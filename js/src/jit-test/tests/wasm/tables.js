@@ -22,21 +22,25 @@ assertErrorMessage(() => new Module(textToBinary(`(module (table (resizable 10))
 
 assertErrorMessage(() => new Module(textToBinary(`(module (table (resizable 10)) (elem (i32.const 10) $f0) ${callee(0)})`)), TypeError, /element segment does not fit/);
 assertErrorMessage(() => new Module(textToBinary(`(module (table (resizable 10)) (elem (i32.const 8) $f0 $f0 $f0) ${callee(0)})`)), TypeError, /element segment does not fit/);
-assertErrorMessage(() => new Module(textToBinary(`(module (table (resizable 10)) (elem (i32.const 1) $f0 $f0) (elem (i32.const 0) $f0) ${callee(0)})`)), TypeError, /must be.*ordered/);
-assertErrorMessage(() => new Module(textToBinary(`(module (table (resizable 10)) (elem (i32.const 1) $f0 $f0) (elem (i32.const 2) $f0) ${callee(0)})`)), TypeError, /must be.*disjoint/);
 
-assertErrorMessage(() => evalText(`(module (table (resizable 10)) (import "globals" "a" (global i32 immutable)) (elem (get_global 0) $f0) ${callee(0)})`, {globals:{a:10}}), TypeError, /element segment does not fit/);
-assertErrorMessage(() => evalText(`(module (table (resizable 10)) (import "globals" "a" (global i32 immutable)) (elem (get_global 0) $f0 $f0 $f0) ${callee(0)})`, {globals:{a:8}}), TypeError, /element segment does not fit/);
-assertErrorMessage(() => evalText(`(module (table (resizable 10)) (import "globals" "a" (global i32 immutable)) (elem (i32.const 1) $f0 $f0) (elem (get_global 0) $f0) ${callee(0)})`, {globals:{a:0}}), TypeError, /must be.*ordered/);
-assertErrorMessage(() => evalText(`(module (table (resizable 10)) (import "globals" "a" (global i32 immutable)) (elem (get_global 0) $f0 $f0) (elem (i32.const 2) $f0) ${callee(0)})`, {globals:{a:1}}), TypeError, /must be.*disjoint/);
+assertErrorMessage(() => evalText(`(module (table (resizable 10)) (import "globals" "a" (global i32 immutable)) (elem (get_global 0) $f0) ${callee(0)})`, {globals:{a:10}}), RangeError, /elem segment does not fit/);
+assertErrorMessage(() => evalText(`(module (table (resizable 10)) (import "globals" "a" (global i32 immutable)) (elem (get_global 0) $f0 $f0 $f0) ${callee(0)})`, {globals:{a:8}}), RangeError, /elem segment does not fit/);
 
+assertEq(new Module(textToBinary(`(module (table (resizable 10)) (elem (i32.const 1) $f0 $f0) (elem (i32.const 0) $f0) ${callee(0)})`)) instanceof Module, true);
+assertEq(new Module(textToBinary(`(module (table (resizable 10)) (elem (i32.const 1) $f0 $f0) (elem (i32.const 2) $f0) ${callee(0)})`)) instanceof Module, true);
+evalText(`(module (table (resizable 10)) (import "globals" "a" (global i32 immutable)) (elem (i32.const 1) $f0 $f0) (elem (get_global 0) $f0) ${callee(0)})`, {globals:{a:0}});
+evalText(`(module (table (resizable 10)) (import "globals" "a" (global i32 immutable)) (elem (get_global 0) $f0 $f0) (elem (i32.const 2) $f0) ${callee(0)})`, {globals:{a:1}});
+
+var m = new Module(textToBinary(`
+    (module
+        (import "globals" "table" (table 10))
+        (import "globals" "a" (global i32 immutable))
+        (elem (get_global 0) $f0 $f0)
+        ${callee(0)})
+`));
 var tbl = new Table({initial:50, element:"anyfunc"});
-assertErrorMessage(() => evalText(`(module
-    (import "globals" "table" (table 10 100))
-    (import "globals" "a" (global i32 immutable))
-    (elem (get_global 0) $f0 $f0)
-    ${callee(0)})
-`, {globals:{a:20, table:tbl}}), Error, /element segment does not fit/);
+assertEq(new Instance(m, {globals:{a:20, table:tbl}}) instanceof Instance, true);
+assertErrorMessage(() => new Instance(m, {globals:{a:50, table:tbl}}), RangeError, /elem segment does not fit/);
 
 var caller = `(type $v2i (func (result i32))) (func $call (param $i i32) (result i32) (call_indirect $v2i (get_local $i))) (export "call" $call)`
 var callee = i => `(func $f${i} (type $v2i) (result i32) (i32.const ${i}))`;
@@ -124,7 +128,7 @@ var m = new Module(textToBinary(`(module
     (import $imp "a" "imp" (result i32))
     (func $call (param $i i32) (result i32)
         (i32.add
-            (call_import $imp)
+            (call $imp)
             (i32.add
                 (i32.load (i32.const 0))
                 (if (i32.eqz (get_local $i))

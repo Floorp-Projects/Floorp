@@ -36,7 +36,7 @@ SystemServiceIsRunning(const char* aSvcName)
   }
 
   char value[PROPERTY_VALUE_MAX];
-  NS_WARN_IF(property_get(key, value, "") < 0);
+  Unused << NS_WARN_IF(property_get(key, value, "") < 0);
 
   return !strcmp(value, "running");
 }

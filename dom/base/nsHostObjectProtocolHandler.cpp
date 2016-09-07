@@ -140,8 +140,8 @@ BroadcastBlobURLRegistration(const nsACString& aURI,
     return;
   }
 
-  NS_WARN_IF(!cc->SendStoreAndBroadcastBlobURLRegistration(nsCString(aURI), actor,
-                                                           IPC::Principal(aPrincipal)));
+  Unused << NS_WARN_IF(!cc->SendStoreAndBroadcastBlobURLRegistration(
+    nsCString(aURI), actor, IPC::Principal(aPrincipal)));
 }
 
 void
@@ -156,7 +156,8 @@ BroadcastBlobURLUnregistration(const nsACString& aURI, DataInfo* aInfo)
   }
 
   ContentChild* cc = ContentChild::GetSingleton();
-  NS_WARN_IF(!cc->SendUnstoreAndBroadcastBlobURLUnregistration(nsCString(aURI)));
+  Unused << NS_WARN_IF(!cc->SendUnstoreAndBroadcastBlobURLUnregistration(
+    nsCString(aURI)));
 }
 
 class HostObjectURLsReporter final : public nsIMemoryReporter

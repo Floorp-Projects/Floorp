@@ -43,7 +43,7 @@ PluginWidgetChild::RecvSetScrollCaptureId(const uint64_t& aScrollCaptureId,
   PluginInstanceParent* instance =
     PluginInstanceParent::LookupPluginInstanceByID(aPluginInstanceId);
   if (instance) {
-    NS_WARN_IF(NS_FAILED(instance->SetScrollCaptureId(aScrollCaptureId)));
+    Unused << NS_WARN_IF(NS_FAILED(instance->SetScrollCaptureId(aScrollCaptureId)));
   }
 
   return true;

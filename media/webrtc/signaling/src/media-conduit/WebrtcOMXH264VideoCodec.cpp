@@ -1141,7 +1141,7 @@ WebrtcOMXH264VideoEncoder::SetRates(uint32_t aBitRateKbps, uint32_t aFrameRate)
   }
   mBitRateKbps = aBitRateKbps;
   nsresult rv = mOMX->SetBitrate(mBitRateKbps);
-  NS_WARN_IF(NS_FAILED(rv));
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetBitrate failed");
   return NS_FAILED(rv) ? WEBRTC_VIDEO_CODEC_OK : WEBRTC_VIDEO_CODEC_ERROR;
 }
 

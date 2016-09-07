@@ -394,7 +394,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         return mLayerClient.getMatrixForLayerRectToViewRect();
     }
 
-    void setSurfaceBackgroundColor(int newColor) {
+    public void setSurfaceBackgroundColor(int newColor) {
         if (mSurfaceView != null) {
             mSurfaceView.setBackgroundColor(newColor);
         }
@@ -794,4 +794,9 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         mRenderer.removeZoomedViewListener(listener);
     }
 
+    public void setClearColor(int color) {
+        if (mLayerClient != null) {
+            mLayerClient.setClearColor(color);
+        }
+    }
 }

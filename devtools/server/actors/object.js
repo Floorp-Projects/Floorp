@@ -1800,13 +1800,27 @@ DebuggerServer.ObjectActorPreviewers.Object = [
       return false;
     }
 
-    // Making sure that all keys are array indices, that is:
-    // `ToString(ToUint32(key)) === key  &&  key !== "4294967295"`.
-    // Also ensuring that the keys are consecutive and start at "0",
-    // this implies checking `key !== "4294967295"` is not necessary.
+    // Pseudo-arrays should only have array indices and, optionally, a "length" property.
+    // Since array indices are sorted first, check if the last property is "length".
+    if(keys[keys.length-1] === "length") {
+      keys.pop();
+      // The value of "length" should equal the number of other properties. If eventually
+      // we allow sparse pseudo-arrays, we should check whether it's a Uint32 instead.
+      if(rawObj.length !== keys.length) {
+        return false;
+      }
+    }
+
+    // Ensure that the keys are consecutive integers starting at "0". If eventually we
+    // allow sparse pseudo-arrays, we should check that they are array indices, that is:
+    // `(key >>> 0) + '' === key && key !== "4294967295"`.
+    // Checking the last property first allows us to avoid useless iterations when
+    // there is any property which is not an array index.
+    if(keys.length && keys[keys.length-1] !== keys.length - 1 + '') {
+      return false;
+    }
     for (let key of keys) {
-      let numKey = key >>> 0; // ToUint32(key)
-      if (numKey + '' != key || numKey != length++) {
+      if (key !== (length++) + '') {
         return false;
       }
     }

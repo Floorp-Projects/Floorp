@@ -64,7 +64,9 @@ GridLines::IndexedGetter(uint32_t aIndex,
 
 void
 GridLines::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
-                       const ComputedGridLineInfo* aLineInfo)
+                       const ComputedGridLineInfo* aLineInfo,
+                       const nsTArray<RefPtr<GridArea>>& aAreas,
+                       bool aIsRow)
 {
   mLines.Clear();
 
@@ -84,6 +86,8 @@ GridLines::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
     for (uint32_t i = aTrackInfo->mStartFragmentTrack;
          i < aTrackInfo->mEndFragmentTrack + 1;
          i++) {
+      uint32_t line1Index = i + 1;
+
       startOfNextTrack = (i < aTrackInfo->mEndFragmentTrack) ?
                          aTrackInfo->mPositions[i] :
                          endOfLastTrack;
@@ -96,12 +100,40 @@ GridLines::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
         lineNames = aLineInfo->mNames.SafeElementAt(i, nsTArray<nsString>());
       }
 
+      // Add in names from grid areas where this line is used as a boundary.
+      for (auto area : aAreas) {
+        bool haveNameToAdd = false;
+        nsAutoString nameToAdd;
+        area->GetName(nameToAdd);
+        if (aIsRow) {
+          if (area->RowStart() == line1Index) {
+            haveNameToAdd = true;
+            nameToAdd.AppendLiteral("-start");
+          } else if (area->RowEnd() == line1Index) {
+            haveNameToAdd = true;
+            nameToAdd.AppendLiteral("-end");
+          }
+        } else {
+          if (area->ColumnStart() == line1Index) {
+            haveNameToAdd = true;
+            nameToAdd.AppendLiteral("-start");
+          } else if (area->ColumnEnd() == line1Index) {
+            haveNameToAdd = true;
+            nameToAdd.AppendLiteral("-end");
+          }
+        }
+
+        if (haveNameToAdd && !lineNames.Contains(nameToAdd)) {
+          lineNames.AppendElement(nameToAdd);
+        }
+      }
+
       line->SetLineValues(
         lineNames,
         nsPresContext::AppUnitsToDoubleCSSPixels(endOfLastTrack),
         nsPresContext::AppUnitsToDoubleCSSPixels(startOfNextTrack -
                                                  endOfLastTrack),
-        i + 1,
+        line1Index,
         (
           // Implicit if there are no explicit tracks, or if the index
           // is before the first explicit track, or after

@@ -324,12 +324,12 @@ FlyWebMDNSService::OnDiscoveryStarted(const nsACString& aServiceType)
   // If service discovery is inactive, then stop network discovery immediately.
   if (!mDiscoveryActive) {
     // Set the stop timer to fire immediately.
-    NS_WARN_IF(NS_FAILED(mDiscoveryStopTimer->InitWithCallback(this, 0, nsITimer::TYPE_ONE_SHOT)));
+    Unused << NS_WARN_IF(NS_FAILED(mDiscoveryStopTimer->InitWithCallback(this, 0, nsITimer::TYPE_ONE_SHOT)));
     return NS_OK;
   }
 
   // Otherwise, set the stop timer to fire in 5 seconds.
-  NS_WARN_IF(NS_FAILED(mDiscoveryStopTimer->InitWithCallback(this, 5 * 1000, nsITimer::TYPE_ONE_SHOT)));
+  Unused << NS_WARN_IF(NS_FAILED(mDiscoveryStopTimer->InitWithCallback(this, 5 * 1000, nsITimer::TYPE_ONE_SHOT)));
 
   return NS_OK;
 }
@@ -363,7 +363,7 @@ FlyWebMDNSService::OnDiscoveryStopped(const nsACString& aServiceType)
   mService->NotifyDiscoveredServicesChanged();
 
   // Start discovery again immediately.
-  NS_WARN_IF(NS_FAILED(mDiscoveryStartTimer->InitWithCallback(this, 0, nsITimer::TYPE_ONE_SHOT)));
+  Unused << NS_WARN_IF(NS_FAILED(mDiscoveryStartTimer->InitWithCallback(this, 0, nsITimer::TYPE_ONE_SHOT)));
 
   return NS_OK;
 }
@@ -405,7 +405,7 @@ FlyWebMDNSService::OnStartDiscoveryFailed(const nsACString& aServiceType, int32_
 
   // If discovery is active, and the number of consecutive failures is < 3, try starting again.
   if (mDiscoveryActive && mNumConsecutiveStartDiscoveryFailures < 3) {
-    NS_WARN_IF(NS_FAILED(mDiscoveryStartTimer->InitWithCallback(this, 0, nsITimer::TYPE_ONE_SHOT)));
+    Unused << NS_WARN_IF(NS_FAILED(mDiscoveryStartTimer->InitWithCallback(this, 0, nsITimer::TYPE_ONE_SHOT)));
   }
 
   return NS_OK;
@@ -420,7 +420,7 @@ FlyWebMDNSService::OnStopDiscoveryFailed(const nsACString& aServiceType, int32_t
 
   // If discovery is active, start discovery again immediately.
   if (mDiscoveryActive) {
-    NS_WARN_IF(NS_FAILED(mDiscoveryStartTimer->InitWithCallback(this, 0, nsITimer::TYPE_ONE_SHOT)));
+    Unused << NS_WARN_IF(NS_FAILED(mDiscoveryStartTimer->InitWithCallback(this, 0, nsITimer::TYPE_ONE_SHOT)));
   }
 
   return NS_OK;

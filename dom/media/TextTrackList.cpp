@@ -188,7 +188,7 @@ TextTrackList::CreateAndDispatchTrackEventRunner(TextTrack* aTrack,
                         NS_DISPATCH_NORMAL);
 
   // If we are shutting down this can file but it's still ok.
-  NS_WARN_IF(NS_FAILED(rv));
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Dispatch failed");
 }
 
 HTMLMediaElement*

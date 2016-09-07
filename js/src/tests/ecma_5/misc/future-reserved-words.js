@@ -55,7 +55,7 @@ function testWord(word, expectNormal, expectStrict)
     actual = e.name;
     status +=  ", " + e.name + ": " + e.message + " ";
   }
-  reportCompare(expectNormal, actual, status);
+  assertEq(actual, expectNormal, status);
 
   actual = "";
   status = summary + ": " + word + ": strict assignment";
@@ -69,7 +69,7 @@ function testWord(word, expectNormal, expectStrict)
     actual = e.name;
     status +=  ", " + e.name + ": " + e.message + " ";
   }
-  reportCompare(expectStrict, actual, status);
+  assertEq(actual, expectStrict, status);
 
   // USE IN VARIABLE DECLARATION
 
@@ -85,7 +85,7 @@ function testWord(word, expectNormal, expectStrict)
     actual = e.name;
     status +=  ", " + e.name + ": " + e.message + " ";
   }
-  reportCompare(expectNormal, actual, status);
+  assertEq(actual, expectNormal, status);
 
   actual = "";
   status = summary + ": " + word + ": strict var";
@@ -99,7 +99,7 @@ function testWord(word, expectNormal, expectStrict)
     actual = e.name;
     status +=  ", " + e.name + ": " + e.message + " ";
   }
-  reportCompare(expectStrict, actual, status);
+  assertEq(actual, expectStrict, status);
 
   // USE IN FOR-IN VARIABLE DECLARATION
 
@@ -115,7 +115,7 @@ function testWord(word, expectNormal, expectStrict)
     actual = e.name;
     status +=  ", " + e.name + ": " + e.message + " ";
   }
-  reportCompare(expectNormal, actual, status);
+  assertEq(actual, expectNormal, status);
 
   actual = "";
   status = summary + ": " + word + ": strict for-in var";
@@ -129,7 +129,7 @@ function testWord(word, expectNormal, expectStrict)
     actual = e.name;
     status +=  ", " + e.name + ": " + e.message + " ";
   }
-  reportCompare(expectStrict, actual, status);
+  assertEq(actual, expectStrict, status);
 
   // USE AS CATCH IDENTIFIER
 
@@ -145,7 +145,7 @@ function testWord(word, expectNormal, expectStrict)
     actual = e.name;
     status +=  ", " + e.name + ": " + e.message + " ";
   }
-  reportCompare(expectNormal, actual, status);
+  assertEq(actual, expectNormal, status);
 
   actual = "";
   status = summary + ": " + word + ": strict var";
@@ -159,7 +159,7 @@ function testWord(word, expectNormal, expectStrict)
     actual = e.name;
     status +=  ", " + e.name + ": " + e.message + " ";
   }
-  reportCompare(expectStrict, actual, status);
+  assertEq(actual, expectStrict, status);
 
   // USE AS LABEL
 
@@ -175,7 +175,7 @@ function testWord(word, expectNormal, expectStrict)
     actual = e.name;
     status +=  ", " + e.name + ": " + e.message + " ";
   }
-  reportCompare(expectNormal, actual, status);
+  assertEq(actual, expectNormal, status);
 
   actual = "";
   status = summary + ": " + word + ": strict label";
@@ -189,7 +189,7 @@ function testWord(word, expectNormal, expectStrict)
     actual = e.name;
     status +=  ", " + e.name + ": " + e.message + " ";
   }
-  reportCompare(expectStrict, actual, status);
+  assertEq(actual, expectStrict, status);
 
   // USE AS ARGUMENT NAME IN FUNCTION DECLARATION
 
@@ -205,7 +205,7 @@ function testWord(word, expectNormal, expectStrict)
     actual = e.name;
     status +=  ", " + e.name + ": " + e.message + " ";
   }
-  reportCompare(expectNormal, actual, status);
+  assertEq(actual, expectNormal, status);
 
   actual = "";
   status = summary + ": " + word + ": strict function argument";
@@ -219,7 +219,7 @@ function testWord(word, expectNormal, expectStrict)
     actual = e.name;
     status +=  ", " + e.name + ": " + e.message + " ";
   }
-  reportCompare(expectStrict, actual, status);
+  assertEq(actual, expectStrict, status);
 
   actual = "";
   status = summary + ": " + word + ": function argument retroactively strict";
@@ -233,7 +233,7 @@ function testWord(word, expectNormal, expectStrict)
     actual = e.name;
     status +=  ", " + e.name + ": " + e.message + " ";
   }
-  reportCompare(expectStrict, actual, status);
+  assertEq(actual, expectStrict, status);
 
   // USE AS ARGUMENT NAME IN FUNCTION EXPRESSION
 
@@ -249,7 +249,7 @@ function testWord(word, expectNormal, expectStrict)
     actual = e.name;
     status +=  ", " + e.name + ": " + e.message + " ";
   }
-  reportCompare(expectNormal, actual, status);
+  assertEq(actual, expectNormal, status);
 
   actual = "";
   status = summary + ": " + word + ": strict function expression argument";
@@ -263,7 +263,7 @@ function testWord(word, expectNormal, expectStrict)
     actual = e.name;
     status +=  ", " + e.name + ": " + e.message + " ";
   }
-  reportCompare(expectStrict, actual, status);
+  assertEq(actual, expectStrict, status);
 
   actual = "";
   status = summary + ": " + word + ": function expression argument retroactively strict";
@@ -277,7 +277,7 @@ function testWord(word, expectNormal, expectStrict)
     actual = e.name;
     status +=  ", " + e.name + ": " + e.message + " ";
   }
-  reportCompare(expectStrict, actual, status);
+  assertEq(actual, expectStrict, status);
 
   // USE AS ARGUMENT NAME WITH FUNCTION CONSTRUCTOR
 
@@ -293,7 +293,7 @@ function testWord(word, expectNormal, expectStrict)
     actual = e.name;
     status +=  ", " + e.name + ": " + e.message + " ";
   }
-  reportCompare(expectNormal, actual, status);
+  assertEq(actual, expectNormal, status);
 
   actual = "";
   status = summary + ": " + word + ": argument with strict Function";
@@ -307,7 +307,7 @@ function testWord(word, expectNormal, expectStrict)
     actual = e.name;
     status +=  ", " + e.name + ": " + e.message + " ";
   }
-  reportCompare(expectStrict, actual, status);
+  assertEq(actual, expectStrict, status);
 
   // USE AS ARGUMENT NAME IN PROPERTY SETTER
 
@@ -323,7 +323,7 @@ function testWord(word, expectNormal, expectStrict)
     actual = e.name;
     status +=  ", " + e.name + ": " + e.message + " ";
   }
-  reportCompare(expectNormal, actual, status);
+  assertEq(actual, expectNormal, status);
 
   actual = "";
   status = summary + ": " + word + ": strict property setter argument";
@@ -337,7 +337,7 @@ function testWord(word, expectNormal, expectStrict)
     actual = e.name;
     status +=  ", " + e.name + ": " + e.message + " ";
   }
-  reportCompare(expectStrict, actual, status);
+  assertEq(actual, expectStrict, status);
 
   actual = "";
   status = summary + ": " + word + ": property setter argument retroactively strict";
@@ -351,7 +351,7 @@ function testWord(word, expectNormal, expectStrict)
     actual = e.name;
     status +=  ", " + e.name + ": " + e.message + " ";
   }
-  reportCompare(expectStrict, actual, status);
+  assertEq(actual, expectStrict, status);
 
   // USE AS FUNCTION NAME IN FUNCTION DECLARATION
 
@@ -367,7 +367,7 @@ function testWord(word, expectNormal, expectStrict)
     actual = e.name;
     status +=  ", " + e.name + ": " + e.message + " ";
   }
-  reportCompare(expectNormal, actual, status);
+  assertEq(actual, expectNormal, status);
 
   actual = "";
   status = summary + ": " + word + ": strict function name";
@@ -381,7 +381,7 @@ function testWord(word, expectNormal, expectStrict)
     actual = e.name;
     status +=  ", " + e.name + ": " + e.message + " ";
   }
-  reportCompare(expectStrict, actual, status);
+  assertEq(actual, expectStrict, status);
 
   actual = "";
   status = summary + ": " + word + ": function name retroactively strict";
@@ -395,7 +395,7 @@ function testWord(word, expectNormal, expectStrict)
     actual = e.name;
     status +=  ", " + e.name + ": " + e.message + " ";
   }
-  reportCompare(expectStrict, actual, status);
+  assertEq(actual, expectStrict, status);
 
   // USE AS FUNCTION NAME IN FUNCTION EXPRESSION
 
@@ -411,7 +411,7 @@ function testWord(word, expectNormal, expectStrict)
     actual = e.name;
     status +=  ", " + e.name + ": " + e.message + " ";
   }
-  reportCompare(expectNormal, actual, status);
+  assertEq(actual, expectNormal, status);
 
   actual = "";
   status = summary + ": " + word + ": strict function expression name";
@@ -425,7 +425,7 @@ function testWord(word, expectNormal, expectStrict)
     actual = e.name;
     status +=  ", " + e.name + ": " + e.message + " ";
   }
-  reportCompare(expectStrict, actual, status);
+  assertEq(actual, expectStrict, status);
 
   actual = "";
   status = summary + ": " + word + ": function expression name retroactively strict";
@@ -439,7 +439,7 @@ function testWord(word, expectNormal, expectStrict)
     actual = e.name;
     status +=  ", " + e.name + ": " + e.message + " ";
   }
-  reportCompare(expectStrict, actual, status);
+  assertEq(actual, expectStrict, status);
 }
 
 function testFutureReservedWord(word)

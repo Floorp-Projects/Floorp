@@ -748,7 +748,7 @@ WorkerProxyToMainThreadRunnable::PostDispatchOnMainThread()
 
   RefPtr<WorkerControlRunnable> runnable =
     new ReleaseRunnable(mWorkerPrivate, this);
-  NS_WARN_IF(!runnable->Dispatch());
+  Unused << NS_WARN_IF(!runnable->Dispatch());
 }
 
 bool

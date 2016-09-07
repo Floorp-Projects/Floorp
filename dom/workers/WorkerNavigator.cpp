@@ -7,6 +7,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
+#include "mozilla/dom/StorageManager.h"
 #include "mozilla/dom/WorkerNavigator.h"
 #include "mozilla/dom/WorkerNavigatorBinding.h"
 
@@ -26,8 +27,7 @@ namespace dom {
 
 using namespace mozilla::dom::workers;
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WorkerNavigator)
-
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WorkerNavigator, mStorageManager);
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WorkerNavigator, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WorkerNavigator, Release)
 
@@ -162,6 +162,22 @@ WorkerNavigator::HardwareConcurrency() const
   MOZ_ASSERT(rts);
 
   return rts->ClampedHardwareConcurrency();
+}
+
+StorageManager*
+WorkerNavigator::Storage()
+{
+  if (!mStorageManager) {
+    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+    MOZ_ASSERT(workerPrivate);
+
+    RefPtr<nsIGlobalObject> global = workerPrivate->GlobalScope();
+    MOZ_ASSERT(global);
+
+    mStorageManager = new StorageManager(global);
+  }
+
+  return mStorageManager;
 }
 
 } // namespace dom

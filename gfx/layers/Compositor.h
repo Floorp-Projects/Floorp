@@ -349,8 +349,16 @@ public:
                     const gfx::IntRect& aClipRect = gfx::IntRect(),
                     const gfx::Matrix4x4& aTransform = gfx::Matrix4x4());
 
-  void SetBeginFrameClearColor(const gfx::Color& aColor) {
-    mBeginFrameClearColor = aColor;
+  void SetClearColor(const gfx::Color& aColor) {
+    mClearColor = aColor;
+  }
+
+  void SetDefaultClearColor(const gfx::Color& aColor) {
+    mDefaultClearColor = aColor;
+  }
+
+  void SetClearColorToDefault() {
+    mClearColor = mDefaultClearColor;
   }
 
   /*
@@ -642,7 +650,8 @@ protected:
   FenceHandle mReleaseFenceHandle;
 #endif
 
-  gfx::Color mBeginFrameClearColor;
+  gfx::Color mClearColor;
+  gfx::Color mDefaultClearColor;
 
 private:
   static LayersBackend sBackend;

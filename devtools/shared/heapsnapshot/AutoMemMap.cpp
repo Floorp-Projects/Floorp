@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/devtools/AutoMemMap.h"
+
+#include "mozilla/Unused.h"
 #include "nsDebug.h"
 
 namespace mozilla {
@@ -13,17 +15,17 @@ namespace devtools {
 AutoMemMap::~AutoMemMap()
 {
   if (addr) {
-    NS_WARN_IF(PR_MemUnmap(addr, size()) != PR_SUCCESS);
+    Unused << NS_WARN_IF(PR_MemUnmap(addr, size()) != PR_SUCCESS);
     addr = nullptr;
   }
 
   if (fileMap) {
-    NS_WARN_IF(PR_CloseFileMap(fileMap) != PR_SUCCESS);
+    Unused << NS_WARN_IF(PR_CloseFileMap(fileMap) != PR_SUCCESS);
     fileMap = nullptr;
   }
 
   if (fd) {
-    NS_WARN_IF(PR_Close(fd) != PR_SUCCESS);
+    Unused << NS_WARN_IF(PR_Close(fd) != PR_SUCCESS);
     fd = nullptr;
   }
 }

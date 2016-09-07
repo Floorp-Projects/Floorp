@@ -135,8 +135,8 @@ FileSystemTaskChildBase::Start()
   if (HasError()) {
     // In this case we don't want to use IPC at all.
     RefPtr<ErrorRunnable> runnable = new ErrorRunnable(this);
-    nsresult rv = NS_DispatchToCurrentThread(runnable);
-    NS_WARN_IF(NS_FAILED(rv));
+    DebugOnly<nsresult> rv = NS_DispatchToCurrentThread(runnable);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NS_DispatchToCurrentThread failed");
     return;
   }
 
@@ -235,13 +235,13 @@ FileSystemTaskParentBase::Start()
   mFileSystem->AssertIsOnOwningThread();
 
   if (NeedToGoToMainThread()) {
-    nsresult rv = NS_DispatchToMainThread(this, NS_DISPATCH_NORMAL);
-    NS_WARN_IF(NS_FAILED(rv));
+    DebugOnly<nsresult> rv = NS_DispatchToMainThread(this, NS_DISPATCH_NORMAL);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NS_DispatchToCurrentThread failed");
     return;
   }
 
-  nsresult rv = DispatchToIOThread(this);
-  NS_WARN_IF(NS_FAILED(rv));
+  DebugOnly<nsresult> rv = DispatchToIOThread(this);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "DispatchToIOThread failed");
 }
 
 void

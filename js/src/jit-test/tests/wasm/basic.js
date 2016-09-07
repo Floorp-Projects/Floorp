@@ -445,9 +445,9 @@ assertErrorMessage(() => i2v(5), Error, badIndirectCall);
         `(module
             (type $v2v (func))
             (import $foo "f" "")
-            (func (call_import $foo))
-            (func (result i32) (i32.const 0))
-            (table 0 1)
+            (func $a (call_import $foo))
+            (func $b (result i32) (i32.const 0))
+            (table $a $b)
             (func $bar (call_indirect $v2v (i32.const 0)))
             (export "" $bar)
         )`,

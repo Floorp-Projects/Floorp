@@ -234,6 +234,12 @@ public class DownloadContentCatalog {
             // Catalog seems to be broken. Re-create catalog:
             loadedContent = DownloadContentBootstrap.createInitialDownloadContentList();
             hasCatalogChanged = true; // Indicate that we want to persist the new catalog
+        } catch (NullPointerException e) {
+            // Bad content can produce an NPE in JSON code -- bug 1300139
+            Log.w(LOGTAG, "Unable to parse catalog JSON. Re-creating catalog.", e);
+            // Catalog seems to be broken. Re-create catalog:
+            loadedContent = DownloadContentBootstrap.createInitialDownloadContentList();
+            hasCatalogChanged = true; // Indicate that we want to persist the new catalog
         } catch (UnsupportedEncodingException e) {
             AssertionError error = new AssertionError("Should not happen: This device does not speak UTF-8");
             error.initCause(e);

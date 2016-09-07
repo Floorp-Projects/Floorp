@@ -22,6 +22,7 @@
 #include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/dom/CameraFacesDetectedEvent.h"
 #include "mozilla/dom/CameraStateChangeEvent.h"
+#include "mozilla/DebugOnly.h"
 #include "nsNetUtil.h"
 #include "DOMCameraDetectedFace.h"
 #include "nsServiceManagerUtils.h"
@@ -245,8 +246,8 @@ public:
     MutexAutoLock lock(mTestHw->mMutex);
 
     mTestHw->mStatus = RunInline();
-    nsresult rv = mTestHw->mCondVar.Notify();
-    NS_WARN_IF(NS_FAILED(rv));
+    DebugOnly<nsresult> rv = mTestHw->mCondVar.Notify();
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Notify failed");
     return NS_OK;
   }
 
@@ -313,15 +314,15 @@ TestGonkCameraHardware::~TestGonkCameraHardware()
     {
       if (mTestHw->mDomListener) {
         mTestHw->mDomListener = nullptr;
-        nsresult rv = mJSTestWrapper->SetHandler(nullptr);
-        NS_WARN_IF(NS_FAILED(rv));
+        DebugOnly<nsresult> rv = mJSTestWrapper->SetHandler(nullptr);
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetHandler failed");
       }
       return NS_OK;
     }
   };
 
-  nsresult rv = WaitWhileRunningOnMainThread(new Delegate(this));
-  NS_WARN_IF(NS_FAILED(rv));
+  DebugOnly<nsresult> rv = WaitWhileRunningOnMainThread(new Delegate(this));
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WaitWhileRunningOnMainThread failed");
   DOM_CAMERA_LOGA("^===== Destroyed TestGonkCameraHardware =====^\n");
 }
 
@@ -385,8 +386,8 @@ TestGonkCameraHardware::Init()
     }
   };
 
-  nsresult rv = WaitWhileRunningOnMainThread(new Delegate(this));
-  NS_WARN_IF(NS_FAILED(rv));
+  DebugOnly<nsresult> rv = WaitWhileRunningOnMainThread(new Delegate(this));
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WaitWhileRunningOnMainThread failed");
   return rv;
 }
 
@@ -539,8 +540,8 @@ TestGonkCameraHardware::CancelTakePicture()
   };
 
   DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
-  nsresult rv = WaitWhileRunningOnMainThread(new Delegate(this));
-  NS_WARN_IF(NS_FAILED(rv));
+  DebugOnly<nsresult> rv = WaitWhileRunningOnMainThread(new Delegate(this));
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WaitWhileRunningOnMainThread failed");
 }
 
 int
@@ -588,8 +589,8 @@ TestGonkCameraHardware::StopPreview()
   };
 
   DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
-  nsresult rv = WaitWhileRunningOnMainThread(new Delegate(this));
-  NS_WARN_IF(NS_FAILED(rv));
+  DebugOnly<nsresult> rv = WaitWhileRunningOnMainThread(new Delegate(this));
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WaitWhileRunningOnMainThread failed");
 }
 
 class TestGonkCameraHardware::PushParametersDelegate : public ControlMessage

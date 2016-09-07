@@ -54,6 +54,9 @@ extern bool
 IsExportedFunction(JSFunction* fun);
 
 extern bool
+IsExportedWasmFunction(JSFunction* fun);
+
+extern bool
 IsExportedFunction(const Value& v, MutableHandleFunction f);
 
 extern Instance&
@@ -63,7 +66,7 @@ extern WasmInstanceObject*
 ExportedFunctionToInstanceObject(JSFunction* fun);
 
 extern uint32_t
-ExportedFunctionToIndex(JSFunction* fun);
+ExportedFunctionToDefinitionIndex(JSFunction* fun);
 
 } // namespace wasm
 
@@ -117,9 +120,9 @@ class WasmInstanceObject : public NativeObject
     static void finalize(FreeOp* fop, JSObject* obj);
     static void trace(JSTracer* trc, JSObject* obj);
 
-    // ExportMap maps from function index to exported function object. This map
-    // is weak to avoid holding objects alive; the point is just to ensure a
-    // unique object identity for any given function object.
+    // ExportMap maps from function definition index to exported function
+    // object. This map is weak to avoid holding objects alive; the point is
+    // just to ensure a unique object identity for any given function object.
     using ExportMap = GCHashMap<uint32_t,
                                 ReadBarrieredFunction,
                                 DefaultHasher<uint32_t>,
@@ -147,6 +150,8 @@ class WasmInstanceObject : public NativeObject
                                     HandleWasmInstanceObject instanceObj,
                                     uint32_t funcIndex,
                                     MutableHandleFunction fun);
+
+    const wasm::CodeRange& getExportedFunctionCodeRange(HandleFunction fun);
 };
 
 // The class of WebAssembly.Memory. A WasmMemoryObject references an ArrayBuffer

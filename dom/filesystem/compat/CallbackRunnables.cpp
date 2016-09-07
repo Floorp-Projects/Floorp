@@ -12,6 +12,7 @@
 #include "mozilla/dom/FileSystemDirectoryReaderBinding.h"
 #include "mozilla/dom/FileSystemFileEntry.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/Unused.h"
 #include "nsIGlobalObject.h"
 #include "nsPIDOMWindow.h"
 
@@ -141,8 +142,8 @@ GetEntryHelper::Error(nsresult aError)
   if (mErrorCallback) {
     RefPtr<ErrorCallbackRunnable> runnable =
       new ErrorCallbackRunnable(mGlobal, mErrorCallback, aError);
-    nsresult rv = NS_DispatchToMainThread(runnable);
-    NS_WARN_IF(NS_FAILED(rv));
+    DebugOnly<nsresult> rv = NS_DispatchToMainThread(runnable);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NS_DispatchToMainThread failed");
   }
 }
 
@@ -159,8 +160,8 @@ ErrorCallbackHelper::Call(nsIGlobalObject* aGlobal,
   if (aErrorCallback.WasPassed()) {
     RefPtr<ErrorCallbackRunnable> runnable =
       new ErrorCallbackRunnable(aGlobal, &aErrorCallback.Value(), aError);
-    nsresult rv = NS_DispatchToMainThread(runnable);
-    NS_WARN_IF(NS_FAILED(rv));
+    DebugOnly<nsresult> rv = NS_DispatchToMainThread(runnable);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NS_DispatchToMainThread failed");
   }
 }
 

@@ -24,7 +24,6 @@
 #include "nsTHashtable.h"                // for member
 #include "mozilla/net/ReferrerPolicy.h"  // for member
 #include "nsWeakReference.h"
-#include "mozilla/dom/DocumentBinding.h"
 #include "mozilla/UseCounter.h"
 #include "mozilla/WeakPtr.h"
 #include "Units.h"
@@ -37,6 +36,16 @@
 #include "mozilla/StyleBackendType.h"
 #include "mozilla/StyleSheetHandle.h"
 #include <bitset>                        // for member
+
+#ifdef MOZILLA_INTERNAL_API
+#include "mozilla/dom/DocumentBinding.h"
+#else
+namespace mozilla {
+namespace dom {
+class ElementCreationOptionsOrString;
+} // namespace dom
+} // namespace mozilla
+#endif // MOZILLA_INTERNAL_API
 
 class gfxUserFontSet;
 class imgIRequest;
@@ -1513,7 +1522,7 @@ public:
   virtual already_AddRefed<Element> CreateElem(const nsAString& aName,
                                                nsIAtom* aPrefix,
                                                int32_t aNamespaceID,
-                                               nsAString* aIs = nullptr) = 0;
+                                               const nsAString* aIs = nullptr) = 0;
 
   /**
    * Get the security info (i.e. SSL state etc) that the document got
@@ -2504,7 +2513,7 @@ public:
   // GetElementById defined above
   virtual already_AddRefed<Element>
     CreateElement(const nsAString& aTagName,
-                  const mozilla::dom::ElementCreationOptions& aOptions,
+                  const mozilla::dom::ElementCreationOptionsOrString& aOptions,
                   mozilla::ErrorResult& rv) = 0;
   virtual already_AddRefed<Element>
     CreateElementNS(const nsAString& aNamespaceURI,
@@ -2591,6 +2600,7 @@ public:
   {
     UnlockPointer(this);
   }
+#ifdef MOZILLA_INTERNAL_API
   bool Hidden() const
   {
     return mVisibilityState != mozilla::dom::VisibilityState::Visible;
@@ -2609,6 +2619,7 @@ public:
     WarnOnceAbout(ePrefixedVisibilityAPI);
     return VisibilityState();
   }
+#endif
   virtual mozilla::dom::StyleSheetList* StyleSheets() = 0;
   void GetSelectedStyleSheetSet(nsAString& aSheetSet);
   virtual void SetSelectedStyleSheetSet(const nsAString& aSheetSet) = 0;
@@ -2912,8 +2923,13 @@ protected:
   // Our readyState
   ReadyState mReadyState;
 
+#ifdef MOZILLA_INTERNAL_API
   // Our visibility state
   mozilla::dom::VisibilityState mVisibilityState;
+  static_assert(sizeof(mozilla::dom::VisibilityState) == sizeof(uint32_t), "Error size of mVisibilityState and mDummy");
+#else
+  uint32_t mDummy;
+#endif
 
   // Whether this document has (or will have, once we have a pres shell) a
   // Gecko- or Servo-backed style system.

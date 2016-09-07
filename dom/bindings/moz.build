@@ -29,6 +29,7 @@ EXPORTS.mozilla.dom += [
     'DOMString.h',
     'Errors.msg',
     'Exceptions.h',
+    'FakeString.h',
     'IterableIterator.h',
     'JSSlots.h',
     'MozMap.h',

@@ -62,7 +62,7 @@ function runTests() {
 			is(grid.areas[1].type, "explicit", "Area 1 is explicit.");
 			is(grid.areas[2].type, "explicit", "Area 2 is explicit.");
 
-			// test start and end lines
+			// test numbers of start and end lines
 			is(grid.areas[0].rowStart, 1, "Area 0 has start row line of 1.");
 			is(grid.areas[0].rowEnd, 2, "Area 0 has end row line of 2.");
 			is(grid.areas[0].columnStart, 1, "Area 0 has start column line of 1.");
@@ -77,6 +77,53 @@ function runTests() {
 			is(grid.areas[2].rowEnd, 4, "Area 2 has end row line of 4.");
 			is(grid.areas[2].columnStart, 2, "Area 2 has start column line of 2.");
 			is(grid.areas[2].columnEnd, 4, "Area 2 has end column line of 4.");
+			
+			// test names of all the row lines
+			isnot(grid.rows.lines[0].names.indexOf("areaA-start"), -1,
+				"Grid row line 1 has the name 'areaA-start'."
+			);
+			
+			isnot(grid.rows.lines[1].names.indexOf("areaA-end"), -1,
+				"Grid row line 2 has the name 'areaA-end'."
+			);
+			isnot(grid.rows.lines[1].names.indexOf("areaB-start"), -1,
+				"Grid row line 2 has the name 'areaB-start'."
+			);
+			isnot(grid.rows.lines[1].names.indexOf("areaC-start"), -1,
+				"Grid row line 2 has the name 'areaC-start'."
+			);
+			
+			is(grid.rows.lines[2].names.length, 0, "Grid row line 3 has no names.");
+			
+			isnot(grid.rows.lines[3].names.indexOf("areaB-end"), -1,
+				"Grid row line 4 has the name 'areaB-end'."
+			);
+			isnot(grid.rows.lines[3].names.indexOf("areaC-end"), -1,
+				"Grid row line 4 has the name 'areaC-end'."
+			);
+			
+			// test names of all the column lines
+			isnot(grid.cols.lines[0].names.indexOf("areaA-start"), -1,
+				"Grid column line 1 has the name 'areaA-start'."
+			);
+			isnot(grid.cols.lines[0].names.indexOf("areaB-start"), -1,
+				"Grid column line 1 has the name 'areaB-start'."
+			);
+			
+			isnot(grid.cols.lines[1].names.indexOf("areaB-end"), -1,
+				"Grid column line 2 has the name 'areaB-end'."
+			);
+			isnot(grid.cols.lines[1].names.indexOf("areaC-start"), -1,
+				"Grid column line 2 has the name 'areaC-start'."
+			);
+			
+			isnot(grid.cols.lines[2].names.indexOf("areaA-end"), -1,
+				"Grid column line 3 has the name 'areaA-end'."
+			);
+			
+			isnot(grid.cols.lines[3].names.indexOf("areaC-end"), -1,
+				"Grid column line 4 has the name 'areaC-end'."
+			);
 		}
 	}
 

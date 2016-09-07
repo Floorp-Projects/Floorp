@@ -503,7 +503,6 @@ QuotaManagerService::GetUsageForPrincipal(nsIPrincipal* aPrincipal,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(aCallback);
-  MOZ_ASSERT(nsContentUtils::IsCallerChrome());
 
   RefPtr<UsageRequest> request = new UsageRequest(aPrincipal, aCallback);
 

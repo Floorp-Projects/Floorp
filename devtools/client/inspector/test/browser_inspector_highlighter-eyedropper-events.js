@@ -7,6 +7,11 @@
 
 const HIGHLIGHTER_TYPE = "EyeDropper";
 const ID = "eye-dropper-";
+const TEST_URI = `
+<style>
+  html{width:100%;height:100%;}
+</style>
+<body>eye-dropper test</body>`;
 
 const MOVE_EVENTS_DATA = [
   {type: "mouse", x: 200, y: 100, expected: {x: 200, y: 100}},
@@ -19,26 +24,91 @@ const MOVE_EVENTS_DATA = [
   {type: "keyboard", key: "VK_DOWN", shift: true, expected: {x: 100, y: 211}},
   {type: "keyboard", key: "VK_UP", expected: {x: 100, y: 210}},
   {type: "keyboard", key: "VK_UP", shift: true, expected: {x: 100, y: 200}},
+  // Mouse initialization for left and top snapping
+  {type: "mouse", x: 7, y: 7, expected: {x: 7, y: 7}},
+  // Left Snapping
+  {type: "keyboard", key: "VK_LEFT", shift: true, expected: {x: 0, y: 7},
+   desc: "Left Snapping to x=0"},
+  // Top Snapping
+  {type: "keyboard", key: "VK_UP", shift: true, expected: {x: 0, y: 0},
+   desc: "Top Snapping to y=0"},
+  // Mouse initialization for right snapping
+  {
+    type: "mouse",
+    x: (width, height) => width - 5,
+    y: 0,
+    expected: {
+      x: (width, height) => width - 5,
+      y: 0
+    }
+  },
+  // Right snapping
+  {
+    type: "keyboard",
+    key: "VK_RIGHT",
+    shift: true,
+    expected: {
+      x: (width, height) => width,
+      y: 0
+    },
+    desc: "Right snapping to x=max window width available"
+  },
+  // Mouse initialization for bottom snapping
+  {
+    type: "mouse",
+    x: 0,
+    y: (width, height) => height - 5,
+    expected: {
+      x: 0,
+      y: (width, height) => height - 5
+    }
+  },
+  // Bottom snapping
+  {
+    type: "keyboard",
+    key: "VK_DOWN",
+    shift: true,
+    expected: {
+      x: 0,
+      y: (width, height) => height
+    },
+    desc: "Bottom snapping to y=max window height available"
+  },
 ];
 
 add_task(function* () {
-  let helper = yield openInspectorForURL("data:text/html;charset=utf-8,eye-dropper test")
-               .then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
+  let {inspector, testActor} = yield openInspectorForURL(
+    "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let helper = yield getHighlighterHelperFor(HIGHLIGHTER_TYPE)({inspector, testActor});
+
   helper.prefix = ID;
 
   yield helper.show("html");
-  yield respondsToMoveEvents(helper);
+  yield respondsToMoveEvents(helper, testActor);
   yield respondsToReturnAndEscape(helper);
 
   helper.finalize();
 });
 
-function* respondsToMoveEvents(helper) {
+function* respondsToMoveEvents(helper, testActor) {
   info("Checking that the eyedropper responds to events from the mouse and keyboard");
   let {mouse} = helper;
+  let {width, height} = yield testActor.getBoundingClientRect("html");
 
-  for (let {type, x, y, key, shift, expected} of MOVE_EVENTS_DATA) {
-    info(`Simulating a ${type} event to move to ${expected.x} ${expected.y}`);
+  for (let {type, x, y, key, shift, expected, desc} of MOVE_EVENTS_DATA) {
+    x = typeof x === "function" ? x(width, height) : x;
+    y = typeof y === "function" ? y(width, height) : y;
+    expected.x = typeof expected.x === "function" ?
+      expected.x(width, height) : expected.x;
+    expected.y = typeof expected.y === "function" ?
+      expected.y(width, height) : expected.y;
+
+    if (typeof desc === "undefined") {
+      info(`Simulating a ${type} event to move to ${expected.x} ${expected.y}`);
+    } else {
+      info(`Simulating ${type} event: ${desc}`);
+    }
+
     if (type === "mouse") {
       yield mouse.move(x, y);
     } else if (type === "keyboard") {

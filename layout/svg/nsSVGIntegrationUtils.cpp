@@ -165,8 +165,7 @@ nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(const nsIFrame* aFrame)
 {
   const nsStyleSVGReset *style = aFrame->StyleSVGReset();
   return style->HasClipPath() ||
-         style->mMask.HasLayerWithImage() ||
-         (aFrame->StyleEffects()->mOpacity != 1.0f);
+         style->mMask.HasLayerWithImage();
 }
 
 // For non-SVG frames, this gives the offset to the frame's "user space".
@@ -617,15 +616,10 @@ static float
 ComputeOpacity(const nsSVGIntegrationUtils::PaintFramesParams& aParams)
 {
   nsIFrame* frame = aParams.frame;
-
-  MOZ_ASSERT(!nsSVGUtils::CanOptimizeOpacity(frame) ||
-             !aParams.callerPaintsOpacity,
-             "How can we be optimizing the opacity into the svg as well as having the caller paint it?");
-
   float opacity = frame->StyleEffects()->mOpacity;
 
   if (opacity != 1.0f &&
-      (nsSVGUtils::CanOptimizeOpacity(frame) || aParams.callerPaintsOpacity)) {
+      (nsSVGUtils::CanOptimizeOpacity(frame) || !aParams.handleOpacity)) {
     return 1.0f;
   }
 
@@ -758,6 +752,10 @@ BlendToTarget(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
 DrawResult
 nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
 {
+  MOZ_ASSERT(UsingMaskOrClipPathForFrame(aParams.frame),
+             "Should not use this method when no mask or clipPath effect"
+             "on this frame");
+
   /* SVG defines the following rendering model:
    *
    *  1. Render geometry
@@ -926,7 +924,10 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
 DrawResult
 nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams)
 {
-  MOZ_ASSERT(!aParams.builder->IsForGenerateGlyphMask());
+  MOZ_ASSERT(!aParams.builder->IsForGenerateGlyphMask(),
+             "Filter effect is discarded while generating glyph mask.");
+  MOZ_ASSERT(aParams.frame->StyleEffects()->HasFilters(),
+             "Should not use this method when no filter effect on this frame");
 
   nsIFrame* frame = aParams.frame;
   DrawResult result = DrawResult::SUCCESS;
@@ -969,6 +970,18 @@ nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams)
     return DrawResult::TEMPORARY_ERROR;
   }
 
+  if (opacity != 1.0f) {
+    context.Save();
+    nsRect clipRect =
+      frame->GetVisualOverflowRectRelativeToSelf() + toUserSpace;
+    context.Clip(NSRectToSnappedRect(clipRect,
+                                  frame->PresContext()->AppUnitsPerDevPixel(),
+                                  *context.GetDrawTarget()));
+
+    target->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, opacity,
+                                  nullptr, Matrix());
+  }
+
   /* Paint the child and apply filters */
   RegularFramePaintCallback callback(aParams.builder, aParams.layerManager,
                                      offsetToUserSpace);
@@ -976,6 +989,11 @@ nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams)
   gfxMatrix tm = nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(frame);
   nsFilterInstance::PaintFilteredFrame(frame, target->GetDrawTarget(),
                                        tm, &callback, &dirtyRegion);
+
+  if (opacity != 1.0f) {
+    target->PopGroupAndBlend();
+    context.Restore();
+  }
 
   if (aParams.frame->StyleEffects()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
     MOZ_ASSERT(target != &aParams.ctx);

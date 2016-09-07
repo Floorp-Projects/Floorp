@@ -112,35 +112,37 @@ struct ShareableBytes : ShareableBase<ShareableBytes>
     size_t sizeOfExcludingThis(MallocSizeOf m) const { return bytes.sizeOfExcludingThis(m); }
     const uint8_t* begin() const { return bytes.begin(); }
     const uint8_t* end() const { return bytes.end(); }
+    size_t length() const { return bytes.length(); }
     bool append(const uint8_t *p, uint32_t ct) { return bytes.append(p, ct); }
 };
 
 typedef RefPtr<ShareableBytes> MutableBytes;
 typedef RefPtr<const ShareableBytes> SharedBytes;
 
-// A FuncExport represents a single function inside a wasm Module that has been
-// exported one or more times. A FuncExport represents an internal entry point
-// that can be called via function-index by Instance::callExport(). To allow
-// O(log(n)) lookup of a FuncExport by function-index, the FuncExportVector
-// is stored sorted by function index.
+// A FuncDefExport represents a single function definition inside a wasm Module
+// that has been exported one or more times. A FuncDefExport represents an
+// internal entry point that can be called via function definition index by
+// Instance::callExport(). To allow O(log(n)) lookup of a FuncDefExport by
+// function definition index, the FuncDefExportVector is stored sorted by
+// function definition index.
 
-class FuncExport
+class FuncDefExport
 {
     Sig sig_;
     MOZ_INIT_OUTSIDE_CTOR struct CacheablePod {
-        uint32_t funcIndex_;
+        uint32_t funcDefIndex_;
         uint32_t codeRangeIndex_;
         uint32_t entryOffset_;
     } pod;
 
   public:
-    FuncExport() = default;
-    explicit FuncExport(Sig&& sig,
-                        uint32_t funcIndex,
-                        uint32_t codeRangeIndex)
+    FuncDefExport() = default;
+    explicit FuncDefExport(Sig&& sig,
+                           uint32_t funcDefIndex,
+                           uint32_t codeRangeIndex)
       : sig_(Move(sig))
     {
-        pod.funcIndex_ = funcIndex;
+        pod.funcDefIndex_ = funcDefIndex;
         pod.codeRangeIndex_ = codeRangeIndex;
         pod.entryOffset_ = UINT32_MAX;
     }
@@ -152,8 +154,8 @@ class FuncExport
     const Sig& sig() const {
         return sig_;
     }
-    uint32_t funcIndex() const {
-        return pod.funcIndex_;
+    uint32_t funcDefIndex() const {
+        return pod.funcDefIndex_;
     }
     uint32_t codeRangeIndex() const {
         return pod.codeRangeIndex_;
@@ -163,10 +165,10 @@ class FuncExport
         return pod.entryOffset_;
     }
 
-    WASM_DECLARE_SERIALIZABLE(FuncExport)
+    WASM_DECLARE_SERIALIZABLE(FuncDefExport)
 };
 
-typedef Vector<FuncExport, 0, SystemAllocPolicy> FuncExportVector;
+typedef Vector<FuncDefExport, 0, SystemAllocPolicy> FuncDefExportVector;
 
 // An FuncImport contains the runtime metadata needed to implement a call to an
 // imported function. Each function import has two call stubs: an optimized path
@@ -237,7 +239,7 @@ class CodeRange
     uint32_t begin_;
     uint32_t profilingReturn_;
     uint32_t end_;
-    uint32_t funcIndex_;
+    uint32_t funcDefIndex_;
     uint32_t funcLineOrBytecode_;
     uint8_t funcBeginToTableEntry_;
     uint8_t funcBeginToTableProfilingJump_;
@@ -250,7 +252,7 @@ class CodeRange
     CodeRange() = default;
     CodeRange(Kind kind, Offsets offsets);
     CodeRange(Kind kind, ProfilingOffsets offsets);
-    CodeRange(uint32_t funcIndex, uint32_t lineOrBytecode, FuncOffsets offsets);
+    CodeRange(uint32_t funcDefIndex, uint32_t lineOrBytecode, FuncOffsets offsets);
 
     // All CodeRanges have a begin and end.
 
@@ -312,9 +314,9 @@ class CodeRange
         MOZ_ASSERT(isFunction());
         return profilingReturn_ - funcProfilingEpilogueToProfilingReturn_;
     }
-    uint32_t funcIndex() const {
+    uint32_t funcDefIndex() const {
         MOZ_ASSERT(isFunction());
-        return funcIndex_;
+        return funcDefIndex_;
     }
     uint32_t funcLineOrBytecode() const {
         MOZ_ASSERT(isFunction());
@@ -346,11 +348,11 @@ struct CallThunk
 {
     uint32_t offset;
     union {
-        uint32_t funcIndex;
+        uint32_t funcDefIndex;
         uint32_t codeRangeIndex;
     } u;
 
-    CallThunk(uint32_t offset, uint32_t funcIndex) : offset(offset) { u.funcIndex = funcIndex; }
+    CallThunk(uint32_t offset, uint32_t funcDefIndex) : offset(offset) { u.funcDefIndex = funcDefIndex; }
     CallThunk() = default;
 };
 
@@ -448,7 +450,7 @@ struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
     const MetadataCacheablePod& pod() const { return *this; }
 
     FuncImportVector      funcImports;
-    FuncExportVector      funcExports;
+    FuncDefExportVector   funcDefExports;
     SigWithIdVector       sigIds;
     GlobalDescVector      globals;
     TableDescVector       tables;
@@ -464,7 +466,7 @@ struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
     bool usesMemory() const { return UsesMemory(memoryUsage); }
     bool hasSharedMemory() const { return memoryUsage == MemoryUsage::Shared; }
 
-    const FuncExport& lookupFuncExport(uint32_t funcIndex) const;
+    const FuncDefExport& lookupFuncDefExport(uint32_t funcDefIndex) const;
 
     // AsmJSMetadata derives Metadata iff isAsmJS(). Mostly this distinction is
     // encapsulated within AsmJS.cpp, but the additional virtual functions allow
@@ -487,8 +489,8 @@ struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
     virtual ScriptSource* maybeScriptSource() const {
         return nullptr;
     }
-    virtual bool getFuncName(JSContext* cx, const Bytes* maybeBytecode, uint32_t funcIndex,
-                             TwoByteName* name) const;
+    virtual bool getFuncDefName(JSContext* cx, const Bytes* maybeBytecode, uint32_t funcDefIndex,
+                                TwoByteName* name) const;
 
     WASM_DECLARE_SERIALIZABLE_VIRTUAL(Metadata);
 };
@@ -529,8 +531,8 @@ class Code
     // Return the name associated with a given function index, or generate one
     // if none was given by the module.
 
-    bool getFuncName(JSContext* cx, uint32_t funcIndex, TwoByteName* name) const;
-    JSAtom* getFuncAtom(JSContext* cx, uint32_t funcIndex) const;
+    bool getFuncDefName(JSContext* cx, uint32_t funcDefIndex, TwoByteName* name) const;
+    JSAtom* getFuncDefAtom(JSContext* cx, uint32_t funcDefIndex) const;
 
     // If the source bytecode was saved when this Code was constructed, this
     // method will render the binary as text. Otherwise, a diagnostic string
@@ -547,7 +549,7 @@ class Code
 
     MOZ_MUST_USE bool ensureProfilingState(JSContext* cx, bool enabled);
     bool profilingEnabled() const { return profilingEnabled_; }
-    const char* profilingLabel(uint32_t funcIndex) const { return funcLabels_[funcIndex].get(); }
+    const char* profilingLabel(uint32_t funcDefIndex) const { return funcLabels_[funcDefIndex].get(); }
 
     // about:memory reporting:
 

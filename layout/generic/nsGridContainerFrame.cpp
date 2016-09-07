@@ -1628,7 +1628,7 @@ struct nsGridContainerFrame::Tracks
     return size;
   }
 
-  nsTArray<nsString> GetLineNamesAtIndex(
+  nsTArray<nsString> GetExplicitLineNamesAtIndex(
     const nsStyleGridTemplate& aGridTemplate,
     const TrackSizingFunctions& aFunctions,
     uint32_t aIndex)
@@ -2315,7 +2315,6 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::Grid
    */
   uint32_t mExplicitGridOffsetCol;
   uint32_t mExplicitGridOffsetRow;
-
 };
 
 void
@@ -2678,15 +2677,30 @@ nsGridContainerFrame::AddImplicitNamedAreas(
   ImplicitNamedAreas* areas = GetImplicitNamedAreas();
   for (uint32_t i = 0; i < len; ++i) {
     for (const nsString& name : aLineNameLists[i]) {
-      uint32_t index;
-      if (Grid::IsNameWithStartSuffix(name, &index) ||
-          Grid::IsNameWithEndSuffix(name, &index)) {
-        nsDependentSubstring area(name, 0, index);
+      uint32_t indexOfSuffix;
+      if (Grid::IsNameWithStartSuffix(name, &indexOfSuffix) ||
+          Grid::IsNameWithEndSuffix(name, &indexOfSuffix)) {
+        // Extract the name that was found earlier.
+        nsDependentSubstring areaName(name, 0, indexOfSuffix);
+
+        // Lazily create the ImplicitNamedAreas.
         if (!areas) {
           areas = new ImplicitNamedAreas;
           Properties().Set(ImplicitNamedAreasProperty(), areas);
         }
-        areas->PutEntry(area);
+
+        mozilla::css::GridNamedArea area;
+        if (!areas->Get(areaName, &area)) {
+          // Not found, so prep the newly-seen area with a name and empty
+          // boundary information, which will get filled in later.
+          area.mName = areaName;
+          area.mRowStart = 0;
+          area.mRowEnd = 0;
+          area.mColumnStart = 0;
+          area.mColumnEnd = 0;
+
+          areas->Put(areaName, area);
+        }
       }
     }
   }
@@ -3456,6 +3470,38 @@ nsGridContainerFrame::Grid::PlaceGridItems(GridReflowInput& aState,
     aState.mColFunctions.SetNumRepeatTracks(finalColRepeatCount);
     auto finalRowRepeatCount = aState.mRowFunctions.NumRepeatTracks() - numEmptyRows;
     aState.mRowFunctions.SetNumRepeatTracks(finalRowRepeatCount);
+  }
+
+  // Update the line boundaries of the implicit grid areas, if needed.
+  if (mAreas &&
+      aState.mFrame->HasAnyStateBits(NS_STATE_GRID_GENERATE_COMPUTED_VALUES)) {
+    for (auto iter = mAreas->Iter(); !iter.Done(); iter.Next()) {
+      auto& areaInfo = iter.Data();
+
+      // Resolve the lines for the area. We use the name of the area as the
+      // name of the lines, knowing that the line placement algorithm will
+      // add the -start and -end suffixes as appropriate for layout.
+      nsStyleGridLine lineStartAndEnd;
+      lineStartAndEnd.mLineName = areaInfo.mName;
+
+      LineRange columnLines = ResolveLineRange(
+        lineStartAndEnd, lineStartAndEnd,
+        colLineNameMap,
+        &GridNamedArea::mColumnStart, &GridNamedArea::mColumnEnd,
+        mExplicitGridColEnd, gridStyle);
+
+      LineRange rowLines = ResolveLineRange(
+        lineStartAndEnd, lineStartAndEnd,
+        rowLineNameMap,
+        &GridNamedArea::mRowStart, &GridNamedArea::mRowEnd,
+        mExplicitGridRowEnd, gridStyle);
+
+      // Put the resolved line indices back into the area structure.
+      areaInfo.mColumnStart = columnLines.mStart + mExplicitGridOffsetCol;
+      areaInfo.mColumnEnd = columnLines.mEnd + mExplicitGridOffsetCol;
+      areaInfo.mRowStart = rowLines.mStart + mExplicitGridOffsetRow;
+      areaInfo.mRowEnd = rowLines.mEnd + mExplicitGridOffsetRow;
+    }
   }
 }
 
@@ -5809,18 +5855,23 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
     }
 
     // Generate the line info properties. We need to provide the number of
-    // repeat tracks produced in the reflow.
+    // repeat tracks produced in the reflow. Only explicit names are assigned
+    // to lines here; the mozilla::dom::GridLines class will later extract
+    // implicit names from grid areas and assign them to the appropriate lines.
 
     // Generate column lines first.
     uint32_t capacity = gridReflowInput.mColFunctions.NumRepeatTracks() +
                         gridReflowInput.mCols.mSizes.Length();
     nsTArray<nsTArray<nsString>> columnLineNames(capacity);
     for (col = 0; col <= gridReflowInput.mCols.mSizes.Length(); col++) {
-      columnLineNames.AppendElement(
-        gridReflowInput.mCols.GetLineNamesAtIndex(
+      // Offset col by the explicit grid offset, to get the original names.
+      nsTArray<nsString> explicitNames =
+        gridReflowInput.mCols.GetExplicitLineNamesAtIndex(
           gridReflowInput.mGridStyle->mGridTemplateColumns,
           gridReflowInput.mColFunctions,
-          col));
+          col - gridReflowInput.mColFunctions.mExplicitGridOffset);
+
+      columnLineNames.AppendElement(explicitNames);
     }
     ComputedGridLineInfo* columnLineInfo = new ComputedGridLineInfo(
       Move(columnLineNames));
@@ -5831,11 +5882,14 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
                gridReflowInput.mRows.mSizes.Length();
     nsTArray<nsTArray<nsString>> rowLineNames(capacity);
     for (row = 0; row <= gridReflowInput.mRows.mSizes.Length(); row++) {
-      rowLineNames.AppendElement(
-        gridReflowInput.mRows.GetLineNamesAtIndex(
+      // Offset row by the explicit grid offset, to get the original names.
+      nsTArray<nsString> explicitNames =
+        gridReflowInput.mRows.GetExplicitLineNamesAtIndex(
           gridReflowInput.mGridStyle->mGridTemplateRows,
           gridReflowInput.mRowFunctions,
-          row));
+          row - gridReflowInput.mRowFunctions.mExplicitGridOffset);
+
+      rowLineNames.AppendElement(explicitNames);
     }
     ComputedGridLineInfo* rowLineInfo = new ComputedGridLineInfo(
       Move(rowLineNames));

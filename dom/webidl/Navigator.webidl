@@ -30,6 +30,7 @@ Navigator implements NavigatorOnLine;
 Navigator implements NavigatorContentUtils;
 Navigator implements NavigatorStorageUtils;
 Navigator implements NavigatorConcurrentHardware;
+Navigator implements NavigatorStorage;
 
 [NoInterfaceObject, Exposed=(Window,Worker)]
 interface NavigatorID {
@@ -83,6 +84,11 @@ interface NavigatorContentUtils {
   //DOMString isContentHandlerRegistered(DOMString mimeType, DOMString url);
   //void unregisterProtocolHandler(DOMString scheme, DOMString url);
   //void unregisterContentHandler(DOMString mimeType, DOMString url);
+};
+
+[NoInterfaceObject, Exposed=(Window,Worker)]
+interface NavigatorStorage {
+  readonly attribute StorageManager storage;
 };
 
 [NoInterfaceObject]

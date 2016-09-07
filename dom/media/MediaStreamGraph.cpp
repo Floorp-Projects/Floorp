@@ -2611,7 +2611,7 @@ MediaStream::AddMainThreadListener(MainThreadMediaStreamListener* aListener)
   };
 
   nsCOMPtr<nsIRunnable> runnable = new NotifyRunnable(this);
-  NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable.forget())));
+  Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable.forget())));
 }
 
 SourceMediaStream::SourceMediaStream() :
@@ -2889,7 +2889,25 @@ SourceMediaStream::AddDirectTrackListenerImpl(already_AddRefed<DirectMediaStream
       MediaStreamVideoSink* videoSink = listener->AsMediaStreamVideoSink();
       // Re-send missed VideoSegment to new added MediaStreamVideoSink.
       if (streamTrack->GetType() == MediaSegment::VIDEO && videoSink) {
-        videoSink->SetCurrentFrames(*(static_cast<VideoSegment*>(streamTrack->GetSegment())));
+        VideoSegment videoSegment;
+        if (mTracks.GetForgottenDuration() < streamTrack->GetSegment()->GetDuration()) {
+          videoSegment.AppendSlice(*streamTrack->GetSegment(),
+                                   mTracks.GetForgottenDuration(),
+                                   streamTrack->GetSegment()->GetDuration());
+        } else {
+          VideoSegment* streamTrackSegment = static_cast<VideoSegment*>(streamTrack->GetSegment());
+          VideoChunk* lastChunk = streamTrackSegment->GetLastChunk();
+          if (lastChunk) {
+            StreamTime startTime = streamTrackSegment->GetDuration() - lastChunk->GetDuration();
+            videoSegment.AppendSlice(*streamTrackSegment,
+                                     startTime,
+                                     streamTrackSegment->GetDuration());
+          }
+        }
+        if (found) {
+          videoSegment.AppendSlice(*data->mData, 0, data->mData->GetDuration());
+        }
+        videoSink->SetCurrentFrames(videoSegment);
       }
     }
 

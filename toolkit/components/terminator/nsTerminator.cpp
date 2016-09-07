@@ -344,9 +344,7 @@ nsTerminator::SelfInit()
 
   for (size_t i = 0; i < ArrayLength(sShutdownSteps); ++i) {
     DebugOnly<nsresult> rv = os->AddObserver(this, sShutdownSteps[i].mTopic, false);
-#if defined(DEBUG)
-    NS_WARN_IF(NS_FAILED(rv));
-#endif // defined(DEBUG)
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AddObserver failed");
   }
 
   return NS_OK;

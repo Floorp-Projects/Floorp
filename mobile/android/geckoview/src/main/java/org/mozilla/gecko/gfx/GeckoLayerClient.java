@@ -17,6 +17,7 @@ import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.AppConstants;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.PointF;
 import android.graphics.RectF;
@@ -105,6 +106,9 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     private volatile boolean mContentDocumentIsDisplayed;
 
     private SynthesizedEventState mPointerState;
+
+    @WrapForJNI(stubName = "ClearColor")
+    private volatile int mClearColor = Color.WHITE;
 
     public GeckoLayerClient(Context context, LayerView view, EventDispatcher eventDispatcher) {
         // we can fill these in with dummy values because they are always written
@@ -900,5 +904,9 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
 
     public void removeDrawListener(DrawListener listener) {
         mDrawListeners.remove(listener);
+    }
+
+    public void setClearColor(int color) {
+        mClearColor = color;
     }
 }

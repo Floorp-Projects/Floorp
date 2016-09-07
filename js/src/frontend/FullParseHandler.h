@@ -196,10 +196,6 @@ class FullParseHandler
         return new_<ConditionalExpression>(cond, thenExpr, elseExpr);
     }
 
-    void markAsSetCall(ParseNode* pn) {
-        pn->pn_xflags |= PNX_SETCALL;
-    }
-
     ParseNode* newDelete(uint32_t begin, ParseNode* expr) {
         if (expr->isKind(PNK_NAME)) {
             expr->setOp(JSOP_DELNAME);

@@ -1373,12 +1373,14 @@ struct WasmParseContext
     LifoAlloc& lifo;
     UniqueChars* error;
     DtoaState* dtoaState;
+    bool newFormat;
 
-    WasmParseContext(const char16_t* text, LifoAlloc& lifo, UniqueChars* error)
+    WasmParseContext(const char16_t* text, LifoAlloc& lifo, UniqueChars* error, bool newFormat)
       : ts(text, error),
         lifo(lifo),
         error(error),
-        dtoaState(NewDtoaState())
+        dtoaState(NewDtoaState()),
+        newFormat(newFormat)
     {}
 
     bool fail(const char* message) {
@@ -2208,7 +2210,7 @@ ParseExprInsideParens(WasmParseContext& c)
       case WasmToken::Call:
         return ParseCall(c, Expr::Call);
       case WasmToken::CallImport:
-        return ParseCall(c, Expr::CallImport);
+        return ParseCall(c, c.newFormat ? Expr::Call : Expr::CallImport);
       case WasmToken::CallIndirect:
         return ParseCallIndirect(c);
       case WasmToken::ComparisonOpcode:
@@ -2403,17 +2405,32 @@ ParseTypeDef(WasmParseContext& c)
 }
 
 static AstDataSegment*
-ParseDataSegment(WasmParseContext& c)
+ParseDataSegment(WasmParseContext& c, bool newFormat)
 {
-    WasmToken dstOffset;
-    if (!c.ts.match(WasmToken::Index, &dstOffset, c.error))
-        return nullptr;
+    AstExpr* offset;
+    if (newFormat) {
+        WasmToken dstOffset;
+        if (c.ts.getIf(WasmToken::Index, &dstOffset))
+            offset = new(c.lifo) AstConst(Val(dstOffset.index()));
+        else
+            offset = ParseExpr(c);
+        if (!offset)
+            return nullptr;
+    } else {
+        WasmToken dstOffset;
+        if (!c.ts.match(WasmToken::Index, &dstOffset, c.error))
+            return nullptr;
+
+        offset = new(c.lifo) AstConst(Val(dstOffset.index()));
+        if (!offset)
+            return nullptr;
+    }
 
     WasmToken text;
     if (!c.ts.match(WasmToken::Text, &text, c.error))
         return nullptr;
 
-    return new(c.lifo) AstDataSegment(dstOffset.index(), text.text());
+    return new(c.lifo) AstDataSegment(offset, text.text());
 }
 
 static bool
@@ -2442,7 +2459,7 @@ ParseMemory(WasmParseContext& c, WasmToken token, AstModule* module)
     while (c.ts.getIf(WasmToken::OpenParen)) {
         if (!c.ts.match(WasmToken::Segment, c.error))
             return false;
-        AstDataSegment* segment = ParseDataSegment(c);
+        AstDataSegment* segment = ParseDataSegment(c, /* newFormat = */ false);
         if (!segment || !module->append(segment))
             return false;
         if (!c.ts.match(WasmToken::CloseParen, c.error))
@@ -2487,7 +2504,7 @@ ParseGlobalType(WasmParseContext& c, WasmToken* typeToken, uint32_t* flags)
 }
 
 static AstImport*
-ParseImport(WasmParseContext& c, bool newFormat, AstModule* module)
+ParseImport(WasmParseContext& c, AstModule* module)
 {
     AstName name = c.ts.getIfName();
 
@@ -2502,7 +2519,7 @@ ParseImport(WasmParseContext& c, bool newFormat, AstModule* module)
     AstRef sigRef;
     WasmToken openParen;
     if (c.ts.getIf(WasmToken::OpenParen, &openParen)) {
-        if (newFormat) {
+        if (c.newFormat) {
             if (c.ts.getIf(WasmToken::Memory)) {
                 AstResizable memory;
                 if (!ParseResizable(c, &memory))
@@ -2668,7 +2685,7 @@ ParseGlobal(WasmParseContext& c)
 static AstModule*
 ParseModule(const char16_t* text, bool newFormat, LifoAlloc& lifo, UniqueChars* error)
 {
-    WasmParseContext c(text, lifo, error);
+    WasmParseContext c(text, lifo, error, newFormat);
 
     if (!c.ts.match(WasmToken::OpenParen, c.error))
         return nullptr;
@@ -2706,13 +2723,13 @@ ParseModule(const char16_t* text, bool newFormat, LifoAlloc& lifo, UniqueChars* 
             break;
           }
           case WasmToken::Data: {
-            AstDataSegment* segment = ParseDataSegment(c);
+            AstDataSegment* segment = ParseDataSegment(c, newFormat);
             if (!segment || !module->append(segment))
                 return nullptr;
             break;
           }
           case WasmToken::Import: {
-            AstImport* imp = ParseImport(c, newFormat, module);
+            AstImport* imp = ParseImport(c, module);
             if (!imp || !module->append(imp))
                 return nullptr;
             break;
@@ -3190,7 +3207,7 @@ ResolveFunc(Resolver& r, AstFunc& func)
 }
 
 static bool
-ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
+ResolveModule(LifoAlloc& lifo, bool newFormat, AstModule* module, UniqueChars* error)
 {
     Resolver r(lifo, error);
 
@@ -3204,31 +3221,19 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
             return r.fail("duplicate signature");
     }
 
-    size_t numFuncs = module->funcs().length();
-    for (size_t i = 0; i < numFuncs; i++) {
-        AstFunc* func = module->funcs()[i];
-        if (!r.resolveSignature(func->sig()))
-            return false;
-        if (!r.registerFuncName(func->name(), i))
-            return r.fail("duplicate function");
-    }
-
-    for (AstElemSegment* seg : module->elemSegments()) {
-        for (AstRef& ref : seg->elems()) {
-            if (!r.resolveFunction(ref))
-                return false;
-        }
-    }
-
-    size_t numImports = module->imports().length();
+    size_t lastFuncIndex = 0;
     size_t lastFuncImportIndex = 0;
     size_t lastGlobalIndex = 0;
-    for (size_t i = 0; i < numImports; i++) {
-        AstImport* imp = module->imports()[i];
+    for (AstImport* imp : module->imports()) {
         switch (imp->kind()) {
           case DefinitionKind::Function:
-            if (!r.registerImportName(imp->name(), lastFuncImportIndex++))
-                return r.fail("duplicate import");
+            if (newFormat) {
+                if (!r.registerFuncName(imp->name(), lastFuncIndex++))
+                    return r.fail("duplicate import");
+            } else {
+                if (!r.registerImportName(imp->name(), lastFuncImportIndex++))
+                    return r.fail("duplicate import");
+            }
             if (!r.resolveSignature(imp->funcSig()))
                 return false;
             break;
@@ -3240,6 +3245,13 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
           case DefinitionKind::Table:
             break;
         }
+    }
+
+    for (AstFunc* func : module->funcs()) {
+        if (!r.resolveSignature(func->sig()))
+            return false;
+        if (!r.registerFuncName(func->name(), lastFuncIndex++))
+            return r.fail("duplicate function");
     }
 
     const AstGlobalVector& globals = module->globals();
@@ -3276,9 +3288,18 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
             return false;
     }
 
+    for (AstDataSegment* segment : module->dataSegments()) {
+        if (!ResolveExpr(r, *segment->offset()))
+            return false;
+    }
+
     for (AstElemSegment* segment : module->elemSegments()) {
         if (!ResolveExpr(r, *segment->offset()))
             return false;
+        for (AstRef& ref : segment->elems()) {
+            if (!r.resolveFunction(ref))
+                return false;
+        }
     }
 
     return true;
@@ -4056,12 +4077,14 @@ EncodeDataSegment(Encoder& e, bool newFormat, AstDataSegment& segment)
         if (!e.writeVarU32(0))  // linear memory index
             return false;
 
-        if (!e.writeExpr(Expr::I32Const))
+        if (!EncodeExpr(e, *segment.offset()))
+            return false;
+        if (!e.writeExpr(Expr::End))
+            return false;
+    } else {
+        if (!e.writeVarU32(segment.offset()->as<AstConst>().val().i32()))
             return false;
     }
-
-    if (!e.writeVarU32(segment.offset()))
-        return false;
 
     AstName text = segment.text();
 
@@ -4184,13 +4207,13 @@ EncodeModule(AstModule& module, bool newFormat, Bytes* bytes)
     if (!EncodeStartSection(e, module))
         return false;
 
+    if (!EncodeElemSection(e, newFormat, module))
+        return false;
+
     if (!EncodeCodeSection(e, module))
         return false;
 
     if (!EncodeDataSection(e, newFormat, module))
-        return false;
-
-    if (!EncodeElemSection(e, newFormat, module))
         return false;
 
     return true;
@@ -4206,7 +4229,7 @@ wasm::TextToBinary(const char16_t* text, bool newFormat, Bytes* bytes, UniqueCha
     if (!module)
         return false;
 
-    if (!ResolveModule(lifo, module, error))
+    if (!ResolveModule(lifo, newFormat, module, error))
         return false;
 
     return EncodeModule(*module, newFormat, bytes);

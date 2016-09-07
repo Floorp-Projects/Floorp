@@ -18,7 +18,6 @@
     macro(Any, Any, "Any") \
     macro(apply, apply, "apply") \
     macro(arguments, arguments, "arguments") \
-    macro(as, as, "as") \
     macro(ArrayBufferSpecies, ArrayBufferSpecies, "ArrayBufferSpecies") \
     macro(ArrayIterator, ArrayIterator, "Array Iterator") \
     macro(ArrayIteratorNext, ArrayIteratorNext, "ArrayIteratorNext") \
@@ -27,6 +26,7 @@
     macro(ArrayType, ArrayType, "ArrayType") \
     macro(ArrayValues, ArrayValues, "ArrayValues") \
     macro(ArrayValuesAt, ArrayValuesAt, "ArrayValuesAt") \
+    macro(as, as, "as") \
     macro(Async, Async, "Async") \
     macro(Bool8x16, Bool8x16, "Bool8x16") \
     macro(Bool16x8, Bool16x8, "Bool16x8") \
@@ -36,14 +36,13 @@
     macro(buffer, buffer, "buffer") \
     macro(builder, builder, "builder") \
     macro(by, by, "by") \
-    macro(byteLength, byteLength, "byteLength") \
     macro(byteAlignment, byteAlignment, "byteAlignment") \
+    macro(byteLength, byteLength, "byteLength") \
     macro(byteOffset, byteOffset, "byteOffset") \
     macro(bytes, bytes, "bytes") \
     macro(BYTES_PER_ELEMENT, BYTES_PER_ELEMENT, "BYTES_PER_ELEMENT") \
     macro(call, call, "call") \
     macro(callContentFunction, callContentFunction, "callContentFunction") \
-    macro(std_Function_apply, std_Function_apply, "std_Function_apply") \
     macro(callee, callee, "callee") \
     macro(caller, caller, "caller") \
     macro(callFunction, callFunction, "callFunction") \
@@ -73,11 +72,11 @@
     macro(dayPeriod, dayPeriod, "dayPeriod") \
     macro(decodeURI, decodeURI, "decodeURI") \
     macro(decodeURIComponent, decodeURIComponent, "decodeURIComponent") \
-    macro(default_, default_, "default") \
     macro(DefaultBaseClassConstructor, DefaultBaseClassConstructor, "DefaultBaseClassConstructor") \
     macro(DefaultDerivedClassConstructor, DefaultDerivedClassConstructor, "DefaultDerivedClassConstructor") \
-    macro(defineProperty, defineProperty, "defineProperty") \
+    macro(default_, default_, "default") \
     macro(defineGetter, defineGetter, "__defineGetter__") \
+    macro(defineProperty, defineProperty, "defineProperty") \
     macro(defineSetter, defineSetter, "__defineSetter__") \
     macro(delete, delete_, "delete") \
     macro(deleteProperty, deleteProperty, "deleteProperty") \
@@ -119,17 +118,19 @@
     macro(formatToParts, formatToParts, "formatToParts") \
     macro(frame, frame, "frame") \
     macro(from, from, "from") \
-    macro(futexOK, futexOK, "ok") \
+    macro(fulfilled, fulfilled, "fulfilled") \
+    macro(fulfillHandler, fulfillHandler, "fulfillHandler") \
     macro(futexNotEqual, futexNotEqual, "not-equal") \
+    macro(futexOK, futexOK, "ok") \
     macro(futexTimedOut, futexTimedOut, "timed-out") \
     macro(gcCycleNumber, gcCycleNumber, "gcCycleNumber") \
     macro(Generator, Generator, "Generator") \
     macro(GeneratorFunction, GeneratorFunction, "GeneratorFunction") \
     macro(get, get, "get") \
-    macro(getPrefix, getPrefix, "get ") \
     macro(getInternals, getInternals, "getInternals") \
     macro(getOwnPropertyDescriptor, getOwnPropertyDescriptor, "getOwnPropertyDescriptor") \
     macro(getOwnPropertyNames, getOwnPropertyNames, "getOwnPropertyNames") \
+    macro(getPrefix, getPrefix, "get ") \
     macro(getPropertyDescriptor, getPropertyDescriptor, "getPropertyDescriptor") \
     macro(getPrototypeOf, getPrototypeOf, "getPrototypeOf") \
     macro(global, global, "global") \
@@ -141,27 +142,28 @@
     macro(ignoreCase, ignoreCase, "ignoreCase") \
     macro(ignorePunctuation, ignorePunctuation, "ignorePunctuation") \
     macro(includes, includes, "includes") \
+    macro(incumbentGlobal, incumbentGlobal, "incumbentGlobal") \
     macro(index, index, "index") \
+    macro(Infinity, Infinity, "Infinity") \
     macro(InitializeCollator, InitializeCollator, "InitializeCollator") \
     macro(InitializeDateTimeFormat, InitializeDateTimeFormat, "InitializeDateTimeFormat") \
     macro(InitializeNumberFormat, InitializeNumberFormat, "InitializeNumberFormat") \
-    macro(inNursery, inNursery, "inNursery") \
     macro(innermost, innermost, "innermost") \
+    macro(inNursery, inNursery, "inNursery") \
     macro(input, input, "input") \
+    macro(int8, int8, "int8") \
+    macro(int16, int16, "int16") \
+    macro(int32, int32, "int32") \
     macro(Int8x16, Int8x16, "Int8x16") \
     macro(Int16x8, Int16x8, "Int16x8") \
     macro(Int32x4, Int32x4, "Int32x4") \
+    macro(InterpretGeneratorResume, InterpretGeneratorResume, "InterpretGeneratorResume") \
+    macro(isEntryPoint, isEntryPoint, "isEntryPoint") \
+    macro(isExtensible, isExtensible, "isExtensible") \
     macro(isFinite, isFinite, "isFinite") \
     macro(isNaN, isNaN, "isNaN") \
     macro(isPrototypeOf, isPrototypeOf, "isPrototypeOf") \
     macro(iterate, iterate, "iterate") \
-    macro(Infinity, Infinity, "Infinity") \
-    macro(InterpretGeneratorResume, InterpretGeneratorResume, "InterpretGeneratorResume") \
-    macro(int8, int8, "int8") \
-    macro(int16, int16, "int16") \
-    macro(int32, int32, "int32") \
-    macro(isEntryPoint, isEntryPoint, "isEntryPoint") \
-    macro(isExtensible, isExtensible, "isExtensible") \
     macro(iteratorIntrinsic, iteratorIntrinsic, "__iterator__") \
     macro(join, join, "join") \
     macro(js, js, "js") \
@@ -202,24 +204,24 @@
     macro(NFD, NFD, "NFD") \
     macro(NFKC, NFKC, "NFKC") \
     macro(NFKD, NFKD, "NFKD") \
-    macro(nonincrementalReason, nonincrementalReason, "nonincrementalReason") \
     macro(noFilename, noFilename, "noFilename") \
+    macro(nonincrementalReason, nonincrementalReason, "nonincrementalReason") \
     macro(noStack, noStack, "noStack") \
     macro(NumberFormat, NumberFormat, "NumberFormat") \
     macro(NumberFormatFormatGet, NumberFormatFormatGet, "Intl_NumberFormat_format_get") \
     macro(numeric, numeric, "numeric") \
-    macro(objectUndefined, objectUndefined, "[object Undefined]") \
-    macro(objectNull, objectNull, "[object Null]") \
-    macro(objectArray, objectArray, "[object Array]") \
-    macro(objectString, objectString, "[object String]") \
     macro(objectArguments, objectArguments, "[object Arguments]") \
-    macro(objectFunction, objectFunction, "[object Function]") \
-    macro(objectError, objectError, "[object Error]") \
+    macro(objectArray, objectArray, "[object Array]") \
     macro(objectBoolean, objectBoolean, "[object Boolean]") \
-    macro(objectNumber, objectNumber, "[object Number]") \
     macro(objectDate, objectDate, "[object Date]") \
+    macro(objectError, objectError, "[object Error]") \
+    macro(objectFunction, objectFunction, "[object Function]") \
+    macro(objectNull, objectNull, "[object Null]") \
+    macro(objectNumber, objectNumber, "[object Number]") \
     macro(objectRegExp, objectRegExp, "[object RegExp]") \
     macro(objects, objects, "objects") \
+    macro(objectString, objectString, "[object String]") \
+    macro(objectUndefined, objectUndefined, "[object Undefined]") \
     macro(of, of, "of") \
     macro(offset, offset, "offset") \
     macro(optimizedOut, optimizedOut, "optimizedOut") \
@@ -229,33 +231,36 @@
     macro(parseFloat, parseFloat, "parseFloat") \
     macro(parseInt, parseInt, "parseInt") \
     macro(pattern, pattern, "pattern") \
+    macro(pending, pending, "pending") \
     macro(preventExtensions, preventExtensions, "preventExtensions") \
     macro(promise, promise, "promise") \
-    macro(SetIterator, SetIterator, "Set Iterator") \
-    macro(state, state, "state") \
-    macro(pending, pending, "pending") \
-    macro(fulfillHandler, fulfillHandler, "fulfillHandler") \
-    macro(fulfilled, fulfilled, "fulfilled") \
-    macro(reject, reject, "reject") \
-    macro(rejected, rejected, "rejected") \
-    macro(rejectHandler, rejectHandler, "rejectHandler") \
-    macro(resolve, resolve, "resolve") \
-    macro(incumbentGlobal, incumbentGlobal, "incumbentGlobal") \
     macro(propertyIsEnumerable, propertyIsEnumerable, "propertyIsEnumerable") \
     macro(proto, proto, "__proto__") \
     macro(prototype, prototype, "prototype") \
     macro(proxy, proxy, "proxy") \
+    macro(raw, raw, "raw") \
     macro(reason, reason, "reason") \
+    macro(RegExpBuiltinExec, RegExpBuiltinExec, "RegExpBuiltinExec") \
+    macro(RegExpMatcher, RegExpMatcher, "RegExpMatcher") \
+    macro(RegExpSearcher, RegExpSearcher, "RegExpSearcher") \
+    macro(RegExpTester, RegExpTester, "RegExpTester") \
+    macro(RegExp_prototype_Exec, RegExp_prototype_Exec, "RegExp_prototype_Exec") \
     macro(Reify, Reify, "Reify") \
+    macro(reject, reject, "reject") \
+    macro(rejected, rejected, "rejected") \
+    macro(rejectHandler, rejectHandler, "rejectHandler") \
     macro(RequireObjectCoercible, RequireObjectCoercible, "RequireObjectCoercible") \
+    macro(resolve, resolve, "resolve") \
     macro(resumeGenerator, resumeGenerator, "resumeGenerator") \
     macro(return, return_, "return") \
     macro(revoke, revoke, "revoke") \
     macro(script, script, "script") \
     macro(scripts, scripts, "scripts") \
     macro(second, second, "second") \
+    macro(selfHosted, selfHosted, "self-hosted") \
     macro(sensitivity, sensitivity, "sensitivity") \
     macro(set, set, "set") \
+    macro(SetIterator, SetIterator, "Set Iterator") \
     macro(setPrefix, setPrefix, "set ") \
     macro(setPrototypeOf, setPrototypeOf, "setPrototypeOf") \
     macro(shape, shape, "shape") \
@@ -266,13 +271,16 @@
     macro(star, star, "*") \
     macro(starDefaultStar, starDefaultStar, "*default*") \
     macro(startTimestamp, startTimestamp, "startTimestamp") \
+    macro(state, state, "state") \
     macro(static, static_, "static") \
+    macro(std_Function_apply, std_Function_apply, "std_Function_apply") \
     macro(sticky, sticky, "sticky") \
-    macro(strings, strings, "strings") \
     macro(StringIterator, StringIterator, "String Iterator") \
+    macro(strings, strings, "strings") \
     macro(StructType, StructType, "StructType") \
     macro(style, style, "style") \
     macro(super, super, "super") \
+    macro(Symbol_iterator_fun, Symbol_iterator_fun, "[Symbol.iterator]") \
     macro(target, target, "target") \
     macro(test, test, "test") \
     macro(then, then, "then") \
@@ -289,10 +297,6 @@
     macro(toUTCString, toUTCString, "toUTCString") \
     macro(true, true_, "true") \
     macro(type, type, "type") \
-    macro(unescape, unescape, "unescape") \
-    macro(uneval, uneval, "uneval") \
-    macro(unicode, unicode, "unicode") \
-    macro(uninitialized, uninitialized, "uninitialized") \
     macro(uint8, uint8, "uint8") \
     macro(uint8Clamped, uint8Clamped, "uint8Clamped") \
     macro(uint16, uint16, "uint16") \
@@ -300,35 +304,33 @@
     macro(Uint8x16, Uint8x16, "Uint8x16") \
     macro(Uint16x8, Uint16x8, "Uint16x8") \
     macro(Uint32x4, Uint32x4, "Uint32x4") \
+    macro(unescape, unescape, "unescape") \
+    macro(uneval, uneval, "uneval") \
+    macro(unicode, unicode, "unicode") \
+    macro(uninitialized, uninitialized, "uninitialized") \
     macro(unsized, unsized, "unsized") \
     macro(unwatch, unwatch, "unwatch") \
+    macro(UnwrapAndCallRegExpBuiltinExec, UnwrapAndCallRegExpBuiltinExec, "UnwrapAndCallRegExpBuiltinExec") \
     macro(url, url, "url") \
     macro(usage, usage, "usage") \
-    macro(useGrouping, useGrouping, "useGrouping") \
     macro(useAsm, useAsm, "use asm") \
+    macro(useGrouping, useGrouping, "useGrouping") \
     macro(useStrict, useStrict, "use strict") \
     macro(value, value, "value") \
-    macro(values, values, "values") \
     macro(valueOf, valueOf, "valueOf") \
+    macro(values, values, "values") \
     macro(var, var, "var") \
     macro(variable, variable, "variable") \
     macro(void0, void0, "(void 0)") \
     macro(wasm, wasm, "wasm") \
     macro(watch, watch, "watch") \
     macro(WeakSet_add, WeakSet_add, "WeakSet_add") \
-    macro(RegExp_prototype_Exec, RegExp_prototype_Exec, "RegExp_prototype_Exec") \
-    macro(UnwrapAndCallRegExpBuiltinExec, UnwrapAndCallRegExpBuiltinExec, "UnwrapAndCallRegExpBuiltinExec") \
-    macro(RegExpBuiltinExec, RegExpBuiltinExec, "RegExpBuiltinExec") \
-    macro(RegExpMatcher, RegExpMatcher, "RegExpMatcher") \
-    macro(RegExpSearcher, RegExpSearcher, "RegExpSearcher") \
-    macro(RegExpTester, RegExpTester, "RegExpTester") \
     macro(weekday, weekday, "weekday") \
     macro(weekendEnd, weekendEnd, "weekendEnd") \
     macro(weekendStart, weekendStart, "weekendStart") \
     macro(writable, writable, "writable") \
     macro(year, year, "year") \
     macro(yield, yield, "yield") \
-    macro(raw, raw, "raw") \
     /* Type names must be contiguous and ordered; see js::TypeName. */ \
     macro(undefined, undefined, "undefined") \
     macro(object, object, "object") \
@@ -338,10 +340,5 @@
     macro(boolean, boolean, "boolean") \
     macro(null, null, "null") \
     macro(symbol, symbol, "symbol") \
-    /* Function names for properties named by symbols. */ \
-    macro(Symbol_iterator_fun, Symbol_iterator_fun, "[Symbol.iterator]") \
-    /* Not really a property name, but we use this to compare to atomized
-       script source strings */ \
-    macro(selfHosted, selfHosted, "self-hosted") \
 
 #endif /* vm_CommonPropertyNames_h */

@@ -32,9 +32,9 @@ bool
 GamepadEventChannelChild::RecvGamepadUpdate(
                                        const GamepadChangeEvent& aGamepadEvent)
 {
-  nsresult rv;
-  rv = NS_DispatchToMainThread(new GamepadUpdateRunnable(aGamepadEvent));
-  NS_WARN_IF(NS_FAILED(rv));
+  DebugOnly<nsresult> rv =
+    NS_DispatchToMainThread(new GamepadUpdateRunnable(aGamepadEvent));
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NS_DispatchToMainThread failed");
   return true;
 }
 
