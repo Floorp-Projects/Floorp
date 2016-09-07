@@ -131,18 +131,14 @@ var gEditItemOverlay = {
                         PlacesUIUtils.getItemDescription(this._paneInfo.itemId));
   },
 
-  _initKeywordField: Task.async(function* (newKeyword = "") {
-    if (!this._paneInfo.isBookmark) {
+  _initKeywordField: Task.async(function* (aNewKeyword) {
+    if (!this._paneInfo.isBookmark)
       throw new Error("_initKeywordField called unexpectedly");
-    }
 
-    if (!newKeyword) {
-      let entries = [];
-      yield PlacesUtils.keywords.fetch({ url: this._paneInfo.uri.spec },
-                                       e => entries.push(e));
-      if (entries.length > 0) {
-        this._keyword = newKeyword = entries[0].keyword;
-      }
+    let newKeyword = aNewKeyword;
+    if (newKeyword === undefined) {
+      let itemId = this._paneInfo.itemId;
+      newKeyword = PlacesUtils.bookmarks.getKeywordForBookmark(itemId);
     }
     this._initTextField(this._keywordField, newKeyword);
   }),
@@ -219,7 +215,7 @@ var gEditItemOverlay = {
     }
 
     if (showOrCollapse("keywordRow", isBookmark, "keyword")) {
-      this._initKeywordField().catch(Components.utils.reportError);
+      this._initKeywordField();
       this._keywordField.readOnly = this.readOnly;
     }
 
@@ -572,7 +568,7 @@ var gEditItemOverlay = {
                     : this._paneInfo.itemGuid;
         PlacesTransactions.EditTitle({ guid, title: newTitle })
                           .transact().catch(Components.utils.reportError);
-      }).catch(Components.utils.reportError);
+      }).catch(Cu.reportError);
     }
   },
 
@@ -629,19 +625,14 @@ var gEditItemOverlay = {
       return;
 
     let itemId = this._paneInfo.itemId;
-    let oldKeyword = this._keyword;
-    let keyword = this._keyword = this._keywordField.value;
-    let postData = this._paneInfo.postData;
+    let newKeyword = this._keywordField.value;
     if (!PlacesUIUtils.useAsyncTransactions) {
-      let txn = new PlacesEditBookmarkKeywordTransaction(itemId,
-                                                         keyword,
-                                                         postData,
-                                                         oldKeyword);
+      let txn = new PlacesEditBookmarkKeywordTransaction(itemId, newKeyword, this._paneInfo.postData);
       PlacesUtils.transactionManager.doTransaction(txn);
       return;
     }
     let guid = this._paneInfo.itemGuid;
-    PlacesTransactions.EditKeyword({ guid, keyword, postData, oldKeyword })
+    PlacesTransactions.EditKeyword({ guid, keyword: newKeyword })
                       .transact().catch(Components.utils.reportError);
   },
 
@@ -1095,7 +1086,7 @@ var gEditItemOverlay = {
       break;
     case "keyword":
       if (this._paneInfo.visibleRows.has("keywordRow"))
-        this._initKeywordField(aValue).catch(Components.utils.reportError);
+        this._initKeywordField(aValue);
       break;
     case PlacesUIUtils.DESCRIPTION_ANNO:
       if (this._paneInfo.visibleRows.has("descriptionRow"))
