@@ -3489,6 +3489,28 @@ nsWindow::SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
     return NS_OK;
 }
 
+bool
+nsWindow::PreRender(LayerManagerComposite* aManager)
+{
+    if (Destroyed()) {
+        return true;
+    }
+
+    layers::Compositor* compositor = aManager->GetCompositor();
+
+    GeckoLayerClient::LocalRef client;
+
+    if (NativePtr<LayerViewSupport>::Locked lvs{mLayerViewSupport}) {
+        client = lvs->GetLayerClient();
+    }
+
+    if (compositor && client) {
+        // Android Color is ARGB which is apparently unusual.
+        compositor->SetDefaultClearColor(gfx::Color::UnusualFromARGB((uint32_t)client->ClearColor()));
+    }
+
+    return true;
+}
 void
 nsWindow::DrawWindowUnderlay(LayerManagerComposite* aManager,
                              LayoutDeviceIntRect aRect)
@@ -3501,6 +3523,10 @@ nsWindow::DrawWindowUnderlay(LayerManagerComposite* aManager,
 
     if (NativePtr<LayerViewSupport>::Locked lvs{mLayerViewSupport}) {
         client = lvs->GetLayerClient();
+    }
+
+    if (!client) {
+        return;
     }
 
     LayerRenderer::Frame::LocalRef frame = client->CreateFrame();

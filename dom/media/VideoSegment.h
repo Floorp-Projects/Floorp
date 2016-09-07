@@ -94,7 +94,7 @@ struct VideoChunk {
 
   StreamTime mDuration;
   VideoFrame mFrame;
-  mozilla::TimeStamp mTimeStamp;
+  TimeStamp mTimeStamp;
 };
 
 class VideoSegment : public MediaSegmentBase<VideoSegment, VideoChunk> {

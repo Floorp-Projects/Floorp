@@ -768,7 +768,7 @@ TCPSocket::MaybeReportErrorAndCloseIfOpen(nsresult status) {
       }
     }
 
-    NS_WARN_IF(NS_FAILED(FireErrorEvent(errName, errorType)));
+    Unused << NS_WARN_IF(NS_FAILED(FireErrorEvent(errName, errorType)));
   }
 
   return FireEvent(NS_LITERAL_STRING("close"));

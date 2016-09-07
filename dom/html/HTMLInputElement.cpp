@@ -253,7 +253,7 @@ public:
     }
 
     mInputElement->SetFilesOrDirectories(array, true);
-    NS_WARN_IF(NS_FAILED(DispatchEvents()));
+    Unused << NS_WARN_IF(NS_FAILED(DispatchEvents()));
   }
 
   nsresult
@@ -264,7 +264,7 @@ public:
                                               static_cast<nsIDOMHTMLInputElement*>(mInputElement.get()),
                                               NS_LITERAL_STRING("input"), true,
                                               false);
-    NS_WARN_IF(NS_FAILED(rv));
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "DispatchTrustedEvent failed");
 
     rv = nsContentUtils::DispatchTrustedEvent(mInputElement->OwnerDoc(),
                                               static_cast<nsIDOMHTMLInputElement*>(mInputElement.get()),

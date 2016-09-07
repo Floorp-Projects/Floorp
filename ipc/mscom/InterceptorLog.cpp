@@ -14,6 +14,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Unused.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
@@ -40,6 +41,7 @@ using mozilla::services::GetObserverService;
 using mozilla::StaticAutoPtr;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
+using mozilla::Unused;
 
 namespace {
 
@@ -178,10 +180,10 @@ Logger::Shutdown()
   nsresult rv = mThread->Dispatch(NewNonOwningRunnableMethod(this,
                                                              &Logger::CloseFile),
                                   NS_DISPATCH_NORMAL);
-  NS_WARN_IF(NS_FAILED(rv));
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Dispatch failed");
 
   rv = mThread->Shutdown();
-  NS_WARN_IF(NS_FAILED(rv));
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Shutdown failed");
   return NS_OK;
 }
 
@@ -399,7 +401,7 @@ ShutdownEvent::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   MOZ_ASSERT(sLogger);
-  NS_WARN_IF(NS_FAILED(sLogger->Shutdown()));
+  Unused << NS_WARN_IF(NS_FAILED(sLogger->Shutdown()));
   nsCOMPtr<nsIObserver> kungFuDeathGrip(this);
   nsCOMPtr<nsIObserverService> obsSvc = GetObserverService();
   obsSvc->RemoveObserver(this, aTopic);

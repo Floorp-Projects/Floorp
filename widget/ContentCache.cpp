@@ -499,7 +499,7 @@ ContentCacheInChild::SetSelection(nsIWidget* aWidget,
   if (NS_WARN_IF(!CacheCaret(aWidget))) {
     return;
   }
-  NS_WARN_IF(!CacheTextRects(aWidget));
+  Unused << NS_WARN_IF(!CacheTextRects(aWidget));
 }
 
 /*****************************************************************************
@@ -528,10 +528,10 @@ ContentCacheInParent::AssignContent(const ContentCache& aOther,
   mEditorRect = aOther.mEditorRect;
 
   if (mIsComposing) {
-    NS_WARN_IF(mCompositionStart == UINT32_MAX);
+    NS_WARNING_ASSERTION(mCompositionStart != UINT32_MAX, "mCompositionStart");
     IMEStateManager::MaybeStartOffsetUpdatedInChild(aWidget, mCompositionStart);
   } else {
-    NS_WARN_IF(mCompositionStart != UINT32_MAX);
+    NS_WARNING_ASSERTION(mCompositionStart == UINT32_MAX, "mCompositionStart");
   }
 
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
@@ -836,27 +836,31 @@ ContentCacheInParent::GetTextRect(uint32_t aOffset,
      mSelection.mAnchor, mSelection.mFocus));
 
   if (!aOffset) {
-    NS_WARN_IF(mFirstCharRect.IsEmpty());
+    NS_WARNING_ASSERTION(!mFirstCharRect.IsEmpty(), "empty rect");
     aTextRect = mFirstCharRect;
     return !aTextRect.IsEmpty();
   }
   if (aOffset == mSelection.mAnchor) {
-    NS_WARN_IF(mSelection.mAnchorCharRects[eNextCharRect].IsEmpty());
+    NS_WARNING_ASSERTION(!mSelection.mAnchorCharRects[eNextCharRect].IsEmpty(),
+                         "empty rect");
     aTextRect = mSelection.mAnchorCharRects[eNextCharRect];
     return !aTextRect.IsEmpty();
   }
   if (mSelection.mAnchor && aOffset == mSelection.mAnchor - 1) {
-    NS_WARN_IF(mSelection.mAnchorCharRects[ePrevCharRect].IsEmpty());
+    NS_WARNING_ASSERTION(!mSelection.mAnchorCharRects[ePrevCharRect].IsEmpty(),
+                         "empty rect");
     aTextRect = mSelection.mAnchorCharRects[ePrevCharRect];
     return !aTextRect.IsEmpty();
   }
   if (aOffset == mSelection.mFocus) {
-    NS_WARN_IF(mSelection.mFocusCharRects[eNextCharRect].IsEmpty());
+    NS_WARNING_ASSERTION(!mSelection.mFocusCharRects[eNextCharRect].IsEmpty(),
+                         "empty rect");
     aTextRect = mSelection.mFocusCharRects[eNextCharRect];
     return !aTextRect.IsEmpty();
   }
   if (mSelection.mFocus && aOffset == mSelection.mFocus - 1) {
-    NS_WARN_IF(mSelection.mFocusCharRects[ePrevCharRect].IsEmpty());
+    NS_WARNING_ASSERTION(!mSelection.mFocusCharRects[ePrevCharRect].IsEmpty(),
+                         "empty rect");
     aTextRect = mSelection.mFocusCharRects[ePrevCharRect];
     return !aTextRect.IsEmpty();
   }
@@ -908,34 +912,38 @@ ContentCacheInParent::GetUnionTextRects(
 
   if (!mSelection.Collapsed() &&
       aOffset == mSelection.StartOffset() && aLength == mSelection.Length()) {
-    NS_WARN_IF(mSelection.mRect.IsEmpty());
+    NS_WARNING_ASSERTION(!mSelection.mRect.IsEmpty(), "empty rect");
     aUnionTextRect = mSelection.mRect;
     return !aUnionTextRect.IsEmpty();
   }
 
   if (aLength == 1) {
     if (!aOffset) {
-      NS_WARN_IF(mFirstCharRect.IsEmpty());
+      NS_WARNING_ASSERTION(!mFirstCharRect.IsEmpty(), "empty rect");
       aUnionTextRect = mFirstCharRect;
       return !aUnionTextRect.IsEmpty();
     }
     if (aOffset == mSelection.mAnchor) {
-      NS_WARN_IF(mSelection.mAnchorCharRects[eNextCharRect].IsEmpty());
+      NS_WARNING_ASSERTION(
+        !mSelection.mAnchorCharRects[eNextCharRect].IsEmpty(), "empty rect");
       aUnionTextRect = mSelection.mAnchorCharRects[eNextCharRect];
       return !aUnionTextRect.IsEmpty();
     }
     if (mSelection.mAnchor && aOffset == mSelection.mAnchor - 1) {
-      NS_WARN_IF(mSelection.mAnchorCharRects[ePrevCharRect].IsEmpty());
+      NS_WARNING_ASSERTION(
+        !mSelection.mAnchorCharRects[ePrevCharRect].IsEmpty(), "empty rect");
       aUnionTextRect = mSelection.mAnchorCharRects[ePrevCharRect];
       return !aUnionTextRect.IsEmpty();
     }
     if (aOffset == mSelection.mFocus) {
-      NS_WARN_IF(mSelection.mFocusCharRects[eNextCharRect].IsEmpty());
+      NS_WARNING_ASSERTION(
+        !mSelection.mFocusCharRects[eNextCharRect].IsEmpty(), "empty rect");
       aUnionTextRect = mSelection.mFocusCharRects[eNextCharRect];
       return !aUnionTextRect.IsEmpty();
     }
     if (mSelection.mFocus && aOffset == mSelection.mFocus - 1) {
-      NS_WARN_IF(mSelection.mFocusCharRects[ePrevCharRect].IsEmpty());
+      NS_WARNING_ASSERTION(
+        !mSelection.mFocusCharRects[ePrevCharRect].IsEmpty(), "empty rect");
       aUnionTextRect = mSelection.mFocusCharRects[ePrevCharRect];
       return !aUnionTextRect.IsEmpty();
     }

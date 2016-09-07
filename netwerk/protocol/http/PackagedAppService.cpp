@@ -465,7 +465,7 @@ PackagedAppService::PackagedAppDownloader::OnStartRequest(nsIRequest *aRequest,
 
   MOZ_ASSERT(mWriter);
   rv = mWriter->OnStartRequest(aRequest, aContext);
-  NS_WARN_IF(NS_FAILED(rv));
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "OnStartRequest failed");
 
   EnsureVerifier(aRequest);
 

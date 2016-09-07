@@ -1655,15 +1655,11 @@ AstDecodeDataSection(AstDecodeContext &c)
         return AstDecodeFail(c, "failed to read number of data segments");
 
     const uint32_t heapLength = c.module().hasMemory() ? c.module().memory().initial() : 0;
-    uint32_t prevEnd = 0;
 
     for (uint32_t i = 0; i < numSegments; i++) {
         uint32_t dstOffset;
         if (!c.d.readVarU32(&dstOffset))
             return AstDecodeFail(c, "expected segment destination offset");
-
-        if (dstOffset < prevEnd)
-            return AstDecodeFail(c, "data segments must be disjoint and ordered");
 
         uint32_t numBytes;
         if (!c.d.readVarU32(&numBytes))
@@ -1680,12 +1676,14 @@ AstDecodeDataSection(AstDecodeContext &c)
         for (size_t i = 0; i < numBytes; i++)
             buffer[i] = src[i];
 
-        AstName name(buffer, numBytes);
-        AstDataSegment* segment = new(c.lifo) AstDataSegment(dstOffset, name);
-        if (!segment || !c.module().append(segment))
+        AstExpr* offset = new(c.lifo) AstConst(Val(dstOffset));
+        if (!offset)
             return false;
 
-        prevEnd = dstOffset + numBytes;
+        AstName name(buffer, numBytes);
+        AstDataSegment* segment = new(c.lifo) AstDataSegment(offset, name);
+        if (!segment || !c.module().append(segment))
+            return false;
     }
 
     if (!c.d.finishSection(sectionStart, sectionSize))

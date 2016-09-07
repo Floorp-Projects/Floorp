@@ -401,6 +401,14 @@ public:
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
+  Chunk* GetLastChunk()
+  {
+    if (mChunks.IsEmpty()) {
+      return nullptr;
+    }
+    return &mChunks[mChunks.Length() - 1];
+  }
+
 protected:
   explicit MediaSegmentBase(Type aType) : MediaSegment(aType) {}
 
@@ -446,14 +454,6 @@ protected:
     c->mDuration = aDuration;
     mDuration += aDuration;
     return c;
-  }
-
-  Chunk* GetLastChunk()
-  {
-    if (mChunks.IsEmpty()) {
-      return nullptr;
-    }
-    return &mChunks[mChunks.Length() - 1];
   }
 
   void RemoveLeading(StreamTime aDuration, uint32_t aStartIndex)

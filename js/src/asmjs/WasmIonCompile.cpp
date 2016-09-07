@@ -994,8 +994,8 @@ class FunctionCompiler
         return true;
     }
 
-    bool internalCall(const Sig& sig, uint32_t funcIndex, const CallCompileState& call,
-                      MDefinition** def)
+    bool callDefinition(const Sig& sig, uint32_t funcDefIndex, const CallCompileState& call,
+                        MDefinition** def)
     {
         if (inDeadCode()) {
             *def = nullptr;
@@ -1004,7 +1004,7 @@ class FunctionCompiler
 
         CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Relative);
         MIRType ret = ToMIRType(sig.ret());
-        auto callee = CalleeDesc::internal(funcIndex);
+        auto callee = CalleeDesc::definition(funcDefIndex);
         auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_, ret,
                                    call.spIncrement_, MWasmCall::DontSaveTls);
         if (!ins)
@@ -1885,6 +1885,30 @@ EmitCallArgs(FunctionCompiler& f, const Sig& sig, InterModule interModule, CallC
 }
 
 static bool
+EmitCallImportCommon(FunctionCompiler& f, uint32_t lineOrBytecode, uint32_t funcImportIndex)
+{
+    const FuncImportGenDesc& funcImport = f.mg().funcImports[funcImportIndex];
+    const Sig& sig = *funcImport.sig;
+
+    CallCompileState call(f, lineOrBytecode);
+    if (!EmitCallArgs(f, sig, InterModule::True, &call))
+        return false;
+
+    if (!f.iter().readCallReturn(sig.ret()))
+        return false;
+
+    MDefinition* def;
+    if (!f.callImport(funcImport.globalDataOffset, call, sig.ret(), &def))
+        return false;
+
+    if (IsVoid(sig.ret()))
+        return true;
+
+    f.iter().setResult(def);
+    return true;
+}
+
+static bool
 EmitCall(FunctionCompiler& f, uint32_t callOffset)
 {
     uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode(callOffset);
@@ -1894,7 +1918,14 @@ EmitCall(FunctionCompiler& f, uint32_t callOffset)
     if (!f.iter().readCall(&calleeIndex, &arity))
         return false;
 
-    const Sig& sig = *f.mg().funcSigs[calleeIndex];
+    // For asm.js and old-format wasm code, imports are not part of the function
+    // index space so in these cases firstFuncDefIndex is fixed to 0, even if
+    // there are function imports.
+    if (calleeIndex < f.mg().firstFuncDefIndex)
+        return EmitCallImportCommon(f, lineOrBytecode, calleeIndex);
+
+    uint32_t funcDefIndex = calleeIndex - f.mg().firstFuncDefIndex;
+    const Sig& sig = *f.mg().funcDefSigs[funcDefIndex];
 
     CallCompileState call(f, lineOrBytecode);
     if (!EmitCallArgs(f, sig, InterModule::False, &call))
@@ -1904,7 +1935,7 @@ EmitCall(FunctionCompiler& f, uint32_t callOffset)
         return false;
 
     MDefinition* def;
-    if (!f.internalCall(sig, calleeIndex, call, &def))
+    if (!f.callDefinition(sig, funcDefIndex, call, &def))
         return false;
 
     if (IsVoid(sig.ret()))
@@ -1912,6 +1943,21 @@ EmitCall(FunctionCompiler& f, uint32_t callOffset)
 
     f.iter().setResult(def);
     return true;
+}
+
+static bool
+EmitCallImport(FunctionCompiler& f, uint32_t callOffset)
+{
+    MOZ_ASSERT(!f.mg().firstFuncDefIndex);
+
+    uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode(callOffset);
+
+    uint32_t funcImportIndex;
+    uint32_t arity;
+    if (!f.iter().readCallImport(&funcImportIndex, &arity))
+        return false;
+
+    return EmitCallImportCommon(f, lineOrBytecode, funcImportIndex);
 }
 
 static bool
@@ -1941,37 +1987,6 @@ EmitCallIndirect(FunctionCompiler& f, uint32_t callOffset)
 
     MDefinition* def;
     if (!f.callIndirect(sigIndex, callee, call, &def))
-        return false;
-
-    if (IsVoid(sig.ret()))
-        return true;
-
-    f.iter().setResult(def);
-    return true;
-}
-
-static bool
-EmitCallImport(FunctionCompiler& f, uint32_t callOffset)
-{
-    uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode(callOffset);
-
-    uint32_t funcImportIndex;
-    uint32_t arity;
-    if (!f.iter().readCallImport(&funcImportIndex, &arity))
-        return false;
-
-    const FuncImportGenDesc& funcImport = f.mg().funcImports[funcImportIndex];
-    const Sig& sig = *funcImport.sig;
-
-    CallCompileState call(f, lineOrBytecode);
-    if (!EmitCallArgs(f, sig, InterModule::True, &call))
-        return false;
-
-    if (!f.iter().readCallReturn(sig.ret()))
-        return false;
-
-    MDefinition* def;
-    if (!f.callImport(funcImport.globalDataOffset, call, sig.ret(), &def))
         return false;
 
     if (IsVoid(sig.ret()))
@@ -3694,7 +3709,7 @@ wasm::IonCompileFunction(IonCompileTask* task)
         if (!lir)
             return false;
 
-        SigIdDesc sigId = task->mg().funcSigs[func.index()]->id;
+        SigIdDesc sigId = task->mg().funcDefSigs[func.defIndex()]->id;
 
         CodeGenerator codegen(&mir, lir, &results.masm());
         if (!codegen.generateWasm(sigId, &results.offsets()))

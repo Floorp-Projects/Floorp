@@ -151,7 +151,9 @@ public:
     return info;
   }
 
-  typedef nsTHashtable<nsStringHashKey> ImplicitNamedAreas;
+  typedef nsBaseHashtable<nsStringHashKey,
+                          mozilla::css::GridNamedArea,
+                          mozilla::css::GridNamedArea> ImplicitNamedAreas;
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(ImplicitNamedAreasProperty,
                                       ImplicitNamedAreas)
   ImplicitNamedAreas* GetImplicitNamedAreas() const {

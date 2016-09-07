@@ -440,10 +440,20 @@
 
 .tabbrowser-tab::after,
 .tabbrowser-tab::before {
-  margin-top: 5px;
-  margin-bottom: 4px;
   margin-inline-start: -1px;
-  border-left: 1px solid currentColor;
+  /* Vertical margin doesn't work here for positioned pinned tabs, see
+     bug 1198236 and bug 1300410. We're using linear-gradient instead
+     to cut off the border at the top and at the bottom. */
+  border-left: 1px solid;
+  border-image: linear-gradient(transparent 6px,
+                                currentColor 6px,
+                                currentColor calc(100% - 5px),
+                                transparent calc(100% - 5px));
+  border-image-slice: 1;
+  /* The 1px border and negative margin may amount to a different number of
+     device pixels (bug 477157), so we also set a width to match the margin. */
+  width: 1px;
+  box-sizing: border-box;
   opacity: 0.2;
 }
 

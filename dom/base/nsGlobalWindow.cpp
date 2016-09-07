@@ -543,7 +543,6 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsTimeout)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsTimeout)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsTimeout)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPrincipal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mScriptHandler)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsTimeout, AddRef)
@@ -2417,7 +2416,7 @@ nsGlobalWindow::ComputeIsSecureContext(nsIDocument* aDocument)
 
   nsCOMPtr<nsIContentSecurityManager> csm =
     do_GetService(NS_CONTENTSECURITYMANAGER_CONTRACTID);
-  NS_WARN_IF(!csm);
+  NS_WARNING_ASSERTION(csm, "csm is null");
   if (csm) {
     bool isTrustworthyOrigin = false;
     csm->IsOriginPotentiallyTrustworthy(principal, &isTrustworthyOrigin);
@@ -12034,23 +12033,6 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
     // Don't allow timeouts less than DOMMinTimeoutValue() from
     // now...
     realInterval = std::max(realInterval, uint32_t(DOMMinTimeoutValue()));
-  }
-
-  // Get principal of currently executing code, save for execution of timeout.
-  // If our principals subsume the subject principal then use the subject
-  // principal. Otherwise, use our principal to avoid running script in
-  // elevated principals.
-  //
-  // Note the direction of this test: We don't allow setTimeouts running with
-  // chrome privileges on content windows, but we do allow setTimeouts running
-  // with content privileges on chrome windows (where they can't do very much,
-  // of course).
-  nsCOMPtr<nsIPrincipal> subjectPrincipal = nsContentUtils::SubjectPrincipal();
-  nsCOMPtr<nsIPrincipal> ourPrincipal = GetPrincipal();
-  if (ourPrincipal->Subsumes(subjectPrincipal)) {
-    timeout->mPrincipal = subjectPrincipal;
-  } else {
-    timeout->mPrincipal = ourPrincipal;
   }
 
   TimeDuration delta = TimeDuration::FromMilliseconds(realInterval);

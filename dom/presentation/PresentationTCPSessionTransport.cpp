@@ -331,7 +331,7 @@ PresentationTCPSessionTransport::SetCallback(nsIPresentationSessionTransportCall
 
   if (!!mCallback && ReadyState::OPEN == mReadyState) {
     // Notify the transport channel is ready.
-    NS_WARN_IF(NS_FAILED(mCallback->NotifyTransportReady()));
+    Unused << NS_WARN_IF(NS_FAILED(mCallback->NotifyTransportReady()));
   }
 
   return NS_OK;
@@ -356,7 +356,7 @@ PresentationTCPSessionTransport::EnsureCopying()
 
   mAsyncCopierActive = true;
   RefPtr<CopierCallbacks> callbacks = new CopierCallbacks(this);
-  NS_WARN_IF(NS_FAILED(mMultiplexStreamCopier->AsyncCopy(callbacks, nullptr)));
+  Unused << NS_WARN_IF(NS_FAILED(mMultiplexStreamCopier->AsyncCopy(callbacks, nullptr)));
 }
 
 void
@@ -458,14 +458,15 @@ PresentationTCPSessionTransport::SetReadyState(ReadyState aReadyState)
     }
 
     // Notify the transport channel is ready.
-    NS_WARN_IF(NS_FAILED(mCallback->NotifyTransportReady()));
+    Unused << NS_WARN_IF(NS_FAILED(mCallback->NotifyTransportReady()));
   } else if (mReadyState == ReadyState::CLOSED && mCallback) {
     if (NS_WARN_IF(!mCallback)) {
       return;
     }
 
     // Notify the transport channel has been shut down.
-    NS_WARN_IF(NS_FAILED(mCallback->NotifyTransportClosed(mCloseStatus)));
+    Unused <<
+      NS_WARN_IF(NS_FAILED(mCallback->NotifyTransportClosed(mCloseStatus)));
     mCallback = nullptr;
   }
 }
