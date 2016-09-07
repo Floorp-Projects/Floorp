@@ -25,6 +25,7 @@ task:
   scopes:
     - 'docker-worker:cache:level-{{level}}-hg-shared'
     - 'docker-worker:cache:level-{{level}}-checkouts'
+    - 'secrets:get:project/taskcluster/gecko/hgfingerprint'
 
   payload:
     # Thirty minutes should be enough for lint checks
