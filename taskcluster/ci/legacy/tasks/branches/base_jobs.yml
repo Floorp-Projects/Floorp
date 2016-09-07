@@ -9,6 +9,8 @@ builds:
   android-api-15:
     platforms:
       - Android
+    extra-builds:  # see RIDEALONG_BUILDS in `mach taskgraph`
+      - android-api-15-l10n
     types:
       opt:
         task: tasks/builds/android_api_15.yml
