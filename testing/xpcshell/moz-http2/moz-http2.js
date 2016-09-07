@@ -749,12 +749,15 @@ function handleRequest(req, res) {
 
 // Set up the SSL certs for our server - this server has a cert for foo.example.com
 // signed by netwerk/tests/unit/CA.cert.der
-//var log_module = node_http2_root + "/test/util";
 var options = {
   key: fs.readFileSync(__dirname + '/http2-key.pem'),
   cert: fs.readFileSync(__dirname + '/http2-cert.pem'),
-  //, log: require(log_module).createLogger('server')
 };
+
+if (process.env.HTTP2_LOG !== undefined) {
+  var log_module = node_http2_root + "/test/util";
+  options.log = require(log_module).createLogger('server')
+}
 
 var server = http2.createServer(options, handleRequest);
 
