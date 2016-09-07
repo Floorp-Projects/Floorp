@@ -38,9 +38,11 @@ Compositor::Compositor(widget::CompositorWidget* aWidget,
 #if defined(MOZ_WIDGET_ANDROID)
   // If the default color isn't white for Fennec, there is a black
   // flash before the first page of a tab is loaded.
-  , mBeginFrameClearColor(1.0, 1.0, 1.0, 1.0)
+  , mClearColor(1.0, 1.0, 1.0, 1.0)
+  , mDefaultClearColor(1.0, 1.0, 1.0, 1.0)
 #else
-  , mBeginFrameClearColor(0.0, 0.0, 0.0, 0.0)
+  , mClearColor(0.0, 0.0, 0.0, 0.0)
+  , mDefaultClearColor(0.0, 0.0, 0.0, 0.0)
 #endif
 {
 }

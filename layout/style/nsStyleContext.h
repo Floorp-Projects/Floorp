@@ -695,8 +695,9 @@ private:
         if (mPseudoTag == nsCSSAnonBoxes::mozText) {                    \
           MOZ_ASSERT(mParent);                                          \
           newData = mParent->DoGetStyle##name_<true>();                 \
-          NS_WARN_IF(newData !=                                         \
-            Servo_GetStyle##name_(mSource.AsServoComputedValues()));    \
+          NS_WARNING_ASSERTION(                                         \
+            newData == Servo_GetStyle##name_(mSource.AsServoComputedValues()), \
+            "bad newData");                                             \
         } else {                                                        \
           newData =                                                     \
             Servo_GetStyle##name_(mSource.AsServoComputedValues());     \

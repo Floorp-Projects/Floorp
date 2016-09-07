@@ -274,12 +274,33 @@ PropertyDescriptor::trace(JSTracer* trc)
 void
 js::gc::GCRuntime::traceRuntimeForMajorGC(JSTracer* trc, AutoLockForExclusiveAccess& lock)
 {
+    // FinishRoots will have asserted that every root that we do not expect
+    // is gone, so we can simply skip traceRuntime here.
+    if (rt->isBeingDestroyed())
+        return;
+
+    gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_ROOTS);
+    if (rt->atomsCompartment(lock)->zone()->isCollecting())
+        traceRuntimeAtoms(trc, lock);
+    JSCompartment::traceIncomingCrossCompartmentEdgesForZoneGC(trc);
     traceRuntimeCommon(trc, MarkRuntime, lock);
 }
 
 void
 js::gc::GCRuntime::traceRuntimeForMinorGC(JSTracer* trc, AutoLockForExclusiveAccess& lock)
 {
+    // Note that we *must* trace the runtime during the SHUTDOWN_GC's minor GC
+    // despite having called FinishRoots already. This is because FinishRoots
+    // does not clear the crossCompartmentWrapper map. It cannot do this
+    // because Proxy's trace for CrossCompartmentWrappers asserts presence in
+    // the map. And we can reach its trace function despite having finished the
+    // roots via the edges stored by the pre-barrier verifier when we finish
+    // the verifier for the last time.
+    gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_ROOTS);
+
+    // FIXME: As per bug 1298816 comment 12, we should be able to remove this.
+    jit::JitRuntime::MarkJitcodeGlobalTableUnconditionally(trc);
+
     traceRuntimeCommon(trc, TraceRuntime, lock);
 }
 
@@ -298,57 +319,53 @@ js::TraceRuntime(JSTracer* trc)
 void
 js::gc::GCRuntime::traceRuntime(JSTracer* trc, AutoLockForExclusiveAccess& lock)
 {
+    MOZ_ASSERT(!rt->isBeingDestroyed());
+
+    gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_ROOTS);
+    traceRuntimeAtoms(trc, lock);
     traceRuntimeCommon(trc, TraceRuntime, lock);
+}
+
+void
+js::gc::GCRuntime::traceRuntimeAtoms(JSTracer* trc, AutoLockForExclusiveAccess& lock)
+{
+    gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_RUNTIME_DATA);
+    MarkPermanentAtoms(trc);
+    MarkAtoms(trc, lock);
+    MarkWellKnownSymbols(trc);
+    jit::JitRuntime::Mark(trc, lock);
 }
 
 void
 js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrMark,
                                       AutoLockForExclusiveAccess& lock)
 {
-    gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_ROOTS);
-
     MOZ_ASSERT(!rt->mainThread.suppressGC);
 
-    // Trace incoming CCW edges.
-    if (traceOrMark == MarkRuntime) {
-        gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_CCWS);
-        JSCompartment::traceIncomingCrossCompartmentEdgesForZoneGC(trc);
-    }
-
-    // Trace C stack roots.
     {
-        gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_ROOTERS);
+        gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_STACK);
 
+        // Trace active interpreter and JIT stack roots.
+        MarkInterpreterActivations(rt, trc);
+        jit::MarkJitActivations(rt, trc);
+
+        // Trace legacy C stack roots.
         AutoGCRooter::traceAll(trc);
-
-        if (!rt->isBeingDestroyed()) {
-            MarkExactStackRoots(rt, trc);
-            rt->markSelfHostingGlobal(trc);
-        }
 
         for (RootRange r = rootsHash.all(); !r.empty(); r.popFront()) {
             const RootEntry& entry = r.front();
             TraceRoot(trc, entry.key(), entry.value());
         }
 
-        MarkPersistentRooted(rt, trc);
+        // Trace C stack roots.
+        MarkExactStackRoots(rt, trc);
     }
 
-    // Trace the atoms Compartment.
-    if (!rt->isBeingDestroyed() && !rt->isHeapMinorCollecting()) {
-        gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_RUNTIME_DATA);
+    // Trace runtime global roots.
+    MarkPersistentRooted(rt, trc);
 
-        if (traceOrMark == TraceRuntime || rt->atomsCompartment(lock)->zone()->isCollecting()) {
-            MarkPermanentAtoms(trc);
-            MarkAtoms(trc, lock);
-            MarkWellKnownSymbols(trc);
-            jit::JitRuntime::Mark(trc, lock);
-        }
-    }
-
-    // This table is weak in major GC's.
-    if (rt->isHeapMinorCollecting())
-        jit::JitRuntime::MarkJitcodeGlobalTableUnconditionally(trc);
+    // Trace the self-hosting global compartment.
+    rt->markSelfHostingGlobal(trc);
 
     // Trace anything in the single context. Note that this is actually the
     // same struct as the JSRuntime, but is still split for historical reasons.
@@ -359,14 +376,10 @@ js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrM
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next())
         c->traceRoots(trc, traceOrMark);
 
-    // Trace JS stack roots.
-    MarkInterpreterActivations(rt, trc);
-    jit::MarkJitActivations(rt, trc);
-
     // Trace SPS.
     rt->spsProfiler.trace(trc);
 
-    // Trace the embeddings black and gray roots.
+    // Trace the embedding's black and gray roots.
     if (!rt->isHeapMinorCollecting()) {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_EMBEDDING);
 

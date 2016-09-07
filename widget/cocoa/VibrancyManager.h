@@ -73,6 +73,8 @@ public:
   void UpdateVibrantRegion(VibrancyType aType,
                            const LayoutDeviceIntRegion& aRegion);
 
+  bool HasVibrantRegions() { return !mVibrantRegions.IsEmpty(); }
+
   /**
    * Clear the vibrant areas that we know about.
    * The clearing happens in the current NSGraphicsContext. If you call this

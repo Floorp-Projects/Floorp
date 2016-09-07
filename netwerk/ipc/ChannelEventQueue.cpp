@@ -7,6 +7,7 @@
 
 #include "nsISupports.h"
 #include "mozilla/net/ChannelEventQueue.h"
+#include "mozilla/Unused.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
@@ -73,7 +74,7 @@ ChannelEventQueue::Resume()
       mTargetThread->Dispatch(event.forget(), NS_DISPATCH_NORMAL);
     } else {
       MOZ_RELEASE_ASSERT(NS_IsMainThread());
-      NS_WARN_IF(NS_FAILED(NS_DispatchToCurrentThread(event.forget())));
+      Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToCurrentThread(event.forget())));
     }
   }
 }

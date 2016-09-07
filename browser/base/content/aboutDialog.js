@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 // Services = object with smart getters for common XPCOM services
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/AppConstants.jsm");
@@ -39,19 +41,30 @@ function init(aEvent)
   }
 
   // Include the build ID and display warning if this is an "a#" (nightly or aurora) build
+  let versionField = document.getElementById("version");
   let version = Services.appinfo.version;
   if (/a\d+$/.test(version)) {
     let buildID = Services.appinfo.appBuildID;
-    let buildDate = buildID.slice(0, 4) + "-" + buildID.slice(4, 6) + "-" + buildID.slice(6, 8);
-    document.getElementById("version").textContent += " (" + buildDate + ")";
+    let year = buildID.slice(0, 4);
+    let month = buildID.slice(4, 6);
+    let day = buildID.slice(6, 8);
+    versionField.textContent += ` (${year}-${month}-${day})`;
+
     document.getElementById("experimental").hidden = false;
     document.getElementById("communityDesc").hidden = true;
   }
 
+  // Append "(32-bit)" or "(64-bit)" build architecture to the version number:
+  let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
+  let archResource = Services.appinfo.is64Bit
+                     ? "aboutDialog.architecture.sixtyFourBit"
+                     : "aboutDialog.architecture.thirtyTwoBit";
+  let arch = bundle.GetStringFromName(archResource);
+  versionField.textContent += ` (${arch})`;
+
   if (AppConstants.MOZ_UPDATER) {
     gAppUpdater = new appUpdater();
 
-    let defaults = Services.prefs.getDefaultBranch("");
     let channelLabel = document.getElementById("currentChannel");
     let currentChannelText = document.getElementById("currentChannelText");
     channelLabel.value = UpdateUtils.UpdateChannel;

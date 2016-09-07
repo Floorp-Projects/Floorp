@@ -130,10 +130,10 @@ RemotePrintJobParent::RecvFinalizePrint()
   // EndDocument is sometimes called in the child even when BeginDocument has
   // not been called. See bug 1223332.
   if (mPrintDeviceContext) {
-    nsresult rv = mPrintDeviceContext->EndDocument();
+    DebugOnly<nsresult> rv = mPrintDeviceContext->EndDocument();
 
     // Too late to abort the child just log.
-    NS_WARN_IF(NS_FAILED(rv));
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "EndDocument failed");
   }
 
 

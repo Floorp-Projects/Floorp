@@ -401,9 +401,7 @@ CodeGeneratorX86::emitWasmCall(LWasmCallBase* ins)
 
     emitWasmCallBase(ins);
 
-    if (IsFloatingPointType(mir->type()) &&
-        mir->callee().which() == wasm::CalleeDesc::Builtin)
-    {
+    if (IsFloatingPointType(mir->type()) && mir->callee().which() == wasm::CalleeDesc::Builtin) {
         if (mir->type() == MIRType::Float32) {
             masm.reserveStack(sizeof(float));
             Operand op(esp, 0);

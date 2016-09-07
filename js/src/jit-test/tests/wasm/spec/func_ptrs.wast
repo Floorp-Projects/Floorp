@@ -78,7 +78,7 @@
 
 (module
     (type $T (func (result i32)))
-    (table 0 1)
+    (table $t1 $t2)
 
     (import $print_i32 "spectest" "print" (param i32))
 

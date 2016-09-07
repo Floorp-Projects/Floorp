@@ -98,8 +98,8 @@ public:
       RefPtr<ErrorCallbackRunnable> runnable =
         new ErrorCallbackRunnable(mGlobal, mErrorCallback,
                                   NS_ERROR_DOM_INVALID_STATE_ERR);
-      nsresult rv = NS_DispatchToMainThread(runnable);
-      NS_WARN_IF(NS_FAILED(rv));
+      DebugOnly<nsresult> rv = NS_DispatchToMainThread(runnable);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NS_DispatchToMainThread failed");
     }
   }
 
@@ -160,7 +160,7 @@ FileSystemDirectoryReader::ReadEntries(FileSystemEntriesCallback& aSuccessCallba
     RefPtr<EmptyEntriesCallbackRunnable> runnable =
       new EmptyEntriesCallbackRunnable(&aSuccessCallback);
     aRv = NS_DispatchToMainThread(runnable);
-    NS_WARN_IF(aRv.Failed());
+    NS_WARNING_ASSERTION(!aRv.Failed(), "NS_DispatchToMainThread failed");
     return;
   }
 

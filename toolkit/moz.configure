@@ -764,3 +764,15 @@ def skia_includes(skia, skia_gpu):
     return includes
 
 set_config('SKIA_INCLUDES', skia_includes)
+
+# Support various fuzzing options
+# ==============================================================
+option('--enable-libfuzzer', help='Enable libfuzzer support')
+
+@depends('--enable-libfuzzer')
+def enable_libfuzzer(value):
+    if value:
+        return True
+
+set_config('LIBFUZZER', enable_libfuzzer)
+set_define('LIBFUZZER', enable_libfuzzer)

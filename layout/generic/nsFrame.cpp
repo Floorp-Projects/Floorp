@@ -2442,7 +2442,8 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
    */
   if (usingSVGEffects) {
     MOZ_ASSERT(StyleEffects()->HasFilters() ||
-               nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(this));
+               nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(this),
+               "Beside filter & mask/clip-path, what else effect do we have?");
 
     if (clipCapturedBy == ContainerItemType::eSVGEffects) {
       clipState.ExitStackingContextContents(&containerItemScrollClip);
@@ -2451,16 +2452,27 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     buildingDisplayList.SetDirtyRect(dirtyRectOutsideSVGEffects);
 
     // Skip all filter effects while generating glyph mask.
-    if (StyleEffects()->HasFilters() && !aBuilder->IsForGenerateGlyphMask()) {
+    bool createFilter =
+      StyleEffects()->HasFilters() && !aBuilder->IsForGenerateGlyphMask();
+    bool createMask = nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(this);
+
+    if (createFilter) {
+      // If we are going to create a mask display item, handle opacity effect
+      // in that mask display item; Otherwise, take care of opacity in this
+      // filter display item.
+      bool handleOpacity = !createMask && !useOpacity;
+
       /* List now emptied, so add the new list to the top. */
       resultList.AppendNewToTop(
-          new (aBuilder) nsDisplayFilter(aBuilder, this, &resultList, useOpacity));
+        new (aBuilder) nsDisplayFilter(aBuilder, this, &resultList,
+                                       handleOpacity));
     }
 
-    if (nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(this)) {
+    if (createMask) {
       /* List now emptied, so add the new list to the top. */
       resultList.AppendNewToTop(
-          new (aBuilder) nsDisplayMask(aBuilder, this, &resultList, useOpacity));
+          new (aBuilder) nsDisplayMask(aBuilder, this, &resultList,
+                                       !useOpacity));
     }
 
     // Also add the hoisted scroll info items. We need those for APZ scrolling

@@ -1334,7 +1334,7 @@ RenderDataSection(WasmRenderContext& c, const AstModule& module)
             return false;
         if (!c.buffer.append("(segment "))
            return false;
-        if (!RenderInt32(c, segment->offset()))
+        if (!RenderInt32(c, segment->offset()->as<AstConst>().val().i32()))
            return false;
         if (!c.buffer.append(" \""))
            return false;
