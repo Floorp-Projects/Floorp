@@ -28,6 +28,16 @@ function evalText(str, imports) {
     return new WebAssembly.Instance(m, imports);
 }
 
+function wasmValidateText(str) {
+    assertEq(WebAssembly.validate(wasmTextToBinary(str, 'new-format')), true);
+}
+
+function wasmFailValidateText(str, errorType, pattern) {
+    let binary = wasmTextToBinary(str, 'new-format');
+    assertEq(WebAssembly.validate(binary), false);
+    assertErrorMessage(() => new WebAssembly.Module(binary), errorType, pattern);
+}
+
 function wasmEvalText(str, imports) {
     var exports = Wasm.instantiateModule(wasmTextToBinary(str), imports).exports;
     if (Object.keys(exports).length == 1 && exports[""])
