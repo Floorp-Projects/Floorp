@@ -34,7 +34,7 @@ static const nsAttrValue::EnumTable kClearTable[] = {
   { "right", NS_STYLE_CLEAR_RIGHT },
   { "all", NS_STYLE_CLEAR_BOTH },
   { "both", NS_STYLE_CLEAR_BOTH },
-  { 0 }
+  { nullptr, 0 }
 };
 
 bool
