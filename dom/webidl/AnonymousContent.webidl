@@ -61,10 +61,4 @@ interface AnonymousContent {
   [Throws]
   nsISupports? getCanvasContext(DOMString elementId,
                                 DOMString contextId);
-
-  [Func="nsDocument::IsElementAnimateEnabled", Throws]
-  Animation setAnimationForElement(DOMString elementId,
-                                   object? keyframes,
-                                   optional UnrestrictedDoubleOrKeyframeAnimationOptions
-                                     options);
 };
