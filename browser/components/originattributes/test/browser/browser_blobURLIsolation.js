@@ -87,8 +87,11 @@ function doTest(blobify, deblobify) {
   }
 }
 
+let tests = [];
 for (let blobify of [page_blobify, worker_blobify]) {
   for (let deblobify of [page_deblobify, worker_deblobify]) {
-    IsolationTestTools.runTests(TEST_PAGE, doTest(blobify, deblobify));
+    tests.push(doTest(blobify, deblobify));
   }
 }
+
+IsolationTestTools.runTests(TEST_PAGE, tests);
