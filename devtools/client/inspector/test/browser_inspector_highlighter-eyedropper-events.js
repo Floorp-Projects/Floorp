@@ -77,21 +77,22 @@ const MOVE_EVENTS_DATA = [
 ];
 
 add_task(function* () {
-  let helper = yield openInspectorForURL("data:text/html;charset=utf-8,"
-    + encodeURIComponent(TEST_URI)
-  ).then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
+  let {inspector, testActor} = yield openInspectorForURL(
+    "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let helper = yield getHighlighterHelperFor(HIGHLIGHTER_TYPE)({inspector, testActor});
+
   helper.prefix = ID;
 
   yield helper.show("html");
-  yield respondsToMoveEvents(helper);
+  yield respondsToMoveEvents(helper, testActor);
   yield respondsToReturnAndEscape(helper);
 
   helper.finalize();
 });
 
-function* respondsToMoveEvents(helper) {
+function* respondsToMoveEvents(helper, testActor) {
   info("Checking that the eyedropper responds to events from the mouse and keyboard");
-  let {mouse, testActor} = helper;
+  let {mouse} = helper;
   let {width, height} = yield testActor.getBoundingClientRect("html");
 
   for (let {type, x, y, key, shift, expected, desc} of MOVE_EVENTS_DATA) {
