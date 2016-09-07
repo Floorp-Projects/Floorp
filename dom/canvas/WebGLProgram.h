@@ -61,18 +61,25 @@ struct UniformBlockInfo final
 {
     const nsCString mBaseUserName;
     const nsCString mBaseMappedName;
+    const uint32_t mDataSize;
 
-    UniformBlockInfo(const nsACString& baseUserName,
-                     const nsACString& baseMappedName)
+    const IndexedBufferBinding* mBinding;
+
+    UniformBlockInfo(WebGLContext* webgl, const nsACString& baseUserName,
+                     const nsACString& baseMappedName, uint32_t dataSize)
         : mBaseUserName(baseUserName)
         , mBaseMappedName(baseMappedName)
-    {}
+        , mDataSize(dataSize)
+        , mBinding(&webgl->mIndexedUniformBufferBindings[0])
+    { }
 };
 
 struct LinkedProgramInfo final
     : public RefCounted<LinkedProgramInfo>
     , public SupportsWeakPtr<LinkedProgramInfo>
 {
+    friend class WebGLProgram;
+
     MOZ_DECLARE_REFCOUNTED_TYPENAME(LinkedProgramInfo)
     MOZ_DECLARE_WEAKREFERENCE_TYPENAME(LinkedProgramInfo)
 
@@ -82,11 +89,13 @@ struct LinkedProgramInfo final
 
     std::vector<AttribInfo> attribs;
     std::vector<UniformInfo*> uniforms; // Owns its contents.
-    std::vector<const UniformBlockInfo*> uniformBlocks; // Owns its contents.
+    std::vector<UniformBlockInfo*> uniformBlocks; // Owns its contents.
     std::vector<RefPtr<WebGLActiveInfo>> transformFeedbackVaryings;
 
     // Needed for draw call validation.
     std::vector<UniformInfo*> uniformSamplers;
+
+    mutable std::vector<size_t> componentsPerTFVert;
 
     //////
 
@@ -123,6 +132,8 @@ class WebGLProgram final
     , public LinkedListElement<WebGLProgram>
     , public WebGLContextBoundObject
 {
+    friend class WebGLTransformFeedback;
+
 public:
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLProgram)
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLProgram)
@@ -174,7 +185,7 @@ public:
 
     void TransformFeedbackVaryings(const dom::Sequence<nsString>& varyings,
                                    GLenum bufferMode);
-    already_AddRefed<WebGLActiveInfo> GetTransformFeedbackVarying(GLuint index);
+    already_AddRefed<WebGLActiveInfo> GetTransformFeedbackVarying(GLuint index) const;
 
     void EnumerateFragOutputs(std::map<nsCString, const nsCString> &out_FragOutputs) const;
 
@@ -194,6 +205,7 @@ private:
     ~WebGLProgram();
 
     void LinkAndUpdate();
+    bool ValidateForLink();
     bool ValidateAfterTentativeLink(nsCString* const out_linkLog) const;
 
 public:
@@ -202,14 +214,15 @@ public:
 private:
     WebGLRefPtr<WebGLShader> mVertShader;
     WebGLRefPtr<WebGLShader> mFragShader;
-    std::map<nsCString, GLuint> mBoundAttribLocs;
-    std::vector<nsCString> mTransformFeedbackVaryings;
-    GLenum mTransformFeedbackBufferMode;
+    size_t mNumActiveTFOs;
+
+    std::map<nsCString, GLuint> mNextLink_BoundAttribLocs;
+
+    std::vector<nsString> mNextLink_TransformFeedbackVaryings;
+    GLenum mNextLink_TransformFeedbackBufferMode;
+
     nsCString mLinkLog;
     RefPtr<const webgl::LinkedProgramInfo> mMostRecentLinkInfo;
-    // Storage for transform feedback varyings before link.
-    // (Work around for bug seen on nVidia drivers.)
-    std::vector<std::string> mTempMappedVaryings;
 };
 
 } // namespace mozilla
