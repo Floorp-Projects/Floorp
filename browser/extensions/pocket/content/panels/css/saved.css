@@ -406,7 +406,7 @@
     padding: 3px 2px 1px;
     text-transform: none;
 }
-.pkt_ext_containersaved .pkt_ext_tag_input_wrapper input::-moz-placeholder {
+.pkt_ext_containersaved .pkt_ext_tag_input_wrapper input::placeholder {
     color: #a9a9a9;
     letter-spacing: normal;
     text-transform: none;

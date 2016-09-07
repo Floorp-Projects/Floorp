@@ -1,4 +1,4 @@
-input::-moz-placeholder {
+input::placeholder {
   color: green;
   opacity: 1.0;
 }
