@@ -280,11 +280,18 @@ NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(BlockEndEdgeOfChildrenProperty, nscoord)
 //----------------------------------------------------------------------
 
 nsBlockFrame*
-NS_NewBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, nsFrameState aFlags)
+NS_NewBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  nsBlockFrame* it = new (aPresShell) nsBlockFrame(aContext);
-  it->SetFlags(aFlags);
-  return it;
+  return new (aPresShell) nsBlockFrame(aContext);
+}
+
+nsBlockFrame*
+NS_NewBlockFormattingContext(nsIPresShell* aPresShell,
+                             nsStyleContext* aStyleContext)
+{
+  nsBlockFrame* blockFrame = NS_NewBlockFrame(aPresShell, aStyleContext);
+  blockFrame->AddStateBits(NS_BLOCK_FLOAT_MGR | NS_BLOCK_MARGIN_ROOT);
+  return blockFrame;
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsBlockFrame)
