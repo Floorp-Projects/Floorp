@@ -51,7 +51,7 @@ contain any of the following fields:
     </thead>
     <tr>
         <td><code>binary</code>
-        <td>String
+        <td><code>string</code>
         <td>Taken from <code>-b</code> argument
           or system default location
         <td>Absolute path of the Firefox binary,
@@ -62,7 +62,7 @@ contain any of the following fields:
     on the current system.
     <tr>
         <td><code>args</code>
-        <td>Array of strings
+        <td><code>Array.&ltstring&gt;</code>
         <td>
         <td>Command line arguments to pass to the Firefox binary.
           These must include the leading <code>--</code> where required
@@ -70,7 +70,7 @@ contain any of the following fields:
     </tr>
     <tr>
         <td><code>profile</code>
-        <td>String
+        <td><code>string</code>
         <td>New, empty profile
         <td>Base64-encoded zip of a profile directory
           to use as the profile for the Firefox instance.
@@ -78,7 +78,7 @@ contain any of the following fields:
     </tr>
     <tr>
         <td><code>prefs</code>
-        <td>Object&lt;string,&nbsp;(string|boolean|integer)&gt
+        <td><code>Object&lt;string,&nbsp;(string|boolean|integer)&gt</code>
         <td>
         <td>Map of preference name to preference value, which can be a
             string, a boolean or an integer.
