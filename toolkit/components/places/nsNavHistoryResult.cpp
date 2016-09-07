@@ -3014,7 +3014,8 @@ nsNavHistoryQueryResultNode::OnItemMoved(int64_t aFolder,
  */
 NS_IMPL_ISUPPORTS_INHERITED(nsNavHistoryFolderResultNode,
                             nsNavHistoryContainerResultNode,
-                            nsINavHistoryQueryResultNode)
+                            nsINavHistoryQueryResultNode,
+                            mozIStorageStatementCallback)
 
 nsNavHistoryFolderResultNode::nsNavHistoryFolderResultNode(
     const nsACString& aTitle, nsNavHistoryQueryOptions* aOptions,
