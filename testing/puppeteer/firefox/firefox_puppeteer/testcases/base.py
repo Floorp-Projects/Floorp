@@ -93,8 +93,6 @@ class BaseFirefoxTestCase(unittest.TestCase, Puppeteer):
         self.marionette.set_context('chrome')
 
         try:
-            self.prefs.restore_all_prefs()
-
             # This code should be run after all other tearDown code
             # so that in case of a failure, further tests will not run
             # in a state that is more inconsistent than necessary.
