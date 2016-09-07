@@ -59,32 +59,21 @@ function Startup() {
   Services.obs.addObserver(signonReloadDisplay, "passwordmgr-storage-changed", false);
 
   signonsTree = document.getElementById("signonsTree");
-}
-
-
-// TODO: Integragte to SignonsStartup?
-function HandleTreeColumnClick(sortFunction, event) {
-  if (event.target.nodeName != "treecol" || event.button != 0) {
-    return;
-  }
-
-  let sortField = event.target.getAttribute("data-field-name");
-  if (!sortField) {
-    return;
-  }
-
-  sortFunction(sortField);
-  Services.telemetry.getKeyedHistogramById("PWMGR_MANAGE_SORTED").add(sortField);
-}
-
-function SignonsStartup() {
   kSignonBundle = document.getElementById("signonBundle");
   document.getElementById("togglePasswords").label = kSignonBundle.getString("showPasswords");
   document.getElementById("togglePasswords").accessKey = kSignonBundle.getString("showPasswordsAccessKey");
   document.getElementById("signonsIntro").textContent = kSignonBundle.getString("loginsDescriptionAll");
+  document.getElementsByTagName("treecols")[0].addEventListener("click", (event) => {
+    let { target, button } = event;
+    let sortField = target.getAttribute("data-field-name");
 
-  let treecols = document.getElementsByTagName("treecols")[0];
-  treecols.addEventListener("click", HandleTreeColumnClick.bind(null, SignonColumnSort));
+    if (target.nodeName != "treecol" || button != 0 || !sortField) {
+      return;
+    }
+
+    SignonColumnSort(sortField);
+    Services.telemetry.getKeyedHistogramById("PWMGR_MANAGE_SORTED").add(sortField);
+  });
 
   LoadSignons();
 
