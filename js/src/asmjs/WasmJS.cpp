@@ -106,14 +106,12 @@ GetImports(JSContext* cx,
         if (!GetProperty(cx, importObj, import.module.get(), &v))
             return false;
 
-        if (strlen(import.func.get()) > 0) {
-            if (!v.isObject())
-                return Throw(cx, JSMSG_WASM_BAD_IMPORT_FIELD, "an Object");
+        if (!v.isObject())
+            return Throw(cx, JSMSG_WASM_BAD_IMPORT_FIELD, "an Object");
 
-            RootedObject obj(cx, &v.toObject());
-            if (!GetProperty(cx, obj, import.func.get(), &v))
-                return false;
-        }
+        RootedObject obj(cx, &v.toObject());
+        if (!GetProperty(cx, obj, import.func.get(), &v))
+            return false;
 
         switch (import.kind) {
           case DefinitionKind::Function:
