@@ -87,11 +87,6 @@ fn app<'a, 'b>() -> App<'a, 'b> {
              .help("Prints version and copying information"))
 }
 
-fn print_err(reason: &str) {
-    let prog = std::env::args().next().unwrap_or("geckodriver".to_owned());
-    let _ = writeln!(&mut ::std::io::stderr(), "{}: error: {}", prog, reason);
-}
-
 fn run() -> ProgramResult {
     let matches = app().get_matches();
 
@@ -128,16 +123,15 @@ You can obtain a copy of the license at https://mozilla.org/MPL/2.0/.");
     // overrides defaults in Gecko
     // which are info for optimised builds
     // and debug for debug builds
-    let log_level =
-        if matches.is_present("log_level") {
-            LogLevel::from_str(matches.value_of("log_level").unwrap()).ok()
-        } else {
-            match matches.occurrences_of("v") {
-                0 => None,
-                1 => Some(LogLevel::Debug),
-                _ => Some(LogLevel::Trace),
-            }
-        };
+    let log_level = if matches.is_present("log_level") {
+        LogLevel::from_str(matches.value_of("log_level").unwrap()).ok()
+    } else {
+        match matches.occurrences_of("verbosity") {
+            0 => None,
+            1 => Some(LogLevel::Debug),
+            _ => Some(LogLevel::Trace),
+        }
+    };
 
     let settings = MarionetteSettings {
         port: marionette_port,
@@ -147,7 +141,9 @@ You can obtain a copy of the license at https://mozilla.org/MPL/2.0/.");
     };
 
     let handler = MarionetteHandler::new(settings);
-    webdriver::server::start(addr, handler, extension_routes());
+    let listening = try!(webdriver::server::start(addr, handler, extension_routes())
+        .or(Err((ExitCode::Usage, "Invalid host address".to_owned()))));
+    info!("Listening on {}", listening.socket);
 
     Ok(())
 }
@@ -158,7 +154,7 @@ fn main() {
     let exit_code = match run() {
         Ok(_) => ExitCode::Ok,
         Err((exit_code, reason)) => {
-            print_err(&reason.to_string());
+            error!("{}", reason);
             exit_code
         },
     };
