@@ -48,8 +48,7 @@ nsLineBox::nsLineBox(nsIFrame* aFrame, int32_t aCount, bool aIsBlock)
                  "wrong kind of child frame");
   }
 #endif
-
-  static_assert(NS_STYLE_CLEAR_MAX <= 15,
+  static_assert(static_cast<int>(StyleClear::Max) <= 15,
                 "FlagBits needs more bits to store the full range of "
                 "break type ('clear') values");
   mChildCount = aCount;
@@ -193,16 +192,16 @@ ListFloats(FILE* out, const char* aPrefix, const nsFloatCacheList& aFloats)
 }
 
 const char*
-nsLineBox::BreakTypeToString(uint8_t aBreakType) const
+nsLineBox::BreakTypeToString(StyleClear aBreakType) const
 {
   switch (aBreakType) {
-    case NS_STYLE_CLEAR_NONE: return "nobr";
-    case NS_STYLE_CLEAR_LEFT: return "leftbr";
-    case NS_STYLE_CLEAR_RIGHT: return "rightbr";
-    case NS_STYLE_CLEAR_INLINE_START: return "inlinestartbr";
-    case NS_STYLE_CLEAR_INLINE_END: return "inlineendbr";
-    case NS_STYLE_CLEAR_BOTH: return "leftbr+rightbr";
-    case NS_STYLE_CLEAR_LINE: return "linebr";
+    case StyleClear::None_: return "nobr";
+    case StyleClear::Left: return "leftbr";
+    case StyleClear::Right: return "rightbr";
+    case StyleClear::InlineStart: return "inlinestartbr";
+    case StyleClear::InlineEnd: return "inlineendbr";
+    case StyleClear::Both: return "leftbr+rightbr";
+    case StyleClear::Line: return "linebr";
     default:
       break;
   }
