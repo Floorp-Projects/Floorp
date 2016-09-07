@@ -46,12 +46,6 @@ def docker_worker_spidermonkey(config, job, taskdesc, schema=sm_run_schema):
             'mount-point': "/home/worker/workspace",
         })
 
-    # include secrets access
-    # TODO (taskdiff): this is unused? remove it
-    worker['taskcluster-proxy'] = True
-    taskdesc['scopes'].append(
-        'secrets:get:project/releng/gecko/build/level-{}/*'.format(config.params['level']))
-
     docker_worker_add_tc_vcs_cache(config, job, taskdesc)
     docker_worker_add_public_artifacts(config, job, taskdesc)
     docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc)
