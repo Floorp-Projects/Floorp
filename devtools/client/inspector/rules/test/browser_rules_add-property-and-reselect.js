@@ -29,7 +29,7 @@ function* setPropertyOnAllRules(view) {
   // view to be updated.
   let onRefreshed = view.once("ruleview-refreshed");
   for (let rule of view._elementStyle.rules) {
-    rule.editor.addProperty("font-weight", "bold", "");
+    rule.editor.addProperty("font-weight", "bold", "", true);
   }
   yield onRefreshed;
 }

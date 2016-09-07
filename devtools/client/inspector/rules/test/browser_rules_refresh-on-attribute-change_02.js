@@ -32,7 +32,7 @@ function* testPropertyChanges(inspector, ruleView) {
   info("Adding a second margin-top value in the element selector");
   let ruleEditor = ruleView._elementStyle.rules[0].editor;
   let onRefreshed = inspector.once("rule-view-refreshed");
-  ruleEditor.addProperty("margin-top", "5px", "");
+  ruleEditor.addProperty("margin-top", "5px", "", true);
   yield onRefreshed;
 
   let rule = ruleView._elementStyle.rules[0];
