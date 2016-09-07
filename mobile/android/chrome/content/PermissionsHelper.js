@@ -5,8 +5,7 @@
 
 var PermissionsHelper = {
   _permissonTypes: ["password", "geolocation", "popup", "indexedDB",
-                    "offline-app", "desktop-notification", "plugins", "native-intent",
-                    "flyweb-publish-server"],
+                    "offline-app", "desktop-notification", "plugins", "native-intent"],
   _permissionStrings: {
     "password": {
       label: "password.logins",
@@ -17,11 +16,6 @@ var PermissionsHelper = {
       label: "geolocation.location",
       allowed: "geolocation.allow",
       denied: "geolocation.dontAllow"
-    },
-    "flyweb-publish-server": {
-      label: "flyWebPublishServer.publishServer",
-      allowed: "flyWebPublishServer.allow",
-      denied: "flyWebPublishServer.dontAllow"
     },
     "popup": {
       label: "blockPopups.label2",
