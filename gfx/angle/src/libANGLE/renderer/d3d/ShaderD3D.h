@@ -19,12 +19,11 @@ class DynamicHLSL;
 class RendererD3D;
 struct D3DCompilerWorkarounds;
 struct D3DUniform;
-struct WorkaroundsD3D;
 
 class ShaderD3D : public ShaderImpl
 {
   public:
-    ShaderD3D(const gl::ShaderState &data, const WorkaroundsD3D &workarounds);
+    ShaderD3D(const gl::ShaderState &data);
     virtual ~ShaderD3D();
 
     // ShaderImpl implementation
@@ -77,8 +76,7 @@ class ShaderD3D : public ShaderImpl
     mutable std::string mDebugInfo;
     std::map<std::string, unsigned int> mUniformRegisterMap;
     std::map<std::string, unsigned int> mInterfaceBlockRegisterMap;
-    int mAdditionalOptions;
 };
-}  // namespace rx
+}
 
 #endif  // LIBANGLE_RENDERER_D3D_SHADERD3D_H_

@@ -30,7 +30,7 @@ class SwapChainPanelNativeWindow : public InspectableNativeWindow, public std::e
                             IDXGISwapChain1 **swapChain) override;
 
   protected:
-    HRESULT scaleSwapChain(const Size &windowSize, const RECT &clientRect) override;
+    HRESULT scaleSwapChain(const SIZE &windowSize, const RECT &clientRect) override;
 
     bool registerForSizeChangeEvents();
     void unregisterForSizeChangeEvents();
@@ -74,7 +74,8 @@ class SwapChainPanelSizeChangedHandler :
             HRESULT result = sizeChangedEventArgs->get_NewSize(&newSize);
             if (SUCCEEDED(result))
             {
-                host->setNewClientSize(newSize);
+                SIZE windowSize = { lround(newSize.Width), lround(newSize.Height) };
+                host->setNewClientSize(windowSize);
             }
         }
 
@@ -88,6 +89,6 @@ class SwapChainPanelSizeChangedHandler :
 HRESULT GetSwapChainPanelSize(
     const ComPtr<ABI::Windows::UI::Xaml::Controls::ISwapChainPanel> &swapChainPanel,
     const ComPtr<ABI::Windows::UI::Core::ICoreDispatcher> &dispatcher,
-    Size *windowSize);
+    SIZE *windowSize);
 }
 #endif // LIBANGLE_RENDERER_D3D_D3D11_WINRT_SWAPCHAINPANELNATIVEWINDOW_H_

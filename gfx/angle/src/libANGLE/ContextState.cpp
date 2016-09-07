@@ -15,16 +15,15 @@ namespace gl
 {
 
 ContextState::ContextState(uintptr_t contextIn,
-                           GLint clientMajorVersionIn,
-                           GLint clientMinorVersionIn,
+                           GLint clientVersionIn,
                            State *stateIn,
                            const Caps &capsIn,
                            const TextureCapsMap &textureCapsIn,
                            const Extensions &extensionsIn,
                            const ResourceManager *resourceManagerIn,
                            const Limitations &limitationsIn)
-    : mGLVersion(clientMajorVersionIn, clientMinorVersionIn),
-      mContext(contextIn),
+    : mContext(contextIn),
+      mClientVersion(clientVersionIn),
       mState(stateIn),
       mCaps(capsIn),
       mTextureCaps(textureCapsIn),
@@ -43,8 +42,7 @@ const TextureCaps &ContextState::getTextureCap(GLenum internalFormat) const
     return mTextureCaps.get(internalFormat);
 }
 
-ValidationContext::ValidationContext(GLint clientMajorVersion,
-                                     GLint clientMinorVersion,
+ValidationContext::ValidationContext(GLint clientVersion,
                                      State *state,
                                      const Caps &caps,
                                      const TextureCapsMap &textureCaps,
@@ -53,8 +51,7 @@ ValidationContext::ValidationContext(GLint clientMajorVersion,
                                      const Limitations &limitations,
                                      bool skipValidation)
     : mState(reinterpret_cast<uintptr_t>(this),
-             clientMajorVersion,
-             clientMinorVersion,
+             clientVersion,
              state,
              caps,
              textureCaps,
@@ -333,7 +330,7 @@ bool ValidationContext::getQueryParameterInfo(GLenum pname, GLenum *type, unsign
         case GL_PACK_ROW_LENGTH:
         case GL_PACK_SKIP_ROWS:
         case GL_PACK_SKIP_PIXELS:
-            if ((getClientMajorVersion() < 3) && !getExtensions().packSubimage)
+            if ((getClientVersion() < 3) && !getExtensions().packSubimage)
             {
                 return false;
             }
@@ -343,7 +340,7 @@ bool ValidationContext::getQueryParameterInfo(GLenum pname, GLenum *type, unsign
         case GL_UNPACK_ROW_LENGTH:
         case GL_UNPACK_SKIP_ROWS:
         case GL_UNPACK_SKIP_PIXELS:
-            if ((getClientMajorVersion() < 3) && !getExtensions().unpackSubimage)
+            if ((getClientVersion() < 3) && !getExtensions().unpackSubimage)
             {
                 return false;
             }
@@ -351,7 +348,7 @@ bool ValidationContext::getQueryParameterInfo(GLenum pname, GLenum *type, unsign
             *numParams = 1;
             return true;
         case GL_VERTEX_ARRAY_BINDING:
-            if ((getClientMajorVersion() < 3) && !getExtensions().vertexArrayObject)
+            if ((getClientVersion() < 3) && !getExtensions().vertexArrayObject)
             {
                 return false;
             }
@@ -360,7 +357,7 @@ bool ValidationContext::getQueryParameterInfo(GLenum pname, GLenum *type, unsign
             return true;
         case GL_PIXEL_PACK_BUFFER_BINDING:
         case GL_PIXEL_UNPACK_BUFFER_BINDING:
-            if ((getClientMajorVersion() < 3) && !getExtensions().pixelBufferObject)
+            if ((getClientVersion() < 3) && !getExtensions().pixelBufferObject)
             {
                 return false;
             }
@@ -369,9 +366,7 @@ bool ValidationContext::getQueryParameterInfo(GLenum pname, GLenum *type, unsign
             return true;
     }
 
-    const GLVersion &glVersion = mState.getGLVersion();
-
-    if (!glVersion.isES3OrGreater())
+    if (getClientVersion() < 3)
     {
         return false;
     }
@@ -447,63 +442,6 @@ bool ValidationContext::getQueryParameterInfo(GLenum pname, GLenum *type, unsign
         }
     }
 
-    if (!glVersion.isES31())
-    {
-        return false;
-    }
-
-    switch (pname)
-    {
-        case GL_MAX_FRAMEBUFFER_WIDTH:
-        case GL_MAX_FRAMEBUFFER_HEIGHT:
-        case GL_MAX_FRAMEBUFFER_SAMPLES:
-        case GL_MAX_SAMPLE_MASK_WORDS:
-        case GL_MAX_COLOR_TEXTURE_SAMPLES:
-        case GL_MAX_DEPTH_TEXTURE_SAMPLES:
-        case GL_MAX_INTEGER_SAMPLES:
-        case GL_MAX_VERTEX_ATTRIB_RELATIVE_OFFSET:
-        case GL_MAX_VERTEX_ATTRIB_BINDINGS:
-        case GL_MAX_VERTEX_ATTRIB_STRIDE:
-        case GL_MAX_VERTEX_ATOMIC_COUNTER_BUFFERS:
-        case GL_MAX_VERTEX_ATOMIC_COUNTERS:
-        case GL_MAX_VERTEX_IMAGE_UNIFORMS:
-        case GL_MAX_VERTEX_SHADER_STORAGE_BLOCKS:
-        case GL_MAX_FRAGMENT_ATOMIC_COUNTER_BUFFERS:
-        case GL_MAX_FRAGMENT_ATOMIC_COUNTERS:
-        case GL_MAX_FRAGMENT_IMAGE_UNIFORMS:
-        case GL_MAX_FRAGMENT_SHADER_STORAGE_BLOCKS:
-        case GL_MIN_PROGRAM_TEXTURE_GATHER_OFFSET:
-        case GL_MAX_PROGRAM_TEXTURE_GATHER_OFFSET:
-        case GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS:
-        case GL_MAX_COMPUTE_UNIFORM_BLOCKS:
-        case GL_MAX_COMPUTE_TEXTURE_IMAGE_UNITS:
-        case GL_MAX_COMPUTE_SHARED_MEMORY_SIZE:
-        case GL_MAX_COMPUTE_UNIFORM_COMPONENTS:
-        case GL_MAX_COMPUTE_ATOMIC_COUNTER_BUFFERS:
-        case GL_MAX_COMPUTE_ATOMIC_COUNTERS:
-        case GL_MAX_COMPUTE_IMAGE_UNIFORMS:
-        case GL_MAX_COMBINED_COMPUTE_UNIFORM_COMPONENTS:
-        case GL_MAX_COMPUTE_SHADER_STORAGE_BLOCKS:
-        case GL_MAX_COMBINED_SHADER_OUTPUT_RESOURCES:
-        case GL_MAX_UNIFORM_LOCATIONS:
-        case GL_MAX_ATOMIC_COUNTER_BUFFER_BINDINGS:
-        case GL_MAX_ATOMIC_COUNTER_BUFFER_SIZE:
-        case GL_MAX_COMBINED_ATOMIC_COUNTER_BUFFERS:
-        case GL_MAX_COMBINED_ATOMIC_COUNTERS:
-        case GL_MAX_IMAGE_UNITS:
-        case GL_MAX_COMBINED_IMAGE_UNIFORMS:
-        case GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS:
-        case GL_MAX_COMBINED_SHADER_STORAGE_BLOCKS:
-        case GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT:
-            *type      = GL_INT;
-            *numParams = 1;
-            return true;
-        case GL_MAX_SHADER_STORAGE_BLOCK_SIZE:
-            *type      = GL_INT_64_ANGLEX;
-            *numParams = 1;
-            return true;
-    }
-
     return false;
 }
 
@@ -511,9 +449,7 @@ bool ValidationContext::getIndexedQueryParameterInfo(GLenum target,
                                                      GLenum *type,
                                                      unsigned int *numParams)
 {
-
-    const GLVersion &glVersion = mState.getGLVersion();
-    if (!glVersion.isES3OrGreater())
+    if (getClientVersion() < 3)
     {
         return false;
     }
@@ -533,22 +469,6 @@ bool ValidationContext::getIndexedQueryParameterInfo(GLenum target,
         case GL_UNIFORM_BUFFER_SIZE:
         {
             *type      = GL_INT_64_ANGLEX;
-            *numParams = 1;
-            return true;
-        }
-    }
-
-    if (!glVersion.isES31())
-    {
-        return false;
-    }
-
-    switch (target)
-    {
-        case GL_MAX_COMPUTE_WORK_GROUP_COUNT:
-        case GL_MAX_COMPUTE_WORK_GROUP_SIZE:
-        {
-            *type      = GL_INT;
             *numParams = 1;
             return true;
         }

@@ -14,7 +14,6 @@
 #include <set>
 #include <string>
 #include <vector>
-#include <array>
 
 namespace gl
 {
@@ -289,9 +288,6 @@ struct Extensions
     // GL_CHROMIUM_sync_query
     bool syncQuery;
 
-    // GL_CHROMIUM_copy_texture
-    bool copyTexture;
-
     // ES3 Extension support
 
     // GL_EXT_color_buffer_float
@@ -354,7 +350,7 @@ struct Caps
 {
     Caps();
 
-    // ES 3.1 (April 29, 2015) 20.39: implementation dependent values
+    // Table 6.28, implementation dependent values
     GLuint64 maxElementIndex;
     GLuint max3DTextureSize;
     GLuint max2DTextureSize;
@@ -362,29 +358,16 @@ struct Caps
     GLfloat maxLODBias;
     GLuint maxCubeMapTextureSize;
     GLuint maxRenderbufferSize;
+    GLuint maxDrawBuffers;
+    GLuint maxColorAttachments;
+    GLuint maxViewportWidth;
+    GLuint maxViewportHeight;
     GLfloat minAliasedPointSize;
     GLfloat maxAliasedPointSize;
     GLfloat minAliasedLineWidth;
     GLfloat maxAliasedLineWidth;
 
-    // ES 3.1 (April 29, 2015) 20.40: implementation dependent values (cont.)
-    GLuint maxDrawBuffers;
-    GLuint maxFramebufferWidth;
-    GLuint maxFramebufferHeight;
-    GLuint maxFramebufferSamples;
-    GLuint maxColorAttachments;
-    GLuint maxViewportWidth;
-    GLuint maxViewportHeight;
-    GLuint maxSampleMaskWords;
-    GLuint maxColorTextureSamples;
-    GLuint maxDepthTextureSamples;
-    GLuint maxIntegerSamples;
-    GLuint64 maxServerWaitTimeout;
-
-    // ES 3.1 (April 29, 2015) Table 20.41: Implementation dependent values (cont.)
-    GLint maxVertexAttribRelativeOffset;
-    GLint maxVertexAttribBindings;
-    GLint maxVertexAttribStride;
+    // Table 6.29, implementation dependent values (cont.)
     GLuint maxElementsIndices;
     GLuint maxElementsVertices;
     std::vector<GLenum> compressedTextureFormats;
@@ -402,49 +385,26 @@ struct Caps
     TypePrecision fragmentHighpInt;
     TypePrecision fragmentMediumpInt;
     TypePrecision fragmentLowpInt;
+    GLuint64 maxServerWaitTimeout;
 
-    // ES 3.1 (April 29, 2015) Table 20.43: Implementation dependent Vertex shader limits
+    // Table 6.31, implementation dependent vertex shader limits
     GLuint maxVertexAttributes;
     GLuint maxVertexUniformComponents;
     GLuint maxVertexUniformVectors;
     GLuint maxVertexUniformBlocks;
     GLuint maxVertexOutputComponents;
     GLuint maxVertexTextureImageUnits;
-    GLuint maxVertexAtomicCounterBuffers;
-    GLuint maxVertexAtomicCounters;
-    GLuint maxVertexImageUniforms;
-    GLuint maxVertexShaderStorageBlocks;
 
-    // ES 3.1 (April 29, 2015) Table 20.44: Implementation dependent Fragment shader limits
+    // Table 6.32, implementation dependent fragment shader limits
     GLuint maxFragmentUniformComponents;
     GLuint maxFragmentUniformVectors;
     GLuint maxFragmentUniformBlocks;
     GLuint maxFragmentInputComponents;
     GLuint maxTextureImageUnits;
-    GLuint maxFragmentAtomicCounterBuffers;
-    GLuint maxFragmentAtomicCounters;
-    GLuint maxFragmentImageUniforms;
-    GLuint maxFragmentShaderStorageBlocks;
-    GLint minProgramTextureGatherOffset;
-    GLuint maxProgramTextureGatherOffset;
     GLint minProgramTexelOffset;
     GLint maxProgramTexelOffset;
 
-    // ES 3.1 (April 29, 2015) Table 20.45: implementation dependent compute shader limits
-    std::array<GLuint, 3> maxComputeWorkGroupCount;
-    std::array<GLuint, 3> maxComputeWorkGroupSize;
-    GLuint maxComputeWorkGroupInvocations;
-    GLuint maxComputeUniformBlocks;
-    GLuint maxComputeTextureImageUnits;
-    GLuint maxComputeSharedMemorySize;
-    GLuint maxComputeUniformComponents;
-    GLuint maxComputeAtomicCounterBuffers;
-    GLuint maxComputeAtomicCounters;
-    GLuint maxComputeImageUniforms;
-    GLuint maxCombinedComputeUniformComponents;
-    GLuint maxComputeShaderStorageBlocks;
-
-    // ES 3.1 (April 29, 2015) Table 20.46: implementation dependent aggregate shader limits
+    // Table 6.33, implementation dependent aggregate shader limits
     GLuint maxUniformBufferBindings;
     GLuint64 maxUniformBlockSize;
     GLuint uniformBufferOffsetAlignment;
@@ -454,27 +414,13 @@ struct Caps
     GLuint maxVaryingComponents;
     GLuint maxVaryingVectors;
     GLuint maxCombinedTextureImageUnits;
-    GLuint maxCombinedShaderOutputResources;
 
-    // ES 3.1 (April 29, 2015) Table 20.47: implementation dependent aggregate shader limits (cont.)
-    GLuint maxUniformLocations;
-    GLuint maxAtomicCounterBufferBindings;
-    GLuint maxAtomicCounterBufferSize;
-    GLuint maxCombinedAtomicCounterBuffers;
-    GLuint maxCombinedAtomicCounters;
-    GLuint maxImageUnits;
-    GLuint maxCombinedImageUniforms;
-    GLuint maxShaderStorageBufferBindings;
-    GLuint64 maxShaderStorageBlockSize;
-    GLuint maxCombinedShaderStorageBlocks;
-    GLuint shaderStorageBufferOffsetAlignment;
-
-    // ES 3.1 (April 29, 2015) Table 20.48: implementation dependent transform feedback limits
+    // Table 6.34, implementation dependent transform feedback limits
     GLuint maxTransformFeedbackInterleavedComponents;
     GLuint maxTransformFeedbackSeparateAttributes;
     GLuint maxTransformFeedbackSeparateComponents;
 
-    // ES 3.1 (April 29, 2015) Table 20.49: Framebuffer Dependent Values
+    // Table 6.35, Framebuffer Dependent Values
     GLuint maxSamples;
 };
 

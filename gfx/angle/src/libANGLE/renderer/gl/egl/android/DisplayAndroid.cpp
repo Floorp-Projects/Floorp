@@ -159,7 +159,6 @@ SurfaceImpl *DisplayAndroid::createWindowSurface(const egl::SurfaceState &state,
                                        EGL_NONE};
     success = mEGL->chooseConfig(configAttribList, &config, 1, &numConfig);
     ASSERT(success && numConfig == 1);
-    UNUSED_ASSERTION_VARIABLE(success);
 
     return new WindowSurfaceEGL(state, mEGL, config, window, attribs.toIntVector(), mContext,
                                 getRenderer());
@@ -177,7 +176,6 @@ SurfaceImpl *DisplayAndroid::createPbufferSurface(const egl::SurfaceState &state
                                        EGL_NONE};
     success = mEGL->chooseConfig(configAttribList, &config, 1, &numConfig);
     ASSERT(success && numConfig == 1);
-    UNUSED_ASSERTION_VARIABLE(success);
 
     return new PbufferSurfaceEGL(state, mEGL, config, attribs.toIntVector(), mContext,
                                  getRenderer());
@@ -214,8 +212,8 @@ void DisplayAndroid::getConfigAttrib(EGLConfig config, EGLint attribute, T *valu
 {
     EGLint tmp;
     EGLBoolean success = mEGL->getConfigAttrib(config, attribute, &tmp);
-    ASSERT(success == EGL_TRUE);
     UNUSED_ASSERTION_VARIABLE(success);
+    ASSERT(success == EGL_TRUE);
     *value = tmp;
 }
 
@@ -233,7 +231,6 @@ egl::ConfigSet DisplayAndroid::generateConfigs()
     success =
         mEGL->chooseConfig(mConfigAttribList.data(), configs.data(), numConfigs, &numConfigs2);
     ASSERT(success == EGL_TRUE && numConfigs2 == numConfigs);
-    UNUSED_ASSERTION_VARIABLE(success);
 
     for (int i = 0; i < numConfigs; i++)
     {
@@ -332,6 +329,11 @@ egl::ConfigSet DisplayAndroid::generateConfigs()
     }
 
     return configSet;
+}
+
+bool DisplayAndroid::isDeviceLost() const
+{
+    return false;
 }
 
 bool DisplayAndroid::testDeviceLost()
