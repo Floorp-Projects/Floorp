@@ -17,6 +17,7 @@ struct ScalarInfo {
   uint32_t name_offset;
   uint32_t expiration_offset;
   uint32_t dataset;
+  bool keyed;
 
   const char *name() const;
   const char *expiration() const;

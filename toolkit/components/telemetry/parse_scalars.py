@@ -86,7 +86,8 @@ class ScalarType:
 
         OPTIONAL_FIELDS = {
             'cpp_guard': basestring,
-            'release_channel_collection': basestring
+            'release_channel_collection': basestring,
+            'keyed': bool
         }
 
         # The types for the data within the fields that hold lists.
@@ -191,6 +192,11 @@ class ScalarType:
     def kind(self):
         """Get the scalar kind"""
         return self._definition['kind']
+
+    @property
+    def keyed(self):
+        """Boolean indicating whether this is a keyed scalar"""
+        return self._definition.get('keyed', False)
 
     @property
     def nsITelemetry_kind(self):
