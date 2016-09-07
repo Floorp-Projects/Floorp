@@ -80,6 +80,7 @@ H264Converter::Input(MediaRawData* aSample)
     if (rv == NS_ERROR_NOT_INITIALIZED) {
       // We are missing the required SPS to create the decoder.
       // Ignore for the time being, the MediaRawData will be dropped.
+      mCallback->InputExhausted();
       return NS_OK;
     }
   } else {
