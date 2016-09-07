@@ -338,28 +338,32 @@ function SignonSelected() {
   }
 }
 
-function DeleteSelectedItemFromTree
-    (tree, view, table, deletedTable, removeButton, removeAllButton) {
+function DeleteSignon() {
+  let filterSet = signonsTreeView._filterSet;
+  let syncNeeded = (filterSet.length != 0);
+  let tree = signonsTree;
+  let view = signonsTreeView;
+  let table = filterSet.length ? filterSet : signons;
 
   // Turn off tree selection notifications during the deletion
   tree.view.selection.selectEventsSuppressed = true;
 
   // remove selected items from list (by setting them to null) and place in deleted list
   let selections = GetTreeSelections(tree);
-  for (let s=selections.length-1; s>= 0; s--) {
+  for (let s = selections.length - 1; s >= 0; s--) {
     let i = selections[s];
-    deletedTable[deletedTable.length] = table[i];
+    deletedSignons.push(table[i]);
     table[i] = null;
   }
 
   // collapse list by removing all the null entries
-  for (let j=0; j<table.length; j++) {
+  for (let j = 0; j < table.length; j++) {
     if (table[j] == null) {
       let k = j;
       while ((k < table.length) && (table[k] == null)) {
         k++;
       }
-      table.splice(j, k-j);
+      table.splice(j, k - j);
       view.rowCount -= k - j;
       tree.treeBoxObject.rowCountChanged(j, j - k);
     }
@@ -373,17 +377,10 @@ function DeleteSelectedItemFromTree
     tree.treeBoxObject.ensureRowIsVisible(nextSelection);
   } else {
     // disable buttons
-    document.getElementById(removeButton).setAttribute("disabled", "true")
-    document.getElementById(removeAllButton).setAttribute("disabled", "true");
+    document.getElementById("removeSignon").setAttribute("disabled", "true")
+    document.getElementById("removeAllSignons").setAttribute("disabled", "true");
   }
   tree.view.selection.selectEventsSuppressed = false;
-}
-
-function DeleteSignon() {
-  let syncNeeded = (signonsTreeView._filterSet.length != 0);
-  DeleteSelectedItemFromTree(signonsTree, signonsTreeView,
-                             signonsTreeView._filterSet.length ? signonsTreeView._filterSet : signons,
-                             deletedSignons, "removeSignon", "removeAllSignons");
   FinalizeSignonDeletions(syncNeeded);
 }
 
