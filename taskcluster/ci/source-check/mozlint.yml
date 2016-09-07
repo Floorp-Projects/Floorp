@@ -1,9 +1,5 @@
 mozlint-eslint/opt:
     description: JS lint check
-    index:
-        product: lint
-        job-name:
-            gecko-v2: eslint-gecko-opt
     treeherder:
         symbol: ES
         kind: test
@@ -48,10 +44,6 @@ mozlint-eslint/opt:
 
 mozlint-flake8/opt:
     description: flake8 run over the gecko codebase
-    index:
-        product: lint
-        job-name:
-            gecko-v2: mozlint-flake8-opt
     treeherder:
         symbol: f8
         kind: test
@@ -78,10 +70,6 @@ mozlint-flake8/opt:
 
 wptlint-gecko/opt:
     description: web-platform-tests linter
-    index:
-        product: lint
-        job-name:
-            gecko-v2: wpt-lint-gecko-opt
     treeherder:
         symbol: W
         kind: test

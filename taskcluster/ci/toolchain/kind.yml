@@ -23,10 +23,6 @@ job-defaults:
 
 jobs:
     linux64-clang/opt:
-        index:
-            product: firefox
-            job-name:
-                gecko-v2: linux64-clang-opt
         treeherder:
             symbol: Cc(Clang)
         run:
@@ -38,10 +34,6 @@ jobs:
                 - 'taskcluster/scripts/misc/build-clang-linux.sh'
 
     linux64-gcc/opt:
-        index:
-            product: firefox
-            job-name:
-                gecko-v2: linux64-gcc-opt
         treeherder:
             symbol: Cc(GCC)
         run:
