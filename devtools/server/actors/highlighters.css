@@ -55,7 +55,7 @@
   cursor: grabbing;
 }
 
-/* Box model highlighter */
+/* Box Model Highlighter */
 
 :-moz-native-anonymous .box-model-regions {
   opacity: 0.6;
@@ -202,7 +202,26 @@
   padding-inline-start: 6px;
 }
 
-/* Css transform highlighter */
+/* CSS Grid Highlighter */
+
+:-moz-native-anonymous .css-grid-canvas {
+  position: absolute;
+  pointer-events: none;
+  top: 0;
+  left: 0;
+  image-rendering: -moz-crisp-edges;
+}
+
+:-moz-native-anonymous .css-grid-regions {
+  opacity: 0.6;
+}
+
+:-moz-native-anonymous .css-grid-areas {
+  fill: #CEC0ED;
+  stroke: none;
+}
+
+/* CSS Transform Highlighter */
 
 :-moz-native-anonymous .css-transform-transformed {
   fill: var(--highlighter-content-color);
@@ -222,7 +241,7 @@
   stroke-width: 2;
 }
 
-/* Rect highlighter */
+/* Rect Highlighter */
 
 :-moz-native-anonymous .highlighted-rect {
   position: absolute;
@@ -230,7 +249,7 @@
   opacity: 0.8;
 }
 
-/* Element geometry highlighter */
+/* Element Geometry Highlighter */
 
 :-moz-native-anonymous .geometry-editor-root {
   /* The geometry editor can be interacted with, so it needs to react to
@@ -300,7 +319,7 @@
   dominant-baseline: middle;
 }
 
-/* Rulers highlighter */
+/* Rulers Highlighter */
 
 :-moz-native-anonymous .rulers-highlighter-elements {
   shape-rendering: crispEdges;
@@ -344,7 +363,7 @@
   text-anchor: end;
 }
 
-/* Measuring Tool highlighter */
+/* Measuring Tool Highlighter */
 
 :-moz-native-anonymous .measuring-tool-highlighter-root {
   position: absolute;
@@ -404,17 +423,7 @@
   shape-rendering: crispEdges;
 }
 
-/* CSS Grid highlighter */
-
-:-moz-native-anonymous .css-grid-canvas {
-  position: absolute;
-  pointer-events: none;
-  top: 0;
-  left: 0;
-  image-rendering: -moz-crisp-edges;
-}
-
-/* Eye dropper */
+/* Eye Dropper */
 
 :-moz-native-anonymous .eye-dropper-root {
   --magnifier-width: 96px;
