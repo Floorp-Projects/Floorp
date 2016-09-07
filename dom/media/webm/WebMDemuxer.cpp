@@ -355,13 +355,6 @@ WebMDemuxer::ReadMetadata()
         continue;
       }
 
-      uint64_t defaultDuration;
-      r = nestegg_track_default_duration(context, track, &defaultDuration);
-      if (r >= 0) {
-        mVideoDefaultDuration =
-          Some(uint64_t(media::TimeUnit::FromNanoseconds(defaultDuration).ToMicroseconds()));
-      }
-
       mVideoTrack = track;
       mHasVideo = true;
 
@@ -400,13 +393,6 @@ WebMDemuxer::ReadMetadata()
       r = nestegg_track_audio_params(context, track, &params);
       if (r == -1) {
         return NS_ERROR_FAILURE;
-      }
-
-      uint64_t defaultDuration;
-      r = nestegg_track_default_duration(context, track, &defaultDuration);
-      if (r >= 0) {
-        mAudioDefaultDuration =
-          Some(uint64_t(media::TimeUnit::FromNanoseconds(defaultDuration).ToMicroseconds()));
       }
 
       mAudioTrack = track;
@@ -601,11 +587,7 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType, MediaRawDataQueue *aSampl
     } else if (!mIsMediaSource ||
                (mIsMediaSource && mLastAudioFrameTime.isSome())) {
       next_tstamp = tstamp;
-      if (mAudioDefaultDuration.isSome()) {
-        next_tstamp += mAudioDefaultDuration.ref();
-      } else {
-        next_tstamp += tstamp - mLastAudioFrameTime.refOr(0);
-      }
+      next_tstamp += tstamp - mLastAudioFrameTime.refOr(0);
     } else {
       PushAudioPacket(holder);
     }
@@ -620,11 +602,7 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType, MediaRawDataQueue *aSampl
     } else if (!mIsMediaSource ||
                (mIsMediaSource && mLastVideoFrameTime.isSome())) {
       next_tstamp = tstamp;
-      if (mVideoDefaultDuration.isSome()) {
-        next_tstamp += mVideoDefaultDuration.ref();
-      } else {
-        next_tstamp += tstamp - mLastVideoFrameTime.refOr(0);
-      }
+      next_tstamp += tstamp - mLastVideoFrameTime.refOr(0);
     } else {
       PushVideoPacket(holder);
     }
