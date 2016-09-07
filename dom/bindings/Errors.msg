@@ -60,6 +60,7 @@ MSG_DEF(MSG_INVALID_HEADER_VALUE, 1, JSEXN_TYPEERR, "{0} is an invalid header va
 MSG_DEF(MSG_INVALID_HEADER_SEQUENCE, 0, JSEXN_TYPEERR, "Headers require name/value tuples when being initialized by a sequence.")
 MSG_DEF(MSG_PERMISSION_DENIED_TO_PASS_ARG, 1, JSEXN_TYPEERR, "Permission denied to pass cross-origin object as {0}.")
 MSG_DEF(MSG_MISSING_REQUIRED_DICTIONARY_MEMBER, 1, JSEXN_TYPEERR, "Missing required {0}.")
+MSG_DEF(MSG_REQUEST_INTEGRITY_METADATA_NOT_EMPTY, 0, JSEXN_TYPEERR, "Request integrity metadata should be an empty string when in no-cors mode.")
 MSG_DEF(MSG_INVALID_REQUEST_METHOD, 1, JSEXN_TYPEERR, "Invalid request method {0}.")
 MSG_DEF(MSG_INVALID_REQUEST_MODE, 1, JSEXN_TYPEERR, "Invalid request mode {0}.")
 MSG_DEF(MSG_INVALID_REFERRER_URL, 1, JSEXN_TYPEERR, "Invalid referrer URL {0}.")
