@@ -126,17 +126,11 @@ class NativeIterCache
     }
 
   public:
-    /* Native iterator most recently started. */
-    PropertyIteratorObject* last;
-
-    NativeIterCache()
-      : last(nullptr)
-    {
+    NativeIterCache() {
         mozilla::PodArrayZero(data);
     }
 
     void purge() {
-        last = nullptr;
         mozilla::PodArrayZero(data);
     }
 
