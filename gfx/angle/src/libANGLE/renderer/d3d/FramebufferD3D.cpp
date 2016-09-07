@@ -309,24 +309,10 @@ bool FramebufferD3D::checkStatus() const
         return false;
     }
 
-    // D3D11 does not allow for overlapping RenderTargetViews, so ensure uniqueness
-    const auto &colorAttachments = mState.getColorAttachments();
-    for (size_t colorAttachment = 0; colorAttachment < colorAttachments.size(); colorAttachment++)
+    // D3D11 does not allow for overlapping RenderTargetViews
+    if (!mState.colorAttachmentsAreUniqueImages())
     {
-        const gl::FramebufferAttachment &attachment = colorAttachments[colorAttachment];
-        if (attachment.isAttached())
-        {
-            for (size_t prevColorAttachment = 0; prevColorAttachment < colorAttachment; prevColorAttachment++)
-            {
-                const gl::FramebufferAttachment &prevAttachment = colorAttachments[prevColorAttachment];
-                if (prevAttachment.isAttached() &&
-                    (attachment.id() == prevAttachment.id() &&
-                     attachment.type() == prevAttachment.type()))
-                {
-                    return false;
-                }
-            }
-        }
+        return false;
     }
 
     // D3D requires all render targets to have the same dimensions.

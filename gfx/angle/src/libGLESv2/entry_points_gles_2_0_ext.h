@@ -179,6 +179,86 @@ ANGLE_EXPORT void GL_APIENTRY StencilThenCoverStrokePathCHROMIUM(GLuint path,
                                                                  GLint reference,
                                                                  GLuint mask,
                                                                  GLenum coverMode);
-}
+ANGLE_EXPORT void GL_APIENTRY CoverFillPathInstancedCHROMIUM(GLsizei numPaths,
+                                                             GLenum pathNameType,
+                                                             const void *paths,
+                                                             GLuint pathBase,
+                                                             GLenum coverMode,
+                                                             GLenum transformType,
+                                                             const GLfloat *transformValues);
+ANGLE_EXPORT void GL_APIENTRY CoverStrokePathInstancedCHROMIUM(GLsizei numPaths,
+                                                               GLenum pathNameType,
+                                                               const void *paths,
+                                                               GLuint pathBase,
+                                                               GLenum coverMode,
+                                                               GLenum transformType,
+                                                               const GLfloat *transformValues);
+ANGLE_EXPORT void GL_APIENTRY StencilFillPathInstancedCHROMIUM(GLsizei numPaths,
+                                                               GLenum pathNameType,
+                                                               const void *paths,
+                                                               GLuint pathBAse,
+                                                               GLenum fillMode,
+                                                               GLuint mask,
+                                                               GLenum transformType,
+                                                               const GLfloat *transformValues);
+ANGLE_EXPORT void GL_APIENTRY StencilStrokePathInstancedCHROMIUM(GLsizei numPaths,
+                                                                 GLenum pathNameType,
+                                                                 const void *paths,
+                                                                 GLuint pathBase,
+                                                                 GLint reference,
+                                                                 GLuint mask,
+                                                                 GLenum transformType,
+                                                                 const GLfloat *transformValues);
+ANGLE_EXPORT void GL_APIENTRY
+StencilThenCoverFillPathInstancedCHROMIUM(GLsizei numPaths,
+                                          GLenum pathNameType,
+                                          const void *paths,
+                                          GLuint pathBase,
+                                          GLenum fillMode,
+                                          GLuint mask,
+                                          GLenum coverMode,
+                                          GLenum transformType,
+                                          const GLfloat *transformValues);
+ANGLE_EXPORT void GL_APIENTRY
+StencilThenCoverStrokePathInstancedCHROMIUM(GLsizei numPaths,
+                                            GLenum pathNameType,
+                                            const void *paths,
+                                            GLuint pathBase,
+                                            GLint reference,
+                                            GLuint mask,
+                                            GLenum coverMode,
+                                            GLenum transformType,
+                                            const GLfloat *transformValues);
+ANGLE_EXPORT void GL_APIENTRY BindFragmentInputLocationCHROMIUM(GLuint program,
+                                                                GLint location,
+                                                                const GLchar *name);
+ANGLE_EXPORT void GL_APIENTRY ProgramPathFragmentInputGenCHROMIUM(GLuint program,
+                                                                  GLint location,
+                                                                  GLenum genMode,
+                                                                  GLint components,
+                                                                  const GLfloat *coeffs);
+
+// GL_CHROMIUM_copy_texture
+ANGLE_EXPORT void GL_APIENTRY CopyTextureCHROMIUM(GLuint sourceId,
+                                                  GLuint destId,
+                                                  GLint internalFormat,
+                                                  GLenum destType,
+                                                  GLboolean unpackFlipY,
+                                                  GLboolean unpackPremultiplyAlpha,
+                                                  GLboolean unpackUnmultiplyAlpha);
+
+ANGLE_EXPORT void GL_APIENTRY CopySubTextureCHROMIUM(GLuint sourceId,
+                                                     GLuint destId,
+                                                     GLint xoffset,
+                                                     GLint yoffset,
+                                                     GLint x,
+                                                     GLint y,
+                                                     GLsizei width,
+                                                     GLsizei height,
+                                                     GLboolean unpackFlipY,
+                                                     GLboolean unpackPremultiplyAlpha,
+                                                     GLboolean unpackUnmultiplyAlpha);
+
+}  // namespace gl
 
 #endif // LIBGLESV2_ENTRYPOINTGLES20EXT_H_

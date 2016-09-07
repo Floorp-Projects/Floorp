@@ -63,7 +63,7 @@ class OcclusionQueriesTest : public ANGLETest
 
 TEST_P(OcclusionQueriesTest, IsOccluded)
 {
-    if (getClientVersion() < 3 && !extensionEnabled("GL_EXT_occlusion_query_boolean"))
+    if (getClientMajorVersion() < 3 && !extensionEnabled("GL_EXT_occlusion_query_boolean"))
     {
         std::cout << "Test skipped because ES3 or GL_EXT_occlusion_query_boolean are not available."
                   << std::endl;
@@ -110,7 +110,7 @@ TEST_P(OcclusionQueriesTest, IsOccluded)
 
 TEST_P(OcclusionQueriesTest, IsNotOccluded)
 {
-    if (getClientVersion() < 3 && !extensionEnabled("GL_EXT_occlusion_query_boolean"))
+    if (getClientMajorVersion() < 3 && !extensionEnabled("GL_EXT_occlusion_query_boolean"))
     {
         std::cout << "Test skipped because ES3 or GL_EXT_occlusion_query_boolean are not available."
                   << std::endl;
@@ -144,7 +144,7 @@ TEST_P(OcclusionQueriesTest, IsNotOccluded)
 
 TEST_P(OcclusionQueriesTest, Errors)
 {
-    if (getClientVersion() < 3 && !extensionEnabled("GL_EXT_occlusion_query_boolean"))
+    if (getClientMajorVersion() < 3 && !extensionEnabled("GL_EXT_occlusion_query_boolean"))
     {
         std::cout << "Test skipped because ES3 or GL_EXT_occlusion_query_boolean are not available."
                   << std::endl;
@@ -208,7 +208,7 @@ TEST_P(OcclusionQueriesTest, Errors)
 // result for each query.  Helps expose bugs in ANGLE's virtual contexts.
 TEST_P(OcclusionQueriesTest, MultiContext)
 {
-    if (getClientVersion() < 3 && !extensionEnabled("GL_EXT_occlusion_query_boolean"))
+    if (getClientMajorVersion() < 3 && !extensionEnabled("GL_EXT_occlusion_query_boolean"))
     {
         std::cout << "Test skipped because ES3 or GL_EXT_occlusion_query_boolean are not available."
                   << std::endl;

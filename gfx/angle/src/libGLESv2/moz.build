@@ -14,6 +14,7 @@ UNIFIED_SOURCES += [
     'entry_points_gles_2_0.cpp',
     'entry_points_gles_2_0_ext.cpp',
     'entry_points_gles_3_0.cpp',
+    'entry_points_gles_3_1.cpp',
     'global_state.cpp',
     'libGLESv2.cpp',
 ]
