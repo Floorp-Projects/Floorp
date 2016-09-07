@@ -78,7 +78,6 @@ jobs:
             tier: 3
         run-on-projects:
             - try
-        worker-type: aws-provisioner-v1/mulet-debug  # TODO (taskdiff): change to default
         worker:
             docker-image: {in-tree: builder}
         run:
