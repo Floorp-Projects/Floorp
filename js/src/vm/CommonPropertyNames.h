@@ -191,6 +191,7 @@
     macro(minute, minute, "minute") \
     macro(missingArguments, missingArguments, "missingArguments") \
     macro(module, module, "module") \
+    macro(Module, Module, "Module") \
     macro(ModuleDeclarationInstantiation, ModuleDeclarationInstantiation, "ModuleDeclarationInstantiation") \
     macro(ModuleEvaluation, ModuleEvaluation, "ModuleEvaluation") \
     macro(month, month, "month") \
