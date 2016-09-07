@@ -782,8 +782,6 @@ protected:
     WebGLRefPtr<WebGLBuffer>& GetBufferSlotByTargetIndexed(GLenum target,
                                                            GLuint index);
 
-    GLenum GetCurrentBinding(WebGLBuffer* buffer) const;
-
 // -----------------------------------------------------------------------------
 // Queries (WebGL2ContextQueries.cpp)
 protected:
