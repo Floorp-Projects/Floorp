@@ -42,17 +42,17 @@ then copies stderr to stdout. This leads to: fd1 and fd2 sending to stderr
 of the parent process (the shell), and fd3 sending to gzip.)
 
 Each line of the allocations log is formatted as follows:
-  <pid> <function>([<args>])[=<result>]
+  <pid> <tid> <function>([<args>])[=<result>]
 where <args> is a comma separated list of values. The number of <args> and
 the presence of <result> depend on the <function>.
 
 Example log:
-  18545 malloc(32)=0x7f90495120e0
-  18545 calloc(1,148)=0x7f9049537480
-  18545 realloc(0x7f90495120e0,64)=0x7f9049536680
-  18545 posix_memalign(256,240)=0x7f9049583300
-  18545 jemalloc_stats()
-  18545 free(0x7f9049536680)
+  18545 18545 malloc(32)=0x7f90495120e0
+  18545 18545 calloc(1,148)=0x7f9049537480
+  18545 18545 realloc(0x7f90495120e0,64)=0x7f9049536680
+  18545 18545 posix_memalign(256,240)=0x7f9049583300
+  18545 18545 jemalloc_stats()
+  18545 18545 free(0x7f9049536680)
 
 This log can be replayed with the logalloc-replay tool in
 memory/replace/logalloc/replay. However, as the goal of that tool is to
@@ -69,12 +69,12 @@ in a large (almost) linear array of allocation tracking slots (prefixed with
 first seen pid number is 1, the second is 2, etc.).
 
 The above example log would become the following, once preprocessed:
-  1 malloc(32)=#1
-  1 calloc(1,148)=#2
-  1 realloc(#1,64)=#1
-  1 posix_memalign(256,240)=#3
-  1 jemalloc_stats()
-  1 free(#1)
+  1 1 malloc(32)=#1
+  1 1 calloc(1,148)=#2
+  1 1 realloc(#1,64)=#1
+  1 1 posix_memalign(256,240)=#3
+  1 1 jemalloc_stats()
+  1 1 free(#1)
 
 The logalloc-replay tool then takes the preprocessed log on its stdin and
 replays the allocations printed there, but will only replay those with the
@@ -91,7 +91,7 @@ to about:memory in Firefox, but they can also be added after preprocessing.
 Here is an example of what one can do:
 
   gunzip -c log.gz | python logalloc_munge.py | \
-  awk '$1 == "2" { print $0 } !(NR % 10000) { print "2 jemalloc_stats()" }' | \
+  awk '$1 == "2" { print $0 } !(NR % 10000) { print "2 1 jemalloc_stats()" }' | \
     ./logalloc-replay
 
 The above command replays the allocations of process #2, with some stats
@@ -103,5 +103,5 @@ through a different allocator. For example:
 
   LD_PRELOAD=libreplace_jemalloc.so logalloc-replay < log
 
-Will replay the log against jemalloc3 (which is, as of writing, what
+Will replay the log against jemalloc4 (which is, as of writing, what
 libreplace_jemalloc.so contains).
