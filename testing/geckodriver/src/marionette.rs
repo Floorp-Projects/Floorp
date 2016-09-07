@@ -472,6 +472,7 @@ impl FirefoxOptions {
     }
 }
 
+#[derive(Default)]
 pub struct MarionetteSettings {
     pub port: Option<u16>,
     pub binary: Option<PathBuf>,
