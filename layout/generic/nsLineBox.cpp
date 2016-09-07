@@ -192,17 +192,19 @@ ListFloats(FILE* out, const char* aPrefix, const nsFloatCacheList& aFloats)
   }
 }
 
-const char *
-BreakTypeToString(uint8_t aBreakType)
+const char*
+nsLineBox::BreakTypeToString(uint8_t aBreakType) const
 {
   switch (aBreakType) {
-  case NS_STYLE_CLEAR_NONE: return "nobr";
-  case NS_STYLE_CLEAR_LEFT: return "leftbr";
-  case NS_STYLE_CLEAR_RIGHT: return "rightbr";
-  case NS_STYLE_CLEAR_BOTH: return "leftbr+rightbr";
-  case NS_STYLE_CLEAR_LINE: return "linebr";
-  default:
-    break;
+    case NS_STYLE_CLEAR_NONE: return "nobr";
+    case NS_STYLE_CLEAR_LEFT: return "leftbr";
+    case NS_STYLE_CLEAR_RIGHT: return "rightbr";
+    case NS_STYLE_CLEAR_INLINE_START: return "inlinestartbr";
+    case NS_STYLE_CLEAR_INLINE_END: return "inlineendbr";
+    case NS_STYLE_CLEAR_BOTH: return "leftbr+rightbr";
+    case NS_STYLE_CLEAR_LINE: return "linebr";
+    default:
+      break;
   }
   return "unknown";
 }
