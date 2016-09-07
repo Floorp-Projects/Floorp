@@ -582,8 +582,7 @@ class FunctionBox : public ObjectBox, public SharedContext
 
     void setStart(const TokenStream& tokenStream) {
         bufStart = tokenStream.currentToken().pos.begin;
-        startLine = tokenStream.getLineno();
-        startColumn = tokenStream.getColumn();
+        tokenStream.srcCoords.lineNumAndColumnIndex(bufStart, &startLine, &startColumn);
     }
 
     void trace(JSTracer* trc) override;

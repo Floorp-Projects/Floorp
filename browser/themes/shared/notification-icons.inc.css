@@ -67,7 +67,7 @@
   opacity: .4;
 }
 
-.notification-anchor-icon:hover {
+.notification-anchor-icon:not(.plugin-blocked):hover {
   opacity: .6;
 }
 
@@ -247,7 +247,7 @@
 .plugin-icon.plugin-blocked {
   list-style-image: url(chrome://browser/skin/notification-icons.svg#plugin-blocked);
   fill: #d92215;
-  opacity: 1 !important; /* !important to override the default hover opacity */
+  opacity: 1;
 }
 
 #notification-popup-box[hidden] {
