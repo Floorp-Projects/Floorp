@@ -130,7 +130,7 @@ bool DeferGlobalInitializersTraverser::visitBinary(Visit visit, TIntermBinary *n
                 ASSERT(symbolNode->getQualifier() == EvqGlobal);
             }
             // Remove the initializer from the global scope and just declare the global instead.
-            mReplacements.push_back(NodeUpdateEntry(getParentNode(), node, symbolNode, false));
+            queueReplacement(node, symbolNode, OriginalNode::IS_DROPPED);
         }
     }
     return false;
