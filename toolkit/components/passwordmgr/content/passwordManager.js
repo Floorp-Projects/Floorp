@@ -49,7 +49,7 @@ let signonReloadDisplay = {
           LoadSignons();
           // apply the filter if needed
           if (filterField && filterField.value != "") {
-            _filterPasswords();
+            FilterPasswords();
           }
           break;
       }
@@ -113,7 +113,7 @@ function Shutdown() {
 
 function setFilter(aFilterString) {
   filterField.value = aFilterString;
-  _filterPasswords();
+  FilterPasswords();
 }
 
 let signonsTreeView = {
@@ -442,7 +442,7 @@ function TogglePasswordVisible() {
     togglePasswordsButton.label = kSignonBundle.getString(showingPasswords ? "hidePasswords" : "showPasswords");
     togglePasswordsButton.accessKey = kSignonBundle.getString(showingPasswords ? "hidePasswordsAccessKey" : "showPasswordsAccessKey");
     document.getElementById("passwordCol").hidden = !showingPasswords;
-    _filterPasswords();
+    FilterPasswords();
   }
 
   // Notify observers that the password visibility toggling is
@@ -580,7 +580,7 @@ function SignonMatchesFilter(aSignon, aFilterValue) {
   return false;
 }
 
-function FilterPasswords(aFilterValue, view) {
+function _filterPasswords(aFilterValue, view) {
   aFilterValue = aFilterValue.toLowerCase();
   return signons.filter(s => SignonMatchesFilter(s, aFilterValue));
 }
@@ -597,13 +597,13 @@ function SignonSaveState() {
   }
 }
 
-function _filterPasswords() {
+function FilterPasswords() {
   if (filterField.value == "") {
     SignonClearFilter();
     return;
   }
 
-  let newFilterSet = FilterPasswords(filterField.value, signonsTreeView);
+  let newFilterSet = _filterPasswords(filterField.value, signonsTreeView);
   if (!signonsTreeView._filterSet.length) {
     // Save Display Info for the Non-Filtered mode when we first
     // enter Filtered mode.
