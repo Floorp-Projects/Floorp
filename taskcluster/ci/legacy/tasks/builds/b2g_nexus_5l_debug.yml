@@ -5,8 +5,8 @@ $inherits:
     build_type: 'debug'
 task:
   scopes:
-    - 'docker-worker:cache:level-{{level}}-{{project}}-build-nexus-5-l-debug'
-    - 'docker-worker:cache:level-{{level}}-{{project}}-build-nexus-5-l-debug-objdir-gecko'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-nexus-5l-eng-debug'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-nexus-5l-eng-debug-objdir-gecko'
     - 'docker-worker:relengapi-proxy:tooltool.download.internal'
     - 'docker-worker:relengapi-proxy:tooltool.download.public'
   metadata:
@@ -14,8 +14,8 @@ task:
 
   payload:
     cache:
-      level-{{level}}-{{project}}-build-nexus-5-l-debug: /home/worker/workspace
-      level-{{level}}-{{project}}-build-nexus-5-l-debug-objdir-gecko: /home/worker/objdir-gecko
+      level-{{level}}-{{project}}-build-nexus-5l-eng-debug: /home/worker/workspace
+      level-{{level}}-{{project}}-build-nexus-5l-eng-debug-objdir-gecko: /home/worker/objdir-gecko
     features:
       relengAPIProxy: true
     env:
