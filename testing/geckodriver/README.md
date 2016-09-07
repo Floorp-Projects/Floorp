@@ -77,12 +77,43 @@ contain any of the following fields:
           This may be used to e.g. install extensions or custom certificates.
     </tr>
     <tr>
+        <td><code>log</code>
+        <td><a href=#log_options>Log options</a> object
+        <td>
+        <td>Logging options for Gecko.
+    </tr>
+    <tr>
         <td><code>prefs</code>
         <td><code>Object&lt;string,&nbsp;(string|boolean|integer)&gt</code>
         <td>
         <td>Map of preference name to preference value, which can be a
             string, a boolean or an integer.
     </tr>
+</table>
+
+### Log options
+
+<table>
+ <thead>
+  <tr>
+   <th>Name
+   <th>Type
+   <th>Default
+   <th>Description
+  </tr>
+ </thead>
+
+ <tr>
+  <td><code>level</code>
+  <td>String
+  <td><code>info</code> with optimised Firefox builds,
+   and <code>debug</code> with non-optimised
+  <td>Set the level of verbosity in Gecko.
+   Available levels are <code>trace</code>,
+   <code>debug</code>, <code>config</code>,
+   <code>info</code>, <code>warn</code>,
+   <code>error</code>, and <code>fatal</code>.
+ </tr>
 </table>
 
 ## Building

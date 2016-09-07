@@ -8,6 +8,7 @@ All notable changes to this program is documented in this file.
 - Introduced continous integration builds for Windows 32-bit binaries
 - Added new extension commands for finding an element’s anonymous children and querying its attributes; accessible through the `/session/{sessionId}/moz/xbl/{elementId}/anonymous_children` to return all anonymous children and `/session/{sessionId}/moz/xbl/{elementId}/anonymous_by_attribute` to return an anonymous element by a name and attribute query
 - Added `firefoxOptions` capability to set preferences from capabilities
+- Introduced a logging capability to change the verbosity of Gecko
 
 ### Changed
 - Accepted capabilities changed to a chromedriver-like dictionary of keys and values; this will cause `firefox_binary`, `firefox_args` and `firefox_profile` to stop working
@@ -17,6 +18,7 @@ All notable changes to this program is documented in this file.
 
 ### Fixed
 - Corrected link to repository in Cargo metadata
+- Verbosity shorthand flag `-v[v]` now works again, following the replacement of the argument parsing library in the previous release.
 
 ## 0.10.0 (2016-08-02)
 
