@@ -64,26 +64,26 @@ function* testPosition(test, inspector, testActor) {
   yield selectAndHighlightNode(test.selector, inspector);
 
   let position = yield testActor.getHighlighterNodeAttribute(
-    "box-model-infobar-container", "position");
+    "box-model-nodeinfobar-container", "position");
   is(position, test.position, "Node " + test.selector + ": position matches");
 
   let tag = yield testActor.getHighlighterNodeTextContent(
-    "box-model-infobar-tagname");
+    "box-model-nodeinfobar-tagname");
   is(tag, test.tag, "node " + test.selector + ": tagName matches.");
 
   if (test.id) {
     let id = yield testActor.getHighlighterNodeTextContent(
-      "box-model-infobar-id");
+      "box-model-nodeinfobar-id");
     is(id, "#" + test.id, "node " + test.selector + ": id matches.");
   }
 
   let classes = yield testActor.getHighlighterNodeTextContent(
-    "box-model-infobar-classes");
+    "box-model-nodeinfobar-classes");
   is(classes, test.classes, "node " + test.selector + ": classes match.");
 
   if (test.dims) {
     let dims = yield testActor.getHighlighterNodeTextContent(
-      "box-model-infobar-dimensions");
+      "box-model-nodeinfobar-dimensions");
     is(dims, test.dims, "node " + test.selector + ": dims match.");
   }
 }

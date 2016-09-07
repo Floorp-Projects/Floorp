@@ -7,10 +7,11 @@
 const { extend } = require("sdk/core/heritage");
 const { AutoRefreshHighlighter } = require("./auto-refresh");
 const {
-  CanvasFrameAnonymousContentHelper, moveInfobar,
+  CanvasFrameAnonymousContentHelper,
   getBindingElementAndPseudo, hasPseudoClassLock, getComputedStyle,
   createSVGNode, createNode, isNodeValid } = require("./utils/markup");
-const { setIgnoreLayoutChanges } = require("devtools/shared/layout/utils");
+const { getCurrentZoom,
+  setIgnoreLayoutChanges } = require("devtools/shared/layout/utils");
 const inspector = require("devtools/server/actors/inspector");
 
 // Note that the order of items in this array is important because it is used
@@ -19,6 +20,10 @@ const BOX_MODEL_REGIONS = ["margin", "border", "padding", "content"];
 const BOX_MODEL_SIDES = ["top", "right", "bottom", "left"];
 // Width of boxmodelhighlighter guides
 const GUIDE_STROKE_WIDTH = 1;
+// How high is the nodeinfobar (px).
+const NODE_INFOBAR_HEIGHT = 34;
+// What's the size of the nodeinfobar arrow (px).
+const NODE_INFOBAR_ARROW_SIZE = 9;
 // FIXME: add ":visited" and ":link" after bug 713106 is fixed
 const PSEUDO_CLASSES = [":hover", ":active", ":focus"];
 
@@ -68,17 +73,17 @@ const PSEUDO_CLASSES = [":hover", ":active", ":focus"];
  *       <line class="box-model-guide-bottom" x1="..." y1="..." x2="..." y2="..." />
  *       <line class="box-model-guide-left" x1="..." y1="..." x2="..." y2="..." />
  *     </svg>
- *     <div class="box-model-infobar-container">
- *       <div class="box-model-infobar-arrow highlighter-infobar-arrow-top" />
- *       <div class="box-model-infobar">
- *         <div class="box-model-infobar-text" align="center">
- *           <span class="box-model-infobar-tagname">Node name</span>
- *           <span class="box-model-infobar-id">Node id</span>
- *           <span class="box-model-infobar-classes">.someClass</span>
- *           <span class="box-model-infobar-pseudo-classes">:hover</span>
+ *     <div class="box-model-nodeinfobar-container">
+ *       <div class="box-model-nodeinfobar-arrow highlighter-nodeinfobar-arrow-top" />
+ *       <div class="box-model-nodeinfobar">
+ *         <div class="box-model-nodeinfobar-text" align="center">
+ *           <span class="box-model-nodeinfobar-tagname">Node name</span>
+ *           <span class="box-model-nodeinfobar-id">Node id</span>
+ *           <span class="box-model-nodeinfobar-classes">.someClass</span>
+ *           <span class="box-model-nodeinfobar-pseudo-classes">:hover</span>
  *         </div>
  *       </div>
- *       <div class="box-model-infobar-arrow box-model-infobar-arrow-bottom"/>
+ *       <div class="box-model-nodeinfobar-arrow box-model-nodeinfobar-arrow-bottom"/>
  *     </div>
  *   </div>
  * </div>
@@ -181,26 +186,26 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     let infobarContainer = createNode(this.win, {
       parent: rootWrapper,
       attributes: {
-        "class": "infobar-container",
-        "id": "infobar-container",
+        "class": "nodeinfobar-container",
+        "id": "nodeinfobar-container",
         "position": "top",
         "hidden": "true"
       },
       prefix: this.ID_CLASS_PREFIX
     });
 
-    let infobar = createNode(this.win, {
+    let nodeInfobar = createNode(this.win, {
       parent: infobarContainer,
       attributes: {
-        "class": "infobar"
+        "class": "nodeinfobar"
       },
       prefix: this.ID_CLASS_PREFIX
     });
 
     let texthbox = createNode(this.win, {
-      parent: infobar,
+      parent: nodeInfobar,
       attributes: {
-        "class": "infobar-text"
+        "class": "nodeinfobar-text"
       },
       prefix: this.ID_CLASS_PREFIX
     });
@@ -208,8 +213,8 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
       nodeType: "span",
       parent: texthbox,
       attributes: {
-        "class": "infobar-tagname",
-        "id": "infobar-tagname"
+        "class": "nodeinfobar-tagname",
+        "id": "nodeinfobar-tagname"
       },
       prefix: this.ID_CLASS_PREFIX
     });
@@ -217,8 +222,8 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
       nodeType: "span",
       parent: texthbox,
       attributes: {
-        "class": "infobar-id",
-        "id": "infobar-id"
+        "class": "nodeinfobar-id",
+        "id": "nodeinfobar-id"
       },
       prefix: this.ID_CLASS_PREFIX
     });
@@ -226,8 +231,8 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
       nodeType: "span",
       parent: texthbox,
       attributes: {
-        "class": "infobar-classes",
-        "id": "infobar-classes"
+        "class": "nodeinfobar-classes",
+        "id": "nodeinfobar-classes"
       },
       prefix: this.ID_CLASS_PREFIX
     });
@@ -235,8 +240,8 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
       nodeType: "span",
       parent: texthbox,
       attributes: {
-        "class": "infobar-pseudo-classes",
-        "id": "infobar-pseudo-classes"
+        "class": "nodeinfobar-pseudo-classes",
+        "id": "nodeinfobar-pseudo-classes"
       },
       prefix: this.ID_CLASS_PREFIX
     });
@@ -244,8 +249,8 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
       nodeType: "span",
       parent: texthbox,
       attributes: {
-        "class": "infobar-dimensions",
-        "id": "infobar-dimensions"
+        "class": "nodeinfobar-dimensions",
+        "id": "nodeinfobar-dimensions"
       },
       prefix: this.ID_CLASS_PREFIX
     });
@@ -345,14 +350,14 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
    * Hide the infobar
    */
   _hideInfobar: function () {
-    this.getElement("infobar-container").setAttribute("hidden", "true");
+    this.getElement("nodeinfobar-container").setAttribute("hidden", "true");
   },
 
   /**
    * Show the infobar
    */
   _showInfobar: function () {
-    this.getElement("infobar-container").removeAttribute("hidden");
+    this.getElement("nodeinfobar-container").removeAttribute("hidden");
     this._updateInfobar();
   },
 
@@ -374,7 +379,7 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
    * Calculate an outer quad based on the quads returned by getAdjustedQuads.
    * The BoxModelHighlighter may highlight more than one boxes, so in this case
    * create a new quad that "contains" all of these quads.
-   * This is useful to position the guides and infobar.
+   * This is useful to position the guides and nodeinfobar.
    * This may happen if the BoxModelHighlighter is used to highlight an inline
    * element that spans line breaks.
    * @param {String} region The box-model region to get the outer quad for.
@@ -671,11 +676,11 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
               " \u00D7 " +
               parseFloat(rect.height.toPrecision(6));
 
-    this.getElement("infobar-tagname").setTextContent(displayName);
-    this.getElement("infobar-id").setTextContent(id);
-    this.getElement("infobar-classes").setTextContent(classList);
-    this.getElement("infobar-pseudo-classes").setTextContent(pseudos);
-    this.getElement("infobar-dimensions").setTextContent(dim);
+    this.getElement("nodeinfobar-tagname").setTextContent(displayName);
+    this.getElement("nodeinfobar-id").setTextContent(id);
+    this.getElement("nodeinfobar-classes").setTextContent(classList);
+    this.getElement("nodeinfobar-pseudo-classes").setTextContent(pseudos);
+    this.getElement("nodeinfobar-dimensions").setTextContent(dim);
 
     this._moveInfobar();
   },
@@ -685,9 +690,57 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
    */
   _moveInfobar: function () {
     let bounds = this._getOuterBounds();
-    let container = this.getElement("infobar-container");
+    let winHeight = this.win.innerHeight * getCurrentZoom(this.win);
+    let winWidth = this.win.innerWidth * getCurrentZoom(this.win);
+    let winScrollY = this.win.scrollY;
 
-    moveInfobar(container, bounds, this.win);
+    // Ensure that containerBottom and containerTop are at least zero to avoid
+    // showing tooltips outside the viewport.
+    let containerBottom = Math.max(0, bounds.bottom) + NODE_INFOBAR_ARROW_SIZE;
+    let containerTop = Math.min(winHeight, bounds.top);
+    let container = this.getElement("nodeinfobar-container");
+
+    // Can the bar be above the node?
+    let top;
+    if (containerTop < NODE_INFOBAR_HEIGHT) {
+      // No. Can we move the bar under the node?
+      if (containerBottom + NODE_INFOBAR_HEIGHT > winHeight) {
+        // No. Let's move it inside. Can we show it at the top of the element?
+        if (containerTop < winScrollY) {
+          // No. Window is scrolled past the top of the element.
+          top = 0;
+        } else {
+          // Yes. Show it at the top of the element
+          top = containerTop;
+        }
+        container.setAttribute("position", "overlap");
+      } else {
+        // Yes. Let's move it under the node.
+        top = containerBottom;
+        container.setAttribute("position", "bottom");
+      }
+    } else {
+      // Yes. Let's move it on top of the node.
+      top = containerTop - NODE_INFOBAR_HEIGHT;
+      container.setAttribute("position", "top");
+    }
+
+    // Align the bar with the box's center if possible.
+    let left = bounds.right - bounds.width / 2;
+    // Make sure the while infobar is visible.
+    let buffer = 100;
+    if (left < buffer) {
+      left = buffer;
+      container.setAttribute("hide-arrow", "true");
+    } else if (left > winWidth - buffer) {
+      left = winWidth - buffer;
+      container.setAttribute("hide-arrow", "true");
+    } else {
+      container.removeAttribute("hide-arrow");
+    }
+
+    let style = "top:" + top + "px;left:" + left + "px;";
+    container.setAttribute("style", style);
   }
 });
 exports.BoxModelHighlighter = BoxModelHighlighter;

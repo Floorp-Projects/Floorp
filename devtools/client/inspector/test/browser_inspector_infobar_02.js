@@ -45,6 +45,6 @@ function* testNode(test, inspector, testActor) {
   yield selectAndHighlightNode(test.selector, inspector);
 
   let tag = yield testActor.getHighlighterNodeTextContent(
-    "box-model-infobar-tagname");
+    "box-model-nodeinfobar-tagname");
   is(tag, test.tag, "node " + test.selector + ": tagName matches.");
 }

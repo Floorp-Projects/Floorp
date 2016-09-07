@@ -117,7 +117,7 @@ function* assertPseudoAddedToNode(inspector, testActor, ruleview) {
 
   info("Check that the infobar selector contains the pseudo-class");
   let value = yield testActor.getHighlighterNodeTextContent(
-    "box-model-infobar-pseudo-classes");
+    "box-model-nodeinfobar-pseudo-classes");
   is(value, PSEUDO, "pseudo-class in infobar selector");
   yield inspector.toolbox.highlighter.hideBoxModel();
 }
@@ -143,7 +143,7 @@ function* assertPseudoRemovedFromView(inspector, testActor, ruleview) {
   yield showPickerOn("#div-1", inspector);
 
   let value = yield testActor.getHighlighterNodeTextContent(
-    "box-model-infobar-pseudo-classes");
+    "box-model-nodeinfobar-pseudo-classes");
   is(value, "", "pseudo-class removed from infobar selector");
   yield inspector.toolbox.highlighter.hideBoxModel();
 }
