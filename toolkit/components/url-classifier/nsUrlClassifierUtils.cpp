@@ -100,7 +100,7 @@ typedef FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints Constraints;
 
 static void
 InitListUpdateRequest(ThreatType aThreatType,
-                      const char* aState,
+                      const char* aStateBase64,
                       ListUpdateRequest* aListUpdateRequest)
 {
   aListUpdateRequest->set_threat_type(aThreatType);
@@ -114,8 +114,12 @@ InitListUpdateRequest(ThreatType aThreatType,
   aListUpdateRequest->set_allocated_constraints(contraints);
 
   // Only set non-empty state.
-  if (aState[0] != '\0') {
-    aListUpdateRequest->set_state(aState);
+  if (aStateBase64[0] != '\0') {
+    nsCString stateBinary;
+    nsresult rv = Base64Decode(nsCString(aStateBase64), stateBinary);
+    if (NS_SUCCEEDED(rv)) {
+      aListUpdateRequest->set_state(stateBinary.get());
+    }
   }
 }
 
@@ -267,7 +271,7 @@ nsUrlClassifierUtils::GetProtocolVersion(const nsACString& aProvider,
 
 NS_IMETHODIMP
 nsUrlClassifierUtils::MakeUpdateRequestV4(const char** aListNames,
-                                          const char** aStates,
+                                          const char** aStatesBase64,
                                           uint32_t aCount,
                                           nsACString &aRequest)
 {
@@ -284,7 +288,7 @@ nsUrlClassifierUtils::MakeUpdateRequestV4(const char** aListNames,
       continue; // Unknown list name.
     }
     auto lur = r.mutable_list_update_requests()->Add();
-    InitListUpdateRequest(static_cast<ThreatType>(threatType), aStates[i], lur);
+    InitListUpdateRequest(static_cast<ThreatType>(threatType), aStatesBase64[i], lur);
   }
 
   // Then serialize.

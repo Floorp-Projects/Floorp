@@ -401,7 +401,7 @@ PROT_ListManager.prototype.makeUpdateRequest_ = function(updateUrl, tableData) {
       // "saving states to HashStore".
       let statePrefName = "browser.safebrowsing.provider.google4.state." + listName;
       let stateBase64 = this.prefs_.getPref(statePrefName, "");
-      stateArray.push(stateBase64 ? atob(stateBase64) : "");
+      stateArray.push(stateBase64);
     });
 
     let urlUtils = Cc["@mozilla.org/url-classifier/utils;1"]
