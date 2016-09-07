@@ -1,4 +1,4 @@
-// Generated from: b918892ece90180a8826e80796dcf7e78c36c0e8 make prefs bail if it can't access localStorage (fixes Firefox bundle)
+// Generated from: 9c498c2c83e7562909132883e12578a9b45fc295 Fix #653, finesse selected tab designs (#654)
 
 var Debugger =
 /******/ (function(modules) { // webpackBootstrap
@@ -79,11 +79,12 @@ var Debugger =
 	
 	var isEnabled = _require4.isEnabled;
 	var isFirefoxPanel = _require4.isFirefoxPanel;
+	var getValue = _require4.getValue;
 	var isDevelopment = _require4.isDevelopment;
 	var setConfig = _require4.setConfig;
 	
 	
-	setConfig(({"environment":"firefox-panel","baseWorkerURL":"resource://devtools/client/debugger/new/","logging":false,"clientLogging":false,"features":{"tabs":true},"hotReloading":false}));
+	setConfig(({"environment":"firefox-panel","baseWorkerURL":"resource://devtools/client/debugger/new/","logging":{"client":false,"firefoxProxy":false,"actions":false},"clientLogging":false,"features":{"tabs":true,"sourceMaps":false,"prettyPrint":true,"watchExpressions":false},"hotReloading":true}));
 	
 	// Set various flags before requiring app code.
 	if (isEnabled("logging.client")) {
@@ -99,19 +100,20 @@ var Debugger =
 	var firefox = __webpack_require__(247);
 	var configureStore = __webpack_require__(328);
 	var reducers = __webpack_require__(336);
+	var selectors = __webpack_require__(347);
 	
-	var Tabs = __webpack_require__(347);
-	var App = __webpack_require__(359);
+	var Tabs = __webpack_require__(354);
+	var App = __webpack_require__(360);
 	
 	var createStore = configureStore({
-	  log: false,
+	  log: getValue("logging.actions"),
 	  makeThunkArgs: (args, state) => {
 	    return Object.assign({}, args, { client: getClient(state) });
 	  }
 	});
 	
 	var store = createStore(combineReducers(reducers));
-	var actions = bindActionCreators(__webpack_require__(360), store.dispatch);
+	var actions = bindActionCreators(__webpack_require__(362), store.dispatch);
 	
 	if (isDevelopment()) {
 	  AppConstants.DEBUG_JS_MODULES = true;
@@ -161,18 +163,36 @@ var Debugger =
 	    renderRoot(App);
 	  });
 	} else if (isFirefoxPanel()) {
-	  // The toolbox already provides the tab to debug.
-	  module.exports = {
-	    setThreadClient: firefox.setThreadClient,
-	    setTabTarget: firefox.setTabTarget,
-	    initPage: firefox.initPage,
-	    getActions: () => actions,
-	    renderApp: () => renderRoot(App)
-	  };
+	  (function () {
+	    // The toolbox already provides the tab to debug.
+	    function bootstrap(_ref) {
+	      var threadClient = _ref.threadClient;
+	      var tabTarget = _ref.tabTarget;
+	
+	      firefox.setThreadClient(threadClient);
+	      firefox.setTabTarget(tabTarget);
+	      firefox.initPage(actions);
+	      renderRoot(App);
+	    }
+	
+	    module.exports = {
+	      bootstrap,
+	      store: store,
+	      actions: actions,
+	      selectors: selectors,
+	
+	      // Remove these once we update the API on m-c
+	      setThreadClient: firefox.setThreadClient,
+	      setTabTarget: firefox.setTabTarget,
+	      initPage: firefox.initPage,
+	      renderApp: () => renderRoot(App),
+	      getActions: () => actions
+	    };
+	  })();
 	} else {
+	  renderRoot(Tabs);
 	  connectClients().then(tabs => {
 	    actions.newTabs(tabs);
-	    renderRoot(Tabs);
 	  });
 	}
 
@@ -26915,7 +26935,7 @@ var Debugger =
 	  {
 	    if (aRequest instanceof Ci.nsIChannel) {
 	      let loadInfo = aRequest.loadInfo;
-	      if (loadInfo && loadInfo.isTopLevelLoad) {
+	      if (loadInfo && loadInfo.parentOuterWindowID == loadInfo.outerWindowID) {
 	        return (aRequest.loadFlags & Ci.nsIChannel.LOAD_DOCUMENT_URI);
 	      }
 	    }
@@ -27512,9 +27532,15 @@ var Debugger =
 	  return pick(config, key);
 	}
 	
-	var isEnabled = getValue;
+	function isEnabled(key) {
+	  return config.features[key];
+	}
 	
 	function isDevelopment() {
+	  if (isFirefoxPanel()) {
+	    // Default to production if compiling for the Firefox panel
+	    return ("production") === "development";
+	  }
 	  return ("production") !== "production";
 	}
 	
@@ -29021,7 +29047,7 @@ var Debugger =
 	    return Promise.resolve(injectedDebuggee);
 	  }
 	
-	  return window.client.evaluate(debuggeeStatement).then(result => {
+	  return window.client.debuggeeCommand(debuggeeStatement).then(result => {
 	    injectedDebuggee = result;
 	  });
 	}
@@ -29231,7 +29257,6 @@ var Debugger =
 	
 	function connectClient() {
 	  var deferred = defer();
-	  var isConnected = false;
 	  var useProxy = !getValue("firefox.webSocketConnection");
 	  var portPref = useProxy ? "firefox.proxyPort" : "firefox.webSocketPort";
 	  var webSocketPort = getValue(portPref);
@@ -29240,17 +29265,7 @@ var Debugger =
 	  var transport = useProxy ? new DebuggerTransport(socket) : new WebSocketDebuggerTransport(socket);
 	  debuggerClient = new DebuggerClient(transport);
 	
-	  // TODO: the timeout logic should be moved to DebuggerClient.connect.
-	  setTimeout(() => {
-	    if (isConnected) {
-	      return;
-	    }
-	
-	    deferred.resolve([]);
-	  }, 6000);
-	
 	  debuggerClient.connect().then(() => {
-	    isConnected = true;
 	    return debuggerClient.listTabs().then(response => {
 	      deferred.resolve(createTabs(response.tabs));
 	    });
@@ -29283,15 +29298,10 @@ var Debugger =
 	  tabTarget = getTabTarget();
 	  threadClient = getThreadClient();
 	
-	  setupCommands({ threadClient, tabTarget });
+	  setupCommands({ threadClient, tabTarget, debuggerClient });
 	
 	  tabTarget.on("will-navigate", actions.willNavigate);
 	  tabTarget.on("navigate", actions.navigate);
-	  tabTarget.on("frame-update", function (_, packet) {
-	    if (packet.destroyAll) {
-	      actions.willNavigate();
-	    }
-	  });
 	
 	  // Listen to all the requested events.
 	  setupEvents({ threadClient, actions });
@@ -29675,23 +29685,28 @@ var Debugger =
 	   *         and behaviors of the server we connect to. See RootActor).
 	   */
 	  connect: function (aOnConnected) {
-	    let deferred = promise.defer();
-	    this.emit("connect");
+	    return Promise.race([
+	      new Promise((resolve, reject) => {
+	        this.emit("connect");
 	
-	    // Also emit the event on the |DebuggerClient| object (not on the instance),
-	    // so it's possible to track all instances.
-	    events.emit(DebuggerClient, "connect", this);
+	        // Also emit the event on the |DebuggerClient| object (not on the instance),
+	        // so it's possible to track all instances.
+	        events.emit(DebuggerClient, "connect", this);
 	
-	    this.addOneTimeListener("connected", (aName, aApplicationType, aTraits) => {
-	      this.traits = aTraits;
-	      if (aOnConnected) {
-	        aOnConnected(aApplicationType, aTraits);
-	      }
-	      deferred.resolve([aApplicationType, aTraits]);
-	    });
+	        this.addOneTimeListener("connected", (aName, aApplicationType, aTraits) => {
+	          this.traits = aTraits;
+	          if (aOnConnected) {
+	            aOnConnected(aApplicationType, aTraits);
+	          }
+	          resolve([aApplicationType, aTraits]);
+	        });
 	
-	    this._transport.ready();
-	    return deferred.promise;
+	        this._transport.ready();
+	      }),
+	      new Promise((resolve, reject) => {
+	        setTimeout(() => reject(new Error("Connect timeout error")), 6000);
+	      })
+	    ]);
 	  },
 	
 	  /**
@@ -35819,7 +35834,6 @@ var Debugger =
 	          // Prevent a bad listener from interfering with the others.
 	          var msg = ex + ": " + ex.stack;
 	          console.error(msg);
-	          dump(msg + "\n");
 	        }
 	      }
 	    };
@@ -36597,6 +36611,7 @@ var Debugger =
 	  id: t.String,
 	  displayName: t.String,
 	  location: Location,
+	  this: t.union([t.Object, t.Nil]),
 	  scope: t.union([t.Object, t.Nil])
 	}, "Frame");
 	
@@ -38567,10 +38582,12 @@ var Debugger =
 	var bpClients = void 0;
 	var threadClient = void 0;
 	var tabTarget = void 0;
+	var debuggerClient = void 0;
 	
 	function setupCommands(dependencies) {
 	  threadClient = dependencies.threadClient;
 	  tabTarget = dependencies.tabTarget;
+	  debuggerClient = dependencies.debuggerClient;
 	  bpClients = {};
 	}
 	
@@ -38646,12 +38663,22 @@ var Debugger =
 	
 	function evaluate(script) {
 	  var deferred = defer();
-	
 	  tabTarget.activeConsole.evaluateJS(script, result => {
 	    deferred.resolve(result);
 	  });
 	
 	  return deferred.promise;
+	}
+	
+	function debuggeeCommand(script) {
+	  tabTarget.activeConsole.evaluateJS(script, () => {});
+	
+	  var consoleActor = tabTarget.form.consoleActor;
+	  var request = debuggerClient._activeRequests.get(consoleActor);
+	  request.emit("json-reply", {});
+	  debuggerClient._activeRequests.delete(consoleActor);
+	
+	  return Promise.resolve();
 	}
 	
 	function navigate(url) {
@@ -38663,8 +38690,8 @@ var Debugger =
 	  return objClient.getPrototypeAndProperties();
 	}
 	
-	function pauseOnExceptions(toggle) {
-	  return threadClient.pauseOnExceptions(toggle);
+	function pauseOnExceptions(shouldPauseOnExceptions, shouldIgnoreCaughtExceptions) {
+	  return threadClient.pauseOnExceptions(shouldPauseOnExceptions, shouldIgnoreCaughtExceptions);
 	}
 	
 	function prettyPrint(sourceId, indentSize) {
@@ -38687,6 +38714,7 @@ var Debugger =
 	  setBreakpoint,
 	  removeBreakpoint,
 	  evaluate,
+	  debuggeeCommand,
 	  navigate,
 	  getProperties,
 	  pauseOnExceptions,
@@ -38739,10 +38767,9 @@ var Debugger =
 	
 	
 	var CALL_STACK_PAGE_SIZE = 1000;
-	var NEW_SOURCE_IGNORED_URLS = ["debugger eval code", "XStringBundle"];
-	
 	var threadClient = void 0;
 	var actions = void 0;
+	var evalIndex = 1;
 	
 	function setupEvents(dependencies) {
 	  threadClient = dependencies.threadClient;
@@ -38766,6 +38793,7 @@ var Debugger =
 	      line: frame.where.line,
 	      column: frame.where.column
 	    }),
+	    this: frame.this,
 	    scope: frame.environment
 	  });
 	}
@@ -38777,13 +38805,8 @@ var Debugger =
 	function newSource(_, packet) {
 	  var source = packet.source;
 	
-	
-	  if (NEW_SOURCE_IGNORED_URLS.indexOf(source.url) > -1) {
-	    return;
-	  }
-	
-	  if (source.introductionType == "debugger eval") {
-	    return;
+	  if (!source.url) {
+	    source.url = `SOURCE${ evalIndex++ }`;
 	  }
 	
 	  actions.newSource(Source({
@@ -38869,7 +38892,7 @@ var Debugger =
 	function connectClient() {
 	  var deferred = defer();
 	
-	  if (!isEnabled("chrome.debug")) {
+	  if (!getValue("chrome.debug")) {
 	    return deferred.resolve(createTabs([]));
 	  }
 	
@@ -38877,6 +38900,9 @@ var Debugger =
 	  var url = `http://localhost:${ webSocketPort }/json/list`;
 	  networkRequest(url).then(body => {
 	    deferred.resolve(createTabs(body));
+	  }).catch(err => {
+	    console.log(err);
+	    deferred.reject();
 	  });
 	
 	  return deferred.promise;
@@ -38898,7 +38924,7 @@ var Debugger =
 	  var agents = connection._agents;
 	
 	  setupCommands({ agents: agents });
-	  setupEvents({ actions });
+	  setupEvents({ actions, agents });
 	
 	  agents.Debugger.enable();
 	  agents.Debugger.setPauseOnExceptions("none");
@@ -38937,9 +38963,15 @@ var Debugger =
 	
 	
 	function networkRequest(url) {
-	  return fetch(`/get?url=${ url }`).then(res => res.json()).catch(res => {
+	  return Promise.race([fetch(`/get?url=${ url }`).then(res => {
+	    if (res.status >= 200 && res.status < 300) {
+	      return res.json();
+	    }
 	    log(`failed to request ${ url }`);
-	  });
+	    return Promise.resolve([]);
+	  }), new Promise((resolve, reject) => {
+	    setTimeout(() => reject(new Error("Connect timeout error")), 6000);
+	  })]);
 	}
 	
 	module.exports = {
@@ -38979,6 +39011,8 @@ var Debugger =
 	 *          The combined array, in the form [a1, b1, a2, b2, ...]
 	 */
 	
+	
+	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 	
 	function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
 	
@@ -39153,6 +39187,24 @@ var Debugger =
 	  return Object.assign({}, obj, fields);
 	}
 	
+	function throttle(func, ms) {
+	  var timeout = void 0,
+	      _this = void 0;
+	  return function () {
+	    for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+	      args[_key4] = arguments[_key4];
+	    }
+	
+	    _this = this;
+	    if (!timeout) {
+	      timeout = setTimeout(() => {
+	        func.apply.apply(func, [_this].concat(_toConsumableArray(args)));
+	        timeout = null;
+	      }, ms);
+	    }
+	  };
+	}
+	
 	module.exports = {
 	  asPaused,
 	  handleError,
@@ -39167,7 +39219,8 @@ var Debugger =
 	  mapObject,
 	  compose,
 	  log,
-	  updateObj
+	  updateObj,
+	  throttle
 	};
 
 /***/ },
@@ -39506,6 +39559,11 @@ var Debugger =
 	  });
 	}
 	
+	function debuggeeCommand(script) {
+	  evaluate(script);
+	  return Promise.resolve();
+	}
+	
 	function navigate(url) {
 	  return pageAgent.navigate(url, (_, result) => {
 	    return result;
@@ -39523,6 +39581,7 @@ var Debugger =
 	  setBreakpoint,
 	  removeBreakpoint,
 	  evaluate,
+	  debuggeeCommand,
 	  navigate
 	};
 	
@@ -39554,6 +39613,8 @@ var Debugger =
 	      type: reason
 	    }, data);
 	
+	    pageAgent.setOverlayMessage("Paused in debugger.html");
+	
 	    yield actions.paused({ frame, why, frames });
 	  });
 	
@@ -39572,9 +39633,11 @@ var Debugger =
 	
 	
 	var actions = void 0;
+	var pageAgent = void 0;
 	
 	function setupEvents(dependencies) {
 	  actions = dependencies.actions;
+	  pageAgent = dependencies.agents.Page;
 	}
 	
 	// Debugger Events
@@ -39594,6 +39657,7 @@ var Debugger =
 	function scriptFailedToParse() {}
 	
 	function resumed() {
+	  pageAgent.setOverlayMessage(undefined);
 	  actions.resumed();
 	}
 	
@@ -39787,24 +39851,23 @@ var Debugger =
 /* 330 */
 /***/ function(module, exports) {
 
-	/* This Source Code Form is subject to the terms of the Mozilla Public
-	 * License, v. 2.0. If a copy of the MPL was not distributed with this
-	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-	"use strict";
-	
 	/**
 	 * A middleware that logs all actions coming through the system
 	 * to the console.
 	 */
-	function log({ dispatch, getState }) {
+	function log(_ref) {
+	  var dispatch = _ref.dispatch;
+	  var getState = _ref.getState;
+	
 	  return next => action => {
-	    console.log("[DISPATCH]", JSON.stringify(action, null, 2));
+	    var actionText = JSON.stringify(action, null, 2);
+	    var truncatedActionText = actionText.slice(0, 1000) + "...";
+	    console.log(`[DISPATCH ${ action.type }]`, action, truncatedActionText);
 	    next(action);
 	  };
 	}
 	
 	exports.log = log;
-
 
 /***/ },
 /* 331 */
@@ -39992,9 +40055,9 @@ var Debugger =
 	  eventListeners,
 	  sources: sources.update,
 	  breakpoints: breakpoints.update,
+	  pause: pause.update,
 	  asyncRequests,
-	  tabs,
-	  pause
+	  tabs
 	};
 
 /***/ },
@@ -40062,6 +40125,7 @@ var Debugger =
 	exports.ENABLE_BREAKPOINT = "ENABLE_BREAKPOINT";
 	exports.DISABLE_BREAKPOINT = "DISABLE_BREAKPOINT";
 	exports.SET_BREAKPOINT_CONDITION = "SET_BREAKPOINT_CONDITION";
+	exports.TOGGLE_BREAKPOINTS = "TOGGLE_BREAKPOINTS";
 	
 	exports.ADD_SOURCE = "ADD_SOURCE";
 	exports.LOAD_SOURCE_MAP = "LOAD_SOURCE_MAP";
@@ -40118,8 +40182,8 @@ var Debugger =
 	  switch (action.type) {
 	    case "ADD_SOURCE":
 	      {
-	        var source = action.source;
-	        return state.mergeIn(["sources", action.source.id], source);
+	        var _source = action.source;
+	        return state.mergeIn(["sources", action.source.id], _source);
 	      }
 	
 	    case "ADD_SOURCES":
@@ -40159,9 +40223,9 @@ var Debugger =
 	
 	          values = [generatedSourceText].concat(_toConsumableArray(originalSourceTexts));
 	        } else {
-	          var _source = action.source;
+	          var _source2 = action.source;
 	
-	          values = [_source];
+	          values = [_source2];
 	        }
 	
 	        return _updateText(state, action, values);
@@ -40179,10 +40243,11 @@ var Debugger =
 	      }
 	
 	      return _updateText(state, action, [action.originalSource]);
+	
 	    case "NAVIGATE":
-	      // Reset the entire state to just the initial state, a blank state
-	      // if you will.
-	      return State();
+	      var source = state.selectedSource;
+	      var sourceUrl = source && source.get("url");
+	      return State().set("pendingSelectedSourceURL", sourceUrl);
 	  }
 	
 	  return state;
@@ -40316,6 +40381,15 @@ var Debugger =
 	  return state.sources.sourceMaps.get(sourceId);
 	}
 	
+	function getPrettySource(state, id) {
+	  var source = getSource(state, id);
+	  if (!source) {
+	    return;
+	  }
+	
+	  return getSourceByURL(state, source.get("url") + ":formatted");
+	}
+	
 	module.exports = {
 	  State,
 	  update,
@@ -40327,7 +40401,8 @@ var Debugger =
 	  getSourceTabs,
 	  getSelectedSource,
 	  getPendingSelectedSourceURL,
-	  getSourceMap
+	  getSourceMap,
+	  getPrettySource
 	};
 
 /***/ },
@@ -45404,7 +45479,8 @@ var Debugger =
 	var makeRecord = __webpack_require__(342);
 	
 	var State = makeRecord({
-	  breakpoints: I.Map()
+	  breakpoints: I.Map(),
+	  breakpointsDisabled: false
 	});
 	
 	// Return the first argument that is a string, or null if nothing is a
@@ -45502,6 +45578,14 @@ var Debugger =
 	        break;
 	      }
 	
+	    case "TOGGLE_BREAKPOINTS":
+	      {
+	        if (action.status === "start") {
+	          return state.set("breakpointsDisabled", action.shouldDisableBreakpoints);
+	        }
+	        break;
+	      }
+	
 	    case "SET_BREAKPOINT_CONDITION":
 	      {
 	        var _id2 = makeLocationId(action.breakpoint.location);
@@ -45543,13 +45627,26 @@ var Debugger =
 	  });
 	}
 	
+	function getBreakpointsDisabled(state) {
+	  return state.breakpoints.get("breakpointsDisabled");
+	}
+	
+	function getBreakpointsLoading(state) {
+	  var breakpoints = getBreakpoints(state);
+	  var isLoading = !!breakpoints.valueSeq().filter(bp => bp.loading).first();
+	
+	  return breakpoints.size > 0 && isLoading;
+	}
+	
 	module.exports = {
 	  State,
 	  update,
 	  makeLocationId,
 	  getBreakpoint,
 	  getBreakpoints,
-	  getBreakpointsForSource
+	  getBreakpointsForSource,
+	  getBreakpointsDisabled,
+	  getBreakpointsLoading
 	};
 
 /***/ },
@@ -45659,9 +45756,10 @@ var Debugger =
 	  pause: null,
 	  isWaitingOnBreak: false,
 	  frames: null,
-	  selectedFrame: null,
+	  selectedFrameId: null,
 	  loadedObjects: {},
 	  shouldPauseOnExceptions: false,
+	  shouldIgnoreCaughtExceptions: false,
 	  expressions: []
 	});
 	
@@ -45673,14 +45771,18 @@ var Debugger =
 	  switch (action.type) {
 	    case constants.PAUSED:
 	      if (action.status == "done") {
-	        var pause = action.value.pauseInfo;
-	        pause.isInterrupted = pause.why.type === "interrupted";
+	        var _action$value = action.value;
+	        var selectedFrameId = _action$value.selectedFrameId;
+	        var frames = _action$value.frames;
+	        var pauseInfo = _action$value.pauseInfo;
+	
+	        pauseInfo.isInterrupted = pauseInfo.why.type === "interrupted";
 	
 	        return state.merge({
 	          isWaitingOnBreak: false,
-	          pause: fromJS(pause),
-	          selectedFrame: action.value.pauseInfo.frame,
-	          frames: action.value.frames
+	          pause: fromJS(pauseInfo),
+	          selectedFrameId,
+	          frames
 	        });
 	      }
 	
@@ -45689,10 +45791,17 @@ var Debugger =
 	      return state.merge({
 	        pause: null,
 	        frames: null,
-	        selectedFrame: null,
+	        selectedFrameId: null,
 	        loadedObjects: {}
 	      });
 	
+	    case constants.TOGGLE_PRETTY_PRINT:
+	      if (action.status == "done") {
+	        var _frames = action.value.frames;
+	        return state.merge({ frames: _frames });
+	      }
+	
+	      break;
 	    case constants.BREAK_ON_NEXT:
 	      return state.set("isWaitingOnBreak", true);
 	
@@ -45703,7 +45812,7 @@ var Debugger =
 	
 	      break;
 	    case constants.SELECT_FRAME:
-	      return state.set("selectedFrame", action.frame);
+	      return state.set("selectedFrameId", action.frame.id);
 	
 	    case constants.LOAD_OBJECT_PROPERTIES:
 	      if (action.status === "done") {
@@ -45718,8 +45827,13 @@ var Debugger =
 	      return initialState;
 	
 	    case constants.PAUSE_ON_EXCEPTIONS:
-	      var toggle = action.toggle;
-	      return state.set("shouldPauseOnExceptions", toggle);
+	      var shouldPauseOnExceptions = action.shouldPauseOnExceptions;
+	      var shouldIgnoreCaughtExceptions = action.shouldIgnoreCaughtExceptions;
+	
+	      return state.merge({
+	        shouldPauseOnExceptions,
+	        shouldIgnoreCaughtExceptions
+	      });
 	
 	    case constants.ADD_EXPRESSION:
 	      return state.setIn(["expressions", action.id], { id: action.id,
@@ -45748,75 +45862,6 @@ var Debugger =
 	  return state;
 	}
 	
-	module.exports = update;
-
-/***/ },
-/* 347 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var React = __webpack_require__(17);
-	
-	var _require = __webpack_require__(15);
-	
-	var connect = _require.connect;
-	
-	var _require2 = __webpack_require__(348);
-	
-	var getTabs = _require2.getTabs;
-	
-	
-	__webpack_require__(355);
-	var dom = React.DOM;
-	
-	function getTabsByBrowser(tabs, browser) {
-	  return tabs.valueSeq().filter(tab => tab.get("browser") == browser);
-	}
-	
-	function renderTabs(tabTitle, tabs, paramName) {
-	  if (tabs.count() == 0) {
-	    return null;
-	  }
-	
-	  return dom.div({ className: `tab-group ${ tabTitle }` }, dom.div({ className: "tab-group-title" }, tabTitle), dom.ul({ className: "tab-list" }, tabs.valueSeq().map(tab => dom.li({ "className": "tab",
-	    "key": tab.get("id"),
-	    "onClick": () => {
-	      window.location = "/?" + paramName + "=" + tab.get("id");
-	    } }, dom.div({ className: "tab-title" }, tab.get("title")), dom.div({ className: "tab-url" }, tab.get("url"))))));
-	}
-	
-	function renderMessage(tabsIsEmpty) {
-	  return dom.div({ className: "not-connected-message" }, !tabsIsEmpty || "No remote tabs found. ", "You may be looking to ", dom.a({ href: `/?ws=${ document.location.hostname }:9229/node` }, "connect to Node"), ".", dom.br(), "Make sure you run ", dom.a({ href: "https://github.com/devtools-html/debugger.html/blob/master/CONTRIBUTING.md#firefox" }, "Firefox"), ", ", dom.a({ href: "https://github.com/devtools-html/debugger.html/blob/master/CONTRIBUTING.md#chrome" }, "Chrome"), " or ", dom.a({ href: "https://github.com/devtools-html/debugger.html/blob/master/CONTRIBUTING.md#nodejs" }, "Node"), " with the right flags.");
-	}
-	function Tabs(_ref) {
-	  var tabs = _ref.tabs;
-	
-	  var firefoxTabs = getTabsByBrowser(tabs, "firefox");
-	  var chromeTabs = getTabsByBrowser(tabs, "chrome");
-	
-	  return dom.div({ className: "tabs theme-light" }, renderTabs("Firefox Tabs", firefoxTabs, "firefox-tab"), renderTabs("Chrome Tabs", chromeTabs, "chrome-tab"), renderMessage(tabs.isEmpty()));
-	}
-	
-	module.exports = connect(state => ({ tabs: getTabs(state) }))(Tabs);
-
-/***/ },
-/* 348 */
-/***/ function(module, exports, __webpack_require__) {
-
-	
-	
-	var URL = __webpack_require__(349);
-	var path = __webpack_require__(354);
-	var sources = __webpack_require__(339);
-	var breakpoints = __webpack_require__(343);
-	
-	function getTabs(state) {
-	  return state.tabs.get("tabs");
-	}
-	
-	function getSelectedTab(state) {
-	  return state.tabs.get("selectedTab");
-	}
-	
 	function getPause(state) {
 	  return state.pause.get("pause");
 	}
@@ -45837,12 +45882,51 @@ var Debugger =
 	  return state.pause.get("shouldPauseOnExceptions");
 	}
 	
+	function getShouldIgnoreCaughtExceptions(state) {
+	  return state.pause.get("shouldIgnoreCaughtExceptions");
+	}
+	
 	function getFrames(state) {
 	  return state.pause.get("frames") || [];
 	}
 	
 	function getSelectedFrame(state) {
-	  return state.pause.get("selectedFrame");
+	  var selectedFrameId = state.pause.get("selectedFrameId");
+	  var frames = state.pause.get("frames");
+	  return frames && frames.find(frame => frame.id == selectedFrameId);
+	}
+	
+	module.exports = {
+	  initialState,
+	  update,
+	  getPause,
+	  getLoadedObjects,
+	  getExpressions,
+	  getIsWaitingOnBreak,
+	  getShouldPauseOnExceptions,
+	  getShouldIgnoreCaughtExceptions,
+	  getFrames,
+	  getSelectedFrame
+	};
+
+/***/ },
+/* 347 */
+/***/ function(module, exports, __webpack_require__) {
+
+	
+	
+	var URL = __webpack_require__(348);
+	var path = __webpack_require__(353);
+	var sources = __webpack_require__(339);
+	var pause = __webpack_require__(346);
+	var breakpoints = __webpack_require__(343);
+	
+	function getTabs(state) {
+	  return state.tabs.get("tabs");
+	}
+	
+	function getSelectedTab(state) {
+	  return state.tabs.get("selectedTab");
 	}
 	
 	function getSourceMapURL(state, source) {
@@ -45875,26 +45959,31 @@ var Debugger =
 	  getSelectedSource: sources.getSelectedSource,
 	  getPendingSelectedSourceURL: sources.getPendingSelectedSourceURL,
 	  getSourceMap: sources.getSourceMap,
+	  getPrettySource: sources.getPrettySource,
 	
 	  getSourceMapURL,
 	
 	  getBreakpoint: breakpoints.getBreakpoint,
 	  getBreakpoints: breakpoints.getBreakpoints,
 	  getBreakpointsForSource: breakpoints.getBreakpointsForSource,
+	  getBreakpointsDisabled: breakpoints.getBreakpointsDisabled,
+	  getBreakpointsLoading: breakpoints.getBreakpointsLoading,
 	
 	  getTabs,
 	  getSelectedTab,
-	  getPause,
-	  getLoadedObjects,
-	  getExpressions,
-	  getIsWaitingOnBreak,
-	  getShouldPauseOnExceptions,
-	  getFrames,
-	  getSelectedFrame
+	
+	  getPause: pause.getPause,
+	  getLoadedObjects: pause.getLoadedObjects,
+	  getExpressions: pause.getExpressions,
+	  getIsWaitingOnBreak: pause.getIsWaitingOnBreak,
+	  getShouldPauseOnExceptions: pause.getShouldPauseOnExceptions,
+	  getShouldIgnoreCaughtExceptions: pause.getShouldIgnoreCaughtExceptions,
+	  getFrames: pause.getFrames,
+	  getSelectedFrame: pause.getSelectedFrame
 	};
 
 /***/ },
-/* 349 */
+/* 348 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -45918,7 +46007,7 @@ var Debugger =
 	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 	// USE OR OTHER DEALINGS IN THE SOFTWARE.
 	
-	var punycode = __webpack_require__(350);
+	var punycode = __webpack_require__(349);
 	
 	exports.parse = urlParse;
 	exports.resolve = urlResolve;
@@ -45990,7 +46079,7 @@ var Debugger =
 	      'gopher:': true,
 	      'file:': true
 	    },
-	    querystring = __webpack_require__(351);
+	    querystring = __webpack_require__(350);
 	
 	function urlParse(url, parseQueryString, slashesDenoteHost) {
 	  if (url && isObject(url) && url instanceof Url) return url;
@@ -46607,7 +46696,7 @@ var Debugger =
 
 
 /***/ },
-/* 350 */
+/* 349 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/*! https://mths.be/punycode v1.3.2 by @mathias */
@@ -47142,17 +47231,17 @@ var Debugger =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(250)(module), (function() { return this; }())))
 
 /***/ },
-/* 351 */
+/* 350 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
-	exports.decode = exports.parse = __webpack_require__(352);
-	exports.encode = exports.stringify = __webpack_require__(353);
+	exports.decode = exports.parse = __webpack_require__(351);
+	exports.encode = exports.stringify = __webpack_require__(352);
 
 
 /***/ },
-/* 352 */
+/* 351 */
 /***/ function(module, exports) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -47238,7 +47327,7 @@ var Debugger =
 
 
 /***/ },
-/* 353 */
+/* 352 */
 /***/ function(module, exports) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -47308,7 +47397,7 @@ var Debugger =
 
 
 /***/ },
-/* 354 */
+/* 353 */
 /***/ function(module, exports) {
 
 	function basename(path) {
@@ -47333,355 +47422,124 @@ var Debugger =
 	};
 
 /***/ },
+/* 354 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(17);
+	
+	var _require = __webpack_require__(15);
+	
+	var connect = _require.connect;
+	
+	var classnames = __webpack_require__(355);
+	
+	var _require2 = __webpack_require__(347);
+	
+	var getTabs = _require2.getTabs;
+	
+	
+	__webpack_require__(356);
+	var dom = React.DOM;
+	
+	var githubUrl = "https://github.com/devtools-html/debugger.html/blob/master";
+	
+	function getTabsByBrowser(tabs, browser) {
+	  return tabs.valueSeq().filter(tab => tab.get("browser") == browser);
+	}
+	
+	function renderTabs(tabTitle, tabs, paramName) {
+	  if (tabs.count() == 0) {
+	    return null;
+	  }
+	
+	  return dom.div({ className: `tab-group ${ tabTitle }` }, dom.div({ className: "tab-group-title" }, tabTitle), dom.ul({ className: "tab-list" }, tabs.valueSeq().map(tab => dom.li({ "className": "tab",
+	    "key": tab.get("id"),
+	    "onClick": () => {
+	      window.location = "/?" + paramName + "=" + tab.get("id");
+	    } }, dom.div({ className: "tab-title" }, tab.get("title")), dom.div({ className: "tab-url" }, tab.get("url"))))));
+	}
+	
+	function renderMessage(noTabs) {
+	  return dom.div({ className: classnames("connect-message", { "not-connected": noTabs }) }, dom.p(null, noTabs && "No remote tabs found. ", "You may be looking to ", dom.a({
+	    href: `/?ws=${ document.location.hostname }:9229/node`
+	  }, "connect to Node"), "."), dom.p(null, "Make sure you run ", dom.a({ href: `${ githubUrl }/CONTRIBUTING.md#firefox` }, "Firefox"), ", ", dom.a({ href: `${ githubUrl }/CONTRIBUTING.md#chrome` }, "Chrome"), " or ", dom.a({ href: `${ githubUrl }/CONTRIBUTING.md#nodejs` }, "Node"), " with the right flags."));
+	}
+	function Tabs(_ref) {
+	  var tabs = _ref.tabs;
+	
+	  var firefoxTabs = getTabsByBrowser(tabs, "firefox");
+	  var chromeTabs = getTabsByBrowser(tabs, "chrome");
+	
+	  return dom.div({ className: "tabs theme-light" }, renderTabs("Firefox Tabs", firefoxTabs, "firefox-tab"), renderTabs("Chrome Tabs", chromeTabs, "chrome-tab"), renderMessage(tabs.isEmpty()));
+	}
+	
+	module.exports = connect(state => ({ tabs: getTabs(state) }))(Tabs);
+
+/***/ },
 /* 355 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// style-loader: Adds some css to the DOM by adding a <style> tag
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
+	  Copyright (c) 2016 Jed Watson.
+	  Licensed under the MIT License (MIT), see
+	  http://jedwatson.github.io/classnames
+	*/
+	/* global define */
 	
-	// load the styles
-	var content = __webpack_require__(356);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(358)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./Tabs.css", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./Tabs.css");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
+	(function () {
+		'use strict';
+	
+		var hasOwn = {}.hasOwnProperty;
+	
+		function classNames () {
+			var classes = [];
+	
+			for (var i = 0; i < arguments.length; i++) {
+				var arg = arguments[i];
+				if (!arg) continue;
+	
+				var argType = typeof arg;
+	
+				if (argType === 'string' || argType === 'number') {
+					classes.push(arg);
+				} else if (Array.isArray(arg)) {
+					classes.push(classNames.apply(null, arg));
+				} else if (argType === 'object') {
+					for (var key in arg) {
+						if (hasOwn.call(arg, key) && arg[key]) {
+							classes.push(key);
+						}
+					}
+				}
+			}
+	
+			return classes.join(' ');
 		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
+	
+		if (typeof module !== 'undefined' && module.exports) {
+			module.exports = classNames;
+		} else if (true) {
+			// register as 'classnames', consistent with npm package name
+			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = function () {
+				return classNames;
+			}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+		} else {
+			window.classNames = classNames;
+		}
+	}());
+
 
 /***/ },
 /* 356 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(357)();
-	// imports
-	
-	
-	// module
-	exports.push([module.id, ".tabs {\n  margin: 100px auto;\n  margin-bottom: 0;\n  width: calc(100% - 200px);\n}\n\n.tabs .tab-group {\n  margin-top: 20px;\n}\n\n.tabs .tab-group-title {\n  margin: 0 0 1em 10px;\n  color: var(--theme-highlight-lightorange);\n}\n\n.tabs .tab-list {\n  list-style: none;\n  padding: 0px;\n  margin: 0px;\n}\n\n.tabs .tab:first-child {\n  border-top: 1px solid #dddddd;\n}\n\n.tabs .tab {\n  border-bottom: 1px solid #dddddd;\n  padding: 10px;\n  font-family: sans-serif;\n  font-size: 0.9em;\n}\n\n.tabs .tab:hover {\n  background-color: var(--theme-toolbar-background);\n  cursor: pointer;\n}\n\n.tabs .tab-title {\n  line-height: 25px;\n  color: var(--theme-content-color1);\n}\n\n.tabs .tab-url {\n  color: var(--theme-highlight-bluegrey);\n}\n\n.not-connected-message {\n  margin: 20px;\n  padding: 50px 100px;\n  border: 1px solid #dddddd;\n  background-color: #fbfbfb;\n  color: #9a9a9a;\n  text-align: center;\n}\n\n.node-message {\n  margin: 3em 0;\n  text-align: center;\n  font-size: 0.9em;\n}\n", ""]);
-	
-	// exports
-
-
-/***/ },
-/* 357 */
 /***/ function(module, exports) {
 
-	/*
-		MIT License http://www.opensource.org/licenses/mit-license.php
-		Author Tobias Koppers @sokra
-	*/
-	// css base code, injected by the css-loader
-	module.exports = function() {
-		var list = [];
-	
-		// return the list of modules as css string
-		list.toString = function toString() {
-			var result = [];
-			for(var i = 0; i < this.length; i++) {
-				var item = this[i];
-				if(item[2]) {
-					result.push("@media " + item[2] + "{" + item[1] + "}");
-				} else {
-					result.push(item[1]);
-				}
-			}
-			return result.join("");
-		};
-	
-		// import a list of modules into the list
-		list.i = function(modules, mediaQuery) {
-			if(typeof modules === "string")
-				modules = [[null, modules, ""]];
-			var alreadyImportedModules = {};
-			for(var i = 0; i < this.length; i++) {
-				var id = this[i][0];
-				if(typeof id === "number")
-					alreadyImportedModules[id] = true;
-			}
-			for(i = 0; i < modules.length; i++) {
-				var item = modules[i];
-				// skip already imported module
-				// this implementation is not 100% perfect for weird media query combinations
-				//  when a module is imported multiple times with different media queries.
-				//  I hope this will never occur (Hey this way we have smaller bundles)
-				if(typeof item[0] !== "number" || !alreadyImportedModules[item[0]]) {
-					if(mediaQuery && !item[2]) {
-						item[2] = mediaQuery;
-					} else if(mediaQuery) {
-						item[2] = "(" + item[2] + ") and (" + mediaQuery + ")";
-					}
-					list.push(item);
-				}
-			}
-		};
-		return list;
-	};
-
+	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 358 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/*
-		MIT License http://www.opensource.org/licenses/mit-license.php
-		Author Tobias Koppers @sokra
-	*/
-	var stylesInDom = {},
-		memoize = function(fn) {
-			var memo;
-			return function () {
-				if (typeof memo === "undefined") memo = fn.apply(this, arguments);
-				return memo;
-			};
-		},
-		isOldIE = memoize(function() {
-			return /msie [6-9]\b/.test(window.navigator.userAgent.toLowerCase());
-		}),
-		getHeadElement = memoize(function () {
-			return document.head || document.getElementsByTagName("head")[0];
-		}),
-		singletonElement = null,
-		singletonCounter = 0,
-		styleElementsInsertedAtTop = [];
-	
-	module.exports = function(list, options) {
-		if(false) {
-			if(typeof document !== "object") throw new Error("The style-loader cannot be used in a non-browser environment");
-		}
-	
-		options = options || {};
-		// Force single-tag solution on IE6-9, which has a hard limit on the # of <style>
-		// tags it will allow on a page
-		if (typeof options.singleton === "undefined") options.singleton = isOldIE();
-	
-		// By default, add <style> tags to the bottom of <head>.
-		if (typeof options.insertAt === "undefined") options.insertAt = "bottom";
-	
-		var styles = listToStyles(list);
-		addStylesToDom(styles, options);
-	
-		return function update(newList) {
-			var mayRemove = [];
-			for(var i = 0; i < styles.length; i++) {
-				var item = styles[i];
-				var domStyle = stylesInDom[item.id];
-				domStyle.refs--;
-				mayRemove.push(domStyle);
-			}
-			if(newList) {
-				var newStyles = listToStyles(newList);
-				addStylesToDom(newStyles, options);
-			}
-			for(var i = 0; i < mayRemove.length; i++) {
-				var domStyle = mayRemove[i];
-				if(domStyle.refs === 0) {
-					for(var j = 0; j < domStyle.parts.length; j++)
-						domStyle.parts[j]();
-					delete stylesInDom[domStyle.id];
-				}
-			}
-		};
-	}
-	
-	function addStylesToDom(styles, options) {
-		for(var i = 0; i < styles.length; i++) {
-			var item = styles[i];
-			var domStyle = stylesInDom[item.id];
-			if(domStyle) {
-				domStyle.refs++;
-				for(var j = 0; j < domStyle.parts.length; j++) {
-					domStyle.parts[j](item.parts[j]);
-				}
-				for(; j < item.parts.length; j++) {
-					domStyle.parts.push(addStyle(item.parts[j], options));
-				}
-			} else {
-				var parts = [];
-				for(var j = 0; j < item.parts.length; j++) {
-					parts.push(addStyle(item.parts[j], options));
-				}
-				stylesInDom[item.id] = {id: item.id, refs: 1, parts: parts};
-			}
-		}
-	}
-	
-	function listToStyles(list) {
-		var styles = [];
-		var newStyles = {};
-		for(var i = 0; i < list.length; i++) {
-			var item = list[i];
-			var id = item[0];
-			var css = item[1];
-			var media = item[2];
-			var sourceMap = item[3];
-			var part = {css: css, media: media, sourceMap: sourceMap};
-			if(!newStyles[id])
-				styles.push(newStyles[id] = {id: id, parts: [part]});
-			else
-				newStyles[id].parts.push(part);
-		}
-		return styles;
-	}
-	
-	function insertStyleElement(options, styleElement) {
-		var head = getHeadElement();
-		var lastStyleElementInsertedAtTop = styleElementsInsertedAtTop[styleElementsInsertedAtTop.length - 1];
-		if (options.insertAt === "top") {
-			if(!lastStyleElementInsertedAtTop) {
-				head.insertBefore(styleElement, head.firstChild);
-			} else if(lastStyleElementInsertedAtTop.nextSibling) {
-				head.insertBefore(styleElement, lastStyleElementInsertedAtTop.nextSibling);
-			} else {
-				head.appendChild(styleElement);
-			}
-			styleElementsInsertedAtTop.push(styleElement);
-		} else if (options.insertAt === "bottom") {
-			head.appendChild(styleElement);
-		} else {
-			throw new Error("Invalid value for parameter 'insertAt'. Must be 'top' or 'bottom'.");
-		}
-	}
-	
-	function removeStyleElement(styleElement) {
-		styleElement.parentNode.removeChild(styleElement);
-		var idx = styleElementsInsertedAtTop.indexOf(styleElement);
-		if(idx >= 0) {
-			styleElementsInsertedAtTop.splice(idx, 1);
-		}
-	}
-	
-	function createStyleElement(options) {
-		var styleElement = document.createElement("style");
-		styleElement.type = "text/css";
-		insertStyleElement(options, styleElement);
-		return styleElement;
-	}
-	
-	function createLinkElement(options) {
-		var linkElement = document.createElement("link");
-		linkElement.rel = "stylesheet";
-		insertStyleElement(options, linkElement);
-		return linkElement;
-	}
-	
-	function addStyle(obj, options) {
-		var styleElement, update, remove;
-	
-		if (options.singleton) {
-			var styleIndex = singletonCounter++;
-			styleElement = singletonElement || (singletonElement = createStyleElement(options));
-			update = applyToSingletonTag.bind(null, styleElement, styleIndex, false);
-			remove = applyToSingletonTag.bind(null, styleElement, styleIndex, true);
-		} else if(obj.sourceMap &&
-			typeof URL === "function" &&
-			typeof URL.createObjectURL === "function" &&
-			typeof URL.revokeObjectURL === "function" &&
-			typeof Blob === "function" &&
-			typeof btoa === "function") {
-			styleElement = createLinkElement(options);
-			update = updateLink.bind(null, styleElement);
-			remove = function() {
-				removeStyleElement(styleElement);
-				if(styleElement.href)
-					URL.revokeObjectURL(styleElement.href);
-			};
-		} else {
-			styleElement = createStyleElement(options);
-			update = applyToTag.bind(null, styleElement);
-			remove = function() {
-				removeStyleElement(styleElement);
-			};
-		}
-	
-		update(obj);
-	
-		return function updateStyle(newObj) {
-			if(newObj) {
-				if(newObj.css === obj.css && newObj.media === obj.media && newObj.sourceMap === obj.sourceMap)
-					return;
-				update(obj = newObj);
-			} else {
-				remove();
-			}
-		};
-	}
-	
-	var replaceText = (function () {
-		var textStore = [];
-	
-		return function (index, replacement) {
-			textStore[index] = replacement;
-			return textStore.filter(Boolean).join('\n');
-		};
-	})();
-	
-	function applyToSingletonTag(styleElement, index, remove, obj) {
-		var css = remove ? "" : obj.css;
-	
-		if (styleElement.styleSheet) {
-			styleElement.styleSheet.cssText = replaceText(index, css);
-		} else {
-			var cssNode = document.createTextNode(css);
-			var childNodes = styleElement.childNodes;
-			if (childNodes[index]) styleElement.removeChild(childNodes[index]);
-			if (childNodes.length) {
-				styleElement.insertBefore(cssNode, childNodes[index]);
-			} else {
-				styleElement.appendChild(cssNode);
-			}
-		}
-	}
-	
-	function applyToTag(styleElement, obj) {
-		var css = obj.css;
-		var media = obj.media;
-	
-		if(media) {
-			styleElement.setAttribute("media", media)
-		}
-	
-		if(styleElement.styleSheet) {
-			styleElement.styleSheet.cssText = css;
-		} else {
-			while(styleElement.firstChild) {
-				styleElement.removeChild(styleElement.firstChild);
-			}
-			styleElement.appendChild(document.createTextNode(css));
-		}
-	}
-	
-	function updateLink(linkElement, obj) {
-		var css = obj.css;
-		var sourceMap = obj.sourceMap;
-	
-		if(sourceMap) {
-			// http://stackoverflow.com/a/26603875
-			css += "\n/*# sourceMappingURL=data:application/json;base64," + btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap)))) + " */";
-		}
-	
-		var blob = new Blob([css], { type: "text/css" });
-	
-		var oldSrc = linkElement.href;
-	
-		linkElement.href = URL.createObjectURL(blob);
-	
-		if(oldSrc)
-			URL.revokeObjectURL(oldSrc);
-	}
-
-
-/***/ },
-/* 359 */
+/* 357 */,
+/* 358 */,
+/* 359 */,
+/* 360 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
@@ -47697,38 +47555,65 @@ var Debugger =
 	
 	var bindActionCreators = _require2.bindActionCreators;
 	
-	var actions = __webpack_require__(360);
+	var _require3 = __webpack_require__(361);
 	
-	__webpack_require__(369);
-	__webpack_require__(371);
+	var Services = _require3.Services;
+	
+	var actions = __webpack_require__(362);
+	
 	__webpack_require__(373);
-	var Sources = createFactory(__webpack_require__(375));
-	var Editor = createFactory(__webpack_require__(414));
-	var SplitBox = createFactory(__webpack_require__(425));
-	var RightSidebar = createFactory(__webpack_require__(429));
-	var SourceTabs = createFactory(__webpack_require__(498));
-	var SourceFooter = createFactory(__webpack_require__(503));
-	var Autocomplete = createFactory(__webpack_require__(504));
+	__webpack_require__(375);
 	
-	var _require3 = __webpack_require__(348);
+	var Sources = createFactory(__webpack_require__(382));
+	var Editor = createFactory(__webpack_require__(417));
+	var SplitBox = createFactory(__webpack_require__(428));
+	var RightSidebar = createFactory(__webpack_require__(432));
+	var SourceTabs = createFactory(__webpack_require__(526));
+	var SourceFooter = createFactory(__webpack_require__(531));
+	var Svg = __webpack_require__(390);
+	var Autocomplete = createFactory(__webpack_require__(534));
 	
-	var getSelectedSource = _require3.getSelectedSource;
-	var getSources = _require3.getSources;
+	var _require4 = __webpack_require__(347);
 	
-	var _require4 = __webpack_require__(324);
+	var getSources = _require4.getSources;
+	var getSelectedSource = _require4.getSelectedSource;
 	
-	var endTruncateStr = _require4.endTruncateStr;
+	var _require5 = __webpack_require__(324);
 	
-	var _require5 = __webpack_require__(513);
+	var endTruncateStr = _require5.endTruncateStr;
 	
-	var KeyShortcuts = _require5.KeyShortcuts;
+	var _require6 = __webpack_require__(543);
 	
+	var KeyShortcuts = _require6.KeyShortcuts;
+	
+	var _require7 = __webpack_require__(385);
+	
+	var isHiddenSource = _require7.isHiddenSource;
+	var getURL = _require7.getURL;
+	
+	
+	function searchResults(sources) {
+	  function getSourcePath(source) {
+	    var _getURL = getURL(source);
+	
+	    var path = _getURL.path;
+	
+	    return endTruncateStr(path, 50);
+	  }
+	
+	  return sources.valueSeq().filter(source => !isHiddenSource(source)).map(source => ({
+	    value: getSourcePath(source),
+	    title: getSourcePath(source).split("/").pop(),
+	    subtitle: getSourcePath(source),
+	    id: source.get("id")
+	  })).toJS();
+	}
 	
 	var App = React.createClass({
 	  propTypes: {
 	    sources: PropTypes.object,
-	    selectedSource: PropTypes.object,
-	    selectSource: PropTypes.func
+	    selectSource: PropTypes.func,
+	    selectedSource: PropTypes.object
 	  },
 	
 	  displayName: "App",
@@ -47741,12 +47626,12 @@ var Debugger =
 	
 	  componentDidMount() {
 	    this.shortcuts = new KeyShortcuts({ window });
-	    this.shortcuts.on("Cmd+P", this.toggleSourcesSearch);
+	    this.shortcuts.on("CmdOrCtrl+P", this.toggleSourcesSearch);
 	    window.addEventListener("keydown", this.onKeyDown);
 	  },
 	
 	  componentWillUnmount() {
-	    this.shortcuts.off("Cmd+P", this.toggleSourcesSearch);
+	    this.shortcuts.off("CmdOrCtrl+P", this.toggleSourcesSearch);
 	    window.removeEventListener("keydown", this.onKeyDown);
 	  },
 	
@@ -47762,50 +47647,27 @@ var Debugger =
 	    }
 	  },
 	
+	  closeSourcesSearch() {
+	    this.setState({ searchOn: false });
+	  },
+	
 	  renderSourcesSearch() {
-	    function getSourcePath(source) {
-	      var url = source.get("url") || "";
-	      var path = new URL(url).pathname;
-	      return endTruncateStr(path, 50);
-	    }
-	
-	    function searchResults(sources) {
-	      return sources.valueSeq().filter(source => !!source.get("url")).map(source => ({
-	        value: getSourcePath(source),
-	        title: getSourcePath(source).split("/").pop(),
-	        subtitle: getSourcePath(source),
-	        id: source.get("id")
-	      })).toJS();
-	    }
-	
-	    return Autocomplete({
+	    return dom.div({ className: "search-container" }, Autocomplete({
 	      selectItem: result => {
 	        this.props.selectSource(result.id);
 	        this.setState({ searchOn: false });
 	      },
 	      items: searchResults(this.props.sources)
-	    });
-	  },
-	
-	  renderEditor() {
-	    return dom.div({ className: "editor-container" }, SourceTabs(), Editor(), SourceFooter());
+	    }), dom.div({ className: "close-button" }, Svg("close", { onClick: this.closeSourcesSearch })));
 	  },
 	
 	  renderWelcomeBox() {
-	    return dom.div({ className: "welcomebox" }, "Want to find a file? (Cmd + P)");
+	    var modifierTxt = Services.appinfo.OS === "Darwin" ? "Cmd" : "Ctrl";
+	    return dom.div({ className: "welcomebox" }, `Want to find a file? (${ modifierTxt } + P)`);
 	  },
 	
 	  renderCenterPane() {
-	    var centerPane = void 0;
-	    if (this.state.searchOn) {
-	      centerPane = this.renderSourcesSearch();
-	    } else if (this.props.selectedSource) {
-	      centerPane = this.renderEditor();
-	    } else {
-	      centerPane = this.renderWelcomeBox();
-	    }
-	
-	    return dom.div({ className: "center-pane" }, centerPane);
+	    return dom.div({ className: "center-pane" }, dom.div({ className: "editor-container" }, SourceTabs(), Editor(), !this.props.selectedSource ? this.renderWelcomeBox() : null, this.state.searchOn ? this.renderSourcesSearch() : null, SourceFooter()));
 	  },
 	
 	  render: function () {
@@ -47816,7 +47678,7 @@ var Debugger =
 	        initialWidth: 300,
 	        rightFlex: true,
 	        left: this.renderCenterPane(this.props),
-	        right: RightSidebar()
+	        right: RightSidebar({ keyShortcuts: this.shortcuts })
 	      })
 	    }));
 	  }
@@ -47826,22 +47688,641 @@ var Debugger =
 	  selectedSource: getSelectedSource(state) }), dispatch => bindActionCreators(actions, dispatch))(App);
 
 /***/ },
-/* 360 */
+/* 361 */
+/***/ function(module, exports) {
+
+	/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+	/* vim: set ts=2 et sw=2 tw=80: */
+	/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+	
+	"use strict";
+	
+	/* globals localStorage, window, document, NodeFilter */
+	
+	// Some constants from nsIPrefBranch.idl.
+	const PREF_INVALID = 0;
+	const PREF_STRING = 32;
+	const PREF_INT = 64;
+	const PREF_BOOL = 128;
+	const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
+	
+	/**
+	 * Create a new preference object.
+	 *
+	 * @param {PrefBranch} branch the branch holding this preference
+	 * @param {String} name the base name of this preference
+	 * @param {String} fullName the fully-qualified name of this preference
+	 */
+	function Preference(branch, name, fullName) {
+	  this.branch = branch;
+	  this.name = name;
+	  this.fullName = fullName;
+	  this.defaultValue = null;
+	  this.hasUserValue = false;
+	  this.userValue = null;
+	  this.type = null;
+	}
+	
+	Preference.prototype = {
+	  /**
+	   * Return this preference's current value.
+	   *
+	   * @return {Any} The current value of this preference.  This may
+	   *         return a string, a number, or a boolean depending on the
+	   *         preference's type.
+	   */
+	  get: function () {
+	    if (this.hasUserValue) {
+	      return this.userValue;
+	    }
+	    return this.defaultValue;
+	  },
+	
+	  /**
+	   * Set the preference's value.  The new value is assumed to be a
+	   * user value.  After setting the value, this function emits a
+	   * change notification.
+	   *
+	   * @param {Any} value the new value
+	   */
+	  set: function (value) {
+	    if (!this.hasUserValue || value !== this.userValue) {
+	      this.userValue = value;
+	      this.hasUserValue = true;
+	      this.saveAndNotify();
+	    }
+	  },
+	
+	  /**
+	   * Set the default value for this preference, and emit a
+	   * notification if this results in a visible change.
+	   *
+	   * @param {Any} value the new default value
+	   */
+	  setDefault: function (value) {
+	    if (this.defaultValue !== value) {
+	      this.defaultValue = value;
+	      if (!this.hasUserValue) {
+	        this.saveAndNotify();
+	      }
+	    }
+	  },
+	
+	  /**
+	   * If this preference has a user value, clear it.  If a change was
+	   * made, emit a change notification.
+	   */
+	  clearUserValue: function () {
+	    if (this.hasUserValue) {
+	      this.userValue = null;
+	      this.hasUserValue = false;
+	      this.saveAndNotify();
+	    }
+	  },
+	
+	  /**
+	   * Helper function to write the preference's value to local storage
+	   * and then emit a change notification.
+	   */
+	  saveAndNotify: function () {
+	    let store = {
+	      type: this.type,
+	      defaultValue: this.defaultValue,
+	      hasUserValue: this.hasUserValue,
+	      userValue: this.userValue,
+	    };
+	
+	    localStorage.setItem(this.fullName, JSON.stringify(store));
+	    this.branch._notify(this.name);
+	  },
+	
+	  /**
+	   * Change this preference's value without writing it back to local
+	   * storage.  This is used to handle changes to local storage that
+	   * were made externally.
+	   *
+	   * @param {Number} type one of the PREF_* values
+	   * @param {Any} userValue the user value to use if the pref does not exist
+	   * @param {Any} defaultValue the default value to use if the pref
+	   *        does not exist
+	   * @param {Boolean} hasUserValue if a new pref is created, whether
+	   *        the default value is also a user value
+	   * @param {Object} store the new value of the preference.  It should
+	   *        be of the form {type, defaultValue, hasUserValue, userValue};
+	   *        where |type| is one of the PREF_* type constants; |defaultValue|
+	   *        and |userValue| are the default and user values, respectively;
+	   *        and |hasUserValue| is a boolean indicating whether the user value
+	   *        is valid
+	   */
+	  storageUpdated: function (type, userValue, hasUserValue, defaultValue) {
+	    this.type = type;
+	    this.defaultValue = defaultValue;
+	    this.hasUserValue = hasUserValue;
+	    this.userValue = userValue;
+	    // There's no need to write this back to local storage, since it
+	    // came from there; and this avoids infinite event loops.
+	    this.branch._notify(this.name);
+	  },
+	};
+	
+	/**
+	 * Create a new preference branch.  This object conforms largely to
+	 * nsIPrefBranch and nsIPrefService, though it only implements the
+	 * subset needed by devtools.
+	 *
+	 * @param {PrefBranch} parent the parent branch, or null for the root
+	 *        branch.
+	 * @param {String} name the base name of this branch
+	 * @param {String} fullName the fully-qualified name of this branch
+	 */
+	function PrefBranch(parent, name, fullName) {
+	  this._parent = parent;
+	  this._name = name;
+	  this._fullName = fullName;
+	  this._observers = {};
+	  this._children = {};
+	
+	  if (!parent) {
+	    this._initializeRoot();
+	  }
+	}
+	
+	PrefBranch.prototype = {
+	  PREF_INVALID: PREF_INVALID,
+	  PREF_STRING: PREF_STRING,
+	  PREF_INT: PREF_INT,
+	  PREF_BOOL: PREF_BOOL,
+	
+	  /** @see nsIPrefBranch.root.  */
+	  get root() {
+	    return this._fullName;
+	  },
+	
+	  /** @see nsIPrefBranch.getPrefType.  */
+	  getPrefType: function (prefName) {
+	    return this._findPref(prefName).type;
+	  },
+	
+	  /** @see nsIPrefBranch.getBoolPref.  */
+	  getBoolPref: function (prefName) {
+	    let thePref = this._findPref(prefName);
+	    if (thePref.type !== PREF_BOOL) {
+	      throw new Error(`${prefName} does not have bool type`);
+	    }
+	    return thePref.get();
+	  },
+	
+	  /** @see nsIPrefBranch.setBoolPref.  */
+	  setBoolPref: function (prefName, value) {
+	    if (typeof value !== "boolean") {
+	      throw new Error("non-bool passed to setBoolPref");
+	    }
+	    let thePref = this._findOrCreatePref(prefName, value, true, value);
+	    if (thePref.type !== PREF_BOOL) {
+	      throw new Error(`${prefName} does not have bool type`);
+	    }
+	    thePref.set(value);
+	  },
+	
+	  /** @see nsIPrefBranch.getCharPref.  */
+	  getCharPref: function (prefName) {
+	    let thePref = this._findPref(prefName);
+	    if (thePref.type !== PREF_STRING) {
+	      throw new Error(`${prefName} does not have string type`);
+	    }
+	    return thePref.get();
+	  },
+	
+	  /** @see nsIPrefBranch.setCharPref.  */
+	  setCharPref: function (prefName, value) {
+	    if (typeof value !== "string") {
+	      throw new Error("non-string passed to setCharPref");
+	    }
+	    let thePref = this._findOrCreatePref(prefName, value, true, value);
+	    if (thePref.type !== PREF_STRING) {
+	      throw new Error(`${prefName} does not have string type`);
+	    }
+	    thePref.set(value);
+	  },
+	
+	  /** @see nsIPrefBranch.getIntPref.  */
+	  getIntPref: function (prefName) {
+	    let thePref = this._findPref(prefName);
+	    if (thePref.type !== PREF_INT) {
+	      throw new Error(`${prefName} does not have int type`);
+	    }
+	    return thePref.get();
+	  },
+	
+	  /** @see nsIPrefBranch.setIntPref.  */
+	  setIntPref: function (prefName, value) {
+	    if (typeof value !== "number") {
+	      throw new Error("non-number passed to setIntPref");
+	    }
+	    let thePref = this._findOrCreatePref(prefName, value, true, value);
+	    if (thePref.type !== PREF_INT) {
+	      throw new Error(`${prefName} does not have int type`);
+	    }
+	    thePref.set(value);
+	  },
+	
+	  /** @see nsIPrefBranch.clearUserPref */
+	  clearUserPref: function (prefName) {
+	    let thePref = this._findPref(prefName);
+	    thePref.clearUserValue();
+	  },
+	
+	  /** @see nsIPrefBranch.prefHasUserValue */
+	  prefHasUserValue: function (prefName) {
+	    let thePref = this._findPref(prefName);
+	    return thePref.hasUserValue;
+	  },
+	
+	  /** @see nsIPrefBranch.addObserver */
+	  addObserver: function (domain, observer, holdWeak) {
+	    if (domain !== "" && !domain.endsWith(".")) {
+	      throw new Error("invalid domain to addObserver: " + domain);
+	    }
+	    if (holdWeak) {
+	      throw new Error("shim prefs only supports strong observers");
+	    }
+	
+	    if (!(domain in this._observers)) {
+	      this._observers[domain] = [];
+	    }
+	    this._observers[domain].push(observer);
+	  },
+	
+	  /** @see nsIPrefBranch.removeObserver */
+	  removeObserver: function (domain, observer) {
+	    if (!(domain in this._observers)) {
+	      return;
+	    }
+	    let index = this._observers[domain].indexOf(observer);
+	    if (index >= 0) {
+	      this._observers[domain].splice(index, 1);
+	    }
+	  },
+	
+	  /** @see nsIPrefService.savePrefFile */
+	  savePrefFile: function (file) {
+	    if (file) {
+	      throw new Error("shim prefs only supports null file in savePrefFile");
+	    }
+	    // Nothing to do - this implementation always writes back.
+	  },
+	
+	  /** @see nsIPrefService.getBranch */
+	  getBranch: function (prefRoot) {
+	    if (!prefRoot) {
+	      return this;
+	    }
+	    if (prefRoot.endsWith(".")) {
+	      prefRoot = prefRoot.slice(0, -1);
+	    }
+	    // This is a bit weird since it could erroneously return a pref,
+	    // not a pref branch.
+	    return this._findPref(prefRoot);
+	  },
+	
+	  /**
+	   * Helper function to find either a Preference or PrefBranch object
+	   * given its name.  If the name is not found, throws an exception.
+	   *
+	   * @param {String} prefName the fully-qualified preference name
+	   * @return {Object} Either a Preference or PrefBranch object
+	   */
+	  _findPref: function (prefName) {
+	    let branchNames = prefName.split(".");
+	    let branch = this;
+	
+	    for (let branchName of branchNames) {
+	      branch = branch._children[branchName];
+	      if (!branch) {
+	        throw new Error("could not find pref branch " + prefName);
+	      }
+	    }
+	
+	    return branch;
+	  },
+	
+	  /**
+	   * Helper function to notify any observers when a preference has
+	   * changed.  This will also notify the parent branch for further
+	   * reporting.
+	   *
+	   * @param {String} relativeName the name of the updated pref,
+	   *        relative to this branch
+	   */
+	  _notify: function (relativeName) {
+	    for (let domain in this._observers) {
+	      if (relativeName.startsWith(domain)) {
+	        // Allow mutation while walking.
+	        let localList = this._observers[domain].slice();
+	        for (let observer of localList) {
+	          try {
+	            observer.observe(this, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID,
+	                             relativeName);
+	          } catch (e) {
+	            console.error(e);
+	          }
+	        }
+	      }
+	    }
+	
+	    if (this._parent) {
+	      this._parent._notify(this._name + "." + relativeName);
+	    }
+	  },
+	
+	  /**
+	   * Helper function to create a branch given an array of branch names
+	   * representing the path of the new branch.
+	   *
+	   * @param {Array} branchList an array of strings, one per component
+	   *        of the branch to be created
+	   * @return {PrefBranch} the new branch
+	   */
+	  _createBranch: function (branchList) {
+	    let parent = this;
+	    for (let branch of branchList) {
+	      if (!parent._children[branch]) {
+	        parent._children[branch] = new PrefBranch(parent, branch,
+	                                                  parent.root + "." + branch);
+	      }
+	      parent = parent._children[branch];
+	    }
+	    return parent;
+	  },
+	
+	  /**
+	   * Create a new preference.  The new preference is assumed to be in
+	   * local storage already, and the new value is taken from there.
+	   *
+	   * @param {String} keyName the full-qualified name of the preference.
+	   *        This is also the name of the key in local storage.
+	   * @param {Any} userValue the user value to use if the pref does not exist
+	   * @param {Any} defaultValue the default value to use if the pref
+	   *        does not exist
+	   * @param {Boolean} hasUserValue if a new pref is created, whether
+	   *        the default value is also a user value
+	   */
+	  _findOrCreatePref: function (keyName, userValue, hasUserValue, defaultValue) {
+	    let branchName = keyName.split(".");
+	    let prefName = branchName.pop();
+	
+	    let branch = this._createBranch(branchName);
+	    if (!(prefName in branch._children)) {
+	      if (hasUserValue && typeof (userValue) !== typeof (defaultValue)) {
+	        throw new Error("inconsistent values when creating " + keyName);
+	      }
+	
+	      let type;
+	      switch (typeof (defaultValue)) {
+	        case "boolean":
+	          type = PREF_BOOL;
+	          break;
+	        case "number":
+	          type = PREF_INT;
+	          break;
+	        case "string":
+	          type = PREF_STRING;
+	          break;
+	        default:
+	          throw new Error("unhandled argument type: " + typeof (defaultValue));
+	      }
+	
+	      let thePref = new Preference(branch, prefName, keyName);
+	      thePref.storageUpdated(type, userValue, hasUserValue, defaultValue);
+	      branch._children[prefName] = thePref;
+	    }
+	
+	    return branch._children[prefName];
+	  },
+	
+	  /**
+	   * Helper function that is called when local storage changes.  This
+	   * updates the preferences and notifies pref observers as needed.
+	   *
+	   * @param {StorageEvent} event the event representing the local
+	   *        storage change
+	   */
+	  _onStorageChange: function (event) {
+	    if (event.storageArea !== localStorage) {
+	      return;
+	    }
+	
+	    // Ignore delete events.  Not clear what's correct.
+	    if (event.key === null || event.newValue === null) {
+	      return;
+	    }
+	
+	    let {type, userValue, hasUserValue, defaultValue} =
+	        JSON.parse(event.newValue);
+	    if (event.oldValue === null) {
+	      this._findOrCreatePref(event.key, userValue, hasUserValue, defaultValue);
+	    } else {
+	      let thePref = this._findPref(event.key);
+	      thePref.storageUpdated(type, userValue, hasUserValue, defaultValue);
+	    }
+	  },
+	
+	  /**
+	   * Helper function to initialize the root PrefBranch.
+	   */
+	  _initializeRoot: function () {
+	    try {
+	      if (localStorage.length === 0) {
+	        // FIXME - this is where we'll load devtools.js to install the
+	        // default prefs.
+	      }
+	    } catch(e) {
+	      // Couldn't access localStorage; bail. This happens in the
+	      // Firefox panel because Chrome-privileged code can't access it.
+	      return;
+	    }
+	
+	    // Read the prefs from local storage and create the local
+	    // representations.
+	    for (let i = 0; i < localStorage.length; ++i) {
+	      let keyName = localStorage.key(i);
+	      try {
+	        let {userValue, hasUserValue, defaultValue} =
+	            JSON.parse(localStorage.getItem(keyName));
+	
+	        this._findOrCreatePref(keyName, userValue, hasUserValue, defaultValue);
+	      } catch (e) {
+	      }
+	    }
+	
+	    this._onStorageChange = this._onStorageChange.bind(this);
+	    window.addEventListener("storage", this._onStorageChange);
+	  },
+	};
+	
+	const Services = {
+	  /**
+	   * An implementation of nsIPrefService that is based on local
+	   * storage.  Only the subset of nsIPrefService that is actually used
+	   * by devtools is implemented here.
+	   */
+	  prefs: new PrefBranch(null, "", ""),
+	
+	  /**
+	   * An implementation of Services.appinfo that holds just the
+	   * properties needed by devtools.
+	   */
+	  appinfo: {
+	    get OS() {
+	      const os = window.navigator.userAgent;
+	      if (os) {
+	        if (os.includes("Linux")) {
+	          return "Linux";
+	        } else if (os.includes("Windows")) {
+	          return "WINNT";
+	        } else if (os.includes("Mac")) {
+	          return "Darwin";
+	        }
+	      }
+	      return "Unknown";
+	    },
+	
+	    // It's fine for this to be an approximation.
+	    get name() {
+	      return window.navigator.userAgent;
+	    },
+	
+	    // It's fine for this to be an approximation.
+	    get version() {
+	      return window.navigator.appVersion;
+	    },
+	
+	    // This is only used by telemetry, which is disabled for the
+	    // content case.  So, being totally wrong is ok.
+	    get is64Bit() {
+	      return true;
+	    },
+	  },
+	
+	  /**
+	   * A no-op implementation of Services.telemetry.  This supports just
+	   * the subset of Services.telemetry that is used by devtools.
+	   */
+	  telemetry: {
+	    getHistogramById: function (name) {
+	      return {
+	        add: () => {}
+	      };
+	    },
+	
+	    getKeyedHistogramById: function (name) {
+	      return {
+	        add: () => {}
+	      };
+	    },
+	  },
+	
+	  /**
+	   * An implementation of Services.focus that holds just the
+	   * properties and methods needed by devtools.
+	   * @see nsIFocusManager.idl for details.
+	   */
+	  focus: {
+	    // These values match nsIFocusManager in order to make testing a
+	    // bit simpler.
+	    MOVEFOCUS_FORWARD: 1,
+	    MOVEFOCUS_BACKWARD: 2,
+	
+	    get focusedElement() {
+	      if (!document.hasFocus()) {
+	        return null;
+	      }
+	      return document.activeElement;
+	    },
+	
+	    moveFocus: function (window, startElement, type, flags) {
+	      if (flags !== 0) {
+	        throw new Error("shim Services.focus.moveFocus only accepts flags===0");
+	      }
+	      if (type !== Services.focus.MOVEFOCUS_FORWARD
+	          && type !== Services.focus.MOVEFOCUS_BACKWARD) {
+	        throw new Error("shim Services.focus.moveFocus only supports " +
+	                        " MOVEFOCUS_FORWARD and MOVEFOCUS_BACKWARD");
+	      }
+	
+	      if (!startElement) {
+	        startElement = document.activeElement || document;
+	      }
+	
+	      let iter = document.createTreeWalker(document, NodeFilter.SHOW_ELEMENT, {
+	        acceptNode: function (node) {
+	          let tabIndex = node.getAttribute("tabindex");
+	          if (tabIndex === "-1") {
+	            return NodeFilter.FILTER_SKIP;
+	          }
+	          node.focus();
+	          if (document.activeElement == node) {
+	            return NodeFilter.FILTER_ACCEPT;
+	          }
+	          return NodeFilter.FILTER_SKIP;
+	        }
+	      });
+	
+	      iter.currentNode = startElement;
+	
+	      // Sets the focus via side effect in the filter.
+	      if (type === Services.focus.MOVEFOCUS_FORWARD) {
+	        iter.nextNode();
+	      } else {
+	        iter.previousNode();
+	      }
+	    },
+	  },
+	};
+	
+	/**
+	 * Create a new preference.  This is used during startup (see
+	 * devtools/client/preferences/devtools.js) to install the
+	 * default preferences.
+	 *
+	 * @param {String} name the name of the preference
+	 * @param {Any} value the default value of the preference
+	 */
+	function pref(name, value) {
+	  let thePref = Services.prefs._findOrCreatePref(name, value, true, value);
+	  thePref.setDefault(value);
+	}
+	
+	exports.Services = Services;
+	// This is exported to silence eslint and, at some point, perhaps to
+	// provide it when loading devtools.js in order to install the default
+	// preferences.
+	exports.pref = pref;
+
+
+/***/ },
+/* 362 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var breakpoints = __webpack_require__(361);
-	var eventListeners = __webpack_require__(363);
-	var sources = __webpack_require__(364);
-	var tabs = __webpack_require__(366);
-	var pause = __webpack_require__(367);
-	var navigation = __webpack_require__(368);
+	
+	
+	var breakpoints = __webpack_require__(363);
+	var eventListeners = __webpack_require__(366);
+	var sources = __webpack_require__(367);
+	var tabs = __webpack_require__(370);
+	var pause = __webpack_require__(371);
+	var navigation = __webpack_require__(372);
 	
 	module.exports = Object.assign(navigation, breakpoints, eventListeners, sources, tabs, pause);
 
 /***/ },
-/* 361 */
+/* 363 */
 /***/ function(module, exports, __webpack_require__) {
 
+	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+	
 	function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
 	
 	/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -47854,12 +48335,12 @@ var Debugger =
 	
 	var PROMISE = _require.PROMISE;
 	
-	var _require2 = __webpack_require__(348);
+	var _require2 = __webpack_require__(347);
 	
 	var getBreakpoint = _require2.getBreakpoint;
 	var getBreakpoints = _require2.getBreakpoints;
 	
-	var _require3 = __webpack_require__(362);
+	var _require3 = __webpack_require__(364);
 	
 	var getOriginalLocation = _require3.getOriginalLocation;
 	var getGeneratedLocation = _require3.getGeneratedLocation;
@@ -47967,14 +48448,29 @@ var Debugger =
 	  };
 	}
 	
-	function removeAllBreakpoints() {
+	function toggleAllBreakpoints(shouldDisableBreakpoints) {
 	  return _ref6 => {
 	    var dispatch = _ref6.dispatch;
 	    var getState = _ref6.getState;
 	
 	    var breakpoints = getBreakpoints(getState());
-	    var activeBreakpoints = breakpoints.filter(bp => !bp.disabled);
-	    activeBreakpoints.forEach(bp => removeBreakpoint(bp.location));
+	    return dispatch({
+	      type: constants.TOGGLE_BREAKPOINTS,
+	      shouldDisableBreakpoints,
+	      [PROMISE]: _asyncToGenerator(function* () {
+	        for (var _ref8 of breakpoints) {
+	          var _ref9 = _slicedToArray(_ref8, 2);
+	
+	          var breakpoint = _ref9[1];
+	
+	          if (shouldDisableBreakpoints) {
+	            yield dispatch(disableBreakpoint(breakpoint.location));
+	          } else {
+	            yield dispatch(enableBreakpoint(breakpoint.location));
+	          }
+	        }
+	      })()
+	    });
 	  };
 	}
 	
@@ -48018,16 +48514,16 @@ var Debugger =
 	  addBreakpoint,
 	  disableBreakpoint,
 	  removeBreakpoint,
-	  removeAllBreakpoints,
+	  toggleAllBreakpoints,
 	  setBreakpointCondition
 	};
 
 /***/ },
-/* 362 */
+/* 364 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var getOriginalSources = (() => {
-	  var _ref2 = _asyncToGenerator(function* (state, source) {
+	  var _ref = _asyncToGenerator(function* (state, source) {
 	    var originalSourceUrls = yield getOriginalSourceUrls(source);
 	    return originalSourceUrls.map(function (url) {
 	      return getSourceByURL(state, url);
@@ -48035,33 +48531,12 @@ var Debugger =
 	  });
 	
 	  return function getOriginalSources(_x, _x2) {
-	    return _ref2.apply(this, arguments);
-	  };
-	})();
-	
-	var getGeneratedSource = (() => {
-	  var _ref3 = _asyncToGenerator(function* (state, source) {
-	    if (yield isGenerated(source)) {
-	      return source;
-	    }
-	
-	    var generatedSourceId = yield getGeneratedSourceId(source);
-	    var originalSource = getSource(state, generatedSourceId);
-	
-	    if (originalSource) {
-	      return originalSource.toJS();
-	    }
-	
-	    return source;
-	  });
-	
-	  return function getGeneratedSource(_x3, _x4) {
-	    return _ref3.apply(this, arguments);
+	    return _ref.apply(this, arguments);
 	  };
 	})();
 	
 	var getGeneratedLocation = (() => {
-	  var _ref4 = _asyncToGenerator(function* (state, location) {
+	  var _ref2 = _asyncToGenerator(function* (state, location) {
 	    var source = getSource(state, location.sourceId);
 	
 	    if (!source) {
@@ -48075,29 +48550,34 @@ var Debugger =
 	    return location;
 	  });
 	
-	  return function getGeneratedLocation(_x5, _x6) {
-	    return _ref4.apply(this, arguments);
+	  return function getGeneratedLocation(_x3, _x4) {
+	    return _ref2.apply(this, arguments);
 	  };
 	})();
 	
 	var getOriginalLocation = (() => {
-	  var _ref5 = _asyncToGenerator(function* (state, location) {
+	  var _ref3 = _asyncToGenerator(function* (state, location) {
 	    var source = getSource(state, location.sourceId);
 	
 	    if (!source) {
 	      return location;
 	    }
 	
-	    var _isGenerated = yield isGenerated(source.toJS());
-	
-	    if (_isGenerated) {
+	    if (isGenerated(source.toJS())) {
 	      var originalPosition = yield getOriginalSourcePosition(source.toJS(), location);
 	
 	      var url = originalPosition.url;
 	      var line = originalPosition.line;
 	
+	      if (!url) {
+	        return {
+	          sourceId: source.get("id"),
+	          line: location.line
+	        };
+	      }
 	
 	      var originalSource = getSourceByURL(state, url);
+	
 	      return {
 	        sourceId: originalSource.get("id"),
 	        line
@@ -48107,22 +48587,22 @@ var Debugger =
 	    return location;
 	  });
 	
-	  return function getOriginalLocation(_x7, _x8) {
-	    return _ref5.apply(this, arguments);
+	  return function getOriginalLocation(_x5, _x6) {
+	    return _ref3.apply(this, arguments);
 	  };
 	})();
 	
 	var getOriginalSourceTexts = (() => {
-	  var _ref6 = _asyncToGenerator(function* (state, generatedSource, generatedText) {
+	  var _ref4 = _asyncToGenerator(function* (state, generatedSource, generatedText) {
 	    if (!_shouldSourceMap(generatedSource)) {
 	      return [];
 	    }
 	
 	    var originalTexts = yield getOriginalTexts(generatedSource, generatedText);
 	
-	    return originalTexts.map(function (_ref7) {
-	      var text = _ref7.text;
-	      var url = _ref7.url;
+	    return originalTexts.map(function (_ref5) {
+	      var text = _ref5.text;
+	      var url = _ref5.url;
 	
 	      var id = getSourceByURL(state, url).get("id");
 	      var contentType = "text/javascript";
@@ -48130,8 +48610,8 @@ var Debugger =
 	    });
 	  });
 	
-	  return function getOriginalSourceTexts(_x9, _x10, _x11) {
-	    return _ref6.apply(this, arguments);
+	  return function getOriginalSourceTexts(_x7, _x8, _x9) {
+	    return _ref4.apply(this, arguments);
 	  };
 	})();
 	
@@ -48141,18 +48621,31 @@ var Debugger =
 	
 	var workerTask = _require.workerTask;
 	
-	var _require2 = __webpack_require__(348);
+	var _require2 = __webpack_require__(365);
 	
-	var getSource = _require2.getSource;
-	var getSourceByURL = _require2.getSourceByURL;
+	var makeOriginalSource = _require2.makeOriginalSource;
+	var getGeneratedSourceId = _require2.getGeneratedSourceId;
 	
-	var _require3 = __webpack_require__(196);
+	var _require3 = __webpack_require__(347);
 	
-	var isEnabled = _require3.isEnabled;
-	var getValue = _require3.getValue;
+	var getSource = _require3.getSource;
+	var getSourceByURL = _require3.getSourceByURL;
+	
+	var _require4 = __webpack_require__(196);
+	
+	var isEnabled = _require4.isEnabled;
+	var getValue = _require4.getValue;
 	
 	
-	var sourceMapWorker = new Worker(getValue("baseWorkerURL") + "source-map-worker.js");
+	var sourceMapWorker = void 0;
+	function restartWorker() {
+	  if (sourceMapWorker) {
+	    sourceMapWorker.terminate();
+	  }
+	  sourceMapWorker = new Worker(getValue("baseWorkerURL") + "source-map-worker.js");
+	}
+	restartWorker();
+	
 	var sourceMapTask = function (method) {
 	  return function () {
 	    var args = Array.prototype.slice.call(arguments);
@@ -48160,33 +48653,43 @@ var Debugger =
 	  };
 	};
 	
-	function makeOriginalSource(_ref) {
-	  var url = _ref.url;
-	  var source = _ref.source;
-	  var _ref$id = _ref.id;
-	  var id = _ref$id === undefined ? 1 : _ref$id;
-	
-	  var generatedSourceId = source.id;
-	  return {
-	    url,
-	    id: JSON.stringify({ generatedSourceId, id }),
-	    isPrettyPrinted: false
-	  };
-	}
-	
 	var getOriginalSourcePosition = sourceMapTask("getOriginalSourcePosition");
 	var getGeneratedSourceLocation = sourceMapTask("getGeneratedSourceLocation");
 	var createOriginalSources = sourceMapTask("createOriginalSources");
 	var getOriginalSourceUrls = sourceMapTask("getOriginalSourceUrls");
 	var getOriginalTexts = sourceMapTask("getOriginalTexts");
-	var isOriginal = sourceMapTask("isOriginal");
-	var isGenerated = sourceMapTask("isGenerated");
-	var getGeneratedSourceId = sourceMapTask("getGeneratedSourceId");
 	var createSourceMap = sourceMapTask("createSourceMap");
 	var clearData = sourceMapTask("clearData");
 	
-	function _shouldSourceMap(generatedSource) {
-	  return isEnabled("features.sourceMaps") && generatedSource.sourceMapURL;
+	function _shouldSourceMap(source) {
+	  return isEnabled("sourceMaps") && source.sourceMapURL;
+	}
+	
+	function isMapped(source) {
+	  return _shouldSourceMap(source);
+	}
+	
+	function isOriginal(originalSource) {
+	  return !!getGeneratedSourceId(originalSource);
+	}
+	
+	function isGenerated(source) {
+	  return !isOriginal(source);
+	}
+	
+	function getGeneratedSource(state, source) {
+	  if (isGenerated(source)) {
+	    return source;
+	  }
+	
+	  var generatedSourceId = getGeneratedSourceId(source);
+	  var originalSource = getSource(state, generatedSourceId);
+	
+	  if (originalSource) {
+	    return originalSource.toJS();
+	  }
+	
+	  return source;
 	}
 	
 	module.exports = {
@@ -48200,16 +48703,46 @@ var Debugger =
 	  getGeneratedSourceLocation,
 	  createOriginalSources,
 	  getOriginalSourceUrls,
-	  getOriginalTexts,
 	  isOriginal,
 	  isGenerated,
+	  isMapped,
 	  getGeneratedSourceId,
 	  createSourceMap,
-	  clearData
+	  clearData,
+	  restartWorker
 	};
 
 /***/ },
-/* 363 */
+/* 365 */
+/***/ function(module, exports) {
+
+	
+	function getGeneratedSourceId(originalSource) {
+	  var match = originalSource.id.match(/(.*)\/originalSource/);
+	  return match ? match[1] : null;
+	}
+	
+	function makeOriginalSource(_ref) {
+	  var url = _ref.url;
+	  var source = _ref.source;
+	  var _ref$id = _ref.id;
+	  var id = _ref$id === undefined ? 1 : _ref$id;
+	
+	  var generatedSourceId = source.id;
+	  return {
+	    url,
+	    id: `${ generatedSourceId }/originalSource${ id }`,
+	    isPrettyPrinted: false
+	  };
+	}
+	
+	module.exports = {
+	  makeOriginalSource,
+	  getGeneratedSourceId
+	};
+
+/***/ },
+/* 366 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -48339,7 +48872,7 @@ var Debugger =
 	module.exports = { updateEventBreakpoints, fetchEventListeners };
 
 /***/ },
-/* 364 */
+/* 367 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
@@ -48396,7 +48929,7 @@ var Debugger =
 	
 	var Task = _require2.Task;
 	
-	var _require3 = __webpack_require__(365);
+	var _require3 = __webpack_require__(368);
 	
 	var isJavaScript = _require3.isJavaScript;
 	
@@ -48408,34 +48941,39 @@ var Debugger =
 	
 	var workerTask = _require5.workerTask;
 	
+	var _require6 = __webpack_require__(369);
+	
+	var updateFrameLocations = _require6.updateFrameLocations;
+	
 	
 	var constants = __webpack_require__(338);
 	var invariant = __webpack_require__(175);
 	
-	var _require6 = __webpack_require__(196);
+	var _require7 = __webpack_require__(196);
 	
-	var isEnabled = _require6.isEnabled;
+	var isEnabled = _require7.isEnabled;
 	
-	var _require7 = __webpack_require__(362);
+	var _require8 = __webpack_require__(364);
 	
-	var createOriginalSources = _require7.createOriginalSources;
-	var getOriginalSourceTexts = _require7.getOriginalSourceTexts;
-	var createSourceMap = _require7.createSourceMap;
-	var makeOriginalSource = _require7.makeOriginalSource;
-	var getGeneratedSource = _require7.getGeneratedSource;
+	var createOriginalSources = _require8.createOriginalSources;
+	var getOriginalSourceTexts = _require8.getOriginalSourceTexts;
+	var createSourceMap = _require8.createSourceMap;
+	var makeOriginalSource = _require8.makeOriginalSource;
+	var getGeneratedSource = _require8.getGeneratedSource;
 	
-	var _require8 = __webpack_require__(348);
+	var _require9 = __webpack_require__(347);
 	
-	var getSource = _require8.getSource;
-	var getSourceByURL = _require8.getSourceByURL;
-	var getSourceText = _require8.getSourceText;
-	var getPendingSelectedSourceURL = _require8.getPendingSelectedSourceURL;
-	var getSourceMap = _require8.getSourceMap;
-	var getSourceMapURL = _require8.getSourceMapURL;
+	var getSource = _require9.getSource;
+	var getSourceByURL = _require9.getSourceByURL;
+	var getSourceText = _require9.getSourceText;
+	var getPendingSelectedSourceURL = _require9.getPendingSelectedSourceURL;
+	var getSourceMap = _require9.getSourceMap;
+	var getSourceMapURL = _require9.getSourceMapURL;
+	var getFrames = _require9.getFrames;
 	
 	
 	function _shouldSourceMap(generatedSource) {
-	  return isEnabled("features.sourceMaps") && generatedSource.sourceMapURL;
+	  return isEnabled("sourceMaps") && generatedSource.sourceMapURL;
 	}
 	
 	function _addSource(source) {
@@ -48598,8 +49136,13 @@ var Debugger =
 	    var client = _ref10.client;
 	
 	    var source = getSource(getState(), id).toJS();
+	    var sourceText = getSourceText(getState(), id).toJS();
 	
-	    if (!isEnabled("features.prettyPrint") || source.isPrettyPrinted) {
+	    if (sourceText.loading) {
+	      return;
+	    }
+	
+	    if (!isEnabled("prettyPrint") || source.isPrettyPrinted) {
 	      return {};
 	    }
 	
@@ -48612,8 +49155,9 @@ var Debugger =
 	      source,
 	      originalSource,
 	      [PROMISE]: _asyncToGenerator(function* () {
-	        var sourceText = getSourceText(getState(), source.id).toJS();
+	        var state = getState();
 	        var text = yield _prettyPrintSource({ source, sourceText, url });
+	        var frames = yield updateFrameLocations(state, getFrames(state));
 	
 	        dispatch(selectSource(originalSource.id));
 	
@@ -48625,7 +49169,8 @@ var Debugger =
 	
 	        return {
 	          isPrettyPrinted: true,
-	          sourceText: originalSourceText
+	          sourceText: originalSourceText,
+	          frames
 	        };
 	      })()
 	    });
@@ -48793,7 +49338,7 @@ var Debugger =
 	};
 
 /***/ },
-/* 365 */
+/* 368 */
 /***/ function(module, exports) {
 
 	
@@ -48826,12 +49371,67 @@ var Debugger =
 	  return url && /\.jsm?$/.test(trimUrlQuery(url)) || contentType.includes("javascript");
 	}
 	
+	function isPretty(source) {
+	  return source.url.match(/formatted$/);
+	}
+	
 	module.exports = {
-	  isJavaScript
+	  isJavaScript,
+	  isPretty
 	};
 
 /***/ },
-/* 366 */
+/* 369 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var updateFrameLocation = (() => {
+	  var _ref = _asyncToGenerator(function* (state, frame) {
+	    var originalLocation = yield getOriginalLocation(state, frame.location);
+	
+	    return Frame.update(frame, {
+	      $merge: { location: Location(originalLocation) }
+	    });
+	  });
+	
+	  return function updateFrameLocation(_x, _x2) {
+	    return _ref.apply(this, arguments);
+	  };
+	})();
+	
+	var updateFrameLocations = (() => {
+	  var _ref2 = _asyncToGenerator(function* (state, frames) {
+	    return yield asyncMap(frames, function (item) {
+	      return updateFrameLocation(state, item);
+	    });
+	  });
+	
+	  return function updateFrameLocations(_x3, _x4) {
+	    return _ref2.apply(this, arguments);
+	  };
+	})();
+	
+	function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
+	
+	var _require = __webpack_require__(263);
+	
+	var Location = _require.Location;
+	var Frame = _require.Frame;
+	
+	var _require2 = __webpack_require__(364);
+	
+	var getOriginalLocation = _require2.getOriginalLocation;
+	
+	var _require3 = __webpack_require__(324);
+	
+	var asyncMap = _require3.asyncMap;
+	
+	
+	module.exports = {
+	  updateFrameLocations
+	};
+
+/***/ },
+/* 370 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -48863,33 +49463,14 @@ var Debugger =
 	};
 
 /***/ },
-/* 367 */
+/* 371 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var updateFrame = (() => {
-	  var _ref = _asyncToGenerator(function* (state, frame) {
-	    var originalLocation = yield getOriginalLocation(state, frame.location);
-	
-	    return Frame.update(frame, {
-	      $merge: { location: Location(originalLocation) }
-	    });
-	  });
-	
-	  return function updateFrame(_x, _x2) {
-	    return _ref.apply(this, arguments);
-	  };
-	})();
-	
-	/**
-	 * Debugger has just resumed
-	 */
-	
-	
 	function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
 	
 	var constants = __webpack_require__(338);
 	
-	var _require = __webpack_require__(364);
+	var _require = __webpack_require__(367);
 	
 	var selectSource = _require.selectSource;
 	
@@ -48897,26 +49478,22 @@ var Debugger =
 	
 	var PROMISE = _require2.PROMISE;
 	
-	var _require3 = __webpack_require__(263);
+	var _require3 = __webpack_require__(347);
 	
-	var Location = _require3.Location;
-	var Frame = _require3.Frame;
+	var getExpressions = _require3.getExpressions;
 	
-	var _require4 = __webpack_require__(348);
+	var _require4 = __webpack_require__(369);
 	
-	var getExpressions = _require4.getExpressions;
+	var updateFrameLocations = _require4.updateFrameLocations;
 	
-	var _require5 = __webpack_require__(362);
+	/**
+	 * Debugger has just resumed
+	 */
 	
-	var getOriginalLocation = _require5.getOriginalLocation;
-	
-	var _require6 = __webpack_require__(324);
-	
-	var asyncMap = _require6.asyncMap;
 	function resumed() {
-	  return _ref2 => {
-	    var dispatch = _ref2.dispatch;
-	    var client = _ref2.client;
+	  return _ref => {
+	    var dispatch = _ref.dispatch;
+	    var client = _ref.client;
 	
 	    return dispatch({
 	      type: constants.RESUME,
@@ -48929,10 +49506,10 @@ var Debugger =
 	 * Debugger has just paused
 	 */
 	function paused(pauseInfo) {
-	  return _ref3 => {
-	    var dispatch = _ref3.dispatch;
-	    var getState = _ref3.getState;
-	    var client = _ref3.client;
+	  return _ref2 => {
+	    var dispatch = _ref2.dispatch;
+	    var getState = _ref2.getState;
+	    var client = _ref2.client;
 	    var frame = pauseInfo.frame;
 	    var frames = pauseInfo.frames;
 	    var why = pauseInfo.why;
@@ -48943,32 +49520,31 @@ var Debugger =
 	    return dispatch({
 	      type: constants.PAUSED,
 	      [PROMISE]: _asyncToGenerator(function* () {
-	        frame = yield updateFrame(getState(), frame);
-	
-	        frames = yield asyncMap(frames, function (item) {
-	          return updateFrame(getState(), item);
-	        });
+	        frames = yield updateFrameLocations(getState(), frames);
 	
 	        dispatch(selectSource(frame.location.sourceId));
 	        return {
 	          pauseInfo: { why, frame },
-	          frames: frames
+	          frames: frames,
+	          selectedFrameId: frame.id
 	        };
 	      })()
 	    });
 	  };
 	}
 	
-	function pauseOnExceptions(toggle) {
-	  return _ref5 => {
-	    var dispatch = _ref5.dispatch;
-	    var getState = _ref5.getState;
-	    var client = _ref5.client;
+	function pauseOnExceptions(shouldPauseOnExceptions, shouldIgnoreCaughtExceptions) {
+	  return _ref4 => {
+	    var dispatch = _ref4.dispatch;
+	    var getState = _ref4.getState;
+	    var client = _ref4.client;
 	
-	    client.pauseOnExceptions(toggle);
+	    client.pauseOnExceptions(shouldPauseOnExceptions, shouldIgnoreCaughtExceptions);
+	
 	    return dispatch({
 	      type: constants.PAUSE_ON_EXCEPTIONS,
-	      toggle
+	      shouldPauseOnExceptions,
+	      shouldIgnoreCaughtExceptions
 	    });
 	  };
 	}
@@ -48976,12 +49552,12 @@ var Debugger =
 	/**
 	 * Debugger commands like stepOver, stepIn, stepUp
 	 */
-	function command(_ref6) {
-	  var type = _ref6.type;
+	function command(_ref5) {
+	  var type = _ref5.type;
 	
-	  return _ref7 => {
-	    var dispatch = _ref7.dispatch;
-	    var client = _ref7.client;
+	  return _ref6 => {
+	    var dispatch = _ref6.dispatch;
+	    var client = _ref6.client;
 	
 	    // execute debugger thread command e.g. stepIn, stepOver
 	    client[type]();
@@ -48993,15 +49569,31 @@ var Debugger =
 	  };
 	}
 	
+	function stepIn() {
+	  return command({ type: "stepIn" });
+	}
+	
+	function stepOver() {
+	  return command({ type: "stepOver" });
+	}
+	
+	function stepOut() {
+	  return command({ type: "stepOut" });
+	}
+	
+	function resume() {
+	  return command({ type: "resume" });
+	}
+	
 	/**
 	 * Debugger breakOnNext command.
 	 * It's different from the comand action because we also want to
 	 * highlight the pause icon.
 	 */
 	function breakOnNext() {
-	  return _ref8 => {
-	    var dispatch = _ref8.dispatch;
-	    var client = _ref8.client;
+	  return _ref7 => {
+	    var dispatch = _ref7.dispatch;
+	    var client = _ref7.client;
 	
 	    client.breakOnNext();
 	
@@ -49016,13 +49608,13 @@ var Debugger =
 	 * Select a frame
 	 */
 	function selectFrame(frame) {
-	  return _ref9 => {
-	    var dispatch = _ref9.dispatch;
+	  return _ref8 => {
+	    var dispatch = _ref8.dispatch;
 	
 	    dispatch(selectSource(frame.location.sourceId, { line: frame.location.line }));
 	    dispatch({
 	      type: constants.SELECT_FRAME,
-	      frame: frame
+	      frame
 	    });
 	  };
 	}
@@ -49034,9 +49626,9 @@ var Debugger =
 	 * for Chrome, which is why it takes a grip.
 	 */
 	function loadObjectProperties(grip) {
-	  return _ref10 => {
-	    var dispatch = _ref10.dispatch;
-	    var client = _ref10.client;
+	  return _ref9 => {
+	    var dispatch = _ref9.dispatch;
+	    var client = _ref9.client;
 	
 	    dispatch({
 	      type: constants.LOAD_OBJECT_PROPERTIES,
@@ -49051,9 +49643,9 @@ var Debugger =
 	 * @param expression
 	 */
 	function addExpression(expression) {
-	  return _ref11 => {
-	    var dispatch = _ref11.dispatch;
-	    var getState = _ref11.getState;
+	  return _ref10 => {
+	    var dispatch = _ref10.dispatch;
+	    var getState = _ref10.getState;
 	
 	    var id = expression.id !== undefined ? parseInt(expression.id, 10) : getExpressions(getState()).toSeq().size++;
 	    dispatch({
@@ -49066,8 +49658,8 @@ var Debugger =
 	}
 	
 	function updateExpression(expression) {
-	  return _ref12 => {
-	    var dispatch = _ref12.dispatch;
+	  return _ref11 => {
+	    var dispatch = _ref11.dispatch;
 	
 	    dispatch({
 	      type: constants.UPDATE_EXPRESSION,
@@ -49078,8 +49670,8 @@ var Debugger =
 	}
 	
 	function deleteExpression(expression) {
-	  return _ref13 => {
-	    var dispatch = _ref13.dispatch;
+	  return _ref12 => {
+	    var dispatch = _ref12.dispatch;
 	
 	    dispatch({
 	      type: constants.DELETE_EXPRESSION,
@@ -49089,10 +49681,10 @@ var Debugger =
 	}
 	
 	function evaluateExpressions() {
-	  return _ref14 => {
-	    var dispatch = _ref14.dispatch;
-	    var getState = _ref14.getState;
-	    var client = _ref14.client;
+	  return _ref13 => {
+	    var dispatch = _ref13.dispatch;
+	    var getState = _ref13.getState;
+	    var client = _ref13.client;
 	
 	    for (var expression of getExpressions(getState())) {
 	      dispatch({
@@ -49113,18 +49705,22 @@ var Debugger =
 	  paused,
 	  pauseOnExceptions,
 	  command,
+	  stepIn,
+	  stepOut,
+	  stepOver,
+	  resume,
 	  breakOnNext,
 	  selectFrame,
 	  loadObjectProperties
 	};
 
 /***/ },
-/* 368 */
+/* 372 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var constants = __webpack_require__(338);
 	
-	var _require = __webpack_require__(362);
+	var _require = __webpack_require__(364);
 	
 	var clearData = _require.clearData;
 	
@@ -49155,134 +49751,33 @@ var Debugger =
 	};
 
 /***/ },
-/* 369 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-	
-	// load the styles
-	var content = __webpack_require__(370);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(358)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./App.css", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./App.css");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 370 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(357)();
-	// imports
-	
-	
-	// module
-	exports.push([module.id, "/* vim:set ts=2 sw=2 sts=2 et: */\n\n/* This Source Code Form is subject to the terms of the Mozilla Public\n * License, v. 2.0. If a copy of the MPL was not distributed with this file,\n * You can obtain one at http://mozilla.org/MPL/2.0/. */\n\n* {\n  box-sizing: border-box;\n}\n\nhtml,\nbody {\n  font-family: \"SF UI Text\", sans-serif;\n  height: 100%;\n  margin: 0;\n  padding: 0;\n  width: 100%;\n}\n\n#mount {\n  display: flex;\n  height: 100%;\n}\n\n.debugger {\n  display: flex;\n  flex: 1;\n}\n\n.center-pane {\n  display: flex;\n  position: relative;\n  flex: 1;\n  background-color: #fcfcfc;\n}\n\n.editor-container {\n  display: flex;\n  flex: 1;\n}\n\n.subsettings:hover {\n  cursor: pointer;\n}\n\n.source-footer {\n  background: white;\n  position: absolute;\n  bottom: 0;\n  right: 0;\n  z-index: 100;\n  width: 100px;\n  opacity: 0.9;\n}\n\n.source-footer .command-bar {\n  float: right;\n}\n\n.command-bar > span {\n  cursor: pointer;\n  margin-right: 0.7em;\n  width: 1em;\n  height: 1.1em;\n  display: inline-block;\n  text-align: center;\n  transition: opacity 200ms;\n}\n\n.welcomebox {\n  margin: 50px auto;\n  padding: 20px;\n  font-size: 1em;\n  color: var(--theme-gray-darker);\n  font-weight: lighter;\n  text-align: center;\n  width: 100%;\n}\n", ""]);
-	
-	// exports
-
-
-/***/ },
-/* 371 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-	
-	// load the styles
-	var content = __webpack_require__(372);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(358)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./variables.css", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./variables.css");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 372 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(357)();
-	// imports
-	
-	
-	// module
-	exports.push([module.id, "/* vim:set ts=2 sw=2 sts=2 et: */\n/* This Source Code Form is subject to the terms of the Mozilla Public\n * License, v. 2.0. If a copy of the MPL was not distributed with this\n * file, You can obtain one at http://mozilla.org/MPL/2.0/. */\n\n/* Variable declarations for light and dark devtools themes.\n * Colors are taken from:\n * https://developer.mozilla.org/en-US/docs/Tools/DevToolsColors.\n * Changes should be kept in sync with commandline.css and commandline.inc.css.\n */\n\n/* IMPORTANT NOTE:\n * This file is parsed in js (see client/shared/theme.js)\n * so the formatting should be consistent (i.e. no '}' inside a rule).\n */\n\n:root .theme-light {\n  --theme-body-background: white;\n  --theme-sidebar-background: white;\n  --theme-contrast-background: #e6b064;\n\n  --theme-tab-toolbar-background: #fcfcfc;\n  --theme-toolbar-background: #fcfcfc;\n  --theme-selection-background: #4c9ed9;\n  --theme-selection-background-semitransparent: rgba(76, 158, 217, 0.15);\n  --theme-selection-color: #f5f7fa;\n  --theme-splitter-color: #dde1e4;\n  --theme-breakpoint-background: #fafafa;\n  --theme-comment: #696969;\n\n  --theme-body-color: #393f4c;\n  --theme-body-color-alt: #585959;\n  --theme-body-color-inactive: #999797;\n  --theme-content-color1: #292e33;\n  --theme-content-color2: #8fa1b2;\n  --theme-content-color3: #667380;\n\n  --theme-gray: #dde1e4;\n  --theme-gray-darker: #ccd1d5;\n\n  --theme-highlight-green: #2cbb0f;\n  --theme-highlight-blue: #0088cc;\n  --theme-highlight-bluegrey: #0072ab;\n  --theme-highlight-purple: #5b5fff;\n  --theme-highlight-lightorange: #d97e00;\n  --theme-highlight-orange: #f13c00;\n  --theme-highlight-red: #ed2655;\n  --theme-highlight-pink: #b82ee5;\n\n  /* Colors used in Graphs, like performance tools. Similar colors to Chrome's timeline. */\n  --theme-graphs-green: #85d175;\n  --theme-graphs-blue: #83b7f6;\n  --theme-graphs-bluegrey: #0072ab;\n  --theme-graphs-purple: #b693eb;\n  --theme-graphs-yellow: #efc052;\n  --theme-graphs-orange: #d97e00;\n  --theme-graphs-red: #e57180;\n  --theme-graphs-grey: #cccccc;\n  --theme-graphs-full-red: #f00;\n  --theme-graphs-full-blue: #00f;\n\n  --breakpoint-active-color: rgba(44,187,15,.1);\n}\n\n:root .theme-dark {\n  --theme-body-background: #393f4c;\n  --theme-sidebar-background: #393f4c;\n  --theme-contrast-background: #ffb35b;\n\n  --theme-tab-toolbar-background: #272b35;\n  --theme-toolbar-background: #272b35;\n  --theme-selection-background: #5675B9;\n  --theme-selection-background-semitransparent: rgba(86, 117, 185, 0.5);\n  --theme-selection-color: #f5f7fa;\n  --theme-splitter-color: #454d5d;\n  --theme-breakpoint-background: #fafafa; /* Match not found */\n  --theme-comment: #757873;\n\n  --theme-body-color: #8fa1b2;\n  --theme-body-color-alt: #b6babf;\n  --theme-body-color-inactive: #8fa1b2;\n  --theme-content-color1: #a9bacb;\n  --theme-content-color2: #8fa1b2;\n  --theme-content-color3: #5f7387;\n\n  --theme-gray: #dde1e4; /* Match not found */\n  --theme-gray-darker: #ccd1d5; /* Match not found */\n\n  --theme-highlight-green: #00ff7f;\n  --theme-highlight-blue: #46afe3;\n  --theme-highlight-bluegrey: #5e88b0;\n  --theme-highlight-purple: #bcb8db;\n  --theme-highlight-lightorange: #d99b28;\n  --theme-highlight-orange: #d96629;\n  --theme-highlight-red: #eb5368;\n  --theme-highlight-pink: #df80ff;\n  --theme-highlight-gray: #e9f4fe;\n\n  /* Colors used in Graphs, like performance tools. Similar colors to Chrome's timeline. */\n  --theme-graphs-green: #70bf53;\n  --theme-graphs-blue: #46afe3;\n  --theme-graphs-bluegrey: #5e88b0;\n  --theme-graphs-purple: #df80ff;\n  --theme-graphs-yellow: #d99b28;\n  --theme-graphs-orange: #d96629;\n  --theme-graphs-red: #eb5368;\n  --theme-graphs-grey: #757873;\n  --theme-graphs-full-red: #f00;\n  --theme-graphs-full-blue: #00f;\n\n  --breakpoint-active-color: rgba(44,187,15,.1); /* Match not found */\n}\n\n:root .theme-firebug {\n  --theme-body-background: #fcfcfc;\n  --theme-sidebar-background: #fcfcfc;\n  --theme-contrast-background: #e6b064;\n\n  --theme-tab-toolbar-background: #ebeced;\n  --theme-toolbar-background: #f0f1f2;\n  --theme-selection-background: #3399ff;\n  --theme-selection-background-semitransparent: rgba(128,128,128,0.2);\n  --theme-selection-color: white;\n  --theme-splitter-color: #aabccf;\n  --theme-comment: green;\n\n  --theme-body-color: #18191a;\n  --theme-body-color-alt: #585959;\n  --theme-content-color1: #292e33;\n  --theme-content-color2: #8fa1b2;\n  --theme-content-color3: #667380;\n\n  --theme-gray: #dde1e4; /* Match not found */\n  --theme-gray-darker: #ccd1d5; /* Match not found */\n\n  --theme-highlight-green: #2cbb0f;\n  --theme-highlight-blue: #3455db;\n  --theme-highlight-bluegrey: #0072ab;\n  --theme-highlight-purple: #887ce6;\n  --theme-highlight-lightorange: #d97e00;\n  --theme-highlight-orange: #f13c00;\n  --theme-highlight-red: #e22f6f;\n  --theme-highlight-pink: #b82ee5;\n  --theme-highlight-gray: #dde1e4;\n\n  /* Colors used in Graphs, like performance tools. Mostly similar to some \"highlight-*\" colors. */\n  --theme-graphs-green: #70bf53;\n  --theme-graphs-blue: #46afe3;\n  --theme-graphs-bluegrey: #5e88b0;\n  --theme-graphs-purple: #df80ff;\n  --theme-graphs-yellow: #d99b28;\n  --theme-graphs-orange: #d96629;\n  --theme-graphs-red: #eb5368;\n  --theme-graphs-grey: #757873;\n  --theme-graphs-full-red: #f00;\n  --theme-graphs-full-blue: #00f;\n\n  --breakpoint-active-color: rgba(44,187,15,.1); /* Match not found */\n}", ""]);
-	
-	// exports
-
-
-/***/ },
 /* 373 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-	
-	// load the styles
-	var content = __webpack_require__(374);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(358)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../../node_modules/css-loader/index.js!./light-theme.css", function() {
-				var newContent = require("!!./../../../../node_modules/css-loader/index.js!./light-theme.css");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
+	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 374 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(357)();
-	// imports
-	
-	
-	// module
-	exports.push([module.id, "/* vim:set ts=2 sw=2 sts=2 et: */\n/* This Source Code Form is subject to the terms of the Mozilla Public\n  * License, v. 2.0. If a copy of the MPL was not distributed with this\n  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */\n\nbody {\n  margin: 0;\n}\n\n.theme-body {\n  background: var(--theme-body-background);\n  color: var(--theme-body-color);\n}\n\n.theme-sidebar {\n  background: var(--theme-sidebar-background);\n  color: var(--theme-body-color);\n}\n\n::-moz-selection {\n  background-color: var(--theme-selection-background);\n  color: var(--theme-selection-color);\n}\n\n.theme-bg-darker {\n  background: var(--theme-selection-background-semitransparent);\n}\n\n.theme-selected,\n.CodeMirror-hint-active {\n  background-color: var(--theme-selection-background);\n  color: var(--theme-selection-color);\n}\n\n.theme-bg-contrast,\n.variable-or-property:not([overridden])[changed] {\n  background: var(--theme-contrast-background);\n}\n\n.theme-link,\n.cm-s-mozilla .cm-link,\n.CodeMirror-Tern-type {\n  color: var(--theme-highlight-blue);\n}\n\n/*\n * FIXME: http://bugzil.la/575675 CSS links without :visited set cause assertion\n * failures in debug builds.\n */\n.theme-link:visited,\n.cm-s-mozilla .cm-link:visited {\n  color: var(--theme-highlight-blue);\n}\n\n.theme-comment,\n.cm-s-mozilla .cm-meta,\n.cm-s-mozilla .cm-hr,\n.cm-s-mozilla .cm-comment,\n.variable-or-property .token-undefined,\n.variable-or-property .token-null,\n.CodeMirror-Tern-completion-unknown:before {\n  color: var(--theme-comment);\n}\n\n.theme-gutter {\n  background-color: var(--theme-tab-toolbar-background);\n  color: var(--theme-content-color3);\n  border-color: var(--theme-splitter-color);\n}\n\n.theme-separator { /* grey */\n  border-color: #cddae5;\n}\n\n.cm-s-mozilla .cm-unused-line {\n  text-decoration: line-through;\n  text-decoration-color: var(--theme-highlight-bluegrey);\n}\n\n.cm-s-mozilla .cm-executed-line {\n  background-color: #fcfffc;\n}\n\n.theme-fg-color1,\n.cm-s-mozilla .cm-number,\n.variable-or-property .token-number,\n.variable-or-property[return] > .title > .name,\n.variable-or-property[scope] > .title > .name {\n  color: var(--theme-highlight-purple);\n}\n\n.CodeMirror-Tern-completion-number:before {\n  background-color: hsl(72,100%,27%);\n}\n\n.theme-fg-color2,\n.cm-s-mozilla .cm-attribute,\n.cm-s-mozilla .cm-builtin,\n.cm-s-mozilla .cm-property,\n.variables-view-variable > .title > .name {\n  color: var(--theme-highlight-red);\n}\n\n.cm-s-mozilla .cm-def {\n  color: var(--theme-body-color);\n}\n\n.CodeMirror-Tern-completion-object:before {\n  background-color: hsl(208,56%,40%);\n}\n\n.theme-fg-color3,\n.cm-s-mozilla .cm-variable,\n.cm-s-mozilla .cm-tag,\n.cm-s-mozilla .cm-header,\n.cm-s-mozilla .cm-bracket,\n.cm-s-mozilla .cm-qualifier,\n.variables-view-property > .title > .name {\n  color: var(--theme-highlight-blue);\n}\n\n.CodeMirror-Tern-completion-array:before {\n  background-color: var(--theme-highlight-bluegrey);\n}\n\n.theme-fg-color4 {\n  color: var(--theme-highlight-orange);\n}\n\n.theme-fg-color5,\n.cm-s-mozilla .cm-keyword {\n  color: var(--theme-highlight-red);\n}\n\n.theme-fg-color6,\n.cm-s-mozilla .cm-string,\n.cm-s-mozilla .cm-string-2,\n.variable-or-property .token-string,\n.CodeMirror-Tern-farg {\n  color: var(--theme-highlight-purple);\n}\n\n.CodeMirror-Tern-completion-string:before,\n.CodeMirror-Tern-completion-fn:before {\n  background-color: hsl(24,85%,39%);\n}\n\n.theme-fg-color7,\n.cm-s-mozilla .cm-atom,\n.cm-s-mozilla .cm-quote,\n.cm-s-mozilla .cm-error,\n.variable-or-property .token-boolean,\n.variable-or-property .token-domnode,\n.variable-or-property[exception] > .title > .name {\n  color: var(--theme-highlight-red);\n}\n\n.CodeMirror-Tern-completion-bool:before {\n  background-color: #bf5656;\n}\n\n.variable-or-property .token-domnode {\n  font-weight: bold;\n}\n\n.theme-fg-contrast { /* To be used for text on theme-bg-contrast */\n  color: black;\n}\n\n.theme-toolbar,\n.devtools-toolbar,\n.devtools-sidebar-tabs tabs,\n.devtools-sidebar-alltabs,\n.cm-s-mozilla .CodeMirror-dialog { /* General toolbar styling */\n  color: var(--theme-body-color);\n  background-color: var(--theme-toolbar-background);\n  border-color: var(--theme-splitter-color);\n}\n\n.ruleview-swatch,\n.computedview-colorswatch {\n  box-shadow: 0 0 0 1px #c4c4c4;\n}\n\n/* CodeMirror specific styles.\n * Best effort to match the existing theme, some of the colors\n * are duplicated here to prevent weirdness in the main theme. */\n\n.CodeMirror.cm-s-mozilla { /* Inherit platform specific font sizing and styles */\n  font-family: inherit;\n  font-size: inherit;\n  background: transparent;\n}\n\n.CodeMirror.cm-s-mozilla  pre,\n.cm-s-mozilla .cm-variable-2,\n.cm-s-mozilla .cm-variable-3,\n.cm-s-mozilla .cm-operator,\n.cm-s-mozilla .cm-special {\n  color: var(--theme-body-color);\n}\n\n.cm-s-mozilla .CodeMirror-lines .CodeMirror-cursor {\n  border-left: solid 1px black;\n}\n\n.cm-s-mozilla.CodeMirror-focused .CodeMirror-selected { /* selected text (focused) */\n  background: rgb(185, 215, 253);\n}\n\n.cm-s-mozilla .CodeMirror-selected { /* selected text (unfocused) */\n  background: rgb(176, 176, 176);\n}\n\n.cm-s-mozilla .CodeMirror-activeline-background { /* selected color with alpha */\n  background: rgba(185, 215, 253, .35);\n}\n\ndiv.cm-s-mozilla span.CodeMirror-matchingbracket { /* highlight brackets */\n  outline: solid 1px rgba(0, 0, 0, .25);\n  color: black;\n}\n\n/* Highlight for a line that contains an error. */\ndiv.CodeMirror div.error-line {\n  background: rgba(255,0,0,0.2);\n}\n\n/* Generic highlighted text */\ndiv.CodeMirror span.marked-text {\n  background: rgba(255,255,0,0.2);\n  border: 1px dashed rgba(192,192,0,0.6);\n  margin-inline-start: -1px;\n  margin-inline-end: -1px;\n}\n\n/* Highlight for evaluating current statement. */\ndiv.CodeMirror span.eval-text {\n  background-color: #ccd;\n}\n\n.cm-s-mozilla .CodeMirror-linenumber { /* line number text */\n  color: var(--theme-content-color3);\n}\n\n.cm-s-mozilla .CodeMirror-gutters { /* vertical line next to line numbers */\n  border-right-color: var(--theme-splitter-color);\n  background-color: var(--theme-sidebar-background);\n}\n\n.cm-s-markup-view pre {\n  line-height: 1.4em;\n  min-height: 1.4em;\n}\n", ""]);
-	
-	// exports
-
-
-/***/ },
+/* 374 */,
 /* 375 */
+/***/ function(module, exports) {
+
+	// removed by extract-text-webpack-plugin
+
+/***/ },
+/* 376 */,
+/* 377 */,
+/* 378 */,
+/* 379 */,
+/* 380 */,
+/* 381 */,
+/* 382 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
 	var dom = React.DOM;
 	var PropTypes = React.PropTypes;
 	
-	var ImPropTypes = __webpack_require__(376);
+	var ImPropTypes = __webpack_require__(383);
 	
 	var _require = __webpack_require__(2);
 	
@@ -49292,16 +49787,16 @@ var Debugger =
 	
 	var connect = _require2.connect;
 	
-	var SourcesTree = React.createFactory(__webpack_require__(377));
-	var actions = __webpack_require__(360);
+	var SourcesTree = React.createFactory(__webpack_require__(384));
+	var actions = __webpack_require__(362);
 	
-	var _require3 = __webpack_require__(348);
+	var _require3 = __webpack_require__(347);
 	
 	var getSelectedSource = _require3.getSelectedSource;
 	var getSources = _require3.getSources;
 	
 	
-	__webpack_require__(412);
+	__webpack_require__(415);
 	
 	var Sources = React.createClass({
 	  propTypes: {
@@ -49317,7 +49812,7 @@ var Debugger =
 	    var selectSource = _props.selectSource;
 	
 	
-	    return dom.div({ className: "sources-panel" }, SourcesTree({ sources, selectSource }));
+	    return dom.div({ className: "sources-panel" }, dom.div({ className: "sources-header" }, "Sources"), SourcesTree({ sources, selectSource }));
 	  }
 	});
 	
@@ -49325,7 +49820,7 @@ var Debugger =
 	  sources: getSources(state) }), dispatch => bindActionCreators(actions, dispatch))(Sources);
 
 /***/ },
-/* 376 */
+/* 383 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -49529,33 +50024,35 @@ var Debugger =
 	module.exports = ImmutablePropTypes;
 
 /***/ },
-/* 377 */
+/* 384 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
 	var dom = React.DOM;
 	var PropTypes = React.PropTypes;
 	
-	var _require = __webpack_require__(378);
+	var classnames = __webpack_require__(355);
+	var ImPropTypes = __webpack_require__(383);
 	
-	var nodeHasChildren = _require.nodeHasChildren;
-	var createParentMap = _require.createParentMap;
-	var addToTree = _require.addToTree;
-	var collapseTree = _require.collapseTree;
-	var createTree = _require.createTree;
+	var _require = __webpack_require__(341);
 	
+	var Set = _require.Set;
 	
-	var classnames = __webpack_require__(379);
-	var ImPropTypes = __webpack_require__(376);
+	var _require2 = __webpack_require__(385);
 	
-	var _require2 = __webpack_require__(341);
+	var nodeHasChildren = _require2.nodeHasChildren;
+	var createParentMap = _require2.createParentMap;
+	var addToTree = _require2.addToTree;
+	var collapseTree = _require2.collapseTree;
+	var createTree = _require2.createTree;
 	
-	var Set = _require2.Set;
+	var ManagedTree = React.createFactory(__webpack_require__(386));
+	var Svg = __webpack_require__(390);
 	
-	var debounce = __webpack_require__(380);
+	var _require3 = __webpack_require__(324);
 	
-	var ManagedTree = React.createFactory(__webpack_require__(383));
-	var Svg = __webpack_require__(387);
+	var throttle = _require3.throttle;
+	
 	
 	var SourcesTree = React.createClass({
 	  propTypes: {
@@ -49569,12 +50066,16 @@ var Debugger =
 	    return createTree(this.props.sources);
 	  },
 	
-	  componentWillMount() {
-	    this.debouncedUpdate = debounce(this.debouncedUpdate, 50);
-	  },
+	  queueUpdate: throttle(function () {
+	    if (!this.isMounted()) {
+	      return;
+	    }
+	
+	    this.forceUpdate();
+	  }, 50),
 	
 	  shouldComponentUpdate() {
-	    this.debouncedUpdate();
+	    this.queueUpdate();
 	    return false;
 	  },
 	
@@ -49606,14 +50107,6 @@ var Debugger =
 	    this.setState({ uncollapsedTree,
 	      sourceTree,
 	      parentMap: createParentMap(sourceTree) });
-	  },
-	
-	  debouncedUpdate() {
-	    if (!this.isMounted()) {
-	      return;
-	    }
-	
-	    this.forceUpdate();
 	  },
 	
 	  focusItem(item) {
@@ -49700,15 +50193,26 @@ var Debugger =
 	module.exports = SourcesTree;
 
 /***/ },
-/* 378 */
+/* 385 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var URL = __webpack_require__(349);
+	var URL = __webpack_require__(348);
 	
 	var _require = __webpack_require__(334);
 	
 	var assert = _require.assert;
 	
+	var _require2 = __webpack_require__(368);
+	
+	var isPretty = _require2.isPretty;
+	
+	
+	var IGNORED_URLS = ["debugger eval code", "XStringBundle"];
+	
+	function isHiddenSource(source) {
+	  var url = source.get("url");
+	  return !url || url.match(/SOURCE/) || IGNORED_URLS.includes(url);
+	}
 	
 	function nodeHasChildren(item) {
 	  return Array.isArray(item.contents);
@@ -49782,7 +50286,7 @@ var Debugger =
 	
 	function addToTree(tree, source) {
 	  var url = getURL(source);
-	  if (!url) {
+	  if (isHiddenSource(source) || isPretty(source.toJS())) {
 	    return;
 	  }
 	  url.path = decodeURIComponent(url.path);
@@ -49882,357 +50386,18 @@ var Debugger =
 	  createParentMap,
 	  addToTree,
 	  collapseTree,
-	  createTree
+	  createTree,
+	  getURL,
+	  isHiddenSource
 	};
 
 /***/ },
-/* 379 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
-	  Copyright (c) 2016 Jed Watson.
-	  Licensed under the MIT License (MIT), see
-	  http://jedwatson.github.io/classnames
-	*/
-	/* global define */
-	
-	(function () {
-		'use strict';
-	
-		var hasOwn = {}.hasOwnProperty;
-	
-		function classNames () {
-			var classes = [];
-	
-			for (var i = 0; i < arguments.length; i++) {
-				var arg = arguments[i];
-				if (!arg) continue;
-	
-				var argType = typeof arg;
-	
-				if (argType === 'string' || argType === 'number') {
-					classes.push(arg);
-				} else if (Array.isArray(arg)) {
-					classes.push(classNames.apply(null, arg));
-				} else if (argType === 'object') {
-					for (var key in arg) {
-						if (hasOwn.call(arg, key) && arg[key]) {
-							classes.push(key);
-						}
-					}
-				}
-			}
-	
-			return classes.join(' ');
-		}
-	
-		if (typeof module !== 'undefined' && module.exports) {
-			module.exports = classNames;
-		} else if (true) {
-			// register as 'classnames', consistent with npm package name
-			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = function () {
-				return classNames;
-			}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-		} else {
-			window.classNames = classNames;
-		}
-	}());
-
-
-/***/ },
-/* 380 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var isObject = __webpack_require__(212),
-	    now = __webpack_require__(381),
-	    toNumber = __webpack_require__(382);
-	
-	/** Used as the `TypeError` message for "Functions" methods. */
-	var FUNC_ERROR_TEXT = 'Expected a function';
-	
-	/* Built-in method references for those with the same name as other `lodash` methods. */
-	var nativeMax = Math.max,
-	    nativeMin = Math.min;
-	
-	/**
-	 * Creates a debounced function that delays invoking `func` until after `wait`
-	 * milliseconds have elapsed since the last time the debounced function was
-	 * invoked. The debounced function comes with a `cancel` method to cancel
-	 * delayed `func` invocations and a `flush` method to immediately invoke them.
-	 * Provide an options object to indicate whether `func` should be invoked on
-	 * the leading and/or trailing edge of the `wait` timeout. The `func` is invoked
-	 * with the last arguments provided to the debounced function. Subsequent calls
-	 * to the debounced function return the result of the last `func` invocation.
-	 *
-	 * **Note:** If `leading` and `trailing` options are `true`, `func` is invoked
-	 * on the trailing edge of the timeout only if the debounced function is
-	 * invoked more than once during the `wait` timeout.
-	 *
-	 * See [David Corbacho's article](https://css-tricks.com/debouncing-throttling-explained-examples/)
-	 * for details over the differences between `_.debounce` and `_.throttle`.
-	 *
-	 * @static
-	 * @memberOf _
-	 * @since 0.1.0
-	 * @category Function
-	 * @param {Function} func The function to debounce.
-	 * @param {number} [wait=0] The number of milliseconds to delay.
-	 * @param {Object} [options={}] The options object.
-	 * @param {boolean} [options.leading=false]
-	 *  Specify invoking on the leading edge of the timeout.
-	 * @param {number} [options.maxWait]
-	 *  The maximum time `func` is allowed to be delayed before it's invoked.
-	 * @param {boolean} [options.trailing=true]
-	 *  Specify invoking on the trailing edge of the timeout.
-	 * @returns {Function} Returns the new debounced function.
-	 * @example
-	 *
-	 * // Avoid costly calculations while the window size is in flux.
-	 * jQuery(window).on('resize', _.debounce(calculateLayout, 150));
-	 *
-	 * // Invoke `sendMail` when clicked, debouncing subsequent calls.
-	 * jQuery(element).on('click', _.debounce(sendMail, 300, {
-	 *   'leading': true,
-	 *   'trailing': false
-	 * }));
-	 *
-	 * // Ensure `batchLog` is invoked once after 1 second of debounced calls.
-	 * var debounced = _.debounce(batchLog, 250, { 'maxWait': 1000 });
-	 * var source = new EventSource('/stream');
-	 * jQuery(source).on('message', debounced);
-	 *
-	 * // Cancel the trailing debounced invocation.
-	 * jQuery(window).on('popstate', debounced.cancel);
-	 */
-	function debounce(func, wait, options) {
-	  var lastArgs,
-	      lastThis,
-	      maxWait,
-	      result,
-	      timerId,
-	      lastCallTime,
-	      lastInvokeTime = 0,
-	      leading = false,
-	      maxing = false,
-	      trailing = true;
-	
-	  if (typeof func != 'function') {
-	    throw new TypeError(FUNC_ERROR_TEXT);
-	  }
-	  wait = toNumber(wait) || 0;
-	  if (isObject(options)) {
-	    leading = !!options.leading;
-	    maxing = 'maxWait' in options;
-	    maxWait = maxing ? nativeMax(toNumber(options.maxWait) || 0, wait) : maxWait;
-	    trailing = 'trailing' in options ? !!options.trailing : trailing;
-	  }
-	
-	  function invokeFunc(time) {
-	    var args = lastArgs,
-	        thisArg = lastThis;
-	
-	    lastArgs = lastThis = undefined;
-	    lastInvokeTime = time;
-	    result = func.apply(thisArg, args);
-	    return result;
-	  }
-	
-	  function leadingEdge(time) {
-	    // Reset any `maxWait` timer.
-	    lastInvokeTime = time;
-	    // Start the timer for the trailing edge.
-	    timerId = setTimeout(timerExpired, wait);
-	    // Invoke the leading edge.
-	    return leading ? invokeFunc(time) : result;
-	  }
-	
-	  function remainingWait(time) {
-	    var timeSinceLastCall = time - lastCallTime,
-	        timeSinceLastInvoke = time - lastInvokeTime,
-	        result = wait - timeSinceLastCall;
-	
-	    return maxing ? nativeMin(result, maxWait - timeSinceLastInvoke) : result;
-	  }
-	
-	  function shouldInvoke(time) {
-	    var timeSinceLastCall = time - lastCallTime,
-	        timeSinceLastInvoke = time - lastInvokeTime;
-	
-	    // Either this is the first call, activity has stopped and we're at the
-	    // trailing edge, the system time has gone backwards and we're treating
-	    // it as the trailing edge, or we've hit the `maxWait` limit.
-	    return (lastCallTime === undefined || (timeSinceLastCall >= wait) ||
-	      (timeSinceLastCall < 0) || (maxing && timeSinceLastInvoke >= maxWait));
-	  }
-	
-	  function timerExpired() {
-	    var time = now();
-	    if (shouldInvoke(time)) {
-	      return trailingEdge(time);
-	    }
-	    // Restart the timer.
-	    timerId = setTimeout(timerExpired, remainingWait(time));
-	  }
-	
-	  function trailingEdge(time) {
-	    timerId = undefined;
-	
-	    // Only invoke if we have `lastArgs` which means `func` has been
-	    // debounced at least once.
-	    if (trailing && lastArgs) {
-	      return invokeFunc(time);
-	    }
-	    lastArgs = lastThis = undefined;
-	    return result;
-	  }
-	
-	  function cancel() {
-	    lastInvokeTime = 0;
-	    lastArgs = lastCallTime = lastThis = timerId = undefined;
-	  }
-	
-	  function flush() {
-	    return timerId === undefined ? result : trailingEdge(now());
-	  }
-	
-	  function debounced() {
-	    var time = now(),
-	        isInvoking = shouldInvoke(time);
-	
-	    lastArgs = arguments;
-	    lastThis = this;
-	    lastCallTime = time;
-	
-	    if (isInvoking) {
-	      if (timerId === undefined) {
-	        return leadingEdge(lastCallTime);
-	      }
-	      if (maxing) {
-	        // Handle invocations in a tight loop.
-	        timerId = setTimeout(timerExpired, wait);
-	        return invokeFunc(lastCallTime);
-	      }
-	    }
-	    if (timerId === undefined) {
-	      timerId = setTimeout(timerExpired, wait);
-	    }
-	    return result;
-	  }
-	  debounced.cancel = cancel;
-	  debounced.flush = flush;
-	  return debounced;
-	}
-	
-	module.exports = debounce;
-
-
-/***/ },
-/* 381 */
-/***/ function(module, exports) {
-
-	/**
-	 * Gets the timestamp of the number of milliseconds that have elapsed since
-	 * the Unix epoch (1 January 1970 00:00:00 UTC).
-	 *
-	 * @static
-	 * @memberOf _
-	 * @since 2.4.0
-	 * @category Date
-	 * @returns {number} Returns the timestamp.
-	 * @example
-	 *
-	 * _.defer(function(stamp) {
-	 *   console.log(_.now() - stamp);
-	 * }, _.now());
-	 * // => Logs the number of milliseconds it took for the deferred invocation.
-	 */
-	function now() {
-	  return Date.now();
-	}
-	
-	module.exports = now;
-
-
-/***/ },
-/* 382 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var isFunction = __webpack_require__(211),
-	    isObject = __webpack_require__(212),
-	    isSymbol = __webpack_require__(241);
-	
-	/** Used as references for various `Number` constants. */
-	var NAN = 0 / 0;
-	
-	/** Used to match leading and trailing whitespace. */
-	var reTrim = /^\s+|\s+$/g;
-	
-	/** Used to detect bad signed hexadecimal string values. */
-	var reIsBadHex = /^[-+]0x[0-9a-f]+$/i;
-	
-	/** Used to detect binary string values. */
-	var reIsBinary = /^0b[01]+$/i;
-	
-	/** Used to detect octal string values. */
-	var reIsOctal = /^0o[0-7]+$/i;
-	
-	/** Built-in method references without a dependency on `root`. */
-	var freeParseInt = parseInt;
-	
-	/**
-	 * Converts `value` to a number.
-	 *
-	 * @static
-	 * @memberOf _
-	 * @since 4.0.0
-	 * @category Lang
-	 * @param {*} value The value to process.
-	 * @returns {number} Returns the number.
-	 * @example
-	 *
-	 * _.toNumber(3.2);
-	 * // => 3.2
-	 *
-	 * _.toNumber(Number.MIN_VALUE);
-	 * // => 5e-324
-	 *
-	 * _.toNumber(Infinity);
-	 * // => Infinity
-	 *
-	 * _.toNumber('3.2');
-	 * // => 3.2
-	 */
-	function toNumber(value) {
-	  if (typeof value == 'number') {
-	    return value;
-	  }
-	  if (isSymbol(value)) {
-	    return NAN;
-	  }
-	  if (isObject(value)) {
-	    var other = isFunction(value.valueOf) ? value.valueOf() : value;
-	    value = isObject(other) ? (other + '') : other;
-	  }
-	  if (typeof value != 'string') {
-	    return value === 0 ? value : +value;
-	  }
-	  value = value.replace(reTrim, '');
-	  var isBinary = reIsBinary.test(value);
-	  return (isBinary || reIsOctal.test(value))
-	    ? freeParseInt(value.slice(2), isBinary ? 2 : 8)
-	    : (reIsBadHex.test(value) ? NAN : +value);
-	}
-	
-	module.exports = toNumber;
-
-
-/***/ },
-/* 383 */
+/* 386 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
-	var Tree = React.createFactory(__webpack_require__(384));
-	__webpack_require__(385);
+	var Tree = React.createFactory(__webpack_require__(387));
+	__webpack_require__(388);
 	
 	var ManagedTree = React.createClass({
 	  propTypes: Tree.propTypes,
@@ -50307,7 +50472,7 @@ var Debugger =
 	module.exports = ManagedTree;
 
 /***/ },
-/* 384 */
+/* 387 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -50907,85 +51072,52 @@ var Debugger =
 
 
 /***/ },
-/* 385 */
-/***/ function(module, exports, __webpack_require__) {
+/* 388 */
+/***/ function(module, exports) {
 
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-	
-	// load the styles
-	var content = __webpack_require__(386);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(358)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../../node_modules/css-loader/index.js!./ManagedTree.css", function() {
-				var newContent = require("!!./../../../../node_modules/css-loader/index.js!./ManagedTree.css");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
+	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 386 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(357)();
-	// imports
-	
-	
-	// module
-	exports.push([module.id, ".tree {\n  -webkit-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  -o-user-select: none;\n  user-select: none;\n\n  flex: 1;\n  white-space: nowrap;\n  overflow: auto;\n}\n\n.tree button {\n  display: block;\n}\n\n.tree .node {\n  padding: 2px 5px;\n  position: relative;\n}\n\n.tree .node.focused {\n  color: white;\n  background-color: var(--theme-selection-background);\n}\n\n.tree .node > div {\n  margin-left: 10px;\n}\n\n.tree .node.focused svg {\n  fill: white;\n}\n\n.tree-node button {\n  position: fixed;\n}\n", ""]);
-	
-	// exports
-
-
-/***/ },
-/* 387 */
+/* 389 */,
+/* 390 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
 	 * This file maps the SVG React Components in the public/images directory.
 	 */
-	var Svg = __webpack_require__(388);
+	var Svg = __webpack_require__(391);
 	module.exports = Svg;
 
 /***/ },
-/* 388 */
+/* 391 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
-	var InlineSVG = __webpack_require__(389);
+	var InlineSVG = __webpack_require__(392);
 	
 	var svg = {
-	  "angle-brackets": __webpack_require__(390),
-	  "arrow": __webpack_require__(391),
-	  "blackBox": __webpack_require__(392),
-	  "breakpoint": __webpack_require__(393),
-	  "close": __webpack_require__(394),
-	  "disableBreakpoints": __webpack_require__(395),
-	  "domain": __webpack_require__(396),
-	  "file": __webpack_require__(397),
-	  "folder": __webpack_require__(398),
-	  "globe": __webpack_require__(399),
-	  "magnifying-glass": __webpack_require__(400),
-	  "pause": __webpack_require__(401),
-	  "pause-circle": __webpack_require__(402),
-	  "pause-exceptions": __webpack_require__(403),
-	  "prettyPrint": __webpack_require__(404),
-	  "resume": __webpack_require__(405),
-	  "settings": __webpack_require__(406),
-	  "stepIn": __webpack_require__(407),
-	  "stepOut": __webpack_require__(408),
-	  "stepOver": __webpack_require__(409),
-	  "subSettings": __webpack_require__(410),
-	  "worker": __webpack_require__(411)
+	  "angle-brackets": __webpack_require__(393),
+	  "arrow": __webpack_require__(394),
+	  "blackBox": __webpack_require__(395),
+	  "breakpoint": __webpack_require__(396),
+	  "close": __webpack_require__(397),
+	  "disableBreakpoints": __webpack_require__(398),
+	  "domain": __webpack_require__(399),
+	  "file": __webpack_require__(400),
+	  "folder": __webpack_require__(401),
+	  "globe": __webpack_require__(402),
+	  "magnifying-glass": __webpack_require__(403),
+	  "pause": __webpack_require__(404),
+	  "pause-circle": __webpack_require__(405),
+	  "pause-exceptions": __webpack_require__(406),
+	  "prettyPrint": __webpack_require__(407),
+	  "resume": __webpack_require__(408),
+	  "settings": __webpack_require__(409),
+	  "stepIn": __webpack_require__(410),
+	  "stepOut": __webpack_require__(411),
+	  "stepOver": __webpack_require__(412),
+	  "subSettings": __webpack_require__(413),
+	  "worker": __webpack_require__(414)
 	};
 	
 	module.exports = function (name, props) {
@@ -50993,7 +51125,10 @@ var Debugger =
 	  if (!svg[name]) {
 	    throw new Error("Unknown SVG: " + name);
 	  }
-	  var className = props ? `${ name } ${ props.className }` : name;
+	  var className = name;
+	  if (props && props.className) {
+	    className = `${ name } ${ props.className }`;
+	  }
 	  if (name === "subSettings") {
 	    className = "";
 	  }
@@ -51002,7 +51137,7 @@ var Debugger =
 	};
 
 /***/ },
-/* 389 */
+/* 392 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -51158,183 +51293,151 @@ var Debugger =
 	module.exports = exports['default'];
 
 /***/ },
-/* 390 */
+/* 393 */
 /***/ function(module, exports) {
 
 	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"-1 73 16 11\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"><g id=\"Shape-Copy-3-+-Shape-Copy-4\" stroke=\"none\" stroke-width=\"1\" fill=\"none\" fill-rule=\"evenodd\" transform=\"translate(0.000000, 74.000000)\"><path d=\"M0.749321284,4.16081709 L4.43130681,0.242526751 C4.66815444,-0.00952143591 5.06030999,-0.0211407611 5.30721074,0.216574262 C5.55411149,0.454289284 5.56226116,0.851320812 5.32541353,1.103369 L1.95384971,4.69131519 L5.48809879,8.09407556 C5.73499955,8.33179058 5.74314922,8.72882211 5.50630159,8.9808703 C5.26945396,9.23291849 4.87729841,9.24453781 4.63039766,9.00682279 L0.827097345,5.34502101 C0.749816996,5.31670099 0.677016974,5.27216098 0.613753508,5.21125118 C0.427367989,5.03179997 0.377040713,4.7615583 0.465458792,4.53143559 C0.492371834,4.43667624 0.541703274,4.34676528 0.613628034,4.27022448 C0.654709457,4.22650651 0.70046335,4.19002189 0.749321284,4.16081709 Z\" id=\"Shape-Copy-3\" stroke=\"#FFFFFF\" stroke-width=\"0.05\" fill=\"#DDE1E4\"></path><path d=\"M13.7119065,5.44453032 L9.77062746,9.09174784 C9.51677479,9.3266604 9.12476399,9.31089603 8.89504684,9.05653714 C8.66532968,8.80217826 8.68489539,8.40554539 8.93874806,8.17063283 L12.5546008,4.82456128 L9.26827469,1.18571135 C9.03855754,0.931352463 9.05812324,0.534719593 9.31197591,0.299807038 C9.56582858,0.0648944831 9.95783938,0.0806588502 10.1875565,0.335017737 L13.72891,4.25625178 C13.8013755,4.28980469 13.8684335,4.3382578 13.9254821,4.40142604 C14.0883019,4.58171146 14.1258883,4.83347168 14.0435812,5.04846202 C14.0126705,5.15680232 13.9526426,5.2583679 13.8641331,5.34027361 C13.8174417,5.38348136 13.7660763,5.41820853 13.7119065,5.44453032 Z\" id=\"Shape-Copy-4\" stroke=\"#FFFFFF\" stroke-width=\"0.05\" fill=\"#DDE1E4\"></path></g></svg>"
 
 /***/ },
-/* 391 */
+/* 394 */
 /***/ function(module, exports) {
 
 	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\"0 0 16 16\"><path d=\"M8 13.4c-.5 0-.9-.2-1.2-.6L.4 5.2C0 4.7-.1 4.3.2 3.7S1 3 1.6 3h12.8c.6 0 1.2.1 1.4.7.3.6.2 1.1-.2 1.6l-6.4 7.6c-.3.4-.7.5-1.2.5z\"></path></svg>"
 
 /***/ },
-/* 392 */
+/* 395 */
 /***/ function(module, exports) {
 
 	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"##4A464C\"><g fill-rule=\"evenodd\"><circle cx=\"8\" cy=\"8.5\" r=\"1.5\"></circle><path d=\"M15.498 8.28l-.001-.03v-.002-.004l-.002-.018-.004-.031c0-.002 0-.002 0 0l-.004-.035.006.082c-.037-.296-.133-.501-.28-.661-.4-.522-.915-1.042-1.562-1.604-1.36-1.182-2.74-1.975-4.178-2.309a6.544 6.544 0 0 0-2.755-.042c-.78.153-1.565.462-2.369.91C3.252 5.147 2.207 6 1.252 7.035c-.216.233-.36.398-.499.577-.338.437-.338 1 0 1.437.428.552.941 1.072 1.59 1.635 1.359 1.181 2.739 1.975 4.177 2.308.907.21 1.829.223 2.756.043.78-.153 1.564-.462 2.369-.91 1.097-.612 2.141-1.464 3.097-2.499.217-.235.36-.398.498-.578.12-.128.216-.334.248-.554 0 .01 0 .01-.008.04l.013-.079-.001.011.003-.031.001-.017v.005l.001-.02v.008l.002-.03.001-.05-.001-.044v-.004-.004zm-.954.045v.007l.001.004V8.33v.012l-.001.01v-.005-.005l.002-.015-.001.008c-.002.014-.002.014 0 0l-.007.084c.003-.057-.004-.041-.014-.031-.143.182-.27.327-.468.543-.89.963-1.856 1.752-2.86 2.311-.724.404-1.419.677-2.095.81a5.63 5.63 0 0 1-2.374-.036c-1.273-.295-2.523-1.014-3.774-2.101-.604-.525-1.075-1.001-1.457-1.496-.054-.07-.054-.107 0-.177.117-.152.244-.298.442-.512.89-.963 1.856-1.752 2.86-2.311.724-.404 1.419-.678 2.095-.81a5.631 5.631 0 0 1 2.374.036c1.272.295 2.523 1.014 3.774 2.101.603.524 1.074 1 1.457 1.496.035.041.043.057.046.076 0 .01 0 .01.008.043l-.009-.047.003.02-.002-.013v-.008.016c0-.004 0-.004 0 0v-.004z\"></path></g></svg>"
 
 /***/ },
-/* 393 */
-/***/ function(module, exports) {
-
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\"0 0 33 12\"><path id=\"base-path\" d=\"M27.1,0H1C0.4,0,0,0.4,0,1v10c0,0.6,0.4,1,1,1h26.1 c0.6,0,1.2-0.3,1.5-0.7L33,6l-4.4-5.3C28.2,0.3,27.7,0,27.1,0z\"></path></svg>"
-
-/***/ },
-/* 394 */
-/***/ function(module, exports) {
-
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 6 6\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"><path d=\"M1.35191454,5.27895256 L5.31214367,1.35518468 C5.50830675,1.16082764 5.50977084,0.844248536 5.3154138,0.648085456 C5.12105677,0.451922377 4.80447766,0.450458288 4.60831458,0.644815324 L0.648085456,4.56858321 C0.451922377,4.76294025 0.450458288,5.07951935 0.644815324,5.27568243 C0.83917236,5.47184551 1.15575146,5.4733096 1.35191454,5.27895256 L1.35191454,5.27895256 Z\" id=\"Line\" stroke=\"none\" fill=\"#696969\" fill-rule=\"evenodd\"></path><path d=\"M5.31214367,4.56858321 L1.35191454,0.644815324 C1.15575146,0.450458288 0.83917236,0.451922377 0.644815324,0.648085456 C0.450458288,0.844248536 0.451922377,1.16082764 0.648085456,1.35518468 L4.60831458,5.27895256 C4.80447766,5.4733096 5.12105677,5.47184551 5.3154138,5.27568243 C5.50977084,5.07951935 5.50830675,4.76294025 5.31214367,4.56858321 L5.31214367,4.56858321 Z\" id=\"Line-Copy-2\" stroke=\"none\" fill=\"#696969\" fill-rule=\"evenodd\"></path></svg>"
-
-/***/ },
-/* 395 */
-/***/ function(module, exports) {
-
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"##4A464C\"><g fill-rule=\"evenodd\"><path d=\"M3.233 11.25l-.417 1H1.712C.763 12.25 0 11.574 0 10.747V6.503C0 5.675.755 5 1.712 5h4.127l-.417 1H1.597C1.257 6 1 6.225 1 6.503v4.244c0 .277.267.503.597.503h1.636zM7.405 11.27L7 12.306c.865.01 2.212-.024 2.315-.04.112-.016.112-.016.185-.035.075-.02.156-.046.251-.082.152-.056.349-.138.592-.244.415-.182.962-.435 1.612-.744l.138-.066a179.35 179.35 0 0 0 2.255-1.094c1.191-.546 1.191-2.074-.025-2.632l-.737-.34a3547.554 3547.554 0 0 0-3.854-1.78c-.029.11-.065.222-.11.336l-.232.596c.894.408 4.56 2.107 4.56 2.107.458.21.458.596 0 .806L9.197 11.27H7.405zM4.462 14.692l5-12a.5.5 0 1 0-.924-.384l-5 12a.5.5 0 1 0 .924.384z\"></path></g></svg>"
-
-/***/ },
 /* 396 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#DDE1E4\"><path d=\"M9.05 4.634l-2.144.003-.116.116v1.445l.92.965.492.034.116-.116v-.617L9.13 5.7l.035-.95M12.482 10.38l-1.505-1.462H9.362l-.564.516-.034 1.108.72.768 1.323.034-.117-.116v1.2l.972 1.02.315.034.116-.116v-1.154l.422-.374.034-.927-.117.117h.26l.408-.36V10.5l-.125-.124-.575-.033\"></path><path d=\"M8.47 15.073c-3.088 0-5.6-2.513-5.6-5.602V9.4v-.003c0-.018 0-.018.002-.034l.182-.088.724.587.49.033.497.543-.034.9.317.383h.47l.114.096-.032 1.9.524.553h.105l.025-.338 1.004-.95.054-.474.53-.462v-.888l-.588-.038-1.118-1.155H4.48l-.154-.09V9.01l.155-.1h1.164v-.273l.12-.115.7.033.494-.443.034-.746-.624-.655h-.724v.28l-.11.07H4.64l-.114-.09.025-.64.48-.43v-.244h-.382c-.102 0-.152-.128-.08-.2 1.04-1.01 2.428-1.59 3.903-1.59 1.374 0 2.672.5 3.688 1.39.08.068.03.198-.075.198l-1.144-.034-.81.803.52.523v.16l-.382.388h-.158l-.176-.177v-.16l.076-.074-.252-.252-.37.362.53.53c.072.072.005.194-.096.194l-.752-.005v.844h.783L9.885 8l.16-.143h.16l.62.61v.267l.58.027.003.002V8.76l.18-.03 1.234 1.24.753-.708h.382l.116.108c0 .02.003.016.003.036v.065c0 3.09-2.515 5.603-5.605 5.603M8.47 3C4.904 3 2 5.903 2 9.47c0 3.57 2.903 6.472 6.47 6.472 3.57 0 6.472-2.903 6.472-6.47C14.942 5.9 12.04 3 8.472 3\"></path></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\"0 0 33 12\"><path id=\"base-path\" d=\"M27.1,0H1C0.4,0,0,0.4,0,1v10c0,0.6,0.4,1,1,1h26.1 c0.6,0,1.2-0.3,1.5-0.7L33,6l-4.4-5.3C28.2,0.3,27.7,0,27.1,0z\"></path></svg>"
 
 /***/ },
 /* 397 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#DDE1E4\"><path d=\"M4 2v12h9V4.775L9.888 2H4zm0-1h5.888c.246 0 .483.09.666.254l3.112 2.774c.212.19.334.462.334.747V14c0 .552-.448 1-1 1H4c-.552 0-1-.448-1-1V2c0-.552.448-1 1-1z\"></path><path d=\"M9 1.5v4c0 .325.306.564.62.485l4-1c.27-.067.432-.338.365-.606-.067-.27-.338-.432-.606-.365l-4 1L10 5.5v-4c0-.276-.224-.5-.5-.5s-.5.224-.5.5z\"></path></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 6 6\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"><path d=\"M1.35191454,5.27895256 L5.31214367,1.35518468 C5.50830675,1.16082764 5.50977084,0.844248536 5.3154138,0.648085456 C5.12105677,0.451922377 4.80447766,0.450458288 4.60831458,0.644815324 L0.648085456,4.56858321 C0.451922377,4.76294025 0.450458288,5.07951935 0.644815324,5.27568243 C0.83917236,5.47184551 1.15575146,5.4733096 1.35191454,5.27895256 L1.35191454,5.27895256 Z\" id=\"Line\" stroke=\"none\" fill=\"#696969\" fill-rule=\"evenodd\"></path><path d=\"M5.31214367,4.56858321 L1.35191454,0.644815324 C1.15575146,0.450458288 0.83917236,0.451922377 0.644815324,0.648085456 C0.450458288,0.844248536 0.451922377,1.16082764 0.648085456,1.35518468 L4.60831458,5.27895256 C4.80447766,5.4733096 5.12105677,5.47184551 5.3154138,5.27568243 C5.50977084,5.07951935 5.50830675,4.76294025 5.31214367,4.56858321 L5.31214367,4.56858321 Z\" id=\"Line-Copy-2\" stroke=\"none\" fill=\"#696969\" fill-rule=\"evenodd\"></path></svg>"
 
 /***/ },
 /* 398 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#DDE1E5\"><path d=\"M2 5.193v7.652c0 .003-.002 0 .007 0H14v-7.69c0-.003.002 0-.007 0h-7.53v-2.15c0-.002-.004-.005-.01-.005H2.01C2 3 2 3 2 3.005V5.193zm-1 0V3.005C1 2.45 1.444 2 2.01 2h4.442c.558 0 1.01.45 1.01 1.005v1.15h6.53c.557 0 1.008.44 1.008 1v7.69c0 .553-.45 1-1.007 1H2.007c-.556 0-1.007-.44-1.007-1V5.193zM6.08 4.15H2v1h4.46v-1h-.38z\" fill-rule=\"evenodd\"></path></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"##4A464C\"><g fill-rule=\"evenodd\"><path d=\"M3.233 11.25l-.417 1H1.712C.763 12.25 0 11.574 0 10.747V6.503C0 5.675.755 5 1.712 5h4.127l-.417 1H1.597C1.257 6 1 6.225 1 6.503v4.244c0 .277.267.503.597.503h1.636zM7.405 11.27L7 12.306c.865.01 2.212-.024 2.315-.04.112-.016.112-.016.185-.035.075-.02.156-.046.251-.082.152-.056.349-.138.592-.244.415-.182.962-.435 1.612-.744l.138-.066a179.35 179.35 0 0 0 2.255-1.094c1.191-.546 1.191-2.074-.025-2.632l-.737-.34a3547.554 3547.554 0 0 0-3.854-1.78c-.029.11-.065.222-.11.336l-.232.596c.894.408 4.56 2.107 4.56 2.107.458.21.458.596 0 .806L9.197 11.27H7.405zM4.462 14.692l5-12a.5.5 0 1 0-.924-.384l-5 12a.5.5 0 1 0 .924.384z\"></path></g></svg>"
 
 /***/ },
 /* 399 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"14 6 13 12\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"><g id=\"world\" stroke=\"none\" stroke-width=\"1\" fill=\"none\" fill-rule=\"evenodd\" transform=\"translate(14.000000, 6.000000)\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M6.35076107,0.354 C3.25095418,0.354 0.729,2.87582735 0.729,5.9758879 C0.729,9.07544113 3.25082735,11.5972685 6.35076107,11.5972685 C9.45044113,11.5972685 11.9723953,9.07544113 11.9723953,5.97576107 C11.9723953,2.87582735 9.45044113,0.354 6.35076107,0.354 L6.35076107,0.354 Z M6.35076107,10.8289121 C3.67445071,10.8289121 1.49722956,8.65181776 1.49722956,5.97576107 C1.49722956,5.9443064 1.49900522,5.91335907 1.49976622,5.88215806 L2.20090094,6.4213266 L2.56313696,6.4213266 L2.97268183,6.8306178 L2.97268183,7.68217686 L3.32324919,8.03287105 L3.73926255,8.03287105 L3.73926255,9.79940584 L4.27386509,10.3361645 L4.4591686,10.3361645 L4.4591686,10.000183 L5.37655417,9.08343163 L5.37655417,8.73400577 L5.85585737,8.25203907 L5.85585737,7.37206934 L5.32518666,7.37206934 L4.28439226,6.33140176 L2.82225748,6.33140176 L2.82225748,5.56938704 L3.96286973,5.56938704 L3.96286973,5.23949352 L4.65068695,5.23949352 L5.11477015,4.77667865 L5.11477015,4.03001076 L4.49087694,3.40662489 L3.75359472,3.40662489 L3.75359472,3.78725175 L2.96228149,3.78725175 L2.96228149,3.28385021 L3.42217919,2.82319151 L3.42217919,2.49786399 L2.97001833,2.49786399 C3.84466106,1.64744643 5.03714814,1.12222956 6.35063424,1.12222956 C7.57292716,1.12222956 8.69020207,1.57730759 9.54442463,2.32587797 L8.46164839,2.32587797 L7.680355,3.10666403 L8.21508437,3.64088607 L7.87238068,3.98257509 L7.7165025,3.82669692 L7.85297518,3.68946324 L7.78930484,3.62566607 L7.78943167,3.62566607 L7.56011699,3.39559038 L7.55986332,3.39571722 L7.49758815,3.33318838 L7.01904595,3.78585658 L7.55910232,4.32654712 L6.8069806,4.32198112 L6.8069806,5.25864535 L7.66716433,5.25864535 L7.6723645,4.72112565 L7.81289584,4.57996014 L8.31819988,5.08653251 L8.31819988,5.41921636 L9.00703176,5.41921636 L9.03366676,5.39321553 L9.03430093,5.39194719 L10.195587,6.55259911 L10.8637451,5.88520206 L11.2018828,5.88520206 C11.2023901,5.9153884 11.2041658,5.94532107 11.2041658,5.97563424 C11.2040389,8.65181776 9.0269446,10.8289121 6.35076107,10.8289121 L6.35076107,10.8289121 Z\" id=\"Shape\" stroke=\"#DDE1E5\" stroke-width=\"0.25\" fill=\"#DDE1E5\"></path><polygon id=\"Shape\" stroke=\"#DDE1E5\" stroke-width=\"0.25\" fill=\"#DDE1E5\" points=\"6.50676608 1.61523076 4.52892694 1.61789426 4.52892694 2.95192735 5.34560683 3.76733891 5.72496536 3.76733891 5.72496536 3.1967157 6.50676608 2.41592965\"></polygon><polygon id=\"Shape\" stroke=\"#DDE1E5\" stroke-width=\"0.25\" fill=\"#DDE1E5\" points=\"9.59959714 6.88718547 8.28623788 5.57268471 8.28623788 5.57002121 6.79607294 5.57002121 6.35101474 6.01469891 6.35101474 6.96201714 6.98429362 7.59466185 8.12909136 7.59466185 8.12909136 8.70343893 8.99434843 9.56882283 9.20971144 9.56882283 9.20971144 8.50329592 9.63029081 8.08271655 9.63029081 7.3026915 9.87025949 7.3026915 10.1711082 7.00082814 10.0558167 6.88718547\"></polygon></g></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#DDE1E4\"><path d=\"M9.05 4.634l-2.144.003-.116.116v1.445l.92.965.492.034.116-.116v-.617L9.13 5.7l.035-.95M12.482 10.38l-1.505-1.462H9.362l-.564.516-.034 1.108.72.768 1.323.034-.117-.116v1.2l.972 1.02.315.034.116-.116v-1.154l.422-.374.034-.927-.117.117h.26l.408-.36V10.5l-.125-.124-.575-.033\"></path><path d=\"M8.47 15.073c-3.088 0-5.6-2.513-5.6-5.602V9.4v-.003c0-.018 0-.018.002-.034l.182-.088.724.587.49.033.497.543-.034.9.317.383h.47l.114.096-.032 1.9.524.553h.105l.025-.338 1.004-.95.054-.474.53-.462v-.888l-.588-.038-1.118-1.155H4.48l-.154-.09V9.01l.155-.1h1.164v-.273l.12-.115.7.033.494-.443.034-.746-.624-.655h-.724v.28l-.11.07H4.64l-.114-.09.025-.64.48-.43v-.244h-.382c-.102 0-.152-.128-.08-.2 1.04-1.01 2.428-1.59 3.903-1.59 1.374 0 2.672.5 3.688 1.39.08.068.03.198-.075.198l-1.144-.034-.81.803.52.523v.16l-.382.388h-.158l-.176-.177v-.16l.076-.074-.252-.252-.37.362.53.53c.072.072.005.194-.096.194l-.752-.005v.844h.783L9.885 8l.16-.143h.16l.62.61v.267l.58.027.003.002V8.76l.18-.03 1.234 1.24.753-.708h.382l.116.108c0 .02.003.016.003.036v.065c0 3.09-2.515 5.603-5.605 5.603M8.47 3C4.904 3 2 5.903 2 9.47c0 3.57 2.903 6.472 6.47 6.472 3.57 0 6.472-2.903 6.472-6.47C14.942 5.9 12.04 3 8.472 3\"></path></svg>"
 
 /***/ },
 /* 400 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"488 384 14 14\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"><path d=\"M495.5,391.5 L500.200877,396.200877\" id=\"Line\" stroke=\"#4A90E2\" stroke-width=\"1.25\" stroke-linecap=\"round\" stroke-linejoin=\"round\" fill=\"none\"></path><ellipse id=\"Oval-6\" stroke=\"#4A90E2\" stroke-width=\"1.25\" fill=\"#FFFFFF\" fill-rule=\"evenodd\" cx=\"493.5\" cy=\"389.5\" rx=\"4.5\" ry=\"4.5\"></ellipse></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#DDE1E4\"><path d=\"M4 2v12h9V4.775L9.888 2H4zm0-1h5.888c.246 0 .483.09.666.254l3.112 2.774c.212.19.334.462.334.747V14c0 .552-.448 1-1 1H4c-.552 0-1-.448-1-1V2c0-.552.448-1 1-1z\"></path><path d=\"M9 1.5v4c0 .325.306.564.62.485l4-1c.27-.067.432-.338.365-.606-.067-.27-.338-.432-.606-.365l-4 1L10 5.5v-4c0-.276-.224-.5-.5-.5s-.5.224-.5.5z\"></path></svg>"
 
 /***/ },
 /* 401 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#4A464C\"><g fill-rule=\"evenodd\"><path d=\"M6.5 12.003l.052-9a.5.5 0 1 0-1-.006l-.052 9a.5.5 0 1 0 1 .006zM13 11.997l-.05-9a.488.488 0 0 0-.477-.497.488.488 0 0 0-.473.503l.05 9a.488.488 0 0 0 .477.497.488.488 0 0 0 .473-.503z\"></path></g></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#DDE1E5\"><path d=\"M2 5.193v7.652c0 .003-.002 0 .007 0H14v-7.69c0-.003.002 0-.007 0h-7.53v-2.15c0-.002-.004-.005-.01-.005H2.01C2 3 2 3 2 3.005V5.193zm-1 0V3.005C1 2.45 1.444 2 2.01 2h4.442c.558 0 1.01.45 1.01 1.005v1.15h6.53c.557 0 1.008.44 1.008 1v7.69c0 .553-.45 1-1.007 1H2.007c-.556 0-1.007-.44-1.007-1V5.193zM6.08 4.15H2v1h4.46v-1h-.38z\" fill-rule=\"evenodd\"></path></svg>"
 
 /***/ },
 /* 402 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"975 569 11 11\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"><g id=\"Pause-circle\" stroke=\"none\" stroke-width=\"1\" fill=\"none\" fill-rule=\"evenodd\" transform=\"translate(976.000000, 570.000000)\"><path d=\"M4.5,0.538639227 C2.3152037,0.538639227 0.538639227,2.31614868 0.538639227,4.5 C0.538639227,6.6847963 2.3152037,8.46136077 4.5,8.46136077 C6.6847963,8.46136077 8.46136077,6.6847963 8.46136077,4.5 C8.46136077,2.31614868 6.6847963,0.538639227 4.5,0.538639227 M4.5,9 C2.01847963,9 0,6.98152037 0,4.5 C0,2.01847963 2.01847963,0 4.5,0 C6.98152037,0 9,2.01847963 9,4.5 C9,6.98152037 6.98152037,9 4.5,9\" id=\"Fill-1-Copy\" stroke=\"#4990E2\" stroke-width=\"0.5\" fill=\"#4990E2\"></path><path d=\"M3,3 L3,6.5\" id=\"Line\" stroke=\"#4990E2\" stroke-width=\"1.15\" stroke-linecap=\"round\"></path><path d=\"M6,3 L6,6.5\" id=\"Line\" stroke=\"#4990E2\" stroke-width=\"1.15\" stroke-linecap=\"round\"></path></g></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"14 6 13 12\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"><g id=\"world\" stroke=\"none\" stroke-width=\"1\" fill=\"none\" fill-rule=\"evenodd\" transform=\"translate(14.000000, 6.000000)\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M6.35076107,0.354 C3.25095418,0.354 0.729,2.87582735 0.729,5.9758879 C0.729,9.07544113 3.25082735,11.5972685 6.35076107,11.5972685 C9.45044113,11.5972685 11.9723953,9.07544113 11.9723953,5.97576107 C11.9723953,2.87582735 9.45044113,0.354 6.35076107,0.354 L6.35076107,0.354 Z M6.35076107,10.8289121 C3.67445071,10.8289121 1.49722956,8.65181776 1.49722956,5.97576107 C1.49722956,5.9443064 1.49900522,5.91335907 1.49976622,5.88215806 L2.20090094,6.4213266 L2.56313696,6.4213266 L2.97268183,6.8306178 L2.97268183,7.68217686 L3.32324919,8.03287105 L3.73926255,8.03287105 L3.73926255,9.79940584 L4.27386509,10.3361645 L4.4591686,10.3361645 L4.4591686,10.000183 L5.37655417,9.08343163 L5.37655417,8.73400577 L5.85585737,8.25203907 L5.85585737,7.37206934 L5.32518666,7.37206934 L4.28439226,6.33140176 L2.82225748,6.33140176 L2.82225748,5.56938704 L3.96286973,5.56938704 L3.96286973,5.23949352 L4.65068695,5.23949352 L5.11477015,4.77667865 L5.11477015,4.03001076 L4.49087694,3.40662489 L3.75359472,3.40662489 L3.75359472,3.78725175 L2.96228149,3.78725175 L2.96228149,3.28385021 L3.42217919,2.82319151 L3.42217919,2.49786399 L2.97001833,2.49786399 C3.84466106,1.64744643 5.03714814,1.12222956 6.35063424,1.12222956 C7.57292716,1.12222956 8.69020207,1.57730759 9.54442463,2.32587797 L8.46164839,2.32587797 L7.680355,3.10666403 L8.21508437,3.64088607 L7.87238068,3.98257509 L7.7165025,3.82669692 L7.85297518,3.68946324 L7.78930484,3.62566607 L7.78943167,3.62566607 L7.56011699,3.39559038 L7.55986332,3.39571722 L7.49758815,3.33318838 L7.01904595,3.78585658 L7.55910232,4.32654712 L6.8069806,4.32198112 L6.8069806,5.25864535 L7.66716433,5.25864535 L7.6723645,4.72112565 L7.81289584,4.57996014 L8.31819988,5.08653251 L8.31819988,5.41921636 L9.00703176,5.41921636 L9.03366676,5.39321553 L9.03430093,5.39194719 L10.195587,6.55259911 L10.8637451,5.88520206 L11.2018828,5.88520206 C11.2023901,5.9153884 11.2041658,5.94532107 11.2041658,5.97563424 C11.2040389,8.65181776 9.0269446,10.8289121 6.35076107,10.8289121 L6.35076107,10.8289121 Z\" id=\"Shape\" stroke=\"#DDE1E5\" stroke-width=\"0.25\" fill=\"#DDE1E5\"></path><polygon id=\"Shape\" stroke=\"#DDE1E5\" stroke-width=\"0.25\" fill=\"#DDE1E5\" points=\"6.50676608 1.61523076 4.52892694 1.61789426 4.52892694 2.95192735 5.34560683 3.76733891 5.72496536 3.76733891 5.72496536 3.1967157 6.50676608 2.41592965\"></polygon><polygon id=\"Shape\" stroke=\"#DDE1E5\" stroke-width=\"0.25\" fill=\"#DDE1E5\" points=\"9.59959714 6.88718547 8.28623788 5.57268471 8.28623788 5.57002121 6.79607294 5.57002121 6.35101474 6.01469891 6.35101474 6.96201714 6.98429362 7.59466185 8.12909136 7.59466185 8.12909136 8.70343893 8.99434843 9.56882283 9.20971144 9.56882283 9.20971144 8.50329592 9.63029081 8.08271655 9.63029081 7.3026915 9.87025949 7.3026915 10.1711082 7.00082814 10.0558167 6.88718547\"></polygon></g></svg>"
 
 /***/ },
 /* 403 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M10.483 13.995H5.517l-3.512-3.512V5.516l3.512-3.512h4.966l3.512 3.512v4.967l-3.512 3.512zm4.37-9.042l-3.807-3.805A.503.503 0 0 0 10.691 1H5.309a.503.503 0 0 0-.356.148L1.147 4.953A.502.502 0 0 0 1 5.308v5.383c0 .134.053.262.147.356l3.806 3.806a.503.503 0 0 0 .356.147h5.382a.503.503 0 0 0 .355-.147l3.806-3.806A.502.502 0 0 0 15 10.69V5.308a.502.502 0 0 0-.147-.355z\"></path><path d=\"M10 10.5a.5.5 0 1 0 1 0v-5a.5.5 0 1 0-1 0v5zM5 10.5a.5.5 0 1 0 1 0v-5a.5.5 0 0 0-1 0v5z\"></path></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"488 384 14 14\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"><path d=\"M495.5,391.5 L500.200877,396.200877\" id=\"Line\" stroke=\"#4A90E2\" stroke-width=\"1.25\" stroke-linecap=\"round\" stroke-linejoin=\"round\" fill=\"none\"></path><ellipse id=\"Oval-6\" stroke=\"#4A90E2\" stroke-width=\"1.25\" fill=\"#FFFFFF\" fill-rule=\"evenodd\" cx=\"493.5\" cy=\"389.5\" rx=\"4.5\" ry=\"4.5\"></ellipse></svg>"
 
 /***/ },
 /* 404 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"##4A464C\"><path d=\"M4.525 13.21h-.472c-.574 0-.987-.154-1.24-.463-.253-.31-.38-.882-.38-1.719v-.573c0-.746-.097-1.265-.292-1.557-.196-.293-.51-.44-.945-.44v-.974c.435 0 .75-.146.945-.44.195-.292.293-.811.293-1.556v-.58c0-.833.126-1.404.379-1.712.253-.31.666-.464 1.24-.464h.472v.783h-.179c-.37 0-.628.08-.774.24-.145.159-.218.54-.218 1.141v.383c0 .824-.096 1.432-.287 1.823-.191.39-.516.679-.974.866.458.191.783.482.974.873.191.39.287.998.287 1.823v.382c0 .602.073.982.218 1.142.146.16.404.239.774.239h.18v.783zm9.502-4.752c-.43 0-.744.147-.942.44-.197.292-.296.811-.296 1.557v.573c0 .837-.125 1.41-.376 1.719-.251.309-.664.463-1.237.463h-.478v-.783h.185c.37 0 .628-.08.774-.24.145-.159.218-.539.218-1.14v-.383c0-.825.096-1.433.287-1.823.191-.39.516-.682.974-.873-.458-.187-.783-.476-.974-.866-.191-.391-.287-.999-.287-1.823v-.383c0-.602-.073-.982-.218-1.142-.146-.159-.404-.239-.774-.239h-.185v-.783h.478c.573 0 .986.155 1.237.464.25.308.376.88.376 1.712v.58c0 .673.088 1.174.263 1.503.176.329.5.493.975.493v.974z\" fill-rule=\"evenodd\"></path></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#4A464C\"><g fill-rule=\"evenodd\"><path d=\"M6.5 12.003l.052-9a.5.5 0 1 0-1-.006l-.052 9a.5.5 0 1 0 1 .006zM13 11.997l-.05-9a.488.488 0 0 0-.477-.497.488.488 0 0 0-.473.503l.05 9a.488.488 0 0 0 .477.497.488.488 0 0 0 .473-.503z\"></path></g></svg>"
 
 /***/ },
 /* 405 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#696969\"><path d=\"M6.925 12.5l7.4-5-7.4-5v10zM6 12.5v-10c0-.785.8-1.264 1.415-.848l7.4 5c.58.392.58 1.304 0 1.696l-7.4 5C6.8 13.764 6 13.285 6 12.5z\" fill-rule=\"evenodd\"></path></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"975 569 11 11\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"><g id=\"Pause-circle\" stroke=\"none\" stroke-width=\"1\" fill=\"none\" fill-rule=\"evenodd\" transform=\"translate(976.000000, 570.000000)\"><path d=\"M4.5,0.538639227 C2.3152037,0.538639227 0.538639227,2.31614868 0.538639227,4.5 C0.538639227,6.6847963 2.3152037,8.46136077 4.5,8.46136077 C6.6847963,8.46136077 8.46136077,6.6847963 8.46136077,4.5 C8.46136077,2.31614868 6.6847963,0.538639227 4.5,0.538639227 M4.5,9 C2.01847963,9 0,6.98152037 0,4.5 C0,2.01847963 2.01847963,0 4.5,0 C6.98152037,0 9,2.01847963 9,4.5 C9,6.98152037 6.98152037,9 4.5,9\" id=\"Fill-1-Copy\" stroke=\"#4990E2\" stroke-width=\"0.5\" fill=\"#4990E2\"></path><path d=\"M3,3 L3,6.5\" id=\"Line\" stroke=\"#4990E2\" stroke-width=\"1.15\" stroke-linecap=\"round\"></path><path d=\"M6,3 L6,6.5\" id=\"Line\" stroke=\"#4990E2\" stroke-width=\"1.15\" stroke-linecap=\"round\"></path></g></svg>"
 
 /***/ },
 /* 406 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\"0 0 33 12\"><path id=\"base-path\" d=\"M27.1,0H1C0.4,0,0,0.4,0,1v10c0,0.6,0.4,1,1,1h26.1 c0.6,0,1.2-0.3,1.5-0.7L33,6l-4.4-5.3C28.2,0.3,27.7,0,27.1,0z\"></path></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M10.483 13.995H5.517l-3.512-3.512V5.516l3.512-3.512h4.966l3.512 3.512v4.967l-3.512 3.512zm4.37-9.042l-3.807-3.805A.503.503 0 0 0 10.691 1H5.309a.503.503 0 0 0-.356.148L1.147 4.953A.502.502 0 0 0 1 5.308v5.383c0 .134.053.262.147.356l3.806 3.806a.503.503 0 0 0 .356.147h5.382a.503.503 0 0 0 .355-.147l3.806-3.806A.502.502 0 0 0 15 10.69V5.308a.502.502 0 0 0-.147-.355z\"></path><path d=\"M10 10.5a.5.5 0 1 0 1 0v-5a.5.5 0 1 0-1 0v5zM5 10.5a.5.5 0 1 0 1 0v-5a.5.5 0 0 0-1 0v5z\"></path></svg>"
 
 /***/ },
 /* 407 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#4A464C\"><g fill-rule=\"evenodd\"><path d=\"M1.5 14.042h4.095a.5.5 0 0 0 0-1H1.5a.5.5 0 1 0 0 1zM7.983 2a.5.5 0 0 1 .517.5v7.483l3.136-3.326a.5.5 0 1 1 .728.686l-4 4.243a.499.499 0 0 1-.73-.004L3.635 7.343a.5.5 0 0 1 .728-.686L7.5 9.983V3H1.536C1.24 3 1 2.776 1 2.5s.24-.5.536-.5h6.447zM10.5 14.042h4.095a.5.5 0 0 0 0-1H10.5a.5.5 0 1 0 0 1z\"></path></g></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"##4A464C\"><path d=\"M4.525 13.21h-.472c-.574 0-.987-.154-1.24-.463-.253-.31-.38-.882-.38-1.719v-.573c0-.746-.097-1.265-.292-1.557-.196-.293-.51-.44-.945-.44v-.974c.435 0 .75-.146.945-.44.195-.292.293-.811.293-1.556v-.58c0-.833.126-1.404.379-1.712.253-.31.666-.464 1.24-.464h.472v.783h-.179c-.37 0-.628.08-.774.24-.145.159-.218.54-.218 1.141v.383c0 .824-.096 1.432-.287 1.823-.191.39-.516.679-.974.866.458.191.783.482.974.873.191.39.287.998.287 1.823v.382c0 .602.073.982.218 1.142.146.16.404.239.774.239h.18v.783zm9.502-4.752c-.43 0-.744.147-.942.44-.197.292-.296.811-.296 1.557v.573c0 .837-.125 1.41-.376 1.719-.251.309-.664.463-1.237.463h-.478v-.783h.185c.37 0 .628-.08.774-.24.145-.159.218-.539.218-1.14v-.383c0-.825.096-1.433.287-1.823.191-.39.516-.682.974-.873-.458-.187-.783-.476-.974-.866-.191-.391-.287-.999-.287-1.823v-.383c0-.602-.073-.982-.218-1.142-.146-.159-.404-.239-.774-.239h-.185v-.783h.478c.573 0 .986.155 1.237.464.25.308.376.88.376 1.712v.58c0 .673.088 1.174.263 1.503.176.329.5.493.975.493v.974z\" fill-rule=\"evenodd\"></path></svg>"
 
 /***/ },
 /* 408 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"##4A464C\"><g fill-rule=\"evenodd\"><path d=\"M5 13.5H1a.5.5 0 1 0 0 1h4a.5.5 0 1 0 0-1zM12 13.5H8a.5.5 0 1 0 0 1h4a.5.5 0 1 0 0-1zM6.11 5.012A.427.427 0 0 1 6.21 5h7.083L9.646 1.354a.5.5 0 1 1 .708-.708l4.5 4.5a.498.498 0 0 1 0 .708l-4.5 4.5a.5.5 0 0 1-.708-.708L13.293 6H6.5v5.5a.5.5 0 1 1-1 0v-6a.5.5 0 0 1 .61-.488z\"></path></g></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#696969\"><path d=\"M6.925 12.5l7.4-5-7.4-5v10zM6 12.5v-10c0-.785.8-1.264 1.415-.848l7.4 5c.58.392.58 1.304 0 1.696l-7.4 5C6.8 13.764 6 13.285 6 12.5z\" fill-rule=\"evenodd\"></path></svg>"
 
 /***/ },
 /* 409 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#4A464C\"><g fill-rule=\"evenodd\"><path d=\"M13.297 6.912C12.595 4.39 10.167 2.5 7.398 2.5A5.898 5.898 0 0 0 1.5 8.398a.5.5 0 0 0 1 0A4.898 4.898 0 0 1 7.398 3.5c2.75 0 5.102 2.236 5.102 4.898v.004L8.669 7.029a.5.5 0 0 0-.338.942l4.462 1.598a.5.5 0 0 0 .651-.34.506.506 0 0 0 .02-.043l2-5a.5.5 0 1 0-.928-.372l-1.24 3.098z\"></path><circle cx=\"7\" cy=\"12\" r=\"1\"></circle></g></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\"0 0 33 12\"><path id=\"base-path\" d=\"M27.1,0H1C0.4,0,0,0.4,0,1v10c0,0.6,0.4,1,1,1h26.1 c0.6,0,1.2-0.3,1.5-0.7L33,6l-4.4-5.3C28.2,0.3,27.7,0,27.1,0z\"></path></svg>"
 
 /***/ },
 /* 410 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#696969\"><path d=\"M12.219 7c.345 0 .635.117.869.352.234.234.351.524.351.869 0 .351-.118.652-.356.903-.238.25-.526.376-.864.376-.332 0-.615-.125-.85-.376a1.276 1.276 0 0 1-.351-.903A1.185 1.185 0 0 1 12.218 7zM8.234 7c.345 0 .635.117.87.352.234.234.351.524.351.869 0 .351-.119.652-.356.903-.238.25-.526.376-.865.376-.332 0-.613-.125-.844-.376a1.286 1.286 0 0 1-.347-.903c0-.352.114-.643.342-.874.228-.231.51-.347.85-.347zM4.201 7c.339 0 .627.117.864.352.238.234.357.524.357.869 0 .351-.119.652-.357.903-.237.25-.525.376-.864.376-.338 0-.623-.125-.854-.376A1.286 1.286 0 0 1 3 8.221 1.185 1.185 0 0 1 4.201 7z\" fill-rule=\"evenodd\"></path></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#4A464C\"><g fill-rule=\"evenodd\"><path d=\"M1.5 14.042h4.095a.5.5 0 0 0 0-1H1.5a.5.5 0 1 0 0 1zM7.983 2a.5.5 0 0 1 .517.5v7.483l3.136-3.326a.5.5 0 1 1 .728.686l-4 4.243a.499.499 0 0 1-.73-.004L3.635 7.343a.5.5 0 0 1 .728-.686L7.5 9.983V3H1.536C1.24 3 1 2.776 1 2.5s.24-.5.536-.5h6.447zM10.5 14.042h4.095a.5.5 0 0 0 0-1H10.5a.5.5 0 1 0 0 1z\"></path></g></svg>"
 
 /***/ },
 /* 411 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#DDE1E4\"><path fill-rule=\"evenodd\" d=\"M8.5 8.793L5.854 6.146l-.04-.035L7.5 4.426c.2-.2.3-.4.3-.6 0-.2-.1-.4-.2-.6l-1-1c-.4-.3-.9-.3-1.2 0l-4.1 4.1c-.2.2-.3.4-.3.6 0 .2.1.4.2.6l1 1c.3.3.9.3 1.2 0l1.71-1.71.036.04L7.793 9.5l-3.647 3.646c-.195.196-.195.512 0 .708.196.195.512.195.708 0L8.5 10.207l3.646 3.647c.196.195.512.195.708 0 .195-.196.195-.512 0-.708L9.207 9.5l2.565-2.565L13.3 8.5c.1.1 2.3 1.1 2.7.7.4-.4-.3-2.7-.5-2.9l-1.1-1.1c.1-.1.2-.4.2-.6 0-.2-.1-.4-.2-.6l-.4-.4c-.3-.3-.8-.3-1.1 0l-1.5-1.4c-.2-.2-.3-.2-.5-.2s-.3.1-.5.2L9.2 3.4c-.2.1-.2.2-.2.4s.1.4.2.5l1.874 1.92L8.5 8.792z\"></path></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"##4A464C\"><g fill-rule=\"evenodd\"><path d=\"M5 13.5H1a.5.5 0 1 0 0 1h4a.5.5 0 1 0 0-1zM12 13.5H8a.5.5 0 1 0 0 1h4a.5.5 0 1 0 0-1zM6.11 5.012A.427.427 0 0 1 6.21 5h7.083L9.646 1.354a.5.5 0 1 1 .708-.708l4.5 4.5a.498.498 0 0 1 0 .708l-4.5 4.5a.5.5 0 0 1-.708-.708L13.293 6H6.5v5.5a.5.5 0 1 1-1 0v-6a.5.5 0 0 1 .61-.488z\"></path></g></svg>"
 
 /***/ },
 /* 412 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-	
-	// load the styles
-	var content = __webpack_require__(413);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(358)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./Sources.css", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./Sources.css");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#4A464C\"><g fill-rule=\"evenodd\"><path d=\"M13.297 6.912C12.595 4.39 10.167 2.5 7.398 2.5A5.898 5.898 0 0 0 1.5 8.398a.5.5 0 0 0 1 0A4.898 4.898 0 0 1 7.398 3.5c2.75 0 5.102 2.236 5.102 4.898v.004L8.669 7.029a.5.5 0 0 0-.338.942l4.462 1.598a.5.5 0 0 0 .651-.34.506.506 0 0 0 .02-.043l2-5a.5.5 0 1 0-.928-.372l-1.24 3.098z\"></path><circle cx=\"7\" cy=\"12\" r=\"1\"></circle></g></svg>"
 
 /***/ },
 /* 413 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
-	exports = module.exports = __webpack_require__(357)();
-	// imports
-	
-	
-	// module
-	exports.push([module.id, ".sources-panel {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n}\n\n.sources-list {\n  flex: 1;\n  display: flex;\n  overflow: hidden;\n  font-size: 0.75em;\n}\n\nul.sources-list {\n  list-style: none;\n  margin: 20px 0;\n  padding: 0;\n  padding-left: 10px;\n  flex: 1;\n  white-space: nowrap;\n}\n\n.sources-list ul {\n  list-style: none;\n  margin: 0.5em 0;\n  padding: 0;\n}\n\n.sources-list .source-item {\n  list-style: none;\n  white-space: nowrap;\n}\n\n.sources-list .label {\n  font-size: 1em;\n  padding-left: 10px;\n  color: var(--theme-comment);\n}\n\n.sources-list .source-item.selected {\n  background-color: var(--theme-selection-background);\n}\n\n.sources-list .source-item.selected .label {\n  color: var(--theme-selection-color);\n}\n\n.arrow,\n.folder,\n.domain,\n.file,\n.worker {\n  fill: var(--theme-splitter-color);\n}\n\n.domain,\n.file,\n.worker {\n  position: relative;\n  top: 1px;\n}\n\n.worker,\n.folder {\n  position: relative;\n  top: 2px;\n}\n\n.domain svg,\n.folder svg,\n.worker svg {\n  width: 15px;\n  margin-right: 5px;\n}\n\n.file svg {\n  width: 13px;\n  margin-right: 5px;\n}\n\n.tree {\n  -webkit-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  -o-user-select: none;\n  user-select: none;\n\n  flex: 1;\n  white-space: nowrap;\n  overflow: auto;\n}\n\n.tree button {\n  display: block;\n}\n\n.tree .node {\n  padding: 2px 5px;\n  position: relative;\n  cursor: pointer;\n}\n\n.tree .node:hover {\n  background: var(--theme-tab-toolbar-background);\n}\n\n.tree .node.focused {\n  color: white;\n  background-color: var(--theme-selection-background);\n}\n\n.tree .node > div {\n  margin-left: 10px;\n}\n\n.tree .node.focused svg {\n  fill: white;\n}\n\n.sources-list .tree-node button {\n  position: fixed;\n}\n", ""]);
-	
-	// exports
-
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#696969\"><path d=\"M12.219 7c.345 0 .635.117.869.352.234.234.351.524.351.869 0 .351-.118.652-.356.903-.238.25-.526.376-.864.376-.332 0-.615-.125-.85-.376a1.276 1.276 0 0 1-.351-.903A1.185 1.185 0 0 1 12.218 7zM8.234 7c.345 0 .635.117.87.352.234.234.351.524.351.869 0 .351-.119.652-.356.903-.238.25-.526.376-.865.376-.332 0-.613-.125-.844-.376a1.286 1.286 0 0 1-.347-.903c0-.352.114-.643.342-.874.228-.231.51-.347.85-.347zM4.201 7c.339 0 .627.117.864.352.238.234.357.524.357.869 0 .351-.119.652-.357.903-.237.25-.525.376-.864.376-.338 0-.623-.125-.854-.376A1.286 1.286 0 0 1 3 8.221 1.185 1.185 0 0 1 4.201 7z\" fill-rule=\"evenodd\"></path></svg>"
 
 /***/ },
 /* 414 */
+/***/ function(module, exports) {
+
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#DDE1E4\"><path fill-rule=\"evenodd\" d=\"M8.5 8.793L5.854 6.146l-.04-.035L7.5 4.426c.2-.2.3-.4.3-.6 0-.2-.1-.4-.2-.6l-1-1c-.4-.3-.9-.3-1.2 0l-4.1 4.1c-.2.2-.3.4-.3.6 0 .2.1.4.2.6l1 1c.3.3.9.3 1.2 0l1.71-1.71.036.04L7.793 9.5l-3.647 3.646c-.195.196-.195.512 0 .708.196.195.512.195.708 0L8.5 10.207l3.646 3.647c.196.195.512.195.708 0 .195-.196.195-.512 0-.708L9.207 9.5l2.565-2.565L13.3 8.5c.1.1 2.3 1.1 2.7.7.4-.4-.3-2.7-.5-2.9l-1.1-1.1c.1-.1.2-.4.2-.6 0-.2-.1-.4-.2-.6l-.4-.4c-.3-.3-.8-.3-1.1 0l-1.5-1.4c-.2-.2-.3-.2-.5-.2s-.3.1-.5.2L9.2 3.4c-.2.1-.2.2-.2.4s.1.4.2.5l1.874 1.92L8.5 8.792z\"></path></svg>"
+
+/***/ },
+/* 415 */
+/***/ function(module, exports) {
+
+	// removed by extract-text-webpack-plugin
+
+/***/ },
+/* 416 */,
+/* 417 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
-	var ImPropTypes = __webpack_require__(376);
+	var ReactDOM = __webpack_require__(176);
+	var ImPropTypes = __webpack_require__(383);
 	
 	var _require = __webpack_require__(2);
 	
@@ -51344,46 +51447,46 @@ var Debugger =
 	
 	var connect = _require2.connect;
 	
-	var CodeMirror = __webpack_require__(415);
-	var dom = React.DOM;
-	var PropTypes = React.PropTypes;
+	var SourceEditor = __webpack_require__(418);
 	
 	var _require3 = __webpack_require__(195);
 	
 	var debugGlobal = _require3.debugGlobal;
 	
-	var _require4 = __webpack_require__(196);
+	var _require4 = __webpack_require__(347);
 	
-	var isFirefox = _require4.isFirefox;
+	var getSourceText = _require4.getSourceText;
+	var getBreakpointsForSource = _require4.getBreakpointsForSource;
+	var getSelectedSource = _require4.getSelectedSource;
+	var getSelectedFrame = _require4.getSelectedFrame;
 	
-	var _require5 = __webpack_require__(348);
+	var _require5 = __webpack_require__(343);
 	
-	var getSourceText = _require5.getSourceText;
-	var getBreakpointsForSource = _require5.getBreakpointsForSource;
-	var getSelectedSource = _require5.getSelectedSource;
-	var getSelectedFrame = _require5.getSelectedFrame;
+	var makeLocationId = _require5.makeLocationId;
 	
-	var _require6 = __webpack_require__(343);
+	var actions = __webpack_require__(362);
+	var Breakpoint = React.createFactory(__webpack_require__(425));
+	var dom = React.DOM;
+	var PropTypes = React.PropTypes;
 	
-	var makeLocationId = _require6.makeLocationId;
 	
-	var actions = __webpack_require__(360);
-	
-	var _require7 = __webpack_require__(416);
-	
-	var alignLine = _require7.alignLine;
-	var onWheel = _require7.onWheel;
-	var resizeBreakpointGutter = _require7.resizeBreakpointGutter;
-	
-	var Breakpoint = React.createFactory(__webpack_require__(417));
-	
-	__webpack_require__(418);
-	__webpack_require__(420);
-	__webpack_require__(422);
-	__webpack_require__(423);
+	__webpack_require__(426);
 	
 	function isSourceForFrame(source, frame) {
-	  return frame && frame.location.sourceId === source.get("id");
+	  return source && frame && frame.location.sourceId === source.get("id");
+	}
+	
+	/**
+	 * Forces the breakpoint gutter to be the same size as the line
+	 * numbers gutter. Editor CSS will absolutely position the gutter
+	 * beneath the line numbers. This makes it easy to be flexible with
+	 * how we overlay breakpoints.
+	 */
+	function resizeBreakpointGutter(editor) {
+	  var gutters = editor.display.gutters;
+	  var lineNumbers = gutters.querySelector(".CodeMirror-linenumbers");
+	  var breakpoints = gutters.querySelector(".breakpoints");
+	  breakpoints.style.width = lineNumbers.clientWidth + "px";
 	}
 	
 	var Editor = React.createClass({
@@ -51399,34 +51502,38 @@ var Debugger =
 	  displayName: "Editor",
 	
 	  componentDidMount() {
-	    this.editor = CodeMirror.fromTextArea(this.refs.editor, {
+	    this.editor = new SourceEditor({
 	      mode: "javascript",
+	      readOnly: true,
 	      lineNumbers: true,
 	      theme: "mozilla",
 	      lineWrapping: false,
-	      smartIndent: false,
 	      matchBrackets: true,
-	      styleActiveLine: true,
-	      readOnly: true,
-	      gutters: ["breakpoints"]
+	      showAnnotationRuler: true,
+	      enableCodeFolding: false,
+	      gutters: ["breakpoints"],
+	      value: " "
 	    });
 	
-	    debugGlobal("cm", this.editor);
+	    this.editor.appendTo(ReactDOM.findDOMNode(this).querySelector(".editor-mount"), null, true);
 	
-	    this.editor.on("gutterClick", this.onGutterClick);
+	    this.editor.codeMirror.on("gutterClick", this.onGutterClick);
+	    resizeBreakpointGutter(this.editor.codeMirror);
+	    debugGlobal("cm", this.editor.codeMirror);
 	
-	    if (isFirefox()) {
-	      this.editor.getScrollerElement().addEventListener("wheel", ev => onWheel(this.editor, ev));
+	    if (this.props.sourceText) {
+	      this.setText(this.props.sourceText.get("text"));
 	    }
-	
-	    this.setText(this.props.sourceText.get("text"));
-	    resizeBreakpointGutter(this.editor);
 	  },
 	
 	  onGutterClick(cm, line, gutter, ev) {
 	    var bp = this.props.breakpoints.find(b => {
 	      return b.location.line === line + 1;
 	    });
+	
+	    if (bp && bp.loading) {
+	      return;
+	    }
 	
 	    if (bp) {
 	      this.props.removeBreakpoint({
@@ -51444,29 +51551,29 @@ var Debugger =
 	  },
 	
 	  clearDebugLine(line) {
-	    this.editor.removeLineClass(line - 1, "line", "debug-line");
+	    this.editor.codeMirror.removeLineClass(line - 1, "line", "debug-line");
 	  },
 	
 	  setDebugLine(line) {
-	    this.editor.addLineClass(line - 1, "line", "debug-line");
-	    alignLine(this.editor, line);
+	    this.editor.codeMirror.addLineClass(line - 1, "line", "debug-line");
+	    this.editor.alignLine(line);
 	  },
 	
 	  setSourceText(newSourceText, oldSourceText) {
 	    if (newSourceText.get("loading")) {
-	      this.editor.setValue("Loading...");
+	      this.setText("Loading...");
 	      return;
 	    }
 	
 	    if (newSourceText.get("error")) {
-	      this.editor.setValue("Error");
+	      this.setText("Error");
 	      console.error(newSourceText.get("error"));
 	      return;
 	    }
 	
 	    this.setText(newSourceText.get("text"));
 	
-	    resizeBreakpointGutter(this.editor);
+	    resizeBreakpointGutter(this.editor.codeMirror);
 	  },
 	
 	  // Only reset the editor text if the source has changed.
@@ -51477,11 +51584,11 @@ var Debugger =
 	      return;
 	    }
 	
-	    if (text == this.editor.getValue()) {
+	    if (text == this.editor.getText()) {
 	      return;
 	    }
 	
-	    this.editor.setValue(text);
+	    this.editor.setText(text);
 	  },
 	
 	  componentWillReceiveProps(nextProps) {
@@ -51497,7 +51604,7 @@ var Debugger =
 	    }
 	
 	    if (this.props.selectedSource && !nextProps.selectedSource) {
-	      this.editor.setValue("");
+	      this.editor.setText("");
 	    }
 	
 	    // Highlight the paused line if necessary
@@ -51507,16 +51614,17 @@ var Debugger =
 	  },
 	
 	  render() {
-	    var breakpoints = this.props.breakpoints.valueSeq().filter(bp => !bp.disabled);
+	    var _props = this.props;
+	    var breakpoints = _props.breakpoints;
+	    var sourceText = _props.sourceText;
 	
-	    return dom.div({ className: "editor-wrapper" }, dom.textarea({
-	      ref: "editor",
-	      defaultValue: "..."
-	    }), breakpoints.map(bp => {
+	    var isLoading = sourceText && sourceText.get("loading");
+	
+	    return dom.div({ className: "editor-wrapper devtools-monospace" }, dom.div({ className: "editor-mount" }), !isLoading && breakpoints.valueSeq().map(bp => {
 	      return Breakpoint({
 	        key: makeLocationId(bp.location),
 	        breakpoint: bp,
-	        editor: this.editor
+	        editor: this.editor && this.editor.codeMirror
 	      });
 	    }));
 	  }
@@ -51527,7 +51635,7 @@ var Debugger =
 	  var selectedId = selectedSource && selectedSource.get("id");
 	
 	  return {
-	    selectedSource: selectedSource,
+	    selectedSource,
 	    sourceText: getSourceText(state, selectedId),
 	    breakpoints: getBreakpointsForSource(state, selectedId),
 	    selectedFrame: getSelectedFrame(state)
@@ -51535,7 +51643,91 @@ var Debugger =
 	}, dispatch => bindActionCreators(actions, dispatch))(Editor);
 
 /***/ },
-/* 415 */
+/* 418 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var CodeMirror = __webpack_require__(419);
+	
+	__webpack_require__(420);
+	__webpack_require__(422);
+	__webpack_require__(423);
+	
+	// Maximum allowed margin (in number of lines) from top or bottom of the editor
+	// while shifting to a line which was initially out of view.
+	var MAX_VERTICAL_OFFSET = 3;
+	
+	class SourceEditor {
+	  constructor(opts) {
+	    this.opts = opts;
+	  }
+	
+	  appendTo(node, env, noIframe) {
+	    this.editor = CodeMirror(node, this.opts);
+	  }
+	
+	  get codeMirror() {
+	    return this.editor;
+	  }
+	
+	  setText(str) {
+	    this.editor.setValue(str);
+	  }
+	
+	  getText() {
+	    return this.editor.getValue();
+	  }
+	
+	  /**
+	   * Aligns the provided line to either "top", "center" or "bottom" of the
+	   * editor view with a maximum margin of MAX_VERTICAL_OFFSET lines from top or
+	   * bottom.
+	   */
+	  alignLine(line) {
+	    var align = arguments.length <= 1 || arguments[1] === undefined ? "top" : arguments[1];
+	
+	    var cm = this.editor;
+	    var from = cm.lineAtHeight(0, "page");
+	    var to = cm.lineAtHeight(cm.getWrapperElement().clientHeight, "page");
+	    var linesVisible = to - from;
+	    var halfVisible = Math.round(linesVisible / 2);
+	
+	    // If the target line is in view, skip the vertical alignment part.
+	    if (line <= to && line >= from) {
+	      return;
+	    }
+	
+	    // Setting the offset so that the line always falls in the upper half
+	    // of visible lines (lower half for bottom aligned).
+	    // MAX_VERTICAL_OFFSET is the maximum allowed value.
+	    var offset = Math.min(halfVisible, MAX_VERTICAL_OFFSET);
+	
+	    var topLine = {
+	      "center": Math.max(line - halfVisible, 0),
+	      "bottom": Math.max(line - linesVisible + offset, 0),
+	      "top": Math.max(line - offset, 0)
+	    }[align || "top"] || offset;
+	
+	    // Bringing down the topLine to total lines in the editor if exceeding.
+	    topLine = Math.min(topLine, cm.lineCount());
+	    this.setFirstVisibleLine(topLine);
+	  }
+	
+	  /**
+	   * Scrolls the view such that the given line number is the first visible line.
+	   */
+	  setFirstVisibleLine(line) {
+	    var _editor$charCoords = this.editor.charCoords({ line: line, ch: 0 }, "local");
+	
+	    var top = _editor$charCoords.top;
+	
+	    this.editor.scrollTo(0, top);
+	  }
+	}
+	
+	module.exports = SourceEditor;
+
+/***/ },
+/* 419 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// CodeMirror, copyright (c) by Marijn Haverbeke and others
@@ -60463,267 +60655,13 @@ var Debugger =
 
 
 /***/ },
-/* 416 */
+/* 420 */
 /***/ function(module, exports) {
 
-	// Maximum allowed margin (in number of lines) from top or bottom of the editor
-	// while shifting to a line which was initially out of view.
-	var MAX_VERTICAL_OFFSET = 3;
-	
-	/**
-	 * Aligns the provided line to either "top", "center" or "bottom" of the
-	 * editor view with a maximum margin of MAX_VERTICAL_OFFSET lines from top or
-	 * bottom.
-	 */
-	function alignLine(cm, line) {
-	  var align = arguments.length <= 2 || arguments[2] === undefined ? "top" : arguments[2];
-	
-	  var from = cm.lineAtHeight(0, "page");
-	  var to = cm.lineAtHeight(cm.getWrapperElement().clientHeight, "page");
-	  var linesVisible = to - from;
-	  var halfVisible = Math.round(linesVisible / 2);
-	
-	  // If the target line is in view, skip the vertical alignment part.
-	  if (line <= to && line >= from) {
-	    return;
-	  }
-	
-	  // Setting the offset so that the line always falls in the upper half
-	  // of visible lines (lower half for bottom aligned).
-	  // MAX_VERTICAL_OFFSET is the maximum allowed value.
-	  var offset = Math.min(halfVisible, MAX_VERTICAL_OFFSET);
-	
-	  var topLine = {
-	    "center": Math.max(line - halfVisible, 0),
-	    "bottom": Math.max(line - linesVisible + offset, 0),
-	    "top": Math.max(line - offset, 0)
-	  }[align || "top"] || offset;
-	
-	  // Bringing down the topLine to total lines in the editor if exceeding.
-	  topLine = Math.min(topLine, cm.lineCount());
-	  setFirstVisibleLine(cm, topLine);
-	}
-	
-	/**
-	 * Scrolls the view such that the given line number is the first visible line.
-	 */
-	function setFirstVisibleLine(cm, line) {
-	  var _cm$charCoords = cm.charCoords({ line: line, ch: 0 }, "local");
-	
-	  var top = _cm$charCoords.top;
-	
-	  cm.scrollTo(0, top);
-	}
-	
-	/**
-	 * Disable APZ for source editors. It currently causes the line numbers to
-	 * "tear off" and swim around on top of the content. Bug 1160601 tracks
-	 * finding a solution that allows APZ to work with CodeMirror.
-	 */
-	function onWheel(cm, ev) {
-	  // FIX bug where chrome does not support scrollBy
-	  if (!cm.getScrollerElement().scrollBy) {
-	    return;
-	  }
-	
-	  // By handling the wheel events ourselves, we force the platform to
-	  // scroll synchronously, like it did before APZ. However, we lose smooth
-	  // scrolling for users with mouse wheels. This seems acceptible vs.
-	  // doing nothing and letting the gutter slide around.
-	  ev.preventDefault();
-	
-	  var deltaX = ev.deltaX;
-	  var deltaY = ev.deltaY;
-	
-	
-	  if (ev.deltaMode == ev.DOM_DELTA_LINE) {
-	    deltaX *= cm.defaultCharWidth();
-	    deltaY *= cm.defaultTextHeight();
-	  } else if (ev.deltaMode == ev.DOM_DELTA_PAGE) {
-	    deltaX *= cm.getWrapperElement().clientWidth;
-	    deltaY *= cm.getWrapperElement().clientHeight;
-	  }
-	
-	  if (cm.getScrollerElement().scrollBy) {
-	    cm.getScrollerElement().scrollBy(deltaX, deltaY);
-	  }
-	}
-	
-	/**
-	 * Forces the breakpoint gutter to be the same size as the line
-	 * numbers gutter. Editor CSS will absolutely position the gutter
-	 * beneath the line numbers. This makes it easy to be flexible with
-	 * how we overlay breakpoints.
-	 */
-	function resizeBreakpointGutter(editor) {
-	  var gutters = editor.display.gutters;
-	  var lineNumbers = gutters.querySelector(".CodeMirror-linenumbers");
-	  var breakpoints = gutters.querySelector(".breakpoints");
-	  breakpoints.style.width = lineNumbers.clientWidth + "px";
-	}
-	
-	module.exports = {
-	  alignLine,
-	  onWheel,
-	  resizeBreakpointGutter
-	};
+	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 417 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var React = __webpack_require__(17);
-	var PropTypes = React.PropTypes;
-	
-	
-	function makeMarker() {
-	  var marker = document.createElement("div");
-	  marker.className = "editor breakpoint";
-	
-	  var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-	  svg.setAttribute("viewBox", "0 0 60 12");
-	  svg.setAttribute("preserveAspectRatio", "none");
-	  var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-	  // Until we figure out our loader story, embed it directly so we can
-	  // control it with CSS.
-	  path.setAttribute("d", "M53.9,0H1C0.4,0,0,0.4,0,1v10c0,0.6,0.4,1,1,1h52.9c0.6,0,1.2-0.3,1.5-0.7L60,6l-4.4-5.3C55,0.3,54.5,0,53.9,0z"); // eslint-disable-line max-len
-	  svg.appendChild(path);
-	  marker.appendChild(svg);
-	
-	  return marker;
-	}
-	
-	var Breakpoint = React.createClass({
-	  propTypes: {
-	    breakpoint: PropTypes.object,
-	    editor: PropTypes.object
-	  },
-	
-	  displayName: "Breakpoint",
-	
-	  addBreakpoint() {
-	    var bp = this.props.breakpoint;
-	    var line = bp.location.line - 1;
-	    this.props.editor.setGutterMarker(line, "breakpoints", makeMarker());
-	    this.props.editor.addLineClass(line, "line", "breakpoint");
-	  },
-	
-	  shouldComponentUpdate(nextProps) {
-	    return this.props.editor !== nextProps.editor;
-	  },
-	
-	  componentDidMount() {
-	    if (!this.props.editor) {
-	      return;
-	    }
-	
-	    this.addBreakpoint();
-	  },
-	
-	  componentDidUpdate() {
-	    this.addBreakpoint();
-	  },
-	
-	  componentWillUnmount() {
-	    if (!this.props.editor) {
-	      return;
-	    }
-	
-	    var bp = this.props.breakpoint;
-	    var line = bp.location.line - 1;
-	
-	    this.props.editor.setGutterMarker(line, "breakpoints", null);
-	    this.props.editor.removeLineClass(line, "line", "breakpoint");
-	  },
-	
-	  render() {
-	    return null;
-	  }
-	});
-	
-	module.exports = Breakpoint;
-
-/***/ },
-/* 418 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-	
-	// load the styles
-	var content = __webpack_require__(419);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(358)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../css-loader/index.js!./codemirror.css", function() {
-				var newContent = require("!!./../../css-loader/index.js!./codemirror.css");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 419 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(357)();
-	// imports
-	
-	
-	// module
-	exports.push([module.id, "/* BASICS */\n\n.CodeMirror {\n  /* Set height, width, borders, and global font properties here */\n  font-family: monospace;\n  height: 300px;\n  color: black;\n}\n\n/* PADDING */\n\n.CodeMirror-lines {\n  padding: 4px 0; /* Vertical padding around content */\n}\n.CodeMirror pre {\n  padding: 0 4px; /* Horizontal padding of content */\n}\n\n.CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler {\n  background-color: white; /* The little square between H and V scrollbars */\n}\n\n/* GUTTER */\n\n.CodeMirror-gutters {\n  border-right: 1px solid #ddd;\n  background-color: #f7f7f7;\n  white-space: nowrap;\n}\n.CodeMirror-linenumbers {}\n.CodeMirror-linenumber {\n  padding: 0 3px 0 5px;\n  min-width: 20px;\n  text-align: right;\n  color: #999;\n  white-space: nowrap;\n}\n\n.CodeMirror-guttermarker { color: black; }\n.CodeMirror-guttermarker-subtle { color: #999; }\n\n/* CURSOR */\n\n.CodeMirror-cursor {\n  border-left: 1px solid black;\n  border-right: none;\n  width: 0;\n}\n/* Shown when moving in bi-directional text */\n.CodeMirror div.CodeMirror-secondarycursor {\n  border-left: 1px solid silver;\n}\n.cm-fat-cursor .CodeMirror-cursor {\n  width: auto;\n  border: 0 !important;\n  background: #7e7;\n}\n.cm-fat-cursor div.CodeMirror-cursors {\n  z-index: 1;\n}\n\n.cm-animate-fat-cursor {\n  width: auto;\n  border: 0;\n  -webkit-animation: blink 1.06s steps(1) infinite;\n  -moz-animation: blink 1.06s steps(1) infinite;\n  animation: blink 1.06s steps(1) infinite;\n  background-color: #7e7;\n}\n@-moz-keyframes blink {\n  0% {}\n  50% { background-color: transparent; }\n  100% {}\n}\n@-webkit-keyframes blink {\n  0% {}\n  50% { background-color: transparent; }\n  100% {}\n}\n@keyframes blink {\n  0% {}\n  50% { background-color: transparent; }\n  100% {}\n}\n\n/* Can style cursor different in overwrite (non-insert) mode */\n.CodeMirror-overwrite .CodeMirror-cursor {}\n\n.cm-tab { display: inline-block; text-decoration: inherit; }\n\n.CodeMirror-rulers {\n  position: absolute;\n  left: 0; right: 0; top: -50px; bottom: -20px;\n  overflow: hidden;\n}\n.CodeMirror-ruler {\n  border-left: 1px solid #ccc;\n  top: 0; bottom: 0;\n  position: absolute;\n}\n\n/* DEFAULT THEME */\n\n.cm-s-default .cm-header {color: blue;}\n.cm-s-default .cm-quote {color: #090;}\n.cm-negative {color: #d44;}\n.cm-positive {color: #292;}\n.cm-header, .cm-strong {font-weight: bold;}\n.cm-em {font-style: italic;}\n.cm-link {text-decoration: underline;}\n.cm-strikethrough {text-decoration: line-through;}\n\n.cm-s-default .cm-keyword {color: #708;}\n.cm-s-default .cm-atom {color: #219;}\n.cm-s-default .cm-number {color: #164;}\n.cm-s-default .cm-def {color: #00f;}\n.cm-s-default .cm-variable,\n.cm-s-default .cm-punctuation,\n.cm-s-default .cm-property,\n.cm-s-default .cm-operator {}\n.cm-s-default .cm-variable-2 {color: #05a;}\n.cm-s-default .cm-variable-3 {color: #085;}\n.cm-s-default .cm-comment {color: #a50;}\n.cm-s-default .cm-string {color: #a11;}\n.cm-s-default .cm-string-2 {color: #f50;}\n.cm-s-default .cm-meta {color: #555;}\n.cm-s-default .cm-qualifier {color: #555;}\n.cm-s-default .cm-builtin {color: #30a;}\n.cm-s-default .cm-bracket {color: #997;}\n.cm-s-default .cm-tag {color: #170;}\n.cm-s-default .cm-attribute {color: #00c;}\n.cm-s-default .cm-hr {color: #999;}\n.cm-s-default .cm-link {color: #00c;}\n\n.cm-s-default .cm-error {color: #f00;}\n.cm-invalidchar {color: #f00;}\n\n.CodeMirror-composing { border-bottom: 2px solid; }\n\n/* Default styles for common addons */\n\ndiv.CodeMirror span.CodeMirror-matchingbracket {color: #0f0;}\ndiv.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}\n.CodeMirror-matchingtag { background: rgba(255, 150, 0, .3); }\n.CodeMirror-activeline-background {background: #e8f2ff;}\n\n/* STOP */\n\n/* The rest of this file contains styles related to the mechanics of\n   the editor. You probably shouldn't touch them. */\n\n.CodeMirror {\n  position: relative;\n  overflow: hidden;\n  background: white;\n}\n\n.CodeMirror-scroll {\n  overflow: scroll !important; /* Things will break if this is overridden */\n  /* 30px is the magic margin used to hide the element's real scrollbars */\n  /* See overflow: hidden in .CodeMirror */\n  margin-bottom: -30px; margin-right: -30px;\n  padding-bottom: 30px;\n  height: 100%;\n  outline: none; /* Prevent dragging from highlighting the element */\n  position: relative;\n}\n.CodeMirror-sizer {\n  position: relative;\n  border-right: 30px solid transparent;\n}\n\n/* The fake, visible scrollbars. Used to force redraw during scrolling\n   before actual scrolling happens, thus preventing shaking and\n   flickering artifacts. */\n.CodeMirror-vscrollbar, .CodeMirror-hscrollbar, .CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler {\n  position: absolute;\n  z-index: 6;\n  display: none;\n}\n.CodeMirror-vscrollbar {\n  right: 0; top: 0;\n  overflow-x: hidden;\n  overflow-y: scroll;\n}\n.CodeMirror-hscrollbar {\n  bottom: 0; left: 0;\n  overflow-y: hidden;\n  overflow-x: scroll;\n}\n.CodeMirror-scrollbar-filler {\n  right: 0; bottom: 0;\n}\n.CodeMirror-gutter-filler {\n  left: 0; bottom: 0;\n}\n\n.CodeMirror-gutters {\n  position: absolute; left: 0; top: 0;\n  min-height: 100%;\n  z-index: 3;\n}\n.CodeMirror-gutter {\n  white-space: normal;\n  height: 100%;\n  display: inline-block;\n  vertical-align: top;\n  margin-bottom: -30px;\n  /* Hack to make IE7 behave */\n  *zoom:1;\n  *display:inline;\n}\n.CodeMirror-gutter-wrapper {\n  position: absolute;\n  z-index: 4;\n  background: none !important;\n  border: none !important;\n}\n.CodeMirror-gutter-background {\n  position: absolute;\n  top: 0; bottom: 0;\n  z-index: 4;\n}\n.CodeMirror-gutter-elt {\n  position: absolute;\n  cursor: default;\n  z-index: 4;\n}\n.CodeMirror-gutter-wrapper {\n  -webkit-user-select: none;\n  -moz-user-select: none;\n  user-select: none;\n}\n\n.CodeMirror-lines {\n  cursor: text;\n  min-height: 1px; /* prevents collapsing before first draw */\n}\n.CodeMirror pre {\n  /* Reset some styles that the rest of the page might have set */\n  -moz-border-radius: 0; -webkit-border-radius: 0; border-radius: 0;\n  border-width: 0;\n  background: transparent;\n  font-family: inherit;\n  font-size: inherit;\n  margin: 0;\n  white-space: pre;\n  word-wrap: normal;\n  line-height: inherit;\n  color: inherit;\n  z-index: 2;\n  position: relative;\n  overflow: visible;\n  -webkit-tap-highlight-color: transparent;\n  -webkit-font-variant-ligatures: none;\n  font-variant-ligatures: none;\n}\n.CodeMirror-wrap pre {\n  word-wrap: break-word;\n  white-space: pre-wrap;\n  word-break: normal;\n}\n\n.CodeMirror-linebackground {\n  position: absolute;\n  left: 0; right: 0; top: 0; bottom: 0;\n  z-index: 0;\n}\n\n.CodeMirror-linewidget {\n  position: relative;\n  z-index: 2;\n  overflow: auto;\n}\n\n.CodeMirror-widget {}\n\n.CodeMirror-code {\n  outline: none;\n}\n\n/* Force content-box sizing for the elements where we expect it */\n.CodeMirror-scroll,\n.CodeMirror-sizer,\n.CodeMirror-gutter,\n.CodeMirror-gutters,\n.CodeMirror-linenumber {\n  -moz-box-sizing: content-box;\n  box-sizing: content-box;\n}\n\n.CodeMirror-measure {\n  position: absolute;\n  width: 100%;\n  height: 0;\n  overflow: hidden;\n  visibility: hidden;\n}\n\n.CodeMirror-cursor {\n  position: absolute;\n  pointer-events: none;\n}\n.CodeMirror-measure pre { position: static; }\n\ndiv.CodeMirror-cursors {\n  visibility: hidden;\n  position: relative;\n  z-index: 3;\n}\ndiv.CodeMirror-dragcursors {\n  visibility: visible;\n}\n\n.CodeMirror-focused div.CodeMirror-cursors {\n  visibility: visible;\n}\n\n.CodeMirror-selected { background: #d9d9d9; }\n.CodeMirror-focused .CodeMirror-selected { background: #d7d4f0; }\n.CodeMirror-crosshair { cursor: crosshair; }\n.CodeMirror-line::selection, .CodeMirror-line > span::selection, .CodeMirror-line > span > span::selection { background: #d7d4f0; }\n.CodeMirror-line::-moz-selection, .CodeMirror-line > span::-moz-selection, .CodeMirror-line > span > span::-moz-selection { background: #d7d4f0; }\n\n.cm-searching {\n  background: #ffa;\n  background: rgba(255, 255, 0, .4);\n}\n\n/* IE7 hack to prevent it from returning funny offsetTops on the spans */\n.CodeMirror span { *vertical-align: text-bottom; }\n\n/* Used to force a border model for a node */\n.cm-force-border { padding-right: .1px; }\n\n@media print {\n  /* Hide the cursor when printing */\n  .CodeMirror div.CodeMirror-cursors {\n    visibility: hidden;\n  }\n}\n\n/* See issue #2901 */\n.cm-tab-wrap-hack:after { content: ''; }\n\n/* Help users use markselection to safely style text background */\nspan.CodeMirror-selectedtext { background: none; }\n", ""]);
-	
-	// exports
-
-
-/***/ },
-/* 420 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-	
-	// load the styles
-	var content = __webpack_require__(421);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(358)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./Editor.css", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./Editor.css");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 421 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(357)();
-	// imports
-	
-	
-	// module
-	exports.push([module.id, "/* vim:set ts=2 sw=2 sts=2 et: */\n\n/* This Source Code Form is subject to the terms of the Mozilla Public\n * License, v. 2.0. If a copy of the MPL was not distributed with this\n * file, You can obtain one at http://mozilla.org/MPL/2.0/. */\n\n/**\n * There's a known codemirror flex issue with chrome that this addresses.\n * BUG https://github.com/devtools-html/debugger.html/issues/63\n */\n.editor-wrapper {\n  position: absolute;\n  height: calc(100% - 30px);\n  width: 100%;\n  top: 30px;\n  left: 0px;\n}\n\n.editor-wrapper .breakpoints {\n  position: absolute;\n  top: 0;\n  left: 0;\n}\n\n.editor.breakpoint svg {\n  fill: var(--theme-selection-background);\n  width: 60px;\n  height: 12px;\n  position: absolute;\n  top: 0;\n  right: -4px;\n}\n\n.editor.breakpoint:hover {\n  cursor: pointer;\n}\n\n.CodeMirror {\n  font-family: Menlo, monospace !important;\n}\n\n/* set the linenumber white when there is a breakpoint */\n.breakpoint .CodeMirror-linenumber {\n  color: white;\n}\n\n/* move the breakpoint below the linenumber */\n.breakpoint .CodeMirror-gutter-elt:last-child {\n  z-index: 0;\n}\n\n.debug-line .CodeMirror-line {\n  background-color: var(--breakpoint-active-color) !important;\n}\n\n/* Don't display the highlight color since the debug line\n   is already highlighted */\n.debug-line .CodeMirror-activeline-background {\n  display: none;\n}\n", ""]);
-	
-	// exports
-
-
-/***/ },
+/* 421 */,
 /* 422 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -60734,7 +60672,7 @@ var Debugger =
 	
 	(function(mod) {
 	  if (true) // CommonJS
-	    mod(__webpack_require__(415));
+	    mod(__webpack_require__(419));
 	  else if (typeof define == "function" && define.amd) // AMD
 	    define(["../../lib/codemirror"], mod);
 	  else // Plain browser env
@@ -61479,46 +61417,96 @@ var Debugger =
 
 /***/ },
 /* 423 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-	
-	// load the styles
-	var content = __webpack_require__(424);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(358)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./codemirror.css", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./codemirror.css");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
+	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 424 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(357)();
-	// imports
-	
-	
-	// module
-	exports.push([module.id, "\n.theme-body {\n  background: var(--theme-body-background);\n  color: var(--theme-body-color);\n}\n\n.theme-sidebar {\n  color: var(--theme-body-color);\n}\n\n.devtools-dark-theme .theme-sidebar {\n  background: var(--theme-sidebar-background);\n  color: var(--theme-content-color1);\n}\n\n::-moz-selection {\n  background-color: var(--theme-selection-background);\n  color: var(--theme-selection-color);\n}\n\n.theme-bg-darker {\n  background: var(--theme-selection-background-semitransparent);\n}\n\n.theme-selected,\n.CodeMirror-hint-active {\n  background-color: var(--theme-selection-background);\n  color: var(--theme-selection-color);\n}\n\n.theme-bg-contrast,\n.variable-or-property:not([overridden])[changed] {\n  background: var(--theme-contrast-background);\n}\n\n.theme-link,\n.cm-link,\n.CodeMirror-Tern-type {\n  color: var(--theme-highlight-blue);\n}\n\n.theme-link:visited,\n.cm-link:visited,\n.CodeMirror-Tern-type {\n  color: var(--theme-highlight-blue);\n}\n\n.theme-comment,\n.cm-meta,\n.cm-hr,\n.cm-comment,\n.variable-or-property .token-undefined,\n.variable-or-property .token-null,\n.CodeMirror-Tern-completion-unknown::before {\n  color: var(--theme-comment);\n}\n\n.theme-gutter {\n  background-color: var(--theme-tab-toolbar-background);\n  color: var(--theme-content-color3);\n  border-color: var(--theme-splitter-color);\n}\n\n.theme-separator {\n  border-color: var(--theme-splitter-color);\n}\n\n.theme-fg-color1,\n.cm-number,\n.variable-or-property .token-number,\n.variable-or-property[return] > .title > .name,\n.variable-or-property[scope] > .title > .name {\n  color: var(--theme-highlight-green);\n}\n\n.CodeMirror-Tern-completion-number:before {\n  background-color: hsl(72, 100%, 27%);\n}\n\n.devtools-dark-theme .CodeMirror-Tern-completion-number::before {\n  background-color: #5c9966;\n}\n\n.theme-fg-color2,\n.cm-attribute,\n.cm-variable,\n.cm-def,\n.cm-property,\n.cm-qualifier,\n.variables-view-variable > .title > .name {\n  color: var(--theme-highlight-blue);\n}\n\n.CodeMirror-Tern-completion-object::before {\n  background-color: hsl(208, 56%, 40%);\n}\n\n.devtools-dark-theme .CodeMirror-Tern-completion-object::before {\n  background-color: #3689b2;\n}\n\n.cm-unused-line {\n  text-decoration: line-through;\n  text-decoration-color: #0072ab;\n}\n\n.cm-executed-line {\n  background-color: #133c26;\n}\n\n.theme-fg-color3,\n.cm-builtin,\n.cm-tag,\n.cm-header,\n.cm-bracket,\n.variables-view-property > .title > .name {\n  color: var(--theme-highlight-bluegrey);\n}\n\n.devtools-dark-theme .theme-fg-color3,\n.devtools-dark-theme .cm-builtin,\n.devtools-dark-theme .cm-tag,\n.devtools-dark-theme .cm-header,\n.devtools-dark-theme .cm-bracket,\n.devtools-dark-theme .variables-view-property > .title > .name {\n  color: var(--theme-highlight-pink);\n}\n\n.CodeMirror-Tern-completion-array::before {\n  background-color: var(--theme-highlight-bluegrey);\n}\n\n.theme-fg-color4 {\n  color: var(--theme-highlight-orange);\n}\n\n.devtools-dark-theme .theme-fg-color4 {\n  color: var(--theme-highlight-purple);\n}\n\n.theme-fg-color5,\n.cm-keyword {\n  color: var(--theme-highlight-lightorange);\n}\n\n.theme-fg-color6,\n.cm-string,\n.cm-string-2,\n.variable-or-property .token-string,\n.CodeMirror-Tern-farg {\n  color: var(--theme-highlight-orange);\n}\n\n.CodeMirror-Tern-completion-string::before,\n.CodeMirror-Tern-completion-fn::before {\n  background-color: hsl(24, 85%, 39%);\n}\n\n.devtools-dark-theme .CodeMirror-Tern-completion-string::before,\n.devtools-dark-theme .CodeMirror-Tern-completion-fn::before {\n  background-color: #b26b47;\n}\n\n.theme-fg-color7,\n.cm-atom,\n.cm-quote,\n.cm-error,\n.variable-or-property .token-boolean,\n.variable-or-property .token-domnode,\n.variable-or-property[exception] > .title > .name {\n  color: var(--theme-highlight-red);\n}\n\n.CodeMirror-Tern-completion-bool::before {\n  background-color: #bf5656;\n}\n\n.variable-or-property .token-domnode {\n  font-weight: bold;\n}\n\n.theme-toolbar,\n.devtools-toolbar,\n.devtools-sidebar-tabs tabs,\n.devtools-sidebar-alltabs,\n.CodeMirror-dialog {\n  /* General toolbar styling */\n  color: var(--theme-body-color);\n  background-color: var(--theme-toolbar-background);\n  border-color: var(--theme-splitter-color);\n}\n\n.devtools-dark-theme .theme-toolbar,\n.devtools-dark-theme .devtools-toolbar,\n.devtools-dark-theme .devtools-sidebar-tabs tabs,\n.devtools-dark-theme .devtools-sidebar-alltabs,\n.devtools-dark-theme .CodeMirror-dialog {\n  /* General toolbar styling */\n  color: var(--theme-body-color-alt);\n  background-color: var(--theme-toolbar-background);\n  border-color: hsla(210, 8%, 5%, 0.6);\n}\n\n.theme-fg-contrast {\n  /* To be used for text on theme-bg-contrast */\n  color: black;\n}\n\n.ruleview-swatch,\n.computedview-colorswatch {\n  box-shadow: 0 0 0 1px #c4c4c4;\n}\n\n.devtools-dark-theme .ruleview-swatch,\n.devtools-dark-theme .computedview-colorswatch {\n  box-shadow: 0 0 0 1px #818181;\n}\n\n.CodeMirror.cm-s-mozilla {\n  /* Inherit platform specific font sizing and styles */\n  font-family: inherit;\n  font-size: 11px;\n  height: 100%;\n  background: var(--theme-body-background);\n}\n\n\n.devtools-dark-theme .CodeMirror {\n  background: var(--theme-body-background);\n}\n\n.CodeMirror pre,\n.cm-variable-2,\n.cm-variable-3,\n.cm-operator,\n.cm-special {\n  color: var(--theme-body-color);\n}\n\n.devtools-dark-theme .CodeMirror pre,\n.devtools-dark-theme .cm-variable-2,\n.devtools-dark-theme .cm-variable-3,\n.devtools-dark-theme .cm-operator,\n.devtools-dark-theme .cm-special {\n  color: var(--theme-content-color1);\n}\n\n.CodeMirror-lines .CodeMirror-cursor {\n  border-left: solid 1px black;\n}\n\n.devtools-dark-theme .CodeMirror-lines .CodeMirror-cursor {\n  border-left: solid 1px #ffffff;\n}\n\n.CodeMirror-focused .CodeMirror-selected {\n  /* selected text (focused) */\n  background: rgb(185, 215, 253);\n}\n\n.CodeMirror-selected {\n  /* selected text (unfocused) */\n  background: rgb(176, 176, 176);\n}\n\n.CodeMirror-activeline-background {\n  /* selected color with alpha */\n  background: rgba(185, 215, 253, 0.35);\n}\n\n.devtools-dark-theme .CodeMirror-activeline-background {\n  background: rgba(185, 215, 253, 0.15);\n}\n\ndiv.cm-s-mozilla span.CodeMirror-matchingbracket {\n  /* highlight brackets */\n  outline: solid 1px rgba(0, 0, 0, 0.25);\n  color: black;\n}\n\n.devtools-dark-theme div span.CodeMirror-matchingbracket {\n  outline: solid 1px rgba(255, 255, 255, .25);\n  color: white;\n}\n\n/* Highlight for a line that contains an error. */\ndiv.CodeMirror div.error-line {\n  background: rgba(255, 0, 0, 0.2);\n}\n\n/* Generic highlighted text */\ndiv.CodeMirror span.marked-text {\n  background: rgba(255, 255, 0, 0.2);\n  border: 1px dashed rgba(192, 192, 0, 0.6);\n  -moz-margin-start: -1px;\n  -moz-margin-end: -1px;\n}\n\n/* Highlight for evaluating current statement. */\ndiv.CodeMirror span.eval-text {\n  background-color: #ccccdd;\n}\n\n.devtools-dark-theme div.CodeMirror span.eval-text {\n  background-color: #555566;\n}\n\n.CodeMirror-linenumber {\n  /* line number text */\n  color: var(--theme-content-color3);\n}\n\n.CodeMirror-gutters {\n  /* vertical line next to line numbers */\n  border-right-color: var(--theme-toolbar-background);\n  background-color: var(--theme-breakpoint-background);\n}\n\n.cm-s-markup-view pre {\n  line-height: 1.4em;\n  min-height: 1.4em;\n}\n\n.CodeMirror-Tern-fname {\n  color: #f7f7f7;\n}\n\n.CodeMirror-hints,\n.CodeMirror-Tern-tooltip {\n  box-shadow: 0 0 4px rgba(128, 128, 128, 0.5);\n  background-color: var(--theme-sidebar-background);\n}\n\n.devtools-dark-theme .CodeMirror-hints,\n.devtools-dark-theme .CodeMirror-Tern-tooltip {\n  box-shadow: 0 0 4px rgba(255, 255, 255, 0.3);\n  background-color: #0f171f;\n  color: var(--theme-body-color);\n}\n", ""]);
-	
-	// exports
-
-
-/***/ },
+/* 424 */,
 /* 425 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(17);
+	var PropTypes = React.PropTypes;
+	
+	var classnames = __webpack_require__(355);
+	
+	function makeMarker(isDisabled) {
+	  var marker = document.createElement("div");
+	  marker.className = classnames("editor new-breakpoint", { "breakpoint-disabled": isDisabled });
+	
+	  var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+	  svg.setAttribute("viewBox", "0 0 60 12");
+	  svg.setAttribute("preserveAspectRatio", "none");
+	  var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+	  // Until we figure out our loader story, embed it directly so we can
+	  // control it with CSS.
+	  path.setAttribute("d", "M53.9,0H1C0.4,0,0,0.4,0,1v10c0,0.6,0.4,1,1,1h52.9c0.6,0,1.2-0.3,1.5-0.7L60,6l-4.4-5.3C55,0.3,54.5,0,53.9,0z"); // eslint-disable-line max-len
+	  svg.appendChild(path);
+	  marker.appendChild(svg);
+	
+	  return marker;
+	}
+	
+	var Breakpoint = React.createClass({
+	  propTypes: {
+	    breakpoint: PropTypes.object,
+	    editor: PropTypes.object
+	  },
+	
+	  displayName: "Breakpoint",
+	
+	  addBreakpoint() {
+	    var bp = this.props.breakpoint;
+	    var line = bp.location.line - 1;
+	    this.props.editor.setGutterMarker(line, "breakpoints", makeMarker(bp.disabled));
+	    this.props.editor.addLineClass(line, "line", "new-breakpoint");
+	  },
+	
+	  shouldComponentUpdate(nextProps) {
+	    return this.props.editor !== nextProps.editor || this.props.breakpoint.disabled !== nextProps.breakpoint.disabled;
+	  },
+	
+	  componentDidMount() {
+	    if (!this.props.editor) {
+	      return;
+	    }
+	
+	    this.addBreakpoint();
+	  },
+	
+	  componentDidUpdate() {
+	    this.addBreakpoint();
+	  },
+	
+	  componentWillUnmount() {
+	    if (!this.props.editor) {
+	      return;
+	    }
+	
+	    var bp = this.props.breakpoint;
+	    var line = bp.location.line - 1;
+	
+	    this.props.editor.setGutterMarker(line, "breakpoints", null);
+	    this.props.editor.removeLineClass(line, "line", "new-breakpoint");
+	  },
+	
+	  render() {
+	    return null;
+	  }
+	});
+	
+	module.exports = Breakpoint;
+
+/***/ },
+/* 426 */
+/***/ function(module, exports) {
+
+	// removed by extract-text-webpack-plugin
+
+/***/ },
+/* 427 */,
+/* 428 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -61527,8 +61515,8 @@ var Debugger =
 	
 	var React = __webpack_require__(17);
 	var ReactDOM = __webpack_require__(176);
-	var Draggable = React.createFactory(__webpack_require__(426));
-	__webpack_require__(427);
+	var Draggable = React.createFactory(__webpack_require__(429));
+	__webpack_require__(430);
 	
 	var dom = React.DOM;
 	var PropTypes = React.PropTypes;
@@ -61576,7 +61564,7 @@ var Debugger =
 	module.exports = SplitBox;
 
 /***/ },
-/* 426 */
+/* 429 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
@@ -61630,51 +61618,19 @@ var Debugger =
 	module.exports = Draggable;
 
 /***/ },
-/* 427 */
-/***/ function(module, exports, __webpack_require__) {
+/* 430 */
+/***/ function(module, exports) {
 
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-	
-	// load the styles
-	var content = __webpack_require__(428);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(358)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./SplitBox.css", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./SplitBox.css");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
+	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 428 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(357)();
-	// imports
-	
-	
-	// module
-	exports.push([module.id, ".split-box {\n  display: flex;\n  flex: 1;\n  min-width: 0;\n}\n\n.split-box .uncontrolled {\n  display: flex;\n  flex: 1;\n  min-width: 0;\n  overflow: auto;\n}\n\n.split-box .controlled {\n  display: flex;\n  overflow: auto;\n}\n\n.split-box .splitter {\n  background-color: var(--theme-splitter-color);\n  border-bottom-width: 0;\n  border-color: white;\n  border-left-width: 0;\n  border-right-width: 0;\n  border-style: solid;\n  border-top-width: 0;\n  box-sizing: content-box;\n  cursor: ew-resize;\n  flex: 0 0 1px;\n}\n", ""]);
-	
-	// exports
-
-
-/***/ },
-/* 429 */
+/* 431 */,
+/* 432 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
 	var dom = React.DOM;
+	var PropTypes = React.PropTypes;
 	
 	var _require = __webpack_require__(15);
 	
@@ -61684,68 +61640,218 @@ var Debugger =
 	
 	var bindActionCreators = _require2.bindActionCreators;
 	
-	var _require3 = __webpack_require__(348);
+	var _require3 = __webpack_require__(347);
 	
 	var getPause = _require3.getPause;
 	var getIsWaitingOnBreak = _require3.getIsWaitingOnBreak;
+	var getBreakpointsDisabled = _require3.getBreakpointsDisabled;
 	var getShouldPauseOnExceptions = _require3.getShouldPauseOnExceptions;
+	var getShouldIgnoreCaughtExceptions = _require3.getShouldIgnoreCaughtExceptions;
+	var getBreakpoints = _require3.getBreakpoints;
+	var getBreakpointsLoading = _require3.getBreakpointsLoading;
 	
 	var _require4 = __webpack_require__(196);
 	
 	var isEnabled = _require4.isEnabled;
 	
-	var Svg = __webpack_require__(387);
+	var Svg = __webpack_require__(390);
+	var ImPropTypes = __webpack_require__(383);
 	
-	var actions = __webpack_require__(360);
-	var Breakpoints = React.createFactory(__webpack_require__(430));
-	var Expressions = React.createFactory(__webpack_require__(450));
-	var Scopes = React.createFactory(__webpack_require__(483));
-	var Frames = React.createFactory(__webpack_require__(490));
-	var Accordion = React.createFactory(__webpack_require__(493));
-	__webpack_require__(496);
+	var actions = __webpack_require__(362);
+	var Breakpoints = React.createFactory(__webpack_require__(433));
+	var Expressions = React.createFactory(__webpack_require__(453));
+	var Scopes = React.createFactory(__webpack_require__(486));
+	var Frames = React.createFactory(__webpack_require__(518));
+	var Accordion = React.createFactory(__webpack_require__(521));
+	__webpack_require__(524);
 	
 	function debugBtn(onClick, type, className, tooltip) {
 	  className = `${ type } ${ className }`;
 	  return dom.span({ onClick, className, key: type }, Svg(type, { title: tooltip }));
 	}
 	
-	function getItems() {
-	  var items = [{ header: "Breakpoints",
-	    component: Breakpoints,
-	    opened: true }, { header: "Call Stack",
-	    component: Frames }, { header: "Scopes",
-	    component: Scopes }];
-	  if (isEnabled("features.watchExpressions")) {
-	    items.unshift({ header: "Watch Expressions",
-	      component: Expressions,
-	      opened: true });
+	var RightSidebar = React.createClass({
+	  propTypes: {
+	    sources: PropTypes.object,
+	    selectedSource: PropTypes.object,
+	    resume: PropTypes.func,
+	    stepIn: PropTypes.func,
+	    stepOut: PropTypes.func,
+	    stepOver: PropTypes.func,
+	    toggleAllBreakpoints: PropTypes.func,
+	    breakOnNext: PropTypes.func,
+	    pause: ImPropTypes.map,
+	    pauseOnExceptions: PropTypes.func,
+	    shouldPauseOnExceptions: PropTypes.bool,
+	    shouldIgnoreCaughtExceptions: PropTypes.bool,
+	    breakpoints: ImPropTypes.map,
+	    isWaitingOnBreak: PropTypes.bool,
+	    breakpointsDisabled: PropTypes.bool,
+	    breakpointsLoading: PropTypes.bool,
+	    keyShortcuts: PropTypes.object
+	  },
+	
+	  displayName: "RightSidebar",
+	
+	  resume() {
+	    if (this.props.pause) {
+	      this.props.resume();
+	    } else if (!this.props.isWaitingOnBreak) {
+	      this.props.breakOnNext();
+	    }
+	  },
+	
+	  stepOver() {
+	    if (!this.props.pause) {
+	      return;
+	    }
+	    this.props.stepOver();
+	  },
+	
+	  stepIn() {
+	    if (!this.props.pause) {
+	      return;
+	    }
+	    this.props.stepIn();
+	  },
+	
+	  stepOut() {
+	    if (!this.props.pause) {
+	      return;
+	    }
+	    this.props.stepOut();
+	  },
+	
+	  setupKeyboardShortcuts() {
+	    var keyShortcuts = this.props.keyShortcuts;
+	
+	    if (this.keyShortcutsEnabled) {
+	      return;
+	    }
+	
+	    this.keyShortcutsEnabled = true;
+	    keyShortcuts.on("F8", this.resume);
+	    keyShortcuts.on("F10", this.stepOver);
+	    keyShortcuts.on("F11", this.stepIn);
+	    keyShortcuts.on("F12", this.stepOut);
+	  },
+	
+	  componentWillUnmount() {
+	    var keyShortcuts = this.props.keyShortcuts;
+	
+	    keyShortcuts.off("F8", this.resume);
+	    keyShortcuts.off("F10", this.stepOver);
+	    keyShortcuts.off("F11", this.stepIn);
+	    keyShortcuts.off("F12", this.stepOut);
+	  },
+	
+	  componentDidUpdate() {
+	    this.setupKeyboardShortcuts();
+	  },
+	
+	  renderStepButtons() {
+	    var className = this.props.pause ? "active" : "disabled";
+	    return [debugBtn(this.stepOver, "stepOver", className, "Step Over (F10)"), debugBtn(this.stepIn, "stepIn", className, "Step In (F11)"), debugBtn(this.stepOut, "stepOut", className, "Step Out \u21E7 (F12)")];
+	  },
+	
+	  renderPauseButton() {
+	    var _props = this.props;
+	    var pause = _props.pause;
+	    var breakOnNext = _props.breakOnNext;
+	    var isWaitingOnBreak = _props.isWaitingOnBreak;
+	
+	
+	    if (pause) {
+	      return debugBtn(this.resume, "resume", "active", "Click to resume (F8)");
+	    }
+	
+	    if (isWaitingOnBreak) {
+	      return debugBtn(null, "pause", "disabled", "Waiting for next execution");
+	    }
+	
+	    return debugBtn(breakOnNext, "pause", "active", "Click to pause (F8)");
+	  },
+	
+	  /*
+	   * The pause on exception button has three states in this order:
+	   *  1. don't pause on exceptions      [false, false]
+	   *  2. pause on uncaught exceptions   [true, true]
+	   *  3. pause on all exceptions        [true, false]
+	  */
+	  renderPauseOnExceptions() {
+	    var _props2 = this.props;
+	    var shouldPauseOnExceptions = _props2.shouldPauseOnExceptions;
+	    var shouldIgnoreCaughtExceptions = _props2.shouldIgnoreCaughtExceptions;
+	    var pauseOnExceptions = _props2.pauseOnExceptions;
+	
+	
+	    function pauseBtn(pause, ignore, tooltip) {
+	      return debugBtn(() => pauseOnExceptions(pause, ignore), "pause-exceptions", "enabled", tooltip);
+	    }
+	
+	    if (!shouldPauseOnExceptions && !shouldIgnoreCaughtExceptions) {
+	      return pauseBtn(true, true, "Ignore exceptions");
+	    }
+	
+	    if (shouldPauseOnExceptions && shouldIgnoreCaughtExceptions) {
+	      return pauseBtn(true, false, "Pause on uncaught exceptions");
+	    }
+	
+	    return pauseBtn(false, false, "Pause on all exceptions");
+	  },
+	
+	  renderDisableBreakpoints() {
+	    var _props3 = this.props;
+	    var toggleAllBreakpoints = _props3.toggleAllBreakpoints;
+	    var breakpoints = _props3.breakpoints;
+	    var breakpointsDisabled = _props3.breakpointsDisabled;
+	    var breakpointsLoading = _props3.breakpointsLoading;
+	
+	
+	    if (breakpoints.size == 0 || breakpointsLoading) {
+	      return debugBtn(null, "disableBreakpoints", "disabled", "Disable Breakpoints");
+	    }
+	
+	    return debugBtn(() => toggleAllBreakpoints(!breakpointsDisabled), "disableBreakpoints", breakpointsDisabled ? "breakpoints-disabled" : "", "Disable Breakpoints");
+	  },
+	
+	  getItems() {
+	    var items = [{ header: "Breakpoints",
+	      component: Breakpoints,
+	      opened: true }, { header: "Call Stack",
+	      component: Frames }, { header: "Scopes",
+	      component: Scopes }];
+	    if (isEnabled("watchExpressions")) {
+	      items.unshift({ header: "Watch Expressions",
+	        component: Expressions,
+	        opened: true });
+	    }
+	    return items;
+	  },
+	
+	  render() {
+	    return dom.div({ className: "right-sidebar",
+	      style: { overflowX: "hidden" } }, dom.div({ className: "command-bar" }, this.renderPauseButton(), this.renderStepButtons(), this.renderDisableBreakpoints(), this.renderPauseOnExceptions()), Accordion({
+	      items: this.getItems()
+	    }));
 	  }
-	  return items;
-	}
 	
-	function RightSidebar(_ref) {
-	  var resume = _ref.resume;
-	  var command = _ref.command;
-	  var breakOnNext = _ref.breakOnNext;
-	  var pause = _ref.pause;
-	  var isWaitingOnBreak = _ref.isWaitingOnBreak;
-	  var pauseOnExceptions = _ref.pauseOnExceptions;
-	  var shouldPauseOnExceptions = _ref.shouldPauseOnExceptions;
+	});
 	
-	  return dom.div({ className: "right-sidebar",
-	    style: { overflowX: "hidden" } }, dom.div({ className: "command-bar" }, pause ? [debugBtn(() => command({ type: "resume" }), "resume", "active", "Click to resume (F8)"), debugBtn(() => command({ type: "stepOver" }), "stepOver", "active", "Step Over (F10)"), debugBtn(() => command({ type: "stepIn" }), "stepIn", "active", "Step In (F11)"), debugBtn(() => command({ type: "stepOut" }), "stepOut", "active", "Step Out \u21E7 (F12)")] : [isWaitingOnBreak ? debugBtn(null, "pause", "disabled", "Click to resume (F8)") : debugBtn(breakOnNext, "pause", "Click to resume (F8)"), debugBtn(null, "stepOver", "disabled", "Step Over (F10)"), debugBtn(null, "stepIn", "disabled", "Step In (F11)"), debugBtn(null, "stepOut", "disabled", "Step Out \u21E7 (F12)")], debugBtn(() => command({ type: "disableBreakpoints" }), "disableBreakpoints", "disabled", "Disable Breakpoints"), debugBtn(() => pauseOnExceptions(!shouldPauseOnExceptions), "pause-exceptions", shouldPauseOnExceptions ? "enabled" : "disabled", "Toggle Pause on Exceptions"), debugBtn(() => command({ type: "subSettings" }), "subSettings", "", "Settings")), Accordion({
-	    items: getItems()
-	  }));
-	}
-	
-	module.exports = connect(state => ({
-	  pause: getPause(state),
-	  isWaitingOnBreak: getIsWaitingOnBreak(state),
-	  shouldPauseOnExceptions: getShouldPauseOnExceptions(state)
-	}), dispatch => bindActionCreators(actions, dispatch))(RightSidebar);
+	module.exports = connect(state => {
+	  return {
+	    pause: getPause(state),
+	    isWaitingOnBreak: getIsWaitingOnBreak(state),
+	    shouldPauseOnExceptions: getShouldPauseOnExceptions(state),
+	    shouldIgnoreCaughtExceptions: getShouldIgnoreCaughtExceptions(state),
+	    breakpointsDisabled: getBreakpointsDisabled(state),
+	    breakpoints: getBreakpoints(state),
+	    breakpointsLoading: getBreakpointsLoading(state)
+	  };
+	}, dispatch => bindActionCreators(actions, dispatch))(RightSidebar);
 
 /***/ },
-/* 430 */
+/* 433 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
@@ -61758,12 +61864,12 @@ var Debugger =
 	
 	var bindActionCreators = _require2.bindActionCreators;
 	
-	var ImPropTypes = __webpack_require__(376);
-	var Isvg = React.createFactory(__webpack_require__(431));
-	var classnames = __webpack_require__(379);
-	var actions = __webpack_require__(360);
+	var ImPropTypes = __webpack_require__(383);
+	var Isvg = React.createFactory(__webpack_require__(434));
+	var classnames = __webpack_require__(355);
+	var actions = __webpack_require__(362);
 	
-	var _require3 = __webpack_require__(348);
+	var _require3 = __webpack_require__(347);
 	
 	var getSource = _require3.getSource;
 	var getPause = _require3.getPause;
@@ -61780,7 +61886,7 @@ var Debugger =
 	var PropTypes = React.PropTypes;
 	
 	
-	__webpack_require__(448);
+	__webpack_require__(451);
 	
 	function isCurrentlyPausedAtBreakpoint(state, breakpoint) {
 	  var pause = getPause(state);
@@ -61805,6 +61911,10 @@ var Debugger =
 	  displayName: "Breakpoints",
 	
 	  handleCheckbox(breakpoint) {
+	    if (breakpoint.loading) {
+	      return;
+	    }
+	
 	    if (breakpoint.disabled) {
 	      this.props.enableBreakpoint(breakpoint.location);
 	    } else {
@@ -61865,7 +61975,7 @@ var Debugger =
 	    bp.locationId = locationId;
 	    bp.isCurrentlyPaused = isCurrentlyPaused;
 	    return bp;
-	  });
+	  }).filter(bp => bp.location.source);
 	}
 	
 	module.exports = connect((state, props) => ({
@@ -61873,7 +61983,7 @@ var Debugger =
 	}), dispatch => bindActionCreators(actions, dispatch))(Breakpoints);
 
 /***/ },
-/* 431 */
+/* 434 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -61888,19 +61998,19 @@ var Debugger =
 	
 	var _react2 = _interopRequireDefault(_react);
 	
-	var _once = __webpack_require__(432);
+	var _once = __webpack_require__(435);
 	
 	var _once2 = _interopRequireDefault(_once);
 	
-	var _httpplease = __webpack_require__(434);
+	var _httpplease = __webpack_require__(437);
 	
 	var _httpplease2 = _interopRequireDefault(_httpplease);
 	
-	var _oldiexdomain = __webpack_require__(444);
+	var _oldiexdomain = __webpack_require__(447);
 	
 	var _oldiexdomain2 = _interopRequireDefault(_oldiexdomain);
 	
-	var _shouldComponentUpdate = __webpack_require__(446);
+	var _shouldComponentUpdate = __webpack_require__(449);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -62204,10 +62314,10 @@ var Debugger =
 	module.exports = exports['default'];
 
 /***/ },
-/* 432 */
+/* 435 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var wrappy = __webpack_require__(433)
+	var wrappy = __webpack_require__(436)
 	module.exports = wrappy(once)
 	
 	once.proto = once(function () {
@@ -62231,7 +62341,7 @@ var Debugger =
 
 
 /***/ },
-/* 433 */
+/* 436 */
 /***/ function(module, exports) {
 
 	// Returns a wrapper function that returns a wrapped callback
@@ -62270,20 +62380,20 @@ var Debugger =
 
 
 /***/ },
-/* 434 */
+/* 437 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
 	var
-	  cleanURL = __webpack_require__(435),
-	  XHR = __webpack_require__(436),
-	  delay = __webpack_require__(437),
-	  RequestError = __webpack_require__(438),
-	  Response = __webpack_require__(439),
-	  Request = __webpack_require__(440),
-	  extend = __webpack_require__(442),
-	  once = __webpack_require__(443);
+	  cleanURL = __webpack_require__(438),
+	  XHR = __webpack_require__(439),
+	  delay = __webpack_require__(440),
+	  RequestError = __webpack_require__(441),
+	  Response = __webpack_require__(442),
+	  Request = __webpack_require__(443),
+	  extend = __webpack_require__(445),
+	  once = __webpack_require__(446);
 	
 	var i,
 	    createError = RequestError.create;
@@ -62488,7 +62598,7 @@ var Debugger =
 
 
 /***/ },
-/* 435 */
+/* 438 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -62503,14 +62613,14 @@ var Debugger =
 
 
 /***/ },
-/* 436 */
+/* 439 */
 /***/ function(module, exports) {
 
 	module.exports = window.XMLHttpRequest;
 
 
 /***/ },
-/* 437 */
+/* 440 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -62531,14 +62641,14 @@ var Debugger =
 
 
 /***/ },
-/* 438 */
+/* 441 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
-	var Response = __webpack_require__(439);
-	var extractResponseProps = __webpack_require__(441);
-	var extend = __webpack_require__(442);
+	var Response = __webpack_require__(442);
+	var extractResponseProps = __webpack_require__(444);
+	var extend = __webpack_require__(445);
 	
 	function RequestError(message, props) {
 	  var err = new Error(message);
@@ -62573,13 +62683,13 @@ var Debugger =
 
 
 /***/ },
-/* 439 */
+/* 442 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
-	var Request = __webpack_require__(440);
-	var extractResponseProps = __webpack_require__(441);
+	var Request = __webpack_require__(443);
+	var extractResponseProps = __webpack_require__(444);
 	
 	function Response(props) {
 	  this.request = props.request;
@@ -62603,7 +62713,7 @@ var Debugger =
 
 
 /***/ },
-/* 440 */
+/* 443 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -62652,12 +62762,12 @@ var Debugger =
 
 
 /***/ },
-/* 441 */
+/* 444 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
-	var extend = __webpack_require__(442);
+	var extend = __webpack_require__(445);
 	
 	module.exports = function(req) {
 	  var xhr = req.xhr;
@@ -62691,7 +62801,7 @@ var Debugger =
 
 
 /***/ },
-/* 442 */
+/* 445 */
 /***/ function(module, exports) {
 
 	module.exports = extend
@@ -62714,7 +62824,7 @@ var Debugger =
 
 
 /***/ },
-/* 443 */
+/* 446 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -62733,14 +62843,14 @@ var Debugger =
 
 
 /***/ },
-/* 444 */
+/* 447 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
 	var
-	  urllite = __webpack_require__(445),
-	  once = __webpack_require__(443);
+	  urllite = __webpack_require__(448),
+	  once = __webpack_require__(446);
 	
 	var warningShown = false;
 	
@@ -62807,7 +62917,7 @@ var Debugger =
 
 
 /***/ },
-/* 445 */
+/* 448 */
 /***/ function(module, exports) {
 
 	(function() {
@@ -62878,7 +62988,7 @@ var Debugger =
 
 
 /***/ },
-/* 446 */
+/* 449 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -62889,7 +62999,7 @@ var Debugger =
 	exports.shouldComponentUpdate = shouldComponentUpdate;
 	exports.shouldComponentUpdateContext = shouldComponentUpdateContext;
 	
-	var _shallowEqual = __webpack_require__(447);
+	var _shallowEqual = __webpack_require__(450);
 	
 	var _shallowEqual2 = _interopRequireDefault(_shallowEqual);
 	
@@ -62931,7 +63041,7 @@ var Debugger =
 	exports.default = { shouldComponentUpdate: shouldComponentUpdate, shouldComponentUpdateContext: shouldComponentUpdateContext };
 
 /***/ },
-/* 447 */
+/* 450 */
 /***/ function(module, exports) {
 
 	/**
@@ -63002,47 +63112,14 @@ var Debugger =
 	module.exports = shallowEqual;
 
 /***/ },
-/* 448 */
-/***/ function(module, exports, __webpack_require__) {
+/* 451 */
+/***/ function(module, exports) {
 
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-	
-	// load the styles
-	var content = __webpack_require__(449);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(358)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./Breakpoints.css", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./Breakpoints.css");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
+	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 449 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(357)();
-	// imports
-	
-	
-	// module
-	exports.push([module.id, ".breakpoints-list .breakpoint {\n  font-size: 12px;\n  color: var(--theme-content-color1);\n  margin: 0.5em 0;\n  line-height: 1em;\n  display: flex;\n  flex-flow: row;\n  align-items: center;\n}\n\n.breakpoints-list .breakpoint input {\n  flex: 0 1 content;\n  order: 1;\n}\n\n/*\n.breakpoints-list .breakpoint.paused {\n}\n*/\n\n.breakpoints-list .breakpoint.disabled .breakpoint-label {\n  color: var(--theme-content-color3);\n  transition: color 0.5s linear;\n}\n\n.breakpoints-list .breakpoint:hover {\n  cursor: pointer;\n  background-color: var(--theme-toolbar-background);\n}\n\n.breakpoints-list .breakpoint-label {\n  flex: 1 0 auto;\n  order: 2;\n}\n\n.breakpoints-list .pause-indicator {\n  flex: 0 1 content;\n  order: 3;\n}\n", ""]);
-	
-	// exports
-
-
-/***/ },
-/* 450 */
+/* 452 */,
+/* 453 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
@@ -63055,23 +63132,23 @@ var Debugger =
 	
 	var bindActionCreators = _require2.bindActionCreators;
 	
-	var ImPropTypes = __webpack_require__(376);
+	var ImPropTypes = __webpack_require__(383);
 	// const classnames = require("classnames");
-	var Svg = __webpack_require__(387);
-	var actions = __webpack_require__(360);
+	var Svg = __webpack_require__(390);
+	var actions = __webpack_require__(362);
 	
-	var _require3 = __webpack_require__(348);
+	var _require3 = __webpack_require__(347);
 	
 	var getExpressions = _require3.getExpressions;
 	var getPause = _require3.getPause;
 	
-	var Rep = React.createFactory(__webpack_require__(451));
+	var Rep = React.createFactory(__webpack_require__(454));
 	// const { truncateStr } = require("../utils/utils");
 	var dom = React.DOM;
 	var PropTypes = React.PropTypes;
 	
 	
-	__webpack_require__(481);
+	__webpack_require__(484);
 	
 	var Expressions = React.createClass({
 	  propTypes: {
@@ -63174,25 +63251,26 @@ var Debugger =
 	  expressions: getExpressions(state) }), dispatch => bindActionCreators(actions, dispatch))(Expressions);
 
 /***/ },
-/* 451 */
+/* 454 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
-	var Rep = React.createFactory(__webpack_require__(452).Rep);
-	var Grip = __webpack_require__(478).Grip;
+	var Rep = React.createFactory(__webpack_require__(455).Rep);
+	var Grip = __webpack_require__(481).Grip;
 	
-	__webpack_require__(479);
+	__webpack_require__(482);
 	
 	function renderRep(_ref) {
 	  var object = _ref.object;
+	  var mode = _ref.mode;
 	
-	  return Rep({ object, defaultRep: Grip });
+	  return Rep({ object, defaultRep: Grip, mode });
 	}
 	
 	module.exports = renderRep;
 
 /***/ },
-/* 452 */
+/* 455 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -63208,31 +63286,31 @@ var Debugger =
 	  // Dependencies
 	  const React = __webpack_require__(17);
 	
-	  const { isGrip } = __webpack_require__(453);
+	  const { isGrip } = __webpack_require__(456);
 	
 	  // Load all existing rep templates
-	  const { Undefined } = __webpack_require__(454);
-	  const { Null } = __webpack_require__(456);
-	  const { StringRep } = __webpack_require__(457);
-	  const { Number } = __webpack_require__(458);
-	  const { ArrayRep } = __webpack_require__(459);
-	  const { Obj } = __webpack_require__(461);
+	  const { Undefined } = __webpack_require__(457);
+	  const { Null } = __webpack_require__(459);
+	  const { StringRep } = __webpack_require__(460);
+	  const { Number } = __webpack_require__(461);
+	  const { ArrayRep } = __webpack_require__(462);
+	  const { Obj } = __webpack_require__(464);
 	
 	  // DOM types (grips)
-	  const { Attribute } = __webpack_require__(463);
-	  const { DateTime } = __webpack_require__(465);
-	  const { Document } = __webpack_require__(466);
-	  const { Event } = __webpack_require__(468);
-	  const { Func } = __webpack_require__(469);
-	  const { NamedNodeMap } = __webpack_require__(470);
-	  const { RegExp } = __webpack_require__(471);
-	  const { StyleSheet } = __webpack_require__(472);
-	  const { TextNode } = __webpack_require__(473);
-	  const { Window } = __webpack_require__(474);
-	  const { ObjectWithText } = __webpack_require__(475);
-	  const { ObjectWithURL } = __webpack_require__(476);
-	  const { GripArray } = __webpack_require__(477);
-	  const { Grip } = __webpack_require__(478);
+	  const { Attribute } = __webpack_require__(466);
+	  const { DateTime } = __webpack_require__(468);
+	  const { Document } = __webpack_require__(469);
+	  const { Event } = __webpack_require__(471);
+	  const { Func } = __webpack_require__(472);
+	  const { NamedNodeMap } = __webpack_require__(473);
+	  const { RegExp } = __webpack_require__(474);
+	  const { StyleSheet } = __webpack_require__(475);
+	  const { TextNode } = __webpack_require__(476);
+	  const { Window } = __webpack_require__(477);
+	  const { ObjectWithText } = __webpack_require__(478);
+	  const { ObjectWithURL } = __webpack_require__(479);
+	  const { GripArray } = __webpack_require__(480);
+	  const { Grip } = __webpack_require__(481);
 	
 	  // List of all registered template.
 	  // XXX there should be a way for extensions to register a new
@@ -63271,6 +63349,7 @@ var Debugger =
 	    propTypes: {
 	      object: React.PropTypes.any,
 	      defaultRep: React.PropTypes.object,
+	      mode: React.PropTypes.string,
 	    },
 	
 	    render: function () {
@@ -63325,7 +63404,7 @@ var Debugger =
 
 
 /***/ },
-/* 453 */
+/* 456 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -63412,7 +63491,7 @@ var Debugger =
 
 
 /***/ },
-/* 454 */
+/* 457 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -63427,8 +63506,8 @@ var Debugger =
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	  // Dependencies
 	  const React = __webpack_require__(17);
-	  const { createFactories } = __webpack_require__(453);
-	  const { ObjectBox } = createFactories(__webpack_require__(455));
+	  const { createFactories } = __webpack_require__(456);
+	  const { ObjectBox } = createFactories(__webpack_require__(458));
 	
 	  /**
 	   * Renders undefined value
@@ -63463,7 +63542,7 @@ var Debugger =
 
 
 /***/ },
-/* 455 */
+/* 458 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -63504,7 +63583,7 @@ var Debugger =
 
 
 /***/ },
-/* 456 */
+/* 459 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -63519,8 +63598,8 @@ var Debugger =
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	  // Dependencies
 	  const React = __webpack_require__(17);
-	  const { createFactories } = __webpack_require__(453);
-	  const { ObjectBox } = createFactories(__webpack_require__(455));
+	  const { createFactories } = __webpack_require__(456);
+	  const { ObjectBox } = createFactories(__webpack_require__(458));
 	
 	  /**
 	   * Renders null value
@@ -63555,7 +63634,7 @@ var Debugger =
 
 
 /***/ },
-/* 457 */
+/* 460 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -63570,8 +63649,8 @@ var Debugger =
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	  // Dependencies
 	  const React = __webpack_require__(17);
-	  const { createFactories, cropMultipleLines } = __webpack_require__(453);
-	  const { ObjectBox } = createFactories(__webpack_require__(455));
+	  const { createFactories, cropMultipleLines } = __webpack_require__(456);
+	  const { ObjectBox } = createFactories(__webpack_require__(458));
 	
 	  /**
 	   * Renders a string. String value is enclosed within quotes.
@@ -63612,7 +63691,7 @@ var Debugger =
 
 
 /***/ },
-/* 458 */
+/* 461 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -63627,8 +63706,8 @@ var Debugger =
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	  // Dependencies
 	  const React = __webpack_require__(17);
-	  const { createFactories } = __webpack_require__(453);
-	  const { ObjectBox } = createFactories(__webpack_require__(455));
+	  const { createFactories } = __webpack_require__(456);
+	  const { ObjectBox } = createFactories(__webpack_require__(458));
 	
 	  /**
 	   * Renders a number
@@ -63664,7 +63743,7 @@ var Debugger =
 
 
 /***/ },
-/* 459 */
+/* 462 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -63679,9 +63758,9 @@ var Debugger =
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	  // Dependencies
 	  const React = __webpack_require__(17);
-	  const { createFactories } = __webpack_require__(453);
-	  const { ObjectBox } = createFactories(__webpack_require__(455));
-	  const { Caption } = createFactories(__webpack_require__(460));
+	  const { createFactories } = __webpack_require__(456);
+	  const { ObjectBox } = createFactories(__webpack_require__(458));
+	  const { Caption } = createFactories(__webpack_require__(463));
 	
 	  // Shortcuts
 	  const DOM = React.DOM;
@@ -63837,7 +63916,7 @@ var Debugger =
 	    displayName: "ItemRep",
 	
 	    render: function () {
-	      const { Rep } = createFactories(__webpack_require__(452));
+	      const { Rep } = createFactories(__webpack_require__(455));
 	
 	      let object = this.props.object;
 	      let delim = this.props.delim;
@@ -63879,7 +63958,7 @@ var Debugger =
 
 
 /***/ },
-/* 460 */
+/* 463 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -63916,7 +63995,7 @@ var Debugger =
 
 
 /***/ },
-/* 461 */
+/* 464 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -63930,10 +64009,10 @@ var Debugger =
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	  // Dependencies
 	  const React = __webpack_require__(17);
-	  const { createFactories } = __webpack_require__(453);
-	  const { ObjectBox } = createFactories(__webpack_require__(455));
-	  const { Caption } = createFactories(__webpack_require__(460));
-	  const { PropRep } = createFactories(__webpack_require__(462));
+	  const { createFactories } = __webpack_require__(456);
+	  const { ObjectBox } = createFactories(__webpack_require__(458));
+	  const { Caption } = createFactories(__webpack_require__(463));
+	  const { PropRep } = createFactories(__webpack_require__(465));
 	  // Shortcuts
 	  const { span } = React.DOM;
 	  /**
@@ -64085,7 +64164,7 @@ var Debugger =
 
 
 /***/ },
-/* 462 */
+/* 465 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -64098,7 +64177,7 @@ var Debugger =
 	// Make this available to both AMD and CJS environments
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	  const React = __webpack_require__(17);
-	  const { createFactories } = __webpack_require__(453);
+	  const { createFactories } = __webpack_require__(456);
 	
 	  const { span } = React.DOM;
 	
@@ -64119,7 +64198,7 @@ var Debugger =
 	    },
 	
 	    render: function () {
-	      let { Rep } = createFactories(__webpack_require__(452));
+	      let { Rep } = createFactories(__webpack_require__(455));
 	
 	      return (
 	        span({},
@@ -64148,7 +64227,7 @@ var Debugger =
 
 
 /***/ },
-/* 463 */
+/* 466 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -64164,9 +64243,9 @@ var Debugger =
 	  const React = __webpack_require__(17);
 	
 	  // Reps
-	  const { createFactories, isGrip } = __webpack_require__(453);
-	  const { ObjectLink } = createFactories(__webpack_require__(464));
-	  const { StringRep } = __webpack_require__(457);
+	  const { createFactories, isGrip } = __webpack_require__(456);
+	  const { ObjectLink } = createFactories(__webpack_require__(467));
+	  const { StringRep } = __webpack_require__(460);
 	
 	  // Shortcuts
 	  const { span } = React.DOM;
@@ -64224,7 +64303,7 @@ var Debugger =
 
 
 /***/ },
-/* 464 */
+/* 467 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -64266,7 +64345,7 @@ var Debugger =
 
 
 /***/ },
-/* 465 */
+/* 468 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -64282,8 +64361,8 @@ var Debugger =
 	  const React = __webpack_require__(17);
 	
 	  // Reps
-	  const { createFactories, isGrip } = __webpack_require__(453);
-	  const { ObjectLink } = createFactories(__webpack_require__(464));
+	  const { createFactories, isGrip } = __webpack_require__(456);
+	  const { ObjectLink } = createFactories(__webpack_require__(467));
 	
 	  // Shortcuts
 	  const { span } = React.DOM;
@@ -64333,7 +64412,7 @@ var Debugger =
 
 
 /***/ },
-/* 466 */
+/* 469 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -64349,9 +64428,9 @@ var Debugger =
 	  const React = __webpack_require__(17);
 	
 	  // Reps
-	  const { createFactories, isGrip } = __webpack_require__(453);
-	  const { ObjectBox } = createFactories(__webpack_require__(455));
-	  const { getFileName } = __webpack_require__(467);
+	  const { createFactories, isGrip } = __webpack_require__(456);
+	  const { ObjectBox } = createFactories(__webpack_require__(458));
+	  const { getFileName } = __webpack_require__(470);
 	
 	  // Shortcuts
 	  const { span } = React.DOM;
@@ -64411,7 +64490,7 @@ var Debugger =
 
 
 /***/ },
-/* 467 */
+/* 470 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -64498,7 +64577,7 @@ var Debugger =
 
 
 /***/ },
-/* 468 */
+/* 471 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -64514,8 +64593,8 @@ var Debugger =
 	  const React = __webpack_require__(17);
 	
 	  // Reps
-	  const { createFactories, isGrip } = __webpack_require__(453);
-	  const { ObjectLink } = createFactories(__webpack_require__(464));
+	  const { createFactories, isGrip } = __webpack_require__(456);
+	  const { ObjectLink } = createFactories(__webpack_require__(467));
 	
 	  /**
 	   * Renders DOM event objects.
@@ -64573,7 +64652,7 @@ var Debugger =
 
 
 /***/ },
-/* 469 */
+/* 472 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -64589,8 +64668,8 @@ var Debugger =
 	  const React = __webpack_require__(17);
 	
 	  // Reps
-	  const { createFactories, isGrip, cropString } = __webpack_require__(453);
-	  const { ObjectLink } = createFactories(__webpack_require__(464));
+	  const { createFactories, isGrip, cropString } = __webpack_require__(456);
+	  const { ObjectLink } = createFactories(__webpack_require__(467));
 	
 	  /**
 	   * This component represents a template for Function objects.
@@ -64638,7 +64717,7 @@ var Debugger =
 
 
 /***/ },
-/* 470 */
+/* 473 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -64654,9 +64733,9 @@ var Debugger =
 	  const React = __webpack_require__(17);
 	
 	  // Reps
-	  const { createFactories, isGrip } = __webpack_require__(453);
-	  const { ObjectLink } = createFactories(__webpack_require__(464));
-	  const { Caption } = createFactories(__webpack_require__(460));
+	  const { createFactories, isGrip } = __webpack_require__(456);
+	  const { ObjectLink } = createFactories(__webpack_require__(467));
+	  const { Caption } = createFactories(__webpack_require__(463));
 	
 	  // Shortcuts
 	  const { span } = React.DOM;
@@ -64774,7 +64853,7 @@ var Debugger =
 	    },
 	
 	    render: function () {
-	      const { Rep } = createFactories(__webpack_require__(452));
+	      const { Rep } = createFactories(__webpack_require__(455));
 	
 	      return (
 	        span({},
@@ -64817,7 +64896,7 @@ var Debugger =
 
 
 /***/ },
-/* 471 */
+/* 474 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -64833,8 +64912,8 @@ var Debugger =
 	  const React = __webpack_require__(17);
 	
 	  // Reps
-	  const { createFactories, isGrip } = __webpack_require__(453);
-	  const { ObjectLink } = createFactories(__webpack_require__(464));
+	  const { createFactories, isGrip } = __webpack_require__(456);
+	  const { ObjectLink } = createFactories(__webpack_require__(467));
 	
 	  // Shortcuts
 	  const { span } = React.DOM;
@@ -64892,7 +64971,7 @@ var Debugger =
 
 
 /***/ },
-/* 472 */
+/* 475 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -64908,9 +64987,9 @@ var Debugger =
 	  const React = __webpack_require__(17);
 	
 	  // Reps
-	  const { createFactories, isGrip } = __webpack_require__(453);
-	  const { ObjectBox } = createFactories(__webpack_require__(455));
-	  const { getFileName } = __webpack_require__(467);
+	  const { createFactories, isGrip } = __webpack_require__(456);
+	  const { ObjectBox } = createFactories(__webpack_require__(458));
+	  const { getFileName } = __webpack_require__(470);
 	
 	  // Shortcuts
 	  const DOM = React.DOM;
@@ -64965,7 +65044,7 @@ var Debugger =
 
 
 /***/ },
-/* 473 */
+/* 476 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -64981,8 +65060,8 @@ var Debugger =
 	  const React = __webpack_require__(17);
 	
 	  // Reps
-	  const { createFactories, isGrip, cropMultipleLines } = __webpack_require__(453);
-	  const { ObjectLink } = createFactories(__webpack_require__(464));
+	  const { createFactories, isGrip, cropMultipleLines } = __webpack_require__(456);
+	  const { ObjectLink } = createFactories(__webpack_require__(467));
 	
 	  // Shortcuts
 	  const DOM = React.DOM;
@@ -65052,7 +65131,7 @@ var Debugger =
 
 
 /***/ },
-/* 474 */
+/* 477 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -65068,8 +65147,8 @@ var Debugger =
 	  const React = __webpack_require__(17);
 	
 	  // Reps
-	  const { createFactories, isGrip, cropString } = __webpack_require__(453);
-	  const { ObjectBox } = createFactories(__webpack_require__(455));
+	  const { createFactories, isGrip, cropString } = __webpack_require__(456);
+	  const { ObjectBox } = createFactories(__webpack_require__(458));
 	
 	  // Shortcuts
 	  const DOM = React.DOM;
@@ -65120,7 +65199,7 @@ var Debugger =
 
 
 /***/ },
-/* 475 */
+/* 478 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -65136,8 +65215,8 @@ var Debugger =
 	  const React = __webpack_require__(17);
 	
 	  // Reps
-	  const { createFactories, isGrip } = __webpack_require__(453);
-	  const { ObjectLink } = createFactories(__webpack_require__(464));
+	  const { createFactories, isGrip } = __webpack_require__(456);
+	  const { ObjectLink } = createFactories(__webpack_require__(467));
 	
 	  // Shortcuts
 	  const { span } = React.DOM;
@@ -65191,7 +65270,7 @@ var Debugger =
 
 
 /***/ },
-/* 476 */
+/* 479 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -65207,8 +65286,8 @@ var Debugger =
 	  const React = __webpack_require__(17);
 	
 	  // Reps
-	  const { createFactories, isGrip } = __webpack_require__(453);
-	  const { ObjectLink } = createFactories(__webpack_require__(464));
+	  const { createFactories, isGrip } = __webpack_require__(456);
+	  const { ObjectLink } = createFactories(__webpack_require__(467));
 	
 	  // Shortcuts
 	  const { span } = React.DOM;
@@ -65262,7 +65341,7 @@ var Debugger =
 
 
 /***/ },
-/* 477 */
+/* 480 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -65277,9 +65356,9 @@ var Debugger =
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	  // Dependencies
 	  const React = __webpack_require__(17);
-	  const { createFactories, isGrip } = __webpack_require__(453);
-	  const { ObjectBox } = createFactories(__webpack_require__(455));
-	  const { Caption } = createFactories(__webpack_require__(460));
+	  const { createFactories, isGrip } = __webpack_require__(456);
+	  const { ObjectBox } = createFactories(__webpack_require__(458));
+	  const { Caption } = createFactories(__webpack_require__(463));
 	
 	  // Shortcuts
 	  const { a, span } = React.DOM;
@@ -65411,7 +65490,7 @@ var Debugger =
 	    },
 	
 	    render: function () {
-	      let { Rep } = createFactories(__webpack_require__(452));
+	      let { Rep } = createFactories(__webpack_require__(455));
 	
 	      return (
 	        span({},
@@ -65456,7 +65535,7 @@ var Debugger =
 
 
 /***/ },
-/* 478 */
+/* 481 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -65471,10 +65550,10 @@ var Debugger =
 	  // ReactJS
 	  const React = __webpack_require__(17);
 	  // Dependencies
-	  const { createFactories, isGrip } = __webpack_require__(453);
-	  const { ObjectBox } = createFactories(__webpack_require__(455));
-	  const { Caption } = createFactories(__webpack_require__(460));
-	  const { PropRep } = createFactories(__webpack_require__(462));
+	  const { createFactories, isGrip } = __webpack_require__(456);
+	  const { ObjectBox } = createFactories(__webpack_require__(458));
+	  const { Caption } = createFactories(__webpack_require__(463));
+	  const { PropRep } = createFactories(__webpack_require__(465));
 	  // Shortcuts
 	  const { span } = React.DOM;
 	
@@ -65643,87 +65722,21 @@ var Debugger =
 
 
 /***/ },
-/* 479 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-	
-	// load the styles
-	var content = __webpack_require__(480);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(358)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../../../../../../node_modules/css-loader/index.js!./reps.css", function() {
-				var newContent = require("!!./../../../../../../../../node_modules/css-loader/index.js!./reps.css");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 480 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(357)();
-	// imports
-	
-	
-	// module
-	exports.push([module.id, "/* vim:set ts=2 sw=2 sts=2 et: */\n/* This Source Code Form is subject to the terms of the Mozilla Public\n * License, v. 2.0. If a copy of the MPL was not distributed with this\n * file, You can obtain one at http://mozilla.org/MPL/2.0/. */\n\n.theme-dark,\n.theme-light {\n  --number-color: var(--theme-highlight-green);\n  --string-color: var(--theme-highlight-orange);\n  --null-color: var(--theme-comment);\n  --object-color: var(--theme-body-color);\n  --caption-color: var(--theme-highlight-blue);\n  --location-color: var(--theme-content-color1);\n  --source-link-color: var(--theme-highlight-blue);\n  --node-color: var(--theme-highlight-bluegrey);\n  --reference-color: var(--theme-highlight-purple);\n}\n\n.theme-firebug {\n  --number-color: #000088;\n  --string-color: #FF0000;\n  --null-color: #787878;\n  --object-color: DarkGreen;\n  --caption-color: #444444;\n  --location-color: #555555;\n  --source-link-color: blue;\n  --node-color: rgb(0, 0, 136);\n  --reference-color: rgb(102, 102, 255);\n}\n\n/******************************************************************************/\n\n.objectLink:hover {\n  cursor: pointer;\n  text-decoration: underline;\n}\n\n.inline {\n  display: inline;\n  white-space: normal;\n}\n\n.objectBox-object {\n  font-weight: bold;\n  color: var(--object-color);\n  white-space: pre-wrap;\n}\n\n.objectBox-string,\n.objectBox-text,\n.objectLink-textNode,\n.objectBox-table {\n  white-space: pre-wrap;\n}\n\n.objectBox-number,\n.objectLink-styleRule,\n.objectLink-element,\n.objectLink-textNode,\n.objectBox-array > .length {\n  color: var(--number-color);\n}\n\n.objectBox-string {\n  color: var(--string-color);\n}\n\n.objectLink-function,\n.objectBox-stackTrace,\n.objectLink-profile {\n  color: var(--object-color);\n}\n\n.objectLink-Location {\n  font-style: italic;\n  color: var(--location-color);\n}\n\n.objectBox-null,\n.objectBox-undefined,\n.objectBox-hint,\n.logRowHint {\n  font-style: italic;\n  color: var(--null-color);\n}\n\n.objectLink-sourceLink {\n  position: absolute;\n  right: 4px;\n  top: 2px;\n  padding-left: 8px;\n  font-weight: bold;\n  color: var(--source-link-color);\n}\n\n/******************************************************************************/\n\n.objectLink-event,\n.objectLink-eventLog,\n.objectLink-regexp,\n.objectLink-object,\n.objectLink-Date {\n  font-weight: bold;\n  color: var(--object-color);\n  white-space: pre-wrap;\n}\n\n/******************************************************************************/\n\n.objectLink-object .nodeName,\n.objectLink-NamedNodeMap .nodeName,\n.objectLink-NamedNodeMap .objectEqual,\n.objectLink-NamedNodeMap .arrayLeftBracket,\n.objectLink-NamedNodeMap .arrayRightBracket,\n.objectLink-Attr .attrEqual,\n.objectLink-Attr .attrTitle {\n  color: var(--node-color);\n}\n\n.objectLink-object .nodeName {\n  font-weight: normal;\n}\n\n/******************************************************************************/\n\n.objectLeftBrace,\n.objectRightBrace,\n.arrayLeftBracket,\n.arrayRightBracket {\n  cursor: pointer;\n  font-weight: bold;\n}\n\n.objectLeftBrace,\n.arrayLeftBracket {\n  margin-right: 4px;\n}\n\n.objectRightBrace,\n.arrayRightBracket {\n  margin-left: 4px;\n}\n\n/******************************************************************************/\n/* Cycle reference*/\n\n.objectLink-Reference {\n  font-weight: bold;\n  color: var(--reference-color);\n}\n\n.objectBox-array > .objectTitle {\n  font-weight: bold;\n  color: var(--object-color);\n}\n\n.caption {\n  font-weight: bold;\n  color:  var(--caption-color);\n}\n\n/******************************************************************************/\n/* Themes */\n\n.theme-dark .objectBox-null,\n.theme-dark .objectBox-undefined,\n.theme-light .objectBox-null,\n.theme-light .objectBox-undefined {\n  font-style: normal;\n}\n\n.theme-dark .objectBox-object,\n.theme-light .objectBox-object {\n  font-weight: normal;\n  white-space: pre-wrap;\n}\n\n.theme-dark .caption,\n.theme-light .caption {\n  font-weight: normal;\n}\n", ""]);
-	
-	// exports
-
-
-/***/ },
-/* 481 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-	
-	// load the styles
-	var content = __webpack_require__(482);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(358)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./Expressions.css", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./Expressions.css");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
 /* 482 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
-	exports = module.exports = __webpack_require__(357)();
-	// imports
-	
-	
-	// module
-	exports.push([module.id, ".input-expression {\n  width: 100%;\n  padding: 5px;\n  margin: 0px;\n  border: none;\n  cursor: hand;\n}\n\n.expression-container {\n  border: 1px;\n  padding: 2px;\n  margin: 1px;\n  width: 100%;\n}\n\n.expression-output-container .close-btn {\n  width: 6px;\n  height: 6px;\n  float: right;\n  margin-right: 6px;\n  display: block;\n  cursor: pointer;\n}\n\n.expression-input {\n  color: var(--theme-content-color1);\n  cursor: pointer;\n  max-width: 50%;\n}\n\n.expression-value {\n  overflow-x: scroll;\n  color: var(--theme-content-color2);\n  max-width: 50% !important;\n}\n", ""]);
-	
-	// exports
-
+	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 483 */
+/* 483 */,
+/* 484 */
+/***/ function(module, exports) {
+
+	// removed by extract-text-webpack-plugin
+
+/***/ },
+/* 485 */,
+/* 486 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
@@ -65736,20 +65749,22 @@ var Debugger =
 	
 	var connect = _require2.connect;
 	
-	var ImPropTypes = __webpack_require__(376);
-	var actions = __webpack_require__(360);
+	var ImPropTypes = __webpack_require__(383);
+	var actions = __webpack_require__(362);
 	
-	var _require3 = __webpack_require__(348);
+	var _require3 = __webpack_require__(347);
 	
-	var getPause = _require3.getPause;
+	var getSelectedFrame = _require3.getSelectedFrame;
 	var getLoadedObjects = _require3.getLoadedObjects;
+	var getPause = _require3.getPause;
 	
-	var ObjectInspector = React.createFactory(__webpack_require__(484));
+	var ObjectInspector = React.createFactory(__webpack_require__(487));
 	var dom = React.DOM;
 	var PropTypes = React.PropTypes;
 	
+	var toPairs = __webpack_require__(491);
 	
-	__webpack_require__(488);
+	__webpack_require__(516);
 	
 	function info(text) {
 	  return dom.div({ className: "pane-info" }, text);
@@ -65758,89 +65773,112 @@ var Debugger =
 	// Create the tree nodes representing all the variables and arguments
 	// for the bindings from a scope.
 	function getBindingVariables(bindings, parentName) {
-	  return bindings.get("arguments").map(arg => arg.entrySeq().get(0)).concat(bindings.get("variables").entrySeq()).filter(binding => !binding[1].hasIn(["value", "missingArguments"]) && !binding[1].hasIn(["value", "optimizedOut"])).map(binding => ({
+	  var args = bindings.arguments.map(arg => toPairs(arg)[0]);
+	  var variables = toPairs(bindings.variables);
+	
+	  return args.concat(variables).filter(binding => !(binding[1].value.missingArguments || binding[1].value.optimizedOut)).map(binding => ({
 	    name: binding[0],
 	    path: parentName + "/" + binding[0],
-	    contents: binding[1].toJS()
-	  })).toArray();
+	    contents: binding[1]
+	  }));
 	}
 	
-	function getSpecialVariables(pauseInfo, parentName) {
+	function getSpecialVariables(pauseInfo, path) {
 	  var thrown = pauseInfo.getIn(["why", "frameFinished", "throw"]);
 	  var returned = pauseInfo.getIn(["why", "frameFinished", "return"]);
-	  var this_ = pauseInfo.getIn(["frame", "this"]);
 	  var vars = [];
 	
 	  if (thrown) {
+	    // handle dehydrating excpetion strings and errors.
+	    thrown = thrown.toJS ? thrown.toJS() : thrown;
+	
 	    vars.push({
 	      name: "<exception>",
-	      path: parentName + "/<exception>",
-	      contents: { value: thrown.toJS() }
+	      path: path + "/<exception>",
+	      contents: { value: thrown }
 	    });
 	  }
 	
 	  if (returned) {
 	    vars.push({
 	      name: "<return>",
-	      path: parentName + "/<return>",
+	      path: path + "/<return>",
 	      contents: { value: returned.toJS() }
-	    });
-	  }
-	
-	  if (this_) {
-	    vars.push({
-	      name: "<this>",
-	      path: parentName + "/<this>",
-	      contents: { value: this_.toJS() }
 	    });
 	  }
 	
 	  return vars;
 	}
 	
-	function getScopes(pauseInfo) {
-	  if (!pauseInfo) {
+	function getThisVariable(frame, path) {
+	  var this_ = frame.this;
+	
+	  if (!this_) {
 	    return null;
 	  }
 	
-	  var scope = pauseInfo.getIn(["frame", "scope"]);
-	  if (!scope) {
+	  return {
+	    name: "<this>",
+	    path: path + "/<this>",
+	    contents: { value: this_ }
+	  };
+	}
+	
+	function getScopes(pauseInfo, selectedFrame) {
+	  if (!pauseInfo || !selectedFrame) {
+	    return null;
+	  }
+	
+	  var selectedScope = selectedFrame.scope;
+	
+	  if (!selectedScope) {
 	    return null;
 	  }
 	
 	  var scopes = [];
 	
-	  do {
-	    var type = scope.get("type");
+	  var scope = selectedScope;
+	  var pausedScopeActor = pauseInfo.getIn(["frame", "scope"]).get("actor");
 	
+	  do {
+	    var type = scope.type;
+	    var key = scope.actor;
 	    if (type === "function" || type === "block") {
-	      var bindings = scope.get("bindings");
+	      var bindings = scope.bindings;
 	      var title = void 0;
 	      if (type === "function") {
-	        title = scope.getIn(["function", "displayName"]) || "(anonymous)";
+	        title = scope.function.displayName || "(anonymous)";
 	      } else {
 	        title = "Block";
 	      }
 	
 	      var vars = getBindingVariables(bindings, title);
 	
-	      // Innermost
-	      if (scope === pauseInfo.getIn(["frame", "scope"])) {
-	        vars = vars.concat(getSpecialVariables(pauseInfo, title));
+	      // show exception, return, and this variables in innermost scope
+	      if (scope.actor === pausedScopeActor) {
+	        vars = vars.concat(getSpecialVariables(pauseInfo, key));
 	      }
 	
-	      if (vars.length) {
+	      if (scope.actor === selectedScope.actor) {
+	        var this_ = getThisVariable(selectedFrame, key);
+	
+	        if (this_) {
+	          vars.push(this_);
+	        }
+	      }
+	
+	      if (vars && vars.length) {
 	        vars.sort((a, b) => a.name.localeCompare(b.name));
-	        scopes.push({ name: title, path: title, contents: vars });
+	        scopes.push({ name: title, path: key, contents: vars });
 	      }
 	    } else if (type === "object") {
 	      scopes.push({
-	        name: scope.getIn(["object", "class"]),
-	        path: scope.getIn(["object", "class"]),
-	        contents: { value: scope.get("object").toJS() }
+	        name: scope.object.class,
+	        path: key,
+	        contents: { value: scope.object }
 	      });
 	    }
-	  } while (scope = scope.get("parent")); // eslint-disable-line no-cond-assign
+	  } while (scope = scope.parent); // eslint-disable-line no-cond-assign
 	
 	  return scopes;
 	}
@@ -65849,26 +65887,40 @@ var Debugger =
 	  propTypes: {
 	    pauseInfo: ImPropTypes.map,
 	    loadedObjects: ImPropTypes.map,
-	    loadObjectProperties: PropTypes.func
+	    loadObjectProperties: PropTypes.func,
+	    selectedFrame: PropTypes.object
 	  },
 	
 	  displayName: "Scopes",
 	
 	  getInitialState() {
-	    return { scopes: getScopes(this.props.pauseInfo) };
+	    var _props = this.props;
+	    var pauseInfo = _props.pauseInfo;
+	    var selectedFrame = _props.selectedFrame;
+	
+	    return { scopes: getScopes(pauseInfo, selectedFrame) };
 	  },
 	
 	  componentWillReceiveProps(nextProps) {
-	    if (this.props.pauseInfo !== nextProps.pauseInfo) {
-	      this.setState({ scopes: getScopes(nextProps.pauseInfo) });
+	    var _props2 = this.props;
+	    var pauseInfo = _props2.pauseInfo;
+	    var selectedFrame = _props2.selectedFrame;
+	
+	    var pauseInfoChanged = pauseInfo !== nextProps.pauseInfo;
+	    var selectedFrameChange = selectedFrame !== nextProps.selectedFrame;
+	
+	    if (pauseInfoChanged || selectedFrameChange) {
+	      this.setState({
+	        scopes: getScopes(nextProps.pauseInfo, nextProps.selectedFrame)
+	      });
 	    }
 	  },
 	
 	  render() {
-	    var _props = this.props;
-	    var pauseInfo = _props.pauseInfo;
-	    var loadObjectProperties = _props.loadObjectProperties;
-	    var loadedObjects = _props.loadedObjects;
+	    var _props3 = this.props;
+	    var pauseInfo = _props3.pauseInfo;
+	    var loadObjectProperties = _props3.loadObjectProperties;
+	    var loadedObjects = _props3.loadedObjects;
 	    var scopes = this.state.scopes;
 	
 	
@@ -65885,18 +65937,21 @@ var Debugger =
 	  }
 	});
 	
-	module.exports = connect(state => ({ pauseInfo: getPause(state),
-	  loadedObjects: getLoadedObjects(state) }), dispatch => bindActionCreators(actions, dispatch))(Scopes);
+	module.exports = connect(state => ({
+	  pauseInfo: getPause(state),
+	  selectedFrame: getSelectedFrame(state),
+	  loadedObjects: getLoadedObjects(state)
+	}), dispatch => bindActionCreators(actions, dispatch))(Scopes);
 
 /***/ },
-/* 484 */
+/* 487 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
-	var classnames = __webpack_require__(379);
-	var ManagedTree = React.createFactory(__webpack_require__(383));
-	var Arrow = React.createFactory(__webpack_require__(485));
-	var Rep = __webpack_require__(451);
+	var classnames = __webpack_require__(355);
+	var ManagedTree = React.createFactory(__webpack_require__(386));
+	var Arrow = React.createFactory(__webpack_require__(488));
+	var Rep = __webpack_require__(454);
 	var dom = React.DOM;
 	var PropTypes = React.PropTypes;
 	
@@ -66027,7 +66082,7 @@ var Debugger =
 	    var objectValue = void 0;
 	    if (nodeHasProperties(item) || nodeIsPrimitive(item)) {
 	      var object = item.contents.value;
-	      objectValue = Rep({ object });
+	      objectValue = Rep({ object, mode: "tiny" });
 	    }
 	
 	    return dom.div({ className: classnames("node", { focused }),
@@ -66078,108 +66133,826 @@ var Debugger =
 	module.exports = ObjectInspector;
 
 /***/ },
-/* 485 */
+/* 488 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
-	var InlineSVG = __webpack_require__(389);
+	var InlineSVG = __webpack_require__(392);
 	var dom = React.DOM;
 	
-	__webpack_require__(486);
+	__webpack_require__(489);
 	
 	// This is inline because it's much faster. We need to revisit how we
 	// load SVGs, at least for components that render them several times.
 	var Arrow = props => {
 	  var className = "arrow " + (props.className || "");
 	  return dom.span(Object.assign({}, props, { className }), React.createElement(InlineSVG, {
-	    src: __webpack_require__(391)
+	    src: __webpack_require__(394)
 	  }));
 	};
 	
 	module.exports = Arrow;
 
 /***/ },
-/* 486 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-	
-	// load the styles
-	var content = __webpack_require__(487);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(358)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../../node_modules/css-loader/index.js!./Arrow.css", function() {
-				var newContent = require("!!./../../../../node_modules/css-loader/index.js!./Arrow.css");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 487 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(357)();
-	// imports
-	
-	
-	// module
-	exports.push([module.id, ".arrow svg {\n  fill: var(--theme-splitter-color);\n  margin-right: 5px;\n  margin-top: 3px;\n  transform: rotate(-90deg);\n  transition: transform 0.25s ease;\n  width: 10px;\n}\n\n.arrow.expanded svg {\n  transform: rotate(0deg);\n}\n\n.arrow.hidden {\n  visibility: hidden;\n}\n", ""]);
-	
-	// exports
-
-
-/***/ },
-/* 488 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-	
-	// load the styles
-	var content = __webpack_require__(489);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(358)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./Scopes.css", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./Scopes.css");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
 /* 489 */
+/***/ function(module, exports) {
+
+	// removed by extract-text-webpack-plugin
+
+/***/ },
+/* 490 */,
+/* 491 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(357)();
-	// imports
+	var createToPairs = __webpack_require__(492),
+	    keys = __webpack_require__(502);
 	
+	/**
+	 * Creates an array of own enumerable string keyed-value pairs for `object`
+	 * which can be consumed by `_.fromPairs`. If `object` is a map or set, its
+	 * entries are returned.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 4.0.0
+	 * @alias entries
+	 * @category Object
+	 * @param {Object} object The object to query.
+	 * @returns {Array} Returns the key-value pairs.
+	 * @example
+	 *
+	 * function Foo() {
+	 *   this.a = 1;
+	 *   this.b = 2;
+	 * }
+	 *
+	 * Foo.prototype.c = 3;
+	 *
+	 * _.toPairs(new Foo);
+	 * // => [['a', 1], ['b', 2]] (iteration order is not guaranteed)
+	 */
+	var toPairs = createToPairs(keys);
 	
-	// module
-	exports.push([module.id, "\n.object-label {\n  color: var(--theme-highlight-blue);\n}\n\n.objectBox-object,\n.objectBox-string,\n.objectBox-text,\n.objectBox-table,\n.objectLink-textNode,\n.objectLink-event,\n.objectLink-eventLog,\n.objectLink-regexp,\n.objectLink-object,\n.objectLink-Date,\n.theme-dark .objectBox-object,\n.theme-light .objectBox-object {\n  white-space: nowrap;\n}\n\n.scopes-list .tree-node {\n  overflow: hidden;\n}\n", ""]);
-	
-	// exports
+	module.exports = toPairs;
 
 
 /***/ },
-/* 490 */
+/* 492 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var baseToPairs = __webpack_require__(493),
+	    getTag = __webpack_require__(495),
+	    mapToArray = __webpack_require__(500),
+	    setToPairs = __webpack_require__(501);
+	
+	/** `Object#toString` result references. */
+	var mapTag = '[object Map]',
+	    setTag = '[object Set]';
+	
+	/**
+	 * Creates a `_.toPairs` or `_.toPairsIn` function.
+	 *
+	 * @private
+	 * @param {Function} keysFunc The function to get the keys of a given object.
+	 * @returns {Function} Returns the new pairs function.
+	 */
+	function createToPairs(keysFunc) {
+	  return function(object) {
+	    var tag = getTag(object);
+	    if (tag == mapTag) {
+	      return mapToArray(object);
+	    }
+	    if (tag == setTag) {
+	      return setToPairs(object);
+	    }
+	    return baseToPairs(object, keysFunc(object));
+	  };
+	}
+	
+	module.exports = createToPairs;
+
+
+/***/ },
+/* 493 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var arrayMap = __webpack_require__(494);
+	
+	/**
+	 * The base implementation of `_.toPairs` and `_.toPairsIn` which creates an array
+	 * of key-value pairs for `object` corresponding to the property names of `props`.
+	 *
+	 * @private
+	 * @param {Object} object The object to query.
+	 * @param {Array} props The property names to get values for.
+	 * @returns {Object} Returns the key-value pairs.
+	 */
+	function baseToPairs(object, props) {
+	  return arrayMap(props, function(key) {
+	    return [key, object[key]];
+	  });
+	}
+	
+	module.exports = baseToPairs;
+
+
+/***/ },
+/* 494 */
+/***/ function(module, exports) {
+
+	/**
+	 * A specialized version of `_.map` for arrays without support for iteratee
+	 * shorthands.
+	 *
+	 * @private
+	 * @param {Array} [array] The array to iterate over.
+	 * @param {Function} iteratee The function invoked per iteration.
+	 * @returns {Array} Returns the new mapped array.
+	 */
+	function arrayMap(array, iteratee) {
+	  var index = -1,
+	      length = array ? array.length : 0,
+	      result = Array(length);
+	
+	  while (++index < length) {
+	    result[index] = iteratee(array[index], index, array);
+	  }
+	  return result;
+	}
+	
+	module.exports = arrayMap;
+
+
+/***/ },
+/* 495 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var DataView = __webpack_require__(496),
+	    Map = __webpack_require__(231),
+	    Promise = __webpack_require__(497),
+	    Set = __webpack_require__(498),
+	    WeakMap = __webpack_require__(499),
+	    toSource = __webpack_require__(217);
+	
+	/** `Object#toString` result references. */
+	var mapTag = '[object Map]',
+	    objectTag = '[object Object]',
+	    promiseTag = '[object Promise]',
+	    setTag = '[object Set]',
+	    weakMapTag = '[object WeakMap]';
+	
+	var dataViewTag = '[object DataView]';
+	
+	/** Used for built-in method references. */
+	var objectProto = Object.prototype;
+	
+	/**
+	 * Used to resolve the
+	 * [`toStringTag`](http://ecma-international.org/ecma-262/6.0/#sec-object.prototype.tostring)
+	 * of values.
+	 */
+	var objectToString = objectProto.toString;
+	
+	/** Used to detect maps, sets, and weakmaps. */
+	var dataViewCtorString = toSource(DataView),
+	    mapCtorString = toSource(Map),
+	    promiseCtorString = toSource(Promise),
+	    setCtorString = toSource(Set),
+	    weakMapCtorString = toSource(WeakMap);
+	
+	/**
+	 * Gets the `toStringTag` of `value`.
+	 *
+	 * @private
+	 * @param {*} value The value to query.
+	 * @returns {string} Returns the `toStringTag`.
+	 */
+	function getTag(value) {
+	  return objectToString.call(value);
+	}
+	
+	// Fallback for data views, maps, sets, and weak maps in IE 11,
+	// for data views in Edge, and promises in Node.js.
+	if ((DataView && getTag(new DataView(new ArrayBuffer(1))) != dataViewTag) ||
+	    (Map && getTag(new Map) != mapTag) ||
+	    (Promise && getTag(Promise.resolve()) != promiseTag) ||
+	    (Set && getTag(new Set) != setTag) ||
+	    (WeakMap && getTag(new WeakMap) != weakMapTag)) {
+	  getTag = function(value) {
+	    var result = objectToString.call(value),
+	        Ctor = result == objectTag ? value.constructor : undefined,
+	        ctorString = Ctor ? toSource(Ctor) : undefined;
+	
+	    if (ctorString) {
+	      switch (ctorString) {
+	        case dataViewCtorString: return dataViewTag;
+	        case mapCtorString: return mapTag;
+	        case promiseCtorString: return promiseTag;
+	        case setCtorString: return setTag;
+	        case weakMapCtorString: return weakMapTag;
+	      }
+	    }
+	    return result;
+	  };
+	}
+	
+	module.exports = getTag;
+
+
+/***/ },
+/* 496 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var getNative = __webpack_require__(209),
+	    root = __webpack_require__(215);
+	
+	/* Built-in method references that are verified to be native. */
+	var DataView = getNative(root, 'DataView');
+	
+	module.exports = DataView;
+
+
+/***/ },
+/* 497 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var getNative = __webpack_require__(209),
+	    root = __webpack_require__(215);
+	
+	/* Built-in method references that are verified to be native. */
+	var Promise = getNative(root, 'Promise');
+	
+	module.exports = Promise;
+
+
+/***/ },
+/* 498 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var getNative = __webpack_require__(209),
+	    root = __webpack_require__(215);
+	
+	/* Built-in method references that are verified to be native. */
+	var Set = getNative(root, 'Set');
+	
+	module.exports = Set;
+
+
+/***/ },
+/* 499 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var getNative = __webpack_require__(209),
+	    root = __webpack_require__(215);
+	
+	/* Built-in method references that are verified to be native. */
+	var WeakMap = getNative(root, 'WeakMap');
+	
+	module.exports = WeakMap;
+
+
+/***/ },
+/* 500 */
+/***/ function(module, exports) {
+
+	/**
+	 * Converts `map` to its key-value pairs.
+	 *
+	 * @private
+	 * @param {Object} map The map to convert.
+	 * @returns {Array} Returns the key-value pairs.
+	 */
+	function mapToArray(map) {
+	  var index = -1,
+	      result = Array(map.size);
+	
+	  map.forEach(function(value, key) {
+	    result[++index] = [key, value];
+	  });
+	  return result;
+	}
+	
+	module.exports = mapToArray;
+
+
+/***/ },
+/* 501 */
+/***/ function(module, exports) {
+
+	/**
+	 * Converts `set` to its value-value pairs.
+	 *
+	 * @private
+	 * @param {Object} set The set to convert.
+	 * @returns {Array} Returns the value-value pairs.
+	 */
+	function setToPairs(set) {
+	  var index = -1,
+	      result = Array(set.size);
+	
+	  set.forEach(function(value) {
+	    result[++index] = [value, value];
+	  });
+	  return result;
+	}
+	
+	module.exports = setToPairs;
+
+
+/***/ },
+/* 502 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var baseHas = __webpack_require__(503),
+	    baseKeys = __webpack_require__(504),
+	    indexKeys = __webpack_require__(505),
+	    isArrayLike = __webpack_require__(509),
+	    isIndex = __webpack_require__(514),
+	    isPrototype = __webpack_require__(515);
+	
+	/**
+	 * Creates an array of the own enumerable property names of `object`.
+	 *
+	 * **Note:** Non-object values are coerced to objects. See the
+	 * [ES spec](http://ecma-international.org/ecma-262/6.0/#sec-object.keys)
+	 * for more details.
+	 *
+	 * @static
+	 * @since 0.1.0
+	 * @memberOf _
+	 * @category Object
+	 * @param {Object} object The object to query.
+	 * @returns {Array} Returns the array of property names.
+	 * @example
+	 *
+	 * function Foo() {
+	 *   this.a = 1;
+	 *   this.b = 2;
+	 * }
+	 *
+	 * Foo.prototype.c = 3;
+	 *
+	 * _.keys(new Foo);
+	 * // => ['a', 'b'] (iteration order is not guaranteed)
+	 *
+	 * _.keys('hi');
+	 * // => ['0', '1']
+	 */
+	function keys(object) {
+	  var isProto = isPrototype(object);
+	  if (!(isProto || isArrayLike(object))) {
+	    return baseKeys(object);
+	  }
+	  var indexes = indexKeys(object),
+	      skipIndexes = !!indexes,
+	      result = indexes || [],
+	      length = result.length;
+	
+	  for (var key in object) {
+	    if (baseHas(object, key) &&
+	        !(skipIndexes && (key == 'length' || isIndex(key, length))) &&
+	        !(isProto && key == 'constructor')) {
+	      result.push(key);
+	    }
+	  }
+	  return result;
+	}
+	
+	module.exports = keys;
+
+
+/***/ },
+/* 503 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var getPrototype = __webpack_require__(5);
+	
+	/** Used for built-in method references. */
+	var objectProto = Object.prototype;
+	
+	/** Used to check objects for own properties. */
+	var hasOwnProperty = objectProto.hasOwnProperty;
+	
+	/**
+	 * The base implementation of `_.has` without support for deep paths.
+	 *
+	 * @private
+	 * @param {Object} [object] The object to query.
+	 * @param {Array|string} key The key to check.
+	 * @returns {boolean} Returns `true` if `key` exists, else `false`.
+	 */
+	function baseHas(object, key) {
+	  // Avoid a bug in IE 10-11 where objects with a [[Prototype]] of `null`,
+	  // that are composed entirely of index properties, return `false` for
+	  // `hasOwnProperty` checks of them.
+	  return object != null &&
+	    (hasOwnProperty.call(object, key) ||
+	      (typeof object == 'object' && key in object && getPrototype(object) === null));
+	}
+	
+	module.exports = baseHas;
+
+
+/***/ },
+/* 504 */
+/***/ function(module, exports) {
+
+	/* Built-in method references for those with the same name as other `lodash` methods. */
+	var nativeKeys = Object.keys;
+	
+	/**
+	 * The base implementation of `_.keys` which doesn't skip the constructor
+	 * property of prototypes or treat sparse arrays as dense.
+	 *
+	 * @private
+	 * @param {Object} object The object to query.
+	 * @returns {Array} Returns the array of property names.
+	 */
+	function baseKeys(object) {
+	  return nativeKeys(Object(object));
+	}
+	
+	module.exports = baseKeys;
+
+
+/***/ },
+/* 505 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var baseTimes = __webpack_require__(506),
+	    isArguments = __webpack_require__(507),
+	    isArray = __webpack_require__(201),
+	    isLength = __webpack_require__(512),
+	    isString = __webpack_require__(513);
+	
+	/**
+	 * Creates an array of index keys for `object` values of arrays,
+	 * `arguments` objects, and strings, otherwise `null` is returned.
+	 *
+	 * @private
+	 * @param {Object} object The object to query.
+	 * @returns {Array|null} Returns index keys, else `null`.
+	 */
+	function indexKeys(object) {
+	  var length = object ? object.length : undefined;
+	  if (isLength(length) &&
+	      (isArray(object) || isString(object) || isArguments(object))) {
+	    return baseTimes(length, String);
+	  }
+	  return null;
+	}
+	
+	module.exports = indexKeys;
+
+
+/***/ },
+/* 506 */
+/***/ function(module, exports) {
+
+	/**
+	 * The base implementation of `_.times` without support for iteratee shorthands
+	 * or max array length checks.
+	 *
+	 * @private
+	 * @param {number} n The number of times to invoke `iteratee`.
+	 * @param {Function} iteratee The function invoked per iteration.
+	 * @returns {Array} Returns the array of results.
+	 */
+	function baseTimes(n, iteratee) {
+	  var index = -1,
+	      result = Array(n);
+	
+	  while (++index < n) {
+	    result[index] = iteratee(index);
+	  }
+	  return result;
+	}
+	
+	module.exports = baseTimes;
+
+
+/***/ },
+/* 507 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var isArrayLikeObject = __webpack_require__(508);
+	
+	/** `Object#toString` result references. */
+	var argsTag = '[object Arguments]';
+	
+	/** Used for built-in method references. */
+	var objectProto = Object.prototype;
+	
+	/** Used to check objects for own properties. */
+	var hasOwnProperty = objectProto.hasOwnProperty;
+	
+	/**
+	 * Used to resolve the
+	 * [`toStringTag`](http://ecma-international.org/ecma-262/6.0/#sec-object.prototype.tostring)
+	 * of values.
+	 */
+	var objectToString = objectProto.toString;
+	
+	/** Built-in value references. */
+	var propertyIsEnumerable = objectProto.propertyIsEnumerable;
+	
+	/**
+	 * Checks if `value` is likely an `arguments` object.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 0.1.0
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is correctly classified,
+	 *  else `false`.
+	 * @example
+	 *
+	 * _.isArguments(function() { return arguments; }());
+	 * // => true
+	 *
+	 * _.isArguments([1, 2, 3]);
+	 * // => false
+	 */
+	function isArguments(value) {
+	  // Safari 8.1 incorrectly makes `arguments.callee` enumerable in strict mode.
+	  return isArrayLikeObject(value) && hasOwnProperty.call(value, 'callee') &&
+	    (!propertyIsEnumerable.call(value, 'callee') || objectToString.call(value) == argsTag);
+	}
+	
+	module.exports = isArguments;
+
+
+/***/ },
+/* 508 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var isArrayLike = __webpack_require__(509),
+	    isObjectLike = __webpack_require__(7);
+	
+	/**
+	 * This method is like `_.isArrayLike` except that it also checks if `value`
+	 * is an object.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 4.0.0
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is an array-like object,
+	 *  else `false`.
+	 * @example
+	 *
+	 * _.isArrayLikeObject([1, 2, 3]);
+	 * // => true
+	 *
+	 * _.isArrayLikeObject(document.body.children);
+	 * // => true
+	 *
+	 * _.isArrayLikeObject('abc');
+	 * // => false
+	 *
+	 * _.isArrayLikeObject(_.noop);
+	 * // => false
+	 */
+	function isArrayLikeObject(value) {
+	  return isObjectLike(value) && isArrayLike(value);
+	}
+	
+	module.exports = isArrayLikeObject;
+
+
+/***/ },
+/* 509 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var getLength = __webpack_require__(510),
+	    isFunction = __webpack_require__(211),
+	    isLength = __webpack_require__(512);
+	
+	/**
+	 * Checks if `value` is array-like. A value is considered array-like if it's
+	 * not a function and has a `value.length` that's an integer greater than or
+	 * equal to `0` and less than or equal to `Number.MAX_SAFE_INTEGER`.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 4.0.0
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
+	 * @example
+	 *
+	 * _.isArrayLike([1, 2, 3]);
+	 * // => true
+	 *
+	 * _.isArrayLike(document.body.children);
+	 * // => true
+	 *
+	 * _.isArrayLike('abc');
+	 * // => true
+	 *
+	 * _.isArrayLike(_.noop);
+	 * // => false
+	 */
+	function isArrayLike(value) {
+	  return value != null && isLength(getLength(value)) && !isFunction(value);
+	}
+	
+	module.exports = isArrayLike;
+
+
+/***/ },
+/* 510 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var baseProperty = __webpack_require__(511);
+	
+	/**
+	 * Gets the "length" property value of `object`.
+	 *
+	 * **Note:** This function is used to avoid a
+	 * [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792) that affects
+	 * Safari on at least iOS 8.1-8.3 ARM64.
+	 *
+	 * @private
+	 * @param {Object} object The object to query.
+	 * @returns {*} Returns the "length" value.
+	 */
+	var getLength = baseProperty('length');
+	
+	module.exports = getLength;
+
+
+/***/ },
+/* 511 */
+/***/ function(module, exports) {
+
+	/**
+	 * The base implementation of `_.property` without support for deep paths.
+	 *
+	 * @private
+	 * @param {string} key The key of the property to get.
+	 * @returns {Function} Returns the new accessor function.
+	 */
+	function baseProperty(key) {
+	  return function(object) {
+	    return object == null ? undefined : object[key];
+	  };
+	}
+	
+	module.exports = baseProperty;
+
+
+/***/ },
+/* 512 */
+/***/ function(module, exports) {
+
+	/** Used as references for various `Number` constants. */
+	var MAX_SAFE_INTEGER = 9007199254740991;
+	
+	/**
+	 * Checks if `value` is a valid array-like length.
+	 *
+	 * **Note:** This function is loosely based on
+	 * [`ToLength`](http://ecma-international.org/ecma-262/6.0/#sec-tolength).
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 4.0.0
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is a valid length,
+	 *  else `false`.
+	 * @example
+	 *
+	 * _.isLength(3);
+	 * // => true
+	 *
+	 * _.isLength(Number.MIN_VALUE);
+	 * // => false
+	 *
+	 * _.isLength(Infinity);
+	 * // => false
+	 *
+	 * _.isLength('3');
+	 * // => false
+	 */
+	function isLength(value) {
+	  return typeof value == 'number' &&
+	    value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
+	}
+	
+	module.exports = isLength;
+
+
+/***/ },
+/* 513 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var isArray = __webpack_require__(201),
+	    isObjectLike = __webpack_require__(7);
+	
+	/** `Object#toString` result references. */
+	var stringTag = '[object String]';
+	
+	/** Used for built-in method references. */
+	var objectProto = Object.prototype;
+	
+	/**
+	 * Used to resolve the
+	 * [`toStringTag`](http://ecma-international.org/ecma-262/6.0/#sec-object.prototype.tostring)
+	 * of values.
+	 */
+	var objectToString = objectProto.toString;
+	
+	/**
+	 * Checks if `value` is classified as a `String` primitive or object.
+	 *
+	 * @static
+	 * @since 0.1.0
+	 * @memberOf _
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is correctly classified,
+	 *  else `false`.
+	 * @example
+	 *
+	 * _.isString('abc');
+	 * // => true
+	 *
+	 * _.isString(1);
+	 * // => false
+	 */
+	function isString(value) {
+	  return typeof value == 'string' ||
+	    (!isArray(value) && isObjectLike(value) && objectToString.call(value) == stringTag);
+	}
+	
+	module.exports = isString;
+
+
+/***/ },
+/* 514 */
+/***/ function(module, exports) {
+
+	/** Used as references for various `Number` constants. */
+	var MAX_SAFE_INTEGER = 9007199254740991;
+	
+	/** Used to detect unsigned integer values. */
+	var reIsUint = /^(?:0|[1-9]\d*)$/;
+	
+	/**
+	 * Checks if `value` is a valid array-like index.
+	 *
+	 * @private
+	 * @param {*} value The value to check.
+	 * @param {number} [length=MAX_SAFE_INTEGER] The upper bounds of a valid index.
+	 * @returns {boolean} Returns `true` if `value` is a valid index, else `false`.
+	 */
+	function isIndex(value, length) {
+	  length = length == null ? MAX_SAFE_INTEGER : length;
+	  return !!length &&
+	    (typeof value == 'number' || reIsUint.test(value)) &&
+	    (value > -1 && value % 1 == 0 && value < length);
+	}
+	
+	module.exports = isIndex;
+
+
+/***/ },
+/* 515 */
+/***/ function(module, exports) {
+
+	/** Used for built-in method references. */
+	var objectProto = Object.prototype;
+	
+	/**
+	 * Checks if `value` is likely a prototype object.
+	 *
+	 * @private
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is a prototype, else `false`.
+	 */
+	function isPrototype(value) {
+	  var Ctor = value && value.constructor,
+	      proto = (typeof Ctor == 'function' && Ctor.prototype) || objectProto;
+	
+	  return value === proto;
+	}
+	
+	module.exports = isPrototype;
+
+
+/***/ },
+/* 516 */
+/***/ function(module, exports) {
+
+	// removed by extract-text-webpack-plugin
+
+/***/ },
+/* 517 */,
+/* 518 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
@@ -66194,17 +66967,17 @@ var Debugger =
 	
 	var connect = _require2.connect;
 	
-	var actions = __webpack_require__(360);
+	var actions = __webpack_require__(362);
 	
 	var _require3 = __webpack_require__(324);
 	
 	var endTruncateStr = _require3.endTruncateStr;
 	
-	var _require4 = __webpack_require__(354);
+	var _require4 = __webpack_require__(353);
 	
 	var basename = _require4.basename;
 	
-	var _require5 = __webpack_require__(348);
+	var _require5 = __webpack_require__(347);
 	
 	var getFrames = _require5.getFrames;
 	var getSelectedFrame = _require5.getSelectedFrame;
@@ -66212,7 +66985,7 @@ var Debugger =
 	
 	
 	if (typeof window == "object") {
-	  __webpack_require__(491);
+	  __webpack_require__(519);
 	}
 	
 	function renderFrameTitle(frame) {
@@ -66244,7 +67017,7 @@ var Debugger =
 	}
 	
 	module.exports = connect(state => ({
-	  frames: getFrames(state).map(frame => {
+	  frames: getFrames(state).filter(frame => getSource(state, frame.location.sourceId)).map(frame => {
 	    return Object.assign({}, frame, {
 	      source: getSource(state, frame.location.sourceId).toJS()
 	    });
@@ -66253,47 +67026,14 @@ var Debugger =
 	}), dispatch => bindActionCreators(actions, dispatch))(Frames);
 
 /***/ },
-/* 491 */
-/***/ function(module, exports, __webpack_require__) {
+/* 519 */
+/***/ function(module, exports) {
 
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-	
-	// load the styles
-	var content = __webpack_require__(492);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(358)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./Frames.css", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./Frames.css");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
+	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 492 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(357)();
-	// imports
-	
-	
-	// module
-	exports.push([module.id, "\n.frames ul {\n  list-style: none;\n  margin: 0;\n  padding: 0;\n}\n\n.frames ul li {\n  cursor: pointer;\n  padding: 10px;\n  clear: both;\n  overflow: hidden;\n}\n\n.frames ul li:nth-of-type(2n) {\n  background-color: #f9f9f9;\n}\n\n.frames .location {\n  float: right;\n  color: #666666;\n  font-weight: lighter;\n}\n\n.frames .title {\n  float: left;\n  text-overflow: ellipsis;\n  overflow: hidden;\n  margin-right: 1em;\n}\n\n.frames ul li.selected,\n.frames ul li.selected .location {\n  background-color: var(--theme-selection-background);\n  color: white;\n}\n", ""]);
-	
-	// exports
-
-
-/***/ },
-/* 493 */
+/* 520 */,
+/* 521 */
 /***/ function(module, exports, __webpack_require__) {
 
 	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
@@ -66303,9 +67043,9 @@ var Debugger =
 	var PropTypes = React.PropTypes;
 	var div = dom.div;
 	
-	var Svg = __webpack_require__(387);
+	var Svg = __webpack_require__(390);
 	
-	__webpack_require__(494);
+	__webpack_require__(522);
 	
 	var Accordion = React.createClass({
 	  propTypes: {
@@ -66355,87 +67095,21 @@ var Debugger =
 	module.exports = Accordion;
 
 /***/ },
-/* 494 */
-/***/ function(module, exports, __webpack_require__) {
+/* 522 */
+/***/ function(module, exports) {
 
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-	
-	// load the styles
-	var content = __webpack_require__(495);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(358)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./Accordion.css", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./Accordion.css");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
+	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 495 */
-/***/ function(module, exports, __webpack_require__) {
+/* 523 */,
+/* 524 */
+/***/ function(module, exports) {
 
-	exports = module.exports = __webpack_require__(357)();
-	// imports
-	
-	
-	// module
-	exports.push([module.id, ".accordion {\n  background-color: var(--theme-body-background);\n  width: 100%;\n}\n\n.accordion ._header {\n  background-color: var(--theme-toolbar-background);\n  border-bottom: 1px solid #d0d0d0;\n  cursor: pointer;\n  font-size: 12px;\n  padding: 5px;\n  transition: all 0.25s ease;\n  width: 100%;\n\n  -webkit-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  -o-user-select: none;\n  user-select: none;\n}\n\n.accordion ._header:hover {\n  background-color: var(--theme-selection-color);\n}\n\n.accordion ._header:hover svg {\n  fill: var(--theme-gray-darker);\n}\n\n.accordion ._content {\n  border-bottom: 1px solid #d0d0d0;\n}\n", ""]);
-	
-	// exports
-
+	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 496 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-	
-	// load the styles
-	var content = __webpack_require__(497);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(358)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./RightSidebar.css", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./RightSidebar.css");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 497 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(357)();
-	// imports
-	
-	
-	// module
-	exports.push([module.id, ".right-sidebar {\n  flex: 1;\n  white-space: nowrap;\n}\n\n.command-bar {\n  border-bottom: 1px solid #cccccc;\n  height: 30px;\n  padding: 8px 5px 10px 10px;\n  overflow: hidden;\n}\n\n.command-bar > span {\n  cursor: pointer;\n  margin-right: 0.7em;\n  width: 1em;\n  height: 1.1em;\n  display: inline-block;\n  text-align: center;\n  transition: opacity 200ms;\n}\n\n.command-bar > span.disabled {\n  opacity: 0.3;\n  cursor: default;\n}\n\n.command-bar .stepOut {\n  margin-right: 2em;\n}\n\n.command-bar .subSettings {\n  float: right;\n}\n\n.pane {\n  font-size: 0.75em;\n  color: var(--theme-body-color);\n}\n\n.pane .pane-info {\n  font-style: italic;\n  text-align: center;\n  padding: 0.5em;\n}\n", ""]);
-	
-	// exports
-
-
-/***/ },
-/* 498 */
+/* 525 */,
+/* 526 */
 /***/ function(module, exports, __webpack_require__) {
 
 	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
@@ -66444,7 +67118,7 @@ var Debugger =
 	var dom = React.DOM;
 	var PropTypes = React.PropTypes;
 	
-	var ImPropTypes = __webpack_require__(376);
+	var ImPropTypes = __webpack_require__(383);
 	
 	var _require = __webpack_require__(15);
 	
@@ -66454,9 +67128,9 @@ var Debugger =
 	
 	var bindActionCreators = _require2.bindActionCreators;
 	
-	var Svg = __webpack_require__(387);
+	var Svg = __webpack_require__(390);
 	
-	var _require3 = __webpack_require__(348);
+	var _require3 = __webpack_require__(347);
 	
 	var getSelectedSource = _require3.getSelectedSource;
 	var getSourceTabs = _require3.getSourceTabs;
@@ -66465,16 +67139,16 @@ var Debugger =
 	
 	var endTruncateStr = _require4.endTruncateStr;
 	
-	var classnames = __webpack_require__(379);
-	var actions = __webpack_require__(360);
+	var classnames = __webpack_require__(355);
+	var actions = __webpack_require__(362);
 	
 	var _require5 = __webpack_require__(196);
 	
 	var isEnabled = _require5.isEnabled;
 	
 	
-	__webpack_require__(499);
-	__webpack_require__(501);
+	__webpack_require__(527);
+	__webpack_require__(529);
 	
 	/**
 	 * TODO: this is a placeholder function
@@ -66642,7 +67316,7 @@ var Debugger =
 	  },
 	
 	  render() {
-	    if (!isEnabled("features.tabs")) {
+	    if (!isEnabled("tabs")) {
 	      return dom.div({ className: "source-header" });
 	    }
 	
@@ -66656,91 +67330,26 @@ var Debugger =
 	}), dispatch => bindActionCreators(actions, dispatch))(SourceTabs);
 
 /***/ },
-/* 499 */
-/***/ function(module, exports, __webpack_require__) {
+/* 527 */
+/***/ function(module, exports) {
 
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-	
-	// load the styles
-	var content = __webpack_require__(500);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(358)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./SourceTabs.css", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./SourceTabs.css");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
+	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 500 */
-/***/ function(module, exports, __webpack_require__) {
+/* 528 */,
+/* 529 */
+/***/ function(module, exports) {
 
-	exports = module.exports = __webpack_require__(357)();
-	// imports
-	
-	
-	// module
-	exports.push([module.id, ".source-header {\n  border-bottom: 1px solid var(--theme-gray);\n  height: 30px;\n  flex: 1;\n}\n\n.source-tabs {\n  width: calc(100% - 30px);\n  overflow: hidden;\n}\n\n.source-tab {\n  border: 1px solid var(--theme-gray);\n  border-top-left-radius: 2px;\n  border-top-right-radius: 2px;\n  padding: 2px 20px 2px 10px;\n  height: 23px;\n  line-height: 20px;\n  color: var(--theme-comment);\n  font-size: 0.7em;\n  margin: 6px 0 0 10px;\n  display: inline-block;\n  border-bottom: none;\n  position: relative;\n}\n\n.source-tab:hover {\n  background: var(--theme-toolbar-background);\n  cursor: pointer;\n}\n\n.source-tab.active {\n  background: var(--theme-selection-background);\n  border-color: var(--theme-selection-background);\n  color: white;\n}\n\n.source-tab.active path {\n  fill: white;\n}\n\n.source-tab .close-btn {\n  position: absolute;\n  right: 7px;\n  top: 1px;\n  width: 6px;\n  height: 6px;\n}\n\n.source-header .subsettings {\n  position: absolute;\n  right: 3px;\n  top: 9px;\n}\n\n.sources-dropdown {\n  position: absolute;\n  top: 35px;\n  right: 0px;\n}\n", ""]);
-	
-	// exports
-
+	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 501 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-	
-	// load the styles
-	var content = __webpack_require__(502);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(358)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./Dropdown.css", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./Dropdown.css");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 502 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(357)();
-	// imports
-	
-	
-	// module
-	exports.push([module.id, ".dropdown {\n  background: white;\n  border: 1px solid var(--theme-gray);\n  width: 150px;\n  max-height: 300px;\n  z-index: 1000;\n}\n\n.dropdown li {\n  padding-left: 10px;\n}\n\n.dropdown li:hover {\n  background: var(--theme-tab-toolbar-background);\n  cursor: pointer;\n}\n\n.dropdown ul {\n  list-style: none;\n  line-height: 2em;\n  font-size: 0.8em;\n  margin: 0;\n  padding: 0;\n}\n", ""]);
-	
-	// exports
-
-
-/***/ },
-/* 503 */
+/* 530 */,
+/* 531 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
 	var dom = React.DOM;
+	var PropTypes = React.PropTypes;
 	
 	var _require = __webpack_require__(15);
 	
@@ -66750,17 +67359,34 @@ var Debugger =
 	
 	var bindActionCreators = _require2.bindActionCreators;
 	
-	var actions = __webpack_require__(360);
+	var actions = __webpack_require__(362);
 	
 	var _require3 = __webpack_require__(196);
 	
 	var isEnabled = _require3.isEnabled;
 	
-	var _require4 = __webpack_require__(348);
+	var _require4 = __webpack_require__(347);
 	
 	var getSelectedSource = _require4.getSelectedSource;
+	var getSourceText = _require4.getSourceText;
+	var getPrettySource = _require4.getPrettySource;
 	
-	var Svg = __webpack_require__(387);
+	var Svg = __webpack_require__(390);
+	var ImPropTypes = __webpack_require__(383);
+	var classnames = __webpack_require__(355);
+	
+	var _require5 = __webpack_require__(364);
+	
+	var isMapped = _require5.isMapped;
+	var getGeneratedSourceId = _require5.getGeneratedSourceId;
+	var isOriginal = _require5.isOriginal;
+	
+	var _require6 = __webpack_require__(368);
+	
+	var isPretty = _require6.isPretty;
+	
+	
+	__webpack_require__(532);
 	
 	function debugBtn(onClick, type) {
 	  var className = arguments.length <= 2 || arguments[2] === undefined ? "active" : arguments[2];
@@ -66770,35 +67396,102 @@ var Debugger =
 	  return dom.span({ onClick, className, key: type }, Svg(type, { title: tooltip }));
 	}
 	
-	function SourceFooter(_ref) {
-	  var togglePrettyPrint = _ref.togglePrettyPrint;
-	  var selectedSource = _ref.selectedSource;
+	var SourceFooter = React.createClass({
+	  propTypes: {
+	    selectedSource: ImPropTypes.map,
+	    togglePrettyPrint: PropTypes.func,
+	    sourceText: ImPropTypes.map,
+	    selectSource: PropTypes.func,
+	    prettySource: ImPropTypes.map
+	  },
 	
-	  var commandsEnabled = selectedSource ? "" : "disabled";
+	  displayName: "SourceFooter",
 	
-	  return dom.div({
-	    className: "source-footer"
-	  }, dom.div({ className: "command-bar" }, isEnabled("features.blackbox") ? debugBtn(() => {}, "blackBox", commandsEnabled, "Toggle Black Boxing") : null, debugBtn(() => togglePrettyPrint(selectedSource.get("id")), "prettyPrint", commandsEnabled, "Prettify Source")));
-	}
+	  blackboxButton() {
+	    if (!isEnabled("blackbox")) {
+	      return null;
+	    }
 	
-	module.exports = connect(state => ({
-	  selectedSource: getSelectedSource(state)
-	}), dispatch => bindActionCreators(actions, dispatch))(SourceFooter);
+	    return debugBtn(() => {}, "blackBox", this.props.selectedSource, "Toggle Black Boxing");
+	  },
+	
+	  onClickPrettyPrint() {
+	    var _props = this.props;
+	    var selectedSource = _props.selectedSource;
+	    var togglePrettyPrint = _props.togglePrettyPrint;
+	    var selectSource = _props.selectSource;
+	    var prettySource = _props.prettySource;
+	
+	
+	    if (isPretty(selectedSource.toJS())) {
+	      return selectSource(getGeneratedSourceId(selectedSource.toJS()));
+	    }
+	
+	    if (selectedSource.get("isPrettyPrinted")) {
+	      return selectSource(prettySource.get("id"));
+	    }
+	
+	    togglePrettyPrint(selectedSource.get("id"));
+	  },
+	
+	  prettyPrintButton() {
+	    var _props2 = this.props;
+	    var selectedSource = _props2.selectedSource;
+	    var sourceText = _props2.sourceText;
+	
+	    var sourceLoaded = selectedSource && !sourceText.get("loading");
+	
+	    if (isMapped(selectedSource.toJS()) || isOriginal(selectedSource.toJS()) && !isPretty(selectedSource.toJS())) {
+	      return;
+	    }
+	
+	    return debugBtn(this.onClickPrettyPrint, "prettyPrint", classnames({
+	      active: sourceLoaded,
+	      pretty: isPretty(selectedSource.toJS())
+	    }), "Prettify Source");
+	  },
+	
+	  render() {
+	    if (!this.props.selectedSource) {
+	      return null;
+	    }
+	
+	    return dom.div({ className: "source-footer" }, dom.div({ className: "command-bar" }, this.blackboxButton(), this.prettyPrintButton()));
+	  }
+	});
+	
+	module.exports = connect(state => {
+	  var selectedSource = getSelectedSource(state);
+	  var selectedId = selectedSource && selectedSource.get("id");
+	  return {
+	    selectedSource,
+	    sourceText: getSourceText(state, selectedId),
+	    prettySource: getPrettySource(state, selectedId)
+	  };
+	}, dispatch => bindActionCreators(actions, dispatch))(SourceFooter);
 
 /***/ },
-/* 504 */
+/* 532 */
+/***/ function(module, exports) {
+
+	// removed by extract-text-webpack-plugin
+
+/***/ },
+/* 533 */,
+/* 534 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
 	var dom = React.DOM;
 	var PropTypes = React.PropTypes;
 	
-	var _require = __webpack_require__(505);
+	var _require = __webpack_require__(535);
 	
 	var filter = _require.filter;
 	
-	var classnames = __webpack_require__(379);
-	__webpack_require__(511);
+	var classnames = __webpack_require__(355);
+	__webpack_require__(541);
+	var Svg = __webpack_require__(390);
 	
 	var Autocomplete = React.createClass({
 	  propTypes: {
@@ -66849,6 +67542,20 @@ var Debugger =
 	    }, dom.div({ className: "title" }, result.title), dom.div({ className: "subtitle" }, result.subtitle));
 	  },
 	
+	  renderInput() {
+	    return dom.input({
+	      ref: "searchInput",
+	      onChange: e => this.setState({
+	        inputValue: e.target.value,
+	        selectedIndex: -1
+	      }),
+	      onFocus: e => this.setState({ focused: true }),
+	      onBlur: e => this.setState({ focused: false }),
+	      onKeyDown: this.onKeyDown,
+	      placeholder: "Search..."
+	    });
+	  },
+	
 	  getSearchResults() {
 	    var inputValue = this.state.inputValue;
 	
@@ -66882,36 +67589,32 @@ var Debugger =
 	
 	  render() {
 	    var searchResults = this.getSearchResults();
-	
-	    return dom.div({ className: "autocomplete" }, dom.input({
-	      ref: "searchInput",
-	      onChange: e => this.setState({
-	        inputValue: e.target.value,
-	        selectedIndex: -1
-	      }),
-	      onKeyDown: this.onKeyDown
-	    }), dom.ul({ className: "results", ref: "results" }, searchResults.map(this.renderSearchItem)));
+	    return dom.div({ className: classnames({
+	        autocomplete: true,
+	        focused: this.state.focused
+	      })
+	    }, new Svg("magnifying-glass"), this.renderInput(), dom.ul({ className: "results", ref: "results" }, searchResults.map(this.renderSearchItem)));
 	  }
 	});
 	
 	module.exports = Autocomplete;
 
 /***/ },
-/* 505 */
+/* 535 */
 /***/ function(module, exports, __webpack_require__) {
 
 	(function() {
 	  var PathSeparator, filter, legacy_scorer, matcher, prepQueryCache, scorer;
 	
-	  scorer = __webpack_require__(506);
+	  scorer = __webpack_require__(536);
 	
-	  legacy_scorer = __webpack_require__(508);
+	  legacy_scorer = __webpack_require__(538);
 	
-	  filter = __webpack_require__(509);
+	  filter = __webpack_require__(539);
 	
-	  matcher = __webpack_require__(510);
+	  matcher = __webpack_require__(540);
 	
-	  PathSeparator = __webpack_require__(507).sep;
+	  PathSeparator = __webpack_require__(537).sep;
 	
 	  prepQueryCache = null;
 	
@@ -66986,13 +67689,13 @@ var Debugger =
 
 
 /***/ },
-/* 506 */
+/* 536 */
 /***/ function(module, exports, __webpack_require__) {
 
 	(function() {
 	  var AcronymResult, PathSeparator, Query, basenameScore, coreChars, countDir, doScore, emptyAcronymResult, file_coeff, isMatch, isSeparator, isWordEnd, isWordStart, miss_coeff, opt_char_re, pos_bonus, scoreAcronyms, scoreCharacter, scoreConsecutives, scoreExact, scoreExactMatch, scorePattern, scorePosition, scoreSize, tau_depth, tau_size, truncatedUpperCase, wm;
 	
-	  PathSeparator = __webpack_require__(507).sep;
+	  PathSeparator = __webpack_require__(537).sep;
 	
 	  wm = 150;
 	
@@ -67379,7 +68082,7 @@ var Debugger =
 
 
 /***/ },
-/* 507 */
+/* 537 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -67610,13 +68313,13 @@ var Debugger =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(185)))
 
 /***/ },
-/* 508 */
+/* 538 */
 /***/ function(module, exports, __webpack_require__) {
 
 	(function() {
 	  var PathSeparator, queryIsLastPathSegment;
 	
-	  PathSeparator = __webpack_require__(507).sep;
+	  PathSeparator = __webpack_require__(537).sep;
 	
 	  exports.basenameScore = function(string, query, score) {
 	    var base, depth, index, lastCharacter, segmentCount, slashCount;
@@ -67744,15 +68447,15 @@ var Debugger =
 
 
 /***/ },
-/* 509 */
+/* 539 */
 /***/ function(module, exports, __webpack_require__) {
 
 	(function() {
 	  var PathSeparator, legacy_scorer, pluckCandidates, scorer, sortCandidates;
 	
-	  scorer = __webpack_require__(506);
+	  scorer = __webpack_require__(536);
 	
-	  legacy_scorer = __webpack_require__(508);
+	  legacy_scorer = __webpack_require__(538);
 	
 	  pluckCandidates = function(a) {
 	    return a.candidate;
@@ -67762,7 +68465,7 @@ var Debugger =
 	    return b.score - a.score;
 	  };
 	
-	  PathSeparator = __webpack_require__(507).sep;
+	  PathSeparator = __webpack_require__(537).sep;
 	
 	  module.exports = function(candidates, query, _arg) {
 	    var allowErrors, bAllowErrors, bKey, candidate, coreQuery, key, legacy, maxInners, maxResults, prepQuery, queryHasSlashes, score, scoredCandidates, spotLeft, string, _i, _j, _len, _len1, _ref;
@@ -67823,15 +68526,15 @@ var Debugger =
 
 
 /***/ },
-/* 510 */
+/* 540 */
 /***/ function(module, exports, __webpack_require__) {
 
 	(function() {
 	  var PathSeparator, scorer;
 	
-	  PathSeparator = __webpack_require__(507).sep;
+	  PathSeparator = __webpack_require__(537).sep;
 	
-	  scorer = __webpack_require__(506);
+	  scorer = __webpack_require__(536);
 	
 	  exports.basenameMatch = function(subject, subject_lw, prepQuery) {
 	    var basePos, depth, end;
@@ -67976,47 +68679,14 @@ var Debugger =
 
 
 /***/ },
-/* 511 */
-/***/ function(module, exports, __webpack_require__) {
+/* 541 */
+/***/ function(module, exports) {
 
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-	
-	// load the styles
-	var content = __webpack_require__(512);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(358)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./Autocomplete.css", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./Autocomplete.css");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
+	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 512 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(357)();
-	// imports
-	
-	
-	// module
-	exports.push([module.id, "\n.autocomplete {\n  width: 100%;\n  padding: 20px;\n}\n\n.autocomplete ul {\n  list-style: none;\n  width: 100%;\n  max-height: calc(100% - 32px);\n  margin: 0px;\n  padding: 0px;\n  overflow: auto;\n  border-left: 2px solid #dde1e4;\n  border-right: 2px solid #dde1e4;\n}\n\n.autocomplete ul:not(:empty) {\n  border-bottom: 2px solid #dde1e4;\n}\n\n.autocomplete li:nth-child(1) {\n  border-top: none;\n}\n\n.autocomplete li {\n  border-top: 2px solid #dde1e4;\n  padding: 10px;\n}\n\n.autocomplete li:hover {\n  background: #efefef;\n  cursor: pointer;\n}\n\n.autocomplete li.selected {\n  background: var(--theme-selection-background);\n  color: white;\n}\n\n.autocomplete li.selected .subtitle {\n  color: white;\n}\n\n.autocomplete li .title {\n  font-size: 0.8em;\n  line-height: 1.5em;\n}\n\n.autocomplete li .subtitle {\n  font-size: 0.7em;\n  line-height: 1.5em;\n  color: grey;\n}\n\n.autocomplete input {\n  width: 100%;\n  border: 2px solid #dde1e4;\n  outline: none;\n  line-height: 2.5em;\n  height: 2.5em;\n  padding-left: 25px;\n  font-size: 0.8em;\n  background-image: url(\"/images/magnifying-glass.svg\");\n  background-repeat: no-repeat;\n  background-position: 5px 50%;\n}\n\n.autocomplete input:focus {\n  border-color: #4a90e0;\n}\n", ""]);
-	
-	// exports
-
-
-/***/ },
-/* 513 */
+/* 542 */,
+/* 543 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -68025,7 +68695,7 @@ var Debugger =
 	
 	"use strict";
 	
-	const { Services } = __webpack_require__(514);
+	const { Services } = __webpack_require__(361);
 	const EventEmitter = __webpack_require__(260);
 	const isOSX = Services.appinfo.OS === "Darwin";
 	
@@ -68163,6 +68833,7 @@ var Debugger =
 	    shortcut.keyCode = window.KeyboardEvent[key];
 	    // Used only to stringify the shortcut
 	    shortcut.keyCodeString = key;
+	    shortcut.key = key;
 	  } else {
 	    console.error("Unsupported key:", key);
 	    return null;
@@ -68219,11 +68890,17 @@ var Debugger =
 	    }
 	    if (shortcut.keyCode) {
 	      return event.keyCode == shortcut.keyCode;
+	    } else if (event.key in ElectronKeysMapping) {
+	      return ElectronKeysMapping[event.key] === shortcut.key;
 	    }
+	
+	    // get the key from the keyCode if key is not provided.
+	    let key = event.key || String.fromCharCode(event.keyCode);
+	
 	    // For character keys, we match if the final character is the expected one.
 	    // But for digits we also accept indirect match to please azerty keyboard,
 	    // which requires Shift to be pressed to get digits.
-	    return event.key.toLowerCase() == shortcut.key ||
+	    return key.toLowerCase() == shortcut.key ||
 	      (shortcut.key.match(/[0-9]/) &&
 	       event.keyCode == shortcut.key.charCodeAt(0));
 	  },
@@ -68257,621 +68934,6 @@ var Debugger =
 	  },
 	};
 	exports.KeyShortcuts = KeyShortcuts;
-
-
-/***/ },
-/* 514 */
-/***/ function(module, exports) {
-
-	/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-	/* vim: set ts=2 et sw=2 tw=80: */
-	/* This Source Code Form is subject to the terms of the Mozilla Public
-	 * License, v. 2.0. If a copy of the MPL was not distributed with this
-	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-	
-	"use strict";
-	
-	/* globals localStorage, window, document, NodeFilter */
-	
-	// Some constants from nsIPrefBranch.idl.
-	const PREF_INVALID = 0;
-	const PREF_STRING = 32;
-	const PREF_INT = 64;
-	const PREF_BOOL = 128;
-	const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
-	
-	/**
-	 * Create a new preference object.
-	 *
-	 * @param {PrefBranch} branch the branch holding this preference
-	 * @param {String} name the base name of this preference
-	 * @param {String} fullName the fully-qualified name of this preference
-	 */
-	function Preference(branch, name, fullName) {
-	  this.branch = branch;
-	  this.name = name;
-	  this.fullName = fullName;
-	  this.defaultValue = null;
-	  this.hasUserValue = false;
-	  this.userValue = null;
-	  this.type = null;
-	}
-	
-	Preference.prototype = {
-	  /**
-	   * Return this preference's current value.
-	   *
-	   * @return {Any} The current value of this preference.  This may
-	   *         return a string, a number, or a boolean depending on the
-	   *         preference's type.
-	   */
-	  get: function () {
-	    if (this.hasUserValue) {
-	      return this.userValue;
-	    }
-	    return this.defaultValue;
-	  },
-	
-	  /**
-	   * Set the preference's value.  The new value is assumed to be a
-	   * user value.  After setting the value, this function emits a
-	   * change notification.
-	   *
-	   * @param {Any} value the new value
-	   */
-	  set: function (value) {
-	    if (!this.hasUserValue || value !== this.userValue) {
-	      this.userValue = value;
-	      this.hasUserValue = true;
-	      this.saveAndNotify();
-	    }
-	  },
-	
-	  /**
-	   * Set the default value for this preference, and emit a
-	   * notification if this results in a visible change.
-	   *
-	   * @param {Any} value the new default value
-	   */
-	  setDefault: function (value) {
-	    if (this.defaultValue !== value) {
-	      this.defaultValue = value;
-	      if (!this.hasUserValue) {
-	        this.saveAndNotify();
-	      }
-	    }
-	  },
-	
-	  /**
-	   * If this preference has a user value, clear it.  If a change was
-	   * made, emit a change notification.
-	   */
-	  clearUserValue: function () {
-	    if (this.hasUserValue) {
-	      this.userValue = null;
-	      this.hasUserValue = false;
-	      this.saveAndNotify();
-	    }
-	  },
-	
-	  /**
-	   * Helper function to write the preference's value to local storage
-	   * and then emit a change notification.
-	   */
-	  saveAndNotify: function () {
-	    let store = {
-	      type: this.type,
-	      defaultValue: this.defaultValue,
-	      hasUserValue: this.hasUserValue,
-	      userValue: this.userValue,
-	    };
-	
-	    localStorage.setItem(this.fullName, JSON.stringify(store));
-	    this.branch._notify(this.name);
-	  },
-	
-	  /**
-	   * Change this preference's value without writing it back to local
-	   * storage.  This is used to handle changes to local storage that
-	   * were made externally.
-	   *
-	   * @param {Number} type one of the PREF_* values
-	   * @param {Any} userValue the user value to use if the pref does not exist
-	   * @param {Any} defaultValue the default value to use if the pref
-	   *        does not exist
-	   * @param {Boolean} hasUserValue if a new pref is created, whether
-	   *        the default value is also a user value
-	   * @param {Object} store the new value of the preference.  It should
-	   *        be of the form {type, defaultValue, hasUserValue, userValue};
-	   *        where |type| is one of the PREF_* type constants; |defaultValue|
-	   *        and |userValue| are the default and user values, respectively;
-	   *        and |hasUserValue| is a boolean indicating whether the user value
-	   *        is valid
-	   */
-	  storageUpdated: function (type, userValue, hasUserValue, defaultValue) {
-	    this.type = type;
-	    this.defaultValue = defaultValue;
-	    this.hasUserValue = hasUserValue;
-	    this.userValue = userValue;
-	    // There's no need to write this back to local storage, since it
-	    // came from there; and this avoids infinite event loops.
-	    this.branch._notify(this.name);
-	  },
-	};
-	
-	/**
-	 * Create a new preference branch.  This object conforms largely to
-	 * nsIPrefBranch and nsIPrefService, though it only implements the
-	 * subset needed by devtools.
-	 *
-	 * @param {PrefBranch} parent the parent branch, or null for the root
-	 *        branch.
-	 * @param {String} name the base name of this branch
-	 * @param {String} fullName the fully-qualified name of this branch
-	 */
-	function PrefBranch(parent, name, fullName) {
-	  this._parent = parent;
-	  this._name = name;
-	  this._fullName = fullName;
-	  this._observers = {};
-	  this._children = {};
-	
-	  if (!parent) {
-	    this._initializeRoot();
-	  }
-	}
-	
-	PrefBranch.prototype = {
-	  PREF_INVALID: PREF_INVALID,
-	  PREF_STRING: PREF_STRING,
-	  PREF_INT: PREF_INT,
-	  PREF_BOOL: PREF_BOOL,
-	
-	  /** @see nsIPrefBranch.root.  */
-	  get root() {
-	    return this._fullName;
-	  },
-	
-	  /** @see nsIPrefBranch.getPrefType.  */
-	  getPrefType: function (prefName) {
-	    return this._findPref(prefName).type;
-	  },
-	
-	  /** @see nsIPrefBranch.getBoolPref.  */
-	  getBoolPref: function (prefName) {
-	    let thePref = this._findPref(prefName);
-	    if (thePref.type !== PREF_BOOL) {
-	      throw new Error(`${prefName} does not have bool type`);
-	    }
-	    return thePref.get();
-	  },
-	
-	  /** @see nsIPrefBranch.setBoolPref.  */
-	  setBoolPref: function (prefName, value) {
-	    if (typeof value !== "boolean") {
-	      throw new Error("non-bool passed to setBoolPref");
-	    }
-	    let thePref = this._findOrCreatePref(prefName, value, true, value);
-	    if (thePref.type !== PREF_BOOL) {
-	      throw new Error(`${prefName} does not have bool type`);
-	    }
-	    thePref.set(value);
-	  },
-	
-	  /** @see nsIPrefBranch.getCharPref.  */
-	  getCharPref: function (prefName) {
-	    let thePref = this._findPref(prefName);
-	    if (thePref.type !== PREF_STRING) {
-	      throw new Error(`${prefName} does not have string type`);
-	    }
-	    return thePref.get();
-	  },
-	
-	  /** @see nsIPrefBranch.setCharPref.  */
-	  setCharPref: function (prefName, value) {
-	    if (typeof value !== "string") {
-	      throw new Error("non-string passed to setCharPref");
-	    }
-	    let thePref = this._findOrCreatePref(prefName, value, true, value);
-	    if (thePref.type !== PREF_STRING) {
-	      throw new Error(`${prefName} does not have string type`);
-	    }
-	    thePref.set(value);
-	  },
-	
-	  /** @see nsIPrefBranch.getIntPref.  */
-	  getIntPref: function (prefName) {
-	    let thePref = this._findPref(prefName);
-	    if (thePref.type !== PREF_INT) {
-	      throw new Error(`${prefName} does not have int type`);
-	    }
-	    return thePref.get();
-	  },
-	
-	  /** @see nsIPrefBranch.setIntPref.  */
-	  setIntPref: function (prefName, value) {
-	    if (typeof value !== "number") {
-	      throw new Error("non-number passed to setIntPref");
-	    }
-	    let thePref = this._findOrCreatePref(prefName, value, true, value);
-	    if (thePref.type !== PREF_INT) {
-	      throw new Error(`${prefName} does not have int type`);
-	    }
-	    thePref.set(value);
-	  },
-	
-	  /** @see nsIPrefBranch.clearUserPref */
-	  clearUserPref: function (prefName) {
-	    let thePref = this._findPref(prefName);
-	    thePref.clearUserValue();
-	  },
-	
-	  /** @see nsIPrefBranch.prefHasUserValue */
-	  prefHasUserValue: function (prefName) {
-	    let thePref = this._findPref(prefName);
-	    return thePref.hasUserValue;
-	  },
-	
-	  /** @see nsIPrefBranch.addObserver */
-	  addObserver: function (domain, observer, holdWeak) {
-	    if (domain !== "" && !domain.endsWith(".")) {
-	      throw new Error("invalid domain to addObserver: " + domain);
-	    }
-	    if (holdWeak) {
-	      throw new Error("shim prefs only supports strong observers");
-	    }
-	
-	    if (!(domain in this._observers)) {
-	      this._observers[domain] = [];
-	    }
-	    this._observers[domain].push(observer);
-	  },
-	
-	  /** @see nsIPrefBranch.removeObserver */
-	  removeObserver: function (domain, observer) {
-	    if (!(domain in this._observers)) {
-	      return;
-	    }
-	    let index = this._observers[domain].indexOf(observer);
-	    if (index >= 0) {
-	      this._observers[domain].splice(index, 1);
-	    }
-	  },
-	
-	  /** @see nsIPrefService.savePrefFile */
-	  savePrefFile: function (file) {
-	    if (file) {
-	      throw new Error("shim prefs only supports null file in savePrefFile");
-	    }
-	    // Nothing to do - this implementation always writes back.
-	  },
-	
-	  /** @see nsIPrefService.getBranch */
-	  getBranch: function (prefRoot) {
-	    if (!prefRoot) {
-	      return this;
-	    }
-	    if (prefRoot.endsWith(".")) {
-	      prefRoot = prefRoot.slice(0, -1);
-	    }
-	    // This is a bit weird since it could erroneously return a pref,
-	    // not a pref branch.
-	    return this._findPref(prefRoot);
-	  },
-	
-	  /**
-	   * Helper function to find either a Preference or PrefBranch object
-	   * given its name.  If the name is not found, throws an exception.
-	   *
-	   * @param {String} prefName the fully-qualified preference name
-	   * @return {Object} Either a Preference or PrefBranch object
-	   */
-	  _findPref: function (prefName) {
-	    let branchNames = prefName.split(".");
-	    let branch = this;
-	
-	    for (let branchName of branchNames) {
-	      branch = branch._children[branchName];
-	      if (!branch) {
-	        throw new Error("could not find pref branch " + prefName);
-	      }
-	    }
-	
-	    return branch;
-	  },
-	
-	  /**
-	   * Helper function to notify any observers when a preference has
-	   * changed.  This will also notify the parent branch for further
-	   * reporting.
-	   *
-	   * @param {String} relativeName the name of the updated pref,
-	   *        relative to this branch
-	   */
-	  _notify: function (relativeName) {
-	    for (let domain in this._observers) {
-	      if (relativeName.startsWith(domain)) {
-	        // Allow mutation while walking.
-	        let localList = this._observers[domain].slice();
-	        for (let observer of localList) {
-	          try {
-	            observer.observe(this, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID,
-	                             relativeName);
-	          } catch (e) {
-	            console.error(e);
-	          }
-	        }
-	      }
-	    }
-	
-	    if (this._parent) {
-	      this._parent._notify(this._name + "." + relativeName);
-	    }
-	  },
-	
-	  /**
-	   * Helper function to create a branch given an array of branch names
-	   * representing the path of the new branch.
-	   *
-	   * @param {Array} branchList an array of strings, one per component
-	   *        of the branch to be created
-	   * @return {PrefBranch} the new branch
-	   */
-	  _createBranch: function (branchList) {
-	    let parent = this;
-	    for (let branch of branchList) {
-	      if (!parent._children[branch]) {
-	        parent._children[branch] = new PrefBranch(parent, branch,
-	                                                  parent.root + "." + branch);
-	      }
-	      parent = parent._children[branch];
-	    }
-	    return parent;
-	  },
-	
-	  /**
-	   * Create a new preference.  The new preference is assumed to be in
-	   * local storage already, and the new value is taken from there.
-	   *
-	   * @param {String} keyName the full-qualified name of the preference.
-	   *        This is also the name of the key in local storage.
-	   * @param {Any} userValue the user value to use if the pref does not exist
-	   * @param {Any} defaultValue the default value to use if the pref
-	   *        does not exist
-	   * @param {Boolean} hasUserValue if a new pref is created, whether
-	   *        the default value is also a user value
-	   */
-	  _findOrCreatePref: function (keyName, userValue, hasUserValue, defaultValue) {
-	    let branchName = keyName.split(".");
-	    let prefName = branchName.pop();
-	
-	    let branch = this._createBranch(branchName);
-	    if (!(prefName in branch._children)) {
-	      if (hasUserValue && typeof (userValue) !== typeof (defaultValue)) {
-	        throw new Error("inconsistent values when creating " + keyName);
-	      }
-	
-	      let type;
-	      switch (typeof (defaultValue)) {
-	        case "boolean":
-	          type = PREF_BOOL;
-	          break;
-	        case "number":
-	          type = PREF_INT;
-	          break;
-	        case "string":
-	          type = PREF_STRING;
-	          break;
-	        default:
-	          throw new Error("unhandled argument type: " + typeof (defaultValue));
-	      }
-	
-	      let thePref = new Preference(branch, prefName, keyName);
-	      thePref.storageUpdated(type, userValue, hasUserValue, defaultValue);
-	      branch._children[prefName] = thePref;
-	    }
-	
-	    return branch._children[prefName];
-	  },
-	
-	  /**
-	   * Helper function that is called when local storage changes.  This
-	   * updates the preferences and notifies pref observers as needed.
-	   *
-	   * @param {StorageEvent} event the event representing the local
-	   *        storage change
-	   */
-	  _onStorageChange: function (event) {
-	    if (event.storageArea !== localStorage) {
-	      return;
-	    }
-	
-	    // Ignore delete events.  Not clear what's correct.
-	    if (event.key === null || event.newValue === null) {
-	      return;
-	    }
-	
-	    let {type, userValue, hasUserValue, defaultValue} =
-	        JSON.parse(event.newValue);
-	    if (event.oldValue === null) {
-	      this._findOrCreatePref(event.key, userValue, hasUserValue, defaultValue);
-	    } else {
-	      let thePref = this._findPref(event.key);
-	      thePref.storageUpdated(type, userValue, hasUserValue, defaultValue);
-	    }
-	  },
-	
-	  /**
-	   * Helper function to initialize the root PrefBranch.
-	   */
-	  _initializeRoot: function () {
-	    try {
-	      if (localStorage.length === 0) {
-	        // FIXME - this is where we'll load devtools.js to install the
-	        // default prefs.
-	      }
-	    } catch(e) {
-	      // Couldn't access localStorage; bail. This happens in the
-	      // Firefox panel because Chrome-privileged code can't access it.
-	      return;
-	    }
-	
-	    // Read the prefs from local storage and create the local
-	    // representations.
-	    for (let i = 0; i < localStorage.length; ++i) {
-	      let keyName = localStorage.key(i);
-	      try {
-	        let {userValue, hasUserValue, defaultValue} =
-	            JSON.parse(localStorage.getItem(keyName));
-	
-	        this._findOrCreatePref(keyName, userValue, hasUserValue, defaultValue);
-	      } catch (e) {
-	      }
-	    }
-	
-	    this._onStorageChange = this._onStorageChange.bind(this);
-	    window.addEventListener("storage", this._onStorageChange);
-	  },
-	};
-	
-	const Services = {
-	  /**
-	   * An implementation of nsIPrefService that is based on local
-	   * storage.  Only the subset of nsIPrefService that is actually used
-	   * by devtools is implemented here.
-	   */
-	  prefs: new PrefBranch(null, "", ""),
-	
-	  /**
-	   * An implementation of Services.appinfo that holds just the
-	   * properties needed by devtools.
-	   */
-	  appinfo: {
-	    get OS() {
-	      const os = window.navigator.userAgent;
-	      if (os) {
-	        if (os.includes("Linux")) {
-	          return "Linux";
-	        } else if (os.includes("Windows")) {
-	          return "WINNT";
-	        } else if (os.includes("Mac")) {
-	          return "Darwin";
-	        }
-	      }
-	      return "Unknown";
-	    },
-	
-	    // It's fine for this to be an approximation.
-	    get name() {
-	      return window.navigator.userAgent;
-	    },
-	
-	    // It's fine for this to be an approximation.
-	    get version() {
-	      return window.navigator.appVersion;
-	    },
-	
-	    // This is only used by telemetry, which is disabled for the
-	    // content case.  So, being totally wrong is ok.
-	    get is64Bit() {
-	      return true;
-	    },
-	  },
-	
-	  /**
-	   * A no-op implementation of Services.telemetry.  This supports just
-	   * the subset of Services.telemetry that is used by devtools.
-	   */
-	  telemetry: {
-	    getHistogramById: function (name) {
-	      return {
-	        add: () => {}
-	      };
-	    },
-	
-	    getKeyedHistogramById: function (name) {
-	      return {
-	        add: () => {}
-	      };
-	    },
-	  },
-	
-	  /**
-	   * An implementation of Services.focus that holds just the
-	   * properties and methods needed by devtools.
-	   * @see nsIFocusManager.idl for details.
-	   */
-	  focus: {
-	    // These values match nsIFocusManager in order to make testing a
-	    // bit simpler.
-	    MOVEFOCUS_FORWARD: 1,
-	    MOVEFOCUS_BACKWARD: 2,
-	
-	    get focusedElement() {
-	      if (!document.hasFocus()) {
-	        return null;
-	      }
-	      return document.activeElement;
-	    },
-	
-	    moveFocus: function (window, startElement, type, flags) {
-	      if (flags !== 0) {
-	        throw new Error("shim Services.focus.moveFocus only accepts flags===0");
-	      }
-	      if (type !== Services.focus.MOVEFOCUS_FORWARD
-	          && type !== Services.focus.MOVEFOCUS_BACKWARD) {
-	        throw new Error("shim Services.focus.moveFocus only supports " +
-	                        " MOVEFOCUS_FORWARD and MOVEFOCUS_BACKWARD");
-	      }
-	
-	      if (!startElement) {
-	        startElement = document.activeElement || document;
-	      }
-	
-	      let iter = document.createTreeWalker(document, NodeFilter.SHOW_ELEMENT, {
-	        acceptNode: function (node) {
-	          let tabIndex = node.getAttribute("tabindex");
-	          if (tabIndex === "-1") {
-	            return NodeFilter.FILTER_SKIP;
-	          }
-	          node.focus();
-	          if (document.activeElement == node) {
-	            return NodeFilter.FILTER_ACCEPT;
-	          }
-	          return NodeFilter.FILTER_SKIP;
-	        }
-	      });
-	
-	      iter.currentNode = startElement;
-	
-	      // Sets the focus via side effect in the filter.
-	      if (type === Services.focus.MOVEFOCUS_FORWARD) {
-	        iter.nextNode();
-	      } else {
-	        iter.previousNode();
-	      }
-	    },
-	  },
-	};
-	
-	/**
-	 * Create a new preference.  This is used during startup (see
-	 * devtools/client/preferences/devtools.js) to install the
-	 * default preferences.
-	 *
-	 * @param {String} name the name of the preference
-	 * @param {Any} value the default value of the preference
-	 */
-	function pref(name, value) {
-	  let thePref = Services.prefs._findOrCreatePref(name, value, true, value);
-	  thePref.setDefault(value);
-	}
-	
-	exports.Services = Services;
-	// This is exported to silence eslint and, at some point, perhaps to
-	// provide it when loading devtools.js in order to install the default
-	// preferences.
-	exports.pref = pref;
 
 
 /***/ }
