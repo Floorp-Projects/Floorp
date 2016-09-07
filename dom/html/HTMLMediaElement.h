@@ -1039,7 +1039,7 @@ protected:
   /**
    * Possible values of the 'preload' attribute.
    */
-  enum PreloadAttrValue {
+  enum PreloadAttrValue : uint8_t {
     PRELOAD_ATTR_EMPTY,    // set to ""
     PRELOAD_ATTR_NONE,     // set to "none"
     PRELOAD_ATTR_METADATA, // set to "metadata"

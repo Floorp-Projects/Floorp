@@ -67,7 +67,7 @@ static constexpr nsAttrValue::EnumTable kKindTable[] = {
   { "descriptions", static_cast<int16_t>(TextTrackKind::Descriptions) },
   { "chapters", static_cast<int16_t>(TextTrackKind::Chapters) },
   { "metadata", static_cast<int16_t>(TextTrackKind::Metadata) },
-  { 0 }
+  { nullptr, 0 }
 };
 
 // Invalid values are treated as "metadata" in ParseAttribute, but if no value
