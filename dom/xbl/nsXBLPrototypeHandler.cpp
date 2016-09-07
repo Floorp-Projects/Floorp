@@ -737,6 +737,7 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
 
   if (aKeyElement) {
     mType |= NS_HANDLER_TYPE_XUL;
+    MOZ_ASSERT(!mPrototypeBinding);
     nsCOMPtr<nsIWeakReference> weak = do_GetWeakReference(aKeyElement);
     if (!weak) {
       return;
@@ -836,12 +837,14 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
     mMisc = 1;
     mDetail = key[0];
     const uint8_t GTK2Modifiers = cShift | cControl | cShiftMask | cControlMask;
-    if ((mKeyMask & GTK2Modifiers) == GTK2Modifiers &&
+    if ((mType & NS_HANDLER_TYPE_XUL) &&
+        (mKeyMask & GTK2Modifiers) == GTK2Modifiers &&
         modifiers.First() != char16_t(',') &&
         (mDetail == 'u' || mDetail == 'U'))
       ReportKeyConflict(key.get(), modifiers.get(), aKeyElement, "GTK2Conflict2");
     const uint8_t WinModifiers = cControl | cAlt | cControlMask | cAltMask;
-    if ((mKeyMask & WinModifiers) == WinModifiers &&
+    if ((mType & NS_HANDLER_TYPE_XUL) &&
+        (mKeyMask & WinModifiers) == WinModifiers &&
         modifiers.First() != char16_t(',') &&
         (('A' <= mDetail && mDetail <= 'Z') ||
          ('a' <= mDetail && mDetail <= 'z')))
@@ -885,7 +888,7 @@ nsXBLPrototypeHandler::ReportKeyConflict(const char16_t* aKey, const char16_t* a
     if (docInfo) {
       doc = docInfo->GetDocument();
     }
-  } else if (aKeyElement) {
+  } else {
     doc = aKeyElement->OwnerDoc();
   }
 
