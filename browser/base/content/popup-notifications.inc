@@ -44,12 +44,6 @@
       </popupnotificationcontent>
     </popupnotification>
 
-    <popupnotification id="pointerLock-notification" hidden="true">
-      <popupnotificationcontent orient="vertical" align="start">
-        <label id="pointerLock-cancel">&pointerLock.notification.message;</label>
-      </popupnotificationcontent>
-    </popupnotification>
-
     <popupnotification id="password-notification" hidden="true">
       <popupnotificationcontent orient="vertical">
         <textbox id="password-notification-username"/>

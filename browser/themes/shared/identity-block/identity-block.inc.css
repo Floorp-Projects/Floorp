@@ -55,7 +55,6 @@
   width: 16px;
   height: 16px;
   list-style-image: url(chrome://browser/skin/identity-icon.svg#normal);
-  opacity: .5;
 }
 
 #identity-box:hover > #identity-icon:not(.no-hover),
@@ -74,11 +73,10 @@
 
 #urlbar[pageproxystate="valid"] > #identity-box.chromeUI > #identity-icon {
   list-style-image: url(chrome://branding/content/identity-icons-brand.svg);
-  opacity: 1;
 }
 
 #urlbar[pageproxystate="invalid"] > #identity-box > #identity-icon {
-  opacity: .2;
+  opacity: .3;
 }
 
 #urlbar[actiontype="searchengine"] > #identity-box > #identity-icon {
@@ -86,7 +84,6 @@
   list-style-image: url(chrome://global/skin/icons/autocomplete-search.svg#search-icon);
   width: 16px;
   height: 16px;
-  opacity: .5;
 }
 
 /* SHARING ICON */
@@ -140,13 +137,10 @@
   margin-inline-start: 2px;
   margin-inline-end: 0;
   list-style-image: url(chrome://browser/skin/tracking-protection-16.svg);
-  opacity: .5;
 }
 
 #tracking-protection-icon[state="loaded-tracking-content"] {
   list-style-image: url(chrome://browser/skin/tracking-protection-disabled-16.svg);
-  filter: none;
-  opacity: 1;
 }
 
 #tracking-protection-icon[animate] {
