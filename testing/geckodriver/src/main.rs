@@ -10,6 +10,7 @@ extern crate mozprofile;
 extern crate mozrunner;
 extern crate regex;
 extern crate rustc_serialize;
+extern crate time;
 #[macro_use]
 extern crate webdriver;
 extern crate zip;
@@ -17,6 +18,7 @@ extern crate zip;
 use clap::{App, Arg};
 use marionette::{MarionetteHandler, LogLevel, MarionetteSettings, extension_routes};
 use std::borrow::ToOwned;
+use std::env;
 use std::io::Write;
 use std::net::{SocketAddr, IpAddr};
 use std::path::PathBuf;
@@ -38,6 +40,44 @@ type ProgramResult = std::result::Result<(), (ExitCode, String)>;
 enum ExitCode {
     Ok = 0,
     Usage = 64,
+}
+
+// Produces a timestamp in milliseconds which format is similar to Gecko.
+fn timestamp() -> String {
+    let tm = time::get_time();
+    let ms = tm.sec as f64 + (tm.nsec as f64 / 1000.0 / 1000.0 / 1000.0);
+    format!("{:.3}", ms).replace(".", "")
+}
+
+fn init_env_logger(level: &Option<LogLevel>) {
+    let mut builder = env_logger::LogBuilder::new();
+
+    let format = |r: &log::LogRecord| {
+        format!("{}\t{}\t{}\t{}", timestamp(), r.target(), r.level(), r.args())
+    };
+    builder.format(format);
+
+    // allow passed log level to override environment variable
+    match *level {
+        Some(ref level) => {
+            let filter = match *level {
+                LogLevel::Fatal | LogLevel::Error => log::LogLevelFilter::Error,
+                LogLevel::Warn => log::LogLevelFilter::Warn,
+                LogLevel::Info => log::LogLevelFilter::Info,
+                LogLevel::Config | LogLevel::Debug => log::LogLevelFilter::Debug,
+                LogLevel::Trace => log::LogLevelFilter::Trace,
+            };
+            builder.filter(None, filter);
+        },
+
+        None => {
+            if env::var("RUST_LOG").is_ok() {
+                builder.parse(&env::var("RUST_LOG").unwrap());
+            }
+        },
+    }
+
+    let _ = builder.init();
 }
 
 fn app<'a, 'b>() -> App<'a, 'b> {
@@ -127,11 +167,12 @@ You can obtain a copy of the license at https://mozilla.org/MPL/2.0/.");
         LogLevel::from_str(matches.value_of("log_level").unwrap()).ok()
     } else {
         match matches.occurrences_of("verbosity") {
-            0 => None,
+            0 => Some(LogLevel::Info),
             1 => Some(LogLevel::Debug),
             _ => Some(LogLevel::Trace),
         }
     };
+    init_env_logger(&log_level);
 
     let settings = MarionetteSettings {
         port: marionette_port,
@@ -149,8 +190,6 @@ You can obtain a copy of the license at https://mozilla.org/MPL/2.0/.");
 }
 
 fn main() {
-    let _ = env_logger::init();
-
     let exit_code = match run() {
         Ok(_) => ExitCode::Ok,
         Err((exit_code, reason)) => {
