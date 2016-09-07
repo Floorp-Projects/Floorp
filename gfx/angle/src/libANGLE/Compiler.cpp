@@ -23,17 +23,34 @@ namespace
 // ShFinalize.
 size_t activeCompilerHandles = 0;
 
+ShShaderSpec SelectShaderSpec(GLint majorVersion, GLint minorVersion)
+{
+    if (majorVersion >= 3)
+    {
+        if (minorVersion == 1)
+        {
+            return SH_GLES3_1_SPEC;
+        }
+        else
+        {
+            return SH_GLES3_SPEC;
+        }
+    }
+    return SH_GLES2_SPEC;
+}
+
 }  // anonymous namespace
 
 Compiler::Compiler(rx::GLImplFactory *implFactory, const ContextState &state)
     : mImplementation(implFactory->createCompiler()),
-      mSpec(state.getClientVersion() > 2 ? SH_GLES3_SPEC : SH_GLES2_SPEC),
+      mSpec(SelectShaderSpec(state.getClientMajorVersion(), state.getClientMinorVersion())),
       mOutputType(mImplementation->getTranslatorOutputType()),
       mResources(),
       mFragmentCompiler(nullptr),
-      mVertexCompiler(nullptr)
+      mVertexCompiler(nullptr),
+      mComputeCompiler(nullptr)
 {
-    ASSERT(state.getClientVersion() == 2 || state.getClientVersion() == 3);
+    ASSERT(state.getClientMajorVersion() == 2 || state.getClientMajorVersion() == 3);
 
     const gl::Caps &caps             = state.getCaps();
     const gl::Extensions &extensions = state.getExtensions();
@@ -62,6 +79,35 @@ Compiler::Compiler(rx::GLImplFactory *implFactory, const ContextState &state)
     mResources.MaxFragmentInputVectors = caps.maxFragmentInputComponents / 4;
     mResources.MinProgramTexelOffset   = caps.minProgramTexelOffset;
     mResources.MaxProgramTexelOffset   = caps.maxProgramTexelOffset;
+
+    // GLSL ES 3.1 compute shader constants
+    mResources.MaxImageUnits                    = caps.maxImageUnits;
+    mResources.MaxVertexImageUniforms           = caps.maxVertexImageUniforms;
+    mResources.MaxFragmentImageUniforms         = caps.maxFragmentImageUniforms;
+    mResources.MaxComputeImageUniforms          = caps.maxComputeImageUniforms;
+    mResources.MaxCombinedImageUniforms         = caps.maxCombinedImageUniforms;
+    mResources.MaxCombinedShaderOutputResources = caps.maxCombinedShaderOutputResources;
+
+    for (size_t index = 0u; index < 3u; ++index)
+    {
+        mResources.MaxComputeWorkGroupCount[index] = caps.maxComputeWorkGroupCount[index];
+        mResources.MaxComputeWorkGroupSize[index]  = caps.maxComputeWorkGroupSize[index];
+    }
+
+    mResources.MaxComputeUniformComponents = caps.maxComputeUniformComponents;
+    mResources.MaxComputeTextureImageUnits = caps.maxComputeTextureImageUnits;
+
+    mResources.MaxComputeAtomicCounters       = caps.maxComputeAtomicCounters;
+    mResources.MaxComputeAtomicCounterBuffers = caps.maxComputeAtomicCounterBuffers;
+
+    mResources.MaxVertexAtomicCounters         = caps.maxVertexAtomicCounters;
+    mResources.MaxFragmentAtomicCounters       = caps.maxFragmentAtomicCounters;
+    mResources.MaxCombinedAtomicCounters       = caps.maxCombinedAtomicCounters;
+    mResources.MaxAtomicCounterBindings        = caps.maxAtomicCounterBufferBindings;
+    mResources.MaxVertexAtomicCounterBuffers   = caps.maxVertexAtomicCounterBuffers;
+    mResources.MaxFragmentAtomicCounterBuffers = caps.maxFragmentAtomicCounterBuffers;
+    mResources.MaxCombinedAtomicCounterBuffers = caps.maxCombinedAtomicCounterBuffers;
+    mResources.MaxAtomicCounterBufferSize      = caps.maxAtomicCounterBufferSize;
 }
 
 Compiler::~Compiler()
@@ -90,6 +136,15 @@ Error Compiler::release()
         activeCompilerHandles--;
     }
 
+    if (mComputeCompiler)
+    {
+        ShDestruct(mComputeCompiler);
+        mComputeCompiler = nullptr;
+
+        ASSERT(activeCompilerHandles > 0);
+        activeCompilerHandles--;
+    }
+
     if (activeCompilerHandles == 0)
     {
         ShFinalize();
@@ -112,7 +167,9 @@ ShHandle Compiler::getCompilerHandle(GLenum type)
         case GL_FRAGMENT_SHADER:
             compiler = &mFragmentCompiler;
             break;
-
+        case GL_COMPUTE_SHADER:
+            compiler = &mComputeCompiler;
+            break;
         default:
             UNREACHABLE();
             return nullptr;

@@ -24,15 +24,16 @@ namespace
 bool ImageIndexConflictsWithSRV(const gl::ImageIndex &index, D3D11_SHADER_RESOURCE_VIEW_DESC desc)
 {
     unsigned mipLevel   = index.mipIndex;
-    unsigned layerIndex = index.layerIndex;
+    GLint layerIndex    = index.layerIndex;
     GLenum type         = index.type;
 
     switch (desc.ViewDimension)
     {
         case D3D11_SRV_DIMENSION_TEXTURE2D:
         {
-            unsigned maxSrvMip = desc.Texture2D.MipLevels + desc.Texture2D.MostDetailedMip;
-            maxSrvMip          = (desc.Texture2D.MipLevels == -1) ? INT_MAX : maxSrvMip;
+            bool allLevels         = (desc.Texture2D.MipLevels == std::numeric_limits<UINT>::max());
+            unsigned int maxSrvMip = desc.Texture2D.MipLevels + desc.Texture2D.MostDetailedMip;
+            maxSrvMip              = allLevels ? INT_MAX : maxSrvMip;
 
             unsigned mipMin = index.mipIndex;
             unsigned mipMax = (layerIndex == -1) ? INT_MAX : layerIndex;
@@ -44,22 +45,25 @@ bool ImageIndexConflictsWithSRV(const gl::ImageIndex &index, D3D11_SHADER_RESOUR
 
         case D3D11_SRV_DIMENSION_TEXTURE2DARRAY:
         {
-            unsigned maxSrvMip =
+            bool allLevels = (desc.Texture2DArray.MipLevels == std::numeric_limits<UINT>::max());
+            unsigned int maxSrvMip =
                 desc.Texture2DArray.MipLevels + desc.Texture2DArray.MostDetailedMip;
-            maxSrvMip = (desc.Texture2DArray.MipLevels == -1) ? INT_MAX : maxSrvMip;
+            maxSrvMip = allLevels ? INT_MAX : maxSrvMip;
 
             unsigned maxSlice = desc.Texture2DArray.FirstArraySlice + desc.Texture2DArray.ArraySize;
 
             // Cube maps can be mapped to Texture2DArray SRVs
             return (type == GL_TEXTURE_2D_ARRAY || gl::IsCubeMapTextureTarget(type)) &&
                    desc.Texture2DArray.MostDetailedMip <= mipLevel && mipLevel < maxSrvMip &&
-                   desc.Texture2DArray.FirstArraySlice <= layerIndex && layerIndex < maxSlice;
+                   desc.Texture2DArray.FirstArraySlice <= static_cast<UINT>(layerIndex) &&
+                   static_cast<UINT>(layerIndex) < maxSlice;
         }
 
         case D3D11_SRV_DIMENSION_TEXTURECUBE:
         {
-            unsigned maxSrvMip = desc.TextureCube.MipLevels + desc.TextureCube.MostDetailedMip;
-            maxSrvMip          = (desc.TextureCube.MipLevels == -1) ? INT_MAX : maxSrvMip;
+            bool allLevels = (desc.TextureCube.MipLevels == std::numeric_limits<UINT>::max());
+            unsigned int maxSrvMip = desc.TextureCube.MipLevels + desc.TextureCube.MostDetailedMip;
+            maxSrvMip              = allLevels ? INT_MAX : maxSrvMip;
 
             return gl::IsCubeMapTextureTarget(type) &&
                    desc.TextureCube.MostDetailedMip <= mipLevel && mipLevel < maxSrvMip;
@@ -67,8 +71,9 @@ bool ImageIndexConflictsWithSRV(const gl::ImageIndex &index, D3D11_SHADER_RESOUR
 
         case D3D11_SRV_DIMENSION_TEXTURE3D:
         {
-            unsigned maxSrvMip = desc.Texture3D.MipLevels + desc.Texture3D.MostDetailedMip;
-            maxSrvMip          = (desc.Texture3D.MipLevels == -1) ? INT_MAX : maxSrvMip;
+            bool allLevels         = (desc.Texture3D.MipLevels == std::numeric_limits<UINT>::max());
+            unsigned int maxSrvMip = desc.Texture3D.MipLevels + desc.Texture3D.MostDetailedMip;
+            maxSrvMip              = allLevels ? INT_MAX : maxSrvMip;
 
             return type == GL_TEXTURE_3D && desc.Texture3D.MostDetailedMip <= mipLevel &&
                    mipLevel < maxSrvMip;

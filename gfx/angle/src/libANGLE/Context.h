@@ -68,9 +68,6 @@ class Context final : public ValidationContext
     void makeCurrent(egl::Surface *surface);
     void releaseSurface();
 
-    virtual void markContextLost();
-    bool isContextLost();
-
     // These create  and destroy methods are merely pass-throughs to
     // ResourceManager, which owns these object types
     GLuint createBuffer();
@@ -178,8 +175,14 @@ class Context final : public ValidationContext
     Query *getQuery(GLuint handle, bool create, GLenum type);
     Query *getQuery(GLuint handle) const;
     TransformFeedback *getTransformFeedback(GLuint handle) const;
-    LabeledObject *getLabeledObject(GLenum identifier, GLuint name) const;
-    LabeledObject *getLabeledObjectFromPtr(const void *ptr) const;
+    void objectLabel(GLenum identifier, GLuint name, GLsizei length, const GLchar *label);
+    void objectPtrLabel(const void *ptr, GLsizei length, const GLchar *label);
+    void getObjectLabel(GLenum identifier,
+                        GLuint name,
+                        GLsizei bufSize,
+                        GLsizei *length,
+                        GLchar *label) const;
+    void getObjectPtrLabel(const void *ptr, GLsizei bufSize, GLsizei *length, GLchar *label) const;
 
     Texture *getTargetTexture(GLenum target) const;
     Texture *getSamplerTexture(unsigned int sampler, GLenum type) const;
@@ -196,9 +199,9 @@ class Context final : public ValidationContext
     void getIntegerv(GLenum pname, GLint *params);
     void getInteger64v(GLenum pname, GLint64 *params);
     void getPointerv(GLenum pname, void **params) const;
-
-    bool getIndexedIntegerv(GLenum target, GLuint index, GLint *data);
-    bool getIndexedInteger64v(GLenum target, GLuint index, GLint64 *data);
+    void getBooleani_v(GLenum target, GLuint index, GLboolean *data);
+    void getIntegeri_v(GLenum target, GLuint index, GLint *data);
+    void getInteger64i_v(GLenum target, GLuint index, GLint64 *data);
 
     void activeTexture(GLenum texture);
     void blendColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
@@ -457,6 +460,24 @@ class Context final : public ValidationContext
                                  GLenum format,
                                  GLsizei imageSize,
                                  const GLvoid *data);
+    void copyTextureCHROMIUM(GLuint sourceId,
+                             GLuint destId,
+                             GLint internalFormat,
+                             GLenum destType,
+                             GLboolean unpackFlipY,
+                             GLboolean unpackPremultiplyAlpha,
+                             GLboolean unpackUnmultiplyAlpha);
+    void copySubTextureCHROMIUM(GLuint sourceId,
+                                GLuint destId,
+                                GLint xoffset,
+                                GLint yoffset,
+                                GLint x,
+                                GLint y,
+                                GLsizei width,
+                                GLsizei height,
+                                GLboolean unpackFlipY,
+                                GLboolean unpackPremultiplyAlpha,
+                                GLboolean unpackUnmultiplyAlpha);
 
     void generateMipmap(GLenum target);
 
@@ -491,12 +512,68 @@ class Context final : public ValidationContext
     void coverStrokePath(GLuint path, GLenum coverMode);
     void stencilThenCoverFillPath(GLuint path, GLenum fillMode, GLuint mask, GLenum coverMode);
     void stencilThenCoverStrokePath(GLuint path, GLint reference, GLuint mask, GLenum coverMode);
+    void coverFillPathInstanced(GLsizei numPaths,
+                                GLenum pathNameType,
+                                const void *paths,
+                                GLuint pathBase,
+                                GLenum coverMode,
+                                GLenum transformType,
+                                const GLfloat *transformValues);
+    void coverStrokePathInstanced(GLsizei numPaths,
+                                  GLenum pathNameType,
+                                  const void *paths,
+                                  GLuint pathBase,
+                                  GLenum coverMode,
+                                  GLenum transformType,
+                                  const GLfloat *transformValues);
+    void stencilFillPathInstanced(GLsizei numPaths,
+                                  GLenum pathNameType,
+                                  const void *paths,
+                                  GLuint pathBAse,
+                                  GLenum fillMode,
+                                  GLuint mask,
+                                  GLenum transformType,
+                                  const GLfloat *transformValues);
+    void stencilStrokePathInstanced(GLsizei numPaths,
+                                    GLenum pathNameType,
+                                    const void *paths,
+                                    GLuint pathBase,
+                                    GLint reference,
+                                    GLuint mask,
+                                    GLenum transformType,
+                                    const GLfloat *transformValues);
+    void stencilThenCoverFillPathInstanced(GLsizei numPaths,
+                                           GLenum pathNameType,
+                                           const void *paths,
+                                           GLuint pathBase,
+                                           GLenum fillMode,
+                                           GLuint mask,
+                                           GLenum coverMode,
+                                           GLenum transformType,
+                                           const GLfloat *transformValues);
+    void stencilThenCoverStrokePathInstanced(GLsizei numPaths,
+                                             GLenum pathNameType,
+                                             const void *paths,
+                                             GLuint pathBase,
+                                             GLint reference,
+                                             GLuint mask,
+                                             GLenum coverMode,
+                                             GLenum transformType,
+                                             const GLfloat *transformValues);
+    void bindFragmentInputLocation(GLuint program, GLint location, const GLchar *name);
+    void programPathFragmentInputGen(GLuint program,
+                                     GLint location,
+                                     GLenum genMode,
+                                     GLint components,
+                                     const GLfloat *coeffs);
 
     void handleError(const Error &error) override;
 
     GLenum getError();
+    void markContextLost();
+    bool isContextLost();
     GLenum getResetStatus();
-    virtual bool isResetNotificationEnabled();
+    bool isResetNotificationEnabled();
 
     const egl::Config *getConfig() const;
     EGLenum getClientType() const;
@@ -534,6 +611,9 @@ class Context final : public ValidationContext
 
     void initCaps();
 
+    LabeledObject *getLabeledObject(GLenum identifier, GLuint name) const;
+    LabeledObject *getLabeledObjectFromPtr(const void *ptr) const;
+
     std::unique_ptr<rx::ContextImpl> mImplementation;
 
     // Caps to use for validation
@@ -547,7 +627,8 @@ class Context final : public ValidationContext
 
     State mGLState;
 
-    int mClientVersion;
+    int mClientMajorVersion;
+    int mClientMinorVersion;
 
     const egl::Config *mConfig;
     EGLenum mClientType;

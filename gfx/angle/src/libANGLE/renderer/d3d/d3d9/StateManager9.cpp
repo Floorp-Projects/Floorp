@@ -833,14 +833,12 @@ void StateManager9::setColorMask(const gl::Framebuffer *framebuffer,
 {
     // Set the color mask
 
-    const gl::FramebufferAttachment *attachment = framebuffer->getFirstColorbuffer();
-    GLenum internalFormat                       = attachment ? attachment->getInternalFormat() : GL_NONE;
-
-    const gl::InternalFormat &formatInfo = gl::GetInternalFormatInfo(internalFormat);
+    const auto *attachment = framebuffer->getFirstColorbuffer();
+    const auto &format     = attachment ? attachment->getFormat() : gl::Format::Invalid();
 
     DWORD colorMask = gl_d3d9::ConvertColorMask(
-        formatInfo.redBits > 0 && red, formatInfo.greenBits > 0 && green,
-        formatInfo.blueBits > 0 && blue, formatInfo.alphaBits > 0 && alpha);
+        format.info->redBits > 0 && red, format.info->greenBits > 0 && green,
+        format.info->blueBits > 0 && blue, format.info->alphaBits > 0 && alpha);
 
     // Apparently some ATI cards have a bug where a draw with a zero color write mask can cause
     // later draws to have incorrect results. Instead, set a nonzero color write mask but modify the
