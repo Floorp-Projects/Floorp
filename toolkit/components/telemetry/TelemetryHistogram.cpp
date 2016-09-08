@@ -1337,7 +1337,9 @@ internal_RemoteAccumulate(mozilla::Telemetry::ID aId,
 
 void internal_Accumulate(mozilla::Telemetry::ID aHistogram, uint32_t aSample)
 {
-  if (!internal_CanRecordBase() ||
+  bool isValid = internal_IsHistogramEnumId(aHistogram);
+  MOZ_ASSERT(isValid, "Accumulation using invalid id");
+  if (!internal_CanRecordBase() || !isValid ||
       internal_RemoteAccumulate(aHistogram, aSample)) {
     return;
   }
@@ -1352,7 +1354,9 @@ void
 internal_Accumulate(mozilla::Telemetry::ID aID,
                     const nsCString& aKey, uint32_t aSample)
 {
-  if (!gInitDone || !internal_CanRecordBase() ||
+  bool isValid = internal_IsHistogramEnumId(aID);
+  MOZ_ASSERT(isValid, "Child keyed telemetry accumulation using invalid id");
+  if (!gInitDone || !internal_CanRecordBase() || !isValid ||
       internal_RemoteAccumulate(aID, aKey, aSample)) {
     return;
   }
