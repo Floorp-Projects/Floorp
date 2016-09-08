@@ -1575,7 +1575,7 @@ public:
         glyph->mIndex = aGlyphID;
         glyph->mPosition.x = aPt.x;
         glyph->mPosition.y = aPt.y;
-        glyph->mPosition = mFontParams.matInv * glyph->mPosition;
+        glyph->mPosition = mFontParams.matInv.TransformPoint(glyph->mPosition);
         Flush(false); // this will flush only if the buffer is full
     }
 
@@ -1766,7 +1766,7 @@ double
 gfxFont::CalcXScale(DrawTarget* aDrawTarget)
 {
     // determine magnitude of a 1px x offset in device space
-    Size t = aDrawTarget->GetTransform() * Size(1.0, 0.0);
+    Size t = aDrawTarget->GetTransform().TransformSize(Size(1.0, 0.0));
     if (t.width == 1.0 && t.height == 0.0) {
         // short-circuit the most common case to avoid sqrt() and division
         return 1.0;
@@ -1834,7 +1834,7 @@ gfxFont::DrawOneGlyph(uint32_t aGlyphID, double aAdvance, gfxPoint *aPt,
         RenderColorGlyph(runParams.dt, runParams.context,
                          fontParams.scaledFont, fontParams.renderingOptions,
                          fontParams.drawOptions,
-                         fontParams.matInv * gfx::Point(devPt.x, devPt.y),
+                         fontParams.matInv.TransformPoint(gfx::Point(devPt.x, devPt.y)),
                          aGlyphID)) {
         return;
     }

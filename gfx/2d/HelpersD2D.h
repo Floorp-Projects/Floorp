@@ -653,10 +653,10 @@ CreatePartialBitmapForSurface(DataSourceSurface *aSurface, const Matrix &aDestin
       ImageHalfScaler scaler(mapping.GetData(), mapping.GetStride(), size);
 
       // Calculate the maximum width/height of the image post transform.
-      Point topRight = transform * Point(Float(size.width), 0);
-      Point topLeft = transform * Point(0, 0);
-      Point bottomRight = transform * Point(Float(size.width), Float(size.height));
-      Point bottomLeft = transform * Point(0, Float(size.height));
+      Point topRight = transform.TransformPoint(Point(Float(size.width), 0));
+      Point topLeft = transform.TransformPoint(Point(0, 0));
+      Point bottomRight = transform.TransformPoint(Point(Float(size.width), Float(size.height)));
+      Point bottomLeft = transform.TransformPoint(Point(0, Float(size.height)));
 
       IntSize scaleSize;
 

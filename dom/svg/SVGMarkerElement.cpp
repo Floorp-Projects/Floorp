@@ -362,7 +362,7 @@ SVGMarkerElement::GetViewBoxTransform()
     float refX = mLengthAttributes[REFX].GetAnimValue(mCoordCtx);
     float refY = mLengthAttributes[REFY].GetAnimValue(mCoordCtx);
 
-    gfx::Point ref = viewBoxTM * gfx::Point(refX, refY);
+    gfx::Point ref = viewBoxTM.TransformPoint(gfx::Point(refX, refY));
 
     Matrix TM = viewBoxTM;
     TM.PostTranslate(-ref.x, -ref.y);
