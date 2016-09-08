@@ -31,7 +31,6 @@ class DisplayVk : public DisplayImpl
 
     egl::ConfigSet generateConfigs() override;
 
-    bool isDeviceLost() const override;
     bool testDeviceLost() override;
     egl::Error restoreLostDevice() override;
 
@@ -71,6 +70,7 @@ class DisplayVk : public DisplayImpl
     StreamProducerImpl *createStreamProducerD3DTextureNV12(
         egl::Stream::ConsumerType consumerType,
         const egl::AttributeMap &attribs) override;
+    gl::Version getMaxSupportedESVersion() const override;
 
   private:
     void generateExtensions(egl::DisplayExtensions *outExtensions) const override;

@@ -137,6 +137,24 @@ struct VariableLocation
     bool ignored;
 };
 
+// Information about a variable binding.
+// Currently used by CHROMIUM_path_rendering
+struct BindingInfo
+{
+    // The type of binding, for example GL_FLOAT_VEC3.
+    // This can be GL_NONE if the variable is optimized away.
+    GLenum type;
+
+    // This is the name of the variable in
+    // the translated shader program. Note that
+    // this can be empty in the case where the
+    // variable has been optimized away.
+    std::string name;
+
+    // True if the binding is valid, otherwise false.
+    bool valid;
+};
+
 class ProgramState final : angle::NonCopyable
 {
   public:
@@ -147,6 +165,7 @@ class ProgramState final : angle::NonCopyable
 
     const Shader *getAttachedVertexShader() const { return mAttachedVertexShader; }
     const Shader *getAttachedFragmentShader() const { return mAttachedFragmentShader; }
+    const Shader *getAttachedComputeShader() const { return mAttachedComputeShader; }
     const std::vector<std::string> &getTransformFeedbackVaryingNames() const
     {
         return mTransformFeedbackVaryingNames;
@@ -180,8 +199,11 @@ class ProgramState final : angle::NonCopyable
 
     std::string mLabel;
 
+    sh::WorkGroupSize mComputeShaderLocalSize;
+
     Shader *mAttachedFragmentShader;
     Shader *mAttachedVertexShader;
+    Shader *mAttachedComputeShader;
 
     std::vector<std::string> mTransformFeedbackVaryingNames;
     std::vector<sh::Varying> mTransformFeedbackVaryingVars;
@@ -228,6 +250,14 @@ class Program final : angle::NonCopyable, public LabeledObject
 
     void bindAttributeLocation(GLuint index, const char *name);
     void bindUniformLocation(GLuint index, const char *name);
+
+    // CHROMIUM_path_rendering
+    BindingInfo getFragmentInputBindingInfo(GLint index) const;
+    void bindFragmentInputLocation(GLint index, const char *name);
+    void pathFragmentInputGen(GLint index,
+                              GLenum genMode,
+                              GLint components,
+                              const GLfloat *coeffs);
 
     Error link(const ContextState &data);
     bool isLinked() const;
@@ -351,14 +381,22 @@ class Program final : angle::NonCopyable, public LabeledObject
                         InfoLog &infoLog,
                         const Bindings &attributeBindings,
                         const Shader *vertexShader);
+    bool validateUniformBlocksCount(GLuint maxUniformBlocks,
+                                    const std::vector<sh::InterfaceBlock> &block,
+                                    const std::string &errorMessage,
+                                    InfoLog &infoLog) const;
+    bool validateVertexAndFragmentInterfaceBlocks(
+        const std::vector<sh::InterfaceBlock> &vertexInterfaceBlocks,
+        const std::vector<sh::InterfaceBlock> &fragmentInterfaceBlocks,
+        InfoLog &infoLog) const;
     bool linkUniformBlocks(InfoLog &infoLog, const Caps &caps);
-    static bool linkVaryings(InfoLog &infoLog,
-                             const Shader *vertexShader,
-                             const Shader *fragmentShader);
+    bool linkVaryings(InfoLog &infoLog, const Shader *vertexShader, const Shader *fragmentShader) const;
+    bool validateVertexAndFragmentUniforms(InfoLog &infoLog) const;
     bool linkUniforms(gl::InfoLog &infoLog, const gl::Caps &caps, const Bindings &uniformBindings);
     bool indexUniforms(gl::InfoLog &infoLog, const gl::Caps &caps, const Bindings &uniformBindings);
-    bool areMatchingInterfaceBlocks(gl::InfoLog &infoLog, const sh::InterfaceBlock &vertexInterfaceBlock,
-                                    const sh::InterfaceBlock &fragmentInterfaceBlock);
+    bool areMatchingInterfaceBlocks(gl::InfoLog &infoLog,
+                                    const sh::InterfaceBlock &vertexInterfaceBlock,
+                                    const sh::InterfaceBlock &fragmentInterfaceBlock) const;
 
     static bool linkValidateVariablesBase(InfoLog &infoLog,
                                           const std::string &variableName,
@@ -382,6 +420,13 @@ class Program final : angle::NonCopyable, public LabeledObject
     std::vector<const sh::Varying *> getMergedVaryings() const;
     void linkOutputVariables();
 
+    bool flattenUniformsAndCheckCapsForShader(const gl::Shader &shader,
+                                              GLuint maxUniformComponents,
+                                              GLuint maxTextureImageUnits,
+                                              const std::string &componentsErrorMessage,
+                                              const std::string &samplerErrorMessage,
+                                              std::vector<LinkedUniform> &samplerUniforms,
+                                              InfoLog &infoLog);
     bool flattenUniformsAndCheckCaps(const Caps &caps, InfoLog &infoLog);
 
     struct VectorAndSamplerCount
@@ -429,6 +474,9 @@ class Program final : angle::NonCopyable, public LabeledObject
 
     Bindings mAttributeBindings;
     Bindings mUniformBindings;
+
+    // CHROMIUM_path_rendering
+    Bindings mFragmentInputBindings;
 
     bool mLinked;
     bool mDeleteStatus;   // Flag to indicate that the program can be deleted when no longer in use
