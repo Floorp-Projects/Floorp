@@ -83,8 +83,8 @@ task_description_schema = Schema({
     # if omitted, the build will not be indexed.
     Optional('index'): {
         # the name of the product this build produces
-        # TODO: remove lint when not used
-        'product': Any('firefox', 'mobile', 'b2g', 'lint'),
+        # TODO: remove lint, harnesss-test when not used
+        'product': Any('firefox', 'mobile', 'b2g', 'lint', 'harness_test'),
 
         # the names to use for this job in the TaskCluster index
         'job-name': Any(

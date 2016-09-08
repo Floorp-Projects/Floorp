@@ -77,6 +77,11 @@ B2G device builds produce binaries targetted to specific devices.  These
 involve some device-specific binaries which are not redistributable, so the
 inputs to and outputs from these tasks are restricted.
 
+marionette-harness
+------------------
+
+TBD (Maja)
+
 Tests
 -----
 
