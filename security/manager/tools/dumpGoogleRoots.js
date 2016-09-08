@@ -57,14 +57,31 @@ function downloadRoots() {
   return roots;
 }
 
+function makeFormattedNickname(cert) {
+  if (cert.nickname.startsWith("Builtin Object Token:")) {
+    return `"${cert.nickname.substring("Builtin Object Token:".length)}"`;
+  }
+  // Otherwise, this isn't a built-in and we have to comment it out.
+  if (cert.commonName) {
+    return `// "${cert.commonName}"`;
+  }
+  if (cert.organizationalUnit) {
+    return `// "${cert.organizationalUnit}"`;
+  }
+  if (cert.organization) {
+    return `// "${cert.organization}"`;
+  }
+  throw new Error(`couldn't make nickname for ${cert.subjectName}`);
+}
+
 var roots = downloadRoots();
 var rootNicknames = [];
 for (var root of roots) {
-  rootNicknames.push(root.nickname.substring("Builtin Object Token:".length));
+  rootNicknames.push(makeFormattedNickname(root));
 }
 rootNicknames.sort(function(rootA, rootB) {
-  let rootALowercase = rootA.toLowerCase();
-  let rootBLowercase = rootB.toLowerCase();
+  let rootALowercase = rootA.toLowerCase().replace(/(^[^"]*")|"/g, "");
+  let rootBLowercase = rootB.toLowerCase().replace(/(^[^"]*")|"/g, "");
   if (rootALowercase < rootBLowercase) {
     return -1;
   }
@@ -82,7 +99,7 @@ for (var nickname of rootNicknames) {
     dump(",\n");
   }
   first = false;
-  dump("        \"" + nickname + "\"");
+  dump("        " + nickname);
 }
 dump("\n");
 dump("      ]\n");
