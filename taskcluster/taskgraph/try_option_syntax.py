@@ -510,25 +510,7 @@ class TryOptionSyntax(object):
                 return True
             return True
 
-        if attr('kind') == 'legacy':
-            if attr('legacy_kind') in ('build', 'post_build'):
-                if attr('build_type') not in self.build_types:
-                    return False
-                if self.platforms is not None:
-                    if attr('build_platform') not in self.platforms:
-                        return False
-                return True
-            elif attr('legacy_kind') == 'job':
-                if self.jobs is not None:
-                    if attr('job') not in self.jobs:
-                        return False
-                return True
-            elif attr('legacy_kind') == 'unittest':
-                return match_test(self.unittests, 'unittest_try_name')
-            elif attr('legacy_kind') == 'talos':
-                return match_test(self.talos, 'talos_try_name')
-            return False
-        elif attr('kind') in ('desktop-test', 'android-test'):
+        if attr('kind') in ('desktop-test', 'android-test'):
             return match_test(self.unittests, 'unittest_try_name')
         elif attr('kind') in JOB_KINDS:
             if self.jobs is None:
