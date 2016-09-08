@@ -143,7 +143,7 @@ public:
    *
    * can be called from any thread.
    */
-  static ImageBridgeChild* GetSingleton();
+  static RefPtr<ImageBridgeChild> GetSingleton();
 
 
   static void IdentifyCompositorTextureHost(const TextureFactoryIdentifier& aIdentifier);
