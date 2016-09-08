@@ -50,7 +50,7 @@ function test() {
         collapsible: true,
         stacktrace: stack,
       }, {
-        text: "An invalid or illegal string was specified",
+        text: "SyntaxError: 'buggy;selector' is not a valid selector",
         category: CATEGORY_JS,
         severity: SEVERITY_ERROR,
         collapsible: true,

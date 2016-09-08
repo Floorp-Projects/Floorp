@@ -9,7 +9,11 @@
   <body>
     <div id="mount"></div>
     <script type="text/javascript">
-      var devtoolsRequire = Components.utils.import("resource://devtools/shared/Loader.jsm", {}).require;
+      const { BrowserLoader } = Components.utils.import("resource://devtools/client/shared/browser-loader.js", {});
+      const { require: devtoolsRequire } = BrowserLoader({
+        baseURI: "resource://devtools/client/debugger/new/",
+        window,
+      });
     </script>
     <script type="text/javascript" src="resource://devtools/client/debugger/new/bundle.js"></script>
   </body>
