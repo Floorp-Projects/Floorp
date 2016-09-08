@@ -496,13 +496,21 @@ ImageBridgeChild::ShutdownStep2(SynchronousTask* aTask)
   MOZ_ASSERT(InImageBridgeChildThread(),
              "Should be in ImageBridgeChild thread.");
 
-  Close();
+  if (mCanSend) {
+    Close();
+  }
 }
 
 void
 ImageBridgeChild::ActorDestroy(ActorDestroyReason aWhy)
 {
   mCanSend = false;
+}
+
+void
+ImageBridgeChild::DeallocPImageBridgeChild()
+{
+  this->Release();
 }
 
 void
@@ -906,8 +914,10 @@ ImageBridgeChild::Bind(Endpoint<PImageBridgeChild>&& aEndpoint)
     return;
   }
 
-  mCanSend = true;
+  // This reference is dropped in DeallocPImageBridgeChild.
+  this->AddRef();
 
+  mCanSend = true;
   SendImageBridgeThreadId();
 }
 
@@ -918,8 +928,10 @@ ImageBridgeChild::BindSameProcess(RefPtr<ImageBridgeParent> aParent)
   ipc::MessageChannel *parentChannel = aParent->GetIPCChannel();
   Open(parentChannel, parentMsgLoop, mozilla::ipc::ChildSide);
 
-  mCanSend = true;
+  // This reference is dropped in DeallocPImageBridgeChild.
+  this->AddRef();
 
+  mCanSend = true;
   SendImageBridgeThreadId();
 }
 
