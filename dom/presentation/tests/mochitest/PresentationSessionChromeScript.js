@@ -240,19 +240,19 @@ const mockedSessionTransport = {
     return this._selfAddress;
   },
   buildTCPSenderTransport: function(transport, listener) {
-    sendAsyncMessage('data-transport-initialized');
     this._listener = listener;
     this._role = Ci.nsIPresentationService.ROLE_CONTROLLER;
+    this._listener.onSessionTransport(this);
+    this._listener = null;
+    sendAsyncMessage('data-transport-initialized');
 
     setTimeout(()=>{
-      this._listener.onSessionTransport(this);
-      this._listener = null;
       this.simulateTransportReady();
     }, 0);
   },
   buildTCPReceiverTransport: function(description, listener) {
     this._listener = listener;
-    this._role = Ci.nsIPresentationService.ROLE_CONTROLLER;
+    this._role = Ci.nsIPresentationService.ROLE_RECEIVER;
 
     var addresses = description.QueryInterface(Ci.nsIPresentationChannelDescription).tcpAddress;
     this._selfAddress = {
@@ -269,7 +269,6 @@ const mockedSessionTransport = {
   },
   // in-process case
   buildDataChannelTransport: function(role, window, listener) {
-    dump("PresentationSessionChromeScript: build data channel transport\n");
     this._listener = listener;
     this._role = role;
 
