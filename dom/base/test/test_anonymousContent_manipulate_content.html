@@ -60,6 +60,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1020244
   is(anonymousContent.getAttributeForElement("test-element", "class"), null,
     "Class attribute for the test element was removed");
 
+  let anim = anonymousContent.setAnimationForElement("test-element", [
+    { transform: 'translateY(0px)' },
+    { transform: 'translateY(-300px)' }
+  ], 2000);
+  is(anim.playState, "pending", "Animation should be running");
+  anim.cancel();
+  is(anim.playState, "idle", "Animation should have stopped immediately");
+
   chromeDocument.removeAnonymousContent(anonymousContent);
   </script>
 </body>
