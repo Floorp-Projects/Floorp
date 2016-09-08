@@ -226,18 +226,30 @@ public:
     virtual ~TrackListener() {}
 
     /**
-     * Called when the DOMMediaStream has a new track added, either by
-     * JS (addTrack()) or the source creating one.
+     * Called when the DOMMediaStream has a live track added, either by
+     * script (addTrack()) or the source creating one.
      */
     virtual void
     NotifyTrackAdded(const RefPtr<MediaStreamTrack>& aTrack) {};
 
     /**
-     * Called when the DOMMediaStream removes a track, either by
-     * JS (removeTrack()) or the source ending it.
+     * Called when the DOMMediaStream removes a live track from playback, either
+     * by script (removeTrack(), track.stop()) or the source ending it.
      */
     virtual void
     NotifyTrackRemoved(const RefPtr<MediaStreamTrack>& aTrack) {};
+
+    /**
+     * Called when the DOMMediaStream has become active.
+     */
+    virtual void
+    NotifyActive() {};
+
+    /**
+     * Called when the DOMMediaStream has become inactive.
+     */
+    virtual void
+    NotifyInactive() {};
   };
 
   /**
@@ -362,6 +374,8 @@ public:
 
   /** Identical to CloneInternal(TrackForwardingOption::EXPLICIT) */
   already_AddRefed<DOMMediaStream> Clone();
+
+  bool Active() const;
 
   IMPL_EVENT_HANDLER(addtrack)
 
@@ -599,6 +613,12 @@ protected:
   // created.
   void NotifyTracksCreated();
 
+  // Dispatches NotifyActive() to all registered track listeners.
+  void NotifyActive();
+
+  // Dispatches NotifyInactive() to all registered track listeners.
+  void NotifyInactive();
+
   // Dispatches NotifyTrackAdded() to all registered track listeners.
   void NotifyTrackAdded(const RefPtr<MediaStreamTrack>& aTrack);
 
@@ -698,6 +718,9 @@ protected:
 
   // The track listeners subscribe to changes in this stream's track set.
   nsTArray<TrackListener*> mTrackListeners;
+
+  // True if this stream has live tracks.
+  bool mActive;
 
 private:
   void NotifyPrincipalChanged();

@@ -36,9 +36,7 @@ interface MediaStream : EventTarget {
     void                       addTrack (MediaStreamTrack track);
     void                       removeTrack (MediaStreamTrack track);
     MediaStream                clone ();
-    // readonly    attribute boolean      active;
-    //             attribute EventHandler onactive;
-    //             attribute EventHandler oninactive;
+    readonly    attribute boolean      active;
                 attribute EventHandler onaddtrack;
     //             attribute EventHandler onremovetrack;
     readonly attribute double currentTime;
