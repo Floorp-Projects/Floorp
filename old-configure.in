@@ -3284,6 +3284,7 @@ MOZ_ARG_DISABLE_BOOL(pulseaudio,
    MOZ_PULSEAUDIO=1)
 
 if test -n "$MOZ_PULSEAUDIO"; then
+    AC_DEFINE(MOZ_PULSEAUDIO)
     if test -z "$gonkdir"; then
         PKG_CHECK_MODULES(MOZ_PULSEAUDIO, libpulse, ,
              [echo "$MOZ_PULSEAUDIO_PKG_ERRORS"
