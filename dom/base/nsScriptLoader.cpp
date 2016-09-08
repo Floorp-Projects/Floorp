@@ -51,6 +51,7 @@
 #include "nsINetworkPredictor.h"
 #include "ImportManager.h"
 #include "mozilla/dom/EncodingUtils.h"
+#include "mozilla/ConsoleReportCollector.h"
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Unused.h"
@@ -514,7 +515,8 @@ nsScriptLoader::nsScriptLoader(nsIDocument *aDocument)
     mEnabled(true),
     mDeferEnabled(false),
     mDocumentParsingDone(false),
-    mBlockingDOMContentLoaded(false)
+    mBlockingDOMContentLoaded(false),
+    mReporter(new ConsoleReportCollector())
 {
 }
 
@@ -1279,7 +1281,12 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType,
 
   nsAutoPtr<mozilla::dom::SRICheckDataVerifier> sriDataVerifier;
   if (!aRequest->mIntegrity.IsEmpty()) {
-    sriDataVerifier = new SRICheckDataVerifier(aRequest->mIntegrity, mDocument);
+    nsAutoCString sourceUri;
+    if (mDocument && mDocument->GetDocumentURI()) {
+      mDocument->GetDocumentURI()->GetAsciiSpec(sourceUri);
+    }
+    sriDataVerifier = new SRICheckDataVerifier(aRequest->mIntegrity, sourceUri,
+                                               mReporter);
   }
 
   RefPtr<nsScriptLoadHandler> handler =
@@ -1505,7 +1512,12 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
           MOZ_LOG(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug,
                  ("nsScriptLoader::ProcessScriptElement, integrity=%s",
                   NS_ConvertUTF16toUTF8(integrity).get()));
-          SRICheck::IntegrityMetadata(integrity, mDocument, &sriMetadata);
+          nsAutoCString sourceUri;
+          if (mDocument && mDocument->GetDocumentURI()) {
+            mDocument->GetDocumentURI()->GetAsciiSpec(sourceUri);
+          }
+          SRICheck::IntegrityMetadata(integrity, sourceUri, mReporter,
+                                      &sriMetadata);
         }
       }
 
@@ -2451,8 +2463,16 @@ nsScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
   if (!request->mIntegrity.IsEmpty() &&
       NS_SUCCEEDED((rv = aSRIStatus))) {
     MOZ_ASSERT(aSRIDataVerifier);
-    if (NS_FAILED(aSRIDataVerifier->Verify(request->mIntegrity, channel,
-                                           request->mCORSMode, mDocument))) {
+    MOZ_ASSERT(mReporter);
+
+    nsAutoCString sourceUri;
+    if (mDocument && mDocument->GetDocumentURI()) {
+      mDocument->GetDocumentURI()->GetAsciiSpec(sourceUri);
+    }
+    rv = aSRIDataVerifier->Verify(request->mIntegrity, channel, sourceUri,
+                                  mReporter);
+    mReporter->FlushConsoleReports(mDocument);
+    if (NS_FAILED(rv)) {
       rv = NS_ERROR_SRI_CORRUPT;
     }
   } else {
@@ -2757,7 +2777,11 @@ nsScriptLoader::PreloadURI(nsIURI *aURI, const nsAString &aCharset,
     MOZ_LOG(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug,
            ("nsScriptLoader::PreloadURI, integrity=%s",
             NS_ConvertUTF16toUTF8(aIntegrity).get()));
-    SRICheck::IntegrityMetadata(aIntegrity, mDocument, &sriMetadata);
+    nsAutoCString sourceUri;
+    if (mDocument && mDocument->GetDocumentURI()) {
+      mDocument->GetDocumentURI()->GetAsciiSpec(sourceUri);
+    }
+    SRICheck::IntegrityMetadata(aIntegrity, sourceUri, mReporter, &sriMetadata);
   }
 
   RefPtr<nsScriptLoadRequest> request =
