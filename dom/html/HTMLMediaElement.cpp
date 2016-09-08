@@ -3873,22 +3873,6 @@ public:
   void Forget() { mElement = nullptr; }
 
   // Main thread
-  void DoNotifyFinished()
-  {
-    mFinished = true;
-    if (mElement) {
-      RefPtr<HTMLMediaElement> deathGrip = mElement;
-
-      // Update NextFrameStatus() to move to NEXT_FRAME_UNAVAILABLE and
-      // HAVE_CURRENT_DATA.
-      mElement = nullptr;
-      // NotifyWatchers before calling PlaybackEnded since PlaybackEnded
-      // can remove watchers.
-      NotifyWatchers();
-
-      deathGrip->PlaybackEnded();
-    }
-  }
 
   MediaDecoderOwner::NextFrameStatus NextFrameStatus()
   {
@@ -3943,15 +3927,6 @@ public:
       event = NewRunnableMethod(this, &StreamListener::DoNotifyUnblocked);
     }
     aGraph->DispatchToMainThreadAfterStreamStateUpdate(event.forget());
-  }
-  virtual void NotifyEvent(MediaStreamGraph* aGraph,
-                           MediaStreamGraphEvent event) override
-  {
-    if (event == MediaStreamGraphEvent::EVENT_FINISHED) {
-      nsCOMPtr<nsIRunnable> event =
-        NewRunnableMethod(this, &StreamListener::DoNotifyFinished);
-      aGraph->DispatchToMainThreadAfterStreamStateUpdate(event.forget());
-    }
   }
   virtual void NotifyHasCurrentData(MediaStreamGraph* aGraph) override
   {
@@ -4017,6 +3992,17 @@ public:
   void NotifyTrackRemoved(const RefPtr<MediaStreamTrack>& aTrack) override
   {
     mElement->NotifyMediaStreamTrackRemoved(aTrack);
+  }
+
+  void NotifyInactive() override
+  {
+    LOG(LogLevel::Debug, ("%p, mSrcStream %p became inactive",
+                          mElement, mElement->mSrcStream.get()));
+    MOZ_ASSERT(!mElement->mSrcStream->Active());
+    if (mElement->mMediaStreamListener) {
+      mElement->mMediaStreamListener->Forget();
+    }
+    mElement->PlaybackEnded();
   }
 
 protected:
