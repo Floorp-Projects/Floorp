@@ -521,13 +521,6 @@ ImageBridgeChild::CreateCanvasClientSync(SynchronousTask* aTask,
   *outResult = CreateCanvasClientNow(aType, aFlags);
 }
 
-static void ConnectImageBridge(ImageBridgeChild * child, ImageBridgeParent * parent)
-{
-  MessageLoop *parentMsgLoop = parent->GetMessageLoop();
-  ipc::MessageChannel *parentChannel = parent->GetIPCChannel();
-  child->Open(parentChannel, parentMsgLoop, mozilla::ipc::ChildSide);
-}
-
 ImageBridgeChild::ImageBridgeChild()
   : mShuttingDown(false)
   , mFwdTransactionId(0)
@@ -872,14 +865,8 @@ void
 ImageBridgeChild::SendImageBridgeThreadId()
 {
 #ifdef MOZ_WIDGET_GONK
-  SendImageBridgeThreadId(gettid());
+  PImageBridgeChild::SendImageBridgeThreadId(gettid());
 #endif
-}
-
-static void CallSendImageBridgeThreadId(ImageBridgeChild* aImageBridgeChild)
-{
-  MOZ_ASSERT(InImageBridgeChildThread());
-  aImageBridgeChild->SendImageBridgeThreadId();
 }
 
 bool
@@ -894,22 +881,37 @@ ImageBridgeChild::InitForContent(Endpoint<PImageBridgeChild>&& aEndpoint)
     return false;
   }
 
-  sImageBridgeChildSingleton = new ImageBridgeChild();
+  RefPtr<ImageBridgeChild> child = new ImageBridgeChild();
 
-  MessageLoop* loop = sImageBridgeChildSingleton->GetMessageLoop();
+  sImageBridgeChildSingleton = child;
 
-  loop->PostTask(NewRunnableMethod<Endpoint<PImageBridgeChild>&&>(
-    sImageBridgeChildSingleton, &ImageBridgeChild::Bind, Move(aEndpoint)));
-  loop->PostTask(NewRunnableFunction(
-    CallSendImageBridgeThreadId, sImageBridgeChildSingleton.get()));
+  RefPtr<Runnable> runnable = NewRunnableMethod<Endpoint<PImageBridgeChild>&&>(
+    child,
+    &ImageBridgeChild::Bind,
+    Move(aEndpoint));
+  child->GetMessageLoop()->PostTask(runnable.forget());
 
-  return sImageBridgeChildSingleton;
+  return true;
 }
 
 void
 ImageBridgeChild::Bind(Endpoint<PImageBridgeChild>&& aEndpoint)
 {
-  aEndpoint.Bind(this);
+  if (!aEndpoint.Bind(this)) {
+    return;
+  }
+
+  SendImageBridgeThreadId();
+}
+
+void
+ImageBridgeChild::BindSameProcess(RefPtr<ImageBridgeParent> aParent)
+{
+  MessageLoop *parentMsgLoop = aParent->GetMessageLoop();
+  ipc::MessageChannel *parentChannel = aParent->GetIPCChannel();
+  Open(parentChannel, parentMsgLoop, mozilla::ipc::ChildSide);
+
+  SendImageBridgeThreadId();
 }
 
 void ImageBridgeChild::ShutDown()
@@ -959,13 +961,16 @@ ImageBridgeChild::InitSameProcess()
     sImageBridgeChildThread->Start();
   }
 
-  sImageBridgeChildSingleton = new ImageBridgeChild();
+  RefPtr<ImageBridgeChild> child = new ImageBridgeChild();
   RefPtr<ImageBridgeParent> parent = ImageBridgeParent::CreateSameProcess();
 
-  sImageBridgeChildSingleton->ConnectAsync(parent);
-  sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
-    NewRunnableFunction(CallSendImageBridgeThreadId,
-                        sImageBridgeChildSingleton.get()));
+  sImageBridgeChildSingleton = child;
+
+  RefPtr<Runnable> runnable = WrapRunnable(
+    child,
+    &ImageBridgeChild::BindSameProcess,
+    parent);
+  child->GetMessageLoop()->PostTask(runnable.forget());
 }
 
 /* static */ void
@@ -996,12 +1001,6 @@ bool InImageBridgeChildThread()
 MessageLoop * ImageBridgeChild::GetMessageLoop() const
 {
   return sImageBridgeChildThread ? sImageBridgeChildThread->message_loop() : nullptr;
-}
-
-void ImageBridgeChild::ConnectAsync(ImageBridgeParent* aParent)
-{
-  GetMessageLoop()->PostTask(NewRunnableFunction(&ConnectImageBridge,
-                                                 this, aParent));
 }
 
 void
