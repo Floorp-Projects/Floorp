@@ -1243,7 +1243,12 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 "UNION ALL " + historyQuery + ") " +
                 "GROUP BY " + Combined.URL + ";";
 
-        return db.rawQuery(query, null);
+        final Cursor cursor = db.rawQuery(query, null);
+
+        cursor.setNotificationUri(getContext().getContentResolver(),
+                BrowserContract.AUTHORITY_URI);
+
+        return cursor;
     }
 
     @Override
