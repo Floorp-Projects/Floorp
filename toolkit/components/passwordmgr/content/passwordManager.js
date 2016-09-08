@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*** =================== SAVED SIGNONS CODE =================== ***/
-var { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
+const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -14,20 +14,20 @@ XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 
-var kSignonBundle;
-var kObserverService;
+let kSignonBundle;
+let kObserverService;
 
 // interface variables
-var passwordmanager = null;
+let passwordmanager = null;
 
-var showingPasswords = false;
+let showingPasswords = false;
 
 // password-manager lists
-var signons = [];
-var deletedSignons = [];
+let signons = [];
+let deletedSignons = [];
 
-var signonsTree;
-var signonReloadDisplay = {
+let signonsTree;
+let signonReloadDisplay = {
   observe: function(subject, topic, data) {
     if (topic == "passwordmgr-storage-changed") {
       switch (data) {
@@ -52,9 +52,9 @@ var signonReloadDisplay = {
 }
 
 // Formatter for localization.
-var dateFormatter = new Intl.DateTimeFormat(undefined,
+let dateFormatter = new Intl.DateTimeFormat(undefined,
                       { day: "numeric", month: "short", year: "numeric" });
-var dateAndTimeFormatter = new Intl.DateTimeFormat(undefined,
+let dateAndTimeFormatter = new Intl.DateTimeFormat(undefined,
                              { day: "numeric", month: "short", year: "numeric",
                                hour: "numeric", minute: "numeric" });
 
@@ -120,7 +120,7 @@ function setFilter(aFilterString) {
   _filterPasswords();
 }
 
-var signonsTreeView = {
+let signonsTreeView = {
   // Keep track of which favicons we've fetched or started fetching.
   // Maps a login origin to a favicon URL.
   _faviconMap: new Map(),
@@ -161,8 +161,8 @@ var signonsTreeView = {
   getProgressMode(row, column) {},
   getCellValue(row, column) {},
   getCellText(row, column) {
-    var time;
-    var signon = this._filterSet.length ? this._filterSet[row] : signons[row];
+    let time;
+    let signon = this._filterSet.length ? this._filterSet[row] : signons[row];
     switch (column.id) {
       case "siteCol":
         return signon.httpRealm ?
@@ -234,18 +234,18 @@ var signonsTreeView = {
 function SortTree(tree, view, table, column, lastSortColumn, lastSortAscending, updateSelection) {
 
   // remember which item was selected so we can restore it after the sort
-  var selections = GetTreeSelections(tree);
-  var selectedNumber = selections.length ? table[selections[0]].number : -1;
+  let selections = GetTreeSelections(tree);
+  let selectedNumber = selections.length ? table[selections[0]].number : -1;
 
   // determine if sort is to be ascending or descending
-  var ascending = (column == lastSortColumn) ? !lastSortAscending : true;
+  let ascending = (column == lastSortColumn) ? !lastSortAscending : true;
 
   function compareFunc(a, b) {
-    var valA, valB;
+    let valA, valB;
     switch (column) {
       case "hostname":
-        var realmA = a.httpRealm;
-        var realmB = b.httpRealm;
+        let realmA = a.httpRealm;
+        let realmB = b.httpRealm;
         realmA = realmA == null ? "" : realmA.toLowerCase();
         realmB = realmB == null ? "" : realmB.toLowerCase();
 
@@ -276,9 +276,9 @@ function SortTree(tree, view, table, column, lastSortColumn, lastSortAscending, 
     table.reverse();
 
   // restore the selection
-  var selectedRow = -1;
+  let selectedRow = -1;
   if (selectedNumber>=0 && updateSelection) {
-    for (var s=0; s<table.length; s++) {
+    for (let s=0; s<table.length; s++) {
       if (table[s].number == selectedNumber) {
         // update selection
         // note: we need to deselect before reselecting in order to trigger ...Selected()
@@ -318,8 +318,8 @@ function LoadSignons() {
   SignonColumnSort(lastSignonSortColumn);
 
   // disable "remove all signons" button if there are no signons
-  var element = document.getElementById("removeAllSignons");
-  var toggle = document.getElementById("togglePasswords");
+  let element = document.getElementById("removeAllSignons");
+  let toggle = document.getElementById("togglePasswords");
   if (signons.length == 0) {
     element.setAttribute("disabled", "true");
     toggle.setAttribute("disabled", "true");
@@ -332,15 +332,15 @@ function LoadSignons() {
 }
 
 function GetTreeSelections(tree) {
-  var selections = [];
-  var select = tree.view.selection;
+  let selections = [];
+  let select = tree.view.selection;
   if (select) {
-    var count = select.getRangeCount();
-    var min = new Object();
-    var max = new Object();
-    for (var i=0; i<count; i++) {
+    let count = select.getRangeCount();
+    let min = new Object();
+    let max = new Object();
+    for (let i=0; i<count; i++) {
       select.getRangeAt(i, min, max);
-      for (var k=min.value; k<=max.value; k++) {
+      for (let k=min.value; k<=max.value; k++) {
         if (k != -1) {
           selections[selections.length] = k;
         }
@@ -351,7 +351,7 @@ function GetTreeSelections(tree) {
 }
 
 function SignonSelected() {
-  var selections = GetTreeSelections(signonsTree);
+  let selections = GetTreeSelections(signonsTree);
   if (selections.length) {
     document.getElementById("removeSignon").removeAttribute("disabled");
   } else {
@@ -366,17 +366,17 @@ function DeleteSelectedItemFromTree
   tree.view.selection.selectEventsSuppressed = true;
 
   // remove selected items from list (by setting them to null) and place in deleted list
-  var selections = GetTreeSelections(tree);
-  for (var s=selections.length-1; s>= 0; s--) {
-    var i = selections[s];
+  let selections = GetTreeSelections(tree);
+  for (let s=selections.length-1; s>= 0; s--) {
+    let i = selections[s];
     deletedTable[deletedTable.length] = table[i];
     table[i] = null;
   }
 
   // collapse list by removing all the null entries
-  for (var j=0; j<table.length; j++) {
+  for (let j=0; j<table.length; j++) {
     if (table[j] == null) {
-      var k = j;
+      let k = j;
       while ((k < table.length) && (table[k] == null)) {
         k++;
       }
@@ -389,7 +389,7 @@ function DeleteSelectedItemFromTree
   // update selection and/or buttons
   if (table.length) {
     // update selection
-    var nextSelection = (selections[0] < table.length) ? selections[0] : table.length-1;
+    let nextSelection = (selections[0] < table.length) ? selections[0] : table.length-1;
     tree.view.selection.select(nextSelection);
     tree.treeBoxObject.ensureRowIsVisible(nextSelection);
   } else {
@@ -401,7 +401,7 @@ function DeleteSelectedItemFromTree
 }
 
 function DeleteSignon() {
-  var syncNeeded = (signonsTreeView._filterSet.length != 0);
+  let syncNeeded = (signonsTreeView._filterSet.length != 0);
   DeleteSelectedItemFromTree(signonsTree, signonsTreeView,
                              signonsTreeView._filterSet.length ? signonsTreeView._filterSet : signons,
                              deletedSignons, "removeSignon", "removeAllSignons");
@@ -411,7 +411,7 @@ function DeleteSignon() {
 function DeleteAllFromTree(tree, view, table, deletedTable, removeButton, removeAllButton) {
 
   // remove all items from table and place in deleted table
-  for (var i=0; i<table.length; i++) {
+  for (let i=0; i<table.length; i++) {
     deletedTable[deletedTable.length] = table[i];
   }
   table.length = 0;
@@ -422,7 +422,7 @@ function DeleteAllFromTree(tree, view, table, deletedTable, removeButton, remove
   // update the tree view and notify the tree
   view.rowCount = 0;
 
-  var box = tree.treeBoxObject;
+  let box = tree.treeBoxObject;
   box.rowCountChanged(0, -deletedTable.length);
   box.invalidate();
 
@@ -433,11 +433,11 @@ function DeleteAllFromTree(tree, view, table, deletedTable, removeButton, remove
 }
 
 function DeleteAllSignons() {
-  var prompter = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+  let prompter = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                            .getService(Components.interfaces.nsIPromptService);
 
   // Confirm the user wants to remove all passwords
-  var dummy = { value: false };
+  let dummy = { value: false };
   if (prompter.confirmEx(window,
                          kSignonBundle.getString("removeAllPasswordsTitle"),
                          kSignonBundle.getString("removeAllPasswordsPrompt"),
@@ -445,7 +445,7 @@ function DeleteAllSignons() {
                          null, null, null, null, dummy) == 1) // 1 == "No" button
     return;
 
-  var syncNeeded = (signonsTreeView._filterSet.length != 0);
+  let syncNeeded = (signonsTreeView._filterSet.length != 0);
   DeleteAllFromTree(signonsTree, signonsTreeView,
                         signonsTreeView._filterSet.length ? signonsTreeView._filterSet : signons,
                         deletedSignons, "removeSignon", "removeAllSignons");
@@ -469,8 +469,8 @@ function TogglePasswordVisible() {
 }
 
 function AskUserShowPasswords() {
-  var prompter = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-  var dummy = { value: false };
+  let prompter = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+  let dummy = { value: false };
 
   // Confirm the user wants to display passwords
   return prompter.confirmEx(window,
@@ -480,7 +480,7 @@ function AskUserShowPasswords() {
 }
 
 function FinalizeSignonDeletions(syncNeeded) {
-  for (var s = 0; s < deletedSignons.length; s++) {
+  for (let s = 0; s < deletedSignons.length; s++) {
     passwordmanager.removeLogin(deletedSignons[s]);
     Services.telemetry.getHistogramById("PWMGR_MANAGE_DELETED").add(1);
   }
@@ -529,12 +529,12 @@ function getColumnByName(column) {
   return undefined;
 }
 
-var lastSignonSortColumn = "hostname";
-var lastSignonSortAscending = true;
+let lastSignonSortColumn = "hostname";
+let lastSignonSortAscending = true;
 
 function SignonColumnSort(column) {
   // clear out the sortDirection attribute on the old column
-  var lastSortedCol = getColumnByName(lastSignonSortColumn);
+  let lastSortedCol = getColumnByName(lastSignonSortColumn);
   lastSortedCol.removeAttribute("sortDirection");
 
   // sort
@@ -546,13 +546,13 @@ function SignonColumnSort(column) {
 
   // set the sortDirection attribute to get the styling going
   // first we need to get the right element
-  var sortedCol = getColumnByName(column);
+  let sortedCol = getColumnByName(column);
   sortedCol.setAttribute("sortDirection", lastSignonSortAscending ?
                                           "ascending" : "descending");
 }
 
 function SignonClearFilter() {
-  var singleSelection = (signonsTreeView.selection.count == 1);
+  let singleSelection = (signonsTreeView.selection.count == 1);
 
   // Clear the Tree Display
   signonsTreeView.rowCount = 0;
@@ -566,7 +566,7 @@ function SignonClearFilter() {
   if (singleSelection) {
     signonsTreeView.selection.clearSelection();
     for (let i = 0; i < signonsTreeView._lastSelectedRanges.length; ++i) {
-      var range = signonsTreeView._lastSelectedRanges[i];
+      let range = signonsTreeView._lastSelectedRanges[i];
       signonsTreeView.selection.rangedSelect(range.min, range.max, true);
     }
   } else {
@@ -578,7 +578,7 @@ function SignonClearFilter() {
 }
 
 function FocusFilterBox() {
-  var filterBox = document.getElementById("filter");
+  let filterBox = document.getElementById("filter");
   if (filterBox.getAttribute("focused") != "true")
     filterBox.focus();
 }
@@ -606,24 +606,24 @@ function FilterPasswords(aFilterValue, view) {
 
 function SignonSaveState() {
   // Save selection
-  var seln = signonsTreeView.selection;
+  let seln = signonsTreeView.selection;
   signonsTreeView._lastSelectedRanges = [];
-  var rangeCount = seln.getRangeCount();
-  for (var i = 0; i < rangeCount; ++i) {
-    var min = {}; var max = {};
+  let rangeCount = seln.getRangeCount();
+  for (let i = 0; i < rangeCount; ++i) {
+    let min = {}; let max = {};
     seln.getRangeAt(i, min, max);
     signonsTreeView._lastSelectedRanges.push({ min: min.value, max: max.value });
   }
 }
 
 function _filterPasswords() {
-  var filter = document.getElementById("filter").value;
+  let filter = document.getElementById("filter").value;
   if (filter == "") {
     SignonClearFilter();
     return;
   }
 
-  var newFilterSet = FilterPasswords(filter, signonsTreeView);
+  let newFilterSet = FilterPasswords(filter, signonsTreeView);
   if (!signonsTreeView._filterSet.length) {
     // Save Display Info for the Non-Filtered mode when we first
     // enter Filtered mode.
@@ -652,20 +652,20 @@ function CopyPassword() {
   if (!showingPasswords && !masterPasswordLogin())
     return;
   // Copy selected signon's password to clipboard
-  var clipboard = Components.classes["@mozilla.org/widget/clipboardhelper;1"].
+  let clipboard = Components.classes["@mozilla.org/widget/clipboardhelper;1"].
                   getService(Components.interfaces.nsIClipboardHelper);
-  var row = document.getElementById("signonsTree").currentIndex;
-  var password = signonsTreeView.getCellText(row, {id : "passwordCol" });
+  let row = document.getElementById("signonsTree").currentIndex;
+  let password = signonsTreeView.getCellText(row, {id : "passwordCol" });
   clipboard.copyString(password);
   Services.telemetry.getHistogramById("PWMGR_MANAGE_COPIED_PASSWORD").add(1);
 }
 
 function CopyUsername() {
   // Copy selected signon's username to clipboard
-  var clipboard = Components.classes["@mozilla.org/widget/clipboardhelper;1"].
+  let clipboard = Components.classes["@mozilla.org/widget/clipboardhelper;1"].
                   getService(Components.interfaces.nsIClipboardHelper);
-  var row = document.getElementById("signonsTree").currentIndex;
-  var username = signonsTreeView.getCellText(row, {id : "userCol" });
+  let row = document.getElementById("signonsTree").currentIndex;
+  let username = signonsTreeView.getCellText(row, {id : "userCol" });
   clipboard.copyString(username);
   Services.telemetry.getHistogramById("PWMGR_MANAGE_COPIED_USERNAME").add(1);
 }
@@ -713,9 +713,9 @@ function UpdateContextMenu() {
 
 function masterPasswordLogin(noPasswordCallback) {
   // This doesn't harm if passwords are not encrypted
-  var tokendb = Components.classes["@mozilla.org/security/pk11tokendb;1"]
+  let tokendb = Components.classes["@mozilla.org/security/pk11tokendb;1"]
                     .createInstance(Components.interfaces.nsIPK11TokenDB);
-  var token = tokendb.getInternalKeyToken();
+  let token = tokendb.getInternalKeyToken();
 
   // If there is no master password, still give the user a chance to opt-out of displaying passwords
   if (token.checkPassword(""))
