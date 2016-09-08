@@ -391,7 +391,10 @@ nsXBLProtoImplField::InstallField(JS::Handle<JSObject*> aBoundNode,
   nsAutoMicroTask mt;
 
   nsAutoCString uriSpec;
-  aBindingDocURI->GetSpec(uriSpec);
+  nsresult rv = aBindingDocURI->GetSpec(uriSpec);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   nsIGlobalObject* globalObject = xpc::WindowGlobalOrNull(aBoundNode);
   if (!globalObject) {
@@ -409,7 +412,7 @@ nsXBLProtoImplField::InstallField(JS::Handle<JSObject*> aBoundNode,
   JSAddonId* addonId = MapURIToAddonID(aBindingDocURI);
 
   Element* boundElement = nullptr;
-  nsresult rv = UNWRAP_OBJECT(Element, aBoundNode, boundElement);
+  rv = UNWRAP_OBJECT(Element, aBoundNode, boundElement);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
