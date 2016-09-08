@@ -3368,36 +3368,10 @@ nsCSSFrameConstructor::ConstructDetailsFrame(nsFrameConstructorState& aState,
                                                       NS_NewDetailsFrame);
   }
 
-  nsIContent* const content = aItem.mContent;
-  nsStyleContext* const styleContext = aItem.mStyleContext;
-  nsContainerFrame* geometricParent =
-    aState.GetGeometricParent(aStyleDisplay, aParentFrame);
-
-  nsContainerFrame* detailsFrame = NS_NewDetailsFrame(mPresShell, styleContext);
-
   // Build a scroll frame to wrap details frame if necessary.
-  nsContainerFrame* scrollFrame = nullptr;
-
-  RefPtr<nsStyleContext> detailsStyle =
-    BeginBuildingScrollFrame(aState, content, styleContext, geometricParent ,
-                             nsCSSAnonBoxes::scrolledContent, false,
-                             scrollFrame);
-
-  aState.AddChild(scrollFrame, aFrameItems, content, styleContext,
-                  aParentFrame);
-
-  nsFrameItems scrollFrameItems;
-  ConstructBlock(aState, content, scrollFrame, scrollFrame,
-                 detailsStyle, &detailsFrame, scrollFrameItems,
-                 aStyleDisplay->IsAbsPosContainingBlock(scrollFrame) ?
-                   scrollFrame : nullptr,
-                 aItem.mPendingBinding);
-
-  MOZ_ASSERT(scrollFrameItems.OnlyChild() == detailsFrame);
-
-  FinishBuildingScrollFrame(scrollFrame, detailsFrame);
-
-  return scrollFrame;
+  return ConstructScrollableBlockWithConstructor(aState, aItem, aParentFrame,
+                                                 aStyleDisplay, aFrameItems,
+                                                 NS_NewDetailsFrame);
 }
 
 static nsIFrame*
@@ -4839,6 +4813,20 @@ nsCSSFrameConstructor::ConstructScrollableBlock(nsFrameConstructorState& aState,
                                                 const nsStyleDisplay*    aDisplay,
                                                 nsFrameItems&            aFrameItems)
 {
+  return ConstructScrollableBlockWithConstructor(aState, aItem, aParentFrame,
+                                                 aDisplay, aFrameItems,
+                                                 NS_NewBlockFormattingContext);
+}
+
+nsIFrame*
+nsCSSFrameConstructor::ConstructScrollableBlockWithConstructor(
+  nsFrameConstructorState& aState,
+  FrameConstructionItem& aItem,
+  nsContainerFrame* aParentFrame,
+  const nsStyleDisplay* aDisplay,
+  nsFrameItems& aFrameItems,
+  BlockFrameCreationFunc aConstructor)
+{
   nsIContent* const content = aItem.mContent;
   nsStyleContext* const styleContext = aItem.mStyleContext;
 
@@ -4851,8 +4839,7 @@ nsCSSFrameConstructor::ConstructScrollableBlock(nsFrameConstructorState& aState,
 
   // Create our block frame
   // pass a temporary stylecontext, the correct one will be set later
-  nsContainerFrame* scrolledFrame =
-    NS_NewBlockFormattingContext(mPresShell, styleContext);
+  nsContainerFrame* scrolledFrame = aConstructor(mPresShell, styleContext);
 
   // Make sure to AddChild before we call ConstructBlock so that we
   // end up before our descendants in fixed-pos lists as needed.
@@ -4864,8 +4851,8 @@ nsCSSFrameConstructor::ConstructScrollableBlock(nsFrameConstructorState& aState,
                  aDisplay->IsAbsPosContainingBlock(newFrame) ? newFrame : nullptr,
                  aItem.mPendingBinding);
 
-  NS_ASSERTION(blockItem.FirstChild() == scrolledFrame,
-               "Scrollframe's frameItems should be exactly the scrolled frame");
+  MOZ_ASSERT(blockItem.OnlyChild() == scrolledFrame,
+             "Scrollframe's frameItems should be exactly the scrolled frame!");
   FinishBuildingScrollFrame(newFrame, scrolledFrame);
 
   return newFrame;
