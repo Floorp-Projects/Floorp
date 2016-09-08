@@ -4707,7 +4707,7 @@ GenerateEnvironmentChainGuards(MacroAssembler& masm, JSObject* envChain, JSObjec
     // Walk up the env chain. Note that IsCacheableEnvironmentChain guarantees the
     // |tobj == holder| condition terminates the loop.
     while (true) {
-        MOZ_ASSERT(IsCacheableNonGlobalEnvironment(tobj) || tobj->is<GlobalObject>());
+        MOZ_ASSERT(IsCacheableEnvironment(tobj) || tobj->is<GlobalObject>());
 
         if (skipLastGuard && tobj == holder)
             break;
@@ -4728,7 +4728,7 @@ bool
 BindNameIC::attachNonGlobal(JSContext* cx, HandleScript outerScript, IonScript* ion,
                             HandleObject envChain, HandleObject holder)
 {
-    MOZ_ASSERT(IsCacheableNonGlobalEnvironment(envChain));
+    MOZ_ASSERT(IsCacheableEnvironment(envChain));
 
     MacroAssembler masm(cx, ion, outerScript, profilerLeavePc_);
     StubAttacher attacher(*this);
@@ -4768,7 +4768,7 @@ static bool
 IsCacheableNonGlobalEnvironmentChain(JSObject* envChain, JSObject* holder)
 {
     while (true) {
-        if (!IsCacheableNonGlobalEnvironment(envChain)) {
+        if (!IsCacheableEnvironment(envChain)) {
             JitSpew(JitSpew_IonIC, "Non-cacheable object on env chain");
             return false;
         }
@@ -4848,7 +4848,7 @@ IsCacheableEnvironmentChain(JSObject* envChain, JSObject* obj)
 {
     JSObject* obj2 = envChain;
     while (obj2) {
-        if (!IsCacheableNonGlobalEnvironment(obj2) && !obj2->is<GlobalObject>())
+        if (!IsCacheableEnvironment(obj2) && !obj2->is<GlobalObject>())
             return false;
 
         // Stop once we hit the global or target obj.
