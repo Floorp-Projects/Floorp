@@ -326,8 +326,8 @@ function GetTreeSelections() {
   let select = signonsTree.view.selection;
   if (select) {
     let count = select.getRangeCount();
-    let min = new Object();
-    let max = new Object();
+    let min = {};
+    let max = {};
     for (let i = 0; i < count; i++) {
       select.getRangeAt(i, min, max);
       for (let k = min.value; k <= max.value; k++) {
