@@ -2160,6 +2160,10 @@ XULDocument::TraceProtos(JSTracer* aTrc, uint32_t aGCNumber)
     for (i = 0; i < count; ++i) {
         mPrototypes[i]->TraceProtos(aTrc, aGCNumber);
     }
+
+    if (mCurrentPrototype) {
+        mCurrentPrototype->TraceProtos(aTrc, aGCNumber);
+    }
 }
 
 //----------------------------------------------------------------------
