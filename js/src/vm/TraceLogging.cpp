@@ -533,7 +533,7 @@ TraceLoggerThread::stopEvent(uint32_t id)
         return;
 
 #ifdef DEBUG
-    if (enabled_ > 0) {
+    if (enabled_ > 0 && !graphStack.empty()) {
         uint32_t prev = graphStack.popCopy();
         if (id == TraceLogger_Engine) {
             MOZ_ASSERT(prev == TraceLogger_IonMonkey || prev == TraceLogger_Baseline ||
