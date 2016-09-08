@@ -162,8 +162,6 @@ InterceptedChannelChrome::InterceptedChannelChrome(nsHttpChannel* aChannel,
 void
 InterceptedChannelChrome::NotifyController()
 {
-  nsCOMPtr<nsIOutputStream> out;
-
   // Intercepted responses should already be decoded.
   mChannel->SetApplyConversion(false);
 

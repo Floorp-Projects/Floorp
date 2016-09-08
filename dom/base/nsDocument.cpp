@@ -4713,9 +4713,9 @@ nsDocument::GetWindowInternal() const
   nsCOMPtr<nsPIDOMWindowOuter> win;
   if (mRemovedFromDocShell) {
     // The docshell returns the outer window we are done.
-    nsCOMPtr<nsIDocShell> kungfuDeathGrip(mDocumentContainer);
-    if (mDocumentContainer) {
-      win = mDocumentContainer->GetWindow();
+    nsCOMPtr<nsIDocShell> kungFuDeathGrip(mDocumentContainer);
+    if (kungFuDeathGrip) {
+      win = kungFuDeathGrip->GetWindow();
     }
   } else {
     if (nsCOMPtr<nsPIDOMWindowInner> inner = do_QueryInterface(mScriptGlobalObject)) {
