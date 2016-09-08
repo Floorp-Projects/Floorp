@@ -125,8 +125,12 @@ Compartment::lookupCode(const void* pc) const
 Instance*
 Compartment::lookupInstanceDeprecated(const void* pc) const
 {
-    // See profilingEnabled().
-    MOZ_ASSERT(!mutatingInstances_);
+    // lookupInstanceDeprecated can be called asynchronously from the interrupt
+    // signal handler. In that case, the signal handler is just asking whether
+    // the pc is in wasm code. If instances_ is being mutated then we can't be
+    // executing wasm code so returning nullptr is fine.
+    if (mutatingInstances_)
+        return nullptr;
 
     size_t index;
     if (!BinarySearchIf(instances_, 0, instances_.length(), PCComparator(pc), &index))
