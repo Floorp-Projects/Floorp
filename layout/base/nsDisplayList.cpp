@@ -6854,7 +6854,7 @@ nsDisplayMask::PrintEffects(nsACString& aTo)
   nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame(&isOK);
   bool first = true;
   aTo += " effects=(";
-  if (mFrame->StyleEffects()->mOpacity != 1.0f) {
+  if (mFrame->StyleEffects()->mOpacity != 1.0f && mHandleOpacity) {
     first = false;
     aTo += nsPrintfCString("opacity(%f)", mFrame->StyleEffects()->mOpacity);
   }
@@ -7009,7 +7009,7 @@ nsDisplayFilter::PrintEffects(nsACString& aTo)
     nsSVGEffects::GetEffectProperties(firstFrame);
   bool first = true;
   aTo += " effects=(";
-  if (mFrame->StyleEffects()->mOpacity != 1.0f) {
+  if (mFrame->StyleEffects()->mOpacity != 1.0f && mHandleOpacity) {
     first = false;
     aTo += nsPrintfCString("opacity(%f)", mFrame->StyleEffects()->mOpacity);
   }
