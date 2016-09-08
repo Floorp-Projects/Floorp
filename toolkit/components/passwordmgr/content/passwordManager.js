@@ -484,9 +484,9 @@ function HandleSignonKeyPress(e) {
   if (signonsTree.getAttribute("editing")) {
     return;
   }
-  if (e.keyCode == KeyEvent.DOM_VK_DELETE ||
+  if (e.keyCode == KeyboardEvent.DOM_VK_DELETE ||
       (AppConstants.platform == "macosx" &&
-       e.keyCode == KeyEvent.DOM_VK_BACK_SPACE))
+       e.keyCode == KeyboardEvent.DOM_VK_BACK_SPACE))
   {
     DeleteSignon();
   }
