@@ -41,6 +41,10 @@
 #include "CGTextDrawing.h"
 #endif
 
+#ifdef XP_WIN
+#include "ScaledFontDWrite.h"
+#endif
+
 namespace mozilla {
 namespace gfx {
 
@@ -1289,6 +1293,12 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
       // This also applies if cleartype is disabled system wide.
       paint.mPaint.setFlags(paint.mPaint.getFlags() | SkPaint::kGenA8FromLCD_Flag);
     }
+    break;
+  }
+  case FontType::DWRITE:
+  {
+    ScaledFontDWrite* dwriteFont = static_cast<ScaledFontDWrite*>(aFont);
+    paint.mPaint.setEmbeddedBitmapText(dwriteFont->UseEmbeddedBitmaps());
     break;
   }
   default:

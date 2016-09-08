@@ -705,9 +705,10 @@ already_AddRefed<ScaledFont>
 Factory::CreateScaledFontForDWriteFont(IDWriteFont* aFont,
                                        IDWriteFontFamily* aFontFamily,
                                        IDWriteFontFace* aFontFace,
-                                       float aSize)
+                                       float aSize,
+                                       bool aUseEmbeddedBitmap)
 {
-  return MakeAndAddRef<ScaledFontDWrite>(aFont, aFontFamily, aFontFace, aSize);
+  return MakeAndAddRef<ScaledFontDWrite>(aFont, aFontFamily, aFontFace, aSize, aUseEmbeddedBitmap);
 }
 
 #endif // XP_WIN
