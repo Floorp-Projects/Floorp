@@ -749,7 +749,8 @@ public class BrowserApp extends GeckoApp
             "Sanitize:ClearSyncedTabs",
             "Settings:Show",
             "Telemetry:Gather",
-            "Updater:Launch");
+            "Updater:Launch",
+            "Website:Metadata");
 
         final GeckoProfile profile = getProfile();
 
@@ -1490,7 +1491,8 @@ public class BrowserApp extends GeckoApp
             "Sanitize:ClearSyncedTabs",
             "Settings:Show",
             "Telemetry:Gather",
-            "Updater:Launch");
+            "Updater:Launch",
+            "Website:Metadata");
 
         if (AppConstants.MOZ_ANDROID_BEAM) {
             NfcAdapter nfc = NfcAdapter.getDefaultAdapter(this);
@@ -1928,6 +1930,13 @@ public class BrowserApp extends GeckoApp
                 } catch (RuntimeException e) {
                     Log.e(LOGTAG, "Download failed: " + e);
                 }
+                break;
+
+            case "Website:Metadata":
+                final NativeJSObject metadata = message.getObject("metadata");
+                final String location = message.getString("location");
+
+                // TODO: Store metadata (Bug 1301717)
                 break;
 
             default:
