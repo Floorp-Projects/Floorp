@@ -18,7 +18,7 @@ add_test(function test_handleEnter() {
     ["mozilla.com", "https://www.mozilla.com"],
     ["gomozilla.org", "http://www.gomozilla.org"],
   ];
-  doSearch("moz", results, controller => {
+  doSearch("moz", results, 0, controller => {
     let input = controller.input;
     Assert.equal(input.textValue, "mozilla.com");
     Assert.equal(controller.getFinalCompleteValueAt(0), results[0][1]);
@@ -32,7 +32,30 @@ add_test(function test_handleEnter() {
   });
 });
 
-function doSearch(aSearchString, aResults, aOnCompleteCallback) {
+add_test(function test_handleEnter_otherSelected() {
+  // The popup selection may not coincide with what is filled into the input
+  // field, for example if the user changed it with the mouse and then pressed
+  // Enter. In such a case we should still use the inputField value and not the
+  // popup selected value.
+  let results = [
+    ["mozilla.com", "https://www.mozilla.com"],
+    ["gomozilla.org", "http://www.gomozilla.org"],
+  ];
+  doSearch("moz", results, 1, controller => {
+    let input = controller.input;
+    Assert.equal(input.textValue, "mozilla.com");
+    Assert.equal(controller.getFinalCompleteValueAt(0), results[0][1]);
+    Assert.equal(controller.getFinalCompleteValueAt(1), results[1][1]);
+    Assert.equal(input.popup.selectedIndex, 1);
+
+    controller.handleEnter(false);
+    // Verify that the keyboard-selected thing got inserted,
+    // and not the mouse selection:
+    Assert.equal(controller.input.textValue, "https://www.mozilla.com");
+  });
+});
+
+function doSearch(aSearchString, aResults, aSelectedIndex, aOnCompleteCallback) {
   let search = new AutoCompleteSearchBase(
     "search",
     new AutoCompleteResult(aResults)
@@ -41,6 +64,7 @@ function doSearch(aSearchString, aResults, aOnCompleteCallback) {
 
   let input = new AutoCompleteInput([ search.name ]);
   input.textValue = aSearchString;
+  input.popup.selectedIndex = aSelectedIndex;
   // Needed for defaultIndex completion.
   input.selectTextRange(aSearchString.length, aSearchString.length);
 

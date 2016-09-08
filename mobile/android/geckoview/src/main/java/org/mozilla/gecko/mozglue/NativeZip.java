@@ -34,7 +34,7 @@ public class NativeZip implements NativeReference {
     }
 
     @Override
-    public void finalize() {
+    protected void finalize() {
         release();
     }
 
