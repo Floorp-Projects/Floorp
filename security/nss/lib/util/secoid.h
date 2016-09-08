@@ -27,7 +27,7 @@ SEC_ASN1_CHOOSER_DECLARE(SECOID_AlgorithmIDTemplate)
 /*
  * OID handling routines
  */
-extern SECOidData *SECOID_FindOID( const SECItem *oid);
+extern SECOidData *SECOID_FindOID(const SECItem *oid);
 extern SECOidTag SECOID_FindOIDTag(const SECItem *oid);
 extern SECOidData *SECOID_FindOIDByTag(SECOidTag tagnum);
 extern SECOidData *SECOID_FindOIDByMechanism(unsigned long mechanism);
@@ -39,13 +39,13 @@ extern SECOidData *SECOID_FindOIDByMechanism(unsigned long mechanism);
 
 /*
 ** Fill in an algorithm-ID object given a tag and some parameters.
-** 	"aid" where the DER encoded algorithm info is stored (memory
-**	   is allocated)
-**	"tag" the tag number defining the algorithm 
-**	"params" if not NULL, the parameters to go with the algorithm
+**      "aid" where the DER encoded algorithm info is stored (memory
+**         is allocated)
+**      "tag" the tag number defining the algorithm
+**      "params" if not NULL, the parameters to go with the algorithm
 */
 extern SECStatus SECOID_SetAlgorithmID(PLArenaPool *arena, SECAlgorithmID *aid,
-				   SECOidTag tag, SECItem *params);
+                                       SECOidTag tag, SECItem *params);
 
 /*
 ** Copy the "src" object to "dest". Memory is allocated in "dest" for
@@ -54,7 +54,7 @@ extern SECStatus SECOID_SetAlgorithmID(PLArenaPool *arena, SECAlgorithmID *aid,
 ** to do that).
 */
 extern SECStatus SECOID_CopyAlgorithmID(PLArenaPool *arena, SECAlgorithmID *dest,
-				        const SECAlgorithmID *src);
+                                        const SECAlgorithmID *src);
 
 /*
 ** Get the tag number for the given algorithm-id object.
@@ -63,8 +63,8 @@ extern SECOidTag SECOID_GetAlgorithmTag(const SECAlgorithmID *aid);
 
 /*
 ** Destroy an algorithm-id object.
-**	"aid" the certificate-request to destroy
-**	"freeit" if PR_TRUE then free the object as well as its sub-objects
+**      "aid" the certificate-request to destroy
+**      "freeit" if PR_TRUE then free the object as well as its sub-objects
 */
 extern void SECOID_DestroyAlgorithmID(SECAlgorithmID *aid, PRBool freeit);
 
@@ -73,9 +73,9 @@ extern void SECOID_DestroyAlgorithmID(SECAlgorithmID *aid, PRBool freeit);
 ** them.
 */
 extern SECComparison SECOID_CompareAlgorithmID(SECAlgorithmID *a,
-					   SECAlgorithmID *b);
+                                               SECAlgorithmID *b);
 
-extern PRBool SECOID_KnownCertExtenOID (SECItem *extenOid);
+extern PRBool SECOID_KnownCertExtenOID(SECItem *extenOid);
 
 /* Given a tag number, return a string describing it.
  */
@@ -85,7 +85,7 @@ extern const char *SECOID_FindOIDTagDescription(SECOidTag tagnum);
 ** Routine copies the src entry, and returns the new SECOidTag.
 ** Returns SEC_OID_INVALID if failed to add for some reason.
 */
-extern SECOidTag SECOID_AddEntry(const SECOidData * src);
+extern SECOidTag SECOID_AddEntry(const SECOidData *src);
 
 /*
  * initialize the oid data structures.
@@ -100,24 +100,24 @@ extern SECStatus SECOID_Shutdown(void);
 /* if to->data is not NULL, and to->len is large enough to hold the result,
  * then the resultant OID will be copyed into to->data, and to->len will be
  * changed to show the actual OID length.
- * Otherwise, memory for the OID will be allocated (from the caller's 
+ * Otherwise, memory for the OID will be allocated (from the caller's
  * PLArenaPool, if pool is non-NULL) and to->data will receive the address
  * of the allocated data, and to->len will receive the OID length.
  * The original value of to->data is not freed when a new buffer is allocated.
- * 
+ *
  * The input string may begin with "OID." and this still be ignored.
- * The length of the input string is given in len.  If len == 0, then 
+ * The length of the input string is given in len.  If len == 0, then
  * len will be computed as strlen(from), meaning it must be NUL terminated.
  * It is an error if from == NULL, or if *from == '\0'.
  */
-extern SECStatus SEC_StringToOID(PLArenaPool *pool, SECItem *to, 
+extern SECStatus SEC_StringToOID(PLArenaPool *pool, SECItem *to,
                                  const char *from, PRUint32 len);
 
 extern void UTIL_SetForkState(PRBool forked);
 
 /*
  * Accessor functions for new opaque extended SECOID table.
- * Any of these functions may return SECSuccess or SECFailure with the error 
+ * Any of these functions may return SECSuccess or SECFailure with the error
  * code set to SEC_ERROR_UNKNOWN_OBJECT_TYPE if the SECOidTag is out of range.
  */
 
@@ -134,7 +134,6 @@ extern SECStatus NSS_GetAlgorithmPolicy(SECOidTag tag, PRUint32 *pValue);
  */
 extern SECStatus
 NSS_SetAlgorithmPolicy(SECOidTag tag, PRUint32 setBits, PRUint32 clearBits);
-
 
 SEC_END_PROTOS
 

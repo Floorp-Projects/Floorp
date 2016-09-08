@@ -173,13 +173,11 @@ extern "C" {
  * #endif
  */
 
-
 /* All the various PKCS #11 types and #define'd values are in the
  * file pkcs11t.h. */
 #include "pkcs11t.h"
 
-#define __PASTE(x,y)      x##y
-
+#define __PASTE(x, y) x##y
 
 /* packing defines */
 #include "pkcs11p.h"
@@ -188,9 +186,9 @@ extern "C" {
  * ==============================================================
  */
 
-#define CK_NEED_ARG_LIST  1
+#define CK_NEED_ARG_LIST 1
 #define CK_PKCS11_FUNCTION_INFO(name) \
-  CK_DECLARE_FUNCTION(CK_RV, name)
+    CK_DECLARE_FUNCTION(CK_RV, name)
 
 /* pkcs11f.h has all the information about the PKCS #11
  * function prototypes. */
@@ -198,7 +196,6 @@ extern "C" {
 
 #undef CK_NEED_ARG_LIST
 #undef CK_PKCS11_FUNCTION_INFO
-
 
 /* ==============================================================
  * Define the typedef form of all the entry points.  That is, for
@@ -207,9 +204,9 @@ extern "C" {
  * ==============================================================
  */
 
-#define CK_NEED_ARG_LIST  1
+#define CK_NEED_ARG_LIST 1
 #define CK_PKCS11_FUNCTION_INFO(name) \
-  typedef CK_DECLARE_FUNCTION_POINTER(CK_RV, __PASTE(CK_,name))
+    typedef CK_DECLARE_FUNCTION_POINTER(CK_RV, __PASTE(CK_, name))
 
 /* pkcs11f.h has all the information about the PKCS #11
  * function prototypes. */
@@ -217,7 +214,6 @@ extern "C" {
 
 #undef CK_NEED_ARG_LIST
 #undef CK_PKCS11_FUNCTION_INFO
-
 
 /* ==============================================================
  * Define structed vector of entry points.  A CK_FUNCTION_LIST
@@ -229,21 +225,20 @@ extern "C" {
  */
 
 #define CK_PKCS11_FUNCTION_INFO(name) \
-  __PASTE(CK_,name) name;
-  
+    __PASTE(CK_, name)                \
+    name;
+
 struct CK_FUNCTION_LIST {
 
-  CK_VERSION    version;  /* PKCS #11 version */
+    CK_VERSION version; /* PKCS #11 version */
 
 /* Pile all the function pointers into the CK_FUNCTION_LIST. */
 /* pkcs11f.h has all the information about the PKCS #11
  * function prototypes. */
-#include "pkcs11f.h" 
-
+#include "pkcs11f.h"
 };
 
 #undef CK_PKCS11_FUNCTION_INFO
-
 
 #undef __PASTE
 
