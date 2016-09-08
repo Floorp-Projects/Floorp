@@ -458,11 +458,21 @@ TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
 
   toEvict = mSizeSourceBuffer - finalSize;
 
-  // Still some to remove. Remove data starting from the end, up to 30s ahead
-  // of the later of the playback time or the next sample to be demuxed.
-  // 30s is a value chosen as it appears to work with YouTube.
-  TimeUnit upperLimit =
-    std::max(aPlaybackTime, track.mNextSampleTime) + TimeUnit::FromSeconds(30);
+  // See if we can evict data into the future.
+  // We do not evict data from the currently used buffered interval.
+
+  TimeUnit currentPosition = std::max(aPlaybackTime, track.mNextSampleTime);
+  TimeIntervals futureBuffered(TimeInterval(currentPosition, TimeUnit::FromInfinity()));
+  futureBuffered.Intersection(track.mBufferedRanges);
+  futureBuffered.SetFuzz(MediaSourceDemuxer::EOS_FUZZ / 2);
+  if (futureBuffered.Length() <= 1) {
+    // We have one continuous segment ahead of us:
+    // nothing further can be evicted.
+    return;
+  }
+
+  // Don't evict before the end of the current segment
+  TimeUnit upperLimit = futureBuffered[0].mEnd;
   uint32_t evictedFramesStartIndex = buffer.Length();
   for (int32_t i = buffer.Length() - 1; i >= 0; i--) {
     const auto& frame = buffer[i];
