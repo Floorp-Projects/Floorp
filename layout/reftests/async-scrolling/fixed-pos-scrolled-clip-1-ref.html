@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+
+<title>Reference for: position:fixed with scrolled clip should prerender everything and correctly move the clip</title>
+
+<style>
+
+body {
+  margin: 0;
+  height: 4000px;
+}
+
+.greenSquare {
+  position: absolute;
+  top: 300px;
+  left: 100px;
+  width: 200px;
+  height: 200px;
+  background: lime;
+}
+
+</style>
+
+<div class="greenSquare"></div>
+
+<script>
+
+document.documentElement.scrollTop = 200;
+
+</script>
