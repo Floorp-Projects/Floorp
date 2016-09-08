@@ -347,8 +347,9 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     uint32_t wasmActualByteLength() const;
     size_t wasmMappedSize() const;
     mozilla::Maybe<uint32_t> wasmMaxSize() const;
-    MOZ_MUST_USE bool growForWasm(uint32_t delta);
+    MOZ_MUST_USE bool wasmGrowToSizeInPlace(uint32_t newSize);
 #ifndef WASM_HUGE_MEMORY
+    MOZ_MUST_USE bool wasmMovingGrowToSize(uint32_t newSize);
     uint32_t wasmBoundsCheckLimit() const;
 #endif
 

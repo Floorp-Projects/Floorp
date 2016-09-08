@@ -1094,7 +1094,8 @@ class FunctionCompiler
         CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Register);
         auto* ins = MWasmCall::NewBuiltinInstanceMethodCall(alloc(), desc, builtin,
                                                             call.instanceArg_, call.regArgs_,
-                                                            ToMIRType(ret), call.spIncrement_);
+                                                            ToMIRType(ret), call.spIncrement_,
+                                                            call.tlsStackOffset_);
         if (!ins)
             return false;
 
@@ -3006,7 +3007,10 @@ EmitGrowMemory(FunctionCompiler& f, uint32_t callOffset)
     if (!f.passArg(delta, ValType::I32, &args))
         return false;
 
-    f.finishCall(&args, PassTls::False, InterModule::False);
+    // As a short-cut, pretend this is an inter-module call so that any pinned
+    // heap pointer will be reloaded after the call. This hack will go away once
+    // we can stop pinning registers.
+    f.finishCall(&args, PassTls::True, InterModule::True);
 
     MDefinition* ret;
     if (!f.builtinInstanceMethodCall(SymbolicAddress::GrowMemory, args, ValType::I32, &ret))
