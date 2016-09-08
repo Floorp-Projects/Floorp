@@ -132,12 +132,6 @@ The ``android-test`` kind defines tests for Android builds.
 It is very similar to ``desktop-test``, but the details of running the tests
 differ substantially, so they are defined separately.
 
-legacy
-------
-
-The legacy kind is the old, templated-yaml-based task definition mechanism.  It
-is still used for builds and generic tasks, but not for long!
-
 docker-image
 ------------
 

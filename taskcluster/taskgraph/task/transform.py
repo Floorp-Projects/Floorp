@@ -92,3 +92,9 @@ class TransformTask(base.Task):
                              + self.label)
                 return True, None
         return False, None
+
+    @classmethod
+    def from_json(cls, task_dict):
+        # when reading back from JSON, we lose the "when" information
+        task_dict['when'] = {}
+        return cls(task_dict['attributes']['kind'], task_dict)
