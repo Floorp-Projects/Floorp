@@ -84,7 +84,7 @@ testnum++;
 testdesc = "modifyLogin";
 
 expectedNotification = "modifyLogin";
-expectedData=[testuser1, testuser2];
+expectedData = [testuser1, testuser2];
 Services.logins.modifyLogin(testuser1, testuser2);
 do_check_eq(expectedNotification, null);
 LoginTestUtils.checkLogins([testuser2]);

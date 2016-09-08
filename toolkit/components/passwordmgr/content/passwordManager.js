@@ -162,7 +162,7 @@ let signonsTreeView = {
     switch (column.id) {
       case "siteCol":
         return signon.httpRealm ?
-               (signon.hostname + " (" + signon.httpRealm + ")"):
+               (signon.hostname + " (" + signon.httpRealm + ")") :
                signon.hostname;
       case "userCol":
         return signon.username || "";
@@ -383,7 +383,7 @@ function DeleteSignon() {
   // update selection and/or buttons
   if (table.length) {
     // update selection
-    let nextSelection = (selections[0] < table.length) ? selections[0] : table.length-1;
+    let nextSelection = (selections[0] < table.length) ? selections[0] : table.length - 1;
     tree.view.selection.select(nextSelection);
     tree.treeBoxObject.ensureRowIsVisible(nextSelection);
   } else {

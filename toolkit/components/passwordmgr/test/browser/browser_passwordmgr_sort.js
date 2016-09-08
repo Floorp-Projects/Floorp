@@ -50,7 +50,7 @@ function test() {
                                                  Ci.nsILoginInfo, "init");
     for (let i = 0; i < 10; i++)
         pwmgr.addLogin(new nsLoginInfo(urls[i], urls[i], null, users[i], pwds[i],
-                                       "u"+(i+1), "p"+(i+1)));
+                                       "u" + (i + 1), "p" + (i + 1)));
 
     // Open the password manager dialog
     const PWMGR_DLG = "chrome://passwordmgr/content/passwordManager.xul";
@@ -133,7 +133,7 @@ function test() {
             let actualValues = getColumnEntries(aCol);
             is(actualValues.length, expectedValues.length, "Checking length of expected column");
             for (let i = 0; i < expectedValues.length; i++)
-                is(actualValues[i], expectedValues[i], "Checking column entry #"+i);
+                is(actualValues[i], expectedValues[i], "Checking column entry #" + i);
         }
 
         function getColumnEntries(aCol) {
