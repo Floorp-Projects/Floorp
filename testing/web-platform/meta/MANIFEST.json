@@ -19482,12 +19482,12 @@
         "url": "/html/semantics/embedded-content/the-iframe-element/iframe_sandbox_allow_script.html"
       },
       {
-        "path": "html/semantics/embedded-content/the-iframe-element/iframe_sandbox_popups_escaping.html",
-        "url": "/html/semantics/embedded-content/the-iframe-element/iframe_sandbox_popups_escaping.html"
+        "path": "html/semantics/embedded-content/the-iframe-element/iframe_sandbox_popups_escaping-1.html",
+        "url": "/html/semantics/embedded-content/the-iframe-element/iframe_sandbox_popups_escaping-1.html"
       },
       {
-        "path": "html/semantics/embedded-content/the-iframe-element/iframe_sandbox_popups_nonescaping.html",
-        "url": "/html/semantics/embedded-content/the-iframe-element/iframe_sandbox_popups_nonescaping.html"
+        "path": "html/semantics/embedded-content/the-iframe-element/iframe_sandbox_popups_nonescaping-1.html",
+        "url": "/html/semantics/embedded-content/the-iframe-element/iframe_sandbox_popups_nonescaping-1.html"
       },
       {
         "path": "html/semantics/embedded-content/the-iframe-element/move_iframe_in_dom_01.html",
@@ -37800,6 +37800,18 @@
           {
             "path": "html/browsers/history/the-location-interface/location-prototype-setting.html",
             "url": "/html/browsers/history/the-location-interface/location-prototype-setting.html"
+          }
+        ],
+        "html/semantics/embedded-content/the-iframe-element/iframe_sandbox_popups_escaping-2.html": [
+          {
+            "path": "html/semantics/embedded-content/the-iframe-element/iframe_sandbox_popups_escaping-2.html",
+            "url": "/html/semantics/embedded-content/the-iframe-element/iframe_sandbox_popups_escaping-2.html"
+          }
+        ],
+        "html/semantics/embedded-content/the-iframe-element/iframe_sandbox_popups_nonescaping-2.html": [
+          {
+            "path": "html/semantics/embedded-content/the-iframe-element/iframe_sandbox_popups_nonescaping-2.html",
+            "url": "/html/semantics/embedded-content/the-iframe-element/iframe_sandbox_popups_nonescaping-2.html"
           }
         ],
         "html/semantics/forms/the-form-element/form-submission-sandbox.html": [
