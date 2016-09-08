@@ -85,7 +85,7 @@ function checkAllSearches(aQuery, aExpectedCount)
   LoginTestUtils.assertLoginListsEqual(logins, expectedLogins);
 
   // Test countLogins.
-  let count = Services.logins.countLogins(hostname, formSubmitURL, httpRealm)
+  let count = Services.logins.countLogins(hostname, formSubmitURL, httpRealm);
   do_check_eq(count, expectedLogins.length);
 
   // Test searchLogins.
