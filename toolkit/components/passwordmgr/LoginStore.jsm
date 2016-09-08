@@ -126,8 +126,7 @@ const PERMISSION_SAVE_LOGINS = "login-saving";
  * @param aPath
  *        String containing the file path where data should be saved.
  */
-function LoginStore(aPath)
-{
+function LoginStore(aPath) {
   this.path = aPath;
 
   this._saver = new DeferredTask(() => this.save(), kSaveDelayMs);
@@ -162,8 +161,7 @@ LoginStore.prototype = {
    * @resolves When the operation finished successfully.
    * @rejects JavaScript exception.
    */
-  load: function ()
-  {
+  load() {
     return Task.spawn(function* () {
       try {
         let bytes = yield OS.File.read(this.path);
@@ -214,8 +212,7 @@ LoginStore.prototype = {
   /**
    * Loads persistent data from the file to memory, synchronously.
    */
-  ensureDataReady: function ()
-  {
+  ensureDataReady() {
     if (this.dataReady) {
       return;
     }
@@ -266,8 +263,7 @@ LoginStore.prototype = {
   /**
    * Synchronously work on the data just loaded into memory.
    */
-  _processLoadedData: function ()
-  {
+  _processLoadedData() {
     // Create any arrays that are not present in the saved file.
     if (!this.data.logins) {
       this.data.logins = [];
@@ -307,8 +303,7 @@ LoginStore.prototype = {
   /**
    * Called when the data changed, this triggers asynchronous serialization.
    */
-  saveSoon: function ()
-  {
+  saveSoon() {
     return this._saver.arm();
   },
 
@@ -326,8 +321,7 @@ LoginStore.prototype = {
    * @resolves When the operation finished successfully.
    * @rejects JavaScript exception.
    */
-  save: function ()
-  {
+  save() {
     return Task.spawn(function* () {
       // Create or overwrite the file.
       let bytes = gTextEncoder.encode(JSON.stringify(this.data));

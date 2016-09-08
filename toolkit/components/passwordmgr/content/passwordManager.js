@@ -486,8 +486,7 @@ function HandleSignonKeyPress(e) {
   }
   if (e.keyCode == KeyboardEvent.DOM_VK_DELETE ||
       (AppConstants.platform == "macosx" &&
-       e.keyCode == KeyboardEvent.DOM_VK_BACK_SPACE))
-  {
+       e.keyCode == KeyboardEvent.DOM_VK_BACK_SPACE)) {
     DeleteSignon();
   }
 }

@@ -27,8 +27,7 @@ function Transaction(aDatabase) {
   try {
     this._db.beginTransaction();
     this._hasTransaction = true;
-  }
-  catch (e) { /* om nom nom exceptions */ }
+  } catch (e) { /* om nom nom exceptions */ }
 }
 
 Transaction.prototype = {
@@ -335,8 +334,7 @@ LoginManagerStorage_mozStorage.prototype = {
 
     // Check if the new GUID is duplicate.
     if (newLogin.guid != oldStoredLogin.guid &&
-        !this._isGuidUnique(newLogin.guid))
-    {
+        !this._isGuidUnique(newLogin.guid)) {
       throw new Error("specified GUID already exists");
     }
 
