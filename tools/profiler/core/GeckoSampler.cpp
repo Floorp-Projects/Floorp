@@ -781,7 +781,7 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
           mozilla::Maybe<JS::ProfilingFrameIterator::Frame> frame =
             jsIter.getPhysicalFrameWithoutLabel();
           if (frame.isSome())
-            jsFrames[jsCount++] = frame.value();
+            jsFrames[jsCount++] = mozilla::Move(frame.ref());
         }
       }
     }
@@ -891,7 +891,7 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
       // with stale JIT code return addresses.
       if (aSample->isSamplingCurrentThread ||
           jsFrame.kind == JS::ProfilingFrameIterator::Frame_AsmJS) {
-        addDynamicTag(aProfile, 'c', jsFrame.label);
+        addDynamicTag(aProfile, 'c', jsFrame.label.get());
       } else {
         MOZ_ASSERT(jsFrame.kind == JS::ProfilingFrameIterator::Frame_Ion ||
                    jsFrame.kind == JS::ProfilingFrameIterator::Frame_Baseline);
