@@ -7,7 +7,7 @@ import urllib
 
 from marionette import MarionetteTestCase
 from marionette_driver.errors import MarionetteException, TimeoutException
-from marionette_driver.by import By
+from marionette_driver import By, Wait
 
 
 def inline(doc):
@@ -17,14 +17,13 @@ def inline(doc):
 class TestNavigate(MarionetteTestCase):
     def setUp(self):
         MarionetteTestCase.setUp(self)
-        self.marionette.execute_script("window.location.href = 'about:blank'")
-        self.assertEqual("about:blank", self.location_href)
+        self.marionette.navigate("about:")
         self.test_doc = self.marionette.absolute_url("test.html")
         self.iframe_doc = self.marionette.absolute_url("test_iframe.html")
 
     def test_set_location_through_execute_script(self):
         self.marionette.execute_script("window.location.href = '%s'" % self.test_doc)
-        self.assertEqual(self.test_doc, self.location_href)
+        Wait(self.marionette).until(lambda _: self.test_doc == self.location_href)
         self.assertEqual("Marionette Test", self.marionette.title)
 
     def test_navigate(self):
