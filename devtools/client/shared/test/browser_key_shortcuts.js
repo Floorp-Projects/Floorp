@@ -19,6 +19,7 @@ add_task(function* () {
   yield testCommandOrControlModifier(shortcuts);
   yield testCtrlModifier(shortcuts);
   yield testInvalidShortcutString(shortcuts);
+  yield testCmdShiftShortcut(shortcuts);
   shortcuts.destroy();
 
   yield testTarget();
@@ -338,6 +339,40 @@ function testCtrlModifier(shortcuts) {
     window);
   yield onKey;
   yield onKeyAlias;
+}
+
+function testCmdShiftShortcut(shortcuts) {
+  if (!isOSX) {
+    // This test is OSX only (Bug 1300458).
+    return;
+  }
+
+  let onCmdKey = once(shortcuts, "CmdOrCtrl+[", (key, event) => {
+    is(event.key, "[");
+    ok(!event.altKey);
+    ok(!event.ctrlKey);
+    ok(event.metaKey);
+    ok(!event.shiftKey);
+  });
+  let onCmdShiftKey = once(shortcuts, "CmdOrCtrl+Shift+[", (key, event) => {
+    is(event.key, "[");
+    ok(!event.altKey);
+    ok(!event.ctrlKey);
+    ok(event.metaKey);
+    ok(event.shiftKey);
+  });
+
+  EventUtils.synthesizeKey(
+    "[",
+    { metaKey: true, shiftKey: true },
+    window);
+  EventUtils.synthesizeKey(
+    "[",
+    { metaKey: true },
+    window);
+
+  yield onCmdKey;
+  yield onCmdShiftKey;
 }
 
 function testTarget() {
