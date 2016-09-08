@@ -74,8 +74,23 @@ def expected_driver_args(runner):
     return expected
 
 
+class ManifestFixture:
+    def __init__(self, name='mock_manifest',
+                       tests=[{'path': u'test_something.py', 'expected': 'pass'}]):
+        self.filepath = "/path/to/fake/manifest.ini"
+        self.n_disabled = len([t for t in tests if 'disabled' in t])
+        self.n_enabled = len(tests) - self.n_disabled
+        mock_manifest = Mock(spec=manifestparser.TestManifest,
+                             active_tests=Mock(return_value=tests))
+        self.manifest_class = Mock(return_value=mock_manifest)
+        self.__repr__ = lambda: "<ManifestFixture {}>".format(name)
+
+@pytest.fixture
+def manifest():
+    return ManifestFixture()
+
 @pytest.fixture(params=['enabled', 'disabled', 'enabled_disabled', 'empty'])
-def manifest_fixture(request):
+def manifest_with_tests(request):
     '''
     Fixture for the contents of mock_manifest, where a manifest
     can include enabled tests, disabled tests, both, or neither (empty)
@@ -89,16 +104,6 @@ def manifest_fixture(request):
                      (u'test_fail_disabled.py', 'fail', 'skip-if: true')]
     keys = ('path', 'expected', 'disabled')
     active_tests = [dict(zip(keys, values)) for values in included]
-
-    class ManifestFixture:
-        def __init__(self, name, tests):
-            self.filepath = "/path/to/fake/manifest.ini"
-            self.n_disabled = len([t for t in tests if 'disabled' in t])
-            self.n_enabled = len(tests) - self.n_disabled
-            mock_manifest = Mock(spec=manifestparser.TestManifest,
-                                 active_tests=Mock(return_value=tests))
-            self.mock_manifest = Mock(return_value=mock_manifest)
-            self.__repr__ = lambda: "<ManifestFixture {}>".format(name)
 
     return ManifestFixture(request.param, active_tests)
 
@@ -288,31 +293,29 @@ def test_add_test_directory(runner):
 
 
 @pytest.mark.parametrize("test_files_exist", [True, False])
-def test_add_test_manifest(mock_runner, manifest_fixture, monkeypatch, test_files_exist):
-    monkeypatch.setattr('marionette.runner.base.TestManifest', manifest_fixture.mock_manifest)
+def test_add_test_manifest(mock_runner, manifest_with_tests, monkeypatch, test_files_exist):
+    monkeypatch.setattr('marionette.runner.base.TestManifest', manifest_with_tests.manifest_class)
     with patch('marionette.runner.base.os.path.exists', return_value=test_files_exist):
-        if test_files_exist or manifest_fixture.n_enabled == 0:
-            mock_runner.add_test(manifest_fixture.filepath)
-            assert len(mock_runner.tests) == manifest_fixture.n_enabled
-            assert len(mock_runner.manifest_skipped_tests) == manifest_fixture.n_disabled
+        if test_files_exist or manifest_with_tests.n_enabled == 0:
+            mock_runner.add_test(manifest_with_tests.filepath)
+            assert len(mock_runner.tests) == manifest_with_tests.n_enabled
+            assert len(mock_runner.manifest_skipped_tests) == manifest_with_tests.n_disabled
             for test in mock_runner.tests:
                 assert test['filepath'].endswith(test['expected'] + '.py')
         else:
-            pytest.raises(IOError, "mock_runner.add_test(manifest_fixture.filepath)")
-    assert manifest_fixture.mock_manifest().read.called
-    assert manifest_fixture.mock_manifest().active_tests.called
-    args, kwargs = manifest_fixture.mock_manifest().active_tests.call_args
-    assert kwargs['app'] == mock_runner._appName
+            pytest.raises(IOError, "mock_runner.add_test(manifest_with_tests.filepath)")
+    assert manifest_with_tests.manifest_class().read.called
+    assert manifest_with_tests.manifest_class().active_tests.called
 
 
-def test_cleanup_with_manifest(mock_runner, manifest_fixture, monkeypatch):
-    monkeypatch.setattr('marionette.runner.base.TestManifest', manifest_fixture.mock_manifest)
-    if manifest_fixture.n_enabled > 0:
+def test_cleanup_with_manifest(mock_runner, manifest_with_tests, monkeypatch):
+    monkeypatch.setattr('marionette.runner.base.TestManifest', manifest_with_tests.manifest_class)
+    if manifest_with_tests.n_enabled > 0:
         context = patch('marionette.runner.base.os.path.exists', return_value=True)
     else:
         context = pytest.raises(Exception)
     with context:
-        mock_runner.run_tests([manifest_fixture.filepath])
+        mock_runner.run_tests([manifest_with_tests.filepath])
     assert mock_runner.marionette is None
     assert mock_runner.httpd is None
 
