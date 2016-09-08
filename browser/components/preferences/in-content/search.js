@@ -36,6 +36,11 @@ var gSearchPane = {
     document.getElementById("engineList").view = gEngineView;
     this.buildDefaultEngineDropDown();
 
+    let addEnginesLink = document.getElementById("addEngines");
+    let searchEnginesURL = Services.wm.getMostRecentWindow('navigator:browser')
+                                      .BrowserSearch.searchEnginesURL;
+    addEnginesLink.setAttribute("href", searchEnginesURL);
+
     window.addEventListener("click", this, false);
     window.addEventListener("command", this, false);
     window.addEventListener("dragstart", this, false);
@@ -122,10 +127,6 @@ var gSearchPane = {
             }
             engineList.blur();
           }
-        }
-        if (aEvent.target.id == "addEngines" && aEvent.button == 0) {
-          Services.wm.getMostRecentWindow('navigator:browser')
-                     .BrowserSearch.loadAddEngines();
         }
         break;
       case "command":

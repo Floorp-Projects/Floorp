@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="32" height="32" viewBox="0 0 32 32">
+  <path fill="#fff" d="M26.2,31.4H6.8c-1.8,0-3.4-1.5-3.4-3.3V3.8c0-1.8,1.6-3.3,3.4-3.3H23l5.6,6.4V28C28.7,29.9,28,31.4,26.2,31.4z" />
+  <path fill="#939393" d="M26.2,31.9H6.8c-2,0-3.8-1.7-3.8-3.8V3.8C3,1.7,4.8,0,6.8,0h16.4L29,6.7v21.4C29,30.2,28.2,31.9,26.2,31.9z M6.8,1C5.2,1,4,2.3,4,3.8V28c0,1.6,1.4,3,2.9,3h19.2c1.6,0,2-1.5,2-3V7.1L22.7,1C22.7,1,6.8,1,6.8,1z" />
+  <path fill="#4c4c4c" d="M22.5,18.2L17,23.6c-0.3,0.3-0.6,0.4-1.1,0.4c-0.3,0-0.8-0.1-1.1-0.4l-5.5-5.4c-0.5-0.5-0.4-1.1,0.4-1.1H13 v-5.9c0-0.5,0.4-1,1-1h3.9c0.5,0,1,0.4,1,1v5.9h3.1C22.8,17.2,23,17.6,22.5,18.2z" />
+  <polygon fill="#939393" points="27,9 21,9 21,1.9 22,1.9 22,8 27,8" />
+</svg>
