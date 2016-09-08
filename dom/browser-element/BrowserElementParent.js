@@ -263,6 +263,7 @@ BrowserElementParent.prototype = {
                                          Ci.nsISupportsWeakReference]),
 
   setFrameLoader: function(frameLoader) {
+    debug("Setting frameLoader");
     this._frameLoader = frameLoader;
     this._frameElement = frameLoader.QueryInterface(Ci.nsIFrameLoader).ownerElement;
     if (!this._frameElement) {
@@ -300,6 +301,11 @@ BrowserElementParent.prototype = {
 
     this.proxyCallHandler.init(
       this._frameElement, this._frameLoader.messageManager);
+  },
+
+  destroyFrameScripts() {
+    debug("Destroying frame scripts");
+    this._mm.sendAsyncMessage("browser-element-api:destroy");
   },
 
   _runPendingAPICall: function() {

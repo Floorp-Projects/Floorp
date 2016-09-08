@@ -35,6 +35,11 @@ interface nsIBrowserElementAPI : nsISupports
   const long FIND_FORWARD = 0;
   const long FIND_BACKWARD = 1;
 
+  /**
+   * Notify frame scripts that support the API to destroy.
+   */
+  void destroyFrameScripts();
+
   void setFrameLoader(in nsIFrameLoader frameLoader);
 
   void setVisible(in boolean visible);
