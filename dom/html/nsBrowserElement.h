@@ -130,6 +130,7 @@ protected:
   NS_IMETHOD GetParentApplication(mozIApplication** aApplication) = 0;
 
   void InitBrowserElementAPI();
+  void DestroyBrowserElementFrameScripts();
   nsCOMPtr<nsIBrowserElementAPI> mBrowserElementAPI;
   nsTArray<RefPtr<dom::BrowserElementAudioChannel>> mBrowserElementAudioChannels;
 

@@ -75,6 +75,15 @@ nsBrowserElement::InitBrowserElementAPI()
 }
 
 void
+nsBrowserElement::DestroyBrowserElementFrameScripts()
+{
+  if (!mBrowserElementAPI) {
+    return;
+  }
+  mBrowserElementAPI->DestroyFrameScripts();
+}
+
+void
 nsBrowserElement::SetVisible(bool aVisible, ErrorResult& aRv)
 {
   NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));

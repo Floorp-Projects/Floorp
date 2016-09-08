@@ -77,6 +77,27 @@ if (!BrowserElementIsReady) {
       ContentPanning.init();
     }
   }
+
+  function onDestroy() {
+    removeMessageListener("browser-element-api:destroy", onDestroy);
+
+    if (api) {
+      api.destroy();
+    }
+    if ("ContentPanning" in this) {
+      ContentPanning.destroy();
+    }
+    if ("ContentPanningAPZDisabled" in this) {
+      ContentPanningAPZDisabled.destroy();
+    }
+    if ("CopyPasteAssistent" in this) {
+      CopyPasteAssistent.destroy();
+    }
+
+    BrowserElementIsReady = false;
+  }
+  addMessageListener("browser-element-api:destroy", onDestroy);
+
   BrowserElementIsReady = true;
 } else {
   debug("BE already loaded, abort");
