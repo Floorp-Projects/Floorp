@@ -1864,6 +1864,10 @@ class ChildAPIManager {
     return this.context.cloneScope;
   }
 
+  get principal() {
+    return this.context.principal;
+  }
+
   shouldInject(namespace, name, allowedContexts) {
     // Do not generate content script APIs, unless explicitly allowed.
     return this.context.envType !== "content_child" || allowedContexts.includes("content");
