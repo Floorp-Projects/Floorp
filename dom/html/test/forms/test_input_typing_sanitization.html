@@ -198,6 +198,24 @@ function runTest()
         '2012-1',
       ]
     },
+    {
+      type: 'week',
+      validData: [
+        '0001-W01',
+        '1970-W53',
+        '100000-W52',
+        '2016-W30',
+      ],
+      invalidData: [
+        '1-W01',
+        'week',
+        '2016-30',
+        '2010-W80',
+        '2000/W30',
+        '1985-W00',
+        '1000-W'
+      ]
+    },
     { type: 'datetime', todo: true },
     { type: 'datetime-local', todo: true },
   ];
