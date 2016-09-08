@@ -8521,6 +8521,9 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
       aEvent->AsInputEvent()) {
     double millis = (TimeStamp::Now() - aEvent->mTimeStamp).ToMilliseconds();
     Telemetry::Accumulate(Telemetry::INPUT_EVENT_RESPONSE_MS, millis);
+    if (mDocument && mDocument->GetReadyStateEnum() != nsIDocument::READYSTATE_COMPLETE) {
+      Telemetry::Accumulate(Telemetry::LOAD_INPUT_EVENT_RESPONSE_MS, millis);
+    }
   }
 
   return rv;
