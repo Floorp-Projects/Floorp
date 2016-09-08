@@ -1,3 +1,6 @@
+needs-focus == focus-within-1.html focus-within-1-ref.html
+needs-focus == focus-within-2.html focus-within-2-ref.html
+needs-focus == focus-within-3.html focus-within-3-ref.html
 == dir-style-01a.html dir-style-01-ref.html
 == dir-style-01b.html dir-style-01-ref.html
 == dir-style-02a.html dir-style-02-ref.html
