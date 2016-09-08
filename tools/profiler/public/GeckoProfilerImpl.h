@@ -226,6 +226,12 @@ void profiler_sleep_end()
   mozilla_sampler_sleep_end();
 }
 
+static inline
+bool profiler_is_sleeping()
+{
+  return mozilla_sampler_is_sleeping();
+}
+
 #ifndef SPS_STANDALONE
 static inline
 void profiler_js_operation_callback()

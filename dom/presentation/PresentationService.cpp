@@ -463,7 +463,7 @@ PresentationService::HandleSessionRequest(nsIPresentationSessionRequest* aReques
     info->SetControlChannel(ctrlChannel);
     info->SetDevice(device);
     return static_cast<PresentationPresentingInfo*>(
-      info.get())->NotifyResponderReady();
+      info.get())->DoReconnect();
   }
 
   // This is the case for a new session.

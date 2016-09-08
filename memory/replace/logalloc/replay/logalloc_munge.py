@@ -61,8 +61,12 @@ class Ignored(Exception): pass
 
 def split_log_line(line):
     try:
+        # The format for each line is:
+        # <pid> [<tid>] <function>([<args>])[=<result>]
+        #
+        # The original format didn't include the tid, so we try to parse
+        # lines whether they have one or not.
         pid, func_call = line.split(' ', 1)
-        # func_call format is <function>([<args>])[=<result>]
         call, result = func_call.split(')')
         func, args = call.split('(')
         args = args.split(',') if args else []
@@ -70,7 +74,11 @@ def split_log_line(line):
             if result[0] != '=':
                 raise Ignored('Malformed input')
             result = result[1:]
-        return pid, func, args, result
+        if ' ' in func:
+            tid, func = func.split(' ', 1)
+        else:
+            tid = pid
+        return pid, tid, func, args, result
     except:
         raise Ignored('Malformed input')
 
@@ -91,14 +99,16 @@ NUM_ARGUMENTS = {
 def main():
     process_pointers = defaultdict(IdMapping)
     pids = IdMapping()
+    tids = IdMapping()
     for line in sys.stdin:
         line = line.strip()
 
         try:
-            pid, func, args, result = split_log_line(line)
+            pid, tid, func, args, result = split_log_line(line)
 
             # Replace pid with an id.
             pid = pids[int(pid)]
+            tid = tids[int(tid)]
 
             pointers = process_pointers[pid]
 
@@ -124,7 +134,7 @@ def main():
                     raise Ignored('Result is NULL')
                 result = "#%d" % pointers[result]
 
-            print('%d %s(%s)%s' % (pid, func, ','.join(args),
+            print('%d %d %s(%s)%s' % (pid, tid, func, ','.join(args),
                 '=%s' % result if result else ''))
 
         except Exception as e:

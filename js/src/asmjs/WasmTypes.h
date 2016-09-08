@@ -791,95 +791,6 @@ class CallSiteAndTarget : public CallSite
 
 typedef Vector<CallSiteAndTarget, 0, SystemAllocPolicy> CallSiteAndTargetVector;
 
-// Metadata for a bounds check that may need patching later.
-
-class BoundsCheck
-{
-  public:
-    BoundsCheck() = default;
-
-    explicit BoundsCheck(uint32_t cmpOffset)
-      : cmpOffset_(cmpOffset)
-    { }
-
-    uint8_t* patchAt(uint8_t* code) const { return code + cmpOffset_; }
-    void offsetBy(uint32_t offset) { cmpOffset_ += offset; }
-
-  private:
-    uint32_t cmpOffset_; // absolute offset of the comparison
-};
-
-// Summarizes a heap access made by wasm code that needs to be patched later
-// and/or looked up by the wasm signal handlers. Different architectures need
-// to know different things (x64: intruction offset, wrapping and failure
-// behavior, ARM: nothing, x86: offset of end of instruction (heap length to
-// patch is last 4 bytes of instruction)).
-#if defined(JS_CODEGEN_X86)
-class MemoryAccess
-{
-    uint32_t nextInsOffset_;
-
-  public:
-    MemoryAccess() = default;
-
-    explicit MemoryAccess(uint32_t nextInsOffset)
-      : nextInsOffset_(nextInsOffset)
-    { }
-
-    void* patchMemoryPtrImmAt(uint8_t* code) const { return code + nextInsOffset_; }
-    void offsetBy(uint32_t offset) { nextInsOffset_ += offset; }
-};
-#elif defined(JS_CODEGEN_X64)
-class MemoryAccess
-{
-    uint32_t insnOffset_;
-    uint8_t offsetWithinWholeSimdVector_; // if is this e.g. the Z of an XYZ
-    bool throwOnOOB_;                     // should we throw on OOB?
-    bool wrapOffset_;                     // should we wrap the offset on OOB?
-
-  public:
-    enum OutOfBoundsBehavior {
-        Throw,
-        CarryOn,
-    };
-    enum WrappingBehavior {
-        WrapOffset,
-        DontWrapOffset,
-    };
-
-    MemoryAccess() = default;
-
-    MemoryAccess(uint32_t insnOffset, OutOfBoundsBehavior onOOB, WrappingBehavior onWrap,
-                 uint32_t offsetWithinWholeSimdVector = 0)
-      : insnOffset_(insnOffset),
-        offsetWithinWholeSimdVector_(offsetWithinWholeSimdVector),
-        throwOnOOB_(onOOB == OutOfBoundsBehavior::Throw),
-        wrapOffset_(onWrap == WrappingBehavior::WrapOffset)
-    {
-        MOZ_ASSERT(offsetWithinWholeSimdVector_ == offsetWithinWholeSimdVector, "fits in uint8");
-    }
-
-    uint32_t insnOffset() const { return insnOffset_; }
-    uint32_t offsetWithinWholeSimdVector() const { return offsetWithinWholeSimdVector_; }
-    bool throwOnOOB() const { return throwOnOOB_; }
-    bool wrapOffset() const { return wrapOffset_; }
-
-    void offsetBy(uint32_t offset) { insnOffset_ += offset; }
-};
-#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
-      defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64) || \
-      defined(JS_CODEGEN_NONE)
-// Nothing! We don't patch or emulate memory accesses on these platforms.
-class MemoryAccess {
-  public:
-    void offsetBy(uint32_t) { MOZ_CRASH(); }
-    uint32_t insnOffset() const { MOZ_CRASH(); }
-};
-#endif
-
-WASM_DECLARE_POD_VECTOR(MemoryAccess, MemoryAccessVector)
-WASM_DECLARE_POD_VECTOR(BoundsCheck, BoundsCheckVector)
-
 // A wasm::SymbolicAddress represents a pointer to a well-known function or
 // object that is embedded in wasm code. Since wasm code is serialized and
 // later deserialized into a different address space, symbolic addresses must be
@@ -1259,21 +1170,153 @@ struct ExternalTableElem
     TlsData* tls;
 };
 
-// Constants:
+// Because ARM has a fixed-width instruction encoding, ARM can only express a
+// limited subset of immediates (in a single instruction).
+
+extern bool
+IsValidARMImmediate(uint32_t i);
+
+extern uint32_t
+RoundUpToNextValidARMImmediate(uint32_t i);
 
 // The WebAssembly spec hard-codes the virtual page size to be 64KiB and
-// requires linear memory to always be a multiple of 64KiB.
+// requires the size of linear memory to always be a multiple of 64KiB.
+
 static const unsigned PageSize = 64 * 1024;
 
+// Bounds checks always compare the base of the memory access with the bounds
+// check limit. If the memory access is unaligned, this means that, even if the
+// bounds check succeeds, a few bytes of the access can extend past the end of
+// memory. To guard against this, extra space is included in the guard region to
+// catch the overflow. MaxMemoryAccessSize is a conservative approximation of
+// the maximum guard space needed to catch all unaligned overflows.
+
+static const unsigned MaxMemoryAccessSize = sizeof(Val);
+
 #ifdef JS_CODEGEN_X64
-#define WASM_HUGE_MEMORY
-static const uint64_t Uint32Range = uint64_t(UINT32_MAX) + 1;
-static const uint64_t MappedSize = 2 * Uint32Range + PageSize;
+
+// All other code should use WASM_HUGE_MEMORY instead of JS_CODEGEN_X64 so that
+// it is easy to use the huge-mapping optimization for other 64-bit platforms in
+// the future.
+# define WASM_HUGE_MEMORY
+
+// On WASM_HUGE_MEMORY platforms, every asm.js or WebAssembly memory
+// unconditionally allocates a huge region of virtual memory of size
+// wasm::HugeMappedSize. This allows all memory resizing to work without
+// reallocation and provides enough guard space for all offsets to be folded
+// into memory accesses.
+
+static const uint64_t IndexRange = uint64_t(UINT32_MAX) + 1;
+static const uint64_t OffsetGuardLimit = uint64_t(INT32_MAX) + 1;
+static const uint64_t UnalignedGuardPage = PageSize;
+static const uint64_t HugeMappedSize = IndexRange + OffsetGuardLimit + UnalignedGuardPage;
+
+static_assert(MaxMemoryAccessSize <= UnalignedGuardPage, "rounded up to static page size");
+
+#else // !WASM_HUGE_MEMORY
+
+// On !WASM_HUGE_MEMORY platforms:
+//  - To avoid OOM in ArrayBuffer::prepareForAsmJS, asm.js continues to use the
+//    original ArrayBuffer allocation which has no guard region at all.
+//  - For WebAssembly memories, an additional GuardSize is mapped after the
+//    accessible region of the memory to catch folded (base+offset) accesses
+//    where `offset < OffsetGuardLimit` as well as the overflow from unaligned
+//    accesses, as described above for MaxMemoryAccessSize.
+
+static const size_t OffsetGuardLimit = PageSize - MaxMemoryAccessSize;
+static const size_t GuardSize = PageSize;
+
+// Return whether the given immediate satisfies the constraints of the platform
+// (viz. that, on ARM, IsValidARMImmediate).
+
+extern bool
+IsValidBoundsCheckImmediate(uint32_t i);
+
+// For a given WebAssembly/asm.js max size, return the number of bytes to
+// map which will necessarily be a multiple of the system page size and greater
+// than maxSize. For a returned mappedSize:
+//   boundsCheckLimit = mappedSize - GuardSize
+//   IsValidBoundsCheckImmediate(boundsCheckLimit)
+
+extern size_t
+ComputeMappedSize(uint32_t maxSize);
+
+#endif // WASM_HUGE_MEMORY
+
+// Metadata for bounds check instructions that are patched at runtime with the
+// appropriate bounds check limit. On WASM_HUGE_MEMORY platforms for wasm (and
+// SIMD/Atomic) bounds checks, no BoundsCheck is created: the signal handler
+// catches everything. On !WASM_HUGE_MEMORY, a BoundsCheck is created for each
+// memory access (except when statically eliminated by optimizations) so that
+// the length can be patched in as an immediate. This requires that the bounds
+// check limit IsValidBoundsCheckImmediate.
+
+class BoundsCheck
+{
+  public:
+    BoundsCheck() = default;
+
+    explicit BoundsCheck(uint32_t cmpOffset)
+      : cmpOffset_(cmpOffset)
+    { }
+
+    uint8_t* patchAt(uint8_t* code) const { return code + cmpOffset_; }
+    void offsetBy(uint32_t offset) { cmpOffset_ += offset; }
+
+  private:
+    uint32_t cmpOffset_;
+};
+
+// Metadata for memory accesses. On WASM_HUGE_MEMORY platforms, only
+// (non-SIMD/Atomic) asm.js loads and stores create a MemoryAccess so that the
+// signal handler can implement the semantically-correct wraparound logic; the
+// rest simply redirect to the out-of-bounds stub in the signal handler. On x86,
+// the base address of memory is baked into each memory access instruction so
+// the MemoryAccess records the location of each for patching. On all other
+// platforms, no MemoryAccess is created.
+
+#ifdef WASM_HUGE_MEMORY
+class MemoryAccess
+{
+    uint32_t insnOffset_;
+
+  public:
+    MemoryAccess() = default;
+    explicit MemoryAccess(uint32_t insnOffset)
+      : insnOffset_(insnOffset)
+    {}
+
+    uint32_t insnOffset() const { return insnOffset_; }
+
+    void offsetBy(uint32_t offset) { insnOffset_ += offset; }
+};
+#elif defined(JS_CODEGEN_X86)
+class MemoryAccess
+{
+    uint32_t nextInsOffset_;
+
+  public:
+    MemoryAccess() = default;
+    explicit MemoryAccess(uint32_t nextInsOffset)
+      : nextInsOffset_(nextInsOffset)
+    { }
+
+    void* patchMemoryPtrImmAt(uint8_t* code) const { return code + nextInsOffset_; }
+    void offsetBy(uint32_t offset) { nextInsOffset_ += offset; }
+};
+#else
+class MemoryAccess {
+  public:
+    MemoryAccess() { MOZ_CRASH(); }
+    void offsetBy(uint32_t) { MOZ_CRASH(); }
+    uint32_t insnOffset() const { MOZ_CRASH(); }
+};
 #endif
 
-bool IsValidARMLengthImmediate(uint32_t length);
-uint32_t RoundUpToNextValidARMLengthImmediate(uint32_t length);
-size_t LegalizeMapLength(size_t requestedSize);
+WASM_DECLARE_POD_VECTOR(MemoryAccess, MemoryAccessVector)
+WASM_DECLARE_POD_VECTOR(BoundsCheck, BoundsCheckVector)
+
+// Constants:
 
 static const unsigned NaN64GlobalDataOffset       = 0;
 static const unsigned NaN32GlobalDataOffset       = NaN64GlobalDataOffset + sizeof(double);

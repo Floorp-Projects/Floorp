@@ -1,7 +1,10 @@
-// |jit-test| test-also-noasmjs
+// |jit-test|
 load(libdir + "asm.js");
 load(libdir + "simd.js");
 load(libdir + "asserts.js");
+
+// Avoid pathological --ion-eager compile times due to bails in loops
+setJitCompilerOption('ion.warmup.trigger', 1000000);
 
 // Set to true to see more JS debugging spew
 const DEBUG = false;
@@ -273,43 +276,33 @@ function MakeCodeFor(typeName) {
 
     var l1 = type.load1;
     var l2 = type.load2;
-    var l3 = type.load3;
 
     var s1 = type.store1;
     var s2 = type.store2;
-    var s3 = type.store3;
 
     var u8 = new glob.Uint8Array(heap);
 
     function load1(i) { i=i|0; return l1(u8, i); }
     function load2(i) { i=i|0; return l2(u8, i); }
-    function load3(i) { i=i|0; return l3(u8, i); }
 
     function loadCst1() { return l1(u8, 41 << 2); }
     function loadCst2() { return l2(u8, 41 << 2); }
-    function loadCst3() { return l3(u8, 41 << 2); }
 
     function store1(i, x) { i=i|0; x=c(x); return s1(u8, i, x); }
     function store2(i, x) { i=i|0; x=c(x); return s2(u8, i, x); }
-    function store3(i, x) { i=i|0; x=c(x); return s3(u8, i, x); }
 
     function storeCst1(x) { x=c(x); return s1(u8, 41 << 2, x); }
     function storeCst2(x) { x=c(x); return s2(u8, 41 << 2, x); }
-    function storeCst3(x) { x=c(x); return s3(u8, 41 << 2, x); }
 
     return {
         load1: load1,
         load2: load2,
-        load3: load3,
         loadCst1: loadCst1,
         loadCst2: loadCst2,
-        loadCst3: loadCst3,
         store1: store1,
         store2: store2,
-        store3: store3,
         storeCst1: storeCst1,
         storeCst2: storeCst2,
-        storeCst3: storeCst3,
     }
 `;
 }
@@ -329,33 +322,27 @@ function TestPartialLoads(m, typedArray, x, y, z, w) {
     var i = 0, j = 0; // i in elems, j in bytes
     assertEqX4(m.load1(j), [x(i), 0, 0, 0]);
     assertEqX4(m.load2(j), [x(i), y(i), 0, 0]);
-    assertEqX4(m.load3(j), [x(i), y(i), z(i), 0]);
 
     j += 4;
     assertEqX4(m.load1(j), [y(i), 0, 0, 0]);
     assertEqX4(m.load2(j), [y(i), z(i), 0, 0]);
-    assertEqX4(m.load3(j), [y(i), z(i), w(i), 0]);
 
     j += 4;
     assertEqX4(m.load1(j), [z(i), 0, 0, 0]);
     assertEqX4(m.load2(j), [z(i), w(i), 0, 0]);
-    assertEqX4(m.load3(j), [z(i), w(i), x(i+4), 0]);
 
     j += 4;
     assertEqX4(m.load1(j), [w(i), 0, 0, 0]);
     assertEqX4(m.load2(j), [w(i), x(i+4), 0, 0]);
-    assertEqX4(m.load3(j), [w(i), x(i+4), y(i+4), 0]);
 
     j += 4;
     i += 4;
     assertEqX4(m.load1(j), [x(i), 0, 0, 0]);
     assertEqX4(m.load2(j), [x(i), y(i), 0, 0]);
-    assertEqX4(m.load3(j), [x(i), y(i), z(i), 0]);
 
     // Test loads with constant indexes (41)
     assertEqX4(m.loadCst1(), [y(40), 0, 0, 0]);
     assertEqX4(m.loadCst2(), [y(40), z(40), 0, 0]);
-    assertEqX4(m.loadCst3(), [y(40), z(40), w(40), 0]);
 
     // Test limit and OOB accesses
     assertEqX4(m.load1((SIZE - 1) << 2), [w(SIZE - 4), 0, 0, 0]);
@@ -363,9 +350,6 @@ function TestPartialLoads(m, typedArray, x, y, z, w) {
 
     assertEqX4(m.load2((SIZE - 2) << 2), [z(SIZE - 4), w(SIZE - 4), 0, 0]);
     assertThrowsInstanceOf(() => m.load2(((SIZE - 2) << 2) + 1), RangeError);
-
-    assertEqX4(m.load3((SIZE - 3) << 2), [y(SIZE - 4), z(SIZE - 4), w(SIZE - 4), 0]);
-    assertThrowsInstanceOf(() => m.load3(((SIZE - 3) << 2) + 1), RangeError);
 }
 
 // Partial stores
@@ -399,18 +383,6 @@ function TestPartialStores(m, typedArray, typeName, x, y, z, w) {
         typedArray[(i >> 2) + 1] = (i >> 2) + 2;
     }
 
-    function TestStore3(i) {
-        m.store3(i, val);
-        CheckNotModified(0, i >> 2);
-        assertEq(typedArray[i >> 2], x);
-        assertEq(typedArray[(i >> 2) + 1], y);
-        assertEq(typedArray[(i >> 2) + 2], z);
-        CheckNotModified((i >> 2) + 3, SIZE);
-        typedArray[i >> 2] = (i >> 2) + 1;
-        typedArray[(i >> 2) + 1] = (i >> 2) + 2;
-        typedArray[(i >> 2) + 2] = (i >> 2) + 3;
-    }
-
     function TestOOBStore(f) {
         assertThrowsInstanceOf(f, RangeError);
         CheckNotModified(0, SIZE);
@@ -440,18 +412,6 @@ function TestPartialStores(m, typedArray, typeName, x, y, z, w) {
     TestOOBStore(() => m.store2(i + 1, val));
     TestOOBStore(() => m.store2(-1, val));
 
-    TestStore3(0);
-    TestStore3(1 << 2);
-    TestStore3(2 << 2);
-    TestStore3(3 << 2);
-    TestStore3(1337 << 2);
-
-    var i = (SIZE - 3) << 2;
-    TestStore3(i);
-    TestOOBStore(() => m.store3(i + 1, val));
-    TestOOBStore(() => m.store3(-1, val));
-    TestOOBStore(() => m.store3(-9, val));
-
     // Constant indexes (41)
     m.storeCst1(val);
     CheckNotModified(0, 41);
@@ -466,16 +426,6 @@ function TestPartialStores(m, typedArray, typeName, x, y, z, w) {
     CheckNotModified(43, SIZE);
     typedArray[41] = 42;
     typedArray[42] = 43;
-
-    m.storeCst3(val);
-    CheckNotModified(0, 41);
-    assertEq(typedArray[41], x);
-    assertEq(typedArray[42], y);
-    assertEq(typedArray[43], z);
-    CheckNotModified(44, SIZE);
-    typedArray[41] = 42;
-    typedArray[42] = 43;
-    typedArray[43] = 44;
 }
 
 var f32 = new Float32Array(SIZE);

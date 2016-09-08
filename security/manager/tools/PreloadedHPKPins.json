@@ -150,7 +150,7 @@
         "Entrust Root Certification Authority - EC1",
         "Entrust Root Certification Authority - G2",
         "Entrust.net Premium 2048 Secure Server CA",
-        "Equifax Secure CA",
+        // "Equifax Secure Certificate Authority",
         "GeoTrust Global CA",
         "GeoTrust Global CA 2",
         "GeoTrust Primary Certification Authority",

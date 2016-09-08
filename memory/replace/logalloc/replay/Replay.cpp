@@ -509,6 +509,10 @@ main()
       continue;
     }
 
+    /* The log contains thread ids for manual analysis, but we just ignore them
+     * for now. */
+    parseNumber(line.SplitChar(' '));
+
     Buffer func = line.SplitChar('(');
     Buffer args = line.SplitChar(')');
 

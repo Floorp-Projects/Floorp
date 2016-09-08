@@ -6,6 +6,7 @@
 
 #ifndef NS_WINDOWS_DLL_INTERCEPTOR_H_
 #define NS_WINDOWS_DLL_INTERCEPTOR_H_
+
 #include <windows.h>
 #include <winternl.h>
 
@@ -65,6 +66,57 @@
 
 namespace mozilla {
 namespace internal {
+
+// Get op length of '/r'
+static size_t
+GetOpLengthByModRM(const uint8_t* aOp)
+{
+  uint8_t mod = *aOp >> 6;
+  uint8_t rm = *aOp & 0x7;
+
+  switch (mod) {
+  case 0:
+    if (rm == 4) {
+      // SIB
+      if ((*(aOp + 1) & 0x7) == 5) {
+        // disp32
+        return 6;
+      }
+      return 2;
+    } else if (rm == 5) {
+      // [RIP/EIP + disp32]
+      // Since we don't modify relative offset, we should mark as impossible
+      // code.
+      return 0;
+    }
+    // [r/m]
+    return 1;
+
+  case 1:
+    if (rm == 4) {
+      // [SIB + imm8]
+      return 3;
+    }
+    // [r/m + imm8]
+    return 2;
+
+  case 2:
+    if (rm == 4) {
+      // [SIB + imm32]
+      return 6;
+    }
+    // [r/m + imm32]
+    return 5;
+
+  case 3:
+    // r/w
+    return 1;
+
+  default:
+     break;
+  }
+  return 0;
+}
 
 class AutoVirtualProtect
 {
@@ -644,6 +696,24 @@ protected:
       } else if ((origBytes[nBytes] & 0xf0) == 0x50) {
         // 1-byte push/pop
         nBytes++;
+      } else if (origBytes[nBytes] == 0x65) {
+        // GS prefix
+        //
+        // The entry of GetKeyState on Windows 10 has the following code.
+        // 65 48 8b 04 25 30 00 00 00    mov   rax,qword ptr gs:[30h]
+        // (GS prefix + REX + MOV (0x8b) ...)
+        if (origBytes[nBytes + 1] == 0x48 &&
+            (origBytes[nBytes + 2] >= 0x88 && origBytes[nBytes + 2] <= 0x8b)) {
+          nBytes += 3;
+          size_t len = GetOpLengthByModRM(origBytes + nBytes);
+          if (!len) {
+            // no way to support this yet.
+            return;
+          }
+          nBytes += len;
+        } else {
+          return;
+        }
       } else if (origBytes[nBytes] == 0x90) {
         // nop
         nBytes++;

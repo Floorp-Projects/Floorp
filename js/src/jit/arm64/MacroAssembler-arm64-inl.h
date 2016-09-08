@@ -1010,12 +1010,12 @@ MacroAssembler::branchTruncateDoubleToInt32(FloatRegister src, Register dest, La
     convertDoubleToInt32(src, dest, fail);
 }
 
-template <typename T>
+template <typename T, typename L>
 void
-MacroAssembler::branchAdd32(Condition cond, T src, Register dest, Label* label)
+MacroAssembler::branchAdd32(Condition cond, T src, Register dest, L label)
 {
     adds32(src, dest);
-    branch(cond, label);
+    B(label, cond);
 }
 
 template <typename T>
@@ -1543,6 +1543,22 @@ MacroAssembler::clampIntToUint8(Register reg)
     Csel(reg32, reg32, vixl::wzr, Assembler::GreaterThanOrEqual);
     Mov(scratch32, Operand(0xff));
     Csel(reg32, reg32, scratch32, Assembler::LessThanOrEqual);
+}
+
+// ========================================================================
+// wasm support
+
+template <class L>
+void
+MacroAssembler::wasmBoundsCheck(Condition cond, Register index, L label)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::wasmPatchBoundsCheck(uint8_t* patchAt, uint32_t limit)
+{
+    MOZ_CRASH("NYI");
 }
 
 //}}} check_macroassembler_style
