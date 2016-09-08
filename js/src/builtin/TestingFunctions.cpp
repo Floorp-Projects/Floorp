@@ -245,14 +245,10 @@ GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp)
     if (!JS_SetProperty(cx, info, "intl-api", value))
         return false;
 
-#if defined(XP_WIN)
+#if defined(SOLARIS)
     value = BooleanValue(false);
-#elif defined(SOLARIS)
-    value = BooleanValue(false);
-#elif defined(XP_UNIX)
-    value = BooleanValue(true);
 #else
-    value = BooleanValue(false);
+    value = BooleanValue(true);
 #endif
     if (!JS_SetProperty(cx, info, "mapped-array-buffer", value))
         return false;

@@ -388,11 +388,12 @@
     _(HasClass)                     \
     _(AsmSelect)                    \
     _(AsmSelectI64)                 \
+    _(WasmBoundsCheck)              \
+    _(WasmAddOffset)                \
     _(WasmLoad)                     \
     _(WasmLoadI64)                  \
     _(WasmStore)                    \
     _(WasmStoreI64)                 \
-    _(WasmBoundsCheck)              \
     _(WasmLoadGlobalVar)            \
     _(WasmLoadGlobalVarI64)         \
     _(WasmStoreGlobalVar)           \

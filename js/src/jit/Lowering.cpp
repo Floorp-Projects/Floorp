@@ -4125,6 +4125,29 @@ LIRGenerator::visitHasClass(MHasClass* ins)
 }
 
 void
+LIRGenerator::visitWasmAddOffset(MWasmAddOffset* ins)
+{
+    MOZ_ASSERT(ins->base()->type() == MIRType::Int32);
+    MOZ_ASSERT(ins->type() == MIRType::Int32);
+    define(new(alloc()) LWasmAddOffset(useRegisterAtStart(ins->base())), ins);
+}
+
+void
+LIRGenerator::visitWasmBoundsCheck(MWasmBoundsCheck* ins)
+{
+#ifndef DEBUG
+    if (ins->isRedundant())
+        return;
+#endif
+
+    MDefinition* input = ins->input();
+    MOZ_ASSERT(input->type() == MIRType::Int32);
+
+    auto* lir = new(alloc()) LWasmBoundsCheck(useRegisterAtStart(input));
+    add(lir, ins);
+}
+
+void
 LIRGenerator::visitWasmLoadGlobalVar(MWasmLoadGlobalVar* ins)
 {
     if (ins->type() == MIRType::Int64)
