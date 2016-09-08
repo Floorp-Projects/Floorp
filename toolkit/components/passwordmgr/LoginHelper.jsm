@@ -89,8 +89,7 @@ this.LoginHelper = {
    * @throws String with English message in case validation failed.
    */
   checkLoginValues(aLogin) {
-    function badCharacterPresent(l, c)
-    {
+    function badCharacterPresent(l, c) {
       return ((l.formSubmitURL && l.formSubmitURL.indexOf(c) != -1) ||
               (l.httpRealm     && l.httpRealm.indexOf(c)     != -1) ||
                                   l.hostname.indexOf(c)      != -1  ||
