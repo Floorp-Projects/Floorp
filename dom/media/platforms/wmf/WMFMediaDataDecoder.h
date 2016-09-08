@@ -37,12 +37,13 @@ public:
   virtual HRESULT Output(int64_t aStreamOffset,
                          RefPtr<MediaData>& aOutput) = 0;
 
-  void Flush() {
+  virtual void Flush()
+  {
     mDecoder->Flush();
     mSeekTargetThreshold.reset();
   }
 
-  void Drain()
+  virtual void Drain()
   {
     if (FAILED(mDecoder->SendMFTMessage(MFT_MESSAGE_COMMAND_DRAIN, 0))) {
       NS_WARNING("Failed to send DRAIN command to MFT");

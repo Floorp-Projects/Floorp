@@ -49,7 +49,6 @@ class DisplayAndroid : public DisplayEGL
 
     egl::ConfigSet generateConfigs() override;
 
-    bool isDeviceLost() const override;
     bool testDeviceLost() override;
     egl::Error restoreLostDevice() override;
 

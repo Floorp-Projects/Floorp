@@ -243,20 +243,20 @@ const TConstantUnion *TOutputGLSLBase::writeConstantUnion(
     return pConstUnion;
 }
 
-void TOutputGLSLBase::writeConstructorTriplet(Visit visit, const TType &type, const char *constructorBaseType)
+void TOutputGLSLBase::writeConstructorTriplet(Visit visit, const TType &type)
 {
     TInfoSinkBase &out = objSink();
     if (visit == PreVisit)
     {
         if (type.isArray())
         {
-            out << constructorBaseType;
+            out << getTypeName(type);
             out << arrayBrackets(type);
             out << "(";
         }
         else
         {
-            out << constructorBaseType << "(";
+            out << getTypeName(type) << "(";
         }
     }
     else
@@ -357,7 +357,7 @@ bool TOutputGLSLBase::visitBinary(Visit visit, TIntermBinary *node)
                 if (left->isArray())
                 {
                     // The shader will fail validation if the array length is not > 0.
-                    maxSize = leftType.getArraySize() - 1;
+                    maxSize = static_cast<int>(leftType.getArraySize()) - 1;
                 }
                 else
                 {
@@ -917,88 +917,33 @@ bool TOutputGLSLBase::visitAggregate(Visit visit, TIntermAggregate *node)
         visitChildren = false;
         break;
       case EOpConstructFloat:
-        writeConstructorTriplet(visit, node->getType(), "float");
-        break;
       case EOpConstructVec2:
-        writeConstructorTriplet(visit, node->getType(), "vec2");
-        break;
       case EOpConstructVec3:
-        writeConstructorTriplet(visit, node->getType(), "vec3");
-        break;
       case EOpConstructVec4:
-        writeConstructorTriplet(visit, node->getType(), "vec4");
-        break;
       case EOpConstructBool:
-        writeConstructorTriplet(visit, node->getType(), "bool");
-        break;
       case EOpConstructBVec2:
-        writeConstructorTriplet(visit, node->getType(), "bvec2");
-        break;
       case EOpConstructBVec3:
-        writeConstructorTriplet(visit, node->getType(), "bvec3");
-        break;
       case EOpConstructBVec4:
-        writeConstructorTriplet(visit, node->getType(), "bvec4");
-        break;
       case EOpConstructInt:
-        writeConstructorTriplet(visit, node->getType(), "int");
-        break;
       case EOpConstructIVec2:
-        writeConstructorTriplet(visit, node->getType(), "ivec2");
-        break;
       case EOpConstructIVec3:
-        writeConstructorTriplet(visit, node->getType(), "ivec3");
-        break;
       case EOpConstructIVec4:
-        writeConstructorTriplet(visit, node->getType(), "ivec4");
-        break;
       case EOpConstructUInt:
-        writeConstructorTriplet(visit, node->getType(), "uint");
-        break;
       case EOpConstructUVec2:
-        writeConstructorTriplet(visit, node->getType(), "uvec2");
-        break;
       case EOpConstructUVec3:
-        writeConstructorTriplet(visit, node->getType(), "uvec3");
-        break;
       case EOpConstructUVec4:
-        writeConstructorTriplet(visit, node->getType(), "uvec4");
-        break;
       case EOpConstructMat2:
-        writeConstructorTriplet(visit, node->getType(), "mat2");
-        break;
       case EOpConstructMat2x3:
-        writeConstructorTriplet(visit, node->getType(), "mat2x3");
-        break;
       case EOpConstructMat2x4:
-        writeConstructorTriplet(visit, node->getType(), "mat2x4");
-        break;
       case EOpConstructMat3x2:
-        writeConstructorTriplet(visit, node->getType(), "mat3x2");
-        break;
       case EOpConstructMat3:
-        writeConstructorTriplet(visit, node->getType(), "mat3");
-        break;
       case EOpConstructMat3x4:
-        writeConstructorTriplet(visit, node->getType(), "mat3x4");
-        break;
       case EOpConstructMat4x2:
-        writeConstructorTriplet(visit, node->getType(), "mat4x2");
-        break;
       case EOpConstructMat4x3:
-        writeConstructorTriplet(visit, node->getType(), "mat4x3");
-        break;
       case EOpConstructMat4:
-        writeConstructorTriplet(visit, node->getType(), "mat4");
-        break;
       case EOpConstructStruct:
-        {
-            const TType &type = node->getType();
-            ASSERT(type.getBasicType() == EbtStruct);
-            TString constructorName = hashName(type.getStruct()->name());
-            writeConstructorTriplet(visit, node->getType(), constructorName.c_str());
-            break;
-        }
+          writeConstructorTriplet(visit, node->getType());
+          break;
 
       case EOpOuterProduct:
         writeBuiltInFunctionTriplet(visit, "outerProduct(", useEmulatedFunction);
@@ -1208,45 +1153,10 @@ void TOutputGLSLBase::visitCodeBlock(TIntermNode *node)
 
 TString TOutputGLSLBase::getTypeName(const TType &type)
 {
-    TInfoSinkBase out;
-    if (type.isMatrix())
-    {
-        out << "mat";
-        out << type.getNominalSize();
-        if (type.getSecondarySize() != type.getNominalSize())
-        {
-            out << "x" << type.getSecondarySize();
-        }
-    }
-    else if (type.isVector())
-    {
-        switch (type.getBasicType())
-        {
-          case EbtFloat:
-            out << "vec";
-            break;
-          case EbtInt:
-            out << "ivec";
-            break;
-          case EbtBool:
-            out << "bvec";
-            break;
-          case EbtUInt:
-            out << "uvec";
-            break;
-          default:
-            UNREACHABLE();
-        }
-        out << type.getNominalSize();
-    }
+    if (type.getBasicType() == EbtStruct)
+        return hashName(type.getStruct()->name());
     else
-    {
-        if (type.getBasicType() == EbtStruct)
-            out << hashName(type.getStruct()->name());
-        else
-            out << type.getBasicString();
-    }
-    return TString(out.c_str());
+        return type.getBuiltInTypeNameString();
 }
 
 TString TOutputGLSLBase::hashName(const TString &name)

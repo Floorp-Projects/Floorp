@@ -43,6 +43,7 @@ class PackUnpackTest : public ANGLETest
             }
         );
 
+        // clang-format off
         // Fragment Shader source
         const std::string sNormFS = SHADER_SOURCE
         (   #version 300 es\n
@@ -54,6 +55,21 @@ class PackUnpackTest : public ANGLETest
             {
                 uint u = packSnorm2x16(v);
                 vec2 r = unpackSnorm2x16(u);
+                fragColor = vec4(r, 0.0, 1.0);
+            }
+        );
+
+        // Fragment Shader source
+        const std::string uNormFS = SHADER_SOURCE
+        (   #version 300 es\n
+            precision mediump float;
+            uniform mediump vec2 v;
+            layout(location = 0) out mediump vec4 fragColor;
+
+            void main()
+            {
+                uint u = packUnorm2x16(v);
+                vec2 r = unpackUnorm2x16(u);
                 fragColor = vec4(r, 0.0, 1.0);
             }
         );
@@ -72,10 +88,12 @@ class PackUnpackTest : public ANGLETest
                  fragColor = vec4(r, 0.0, 1.0);
              }
         );
+        // clang-format on
 
         mSNormProgram = CompileProgram(vs, sNormFS);
+        mUNormProgram = CompileProgram(vs, uNormFS);
         mHalfProgram = CompileProgram(vs, halfFS);
-        if (mSNormProgram == 0 || mHalfProgram == 0)
+        if (mSNormProgram == 0 || mUNormProgram == 0 || mHalfProgram == 0)
         {
             FAIL() << "shader compilation failed.";
         }
@@ -99,6 +117,7 @@ class PackUnpackTest : public ANGLETest
         glDeleteTextures(1, &mOffscreenTexture2D);
         glDeleteFramebuffers(1, &mOffscreenFramebuffer);
         glDeleteProgram(mSNormProgram);
+        glDeleteProgram(mUNormProgram);
         glDeleteProgram(mHalfProgram);
 
         ANGLETest::TearDown();
@@ -131,6 +150,7 @@ class PackUnpackTest : public ANGLETest
     }
 
     GLuint mSNormProgram;
+    GLuint mUNormProgram;
     GLuint mHalfProgram;
     GLuint mOffscreenFramebuffer;
     GLuint mOffscreenTexture2D;
@@ -144,6 +164,17 @@ TEST_P(PackUnpackTest, PackUnpackSnormNormal)
     compareBeforeAfter(mSNormProgram, -0.35f, 0.75f);
     compareBeforeAfter(mSNormProgram, 0.00392f, -0.99215f);
     compareBeforeAfter(mSNormProgram, 1.0f, -0.00392f);
+}
+
+// Test the correctness of packSnorm2x16 and unpackSnorm2x16 functions calculating normal floating
+// numbers.
+TEST_P(PackUnpackTest, PackUnpackUnormNormal)
+{
+    // Expect the shader to output the same value as the input
+    compareBeforeAfter(mUNormProgram, 0.5f, 0.2f, 0.5f, 0.2f);
+    compareBeforeAfter(mUNormProgram, 0.35f, 0.75f, 0.35f, 0.75f);
+    compareBeforeAfter(mUNormProgram, 0.00392f, 0.99215f, 0.00392f, 0.99215f);
+    compareBeforeAfter(mUNormProgram, 1.0f, 0.00392f, 1.0f, 0.00392f);
 }
 
 // Test the correctness of packHalf2x16 and unpackHalf2x16 functions calculating normal floating numbers.
@@ -172,6 +203,15 @@ TEST_P(PackUnpackTest, PackUnpackSnormSubnormal)
     compareBeforeAfter(mSNormProgram, 0.00001f, -0.00001f);
 }
 
+// Test the correctness of packUnorm2x16 and unpackUnorm2x16 functions calculating subnormal
+// floating numbers.
+TEST_P(PackUnpackTest, PackUnpackUnormSubnormal)
+{
+    // Expect the shader to output the same value as the input for positive numbers and clamp
+    // to [0, 1]
+    compareBeforeAfter(mUNormProgram, 0.00001f, -0.00001f, 0.00001f, 0.0f);
+}
+
 // Test the correctness of packHalf2x16 and unpackHalf2x16 functions calculating subnormal floating numbers.
 TEST_P(PackUnpackTest, PackUnpackHalfSubnormal)
 {
@@ -186,11 +226,26 @@ TEST_P(PackUnpackTest, PackUnpackSnormZero)
     compareBeforeAfter(mSNormProgram, 0.00000f, -0.00000f);
 }
 
+// Test the correctness of packUnorm2x16 and unpackUnorm2x16 functions calculating zero floating
+// numbers.
+TEST_P(PackUnpackTest, PackUnpackUnormZero)
+{
+    compareBeforeAfter(mUNormProgram, 0.00000f, -0.00000f, 0.00000f, 0.00000f);
+}
+
 // Test the correctness of packHalf2x16 and unpackHalf2x16 functions calculating zero floating numbers.
 TEST_P(PackUnpackTest, PackUnpackHalfZero)
 {
     // Expect the shader to output the same value as the input
     compareBeforeAfter(mHalfProgram, 0.00000f, -0.00000f);
+}
+
+// Test the correctness of packUnorm2x16 and unpackUnorm2x16 functions calculating overflow floating
+// numbers.
+TEST_P(PackUnpackTest, PackUnpackUnormOverflow)
+{
+    // Expect the shader to clamp the input to [0, 1]
+    compareBeforeAfter(mUNormProgram, 67000.0f, -67000.0f, 1.0f, 0.0f);
 }
 
 // Test the correctness of packSnorm2x16 and unpackSnorm2x16 functions calculating overflow floating numbers.

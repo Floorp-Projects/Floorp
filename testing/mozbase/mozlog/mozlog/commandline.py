@@ -142,7 +142,7 @@ def add_logging_group(parser, include_formatters=None):
                           help=help_str, default=None)
 
 
-def setup_handlers(logger, formatters, formatter_options):
+def setup_handlers(logger, formatters, formatter_options, allow_unused_options=False):
     """
     Add handlers to the given logger according to the formatters and
     options provided.
@@ -153,7 +153,7 @@ def setup_handlers(logger, formatters, formatter_options):
                               to use when configuring formatters.
     """
     unused_options = set(formatter_options.keys()) - set(formatters.keys())
-    if unused_options:
+    if unused_options and not allow_unused_options:
         msg = ("Options specified for unused formatter(s) (%s) have no effect" %
                list(unused_options))
         raise ValueError(msg)
@@ -182,7 +182,7 @@ def setup_handlers(logger, formatters, formatter_options):
             logger.add_handler(handler)
 
 
-def setup_logging(logger, args, defaults=None, formatter_defaults=None):
+def setup_logging(logger, args, defaults=None, formatter_defaults=None, allow_unused_options=False):
     """
     Configure a structuredlogger based on command line arguments.
 
@@ -268,7 +268,7 @@ def setup_logging(logger, args, defaults=None, formatter_defaults=None):
     if args.get('valgrind', None) is not None:
         for name in formatters:
             formatter_options[name]['valgrind'] = True
-    setup_handlers(logger, formatters, formatter_options)
+    setup_handlers(logger, formatters, formatter_options, allow_unused_options)
     set_default_logger(logger)
 
     return logger

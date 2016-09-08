@@ -6,6 +6,8 @@
 
 #include "mozilla/ConsoleReportCollector.h"
 
+#include "nsIConsoleService.h"
+#include "nsIScriptError.h"
 #include "nsNetUtil.h"
 
 namespace mozilla {
@@ -37,7 +39,8 @@ ConsoleReportCollector::AddConsoleReport(uint32_t aErrorFlags,
 }
 
 void
-ConsoleReportCollector::FlushConsoleReports(nsIDocument* aDocument)
+ConsoleReportCollector::FlushConsoleReports(nsIDocument* aDocument,
+                                            ReportAction aAction)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -45,7 +48,11 @@ ConsoleReportCollector::FlushConsoleReports(nsIDocument* aDocument)
 
   {
     MutexAutoLock lock(mMutex);
-    mPendingReports.SwapElements(reports);
+    if (aAction == ReportAction::Forget) {
+      mPendingReports.SwapElements(reports);
+    } else {
+      reports = mPendingReports;
+    }
   }
 
   for (uint32_t i = 0; i < reports.Length(); ++i) {
@@ -54,9 +61,12 @@ ConsoleReportCollector::FlushConsoleReports(nsIDocument* aDocument)
     // It would be nice if we did not have to do this since ReportToConsole()
     // just turns around and converts it back to a spec.
     nsCOMPtr<nsIURI> uri;
-    nsresult rv = NS_NewURI(getter_AddRefs(uri), report.mSourceFileURI);
-    if (NS_FAILED(rv)) {
-      continue;
+    if (!report.mSourceFileURI.IsEmpty()) {
+      nsresult rv = NS_NewURI(getter_AddRefs(uri), report.mSourceFileURI);
+      MOZ_ALWAYS_SUCCEEDS(rv);
+      if (NS_FAILED(rv)) {
+        continue;
+      }
     }
 
     // Convert back from nsTArray<nsString> to the char16_t** format required
@@ -98,6 +108,79 @@ ConsoleReportCollector::FlushConsoleReports(nsIConsoleReportCollector* aCollecto
                                  report.mLineNumber, report.mColumnNumber,
                                  report.mMessageName, report.mStringParams);
   }
+}
+
+void
+ConsoleReportCollector::FlushReportsByWindowId(uint64_t aWindowId,
+                                               ReportAction aAction)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsTArray<PendingReport> reports;
+
+  {
+    MutexAutoLock lock(mMutex);
+    if (aAction == ReportAction::Forget) {
+      mPendingReports.SwapElements(reports);
+    } else {
+      reports = mPendingReports;
+    }
+  }
+
+  nsCOMPtr<nsIConsoleService> consoleService =
+    do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+  if (!consoleService) {
+    NS_WARNING("GetConsoleService failed");
+    return;
+  }
+
+  nsresult rv;
+  for (uint32_t i = 0; i < reports.Length(); ++i) {
+    PendingReport& report = reports[i];
+
+    nsXPIDLString errorText;
+    if (!report.mStringParams.IsEmpty()) {
+      rv = nsContentUtils::FormatLocalizedString(report.mPropertiesFile,
+                                                 report.mMessageName.get(),
+                                                 report.mStringParams,
+                                                 errorText);
+    } else {
+      rv = nsContentUtils::GetLocalizedString(report.mPropertiesFile,
+                                              report.mMessageName.get(),
+                                              errorText);
+    }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      continue;
+    }
+
+    nsCOMPtr<nsIScriptError> errorObject =
+    do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      continue;
+    }
+
+    rv = errorObject->InitWithWindowID(errorText,
+                                       NS_ConvertUTF8toUTF16(report.mSourceFileURI),
+                                       EmptyString(),
+                                       report.mLineNumber,
+                                       report.mColumnNumber,
+                                       report.mErrorFlags,
+                                       report.mCategory,
+                                       aWindowId);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      continue;
+    }
+
+    consoleService->LogMessage(errorObject);
+  }
+}
+
+void
+ConsoleReportCollector::ClearConsoleReports()
+{
+  MutexAutoLock lock(mMutex);
+
+  mPendingReports.Clear();
 }
 
 ConsoleReportCollector::~ConsoleReportCollector()

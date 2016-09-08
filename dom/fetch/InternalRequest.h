@@ -128,7 +128,8 @@ public:
                   RequestCredentials aRequestCredentials,
                   const nsAString& aReferrer,
                   ReferrerPolicy aReferrerPolicy,
-                  nsContentPolicyType aContentPolicyType)
+                  nsContentPolicyType aContentPolicyType,
+                  const nsAString& aIntegrity)
     : mMethod(aMethod)
     , mHeaders(aHeaders)
     , mContentPolicyType(aContentPolicyType)
@@ -140,6 +141,7 @@ public:
     , mResponseTainting(LoadTainting::Basic)
     , mCacheMode(aCacheMode)
     , mRedirectMode(aRequestRedirect)
+    , mIntegrity(aIntegrity)
     , mAuthenticationFlag(false)
     , mForceOriginHeader(false)
     , mPreserveContentCodings(false)
@@ -361,6 +363,19 @@ public:
     mRedirectMode = aRedirectMode;
   }
 
+  const nsString&
+  GetIntegrity() const
+  {
+    return mIntegrity;
+  }
+
+  void
+  SetIntegrity(const nsAString& aIntegrity)
+  {
+    MOZ_ASSERT(mIntegrity.IsEmpty());
+    mIntegrity.Assign(aIntegrity);
+  }
+
   nsContentPolicyType
   ContentPolicyType() const
   {
@@ -519,6 +534,8 @@ private:
   MOZ_INIT_OUTSIDE_CTOR LoadTainting mResponseTainting;
   RequestCache mCacheMode;
   RequestRedirect mRedirectMode;
+
+  nsString mIntegrity;
 
   MOZ_INIT_OUTSIDE_CTOR bool mAuthenticationFlag;
   MOZ_INIT_OUTSIDE_CTOR bool mForceOriginHeader;

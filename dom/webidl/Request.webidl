@@ -25,6 +25,7 @@ interface Request {
   readonly attribute RequestCredentials credentials;
   readonly attribute RequestCache cache;
   readonly attribute RequestRedirect redirect;
+  readonly attribute DOMString integrity;
 
   [Throws,
    NewObject] Request clone();
@@ -45,6 +46,7 @@ dictionary RequestInit {
   RequestCredentials credentials;
   RequestCache cache;
   RequestRedirect redirect;
+  DOMString integrity;
 };
 
 // Gecko currently does not ship RequestContext, so please don't use it in IDL
