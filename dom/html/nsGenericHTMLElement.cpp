@@ -220,7 +220,7 @@ static const nsAttrValue::EnumTable kDirTable[] = {
   { "ltr", eDir_LTR },
   { "rtl", eDir_RTL },
   { "auto", eDir_Auto },
-  { 0 }
+  { nullptr, 0 }
 };
 
 void
@@ -1058,7 +1058,7 @@ static const nsAttrValue::EnumTable kDivAlignTable[] = {
   { "center", NS_STYLE_TEXT_ALIGN_MOZ_CENTER },
   { "middle", NS_STYLE_TEXT_ALIGN_MOZ_CENTER },
   { "justify", NS_STYLE_TEXT_ALIGN_JUSTIFY },
-  { 0 }
+  { nullptr, 0 }
 };
 
 static const nsAttrValue::EnumTable kFrameborderTable[] = {
@@ -1066,7 +1066,7 @@ static const nsAttrValue::EnumTable kFrameborderTable[] = {
   { "no", NS_STYLE_FRAME_NO },
   { "1", NS_STYLE_FRAME_1 },
   { "0", NS_STYLE_FRAME_0 },
-  { 0 }
+  { nullptr, 0 }
 };
 
 static const nsAttrValue::EnumTable kScrollingTable[] = {
@@ -1077,7 +1077,7 @@ static const nsAttrValue::EnumTable kScrollingTable[] = {
   { "scroll", NS_STYLE_FRAME_SCROLL },
   { "noscroll", NS_STYLE_FRAME_NOSCROLL },
   { "auto", NS_STYLE_FRAME_AUTO },
-  { 0 }
+  { nullptr, 0 }
 };
 
 static const nsAttrValue::EnumTable kTableVAlignTable[] = {
@@ -1085,7 +1085,7 @@ static const nsAttrValue::EnumTable kTableVAlignTable[] = {
   { "middle",  NS_STYLE_VERTICAL_ALIGN_MIDDLE },
   { "bottom",  NS_STYLE_VERTICAL_ALIGN_BOTTOM },
   { "baseline",NS_STYLE_VERTICAL_ALIGN_BASELINE },
-  { 0 }
+  { nullptr,   0 }
 };
 
 bool
@@ -1107,7 +1107,7 @@ nsGenericHTMLElement::ParseAlignValue(const nsAString& aString,
     { "absmiddle", NS_STYLE_VERTICAL_ALIGN_MIDDLE },
     { "abscenter", NS_STYLE_VERTICAL_ALIGN_MIDDLE },
     { "absbottom", NS_STYLE_VERTICAL_ALIGN_BOTTOM },
-    { 0 }
+    { nullptr,     0 }
   };
 
   return aResult.ParseEnumValue(aString, kAlignTable, false);
@@ -1121,7 +1121,7 @@ static const nsAttrValue::EnumTable kTableHAlignTable[] = {
   { "center", NS_STYLE_TEXT_ALIGN_CENTER },
   { "char",   NS_STYLE_TEXT_ALIGN_CHAR },
   { "justify",NS_STYLE_TEXT_ALIGN_JUSTIFY },
-  { 0 }
+  { nullptr,  0 }
 };
 
 bool
@@ -1142,7 +1142,7 @@ static const nsAttrValue::EnumTable kTableCellHAlignTable[] = {
   { "justify",NS_STYLE_TEXT_ALIGN_JUSTIFY },
   { "middle", NS_STYLE_TEXT_ALIGN_MOZ_CENTER },
   { "absmiddle", NS_STYLE_TEXT_ALIGN_CENTER },
-  { 0 }
+  { nullptr,  0 }
 };
 
 bool
@@ -1190,12 +1190,12 @@ nsGenericHTMLElement::ParseReferrerAttribute(const nsAString& aString,
                                              nsAttrValue& aResult)
 {
   static const nsAttrValue::EnumTable kReferrerTable[] = {
-    { net::kRPS_No_Referrer, net::RP_No_Referrer },
-    { net::kRPS_Origin, net::RP_Origin },
-    { net::kRPS_Origin_When_Cross_Origin, net::RP_Origin_When_Crossorigin },
-    { net::kRPS_No_Referrer_When_Downgrade, net::RP_No_Referrer_When_Downgrade },
-    { net::kRPS_Unsafe_URL, net::RP_Unsafe_URL },
-    { 0 }
+    { net::kRPS_No_Referrer, static_cast<int16_t>(net::RP_No_Referrer) },
+    { net::kRPS_Origin, static_cast<int16_t>(net::RP_Origin) },
+    { net::kRPS_Origin_When_Cross_Origin, static_cast<int16_t>(net::RP_Origin_When_Crossorigin) },
+    { net::kRPS_No_Referrer_When_Downgrade, static_cast<int16_t>(net::RP_No_Referrer_When_Downgrade) },
+    { net::kRPS_Unsafe_URL, static_cast<int16_t>(net::RP_Unsafe_URL) },
+    { nullptr, 0 }
   };
   return aResult.ParseEnumValue(aString, kReferrerTable, false);
 }

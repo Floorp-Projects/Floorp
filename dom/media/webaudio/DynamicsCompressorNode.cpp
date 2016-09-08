@@ -201,7 +201,8 @@ DynamicsCompressorNode::DynamicsCompressorNode(AudioContext* aContext)
 {
   DynamicsCompressorNodeEngine* engine = new DynamicsCompressorNodeEngine(this, aContext->Destination());
   mStream = AudioNodeStream::Create(aContext, engine,
-                                    AudioNodeStream::NO_STREAM_FLAGS);
+                                    AudioNodeStream::NO_STREAM_FLAGS,
+                                    aContext->Graph());
 }
 
 DynamicsCompressorNode::~DynamicsCompressorNode()

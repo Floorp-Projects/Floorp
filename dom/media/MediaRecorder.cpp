@@ -1006,7 +1006,7 @@ MediaRecorder::MediaRecorder(AudioNode& aSrcAudioNode,
     AudioNodeStream::Flags flags =
       AudioNodeStream::EXTERNAL_OUTPUT |
       AudioNodeStream::NEED_MAIN_THREAD_FINISHED;
-    mPipeStream = AudioNodeStream::Create(ctx, engine, flags);
+    mPipeStream = AudioNodeStream::Create(ctx, engine, flags, ctx->Graph());
     AudioNodeStream* ns = aSrcAudioNode.GetStream();
     if (ns) {
       mInputPort =

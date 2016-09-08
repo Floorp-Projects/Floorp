@@ -91,19 +91,6 @@
             "description": "The $(topic:transition-types)[transition type] for this visit from its referrer."
           }
         }
-      },
-      {
-        "id": "HistoryTime",
-        "description": "A time specified as a Date object, a number or string representing milliseconds since the epoch, or an ISO 8601 string",
-        "choices": [
-          {
-            "type": "string",
-            "pattern": "^[1-9]\\d*$"
-          },
-          {
-            "$ref": "extensionTypes.Date"
-          }
-        ]
       }
     ],
     "functions": [
@@ -122,12 +109,12 @@
                 "description": "A free-text query to the history service.  Leave empty to retrieve all pages."
               },
               "startTime": {
-                "$ref": "HistoryTime",
+                "$ref": "extensionTypes.Date",
                 "optional": true,
                 "description": "Limit results to those visited after this date. If not specified, this defaults to 24 hours in the past."
               },
               "endTime": {
-                "$ref": "HistoryTime",
+                "$ref": "extensionTypes.Date",
                 "optional": true,
                 "description": "Limit results to those visited before this date."
               },
@@ -210,7 +197,7 @@
                 "description": "The $(topic:transition-types)[transition type] for this visit from its referrer."
               },
               "visitTime": {
-                "$ref": "HistoryTime",
+                "$ref": "extensionTypes.Date",
                 "optional": true,
                 "description": "The date when this visit occurred."
               }
@@ -259,11 +246,11 @@
             "type": "object",
             "properties": {
               "startTime": {
-                "$ref": "HistoryTime",
+                "$ref": "extensionTypes.Date",
                 "description": "Items added to history after this date."
               },
               "endTime": {
-                "$ref": "HistoryTime",
+                "$ref": "extensionTypes.Date",
                 "description": "Items added to history before this date."
               }
             }

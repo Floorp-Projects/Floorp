@@ -366,7 +366,7 @@ static const nsAttrValue::EnumTable kCellScopeTable[] = {
   { "col",      NS_STYLE_CELL_SCOPE_COL },
   { "rowgroup", NS_STYLE_CELL_SCOPE_ROWGROUP },
   { "colgroup", NS_STYLE_CELL_SCOPE_COLGROUP },
-  { 0 }
+  { nullptr,    0 }
 };
 
 void

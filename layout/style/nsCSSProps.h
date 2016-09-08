@@ -19,6 +19,7 @@
 #include "nsCSSKeywords.h"
 #include "mozilla/CSSEnabledState.h"
 #include "mozilla/UseCounter.h"
+#include "mozilla/EnumTypeTraits.h"
 
 // Length of the "--" prefix on custom names (such as custom property names,
 // and, in the future, custom media query names).
@@ -327,24 +328,6 @@ enum nsStyleAnimType {
   eStyleAnimType_None
 };
 
-namespace mozilla {
-
-// Type trait that determines whether the integral or enum type Type can fit
-// within the integral type Storage without loss.
-template<typename T, typename Storage>
-struct IsEnumFittingWithin
-  : IntegralConstant<
-      bool,
-      std::is_integral<Storage>::value &&
-      std::numeric_limits<typename std::underlying_type<T>::type>::min() >=
-        std::numeric_limits<Storage>::min() &&
-      std::numeric_limits<typename std::underlying_type<T>::type>::max() <=
-        std::numeric_limits<Storage>::max()
-    >
-{};
-
-} // namespace mozilla
-
 class nsCSSProps {
 public:
   typedef mozilla::CSSEnabledState EnabledState;
@@ -366,7 +349,7 @@ public:
       : mKeyword(aKeyword)
       , mValue(static_cast<int16_t>(aValue))
     {
-      static_assert(mozilla::IsEnumFittingWithin<T, int16_t>::value,
+      static_assert(mozilla::EnumTypeFitsWithin<T, int16_t>::value,
                     "aValue must be an enum that fits within mValue");
     }
 
@@ -452,7 +435,7 @@ public:
   static nsCSSKeyword ValueToKeywordEnum(T aValue,
                                          const KTableEntry aTable[])
   {
-    static_assert(mozilla::IsEnumFittingWithin<T, int16_t>::value,
+    static_assert(mozilla::EnumTypeFitsWithin<T, int16_t>::value,
                   "aValue must be an enum that fits within KTableEntry::mValue");
     return ValueToKeywordEnum(static_cast<int16_t>(aValue), aTable);
   }
@@ -464,7 +447,7 @@ public:
   static const nsAFlatCString& ValueToKeyword(T aValue,
                                               const KTableEntry aTable[])
   {
-    static_assert(mozilla::IsEnumFittingWithin<T, int16_t>::value,
+    static_assert(mozilla::EnumTypeFitsWithin<T, int16_t>::value,
                   "aValue must be an enum that fits within KTableEntry::mValue");
     return ValueToKeyword(static_cast<int16_t>(aValue), aTable);
   }

@@ -3050,31 +3050,34 @@ nsLayoutUtils::TranslateViewToWidget(nsPresContext* aPresContext,
 }
 
 // Combine aNewBreakType with aOrigBreakType, but limit the break types
-// to NS_STYLE_CLEAR_LEFT, RIGHT, BOTH.
-uint8_t
-nsLayoutUtils::CombineBreakType(uint8_t aOrigBreakType,
-                                uint8_t aNewBreakType)
+// to StyleClear::Left, Right, Both.
+StyleClear
+nsLayoutUtils::CombineBreakType(StyleClear aOrigBreakType,
+                                StyleClear aNewBreakType)
 {
-  uint8_t breakType = aOrigBreakType;
+  StyleClear breakType = aOrigBreakType;
   switch(breakType) {
-  case NS_STYLE_CLEAR_LEFT:
-    if (NS_STYLE_CLEAR_RIGHT == aNewBreakType ||
-        NS_STYLE_CLEAR_BOTH == aNewBreakType) {
-      breakType = NS_STYLE_CLEAR_BOTH;
-    }
-    break;
-  case NS_STYLE_CLEAR_RIGHT:
-    if (NS_STYLE_CLEAR_LEFT == aNewBreakType ||
-        NS_STYLE_CLEAR_BOTH == aNewBreakType) {
-      breakType = NS_STYLE_CLEAR_BOTH;
-    }
-    break;
-  case NS_STYLE_CLEAR_NONE:
-    if (NS_STYLE_CLEAR_LEFT == aNewBreakType ||
-        NS_STYLE_CLEAR_RIGHT == aNewBreakType ||
-        NS_STYLE_CLEAR_BOTH == aNewBreakType) {
-      breakType = aNewBreakType;
-    }
+    case StyleClear::Left:
+      if (StyleClear::Right == aNewBreakType ||
+          StyleClear::Both == aNewBreakType) {
+        breakType = StyleClear::Both;
+      }
+      break;
+    case StyleClear::Right:
+      if (StyleClear::Left == aNewBreakType ||
+          StyleClear::Both == aNewBreakType) {
+        breakType = StyleClear::Both;
+      }
+      break;
+    case StyleClear::None_:
+      if (StyleClear::Left == aNewBreakType ||
+          StyleClear::Right == aNewBreakType ||
+          StyleClear::Both == aNewBreakType) {
+        breakType = aNewBreakType;
+      }
+      break;
+    default:
+      break;
   }
   return breakType;
 }

@@ -578,7 +578,7 @@ protected:
   nsSMILTimeValue                 mMin;
   nsSMILTimeValue                 mMax;
 
-  enum nsSMILFillMode
+  enum nsSMILFillMode : uint8_t
   {
     FILL_REMOVE,
     FILL_FREEZE
@@ -586,7 +586,7 @@ protected:
   nsSMILFillMode                  mFillMode;
   static nsAttrValue::EnumTable   sFillModeTable[];
 
-  enum nsSMILRestartMode
+  enum nsSMILRestartMode : uint8_t
   {
     RESTART_ALWAYS,
     RESTART_WHENNOTACTIVE,

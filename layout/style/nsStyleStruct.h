@@ -2840,7 +2840,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   // [reset] Save mFloat for position:absolute/fixed; otherwise equal to mFloat.
   mozilla::StyleFloat mOriginalFloat;
 
-  uint8_t mBreakType;           // [reset] see nsStyleConsts.h NS_STYLE_CLEAR_*
+  mozilla::StyleClear mBreakType;  // [reset]
   uint8_t mBreakInside;         // [reset] NS_STYLE_PAGE_BREAK_AUTO/AVOID
   bool mBreakBefore;    // [reset]
   bool mBreakAfter;     // [reset]
@@ -3094,7 +3094,7 @@ public:
   // resolved to {left,right} according to the given writing mode. These are
   // defined in WritingModes.h.
   inline mozilla::StyleFloat PhysicalFloats(mozilla::WritingMode aWM) const;
-  inline uint8_t PhysicalBreakType(mozilla::WritingMode aWM) const;
+  inline mozilla::StyleClear PhysicalBreakType(mozilla::WritingMode aWM) const;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleTable

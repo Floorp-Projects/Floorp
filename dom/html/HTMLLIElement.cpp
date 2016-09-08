@@ -36,7 +36,7 @@ static const nsAttrValue::EnumTable kUnorderedListItemTypeTable[] = {
   { "circle", NS_STYLE_LIST_STYLE_CIRCLE },
   { "round", NS_STYLE_LIST_STYLE_CIRCLE },
   { "square", NS_STYLE_LIST_STYLE_SQUARE },
-  { 0 }
+  { nullptr, 0 }
 };
 
 // values that are handled case-sensitively
@@ -46,7 +46,7 @@ static const nsAttrValue::EnumTable kOrderedListItemTypeTable[] = {
   { "I", NS_STYLE_LIST_STYLE_UPPER_ROMAN },
   { "i", NS_STYLE_LIST_STYLE_LOWER_ROMAN },
   { "1", NS_STYLE_LIST_STYLE_DECIMAL },
-  { 0 }
+  { nullptr, 0 }
 };
 
 bool
