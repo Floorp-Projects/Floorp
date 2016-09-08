@@ -47,7 +47,7 @@ HTMLLegendElement::ParseAttribute(int32_t aNamespaceID,
     { "center", NS_STYLE_TEXT_ALIGN_CENTER },
     { "bottom", NS_STYLE_VERTICAL_ALIGN_BOTTOM },
     { "top", NS_STYLE_VERTICAL_ALIGN_TOP },
-    { 0 }
+    { nullptr, 0 }
   };
 
   if (aAttribute == nsGkAtoms::align && aNamespaceID == kNameSpaceID_None) {
