@@ -98,6 +98,7 @@ public:
 protected:
   virtual ~EventSource();
 
+  MOZ_IS_CLASS_INIT
   nsresult Init(nsISupports* aOwner,
                 const nsAString& aURL,
                 bool aWithCredentials);
