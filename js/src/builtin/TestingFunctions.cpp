@@ -1662,7 +1662,8 @@ ReadSPSProfilingStack(JSContext* cx, unsigned argc, Value* vp)
             if (!JS_DefineProperty(cx, inlineFrameInfo, "kind", frameKind, propAttrs))
                 return false;
 
-            frameLabel = NewStringCopyZ<CanGC>(cx, frames[inlineFrameNo].label);
+            auto chars = frames[inlineFrameNo].label.release();
+            frameLabel = NewString<CanGC>(cx, reinterpret_cast<Latin1Char*>(chars), strlen(chars));
             if (!frameLabel)
                 return false;
 
