@@ -757,6 +757,13 @@ nsImageLoadingContent::LoadImage(const nsAString& aNewURI,
     return NS_OK;
   }
 
+  if (aNewURI.IsEmpty()) {
+    // Cancel image requests and then fire only error event per spec.
+    CancelImageRequests(aNotify);
+    FireEvent(NS_LITERAL_STRING("error"));
+    return NS_OK;
+  }
+
   // Second, parse the URI string to get image URI
   nsCOMPtr<nsIURI> imageURI;
   nsresult rv = StringToURI(aNewURI, doc, getter_AddRefs(imageURI));
@@ -765,24 +772,6 @@ nsImageLoadingContent::LoadImage(const nsAString& aNewURI,
     CancelImageRequests(aNotify);
     FireEvent(NS_LITERAL_STRING("error"));
     FireEvent(NS_LITERAL_STRING("loadend"));
-    return NS_OK;
-  }
-
-  bool equal;
-
-  if (aNewURI.IsEmpty() &&
-      doc->GetDocumentURI() &&
-      NS_SUCCEEDED(doc->GetDocumentURI()->EqualsExceptRef(imageURI, &equal)) &&
-      equal)  {
-
-    // Loading an embedded img from the same URI as the document URI will not work
-    // as a resource cannot recursively embed itself. Attempting to do so generally
-    // results in having to pre-emptively close down an in-flight HTTP transaction
-    // and then incurring the significant cost of establishing a new TCP channel.
-    // This is generally triggered from <img src="">
-    // In light of that, just skip loading it..
-    // Do make sure to drop our existing image, if any
-    CancelImageRequests(aNotify);
     return NS_OK;
   }
 
