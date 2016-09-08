@@ -74,14 +74,30 @@ nsTSubstring_CharT::MutatePrep(size_type aCapacity, char_type** aOldData,
       mFlags &= ~F_VOIDED;  // mutation clears voided flag
       return true;
     }
+  }
 
-    // Use doubling algorithm when forced to increase available capacity.
-    size_type temp = curCapacity;
-    while (temp < aCapacity) {
-      temp <<= 1;
+  if (curCapacity < aCapacity) {
+    // We increase our capacity so that the allocated buffer grows
+    // exponentially, which gives us amortized O(1) appending. Below the
+    // threshold, we use powers-of-two. Above the threshold, we grow by at
+    // least 1.125, rounding up to the nearest MiB.
+    const size_type slowGrowthThreshold = 8 * 1024 * 1024;
+
+    size_type temp;
+    if (aCapacity >= slowGrowthThreshold) {
+      size_type minNewCapacity = curCapacity + (curCapacity >> 3); // multiply by 1.125
+      temp = XPCOM_MAX(aCapacity, minNewCapacity);
+
+      // Round up to the next multiple of MiB.
+      const size_t MiB = 1 << 20;
+      temp = MiB * ((temp + MiB - 1) / MiB);
+    } else {
+      // Round up to the next power of two.
+      temp = mozilla::RoundUpPow2(aCapacity);
     }
-    NS_ASSERTION(XPCOM_MIN(temp, kMaxCapacity) >= aCapacity,
-                 "should have hit the early return at the top");
+
+    MOZ_ASSERT(XPCOM_MIN(temp, kMaxCapacity) >= aCapacity,
+               "should have hit the early return at the top");
     aCapacity = XPCOM_MIN(temp, kMaxCapacity);
   }
 
