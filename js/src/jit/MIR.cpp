@@ -6,6 +6,7 @@
 
 #include "jit/MIR.h"
 
+#include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/MathAlgorithms.h"
@@ -34,6 +35,7 @@ using namespace js::jit;
 
 using JS::ToInt32;
 
+using mozilla::CheckedInt;
 using mozilla::NumbersAreIdentical;
 using mozilla::IsFloat32Representable;
 using mozilla::IsNaN;
@@ -4944,6 +4946,24 @@ MLoadFixedSlotAndUnbox::foldsTo(TempAllocator& alloc)
     return this;
 }
 
+MDefinition*
+MWasmAddOffset::foldsTo(TempAllocator& alloc)
+{
+    MDefinition* baseArg = base();
+    if (!baseArg->isConstant())
+        return this;
+
+    MOZ_ASSERT(baseArg->type() == MIRType::Int32);
+    CheckedInt<uint32_t> ptr = baseArg->toConstant()->toInt32();
+
+    ptr += offset();
+
+    if (!ptr.isValid())
+        return this;
+
+    return MConstant::New(alloc, Int32Value(ptr.value()));
+}
+
 MDefinition::AliasType
 MAsmJSLoadHeap::mightAlias(const MDefinition* def) const
 {
@@ -5425,15 +5445,16 @@ MWasmCall::NewBuiltinInstanceMethodCall(TempAllocator& alloc,
                                         const ABIArg& instanceArg,
                                         const Args& args,
                                         MIRType resultType,
-                                        uint32_t spIncrement)
+                                        uint32_t spIncrement,
+                                        uint32_t tlsStackOffset)
 {
     auto callee = wasm::CalleeDesc::builtinInstanceMethod(builtin);
     MWasmCall* call = MWasmCall::New(alloc, desc, callee, args, resultType, spIncrement,
-                                     MWasmCall::DontSaveTls, nullptr);
-
+                                     tlsStackOffset, nullptr);
     if (!call)
         return nullptr;
-    MOZ_ASSERT(instanceArg != ABIArg()); // instanceArg must be initialized.
+
+    MOZ_ASSERT(instanceArg != ABIArg());
     call->instanceArg_ = instanceArg;
     return call;
 }

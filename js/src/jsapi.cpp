@@ -6212,6 +6212,9 @@ JS_SetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt, uint32_t v
       case JSJITCOMPILER_WASM_TEST_MODE:
         jit::JitOptions.wasmTestMode = !!value;
         break;
+      case JSJITCOMPILER_WASM_FOLD_OFFSETS:
+        jit::JitOptions.wasmFoldOffsets = !!value;
+        break;
       case JSJITCOMPILER_ION_INTERRUPT_WITHOUT_SIGNAL:
         jit::JitOptions.ionInterruptWithoutSignals = !!value;
         break;
@@ -6242,6 +6245,8 @@ JS_GetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt)
         return rt->canUseOffthreadIonCompilation();
       case JSJITCOMPILER_WASM_TEST_MODE:
         return jit::JitOptions.wasmTestMode ? 1 : 0;
+      case JSJITCOMPILER_WASM_FOLD_OFFSETS:
+        return jit::JitOptions.wasmFoldOffsets ? 1 : 0;
       case JSJITCOMPILER_ION_INTERRUPT_WITHOUT_SIGNAL:
         return jit::JitOptions.ionInterruptWithoutSignals ? 1 : 0;
       default:

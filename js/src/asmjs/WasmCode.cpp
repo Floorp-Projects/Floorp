@@ -106,25 +106,34 @@ StaticallyLink(CodeSegment& cs, const LinkData& linkData, ExclusiveContext* cx)
 }
 
 static void
-SpecializeToMemory(CodeSegment& cs, const Metadata& metadata, HandleWasmMemoryObject memory)
+SpecializeToMemory(uint8_t* prevMemoryBase, CodeSegment& cs, const Metadata& metadata,
+                   ArrayBufferObjectMaybeShared& buffer)
 {
-    if (!metadata.boundsChecks.empty()) {
-        uint32_t length = memory->buffer().wasmBoundsCheckLimit();
-        MOZ_RELEASE_ASSERT(length == LegalizeMapLength(length));
-        MOZ_RELEASE_ASSERT(length >= memory->buffer().wasmActualByteLength());
+#ifdef WASM_HUGE_MEMORY
+    MOZ_RELEASE_ASSERT(metadata.boundsChecks.empty());
+    MOZ_RELEASE_ASSERT(metadata.isAsmJS() || metadata.memoryAccesses.empty());
+#else
+    uint32_t limit = buffer.wasmBoundsCheckLimit();
+    MOZ_RELEASE_ASSERT(IsValidBoundsCheckImmediate(limit));
 
-        for (const BoundsCheck& check : metadata.boundsChecks)
-            Assembler::UpdateBoundsCheck(check.patchAt(cs.base()), length);
-    }
+    for (const BoundsCheck& check : metadata.boundsChecks)
+        MacroAssembler::wasmPatchBoundsCheck(check.patchAt(cs.base()), limit);
+#endif
 
 #if defined(JS_CODEGEN_X86)
-    uint8_t* base = memory->buffer().dataPointerEither().unwrap();
-    for (const MemoryAccess& access : metadata.memoryAccesses) {
-        // Patch memory pointer immediate.
-        void* addr = access.patchMemoryPtrImmAt(cs.base());
-        uint32_t disp = reinterpret_cast<uint32_t>(X86Encoding::GetPointer(addr));
-        MOZ_ASSERT(disp <= INT32_MAX);
-        X86Encoding::SetPointer(addr, (void*)(base + disp));
+    uint8_t* memoryBase = buffer.dataPointerEither().unwrap(/* code patching */);
+    if (prevMemoryBase != memoryBase) {
+        for (const MemoryAccess& access : metadata.memoryAccesses) {
+            void* patchAt = access.patchMemoryPtrImmAt(cs.base());
+
+            uint8_t* prevImm = (uint8_t*)X86Encoding::GetPointer(patchAt);
+            MOZ_ASSERT(prevImm >= prevMemoryBase);
+
+            uint32_t offset = prevImm - prevMemoryBase;
+            MOZ_ASSERT(offset <= INT32_MAX);
+
+            X86Encoding::SetPointer(patchAt, memoryBase + offset);
+        }
     }
 #endif
 }
@@ -232,7 +241,7 @@ CodeSegment::create(JSContext* cx,
         memcpy(codeBase, bytecode.begin(), bytecode.length());
         StaticallyLink(*cs, linkData, cx);
         if (memory)
-            SpecializeToMemory(*cs, metadata, memory);
+            SpecializeToMemory(nullptr, *cs, metadata, memory->buffer());
     }
 
     if (!ExecutableAllocator::makeExecutable(codeBase, cs->codeLength())) {
@@ -256,6 +265,16 @@ CodeSegment::~CodeSegment()
 
     MOZ_ASSERT(totalLength() > 0);
     DeallocateExecutableMemory(bytes_, totalLength(), gc::SystemPageSize());
+}
+
+void
+CodeSegment::onMovingGrow(uint8_t* prevMemoryBase, const Metadata& metadata, ArrayBufferObject& buffer)
+{
+    AutoWritableJitCode awjc(base(), codeLength());
+    AutoFlushICache afc("CodeSegment::onMovingGrow");
+    AutoFlushICache::setRange(uintptr_t(base()), codeLength());
+
+    SpecializeToMemory(prevMemoryBase, *this, metadata, buffer);
 }
 
 size_t

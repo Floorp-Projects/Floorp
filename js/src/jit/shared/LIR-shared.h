@@ -7839,6 +7839,21 @@ class LAsmSelectI64 : public LAsmSelectBase<INT64_PIECES, 2 * INT64_PIECES + 1>
     }
 };
 
+class LWasmAddOffset : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(WasmAddOffset);
+    explicit LWasmAddOffset(const LAllocation& base) {
+        setOperand(0, base);
+    }
+    MWasmAddOffset* mir() const {
+        return mir_->toWasmAddOffset();
+    }
+    const LAllocation* base() {
+        return getOperand(0);
+    }
+};
+
 class LWasmBoundsCheck : public LInstructionHelper<0, 1, 0>
 {
   public:

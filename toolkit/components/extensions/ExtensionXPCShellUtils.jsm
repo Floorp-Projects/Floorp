@@ -269,22 +269,22 @@ var ExtensionTestUtils = {
 
   addonManagerStarted: false,
 
-  startAddonManager() {
-    if (this.addonManagerStarted) {
-      return;
-    }
-    this.addonManagerStarted = true;
-
-    let appInfo = {};
-    Cu.import("resource://testing-common/AppInfo.jsm", appInfo);
-
-    appInfo.updateAppInfo({
+  mockAppInfo() {
+    const {updateAppInfo} = Cu.import("resource://testing-common/AppInfo.jsm", {});
+    updateAppInfo({
       ID: "xpcshell@tests.mozilla.org",
       name: "XPCShell",
       version: "48",
       platformVersion: "48",
     });
+  },
 
+  startAddonManager() {
+    if (this.addonManagerStarted) {
+      return;
+    }
+    this.addonManagerStarted = true;
+    this.mockAppInfo();
 
     let manager = Cc["@mozilla.org/addons/integration;1"].getService(Ci.nsIObserver)
                                                          .QueryInterface(Ci.nsITimerCallback);

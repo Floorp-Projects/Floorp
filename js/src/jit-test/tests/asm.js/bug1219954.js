@@ -1,3 +1,4 @@
+// |jit-test| slow
 "use strict";
 
 if (!('oomTest' in this))

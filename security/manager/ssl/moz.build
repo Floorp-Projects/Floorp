@@ -122,7 +122,6 @@ UNIFIED_SOURCES += [
     'nsPKCS11Slot.cpp',
     'nsPKCS12Blob.cpp',
     'nsProtectedAuthThread.cpp',
-    'nsPSMBackgroundThread.cpp',
     'nsRandomGenerator.cpp',
     'nsSecureBrowserUIImpl.cpp',
     'nsSecurityHeaderParser.cpp',

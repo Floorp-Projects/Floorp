@@ -1079,6 +1079,17 @@ void mozilla_sampler_sleep_end() {
     stack->setSleeping(0);
 }
 
+bool mozilla_sampler_is_sleeping() {
+  if (sInitCount == 0) {
+    return false;
+  }
+  PseudoStack *stack = tlsPseudoStack.get();
+  if (stack == nullptr) {
+    return false;
+  }
+  return stack->isSleeping();
+}
+
 double mozilla_sampler_time(const mozilla::TimeStamp& aTime)
 {
   mozilla::TimeDuration delta = aTime - sStartTime;

@@ -5675,6 +5675,34 @@ Version 1.6.24rc03 [August 2, 2016]
 Version 1.6.24[August 4, 2016]
   No changes.
 
+Version 1.6.25beta01 [August 12, 2016]
+  Reject oversized iCCP profile immediately.
+  Cleaned up PNG_DEBUG compile of pngtest.c.
+  Conditionally compile png_inflate().
+
+Version 1.6.25beta02 [August 18, 2016]
+  Don't install pngcp; it conflicts with pngcp in the pngtools package.
+  Minor editing of INSTALL, (whitespace, added copyright line)
+
+Version 1.6.25rc01 [August 24, 2016]
+  No changes.
+
+Version 1.6.25rc02 [August 29, 2016]
+  Added MIPS support (Mandar Sahastrabuddhe <Mandar.Sahastrabuddhe@imgtec.com>).
+  Only the UP filter is currently implemented.
+
+Version 1.6.25rc03 [August 29, 2016]
+  Rebased contrib/intel/intel_sse.patch after the MIPS implementation.
+
+Version 1.6.25rc04 [August 30, 2016]
+  Added MIPS support for SUB, AVG, and PAETH filters (Mandar Sahastrabuddhe).
+
+Version 1.6.25rc05 [August 30, 2016]
+  Rebased contrib/intel/intel_sse.patch after the MIPS implementation update..
+
+Version 1.6.25 [September 1, 2016]
+  No changes.
+
 Send comments/corrections/commendations to png-mng-implement at lists.sf.net
 (subscription required; visit
 https://lists.sourceforge.net/lists/listinfo/png-mng-implement

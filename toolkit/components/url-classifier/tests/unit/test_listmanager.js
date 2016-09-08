@@ -154,7 +154,7 @@ add_test(function test_partialUpdateV4() {
   // test_update_all_tables, this update request should send
   // a partial update to the server.
   let requestV4 = gUrlUtils.makeUpdateRequestV4([TEST_TABLE_DATA_V4.tableName],
-                                                [NEW_CLIENT_STATE],
+                                                [btoa(NEW_CLIENT_STATE)],
                                                 1);
   gExpectedQueryV4 = "&$req=" + btoa(requestV4);
 
@@ -311,24 +311,12 @@ function readFileToString(aFilename) {
   return buf;
 }
 
-function buildUpdateRequestV4InBase64() {
-
-  let request =  urlUtils.makeUpdateRequestV4([TEST_TABLE_DATA_V4.tableName],
-                                              [""],
-                                              1);
-  return btoa(request);
-}
-
 function waitUntilStateSavedToPref(expectedState, callback) {
   const STATE_PREF_NAME_PREFIX = 'browser.safebrowsing.provider.google4.state.';
 
   let stateBase64 = '';
 
   try {
-    // The reason we get pref from 'googpub-phish-proto' instead of
-    // 'test-phish-proto' is 'googpub-phish-proto' would be returned
-    // while we look up the list name from SOCIAL_ENGINEERING_PUBLIC.
-    // See nsUrlClassifierUtils::THREAT_TYPE_CONV_TABLE.
     stateBase64 =
       prefBranch.getCharPref(STATE_PREF_NAME_PREFIX + 'test-phish-proto');
   } catch (e) {}

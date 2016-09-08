@@ -405,10 +405,15 @@ PresentationSessionInfo::ContinueTermination()
 NS_IMETHODIMP
 PresentationSessionInfo::NotifyTransportReady()
 {
-  PRES_DEBUG("%s:id[%s], role[%d]\n", __func__,
-             NS_ConvertUTF16toUTF8(mSessionId).get(), mRole);
+  PRES_DEBUG("%s:id[%s], role[%d], state[%d]\n", __func__,
+             NS_ConvertUTF16toUTF8(mSessionId).get(), mRole, mState);
 
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (mState != nsIPresentationSessionListener::STATE_CONNECTING &&
+      mState != nsIPresentationSessionListener::STATE_CONNECTED) {
+    return NS_OK;
+  }
 
   mIsTransportReady = true;
 
@@ -484,10 +489,14 @@ PresentationSessionInfo::NotifyData(const nsACString& aData)
 NS_IMETHODIMP
 PresentationSessionInfo::OnSessionTransport(nsIPresentationSessionTransport* transport)
 {
-  PRES_DEBUG("%s:id[%s], role[%d]\n", __func__,
-             NS_ConvertUTF16toUTF8(mSessionId).get(), mRole);
+  PRES_DEBUG("%s:id[%s], role[%d], state[%d]\n", __func__,
+             NS_ConvertUTF16toUTF8(mSessionId).get(), mRole, mState);
 
   SetBuilder(nullptr);
+
+  if (mState != nsIPresentationSessionListener::STATE_CONNECTING) {
+    return NS_ERROR_FAILURE;
+  }
 
   // The session transport is managed by content process
   if (!transport) {
@@ -1195,6 +1204,7 @@ nsresult
 PresentationPresentingInfo::InitTransportAndSendAnswer()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mState == nsIPresentationSessionListener::STATE_CONNECTING);
 
   uint8_t type = 0;
   nsresult rv = mRequesterDescription->GetType(&type);
@@ -1308,8 +1318,8 @@ PresentationPresentingInfo::IsAccessible(base::ProcessId aProcessId)
 nsresult
 PresentationPresentingInfo::NotifyResponderReady()
 {
-  PRES_DEBUG("%s:id[%s], role[%d]\n", __func__,
-             NS_ConvertUTF16toUTF8(mSessionId).get(), mRole);
+  PRES_DEBUG("%s:id[%s], role[%d], state[%d]\n", __func__,
+             NS_ConvertUTF16toUTF8(mSessionId).get(), mRole, mState);
 
   if (mTimer) {
     mTimer->Cancel();
@@ -1342,6 +1352,19 @@ PresentationPresentingInfo::NotifyResponderFailure()
   }
 
   return ReplyError(NS_ERROR_DOM_OPERATION_ERR);
+}
+
+nsresult
+PresentationPresentingInfo::DoReconnect()
+{
+  PRES_DEBUG("%s:id[%s], role[%d]\n", __func__,
+             NS_ConvertUTF16toUTF8(mSessionId).get(), mRole);
+
+  MOZ_ASSERT(mState == nsIPresentationSessionListener::STATE_CLOSED);
+
+  SetStateWithReason(nsIPresentationSessionListener::STATE_CONNECTING, NS_OK);
+
+  return NotifyResponderReady();
 }
 
 // nsIPresentationControlChannelListener

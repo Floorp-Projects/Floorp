@@ -162,6 +162,11 @@ struct LayerPropertiesBase : public LayerProperties
     MOZ_COUNT_DTOR(LayerPropertiesBase);
   }
 
+protected:
+  LayerPropertiesBase(const LayerPropertiesBase& a) = delete;
+  LayerPropertiesBase& operator=(const LayerPropertiesBase& a) = delete;
+
+public:
   virtual nsIntRegion ComputeDifferences(Layer* aRoot,
                                          NotifySubDocInvalidationFunc aCallback,
                                          bool* aGeometryChanged);
@@ -282,6 +287,11 @@ struct ContainerLayerProperties : public LayerPropertiesBase
     }
   }
 
+protected:
+  ContainerLayerProperties(const ContainerLayerProperties& a) = delete;
+  ContainerLayerProperties& operator=(const ContainerLayerProperties& a) = delete;
+
+public:
   nsIntRegion ComputeChangeInternal(NotifySubDocInvalidationFunc aCallback,
                                     bool& aGeometryChanged) override
   {
@@ -439,6 +449,11 @@ struct ColorLayerProperties : public LayerPropertiesBase
     , mBounds(aLayer->GetBounds())
   { }
 
+protected:
+  ColorLayerProperties(const ColorLayerProperties& a) = delete;
+  ColorLayerProperties& operator=(const ColorLayerProperties& a) = delete;
+
+public:
   virtual nsIntRegion ComputeChangeInternal(NotifySubDocInvalidationFunc aCallback,
                                             bool& aGeometryChanged)
   {
