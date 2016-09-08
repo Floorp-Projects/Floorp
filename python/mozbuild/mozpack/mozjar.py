@@ -570,7 +570,7 @@ class JarWriter(object):
         self._data.write(end.serialize())
         self._data.close()
 
-    def add(self, name, data, compress=None, mode=None):
+    def add(self, name, data, compress=None, mode=None, skip_duplicates=False):
         '''
         Add a new member to the jar archive, with the given name and the given
         data.
@@ -582,13 +582,15 @@ class JarWriter(object):
         than the uncompressed size.
         The mode option gives the unix permissions that should be stored
         for the jar entry.
+        If a duplicated member is found skip_duplicates will prevent raising
+        an exception if set to True.
         The given data may be a buffer, a file-like instance, a Deflater or a
         JarFileReader instance. The latter two allow to avoid uncompressing
         data to recompress it.
         '''
         name = mozpath.normsep(name)
 
-        if name in self._contents:
+        if name in self._contents and not skip_duplicates:
             raise JarWriterError("File %s already in JarWriter" % name)
         if compress is None:
             compress = self._compress

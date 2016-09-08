@@ -45,28 +45,6 @@ enum SamplerType
     SAMPLER_VERTEX
 };
 
-template <typename T>
-struct Color
-{
-    T red;
-    T green;
-    T blue;
-    T alpha;
-
-    Color() : red(0), green(0), blue(0), alpha(0) { }
-    Color(T r, T g, T b, T a) : red(r), green(g), blue(b), alpha(a) { }
-};
-
-template <typename T>
-bool operator==(const Color<T> &a, const Color<T> &b);
-
-template <typename T>
-bool operator!=(const Color<T> &a, const Color<T> &b);
-
-typedef Color<float> ColorF;
-typedef Color<int> ColorI;
-typedef Color<unsigned int> ColorUI;
-
 struct Rectangle
 {
     Rectangle() : x(0), y(0), width(0), height(0) {}

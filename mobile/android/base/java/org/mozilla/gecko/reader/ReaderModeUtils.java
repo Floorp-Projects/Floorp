@@ -24,21 +24,21 @@ public class ReaderModeUtils {
         return StringUtils.getQueryParameter(aboutReaderUrl, "url");
     }
 
-    public static boolean isEnteringReaderMode(String currentUrl, String newUrl) {
-        if (currentUrl == null || newUrl == null) {
+    public static boolean isEnteringReaderMode(String oldURL, String newURL) {
+        if (oldURL == null || newURL == null) {
             return false;
         }
 
-        if (!AboutPages.isAboutReader(newUrl)) {
+        if (!AboutPages.isAboutReader(newURL)) {
             return false;
         }
 
-        String urlFromAboutReader = getUrlFromAboutReader(newUrl);
+        String urlFromAboutReader = getUrlFromAboutReader(newURL);
         if (urlFromAboutReader == null) {
             return false;
         }
 
-        return urlFromAboutReader.equals(currentUrl);
+        return urlFromAboutReader.equals(oldURL);
     }
 
     public static String getAboutReaderForUrl(String url) {
