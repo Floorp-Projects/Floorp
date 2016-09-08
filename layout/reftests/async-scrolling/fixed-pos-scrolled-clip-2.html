@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html reftest-async-scroll
+      reftest-displayport-x="0" reftest-displayport-y="0"
+      reftest-displayport-w="800" reftest-displayport-h="2000"
+      reftest-async-scroll-x="0" reftest-async-scroll-y="50">
+
+<title>position:fixed should not be clipped by the subframe clip, but it should be clipped by the "clip" clip, and the "clip" clip should be moved by the subframe.</title>
+
+<style>
+
+body {
+  margin: 0;
+  height: 4000px;
+}
+
+.subframe {
+  margin-top: 300px;
+  width: 400px;
+  height: 400px;
+  overflow: auto;
+}
+
+.subframeScrolled {
+  height: 800px;
+  position: relative;
+}
+
+.absoluteClip {
+  position: absolute;
+  top: 0px;
+  left: 100px;
+  width: 200px;
+  height: 200px;
+  background: red;
+  clip: rect(auto auto auto auto);
+}
+
+.fixed {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(lime, lime) black 0 100px no-repeat;
+  background-size: 100% 200px;
+}
+
+</style>
+
+<div class="subframe"
+      reftest-displayport-x="0" reftest-displayport-y="0"
+      reftest-displayport-w="400" reftest-displayport-h="800"
+      reftest-async-scroll-x="0" reftest-async-scroll-y="150">
+  <div class="subframeScrolled">
+    <div class="absoluteClip">
+      <div class="fixed"></div>
+    </div>
+  </div>
+</div>
