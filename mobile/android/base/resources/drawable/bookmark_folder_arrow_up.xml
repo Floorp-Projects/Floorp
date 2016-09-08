@@ -8,7 +8,7 @@
      in to ensure that they display at their true size. -->
 <inset xmlns:android="http://schemas.android.com/apk/res/android"
        android:drawable="@drawable/arrow_up"
-       android:insetTop="3dp"
-       android:insetRight="3dp"
-       android:insetBottom="3dp"
-       android:insetLeft="3dp" />
+       android:insetTop="4dp"
+       android:insetRight="5dp"
+       android:insetBottom="4dp"
+       android:insetLeft="5dp" />

@@ -3246,5 +3246,30 @@ Promise::GetID() {
 }
 #endif // SPIDERMONKEY_PROMISE
 
+#ifndef SPIDERMONKEY_PROMISE
+Promise::PromiseState
+Promise::State() const
+{
+  return mState;
+}
+#else // SPIDERMONKEY_PROMISE
+Promise::PromiseState
+Promise::State() const
+{
+  JS::Rooted<JSObject*> p(RootingCx(), PromiseObj());
+  const JS::PromiseState state = JS::GetPromiseState(p);
+
+  if (state == JS::PromiseState::Fulfilled) {
+      return PromiseState::Resolved;
+  }
+
+  if (state == JS::PromiseState::Rejected) {
+      return PromiseState::Rejected;
+  }
+
+  return PromiseState::Pending;
+}
+#endif // SPIDERMONKEY_PROMISE
+
 } // namespace dom
 } // namespace mozilla

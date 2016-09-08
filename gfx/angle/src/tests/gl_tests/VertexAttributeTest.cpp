@@ -739,7 +739,7 @@ void VertexAttributeCachingTest::SetUp()
     attribTypes.push_back(GL_SHORT);
     attribTypes.push_back(GL_UNSIGNED_SHORT);
 
-    if (getClientVersion() >= 3)
+    if (getClientMajorVersion() >= 3)
     {
         attribTypes.push_back(GL_INT);
         attribTypes.push_back(GL_UNSIGNED_INT);
