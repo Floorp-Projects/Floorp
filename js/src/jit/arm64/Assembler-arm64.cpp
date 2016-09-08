@@ -637,20 +637,6 @@ Assembler::PatchInstructionImmediate(uint8_t* code, PatchedImmPtr imm)
 }
 
 void
-Assembler::UpdateBoundsCheck(uint8_t* patchAt, uint32_t heapLength)
-{
-    Instruction* inst = (Instruction*) patchAt;
-    int32_t mask = ~(heapLength - 1);
-    unsigned n, imm_s, imm_r;
-    if (!IsImmLogical(mask, 32, &n, &imm_s, &imm_r))
-        MOZ_CRASH("Could not encode immediate!?");
-
-    inst->SetImmR(imm_r);
-    inst->SetImmS(imm_s);
-    inst->SetBitN(n);
-}
-
-void
 Assembler::retarget(Label* label, Label* target)
 {
     if (label->used()) {

@@ -56,7 +56,6 @@ class LIRGeneratorX86 : public LIRGeneratorX86Shared
     void lowerUModI64(MMod* mod);
 
   public:
-    void visitWasmLoad(MWasmLoad* ins);
     void visitBox(MBox* box);
     void visitUnbox(MUnbox* unbox);
     void visitReturn(MReturn* ret);
@@ -70,6 +69,7 @@ class LIRGeneratorX86 : public LIRGeneratorX86Shared
     void visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins);
     void visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins);
     void visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins);
+    void visitWasmLoad(MWasmLoad* ins);
     void visitWasmStore(MWasmStore* ins);
     void visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic* ins);
     void visitSubstr(MSubstr* ins);

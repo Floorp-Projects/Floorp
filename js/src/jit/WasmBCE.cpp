@@ -11,12 +11,7 @@ using namespace js;
 using namespace js::jit;
 using namespace mozilla;
 
-struct DefAndOffset {
-    MDefinition* loc;
-    uint32_t endOffset;
-};
-
-typedef js::HashMap<uint32_t, DefAndOffset, DefaultHasher<uint32_t>, SystemAllocPolicy>
+typedef js::HashMap<uint32_t, MDefinition*, DefaultHasher<uint32_t>, SystemAllocPolicy>
     LastSeenMap;
 
 // The Wasm Bounds Check Elimination (BCE) pass looks for bounds checks
@@ -31,7 +26,9 @@ typedef js::HashMap<uint32_t, DefAndOffset, DefaultHasher<uint32_t>, SystemAlloc
 // check, but a set of checks that together dominate a redundant check?
 //
 // TODO (dbounov): Generalize to constant additions relative to one base
-bool jit::EliminateBoundsChecks(MIRGenerator* mir, MIRGraph& graph) {
+bool
+jit::EliminateBoundsChecks(MIRGenerator* mir, MIRGraph& graph)
+{
     // Map for dominating block where a given definition was checked
     LastSeenMap lastSeen;
     if (!lastSeen.init())
@@ -46,17 +43,12 @@ bool jit::EliminateBoundsChecks(MIRGenerator* mir, MIRGraph& graph) {
               case MDefinition::Op_WasmBoundsCheck: {
                 MWasmBoundsCheck* bc = def->toWasmBoundsCheck();
                 MDefinition* addr = def->getOperand(0);
-                LastSeenMap::Ptr checkPtr = lastSeen.lookup(addr->id());
 
-                if (checkPtr &&
-                    checkPtr->value().endOffset >= bc->endOffset() &&
-                    checkPtr->value().loc->block()->dominates(block)) {
-                    // Address already checked. Discard current check
+                LastSeenMap::AddPtr checkPtr = lastSeen.lookupForAdd(addr->id());
+                if (checkPtr && checkPtr->value()->block()->dominates(block)) {
                     bc->setRedundant(true);
                 } else {
-                    DefAndOffset defOff = { def, bc->endOffset() };
-                    // Address not previously checked - remember current check
-                    if (!lastSeen.put(addr->id(), defOff))
+                    if (!lastSeen.add(checkPtr, addr->id(), def))
                         return false;
                 }
                 break;
@@ -64,7 +56,6 @@ bool jit::EliminateBoundsChecks(MIRGenerator* mir, MIRGraph& graph) {
               case MDefinition::Op_Phi: {
                 MPhi* phi = def->toPhi();
                 bool phiChecked = true;
-                uint32_t off = UINT32_MAX;
 
                 MOZ_ASSERT(phi->numOperands() > 0);
 
@@ -77,19 +68,16 @@ bool jit::EliminateBoundsChecks(MIRGenerator* mir, MIRGraph& graph) {
                 // cannot be in lastSeen because its block hasn't been traversed yet.
                 for (int i = 0, nOps = phi->numOperands(); i < nOps; i++) {
                     MDefinition* src = phi->getOperand(i);
-                    LastSeenMap::Ptr checkPtr = lastSeen.lookup(src->id());
 
-                    if (!checkPtr || !checkPtr->value().loc->block()->dominates(block)) {
+                    LastSeenMap::Ptr checkPtr = lastSeen.lookup(src->id());
+                    if (!checkPtr || !checkPtr->value()->block()->dominates(block)) {
                         phiChecked = false;
                         break;
-                    } else {
-                        off = Min(off, checkPtr->value().endOffset);
                     }
                 }
 
                 if (phiChecked) {
-                    DefAndOffset defOff = { def, off };
-                    if (!lastSeen.put(def->id(), defOff))
+                    if (!lastSeen.put(def->id(), def))
                         return false;
                 }
 

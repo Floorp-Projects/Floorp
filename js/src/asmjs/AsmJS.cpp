@@ -286,6 +286,7 @@ struct AsmJSMetadataCacheablePod
     uint32_t                numFFIs;
     uint32_t                srcLength;
     uint32_t                srcLengthWithRightBrace;
+    bool                    usesSimd;
 
     AsmJSMetadataCacheablePod() { PodZero(this); }
 };
@@ -1606,6 +1607,7 @@ class MOZ_STACK_CLASS ModuleValidator
     ImportMap             importMap_;
     ArrayViewVector       arrayViews_;
     bool                  atomicsPresent_;
+    bool                  simdPresent_;
 
     // State used to build the AsmJSModule in finish():
     ModuleGenerator       mg_;
@@ -1685,6 +1687,7 @@ class MOZ_STACK_CLASS ModuleValidator
         importMap_(cx),
         arrayViews_(cx),
         atomicsPresent_(false),
+        simdPresent_(false),
         mg_(ImportVector()),
         errorString_(nullptr),
         errorOffset_(UINT32_MAX),
@@ -2006,6 +2009,8 @@ class MOZ_STACK_CLASS ModuleValidator
         return asmJSMetadata_->asmJSGlobals.append(Move(g));
     }
     bool addSimdCtor(PropertyName* var, SimdType type, PropertyName* field) {
+        simdPresent_ = true;
+
         UniqueChars fieldChars = StringToNewUTF8CharsZ(cx_, *field);
         if (!fieldChars)
             return false;
@@ -2022,6 +2027,8 @@ class MOZ_STACK_CLASS ModuleValidator
         return asmJSMetadata_->asmJSGlobals.append(Move(g));
     }
     bool addSimdOperation(PropertyName* var, SimdType type, SimdOperation op, PropertyName* field) {
+        simdPresent_ = true;
+
         UniqueChars fieldChars = StringToNewUTF8CharsZ(cx_, *field);
         if (!fieldChars)
             return false;
@@ -2299,6 +2306,8 @@ class MOZ_STACK_CLASS ModuleValidator
     SharedModule finish() {
         if (!arrayViews_.empty())
             mg_.initMemoryUsage(atomicsPresent_ ? MemoryUsage::Shared : MemoryUsage::Unshared);
+
+        asmJSMetadata_->usesSimd = simdPresent_;
 
         MOZ_ASSERT(asmJSMetadata_->asmJSFuncNames.empty());
         for (const Func* func : functions_) {
@@ -5580,12 +5589,10 @@ CheckSimdOperationCall(FunctionValidator& f, ParseNode* call, const ModuleValida
       case SimdOperation::Fn_load:
       case SimdOperation::Fn_load1:
       case SimdOperation::Fn_load2:
-      case SimdOperation::Fn_load3:
         return CheckSimdLoad(f, call, opType, op, type);
       case SimdOperation::Fn_store:
       case SimdOperation::Fn_store1:
       case SimdOperation::Fn_store2:
-      case SimdOperation::Fn_store3:
         return CheckSimdStore(f, call, opType, op, type);
 
       case SimdOperation::Fn_select:
@@ -5598,6 +5605,10 @@ CheckSimdOperationCall(FunctionValidator& f, ParseNode* call, const ModuleValida
         return CheckSimdAllTrue(f, call, opType, type);
       case SimdOperation::Fn_anyTrue:
         return CheckSimdAnyTrue(f, call, opType, type);
+
+      case SimdOperation::Fn_load3:
+      case SimdOperation::Fn_store3:
+        return f.fail(call, "asm.js does not support 3-element SIMD loads or stores");
 
       case SimdOperation::Constructor:
         MOZ_CRASH("constructors are handled in CheckSimdCtorCall");
@@ -7826,9 +7837,21 @@ CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata, HandleValue bufferVal,
     }
 
     if (buffer->is<ArrayBufferObject>()) {
-        Rooted<ArrayBufferObject*> abheap(cx, &buffer->as<ArrayBufferObject>());
-        if (!ArrayBufferObject::prepareForAsmJS(cx, abheap))
+        // On 64-bit, bounds checks are statically removed so the huge guard
+        // region is always necessary. On 32-bit, allocating a guard page
+        // requires reallocating the incoming ArrayBuffer which could trigger
+        // OOM. Thus, only ask for a guard page when SIMD is used since SIMD
+        // allows unaligned memory access (see MaxMemoryAccessSize comment);
+#ifdef WASM_HUGE_MEMORY
+        bool needGuard = true;
+#else
+        bool needGuard = metadata.usesSimd;
+#endif
+        Rooted<ArrayBufferObject*> arrayBuffer(cx, &buffer->as<ArrayBufferObject>());
+        if (!ArrayBufferObject::prepareForAsmJS(cx, arrayBuffer, needGuard))
             return LinkFail(cx, "Unable to prepare ArrayBuffer for asm.js use");
+
+        MOZ_ASSERT(arrayBuffer->isAsmJSMalloced() || arrayBuffer->isWasmMapped());
     } else {
         if (!buffer->as<SharedArrayBufferObject>().isPreparedForAsmJS())
             return LinkFail(cx, "SharedArrayBuffer must be created with wasm test mode enabled");

@@ -456,9 +456,6 @@ hasMultiAlias()
     return false;
 }
 
-static const size_t WasmCheckedImmediateRange = 0;
-static const size_t WasmImmediateRange = 0;
-
 } // namespace jit
 } // namespace js
 

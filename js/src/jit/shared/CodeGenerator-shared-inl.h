@@ -347,8 +347,7 @@ CodeGeneratorShared::restoreLiveVolatile(LInstruction* ins)
 
 void
 CodeGeneratorShared::verifyHeapAccessDisassembly(uint32_t begin, uint32_t end, bool isLoad,
-                                                 bool isInt64, Scalar::Type type, unsigned numElems,
-                                                 const Operand& mem, LAllocation alloc)
+                                                 Scalar::Type type, Operand mem, LAllocation alloc)
 {
 #ifdef DEBUG
     using namespace Disassembler;
@@ -358,11 +357,7 @@ CodeGeneratorShared::verifyHeapAccessDisassembly(uint32_t begin, uint32_t end, b
       case Scalar::Int8:
       case Scalar::Int16:
         if (kind == HeapAccess::Load)
-            kind = isInt64 ? HeapAccess::LoadSext64 : HeapAccess::LoadSext32;
-        break;
-      case Scalar::Int32:
-        if (isInt64 && kind == HeapAccess::Load)
-            kind = HeapAccess::LoadSext64;
+            kind = HeapAccess::LoadSext32;
         break;
       default:
         break;
@@ -381,7 +376,7 @@ CodeGeneratorShared::verifyHeapAccessDisassembly(uint32_t begin, uint32_t end, b
         } else {
             // x86 doesn't allow encoding an imm64 to memory move; the value
             // is wrapped anyways.
-            int32_t i = isInt64 ? int32_t(ToInt64(&alloc)) : ToInt32(&alloc);
+            int32_t i = ToInt32(&alloc);
 
             // Sign-extend the immediate value out to 32 bits. We do this even
             // for unsigned element types so that we match what the disassembly
@@ -408,28 +403,23 @@ CodeGeneratorShared::verifyHeapAccessDisassembly(uint32_t begin, uint32_t end, b
         MOZ_CRASH("Unexpected array type");
     }
 
-    size_t size = Scalar::isSimdType(type)
-                  ? Scalar::scalarByteSize(type) * numElems
-                  : TypedArrayElemSize(type);
-    masm.verifyHeapAccessDisassembly(begin, end,
-                                     HeapAccess(kind, size, ComplexAddress(mem), op));
+    HeapAccess access(kind, TypedArrayElemSize(type), ComplexAddress(mem), op);
+    masm.verifyHeapAccessDisassembly(begin, end, access);
 #endif
 }
 
 void
-CodeGeneratorShared::verifyLoadDisassembly(uint32_t begin, uint32_t end, bool isInt64,
-                                           Scalar::Type type, unsigned numElems, const Operand& mem,
-                                           LAllocation alloc)
+CodeGeneratorShared::verifyLoadDisassembly(uint32_t begin, uint32_t end, Scalar::Type type,
+                                           Operand mem, LAllocation alloc)
 {
-    verifyHeapAccessDisassembly(begin, end, true, isInt64, type, numElems, mem, alloc);
+    verifyHeapAccessDisassembly(begin, end, true, type, mem, alloc);
 }
 
 void
-CodeGeneratorShared::verifyStoreDisassembly(uint32_t begin, uint32_t end, bool isInt64,
-                                            Scalar::Type type, unsigned numElems,
-                                            const Operand& mem, LAllocation alloc)
+CodeGeneratorShared::verifyStoreDisassembly(uint32_t begin, uint32_t end, Scalar::Type type,
+                                            Operand mem, LAllocation alloc)
 {
-    verifyHeapAccessDisassembly(begin, end, false, isInt64, type, numElems, mem, alloc);
+    verifyHeapAccessDisassembly(begin, end, false, type, mem, alloc);
 }
 
 inline bool

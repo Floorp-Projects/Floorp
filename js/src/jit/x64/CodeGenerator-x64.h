@@ -27,21 +27,10 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
                            Operand dest, MIRType slotType);
     void memoryBarrier(MemoryBarrierBits barrier);
 
-    void load(Scalar::Type type, const Operand& srcAddr, AnyRegister out);
-    void loadI64(Scalar::Type type, const Operand& srcAddr, Register64 out);
+    void wasmStore(Scalar::Type type, unsigned numSimdElems, const LAllocation* value, Operand dstAddr);
+    template <typename T> void emitWasmLoad(T* ins);
+    template <typename T> void emitWasmStore(T* ins);
 
-    void store(Scalar::Type type, const LAllocation* value, const Operand& dstAddr);
-
-    void loadSimd(Scalar::Type type, unsigned numElems, const Operand& srcAddr, FloatRegister out);
-    void storeSimd(Scalar::Type type, unsigned numElems, FloatRegister in, const Operand& dstAddr);
-
-    void emitSimdLoad(LAsmJSLoadHeap* ins);
-    void emitSimdStore(LAsmJSStoreHeap* ins);
-
-    template <typename T>
-    void emitWasmLoad(T* ins);
-    template <typename T>
-    void emitWasmStore(T* ins);
   public:
     CodeGeneratorX64(MIRGenerator* gen, LIRGraph* graph, MacroAssembler* masm);
 
