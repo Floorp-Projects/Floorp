@@ -51,7 +51,10 @@ void nsCycleCollector_collectSlice(js::SliceBudget& budget,
                                    bool aPreferShorterSlices = false);
 
 uint32_t nsCycleCollector_suspectedCount();
-void nsCycleCollector_shutdown();
+
+// If aDoCollect is true, then run the GC and CC a few times before
+// shutting down the CC completely.
+void nsCycleCollector_shutdown(bool aDoCollect = true);
 
 // Helpers for interacting with JS
 void nsCycleCollector_registerJSRuntime(mozilla::CycleCollectedJSRuntime* aRt);
