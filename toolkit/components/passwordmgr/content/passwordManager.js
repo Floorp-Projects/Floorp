@@ -16,6 +16,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
 
 let kSignonBundle;
 
+// Default value for signon table sorting
+let lastSignonSortColumn = "hostname";
+let lastSignonSortAscending = true;
+
 let showingPasswords = false;
 
 // password-manager lists
@@ -210,14 +214,11 @@ let signonsTreeView = {
   },
 };
 
-function SortTree(tree, view, table, column, lastSortColumn, lastSortAscending, updateSelection) {
-
+function SortTree(tree, column, ascending) {
+  let table = signonsTreeView._filterSet.length ? signonsTreeView._filterSet : signons;
   // remember which item was selected so we can restore it after the sort
   let selections = GetTreeSelections(tree);
   let selectedNumber = selections.length ? table[selections[0]].number : -1;
-
-  // determine if sort is to be ascending or descending
-  let ascending = (column == lastSortColumn) ? !lastSortAscending : true;
 
   function compareFunc(a, b) {
     let valA, valB;
@@ -251,13 +252,14 @@ function SortTree(tree, view, table, column, lastSortColumn, lastSortAscending, 
 
   // do the sort
   table.sort(compareFunc);
-  if (!ascending)
+  if (!ascending) {
     table.reverse();
+  }
 
   // restore the selection
   let selectedRow = -1;
-  if (selectedNumber>=0 && updateSelection) {
-    for (let s=0; s<table.length; s++) {
+  if (selectedNumber >= 0 && false) {
+    for (let s = 0; s < table.length; s++) {
       if (table[s].number == selectedNumber) {
         // update selection
         // note: we need to deselect before reselecting in order to trigger ...Selected()
@@ -272,10 +274,8 @@ function SortTree(tree, view, table, column, lastSortColumn, lastSortAscending, 
   // display the results
   tree.treeBoxObject.invalidate();
   if (selectedRow >= 0) {
-    tree.treeBoxObject.ensureRowIsVisible(selectedRow)
+    tree.treeBoxObject.ensureRowIsVisible(selectedRow);
   }
-
-  return ascending;
 }
 
 function LoadSignons() {
@@ -502,24 +502,22 @@ function getColumnByName(column) {
   return undefined;
 }
 
-let lastSignonSortColumn = "hostname";
-let lastSignonSortAscending = true;
-
 function SignonColumnSort(column) {
-  // clear out the sortDirection attribute on the old column
+  let sortedCol = getColumnByName(column);
   let lastSortedCol = getColumnByName(lastSignonSortColumn);
+
+  // clear out the sortDirection attribute on the old column
   lastSortedCol.removeAttribute("sortDirection");
 
+  // determine if sort is to be ascending or descending
+  lastSignonSortAscending = (column == lastSignonSortColumn) ? !lastSignonSortAscending : true;
+
   // sort
-  lastSignonSortAscending =
-    SortTree(signonsTree, signonsTreeView,
-                 signonsTreeView._filterSet.length ? signonsTreeView._filterSet : signons,
-                 column, lastSignonSortColumn, lastSignonSortAscending);
   lastSignonSortColumn = column;
+  SortTree(signonsTree, lastSignonSortColumn, lastSignonSortAscending);
 
   // set the sortDirection attribute to get the styling going
   // first we need to get the right element
-  let sortedCol = getColumnByName(column);
   sortedCol.setAttribute("sortDirection", lastSignonSortAscending ?
                                           "ascending" : "descending");
 }
