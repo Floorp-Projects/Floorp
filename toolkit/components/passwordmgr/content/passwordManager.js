@@ -227,10 +227,10 @@ let signonsTreeView = {
   },
 };
 
-function SortTree(tree, column, ascending) {
+function SortTree(column, ascending) {
   let table = signonsTreeView._filterSet.length ? signonsTreeView._filterSet : signons;
   // remember which item was selected so we can restore it after the sort
-  let selections = GetTreeSelections(tree);
+  let selections = GetTreeSelections();
   let selectedNumber = selections.length ? table[selections[0]].number : -1;
 
   function compareFunc(a, b) {
@@ -276,8 +276,8 @@ function SortTree(tree, column, ascending) {
       if (table[s].number == selectedNumber) {
         // update selection
         // note: we need to deselect before reselecting in order to trigger ...Selected()
-        tree.view.selection.select(-1);
-        tree.view.selection.select(s);
+        signonsTree.view.selection.select(-1);
+        signonsTree.view.selection.select(s);
         selectedRow = s;
         break;
       }
@@ -285,9 +285,9 @@ function SortTree(tree, column, ascending) {
   }
 
   // display the results
-  tree.treeBoxObject.invalidate();
+  signonsTree.treeBoxObject.invalidate();
   if (selectedRow >= 0) {
-    tree.treeBoxObject.ensureRowIsVisible(selectedRow);
+    signonsTree.treeBoxObject.ensureRowIsVisible(selectedRow);
   }
 }
 
@@ -321,9 +321,9 @@ function LoadSignons() {
   return true;
 }
 
-function GetTreeSelections(tree) {
+function GetTreeSelections() {
   let selections = [];
-  let select = tree.view.selection;
+  let select = signonsTree.view.selection;
   if (select) {
     let count = select.getRangeCount();
     let min = new Object();
@@ -341,7 +341,7 @@ function GetTreeSelections(tree) {
 }
 
 function SignonSelected() {
-  let selections = GetTreeSelections(signonsTree);
+  let selections = GetTreeSelections();
   if (selections.length) {
     removeButton.removeAttribute("disabled");
   } else {
@@ -360,7 +360,7 @@ function DeleteSignon() {
   tree.view.selection.selectEventsSuppressed = true;
 
   // remove selected items from list (by setting them to null) and place in deleted list
-  let selections = GetTreeSelections(tree);
+  let selections = GetTreeSelections();
   for (let s = selections.length - 1; s >= 0; s--) {
     let i = selections[s];
     deletedSignons.push(table[i]);
@@ -410,7 +410,6 @@ function DeleteAllSignons() {
 
   let filterSet = signonsTreeView._filterSet;
   let syncNeeded = (filterSet.length != 0);
-  let tree = signonsTree;
   let view = signonsTreeView;
   let table = filterSet.length ? filterSet : signons;
 
@@ -426,7 +425,7 @@ function DeleteAllSignons() {
   // update the tree view and notify the tree
   view.rowCount = 0;
 
-  let box = tree.treeBoxObject;
+  let box = signonsTree.treeBoxObject;
   box.rowCountChanged(0, -deletedSignons.length);
   box.invalidate();
 
@@ -525,7 +524,7 @@ function SignonColumnSort(column) {
 
   // sort
   lastSignonSortColumn = column;
-  SortTree(signonsTree, lastSignonSortColumn, lastSignonSortAscending);
+  SortTree(lastSignonSortColumn, lastSignonSortAscending);
 
   // set the sortDirection attribute to get the styling going
   // first we need to get the right element
