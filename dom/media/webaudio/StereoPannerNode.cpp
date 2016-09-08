@@ -179,7 +179,8 @@ StereoPannerNode::StereoPannerNode(AudioContext* aContext)
 {
   StereoPannerNodeEngine* engine = new StereoPannerNodeEngine(this, aContext->Destination());
   mStream = AudioNodeStream::Create(aContext, engine,
-                                    AudioNodeStream::NO_STREAM_FLAGS);
+                                    AudioNodeStream::NO_STREAM_FLAGS,
+                                    aContext->Graph());
 }
 
 StereoPannerNode::~StereoPannerNode()

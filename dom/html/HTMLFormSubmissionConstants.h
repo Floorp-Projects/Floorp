@@ -12,7 +12,7 @@
 static const nsAttrValue::EnumTable kFormMethodTable[] = {
   { "get", NS_FORM_METHOD_GET },
   { "post", NS_FORM_METHOD_POST },
-  { 0 }
+  { nullptr, 0 }
 };
 
 // Default method is 'get'.
@@ -22,7 +22,7 @@ static const nsAttrValue::EnumTable kFormEnctypeTable[] = {
   { "multipart/form-data", NS_FORM_ENCTYPE_MULTIPART },
   { "application/x-www-form-urlencoded", NS_FORM_ENCTYPE_URLENCODED },
   { "text/plain", NS_FORM_ENCTYPE_TEXTPLAIN },
-  { 0 }
+  { nullptr, 0 }
 };
 
 // Default method is 'application/x-www-form-urlencoded'.

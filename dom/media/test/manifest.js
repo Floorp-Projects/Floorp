@@ -533,6 +533,20 @@ var gErrorTests = [
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
+function IsWindowsVistaOrLater() {
+  var re = /Windows NT (\d+.\d)/;
+  var winver = manifestNavigator().userAgent.match(re);
+  return winver && winver.length == 2 && parseFloat(winver[1]) >= 6.0;
+}
+
+// Windows' H.264 decoder cannot handle H.264 streams with resolution
+// less than 48x48 pixels. We refuse to play and error on such streams.
+if (IsWindowsVistaOrLater() &&
+    manifestVideo().canPlayType('video/mp4; codecs="avc1.42E01E"')) {
+  gErrorTests = gErrorTests.concat({name: "red-46x48.mp4", type:"video/mp4"},
+                                   {name: "red-48x46.mp4", type:"video/mp4"});
+}
+
 // These are files that have nontrivial duration and are useful for seeking within.
 var gSeekTests = [
   { name:"r11025_s16_c1.wav", type:"audio/x-wav", duration:1.0 },
@@ -561,12 +575,6 @@ var gFastSeekTests = [
   // points, as the audio required for that sync point may be before the keyframe.
   { name:"bug516323.indexed.ogv", type:"video/ogg", keyframes:[0, 0.46, 3.06] },
 ];
-
-function IsWindows8OrLater() {
-  var re = /Windows NT (\d.\d)/;
-  var winver = manifestNavigator().userAgent.match(re);
-  return winver && winver.length == 2 && parseFloat(winver[1]) >= 6.2;
-}
 
 // These files are WebMs without cues. They're seekable within their buffered
 // ranges. If work renders WebMs fully seekable these files should be moved

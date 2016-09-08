@@ -9,7 +9,7 @@
 
 namespace mozilla {
 
-enum CORSMode {
+enum CORSMode : uint8_t {
   /**
    * The default of not using CORS to validate cross-origin loads.
    */

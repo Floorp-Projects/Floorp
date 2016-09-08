@@ -62,7 +62,8 @@ ChannelSplitterNode::ChannelSplitterNode(AudioContext* aContext,
 {
   mStream = AudioNodeStream::Create(aContext,
                                     new ChannelSplitterNodeEngine(this),
-                                    AudioNodeStream::NO_STREAM_FLAGS);
+                                    AudioNodeStream::NO_STREAM_FLAGS,
+                                    aContext->Graph());
 }
 
 ChannelSplitterNode::~ChannelSplitterNode()

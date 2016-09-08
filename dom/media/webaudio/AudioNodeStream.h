@@ -62,13 +62,12 @@ public:
   /**
    * Create a stream that will process audio for an AudioNode.
    * Takes ownership of aEngine.
-   * If aGraph is non-null, use that as the MediaStreamGraph, otherwise use
-   * aCtx's graph. aGraph is only non-null when called for AudioDestinationNode
-   * since the context's graph hasn't been set up in that case.
+   * aGraph is required and equals the graph of aCtx in most cases. An exception
+   * is AudioDestinationNode where the context's graph hasn't been set up yet.
    */
   static already_AddRefed<AudioNodeStream>
   Create(AudioContext* aCtx, AudioNodeEngine* aEngine, Flags aKind,
-         MediaStreamGraph* aGraph = nullptr);
+         MediaStreamGraph* aGraph);
 
 protected:
   /**

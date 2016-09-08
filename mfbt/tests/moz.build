@@ -17,6 +17,7 @@ CppUnitTests([
     'TestCountZeroes',
     'TestEndian',
     'TestEnumSet',
+    'TestEnumTypeTraits',
     'TestFastBernoulliTrial',
     'TestFloatingPoint',
     'TestFunction',
