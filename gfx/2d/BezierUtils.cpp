@@ -329,6 +329,9 @@ CalculateDistanceToEllipticArc(const Point& P, const Point& normal,
   Float n1 = (- B + S) / A;
   Float n2 = (- B - S) / A;
 
+  MOZ_ASSERT(n1 >= 0);
+  MOZ_ASSERT(n2 >= 0);
+
   return n1 < n2 ? n1 : n2;
 }
 
