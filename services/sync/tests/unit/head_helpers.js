@@ -76,6 +76,24 @@ function loadAddonTestFunctions() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 }
 
+function webExtensionsTestPath(path) {
+  if (path[0] != "/") {
+    throw Error("Path must begin with '/': " + path);
+  }
+
+  return "../../../../toolkit/components/extensions/test/xpcshell" + path;
+}
+
+/**
+ * Loads the WebExtension test functions by importing its test file.
+ */
+function loadWebExtensionTestFunctions() {
+  const path = webExtensionsTestPath("/head_sync.js");
+  let file = do_get_file(path);
+  let uri = Services.io.newFileURI(file);
+  Services.scriptloader.loadSubScript(uri.spec, gGlobalScope);
+}
+
 function getAddonInstall(name) {
   let f = do_get_file(ExtensionsTestPath("/addons/" + name + ".xpi"));
   let cb = Async.makeSyncCallback();
