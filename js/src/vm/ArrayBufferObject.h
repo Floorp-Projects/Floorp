@@ -252,6 +252,10 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
                                      HandleObject proto = nullptr,
                                      NewObjectKind newKind = GenericObject);
 
+    // Create an ArrayBufferObject that is safely finalizable and can later be
+    // initialize()d to become a real, content-visible ArrayBufferObject.
+    static ArrayBufferObject* createEmpty(JSContext* cx);
+
     static bool createDataViewForThisImpl(JSContext* cx, const CallArgs& args);
     static bool createDataViewForThis(JSContext* cx, unsigned argc, Value* vp);
 
@@ -395,6 +399,15 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
         setFlags(0);
         setFirstView(nullptr);
         setDataPointer(contents, ownsState);
+    }
+
+    // Note: initialize() may be called after initEmpty(); initEmpty() must
+    // only initialize the ArrayBufferObject to a safe, finalizable state.
+    void initEmpty() {
+        setByteLength(0);
+        setFlags(0);
+        setFirstView(nullptr);
+        setDataPointer(BufferContents::createPlain(nullptr), DoesntOwnData);
     }
 };
 

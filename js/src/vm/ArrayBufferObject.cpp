@@ -671,6 +671,10 @@ ArrayBufferObject::createForWasm(JSContext* cx, uint32_t initialSize, Maybe<uint
         maxSize = Some(Min(clamp, maxSize.value()));
     }
 
+    RootedArrayBufferObject buffer(cx, ArrayBufferObject::createEmpty(cx));
+    if (!buffer)
+        return nullptr;
+
     // Try to reserve the maximum requested memory
     WasmArrayRawBuffer* wasmBuf = WasmArrayRawBuffer::Allocate(initialSize, maxSize);
     if (!wasmBuf) {
@@ -704,14 +708,9 @@ ArrayBufferObject::createForWasm(JSContext* cx, uint32_t initialSize, Maybe<uint
 #endif
     }
 
-    void *data = wasmBuf->dataPointer();
-    BufferContents contents = BufferContents::create<WASM_MAPPED>(data);
-    ArrayBufferObject* buffer = ArrayBufferObject::create(cx, initialSize, contents);
-    if (!buffer) {
-        WasmArrayRawBuffer::Release(data);
-        return nullptr;
-    }
-
+    auto contents = BufferContents::create<WASM_MAPPED>(wasmBuf->dataPointer());
+    buffer->initialize(initialSize, contents, OwnsData);
+    cx->zone()->updateMallocCounter(wasmBuf->mappedSize());
     return buffer;
 }
 
@@ -761,6 +760,7 @@ ArrayBufferObject::prepareForAsmJS(JSContext* cx, Handle<ArrayBufferObject*> buf
         BufferContents newContents = BufferContents::create<WASM_MAPPED>(data);
         buffer->changeContents(cx, newContents);
         MOZ_ASSERT(data == buffer->dataPointer());
+        cx->zone()->updateMallocCounter(wasmBuf->mappedSize());
         return true;
     }
 
@@ -1009,6 +1009,18 @@ ArrayBufferObject::create(JSContext* cx, uint32_t nbytes,
 {
     return create(cx, nbytes, BufferContents::createPlain(nullptr),
                   OwnsState::OwnsData, proto);
+}
+
+ArrayBufferObject*
+ArrayBufferObject::createEmpty(JSContext* cx)
+{
+    AutoSetNewObjectMetadata metadata(cx);
+    ArrayBufferObject* obj = NewObjectWithClassProto<ArrayBufferObject>(cx, nullptr);
+    if (!obj)
+        return nullptr;
+
+    obj->initEmpty();
+    return obj;
 }
 
 bool
