@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html reftest-async-scroll
+      reftest-displayport-x="0" reftest-displayport-y="0"
+      reftest-displayport-w="800" reftest-displayport-h="2000"
+      reftest-async-scroll-x="0" reftest-async-scroll-y="20">
+
+<title>This is fixed-pos-scrolled-clip-1.html in an iframe</title>
+
+<style>
+
+body {
+  margin: 0;
+  height: 4000px;
+}
+
+.subframe {
+  position: relative;
+  left: 10px;
+  top: 10px;
+  border: 0;
+  width: 500px;
+  height: 600px;
+  overflow: auto;
+  box-shadow: 0 0 0 2px black;
+}
+
+</style>
+
+<iframe class="subframe" src="fixed-pos-scrolled-clip-1.html"></iframe>
