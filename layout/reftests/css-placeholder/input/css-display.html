@@ -2,11 +2,13 @@
 <html>
   <link rel='stylesheet' type='text/css' href='style.css'>
   <style>
-    input::-moz-placeholder {
+    [bar]::-moz-placeholder,
+    [foo]::placeholder {
       display: inline;
     }
   </style>
   <body>
     <input placeholder='foo'>
+    <input placeholder='bar'>
   </body>
 </html>

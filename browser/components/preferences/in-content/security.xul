@@ -53,8 +53,7 @@
       hidden="true"
       data-category="paneSecurity">
   <label class="header-name" flex="1">&paneSecurity.title;</label>
-  <button class="help-button"
-          aria-label="&helpButton.label;"/>
+  <html:a class="help-button" target="_blank" aria-label="&helpButton.label;"></html:a>
 </hbox>
 
 <!-- addons, forgery (phishing) UI -->

@@ -282,6 +282,8 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitIsConstructor(MIsConstructor* ins);
     void visitIsObject(MIsObject* ins);
     void visitHasClass(MHasClass* ins);
+    void visitWasmAddOffset(MWasmAddOffset* ins);
+    void visitWasmBoundsCheck(MWasmBoundsCheck* ins);
     void visitWasmLoadGlobalVar(MWasmLoadGlobalVar* ins);
     void visitWasmStoreGlobalVar(MWasmStoreGlobalVar* ins);
     void visitAsmJSParameter(MAsmJSParameter* ins);

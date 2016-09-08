@@ -8,10 +8,15 @@
     }
     function focusHandler()
     {
+      document.getElementById('moz').focus();
+    }
+    function focusHandlerMoz()
+    {
       document.documentElement.className = '';
     }
   </script>
   <body onload='loadHandler();'>
     <textarea id='t' class='ref' onfocus='focusHandler();'>foo</textarea>
+    <textarea id='moz' class='ref' onfocus='focusHandlerMoz();'>bar</textarea>
   </body>
 </html>

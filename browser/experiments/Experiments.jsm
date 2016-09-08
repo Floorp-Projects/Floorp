@@ -940,12 +940,6 @@ Experiments.Experiments.prototype = {
   _httpGetRequest: function (url) {
     this._log.trace("httpGetRequest(" + url + ")");
     let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
-    try {
-      xhr.open("GET", url);
-    } catch (e) {
-      this._log.error("httpGetRequest() - Error opening request to " + url + ": " + e);
-      return Promise.reject(new Error("Experiments - Error opening XHR for " + url));
-    }
 
     this._networkRequest = xhr;
     let deferred = Promise.defer();
@@ -972,12 +966,19 @@ Experiments.Experiments.prototype = {
       this._networkRequest = null;
     };
 
-    if (xhr.channel instanceof Ci.nsISupportsPriority) {
-      xhr.channel.priority = Ci.nsISupportsPriority.PRIORITY_LOWEST;
-    }
+    try {
+      xhr.open("GET", url);
 
-    xhr.timeout = MANIFEST_FETCH_TIMEOUT_MSEC;
-    xhr.send(null);
+      if (xhr.channel instanceof Ci.nsISupportsPriority) {
+        xhr.channel.priority = Ci.nsISupportsPriority.PRIORITY_LOWEST;
+      }
+
+      xhr.timeout = MANIFEST_FETCH_TIMEOUT_MSEC;
+      xhr.send(null);
+    } catch (e) {
+      this._log.error("httpGetRequest() - Error opening request to " + url + ": " + e);
+      return Promise.reject(new Error("Experiments - Error opening XHR for " + url));
+    }
     return deferred.promise;
   },
 

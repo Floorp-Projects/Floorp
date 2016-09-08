@@ -339,12 +339,6 @@ LIRGeneratorARM64::visitWasmTruncateToInt64(MWasmTruncateToInt64* ins)
 }
 
 void
-LIRGeneratorARM64::visitWasmBoundsCheck(MWasmBoundsCheck* ins)
-{
-    MOZ_CRASH("NY");
-}
-
-void
 LIRGeneratorARM64::visitWasmLoad(MWasmLoad* ins)
 {
     MOZ_CRASH("NY");

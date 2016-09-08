@@ -273,13 +273,6 @@ function loadSnippets()
     // Try to update from network.
     let xhr = new XMLHttpRequest();
     xhr.timeout = 5000;
-    try {
-      xhr.open("GET", updateURL, true);
-    } catch (ex) {
-      showSnippets();
-      loadCompleted();
-      return;
-    }
     // Even if fetching should fail we don't want to spam the server, thus
     // set the last update time regardless its results.  Will retry tomorrow.
     gSnippetsMap.set("snippets-last-update", Date.now());
@@ -291,7 +284,14 @@ function loadSnippets()
       showSnippets();
       loadCompleted();
     };
-    xhr.send(null);
+    try {
+      xhr.open("GET", updateURL, true);
+      xhr.send(null);
+    } catch (ex) {
+      showSnippets();
+      loadCompleted();
+      return;
+    }
   } else {
     showSnippets();
     loadCompleted();

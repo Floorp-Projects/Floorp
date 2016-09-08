@@ -1,7 +1,7 @@
 
 /* pngrutil.c - utilities to read a PNG file
  *
- * Last changed in libpng 1.6.24 [August 4, 2016]
+ * Last changed in libpng 1.6.25 [September 1, 2016]
  * Copyright (c) 1998-2002,2004,2006-2016 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -461,6 +461,7 @@ png_zlib_inflate(png_structrp png_ptr, int flush)
 #endif /* Zlib >= 1.2.4 */
 
 #ifdef PNG_READ_COMPRESSED_TEXT_SUPPORTED
+#if defined(PNG_READ_zTXt_SUPPORTED) || defined (PNG_READ_iTXt_SUPPORTED)
 /* png_inflate now returns zlib error codes including Z_OK and Z_STREAM_END to
  * allow the caller to do multiple calls if required.  If the 'finish' flag is
  * set Z_FINISH will be passed to the final inflate() call and Z_STREAM_END must
@@ -590,7 +591,6 @@ png_inflate(png_structrp png_ptr, png_uint_32 owner, int finish,
    }
 }
 
-#if defined(PNG_READ_zTXt_SUPPORTED) || defined (PNG_READ_iTXt_SUPPORTED)
 /*
  * Decompress trailing data in a chunk.  The assumption is that read_buffer
  * points at an allocated area holding the contents of a chunk with a

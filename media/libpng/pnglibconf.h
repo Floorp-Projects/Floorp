@@ -43,22 +43,26 @@
 #define PNG_NO_PEDANTIC_WARNINGS
 #endif
 
-#undef PNG_ARM_NEON_OPT /* This may have been defined in pngpriv.h */
-#ifdef __ARM_NEON__
-#  ifdef MOZ_PNG_HAVE_ARM_NEON
-#    ifdef MOZ_PNG_HAVE_ARM_NEON_CHECK
-#      define PNG_ARM_NEON_CHECK_SUPPORTED
-#      define PNG_ARM_NEON_OPT 1
-#    else
-#      define PNG_ARM_NEON_OPT 2
-#    endif
-#    define PNG_ALIGNED_MEMORY_SUPPORTED
-     /* Accept the PNG_ARM_NEON_IMPLEMENTATION setting from pngpriv.h. */
-#  else
-#    define PNG_ARM_NEON_OPT 0
-#  endif
+#ifdef MOZ_PNG_USE_ARM_NEON
+#  undef PNG_ARM_NEON_OPT /* Let libpng decide */
+#  define PNG_ALIGNED_MEMORY_SUPPORTED
 #else
 #  define PNG_ARM_NEON_OPT 0
+#endif
+
+#ifdef MOZ_PNG_USE_MIPS_MSA
+#  undef PNG_MIPS_MSA_OPT
+#  define PNG_ALIGNED_MEMORY_SUPPORTED
+#else
+#  define PNG_MIPS_MSA_OPT 0
+#endif
+
+#ifdef MOZ_PNG_USE_INTEL_SSE
+#  undef PNG_INTEL_SSE_OPT
+#  define PNG_INTEL_SSE
+#  define PNG_ALIGNED_MEMORY_SUPPORTED
+#else
+#  define PNG_INTEL_SSE_OPT 0
 #endif
 
 #define PNG_READ_SUPPORTED

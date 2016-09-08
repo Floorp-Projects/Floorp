@@ -201,7 +201,6 @@ Exception::Exception(const nsACString& aMessage,
                      nsIStackFrame *aLocation,
                      nsISupports *aData)
 : mResult(NS_OK),
-  mLineNumber(0),
   mInitialized(false),
   mHoldingJSVal(false)
 {
@@ -223,7 +222,6 @@ Exception::Exception(const nsACString& aMessage,
 
 Exception::Exception()
   : mResult(NS_OK),
-    mLineNumber(-1),
     mInitialized(false),
     mHoldingJSVal(false)
 {
@@ -316,7 +314,7 @@ Exception::GetFilename(JSContext* aCx, nsAString& aFilename)
     return mLocation->GetFilename(aCx, aFilename);
   }
 
-  aFilename.Assign(mFilename);
+  aFilename.Truncate();
   return NS_OK;
 }
 
@@ -333,7 +331,7 @@ Exception::GetLineNumber(JSContext* aCx, uint32_t *aLineNumber)
     return rv;
   }
 
-  *aLineNumber = mLineNumber;
+  *aLineNumber = 0;
   return NS_OK;
 }
 
@@ -484,7 +482,7 @@ Exception::LineNumber(JSContext* aCx) const
     return 0;
   }
 
-  return mLineNumber;
+  return 0;
 }
 
 uint32_t

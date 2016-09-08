@@ -350,8 +350,8 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
     nsIContent* placeholderNode = txtCtrl->CreatePlaceholderNode();
     NS_ENSURE_TRUE(placeholderNode, NS_ERROR_OUT_OF_MEMORY);
 
-    // Associate ::-moz-placeholder pseudo-element with the placeholder node.
-    CSSPseudoElementType pseudoType = CSSPseudoElementType::mozPlaceholder;
+    // Associate ::placeholder pseudo-element with the placeholder node.
+    CSSPseudoElementType pseudoType = CSSPseudoElementType::placeholder;
 
     // If this is a text input inside a number input then we want to use the
     // main number input as the source of style for the placeholder frame.
@@ -1464,7 +1464,7 @@ nsTextControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 mozilla::dom::Element*
 nsTextControlFrame::GetPseudoElement(CSSPseudoElementType aType)
 {
-  if (aType == CSSPseudoElementType::mozPlaceholder) {
+  if (aType == CSSPseudoElementType::placeholder) {
     nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
     return txtCtrl->GetPlaceholderNode();
   }

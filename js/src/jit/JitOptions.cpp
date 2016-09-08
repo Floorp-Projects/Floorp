@@ -224,6 +224,10 @@ DefaultJitOptions::DefaultJitOptions()
     // Test whether wasm int64 / double NaN bits testing is enabled.
     SET_DEFAULT(wasmTestMode, false);
 
+    // Toggles the optimization whereby offsets are folded into loads and not
+    // included in the bounds check.
+    SET_DEFAULT(wasmFoldOffsets, true);
+
     // Determines whether we suppress using signal handlers
     // for interrupting jit-ed code. This is used only for testing.
     SET_DEFAULT(ionInterruptWithoutSignals, false);

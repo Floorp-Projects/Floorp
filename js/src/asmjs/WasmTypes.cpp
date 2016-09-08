@@ -624,50 +624,62 @@ Assumptions::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 //  or
 //    2^24 * n for n >= 1.
 bool
-wasm::IsValidARMLengthImmediate(uint32_t length)
+wasm::IsValidARMImmediate(uint32_t i)
 {
-    bool valid = (IsPowerOfTwo(length) ||
-                  (length & 0x00ffffff) == 0);
+    bool valid = (IsPowerOfTwo(i) ||
+                  (i & 0x00ffffff) == 0);
 
-    MOZ_ASSERT_IF(valid, length % PageSize == 0);
+    MOZ_ASSERT_IF(valid, i % PageSize == 0);
 
     return valid;
 }
 
 uint32_t
-wasm::RoundUpToNextValidARMLengthImmediate(uint32_t length)
+wasm::RoundUpToNextValidARMImmediate(uint32_t i)
 {
-    MOZ_ASSERT(length <= 0xff000000);
+    MOZ_ASSERT(i <= 0xff000000);
 
-    if (length <= 16 * 1024 * 1024)
-        length = length ? mozilla::RoundUpPow2(length) : 0;
+    if (i <= 16 * 1024 * 1024)
+        i = i ? mozilla::RoundUpPow2(i) : 0;
     else
-        length = (length + 0x00ffffff) & ~0x00ffffff;
+        i = (i + 0x00ffffff) & ~0x00ffffff;
 
-    MOZ_ASSERT(IsValidARMLengthImmediate(length));
+    MOZ_ASSERT(IsValidARMImmediate(i));
 
-    return length;
+    return i;
+}
+
+#ifndef WASM_HUGE_MEMORY
+
+bool
+wasm::IsValidBoundsCheckImmediate(uint32_t i)
+{
+#ifdef JS_CODEGEN_ARM
+    return IsValidARMImmediate(i);
+#else
+    return true;
+#endif
 }
 
 size_t
-wasm::LegalizeMapLength(size_t requestedSize)
+wasm::ComputeMappedSize(uint32_t maxSize)
 {
-#ifdef WASM_HUGE_MEMORY
-    // On 64-bit platforms just give us a 4G guard region
-    return wasm::MappedSize;
-#else
-    uint32_t res = requestedSize;
+    MOZ_ASSERT(maxSize % PageSize == 0);
 
-    // On 32-bit platforms clamp down to 1GB
-    uint32_t MaxMappedSize = (1 << 30);
-    res = Min(res, MaxMappedSize);
+    // It is the bounds-check limit, not the mapped size, that gets baked into
+    // code. Thus round up the maxSize to the next valid immediate value
+    // *before* adding in the guard page.
 
 # ifdef JS_CODEGEN_ARM
-    // On Arm round so that it fits in a single instruction
-    res = RoundUpToNextValidARMLengthImmediate(res);
-    MOZ_RELEASE_ASSERT(res <= MaxMappedSize);
+    uint32_t boundsCheckLimit = RoundUpToNextValidARMImmediate(maxSize);
+# else
+    uint32_t boundsCheckLimit = maxSize;
 # endif
+    MOZ_ASSERT(IsValidBoundsCheckImmediate(boundsCheckLimit));
 
-    return res;
-#endif
+    MOZ_ASSERT(boundsCheckLimit % gc::SystemPageSize() == 0);
+    MOZ_ASSERT(GuardSize % gc::SystemPageSize() == 0);
+    return boundsCheckLimit + GuardSize;
 }
+
+#endif  // WASM_HUGE_MEMORY

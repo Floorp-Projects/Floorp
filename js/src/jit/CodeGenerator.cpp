@@ -11615,6 +11615,27 @@ CodeGenerator::visitWasmTrap(LWasmTrap* lir)
     masm.jump(wasm::JumpTarget(lir->mir()->trap()));
 }
 
+void
+CodeGenerator::visitWasmBoundsCheck(LWasmBoundsCheck* ins)
+{
+    const MWasmBoundsCheck* mir = ins->mir();
+    Register ptr = ToRegister(ins->ptr());
+
+    if (mir->isRedundant()) {
+        // For better test coverage, inject debug assertions that redundant
+        // bounds checks really are redundant.
+#ifdef DEBUG
+        Label ok;
+        masm.wasmBoundsCheck(Assembler::Below, ptr, &ok);
+        masm.assumeUnreachable("Redundant bounds check failed!");
+        masm.bind(&ok);
+#endif
+        return;
+    }
+
+    masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptr, wasm::JumpTarget::OutOfBounds);
+}
+
 typedef bool (*RecompileFn)(JSContext*);
 static const VMFunction RecompileFnInfo = FunctionInfo<RecompileFn>(Recompile, "Recompile");
 

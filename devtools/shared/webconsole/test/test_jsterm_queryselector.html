@@ -92,12 +92,12 @@ let checkQuerySelectorAllException = Task.async(function*() {
   let response = yield evaluateJS("$$(':foo')");
   checkObject(response, {
     input: "$$(':foo')",
-    exceptionMessage: "SyntaxError: An invalid or illegal string was specified",
+    exceptionMessage: "SyntaxError: ':foo' is not a valid selector",
     exception: {
       preview: {
         kind: "DOMException",
         name: "SyntaxError",
-        message: "An invalid or illegal string was specified"
+        message: "':foo' is not a valid selector"
       }
     }
   });

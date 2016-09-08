@@ -1,4 +1,5 @@
-input::-moz-placeholder,
+[placeholder="bar"]::-moz-placeholder,
+[placeholder="foo"]::placeholder,
 input.ref {
   color: green;
   opacity: 1.0;

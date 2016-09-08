@@ -102,6 +102,15 @@ treecol {
 }
 
 /* header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header[hidden=true] {
+  display: none;
+}
 
 #header-advanced {
   border-bottom: none;

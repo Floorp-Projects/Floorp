@@ -32,6 +32,13 @@ typedef void (*NotifySubDocInvalidationFunc)(ContainerLayer* aLayer,
  */
 struct LayerProperties
 {
+protected:
+  LayerProperties() {}
+
+  LayerProperties(const LayerProperties& a) = delete;
+  LayerProperties& operator=(const LayerProperties& a) = delete;
+
+public:
   virtual ~LayerProperties() {}
 
   /**

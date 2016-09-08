@@ -55,6 +55,7 @@
   skin/classic/browser/downloads/contentAreaDownloadsView.css  (../shared/downloads/contentAreaDownloadsView.css)
   skin/classic/browser/downloads/download-blocked.svg          (../shared/downloads/download-blocked.svg)
   skin/classic/browser/downloads/menubutton-dropmarker.svg     (../shared/downloads/menubutton-dropmarker.svg)
+  skin/classic/browser/downloads/download-summary.svg          (../shared/downloads/download-summary.svg)
   skin/classic/browser/drm-icon.svg                            (../shared/drm-icon.svg)
   skin/classic/browser/filters.svg                             (../shared/filters.svg)
   skin/classic/browser/fullscreen/insecure.svg                 (../shared/fullscreen/insecure.svg)
