@@ -111,8 +111,8 @@ class GamepadManager final : public nsIObserver,
   // Gamepad IPDL child
   // This pointer is only used by this singleton instance and
   // will be destroyed during the IPDL shutdown chain, so we
-  // don't need to refcount it here
-  GamepadEventChannelChild MOZ_NON_OWNING_REF *mChild;
+  // don't need to refcount it here.
+  nsTArray<GamepadEventChannelChild *> mChannelChildren;
 
  private:
 

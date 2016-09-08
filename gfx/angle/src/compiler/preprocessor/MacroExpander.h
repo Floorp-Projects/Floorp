@@ -24,7 +24,7 @@ struct SourceLocation;
 class MacroExpander : public Lexer
 {
   public:
-    MacroExpander(Lexer *lexer, MacroSet *macroSet, Diagnostics *diagnostics, bool parseDefined);
+    MacroExpander(Lexer *lexer, MacroSet *macroSet, Diagnostics *diagnostics);
     ~MacroExpander() override;
 
     void lex(Token *token) override;
@@ -81,7 +81,6 @@ class MacroExpander : public Lexer
     Lexer *mLexer;
     MacroSet *mMacroSet;
     Diagnostics *mDiagnostics;
-    bool mParseDefined;
 
     std::unique_ptr<Token> mReserveToken;
     std::vector<MacroContext *> mContextStack;

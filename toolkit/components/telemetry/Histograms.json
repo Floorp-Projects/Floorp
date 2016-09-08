@@ -5577,7 +5577,7 @@
     "n_values": 3,
     "description": "Whether the user is in safe mode (No, Yes, Forced)"
   },
-  "SCRIPT_BLOCK_WRONG_MIME": {
+  "SCRIPT_BLOCK_INCORRECT_MIME": {
     "alert_emails": ["ckerschbaumer@mozilla.com"],
     "bug_numbers": [1288361, 1299267],
     "expires_in_version": "56",

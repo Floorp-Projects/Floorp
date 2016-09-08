@@ -8,7 +8,9 @@
 
 #include "libANGLE/renderer/gl/ProgramGL.h"
 
+#include "common/angleutils.h"
 #include "common/debug.h"
+#include "common/string_utils.h"
 #include "common/utilities.h"
 #include "libANGLE/renderer/gl/FunctionsGL.h"
 #include "libANGLE/renderer/gl/ShaderGL.h"
@@ -23,11 +25,13 @@ namespace rx
 ProgramGL::ProgramGL(const gl::ProgramState &data,
                      const FunctionsGL *functions,
                      const WorkaroundsGL &workarounds,
-                     StateManagerGL *stateManager)
+                     StateManagerGL *stateManager,
+                     bool enablePathRendering)
     : ProgramImpl(data),
       mFunctions(functions),
       mWorkarounds(workarounds),
       mStateManager(stateManager),
+      mEnablePathRendering(enablePathRendering),
       mProgramID(0)
 {
     ASSERT(mFunctions);
@@ -97,53 +101,68 @@ LinkResult ProgramGL::link(const gl::ContextState &data, gl::InfoLog &infoLog)
 {
     preLink();
 
-    // Set the transform feedback state
-    std::vector<const GLchar *> transformFeedbackVaryings;
-    for (const auto &tfVarying : mState.getTransformFeedbackVaryingNames())
+    if (mState.getAttachedComputeShader())
     {
-        transformFeedbackVaryings.push_back(tfVarying.c_str());
-    }
+        const ShaderGL *computeShaderGL = GetImplAs<ShaderGL>(mState.getAttachedComputeShader());
 
-    if (transformFeedbackVaryings.empty())
-    {
-        if (mFunctions->transformFeedbackVaryings)
-        {
-            mFunctions->transformFeedbackVaryings(mProgramID, 0, nullptr,
-                                                  mState.getTransformFeedbackBufferMode());
-        }
+        mFunctions->attachShader(mProgramID, computeShaderGL->getShaderID());
+
+        // Link and verify
+        mFunctions->linkProgram(mProgramID);
+
+        // Detach the shaders
+        mFunctions->detachShader(mProgramID, computeShaderGL->getShaderID());
     }
     else
     {
-        ASSERT(mFunctions->transformFeedbackVaryings);
-        mFunctions->transformFeedbackVaryings(
-            mProgramID, static_cast<GLsizei>(transformFeedbackVaryings.size()),
-            &transformFeedbackVaryings[0], mState.getTransformFeedbackBufferMode());
-    }
-
-    const ShaderGL *vertexShaderGL   = GetImplAs<ShaderGL>(mState.getAttachedVertexShader());
-    const ShaderGL *fragmentShaderGL = GetImplAs<ShaderGL>(mState.getAttachedFragmentShader());
-
-    // Attach the shaders
-    mFunctions->attachShader(mProgramID, vertexShaderGL->getShaderID());
-    mFunctions->attachShader(mProgramID, fragmentShaderGL->getShaderID());
-
-    // Bind attribute locations to match the GL layer.
-    for (const sh::Attribute &attribute : mState.getAttributes())
-    {
-        if (!attribute.staticUse)
+        // Set the transform feedback state
+        std::vector<const GLchar *> transformFeedbackVaryings;
+        for (const auto &tfVarying : mState.getTransformFeedbackVaryingNames())
         {
-            continue;
+            transformFeedbackVaryings.push_back(tfVarying.c_str());
         }
 
-        mFunctions->bindAttribLocation(mProgramID, attribute.location, attribute.name.c_str());
+        if (transformFeedbackVaryings.empty())
+        {
+            if (mFunctions->transformFeedbackVaryings)
+            {
+                mFunctions->transformFeedbackVaryings(mProgramID, 0, nullptr,
+                                                      mState.getTransformFeedbackBufferMode());
+            }
+        }
+        else
+        {
+            ASSERT(mFunctions->transformFeedbackVaryings);
+            mFunctions->transformFeedbackVaryings(
+                mProgramID, static_cast<GLsizei>(transformFeedbackVaryings.size()),
+                &transformFeedbackVaryings[0], mState.getTransformFeedbackBufferMode());
+        }
+
+        const ShaderGL *vertexShaderGL   = GetImplAs<ShaderGL>(mState.getAttachedVertexShader());
+        const ShaderGL *fragmentShaderGL = GetImplAs<ShaderGL>(mState.getAttachedFragmentShader());
+
+        // Attach the shaders
+        mFunctions->attachShader(mProgramID, vertexShaderGL->getShaderID());
+        mFunctions->attachShader(mProgramID, fragmentShaderGL->getShaderID());
+
+        // Bind attribute locations to match the GL layer.
+        for (const sh::Attribute &attribute : mState.getAttributes())
+        {
+            if (!attribute.staticUse)
+            {
+                continue;
+            }
+
+            mFunctions->bindAttribLocation(mProgramID, attribute.location, attribute.name.c_str());
+        }
+
+        // Link and verify
+        mFunctions->linkProgram(mProgramID);
+
+        // Detach the shaders
+        mFunctions->detachShader(mProgramID, vertexShaderGL->getShaderID());
+        mFunctions->detachShader(mProgramID, fragmentShaderGL->getShaderID());
     }
-
-    // Link and verify
-    mFunctions->linkProgram(mProgramID);
-
-    // Detach the shaders
-    mFunctions->detachShader(mProgramID, vertexShaderGL->getShaderID());
-    mFunctions->detachShader(mProgramID, fragmentShaderGL->getShaderID());
 
     // Verify the link
     if (!checkLinkStatus(infoLog))
@@ -382,6 +401,26 @@ bool ProgramGL::getUniformBlockMemberInfo(const std::string &memberUniformName,
     return true;
 }
 
+void ProgramGL::setPathFragmentInputGen(const std::string &inputName,
+                                        GLenum genMode,
+                                        GLint components,
+                                        const GLfloat *coeffs)
+{
+    ASSERT(mEnablePathRendering);
+
+    for (const auto &input : mPathRenderingFragmentInputs)
+    {
+        if (input.name == inputName)
+        {
+            mFunctions->programPathFragmentInputGenNV(mProgramID, input.location, genMode,
+                                                      components, coeffs);
+            ASSERT(mFunctions->getError() == GL_NO_ERROR);
+            return;
+        }
+    }
+
+}
+
 void ProgramGL::preLink()
 {
     // Reset the program state
@@ -389,6 +428,7 @@ void ProgramGL::preLink()
     mUniformBlockRealLocationMap.clear();
     mSamplerBindings.clear();
     mUniformIndexToSamplerIndex.clear();
+    mPathRenderingFragmentInputs.clear();
 }
 
 bool ProgramGL::checkLinkStatus(gl::InfoLog &infoLog)
@@ -477,6 +517,71 @@ void ProgramGL::postLink()
         samplerBinding.textureType = gl::SamplerTypeToTextureType(linkedUniform.type);
         samplerBinding.boundTextureUnits.resize(linkedUniform.elementCount(), 0);
         mSamplerBindings.push_back(samplerBinding);
+    }
+
+    // Discover CHROMIUM_path_rendering fragment inputs if enabled.
+    if (!mEnablePathRendering)
+        return;
+
+    GLint numFragmentInputs = 0;
+    mFunctions->getProgramInterfaceiv(mProgramID, GL_FRAGMENT_INPUT_NV, GL_ACTIVE_RESOURCES,
+                                      &numFragmentInputs);
+    if (numFragmentInputs <= 0)
+        return;
+
+    GLint maxNameLength = 0;
+    mFunctions->getProgramInterfaceiv(mProgramID, GL_FRAGMENT_INPUT_NV, GL_MAX_NAME_LENGTH,
+                                      &maxNameLength);
+    ASSERT(maxNameLength);
+
+    for (GLint i = 0; i < numFragmentInputs; ++i)
+    {
+        std::string name;
+        name.resize(maxNameLength);
+
+        GLsizei nameLen = 0;
+        mFunctions->getProgramResourceName(mProgramID, GL_FRAGMENT_INPUT_NV, i, maxNameLength,
+                                           &nameLen, &name[0]);
+        name.resize(nameLen);
+
+        // Ignore built-ins
+        if (angle::BeginsWith(name, "gl_"))
+            continue;
+
+        const GLenum kQueryProperties[] = {GL_LOCATION, GL_ARRAY_SIZE};
+        GLint queryResults[ArraySize(kQueryProperties)];
+        GLsizei queryLength = 0;
+
+        mFunctions->getProgramResourceiv(
+            mProgramID, GL_FRAGMENT_INPUT_NV, i, static_cast<GLsizei>(ArraySize(kQueryProperties)),
+            kQueryProperties, static_cast<GLsizei>(ArraySize(queryResults)), &queryLength,
+            queryResults);
+
+        ASSERT(queryLength == static_cast<GLsizei>(ArraySize(kQueryProperties)));
+
+        PathRenderingFragmentInput baseElementInput;
+        baseElementInput.name     = name;
+        baseElementInput.location = queryResults[0];
+        mPathRenderingFragmentInputs.push_back(std::move(baseElementInput));
+
+        // If the input is an array it's denoted by [0] suffix on the variable
+        // name. We'll then create an entry per each array index where index > 0
+        if (angle::EndsWith(name, "[0]"))
+        {
+            // drop the suffix
+            name.resize(name.size() - 3);
+
+            const auto arraySize    = queryResults[1];
+            const auto baseLocation = queryResults[0];
+
+            for (GLint arrayIndex = 1; arrayIndex < arraySize; ++arrayIndex)
+            {
+                PathRenderingFragmentInput arrayElementInput;
+                arrayElementInput.name     = name + "[" + std::to_string(arrayIndex) + "]";
+                arrayElementInput.location = baseLocation + arrayIndex;
+                mPathRenderingFragmentInputs.push_back(std::move(arrayElementInput));
+            }
+        }
     }
 }
 
