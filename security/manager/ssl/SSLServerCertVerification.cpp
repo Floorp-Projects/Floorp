@@ -431,8 +431,9 @@ DetermineCertOverrideErrors(const UniqueCERTCertificate& cert,
       return SECFailure;
     }
     Input hostnameInput;
-    Result result = hostnameInput.Init(uint8_t_ptr_cast(hostName),
-                                       strlen(hostName));
+    Result result = hostnameInput.Init(
+      BitwiseCast<const uint8_t*, const char*>(hostName),
+      strlen(hostName));
     if (result != Success) {
       PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
       return SECFailure;
