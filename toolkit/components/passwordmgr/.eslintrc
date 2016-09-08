@@ -4,6 +4,9 @@
     // Require spacing around =>
     "arrow-spacing": 2,
 
+    // No newline before open brace for a block
+    "brace-style": [2, "1tbs", {"allowSingleLine": true}],
+
     // No space before always a space after a comma
     "comma-spacing": [2, {"before": false, "after": true}],
 
