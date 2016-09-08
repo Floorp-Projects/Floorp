@@ -5,7 +5,7 @@ function cleanUpPopupNotifications() {
     var container = getPopupNotifications(window.top);
     var notes = container._currentNotifications;
     info(true, "Removing " + notes.length + " popup notifications.");
-    for (var i = notes.length-1; i >= 0; i--) {
+    for (var i = notes.length - 1; i >= 0; i--) {
 	notes[i].remove();
     }
 }

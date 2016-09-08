@@ -21,5 +21,8 @@
 
     // Always require semicolon at end of statement
     "semi": [2, "always"],
+
+    // Require spaces around operators
+    "space-infix-ops": 2,
   }
 }
