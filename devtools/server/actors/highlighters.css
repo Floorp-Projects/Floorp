@@ -29,7 +29,7 @@
 
 :-moz-native-anonymous .highlighter-container {
   --highlighter-guide-color: #08c;
-  --highlighter-content-color: #87ceeb;
+  --highlighter-content-color: #f0f7ff;
   --highlighter-bubble-text-color: hsl(216, 33%, 97%);
   --highlighter-bubble-background-color: hsl(214, 13%, 24%);
   --highlighter-bubble-border-color: rgba(255, 255, 255, 0.2);
@@ -55,7 +55,7 @@
   cursor: grabbing;
 }
 
-/* Box model highlighter */
+/* Box Model Highlighter */
 
 :-moz-native-anonymous .box-model-regions {
   opacity: 0.6;
@@ -72,15 +72,15 @@
 }
 
 :-moz-native-anonymous .box-model-padding {
-  fill: #6a5acd;
+  fill: #7fe3cc;
 }
 
 :-moz-native-anonymous .box-model-border {
-  fill: #444444;
+  fill: #b3c8e2;
 }
 
 :-moz-native-anonymous .box-model-margin {
-  fill: #edff64;
+  fill: #9ebce1;
 }
 
 :-moz-native-anonymous .box-model-content,
@@ -99,9 +99,9 @@
   shape-rendering: crispEdges;
 }
 
-/* Highlighter - Node Infobar */
+/* Highlighter - Infobar */
 
-:-moz-native-anonymous .box-model-nodeinfobar-container {
+:-moz-native-anonymous [class$=infobar-container] {
   position: absolute;
   max-width: 95%;
 
@@ -109,10 +109,10 @@
   font-size: 11px;
 }
 
-:-moz-native-anonymous .box-model-nodeinfobar {
+:-moz-native-anonymous [class$=infobar] {
   position: relative;
 
-  /* Centering the nodeinfobar in the container */
+  /* Centering the infobar in the container */
   left: -50%;
 
   padding: 5px;
@@ -127,24 +127,24 @@
   border: 1px solid var(--highlighter-bubble-border-color);
 }
 
-:-moz-native-anonymous .box-model-nodeinfobar-container[hide-arrow] > .box-model-nodeinfobar {
+:-moz-native-anonymous [class$=infobar-container][hide-arrow] > [class$=infobar] {
   margin: 7px 0;
 }
 
 /* Arrows */
 
-:-moz-native-anonymous .box-model-nodeinfobar-container > .box-model-nodeinfobar:before {
+:-moz-native-anonymous [class$=infobar-container] > [class$=infobar]:before {
   left: calc(50% - 8px);
   border: 8px solid var(--highlighter-bubble-border-color);
 }
 
-:-moz-native-anonymous .box-model-nodeinfobar-container > .box-model-nodeinfobar:after {
+:-moz-native-anonymous [class$=infobar-container] > [class$=infobar]:after {
   left: calc(50% - 7px);
   border: 7px solid var(--highlighter-bubble-background-color);
 }
 
-:-moz-native-anonymous .box-model-nodeinfobar-container > .box-model-nodeinfobar:before,
-:-moz-native-anonymous .box-model-nodeinfobar-container > .box-model-nodeinfobar:after {
+:-moz-native-anonymous [class$=infobar-container] > [class$=infobar]:before,
+:-moz-native-anonymous [class$=infobar-container] > [class$=infobar]:after {
   content: "";
   display: none;
   position: absolute;
@@ -154,23 +154,23 @@
   border-right-color: transparent;
 }
 
-:-moz-native-anonymous .box-model-nodeinfobar-container[position="top"]:not([hide-arrow]) > .box-model-nodeinfobar:before,
-:-moz-native-anonymous .box-model-nodeinfobar-container[position="top"]:not([hide-arrow]) > .box-model-nodeinfobar:after {
+:-moz-native-anonymous [class$=infobar-container][position="top"]:not([hide-arrow]) > [class$=infobar]:before,
+:-moz-native-anonymous [class$=infobar-container][position="top"]:not([hide-arrow]) > [class$=infobar]:after {
   border-bottom: 0;
   top: 100%;
   display: block;
 }
 
-:-moz-native-anonymous .box-model-nodeinfobar-container[position="bottom"]:not([hide-arrow]) > .box-model-nodeinfobar:before,
-:-moz-native-anonymous .box-model-nodeinfobar-container[position="bottom"]:not([hide-arrow]) > .box-model-nodeinfobar:after {
+:-moz-native-anonymous [class$=infobar-container][position="bottom"]:not([hide-arrow]) > [class$=infobar]:before,
+:-moz-native-anonymous [class$=infobar-container][position="bottom"]:not([hide-arrow]) > [class$=infobar]:after {
   border-top: 0;
   bottom: 100%;
   display: block;
 }
 
-/* Text container */
+/* Text Container */
 
-:-moz-native-anonymous .box-model-nodeinfobar-text {
+:-moz-native-anonymous [class$=infobar-text] {
   overflow: hidden;
   white-space: nowrap;
   direction: ltr;
@@ -178,31 +178,54 @@
   display: flex;
 }
 
-:-moz-native-anonymous .box-model-nodeinfobar-tagname {
+:-moz-native-anonymous .box-model-infobar-tagname {
   color: hsl(285,100%, 75%);
 }
 
-:-moz-native-anonymous .box-model-nodeinfobar-id {
+:-moz-native-anonymous .box-model-infobar-id {
   color: hsl(103, 46%, 54%);
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-:-moz-native-anonymous .box-model-nodeinfobar-classes,
-:-moz-native-anonymous .box-model-nodeinfobar-pseudo-classes {
+:-moz-native-anonymous .box-model-infobar-classes,
+:-moz-native-anonymous .box-model-infobar-pseudo-classes {
   color: hsl(200, 74%, 57%);
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-:-moz-native-anonymous .box-model-nodeinfobar-dimensions {
+:-moz-native-anonymous [class$=infobar-dimensions] {
   color: hsl(210, 30%, 85%);
   border-inline-start: 1px solid #5a6169;
   margin-inline-start: 6px;
   padding-inline-start: 6px;
 }
 
-/* Css transform highlighter */
+/* CSS Grid Highlighter */
+
+:-moz-native-anonymous .css-grid-canvas {
+  position: absolute;
+  pointer-events: none;
+  top: 0;
+  left: 0;
+  image-rendering: -moz-crisp-edges;
+}
+
+:-moz-native-anonymous .css-grid-regions {
+  opacity: 0.6;
+}
+
+:-moz-native-anonymous .css-grid-areas {
+  fill: #CEC0ED;
+  stroke: none;
+}
+
+:-moz-native-anonymous .css-grid-infobar-areaname {
+  color: hsl(285,100%, 75%);
+}
+
+/* CSS Transform Highlighter */
 
 :-moz-native-anonymous .css-transform-transformed {
   fill: var(--highlighter-content-color);
@@ -222,7 +245,7 @@
   stroke-width: 2;
 }
 
-/* Rect highlighter */
+/* Rect Highlighter */
 
 :-moz-native-anonymous .highlighted-rect {
   position: absolute;
@@ -230,7 +253,7 @@
   opacity: 0.8;
 }
 
-/* Element geometry highlighter */
+/* Element Geometry Highlighter */
 
 :-moz-native-anonymous .geometry-editor-root {
   /* The geometry editor can be interacted with, so it needs to react to
@@ -300,7 +323,7 @@
   dominant-baseline: middle;
 }
 
-/* Rulers highlighter */
+/* Rulers Highlighter */
 
 :-moz-native-anonymous .rulers-highlighter-elements {
   shape-rendering: crispEdges;
@@ -344,7 +367,7 @@
   text-anchor: end;
 }
 
-/* Measuring Tool highlighter */
+/* Measuring Tool Highlighter */
 
 :-moz-native-anonymous .measuring-tool-highlighter-root {
   position: absolute;
@@ -404,17 +427,7 @@
   shape-rendering: crispEdges;
 }
 
-/* CSS Grid highlighter */
-
-:-moz-native-anonymous .css-grid-canvas {
-  position: absolute;
-  pointer-events: none;
-  top: 0;
-  left: 0;
-  image-rendering: -moz-crisp-edges;
-}
-
-/* Eye dropper */
+/* Eye Dropper */
 
 :-moz-native-anonymous .eye-dropper-root {
   --magnifier-width: 96px;
