@@ -1259,21 +1259,65 @@ struct ExternalTableElem
     TlsData* tls;
 };
 
-// Constants:
+// Because ARM has a fixed-width instruction encoding, ARM can only express a
+// limited subset of immediates (in a single instruction).
+
+extern bool
+IsValidARMImmediate(uint32_t i);
+
+extern uint32_t
+RoundUpToNextValidARMImmediate(uint32_t i);
 
 // The WebAssembly spec hard-codes the virtual page size to be 64KiB and
-// requires linear memory to always be a multiple of 64KiB.
+// requires the size of linear memory to always be a multiple of 64KiB.
+
 static const unsigned PageSize = 64 * 1024;
 
 #ifdef JS_CODEGEN_X64
-#define WASM_HUGE_MEMORY
-static const uint64_t Uint32Range = uint64_t(UINT32_MAX) + 1;
-static const uint64_t MappedSize = 2 * Uint32Range + PageSize;
-#endif
 
-bool IsValidARMLengthImmediate(uint32_t length);
-uint32_t RoundUpToNextValidARMLengthImmediate(uint32_t length);
-size_t LegalizeMapLength(size_t requestedSize);
+// All other code should use WASM_HUGE_MEMORY instead of JS_CODEGEN_X64 so that
+// it is easy to use the huge-mapping optimization for other 64-bit platforms in
+// the future.
+# define WASM_HUGE_MEMORY
+
+// On WASM_HUGE_MEMORY platforms, every asm.js or WebAssembly memory
+// unconditionally allocates a huge region of virtual memory of size
+// wasm::HugeMappedSize. This allows all memory resizing to work without
+// reallocation and provides enough guard space for all offsets to be folded
+// into memory accesses.
+
+static const uint64_t Uint32Range = uint64_t(UINT32_MAX) + 1;
+static const uint64_t HugeMappedSize = 2 * Uint32Range + PageSize;
+
+#else // !WASM_HUGE_MEMORY
+
+// On !WASM_HUGE_MEMORY platforms:
+//  - To avoid OOM in ArrayBuffer::prepareForAsmJS, asm.js continues to use the
+//    original ArrayBuffer allocation which has no guard region at all.
+//  - For WebAssembly memories, additional memory is mapped after the accessible
+//    region of the memory; see the js::WasmArrayRawBuffer comment for more
+//    details.
+
+static const size_t GuardSize = PageSize;
+
+// Return whether the given immediate satisfies the constraints of the platform
+// (viz. that, on ARM, IsValidARMImmediate).
+
+extern bool
+IsValidBoundsCheckImmediate(uint32_t i);
+
+// For a given WebAssembly/asm.js max size, return the number of bytes to
+// map which will necessarily be a multiple of the system page size and greater
+// than maxSize. For a returned mappedSize:
+//   boundsCheckLimit = mappedSize - GuardSize
+//   IsValidBoundsCheckImmediate(boundsCheckLimit)
+
+extern size_t
+ComputeMappedSize(uint32_t maxSize);
+
+#endif // WASM_HUGE_MEMORY
+
+// Constants:
 
 static const unsigned NaN64GlobalDataOffset       = 0;
 static const unsigned NaN32GlobalDataOffset       = NaN64GlobalDataOffset + sizeof(double);

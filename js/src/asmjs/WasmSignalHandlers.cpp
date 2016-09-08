@@ -665,10 +665,10 @@ EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddre
     // However, we wish to support the optimization of folding immediates
     // and scaled indices into addresses, and any address arithmetic we fold
     // gets done at full pointer width, so it doesn't get properly wrapped.
-    // We support this by extending MappedSize to the greatest size that could
-    // be reached by such an unwrapped address, and then when we arrive here in
-    // the signal handler for such an access, we compute the fully wrapped
-    // address, and perform the load or store on it.
+    // We support this by extending HugeMappedSize to the greatest size that
+    // could be reached by such an unwrapped address, and then when we arrive
+    // here in the signal handler for such an access, we compute the fully
+    // wrapped address, and perform the load or store on it.
     //
     // Taking a signal is really slow, but in theory programs really shouldn't
     // be hitting this anyway.
