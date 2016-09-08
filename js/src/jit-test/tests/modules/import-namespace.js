@@ -54,6 +54,16 @@ assertThrowsInstanceOf(function() { ns.a = 1; }, TypeError);
 delete ns.foo;
 assertThrowsInstanceOf(function() { delete ns.a; }, TypeError);
 
+// Test @@toStringTag property
+desc = Object.getOwnPropertyDescriptor(ns, Symbol.toStringTag);
+assertEq(desc.value, "Module");
+assertEq(desc.writable, false);
+assertEq(desc.enumerable, false);
+assertEq(desc.configurable, true);
+assertEq(typeof desc.get, "undefined");
+assertEq(typeof desc.set, "undefined");
+assertEq(Object.prototype.toString.call(ns), "[object Module]");
+
 // Test @@iterator method.
 let iteratorFun = ns[Symbol.iterator];
 assertEq(iteratorFun.name, "[Symbol.iterator]");

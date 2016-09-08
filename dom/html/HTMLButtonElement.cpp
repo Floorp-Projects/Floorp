@@ -386,7 +386,7 @@ HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
           // see bug 592124.
           // Hold a strong ref while dispatching
           RefPtr<HTMLFormElement> form(mForm);
-          presShell->HandleDOMEventWithTarget(mForm, &event, &status);
+          presShell->HandleDOMEventWithTarget(form, &event, &status);
           aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
         }
       }

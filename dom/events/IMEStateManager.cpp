@@ -323,7 +323,7 @@ IMEStateManager::OnRemoveContent(nsPresContext* aPresContext,
       // is called during the content being removed.  Then, the native
       // composition events which are caused by following APIs are ignored due
       // to unsafe to run script (in PresShell::HandleEvent()).
-      nsCOMPtr<nsIWidget> widget = aPresContext->GetRootWidget();
+      DebugOnly<void*> widget = aPresContext->GetRootWidget();
       MOZ_ASSERT(widget, "Why is there no widget?");
       nsresult rv =
         compositionInContent->NotifyIME(REQUEST_TO_CANCEL_COMPOSITION);
@@ -1601,8 +1601,8 @@ IMEStateManager::CreateIMEContentObserver(nsIEditor* aEditor)
   // IMEContentObserver::Init() might create another IMEContentObserver
   // instance.  So, sActiveIMEContentObserver would be replaced with new one.
   // We should hold the current instance here.
-  RefPtr<IMEContentObserver> kungFuDeathGrip(sActiveIMEContentObserver);
-  sActiveIMEContentObserver->Init(widget, sPresContext, sContent, aEditor);
+  RefPtr<IMEContentObserver> activeIMEContentObserver(sActiveIMEContentObserver);
+  activeIMEContentObserver->Init(widget, sPresContext, sContent, aEditor);
 }
 
 // static

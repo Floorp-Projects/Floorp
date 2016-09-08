@@ -1391,19 +1391,6 @@ class LCheckOverRecursed : public LInstructionHelper<0, 0, 0>
     }
 };
 
-class LAsmJSInterruptCheck : public LInstructionHelper<0, 0, 0>
-{
-  public:
-    LIR_HEADER(AsmJSInterruptCheck);
-
-    LAsmJSInterruptCheck()
-    { }
-
-    bool isCall() const {
-        return true;
-    }
-};
-
 class LWasmTrap : public LInstructionHelper<0, 0, 0>
 {
   public:

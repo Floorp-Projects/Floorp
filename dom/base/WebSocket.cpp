@@ -1265,18 +1265,18 @@ WebSocket::ConstructorCommon(const GlobalObject& aGlobal,
   }
 
   RefPtr<WebSocket> webSocket = new WebSocket(ownerWindow);
-  RefPtr<WebSocketImpl> kungfuDeathGrip = webSocket->mImpl;
+  RefPtr<WebSocketImpl> webSocketImpl = webSocket->mImpl;
 
   bool connectionFailed = true;
 
   if (NS_IsMainThread()) {
-    webSocket->mImpl->Init(aGlobal.Context(), principal, !!aTransportProvider,
-                           aUrl, protocolArray, EmptyCString(),
-                           0, 0, aRv, &connectionFailed);
+    webSocketImpl->Init(aGlobal.Context(), principal, !!aTransportProvider,
+                        aUrl, protocolArray, EmptyCString(),
+                        0, 0, aRv, &connectionFailed);
   } else {
     // In workers we have to keep the worker alive using a workerHolder in order
     // to dispatch messages correctly.
-    if (!webSocket->mImpl->RegisterWorkerHolder()) {
+    if (!webSocketImpl->RegisterWorkerHolder()) {
       aRv.Throw(NS_ERROR_FAILURE);
       return nullptr;
     }
@@ -1289,7 +1289,7 @@ WebSocket::ConstructorCommon(const GlobalObject& aGlobal,
     }
 
     RefPtr<InitRunnable> runnable =
-      new InitRunnable(webSocket->mImpl, !!aTransportProvider, aUrl,
+      new InitRunnable(webSocketImpl, !!aTransportProvider, aUrl,
                        protocolArray, nsDependentCString(file.get()), lineno,
                        column, aRv, &connectionFailed);
     runnable->Dispatch(aRv);

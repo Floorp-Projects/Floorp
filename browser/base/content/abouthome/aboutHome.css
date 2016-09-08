@@ -107,6 +107,7 @@ a {
 
 #searchSubmit {
   margin-inline-start: -1px;
+  color: transparent;
   background: url("chrome://browser/skin/search-arrow-go.svg#search-arrow-go") center center no-repeat, linear-gradient(hsla(0,0%,100%,.8), hsla(0,0%,100%,.1)) padding-box;
   padding: 0;
   border: 1px solid;
@@ -115,7 +116,6 @@ a {
   border-inline-start: 1px solid transparent;
   box-shadow: 0 0 2px hsla(0,0%,100%,.5) inset,
               0 1px 0 hsla(0,0%,100%,.2);
-  color: inherit;
   cursor: pointer;
   transition-property: background-color, border-color, box-shadow;
   transition-duration: 150ms;
@@ -132,7 +132,6 @@ a {
 #searchText + #searchSubmit:hover,
 #searchText[autofocus] + #searchSubmit {
   border-color: #59b5fc #45a3e7 #3294d5;
-  color: white;
 }
 
 #searchText:focus + #searchSubmit,

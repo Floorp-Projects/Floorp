@@ -953,18 +953,13 @@ js::Nursery::queueSweepAction(SweepThunk thunk, void* data)
 {
     static_assert(sizeof(SweepAction) % CellSize == 0,
                   "SweepAction size must be a multiple of cell size");
-    MOZ_ASSERT(!runtime()->mainThread.suppressGC);
 
-    SweepAction* action = nullptr;
-    if (isEnabled() && !js::oom::ShouldFailWithOOM())
-        action = reinterpret_cast<SweepAction*>(allocate(sizeof(SweepAction)));
+    MOZ_ASSERT(isEnabled());
 
-    if (!action) {
-        runtime()->gc.evictNursery();
-        AutoSetThreadIsSweeping threadIsSweeping;
-        thunk(data);
-        return;
-    }
+    AutoEnterOOMUnsafeRegion oomUnsafe;
+    auto action = reinterpret_cast<SweepAction*>(allocate(sizeof(SweepAction)));
+    if (!action)
+        oomUnsafe.crash("Nursery::queueSweepAction");
 
     new (action) SweepAction(thunk, data, sweepActions_);
     sweepActions_ = action;

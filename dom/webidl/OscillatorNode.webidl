@@ -18,6 +18,7 @@ enum OscillatorType {
   "custom"
 };
 
+[Pref="dom.webaudio.enabled"]
 interface OscillatorNode : AudioNode {
 
     [SetterThrows]

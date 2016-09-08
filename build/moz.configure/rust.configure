@@ -105,7 +105,7 @@ def rust_target(rust_compiler, rustc, target, cross_compiling):
             # OpenBSD
             ('x86_64', 'OpenBSD'): 'x86_64-unknown-openbsd',
             # Linux
-            ('x86', 'Linux'): 'i686-unknown-linux-gnu',
+            ('x86', 'Linux'): 'i586-unknown-linux-gnu',
             # Linux
             ('x86_64', 'Linux'): 'x86_64-unknown-linux-gnu',
             # OS X and iOS

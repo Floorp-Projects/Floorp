@@ -21,6 +21,7 @@ enum ChannelInterpretation {
     "discrete"
 };
 
+[Pref="dom.webaudio.enabled"]
 interface AudioNode : EventTarget {
 
     [Throws]

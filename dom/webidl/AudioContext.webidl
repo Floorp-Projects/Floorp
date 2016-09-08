@@ -24,7 +24,8 @@ dictionary PeriodicWaveConstraints {
 };
 
 [Constructor,
- Constructor(AudioChannel audioChannelType)]
+ Constructor(AudioChannel audioChannelType),
+ Pref="dom.webaudio.enabled"]
 interface AudioContext : EventTarget {
 
     readonly attribute AudioDestinationNode destination;

@@ -2546,7 +2546,7 @@ DataChannel::Close()
 {
   ENSURE_DATACONNECTION;
   RefPtr<DataChannelConnection> connection(mConnection);
-  mConnection->Close(this);
+  connection->Close(this);
 }
 
 // Used when disconnecting from the DataChannelConnection

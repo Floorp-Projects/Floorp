@@ -281,9 +281,9 @@ static nsCOMPtr<nsIEventTarget> GetSTSThread()
 
 static void CheckSTSThread()
 {
-  nsCOMPtr<nsIEventTarget> sts_thread = GetSTSThread();
+  DebugOnly<nsCOMPtr<nsIEventTarget>> sts_thread = GetSTSThread();
 
-  ASSERT_ON_THREAD(sts_thread);
+  ASSERT_ON_THREAD(sts_thread.value);
 }
 
 

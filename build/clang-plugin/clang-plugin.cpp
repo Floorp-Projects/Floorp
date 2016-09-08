@@ -158,6 +158,11 @@ private:
     virtual void run(const MatchFinder::MatchResult &Result);
   };
 
+  class KungFuDeathGripChecker : public MatchFinder::MatchCallback {
+  public:
+    virtual void run(const MatchFinder::MatchResult &Result);
+  };
+
   ScopeChecker Scope;
   ArithmeticArgChecker ArithmeticArg;
   TrivialCtorDtorChecker TrivialCtorDtor;
@@ -174,6 +179,7 @@ private:
   NoExplicitMoveConstructorChecker NoExplicitMoveConstructor;
   RefCountedCopyConstructorChecker RefCountedCopyConstructor;
   AssertAssignmentChecker AssertAttribution;
+  KungFuDeathGripChecker KungFuDeathGrip;
   MatchFinder AstMatcher;
 };
 
@@ -313,6 +319,44 @@ bool isIgnoredExprForMustUse(const Expr *E) {
 template<typename T>
 StringRef getNameChecked(const T& D) {
   return D->getIdentifier() ? D->getName() : "";
+}
+
+bool typeIsRefPtr(QualType Q) {
+  CXXRecordDecl *D = Q->getAsCXXRecordDecl();
+  if (!D || !D->getIdentifier()) {
+    return false;
+  }
+
+  StringRef name = D->getName();
+  if (name == "RefPtr" || name == "nsCOMPtr") {
+    return true;
+  }
+  return false;
+}
+
+// The method defined in clang for ignoring implicit nodes doesn't work with
+// some AST trees. To get around this, we define our own implementation of
+// IgnoreImplicit.
+const Stmt *IgnoreImplicit(const Stmt *s) {
+  while (true) {
+    if (auto *ewc = dyn_cast<ExprWithCleanups>(s)) {
+      s = ewc->getSubExpr();
+    } else if (auto *mte = dyn_cast<MaterializeTemporaryExpr>(s)) {
+      s = mte->GetTemporaryExpr();
+    } else if (auto *bte = dyn_cast<CXXBindTemporaryExpr>(s)) {
+      s = bte->getSubExpr();
+    } else if (auto *ice = dyn_cast<ImplicitCastExpr>(s)) {
+      s = ice->getSubExpr();
+    } else {
+      break;
+    }
+  }
+
+  return s;
+}
+
+const Expr *IgnoreImplicit(const Expr *e) {
+  return cast<Expr>(IgnoreImplicit(static_cast<const Stmt *>(e)));
 }
 }
 
@@ -821,6 +865,9 @@ AST_MATCHER(CXXRecordDecl, isLambdaDecl) {
   return Node.isLambda();
 }
 
+AST_MATCHER(QualType, isRefPtr) {
+  return typeIsRefPtr(Node);
+}
 }
 }
 
@@ -1145,6 +1192,9 @@ DiagnosticsMatcher::DiagnosticsMatcher() {
   AstMatcher.addMatcher(
       callExpr(isAssertAssignmentTestFunc()).bind("funcCall"),
       &AssertAttribution);
+
+  AstMatcher.addMatcher(varDecl(hasType(isRefPtr())).bind("decl"),
+                        &KungFuDeathGrip);
 }
 
 // These enum variants determine whether an allocation has occured in the code.
@@ -1691,6 +1741,97 @@ void DiagnosticsMatcher::AssertAssignmentChecker::run(
   if (FuncCall && hasSideEffectAssignment(FuncCall)) {
     Diag.Report(FuncCall->getLocStart(), AssignInsteadOfComp);
   }
+}
+
+void DiagnosticsMatcher::KungFuDeathGripChecker::run(
+    const MatchFinder::MatchResult &Result) {
+  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
+  unsigned ErrorID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Error,
+      "Unused \"kungFuDeathGrip\" %0 objects constructed from %1 are prohibited");
+
+  unsigned NoteID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Note,
+      "Please switch all accesses to this %0 to go through '%1', or explicitly pass '%1' to `mozilla::Unused`");
+
+  const VarDecl *D = Result.Nodes.getNodeAs<VarDecl>("decl");
+  if (D->isReferenced() || !D->hasLocalStorage() || !D->hasInit()) {
+    return;
+  }
+
+  // Not interested in parameters.
+  if (isa<ImplicitParamDecl>(D) || isa<ParmVarDecl>(D)) {
+    return;
+  }
+
+  const Expr *E = IgnoreImplicit(D->getInit());
+  const CXXConstructExpr *CE = dyn_cast<CXXConstructExpr>(E);
+  if (CE && CE->getNumArgs() == 0) {
+    // We don't report an error when we construct and don't use a nsCOMPtr /
+    // nsRefPtr with no arguments. We don't report it because the error is not
+    // related to the current check. In the future it may be reported through a
+    // more generic mechanism.
+    return;
+  }
+
+  // We don't want to look at the single argument conversion constructors
+  // which are inbetween the declaration and the actual object which we are
+  // assigning into the nsCOMPtr/RefPtr. To do this, we repeatedly
+  // IgnoreImplicit, then look at the expression. If it is one of these
+  // conversion constructors, we ignore it and continue to dig.
+  while ((CE = dyn_cast<CXXConstructExpr>(E)) && CE->getNumArgs() == 1) {
+    E = IgnoreImplicit(CE->getArg(0));
+  }
+
+  // We allow taking a kungFuDeathGrip of `this` because it cannot change
+  // beneath us, so calling directly through `this` is OK. This is the same
+  // for local variable declarations.
+  //
+  // We also don't complain about unused RefPtrs which are constructed from
+  // the return value of a new expression, as these are required in order to
+  // immediately destroy the value created (which was presumably created for
+  // its side effects), and are not used as a death grip.
+  if (isa<CXXThisExpr>(E) || isa<DeclRefExpr>(E) || isa<CXXNewExpr>(E)) {
+    return;
+  }
+
+  // These types are assigned into nsCOMPtr and RefPtr for their side effects,
+  // and not as a kungFuDeathGrip. We don't want to consider RefPtr and nsCOMPtr
+  // types which are initialized with these types as errors.
+  const TagDecl *TD = E->getType()->getAsTagDecl();
+  if (TD && TD->getIdentifier()) {
+    static const char *IgnoreTypes[] = {
+      "already_AddRefed",
+      "nsGetServiceByCID",
+      "nsGetServiceByCIDWithError",
+      "nsGetServiceByContractID",
+      "nsGetServiceByContractIDWithError",
+      "nsCreateInstanceByCID",
+      "nsCreateInstanceByContractID",
+      "nsCreateInstanceFromFactory",
+    };
+
+    for (uint32_t i = 0; i < sizeof(IgnoreTypes) / sizeof(IgnoreTypes[0]); ++i) {
+      if (TD->getName() == IgnoreTypes[i]) {
+        return;
+      }
+    }
+  }
+
+  // Report the error
+  const char *ErrThing;
+  const char *NoteThing;
+  if (isa<MemberExpr>(E)) {
+    ErrThing  = "members";
+    NoteThing = "member";
+  } else {
+    ErrThing = "temporary values";
+    NoteThing = "value";
+  }
+
+  // We cannot provide the note if we don't have an initializer
+  Diag.Report(D->getLocStart(), ErrorID) << D->getType() << ErrThing;
+  Diag.Report(E->getLocStart(), NoteID) << NoteThing << getNameChecked(D);
 }
 
 class MozCheckAction : public PluginASTAction {

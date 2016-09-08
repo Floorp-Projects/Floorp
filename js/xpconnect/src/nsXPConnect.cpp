@@ -343,10 +343,12 @@ xpc_MarkInCCGeneration(nsISupports* aVariant, uint32_t aGeneration)
 void
 xpc_TryUnmarkWrappedGrayObject(nsISupports* aWrappedJS)
 {
+#ifdef DEBUG
     nsCOMPtr<nsIXPConnectWrappedJSUnmarkGray> wjsug =
       do_QueryInterface(aWrappedJS);
     MOZ_ASSERT(!wjsug, "One should never be able to QI to "
                        "nsIXPConnectWrappedJSUnmarkGray successfully!");
+#endif
 }
 
 /***************************************************************************/
