@@ -4227,7 +4227,7 @@ SVGTextFrame::GetEndPositionOfChar(nsIContent* aContent,
   Matrix m =
     Matrix::Rotation(mPositions[startIndex].mAngle) *
     Matrix::Translation(ToPoint(mPositions[startIndex].mPosition));
-  Point p = m * Point(advance / mFontSizeScaleFactor, 0);
+  Point p = m.TransformPoint(Point(advance / mFontSizeScaleFactor, 0));
 
   NS_ADDREF(*aResult = new DOMSVGPoint(p));
   return NS_OK;

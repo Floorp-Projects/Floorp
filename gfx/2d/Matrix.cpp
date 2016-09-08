@@ -95,10 +95,10 @@ Matrix::TransformBounds(const Rect &aRect) const
   Float min_x, max_x;
   Float min_y, max_y;
 
-  quad[0] = *this * aRect.TopLeft();
-  quad[1] = *this * aRect.TopRight();
-  quad[2] = *this * aRect.BottomLeft();
-  quad[3] = *this * aRect.BottomRight();
+  quad[0] = TransformPoint(aRect.TopLeft());
+  quad[1] = TransformPoint(aRect.TopRight());
+  quad[2] = TransformPoint(aRect.BottomLeft());
+  quad[3] = TransformPoint(aRect.BottomRight());
 
   min_x = max_x = quad[0].x;
   min_y = max_y = quad[0].y;

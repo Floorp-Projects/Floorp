@@ -161,7 +161,7 @@ static gfx::PointTyped<TargetUnits>
 TransformBy(const gfx::Matrix4x4Typed<SourceUnits, TargetUnits>& aTransform,
             const gfx::PointTyped<SourceUnits>& aPoint)
 {
-  return aTransform * aPoint;
+  return aTransform.TransformPoint(aPoint);
 }
 template <typename TargetUnits, typename SourceUnits>
 static gfx::IntPointTyped<TargetUnits>

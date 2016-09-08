@@ -495,8 +495,8 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoo
         // subtree root space, and then the inverse of the new cumulative transform
         // to bring it back to layer space.
         LayerPoint transformedAnchor = ViewAs<LayerPixel>(
-            newCumulativeTransform.Inverse() *
-            (oldCumulativeTransform * offsetAnchor.ToUnknownPoint()));
+            newCumulativeTransform.Inverse().TransformPoint(
+              (oldCumulativeTransform.TransformPoint(offsetAnchor.ToUnknownPoint()))));
 
         // We want to translate the layer by the difference between |transformedAnchor|
         // and |anchor|. To achieve this, we will add a translation to the layer's
