@@ -38,6 +38,7 @@ BUILD_KINDS = set([
 JOB_KINDS = set([
     'source-check',
     'toolchain',
+    'marionette-harness',
 ])
 
 
