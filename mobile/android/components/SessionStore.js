@@ -388,11 +388,19 @@ SessionStore.prototype = {
         }
         break;
       }
-      case "pageshow": {
+      case "pageshow":
+      case "AboutReaderContentReady": {
         let browser = aEvent.currentTarget;
 
         // Skip subframe pageshows.
         if (browser.contentDocument !== aEvent.originalTarget) {
+          return;
+        }
+
+        if (browser.currentURI.spec.startsWith("about:reader") &&
+            !browser.contentDocument.body.classList.contains("loaded")) {
+          // Don't restore the scroll position of an about:reader page at this point;
+          // wait for the custom event dispatched from AboutReader.jsm instead.
           return;
         }
 
@@ -401,7 +409,7 @@ SessionStore.prototype = {
         // or on load, whichever comes first.
         // In the latter case, our load handler runs before the MVM's one, which is the
         // wrong way around, so we have to use a later event instead.
-        log("pageshow for tab " + window.BrowserApp.getTabForBrowser(browser).id);
+        log(aEvent.type + " for tab " + window.BrowserApp.getTabForBrowser(browser).id);
         if (browser.__SS_restoreDataOnPageshow) {
           delete browser.__SS_restoreDataOnPageshow;
           this._restoreScrollPosition(browser.__SS_data.scrolldata, browser);
@@ -514,6 +522,7 @@ SessionStore.prototype = {
     // Gecko might set the initial zoom level after the JS "load" event,
     // so we have to restore zoom and scroll position after that.
     aBrowser.addEventListener("pageshow", this, true);
+    aBrowser.addEventListener("AboutReaderContentReady", this, true);
 
     // Use a combination of events to watch for text data changes
     aBrowser.addEventListener("change", this, true);
@@ -537,6 +546,7 @@ SessionStore.prototype = {
     aBrowser.removeEventListener("DOMTitleChanged", this, true);
     aBrowser.removeEventListener("load", this, true);
     aBrowser.removeEventListener("pageshow", this, true);
+    aBrowser.removeListener("AboutReaderContentReady", this, true);
     aBrowser.removeEventListener("change", this, true);
     aBrowser.removeEventListener("input", this, true);
     aBrowser.removeEventListener("DOMAutoComplete", this, true);
