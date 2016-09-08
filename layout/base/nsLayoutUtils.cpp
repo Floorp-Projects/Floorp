@@ -7503,11 +7503,9 @@ nsLayoutUtils::SurfaceFromElement(HTMLVideoElement* aElement,
     (aSurfaceFlags & SFE_PREFER_NO_PREMULTIPLY_ALPHA) == 0,
     "We can't support non-premultiplied alpha for video!");
 
-#ifdef MOZ_EME
   if (aElement->ContainsRestrictedContent()) {
     return result;
   }
-#endif
 
   uint16_t readyState;
   if (NS_SUCCEEDED(aElement->GetReadyState(&readyState)) &&

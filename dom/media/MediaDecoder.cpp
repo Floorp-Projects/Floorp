@@ -311,13 +311,10 @@ MediaDecoder::IsHeuristicDormantSupported() const
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  return
-#if defined(MOZ_EME)
-    // We disallow dormant for encrypted media until bug 1181864 is fixed.
-    mInfo &&
-    !mInfo->IsEncrypted() &&
-#endif
-    mIsHeuristicDormantSupported;
+  // We disallow dormant for encrypted media until bug 1181864 is fixed.
+  return mInfo &&
+         !mInfo->IsEncrypted() &&
+         mIsHeuristicDormantSupported;
 }
 
 void
@@ -494,9 +491,7 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
   , mLogicalPosition(0.0)
   , mDuration(std::numeric_limits<double>::quiet_NaN())
   , mResourceCallback(new ResourceCallback())
-#ifdef MOZ_EME
   , mCDMProxyPromise(mCDMProxyPromiseHolder.Ensure(__func__))
-#endif
   , mIgnoreProgressData(false)
   , mInfiniteStream(false)
   , mOwner(aOwner)
@@ -593,9 +588,7 @@ MediaDecoder::Shutdown()
 
   mResourceCallback->Disconnect();
 
-#ifdef MOZ_EME
   mCDMProxyPromiseHolder.RejectIfExists(true, __func__);
-#endif
 
   DiscardOngoingSeekIfExists();
 
@@ -1677,7 +1670,6 @@ MediaDecoder::CanPlayThrough()
   return GetStatistics().CanPlayThrough();
 }
 
-#ifdef MOZ_EME
 RefPtr<MediaDecoder::CDMProxyPromise>
 MediaDecoder::RequestCDMProxy() const
 {
@@ -1692,7 +1684,6 @@ MediaDecoder::SetCDMProxy(CDMProxy* aProxy)
 
   mCDMProxyPromiseHolder.ResolveIfExists(aProxy, __func__);
 }
-#endif
 
 bool
 MediaDecoder::IsOpusEnabled()
