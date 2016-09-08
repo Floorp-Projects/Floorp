@@ -148,14 +148,10 @@ for (let [type, ext] of [
     assertErrorMessage(() => badStoreModule(type, ext), TypeError, /can't touch memory/);
 }
 
-for (var ind = 0; ind < 1; ind++) {
-    /*
-     * TODO: wasm.explicit-bounds-check option is being deprecated. We will be adding a
-     * new option that treats all offset as "non-foldable". When that is added trigger
-     * it here when ind == 1.
-    if (ind == 1)
-        setJitCompilerOption('wasm.explicit-bounds-checks', 1);
-    */
+assertEq(getJitCompilerOptions()['wasm.fold-offsets'], 1);
+
+for (var foldOffsets = 0; foldOffsets <= 1; foldOffsets++) {
+    setJitCompilerOption('wasm.fold-offsets', foldOffsets);
 
     testLoad('i32', '', 0, 0, 0, 0x03020100);
     testLoad('i32', '', 1, 0, 1, 0x04030201);
@@ -399,3 +395,5 @@ for (var ind = 0; ind < 1; ind++) {
         setJitCompilerOption('wasm.test-mode', 0);
     }
 }
+
+setJitCompilerOption('wasm.fold-offsets', 1);

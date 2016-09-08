@@ -57,7 +57,8 @@ DottedCornerFinder::DottedCornerFinder(const Bezier& aOuterBezier,
    mNormalSign((aCorner == C_TL || aCorner == C_BR) ? -1.0f : 1.0f),
    mC0(aC0), mCn(aCn),
    mR0(aR0), mRn(aRn), mMaxR(std::max(aR0, aRn)),
-   mCurveOrigin(mC0.x, mCn.y),
+   mCenterCurveOrigin(mC0.x, mCn.y),
+   mInnerCurveOrigin(mInnerBezier.mPoints[0].x, mInnerBezier.mPoints[3].y),
    mBestOverlap(0.0f),
    mHasZeroBorderWidth(false), mHasMore(true),
    mMaxCount(aCornerDim.width + aCornerDim.height),
@@ -185,8 +186,8 @@ DottedCornerFinder::Next(void)
       phi = M_PI / 2.0f + phi;
     }
 
-    Point C(mCurveOrigin.x + mCenterCurveR * cos(phi),
-            mCurveOrigin.y + mCenterCurveR * sin(phi));
+    Point C(mCenterCurveOrigin.x + mCenterCurveR * cos(phi),
+            mCenterCurveOrigin.y + mCenterCurveR * sin(phi));
     return DottedCornerFinder::Result(C, mR0);
   }
 
@@ -288,7 +289,7 @@ DottedCornerFinder::FindNext(Float overlap)
       }
 
       Point normal = PointRotateCCW90(Diff / DiffLength) * (-mNormalSign);
-      r = CalculateDistanceToEllipticArc(C, normal, mCurveOrigin,
+      r = CalculateDistanceToEllipticArc(C, normal, mInnerCurveOrigin,
                                          mInnerWidth, mInnerHeight);
 
       // Check overlap along arc.

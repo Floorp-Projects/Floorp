@@ -409,6 +409,23 @@ MacroAssembler::storeUncanonicalizedFloat32(FloatRegister src, const BaseIndex& 
     ma_ss(src, addr);
 }
 
+// ========================================================================
+// wasm support
+
+template <class L>
+void
+MacroAssembler::wasmBoundsCheck(Condition cond, Register index, L label)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::wasmPatchBoundsCheck(uint8_t* patchAt, uint32_t limit)
+{
+    // Replace with new value
+    Assembler::UpdateLoad64Value((Instruction*) patchAt, limit);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

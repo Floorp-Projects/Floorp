@@ -18,6 +18,7 @@
 
 #include "asmjs/WasmJS.h"
 
+#include "mozilla/CheckedInt.h"
 #include "mozilla/Maybe.h"
 
 #include "asmjs/WasmCompile.h"
@@ -35,6 +36,7 @@
 using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
+using mozilla::CheckedInt;
 using mozilla::Nothing;
 
 bool
@@ -710,12 +712,34 @@ wasm::ExportedFunctionToDefinitionIndex(JSFunction* fun)
 // ============================================================================
 // WebAssembly.Memory class and methods
 
+const ClassOps WasmMemoryObject::classOps_ =
+{
+    nullptr, /* addProperty */
+    nullptr, /* delProperty */
+    nullptr, /* getProperty */
+    nullptr, /* setProperty */
+    nullptr, /* enumerate */
+    nullptr, /* resolve */
+    nullptr, /* mayResolve */
+    WasmMemoryObject::finalize
+};
+
 const Class WasmMemoryObject::class_ =
 {
     "WebAssembly.Memory",
     JSCLASS_DELAY_METADATA_BUILDER |
-    JSCLASS_HAS_RESERVED_SLOTS(WasmMemoryObject::RESERVED_SLOTS)
+    JSCLASS_HAS_RESERVED_SLOTS(WasmMemoryObject::RESERVED_SLOTS) |
+    JSCLASS_FOREGROUND_FINALIZE,
+    &WasmMemoryObject::classOps_
 };
+
+/* static */ void
+WasmMemoryObject::finalize(FreeOp* fop, JSObject* obj)
+{
+    WasmMemoryObject& memory = obj->as<WasmMemoryObject>();
+    if (memory.hasObservers())
+        fop->delete_(&memory.observers());
+}
 
 /* static */ WasmMemoryObject*
 WasmMemoryObject::create(ExclusiveContext* cx, HandleArrayBufferObjectMaybeShared buffer,
@@ -727,6 +751,7 @@ WasmMemoryObject::create(ExclusiveContext* cx, HandleArrayBufferObjectMaybeShare
         return nullptr;
 
     obj->initReservedSlot(BUFFER_SLOT, ObjectValue(*buffer));
+    MOZ_ASSERT(!obj->hasObservers());
     return obj;
 }
 
@@ -838,6 +863,104 @@ ArrayBufferObjectMaybeShared&
 WasmMemoryObject::buffer() const
 {
     return getReservedSlot(BUFFER_SLOT).toObject().as<ArrayBufferObjectMaybeShared>();
+}
+
+bool
+WasmMemoryObject::hasObservers() const
+{
+    return !getReservedSlot(OBSERVERS_SLOT).isUndefined();
+}
+
+WasmMemoryObject::WeakInstanceSet&
+WasmMemoryObject::observers() const
+{
+    MOZ_ASSERT(hasObservers());
+    return *reinterpret_cast<WeakInstanceSet*>(getReservedSlot(OBSERVERS_SLOT).toPrivate());
+}
+
+WasmMemoryObject::WeakInstanceSet*
+WasmMemoryObject::getOrCreateObservers(JSContext* cx)
+{
+    if (!hasObservers()) {
+        auto observers = MakeUnique<WeakInstanceSet>(cx->zone(), InstanceSet());
+        if (!observers || !observers->init()) {
+            ReportOutOfMemory(cx);
+            return nullptr;
+        }
+
+        setReservedSlot(OBSERVERS_SLOT, PrivateValue(observers.release()));
+    }
+
+    return &observers();
+}
+
+bool
+WasmMemoryObject::movingGrowable() const
+{
+#ifdef WASM_HUGE_MEMORY
+    return false;
+#else
+    return !buffer().wasmMaxSize();
+#endif
+}
+
+bool
+WasmMemoryObject::addMovingGrowObserver(JSContext* cx, WasmInstanceObject* instance)
+{
+    MOZ_ASSERT(movingGrowable());
+
+    WeakInstanceSet* observers = getOrCreateObservers(cx);
+    if (!observers)
+        return false;
+
+    if (!observers->putNew(instance)) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    return true;
+}
+
+uint32_t
+WasmMemoryObject::grow(uint32_t delta)
+{
+    ArrayBufferObject &buf = buffer().as<ArrayBufferObject>();
+
+    MOZ_ASSERT(buf.wasmActualByteLength() % PageSize == 0);
+    uint32_t oldNumPages = buf.wasmActualByteLength() / PageSize;
+
+    CheckedInt<uint32_t> newSize = oldNumPages;
+    newSize += delta;
+    newSize *= PageSize;
+    if (!newSize.isValid())
+        return -1;
+
+    if (Maybe<uint32_t> maxSize = buf.wasmMaxSize()) {
+        if (newSize.value() > maxSize.value())
+            return -1;
+
+        if (!buf.wasmGrowToSizeInPlace(newSize.value()))
+            return -1;
+    } else {
+#ifdef WASM_HUGE_MEMORY
+        if (!buf.wasmGrowToSizeInPlace(newSize.value()))
+            return -1;
+#else
+        MOZ_ASSERT(movingGrowable());
+
+        uint8_t* prevMemoryBase = buf.dataPointer();
+
+        if (!buf.wasmMovingGrowToSize(newSize.value()))
+            return -1;
+
+        if (hasObservers()) {
+            for (InstanceSet::Range r = observers().all(); !r.empty(); r.popFront())
+                r.front()->instance().onMovingGrow(prevMemoryBase);
+        }
+#endif
+    }
+
+    return oldNumPages;
 }
 
 // ============================================================================

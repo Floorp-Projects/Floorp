@@ -194,6 +194,21 @@ LIRGeneratorX64::visitAsmJSUnsignedToFloat32(MAsmJSUnsignedToFloat32* ins)
 }
 
 void
+LIRGeneratorX64::visitWasmLoad(MWasmLoad* ins)
+{
+    if (ins->type() != MIRType::Int64) {
+        lowerWasmLoad(ins);
+        return;
+    }
+
+    MDefinition* base = ins->base();
+    MOZ_ASSERT(base->type() == MIRType::Int32);
+
+    auto* lir = new(alloc()) LWasmLoadI64(useRegisterOrZeroAtStart(base));
+    defineInt64(lir, ins);
+}
+
+void
 LIRGeneratorX64::visitWasmStore(MWasmStore* ins)
 {
     MDefinition* base = ins->base();
@@ -241,13 +256,7 @@ LIRGeneratorX64::visitAsmJSLoadHeap(MAsmJSLoadHeap* ins)
     MDefinition* base = ins->base();
     MOZ_ASSERT(base->type() == MIRType::Int32);
 
-    // For simplicity, require a register if we're going to emit a bounds-check
-    // branch, so that we don't have special cases for constants.
-    LAllocation baseAlloc = gen->needsBoundsCheckBranch(ins)
-                            ? useRegisterAtStart(base)
-                            : useRegisterOrZeroAtStart(base);
-
-    define(new(alloc()) LAsmJSLoadHeap(baseAlloc), ins);
+    define(new(alloc()) LAsmJSLoadHeap(useRegisterOrZeroAtStart(base)), ins);
 }
 
 void
@@ -255,12 +264,6 @@ LIRGeneratorX64::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins)
 {
     MDefinition* base = ins->base();
     MOZ_ASSERT(base->type() == MIRType::Int32);
-
-    // For simplicity, require a register if we're going to emit a bounds-check
-    // branch, so that we don't have special cases for constants.
-    LAllocation baseAlloc = gen->needsBoundsCheckBranch(ins)
-                            ? useRegisterAtStart(base)
-                            : useRegisterOrZeroAtStart(base);
 
     LAsmJSStoreHeap* lir = nullptr;  // initialize to silence GCC warning
     switch (ins->accessType()) {
@@ -270,7 +273,8 @@ LIRGeneratorX64::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins)
       case Scalar::Uint16:
       case Scalar::Int32:
       case Scalar::Uint32:
-        lir = new(alloc()) LAsmJSStoreHeap(baseAlloc, useRegisterOrConstantAtStart(ins->value()));
+        lir = new(alloc()) LAsmJSStoreHeap(useRegisterOrZeroAtStart(base),
+                                           useRegisterOrConstantAtStart(ins->value()));
         break;
       case Scalar::Float32:
       case Scalar::Float64:
@@ -278,7 +282,8 @@ LIRGeneratorX64::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins)
       case Scalar::Int8x16:
       case Scalar::Int16x8:
       case Scalar::Int32x4:
-        lir = new(alloc()) LAsmJSStoreHeap(baseAlloc, useRegisterAtStart(ins->value()));
+        lir = new(alloc()) LAsmJSStoreHeap(useRegisterOrZeroAtStart(base),
+                                           useRegisterAtStart(ins->value()));
         break;
       case Scalar::Int64:
       case Scalar::Uint8Clamped:
@@ -461,21 +466,6 @@ LIRGeneratorX64::lowerUModI64(MMod* mod)
                                                     useRegister(mod->rhs()),
                                                     tempFixed(rax));
     defineInt64Fixed(lir, mod, LInt64Allocation(LAllocation(AnyRegister(rdx))));
-}
-
-void
-LIRGeneratorX64::visitWasmLoad(MWasmLoad* ins)
-{
-    if (ins->type() != MIRType::Int64) {
-        lowerWasmLoad(ins);
-        return;
-    }
-
-    MDefinition* base = ins->base();
-    MOZ_ASSERT(base->type() == MIRType::Int32);
-
-    auto* lir = new(alloc()) LWasmLoadI64(useRegisterOrZeroAtStart(base));
-    defineInt64(lir, ins);
 }
 
 void

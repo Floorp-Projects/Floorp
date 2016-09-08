@@ -22,8 +22,8 @@ body {
 }
 
 input {
-  font: message-box !important;
-  font-size: 16px !important;
+  font: message-box;
+  font-size: 16px;
 }
 
 input[type=button] {

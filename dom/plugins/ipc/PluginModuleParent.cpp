@@ -3365,4 +3365,20 @@ PluginModuleChromeParent::RecvProfile(const nsCString& aProfile)
     return true;
 }
 
+bool
+PluginModuleParent::AnswerGetKeyState(const int32_t& aVirtKey, int16_t* aRet)
+{
+    return false;
+}
 
+bool
+PluginModuleChromeParent::AnswerGetKeyState(const int32_t& aVirtKey,
+                                            int16_t* aRet)
+{
+#if defined(XP_WIN)
+    *aRet = ::GetKeyState(aVirtKey);
+    return true;
+#else
+    return PluginModuleParent::AnswerGetKeyState(aVirtKey, aRet);
+#endif
+}

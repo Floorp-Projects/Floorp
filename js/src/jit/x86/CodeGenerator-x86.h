@@ -28,23 +28,10 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     ValueOperand ToOutValue(LInstruction* ins);
     ValueOperand ToTempValue(LInstruction* ins, size_t pos);
 
-    void load(Scalar::Type vt, const Operand& srcAddr, const LDefinition* out);
-    void loadI64(Scalar::Type vt, const Operand& srcAddr, const Register64 out);
-    void store(Scalar::Type vt, const LAllocation* value, const Operand& dstAddr);
-    void storeI64(Scalar::Type vt, const LInt64Allocation value, const Operand& dstAddr);
-
-    void loadSimd(Scalar::Type type, unsigned numElems, const Operand& srcAddr, FloatRegister out);
-    void emitSimdLoad(LAsmJSLoadHeap* ins);
-
-    void storeSimd(Scalar::Type type, unsigned numElems, FloatRegister in, const Operand& dstAddr);
-    void emitSimdStore(LAsmJSStoreHeap* ins);
-
     void memoryBarrier(MemoryBarrierBits barrier);
 
-    template <typename T>
-    void emitWasmLoad(T* ins);
-    template <typename T>
-    void emitWasmStore(T* ins);
+    template <typename T> void emitWasmLoad(T* ins);
+    template <typename T> void emitWasmStore(T* ins);
 
   public:
     CodeGeneratorX86(MIRGenerator* gen, LIRGraph* graph, MacroAssembler* masm);
@@ -102,8 +89,7 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     void visitTestI64AndBranch(LTestI64AndBranch* lir);
 
   private:
-    void asmJSAtomicComputeAddress(Register addrTemp, Register ptrReg,
-                                   const MWasmMemoryAccess* access);
+    void asmJSAtomicComputeAddress(Register addrTemp, Register ptrReg);
 };
 
 typedef CodeGeneratorX86 CodeGeneratorSpecific;

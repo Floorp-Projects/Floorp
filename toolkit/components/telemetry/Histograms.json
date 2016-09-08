@@ -4723,6 +4723,15 @@
     "n_buckets": 50,
     "description": "Time (ms) from the Input event being created to the end of it being handled"
   },
+  "LOAD_INPUT_EVENT_RESPONSE_MS": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1298101],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 50,
+    "description": "Time (ms) from the Input event being created to the end of it being handled for events handling during page load only"
+  },
   "EVENTLOOP_UI_ACTIVITY_EXP_MS": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "bug_numbers": [1198196],
@@ -10246,7 +10255,7 @@
     "expires_in_version": "58",
     "bug_numbers": [1296606],
     "kind": "count",
-    "description": "Number of named profiles."
+    "description": "Number of named browser profiles for the current user, as reported by the profile service at startup."
   },
   "WEB_PERMISSION_CLEARED": {
     "alert_emails": ["firefox-dev@mozilla.org"],

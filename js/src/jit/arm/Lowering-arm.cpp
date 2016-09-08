@@ -609,17 +609,6 @@ LIRGeneratorARM::visitAsmJSUnsignedToFloat32(MAsmJSUnsignedToFloat32* ins)
 }
 
 void
-LIRGeneratorARM::visitWasmBoundsCheck(MWasmBoundsCheck* ins)
-{
-    MDefinition* input = ins->input();
-    MOZ_ASSERT(input->type() == MIRType::Int32);
-
-    LAllocation baseAlloc = useRegisterAtStart(input);
-    auto* lir = new(alloc()) LWasmBoundsCheck(baseAlloc);
-    add(lir, ins);
-}
-
-void
 LIRGeneratorARM::visitWasmLoad(MWasmLoad* ins)
 {
     MDefinition* base = ins->base();
@@ -723,9 +712,9 @@ LIRGeneratorARM::visitAsmJSLoadHeap(MAsmJSLoadHeap* ins)
 
     MDefinition* base = ins->base();
     MOZ_ASSERT(base->type() == MIRType::Int32);
-    LAllocation baseAlloc;
 
     // For the ARM it is best to keep the 'base' in a register if a bounds check is needed.
+    LAllocation baseAlloc;
     if (base->isConstant() && !ins->needsBoundsCheck()) {
         // A bounds check is only skipped for a positive index.
         MOZ_ASSERT(base->toConstant()->toInt32() >= 0);

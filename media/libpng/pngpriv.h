@@ -1,7 +1,7 @@
 
 /* pngpriv.h - private declarations for use inside libpng
  *
- * Last changed in libpng 1.6.24 [August 4, 2016]
+ * Last changed in libpng 1.6.25 [September 1, 2016]
  * Copyright (c) 1998-2002,2004,2006-2016 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -182,6 +182,14 @@
 #  endif
 #endif /* PNG_ARM_NEON_OPT > 0 */
 
+#ifndef PNG_MIPS_MSA_OPT
+#  if defined(__mips_msa) && (__mips_isa_rev >= 5) && defined(PNG_ALIGNED_MEMORY_SUPPORTED)
+#     define PNG_MIPS_MSA_OPT 2
+#  else
+#     define PNG_MIPS_MSA_OPT 0
+#  endif
+#endif
+
 #ifndef PNG_INTEL_SSE_OPT
 #   ifdef PNG_INTEL_SSE
       /* Only check for SSE if the build configuration has been modified to
@@ -217,6 +225,27 @@
 #      define PNG_FILTER_OPTIMIZATIONS png_init_filter_functions_sse2
 #   endif
 #endif
+
+#if PNG_MIPS_MSA_OPT > 0
+#  define PNG_FILTER_OPTIMIZATIONS png_init_filter_functions_msa
+#  ifndef PNG_MIPS_MSA_IMPLEMENTATION
+#     if defined(__mips_msa)
+#        if defined(__clang__)
+#        elif defined(__GNUC__)
+#           if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 7)
+#              define PNG_MIPS_MSA_IMPLEMENTATION 2
+#           endif /* no GNUC support */
+#        endif /* __GNUC__ */
+#     else /* !defined __mips_msa */
+#        define PNG_MIPS_MSA_IMPLEMENTATION 2
+#     endif /* __mips_msa */
+#  endif /* !PNG_MIPS_MSA_IMPLEMENTATION */
+
+#  ifndef PNG_MIPS_MSA_IMPLEMENTATION
+#     define PNG_MIPS_MSA_IMPLEMENTATION 1
+#  endif
+#endif /* PNG_MIPS_MSA_OPT > 0 */
+
 
 /* Is this a build of a DLL where compilation of the object modules requires
  * different preprocessor settings to those required for a simple library?  If
@@ -1240,7 +1269,24 @@ PNG_INTERNAL_FUNCTION(void,png_read_filter_row_paeth3_neon,(png_row_infop
 PNG_INTERNAL_FUNCTION(void,png_read_filter_row_paeth4_neon,(png_row_infop
     row_info, png_bytep row, png_const_bytep prev_row),PNG_EMPTY);
 #endif
- 
+
+#if PNG_MIPS_MSA_OPT > 0
+PNG_INTERNAL_FUNCTION(void,png_read_filter_row_up_msa,(png_row_infop row_info,
+    png_bytep row, png_const_bytep prev_row),PNG_EMPTY);
+PNG_INTERNAL_FUNCTION(void,png_read_filter_row_sub3_msa,(png_row_infop
+    row_info, png_bytep row, png_const_bytep prev_row),PNG_EMPTY);
+PNG_INTERNAL_FUNCTION(void,png_read_filter_row_sub4_msa,(png_row_infop
+    row_info, png_bytep row, png_const_bytep prev_row),PNG_EMPTY);
+PNG_INTERNAL_FUNCTION(void,png_read_filter_row_avg3_msa,(png_row_infop
+    row_info, png_bytep row, png_const_bytep prev_row),PNG_EMPTY);
+PNG_INTERNAL_FUNCTION(void,png_read_filter_row_avg4_msa,(png_row_infop
+    row_info, png_bytep row, png_const_bytep prev_row),PNG_EMPTY);
+PNG_INTERNAL_FUNCTION(void,png_read_filter_row_paeth3_msa,(png_row_infop
+    row_info, png_bytep row, png_const_bytep prev_row),PNG_EMPTY);
+PNG_INTERNAL_FUNCTION(void,png_read_filter_row_paeth4_msa,(png_row_infop
+    row_info, png_bytep row, png_const_bytep prev_row),PNG_EMPTY);
+#endif
+
 #if PNG_INTEL_SSE_IMPLEMENTATION > 0
 PNG_INTERNAL_FUNCTION(void,png_read_filter_row_sub3_sse2,(png_row_infop
     row_info, png_bytep row, png_const_bytep prev_row),PNG_EMPTY);
@@ -1602,9 +1648,11 @@ PNG_INTERNAL_FUNCTION(int,png_colorspace_set_ICC,(png_const_structrp png_ptr,
    /* The 'name' is used for information only */
 
 /* Routines for checking parts of an ICC profile. */
+#ifdef PNG_READ_iCCP_SUPPORTED
 PNG_INTERNAL_FUNCTION(int,png_icc_check_length,(png_const_structrp png_ptr,
    png_colorspacerp colorspace, png_const_charp name,
    png_uint_32 profile_length), PNG_EMPTY);
+#endif /* READ_iCCP */
 PNG_INTERNAL_FUNCTION(int,png_icc_check_header,(png_const_structrp png_ptr,
    png_colorspacerp colorspace, png_const_charp name,
    png_uint_32 profile_length,
@@ -2026,11 +2074,17 @@ PNG_INTERNAL_FUNCTION(void, PNG_FILTER_OPTIMIZATIONS, (png_structp png_ptr,
 #  if PNG_ARM_NEON_OPT > 0
 PNG_INTERNAL_FUNCTION(void, png_init_filter_functions_neon,
    (png_structp png_ptr, unsigned int bpp), PNG_EMPTY);
-#  endif
-# if PNG_INTEL_SSE_IMPLEMENTATION > 0
+#endif
+
+#if PNG_MIPS_MSA_OPT > 0
+PNG_INTERNAL_FUNCTION(void, png_init_filter_functions_msa,
+   (png_structp png_ptr, unsigned int bpp), PNG_EMPTY);
+#endif
+
+#  if PNG_INTEL_SSE_IMPLEMENTATION > 0
 PNG_INTERNAL_FUNCTION(void, png_init_filter_functions_sse2,
    (png_structp png_ptr, unsigned int bpp), PNG_EMPTY);
-# endif
+#  endif
 #endif
 
 PNG_INTERNAL_FUNCTION(png_uint_32, png_check_keyword, (png_structrp png_ptr,

@@ -72,12 +72,12 @@ AppValidator.checkManifest = function (manifestURL) {
 
   try {
     req.open("GET", manifestURL, true);
+    req.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE | Ci.nsIRequest.INHIBIT_CACHING;
   } catch (e) {
     error = strings.formatStringFromName("validator.invalidManifestURL", [manifestURL], 1);
     deferred.reject(error);
     return deferred.promise;
   }
-  req.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE | Ci.nsIRequest.INHIBIT_CACHING;
 
   req.onload = function () {
     let manifest = null;
@@ -228,12 +228,12 @@ AppValidator.prototype.validateLaunchPath = function (manifest) {
   req.overrideMimeType("text/plain");
   try {
     req.open("HEAD", indexURL, true);
+    req.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE | Ci.nsIRequest.INHIBIT_CACHING;
   } catch (e) {
     this.error(strings.formatStringFromName("validator.accessFailedLaunchPath", [indexURL], 1));
     deferred.resolve();
     return deferred.promise;
   }
-  req.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE | Ci.nsIRequest.INHIBIT_CACHING;
   req.onload = () => {
     if (req.status >= 400)
       this.error(strings.formatStringFromName("validator.accessFailedLaunchPathBadHttpCode", [indexURL, req.status], 2));

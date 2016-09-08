@@ -640,9 +640,9 @@ MacroAssembler::branchDouble(DoubleCondition cond, FloatRegister lhs, FloatRegis
     j(ConditionFromDoubleCondition(cond), label);
 }
 
-template <typename T>
+template <typename T, typename L>
 void
-MacroAssembler::branchAdd32(Condition cond, T src, Register dest, Label* label)
+MacroAssembler::branchAdd32(Condition cond, T src, Register dest, L label)
 {
     addl(src, dest);
     j(cond, label);

@@ -214,9 +214,6 @@ class MIRGenerator
   public:
     const JitCompileOptions options;
 
-    bool needsBoundsCheckBranch(const MWasmMemoryAccess* access) const;
-    size_t foldableOffsetRange(const MWasmMemoryAccess* access) const;
-
   private:
     GraphSpewer gs_;
 

@@ -107,6 +107,7 @@ void mozilla_sampler_unregister_thread();
 
 void mozilla_sampler_sleep_start();
 void mozilla_sampler_sleep_end();
+bool mozilla_sampler_is_sleeping();
 
 double mozilla_sampler_time();
 double mozilla_sampler_time(const mozilla::TimeStamp& aTime);
