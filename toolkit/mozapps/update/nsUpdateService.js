@@ -1864,6 +1864,17 @@ UpdateService.prototype = {
   observe: function AUS_observe(subject, topic, data) {
     switch (topic) {
       case "post-update-processing":
+        if (readStatusFile(getUpdatesDir()) == STATE_SUCCEEDED) {
+          // The active update needs to be copied to the first update in the
+          // updates.xml early during startup to support post update actions
+          // (bug 1301288).
+          let um = Cc["@mozilla.org/updates/update-manager;1"].
+                   getService(Ci.nsIUpdateManager);
+          um.activeUpdate.state = STATE_SUCCEEDED;
+          um.saveUpdates();
+          Services.prefs.setBoolPref(PREF_APP_UPDATE_POSTUPDATE, true);
+        }
+
         if (Services.appinfo.ID in APPID_TO_TOPIC) {
           // Delay post-update processing to ensure that possible update
           // dialogs are shown in front of the app window, if possible.
@@ -2076,7 +2087,6 @@ UpdateService.prototype = {
 
       // Update the patch's metadata.
       um.activeUpdate = update;
-      Services.prefs.setBoolPref(PREF_APP_UPDATE_POSTUPDATE, true);
 
       // Done with this update. Clean it up.
       cleanupActiveUpdate();
