@@ -5445,15 +5445,16 @@ MWasmCall::NewBuiltinInstanceMethodCall(TempAllocator& alloc,
                                         const ABIArg& instanceArg,
                                         const Args& args,
                                         MIRType resultType,
-                                        uint32_t spIncrement)
+                                        uint32_t spIncrement,
+                                        uint32_t tlsStackOffset)
 {
     auto callee = wasm::CalleeDesc::builtinInstanceMethod(builtin);
     MWasmCall* call = MWasmCall::New(alloc, desc, callee, args, resultType, spIncrement,
-                                     MWasmCall::DontSaveTls, nullptr);
-
+                                     tlsStackOffset, nullptr);
     if (!call)
         return nullptr;
-    MOZ_ASSERT(instanceArg != ABIArg()); // instanceArg must be initialized.
+
+    MOZ_ASSERT(instanceArg != ABIArg());
     call->instanceArg_ = instanceArg;
     return call;
 }

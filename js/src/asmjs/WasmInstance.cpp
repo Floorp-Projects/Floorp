@@ -292,42 +292,6 @@ Instance::currentMemory_i32(Instance* instance)
     return instance->currentMemory();
 }
 
-uint32_t
-Instance::growMemory(uint32_t delta)
-{
-    MOZ_RELEASE_ASSERT(memory_);
-
-    // Using uint64_t to avoid worrying about overflows in safety comp.
-    uint64_t curNumPages = currentMemory();
-    uint64_t newNumPages = curNumPages + (uint64_t) delta;
-
-    if (metadata().maxMemoryLength) {
-        ArrayBufferObject &buf = memory_->buffer().as<ArrayBufferObject>();
-        // Guaranteed by instantiateMemory
-        MOZ_RELEASE_ASSERT(buf.wasmMaxSize() && buf.wasmMaxSize() <= metadata().maxMemoryLength);
-
-        if (newNumPages * wasm::PageSize > buf.wasmMaxSize().value())
-            return (uint32_t) -1;
-
-        // Try to grow the memory
-        if (!buf.growForWasm(delta))
-            return (uint32_t) -1;
-    } else {
-        return -1; // TODO: implement grow_memory w/o max when we add realloc
-    }
-
-    return curNumPages;
-}
-
-uint32_t
-Instance::currentMemory()
-{
-    MOZ_RELEASE_ASSERT(memory_);
-    uint32_t curMemByteLen = memory_->buffer().wasmActualByteLength();
-    MOZ_ASSERT(curMemByteLen % wasm::PageSize == 0);
-    return curMemByteLen / wasm::PageSize;
-}
-
 Instance::Instance(JSContext* cx,
                    Handle<WasmInstanceObject*> object,
                    UniqueCode code,
@@ -411,6 +375,9 @@ Instance::Instance(JSContext* cx,
 bool
 Instance::init(JSContext* cx)
 {
+    if (memory_ && memory_->movingGrowable() && !memory_->addMovingGrowObserver(cx, object_))
+        return false;
+
     if (!metadata().sigIds.empty()) {
         ExclusiveData<SigIdSet>::Guard lockedSigIdSet = sigIdSet.lock();
 
@@ -590,6 +557,9 @@ Instance::object() const
 bool
 Instance::callExport(JSContext* cx, uint32_t funcDefIndex, CallArgs args)
 {
+    // If there has been a moving grow, this Instance should have been notified.
+    MOZ_RELEASE_ASSERT(!memory_ || tlsData_.memoryBase == memory_->buffer().dataPointerEither());
+
     if (!cx->compartment()->wasm.ensureProfilingState(cx))
         return false;
 
@@ -804,6 +774,33 @@ Instance::callExport(JSContext* cx, uint32_t funcDefIndex, CallArgs args)
         args.rval().set(ObjectValue(*retObj));
 
     return true;
+}
+
+uint32_t
+Instance::currentMemory()
+{
+    MOZ_RELEASE_ASSERT(memory_);
+    uint32_t byteLength = memory_->buffer().wasmActualByteLength();
+    MOZ_ASSERT(byteLength % wasm::PageSize == 0);
+    return byteLength / wasm::PageSize;
+}
+
+uint32_t
+Instance::growMemory(uint32_t delta)
+{
+    MOZ_ASSERT(!isAsmJS());
+    uint32_t ret = memory_->grow(delta);
+    MOZ_RELEASE_ASSERT(tlsData_.memoryBase == memory_->buffer().dataPointerEither());
+    return ret;
+}
+
+void
+Instance::onMovingGrow(uint8_t* prevMemoryBase)
+{
+    MOZ_ASSERT(!isAsmJS());
+    ArrayBufferObject& buffer = memory_->buffer().as<ArrayBufferObject>();
+    tlsData_.memoryBase = buffer.dataPointer();
+    code_->segment().onMovingGrow(prevMemoryBase, metadata(), buffer);
 }
 
 void
