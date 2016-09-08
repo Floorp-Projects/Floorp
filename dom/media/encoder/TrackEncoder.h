@@ -258,8 +258,6 @@ public:
     , mTotalFrameDuration(0)
     , mLastFrameDuration(0)
     , mVideoBitrate(0)
-    , mLastFrameTimeStamp(TimeStamp::Now())
-    , mFirstFrame(true)
   {}
 
   /**
@@ -359,10 +357,6 @@ protected:
   VideoSegment mRawSegment;
 
   uint32_t mVideoBitrate;
-
-private:
-  TimeStamp mLastFrameTimeStamp;
-  bool mFirstFrame;
 };
 
 } // namespace mozilla
