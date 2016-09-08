@@ -23,6 +23,8 @@ var win32 = {
   WORD: ctypes.uint16_t,
   DWORD: ctypes.uint32_t,
   LONG: ctypes.long,
+  LARGE_INTEGER: ctypes.int64_t,
+  ULONGLONG: ctypes.uint64_t,
 
   UINT: ctypes.unsigned_int,
   UCHAR: ctypes.unsigned_char,
@@ -95,6 +97,11 @@ Object.assign(win32, {
 
   PROC_THREAD_ATTRIBUTE_HANDLE_LIST: 0x00020002,
 
+  JobObjectBasicLimitInformation: 2,
+  JobObjectExtendedLimitInformation: 9,
+
+  JOB_OBJECT_LIMIT_BREAKAWAY_OK: 0x00000800,
+
   // These constants are 32-bit unsigned integers, but Windows defines
   // them as negative integers cast to an unsigned type.
   STD_INPUT_HANDLE: -10 + 0x100000000,
@@ -106,6 +113,38 @@ Object.assign(win32, {
 });
 
 Object.assign(win32, {
+  JOBOBJECT_BASIC_LIMIT_INFORMATION: new ctypes.StructType("JOBOBJECT_BASIC_LIMIT_INFORMATION", [
+    {"PerProcessUserTimeLimit": win32.LARGE_INTEGER},
+    {"PerJobUserTimeLimit": win32.LARGE_INTEGER},
+    {"LimitFlags": win32.DWORD},
+    {"MinimumWorkingSetSize": win32.SIZE_T},
+    {"MaximumWorkingSetSize": win32.SIZE_T},
+    {"ActiveProcessLimit": win32.DWORD},
+    {"Affinity": win32.ULONG_PTR},
+    {"PriorityClass": win32.DWORD},
+    {"SchedulingClass": win32.DWORD},
+  ]),
+
+  IO_COUNTERS: new ctypes.StructType("IO_COUNTERS", [
+    {"ReadOperationCount": win32.ULONGLONG},
+    {"WriteOperationCount": win32.ULONGLONG},
+    {"OtherOperationCount": win32.ULONGLONG},
+    {"ReadTransferCount": win32.ULONGLONG},
+    {"WriteTransferCount": win32.ULONGLONG},
+    {"OtherTransferCount": win32.ULONGLONG},
+  ]),
+});
+
+Object.assign(win32, {
+  JOBOBJECT_EXTENDED_LIMIT_INFORMATION: new ctypes.StructType("JOBOBJECT_EXTENDED_LIMIT_INFORMATION", [
+    {"BasicLimitInformation": win32.JOBOBJECT_BASIC_LIMIT_INFORMATION},
+    {"IoInfo": win32.IO_COUNTERS},
+    {"ProcessMemoryLimit": win32.SIZE_T},
+    {"JobMemoryLimit": win32.SIZE_T},
+    {"PeakProcessMemoryUsed": win32.SIZE_T},
+    {"PeakJobMemoryUsed": win32.SIZE_T},
+  ]),
+
   OVERLAPPED: new ctypes.StructType("OVERLAPPED", [
      {"Internal": win32.ULONG_PTR},
      {"InternalHigh": win32.ULONG_PTR},
@@ -337,6 +376,15 @@ var libc = new Library("libc", LIBC_CHOICES, {
     win32.WINAPI,
     win32.DWORD,
     win32.HANDLE, /* hThread */
+  ],
+
+  SetInformationJobObject: [
+    win32.WINAPI,
+    win32.BOOL,
+    win32.HANDLE, /* hJob */
+    ctypes.int, /* JobObjectInfoClass */
+    win32.LPVOID, /* lpJobObjectInfo */
+    win32.DWORD, /* cbJobObjectInfoLengt */
   ],
 
   TerminateJobObject: [
