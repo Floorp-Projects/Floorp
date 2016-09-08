@@ -308,6 +308,42 @@ def test_add_test_manifest(mock_runner, manifest_with_tests, monkeypatch, test_f
     assert manifest_with_tests.manifest_class().active_tests.called
 
 
+def get_kwargs_passed_to_manifest(mock_runner, manifest, monkeypatch, **kwargs):
+    '''Helper function for test_manifest_* tests.
+    Returns the kwargs passed to the call to manifest.active_tests.'''
+    monkeypatch.setattr('marionette.runner.base.TestManifest', manifest.manifest_class)
+    monkeypatch.setattr('marionette.runner.base.mozinfo.info', {'mozinfo_key': 'mozinfo_val'})
+    for attr in kwargs:
+        setattr(mock_runner, attr, kwargs[attr])
+    with patch('marionette.runner.base.os.path.exists', return_value=True):
+        mock_runner.add_test(manifest.filepath)
+    call_args, call_kwargs = manifest.manifest_class().active_tests.call_args
+    return call_kwargs
+
+
+def test_manifest_basic_args(mock_runner, manifest, monkeypatch):
+    kwargs = get_kwargs_passed_to_manifest(mock_runner, manifest, monkeypatch)
+    assert kwargs['exists'] is False
+    assert kwargs['disabled'] is True
+    assert kwargs['app'] == 'fake_app'
+    assert 'mozinfo_key' in kwargs and kwargs['mozinfo_key'] == 'mozinfo_val'
+
+
+@pytest.mark.parametrize('e10s', (True, False))
+def test_manifest_with_e10s(mock_runner, manifest, monkeypatch, e10s):
+    kwargs = get_kwargs_passed_to_manifest(mock_runner, manifest, monkeypatch, e10s=e10s)
+    assert kwargs['e10s'] == e10s
+
+
+@pytest.mark.parametrize('test_tags', (None, ['tag', 'tag2']))
+def test_manifest_with_test_tags(mock_runner, manifest, monkeypatch, test_tags):
+    kwargs = get_kwargs_passed_to_manifest(mock_runner, manifest, monkeypatch, test_tags=test_tags)
+    if test_tags is None:
+        assert kwargs['filters'] == []
+    else:
+        assert len(kwargs['filters']) == 1 and kwargs['filters'][0].tags == test_tags
+
+
 def test_cleanup_with_manifest(mock_runner, manifest_with_tests, monkeypatch):
     monkeypatch.setattr('marionette.runner.base.TestManifest', manifest_with_tests.manifest_class)
     if manifest_with_tests.n_enabled > 0:
