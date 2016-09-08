@@ -3,11 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import time
+import unittest
 import urllib
 
 from marionette import MarionetteTestCase
 from marionette_driver.errors import MarionetteException, TimeoutException
-from marionette_driver.by import By
+from marionette_driver import By, Wait
 
 
 def inline(doc):
@@ -17,19 +18,18 @@ def inline(doc):
 class TestNavigate(MarionetteTestCase):
     def setUp(self):
         MarionetteTestCase.setUp(self)
-        self.marionette.execute_script("window.location.href = 'about:blank'")
-        self.assertEqual("about:blank", self.location_href)
+        self.marionette.navigate("about:")
         self.test_doc = self.marionette.absolute_url("test.html")
         self.iframe_doc = self.marionette.absolute_url("test_iframe.html")
 
     def test_set_location_through_execute_script(self):
         self.marionette.execute_script("window.location.href = '%s'" % self.test_doc)
-        self.assertEqual(self.test_doc, self.location_href)
+        Wait(self.marionette).until(lambda _: self.test_doc == self.location_href)
         self.assertEqual("Marionette Test", self.marionette.title)
 
     def test_navigate(self):
         self.marionette.navigate(self.test_doc)
-        self.assertNotEqual("about:blank", self.location_href)
+        self.assertNotEqual("about:", self.location_href)
         self.assertEqual("Marionette Test", self.marionette.title)
 
     def test_navigate_chrome_error(self):
@@ -123,6 +123,7 @@ class TestNavigate(MarionetteTestCase):
         self.assertEqual("complete", state)
         self.assertTrue(self.marionette.find_element(By.ID, "mozLink"))
 
+    @unittest.skip("Bug 1302707 - No timeout exception raised.")
     def test_should_throw_a_timeoutexception_when_loading_page(self):
         try:
             self.marionette.timeouts("page load", 0)
