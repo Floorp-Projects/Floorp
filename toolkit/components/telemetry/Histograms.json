@@ -4487,20 +4487,22 @@
     "description": "Firefox: Time in ms between tab selection and tab content paint."
   },
   "FX_TAB_SWITCH_SPINNER_VISIBLE_MS": {
-    "expires_in_version": "default",
+    "expires_in_version": "56",
     "kind": "exponential",
     "high": 1000,
     "n_buckets": 20,
+    "releaseChannelCollection": "opt-out",
     "description": "Firefox: If the spinner interstitial displays during tab switching, records the time in ms the graphic is visible"
   },
   "FX_TAB_SWITCH_SPINNER_VISIBLE_LONG_MS": {
-    "expires_in_version": "54",
+    "expires_in_version": "56",
     "kind": "exponential",
     "low": 1000,
     "high": 64000,
     "n_buckets": 7,
     "bug_numbers": [1301104],
     "alert_emails": ["mconley@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "Firefox: If the spinner interstitial displays during tab switching, records the time in ms the graphic is visible. This probe is similar to FX_TAB_SWITCH_SPINNER_VISIBLE_MS, but is for truly degenerate cases."
   },
   "FX_TAB_CLICK_MS": {
