@@ -77,9 +77,9 @@ encodePrefix(const SECOidData *hashOid, unsigned int digestLen,
         return SECFailure;
     }
 
-    prefix->data[0] = SEC_ASN1_SEQUENCE|SEC_ASN1_CONSTRUCTED;
+    prefix->data[0] = SEC_ASN1_SEQUENCE | SEC_ASN1_CONSTRUCTED;
     prefix->data[1] = outerSeqLen;
-    prefix->data[2] = SEC_ASN1_SEQUENCE|SEC_ASN1_CONSTRUCTED;
+    prefix->data[2] = SEC_ASN1_SEQUENCE | SEC_ASN1_CONSTRUCTED;
     prefix->data[3] = innerSeqLen;
     prefix->data[4] = SEC_ASN1_OBJECT_ID;
     prefix->data[5] = hashOid->oid.len;
@@ -96,13 +96,13 @@ encodePrefix(const SECOidData *hashOid, unsigned int digestLen,
 
 SECStatus
 _SGN_VerifyPKCS1DigestInfo(SECOidTag digestAlg,
-                           const SECItem* digest,
-                           const SECItem* dataRecoveredFromSignature,
+                           const SECItem *digest,
+                           const SECItem *dataRecoveredFromSignature,
                            PRBool unsafeAllowMissingParameters)
 {
     SECOidData *hashOid;
     pkcs1Prefixes pp;
-    const pkcs1Prefix* expectedPrefix;
+    const pkcs1Prefix *expectedPrefix;
     SECStatus rv, rv2, rv3;
 
     if (!digest || !digest->data ||
@@ -136,11 +136,11 @@ _SGN_VerifyPKCS1DigestInfo(SECOidTag digestAlg,
          */
 
         if (dataRecoveredFromSignature->len ==
-                pp.prefixWithParams.len + pp.digestLen) {
+            pp.prefixWithParams.len + pp.digestLen) {
             expectedPrefix = &pp.prefixWithParams;
         } else if (unsafeAllowMissingParameters &&
                    dataRecoveredFromSignature->len ==
-                      pp.prefixWithoutParams.len + pp.digestLen) {
+                       pp.prefixWithoutParams.len + pp.digestLen) {
             expectedPrefix = &pp.prefixWithoutParams;
         } else {
             PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
