@@ -1831,7 +1831,7 @@ public:
   // The returned value may differ if the document is loaded via XHR, and
   // when accessed from chrome privileged script and
   // from content privileged script for compatibility.
-  void GetBaseURIFromJS(nsAString& aBaseURI) const;
+  void GetBaseURIFromJS(nsAString& aBaseURI, mozilla::ErrorResult& aRv) const;
   bool HasChildNodes() const
   {
     return HasChildren();
