@@ -7018,7 +7018,6 @@ nsDisplayFilter::PrintEffects(nsACString& aTo)
       aTo += ", ";
     }
     aTo += "filter";
-    first = false;
   }
   aTo += ")";
 }
