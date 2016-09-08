@@ -5,16 +5,20 @@
 
 input {
   width: 15em;
-  -moz-appearance: textfield;
+}
+
+input[type=number]::placeholder {
+  color: blue;
+  opacity: 1.0;
 }
 
 input[type=number]::-moz-placeholder {
-  color: blue;
+  font-style: italic;
+  opacity: 1.0;
 }
-
     </style>
   </head>
   <body>
-    <input type="number" placeholder="placeholder">
+    <input type="number" placeholder="123">
   </body>
 </html>

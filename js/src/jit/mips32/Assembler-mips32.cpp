@@ -483,14 +483,3 @@ Assembler::ToggleCall(CodeLocationLabel inst_, bool enabled)
 
     AutoFlushICache::flush(uintptr_t(i2), 4);
 }
-
-void
-Assembler::UpdateBoundsCheck(uint8_t* patchAt, uint32_t heapLength)
-{
-    Instruction* inst = (Instruction*) patchAt;
-    InstImm* i0 = (InstImm*) inst;
-    InstImm* i1 = (InstImm*) i0->next();
-
-    // Replace with new value
-    Assembler::UpdateLuiOriValue(i0, i1, heapLength);
-}

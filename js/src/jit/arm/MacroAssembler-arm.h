@@ -981,11 +981,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void loadFloat32(const Address& addr, FloatRegister dest);
     void loadFloat32(const BaseIndex& src, FloatRegister dest);
 
-    void ma_loadHeapAsmJS(Register ptrReg, int size, bool needsBoundsCheck, bool faultOnOOB,
-                          FloatRegister output);
-    void ma_loadHeapAsmJS(Register ptrReg, int size, bool isSigned, bool needsBoundsCheck,
-                          bool faultOnOOB, Register output);
-
     void store8(Register src, const Address& address);
     void store8(Imm32 imm, const Address& address);
     void store8(Register src, const BaseIndex& address);
@@ -1021,11 +1016,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void moveDouble(FloatRegister src, FloatRegister dest, Condition cc = Always) {
         ma_vmov(src, dest, cc);
     }
-
-    void ma_storeHeapAsmJS(Register ptrReg, int size, bool needsBoundsCheck, bool faultOnOOB,
-                           FloatRegister value);
-    void ma_storeHeapAsmJS(Register ptrReg, int size, bool isSigned, bool needsBoundsCheck,
-                           bool faultOnOOB, Register value);
 
   private:
     template<typename T>
@@ -1443,9 +1433,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void ma_storeImm(Imm32 c, const Address& dest) {
         ma_mov(c, lr);
         ma_str(lr, dest);
-    }
-    BufferOffset ma_BoundsCheck(Register bounded) {
-        return as_cmp(bounded, Imm8(0));
     }
 
     void moveFloat32(FloatRegister src, FloatRegister dest, Condition cc = Always) {

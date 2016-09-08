@@ -2534,9 +2534,9 @@ void ContentEnumFunc(const RuleValue& value, nsCSSSelector* aSelector,
       // We can get here when calling getComputedStyle(aElt, aPseudo) if:
       //
       //   * aPseudo is a pseudo-element that supports a user action
-      //     pseudo-class, like "::-moz-placeholder";
+      //     pseudo-class, like "::placeholder";
       //   * there is a style rule that uses a pseudo-class on this
-      //     pseudo-element in the document, like ::-moz-placeholder:hover; and
+      //     pseudo-element in the document, like ::placeholder:hover; and
       //   * aElt does not have such a pseudo-element.
       //
       // We know that the selector can't match, since there is no element for

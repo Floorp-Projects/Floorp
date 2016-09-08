@@ -49,7 +49,7 @@ WasmArrayBufferMappedSize(const ArrayBufferObjectMaybeShared* buf)
     if (buf->is<ArrayBufferObject>())
         return buf->as<ArrayBufferObject>().wasmMappedSize();
 #ifdef WASM_HUGE_MEMORY
-    return wasm::MappedSize;
+    return wasm::HugeMappedSize;
 #else
     return buf->as<SharedArrayBufferObject>().byteLength();
 #endif
@@ -61,6 +61,14 @@ WasmArrayBufferActualByteLength(const ArrayBufferObjectMaybeShared* buf)
     if (buf->is<ArrayBufferObject>())
         return buf->as<ArrayBufferObject>().wasmActualByteLength();
     return buf->as<SharedArrayBufferObject>().byteLength();
+}
+
+inline mozilla::Maybe<uint32_t>
+WasmArrayBufferMaxSize(const ArrayBufferObjectMaybeShared* buf)
+{
+    if (buf->is<ArrayBufferObject>())
+        return buf->as<ArrayBufferObject>().wasmMaxSize();
+    return mozilla::Some(buf->as<SharedArrayBufferObject>().byteLength());
 }
 
 inline ArrayBufferObjectMaybeShared&

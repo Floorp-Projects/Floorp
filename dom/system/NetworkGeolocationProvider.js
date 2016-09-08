@@ -497,6 +497,7 @@ WifiGeoPositionProvider.prototype = {
 
     try {
       xhr.open("POST", url, true);
+      xhr.channel.loadFlags = Ci.nsIChannel.LOAD_ANONYMOUS;
     } catch (e) {
       this.notifyListener("notifyError",
                           [POSITION_UNAVAILABLE]);
@@ -505,7 +506,6 @@ WifiGeoPositionProvider.prototype = {
     xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
     xhr.responseType = "json";
     xhr.mozBackgroundRequest = true;
-    xhr.channel.loadFlags = Ci.nsIChannel.LOAD_ANONYMOUS;
     xhr.timeout = Services.prefs.getIntPref("geo.wifi.xhr.timeout");
     xhr.ontimeout = (function() {
       LOG("Location request XHR timed out.")

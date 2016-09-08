@@ -49,6 +49,8 @@
 #ifndef SAMPLER_H
 #define SAMPLER_H
 
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #ifndef SPS_STANDALONE
 #include "js/TypeDecls.h"
 #endif
@@ -232,6 +234,7 @@ static inline void profiler_unregister_thread() {}
 // profiler_sleep_end() is an error.
 static inline void profiler_sleep_start() {}
 static inline void profiler_sleep_end() {}
+static inline bool profiler_is_sleeping() { return false; }
 
 // Call by the JSRuntime's operation callback. This is used to enable
 // profiling on auxilerary threads.
@@ -251,7 +254,7 @@ static inline void profiler_log(const char *fmt, va_list args) {}
 
 #endif
 
-class GeckoProfilerInitRAII {
+class MOZ_RAII GeckoProfilerInitRAII {
 public:
   explicit GeckoProfilerInitRAII(void* stackTop) {
     profiler_init(stackTop);
@@ -261,7 +264,7 @@ public:
   }
 };
 
-class GeckoProfilerSleepRAII {
+class MOZ_RAII GeckoProfilerSleepRAII {
 public:
   GeckoProfilerSleepRAII() {
     profiler_sleep_start();
@@ -269,6 +272,29 @@ public:
   ~GeckoProfilerSleepRAII() {
     profiler_sleep_end();
   }
+};
+
+/**
+ * Temporarily wake up the profiler while servicing events such as
+ * Asynchronous Procedure Calls (APCs).
+ */
+class MOZ_RAII GeckoProfilerWakeRAII {
+public:
+  GeckoProfilerWakeRAII()
+    : mIssuedWake(profiler_is_sleeping())
+  {
+    if (mIssuedWake) {
+      profiler_sleep_end();
+    }
+  }
+  ~GeckoProfilerWakeRAII() {
+    if (mIssuedWake) {
+      MOZ_ASSERT(!profiler_is_sleeping());
+      profiler_sleep_start();
+    }
+  }
+private:
+  bool mIssuedWake;
 };
 
 #endif // ifndef SAMPLER_H

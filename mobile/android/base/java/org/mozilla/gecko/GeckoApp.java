@@ -1724,33 +1724,31 @@ public abstract class GeckoApp
             // If we are doing an OOM restore, parse the session data and
             // stub the restored tabs immediately. This allows the UI to be
             // updated before Gecko has restored.
-            if (mShouldRestore) {
-                final JSONArray tabs = new JSONArray();
-                final JSONObject windowObject = new JSONObject();
-                final boolean sessionDataValid;
+            final JSONArray tabs = new JSONArray();
+            final JSONObject windowObject = new JSONObject();
+            final boolean sessionDataValid;
 
-                LastSessionParser parser = new LastSessionParser(tabs, windowObject, isExternalURL);
+            LastSessionParser parser = new LastSessionParser(tabs, windowObject, isExternalURL);
 
-                if (mPrivateBrowsingSession == null) {
-                    sessionDataValid = parser.parse(sessionString);
-                } else {
-                    sessionDataValid = parser.parse(sessionString, mPrivateBrowsingSession);
+            if (mPrivateBrowsingSession == null) {
+                sessionDataValid = parser.parse(sessionString);
+            } else {
+                sessionDataValid = parser.parse(sessionString, mPrivateBrowsingSession);
+            }
+
+            if (tabs.length() > 0) {
+                windowObject.put("tabs", tabs);
+                sessionString = new JSONObject().put("windows", new JSONArray().put(windowObject)).toString();
+            } else {
+                if (parser.allTabsSkipped() || sessionDataValid) {
+                    // If we intentionally skipped all tabs we've read from the session file, we
+                    // set mShouldRestore back to false at this point already, so the calling code
+                    // can infer that the exception wasn't due to a damaged session store file.
+                    // The same applies if the session file was syntactically valid and
+                    // simply didn't contain any tabs.
+                    mShouldRestore = false;
                 }
-
-                if (tabs.length() > 0) {
-                    windowObject.put("tabs", tabs);
-                    sessionString = new JSONObject().put("windows", new JSONArray().put(windowObject)).toString();
-                } else {
-                    if (parser.allTabsSkipped() || sessionDataValid) {
-                        // If we intentionally skipped all tabs we've read from the session file, we
-                        // set mShouldRestore back to false at this point already, so the calling code
-                        // can infer that the exception wasn't due to a damaged session store file.
-                        // The same applies if the session file was syntactically valid and
-                        // simply didn't contain any tabs.
-                        mShouldRestore = false;
-                    }
-                    throw new SessionRestoreException("No tabs could be read from session file");
-                }
+                throw new SessionRestoreException("No tabs could be read from session file");
             }
 
             JSONObject restoreData = new JSONObject();
