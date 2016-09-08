@@ -63,6 +63,7 @@
 #include "ScrollSnap.h"
 #include "UnitTransforms.h"
 #include "nsPluginFrame.h"
+#include "mozilla/layers/APZCCallbackHelper.h"
 #include <mozilla/layers/AxisPhysicsModel.h>
 #include <mozilla/layers/AxisPhysicsMSDModel.h>
 #include "mozilla/layers/LayerTransactionChild.h"
@@ -1864,6 +1865,7 @@ public:
     }
 
     mCallee = aCallee;
+    APZCCallbackHelper::SuppressDisplayport(true, mCallee->mOuter->PresContext()->PresShell());
     return true;
   }
 
@@ -1888,6 +1890,7 @@ private:
   void RemoveObserver() {
     if (mCallee) {
       RefreshDriver(mCallee)->RemoveRefreshObserver(this, Flush_Style);
+      APZCCallbackHelper::SuppressDisplayport(false, mCallee->mOuter->PresContext()->PresShell());
     }
   }
 };
