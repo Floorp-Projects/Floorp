@@ -3201,8 +3201,8 @@ js::CheckCanDeclareGlobalBinding(JSContext* cx, Handle<GlobalObject*> global,
     if (!GetOwnPropertyDescriptor(cx, global, id, &desc))
         return false;
 
-    // ES 8.1.14.15 CanDeclareGlobalVar
-    // ES 8.1.14.16 CanDeclareGlobalFunction
+    // ES 8.1.1.4.15 CanDeclareGlobalVar
+    // ES 8.1.1.4.16 CanDeclareGlobalFunction
 
     // Step 4.
     if (!desc.object()) {
