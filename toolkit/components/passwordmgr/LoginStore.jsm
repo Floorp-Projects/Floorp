@@ -80,7 +80,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
-                                  "resource://gre/modules/osfile.jsm")
+                                  "resource://gre/modules/osfile.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "gTextDecoder", function () {
   return new TextDecoder();
@@ -219,7 +219,7 @@ LoginStore.prototype = {
       // This reads the file and automatically detects the UTF-8 encoding.
       let inputStream = new FileInputStream(new FileUtils.File(this.path),
                                             FileUtils.MODE_RDONLY,
-                                            FileUtils.PERMS_FILE, 0)
+                                            FileUtils.PERMS_FILE, 0);
       try {
         let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
         this.data = json.decodeFromStream(inputStream,
