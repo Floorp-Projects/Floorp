@@ -319,6 +319,7 @@ FetchDriver::HttpFetch()
     internalChan->SetRedirectMode(static_cast<uint32_t>(mRequest->GetRedirectMode()));
     mRequest->MaybeSkipCacheIfPerformingRevalidation();
     internalChan->SetFetchCacheMode(static_cast<uint32_t>(mRequest->GetCacheMode()));
+    internalChan->SetIntegrityMetadata(mRequest->GetIntegrity());
   }
 
   // Step 5. Proxy authentication will be handled by Necko.
@@ -397,10 +398,14 @@ FetchDriver::BeginAndGetFilteredResponse(InternalResponse* aResponse,
 
   MOZ_ASSERT(filteredResponse);
   MOZ_ASSERT(mObserver);
-  mObserver->OnResponseAvailable(filteredResponse);
-#ifdef DEBUG
-  mResponseAvailableCalled = true;
-#endif
+  if (filteredResponse->Type() == ResponseType::Error ||
+      mRequest->GetIntegrity().IsEmpty()) {
+    mObserver->OnResponseAvailable(filteredResponse);
+  #ifdef DEBUG
+    mResponseAvailableCalled = true;
+  #endif
+  }
+
   return filteredResponse.forget();
 }
 
@@ -598,6 +603,30 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
   // sure the Response is fully initialized before calling this.
   mResponse = BeginAndGetFilteredResponse(response, foundOpaqueRedirect);
 
+  // From "Main Fetch" step 17: SRI-part1.
+  if (mResponse->Type() != ResponseType::Error &&
+      !mRequest->GetIntegrity().IsEmpty() &&
+      mSRIMetadata.IsEmpty()) {
+    nsIConsoleReportCollector* aReporter = nullptr;
+    if (mObserver) {
+      aReporter = mObserver->GetReporter();
+    }
+
+    nsAutoCString sourceUri;
+    if (mDocument && mDocument->GetDocumentURI()) {
+      mDocument->GetDocumentURI()->GetAsciiSpec(sourceUri);
+    } else if (!mWorkerScript.IsEmpty()) {
+      sourceUri.Assign(mWorkerScript);
+    }
+    SRICheck::IntegrityMetadata(mRequest->GetIntegrity(), sourceUri,
+                                aReporter, &mSRIMetadata);
+    mSRIDataVerifier = new SRICheckDataVerifier(mSRIMetadata, sourceUri,
+                                                aReporter);
+
+    // Do not retarget off main thread when using SRI API.
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIEventTarget> sts = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     FailWithNetworkError();
@@ -627,6 +656,46 @@ FetchDriver::OnDataAvailable(nsIRequest* aRequest,
   MOZ_ASSERT(mResponse);
   MOZ_ASSERT(mPipeOutputStream);
 
+  // From "Main Fetch" step 17: SRI-part2.
+  if (mResponse->Type() != ResponseType::Error &&
+      !mRequest->GetIntegrity().IsEmpty()) {
+    MOZ_ASSERT(mSRIDataVerifier);
+
+    uint32_t aWrite;
+    nsTArray<uint8_t> buffer;
+    nsresult rv;
+    buffer.SetCapacity(aCount);
+    while (aCount > 0) {
+      rv = aInputStream->Read(reinterpret_cast<char*>(buffer.Elements()),
+                              aCount, &aRead);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      rv = mSRIDataVerifier->Update(aRead, (uint8_t*)buffer.Elements());
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      while (aRead > 0) {
+        rv = mPipeOutputStream->Write(reinterpret_cast<char*>(buffer.Elements()),
+                                      aRead, &aWrite);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+
+        if (aRead < aWrite) {
+          return NS_ERROR_FAILURE;
+        }
+
+        aRead -= aWrite;
+      }
+
+
+      aCount -= aWrite;
+    }
+
+    return NS_OK;
+  }
+
   nsresult rv = aInputStream->ReadSegments(NS_CopySegmentToStream,
                                            mPipeOutputStream,
                                            aCount, &aRead);
@@ -651,12 +720,49 @@ FetchDriver::OnStopRequest(nsIRequest* aRequest,
     MOZ_ASSERT(mResponse);
     MOZ_ASSERT(!mResponse->IsError());
 
+    // From "Main Fetch" step 17: SRI-part3.
+    if (mResponse->Type() != ResponseType::Error &&
+        !mRequest->GetIntegrity().IsEmpty()) {
+      MOZ_ASSERT(mSRIDataVerifier);
+
+      nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+
+      nsIConsoleReportCollector* aReporter = nullptr;
+      if (mObserver) {
+        aReporter = mObserver->GetReporter();
+      }
+
+      nsAutoCString sourceUri;
+      if (mDocument && mDocument->GetDocumentURI()) {
+        mDocument->GetDocumentURI()->GetAsciiSpec(sourceUri);
+      } else if (!mWorkerScript.IsEmpty()) {
+        sourceUri.Assign(mWorkerScript);
+      }
+      nsresult rv = mSRIDataVerifier->Verify(mSRIMetadata, channel, sourceUri,
+                                             aReporter);
+      if (NS_FAILED(rv)) {
+        FailWithNetworkError();
+        // Cancel request.
+        return rv;
+      }
+    }
+
     if (mPipeOutputStream) {
       mPipeOutputStream->Close();
     }
   }
 
   if (mObserver) {
+    if (mResponse->Type() != ResponseType::Error &&
+        !mRequest->GetIntegrity().IsEmpty()) {
+      //From "Main Fetch" step 23: Process response.
+      MOZ_ASSERT(mResponse);
+      mObserver->OnResponseAvailable(mResponse);
+      #ifdef DEBUG
+        mResponseAvailableCalled = true;
+      #endif
+    }
+
     mObserver->OnResponseEnd();
     mObserver = nullptr;
   }

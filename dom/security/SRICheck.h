@@ -7,14 +7,13 @@
 #ifndef mozilla_dom_SRICheck_h
 #define mozilla_dom_SRICheck_h
 
-#include "mozilla/CORSMode.h"
 #include "nsCOMPtr.h"
 #include "nsICryptoHash.h"
 #include "SRIMetadata.h"
 
 class nsIChannel;
-class nsIDocument;
 class nsIUnicharStreamLoader;
+class nsIConsoleReportCollector;
 
 namespace mozilla {
 namespace dom {
@@ -30,7 +29,8 @@ public:
    * return the strongest supported hash.
    */
   static nsresult IntegrityMetadata(const nsAString& aMetadataList,
-                                    const nsIDocument* aDocument,
+                                    const nsACString& aSourceFileURI,
+                                    nsIConsoleReportCollector* aReporter,
                                     SRIMetadata* outMetadata);
 
   /**
@@ -39,20 +39,22 @@ public:
    */
   static nsresult VerifyIntegrity(const SRIMetadata& aMetadata,
                                   nsIUnicharStreamLoader* aLoader,
-                                  const CORSMode aCORSMode,
                                   const nsAString& aString,
-                                  const nsIDocument* aDocument);
+                                  const nsACString& aSourceFileURI,
+                                  nsIConsoleReportCollector* aReporter);
 };
 
 class SRICheckDataVerifier final
 {
   public:
     SRICheckDataVerifier(const SRIMetadata& aMetadata,
-                         const nsIDocument* aDocument);
+                         const nsACString& aSourceFileURI,
+                         nsIConsoleReportCollector* aReporter);
 
     nsresult Update(uint32_t aStringLen, const uint8_t* aString);
     nsresult Verify(const SRIMetadata& aMetadata, nsIChannel* aChannel,
-                    const CORSMode aCORSMode, const nsIDocument* aDocument);
+                    const nsACString& aSourceFileURI,
+                    nsIConsoleReportCollector* aReporter);
 
   private:
     nsCOMPtr<nsICryptoHash> mCryptoHash;
@@ -65,7 +67,8 @@ class SRICheckDataVerifier final
     nsresult EnsureCryptoHash();
     nsresult Finish();
     nsresult VerifyHash(const SRIMetadata& aMetadata, uint32_t aHashIndex,
-                        const nsIDocument* aDocument);
+                        const nsACString& aSourceFileURI,
+                        nsIConsoleReportCollector* aReporter);
 };
 
 } // namespace dom

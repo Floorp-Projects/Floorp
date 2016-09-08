@@ -431,7 +431,7 @@ function createUserContextMenu(event, addCommandAttribute = true, excludeUserCon
   // If we are excluding a userContextId, we want to add a 'no-container' item.
   if (excludeUserContextId) {
     let menuitem = document.createElement("menuitem");
-    menuitem.setAttribute("usercontextid", "0");
+    menuitem.setAttribute("data-usercontextid", "0");
     menuitem.setAttribute("label", bundle.getString("userContextNone.label"));
     menuitem.setAttribute("accesskey", bundle.getString("userContextNone.accesskey"));
 
@@ -451,7 +451,7 @@ function createUserContextMenu(event, addCommandAttribute = true, excludeUserCon
     }
 
     let menuitem = document.createElement("menuitem");
-    menuitem.setAttribute("usercontextid", identity.userContextId);
+    menuitem.setAttribute("data-usercontextid", identity.userContextId);
     menuitem.setAttribute("label", ContextualIdentityService.getUserContextLabel(identity.userContextId));
 
     if (identity.accessKey) {

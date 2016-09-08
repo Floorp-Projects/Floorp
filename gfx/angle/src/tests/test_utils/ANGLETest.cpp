@@ -15,18 +15,20 @@
 namespace angle
 {
 
+const GLColorRGB GLColorRGB::black(0u, 0u, 0u);
 const GLColorRGB GLColorRGB::blue(0u, 0u, 255u);
 const GLColorRGB GLColorRGB::green(0u, 255u, 0u);
 const GLColorRGB GLColorRGB::red(255u, 0u, 0u);
 const GLColorRGB GLColorRGB::yellow(255u, 255u, 0);
 
-const GLColor GLColor::black = GLColor(0u, 0u, 0u, 255u);
-const GLColor GLColor::blue   = GLColor(0u, 0u, 255u, 255u);
-const GLColor GLColor::cyan   = GLColor(0u, 255u, 255u, 255u);
-const GLColor GLColor::green  = GLColor(0u, 255u, 0u, 255u);
-const GLColor GLColor::red    = GLColor(255u, 0u, 0u, 255u);
-const GLColor GLColor::yellow = GLColor(255u, 255u, 0, 255u);
-const GLColor GLColor::white = GLColor(255u, 255u, 255u, 255u);
+const GLColor GLColor::black            = GLColor(0u, 0u, 0u, 255u);
+const GLColor GLColor::blue             = GLColor(0u, 0u, 255u, 255u);
+const GLColor GLColor::cyan             = GLColor(0u, 255u, 255u, 255u);
+const GLColor GLColor::green            = GLColor(0u, 255u, 0u, 255u);
+const GLColor GLColor::red              = GLColor(255u, 0u, 0u, 255u);
+const GLColor GLColor::transparentBlack = GLColor(0u, 0u, 0u, 0u);
+const GLColor GLColor::white            = GLColor(255u, 255u, 255u, 255u);
+const GLColor GLColor::yellow           = GLColor(255u, 255u, 0, 255u);
 
 const GLColor16 GLColor16::white = GLColor16(65535u, 65535u, 65535u, 65535u);
 
@@ -35,6 +37,11 @@ namespace
 float ColorNorm(GLubyte channelValue)
 {
     return static_cast<float>(channelValue) / 255.0f;
+}
+
+GLubyte ColorDenorm(float colorValue)
+{
+    return static_cast<GLubyte>(colorValue * 255.0f);
 }
 
 // Use a custom ANGLE platform class to capture and report internal errors.
@@ -89,6 +96,17 @@ void TestPlatform::enableMessages()
 }
 
 TestPlatform g_testPlatformInstance;
+
+std::array<Vector3, 4> GetIndexedQuadVertices()
+{
+    std::array<Vector3, 4> vertices;
+    vertices[0] = Vector3(-1.0f, 1.0f, 0.5f);
+    vertices[1] = Vector3(-1.0f, -1.0f, 0.5f);
+    vertices[2] = Vector3(1.0f, -1.0f, 0.5f);
+    vertices[3] = Vector3(1.0f, 1.0f, 0.5f);
+    return vertices;
+}
+
 }  // anonymous namespace
 
 GLColorRGB::GLColorRGB() : R(0), G(0), B(0)
@@ -99,11 +117,32 @@ GLColorRGB::GLColorRGB(GLubyte r, GLubyte g, GLubyte b) : R(r), G(g), B(b)
 {
 }
 
+GLColorRGB::GLColorRGB(const Vector3 &floatColor)
+    : R(ColorDenorm(floatColor.x)), G(ColorDenorm(floatColor.y)), B(ColorDenorm(floatColor.z))
+{
+}
+
 GLColor::GLColor() : R(0), G(0), B(0), A(0)
 {
 }
 
 GLColor::GLColor(GLubyte r, GLubyte g, GLubyte b, GLubyte a) : R(r), G(g), B(b), A(a)
+{
+}
+
+GLColor::GLColor(const Vector4 &floatColor)
+    : R(ColorDenorm(floatColor.x)),
+      G(ColorDenorm(floatColor.y)),
+      B(ColorDenorm(floatColor.z)),
+      A(ColorDenorm(floatColor.w))
+{
+}
+
+GLColor::GLColor(const GLColor16 &color16)
+    : R(static_cast<GLubyte>(color16.R)),
+      G(static_cast<GLubyte>(color16.G)),
+      B(static_cast<GLubyte>(color16.B)),
+      A(static_cast<GLubyte>(color16.A))
 {
 }
 
@@ -168,6 +207,19 @@ std::ostream &operator<<(std::ostream &ostream, const GLColor16 &color)
 }
 
 }  // namespace angle
+
+// static
+std::array<Vector3, 6> ANGLETest::GetQuadVertices()
+{
+    std::array<Vector3, 6> vertices;
+    vertices[0] = Vector3(-1.0f, 1.0f, 0.5f);
+    vertices[1] = Vector3(-1.0f, -1.0f, 0.5f);
+    vertices[2] = Vector3(1.0f, -1.0f, 0.5f);
+    vertices[3] = Vector3(-1.0f, 1.0f, 0.5f);
+    vertices[4] = Vector3(1.0f, -1.0f, 0.5f);
+    vertices[5] = Vector3(1.0f, 1.0f, 0.5f);
+    return vertices;
+}
 
 ANGLETest::ANGLETest()
     : mEGLWindow(nullptr),
@@ -261,19 +313,6 @@ void ANGLETest::swapBuffers()
     }
 }
 
-// static
-std::array<Vector3, 6> ANGLETest::GetQuadVertices()
-{
-    std::array<Vector3, 6> vertices;
-    vertices[0] = Vector3(-1.0f, 1.0f, 0.5f);
-    vertices[1] = Vector3(-1.0f, -1.0f, 0.5f);
-    vertices[2] = Vector3(1.0f, -1.0f, 0.5f);
-    vertices[3] = Vector3(-1.0f, 1.0f, 0.5f);
-    vertices[4] = Vector3(1.0f, -1.0f, 0.5f);
-    vertices[5] = Vector3(1.0f, 1.0f, 0.5f);
-    return vertices;
-}
-
 void ANGLETest::setupQuadVertexBuffer(GLfloat positionAttribZ, GLfloat positionAttribXYScale)
 {
     if (mQuadVertexBuffer == 0)
@@ -291,6 +330,25 @@ void ANGLETest::setupQuadVertexBuffer(GLfloat positionAttribZ, GLfloat positionA
 
     glBindBuffer(GL_ARRAY_BUFFER, mQuadVertexBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 3 * 6, quadVertices.data(), GL_STATIC_DRAW);
+}
+
+void ANGLETest::setupIndexedQuadVertexBuffer(GLfloat positionAttribZ, GLfloat positionAttribXYScale)
+{
+    if (mQuadVertexBuffer == 0)
+    {
+        glGenBuffers(1, &mQuadVertexBuffer);
+    }
+
+    auto quadVertices = angle::GetIndexedQuadVertices();
+    for (Vector3 &vertex : quadVertices)
+    {
+        vertex.x *= positionAttribXYScale;
+        vertex.y *= positionAttribXYScale;
+        vertex.z = positionAttribZ;
+    }
+
+    glBindBuffer(GL_ARRAY_BUFFER, mQuadVertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 3 * 4, quadVertices.data(), GL_STATIC_DRAW);
 }
 
 // static
@@ -380,7 +438,7 @@ void ANGLETest::drawIndexedQuad(GLuint program,
     GLuint prevBinding = 0;
     glGetIntegerv(GL_ARRAY_BUFFER_BINDING, reinterpret_cast<GLint *>(&prevBinding));
 
-    setupQuadVertexBuffer(positionAttribZ, positionAttribXYScale);
+    setupIndexedQuadVertexBuffer(positionAttribZ, positionAttribXYScale);
 
     glVertexAttribPointer(positionLocation, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
     glEnableVertexAttribArray(positionLocation);
@@ -585,7 +643,7 @@ void ANGLETest::setNoErrorEnabled(bool enabled)
     mEGLWindow->setNoErrorEnabled(enabled);
 }
 
-int ANGLETest::getClientVersion() const
+int ANGLETest::getClientMajorVersion() const
 {
     return mEGLWindow->getClientMajorVersion();
 }

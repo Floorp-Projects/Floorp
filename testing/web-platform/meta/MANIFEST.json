@@ -16010,6 +16010,10 @@
         "url": "/fetch/api/basic/accept-header.html"
       },
       {
+        "path": "fetch/api/basic/integrity-sharedworker.html",
+        "url": "/fetch/api/basic/integrity-sharedworker.html"
+      },
+      {
         "path": "fetch/api/basic/integrity-worker.html",
         "url": "/fetch/api/basic/integrity-worker.html"
       },
