@@ -102,8 +102,8 @@ TrackBuffersManager::TrackBuffersManager(MediaSourceDecoder* aParentDecoder,
   , mVideoEvictionThreshold(Preferences::GetUint("media.mediasource.eviction_threshold.video",
                                                  100 * 1024 * 1024))
   , mAudioEvictionThreshold(Preferences::GetUint("media.mediasource.eviction_threshold.audio",
-                                                 30 * 1024 * 1024))
-  , mEvictionOccurred(false)
+                                                 10 * 1024 * 1024))
+  , mEvictionState(EvictionState::NO_EVICTION_NEEDED)
   , mMonitor("TrackBuffersManager")
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be instanciated on the main thread");
@@ -278,18 +278,22 @@ TrackBuffersManager::EvictData(const TimeUnit& aPlaybackTime, int64_t aSize)
             GetSize() / 1024, EvictionThreshold() / 1024, toEvict / 1024);
 
   if (toEvict <= 0) {
+    mEvictionState = EvictionState::NO_EVICTION_NEEDED;
     return EvictDataResult::NO_DATA_EVICTED;
   }
   if (toEvict <= 512*1024) {
     // Don't bother evicting less than 512KB.
+    mEvictionState = EvictionState::NO_EVICTION_NEEDED;
     return EvictDataResult::CANT_EVICT;
   }
 
-  if (mBufferFull && mEvictionOccurred) {
+  if (mBufferFull && mEvictionState == EvictionState::EVICTION_COMPLETED) {
     return EvictDataResult::BUFFER_FULL;
   }
 
   MSE_DEBUG("Reaching our size limit, schedule eviction of %lld bytes", toEvict);
+
+  mEvictionState = EvictionState::EVICTION_NEEDED;
 
   QueueTask(new EvictDataTask(aPlaybackTime, toEvict));
 
@@ -411,6 +415,8 @@ TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
 {
   MOZ_ASSERT(OnTaskQueue());
 
+  mEvictionState = EvictionState::EVICTION_COMPLETED;
+
   // Video is what takes the most space, only evict there if we have video.
   const auto& track = HasVideo() ? mVideoTracks : mAudioTracks;
   const auto& buffer = track.mBuffers.LastElement();
@@ -452,11 +458,21 @@ TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
 
   toEvict = mSizeSourceBuffer - finalSize;
 
-  // Still some to remove. Remove data starting from the end, up to 30s ahead
-  // of the later of the playback time or the next sample to be demuxed.
-  // 30s is a value chosen as it appears to work with YouTube.
-  TimeUnit upperLimit =
-    std::max(aPlaybackTime, track.mNextSampleTime) + TimeUnit::FromSeconds(30);
+  // See if we can evict data into the future.
+  // We do not evict data from the currently used buffered interval.
+
+  TimeUnit currentPosition = std::max(aPlaybackTime, track.mNextSampleTime);
+  TimeIntervals futureBuffered(TimeInterval(currentPosition, TimeUnit::FromInfinity()));
+  futureBuffered.Intersection(track.mBufferedRanges);
+  futureBuffered.SetFuzz(MediaSourceDemuxer::EOS_FUZZ / 2);
+  if (futureBuffered.Length() <= 1) {
+    // We have one continuous segment ahead of us:
+    // nothing further can be evicted.
+    return;
+  }
+
+  // Don't evict before the end of the current segment
+  TimeUnit upperLimit = futureBuffered[0].mEnd;
   uint32_t evictedFramesStartIndex = buffer.Length();
   for (int32_t i = buffer.Length() - 1; i >= 0; i--) {
     const auto& frame = buffer[i];
@@ -563,7 +579,6 @@ TrackBuffersManager::CodedFrameRemoval(TimeInterval aInterval)
   if (mBufferFull && mSizeSourceBuffer < EvictionThreshold()) {
     mBufferFull = false;
   }
-  mEvictionOccurred = true;
 
   return dataRemoved;
 }
@@ -1269,7 +1284,6 @@ TrackBuffersManager::CompleteCodedFrameProcessing()
   // 4. If this SourceBuffer is full and cannot accept more media data, then set the buffer full flag to true.
   if (mSizeSourceBuffer >= EvictionThreshold()) {
     mBufferFull = true;
-    mEvictionOccurred = false;
   }
 
   // 5. If the input buffer does not contain a complete media segment, then jump to the need more data step below.
