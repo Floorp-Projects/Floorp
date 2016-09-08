@@ -1053,16 +1053,19 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
   nsCOMPtr<nsIDocShell> newDocShell(do_QueryInterface(newDocShellItem));
   NS_ENSURE_TRUE(newDocShell, NS_ERROR_UNEXPECTED);
 
+  // If our parent is sandboxed, set it as the one permitted sandboxed navigator
+  // on the new window we're opening.
+  if (activeDocsSandboxFlags && parentWindow) {
+    newDocShell->SetOnePermittedSandboxedNavigator(
+      parentWindow->GetDocShell());
+  }
+
   // Copy sandbox flags to the new window if activeDocsSandboxFlags says to do
   // so.  Note that it's only nonzero if the window is new, so clobbering
   // sandbox flags on the window makes sense in that case.
   if (activeDocsSandboxFlags &
         SANDBOX_PROPAGATES_TO_AUXILIARY_BROWSING_CONTEXTS) {
     newDocShell->SetSandboxFlags(activeDocsSandboxFlags);
-    if (parentWindow) {
-      newDocShell->SetOnePermittedSandboxedNavigator(
-        parentWindow->GetDocShell());
-    }
   }
 
   rv = ReadyOpenedDocShellItem(newDocShellItem, parentWindow, windowIsNew, aResult);
