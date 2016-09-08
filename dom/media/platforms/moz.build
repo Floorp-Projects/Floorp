@@ -31,15 +31,13 @@ UNIFIED_SOURCES += [
 ]
 
 DIRS += [
+    'agnostic/eme',
     'agnostic/gmp',
     'omx'
 ]
 
 if CONFIG['MOZ_WMF']:
     DIRS += [ 'wmf' ];
-
-if CONFIG['MOZ_EME']:
-    DIRS += ['agnostic/eme']
 
 if CONFIG['MOZ_FFVPX'] or CONFIG['MOZ_FFMPEG']:
     # common code to either FFmpeg or FFVPX
