@@ -2232,7 +2232,11 @@ XMLHttpRequestMainThread::RequestBody<nsIDocument>::GetAsStream(
     if (!nsContentUtils::SerializeNodeToMarkup(mBody, true, serialized)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    NS_ConvertUTF16toUTF8 utf8Serialized(serialized);
+
+    nsAutoCString utf8Serialized;
+    if (!AppendUTF16toUTF8(serialized, utf8Serialized, fallible)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     uint32_t written;
     rv = output->Write(utf8Serialized.get(), utf8Serialized.Length(), &written);
@@ -2271,7 +2275,11 @@ XMLHttpRequestMainThread::RequestBody<const nsAString>::GetAsStream(
   aContentType.AssignLiteral("text/plain");
   aCharset.AssignLiteral("UTF-8");
 
-  nsCString converted = NS_ConvertUTF16toUTF8(*mBody);
+  nsAutoCString converted;
+  if (!AppendUTF16toUTF8(*mBody, converted, fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   *aContentLength = converted.Length();
   nsresult rv = NS_NewCStringInputStream(aResult, converted);
   NS_ENSURE_SUCCESS(rv, rv);
