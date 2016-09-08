@@ -74,7 +74,6 @@ class WasmArrayRawBuffer;
 class ArrayBufferObjectMaybeShared;
 
 uint32_t AnyArrayBufferByteLength(const ArrayBufferObjectMaybeShared* buf);
-uint32_t WasmArrayBufferActualByteLength(const ArrayBufferObjectMaybeShared* buf);
 mozilla::Maybe<uint32_t> WasmArrayBufferMaxSize(const ArrayBufferObjectMaybeShared* buf);
 size_t WasmArrayBufferMappedSize(const ArrayBufferObjectMaybeShared* buf);
 bool WasmArrayBufferGrowForWasm(ArrayBufferObjectMaybeShared* buf, uint32_t delta);
@@ -96,9 +95,6 @@ class ArrayBufferObjectMaybeShared : public NativeObject
     // Note: the eventual goal is to remove this from ArrayBuffer and have
     // (Shared)ArrayBuffers alias memory owned by some wasm::Memory object.
 
-    uint32_t wasmActualByteLength() const {
-        return WasmArrayBufferActualByteLength(this);
-    }
     mozilla::Maybe<uint32_t> wasmMaxSize() const {
         return WasmArrayBufferMaxSize(this);
     }
@@ -350,12 +346,17 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
                                             mozilla::Maybe<uint32_t> maxSize);
     static MOZ_MUST_USE bool prepareForAsmJS(JSContext* cx, Handle<ArrayBufferObject*> buffer,
                                              bool needGuard);
-    uint32_t wasmActualByteLength() const;
     size_t wasmMappedSize() const;
     mozilla::Maybe<uint32_t> wasmMaxSize() const;
-    MOZ_MUST_USE bool wasmGrowToSizeInPlace(uint32_t newSize);
+    static MOZ_MUST_USE bool wasmGrowToSizeInPlace(uint32_t newSize,
+                                                   Handle<ArrayBufferObject*> oldBuf,
+                                                   MutableHandle<ArrayBufferObject*> newBuf,
+                                                   JSContext* cx);
 #ifndef WASM_HUGE_MEMORY
-    MOZ_MUST_USE bool wasmMovingGrowToSize(uint32_t newSize);
+    static MOZ_MUST_USE bool wasmMovingGrowToSize(uint32_t newSize,
+                                                  Handle<ArrayBufferObject*> oldBuf,
+                                                  MutableHandle<ArrayBufferObject*> newBuf,
+                                                  JSContext* cx);
     uint32_t wasmBoundsCheckLimit() const;
 #endif
 
