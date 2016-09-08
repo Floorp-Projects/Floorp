@@ -10,7 +10,6 @@
 #include <stdint.h>                     // for int32_t, uint64_t
 #include "gfxTypes.h"
 #include "mozilla/Attributes.h"         // for override
-#include "mozilla/UniquePtr.h"
 #include "mozilla/layers/CompositableClient.h"  // for CompositableClient
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/ISurfaceAllocator.h"  // for ISurfaceAllocator
@@ -80,10 +79,9 @@ class CompositableForwarder : public TextureForwarder
 public:
 
   CompositableForwarder()
-    : mSerial(++sSerialCounter)
-  {
-    mActiveResourceTracker = MakeUnique<ActiveResourceTracker>(1000, "CompositableForwarder");
-  }
+    : mActiveResourceTracker(1000, "CompositableForwarder")
+    , mSerial(++sSerialCounter)
+  {}
 
   /**
    * Setup the IPDL actor for aCompositable to be part of layers
@@ -209,7 +207,7 @@ public:
     return mTextureFactoryIdentifier;
   }
 
-  ActiveResourceTracker& GetActiveResourceTracker() { return *mActiveResourceTracker.get(); }
+  ActiveResourceTracker& GetActiveResourceTracker() { return mActiveResourceTracker; }
 
 protected:
   TextureFactoryIdentifier mTextureFactoryIdentifier;
@@ -218,7 +216,7 @@ protected:
   nsTArray<RefPtr<CompositableClient>> mCompositableClientsToRemove;
   RefPtr<SyncObject> mSyncObject;
 
-  UniquePtr<ActiveResourceTracker> mActiveResourceTracker;
+  ActiveResourceTracker mActiveResourceTracker;
 
   const int32_t mSerial;
   static mozilla::Atomic<int32_t> sSerialCounter;
