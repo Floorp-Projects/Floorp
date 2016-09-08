@@ -9,12 +9,15 @@
 
 #include "nsTArray.h"
 #include "nsString.h"
+#include "SRICheck.h"
 
 namespace mozilla {
 namespace dom {
 
 class SRIMetadata final
 {
+  friend class SRICheck;
+
 public:
   static const uint32_t MAX_ALTERNATE_HASHES = 256;
   static const int8_t UNKNOWN_ALGORITHM = -1;
@@ -61,8 +64,14 @@ public:
   void GetAlgorithm(nsCString* outAlg) const { *outAlg = mAlgorithm; }
   void GetHashType(int8_t* outType, uint32_t* outLength) const;
 
+  const nsString& GetIntegrityString() const
+  {
+    return mIntegrityString;
+  }
+
 private:
   nsTArray<nsCString> mHashes;
+  nsString mIntegrityString;
   nsCString mAlgorithm;
   int8_t mAlgorithmType;
   bool mEmpty;

@@ -408,7 +408,7 @@ TEST_P(DebugTest, ObjectLabels)
 // Test basic usage of setting and getting labels
 TEST_P(DebugTest, ObjectPtrLabels)
 {
-    if (!mDebugExtensionAvailable || getClientVersion() < 3)
+    if (!mDebugExtensionAvailable || getClientMajorVersion() < 3)
     {
         std::cout << "Test skipped because GL_KHR_debug or ES3 is not available." << std::endl;
         return;

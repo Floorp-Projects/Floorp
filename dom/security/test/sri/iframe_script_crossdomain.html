@@ -58,17 +58,17 @@
     ok(false, "Non-CORS loads with correct hashes redirecting to a different origin should be blocked!");
   }
 
-  function good_correctDataBlocked() {
-    ok(true, "A data: URL was blocked correctly.");
+  function good_correctDataLoaded() {
+    ok(true, "Since data: URLs are same-origin, they should be loaded.");
   }
-  function bad_correctDataLoaded() {
-    ok(false, "Since data: URLs are neither same-origin nor CORS, they should be blocked!");
+  function bad_correctDataBlocked() {
+    todo(false, "We should not block scripts in data: URIs!");
   }
-  function good_correctDataCORSBlocked() {
-    ok(true, "A data: URL was blocked correctly even though it was a CORS load.");
+  function good_correctDataCORSLoaded() {
+    ok(true, "A data: URL with a CORS load was loaded correctly.");
   }
-  function bad_correctDataCORSLoaded() {
-    todo(false, "We should not load scripts in data: URIs regardless of CORS mode!");
+  function bad_correctDataCORSBlocked() {
+    ok(false, "We should not BLOCK scripts!");
   }
 
   window.onload = function() {
@@ -112,18 +112,18 @@
         onerror="good_correct301Blocked()"
         onload="bad_correct301Loaded()"></script>
 
-<!-- data: URLs are not same-origin -->
+<!-- data: URLs are same-origin -->
 <script src="data:,console.log('data:valid');"
         integrity="sha256-W5I4VIN+mCwOfR9kDbvWoY1UOVRXIh4mKRN0Nz0ookg="
-        onerror="good_correctDataBlocked()"
-        onload="bad_correctDataLoaded()"></script>
+        onerror="bad_correctDataBlocked()"
+        onload="good_correctDataLoaded()"></script>
 
-<!-- data: URLs should always be opaque -->
+<!-- not cors-enabled with data: URLs. should trigger onload -->
 <script src="data:,console.log('data:valid');"
         crossorigin="anonymous"
         integrity="sha256-W5I4VIN+mCwOfR9kDbvWoY1UOVRXIh4mKRN0Nz0ookg="
-        onerror="good_correctDataCORSBlocked()"
-        onload="bad_correctDataCORSLoaded()"></script>
+        onerror="bad_correctDataCORSBlocked()"
+        onload="good_correctDataCORSLoaded()"></script>
 
 <script>
   ok(window.hasCORSLoaded, "CORS-enabled resource with a correct hash");

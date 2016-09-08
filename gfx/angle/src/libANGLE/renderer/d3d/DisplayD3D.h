@@ -55,7 +55,6 @@ class DisplayD3D : public DisplayImpl
 
     egl::ConfigSet generateConfigs() override;
 
-    bool isDeviceLost() const override;
     bool testDeviceLost() override;
     egl::Error restoreLostDevice() override;
 
@@ -69,6 +68,7 @@ class DisplayD3D : public DisplayImpl
     egl::Error waitNative(EGLint engine,
                           egl::Surface *drawSurface,
                           egl::Surface *readSurface) const override;
+    gl::Version getMaxSupportedESVersion() const override;
 
   private:
     void generateExtensions(egl::DisplayExtensions *outExtensions) const override;

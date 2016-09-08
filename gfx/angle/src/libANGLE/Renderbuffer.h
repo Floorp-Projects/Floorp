@@ -17,6 +17,7 @@
 #include "libANGLE/Error.h"
 #include "libANGLE/FramebufferAttachment.h"
 #include "libANGLE/Image.h"
+#include "libANGLE/formatutils.h"
 #include "libANGLE/renderer/RenderbufferImpl.h"
 
 namespace gl
@@ -46,7 +47,7 @@ class Renderbuffer final : public egl::ImageSibling,
 
     GLsizei getWidth() const;
     GLsizei getHeight() const;
-    GLenum getInternalFormat() const;
+    const Format &getFormat() const;
     GLsizei getSamples() const;
     GLuint getRedSize() const;
     GLuint getGreenSize() const;
@@ -57,7 +58,11 @@ class Renderbuffer final : public egl::ImageSibling,
 
     // FramebufferAttachmentObject Impl
     Extents getAttachmentSize(const FramebufferAttachment::Target &target) const override;
-    GLenum getAttachmentInternalFormat(const FramebufferAttachment::Target &/*target*/) const override { return getInternalFormat(); }
+    const Format &getAttachmentFormat(
+        const FramebufferAttachment::Target & /*target*/) const override
+    {
+        return getFormat();
+    }
     GLsizei getAttachmentSamples(const FramebufferAttachment::Target &/*target*/) const override { return getSamples(); }
 
     void onAttach() override;
@@ -73,7 +78,7 @@ class Renderbuffer final : public egl::ImageSibling,
 
     GLsizei mWidth;
     GLsizei mHeight;
-    GLenum mInternalFormat;
+    Format mFormat;
     GLsizei mSamples;
 };
 

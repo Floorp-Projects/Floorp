@@ -93,12 +93,14 @@ StateManagerGL::StateManagerGL(const FunctionsGL *functions, const gl::Caps &ren
       mDepthMask(true),
       mStencilTestEnabled(false),
       mStencilFrontFunc(GL_ALWAYS),
+      mStencilFrontRef(0),
       mStencilFrontValueMask(static_cast<GLuint>(-1)),
       mStencilFrontStencilFailOp(GL_KEEP),
       mStencilFrontStencilPassDepthFailOp(GL_KEEP),
       mStencilFrontStencilPassDepthPassOp(GL_KEEP),
       mStencilFrontWritemask(static_cast<GLuint>(-1)),
       mStencilBackFunc(GL_ALWAYS),
+      mStencilBackRef(0),
       mStencilBackValueMask(static_cast<GLuint>(-1)),
       mStencilBackStencilFailOp(GL_KEEP),
       mStencilBackStencilPassDepthFailOp(GL_KEEP),
@@ -658,18 +660,26 @@ gl::Error StateManagerGL::setDrawElementsState(const gl::ContextState &data,
     return setGenericDrawState(data);
 }
 
-gl::Error StateManagerGL::onMakeCurrent(const gl::ContextState &data)
+gl::Error StateManagerGL::pauseTransformFeedback(const gl::ContextState &data)
 {
-    const gl::State &state = data.getState();
-
-    // If the context has changed, pause the previous context's transform feedback and queries
+    // If the context is going to be changed, pause the previous context's transform feedback
     if (data.getContext() != mPrevDrawContext)
     {
         if (mPrevDrawTransformFeedback != nullptr)
         {
             mPrevDrawTransformFeedback->syncPausedState(true);
         }
+    }
+    return gl::Error(GL_NO_ERROR);
+}
 
+gl::Error StateManagerGL::onMakeCurrent(const gl::ContextState &data)
+{
+    const gl::State &state = data.getState();
+
+    // If the context has changed, pause the previous context's queries
+    if (data.getContext() != mPrevDrawContext)
+    {
         for (QueryGL *prevQuery : mCurrentQueries)
         {
             prevQuery->pause();
@@ -774,7 +784,7 @@ gl::Error StateManagerGL::setGenericDrawState(const gl::ContextState &data)
     framebufferGL->syncDrawState();
 
     // Seamless cubemaps are required for ES3 and higher contexts.
-    setTextureCubemapSeamlessEnabled(data.getClientVersion() >= 3);
+    setTextureCubemapSeamlessEnabled(data.getClientMajorVersion() >= 3);
 
     // Set the current transform feedback state
     gl::TransformFeedback *transformFeedback = state.getCurrentTransformFeedback();

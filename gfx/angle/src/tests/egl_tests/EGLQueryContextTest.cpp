@@ -28,7 +28,8 @@ class EGLQueryContextTest : public testing::TestWithParam<PlatformParameters>
             EGL_PLATFORM_ANGLE_TYPE_ANGLE, GetParam().getRenderer(),
             EGL_NONE
         };
-        mDisplay = eglGetPlatformDisplayEXT(EGL_PLATFORM_ANGLE_ANGLE, EGL_DEFAULT_DISPLAY, dispattrs);
+        mDisplay = eglGetPlatformDisplayEXT(
+            EGL_PLATFORM_ANGLE_ANGLE, reinterpret_cast<void *>(EGL_DEFAULT_DISPLAY), dispattrs);
         EXPECT_TRUE(mDisplay != EGL_NO_DISPLAY);
         EXPECT_TRUE(eglInitialize(mDisplay, NULL, NULL) != EGL_FALSE);
 

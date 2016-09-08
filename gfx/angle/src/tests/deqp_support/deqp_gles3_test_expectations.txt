@@ -36,6 +36,17 @@
 // We can't support distinct texture sizes in D3D11.
 1097 WIN : dEQP-GLES3.functional.fbo.completeness.size.distinct = FAIL
 
+// Fail because we support these formats through the ANGLE_depth_texture extension instead of OES_depth_texture
+605754 MAC WIN LINUX : dEQP-GLES3.functional.fbo.completeness.renderable.texture.depth.depth_component_unsigned_short = FAIL
+605754 MAC WIN LINUX : dEQP-GLES3.functional.fbo.completeness.renderable.texture.depth.depth_component_unsigned_int = FAIL
+
+// Tests that we fail because they're not in line with the WebGL spec
+1335 MAC WIN LINUX : dEQP-GLES3.functional.shaders.preprocessor.conditional_inclusion.basic_2* = FAIL
+1335 MAC WIN LINUX : dEQP-GLES3.functional.shaders.preprocessor.conditional_inclusion.defined_macro_defined_test* = FAIL
+1335 MAC WIN LINUX : dEQP-GLES3.functional.shaders.preprocessor.conditional_inclusion.defined_macro_undef* = FAIL
+1335 MAC WIN LINUX : dEQP-GLES3.functional.shaders.preprocessor.conditional_inclusion.define_defined* = FAIL
+1335 MAC WIN LINUX : dEQP-GLES3.functional.shaders.preprocessor.conditional_inclusion.define_defined_outside_if* = FAIL
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Temporary entries: they should be removed once the bugs are fixed.
@@ -45,6 +56,46 @@
 // TODO(jmadill): Find why this fails when run in a certain sequence, but not singly.
 1098 WIN : dEQP-GLES3.functional.uniform_api.random.50 = FAIL
 
+// Caused by a D3D compiler bug
+1448 WIN : dEQP-GLES3.functional.shaders.loops.for_constant_iterations.nested_sequence_vertex = FAIL
+1448 WIN : dEQP-GLES3.functional.shaders.loops.for_constant_iterations.nested_sequence_fragment = FAIL
+1448 WIN : dEQP-GLES3.functional.shaders.loops.for_constant_iterations.nested_tricky_dataflow_1_vertex = FAIL
+1448 WIN : dEQP-GLES3.functional.shaders.loops.for_constant_iterations.nested_tricky_dataflow_1_fragment = FAIL
+1448 WIN : dEQP-GLES3.functional.shaders.loops.for_constant_iterations.nested_tricky_dataflow_2_vertex = FAIL
+1448 WIN : dEQP-GLES3.functional.shaders.loops.for_constant_iterations.nested_tricky_dataflow_2_fragment = FAIL
+1448 WIN : dEQP-GLES3.functional.shaders.loops.while_constant_iterations.nested_tricky_dataflow_1_vertex = FAIL
+1448 WIN : dEQP-GLES3.functional.shaders.loops.while_constant_iterations.nested_tricky_dataflow_1_fragment = FAIL
+1448 WIN : dEQP-GLES3.functional.shaders.loops.while_constant_iterations.nested_tricky_dataflow_2_vertex = FAIL
+1448 WIN : dEQP-GLES3.functional.shaders.loops.while_constant_iterations.nested_tricky_dataflow_2_fragment = FAIL
+1448 WIN : dEQP-GLES3.functional.shaders.loops.do_while_constant_iterations.nested_tricky_dataflow_1_vertex = FAIL
+1448 WIN : dEQP-GLES3.functional.shaders.loops.do_while_constant_iterations.nested_tricky_dataflow_1_fragment = FAIL
+1448 WIN : dEQP-GLES3.functional.shaders.loops.do_while_constant_iterations.nested_tricky_dataflow_2_vertex = FAIL
+1448 WIN : dEQP-GLES3.functional.shaders.loops.do_while_constant_iterations.nested_tricky_dataflow_2_fragment = FAIL
+
+// Missing the SampleCmp instruction in vertex shaders.
+1435 WIN : dEQP-GLES3.functional.shaders.texture_functions.texturelod.sampler2dshadow_vertex = FAIL
+1435 WIN : dEQP-GLES3.functional.shaders.texture_functions.texturelodoffset.sampler2dshadow_vertex = FAIL
+1435 WIN : dEQP-GLES3.functional.shaders.texture_functions.textureprojlod.sampler2dshadow_vertex = FAIL
+1435 WIN : dEQP-GLES3.functional.shaders.texture_functions.textureprojlodoffset.sampler2dshadow_vertex = FAIL
+
+// SampleCmp is missing gradient/offset parameters in HLSL.
+1436 WIN : dEQP-GLES3.functional.shaders.texture_functions.texturelod.sampler2dshadow_fragment = FAIL
+1436 WIN : dEQP-GLES3.functional.shaders.texture_functions.texturelodoffset.sampler2dshadow_fragment = FAIL
+1436 WIN : dEQP-GLES3.functional.shaders.texture_functions.textureprojlod.sampler2dshadow_fragment = FAIL
+1436 WIN : dEQP-GLES3.functional.shaders.texture_functions.textureprojlodoffset.sampler2dshadow_fragment = FAIL
+1436 WIN : dEQP-GLES3.functional.shaders.texture_functions.texturegrad.sampler2dshadow_vertex = FAIL
+1436 WIN : dEQP-GLES3.functional.shaders.texture_functions.texturegrad.sampler2dshadow_fragment = FAIL
+1436 WIN : dEQP-GLES3.functional.shaders.texture_functions.texturegrad.sampler2darrayshadow_vertex = FAIL
+1436 WIN : dEQP-GLES3.functional.shaders.texture_functions.texturegrad.sampler2darrayshadow_fragment = FAIL
+1436 WIN : dEQP-GLES3.functional.shaders.texture_functions.texturegradoffset.sampler2dshadow_vertex = FAIL
+1436 WIN : dEQP-GLES3.functional.shaders.texture_functions.texturegradoffset.sampler2dshadow_fragment = FAIL
+1436 WIN : dEQP-GLES3.functional.shaders.texture_functions.texturegradoffset.sampler2darrayshadow_vertex = FAIL
+1436 WIN : dEQP-GLES3.functional.shaders.texture_functions.texturegradoffset.sampler2darrayshadow_fragment = FAIL
+1436 WIN : dEQP-GLES3.functional.shaders.texture_functions.textureprojgrad.sampler2dshadow_vertex = FAIL
+1436 WIN : dEQP-GLES3.functional.shaders.texture_functions.textureprojgrad.sampler2dshadow_fragment = FAIL
+1436 WIN : dEQP-GLES3.functional.shaders.texture_functions.textureprojgradoffset.sampler2dshadow_vertex = FAIL
+1436 WIN : dEQP-GLES3.functional.shaders.texture_functions.textureprojgradoffset.sampler2dshadow_fragment = FAIL
+
 // TODO(jmadill, cwallez): triage the failures below into permanent and temporary failures
 
 // Windows and Linux failures
@@ -53,8 +104,6 @@
 1101 WIN LINUX : dEQP-GLES3.functional.negative_api.texture.compressedtexsubimage2d_invalid_size = FAIL
 1101 WIN LINUX : dEQP-GLES3.functional.negative_api.texture.compressedtexsubimage3d = FAIL
 1101 WIN LINUX : dEQP-GLES3.functional.negative_api.texture.compressedtexsubimage3d_invalid_buffer_target = FAIL
-1101 WIN LINUX : dEQP-GLES3.functional.negative_api.fragment.begin_query = FAIL
-1101 WIN LINUX : dEQP-GLES3.functional.negative_api.vertex_array.vertex_attrib_i_pointer = FAIL
 1095 WIN LINUX : dEQP-GLES3.functional.texture.mipmap.2d.projected.nearest_nearest_clamp = FAIL
 1095 WIN LINUX : dEQP-GLES3.functional.texture.mipmap.2d.projected.nearest_nearest_repeat = FAIL
 1095 WIN LINUX : dEQP-GLES3.functional.texture.mipmap.2d.projected.nearest_nearest_mirror = FAIL
@@ -64,8 +113,6 @@
 
 // Windows only failure
 
-1101 WIN : dEQP-GLES3.functional.negative_api.vertex_array.draw_range_elements = FAIL
-1101 WIN : dEQP-GLES3.functional.negative_api.vertex_array.draw_range_elements_incomplete_primitive = FAIL
 1093 WIN : dEQP-GLES3.functional.shaders.builtin_functions.precision.tanh.highp_vertex.scalar = FAIL
 1093 WIN : dEQP-GLES3.functional.shaders.builtin_functions.precision.tanh.highp_vertex.vec2 = FAIL
 1093 WIN : dEQP-GLES3.functional.shaders.builtin_functions.precision.tanh.highp_vertex.vec3 = FAIL
@@ -74,68 +121,10 @@
 1093 WIN : dEQP-GLES3.functional.shaders.builtin_functions.precision.tanh.highp_fragment.vec2 = FAIL
 1093 WIN : dEQP-GLES3.functional.shaders.builtin_functions.precision.tanh.highp_fragment.vec3 = FAIL
 1093 WIN : dEQP-GLES3.functional.shaders.builtin_functions.precision.tanh.highp_fragment.vec4 = FAIL
-1091 WIN : dEQP-GLES3.functional.shaders.loops.for_constant_iterations.nested_sequence_vertex = FAIL
-1091 WIN : dEQP-GLES3.functional.shaders.loops.for_constant_iterations.nested_sequence_fragment = FAIL
-1091 WIN : dEQP-GLES3.functional.shaders.loops.for_constant_iterations.nested_tricky_dataflow_1_vertex = FAIL
-1091 WIN : dEQP-GLES3.functional.shaders.loops.for_constant_iterations.nested_tricky_dataflow_1_fragment = FAIL
-1091 WIN : dEQP-GLES3.functional.shaders.loops.for_constant_iterations.nested_tricky_dataflow_2_vertex = FAIL
-1091 WIN : dEQP-GLES3.functional.shaders.loops.for_constant_iterations.nested_tricky_dataflow_2_fragment = FAIL
-1091 WIN : dEQP-GLES3.functional.shaders.loops.while_constant_iterations.nested_tricky_dataflow_1_vertex = FAIL
-1091 WIN : dEQP-GLES3.functional.shaders.loops.while_constant_iterations.nested_tricky_dataflow_1_fragment = FAIL
-1091 WIN : dEQP-GLES3.functional.shaders.loops.while_constant_iterations.nested_tricky_dataflow_2_vertex = FAIL
-1091 WIN : dEQP-GLES3.functional.shaders.loops.while_constant_iterations.nested_tricky_dataflow_2_fragment = FAIL
-1091 WIN : dEQP-GLES3.functional.shaders.loops.do_while_constant_iterations.nested_tricky_dataflow_1_vertex = FAIL
-1091 WIN : dEQP-GLES3.functional.shaders.loops.do_while_constant_iterations.nested_tricky_dataflow_1_fragment = FAIL
-1091 WIN : dEQP-GLES3.functional.shaders.loops.do_while_constant_iterations.nested_tricky_dataflow_2_vertex = FAIL
-1091 WIN : dEQP-GLES3.functional.shaders.loops.do_while_constant_iterations.nested_tricky_dataflow_2_fragment = FAIL
 1092 WIN : dEQP-GLES3.functional.shaders.texture_functions.textureoffset.sampler3d_fixed_fragment = FAIL
 1092 WIN : dEQP-GLES3.functional.shaders.texture_functions.textureoffset.sampler3d_float_fragment = FAIL
 1092 WIN : dEQP-GLES3.functional.shaders.texture_functions.textureprojoffset.sampler3d_fixed_fragment = FAIL
 1092 WIN : dEQP-GLES3.functional.shaders.texture_functions.textureprojoffset.sampler3d_float_fragment = FAIL
-1092 WIN : dEQP-GLES3.functional.shaders.texture_functions.texturelod.sampler2dshadow_* = FAIL
-1092 WIN : dEQP-GLES3.functional.shaders.texture_functions.texturelodoffset.sampler2dshadow_vertex = FAIL
-1092 WIN : dEQP-GLES3.functional.shaders.texture_functions.texturelodoffset.sampler2dshadow_fragment = FAIL
-1092 WIN : dEQP-GLES3.functional.shaders.texture_functions.textureprojlod.sampler2dshadow_vertex = FAIL
-1092 WIN : dEQP-GLES3.functional.shaders.texture_functions.textureprojlod.sampler2dshadow_fragment = FAIL
-1092 WIN : dEQP-GLES3.functional.shaders.texture_functions.textureprojlodoffset.sampler2dshadow_vertex = FAIL
-1092 WIN : dEQP-GLES3.functional.shaders.texture_functions.textureprojlodoffset.sampler2dshadow_fragment = FAIL
-1092 WIN : dEQP-GLES3.functional.shaders.texture_functions.texturegrad.sampler2dshadow_vertex = FAIL
-1092 WIN : dEQP-GLES3.functional.shaders.texture_functions.texturegrad.sampler2dshadow_fragment = FAIL
-1092 WIN : dEQP-GLES3.functional.shaders.texture_functions.texturegrad.sampler2darrayshadow_vertex = FAIL
-1092 WIN : dEQP-GLES3.functional.shaders.texture_functions.texturegrad.sampler2darrayshadow_fragment = FAIL
-1092 WIN : dEQP-GLES3.functional.shaders.texture_functions.texturegradoffset.sampler2dshadow_vertex = FAIL
-1092 WIN : dEQP-GLES3.functional.shaders.texture_functions.texturegradoffset.sampler2dshadow_fragment = FAIL
-1092 WIN : dEQP-GLES3.functional.shaders.texture_functions.texturegradoffset.sampler2darrayshadow_vertex = FAIL
-1092 WIN : dEQP-GLES3.functional.shaders.texture_functions.texturegradoffset.sampler2darrayshadow_fragment = FAIL
-1092 WIN : dEQP-GLES3.functional.shaders.texture_functions.textureprojgrad.sampler2dshadow_vertex = FAIL
-1092 WIN : dEQP-GLES3.functional.shaders.texture_functions.textureprojgrad.sampler2dshadow_fragment = FAIL
-1092 WIN : dEQP-GLES3.functional.shaders.texture_functions.textureprojgradoffset.sampler2dshadow_vertex = FAIL
-1092 WIN : dEQP-GLES3.functional.shaders.texture_functions.textureprojgradoffset.sampler2dshadow_fragment = FAIL
-1095 WIN : dEQP-GLES3.functional.texture.specification.teximage2d_depth.depth_component32f = FAIL
-1095 WIN : dEQP-GLES3.functional.texture.specification.teximage2d_depth.depth32f_stencil8 = FAIL
-1095 WIN : dEQP-GLES3.functional.texture.specification.teximage2d_depth_pbo.depth_component32f = FAIL
-1095 WIN : dEQP-GLES3.functional.texture.specification.teximage2d_depth_pbo.depth_component24 = FAIL
-1095 WIN : dEQP-GLES3.functional.texture.specification.teximage2d_depth_pbo.depth32f_stencil8 = FAIL
-1095 WIN : dEQP-GLES3.functional.texture.specification.texsubimage2d_depth.depth_component32f = FAIL
-1095 WIN : dEQP-GLES3.functional.texture.specification.texsubimage2d_depth.depth32f_stencil8 = FAIL
-1095 WIN : dEQP-GLES3.functional.texture.specification.basic_copyteximage2d.cube_luminance = FAIL
-1095 WIN : dEQP-GLES3.functional.texture.specification.basic_copyteximage2d.cube_luminance_alpha = FAIL
-1095 WIN : dEQP-GLES3.functional.texture.specification.basic_copyteximage2d.cube_rgb = FAIL
-1095 WIN : dEQP-GLES3.functional.texture.specification.basic_copytexsubimage2d.2d_rgba = FAIL
-1095 WIN : dEQP-GLES3.functional.texture.specification.basic_copytexsubimage2d.2d_alpha = FAIL
-1095 WIN : dEQP-GLES3.functional.texture.specification.basic_copytexsubimage2d.2d_luminance_alpha = FAIL
-1095 WIN : dEQP-GLES3.functional.texture.specification.basic_copytexsubimage2d.2d_rgb = FAIL
-1095 WIN : dEQP-GLES3.functional.texture.specification.basic_copytexsubimage2d.cube_rgba = FAIL
-1095 WIN : dEQP-GLES3.functional.texture.specification.basic_copytexsubimage2d.cube_alpha = FAIL
-1095 WIN : dEQP-GLES3.functional.texture.specification.basic_copytexsubimage2d.cube_luminance_alpha = FAIL
-1095 WIN : dEQP-GLES3.functional.texture.specification.basic_copytexsubimage2d.cube_rgb = FAIL
-1095 WIN : dEQP-GLES3.functional.texture.specification.teximage3d_depth.depth_component32f_2d_array = FAIL
-1095 WIN : dEQP-GLES3.functional.texture.specification.teximage3d_depth.depth32f_stencil8_2d_array = FAIL
-1095 WIN : dEQP-GLES3.functional.texture.specification.teximage3d_depth_pbo.depth_component32f_2d_array = FAIL
-1095 WIN : dEQP-GLES3.functional.texture.specification.teximage3d_depth_pbo.depth32f_stencil8_2d_array = FAIL
-1095 WIN : dEQP-GLES3.functional.texture.specification.teximage3d_depth_pbo.depth_component24_2d_array = FAIL
-1095 WIN : dEQP-GLES3.functional.texture.specification.texsubimage3d_depth.depth_component32f_2d_array = FAIL
-1095 WIN : dEQP-GLES3.functional.texture.specification.texsubimage3d_depth.depth32f_stencil8_2d_array = FAIL
 1096 WIN : dEQP-GLES3.functional.fragment_ops.depth_stencil.stencil_depth_funcs.stencil_* = FAIL
 1096 WIN : dEQP-GLES3.functional.fragment_ops.depth_stencil.stencil_ops.* = FAIL
 1096 WIN : dEQP-GLES3.functional.fragment_ops.depth_stencil.write_mask.* = FAIL
@@ -190,41 +179,7 @@
 1096 WIN : dEQP-GLES3.functional.fragment_ops.blend.fbo_srgb.equation_src_func_dst_func.reverse_subtract_one_minus_constant_alpha_one_minus_constant_color = FAIL
 1096 WIN : dEQP-GLES3.functional.fragment_ops.random.* = FAIL
 1096 WIN : dEQP-GLES3.functional.fragment_ops.interaction.basic_shader.* = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.color.repeated_clear.sample.tex2d.rgba8 = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.color.repeated_clear.sample.tex2d.srgb8_alpha8 = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.color.repeated_clear.sample.tex2d.rgb10_a2 = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.color.repeated_clear.sample.tex2d.rgba4 = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.color.repeated_clear.sample.tex2d.rgb5_a1 = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.color.repeated_clear.sample.tex2d.rgb8 = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.color.repeated_clear.sample.tex2d.rgb565 = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.color.repeated_clear.sample.tex2d.rg8 = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.color.repeated_clear.sample.tex2d.r8 = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.color.repeated_clear.sample.tex2d.rgba32f = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.color.repeated_clear.sample.tex2d.rgba16f = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.color.repeated_clear.sample.tex2d.rgb16f = FAIL
 1097 WIN : dEQP-GLES3.functional.fbo.color.repeated_clear.sample.tex2d.r11f_g11f_b10f = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.color.repeated_clear.sample.tex2d.rg32f = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.color.repeated_clear.sample.tex2d.rg16f = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.color.repeated_clear.sample.tex2d.r32f = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.color.repeated_clear.sample.tex2d.r16f = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.msaa.2_samples.depth_component32f = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.msaa.2_samples.depth_component24 = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.msaa.2_samples.depth_component16 = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.msaa.2_samples.depth32f_stencil8 = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.msaa.2_samples.depth24_stencil8 = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.msaa.2_samples.stencil_index8 = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.msaa.4_samples.depth_component32f = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.msaa.4_samples.depth_component24 = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.msaa.4_samples.depth_component16 = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.msaa.4_samples.depth32f_stencil8 = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.msaa.4_samples.depth24_stencil8 = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.msaa.4_samples.stencil_index8 = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.msaa.8_samples.depth_component32f = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.msaa.8_samples.depth_component24 = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.msaa.8_samples.depth_component16 = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.msaa.8_samples.depth32f_stencil8 = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.msaa.8_samples.depth24_stencil8 = FAIL
-1097 WIN : dEQP-GLES3.functional.fbo.msaa.8_samples.stencil_index8 = FAIL
 1098 WIN : dEQP-GLES3.functional.uniform_api.random.8 = FAIL
 1098 WIN : dEQP-GLES3.functional.uniform_api.random.81 = FAIL
 1101 WIN : dEQP-GLES3.functional.polygon_offset.fixed16_render_with_units = FAIL
@@ -272,7 +227,6 @@
 // UBO tests trigger crashes when getting the program info log, skip them until this is fixed.
 1323 LINUX : dEQP-GLES3.functional.ubo.* = SKIP
 
-1323 LINUX : dEQP-GLES3.functional.default_vertex_attrib.int.vertex_attribi_4i = FAIL
 1323 LINUX : dEQP-GLES3.functional.draw.random.210 = FAIL
 1323 LINUX : dEQP-GLES3.functional.fbo.blit.default_framebuffer.srgb8_alpha8 = FAIL
 1323 LINUX : dEQP-GLES3.functional.fbo.blit.default_framebuffer.srgb8_alpha8_linear_out_of_bounds_blit_to_default = FAIL
@@ -284,9 +238,6 @@
 1323 LINUX : dEQP-GLES3.functional.fbo.depth.depth_write_clamp.depth32f_stencil8 = FAIL
 1323 LINUX : dEQP-GLES3.functional.negative_api.state.get_integeri_v = FAIL
 1323 LINUX : dEQP-GLES3.functional.rasterization.fbo.rbo_multisample_max.primitives.points = FAIL
-1323 LINUX : dEQP-GLES3.functional.shaders.switch.conditional_fall_through_2_dynamic_fragment = FAIL
-1323 LINUX : dEQP-GLES3.functional.shaders.switch.conditional_fall_through_dynamic_fragment = FAIL
-1323 LINUX : dEQP-GLES3.functional.shaders.switch.conditional_fall_through_dynamic_vertex = FAIL
 1323 LINUX : dEQP-GLES3.functional.state_query.integers64.max_server_wait_timeout_getfloat = FAIL
 1323 LINUX : dEQP-GLES3.functional.texture.mipmap.2d.projected.linear_linear_clamp = FAIL
 1323 LINUX : dEQP-GLES3.functional.texture.mipmap.2d.projected.linear_linear_mirror = FAIL

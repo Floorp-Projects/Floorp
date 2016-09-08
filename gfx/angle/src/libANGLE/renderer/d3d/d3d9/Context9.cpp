@@ -16,7 +16,6 @@
 #include "libANGLE/renderer/d3d/RenderbufferD3D.h"
 #include "libANGLE/renderer/d3d/SamplerD3D.h"
 #include "libANGLE/renderer/d3d/TextureD3D.h"
-#include "libANGLE/renderer/d3d/TransformFeedbackD3D.h"
 #include "libANGLE/renderer/d3d/d3d9/Buffer9.h"
 #include "libANGLE/renderer/d3d/d3d9/Fence9.h"
 #include "libANGLE/renderer/d3d/d3d9/Framebuffer9.h"
@@ -49,7 +48,7 @@ CompilerImpl *Context9::createCompiler()
 
 ShaderImpl *Context9::createShader(const gl::ShaderState &data)
 {
-    return new ShaderD3D(data);
+    return new ShaderD3D(data, mRenderer->getWorkarounds());
 }
 
 ProgramImpl *Context9::createProgram(const gl::ProgramState &data)
@@ -110,9 +109,10 @@ FenceSyncImpl *Context9::createFenceSync()
     return nullptr;
 }
 
-TransformFeedbackImpl *Context9::createTransformFeedback()
+TransformFeedbackImpl *Context9::createTransformFeedback(const gl::TransformFeedbackState &state)
 {
-    return new TransformFeedbackD3D();
+    UNREACHABLE();
+    return nullptr;
 }
 
 SamplerImpl *Context9::createSampler()
@@ -178,24 +178,9 @@ gl::Error Context9::drawRangeElements(GLenum mode,
     return mRenderer->genericDrawElements(this, mode, count, type, indices, 0, indexRange);
 }
 
-void Context9::notifyDeviceLost()
+GLenum Context9::getResetStatus()
 {
-    mRenderer->notifyDeviceLost();
-}
-
-bool Context9::isDeviceLost() const
-{
-    return mRenderer->isDeviceLost();
-}
-
-bool Context9::testDeviceLost()
-{
-    return mRenderer->testDeviceLost();
-}
-
-bool Context9::testDeviceResettable()
-{
-    return mRenderer->testDeviceResettable();
+    return mRenderer->getResetStatus();
 }
 
 std::string Context9::getVendorString() const

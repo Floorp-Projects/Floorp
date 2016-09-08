@@ -18,6 +18,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/CondVar.h"
+#include "mozilla/ConsoleReportCollector.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/Move.h"
 #include "mozilla/TimeStamp.h"
@@ -40,6 +41,7 @@
 #endif
 
 class nsIChannel;
+class nsIConsoleReportCollector;
 class nsIDocument;
 class nsIEventTarget;
 class nsIPrincipal;
@@ -810,6 +812,9 @@ public:
   {
     return mLoadInfo.mLoadFailedAsyncRunnable.forget();
   }
+
+  void
+  FlushReportsToSharedWorkers(nsIConsoleReportCollector* aReporter);
 
   IMPL_EVENT_HANDLER(message)
   IMPL_EVENT_HANDLER(error)
