@@ -392,7 +392,7 @@ this.LoginHelper = {
     const KEY_DELIMITER = ":";
 
     if (!preferredOrigin && resolveBy.includes("scheme")) {
-      throw new Error("dedupeLogins: `preferredOrigin` is required in order to "+
+      throw new Error("dedupeLogins: `preferredOrigin` is required in order to " +
                       "prefer schemes which match it.");
     }
 
