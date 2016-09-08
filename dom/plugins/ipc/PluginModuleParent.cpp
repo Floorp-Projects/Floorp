@@ -3129,7 +3129,7 @@ layers::TextureClientRecycleAllocator*
 PluginModuleParent::EnsureTextureAllocator()
 {
     if (!mTextureAllocator) {
-        mTextureAllocator = new TextureClientRecycleAllocator(ImageBridgeChild::GetSingleton().get());
+        mTextureAllocator = new TextureClientRecycleAllocator(ImageBridgeChild::GetSingleton());
     }
     return mTextureAllocator;
 }

@@ -19,7 +19,6 @@
 #include "mozilla/layers/PImageBridgeChild.h"
 #include "mozilla/Mutex.h"
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT
-#include "nsIObserver.h"
 #include "nsRegion.h"                   // for nsIntRegion
 #include "mozilla/gfx/Rect.h"
 
@@ -46,8 +45,6 @@ class CompositableClient;
 struct CompositableTransaction;
 class Image;
 class TextureClient;
-class SynchronousTask;
-struct AllocShmemParams;
 
 /**
  * Returns true if the current thread is the ImageBrdigeChild's thread.
@@ -112,7 +109,6 @@ class ImageBridgeChild final : public PImageBridgeChild
                              , public ShmemAllocator
 {
   friend class ImageContainer;
-
   typedef InfallibleTArray<AsyncParentMessageData> AsyncParentMessageArray;
 public:
 
@@ -139,12 +135,36 @@ public:
   static void ShutDown();
 
   /**
+   * Returns true if the singleton has been created.
+   *
+   * Can be called from any thread.
+   */
+  static bool IsCreated();
+  /**
+   * Returns true if the singleton's ShutDown() was called.
+   *
+   * Can be called from any thread.
+   */
+  static bool IsShutDown()
+  {
+    return sIsShutDown;
+  }
+
+  /**
    * returns the singleton instance.
    *
    * can be called from any thread.
    */
-  static RefPtr<ImageBridgeChild> GetSingleton();
+  static ImageBridgeChild* GetSingleton();
 
+
+  /**
+   * Dispatches a task to the ImageBridgeChild thread to do the connection
+   */
+  void ConnectAsync(ImageBridgeParent* aParent);
+
+  using PImageBridgeChild::SendImageBridgeThreadId;
+  void SendImageBridgeThreadId();
 
   static void IdentifyCompositorTextureHost(const TextureFactoryIdentifier& aIdentifier);
 
@@ -213,54 +233,21 @@ public:
 
   already_AddRefed<CanvasClient> CreateCanvasClient(CanvasClient::CanvasClientType aType,
                                                     TextureFlags aFlag);
-  void ReleaseImageContainer(RefPtr<ImageContainerChild> aChild);
-  void UpdateAsyncCanvasRenderer(AsyncCanvasRenderer* aClient);
-  void UpdateImageClient(RefPtr<ImageClient> aClient, RefPtr<ImageContainer> aContainer);
+  already_AddRefed<CanvasClient> CreateCanvasClientNow(CanvasClient::CanvasClientType aType,
+                                                       TextureFlags aFlag);
+
+  static void DispatchReleaseImageContainer(ImageContainerChild* aChild);
   static void DispatchReleaseTextureClient(TextureClient* aClient);
+  static void DispatchImageClientUpdate(ImageClient* aClient, ImageContainer* aContainer);
+
+  static void UpdateAsyncCanvasRenderer(AsyncCanvasRenderer* aClient);
+  static void UpdateAsyncCanvasRendererNow(AsyncCanvasRenderer* aClient);
 
   /**
    * Flush all Images sent to CompositableHost.
    */
-  void FlushAllImages(ImageClient* aClient, ImageContainer* aContainer);
+  static void FlushAllImages(ImageClient* aClient, ImageContainer* aContainer);
 
-private:
-  // Helpers for dispatching.
-  already_AddRefed<CanvasClient> CreateCanvasClientNow(
-    CanvasClient::CanvasClientType aType,
-    TextureFlags aFlags);
-  void CreateCanvasClientSync(
-    SynchronousTask* aTask,
-    CanvasClient::CanvasClientType aType,
-    TextureFlags aFlags,
-    RefPtr<CanvasClient>* const outResult);
-
-  void CreateImageClientSync(
-    SynchronousTask* aTask,
-    RefPtr<ImageClient>* result,
-    CompositableType aType,
-    ImageContainer* aImageContainer,
-    ImageContainerChild* aContainerChild);
-
-  void ReleaseTextureClientNow(TextureClient* aClient);
-
-  void UpdateAsyncCanvasRendererNow(AsyncCanvasRenderer* aClient);
-  void UpdateAsyncCanvasRendererSync(
-    SynchronousTask* aTask,
-    AsyncCanvasRenderer* aWrapper);
-
-  void FlushAllImagesSync(
-    SynchronousTask* aTask,
-    ImageClient* aClient,
-    ImageContainer* aContainer,
-    RefPtr<AsyncTransactionWaiter> aWaiter);
-
-  void ProxyAllocShmemNow(SynchronousTask* aTask, AllocShmemParams* aParams);
-  void ProxyDeallocShmemNow(
-    SynchronousTask* aTask,
-    ISurfaceAllocator* aAllocator,
-    Shmem* aShmem);
-
-public:
   // CompositableForwarder
 
   virtual void Connect(CompositableClient* aCompositable,
@@ -367,6 +354,11 @@ public:
     return InImageBridgeChildThread();
   }
 
+
+  void MarkShutDown();
+
+  void FallbackDestroyActors();
+
 protected:
   ImageBridgeChild();
   bool DispatchAllocShmemInternal(size_t aSize,
@@ -375,44 +367,11 @@ protected:
                                   bool aUnsafe);
 
   void Bind(Endpoint<PImageBridgeChild>&& aEndpoint);
-  void BindSameProcess(RefPtr<ImageBridgeParent> aParent);
-
-  void SendImageBridgeThreadId();
-
-  void WillShutdown();
-  void ShutdownStep1(SynchronousTask* aTask);
-  void ShutdownStep2(SynchronousTask* aTask);
-  void MarkShutDown();
-  void FallbackDestroyActors();
-
-  void ActorDestroy(ActorDestroyReason aWhy) override;
-  void DeallocPImageBridgeChild() override;
-
-  bool CanSend() const;
-
-private:
-  class ShutdownObserver final : public nsIObserver
-  {
-  public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIOBSERVER
-
-    explicit ShutdownObserver(ImageBridgeChild* aImageBridge);
-    void Unregister();
-
-  private:
-    ~ShutdownObserver() {};
-
-    ImageBridgeChild* mImageBridge;
-  };
-  friend class ShutdownObserver;
-
-  void OnXPCOMShutdown();
 
 private:
   CompositableTransaction* mTxn;
-
-  bool mCanSend;
+  Atomic<bool> mShuttingDown;
+  static Atomic<bool> sIsShutDown;
 
   /**
    * Transaction id of CompositableForwarder.
@@ -432,8 +391,6 @@ private:
   Mutex mWaitingFenceHandleMutex;
   nsDataHashtable<nsUint64HashKey, RefPtr<TextureClient> > mTexturesWaitingFenceHandle;
 #endif
-
-  RefPtr<ShutdownObserver> mShutdownObserver;
 };
 
 } // namespace layers

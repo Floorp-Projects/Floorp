@@ -147,9 +147,10 @@ OffscreenCanvas::GetContext(JSContext* aCx,
       mCanvasRenderer->mGLContext = gl;
       mCanvasRenderer->SetIsAlphaPremultiplied(webGL->IsPremultAlpha() || !gl->Caps().alpha);
 
-      if (RefPtr<ImageBridgeChild> imageBridge = ImageBridgeChild::GetSingleton()) {
+      if (ImageBridgeChild::IsCreated()) {
         TextureFlags flags = TextureFlags::ORIGIN_BOTTOM_LEFT;
-        mCanvasClient = imageBridge->CreateCanvasClient(CanvasClient::CanvasClientTypeShSurf, flags);
+        mCanvasClient = ImageBridgeChild::GetSingleton()->
+          CreateCanvasClient(CanvasClient::CanvasClientTypeShSurf, flags);
         mCanvasRenderer->SetCanvasClient(mCanvasClient);
 
         gl::GLScreenBuffer* screen = gl->Screen();
