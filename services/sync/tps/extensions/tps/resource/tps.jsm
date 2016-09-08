@@ -24,6 +24,7 @@ Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/main.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/bookmark_validator.js");
+Cu.import("resource://services-sync/engines/passwords.js");
 // TPS modules
 Cu.import("resource://tps/logger.jsm");
 
@@ -112,6 +113,7 @@ var TPS = {
   _usSinceEpoch: 0,
   _requestedQuit: false,
   shouldValidateBookmarks: false,
+  shouldValidatePasswords: false,
 
   _init: function TPS__init() {
     // Check if Firefox Accounts is enabled
@@ -416,6 +418,7 @@ var TPS = {
   },
 
   HandlePasswords: function (passwords, action) {
+    this.shouldValidatePasswords = true;
     try {
       for (let password of passwords) {
         let password_id = -1;
@@ -656,13 +659,46 @@ var TPS = {
     Logger.logInfo("Bookmark validation finished");
   },
 
+  ValidatePasswords() {
+    let serverRecordDumpStr;
+    try {
+      Logger.logInfo("About to perform password validation");
+      let pwEngine = Weave.Service.engineManager.get("passwords");
+      let validator = new PasswordValidator();
+      let serverRecords = validator.getServerItems(pwEngine);
+      let clientRecords = Async.promiseSpinningly(validator.getClientItems());
+      serverRecordDumpStr = JSON.stringify(serverRecords);
+
+      let { problemData } = validator.compareClientWithServer(clientRecords, serverRecords);
+
+      for (let { name, count } of problemData.getSummary()) {
+        if (count) {
+          Logger.logInfo(`Validation problem: "${name}": ${JSON.stringify(problemData[name])}`);
+        }
+        Logger.AssertEqual(count, 0, `Password validation error of type ${name}`);
+      }
+    } catch (e) {
+      // Dump the client records (should always be doable)
+      DumpPasswords();
+      // Dump the server records if gotten them already.
+      if (serverRecordDumpStr) {
+        Logger.logInfo("Server password records:\n" + serverRecordDumpStr + "\n");
+      }
+      this.DumpError("Password validation failed", e);
+    }
+    Logger.logInfo("Password validation finished");
+  },
+
   RunNextTestAction: function() {
     try {
       if (this._currentAction >=
           this._phaselist[this._currentPhase].length) {
+        // Run necessary validations and then finish up
         if (this.shouldValidateBookmarks) {
-          // Run bookmark validation and then finish up
           this.ValidateBookmarks();
+        }
+        if (this.shouldValidatePasswords) {
+          this.ValidatePasswords();
         }
         // we're all done
         Logger.logInfo("test phase " + this._currentPhase + ": " +
@@ -1100,6 +1136,9 @@ var Passwords = {
   },
   verifyNot: function Passwords__verifyNot(passwords) {
     this.HandlePasswords(passwords, ACTION_VERIFY_NOT);
+  },
+  skipValidation() {
+    TPS.shouldValidatePasswords = false;
   }
 };
 

@@ -140,6 +140,7 @@ public class Tab {
         mPluginViews = new ArrayList<View>();
         mState = shouldShowProgress(url) ? STATE_LOADING : STATE_SUCCESS;
         mLoadProgress = LOAD_PROGRESS_INIT;
+        mIconRequestBuilder = Icons.with(mAppContext).pageUrl(mUrl);
 
         updateBookmark();
     }
@@ -450,13 +451,6 @@ public class Tab {
         // Static Favicons never change
         if (AboutPages.isBuiltinIconPage(mUrl) && mFavicon != null) {
             return;
-        }
-
-        if (mIconRequestBuilder == null) {
-            // For the first internal homepage we might want to load a favicon without ever receiving
-            // a location change event first. In this case we didn't start to build a request yet.
-            // Let's do that now.
-            mIconRequestBuilder = Icons.with(mAppContext).pageUrl(mUrl);
         }
 
         mRunningIconRequest = mIconRequestBuilder

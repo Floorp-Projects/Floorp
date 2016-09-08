@@ -76,6 +76,12 @@ extensions.registerSchemaAPI("runtime", "addon_parent", context => {
         return context.lastError;
       },
 
+      getBrowserInfo: function() {
+        const {name, vendor, version, appBuildID} = Services.appinfo;
+        const info = {name, vendor, version, buildID: appBuildID};
+        return Promise.resolve(info);
+      },
+
       getPlatformInfo: function() {
         return Promise.resolve(ExtensionUtils.PlatformInfo);
       },
