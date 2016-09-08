@@ -281,10 +281,10 @@ RecordManager.prototype = {
  * You can update this thing simply by giving it /info/collections. It'll
  * use the last modified time to bring itself up to date.
  */
-this.CollectionKeyManager = function CollectionKeyManager() {
-  this.lastModified = 0;
-  this._collections = {};
-  this._default = null;
+this.CollectionKeyManager = function CollectionKeyManager(lastModified, default_, collections) {
+  this.lastModified = lastModified || 0;
+  this._default = default_ || null;
+  this._collections = collections || {};
 
   this._log = Log.repository.getLogger("Sync.CollectionKeyManager");
 }
@@ -292,6 +292,19 @@ this.CollectionKeyManager = function CollectionKeyManager() {
 // TODO: persist this locally as an Identity. Bug 610913.
 // Note that the last modified time needs to be preserved.
 CollectionKeyManager.prototype = {
+
+  /**
+   * Generate a new CollectionKeyManager that has the same attributes
+   * as this one.
+   */
+  clone() {
+    const newCollections = {};
+    for (let c in this._collections) {
+      newCollections[c] = this._collections[c];
+    }
+
+    return new CollectionKeyManager(this.lastModified, this._default, newCollections);
+  },
 
   // Return information about old vs new keys:
   // * same: true if two collections are equal
@@ -369,8 +382,7 @@ CollectionKeyManager.prototype = {
    * Compute a new default key, and new keys for any specified collections.
    */
   newKeys: function(collections) {
-    let newDefaultKey = new BulkKeyBundle(DEFAULT_KEYBUNDLE_NAME);
-    newDefaultKey.generateRandom();
+    let newDefaultKeyBundle = this.newDefaultKeyBundle();
 
     let newColls = {};
     if (collections) {
@@ -380,7 +392,7 @@ CollectionKeyManager.prototype = {
         newColls[c] = b;
       });
     }
-    return [newDefaultKey, newColls];
+    return [newDefaultKeyBundle, newColls];
   },
 
   /**
@@ -392,6 +404,57 @@ CollectionKeyManager.prototype = {
     [newDefaultKey, newColls] = this.newKeys(collections);
 
     return this._makeWBO(newColls, newDefaultKey);
+  },
+
+  /**
+   * Create a new default key.
+   *
+   * @returns {BulkKeyBundle}
+   */
+  newDefaultKeyBundle() {
+    const key = new BulkKeyBundle(DEFAULT_KEYBUNDLE_NAME);
+    key.generateRandom();
+    return key;
+  },
+
+  /**
+   * Create a new default key and store it as this._default, since without one you cannot use setContents.
+   */
+  generateDefaultKey() {
+    this._default = this.newDefaultKeyBundle();
+  },
+
+  /**
+   * Return true if keys are already present for each of the given
+   * collections.
+   */
+  hasKeysFor(collections) {
+    // We can't use filter() here because sometimes collections is an iterator.
+    for (let collection of collections) {
+      if (!this._collections[collection]) {
+        return false;
+      }
+    }
+    return true;
+  },
+
+  /**
+   * Return a new CollectionKeyManager that has keys for each of the
+   * given collections (creating new ones for collections where we
+   * don't already have keys).
+   */
+  ensureKeysFor(collections) {
+    const newKeys = Object.assign({}, this._collections);
+    for (let c of collections) {
+      if (newKeys[c]) {
+        continue;  // don't replace existing keys
+      }
+
+      const b = new BulkKeyBundle(c);
+      b.generateRandom();
+      newKeys[c] = b;
+    }
+    return new CollectionKeyManager(this.lastModified, this._default, newKeys);
   },
 
   // Take the fetched info/collections WBO, checking the change
@@ -424,9 +487,6 @@ CollectionKeyManager.prototype = {
   //
   setContents: function setContents(payload, modified) {
 
-    if (!modified)
-      throw "No modified time provided to setContents.";
-
     let self = this;
 
     this._log.info("Setting collection keys contents. Our last modified: " +
@@ -456,9 +516,7 @@ CollectionKeyManager.prototype = {
         if (v) {
           let keyObj = new BulkKeyBundle(k);
           keyObj.keyPairB64 = v;
-          if (keyObj) {
-            newCollections[k] = keyObj;
-          }
+          newCollections[k] = keyObj;
         }
       }
     }
@@ -469,8 +527,11 @@ CollectionKeyManager.prototype = {
     let sameColls = collComparison.same;
 
     if (sameDefault && sameColls) {
-      self._log.info("New keys are the same as our old keys! Bumped local modified time.");
-      self.lastModified = modified;
+      self._log.info("New keys are the same as our old keys!");
+      if (modified) {
+        self._log.info("Bumped local modified time.");
+        self.lastModified = modified;
+      }
       return false;
     }
 
@@ -482,8 +543,10 @@ CollectionKeyManager.prototype = {
     this._collections = newCollections;
 
     // Always trust the server.
-    self._log.info("Bumping last modified to " + modified);
-    self.lastModified = modified;
+    if (modified) {
+      self._log.info("Bumping last modified to " + modified);
+      self.lastModified = modified;
+    }
 
     return sameDefault ? collComparison.changed : true;
   },
