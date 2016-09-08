@@ -1692,6 +1692,8 @@ nsUrlClassifierDBService::Observe(nsISupports *aSubject, const char *aTopic,
     nsresult rv;
     nsCOMPtr<nsIPrefBranch> prefs(do_QueryInterface(aSubject, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
+    Unused << prefs;
+
     if (NS_LITERAL_STRING(CHECK_MALWARE_PREF).Equals(aData)) {
       mCheckMalware = Preferences::GetBool(CHECK_MALWARE_PREF,
         CHECK_MALWARE_DEFAULT);

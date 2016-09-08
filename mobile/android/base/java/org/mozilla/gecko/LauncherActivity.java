@@ -68,6 +68,12 @@ public class LauncherActivity extends Activity {
     private void dispatchNormalIntent() {
         Intent intent = new Intent(getIntent());
         intent.setClassName(getApplicationContext(), AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
+
+        // Explicitly remove the new task and clear task flags (Our browser activity is a single
+        // task activity and we never want to start a second task here). See bug 1280112.
+        intent.setFlags(intent.getFlags() & ~Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.setFlags(intent.getFlags() & ~Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
         startActivity(intent);
     }
 

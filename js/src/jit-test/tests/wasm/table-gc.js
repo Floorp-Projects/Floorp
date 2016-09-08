@@ -9,11 +9,6 @@ const Module = WebAssembly.Module;
 const Instance = WebAssembly.Instance;
 const Table = WebAssembly.Table;
 
-// Explicitly opt into the new binary format for imports and exports until it
-// is used by default everywhere.
-const textToBinary = str => wasmTextToBinary(str, 'new-format');
-const evalText = (str, imports) => new Instance(new Module(textToBinary(str)), imports);
-
 var caller = `(type $v2i (func (result i32))) (func $call (param $i i32) (result i32) (call_indirect $v2i (get_local $i))) (export "call" $call)`
 var callee = i => `(func $f${i} (type $v2i) (result i32) (i32.const ${i}))`;
 

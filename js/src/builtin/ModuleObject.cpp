@@ -411,7 +411,15 @@ ModuleNamespaceObject::ProxyHandler::getOwnPropertyDescriptor(JSContext* cx, Han
             return true;
         }
 
-        // TODO: Implement @@toStringTag here and in has() and get() methods.
+        if (symbol == cx->wellKnownSymbols().toStringTag) {
+            RootedValue value(cx, StringValue(cx->names().Module));
+            desc.object().set(proxy);
+            desc.setWritable(false);
+            desc.setEnumerable(false);
+            desc.setConfigurable(true);
+            desc.setValue(value);
+            return true;
+        }
 
         return true;
     }
@@ -450,10 +458,8 @@ ModuleNamespaceObject::ProxyHandler::has(JSContext* cx, HandleObject proxy, Hand
     Rooted<ModuleNamespaceObject*> ns(cx, &proxy->as<ModuleNamespaceObject>());
     if (JSID_IS_SYMBOL(id)) {
         Rooted<JS::Symbol*> symbol(cx, JSID_TO_SYMBOL(id));
-        if (symbol == cx->wellKnownSymbols().iterator)
-            return true;
-
-        return false;
+        return symbol == cx->wellKnownSymbols().iterator ||
+               symbol == cx->wellKnownSymbols().toStringTag;
     }
 
     *bp = ns->bindings().has(id);
@@ -469,6 +475,11 @@ ModuleNamespaceObject::ProxyHandler::get(JSContext* cx, HandleObject proxy, Hand
         Rooted<JS::Symbol*> symbol(cx, JSID_TO_SYMBOL(id));
         if (symbol == cx->wellKnownSymbols().iterator) {
             vp.set(getEnumerateFunction(proxy));
+            return true;
+        }
+
+        if (symbol == cx->wellKnownSymbols().toStringTag) {
+            vp.setString(cx->names().Module);
             return true;
         }
 

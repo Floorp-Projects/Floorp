@@ -2000,7 +2000,7 @@ Console::StartTimer(JSContext* aCx, const JS::Value& aName,
     return false;
   }
 
-  DOMHighResTimeStamp entry;
+  DOMHighResTimeStamp entry = 0;
   if (!mTimerRegistry.Get(label, &entry)) {
     mTimerRegistry.Put(label, aTimestamp);
   } else {
@@ -2063,7 +2063,7 @@ Console::StopTimer(JSContext* aCx, const JS::Value& aName,
     return false;
   }
 
-  DOMHighResTimeStamp entry;
+  DOMHighResTimeStamp entry = 0;
   if (NS_WARN_IF(!mTimerRegistry.Get(key, &entry))) {
     return false;
   }

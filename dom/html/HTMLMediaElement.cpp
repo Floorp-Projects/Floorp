@@ -299,7 +299,7 @@ public:
     }
 
     RefPtr<HTMLMediaElement> deathGrip = mElement;
-    mElement->UpdateInitialMediaSize(aSize);
+    deathGrip->UpdateInitialMediaSize(aSize);
   }
 
   void NotifyRealtimeTrackData(MediaStreamGraph* aGraph,
@@ -2544,6 +2544,8 @@ HTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded,
                                         bool aCaptureAudio,
                                         MediaStreamGraph* aGraph)
 {
+  MOZ_RELEASE_ASSERT(aGraph);
+
   nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
   if (!window) {
     return nullptr;
@@ -2553,13 +2555,6 @@ HTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded,
     return nullptr;
   }
 #endif
-
-  if (!aGraph) {
-    MediaStreamGraph::GraphDriverType graphDriverType =
-      HasAudio() ? MediaStreamGraph::AUDIO_THREAD_DRIVER
-                 : MediaStreamGraph::SYSTEM_THREAD_DRIVER;
-    aGraph = MediaStreamGraph::GetInstance(graphDriverType, mAudioChannel);
-  }
 
   if (!mOutputStreams.IsEmpty() &&
       aGraph != mOutputStreams[0].mStream->GetInputStream()->Graph()) {
@@ -2655,7 +2650,10 @@ already_AddRefed<DOMMediaStream>
 HTMLMediaElement::CaptureAudio(ErrorResult& aRv,
                                MediaStreamGraph* aGraph)
 {
-  RefPtr<DOMMediaStream> stream = CaptureStreamInternal(false, aGraph);
+  MOZ_RELEASE_ASSERT(aGraph);
+
+  RefPtr<DOMMediaStream> stream =
+    CaptureStreamInternal(false, true, aGraph);
   if (!stream) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -2665,10 +2663,16 @@ HTMLMediaElement::CaptureAudio(ErrorResult& aRv,
 }
 
 already_AddRefed<DOMMediaStream>
-HTMLMediaElement::MozCaptureStream(ErrorResult& aRv,
-                                   MediaStreamGraph* aGraph)
+HTMLMediaElement::MozCaptureStream(ErrorResult& aRv)
 {
-  RefPtr<DOMMediaStream> stream = CaptureStreamInternal(false, aGraph);
+  MediaStreamGraph::GraphDriverType graphDriverType =
+    HasAudio() ? MediaStreamGraph::AUDIO_THREAD_DRIVER
+               : MediaStreamGraph::SYSTEM_THREAD_DRIVER;
+  MediaStreamGraph* graph =
+    MediaStreamGraph::GetInstance(graphDriverType, mAudioChannel);
+
+  RefPtr<DOMMediaStream> stream =
+    CaptureStreamInternal(false, false, graph);
   if (!stream) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -2678,10 +2682,16 @@ HTMLMediaElement::MozCaptureStream(ErrorResult& aRv,
 }
 
 already_AddRefed<DOMMediaStream>
-HTMLMediaElement::MozCaptureStreamUntilEnded(ErrorResult& aRv,
-                                             MediaStreamGraph* aGraph)
+HTMLMediaElement::MozCaptureStreamUntilEnded(ErrorResult& aRv)
 {
-  RefPtr<DOMMediaStream> stream = CaptureStreamInternal(true, aGraph);
+  MediaStreamGraph::GraphDriverType graphDriverType =
+    HasAudio() ? MediaStreamGraph::AUDIO_THREAD_DRIVER
+               : MediaStreamGraph::SYSTEM_THREAD_DRIVER;
+  MediaStreamGraph* graph =
+    MediaStreamGraph::GetInstance(graphDriverType, mAudioChannel);
+
+  RefPtr<DOMMediaStream> stream =
+    CaptureStreamInternal(true, false, graph);
   if (!stream) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -3221,7 +3231,7 @@ bool HTMLMediaElement::ParseAttribute(int32_t aNamespaceID,
     { "none",     HTMLMediaElement::PRELOAD_ATTR_NONE },
     { "metadata", HTMLMediaElement::PRELOAD_ATTR_METADATA },
     { "auto",     HTMLMediaElement::PRELOAD_ATTR_AUTO },
-    { 0 }
+    { nullptr,    0 }
   };
 
   if (aNamespaceID == kNameSpaceID_None) {
@@ -3942,16 +3952,16 @@ public:
       mPendingNotifyOutput = false;
     }
     if (mElement && mHaveCurrentData) {
-      RefPtr<HTMLMediaElement> deathGrip = mElement;
-      mElement->FireTimeUpdate(true);
+      RefPtr<HTMLMediaElement> kungFuDeathGrip = mElement;
+      kungFuDeathGrip->FireTimeUpdate(true);
     }
   }
   void DoNotifyHaveCurrentData()
   {
     mHaveCurrentData = true;
     if (mElement) {
-      RefPtr<HTMLMediaElement> deathGrip = mElement;
-      mElement->FirstFrameLoaded();
+      RefPtr<HTMLMediaElement> kungFuDeathGrip = mElement;
+      kungFuDeathGrip->FirstFrameLoaded();
     }
     NotifyWatchers();
     DoNotifyOutput();
@@ -6574,7 +6584,8 @@ HTMLMediaElement::AudioCaptureStreamChangeIfNeeded()
     if (GetSrcMediaStream()) {
       mCaptureStreamPort = msg->ConnectToCaptureStream(id, GetSrcMediaStream());
     } else {
-      RefPtr<DOMMediaStream> stream = CaptureStreamInternal(false, msg);
+      RefPtr<DOMMediaStream> stream =
+        CaptureStreamInternal(false, false, msg);
       mCaptureStreamPort = msg->ConnectToCaptureStream(id, stream->GetPlaybackStream());
     }
   } else if (!mAudioCapturedByWindow && mCaptureStreamPort) {
