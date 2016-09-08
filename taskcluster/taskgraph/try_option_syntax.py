@@ -39,6 +39,7 @@ JOB_KINDS = set([
     'source-check',
     'toolchain',
     'marionette-harness',
+    'android-stuff',
 ])
 
 
