@@ -10,9 +10,11 @@ import android.media.MediaCodec.CryptoInfo;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import org.mozilla.gecko.annotation.WrapForJNI;
+
 import java.nio.ByteBuffer;
 
-// POD carrying input sample data and info cross process.
+// Parcelable carrying input/output sample data and info cross process.
 public final class Sample implements Parcelable {
     public static final Sample EOS;
     static {
@@ -21,32 +23,116 @@ public final class Sample implements Parcelable {
         EOS = new Sample(null, eosInfo, null);
     }
 
+    public interface Buffer extends Parcelable {
+        void readFromByteBuffer(ByteBuffer src, int offset, int size);
+        void writeToByteBuffer(ByteBuffer dest, int offset, int size);
+    }
+
+    private static final class ArrayBuffer implements Buffer {
+        private byte[] mArray;
+
+        public static final Creator<ArrayBuffer> CREATOR = new Creator<ArrayBuffer>() {
+            @Override
+            public ArrayBuffer createFromParcel(Parcel in) {
+                return new ArrayBuffer(in);
+            }
+
+            @Override
+            public ArrayBuffer[] newArray(int size) {
+                return new ArrayBuffer[size];
+            }
+        };
+
+        private ArrayBuffer(Parcel in) {
+            mArray = in.createByteArray();
+        }
+
+        private ArrayBuffer(byte[] bytes) { mArray = bytes; }
+
+        @Override
+        public int describeContents() { return 0; }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeByteArray(mArray);
+        }
+
+        @Override
+        public void readFromByteBuffer(ByteBuffer src, int offset, int size) {
+            src.position(offset);
+            if (mArray == null || mArray.length != size) {
+                mArray = new byte[size];
+            }
+            src.get(mArray, 0, size);
+        }
+
+        @Override
+        public void writeToByteBuffer(ByteBuffer dest, int offset, int size) {
+            dest.put(mArray, offset, size);
+        }
+    }
+
+    public Buffer buffer;
+    @WrapForJNI
     public BufferInfo info;
-    public ByteBuffer bytes;
     public CryptoInfo cryptoInfo;
 
-    public Sample(ByteBuffer bytes, BufferInfo info, CryptoInfo cryptoInfo) {
+    public static Sample create(ByteBuffer src, BufferInfo info, CryptoInfo cryptoInfo) {
+        ArrayBuffer buffer = new ArrayBuffer(byteArrayFromBuffer(src, info.offset, info.size));
+
+        BufferInfo bufferInfo = new BufferInfo();
+        bufferInfo.set(0, info.size, info.presentationTimeUs, info.flags);
+
+        return new Sample(buffer, bufferInfo, cryptoInfo);
+    }
+
+    private Sample(Buffer bytes, BufferInfo info, CryptoInfo cryptoInfo) {
+        buffer = bytes;
         this.info = info;
-        this.bytes = bytes;
         this.cryptoInfo = cryptoInfo;
     }
 
-    protected Sample(Parcel in) {
-        readFromParcel(in);
+    private Sample(Parcel in) {
+        readInfo(in);
+        readCrypto(in);
+        buffer = in.readParcelable(Sample.class.getClassLoader());
     }
 
-    public static Sample createDummyWithInfo(BufferInfo info) {
-        BufferInfo dummyInfo = new BufferInfo();
-        dummyInfo.set(0, 0, info.presentationTimeUs, info.flags);
-        return new Sample(null, dummyInfo, null);
+    private void readInfo(Parcel in) {
+        int offset = in.readInt();
+        int size = in.readInt();
+        long pts = in.readLong();
+        int flags = in.readInt();
+
+        info = new BufferInfo();
+        info.set(offset, size, pts, flags);
     }
 
-    public boolean isDummy() {
-        return !isEOS() && bytes == null && info.size == 0;
+    private void readCrypto(Parcel in) {
+        int hasCryptoInfo = in.readInt();
+        if (hasCryptoInfo == 0) {
+            return;
+        }
+
+        byte[] iv = in.createByteArray();
+        byte[] key = in.createByteArray();
+        int mode = in.readInt();
+        int[] numBytesOfClearData = in.createIntArray();
+        int[] numBytesOfEncryptedData = in.createIntArray();
+        int numSubSamples = in.readInt();
+
+        cryptoInfo = new CryptoInfo();
+        cryptoInfo.set(numSubSamples,
+                      numBytesOfClearData,
+                      numBytesOfEncryptedData,
+                      key,
+                      iv,
+                      mode);
     }
 
     public boolean isEOS() {
-        return (info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0;
+        return (this == EOS) ||
+                ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0);
     }
 
     public static final Creator<Sample> CREATOR = new Creator<Sample>() {
@@ -66,43 +152,21 @@ public final class Sample implements Parcelable {
         return 0;
     }
 
-    public void readFromParcel(Parcel in) {
-        long pts = in.readLong();
-        int flags = in.readInt();
-        int size = 0;
-        byte[] buf = in.createByteArray();
-        if (buf != null) {
-            bytes = ByteBuffer.wrap(buf);
-            size = buf.length;
-        }
-        info = new BufferInfo();
-        info.set(0, size, pts, flags);
-
-        int hasCryptoInfo = in.readInt();
-        if (hasCryptoInfo == 1) {
-            byte[] iv = in.createByteArray();
-            byte[] key = in.createByteArray();
-            int mode = in.readInt();
-            int[] numBytesOfClearData = in.createIntArray();
-            int[] numBytesOfEncryptedData = in.createIntArray();
-            int numSubSamples = in.readInt();
-            cryptoInfo = new CryptoInfo();
-            cryptoInfo.set(numSubSamples,
-                           numBytesOfClearData,
-                           numBytesOfEncryptedData,
-                           key,
-                           iv,
-                           mode);
-        } else {
-            cryptoInfo = null;
-        }
-    }
-
     @Override
     public void writeToParcel(Parcel dest, int parcelableFlags) {
+        writeInfo(dest);
+        writeCrypto(dest);
+        dest.writeParcelable(buffer, parcelableFlags);
+    }
+
+    private void writeInfo(Parcel dest) {
+        dest.writeInt(info.offset);
+        dest.writeInt(info.size);
         dest.writeLong(info.presentationTimeUs);
         dest.writeInt(info.flags);
-        dest.writeByteArray(byteArrayFromBuffer(bytes, info.offset, info.size));
+    }
+
+    private void writeCrypto(Parcel dest) {
         if (cryptoInfo != null) {
             dest.writeInt(1);
             dest.writeByteArray(cryptoInfo.iv);
@@ -130,22 +194,27 @@ public final class Sample implements Parcelable {
         return bytes;
     }
 
-    public byte[] getBytes() {
-        return byteArrayFromBuffer(bytes, info.offset, info.size);
+    @WrapForJNI
+    public void writeToByteBuffer(ByteBuffer dest) {
+        if (buffer != null && dest != null && info.size > 0) {
+            buffer.writeToByteBuffer(dest, info.offset, info.size);
+        }
     }
 
     @Override
     public String toString() {
         if (isEOS()) {
             return "EOS sample";
-        } else {
-            StringBuilder str = new StringBuilder();
-            str.append("{ pts=").append(info.presentationTimeUs);
-            if (bytes != null) {
-                str.append(", size=").append(info.size);
-            }
-            str.append(", flags=").append(Integer.toHexString(info.flags)).append(" }");
-            return str.toString();
         }
+
+        StringBuilder str = new StringBuilder();
+        str.append("{ buffer=").append(buffer).
+                append(", info=").
+                append("{ offset=").append(info.offset).
+                append(", size=").append(info.size).
+                append(", pts=").append(info.presentationTimeUs).
+                append(", flags=").append(Integer.toHexString(info.flags)).append(" }").
+                append(" }");
+            return str.toString();
     }
 }

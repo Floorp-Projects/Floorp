@@ -50,9 +50,8 @@ import java.util.Queue;
                 // Flush invalidates all buffers.
                 return;
             }
-            ByteBuffer buffer = codec.getOutputBuffer(index);
             try {
-                mRemote.onOutput(new Sample(buffer, info, null));
+                mRemote.onOutput(Sample.create(codec.getOutputBuffer(index), info, null));
             } catch (TransactionTooLargeException ttle) {
                 Log.e(LOGTAG, "Output is too large:" + ttle.getMessage());
                 outputDummy(info);
@@ -70,7 +69,7 @@ import java.util.Queue;
         private void outputDummy(MediaCodec.BufferInfo info) {
             try {
                 if (DEBUG) Log.d(LOGTAG, "return dummy sample");
-                mRemote.onOutput(Sample.createDummyWithInfo(info));
+                mRemote.onOutput(Sample.create(null, info, null));
             } catch (RemoteException e) {
                 // Dead recipient.
                 e.printStackTrace();
@@ -118,10 +117,10 @@ import java.util.Queue;
                 int index = mAvailableInputBuffers.poll();
                 Sample sample = mInputSamples.poll();
                 int len = 0;
-                if (!sample.isEOS() && sample.bytes != null) {
+                if (!sample.isEOS() && sample.buffer != null) {
                     len = sample.info.size;
                     ByteBuffer buf = mCodec.getInputBuffer(index);
-                    buf.put(sample.bytes);
+                    sample.writeToByteBuffer(buf);
                     try {
                         mCallbacks.onInputExhausted();
                     } catch (RemoteException e) {
