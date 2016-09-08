@@ -91,8 +91,13 @@ interface nsIMozBrowserFrame : nsIDOMMozBrowserFrame
   void createRemoteFrameLoader(in nsITabParent aTabParent);
 
   /**
-   * Initialize the API, and add frame message listener to listen to API
+   * Initialize the API, and add frame message listener that supports API
    * invocations.
    */
   [noscript] void initializeBrowserAPI();
+
+  /**
+   * Notify frame scripts that support the API to destroy.
+   */
+  [noscript] void destroyBrowserFrameScripts();
 };

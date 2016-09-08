@@ -17,25 +17,55 @@ var { classes: Cc, interfaces: Ci, results: Cr, utils: Cu }  = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Geometry.jsm");
 
-const kObservedEvents = [
+var kObservedEvents = [
   "BEC:ShownModalPrompt",
   "Activity:Success",
   "Activity:Error"
 ];
 
-const ContentPanning = {
+var ContentPanning = {
   init: function cp_init() {
-    addEventListener("unload",
-		     this._unloadHandler.bind(this),
-		     /* useCapture = */ false,
-		     /* wantsUntrusted = */ false);
-
-    addMessageListener("Viewport:Change", this._recvViewportChange.bind(this));
-    addMessageListener("Gesture:DoubleTap", this._recvDoubleTap.bind(this));
-    addEventListener("visibilitychange", this._handleVisibilityChange.bind(this));
+    addEventListener("unload", this,
+                     /* useCapture = */ false, /* wantsUntrusted = */ false);
+    addMessageListener("Viewport:Change", this);
+    addMessageListener("Gesture:DoubleTap", this);
+    addEventListener("visibilitychange", this);
     kObservedEvents.forEach((topic) => {
       Services.obs.addObserver(this, topic, false);
     });
+  },
+
+  destroy: function() {
+    removeEventListener("unload", this,
+                        /* useCapture = */ false, /* wantsUntrusted = */ false);
+    removeMessageListener("Viewport:Change", this);
+    removeMessageListener("Gesture:DoubleTap", this);
+    removeEventListener("visibilitychange", this);
+    kObservedEvents.forEach((topic) => {
+      Services.obs.removeObserver(this, topic, false);
+    });
+  },
+
+  handleEvent: function(event) {
+    switch (event.type) {
+      case "unload":
+        this._unloadHandler(event);
+        break;
+      case "visibilitychange":
+        this._handleVisibilityChange(event);
+        break;
+    }
+  },
+
+  receiveMessage: function(message) {
+    switch (message.name) {
+      case "Viewport:Change":
+        this._recvViewportChange(message);
+        break;
+      case "Gesture:DoubleTap":
+        this._recvDoubleTap(message);
+        break;
+    }
   },
 
   observe: function cp_observe(subject, topic, data) {
@@ -176,7 +206,7 @@ const ContentPanning = {
   }
 };
 
-const ElementTouchHelper = {
+var ElementTouchHelper = {
   anyElementFromPoint: function(aWindow, aX, aY) {
     let cwu = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     let elem = cwu.elementFromPoint(aX, aY, true, true);

@@ -726,3 +726,11 @@ nsGenericHTMLFrameElement::InitializeBrowserAPI()
   InitBrowserElementAPI();
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsGenericHTMLFrameElement::DestroyBrowserFrameScripts()
+{
+  MOZ_ASSERT(mFrameLoader);
+  DestroyBrowserElementFrameScripts();
+  return NS_OK;
+}

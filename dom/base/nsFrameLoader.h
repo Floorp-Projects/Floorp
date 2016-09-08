@@ -333,6 +333,7 @@ private:
   void ResetPermissionManagerStatus();
 
   void InitializeBrowserAPI();
+  void DestroyBrowserFrameScripts();
 
   nsresult GetNewTabContext(mozilla::dom::MutableTabContext* aTabContext,
                             nsIURI* aURI = nullptr,

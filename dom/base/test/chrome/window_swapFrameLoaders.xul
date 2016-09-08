@@ -10,7 +10,7 @@ Test swapFrameLoaders with different frame types and remoteness
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
 
   <script type="application/javascript"><![CDATA[
-  ["SimpleTest", "SpecialPowers", "info", "is"].forEach(key => {
+  ["SimpleTest", "SpecialPowers", "info", "is", "ok"].forEach(key => {
     window[key] = window.opener[key];
   })
   const { interfaces: Ci } = Components;
@@ -117,6 +117,13 @@ Test swapFrameLoaders with different frame types and remoteness
           addMessageListener("ping", function() {
             sendAsyncMessage("pong", "${name}");
           });
+          addMessageListener("check-browser-api", function() {
+            let exists = "api" in this;
+            sendAsyncMessage("check-browser-api", {
+              exists,
+              running: exists && !this.api._shuttingDown,
+            });
+          });
         }`;
       }
 
@@ -211,6 +218,35 @@ Test swapFrameLoaders with different frame types and remoteness
         mmB.sendAsyncMessage("ping");
         let [ { data: pongB } ] = yield inflightB;
         is(pongB, "A", "Frame B message manager acquired after swap gets reply A after swap");
+      }
+
+      // Verify browser API frame scripts destroyed if swapped out of browser frame
+      if (frameA.hasAttribute("mozbrowser") != frameB.hasAttribute("mozbrowser")) {
+        let mmA = frameA.frameLoader.messageManager;
+        let mmB = frameB.frameLoader.messageManager;
+
+        let inflightA = once(mmA, "check-browser-api");
+        let inflightB = once(mmB, "check-browser-api");
+
+        info("Check browser API for frame A");
+        mmA.sendAsyncMessage("check-browser-api");
+        let [ { data: apiA } ] = yield inflightA;
+        if (frameA.hasAttribute("mozbrowser")) {
+          ok(apiA.exists && apiA.running, "Frame A browser API exists and is running");
+        } else {
+          ok(apiA.exists && !apiA.running, "Frame A browser API did exist but is now destroyed");
+        }
+
+        info("Check browser API for frame B");
+        mmB.sendAsyncMessage("check-browser-api");
+        let [ { data: apiB } ] = yield inflightB;
+        if (frameB.hasAttribute("mozbrowser")) {
+          ok(apiB.exists && apiB.running, "Frame B browser API exists and is running");
+        } else {
+          ok(apiB.exists && !apiB.running, "Frame B browser API did exist but is now destroyed");
+        }
+      } else {
+        info("Frames have matching mozbrowser state, skipping browser API destruction check");
       }
 
       frameA.remove();
