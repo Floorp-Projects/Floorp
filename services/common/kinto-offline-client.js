@@ -20,7 +20,7 @@
 this.EXPORTED_SYMBOLS = ["loadKinto"];
 
 /*
- * Version 4.0.3 - 8100433
+ * Version 4.0.4 - 03f82da
  */
 
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.loadKinto = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
@@ -1805,15 +1805,7 @@ class Collection {
       });
     }).then(syncResultObject => {
       syncResultObject.lastModified = changeObject.lastModified;
-      // Don't persist lastModified value if any conflict or error occured
-      if (!syncResultObject.ok) {
-        return syncResultObject;
-      }
-      // No conflict occured, persist collection's lastModified value
-      return this.db.saveLastModified(syncResultObject.lastModified).then(lastModified => {
-        this._lastModified = lastModified;
-        return syncResultObject;
-      });
+      return syncResultObject;
     });
   }
 
@@ -2216,7 +2208,18 @@ class Collection {
       // Avoid redownloading our own changes during the last pull.
       const pullOpts = _extends({}, options, { exclude: result.published });
       return this.pullChanges(client, result, pullOpts);
+    }).then(syncResultObject => {
+      // Don't persist lastModified value if any conflict or error occured
+      if (!syncResultObject.ok) {
+        return syncResultObject;
+      }
+      // No conflict occured, persist collection's lastModified value
+      return this.db.saveLastModified(syncResultObject.lastModified).then(lastModified => {
+        this._lastModified = lastModified;
+        return syncResultObject;
+      });
     });
+
     // Ensure API default remote is reverted if a custom one's been used
     return (0, _utils.pFinally)(syncPromise, () => this.api.remote = previousRemote);
   }

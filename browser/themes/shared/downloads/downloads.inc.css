@@ -150,16 +150,8 @@ toolbarseparator.downloadsDropmarkerSplitter {
 }
 
 #downloadsSummary > .downloadTypeIcon {
-  list-style-image: url("chrome://browser/skin/downloads/download-summary.png");
+  list-style-image: url("chrome://browser/skin/downloads/download-summary.svg");
 }
-
-%ifdef XP_MACOSX
-@media (min-resolution: 2dppx) {
-  #downloadsSummary > .downloadTypeIcon {
-    list-style-image: url("chrome://browser/skin/downloads/download-summary@2x.png");
-  }
-}
-%endif
 
 #downloadsSummaryDescription {
   color: -moz-nativehyperlinktext;

@@ -488,4 +488,41 @@ H264::ComputeMaxRefFrames(const mozilla::MediaByteBuffer* aExtraData)
   return maxRefFrames;
 }
 
+/* static */ H264::FrameType
+H264::GetFrameType(const mozilla::MediaRawData* aSample)
+{
+  if (!AnnexB::IsAVCC(aSample)) {
+    // We must have a valid AVCC frame with extradata.
+    return FrameType::INVALID;
+  }
+  MOZ_ASSERT(aSample->Data());
+
+  int nalLenSize = ((*aSample->mExtraData)[4] & 3) + 1;
+
+  ByteReader reader(aSample->Data(), aSample->Size());
+
+  while (reader.Remaining() >= nalLenSize) {
+    uint32_t nalLen;
+    switch (nalLenSize) {
+      case 1: nalLen = reader.ReadU8();  break;
+      case 2: nalLen = reader.ReadU16(); break;
+      case 3: nalLen = reader.ReadU24(); break;
+      case 4: nalLen = reader.ReadU32(); break;
+    }
+    if (!nalLen) {
+      continue;
+    }
+    const uint8_t* p = reader.Read(nalLen);
+    if (!p) {
+      return FrameType::INVALID;
+    }
+    if ((p[0] & 0x1f) == 5) {
+      // IDR NAL.
+      return FrameType::I_FRAME;
+    }
+  }
+
+  return FrameType::OTHER;
+}
+
 } // namespace mp4_demuxer
