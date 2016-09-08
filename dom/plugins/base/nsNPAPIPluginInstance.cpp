@@ -318,10 +318,10 @@ nsNPAPIPluginInstance::GetDOMWindow()
   if (!mOwner)
     return nullptr;
 
-  RefPtr<nsPluginInstanceOwner> deathGrip(mOwner);
+  RefPtr<nsPluginInstanceOwner> kungFuDeathGrip(mOwner);
 
   nsCOMPtr<nsIDocument> doc;
-  mOwner->GetDocument(getter_AddRefs(doc));
+  kungFuDeathGrip->GetDocument(getter_AddRefs(doc));
   if (!doc)
     return nullptr;
 

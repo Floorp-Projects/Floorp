@@ -1271,6 +1271,7 @@ PendingLookup::SendRemoteQueryInternal()
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
+  mozilla::Unused << httpChannel;
 
   // Upload the protobuf to the application reputation service.
   nsCOMPtr<nsIUploadChannel2> uploadChannel = do_QueryInterface(mChannel, &rv);

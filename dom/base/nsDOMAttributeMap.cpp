@@ -260,7 +260,7 @@ nsDOMAttributeMap::SetNamedItemNS(Attr& aAttr, ErrorResult& aError)
 
   nsresult rv;
   if (mContent->OwnerDoc() != aAttr.OwnerDoc()) {
-    nsCOMPtr<nsINode> adoptedNode =
+    DebugOnly<void*> adoptedNode =
       mContent->OwnerDoc()->AdoptNode(aAttr, aError);
     if (aError.Failed()) {
       return nullptr;
