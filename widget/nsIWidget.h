@@ -653,6 +653,14 @@ class nsIWidget : public nsISupports
     }
 
     /**
+     * Are we app modal. Currently only implemented on Cocoa.
+     */
+    virtual bool IsRunningAppModal()
+    {
+      return false;
+    }
+
+    /**
      * The maximum number of simultaneous touch contacts supported by the device.
      * In the case of devices with multiple digitizers (e.g. multiple touch screens),
      * the value will be the maximum of the set of maximum supported contacts by

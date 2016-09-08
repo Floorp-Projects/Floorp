@@ -1285,15 +1285,18 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
       return NS_OK;
     }
 
-    if (!newWindowShouldBeModal && parentIsModal) {
-      nsCOMPtr<nsIBaseWindow> parentWindow(do_GetInterface(newTreeOwner));
-      if (parentWindow) {
-        nsCOMPtr<nsIWidget> parentWidget;
-        parentWindow->GetMainWidget(getter_AddRefs(parentWidget));
-        if (parentWidget) {
-          parentWidget->SetFakeModal(true);
-        }
+    bool isAppModal = false;
+    nsCOMPtr<nsIBaseWindow> parentWindow(do_GetInterface(newTreeOwner));
+    nsCOMPtr<nsIWidget> parentWidget;
+    if (parentWindow) {
+      parentWindow->GetMainWidget(getter_AddRefs(parentWidget));
+      if (parentWidget) {
+        isAppModal = parentWidget->IsRunningAppModal();
       }
+    }
+    if (parentWidget &&
+        ((!newWindowShouldBeModal && parentIsModal) || isAppModal)) {
+      parentWidget->SetFakeModal(true);
     } else {
       // Reset popup state while opening a modal dialog, and firing
       // events about the dialog, to prevent the current state from
