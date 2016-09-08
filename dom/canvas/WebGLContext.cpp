@@ -2119,6 +2119,24 @@ ScopedUnpackReset::UnwrapImpl()
     }
 }
 
+////////////////////
+
+void
+ScopedFBRebinder::UnwrapImpl()
+{
+    const auto fnName = [&](WebGLFramebuffer* fb) {
+        return fb ? fb->mGLName : 0;
+    };
+
+    if (mWebGL->IsWebGL2()) {
+        mGL->fBindFramebuffer(LOCAL_GL_DRAW_FRAMEBUFFER, fnName(mWebGL->mBoundDrawFramebuffer));
+        mGL->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, fnName(mWebGL->mBoundReadFramebuffer));
+    } else {
+        MOZ_ASSERT(mWebGL->mBoundDrawFramebuffer == mWebGL->mBoundReadFramebuffer);
+        mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, fnName(mWebGL->mBoundDrawFramebuffer));
+    }
+}
+
 ////////////////////////////////////////
 
 void

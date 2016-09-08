@@ -342,13 +342,13 @@ WebGLFBAttachPoint::IsComplete(WebGLContext* webgl, nsCString* const out_info) c
 }
 
 void
-WebGLFBAttachPoint::Resolve(gl::GLContext* gl, FBTarget target) const
+WebGLFBAttachPoint::Resolve(gl::GLContext* gl) const
 {
     if (!HasImage())
         return;
 
     if (Renderbuffer()) {
-        Renderbuffer()->DoFramebufferRenderbuffer(target, mAttachmentPoint);
+        Renderbuffer()->DoFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, mAttachmentPoint);
         return;
     }
     MOZ_ASSERT(Texture());
@@ -360,8 +360,8 @@ WebGLFBAttachPoint::Resolve(gl::GLContext* gl, FBTarget target) const
     ////
 
     const auto fnAttach2D = [&](GLenum attachmentPoint) {
-        gl->fFramebufferTexture2D(target.get(), attachmentPoint, mTexImageTarget.get(),
-                                  texName, mTexImageLevel);
+        gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, attachmentPoint,
+                                  mTexImageTarget.get(), texName, mTexImageLevel);
     };
 
     ////
@@ -386,8 +386,8 @@ WebGLFBAttachPoint::Resolve(gl::GLContext* gl, FBTarget target) const
     case LOCAL_GL_TEXTURE_3D:
         // If we have fFramebufferTextureLayer, we can rely on having
         // DEPTH_STENCIL_ATTACHMENT.
-        gl->fFramebufferTextureLayer(target.get(), mAttachmentPoint,
-                                     texName, mTexImageLevel, mTexImageLayer);
+        gl->fFramebufferTextureLayer(LOCAL_GL_FRAMEBUFFER, mAttachmentPoint, texName,
+                                     mTexImageLevel, mTexImageLayer);
         break;
     }
 }
@@ -894,7 +894,7 @@ WebGLFramebuffer::ValidateForRead(const char* funcName,
 // Resolution and caching
 
 void
-WebGLFramebuffer::ResolveAttachments(FBTarget target) const
+WebGLFramebuffer::ResolveAttachments() const
 {
     const auto& gl = mContext->gl;
 
@@ -903,23 +903,24 @@ WebGLFramebuffer::ResolveAttachments(FBTarget target) const
 
     for (uint32_t i = 0; i < mContext->mImplMaxColorAttachments; i++) {
         const GLenum attachEnum = LOCAL_GL_COLOR_ATTACHMENT0 + i;
-        gl->fFramebufferRenderbuffer(target.get(), attachEnum, LOCAL_GL_RENDERBUFFER, 0);
+        gl->fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, attachEnum,
+                                     LOCAL_GL_RENDERBUFFER, 0);
     }
 
-    gl->fFramebufferRenderbuffer(target.get(), LOCAL_GL_DEPTH_ATTACHMENT,
+    gl->fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_ATTACHMENT,
                                  LOCAL_GL_RENDERBUFFER, 0);
-    gl->fFramebufferRenderbuffer(target.get(), LOCAL_GL_STENCIL_ATTACHMENT,
+    gl->fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_STENCIL_ATTACHMENT,
                                  LOCAL_GL_RENDERBUFFER, 0);
 
     ////
 
     for (const auto& attach : mColorAttachments) {
-        attach.Resolve(gl, target);
+        attach.Resolve(gl);
     }
 
-    mDepthAttachment.Resolve(gl, target);
-    mStencilAttachment.Resolve(gl, target);
-    mDepthStencilAttachment.Resolve(gl, target);
+    mDepthAttachment.Resolve(gl);
+    mStencilAttachment.Resolve(gl);
+    mDepthStencilAttachment.Resolve(gl);
 }
 
 bool
@@ -984,15 +985,8 @@ WebGLFramebuffer::ResolveAttachmentData(const char* funcName) const
     }
 
     if (clearBits) {
-        const auto drawBufferExt = WebGLExtensionID::WEBGL_draw_buffers;
-        const bool hasDrawBuffers = (mContext->IsWebGL2() ||
-                                     mContext->IsExtensionEnabled(drawBufferExt));
-
         const auto fnDrawBuffers = [&](const std::vector<const WebGLFBAttachPoint*>& src)
         {
-            if (!hasDrawBuffers)
-                return;
-
             std::vector<GLenum> enumList;
 
             for (const auto& cur : src) {
@@ -1013,7 +1007,10 @@ WebGLFramebuffer::ResolveAttachmentData(const char* funcName) const
 
         mContext->MakeContextCurrent();
 
-        fnDrawBuffers(colorAttachmentsToClear);
+        const bool hasDrawBuffers = mContext->HasDrawBuffers();
+        if (hasDrawBuffers) {
+            fnDrawBuffers(colorAttachmentsToClear);
+        }
 
         {
             gl::ScopedBindFramebuffer autoBind(mContext->gl, mGLName);
@@ -1021,7 +1018,9 @@ WebGLFramebuffer::ResolveAttachmentData(const char* funcName) const
             mContext->ForceClearFramebufferWithDefaultValues(clearBits, false);
         }
 
-        fnDrawBuffers(mColorDrawBuffers);
+        if (hasDrawBuffers) {
+            RefreshDrawBuffers();
+        }
 
         // Mark initialized.
         for (const auto& cur : attachmentsToClear) {
@@ -1099,7 +1098,7 @@ WebGLFramebuffer::ResolvedData::ResolvedData(const WebGLFramebuffer& parent)
 }
 
 void
-WebGLFramebuffer::RecacheResolvedData()
+WebGLFramebuffer::RefreshResolvedData()
 {
     if (mResolvedCompleteData) {
         mResolvedCompleteData.reset(new ResolvedData(*this));
@@ -1127,27 +1126,23 @@ WebGLFramebuffer::CheckFramebufferStatus(const char* funcName)
         gl::GLContext* const gl = mContext->gl;
         gl->MakeCurrent();
 
+        const ScopedFBRebinder autoFB(mContext);
+        gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mGLName);
+
         ////
 
-        const FBTarget fbTarget = (mContext->IsWebGL2() ? LOCAL_GL_DRAW_FRAMEBUFFER
-                                                        : LOCAL_GL_FRAMEBUFFER);
-        const bool needsFBRebind = (mContext->mBoundDrawFramebuffer != this);
-        if (needsFBRebind) {
-            gl->fBindFramebuffer(fbTarget.get(), mGLName);
-        }
+        ResolveAttachments(); // OK, attach everything properly!
+        RefreshDrawBuffers();
+        RefreshReadBuffer();
 
-        ResolveAttachments(fbTarget); // OK, attach everything properly!
-        ret = gl->fCheckFramebufferStatus(fbTarget.get());
-
-        if (needsFBRebind) {
-            gl->fBindFramebuffer(fbTarget.get(),
-                                 mContext->mBoundDrawFramebuffer->mGLName);
-        }
+        ret = gl->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
 
         ////
 
         if (ret != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
-            statusInfo.AssignLiteral("Bad status according to the driver:");
+            const nsPrintfCString text("Bad status according to the driver: 0x%04x",
+                                       ret.get());
+            statusInfo = text;
             break;
         }
 
@@ -1170,6 +1165,49 @@ WebGLFramebuffer::CheckFramebufferStatus(const char* funcName)
 ////
 
 void
+WebGLFramebuffer::RefreshDrawBuffers() const
+{
+    const auto& gl = mContext->gl;
+    if (!gl->IsSupported(gl::GLFeature::draw_buffers))
+        return;
+
+    // Prior to GL4.1, having a no-image FB attachment that's selected by DrawBuffers
+    // yields a framebuffer status of FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER.
+    // We could workaround this only on affected versions, but it's easier be
+    // unconditional.
+    std::vector<GLenum> driverBuffers(mContext->mImplMaxDrawBuffers, LOCAL_GL_NONE);
+    for (const auto& attach : mColorDrawBuffers) {
+        if (attach->HasImage()) {
+            const uint32_t index = attach->mAttachmentPoint - LOCAL_GL_COLOR_ATTACHMENT0;
+            driverBuffers[index] = attach->mAttachmentPoint;
+        }
+    }
+
+    gl->fDrawBuffers(driverBuffers.size(), driverBuffers.data());
+}
+
+void
+WebGLFramebuffer::RefreshReadBuffer() const
+{
+    const auto& gl = mContext->gl;
+    if (!gl->IsSupported(gl::GLFeature::read_buffer))
+        return;
+
+    // Prior to GL4.1, having a no-image FB attachment that's selected by ReadBuffer
+    // yields a framebuffer status of FRAMEBUFFER_INCOMPLETE_READ_BUFFER.
+    // We could workaround this only on affected versions, but it's easier be
+    // unconditional.
+    GLenum driverBuffer = LOCAL_GL_NONE;
+    if (mColorReadBuffer && mColorReadBuffer->HasImage()) {
+        driverBuffer = mColorReadBuffer->mAttachmentPoint;
+    }
+
+    gl->fReadBuffer(driverBuffer);
+}
+
+////
+
+void
 WebGLFramebuffer::DrawBuffers(const char* funcName, const dom::Sequence<GLenum>& buffers)
 {
     if (buffers.Length() > mContext->mImplMaxDrawBuffers) {
@@ -1178,6 +1216,9 @@ WebGLFramebuffer::DrawBuffers(const char* funcName, const dom::Sequence<GLenum>&
                                     " MAX_DRAW_BUFFERS.", funcName);
         return;
     }
+
+    std::vector<const WebGLFBAttachPoint*> newColorDrawBuffers;
+    newColorDrawBuffers.reserve(buffers.Length());
 
     for (size_t i = 0; i < buffers.Length(); i++) {
         // "If the GL is bound to a draw framebuffer object, the `i`th buffer listed in
@@ -1190,9 +1231,11 @@ WebGLFramebuffer::DrawBuffers(const char* funcName, const dom::Sequence<GLenum>&
         //  equal to that of the MAX_DRAW_BUFFERS_WEBGL parameter."
         // This means that if buffers.Length() isn't larger than MaxDrawBuffers, it won't
         // be larger than MaxColorAttachments.
-        if (buffers[i] != LOCAL_GL_NONE &&
-            buffers[i] != LOCAL_GL_COLOR_ATTACHMENT0 + i)
-        {
+        const auto& cur = buffers[i];
+        if (cur == LOCAL_GL_COLOR_ATTACHMENT0 + i) {
+            const auto& attach = mColorAttachments[i];
+            newColorDrawBuffers.push_back(&attach);
+        } else if (cur != LOCAL_GL_NONE) {
             mContext->ErrorInvalidOperation("%s: `buffers[i]` must be NONE or"
                                             " COLOR_ATTACHMENTi.",
                                             funcName);
@@ -1201,25 +1244,12 @@ WebGLFramebuffer::DrawBuffers(const char* funcName, const dom::Sequence<GLenum>&
     }
 
     ////
-    // Record it.
-
-    mColorDrawBuffers.clear();
-    for (size_t i = 0; i < buffers.Length(); i++) {
-        const auto& attachEnum = buffers[i];
-        if (attachEnum == LOCAL_GL_NONE)
-            continue;
-
-        const auto& attach = mColorAttachments[i];
-        MOZ_ASSERT(attach.mAttachmentPoint == attachEnum);
-
-        mColorDrawBuffers.push_back(&attach);
-    }
-    RecacheResolvedData();
-
-    ////
 
     mContext->MakeContextCurrent();
-    mContext->gl->fDrawBuffers(buffers.Length(), buffers.Elements());
+
+    mColorDrawBuffers.swap(newColorDrawBuffers);
+    RefreshDrawBuffers(); // Calls glDrawBuffers.
+    RefreshResolvedData();
 }
 
 void
@@ -1236,14 +1266,15 @@ WebGLFramebuffer::ReadBuffer(const char* funcName, GLenum attachPoint)
         }
         return;
     }
-    const auto& attach = maybeAttach.value();
+    const auto& attach = maybeAttach.value(); // Might be nullptr.
 
-    // Record it.
-    mColorReadBuffer = attach;
-    RecacheResolvedData();
+    ////
 
     mContext->MakeContextCurrent();
-    mContext->gl->fReadBuffer(attachPoint);
+
+    mColorReadBuffer = attach;
+    RefreshReadBuffer(); // Calls glReadBuffer.
+    RefreshResolvedData();
 }
 
 ////
