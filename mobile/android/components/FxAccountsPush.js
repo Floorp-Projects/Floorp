@@ -24,6 +24,10 @@ const Log = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.bi
 
 function FxAccountsPush() {
   Services.obs.addObserver(this, "FxAccountsPush:ReceivedPushMessageToDecode", false);
+
+  Messaging.sendRequestForResult({
+    type: "FxAccountsPush:Initialized"
+  });
 }
 
 FxAccountsPush.prototype = {
