@@ -35,6 +35,9 @@ int GetQuirksFromMimeTypeAndFilename(const nsCString& aMimeType,
         quirks |= QUIRK_FLASH_HOOK_GETWINDOWINFO;
         quirks |= QUIRK_FLASH_FIXUP_MOUSE_CAPTURE;
         quirks |= QUIRK_WINLESS_HOOK_IME;
+#if defined(_M_X64) || defined(__x86_64__)
+        quirks |= QUIRK_FLASH_HOOK_GETKEYSTATE;
+#endif
 #endif
     }
 

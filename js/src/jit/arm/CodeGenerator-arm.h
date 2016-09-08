@@ -240,11 +240,11 @@ class CodeGeneratorARM : public CodeGeneratorShared
     void emitWasmCall(LWasmCallBase* ins);
     void visitWasmCall(LWasmCall* ins);
     void visitWasmCallI64(LWasmCallI64* ins);
-    void visitWasmBoundsCheck(LWasmBoundsCheck* ins);
     void visitWasmLoad(LWasmLoad* ins);
     void visitWasmLoadI64(LWasmLoadI64* ins);
     void visitWasmUnalignedLoad(LWasmUnalignedLoad* ins);
     void visitWasmUnalignedLoadI64(LWasmUnalignedLoadI64* ins);
+    void visitWasmAddOffset(LWasmAddOffset* ins);
     void visitWasmStore(LWasmStore* ins);
     void visitWasmStoreI64(LWasmStoreI64* ins);
     void visitWasmUnalignedStore(LWasmUnalignedStore* ins);

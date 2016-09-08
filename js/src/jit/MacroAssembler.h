@@ -1040,8 +1040,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branchFloat32NotInInt64Range(Address src, Register temp, Label* fail);
     inline void branchFloat32NotInUInt64Range(Address src, Register temp, Label* fail);
 
-    template <typename T>
-    inline void branchAdd32(Condition cond, T src, Register dest, Label* label) PER_SHARED_ARCH;
+    template <typename T, typename L>
+    inline void branchAdd32(Condition cond, T src, Register dest, L label) PER_SHARED_ARCH;
     template <typename T>
     inline void branchSub32(Condition cond, T src, Register dest, Label* label) PER_SHARED_ARCH;
 
@@ -1314,6 +1314,27 @@ class MacroAssembler : public MacroAssemblerSpecific
         DEFINED_ON(x86, x64);
 
   public:
+    // ========================================================================
+    // wasm support
+
+    // Emit a bounds check against the (dynamically-patched) wasm bounds check
+    // limit, jumping to 'label' if 'cond' holds.
+    template <class L>
+    inline void wasmBoundsCheck(Condition cond, Register index, L label) PER_ARCH;
+
+    // Called after compilation completes to patch the given limit into the
+    // given instruction's immediate.
+    static inline void wasmPatchBoundsCheck(uint8_t* patchAt, uint32_t limit) PER_ARCH;
+
+    // On x86, each instruction adds its own wasm::MemoryAccess's to the
+    // wasm::MemoryAccessVector (there can be multiple when i64 is involved).
+    // On x64, only some asm.js accesses need a wasm::MemoryAccess so the caller
+    // is responsible for doing this instead.
+    void wasmLoad(Scalar::Type type, unsigned numSimdElems, Operand srcAddr, AnyRegister out) DEFINED_ON(x86, x64);
+    void wasmLoadI64(Scalar::Type type, Operand srcAddr, Register64 out) DEFINED_ON(x86, x64);
+    void wasmStore(Scalar::Type type, unsigned numSimdElems, AnyRegister value, Operand dstAddr) DEFINED_ON(x86, x64);
+    void wasmStoreI64(Register64 value, Operand dstAddr) DEFINED_ON(x86);
+
     // wasm specific methods, used in both the wasm baseline compiler and ion.
     void wasmTruncateDoubleToUInt32(FloatRegister input, Register output, Label* oolEntry) DEFINED_ON(x86, x64);
     void wasmTruncateDoubleToInt32(FloatRegister input, Register output, Label* oolEntry) DEFINED_ON(x86_shared);

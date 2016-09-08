@@ -37,8 +37,7 @@
       hidden="true"
       data-category="paneContent">
   <label class="header-name" flex="1">&paneContent.title;</label>
-  <button class="help-button"
-          aria-label="&helpButton.label;"/>
+  <html:a class="help-button" target="_blank" aria-label="&helpButton.label;"></html:a>
 </hbox>
 
 <groupbox id="drmGroup" data-category="paneContent" hidden="true">

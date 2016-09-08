@@ -21,14 +21,14 @@ html|*.textbox-textarea {
 }
 
 /*
-html|*.textbox-input::-moz-placeholder,
-html|*.textbox-textarea::-moz-placeholder {
+html|*.textbox-input::placeholder,
+html|*.textbox-textarea::placeholder {
   text-align: left;
   direction: ltr;
 }
 
-html|*.textbox-input::-moz-placeholder:-moz-locale-dir(rtl),
-html|*.textbox-textarea::-moz-placeholder:-moz-locale-dir(rtl) {
+html|*.textbox-input::placeholder:-moz-locale-dir(rtl),
+html|*.textbox-textarea::placeholder:-moz-locale-dir(rtl) {
   text-align: right;
   direction: rtl;
 }

@@ -77,14 +77,22 @@ var gSyncUtils = {
     this._openLink(Weave.Service.pwResetURL);
   },
 
-  openToS: function () {
+  get tosURL() {
     let root = this.fxAccountsEnabled ? "fxa." : "";
-    this._openLink(Weave.Svc.Prefs.get(root + "termsURL"));
+    return  Weave.Svc.Prefs.get(root + "termsURL");
+  },
+
+  openToS: function () {
+    this._openLink(this.tosURL);
+  },
+
+  get privacyPolicyURL() {
+    let root = this.fxAccountsEnabled ? "fxa." : "";
+    return  Weave.Svc.Prefs.get(root + "privacyURL");
   },
 
   openPrivacyPolicy: function () {
-    let root = this.fxAccountsEnabled ? "fxa." : "";
-    this._openLink(Weave.Svc.Prefs.get(root + "privacyURL"));
+    this._openLink(this.privacyPolicyURL);
   },
 
   /**

@@ -208,6 +208,8 @@ protected:
 
     virtual bool RecvProfile(const nsCString& aProfile) override { return true; }
 
+    virtual bool AnswerGetKeyState(const int32_t& aVirtKey, int16_t* aRet) override;
+
     virtual bool RecvReturnClearSiteData(const NPError& aRv,
                                          const uint64_t& aCallbackId) override;
 
@@ -497,6 +499,9 @@ class PluginModuleChromeParent
 
     virtual bool
     RecvProfile(const nsCString& aProfile) override;
+
+    virtual bool
+    AnswerGetKeyState(const int32_t& aVirtKey, int16_t* aRet) override;
 
 private:
     virtual void

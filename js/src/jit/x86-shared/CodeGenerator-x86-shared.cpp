@@ -424,82 +424,16 @@ CodeGeneratorX86Shared::visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTyp
 }
 
 void
-CodeGeneratorX86Shared::visitOffsetBoundsCheck(OffsetBoundsCheck* oolCheck)
+CodeGeneratorX86Shared::visitWasmAddOffset(LWasmAddOffset* lir)
 {
-    // The access is heap[ptr + offset]. The inline code checks that
-    // ptr < heap.length - offset. We get here when that fails. We need to check
-    // for the case where ptr + offset >= 0, in which case the access is still
-    // in bounds.
-    MOZ_ASSERT(oolCheck->offset() != 0,
-               "An access without a constant offset doesn't need a separate OffsetBoundsCheck");
-    masm.cmp32(oolCheck->ptrReg(), Imm32(-uint32_t(oolCheck->offset())));
-    if (oolCheck->maybeOutOfBounds())
-        masm.j(Assembler::Below, oolCheck->maybeOutOfBounds());
-    else
-        masm.j(Assembler::Below, wasm::JumpTarget::OutOfBounds);
+    MWasmAddOffset* mir = lir->mir();
+    Register base = ToRegister(lir->base());
+    Register out = ToRegister(lir->output());
 
-#ifdef JS_CODEGEN_X64
-    // In order to get the offset to wrap properly, we must sign-extend the
-    // pointer to 32-bits. We'll zero out the sign extension immediately
-    // after the access to restore asm.js invariants.
-    masm.movslq(oolCheck->ptrReg(), oolCheck->ptrReg());
-#endif
-
-    masm.jmp(oolCheck->rejoin());
-}
-
-void
-CodeGeneratorX86Shared::emitAsmJSBoundsCheckBranch(const MWasmMemoryAccess* access,
-                                                   const MInstruction* mir,
-                                                   Register ptr, Label* maybeFail)
-{
-    // Emit a bounds-checking branch for |access|.
-
-    MOZ_ASSERT(gen->needsBoundsCheckBranch(access));
-
-    Label* pass = nullptr;
-
-    // If we have a non-zero offset, it's possible that |ptr| itself is out of
-    // bounds, while adding the offset computes an in-bounds address. To catch
-    // this case, we need a second branch, which we emit out of line since it's
-    // unlikely to be needed in normal programs.
-    if (access->offset() != 0) {
-        auto oolCheck = new(alloc()) OffsetBoundsCheck(maybeFail, ptr, access->offset());
-        maybeFail = oolCheck->entry();
-        pass = oolCheck->rejoin();
-        addOutOfLineCode(oolCheck, mir);
-    }
-
-    // The bounds check is a comparison with an immediate value. The asm.js
-    // module linking process will add the length of the heap to the immediate
-    // field, so -access->endOffset() will turn into
-    // (heapLength - access->endOffset()), allowing us to test whether the end
-    // of the access is beyond the end of the heap.
-    MOZ_ASSERT(access->endOffset() >= 1,
-               "need to subtract 1 to use JAE, see also AssemblerX86Shared::UpdateBoundsCheck");
-
-    uint32_t cmpOffset = masm.cmp32WithPatch(ptr, Imm32(1 - access->endOffset())).offset();
-    if (maybeFail)
-        masm.j(Assembler::AboveOrEqual, maybeFail);
-    else
-        masm.j(Assembler::AboveOrEqual, wasm::JumpTarget::OutOfBounds);
-
-    if (pass)
-        masm.bind(pass);
-
-    masm.append(wasm::BoundsCheck(cmpOffset));
-}
-
-void
-CodeGeneratorX86Shared::visitWasmBoundsCheck(LWasmBoundsCheck* ins)
-{
-    const MWasmBoundsCheck* mir = ins->mir();
-
-    MOZ_ASSERT(gen->needsBoundsCheckBranch(mir));
-    MOZ_ASSERT(mir->offset() <= INT32_MAX);
-
-    Register ptrReg = ToRegister(ins->ptr());
-    maybeEmitWasmBoundsCheckBranch(mir, ptrReg, mir->isRedundant());
+    if (base != out)
+        masm.move32(base, out);
+    masm.add32(Imm32(mir->offset()), out);
+    masm.j(Assembler::CarrySet, wasm::JumpTarget::OutOfBounds);
 }
 
 void
@@ -535,102 +469,6 @@ CodeGeneratorX86Shared::visitWasmTruncateToInt32(LWasmTruncateToInt32* lir)
         MOZ_CRASH("unexpected type");
 
     masm.bind(ool->rejoin());
-}
-
-void
-CodeGeneratorX86Shared::maybeEmitWasmBoundsCheckBranch(const MWasmMemoryAccess* mir, Register ptr,
-                                                       bool redundant)
-{
-    if (!gen->needsBoundsCheckBranch(mir))
-        return;
-
-    MOZ_ASSERT(mir->endOffset() >= 1,
-               "need to subtract 1 to use JAE, see also AssemblerX86Shared::UpdateBoundsCheck");
-
-    // TODO: See 1287224 Unify MWasmBoundsCheck::redunant_ and needsBoundsCheck
-    if (!redundant) {
-        uint32_t cmpOffset = masm.cmp32WithPatch(ptr, Imm32(1 - mir->endOffset())).offset();
-        masm.j(Assembler::AboveOrEqual, wasm::JumpTarget::OutOfBounds);
-        masm.append(wasm::BoundsCheck(cmpOffset));
-    } else {
-#ifdef DEBUG
-        Label ok;
-        uint32_t cmpOffset = masm.cmp32WithPatch(ptr, Imm32(1 - mir->endOffset())).offset();
-        masm.j(Assembler::Below, &ok);
-        masm.assumeUnreachable("Redundant bounds check failed!");
-        masm.bind(&ok);
-        masm.append(wasm::BoundsCheck(cmpOffset));
-#endif
-    }
-}
-
-bool
-CodeGeneratorX86Shared::maybeEmitThrowingAsmJSBoundsCheck(const MWasmMemoryAccess* access,
-                                                          const MInstruction* mir,
-                                                          const LAllocation* ptr)
-{
-    if (!gen->needsBoundsCheckBranch(access))
-        return false;
-
-    emitAsmJSBoundsCheckBranch(access, mir, ToRegister(ptr), nullptr);
-    return true;
-}
-
-bool
-CodeGeneratorX86Shared::maybeEmitAsmJSLoadBoundsCheck(const MAsmJSLoadHeap* mir, LAsmJSLoadHeap* ins,
-                                                      OutOfLineLoadTypedArrayOutOfBounds** ool)
-{
-    MOZ_ASSERT(!Scalar::isSimdType(mir->accessType()));
-    *ool = nullptr;
-
-    if (!gen->needsBoundsCheckBranch(mir))
-        return false;
-
-    Label* rejoin = nullptr;
-    if (!mir->isAtomicAccess()) {
-        *ool = new(alloc()) OutOfLineLoadTypedArrayOutOfBounds(ToAnyRegister(ins->output()),
-                                                               mir->accessType());
-        addOutOfLineCode(*ool, mir);
-        rejoin = (*ool)->entry();
-    }
-
-    emitAsmJSBoundsCheckBranch(mir, mir, ToRegister(ins->ptr()), rejoin);
-    return true;
-}
-
-bool
-CodeGeneratorX86Shared::maybeEmitAsmJSStoreBoundsCheck(const MAsmJSStoreHeap* mir, LAsmJSStoreHeap* ins,
-                                                       Label** rejoin)
-{
-    MOZ_ASSERT(!Scalar::isSimdType(mir->accessType()));
-
-    *rejoin = nullptr;
-    if (!gen->needsBoundsCheckBranch(mir))
-        return false;
-
-    if (!mir->isAtomicAccess())
-        *rejoin = alloc().lifoAlloc()->newInfallible<Label>();
-
-    emitAsmJSBoundsCheckBranch(mir, mir, ToRegister(ins->ptr()), *rejoin);
-    return true;
-}
-
-void
-CodeGeneratorX86Shared::cleanupAfterAsmJSBoundsCheckBranch(const MWasmMemoryAccess* access,
-                                                           Register ptr)
-{
-    // Clean up after performing a heap access checked by a branch.
-
-    MOZ_ASSERT(gen->needsBoundsCheckBranch(access));
-
-#ifdef JS_CODEGEN_X64
-    // If the offset is 0, we don't use an OffsetBoundsCheck.
-    if (access->offset() != 0) {
-        // Zero out the high 32 bits, in case the OffsetBoundsCheck code had to
-        // sign-extend (movslq) the pointer value to get wraparound to work.
-        masm.movl(ptr, ptr);
-    }
-#endif
 }
 
 bool
