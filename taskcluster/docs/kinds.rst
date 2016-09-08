@@ -49,6 +49,14 @@ valgrind
 
 Valgrind tasks produce builds instrumented by valgrind.
 
+static-analysis
+---------------
+
+Static analysis builds use the compiler to perform some detailed analysis of
+the source code while building.  The useful output from these tasks are their
+build logs, and while they produce a binary, they do not upload it as an
+artifact.
+
 Tests
 -----
 
