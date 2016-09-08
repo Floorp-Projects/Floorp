@@ -715,8 +715,11 @@ ArrayBufferObject::createForWasm(JSContext* cx, uint32_t initialSize, Maybe<uint
 }
 
 /* static */ bool
-ArrayBufferObject::prepareForAsmJS(JSContext* cx, Handle<ArrayBufferObject*> buffer)
+ArrayBufferObject::prepareForAsmJS(JSContext* cx, Handle<ArrayBufferObject*> buffer, bool needGuard)
 {
+#ifdef WASM_HUGE_MEMORY
+    MOZ_ASSERT(needGuard);
+#endif
     MOZ_ASSERT(buffer->byteLength() % wasm::PageSize == 0);
     MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
 
@@ -725,32 +728,44 @@ ArrayBufferObject::prepareForAsmJS(JSContext* cx, Handle<ArrayBufferObject*> buf
         return false;
     }
 
-#ifdef WASM_HUGE_MEMORY
-    if (buffer->isWasmMapped())
-        return true;
-
-    uint32_t length = buffer->byteLength();
     // Since asm.js doesn't grow, assume max is same as length.
-    WasmArrayRawBuffer* wasmBuf = WasmArrayRawBuffer::Allocate(length, Some(length));
-    void* data = wasmBuf->dataPointer();
+    uint32_t length = buffer->byteLength();
+    uint32_t maxSize = length;
 
-    if (!data) {
-        // Note - we don't need the same backoff search as in WASM, since we don't over-map to
-        // allow growth in asm.js
-        ReportOutOfMemory(cx);
-        return false;
+    if (needGuard) {
+        if (buffer->isWasmMapped())
+            return true;
+
+        if (buffer->isAsmJSMalloced()) {
+            // needGuard is only set for SIMD.js (which isn't shipping, so this
+            // error isn't content-visible).
+            JS_ReportError(cx, "ArrayBuffer can't be prepared for asm.js with SIMD.js");
+            return false;
+        }
+
+        WasmArrayRawBuffer* wasmBuf = WasmArrayRawBuffer::Allocate(length, Some(maxSize));
+        if (!wasmBuf) {
+            // Note - we don't need the same backoff search as in WASM, since we don't over-map to
+            // allow growth in asm.js
+            ReportOutOfMemory(cx);
+            return false;
+        }
+
+        // Copy over the current contents of the typed array.
+        void* data = wasmBuf->dataPointer();
+        memcpy(data, buffer->dataPointer(), length);
+
+        // Swap the new elements into the ArrayBufferObject. Mark the
+        // ArrayBufferObject so we don't do this again.
+        BufferContents newContents = BufferContents::create<WASM_MAPPED>(data);
+        buffer->changeContents(cx, newContents);
+        MOZ_ASSERT(data == buffer->dataPointer());
+        return true;
     }
 
-    // Copy over the current contents of the typed array.
-    memcpy(data, buffer->dataPointer(), length);
+    if (buffer->isAsmJSMalloced())
+        return true;
 
-    // Swap the new elements into the ArrayBufferObject. Mark the
-    // ArrayBufferObject so we don't do this again.
-    BufferContents newContents = BufferContents::create<WASM_MAPPED>(data);
-    buffer->changeContents(cx, newContents);
-    MOZ_ASSERT(data == buffer->dataPointer());
-    return true;
-#else
     if (!buffer->ownsData()) {
         BufferContents contents = AllocateArrayBufferContents(cx, buffer->byteLength());
         if (!contents)
@@ -760,11 +775,6 @@ ArrayBufferObject::prepareForAsmJS(JSContext* cx, Handle<ArrayBufferObject*> buf
     }
 
     buffer->setIsAsmJSMalloced();
-
-    // On non-x64 architectures we can't yet emulate asm.js heap access.
-    MOZ_RELEASE_ASSERT(buffer->wasmActualByteLength() == buffer->wasmMappedSize());
-    MOZ_RELEASE_ASSERT(buffer->wasmActualByteLength() == buffer->wasmBoundsCheckLimit());
-#endif
     return true;
 }
 

@@ -3381,27 +3381,6 @@ Assembler::BailoutTableStart(uint8_t* code)
     return (uint8_t*) inst;
 }
 
-void
-Assembler::UpdateBoundsCheck(uint8_t* patchAt, uint32_t heapLength)
-{
-    Instruction* inst = (Instruction*) patchAt;
-    MOZ_ASSERT(inst->is<InstCMP>());
-    InstCMP* cmp = inst->as<InstCMP>();
-
-    Register index;
-    cmp->extractOp1(&index);
-
-    MOZ_ASSERT(cmp->extractOp2().isImm8());
-
-    Imm8 imm8 = Imm8(heapLength);
-    MOZ_ASSERT(!imm8.invalid);
-
-    *inst = InstALU(InvalidReg, index, imm8, OpCmp, SetCC, Always);
-    // NOTE: we don't update the Auto Flush Cache!  this function is currently
-    // only called from within ModuleGenerator::finish, which does that
-    // for us. Don't call this!
-}
-
 InstructionIterator::InstructionIterator(Instruction* i_)
   : i(i_)
 {

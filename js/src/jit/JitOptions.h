@@ -70,6 +70,7 @@ struct DefaultJitOptions
     bool limitScriptSize;
     bool osr;
     bool wasmTestMode;
+    bool wasmFoldOffsets;
     bool ionInterruptWithoutSignals;
     uint32_t baselineWarmUpThreshold;
     uint32_t exceptionBailoutThreshold;

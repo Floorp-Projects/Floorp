@@ -19,11 +19,11 @@ class EffectiveAddressAnalysis
     MIRGenerator* mir_;
     MIRGraph& graph_;
 
-    template<typename MWasmMemoryAccessType>
-    MOZ_MUST_USE bool tryAddDisplacement(MWasmMemoryAccessType* ins, int32_t o);
+    template <typename AsmJSMemoryAccess>
+    MOZ_MUST_USE bool tryAddDisplacement(AsmJSMemoryAccess* ins, int32_t o);
 
-    template<typename MWasmMemoryAccessType>
-    void analyzeAsmHeapAccess(MWasmMemoryAccessType* ins);
+    template <typename AsmJSMemoryAccess>
+    void analyzeAsmJSHeapAccess(AsmJSMemoryAccess* ins);
 
   public:
     EffectiveAddressAnalysis(MIRGenerator* mir, MIRGraph& graph)

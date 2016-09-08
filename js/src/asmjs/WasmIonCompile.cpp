@@ -702,117 +702,98 @@ class FunctionCompiler
     }
 
   private:
-    // False means we're sure to be out-of-bounds after this bounds check.
-    bool maybeAddBoundsCheck(MDefinition* base, const MWasmMemoryAccess& access)
+    void checkOffsetAndBounds(MWasmMemoryAccess* access, MDefinition** base)
     {
-        if (access.offset() > uint32_t(INT32_MAX)) {
-            curBlock_->end(MWasmTrap::New(alloc(), Trap::OutOfBounds));
-            curBlock_ = nullptr;
-            return false;
+        // If the offset is bigger than the guard region, a separate instruction
+        // is necessary to add the offset to the base and check for overflow.
+        if (access->offset() >= OffsetGuardLimit || !JitOptions.wasmFoldOffsets) {
+            auto* ins = MWasmAddOffset::New(alloc(), *base, access->offset());
+            curBlock_->add(ins);
+
+            *base = ins;
+            access->clearOffset();
         }
 
 #ifndef WASM_HUGE_MEMORY
-        curBlock_->add(MWasmBoundsCheck::New(alloc(), base, access));
+        curBlock_->add(MWasmBoundsCheck::New(alloc(), *base));
 #endif
-        return true;
     }
 
-    MDefinition* loadHeapPrivate(MDefinition* base, const MWasmMemoryAccess& access,
-                                 bool isInt64 = false)
+    // Return true only for real asm.js (HEAP[i>>2]|0) accesses which have the
+    // peculiar property of not throwing on out-of-bounds. Everything else
+    // (wasm, SIMD.js, Atomics) throws on out-of-bounds.
+    bool isAsmJSAccess(const MWasmMemoryAccess& access) {
+        return mg().isAsmJS() && !access.isSimdAccess() && !access.isAtomicAccess();
+    }
+
+  public:
+    MDefinition* load(MDefinition* base, MWasmMemoryAccess access, ValType result)
     {
         if (inDeadCode())
             return nullptr;
 
         MInstruction* load = nullptr;
-        if (mg().isAsmJS()) {
-            load = MAsmJSLoadHeap::New(alloc(), base, access);
+        if (isAsmJSAccess(access)) {
+            MOZ_ASSERT(access.offset() == 0);
+            load = MAsmJSLoadHeap::New(alloc(), base, access.accessType());
         } else {
-            if (!maybeAddBoundsCheck(base, access))
-                return nullptr;
-            load = MWasmLoad::New(alloc(), base, access, isInt64);
+            checkOffsetAndBounds(&access, &base);
+            load = MWasmLoad::New(alloc(), base, access, ToMIRType(result));
         }
 
         curBlock_->add(load);
         return load;
     }
 
-    void storeHeapPrivate(MDefinition* base, const MWasmMemoryAccess& access, MDefinition* v)
+    void store(MDefinition* base, MWasmMemoryAccess access, MDefinition* v)
     {
         if (inDeadCode())
             return;
 
         MInstruction* store = nullptr;
-        if (mg().isAsmJS()) {
-            store = MAsmJSStoreHeap::New(alloc(), base, access, v);
+        if (isAsmJSAccess(access)) {
+            MOZ_ASSERT(access.offset() == 0);
+            store = MAsmJSStoreHeap::New(alloc(), base, access.accessType(), v);
         } else {
-            if (!maybeAddBoundsCheck(base, access))
-                return;
+            checkOffsetAndBounds(&access, &base);
             store = MWasmStore::New(alloc(), base, access, v);
         }
 
         curBlock_->add(store);
     }
 
-  public:
-    MDefinition* loadHeap(MDefinition* base, const MWasmMemoryAccess& access, bool isInt64)
-    {
-        MOZ_ASSERT(!Scalar::isSimdType(access.accessType()), "SIMD loads should use loadSimdHeap");
-        return loadHeapPrivate(base, access, isInt64);
-    }
-    MDefinition* loadSimdHeap(MDefinition* base, const MWasmMemoryAccess& access)
-    {
-        MOZ_ASSERT(Scalar::isSimdType(access.accessType()), "non-SIMD loads should use loadHeap");
-        return loadHeapPrivate(base, access);
-    }
-    MDefinition* loadAtomicHeap(MDefinition* base, const MWasmMemoryAccess& access)
-    {
-        return loadHeapPrivate(base, access);
-    }
-
-    void storeHeap(MDefinition* base, const MWasmMemoryAccess& access, MDefinition* v)
-    {
-        MOZ_ASSERT(!Scalar::isSimdType(access.accessType()), "SIMD store should use storeSimdHeap");
-        storeHeapPrivate(base, access, v);
-    }
-    void storeSimdHeap(MDefinition* base, const MWasmMemoryAccess& access, MDefinition* v)
-    {
-        MOZ_ASSERT(Scalar::isSimdType(access.accessType()), "non-SIMD stores should use storeHeap");
-        storeHeapPrivate(base, access, v);
-    }
-    void storeAtomicHeap(MDefinition* base, const MWasmMemoryAccess& access, MDefinition* v)
-    {
-        storeHeapPrivate(base, access, v);
-    }
-
-    MDefinition* atomicCompareExchangeHeap(MDefinition* base, const MWasmMemoryAccess& access,
+    MDefinition* atomicCompareExchangeHeap(MDefinition* base, MWasmMemoryAccess access,
                                            MDefinition* oldv, MDefinition* newv)
     {
         if (inDeadCode())
             return nullptr;
 
+        checkOffsetAndBounds(&access, &base);
         auto* cas = MAsmJSCompareExchangeHeap::New(alloc(), base, access, oldv, newv, tlsPointer_);
         curBlock_->add(cas);
         return cas;
     }
 
-    MDefinition* atomicExchangeHeap(MDefinition* base, const MWasmMemoryAccess& access,
+    MDefinition* atomicExchangeHeap(MDefinition* base, MWasmMemoryAccess access,
                                     MDefinition* value)
     {
         if (inDeadCode())
             return nullptr;
 
+        checkOffsetAndBounds(&access, &base);
         auto* cas = MAsmJSAtomicExchangeHeap::New(alloc(), base, access, value, tlsPointer_);
         curBlock_->add(cas);
         return cas;
     }
 
     MDefinition* atomicBinopHeap(js::jit::AtomicOp op,
-                                 MDefinition* base, const MWasmMemoryAccess& access,
+                                 MDefinition* base, MWasmMemoryAccess access,
                                  MDefinition* v)
     {
         if (inDeadCode())
             return nullptr;
 
+        checkOffsetAndBounds(&access, &base);
         auto* binop = MAsmJSAtomicBinopHeap::New(alloc(), op, base, access, v, tlsPointer_);
         curBlock_->add(binop);
         return binop;
@@ -2351,7 +2332,7 @@ EmitLoad(FunctionCompiler& f, ValType type, Scalar::Type viewType)
         return false;
 
     MWasmMemoryAccess access(viewType, addr.align, addr.offset);
-    f.iter().setResult(f.loadHeap(addr.base, access, type == ValType::I64));
+    f.iter().setResult(f.load(addr.base, access, type));
     return true;
 }
 
@@ -2364,7 +2345,7 @@ EmitStore(FunctionCompiler& f, ValType resultType, Scalar::Type viewType)
         return false;
 
     MWasmMemoryAccess access(viewType, addr.align, addr.offset);
-    f.storeHeap(addr.base, access, value);
+    f.store(addr.base, access, value);
     return true;
 }
 
@@ -2384,7 +2365,7 @@ EmitStoreWithCoercion(FunctionCompiler& f, ValType resultType, Scalar::Type view
         MOZ_CRASH("unexpected coerced store");
 
     MWasmMemoryAccess access(viewType, addr.align, addr.offset);
-    f.storeHeap(addr.base, access, value);
+    f.store(addr.base, access, value);
     return true;
 }
 
@@ -2458,7 +2439,7 @@ EmitAtomicsLoad(FunctionCompiler& f)
 
     MWasmMemoryAccess access(viewType, addr.align, addr.offset, 0,
                              MembarBeforeLoad, MembarAfterLoad);
-    f.iter().setResult(f.loadAtomicHeap(addr.base, access));
+    f.iter().setResult(f.load(addr.base, access, ValType::I32));
     return true;
 }
 
@@ -2473,7 +2454,7 @@ EmitAtomicsStore(FunctionCompiler& f)
 
     MWasmMemoryAccess access(viewType, addr.align, addr.offset, 0,
                              MembarBeforeStore, MembarAfterStore);
-    f.storeAtomicHeap(addr.base, access, value);
+    f.store(addr.base, access, value);
     f.iter().setResult(value);
     return true;
 }
@@ -2740,7 +2721,7 @@ EmitSimdLoad(FunctionCompiler& f, ValType resultType, unsigned numElems)
         return false;
 
     MWasmMemoryAccess access(viewType, addr.align, addr.offset, numElems);
-    f.iter().setResult(f.loadSimdHeap(addr.base, access));
+    f.iter().setResult(f.load(addr.base, access, resultType));
     return true;
 }
 
@@ -2759,7 +2740,7 @@ EmitSimdStore(FunctionCompiler& f, ValType resultType, unsigned numElems)
         return false;
 
     MWasmMemoryAccess access(viewType, addr.align, addr.offset, numElems);
-    f.storeSimdHeap(addr.base, access, value);
+    f.store(addr.base, access, value);
     return true;
 }
 
@@ -2939,16 +2920,12 @@ EmitSimdOp(FunctionCompiler& f, ValType type, SimdOperation op, SimdSign sign)
         return EmitSimdLoad(f, type, 1);
       case SimdOperation::Fn_load2:
         return EmitSimdLoad(f, type, 2);
-      case SimdOperation::Fn_load3:
-        return EmitSimdLoad(f, type, 3);
       case SimdOperation::Fn_store:
         return EmitSimdStore(f, type, 0);
       case SimdOperation::Fn_store1:
         return EmitSimdStore(f, type, 1);
       case SimdOperation::Fn_store2:
         return EmitSimdStore(f, type, 2);
-      case SimdOperation::Fn_store3:
-        return EmitSimdStore(f, type, 3);
       case SimdOperation::Fn_allTrue:
         return EmitSimdAllTrue(f, type);
       case SimdOperation::Fn_anyTrue:
@@ -3002,6 +2979,8 @@ EmitSimdOp(FunctionCompiler& f, ValType type, SimdOperation op, SimdSign sign)
         return EmitSimdBitcast(f, ValType::I32x4, type);
       case SimdOperation::Fn_fromFloat32x4Bits:
         return EmitSimdBitcast(f, ValType::F32x4, type);
+      case SimdOperation::Fn_load3:
+      case SimdOperation::Fn_store3:
       case SimdOperation::Fn_fromFloat64x2Bits:
         MOZ_CRASH("NYI");
     }

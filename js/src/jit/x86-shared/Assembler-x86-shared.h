@@ -304,6 +304,8 @@ class AssemblerX86Shared : public AssemblerShared
         LessThan = X86Encoding::ConditionL,
         LessThanOrEqual = X86Encoding::ConditionLE,
         Overflow = X86Encoding::ConditionO,
+        CarrySet = X86Encoding::ConditionC,
+        CarryClear = X86Encoding::ConditionNC,
         Signed = X86Encoding::ConditionS,
         NotSigned = X86Encoding::ConditionNS,
         Zero = X86Encoding::ConditionE,
@@ -1079,34 +1081,6 @@ class AssemblerX86Shared : public AssemblerShared
     }
     static void patchJumpToTwoByteNop(uint8_t* jump) {
         X86Encoding::BaseAssembler::patchJumpToTwoByteNop(jump);
-    }
-
-    static void UpdateBoundsCheck(uint8_t* patchAt, uint32_t heapLength) {
-        // On x64, even with signal handling being used for most bounds checks,
-        // there may be atomic operations that depend on explicit checks. All
-        // accesses that have been recorded are the only ones that need bound
-        // checks.
-        //
-        // An access is out-of-bounds iff
-        //          ptr + offset + data-type-byte-size > heapLength
-        //     i.e  ptr + offset + data-type-byte-size - 1 >= heapLength
-        //     i.e. ptr >= heapLength - data-type-byte-size - offset + 1.
-        //
-        // before := data-type-byte-size + offset - 1
-        uint32_t before = reinterpret_cast<uint32_t*>(patchAt)[-1];
-        uint32_t after = before + heapLength;
-
-        // If the computed index `before` already is out of bounds,
-        // we need to make sure the bounds check will fail all the time.
-        // For bounds checks, the sequence of instructions we use is:
-        //      cmp(ptrReg, #before)
-        //      jae(OutOfBounds)
-        // so replace the cmp immediate with 0.
-        if (after > heapLength)
-            after = 0;
-
-        MOZ_ASSERT_IF(after, int32_t(after) >= int32_t(before));
-        reinterpret_cast<uint32_t*>(patchAt)[-1] = after;
     }
 
     void breakpoint() {

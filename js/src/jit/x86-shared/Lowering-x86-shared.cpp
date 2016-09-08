@@ -327,17 +327,6 @@ LIRGeneratorX86Shared::visitAsmJSNeg(MAsmJSNeg* ins)
 }
 
 void
-LIRGeneratorX86Shared::visitWasmBoundsCheck(MWasmBoundsCheck* ins)
-{
-    if (!gen->needsBoundsCheckBranch(ins))
-        return;
-
-    MDefinition* index = ins->input();
-    auto* lir = new(alloc()) LWasmBoundsCheck(useRegisterAtStart(index));
-    add(lir, ins);
-}
-
-void
 LIRGeneratorX86Shared::lowerWasmLoad(MWasmLoad* ins)
 {
     MOZ_ASSERT(ins->type() != MIRType::Int64);

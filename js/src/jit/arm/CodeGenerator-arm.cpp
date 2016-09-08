@@ -2240,6 +2240,10 @@ void
 CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
 {
     const MAsmJSLoadHeap* mir = ins->mir();
+    MOZ_ASSERT(mir->offset() == 0);
+
+    const LAllocation* ptr = ins->ptr();
+
     bool isSigned;
     int size;
     bool isFloat = false;
@@ -2254,10 +2258,6 @@ CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
       case Scalar::Float32: isFloat = true;   size = 32; break;
       default: MOZ_CRASH("unexpected array type");
     }
-
-    memoryBarrier(mir->barrierBefore());
-
-    const LAllocation* ptr = ins->ptr();
 
     if (ptr->isConstant()) {
         MOZ_ASSERT(!mir->needsBoundsCheck());
@@ -2275,63 +2275,37 @@ CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
         }
     } else {
         Register ptrReg = ToRegister(ptr);
-        if (isFloat)
-            masm.ma_loadHeapAsmJS(ptrReg, size, mir->needsBoundsCheck(),
-                                  /*faultOnOOB=*/false, ToFloatRegister(ins->output()));
-        else
-            masm.ma_loadHeapAsmJS(ptrReg, size, isSigned, mir->needsBoundsCheck(),
-                                  mir->isAtomicAccess(), ToRegister(ins->output()));
-    }
+        if (isFloat) {
+            FloatRegister output = ToFloatRegister(ins->output());
+            if (size == 32)
+                output = output.singleOverlay();
 
-    memoryBarrier(mir->barrierAfter());
-}
+            Assembler::Condition cond = Assembler::Always;
+            if (mir->needsBoundsCheck()) {
+                BufferOffset cmp = masm.as_cmp(ptrReg, Imm8(0));
+                masm.append(wasm::BoundsCheck(cmp.getOffset()));
 
-void
-CodeGeneratorARM::visitWasmBoundsCheck(LWasmBoundsCheck* ins)
-{
-    MWasmBoundsCheck* mir = ins->mir();
+                size_t nanOffset = size == 32 ? wasm::NaN32GlobalDataOffset : wasm::NaN64GlobalDataOffset;
+                masm.ma_vldr(Address(GlobalReg, nanOffset - AsmJSGlobalRegBias), output,
+                             Assembler::AboveOrEqual);
+                cond = Assembler::Below;
+            }
 
-    MOZ_ASSERT(mir->offset() <= INT32_MAX);
+            masm.ma_vldr(output, HeapReg, ptrReg, 0, cond);
+        } else {
+            Register output = ToRegister(ins->output());
 
-    if (!mir->isRedundant()) {
-        // No guarantee that heapBase + endOffset can be properly encoded in
-        // the cmp immediate in ma_BoundsCheck, so use an explicit add instead.
-        uint32_t endOffset = mir->endOffset();
+            Assembler::Condition cond = Assembler::Always;
+            if (mir->needsBoundsCheck()) {
+                uint32_t cmpOffset = masm.as_cmp(ptrReg, Imm8(0)).getOffset();
+                masm.append(wasm::BoundsCheck(cmpOffset));
 
-        Register ptr = ToRegister(ins->ptr());
+                masm.ma_mov(Imm32(0), output, Assembler::AboveOrEqual);
+                cond = Assembler::Below;
+            }
 
-        ScratchRegisterScope ptrPlusOffset(masm);
-        masm.move32(Imm32(endOffset), ptrPlusOffset);
-        masm.ma_add(ptr, ptrPlusOffset, SetCC);
-
-        // Detect unsigned overflow by checking the carry bit.
-        masm.as_b(wasm::JumpTarget::OutOfBounds, Assembler::CarrySet);
-
-        uint32_t cmpOffset = masm.ma_BoundsCheck(ptrPlusOffset).getOffset();
-        masm.append(wasm::BoundsCheck(cmpOffset));
-        masm.as_b(wasm::JumpTarget::OutOfBounds, Assembler::Above);
-    } else {
-#ifdef DEBUG
-        Label ok1, ok2;
-        uint32_t endOffset = mir->endOffset();
-
-        Register ptr = ToRegister(ins->ptr());
-
-        ScratchRegisterScope ptrPlusOffset(masm);
-        masm.move32(Imm32(endOffset), ptrPlusOffset);
-        masm.ma_add(ptr, ptrPlusOffset, SetCC);
-
-        // Detect unsigned overflow by checking the carry bit.
-        masm.as_b(&ok1, Assembler::CarryClear);
-        masm.assumeUnreachable("Redundant bounds check failed!");
-        masm.bind(&ok1);
-
-        uint32_t cmpOffset = masm.ma_BoundsCheck(ptrPlusOffset).getOffset();
-        masm.append(wasm::BoundsCheck(cmpOffset));
-        masm.as_b(&ok2, Assembler::BelowOrEqual);
-        masm.assumeUnreachable("Redundant bounds check failed!");
-        masm.bind(&ok2);
-#endif
+            masm.ma_dataTransferN(IsLoad, size, isSigned, HeapReg, ptrReg, output, Offset, cond);
+        }
     }
 }
 
@@ -2341,10 +2315,8 @@ CodeGeneratorARM::emitWasmLoad(T* lir)
 {
     const MWasmLoad* mir = lir->mir();
 
-    MOZ_ASSERT(!mir->barrierBefore() && !mir->barrierAfter(), "atomics NYI");
-
     uint32_t offset = mir->offset();
-    MOZ_ASSERT(offset <= INT32_MAX);
+    MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
 
     Register ptr = ToRegister(lir->ptr());
     Scalar::Type type = mir->accessType();
@@ -2352,7 +2324,8 @@ CodeGeneratorARM::emitWasmLoad(T* lir)
     // Maybe add the offset.
     if (offset || type == Scalar::Int64) {
         Register ptrPlusOffset = ToRegister(lir->ptrCopy());
-        masm.ma_add(Imm32(offset), ptrPlusOffset);
+        if (offset)
+            masm.ma_add(Imm32(offset), ptrPlusOffset);
         ptr = ptrPlusOffset;
     } else {
         MOZ_ASSERT(lir->ptrCopy()->isBogusTemp());
@@ -2361,6 +2334,8 @@ CodeGeneratorARM::emitWasmLoad(T* lir)
     bool isSigned = type == Scalar::Int8 || type == Scalar::Int16 || type == Scalar::Int32 ||
                     type == Scalar::Int64;
     unsigned byteSize = mir->byteSize();
+
+    memoryBarrier(mir->barrierBefore());
 
     if (mir->type() == MIRType::Int64) {
         Register64 output = ToOutRegister64(lir);
@@ -2388,6 +2363,8 @@ CodeGeneratorARM::emitWasmLoad(T* lir)
             masm.ma_dataTransferN(IsLoad, byteSize * 8, isSigned, HeapReg, ptr, output.gpr());
         }
     }
+
+    memoryBarrier(mir->barrierAfter());
 }
 
 void
@@ -2408,10 +2385,8 @@ CodeGeneratorARM::emitWasmUnalignedLoad(T* lir)
 {
     const MWasmLoad* mir = lir->mir();
 
-    MOZ_ASSERT(!mir->barrierBefore() && !mir->barrierAfter(), "atomics NYI");
-
     uint32_t offset = mir->offset();
-    MOZ_ASSERT(offset <= INT32_MAX);
+    MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
 
     Register ptr = ToRegister(lir->ptrCopy());
     if (offset)
@@ -2439,6 +2414,8 @@ CodeGeneratorARM::emitWasmUnalignedLoad(T* lir)
 
     MOZ_ASSERT(low != tmp);
     MOZ_ASSERT(low != ptr);
+
+    memoryBarrier(mir->barrierBefore());
 
     masm.emitUnalignedLoad(isSigned, Min(byteSize, 4u), ptr, tmp, low);
 
@@ -2468,6 +2445,8 @@ CodeGeneratorARM::emitWasmUnalignedLoad(T* lir)
                 masm.ma_mov(Imm32(0), output.high);
         }
     }
+
+    memoryBarrier(mir->barrierAfter());
 }
 
 void
@@ -2482,16 +2461,25 @@ CodeGeneratorARM::visitWasmUnalignedLoadI64(LWasmUnalignedLoadI64* lir)
     emitWasmUnalignedLoad(lir);
 }
 
+void
+CodeGeneratorARM::visitWasmAddOffset(LWasmAddOffset* lir)
+{
+    MWasmAddOffset* mir = lir->mir();
+    Register base = ToRegister(lir->base());
+    Register out = ToRegister(lir->output());
+
+    masm.ma_add(base, Imm32(mir->offset()), out, SetCC);
+    masm.ma_b(wasm::JumpTarget::OutOfBounds, Assembler::CarrySet);
+}
+
 template <typename T>
 void
 CodeGeneratorARM::emitWasmStore(T* lir)
 {
     const MWasmStore* mir = lir->mir();
 
-    MOZ_ASSERT(!mir->barrierBefore() && !mir->barrierAfter(), "atomics NYI");
-
     uint32_t offset = mir->offset();
-    MOZ_ASSERT(offset <= INT32_MAX);
+    MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
 
     Register ptr = ToRegister(lir->ptr());
     unsigned byteSize = mir->byteSize();
@@ -2500,11 +2488,14 @@ CodeGeneratorARM::emitWasmStore(T* lir)
     // Maybe add the offset.
     if (offset || type == Scalar::Int64) {
         Register ptrPlusOffset = ToRegister(lir->ptrCopy());
-        masm.ma_add(Imm32(offset), ptrPlusOffset);
+        if (offset)
+            masm.ma_add(Imm32(offset), ptrPlusOffset);
         ptr = ptrPlusOffset;
     } else {
         MOZ_ASSERT(lir->ptrCopy()->isBogusTemp());
     }
+
+    memoryBarrier(mir->barrierBefore());
 
     if (type == Scalar::Int64) {
         MOZ_ASSERT(INT64LOW_OFFSET == 0);
@@ -2527,6 +2518,8 @@ CodeGeneratorARM::emitWasmStore(T* lir)
             masm.ma_dataTransferN(IsStore, 8 * byteSize /* bits */, isSigned, HeapReg, ptr, val);
         }
     }
+
+    memoryBarrier(mir->barrierAfter());
 }
 
 void
@@ -2547,10 +2540,8 @@ CodeGeneratorARM::emitWasmUnalignedStore(T* lir)
 {
     const MWasmStore* mir = lir->mir();
 
-    MOZ_ASSERT(!mir->barrierBefore() && !mir->barrierAfter(), "atomics NYI");
-
     uint32_t offset = mir->offset();
-    MOZ_ASSERT(offset <= INT32_MAX);
+    MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
 
     Register ptr = ToRegister(lir->ptrCopy());
     if (offset)
@@ -2560,6 +2551,8 @@ CodeGeneratorARM::emitWasmUnalignedStore(T* lir)
     masm.ma_add(HeapReg, ptr);
 
     MIRType mirType = mir->value()->type();
+
+    memoryBarrier(mir->barrierAfter());
 
     Register val = ToRegister(lir->valueHelper());
     if (IsFloatingPointType(mirType)) {
@@ -2586,7 +2579,9 @@ CodeGeneratorARM::emitWasmUnalignedStore(T* lir)
             masm.ma_mov(ToRegister64(lir->getInt64Operand(LWasmUnalignedStoreI64::ValueIndex)).high, val);
         }
         masm.emitUnalignedStore(4, ptr, val, /* offset */ 4);
-     }
+    }
+
+    memoryBarrier(mir->barrierBefore());
 }
 
 void
@@ -2605,6 +2600,10 @@ void
 CodeGeneratorARM::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
 {
     const MAsmJSStoreHeap* mir = ins->mir();
+    MOZ_ASSERT(mir->offset() == 0);
+
+    const LAllocation* ptr = ins->ptr();
+
     bool isSigned;
     int size;
     bool isFloat = false;
@@ -2619,10 +2618,6 @@ CodeGeneratorARM::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
       case Scalar::Float32: isFloat = true;   size = 32; break;
       default: MOZ_CRASH("unexpected array type");
     }
-
-    memoryBarrier(mir->barrierBefore());
-
-    const LAllocation* ptr = ins->ptr();
 
     if (ptr->isConstant()) {
         MOZ_ASSERT(!mir->needsBoundsCheck());
@@ -2641,21 +2636,34 @@ CodeGeneratorARM::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
         }
     } else {
         Register ptrReg = ToRegister(ptr);
-        if (isFloat)
-            masm.ma_storeHeapAsmJS(ptrReg, size, mir->needsBoundsCheck(), /*faultOnOOB=*/false,
-                                   ToFloatRegister(ins->value()));
-        else
-            masm.ma_storeHeapAsmJS(ptrReg, size, isSigned, mir->needsBoundsCheck(),
-                                   mir->isAtomicAccess(), ToRegister(ins->value()));
-    }
 
-    memoryBarrier(mir->barrierAfter());
+        Assembler::Condition cond = Assembler::Always;
+        if (mir->needsBoundsCheck()) {
+            BufferOffset cmp = masm.as_cmp(ptrReg, Imm8(0));
+            masm.append(wasm::BoundsCheck(cmp.getOffset()));
+
+            cond = Assembler::Below;
+        }
+
+        if (isFloat) {
+            FloatRegister value = ToFloatRegister(ins->value());
+            if (size == 32)
+                value = value.singleOverlay();
+
+            masm.ma_vstr(value, HeapReg, ptrReg, 0, 0, Assembler::Below);
+        } else {
+            Register value = ToRegister(ins->value());
+            masm.ma_dataTransferN(IsStore, size, isSigned, HeapReg, ptrReg, value, Offset, cond);
+        }
+    }
 }
 
 void
 CodeGeneratorARM::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap* ins)
 {
     MAsmJSCompareExchangeHeap* mir = ins->mir();
+    MOZ_ASSERT(mir->offset() == 0);
+
     Scalar::Type vt = mir->accessType();
     const LAllocation* ptr = ins->ptr();
     Register ptrReg = ToRegister(ptr);
@@ -2665,11 +2673,6 @@ CodeGeneratorARM::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap* ins)
     Register oldval = ToRegister(ins->oldValue());
     Register newval = ToRegister(ins->newValue());
 
-    if (mir->needsBoundsCheck()) {
-        uint32_t cmpOffset = masm.ma_BoundsCheck(ptrReg).getOffset();
-        masm.ma_b(wasm::JumpTarget::OutOfBounds, Assembler::AboveOrEqual);
-        masm.append(wasm::BoundsCheck(cmpOffset));
-    }
     masm.compareExchangeToTypedIntArray(vt == Scalar::Uint32 ? Scalar::Int32 : vt,
                                         srcAddr, oldval, newval, InvalidReg,
                                         ToAnyRegister(ins->output()));
@@ -2679,6 +2682,8 @@ void
 CodeGeneratorARM::visitAsmJSCompareExchangeCallout(LAsmJSCompareExchangeCallout* ins)
 {
     const MAsmJSCompareExchangeHeap* mir = ins->mir();
+    MOZ_ASSERT(mir->offset() == 0);
+
     Register ptr = ToRegister(ins->ptr());
     Register oldval = ToRegister(ins->oldval());
     Register newval = ToRegister(ins->newval());
@@ -2704,17 +2709,13 @@ void
 CodeGeneratorARM::visitAsmJSAtomicExchangeHeap(LAsmJSAtomicExchangeHeap* ins)
 {
     MAsmJSAtomicExchangeHeap* mir = ins->mir();
+    MOZ_ASSERT(mir->offset() == 0);
+
     Scalar::Type vt = mir->accessType();
     Register ptrReg = ToRegister(ins->ptr());
     Register value = ToRegister(ins->value());
     BaseIndex srcAddr(HeapReg, ptrReg, TimesOne);
     MOZ_ASSERT(ins->addrTemp()->isBogusTemp());
-
-    if (mir->needsBoundsCheck()) {
-        uint32_t cmpOffset = masm.ma_BoundsCheck(ptrReg).getOffset();
-        masm.ma_b(wasm::JumpTarget::OutOfBounds, Assembler::AboveOrEqual);
-        masm.append(wasm::BoundsCheck(cmpOffset));
-    }
 
     masm.atomicExchangeToTypedIntArray(vt == Scalar::Uint32 ? Scalar::Int32 : vt,
                                        srcAddr, value, InvalidReg, ToAnyRegister(ins->output()));
@@ -2724,6 +2725,8 @@ void
 CodeGeneratorARM::visitAsmJSAtomicExchangeCallout(LAsmJSAtomicExchangeCallout* ins)
 {
     const MAsmJSAtomicExchangeHeap* mir = ins->mir();
+    MOZ_ASSERT(mir->offset() == 0);
+
     Register ptr = ToRegister(ins->ptr());
     Register value = ToRegister(ins->value());
     Register tls = ToRegister(ins->tls());
@@ -2746,54 +2749,45 @@ CodeGeneratorARM::visitAsmJSAtomicExchangeCallout(LAsmJSAtomicExchangeCallout* i
 void
 CodeGeneratorARM::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins)
 {
-    MOZ_ASSERT(ins->mir()->hasUses());
-    MOZ_ASSERT(ins->addrTemp()->isBogusTemp());
-
     MAsmJSAtomicBinopHeap* mir = ins->mir();
+    MOZ_ASSERT(mir->offset() == 0);
+    MOZ_ASSERT(mir->hasUses());
+
     Scalar::Type vt = mir->accessType();
     Register ptrReg = ToRegister(ins->ptr());
     Register flagTemp = ToRegister(ins->flagTemp());
     const LAllocation* value = ins->value();
     AtomicOp op = mir->operation();
+    MOZ_ASSERT(ins->addrTemp()->isBogusTemp());
 
     BaseIndex srcAddr(HeapReg, ptrReg, TimesOne);
 
-    if (mir->needsBoundsCheck()) {
-        uint32_t cmpOffset = masm.ma_BoundsCheck(ptrReg).getOffset();
-        masm.ma_b(wasm::JumpTarget::OutOfBounds, Assembler::AboveOrEqual);
-        masm.append(wasm::BoundsCheck(cmpOffset));
-    }
-
-    if (value->isConstant())
+    if (value->isConstant()) {
         atomicBinopToTypedIntArray(op, vt == Scalar::Uint32 ? Scalar::Int32 : vt,
                                    Imm32(ToInt32(value)), srcAddr, flagTemp, InvalidReg,
                                    ToAnyRegister(ins->output()));
-    else
+    } else {
         atomicBinopToTypedIntArray(op, vt == Scalar::Uint32 ? Scalar::Int32 : vt,
                                    ToRegister(value), srcAddr, flagTemp, InvalidReg,
                                    ToAnyRegister(ins->output()));
+    }
 }
 
 void
 CodeGeneratorARM::visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEffect* ins)
 {
-    MOZ_ASSERT(!ins->mir()->hasUses());
-    MOZ_ASSERT(ins->addrTemp()->isBogusTemp());
-
     MAsmJSAtomicBinopHeap* mir = ins->mir();
+    MOZ_ASSERT(mir->offset() == 0);
+    MOZ_ASSERT(!mir->hasUses());
+
     Scalar::Type vt = mir->accessType();
     Register ptrReg = ToRegister(ins->ptr());
     Register flagTemp = ToRegister(ins->flagTemp());
     const LAllocation* value = ins->value();
     AtomicOp op = mir->operation();
+    MOZ_ASSERT(ins->addrTemp()->isBogusTemp());
 
     BaseIndex srcAddr(HeapReg, ptrReg, TimesOne);
-
-    if (mir->needsBoundsCheck()) {
-        uint32_t cmpOffset = masm.ma_BoundsCheck(ptrReg).getOffset();
-        masm.ma_b(wasm::JumpTarget::OutOfBounds, Assembler::AboveOrEqual);
-        masm.append(wasm::BoundsCheck(cmpOffset));
-    }
 
     if (value->isConstant())
         atomicBinopToTypedIntArray(op, vt, Imm32(ToInt32(value)), srcAddr, flagTemp);
@@ -2805,6 +2799,8 @@ void
 CodeGeneratorARM::visitAsmJSAtomicBinopCallout(LAsmJSAtomicBinopCallout* ins)
 {
     const MAsmJSAtomicBinopHeap* mir = ins->mir();
+    MOZ_ASSERT(mir->offset() == 0);
+
     Register ptr = ToRegister(ins->ptr());
     Register value = ToRegister(ins->value());
     Register tls = ToRegister(ins->tls());

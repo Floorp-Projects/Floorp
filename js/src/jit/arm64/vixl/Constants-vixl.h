@@ -234,8 +234,8 @@ enum Condition {
   // Mozilla expanded aliases.
   Equal = 0, Zero = 0,
   NotEqual = 1, NonZero = 1,
-  AboveOrEqual = 2,
-  Below = 3,
+  AboveOrEqual = 2, CarrySet = 2,
+  Below = 3, CarryClear = 3,
   Signed = 4,
   NotSigned = 5,
   Overflow = 6,

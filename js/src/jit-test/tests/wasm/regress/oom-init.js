@@ -1,4 +1,4 @@
-// |jit-test| allow-oom
+// |jit-test| slow; allow-oom
 
 if (typeof oomTest !== 'function' || !wasmIsSupported())
     quit();

@@ -105,52 +105,6 @@ MIRGenerator::addAbortedPreliminaryGroup(ObjectGroup* group)
         oomUnsafe.crash("addAbortedPreliminaryGroup");
 }
 
-bool
-MIRGenerator::needsBoundsCheckBranch(const MWasmMemoryAccess* access) const
-{
-    // A heap access needs a bounds-check branch if we're not relying on signal
-    // handlers to catch errors, and if it's not proven to be within bounds.
-    // We use signal-handlers on x64, but on x86 there isn't enough address
-    // space for a guard region.  Also, on x64 the atomic loads and stores
-    // can't (yet) use the signal handlers.
-#ifdef WASM_HUGE_MEMORY
-    return false;
-#else
-    return access->needsBoundsCheck();
-#endif
-}
-
-size_t
-MIRGenerator::foldableOffsetRange(const MWasmMemoryAccess* access) const
-{
-    // This determines whether it's ok to fold up to WasmImmediateRange
-    // offsets, instead of just WasmCheckedImmediateRange.
-
-    static_assert(WasmCheckedImmediateRange <= WasmImmediateRange,
-                  "WasmImmediateRange should be the size of an unconstrained "
-                  "address immediate");
-
-#ifdef WASM_HUGE_MEMORY
-    static_assert(wasm::Uint32Range + WasmImmediateRange + sizeof(wasm::Val) < wasm::HugeMappedSize,
-                  "When using signal handlers for bounds checking, a uint32 is added to the base "
-                  "address followed by an immediate in the range [0, WasmImmediateRange). An "
-                  "unaligned access (whose size is conservatively approximated by wasm::Val) may "
-                  "spill over, so ensure a space at the end.");
-    return WasmImmediateRange;
-#else
-    // On 32-bit platforms, if we've proven the access is in bounds after
-    // 32-bit wrapping, we can fold full offsets because they're added with
-    // 32-bit arithmetic.
-    if (sizeof(intptr_t) == sizeof(int32_t) && !access->needsBoundsCheck())
-        return WasmImmediateRange;
-
-    // Otherwise, only allow the checked size. This is always less than the
-    // minimum heap length, and allows explicit bounds checks to fold in the
-    // offset without overflow.
-    return WasmCheckedImmediateRange;
-#endif
-}
-
 void
 MIRGraph::addBlock(MBasicBlock* block)
 {

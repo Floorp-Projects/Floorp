@@ -117,7 +117,6 @@ class LIRGeneratorARM64 : public LIRGeneratorShared
     void visitSubstr(MSubstr* ins);
     void visitRandom(MRandom* ins);
     void visitWasmTruncateToInt64(MWasmTruncateToInt64* ins);
-    void visitWasmBoundsCheck(MWasmBoundsCheck* ins);
     void visitWasmLoad(MWasmLoad* ins);
     void visitWasmStore(MWasmStore* ins);
     void visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins);

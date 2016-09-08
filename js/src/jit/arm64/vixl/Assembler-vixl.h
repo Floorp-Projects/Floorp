@@ -858,7 +858,9 @@ class Assembler : public MozBaseAssembler {
   COPYENUM(NotEqual);
   COPYENUM(NonZero);
   COPYENUM(AboveOrEqual);
+  COPYENUM(CarrySet);
   COPYENUM(Below);
+  COPYENUM(CarryClear);
   COPYENUM(Signed);
   COPYENUM(NotSigned);
   COPYENUM(Overflow);
