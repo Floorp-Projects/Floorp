@@ -16,35 +16,15 @@ namespace
 {
 
 // Test for the SH_EMULATE_BUILT_IN_FUNCTIONS flag.
-class EmulateBuiltInFunctionsTest : public testing::Test
+class EmulateBuiltInFunctionsTest : public MatchOutputCodeTest
 {
   public:
-    EmulateBuiltInFunctionsTest() {}
-
-  protected:
-    void compile(const std::string &shaderString)
+    EmulateBuiltInFunctionsTest()
+        : MatchOutputCodeTest(GL_VERTEX_SHADER,
+                              SH_EMULATE_BUILT_IN_FUNCTIONS,
+                              SH_GLSL_COMPATIBILITY_OUTPUT)
     {
-        std::string infoLog;
-        bool compilationSuccess = compileTestShader(GL_VERTEX_SHADER,
-                                                    SH_GLES2_SPEC,
-                                                    SH_GLSL_COMPATIBILITY_OUTPUT,
-                                                    shaderString,
-                                                    SH_EMULATE_BUILT_IN_FUNCTIONS,
-                                                    &mGLSLCode,
-                                                    &infoLog);
-        if (!compilationSuccess)
-        {
-            FAIL() << "Shader compilation into GLSL failed " << infoLog;
-        }
     }
-
-    bool foundInCode(const char *stringToFind)
-    {
-        return mGLSLCode.find(stringToFind) != std::string::npos;
-    }
-
-  private:
-    std::string mGLSLCode;
 };
 
 TEST_F(EmulateBuiltInFunctionsTest, DotEmulated)

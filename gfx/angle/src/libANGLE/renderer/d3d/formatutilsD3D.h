@@ -24,14 +24,6 @@ struct FormatType;
 
 namespace rx
 {
-typedef void (*MipGenerationFunction)(size_t sourceWidth, size_t sourceHeight, size_t sourceDepth,
-                                      const uint8_t *sourceData, size_t sourceRowPitch, size_t sourceDepthPitch,
-                                      uint8_t *destData, size_t destRowPitch, size_t destDepthPitch);
-
-typedef void (*LoadImageFunction)(size_t width, size_t height, size_t depth,
-                                  const uint8_t *input, size_t inputRowPitch, size_t inputDepthPitch,
-                                  uint8_t *output, size_t outputRowPitch, size_t outputDepthPitch);
-
 typedef void (*InitializeTextureDataFunction)(size_t width, size_t height, size_t depth,
                                               uint8_t *output, size_t outputRowPitch, size_t outputDepthPitch);
 
