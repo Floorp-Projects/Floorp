@@ -3766,6 +3766,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
     js::ProfileEntry::Category::GRAPHICS);
 
   AnimatedGeometryRoot* lastAnimatedGeometryRoot = mContainerAnimatedGeometryRoot;
+  nsPoint lastAGRTopLeft;
   nsPoint topLeft(0,0);
 
   // When NO_COMPONENT_ALPHA is set, items will be flattened into a single
@@ -3773,7 +3774,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
   // items.
   if (mFlattenToSingleLayer) {
     if (ChooseAnimatedGeometryRoot(*aList, &lastAnimatedGeometryRoot)) {
-      topLeft = (*lastAnimatedGeometryRoot)->GetOffsetToCrossDoc(mContainerReferenceFrame);
+      lastAGRTopLeft = (*lastAnimatedGeometryRoot)->GetOffsetToCrossDoc(mContainerReferenceFrame);
     }
   }
 
@@ -3844,6 +3845,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
     if (mFlattenToSingleLayer && layerState != LAYER_ACTIVE_FORCE) {
       forceInactive = true;
       animatedGeometryRoot = lastAnimatedGeometryRoot;
+      topLeft = lastAGRTopLeft;
     } else {
       forceInactive = false;
       if (mManager->IsWidgetLayerManager()) {
