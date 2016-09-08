@@ -133,7 +133,7 @@ MessagePortParent::ActorDestroy(ActorDestroyReason aWhy)
     // When the last parent is deleted, this service is freed but this cannot
     // be done when the hashtables are written by CloseAll.
     RefPtr<MessagePortService> kungFuDeathGrip = mService;
-    mService->ParentDestroy(this);
+    kungFuDeathGrip->ParentDestroy(this);
   }
 }
 

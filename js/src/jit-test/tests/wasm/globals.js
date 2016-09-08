@@ -2,7 +2,6 @@
 load(libdir + "wasm.js");
 
 const { Instance, Module } = WebAssembly;
-const evalText = (txt, imports = {}) => new Instance(new Module(wasmTextToBinary(txt, 'new-format')), imports).exports;
 
 // Locally-defined globals
 assertErrorMessage(() => evalText(`(module (global))`), SyntaxError, /parsing/);
@@ -33,7 +32,7 @@ function testInner(type, initialValue, nextValue, coercion, assertFunc = assertE
         (export "get_cst" $get_cst)
 
         (export "set" $set)
-    )`);
+    )`).exports;
 
     assertFunc(module.get(), coercion(initialValue));
     assertEq(module.set(coercion(nextValue)), undefined);
@@ -76,7 +75,7 @@ var module = evalText(`(module
     (export "get2" $get_2) (export "set2" $set_2)
     (export "get3" $get_3) (export "set3" $set_3)
     (export "get4" $get_4) (export "set4" $set_4)
-)`);
+)`).exports;
 
 let values = [42, 10, Math.fround(13.37), 13.37, -18];
 let nextValues = [13, 37, Math.fround(-17.89), 9.3, -13];
@@ -107,7 +106,7 @@ module = evalText(`(module
     globals: {
         a: 1
     }
-});
+}).exports;
 assertEq(module.f, module.tbl.get(1));
 
 // Import/export rules.
@@ -120,7 +119,7 @@ module = evalText(`(module
  (func $get (result i32) (get_global $g))
  (export "getter" $get)
  (export "value" global 0)
-)`, { globals: {x: 42} });
+)`, { globals: {x: 42} }).exports;
 
 assertEq(module.getter(), 42);
 assertEq(module.value, 42);
@@ -131,7 +130,7 @@ module = evalText(`(module
  (global i32 immutable (i32.const 1337))
  (export "imported" global 0)
  (export "defined" global 1)
-)`, { globals: {x: 42} });
+)`, { globals: {x: 42} }).exports;
 
 assertEq(module.imported, 42);
 assertEq(module.defined, 1337);
@@ -166,7 +165,7 @@ function testInitExpr(type, initialValue, nextValue, coercion, assertFunc = asse
         globals: {
             a: coercion(initialValue)
         }
-    });
+    }).exports;
 
     assertFunc(module.get0(), coercion(initialValue));
     assertFunc(module.get1(), coercion(initialValue));
@@ -196,7 +195,7 @@ testInitExpr('f64', 13.37, 0.1989, x => +x);
      (global i64 immutable (i64.const 0xFAFADADABABA))
      (export "imported" global 0)
      (export "defined" global 1)
-    )`, { globals: {x: createI64('0x1234567887654321')} });
+    )`, { globals: {x: createI64('0x1234567887654321')} }).exports;
 
     assertEqI64(module.imported, createI64('0x1234567887654321'));
     assertEqI64(module.defined, createI64('0xFAFADADABABA'));

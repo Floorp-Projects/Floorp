@@ -1661,7 +1661,11 @@ nsWebBrowser::ScrollByPages(int32_t aNumPages)
 NS_IMETHODIMP
 nsWebBrowser::SetDocShell(nsIDocShell* aDocShell)
 {
+  // We need to keep the docshell alive while we perform the changes, but we
+  // don't need to call any methods on it.
   nsCOMPtr<nsIDocShell> kungFuDeathGrip(mDocShell);
+  mozilla::Unused << kungFuDeathGrip;
+
   if (aDocShell) {
     NS_ENSURE_TRUE(!mDocShell, NS_ERROR_FAILURE);
 

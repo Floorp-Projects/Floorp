@@ -210,9 +210,9 @@ ParseTask::ParseTask(ParseTaskKind kind, ExclusiveContext* cx, JSObject* exclusi
                      JS::OffThreadCompileCallback callback, void* callbackData)
   : kind(kind), cx(cx), options(initCx), chars(chars), length(length),
     alloc(JSRuntime::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
-    exclusiveContextGlobal(initCx, exclusiveContextGlobal),
+    exclusiveContextGlobal(exclusiveContextGlobal),
     callback(callback), callbackData(callbackData),
-    script(initCx), sourceObject(initCx),
+    script(nullptr), sourceObject(nullptr),
     errors(cx), overRecursed(false), outOfMemory(false)
 {
 }
@@ -254,6 +254,19 @@ ParseTask::~ParseTask()
         js_delete(errors[i]);
 }
 
+void
+ParseTask::trace(JSTracer* trc)
+{
+    if (exclusiveContextGlobal->zoneFromAnyThread()->runtimeFromAnyThread() != trc->runtime())
+        return;
+
+    TraceManuallyBarrieredEdge(trc, &exclusiveContextGlobal, "ParseTask::exclusiveContextGlobal");
+    if (script)
+        TraceManuallyBarrieredEdge(trc, &script, "ParseTask::script");
+    if (sourceObject)
+        TraceManuallyBarrieredEdge(trc, &sourceObject, "ParseTask::sourceObject");
+}
+
 ScriptParseTask::ScriptParseTask(ExclusiveContext* cx, JSObject* exclusiveContextGlobal,
                                  JSContext* initCx, const char16_t* chars, size_t length,
                                  JS::OffThreadCompileCallback callback, void* callbackData)
@@ -269,7 +282,7 @@ ScriptParseTask::parse()
     script = frontend::CompileGlobalScript(cx, alloc, ScopeKind::Global,
                                            options, srcBuf,
                                            /* extraSct = */ nullptr,
-                                           /* sourceObjectOut = */ sourceObject.address());
+                                           /* sourceObjectOut = */ &sourceObject);
 }
 
 ModuleParseTask::ModuleParseTask(ExclusiveContext* cx, JSObject* exclusiveContextGlobal,
@@ -284,8 +297,7 @@ void
 ModuleParseTask::parse()
 {
     SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
-    ModuleObject* module = frontend::CompileModule(cx, options, srcBuf, alloc,
-                                                   sourceObject.address());
+    ModuleObject* module = frontend::CompileModule(cx, options, srcBuf, alloc, &sourceObject);
     if (module)
         script = module->script();
 }
@@ -1671,6 +1683,22 @@ GlobalHelperThreadState::compressionTaskForSource(ScriptSource* ss,
             return task;
     }
     return nullptr;
+}
+
+void
+GlobalHelperThreadState::trace(JSTracer* trc)
+{
+    AutoLockHelperThreadState lock;
+    for (auto builder : ionWorklist(lock))
+        builder->trace(trc);
+    for (auto builder : ionFinishedList(lock))
+        builder->trace(trc);
+    for (auto parseTask : parseWorklist_)
+        parseTask->trace(trc);
+    for (auto parseTask : parseFinishedList_)
+        parseTask->trace(trc);
+    for (auto parseTask : parseWaitingOnGC_)
+        parseTask->trace(trc);
 }
 
 void

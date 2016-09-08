@@ -1,10 +1,6 @@
 load(libdir + 'wasm.js');
 load(libdir + 'asserts.js');
 
-// Explicitly opt into the new binary format for imports and exports until it
-// is used by default everywhere.
-const textToBinary = str => wasmTextToBinary(str, 'new-format');
-
 const emptyModule = textToBinary('(module)');
 
 // 'WebAssembly' property on global object

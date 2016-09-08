@@ -1058,13 +1058,13 @@ const KTableEntry nsCSSProps::kCaptionSideKTable[] = {
 };
 
 KTableEntry nsCSSProps::kClearKTable[] = {
-  { eCSSKeyword_none,         NS_STYLE_CLEAR_NONE },
-  { eCSSKeyword_left,         NS_STYLE_CLEAR_LEFT },
-  { eCSSKeyword_right,        NS_STYLE_CLEAR_RIGHT },
-  { eCSSKeyword_inline_start, NS_STYLE_CLEAR_INLINE_START },
-  { eCSSKeyword_inline_end,   NS_STYLE_CLEAR_INLINE_END },
-  { eCSSKeyword_both,         NS_STYLE_CLEAR_BOTH },
-  { eCSSKeyword_UNKNOWN,      -1 }
+  { eCSSKeyword_none, StyleClear::None_ },
+  { eCSSKeyword_left, StyleClear::Left },
+  { eCSSKeyword_right, StyleClear::Right },
+  { eCSSKeyword_inline_start, StyleClear::InlineStart },
+  { eCSSKeyword_inline_end, StyleClear::InlineEnd },
+  { eCSSKeyword_both, StyleClear::Both },
+  { eCSSKeyword_UNKNOWN, -1 }
 };
 
 // See also kContextPatternKTable for SVG paint-specific values

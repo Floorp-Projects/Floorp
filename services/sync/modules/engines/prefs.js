@@ -110,9 +110,18 @@ PrefStore.prototype = {
     return values;
   },
 
+  _updateLightWeightTheme (themeID) {
+    let themeObject = null;
+    if (themeID) {
+      themeObject = LightweightThemeManager.getUsedTheme(themeID);
+    }
+    LightweightThemeManager.currentTheme = themeObject;
+  },
+
   _setAllPrefs: function (values) {
     let selectedThemeIDPref = "lightweightThemes.selectedThemeID";
     let selectedThemeIDBefore = this._prefs.get(selectedThemeIDPref, null);
+    let selectedThemeIDAfter = selectedThemeIDBefore;
 
     // Update 'services.sync.prefs.sync.foo.pref' before 'foo.pref', otherwise
     // _isSynced returns false when 'foo.pref' doesn't exist (e.g., on a new device).
@@ -124,27 +133,30 @@ PrefStore.prototype = {
 
       let value = values[pref];
 
-      // Pref has gone missing. The best we can do is reset it.
-      if (value == null) {
-        this._prefs.reset(pref);
-        continue;
-      }
+      switch (pref) {
+        // Some special prefs we don't want to set directly.
+        case selectedThemeIDPref:
+          selectedThemeIDAfter = value;
+          break;
 
-      try {
-        this._prefs.set(pref, value);
-      } catch(ex) {
-        this._log.trace("Failed to set pref: " + pref + ": " + ex);
-      } 
+        // default is to just set the pref
+        default:
+          if (value == null) {
+            // Pref has gone missing. The best we can do is reset it.
+            this._prefs.reset(pref);
+          } else {
+            try {
+              this._prefs.set(pref, value);
+            } catch(ex) {
+              this._log.trace("Failed to set pref: " + pref + ": " + ex);
+            }
+          }
+      }
     }
 
     // Notify the lightweight theme manager if the selected theme has changed.
-    let selectedThemeIDAfter = this._prefs.get(selectedThemeIDPref, null);
     if (selectedThemeIDBefore != selectedThemeIDAfter) {
-      // The currentTheme getter will reflect the theme with the new
-      // selectedThemeID (if there is one).  Just reset it to itself
-      let currentTheme = LightweightThemeManager.currentTheme;
-      LightweightThemeManager.currentTheme = null;
-      LightweightThemeManager.currentTheme = currentTheme;
+      this._updateLightWeightTheme(selectedThemeIDAfter);
     }
   },
 

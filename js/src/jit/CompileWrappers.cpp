@@ -74,12 +74,6 @@ CompileRuntime::addressOfActivation()
     return runtime()->addressOfActivation();
 }
 
-const void*
-CompileRuntime::addressOfLastCachedNativeIterator()
-{
-    return &static_cast<JSContext*>(runtime())->caches.nativeIterCache.last;
-}
-
 #ifdef JS_GC_ZEAL
 const void*
 CompileRuntime::addressOfGCZealModeBits()
@@ -246,6 +240,12 @@ const void*
 CompileCompartment::addressOfEnumerators()
 {
     return &compartment()->enumerators;
+}
+
+const void*
+CompileCompartment::addressOfLastCachedNativeIterator()
+{
+    return &compartment()->lastCachedNativeIterator;
 }
 
 const void*

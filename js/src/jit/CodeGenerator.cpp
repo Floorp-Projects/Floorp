@@ -8785,7 +8785,7 @@ CodeGenerator::visitIteratorStart(LIteratorStart* lir)
     MOZ_ASSERT(flags == JSITER_ENUMERATE);
 
     // Fetch the most recent iterator and ensure it's not nullptr.
-    masm.loadPtr(AbsoluteAddress(GetJitContext()->runtime->addressOfLastCachedNativeIterator()), output);
+    masm.loadPtr(AbsoluteAddress(gen->compartment->addressOfLastCachedNativeIterator()), output);
     masm.branchTestPtr(Assembler::Zero, output, output, ool->entry());
 
     // Load NativeIterator.
@@ -11606,19 +11606,6 @@ CodeGenerator::visitInterruptCheck(LInterruptCheck* lir)
     AbsoluteAddress interruptAddr(GetJitContext()->runtime->addressOfInterruptUint32());
     masm.branch32(Assembler::NotEqual, interruptAddr, Imm32(0), ool->entry());
     masm.bind(ool->rejoin());
-}
-
-void
-CodeGenerator::visitAsmJSInterruptCheck(LAsmJSInterruptCheck* lir)
-{
-    Label rejoin;
-    masm.branch32(Assembler::Equal, wasm::SymbolicAddress::InterruptUint32, Imm32(0), &rejoin);
-
-    MOZ_ASSERT((sizeof(AsmJSFrame) + masm.framePushed()) % ABIStackAlignment == 0);
-    masm.call(wasm::SymbolicAddress::HandleExecutionInterrupt);
-    masm.branchIfFalseBool(ReturnReg, wasm::JumpTarget::Throw);
-
-    masm.bind(&rejoin);
 }
 
 void

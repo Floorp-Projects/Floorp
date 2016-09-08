@@ -144,8 +144,6 @@ class nsCSPParser {
     bool atValidSubDelimChar();                             // helper function to parse sub-delims
     bool atValidPctEncodedChar();                           // helper function to parse pct-encoded
     bool subPath(nsCSPHostSrc* aCspHost);                   // helper function to parse paths
-    void percentDecodeStr(const nsAString& aEncStr,         // helper function to percent-decode
-                          nsAString& outDecStr);
 
     inline bool atEnd()
     {

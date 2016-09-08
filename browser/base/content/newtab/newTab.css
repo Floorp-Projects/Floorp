@@ -399,6 +399,7 @@ input[type=button] {
 
 #newtab-search-submit {
   margin-inline-start: -1px;
+  color: transparent;
   background: url("chrome://browser/skin/search-arrow-go.svg#search-arrow-go") center center no-repeat, linear-gradient(hsla(0,0%,100%,.8), hsla(0,0%,100%,.1)) padding-box;
   padding: 0;
   border: 1px solid;
@@ -407,7 +408,6 @@ input[type=button] {
   border-inline-start: 1px solid transparent;
   box-shadow: 0 0 2px hsla(0,0%,100%,.5) inset,
               0 1px 0 hsla(0,0%,100%,.2);
-  color: inherit;
   cursor: pointer;
   transition-property: background-color, border-color, box-shadow;
   transition-duration: 150ms;
@@ -423,7 +423,6 @@ input[type=button] {
 #newtab-search-text + #newtab-search-submit:hover,
 #newtab-search-text[autofocus] + #newtab-search-submit {
   border-color: #59b5fc #45a3e7 #3294d5;
-  color: white;
 }
 
 #newtab-search-text:focus + #newtab-search-submit,

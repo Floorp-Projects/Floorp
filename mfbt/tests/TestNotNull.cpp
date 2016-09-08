@@ -7,6 +7,7 @@
 #include "mozilla/NotNull.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 
 using mozilla::WrapNotNull;
 using mozilla::MakeUnique;
@@ -283,10 +284,12 @@ TestNotNullWithRefPtr()
   // At this point the refcount is still 2.
 
   RefPtr<MyRefType> r4 = r2;
+  mozilla::Unused << r4;
 
   // At this point the refcount is 3.
 
   RefPtr<MyRefType> r5 = r3.get();
+  mozilla::Unused << r5;
 
   // At this point the refcount is 4.
 

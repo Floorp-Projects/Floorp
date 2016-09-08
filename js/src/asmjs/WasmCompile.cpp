@@ -613,7 +613,7 @@ DecodeFunctionSection(Decoder& d, ModuleGeneratorData* init)
 }
 
 static UniqueChars
-MaybeDecodeName(Decoder& d)
+DecodeName(Decoder& d)
 {
     uint32_t numBytes;
     if (!d.readVarU32(&numBytes))
@@ -774,28 +774,22 @@ DecodeImport(Decoder& d, bool newFormat, ModuleGeneratorData* init, ImportVector
         if (!init->funcImports.emplaceBack(sig))
             return false;
 
-        UniqueChars moduleName = MaybeDecodeName(d);
+        UniqueChars moduleName = DecodeName(d);
         if (!moduleName)
             return Fail(d, "expected valid import module name");
 
-        if (!strlen(moduleName.get()))
-            return Fail(d, "module name cannot be empty");
-
-        UniqueChars funcName = MaybeDecodeName(d);
+        UniqueChars funcName = DecodeName(d);
         if (!funcName)
             return Fail(d, "expected valid import func name");
 
         return imports->emplaceBack(Move(moduleName), Move(funcName), DefinitionKind::Function);
     }
 
-    UniqueChars moduleName = MaybeDecodeName(d);
+    UniqueChars moduleName = DecodeName(d);
     if (!moduleName)
         return Fail(d, "expected valid import module name");
 
-    if (!strlen(moduleName.get()))
-        return Fail(d, "module name cannot be empty");
-
-    UniqueChars funcName = MaybeDecodeName(d);
+    UniqueChars funcName = DecodeName(d);
     if (!funcName)
         return Fail(d, "expected valid import func name");
 
@@ -1074,7 +1068,7 @@ typedef HashSet<const char*, CStringHasher, SystemAllocPolicy> CStringSet;
 static UniqueChars
 DecodeExportName(Decoder& d, CStringSet* dupSet)
 {
-    UniqueChars exportName = MaybeDecodeName(d);
+    UniqueChars exportName = DecodeName(d);
     if (!exportName) {
         Fail(d, "expected valid export name");
         return nullptr;

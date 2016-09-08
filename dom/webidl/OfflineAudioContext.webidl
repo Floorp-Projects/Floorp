@@ -10,7 +10,8 @@
  * liability, trademark and document use rules apply.
  */
 
-[Constructor(unsigned long numberOfChannels, unsigned long length, float sampleRate)]
+[Constructor(unsigned long numberOfChannels, unsigned long length, float sampleRate),
+Pref="dom.webaudio.enabled"]
 interface OfflineAudioContext : AudioContext {
 
     [Throws]

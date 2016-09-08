@@ -167,7 +167,7 @@ static const nsAttrValue::EnumTable kMozAudioChannelAttributeTable[] = {
   { "ringer",             (int16_t)AudioChannel::Ringer },
   { "publicnotification", (int16_t)AudioChannel::Publicnotification },
   { "system",             (int16_t)AudioChannel::System },
-  { nullptr }
+  { nullptr,              0 }
 };
 
 /* static */ void

@@ -576,7 +576,7 @@ protected:
 
   /** Find any trailing BR clear from the last line of the block (or its PIFs)
    */
-  uint8_t FindTrailingClear();
+  mozilla::StyleClear FindTrailingClear();
 
   /**
    * Remove a float from our float list.

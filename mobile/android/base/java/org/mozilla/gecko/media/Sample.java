@@ -39,7 +39,7 @@ public final class Sample implements Parcelable {
     }
 
     public boolean isDummy() {
-        return bytes == null && info.size == 0;
+        return !isEOS() && bytes == null && info.size == 0;
     }
 
     public boolean isEOS() {
