@@ -351,7 +351,7 @@ AudioStream::Init(uint32_t aNumChannels, uint32_t aRate,
   if (!cubebContext) {
     NS_WARNING("Can't get cubeb context!");
     CubebUtils::ReportCubebStreamInitFailure(true);
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_DOM_MEDIA_CUBEB_INITIALIZATION_ERR;
   }
 
   return OpenCubeb(cubebContext, params, startTime, CubebUtils::GetFirstStream());
