@@ -16,6 +16,7 @@ enum OverSampleType {
   "4x"
 };
 
+[Pref="dom.webaudio.enabled"]
 interface WaveShaperNode : AudioNode {
 
       [SetterThrows]

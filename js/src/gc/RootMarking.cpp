@@ -379,6 +379,9 @@ js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrM
     // Trace SPS.
     rt->spsProfiler.trace(trc);
 
+    // Trace helper thread roots.
+    HelperThreadState().trace(trc);
+
     // Trace the embedding's black and gray roots.
     if (!rt->isHeapMinorCollecting()) {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_EMBEDDING);

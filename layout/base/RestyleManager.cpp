@@ -299,6 +299,7 @@ RestyleManager::AttributeChanged(Element* aElement,
   // XXXbz how, exactly, would this attribute change cause us to be
   // destroyed from inside this function?
   nsCOMPtr<nsIPresShell> shell = PresContext()->GetPresShell();
+  mozilla::Unused << shell; // Unused within this function
 
   // Get the frame associated with the content which is the highest in the frame tree
   nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
@@ -694,6 +695,7 @@ RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
 
   // Make sure that the viewmanager will outlive the presshell
   RefPtr<nsViewManager> vm = presShell->GetViewManager();
+  mozilla::Unused << vm; // Not used within this function
 
   // We may reconstruct frames below and hence process anything that is in the
   // tree. We don't want to get notified to process those items again after.

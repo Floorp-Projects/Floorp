@@ -2783,7 +2783,6 @@ nsFrameSelection::SelectBlockOfCells(nsIContent *aStartCell, nsIContent *aEndCel
   NS_ENSURE_TRUE(aEndCell, NS_ERROR_NULL_POINTER);
   mEndSelectedCell = aEndCell;
 
-  nsCOMPtr<nsIContent> startCell;
   nsresult result = NS_OK;
 
   // If new end cell is in a different table, do nothing
@@ -5092,17 +5091,17 @@ Selection::Collapse(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
     return;
   }
 
-  nsCOMPtr<nsINode> kungfuDeathGrip = &aParentNode;
+  nsCOMPtr<nsINode> parentNode = &aParentNode;
 
   mFrameSelection->InvalidateDesiredPos();
-  if (!IsValidSelectionPoint(mFrameSelection, &aParentNode)) {
+  if (!IsValidSelectionPoint(mFrameSelection, parentNode)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
   nsresult result;
 
   RefPtr<nsPresContext> presContext = GetPresContext();
-  if (!presContext || presContext->Document() != aParentNode.OwnerDoc()) {
+  if (!presContext || presContext->Document() != parentNode->OwnerDoc()) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -5115,37 +5114,37 @@ Selection::Collapse(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
 
   // Hack to display the caret on the right line (bug 1237236).
   if (mFrameSelection->GetHint() != CARET_ASSOCIATE_AFTER &&
-      aParentNode.IsContent()) {
+      parentNode->IsContent()) {
     int32_t frameOffset;
     nsTextFrame* f =
-      do_QueryFrame(nsCaret::GetFrameAndOffset(this, &aParentNode,
+      do_QueryFrame(nsCaret::GetFrameAndOffset(this, parentNode,
                                                aOffset, &frameOffset));
     if (f && f->IsAtEndOfLine() && f->HasSignificantTerminalNewline()) {
-      if ((aParentNode.AsContent() == f->GetContent() &&
+      if ((parentNode->AsContent() == f->GetContent() &&
            f->GetContentEnd() == int32_t(aOffset)) ||
-          (&aParentNode == f->GetContent()->GetParentNode() &&
-           aParentNode.IndexOf(f->GetContent()) + 1 == int32_t(aOffset))) {
+          (parentNode == f->GetContent()->GetParentNode() &&
+           parentNode->IndexOf(f->GetContent()) + 1 == int32_t(aOffset))) {
         mFrameSelection->SetHint(CARET_ASSOCIATE_AFTER);
       }
     }
   }
 
-  RefPtr<nsRange> range = new nsRange(&aParentNode);
-  result = range->SetEnd(&aParentNode, aOffset);
+  RefPtr<nsRange> range = new nsRange(parentNode);
+  result = range->SetEnd(parentNode, aOffset);
   if (NS_FAILED(result)) {
     aRv.Throw(result);
     return;
   }
-  result = range->SetStart(&aParentNode, aOffset);
+  result = range->SetStart(parentNode, aOffset);
   if (NS_FAILED(result)) {
     aRv.Throw(result);
     return;
   }
 
 #ifdef DEBUG_SELECTION
-  nsCOMPtr<nsIContent> content = do_QueryInterface(&aParentNode);
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(&aParentNode);
-  printf ("Sel. Collapse to %p %s %d\n", &aParentNode,
+  nsCOMPtr<nsIContent> content = do_QueryInterface(parentNode);
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(parentNode);
+  printf ("Sel. Collapse to %p %s %d\n", parentNode.get(),
           content ? nsAtomCString(content->NodeInfo()->NameAtom()).get()
                   : (doc ? "DOCUMENT" : "???"),
           aOffset);

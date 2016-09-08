@@ -942,7 +942,6 @@ int64_t nsDocLoader::GetMaxTotalProgress()
   int64_t newMaxTotal = 0;
 
   uint32_t count = mChildList.Length();
-  nsCOMPtr<nsIWebProgress> webProgress;
   for (uint32_t i=0; i < count; i++)
   {
     int64_t individualProgress = 0;

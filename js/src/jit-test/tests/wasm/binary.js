@@ -229,14 +229,14 @@ assertThrowsInstanceOf(() => wasmEval(moduleWithSections([sigSection([v2vSig]), 
 assertErrorMessage(() => wasmEval(moduleWithSections([importSection([{sigIndex:0, module:"a", func:"b"}])])), TypeError, /signature index out of range/);
 assertErrorMessage(() => wasmEval(moduleWithSections([sigSection([v2vSig]), importSection([{sigIndex:1, module:"a", func:"b"}])])), TypeError, /signature index out of range/);
 wasmEval(moduleWithSections([sigSection([v2vSig]), importSection([])]));
-wasmEval(moduleWithSections([sigSection([v2vSig]), importSection([{sigIndex:0, module:"a", func:""}])]), {a:()=>{}});
+wasmEval(moduleWithSections([sigSection([v2vSig]), importSection([{sigIndex:0, module:"a", func:""}])]), {a:{"":()=>{}}});
 
 wasmEval(moduleWithSections([
     sigSection([v2vSig]),
     importSection([{sigIndex:0, module:"a", func:""}]),
     declSection([0]),
     bodySection([v2vBody])
-]), {a:()=>{}});
+]), {a:{"":()=>{}}});
 
 assertErrorMessage(() => wasmEval(moduleWithSections([ {name: dataSegmentsId, body: [], } ])), TypeError, /data section requires a memory section/);
 
