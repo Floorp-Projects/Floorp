@@ -4,13 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "BackgroundFileSaver.h"
-
-#include "ScopedNSSTypes.h"
-#include "mozilla/Casting.h"
+#include "pk11pub.h"
 #include "mozilla/Logging.h"
-#include "mozilla/Telemetry.h"
-#include "nsCOMArray.h"
+#include "ScopedNSSTypes.h"
+#include "secoidt.h"
+
 #include "nsIAsyncInputStream.h"
 #include "nsIFile.h"
 #include "nsIMutableArray.h"
@@ -18,10 +16,12 @@
 #include "nsIX509Cert.h"
 #include "nsIX509CertDB.h"
 #include "nsIX509CertList.h"
+#include "nsCOMArray.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
-#include "pk11pub.h"
-#include "secoidt.h"
+
+#include "BackgroundFileSaver.h"
+#include "mozilla/Telemetry.h"
 
 #ifdef XP_WIN
 #include <windows.h>
@@ -583,10 +583,9 @@ BackgroundFileSaver::ProcessStateChange()
           return NS_ERROR_NOT_AVAILABLE;
         }
 
-        nsresult rv = MapSECStatus(
-          PK11_DigestOp(mDigestContext.get(),
-                        BitwiseCast<unsigned char*, char*>(buffer),
-                        count));
+        nsresult rv = MapSECStatus(PK11_DigestOp(mDigestContext.get(),
+                                                 uint8_t_ptr_cast(buffer),
+                                                 count));
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
@@ -725,9 +724,8 @@ BackgroundFileSaver::CheckCompletion()
       rv = d.End(SEC_OID_SHA256, mDigestContext);
       if (NS_SUCCEEDED(rv)) {
         MutexAutoLock lock(mLock);
-        mSha256 =
-          nsDependentCSubstring(BitwiseCast<char*, unsigned char*>(d.get().data),
-                                d.get().len);
+        mSha256 = nsDependentCSubstring(char_ptr_cast(d.get().data),
+                                        d.get().len);
       }
     }
   }
@@ -1234,10 +1232,8 @@ DigestOutputStream::Write(const char* aBuf, uint32_t aCount, uint32_t* retval)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsresult rv = MapSECStatus(
-    PK11_DigestOp(mDigestContext,
-                  BitwiseCast<const unsigned char*, const char*>(aBuf),
-                  aCount));
+  nsresult rv = MapSECStatus(PK11_DigestOp(mDigestContext,
+                                           uint8_t_ptr_cast(aBuf), aCount));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return mOutputStream->Write(aBuf, aCount, retval);

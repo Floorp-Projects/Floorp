@@ -13,7 +13,6 @@
 #include "NSSCertDBTrustDomain.h"
 #include "NSSErrorsService.h"
 #include "cert.h"
-#include "mozilla/Casting.h"
 #include "nsNSSComponent.h"
 #include "nsServiceManagerUtils.h"
 #include "pk11pub.h"
@@ -712,8 +711,7 @@ CertVerifier::VerifySSLServerCert(const UniqueCERTCertificate& peerCert,
   }
 
   Input hostnameInput;
-  result = hostnameInput.Init(BitwiseCast<const uint8_t*, const char*>(hostname),
-                              strlen(hostname));
+  result = hostnameInput.Init(uint8_t_ptr_cast(hostname), strlen(hostname));
   if (result != Success) {
     PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
     return SECFailure;

@@ -286,10 +286,8 @@ nsDataSignatureVerifier::VerifySignature(const char* aRSABuf,
   *aSigningCert = nullptr;
 
   Digest digest;
-  nsresult rv = digest.DigestBuf(
-    SEC_OID_SHA1,
-    BitwiseCast<const uint8_t*, const char*>(aPlaintext),
-    aPlaintextLen);
+  nsresult rv = digest.DigestBuf(SEC_OID_SHA1, uint8_t_ptr_cast(aPlaintext),
+                                 aPlaintextLen);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
