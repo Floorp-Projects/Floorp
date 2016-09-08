@@ -156,7 +156,7 @@ testuser5.init("http://test.gov", "http://test.gov", null,
 
 /* ========== 1 ========== */
 testnum++;
-testdesc = "Test downgrade from v999 storage"
+testdesc = "Test downgrade from v999 storage";
 
 yield* copyFile("signons-v999.sqlite");
 // Verify the schema version in the test file.
@@ -177,7 +177,7 @@ deleteFile(OUTDIR, "signons-v999.sqlite");
 
 /* ========== 2 ========== */
 testnum++;
-testdesc = "Test downgrade from incompat v999 storage"
+testdesc = "Test downgrade from incompat v999 storage";
 // This file has a testuser999/testpass999, but is missing an expected column
 
 var origFile = OS.Path.join(OUTDIR, "signons-v999-2.sqlite");
@@ -198,7 +198,7 @@ yield OS.File.remove(failFile);
 
 /* ========== 3 ========== */
 testnum++;
-testdesc = "Test upgrade from v1->v2 storage"
+testdesc = "Test upgrade from v1->v2 storage";
 
 yield* copyFile("signons-v1.sqlite");
 // Sanity check the test file.
@@ -257,7 +257,7 @@ deleteFile(OUTDIR, "signons-v1v2.sqlite");
 
 /* ========== 5 ========== */
 testnum++;
-testdesc = "Test upgrade from v2->v3 storage"
+testdesc = "Test upgrade from v2->v3 storage";
 
 yield* copyFile("signons-v2.sqlite");
 // Sanity check the test file.
@@ -317,7 +317,7 @@ deleteFile(OUTDIR, "signons-v2v3.sqlite");
 
 /* ========== 7 ========== */
 testnum++;
-testdesc = "Test upgrade from v3->v4 storage"
+testdesc = "Test upgrade from v3->v4 storage";
 
 yield* copyFile("signons-v3.sqlite");
 // Sanity check the test file.
@@ -344,7 +344,7 @@ for (var i = 0; i < 2; i++) {
 
 /* ========== 8 ========== */
 testnum++;
-testdesc = "Test upgrade from v3->v4->v3 storage"
+testdesc = "Test upgrade from v3->v4->v3 storage";
 
 yield* copyFile("signons-v3v4.sqlite");
 // Sanity check the test file.
@@ -384,7 +384,7 @@ LoginTestUtils.assertTimeIsAboutNow(t2.timePasswordChanged);
 
 /* ========== 9 ========== */
 testnum++;
-testdesc = "Test upgrade from v4 storage"
+testdesc = "Test upgrade from v4 storage";
 
 yield* copyFile("signons-v4.sqlite");
 // Sanity check the test file.
@@ -399,7 +399,7 @@ do_check_true(dbConnection.tableExists("moz_deleted_logins"));
 
 /* ========== 10 ========== */
 testnum++;
-testdesc = "Test upgrade from v4->v5->v4 storage"
+testdesc = "Test upgrade from v4->v5->v4 storage";
 
 yield copyFile("signons-v4v5.sqlite");
 // Sanity check the test file.
@@ -451,7 +451,7 @@ for (let host of disabledHosts) {
 
 /* ========== 12 ========== */
 testnum++;
-testdesc = "Create nsILoginInfo instances for testing with"
+testdesc = "Create nsILoginInfo instances for testing with";
 
 testuser1 = new nsLoginInfo;
 testuser1.init("http://dummyhost.mozilla.org", "", null,
@@ -466,7 +466,7 @@ testuser1.init("http://dummyhost.mozilla.org", "", null,
 
 /* ========== 13 ========== */
 testnum++;
-testdesc = "Corrupt database and backup"
+testdesc = "Corrupt database and backup";
 
 const filename = "signons-c.sqlite";
 const filepath = OS.Path.join(OS.Constants.Path.profileDir, filename);

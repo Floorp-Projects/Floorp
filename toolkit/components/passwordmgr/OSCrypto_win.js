@@ -22,7 +22,7 @@ const wintypes = {
   PDWORD: ctypes.uint32_t.ptr,
   PVOID: ctypes.voidptr_t,
   WORD: ctypes.uint16_t,
-}
+};
 
 function OSCrypto() {
   this._structs = {};

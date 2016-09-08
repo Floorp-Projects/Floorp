@@ -56,7 +56,7 @@ let signonReloadDisplay = {
       Services.obs.notifyObservers(null, "passwordmgr-dialog-updated", null);
     }
   }
-}
+};
 
 // Formatter for localization.
 let dateFormatter = new Intl.DateTimeFormat(undefined,

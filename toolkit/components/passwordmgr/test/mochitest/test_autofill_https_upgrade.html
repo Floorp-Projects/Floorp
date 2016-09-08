@@ -58,7 +58,7 @@ function* prepareLoginsAndProcessForm(url, logins = []) {
 
 add_task(function* setup() {
   yield SpecialPowers.pushPrefEnv({"set": [["signon.schemeUpgrades", true]]});
-})
+});
 
 add_task(function* test_simpleNoDupesNoAction() {
   yield prepareLoginsAndProcessForm("https://example.com" + MISSING_ACTION_PATH, [

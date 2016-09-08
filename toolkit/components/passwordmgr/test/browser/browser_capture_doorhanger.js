@@ -568,7 +568,7 @@ add_task(function* test_noShowPasswordOnDismissal() {
     panel.hidePopup();
     yield promiseHidden;
 
-    info("Clicking on anchor to reshow popup.")
+    info("Clicking on anchor to reshow popup.");
     let promiseShown = BrowserTestUtils.waitForEvent(panel, "popupshown");
     notif.anchorElement.click();
     yield promiseShown;
