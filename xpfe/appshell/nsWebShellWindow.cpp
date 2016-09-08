@@ -224,7 +224,7 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
     }
     rv = mDocShell->CreateAboutBlankContentViewer(principal);
     NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<nsIDocument> doc = mDocShell ? mDocShell->GetDocument() : nullptr;
+    nsCOMPtr<nsIDocument> doc = mDocShell->GetDocument();
     NS_ENSURE_TRUE(!!doc, NS_ERROR_FAILURE);
     doc->SetIsInitialDocument(true);
   }
