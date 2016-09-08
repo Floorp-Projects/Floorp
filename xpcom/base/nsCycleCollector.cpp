@@ -1334,7 +1334,7 @@ public:
                SliceBudget& aBudget,
                nsICycleCollectorListener* aManualListener,
                bool aPreferShorterSlices = false);
-  void Shutdown();
+  void Shutdown(bool aDoCollect);
 
   bool IsIdle() const { return mIncrementalPhase == IdlePhase; }
 
@@ -3885,17 +3885,14 @@ nsCycleCollector::SuspectedCount()
 }
 
 void
-nsCycleCollector::Shutdown()
+nsCycleCollector::Shutdown(bool aDoCollect)
 {
   CheckThreadSafety();
 
   // Always delete snow white objects.
   FreeSnowWhite(true);
 
-#ifndef NS_FREE_PERMANENT_DATA
-  if (PR_GetEnv("MOZ_CC_RUN_DURING_SHUTDOWN"))
-#endif
-  {
+  if (aDoCollect) {
     ShutdownCollect();
   }
 }
@@ -4205,7 +4202,7 @@ nsCycleCollector_finishAnyCurrentCollection()
 }
 
 void
-nsCycleCollector_shutdown()
+nsCycleCollector_shutdown(bool aDoCollect)
 {
   CollectorData* data = sCollectorData.get();
 
@@ -4214,7 +4211,7 @@ nsCycleCollector_shutdown()
     PROFILER_LABEL("nsCycleCollector", "shutdown",
                    js::ProfileEntry::Category::CC);
 
-    data->mCollector->Shutdown();
+    data->mCollector->Shutdown(aDoCollect);
     data->mCollector = nullptr;
     if (data->mRuntime) {
       // Run any remaining tasks that may have been enqueued via
