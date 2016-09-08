@@ -5045,9 +5045,17 @@ js::ThrowUninitializedThis(JSContext* cx, AbstractFramePtr frame)
     if (frame.isFunctionFrame()) {
         fun = frame.callee();
     } else {
-        MOZ_ASSERT(frame.isEvalFrame());
-        MOZ_ASSERT(frame.script()->isDirectEvalInFunction());
-        for (ScopeIter si(frame.script()->enclosingScope()); si; si++) {
+        Scope* startingScope;
+        if (frame.isDebuggerEvalFrame()) {
+            AbstractFramePtr evalInFramePrev = frame.asInterpreterFrame()->evalInFramePrev();
+            startingScope = evalInFramePrev.script()->bodyScope();
+        } else {
+            MOZ_ASSERT(frame.isEvalFrame());
+            MOZ_ASSERT(frame.script()->isDirectEvalInFunction());
+            startingScope = frame.script()->enclosingScope();
+        }
+
+        for (ScopeIter si(startingScope); si; si++) {
             if (si.scope()->is<FunctionScope>()) {
                 fun = si.scope()->as<FunctionScope>().canonicalFunction();
                 break;
