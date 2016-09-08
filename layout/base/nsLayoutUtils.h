@@ -694,8 +694,9 @@ public:
   static nsIFrame* GetFloatFromPlaceholder(nsIFrame* aPlaceholder);
 
   // Combine aNewBreakType with aOrigBreakType, but limit the break types
-  // to NS_STYLE_CLEAR_LEFT, RIGHT, LEFT_AND_RIGHT.
-  static uint8_t CombineBreakType(uint8_t aOrigBreakType, uint8_t aNewBreakType);
+  // to StyleClear::Left, Right, Both.
+  static mozilla::StyleClear CombineBreakType(mozilla::StyleClear aOrigBreakType,
+                                              mozilla::StyleClear aNewBreakType);
 
   /**
    * Get the coordinates of a given DOM mouse event, relative to a given

@@ -384,8 +384,6 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
 
   LOG(("  forceExternalHandling: %s", forceExternalHandling ? "yes" : "no"));
 
-  // We're going to try to find a contentListener that can handle our data
-  nsCOMPtr<nsIURIContentListener> contentListener;
   // The type or data the contentListener wants.
   nsXPIDLCString desiredContentType;
 

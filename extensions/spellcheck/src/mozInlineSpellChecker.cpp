@@ -1805,7 +1805,6 @@ nsresult mozInlineSpellChecker::GetSpellCheckSelection(nsISelection ** aSpellChe
   nsresult rv = editor->GetSelectionController(getter_AddRefs(selcon));
   NS_ENSURE_SUCCESS(rv, rv); 
 
-  nsCOMPtr<nsISelection> spellCheckSelection;
   return selcon->GetSelection(nsISelectionController::SELECTION_SPELLCHECK, aSpellCheckSelection);
 }
 

@@ -21,6 +21,7 @@ enum BiquadFilterType {
   "allpass"
 };
 
+[Pref="dom.webaudio.enabled"]
 interface BiquadFilterNode : AudioNode {
 
     attribute BiquadFilterType type;

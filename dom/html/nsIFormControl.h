@@ -38,14 +38,14 @@ enum FormControlsTypes {
   NS_FORM_INPUT_ELEMENT  = 0x80  // 0b10000000
 };
 
-enum ButtonElementTypes {
+enum ButtonElementTypes : uint8_t {
   NS_FORM_BUTTON_BUTTON = NS_FORM_BUTTON_ELEMENT + 1,
   NS_FORM_BUTTON_RESET,
   NS_FORM_BUTTON_SUBMIT,
   eButtonElementTypesMax
 };
 
-enum InputElementTypes {
+enum InputElementTypes : uint8_t {
   NS_FORM_INPUT_BUTTON = NS_FORM_INPUT_ELEMENT + 1,
   NS_FORM_INPUT_CHECKBOX,
   NS_FORM_INPUT_COLOR,

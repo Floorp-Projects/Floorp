@@ -1428,9 +1428,11 @@ ScopedXPCOMStartup::Initialize()
     mServiceManager = nullptr;
   }
   else {
+#ifdef DEBUG
     nsCOMPtr<nsIComponentRegistrar> reg =
       do_QueryInterface(mServiceManager);
     NS_ASSERTION(reg, "Service Manager doesn't QI to Registrar.");
+#endif
   }
 
   return rv;

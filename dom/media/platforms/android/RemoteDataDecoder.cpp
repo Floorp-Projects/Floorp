@@ -149,7 +149,7 @@ public:
 
       NS_ENSURE_TRUE_VOID(ok);
 
-      if (size > 0) {
+      if (size > 0 && durationUs.value() > 0) {
         RefPtr<layers::Image> img =
           new SurfaceTextureImage(mDecoder->mSurfaceTexture.get(), mDecoder->mConfig.mDisplay,
                                   gl::OriginPos::BottomLeft);
@@ -171,7 +171,6 @@ public:
 
       if ((flags & MediaCodec::BUFFER_FLAG_END_OF_STREAM) != 0) {
         mDecoderCallback->DrainComplete();
-        return;
       }
     }
 
@@ -221,6 +220,15 @@ public:
   {
     mInputDurations.Clear();
     return RemoteDataDecoder::Flush();
+  }
+
+  nsresult Drain() override
+  {
+    nsresult res = RemoteDataDecoder::Drain();
+    NS_ENSURE_SUCCESS(res, res);
+
+    mInputDurations.Put(0);
+    return NS_OK;
   }
 
   nsresult Input(MediaRawData* aSample) override
@@ -440,7 +448,7 @@ RemoteDataDecoder::Drain()
   bufferInfo->Set(0, 0, -1, MediaCodec::BUFFER_FLAG_END_OF_STREAM);
 
   mJavaDecoder->Input(nullptr, bufferInfo);
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 nsresult

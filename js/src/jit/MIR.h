@@ -7737,17 +7737,6 @@ class MInterruptCheck : public MNullaryInstruction
     }
 };
 
-// Check whether we need to fire the interrupt handler at loop headers and
-// function prologues in asm.js. Generated only if we can't use implicit
-// interrupt checks with signal handlers.
-class MAsmJSInterruptCheck
-  : public MNullaryInstruction
-{
-  public:
-    INSTRUCTION_HEADER(AsmJSInterruptCheck)
-    TRIVIAL_NEW_WRAPPERS
-};
-
 // Directly jumps to the indicated trap, leaving Wasm code and reporting a
 // runtime error.
 

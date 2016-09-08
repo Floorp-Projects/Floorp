@@ -44,7 +44,7 @@ BlockReflowInput::BlockReflowInput(const ReflowInput& aReflowInput,
     mBorderPadding(mReflowInput.ComputedLogicalBorderPadding()),
     mPrevBEndMargin(),
     mLineNumber(0),
-    mFloatBreakType(NS_STYLE_CLEAR_NONE),
+    mFloatBreakType(StyleClear::None_),
     mConsumedBSize(aConsumedBSize)
 {
   if (!sFloatFragmentsInsideColumnPrefCached) {
@@ -732,7 +732,7 @@ BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat)
   // See if the float should clear any preceding floats...
   // XXX We need to mark this float somehow so that it gets reflowed
   // when floats are inserted before it.
-  if (NS_STYLE_CLEAR_NONE != floatDisplay->mBreakType) {
+  if (StyleClear::None_ != floatDisplay->mBreakType) {
     // XXXldb Does this handle vertical margins correctly?
     mBCoord = ClearFloats(mBCoord, floatDisplay->PhysicalBreakType(wm));
   }
@@ -1080,7 +1080,7 @@ BlockReflowInput::PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aList,
 }
 
 nscoord
-BlockReflowInput::ClearFloats(nscoord aBCoord, uint8_t aBreakType,
+BlockReflowInput::ClearFloats(nscoord aBCoord, StyleClear aBreakType,
                                 nsIFrame *aReplacedBlock,
                                 uint32_t aFlags)
 {
@@ -1092,8 +1092,8 @@ BlockReflowInput::ClearFloats(nscoord aBCoord, uint8_t aBreakType,
 #endif
 
 #ifdef NOISY_FLOAT_CLEARING
-  printf("BlockReflowInput::ClearFloats: aBCoord=%d breakType=%d\n",
-         aBCoord, aBreakType);
+  printf("BlockReflowInput::ClearFloats: aBCoord=%d breakType=%s\n",
+         aBCoord, nsLineBox::BreakTypeToString(aBreakType));
   mFloatManager->List(stdout);
 #endif
 
@@ -1103,7 +1103,7 @@ BlockReflowInput::ClearFloats(nscoord aBCoord, uint8_t aBreakType,
 
   nscoord newBCoord = aBCoord;
 
-  if (aBreakType != NS_STYLE_CLEAR_NONE) {
+  if (aBreakType != StyleClear::None_) {
     newBCoord = mFloatManager->ClearFloats(newBCoord, aBreakType, aFlags);
   }
 

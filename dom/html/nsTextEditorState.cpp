@@ -2106,7 +2106,7 @@ nsTextEditorState::SetValue(const nsAString& aValue, uint32_t aFlags)
             !StringBeginsWith(newValue, currentValue)) {
           // Replace the whole text.
           currentLength = 0;
-          mSelCon->SelectAll();
+          kungFuDeathGrip->SelectAll();
         } else {
           // Collapse selection to the end so that we can append data.
           mBoundFrame->SelectAllOrCollapseToEndOfText(false);
