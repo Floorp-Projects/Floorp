@@ -149,7 +149,7 @@ public:
   // Returns the first coordinate >= aBCoord that clears the
   // floats indicated by aBreakType and has enough inline size between floats
   // (or no floats remaining) to accomodate aReplacedBlock.
-  nscoord ClearFloats(nscoord aBCoord, uint8_t aBreakType,
+  nscoord ClearFloats(nscoord aBCoord, mozilla::StyleClear aBreakType,
                       nsIFrame *aReplacedBlock = nullptr,
                       uint32_t aFlags = 0);
 
@@ -371,7 +371,7 @@ public:
 
   Flags mFlags;
 
-  uint8_t mFloatBreakType;
+  StyleClear mFloatBreakType;
 
   // The amount of computed block-direction size "consumed" by previous-in-flows.
   nscoord mConsumedBSize;

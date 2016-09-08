@@ -285,9 +285,10 @@ typedef uint32_t nsReflowStatus;
 #define NS_INLINE_IS_BREAK_BEFORE(_status) \
   (NS_INLINE_BREAK == ((_status) & (NS_INLINE_BREAK|NS_INLINE_BREAK_AFTER)))
 
-#define NS_INLINE_GET_BREAK_TYPE(_status) (((_status) >> 12) & 0xF)
+#define NS_INLINE_GET_BREAK_TYPE(_status) \
+  (static_cast<StyleClear>(((_status) >> 12) & 0xF))
 
-#define NS_INLINE_MAKE_BREAK_TYPE(_type)  ((_type) << 12)
+#define NS_INLINE_MAKE_BREAK_TYPE(_type)  (static_cast<int>(_type) << 12)
 
 // Construct a line-break-before status. Note that there is no
 // completion status for a line-break before because we *know* that
@@ -295,7 +296,7 @@ typedef uint32_t nsReflowStatus;
 // status doesn't matter.
 #define NS_INLINE_LINE_BREAK_BEFORE()                                   \
   (NS_INLINE_BREAK | NS_INLINE_BREAK_BEFORE |                           \
-   NS_INLINE_MAKE_BREAK_TYPE(NS_STYLE_CLEAR_LINE))
+   NS_INLINE_MAKE_BREAK_TYPE(StyleClear::Line))
 
 // Take a completion status and add to it the desire to have a
 // line-break after. For this macro we do need the completion status
@@ -303,7 +304,7 @@ typedef uint32_t nsReflowStatus;
 // continue the frame or not.
 #define NS_INLINE_LINE_BREAK_AFTER(_completionStatus)                   \
   ((_completionStatus) | NS_INLINE_BREAK | NS_INLINE_BREAK_AFTER |      \
-   NS_INLINE_MAKE_BREAK_TYPE(NS_STYLE_CLEAR_LINE))
+   NS_INLINE_MAKE_BREAK_TYPE(StyleClear::Line))
 
 // A frame is "truncated" if the part of the frame before the first
 // possible break point was unable to fit in the available vertical

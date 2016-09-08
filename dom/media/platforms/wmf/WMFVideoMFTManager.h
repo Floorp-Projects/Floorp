@@ -51,6 +51,8 @@ public:
 
 private:
 
+  bool ValidateVideoInfo();
+
   bool InitializeDXVA(bool aForceD3D9);
 
   bool InitInternal(bool aForceD3D9);
@@ -101,6 +103,7 @@ private:
   uint32_t mNullOutputCount;
   bool mGotValidOutputAfterNullOutput;
   bool mGotExcessiveNullOutput;
+  bool mIsValid;
 };
 
 } // namespace mozilla

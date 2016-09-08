@@ -22,7 +22,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Menu)
 namespace mozilla {
 namespace dom {
 
-enum MenuType
+enum MenuType : uint8_t
 {
   MENU_TYPE_CONTEXT = 1,
   MENU_TYPE_TOOLBAR,
@@ -33,7 +33,7 @@ static const nsAttrValue::EnumTable kMenuTypeTable[] = {
   { "context", MENU_TYPE_CONTEXT },
   { "toolbar", MENU_TYPE_TOOLBAR },
   { "list", MENU_TYPE_LIST },
-  { 0 }
+  { nullptr, 0 }
 };
 
 static const nsAttrValue::EnumTable* kMenuDefaultType =

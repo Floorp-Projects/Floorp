@@ -191,63 +191,6 @@ nsCSPParser::atEndOfPath()
   return (atEnd() || peek(QUESTIONMARK) || peek(NUMBER_SIGN));
 }
 
-void
-nsCSPParser::percentDecodeStr(const nsAString& aEncStr, nsAString& outDecStr)
-{
-  outDecStr.Truncate();
-
-  // helper function that should not be visible outside this methods scope
-  struct local {
-    static inline char16_t convertHexDig(char16_t aHexDig) {
-      if (isNumberToken(aHexDig)) {
-        return aHexDig - '0';
-      }
-      if (aHexDig >= 'A' && aHexDig <= 'F') {
-        return aHexDig - 'A' + 10;
-      }
-      // must be a lower case character
-      // (aHexDig >= 'a' && aHexDig <= 'f')
-      return aHexDig - 'a' + 10;
-    }
-  };
-
-  const char16_t *cur, *end, *hexDig1, *hexDig2;
-  cur = aEncStr.BeginReading();
-  end = aEncStr.EndReading();
-
-  while (cur != end) {
-    // if it's not a percent sign then there is
-    // nothing to do for that character
-    if (*cur != PERCENT_SIGN) {
-      outDecStr.Append(*cur);
-      cur++;
-      continue;
-    }
-
-    // get the two hexDigs following the '%'-sign
-    hexDig1 = cur + 1;
-    hexDig2 = cur + 2;
-
-    // if there are no hexdigs after the '%' then
-    // there is nothing to do for us.
-    if (hexDig1 == end || hexDig2 == end ||
-        !isValidHexDig(*hexDig1) ||
-        !isValidHexDig(*hexDig2)) {
-      outDecStr.Append(PERCENT_SIGN);
-      cur++;
-      continue;
-    }
-
-    // decode "% hexDig1 hexDig2" into a character.
-    char16_t decChar = (local::convertHexDig(*hexDig1) << 4) +
-                       local::convertHexDig(*hexDig2);
-    outDecStr.Append(decChar);
-
-    // increment 'cur' to after the second hexDig
-    cur = ++hexDig2;
-  }
-}
-
 // unreserved    = ALPHA / DIGIT / "-" / "." / "_" / "~"
 bool
 nsCSPParser::atValidUnreservedChar()
@@ -398,7 +341,7 @@ nsCSPParser::subPath(nsCSPHostSrc* aCspHost)
       // before appendig any additional portion of a subpath we have to pct-decode
       // that portion of the subpath. atValidPathChar() already verified a correct
       // pct-encoding, now we can safely decode and append the decoded-sub path.
-      percentDecodeStr(mCurValue, pctDecodedSubPath);
+      CSP_PercentDecodeStr(mCurValue, pctDecodedSubPath);
       aCspHost->appendPath(pctDecodedSubPath);
       // Resetting current value since we are appending parts of the path
       // to aCspHost, e.g; "http://www.example.com/path1/path2" then the
@@ -427,7 +370,7 @@ nsCSPParser::subPath(nsCSPHostSrc* aCspHost)
   // before appendig any additional portion of a subpath we have to pct-decode
   // that portion of the subpath. atValidPathChar() already verified a correct
   // pct-encoding, now we can safely decode and append the decoded-sub path.
-  percentDecodeStr(mCurValue, pctDecodedSubPath);
+  CSP_PercentDecodeStr(mCurValue, pctDecodedSubPath);
   aCspHost->appendPath(pctDecodedSubPath);
   resetCurValue();
   return true;

@@ -32,7 +32,7 @@ static const nsAttrValue::EnumTable kCaptionAlignTable[] = {
   { "right",  NS_STYLE_CAPTION_SIDE_RIGHT },
   { "top",    NS_STYLE_CAPTION_SIDE_TOP },
   { "bottom", NS_STYLE_CAPTION_SIDE_BOTTOM },
-  { 0 }
+  { nullptr,  0 }
 };
 
 bool

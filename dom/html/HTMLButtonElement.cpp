@@ -47,7 +47,7 @@ static const nsAttrValue::EnumTable kButtonTypeTable[] = {
   { "button", NS_FORM_BUTTON_BUTTON },
   { "reset", NS_FORM_BUTTON_RESET },
   { "submit", NS_FORM_BUTTON_SUBMIT },
-  { 0 }
+  { nullptr, 0 }
 };
 
 // Default type is 'submit'.

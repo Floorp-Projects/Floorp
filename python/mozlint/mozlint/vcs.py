@@ -23,7 +23,7 @@ class VCSFiles(object):
         )
 
         for cmd in commands:
-            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             output = proc.communicate()[0].strip()
 
             if proc.returncode == 0:

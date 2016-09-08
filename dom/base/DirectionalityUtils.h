@@ -22,7 +22,7 @@ class Element;
 
 namespace mozilla {
 
-enum Directionality {
+enum Directionality : uint8_t {
   eDir_NotSet,
   eDir_RTL,
   eDir_LTR,
