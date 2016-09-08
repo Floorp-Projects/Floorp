@@ -13,6 +13,9 @@
     // Commas at the end of the line not the start
     "comma-style": 2,
 
+    // Use {} instead of new Object()
+    "no-new-object": 2,
+
     // No using undeclared variables
     "no-undef": 2,
 
