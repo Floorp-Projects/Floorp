@@ -1473,12 +1473,13 @@ JSStructuredCloneWriter::transferOwnership()
             JSAutoCompartment ac(context(), arrayBuffer);
             size_t nbytes = arrayBuffer->byteLength();
 
-            // Structured cloning currently only has optimizations for mapped
-            // and malloc'd buffers, not asm.js-ified buffers.
+            if (arrayBuffer->isWasm()) {
+                JS_ReportErrorNumber(context(), GetErrorMessage, nullptr, JSMSG_WASM_NO_TRANSFER);
+                return false;
+            }
+
             bool hasStealableContents = arrayBuffer->hasStealableContents() &&
-                                        (arrayBuffer->isMapped() || arrayBuffer->hasMallocedContents());
-            if (scope == JS::StructuredCloneScope::DifferentProcess)
-                hasStealableContents = false;
+                                        (scope != JS::StructuredCloneScope::DifferentProcess);
 
             ArrayBufferObject::BufferContents bufContents =
                 ArrayBufferObject::stealContents(context(), arrayBuffer, hasStealableContents);
