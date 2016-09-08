@@ -14,7 +14,7 @@ Index: LICENSE
 +
  This code is released under the libpng license.
  
- libpng versions 1.0.7, July 1, 2000 through 1.6.24, August 4, 2016 are
+ libpng versions 1.0.7, July 1, 2000 through 1.6.25, September 1, 2016 are
 Index: pngread.c
 ===================================================================
 --- pngread.c
@@ -299,8 +299,8 @@ Index: png.c
  #else
  #  ifdef __STDC__
     return PNG_STRING_NEWLINE \
--      "libpng version 1.6.24 - August 4, 2016" PNG_STRING_NEWLINE \
-+      "libpng version 1.6.24+apng - August 4, 2016" PNG_STRING_NEWLINE \
+-      "libpng version 1.6.25 - September 1, 2016" PNG_STRING_NEWLINE \
++      "libpng version 1.6.25+apng - September 1, 2016" PNG_STRING_NEWLINE \
        "Copyright (c) 1998-2002,2004,2006-2016 Glenn Randers-Pehrson" \
        PNG_STRING_NEWLINE \
        "Copyright (c) 1996-1997 Andreas Dilger" PNG_STRING_NEWLINE \
@@ -310,8 +310,8 @@ Index: png.c
 +      "Portions Copyright (c) 2006-2007 Andrew Smith" PNG_STRING_NEWLINE \
 +      "Portions Copyright (c) 2008-2016 Max Stepin" PNG_STRING_NEWLINE ;
  #  else
--   return "libpng version 1.6.24 - August 4, 2016\
-+   return "libpng version 1.6.24+apng - August 4, 2016\
+-   return "libpng version 1.6.25 - September 1, 2016\
++   return "libpng version 1.6.25+apng - September 1, 2016\
        Copyright (c) 1998-2002,2004,2006-2016 Glenn Randers-Pehrson\
        Copyright (c) 1996-1997 Andreas Dilger\
 -      Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.";
@@ -338,19 +338,19 @@ Index: png.h
   * This code is released under the libpng license.
   *
   * Some files in the "contrib" directory and some configure-generated
-@@ -313,8 +319,9 @@
+@@ -314,8 +320,9 @@
   */
  
  /* Version information for png.h - this should match the version in png.c */
--#define PNG_LIBPNG_VER_STRING "1.6.24"
--#define PNG_HEADER_VERSION_STRING " libpng version 1.6.24 - August 4, 2016\n"
-+#define PNG_LIBPNG_VER_STRING "1.6.24+apng"
+-#define PNG_LIBPNG_VER_STRING "1.6.25"
+-#define PNG_HEADER_VERSION_STRING " libpng version 1.6.25 - September 1, 2016\n"
++#define PNG_LIBPNG_VER_STRING "1.6.25+apng"
 +#define PNG_HEADER_VERSION_STRING \
-+     " libpng version 1.6.24+apng - August 4, 2016\n"
++     " libpng version 1.6.25+apng - September 1, 2016\n"
  
  #define PNG_LIBPNG_VER_SONUM   16
  #define PNG_LIBPNG_VER_DLLNUM  16
-@@ -365,6 +372,10 @@
+@@ -366,6 +373,10 @@
  #   include "pnglibconf.h"
  #endif
  
@@ -361,7 +361,7 @@ Index: png.h
  #ifndef PNG_VERSION_INFO_ONLY
  /* Machine specific configuration. */
  #  include "pngconf.h"
-@@ -460,6 +471,17 @@
+@@ -461,6 +472,17 @@
   * See pngconf.h for base types that vary by machine/system
   */
  
@@ -379,7 +379,7 @@ Index: png.h
  /* This triggers a compiler error in png.c, if png.c and png.h
   * do not agree upon the version number.
   */
-@@ -780,6 +802,10 @@
+@@ -781,6 +803,10 @@
  #define PNG_INFO_sPLT 0x2000U  /* ESR, 1.0.6 */
  #define PNG_INFO_sCAL 0x4000U  /* ESR, 1.0.6 */
  #define PNG_INFO_IDAT 0x8000U  /* ESR, 1.0.6 */
@@ -390,7 +390,7 @@ Index: png.h
  
  /* This is used for the transformation routines, as some of them
   * change these values for the row.  It also should enable using
-@@ -817,6 +843,10 @@
+@@ -818,6 +844,10 @@
  #ifdef PNG_PROGRESSIVE_READ_SUPPORTED
  typedef PNG_CALLBACK(void, *png_progressive_info_ptr, (png_structp, png_infop));
  typedef PNG_CALLBACK(void, *png_progressive_end_ptr, (png_structp, png_infop));
@@ -401,7 +401,7 @@ Index: png.h
  
  /* The following callback receives png_uint_32 row_number, int pass for the
   * png_bytep data of the row.  When transforming an interlaced image the
-@@ -3242,6 +3272,75 @@
+@@ -3246,6 +3276,75 @@
   *  END OF HARDWARE AND SOFTWARE OPTIONS
   ******************************************************************************/
  
@@ -477,7 +477,7 @@ Index: png.h
  /* Maintainer: Put new public prototypes here ^, in libpng.3, in project
   * defs, and in scripts/symbols.def.
   */
-@@ -3250,7 +3349,11 @@
+@@ -3254,7 +3353,11 @@
   * one to use is one more than this.)
   */
  #ifdef PNG_EXPORT_LAST_ORDINAL
@@ -493,7 +493,7 @@ Index: pngpriv.h
 ===================================================================
 --- pngpriv.h
 +++ pngpriv.h
-@@ -537,6 +537,10 @@
+@@ -566,6 +566,10 @@
  #define PNG_HAVE_CHUNK_AFTER_IDAT 0x2000 /* Have another chunk after IDAT */
                     /*             0x4000 (unused) */
  #define PNG_IS_READ_STRUCT        0x8000 /* Else is a write struct */
@@ -504,7 +504,7 @@ Index: pngpriv.h
  
  /* Flags for the transformations the PNG library does on the image data */
  #define PNG_BGR                 0x0001
-@@ -754,6 +758,16 @@
+@@ -783,6 +787,16 @@
  #define png_tRNS PNG_U32(116,  82,  78,  83)
  #define png_zTXt PNG_U32(122,  84,  88, 116)
  
@@ -521,7 +521,7 @@ Index: pngpriv.h
  /* The following will work on (signed char*) strings, whereas the get_uint_32
   * macro will fail on top-bit-set values because of the sign extension.
   */
-@@ -1443,6 +1457,49 @@
+@@ -1489,6 +1503,49 @@
  
  #endif /* PROGRESSIVE_READ */
  

@@ -76,7 +76,6 @@ class LIRGeneratorMIPSShared : public LIRGeneratorShared
     void lowerUMod(MMod* mod);
     void visitPowHalf(MPowHalf* ins);
     void visitAsmJSNeg(MAsmJSNeg* ins);
-    void visitWasmBoundsCheck(MWasmBoundsCheck* ins);
     void visitWasmLoad(MWasmLoad* ins);
     void visitWasmStore(MWasmStore* ins);
     void visitAsmSelect(MAsmSelect* ins);

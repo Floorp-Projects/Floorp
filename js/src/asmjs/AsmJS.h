@@ -84,9 +84,6 @@ AsmJSModuleToString(JSContext* cx, HandleFunction fun, bool addParenToLambda);
 extern bool
 IsValidAsmJSHeapLength(uint32_t length);
 
-extern uint32_t
-RoundUpToNextValidAsmJSHeapLength(uint32_t length);
-
 } // namespace js
 
 #endif // asmjs_asmjs_h

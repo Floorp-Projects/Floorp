@@ -106,12 +106,6 @@ exports.items = [
 
       let xhr = new XMLHttpRequest();
 
-      try {
-        xhr.open("GET", args.url, true);
-      } catch(e) {
-        return l10n.lookup("jsbInvalidURL");
-      }
-
       let deferred = context.defer();
 
       xhr.onreadystatechange = function() {
@@ -128,7 +122,12 @@ exports.items = [
           }
         };
       }
-      xhr.send(null);
+      try {
+        xhr.open("GET", args.url, true);
+        xhr.send(null);
+      } catch(e) {
+        return l10n.lookup("jsbInvalidURL");
+      }
       return deferred.promise;
     }
   }

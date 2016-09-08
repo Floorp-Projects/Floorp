@@ -294,17 +294,6 @@ LIRGeneratorMIPSShared::visitAsmJSNeg(MAsmJSNeg* ins)
 }
 
 void
-LIRGeneratorMIPSShared::visitWasmBoundsCheck(MWasmBoundsCheck* ins)
-{
-    if (!gen->needsBoundsCheckBranch(ins))
-        return;
-
-    MDefinition* index = ins->input();
-    auto* lir = new(alloc()) LWasmBoundsCheck(useRegisterAtStart(index));
-    add(lir, ins);
-}
-
-void
 LIRGeneratorMIPSShared::visitWasmLoad(MWasmLoad* ins)
 {
     MDefinition* base = ins->base();
