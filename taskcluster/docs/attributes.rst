@@ -17,8 +17,7 @@ kind
 ====
 
 A task's ``kind`` attribute gives the name of the kind that generated it, e.g.,
-``build`` or ``legacy``.
-
+``build`` or ``spidermonkey``.
 
 run_on_projects
 ===============
@@ -93,13 +92,13 @@ the suite.  Examples: ``mochitest-devtools-chrome-chunked`` or ``a11y``.
 unittest_try_name
 =================
 
-(deprecated) This is the name used to refer to a unit test via try syntax.  It
+This is the name used to refer to a unit test via try syntax.  It
 may not match either of ``unittest_suite`` or ``unittest_flavor``.
 
 talos_try_name
 ==============
 
-(deprecated) This is the name used to refer to a talos job via try syntax.
+This is the name used to refer to a talos job via try syntax.
 
 test_chunk
 ==========
@@ -112,25 +111,6 @@ e10s
 
 For test suites which distinguish whether they run with or without e10s, this
 boolean value identifies this particular run.
-
-legacy_kind
-===========
-
-(deprecated) The kind of task as created by the legacy kind.  This is valid
-only for the ``legacy`` kind.  One of ``build``, ``unittest,``, ``talos``,
-``post_build``, or ``job``.
-
-job
-===
-
-(deprecated) The name of the job (corresponding to a ``-j`` option or the name
-of a post-build job).  This is valid only for the ``legacy`` kind.
-
-post_build
-==========
-
-(deprecated) The name of the post-build activity.  This is valid only for the
-``legacy`` kind.
 
 image_name
 ==========

@@ -530,7 +530,7 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         pushinfo = self.vcs_query_pushinfo(repo, revision, vcs='hg')
         pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime(pushinfo.pushdate))
         routes_json = os.path.join(self.query_abs_dirs()['abs_mozilla_dir'],
-                                   'taskcluster/ci/legacy/routes.json')
+                                   'testing/mozharness/configs/routes.json')
         with open(routes_json) as routes_file:
             contents = json.load(routes_file)
             templates = contents['l10n']
