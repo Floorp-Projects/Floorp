@@ -86,8 +86,7 @@ ReadStream(const nsCOMPtr<nsIInputStream>& stream, /*out*/ SECItem& buf)
   // instead of length, so that we can check whether the metadata for
   // the entry is incorrect.
   uint32_t bytesRead;
-  rv = stream->Read(BitwiseCast<char*, unsigned char*>(buf.data), buf.len,
-                    &bytesRead);
+  rv = stream->Read(char_ptr_cast(buf.data), buf.len, &bytesRead);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -189,8 +188,7 @@ VerifyStreamContentDigest(nsIInputStream* stream,
   uint64_t totalBytesRead = 0;
   for (;;) {
     uint32_t bytesRead;
-    rv = stream->Read(BitwiseCast<char*, unsigned char*>(buf.data), buf.len,
-                      &bytesRead);
+    rv = stream->Read(char_ptr_cast(buf.data), buf.len, &bytesRead);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (bytesRead == 0) {
@@ -753,7 +751,7 @@ OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
   }
 
   ScopedAutoSECItem mfDigest;
-  rv = ParseSF(BitwiseCast<char*, unsigned char*>(sfBuffer.data), mfDigest);
+  rv = ParseSF(char_ptr_cast(sfBuffer.data), mfDigest);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -779,8 +777,7 @@ OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
 
   nsTHashtable<nsCStringHashKey> items;
 
-  rv = ParseMF(BitwiseCast<char*, unsigned char*>(manifestBuffer.data), zip,
-               items, buf);
+  rv = ParseMF(char_ptr_cast(manifestBuffer.data), zip, items, buf);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1436,7 +1433,7 @@ VerifySignedDirectory(AppTrustedRoot aTrustedRoot,
   // Get the expected manifest hash from the signed .sf file
 
   ScopedAutoSECItem mfDigest;
-  rv = ParseSF(BitwiseCast<char*, unsigned char*>(sfBuffer.data), mfDigest);
+  rv = ParseSF(char_ptr_cast(sfBuffer.data), mfDigest);
   if (NS_FAILED(rv)) {
     return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
   }
@@ -1463,7 +1460,7 @@ VerifySignedDirectory(AppTrustedRoot aTrustedRoot,
   ScopedAutoSECItem buf(128 * 1024);
 
   nsTHashtable<nsStringHashKey> items;
-  rv = ParseMFUnpacked(BitwiseCast<char*, unsigned char*>(manifestBuffer.data),
+  rv = ParseMFUnpacked(char_ptr_cast(manifestBuffer.data),
                        aDirectory, items, buf);
   if (NS_FAILED(rv)){
     return rv;
