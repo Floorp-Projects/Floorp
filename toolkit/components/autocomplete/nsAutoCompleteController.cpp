@@ -1390,26 +1390,28 @@ nsAutoCompleteController::EnterMatch(bool aIsPopupSelection,
     int32_t selectedIndex;
     popup->GetSelectedIndex(&selectedIndex);
     if (selectedIndex >= 0) {
-
       nsAutoString inputValue;
       input->GetTextValue(inputValue);
-      nsAutoString finalValue;
-      if (!completeSelection || aIsPopupSelection ||
-          (mDefaultIndexCompleted &&
-           inputValue.Equals(mPlaceholderCompletionString,
-                             nsCaseInsensitiveStringComparator()))) {
+      bool defaultCompleted = mDefaultIndexCompleted &&
+                              inputValue.Equals(mPlaceholderCompletionString,
+                                                nsCaseInsensitiveStringComparator());
+      if (aIsPopupSelection || (!completeSelection && !defaultCompleted)) {
         // We need to fill-in the value if:
-        //  * completeselectedindex is false
+        //  * completeselectedindex is false and we didn't defaultComplete
         //  * A row in the popup was confirmed
-        //  * The default index completion was confirmed
-        GetResultValueAt(selectedIndex, true, finalValue);
-        value = finalValue;
+        GetResultValueAt(selectedIndex, true, value);
+      } else if (defaultCompleted) {
+        // We also need to fill-in the value if the default index completion was
+        // confirmed, though we cannot use the selectedIndex cause the selection
+        // may have been changed by the mouse in the meanwhile.
+        GetFinalDefaultCompleteValue(value);
       } else if (mCompletedSelectionIndex != -1) {
         // If completeselectedindex is true, and EnterMatch was not invoked by
         // mouse-clicking a match (for example the user pressed Enter),
         // don't fill in the value as it will have already been filled in as
         // needed, unless the selected match has a final complete value that
         // differs from the user-facing value.
+        nsAutoString finalValue;
         GetResultValueAt(mCompletedSelectionIndex, true, finalValue);
         nsAutoString completedValue;
         GetResultValueAt(mCompletedSelectionIndex, false, completedValue);

@@ -121,11 +121,18 @@ class MarionetteHarnessTests(VirtualenvMixin, BuildbotMixin, BaseScript):
         test_path = os.path.join(dirs['abs_src_dir'], test_relpath)
         self.activate_virtualenv()
         import pytest
-        log_path = os.path.join(dirs['abs_log_dir'], 'pytest.log')
-        command = ['--resultlog', log_path, '--verbose', test_path]
+        command = ['-p', 'no:terminalreporter',  # disable pytest logging
+                   test_path]
+        logs = {}
+        for fmt in ['tbpl', 'mach', 'raw']:
+            logs[fmt] = os.path.join(dirs['abs_log_dir'],
+                                     'mn-harness_{}.log'.format(fmt))
+            command.extend(['--log-'+fmt, logs[fmt]])
         self.info('Calling pytest.main with the following arguments: %s' % command)
         status = self._get_pytest_status(pytest.main(command))
-        self.read_from_file(log_path)
+        self.read_from_file(logs['tbpl'])
+        for log in logs.values():
+            self.copy_to_upload_dir(log, dest='logs/')
         self.buildbot_status(status)
 
 

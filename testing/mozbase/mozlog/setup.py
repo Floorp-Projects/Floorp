@@ -32,5 +32,8 @@ setup(name=PACKAGE_NAME,
       entry_points={
           "console_scripts": [
               "structlog = mozlog.scripts:main"
+          ],
+          'pytest11': [
+            'mozlog = mozlog.pytest_mozlog.plugin',
           ]}
      )

@@ -197,6 +197,41 @@ var gTests = [
     yield expectNoObserverCalled();
     yield checkNotSharing();
   }
+},
+
+{
+  desc: "getUserMedia audio+video: reloading the top level page removes all sharing UI",
+  run: function* checkReloading() {
+    let promise = promisePopupNotificationShown("webRTC-shareDevices");
+    yield promiseRequestDevice(true, true, "frame1");
+    yield promise;
+    yield expectObserverCalled("getUserMedia:request");
+    checkDeviceSelectors(true, true);
+
+    let indicator = promiseIndicatorWindow();
+    yield promiseMessage("ok", () => {
+      PopupNotifications.panel.firstChild.button.click();
+    });
+    yield expectObserverCalled("getUserMedia:response:allow");
+    yield expectObserverCalled("recording-device-events");
+    is((yield getMediaCaptureState()), "CameraAndMicrophone",
+       "expected camera and microphone to be shared");
+
+    yield indicator;
+    yield checkSharingUI({video: true, audio: true});
+
+    info("reloading the web page");
+    promise = promiseObserverCalled("recording-device-events");
+    content.location.reload();
+    yield promise;
+
+    if ((yield promiseTodoObserverNotCalled("recording-device-events")) == 1) {
+      todo(false, "Got the 'recording-device-events' notification twice, likely because of bug 962719");
+    }
+    yield expectObserverCalled("recording-window-ended");
+    yield expectNoObserverCalled();
+    yield checkNotSharing();
+  }
 }
 
 ];

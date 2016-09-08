@@ -128,6 +128,10 @@ this.webrtcUI = {
     }
   },
 
+  forgetStreamsFromBrowser: function(aBrowser) {
+    this._streams = this._streams.filter(stream => stream.browser != aBrowser);
+  },
+
   showSharingDoorhanger: function(aActiveStream, aType) {
     let browserWindow = aActiveStream.browser.ownerGlobal;
     if (aActiveStream.tab) {
