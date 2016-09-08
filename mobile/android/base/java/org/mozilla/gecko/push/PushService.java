@@ -65,9 +65,15 @@ public class PushService implements BundleEventListener {
             "PushServiceAndroidGCM:UnregisterUserAgent",
             "PushServiceAndroidGCM:SubscribeChannel",
             "PushServiceAndroidGCM:UnsubscribeChannel",
+            "FxAccountsPush:Initialized",
             "FxAccountsPush:ReceivedPushMessageToDecode:Response",
             "History:GetPrePathLastVisitedTimeMilliseconds",
     };
+
+    private enum GeckoComponent {
+        FxAccountsPush,
+        PushServiceAndroidGCM
+    }
 
     public static synchronized PushService getInstance(Context context) {
         if (sInstance == null) {
@@ -89,8 +95,9 @@ public class PushService implements BundleEventListener {
 
     protected final PushManager pushManager;
 
-    private boolean canSendPushMessagesToGecko;
-
+    // NB: These are not thread-safe, we're depending on these being access from the same background thread.
+    private boolean isReadyPushServiceAndroidGCM = false;
+    private boolean isReadyFxAccountsPush = false;
     private final List<JSONObject> pendingPushMessages;
 
     public PushService(Context context) {
@@ -176,7 +183,7 @@ public class PushService implements BundleEventListener {
             return;
         }
 
-        if (canSendPushMessagesToGecko) {
+        if (canSendPushMessagesToGecko()) {
             if (!GeckoThread.canUseProfile(profileName, new File(profilePath))) {
                 Log.e(LOG_TAG, "Mismatched profile for chid: " + chid + "; ignoring dom/push message.");
                 return;
@@ -198,7 +205,7 @@ public class PushService implements BundleEventListener {
             data.put("enckey", bundle.getString("enckey"));
             data.put("message", bundle.getString("body"));
 
-            if (!canSendPushMessagesToGecko) {
+            if (!canSendPushMessagesToGecko()) {
                 data.put("profileName", profileName);
                 data.put("profilePath", profilePath);
                 data.put("service", subscription.service);
@@ -208,26 +215,27 @@ public class PushService implements BundleEventListener {
             return;
         }
 
-        if (canSendPushMessagesToGecko) {
-            if (isWebPush) {
-                sendMessageToGeckoService(data);
-            } else {
-                sendMessageToDecodeToGeckoService(data);
-            }
-        } else {
-            Log.i(LOG_TAG, "Service not initialized, adding message to queue.");
+        if (!canSendPushMessagesToGecko()) {
+            Log.i(LOG_TAG, "Required service not initialized, adding message to queue.");
             pendingPushMessages.add(data);
+            return;
+        }
+
+        if (isWebPush) {
+            sendMessageToGeckoService(data);
+        } else {
+            sendMessageToDecodeToGeckoService(data);
         }
     }
 
-    protected void sendMessageToGeckoService(final @NonNull JSONObject message) {
+    protected static void sendMessageToGeckoService(final @NonNull JSONObject message) {
         Log.i(LOG_TAG, "Delivering dom/push message to Gecko!");
         GeckoAppShell.notifyObservers("PushServiceAndroidGCM:ReceivedPushMessage",
                                       message.toString(),
                                       GeckoThread.State.PROFILE_READY);
     }
 
-    protected void sendMessageToDecodeToGeckoService(final @NonNull JSONObject message) {
+    protected static void sendMessageToDecodeToGeckoService(final @NonNull JSONObject message) {
         Log.i(LOG_TAG, "Delivering dom/push message to decode to Gecko!");
         GeckoAppShell.notifyObservers("FxAccountsPush:ReceivedPushMessageToDecode",
                                       message.toString(),
@@ -260,6 +268,21 @@ public class PushService implements BundleEventListener {
         }
 
         try {
+            if ("PushServiceAndroidGCM:Initialized".equals(event)) {
+                processComponentState(GeckoComponent.PushServiceAndroidGCM, true);
+                callback.sendSuccess(null);
+                return;
+            }
+            if ("PushServiceAndroidGCM:Uninitialized".equals(event)) {
+                processComponentState(GeckoComponent.PushServiceAndroidGCM, false);
+                callback.sendSuccess(null);
+                return;
+            }
+            if ("FxAccountsPush:Initialized".equals(event)) {
+                processComponentState(GeckoComponent.FxAccountsPush, true);
+                callback.sendSuccess(null);
+                return;
+            }
             if ("PushServiceAndroidGCM:Configure".equals(event)) {
                 final String endpoint = message.getString("endpoint");
                 if (endpoint == null) {
@@ -289,38 +312,6 @@ public class PushService implements BundleEventListener {
                 } catch (JSONException e) {
                     callback.sendError("Got exception handling message [" + event + "]: " + e.toString());
                 }
-                return;
-            }
-            if ("PushServiceAndroidGCM:Initialized".equals(event)) {
-                // Send all pending messages to Gecko and set the
-                // canSendPushMessageToGecko flag to true so that
-                // all new push messages are sent directly to Gecko
-                // instead of being queued.
-                canSendPushMessagesToGecko = true;
-                for (JSONObject pushMessage : pendingPushMessages) {
-                    final String profileName = pushMessage.optString("profileName", null);
-                    final String profilePath = pushMessage.optString("profilePath", null);
-                    final String service = pushMessage.optString("service", null);
-                    if (profileName == null || profilePath == null ||
-                            !GeckoThread.canUseProfile(profileName, new File(profilePath))) {
-                        Log.e(LOG_TAG, "Mismatched profile for chid: " +
-                                       pushMessage.optString("channelID") +
-                                       "; ignoring dom/push message.");
-                        continue;
-                    }
-                    if (SERVICE_WEBPUSH.equals(service)) {
-                        sendMessageToGeckoService(pushMessage);
-                    } else /* FxA Push */ {
-                        sendMessageToDecodeToGeckoService(pushMessage);
-                    }
-                }
-                pendingPushMessages.clear();
-                callback.sendSuccess(null);
-                return;
-            }
-            if ("PushServiceAndroidGCM:Uninitialized".equals(event)) {
-                canSendPushMessagesToGecko = false;
-                callback.sendSuccess(null);
                 return;
             }
             if ("PushServiceAndroidGCM:RegisterUserAgent".equals(event)) {
@@ -424,6 +415,45 @@ public class PushService implements BundleEventListener {
             // permissions, and then be more aggressive showing this notification when we have
             // registrations and subscriptions that can't be advanced.
             callback.sendError("To handle event [" + event + "], user interaction is needed to enable Google Play Services.");
+        }
+    }
+
+    private void processComponentState(@NonNull GeckoComponent component, boolean isReady) {
+        if (component == GeckoComponent.FxAccountsPush) {
+            isReadyFxAccountsPush = isReady;
+
+        } else if (component == GeckoComponent.PushServiceAndroidGCM) {
+            isReadyPushServiceAndroidGCM = isReady;
+        }
+
+        // Send all pending messages to Gecko.
+        if (canSendPushMessagesToGecko()) {
+            sendPushMessagesToGecko(pendingPushMessages);
+            pendingPushMessages.clear();
+        }
+    }
+
+    private boolean canSendPushMessagesToGecko() {
+        return isReadyFxAccountsPush && isReadyPushServiceAndroidGCM;
+    }
+
+    private static void sendPushMessagesToGecko(@NonNull List<JSONObject> messages) {
+        for (JSONObject pushMessage : messages) {
+            final String profileName = pushMessage.optString("profileName", null);
+            final String profilePath = pushMessage.optString("profilePath", null);
+            final String service = pushMessage.optString("service", null);
+            if (profileName == null || profilePath == null ||
+                    !GeckoThread.canUseProfile(profileName, new File(profilePath))) {
+                Log.e(LOG_TAG, "Mismatched profile for chid: " +
+                        pushMessage.optString("channelID") +
+                        "; ignoring dom/push message.");
+                continue;
+            }
+            if (SERVICE_WEBPUSH.equals(service)) {
+                sendMessageToGeckoService(pushMessage);
+            } else if (SERVICE_FXA.equals(service)) {
+                sendMessageToDecodeToGeckoService(pushMessage);
+            }
         }
     }
 }
