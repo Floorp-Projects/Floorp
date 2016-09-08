@@ -4,6 +4,10 @@
 
 package org.mozilla.gecko.icons.decoders;
 
+import android.support.annotation.VisibleForTesting;
+
+import org.mozilla.gecko.annotation.RobocopTarget;
+
 /**
  * Representation of an ICO file ICONDIRENTRY structure.
  */
@@ -23,6 +27,7 @@ public class IconDirectoryEntry implements Comparable<IconDirectoryEntry> {
     int index;
     boolean isErroneous;
 
+    @RobocopTarget
     public IconDirectoryEntry(int width, int height, int paletteSize, int bitsPerPixel, int payloadSize, int payloadOffset, boolean payloadIsPNG) {
         this.width = width;
         this.height = height;
@@ -183,6 +188,12 @@ public class IconDirectoryEntry implements Comparable<IconDirectoryEntry> {
 
     public static void setMaxBPP(int maxBPP) {
         IconDirectoryEntry.maxBPP = maxBPP;
+    }
+
+    @VisibleForTesting
+    @RobocopTarget
+    public int getWidth() {
+        return width;
     }
 
     @Override
