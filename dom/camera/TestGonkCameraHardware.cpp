@@ -388,7 +388,7 @@ TestGonkCameraHardware::Init()
 
   DebugOnly<nsresult> rv = WaitWhileRunningOnMainThread(new Delegate(this));
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WaitWhileRunningOnMainThread failed");
-  return rv;
+  return NS_OK;
 }
 
 int

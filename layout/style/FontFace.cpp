@@ -160,8 +160,6 @@ FontFace::CreateForRule(nsISupports* aGlobal,
                         FontFaceSet* aFontFaceSet,
                         nsCSSFontFaceRule* aRule)
 {
-  nsCOMPtr<nsIGlobalObject> globalObject = do_QueryInterface(aGlobal);
-
   RefPtr<FontFace> obj = new FontFace(aGlobal, aFontFaceSet);
   obj->mRule = aRule;
   obj->mSourceType = eSourceType_FontFaceRule;

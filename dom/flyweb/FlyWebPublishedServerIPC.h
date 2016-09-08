@@ -50,7 +50,6 @@ public:
     }
   }
 
-  virtual void PermissionGranted(bool aGranted) override;
   virtual void OnFetchResponse(InternalRequest* aRequest,
                                InternalResponse* aResponse) override;
   virtual void OnWebSocketResponse(InternalRequest* aConnectRequest,
@@ -99,7 +98,6 @@ public:
                              const nsAString& aName,
                              const FlyWebPublishOptions& aOptions);
 
-  virtual void PermissionGranted(bool aGranted) override;
   virtual bool RecvServerReady(const nsresult& aStatus) override;
   virtual bool RecvServerClose() override;
   virtual bool RecvFetchRequest(const IPCInternalRequest& aRequest,
@@ -127,7 +125,7 @@ private:
   nsDataHashtable<nsRefPtrHashKey<InternalRequest>, uint64_t> mPendingRequests;
   nsRefPtrHashtable<nsUint64HashKey, TransportProviderChild>
     mPendingTransportProviders;
-  bool mActorExists;
+  bool mActorDestroyed;
 };
 
 class FlyWebPublishedServerParent final : public PFlyWebPublishedServerParent

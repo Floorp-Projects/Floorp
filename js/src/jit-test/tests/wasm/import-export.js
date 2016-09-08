@@ -22,10 +22,6 @@ const tab2Elem = new Table({initial:2, element:"anyfunc"});
 const tab3Elem = new Table({initial:3, element:"anyfunc"});
 const tab4Elem = new Table({initial:4, element:"anyfunc"});
 
-// Explicitly opt into the new binary format for imports and exports until it
-// is used by default everywhere.
-const textToBinary = str => wasmTextToBinary(str, 'new-format');
-
 assertErrorMessage(() => new Memory({initial:2, maximum:1}), TypeError, /bad Memory maximum size/);
 
 const m1 = new Module(textToBinary('(module (import "foo" "bar") (import "baz" "quux"))'));
@@ -94,7 +90,7 @@ assertErrorMessage(() => new Module(textToBinary('(module (import "a" "b" (table
 
 // Import wasm-wasm type mismatch
 
-var e = new Instance(new Module(textToBinary('(module (func $i2v (param i32)) (export "i2v" $i2v) (func $f2v (param f32)) (export "f2v" $f2v))'))).exports;
+var e = evalText('(module (func $i2v (param i32)) (export "i2v" $i2v) (func $f2v (param f32)) (export "f2v" $f2v))').exports;
 var i2vm = new Module(textToBinary('(module (import "a" "b" (param i32)))'));
 var f2vm = new Module(textToBinary('(module (import "a" "b" (param f32)))'));
 assertEq(new Instance(i2vm, {a:{b:e.i2v}}) instanceof Instance, true);

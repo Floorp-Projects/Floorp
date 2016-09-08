@@ -421,7 +421,6 @@ void nsMenuX::MenuConstruct()
       if (ownerDoc && jsapi.Init(ownerDoc->GetInnerWindow())) {
         JSContext* cx = jsapi.cx();
         JS::RootedObject ignoredObj(cx);
-        nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
         xpconnect->WrapNative(cx, JS::CurrentGlobalOrNull(cx), menuPopup,
                               NS_GET_IID(nsISupports), ignoredObj.address());
         mXBLAttached = true;
