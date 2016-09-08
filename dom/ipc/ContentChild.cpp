@@ -2983,6 +2983,10 @@ ContentChild::RecvShutdown()
   // to wait for that event loop to finish. Otherwise we could prematurely
   // terminate an "unload" or "pagehide" event handler (which might be doing a
   // sync XHR, for example).
+#if defined(MOZ_CRASHREPORTER)
+  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("IPCShutdownState"),
+                                     NS_LITERAL_CSTRING("RecvShutdown"));
+#endif
   nsCOMPtr<nsIThread> thread;
   nsresult rv = NS_GetMainThread(getter_AddRefs(thread));
   if (NS_SUCCEEDED(rv) && thread) {
@@ -3030,6 +3034,10 @@ ContentChild::RecvShutdown()
   // parent closes.
   StartForceKillTimer();
 
+#if defined(MOZ_CRASHREPORTER)
+  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("IPCShutdownState"),
+                                     NS_LITERAL_CSTRING("SendFinishShutdown"));
+#endif
   // Ignore errors here. If this fails, the parent will kill us after a
   // timeout.
   Unused << SendFinishShutdown();
