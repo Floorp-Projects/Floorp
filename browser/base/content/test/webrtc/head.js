@@ -63,6 +63,18 @@ function promiseWindow(url) {
   });
 }
 
+function whenDelayedStartupFinished(aWindow) {
+  return new Promise(resolve => {
+    info("Waiting for delayed startup to finish");
+    Services.obs.addObserver(function observer(aSubject, aTopic) {
+      if (aWindow == aSubject) {
+        Services.obs.removeObserver(observer, aTopic);
+        resolve();
+      }
+    }, "browser-delayed-startup-finished", false);
+  });
+}
+
 function promiseIndicatorWindow() {
   // We don't show the indicator window on Mac.
   if ("nsISystemStatusBar" in Ci)
@@ -407,9 +419,10 @@ function checkDeviceSelectors(aAudio, aVideo) {
     ok(cameraSelector.hidden, "camera selector hidden");
 }
 
-function* checkSharingUI(aExpected) {
+function* checkSharingUI(aExpected, aWin = window) {
+  let doc = aWin.document;
   // First check the icon above the control center (i) icon.
-  let identityBox = document.getElementById("identity-box");
+  let identityBox = doc.getElementById("identity-box");
   ok(identityBox.hasAttribute("sharing"), "sharing attribute is set");
   let sharing = identityBox.getAttribute("sharing");
   if (aExpected.video)
@@ -419,7 +432,7 @@ function* checkSharingUI(aExpected) {
 
   // Then check the sharing indicators inside the control center panel.
   identityBox.click();
-  let permissions = document.getElementById("identity-popup-permission-list");
+  let permissions = doc.getElementById("identity-popup-permission-list");
   for (let id of ["microphone", "camera", "screen"]) {
     let convertId = id => {
       if (id == "camera")
@@ -429,7 +442,7 @@ function* checkSharingUI(aExpected) {
       return id;
     };
     let expected = aExpected[convertId(id)];
-    is(!!gIdentityHandler._sharingState[id], !!expected,
+    is(!!aWin.gIdentityHandler._sharingState[id], !!expected,
        "sharing state for " + id + " as expected");
     let icon = permissions.querySelectorAll(
       ".identity-popup-permission-icon." + id + "-icon");
@@ -445,7 +458,7 @@ function* checkSharingUI(aExpected) {
       is(icon.length, 1, "should not show more than 1 " + id + " icon");
     }
   }
-  gIdentityHandler._identityPopup.hidden = true;
+  aWin.gIdentityHandler._identityPopup.hidden = true;
 
   // Check the global indicators.
   yield* assertWebRTCIndicatorStatus(aExpected);
