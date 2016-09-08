@@ -9,21 +9,6 @@
 namespace gl
 {
 
-template <typename T>
-bool operator==(const Color<T> &a, const Color<T> &b)
-{
-    return a.red == b.red &&
-           a.green == b.green &&
-           a.blue == b.blue &&
-           a.alpha == b.alpha;
-}
-
-template <typename T>
-bool operator!=(const Color<T> &a, const Color<T> &b)
-{
-    return !(a == b);
-}
-
 inline bool operator==(const Rectangle &a, const Rectangle &b)
 {
     return a.x == b.x &&

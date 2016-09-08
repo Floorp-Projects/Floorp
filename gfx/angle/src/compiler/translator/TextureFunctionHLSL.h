@@ -62,7 +62,9 @@ class TextureFunctionHLSL final : angle::NonCopyable
                                bool lod0,
                                sh::GLenum shaderType);
 
-    void textureFunctionHeader(TInfoSinkBase &out, const ShShaderOutput outputType);
+    void textureFunctionHeader(TInfoSinkBase &out,
+                               const ShShaderOutput outputType,
+                               bool getDimensionsIgnoresBaseLevel);
 
   private:
     typedef std::set<TextureFunction> TextureFunctionSet;

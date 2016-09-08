@@ -61,7 +61,7 @@ gl::Error Image9::generateMip(IDirect3DSurface9 *destSurface, IDirect3DSurface9 
     ASSERT(sourceDesc.Height == 1 || sourceDesc.Height / 2 == destDesc.Height);
 
     const d3d9::D3DFormat &d3dFormatInfo = d3d9::GetD3DFormatInfo(sourceDesc.Format);
-    ASSERT(d3dFormatInfo.mipGenerationFunction != NULL);
+    ASSERT(d3dFormatInfo.info->mipGenerationFunction != NULL);
 
     D3DLOCKED_RECT sourceLocked = {0};
     result = sourceSurface->LockRect(&sourceLocked, NULL, D3DLOCK_READONLY);
@@ -85,8 +85,8 @@ gl::Error Image9::generateMip(IDirect3DSurface9 *destSurface, IDirect3DSurface9 
 
     ASSERT(sourceData && destData);
 
-    d3dFormatInfo.mipGenerationFunction(sourceDesc.Width, sourceDesc.Height, 1, sourceData, sourceLocked.Pitch, 0,
-                                        destData, destLocked.Pitch, 0);
+    d3dFormatInfo.info->mipGenerationFunction(sourceDesc.Width, sourceDesc.Height, 1, sourceData,
+                                              sourceLocked.Pitch, 0, destData, destLocked.Pitch, 0);
 
     destSurface->UnlockRect();
     sourceSurface->UnlockRect();

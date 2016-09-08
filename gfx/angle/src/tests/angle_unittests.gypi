@@ -46,6 +46,7 @@
             '<(angle_path)/src/tests/compiler_tests/CollectVariables_test.cpp',
             '<(angle_path)/src/tests/compiler_tests/ConstantFolding_test.cpp',
             '<(angle_path)/src/tests/compiler_tests/DebugShaderPrecision_test.cpp',
+            '<(angle_path)/src/tests/compiler_tests/EmulateGLFragColorBroadcast_test.cpp',
             '<(angle_path)/src/tests/compiler_tests/ExpressionLimit_test.cpp',
             '<(angle_path)/src/tests/compiler_tests/EXT_blend_func_extended_test.cpp',
             '<(angle_path)/src/tests/compiler_tests/FragDepth_test.cpp',
@@ -54,6 +55,7 @@
             '<(angle_path)/src/tests/compiler_tests/MalformedShader_test.cpp',
             '<(angle_path)/src/tests/compiler_tests/NV_draw_buffers_test.cpp',
             '<(angle_path)/src/tests/compiler_tests/Pack_Unpack_test.cpp',
+            '<(angle_path)/src/tests/compiler_tests/PruneEmptyDeclarations_test.cpp',
             '<(angle_path)/src/tests/compiler_tests/PruneUnusedFunctions_test.cpp',
             '<(angle_path)/src/tests/compiler_tests/RecordConstantPrecision_test.cpp',
             '<(angle_path)/src/tests/compiler_tests/RemovePow_test.cpp',
@@ -62,6 +64,7 @@
             '<(angle_path)/src/tests/compiler_tests/ShCompile_test.cpp',
             '<(angle_path)/src/tests/compiler_tests/TypeTracking_test.cpp',
             '<(angle_path)/src/tests/compiler_tests/VariablePacker_test.cpp',
+            '<(angle_path)/src/tests/compiler_tests/WorkGroupSize_test.cpp',
             '<(angle_path)/src/tests/preprocessor_tests/char_test.cpp',
             '<(angle_path)/src/tests/preprocessor_tests/comment_test.cpp',
             '<(angle_path)/src/tests/preprocessor_tests/define_test.cpp',
@@ -135,6 +138,10 @@
         ['OS=="win"',
         {
             # TODO(cwallez): make this angle_enable_hlsl instead (requires gyp file refactoring)
+            'defines':
+            [
+                'ANGLE_ENABLE_HLSL',
+            ],
             'sources':
             [
                 '<@(angle_unittests_hlsl_sources)',
