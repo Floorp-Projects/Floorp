@@ -57,7 +57,9 @@ public:
 
     Result(const Point& aC, Float aR)
      : C(aC), r(aR)
-    {}
+    {
+      MOZ_ASSERT(aR >= 0);
+    }
   };
 
   //                        aBorderRadiusX
@@ -189,11 +191,12 @@ private:
   Float mMaxR;
 
   // Parameters for the center curve with perfect circle and the inner curve.
+  // The center curve doesn't necessarily share the origin with others.
   //
   //               ___---+
   //           __--      |
   //         _-          |
-  //       /        __---+
+  //       /        __-+ |
   //     /      __--     |
   //    |     /          |
   //   |    /        __--+--
@@ -203,18 +206,39 @@ private:
   // |    |     |        | |
   // |    |     |        | | mInnerHeight
   // |    |    |         | |
-  // |    |    |         | |
-  // |    |    |         | v
-  // +----+----+---------+
-  //      |    |         | mCurveOrigin
-  //      |    |<------->|
-  //      |  mInnerWidth |
-  //      |              |
-  //      |<------------>|
-  //        mCenterCurveR
+  // |    +    |         | |
+  // |         |         | v
+  // +---------+---------+
+  //           |         | mInnerCurveOrigin
+  //           |<------->|
+  //           mInnerWidth
   //
-  Point mCurveOrigin;
+  //               ___---+
+  //           __--
+  //         _-
+  //       /        __-+
+  //     /      __--   |
+  //    |     /        |
+  //   |    /        __--+
+  //  |    |       _-  |
+  //  |    |      /    |
+  // |     |     /     |
+  // |    |     |      |
+  // |    |     |      |
+  // |    |    |       |
+  // |    +--- | ------+
+  // |    |    |       | mCenterCurveOrigin
+  // +    |    +       |
+  //      |            |
+  //      |            |
+  //      |            |
+  //      |            |
+  //      |<---------->|
+  //       mCenterCurveR
+  //
+  Point mCenterCurveOrigin;
   Float mCenterCurveR;
+  Point mInnerCurveOrigin;
   Float mInnerWidth;
   Float mInnerHeight;
 
