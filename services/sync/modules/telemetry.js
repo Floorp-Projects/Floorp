@@ -33,7 +33,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
 const log = Log.repository.getLogger("Sync.Telemetry");
 
 const TOPICS = [
-  "xpcom-shutdown",
+  "profile-before-change",
   "weave:service:sync:start",
   "weave:service:sync:finish",
   "weave:service:sync:error",
@@ -361,6 +361,7 @@ class SyncTelemetryImpl {
     // We still call submit() with possibly illegal payloads so that tests can
     // know that the ping was built. We don't end up submitting them, however.
     if (record.syncs.length) {
+      log.trace(`submitting ${record.syncs.length} sync record(s) to telemetry`);
       TelemetryController.submitExternalPing("sync", record);
     }
   }
@@ -405,7 +406,7 @@ class SyncTelemetryImpl {
     log.trace(`observed ${topic} ${data}`);
 
     switch (topic) {
-      case "xpcom-shutdown":
+      case "profile-before-change":
         this.shutdown();
         break;
 
