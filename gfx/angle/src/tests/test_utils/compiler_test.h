@@ -9,9 +9,13 @@
 #ifndef TESTS_TEST_UTILS_COMPILER_TEST_H_
 #define TESTS_TEST_UTILS_COMPILER_TEST_H_
 
+#include <map>
+
+#include "angle_gl.h"
+#include "gtest/gtest.h"
 #include "GLSLANG/ShaderLang.h"
 
-bool compileTestShader(sh::GLenum type,
+bool compileTestShader(GLenum type,
                        ShShaderSpec spec,
                        ShShaderOutput output,
                        const std::string &shaderString,
@@ -20,15 +24,7 @@ bool compileTestShader(sh::GLenum type,
                        std::string *translatedCode,
                        std::string *infoLog);
 
-bool compileTestShader(sh::GLenum type,
-                       ShShaderSpec spec,
-                       ShShaderOutput output,
-                       const std::string &shaderString,
-                       ShBuiltInResources *resources,
-                       std::string *translatedCode,
-                       std::string *infoLog);
-
-bool compileTestShader(sh::GLenum type,
+bool compileTestShader(GLenum type,
                        ShShaderSpec spec,
                        ShShaderOutput output,
                        const std::string &shaderString,
@@ -36,11 +32,57 @@ bool compileTestShader(sh::GLenum type,
                        std::string *translatedCode,
                        std::string *infoLog);
 
-bool compileTestShader(sh::GLenum type,
-                       ShShaderSpec spec,
-                       ShShaderOutput output,
-                       const std::string &shaderString,
-                       std::string *translatedCode,
-                       std::string *infoLog);
+class MatchOutputCodeTest : public testing::Test
+{
+  protected:
+    MatchOutputCodeTest(GLenum shaderType, int defaultCompileOptions, ShShaderOutput outputType);
+
+    void addOutputType(const ShShaderOutput outputType);
+
+    ShBuiltInResources *getResources();
+
+    // Compile functions clear any results from earlier calls to them.
+    void compile(const std::string &shaderString);
+    void compile(const std::string &shaderString, const int compileOptions);
+
+    bool foundInESSLCode(const char *stringToFind) const
+    {
+        return foundInCode(SH_ESSL_OUTPUT, stringToFind);
+    }
+
+    bool foundInGLSLCode(const char *stringToFind) const
+    {
+        return foundInCode(SH_GLSL_COMPATIBILITY_OUTPUT, stringToFind);
+    }
+
+    bool foundInCode(ShShaderOutput output, const char *stringToFind) const;
+
+    // Test that the string occurs for exactly expectedOccurrences times
+    bool foundInCode(ShShaderOutput output,
+                     const char *stringToFind,
+                     const int expectedOccurrences) const;
+
+    // Test that the string is found in all outputs
+    bool foundInCode(const char *stringToFind) const;
+
+    // Test that the string occurs for exactly expectedOccurrences times in all outputs
+    bool foundInCode(const char *stringToFind, const int expectedOccurrences) const;
+
+    // Test that the string is found in none of the outputs
+    bool notFoundInCode(const char *stringToFind) const;
+
+  private:
+    bool compileWithSettings(ShShaderOutput output,
+                             const std::string &shaderString,
+                             int compileOptions,
+                             std::string *translatedCode,
+                             std::string *infoLog);
+
+    GLenum mShaderType;
+    int mDefaultCompileOptions;
+    ShBuiltInResources mResources;
+
+    std::map<ShShaderOutput, std::string> mOutputCode;
+};
 
 #endif // TESTS_TEST_UTILS_COMPILER_TEST_H_

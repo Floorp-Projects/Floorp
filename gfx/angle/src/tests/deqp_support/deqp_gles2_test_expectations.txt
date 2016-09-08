@@ -34,6 +34,9 @@
 998 WIN LINUX MAC : dEQP-GLES2.performance.* = SKIP
 998 WIN LINUX MAC : dEQP-GLES2.stress.* = SKIP
 
+// Tests that we fail because they're not in line with the WebGL spec
+1335 WIN LINUX MAC : dEQP-GLES2.functional.shaders.preprocessor.conditional_inclusion.basic_2* = FAIL
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Temporary entries: they should be removed once the bugs are fixed.
@@ -65,11 +68,7 @@
 1027 WIN : dEQP-GLES2.functional.fbo.render.recreate_colorbuffer.rebind_rbo_rgba4_stencil_index8 = FAIL
 1027 WIN : dEQP-GLES2.functional.fbo.render.recreate_colorbuffer.no_rebind_tex2d_rgb_stencil_index8 = FAIL
 1027 WIN : dEQP-GLES2.functional.fbo.render.recreate_colorbuffer.no_rebind_tex2d_rgba_stencil_index8 = FAIL
-1027 WIN : dEQP-GLES2.functional.fbo.render.recreate_stencilbuffer.rebind_tex2d_rgb_stencil_index8 = FAIL
-1027 WIN : dEQP-GLES2.functional.fbo.render.recreate_stencilbuffer.no_rebind_rbo_rgb5_a1_stencil_index8 = FAIL
 1033 WIN : dEQP-GLES2.functional.polygon_offset.fixed16_render_with_units = FAIL
-1015 WIN : dEQP-GLES2.functional.shaders.functions.misc.missing_returns_vertex = FAIL
-1015 WIN : dEQP-GLES2.functional.shaders.functions.misc.missing_returns_fragment = FAIL
 1017 WIN : dEQP-GLES2.functional.shaders.loops.for_constant_iterations.nested_sequence_* = FAIL
 1017 WIN : dEQP-GLES2.functional.shaders.loops.for_constant_iterations.nested_tricky_dataflow_* = FAIL
 1017 WIN : dEQP-GLES2.functional.shaders.loops.while_constant_iterations.nested_tricky_dataflow_* = FAIL
@@ -81,9 +80,6 @@
 1020 WIN : dEQP-GLES2.functional.texture.mipmap.cube.projected.linear_nearest = FAIL
 1020 WIN : dEQP-GLES2.functional.texture.mipmap.cube.bias.linear_nearest = FAIL
 1020 WIN : dEQP-GLES2.functional.texture.mipmap.cube.bias.linear_linear = FAIL
-1021 WIN : dEQP-GLES2.functional.texture.specification.basic_copyteximage2d.cube_luminance = FAIL
-1021 WIN : dEQP-GLES2.functional.texture.specification.basic_copyteximage2d.cube_luminance_alpha = FAIL
-1021 WIN : dEQP-GLES2.functional.texture.specification.basic_copyteximage2d.cube_rgb = FAIL
 1025 WIN : dEQP-GLES2.functional.fragment_ops.depth_stencil.stencil_depth_funcs.stencil_* = FAIL
 1025 WIN : dEQP-GLES2.functional.fragment_ops.depth_stencil.stencil_ops.* = FAIL
 1025 WIN : dEQP-GLES2.functional.fragment_ops.depth_stencil.write_mask.* = FAIL
@@ -112,6 +108,7 @@
 1025 WIN : dEQP-GLES2.functional.fragment_ops.blend.equation_src_func_dst_func.reverse_subtract_constant_alpha_one_minus_constant_color = FAIL
 1025 WIN : dEQP-GLES2.functional.fragment_ops.blend.equation_src_func_dst_func.reverse_subtract_one_minus_constant_alpha_constant_color = FAIL
 1025 WIN : dEQP-GLES2.functional.fragment_ops.blend.equation_src_func_dst_func.reverse_subtract_one_minus_constant_alpha_one_minus_constant_color = FAIL
+1418 WIN : dEQP-GLES2.functional.clipping.triangle_vertex.clip_three.clip_pos_x_pos_y_pos_z_and_neg_x_pos_y_pos_z_and_neg_x_neg_y_neg_z = FAIL
 
 // Failures on the dEQP Windows bots that do not reproduce locally
 1108 WIN : dEQP-GLES2.functional.shaders.struct.local.dynamic_loop_struct_array_fragment = FAIL
