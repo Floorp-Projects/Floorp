@@ -343,7 +343,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     // WebAssembly support:
     static ArrayBufferObject* createForWasm(JSContext* cx, uint32_t initialSize,
                                             mozilla::Maybe<uint32_t> maxSize);
-    static bool prepareForAsmJS(JSContext* cx, Handle<ArrayBufferObject*> buffer);
+    static bool prepareForAsmJS(JSContext* cx, Handle<ArrayBufferObject*> buffer, bool needGuard);
     uint32_t wasmActualByteLength() const;
     size_t wasmMappedSize() const;
     mozilla::Maybe<uint32_t> wasmMaxSize() const;

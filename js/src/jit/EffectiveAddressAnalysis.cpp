@@ -100,36 +100,33 @@ AnalyzeLsh(TempAllocator& alloc, MLsh* lsh)
     last->block()->insertAfter(last, eaddr);
 }
 
-template<typename MWasmMemoryAccessType>
+template<typename AsmJSMemoryAccess>
 bool
-EffectiveAddressAnalysis::tryAddDisplacement(MWasmMemoryAccessType* ins, int32_t o)
+EffectiveAddressAnalysis::tryAddDisplacement(AsmJSMemoryAccess* ins, int32_t o)
 {
+#ifdef WASM_HUGE_MEMORY
     // Compute the new offset. Check for overflow.
     uint32_t oldOffset = ins->offset();
     uint32_t newOffset = oldOffset + o;
     if (o < 0 ? (newOffset >= oldOffset) : (newOffset < oldOffset))
         return false;
 
-    // Compute the new offset to the end of the access. Check for overflow
-    // here also.
-    uint32_t newEnd = newOffset + ins->byteSize();
-    if (newEnd < newOffset)
-        return false;
-
-    // Determine the range of valid offsets which can be folded into this
-    // instruction and check whether our computed offset is within that range.
-    size_t range = mir_->foldableOffsetRange(ins);
-    if (size_t(newEnd) > range)
+    // The offset must ultimately be written into the offset immediate of a load
+    // or store instruction so don't allow folding of the offset is bigger.
+    if (newOffset >= wasm::OffsetGuardLimit)
         return false;
 
     // Everything checks out. This is the new offset.
     ins->setOffset(newOffset);
     return true;
+#else
+    return false;
+#endif
 }
 
-template<typename MWasmMemoryAccessType>
+template<typename AsmJSMemoryAccess>
 void
-EffectiveAddressAnalysis::analyzeAsmHeapAccess(MWasmMemoryAccessType* ins)
+EffectiveAddressAnalysis::analyzeAsmJSHeapAccess(AsmJSMemoryAccess* ins)
 {
     MDefinition* base = ins->base();
 
@@ -198,9 +195,9 @@ EffectiveAddressAnalysis::analyze()
             if (i->isLsh())
                 AnalyzeLsh(graph_.alloc(), i->toLsh());
             else if (i->isAsmJSLoadHeap())
-                analyzeAsmHeapAccess(i->toAsmJSLoadHeap());
+                analyzeAsmJSHeapAccess(i->toAsmJSLoadHeap());
             else if (i->isAsmJSStoreHeap())
-                analyzeAsmHeapAccess(i->toAsmJSStoreHeap());
+                analyzeAsmJSHeapAccess(i->toAsmJSStoreHeap());
         }
     }
     return true;

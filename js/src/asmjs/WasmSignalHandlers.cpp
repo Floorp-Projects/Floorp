@@ -601,11 +601,24 @@ ComputeAccessAddress(EMULATOR_CONTEXT* context, const Disassembler::ComplexAddre
     return reinterpret_cast<uint8_t*>(result);
 }
 
-MOZ_COLD static uint8_t*
-EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddress,
-                  const MemoryAccess* memoryAccess, const Instance& instance)
+MOZ_COLD static bool
+HugeMemoryAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddress,
+                 const Instance& instance, uint8_t** ppc)
 {
     MOZ_RELEASE_ASSERT(instance.codeSegment().containsFunctionPC(pc));
+
+    // On WASM_HUGE_MEMORY platforms, wasm::MemoryAccess is only created for
+    // asm.js loads and stores since they unfortunately do not simply throw on
+    // out-of-bounds. Everything else (WebAssembly and experimental
+    // SIMD/Atomics) throws.
+
+    const MemoryAccess* memoryAccess = instance.code().lookupMemoryAccess(pc);
+    if (!memoryAccess) {
+        *ppc = instance.codeSegment().outOfBoundsCode();
+        return true;
+    }
+
+    MOZ_RELEASE_ASSERT(instance.isAsmJS());
     MOZ_RELEASE_ASSERT(memoryAccess->insnOffset() == (pc - instance.codeBase()));
 
     // Disassemble the instruction which caused the trap so that we can extract
@@ -651,13 +664,6 @@ EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddre
                        instance.memoryLength(),
                        "Computed access address is not actually out of bounds");
 
-    // Wasm loads/stores don't wrap offsets at all, so hitting the guard page
-    // means we are out of bounds in any cases.
-    if (!memoryAccess->wrapOffset()) {
-        MOZ_ASSERT(memoryAccess->throwOnOOB());
-        return instance.codeSegment().outOfBoundsCode();
-    }
-
     // The basic sandbox model is that all heap accesses are a heap base
     // register plus an index, and the index is always computed with 32-bit
     // operations, so we know it can only be 4 GiB off of the heap base.
@@ -677,13 +683,6 @@ EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddre
     size_t size = access.size();
     MOZ_RELEASE_ASSERT(wrappedOffset + size > wrappedOffset);
     bool inBounds = wrappedOffset + size < instance.memoryLength();
-
-    // If this is storing Z of an XYZ, check whether X is also in bounds, so
-    // that we don't store anything before throwing.
-    MOZ_RELEASE_ASSERT(unwrappedOffset > memoryAccess->offsetWithinWholeSimdVector());
-    uint32_t wrappedBaseOffset = uint32_t(unwrappedOffset - memoryAccess->offsetWithinWholeSimdVector());
-    if (wrappedBaseOffset >= instance.memoryLength())
-        inBounds = false;
 
     if (inBounds) {
         // We now know that this is an access that is actually in bounds when
@@ -711,10 +710,6 @@ EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddre
     } else {
         // We now know that this is an out-of-bounds access made by an asm.js
         // load/store that we should handle.
-
-        if (memoryAccess->throwOnOOB())
-            return instance.codeSegment().outOfBoundsCode();
-
         switch (access.kind()) {
           case Disassembler::HeapAccess::Load:
           case Disassembler::HeapAccess::LoadSext32:
@@ -736,7 +731,8 @@ EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddre
         }
     }
 
-    return end;
+    *ppc = end;
+    return true;
 }
 #endif // JS_CODEGEN_X64
 
@@ -803,15 +799,11 @@ HandleFault(PEXCEPTION_POINTERS exception)
     }
 
 #ifdef WASM_HUGE_MEMORY
-    const MemoryAccess* memoryAccess = instance->code().lookupMemoryAccess(pc);
-    if (!memoryAccess)
-        *ppc = instance->codeSegment().outOfBoundsCode();
-    else
-        *ppc = EmulateHeapAccess(context, pc, faultingAddress, memoryAccess, *instance);
+    return HugeMemoryAccess(context, pc, faultingAddress, *instance, ppc);
 #else
     *ppc = instance->codeSegment().outOfBoundsCode();
-#endif
     return true;
+#endif
 }
 
 static LONG WINAPI
@@ -934,11 +926,8 @@ HandleMachException(JSRuntime* rt, const ExceptionRequest& request)
         return false;
 
 #ifdef WASM_HUGE_MEMORY
-    const MemoryAccess* memoryAccess = instance->code().lookupMemoryAccess(pc);
-    if (!memoryAccess)
-        *ppc = instance->codeSegment().outOfBoundsCode();
-    else
-        *ppc = EmulateHeapAccess(&context, pc, faultingAddress, memoryAccess, *instance);
+    if (!HugeMemoryAccess(&context, pc, faultingAddress, *instance, ppc))
+        return false;
 #else
     *ppc = instance->codeSegment().outOfBoundsCode();
 #endif
@@ -1153,24 +1142,18 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
         return false;
 
 #ifdef WASM_HUGE_MEMORY
-    MOZ_RELEASE_ASSERT(signal == Signal::SegFault);
-    const MemoryAccess* memoryAccess = instance->code().lookupMemoryAccess(pc);
-    if (!memoryAccess)
-        *ppc = instance->codeSegment().outOfBoundsCode();
-    else
-        *ppc = EmulateHeapAccess(context, pc, faultingAddress, memoryAccess, *instance);
+    return HugeMemoryAccess(context, pc, faultingAddress, *instance, ppc);
 #elif defined(JS_CODEGEN_ARM)
     MOZ_RELEASE_ASSERT(signal == Signal::BusError || signal == Signal::SegFault);
     if (signal == Signal::BusError)
         *ppc = instance->codeSegment().unalignedAccessCode();
     else
         *ppc = instance->codeSegment().outOfBoundsCode();
-#else
-    MOZ_RELEASE_ASSERT(signal == Signal::SegFault);
-    *ppc = instance->codeSegment().outOfBoundsCode();
-#endif
-
     return true;
+#else
+    *ppc = instance->codeSegment().outOfBoundsCode();
+    return true;
+#endif
 }
 
 static struct sigaction sPrevSEGVHandler;

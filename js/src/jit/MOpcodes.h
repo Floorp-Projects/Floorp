@@ -271,6 +271,7 @@ namespace jit {
     _(HasClass)                                                             \
     _(CopySign)                                                             \
     _(WasmBoundsCheck)                                                      \
+    _(WasmAddOffset)                                                        \
     _(WasmLoad)                                                             \
     _(WasmStore)                                                            \
     _(WasmTrap)                                                             \

@@ -110,12 +110,13 @@ SpecializeToMemory(CodeSegment& cs, const Metadata& metadata, HandleWasmMemoryOb
 {
 #ifdef WASM_HUGE_MEMORY
     MOZ_RELEASE_ASSERT(metadata.boundsChecks.empty());
+    MOZ_RELEASE_ASSERT(metadata.isAsmJS() || metadata.memoryAccesses.empty());
 #else
     uint32_t limit = memory->buffer().wasmBoundsCheckLimit();
     MOZ_RELEASE_ASSERT(IsValidBoundsCheckImmediate(limit));
 
     for (const BoundsCheck& check : metadata.boundsChecks)
-        Assembler::UpdateBoundsCheck(check.patchAt(cs.base()), limit);
+        MacroAssembler::wasmPatchBoundsCheck(check.patchAt(cs.base()), limit);
 #endif
 
 #if defined(JS_CODEGEN_X86)

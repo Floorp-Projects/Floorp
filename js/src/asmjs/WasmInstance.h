@@ -113,6 +113,10 @@ class Instance
     // be notified so it can go back to the generic callImport.
 
     void deoptimizeImportExit(uint32_t funcImportIndex);
+
+    // Called by simulators to check whether accessing 'numBytes' starting at
+    // 'addr' would trigger a fault and be safely handled by signal handlers.
+
     bool memoryAccessWouldFault(uint8_t* addr, unsigned numBytes);
 
     // See Code::ensureProfilingState comment.
