@@ -94,7 +94,7 @@ public:
     bool HasImage() const;
     bool IsComplete(WebGLContext* webgl, nsCString* const out_info) const;
 
-    void Resolve(gl::GLContext* gl, FBTarget target) const;
+    void Resolve(gl::GLContext* gl) const;
 
     JS::Value GetParameter(const char* funcName, WebGLContext* webgl, JSContext* cx,
                            GLenum target, GLenum attachment, GLenum pname,
@@ -217,7 +217,9 @@ public:
 protected:
     Maybe<WebGLFBAttachPoint*> GetAttachPoint(GLenum attachment); // Fallible
     Maybe<WebGLFBAttachPoint*> GetColorAttachPoint(GLenum attachment); // Fallible
-    void ResolveAttachments(FBTarget target) const;
+    void ResolveAttachments() const;
+    void RefreshDrawBuffers() const;
+    void RefreshReadBuffer() const;
     bool ResolveAttachmentData(const char* funcName) const;
 
 public:
@@ -252,7 +254,7 @@ public:
         mResolvedCompleteData = nullptr;
     }
 
-    void RecacheResolvedData();
+    void RefreshResolvedData();
 
     ////////////////
     // WebGL funcs
