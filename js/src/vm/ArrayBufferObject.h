@@ -281,12 +281,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
         return ownsData();
     }
 
-    // Return whether the buffer is allocated by js_malloc and should be freed
-    // with js_free.
-    bool hasMallocedContents() const {
-        return (ownsData() && isPlain()) || isAsmJSMalloced();
-    }
-
     static void addSizeOfExcludingThis(JSObject* obj, mozilla::MallocSizeOf mallocSizeOf,
                                        JS::ClassInfo* info);
 
