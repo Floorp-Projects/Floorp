@@ -55,7 +55,7 @@ function storageApiFactory(context) {
         };
 
         ExtensionStorage.addOnChangedListener(extension.id, listenerLocal);
-        ExtensionStorageSync.addOnChangedListener(extension, listenerSync);
+        ExtensionStorageSync.addOnChangedListener(extension, listenerSync, context);
         return () => {
           ExtensionStorage.removeOnChangedListener(extension.id, listenerLocal);
           ExtensionStorageSync.removeOnChangedListener(extension, listenerSync);
