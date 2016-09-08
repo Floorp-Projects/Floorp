@@ -3953,4 +3953,4 @@ RequestHeaders::CharsetIterator::Next()
 }
 
 } // dom namespace
-} // mozilla namespaceo
+} // mozilla namespace

@@ -823,6 +823,12 @@ CanCacheIterableObject(JSContext* cx, JSObject* obj)
 bool
 js::GetIterator(JSContext* cx, HandleObject obj, unsigned flags, MutableHandleObject objp)
 {
+#ifdef DEBUG
+    auto assertCompartment = mozilla::MakeScopeExit([&] {
+        assertSameCompartment(cx, objp);
+    });
+#endif
+
     if (obj->is<PropertyIteratorObject>() || obj->is<LegacyGeneratorObject>()) {
         objp.set(obj);
         return true;
@@ -842,8 +848,7 @@ js::GetIterator(JSContext* cx, HandleObject obj, unsigned flags, MutableHandleOb
     if (flags == JSITER_ENUMERATE) {
         // Check to see if this is the same as the most recent object which was
         // iterated over.
-        PropertyIteratorObject* last = cx->caches.nativeIterCache.last;
-        if (last) {
+        if (PropertyIteratorObject* last = cx->compartment()->lastCachedNativeIterator) {
             NativeIterator* lastni = last->getNativeIterator();
             if (!(lastni->flags & (JSITER_ACTIVE|JSITER_UNREUSABLE)) &&
                 CanCompareIterableObjectToCache(obj) &&
@@ -882,21 +887,21 @@ js::GetIterator(JSContext* cx, HandleObject obj, unsigned flags, MutableHandleOb
             } while (pobj);
         }
 
-        PropertyIteratorObject* iterobj = cx->caches.nativeIterCache.get(key);
-        if (iterobj) {
+        if (PropertyIteratorObject* iterobj = cx->caches.nativeIterCache.get(key)) {
             NativeIterator* ni = iterobj->getNativeIterator();
             if (!(ni->flags & (JSITER_ACTIVE|JSITER_UNREUSABLE)) &&
                 ni->guard_key == key &&
                 ni->guard_length == guards.length() &&
                 Compare(reinterpret_cast<ReceiverGuard*>(ni->guard_array),
-                        guards.begin(), ni->guard_length))
+                        guards.begin(), ni->guard_length) &&
+                iterobj->compartment() == cx->compartment())
             {
                 objp.set(iterobj);
 
                 UpdateNativeIterator(ni, obj);
                 RegisterEnumerator(cx, iterobj, ni);
                 if (guards.length() == 2)
-                    cx->caches.nativeIterCache.last = iterobj;
+                    cx->compartment()->lastCachedNativeIterator = iterobj;
                 return true;
             }
         }
@@ -930,7 +935,7 @@ js::GetIterator(JSContext* cx, HandleObject obj, unsigned flags, MutableHandleOb
         cx->caches.nativeIterCache.set(key, iterobj);
 
     if (guards.length() == 2)
-        cx->caches.nativeIterCache.last = iterobj;
+        cx->compartment()->lastCachedNativeIterator = iterobj;
     return true;
 }
 

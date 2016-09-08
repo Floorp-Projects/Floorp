@@ -1050,8 +1050,8 @@ nsParser::ContinueInterruptedParsing()
                         mParserContext->mStreamListenerState == eOnStop;
 
   mProcessingNetworkData = true;
-  if (mSink) {
-    mSink->WillParse();
+  if (sinkDeathGrip) {
+    sinkDeathGrip->WillParse();
   }
   result = ResumeParse(true, isFinalChunk); // Ref. bug 57999
   mProcessingNetworkData = false;
@@ -1836,8 +1836,8 @@ nsParser::OnDataAvailable(nsIRequest *request, nsISupports* aContext,
       nsCOMPtr<nsIParser> kungFuDeathGrip(this);
       nsCOMPtr<nsIContentSink> sinkDeathGrip(mSink);
       mProcessingNetworkData = true;
-      if (mSink) {
-        mSink->WillParse();
+      if (sinkDeathGrip) {
+        sinkDeathGrip->WillParse();
       }
       rv = ResumeParse();
       mProcessingNetworkData = false;

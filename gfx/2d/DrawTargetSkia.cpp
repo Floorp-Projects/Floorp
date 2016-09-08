@@ -11,6 +11,8 @@
 #include "FilterNodeSoftware.h"
 #include "HelpersSkia.h"
 
+#include "mozilla/ArrayUtils.h"
+
 #include "skia/include/core/SkSurface.h"
 #include "skia/include/core/SkTypeface.h"
 #include "skia/include/effects/SkGradientShader.h"
@@ -103,6 +105,12 @@ ReleaseTemporarySurface(void* aPixels, void* aContext)
   }
 }
 
+#ifdef IS_BIG_ENDIAN
+static const int kARGBAlphaOffset = 0;
+#else
+static const int kARGBAlphaOffset = 3;
+#endif
+
 static void
 WriteRGBXFormat(uint8_t* aData, const IntSize &aSize,
                 const int32_t aStride, SurfaceFormat aFormat)
@@ -116,11 +124,7 @@ WriteRGBXFormat(uint8_t* aData, const IntSize &aSize,
 
   for (int row = 0; row < height; ++row) {
     for (int column = 0; column < width; column += 4) {
-#ifdef IS_BIG_ENDIAN
-      aData[column] = 0xFF;
-#else
-      aData[column + 3] = 0xFF;
-#endif
+      aData[column + kARGBAlphaOffset] = 0xFF;
     }
     aData += aStride;
   }
@@ -142,11 +146,14 @@ VerifyRGBXFormat(uint8_t* aData, const IntSize &aSize, const int32_t aStride, Su
 
   for (int row = 0; row < height; ++row) {
     for (int column = 0; column < width; column += 4) {
-#ifdef IS_BIG_ENDIAN
-      MOZ_ASSERT(aData[column] == 0xFF);
-#else
-      MOZ_ASSERT(aData[column + 3] == 0xFF);
-#endif
+      if (aData[column + kARGBAlphaOffset] != 0xFF) {
+        gfxCriticalError() << "RGBX pixel at (" << column << "," << row << ") in "
+                           << width << "x" << height << " surface is not opaque: "
+                           << int(aData[column]) << ","
+                           << int(aData[column+1]) << ","
+                           << int(aData[column+2]) << ","
+                           << int(aData[column+3]);
+      }
     }
     aData += aStride;
   }
@@ -169,27 +176,30 @@ VerifyRGBXCorners(uint8_t* aData, const IntSize &aSize, const int32_t aStride, S
   const int strideDiff = aStride - (width * pixelSize);
   MOZ_ASSERT(width * pixelSize <= aStride);
 
-#ifdef IS_BIG_ENDIAN
-  const int alphaOffset = 0;
-#else
-  const int alphaOffset = 3;
-#endif
-
-  const int topLeft = alphaOffset;
-  const int topRight = width * pixelSize + alphaOffset - pixelSize;
-  const int bottomRight = aStride * height - strideDiff + alphaOffset - pixelSize;
-  const int bottomLeft = aStride * height - aStride + alphaOffset;
+  const int topLeft = kARGBAlphaOffset;
+  const int topRight = width * pixelSize + kARGBAlphaOffset - pixelSize;
+  const int bottomRight = aStride * height - strideDiff + kARGBAlphaOffset - pixelSize;
+  const int bottomLeft = aStride * height - aStride + kARGBAlphaOffset;
 
   // Lastly the center pixel
   int middleRowHeight = height / 2;
   int middleRowWidth = (width / 2) * pixelSize;
-  const int middle = aStride * middleRowHeight + middleRowWidth + alphaOffset;
+  const int middle = aStride * middleRowHeight + middleRowWidth + kARGBAlphaOffset;
 
-  MOZ_ASSERT(aData[topLeft] == 0xFF);
-  MOZ_ASSERT(aData[topRight] == 0xFF);
-  MOZ_ASSERT(aData[bottomRight] == 0xFF);
-  MOZ_ASSERT(aData[bottomLeft] == 0xFF);
-  MOZ_ASSERT(aData[middle] == 0xFF);
+  const int offsets[] = { topLeft, topRight, bottomRight, bottomLeft, middle };
+  for (size_t i = 0; i < MOZ_ARRAY_LENGTH(offsets); i++) {
+    int offset = offsets[i];
+    if (aData[offset] != 0xFF) {
+        int row = offset / aStride;
+        int column = (offset % aStride) / pixelSize;
+        gfxCriticalError() << "RGBX corner pixel at (" << column << "," << row << ") in "
+                           << width << "x" << height << " surface is not opaque: "
+                           << int(aData[column]) << ","
+                           << int(aData[column+1]) << ","
+                           << int(aData[column+2]) << ","
+                           << int(aData[column+3]);
+    }
+  }
 
   return true;
 }

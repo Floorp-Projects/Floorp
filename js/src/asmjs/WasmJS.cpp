@@ -106,14 +106,12 @@ GetImports(JSContext* cx,
         if (!GetProperty(cx, importObj, import.module.get(), &v))
             return false;
 
-        if (strlen(import.func.get()) > 0) {
-            if (!v.isObject())
-                return Throw(cx, JSMSG_WASM_BAD_IMPORT_FIELD, "an Object");
+        if (!v.isObject())
+            return Throw(cx, JSMSG_WASM_BAD_IMPORT_FIELD, "an Object");
 
-            RootedObject obj(cx, &v.toObject());
-            if (!GetProperty(cx, obj, import.func.get(), &v))
-                return false;
-        }
+        RootedObject obj(cx, &v.toObject());
+        if (!GetProperty(cx, obj, import.func.get(), &v))
+            return false;
 
         switch (import.kind) {
           case DefinitionKind::Function:
@@ -1288,6 +1286,36 @@ WebAssembly_compile(JSContext* cx, unsigned argc, Value* vp)
 }
 #endif
 
+static bool
+WebAssembly_validate(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs callArgs = CallArgsFromVp(argc, vp);
+
+    MutableBytes bytecode;
+    CompileArgs compileArgs;
+    if (!GetCompileArgs(cx, callArgs, "WebAssembly.validate", &bytecode, &compileArgs))
+        return false;
+
+    UniqueChars error;
+    bool validated = !!Compile(*bytecode, compileArgs, &error);
+
+    // If the reason for validation failure was OOM (signalled by null error
+    // message), report out-of-memory so that validate's return is always
+    // correct.
+    if (!validated && !error) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    if (error) {
+        JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
+                                     JSMSG_WASM_DECODE_FAIL, "?", error.get());
+    }
+
+    callArgs.rval().setBoolean(validated);
+    return true;
+}
+
 static const JSFunctionSpec WebAssembly_static_methods[] =
 {
 #if JS_HAS_TOSOURCE
@@ -1296,6 +1324,7 @@ static const JSFunctionSpec WebAssembly_static_methods[] =
 #ifdef SPIDERMONKEY_PROMISE
     JS_FN("compile", WebAssembly_compile, 1, 0),
 #endif
+    JS_FN("validate", WebAssembly_validate, 1, 0),
     JS_FS_END
 };
 

@@ -57,8 +57,6 @@ public:
     aUiUrl = mUiUrl;
   }
 
-  virtual void PermissionGranted(bool aGranted) = 0;
-
   virtual void OnFetchResponse(InternalRequest* aRequest,
                                InternalResponse* aResponse) = 0;
   already_AddRefed<WebSocket>

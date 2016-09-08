@@ -1987,7 +1987,6 @@ nsComponentManagerImpl::RemoveBootstrappedManifestLocation(nsIFile* aLocation)
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIFile> manifest;
   nsString path;
   nsresult rv = aLocation->GetPath(path);
   if (NS_FAILED(rv)) {

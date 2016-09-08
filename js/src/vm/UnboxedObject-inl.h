@@ -568,10 +568,12 @@ MoveBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* obj, uint32_t dstStart,
         uint8_t* data = obj->as<UnboxedArrayObject>().elements();
         size_t elementSize = UnboxedTypeSize(Type);
 
-        if (UnboxedTypeNeedsPreBarrier(Type)) {
+        if (UnboxedTypeNeedsPreBarrier(Type) &&
+            JS::shadow::Zone::asShadowZone(obj->zone())->needsIncrementalBarrier())
+        {
             // Trigger pre barriers on any elements we are overwriting. See
-            // moveDenseElements::moveDenseElements. No post barrier is needed
-            // as only whole cell post barriers are used with unboxed objects.
+            // NativeObject::moveDenseElements. No post barrier is needed as
+            // only whole cell post barriers are used with unboxed objects.
             for (size_t i = 0; i < length; i++)
                 obj->as<UnboxedArrayObject>().triggerPreBarrier<Type>(dstStart + i);
         }

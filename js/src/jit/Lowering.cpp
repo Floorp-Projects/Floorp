@@ -2523,13 +2523,6 @@ LIRGenerator::visitInterruptCheck(MInterruptCheck* ins)
 }
 
 void
-LIRGenerator::visitAsmJSInterruptCheck(MAsmJSInterruptCheck* ins)
-{
-    gen->setPerformsCall();
-    add(new(alloc()) LAsmJSInterruptCheck, ins);
-}
-
-void
 LIRGenerator::visitWasmTrap(MWasmTrap* ins)
 {
     add(new(alloc()) LWasmTrap, ins);

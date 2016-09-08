@@ -299,7 +299,7 @@ public:
     }
 
     RefPtr<HTMLMediaElement> deathGrip = mElement;
-    mElement->UpdateInitialMediaSize(aSize);
+    deathGrip->UpdateInitialMediaSize(aSize);
   }
 
   void NotifyRealtimeTrackData(MediaStreamGraph* aGraph,
@@ -3952,16 +3952,16 @@ public:
       mPendingNotifyOutput = false;
     }
     if (mElement && mHaveCurrentData) {
-      RefPtr<HTMLMediaElement> deathGrip = mElement;
-      mElement->FireTimeUpdate(true);
+      RefPtr<HTMLMediaElement> kungFuDeathGrip = mElement;
+      kungFuDeathGrip->FireTimeUpdate(true);
     }
   }
   void DoNotifyHaveCurrentData()
   {
     mHaveCurrentData = true;
     if (mElement) {
-      RefPtr<HTMLMediaElement> deathGrip = mElement;
-      mElement->FirstFrameLoaded();
+      RefPtr<HTMLMediaElement> kungFuDeathGrip = mElement;
+      kungFuDeathGrip->FirstFrameLoaded();
     }
     NotifyWatchers();
     DoNotifyOutput();

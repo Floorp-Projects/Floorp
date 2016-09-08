@@ -1406,6 +1406,8 @@ nsresult nsChildView::ConfigureChildren(const nsTArray<Configuration>& aConfigur
 NS_IMETHODIMP nsChildView::DispatchEvent(WidgetGUIEvent* event,
                                          nsEventStatus& aStatus)
 {
+  RefPtr<nsChildView> kungFuDeathGrip(this);
+
 #ifdef DEBUG
   debug_DumpEvent(stdout, event->mWidget, event, "something", 0);
 #endif
@@ -1429,16 +1431,16 @@ NS_IMETHODIMP nsChildView::DispatchEvent(WidgetGUIEvent* event,
   // If the listener is NULL, check if the parent is a popup. If it is, then
   // this child is the popup content view attached to a popup. Get the
   // listener from the parent popup instead.
-  nsCOMPtr<nsIWidget> kungFuDeathGrip = do_QueryInterface(mParentWidget ? mParentWidget : this);
-  if (!listener && mParentWidget) {
-    if (mParentWidget->WindowType() == eWindowType_popup) {
+  nsCOMPtr<nsIWidget> parentWidget = mParentWidget;
+  if (!listener && parentWidget) {
+    if (parentWidget->WindowType() == eWindowType_popup) {
       // Check just in case event->mWidget isn't this widget
       if (event->mWidget) {
         listener = event->mWidget->GetWidgetListener();
       }
       if (!listener) {
-        event->mWidget = mParentWidget;
-        listener = mParentWidget->GetWidgetListener();
+        event->mWidget = parentWidget;
+        listener = parentWidget->GetWidgetListener();
       }
     }
   }
@@ -6066,8 +6068,8 @@ nsChildView::GetSelectionAsPlaintext(nsAString& aResult)
   id<mozAccessible> nativeAccessible = nil;
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
-  nsCOMPtr<nsIWidget> kungFuDeathGrip2(mGeckoChild);
-  RefPtr<a11y::Accessible> accessible = mGeckoChild->GetDocumentAccessible();
+  RefPtr<nsChildView> geckoChild(mGeckoChild);
+  RefPtr<a11y::Accessible> accessible = geckoChild->GetDocumentAccessible();
   if (!accessible)
     return nil;
 

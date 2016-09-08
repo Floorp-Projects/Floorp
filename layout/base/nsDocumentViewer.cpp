@@ -672,9 +672,9 @@ nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow)
   width = p2a * mBounds.width;
   height = p2a * mBounds.height;
   if (aDoInitialReflow) {
-    nsCOMPtr<nsIPresShell> shellGrip = mPresShell;
+    nsCOMPtr<nsIPresShell> shell = mPresShell;
     // Initial reflow
-    mPresShell->Initialize(width, height);
+    shell->Initialize(width, height);
   } else {
     // Store the visible area so it's available for other callers of
     // Initialize, like nsContentSink::StartLayout.
@@ -1028,8 +1028,8 @@ nsDocumentViewer::LoadComplete(nsresult aStatus)
     // Now that the document has loaded, we can tell the presshell
     // to unsuppress painting.
     if (mPresShell) {
-      nsCOMPtr<nsIPresShell> shellDeathGrip(mPresShell);
-      mPresShell->UnsuppressPainting();
+      nsCOMPtr<nsIPresShell> shell(mPresShell);
+      shell->UnsuppressPainting();
       // mPresShell could have been removed now, see bug 378682/421432
       if (mPresShell) {
         mPresShell->LoadComplete();
@@ -1708,8 +1708,8 @@ nsDocumentViewer::Stop(void)
 
   if (!mLoaded && mPresShell) {
     // Well, we might as well paint what we have so far.
-    nsCOMPtr<nsIPresShell> shellDeathGrip(mPresShell); // bug 378682
-    mPresShell->UnsuppressPainting();
+    nsCOMPtr<nsIPresShell> shell(mPresShell); // bug 378682
+    shell->UnsuppressPainting();
   }
 
   return NS_OK;
@@ -2070,8 +2070,8 @@ nsDocumentViewer::Show(void)
     // shown...
 
     if (mPresShell) {
-      nsCOMPtr<nsIPresShell> shellDeathGrip(mPresShell); // bug 378682
-      mPresShell->UnsuppressPainting();
+      nsCOMPtr<nsIPresShell> shell(mPresShell); // bug 378682
+      shell->UnsuppressPainting();
     }
   }
 

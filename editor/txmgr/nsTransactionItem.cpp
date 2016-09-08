@@ -255,9 +255,9 @@ nsTransactionItem::RedoTransaction(nsTransactionManager *aTxMgr)
 {
   nsresult result;
 
-  nsCOMPtr<nsITransaction> kungfuDeathGrip(mTransaction);
-  if (mTransaction) {
-    result = mTransaction->RedoTransaction();
+  nsCOMPtr<nsITransaction> transaction(mTransaction);
+  if (transaction) {
+    result = transaction->RedoTransaction();
 
     NS_ENSURE_SUCCESS(result, result);
   }
