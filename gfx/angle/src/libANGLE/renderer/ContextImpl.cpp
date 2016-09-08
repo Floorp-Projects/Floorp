@@ -56,4 +56,58 @@ void ContextImpl::stencilThenCoverStrokePath(const gl::Path *path,
     UNREACHABLE();
 }
 
+void ContextImpl::coverFillPathInstanced(const std::vector<gl::Path *> &paths,
+                                         GLenum coverMode,
+                                         GLenum transformType,
+                                         const GLfloat *transformValues)
+{
+    UNREACHABLE();
+}
+
+void ContextImpl::coverStrokePathInstanced(const std::vector<gl::Path *> &paths,
+                                           GLenum coverMode,
+                                           GLenum transformType,
+                                           const GLfloat *transformValues)
+{
+    UNREACHABLE();
+}
+
+void ContextImpl::stencilFillPathInstanced(const std::vector<gl::Path *> &paths,
+                                           GLenum fillMode,
+                                           GLuint mask,
+                                           GLenum transformType,
+                                           const GLfloat *transformValues)
+{
+    UNREACHABLE();
+}
+
+void ContextImpl::stencilStrokePathInstanced(const std::vector<gl::Path *> &paths,
+                                             GLint reference,
+                                             GLuint mask,
+                                             GLenum transformType,
+                                             const GLfloat *transformValues)
+{
+    UNREACHABLE();
+}
+
+void ContextImpl::stencilThenCoverFillPathInstanced(const std::vector<gl::Path *> &paths,
+                                                    GLenum coverMode,
+                                                    GLenum fillMode,
+                                                    GLuint mask,
+                                                    GLenum transformType,
+                                                    const GLfloat *transformValues)
+{
+    UNREACHABLE();
+}
+
+void ContextImpl::stencilThenCoverStrokePathInstanced(const std::vector<gl::Path *> &paths,
+                                                      GLenum coverMode,
+                                                      GLint reference,
+                                                      GLuint mask,
+                                                      GLenum transformType,
+                                                      const GLfloat *transformValues)
+{
+    UNREACHABLE();
+}
+
 }  // namespace rx

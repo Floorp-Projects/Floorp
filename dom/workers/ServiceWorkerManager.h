@@ -13,6 +13,7 @@
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/ConsoleReportCollector.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TypedEnumBits.h"
@@ -33,6 +34,7 @@
 #include "nsTObserverArray.h"
 
 class mozIApplicationClearPrivateDataParams;
+class nsIConsoleReportCollector;
 
 namespace mozilla {
 
@@ -221,6 +223,10 @@ public:
                                 const nsString& aLine = EmptyString(),
                                 uint32_t aLineNumber = 0,
                                 uint32_t aColumnNumber = 0);
+
+  void
+  FlushReportsToAllClients(const nsACString& aScope,
+                           nsIConsoleReportCollector* aReporter);
 
   // Always consumes the error by reporting to consoles of all controlled
   // documents.

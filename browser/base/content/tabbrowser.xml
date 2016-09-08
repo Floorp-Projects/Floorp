@@ -2663,6 +2663,8 @@
             if (aOtherTab.hasAttribute("sharing")) {
               aOurTab.setAttribute("sharing", aOtherTab.getAttribute("sharing"));
               modifiedAttrs.push("sharing");
+              aOurTab._sharingState = aOtherTab._sharingState;
+              webrtcUI.swapBrowserForNotification(otherBrowser, ourBrowser);
             }
 
             // If the other tab is pending (i.e. has not been restored, yet)

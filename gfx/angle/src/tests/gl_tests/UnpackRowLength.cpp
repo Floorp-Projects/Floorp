@@ -70,7 +70,7 @@ class UnpackRowLengthTest : public ANGLETest
     {
         glPixelStorei(GL_UNPACK_ROW_LENGTH, rowLength);
 
-        if ((getClientVersion() == 3) || extensionEnabled("GL_EXT_unpack_subimage"))
+        if ((getClientMajorVersion() == 3) || extensionEnabled("GL_EXT_unpack_subimage"))
         {
             // Only texSize * texSize region is filled as WHITE, other parts are BLACK.
             // If the UNPACK_ROW_LENGTH is implemented correctly, all texels inside this texture are WHITE.
@@ -78,8 +78,8 @@ class UnpackRowLengthTest : public ANGLETest
             for (int y = 0; y < texSize; y++)
             {
                 std::vector<GLubyte>::iterator rowIter = buf.begin() + y * rowLength * 4;
-                std::fill(rowIter, rowIter + texSize * 4, 255);
-                std::fill(rowIter + texSize * 4, rowIter + rowLength * 4, 0);
+                std::fill(rowIter, rowIter + texSize * 4, static_cast<GLubyte>(255u));
+                std::fill(rowIter + texSize * 4, rowIter + rowLength * 4, static_cast<GLubyte>(0u));
             }
 
             GLuint tex;

@@ -278,6 +278,186 @@ InterpolationType GetInterpolationType(TQualifier qualifier)
     }
 }
 
+TType ConvertShaderVariableTypeToTType(sh::GLenum type)
+{
+    switch (type)
+    {
+        case GL_FLOAT:
+            return TType(EbtFloat);
+        case GL_FLOAT_VEC2:
+            return TType(EbtFloat, 2);
+        case GL_FLOAT_VEC3:
+            return TType(EbtFloat, 3);
+        case GL_FLOAT_VEC4:
+            return TType(EbtFloat, 4);
+        case GL_FLOAT_MAT2:
+            return TType(EbtFloat, 2, 2);
+        case GL_FLOAT_MAT3:
+            return TType(EbtFloat, 3, 3);
+        case GL_FLOAT_MAT4:
+            return TType(EbtFloat, 4, 4);
+        case GL_FLOAT_MAT2x3:
+            return TType(EbtFloat, 2, 3);
+        case GL_FLOAT_MAT2x4:
+            return TType(EbtFloat, 2, 4);
+        case GL_FLOAT_MAT3x2:
+            return TType(EbtFloat, 3, 2);
+        case GL_FLOAT_MAT3x4:
+            return TType(EbtFloat, 3, 4);
+        case GL_FLOAT_MAT4x2:
+            return TType(EbtFloat, 4, 2);
+        case GL_FLOAT_MAT4x3:
+            return TType(EbtFloat, 4, 3);
+        case GL_INT:
+            return TType(EbtInt);
+        case GL_INT_VEC2:
+            return TType(EbtInt, 2);
+        case GL_INT_VEC3:
+            return TType(EbtInt, 3);
+        case GL_INT_VEC4:
+            return TType(EbtInt, 4);
+        case GL_UNSIGNED_INT:
+            return TType(EbtUInt);
+        case GL_UNSIGNED_INT_VEC2:
+            return TType(EbtUInt, 2);
+        case GL_UNSIGNED_INT_VEC3:
+            return TType(EbtUInt, 3);
+        case GL_UNSIGNED_INT_VEC4:
+            return TType(EbtUInt, 4);
+        default:
+            UNREACHABLE();
+            return TType();
+    }
+}
+
+TOperator TypeToConstructorOperator(const TType &type)
+{
+    switch (type.getBasicType())
+    {
+        case EbtFloat:
+            if (type.isMatrix())
+            {
+                switch (type.getCols())
+                {
+                    case 2:
+                        switch (type.getRows())
+                        {
+                            case 2:
+                                return EOpConstructMat2;
+                            case 3:
+                                return EOpConstructMat2x3;
+                            case 4:
+                                return EOpConstructMat2x4;
+                            default:
+                                break;
+                        }
+                        break;
+
+                    case 3:
+                        switch (type.getRows())
+                        {
+                            case 2:
+                                return EOpConstructMat3x2;
+                            case 3:
+                                return EOpConstructMat3;
+                            case 4:
+                                return EOpConstructMat3x4;
+                            default:
+                                break;
+                        }
+                        break;
+
+                    case 4:
+                        switch (type.getRows())
+                        {
+                            case 2:
+                                return EOpConstructMat4x2;
+                            case 3:
+                                return EOpConstructMat4x3;
+                            case 4:
+                                return EOpConstructMat4;
+                            default:
+                                break;
+                        }
+                        break;
+                }
+            }
+            else
+            {
+                switch (type.getNominalSize())
+                {
+                    case 1:
+                        return EOpConstructFloat;
+                    case 2:
+                        return EOpConstructVec2;
+                    case 3:
+                        return EOpConstructVec3;
+                    case 4:
+                        return EOpConstructVec4;
+                    default:
+                        break;
+                }
+            }
+            break;
+
+        case EbtInt:
+            switch (type.getNominalSize())
+            {
+                case 1:
+                    return EOpConstructInt;
+                case 2:
+                    return EOpConstructIVec2;
+                case 3:
+                    return EOpConstructIVec3;
+                case 4:
+                    return EOpConstructIVec4;
+                default:
+                    break;
+            }
+            break;
+
+        case EbtUInt:
+            switch (type.getNominalSize())
+            {
+                case 1:
+                    return EOpConstructUInt;
+                case 2:
+                    return EOpConstructUVec2;
+                case 3:
+                    return EOpConstructUVec3;
+                case 4:
+                    return EOpConstructUVec4;
+                default:
+                    break;
+            }
+            break;
+
+        case EbtBool:
+            switch (type.getNominalSize())
+            {
+                case 1:
+                    return EOpConstructBool;
+                case 2:
+                    return EOpConstructBVec2;
+                case 3:
+                    return EOpConstructBVec3;
+                case 4:
+                    return EOpConstructBVec4;
+                default:
+                    break;
+            }
+            break;
+
+        case EbtStruct:
+            return EOpConstructStruct;
+
+        default:
+            break;
+    }
+
+    return EOpNull;
+}
+
 GetVariableTraverser::GetVariableTraverser(const TSymbolTable &symbolTable)
     : mSymbolTable(symbolTable)
 {
@@ -324,7 +504,7 @@ void GetVariableTraverser::traverse(const TType &type,
 
     VarT variable;
     variable.name = name.c_str();
-    variable.arraySize = static_cast<unsigned int>(type.getArraySize());
+    variable.arraySize = type.getArraySize();
 
     if (!structure)
     {

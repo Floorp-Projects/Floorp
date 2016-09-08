@@ -56,6 +56,8 @@ class MockProgramImpl : public rx::ProgramImpl
     MOCK_METHOD2(setUniformBlockBinding, void(GLuint, GLuint));
     MOCK_CONST_METHOD2(getUniformBlockSize, bool(const std::string &, size_t *));
     MOCK_CONST_METHOD2(getUniformBlockMemberInfo, bool(const std::string &, sh::BlockMemberInfo *));
+    MOCK_METHOD4(setPathFragmentInputGen,
+                 void(const std::string &, GLenum, GLint, const GLfloat *));
 
     MOCK_METHOD0(destroy, void());
 };

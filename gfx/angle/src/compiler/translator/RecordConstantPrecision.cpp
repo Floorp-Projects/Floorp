@@ -128,7 +128,7 @@ void RecordConstantPrecisionTraverser::visitConstantUnion(TIntermConstantUnion *
     TIntermSequence insertions;
     insertions.push_back(createTempInitDeclaration(node, EvqConst));
     insertStatementsInParentBlock(insertions);
-    mReplacements.push_back(NodeUpdateEntry(getParentNode(), node, createTempSymbol(node->getType()), false));
+    queueReplacement(node, createTempSymbol(node->getType()), OriginalNode::IS_DROPPED);
     mFoundHigherPrecisionConstant = true;
 }
 

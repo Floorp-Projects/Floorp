@@ -60,7 +60,7 @@ int ValidateOutputs::validateAndCountErrors(TInfoSinkBase &sink) const
     for (const auto &symbol : mOutputs)
     {
         const TType &type         = symbol->getType();
-        const size_t elementCount = static_cast<size_t>(type.isArray() ? type.getArraySize() : 1);
+        const size_t elementCount = static_cast<size_t>(type.isArray() ? type.getArraySize() : 1u);
         const size_t location     = static_cast<size_t>(type.getLayoutQualifier().location);
 
         ASSERT(type.getLayoutQualifier().location != -1);

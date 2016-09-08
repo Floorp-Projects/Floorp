@@ -42,8 +42,6 @@ struct DXGIFormat
 
     GLenum componentType;
 
-    FastCopyFunctionMap fastCopyFunctions;
-
     NativeMipmapGenerationSupportFunction nativeMipmapSupport;
 };
 

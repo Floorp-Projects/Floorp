@@ -234,6 +234,8 @@ public:
   NS_IMETHOD GetProxyURI(nsIURI **proxyURI) override;
   virtual void SetCorsPreflightParameters(const nsTArray<nsCString>& unsafeHeaders) override;
   NS_IMETHOD GetConnectionInfoHashKey(nsACString& aConnectionInfoHashKey) override;
+  NS_IMETHOD GetIntegrityMetadata(nsAString& aIntegrityMetadata) override;
+  NS_IMETHOD SetIntegrityMetadata(const nsAString& aIntegrityMetadata) override;
 
   inline void CleanRedirectCacheChainIfNecessary()
   {
@@ -263,10 +265,18 @@ public:
                    const nsTArray<nsString>& aStringParams) override;
 
   void
-  FlushConsoleReports(nsIDocument* aDocument) override;
+  FlushConsoleReports(nsIDocument* aDocument,
+                      ReportAction aAction = ReportAction::Forget) override;
 
   void
   FlushConsoleReports(nsIConsoleReportCollector* aCollector) override;
+
+  void
+  FlushReportsByWindowId(uint64_t aWindowId,
+                         ReportAction aAction = ReportAction::Forget) override;
+
+  void
+  ClearConsoleReports() override;
 
   class nsContentEncodings : public nsIUTF8StringEnumerator
     {
@@ -532,6 +542,8 @@ protected:
   bool mForceMainDocumentChannel;
 
   nsID mChannelId;
+
+  nsString mIntegrityMetadata;
 };
 
 // Share some code while working around C++'s absurd inability to handle casting
