@@ -470,6 +470,7 @@ GLContext::GLContext(CreateContextFlags flags, const SurfaceCaps& caps,
     mNeedsTextureSizeChecks(false),
     mNeedsFlushBeforeDeleteFB(false),
     mTextureAllocCrashesOnMapFailure(false),
+    mNeedsCheckAfterAttachTextureToFb(false),
     mWorkAroundDriverBugs(true),
     mHeavyGLCallsSinceLastFlush(false)
 {
@@ -1068,6 +1069,17 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
         // Bug 1164027. Driver crashes when functions such as
         // glTexImage2D fail due to virtual memory exhaustion.
         mTextureAllocCrashesOnMapFailure = true;
+    }
+#endif
+#if MOZ_WIDGET_ANDROID
+    if (mWorkAroundDriverBugs &&
+        Renderer() == GLRenderer::SGX540 &&
+        AndroidBridge::Bridge()->GetAPIVersion() <= 15) {
+        // Bug 1288446. Driver sometimes crashes when uploading data to a
+        // texture if the render target has changed since the texture was
+        // rendered from. Calling glCheckFramebufferStatus after
+        // glFramebufferTexture2D prevents the crash.
+        mNeedsCheckAfterAttachTextureToFb = true;
     }
 #endif
 
