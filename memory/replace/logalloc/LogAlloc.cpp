@@ -38,6 +38,22 @@ postfork() {
   sLock.Release();
 }
 
+static size_t
+GetPid()
+{
+  return size_t(getpid());
+}
+
+static size_t
+GetTid()
+{
+#if defined(_WIN32)
+  return size_t(GetCurrentThreadId());
+#else
+  return size_t(pthread_self());
+#endif
+}
+
 #ifdef ANDROID
 /* See mozglue/android/APKOpen.cpp */
 extern "C" MOZ_EXPORT __attribute__((weak))
@@ -70,7 +86,28 @@ replace_init(const malloc_table_t* aTable)
    * other thread is holding the lock before forking, by acquiring it
    * ourselves, and releasing it after forking, both in the parent and child
    * processes.
-   * Windows doesn't have this problem since there is no fork(). */
+   * Windows doesn't have this problem since there is no fork().
+   * The real allocator, however, might be doing the same thing (jemalloc
+   * does). But pthread_atfork `prepare` handlers (first argument) are
+   * processed in reverse order they were established. But replace_init
+   * runs before the real allocator has had any chance to initialize and
+   * call pthread_atfork itself. This leads to its prefork running before
+   * ours. This leads to a race condition that can lead to a deadlock like
+   * the following:
+   *   - thread A forks.
+   *   - libc calls real allocator's prefork, so thread A holds the real
+   *     allocator lock.
+   *   - thread B calls malloc, which calls our replace_malloc.
+   *   - consequently, thread B holds our lock.
+   *   - thread B then proceeds to call the real allocator's malloc, and
+   *     waits for the real allocator's lock, which thread A holds.
+   *   - libc calls our prefork, so thread A waits for our lock, which
+   *     thread B holds.
+   * To avoid this race condition, the real allocator's prefork must be
+   * called after ours, which means it needs to be registered before ours.
+   * So trick the real allocator into initializing itself without more side
+   * effects by calling malloc with a size it can't possibly allocate. */
+  sFuncs->malloc(-1);
   pthread_atfork(prefork, postfork, postfork);
 #endif
 
@@ -144,7 +181,7 @@ replace_malloc(size_t aSize)
   AutoLock lock(sLock);
   void* ptr = sFuncs->malloc(aSize);
   if (ptr) {
-    FdPrintf(sFd, "%zu malloc(%zu)=%p\n", size_t(getpid()), aSize, ptr);
+    FdPrintf(sFd, "%zu %zu malloc(%zu)=%p\n", GetPid(), GetTid(), aSize, ptr);
   }
   return ptr;
 }
@@ -155,7 +192,7 @@ replace_posix_memalign(void** aPtr, size_t aAlignment, size_t aSize)
   AutoLock lock(sLock);
   int ret = sFuncs->posix_memalign(aPtr, aAlignment, aSize);
   if (ret == 0) {
-    FdPrintf(sFd, "%zu posix_memalign(%zu,%zu)=%p\n", size_t(getpid()),
+    FdPrintf(sFd, "%zu %zu posix_memalign(%zu,%zu)=%p\n", GetPid(), GetTid(),
              aAlignment, aSize, *aPtr);
   }
   return ret;
@@ -167,7 +204,7 @@ replace_aligned_alloc(size_t aAlignment, size_t aSize)
   AutoLock lock(sLock);
   void* ptr = sFuncs->aligned_alloc(aAlignment, aSize);
   if (ptr) {
-    FdPrintf(sFd, "%zu aligned_alloc(%zu,%zu)=%p\n", size_t(getpid()),
+    FdPrintf(sFd, "%zu %zu aligned_alloc(%zu,%zu)=%p\n", GetPid(), GetTid(),
              aAlignment, aSize, ptr);
   }
   return ptr;
@@ -179,7 +216,8 @@ replace_calloc(size_t aNum, size_t aSize)
   AutoLock lock(sLock);
   void* ptr = sFuncs->calloc(aNum, aSize);
   if (ptr) {
-    FdPrintf(sFd, "%zu calloc(%zu,%zu)=%p\n", size_t(getpid()), aNum, aSize, ptr);
+    FdPrintf(sFd, "%zu %zu calloc(%zu,%zu)=%p\n", GetPid(), GetTid(), aNum,
+             aSize, ptr);
   }
   return ptr;
 }
@@ -190,8 +228,8 @@ replace_realloc(void* aPtr, size_t aSize)
   AutoLock lock(sLock);
   void* new_ptr = sFuncs->realloc(aPtr, aSize);
   if (new_ptr || !aSize) {
-    FdPrintf(sFd, "%zu realloc(%p,%zu)=%p\n", size_t(getpid()), aPtr, aSize,
-             new_ptr);
+    FdPrintf(sFd, "%zu %zu realloc(%p,%zu)=%p\n", GetPid(), GetTid(), aPtr,
+             aSize, new_ptr);
   }
   return new_ptr;
 }
@@ -201,7 +239,7 @@ replace_free(void* aPtr)
 {
   AutoLock lock(sLock);
   if (aPtr) {
-    FdPrintf(sFd, "%zu free(%p)\n", size_t(getpid()), aPtr);
+    FdPrintf(sFd, "%zu %zu free(%p)\n", GetPid(), GetTid(), aPtr);
   }
   sFuncs->free(aPtr);
 }
@@ -212,8 +250,8 @@ replace_memalign(size_t aAlignment, size_t aSize)
   AutoLock lock(sLock);
   void* ptr = sFuncs->memalign(aAlignment, aSize);
   if (ptr) {
-    FdPrintf(sFd, "%zu memalign(%zu,%zu)=%p\n", size_t(getpid()), aAlignment,
-             aSize, ptr);
+    FdPrintf(sFd, "%zu %zu memalign(%zu,%zu)=%p\n", GetPid(), GetTid(),
+             aAlignment, aSize, ptr);
   }
   return ptr;
 }
@@ -224,7 +262,7 @@ replace_valloc(size_t aSize)
   AutoLock lock(sLock);
   void* ptr = sFuncs->valloc(aSize);
   if (ptr) {
-    FdPrintf(sFd, "%zu valloc(%zu)=%p\n", size_t(getpid()), aSize, ptr);
+    FdPrintf(sFd, "%zu %zu valloc(%zu)=%p\n", GetPid(), GetTid(), aSize, ptr);
   }
   return ptr;
 }
@@ -234,5 +272,5 @@ replace_jemalloc_stats(jemalloc_stats_t* aStats)
 {
   AutoLock lock(sLock);
   sFuncs->jemalloc_stats(aStats);
-  FdPrintf(sFd, "%zu jemalloc_stats()\n", size_t(getpid()));
+  FdPrintf(sFd, "%zu %zu jemalloc_stats()\n", GetPid(), GetTid());
 }

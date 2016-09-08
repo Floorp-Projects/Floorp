@@ -34,20 +34,20 @@ function runTest() {
   URL.revokeObjectURL(url + test.part);
 
   var xhr = new XMLHttpRequest();
-  try {
   xhr.open('GET', url + test.part);
-  } catch(e) {
-    ok(test.revoke, "This should fail!");
-    runTest();
-    return;
-  }
 
   xhr.onload = function() {
     is(xhr.responseText, 'hello world', 'URL: ' + url + test.part);
     runTest();
   }
 
-  xhr.send();
+  try {
+    xhr.send();
+  } catch(e) {
+    ok(test.revoke, "This should fail!");
+    runTest();
+    return;
+  }
   ok(!test.revoke, "This should succeed!");
 }
 

@@ -350,6 +350,17 @@ public:
   // clamped to be in the range of [4, 16]; otherwise return 4.
   static uint32_t ComputeMaxRefFrames(const mozilla::MediaByteBuffer* aExtraData);
 
+  enum class FrameType
+  {
+    I_FRAME,
+    OTHER,
+    INVALID,
+  };
+
+  // Returns the frame type. Returns I_FRAME if the sample is an IDR
+  // (Instantaneous Decoding Refresh) Picture.
+  static FrameType GetFrameType(const mozilla::MediaRawData* aSample);
+
 private:
   static void vui_parameters(BitReader& aBr, SPSData& aDest);
   // Read HRD parameters, all data is ignored.

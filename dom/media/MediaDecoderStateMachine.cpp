@@ -1076,6 +1076,9 @@ MediaDecoderStateMachine::ExitState()
     case DECODER_STATE_COMPLETED:
       mSentPlaybackEndedEvent = false;
       break;
+    case DECODER_STATE_SHUTDOWN:
+      MOZ_DIAGNOSTIC_ASSERT(false, "Shouldn't escape the SHUTDOWN state.");
+      break;
     default:
       break;
   }
@@ -1224,11 +1227,9 @@ MediaDecoderStateMachine::Shutdown()
 {
   MOZ_ASSERT(OnTaskQueue());
 
-  // Once we've entered the shutdown state here there's no going back.
-  // Change state before issuing shutdown request to threads so those
-  // threads can start exiting cleanly during the Shutdown call.
-  ScheduleStateMachine();
   SetState(DECODER_STATE_SHUTDOWN);
+
+  mDelayedScheduler.Reset();
 
   mBufferedUpdateRequest.DisconnectIfExists();
 
@@ -1254,6 +1255,40 @@ MediaDecoderStateMachine::Shutdown()
   Reset();
 
   mMediaSink->Shutdown();
+
+  // Prevent dangling pointers by disconnecting the listeners.
+  mAudioQueueListener.Disconnect();
+  mVideoQueueListener.Disconnect();
+  mMetadataManager.Disconnect();
+
+  // Disconnect canonicals and mirrors before shutting down our task queue.
+  mBuffered.DisconnectIfConnected();
+  mIsReaderSuspended.DisconnectIfConnected();
+  mEstimatedDuration.DisconnectIfConnected();
+  mExplicitDuration.DisconnectIfConnected();
+  mPlayState.DisconnectIfConnected();
+  mNextPlayState.DisconnectIfConnected();
+  mVolume.DisconnectIfConnected();
+  mLogicalPlaybackRate.DisconnectIfConnected();
+  mPreservesPitch.DisconnectIfConnected();
+  mSameOriginMedia.DisconnectIfConnected();
+  mMediaPrincipalHandle.DisconnectIfConnected();
+  mPlaybackBytesPerSecond.DisconnectIfConnected();
+  mPlaybackRateReliable.DisconnectIfConnected();
+  mDecoderPosition.DisconnectIfConnected();
+  mMediaSeekable.DisconnectIfConnected();
+  mMediaSeekableOnlyInBufferedRanges.DisconnectIfConnected();
+  mIsVisible.DisconnectIfConnected();
+
+  mDuration.DisconnectAll();
+  mIsShutdown.DisconnectAll();
+  mNextFrameStatus.DisconnectAll();
+  mCurrentPosition.DisconnectAll();
+  mPlaybackOffset.DisconnectAll();
+  mIsAudioDataAudible.DisconnectAll();
+
+  // Shut down the watch manager to stop further notifications.
+  mWatchManager.Shutdown();
 
   DECODER_LOG("Shutdown started");
 
@@ -1963,16 +1998,8 @@ void
 MediaDecoderStateMachine::DecodeError()
 {
   MOZ_ASSERT(OnTaskQueue());
-
-  if (IsShutdown()) {
-    // Already shutdown.
-    return;
-  }
-
+  MOZ_ASSERT(!IsShutdown());
   DECODER_WARN("Decode error");
-  // Change state to SHUTDOWN so we have no more processing.
-  SetState(DECODER_STATE_SHUTDOWN);
-
   // Notify the decode error and MediaDecoder will shut down MDSM.
   mOnPlaybackEvent.Notify(MediaEventType::DecodeError);
 }
@@ -2222,45 +2249,6 @@ RefPtr<ShutdownPromise>
 MediaDecoderStateMachine::FinishShutdown()
 {
   MOZ_ASSERT(OnTaskQueue());
-
-  // The reader's listeners hold references to the state machine,
-  // creating a cycle which keeps the state machine and its shared
-  // thread pools alive. So break it here.
-
-  // Prevent dangling pointers by disconnecting the listeners.
-  mAudioQueueListener.Disconnect();
-  mVideoQueueListener.Disconnect();
-  mMetadataManager.Disconnect();
-
-  // Disconnect canonicals and mirrors before shutting down our task queue.
-  mBuffered.DisconnectIfConnected();
-  mIsReaderSuspended.DisconnectIfConnected();
-  mEstimatedDuration.DisconnectIfConnected();
-  mExplicitDuration.DisconnectIfConnected();
-  mPlayState.DisconnectIfConnected();
-  mNextPlayState.DisconnectIfConnected();
-  mVolume.DisconnectIfConnected();
-  mLogicalPlaybackRate.DisconnectIfConnected();
-  mPreservesPitch.DisconnectIfConnected();
-  mSameOriginMedia.DisconnectIfConnected();
-  mMediaPrincipalHandle.DisconnectIfConnected();
-  mPlaybackBytesPerSecond.DisconnectIfConnected();
-  mPlaybackRateReliable.DisconnectIfConnected();
-  mDecoderPosition.DisconnectIfConnected();
-  mMediaSeekable.DisconnectIfConnected();
-  mMediaSeekableOnlyInBufferedRanges.DisconnectIfConnected();
-  mIsVisible.DisconnectIfConnected();
-
-  mDuration.DisconnectAll();
-  mIsShutdown.DisconnectAll();
-  mNextFrameStatus.DisconnectAll();
-  mCurrentPosition.DisconnectAll();
-  mPlaybackOffset.DisconnectAll();
-  mIsAudioDataAudible.DisconnectAll();
-
-  // Shut down the watch manager before shutting down our task queue.
-  mWatchManager.Shutdown();
-
   MOZ_ASSERT(mState == DECODER_STATE_SHUTDOWN,
              "How did we escape from the shutdown state?");
   DECODER_LOG("Shutting down state machine task queue");
@@ -2623,13 +2611,13 @@ MediaDecoderStateMachine::ScheduleStateMachineIn(int64_t aMicroseconds)
   TimeStamp now = TimeStamp::Now();
   TimeStamp target = now + TimeDuration::FromMicroseconds(aMicroseconds);
 
-  SAMPLE_LOG("Scheduling state machine for %lf ms from now", (target - now).ToMilliseconds());
-
-  RefPtr<MediaDecoderStateMachine> self = this;
-  mDelayedScheduler.Ensure(target, [self] () {
-    self->OnDelayedSchedule();
-  }, [self] () {
-    self->NotReached();
+  // It is OK to capture 'this' without causing UAF because the callback
+  // always happens before shutdown.
+  mDelayedScheduler.Ensure(target, [this] () {
+    mDelayedScheduler.CompleteRequest();
+    RunStateMachine();
+  }, [] () {
+    MOZ_DIAGNOSTIC_ASSERT(false);
   });
 }
 
@@ -2673,7 +2661,8 @@ void MediaDecoderStateMachine::PreservesPitchChanged()
   mMediaSink->SetPreservesPitch(mPreservesPitch);
 }
 
-bool MediaDecoderStateMachine::IsShutdown()
+bool
+MediaDecoderStateMachine::IsShutdown() const
 {
   MOZ_ASSERT(OnTaskQueue());
   return mIsShutdown;

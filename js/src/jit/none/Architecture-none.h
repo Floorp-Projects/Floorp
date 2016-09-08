@@ -151,9 +151,6 @@ static const int32_t NUNBOX32_TYPE_OFFSET = 4;
 static const int32_t NUNBOX32_PAYLOAD_OFFSET = 0;
 #endif
 
-static const size_t WasmCheckedImmediateRange = 0;
-static const size_t WasmImmediateRange = 0;
-
 } // namespace jit
 } // namespace js
 

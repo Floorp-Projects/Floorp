@@ -73,17 +73,20 @@ MarkValidRegion(void* addr, size_t len)
 #endif
 }
 
-#if defined(WASM_HUGE_MEMORY)
 // Since this SharedArrayBuffer will likely be used for asm.js code, prepare it
 // for asm.js by mapping the 4gb protected zone described in WasmTypes.h.
 // Since we want to put the SharedArrayBuffer header immediately before the
 // heap but keep the heap page-aligned, allocate an extra page before the heap.
 static uint64_t
-SharedArrayMappedSize()
+SharedArrayMappedSize(uint32_t allocSize)
 {
     MOZ_RELEASE_ASSERT(jit::JitOptions.wasmTestMode);
     MOZ_RELEASE_ASSERT(sizeof(SharedArrayRawBuffer) < gc::SystemPageSize());
-    return wasm::MappedSize + gc::SystemPageSize();
+#ifdef WASM_HUGE_MEMORY
+    return wasm::HugeMappedSize + gc::SystemPageSize();
+#else
+    return allocSize + wasm::GuardSize;
+#endif
 }
 
 // If there are too many 4GB buffers live we run up against system resource
@@ -95,7 +98,6 @@ SharedArrayMappedSize()
 // we throw an OOM error if the per-process limit is exceeded.
 static mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> numLive;
 static const uint32_t maxLive = 1000;
-#endif
 
 static uint32_t
 SharedArrayAllocSize(uint32_t length)
@@ -118,7 +120,6 @@ SharedArrayRawBuffer::New(JSContext* cx, uint32_t length)
     bool preparedForAsmJS = jit::JitOptions.wasmTestMode && IsValidAsmJSHeapLength(length);
 
     void* p = nullptr;
-#ifdef WASM_HUGE_MEMORY
     if (preparedForAsmJS) {
         // Test >= to guard against the case where multiple extant runtimes
         // race to allocate.
@@ -131,15 +132,18 @@ SharedArrayRawBuffer::New(JSContext* cx, uint32_t length)
                 return nullptr;
             }
         }
+
+        uint32_t mappedSize = SharedArrayMappedSize(allocSize);
+
         // Get the entire reserved region (with all pages inaccessible)
-        p = MapMemory(SharedArrayMappedSize(), false);
+        p = MapMemory(mappedSize, false);
         if (!p) {
             numLive--;
             return nullptr;
         }
 
         if (!MarkValidRegion(p, allocSize)) {
-            UnmapMemory(p, SharedArrayMappedSize());
+            UnmapMemory(p, mappedSize);
             numLive--;
             return nullptr;
         }
@@ -147,11 +151,9 @@ SharedArrayRawBuffer::New(JSContext* cx, uint32_t length)
 # if defined(MOZ_VALGRIND) && defined(VALGRIND_DISABLE_ADDR_ERROR_REPORTING_IN_RANGE)
         // Tell Valgrind/Memcheck to not report accesses in the inaccessible region.
         VALGRIND_DISABLE_ADDR_ERROR_REPORTING_IN_RANGE((unsigned char*)p + allocSize,
-                                                       SharedArrayMappedSize() - allocSize);
+                                                       mappedSize - allocSize);
 # endif
-    } else
-#endif
-    {
+    } else {
         p = MapMemory(allocSize, true);
         if (!p)
             return nullptr;
@@ -187,18 +189,18 @@ SharedArrayRawBuffer::dropReference()
     uint8_t* address = p.unwrap(/*safe - only reference*/);
     uint32_t allocSize = SharedArrayAllocSize(this->length);
 
-#if defined(WASM_HUGE_MEMORY)
     if (this->preparedForAsmJS) {
         numLive--;
-        UnmapMemory(address, SharedArrayMappedSize());
+
+        uint32_t mappedSize = SharedArrayMappedSize(allocSize);
+        UnmapMemory(address, mappedSize);
+
 # if defined(MOZ_VALGRIND) && defined(VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE)
         // Tell Valgrind/Memcheck to recommence reporting accesses in the
         // previously-inaccessible region.
-        VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE(address, SharedArrayMappedSize());
+        VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE(address, mappedSize);
 # endif
-    } else
-#endif
-    {
+    } else {
         UnmapMemory(address, allocSize);
     }
 }

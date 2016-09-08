@@ -66,6 +66,7 @@ private:
   RefPtr<GMPCrashHelper> mGMPCrashHelper;
   bool mNeedAVCC;
   nsresult mLastError;
+  bool mNeedKeyframe = true;
 };
 
 } // namespace mozilla

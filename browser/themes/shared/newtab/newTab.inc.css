@@ -85,6 +85,13 @@
   width: 28px;
 }
 
+#newtab-customize-button {
+  font-size: 28px;
+  padding: 0;
+  /* only display the text label when CSS backgrounds are disabled (e.g. in high contrast mode) */
+  color: transparent;
+}
+
 #newtab-customize-button:-moz-any(:hover, :active, [active]) {
   background-image: -moz-image-rect(url(chrome://browser/skin/newtab/controls.svg), 0, 64, 32, 32);
   background-color: #FFFFFF;

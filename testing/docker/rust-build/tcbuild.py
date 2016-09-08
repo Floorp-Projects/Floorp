@@ -101,8 +101,7 @@ def fetch_artifact(queue, task_id, run_id, name, dest_dir):
     write it to a file in dest_dir, and return the path to the written
     file.
     '''
-    replDict = {'taskId': task_id, 'runId': run_id, 'name': name}
-    url = queue.buildUrl('getArtifact', replDict=replDict)
+    url = queue.buildUrl('getArtifact', task_id, run_id, name)
     fn = os.path.join(dest_dir, os.path.basename(name))
     print('Fetching %s...' % name)
     try:

@@ -2,7 +2,7 @@
 <html>
   <!--
     This test checks that a few allowed CSS properties have an effect when
-    applied to ::-moz-placeholder.
+    applied to ::placeholder or ::-moz-placeholder.
   -->
   <style>
     /*
@@ -15,7 +15,8 @@
       font-style: italic;
     }
 
-    :-moz-any(input, textarea)::-moz-placeholder {
+    [placeholder="foo bar"]::placeholder,
+    [placeholder="bar foo"]::-moz-placeholder {
       opacity: 1.0;
       font: -moz-list;
       font-family: mono;
@@ -28,5 +29,7 @@
   <body>
     <input placeholder='foo bar'>
     <textarea placeholder='foo bar'></textarea>
+    <input placeholder='bar foo'>
+    <textarea placeholder='bar foo'></textarea>
   </body>
 </html>

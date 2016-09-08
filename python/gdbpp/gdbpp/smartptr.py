@@ -44,13 +44,15 @@ class smartptr_printer(object):
 @GeckoPrettyPrinter('mozilla::StyleSheetHandle::RefPtr', '^mozilla::HandleRefPtr<mozilla::StyleSheetHandle>$')
 class sheetptr_printer(object):
     def __init__(self, value):
-        self.value = value['mHandle']
-        if self.value and self.value['mPtr'] and self.value['mPtr']['mValue']:
-            self.value = self.value['mPtr']['mValue']
+        self.value = 0
+        if (value['mHandle'] and
+            value['mHandle']['mPtr'] and
+            value['mHandle']['mPtr']['mValue']):
+            self.value = int(value['mHandle']['mPtr']['mValue'])
 
     def to_string(self):
-        if not self.value:
-            type_name = str(self.value.type)
+        if self.value == 0:
+            type_name = 'mozilla::StyleSheet *'
             value = 0
         else:
             value = int(self.value)
