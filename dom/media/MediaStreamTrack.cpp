@@ -404,7 +404,7 @@ MediaStreamTrack::SetReadyState(MediaStreamTrackState aState)
 }
 
 void
-MediaStreamTrack::NotifyEnded()
+MediaStreamTrack::OverrideEnded()
 {
   MOZ_ASSERT(NS_IsMainThread());
 

@@ -306,7 +306,7 @@ public:
    * Note that this sets the track to ended and raises the "ended" event
    * synchronously.
    */
-  void NotifyEnded();
+  void OverrideEnded();
 
   /**
    * Get this track's principal.
