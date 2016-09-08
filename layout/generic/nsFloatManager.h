@@ -271,14 +271,14 @@ public:
     // pushed to the next page/column.
     DONT_CLEAR_PUSHED_FLOATS = (1<<0)
   };
-  nscoord ClearFloats(nscoord aBCoord, uint8_t aBreakType,
+  nscoord ClearFloats(nscoord aBCoord, mozilla::StyleClear aBreakType,
                       uint32_t aFlags = 0) const;
 
   /**
    * Checks if clear would pass into the floats' BFC's next-in-flow,
    * i.e. whether floats affecting this clear have continuations.
    */
-  bool ClearContinues(uint8_t aBreakType) const;
+  bool ClearContinues(mozilla::StyleClear aBreakType) const;
 
   void AssertStateMatches(SavedState *aState) const
   {

@@ -164,7 +164,8 @@ IIRFilterNode::IIRFilterNode(AudioContext* aContext,
   uint64_t windowID = aContext->GetParentObject()->WindowID();
   IIRFilterNodeEngine* engine = new IIRFilterNodeEngine(this, aContext->Destination(), mFeedforward, mFeedback, windowID);
   mStream = AudioNodeStream::Create(aContext, engine,
-                                    AudioNodeStream::NO_STREAM_FLAGS);
+                                    AudioNodeStream::NO_STREAM_FLAGS,
+                                    aContext->Graph());
 }
 
 IIRFilterNode::~IIRFilterNode()
