@@ -200,7 +200,7 @@ auto CodecProxy::Flush() const -> bool
 constexpr char CodecProxy::Input_t::name[];
 constexpr char CodecProxy::Input_t::signature[];
 
-auto CodecProxy::Input(mozilla::jni::ByteArray::Param a0, mozilla::jni::Object::Param a1, mozilla::jni::Object::Param a2) const -> bool
+auto CodecProxy::Input(mozilla::jni::ByteBuffer::Param a0, mozilla::jni::Object::Param a1, mozilla::jni::Object::Param a2) const -> bool
 {
     return mozilla::jni::Method<Input_t>::Call(CodecProxy::mCtx, nullptr, a0, a1, a2);
 }
@@ -238,6 +238,30 @@ constexpr char CodecProxy::NativeCallbacks::OnOutput_t::signature[];
 
 constexpr char CodecProxy::NativeCallbacks::OnOutputFormatChanged_t::name[];
 constexpr char CodecProxy::NativeCallbacks::OnOutputFormatChanged_t::signature[];
+
+const char Sample::name[] =
+        "org/mozilla/gecko/media/Sample";
+
+constexpr char Sample::WriteToByteBuffer_t::name[];
+constexpr char Sample::WriteToByteBuffer_t::signature[];
+
+auto Sample::WriteToByteBuffer(mozilla::jni::ByteBuffer::Param a0) const -> void
+{
+    return mozilla::jni::Method<WriteToByteBuffer_t>::Call(Sample::mCtx, nullptr, a0);
+}
+
+constexpr char Sample::Info_t::name[];
+constexpr char Sample::Info_t::signature[];
+
+auto Sample::Info() const -> mozilla::jni::Object::LocalRef
+{
+    return mozilla::jni::Field<Info_t>::Get(Sample::mCtx, nullptr);
+}
+
+auto Sample::Info(mozilla::jni::Object::Param a0) const -> void
+{
+    return mozilla::jni::Field<Info_t>::Set(Sample::mCtx, nullptr, a0);
+}
 
 const char Restrictions::name[] =
         "org/mozilla/gecko/restrictions/Restrictions";
