@@ -108,14 +108,15 @@ StaticallyLink(CodeSegment& cs, const LinkData& linkData, ExclusiveContext* cx)
 static void
 SpecializeToMemory(CodeSegment& cs, const Metadata& metadata, HandleWasmMemoryObject memory)
 {
-    if (!metadata.boundsChecks.empty()) {
-        uint32_t length = memory->buffer().wasmBoundsCheckLimit();
-        MOZ_RELEASE_ASSERT(length == LegalizeMapLength(length));
-        MOZ_RELEASE_ASSERT(length >= memory->buffer().wasmActualByteLength());
+#ifdef WASM_HUGE_MEMORY
+    MOZ_RELEASE_ASSERT(metadata.boundsChecks.empty());
+#else
+    uint32_t limit = memory->buffer().wasmBoundsCheckLimit();
+    MOZ_RELEASE_ASSERT(IsValidBoundsCheckImmediate(limit));
 
-        for (const BoundsCheck& check : metadata.boundsChecks)
-            Assembler::UpdateBoundsCheck(check.patchAt(cs.base()), length);
-    }
+    for (const BoundsCheck& check : metadata.boundsChecks)
+        Assembler::UpdateBoundsCheck(check.patchAt(cs.base()), limit);
+#endif
 
 #if defined(JS_CODEGEN_X86)
     uint8_t* base = memory->buffer().dataPointerEither().unwrap();
