@@ -2144,6 +2144,10 @@ class CloneBufferObject : public NativeObject {
 
         size_t size = obj->data()->Size();
         UniqueChars buffer(static_cast<char*>(js_malloc(size)));
+        if (!buffer) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
         auto iter = obj->data()->Iter();
         obj->data()->ReadBytes(iter, buffer.get(), size);
         JSString* str = JS_NewStringCopyN(cx, buffer.get(), size);
