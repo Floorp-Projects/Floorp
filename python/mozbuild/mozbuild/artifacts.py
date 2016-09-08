@@ -638,8 +638,7 @@ class TaskCache(CacheManager):
             # extract the build ID; we use the .ini files embedded in the
             # downloaded artifact for this.  We could also use the uploaded
             # public/build/buildprops.json for this purpose.
-            replDict = {'taskId': taskId, 'name': artifact_name}
-            url = self._queue.buildUrl('getLatestArtifact', replDict=replDict)
+            url = self._queue.buildUrl('getLatestArtifact', taskId, artifact_name)
             urls.append(url)
         if not urls:
             raise ValueError('Task for {key} existed, but no artifacts found!'.format(key=key))

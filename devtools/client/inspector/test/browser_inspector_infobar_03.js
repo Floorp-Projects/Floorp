@@ -26,7 +26,7 @@ function* testPositionAndStyle(test, inspector, testActor) {
   yield selectAndHighlightNode(test.selector, inspector);
 
   let style = yield testActor.getHighlighterNodeAttribute(
-    "box-model-nodeinfobar-container", "style");
+    "box-model-infobar-container", "style");
 
   is(style.split(";")[0], test.style,
     "Infobar shows on top of the page when page isn't scrolled");
@@ -34,7 +34,7 @@ function* testPositionAndStyle(test, inspector, testActor) {
   yield testActor.scrollWindow(0, 500);
 
   style = yield testActor.getHighlighterNodeAttribute(
-    "box-model-nodeinfobar-container", "style");
+    "box-model-infobar-container", "style");
 
   is(style.split(";")[0], test.style,
     "Infobar shows on top of the page even if the page is scrolled");
