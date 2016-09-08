@@ -40,7 +40,7 @@
           class="devtools-button" />
         <html:div class="devtools-toolbar-spacer" />
         <html:span id="inspector-searchlabel" />
-        <html:div id="inspector-search" class="devtools-searchbox">
+        <html:div id="inspector-search" class="devtools-searchbox has-clear-btn">
           <html:input id="inspector-searchbox" class="devtools-searchinput"
                       type="search"
                       placeholder="&inspectorSearchHTML.label3;"/>
@@ -73,7 +73,7 @@
       <html:div id="sidebar-panel-ruleview" class="devtools-monospace theme-sidebar inspector-tabpanel">
         <html:div id="ruleview-toolbar-container" class="devtools-toolbar">
           <html:div id="ruleview-toolbar">
-            <html:div class="devtools-searchbox">
+            <html:div class="devtools-searchbox has-clear-btn">
               <html:input id="ruleview-searchbox"
                           class="devtools-filterinput devtools-rule-searchbox"
                           type="search"
@@ -100,7 +100,7 @@
 
       <html:div id="sidebar-panel-computedview" class="devtools-monospace theme-sidebar inspector-tabpanel">
         <html:div id="computedview-toolbar" class="devtools-toolbar">
-          <html:div class="devtools-searchbox">
+          <html:div class="devtools-searchbox has-clear-btn">
             <html:input id="computedview-searchbox"
                         class="devtools-filterinput devtools-rule-searchbox"
                         type="search"
