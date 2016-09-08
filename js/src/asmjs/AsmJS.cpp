@@ -66,6 +66,22 @@ using JS::AsmJSOption;
 using JS::GenericNaN;
 
 /*****************************************************************************/
+
+// The asm.js valid heap lengths are precisely the WASM valid heap lengths for ARM
+// greater or equal to MinHeapLength
+static const size_t MinHeapLength = PageSize;
+
+static uint32_t
+RoundUpToNextValidAsmJSHeapLength(uint32_t length)
+{
+    if (length <= MinHeapLength)
+        return MinHeapLength;
+
+    return wasm::RoundUpToNextValidARMImmediate(length);
+}
+
+
+/*****************************************************************************/
 // asm.js module object
 
 // The asm.js spec recognizes this set of builtin Math functions.
@@ -8827,24 +8843,11 @@ js::AsmJSFunctionToString(JSContext* cx, HandleFunction fun)
     return out.finishString();
 }
 
-// The asm.js valid heap lengths are precisely the WASM valid heap lengths for ARM
-// greater or equal to MinHeapLength
-static const size_t MinHeapLength = PageSize;
-
 bool
 js::IsValidAsmJSHeapLength(uint32_t length)
 {
     if (length < MinHeapLength)
         return false;
 
-    return wasm::IsValidARMLengthImmediate(length);
-}
-
-uint32_t
-js::RoundUpToNextValidAsmJSHeapLength(uint32_t length)
-{
-    if (length <= MinHeapLength)
-        return MinHeapLength;
-
-    return wasm::RoundUpToNextValidARMLengthImmediate(length);
+    return wasm::IsValidARMImmediate(length);
 }

@@ -75,6 +75,7 @@ class ArrayBufferObjectMaybeShared;
 
 uint32_t AnyArrayBufferByteLength(const ArrayBufferObjectMaybeShared* buf);
 uint32_t WasmArrayBufferActualByteLength(const ArrayBufferObjectMaybeShared* buf);
+mozilla::Maybe<uint32_t> WasmArrayBufferMaxSize(const ArrayBufferObjectMaybeShared* buf);
 size_t WasmArrayBufferMappedSize(const ArrayBufferObjectMaybeShared* buf);
 bool WasmArrayBufferGrowForWasm(ArrayBufferObjectMaybeShared* buf, uint32_t delta);
 ArrayBufferObjectMaybeShared& AsAnyArrayBuffer(HandleValue val);
@@ -86,18 +87,26 @@ class ArrayBufferObjectMaybeShared : public NativeObject
         return AnyArrayBufferByteLength(this);
     }
 
-    size_t wasmMappedSize() const {
-        return WasmArrayBufferMappedSize(this);
-    }
-
-    uint32_t wasmBoundsCheckLimit() const;
-    uint32_t wasmActualByteLength() const {
-        return WasmArrayBufferActualByteLength(this);
-    }
-
     inline bool isDetached() const;
 
     inline SharedMem<uint8_t*> dataPointerEither();
+
+    // WebAssembly support:
+    // Note: the eventual goal is to remove this from ArrayBuffer and have
+    // (Shared)ArrayBuffers alias memory owned by some wasm::Memory object.
+
+    uint32_t wasmActualByteLength() const {
+        return WasmArrayBufferActualByteLength(this);
+    }
+    mozilla::Maybe<uint32_t> wasmMaxSize() const {
+        return WasmArrayBufferMaxSize(this);
+    }
+    size_t wasmMappedSize() const {
+        return WasmArrayBufferMappedSize(this);
+    }
+#ifndef WASM_HUGE_MEMORY
+    uint32_t wasmBoundsCheckLimit() const;
+#endif
 };
 
 typedef Rooted<ArrayBufferObjectMaybeShared*> RootedArrayBufferObjectMaybeShared;
@@ -305,11 +314,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     uint8_t* dataPointer() const;
     SharedMem<uint8_t*> dataPointerShared() const;
     uint32_t byteLength() const;
-    uint32_t wasmActualByteLength() const;
-    size_t wasmMappedSize() const;
-    uint32_t wasmBoundsCheckLimit() const;
-    mozilla::Maybe<uint32_t> wasmMaxSize() const;
-    MOZ_MUST_USE bool growForWasm(uint32_t delta);
+
     BufferContents contents() const {
         return BufferContents(dataPointer(), bufferKind());
     }
@@ -335,9 +340,17 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     bool isMapped() const { return bufferKind() == MAPPED; }
     bool isDetached() const { return flags() & DETACHED; }
 
-    static ArrayBufferObject* createForWasm(JSContext* cx, uint32_t numBytes,
+    // WebAssembly support:
+    static ArrayBufferObject* createForWasm(JSContext* cx, uint32_t initialSize,
                                             mozilla::Maybe<uint32_t> maxSize);
     static bool prepareForAsmJS(JSContext* cx, Handle<ArrayBufferObject*> buffer);
+    uint32_t wasmActualByteLength() const;
+    size_t wasmMappedSize() const;
+    mozilla::Maybe<uint32_t> wasmMaxSize() const;
+    MOZ_MUST_USE bool growForWasm(uint32_t delta);
+#ifndef WASM_HUGE_MEMORY
+    uint32_t wasmBoundsCheckLimit() const;
+#endif
 
     static void finalize(FreeOp* fop, JSObject* obj);
 

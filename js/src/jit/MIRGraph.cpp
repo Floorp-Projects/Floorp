@@ -131,7 +131,7 @@ MIRGenerator::foldableOffsetRange(const MWasmMemoryAccess* access) const
                   "address immediate");
 
 #ifdef WASM_HUGE_MEMORY
-    static_assert(wasm::Uint32Range + WasmImmediateRange + sizeof(wasm::Val) < wasm::MappedSize,
+    static_assert(wasm::Uint32Range + WasmImmediateRange + sizeof(wasm::Val) < wasm::HugeMappedSize,
                   "When using signal handlers for bounds checking, a uint32 is added to the base "
                   "address followed by an immediate in the range [0, WasmImmediateRange). An "
                   "unaligned access (whose size is conservatively approximated by wasm::Val) may "
