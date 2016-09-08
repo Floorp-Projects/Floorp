@@ -1038,7 +1038,44 @@ Parser<ParseHandler>::tryDeclareVar(HandlePropertyName name, DeclarationKind kin
     {
         if (AddDeclaredNamePtr p = scope->lookupDeclaredNameForAdd(name)) {
             DeclarationKind declaredKind = p->value()->kind();
-            if (!DeclarationKindIsVar(declaredKind) && !DeclarationKindIsParameter(declaredKind)) {
+            if (DeclarationKindIsVar(declaredKind)) {
+                // Any vars that are redeclared as body-level functions must
+                // be recorded as body-level functions.
+                //
+                // In the case of global and eval scripts, GlobalDeclaration-
+                // Instantiation [1] and EvalDeclarationInstantiation [2]
+                // check for the declarability of global var and function
+                // bindings via CanDeclareVar [3] and CanDeclareGlobal-
+                // Function [4]. CanDeclareGlobalFunction is strictly more
+                // restrictive than CanDeclareGlobalVar, so record the more
+                // restrictive kind. These semantics are implemented in
+                // CheckCanDeclareGlobalBinding.
+                //
+                // For a var previously declared as ForOfVar, this previous
+                // DeclarationKind is used only to check for if the
+                // 'arguments' binding should be declared. Since body-level
+                // functions shadow 'arguments' [5], it is correct to alter
+                // the kind to BodyLevelFunction. See
+                // declareFunctionArgumentsObject.
+                //
+                // For a var previously declared as
+                // VarForAnnexBLexicalFunction, this previous DeclarationKind
+                // is used so that vars synthesized solely for Annex B.3.3 may
+                // be removed if an early error would occur. If a synthesized
+                // Annex B.3.3 var has the same name as a body-level function,
+                // this is not a redeclaration, and indeed, because the
+                // body-level function binds the name, this name should not be
+                // removed should a redeclaration occur in the future. Thus it
+                // is also correct to alter the kind to BodyLevelFunction.
+                //
+                // [1] ES 15.1.11
+                // [2] ES 18.2.1.3
+                // [3] ES 8.1.1.4.15
+                // [4] ES 8.1.1.4.16
+                // [5] ES 9.2.12
+                if (kind == DeclarationKind::BodyLevelFunction)
+                    p->value()->alterKind(kind);
+            } else if (!DeclarationKindIsParameter(declaredKind)) {
                 // Annex B.3.5 allows redeclaring simple (non-destructured)
                 // catch parameters with var declarations, except when it
                 // appears in a for-of.
