@@ -58,15 +58,16 @@ class Instance
     static int32_t callImport_f64(Instance*, int32_t, int32_t, uint64_t*);
     static uint32_t growMemory_i32(Instance* instance, uint32_t delta);
     static uint32_t currentMemory_i32(Instance* instance);
-
     bool callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, const uint64_t* argv,
                     MutableHandleValue rval);
-    uint32_t growMemory(uint32_t delta);
-    uint32_t currentMemory();
 
     // Only WasmInstanceObject can call the private trace function.
     friend class js::WasmInstanceObject;
     void tracePrivate(JSTracer* trc);
+
+    // Only WasmMemoryObject can call the private onMovingGrow notification.
+    friend class js::WasmMemoryObject;
+    void onMovingGrow(uint8_t* prevMemoryBase);
 
   public:
     Instance(JSContext* cx,
@@ -105,6 +106,12 @@ class Instance
     // value in args.rval.
 
     MOZ_MUST_USE bool callExport(JSContext* cx, uint32_t funcDefIndex, CallArgs args);
+
+    // These methods implement their respective wasm operator but may also be
+    // called via the Memory JS API.
+
+    uint32_t currentMemory();
+    uint32_t growMemory(uint32_t delta);
 
     // Initially, calls to imports in wasm code call out through the generic
     // callImport method. If the imported callee gets JIT compiled and the types

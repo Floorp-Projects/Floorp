@@ -60,6 +60,7 @@ using mozilla::DebugOnly;
 using mozilla::CheckedInt;
 using mozilla::Some;
 using mozilla::Maybe;
+using mozilla::Nothing;
 
 using namespace js;
 using namespace js::gc;
@@ -503,72 +504,72 @@ class js::WasmArrayRawBuffer
     }
 #endif
 
-    MOZ_MUST_USE bool growLength(uint32_t deltaLength)
-    {
-        // This should be guaranteed by Instance::growMemory
-        MOZ_ASSERT(maxSize_);
-        MOZ_ASSERT(deltaLength % wasm::PageSize == 0);
+    MOZ_MUST_USE bool growToSizeInPlace(uint32_t newSize) {
+        MOZ_ASSERT(newSize >= actualByteLength());
+        MOZ_ASSERT_IF(maxSize(), newSize <= maxSize().value());
+        MOZ_ASSERT(newSize <= mappedSize());
 
-        CheckedInt<uint32_t> curLength = actualByteLength();
-        CheckedInt<uint32_t> newLength = curLength + deltaLength;
-        MOZ_RELEASE_ASSERT(newLength.isValid());
-        MOZ_ASSERT(newLength.value() <= maxSize_.value());
+        uint32_t delta = newSize - actualByteLength();
+        MOZ_ASSERT(delta % wasm::PageSize == 0);
 
-        uint8_t* dataEnd = dataPointer() + curLength.value();
-        MOZ_ASSERT(((intptr_t)dataEnd) % gc::SystemPageSize() == 0);
+        uint8_t* dataEnd = dataPointer() + actualByteLength();
+        MOZ_ASSERT(uintptr_t(dataEnd) % gc::SystemPageSize() == 0);
 # ifdef XP_WIN
-        if (deltaLength && !VirtualAlloc(dataEnd, deltaLength, MEM_COMMIT, PAGE_READWRITE))
+        if (delta && !VirtualAlloc(dataEnd, delta, MEM_COMMIT, PAGE_READWRITE))
             return false;
 # else  // XP_WIN
-        if (deltaLength && mprotect(dataEnd, deltaLength, PROT_READ | PROT_WRITE))
+        if (delta && mprotect(dataEnd, delta, PROT_READ | PROT_WRITE))
             return false;
 # endif  // !XP_WIN
 
 #  if defined(MOZ_VALGRIND) && defined(VALGRIND_DISABLE_ADDR_ERROR_REPORTING_IN_RANGE)
-        VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE((unsigned char*)dataEnd, deltaLength);
+        VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE((unsigned char*)dataEnd, delta);
 #  endif
 
-        MemProfiler::SampleNative(dataEnd, deltaLength);
+        MemProfiler::SampleNative(dataEnd, delta);
 
-        length_ = newLength.value();
+        length_ = newSize;
         return true;
     }
 
 #ifndef WASM_HUGE_MEMORY
-    // Try and grow the mapped region of memory. Does not changes current or
-    // max size. Does not move memory if no space to grow.
-    void tryGrowMaxSize(uint32_t deltaMaxSize)
-    {
-        MOZ_ASSERT(maxSize_);
-        MOZ_RELEASE_ASSERT(deltaMaxSize % wasm::PageSize  == 0);
-
-        CheckedInt<uint32_t> newMaxSize = maxSize_.value() + deltaMaxSize;
-        MOZ_RELEASE_ASSERT(newMaxSize.isValid());
-        MOZ_RELEASE_ASSERT(newMaxSize.value() % wasm::PageSize == 0);
-
-        size_t newMappedSize = wasm::ComputeMappedSize(newMaxSize.value());
-        MOZ_ASSERT(newMappedSize >= mappedSize_);
+    bool extendMappedSize(uint32_t maxSize) {
+        size_t newMappedSize = wasm::ComputeMappedSize(maxSize);
+        MOZ_ASSERT(mappedSize_ <= newMappedSize);
         if (mappedSize_ == newMappedSize)
-            return;
+            return true;
 
 # ifdef XP_WIN
         uint8_t* mappedEnd = dataPointer() + mappedSize_;
         uint32_t delta = newMappedSize - mappedSize_;
         if (!VirtualAlloc(mappedEnd, delta, MEM_RESERVE, PAGE_NOACCESS))
-            return;
+            return false;
 # elif defined(XP_LINUX)
         // Note this will not move memory (no MREMAP_MAYMOVE specified)
         if (MAP_FAILED == mremap(dataPointer(), mappedSize_, newMappedSize, 0))
-            return;
+            return false;
 # else
         // No mechanism for remapping on MacOS and other Unices. Luckily
         // shouldn't need it here as most of these are 64-bit.
-        return;
+        return false;
 # endif
 
         mappedSize_ = newMappedSize;
+        return true;
+    }
+
+    // Try and grow the mapped region of memory. Does not changes current size.
+    // Does not move memory if no space to grow.
+    void tryGrowMaxSizeInPlace(uint32_t deltaMaxSize) {
+        CheckedInt<uint32_t> newMaxSize = maxSize_.value();
+        newMaxSize += deltaMaxSize;
+        MOZ_ASSERT(newMaxSize.isValid());
+        MOZ_ASSERT(newMaxSize.value() % wasm::PageSize == 0);
+
+        if (!extendMappedSize(newMaxSize.value()))
+            return;
+
         maxSize_ = Some(newMaxSize.value());
-        return;
     }
 #endif // WASM_HUGE_MEMORY
 };
@@ -686,7 +687,7 @@ ArrayBufferObject::createForWasm(JSContext* cx, uint32_t initialSize, Maybe<uint
 
         uint32_t cur = maxSize.value() / 2;
 
-        for (; cur > initialSize; cur = cur / 2) {
+        for (; cur > initialSize; cur /= 2) {
             wasmBuf = WasmArrayRawBuffer::Allocate(initialSize, Some(ROUND_UP(cur, wasm::PageSize)));
             if (wasmBuf)
                 break;
@@ -699,7 +700,7 @@ ArrayBufferObject::createForWasm(JSContext* cx, uint32_t initialSize, Maybe<uint
 
         // Try to grow our chunk as much as possible.
         for (size_t d = cur / 2; d >= wasm::PageSize; d /= 2)
-            wasmBuf->tryGrowMaxSize(ROUND_UP(d, wasm::PageSize));
+            wasmBuf->tryGrowMaxSizeInPlace(ROUND_UP(d, wasm::PageSize));
 #endif
     }
 
@@ -866,17 +867,6 @@ ArrayBufferObject::wasmMaxSize() const
         return Some<uint32_t>(byteLength());
 }
 
-#ifndef WASM_HUGE_MEMORY
-uint32_t
-ArrayBufferObject::wasmBoundsCheckLimit() const
-{
-    if (isWasmMapped())
-        return contents().wasmBuffer()->boundsCheckLimit();
-    else
-        return byteLength();
-}
-#endif
-
 uint32_t
 ArrayBufferObject::wasmActualByteLength() const
 {
@@ -886,7 +876,42 @@ ArrayBufferObject::wasmActualByteLength() const
         return byteLength();
 }
 
+bool
+ArrayBufferObject::wasmGrowToSizeInPlace(uint32_t newSize)
+{
+    return contents().wasmBuffer()->growToSizeInPlace(newSize);
+}
+
 #ifndef WASM_HUGE_MEMORY
+bool
+ArrayBufferObject::wasmMovingGrowToSize(uint32_t newSize)
+{
+    WasmArrayRawBuffer* curBuf = contents().wasmBuffer();
+
+    if (newSize <= curBuf->boundsCheckLimit() || curBuf->extendMappedSize(newSize))
+        return curBuf->growToSizeInPlace(newSize);
+
+    WasmArrayRawBuffer* newBuf = WasmArrayRawBuffer::Allocate(newSize, Nothing());
+    if (!newBuf)
+        return false;
+
+    void* newData = newBuf->dataPointer();
+    memcpy(newData, curBuf->dataPointer(), curBuf->actualByteLength());
+
+    BufferContents newContents = BufferContents::create<WASM_MAPPED>(newData);
+    changeContents(GetJSContextFromMainThread(), newContents);
+    return true;
+}
+
+uint32_t
+ArrayBufferObject::wasmBoundsCheckLimit() const
+{
+    if (isWasmMapped())
+        return contents().wasmBuffer()->boundsCheckLimit();
+    else
+        return byteLength();
+}
+
 uint32_t
 ArrayBufferObjectMaybeShared::wasmBoundsCheckLimit() const
 {
@@ -896,22 +921,6 @@ ArrayBufferObjectMaybeShared::wasmBoundsCheckLimit() const
     return as<SharedArrayBufferObject>().byteLength();
 }
 #endif
-
-bool
-ArrayBufferObject::growForWasm(uint32_t delta)
-{
-    MOZ_ASSERT(isWasmMapped());
-
-    if (delta == 0)
-        return true;
-
-    // Should be guaranteed by Instance::growMemory
-    CheckedInt<uint32_t> curSize = wasmActualByteLength();
-    CheckedInt<uint32_t> newSize = curSize + CheckedInt<uint32_t>(delta) * wasm ::PageSize;
-    MOZ_RELEASE_ASSERT(newSize.isValid());
-
-    return contents().wasmBuffer()->growLength(delta * wasm::PageSize);
-}
 
 uint32_t
 ArrayBufferObject::flags() const
