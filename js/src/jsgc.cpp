@@ -5859,15 +5859,23 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
 
         MOZ_ASSERT(marker.isDrained());
 
-        if (!lastMarkSlice && isIncremental && useZeal &&
-            ((initialState == State::Mark && !hasZealMode(ZealMode::IncrementalRootsThenFinish)) ||
-             hasZealMode(ZealMode::IncrementalMarkAllThenFinish)))
+        /*
+         * In incremental GCs where we have already performed more than once
+         * slice we yield after marking with the aim of starting the sweep in
+         * the next slice, since the first slice of sweeping can be expensive.
+         *
+         * This is modified by the various zeal modes.  We don't yield in
+         * IncrementalRootsThenFinish mode and we always yield in
+         * IncrementalMarkAllThenFinish mode.
+         *
+         * We will need to mark anything new on the stack when we resume, so
+         * we stay in Mark state.
+         */
+        if (!lastMarkSlice && isIncremental &&
+            ((initialState == State::Mark &&
+              !(useZeal && hasZealMode(ZealMode::IncrementalRootsThenFinish))) ||
+             (useZeal && hasZealMode(ZealMode::IncrementalMarkAllThenFinish))))
         {
-            /*
-             * Yield with the aim of starting the sweep in the next
-             * slice.  We will need to mark anything new on the stack
-             * when we resume, so we stay in Mark state.
-             */
             lastMarkSlice = true;
             break;
         }
