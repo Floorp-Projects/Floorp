@@ -570,7 +570,7 @@ Module::instantiateMemory(JSContext* cx, MutableHandleWasmMemoryObject memory) c
         MOZ_ASSERT_IF(metadata_->isAsmJS(), buffer.isPreparedForAsmJS());
         MOZ_ASSERT_IF(!metadata_->isAsmJS(), buffer.as<ArrayBufferObject>().isWasm());
 
-        uint32_t actualLength = buffer.wasmActualByteLength();
+        uint32_t actualLength = buffer.byteLength();
         if (actualLength < declaredMin || actualLength > declaredMax.valueOr(UINT32_MAX)) {
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMP_SIZE, "Memory");
             return false;
