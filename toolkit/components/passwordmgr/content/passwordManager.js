@@ -26,7 +26,14 @@ let showingPasswords = false;
 let signons = [];
 let deletedSignons = [];
 
+// Elements that would be used frequently
+let filterField;
+let togglePasswordsButton;
+let signonsIntro;
+let removeButton;
+let removeAllButton;
 let signonsTree;
+
 let signonReloadDisplay = {
   observe: function(subject, topic, data) {
     if (topic == "passwordmgr-storage-changed") {
@@ -41,7 +48,7 @@ let signonReloadDisplay = {
           signons.length = 0;
           LoadSignons();
           // apply the filter if needed
-          if (document.getElementById("filter") && document.getElementById("filter").value != "") {
+          if (filterField && filterField.value != "") {
             _filterPasswords();
           }
           break;
@@ -64,9 +71,15 @@ function Startup() {
 
   signonsTree = document.getElementById("signonsTree");
   kSignonBundle = document.getElementById("signonBundle");
-  document.getElementById("togglePasswords").label = kSignonBundle.getString("showPasswords");
-  document.getElementById("togglePasswords").accessKey = kSignonBundle.getString("showPasswordsAccessKey");
-  document.getElementById("signonsIntro").textContent = kSignonBundle.getString("loginsDescriptionAll");
+  filterField = document.getElementById("filter");
+  togglePasswordsButton = document.getElementById("togglePasswords");
+  signonsIntro = document.getElementById("signonsIntro");
+  removeButton = document.getElementById("removeSignon");
+  removeAllButton = document.getElementById("removeAllSignons");
+
+  togglePasswordsButton.label = kSignonBundle.getString("showPasswords");
+  togglePasswordsButton.accessKey = kSignonBundle.getString("showPasswordsAccessKey");
+  signonsIntro.textContent = kSignonBundle.getString("loginsDescriptionAll");
   document.getElementsByTagName("treecols")[0].addEventListener("click", (event) => {
     let { target, button } = event;
     let sortField = target.getAttribute("data-field-name");
@@ -99,7 +112,7 @@ function Shutdown() {
 }
 
 function setFilter(aFilterString) {
-  document.getElementById("filter").value = aFilterString;
+  filterField.value = aFilterString;
   _filterPasswords();
 }
 
@@ -297,14 +310,12 @@ function LoadSignons() {
   SignonColumnSort(lastSignonSortColumn);
 
   // disable "remove all signons" button if there are no signons
-  let element = document.getElementById("removeAllSignons");
-  let toggle = document.getElementById("togglePasswords");
   if (signons.length == 0) {
-    element.setAttribute("disabled", "true");
-    toggle.setAttribute("disabled", "true");
+    removeAllButton.setAttribute("disabled", "true");
+    togglePasswordsButton.setAttribute("disabled", "true");
   } else {
-    element.removeAttribute("disabled");
-    toggle.removeAttribute("disabled");
+    removeAllButton.removeAttribute("disabled");
+    togglePasswordsButton.removeAttribute("disabled");
   }
 
   return true;
@@ -332,9 +343,9 @@ function GetTreeSelections(tree) {
 function SignonSelected() {
   let selections = GetTreeSelections(signonsTree);
   if (selections.length) {
-    document.getElementById("removeSignon").removeAttribute("disabled");
+    removeButton.removeAttribute("disabled");
   } else {
-    document.getElementById("removeSignon").setAttribute("disabled", true);
+    removeButton.setAttribute("disabled", true);
   }
 }
 
@@ -377,8 +388,8 @@ function DeleteSignon() {
     tree.treeBoxObject.ensureRowIsVisible(nextSelection);
   } else {
     // disable buttons
-    document.getElementById("removeSignon").setAttribute("disabled", "true")
-    document.getElementById("removeAllSignons").setAttribute("disabled", "true");
+    removeButton.setAttribute("disabled", "true");
+    removeAllButton.setAttribute("disabled", "true");
   }
   tree.view.selection.selectEventsSuppressed = false;
   FinalizeSignonDeletions(syncNeeded);
@@ -420,8 +431,8 @@ function DeleteAllSignons() {
   box.invalidate();
 
   // disable buttons
-  document.getElementById("removeSignon").setAttribute("disabled", "true")
-  document.getElementById("removeAllSignons").setAttribute("disabled", "true");
+  removeButton.setAttribute("disabled", "true");
+  removeAllButton.setAttribute("disabled", "true");
   FinalizeSignonDeletions(syncNeeded);
   Services.telemetry.getHistogramById("PWMGR_MANAGE_DELETED_ALL").add(1);
 }
@@ -429,8 +440,8 @@ function DeleteAllSignons() {
 function TogglePasswordVisible() {
   if (showingPasswords || masterPasswordLogin(AskUserShowPasswords)) {
     showingPasswords = !showingPasswords;
-    document.getElementById("togglePasswords").label = kSignonBundle.getString(showingPasswords ? "hidePasswords" : "showPasswords");
-    document.getElementById("togglePasswords").accessKey = kSignonBundle.getString(showingPasswords ? "hidePasswordsAccessKey" : "showPasswordsAccessKey");
+    togglePasswordsButton.label = kSignonBundle.getString(showingPasswords ? "hidePasswords" : "showPasswords");
+    togglePasswordsButton.accessKey = kSignonBundle.getString(showingPasswords ? "hidePasswordsAccessKey" : "showPasswordsAccessKey");
     document.getElementById("passwordCol").hidden = !showingPasswords;
     _filterPasswords();
   }
@@ -545,13 +556,13 @@ function SignonClearFilter() {
   }
   signonsTreeView._lastSelectedRanges = [];
 
-  document.getElementById("signonsIntro").textContent = kSignonBundle.getString("loginsDescriptionAll");
+  signonsIntro.textContent = kSignonBundle.getString("loginsDescriptionAll");
 }
 
 function FocusFilterBox() {
-  let filterBox = document.getElementById("filter");
-  if (filterBox.getAttribute("focused") != "true")
-    filterBox.focus();
+  if (filterField.getAttribute("focused") != "true") {
+    filterField.focus();
+  }
 }
 
 function SignonMatchesFilter(aSignon, aFilterValue) {
@@ -588,13 +599,12 @@ function SignonSaveState() {
 }
 
 function _filterPasswords() {
-  let filter = document.getElementById("filter").value;
-  if (filter == "") {
+  if (filterField.value == "") {
     SignonClearFilter();
     return;
   }
 
-  let newFilterSet = FilterPasswords(filter, signonsTreeView);
+  let newFilterSet = FilterPasswords(filterField.value, signonsTreeView);
   if (!signonsTreeView._filterSet.length) {
     // Save Display Info for the Non-Filtered mode when we first
     // enter Filtered mode.
@@ -614,7 +624,7 @@ function _filterPasswords() {
   if (signonsTreeView.rowCount > 0)
     signonsTreeView.selection.select(0);
 
-  document.getElementById("signonsIntro").textContent = kSignonBundle.getString("loginsDescriptionFiltered");
+  signonsIntro.textContent = kSignonBundle.getString("loginsDescriptionFiltered");
 }
 
 function CopyPassword() {
@@ -625,7 +635,7 @@ function CopyPassword() {
   // Copy selected signon's password to clipboard
   let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
                   getService(Ci.nsIClipboardHelper);
-  let row = document.getElementById("signonsTree").currentIndex;
+  let row = signonsTree.currentIndex;
   let password = signonsTreeView.getCellText(row, {id : "passwordCol" });
   clipboard.copyString(password);
   Services.telemetry.getHistogramById("PWMGR_MANAGE_COPIED_PASSWORD").add(1);
@@ -635,7 +645,7 @@ function CopyUsername() {
   // Copy selected signon's username to clipboard
   let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
                   getService(Ci.nsIClipboardHelper);
-  let row = document.getElementById("signonsTree").currentIndex;
+  let row = signonsTree.currentIndex;
   let username = signonsTreeView.getCellText(row, {id : "userCol" });
   clipboard.copyString(username);
   Services.telemetry.getHistogramById("PWMGR_MANAGE_COPIED_USERNAME").add(1);
