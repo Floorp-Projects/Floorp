@@ -43,7 +43,7 @@ HTMLHRElement::ParseAttribute(int32_t aNamespaceID,
     { "left", NS_STYLE_TEXT_ALIGN_LEFT },
     { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
     { "center", NS_STYLE_TEXT_ALIGN_CENTER },
-    { 0 }
+    { nullptr, 0 }
   };
 
   if (aNamespaceID == kNameSpaceID_None) {

@@ -144,9 +144,9 @@ BRFrame::Reflow(nsPresContext* aPresContext,
     }
 
     // Return our reflow status
-    uint32_t breakType = aReflowInput.mStyleDisplay->PhysicalBreakType(wm);
-    if (NS_STYLE_CLEAR_NONE == breakType) {
-      breakType = NS_STYLE_CLEAR_LINE;
+    StyleClear breakType = aReflowInput.mStyleDisplay->PhysicalBreakType(wm);
+    if (StyleClear::None_ == breakType) {
+      breakType = StyleClear::Line;
     }
 
     aStatus = NS_INLINE_BREAK | NS_INLINE_BREAK_AFTER |

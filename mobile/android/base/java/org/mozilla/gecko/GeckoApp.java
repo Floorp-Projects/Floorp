@@ -2571,7 +2571,9 @@ public abstract class GeckoApp
             if (CPU.equals(topic)) {
               wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, topic);
             } else if (SCREEN.equals(topic)) {
-              wl = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, topic);
+              // ON_AFTER_RELEASE is set, the user activity timer will be reset when the
+              // WakeLock is released, causing the illumination to remain on a bit longer.
+              wl = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ON_AFTER_RELEASE, topic);
             }
 
             if (wl != null) {

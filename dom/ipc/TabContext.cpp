@@ -302,8 +302,8 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
   nsAutoCString originSuffix;
   nsAutoCString signedPkgOriginNoSuffix;
   nsAutoString presentationURL;
-  UIStateChangeType showAccelerators;
-  UIStateChangeType showFocusRings;
+  UIStateChangeType showAccelerators = UIStateChangeType_NoChange;
+  UIStateChangeType showFocusRings = UIStateChangeType_NoChange;
 
   switch(aParams.type()) {
     case IPCTabContext::TPopupIPCTabContext: {

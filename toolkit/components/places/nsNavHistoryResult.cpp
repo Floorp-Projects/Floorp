@@ -3966,12 +3966,12 @@ nsNavHistoryFolderResultNode::OnItemMoved(int64_t aItemId,
     }
     if (aOldParent == mTargetFolderItemId) {
       OnItemRemoved(aItemId, aOldParent, aOldIndex, aItemType, itemURI,
-                    aGUID, aOldParentGUID, nsINavBookmarksService::SOURCE_DEFAULT);
+                    aGUID, aOldParentGUID, aSource);
     }
     if (aNewParent == mTargetFolderItemId) {
       OnItemAdded(aItemId, aNewParent, aNewIndex, aItemType, itemURI, itemTitle,
                   RoundedPRNow(), // This is a dummy dateAdded, not the real value.
-                  aGUID, aNewParentGUID, nsINavBookmarksService::SOURCE_DEFAULT);
+                  aGUID, aNewParentGUID, aSource);
     }
   }
   return NS_OK;
