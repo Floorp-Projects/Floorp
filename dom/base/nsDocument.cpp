@@ -7081,7 +7081,8 @@ nsIDocument::GetDocumentURI(nsString& aDocumentURI) const
 {
   if (mDocumentURI) {
     nsAutoCString uri;
-    mDocumentURI->GetSpec(uri);
+    // XXX: should handle GetSpec() failure properly. See bug 1301249.
+    Unused << mDocumentURI->GetSpec(uri);
     CopyUTF8toUTF16(uri, aDocumentURI);
   } else {
     aDocumentURI.Truncate();
@@ -7102,14 +7103,18 @@ nsIDocument::GetURL(nsString& aURL) const
 }
 
 void
-nsIDocument::GetDocumentURIFromJS(nsString& aDocumentURI) const
+nsIDocument::GetDocumentURIFromJS(nsString& aDocumentURI, ErrorResult& aRv) const
 {
   if (!mChromeXHRDocURI || !nsContentUtils::IsCallerChrome()) {
     return GetDocumentURI(aDocumentURI);
   }
 
   nsAutoCString uri;
-  mChromeXHRDocURI->GetSpec(uri);
+  nsresult res = mChromeXHRDocURI->GetSpec(uri);
+  if (NS_FAILED(res)) {
+    aRv.Throw(res);
+    return;
+  }
   CopyUTF8toUTF16(uri, aDocumentURI);
 }
 
@@ -9597,7 +9602,11 @@ nsDocument::SetScrollToRef(nsIURI *aDocumentURI)
   // finding the 'ref' part of the URI, we'll haveto revert to
   // string routines for finding the data past '#'
 
-  aDocumentURI->GetSpec(ref);
+  nsresult rv = aDocumentURI->GetSpec(ref);
+  if (NS_FAILED(rv)) {
+    Unused << aDocumentURI->GetRef(mScrollToRef);
+    return;
+  }
 
   nsReadingIterator<char> start, end;
 
