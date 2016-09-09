@@ -2,19 +2,16 @@
 
 Cu.import("resource://gre/modules/NetUtil.jsm");
 
-function completeTest(request, data, ctx)
-{
-    do_test_finished();
-}
-
 function run_test()
 {
-    var chan = NetUtil.newChannel({
-      uri: "http://localhost:80000/",
-      loadUsingSystemPrincipal: true
-    });
-    var httpChan = chan.QueryInterface(Components.interfaces.nsIHttpChannel);
-    httpChan.asyncOpen2(new ChannelListener(completeTest,httpChan, CL_EXPECT_FAILURE));
-    do_test_pending();
+    // Bug 1301621 makes invalid ports throw
+    Assert.throws(() => {
+        var chan = NetUtil.newChannel({
+          uri: "http://localhost:80000/",
+          loadUsingSystemPrincipal: true
+        });
+    }, "invalid port");
+
+    do_test_finished();
 }
 
