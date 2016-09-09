@@ -71,7 +71,7 @@ public class AudioFocusAgent {
                         }
                         Log.d(LOGTAG, "onAudioFocusChange, AUDIOFOCUS_GAIN");
                         notifyObservers("AudioFocusChanged", "gainAudioFocus");
-                        notifyMediaControlService(MediaControlService.ACTION_PLAY);
+                        notifyMediaControlService(MediaControlService.ACTION_RESUME);
                         mAudioFocusState = OWN_FOCUS;
                         break;
                     default:
