@@ -59,6 +59,13 @@ class HelperMixin(object):
         symbolstore.srcdirRepoInfo = {}
         symbolstore.vcsFileInfoCache = {}
 
+        # Remove environment variables that can influence tests.
+        for e in ('MOZ_SOURCE_CHANGESET', 'MOZ_SOURCE_REPO'):
+            try:
+                del os.environ[e]
+            except KeyError:
+                pass
+
     def tearDown(self):
         shutil.rmtree(self.test_dir)
         symbolstore.srcdirRepoInfo = {}
@@ -263,6 +270,16 @@ class TestGetVCSFilename(HelperMixin, unittest.TestCase):
                          symbolstore.GetVCSFilename(filename1, [srcdir1, srcdir2])[0])
         self.assertEqual("hg:example.com/other:bar.c:0987ffff",
                          symbolstore.GetVCSFilename(filename2, [srcdir1, srcdir2])[0])
+
+    def testVCSFilenameEnv(self):
+        # repo URL and changeset read from environment variables if defined.
+        os.environ['MOZ_SOURCE_REPO'] = 'https://somewhere.com/repo'
+        os.environ['MOZ_SOURCE_CHANGESET'] = 'abcdef0123456'
+        os.mkdir(os.path.join(self.test_dir, '.hg'))
+        filename = os.path.join(self.test_dir, 'foo.c')
+        self.assertEqual('hg:somewhere.com/repo:foo.c:abcdef0123456',
+                         symbolstore.GetVCSFilename(filename, [self.test_dir])[0])
+
 
 class TestRepoManifest(HelperMixin, unittest.TestCase):
     def testRepoManifest(self):
