@@ -83,6 +83,13 @@ public:
                                        ? u"active"
                                        : u"inactive");
 
+    // TODO : remove b2g related event in bug1299390.
+    observerService->NotifyObservers(wrapper,
+                                     "media-playback",
+                                     mActive
+                                       ? u"active"
+                                       : u"inactive");
+
     MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
            ("NotifyChannelActiveRunnable, type = %d, active = %d\n",
             mAudioChannel, mActive));
