@@ -42,7 +42,7 @@ using namespace mozilla::layers;
 using namespace mozilla::media;
 
 // Default timeout msecs until try to enter dormant state by heuristic.
-static const int DEFAULT_HEURISTIC_DORMANT_TIMEOUT_MSECS = 60000;
+static const int DEFAULT_HEURISTIC_DORMANT_TIMEOUT_MSECS = 10000;
 
 namespace mozilla {
 
