@@ -72,6 +72,14 @@ runTest(() => getUserMedia({video: true, fake: true})
     captureStreamElement.srcObject = gUMVideoElement.mozCaptureStream();
     captureStreamElement.play();
 
+    // Adding a dummy audio track to the stream will keep a consuming media
+    // element from ending.
+    // We could also solve it by repeatedly play()ing or autoplay, but then we
+    // wouldn't be sure the media element stopped rendering video because it
+    // went to the ended state or because there were no frames for the track.
+    let osc = createOscillatorStream(new AudioContext(), 1000);
+    captureStreamElement.srcObject.addTrack(osc.getTracks()[0]);
+
     return checkVideoPlaying(captureStreamElement);
   })
   .then(() => {
