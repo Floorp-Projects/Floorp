@@ -57,6 +57,12 @@ global.tabGetSender = getSender;
 
 extensions.on("page-shutdown", (type, context) => {
   if (context.viewType == "tab") {
+    if (context.extension.id !== context.xulBrowser.contentPrincipal.addonId) {
+      // Only close extension tabs.
+      // This check prevents about:addons from closing when it contains a
+      // WebExtension as an embedded inline options page.
+      return;
+    }
     let {gBrowser} = context.xulBrowser.ownerGlobal;
     if (gBrowser) {
       let tab = gBrowser.getTabForBrowser(context.xulBrowser);

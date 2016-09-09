@@ -30,6 +30,7 @@ function* loadExtension(options) {
         </html>`,
 
       "options.js": function() {
+        window.iAmOption = true;
         browser.runtime.sendMessage("options.html");
         browser.runtime.onMessage.addListener((msg, sender, respond) => {
           if (msg == "ping") {
@@ -96,6 +97,13 @@ add_tasks(function* test_inline_options(extraOptions) {
         browser.test.assertTrue(tab.id != firstTab, "Tab is a new tab");
 
         optionsTab = tab.id;
+        browser.test.assertEq(0, browser.extension.getViews({type: "popup"}).length, "viewType is not popup");
+        browser.test.assertEq(1, browser.extension.getViews({type: "tab"}).length, "viewType is tab");
+        browser.test.assertEq(1, browser.extension.getViews({windowId: tab.windowId}).length, "windowId matches");
+        let views = browser.extension.getViews();
+        browser.test.assertEq(2, views.length, "Expected the options page and the background page");
+        browser.test.assertTrue(views.includes(window), "One of the views is the background page");
+        browser.test.assertTrue(views.some(w => w.iAmOption), "One of the views is the options page");
 
         browser.test.log("Switch tabs.");
         return browser.tabs.update(firstTab, {active: true});
@@ -195,6 +203,13 @@ add_tasks(function* test_tab_options(extraOptions) {
         browser.test.assertTrue(tab.id != firstTab, "Tab is a new tab");
 
         optionsTab = tab.id;
+        browser.test.assertEq(0, browser.extension.getViews({type: "popup"}).length, "viewType is not popup");
+        browser.test.assertEq(1, browser.extension.getViews({type: "tab"}).length, "viewType is tab");
+        browser.test.assertEq(1, browser.extension.getViews({windowId: tab.windowId}).length, "windowId matches");
+        let views = browser.extension.getViews();
+        browser.test.assertEq(2, views.length, "Expected the options page and the background page");
+        browser.test.assertTrue(views.includes(window), "One of the views is the background page");
+        browser.test.assertTrue(views.some(w => w.iAmOption), "One of the views is the options page");
 
         browser.test.log("Switch tabs.");
         return browser.tabs.update(firstTab, {active: true});
