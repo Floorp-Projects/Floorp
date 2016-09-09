@@ -69,7 +69,6 @@ class nsExpandedPrincipal : public nsIExpandedPrincipal, public mozilla::BasePri
 public:
   nsExpandedPrincipal(nsTArray<nsCOMPtr<nsIPrincipal>> &aWhiteList,
                       const mozilla::PrincipalOriginAttributes& aAttrs);
-  explicit nsExpandedPrincipal(nsTArray<nsCOMPtr<nsIPrincipal>> &aWhiteList);
 
   NS_DECL_NSIEXPANDEDPRINCIPAL
   NS_DECL_NSISERIALIZABLE
