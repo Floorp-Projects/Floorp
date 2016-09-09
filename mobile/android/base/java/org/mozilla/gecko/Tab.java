@@ -84,6 +84,7 @@ public class Tab {
     private volatile int mLoadProgress;
     private volatile int mRecordingCount;
     private volatile boolean mIsAudioPlaying;
+    private volatile boolean mIsMediaPlaying;
     private String mMostRecentHomePanel;
     private boolean mShouldShowToolbarWithoutAnimationOnFirstSelection;
 
@@ -812,6 +813,26 @@ public class Tab {
         return mRecordingCount > 0;
     }
 
+    /**
+     * The "MediaPlaying" is used for controling media control interface and
+     * means the tab has playing media.
+     *
+     * @param isMediaPlaying the tab has any playing media or not
+     */
+    public void setIsMediaPlaying(boolean isMediaPlaying) {
+        mIsMediaPlaying = isMediaPlaying;
+    }
+
+    public boolean isMediaPlaying() {
+        return mIsMediaPlaying;
+    }
+
+    /**
+     * The "AudioPlaying" is used for showing the tab sound indicator and means
+     * the tab has playing media and the media is audible.
+     *
+     * @param isAudioPlaying the tab has any audible playing media or not
+     */
     public void setIsAudioPlaying(boolean isAudioPlaying) {
         mIsAudioPlaying = isAudioPlaying;
     }
