@@ -69,10 +69,7 @@ public class LauncherActivity extends Activity {
         Intent intent = new Intent(getIntent());
         intent.setClassName(getApplicationContext(), AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
 
-        // Explicitly remove the new task and clear task flags (Our browser activity is a single
-        // task activity and we never want to start a second task here). See bug 1280112.
-        intent.setFlags(intent.getFlags() & ~Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.setFlags(intent.getFlags() & ~Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        filterFlags(intent);
 
         startActivity(intent);
     }
@@ -80,7 +77,21 @@ public class LauncherActivity extends Activity {
     private void dispatchCustomTabsIntent() {
         Intent intent = new Intent(getIntent());
         intent.setClassName(getApplicationContext(), CustomTabsActivity.class.getName());
+
+        filterFlags(intent);
+
         startActivity(intent);
+    }
+
+    private static void filterFlags(Intent intent) {
+        // Explicitly remove the new task and clear task flags (Our browser activity is a single
+        // task activity and we never want to start a second task here). See bug 1280112.
+        intent.setFlags(intent.getFlags() & ~Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.setFlags(intent.getFlags() & ~Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
+        // LauncherActivity is started with the "exclude from recents" flag (set in manifest). We do
+        // not want to propagate this flag from the launcher activity to the browser.
+        intent.setFlags(intent.getFlags() & ~Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
     }
 
     private static boolean isViewIntentWithURL(@NonNull final SafeIntent safeIntent) {
