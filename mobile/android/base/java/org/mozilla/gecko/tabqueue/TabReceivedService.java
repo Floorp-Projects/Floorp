@@ -16,6 +16,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 import android.support.v4.app.NotificationCompat;
@@ -66,6 +68,13 @@ public class TabReceivedService extends IntentService {
         builder.setAutoCancel(true);
         builder.setContentText(uri);
         builder.setContentIntent(contentIntent);
+
+        // Trigger "heads-up" notification mode on supported Android versions.
+        builder.setPriority(NotificationCompat.PRIORITY_HIGH);
+        final Uri notificationSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        if (notificationSoundUri != null) {
+            builder.setSound(notificationSoundUri);
+        }
 
         final SharedPreferences prefs = GeckoSharedPrefs.forApp(this);
         final int notificationId = getNextNotificationId(prefs.getInt(PREF_NOTIFICATION_ID, 0));
