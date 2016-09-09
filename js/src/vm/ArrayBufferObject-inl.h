@@ -71,6 +71,14 @@ WasmArrayBufferMaxSize(const ArrayBufferObjectMaybeShared* buf)
     return mozilla::Some(buf->as<SharedArrayBufferObject>().byteLength());
 }
 
+inline bool
+AnyArrayBufferIsPreparedForAsmJS(const ArrayBufferObjectMaybeShared* buf)
+{
+    if (buf->is<ArrayBufferObject>())
+        return buf->as<ArrayBufferObject>().isPreparedForAsmJS();
+    return buf->as<SharedArrayBufferObject>().isPreparedForAsmJS();
+}
+
 inline ArrayBufferObjectMaybeShared&
 AsAnyArrayBuffer(HandleValue val)
 {
