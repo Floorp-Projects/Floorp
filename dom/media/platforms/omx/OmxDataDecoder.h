@@ -103,7 +103,7 @@ protected:
 
   void NotifyError(OMX_ERRORTYPE aOmxError,
                    const char* aLine,
-                   MediaDataDecoderError aError = MediaDataDecoderError::FATAL_ERROR);
+                   const MediaResult& aError = MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR));
 
   // Configure audio/video codec.
   // Some codec may just ignore this and rely on codec specific data in

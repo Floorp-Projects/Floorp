@@ -166,7 +166,8 @@ private:
   void NotifyNewOutput(TrackType aTrack, MediaData* aSample);
   void NotifyInputExhausted(TrackType aTrack);
   void NotifyDrainComplete(TrackType aTrack);
-  void NotifyError(TrackType aTrack, MediaDataDecoderError aError = MediaDataDecoderError::FATAL_ERROR);
+  void NotifyError(TrackType aTrack,
+                   const MediaResult& aError = MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR));
   void NotifyWaitingForData(TrackType aTrack);
   void NotifyEndOfStream(TrackType aTrack);
 
@@ -179,7 +180,7 @@ private:
   // functions.
   void Output(TrackType aType, MediaData* aSample);
   void InputExhausted(TrackType aTrack);
-  void Error(TrackType aTrack, MediaDataDecoderError aError = MediaDataDecoderError::FATAL_ERROR);
+  void Error(TrackType aTrack, const MediaResult& aError);
   void Reset(TrackType aTrack);
   void DrainComplete(TrackType aTrack);
   void DropDecodedSamples(TrackType aTrack);
@@ -206,7 +207,7 @@ private:
     void InputExhausted() override {
       mReader->InputExhausted(mType);
     }
-    void Error(MediaDataDecoderError aError) override {
+    void Error(const MediaResult& aError) override {
       mReader->Error(mType, aError);
     }
     void DrainComplete() override {
@@ -327,10 +328,10 @@ private:
     uint32_t mNumOfConsecutiveError;
     uint32_t mMaxConsecutiveError;
 
-    Maybe<MediaDataDecoderError> mError;
+    Maybe<MediaResult> mError;
     bool HasFatalError() const
     {
-      return mError.isSome() && mError.ref() == MediaDataDecoderError::FATAL_ERROR;
+      return mError.isSome() && mError.ref() != NS_ERROR_DOM_MEDIA_DECODE_ERR;
     }
 
     // If set, all decoded samples prior mTimeThreshold will be dropped.

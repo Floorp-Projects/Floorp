@@ -268,7 +268,8 @@ MediaCodecDataDecoder::InitDecoder(Surface::Param aSurface)
 {
   mDecoder = CreateDecoder(mMimeType);
   if (!mDecoder) {
-    INVOKE_CALLBACK(Error, MediaDataDecoderError::FATAL_ERROR);
+    INVOKE_CALLBACK(Error,
+                    MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__));
     return NS_ERROR_FAILURE;
   }
 
@@ -295,7 +296,7 @@ static const int64_t kDecoderTimeout = 10000;
       INVOKE_CALLBACK(DrainComplete); \
       SetState(ModuleState::kDecoding); \
     } \
-    INVOKE_CALLBACK(Error, MediaDataDecoderError::FATAL_ERROR); \
+    INVOKE_CALLBACK(Error, MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__)); \
     break; \
   }
 
@@ -535,7 +536,9 @@ MediaCodecDataDecoder::DecoderLoop()
       BREAK_ON_DECODER_ERROR();
     } else if (outputStatus < 0) {
       NS_WARNING("Unknown error from decoder!");
-      INVOKE_CALLBACK(Error, MediaDataDecoderError::DECODE_ERROR);
+      INVOKE_CALLBACK(Error,
+                      MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                                       __func__));
       // Don't break here just in case it's recoverable. If it's not, other
       // stuff will fail later and we'll bail out.
     } else {

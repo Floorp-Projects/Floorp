@@ -154,10 +154,12 @@ OpusDataDecoder::ProcessDecode(MediaRawData* aSample)
   DecodeError err = DoDecode(aSample);
   switch (err) {
     case DecodeError::FATAL_ERROR:
-      mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
+      mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                                        __func__));
       return;
     case DecodeError::DECODE_ERROR:
-      mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
+      mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                                        __func__));
       break;
     case DecodeError::DECODE_SUCCESS:
       mCallback->InputExhausted();

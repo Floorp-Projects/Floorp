@@ -10,7 +10,7 @@
 namespace mozilla {
 
 void
-MediaDataDecoderCallbackProxy::Error(MediaDataDecoderError aError)
+MediaDataDecoderCallbackProxy::Error(const MediaResult& aError)
 {
   mProxyCallback->Error(aError);
 }
