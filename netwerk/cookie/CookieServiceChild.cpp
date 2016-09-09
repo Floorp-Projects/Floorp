@@ -4,13 +4,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/net/CookieServiceChild.h"
+#include "mozilla/LoadInfo.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/NeckoChild.h"
+#include "nsIChannel.h"
 #include "nsIURI.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsServiceManagerUtils.h"
-#include "SerializedLoadContext.h"
 
 using namespace mozilla::ipc;
 
@@ -122,10 +124,17 @@ CookieServiceChild::GetCookieStringInternal(nsIURI *aHostURI,
   URIParams uriParams;
   SerializeURI(aHostURI, uriParams);
 
+  mozilla::NeckoOriginAttributes attrs;
+  if (aChannel) {
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
+    if (loadInfo) {
+      attrs = loadInfo->GetOriginAttributes();
+    }
+  }
+
   // Synchronously call the parent.
   nsAutoCString result;
-  SendGetCookieString(uriParams, !!isForeign, aFromHttp,
-                      IPC::SerializedLoadContext(aChannel), &result);
+  SendGetCookieString(uriParams, !!isForeign, aFromHttp, attrs, &result);
   if (!result.IsEmpty())
     *aCookieString = ToNewCString(result);
 
@@ -162,9 +171,17 @@ CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
   URIParams uriParams;
   SerializeURI(aHostURI, uriParams);
 
+  mozilla::NeckoOriginAttributes attrs;
+  if (aChannel) {
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
+    if (loadInfo) {
+      attrs = loadInfo->GetOriginAttributes();
+    }
+  }
+
   // Synchronously call the parent.
   SendSetCookieString(uriParams, !!isForeign, cookieString, serverTime,
-                      aFromHttp, IPC::SerializedLoadContext(aChannel));
+                      aFromHttp, attrs);
   return NS_OK;
 }
 

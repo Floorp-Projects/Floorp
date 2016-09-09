@@ -15,7 +15,6 @@
 #include "nsIPrivateBrowsingChannel.h"
 #include "nsNetCID.h"
 #include "nsPrintfCString.h"
-#include "SerializedLoadContext.h"
 
 using namespace mozilla::ipc;
 using mozilla::BasePrincipal;
@@ -70,33 +69,6 @@ CreateDummyChannel(nsIURI* aHostURI, NeckoOriginAttributes& aAttrs, bool aIsPriv
 namespace mozilla {
 namespace net {
 
-MOZ_MUST_USE
-bool
-CookieServiceParent::GetOriginAttributesFromParams(const IPC::SerializedLoadContext &aLoadContext,
-                                                   NeckoOriginAttributes& aAttrs,
-                                                   bool& aIsPrivate)
-{
-  aIsPrivate = false;
-
-  DocShellOriginAttributes docShellAttrs;
-  const char* error = NeckoParent::GetValidatedAppInfo(aLoadContext,
-                                                       Manager()->Manager(),
-                                                       docShellAttrs);
-  if (error) {
-    NS_WARNING(nsPrintfCString("CookieServiceParent: GetOriginAttributesFromParams: "
-                               "FATAL error: %s: KILLING CHILD PROCESS\n",
-                               error).get());
-    return false;
-  }
-
-  if (aLoadContext.IsPrivateBitValid()) {
-    aIsPrivate = aLoadContext.mOriginAttributes.mPrivateBrowsingId > 0;
-  }
-
-  aAttrs.InheritFromDocShellToNecko(docShellAttrs);
-  return true;
-}
-
 CookieServiceParent::CookieServiceParent()
 {
   // Instantiate the cookieservice via the service manager, so it sticks around
@@ -124,8 +96,7 @@ bool
 CookieServiceParent::RecvGetCookieString(const URIParams& aHost,
                                          const bool& aIsForeign,
                                          const bool& aFromHttp,
-                                         const IPC::SerializedLoadContext&
-                                               aLoadContext,
+                                         const NeckoOriginAttributes& aAttrs,
                                          nsCString* aResult)
 {
   if (!mCookieService)
@@ -137,14 +108,8 @@ CookieServiceParent::RecvGetCookieString(const URIParams& aHost,
   if (!hostURI)
     return false;
 
-  NeckoOriginAttributes attrs;
-  bool isPrivate;
-  bool valid = GetOriginAttributesFromParams(aLoadContext, attrs, isPrivate);
-  if (!valid) {
-    return false;
-  }
-
-  mCookieService->GetCookieStringInternal(hostURI, aIsForeign, aFromHttp, attrs,
+  bool isPrivate = aAttrs.mPrivateBrowsingId > 0;
+  mCookieService->GetCookieStringInternal(hostURI, aIsForeign, aFromHttp, aAttrs,
                                           isPrivate, *aResult);
   return true;
 }
@@ -155,8 +120,7 @@ CookieServiceParent::RecvSetCookieString(const URIParams& aHost,
                                          const nsCString& aCookieString,
                                          const nsCString& aServerTime,
                                          const bool& aFromHttp,
-                                         const IPC::SerializedLoadContext&
-                                               aLoadContext)
+                                         const NeckoOriginAttributes& aAttrs)
 {
   if (!mCookieService)
     return true;
@@ -167,12 +131,7 @@ CookieServiceParent::RecvSetCookieString(const URIParams& aHost,
   if (!hostURI)
     return false;
 
-  NeckoOriginAttributes attrs;
-  bool isPrivate;
-  bool valid = GetOriginAttributesFromParams(aLoadContext, attrs, isPrivate);
-  if (!valid) {
-    return false;
-  }
+  bool isPrivate = aAttrs.mPrivateBrowsingId > 0;
 
   // This is a gross hack. We've already computed everything we need to know
   // for whether to set this cookie or not, but we need to communicate all of
@@ -182,12 +141,13 @@ CookieServiceParent::RecvSetCookieString(const URIParams& aHost,
   // with aIsForeign before we have to worry about nsCookiePermission trying
   // to use the channel to inspect it.
   nsCOMPtr<nsIChannel> dummyChannel;
-  CreateDummyChannel(hostURI, attrs, isPrivate, getter_AddRefs(dummyChannel));
+  CreateDummyChannel(hostURI, const_cast<NeckoOriginAttributes&>(aAttrs),
+                     isPrivate, getter_AddRefs(dummyChannel));
 
   // NB: dummyChannel could be null if something failed in CreateDummyChannel.
   nsDependentCString cookieString(aCookieString, 0);
   mCookieService->SetCookieStringInternal(hostURI, aIsForeign, cookieString,
-                                          aServerTime, aFromHttp, attrs,
+                                          aServerTime, aFromHttp, aAttrs,
                                           isPrivate, dummyChannel);
   return true;
 }
