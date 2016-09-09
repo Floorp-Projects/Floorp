@@ -58,14 +58,13 @@ TheoraDecoder::~TheoraDecoder()
   th_info_clear(&mTheoraInfo);
 }
 
-nsresult
+void
 TheoraDecoder::Shutdown()
 {
   if (mTheoraDecoderContext) {
     th_decode_free(mTheoraDecoderContext);
     mTheoraDecoderContext = nullptr;
   }
-  return NS_OK;
 }
 
 RefPtr<MediaDataDecoder::InitPromise>
@@ -99,7 +98,7 @@ TheoraDecoder::Init()
 
 }
 
-nsresult
+void
 TheoraDecoder::Flush()
 {
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
@@ -109,7 +108,6 @@ TheoraDecoder::Flush()
   });
   SyncRunnable::DispatchToThread(mTaskQueue, r);
   mIsFlushing = false;
-  return NS_OK;
 }
 
 nsresult
@@ -207,14 +205,12 @@ TheoraDecoder::ProcessDecode(MediaRawData* aSample)
   }
 }
 
-nsresult
+void
 TheoraDecoder::Input(MediaRawData* aSample)
 {
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
                        this, &TheoraDecoder::ProcessDecode, aSample));
-
-  return NS_OK;
 }
 
 void
@@ -224,13 +220,11 @@ TheoraDecoder::ProcessDrain()
   mCallback->DrainComplete();
 }
 
-nsresult
+void
 TheoraDecoder::Drain()
 {
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   mTaskQueue->Dispatch(NewRunnableMethod(this, &TheoraDecoder::ProcessDrain));
-
-  return NS_OK;
 }
 
 /* static */

@@ -298,7 +298,8 @@ nsInProcessTabChildGlobal::InitTabChildGlobal()
   nsIURI* uri = mOwner->OwnerDoc()->GetDocumentURI();
   if (uri) {
     nsAutoCString u;
-    uri->GetSpec(u);
+    nsresult rv = uri->GetSpec(u);
+    NS_ENSURE_SUCCESS(rv, rv);
     id.AppendLiteral("?ownedBy=");
     id.Append(u);
   }

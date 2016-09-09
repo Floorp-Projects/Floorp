@@ -74,7 +74,7 @@ AppleVTDecoder::Init()
   return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
 }
 
-nsresult
+void
 AppleVTDecoder::Input(MediaRawData* aSample)
 {
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
@@ -88,10 +88,9 @@ AppleVTDecoder::Input(MediaRawData* aSample)
 
   mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
     this, &AppleVTDecoder::ProcessDecode, aSample));
-  return NS_OK;
 }
 
-nsresult
+void
 AppleVTDecoder::Flush()
 {
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
@@ -102,21 +101,18 @@ AppleVTDecoder::Flush()
   mIsFlushing = false;
 
   mSeekTargetThreshold.reset();
-
-  return NS_OK;
 }
 
-nsresult
+void
 AppleVTDecoder::Drain()
 {
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   nsCOMPtr<nsIRunnable> runnable =
     NewRunnableMethod(this, &AppleVTDecoder::ProcessDrain);
   mTaskQueue->Dispatch(runnable.forget());
-  return NS_OK;
 }
 
-nsresult
+void
 AppleVTDecoder::Shutdown()
 {
   MOZ_DIAGNOSTIC_ASSERT(!mIsShutDown);
@@ -128,7 +124,6 @@ AppleVTDecoder::Shutdown()
   } else {
     ProcessShutdown();
   }
-  return NS_OK;
 }
 
 nsresult

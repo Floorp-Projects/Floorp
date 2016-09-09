@@ -453,7 +453,8 @@ nsPACMan::StartLoading()
 
       // NOTE: This results in GetProxyForURI being called
       if (pacURI) {
-        pacURI->GetSpec(mNormalPACURISpec);
+        nsresult rv = pacURI->GetSpec(mNormalPACURISpec);
+        MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
         NS_NewChannel(getter_AddRefs(channel),
                       pacURI,
                       nsContentUtils::GetSystemPrincipal(),

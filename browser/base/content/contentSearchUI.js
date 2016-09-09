@@ -274,9 +274,11 @@ ContentSearchUIController.prototype = {
         ctrlKey: aEvent.ctrlKey,
         metaKey: aEvent.metaKey,
         altKey: aEvent.altKey,
-        button: aEvent.button,
       },
     };
+    if ("button" in aEvent) {
+      eventData.originalEvent.button = aEvent.button;
+    }
 
     if (this.suggestionAtIndex(this.selectedIndex)) {
       eventData.selection = {

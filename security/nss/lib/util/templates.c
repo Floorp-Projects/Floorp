@@ -20,11 +20,11 @@
 
 const SEC_ASN1Template SECOID_AlgorithmIDTemplate[] = {
     { SEC_ASN1_SEQUENCE,
-	  0, NULL, sizeof(SECAlgorithmID) },
+      0, NULL, sizeof(SECAlgorithmID) },
     { SEC_ASN1_OBJECT_ID,
-	  offsetof(SECAlgorithmID,algorithm) },
+      offsetof(SECAlgorithmID, algorithm) },
     { SEC_ASN1_OPTIONAL | SEC_ASN1_ANY,
-	  offsetof(SECAlgorithmID,parameters) },
+      offsetof(SECAlgorithmID, parameters) },
     { 0 }
 };
 
@@ -55,7 +55,7 @@ const SEC_ASN1Template SEC_BooleanTemplate[] = {
 SEC_ASN1_CHOOSER_IMPLEMENT(SEC_BooleanTemplate)
 
 const SEC_ASN1Template SEC_GeneralizedTimeTemplate[] = {
-    { SEC_ASN1_GENERALIZED_TIME | SEC_ASN1_MAY_STREAM, 0, NULL, sizeof(SECItem)}
+    { SEC_ASN1_GENERALIZED_TIME | SEC_ASN1_MAY_STREAM, 0, NULL, sizeof(SECItem) }
 };
 
 SEC_ASN1_CHOOSER_IMPLEMENT(SEC_GeneralizedTimeTemplate)
@@ -115,7 +115,7 @@ const SEC_ASN1Template SEC_UTCTimeTemplate[] = {
 SEC_ASN1_CHOOSER_IMPLEMENT(SEC_UTCTimeTemplate)
 
 const SEC_ASN1Template SEC_UTF8StringTemplate[] = {
-    { SEC_ASN1_UTF8_STRING | SEC_ASN1_MAY_STREAM, 0, NULL, sizeof(SECItem)}
+    { SEC_ASN1_UTF8_STRING | SEC_ASN1_MAY_STREAM, 0, NULL, sizeof(SECItem) }
 };
 
 SEC_ASN1_CHOOSER_IMPLEMENT(SEC_UTF8StringTemplate)
@@ -124,12 +124,12 @@ SEC_ASN1_CHOOSER_IMPLEMENT(SEC_UTF8StringTemplate)
 /* XXX Changed from static -- need to change name? */
 const SEC_ASN1Template sgn_DigestInfoTemplate[] = {
     { SEC_ASN1_SEQUENCE,
-	  0, NULL, sizeof(SGNDigestInfo) },
+      0, NULL, sizeof(SGNDigestInfo) },
     { SEC_ASN1_INLINE,
-	  offsetof(SGNDigestInfo,digestAlgorithm),
-	  SECOID_AlgorithmIDTemplate },
+      offsetof(SGNDigestInfo, digestAlgorithm),
+      SECOID_AlgorithmIDTemplate },
     { SEC_ASN1_OCTET_STRING,
-	  offsetof(SGNDigestInfo,digest) },
+      offsetof(SGNDigestInfo, digest) },
     { 0 }
 };
 

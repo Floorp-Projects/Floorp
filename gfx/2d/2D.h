@@ -1481,7 +1481,8 @@ public:
     CreateScaledFontForDWriteFont(IDWriteFont* aFont,
                                   IDWriteFontFamily* aFontFamily,
                                   IDWriteFontFace* aFontFace,
-                                  Float aSize);
+                                  Float aSize,
+                                  bool aUseEmbeddedBitmap);
 
 private:
   static ID2D1Device *mD2D1Device;

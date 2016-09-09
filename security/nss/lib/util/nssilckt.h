@@ -13,8 +13,8 @@
 **    subsequently used to extract performance data and other
 **    statistical information about the operation of locks used in
 **    the nss library.
-**     
-**    To enable compilation with instrumentation, build NSS with 
+**
+**    To enable compilation with instrumentation, build NSS with
 **    the compile time switch NEED_NSS_ILOCK defined.
 **
 **    say:  "gmake OS_CFLAGS+=-DNEED_NSS_ILOCK" at make time.
@@ -56,28 +56,28 @@
 **    circumstances, platform dependent logging or
 **    instrumentation probes may be used. In any case, the
 **    relevant data provided by the lock instrumentation is:
-**    
+**
 **      lockType, func, address, duration, line, file [heldTime]
-** 
+**
 **    where:
-**    
+**
 **       lockType: a character representation of nssILockType for the
 **       call. e.g. ... "cert"
-**    
+**
 **       func: the function doing the tracing. e.g. "NewLock"
-**    
+**
 **       address: address of the instrumented lock or monitor
-**    
+**
 **       duration: is how long was spent in the instrumented function,
 **       in PRIntervalTime "ticks".
-**    
+**
 **       line: the line number within the calling function
-**    
+**
 **       file: the file from which the call was made
-**    
+**
 **       heldTime: how long the lock/monitor was held. field
 **       present only for PZ_Unlock() and PZ_ExitMonitor().
-**    
+**
 ** Design Notes:
 **    The design for lock instrumentation was influenced by the
 **    need to gather performance data on NSS 3.x. It is intended
@@ -85,13 +85,13 @@
 **    be minimized. Existing calls to locking functions need only
 **    have their names changed to the instrumentation function
 **    names.
-**    
+**
 ** Private NSS Interface:
 **    nssilock.h defines a private interface for use by NSS.
 **    nssilock.h is experimental in nature and is subject to
 **    change or revocation without notice. ... Don't mess with
 **    it.
-**    
+**
 */
 
 /*
@@ -122,12 +122,12 @@ typedef enum {
     nssILockFreelist = 11,
     nssILockOID = 12,
     nssILockAttribute = 13,
-    nssILockPK11cxt = 14,  /* pk11context */
+    nssILockPK11cxt = 14, /* pk11context */
     nssILockRWLock = 15,
     nssILockOther = 16,
     nssILockSelfServ = 17,
     nssILockKeyDB = 18,
-    nssILockLast  /* don't use this one! */
+    nssILockLast /* don't use this one! */
 } nssILockType;
 
 /*
@@ -139,7 +139,7 @@ typedef enum {
 ** Declare operation type enumerator
 ** enumerations identify the function being performed
 */
-typedef enum  {
+typedef enum {
     FlushTT = 0,
     NewLock = 1,
     Lock = 2,
@@ -163,14 +163,14 @@ typedef enum  {
 ** Declare the trace record
 */
 struct pzTrace_s {
-    PRUint32        threadID; /* PR_GetThreadID() */
-    nssILockOp      op;       /* operation being performed */
-    nssILockType    ltype;    /* lock type identifier */
-    PRIntervalTime  callTime; /* time spent in function */
-    PRIntervalTime  heldTime; /* lock held time, or -1 */
-    void            *lock;    /* address of lock structure */    
-    PRIntn          line;     /* line number */
-    char            file[24]; /* filename */
+    PRUint32 threadID;       /* PR_GetThreadID() */
+    nssILockOp op;           /* operation being performed */
+    nssILockType ltype;      /* lock type identifier */
+    PRIntervalTime callTime; /* time spent in function */
+    PRIntervalTime heldTime; /* lock held time, or -1 */
+    void *lock;              /* address of lock structure */
+    PRIntn line;             /* line number */
+    char file[24];           /* filename */
 };
 
 /*
@@ -182,10 +182,10 @@ typedef struct pzmonitor_s PZMonitor;
 
 #else /* NEED_NSS_ILOCK */
 
-#define PZLock                  PRLock
-#define PZCondVar               PRCondVar
-#define PZMonitor               PRMonitor
-    
+#define PZLock PRLock
+#define PZCondVar PRCondVar
+#define PZMonitor PRMonitor
+
 #endif /* NEED_NSS_ILOCK */
 
 #endif /* _NSSILCKT_H_ */

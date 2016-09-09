@@ -1689,8 +1689,13 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   animation-name: urlbar-zoom-reset-pulse;
   animation-duration: 250ms;
 }
-#urlbar-zoom-button:hover:active {
+
+#urlbar-zoom-button:hover {
   background-color: hsla(0,0%,0%,.1);
+}
+
+#urlbar-zoom-button:hover:active {
+  background-color: hsla(0,0%,0%,.15);
 }
 
 #urlbar-zoom-button > .toolbarbutton-text {

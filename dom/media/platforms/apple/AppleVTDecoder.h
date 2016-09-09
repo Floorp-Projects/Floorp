@@ -43,10 +43,10 @@ public:
   };
 
   RefPtr<InitPromise> Init() override;
-  nsresult Input(MediaRawData* aSample) override;
-  nsresult Flush() override;
-  nsresult Drain() override;
-  nsresult Shutdown() override;
+  void Input(MediaRawData* aSample) override;
+  void Flush() override;
+  void Drain() override;
+  void Shutdown() override;
   void SetSeekThreshold(const media::TimeUnit& aTime) override;
 
   bool IsHardwareAccelerated(nsACString& aFailureReason) const override

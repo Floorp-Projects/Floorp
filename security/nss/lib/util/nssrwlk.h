@@ -3,14 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
-** File:		nsrwlock.h
-** Description:	API to basic reader-writer lock functions of NSS.
-**	These are re-entrant reader writer locks; that is,
-**	If I hold the write lock, I can ask for it and get it again.
-**	If I hold the write lock, I can also ask for and get a read lock.
+** File:        nsrwlock.h
+** Description: API to basic reader-writer lock functions of NSS.
+**  These are re-entrant reader writer locks; that is,
+**  If I hold the write lock, I can ask for it and get it again.
+**  If I hold the write lock, I can also ask for and get a read lock.
 **      I can then release the locks in any order (read or write).
-**	I must release each lock type as many times as I acquired it.
-**	Otherwise, these are normal reader/writer locks.
+**  I must release each lock type as many times as I acquired it.
+**  Otherwise, these are normal reader/writer locks.
 **
 ** For deadlock detection, locks should be ranked, and no lock may be aquired
 ** while I hold a lock of higher rank number.
@@ -25,7 +25,7 @@
 #include "prtypes.h"
 #include "nssrwlkt.h"
 
-#define	NSS_RWLOCK_RANK_NONE	0
+#define NSS_RWLOCK_RANK_NONE 0
 
 /* SEC_BEGIN_PROTOS */
 PR_BEGIN_EXTERN_C
@@ -35,35 +35,35 @@ PR_BEGIN_EXTERN_C
 ** DESCRIPTION:
 **  Returns a pointer to a newly created reader-writer lock object.
 ** INPUTS:      Lock rank
-**		Lock name
+**      Lock name
 ** OUTPUTS:     void
 ** RETURN:      NSSRWLock*
 **   If the lock cannot be created because of resource constraints, NULL
 **   is returned.
-**  
+**
 ***********************************************************************/
-extern NSSRWLock* NSSRWLock_New(PRUint32 lock_rank, const char *lock_name);
+extern NSSRWLock *NSSRWLock_New(PRUint32 lock_rank, const char *lock_name);
 
 /***********************************************************************
 ** FUNCTION:    NSSRWLock_AtomicCreate
 ** DESCRIPTION:
-**  Given the address of a NULL pointer to a NSSRWLock, 
+**  Given the address of a NULL pointer to a NSSRWLock,
 **  atomically initializes that pointer to a newly created NSSRWLock.
 **  Returns the value placed into that pointer, or NULL.
 **
 ** INPUTS:      address of NSRWLock pointer
 **              Lock rank
-**		Lock name
+**      Lock name
 ** OUTPUTS:     NSSRWLock*
 ** RETURN:      NSSRWLock*
-**   If the lock cannot be created because of resource constraints, 
+**   If the lock cannot be created because of resource constraints,
 **   the pointer will be left NULL.
-**  
+**
 ***********************************************************************/
 extern NSSRWLock *
-nssRWLock_AtomicCreate( NSSRWLock  ** prwlock, 
-			PRUint32      lock_rank, 
-			const char *  lock_name);
+nssRWLock_AtomicCreate(NSSRWLock **prwlock,
+                       PRUint32 lock_rank,
+                       const char *lock_name);
 
 /***********************************************************************
 ** FUNCTION:    NSSRWLock_Destroy
@@ -121,7 +121,7 @@ extern void NSSRWLock_UnlockWrite(NSSRWLock *lock);
 **  Tells caller whether the current thread holds the write lock, or not.
 ** INPUTS:      NSSRWLock *lock - Lock to test.
 ** OUTPUTS:     void
-** RETURN:      PRBool	PR_TRUE IFF the current thread holds the write lock.
+** RETURN:      PRBool  PR_TRUE IFF the current thread holds the write lock.
 ***********************************************************************/
 
 extern PRBool NSSRWLock_HaveWriteLock(NSSRWLock *rwlock);

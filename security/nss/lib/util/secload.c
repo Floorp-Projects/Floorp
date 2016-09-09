@@ -16,7 +16,8 @@
  * The caller should call PR_Free to free the string returned by this
  * function.
  */
-static char* loader_GetOriginalPathname(const char* link)
+static char*
+loader_GetOriginalPathname(const char* link)
 {
     char* resolved = NULL;
     char* input = NULL;
@@ -39,8 +40,8 @@ static char* loader_GetOriginalPathname(const char* link)
         return NULL;
     }
     strcpy(input, link);
-    while ( (iterations++ < BL_MAXSYMLINKS) &&
-            ( (retlen = readlink(input, resolved, len - 1)) > 0) ) {
+    while ((iterations++ < BL_MAXSYMLINKS) &&
+           ((retlen = readlink(input, resolved, len - 1)) > 0)) {
         char* tmp = input;
         resolved[retlen] = '\0'; /* NULL termination */
         input = resolved;
@@ -59,11 +60,11 @@ static char* loader_GetOriginalPathname(const char* link)
  * Load the library with the file name 'name' residing in the same
  * directory as the reference library, whose pathname is 'referencePath'.
  */
-static PRLibrary *
-loader_LoadLibInReferenceDir(const char *referencePath, const char *name)
+static PRLibrary*
+loader_LoadLibInReferenceDir(const char* referencePath, const char* name)
 {
-    PRLibrary *dlh = NULL;
-    char *fullName = NULL;
+    PRLibrary* dlh = NULL;
+    char* fullName = NULL;
     char* c;
     PRLibSpec libSpec;
 
@@ -71,21 +72,21 @@ loader_LoadLibInReferenceDir(const char *referencePath, const char *name)
     c = strrchr(referencePath, PR_GetDirectorySeparator());
     if (c) {
         size_t referencePathSize = 1 + c - referencePath;
-        fullName = (char*) PORT_Alloc(strlen(name) + referencePathSize + 1);
+        fullName = (char*)PORT_Alloc(strlen(name) + referencePathSize + 1);
         if (fullName) {
             memcpy(fullName, referencePath, referencePathSize);
-            strcpy(fullName + referencePathSize, name); 
+            strcpy(fullName + referencePathSize, name);
 #ifdef DEBUG_LOADER
-            PR_fprintf(PR_STDOUT, "\nAttempting to load fully-qualified %s\n", 
+            PR_fprintf(PR_STDOUT, "\nAttempting to load fully-qualified %s\n",
                        fullName);
 #endif
             libSpec.type = PR_LibSpec_Pathname;
             libSpec.value.pathname = fullName;
             dlh = PR_LoadLibraryWithFlags(libSpec, PR_LD_NOW | PR_LD_LOCAL
 #ifdef PR_LD_ALT_SEARCH_PATH
-            /* allow library's dependencies to be found in the same directory
-             * on Windows even if PATH is not set. Requires NSPR 4.8.1 . */
-                                          | PR_LD_ALT_SEARCH_PATH 
+                                                       /* allow library's dependencies to be found in the same directory
+                                                        * on Windows even if PATH is not set. Requires NSPR 4.8.1 . */
+                                                       | PR_LD_ALT_SEARCH_PATH
 #endif
                                           );
             PORT_Free(fullName);
@@ -101,7 +102,7 @@ loader_LoadLibInReferenceDir(const char *referencePath, const char *name)
  * staticShLibFunc, is required.
  *
  * existingShLibName:
- *   The file name of the shared library that shall be used as the 
+ *   The file name of the shared library that shall be used as the
  *   "reference library". The loader will attempt to load the requested
  *   library from the same directory as the reference library.
  *
@@ -111,7 +112,7 @@ loader_LoadLibInReferenceDir(const char *referencePath, const char *name)
  * newShLibName:
  *   The simple file name of the new shared library to be loaded.
  *
- * We use PR_GetLibraryFilePathname to get the pathname of the loaded 
+ * We use PR_GetLibraryFilePathname to get the pathname of the loaded
  * shared lib that contains this function, and then do a
  * PR_LoadLibraryWithFlags with an absolute pathname for the shared
  * library to be loaded.
@@ -126,12 +127,12 @@ loader_LoadLibInReferenceDir(const char *referencePath, const char *name)
  *
  */
 
-PRLibrary *
+PRLibrary*
 PORT_LoadLibraryFromOrigin(const char* existingShLibName,
-                 PRFuncPtr staticShLibFunc,
-                 const char *newShLibName)
+                           PRFuncPtr staticShLibFunc,
+                           const char* newShLibName)
 {
-    PRLibrary *lib = NULL;
+    PRLibrary* lib = NULL;
     char* fullPath = NULL;
     PRLibSpec libSpec;
 
@@ -179,4 +180,3 @@ PORT_LoadLibraryFromOrigin(const char* existingShLibName,
     }
     return lib;
 }
-

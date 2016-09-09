@@ -210,6 +210,10 @@ public:
 // TaskQueue passed into the PlatformDecoderModules's Create*Decoder()
 // function. This may not be necessary for platforms with async APIs
 // for decoding.
+//
+// If an error occurs at any point after the Init promise has been
+// completed, then Error() must be called on the associated
+// MediaDataDecoderCallback.
 class MediaDataDecoder {
 protected:
   virtual ~MediaDataDecoder() {};
@@ -235,7 +239,7 @@ public:
   virtual RefPtr<InitPromise> Init() = 0;
 
   // Inserts a sample into the decoder's decode pipeline.
-  virtual nsresult Input(MediaRawData* aSample) = 0;
+  virtual void Input(MediaRawData* aSample) = 0;
 
   // Causes all samples in the decoding pipeline to be discarded. When
   // this function returns, the decoder must be ready to accept new input
@@ -244,7 +248,7 @@ public:
   // While the reader calls Flush(), it ignores all output sent to it;
   // it is safe (but pointless) to send output while Flush is called.
   // The MediaFormatReader will not call Input() while it's calling Flush().
-  virtual nsresult Flush() = 0;
+  virtual void Flush() = 0;
 
   // Causes all complete samples in the pipeline that can be decoded to be
   // output. If the decoder can't produce samples from the current output,
@@ -255,7 +259,7 @@ public:
   // This function is asynchronous. The MediaDataDecoder must call
   // MediaDataDecoderCallback::DrainComplete() once all remaining
   // samples have been output.
-  virtual nsresult Drain() = 0;
+  virtual void Drain() = 0;
 
   // Cancels all init/input/drain operations, and shuts down the
   // decoder. The platform decoder should clean up any resources it's using
@@ -264,7 +268,7 @@ public:
   // The reader will delete the decoder once Shutdown() returns.
   // The MediaDataDecoderCallback *must* not be called after Shutdown() has
   // returned.
-  virtual nsresult Shutdown() = 0;
+  virtual void Shutdown() = 0;
 
   // Called from the state machine task queue or main thread.
   // Decoder needs to decide whether or not hardware accelearation is supported
@@ -277,10 +281,7 @@ public:
   // If audio decoder, aConfig will be a AudioInfo object.
   // It is not safe to store a reference to this object and the decoder must
   // make a copy.
-  virtual nsresult ConfigurationChanged(const TrackInfo& aConfig)
-  {
-    return NS_OK;
-  }
+  virtual void ConfigurationChanged(const TrackInfo& aConfig) {}
 
   // Return the name of the MediaDataDecoder, only used for decoding.
   // Only return a static const string, as the information may be accessed

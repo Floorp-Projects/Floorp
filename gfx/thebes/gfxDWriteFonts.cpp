@@ -702,9 +702,14 @@ gfxDWriteFont::GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
                                                         GetAdjustedSize(),
                                                         GetCairoScaledFont());
   } else if (aTarget->GetBackendType() == BackendType::SKIA) {
+    gfxDWriteFontEntry *fe =
+        static_cast<gfxDWriteFontEntry*>(mFontEntry.get());
+    bool useEmbeddedBitmap = (fe->IsCJKFont() && HasBitmapStrikeForSize(NS_lround(mAdjustedSize)));
+
     mAzureScaledFont =
             Factory::CreateScaledFontForDWriteFont(mFont, mFontFamily,
-                                                   mFontFace, GetAdjustedSize());
+                                                   mFontFace, GetAdjustedSize(),
+                                                   useEmbeddedBitmap);
   } else {
     mAzureScaledFont = Factory::CreateScaledFontForNativeFont(nativeFont,
                                                             GetAdjustedSize());

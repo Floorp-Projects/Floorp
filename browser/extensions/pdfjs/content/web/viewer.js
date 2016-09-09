@@ -951,7 +951,8 @@ exports.PDFRenderingQueue = PDFRenderingQueue;
   "disableFontFace": false,
   "disableTextLayer": false,
   "useOnlyCssZoom": false,
-  "externalLinkTarget": 0
+  "externalLinkTarget": 0,
+  "renderInteractiveForms": false
 }
 
   );
@@ -5037,7 +5038,7 @@ var TEXT_LAYER_RENDER_DELAY = 200; // ms
  * @property {IPDFTextLayerFactory} textLayerFactory
  * @property {IPDFAnnotationLayerFactory} annotationLayerFactory
  * @property {boolean} enhanceTextSelection - Turns on the text selection
- * enhancement. The default is `false`.
+ *   enhancement. The default is `false`.
  */
 
 /**
@@ -5793,7 +5794,7 @@ exports.PDFThumbnailViewer = PDFThumbnailViewer;
  * @property {PageViewport} viewport - The viewport of the text layer.
  * @property {PDFFindController} findController
  * @property {boolean} enhanceTextSelection - Option to turn on improved
- * text selection.
+ *   text selection.
  */
 
 /**
@@ -6190,7 +6191,8 @@ var AnnotationLayerBuilder = (function AnnotationLayerBuilderClosure() {
           annotations: annotations,
           page: self.pdfPage,
           linkService: self.linkService,
-          downloadManager: self.downloadManager
+          downloadManager: self.downloadManager,
+          renderInteractiveForms: pdfjsLib.PDFJS.renderInteractiveForms,
         };
 
         if (self.div) {
@@ -7402,6 +7404,9 @@ var PDFViewerApplication = {
           return;
         }
         PDFJS.externalLinkTarget = value;
+      }),
+      Preferences.get('renderInteractiveForms').then(function resolved(value) {
+        PDFJS.renderInteractiveForms = value;
       }),
       // TODO move more preferences and other async stuff here
     ]).catch(function (reason) { });

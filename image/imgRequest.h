@@ -65,16 +65,16 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
 
-  nsresult Init(nsIURI* aURI,
-                nsIURI* aCurrentURI,
-                bool aHadInsecureRedirect,
-                nsIRequest* aRequest,
-                nsIChannel* aChannel,
-                imgCacheEntry* aCacheEntry,
-                nsISupports* aCX,
-                nsIPrincipal* aLoadingPrincipal,
-                int32_t aCORSMode,
-                ReferrerPolicy aReferrerPolicy);
+  MOZ_MUST_USE nsresult Init(nsIURI* aURI,
+                             nsIURI* aCurrentURI,
+                             bool aHadInsecureRedirect,
+                             nsIRequest* aRequest,
+                             nsIChannel* aChannel,
+                             imgCacheEntry* aCacheEntry,
+                             nsISupports* aCX,
+                             nsIPrincipal* aLoadingPrincipal,
+                             int32_t aCORSMode,
+                             ReferrerPolicy aReferrerPolicy);
 
   void ClearLoader();
 

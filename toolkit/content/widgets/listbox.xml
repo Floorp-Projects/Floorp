@@ -822,11 +822,16 @@
       <handler event="keypress" key=" " phase="target">
         <![CDATA[
           if (this.currentItem) {
-            if (this.currentItem.getAttribute("type") != "checkbox")
+            if (this.currentItem.getAttribute("type") != "checkbox") {
               this.addItemToSelection(this.currentItem);
+              // Prevent page from scrolling on the space key.
+              event.preventDefault();
+            }
             else if (!this.currentItem.disabled) {
               this.currentItem.checked = !this.currentItem.checked;
               this.currentItem.doCommand();
+              // Prevent page from scrolling on the space key.
+              event.preventDefault();
             }
           }
         ]]>

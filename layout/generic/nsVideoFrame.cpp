@@ -281,17 +281,18 @@ public:
 };
 
 void
-nsVideoFrame::Reflow(nsPresContext*           aPresContext,
-                     ReflowOutput&     aMetrics,
+nsVideoFrame::Reflow(nsPresContext* aPresContext,
+                     ReflowOutput& aMetrics,
                      const ReflowInput& aReflowInput,
-                     nsReflowStatus&          aStatus)
+                     nsReflowStatus& aStatus)
 {
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsVideoFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aMetrics, aStatus);
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-                  ("enter nsVideoFrame::Reflow: availSize=%d,%d",
-                  aReflowInput.AvailableWidth(), aReflowInput.AvailableHeight()));
+                 ("enter nsVideoFrame::Reflow: availSize=%d,%d",
+                  aReflowInput.AvailableWidth(),
+                  aReflowInput.AvailableHeight()));
 
   NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
 
@@ -382,7 +383,7 @@ nsVideoFrame::Reflow(nsPresContext*           aPresContext,
   FinishAndStoreOverflow(&aMetrics);
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-                  ("exit nsVideoFrame::Reflow: size=%d,%d",
+                 ("exit nsVideoFrame::Reflow: size=%d,%d",
                   aMetrics.Width(), aMetrics.Height()));
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aMetrics);
 }
@@ -534,7 +535,8 @@ nsVideoFrame::ComputeSize(nsRenderingContext *aRenderingContext,
   // Only video elements have an intrinsic ratio.
   nsSize intrinsicRatio = HasVideoElement() ? size : nsSize(0, 0);
 
-  return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(aWM, aRenderingContext,
+  return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(aWM,
+                                                           aRenderingContext,
                                                            this,
                                                            intrinsicSize,
                                                            intrinsicRatio,

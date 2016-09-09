@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyGetter(this, "kDebug", () => {
 });
 
 const kContentChangeThresholdPx = 5;
-const kModalHighlightRepaintFreqMs = 200;
+const kModalHighlightRepaintFreqMs = 100;
 const kHighlightAllPref = "findbar.highlightAll";
 const kModalHighlightPref = "findbar.modalHighlight";
 const kFontPropsCSS = ["color", "font-family", "font-kerning", "font-size",
@@ -30,96 +30,64 @@ const kFontPropsCamelCase = kFontPropsCSS.map(prop => {
   let parts = prop.split("-");
   return parts.shift() + parts.map(part => part.charAt(0).toUpperCase() + part.slice(1)).join("");
 });
-const kRGBRE = /^rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*/i
-// This uuid is used to prefix HTML element IDs and classNames in order to make
-// them unique and hard to clash with IDs and classNames content authors come up
-// with, since the stylesheet for modal highlighting is inserted as an agent-sheet
-// in the active HTML document.
+const kRGBRE = /^rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*/i;
+// This uuid is used to prefix HTML element IDs in order to make them unique and
+// hard to clash with IDs content authors come up with.
 const kModalIdPrefix = "cedee4d0-74c5-4f2d-ab43-4d37c0f9d463";
 const kModalOutlineId = kModalIdPrefix + "-findbar-modalHighlight-outline";
-const kModalStyle = `
-.findbar-modalHighlight-outline {
-  position: absolute;
-  background: #ffc535;
-  box-shadow: 0 2px 0 0 rgba(0,0,0,.1);
-  color: #000;
-  display: -moz-box;
-  margin: -2px 0 0 -2px !important;
-  padding: 2px !important;
-  pointer-events: none;
-  z-index: 2;
-}
-
-.findbar-modalHighlight-outline.findbar-debug {
-  z-index: 2147483647;
-}
-
-.findbar-modalHighlight-outline[grow] {
-  animation-name: findbar-modalHighlight-outlineAnim;
-}
-
-@keyframes findbar-modalHighlight-outlineAnim {
-  from {
-    transform: scaleX(0) scaleY(0);
-  }
-  50% {
-    transform: scaleX(1.5) scaleY(1.5);
-  }
-  to {
-    transform: scaleX(0) scaleY(0);
-  }
-}
-
-.findbar-modalHighlight-outline[hidden] {
-  opacity: 0;
-}
-
-.findbar-modalHighlight-outline:not([disable-transitions]) {
-  transition-property: opacity, transform, top, left;
-  transition-duration: 50ms;
-  transition-timing-function: linear;
-}
-
-.findbar-modalHighlight-outline-text {
-  margin: 0 !important;
-  padding: 0 !important;
-  vertical-align: top !important;
-}
-
-.findbar-modalHighlight-outlineMask {
-  background: #000;
-  mix-blend-mode: multiply;
-  opacity: .35;
-  pointer-events: none;
-  position: absolute;
-  z-index: 1;
-}
-
-.findbar-modalHighlight-outlineMask.findbar-debug {
-  z-index: 2147483646;
-  top: 0;
-  left: 0;
-}
-
-.findbar-modalHighlight-outlineMask[brighttext] {
-  background: #fff;
-}
-
-.findbar-modalHighlight-rect {
-  background: #fff;
-  margin: -1px 0 0 -1px !important;
-  padding: 0 1px 2px 1px !important;
-  position: absolute;
-}
-
-.findbar-modalHighlight-outlineMask[brighttext] > .findbar-modalHighlight-rect {
-  background: #000;
-}
-
-.findbar-modalHighlight-outline,
-.findbar-modalHighlight-rect {
-  border-radius: 3px;
-}`;
+const kModalStyles = {
+  outlineNode: [
+    ["position", "absolute"],
+    ["background", "#ffc535"],
+    ["border-radius", "3px"],
+    ["box-shadow", "0 2px 0 0 rgba(0,0,0,.1)"],
+    ["color", "#000"],
+    ["display", "-moz-box"],
+    ["margin", "-2px 0 0 -2px !important"],
+    ["padding", "2px !important"],
+    ["pointer-events", "none"],
+    ["transition-property", "opacity, transform, top, left"],
+    ["transition-duration", "50ms"],
+    ["transition-timing-function", "linear"],
+    ["z-index", 2]
+  ],
+  outlineNodeDebug: [ ["z-index", 2147483647] ],
+  outlineText: [
+    ["margin", "0 !important"],
+    ["padding", "0 !important"],
+    ["vertical-align", "top !important"]
+  ],
+  maskNode: [
+    ["background", "#000"],
+    ["mix-blend-mode", "multiply"],
+    ["opacity", ".35"],
+    ["pointer-events", "none"],
+    ["position", "absolute"],
+    ["z-index", 1]
+  ],
+  maskNodeDebug: [
+    ["z-index", 2147483646],
+    ["top", 0],
+    ["left", 0]
+  ],
+  maskNodeBrightText: [ ["background", "#fff"] ],
+  maskRect: [
+    ["background", "#fff"],
+    ["border-radius", "3px"],
+    ["margin", "-1px 0 0 -1px !important"],
+    ["padding", "0 1px 2px 1px !important"],
+    ["position", "absolute"]
+  ],
+  maskRectBrightText: [ "background", "#000" ]
+};
+const kModalOutlineAnim = {
+  "keyframes": [
+    { transform: "scaleX(1) scaleY(1)" },
+    { transform: "scaleX(1.5) scaleY(1.5)", offset: .5, easing: "ease-in" },
+    { transform: "scaleX(1) scaleY(1)" }
+  ],
+  duration: 50,
+};
 
 function mockAnonymousContentNode(domNode) {
   return {
@@ -171,22 +139,6 @@ FinderHighlighter.prototype = {
     return this._iterator;
   },
 
-  get modalStyleSheet() {
-    if (!this._modalStyleSheet) {
-      this._modalStyleSheet = kModalStyle.replace(/findbar-/g,
-        kModalIdPrefix + "-findbar-");
-    }
-    return this._modalStyleSheet;
-  },
-
-  get modalStyleSheetURI() {
-    if (!this._modalStyleSheetURI) {
-      this._modalStyleSheetURI = "data:text/css;charset=utf-8," +
-        encodeURIComponent(this.modalStyleSheet.replace(/[\n]+/g, " "));
-    }
-    return this._modalStyleSheetURI;
-  },
-
   /**
    * Each window is unique, globally, and the relation between an active
    * highlighting session and a window is 1:1.
@@ -195,8 +147,6 @@ FinderHighlighter.prototype = {
    *                                     on page layout changes and user input
    *  - {Map}     frames                 Collection of frames that were encountered
    *                                     when inspecting the found ranges
-   *  - {Boolean} installedSheet         Whether the modal stylesheet was loaded
-   *                                     already
    *  - {Map}     modalHighlightRectsMap Collection of ranges and their corresponding
    *                                     Rects
    *
@@ -208,7 +158,6 @@ FinderHighlighter.prototype = {
       gWindows.set(window, {
         dynamicRangesSet: new Set(),
         frames: new Map(),
-        installedSheet: false,
         modalHighlightRectsMap: new Map()
       });
     }
@@ -401,8 +350,11 @@ FinderHighlighter.prototype = {
     }
     dict.lastWindowDimensions = null;
 
-    if (dict.modalHighlightOutline)
-      dict.modalHighlightOutline.setAttributeForElement(kModalOutlineId, "hidden", "true");
+    if (dict.modalHighlightOutline) {
+      dict.modalHighlightOutline.setAttributeForElement(kModalOutlineId, "style",
+        dict.modalHighlightOutline.getAttributeForElement(kModalOutlineId, "style") +
+        "; opacity: 0");
+    }
 
     this._removeHighlightAllMask(window);
     this._removeModalHighlightListeners(window);
@@ -478,12 +430,14 @@ FinderHighlighter.prototype = {
     }
 
     outlineNode = dict.modalHighlightOutline;
-    try {
-      outlineNode.removeAttributeForElement(kModalOutlineId, "grow");
-    } catch (ex) {}
-    window.requestAnimationFrame(() => {
-      outlineNode.setAttributeForElement(kModalOutlineId, "grow", true);
-    });
+    if (dict.animation)
+      dict.animation.finish();
+    dict.animation = outlineNode.setAnimationForElement(kModalOutlineId,
+      Cu.cloneInto(kModalOutlineAnim.keyframes, window), kModalOutlineAnim.duration);
+    dict.animation.onfinish = () => dict.animation = null;
+
+    if (this._highlightAll && data.searchString)
+      this.highlight(true, data.searchString, data.linksOnly);
   },
 
   /**
@@ -501,6 +455,8 @@ FinderHighlighter.prototype = {
     }
 
     let dict = this.getForWindow(window.top);
+    if (dict.animation)
+      dict.animation.finish();
     dict.currentFoundRange = null;
     dict.dynamicRangesSet.clear();
     dict.frames.clear();
@@ -714,9 +670,28 @@ FinderHighlighter.prototype = {
       let idx = kFontPropsCamelCase.indexOf(prop);
       if (idx == -1)
         continue;
-      style.push(`${kFontPropsCSS[idx]}: ${fontStyle[prop]};`);
+      style.push(`${kFontPropsCSS[idx]}: ${fontStyle[prop]}`);
     }
-    return style.join(" ");
+    return style.join("; ");
+  },
+
+  /**
+   * Transform a style definition array as defined in `kModalStyles` into a CSS
+   * string that can be used to set the 'style' property of a DOM node.
+   *
+   * @param  {Array}    stylePairs         Two-dimensional array of style pairs
+   * @param  {...Array} [additionalStyles] Optional set of style pairs that will
+   *                                       augment or override the styles defined
+   *                                       by `stylePairs`
+   * @return {String}
+   */
+  _getStyleString(stylePairs, ...additionalStyles) {
+    let baseStyle = new Map(stylePairs);
+    for (let additionalStyle of additionalStyles) {
+      for (let [prop, value] of additionalStyle)
+        baseStyle.set(prop, value);
+    }
+    return [...baseStyle].map(([cssProp, cssVal]) => `${cssProp}: ${cssVal}`).join("; ");
   },
 
   /**
@@ -739,7 +714,7 @@ FinderHighlighter.prototype = {
    * is the case for 'fixed' and 'sticky' positioned elements and elements inside
    * (i)frames.
    *
-   * @param  {nsIDOMRange} range Range that be enclosed in a fixed container
+   * @param  {nsIDOMRange} range Range that be enclosed in a dynamic container
    * @return {Boolean}
    */
   _isInDynamicContainer(range) {
@@ -816,12 +791,12 @@ FinderHighlighter.prototype = {
 
   /**
    * Re-read the rectangles of the ranges that we keep track of separately,
-   * because they're enclosed by a position: fixed container DOM node.
+   * because they're enclosed by a position: fixed container DOM node or (i)frame.
    *
    * @param {Object} dict Dictionary of properties belonging to the currently
    *                      active window
    */
-  _updateFixedRangesRects(dict) {
+  _updateDynamicRangesRects(dict) {
     for (let range of dict.dynamicRangesSet)
       this._updateRangeRects(range, false, dict);
     // Reset the frame bounds cache.
@@ -851,7 +826,7 @@ FinderHighlighter.prototype = {
 
     if (!fontStyle)
       fontStyle = this._getRangeFontStyle(range);
-    // Text color in the outline is determined by our stylesheet.
+    // Text color in the outline is determined by kModalStyles.
     delete fontStyle.color;
 
     if (textContent.length)
@@ -859,16 +834,19 @@ FinderHighlighter.prototype = {
     // Correct the line-height to align the text in the middle of the box.
     fontStyle.lineHeight = rect.height + "px";
     outlineNode.setAttributeForElement(kModalOutlineId + "-text", "style",
+      this._getStyleString(kModalStyles.outlineText) + "; " +
       this._getHTMLFontStyle(fontStyle));
-
-    if (typeof outlineNode.getAttributeForElement(kModalOutlineId, "hidden") == "string")
-      outlineNode.removeAttributeForElement(kModalOutlineId, "hidden");
 
     let window = range.startContainer.ownerDocument.defaultView;
     let { left, top } = this._getRootBounds(window);
     outlineNode.setAttributeForElement(kModalOutlineId, "style",
-      `top: ${top + rect.top}px; left: ${left + rect.left}px;
-      height: ${rect.height}px; width: ${rect.width}px;`);
+      this._getStyleString(kModalStyles.outlineNode, [
+        ["top", top + rect.top + "px"],
+        ["left", left + rect.left + "px"],
+        ["height", rect.height + "px"],
+        ["width", rect.width + "px"]],
+        kDebug ? kModalStyles.outlineNodeDebug : []
+    ));
   },
 
   /**
@@ -921,8 +899,6 @@ FinderHighlighter.prototype = {
       return;
     }
 
-    this._maybeInstallStyleSheet(window);
-
     // The outline needs to be sitting inside a container, otherwise the anonymous
     // content API won't find it by its ID later...
     let container = document.createElement("div");
@@ -930,11 +906,12 @@ FinderHighlighter.prototype = {
     // Create the main (yellow) highlight outline box.
     let outlineBox = document.createElement("div");
     outlineBox.setAttribute("id", kModalOutlineId);
-    outlineBox.className = kModalOutlineId + (kDebug ? ` ${kModalIdPrefix}-findbar-debug` : "");
+    outlineBox.setAttribute("style", this._getStyleString(kModalStyles.outlineNode,
+      kDebug ? kModalStyles.outlineNodeDebug : []));
     let outlineBoxText = document.createElement("span");
     let attrValue = kModalOutlineId + "-text";
     outlineBoxText.setAttribute("id", attrValue);
-    outlineBoxText.setAttribute("class", attrValue);
+    outlineBoxText.setAttribute("style", this._getStyleString(kModalStyles.outlineText));
     outlineBox.appendChild(outlineBoxText);
 
     container.appendChild(outlineBox);
@@ -963,25 +940,27 @@ FinderHighlighter.prototype = {
     let maskNode = document.createElement("div");
 
     // Make sure the dimmed mask node takes the full width and height that's available.
-    let {width, height} = this._getWindowDimensions(window);
-    dict.lastWindowDimensions = { width, height };
+    let {width, height} = dict.lastWindowDimensions = this._getWindowDimensions(window);
     maskNode.setAttribute("id", kMaskId);
-    maskNode.setAttribute("class", kMaskId + (kDebug ? ` ${kModalIdPrefix}-findbar-debug` : ""));
-    maskNode.setAttribute("style", `width: ${width}px; height: ${height}px;`);
+    maskNode.setAttribute("style", this._getStyleString(kModalStyles.maskNode,
+      [ ["width", width + "px"], ["height", height + "px"] ],
+      dict.brightText ? kModalStyles.maskNodeBrightText : [],
+      kDebug ? kModalStyles.maskNodeDebug : []));
     if (dict.brightText)
       maskNode.setAttribute("brighttext", "true");
 
     if (paintContent || dict.modalHighlightAllMask) {
       this._updateRangeOutline(dict);
-      this._updateFixedRangesRects(dict);
+      this._updateDynamicRangesRects(dict);
       // Create a DOM node for each rectangle representing the ranges we found.
       let maskContent = [];
-      const kRectClassName = kModalIdPrefix + "-findbar-modalHighlight-rect";
+      const rectStyle = this._getStyleString(kModalStyles.maskRect,
+        dict.brightText ? kModalStyles.maskRectBrightText : []);
       for (let [range, rects] of dict.modalHighlightRectsMap) {
         if (dict.updateAllRanges)
           rects = this._updateRangeRects(range);
         for (let rect of rects) {
-          maskContent.push(`<div class="${kRectClassName}" style="top: ${rect.y}px;
+          maskContent.push(`<div style="${rectStyle}; top: ${rect.y}px;
             left: ${rect.x}px; height: ${rect.height}px; width: ${rect.width}px;"></div>`);
         }
       }
@@ -1033,8 +1012,8 @@ FinderHighlighter.prototype = {
    *                             meantime. This happens when the DOM is updated
    *                             whilst the page is loaded.
    *   {Boolean} scrollOnly      TRUE when the page has scrolled in the meantime,
-   *                             which means that the fixed positioned elements
-   *                             need to be repainted.
+   *                             which means that the dynamically positioned
+   *                             elements need to be repainted.
    *   {Boolean} updateAllRanges Whether to recalculate the rects of all ranges
    *                             that were found up until now.
    */
@@ -1045,12 +1024,12 @@ FinderHighlighter.prototype = {
 
     window = window.top;
     let dict = this.getForWindow(window);
-    let repaintFixedNodes = (scrollOnly && !!dict.dynamicRangesSet.size);
+    let repaintDynamicRanges = (scrollOnly && !!dict.dynamicRangesSet.size);
 
     // When we request to repaint unconditionally, we mean to call
     // `_repaintHighlightAllMask()` right after the timeout.
     if (!dict.unconditionalRepaintRequested)
-      dict.unconditionalRepaintRequested = !contentChanged || repaintFixedNodes;
+      dict.unconditionalRepaintRequested = !contentChanged || repaintDynamicRanges;
     // Some events, like a resize, call for recalculation of all the rects of all ranges.
     if (!dict.updateAllRanges)
       dict.updateAllRanges = updateAllRanges;
@@ -1076,29 +1055,6 @@ FinderHighlighter.prototype = {
         this._repaintHighlightAllMask(window);
       }
     }, kModalHighlightRepaintFreqMs);
-  },
-
-  /**
-   * The outline that shows/ highlights the current found range is styled and
-   * animated using CSS. This style can be found in `kModalStyle`, but to have it
-   * applied on any DOM node we insert using the AnonymousContent API we need to
-   * inject an agent sheet into the document.
-   *
-   * @param {nsIDOMWindow} window
-   */
-  _maybeInstallStyleSheet(window) {
-    window = window.top;
-    let dict = this.getForWindow(window);
-    let document = window.document;
-    if (dict.installedSheet == document)
-      return;
-
-    let dwu = this._getDWU(window);
-    let uri = this.modalStyleSheetURI;
-    try {
-      dwu.loadSheetUsingURIString(uri, dwu.AGENT_SHEET);
-    } catch (e) {}
-    dict.installedSheet = document;
   },
 
   /**

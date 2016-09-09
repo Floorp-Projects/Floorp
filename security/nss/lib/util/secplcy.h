@@ -19,10 +19,10 @@
 
 #define SEC_CIPHER_NOT_ALLOWED 0
 #define SEC_CIPHER_ALLOWED 1
-#define SEC_CIPHER_RESTRICTED 2 /* cipher is allowed in limited cases 
-				   e.g. step-up */
+#define SEC_CIPHER_RESTRICTED 2 /* cipher is allowed in limited cases \
+                                   e.g. step-up */
 
-/* The length of the header string for each cipher table. 
+/* The length of the header string for each cipher table.
    (It's the same regardless of whether we're using md5 strings or not.) */
 #define SEC_POLICY_HEADER_LENGTH 48
 
@@ -42,7 +42,7 @@
 
 #if defined(SEC_POLICY_USE_MD5_STRINGS)
 
-/* We're not testing. 
+/* We're not testing.
    Use md5 checksums of the strings. */
 
 #define SEC_POLICY_SSL_HEADER \
@@ -56,7 +56,7 @@
 
 #else
 
-/* We're testing. 
+/* We're testing.
    Use plaintext versions of the strings, for testing purposes. */
 #define SEC_POLICY_SSL_HEADER \
     "This is the string for the SSL policy table.    "
@@ -68,22 +68,20 @@
 #endif
 
 /* Local cipher tables have to have these members at the top. */
-typedef struct _sec_cp_struct
-{
-  char policy_string[SEC_POLICY_HEADER_LENGTH];
-  long unused; /* placeholder for max keybits in pkcs12 struct */
-  char num_ciphers;
-  char begin_ciphers;
-  /* cipher policy settings follow. each is a char. */
+typedef struct _sec_cp_struct {
+    char policy_string[SEC_POLICY_HEADER_LENGTH];
+    long unused; /* placeholder for max keybits in pkcs12 struct */
+    char num_ciphers;
+    char begin_ciphers;
+    /* cipher policy settings follow. each is a char. */
 } secCPStruct;
 
-struct SECCipherFindStr
-{
-  /* (policy) and (ciphers) are opaque to the outside world */
-  void *policy;
-  void *ciphers;
-  long index;
-  PRBool onlyAllowed;
+struct SECCipherFindStr {
+    /* (policy) and (ciphers) are opaque to the outside world */
+    void *policy;
+    void *ciphers;
+    long index;
+    PRBool onlyAllowed;
 };
 
 typedef struct SECCipherFindStr SECCipherFind;
@@ -91,13 +89,13 @@ typedef struct SECCipherFindStr SECCipherFind;
 SEC_BEGIN_PROTOS
 
 SECCipherFind *sec_CipherFindInit(PRBool onlyAllowed,
-				  secCPStruct *policy,
-				  long *ciphers);
+                                  secCPStruct *policy,
+                                  long *ciphers);
 
 long sec_CipherFindNext(SECCipherFind *find);
 
 char sec_IsCipherAllowed(long cipher, secCPStruct *policies,
-			 long *ciphers);
+                         long *ciphers);
 
 void sec_CipherFindEnd(SECCipherFind *find);
 

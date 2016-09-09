@@ -14,7 +14,7 @@ task:
 
   payload:
     maxRunTime: 3600
-    image: !env TC_IMAGE
+    image: automation/taskcluster/docker
 
     env:
       NSS_HEAD_REPOSITORY: !env NSS_HEAD_REPOSITORY

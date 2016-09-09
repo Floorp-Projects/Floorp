@@ -239,7 +239,7 @@ GMPAudioDecoder::Init()
   return promise;
 }
 
-nsresult
+void
 GMPAudioDecoder::Input(MediaRawData* aSample)
 {
   MOZ_ASSERT(IsOnGMPThread());
@@ -247,7 +247,7 @@ GMPAudioDecoder::Input(MediaRawData* aSample)
   RefPtr<MediaRawData> sample(aSample);
   if (!mGMP) {
     mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
-    return NS_ERROR_FAILURE;
+    return;
   }
 
   mAdapter->SetLastStreamOffset(sample->mOffset);
@@ -256,13 +256,10 @@ GMPAudioDecoder::Input(MediaRawData* aSample)
   nsresult rv = mGMP->Decode(samples);
   if (NS_FAILED(rv)) {
     mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
-    return rv;
   }
-
-  return NS_OK;
 }
 
-nsresult
+void
 GMPAudioDecoder::Flush()
 {
   MOZ_ASSERT(IsOnGMPThread());
@@ -271,11 +268,9 @@ GMPAudioDecoder::Flush()
     // Abort the flush.
     mCallback->FlushComplete();
   }
-
-  return NS_OK;
 }
 
-nsresult
+void
 GMPAudioDecoder::Drain()
 {
   MOZ_ASSERT(IsOnGMPThread());
@@ -283,22 +278,18 @@ GMPAudioDecoder::Drain()
   if (!mGMP || NS_FAILED(mGMP->Drain())) {
     mCallback->DrainComplete();
   }
-
-  return NS_OK;
 }
 
-nsresult
+void
 GMPAudioDecoder::Shutdown()
 {
   mInitPromise.RejectIfExists(MediaDataDecoder::DecoderFailureReason::CANCELED, __func__);
   if (!mGMP) {
-    return NS_ERROR_FAILURE;
+    return;
   }
   // Note this unblocks flush and drain operations waiting for callbacks.
   mGMP->Close();
   mGMP = nullptr;
-
-  return NS_OK;
 }
 
 } // namespace mozilla

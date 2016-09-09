@@ -361,7 +361,8 @@ inCSSValueSearch::SearchStyleValue(const nsAFlatString& aValue, nsIURI* aBaseURL
     nsresult rv = NS_NewURI(getter_AddRefs(uri), url, nullptr, aBaseURL);
     NS_ENSURE_SUCCESS(rv, rv);
     nsAutoCString spec;
-    uri->GetSpec(spec);
+    rv = uri->GetSpec(spec);
+    NS_ENSURE_SUCCESS(rv, rv);
     nsAutoString *result = new NS_ConvertUTF8toUTF16(spec);
     if (mReturnRelativeURLs)
       EqualizeURL(result);

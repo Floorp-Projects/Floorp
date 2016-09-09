@@ -2688,7 +2688,7 @@ nsLayoutUtils::TransformPoints(nsIFrame* aFromFrame, nsIFrame* aToFrame,
     // What should the behaviour be if some of the points aren't invertible
     // and others are? Just assume all points are for now.
     Point toDevPixels = downToDest.ProjectPoint(
-        (upToAncestor * Point(devPixels.x, devPixels.y))).As2DPoint();
+        (upToAncestor.TransformPoint(Point(devPixels.x, devPixels.y)))).As2DPoint();
     // Divide here so that when the devPixelsPerCSSPixels are the same, we get the correct
     // answer instead of some inaccuracy multiplying a number by its reciprocal.
     aPoints[i] = LayoutDevicePoint(toDevPixels.x, toDevPixels.y) /
@@ -2717,8 +2717,8 @@ nsLayoutUtils::TransformPoint(nsIFrame* aFromFrame, nsIFrame* aToFrame,
   float devPixelsPerAppUnitToFrame =
     1.0f / aToFrame->PresContext()->AppUnitsPerDevPixel();
   Point4D toDevPixels = downToDest.ProjectPoint(
-      upToAncestor * Point(aPoint.x * devPixelsPerAppUnitFromFrame,
-                           aPoint.y * devPixelsPerAppUnitFromFrame));
+      upToAncestor.TransformPoint(Point(aPoint.x * devPixelsPerAppUnitFromFrame,
+                                        aPoint.y * devPixelsPerAppUnitFromFrame)));
   if (!toDevPixels.HasPositiveWCoord()) {
     // Not strictly true, but we failed to get a valid point in this
     // coordinate space.

@@ -313,7 +313,7 @@ GMPVideoDecoder::Init()
   return promise;
 }
 
-nsresult
+void
 GMPVideoDecoder::Input(MediaRawData* aSample)
 {
   MOZ_ASSERT(IsOnGMPThread());
@@ -321,7 +321,7 @@ GMPVideoDecoder::Input(MediaRawData* aSample)
   RefPtr<MediaRawData> sample(aSample);
   if (!mGMP) {
     mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
-    return NS_ERROR_FAILURE;
+    return;
   }
 
   mAdapter->SetLastStreamOffset(sample->mOffset);
@@ -329,19 +329,16 @@ GMPVideoDecoder::Input(MediaRawData* aSample)
   GMPUniquePtr<GMPVideoEncodedFrame> frame = CreateFrame(sample);
   if (!frame) {
     mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
-    return NS_ERROR_FAILURE;
+    return;
   }
   nsTArray<uint8_t> info; // No codec specific per-frame info to pass.
   nsresult rv = mGMP->Decode(Move(frame), false, info, 0);
   if (NS_FAILED(rv)) {
     mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
-    return rv;
   }
-
-  return NS_OK;
 }
 
-nsresult
+void
 GMPVideoDecoder::Flush()
 {
   MOZ_ASSERT(IsOnGMPThread());
@@ -350,11 +347,9 @@ GMPVideoDecoder::Flush()
     // Abort the flush.
     mCallback->FlushComplete();
   }
-
-  return NS_OK;
 }
 
-nsresult
+void
 GMPVideoDecoder::Drain()
 {
   MOZ_ASSERT(IsOnGMPThread());
@@ -362,23 +357,19 @@ GMPVideoDecoder::Drain()
   if (!mGMP || NS_FAILED(mGMP->Drain())) {
     mCallback->DrainComplete();
   }
-
-  return NS_OK;
 }
 
-nsresult
+void
 GMPVideoDecoder::Shutdown()
 {
   mInitPromise.RejectIfExists(MediaDataDecoder::DecoderFailureReason::CANCELED, __func__);
   // Note that this *may* be called from the proxy thread also.
   if (!mGMP) {
-    return NS_ERROR_FAILURE;
+    return;
   }
   // Note this unblocks flush and drain operations waiting for callbacks.
   mGMP->Close();
   mGMP = nullptr;
-
-  return NS_OK;
 }
 
 } // namespace mozilla

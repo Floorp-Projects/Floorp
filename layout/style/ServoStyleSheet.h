@@ -40,11 +40,11 @@ public:
   StyleSheetHandle GetParentSheet() const;
   void AppendStyleSheet(StyleSheetHandle aSheet);
 
-  void ParseSheet(const nsAString& aInput,
-                  nsIURI* aSheetURI,
-                  nsIURI* aBaseURI,
-                  nsIPrincipal* aSheetPrincipal,
-                  uint32_t aLineNumber);
+  MOZ_MUST_USE nsresult ParseSheet(const nsAString& aInput,
+                                   nsIURI* aSheetURI,
+                                   nsIURI* aBaseURI,
+                                   nsIPrincipal* aSheetPrincipal,
+                                   uint32_t aLineNumber);
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 

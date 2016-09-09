@@ -16,13 +16,12 @@
 #include "utilrename.h"
 #include "prtypes.h"
 
-
-#ifdef __cplusplus 
-# define SEC_BEGIN_PROTOS extern "C" {
-# define SEC_END_PROTOS }
+#ifdef __cplusplus
+#define SEC_BEGIN_PROTOS extern "C" {
+#define SEC_END_PROTOS }
 #else
-# define SEC_BEGIN_PROTOS
-# define SEC_END_PROTOS
+#define SEC_BEGIN_PROTOS
+#define SEC_END_PROTOS
 #endif
 
 #include "secport.h"
@@ -66,10 +65,10 @@ struct SECItemArrayStr {
 ** values. Again the motivation is so that a compiler can generate
 ** warnings when return values are wrong. Correct testing of status codes:
 **
-**	SECStatus rv;
-**	rv = some_function (some_argument);
-**	if (rv != SECSuccess)
-**		do_an_error_thing();
+**  SECStatus rv;
+**  rv = some_function (some_argument);
+**  if (rv != SECSuccess)
+**      do_an_error_thing();
 **
 */
 typedef enum _SECStatus {

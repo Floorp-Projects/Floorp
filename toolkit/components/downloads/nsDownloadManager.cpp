@@ -1595,8 +1595,10 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
 
   // Adding to the DB
   nsAutoCString source, target;
-  aSource->GetSpec(source);
-  aTarget->GetSpec(target);
+  rv = aSource->GetSpec(source);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aTarget->GetSpec(target);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Track the temp file for exthandler downloads
   nsAutoString tempPath;
@@ -2815,7 +2817,8 @@ nsDownload::SetState(DownloadState aState)
           // Use GIO to store the source URI for later display in the file manager.
           GFile* gio_file = g_file_new_for_path(NS_ConvertUTF16toUTF8(path).get());
           nsCString source_uri;
-          mSource->GetSpec(source_uri);
+          rv = mSource->GetSpec(source_uri);
+          NS_ENSURE_SUCCESS(rv, rv);
           GFileInfo *file_info = g_file_info_new();
           g_file_info_set_attribute_string(file_info, "metadata::download-uri", source_uri.get());
           g_file_set_attributes_async(gio_file,
