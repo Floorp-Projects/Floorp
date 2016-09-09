@@ -6,15 +6,16 @@
 
 #include "ExtendedValidation.h"
 
+#include "base64.h"
 #include "cert.h"
 #include "certdb.h"
-#include "base64.h"
 #include "hasht.h"
-#include "pkix/pkixtypes.h"
+#include "mozilla/ArrayUtils.h"
 #include "pk11pub.h"
-#include "secerr.h"
+#include "pkix/pkixtypes.h"
 #include "prerror.h"
 #include "prinit.h"
+#include "secerr.h"
 
 extern mozilla::LazyLogModule gPIPNSSLog;
 
@@ -1273,8 +1274,7 @@ RegisterOID(const SECItem& oidItem, const char* oidName)
 static bool
 isEVPolicy(SECOidTag policyOIDTag)
 {
-  for (size_t iEV = 0; iEV < PR_ARRAY_SIZE(myTrustedEVInfos); ++iEV) {
-    nsMyTrustedEVInfo& entry = myTrustedEVInfos[iEV];
+  for (const nsMyTrustedEVInfo& entry : myTrustedEVInfos) {
     if (policyOIDTag == entry.oid_tag) {
       return true;
     }
@@ -1294,8 +1294,7 @@ CertIsAuthoritativeForEVPolicy(const UniqueCERTCertificate& cert,
     return false;
   }
 
-  for (size_t iEV = 0; iEV < PR_ARRAY_SIZE(myTrustedEVInfos); ++iEV) {
-    nsMyTrustedEVInfo& entry = myTrustedEVInfos[iEV];
+  for (const nsMyTrustedEVInfo& entry : myTrustedEVInfos) {
     if (entry.cert && CERT_CompareCerts(cert.get(), entry.cert.get())) {
       const SECOidData* oidData = SECOID_FindOIDByTag(entry.oid_tag);
       if (oidData && oidData->oid.len == policy.numBytes &&
@@ -1311,7 +1310,7 @@ CertIsAuthoritativeForEVPolicy(const UniqueCERTCertificate& cert,
 static PRStatus
 IdentityInfoInit()
 {
-  for (size_t iEV = 0; iEV < PR_ARRAY_SIZE(myTrustedEVInfos); ++iEV) {
+  for (size_t iEV = 0; iEV < mozilla::ArrayLength(myTrustedEVInfos); ++iEV) {
     nsMyTrustedEVInfo& entry = myTrustedEVInfos[iEV];
 
     mozilla::ScopedAutoSECItem derIssuer;
@@ -1400,8 +1399,7 @@ EnsureIdentityInfoLoaded()
 void
 CleanupIdentityInfo()
 {
-  for (size_t iEV = 0; iEV < PR_ARRAY_SIZE(myTrustedEVInfos); ++iEV) {
-    nsMyTrustedEVInfo &entry = myTrustedEVInfos[iEV];
+  for (nsMyTrustedEVInfo& entry : myTrustedEVInfos) {
     entry.cert = nullptr;
   }
 
