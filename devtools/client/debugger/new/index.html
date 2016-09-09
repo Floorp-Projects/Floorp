@@ -5,9 +5,20 @@
 <html>
   <head>
     <link rel="stylesheet" type="text/css" href="resource://devtools/client/debugger/new/styles.css" />
+    <link rel="stylesheet"
+          type="text/css"
+          href="chrome://devtools/content/sourceeditor/codemirror/lib/codemirror.css" />
+    <link rel="stylesheet"
+          type="text/css"
+          href="chrome://devtools/content/sourceeditor/codemirror/addon/dialog/dialog.css" />
+    <link rel="stylesheet"
+          type="text/css"
+          href="chrome://devtools/content/sourceeditor/codemirror/mozilla.css" />
   </head>
   <body>
     <div id="mount"></div>
+    <script type="application/javascript;version=1.8"
+            src="chrome://devtools/content/shared/theme-switching.js"></script>
     <script type="text/javascript">
       const { BrowserLoader } = Components.utils.import("resource://devtools/client/shared/browser-loader.js", {});
       const { require: devtoolsRequire } = BrowserLoader({

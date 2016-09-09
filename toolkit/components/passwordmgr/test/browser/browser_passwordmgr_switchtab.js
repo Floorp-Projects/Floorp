@@ -21,19 +21,19 @@ function test() {
 
         is(gBrowser.selectedTab, tab, "Should have selected the new tab");
 
-        domwindow.document.documentElement.cancelDialog()
+        domwindow.document.documentElement.cancelDialog();
       }, domwindow);
     },
 
     onCloseWindow: function() {
     }
-  }
+  };
 
   Services.wm.addListener(listener);
   registerCleanupFunction(() => {
     Services.wm.removeListener(listener);
     gBrowser.removeTab(tab);
-  })
+  });
 
   tab.linkedBrowser.addEventListener("load", () => {
     finish();

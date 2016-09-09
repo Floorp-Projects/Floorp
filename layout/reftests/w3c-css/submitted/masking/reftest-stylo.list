@@ -1,0 +1,85 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+# All mask properties test cases are meant to be failed
+# until bug 1251161 is fixed, which means enabling mask shorthand.
+# To enable it in compile time, refer to bug 1243734
+
+# mask-composite test cases
+== mask-composite-1a.html mask-composite-1a.html
+== mask-composite-1b.html mask-composite-1b.html
+== mask-composite-1c.html mask-composite-1c.html
+== mask-composite-2a.html mask-composite-2a.html
+== mask-composite-2b.html mask-composite-2b.html
+== mask-composite-2c.html mask-composite-2c.html
+
+# mask-mode test cases
+== mask-mode-a.html mask-mode-a.html
+== mask-mode-b.html mask-mode-b.html
+== mask-mode-to-mask-type.html mask-mode-to-mask-type.html
+
+# mask-image test cases
+== mask-image-1a.html mask-image-1a.html
+== mask-image-1b.html mask-image-1b.html
+== mask-image-1c.html mask-image-1c.html
+== mask-image-2.html mask-image-2.html
+== mask-image-3a.html mask-image-3a.html
+== mask-image-3b.html mask-image-3b.html
+== mask-image-3c.html mask-image-3c.html
+== mask-image-3d.html mask-image-3d.html
+== mask-image-3e.html mask-image-3e.html
+== mask-image-3f.html mask-image-3f.html
+== mask-image-3g.html mask-image-3g.html
+== mask-image-4a.html mask-image-4a.html
+== mask-image-4b.html mask-image-4b.html
+
+# mask-clip test cases
+== mask-clip-1.html mask-clip-1.html
+
+# mask-position test cases
+== mask-position-1a.html mask-position-1a.html
+== mask-position-1b.html mask-position-1b.html
+== mask-position-1c.html mask-position-1c.html
+== mask-position-2a.html mask-position-2a.html
+== mask-position-2b.html mask-position-2b.html
+== mask-position-3a.html mask-position-3a.html
+== mask-position-3b.html mask-position-3b.html
+== mask-position-4a.html mask-position-4a.html
+== mask-position-4b.html mask-position-4b.html
+== mask-position-4c.html mask-position-4c.html
+== mask-position-4d.html mask-position-4d.html
+== mask-position-5.html mask-position-5.html
+== mask-position-6.html mask-position-6.html
+== mask-position-7.html mask-position-7.html
+
+# mask-repeat test cases
+== mask-repeat-1.html mask-repeat-1.html
+# bug 1258623
+== mask-repeat-2.html mask-repeat-2.html
+# bug 1258626
+== mask-repeat-3.html mask-repeat-3.html
+# bug 1258626
+
+# mask-origin test cases
+== mask-origin-1.html mask-origin-1.html
+# bug 1258286
+== mask-origin-2.html mask-origin-2.html
+# bug 1260094
+
+# mask-size test cases
+== mask-size-auto.html mask-size-auto.html
+== mask-size-auto-auto.html mask-size-auto-auto.html
+== mask-size-auto-length.html mask-size-auto-length.html
+== mask-size-auto-percent.html mask-size-auto-percent.html
+== mask-size-contain-clip-border.html mask-size-contain-clip-border.html
+== mask-size-contain-clip-padding.html mask-size-contain-clip-padding.html
+== mask-size-contain-position-fifty-fifty.html mask-size-contain-position-fifty-fifty.html
+== mask-size-contain.html mask-size-contain.html
+== mask-size-cover.html mask-size-cover.html
+== mask-size-length.html mask-size-length.html
+== mask-size-length-auto.html mask-size-length-auto.html
+== mask-size-length-length.html mask-size-length-length.html
+== mask-size-length-percent.html mask-size-length-percent.html
+== mask-size-percent.html mask-size-percent.html
+== mask-size-percent-auto.html mask-size-percent-auto.html
+== mask-size-percent-length.html mask-size-percent-length.html
+== mask-size-percent-percent.html mask-size-percent-percent.html
+== mask-size-percent-percent-stretch.html mask-size-percent-percent-stretch.html

@@ -559,12 +559,16 @@ var gSyncPane = {
           replaceQueryString: true
         });
       });
+      // Prevent page from scrolling on the space key.
+      event.preventDefault();
     }
   },
 
   openManageFirefoxAccount: function(event) {
     if (this.clickOrSpaceOrEnterPressed(event)) {
       this.manageFirefoxAccount();
+      // Prevent page from scrolling on the space key.
+      event.preventDefault();
     }
   },
 
@@ -667,4 +671,3 @@ var gSyncPane = {
     textbox.value = value;
   },
 };
-

@@ -121,14 +121,28 @@ MainThreadRuntime::InitializeSecurity()
     return HRESULT_FROM_WIN32(::GetLastError());
   }
 
+  BYTE systemSid[SECURITY_MAX_SID_SIZE];
+  DWORD systemSidSize = sizeof(systemSid);
+  if (!::CreateWellKnownSid(WinLocalSystemSid, nullptr, systemSid,
+                            &systemSidSize)) {
+    return HRESULT_FROM_WIN32(::GetLastError());
+  }
+
+  BYTE adminSid[SECURITY_MAX_SID_SIZE];
+  DWORD adminSidSize = sizeof(adminSid);
+  if (!::CreateWellKnownSid(WinBuiltinAdministratorsSid, nullptr, adminSid,
+                            &adminSidSize)) {
+    return HRESULT_FROM_WIN32(::GetLastError());
+  }
+
   // Grant access to SYSTEM, Administrators, and the user.
   EXPLICIT_ACCESS entries[] = {
     {COM_RIGHTS_EXECUTE, GRANT_ACCESS, NO_INHERITANCE,
-      {nullptr, NO_MULTIPLE_TRUSTEE, TRUSTEE_IS_NAME, TRUSTEE_IS_USER,
-       L"SYSTEM"}},
+      {nullptr, NO_MULTIPLE_TRUSTEE, TRUSTEE_IS_SID, TRUSTEE_IS_USER,
+       reinterpret_cast<LPWSTR>(systemSid)}},
     {COM_RIGHTS_EXECUTE, GRANT_ACCESS, NO_INHERITANCE,
-      {nullptr, NO_MULTIPLE_TRUSTEE, TRUSTEE_IS_NAME, TRUSTEE_IS_WELL_KNOWN_GROUP,
-       L"ADMINISTRATORS"}},
+      {nullptr, NO_MULTIPLE_TRUSTEE, TRUSTEE_IS_SID, TRUSTEE_IS_WELL_KNOWN_GROUP,
+       reinterpret_cast<LPWSTR>(adminSid)}},
     {COM_RIGHTS_EXECUTE, GRANT_ACCESS, NO_INHERITANCE,
       {nullptr, NO_MULTIPLE_TRUSTEE, TRUSTEE_IS_SID, TRUSTEE_IS_USER,
        reinterpret_cast<LPWSTR>(tokenUser.User.Sid)}}

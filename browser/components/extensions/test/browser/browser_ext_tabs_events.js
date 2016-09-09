@@ -171,7 +171,7 @@ add_task(function* testTabEventsSize() {
     });
 
     browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-      if (tab.status == "complete") {
+      if (changeInfo.status == "complete") {
         sendSizeMessages(tab, "on-updated");
       }
     });

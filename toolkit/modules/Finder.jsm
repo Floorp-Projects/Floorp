@@ -26,6 +26,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "ClipboardHelper",
                                          "nsIClipboardHelper");
 
 const kSelectionMaxLen = 150;
+const kMatchesCountLimitPref = "accessibility.typeaheadfind.matchesCountLimit";
 
 function Finder(docShell) {
   this._fastFind = Cc["@mozilla.org/typeaheadfind;1"].createInstance(Ci.nsITypeAheadFind);
@@ -113,7 +114,9 @@ Finder.prototype = {
     })) {
       this.iterator.stop();
     }
+
     this.highlighter.update(options);
+    this.requestMatchesCount(options.searchString, options.linksOnly);
 
     this._outlineLink(options.drawOutline);
 
@@ -165,6 +168,14 @@ Finder.prototype = {
 
     const {FinderHighlighter} = Cu.import("resource://gre/modules/FinderHighlighter.jsm", {});
     return this._highlighter = new FinderHighlighter(this);
+  },
+
+  get matchesCountLimit() {
+    if (typeof this._matchesCountLimit == "number")
+      return this._matchesCountLimit;
+
+    this._matchesCountLimit = Services.prefs.getIntPref(kMatchesCountLimitPref) || 0;
+    return this._matchesCountLimit;
   },
 
   _lastFindResult: null,
@@ -321,6 +332,7 @@ Finder.prototype = {
   onFindbarClose: function() {
     this.enableSelection();
     this.highlighter.highlight(false);
+    this.iterator.reset();
     BrowserUtils.trackToolbarVisibility(this._docShell, "findbar", false);
   },
 
@@ -383,7 +395,7 @@ Finder.prototype = {
   _notifyMatchesCount: function(result = this._currentMatchesCountResult) {
     // The `_currentFound` property is only used for internal bookkeeping.
     delete result._currentFound;
-    if (result.total == this._currentMatchLimit)
+    if (result.total == this.matchesCountLimit)
       result.total = -1;
 
     for (let l of this._listeners) {
@@ -395,9 +407,9 @@ Finder.prototype = {
     this._currentMatchesCountResult = null;
   },
 
-  requestMatchesCount: function(aWord, aMatchLimit, aLinksOnly) {
+  requestMatchesCount: function(aWord, aLinksOnly) {
     if (this._lastFindResult == Ci.nsITypeAheadFind.FIND_NOTFOUND ||
-        this.searchString == "" || !aWord) {
+        this.searchString == "" || !aWord || !this.matchesCountLimit) {
       this._notifyMatchesCount({
         total: 0,
         current: 0
@@ -407,7 +419,6 @@ Finder.prototype = {
 
     let window = this._getWindow();
     this._currentFoundRange = this._fastFind.getFoundRange();
-    this._currentMatchLimit = aMatchLimit;
 
     let params = {
       caseSensitive: this._fastFind.caseSensitive,
@@ -420,7 +431,7 @@ Finder.prototype = {
 
     this.iterator.start(Object.assign(params, {
       finder: this,
-      limit: aMatchLimit,
+      limit: this.matchesCountLimit,
       listener: this,
       useCache: true,
     })).then(() => {
@@ -453,7 +464,7 @@ Finder.prototype = {
   onIteratorReset() {},
 
   onIteratorRestart({ word, linksOnly }) {
-    this.requestMatchesCount(word, this._currentMatchLimit, linksOnly);
+    this.requestMatchesCount(word, linksOnly);
   },
 
   onIteratorStart() {
