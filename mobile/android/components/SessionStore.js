@@ -1347,10 +1347,12 @@ SessionStore.prototype = {
     let window = Services.wm.getMostRecentWindow("navigator:browser");
     for (let i = 0; i < aData.tabs.length; i++) {
       let tabData = JSON.parse(aData.tabs[i]);
+      let isSelectedTab = (i == aData.tabs.length - 1);
       let params = {
-        selected: (i == aData.tabs.length - 1),
+        selected: isSelectedTab,
         isPrivate: tabData.isPrivate,
         desktopMode: tabData.desktopMode,
+        cancelEditMode: isSelectedTab
       };
 
       let tab = window.BrowserApp.addTab(tabData.entries[tabData.index - 1].url, params);

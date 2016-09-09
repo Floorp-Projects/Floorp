@@ -42,7 +42,7 @@
             QueryInterface : function (iid) {
                 const interfaces = [Ci.nsIObserver, Ci.nsISupports];
 
-                if (!interfaces.some( function(v) { return iid.equals(v) } ))
+                if (!interfaces.some( function(v) { return iid.equals(v); } ))
                         throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
                 return this;
             },
@@ -133,7 +133,7 @@
 	QueryInterface : function (iid) {
 	const interfaces = [Ci.nsIProtocolProxyCallback, Ci.nsISupports];
 
-        if (!interfaces.some( function(v) { return iid.equals(v) } ))
+        if (!interfaces.some( function(v) { return iid.equals(v); } ))
           throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
 	  return this;
 	},
@@ -171,7 +171,7 @@
             iframe2b.onload = onFrameLoad;
 
 	    startup();
-        }
+        };
 
         var expectedLoads;
         var expectedDialogs;
@@ -213,29 +213,29 @@
                 ok(true, "doTest testNum 1");
                 expectedLoads = 3;
                 expectedDialogs = 3;
-                iframe1.src = exampleCom + "authenticate.sjs?"+
-                    "r=1&"+
-                    "user=user1name&"+
-                    "pass=user1pass&"+
-                    "realm=mochirealm&"+
-                    "proxy_user=proxy_user&"+
-                    "proxy_pass=proxy_pass&"+
+                iframe1.src = exampleCom + "authenticate.sjs?" +
+                    "r=1&" +
+                    "user=user1name&" +
+                    "pass=user1pass&" +
+                    "realm=mochirealm&" +
+                    "proxy_user=proxy_user&" +
+                    "proxy_pass=proxy_pass&" +
                     "proxy_realm=proxy_realm";
-                iframe2a.src = exampleOrg + "authenticate.sjs?"+
-                    "r=2&"+
-                    "user=user2name&"+
-                    "pass=user2pass&"+
-                    "realm=mochirealm2&"+
-                    "proxy_user=proxy_user&"+
-                    "proxy_pass=proxy_pass&"+
+                iframe2a.src = exampleOrg + "authenticate.sjs?" +
+                    "r=2&" +
+                    "user=user2name&" +
+                    "pass=user2pass&" +
+                    "realm=mochirealm2&" +
+                    "proxy_user=proxy_user&" +
+                    "proxy_pass=proxy_pass&" +
                     "proxy_realm=proxy_realm";
-                iframe2b.src = exampleOrg + "authenticate.sjs?"+
-                    "r=3&"+
-                    "user=user2name&"+
-                    "pass=user2pass&"+
-                    "realm=mochirealm2&"+
-                    "proxy_user=proxy_user&"+
-                    "proxy_pass=proxy_pass&"+
+                iframe2b.src = exampleOrg + "authenticate.sjs?" +
+                    "r=3&" +
+                    "user=user2name&" +
+                    "pass=user2pass&" +
+                    "realm=mochirealm2&" +
+                    "proxy_user=proxy_user&" +
+                    "proxy_pass=proxy_pass&" +
                     "proxy_realm=proxy_realm";
                 break;
 
@@ -258,12 +258,12 @@
                 ok(true, "doTest testNum 3");
                 expectedLoads = 1;
                 expectedDialogs = 1;
-                iframe1.src = exampleCom + "authenticate.sjs?"+
-                    "user=user4name&"+
-                    "pass=user4pass&"+
-                    "realm=mochirealm4&"+
-                    "proxy_user=proxy_user3&"+
-                    "proxy_pass=proxy_pass3&"+
+                iframe1.src = exampleCom + "authenticate.sjs?" +
+                    "user=user4name&" +
+                    "pass=user4pass&" +
+                    "realm=mochirealm4&" +
+                    "proxy_user=proxy_user3&" +
+                    "proxy_pass=proxy_pass3&" +
                     "proxy_realm=proxy_realm3";
                 break;
 
@@ -274,12 +274,12 @@
                 ok(true, "doTest testNum 4");
                 expectedLoads = 1;
                 expectedDialogs = 2;
-                iframe1.src = exampleCom + "authenticate.sjs?"+
-                    "user=user4name&"+
-                    "pass=user4pass&"+
-                    "realm=mochirealm4&"+
-                    "proxy_user=proxy_user3&"+
-                    "proxy_pass=proxy_pass3&"+
+                iframe1.src = exampleCom + "authenticate.sjs?" +
+                    "user=user4name&" +
+                    "pass=user4pass&" +
+                    "realm=mochirealm4&" +
+                    "proxy_user=proxy_user3&" +
+                    "proxy_pass=proxy_pass3&" +
                     "proxy_realm=proxy_realm3";
 
 
@@ -294,13 +294,13 @@
                 ok(true, "doTest testNum 5");
                 expectedLoads = 1;
                 expectedDialogs = 1;
-                iframe1.src = exampleCom + "authenticate.sjs?"+
-                    "user=user5name&"+
-                    "pass=user5pass&"+
-                    "realm=mochirealm5&"+
-                    "proxy_user=proxy_user4&"+
-                    "proxy_pass=proxy_pass4&"+
-                    "proxy_realm=proxy_realm4&"+
+                iframe1.src = exampleCom + "authenticate.sjs?" +
+                    "user=user5name&" +
+                    "pass=user5pass&" +
+                    "realm=mochirealm5&" +
+                    "proxy_user=proxy_user4&" +
+                    "proxy_pass=proxy_pass4&" +
+                    "proxy_realm=proxy_realm4&" +
                     "huge=1";
                 break;
 
@@ -311,13 +311,13 @@
                 ok(true, "doTest testNum 6");
                 expectedLoads = 1;
                 expectedDialogs = 2;
-                iframe1.src = exampleCom + "authenticate.sjs?"+
-                    "user=user5name&"+
-                    "pass=user5pass&"+
-                    "realm=mochirealm5&"+
-                    "proxy_user=proxy_user4&"+
-                    "proxy_pass=proxy_pass4&"+
-                    "proxy_realm=proxy_realm4&"+
+                iframe1.src = exampleCom + "authenticate.sjs?" +
+                    "user=user5name&" +
+                    "pass=user5pass&" +
+                    "realm=mochirealm5&" +
+                    "proxy_user=proxy_user4&" +
+                    "proxy_pass=proxy_pass4&" +
+                    "proxy_realm=proxy_realm4&" +
                     "huge=1";
                 break;
 
@@ -337,14 +337,14 @@
                 ok(true, "doTest testNum 8");
                 expectedLoads = 1;
                 expectedDialogs = 5;
-                iframe1.src = exampleCom + "authenticate.sjs?"+
-                    "user=user6name&"+
-                    "pass=user6pass&"+
-                    "realm=mochirealm6&"+
-                    "proxy_user=proxy_user5&"+
-                    "proxy_pass=proxy_pass5&"+
-                    "proxy_realm=proxy_realm5&"+
-                    "huge=1&"+
+                iframe1.src = exampleCom + "authenticate.sjs?" +
+                    "user=user6name&" +
+                    "pass=user6pass&" +
+                    "realm=mochirealm6&" +
+                    "proxy_user=proxy_user5&" +
+                    "proxy_pass=proxy_pass5&" +
+                    "proxy_realm=proxy_realm5&" +
+                    "huge=1&" +
                     "multiple=3";
                 break;
 
@@ -403,7 +403,7 @@
                     break;
 
                 default:
-                    ok(false, "Unhandled testNum "+testNum+" in handleDialog");
+                    ok(false, "Unhandled testNum " + testNum + " in handleDialog");
             }
 
             if (--expectedDialogs > 0)
@@ -526,7 +526,7 @@
                     break;
 
                 default:
-                    ok(false, "Unhandled testNum "+testNum+" in doCheck");
+                    ok(false, "Unhandled testNum " + testNum + " in doCheck");
             }
         }
 

@@ -308,6 +308,8 @@ private:
     bool IsAgentInvolvingInAudioCompeting(AudioChannelAgent* aAgent) const;
     bool IsAudioCompetingInSameTab() const;
     bool IsContainingPlayingAgent(AudioChannelAgent* aAgent) const;
+
+    bool IsInactiveWindow() const;
   };
 
   AudioChannelWindow*

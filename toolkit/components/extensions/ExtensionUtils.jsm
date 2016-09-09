@@ -175,6 +175,7 @@ class BaseContext {
     this.jsonSandbox = null;
     this.active = true;
 
+    this.messageManager = null;
     this.docShell = null;
     this.contentWindow = null;
     this.innerWindowID = 0;
@@ -186,6 +187,8 @@ class BaseContext {
                                 .getInterface(Ci.nsIDocShell);
 
     this.innerWindowID = getInnerWindowID(contentWindow);
+    this.messageManager = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                  .getInterface(Ci.nsIContentFrameMessageManager);
 
     let onPageShow = event => {
       if (!event || event.target === document) {
@@ -908,6 +911,10 @@ EventManager.prototype = {
       dump(`Expected function\n${Error().stack}`);
       return;
     }
+    if (this.context.unloaded) {
+      dump(`Cannot add listener to ${this.name} after context unloaded`);
+      return;
+    }
 
     if (!this.callbacks.size) {
       this.context.callOnClose(this);
@@ -928,6 +935,7 @@ EventManager.prototype = {
     this.callbacks.delete(callback);
     if (this.callbacks.size == 0) {
       this.unregister();
+      this.unregister = null;
 
       this.context.forgetOnClose(this);
     }
@@ -959,7 +967,9 @@ EventManager.prototype = {
     if (this.callbacks.size) {
       this.unregister();
     }
-    this.callbacks = Object.freeze([]);
+    this.callbacks.clear();
+    this.register = null;
+    this.unregister = null;
   },
 
   api() {
@@ -1142,27 +1152,50 @@ function promiseObserved(topic, test = () => true) {
 
 let gNextPortId = 1;
 
-// Abstraction for a Port object in the extension API. Each port has a unique ID.
-function Port(context, messageManager, name, id, sender) {
+/**
+ * Abstraction for a Port object in the extension API.
+ *
+ * @param {BaseContext} context The context that owns this port.
+ * @param {nsIMessageSender} senderMM The message manager to send messages to.
+ * @param {Array<nsIMessageSender>} receiverMMs Message managers to listen on.
+ * @param {string} name Arbitrary port name as defined by the addon.
+ * @param {string} id An ID that uniquely identifies this port's channel.
+ * @param {object} sender The `port.sender` property.
+ * @param {object} recipient The recipient of messages sent from this port.
+ */
+function Port(context, senderMM, receiverMMs, name, id, sender, recipient) {
   this.context = context;
-  this.messageManager = messageManager;
+  this.senderMM = senderMM;
+  this.receiverMMs = receiverMMs;
   this.name = name;
   this.id = id;
-  this.listenerName = `Extension:Port-${this.id}`;
-  this.disconnectName = `Extension:Disconnect-${this.id}`;
   this.sender = sender;
+  this.recipient = recipient;
   this.disconnected = false;
-
-  this.messageManager.addMessageListener(this.disconnectName, this, true);
   this.disconnectListeners = new Set();
+
+  // Common options for onMessage and onDisconnect.
+  this.handlerBase = {
+    messageFilterStrict: {portId: id},
+    filterMessage: (sender, recipient) => {
+      if (!sender.contextId) {
+        Cu.reportError("Missing sender.contextId in message to Port");
+        return false;
+      }
+      return sender.contextId !== this.context.contextId;
+    },
+  };
+
+  this.disconnectHandler = Object.assign({
+    receiveMessage: () => this.disconnectByOtherEnd(),
+  }, this.handlerBase);
+  MessageChannel.addListener(this.receiverMMs, "Extension:Port:Disconnect", this.disconnectHandler);
+  this.context.callOnClose(this);
 }
 
 Port.prototype = {
   api() {
     let portObj = Cu.createObjectIn(this.context.cloneScope);
-
-    // We want a close() notification when the window is destroyed.
-    this.context.callOnClose(this);
 
     let publicAPI = {
       name: this.name,
@@ -1171,14 +1204,15 @@ Port.prototype = {
       },
       postMessage: json => {
         if (this.disconnected) {
-          throw new this.context.contentWindow.Error("Attempt to postMessage on disconnected port");
+          throw new this.context.cloneScope.Error("Attempt to postMessage on disconnected port");
         }
-        this.messageManager.sendAsyncMessage(this.listenerName, json);
+
+        this._sendMessage("Extension:Port:PostMessage", json);
       },
       onDisconnect: new EventManager(this.context, "Port.onDisconnect", fire => {
         let listener = () => {
-          if (!this.disconnected) {
-            fire();
+          if (this.context.active && !this.disconnected) {
+            fire.withoutClone(portObj);
           }
         };
 
@@ -1188,18 +1222,17 @@ Port.prototype = {
         };
       }).api(),
       onMessage: new EventManager(this.context, "Port.onMessage", fire => {
-        let listener = ({data}) => {
-          if (!this.context.active) {
-            // TODO: Send error as a response.
-            Cu.reportError("Message received on port for an inactive content script");
-          } else if (!this.disconnected) {
-            fire(data);
-          }
-        };
+        let handler = Object.assign({
+          receiveMessage: ({data}) => {
+            if (this.context.active && !this.disconnected) {
+              fire(data);
+            }
+          },
+        }, this.handlerBase);
 
-        this.messageManager.addMessageListener(this.listenerName, listener);
+        MessageChannel.addListener(this.receiverMMs, "Extension:Port:PostMessage", handler);
         return () => {
-          this.messageManager.removeMessageListener(this.listenerName, listener);
+          MessageChannel.removeListener(this.receiverMMs, "Extension:Port:PostMessage", handler);
         };
       }).api(),
     };
@@ -1212,16 +1245,19 @@ Port.prototype = {
     return portObj;
   },
 
-  handleDisconnection() {
-    this.messageManager.removeMessageListener(this.disconnectName, this);
-    this.context.forgetOnClose(this);
-    this.disconnected = true;
+  _sendMessage(message, data) {
+    let options = {
+      recipient: Object.assign({}, this.recipient, {portId: this.id}),
+      responseType: MessageChannel.RESPONSE_NONE,
+    };
+
+    return this.context.sendMessage(this.senderMM, message, data, options);
   },
 
-  receiveMessage(msg) {
-    if (msg.name == this.disconnectName) {
-      this.disconnectByOtherEnd();
-    }
+  handleDisconnection() {
+    MessageChannel.removeListener(this.receiverMMs, "Extension:Port:Disconnect", this.disconnectHandler);
+    this.context.forgetOnClose(this);
+    this.disconnected = true;
   },
 
   disconnectByOtherEnd() {
@@ -1243,7 +1279,7 @@ Port.prototype = {
       return;
     }
     this.handleDisconnection();
-    this.messageManager.sendAsyncMessage(this.disconnectName);
+    this._sendMessage("Extension:Port:Disconnect", null);
   },
 
   close() {
@@ -1255,7 +1291,7 @@ function getMessageManager(target) {
   if (target instanceof Ci.nsIFrameLoaderOwner) {
     return target.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;
   }
-  return target;
+  return target.QueryInterface(Ci.nsIMessageSender);
 }
 
 // Each extension scope gets its own Messenger object. It handles the
@@ -1265,15 +1301,11 @@ function getMessageManager(target) {
 // |messageManagers| is an array of MessageManagers used to receive messages.
 // |sender| is an object describing the sender (usually giving its extension id, tabId, etc.)
 // |filter| is a recipient filter to apply to incoming messages from the broker.
-// |delegate| is an object that must implement a few methods:
-//    getSender(context, messageManagerTarget, sender): returns a MessageSender
-//      See https://developer.chrome.com/extensions/runtime#type-MessageSender.
-function Messenger(context, messageManagers, sender, filter, delegate) {
+function Messenger(context, messageManagers, sender, filter) {
   this.context = context;
   this.messageManagers = messageManagers;
   this.sender = sender;
   this.filter = filter;
-  this.delegate = delegate;
 
   MessageChannel.setupMessageManagers(messageManagers);
 }
@@ -1309,16 +1341,12 @@ Messenger.prototype = {
 
         filterMessage: (sender, recipient) => {
           // Ignore the message if it was sent by this Messenger.
-          return !MessageChannel.matchesFilter(this.sender, sender);
+          return sender.contextId !== this.context.contextId;
         },
 
         receiveMessage: ({target, data: message, sender, recipient}) => {
           if (!this.context.active) {
             return;
-          }
-
-          if (this.delegate) {
-            this.delegate.getSender(this.context, target, sender);
           }
 
           let sendResponse;
@@ -1355,7 +1383,7 @@ Messenger.prototype = {
 
   connect(messageManager, name, recipient) {
     let portId = `${gNextPortId++}-${Services.appinfo.uniqueProcessID}`;
-    let port = new Port(this.context, messageManager, name, portId, null);
+    let port = new Port(this.context, messageManager, this.messageManagers, name, portId, null, recipient);
     let msg = {name, portId};
     this._sendMessage(messageManager, "Extension:Connect", msg, recipient)
       .catch(e => port.disconnectByOtherEnd());
@@ -1369,16 +1397,18 @@ Messenger.prototype = {
 
         filterMessage: (sender, recipient) => {
           // Ignore the port if it was created by this Messenger.
-          return !MessageChannel.matchesFilter(this.sender, sender);
+          return sender.contextId !== this.context.contextId;
         },
 
-        receiveMessage: ({target, data: message, sender, recipient}) => {
+        receiveMessage: ({target, data: message, sender}) => {
           let {name, portId} = message;
           let mm = getMessageManager(target);
-          if (this.delegate) {
-            this.delegate.getSender(this.context, target, sender);
+          let recipient = Object.assign({}, sender);
+          if (recipient.tab) {
+            recipient.tabId = recipient.tab.id;
+            delete recipient.tab;
           }
-          let port = new Port(this.context, mm, name, portId, sender);
+          let port = new Port(this.context, mm, this.messageManagers, name, portId, sender, recipient);
           this.context.runSafeWithoutClone(callback, port.api());
           return true;
         },

@@ -32,11 +32,11 @@ function doxhr(URL, user, pass, code, next) {
   xhr.onload = function() {
     is(xhr.status, code, "expected response code " + code);
     next();
-  }
+  };
   xhr.onerror = function() {
     ok(false, "request passed");
     finishTest();
-  }
+  };
   xhr.send();
 }
 

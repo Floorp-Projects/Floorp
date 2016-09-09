@@ -193,8 +193,9 @@ ContentSignatureVerifier::CreateContextInternal(const nsACString& aData,
   // Check the SAN
   Input hostnameInput;
 
-  result = hostnameInput.Init(uint8_t_ptr_cast(aName.BeginReading()),
-                              aName.Length());
+  result = hostnameInput.Init(
+    BitwiseCast<const uint8_t*, const char*>(aName.BeginReading()),
+    aName.Length());
   if (result != Success) {
     return NS_ERROR_FAILURE;
   }

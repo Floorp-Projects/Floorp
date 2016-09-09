@@ -44,7 +44,7 @@ var proxyAuthinfo = {
 // Force parent to not look for tab-modal prompts, as they're not used for auth prompts.
 isTabModal = false;
 
-const Cc_promptFac= Cc["@mozilla.org/passwordmanager/authpromptfactory;1"];
+const Cc_promptFac = Cc["@mozilla.org/passwordmanager/authpromptfactory;1"];
 ok(Cc_promptFac != null, "Access Cc[@mozilla.org/passwordmanager/authpromptfactory;1]");
 
 const Ci_promptFac = Ci.nsIPromptFactory;
@@ -86,7 +86,7 @@ var resolveCallback = SpecialPowers.wrapCallbackObject({
   QueryInterface : function (iid) {
     const interfaces = [Ci.nsIProtocolProxyCallback, Ci.nsISupports];
 
-    if (!interfaces.some( function(v) { return iid.equals(v) } ))
+    if (!interfaces.some( function(v) { return iid.equals(v); } ))
       throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
     return this;
   },
@@ -137,7 +137,7 @@ startup();
 add_task(function* setup() {
   info("Waiting for startup to complete...");
   yield startupComplete;
-})
+});
 
 add_task(function* test_noAutologin() {
   // test proxy login (default = no autologin), make sure it prompts.

@@ -25,10 +25,13 @@
     Cu.import("resource://testing-common/ContentTask.jsm");
     ContentTask.setTestScope(window.opener.wrappedJSObject);
 
+    var gPrefsvc = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+
     const SAMPLE_URL = "http://www.mozilla.org/";
     const SAMPLE_TEXT = "Some text in a text field.";
     const SEARCH_TEXT = "Text Test";
     const NOT_FOUND_TEXT = "This text is not on the page."
+    const ITERATOR_TIMEOUT = gPrefsvc.getIntPref("findbar.iteratorTimeout") + 20;
 
     var gFindBar = null;
     var gBrowser;
@@ -250,6 +253,8 @@
           }
         };
         gFindBar.browser.finder.addResultListener(listener);
+        // Make sure we resolve _at least_ after five times the find iterator timeout.
+        setTimeout(resolve, ITERATOR_TIMEOUT * 5);
       });
     }
 
@@ -368,9 +373,7 @@
       ok(!matchCaseCheckbox.hidden, "match case box is hidden in manual mode");
       ok(matchCaseLabel.hidden, "match case label is visible in manual mode");
 
-      var prefsvc = Cc["@mozilla.org/preferences-service;1"].
-                    getService(Components.interfaces.nsIPrefBranch);
-      prefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 2);
+      gPrefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 2);
 
       ok(matchCaseCheckbox.hidden,
          "match case box is visible in automatic mode");
@@ -388,7 +391,7 @@
       gFindBar.onFindAgainCommand();
       ok(matchCaseCheckbox.hidden && !matchCaseLabel.hidden,
          "bug 365551: case sensitivity UI is broken after find-again");
-      prefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 0);
+      gPrefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 0);
       gFindBar.close();
     }
 
@@ -519,6 +522,7 @@
       if (matchCase.checked) {
         promise = promiseFindResult();
         matchCase.click();
+        yield new Promise(resolve => setTimeout(resolve, ITERATOR_TIMEOUT));
         yield promise;
       }
 
@@ -553,15 +557,16 @@
         gFindBar._findField.select();
         gFindBar._findField.focus();
 
-        promise = promiseMatchesCountResult();
+        yield new Promise(resolve => setTimeout(resolve, ITERATOR_TIMEOUT));
         yield enterStringIntoFindField(test.text, false);
-        yield promise;
+        yield promiseMatchesCountResult();
         let matches = foundMatches.value.match(regex);
         if (!test.total) {
           ok(!matches, "No message should be shown when 0 matches are expected");
         } else {
           assertMatches(test, matches);
           for (let i = 1; i < test.total; i++) {
+            yield new Promise(resolve => setTimeout(resolve, ITERATOR_TIMEOUT));
             gFindBar.onFindAgainCommand();
             yield promiseMatchesCountResult();
             // test.current + 1, test.current + 2, ..., test.total, 1, ..., test.current
@@ -583,16 +588,14 @@
       yield enterStringIntoFindField(SEARCH_TEXT);
       gFindBar.clear();
 
-      let prefsvc = Cc["@mozilla.org/preferences-service;1"]
-                      .getService(Ci.nsIPrefBranch);
-      prefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 0);
+      gPrefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 0);
 
       yield enterStringIntoFindField("t");
       yield ContentTask.spawn(gBrowser, null, function* () {
         Assert.equal(content.getSelection().toString(), "T", "First T should be selected.");
       });
 
-      prefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 1);
+      gPrefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 1);
       yield ContentTask.spawn(gBrowser, null, function* () {
         Assert.equal(content.getSelection().toString(), "t", "First t should be selected.");
       });
@@ -602,16 +605,14 @@
     // 1. Do a search that fails with case sensitivity but matches with no case sensitivity.
     // 2. Uncheck case sensitivity button to match the string.
     function* testFailedStringReset() {
-      let prefsvc = Cc["@mozilla.org/preferences-service;1"].
-                    getService(Components.interfaces.nsIPrefBranch);
-      prefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 1);
+      gPrefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 1);
 
       yield enterStringIntoFindField(SEARCH_TEXT.toUpperCase(), false);
       yield ContentTask.spawn(gBrowser, null, function* () {
         Assert.equal(content.getSelection().toString(), "", "Not found.");
       });
 
-      prefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 0);
+      gPrefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 0);
       yield ContentTask.spawn(gBrowser, { SEARCH_TEXT }, function* (args) {
         Assert.equal(content.getSelection().toString(), args.SEARCH_TEXT,
           "Search text should be selected.");

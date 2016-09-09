@@ -50,6 +50,18 @@ pref(dom.details_element.enabled,false) == no-summary.html disabled-no-summary-r
 == details-page-break-before-1.html details-two-pages.html
 == details-page-break-before-2.html details-two-pages.html
 
+# With 'float' property
+== float-left-and-float-details.html float-left-and-float-details-ref.html
+== float-left-and-inflow-details.html float-left-and-inflow-details-ref.html
+== float-left-and-float-open-details.html float-left-and-float-open-details-ref.html
+== float-left-and-inflow-open-details.html float-left-and-inflow-open-details-ref.html
+== float-right-and-float-details.html float-right-and-float-details-ref.html
+== float-right-and-inflow-details.html float-right-and-inflow-details-ref.html
+== float-right-and-float-open-details.html float-right-and-float-open-details-ref.html
+== float-right-and-inflow-open-details.html float-right-and-inflow-open-details-ref.html
+== float-open-details-contains-float-left.html float-open-details-contains-float-left-ref.html
+== float-open-details-contains-float-right.html float-open-details-contains-float-right-ref.html
+
 # Various properties on details or summary
 == details-display-inline.html details-display-inline-ref.html
 == details-percentage-height-children.html details-percentage-height-children-ref.html

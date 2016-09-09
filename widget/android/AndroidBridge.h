@@ -501,9 +501,9 @@ private:
   void AddObservers();
   void RemoveObservers();
 
-  void UpdateAudioPlayingWindows(nsPIDOMWindowOuter* aWindow, bool aPlaying);
+  void UpdateAudioPlayingWindows(uint64_t aWindowId, bool aPlaying);
 
-  nsTArray<nsPIDOMWindowOuter*> mAudioPlayingWindows;
+  nsTArray<uint64_t> mAudioPlayingWindows;
 
 protected:
 };

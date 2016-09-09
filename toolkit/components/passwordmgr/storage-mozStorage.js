@@ -27,8 +27,7 @@ function Transaction(aDatabase) {
   try {
     this._db.beginTransaction();
     this._hasTransaction = true;
-  }
-  catch (e) { /* om nom nom exceptions */ }
+  } catch (e) { /* om nom nom exceptions */ }
 }
 
 Transaction.prototype = {
@@ -164,10 +163,6 @@ LoginManagerStorage_mozStorage.prototype = {
   },
 
 
-  /*
-   * initialize
-   *
-   */
   initialize : function () {
     this._dbStmts = {};
 
@@ -201,9 +196,7 @@ LoginManagerStorage_mozStorage.prototype = {
   },
 
 
-  /*
-   * terminate
-   *
+  /**
    * Internal method used by regression tests only.  It is called before
    * replacing this storage module with a new instance.
    */
@@ -212,10 +205,6 @@ LoginManagerStorage_mozStorage.prototype = {
   },
 
 
-  /*
-   * addLogin
-   *
-   */
   addLogin : function (login) {
     // Throws if there are bogus values.
     LoginHelper.checkLoginValues(login);
@@ -290,10 +279,6 @@ LoginManagerStorage_mozStorage.prototype = {
   },
 
 
-  /*
-   * removeLogin
-   *
-   */
   removeLogin : function (login) {
     let [idToDelete, storedLogin] = this._getIdForLogin(login);
     if (!idToDelete)
@@ -321,11 +306,6 @@ LoginManagerStorage_mozStorage.prototype = {
     LoginHelper.notifyStorageChanged("removeLogin", storedLogin);
   },
 
-
-  /*
-   * modifyLogin
-   *
-   */
   modifyLogin : function (oldLogin, newLoginData) {
     let [idToModify, oldStoredLogin] = this._getIdForLogin(oldLogin);
     if (!idToModify)
@@ -335,8 +315,7 @@ LoginManagerStorage_mozStorage.prototype = {
 
     // Check if the new GUID is duplicate.
     if (newLogin.guid != oldStoredLogin.guid &&
-        !this._isGuidUnique(newLogin.guid))
-    {
+        !this._isGuidUnique(newLogin.guid)) {
       throw new Error("specified GUID already exists");
     }
 
@@ -404,9 +383,7 @@ LoginManagerStorage_mozStorage.prototype = {
   },
 
 
-  /*
-   * getAllLogins
-   *
+  /**
    * Returns an array of nsILoginInfo.
    */
   getAllLogins : function (count) {
@@ -570,10 +547,8 @@ LoginManagerStorage_mozStorage.prototype = {
     return [logins, ids];
   },
 
-  /* storeDeletedLogin
-   *
+  /**
    * Moves a login to the deleted logins table
-   *
    */
   storeDeletedLogin : function(aLogin) {
     let stmt = null;
@@ -593,9 +568,7 @@ LoginManagerStorage_mozStorage.prototype = {
   },
 
 
-  /*
-   * removeAllLogins
-   *
+  /**
    * Removes all logins from storage.
    */
   removeAllLogins : function () {
@@ -626,10 +599,6 @@ LoginManagerStorage_mozStorage.prototype = {
   },
 
 
-  /*
-   * findLogins
-   *
-   */
   findLogins : function (count, hostname, formSubmitURL, httpRealm) {
     let loginData = {
       hostname: hostname,
@@ -651,10 +620,6 @@ LoginManagerStorage_mozStorage.prototype = {
   },
 
 
-  /*
-   * countLogins
-   *
-   */
   countLogins : function (hostname, formSubmitURL, httpRealm) {
 
     let _countLoginsHelper = (hostname, formSubmitURL, httpRealm) => {
@@ -689,25 +654,17 @@ LoginManagerStorage_mozStorage.prototype = {
   },
 
 
-  /*
-   * uiBusy
-   */
   get uiBusy() {
     return this._crypto.uiBusy;
   },
 
 
-  /*
-   * isLoggedIn
-   */
   get isLoggedIn() {
     return this._crypto.isLoggedIn;
   },
 
 
-  /*
-   * _getIdForLogin
-   *
+  /**
    * Returns an array with two items: [id, login]. If the login was not
    * found, both items will be null. The returned login contains the actual
    * stored login (useful for looking at the actual nsILoginMetaInfo values).
@@ -742,9 +699,7 @@ LoginManagerStorage_mozStorage.prototype = {
   },
 
 
-  /*
-   * _buildConditionsAndParams
-   *
+  /**
    * Adjusts the WHERE conditions and parameters for statements prior to the
    * statement being created. This fixes the cases where nulls are involved
    * and the empty string is supposed to be a wildcard match
@@ -777,9 +732,7 @@ LoginManagerStorage_mozStorage.prototype = {
   },
 
 
-  /*
-   * _isGuidUnique
-   *
+  /**
    * Checks to see if the specified GUID already exists.
    */
   _isGuidUnique : function (guid) {
@@ -803,9 +756,7 @@ LoginManagerStorage_mozStorage.prototype = {
   },
 
 
-  /*
-   * _encryptLogin
-   *
+  /**
    * Returns the encrypted username, password, and encrypton type for the specified
    * login. Can throw if the user cancels a master password entry.
    */
@@ -818,9 +769,7 @@ LoginManagerStorage_mozStorage.prototype = {
   },
 
 
-  /*
-   * _decryptLogins
-   *
+  /**
    * Decrypts username and password fields in the provided array of
    * logins.
    *
@@ -855,9 +804,7 @@ LoginManagerStorage_mozStorage.prototype = {
   //**************************************************************************//
   // Database Creation & Access
 
-  /*
-   * _dbCreateStatement
-   *
+  /**
    * Creates a statement, wraps it, and then does parameter replacement
    * Returns the wrapped statement for execution.  Will use memoization
    * so that statements can be reused.
@@ -878,9 +825,7 @@ LoginManagerStorage_mozStorage.prototype = {
   },
 
 
-  /*
-   * _dbInit
-   *
+  /**
    * Attempts to initialize the database. This creates the file if it doesn't
    * exist, performs any migrations, etc. Return if this is the first run.
    */
@@ -995,9 +940,7 @@ LoginManagerStorage_mozStorage.prototype = {
   },
 
 
-  /*
-   * _dbMigrateToVersion2
-   *
+  /**
    * Version 2 adds a GUID column. Existing logins are assigned a random GUID.
    */
   _dbMigrateToVersion2 : function () {
@@ -1051,9 +994,7 @@ LoginManagerStorage_mozStorage.prototype = {
   },
 
 
-  /*
-   * _dbMigrateToVersion3
-   *
+  /**
    * Version 3 adds a encType column.
    */
   _dbMigrateToVersion3 : function () {
@@ -1112,9 +1053,7 @@ LoginManagerStorage_mozStorage.prototype = {
   },
 
 
-  /*
-   * _dbMigrateToVersion4
-   *
+  /**
    * Version 4 adds timeCreated, timeLastUsed, timePasswordChanged,
    * and timesUsed columns
    */
@@ -1170,9 +1109,7 @@ LoginManagerStorage_mozStorage.prototype = {
   },
 
 
-  /*
-   * _dbMigrateToVersion5
-   *
+  /**
    * Version 5 adds the moz_deleted_logins table
    */
   _dbMigrateToVersion5 : function () {
@@ -1181,9 +1118,7 @@ LoginManagerStorage_mozStorage.prototype = {
     }
   },
 
-  /*
-   * _dbMigrateToVersion6
-   *
+  /**
    * Version 6 migrates all the hosts from
    * moz_disabledHosts to the permission manager.
    */
@@ -1219,9 +1154,7 @@ LoginManagerStorage_mozStorage.prototype = {
     this._dbConnection.executeSimpleSQL(query);
   },
 
-  /*
-   * _dbAreExpectedColumnsPresent
-   *
+  /**
    * Sanity check to ensure that the columns this version of the code expects
    * are present in the DB we're using.
    */
@@ -1267,9 +1200,7 @@ LoginManagerStorage_mozStorage.prototype = {
   },
 
 
-  /*
-   * _dbColumnExists
-   *
+  /**
    * Checks to see if the named column already exists.
    */
   _dbColumnExists : function (columnName) {
@@ -1303,14 +1234,12 @@ LoginManagerStorage_mozStorage.prototype = {
     this._dbConnection = null;
   },
 
-  /*
-   * _dbCleanup
-   *
+  /**
    * Called when database creation fails. Finalizes database statements,
    * closes the database connection, deletes the database file.
    */
   _dbCleanup : function (backup) {
-    this.log("Cleaning up DB file - close & remove & backup=" + backup)
+    this.log("Cleaning up DB file - close & remove & backup=" + backup);
 
     // Create backup file
     if (backup) {

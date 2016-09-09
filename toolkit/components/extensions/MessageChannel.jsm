@@ -145,7 +145,7 @@ class FilteringMessageManager {
     this.callback = callback;
     this.messageManager = messageManager;
 
-    this.messageManager.addMessageListener(this.messageName, this);
+    this.messageManager.addMessageListener(this.messageName, this, true);
 
     this.handlers = new Map();
   }
@@ -341,6 +341,11 @@ this.MessageChannel = {
   RESPONSE_ALL: 2,
 
   /**
+   * Fire-and-forget: The sender of this message does not expect a reply.
+   */
+  RESPONSE_NONE: 3,
+
+  /**
    * Initializes message handlers for the given message managers if needed.
    *
    * @param {[nsIMessageSender]} messageManagers
@@ -357,7 +362,7 @@ this.MessageChannel = {
   },
 
   /**
-   * Returns true if the peroperties of the `data` object match those in
+   * Returns true if the properties of the `data` object match those in
    * the `filter` object. Matching is done on a strict equality basis,
    * and the behavior varies depending on the value of the `strict`
    * parameter.
@@ -370,7 +375,7 @@ this.MessageChannel = {
    *    If true, all properties in the `filter` object have a
    *    corresponding property in `data` with the same value. If
    *    false, properties present in both objects must have the same
-   *    balue.
+   *    value.
    * @returns {boolean} True if the objects match.
    */
   matchesFilter(filter, data, strict = true) {
@@ -508,6 +513,17 @@ this.MessageChannel = {
     let channelId = `${gChannelId++}-${Services.appinfo.uniqueProcessID}`;
     let message = {messageName, channelId, sender, recipient, data, responseType};
 
+    if (responseType == this.RESPONSE_NONE) {
+      try {
+        target.sendAsyncMessage(MESSAGE_MESSAGE, message);
+      } catch (e) {
+        // Caller is not expecting a reply, so dump the error to the console.
+        Cu.reportError(e);
+        return Promise.reject(e);
+      }
+      return Promise.resolve();  // Not expecting any reply.
+    }
+
     let deferred = PromiseUtils.defer();
     deferred.sender = recipient;
     deferred.messageManager = target;
@@ -600,6 +616,19 @@ this.MessageChannel = {
     let {target} = data;
     if (!(target instanceof Ci.nsIMessageSender)) {
       target = target.messageManager;
+    }
+
+    if (data.responseType == this.RESPONSE_NONE) {
+      handlers.forEach(handler => {
+        // The sender expects no reply, so dump any errors to the console.
+        new Promise(resolve => {
+          resolve(handler.receiveMessage(data));
+        }).catch(e => {
+          Cu.reportError(e.stack ? `${e}\n${e.stack}` : e.message || e);
+        });
+      });
+      // Note: Unhandled messages are silently dropped.
+      return;
     }
 
     let deferred = {

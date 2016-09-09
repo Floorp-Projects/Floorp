@@ -12,15 +12,16 @@
 #ifndef BackgroundFileSaver_h__
 #define BackgroundFileSaver_h__
 
+#include "ScopedNSSTypes.h"
 #include "mozilla/Mutex.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
-#include "nsNSSShutDown.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsIBackgroundFileSaver.h"
 #include "nsIStreamListener.h"
+#include "nsNSSShutDown.h"
 #include "nsStreamUtils.h"
-#include "ScopedNSSTypes.h"
+#include "nsString.h"
 
 class nsIAsyncInputStream;
 class nsIThread;

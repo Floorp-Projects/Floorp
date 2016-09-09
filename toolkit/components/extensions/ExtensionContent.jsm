@@ -263,9 +263,6 @@ class ExtensionContext extends BaseContext {
 
     this.scripts = [];
 
-    let mm = getWindowMessageManager(contentWindow);
-    this.messageManager = mm;
-
     let prin;
     let contentPrincipal = contentWindow.document.nodePrincipal;
     let ssm = Services.scriptSecurityManager;
@@ -324,19 +321,13 @@ class ExtensionContext extends BaseContext {
       `, this.sandbox);
     }
 
-    let delegate = {
-      getSender(context, target, sender) {
-        // Nothing to do here.
-      },
-    };
-
     let url = contentWindow.location.href;
     // The |sender| parameter is passed directly to the extension.
     let sender = {id: this.extension.uuid, frameId, url};
     // Properties in |filter| must match those in the |recipient|
     // parameter of sendMessage.
     let filter = {extensionId: this.extension.id, frameId};
-    this.messenger = new Messenger(this, [mm], sender, filter, delegate);
+    this.messenger = new Messenger(this, [this.messageManager], sender, filter);
 
     this.chromeObj = Cu.createObjectIn(this.sandbox, {defineAs: "browser"});
 
@@ -346,7 +337,7 @@ class ExtensionContext extends BaseContext {
 
     let localApis = {};
     apiManager.generateAPIs(this, localApis);
-    this.childManager = new ChildAPIManager(this, mm, localApis, {
+    this.childManager = new ChildAPIManager(this, this.messageManager, localApis, {
       type: "content_script",
       url,
     });
