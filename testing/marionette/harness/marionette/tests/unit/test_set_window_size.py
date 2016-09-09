@@ -55,7 +55,7 @@ class TestSetWindowSize(MarionetteTestCase):
                          "New height is %s but should be %s" % (size['height'], height))
 
     def test_possible_to_request_window_larger_than_screen(self):
-        self.marionette.set_window_size(100000, 100000)
+        self.marionette.set_window_size(4 * self.max_width, 4 * self.max_height)
         size = self.marionette.window_size
 
         # In X the window size may be greater than the bounds of the screen
