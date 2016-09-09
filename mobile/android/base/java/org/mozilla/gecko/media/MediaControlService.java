@@ -34,7 +34,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
 
     public static final String ACTION_INIT           = "action_init";
     public static final String ACTION_START          = "action_start";
-    public static final String ACTION_PLAY           = "action_play";
+    public static final String ACTION_RESUME         = "action_resume";
     public static final String ACTION_PAUSE          = "action_pause";
     public static final String ACTION_STOP           = "action_stop";
     public static final String ACTION_REMOVE_CONTROL = "action_remove_control";
@@ -163,14 +163,14 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
             case ACTION_START :
                 mController.getTransportControls().sendCustomAction(ACTION_START, null);
                 break;
-            case ACTION_PLAY :
+            case ACTION_RESUME :
                 mController.getTransportControls().play();
                 break;
             case ACTION_PAUSE :
                 mController.getTransportControls().pause();
                 break;
             case ACTION_STOP :
-                if (!mActionState.equals(ACTION_PLAY)) {
+                if (!mActionState.equals(ACTION_RESUME)) {
                     return;
                 }
                 mController.getTransportControls().stop();
@@ -190,7 +190,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
 
                     // If media is playing, we just need to create or remove
                     // the media control interface.
-                    if (mActionState.equals(ACTION_PLAY)) {
+                    if (mActionState.equals(ACTION_RESUME)) {
                         notifyControlInterfaceChanged(mIsMediaControlPrefOn ?
                             ACTION_PAUSE : ACTION_REMOVE_CONTROL);
                     }
@@ -223,7 +223,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                 if (action.equals(ACTION_START)) {
                     Log.d(LOGTAG, "Controller, onStart");
                     notifyControlInterfaceChanged(ACTION_PAUSE);
-                    mActionState = ACTION_PLAY;
+                    mActionState = ACTION_RESUME;
                 }
             }
 
@@ -233,14 +233,14 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                 super.onPlay();
                 notifyControlInterfaceChanged(ACTION_PAUSE);
                 notifyObservers("MediaControl", "resumeMedia");
-                mActionState = ACTION_PLAY;
+                mActionState = ACTION_RESUME;
             }
 
             @Override
             public void onPause() {
                 Log.d(LOGTAG, "Controller, onPause");
                 super.onPause();
-                notifyControlInterfaceChanged(ACTION_PLAY);
+                notifyControlInterfaceChanged(ACTION_RESUME);
                 notifyObservers("MediaControl", "mediaControlPaused");
                 mActionState = ACTION_PAUSE;
             }
@@ -338,7 +338,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
     }
 
     private Notification.Action createNotificationAction(String action) {
-        boolean isPlayAction = action.equals(ACTION_PLAY);
+        boolean isPlayAction = action.equals(ACTION_RESUME);
 
         int icon = isPlayAction ? R.drawable.ic_media_play : R.drawable.ic_media_pause;
         String title = getString(isPlayAction ? R.string.media_play : R.string.media_pause);
