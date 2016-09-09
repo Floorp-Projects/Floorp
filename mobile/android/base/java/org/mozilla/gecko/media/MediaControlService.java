@@ -395,6 +395,5 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                 paint);
 
         return coverArt;
-
     }
 }
