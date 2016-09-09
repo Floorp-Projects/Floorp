@@ -49,5 +49,5 @@ class TestSSLDisabledErrorPage(FirefoxTestCase):
             reset_button.click()
 
             # With the preferences reset, the page has to load correctly
-            Wait(self.marionette).until(expected.element_present(By.LINK_TEXT,
-                                                                 'http://quality.mozilla.org'))
+            Wait(self.marionette, timeout=self.browser.timeout_page_load).until(
+                expected.element_present(By.LINK_TEXT, 'http://quality.mozilla.org'))
