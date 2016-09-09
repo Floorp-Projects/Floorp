@@ -35,6 +35,11 @@ NS_IMETHODIMP MediaError::GetCode(uint16_t* aCode)
   return NS_OK;
 }
 
+NS_IMETHODIMP MediaError::GetMessage(nsAString& aResult)
+{
+  return NS_OK;
+}
+
 JSObject*
 MediaError::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
