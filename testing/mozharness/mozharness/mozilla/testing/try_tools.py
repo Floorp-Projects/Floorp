@@ -83,27 +83,12 @@ class TryToolsMixin(TransferMixin):
                 msg = self.buildbot_config['sourcestamp']['changes'][-1]['comments']
 
             if msg is None or len(msg) == 1024:
-                # This commit message was potentially truncated or not available in
-                # buildbot_config (e.g. if running in TaskCluster), get the full message
+                # This commit message was potentially truncated, get the full message
                 # from hg.
                 props = self.buildbot_config['properties']
-                repo_url = 'https://hg.mozilla.org/%s/'
-                if 'revision' in props and 'repo_path' in props:
-                    rev = props['revision']
-                    repo_path = props['repo_path']
-                else:
-                    # In TaskCluster we have no buildbot props, rely on env vars instead
-                    rev = os.environ.get('GECKO_HEAD_REV')
-                    repo_path = self.config.get('branch')
-                if repo_path:
-                    repo_url = repo_url % repo_path
-                else:
-                    repo_url = os.environ.get('GECKO_HEAD_REPOSITORY',
-                                              repo_url % 'try')
-                if not repo_url.endswith('/'):
-                    repo_url += '/'
-
-                url = '{}json-pushes?changeset={}&full=1'.format(repo_url, rev)
+                rev = props['revision']
+                repo = props['repo_path']
+                url = 'https://hg.mozilla.org/%s/json-pushes?changeset=%s&full=1' % (repo, rev)
 
                 pushinfo = self.load_json_from_url(url)
                 for k, v in pushinfo.items():
@@ -114,41 +99,8 @@ class TryToolsMixin(TransferMixin):
                 # If we don't find try syntax in the usual place, check for it in an
                 # alternate property available to tools using self-serve.
                 msg = self.buildbot_config['properties']['try_syntax']
-        if not msg:
-            self.warning('Try message not found.')
+
         return msg
-
-    def _extract_try_args(self, msg):
-        """ Returns a list of args from a try message, for parsing """
-        if not msg:
-            return None
-        all_try_args = None
-        for line in msg.splitlines():
-            if 'try: ' in line:
-                # Autoland adds quotes to try strings that will confuse our
-                # args later on.
-                if line.startswith('"') and line.endswith('"'):
-                    line = line[1:-1]
-                # Allow spaces inside of [filter expressions]
-                try_message = line.strip().split('try: ', 1)
-                all_try_args = re.findall(r'(?:\[.*?\]|\S)+', try_message[1])
-                break
-        if not all_try_args:
-            self.warning('Try syntax not found in: %s.' % msg )
-        return all_try_args
-
-    def try_message_has_flag(self, flag, message=None):
-        """
-        Returns True if --`flag` is present in message.
-        """
-        parser = argparse.ArgumentParser()
-        parser.add_argument('--' + flag, action='store_true')
-        message = message or self._extract_try_message()
-        if not message:
-            return False
-        msg_list = self._extract_try_args(message)
-        args, _ = parser.parse_known_args(msg_list)
-        return getattr(args, flag, False)
 
     @PostScriptAction('download-and-extract')
     def set_extra_try_arguments(self, action, success=None):
@@ -165,9 +117,23 @@ class TryToolsMixin(TransferMixin):
         if not msg:
             return
 
-        all_try_args = self._extract_try_args(msg)
+        all_try_args = None
+        for line in msg.splitlines():
+            if 'try: ' in line:
+                # Autoland adds quotes to try strings that will confuse our
+                # args later on.
+                if line.startswith('"') and line.endswith('"'):
+                    line = line[1:-1]
+                # Allow spaces inside of [filter expressions]
+                try_message = line.strip().split('try: ', 1)
+                all_try_args = re.findall(r'(?:\[.*?\]|\S)+', try_message[1])
+                break
+
         if not all_try_args:
+            self.warning('Try syntax not found in buildbot config, unable to append '
+                         'arguments from try.')
             return
+
 
         parser = argparse.ArgumentParser(
             description=('Parse an additional subset of arguments passed to try syntax'
