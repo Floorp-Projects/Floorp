@@ -45,7 +45,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1020244
 
   let members = ["getTextContentForElement", "setTextContentForElement",
                  "getAttributeForElement", "setAttributeForElement",
-                 "removeAttributeForElement", "getCanvasContext"];
+                 "removeAttributeForElement", "getCanvasContext",
+                 "setAnimationForElement"];
   for (let member of members) {
     ok(member in anonymousContent, "AnonymousContent object defines " + member);
   }

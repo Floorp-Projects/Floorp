@@ -30,69 +30,68 @@
  * NSS-defined object classes
  *
  */
-#define CKO_NSS (CKO_VENDOR_DEFINED|NSSCK_VENDOR_NSS)
+#define CKO_NSS (CKO_VENDOR_DEFINED | NSSCK_VENDOR_NSS)
 
-#define CKO_NSS_CRL                (CKO_NSS + 1)
-#define CKO_NSS_SMIME              (CKO_NSS + 2)
-#define CKO_NSS_TRUST              (CKO_NSS + 3)
-#define CKO_NSS_BUILTIN_ROOT_LIST  (CKO_NSS + 4)
-#define CKO_NSS_NEWSLOT            (CKO_NSS + 5)
-#define CKO_NSS_DELSLOT            (CKO_NSS + 6)
-
+#define CKO_NSS_CRL (CKO_NSS + 1)
+#define CKO_NSS_SMIME (CKO_NSS + 2)
+#define CKO_NSS_TRUST (CKO_NSS + 3)
+#define CKO_NSS_BUILTIN_ROOT_LIST (CKO_NSS + 4)
+#define CKO_NSS_NEWSLOT (CKO_NSS + 5)
+#define CKO_NSS_DELSLOT (CKO_NSS + 6)
 
 /*
  * NSS-defined key types
  *
  */
-#define CKK_NSS (CKK_VENDOR_DEFINED|NSSCK_VENDOR_NSS)
+#define CKK_NSS (CKK_VENDOR_DEFINED | NSSCK_VENDOR_NSS)
 
-#define CKK_NSS_PKCS8              (CKK_NSS + 1)
+#define CKK_NSS_PKCS8 (CKK_NSS + 1)
 
-#define CKK_NSS_JPAKE_ROUND1       (CKK_NSS + 2)
-#define CKK_NSS_JPAKE_ROUND2       (CKK_NSS + 3)
+#define CKK_NSS_JPAKE_ROUND1 (CKK_NSS + 2)
+#define CKK_NSS_JPAKE_ROUND2 (CKK_NSS + 3)
 
-#define CKK_NSS_CHACHA20           (CKK_NSS + 4)
+#define CKK_NSS_CHACHA20 (CKK_NSS + 4)
 
 /*
  * NSS-defined certificate types
  *
  */
-#define CKC_NSS (CKC_VENDOR_DEFINED|NSSCK_VENDOR_NSS)
+#define CKC_NSS (CKC_VENDOR_DEFINED | NSSCK_VENDOR_NSS)
 
 /* FAKE PKCS #11 defines */
-#define CKA_DIGEST            0x81000000L
-#define CKA_FLAGS_ONLY        0 /* CKA_CLASS */
+#define CKA_DIGEST 0x81000000L
+#define CKA_FLAGS_ONLY 0 /* CKA_CLASS */
 
 /*
  * NSS-defined object attributes
  *
  */
-#define CKA_NSS (CKA_VENDOR_DEFINED|NSSCK_VENDOR_NSS)
+#define CKA_NSS (CKA_VENDOR_DEFINED | NSSCK_VENDOR_NSS)
 
-#define CKA_NSS_URL                (CKA_NSS +  1)
-#define CKA_NSS_EMAIL              (CKA_NSS +  2)
-#define CKA_NSS_SMIME_INFO         (CKA_NSS +  3)
-#define CKA_NSS_SMIME_TIMESTAMP    (CKA_NSS +  4)
-#define CKA_NSS_PKCS8_SALT         (CKA_NSS +  5)
-#define CKA_NSS_PASSWORD_CHECK     (CKA_NSS +  6)
-#define CKA_NSS_EXPIRES            (CKA_NSS +  7)
-#define CKA_NSS_KRL                (CKA_NSS +  8)
+#define CKA_NSS_URL (CKA_NSS + 1)
+#define CKA_NSS_EMAIL (CKA_NSS + 2)
+#define CKA_NSS_SMIME_INFO (CKA_NSS + 3)
+#define CKA_NSS_SMIME_TIMESTAMP (CKA_NSS + 4)
+#define CKA_NSS_PKCS8_SALT (CKA_NSS + 5)
+#define CKA_NSS_PASSWORD_CHECK (CKA_NSS + 6)
+#define CKA_NSS_EXPIRES (CKA_NSS + 7)
+#define CKA_NSS_KRL (CKA_NSS + 8)
 
-#define CKA_NSS_PQG_COUNTER        (CKA_NSS +  20)
-#define CKA_NSS_PQG_SEED           (CKA_NSS +  21)
-#define CKA_NSS_PQG_H              (CKA_NSS +  22)
-#define CKA_NSS_PQG_SEED_BITS      (CKA_NSS +  23)
-#define CKA_NSS_MODULE_SPEC        (CKA_NSS +  24)
-#define CKA_NSS_OVERRIDE_EXTENSIONS (CKA_NSS +  25)
+#define CKA_NSS_PQG_COUNTER (CKA_NSS + 20)
+#define CKA_NSS_PQG_SEED (CKA_NSS + 21)
+#define CKA_NSS_PQG_H (CKA_NSS + 22)
+#define CKA_NSS_PQG_SEED_BITS (CKA_NSS + 23)
+#define CKA_NSS_MODULE_SPEC (CKA_NSS + 24)
+#define CKA_NSS_OVERRIDE_EXTENSIONS (CKA_NSS + 25)
 
-#define CKA_NSS_JPAKE_SIGNERID     (CKA_NSS +  26)
-#define CKA_NSS_JPAKE_PEERID       (CKA_NSS +  27)
-#define CKA_NSS_JPAKE_GX1          (CKA_NSS +  28)
-#define CKA_NSS_JPAKE_GX2          (CKA_NSS +  29)
-#define CKA_NSS_JPAKE_GX3          (CKA_NSS +  30)
-#define CKA_NSS_JPAKE_GX4          (CKA_NSS +  31)
-#define CKA_NSS_JPAKE_X2           (CKA_NSS +  32)
-#define CKA_NSS_JPAKE_X2S          (CKA_NSS +  33)
+#define CKA_NSS_JPAKE_SIGNERID (CKA_NSS + 26)
+#define CKA_NSS_JPAKE_PEERID (CKA_NSS + 27)
+#define CKA_NSS_JPAKE_GX1 (CKA_NSS + 28)
+#define CKA_NSS_JPAKE_GX2 (CKA_NSS + 29)
+#define CKA_NSS_JPAKE_GX3 (CKA_NSS + 30)
+#define CKA_NSS_JPAKE_GX4 (CKA_NSS + 31)
+#define CKA_NSS_JPAKE_X2 (CKA_NSS + 32)
+#define CKA_NSS_JPAKE_X2S (CKA_NSS + 33)
 
 /*
  * Trust attributes:
@@ -104,52 +103,52 @@
 #define CKA_TRUST (CKA_NSS + 0x2000)
 
 /* "Usage" key information */
-#define CKA_TRUST_DIGITAL_SIGNATURE     (CKA_TRUST +  1)
-#define CKA_TRUST_NON_REPUDIATION       (CKA_TRUST +  2)
-#define CKA_TRUST_KEY_ENCIPHERMENT      (CKA_TRUST +  3)
-#define CKA_TRUST_DATA_ENCIPHERMENT     (CKA_TRUST +  4)
-#define CKA_TRUST_KEY_AGREEMENT         (CKA_TRUST +  5)
-#define CKA_TRUST_KEY_CERT_SIGN         (CKA_TRUST +  6)
-#define CKA_TRUST_CRL_SIGN              (CKA_TRUST +  7)
+#define CKA_TRUST_DIGITAL_SIGNATURE (CKA_TRUST + 1)
+#define CKA_TRUST_NON_REPUDIATION (CKA_TRUST + 2)
+#define CKA_TRUST_KEY_ENCIPHERMENT (CKA_TRUST + 3)
+#define CKA_TRUST_DATA_ENCIPHERMENT (CKA_TRUST + 4)
+#define CKA_TRUST_KEY_AGREEMENT (CKA_TRUST + 5)
+#define CKA_TRUST_KEY_CERT_SIGN (CKA_TRUST + 6)
+#define CKA_TRUST_CRL_SIGN (CKA_TRUST + 7)
 
 /* "Purpose" trust information */
-#define CKA_TRUST_SERVER_AUTH           (CKA_TRUST +  8)
-#define CKA_TRUST_CLIENT_AUTH           (CKA_TRUST +  9)
-#define CKA_TRUST_CODE_SIGNING          (CKA_TRUST + 10)
-#define CKA_TRUST_EMAIL_PROTECTION      (CKA_TRUST + 11)
-#define CKA_TRUST_IPSEC_END_SYSTEM      (CKA_TRUST + 12)
-#define CKA_TRUST_IPSEC_TUNNEL          (CKA_TRUST + 13)
-#define CKA_TRUST_IPSEC_USER            (CKA_TRUST + 14)
-#define CKA_TRUST_TIME_STAMPING         (CKA_TRUST + 15)
-#define CKA_TRUST_STEP_UP_APPROVED      (CKA_TRUST + 16)
+#define CKA_TRUST_SERVER_AUTH (CKA_TRUST + 8)
+#define CKA_TRUST_CLIENT_AUTH (CKA_TRUST + 9)
+#define CKA_TRUST_CODE_SIGNING (CKA_TRUST + 10)
+#define CKA_TRUST_EMAIL_PROTECTION (CKA_TRUST + 11)
+#define CKA_TRUST_IPSEC_END_SYSTEM (CKA_TRUST + 12)
+#define CKA_TRUST_IPSEC_TUNNEL (CKA_TRUST + 13)
+#define CKA_TRUST_IPSEC_USER (CKA_TRUST + 14)
+#define CKA_TRUST_TIME_STAMPING (CKA_TRUST + 15)
+#define CKA_TRUST_STEP_UP_APPROVED (CKA_TRUST + 16)
 
-#define CKA_CERT_SHA1_HASH	        (CKA_TRUST + 100)
-#define CKA_CERT_MD5_HASH		(CKA_TRUST + 101)
+#define CKA_CERT_SHA1_HASH (CKA_TRUST + 100)
+#define CKA_CERT_MD5_HASH (CKA_TRUST + 101)
 
 /* NSS trust stuff */
 
 /* HISTORICAL: define used to pass in the database key for DSA private keys */
-#define CKA_NETSCAPE_DB                 0xD5A0DB00L
-#define CKA_NETSCAPE_TRUST              0x80000001L
+#define CKA_NETSCAPE_DB 0xD5A0DB00L
+#define CKA_NETSCAPE_TRUST 0x80000001L
 
 /* FAKE PKCS #11 defines */
-#define CKM_FAKE_RANDOM       0x80000efeUL
+#define CKM_FAKE_RANDOM 0x80000efeUL
 #define CKM_INVALID_MECHANISM 0xffffffffUL
 
 /*
  * NSS-defined crypto mechanisms
  *
  */
-#define CKM_NSS (CKM_VENDOR_DEFINED|NSSCK_VENDOR_NSS)
+#define CKM_NSS (CKM_VENDOR_DEFINED | NSSCK_VENDOR_NSS)
 
-#define CKM_NSS_AES_KEY_WRAP      (CKM_NSS + 1)
-#define CKM_NSS_AES_KEY_WRAP_PAD  (CKM_NSS + 2)
+#define CKM_NSS_AES_KEY_WRAP (CKM_NSS + 1)
+#define CKM_NSS_AES_KEY_WRAP_PAD (CKM_NSS + 2)
 
 /* HKDF key derivation mechanisms. See CK_NSS_HKDFParams for documentation. */
-#define CKM_NSS_HKDF_SHA1         (CKM_NSS + 3)
-#define CKM_NSS_HKDF_SHA256       (CKM_NSS + 4)
-#define CKM_NSS_HKDF_SHA384       (CKM_NSS + 5)
-#define CKM_NSS_HKDF_SHA512       (CKM_NSS + 6)
+#define CKM_NSS_HKDF_SHA1 (CKM_NSS + 3)
+#define CKM_NSS_HKDF_SHA256 (CKM_NSS + 4)
+#define CKM_NSS_HKDF_SHA384 (CKM_NSS + 5)
+#define CKM_NSS_HKDF_SHA512 (CKM_NSS + 6)
 
 /* J-PAKE round 1 key generation mechanisms.
  *
@@ -160,7 +159,7 @@
  * Parameter type: CK_NSS_JPAKERound1Params
  *
  */
-#define CKM_NSS_JPAKE_ROUND1_SHA1   (CKM_NSS + 7)
+#define CKM_NSS_JPAKE_ROUND1_SHA1 (CKM_NSS + 7)
 #define CKM_NSS_JPAKE_ROUND1_SHA256 (CKM_NSS + 8)
 #define CKM_NSS_JPAKE_ROUND1_SHA384 (CKM_NSS + 9)
 #define CKM_NSS_JPAKE_ROUND1_SHA512 (CKM_NSS + 10)
@@ -173,7 +172,7 @@
  * Output key class: CKO_PRIVATE_KEY
  * Parameter type: CK_NSS_JPAKERound2Params
  */
-#define CKM_NSS_JPAKE_ROUND2_SHA1   (CKM_NSS + 11)
+#define CKM_NSS_JPAKE_ROUND2_SHA1 (CKM_NSS + 11)
 #define CKM_NSS_JPAKE_ROUND2_SHA256 (CKM_NSS + 12)
 #define CKM_NSS_JPAKE_ROUND2_SHA384 (CKM_NSS + 13)
 #define CKM_NSS_JPAKE_ROUND2_SHA512 (CKM_NSS + 14)
@@ -188,10 +187,10 @@
  * You must apply a KDF (e.g. CKM_NSS_HKDF_*) to resultant keying material
  * to get a key with uniformly distributed bits.
  */
-#define CKM_NSS_JPAKE_FINAL_SHA1    (CKM_NSS + 15)
-#define CKM_NSS_JPAKE_FINAL_SHA256  (CKM_NSS + 16)
-#define CKM_NSS_JPAKE_FINAL_SHA384  (CKM_NSS + 17)
-#define CKM_NSS_JPAKE_FINAL_SHA512  (CKM_NSS + 18)
+#define CKM_NSS_JPAKE_FINAL_SHA1 (CKM_NSS + 15)
+#define CKM_NSS_JPAKE_FINAL_SHA256 (CKM_NSS + 16)
+#define CKM_NSS_JPAKE_FINAL_SHA384 (CKM_NSS + 17)
+#define CKM_NSS_JPAKE_FINAL_SHA512 (CKM_NSS + 18)
 
 /* Constant-time MAC mechanisms:
  *
@@ -207,21 +206,21 @@
  *
  * Parameter type: CK_NSS_MAC_CONSTANT_TIME_PARAMS
  */
-#define CKM_NSS_HMAC_CONSTANT_TIME      (CKM_NSS + 19)
-#define CKM_NSS_SSL3_MAC_CONSTANT_TIME  (CKM_NSS + 20)
+#define CKM_NSS_HMAC_CONSTANT_TIME (CKM_NSS + 19)
+#define CKM_NSS_SSL3_MAC_CONSTANT_TIME (CKM_NSS + 20)
 
 /* TLS 1.2 mechanisms */
-#define CKM_NSS_TLS_PRF_GENERAL_SHA256          (CKM_NSS + 21)
-#define CKM_NSS_TLS_MASTER_KEY_DERIVE_SHA256    (CKM_NSS + 22)
-#define CKM_NSS_TLS_KEY_AND_MAC_DERIVE_SHA256   (CKM_NSS + 23)
+#define CKM_NSS_TLS_PRF_GENERAL_SHA256 (CKM_NSS + 21)
+#define CKM_NSS_TLS_MASTER_KEY_DERIVE_SHA256 (CKM_NSS + 22)
+#define CKM_NSS_TLS_KEY_AND_MAC_DERIVE_SHA256 (CKM_NSS + 23)
 #define CKM_NSS_TLS_MASTER_KEY_DERIVE_DH_SHA256 (CKM_NSS + 24)
 
 /* TLS extended master secret derivation */
-#define CKM_NSS_TLS_EXTENDED_MASTER_KEY_DERIVE    (CKM_NSS + 25)
+#define CKM_NSS_TLS_EXTENDED_MASTER_KEY_DERIVE (CKM_NSS + 25)
 #define CKM_NSS_TLS_EXTENDED_MASTER_KEY_DERIVE_DH (CKM_NSS + 26)
 
-#define CKM_NSS_CHACHA20_KEY_GEN                (CKM_NSS + 27)
-#define CKM_NSS_CHACHA20_POLY1305               (CKM_NSS + 28)
+#define CKM_NSS_CHACHA20_KEY_GEN (CKM_NSS + 27)
+#define CKM_NSS_CHACHA20_POLY1305 (CKM_NSS + 28)
 
 /*
  * HISTORICAL:
@@ -229,25 +228,25 @@
  * PKCS #11 interface. Most of these are place holders for other mechanism
  * and will change in the future.
  */
-#define CKM_NETSCAPE_PBE_SHA1_DES_CBC           0x80000002UL
-#define CKM_NETSCAPE_PBE_SHA1_TRIPLE_DES_CBC    0x80000003UL
-#define CKM_NETSCAPE_PBE_SHA1_40_BIT_RC2_CBC    0x80000004UL
-#define CKM_NETSCAPE_PBE_SHA1_128_BIT_RC2_CBC   0x80000005UL
-#define CKM_NETSCAPE_PBE_SHA1_40_BIT_RC4        0x80000006UL
-#define CKM_NETSCAPE_PBE_SHA1_128_BIT_RC4       0x80000007UL
-#define CKM_NETSCAPE_PBE_SHA1_FAULTY_3DES_CBC   0x80000008UL
-#define CKM_NETSCAPE_PBE_SHA1_HMAC_KEY_GEN      0x80000009UL
-#define CKM_NETSCAPE_PBE_MD5_HMAC_KEY_GEN       0x8000000aUL
-#define CKM_NETSCAPE_PBE_MD2_HMAC_KEY_GEN       0x8000000bUL
+#define CKM_NETSCAPE_PBE_SHA1_DES_CBC 0x80000002UL
+#define CKM_NETSCAPE_PBE_SHA1_TRIPLE_DES_CBC 0x80000003UL
+#define CKM_NETSCAPE_PBE_SHA1_40_BIT_RC2_CBC 0x80000004UL
+#define CKM_NETSCAPE_PBE_SHA1_128_BIT_RC2_CBC 0x80000005UL
+#define CKM_NETSCAPE_PBE_SHA1_40_BIT_RC4 0x80000006UL
+#define CKM_NETSCAPE_PBE_SHA1_128_BIT_RC4 0x80000007UL
+#define CKM_NETSCAPE_PBE_SHA1_FAULTY_3DES_CBC 0x80000008UL
+#define CKM_NETSCAPE_PBE_SHA1_HMAC_KEY_GEN 0x80000009UL
+#define CKM_NETSCAPE_PBE_MD5_HMAC_KEY_GEN 0x8000000aUL
+#define CKM_NETSCAPE_PBE_MD2_HMAC_KEY_GEN 0x8000000bUL
 
-#define CKM_TLS_PRF_GENERAL                     0x80000373UL
+#define CKM_TLS_PRF_GENERAL 0x80000373UL
 
 typedef struct CK_NSS_JPAKEPublicValue {
-    CK_BYTE * pGX;
+    CK_BYTE *pGX;
     CK_ULONG ulGXLen;
-    CK_BYTE * pGV;
+    CK_BYTE *pGV;
     CK_ULONG ulGVLen;
-    CK_BYTE * pR;
+    CK_BYTE *pR;
     CK_ULONG ulRLen;
 } CK_NSS_JPAKEPublicValue;
 
@@ -257,7 +256,7 @@ typedef struct CK_NSS_JPAKERound1Params {
 } CK_NSS_JPAKERound1Params;
 
 typedef struct CK_NSS_JPAKERound2Params {
-    CK_BYTE * pSharedKey;        /* in */
+    CK_BYTE *pSharedKey;         /* in */
     CK_ULONG ulSharedKeyLen;     /* in */
     CK_NSS_JPAKEPublicValue gx3; /* in */
     CK_NSS_JPAKEPublicValue gx4; /* in */
@@ -284,28 +283,28 @@ typedef struct CK_NSS_JPAKEFinalParams {
  * record to something considerably less than 2^32 bytes.
  */
 typedef struct CK_NSS_MAC_CONSTANT_TIME_PARAMS {
-    CK_MECHANISM_TYPE macAlg;   /* in */
-    CK_ULONG ulBodyTotalLen;    /* in */
-    CK_BYTE * pHeader;          /* in */
-    CK_ULONG ulHeaderLen;       /* in */
+    CK_MECHANISM_TYPE macAlg; /* in */
+    CK_ULONG ulBodyTotalLen;  /* in */
+    CK_BYTE *pHeader;         /* in */
+    CK_ULONG ulHeaderLen;     /* in */
 } CK_NSS_MAC_CONSTANT_TIME_PARAMS;
 
 typedef struct CK_NSS_AEAD_PARAMS {
-    CK_BYTE_PTR  pNonce;
-    CK_ULONG     ulNonceLen;
-    CK_BYTE_PTR  pAAD;
-    CK_ULONG     ulAADLen;
-    CK_ULONG     ulTagLen;
+    CK_BYTE_PTR pNonce;
+    CK_ULONG ulNonceLen;
+    CK_BYTE_PTR pAAD;
+    CK_ULONG ulAADLen;
+    CK_ULONG ulTagLen;
 } CK_NSS_AEAD_PARAMS;
 
 /*
  * NSS-defined return values
  *
  */
-#define CKR_NSS (CKM_VENDOR_DEFINED|NSSCK_VENDOR_NSS)
+#define CKR_NSS (CKM_VENDOR_DEFINED | NSSCK_VENDOR_NSS)
 
-#define CKR_NSS_CERTDB_FAILED      (CKR_NSS + 1)
-#define CKR_NSS_KEYDB_FAILED       (CKR_NSS + 2)
+#define CKR_NSS_CERTDB_FAILED (CKR_NSS + 1)
+#define CKR_NSS_KEYDB_FAILED (CKR_NSS + 2)
 
 /* Mandatory parameter for the CKM_NSS_HKDF_* key deriviation mechanisms.
    See RFC 5869.
@@ -358,7 +357,6 @@ typedef struct CK_NSS_TLS_EXTENDED_MASTER_KEY_DERIVE_PARAMS {
     CK_VERSION_PTR pVersion;
 } CK_NSS_TLS_EXTENDED_MASTER_KEY_DERIVE_PARAMS;
 
-
 /*
  * Trust info
  *
@@ -369,26 +367,25 @@ typedef struct CK_NSS_TLS_EXTENDED_MASTER_KEY_DERIVE_PARAMS {
  * vendor space, like everything else.
  */
 
-typedef CK_ULONG          CK_TRUST;
+typedef CK_ULONG CK_TRUST;
 
 /* The following trust types are defined: */
-#define CKT_VENDOR_DEFINED     0x80000000
+#define CKT_VENDOR_DEFINED 0x80000000
 
-#define CKT_NSS (CKT_VENDOR_DEFINED|NSSCK_VENDOR_NSS)
+#define CKT_NSS (CKT_VENDOR_DEFINED | NSSCK_VENDOR_NSS)
 
 /* If trust goes standard, these'll probably drop out of vendor space. */
-#define CKT_NSS_TRUSTED            (CKT_NSS + 1)
-#define CKT_NSS_TRUSTED_DELEGATOR  (CKT_NSS + 2)
-#define CKT_NSS_MUST_VERIFY_TRUST  (CKT_NSS + 3)
-#define CKT_NSS_NOT_TRUSTED        (CKT_NSS + 10)
-#define CKT_NSS_TRUST_UNKNOWN      (CKT_NSS + 5) /* default */
+#define CKT_NSS_TRUSTED (CKT_NSS + 1)
+#define CKT_NSS_TRUSTED_DELEGATOR (CKT_NSS + 2)
+#define CKT_NSS_MUST_VERIFY_TRUST (CKT_NSS + 3)
+#define CKT_NSS_NOT_TRUSTED (CKT_NSS + 10)
+#define CKT_NSS_TRUST_UNKNOWN (CKT_NSS + 5) /* default */
 
 /*
  * These may well remain NSS-specific; I'm only using them
  * to cache resolution data.
  */
-#define CKT_NSS_VALID_DELEGATOR    (CKT_NSS + 11)
-
+#define CKT_NSS_VALID_DELEGATOR (CKT_NSS + 11)
 
 /*
  * old definitions. They still exist, but the plain meaning of the
@@ -411,26 +408,23 @@ typedef CK_ULONG          CK_TRUST;
  *  cast the resulting value to the deprecated type in the #define, thus
  *  producting the warning when the #define is used.
  */
-#if (__GNUC__  == 4) && (__GNUC_MINOR__ < 5)
+#if (__GNUC__ == 4) && (__GNUC_MINOR__ < 5)
 /* The mac doesn't like the friendlier deprecate messages. I'm assuming this
  * is a gcc version issue rather than mac or ppc specific */
 typedef CK_TRUST __CKT_NSS_UNTRUSTED __attribute__((deprecated));
-typedef CK_TRUST __CKT_NSS_VALID __attribute__ ((deprecated));
+typedef CK_TRUST __CKT_NSS_VALID __attribute__((deprecated));
 typedef CK_TRUST __CKT_NSS_MUST_VERIFY __attribute__((deprecated));
 #else
 /* when possible, get a full deprecation warning. This works on gcc 4.5
  * it may work on earlier versions of gcc */
-typedef CK_TRUST __CKT_NSS_UNTRUSTED __attribute__((deprecated
-    ("CKT_NSS_UNTRUSTED really means CKT_NSS_MUST_VERIFY_TRUST")));
-typedef CK_TRUST __CKT_NSS_VALID __attribute__ ((deprecated
-    ("CKT_NSS_VALID really means CKT_NSS_NOT_TRUSTED")));
-typedef CK_TRUST __CKT_NSS_MUST_VERIFY __attribute__((deprecated
-    ("CKT_NSS_MUST_VERIFY really functions as CKT_NSS_TRUST_UNKNOWN")));
+typedef CK_TRUST __CKT_NSS_UNTRUSTED __attribute__((deprecated("CKT_NSS_UNTRUSTED really means CKT_NSS_MUST_VERIFY_TRUST")));
+typedef CK_TRUST __CKT_NSS_VALID __attribute__((deprecated("CKT_NSS_VALID really means CKT_NSS_NOT_TRUSTED")));
+typedef CK_TRUST __CKT_NSS_MUST_VERIFY __attribute__((deprecated("CKT_NSS_MUST_VERIFY really functions as CKT_NSS_TRUST_UNKNOWN")));
 #endif
 #define CKT_NSS_UNTRUSTED ((__CKT_NSS_UNTRUSTED)CKT_NSS_MUST_VERIFY_TRUST)
-#define CKT_NSS_VALID     ((__CKT_NSS_VALID) CKT_NSS_NOT_TRUSTED)
+#define CKT_NSS_VALID ((__CKT_NSS_VALID)CKT_NSS_NOT_TRUSTED)
 /* keep the old value for compatibility reasons*/
-#define CKT_NSS_MUST_VERIFY ((__CKT_NSS_MUST_VERIFY)(CKT_NSS +4))
+#define CKT_NSS_MUST_VERIFY ((__CKT_NSS_MUST_VERIFY)(CKT_NSS + 4))
 #else
 #ifdef _WIN32
 /* This magic gets the windows compiler to give us a deprecation
@@ -438,47 +432,47 @@ typedef CK_TRUST __CKT_NSS_MUST_VERIFY __attribute__((deprecated
 #pragma deprecated(CKT_NSS_UNTRUSTED, CKT_NSS_MUST_VERIFY, CKT_NSS_VALID)
 #endif
 /* CKT_NSS_UNTRUSTED really means CKT_NSS_MUST_VERIFY_TRUST */
-#define CKT_NSS_UNTRUSTED          CKT_NSS_MUST_VERIFY_TRUST
+#define CKT_NSS_UNTRUSTED CKT_NSS_MUST_VERIFY_TRUST
 /* CKT_NSS_VALID really means CKT_NSS_NOT_TRUSTED */
-#define CKT_NSS_VALID              CKT_NSS_NOT_TRUSTED
+#define CKT_NSS_VALID CKT_NSS_NOT_TRUSTED
 /* CKT_NSS_MUST_VERIFY was always treated as CKT_NSS_TRUST_UNKNOWN */
-#define CKT_NSS_MUST_VERIFY        (CKT_NSS + 4)  /*really means trust unknown*/
+#define CKT_NSS_MUST_VERIFY (CKT_NSS + 4) /*really means trust unknown*/
 #endif
 
 /* don't leave old programs in a lurch just yet, give them the old NETSCAPE
  * synonym */
-#define CKO_NETSCAPE_CRL                CKO_NSS_CRL
-#define CKO_NETSCAPE_SMIME              CKO_NSS_SMIME
-#define CKO_NETSCAPE_TRUST              CKO_NSS_TRUST
-#define CKO_NETSCAPE_BUILTIN_ROOT_LIST  CKO_NSS_BUILTIN_ROOT_LIST
-#define CKO_NETSCAPE_NEWSLOT            CKO_NSS_NEWSLOT
-#define CKO_NETSCAPE_DELSLOT            CKO_NSS_DELSLOT
-#define CKK_NETSCAPE_PKCS8              CKK_NSS_PKCS8
-#define CKA_NETSCAPE_URL                CKA_NSS_URL
-#define CKA_NETSCAPE_EMAIL              CKA_NSS_EMAIL
-#define CKA_NETSCAPE_SMIME_INFO         CKA_NSS_SMIME_INFO
-#define CKA_NETSCAPE_SMIME_TIMESTAMP    CKA_NSS_SMIME_TIMESTAMP
-#define CKA_NETSCAPE_PKCS8_SALT         CKA_NSS_PKCS8_SALT
-#define CKA_NETSCAPE_PASSWORD_CHECK     CKA_NSS_PASSWORD_CHECK
-#define CKA_NETSCAPE_EXPIRES            CKA_NSS_EXPIRES
-#define CKA_NETSCAPE_KRL                CKA_NSS_KRL
-#define CKA_NETSCAPE_PQG_COUNTER        CKA_NSS_PQG_COUNTER
-#define CKA_NETSCAPE_PQG_SEED           CKA_NSS_PQG_SEED
-#define CKA_NETSCAPE_PQG_H              CKA_NSS_PQG_H
-#define CKA_NETSCAPE_PQG_SEED_BITS      CKA_NSS_PQG_SEED_BITS
-#define CKA_NETSCAPE_MODULE_SPEC        CKA_NSS_MODULE_SPEC
-#define CKM_NETSCAPE_AES_KEY_WRAP	CKM_NSS_AES_KEY_WRAP
-#define CKM_NETSCAPE_AES_KEY_WRAP_PAD	CKM_NSS_AES_KEY_WRAP_PAD
-#define CKR_NETSCAPE_CERTDB_FAILED      CKR_NSS_CERTDB_FAILED
-#define CKR_NETSCAPE_KEYDB_FAILED       CKR_NSS_KEYDB_FAILED
+#define CKO_NETSCAPE_CRL CKO_NSS_CRL
+#define CKO_NETSCAPE_SMIME CKO_NSS_SMIME
+#define CKO_NETSCAPE_TRUST CKO_NSS_TRUST
+#define CKO_NETSCAPE_BUILTIN_ROOT_LIST CKO_NSS_BUILTIN_ROOT_LIST
+#define CKO_NETSCAPE_NEWSLOT CKO_NSS_NEWSLOT
+#define CKO_NETSCAPE_DELSLOT CKO_NSS_DELSLOT
+#define CKK_NETSCAPE_PKCS8 CKK_NSS_PKCS8
+#define CKA_NETSCAPE_URL CKA_NSS_URL
+#define CKA_NETSCAPE_EMAIL CKA_NSS_EMAIL
+#define CKA_NETSCAPE_SMIME_INFO CKA_NSS_SMIME_INFO
+#define CKA_NETSCAPE_SMIME_TIMESTAMP CKA_NSS_SMIME_TIMESTAMP
+#define CKA_NETSCAPE_PKCS8_SALT CKA_NSS_PKCS8_SALT
+#define CKA_NETSCAPE_PASSWORD_CHECK CKA_NSS_PASSWORD_CHECK
+#define CKA_NETSCAPE_EXPIRES CKA_NSS_EXPIRES
+#define CKA_NETSCAPE_KRL CKA_NSS_KRL
+#define CKA_NETSCAPE_PQG_COUNTER CKA_NSS_PQG_COUNTER
+#define CKA_NETSCAPE_PQG_SEED CKA_NSS_PQG_SEED
+#define CKA_NETSCAPE_PQG_H CKA_NSS_PQG_H
+#define CKA_NETSCAPE_PQG_SEED_BITS CKA_NSS_PQG_SEED_BITS
+#define CKA_NETSCAPE_MODULE_SPEC CKA_NSS_MODULE_SPEC
+#define CKM_NETSCAPE_AES_KEY_WRAP CKM_NSS_AES_KEY_WRAP
+#define CKM_NETSCAPE_AES_KEY_WRAP_PAD CKM_NSS_AES_KEY_WRAP_PAD
+#define CKR_NETSCAPE_CERTDB_FAILED CKR_NSS_CERTDB_FAILED
+#define CKR_NETSCAPE_KEYDB_FAILED CKR_NSS_KEYDB_FAILED
 
-#define CKT_NETSCAPE_TRUSTED            CKT_NSS_TRUSTED
-#define CKT_NETSCAPE_TRUSTED_DELEGATOR  CKT_NSS_TRUSTED_DELEGATOR
-#define CKT_NETSCAPE_UNTRUSTED          CKT_NSS_UNTRUSTED
-#define CKT_NETSCAPE_MUST_VERIFY        CKT_NSS_MUST_VERIFY
-#define CKT_NETSCAPE_TRUST_UNKNOWN      CKT_NSS_TRUST_UNKNOWN
-#define CKT_NETSCAPE_VALID              CKT_NSS_VALID
-#define CKT_NETSCAPE_VALID_DELEGATOR    CKT_NSS_VALID_DELEGATOR
+#define CKT_NETSCAPE_TRUSTED CKT_NSS_TRUSTED
+#define CKT_NETSCAPE_TRUSTED_DELEGATOR CKT_NSS_TRUSTED_DELEGATOR
+#define CKT_NETSCAPE_UNTRUSTED CKT_NSS_UNTRUSTED
+#define CKT_NETSCAPE_MUST_VERIFY CKT_NSS_MUST_VERIFY
+#define CKT_NETSCAPE_TRUST_UNKNOWN CKT_NSS_TRUST_UNKNOWN
+#define CKT_NETSCAPE_VALID CKT_NSS_VALID
+#define CKT_NETSCAPE_VALID_DELEGATOR CKT_NSS_VALID_DELEGATOR
 
 /*
  * These are not really PKCS #11 values specifically. They are the 'loadable'
@@ -491,18 +485,17 @@ typedef CK_TRUST __CKT_NSS_MUST_VERIFY __attribute__((deprecated
  *  string.
  * The function 'RELEASE' frees the array returned by 'FIND'
  */
-#define SECMOD_MODULE_DB_FUNCTION_FIND  0
-#define SECMOD_MODULE_DB_FUNCTION_ADD   1
-#define SECMOD_MODULE_DB_FUNCTION_DEL   2
+#define SECMOD_MODULE_DB_FUNCTION_FIND 0
+#define SECMOD_MODULE_DB_FUNCTION_ADD 1
+#define SECMOD_MODULE_DB_FUNCTION_DEL 2
 #define SECMOD_MODULE_DB_FUNCTION_RELEASE 3
-typedef char ** (PR_CALLBACK *SECMODModuleDBFunc)(unsigned long function,
-                                        char *parameters, void *moduleSpec);
+typedef char **(PR_CALLBACK *SECMODModuleDBFunc)(unsigned long function,
+                                                 char *parameters, void *moduleSpec);
 
 /* softoken slot ID's */
 #define SFTK_MIN_USER_SLOT_ID 4
 #define SFTK_MAX_USER_SLOT_ID 100
 #define SFTK_MIN_FIPS_USER_SLOT_ID 101
 #define SFTK_MAX_FIPS_USER_SLOT_ID 127
-
 
 #endif /* _PKCS11N_H_ */

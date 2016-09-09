@@ -24,9 +24,9 @@ dictionary ElementCreationOptions {
 interface Document : Node {
   [Throws]
   readonly attribute DOMImplementation implementation;
-  [Pure]
+  [Pure, Throws]
   readonly attribute DOMString URL;
-  [Pure]
+  [Pure, Throws]
   readonly attribute DOMString documentURI;
   [Pure]
   readonly attribute DOMString compatMode;

@@ -38,7 +38,7 @@ public:
 
   nsSystemPrincipal() {}
 
-  virtual void GetScriptLocation(nsACString &aStr) override;
+  virtual nsresult GetScriptLocation(nsACString &aStr) override;
 
 protected:
   virtual ~nsSystemPrincipal(void) {}

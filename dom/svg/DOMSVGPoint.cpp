@@ -115,7 +115,7 @@ DOMSVGPoint::MatrixTransform(dom::SVGMatrix& matrix)
   float x = HasOwner() ? InternalItem().mX : mPt.mX;
   float y = HasOwner() ? InternalItem().mY : mPt.mY;
 
-  Point pt = ToMatrix(matrix.GetMatrix()) * Point(x, y);
+  Point pt = ToMatrix(matrix.GetMatrix()).TransformPoint(Point(x, y));
   nsCOMPtr<nsISVGPoint> newPoint = new DOMSVGPoint(pt);
   return newPoint.forget();
 }

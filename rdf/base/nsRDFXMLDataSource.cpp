@@ -604,14 +604,15 @@ RDFXMLDataSourceImpl::GetURI(char* *aURI)
     if (!mURL) {
         return NS_OK;
     }
-    
+
     nsAutoCString spec;
-    mURL->GetSpec(spec);
+    nsresult rv = mURL->GetSpec(spec);
+    NS_ENSURE_SUCCESS(rv, rv);
     *aURI = ToNewCString(spec);
     if (!*aURI) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
-    
+
     return NS_OK;
 }
 

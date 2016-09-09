@@ -19,13 +19,13 @@ SEC_BEGIN_PROTOS
  */
 
 extern NSSBase64Decoder *
-NSSBase64Decoder_Create (PRInt32 (*output_fn) (void *, const unsigned char *,
-					       PRInt32),
-			 void *output_arg);
+NSSBase64Decoder_Create(PRInt32 (*output_fn)(void *, const unsigned char *,
+                                             PRInt32),
+                        void *output_arg);
 
 extern NSSBase64Encoder *
-NSSBase64Encoder_Create (PRInt32 (*output_fn) (void *, const char *, PRInt32),
-			 void *output_arg);
+NSSBase64Encoder_Create(PRInt32 (*output_fn)(void *, const char *, PRInt32),
+                        void *output_arg);
 
 /*
  * Push data through the decoder/encoder, causing the output_fn (provided
@@ -33,12 +33,12 @@ NSSBase64Encoder_Create (PRInt32 (*output_fn) (void *, const char *, PRInt32),
  */
 
 extern SECStatus
-NSSBase64Decoder_Update (NSSBase64Decoder *data, const char *buffer,
-			 PRUint32 size);
+NSSBase64Decoder_Update(NSSBase64Decoder *data, const char *buffer,
+                        PRUint32 size);
 
 extern SECStatus
-NSSBase64Encoder_Update (NSSBase64Encoder *data, const unsigned char *buffer,
-			 PRUint32 size);
+NSSBase64Encoder_Update(NSSBase64Encoder *data, const unsigned char *buffer,
+                        PRUint32 size);
 
 /*
  * When you're done processing, call this to close the context.
@@ -47,10 +47,10 @@ NSSBase64Encoder_Update (NSSBase64Encoder *data, const unsigned char *buffer,
  */
 
 extern SECStatus
-NSSBase64Decoder_Destroy (NSSBase64Decoder *data, PRBool abort_p);
+NSSBase64Decoder_Destroy(NSSBase64Decoder *data, PRBool abort_p);
 
 extern SECStatus
-NSSBase64Encoder_Destroy (NSSBase64Encoder *data, PRBool abort_p);
+NSSBase64Encoder_Destroy(NSSBase64Encoder *data, PRBool abort_p);
 
 /*
  * Perform base64 decoding from an ascii string "inStr" to an Item.
@@ -66,8 +66,8 @@ NSSBase64Encoder_Destroy (NSSBase64Encoder *data, PRBool abort_p);
  * Return value is NULL on error, the Item (allocated or provided) otherwise.
  */
 extern SECItem *
-NSSBase64_DecodeBuffer (PLArenaPool *arenaOpt, SECItem *outItemOpt,
-			const char *inStr, unsigned int inLen);
+NSSBase64_DecodeBuffer(PLArenaPool *arenaOpt, SECItem *outItemOpt,
+                       const char *inStr, unsigned int inLen);
 
 /*
  * Perform base64 encoding of binary data "inItem" to an ascii string.
@@ -86,8 +86,8 @@ NSSBase64_DecodeBuffer (PLArenaPool *arenaOpt, SECItem *outItemOpt,
  * otherwise.
  */
 extern char *
-NSSBase64_EncodeItem (PLArenaPool *arenaOpt, char *outStrOpt,
-		      unsigned int maxOutLen, SECItem *inItem);
+NSSBase64_EncodeItem(PLArenaPool *arenaOpt, char *outStrOpt,
+                     unsigned int maxOutLen, SECItem *inItem);
 
 SEC_END_PROTOS
 

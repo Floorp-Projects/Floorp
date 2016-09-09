@@ -387,14 +387,18 @@ nsMozIconURI::SetRef(const nsACString& aRef)
 NS_IMETHODIMP
 nsMozIconURI::Equals(nsIURI* other, bool* result)
 {
+  *result = false;
   NS_ENSURE_ARG_POINTER(other);
   NS_PRECONDITION(result, "null pointer");
 
   nsAutoCString spec1;
   nsAutoCString spec2;
 
-  other->GetSpec(spec2);
-  GetSpec(spec1);
+  nsresult rv = GetSpec(spec1);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = other->GetSpec(spec2);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   if (!PL_strcasecmp(spec1.get(), spec2.get())) {
     *result = true;
   } else {

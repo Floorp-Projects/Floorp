@@ -356,7 +356,8 @@ nsXBLPrototypeHandler::EnsureEventHandler(AutoJSAPI& jsapi, nsIAtom* aName,
   NS_ENSURE_TRUE(scopeObject, NS_ERROR_OUT_OF_MEMORY);
 
   nsAutoCString bindingURI;
-  mPrototypeBinding->DocURI()->GetSpec(bindingURI);
+  nsresult rv = mPrototypeBinding->DocURI()->GetSpec(bindingURI);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   uint32_t argCount;
   const char **argNames;
@@ -371,10 +372,10 @@ nsXBLPrototypeHandler::EnsureEventHandler(AutoJSAPI& jsapi, nsIAtom* aName,
 
   JS::Rooted<JSObject*> handlerFun(cx);
   JS::AutoObjectVector emptyVector(cx);
-  nsresult rv = nsJSUtils::CompileFunction(jsapi, emptyVector, options,
-                                           nsAtomCString(aName), argCount,
-                                           argNames, handlerText,
-                                           handlerFun.address());
+  rv = nsJSUtils::CompileFunction(jsapi, emptyVector, options,
+                                  nsAtomCString(aName), argCount,
+                                  argNames, handlerText,
+                                  handlerFun.address());
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(handlerFun, NS_ERROR_FAILURE);
 

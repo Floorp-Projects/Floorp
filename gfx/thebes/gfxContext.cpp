@@ -281,31 +281,25 @@ gfxContext::CurrentMatrix() const
 gfxPoint
 gfxContext::DeviceToUser(const gfxPoint& point) const
 {
-  Matrix matrix = mTransform;
-  matrix.Invert();
-  return ThebesPoint(matrix * ToPoint(point));
+  return ThebesPoint(mTransform.Inverse().TransformPoint(ToPoint(point)));
 }
 
 Size
 gfxContext::DeviceToUser(const Size& size) const
 {
-  Matrix matrix = mTransform;
-  matrix.Invert();
-  return matrix * size;
+  return mTransform.Inverse().TransformSize(size);
 }
 
 gfxRect
 gfxContext::DeviceToUser(const gfxRect& rect) const
 {
-  Matrix matrix = mTransform;
-  matrix.Invert();
-  return ThebesRect(matrix.TransformBounds(ToRect(rect)));
+  return ThebesRect(mTransform.Inverse().TransformBounds(ToRect(rect)));
 }
 
 gfxPoint
 gfxContext::UserToDevice(const gfxPoint& point) const
 {
-  return ThebesPoint(mTransform * ToPoint(point));
+  return ThebesPoint(mTransform.TransformPoint(ToPoint(point)));
 }
 
 Size
@@ -1158,10 +1152,10 @@ gfxContext::ChangeTransform(const Matrix &aNewMatrix, bool aUpdatePatternTransfo
     } else {
       mPathBuilder = mDT->CreatePathBuilder(FillRule::FILL_WINDING);
 
-      mPathBuilder->MoveTo(toNewUS * mRect.TopLeft());
-      mPathBuilder->LineTo(toNewUS * mRect.TopRight());
-      mPathBuilder->LineTo(toNewUS * mRect.BottomRight());
-      mPathBuilder->LineTo(toNewUS * mRect.BottomLeft());
+      mPathBuilder->MoveTo(toNewUS.TransformPoint(mRect.TopLeft()));
+      mPathBuilder->LineTo(toNewUS.TransformPoint(mRect.TopRight()));
+      mPathBuilder->LineTo(toNewUS.TransformPoint(mRect.BottomRight()));
+      mPathBuilder->LineTo(toNewUS.TransformPoint(mRect.BottomLeft()));
       mPathBuilder->Close();
 
       mPathIsRect = false;

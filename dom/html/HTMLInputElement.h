@@ -1165,7 +1165,15 @@ protected:
   bool IsValidSimpleColor(const nsAString& aValue) const;
 
   /**
-   * Parse a date string of the form yyyy-mm
+   * Parse a week string of the form yyyy-Www
+   * @param the string to be parsed.
+   * @return whether the string is a valid week.
+   * Note : this function does not consider the empty string as valid.
+   */
+  bool IsValidWeek(const nsAString& aValue) const;
+
+  /**
+   * Parse a month string of the form yyyy-mm
    * @param the string to be parsed.
    * @return whether the string is a valid month.
    * Note : this function does not consider the empty string as valid.
@@ -1202,6 +1210,16 @@ protected:
                   uint32_t* aMonth) const;
 
   /**
+   * Parse a week string of the form yyyy-Www
+   *
+   * @param the string to be parsed.
+   * @return the year and week in aYear and aWeek.
+   * @return whether the parsing was successful.
+   */
+  bool ParseWeek(const nsAString& aValue,
+                 uint32_t* aYear,
+                 uint32_t* aWeek) const;
+  /**
    * Parse a date string of the form yyyy-mm-dd
    *
    * @param the string to be parsed.
@@ -1223,6 +1241,22 @@ protected:
    * given year and month.
    */
   int32_t MonthsSinceJan1970(uint32_t aYear, uint32_t aMonth) const;
+
+  /**
+   * This methods returns the day of the week given a date, note that 0 = Sunday.
+   */
+  uint32_t DayOfWeek(uint32_t aYear, uint32_t aMonth, uint32_t aDay) const;
+
+  /**
+   * This methods returns the maximum number of week in a given year, the
+   * result is either 52 or 53.
+   */
+  uint32_t MaximumWeekInYear(uint32_t aYear) const;
+
+  /**
+   * This methods returns true if it's a leap year.
+   */
+  bool IsLeapYear(uint32_t aYear) const;
 
   /**
    * Returns whether aValue is a valid time as described by HTML specifications:
@@ -1460,6 +1494,8 @@ protected:
   static const double kMaximumYear;
   // Minimum year limited by HTML standard, year >= 1.
   static const double kMinimumYear;
+  // Long years in a ISO calendar have 53 weeks in them.
+  static const double kMaximumWeekInYear;
 
   /**
    * The type of this input (<input type=...>) as an integer.

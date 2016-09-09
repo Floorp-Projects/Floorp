@@ -953,6 +953,11 @@ struct nsGridContainerFrame::TrackSizingFunctions
     uint32_t repeatTracks =
       CalculateRepeatFillCount(aGridGap, aMinSize, aSize, aMaxSize);
     SetNumRepeatTracks(repeatTracks);
+    // Blank out the removed flags for each of these tracks.
+    mRemovedRepeatTracks.SetLength(repeatTracks);
+    for (auto& track : mRemovedRepeatTracks) {
+      track = false;
+    }
     return repeatTracks;
   }
 
@@ -1079,7 +1084,7 @@ struct nsGridContainerFrame::TrackSizingFunctions
     mRepeatEndDelta = mHasRepeatAuto ?
                         int32_t(aNumRepeatTracks) - 1 :
                         0;
-  }
+}
 
   // Some style data references, for easy access.
   const nsTArray<nsStyleCoord>& mMinSizingFunctions;
@@ -1096,6 +1101,8 @@ struct nsGridContainerFrame::TrackSizingFunctions
   int32_t mRepeatEndDelta;
   // True if there is a specified repeat(auto-fill/fit) track.
   const bool mHasRepeatAuto;
+  // True if this track (relative to mRepeatAutoStart) is a removed auto-fit.
+  nsTArray<bool> mRemovedRepeatTracks;
 };
 
 /**
@@ -3414,6 +3421,11 @@ nsGridContainerFrame::Grid::PlaceGridItems(GridReflowInput& aState,
           colAdjust->SetLength(numColLines);
           PodZero(colAdjust->Elements(), colAdjust->Length());
         }
+
+        uint32_t repeatIndex = col - aState.mColFunctions.mRepeatAutoStart;
+        MOZ_ASSERT(aState.mColFunctions.mRemovedRepeatTracks.Length() >
+                   repeatIndex);
+        aState.mColFunctions.mRemovedRepeatTracks[repeatIndex] = true;
       }
     }
   }
@@ -3436,6 +3448,11 @@ nsGridContainerFrame::Grid::PlaceGridItems(GridReflowInput& aState,
           rowAdjust->SetLength(numRowLines);
           PodZero(rowAdjust->Elements(), rowAdjust->Length());
         }
+
+        uint32_t repeatIndex = row - aState.mRowFunctions.mRepeatAutoStart;
+        MOZ_ASSERT(aState.mRowFunctions.mRemovedRepeatTracks.Length() >
+                   repeatIndex);
+        aState.mRowFunctions.mRemovedRepeatTracks[repeatIndex] = true;
       }
     }
   }
@@ -3466,10 +3483,10 @@ nsGridContainerFrame::Grid::PlaceGridItems(GridReflowInput& aState,
     mGridRowEnd -= numEmptyRows;
     mExplicitGridRowEnd -= numEmptyRows;
     // Adjust the track mapping to unmap the removed tracks.
-    auto finalColRepeatCount = aState.mColFunctions.NumRepeatTracks() - numEmptyCols;
-    aState.mColFunctions.SetNumRepeatTracks(finalColRepeatCount);
-    auto finalRowRepeatCount = aState.mRowFunctions.NumRepeatTracks() - numEmptyRows;
-    aState.mRowFunctions.SetNumRepeatTracks(finalRowRepeatCount);
+    auto colRepeatCount = aState.mColFunctions.NumRepeatTracks();
+    aState.mColFunctions.SetNumRepeatTracks(colRepeatCount - numEmptyCols);
+    auto rowRepeatCount = aState.mRowFunctions.NumRepeatTracks();
+    aState.mRowFunctions.SetNumRepeatTracks(rowRepeatCount - numEmptyRows);
   }
 
   // Update the line boundaries of the implicit grid areas, if needed.
@@ -5769,6 +5786,8 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
     nsTArray<nscoord> colTrackPositions(colTrackCount);
     nsTArray<nscoord> colTrackSizes(colTrackCount);
     nsTArray<uint32_t> colTrackStates(colTrackCount);
+    nsTArray<bool> colRemovedRepeatTracks(
+      gridReflowInput.mColFunctions.mRemovedRepeatTracks);
     uint32_t col = 0;
     for (const TrackSize& sz : gridReflowInput.mCols.mSizes) {
       colTrackPositions.AppendElement(sz.mPosition);
@@ -5790,13 +5809,16 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
       col,
       Move(colTrackPositions),
       Move(colTrackSizes),
-      Move(colTrackStates));
+      Move(colTrackStates),
+      Move(colRemovedRepeatTracks));
     Properties().Set(GridColTrackInfo(), colInfo);
 
     uint32_t rowTrackCount = gridReflowInput.mRows.mSizes.Length();
     nsTArray<nscoord> rowTrackPositions(rowTrackCount);
     nsTArray<nscoord> rowTrackSizes(rowTrackCount);
     nsTArray<uint32_t> rowTrackStates(rowTrackCount);
+    nsTArray<bool> rowRemovedRepeatTracks(
+      gridReflowInput.mRowFunctions.mRemovedRepeatTracks);
     uint32_t row = 0;
     for (const TrackSize& sz : gridReflowInput.mRows.mSizes) {
       rowTrackPositions.AppendElement(sz.mPosition);
@@ -5821,7 +5843,8 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
       row,
       Move(rowTrackPositions),
       Move(rowTrackSizes),
-      Move(rowTrackStates));
+      Move(rowTrackStates),
+      Move(rowRemovedRepeatTracks));
     Properties().Set(GridRowTrackInfo(), rowInfo);
 
     if (prevInFlow) {
@@ -5850,7 +5873,8 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
         gridReflowInput.mStartRow,
         Move(priorRowInfo->mPositions),
         Move(priorRowInfo->mSizes),
-        Move(priorRowInfo->mStates));
+        Move(priorRowInfo->mStates),
+        Move(priorRowInfo->mRemovedRepeatTracks));
       prevInFlow->Properties().Set(GridRowTrackInfo(), revisedPriorRowInfo);
     }
 

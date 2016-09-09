@@ -24,17 +24,17 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-static int 
+static int
 testdir(char *dir)
 {
-   struct stat buf;
-   memset(&buf, 0, sizeof(buf));
+    struct stat buf;
+    memset(&buf, 0, sizeof(buf));
 
-   if (stat(dir,&buf) < 0) {
-	return 0;
-   }
+    if (stat(dir, &buf) < 0) {
+        return 0;
+    }
 
-   return S_ISDIR(buf.st_mode);
+    return S_ISDIR(buf.st_mode);
 }
 
 #define NSS_USER_PATH1 "/.pki"
@@ -42,55 +42,55 @@ testdir(char *dir)
 static char *
 getUserDB(void)
 {
-   char *userdir = PR_GetEnvSecure("HOME");
-   char *nssdir = NULL;
+    char *userdir = PR_GetEnvSecure("HOME");
+    char *nssdir = NULL;
 
-   if (userdir == NULL) {
-	return NULL;
-   }
+    if (userdir == NULL) {
+        return NULL;
+    }
 
-   nssdir = PORT_Alloc(strlen(userdir)
-		+sizeof(NSS_USER_PATH1)+sizeof(NSS_USER_PATH2));
-   if (nssdir == NULL) {
-	return NULL;
-   }
-   PORT_Strcpy(nssdir, userdir);
-   /* verify it exists */
-   if (!testdir(nssdir)) {
-	PORT_Free(nssdir);
-	return NULL;
-   }
-   PORT_Strcat(nssdir, NSS_USER_PATH1);
-   if (!testdir(nssdir) && mkdir(nssdir, 0760)) {
-	PORT_Free(nssdir);
-	return NULL;
-   }
-   PORT_Strcat(nssdir, NSS_USER_PATH2);
-   if (!testdir(nssdir) && mkdir(nssdir, 0760)) {
-	PORT_Free(nssdir);
-	return NULL;
-   }
-   return nssdir;
+    nssdir = PORT_Alloc(strlen(userdir) + sizeof(NSS_USER_PATH1) + sizeof(NSS_USER_PATH2));
+    if (nssdir == NULL) {
+        return NULL;
+    }
+    PORT_Strcpy(nssdir, userdir);
+    /* verify it exists */
+    if (!testdir(nssdir)) {
+        PORT_Free(nssdir);
+        return NULL;
+    }
+    PORT_Strcat(nssdir, NSS_USER_PATH1);
+    if (!testdir(nssdir) && mkdir(nssdir, 0760)) {
+        PORT_Free(nssdir);
+        return NULL;
+    }
+    PORT_Strcat(nssdir, NSS_USER_PATH2);
+    if (!testdir(nssdir) && mkdir(nssdir, 0760)) {
+        PORT_Free(nssdir);
+        return NULL;
+    }
+    return nssdir;
 }
 
 #define NSS_DEFAULT_SYSTEM "/etc/pki/nssdb"
 static char *
-getSystemDB(void) {
-   return PORT_Strdup(NSS_DEFAULT_SYSTEM);
+getSystemDB(void)
+{
+    return PORT_Strdup(NSS_DEFAULT_SYSTEM);
 }
 
 static PRBool
 userIsRoot()
 {
-   /* this works for linux and all unixes that we know off
-	  though it isn't stated as such in POSIX documentation */
-   return getuid() == 0;
+    /* this works for linux and all unixes that we know off
+       though it isn't stated as such in POSIX documentation */
+    return getuid() == 0;
 }
 
 static PRBool
 userCanModifySystemDB()
 {
-   return (access(NSS_DEFAULT_SYSTEM, W_OK) == 0);
+    return (access(NSS_DEFAULT_SYSTEM, W_OK) == 0);
 }
 
 #else
@@ -98,32 +98,32 @@ userCanModifySystemDB()
 static char *
 getUserDB(void)
 {
-   /* use the registry to find the user's NSS_DIR. if no entry exists, create
-    * one in the users Appdir location */
-   return NULL;
+    /* use the registry to find the user's NSS_DIR. if no entry exists, create
+     * one in the users Appdir location */
+    return NULL;
 }
 
 static char *
 getSystemDB(void)
 {
-   /* use the registry to find the system's NSS_DIR. if no entry exists, create
-    * one based on the windows system data area */
-   return NULL;
+    /* use the registry to find the system's NSS_DIR. if no entry exists, create
+     * one based on the windows system data area */
+    return NULL;
 }
 
 static PRBool
 userIsRoot()
 {
-   /* use the registry to find if the user is the system administrator. */
-   return PR_FALSE;
+    /* use the registry to find if the user is the system administrator. */
+    return PR_FALSE;
 }
 
 static PRBool
 userCanModifySystemDB()
 {
-   /* use the registry to find if the user has administrative privilege 
+    /* use the registry to find if the user has administrative privilege
     * to modify the system's nss database. */
-   return PR_FALSE;
+    return PR_FALSE;
 }
 
 #else
@@ -131,24 +131,24 @@ userCanModifySystemDB()
 #endif
 #endif
 
-static PRBool 
+static PRBool
 getFIPSEnv(void)
 {
     char *fipsEnv = PR_GetEnvSecure("NSS_FIPS");
     if (!fipsEnv) {
-	return PR_FALSE;
+        return PR_FALSE;
     }
-    if ((strcasecmp(fipsEnv,"fips") == 0) ||
-	(strcasecmp(fipsEnv,"true") == 0) ||
-	(strcasecmp(fipsEnv,"on") == 0) ||
-	(strcasecmp(fipsEnv,"1") == 0)) {
-	 return PR_TRUE;
+    if ((strcasecmp(fipsEnv, "fips") == 0) ||
+        (strcasecmp(fipsEnv, "true") == 0) ||
+        (strcasecmp(fipsEnv, "on") == 0) ||
+        (strcasecmp(fipsEnv, "1") == 0)) {
+        return PR_TRUE;
     }
     return PR_FALSE;
 }
 #ifdef XP_LINUX
 
-static PRBool 
+static PRBool
 getFIPSMode(void)
 {
     FILE *f;
@@ -157,9 +157,9 @@ getFIPSMode(void)
 
     f = fopen("/proc/sys/crypto/fips_enabled", "r");
     if (!f) {
-	/* if we don't have a proc flag, fall back to the 
-	 * environment variable */
-	return getFIPSEnv();
+        /* if we don't have a proc flag, fall back to the
+     * environment variable */
+        return getFIPSEnv();
     }
 
     size = fread(&d, 1, 1, f);
@@ -172,13 +172,12 @@ getFIPSMode(void)
 }
 
 #else
-static PRBool 
+static PRBool
 getFIPSMode(void)
 {
     return getFIPSEnv();
 }
 #endif
-
 
 #define NSS_DEFAULT_FLAGS "flags=readonly"
 
@@ -191,15 +190,15 @@ getFIPSMode(void)
  * 3 for the crypto operations slot fips
  */
 #define CIPHER_ORDER_FLAGS "cipherOrder=100"
-#define SLOT_FLAGS \
-	"[slotFlags=RSA,RC4,RC2,DES,DH,SHA1,MD5,MD2,SSL,TLS,AES,RANDOM" \
-	" askpw=any timeout=30 ]"
- 
+#define SLOT_FLAGS                                                  \
+    "[slotFlags=RSA,RC4,RC2,DES,DH,SHA1,MD5,MD2,SSL,TLS,AES,RANDOM" \
+    " askpw=any timeout=30 ]"
+
 static const char *nssDefaultFlags =
-	CIPHER_ORDER_FLAGS " slotParams={0x00000001=" SLOT_FLAGS " }  ";
+    CIPHER_ORDER_FLAGS " slotParams={0x00000001=" SLOT_FLAGS " }  ";
 
 static const char *nssDefaultFIPSFlags =
-	CIPHER_ORDER_FLAGS " slotParams={0x00000003=" SLOT_FLAGS " }  ";
+    CIPHER_ORDER_FLAGS " slotParams={0x00000003=" SLOT_FLAGS " }  ";
 
 /*
  * This function builds the list of databases and modules to load, and sets
@@ -210,7 +209,7 @@ static const char *nssDefaultFIPSFlags =
  *
  * Any space allocated in get_list must be freed in release_list.
  * This function can use whatever information is available to the application.
- * it is running in the process of the application for which it is making 
+ * it is running in the process of the application for which it is making
  * decisions, so it's possible to acquire the application name as part of
  * the decision making process.
  *
@@ -226,7 +225,7 @@ get_list(char *filename, char *stripped_parameters)
 
     /* can't get any space */
     if (module_list == NULL) {
-	return NULL;
+        return NULL;
     }
 
     sysdb = getSystemDB();
@@ -234,33 +233,34 @@ get_list(char *filename, char *stripped_parameters)
 
     /* Don't open root's user DB */
     if (userdb != NULL && !userIsRoot()) {
-	/* return a list of databases to open. First the user Database */
-	module_list[next++] = PR_smprintf(
-	    "library= "
-	    "module=\"NSS User database\" "
-	    "parameters=\"configdir='sql:%s' %s tokenDescription='NSS user database'\" "
-        "NSS=\"trustOrder=75 %sflags=internal%s\"",
-        userdb, stripped_parameters, nssflags,
-        isFIPS ? ",FIPS" : "");
+        /* return a list of databases to open. First the user Database */
+        module_list[next++] = PR_smprintf(
+            "library= "
+            "module=\"NSS User database\" "
+            "parameters=\"configdir='sql:%s' %s tokenDescription='NSS user database'\" "
+            "NSS=\"trustOrder=75 %sflags=internal%s\"",
+            userdb, stripped_parameters, nssflags,
+            isFIPS ? ",FIPS" : "");
 
-	/* now open the user's defined PKCS #11 modules */
-	/* skip the local user DB entry */
-	module_list[next++] = PR_smprintf(
-	    "library= "
-	    "module=\"NSS User database\" "
-	    "parameters=\"configdir='sql:%s' %s\" "
-	    "NSS=\"flags=internal,moduleDBOnly,defaultModDB,skipFirst\"", 
-		userdb, stripped_parameters);
-	}
+        /* now open the user's defined PKCS #11 modules */
+        /* skip the local user DB entry */
+        module_list[next++] = PR_smprintf(
+            "library= "
+            "module=\"NSS User database\" "
+            "parameters=\"configdir='sql:%s' %s\" "
+            "NSS=\"flags=internal,moduleDBOnly,defaultModDB,skipFirst\"",
+            userdb, stripped_parameters);
+    }
 
     /* now the system database (always read only unless it's root) */
     if (sysdb) {
-	    const char *readonly = userCanModifySystemDB() ? "" : "flags=readonly";
-	    module_list[next++] = PR_smprintf(
-	      "library= "
-	      "module=\"NSS system database\" "
-	      "parameters=\"configdir='sql:%s' tokenDescription='NSS system database' %s\" "
-	      "NSS=\"trustOrder=80 %sflags=internal,critical\"",sysdb, readonly, nssflags);
+        const char *readonly = userCanModifySystemDB() ? "" : "flags=readonly";
+        module_list[next++] = PR_smprintf(
+            "library= "
+            "module=\"NSS system database\" "
+            "parameters=\"configdir='sql:%s' tokenDescription='NSS system database' %s\" "
+            "NSS=\"trustOrder=80 %sflags=internal,critical\"",
+            sysdb, readonly, nssflags);
     }
 
     /* that was the last module */
@@ -279,28 +279,27 @@ release_list(char **arg)
     int next;
 
     for (next = 0; arg[next]; next++) {
-	free(arg[next]);
+        free(arg[next]);
     }
     PORT_Free(arg);
     return &success;
 }
 
-
 #include "utilpars.h"
 
-#define TARGET_SPEC_COPY(new, start, end)    \
-  if (end > start) {                         \
-        int _cnt = end - start;              \
-        PORT_Memcpy(new, start, _cnt);       \
-        new += _cnt;                         \
-  }
+#define TARGET_SPEC_COPY(new, start, end) \
+    if (end > start) {                    \
+        int _cnt = end - start;           \
+        PORT_Memcpy(new, start, _cnt);    \
+        new += _cnt;                      \
+    }
 
 /*
  * According the strcpy man page:
  *
  * The strings  may  not overlap, and the destination string dest must be
  * large enough to receive the copy.
- * 
+ *
  * This implementation allows target to overlap with src.
  * It does not allow the src to overlap the target.
  *  example: overlapstrcpy(string, string+4) is fine
@@ -310,7 +309,7 @@ static void
 overlapstrcpy(char *target, char *src)
 {
     while (*src) {
-	*target++ = *src++;
+        *target++ = *src++;
     }
     *target = 0;
 }
@@ -328,32 +327,32 @@ parse_parameters(const char *parameters, char **filename, char **stripped)
     *filename = NULL;
     *stripped = NULL;
 
-    newStripped = PORT_Alloc(PORT_Strlen(parameters)+2);
+    newStripped = PORT_Alloc(PORT_Strlen(parameters) + 2);
     targetCurr = newStripped;
     sourcePrev = parameters;
     sourceCurr = NSSUTIL_ArgStrip(parameters);
     TARGET_SPEC_COPY(targetCurr, sourcePrev, sourceCurr);
 
     while (*sourceCurr) {
-	int next;
-	sourcePrev = sourceCurr;
-	NSSUTIL_HANDLE_STRING_ARG(sourceCurr, *filename, "configdir=",
-		sourcePrev = sourceCurr; )
-	NSSUTIL_HANDLE_FINAL_ARG(sourceCurr);
-	TARGET_SPEC_COPY(targetCurr, sourcePrev, sourceCurr);
+        int next;
+        sourcePrev = sourceCurr;
+        NSSUTIL_HANDLE_STRING_ARG(sourceCurr, *filename, "configdir=",
+                                  sourcePrev = sourceCurr;)
+        NSSUTIL_HANDLE_FINAL_ARG(sourceCurr);
+        TARGET_SPEC_COPY(targetCurr, sourcePrev, sourceCurr);
     }
     *targetCurr = 0;
     if (*filename == NULL) {
-	PORT_Free(newStripped);
-	return SECFailure;
+        PORT_Free(newStripped);
+        return SECFailure;
     }
     /* strip off any directives from the filename */
     if (strncmp("sql:", *filename, 4) == 0) {
-	overlapstrcpy(*filename, (*filename)+4);
+        overlapstrcpy(*filename, (*filename) + 4);
     } else if (strncmp("dbm:", *filename, 4) == 0) {
-	overlapstrcpy(*filename, (*filename)+4);
+        overlapstrcpy(*filename, (*filename) + 4);
     } else if (strncmp("extern:", *filename, 7) == 0) {
-	overlapstrcpy(*filename, (*filename)+7);
+        overlapstrcpy(*filename, (*filename) + 7);
     }
     *stripped = newStripped;
     return SECSuccess;
@@ -370,32 +369,32 @@ NSS_ReturnModuleSpecData(unsigned long function, char *parameters, void *args)
 
     rv = parse_parameters(parameters, &filename, &stripped);
     if (rv != SECSuccess) {
-	/* use defaults */
-	filename = getSystemDB();
-	if (!filename) {
-	    return NULL;
-	}
-	stripped = PORT_Strdup(NSS_DEFAULT_FLAGS);
-	if (!stripped) {
-	    free(filename);
-	    return NULL;
-	}
+        /* use defaults */
+        filename = getSystemDB();
+        if (!filename) {
+            return NULL;
+        }
+        stripped = PORT_Strdup(NSS_DEFAULT_FLAGS);
+        if (!stripped) {
+            free(filename);
+            return NULL;
+        }
     }
     switch (function) {
-    case SECMOD_MODULE_DB_FUNCTION_FIND:
-	retString = get_list(filename, stripped);
-	break;
-    case SECMOD_MODULE_DB_FUNCTION_RELEASE:
-	retString = release_list((char **)args);
-	break;
-    /* can't add or delete from this module DB */
-    case SECMOD_MODULE_DB_FUNCTION_ADD:
-    case SECMOD_MODULE_DB_FUNCTION_DEL:
-	retString = NULL;
-	break;
-    default:
-	retString = NULL;
-	break;
+        case SECMOD_MODULE_DB_FUNCTION_FIND:
+            retString = get_list(filename, stripped);
+            break;
+        case SECMOD_MODULE_DB_FUNCTION_RELEASE:
+            retString = release_list((char **)args);
+            break;
+        /* can't add or delete from this module DB */
+        case SECMOD_MODULE_DB_FUNCTION_ADD:
+        case SECMOD_MODULE_DB_FUNCTION_DEL:
+            retString = NULL;
+            break;
+        default:
+            retString = NULL;
+            break;
     }
 
     PORT_Free(filename);

@@ -305,8 +305,8 @@ public:
     if (mPathBuilder) {
       mPathBuilder->MoveTo(mozilla::gfx::Point(ToFloat(aX), ToFloat(aY)));
     } else {
-      mDSPathBuilder->MoveTo(mTarget->GetTransform() *
-                             mozilla::gfx::Point(ToFloat(aX), ToFloat(aY)));
+      mDSPathBuilder->MoveTo(mTarget->GetTransform().TransformPoint(
+                             mozilla::gfx::Point(ToFloat(aX), ToFloat(aY))));
     }
   }
 
@@ -326,10 +326,10 @@ public:
                                       mozilla::gfx::Point(ToFloat(aX), ToFloat(aY)));
     } else {
       mozilla::gfx::Matrix transform = mTarget->GetTransform();
-      mDSPathBuilder->QuadraticBezierTo(transform *
-                                        mozilla::gfx::Point(ToFloat(aCpx), ToFloat(aCpy)),
-                                        transform *
-                                        mozilla::gfx::Point(ToFloat(aX), ToFloat(aY)));
+      mDSPathBuilder->QuadraticBezierTo(transform.TransformPoint(
+                                          mozilla::gfx::Point(ToFloat(aCpx), ToFloat(aCpy))),
+                                        transform.TransformPoint(
+                                          mozilla::gfx::Point(ToFloat(aX), ToFloat(aY))));
     }
   }
 
@@ -517,7 +517,7 @@ public:
     if (mPathBuilder) {
       mPathBuilder->LineTo(aPoint);
     } else {
-      mDSPathBuilder->LineTo(mTarget->GetTransform() * aPoint);
+      mDSPathBuilder->LineTo(mTarget->GetTransform().TransformPoint(aPoint));
     }
   }
 
@@ -529,9 +529,9 @@ public:
       mPathBuilder->BezierTo(aCP1, aCP2, aCP3);
     } else {
       mozilla::gfx::Matrix transform = mTarget->GetTransform();
-      mDSPathBuilder->BezierTo(transform * aCP1,
-                                transform * aCP2,
-                                transform * aCP3);
+      mDSPathBuilder->BezierTo(transform.TransformPoint(aCP1),
+                               transform.TransformPoint(aCP2),
+                               transform.TransformPoint(aCP3));
     }
   }
 

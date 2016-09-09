@@ -290,26 +290,27 @@ public:
   imgLoader();
   nsresult Init();
 
-  nsresult LoadImage(nsIURI* aURI,
-                     nsIURI* aInitialDocumentURI,
-                     nsIURI* aReferrerURI,
-                     ReferrerPolicy aReferrerPolicy,
-                     nsIPrincipal* aLoadingPrincipal,
-                     nsILoadGroup* aLoadGroup,
-                     imgINotificationObserver* aObserver,
-                     nsINode* aContext,
-                     nsIDocument* aLoadingDocument,
-                     nsLoadFlags aLoadFlags,
-                     nsISupports* aCacheKey,
-                     nsContentPolicyType aContentPolicyType,
-                     const nsAString& initiatorType,
-                     imgRequestProxy** _retval);
+  MOZ_MUST_USE nsresult LoadImage(nsIURI* aURI,
+                                  nsIURI* aInitialDocumentURI,
+                                  nsIURI* aReferrerURI,
+                                  ReferrerPolicy aReferrerPolicy,
+                                  nsIPrincipal* aLoadingPrincipal,
+                                  nsILoadGroup* aLoadGroup,
+                                  imgINotificationObserver* aObserver,
+                                  nsINode* aContext,
+                                  nsIDocument* aLoadingDocument,
+                                  nsLoadFlags aLoadFlags,
+                                  nsISupports* aCacheKey,
+                                  nsContentPolicyType aContentPolicyType,
+                                  const nsAString& initiatorType,
+                                  imgRequestProxy** _retval);
 
-  nsresult LoadImageWithChannel(nsIChannel* channel,
-                                imgINotificationObserver* aObserver,
-                                nsISupports* aCX,
-                                nsIStreamListener** listener,
-                                imgRequestProxy** _retval);
+  MOZ_MUST_USE nsresult
+  LoadImageWithChannel(nsIChannel* channel,
+                       imgINotificationObserver* aObserver,
+                       nsISupports* aCX,
+                       nsIStreamListener** listener,
+                       imgRequestProxy** _retval);
 
   static nsresult GetMimeTypeFromContent(const char* aContents,
                                          uint32_t aLength,

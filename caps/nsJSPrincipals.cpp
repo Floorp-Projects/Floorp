@@ -88,8 +88,9 @@ JSPrincipals::dump()
 {
     if (debugToken == nsJSPrincipals::DEBUG_TOKEN) {
       nsAutoCString str;
-      static_cast<nsJSPrincipals *>(this)->GetScriptLocation(str);
-      fprintf(stderr, "nsIPrincipal (%p) = %s\n", static_cast<void*>(this), str.get());
+      nsresult rv = static_cast<nsJSPrincipals *>(this)->GetScriptLocation(str);
+      fprintf(stderr, "nsIPrincipal (%p) = %s\n", static_cast<void*>(this),
+              NS_SUCCEEDED(rv) ? str.get() : "(unknown)");
     } else if (debugToken == dom::workers::kJSPrincipalsDebugToken) {
         fprintf(stderr, "Web Worker principal singleton (%p)\n", this);
     } else {

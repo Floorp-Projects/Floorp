@@ -254,7 +254,7 @@ PathCG::ContainsPoint(const Point &aPoint, const Matrix &aTransform) const
 {
   Matrix inverse = aTransform;
   inverse.Invert();
-  Point transformedPoint = inverse*aPoint;
+  Point transformedPoint = inverse.TransformPoint(aPoint);
   // We could probably drop the input transform and just transform the point at the caller?
   CGPoint point = {transformedPoint.x, transformedPoint.y};
 
@@ -294,7 +294,7 @@ PathCG::StrokeContainsPoint(const StrokeOptions &aStrokeOptions,
 {
   Matrix inverse = aTransform;
   inverse.Invert();
-  Point transformedPoint = inverse*aPoint;
+  Point transformedPoint = inverse.TransformPoint(aPoint);
   // We could probably drop the input transform and just transform the point at the caller?
   CGPoint point = {transformedPoint.x, transformedPoint.y};
 

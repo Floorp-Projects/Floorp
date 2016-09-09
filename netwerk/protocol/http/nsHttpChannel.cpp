@@ -945,9 +945,7 @@ ReportTypeBlocking(nsIURI* aURI,
                    nsILoadInfo* aLoadInfo,
                    const char* aMessageName)
 {
-    nsAutoCString spec;
-    aURI->GetSpec(spec);
-    NS_ConvertUTF8toUTF16 specUTF16(spec);
+    NS_ConvertUTF8toUTF16 specUTF16(aURI->GetSpecOrDefault());
     const char16_t* params[] = { specUTF16.get() };
     nsCOMPtr<nsIDocument> doc;
     if (aLoadInfo) {

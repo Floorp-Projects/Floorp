@@ -273,13 +273,14 @@ nsHTTPIndex::OnStartRequest(nsIRequest *request, nsISupports* aContext)
     // now create the top most resource
     nsCOMPtr<nsIURI> uri;
     channel->GetURI(getter_AddRefs(uri));
-      
+
     nsAutoCString entryuriC;
-    uri->GetSpec(entryuriC);
+    rv = uri->GetSpec(entryuriC);
+    if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIRDFResource> entry;
     rv = mDirRDF->GetResource(entryuriC, getter_AddRefs(entry));
-    
+
     NS_ConvertUTF8toUTF16 uriUnicode(entryuriC);
 
     nsCOMPtr<nsIRDFLiteral> URLVal;

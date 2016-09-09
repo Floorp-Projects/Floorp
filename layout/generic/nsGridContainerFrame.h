@@ -34,7 +34,8 @@ struct ComputedGridTrackInfo
                         uint32_t aEndFragmentTrack,
                         nsTArray<nscoord>&& aPositions,
                         nsTArray<nscoord>&& aSizes,
-                        nsTArray<uint32_t>&& aStates)
+                        nsTArray<uint32_t>&& aStates,
+                        nsTArray<bool>&& aRemovedRepeatTracks)
     : mNumLeadingImplicitTracks(aNumLeadingImplicitTracks)
     , mNumExplicitTracks(aNumExplicitTracks)
     , mStartFragmentTrack(aStartFragmentTrack)
@@ -42,6 +43,7 @@ struct ComputedGridTrackInfo
     , mPositions(aPositions)
     , mSizes(aSizes)
     , mStates(aStates)
+    , mRemovedRepeatTracks(aRemovedRepeatTracks)
   {}
   uint32_t mNumLeadingImplicitTracks;
   uint32_t mNumExplicitTracks;
@@ -50,6 +52,7 @@ struct ComputedGridTrackInfo
   nsTArray<nscoord> mPositions;
   nsTArray<nscoord> mSizes;
   nsTArray<uint32_t> mStates;
+  nsTArray<bool> mRemovedRepeatTracks;
 };
 
 struct ComputedGridLineInfo

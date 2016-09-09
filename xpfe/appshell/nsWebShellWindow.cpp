@@ -214,10 +214,17 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
   // SetInitialPrincipalToSubject. This avoids creating the about:blank document
   // and then blowing it away with a second one, which can cause problems for the
   // top-level chrome window case. See bug 789773.
+  // Note that we don't accept expanded principals here, similar to
+  // SetInitialPrincipalToSubject.
   if (nsContentUtils::IsInitialized()) { // Sometimes this happens really early  See bug 793370.
-    rv = mDocShell->CreateAboutBlankContentViewer(nsContentUtils::SubjectPrincipalOrSystemIfNativeCaller());
+    MOZ_ASSERT(mDocShell->ItemType() == nsIDocShellTreeItem::typeChrome);
+    nsCOMPtr<nsIPrincipal> principal = nsContentUtils::SubjectPrincipalOrSystemIfNativeCaller();
+    if (nsContentUtils::IsExpandedPrincipal(principal)) {
+      principal = nullptr;
+    }
+    rv = mDocShell->CreateAboutBlankContentViewer(principal);
     NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<nsIDocument> doc = mDocShell ? mDocShell->GetDocument() : nullptr;
+    nsCOMPtr<nsIDocument> doc = mDocShell->GetDocument();
     NS_ENSURE_TRUE(!!doc, NS_ERROR_FAILURE);
     doc->SetIsInitialDocument(true);
   }

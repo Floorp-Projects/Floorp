@@ -38,32 +38,32 @@ static struct nssOps nss_ops = {
 SECStatus
 NSS_OptionSet(PRInt32 which, PRInt32 value)
 {
-SECStatus rv = SECSuccess;
+    SECStatus rv = SECSuccess;
 
     switch (which) {
-      case NSS_RSA_MIN_KEY_SIZE:
-        nss_ops.rsaMinKeySize = value;
-        break;
-      case NSS_DH_MIN_KEY_SIZE:
-        nss_ops.dhMinKeySize = value;
-        break;
-      case NSS_DSA_MIN_KEY_SIZE:
-        nss_ops.dsaMinKeySize = value;
-        break;
-      case NSS_TLS_VERSION_MIN_POLICY:
-	nss_ops.tlsVersionMinPolicy = value;
-	break;
-      case NSS_TLS_VERSION_MAX_POLICY:
-	nss_ops.tlsVersionMaxPolicy = value;
-	break;
-      case NSS_DTLS_VERSION_MIN_POLICY:
-	nss_ops.dtlsVersionMinPolicy = value;
-	break;
-      case NSS_DTLS_VERSION_MAX_POLICY:
-	nss_ops.dtlsVersionMaxPolicy = value;
-	break;
-      default:
-	rv = SECFailure;
+        case NSS_RSA_MIN_KEY_SIZE:
+            nss_ops.rsaMinKeySize = value;
+            break;
+        case NSS_DH_MIN_KEY_SIZE:
+            nss_ops.dhMinKeySize = value;
+            break;
+        case NSS_DSA_MIN_KEY_SIZE:
+            nss_ops.dsaMinKeySize = value;
+            break;
+        case NSS_TLS_VERSION_MIN_POLICY:
+            nss_ops.tlsVersionMinPolicy = value;
+            break;
+        case NSS_TLS_VERSION_MAX_POLICY:
+            nss_ops.tlsVersionMaxPolicy = value;
+            break;
+        case NSS_DTLS_VERSION_MIN_POLICY:
+            nss_ops.dtlsVersionMinPolicy = value;
+            break;
+        case NSS_DTLS_VERSION_MAX_POLICY:
+            nss_ops.dtlsVersionMaxPolicy = value;
+            break;
+        default:
+            rv = SECFailure;
     }
 
     return rv;
@@ -72,34 +72,33 @@ SECStatus rv = SECSuccess;
 SECStatus
 NSS_OptionGet(PRInt32 which, PRInt32 *value)
 {
-SECStatus rv = SECSuccess;
+    SECStatus rv = SECSuccess;
 
     switch (which) {
-      case NSS_RSA_MIN_KEY_SIZE:
-        *value = nss_ops.rsaMinKeySize;
-        break;
-      case NSS_DH_MIN_KEY_SIZE:
-        *value = nss_ops.dhMinKeySize;
-        break;
-      case NSS_DSA_MIN_KEY_SIZE:
-        *value = nss_ops.dsaMinKeySize;
-        break;
-      case NSS_TLS_VERSION_MIN_POLICY:
-	*value = nss_ops.tlsVersionMinPolicy;
-	break;
-      case NSS_TLS_VERSION_MAX_POLICY:
-	*value = nss_ops.tlsVersionMaxPolicy;
-	break;
-      case NSS_DTLS_VERSION_MIN_POLICY:
-	*value = nss_ops.dtlsVersionMinPolicy;
-	break;
-      case NSS_DTLS_VERSION_MAX_POLICY:
-	*value = nss_ops.dtlsVersionMaxPolicy;
-	break;
-      default:
-	rv = SECFailure;
+        case NSS_RSA_MIN_KEY_SIZE:
+            *value = nss_ops.rsaMinKeySize;
+            break;
+        case NSS_DH_MIN_KEY_SIZE:
+            *value = nss_ops.dhMinKeySize;
+            break;
+        case NSS_DSA_MIN_KEY_SIZE:
+            *value = nss_ops.dsaMinKeySize;
+            break;
+        case NSS_TLS_VERSION_MIN_POLICY:
+            *value = nss_ops.tlsVersionMinPolicy;
+            break;
+        case NSS_TLS_VERSION_MAX_POLICY:
+            *value = nss_ops.tlsVersionMaxPolicy;
+            break;
+        case NSS_DTLS_VERSION_MIN_POLICY:
+            *value = nss_ops.dtlsVersionMinPolicy;
+            break;
+        case NSS_DTLS_VERSION_MAX_POLICY:
+            *value = nss_ops.dtlsVersionMaxPolicy;
+            break;
+        default:
+            rv = SECFailure;
     }
 
     return rv;
 }
-

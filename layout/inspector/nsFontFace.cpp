@@ -121,7 +121,8 @@ nsFontFace::GetURI(nsAString & aURI)
     NS_ASSERTION(mFontEntry->mUserFontData, "missing userFontData");
     if (mFontEntry->mUserFontData->mURI) {
       nsAutoCString spec;
-      mFontEntry->mUserFontData->mURI->GetSpec(spec);
+      nsresult rv = mFontEntry->mUserFontData->mURI->GetSpec(spec);
+      NS_ENSURE_SUCCESS(rv, rv);
       AppendUTF8toUTF16(spec, aURI);
     }
   }

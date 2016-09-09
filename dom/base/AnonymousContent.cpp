@@ -137,6 +137,23 @@ AnonymousContent::GetCanvasContext(const nsAString& aElementId,
   return context.forget();
 }
 
+already_AddRefed<Animation>
+AnonymousContent::SetAnimationForElement(JSContext* aContext,
+                                         const nsAString& aElementId,
+                                         JS::Handle<JSObject*> aKeyframes,
+                                         const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
+                                         ErrorResult& aRv)
+{
+  Element* element = GetElementById(aElementId);
+
+  if (!element) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return nullptr;
+  }
+
+  return element->Animate(aContext, aKeyframes, aOptions, aRv);
+}
+
 Element*
 AnonymousContent::GetElementById(const nsAString& aElementId)
 {

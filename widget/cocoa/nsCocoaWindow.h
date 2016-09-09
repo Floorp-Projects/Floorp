@@ -243,6 +243,7 @@ public:
     virtual bool            IsEnabled() const override;
     virtual void            SetModal(bool aState) override;
     virtual void            SetFakeModal(bool aState) override;
+    virtual bool            IsRunningAppModal() override;
     virtual bool            IsVisible() const override;
     NS_IMETHOD              SetFocus(bool aState=false) override;
     virtual LayoutDeviceIntPoint WidgetToScreenOffset() override;

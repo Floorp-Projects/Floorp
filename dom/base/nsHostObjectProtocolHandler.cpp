@@ -902,7 +902,8 @@ nsFontTableProtocolHandler::NewURI(const nsACString& aSpec,
     // If aSpec is a relative URI -other- than a bare #ref,
     // this will leave uri empty, and we'll return a failure code below.
     uri = new mozilla::net::nsSimpleURI();
-    uri->SetSpec(aSpec);
+    nsresult rv = uri->SetSpec(aSpec);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   bool schemeIs;

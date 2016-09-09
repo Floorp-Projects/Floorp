@@ -45,7 +45,9 @@ interface imgICache : nsISupports
    * @param doc Optional pointer to the document that the cache entry belongs to.
    * @returns NULL if the URL was not found in the cache
    */
-  nsIProperties findEntryProperties(in nsIURI uri, [optional] in nsIDOMDocument doc);
+  [must_use]
+  nsIProperties findEntryProperties(in nsIURI uri,
+                                    [optional] in nsIDOMDocument doc);
 
   /**
    * Make this cache instance respect private browsing notifications. This

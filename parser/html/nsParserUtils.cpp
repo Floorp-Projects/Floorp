@@ -160,6 +160,7 @@ nsParserUtils::ParseFragment(const nsAString& aFragment,
 
   // Wrap things in a div or body for parsing, but it won't show up in
   // the fragment.
+  nsresult rv = NS_OK;
   AutoTArray<nsString, 2> tagStack;
   nsAutoCString base, spec;
   if (aIsXML) {
@@ -167,7 +168,8 @@ nsParserUtils::ParseFragment(const nsAString& aFragment,
     if (aBaseURI) {
       base.AppendLiteral(XHTML_DIV_TAG);
       base.AppendLiteral(" xml:base=\"");
-      aBaseURI->GetSpec(spec);
+      rv = aBaseURI->GetSpec(spec);
+      NS_ENSURE_SUCCESS(rv, rv);
       // nsEscapeHTML is good enough, because we only need to get
       // quotes, ampersands, and angle brackets
       char* escapedSpec = nsEscapeHTML(spec.get());
@@ -181,7 +183,6 @@ nsParserUtils::ParseFragment(const nsAString& aFragment,
     }
   }
 
-  nsresult rv = NS_OK;
   nsCOMPtr<nsIContent> fragment;
   if (aIsXML) {
     rv = nsContentUtils::ParseFragmentXML(aFragment,
@@ -201,7 +202,8 @@ nsParserUtils::ParseFragment(const nsAString& aFragment,
                                            true);
     // Now, set the base URI on all subtree roots.
     if (aBaseURI) {
-      aBaseURI->GetSpec(spec);
+      nsresult rv2 = aBaseURI->GetSpec(spec);
+      NS_ENSURE_SUCCESS(rv2, rv2);
       nsAutoString spec16;
       CopyUTF8toUTF16(spec, spec16);
       nsIContent* node = fragment->GetFirstChild();
