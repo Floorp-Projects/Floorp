@@ -60,7 +60,6 @@ def target_tasks_try_option_syntax(full_task_graph, parameters):
     return target_tasks_labels
 
 
-@_target_task('all_builds_and_tests')  # (old name)
 @_target_task('default')
 def target_tasks_default(full_task_graph, parameters):
     """Target the tasks which have indicated they should be run on this project
