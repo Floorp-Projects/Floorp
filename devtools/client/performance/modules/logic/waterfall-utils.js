@@ -51,12 +51,12 @@ function collapseMarkersIntoNode({ rootNode, markersList, filter }) {
 
     let finalized = false;
 
-    // If this marker is collapsible, turn it into a parent marker.
-    // If there are no children within it later, it will be turned
-    // back into a normal node.
+    // Extend the marker with extra properties needed in the marker tree
+    let extendedProps = { index: i };
     if (collapsible) {
-      curr = createParentNode(curr);
+      extendedProps.submarkers = [];
     }
+    curr = extend(curr, extendedProps);
 
     // If not nestible, just push it inside the root node. Additionally,
     // markers originating outside the main thread are considered to be
