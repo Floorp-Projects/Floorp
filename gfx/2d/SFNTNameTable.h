@@ -17,8 +17,9 @@ namespace gfx {
 
 struct NameHeader;
 struct NameRecord;
+enum ENameDecoder : int;
 
-typedef Vector<function<bool(const NameRecord*)>> NameRecordMatchers;
+typedef Vector<function<ENameDecoder(const NameRecord*)>> NameRecordMatchers;
 
 class SFNTNameTable final
 {
@@ -38,7 +39,7 @@ public:
   /**
    * Gets the full name from the name table. If the full name string is not
    * present it will use the family space concatenated with the style.
-   * This will only read names that are already UTF16.
+   * This will only read names that are already UTF16 or Mac OS Roman.
    *
    * @param aU16FullName string to be populated with the full name.
    * @return true if the full name is successfully read.
@@ -52,8 +53,13 @@ private:
 
   bool ReadU16Name(const NameRecordMatchers& aMatchers, mozilla::u16string& aU16Name);
 
-  bool ReadU16NameFromRecord(const NameRecord *aNameRecord,
-                             mozilla::u16string& aU16Name);
+  bool ReadU16NameFromU16Record(const NameRecord *aNameRecord,
+                                mozilla::u16string& aU16Name);
+
+#if defined(XP_MACOSX)
+  bool ReadU16NameFromMacRomanRecord(const NameRecord *aNameRecord,
+                                     mozilla::u16string& aU16Name);
+#endif
 
   const NameRecord *mFirstRecord;
   const NameRecord *mEndOfRecords;
