@@ -29,6 +29,8 @@ add_task(function* test_legacy_extension_context() {
 
     browser.test.sendMessage("webextension-ready", extensionInfo);
 
+    let port;
+
     browser.test.onMessage.addListener(msg => {
       if (msg == "do-send-message") {
         browser.runtime.sendMessage("webextension -> legacy_extension message").then(reply => {
@@ -37,13 +39,15 @@ add_task(function* test_legacy_extension_context() {
           browser.test.sendMessage("got-reply-message");
         });
       } else if (msg == "do-connect") {
-        let port = browser.runtime.connect();
+        port = browser.runtime.connect();
 
         port.onMessage.addListener(msg => {
           browser.test.assertEq("legacy_extension -> webextension port message", msg,
                                 "Got the expected message from the LegacyExtensionContext");
           port.postMessage("webextension -> legacy_extension port message");
         });
+      } else if (msg == "do-disconnect") {
+        port.disconnect();
       }
     });
   }
@@ -65,13 +69,21 @@ add_task(function* test_legacy_extension_context() {
     });
   });
 
+  // Connect to the target extension as an external context
+  // using the given custom sender info.
+  let legacyContext;
+
+  extension.on("startup", function onStartup() {
+    extension.off("startup", onStartup);
+    legacyContext = new LegacyExtensionContext(extension);
+    extension.callOnClose({
+      close: () => legacyContext.unload(),
+    });
+  });
+
   yield extension.startup();
 
   let extensionInfo = yield waitForExtensionInfo;
-
-  // Connect to the target extension.id as an external context
-  // using the given custom sender info.
-  let legacyContext = new LegacyExtensionContext(extension);
 
   equal(legacyContext.type, "legacy_extension",
      "LegacyExtensionContext instance has the expected type");
@@ -146,11 +158,11 @@ add_task(function* test_legacy_extension_context() {
     port.onDisconnect.addListener(resolve);
   });
 
-  extension.shutdown();
+  extension.testMessage("do-disconnect");
 
   yield waitForDisconnect;
 
   do_print("Got the disconnect event on unload");
 
-  legacyContext.shutdown();
+  yield extension.shutdown();
 });
