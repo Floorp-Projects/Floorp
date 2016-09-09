@@ -80,8 +80,8 @@ public:
   {
     if (mDecoderCallback) {
       mDecoderCallback->Error(aIsFatal ?
-        MediaDataDecoderError::FATAL_ERROR :
-        MediaDataDecoderError::DECODE_ERROR);
+        MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__) :
+        MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__));
     }
   }
 
@@ -382,7 +382,8 @@ private:
       aFormat->GetInteger(NS_LITERAL_STRING("channel-count"), &mOutputChannels);
       AudioConfig::ChannelLayout layout(mOutputChannels);
       if (!layout.IsValid()) {
-        mDecoderCallback->Error(MediaDataDecoderError::FATAL_ERROR);
+        mDecoderCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                                                 __func__));
         return;
       }
       aFormat->GetInteger(NS_LITERAL_STRING("sample-rate"), &mOutputSampleRate);
@@ -476,7 +477,7 @@ RemoteDataDecoder::Input(MediaRawData* aSample)
   BufferInfo::LocalRef bufferInfo;
   nsresult rv = BufferInfo::New(&bufferInfo);
   if (NS_FAILED(rv)) {
-    mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
+    mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
     return;
   }
   bufferInfo->Set(0, aSample->Size(), aSample->mTime, 0);
