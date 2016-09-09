@@ -452,7 +452,7 @@ WMFVideoMFTManager::InitInternal(bool aForceD3D9)
       if (SUCCEEDED(hr)) {
         mUseHwAccel = true;
       } else {
-        mDXVA2Manager = nullptr;
+        DeleteOnMainThread(mDXVA2Manager);
         mDXVAFailureReason = nsPrintfCString("MFT_MESSAGE_SET_D3D_MANAGER failed with code %X", hr);
       }
     }
