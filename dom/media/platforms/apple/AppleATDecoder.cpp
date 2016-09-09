@@ -194,7 +194,8 @@ AppleATDecoder::SubmitSample(MediaRawData* aSample)
   if (!mConverter) {
     rv = SetupDecoder(aSample);
     if (rv != NS_OK && rv != NS_ERROR_NOT_INITIALIZED) {
-      mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
+      mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                                        __func__));
       return;
     }
   }
@@ -203,9 +204,10 @@ AppleATDecoder::SubmitSample(MediaRawData* aSample)
 
   if (rv == NS_OK) {
     for (size_t i = 0; i < mQueuedSamples.Length(); i++) {
-      if (NS_FAILED(DecodeSample(mQueuedSamples[i]))) {
+      rv = DecodeSample(mQueuedSamples[i]);
+      if (NS_FAILED(rv)) {
         mQueuedSamples.Clear();
-        mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
+        mCallback->Error(MediaResult(rv, __func__));
         return;
       }
     }
@@ -262,7 +264,7 @@ AppleATDecoder::DecodeSample(MediaRawData* aSample)
 
     if (rv && rv != kNoMoreDataErr) {
       LOG("Error decoding audio stream: %d\n", rv);
-      return NS_ERROR_FAILURE;
+      return NS_ERROR_DOM_MEDIA_DECODE_ERR;
     }
 
     if (numFrames) {
@@ -283,7 +285,7 @@ AppleATDecoder::DecodeSample(MediaRawData* aSample)
   media::TimeUnit duration = FramesToTimeUnit(numFrames, rate);
   if (!duration.IsValid()) {
     NS_WARNING("Invalid count of accumulated audio samples");
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
   }
 
 #ifdef LOG_SAMPLE_DECODE
@@ -300,7 +302,7 @@ AppleATDecoder::DecodeSample(MediaRawData* aSample)
     AudioConfig in(*mChannelLayout.get(), rate);
     AudioConfig out(channels, rate);
     if (!in.IsValid() || !out.IsValid()) {
-      return NS_ERROR_FAILURE;
+      return NS_ERROR_DOM_MEDIA_DECODE_ERR;
     }
     mAudioConverter = MakeUnique<AudioConverter>(in, out);
   }

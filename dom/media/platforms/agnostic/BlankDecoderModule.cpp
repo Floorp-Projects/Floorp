@@ -79,7 +79,7 @@ private:
   void OutputFrame(MediaData* aData)
   {
     if (!aData) {
-      mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
+      mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__));
       return;
     }
 

@@ -723,7 +723,7 @@ MediaFormatReader::NotifyDrainComplete(TrackType aTrack)
 }
 
 void
-MediaFormatReader::NotifyError(TrackType aTrack, MediaDataDecoderError aError)
+MediaFormatReader::NotifyError(TrackType aTrack, const MediaResult& aError)
 {
   MOZ_ASSERT(OnTaskQueue());
   LOGV("%s Decoding error", TrackTypeToStr(aTrack));
@@ -1253,7 +1253,7 @@ MediaFormatReader::Update(TrackType aTrack)
   }
 
   if (decoder.mError &&
-      decoder.mError.ref() == MediaDataDecoderError::DECODE_ERROR) {
+      decoder.mError.ref().Code() == NS_ERROR_DOM_MEDIA_DECODE_ERR) {
     decoder.mDecodePending = false;
     decoder.mError.reset();
     if (++decoder.mNumOfConsecutiveError > decoder.mMaxConsecutiveError) {
@@ -1418,7 +1418,7 @@ MediaFormatReader::Output(TrackType aTrack, MediaData* aSample)
 {
   if (!aSample) {
     NS_WARNING("MediaFormatReader::Output() passed a null sample");
-    Error(aTrack);
+    Error(aTrack, MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__));
     return;
   }
 
@@ -1451,10 +1451,10 @@ MediaFormatReader::InputExhausted(TrackType aTrack)
 }
 
 void
-MediaFormatReader::Error(TrackType aTrack, MediaDataDecoderError aError)
+MediaFormatReader::Error(TrackType aTrack, const MediaResult& aError)
 {
   RefPtr<nsIRunnable> task =
-    NewRunnableMethod<TrackType, MediaDataDecoderError>(
+    NewRunnableMethod<TrackType, MediaResult>(
       this, &MediaFormatReader::NotifyError, aTrack, aError);
   OwnerThread()->Dispatch(task.forget());
 }

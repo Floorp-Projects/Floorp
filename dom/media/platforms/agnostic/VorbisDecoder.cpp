@@ -138,7 +138,8 @@ VorbisDataDecoder::ProcessDecode(MediaRawData* aSample)
     return;
   }
   if (DoDecode(aSample) == -1) {
-    mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
+    mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                                      __func__));
   } else {
     mCallback->InputExhausted();
   }

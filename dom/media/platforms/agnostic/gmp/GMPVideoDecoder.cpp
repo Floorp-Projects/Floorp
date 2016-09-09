@@ -54,7 +54,7 @@ VideoCallbackAdapter::Decoded(GMPVideoi420Frame* aDecodedFrame)
   if (v) {
     mCallback->Output(v);
   } else {
-    mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
+    mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
   }
 }
 
@@ -95,7 +95,8 @@ void
 VideoCallbackAdapter::Error(GMPErr aErr)
 {
   MOZ_ASSERT(IsOnGMPThread());
-  mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
+  mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                               nsPrintfCString("%s: %d", __func__, aErr)));
 }
 
 void
@@ -103,7 +104,7 @@ VideoCallbackAdapter::Terminated()
 {
   // Note that this *may* be called from the proxy thread also.
   NS_WARNING("GMP decoder terminated.");
-  mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
+  mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__));
 }
 
 GMPVideoDecoderParams::GMPVideoDecoderParams(const CreateDecoderParams& aParams)
@@ -183,14 +184,14 @@ GMPVideoDecoder::CreateFrame(MediaRawData* aSample)
   GMPVideoFrame* ftmp = nullptr;
   GMPErr err = mHost->CreateFrame(kGMPEncodedVideoFrame, &ftmp);
   if (GMP_FAILED(err)) {
-    mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
+    mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
     return nullptr;
   }
 
   GMPUniquePtr<GMPVideoEncodedFrame> frame(static_cast<GMPVideoEncodedFrame*>(ftmp));
   err = frame->CreateEmptyFrame(aSample->Size());
   if (GMP_FAILED(err)) {
-    mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
+    mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
     return nullptr;
   }
 
@@ -320,7 +321,8 @@ GMPVideoDecoder::Input(MediaRawData* aSample)
 
   RefPtr<MediaRawData> sample(aSample);
   if (!mGMP) {
-    mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
+    mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                                      __func__));
     return;
   }
 
@@ -328,13 +330,13 @@ GMPVideoDecoder::Input(MediaRawData* aSample)
 
   GMPUniquePtr<GMPVideoEncodedFrame> frame = CreateFrame(sample);
   if (!frame) {
-    mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
+    mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
     return;
   }
   nsTArray<uint8_t> info; // No codec specific per-frame info to pass.
   nsresult rv = mGMP->Decode(Move(frame), false, info, 0);
   if (NS_FAILED(rv)) {
-    mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
+    mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__));
   }
 }
 
