@@ -48,28 +48,10 @@ MediaStreamPlayback.prototype = {
    */
   stopTracksForStreamInMediaPlayback : function () {
     var elem = this.mediaElement;
-    var waitForEnded = () => new Promise(resolve => {
-      elem.addEventListener('ended', function ended() {
-        elem.removeEventListener('ended', ended);
-        resolve();
-      });
-    });
-
-    var noTrackEnded = Promise.all(this.mediaStream.getTracks().map(t => {
-      let onNextLoop = wait(0);
-      let p = Promise.race([
-        onNextLoop,
-        haveEvent(t, "ended", onNextLoop)
-          .then(() => Promise.reject("Unexpected ended event for track " + t.id),
-                () => Promise.resolve())
-      ]);
-      t.stop();
-      return p;
-    }));
-
-    return timeout(waitForEnded(), ENDED_TIMEOUT_LENGTH, "ended event never fired")
-             .then(() => ok(true, "ended event successfully fired"))
-             .then(() => noTrackEnded);
+    return Promise.all([
+      haveEvent(elem, "ended", wait(ENDED_TIMEOUT_LENGTH, new Error("Timeout"))),
+      ...this.mediaStream.getTracks().map(t => (t.stop(), haveNoEvent(t, "ended")))
+    ]);
   },
 
   /**
