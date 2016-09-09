@@ -373,6 +373,8 @@ Toolbox.prototype = {
                                 false);
       Services.prefs.addObserver("devtools.serviceWorkers.testing.enabled",
                                  this._applyServiceWorkersTestingSettings, false);
+      Services.prefs.addObserver("devtools.screenshot.clipboard.enabled",
+                                 this._buildButtons, false);
 
       let framesMenu = this.doc.getElementById("command-button-frames");
       framesMenu.addEventListener("click", this.showFramesMenu, false);
@@ -969,15 +971,19 @@ Toolbox.prototype = {
     const options = {
       environment: CommandUtils.createEnvironment(this, "_target")
     };
+
     return CommandUtils.createRequisition(this.target, options).then(requisition => {
       this._requisition = requisition;
 
-      const spec = CommandUtils.getCommandbarSpec("devtools.toolbox.toolbarSpec");
+      let spec = this.getToolbarSpec();
       return CommandUtils.createButtons(spec, this.target, this.doc, requisition)
         .then(buttons => {
           let container = this.doc.getElementById("toolbox-buttons");
           buttons.forEach(button => {
-            if (button) {
+            let currentButton = this.doc.getElementById(button.id);
+            if (currentButton) {
+              container.replaceChild(button, currentButton);
+            } else {
               container.appendChild(button);
             }
           });
@@ -1062,6 +1068,24 @@ Toolbox.prototype = {
         "serviceWorkersTestingEnabled": serviceWorkersTestingEnabled
       });
     }
+  },
+
+  /**
+   * Get the toolbar spec for toolbox
+   */
+  getToolbarSpec: function () {
+    let spec = CommandUtils.getCommandbarSpec("devtools.toolbox.toolbarSpec");
+    // Special case for screenshot command button to check for clipboard preference
+    const clipboardEnabled = Services.prefs
+      .getBoolPref("devtools.screenshot.clipboard.enabled");
+    if (clipboardEnabled) {
+      for (let i = 0; i < spec.length; i++) {
+        if (spec[i] == "screenshot --fullpage --file") {
+          spec[i] += " --clipboard";
+        }
+      }
+    }
+    return spec;
   },
 
   /**
