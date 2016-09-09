@@ -36,11 +36,11 @@ function doxhr(URL, user, pass, next) {
   xhr.onload = function() {
     is(xhr.status, 200, "Got status 200");
     next();
-  }
+  };
   xhr.onerror = function() {
     ok(false, "request passed");
     finishTest();
-  }
+  };
   xhr.send();
 }
 

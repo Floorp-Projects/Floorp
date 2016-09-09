@@ -268,7 +268,6 @@ VideoTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
   if (aTrackEvents == TrackEventCommand::TRACK_EVENT_ENDED) {
     LOG("[VideoTrackEncoder]: Receive TRACK_EVENT_ENDED .");
     NotifyEndOfStream();
-    mFirstFrame = true;
   }
 
 }
@@ -283,7 +282,6 @@ VideoTrackEncoder::AppendVideoSegment(const VideoSegment& aSegment)
   VideoSegment::ChunkIterator iter(const_cast<VideoSegment&>(aSegment));
   while (!iter.IsEnded()) {
     VideoChunk chunk = *iter;
-    mTotalFrameDuration += chunk.GetDuration();
     mLastFrameDuration += chunk.GetDuration();
     // Send only the unique video frames for encoding.
     // Or if we got the same video chunks more than 1 seconds,
@@ -291,19 +289,6 @@ VideoTrackEncoder::AppendVideoSegment(const VideoSegment& aSegment)
     if ((mLastFrame != chunk.mFrame) ||
         (mLastFrameDuration >= mTrackRate)) {
       RefPtr<layers::Image> image = chunk.mFrame.GetImage();
-
-      // Fixme: see bug 1290777. We should remove the useage of duration here and
-      // in |GetEncodedTrack|.
-      StreamTime duration;
-      if (mFirstFrame)
-      {
-        duration = chunk.GetDuration();
-        mFirstFrame = false;
-      } else {
-        MOZ_ASSERT(chunk.mTimeStamp >= mLastFrameTimeStamp);
-        TimeDuration timeDuration = chunk.mTimeStamp - mLastFrameTimeStamp;
-        duration = SecondsToMediaTime(timeDuration.ToSeconds());
-      }
 
       // Because we may get chunks with a null image (due to input blocking),
       // accumulate duration and give it to the next frame that arrives.
@@ -313,13 +298,12 @@ VideoTrackEncoder::AppendVideoSegment(const VideoSegment& aSegment)
       // in with each frame.
       if (image) {
         mRawSegment.AppendFrame(image.forget(),
-                                duration,
+                                mLastFrameDuration,
                                 chunk.mFrame.GetIntrinsicSize(),
                                 PRINCIPAL_HANDLE_NONE,
                                 chunk.mFrame.GetForceBlack());
         mLastFrameDuration = 0;
       }
-      mLastFrameTimeStamp = chunk.mTimeStamp;
     }
     mLastFrame.TakeFrom(&chunk.mFrame);
     iter.Next();

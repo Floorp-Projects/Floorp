@@ -56,7 +56,7 @@ let signonReloadDisplay = {
       Services.obs.notifyObservers(null, "passwordmgr-dialog-updated", null);
     }
   }
-}
+};
 
 // Formatter for localization.
 let dateFormatter = new Intl.DateTimeFormat(undefined,
@@ -162,7 +162,7 @@ let signonsTreeView = {
     switch (column.id) {
       case "siteCol":
         return signon.httpRealm ?
-               (signon.hostname + " (" + signon.httpRealm + ")"):
+               (signon.hostname + " (" + signon.httpRealm + ")") :
                signon.hostname;
       case "userCol":
         return signon.username || "";
@@ -326,8 +326,8 @@ function GetTreeSelections() {
   let select = signonsTree.view.selection;
   if (select) {
     let count = select.getRangeCount();
-    let min = new Object();
-    let max = new Object();
+    let min = {};
+    let max = {};
     for (let i = 0; i < count; i++) {
       select.getRangeAt(i, min, max);
       for (let k = min.value; k <= max.value; k++) {
@@ -383,7 +383,7 @@ function DeleteSignon() {
   // update selection and/or buttons
   if (table.length) {
     // update selection
-    let nextSelection = (selections[0] < table.length) ? selections[0] : table.length-1;
+    let nextSelection = (selections[0] < table.length) ? selections[0] : table.length - 1;
     tree.view.selection.select(nextSelection);
     tree.treeBoxObject.ensureRowIsVisible(nextSelection);
   } else {
@@ -486,8 +486,7 @@ function HandleSignonKeyPress(e) {
   }
   if (e.keyCode == KeyboardEvent.DOM_VK_DELETE ||
       (AppConstants.platform == "macosx" &&
-       e.keyCode == KeyboardEvent.DOM_VK_BACK_SPACE))
-  {
+       e.keyCode == KeyboardEvent.DOM_VK_BACK_SPACE)) {
     DeleteSignon();
   }
 }

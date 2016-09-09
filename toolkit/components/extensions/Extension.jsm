@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["Extension", "ExtensionData", "ExtensionContext"];
+this.EXPORTED_SYMBOLS = ["Extension", "ExtensionData"];
 
 /* globals Extension ExtensionData */
 
@@ -75,7 +75,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "uuidGen",
 const BASE_SCHEMA = "chrome://extensions/content/schemas/manifest.json";
 const CATEGORY_EXTENSION_SCHEMAS = "webextension-schemas";
 const CATEGORY_EXTENSION_SCRIPTS = "webextension-scripts";
-const CATEGORY_EXTENSION_SCRIPTS_CONTENT = "webextension-scripts-content";
+const CATEGORY_EXTENSION_SCRIPTS_ADDON = "webextension-scripts-addon";
 
 let schemaURLs = new Set();
 
@@ -144,11 +144,10 @@ var Management = new class extends SchemaAPIManager {
       this.loadScript(value);
     }
 
-    // TODO(robwu): This should be removed when addons can conceptually run in
-    // a separate process. This category should be used for content scripts only,
-    // but since the current content script API implementations (i18n, extension
-    // and runtime) are also needed in adddons, we re-use the category.
-    for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCRIPTS_CONTENT)) {
+    // TODO(robwu): This should move to its own instances of SchemaAPIManager,
+    // because the above scripts run in the chrome process whereas the following
+    // scripts runs in the addon process.
+    for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCRIPTS_ADDON)) {
       this.loadScript(value);
     }
 
@@ -190,9 +189,7 @@ ExtensionContext = class extends BaseContext {
     this.type = type;
     this.uri = uri || extension.baseURI;
 
-    if (params.contentWindow) {
-      this.setContentWindow(params.contentWindow);
-    }
+    this.setContentWindow(params.contentWindow);
 
     // This is the MessageSender property passed to extension.
     // It can be augmented by the "page-open" hook.
@@ -200,15 +197,16 @@ ExtensionContext = class extends BaseContext {
     if (uri) {
       sender.url = uri.spec;
     }
-    let delegate = {
-      getSender() {},
-    };
-    Management.emit("page-load", this, params, sender, delegate);
+    Management.emit("page-load", this, params, sender);
 
     // Properties in |filter| must match those in the |recipient|
     // parameter of sendMessage.
     let filter = {extensionId: extension.id};
-    this.messenger = new Messenger(this, [Services.mm, Services.ppmm], sender, filter, delegate);
+    // Addon-generated messages (not necessarily from the same process as the
+    // addon itself) are sent to the main process, which forwards them via the
+    // parent process message manager. Specific replies can be sent to the frame
+    // message manager.
+    this.messenger = new Messenger(this, [Services.cpmm, this.messageManager], sender, filter);
 
     if (this.externallyVisible) {
       this.extension.views.add(this);
@@ -253,15 +251,96 @@ ExtensionContext = class extends BaseContext {
   }
 };
 
-class ProxyContext extends ExtensionContext {
-  constructor(extension, params, messageManager, principal) {
-    params.contentWindow = null;
-    params.uri = NetUtil.newURI(params.url);
+// Subscribes to messages related to the extension messaging API and forwards it
+// to the relevant message manager. The "sender" field for the `onMessage` and
+// `onConnect` events are updated if needed.
+let ProxyMessenger = {
+  _initialized: false,
+  init() {
+    if (this._initialized) {
+      return;
+    }
+    this._initialized = true;
 
-    super(extension, params);
-    // TODO(robwu): Get ProxyContext to inherit from BaseContext instead of
-    // ExtensionContext and let callers specify the environment type.
-    this.envType = "content_parent";
+    // TODO(robwu): When addons move to a separate process, we should use the
+    // parent process manager(s) of the addon process(es) instead of the
+    // in-process one.
+    let pipmm = Services.ppmm.getChildAt(0);
+    // Listen on the global frame message manager because content scripts send
+    // and receive extension messages via their frame.
+    // Listen on the parent process message manager because `runtime.connect`
+    // and `runtime.sendMessage` requests must be delivered to all frames in an
+    // addon process (by the API contract).
+    // And legacy addons are not associated with a frame, so that is another
+    // reason for having a parent process manager here.
+    let messageManagers = [Services.mm, pipmm];
+
+    MessageChannel.addListener(messageManagers, "Extension:Connect", this);
+    MessageChannel.addListener(messageManagers, "Extension:Message", this);
+    MessageChannel.addListener(messageManagers, "Extension:Port:Disconnect", this);
+    MessageChannel.addListener(messageManagers, "Extension:Port:PostMessage", this);
+  },
+
+  receiveMessage({target, messageName, channelId, sender, recipient, data, responseType}) {
+    let extension = GlobalManager.extensionMap.get(sender.extensionId);
+    let receiverMM = this._getMessageManagerForRecipient(recipient);
+    if (!extension || !receiverMM) {
+      return Promise.reject({
+        result: MessageChannel.RESULT_NO_HANDLER,
+        message: "No matching message handler for the given recipient.",
+      });
+    }
+
+    if ((messageName == "Extension:Message" ||
+         messageName == "Extension:Connect") &&
+        Management.global.tabGetSender) {
+      // From ext-tabs.js, undefined on Android.
+      Management.global.tabGetSender(extension, target, sender);
+    }
+    return MessageChannel.sendMessage(receiverMM, messageName, data, {
+      sender,
+      recipient,
+      responseType,
+    });
+  },
+
+  /**
+   * @param {object} recipient An object that was passed to
+   *     `MessageChannel.sendMessage`.
+   * @returns {object|null} The message manager matching the recipient if found.
+   */
+  _getMessageManagerForRecipient(recipient) {
+    let {extensionId, tabId} = recipient;
+    // tabs.sendMessage / tabs.connect
+    if (tabId) {
+      // `tabId` being set implies that the tabs API is supported, so we don't
+      // need to check whether `TabManager` exists.
+      let tab = Management.global.TabManager.getTab(tabId, null, null);
+      return tab && tab.linkedBrowser.messageManager;
+    }
+
+    // runtime.sendMessage / runtime.connect
+    if (extensionId) {
+      // TODO(robwu): map the extensionId to the addon parent process's message
+      // manager when they run in a separate process.
+      let pipmm = Services.ppmm.getChildAt(0);
+      return pipmm;
+    }
+
+    // Note: No special handling for sendNativeMessage / connectNative because
+    // native messaging runs in the chrome process, so it never needs a proxy.
+    return null;
+  },
+};
+
+class ProxyContext extends BaseContext {
+  constructor(extension, params, messageManager, principal) {
+    // TODO(robwu): Let callers specify the environment type once we start
+    // re-using this implementation for addon_parent.
+    super("content_parent", extension);
+
+    this.uri = NetUtil.newURI(params.url);
+
     this.messageManager = messageManager;
     this.principal_ = principal;
 
@@ -271,6 +350,8 @@ class ProxyContext extends ExtensionContext {
     this.listenerProxies = new Map();
 
     this.sandbox = Cu.Sandbox(principal, {});
+
+    Management.emit("proxy-context-load", this);
   }
 
   get principal() {
@@ -281,8 +362,12 @@ class ProxyContext extends ExtensionContext {
     return this.sandbox;
   }
 
-  get externallyVisible() {
-    return false;
+  unload() {
+    if (this.unloaded) {
+      return;
+    }
+    super.unload();
+    Management.emit("proxy-context-unload", this);
   }
 }
 
@@ -360,6 +445,10 @@ let ParentAPIManager = {
 
   createProxyContext(data, target) {
     let {extensionId, childId, principal} = data;
+    if (this.proxyContexts.has(childId)) {
+      Cu.reportError("A WebExtension context with the given ID already exists!");
+      return;
+    }
     let extension = GlobalManager.getExtension(extensionId);
 
     let context = new ProxyContext(extension, data, target.messageManager, principal);
@@ -367,16 +456,20 @@ let ParentAPIManager = {
   },
 
   closeProxyContext(childId) {
-    if (!this.proxyContexts.has(childId)) {
+    let context = this.proxyContexts.get(childId);
+    if (!context) {
       return;
     }
-    let context = this.proxyContexts.get(childId);
     context.unload();
     this.proxyContexts.delete(childId);
   },
 
   call(data, target) {
     let context = this.proxyContexts.get(data.childId);
+    if (!context) {
+      Cu.reportError("WebExtension context not found!");
+      return;
+    }
     function callback(...cbArgs) {
       let lastError = context.lastError;
 
@@ -407,6 +500,10 @@ let ParentAPIManager = {
 
   addListener(data, target) {
     let context = this.proxyContexts.get(data.childId);
+    if (!context) {
+      Cu.reportError("WebExtension context not found!");
+      return;
+    }
 
     function listener(...listenerArgs) {
       target.messageManager.sendAsyncMessage("API:RunListener", {
@@ -424,6 +521,9 @@ let ParentAPIManager = {
 
   removeListener(data) {
     let context = this.proxyContexts.get(data.childId);
+    if (!context) {
+      Cu.reportError("WebExtension context not found!");
+    }
     let listener = context.listenerProxies.get(data.path);
     findPathInObject(context.apiObj, data.path).removeListener(listener);
   },
@@ -547,6 +647,13 @@ GlobalManager = {
     if (this.extensionMap.size == 0) {
       Services.obs.addObserver(this, "document-element-inserted", false);
       UninstallObserver.init();
+      ProxyMessenger.init();
+      // This initializes the default message handler for messages targeted at
+      // an addon process, in case the addon process receives a message before
+      // its Messenger has been instantiated. For example, if a content script
+      // sends a message while there is no background page.
+      // TODO(robwu): Move this to the addon process once we have one.
+      MessageChannel.setupMessageManagers([Services.cpmm]);
       this.initialized = true;
     }
 

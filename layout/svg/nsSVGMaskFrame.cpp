@@ -295,7 +295,7 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(gfxContext* aContext,
   }
   RefPtr<DataSourceSurface> destMaskSurface = destMaskSnapshot->GetDataSurface();
   DataSourceSurface::MappedSurface destMap;
-  if (!destMaskSurface->Map(DataSourceSurface::MapType::READ_WRITE, &destMap)) {
+  if (!destMaskSurface->Map(DataSourceSurface::MapType::WRITE, &destMap)) {
     return nullptr;
   }
 

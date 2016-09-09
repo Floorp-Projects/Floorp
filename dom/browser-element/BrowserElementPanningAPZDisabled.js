@@ -14,7 +14,7 @@ Cu.import("resource://gre/modules/Geometry.jsm");
 
 var global = this;
 
-const ContentPanningAPZDisabled = {
+var ContentPanningAPZDisabled = {
   // Are we listening to touch or mouse events?
   watchedEventsType: '',
 
@@ -23,10 +23,26 @@ const ContentPanningAPZDisabled = {
   hybridEvents: false,
 
   init: function cp_init() {
-    this._setupListenersForPanning();
+    let events = this._getEventsList();
+    let els = Cc["@mozilla.org/eventlistenerservice;1"]
+                .getService(Ci.nsIEventListenerService);
+    events.forEach(type => {
+      // Using the system group for mouse/touch events to avoid
+      // missing events if .stopPropagation() has been called.
+      els.addSystemEventListener(global, type, this, /* useCapture = */ false);
+    });
   },
 
-  _setupListenersForPanning: function cp_setupListenersForPanning() {
+  destroy: function () {
+    let events = this._getEventsList();
+    let els = Cc["@mozilla.org/eventlistenerservice;1"]
+                .getService(Ci.nsIEventListenerService);
+    events.forEach(type => {
+      els.removeSystemEventListener(global, type, this, /* useCapture = */ false);
+    });
+  },
+
+  _getEventsList: function () {
     let events;
 
     if (content.TouchEvent) {
@@ -48,16 +64,7 @@ const ContentPanningAPZDisabled = {
       this.watchedEventsType = 'mouse';
     }
 
-    let els = Cc["@mozilla.org/eventlistenerservice;1"]
-                .getService(Ci.nsIEventListenerService);
-
-    events.forEach(function(type) {
-      // Using the system group for mouse/touch events to avoid
-      // missing events if .stopPropagation() has been called.
-      els.addSystemEventListener(global, type,
-                                 this.handleEvent.bind(this),
-                                 /* useCapture = */ false);
-    }.bind(this));
+    return events;
   },
 
   handleEvent: function cp_handleEvent(evt) {
@@ -478,23 +485,23 @@ const ContentPanningAPZDisabled = {
 };
 
 // Min/max velocity of kinetic panning. This is in pixels/millisecond.
-const kMinVelocity = 0.2;
-const kMaxVelocity = 6;
+var kMinVelocity = 0.2;
+var kMaxVelocity = 6;
 
 // Constants that affect the "friction" of the scroll pane.
-const kExponentialC = 1000;
-const kPolynomialC = 100 / 1000000;
+var kExponentialC = 1000;
+var kPolynomialC = 100 / 1000000;
 
 // How often do we change the position of the scroll pane?
 // Too often and panning may jerk near the end.
 // Too little and panning will be choppy. In milliseconds.
-const kUpdateInterval = 16;
+var kUpdateInterval = 16;
 
 // The numbers of momentums to use for calculating the velocity of the pan.
 // Those are taken from the end of the action
-const kSamples = 5;
+var kSamples = 5;
 
-const KineticPanning = {
+var KineticPanning = {
   _position: new Point(0, 0),
   _velocity: new Point(0, 0),
   _acceleration: new Point(0, 0),

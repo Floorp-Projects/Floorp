@@ -33,8 +33,12 @@ function isTopBrowserElement(docShell) {
   return true;
 }
 
+var BrowserElementIsReady;
+
+debug(`Might load BE scripts: BEIR: ${BrowserElementIsReady}`);
 if (!BrowserElementIsReady) {
-  if (!('BrowserElementIsPreloaded' in this)) {
+  debug("Loading BE scripts")
+  if (!("BrowserElementIsPreloaded" in this)) {
     if (isTopBrowserElement(docShell)) {
       if (Services.prefs.getBoolPref("dom.mozInputMethod.enabled")) {
         try {
@@ -73,8 +77,30 @@ if (!BrowserElementIsReady) {
       ContentPanning.init();
     }
   }
-}
 
-var BrowserElementIsReady = true;
+  function onDestroy() {
+    removeMessageListener("browser-element-api:destroy", onDestroy);
+
+    if (api) {
+      api.destroy();
+    }
+    if ("ContentPanning" in this) {
+      ContentPanning.destroy();
+    }
+    if ("ContentPanningAPZDisabled" in this) {
+      ContentPanningAPZDisabled.destroy();
+    }
+    if ("CopyPasteAssistent" in this) {
+      CopyPasteAssistent.destroy();
+    }
+
+    BrowserElementIsReady = false;
+  }
+  addMessageListener("browser-element-api:destroy", onDestroy);
+
+  BrowserElementIsReady = true;
+} else {
+  debug("BE already loaded, abort");
+}
 
 sendAsyncMessage('browser-element-api:call', { 'msg_name': 'hello' });

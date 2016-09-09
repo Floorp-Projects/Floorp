@@ -123,7 +123,8 @@ public class Tabs implements GeckoEventListener {
             "Tab:ViewportMetadata",
             "Tab:StreamStart",
             "Tab:StreamStop",
-            "Tab:AudioPlayingChange");
+            "Tab:AudioPlayingChange",
+            "Tab:MediaPlaybackChange");
 
         mPrivateClearColor = Color.RED;
 
@@ -472,6 +473,13 @@ public class Tabs implements GeckoEventListener {
             if (event.equals("Tab:Added")) {
                 String url = message.isNull("uri") ? null : message.getString("uri");
 
+                if (message.getBoolean("cancelEditMode")) {
+                    final Tab oldTab = getSelectedTab();
+                    if (oldTab != null) {
+                        oldTab.setIsEditing(false);
+                    }
+                }
+
                 if (message.getBoolean("stub")) {
                     if (tab == null) {
                         // Tab was already closed; abort
@@ -566,6 +574,9 @@ public class Tabs implements GeckoEventListener {
             } else if (event.equals("Tab:AudioPlayingChange")) {
                 tab.setIsAudioPlaying(message.getBoolean("isAudioPlaying"));
                 notifyListeners(tab, TabEvents.AUDIO_PLAYING_CHANGE);
+            } else if (event.equals("Tab:MediaPlaybackChange")) {
+                tab.setIsMediaPlaying(message.getBoolean("active"));
+                notifyListeners(tab, TabEvents.MEDIA_PLAYING_CHANGE);
             }
 
         } catch (Exception e) {
@@ -626,6 +637,7 @@ public class Tabs implements GeckoEventListener {
         BOOKMARK_REMOVED,
         AUDIO_PLAYING_CHANGE,
         OPENED_FROM_TABS_TRAY,
+        MEDIA_PLAYING_CHANGE,
     }
 
     public void notifyListeners(Tab tab, TabEvents msg) {

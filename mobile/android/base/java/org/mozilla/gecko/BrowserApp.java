@@ -693,6 +693,7 @@ public class BrowserApp extends GeckoApp
             "LightweightTheme:Update",
             "Search:Keyword",
             "Prompt:ShowTop",
+            "Tab:Added",
             "Video:Play");
 
         EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener)this,
@@ -1427,6 +1428,7 @@ public class BrowserApp extends GeckoApp
             "LightweightTheme:Update",
             "Search:Keyword",
             "Prompt:ShowTop",
+            "Tab:Added",
             "Video:Play");
 
         EventDispatcher.getInstance().unregisterGeckoThreadListener((NativeEventListener) this,
@@ -1659,164 +1661,193 @@ public class BrowserApp extends GeckoApp
     @Override
     public void handleMessage(final String event, final NativeJSObject message,
                               final EventCallback callback) {
-        if ("CharEncoding:Data".equals(event)) {
-            final NativeJSObject[] charsets = message.getObjectArray("charsets");
-            final int selected = message.getInt("selected");
+        switch (event) {
+            case "CharEncoding:Data":
+                final NativeJSObject[] charsets = message.getObjectArray("charsets");
+                final int selected = message.getInt("selected");
 
-            final String[] titleArray = new String[charsets.length];
-            final String[] codeArray = new String[charsets.length];
-            for (int i = 0; i < charsets.length; i++) {
-                final NativeJSObject charset = charsets[i];
-                titleArray[i] = charset.getString("title");
-                codeArray[i] = charset.getString("code");
-            }
+                final String[] titleArray = new String[charsets.length];
+                final String[] codeArray = new String[charsets.length];
+                for (int i = 0; i < charsets.length; i++) {
+                    final NativeJSObject charset = charsets[i];
+                    titleArray[i] = charset.getString("title");
+                    codeArray[i] = charset.getString("code");
+                }
 
-            final AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-            dialogBuilder.setSingleChoiceItems(titleArray, selected,
-                    new AlertDialog.OnClickListener() {
-                @Override
-                public void onClick(final DialogInterface dialog, final int which) {
-                    GeckoAppShell.notifyObservers("CharEncoding:Set", codeArray[which]);
-                    dialog.dismiss();
-                }
-            });
-            dialogBuilder.setNegativeButton(R.string.button_cancel,
-                    new AlertDialog.OnClickListener() {
-                @Override
-                public void onClick(final DialogInterface dialog, final int which) {
-                    dialog.dismiss();
-                }
-            });
-            ThreadUtils.postToUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    dialogBuilder.show();
-                }
-            });
-
-        } else if ("CharEncoding:State".equals(event)) {
-            final boolean visible = message.getString("visible").equals("true");
-            GeckoPreferences.setCharEncodingState(visible);
-            final Menu menu = mMenu;
-            ThreadUtils.postToUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (menu != null) {
-                        menu.findItem(R.id.char_encoding).setVisible(visible);
+                final AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+                dialogBuilder.setSingleChoiceItems(titleArray, selected,
+                        new AlertDialog.OnClickListener() {
+                            @Override
+                            public void onClick(final DialogInterface dialog, final int which) {
+                                GeckoAppShell.notifyObservers("CharEncoding:Set", codeArray[which]);
+                                dialog.dismiss();
+                            }
+                        });
+                dialogBuilder.setNegativeButton(R.string.button_cancel,
+                        new AlertDialog.OnClickListener() {
+                            @Override
+                            public void onClick(final DialogInterface dialog, final int which) {
+                                dialog.dismiss();
+                            }
+                        });
+                ThreadUtils.postToUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        dialogBuilder.show();
                     }
+                });
+                break;
+
+            case "CharEncoding:State":
+                final boolean visible = message.getString("visible").equals("true");
+                GeckoPreferences.setCharEncodingState(visible);
+                final Menu menu = mMenu;
+                ThreadUtils.postToUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (menu != null) {
+                            menu.findItem(R.id.char_encoding).setVisible(visible);
+                        }
+                    }
+                });
+                break;
+
+            case "Experiments:GetActive":
+                final List<String> experiments = SwitchBoard.getActiveExperiments(this);
+                final JSONArray json = new JSONArray(experiments);
+                callback.sendSuccess(json.toString());
+                break;
+
+            case "Experiments:SetOverride":
+                Experiments.setOverride(getContext(), message.getString("name"), message.getBoolean("isEnabled"));
+                break;
+
+            case "Experiments:ClearOverride":
+                Experiments.clearOverride(getContext(), message.getString("name"));
+                break;
+
+            case "Favicon:CacheLoad":
+                final String url = message.getString("url");
+                getFaviconFromCache(callback, url);
+                break;
+
+            case "Feedback:MaybeLater":
+                resetFeedbackLaunchCount();
+                break;
+
+            case "Menu:Add":
+                final MenuItemInfo info = new MenuItemInfo();
+                info.label = message.getString("name");
+                info.id = message.getInt("id") + ADDON_MENU_OFFSET;
+                info.checked = message.optBoolean("checked", false);
+                info.enabled = message.optBoolean("enabled", true);
+                info.visible = message.optBoolean("visible", true);
+                info.checkable = message.optBoolean("checkable", false);
+                final int parent = message.optInt("parent", 0);
+                info.parent = parent <= 0 ? parent : parent + ADDON_MENU_OFFSET;
+                final MenuItemInfo menuItemInfo = info;
+                ThreadUtils.postToUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        addAddonMenuItem(menuItemInfo);
+                    }
+                });
+                break;
+
+            case "Menu:Remove":
+                final int id = message.getInt("id") + ADDON_MENU_OFFSET;
+                ThreadUtils.postToUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        removeAddonMenuItem(id);
+                    }
+                });
+                break;
+
+            case "Sanitize:ClearHistory":
+                handleClearHistory(message.optBoolean("clearSearchHistory", false));
+                callback.sendSuccess(true);
+                break;
+
+            case "Sanitize:ClearSyncedTabs":
+                handleClearSyncedTabs();
+                callback.sendSuccess(true);
+                break;
+
+            case "Settings:Show":
+                final String resource =
+                        message.optString(GeckoPreferences.INTENT_EXTRA_RESOURCES, null);
+                final Intent settingsIntent = new Intent(this, GeckoPreferences.class);
+                GeckoPreferences.setResourceToOpen(settingsIntent, resource);
+                startActivityForResult(settingsIntent, ACTIVITY_REQUEST_PREFERENCES);
+
+                // Don't use a transition to settings if we're on a device where that
+                // would look bad.
+                if (HardwareUtils.IS_KINDLE_DEVICE) {
+                    overridePendingTransition(0, 0);
                 }
-            });
+                break;
 
-        } else if ("Experiments:GetActive".equals(event)) {
-            final List<String> experiments = SwitchBoard.getActiveExperiments(this);
-            final JSONArray json = new JSONArray(experiments);
-            callback.sendSuccess(json.toString());
-        } else if ("Experiments:SetOverride".equals(event)) {
-            Experiments.setOverride(getContext(), message.getString("name"), message.getBoolean("isEnabled"));
-        } else if ("Experiments:ClearOverride".equals(event)) {
-            Experiments.clearOverride(getContext(), message.getString("name"));
-        } else if ("Favicon:CacheLoad".equals(event)) {
-            final String url = message.getString("url");
-            getFaviconFromCache(callback, url);
-        } else if ("Feedback:MaybeLater".equals(event)) {
-            resetFeedbackLaunchCount();
-        } else if ("Menu:Add".equals(event)) {
-            final MenuItemInfo info = new MenuItemInfo();
-            info.label = message.getString("name");
-            info.id = message.getInt("id") + ADDON_MENU_OFFSET;
-            info.checked = message.optBoolean("checked", false);
-            info.enabled = message.optBoolean("enabled", true);
-            info.visible = message.optBoolean("visible", true);
-            info.checkable = message.optBoolean("checkable", false);
-            final int parent = message.optInt("parent", 0);
-            info.parent = parent <= 0 ? parent : parent + ADDON_MENU_OFFSET;
-            final MenuItemInfo menuItemInfo = info;
-            ThreadUtils.postToUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    addAddonMenuItem(menuItemInfo);
+            case "Telemetry:Gather":
+                final BrowserDB db = getProfile().getDB();
+                final ContentResolver cr = getContentResolver();
+                Telemetry.addToHistogram("PLACES_PAGES_COUNT", db.getCount(cr, "history"));
+                Telemetry.addToHistogram("FENNEC_BOOKMARKS_COUNT", db.getCount(cr, "bookmarks"));
+                Telemetry.addToHistogram("BROWSER_IS_USER_DEFAULT", (isDefaultBrowser(Intent.ACTION_VIEW) ? 1 : 0));
+                Telemetry.addToHistogram("FENNEC_CUSTOM_HOMEPAGE", (TextUtils.isEmpty(getHomepage()) ? 0 : 1));
+                final SharedPreferences prefs = GeckoSharedPrefs.forProfile(getContext());
+                final boolean hasCustomHomepanels =
+                        prefs.contains(HomeConfigPrefsBackend.PREFS_CONFIG_KEY) || prefs.contains(HomeConfigPrefsBackend.PREFS_CONFIG_KEY_OLD);
+                Telemetry.addToHistogram("FENNEC_HOMEPANELS_CUSTOM", hasCustomHomepanels ? 1 : 0);
+
+                Telemetry.addToHistogram("FENNEC_READER_VIEW_CACHE_SIZE",
+                        SavedReaderViewHelper.getSavedReaderViewHelper(getContext()).getDiskSpacedUsedKB());
+
+                if (Versions.feature16Plus) {
+                    Telemetry.addToHistogram("BROWSER_IS_ASSIST_DEFAULT", (isDefaultBrowser(Intent.ACTION_ASSIST) ? 1 : 0));
                 }
-            });
+                break;
 
-        } else if ("Menu:Remove".equals(event)) {
-            final int id = message.getInt("id") + ADDON_MENU_OFFSET;
-            ThreadUtils.postToUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    removeAddonMenuItem(id);
+            case "Updater:Launch":
+                handleUpdaterLaunch();
+                break;
+
+            case "Download:AndroidDownloadManager":
+                // Downloading via Android's download manager
+
+                final String uri = message.getString("uri");
+                final String filename = message.getString("filename");
+                final String mimeType = message.getString("mimeType");
+
+                final DownloadManager.Request request = new DownloadManager.Request(Uri.parse(uri));
+                request.setMimeType(mimeType);
+
+                try {
+                    request.setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, filename);
+                } catch (IllegalStateException e) {
+                    Log.e(LOGTAG, "Cannot create download directory");
+                    return;
                 }
-            });
-        } else if ("Sanitize:ClearHistory".equals(event)) {
-            handleClearHistory(message.optBoolean("clearSearchHistory", false));
-            callback.sendSuccess(true);
-        } else if ("Sanitize:ClearSyncedTabs".equals(event)) {
-            handleClearSyncedTabs();
-            callback.sendSuccess(true);
-        } else if ("Settings:Show".equals(event)) {
-            final String resource =
-                    message.optString(GeckoPreferences.INTENT_EXTRA_RESOURCES, null);
-            final Intent settingsIntent = new Intent(this, GeckoPreferences.class);
-            GeckoPreferences.setResourceToOpen(settingsIntent, resource);
-            startActivityForResult(settingsIntent, ACTIVITY_REQUEST_PREFERENCES);
 
-            // Don't use a transition to settings if we're on a device where that
-            // would look bad.
-            if (HardwareUtils.IS_KINDLE_DEVICE) {
-                overridePendingTransition(0, 0);
-            }
+                request.allowScanningByMediaScanner();
+                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                request.addRequestHeader("User-Agent", HardwareUtils.isTablet() ?
+                        AppConstants.USER_AGENT_FENNEC_TABLET :
+                        AppConstants.USER_AGENT_FENNEC_MOBILE);
 
-        } else if ("Telemetry:Gather".equals(event)) {
-            final BrowserDB db = getProfile().getDB();
-            final ContentResolver cr = getContentResolver();
-            Telemetry.addToHistogram("PLACES_PAGES_COUNT", db.getCount(cr, "history"));
-            Telemetry.addToHistogram("FENNEC_BOOKMARKS_COUNT", db.getCount(cr, "bookmarks"));
-            Telemetry.addToHistogram("BROWSER_IS_USER_DEFAULT", (isDefaultBrowser(Intent.ACTION_VIEW) ? 1 : 0));
-            Telemetry.addToHistogram("FENNEC_CUSTOM_HOMEPAGE", (TextUtils.isEmpty(getHomepage()) ? 0 : 1));
-            final SharedPreferences prefs = GeckoSharedPrefs.forProfile(getContext());
-            final boolean hasCustomHomepanels = prefs.contains(HomeConfigPrefsBackend.PREFS_CONFIG_KEY) || prefs.contains(HomeConfigPrefsBackend.PREFS_CONFIG_KEY_OLD);
-            Telemetry.addToHistogram("FENNEC_HOMEPANELS_CUSTOM", hasCustomHomepanels ? 1 : 0);
+                try {
+                    DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+                    manager.enqueue(request);
 
-            Telemetry.addToHistogram("FENNEC_READER_VIEW_CACHE_SIZE", SavedReaderViewHelper.getSavedReaderViewHelper(getContext()).getDiskSpacedUsedKB());
+                    Log.d(LOGTAG, "Enqueued download (Download Manager)");
+                } catch (RuntimeException e) {
+                    Log.e(LOGTAG, "Download failed: " + e);
+                }
+                break;
 
-            if (Versions.feature16Plus) {
-                Telemetry.addToHistogram("BROWSER_IS_ASSIST_DEFAULT", (isDefaultBrowser(Intent.ACTION_ASSIST) ? 1 : 0));
-            }
-        } else if ("Updater:Launch".equals(event)) {
-            handleUpdaterLaunch();
-        } else if ("Download:AndroidDownloadManager".equals(event)) {
-            // Downloading via Android's download manager
-
-            final String uri = message.getString("uri");
-            final String filename = message.getString("filename");
-            final String mimeType = message.getString("mimeType");
-
-            final DownloadManager.Request request = new DownloadManager.Request(Uri.parse(uri));
-            request.setMimeType(mimeType);
-
-            try {
-                request.setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, filename);
-            } catch (IllegalStateException e) {
-                Log.e(LOGTAG, "Cannot create download directory");
-                return;
-            }
-
-            request.allowScanningByMediaScanner();
-            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-            request.addRequestHeader("User-Agent", HardwareUtils.isTablet() ?
-                    AppConstants.USER_AGENT_FENNEC_TABLET :
-                    AppConstants.USER_AGENT_FENNEC_MOBILE);
-
-            try {
-                DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-                manager.enqueue(request);
-
-                Log.d(LOGTAG, "Enqueued download (Download Manager)");
-            } catch (RuntimeException e) {
-                Log.e(LOGTAG, "Download failed: " + e);
-            }
-
-        } else {
-            super.handleMessage(event, message, callback);
+            default:
+                super.handleMessage(event, message, callback);
+                break;
         }
     }
 
@@ -1877,130 +1908,161 @@ public class BrowserApp extends GeckoApp
     @Override
     public void handleMessage(String event, JSONObject message) {
         try {
-            if (event.equals("Menu:Open")) {
-                if (mBrowserToolbar.isEditing()) {
-                    mBrowserToolbar.cancelEdit();
-                }
-
-                openOptionsMenu();
-            } else if (event.equals("Menu:Update")) {
-                final int id = message.getInt("id") + ADDON_MENU_OFFSET;
-                final JSONObject options = message.getJSONObject("options");
-                ThreadUtils.postToUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        updateAddonMenuItem(id, options);
+            switch (event) {
+                case "Menu:Open":
+                    if (mBrowserToolbar.isEditing()) {
+                        mBrowserToolbar.cancelEdit();
                     }
-                });
-            } else if (event.equals("Gecko:DelayedStartup")) {
-                ThreadUtils.postToUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        // Force tabs panel inflation once the initial
-                        // pageload is finished.
-                        ensureTabsPanelExists();
-                        if (AppConstants.NIGHTLY_BUILD && mZoomedView == null) {
-                            ViewStub stub = (ViewStub) findViewById(R.id.zoomed_view_stub);
-                            mZoomedView = (ZoomedView) stub.inflate();
-                        }
-                    }
-                });
 
-                if (AppConstants.MOZ_MEDIA_PLAYER) {
-                    // Check if the fragment is already added. This should never be true here, but this is
-                    // a nice safety check.
-                    // If casting is disabled, these classes aren't built. We use reflection to initialize them.
-                    final Class<?> mediaManagerClass = getMediaPlayerManager();
+                    openOptionsMenu();
+                    break;
 
-                    if (mediaManagerClass != null) {
-                        try {
-                            final String tag = "";
-                            mediaManagerClass.getDeclaredField("MEDIA_PLAYER_TAG").get(tag);
-                            Log.i(LOGTAG, "Found tag " + tag);
-                            final Fragment frag = getSupportFragmentManager().findFragmentByTag(tag);
-                            if (frag == null) {
-                                final Method getInstance = mediaManagerClass.getMethod("newInstance", (Class[]) null);
-                                final Fragment mpm = (Fragment) getInstance.invoke(null);
-                                getSupportFragmentManager().beginTransaction().disallowAddToBackStack().add(mpm, tag).commit();
-                            }
-                        } catch (Exception ex) {
-                            Log.e(LOGTAG, "Error initializing media manager", ex);
-                        }
-                    }
-                }
-
-                if (AppConstants.MOZ_STUMBLER_BUILD_TIME_ENABLED && Restrictions.isAllowed(this, Restrictable.DATA_CHOICES)) {
-                    // Start (this acts as ping if started already) the stumbler lib; if the stumbler has queued data it will upload it.
-                    // Stumbler operates on its own thread, and startup impact is further minimized by delaying work (such as upload) a few seconds.
-                    // Avoid any potential startup CPU/thread contention by delaying the pref broadcast.
-                    final long oneSecondInMillis = 1000;
-                    ThreadUtils.getBackgroundHandler().postDelayed(new Runnable() {
+                case "Menu:Update":
+                    final int id = message.getInt("id") + ADDON_MENU_OFFSET;
+                    final JSONObject options = message.getJSONObject("options");
+                    ThreadUtils.postToUiThread(new Runnable() {
                         @Override
                         public void run() {
-                             GeckoPreferences.broadcastStumblerPref(BrowserApp.this);
+                            updateAddonMenuItem(id, options);
                         }
-                    }, oneSecondInMillis);
-                }
+                    });
+                    break;
 
-                if (AppConstants.MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE) {
-                    // TODO: Better scheduling of sync action (Bug 1257492)
-                    DownloadContentService.startSync(this);
+                case "Gecko:DelayedStartup":
+                    ThreadUtils.postToUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            // Force tabs panel inflation once the initial
+                            // pageload is finished.
+                            ensureTabsPanelExists();
+                            if (AppConstants.NIGHTLY_BUILD && mZoomedView == null) {
+                                ViewStub stub = (ViewStub) findViewById(R.id.zoomed_view_stub);
+                                mZoomedView = (ZoomedView) stub.inflate();
+                            }
+                        }
+                    });
 
-                    DownloadContentService.startVerification(this);
-                }
+                    if (AppConstants.MOZ_MEDIA_PLAYER) {
+                        // Check if the fragment is already added. This should never be true here, but this is
+                        // a nice safety check.
+                        // If casting is disabled, these classes aren't built. We use reflection to initialize them.
+                        final Class<?> mediaManagerClass = getMediaPlayerManager();
 
-                FeedService.setup(this);
-
-                super.handleMessage(event, message);
-            } else if (event.equals("Gecko:Ready")) {
-                // Handle this message in GeckoApp, but also enable the Settings
-                // menuitem, which is specific to BrowserApp.
-                super.handleMessage(event, message);
-                final Menu menu = mMenu;
-                ThreadUtils.postToUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (menu != null) {
-                            menu.findItem(R.id.settings).setEnabled(true);
-                            menu.findItem(R.id.help).setEnabled(true);
+                        if (mediaManagerClass != null) {
+                            try {
+                                final String tag = "";
+                                mediaManagerClass.getDeclaredField("MEDIA_PLAYER_TAG").get(tag);
+                                Log.i(LOGTAG, "Found tag " + tag);
+                                final Fragment frag = getSupportFragmentManager().findFragmentByTag(tag);
+                                if (frag == null) {
+                                    final Method getInstance = mediaManagerClass.getMethod("newInstance", (Class[]) null);
+                                    final Fragment mpm = (Fragment) getInstance.invoke(null);
+                                    getSupportFragmentManager().beginTransaction().disallowAddToBackStack().add(mpm, tag).commit();
+                                }
+                            } catch (Exception ex) {
+                                Log.e(LOGTAG, "Error initializing media manager", ex);
+                            }
                         }
                     }
-                });
 
-                // Display notification for Mozilla data reporting, if data should be collected.
-                if (AppConstants.MOZ_DATA_REPORTING && Restrictions.isAllowed(this, Restrictable.DATA_CHOICES)) {
-                    DataReportingNotification.checkAndNotifyPolicy(GeckoAppShell.getContext());
-                }
+                    if (AppConstants.MOZ_STUMBLER_BUILD_TIME_ENABLED && Restrictions.isAllowed(this, Restrictable.DATA_CHOICES)) {
+                        // Start (this acts as ping if started already) the stumbler lib; if the stumbler has queued data it will upload it.
+                        // Stumbler operates on its own thread, and startup impact is further minimized by delaying work (such as upload) a few seconds.
+                        // Avoid any potential startup CPU/thread contention by delaying the pref broadcast.
+                        final long oneSecondInMillis = 1000;
+                        ThreadUtils.getBackgroundHandler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                GeckoPreferences.broadcastStumblerPref(BrowserApp.this);
+                            }
+                        }, oneSecondInMillis);
+                    }
 
-            } else if (event.equals("Search:Keyword")) {
-                storeSearchQuery(message.getString("query"));
-                recordSearch(GeckoSharedPrefs.forProfile(this), message.getString("identifier"),
-                        TelemetryContract.Method.ACTIONBAR);
-            } else if (event.equals("LightweightTheme:Update")) {
-                ThreadUtils.postToUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mDynamicToolbar.setVisible(true, VisibilityTransition.ANIMATE);
+                    if (AppConstants.MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE) {
+                        // TODO: Better scheduling of sync action (Bug 1257492)
+                        DownloadContentService.startSync(this);
+
+                        DownloadContentService.startVerification(this);
                     }
-                });
-            } else if (event.equals("Video:Play")) {
-                final String uri = message.getString("uri");
-                final String uuid = message.getString("uuid");
-                ThreadUtils.postToUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mVideoPlayer.start(Uri.parse(uri));
-                        Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.CONTENT, "playhls");
+
+                    FeedService.setup(this);
+
+                    super.handleMessage(event, message);
+                    break;
+
+                case "Gecko:Ready":
+                    // Handle this message in GeckoApp, but also enable the Settings
+                    // menuitem, which is specific to BrowserApp.
+                    super.handleMessage(event, message);
+                    final Menu menu = mMenu;
+                    ThreadUtils.postToUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (menu != null) {
+                                menu.findItem(R.id.settings).setEnabled(true);
+                                menu.findItem(R.id.help).setEnabled(true);
+                            }
+                        }
+                    });
+
+                    // Display notification for Mozilla data reporting, if data should be collected.
+                    if (AppConstants.MOZ_DATA_REPORTING && Restrictions.isAllowed(this, Restrictable.DATA_CHOICES)) {
+                        DataReportingNotification.checkAndNotifyPolicy(GeckoAppShell.getContext());
                     }
-                });
-            } else if (event.equals("Prompt:ShowTop")) {
-                // Bring this activity to front so the prompt is visible..
-                Intent bringToFrontIntent = new Intent();
-                bringToFrontIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
-                bringToFrontIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                startActivity(bringToFrontIntent);
-            } else {
-                super.handleMessage(event, message);
+                    break;
+
+                case "Search:Keyword":
+                    storeSearchQuery(message.getString("query"));
+                    recordSearch(GeckoSharedPrefs.forProfile(this), message.getString("identifier"),
+                            TelemetryContract.Method.ACTIONBAR);
+                    break;
+
+                case "LightweightTheme:Update":
+                    ThreadUtils.postToUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mDynamicToolbar.setVisible(true, VisibilityTransition.ANIMATE);
+                        }
+                    });
+                    break;
+
+                case "Video:Play":
+                    final String uri = message.getString("uri");
+                    final String uuid = message.getString("uuid");
+                    ThreadUtils.postToUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mVideoPlayer.start(Uri.parse(uri));
+                            Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.CONTENT, "playhls");
+                        }
+                    });
+                    break;
+
+                case "Prompt:ShowTop":
+                    // Bring this activity to front so the prompt is visible..
+                    Intent bringToFrontIntent = new Intent();
+                    bringToFrontIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
+                    bringToFrontIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                    startActivity(bringToFrontIntent);
+                    break;
+
+                case "Tab:Added":
+                    if (message.getBoolean("cancelEditMode")) {
+                        ThreadUtils.postToUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                // Set the target tab to null so it does not get selected (on editing
+                                // mode exit) in lieu of the tab that we're going to open and select.
+                                mTargetTabForEditingMode = null;
+                                mBrowserToolbar.cancelEdit();
+                            }
+                        });
+                    }
+                    break;
+
+                default:
+                    super.handleMessage(event, message);
+                    break;
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);

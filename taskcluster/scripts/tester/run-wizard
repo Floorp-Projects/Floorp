@@ -77,20 +77,32 @@ it may be missing the command you need. To see a list of commands, run:
 
 def clone():
     """Clone the correct gecko repository and update to the proper revision."""
-    repo = os.environ['GECKO_HEAD_REPOSITORY']
-    rev = os.environ['GECKO_HEAD_REV']
-    clone_path = os.path.expanduser(os.path.join('~', 'gecko'))
+    base_repo = os.environ['GECKO_HEAD_REPOSITORY']
+    dest = os.path.expanduser(os.path.join('~', 'gecko'))
 
-    # try is too large to clone, instead clone central and pull
-    # in changes from try
-    if "hg.mozilla.org/try" in repo:
-        central = 'http://hg.mozilla.org/mozilla-central'
-        call(['hg', 'clone', '-U', central, clone_path])
-        call(['hg', 'pull', '-u', '-r', rev, repo], cwd=clone_path)
+    # Specify method to checkout a revision. This defaults to revisions as
+    # SHA-1 strings, but also supports symbolic revisions like `tip` via the
+    # branch flag.
+    if os.environ.get('GECKO_HEAD_REV'):
+        revision_flag = b'--revision'
+        revision = os.environ['GECKO_HEAD_REV']
+    elif os.environ.get('GECKO_HEAD_REF'):
+        revision_flag = b'--branch'
+        revision = os.environ['GECKO_HEAD_REF']
     else:
-        call(['hg', 'clone', '-u', rev, repo, clone_path])
-    print("Finished cloning to {} at revision {}.".format(
-                clone_path, rev))
+        print('revision is not specified for checkout')
+        return 1
+
+    # TODO Bug 1301382 - pin hg.mozilla.org fingerprint.
+    call([
+        b'/usr/bin/hg', b'robustcheckout',
+        b'--sharebase', b'/home/worker/hg-shared',
+        b'--purge',
+        b'--upstream', b'https://hg.mozilla.org/mozilla-unified',
+        revision_flag, revision,
+        base_repo, dest
+    ])
+    print("Finished cloning to {} at revision {}.".format(dest, revision))
 
 
 def exit():

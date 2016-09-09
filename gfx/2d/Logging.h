@@ -496,7 +496,9 @@ private:
       if ((mOptions & int(LogOptions::CrashAction)) && ValidReason()) {
         mMessage << " " << (int)mReason;
       }
-      mMessage << "]: ";
+      if (AutoPrefix()) {
+        mMessage << "]: ";
+      }
     }
   }
 
