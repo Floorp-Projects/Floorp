@@ -241,6 +241,7 @@ function setupPanelFrame(frame) {
   frame.setAttribute("flex", 1);
   frame.setAttribute("transparent", "transparent");
   frame.setAttribute("autocompleteenabled", true);
+  frame.setAttribute("tooltip", "aHTMLTooltip");
   if (platform === "darwin") {
     frame.style.borderRadius = "6px";
     frame.style.padding = "1px";

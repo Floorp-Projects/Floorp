@@ -200,10 +200,9 @@ RemoteFinder.prototype = {
                                                     shiftKey: aEvent.shiftKey });
   },
 
-  requestMatchesCount: function (aSearchString, aMatchLimit, aLinksOnly) {
+  requestMatchesCount: function (aSearchString, aLinksOnly) {
     this._browser.messageManager.sendAsyncMessage("Finder:MatchesCount",
                                                   { searchString: aSearchString,
-                                                    matchLimit: aMatchLimit,
                                                     linksOnly: aLinksOnly });
   }
 }
@@ -322,7 +321,7 @@ RemoteFinderListener.prototype = {
         break;
 
       case "Finder:MatchesCount":
-        this._finder.requestMatchesCount(data.searchString, data.matchLimit, data.linksOnly);
+        this._finder.requestMatchesCount(data.searchString, data.linksOnly);
         break;
 
       case "Finder:ModalHighlightChange":

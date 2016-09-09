@@ -9,7 +9,7 @@ Custom pings can be submitted from JavaScript using:
     TelemetryController.submitExternalPing(type, payload, options)
 
 - ``type`` - a ``string`` that is the type of the ping, limited to ``/^[a-z0-9][a-z0-9-]+[a-z0-9]$/i``.
-- ``payload`` - the actual payload data for the ping, should be a JSON style object.
+- ``payload`` - the actual payload data for the ping, has to be a JSON style object.
 - ``options`` - optional, an object containing additional options:
    - ``addClientId``- whether to add the client id to the ping, defaults to ``false``
    - ``addEnvironment`` - whether to add the environment data to the ping, defaults to ``false``
@@ -18,6 +18,21 @@ Custom pings can be submitted from JavaScript using:
 ``TelemetryController`` will assemble a ping with the passed payload and the specified options.
 That ping will be archived locally for use with Shield and inspection in ``about:telemetry``.
 If the preferences allow upload of Telemetry pings, the ping will be uploaded at the next opportunity (this is subject to throttling, retry-on-failure, etc.).
+
+Submission constraints
+----------------------
+
+When submitting pings on shutdown, they should not be submitted after Telemetry shutdown.
+Pings should be submitted at the latest within:
+
+- the `observer notification <https://developer.mozilla.org/de/docs/Observer_Notifications#Application_shutdown>`_ ``"profile-before-change"``
+- the :ref:`AsyncShutdown phase <AsyncShutdown_phases>` ``sendTelemetry``
+
+There are other constraints that can lead to a ping submission getting dropped:
+
+- invalid ping type strings
+- invalid payload types: E.g. strings instead of objects.
+- oversized payloads: We currently only drop pings >1MB, but targetting sizes of <=10KB is recommended.
 
 Tools
 =====

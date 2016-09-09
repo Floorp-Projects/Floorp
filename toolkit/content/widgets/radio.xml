@@ -370,8 +370,10 @@
            is done solely through the arrow keys and not the tab button. Tab
            takes you to the next widget in the tab order -->
       <handler event="keypress" key=" " phase="target">
-         this.selectedItem = this.focusedItem;
-         this.selectedItem.doCommand();
+        this.selectedItem = this.focusedItem;
+        this.selectedItem.doCommand();
+        // Prevent page from scrolling on the space key.
+        event.preventDefault();
       </handler>
       <handler event="keypress" keycode="VK_UP" phase="target">
         this.checkAdjacentElement(false);
