@@ -37,7 +37,6 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
     public static final String ACTION_RESUME         = "action_resume";
     public static final String ACTION_PAUSE          = "action_pause";
     public static final String ACTION_STOP           = "action_stop";
-    public static final String ACTION_REMOVE_CONTROL = "action_remove_control";
 
     private static final int MEDIA_CONTROL_ID = 1;
     private static final String MEDIA_CONTROL_PREF = "dom.audiochannel.mediaControl";
@@ -137,7 +136,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
         }
 
         Log.d(LOGTAG, "shutdown");
-        notifyControlInterfaceChanged(ACTION_REMOVE_CONTROL);
+        notifyControlInterfaceChanged(ACTION_STOP);
         PrefsHelper.removeObserver(mPrefsObserver);
 
         Tabs.unregisterOnTabsChangedListener(this);
@@ -170,12 +169,6 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                 mController.getTransportControls().pause();
                 break;
             case ACTION_STOP :
-                if (!mActionState.equals(ACTION_RESUME)) {
-                    return;
-                }
-                mController.getTransportControls().stop();
-                break;
-            case ACTION_REMOVE_CONTROL :
                 mController.getTransportControls().stop();
                 break;
         }
@@ -192,7 +185,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                     // the media control interface.
                     if (mActionState.equals(ACTION_RESUME)) {
                         notifyControlInterfaceChanged(mIsMediaControlPrefOn ?
-                            ACTION_PAUSE : ACTION_REMOVE_CONTROL);
+                            ACTION_PAUSE : ACTION_STOP);
                     }
 
                     // If turn off pref during pausing, except removing media
@@ -201,7 +194,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                     if (mActionState.equals(ACTION_PAUSE) &&
                         !mIsMediaControlPrefOn) {
                         Intent intent = new Intent(getApplicationContext(), MediaControlService.class);
-                        intent.setAction(ACTION_REMOVE_CONTROL);
+                        intent.setAction(ACTION_STOP);
                         handleIntent(intent);
                     }
                 }
@@ -262,8 +255,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
     }
 
     private boolean isNeedToRemoveControlInterface(String action) {
-        return (action.equals(ACTION_STOP) ||
-                action.equals(ACTION_REMOVE_CONTROL));
+        return action.equals(ACTION_STOP);
     }
 
     private void notifyControlInterfaceChanged(final String action) {
@@ -360,7 +352,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
 
     private PendingIntent createDeleteIntent() {
         Intent intent = new Intent(getApplicationContext(), MediaControlService.class);
-        intent.setAction(ACTION_REMOVE_CONTROL);
+        intent.setAction(ACTION_STOP);
         return  PendingIntent.getService(getApplicationContext(), 1, intent, 0);
     }
 
