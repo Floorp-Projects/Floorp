@@ -67,12 +67,6 @@ MediaStreamPlayback.prototype = {
       return p;
     }));
 
-    // XXX (bug 1208316) When we implement MediaStream.active, do not stop
-    // the stream. We just do it now so the media element will raise 'ended'.
-    if (!this.mediaStream.stop) {
-      return;
-    }
-    this.mediaStream.stop();
     return timeout(waitForEnded(), ENDED_TIMEOUT_LENGTH, "ended event never fired")
              .then(() => ok(true, "ended event successfully fired"))
              .then(() => noTrackEnded);
