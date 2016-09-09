@@ -84,7 +84,7 @@ VS_PATTERNS = [
     },
 ]
 
-SDK_RELEASE = '10.0.10586.0'
+SDK_RELEASE = '10.0.14393.0'
 
 # Files from the Windows 10 SDK to install.
 SDK_PATTERNS = [
