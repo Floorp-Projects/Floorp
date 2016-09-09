@@ -7,11 +7,12 @@
 #ifndef mozilla_dom_WebCryptoCommon_h
 #define mozilla_dom_WebCryptoCommon_h
 
-#include "pk11pub.h"
-#include "nsString.h"
-#include "nsContentUtils.h"
-#include "mozilla/dom/CryptoBuffer.h"
 #include "js/StructuredClone.h"
+#include "mozilla/ArrayUtils.h"
+#include "mozilla/dom/CryptoBuffer.h"
+#include "nsContentUtils.h"
+#include "nsString.h"
+#include "pk11pub.h"
 
 // WebCrypto algorithm names
 #define WEBCRYPTO_ALG_AES_CBC       "AES-CBC"
@@ -106,7 +107,8 @@
 // python security/pkix/tools/DottedOIDToCode.py id-ecDH 1.3.132.112
 static const uint8_t id_ecDH[] = { 0x2b, 0x81, 0x04, 0x70 };
 const SECItem SEC_OID_DATA_EC_DH = { siBuffer, (unsigned char*)id_ecDH,
-                                     PR_ARRAY_SIZE(id_ecDH) };
+                                     static_cast<unsigned int>(
+                                       mozilla::ArrayLength(id_ecDH)) };
 
 // python security/pkix/tools/DottedOIDToCode.py dhKeyAgreement 1.2.840.113549.1.3.1
 static const uint8_t dhKeyAgreement[] = {
@@ -114,7 +116,8 @@ static const uint8_t dhKeyAgreement[] = {
 };
 const SECItem SEC_OID_DATA_DH_KEY_AGREEMENT = { siBuffer,
                                                 (unsigned char*)dhKeyAgreement,
-                                                PR_ARRAY_SIZE(dhKeyAgreement) };
+                                                static_cast<unsigned int>(
+                                                  mozilla::ArrayLength(dhKeyAgreement)) };
 
 namespace mozilla {
 namespace dom {
