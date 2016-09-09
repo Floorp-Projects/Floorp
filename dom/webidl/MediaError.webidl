@@ -19,4 +19,6 @@ interface MediaError {
 
   [Constant]
   readonly attribute unsigned short code;
+  [Pref="dom.MediaError.message.enabled"]
+  readonly attribute DOMString message;
 };
