@@ -51,6 +51,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/ContentChild.h"
 #include "nsIObserverService.h"
+#include "nsISupportsPrimitives.h"
 #include "MediaPrefs.h"
 
 using namespace mozilla;
@@ -1187,40 +1188,41 @@ nsAndroidBridge::Observe(nsISupports* aSubject, const char* aTopic,
 {
   if (!strcmp(aTopic, "xpcom-shutdown")) {
     RemoveObservers();
-  } else if (!strcmp(aTopic, "audio-playback")) {
-    ALOG_BRIDGE("nsAndroidBridge::Observe, get audio-playback event.");
+  } else if (!strcmp(aTopic, "media-playback")) {
+    ALOG_BRIDGE("nsAndroidBridge::Observe, get media-playback event.");
 
-    nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryInterface(aSubject);
-    MOZ_ASSERT(window);
-
-    nsAutoString activeStr(aData);
-    if (activeStr.EqualsLiteral("inactive-nonaudible")) {
-      // This state means the audio becomes silent, but it's still playing, so
-      // we don't need to notify the AudioFocusAgent.
+    nsCOMPtr<nsISupportsPRUint64> wrapper = do_QueryInterface(aSubject);
+    if (!wrapper) {
       return NS_OK;
     }
 
-    bool isPlaying = activeStr.EqualsLiteral("active");
+    uint64_t windowId = 0;
+    nsresult rv = wrapper->GetData(&windowId);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-    UpdateAudioPlayingWindows(window, isPlaying);
+    nsAutoString activeStr(aData);
+    bool isPlaying = activeStr.EqualsLiteral("active");
+    UpdateAudioPlayingWindows(windowId, isPlaying);
   }
   return NS_OK;
 }
 
 void
-nsAndroidBridge::UpdateAudioPlayingWindows(nsPIDOMWindowOuter* aWindow,
+nsAndroidBridge::UpdateAudioPlayingWindows(uint64_t aWindowId,
                                            bool aPlaying)
 {
   // Request audio focus for the first audio playing window and abandon focus
   // for the last audio playing window.
-  if (aPlaying && !mAudioPlayingWindows.Contains(aWindow)) {
-    mAudioPlayingWindows.AppendElement(aWindow);
+  if (aPlaying && !mAudioPlayingWindows.Contains(aWindowId)) {
+    mAudioPlayingWindows.AppendElement(aWindowId);
     if (mAudioPlayingWindows.Length() == 1) {
       ALOG_BRIDGE("nsAndroidBridge, request audio focus.");
       AudioFocusAgent::NotifyStartedPlaying();
     }
-  } else if (!aPlaying && mAudioPlayingWindows.Contains(aWindow)) {
-    mAudioPlayingWindows.RemoveElement(aWindow);
+  } else if (!aPlaying && mAudioPlayingWindows.Contains(aWindowId)) {
+    mAudioPlayingWindows.RemoveElement(aWindowId);
     if (mAudioPlayingWindows.Length() == 0) {
       ALOG_BRIDGE("nsAndroidBridge, abandon audio focus.");
       AudioFocusAgent::NotifyStoppedPlaying();
@@ -1234,7 +1236,7 @@ nsAndroidBridge::AddObservers()
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
     obs->AddObserver(this, "xpcom-shutdown", false);
-    obs->AddObserver(this, "audio-playback", false);
+    obs->AddObserver(this, "media-playback", false);
   }
 }
 
@@ -1244,7 +1246,7 @@ nsAndroidBridge::RemoveObservers()
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
     obs->RemoveObserver(this, "xpcom-shutdown");
-    obs->RemoveObserver(this, "audio-playback");
+    obs->RemoveObserver(this, "media-playback");
   }
 }
 
