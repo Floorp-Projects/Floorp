@@ -3,9 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
-from unittest import TestCase
+import sys
 
-from mozunit import main
+import pytest
 
 from mozlint.parser import Parser
 from mozlint.errors import (
@@ -14,55 +14,42 @@ from mozlint.errors import (
 )
 
 
-here = os.path.abspath(os.path.dirname(__file__))
+@pytest.fixture(scope='module')
+def parse(lintdir):
+    parser = Parser()
+
+    def _parse(name):
+        path = os.path.join(lintdir, name)
+        return parser(path)
+    return _parse
 
 
-class TestParser(TestCase):
+def test_parse_valid_linter(parse):
+    lintobj = parse('string.lint')
+    assert isinstance(lintobj, dict)
+    assert 'name' in lintobj
+    assert 'description' in lintobj
+    assert 'type' in lintobj
+    assert 'payload' in lintobj
 
-    def __init__(self, *args, **kwargs):
-        TestCase.__init__(self, *args, **kwargs)
 
-        self._lintdir = os.path.join(here, 'linters')
-        self._parse = Parser()
+@pytest.mark.parametrize('linter', [
+    'invalid_type.lint',
+    'invalid_extension.lnt',
+    'invalid_include.lint',
+    'invalid_exclude.lint',
+    'missing_attrs.lint',
+    'missing_definition.lint',
+])
+def test_parse_invalid_linter(parse, linter):
+    with pytest.raises(LinterParseError):
+        parse(linter)
 
-    def parse(self, name):
-        return self._parse(os.path.join(self._lintdir, name))
 
-    def test_parse_valid_linter(self):
-        linter = self.parse('string.lint')
-        self.assertIsInstance(linter, dict)
-        self.assertIn('name', linter)
-        self.assertIn('description', linter)
-        self.assertIn('type', linter)
-        self.assertIn('payload', linter)
-
-    def test_parse_invalid_type(self):
-        with self.assertRaises(LinterParseError):
-            self.parse('invalid_type.lint')
-
-    def test_parse_invalid_extension(self):
-        with self.assertRaises(LinterParseError):
-            self.parse('invalid_extension.lnt')
-
-    def test_parse_invalid_include_exclude(self):
-        with self.assertRaises(LinterParseError):
-            self.parse('invalid_include.lint')
-
-        with self.assertRaises(LinterParseError):
-            self.parse('invalid_exclude.lint')
-
-    def test_parse_missing_attributes(self):
-        with self.assertRaises(LinterParseError):
-            self.parse('missing_attrs.lint')
-
-    def test_parse_missing_definition(self):
-        with self.assertRaises(LinterParseError):
-            self.parse('missing_definition.lint')
-
-    def test_parse_non_existent_linter(self):
-        with self.assertRaises(LinterNotFound):
-            self.parse('missing_file.lint')
+def test_parse_non_existent_linter(parse):
+    with pytest.raises(LinterNotFound):
+        parse('missing_file.lint')
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(pytest.main(['--verbose', __file__]))
