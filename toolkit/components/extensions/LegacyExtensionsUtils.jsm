@@ -40,18 +40,10 @@ var LegacyExtensionContext = class extends ExtensionContext {
    *   The webextension instance associated with this context. This will be the
    *   instance of the newly created embedded webextension when this class is
    *   used through the EmbeddedWebExtensionsUtils.
-   * @param {Object} [optionalParams]
-   *   An object with the following properties:
-   * @param {string}  [optionalParams.url]
-   *   An URL to mark the messages sent from this context
-   *   (e.g. EmbeddedWebExtension sets it to the base url of the container addon).
    */
-  constructor(targetExtension, optionalParams = {}) {
-    let {url} = optionalParams;
-
+  constructor(targetExtension) {
     super(targetExtension, {
       contentWindow: null,
-      uri: NetUtil.newURI(url || "about:blank"),
       type: "legacy_extension",
     });
 
@@ -167,9 +159,7 @@ class EmbeddedExtension {
         // to subscribe its message listeners (which are supposed to be able to
         // receive any message that the embedded part can try to send to it
         // during its startup).
-        this.context = new LegacyExtensionContext(this.extension, {
-          url: this.resourceURI.resolve("/"),
-        });
+        this.context = new LegacyExtensionContext(this.extension);
 
         // Destroy the LegacyExtensionContext cloneScope when
         // the embedded webextensions is unloaded.
