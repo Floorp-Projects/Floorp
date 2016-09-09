@@ -8,8 +8,7 @@
 include protocol PNecko;
 include URIParams;
 
-
-using class IPC::SerializedLoadContext from "SerializedLoadContext.h";
+using mozilla::NeckoOriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 
 namespace mozilla {
 namespace net {
@@ -50,9 +49,9 @@ parent:
    *        Whether the result is for an HTTP request header. This should be
    *        true for nsICookieService.getCookieStringFromHttp calls, false
    *        otherwise.
-   * @param loadContext
-   *        The loadContext from the HTTP channel or document that the cookie is
-   *        being set on.
+   * @param attrs
+   *        The origin attributes from the HTTP channel or document that the
+   *        cookie is being set on.
    *
    * @see nsICookieService.getCookieString
    * @see nsICookieService.getCookieStringFromHttp
@@ -63,7 +62,7 @@ parent:
   prio(urgent) sync GetCookieString(URIParams host,
                                     bool isForeign,
                                     bool fromHttp,
-                                    SerializedLoadContext loadContext)
+                                    NeckoOriginAttributes attrs)
        returns (nsCString result);
 
   /*
@@ -87,9 +86,9 @@ parent:
    *        Whether the result is for an HTTP request header. This should be
    *        true for nsICookieService.setCookieStringFromHttp calls, false
    *        otherwise.
-   * @param loadContext
-   *        The loadContext from the HTTP channel or document that the cookie is
-   *        being set on.
+   * @param attrs
+   *        The origin attributes from the HTTP channel or document that the
+   *        cookie is being set on.
    *
    * @see nsICookieService.setCookieString
    * @see nsICookieService.setCookieStringFromHttp
@@ -100,7 +99,7 @@ parent:
                                      nsCString cookieString,
                                      nsCString serverTime,
                                      bool fromHttp,
-                                     SerializedLoadContext loadContext);
+                                     NeckoOriginAttributes attrs);
 
   async __delete__();
 };
