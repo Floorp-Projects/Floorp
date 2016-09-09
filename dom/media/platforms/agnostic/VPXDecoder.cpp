@@ -49,11 +49,10 @@ VPXDecoder::~VPXDecoder()
   MOZ_COUNT_DTOR(VPXDecoder);
 }
 
-nsresult
+void
 VPXDecoder::Shutdown()
 {
   vpx_codec_destroy(&mVPX);
-  return NS_OK;
 }
 
 RefPtr<MediaDataDecoder::InitPromise>
@@ -84,7 +83,7 @@ VPXDecoder::Init()
   return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
 }
 
-nsresult
+void
 VPXDecoder::Flush()
 {
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
@@ -94,7 +93,6 @@ VPXDecoder::Flush()
   });
   SyncRunnable::DispatchToThread(mTaskQueue, r);
   mIsFlushing = false;
-  return NS_OK;
 }
 
 int
@@ -197,14 +195,12 @@ VPXDecoder::ProcessDecode(MediaRawData* aSample)
   }
 }
 
-nsresult
+void
 VPXDecoder::Input(MediaRawData* aSample)
 {
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
                        this, &VPXDecoder::ProcessDecode, aSample));
-
-  return NS_OK;
 }
 
 void
@@ -214,13 +210,11 @@ VPXDecoder::ProcessDrain()
   mCallback->DrainComplete();
 }
 
-nsresult
+void
 VPXDecoder::Drain()
 {
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   mTaskQueue->Dispatch(NewRunnableMethod(this, &VPXDecoder::ProcessDrain));
-
-  return NS_OK;
 }
 
 /* static */

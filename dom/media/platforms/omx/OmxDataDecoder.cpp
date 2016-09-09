@@ -175,7 +175,7 @@ OmxDataDecoder::Init()
   return p;
 }
 
-nsresult
+void
 OmxDataDecoder::Input(MediaRawData* aSample)
 {
   LOG("sample %p", aSample);
@@ -195,11 +195,9 @@ OmxDataDecoder::Input(MediaRawData* aSample)
       }
     });
   mOmxTaskQueue->Dispatch(r.forget());
-
-  return NS_OK;
 }
 
-nsresult
+void
 OmxDataDecoder::Flush()
 {
   LOG("");
@@ -215,21 +213,17 @@ OmxDataDecoder::Flush()
   while (mFlushing) {
     lock.Wait();
   }
-
-  return NS_OK;
 }
 
-nsresult
+void
 OmxDataDecoder::Drain()
 {
   LOG("");
 
   mOmxTaskQueue->Dispatch(NewRunnableMethod(this, &OmxDataDecoder::SendEosBuffer));
-
-  return NS_OK;
 }
 
-nsresult
+void
 OmxDataDecoder::Shutdown()
 {
   LOG("");
@@ -250,8 +244,6 @@ OmxDataDecoder::Shutdown()
 
   mOmxTaskQueue->BeginShutdown();
   mOmxTaskQueue->AwaitShutdownAndIdle();
-
-  return NS_OK;
 }
 
 void

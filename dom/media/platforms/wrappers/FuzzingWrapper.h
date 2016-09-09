@@ -103,12 +103,12 @@ public:
 
   // MediaDataDecoder implementation.
   RefPtr<InitPromise> Init() override;
-  nsresult Input(MediaRawData* aSample) override;
-  nsresult Flush() override;
-  nsresult Drain() override;
-  nsresult Shutdown() override;
+  void Input(MediaRawData* aSample) override;
+  void Flush() override;
+  void Drain() override;
+  void Shutdown() override;
   bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
-  nsresult ConfigurationChanged(const TrackInfo& aConfig) override;
+  void ConfigurationChanged(const TrackInfo& aConfig) override;
   const char* GetDescriptionName() const override
   {
     return mDecoder->GetDescriptionName();

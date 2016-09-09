@@ -44,11 +44,9 @@ public:
     return InitPromise::CreateAndResolve(mType, __func__);
   }
 
-  nsresult Shutdown() override {
-    return NS_OK;
-  }
+  void Shutdown() override {}
 
-  nsresult Input(MediaRawData* aSample) override
+  void Input(MediaRawData* aSample) override
   {
     RefPtr<MediaData> data =
       mCreator->Create(media::TimeUnit::FromMicroseconds(aSample->mTime),
@@ -56,25 +54,20 @@ public:
                        aSample->mOffset);
 
     OutputFrame(data);
-
-    return NS_OK;
   }
 
-  nsresult Flush() override
+  void Flush() override
   {
     mReorderQueue.Clear();
-
-    return NS_OK;
   }
 
-  nsresult Drain() override
+  void Drain() override
   {
     while (!mReorderQueue.IsEmpty()) {
       mCallback->Output(mReorderQueue.Pop().get());
     }
 
     mCallback->DrainComplete();
-    return NS_OK;
   }
 
   const char* GetDescriptionName() const override
