@@ -31,13 +31,4 @@ task:
     env:
       GECKO_HEAD_REPOSITORY: '{{head_repository}}'
       GECKO_HEAD_REV: '{{head_rev}}'
-      ARTIFACT_TASKID: '{{build_slugid}}'
-
-  extra:
-    treeherderEnv:
-      - production
-      - staging
-    treeherder:
-      groupSymbol: tc
-      groupName: Submitted by taskcluster
-      symbol: us
+      ARTIFACT_TASKID: {"task-reference": "<{{build_slugid}}>"}
