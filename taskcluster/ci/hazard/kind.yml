@@ -37,9 +37,6 @@ jobs:
                 tc-vcs checkout workspace/gecko "$GECKO_BASE_REPOSITORY" "$GECKO_HEAD_REPOSITORY" "$GECKO_HEAD_REV" "$GECKO_HEAD_REF"
                 && cd ./workspace/gecko/taskcluster/scripts/builder
                 && ./build-haz-linux.sh --project shell $HOME/workspace
-        run-on-projects:
-            - integration
-            - release
         when:
             files-changed:
                 - js/public/**
@@ -76,8 +73,8 @@ jobs:
             platform: mulet-linux64/opt
             symbol: tc(H)
             tier: 3
-        run-on-projects:
-            - try
+        # don't run anywhere by default, but still available via try: -b d -p linux64-mulet-haz
+        run-on-projects: []
         worker:
             docker-image: {in-tree: builder}
         run:
