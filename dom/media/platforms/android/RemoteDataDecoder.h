@@ -31,10 +31,10 @@ public:
 
   virtual ~RemoteDataDecoder() {}
 
-  nsresult Flush() override;
-  nsresult Drain() override;
-  nsresult Shutdown() override;
-  nsresult Input(MediaRawData* aSample) override;
+  void Flush() override;
+  void Drain() override;
+  void Shutdown() override;
+  void Input(MediaRawData* aSample) override;
   const char* GetDescriptionName() const override
   {
     return "android remote decoder";

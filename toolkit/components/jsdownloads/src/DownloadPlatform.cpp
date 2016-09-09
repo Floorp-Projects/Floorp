@@ -106,7 +106,8 @@ nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIFile* aTarget,
       // Use GIO to store the source URI for later display in the file manager.
       GFile* gio_file = g_file_new_for_path(NS_ConvertUTF16toUTF8(path).get());
       nsCString source_uri;
-      aSource->GetSpec(source_uri);
+      nsresult rv = aSource->GetSpec(source_uri);
+      NS_ENSURE_SUCCESS(rv, rv);
       GFileInfo *file_info = g_file_info_new();
       g_file_info_set_attribute_string(file_info, "metadata::download-uri", source_uri.get());
       g_file_set_attributes_async(gio_file,

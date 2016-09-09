@@ -93,7 +93,7 @@ SVGCircleElement::GetGeometryBounds(Rect* aBounds,
 
   if (r <= 0.f) {
     // Rendering of the element is disabled
-    *aBounds = Rect(aToBoundsSpace * Point(x, y), Size());
+    *aBounds = Rect(aToBoundsSpace.TransformPoint(Point(x, y)), Size());
     return true;
   }
 

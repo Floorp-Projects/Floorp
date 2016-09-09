@@ -89,11 +89,6 @@ public:
   {
   }
 
-  nsresult Input(MediaRawData* aSample) override
-  {
-    return MediaCodecDataDecoder::Input(aSample);
-  }
-
   nsresult PostOutput(BufferInfo::Param aInfo, MediaFormat::Param aFormat,
                       const TimeUnit& aDuration) override
   {
@@ -618,14 +613,12 @@ MediaCodecDataDecoder::ClearQueue()
   mDurations.clear();
 }
 
-nsresult
+void
 MediaCodecDataDecoder::Input(MediaRawData* aSample)
 {
   MonitorAutoLock lock(mMonitor);
   mQueue.push_back(aSample);
   lock.NotifyAll();
-
-  return NS_OK;
 }
 
 nsresult
@@ -640,39 +633,35 @@ MediaCodecDataDecoder::ResetOutputBuffers()
   return mDecoder->GetOutputBuffers(ReturnTo(&mOutputBuffers));
 }
 
-nsresult
+void
 MediaCodecDataDecoder::Flush()
 {
   MonitorAutoLock lock(mMonitor);
   if (!SetState(ModuleState::kFlushing)) {
-    return NS_OK;
+    return;
   }
   lock.Notify();
 
   while (mState == ModuleState::kFlushing) {
     lock.Wait();
   }
-
-  return NS_OK;
 }
 
-nsresult
+void
 MediaCodecDataDecoder::Drain()
 {
   MonitorAutoLock lock(mMonitor);
   if (mState == ModuleState::kDrainDecoder ||
       mState == ModuleState::kDrainQueue) {
-    return NS_OK;
+    return;
   }
 
   SetState(ModuleState::kDrainQueue);
   lock.Notify();
-
-  return NS_OK;
 }
 
 
-nsresult
+void
 MediaCodecDataDecoder::Shutdown()
 {
   MonitorAutoLock lock(mMonitor);
@@ -694,8 +683,6 @@ MediaCodecDataDecoder::Shutdown()
     mDecoder->Release();
     mDecoder = nullptr;
   }
-
-  return NS_OK;
 }
 
 } // mozilla

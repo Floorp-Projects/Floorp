@@ -426,7 +426,8 @@ nsChromeRegistryChrome::SendRegisteredChrome(
 
     nsCOMPtr<nsIResProtocolHandler> irph (do_QueryInterface(ph));
     nsResProtocolHandler* rph = static_cast<nsResProtocolHandler*>(irph.get());
-    rph->CollectSubstitutions(resources);
+    rv = rph->CollectSubstitutions(resources);
+    NS_ENSURE_SUCCESS_VOID(rv);
   }
 
   for (auto iter = mOverrideTable.Iter(); !iter.Done(); iter.Next()) {

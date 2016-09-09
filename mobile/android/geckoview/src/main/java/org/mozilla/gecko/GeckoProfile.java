@@ -21,7 +21,6 @@ import org.mozilla.gecko.GeckoProfileDirectories.NoSuchProfileException;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.StubBrowserDB;
-import org.mozilla.gecko.firstrun.FirstrunAnimationContainer;
 import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.INIParser;
 import org.mozilla.gecko.util.INISection;
@@ -972,10 +971,6 @@ public final class GeckoProfile {
         // is called before Gecko starts). If we let Gecko start, the JS telemetry
         // code may try to write to the file at the same time Java does.
         persistClientId(generateNewClientId());
-
-        // Initialize pref flag for displaying the start pane for a new profile.
-        final SharedPreferences prefs = GeckoSharedPrefs.forProfile(mApplicationContext);
-        prefs.edit().putBoolean(FirstrunAnimationContainer.PREF_FIRSTRUN_ENABLED, true).apply();
 
         return profileDir;
     }

@@ -9,7 +9,7 @@
 
 /*
  * secitem.h - public data structures and prototypes for handling
- *	       SECItems
+ *             SECItems
  */
 
 #include "plarena.h"
@@ -33,12 +33,12 @@ SEC_BEGIN_PROTOS
 ** unused and our improved APIs (aka Stan) are looming, I left it out.
 */
 extern SECItem *SECITEM_AllocItem(PLArenaPool *arena, SECItem *item,
-				  unsigned int len);
+                                  unsigned int len);
 
 /*
 ** This is a legacy function containing bugs. It doesn't update item->len,
 ** and it has other issues as described in bug 298649 and bug 298938.
-** However, the function is  kept unchanged for consumers that might depend 
+** However, the function is  kept unchanged for consumers that might depend
 ** on the broken behaviour. New code should call SECITEM_ReallocItemV2.
 **
 ** Reallocate the data for the specified "item".  If "arena" is not NULL,
@@ -48,9 +48,9 @@ extern SECItem *SECITEM_AllocItem(PLArenaPool *arena, SECItem *item,
 ** SECFailure is returned if it is not.  If the allocation succeeds,
 ** SECSuccess is returned.
 */
-extern SECStatus SECITEM_ReallocItem( /* deprecated function */
-				     PLArenaPool *arena, SECItem *item,
-				     unsigned int oldlen, unsigned int newlen);
+extern SECStatus SECITEM_ReallocItem(/* deprecated function */
+                                     PLArenaPool *arena, SECItem *item,
+                                     unsigned int oldlen, unsigned int newlen);
 
 /*
 ** Reallocate the data for the specified "item".  If "arena" is not NULL,
@@ -61,7 +61,7 @@ extern SECStatus SECITEM_ReallocItem( /* deprecated function */
 ** If the allocation succeeds, the item is updated and SECSuccess is returned.
  */
 extern SECStatus SECITEM_ReallocItemV2(PLArenaPool *arena, SECItem *item,
-				       unsigned int newlen);
+                                       unsigned int newlen);
 
 /*
 ** Compare two items returning the difference between them.
@@ -76,7 +76,7 @@ extern PRBool SECITEM_ItemsAreEqual(const SECItem *a, const SECItem *b);
 /*
 ** Copy "from" to "to"
 */
-extern SECStatus SECITEM_CopyItem(PLArenaPool *arena, SECItem *to, 
+extern SECStatus SECITEM_CopyItem(PLArenaPool *arena, SECItem *to,
                                   const SECItem *from);
 
 /*
@@ -85,7 +85,7 @@ extern SECStatus SECITEM_CopyItem(PLArenaPool *arena, SECItem *to,
 extern SECItem *SECITEM_DupItem(const SECItem *from);
 
 /*
-** Allocate an item and copy "from" into it.  The item itself and the 
+** Allocate an item and copy "from" into it.  The item itself and the
 ** data it points to are both allocated from the arena.  If arena is
 ** NULL, this function is equivalent to SECITEM_DupItem.
 */
@@ -101,9 +101,9 @@ extern void SECITEM_FreeItem(SECItem *zap, PRBool freeit);
 */
 extern void SECITEM_ZfreeItem(SECItem *zap, PRBool freeit);
 
-PLHashNumber PR_CALLBACK SECITEM_Hash ( const void *key);
+PLHashNumber PR_CALLBACK SECITEM_Hash(const void *key);
 
-PRIntn PR_CALLBACK SECITEM_HashCompare ( const void *k1, const void *k2);
+PRIntn PR_CALLBACK SECITEM_HashCompare(const void *k1, const void *k2);
 
 extern SECItemArray *SECITEM_AllocArray(PLArenaPool *arena,
                                         SECItemArray *array,

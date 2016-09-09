@@ -499,6 +499,17 @@ class Process extends BaseProcess {
 
     if (ok) {
       this.jobHandle = win32.Handle(libc.CreateJobObjectW(null, null));
+
+      let info = win32.JOBOBJECT_EXTENDED_LIMIT_INFORMATION();
+      info.BasicLimitInformation.LimitFlags = win32.JOB_OBJECT_LIMIT_BREAKAWAY_OK;
+
+      ok = libc.SetInformationJobObject(this.jobHandle, win32.JobObjectExtendedLimitInformation,
+                                        ctypes.cast(info.address(), ctypes.voidptr_t),
+                                        info.constructor.size);
+      errorMessage = `Failed to set job limits: 0x${(ctypes.winLastError || 0).toString(16)}`;
+    }
+
+    if (ok) {
       ok = libc.AssignProcessToJobObject(this.jobHandle, procInfo.hProcess);
       errorMessage = `Failed to attach process to job object: 0x${(ctypes.winLastError || 0).toString(16)}`;
     }

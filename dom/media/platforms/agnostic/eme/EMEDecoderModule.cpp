@@ -45,14 +45,14 @@ public:
     return mDecoder->Init();
   }
 
-  nsresult Input(MediaRawData* aSample) override {
+  void Input(MediaRawData* aSample) override {
     MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
     if (mIsShutdown) {
       NS_WARNING("EME encrypted sample arrived after shutdown");
-      return NS_OK;
+      return;
     }
     if (mSamplesWaitingForKey->WaitIfKeyNotUsable(aSample)) {
-      return NS_OK;
+      return;
     }
 
     nsAutoPtr<MediaRawDataWriter> writer(aSample->CreateWriter());
@@ -64,7 +64,7 @@ public:
       mTaskQueue, __func__, this,
       &EMEDecryptor::Decrypted,
       &EMEDecryptor::Decrypted));
-    return NS_OK;
+    return;
   }
 
   void Decrypted(const DecryptResult& aDecrypted) {
@@ -104,12 +104,11 @@ public:
       // by gmp-clearkey, decoding will fail.
       UniquePtr<MediaRawDataWriter> writer(aDecrypted.mSample->CreateWriter());
       writer->mCrypto = CryptoSample();
-      nsresult rv = mDecoder->Input(aDecrypted.mSample);
-      Unused << NS_WARN_IF(NS_FAILED(rv));
+      mDecoder->Input(aDecrypted.mSample);
     }
   }
 
-  nsresult Flush() override {
+  void Flush() override {
     MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
     MOZ_ASSERT(!mIsShutdown);
     for (auto iter = mDecrypts.Iter(); !iter.Done(); iter.Next()) {
@@ -117,13 +116,11 @@ public:
       holder->DisconnectIfExists();
       iter.Remove();
     }
-    nsresult rv = mDecoder->Flush();
-    Unused << NS_WARN_IF(NS_FAILED(rv));
+    mDecoder->Flush();
     mSamplesWaitingForKey->Flush();
-    return rv;
   }
 
-  nsresult Drain() override {
+  void Drain() override {
     MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
     MOZ_ASSERT(!mIsShutdown);
     for (auto iter = mDecrypts.Iter(); !iter.Done(); iter.Next()) {
@@ -131,23 +128,19 @@ public:
       holder->DisconnectIfExists();
       iter.Remove();
     }
-    nsresult rv = mDecoder->Drain();
-    Unused << NS_WARN_IF(NS_FAILED(rv));
-    return rv;
+    mDecoder->Drain();
   }
 
-  nsresult Shutdown() override {
+  void Shutdown() override {
     MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
     MOZ_ASSERT(!mIsShutdown);
     mIsShutdown = true;
-    nsresult rv = mDecoder->Shutdown();
-    Unused << NS_WARN_IF(NS_FAILED(rv));
+    mDecoder->Shutdown();
     mSamplesWaitingForKey->BreakCycles();
     mSamplesWaitingForKey = nullptr;
     mDecoder = nullptr;
     mProxy = nullptr;
     mCallback = nullptr;
-    return rv;
   }
 
   const char* GetDescriptionName() const override {
@@ -178,38 +171,36 @@ public:
   {
   }
 
-  nsresult Input(MediaRawData* aSample) override;
-  nsresult Shutdown() override;
+  void Input(MediaRawData* aSample) override;
+  void Shutdown() override;
 
 private:
   RefPtr<SamplesWaitingForKey> mSamplesWaitingForKey;
   RefPtr<CDMProxy> mProxy;
 };
 
-nsresult
+void
 EMEMediaDataDecoderProxy::Input(MediaRawData* aSample)
 {
   if (mSamplesWaitingForKey->WaitIfKeyNotUsable(aSample)) {
-    return NS_OK;
+    return;
   }
 
   nsAutoPtr<MediaRawDataWriter> writer(aSample->CreateWriter());
   mProxy->GetSessionIdsForKeyId(aSample->mCrypto.mKeyId,
                                 writer->mCrypto.mSessionIds);
 
-  return MediaDataDecoderProxy::Input(aSample);
+  MediaDataDecoderProxy::Input(aSample);
 }
 
-nsresult
+void
 EMEMediaDataDecoderProxy::Shutdown()
 {
-  nsresult rv = MediaDataDecoderProxy::Shutdown();
+  MediaDataDecoderProxy::Shutdown();
 
   mSamplesWaitingForKey->BreakCycles();
   mSamplesWaitingForKey = nullptr;
   mProxy = nullptr;
-
-  return rv;
 }
 
 EMEDecoderModule::EMEDecoderModule(CDMProxy* aProxy, PDMFactory* aPDM)

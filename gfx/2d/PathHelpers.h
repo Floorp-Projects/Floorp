@@ -41,7 +41,9 @@ inline void PartialArcToBezier(T* aSink,
   Point cp2 =
     aEndOffset + Point(aEndOffset.y, -aEndOffset.x) * aKappaFactor;
 
-  aSink->BezierTo(aTransform * cp1, aTransform * cp2, aTransform * aEndOffset);
+  aSink->BezierTo(aTransform.TransformPoint(cp1),
+                  aTransform.TransformPoint(cp2),
+                  aTransform.TransformPoint(aEndOffset));
 }
 
 /**
@@ -110,7 +112,7 @@ void ArcToBezier(T* aSink, const Point &aOrigin, const Size &aRadius,
     transform *= Matrix::Rotation(aRotation);
   }
   transform.PostTranslate(aOrigin);
-  aSink->LineTo(transform * currentStartOffset);
+  aSink->LineTo(transform.TransformPoint(currentStartOffset));
 
   while (arcSweepLeft > 0) {
     Float currentEndAngle =
@@ -137,7 +139,7 @@ void EllipseToBezier(T* aSink, const Point &aOrigin, const Size &aRadius)
   Matrix transform(aRadius.width, 0, 0, aRadius.height, aOrigin.x, aOrigin.y);
   Point currentStartOffset(1, 0);
 
-  aSink->LineTo(transform * currentStartOffset);
+  aSink->LineTo(transform.TransformPoint(currentStartOffset));
 
   for (int i = 0; i < 4; i++) {
     // cos(x+pi/2) == -sin(x)
@@ -363,9 +365,9 @@ inline bool UserToDevicePixelSnapped(Rect& aRect, const DrawTarget& aDrawTarget,
   }
 #undef WITHIN_E
 
-  Point p1 = mat * aRect.TopLeft();
-  Point p2 = mat * aRect.TopRight();
-  Point p3 = mat * aRect.BottomRight();
+  Point p1 = mat.TransformPoint(aRect.TopLeft());
+  Point p2 = mat.TransformPoint(aRect.TopRight());
+  Point p3 = mat.TransformPoint(aRect.BottomRight());
 
   // Check that the rectangle is axis-aligned. For an axis-aligned rectangle,
   // two opposite corners define the entire rectangle. So check if

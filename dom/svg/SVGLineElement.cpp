@@ -157,8 +157,8 @@ SVGLineElement::GetGeometryBounds(Rect* aBounds,
   GetAnimatedLengthValues(&x1, &y1, &x2, &y2, nullptr);
 
   if (aStrokeOptions.mLineWidth <= 0) {
-    *aBounds = Rect(aToBoundsSpace * Point(x1, y1), Size());
-    aBounds->ExpandToEnclose(aToBoundsSpace * Point(x2, y2));
+    *aBounds = Rect(aToBoundsSpace.TransformPoint(Point(x1, y1)), Size());
+    aBounds->ExpandToEnclose(aToBoundsSpace.TransformPoint(Point(x2, y2)));
     return true;
   }
 
@@ -198,8 +198,8 @@ SVGLineElement::GetGeometryBounds(Rect* aBounds,
 
   if (aToNonScalingStrokeSpace) {
     Point nonScalingSpaceP1, nonScalingSpaceP2;
-    nonScalingSpaceP1 = *aToNonScalingStrokeSpace * Point(x1, y1);
-    nonScalingSpaceP2 = *aToNonScalingStrokeSpace * Point(x2, y2);
+    nonScalingSpaceP1 = aToNonScalingStrokeSpace->TransformPoint(Point(x1, y1));
+    nonScalingSpaceP2 = aToNonScalingStrokeSpace->TransformPoint(Point(x2, y2));
     x1 = nonScalingSpaceP1.x;
     y1 = nonScalingSpaceP1.y;
     x2 = nonScalingSpaceP2.x;
@@ -245,9 +245,9 @@ SVGLineElement::GetGeometryBounds(Rect* aBounds,
   const Matrix& toBoundsSpace = aToNonScalingStrokeSpace ?
     nonScalingToBounds : aToBoundsSpace;
 
-  *aBounds = Rect(toBoundsSpace * points[0], Size());
+  *aBounds = Rect(toBoundsSpace.TransformPoint(points[0]), Size());
   for (uint32_t i = 1; i < 4; ++i) {
-    aBounds->ExpandToEnclose(toBoundsSpace * points[i]);
+    aBounds->ExpandToEnclose(toBoundsSpace.TransformPoint(points[i]));
   }
 
   return true;

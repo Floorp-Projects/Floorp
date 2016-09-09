@@ -217,6 +217,7 @@ const Decimal HTMLInputElement::kStepAny = Decimal(0);
 
 const double HTMLInputElement::kMaximumYear = 275760;
 const double HTMLInputElement::kMinimumYear = 1;
+const double HTMLInputElement::kMaximumWeekInYear = 53;
 
 #define NS_INPUT_ELEMENT_STATE_IID                 \
 { /* dc3b3d14-23e2-4479-b513-7b369343e3a0 */       \
@@ -5047,6 +5048,13 @@ HTMLInputElement::SanitizeValue(nsAString& aValue)
         }
       }
       break;
+    case NS_FORM_INPUT_WEEK:
+      {
+        if (!aValue.IsEmpty() && !IsValidWeek(aValue)) {
+          aValue.Truncate();
+        }
+      }
+      break;
     case NS_FORM_INPUT_COLOR:
       {
         if (IsValidSimpleColor(aValue)) {
@@ -5074,6 +5082,43 @@ bool HTMLInputElement::IsValidSimpleColor(const nsAString& aValue) const
     }
   }
   return true;
+}
+
+bool
+HTMLInputElement::IsLeapYear(uint32_t aYear) const
+{
+  if ((aYear % 4 == 0 && aYear % 100 != 0) || ( aYear % 400 == 0)) {
+    return true;
+  }
+  return false;
+}
+
+uint32_t
+HTMLInputElement::DayOfWeek(uint32_t aYear, uint32_t aMonth, uint32_t aDay) const
+{
+  // Tomohiko Sakamoto algorithm.
+  int monthTable[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
+  aYear -= aMonth < 3;
+
+  return (aYear + aYear / 4 - aYear / 100 + aYear / 400 +
+          monthTable[aMonth - 1] + aDay) % 7;
+}
+
+uint32_t
+HTMLInputElement::MaximumWeekInYear(uint32_t aYear) const
+{
+  int day = DayOfWeek(aYear, 1, 1); // January 1.
+  // A year starting on Thursday or a leap year starting on Wednesday has 53
+  // weeks. All other years have 52 weeks.
+  return day == 4 || (day == 3 && IsLeapYear(aYear)) ? kMaximumWeekInYear
+                                                     : kMaximumWeekInYear - 1;
+}
+
+bool
+HTMLInputElement::IsValidWeek(const nsAString& aValue) const
+{
+  uint32_t year, week;
+  return ParseWeek(aValue, &year, &week);
 }
 
 bool
@@ -5121,6 +5166,34 @@ bool HTMLInputElement::ParseMonth(const nsAString& aValue,
 
   return DigitSubStringToNumber(aValue, endOfYearOffset + 1, 2, aMonth) &&
          *aMonth > 0 && *aMonth <= 12;
+}
+
+bool HTMLInputElement::ParseWeek(const nsAString& aValue,
+                                 uint32_t* aYear,
+                                 uint32_t* aWeek) const
+{
+  // Parse the year, month values out a string formatted as 'yyyy-Www'.
+  if (aValue.Length() < 8) {
+    return false;
+  }
+
+  uint32_t endOfYearOffset = aValue.Length() - 4;
+  if (aValue[endOfYearOffset] != '-') {
+    return false;
+  }
+
+  if (aValue[endOfYearOffset + 1] != 'W') {
+    return false;
+  }
+
+  const nsAString& yearStr = Substring(aValue, 0, endOfYearOffset);
+  if (!ParseYear(yearStr, aYear)) {
+    return false;
+  }
+
+  return DigitSubStringToNumber(aValue, endOfYearOffset + 2, 2, aWeek) &&
+         *aWeek > 0 && *aWeek <= MaximumWeekInYear(*aYear);
+
 }
 
 bool HTMLInputElement::ParseDate(const nsAString& aValue,
