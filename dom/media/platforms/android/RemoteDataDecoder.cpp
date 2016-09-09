@@ -216,28 +216,22 @@ public:
     return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
   }
 
-  nsresult Flush() override
+  void Flush() override
   {
     mInputDurations.Clear();
-    return RemoteDataDecoder::Flush();
+    RemoteDataDecoder::Flush();
   }
 
-  nsresult Drain() override
+  void Drain() override
   {
-    nsresult res = RemoteDataDecoder::Drain();
-    NS_ENSURE_SUCCESS(res, res);
-
+    RemoteDataDecoder::Drain();
     mInputDurations.Put(0);
-    return NS_OK;
   }
 
-  nsresult Input(MediaRawData* aSample) override
+  void Input(MediaRawData* aSample) override
   {
-    nsresult res = RemoteDataDecoder::Input(aSample);
-    NS_ENSURE_SUCCESS(res, res);
-
+    RemoteDataDecoder::Input(aSample);
     mInputDurations.Put(aSample->mDuration);
-    return NS_OK;
   }
 
 private:
@@ -432,26 +426,24 @@ RemoteDataDecoder::RemoteDataDecoder(MediaData::Type aType,
 {
 }
 
-nsresult
+void
 RemoteDataDecoder::Flush()
 {
   mJavaDecoder->Flush();
-  return NS_OK;
 }
 
-nsresult
+void
 RemoteDataDecoder::Drain()
 {
   BufferInfo::LocalRef bufferInfo;
   nsresult rv = BufferInfo::New(&bufferInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS_VOID(rv);
   bufferInfo->Set(0, 0, -1, MediaCodec::BUFFER_FLAG_END_OF_STREAM);
 
   mJavaDecoder->Input(nullptr, bufferInfo);
-  return NS_OK;
 }
 
-nsresult
+void
 RemoteDataDecoder::Shutdown()
 {
   LOG("");
@@ -464,11 +456,9 @@ RemoteDataDecoder::Shutdown()
   mJavaCallbacks = nullptr;
 
   mFormat = nullptr;
-
-  return NS_OK;
 }
 
-nsresult
+void
 RemoteDataDecoder::Input(MediaRawData* aSample)
 {
   MOZ_ASSERT(aSample != nullptr);
@@ -485,12 +475,13 @@ RemoteDataDecoder::Input(MediaRawData* aSample)
 
   BufferInfo::LocalRef bufferInfo;
   nsresult rv = BufferInfo::New(&bufferInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
+    return;
+  }
   bufferInfo->Set(0, aSample->Size(), aSample->mTime, 0);
 
   mJavaDecoder->Input(bytes, bufferInfo);
-
-  return NS_OK;
 }
 
 } // mozilla

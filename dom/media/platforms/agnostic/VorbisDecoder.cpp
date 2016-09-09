@@ -54,11 +54,9 @@ VorbisDataDecoder::~VorbisDataDecoder()
   vorbis_comment_clear(&mVorbisComment);
 }
 
-nsresult
+void
 VorbisDataDecoder::Shutdown()
 {
-  //mReader = nullptr;
-  return NS_OK;
 }
 
 RefPtr<MediaDataDecoder::InitPromise>
@@ -124,14 +122,12 @@ VorbisDataDecoder::DecodeHeader(const unsigned char* aData, size_t aLength)
   return r == 0 ? NS_OK : NS_ERROR_FAILURE;
 }
 
-nsresult
+void
 VorbisDataDecoder::Input(MediaRawData* aSample)
 {
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
                        this, &VorbisDataDecoder::ProcessDecode, aSample));
-
-  return NS_OK;
 }
 
 void
@@ -255,15 +251,14 @@ VorbisDataDecoder::ProcessDrain()
   mCallback->DrainComplete();
 }
 
-nsresult
+void
 VorbisDataDecoder::Drain()
 {
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   mTaskQueue->Dispatch(NewRunnableMethod(this, &VorbisDataDecoder::ProcessDrain));
-  return NS_OK;
 }
 
-nsresult
+void
 VorbisDataDecoder::Flush()
 {
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
@@ -277,7 +272,6 @@ VorbisDataDecoder::Flush()
   });
   SyncRunnable::DispatchToThread(mTaskQueue, r);
   mIsFlushing = false;
-  return NS_OK;
 }
 
 /* static */
