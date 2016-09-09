@@ -63,7 +63,7 @@ AppleATDecoder::Init()
   return InitPromise::CreateAndResolve(TrackType::kAudioTrack, __func__);
 }
 
-nsresult
+void
 AppleATDecoder::Input(MediaRawData* aSample)
 {
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
@@ -81,8 +81,6 @@ AppleATDecoder::Input(MediaRawData* aSample)
         &AppleATDecoder::SubmitSample,
         RefPtr<MediaRawData>(aSample));
   mTaskQueue->Dispatch(runnable.forget());
-
-  return NS_OK;
 }
 
 void
@@ -96,7 +94,7 @@ AppleATDecoder::ProcessFlush()
   }
 }
 
-nsresult
+void
 AppleATDecoder::Flush()
 {
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
@@ -106,20 +104,19 @@ AppleATDecoder::Flush()
     NewRunnableMethod(this, &AppleATDecoder::ProcessFlush);
   SyncRunnable::DispatchToThread(mTaskQueue, runnable);
   mIsFlushing = false;
-  return NS_OK;
 }
 
-nsresult
+void
 AppleATDecoder::Drain()
 {
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   LOG("Draining AudioToolbox AAC decoder");
   mTaskQueue->AwaitIdle();
   mCallback->DrainComplete();
-  return Flush();
+  Flush();
 }
 
-nsresult
+void
 AppleATDecoder::Shutdown()
 {
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
@@ -129,7 +126,7 @@ AppleATDecoder::Shutdown()
   OSStatus rv = AudioConverterDispose(mConverter);
   if (rv) {
     LOG("error %d disposing of AudioConverter", rv);
-    return NS_ERROR_FAILURE;
+    return;
   }
   mConverter = nullptr;
 
@@ -137,11 +134,10 @@ AppleATDecoder::Shutdown()
     rv = AudioFileStreamClose(mStream);
     if (rv) {
       LOG("error %d disposing of AudioFileStream", rv);
-      return NS_ERROR_FAILURE;
+      return;
     }
     mStream = nullptr;
   }
-  return NS_OK;
 }
 
 struct PassthroughUserData {

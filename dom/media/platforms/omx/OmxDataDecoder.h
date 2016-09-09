@@ -66,13 +66,13 @@ public:
 
   RefPtr<InitPromise> Init() override;
 
-  nsresult Input(MediaRawData* aSample) override;
+  void Input(MediaRawData* aSample) override;
 
-  nsresult Flush() override;
+  void Flush() override;
 
-  nsresult Drain() override;
+  void Drain() override;
 
-  nsresult Shutdown() override;
+  void Shutdown() override;
 
   const char* GetDescriptionName() const override
   {
