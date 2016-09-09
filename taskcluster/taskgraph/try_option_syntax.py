@@ -26,6 +26,7 @@ BUILD_KINDS = set([
     'build',
     'artifact-build',
     'hazard',
+    'l10n',
 ])
 
 # anything in this list is governed by -j
