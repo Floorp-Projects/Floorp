@@ -93,7 +93,7 @@ PrincipalInfoToPrincipal(const PrincipalInfo& aPrincipalInfo,
     case PrincipalInfo::TExpandedPrincipalInfo: {
       const ExpandedPrincipalInfo& info = aPrincipalInfo.get_ExpandedPrincipalInfo();
 
-      nsTArray< nsCOMPtr<nsIPrincipal> > whitelist;
+      nsTArray<nsCOMPtr<nsIPrincipal>> whitelist;
       nsCOMPtr<nsIPrincipal> wlPrincipal;
 
       for (uint32_t i = 0; i < info.whitelist().Length(); i++) {
@@ -105,7 +105,7 @@ PrincipalInfoToPrincipal(const PrincipalInfo& aPrincipalInfo,
         whitelist.AppendElement(wlPrincipal);
       }
 
-      RefPtr<nsExpandedPrincipal> expandedPrincipal = new nsExpandedPrincipal(whitelist);
+      RefPtr<nsExpandedPrincipal> expandedPrincipal = new nsExpandedPrincipal(whitelist, info.attrs());
       if (!expandedPrincipal) {
         NS_WARNING("could not instantiate expanded principal");
         return nullptr;
@@ -173,7 +173,9 @@ PrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
       whitelistInfo.AppendElement(info);
     }
 
-    *aPrincipalInfo = ExpandedPrincipalInfo(Move(whitelistInfo));
+    *aPrincipalInfo =
+      ExpandedPrincipalInfo(BasePrincipal::Cast(aPrincipal)->OriginAttributesRef(),
+                            Move(whitelistInfo));
     return NS_OK;
   }
 
