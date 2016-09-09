@@ -378,6 +378,7 @@ class ExtensionContext extends BaseContext {
         isWebExtensionContentScript: true,
         wantExportHelpers: true,
         wantGlobalProperties: ["XMLHttpRequest", "fetch"],
+        originAttributes: attrs,
       });
 
       Cu.evalInSandbox(`
