@@ -124,7 +124,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
     {
         "draw_buffers",
         GLVersion::GL2,
-        GLESVersion::NONE,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::ARB_draw_buffers,

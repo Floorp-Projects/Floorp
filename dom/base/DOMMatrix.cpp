@@ -207,7 +207,7 @@ DOMMatrixReadOnly::TransformPoint(const DOMPointInit& point) const
     transformedPoint.z = point.mZ;
     transformedPoint.w = point.mW;
 
-    transformedPoint = *mMatrix3D * transformedPoint;
+    transformedPoint = mMatrix3D->TransformPoint(transformedPoint);
 
     retval->SetX(transformedPoint.x);
     retval->SetY(transformedPoint.y);
@@ -222,7 +222,7 @@ DOMMatrixReadOnly::TransformPoint(const DOMPointInit& point) const
     transformedPoint.z = point.mZ;
     transformedPoint.w = point.mW;
 
-    transformedPoint = tempMatrix * transformedPoint;
+    transformedPoint = tempMatrix.TransformPoint(transformedPoint);
 
     retval->SetX(transformedPoint.x);
     retval->SetY(transformedPoint.y);
@@ -233,7 +233,7 @@ DOMMatrixReadOnly::TransformPoint(const DOMPointInit& point) const
     transformedPoint.x = point.mX;
     transformedPoint.y = point.mY;
 
-    transformedPoint = *mMatrix2D * transformedPoint;
+    transformedPoint = mMatrix2D->TransformPoint(transformedPoint);
 
     retval->SetX(transformedPoint.x);
     retval->SetY(transformedPoint.y);

@@ -1060,8 +1060,10 @@ nsXBLPrototypeBinding::Write(nsIObjectOutputStream* aStream)
   // write out the extends and display attribute values
   nsAutoCString extends;
   ResolveBaseBinding();
-  if (mBaseBindingURI)
-    mBaseBindingURI->GetSpec(extends);
+  if (mBaseBindingURI) {
+    rv = mBaseBindingURI->GetSpec(extends);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   rv = aStream->WriteStringZ(extends.get());
   NS_ENSURE_SUCCESS(rv, rv);

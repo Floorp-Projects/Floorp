@@ -1499,10 +1499,8 @@ StyleRule::List(FILE* out, int32_t aIndent) const
     if (sheet) {
       nsIURI* uri = sheet->GetSheetURI();
       if (uri) {
-        nsAutoCString uristr;
         str.Append(" /* ");
-        uri->GetSpec(uristr);
-        str.Append(uristr);
+        str.Append(uri->GetSpecOrDefault());
         str.Append(':');
         str.AppendInt(mLineNumber);
         str.Append(" */");

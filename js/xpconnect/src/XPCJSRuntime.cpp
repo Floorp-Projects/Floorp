@@ -1668,7 +1668,10 @@ GetCompartmentName(JSCompartment* c, nsCString& name, int* anonymizeID,
         name.AppendPrintf("<anonymized-%d>", *anonymizeID);
         *anonymizeID += 1;
     } else if (JSPrincipals* principals = JS_GetCompartmentPrincipals(c)) {
-        nsJSPrincipals::get(principals)->GetScriptLocation(name);
+        nsresult rv = nsJSPrincipals::get(principals)->GetScriptLocation(name);
+        if (NS_FAILED(rv)) {
+            name.AssignLiteral("(unknown)");
+        }
 
         // If the compartment's location (name) differs from the principal's
         // script location, append the compartment's location to allow

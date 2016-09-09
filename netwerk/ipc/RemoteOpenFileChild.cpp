@@ -145,7 +145,8 @@ RemoteOpenFileChild::Init(nsIURI* aRemoteOpenUri, nsIURI* aAppUri)
 
   clonedURI->SetScheme(NS_LITERAL_CSTRING("file"));
   nsAutoCString spec;
-  clonedURI->GetSpec(spec);
+  rv = clonedURI->GetSpec(spec);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = NS_NewURI(getter_AddRefs(mURI), spec);
   NS_ENSURE_SUCCESS(rv, rv);

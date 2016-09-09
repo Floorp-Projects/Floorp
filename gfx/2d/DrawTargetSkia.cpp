@@ -41,6 +41,10 @@
 #include "CGTextDrawing.h"
 #endif
 
+#ifdef XP_WIN
+#include "ScaledFontDWrite.h"
+#endif
+
 namespace mozilla {
 namespace gfx {
 
@@ -1291,6 +1295,14 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
     }
     break;
   }
+#ifdef XP_WIN
+  case FontType::DWRITE:
+  {
+    ScaledFontDWrite* dwriteFont = static_cast<ScaledFontDWrite*>(aFont);
+    paint.mPaint.setEmbeddedBitmapText(dwriteFont->UseEmbeddedBitmaps());
+    break;
+  }
+#endif
   default:
     break;
   }

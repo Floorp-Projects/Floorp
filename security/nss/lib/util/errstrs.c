@@ -12,20 +12,21 @@
 #include "nssutil.h"
 #include <string.h>
 
-#define ER3(name, value, str) {#name, str},
+#define ER3(name, value, str) { #name, str },
 
 static const struct PRErrorMessage sectext[] = {
 #include "SECerrs.h"
-    {0,0}
+    { 0, 0 }
 };
 
 static const struct PRErrorTable sec_et = {
-    sectext, "secerrstrings", SEC_ERROR_BASE, 
-        (sizeof sectext)/(sizeof sectext[0]) 
+    sectext, "secerrstrings", SEC_ERROR_BASE,
+    (sizeof sectext) / (sizeof sectext[0])
 };
 
-static PRStatus 
-nss_InitializePRErrorTableOnce(void) {
+static PRStatus
+nss_InitializePRErrorTableOnce(void)
+{
     return PR_ErrorInstallTable(&sec_et);
 }
 
@@ -35,6 +36,6 @@ SECStatus
 NSS_InitializePRErrorTable(void)
 {
     return (PR_SUCCESS == PR_CallOnce(&once, nss_InitializePRErrorTableOnce))
-		? SECSuccess : SECFailure;
+               ? SECSuccess
+               : SECFailure;
 }
-

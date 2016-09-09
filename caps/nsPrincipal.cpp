@@ -99,10 +99,10 @@ nsPrincipal::Init(nsIURI *aCodebase, const PrincipalOriginAttributes& aOriginAtt
   return NS_OK;
 }
 
-void
+nsresult
 nsPrincipal::GetScriptLocation(nsACString &aStr)
 {
-  mCodebase->GetSpec(aStr);
+  return mCodebase->GetSpec(aStr);
 }
 
 /* static */ nsresult
@@ -806,7 +806,7 @@ nsExpandedPrincipal::IsOnCSSUnprefixingWhitelist()
 }
 
 
-void
+nsresult
 nsExpandedPrincipal::GetScriptLocation(nsACString& aStr)
 {
   aStr.Assign("[Expanded Principal [");
@@ -816,12 +816,14 @@ nsExpandedPrincipal::GetScriptLocation(nsACString& aStr)
     }
 
     nsAutoCString spec;
-    nsJSPrincipals::get(mPrincipals.ElementAt(i))->GetScriptLocation(spec);
+    nsresult rv =
+      nsJSPrincipals::get(mPrincipals.ElementAt(i))->GetScriptLocation(spec);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     aStr.Append(spec);
-
   }
   aStr.Append("]]");
+  return NS_OK;
 }
 
 //////////////////////////////////////////

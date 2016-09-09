@@ -286,7 +286,10 @@ nsHtml5StreamParser::SetViewSourceTitle(nsIURI* aURL)
       // UTF-8 for an ellipsis.
       mViewSourceTitle.AssignLiteral("data:\xE2\x80\xA6");
     } else {
-      temp->GetSpec(mViewSourceTitle);
+      nsresult rv = temp->GetSpec(mViewSourceTitle);
+      if (NS_FAILED(rv)) {
+        mViewSourceTitle.AssignLiteral("\xE2\x80\xA6");
+      }
     }
   }
 }

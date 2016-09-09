@@ -171,6 +171,16 @@ FlyWebPublishedServerImpl::FlyWebPublishedServerImpl(nsPIDOMWindowInner* aOwner,
   , mHttpServer(new HttpServer())
 {
   LOG_I("FlyWebPublishedServerImpl::FlyWebPublishedServerImpl(%p)", this);
+}
+
+void
+FlyWebPublishedServerImpl::PermissionGranted(bool aGranted)
+{
+  LOG_I("FlyWebPublishedServerImpl::PermissionGranted(%b)", aGranted);
+  if (!aGranted) {
+    PublishedServerStarted(NS_ERROR_FAILURE);
+    return;
+  }
 
   mHttpServer->Init(-1, Preferences::GetBool("flyweb.use-tls", false), this);
 }
@@ -252,25 +262,37 @@ FlyWebPublishedServerChild::FlyWebPublishedServerChild(nsPIDOMWindowInner* aOwne
                                                        const nsAString& aName,
                                                        const FlyWebPublishOptions& aOptions)
   : FlyWebPublishedServer(aOwner, aName, aOptions)
-  , mActorDestroyed(false)
+  , mActorExists(false)
 {
   LOG_I("FlyWebPublishedServerChild::FlyWebPublishedServerChild(%p)", this);
-
-  ContentChild::GetSingleton()->
-    SendPFlyWebPublishedServerConstructor(this,
-                                          PromiseFlatString(aName),
-                                          aOptions);
 
   // The matching release happens when the actor is destroyed, in
   // ContentChild::DeallocPFlyWebPublishedServerChild
   NS_ADDREF_THIS();
 }
 
+void
+FlyWebPublishedServerChild::PermissionGranted(bool aGranted)
+{
+  if (!aGranted) {
+    PublishedServerStarted(NS_ERROR_FAILURE);
+    return;
+  }
+
+  mActorExists = true;
+  FlyWebPublishOptions options;
+  options.mUiUrl = mUiUrl;
+
+  // Proceed with initialization.
+  ContentChild::GetSingleton()->
+    SendPFlyWebPublishedServerConstructor(this, mName, options);
+}
+
 bool
 FlyWebPublishedServerChild::RecvServerReady(const nsresult& aStatus)
 {
   LOG_I("FlyWebPublishedServerChild::RecvServerReady(%p)", this);
-  MOZ_ASSERT(!mActorDestroyed);
+  MOZ_ASSERT(mActorExists);
 
   PublishedServerStarted(aStatus);
   return true;
@@ -280,7 +302,7 @@ bool
 FlyWebPublishedServerChild::RecvServerClose()
 {
   LOG_I("FlyWebPublishedServerChild::RecvServerClose(%p)", this);
-  MOZ_ASSERT(!mActorDestroyed);
+  MOZ_ASSERT(mActorExists);
 
   Close();
 
@@ -292,7 +314,7 @@ FlyWebPublishedServerChild::RecvFetchRequest(const IPCInternalRequest& aRequest,
                                              const uint64_t& aRequestId)
 {
   LOG_I("FlyWebPublishedServerChild::RecvFetchRequest(%p)", this);
-  MOZ_ASSERT(!mActorDestroyed);
+  MOZ_ASSERT(mActorExists);
 
   RefPtr<InternalRequest> request = new InternalRequest(aRequest);
   mPendingRequests.Put(request, aRequestId);
@@ -307,7 +329,7 @@ FlyWebPublishedServerChild::RecvWebSocketRequest(const IPCInternalRequest& aRequ
                                                  PTransportProviderChild* aProvider)
 {
   LOG_I("FlyWebPublishedServerChild::RecvWebSocketRequest(%p)", this);
-  MOZ_ASSERT(!mActorDestroyed);
+  MOZ_ASSERT(mActorExists);
 
   RefPtr<InternalRequest> request = new InternalRequest(aRequest);
   mPendingRequests.Put(request, aRequestId);
@@ -327,7 +349,7 @@ FlyWebPublishedServerChild::ActorDestroy(ActorDestroyReason aWhy)
 {
   LOG_I("FlyWebPublishedServerChild::ActorDestroy(%p)", this);
 
-  mActorDestroyed = true;
+  mActorExists = false;
 }
 
 void
@@ -336,7 +358,7 @@ FlyWebPublishedServerChild::OnFetchResponse(InternalRequest* aRequest,
 {
   LOG_I("FlyWebPublishedServerChild::OnFetchResponse(%p)", this);
 
-  if (mActorDestroyed) {
+  if (!mActorExists) {
     LOG_I("FlyWebPublishedServerChild::OnFetchResponse(%p) - No actor!", this);
     return;
   }
@@ -361,7 +383,7 @@ FlyWebPublishedServerChild::OnWebSocketAcceptInternal(InternalRequest* aRequest,
 {
   LOG_I("FlyWebPublishedServerChild::OnWebSocketAcceptInternal(%p)", this);
 
-  if (mActorDestroyed) {
+  if (!mActorExists) {
     LOG_I("FlyWebPublishedServerChild::OnWebSocketAcceptInternal(%p) - No actor!", this);
     return nullptr;
   }
@@ -400,7 +422,7 @@ FlyWebPublishedServerChild::OnWebSocketResponse(InternalRequest* aRequest,
 {
   LOG_I("FlyWebPublishedServerChild::OnFetchResponse(%p)", this);
 
-  if (mActorDestroyed) {
+  if (!mActorExists) {
     LOG_I("FlyWebPublishedServerChild::OnFetchResponse(%p) - No actor!", this);
     return;
   }
@@ -428,7 +450,7 @@ FlyWebPublishedServerChild::Close()
 
   FlyWebPublishedServer::Close();
 
-  if (!mActorDestroyed) {
+  if (mActorExists) {
     LOG_I("FlyWebPublishedServerChild::Close - sending __delete__ (%p)", this);
 
     Send__delete__(this);

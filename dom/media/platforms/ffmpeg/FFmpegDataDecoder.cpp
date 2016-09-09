@@ -90,7 +90,7 @@ FFmpegDataDecoder<LIBAV_VER>::InitDecoder()
   return NS_OK;
 }
 
-nsresult
+void
 FFmpegDataDecoder<LIBAV_VER>::Shutdown()
 {
   if (mTaskQueue) {
@@ -100,7 +100,6 @@ FFmpegDataDecoder<LIBAV_VER>::Shutdown()
   } else {
     ProcessShutdown();
   }
-  return NS_OK;
 }
 
 void
@@ -126,15 +125,14 @@ FFmpegDataDecoder<LIBAV_VER>::ProcessDecode(MediaRawData* aSample)
   }
 }
 
-nsresult
+void
 FFmpegDataDecoder<LIBAV_VER>::Input(MediaRawData* aSample)
 {
   mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
     this, &FFmpegDataDecoder::ProcessDecode, aSample));
-  return NS_OK;
 }
 
-nsresult
+void
 FFmpegDataDecoder<LIBAV_VER>::Flush()
 {
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
@@ -143,17 +141,15 @@ FFmpegDataDecoder<LIBAV_VER>::Flush()
     NewRunnableMethod(this, &FFmpegDataDecoder<LIBAV_VER>::ProcessFlush);
   SyncRunnable::DispatchToThread(mTaskQueue, runnable);
   mIsFlushing = false;
-  return NS_OK;
 }
 
-nsresult
+void
 FFmpegDataDecoder<LIBAV_VER>::Drain()
 {
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   nsCOMPtr<nsIRunnable> runnable =
     NewRunnableMethod(this, &FFmpegDataDecoder<LIBAV_VER>::ProcessDrain);
   mTaskQueue->Dispatch(runnable.forget());
-  return NS_OK;
 }
 
 void

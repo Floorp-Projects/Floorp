@@ -65,7 +65,7 @@ protected:
 					void *aClosure);
 
   void appendArg(const char* arg);
-  void resolveShortcutURL(nsIFile* aFile, nsACString& outURL);
+  MOZ_MUST_USE nsresult resolveShortcutURL(nsIFile* aFile, nsACString& outURL);
   nsresult EnumerateHandlers(EnumerateHandlersCallback aCallback, void *aClosure);
   nsresult EnumerateValidators(EnumerateValidatorsCallback aCallback, void *aClosure);
 
@@ -365,8 +365,8 @@ nsCommandLine::ResolveURI(const nsAString& aArgument, nsIURI* *aResult)
     lf->Normalize();
     nsAutoCString url;
     // Try to resolve the url for .url files.
-    resolveShortcutURL(lf, url);
-    if (!url.IsEmpty()) {
+    rv = resolveShortcutURL(lf, url);
+    if (NS_SUCCEEDED(rv) && !url.IsEmpty()) {
       return io->NewURI(url,
                         nullptr,
                         workingDirURI,
@@ -399,20 +399,20 @@ nsCommandLine::appendArg(const char* arg)
   mArgs.AppendElement(warg);
 }
 
-void
+nsresult
 nsCommandLine::resolveShortcutURL(nsIFile* aFile, nsACString& outURL)
 {
   nsCOMPtr<nsIFileProtocolHandler> fph;
   nsresult rv = NS_GetFileProtocolHandler(getter_AddRefs(fph));
   if (NS_FAILED(rv))
-    return;
+    return rv;
 
   nsCOMPtr<nsIURI> uri;
   rv = fph->ReadURLFile(aFile, getter_AddRefs(uri));
   if (NS_FAILED(rv))
-    return;
+    return rv;
 
-  uri->GetSpec(outURL);
+  return uri->GetSpec(outURL);
 }
 
 NS_IMETHODIMP

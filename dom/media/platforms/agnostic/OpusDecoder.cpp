@@ -41,10 +41,9 @@ OpusDataDecoder::~OpusDataDecoder()
   }
 }
 
-nsresult
+void
 OpusDataDecoder::Shutdown()
 {
-  return NS_OK;
 }
 
 void
@@ -138,13 +137,11 @@ OpusDataDecoder::DecodeHeader(const unsigned char* aData, size_t aLength)
   return NS_OK;
 }
 
-nsresult
+void
 OpusDataDecoder::Input(MediaRawData* aSample)
 {
   mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
                        this, &OpusDataDecoder::ProcessDecode, aSample));
-
-  return NS_OK;
 }
 
 void
@@ -323,18 +320,17 @@ OpusDataDecoder::ProcessDrain()
   mCallback->DrainComplete();
 }
 
-nsresult
+void
 OpusDataDecoder::Drain()
 {
   mTaskQueue->Dispatch(NewRunnableMethod(this, &OpusDataDecoder::ProcessDrain));
-  return NS_OK;
 }
 
-nsresult
+void
 OpusDataDecoder::Flush()
 {
   if (!mOpusDecoder) {
-    return NS_OK;
+    return;
   }
   mIsFlushing = true;
   nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction([this] () {
@@ -347,7 +343,6 @@ OpusDataDecoder::Flush()
   });
   SyncRunnable::DispatchToThread(mTaskQueue, runnable);
   mIsFlushing = false;
-  return NS_OK;
 }
 
 /* static */

@@ -255,7 +255,8 @@ SelectionCopyHelper(nsISelection *aSel, nsIDocument *aDoc,
         nsIURI *uri = aDoc->GetDocumentURI();
         if (uri) {
           nsAutoCString spec;
-          uri->GetSpec(spec);
+          nsresult rv = uri->GetSpec(spec);
+          NS_ENSURE_SUCCESS(rv, rv);
           if (!spec.IsEmpty()) {
             nsAutoString shortcut;
             AppendUTF8toUTF16(spec, shortcut);

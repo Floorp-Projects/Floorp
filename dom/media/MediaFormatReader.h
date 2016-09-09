@@ -133,7 +133,7 @@ private:
   void HandleDemuxedSamples(TrackType aTrack,
                             AbstractMediaDecoder::AutoNotifyDecoded& aA);
   // Decode any pending already demuxed samples.
-  bool DecodeDemuxedSamples(TrackType aTrack,
+  void DecodeDemuxedSamples(TrackType aTrack,
                             MediaRawData* aSample);
 
   struct InternalSeekTarget {

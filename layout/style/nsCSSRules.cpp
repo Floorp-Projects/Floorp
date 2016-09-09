@@ -975,8 +975,11 @@ DocumentRule::UseForPresentation(nsPresContext* aPresContext)
   nsIDocument *doc = aPresContext->Document();
   nsIURI *docURI = doc->GetDocumentURI();
   nsAutoCString docURISpec;
-  if (docURI)
-    docURI->GetSpec(docURISpec);
+  if (docURI) {
+    // If GetSpec fails (due to OOM) just skip these URI-specific CSS rules.
+    nsresult rv = docURI->GetSpec(docURISpec);
+    NS_ENSURE_SUCCESS(rv, false);
+  }
 
   for (URL *url = mURLs; url; url = url->next) {
     switch (url->func) {

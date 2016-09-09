@@ -52,8 +52,8 @@ MOZ_GTEST_BENCH(TestStandardURL, Perf, [] {
     nsAutoCString out;
 
     for (int i = COUNT; i; --i) {
-        url->SetSpec(NS_LITERAL_CSTRING("http://example.com"));
-        url->GetSpec(out);
+        ASSERT_EQ(url->SetSpec(NS_LITERAL_CSTRING("http://example.com")), NS_OK);
+        ASSERT_EQ(url->GetSpec(out), NS_OK);
         url->Resolve(NS_LITERAL_CSTRING("foo.html?q=45"), out);
         url->SetScheme(NS_LITERAL_CSTRING("foo"));
         url->GetScheme(out);

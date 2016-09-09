@@ -121,9 +121,11 @@ void*
 MapAlignedPages(size_t size, size_t alignment)
 {
     MOZ_ASSERT(size >= alignment);
+    MOZ_ASSERT(size >= allocGranularity);
     MOZ_ASSERT(size % alignment == 0);
     MOZ_ASSERT(size % pageSize == 0);
-    MOZ_ASSERT(alignment % allocGranularity == 0);
+    MOZ_ASSERT_IF(alignment < allocGranularity, allocGranularity % alignment == 0);
+    MOZ_ASSERT_IF(alignment > allocGranularity, alignment % allocGranularity == 0);
 
     void* p = MapMemory(size, MEM_COMMIT | MEM_RESERVE);
 
@@ -287,6 +289,7 @@ AllocateMappedContent(int fd, size_t offset, size_t length, size_t alignment)
 
     // The allocation granularity and the requested offset
     // must both be divisible by the requested alignment.
+    // Alignments larger than the allocation granularity are not supported.
     if (allocGranularity % alignment != 0 || offset % alignment != 0)
         return nullptr;
 
@@ -345,9 +348,11 @@ void*
 MapAlignedPages(size_t size, size_t alignment)
 {
     MOZ_ASSERT(size >= alignment);
+    MOZ_ASSERT(size >= allocGranularity);
     MOZ_ASSERT(size % alignment == 0);
     MOZ_ASSERT(size % pageSize == 0);
-    MOZ_ASSERT(alignment % allocGranularity == 0);
+    MOZ_ASSERT_IF(alignment < allocGranularity, allocGranularity % alignment == 0);
+    MOZ_ASSERT_IF(alignment > allocGranularity, alignment % allocGranularity == 0);
 
     void* p = _aligned_malloc(size, alignment);
 
@@ -420,9 +425,11 @@ void*
 MapAlignedPages(size_t size, size_t alignment)
 {
     MOZ_ASSERT(size >= alignment);
+    MOZ_ASSERT(size >= allocGranularity);
     MOZ_ASSERT(size % alignment == 0);
     MOZ_ASSERT(size % pageSize == 0);
-    MOZ_ASSERT(alignment % allocGranularity == 0);
+    MOZ_ASSERT_IF(alignment < allocGranularity, allocGranularity % alignment == 0);
+    MOZ_ASSERT_IF(alignment > allocGranularity, alignment % allocGranularity == 0);
 
     int prot = PROT_READ | PROT_WRITE;
     int flags = MAP_PRIVATE | MAP_ANON | MAP_ALIGN | MAP_NOSYNC;
@@ -591,9 +598,11 @@ void*
 MapAlignedPages(size_t size, size_t alignment)
 {
     MOZ_ASSERT(size >= alignment);
+    MOZ_ASSERT(size >= allocGranularity);
     MOZ_ASSERT(size % alignment == 0);
     MOZ_ASSERT(size % pageSize == 0);
-    MOZ_ASSERT(alignment % allocGranularity == 0);
+    MOZ_ASSERT_IF(alignment < allocGranularity, allocGranularity % alignment == 0);
+    MOZ_ASSERT_IF(alignment > allocGranularity, alignment % allocGranularity == 0);
 
     void* p = MapMemory(size);
 
@@ -784,6 +793,7 @@ AllocateMappedContent(int fd, size_t offset, size_t length, size_t alignment)
 
     // The allocation granularity and the requested offset
     // must both be divisible by the requested alignment.
+    // Alignments larger than the allocation granularity are not supported.
     if (allocGranularity % alignment != 0 || offset % alignment != 0)
         return nullptr;
 

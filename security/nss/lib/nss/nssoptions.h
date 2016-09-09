@@ -7,7 +7,7 @@
 /*
  *  Include the default limits here
  */
-/* SSL default limits are here so we don't have to import a private SSL header 
+/* SSL default limits are here so we don't have to import a private SSL header
  * file into NSS proper */
 
 /* The minimum server key sizes accepted by the clients.
@@ -18,4 +18,3 @@
  * happens because NSS used to count bit lengths incorrectly. */
 #define SSL_DH_MIN_P_BITS 1023
 #define SSL_DSA_MIN_P_BITS 1023
-

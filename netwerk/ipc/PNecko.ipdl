@@ -132,7 +132,7 @@ child:
   async PredOnPredictPreconnect(URIParams uri);
   async PredOnPredictDNS(URIParams uri);
 
-  async SpeculativeConnectRequest(nsCString notificationData);
+  async SpeculativeConnectRequest();
 
   async PTransportProvider();
 

@@ -1298,8 +1298,10 @@ RDFServiceImpl::GetDataSource(const char* aURI, bool aBlock, nsIRDFDataSource** 
     if (!StringBeginsWith(spec, NS_LITERAL_CSTRING("rdf:"))) {
         nsCOMPtr<nsIURI> uri;
         NS_NewURI(getter_AddRefs(uri), spec);
-        if (uri)
-            uri->GetSpec(spec);
+        if (uri) {
+            rv = uri->GetSpec(spec);
+            if (NS_FAILED(rv)) return rv;
+        }
     }
 
     // First, check the cache to see if we already have this

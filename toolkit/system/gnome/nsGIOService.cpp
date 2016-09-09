@@ -330,7 +330,8 @@ NS_IMETHODIMP
 nsGIOService::ShowURI(nsIURI* aURI)
 {
   nsAutoCString spec;
-  aURI->GetSpec(spec);
+  nsresult rv = aURI->GetSpec(spec);
+  NS_ENSURE_SUCCESS(rv, rv);
   GError *error = nullptr;
   if (!g_app_info_launch_default_for_uri(spec.get(), nullptr, &error)) {
     g_warning("Could not launch default application for URI: %s", error->message);

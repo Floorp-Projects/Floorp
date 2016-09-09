@@ -15,7 +15,7 @@
 /* Suppress unused variable warnings. */
 #ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable: 4101)
+#pragma warning(disable : 4101)
 #endif
 /* This works for both gcc and clang */
 #if defined(__GNUC__) && !defined(NSS_NO_GCC48)

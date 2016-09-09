@@ -209,5 +209,7 @@ XXX: apply styles to all themes until bug 509642 is fixed
 }
 
 @media (-moz-windows-default-theme) {
-  color: #aa1b08;
+  .popup-notification-warning {
+    color: #aa1b08;
+  }
 }

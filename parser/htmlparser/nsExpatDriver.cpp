@@ -805,7 +805,8 @@ nsExpatDriver::OpenInputStreamFromExternalDTD(const char16_t* aFPIStr,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString absURL;
-  uri->GetSpec(absURL);
+  rv = uri->GetSpec(absURL);
+  NS_ENSURE_SUCCESS(rv, rv);
   CopyUTF8toUTF16(absURL, aAbsURL);
 
   channel->SetContentType(NS_LITERAL_CSTRING("application/xml"));

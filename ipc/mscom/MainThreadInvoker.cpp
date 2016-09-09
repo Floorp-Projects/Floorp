@@ -6,10 +6,12 @@
 
 #include "mozilla/mscom/MainThreadInvoker.h"
 
+#include "GeckoProfiler.h"
 #include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/HangMonitor.h"
 #include "mozilla/RefPtr.h"
 #include "private/prpriv.h" // For PR_GetThreadID
 
@@ -138,6 +140,8 @@ MainThreadInvoker::Invoke(already_AddRefed<nsIRunnable>&& aRunnable,
 /* static */ VOID CALLBACK
 MainThreadInvoker::MainThreadAPC(ULONG_PTR aParam)
 {
+  GeckoProfilerWakeRAII wakeProfiler;
+  mozilla::HangMonitor::NotifyActivity(mozilla::HangMonitor::kGeneralActivity);
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<SyncRunnable> runnable(already_AddRefed<SyncRunnable>(
                                   reinterpret_cast<SyncRunnable*>(aParam)));

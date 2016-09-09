@@ -1044,8 +1044,17 @@ tls13_HandleClientHelloPart2(sslSocket *ss,
     }
 
     if (!ss->statelessResume) {
+        if (ss->ssl3.hs.numClientSigScheme == 0) {
+            /* TODO test what happens when we strip signature_algorithms...
+                    this might not be needed */
+            PORT_SetError(SSL_ERROR_RX_MALFORMED_CLIENT_HELLO);
+            FATAL_ERROR(ss, PORT_GetError(), missing_extension);
+            return SECFailure;
+        }
+
         rv = ssl3_SelectServerCert(ss);
         if (rv != SECSuccess) {
+            FATAL_ERROR(ss, PORT_GetError(), handshake_failure);
             return SECFailure;
         }
     }

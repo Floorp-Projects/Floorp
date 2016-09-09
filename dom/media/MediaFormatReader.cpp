@@ -908,18 +908,14 @@ MediaFormatReader::RequestDemuxSamples(TrackType aTrack)
   }
 }
 
-bool
+void
 MediaFormatReader::DecodeDemuxedSamples(TrackType aTrack,
                                         MediaRawData* aSample)
 {
   MOZ_ASSERT(OnTaskQueue());
   auto& decoder = GetDecoderData(aTrack);
-  if (NS_FAILED(decoder.mDecoder->Input(aSample))) {
-      LOG("Unable to pass frame to decoder");
-      return false;
-  }
+  decoder.mDecoder->Input(aSample);
   decoder.mDecodePending = true;
-  return true;
 }
 
 void
@@ -1019,9 +1015,8 @@ MediaFormatReader::HandleDemuxedSamples(TrackType aTrack,
 
     if (mDemuxOnly) {
       ReturnOutput(sample, aTrack);
-    } else if (!DecodeDemuxedSamples(aTrack, sample)) {
-      NotifyError(aTrack);
-      return;
+    } else {
+      DecodeDemuxedSamples(aTrack, sample);
     }
 
     decoder.mQueuedSamples.RemoveElementAt(0);

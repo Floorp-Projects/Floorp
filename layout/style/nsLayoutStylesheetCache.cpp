@@ -547,7 +547,7 @@ AnnotateCrashReport(nsIURI* aURI)
   nsAutoCString scheme;
   nsDependentCSubstring filename;
   if (aURI) {
-    aURI->GetSpec(spec);
+    spec = aURI->GetSpecOrDefault();
     aURI->GetScheme(scheme);
     int32_t i = spec.RFindChar('/');
     if (i != -1) {
@@ -603,9 +603,8 @@ AnnotateCrashReport(nsIURI* aURI)
       if (!resolvedURI) {
         annotation.AppendLiteral("(ConvertChromeURL failed)\n");
       } else {
-        nsAutoCString resolvedSpec;
-        resolvedURI->GetSpec(resolvedSpec);
-        annotation.Append(NS_ConvertUTF8toUTF16(resolvedSpec));
+        annotation.Append(
+          NS_ConvertUTF8toUTF16(resolvedURI->GetSpecOrDefault()));
         annotation.Append('\n');
       }
     }
@@ -949,7 +948,10 @@ nsLayoutStylesheetCache::BuildPreferenceSheet(StyleSheetHandle::RefPtr* aSheet,
   if (sheet->IsGecko()) {
     sheet->AsGecko()->ReparseSheet(sheetText);
   } else {
-    sheet->AsServo()->ParseSheet(sheetText, uri, uri, nullptr, 0);
+    nsresult rv = sheet->AsServo()->ParseSheet(sheetText, uri, uri, nullptr, 0);
+    // Parsing the about:PreferenceStyleSheet URI can only fail on OOM. If we
+    // are OOM before we parsed any documents we might as well abort.
+    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
   }
 
 #undef NS_GET_R_G_B

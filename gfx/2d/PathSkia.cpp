@@ -134,7 +134,7 @@ SkPathContainsPoint(const SkPath& aPath, const Point& aPoint, const Matrix& aTra
     return false;
   }
 
-  SkPoint point = PointToSkPoint(inverse * aPoint);
+  SkPoint point = PointToSkPoint(inverse.TransformPoint(aPoint));
   return aPath.contains(point.fX, point.fY);
 }
 

@@ -1872,8 +1872,7 @@ JS::ProfilingFrameIterator::getPhysicalFrameAndEntry(jit::JitcodeGlobalEntry* en
         frame.stackAddress = stackAddr;
         frame.returnAddress = nullptr;
         frame.activation = activation_;
-        frame.label = nullptr;
-        return mozilla::Some(frame);
+        return mozilla::Some(mozilla::Move(frame));
     }
 
     MOZ_ASSERT(isJit());
@@ -1897,8 +1896,7 @@ JS::ProfilingFrameIterator::getPhysicalFrameAndEntry(jit::JitcodeGlobalEntry* en
     frame.stackAddress = stackAddr;
     frame.returnAddress = returnAddr;
     frame.activation = activation_;
-    frame.label = nullptr;
-    return mozilla::Some(frame);
+    return mozilla::Some(mozilla::Move(frame));
 }
 
 uint32_t
@@ -1915,8 +1913,10 @@ JS::ProfilingFrameIterator::extractStack(Frame* frames, uint32_t offset, uint32_
         return 0;
 
     if (isAsmJS()) {
-        frames[offset] = physicalFrame.value();
-        frames[offset].label = asmJSIter().label();
+        frames[offset] = mozilla::Move(physicalFrame.ref());
+        frames[offset].label = DuplicateString(asmJSIter().label());
+        if (!frames[offset].label)
+            return 0; // Drop stack frames silently on OOM.
         return 1;
     }
 
@@ -1927,8 +1927,11 @@ JS::ProfilingFrameIterator::extractStack(Frame* frames, uint32_t offset, uint32_
     for (uint32_t i = 0; i < depth; i++) {
         if (offset + i >= end)
             return i;
-        frames[offset + i] = physicalFrame.value();
-        frames[offset + i].label = labels[i];
+        Frame& frame = frames[offset + i];
+        frame = mozilla::Move(physicalFrame.ref());
+        frame.label = DuplicateString(labels[i]);
+        if (!frame.label)
+            return i;  // Drop stack frames silently on OOM.
     }
 
     return depth;

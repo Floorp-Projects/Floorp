@@ -25,7 +25,7 @@ extern char *BTOA_DataToAscii(const unsigned char *data, unsigned int len);
 ** of the input string; set *lenp to the length of the returned data.
 */
 extern unsigned char *ATOB_AsciiToData(const char *string, unsigned int *lenp);
- 
+
 /*
 ** Convert from ascii to binary encoding of an item.
 */

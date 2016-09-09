@@ -103,13 +103,13 @@ PathRecording::TransformedCopyToBuilder(const Matrix &aTransform, FillRule aFill
     PathOp newPathOp;
     newPathOp.mType = iter->mType;
     if (sPointCount[newPathOp.mType] >= 1) {
-      newPathOp.mP1 = aTransform * iter->mP1;
+      newPathOp.mP1 = aTransform.TransformPoint(iter->mP1);
     }
     if (sPointCount[newPathOp.mType] >= 2) {
-      newPathOp.mP2 = aTransform * iter->mP2;
+      newPathOp.mP2 = aTransform.TransformPoint(iter->mP2);
     }
     if (sPointCount[newPathOp.mType] >= 3) {
-      newPathOp.mP3 = aTransform * iter->mP3;
+      newPathOp.mP3 = aTransform.TransformPoint(iter->mP3);
     }
     recording->mPathOps.push_back(newPathOp);
   }

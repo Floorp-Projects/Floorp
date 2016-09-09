@@ -20,6 +20,34 @@
 
 #include <objidl.h>
 
+static bool
+IsCurrentThreadMTALegacy()
+{
+  // We don't use RefPtr for token because CoGetContextToken does *not*
+  // increment its refcount!
+  IUnknown* token = nullptr;
+  HRESULT hr =
+    CoGetContextToken(reinterpret_cast<ULONG_PTR*>(&token));
+  if (FAILED(hr)) {
+    return false;
+  }
+
+  RefPtr<IComThreadingInfo> threadingInfo;
+  hr = token->QueryInterface(IID_IComThreadingInfo,
+                             getter_AddRefs(threadingInfo));
+  if (FAILED(hr)) {
+    return false;
+  }
+
+  APTTYPE aptType;
+  hr = threadingInfo->GetCurrentApartmentType(&aptType);
+  if (FAILED(hr)) {
+    return false;
+  }
+
+  return aptType == APTTYPE_MTA;
+}
+
 namespace mozilla {
 namespace mscom {
 
@@ -29,10 +57,9 @@ IsCurrentThreadMTA()
   static DynamicallyLinkedFunctionPtr<decltype(&::CoGetApartmentType)>
     pCoGetApartmentType(L"ole32.dll", "CoGetApartmentType");
 
-  // There isn't really a thread-safe way to query this on Windows XP. In that
-  // case, we'll just return false since that assumption does no harm.
   if (!pCoGetApartmentType) {
-    return false;
+    // XP and Vista do not expose the newer API.
+    return IsCurrentThreadMTALegacy();
   }
 
   APTTYPE aptType;
