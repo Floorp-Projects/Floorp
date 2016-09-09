@@ -104,25 +104,21 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
             return;
         }
 
+        final Tab playingTab = mTabReference.get();
         switch (msg) {
-            case AUDIO_PLAYING_CHANGE:
-                if (tab == mTabReference.get()) {
-                    return;
+            case MEDIA_PLAYING_CHANGE:
+                if (playingTab != tab && tab.isMediaPlaying()) {
+                    mTabReference = new WeakReference<>(tab);
+                    mController.getTransportControls().sendCustomAction(ACTION_START, null);
+                } else if (playingTab == tab && !tab.isMediaPlaying()) {
+                    mController.getTransportControls().stop();
                 }
-
-                if (!tab.isAudioPlaying()) {
-                    return;
-                }
-
-                mTabReference = new WeakReference<>(tab);
-                notifyControlInterfaceChanged(ACTION_PAUSE);
                 break;
 
             case CLOSED:
-                final Tab playingTab = mTabReference.get();
                 if (playingTab == null || playingTab == tab) {
-                    // The playing tab disappeared or was closed. Remove the controls and stop the service.
-                    notifyControlInterfaceChanged(ACTION_REMOVE_CONTROL);
+                    // Remove the controls when the playing tab disappeared or was closed.
+                    mController.getTransportControls().stop();
                 }
                 break;
         }
@@ -236,6 +232,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                 notifyControlInterfaceChanged(ACTION_STOP);
                 notifyObservers("MediaControl", "mediaControlStopped");
                 mActionState = ACTION_STOP;
+                mTabReference = new WeakReference<>(null);
                 stopSelf();
             }
         });
