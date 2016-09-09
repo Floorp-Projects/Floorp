@@ -24,7 +24,7 @@
         <xul:label class="checkbox-label" xbl:inherits="xbl:text=label,accesskey,crop" flex="1"/>
       </xul:hbox>
     </content>
-    
+
     <implementation implements="nsIDOMXULCheckboxElement">
       <method name="setChecked">
         <parameter name="aValue"/>
@@ -44,24 +44,26 @@
         ]]>
         </body>
       </method>
-      
+
       <!-- public implementation -->
       <property name="checked"    onset="return this.setChecked(val);"
                                   onget="return this.getAttribute('checked') == 'true';"/>
     </implementation>
-    
+
     <handlers>
       <!-- While it would seem we could do this by handling oncommand, we need can't
            because any external oncommand handlers might get called before ours, and
-           then they would see the incorrect value of checked. -->           
+           then they would see the incorrect value of checked. -->
       <handler event="click" button="0" action="if (!this.disabled) this.checked = !this.checked;"/>
       <handler event="keypress" key=" ">
         <![CDATA[
           this.checked = !this.checked;
+          // Prevent page from scrolling on the space key.
+          event.preventDefault();
         ]]>
       </handler>
     </handlers>
-  </binding> 
+  </binding>
 
   <binding id="checkbox-with-spacing"
            extends="chrome://global/content/bindings/checkbox.xml#checkbox">

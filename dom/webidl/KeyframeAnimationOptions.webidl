@@ -10,19 +10,5 @@
  * liability, trademark and document use rules apply.
  */
 
-dictionary KeyframeAnimationOptions : KeyframeEffectOptions {
-  DOMString id = "";
-};
-
-dictionary AnimationFilter {
-  boolean subtree = false;
-};
-
-[NoInterfaceObject]
-interface Animatable {
-  [Func="nsDocument::IsElementAnimateEnabled", Throws]
-  Animation animate(object? keyframes,
-                    optional UnrestrictedDoubleOrKeyframeAnimationOptions options);
-  [Func="nsDocument::IsWebAnimationsEnabled"]
-  sequence<Animation> getAnimations(optional AnimationFilter filter);
-};
+// This typedef is off in its own file, because of bug 995352.
+typedef (unrestricted double or KeyframeAnimationOptions) UnrestrictedDoubleOrKeyframeAnimationOptions;
