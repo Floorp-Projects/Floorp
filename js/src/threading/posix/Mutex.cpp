@@ -17,7 +17,6 @@
   {                                             \
     int result = (call);                        \
     if (result != 0) {                          \
-      MOZ_ASSERT(!errno);                       \
       errno = result;                           \
       perror(msg);                              \
       MOZ_CRASH(msg);                           \
