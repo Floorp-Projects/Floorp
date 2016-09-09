@@ -183,6 +183,21 @@
 <!ENTITY options.stylesheetAutocompletion.label      "Autocomplete CSS">
 <!ENTITY options.stylesheetAutocompletion.tooltip    "Autocomplete CSS properties, values and selectors in Style Editor as you type">
 
+<!-- LOCALIZATION NOTE (options.screenshot.label): This is the label for the
+   -  heading of the group of Screenshot preferences in the options
+   -  panel. -->
+<!ENTITY options.screenshot.label            "Screenshot Behavior">
+
+<!-- LOCALIZATION NOTE (options.screenshot.clipboard.label): This is the
+   - label for the checkbox that toggles screenshot to clipboard feature. -->
+<!ENTITY options.screenshot.clipboard.label      "Screenshot to clipboard">
+<!ENTITY options.screenshot.clipboard.tooltip    "Saves to the screenshot directly to the clipboard">
+
+<!-- LOCALIZATION NOTE (options.screenshot.audio.label): This is the
+   - label for the checkbox that toggles the camera shutter audio for screenshot tool -->
+<!ENTITY options.screenshot.audio.label      "Play camera shutter sound">
+<!ENTITY options.screenshot.audio.tooltip    "Enables the camera audio sound when taking screenshot">
+
 <!-- LOCALIZATION NOTE (options.commonprefs): This is the label for the heading
       of all preferences that affect both the Web Console and the Network
       Monitor -->
