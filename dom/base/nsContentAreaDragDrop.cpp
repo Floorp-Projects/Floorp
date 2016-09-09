@@ -85,7 +85,8 @@ private:
                                             nsIContent **outImageOrLinkNode,
                                             bool* outDragSelectedText);
   static already_AddRefed<nsIContent> FindParentLinkNode(nsIContent* inNode);
-  static void GetAnchorURL(nsIContent* inNode, nsAString& outURL);
+  static MOZ_MUST_USE nsresult
+  GetAnchorURL(nsIContent* inNode, nsAString& outURL);
   static void GetNodeString(nsIContent* inNode, nsAString & outNodeString);
   static void CreateLinkText(const nsAString& inURL, const nsAString & inText,
                               nsAString& outLinkText);
@@ -295,19 +296,21 @@ DragDataProducer::FindParentLinkNode(nsIContent* inNode)
 //
 // GetAnchorURL
 //
-void
+nsresult
 DragDataProducer::GetAnchorURL(nsIContent* inNode, nsAString& outURL)
 {
   nsCOMPtr<nsIURI> linkURI;
   if (!inNode || !inNode->IsLink(getter_AddRefs(linkURI))) {
     // Not a link
     outURL.Truncate();
-    return;
+    return NS_OK;
   }
 
   nsAutoCString spec;
-  linkURI->GetSpec(spec);
+  nsresult rv = linkURI->GetSpec(spec);
+  NS_ENSURE_SUCCESS(rv, rv);
   CopyUTF8toUTF16(spec, outURL);
+  return NS_OK;
 }
 
 
@@ -521,7 +524,8 @@ DragDataProducer::Produce(DataTransfer* aDataTransfer,
         mIsAnchor = true;
 
         // gives an absolute link
-        GetAnchorURL(draggedNode, mUrlString);
+        nsresult rv = GetAnchorURL(draggedNode, mUrlString);
+        NS_ENSURE_SUCCESS(rv, rv);
 
         mHtmlString.AssignLiteral("<a href=\"");
         mHtmlString.Append(mUrlString);
@@ -539,7 +543,8 @@ DragDataProducer::Produce(DataTransfer* aDataTransfer,
         image->GetCurrentURI(getter_AddRefs(imageURI));
         if (imageURI) {
           nsAutoCString spec;
-          imageURI->GetSpec(spec);
+          rv = imageURI->GetSpec(spec);
+          NS_ENSURE_SUCCESS(rv, rv);
           CopyUTF8toUTF16(spec, mUrlString);
         }
 
@@ -584,7 +589,8 @@ DragDataProducer::Produce(DataTransfer* aDataTransfer,
 
             if (mimeInfo) {
               nsAutoCString spec;
-              imgUrl->GetSpec(spec);
+              rv = imgUrl->GetSpec(spec);
+              NS_ENSURE_SUCCESS(rv, rv);
 
               // pass out the image source string
               CopyUTF8toUTF16(spec, mImageSourceString);
@@ -647,7 +653,8 @@ DragDataProducer::Produce(DataTransfer* aDataTransfer,
 
       if (linkNode) {
         mIsAnchor = true;
-        GetAnchorURL(linkNode, mUrlString);
+        rv = GetAnchorURL(linkNode, mUrlString);
+        NS_ENSURE_SUCCESS(rv, rv);
         dragNode = linkNode;
       }
     }

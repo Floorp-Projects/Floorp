@@ -726,6 +726,12 @@ nsCocoaWindow::SetFakeModal(bool aState)
     SetModal(aState);
 }
 
+bool
+nsCocoaWindow::IsRunningAppModal()
+{
+  return [NSApp _isRunningAppModal];
+}
+
 // Hide or show this window
 NS_IMETHODIMP nsCocoaWindow::Show(bool bState)
 {

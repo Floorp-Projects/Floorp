@@ -57,7 +57,7 @@ public:
 
   nsresult Init(const mozilla::PrincipalOriginAttributes& aOriginAttributes = mozilla::PrincipalOriginAttributes());
 
-  virtual void GetScriptLocation(nsACString &aStr) override;
+  virtual nsresult GetScriptLocation(nsACString &aStr) override;
 
   PrincipalKind Kind() override { return eNullPrincipal; }
 

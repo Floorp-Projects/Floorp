@@ -46,7 +46,7 @@ static gfxFloat RecoverZDepth(const Matrix4x4& aTransform, const gfxPoint& aPoin
 {
     const Point3D l(0, 0, 1);
     Point3D l0 = Point3D(aPoint.x, aPoint.y, 0);
-    Point3D p0 = aTransform * Point3D(0, 0, 0);
+    Point3D p0 = aTransform.TransformPoint(Point3D(0, 0, 0));
     Point3D normal = aTransform.GetNormalVector();
 
     gfxFloat n = normal.DotProduct(p0 - l0); 

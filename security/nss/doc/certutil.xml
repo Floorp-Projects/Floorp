@@ -373,12 +373,12 @@ of the attribute codes:
 	</listitem>
 	<listitem>
 	<para>
-		<command>T</command> - Trusted CA (implies c)
+		<command>C</command> - Trusted CA (implies c)
 	</para>
 	</listitem>
 	<listitem>
 	<para>
-		<command>C</command> - trusted CA for client authentication (ssl server only)
+		<command>T</command> - trusted CA for client authentication (ssl server only)
 	</para>
 	</listitem>
 	<listitem>

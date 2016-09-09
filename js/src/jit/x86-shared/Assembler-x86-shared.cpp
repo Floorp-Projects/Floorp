@@ -226,6 +226,8 @@ AssemblerX86Shared::verifyHeapAccessDisassembly(uint32_t begin, uint32_t end,
                                                 const Disassembler::HeapAccess& heapAccess)
 {
 #ifdef DEBUG
+    if (masm.oom())
+        return;
     Disassembler::VerifyHeapAccess(masm.data() + begin, masm.data() + end, heapAccess);
 #endif
 }

@@ -4,12 +4,12 @@
 #include "secdig.h"
 
 #include "secoid.h"
-#include "secasn1.h" 
+#include "secasn1.h"
 #include "secerr.h"
 
 /*
  * XXX Want to have a SGN_DecodeDigestInfo, like:
- *	SGNDigestInfo *SGN_DecodeDigestInfo(SECItem *didata);
+ *  SGNDigestInfo *SGN_DecodeDigestInfo(SECItem *didata);
  * that creates a pool and allocates from it and decodes didata into
  * the newly allocated DigestInfo structure.  Then fix secvfy.c (it
  * will no longer need an arena itself) to call this and then call
@@ -25,7 +25,7 @@
 SECItem *
 SGN_EncodeDigestInfo(PLArenaPool *poolp, SECItem *dest, SGNDigestInfo *diginfo)
 {
-    return SEC_ASN1EncodeItem (poolp, dest, diginfo, sgn_DigestInfoTemplate);
+    return SEC_ASN1EncodeItem(poolp, dest, diginfo, sgn_DigestInfoTemplate);
 }
 
 SGNDigestInfo *
@@ -39,28 +39,28 @@ SGN_CreateDigestInfo(SECOidTag algorithm, const unsigned char *sig,
     SECItem dummy_value;
 
     switch (algorithm) {
-      case SEC_OID_MD2:
-      case SEC_OID_MD5:
-      case SEC_OID_SHA1:
-      case SEC_OID_SHA224:
-      case SEC_OID_SHA256:
-      case SEC_OID_SHA384:
-      case SEC_OID_SHA512:
-	break;
-      default:
-	PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
-	return NULL;
+        case SEC_OID_MD2:
+        case SEC_OID_MD5:
+        case SEC_OID_SHA1:
+        case SEC_OID_SHA224:
+        case SEC_OID_SHA256:
+        case SEC_OID_SHA384:
+        case SEC_OID_SHA512:
+            break;
+        default:
+            PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+            return NULL;
     }
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if (arena == NULL) {
-	return NULL;
+        return NULL;
     }
 
-    di = (SGNDigestInfo *) PORT_ArenaZAlloc(arena, sizeof(SGNDigestInfo));
+    di = (SGNDigestInfo *)PORT_ArenaZAlloc(arena, sizeof(SGNDigestInfo));
     if (di == NULL) {
-	PORT_FreeArena(arena, PR_FALSE);
-	return NULL;
+        PORT_FreeArena(arena, PR_FALSE);
+        return NULL;
     }
 
     di->arena = arena;
@@ -73,28 +73,28 @@ SGN_CreateDigestInfo(SECOidTag algorithm, const unsigned char *sig,
     dummy_value.len = 0;
     null_param = SEC_ASN1EncodeItem(NULL, NULL, &dummy_value, SEC_NullTemplate);
     if (null_param == NULL) {
-	goto loser;
+        goto loser;
     }
 
     rv = SECOID_SetAlgorithmID(arena, &di->digestAlgorithm, algorithm,
-			       null_param);
+                               null_param);
 
     SECITEM_FreeItem(null_param, PR_TRUE);
 
     if (rv != SECSuccess) {
-	goto loser;
+        goto loser;
     }
 
-    di->digest.data = (unsigned char *) PORT_ArenaAlloc(arena, len);
+    di->digest.data = (unsigned char *)PORT_ArenaAlloc(arena, len);
     if (di->digest.data == NULL) {
-	goto loser;
+        goto loser;
     }
 
     di->digest.len = len;
     PORT_Memcpy(di->digest.data, sig, len);
     return di;
 
-  loser:
+loser:
     SGN_DestroyDigestInfo(di);
     return NULL;
 }
@@ -105,27 +105,27 @@ SGN_DecodeDigestInfo(SECItem *didata)
     PLArenaPool *arena;
     SGNDigestInfo *di;
     SECStatus rv = SECFailure;
-    SECItem      diCopy   = {siBuffer, NULL, 0};
+    SECItem diCopy = { siBuffer, NULL, 0 };
 
     arena = PORT_NewArena(SEC_ASN1_DEFAULT_ARENA_SIZE);
-    if(arena == NULL)
-	return NULL;
+    if (arena == NULL)
+        return NULL;
 
     rv = SECITEM_CopyItem(arena, &diCopy, didata);
     if (rv != SECSuccess) {
-	PORT_FreeArena(arena, PR_FALSE);
-    	return NULL;
+        PORT_FreeArena(arena, PR_FALSE);
+        return NULL;
     }
 
     di = (SGNDigestInfo *)PORT_ArenaZAlloc(arena, sizeof(SGNDigestInfo));
     if (di != NULL) {
-	di->arena = arena;
-	rv = SEC_QuickDERDecodeItem(arena, di, sgn_DigestInfoTemplate, &diCopy);
+        di->arena = arena;
+        rv = SEC_QuickDERDecodeItem(arena, di, sgn_DigestInfoTemplate, &diCopy);
     }
-	
+
     if ((di == NULL) || (rv != SECSuccess)) {
-	PORT_FreeArena(arena, PR_FALSE);
-	di = NULL;
+        PORT_FreeArena(arena, PR_FALSE);
+        di = NULL;
     }
 
     return di;
@@ -135,32 +135,32 @@ void
 SGN_DestroyDigestInfo(SGNDigestInfo *di)
 {
     if (di && di->arena) {
-	PORT_FreeArena(di->arena, PR_FALSE);
+        PORT_FreeArena(di->arena, PR_FALSE);
     }
 
     return;
 }
 
-SECStatus 
+SECStatus
 SGN_CopyDigestInfo(PLArenaPool *poolp, SGNDigestInfo *a, SGNDigestInfo *b)
 {
     SECStatus rv;
     void *mark;
 
-    if((poolp == NULL) || (a == NULL) || (b == NULL))
-	return SECFailure;
+    if ((poolp == NULL) || (a == NULL) || (b == NULL))
+        return SECFailure;
 
     mark = PORT_ArenaMark(poolp);
     a->arena = poolp;
-    rv = SECOID_CopyAlgorithmID(poolp, &a->digestAlgorithm, 
-	&b->digestAlgorithm);
+    rv = SECOID_CopyAlgorithmID(poolp, &a->digestAlgorithm,
+                                &b->digestAlgorithm);
     if (rv == SECSuccess)
-	rv = SECITEM_CopyItem(poolp, &a->digest, &b->digest);
+        rv = SECITEM_CopyItem(poolp, &a->digest, &b->digest);
 
     if (rv != SECSuccess) {
-	PORT_ArenaRelease(poolp, mark);
+        PORT_ArenaRelease(poolp, mark);
     } else {
-	PORT_ArenaUnmark(poolp, mark);
+        PORT_ArenaUnmark(poolp, mark);
     }
 
     return rv;
@@ -173,7 +173,8 @@ SGN_CompareDigestInfo(SGNDigestInfo *a, SGNDigestInfo *b)
 
     /* Check signature algorithm's */
     rv = SECOID_CompareAlgorithmID(&a->digestAlgorithm, &b->digestAlgorithm);
-    if (rv) return rv;
+    if (rv)
+        return rv;
 
     /* Compare signature block length's */
     rv = SECITEM_CompareItem(&a->digest, &b->digest);

@@ -694,19 +694,24 @@ nsINode::GetBaseURI(nsAString &aURI) const
 
   nsAutoCString spec;
   if (baseURI) {
-    baseURI->GetSpec(spec);
+    // XXX: should handle GetSpec() failure properly. See bug 1301254.
+    Unused << baseURI->GetSpec(spec);
   }
 
   CopyUTF8toUTF16(spec, aURI);
 }
 
 void
-nsINode::GetBaseURIFromJS(nsAString& aURI) const
+nsINode::GetBaseURIFromJS(nsAString& aURI, ErrorResult& aRv) const
 {
   nsCOMPtr<nsIURI> baseURI = GetBaseURI(nsContentUtils::IsCallerChrome());
   nsAutoCString spec;
   if (baseURI) {
-    baseURI->GetSpec(spec);
+    nsresult res = baseURI->GetSpec(spec);
+    if (NS_FAILED(res)) {
+      aRv.Throw(res);
+      return;
+    }
   }
   CopyUTF8toUTF16(spec, aURI);
 }

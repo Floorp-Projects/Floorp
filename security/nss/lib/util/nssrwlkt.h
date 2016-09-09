@@ -10,11 +10,10 @@
 /*
  * NSSRWLock --
  *
- *	The reader writer lock, NSSRWLock, is an opaque object to the clients
- *	of NSS.  All routines operate on a pointer to this opaque entity.
+ *  The reader writer lock, NSSRWLock, is an opaque object to the clients
+ *  of NSS.  All routines operate on a pointer to this opaque entity.
  */
 
 typedef struct nssRWLockStr NSSRWLock;
-
 
 #endif /* nsrwlock_h___ */

@@ -1053,16 +1053,19 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
   nsCOMPtr<nsIDocShell> newDocShell(do_QueryInterface(newDocShellItem));
   NS_ENSURE_TRUE(newDocShell, NS_ERROR_UNEXPECTED);
 
+  // If our parent is sandboxed, set it as the one permitted sandboxed navigator
+  // on the new window we're opening.
+  if (activeDocsSandboxFlags && parentWindow) {
+    newDocShell->SetOnePermittedSandboxedNavigator(
+      parentWindow->GetDocShell());
+  }
+
   // Copy sandbox flags to the new window if activeDocsSandboxFlags says to do
   // so.  Note that it's only nonzero if the window is new, so clobbering
   // sandbox flags on the window makes sense in that case.
   if (activeDocsSandboxFlags &
         SANDBOX_PROPAGATES_TO_AUXILIARY_BROWSING_CONTEXTS) {
     newDocShell->SetSandboxFlags(activeDocsSandboxFlags);
-    if (parentWindow) {
-      newDocShell->SetOnePermittedSandboxedNavigator(
-        parentWindow->GetDocShell());
-    }
   }
 
   rv = ReadyOpenedDocShellItem(newDocShellItem, parentWindow, windowIsNew, aResult);
@@ -1111,9 +1114,9 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
     auto* docShell = static_cast<nsDocShell*>(newDocShell.get());
 
     // If this is not a chrome docShell, we apply originAttributes from the
-    // subjectPrincipal unless if it's an expanded principal.
+    // subjectPrincipal unless if it's an expanded or system principal.
     if (subjectPrincipal &&
-        !subjectPrincipal->GetIsExpandedPrincipal() &&
+        !nsContentUtils::IsSystemOrExpandedPrincipal(subjectPrincipal) &&
         docShell->ItemType() != nsIDocShellTreeItem::typeChrome) {
       DocShellOriginAttributes attrs;
       attrs.InheritFromDocToChildDocShell(BasePrincipal::Cast(subjectPrincipal)->OriginAttributesRef());
@@ -1282,15 +1285,18 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
       return NS_OK;
     }
 
-    if (!newWindowShouldBeModal && parentIsModal) {
-      nsCOMPtr<nsIBaseWindow> parentWindow(do_GetInterface(newTreeOwner));
-      if (parentWindow) {
-        nsCOMPtr<nsIWidget> parentWidget;
-        parentWindow->GetMainWidget(getter_AddRefs(parentWidget));
-        if (parentWidget) {
-          parentWidget->SetFakeModal(true);
-        }
+    bool isAppModal = false;
+    nsCOMPtr<nsIBaseWindow> parentWindow(do_GetInterface(newTreeOwner));
+    nsCOMPtr<nsIWidget> parentWidget;
+    if (parentWindow) {
+      parentWindow->GetMainWidget(getter_AddRefs(parentWidget));
+      if (parentWidget) {
+        isAppModal = parentWidget->IsRunningAppModal();
       }
+    }
+    if (parentWidget &&
+        ((!newWindowShouldBeModal && parentIsModal) || isAppModal)) {
+      parentWidget->SetFakeModal(true);
     } else {
       // Reset popup state while opening a modal dialog, and firing
       // events about the dialog, to prevent the current state from

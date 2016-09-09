@@ -1760,7 +1760,8 @@ CSSStyleSheet::GetHref(nsAString& aHref)
 {
   if (mInner->mOriginalSheetURI) {
     nsAutoCString str;
-    mInner->mOriginalSheetURI->GetSpec(str);
+    nsresult rv = mInner->mOriginalSheetURI->GetSpec(str);
+    NS_ENSURE_SUCCESS(rv, rv);
     CopyUTF8toUTF16(str, aHref);
   } else {
     SetDOMStringToNull(aHref);

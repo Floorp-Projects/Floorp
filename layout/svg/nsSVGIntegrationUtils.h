@@ -151,11 +151,14 @@ public:
   };
 
   /**
-   * Paint non-SVG frame with SVG effects.
+   * Paint non-SVG frame with mask, clipPath and opacity effect.
    */
   static DrawResult
   PaintMaskAndClipPath(const PaintFramesParams& aParams);
 
+  /**
+   * Paint non-SVG frame with filter and opacity effect.
+   */
   static DrawResult
   PaintFilter(const PaintFramesParams& aParams);
 

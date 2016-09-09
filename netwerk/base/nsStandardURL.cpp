@@ -402,7 +402,7 @@ nsStandardURL::IsValidOfBase(unsigned char c, const uint32_t base) {
     return false;
 }
 
-/* static */ nsresult
+/* static */ inline nsresult
 nsStandardURL::ParseIPv4Number(nsCString &input, uint32_t &number)
 {
     if (input.Length() == 0) {
@@ -472,14 +472,16 @@ nsStandardURL::ParseIPv4Number(nsCString &input, uint32_t &number)
 /* static */ nsresult
 nsStandardURL::NormalizeIPv4(const nsCSubstring &host, nsCString &result)
 {
-    if (FindInReadable(NS_LITERAL_CSTRING(".."), host)) {
+    if (host.Length() == 0 ||
+        host[0] < '0' || '9' < host[0] || // bail-out fast
+        FindInReadable(NS_LITERAL_CSTRING(".."), host)) {
         return NS_ERROR_FAILURE;
     }
+
     nsTArray<nsCString> parts;
     if (!ParseString(host, '.', parts) ||
-        parts.Length() == 0 /* implies host.Length() == 0 */ ||
-        parts.Length() > 4 ||
-        host[0] == '.') {
+        parts.Length() == 0 ||
+        parts.Length() > 4) {
         return NS_ERROR_FAILURE;
     }
     uint32_t n = 0;

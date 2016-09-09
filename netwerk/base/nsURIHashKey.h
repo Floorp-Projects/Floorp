@@ -9,6 +9,7 @@
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
 #include "nsHashKeys.h"
+#include "mozilla/Unused.h"
 
 /**
  * Hashtable key class to use with nsTHashtable/nsBaseHashtable
@@ -45,7 +46,9 @@ public:
             return mozilla::HashString(EmptyCString());
         }
         nsAutoCString spec;
-        const_cast<nsIURI*>(aKey)->GetSpec(spec);
+        // If GetSpec() fails, ignoring the failure and proceeding with an
+        // empty |spec| seems like the best thing to do.
+        mozilla::Unused << const_cast<nsIURI*>(aKey)->GetSpec(spec);
         return mozilla::HashString(spec);
     }
 

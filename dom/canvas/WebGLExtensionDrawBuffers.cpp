@@ -48,8 +48,11 @@ WebGLExtensionDrawBuffers::IsSupported(const WebGLContext* webgl)
 {
     gl::GLContext* gl = webgl->GL();
 
-    if (!gl->IsSupported(gl::GLFeature::draw_buffers))
+    if (!gl->IsExtensionSupported(gl::GLContext::ARB_draw_buffers) &&
+        !gl->IsExtensionSupported(gl::GLContext::EXT_draw_buffers))
+    {
         return false;
+    }
 
     // WEBGL_draw_buffers requires at least 4 color attachments.
     if (webgl->mGLMaxDrawBuffers < webgl->kMinMaxDrawBuffers ||

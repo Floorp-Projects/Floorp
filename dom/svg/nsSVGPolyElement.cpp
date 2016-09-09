@@ -149,9 +149,9 @@ nsSVGPolyElement::GetGeometryBounds(Rect* aBounds,
     }
     *aBounds = aToBoundsSpace.TransformBounds(bounds);
   } else {
-    *aBounds = Rect(aToBoundsSpace * points[0], Size());
+    *aBounds = Rect(aToBoundsSpace.TransformPoint(points[0]), Size());
     for (uint32_t i = 1; i < points.Length(); ++i) {
-      aBounds->ExpandToEnclose(aToBoundsSpace * points[i]);
+      aBounds->ExpandToEnclose(aToBoundsSpace.TransformPoint(points[i]));
     }
   }
   return true;

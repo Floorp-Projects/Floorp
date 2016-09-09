@@ -208,7 +208,7 @@ public:
     MOZ_ASSERT(!aTransform || !aTransform->HasNonIntegerTranslation());
     Point dest(Float(mDestination.x), Float(mDestination.y));
     if (aTransform) {
-      dest = (*aTransform) * dest;
+      dest = aTransform->TransformPoint(dest);
     }
     aDT->CopySurface(mSurface, mSourceRect, IntPoint(uint32_t(dest.x), uint32_t(dest.y)));
   }

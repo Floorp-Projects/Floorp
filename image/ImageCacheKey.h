@@ -34,7 +34,7 @@ class ImageCacheKey final
 {
 public:
   ImageCacheKey(nsIURI* aURI, const PrincipalOriginAttributes& aAttrs,
-                nsIDocument* aDocument);
+                nsIDocument* aDocument, nsresult& aRv);
   ImageCacheKey(ImageURL* aURI, const PrincipalOriginAttributes& aAttrs,
                 nsIDocument* aDocument);
 

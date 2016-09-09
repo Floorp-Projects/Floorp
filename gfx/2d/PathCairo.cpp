@@ -176,7 +176,7 @@ PathCairo::TransformedCopyToBuilder(const Matrix &aTransform, FillRule aFillRule
   RefPtr<PathBuilderCairo> builder = new PathBuilderCairo(aFillRule);
 
   AppendPathToBuilder(builder, &aTransform);
-  builder->mCurrentPoint = aTransform * mCurrentPoint;
+  builder->mCurrentPoint = aTransform.TransformPoint(mCurrentPoint);
 
   return builder.forget();
 }
@@ -186,7 +186,7 @@ PathCairo::ContainsPoint(const Point &aPoint, const Matrix &aTransform) const
 {
   Matrix inverse = aTransform;
   inverse.Invert();
-  Point transformed = inverse * aPoint;
+  Point transformed = inverse.TransformPoint(aPoint);
 
   EnsureContainingContext(aTransform);
 
@@ -200,7 +200,7 @@ PathCairo::StrokeContainsPoint(const StrokeOptions &aStrokeOptions,
 {
   Matrix inverse = aTransform;
   inverse.Invert();
-  Point transformed = inverse * aPoint;
+  Point transformed = inverse.TransformPoint(aPoint);
 
   EnsureContainingContext(aTransform);
 
@@ -313,7 +313,7 @@ PathCairo::AppendPathToBuilder(PathBuilderCairo *aBuilder, const Matrix *aTransf
       i++;
       for (uint32_t c = 0; c < pointCount; c++) {
         cairo_path_data_t data;
-        Point newPoint = *aTransform * Point(mPathData[i].point.x, mPathData[i].point.y);
+        Point newPoint = aTransform->TransformPoint(Point(mPathData[i].point.x, mPathData[i].point.y));
         data.point.x = newPoint.x;
         data.point.y = newPoint.y;
         aBuilder->mPathData.push_back(data);
