@@ -13,6 +13,8 @@ author: Jordan Lund
 
 """
 
+import copy
+import pprint
 import sys
 import os
 
@@ -20,13 +22,15 @@ import os
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 from mozharness.mozilla.building.buildbase import BUILD_BASE_CONFIG_OPTIONS, \
-    BuildingConfig, BuildScript
+    BuildingConfig, BuildOptionParser, BuildScript
+from mozharness.base.config import parse_config_file
+from mozharness.mozilla.testing.try_tools import TryToolsMixin, try_config_options
 
 
-class FxDesktopBuild(BuildScript, object):
+class FxDesktopBuild(BuildScript, TryToolsMixin, object):
     def __init__(self):
         buildscript_kwargs = {
-            'config_options': BUILD_BASE_CONFIG_OPTIONS,
+            'config_options': BUILD_BASE_CONFIG_OPTIONS + copy.deepcopy(try_config_options),
             'all_actions': [
                 'get-secrets',
                 'clobber',
@@ -120,8 +124,40 @@ class FxDesktopBuild(BuildScript, object):
             else:
                 self.fatal("'stage_platform' not determined and is required in your config")
 
+            if self.try_message_has_flag('artifact'):
+                self.info('Artifact build requested in try syntax.')
+                self._update_build_variant(rw_config)
 
     # helpers
+    def _update_build_variant(self, rw_config, variant='artifact'):
+        """ Intended for use in _pre_config_lock """
+        c = self.config
+        variant_cfg_path, _ = BuildOptionParser.find_variant_cfg_path(
+            '--custom-build-variant-cfg',
+            variant,
+            rw_config.config_parser
+        )
+        if not variant_cfg_path:
+            self.fatal('Could not find appropriate config file for variant %s' % variant)
+        # Update other parts of config to keep dump-config accurate
+        # Only dump-config is affected because most config info is set during
+        # initial parsing
+        variant_cfg_dict = parse_config_file(variant_cfg_path)
+        rw_config.all_cfg_files_and_dicts.append((variant_cfg_path, variant_cfg_dict))
+        c.update({
+            'build_variant': variant,
+            'config_files': c['config_files'] + [variant_cfg_path]
+        })
+
+        self.info("Updating self.config with the following from {}:".format(variant_cfg_path))
+        self.info(pprint.pformat(variant_cfg_dict))
+        c.update(variant_cfg_dict)
+        # replace rw_config as well to set actions as in BaseScript
+        rw_config.set_config(c, overwrite=True)
+        rw_config.update_actions()
+        self.actions = tuple(rw_config.actions)
+        self.all_actions = tuple(rw_config.all_actions)
+
 
     def query_abs_dirs(self):
         if self.abs_dirs:
@@ -163,6 +199,9 @@ class FxDesktopBuild(BuildScript, object):
         # reset_mock in BuildingMixing -> MockMixin
         # setup_mock in BuildingMixing (overrides MockMixin.mock_setup)
 
+    def set_extra_try_arguments(self, action, success=None):
+        """ Override unneeded method from TryToolsMixin """
+        pass
 
 if __name__ == '__main__':
     fx_desktop_build = FxDesktopBuild()
