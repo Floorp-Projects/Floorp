@@ -53,6 +53,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIDOMMutationEvent.h"
 #include "mozilla/dom/AnimatableBinding.h"
+#include "mozilla/dom/KeyframeAnimationOptionsBinding.h"
 #include "mozilla/AnimationComparator.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/ContentEvents.h"

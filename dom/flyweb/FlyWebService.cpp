@@ -9,6 +9,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/FlyWebPublishedServerIPC.h"
+#include "mozilla/AddonPathService.h"
 #include "nsISocketTransportService.h"
 #include "mdns/libmdns/nsDNSServiceInfo.h"
 #include "nsIUUIDGenerator.h"
@@ -18,6 +19,7 @@
 #include "mozilla/dom/FlyWebDiscoveryManagerBinding.h"
 #include "prnetdb.h"
 #include "DNS.h"
+#include "nsContentPermissionHelper.h"
 #include "nsSocketTransportService2.h"
 #include "nsSocketTransport2.h"
 #include "nsHashPropertyBag.h"
@@ -34,10 +36,122 @@ struct FlyWebPublishOptions;
 static LazyLogModule gFlyWebServiceLog("FlyWebService");
 #undef LOG_I
 #define LOG_I(...) MOZ_LOG(mozilla::dom::gFlyWebServiceLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
+
 #undef LOG_E
 #define LOG_E(...) MOZ_LOG(mozilla::dom::gFlyWebServiceLog, mozilla::LogLevel::Error, (__VA_ARGS__))
+
 #undef LOG_TEST_I
 #define LOG_TEST_I(...) MOZ_LOG_TEST(mozilla::dom::gFlyWebServiceLog, mozilla::LogLevel::Debug)
+
+class FlyWebPublishServerPermissionCheck final
+  : public nsIContentPermissionRequest
+  , public nsIRunnable
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  FlyWebPublishServerPermissionCheck(const nsCString& aServiceName, uint64_t aWindowID,
+                                     FlyWebPublishedServer* aServer)
+    : mServiceName(aServiceName)
+    , mWindowID(aWindowID)
+    , mServer(aServer)
+  {}
+
+  uint64_t WindowID() const
+  {
+    return mWindowID;
+  }
+
+  NS_IMETHOD Run() override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    nsGlobalWindow* globalWindow = nsGlobalWindow::GetInnerWindowWithId(mWindowID);
+    if (!globalWindow) {
+      return Cancel();
+    }
+    mWindow = globalWindow->AsInner();
+    if (NS_WARN_IF(!mWindow)) {
+      return Cancel();
+    }
+
+    nsCOMPtr<nsIDocument> doc = mWindow->GetDoc();
+    if (NS_WARN_IF(!doc)) {
+      return Cancel();
+    }
+
+    mPrincipal = doc->NodePrincipal();
+    MOZ_ASSERT(mPrincipal);
+
+    mRequester = new nsContentPermissionRequester(mWindow);
+    return nsContentPermissionUtils::AskPermission(this, mWindow);
+  }
+
+  NS_IMETHOD Cancel() override
+  {
+    Resolve(false);
+    return NS_OK;
+  }
+
+  NS_IMETHOD Allow(JS::HandleValue aChoices) override
+  {
+    MOZ_ASSERT(aChoices.isUndefined());
+    Resolve(true);
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetTypes(nsIArray** aTypes) override
+  {
+    nsTArray<nsString> emptyOptions;
+    return nsContentPermissionUtils::CreatePermissionArray(NS_LITERAL_CSTRING("flyweb-publish-server"),
+                                                           NS_LITERAL_CSTRING("unused"), emptyOptions, aTypes);
+  }
+
+  NS_IMETHOD GetRequester(nsIContentPermissionRequester** aRequester) override
+  {
+    NS_ENSURE_ARG_POINTER(aRequester);
+    nsCOMPtr<nsIContentPermissionRequester> requester = mRequester;
+    requester.forget(aRequester);
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetPrincipal(nsIPrincipal** aRequestingPrincipal) override
+  {
+    NS_IF_ADDREF(*aRequestingPrincipal = mPrincipal);
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetWindow(mozIDOMWindow** aRequestingWindow) override
+  {
+    NS_IF_ADDREF(*aRequestingWindow = mWindow);
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetElement(nsIDOMElement** aRequestingElement) override
+  {
+    *aRequestingElement = nullptr;
+    return NS_OK;
+  }
+
+private:
+  void Resolve(bool aResolve)
+  {
+    mServer->PermissionGranted(aResolve);
+  }
+
+  virtual ~FlyWebPublishServerPermissionCheck() = default;
+
+  nsCString mServiceName;
+  uint64_t mWindowID;
+  RefPtr<FlyWebPublishedServer> mServer;
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+  nsCOMPtr<nsIContentPermissionRequester> mRequester;
+};
+
+NS_IMPL_ISUPPORTS(FlyWebPublishServerPermissionCheck,
+                  nsIContentPermissionRequest,
+                  nsIRunnable)
 
 class FlyWebMDNSService final
   : public nsIDNSServiceDiscoveryListener
@@ -841,6 +955,15 @@ FlyWebService::Init()
   return ErrorResult(NS_OK);
 }
 
+static already_AddRefed<FlyWebPublishPromise>
+MakeRejectionPromise(const char* name)
+{
+    MozPromiseHolder<FlyWebPublishPromise> holder;
+    RefPtr<FlyWebPublishPromise> promise = holder.Ensure(name);
+    holder.Reject(NS_ERROR_FAILURE, name);
+    return promise.forget();
+}
+
 already_AddRefed<FlyWebPublishPromise>
 FlyWebService::PublishServer(const nsAString& aName,
                              const FlyWebPublishOptions& aOptions,
@@ -853,10 +976,7 @@ FlyWebService::PublishServer(const nsAString& aName,
   if (existingServer) {
     LOG_I("PublishServer: Trying to publish server with already-existing name %s.",
           NS_ConvertUTF16toUTF8(aName).get());
-    MozPromiseHolder<FlyWebPublishPromise> holder;
-    RefPtr<FlyWebPublishPromise> promise = holder.Ensure(__func__);
-    holder.Reject(NS_ERROR_FAILURE, __func__);
-    return promise.forget();
+    return MakeRejectionPromise(__func__);
   }
 
   RefPtr<FlyWebPublishedServer> server;
@@ -864,6 +984,49 @@ FlyWebService::PublishServer(const nsAString& aName,
     server = new FlyWebPublishedServerChild(aWindow, aName, aOptions);
   } else {
     server = new FlyWebPublishedServerImpl(aWindow, aName, aOptions);
+
+    // Before proceeding, ensure that the FlyWeb system addon exists.
+    nsresult rv;
+    nsCOMPtr<nsIURI> uri;
+    rv = NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("chrome://flyweb/skin/icon-64.png"));
+    if (NS_FAILED(rv)) {
+      return MakeRejectionPromise(__func__);
+    }
+
+    JSAddonId *addonId = MapURIToAddonID(uri);
+    if (!addonId) {
+      LOG_E("PublishServer: Failed to find FlyWeb system addon.");
+      return MakeRejectionPromise(__func__);
+    }
+
+    JSFlatString* flat = JS_ASSERT_STRING_IS_FLAT(JS::StringOfAddonId(addonId));
+    nsAutoString addonIdString;
+    AssignJSFlatString(addonIdString, flat);
+    if (!addonIdString.EqualsLiteral("flyweb@mozilla.org")) {
+      nsCString addonIdCString = NS_ConvertUTF16toUTF8(addonIdString);
+      LOG_E("PublishServer: FlyWeb resource found on wrong system addon: %s.", addonIdCString.get());
+      return MakeRejectionPromise(__func__);
+    }
+  }
+
+  if (aWindow) {
+    nsresult rv;
+
+    MOZ_ASSERT(NS_IsMainThread());
+    rv = NS_DispatchToCurrentThread(
+      MakeAndAddRef<FlyWebPublishServerPermissionCheck>(
+        NS_ConvertUTF16toUTF8(aName), aWindow->WindowID(), server));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      LOG_E("PublishServer: Failed to dispatch permission check runnable for %s",
+            NS_ConvertUTF16toUTF8(aName).get());
+      return MakeRejectionPromise(__func__);
+    }
+  } else {
+    // If aWindow is null, we're definitely in the e10s parent process.
+    // In this case, we know that permission has already been granted
+    // by the user because of content-process prompt.
+    MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+    server->PermissionGranted(true);
   }
 
   mServers.AppendElement(server);

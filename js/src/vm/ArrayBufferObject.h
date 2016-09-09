@@ -252,6 +252,10 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
                                      HandleObject proto = nullptr,
                                      NewObjectKind newKind = GenericObject);
 
+    // Create an ArrayBufferObject that is safely finalizable and can later be
+    // initialize()d to become a real, content-visible ArrayBufferObject.
+    static ArrayBufferObject* createEmpty(JSContext* cx);
+
     static bool createDataViewForThisImpl(JSContext* cx, const CallArgs& args);
     static bool createDataViewForThis(JSContext* cx, unsigned argc, Value* vp);
 
@@ -275,12 +279,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     bool hasStealableContents() const {
         // Inline elements strictly adhere to the corresponding buffer.
         return ownsData();
-    }
-
-    // Return whether the buffer is allocated by js_malloc and should be freed
-    // with js_free.
-    bool hasMallocedContents() const {
-        return (ownsData() && isPlain()) || isAsmJSMalloced();
     }
 
     static void addSizeOfExcludingThis(JSObject* obj, mozilla::MallocSizeOf mallocSizeOf,
@@ -395,6 +393,15 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
         setFlags(0);
         setFirstView(nullptr);
         setDataPointer(contents, ownsState);
+    }
+
+    // Note: initialize() may be called after initEmpty(); initEmpty() must
+    // only initialize the ArrayBufferObject to a safe, finalizable state.
+    void initEmpty() {
+        setByteLength(0);
+        setFlags(0);
+        setFirstView(nullptr);
+        setDataPointer(BufferContents::createPlain(nullptr), DoesntOwnData);
     }
 };
 

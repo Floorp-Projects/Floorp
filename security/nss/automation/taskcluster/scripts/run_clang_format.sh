@@ -34,8 +34,11 @@ else
          "$top/lib/dbm" \
          "$top/lib/dev" \
          "$top/lib/freebl" \
+         "$top/lib/nss" \
          "$top/lib/softoken" \
          "$top/lib/ssl" \
+         "$top/lib/util" \
+         "$top/lib/sysinit" \
          "$top/external_tests/common" \
          "$top/external_tests/der_gtest" \
          "$top/external_tests/pk11_gtest" \

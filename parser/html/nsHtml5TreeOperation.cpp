@@ -911,7 +911,8 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       }
 
       nsAutoCString spec;
-      uri->GetSpec(spec);
+      rv = uri->GetSpec(spec);
+      NS_ENSURE_SUCCESS(rv, rv);
 
       viewSourceUrl.Append(spec);
 
@@ -919,7 +920,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       CopyUTF8toUTF16(viewSourceUrl, utf16);
 
       node->SetAttr(kNameSpaceID_None, nsGkAtoms::href, utf16, true);
-      return rv;
+      return NS_OK;
     }
     case eTreeOpAddViewSourceBase: {
       char16_t* buffer = mTwo.unicharPtr;

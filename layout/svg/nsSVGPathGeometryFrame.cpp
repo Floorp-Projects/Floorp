@@ -366,7 +366,7 @@ nsSVGPathGeometryFrame::GetFrameForPoint(const gfxPoint& aPoint)
       // coordinate system in order for non-scaled stroke to be correct.
       // Naturally we also need to transform the point into the same
       // coordinate system in order to hit-test against the path.
-      point = ToMatrix(userToOuterSVG) * point;
+      point = ToMatrix(userToOuterSVG).TransformPoint(point);
       RefPtr<PathBuilder> builder =
         path->TransformedCopyToBuilder(ToMatrix(userToOuterSVG), fillRule);
       path = builder->Finish();

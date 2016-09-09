@@ -9,7 +9,9 @@
 // anything else that could possibly pull in Windows header files.
 #define CINTERFACE
 
+#include "mozilla/mscom/EnsureMTA.h"
 #include "mozilla/mscom/Registration.h"
+#include "mozilla/mscom/Utils.h"
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
@@ -184,17 +186,21 @@ RegisteredProxy::RegisteredProxy(uintptr_t aModule, IUnknown* aClassObject,
   , mClassObject(aClassObject)
   , mRegCookie(aRegCookie)
   , mTypeLib(aTypeLib)
+  , mIsRegisteredInMTA(IsCurrentThreadMTA())
 {
   MOZ_ASSERT(aClassObject);
   MOZ_ASSERT(aTypeLib);
   AddToRegistry(this);
 }
 
+// If we're initializing from a typelib, it doesn't matter which apartment we
+// run in, so mIsRegisteredInMTA may always be set to false in this case.
 RegisteredProxy::RegisteredProxy(ITypeLib* aTypeLib)
   : mModule(0)
   , mClassObject(nullptr)
   , mRegCookie(0)
   , mTypeLib(aTypeLib)
+  , mIsRegisteredInMTA(false)
 {
   MOZ_ASSERT(aTypeLib);
   AddToRegistry(this);
@@ -207,8 +213,17 @@ RegisteredProxy::~RegisteredProxy()
     mTypeLib->lpVtbl->Release(mTypeLib);
   }
   if (mClassObject) {
-    ::CoRevokeClassObject(mRegCookie);
-    mClassObject->lpVtbl->Release(mClassObject);
+    // NB: mClassObject and mRegCookie must be freed from inside the apartment
+    // which they were created in.
+    auto cleanupFn = [&]() -> void {
+      ::CoRevokeClassObject(mRegCookie);
+      mClassObject->lpVtbl->Release(mClassObject);
+    };
+    if (mIsRegisteredInMTA) {
+      EnsureMTA mta(cleanupFn);
+    } else {
+      cleanupFn();
+    }
   }
   if (mModule) {
     ::FreeLibrary(reinterpret_cast<HMODULE>(mModule));

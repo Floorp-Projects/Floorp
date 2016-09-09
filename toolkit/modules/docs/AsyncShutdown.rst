@@ -5,6 +5,7 @@ AsyncShutdown
 ==============
 
 During shutdown of the process, subsystems are closed one after another. ``AsyncShutdown`` is a module dedicated to express shutdown-time dependencies between:
+
 - services and their clients;
 - shutdown phases (e.g. profile-before-change) and their clients.
 
@@ -14,11 +15,13 @@ Barriers: Expressing shutdown dependencies towards a service
 ============================================================
 
 Consider a service FooService. At some point during the shutdown of the process, this service needs to:
+
 - inform its clients that it is about to shut down;
 - wait until the clients have completed their final operations based on FooService (often asynchronously);
 - only then shut itself down.
 
 This may be expressed as an instance of ``AsyncShutdown.Barrier``. An instance of ``AsyncShutdown.Barrier`` provides:
+
 - a capability ``client`` that may be published to clients, to let them register or unregister blockers;
 - methods for the owner of the barrier to let it consult the state of blockers and wait until all client-registered blockers have been resolved.
 
@@ -33,6 +36,7 @@ mechanism helps ensure that we do not leave the process in a state in
 which it can neither proceed with shutdown nor be relaunched.
 
 If the CrashReporter is enabled, this crash will report:
+
 - the name of the barrier that failed;
 - for each blocker that has not been released yet:
 
@@ -219,6 +223,7 @@ Phases: Expressing dependencies towards phases of shutdown
 ==========================================================
 
 The shutdown of a process takes place by phase, such as:
+
 - ``profileBeforeChange`` (once this phase is complete, there is no guarantee that the process has access to a profile directory);
 - ``webWorkersShutdown`` (once this phase is complete, JavaScript does not have access to workers anymore);
 - ...

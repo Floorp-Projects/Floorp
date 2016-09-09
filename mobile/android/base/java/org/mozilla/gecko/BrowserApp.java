@@ -917,7 +917,7 @@ public class BrowserApp extends GeckoApp
         try {
             final SharedPreferences prefs = GeckoSharedPrefs.forProfile(this);
 
-            if (prefs.getBoolean(FirstrunAnimationContainer.PREF_FIRSTRUN_ENABLED, false)) {
+            if (prefs.getBoolean(FirstrunAnimationContainer.PREF_FIRSTRUN_ENABLED, true)) {
                 if (!Intent.ACTION_VIEW.equals(intent.getAction())) {
                     showFirstrunPager();
 

@@ -39,47 +39,45 @@ DecoderFuzzingWrapper::Init()
   return mDecoder->Init();
 }
 
-nsresult
+void
 DecoderFuzzingWrapper::Input(MediaRawData* aData)
 {
   DFW_LOGV("aData.mTime=%lld", aData->mTime);
   MOZ_ASSERT(mDecoder);
-  return mDecoder->Input(aData);
+  mDecoder->Input(aData);
 }
 
-nsresult
+void
 DecoderFuzzingWrapper::Flush()
 {
   DFW_LOGV("Calling mDecoder[%p]->Flush()", mDecoder.get());
   MOZ_ASSERT(mDecoder);
   // Flush may output some frames (though unlikely).
   // Flush may block a bit, it's ok if we output some frames in the meantime.
-  nsresult result = mDecoder->Flush();
-  DFW_LOGV("mDecoder[%p]->Flush() -> result=%u", mDecoder.get(), uint32_t(result));
+  mDecoder->Flush();
+  DFW_LOGV("mDecoder[%p]->Flush()", mDecoder.get());
   // Clear any delayed output we may have.
   mCallbackWrapper->ClearDelayedOutput();
-  return result;
 }
 
-nsresult
+void
 DecoderFuzzingWrapper::Drain()
 {
   DFW_LOGV("");
   MOZ_ASSERT(mDecoder);
   // Note: The decoder should callback DrainComplete(), we'll drain the
   // delayed output (if any) then.
-  return mDecoder->Drain();
+  mDecoder->Drain();
 }
 
-nsresult
+void
 DecoderFuzzingWrapper::Shutdown()
 {
   DFW_LOGV("");
   MOZ_ASSERT(mDecoder);
   // Both shutdowns below may block a bit.
-  nsresult result = mDecoder->Shutdown();
+  mDecoder->Shutdown();
   mCallbackWrapper->Shutdown();
-  return result;
 }
 
 bool
@@ -90,12 +88,12 @@ DecoderFuzzingWrapper::IsHardwareAccelerated(nsACString& aFailureReason) const
   return mDecoder->IsHardwareAccelerated(aFailureReason);
 }
 
-nsresult
+void
 DecoderFuzzingWrapper::ConfigurationChanged(const TrackInfo& aConfig)
 {
   DFW_LOGV("");
   MOZ_ASSERT(mDecoder);
-  return mDecoder->ConfigurationChanged(aConfig);
+  mDecoder->ConfigurationChanged(aConfig);
 }
 
 

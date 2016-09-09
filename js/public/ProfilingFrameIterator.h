@@ -116,7 +116,7 @@ class JS_PUBLIC_API(ProfilingFrameIterator)
         void* stackAddress;
         void* returnAddress;
         void* activation;
-        const char* label;
+        UniqueChars label;
     };
 
     bool isAsmJS() const;

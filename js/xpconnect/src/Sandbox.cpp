@@ -1764,7 +1764,8 @@ xpc::EvalInSandbox(JSContext* cx, HandleObject sandboxArg, const nsAString& sour
         filenameBuf.Assign(filename);
     } else {
         // Default to the spec of the principal.
-        nsJSPrincipals::get(prin)->GetScriptLocation(filenameBuf);
+        nsresult rv = nsJSPrincipals::get(prin)->GetScriptLocation(filenameBuf);
+        NS_ENSURE_SUCCESS(rv, rv);
         lineNo = 1;
     }
 

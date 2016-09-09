@@ -2212,15 +2212,12 @@ nsHttpHandler::SpeculativeConnectInternal(nsIURI *aURI,
     MOZ_ASSERT(NS_IsMainThread());
     nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
     if (mDebugObservations && obsService) {
-        // this is basically used for test coverage of an otherwise 'hintable' feature
-        nsAutoCString spec;
-        aURI->GetSpec(spec);
-        spec.Append(anonymous ? NS_LITERAL_CSTRING("[A]") : NS_LITERAL_CSTRING("[.]"));
-        obsService->NotifyObservers(nullptr,
-                                    "speculative-connect-request",
-                                    NS_ConvertUTF8toUTF16(spec).get());
+        // this is basically used for test coverage of an otherwise 'hintable'
+        // feature
+        obsService->NotifyObservers(nullptr, "speculative-connect-request",
+                                    nullptr);
         if (!IsNeckoChild() && gNeckoParent) {
-            Unused << gNeckoParent->SendSpeculativeConnectRequest(spec);
+            Unused << gNeckoParent->SendSpeculativeConnectRequest();
         }
     }
 

@@ -3310,7 +3310,7 @@ CanvasRenderingContext2D::ArcTo(double aX1, double aY1, double aX2,
       return;
     }
 
-    p0 = invTransform * mDSPathBuilder->CurrentPoint();
+    p0 = invTransform.TransformPoint(mDSPathBuilder->CurrentPoint());
   }
 
   Point p1(aX1, aY1);
@@ -3393,10 +3393,10 @@ CanvasRenderingContext2D::Rect(double aX, double aY, double aW, double aH)
     mPathBuilder->LineTo(Point(aX, aY + aH));
     mPathBuilder->Close();
   } else {
-    mDSPathBuilder->MoveTo(mTarget->GetTransform() * Point(aX, aY));
-    mDSPathBuilder->LineTo(mTarget->GetTransform() * Point(aX + aW, aY));
-    mDSPathBuilder->LineTo(mTarget->GetTransform() * Point(aX + aW, aY + aH));
-    mDSPathBuilder->LineTo(mTarget->GetTransform() * Point(aX, aY + aH));
+    mDSPathBuilder->MoveTo(mTarget->GetTransform().TransformPoint(Point(aX, aY)));
+    mDSPathBuilder->LineTo(mTarget->GetTransform().TransformPoint(Point(aX + aW, aY)));
+    mDSPathBuilder->LineTo(mTarget->GetTransform().TransformPoint(Point(aX + aW, aY + aH)));
+    mDSPathBuilder->LineTo(mTarget->GetTransform().TransformPoint(Point(aX, aY + aH)));
     mDSPathBuilder->Close();
   }
 }

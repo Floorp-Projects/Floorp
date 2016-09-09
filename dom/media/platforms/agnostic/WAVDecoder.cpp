@@ -51,10 +51,9 @@ WaveDataDecoder::WaveDataDecoder(const CreateDecoderParams& aParams)
 {
 }
 
-nsresult
+void
 WaveDataDecoder::Shutdown()
 {
-  return NS_OK;
 }
 
 RefPtr<MediaDataDecoder::InitPromise>
@@ -63,7 +62,7 @@ WaveDataDecoder::Init()
   return InitPromise::CreateAndResolve(TrackInfo::kAudioTrack, __func__);
 }
 
-nsresult
+void
 WaveDataDecoder::Input(MediaRawData* aSample)
 {
   if (!DoDecode(aSample)) {
@@ -71,7 +70,6 @@ WaveDataDecoder::Input(MediaRawData* aSample)
   } else {
     mCallback->InputExhausted();
   }
-  return NS_OK;
 }
 
 bool
@@ -131,17 +129,15 @@ WaveDataDecoder::DoDecode(MediaRawData* aSample)
   return true;
 }
 
-nsresult
+void
 WaveDataDecoder::Drain()
 {
   mCallback->DrainComplete();
-  return NS_OK;
 }
 
-nsresult
+void
 WaveDataDecoder::Flush()
 {
-  return NS_OK;
 }
 
 /* static */

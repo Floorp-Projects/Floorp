@@ -2229,9 +2229,11 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     aBuilder->EnterSVGEffectsContents(&hoistedScrollInfoItemsStorage);
   }
 
-  // We build an opacity item if it's not going to be drawn by SVG content, or SVG effects.
-  // SVG effects won't handle the opacity if we want an active layer (for async animations),
-  // see nsSVGIntegrationsUtils::PaintFramesWithEffects.
+  // We build an opacity item if it's not going to be drawn by SVG content, or
+  // SVG effects. SVG effects won't handle the opacity if we want an active
+  // layer (for async animations), see
+  // nsSVGIntegrationsUtils::PaintMaskAndClipPath or
+  // nsSVGIntegrationsUtils::PaintFilter.
   bool useOpacity = HasVisualOpacity() && !nsSVGUtils::CanOptimizeOpacity(this) &&
                     (!usingSVGEffects || nsDisplayOpacity::NeedsActiveLayer(aBuilder, this));
   bool useBlendMode = effects->mMixBlendMode != NS_STYLE_BLEND_NORMAL;

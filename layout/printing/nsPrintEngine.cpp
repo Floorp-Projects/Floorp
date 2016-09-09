@@ -1218,10 +1218,10 @@ nsPrintEngine::GetDocumentTitleAndURL(nsIDocument* aDoc,
   if (!exposableURI) return;
 
   nsAutoCString urlCStr;
-  exposableURI->GetSpec(urlCStr);
+  nsresult rv = exposableURI->GetSpec(urlCStr);
+  if (NS_FAILED(rv)) return;
 
-  nsresult rv;
-  nsCOMPtr<nsITextToSubURI> textToSubURI = 
+  nsCOMPtr<nsITextToSubURI> textToSubURI =
     do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return;
 

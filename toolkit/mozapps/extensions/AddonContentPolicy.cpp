@@ -72,16 +72,15 @@ LogMessage(const nsAString &aMessage, nsIURI* aSourceURI, const nsAString &aSour
   nsCOMPtr<nsIScriptError> error = do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
   NS_ENSURE_TRUE(error, NS_ERROR_OUT_OF_MEMORY);
 
-  nsAutoCString sourceName;
-  nsresult rv = aSourceURI->GetSpec(sourceName);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCString sourceName = aSourceURI->GetSpecOrDefault();
 
   uint64_t windowID = 0;
   GetWindowIDFromContext(aContext, &windowID);
 
-  rv = error->InitWithWindowID(aMessage, NS_ConvertUTF8toUTF16(sourceName),
-                               aSourceSample, 0, 0, nsIScriptError::errorFlag,
-                               "JavaScript", windowID);
+  nsresult rv =
+    error->InitWithWindowID(aMessage, NS_ConvertUTF8toUTF16(sourceName),
+                            aSourceSample, 0, 0, nsIScriptError::errorFlag,
+                            "JavaScript", windowID);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIConsoleService> console = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
