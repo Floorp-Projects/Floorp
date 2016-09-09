@@ -103,22 +103,24 @@ def configure_dependent_task(task_path, parameters, taskid, templates, build_tre
 
     task['requires'].append(parameters['build_slugid'])
 
-    if 'treeherder' not in task['task']['extra']:
-        task['task']['extra']['treeherder'] = {}
+    if 'extra' not in task['task']:
+        task['task']['extra'] = {}
 
-    # Copy over any treeherder configuration from the build so
-    # tests show up under the same platform...
-    treeherder_config = task['task']['extra']['treeherder']
+    # only set up treeherder information if the task contained any to begin with
+    if 'treeherder' in task['task']['extra']:
+        # Copy over any treeherder configuration from the build so
+        # tests show up under the same platform...
+        treeherder_config = task['task']['extra']['treeherder']
 
-    treeherder_config['collection'] = \
-        build_treeherder_config.get('collection', {})
+        treeherder_config['collection'] = \
+            build_treeherder_config.get('collection', {})
 
-    treeherder_config['build'] = \
-        build_treeherder_config.get('build', {})
+        treeherder_config['build'] = \
+            build_treeherder_config.get('build', {})
 
-    if 'machine' not in treeherder_config:
-        treeherder_config['machine'] = \
-            build_treeherder_config.get('machine', {})
+        if 'machine' not in treeherder_config:
+            treeherder_config['machine'] = \
+                build_treeherder_config.get('machine', {})
 
     if 'routes' not in task['task']:
         task['task']['routes'] = []
