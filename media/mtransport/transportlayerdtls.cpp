@@ -6,27 +6,28 @@
 
 // Original author: ekr@rtfm.com
 
-#include "transportlayerdtls.h"
-
-#include <algorithm>
 #include <queue>
+#include <algorithm>
 #include <sstream>
 
-#include "dtlsidentity.h"
-#include "keyhi.h"
-#include "logging.h"
 #include "mozilla/UniquePtr.h"
-#include "nsCOMPtr.h"
-#include "nsComponentManagerUtils.h"
-#include "nsComponentManagerUtils.h"
-#include "nsIEventTarget.h"
-#include "nsNetCID.h"
-#include "nsServiceManagerUtils.h"
+
+#include "logging.h"
 #include "ssl.h"
 #include "sslerr.h"
 #include "sslproto.h"
-#include "transportflow.h"
+#include "keyhi.h"
 
+#include "nsCOMPtr.h"
+#include "nsComponentManagerUtils.h"
+#include "nsIEventTarget.h"
+#include "nsNetCID.h"
+#include "nsComponentManagerUtils.h"
+#include "nsServiceManagerUtils.h"
+
+#include "dtlsidentity.h"
+#include "transportflow.h"
+#include "transportlayerdtls.h"
 
 namespace mozilla {
 
@@ -738,31 +739,31 @@ bool TransportLayerDtls::SetupCipherSuites(PRFileDesc* ssl_fd) const {
     }
   }
 
-  for (const auto& cipher : EnabledCiphers) {
-    MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "Enabling: " << cipher);
-    rv = SSL_CipherPrefSet(ssl_fd, cipher, PR_TRUE);
+  for (size_t i = 0; i < PR_ARRAY_SIZE(EnabledCiphers); ++i) {
+    MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "Enabling: " << EnabledCiphers[i]);
+    rv = SSL_CipherPrefSet(ssl_fd, EnabledCiphers[i], PR_TRUE);
     if (rv != SECSuccess) {
       MOZ_MTLOG(ML_ERROR, LAYER_INFO <<
-                "Unable to enable suite: " << cipher);
+                "Unable to enable suite: " << EnabledCiphers[i]);
       return false;
     }
   }
 
-  for (const auto& cipher : DisabledCiphers) {
-    MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "Disabling: " << cipher);
+  for (size_t i = 0; i < PR_ARRAY_SIZE(DisabledCiphers); ++i) {
+    MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "Disabling: " << DisabledCiphers[i]);
 
     PRBool enabled = false;
-    rv = SSL_CipherPrefGet(ssl_fd, cipher, &enabled);
+    rv = SSL_CipherPrefGet(ssl_fd, DisabledCiphers[i], &enabled);
     if (rv != SECSuccess) {
       MOZ_MTLOG(ML_NOTICE, LAYER_INFO <<
-                "Unable to check if suite is enabled: " << cipher);
+                "Unable to check if suite is enabled: " << DisabledCiphers[i]);
       return false;
     }
     if (enabled) {
-      rv = SSL_CipherPrefSet(ssl_fd, cipher, PR_FALSE);
+      rv = SSL_CipherPrefSet(ssl_fd, DisabledCiphers[i], PR_FALSE);
       if (rv != SECSuccess) {
         MOZ_MTLOG(ML_NOTICE, LAYER_INFO <<
-                  "Unable to disable suite: " << cipher);
+                  "Unable to disable suite: " << DisabledCiphers[i]);
         return false;
       }
     }
