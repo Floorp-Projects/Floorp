@@ -2407,6 +2407,22 @@ Predictor::UpdateCacheabilityInternal(nsIURI *sourceURI, nsIURI *targetURI,
                                       const nsCString &method)
 {
   PREDICTOR_LOG(("Predictor::UpdateCacheability httpStatus=%u", httpStatus));
+
+  if (!mInitialized) {
+    PREDICTOR_LOG(("    not initialized"));
+    return;
+  }
+
+  if (!mEnabled) {
+    PREDICTOR_LOG(("    not enabled"));
+    return;
+  }
+
+  if (!mEnablePrefetch) {
+    PREDICTOR_LOG(("    prefetch not enabled"));
+    return;
+  }
+
   uint32_t openFlags = nsICacheStorage::OPEN_READONLY |
                        nsICacheStorage::OPEN_SECRETLY |
                        nsICacheStorage::CHECK_MULTITHREADED;
