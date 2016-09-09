@@ -121,6 +121,7 @@ EXPORTS += [
     'MediaRecorder.h',
     'MediaResource.h',
     'MediaResourceCallback.h',
+    'MediaResult.h',
     'MediaSegment.h',
     'MediaStatistics.h',
     'MediaStreamGraph.h',
