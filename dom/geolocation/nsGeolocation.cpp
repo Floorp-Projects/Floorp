@@ -1257,7 +1257,7 @@ Geolocation::Shutdown()
       if (doc) {
         doc->RemoveSystemEventListener(NS_LITERAL_STRING("visibilitychange"),
                                        this,
-                                       /* useCapture = */ true);
+                                       /* aUseCapture = */ true);
       }
     }
   }
