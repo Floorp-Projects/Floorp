@@ -639,16 +639,13 @@ GlobalManager = {
   },
 
   _onExtensionBrowser(type, browser) {
-    // TODO(robwu): Move this logic inside a frame script.
-    let global = browser.docShell
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIContentFrameMessageManager);
-    ExtensionContent.init(global);
-    /* eslint-disable mozilla/balanced-listeners */
-    global.addEventListener("unload", function() {
-      ExtensionContent.uninit(this);
-    });
-    /* eslint-enable mozilla/balanced-listeners */
+    browser.messageManager.loadFrameScript(`data:,
+      Components.utils.import("resource://gre/modules/ExtensionContent.jsm");
+      ExtensionContent.init(this);
+      addEventListener("unload", function() {
+        ExtensionContent.uninit(this);
+      });
+    `, false);
   },
 
   getExtension(extensionId) {
