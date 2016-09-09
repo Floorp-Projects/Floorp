@@ -32,6 +32,7 @@ import java.lang.ref.WeakReference;
 public class MediaControlService extends Service implements Tabs.OnTabsChangedListener {
     private static final String LOGTAG = "MediaControlService";
 
+    public static final String ACTION_INIT           = "action_init";
     public static final String ACTION_START          = "action_start";
     public static final String ACTION_PLAY           = "action_play";
     public static final String ACTION_PAUSE          = "action_pause";
@@ -155,6 +156,10 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
 
         Log.d(LOGTAG, "HandleIntent, action = " + intent.getAction() + ", actionState = " + mActionState);
         switch (intent.getAction()) {
+            case ACTION_INIT :
+                // This action is used to create a service and do the initialization,
+                // the actual operation would be executed via tab events.
+                break;
             case ACTION_START :
                 mController.getTransportControls().sendCustomAction(ACTION_START, null);
                 break;
@@ -248,7 +253,6 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                 notifyObservers("MediaControl", "mediaControlStopped");
                 mActionState = ACTION_STOP;
                 mTabReference = new WeakReference<>(null);
-                stopSelf();
             }
         });
     }
@@ -270,6 +274,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
         Log.d(LOGTAG, "notifyControlInterfaceChanged, action = " + action);
 
         if (isNeedToRemoveControlInterface(action)) {
+            stopForeground(false);
             NotificationManagerCompat.from(this).cancel(MEDIA_CONTROL_ID);
             return;
         }
