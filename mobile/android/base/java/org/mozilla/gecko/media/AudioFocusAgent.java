@@ -78,6 +78,7 @@ public class AudioFocusAgent {
                 }
             }
         };
+        notifyMediaControlService(MediaControlService.ACTION_INIT);
     }
 
     @RobocopTarget
@@ -113,7 +114,6 @@ public class AudioFocusAgent {
         Log.d(LOGTAG, focusMsg);
         if (result == AudioManager.AUDIOFOCUS_GAIN) {
             mAudioFocusState = OWN_FOCUS;
-            notifyMediaControlService(MediaControlService.ACTION_START);
         }
     }
 
@@ -125,7 +125,6 @@ public class AudioFocusAgent {
         Log.d(LOGTAG, "Abandon AudioFocus");
         mAudioManager.abandonAudioFocus(mAfChangeListener);
         mAudioFocusState = LOST_FOCUS;
-        notifyMediaControlService(MediaControlService.ACTION_STOP);
     }
 
     private void notifyMediaControlService(String action) {
