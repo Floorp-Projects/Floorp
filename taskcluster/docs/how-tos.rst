@@ -44,7 +44,7 @@ The recommended process for changing task graphs is this:
 
        ./mach taskgraph --json -p parameters.yml tasks > old-tasks.json
 
-3. Make your modifications under ``tsakcluster/``.
+3. Make your modifications under ``taskcluster/``.
 
 4. Run the same ``mach taskgraph`` command, sending the output to a new file,
    and use ``diff`` to compare the old and new files.  Make sure your changes
@@ -116,6 +116,102 @@ When working with a group, check out a "twig" repository to share among your
 group, and land the test configuration in that repository.  Once the test is
 green, merge to an integration branch and the test will begin running there as
 well.
+
+Adding a New Task
+.................
+
+If you are adding a new task that is not a test suite, there are a number of
+options.  A few questions to consider:
+
+ * Is this a new build platform or variant that will produce an artifact to
+   be run through the usual test suites?
+
+ * Does this task depend on other tasks?  Do other tasks depend on it?
+
+ * Is this one of a few related tasks, or will you need to generate a large
+   set of tasks using some programmatic means (for example, chunking)?
+
+ * How is the task actually excuted?  Mozharness?  Mach?
+
+ * What kind of environment does the task require?
+
+Armed with that information, you can choose among a few options for
+implementing this new task.  Try to choose the simplest solution that will
+satisfy your near-term needs.  Since this is all implemented in-tree, it
+is not difficult to refactor later when you need more generality.
+
+Existing Kind
+`````````````
+
+The simplest option is to add your task to an existing kind.  This is most
+practical when the task "makes sense" as part of that kind -- for example, if
+your task is building an installer for a new platform using mozharness scripts
+similar to the existing build tasks, it makes most sense to add your task to
+the ``build`` kind.  If you need some additional functionality in the kind,
+it's OK to modify the implementation as necessary, as long as the modification
+is complete and useful to the next developer to come along.
+
+New Kind
+````````
+
+The next option to consider is adding a new kind.  A distinct kind gives you
+some isolation from other task types, which can be nice if you are adding an
+experimental kind of task.
+
+Kinds can range in complexity.  The simplest sort of kind uses the
+``TransformTask`` implementation to read a list of jobs from the ``jobs`` key,
+and applies the standard ``job`` and ``task`` transforms:
+
+.. code-block:: yaml
+
+    implementation: taskgraph.task.transform:TransformTask
+    transforms:
+       - taskgraph.transforms.job:transforms
+       - taskgraph.transforms.task:transforms
+    jobs:
+       - ..your job description here..
+
+Custom Kind Implementation
+``````````````````````````
+
+If your task depends on other tasks, then the decision of which tasks to create
+may require some code.  For example, the ``upload-symbols`` kind iterates over
+the builds in the graph, generating a task for each one.  This specific
+post-build behavior is implemented in the general
+``taskgraph.task.post_build:PostBuildTask`` kind implementation.  If your task
+needs something more purpose-specific, then it may be time to write a new kind
+implementation.
+
+Custom Transforms
+`````````````````
+
+If your task needs to create many tasks from a single description, for example
+to implement chunking, it is time to implement some custom transforms.  Ideally
+those transforms will produce job descriptions, so you can use the existing ``job``
+and ``task`` transforms:
+
+.. code-block:: yaml
+
+    transforms:
+       - taskgraph.transforms.my_stuff:transforms
+       - taskgraph.transforms.job:transforms
+       - taskgraph.transforms.task:transforms
+
+Similarly, if you need to include dynamic task defaults -- perhaps some feature
+is only available in level-3 repositories, or on specific projects -- then
+custom transforms are the appropriate tool.  Try to keep transforms simple,
+single-purpose and well-documented!
+
+Custom Run-Using
+````````````````
+
+If the way your task is executed is unique (so, not a mach command or
+mozharness invocation), you can add a new implementation of the job
+description's "run" section.  Before you do this, consider that it might be a
+better investment to modify your task to support invocation via mozharness or
+mach, instead.  If this is not possible, then adding a new file in
+``taskcluster/taskgraph/transforms/jobs`` with a structure similar to its peers
+will make the new run-using option available for job descriptions.
 
 Something Else?
 ...............
