@@ -9,8 +9,6 @@
 #include "nsUTF8ConverterService.h"
 #include <stdlib.h>
 
-static const int64_t kCookieStaleThreshold = 60 * PR_USEC_PER_SEC; // 1 minute in microseconds
-
 /******************************************************************************
  * nsCookie:
  * string helper impl
@@ -130,7 +128,7 @@ nsCookie::IsStale() const
 {
   int64_t currentTimeInUsec = PR_Now();
 
-  return currentTimeInUsec - LastAccessed() > kCookieStaleThreshold;
+  return currentTimeInUsec - LastAccessed() > mCookieStaleThreshold * PR_USEC_PER_SEC;
 }
 
 /******************************************************************************
