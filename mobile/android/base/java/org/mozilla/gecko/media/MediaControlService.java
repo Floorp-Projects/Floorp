@@ -37,6 +37,8 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
     public static final String ACTION_RESUME         = "action_resume";
     public static final String ACTION_PAUSE          = "action_pause";
     public static final String ACTION_STOP           = "action_stop";
+    public static final String ACTION_RESUME_BY_AUDIO_FOCUS = "action_resume_audio_focus";
+    public static final String ACTION_PAUSE_BY_AUDIO_FOCUS  = "action_pause_audio_focus";
 
     private static final int MEDIA_CONTROL_ID = 1;
     private static final String MEDIA_CONTROL_PREF = "dom.audiochannel.mediaControl";
@@ -171,6 +173,12 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
             case ACTION_STOP :
                 mController.getTransportControls().stop();
                 break;
+            case ACTION_PAUSE_BY_AUDIO_FOCUS :
+                mController.getTransportControls().sendCustomAction(ACTION_PAUSE_BY_AUDIO_FOCUS, null);
+                break;
+            case ACTION_RESUME_BY_AUDIO_FOCUS :
+                mController.getTransportControls().sendCustomAction(ACTION_RESUME_BY_AUDIO_FOCUS, null);
+                break;
         }
     }
 
@@ -217,6 +225,14 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                     Log.d(LOGTAG, "Controller, onStart");
                     notifyControlInterfaceChanged(ACTION_PAUSE);
                     mActionState = ACTION_RESUME;
+                } else if (action.equals(ACTION_PAUSE_BY_AUDIO_FOCUS)) {
+                    Log.d(LOGTAG, "Controller, pause by audio focus changed");
+                    notifyControlInterfaceChanged(ACTION_RESUME);
+                    mActionState = ACTION_PAUSE_BY_AUDIO_FOCUS;
+                } else if (action.equals(ACTION_RESUME_BY_AUDIO_FOCUS)) {
+                    Log.d(LOGTAG, "Controller, resume by audio focus changed");
+                    notifyControlInterfaceChanged(ACTION_PAUSE);
+                    mActionState = ACTION_RESUME_BY_AUDIO_FOCUS;
                 }
             }
 
@@ -227,6 +243,8 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                 notifyControlInterfaceChanged(ACTION_PAUSE);
                 notifyObservers("MediaControl", "resumeMedia");
                 mActionState = ACTION_RESUME;
+                // To make sure we always own audio focus during playing.
+                AudioFocusAgent.notifyStartedPlaying();
             }
 
             @Override
@@ -236,6 +254,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                 notifyControlInterfaceChanged(ACTION_RESUME);
                 notifyObservers("MediaControl", "mediaControlPaused");
                 mActionState = ACTION_PAUSE;
+                AudioFocusAgent.notifyStoppedPlaying();
             }
 
             @Override
