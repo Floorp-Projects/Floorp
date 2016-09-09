@@ -17,7 +17,7 @@ NS_NewSelectsAreaFrame(nsIPresShell* aShell, nsStyleContext* aContext, nsFrameSt
 
   // We need NS_BLOCK_FLOAT_MGR to ensure that the options inside the select
   // aren't expanded by right floats outside the select.
-  it->SetFlags(aFlags | NS_BLOCK_FLOAT_MGR);
+  it->AddStateBits(aFlags | NS_BLOCK_FLOAT_MGR);
 
   return it;
 }
