@@ -25,6 +25,11 @@ Hazard builds are similar to "regular' builds, but use a compiler extension to
 extract a bunch of data from the build and then analyze that data looking for
 hazardous behaviors.
 
+l10n
+----
+
+TBD (Callek)
+
 Tests
 -----
 
