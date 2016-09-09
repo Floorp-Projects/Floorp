@@ -49,31 +49,21 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
     private PrefsHelper.PrefHandler mPrefsObserver;
     private final String[] mPrefs = { MEDIA_CONTROL_PREF };
 
-    private boolean mIsInitMediaSession = false;
+    private boolean mInitialize = false;
     private boolean mIsMediaControlPrefOn = true;
 
-    private static WeakReference<Tab> mTabReference = null;
+    private static WeakReference<Tab> mTabReference = new WeakReference<>(null);
 
     private int coverSize;
 
     @Override
     public void onCreate() {
-        mTabReference = new WeakReference<>(null);
-
-        getGeckoPreference();
-        initMediaSession();
-
-        coverSize = (int) getResources().getDimension(R.dimen.notification_media_cover);
-
-        Tabs.registerOnTabsChangedListener(this);
+        initialize();
     }
 
     @Override
     public void onDestroy() {
-        notifyControlInterfaceChanged(ACTION_REMOVE_CONTROL);
-        PrefsHelper.removeObserver(mPrefsObserver);
-
-        Tabs.unregisterOnTabsChangedListener(this);
+        shutdown();
     }
 
     @Override
@@ -95,12 +85,12 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
 
     @Override
     public void onTaskRemoved(Intent rootIntent) {
-        stopSelf();
+        shutdown();
     }
 
     @Override
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, String data) {
-        if (!mIsInitMediaSession) {
+        if (!mInitialize) {
             return;
         }
 
@@ -124,13 +114,42 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
         }
     }
 
+    private void initialize() {
+        if (mInitialize ||
+            !isAndroidVersionLollopopOrHigher()) {
+            return;
+        }
+
+        Log.d(LOGTAG, "initialize");
+        getGeckoPreference();
+        initMediaSession();
+
+        coverSize = (int) getResources().getDimension(R.dimen.notification_media_cover);
+
+        Tabs.registerOnTabsChangedListener(this);
+        mInitialize = true;
+    }
+
+    private void shutdown() {
+        if (!mInitialize) {
+            return;
+        }
+
+        Log.d(LOGTAG, "shutdown");
+        notifyControlInterfaceChanged(ACTION_REMOVE_CONTROL);
+        PrefsHelper.removeObserver(mPrefsObserver);
+
+        Tabs.unregisterOnTabsChangedListener(this);
+        mInitialize = false;
+        stopSelf();
+    }
+
     private boolean isAndroidVersionLollopopOrHigher() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
     }
 
     private void handleIntent(Intent intent) {
-        if (intent == null || intent.getAction() == null ||
-           !mIsInitMediaSession) {
+        if (intent == null || intent.getAction() == null || !mInitialize) {
             return;
         }
 
@@ -187,10 +206,6 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
     }
 
     private void initMediaSession() {
-        if (!isAndroidVersionLollopopOrHigher() || mIsInitMediaSession) {
-            return;
-        }
-
         // Android MediaSession is introduced since version L.
         mSession = new MediaSession(getApplicationContext(),
                                     "fennec media session");
@@ -236,7 +251,6 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                 stopSelf();
             }
         });
-        mIsInitMediaSession = true;
     }
 
     private void notifyObservers(String topic, String data) {
@@ -249,6 +263,10 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
     }
 
     private void notifyControlInterfaceChanged(final String action) {
+        if (!mInitialize) {
+            return;
+        }
+
         Log.d(LOGTAG, "notifyControlInterfaceChanged, action = " + action);
 
         if (isNeedToRemoveControlInterface(action)) {
