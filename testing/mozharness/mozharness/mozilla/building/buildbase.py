@@ -366,8 +366,7 @@ class BuildOptionParser(object):
         'android-test': 'builds/releng_sub_%s_configs/%s_test.py',
         'android-checkstyle': 'builds/releng_sub_%s_configs/%s_checkstyle.py',
         'android-lint': 'builds/releng_sub_%s_configs/%s_lint.py',
-        'valgrind' : 'builds/releng_sub_%s_configs/%s_valgrind.py',
-        'artifact': 'builds/releng_sub_%s_configs/%s_artifact.py',
+        'valgrind' : 'builds/releng_sub_%s_configs/%s_valgrind.py'
     }
     build_pool_cfg_file = 'builds/build_pool_specifics.py'
     branch_cfg_file = 'builds/branch_specifics.py'
@@ -423,7 +422,13 @@ class BuildOptionParser(object):
         return cls.bits, cls.platform
 
     @classmethod
-    def find_variant_cfg_path(cls, opt, value, parser):
+    def set_build_variant(cls, option, opt, value, parser):
+        """ sets an extra config file.
+
+        This is done by either taking an existing filepath or by taking a valid
+        shortname coupled with known platform/bits.
+        """
+
         valid_variant_cfg_path = None
         # first let's see if we were given a valid short-name
         if cls.build_variants.get(value):
@@ -446,17 +451,6 @@ class BuildOptionParser(object):
                     valid_variant_cfg_path = os.path.join(path,
                                                           prospective_cfg_path)
                     break
-        return valid_variant_cfg_path, prospective_cfg_path
-
-    @classmethod
-    def set_build_variant(cls, option, opt, value, parser):
-        """ sets an extra config file.
-
-        This is done by either taking an existing filepath or by taking a valid
-        shortname coupled with known platform/bits.
-        """
-        valid_variant_cfg_path, prospective_cfg_path = cls.find_variant_cfg_path(
-            '--custom-build-variant-cfg', value, parser)
 
         if not valid_variant_cfg_path:
             # either the value was an indeterminable path or an invalid short
@@ -886,11 +880,6 @@ or run without that action (ie: --no-{action})"
                 env['MOZ_SIGN_CMD'] = moz_sign_cmd.replace('\\', '\\\\\\\\')
             else:
                 self.warning("signing disabled because MOZ_SIGNING_SERVERS is not set")
-        elif 'MOZ_SIGN_CMD' in env:
-            # Ensure that signing is truly disabled
-            # MOZ_SIGN_CMD may be defined by default in buildbot (see MozillaBuildFactory)
-            self.warning("Clearing MOZ_SIGN_CMD because we don't have config['enable_signing']")
-            del env['MOZ_SIGN_CMD']
 
         # to activate the right behaviour in mozonfigs while we transition
         if c.get('enable_release_promotion'):

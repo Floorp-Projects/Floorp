@@ -516,19 +516,7 @@ class BaseConfig(object):
                 self.volatile_config[key] = self._config[key]
                 del(self._config[key])
 
-        self.update_actions()
-        if options.list_actions:
-            self.list_actions()
-
-        # Keep? This is for saving the volatile config in the dump_config
-        self._config['volatile_config'] = self.volatile_config
-
-        self.options = options
-        self.args = args
-        return (self.options, self.args)
-
-    def update_actions(self):
-        """ Update actions after reading in config.
+        """Actions.
 
         Seems a little complex, but the logic goes:
 
@@ -550,6 +538,8 @@ class BaseConfig(object):
             default_actions = self.verify_actions(self._config['default_actions'])
             self.default_actions = default_actions
         self.verify_actions_order(self.default_actions)
+        if options.list_actions:
+            self.list_actions()
         self.actions = self.default_actions[:]
         if self.volatile_config['actions']:
             actions = self.verify_actions(self.volatile_config['actions'])
@@ -562,6 +552,13 @@ class BaseConfig(object):
             for action in actions:
                 if action in self.actions:
                     self.actions.remove(action)
+
+        # Keep? This is for saving the volatile config in the dump_config
+        self._config['volatile_config'] = self.volatile_config
+
+        self.options = options
+        self.args = args
+        return (self.options, self.args)
 
 
 # __main__ {{{1
