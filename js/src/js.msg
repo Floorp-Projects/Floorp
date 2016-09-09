@@ -367,7 +367,7 @@ MSG_DEF(JSMSG_WASM_INVALID_CONVERSION, 0, JSEXN_ERR,         "invalid conversion
 MSG_DEF(JSMSG_WASM_INT_DIVIDE_BY_ZERO, 0, JSEXN_ERR,         "integer divide by zero")
 MSG_DEF(JSMSG_WASM_UNALIGNED_ACCESS,   0, JSEXN_ERR,         "unaligned memory access")
 MSG_DEF(JSMSG_WASM_OVERRECURSED,       0, JSEXN_INTERNALERR, "call stack exhausted")
-MSG_DEF(JSMSG_WASM_NO_TRANSFER,        0, JSEXN_INTERNALERR, "cannot transfer buffer aliasing WebAssembly Memory")
+MSG_DEF(JSMSG_WASM_NO_TRANSFER,        0, JSEXN_INTERNALERR, "cannot transfer WebAssembly/asm.js ArrayBuffer")
 
 // Proxy
 MSG_DEF(JSMSG_BAD_TRAP_RETURN_VALUE,   2, JSEXN_TYPEERR,"trap {1} for {0} returned a primitive value")
