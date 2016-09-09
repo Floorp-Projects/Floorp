@@ -30,15 +30,11 @@ add_task(function* () {
 
   // Test the waterfall background.
 
-  ok(WaterfallView._waterfallHeader._canvas,
-    "A canvas should be created after the recording ended.");
-  ok(WaterfallView._waterfallHeader._ctx,
-    "A 2d context should be created after the recording ended.");
+  ok(WaterfallView.canvas, "A canvas should be created after the recording ended.");
 
-  is(WaterfallView._waterfallHeader._canvas.width,
-    WaterfallView._markersRoot._waterfallWidth,
+  is(WaterfallView.canvas.width, WaterfallView.waterfallWidth,
     "The canvas width is correct.");
-  is(WaterfallView._waterfallHeader._canvas.height, 1,
+  is(WaterfallView.canvas.height, 1,
     "The canvas height is correct.");
 
   yield teardownToolboxAndRemoveTab(panel);
