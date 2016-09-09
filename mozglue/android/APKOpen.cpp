@@ -83,7 +83,8 @@ enum StartupEvent {
 
 using namespace mozilla;
 
-static struct mapping_info * lib_mapping = nullptr;
+static const int MAX_MAPPING_INFO = 32;
+static mapping_info lib_mapping[MAX_MAPPING_INFO];
 
 NS_EXPORT const struct mapping_info *
 getLibraryMapping()
@@ -185,8 +186,6 @@ xul_dlsym(const char *symbolName, T *value)
 
 static int mapping_count = 0;
 
-#define MAX_MAPPING_INFO 32
-
 extern "C" void
 report_mapping(char *name, void *base, uint32_t len, uint32_t offset)
 {
@@ -265,9 +264,6 @@ loadSQLiteLibs(const char *apkName)
   if (loadNSSLibs(apkName) != SUCCESS)
     return FAILURE;
 #else
-  if (!lib_mapping) {
-    lib_mapping = (struct mapping_info *)calloc(MAX_MAPPING_INFO, sizeof(*lib_mapping));
-  }
 
   sqlite_handle = dlopenAPKLibrary(apkName, "libmozsqlite3.so");
   if (!sqlite_handle) {
@@ -285,10 +281,6 @@ loadNSSLibs(const char *apkName)
 {
   if (nss_handle && nspr_handle && plc_handle)
     return SUCCESS;
-
-  if (!lib_mapping) {
-    lib_mapping = (struct mapping_info *)calloc(MAX_MAPPING_INFO, sizeof(*lib_mapping));
-  }
 
   nss_handle = dlopenAPKLibrary(apkName, "libnss3.so");
 
