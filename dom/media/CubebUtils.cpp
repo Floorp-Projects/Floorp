@@ -19,7 +19,8 @@
 #include "prdtoa.h"
 
 #define PREF_VOLUME_SCALE "media.volume_scale"
-#define PREF_CUBEB_LATENCY "media.cubeb_latency_ms"
+#define PREF_CUBEB_LATENCY_PLAYBACK "media.cubeb_latency_playback_ms"
+#define PREF_CUBEB_LATENCY_MSG "media.cubeb_latency_msg_frames"
 
 namespace mozilla {
 
@@ -34,8 +35,10 @@ enum class CubebState {
 } sCubebState = CubebState::Uninitialized;
 cubeb* sCubebContext;
 double sVolumeScale;
-uint32_t sCubebLatency;
-bool sCubebLatencyPrefSet;
+uint32_t sCubebPlaybackLatencyInMilliseconds;
+uint32_t sCubebMSGLatencyInFrames;
+bool sCubebPlaybackLatencyPrefSet;
+bool sCubebMSGLatencyPrefSet;
 bool sAudioStreamInitEverSucceeded = false;
 StaticAutoPtr<char> sBrandName;
 
@@ -81,6 +84,8 @@ uint32_t sPreferredSampleRate;
 extern LazyLogModule gAudioStreamLog;
 
 static const uint32_t CUBEB_NORMAL_LATENCY_MS = 100;
+// Consevative default that can work on all platforms.
+static const uint32_t CUBEB_NORMAL_LATENCY_FRAMES = 1024;
 
 namespace CubebUtils {
 
@@ -95,14 +100,23 @@ void PrefChanged(const char* aPref, void* aClosure)
       NS_ConvertUTF16toUTF8 utf8(value);
       sVolumeScale = std::max<double>(0, PR_strtod(utf8.get(), nullptr));
     }
-  } else if (strcmp(aPref, PREF_CUBEB_LATENCY) == 0) {
+  } else if (strcmp(aPref, PREF_CUBEB_LATENCY_PLAYBACK) == 0) {
     // Arbitrary default stream latency of 100ms.  The higher this
     // value, the longer stream volume changes will take to become
     // audible.
-    sCubebLatencyPrefSet = Preferences::HasUserValue(aPref);
+    sCubebPlaybackLatencyPrefSet = Preferences::HasUserValue(aPref);
     uint32_t value = Preferences::GetUint(aPref, CUBEB_NORMAL_LATENCY_MS);
     StaticMutexAutoLock lock(sMutex);
-    sCubebLatency = std::min<uint32_t>(std::max<uint32_t>(value, 1), 1000);
+    sCubebPlaybackLatencyInMilliseconds = std::min<uint32_t>(std::max<uint32_t>(value, 1), 1000);
+  } else if (strcmp(aPref, PREF_CUBEB_LATENCY_MSG) == 0) {
+    sCubebMSGLatencyPrefSet = Preferences::HasUserValue(aPref);
+    uint32_t value = Preferences::GetUint(aPref, CUBEB_NORMAL_LATENCY_FRAMES);
+    StaticMutexAutoLock lock(sMutex);
+    // 128 is the block size for the Web Audio API, which limits how low the
+    // latency can be here.
+    // We don't want to limit the upper limit too much, so that people can
+    // experiment.
+    sCubebMSGLatencyInFrames = std::min<uint32_t>(std::max<uint32_t>(value, 128), 1e6);
   }
 }
 
@@ -238,24 +252,42 @@ void ReportCubebStreamInitFailure(bool aIsFirst)
                                  : CUBEB_BACKEND_INIT_FAILURE_OTHER);
 }
 
-uint32_t GetCubebLatency()
+uint32_t GetCubebPlaybackLatencyInMilliseconds()
 {
   StaticMutexAutoLock lock(sMutex);
-  return sCubebLatency;
+  return sCubebPlaybackLatencyInMilliseconds;
 }
 
-bool CubebLatencyPrefSet()
+bool CubebPlaybackLatencyPrefSet()
 {
   StaticMutexAutoLock lock(sMutex);
-  return sCubebLatencyPrefSet;
+  return sCubebPlaybackLatencyPrefSet;
+}
+
+bool CubebMSGLatencyPrefSet()
+{
+  StaticMutexAutoLock lock(sMutex);
+  return sCubebMSGLatencyPrefSet;
+}
+
+Maybe<uint32_t> GetCubebMSGLatencyInFrames()
+{
+  StaticMutexAutoLock lock(sMutex);
+  if (!sCubebMSGLatencyPrefSet) {
+    return Maybe<uint32_t>();
+  }
+  MOZ_ASSERT(sCubebMSGLatencyInFrames > 0);
+  return Some(sCubebMSGLatencyInFrames);
 }
 
 void InitLibrary()
 {
   PrefChanged(PREF_VOLUME_SCALE, nullptr);
   Preferences::RegisterCallback(PrefChanged, PREF_VOLUME_SCALE);
-  PrefChanged(PREF_CUBEB_LATENCY, nullptr);
-  Preferences::RegisterCallback(PrefChanged, PREF_CUBEB_LATENCY);
+  PrefChanged(PREF_CUBEB_LATENCY_PLAYBACK, nullptr);
+  PrefChanged(PREF_CUBEB_LATENCY_MSG, nullptr);
+  Preferences::RegisterCallback(PrefChanged, PREF_CUBEB_LATENCY_PLAYBACK);
+  Preferences::RegisterCallback(PrefChanged, PREF_CUBEB_LATENCY_MSG);
 #ifndef MOZ_WIDGET_ANDROID
   NS_DispatchToMainThread(NS_NewRunnableFunction(&InitBrandName));
 #endif
@@ -264,7 +296,8 @@ void InitLibrary()
 void ShutdownLibrary()
 {
   Preferences::UnregisterCallback(PrefChanged, PREF_VOLUME_SCALE);
-  Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_LATENCY);
+  Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_LATENCY_PLAYBACK);
+  Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_LATENCY_MSG);
 
   StaticMutexAutoLock lock(sMutex);
   if (sCubebContext) {

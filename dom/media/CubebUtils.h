@@ -9,6 +9,7 @@
 
 #include "cubeb/cubeb.h"
 #include "mozilla/dom/AudioChannelBinding.h"
+#include "mozilla/Maybe.h"
 
 namespace mozilla {
 namespace CubebUtils {
@@ -36,7 +37,8 @@ cubeb* GetCubebContext();
 cubeb* GetCubebContextUnlocked();
 void ReportCubebStreamInitFailure(bool aIsFirstStream);
 void ReportCubebBackendUsed();
-uint32_t GetCubebLatency();
+uint32_t GetCubebPlaybackLatencyInMilliseconds();
+Maybe<uint32_t> GetCubebMSGLatencyInFrames();
 bool CubebLatencyPrefSet();
 #if defined(__ANDROID__) && defined(MOZ_B2G)
 cubeb_stream_type ConvertChannelToCubebType(dom::AudioChannel aChannel);
