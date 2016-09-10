@@ -1353,14 +1353,6 @@ bool nsPluginInstanceOwner::IsRemoteDrawingCoreAnimation()
   return coreAnimation;
 }
 
-nsresult nsPluginInstanceOwner::ContentsScaleFactorChanged(double aContentsScaleFactor)
-{
-  if (!mInstance) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  return mInstance->ContentsScaleFactorChanged(aContentsScaleFactor);
-}
-
 NPEventModel nsPluginInstanceOwner::GetEventModel()
 {
   return mEventModel;
@@ -1451,6 +1443,16 @@ void nsPluginInstanceOwner::SetPluginPort()
   mPluginWindow->window = pluginPort;
 }
 #endif
+#if defined(XP_MACOSX) || defined(XP_WIN)
+nsresult nsPluginInstanceOwner::ContentsScaleFactorChanged(double aContentsScaleFactor)
+{
+  if (!mInstance) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  return mInstance->ContentsScaleFactorChanged(aContentsScaleFactor);
+}
+#endif
+
 
 // static
 uint32_t
@@ -3623,7 +3625,7 @@ nsPluginInstanceOwner::UpdateWindowVisibility(bool aVisible)
 void
 nsPluginInstanceOwner::ResolutionMayHaveChanged()
 {
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) || defined(XP_WIN)
   double scaleFactor = 1.0;
   GetContentsScaleFactor(&scaleFactor);
   if (scaleFactor != mLastScaleFactor) {
@@ -3709,7 +3711,7 @@ nsPluginInstanceOwner::GetContentsScaleFactor(double *result)
   // On Mac, device pixels need to be translated to (and from) "display pixels"
   // for plugins. On other platforms, plugin coordinates are always in device
   // pixels.
-#if defined(XP_MACOSX)
+#if defined(XP_MACOSX) || defined(XP_WIN)
   nsCOMPtr<nsIContent> content = do_QueryReferent(mContent);
   nsIPresShell* presShell = nsContentUtils::FindPresShellForDocument(content->OwnerDoc());
   if (presShell) {

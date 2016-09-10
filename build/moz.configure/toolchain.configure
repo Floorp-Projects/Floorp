@@ -213,19 +213,19 @@ def get_compiler_info(compiler, language):
     check = dedent('''\
         #if defined(_MSC_VER)
         #if defined(__clang__)
-        %COMPILER clang-cl
+        %COMPILER "clang-cl"
         %VERSION _MSC_FULL_VER
         #else
-        %COMPILER msvc
+        %COMPILER "msvc"
         %VERSION _MSC_FULL_VER
         #endif
         #elif defined(__clang__)
-        %COMPILER clang
+        %COMPILER "clang"
         #  if !__cplusplus || __has_feature(cxx_alignof)
         %VERSION __clang_major__.__clang_minor__.__clang_patchlevel__
         #  endif
         #elif defined(__GNUC__)
-        %COMPILER gcc
+        %COMPILER "gcc"
         %VERSION __GNUC__.__GNUC_MINOR__.__GNUC_PATCHLEVEL__
         #endif
 
@@ -248,7 +248,7 @@ def get_compiler_info(compiler, language):
         for n, (value, condition) in enumerate(preprocessor_checks.iteritems()):
             check += dedent('''\
                 #%(if)s %(condition)s
-                %%%(name)s %(value)s
+                %%%(name)s "%(value)s"
             ''' % {
                 'if': 'elif' if n else 'if',
                 'condition': condition,
@@ -262,9 +262,9 @@ def get_compiler_info(compiler, language):
     # by the preprocessor, except MSVC, which only supports little endian.
     check += dedent('''\
         #if _MSC_VER || __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-        %ENDIANNESS little
+        %ENDIANNESS "little"
         #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-        %ENDIANNESS big
+        %ENDIANNESS "big"
         #endif
     ''')
 
@@ -279,7 +279,7 @@ def get_compiler_info(compiler, language):
         if line.startswith('%'):
             k, _, v = line.partition(' ')
             k = k.lstrip('%')
-            data[k] = v.replace(' ', '')
+            data[k] = v.replace(' ', '').lstrip('"').rstrip('"')
             log.debug('%s = %s', k, data[k])
 
     try:

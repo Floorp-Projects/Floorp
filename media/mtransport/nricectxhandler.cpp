@@ -32,7 +32,6 @@ NrIceCtxHandler::Create(const std::string& name,
                         bool allow_loopback,
                         bool tcp_enabled,
                         bool allow_link_local,
-                        bool hide_non_default,
                         NrIceCtx::Policy policy)
 {
   // InitializeGlobals only executes once
@@ -42,7 +41,7 @@ NrIceCtxHandler::Create(const std::string& name,
 
   if (ctx == nullptr ||
       ctx->current_ctx == nullptr ||
-      !ctx->current_ctx->Initialize(hide_non_default)) {
+      !ctx->current_ctx->Initialize()) {
     return nullptr;
   }
 
@@ -62,18 +61,15 @@ NrIceCtxHandler::CreateStream(const std::string& name, int components)
 
 
 RefPtr<NrIceCtx>
-NrIceCtxHandler::CreateCtx(bool hide_non_default) const
+NrIceCtxHandler::CreateCtx() const
 {
-  return CreateCtx(NrIceCtx::GetNewUfrag(),
-                   NrIceCtx::GetNewPwd(),
-                   hide_non_default);
+  return CreateCtx(NrIceCtx::GetNewUfrag(), NrIceCtx::GetNewPwd());
 }
 
 
 RefPtr<NrIceCtx>
 NrIceCtxHandler::CreateCtx(const std::string& ufrag,
-                           const std::string& pwd,
-                           bool hide_non_default) const
+                           const std::string& pwd) const
 {
   RefPtr<NrIceCtx> new_ctx = new NrIceCtx(this->current_ctx->name(),
                                           true, // offerer (hardcoded per bwc)
@@ -82,7 +78,7 @@ NrIceCtxHandler::CreateCtx(const std::string& ufrag,
     return nullptr;
   }
 
-  if (!new_ctx->Initialize(hide_non_default, ufrag, pwd)) {
+  if (!new_ctx->Initialize(ufrag, pwd)) {
     return nullptr;
   }
 

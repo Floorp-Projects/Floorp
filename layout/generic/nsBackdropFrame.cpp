@@ -47,7 +47,7 @@ nsBackdropFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // none or contents so that we can respond to style change on it. To
   // support those values, we skip painting ourselves in those cases.
   auto display = StyleDisplay()->mDisplay;
-  if (display == mozilla::StyleDisplay::None_ ||
+  if (display == mozilla::StyleDisplay::None ||
       display == mozilla::StyleDisplay::Contents) {
     return;
   }

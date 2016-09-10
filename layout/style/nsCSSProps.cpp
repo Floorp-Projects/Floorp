@@ -1058,7 +1058,7 @@ const KTableEntry nsCSSProps::kCaptionSideKTable[] = {
 };
 
 KTableEntry nsCSSProps::kClearKTable[] = {
-  { eCSSKeyword_none, StyleClear::None_ },
+  { eCSSKeyword_none, StyleClear::None },
   { eCSSKeyword_left, StyleClear::Left },
   { eCSSKeyword_right, StyleClear::Right },
   { eCSSKeyword_inline_start, StyleClear::InlineStart },
@@ -1244,7 +1244,7 @@ const KTableEntry nsCSSProps::kDirectionKTable[] = {
 };
 
 KTableEntry nsCSSProps::kDisplayKTable[] = {
-  { eCSSKeyword_none,                StyleDisplay::None_ },
+  { eCSSKeyword_none,                StyleDisplay::None },
   { eCSSKeyword_inline,              StyleDisplay::Inline },
   { eCSSKeyword_block,               StyleDisplay::Block },
   { eCSSKeyword_inline_block,        StyleDisplay::InlineBlock },
@@ -1479,7 +1479,7 @@ const KTableEntry nsCSSProps::kHyphensKTable[] = {
 };
 
 KTableEntry nsCSSProps::kFloatKTable[] = {
-  { eCSSKeyword_none, StyleFloat::None_ },
+  { eCSSKeyword_none, StyleFloat::None },
   { eCSSKeyword_left, StyleFloat::Left },
   { eCSSKeyword_right, StyleFloat::Right },
   { eCSSKeyword_inline_start, StyleFloat::InlineStart },
@@ -2117,7 +2117,7 @@ const KTableEntry nsCSSProps::kUnicodeBidiKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kUserFocusKTable[] = {
-  { eCSSKeyword_none,           uint8_t(StyleUserFocus::None_) },
+  { eCSSKeyword_none,           uint8_t(StyleUserFocus::None) },
   { eCSSKeyword_normal,         uint8_t(StyleUserFocus::Normal) },
   { eCSSKeyword_ignore,         uint8_t(StyleUserFocus::Ignore) },
   { eCSSKeyword_select_all,     uint8_t(StyleUserFocus::SelectAll) },
@@ -2144,7 +2144,7 @@ const KTableEntry nsCSSProps::kUserModifyKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kUserSelectKTable[] = {
-  { eCSSKeyword_none,       StyleUserSelect::None_ },
+  { eCSSKeyword_none,       StyleUserSelect::None },
   { eCSSKeyword_auto,       StyleUserSelect::Auto },
   { eCSSKeyword_text,       StyleUserSelect::Text },
   { eCSSKeyword_element,    StyleUserSelect::Element },
@@ -2153,7 +2153,7 @@ const KTableEntry nsCSSProps::kUserSelectKTable[] = {
   { eCSSKeyword_toggle,     StyleUserSelect::Toggle },
   { eCSSKeyword_tri_state,  StyleUserSelect::TriState },
   { eCSSKeyword__moz_all,   StyleUserSelect::MozAll },
-  { eCSSKeyword__moz_none,  StyleUserSelect::None_ },
+  { eCSSKeyword__moz_none,  StyleUserSelect::None },
   { eCSSKeyword__moz_text,  StyleUserSelect::MozText },
   { eCSSKeyword_UNKNOWN,    -1 }
 };

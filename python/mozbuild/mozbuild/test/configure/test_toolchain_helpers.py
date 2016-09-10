@@ -24,7 +24,11 @@ from mozpack import path as mozpath
 
 
 class CompilerPreprocessor(Preprocessor):
-    VARSUBST = re.compile('(?P<VAR>\w+)', re.U)
+    # The C preprocessor only expands macros when they are not in C strings.
+    # For now, we don't look very hard for C strings because they don't matter
+    # that much for our unit tests, but we at least avoid expanding in the
+    # simple "FOO" case.
+    VARSUBST = re.compile('(?<!")(?P<VAR>\w+)(?!")', re.U)
     NON_WHITESPACE = re.compile('\S')
     HAS_FEATURE = re.compile('(__has_feature)\(([^\)]*)\)')
 
@@ -84,13 +88,14 @@ class TestCompilerPreprocessor(unittest.TestCase):
             'A': 1,
             'B': '2',
             'C': 'c',
+            'D': 'd'
         })
         pp.out = StringIO()
-        input = StringIO('A.B.C')
+        input = StringIO('A.B.C "D"')
         input.name = 'foo'
         pp.do_include(input)
 
-        self.assertEquals(pp.out.getvalue(), '1 . 2 . c')
+        self.assertEquals(pp.out.getvalue(), '1 . 2 . c "D"')
 
     def test_condition(self):
         pp = CompilerPreprocessor({
