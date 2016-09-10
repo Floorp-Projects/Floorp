@@ -21,6 +21,12 @@
 
 namespace js {
 
+bool
+RuntimeFromMainThreadIsHeapMajorCollecting(JS::shadow::Zone* shadowZone)
+{
+    return shadowZone->runtimeFromMainThread()->isHeapMajorCollecting();
+}
+
 #ifdef DEBUG
 
 static bool
@@ -55,12 +61,6 @@ HeapSlot::preconditionForWriteBarrierPost(NativeObject* obj, Kind kind, uint32_t
     bool isBlackToGray = target.isMarkable() &&
                          IsMarkedBlack(obj) && JS::GCThingIsMarkedGray(JS::GCCellPtr(target));
     return isCorrectSlot && !isBlackToGray;
-}
-
-bool
-RuntimeFromMainThreadIsHeapMajorCollecting(JS::shadow::Zone* shadowZone)
-{
-    return shadowZone->runtimeFromMainThread()->isHeapMajorCollecting();
 }
 
 bool

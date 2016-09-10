@@ -287,6 +287,8 @@
 @BINPATH@/components/FeedProcessor.js
 @BINPATH@/components/PackagedAppUtils.manifest
 @BINPATH@/components/PackagedAppUtils.js
+@BINPATH@/components/WellKnownOpportunisticUtils.js
+@BINPATH@/components/WellKnownOpportunisticUtils.manifest
 @BINPATH@/components/PermissionSettings.js
 @BINPATH@/components/PermissionSettings.manifest
 @BINPATH@/components/PermissionPromptService.js

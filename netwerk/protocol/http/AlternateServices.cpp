@@ -7,14 +7,25 @@
 #include "HttpLog.h"
 
 #include "AlternateServices.h"
+#include "LoadInfo.h"
 #include "nsEscape.h"
 #include "nsHttpConnectionInfo.h"
+#include "nsHttpChannel.h"
 #include "nsHttpHandler.h"
 #include "nsThreadUtils.h"
+#include "nsHttpTransaction.h"
 #include "NullHttpTransaction.h"
 #include "nsISSLStatusProvider.h"
 #include "nsISSLStatus.h"
 #include "nsISSLSocketControl.h"
+#include "nsIWellKnownOpportunisticUtils.h"
+
+/* RFC 7838 Alternative Services
+   http://httpwg.org/http-extensions/opsec.html
+    note that connections currently do not do mixed-scheme (the I attribute
+    in the ConnectionInfo prevents it) but could, do not honor tls-commit and should
+    not, and always require authentication
+*/
 
 namespace mozilla {
 namespace net {
@@ -123,11 +134,13 @@ AltSvcMapping::ProcessHeader(const nsCString &buf, const nsCString &originScheme
       continue;
     }
 
-    RefPtr<AltSvcMapping> mapping = new AltSvcMapping(originScheme,
-                                                        originHost, originPort,
-                                                        username, privateBrowsing,
-                                                        NowInSeconds() + maxage,
-                                                        hostname, portno, npnToken);
+    RefPtr<AltSvcMapping> mapping = new AltSvcMapping(gHttpHandler->ConnMgr()->GetStoragePtr(),
+                                                      gHttpHandler->ConnMgr()->StorageEpoch(),
+                                                      originScheme,
+                                                      originHost, originPort,
+                                                      username, privateBrowsing,
+                                                      NowInSeconds() + maxage,
+                                                      hostname, portno, npnToken);
     if (mapping->TTL() <= 0) {
       LOG(("Alt Svc invalid map"));
       mapping = nullptr;
@@ -141,7 +154,8 @@ AltSvcMapping::ProcessHeader(const nsCString &buf, const nsCString &originScheme
   }
 }
 
-AltSvcMapping::AltSvcMapping(const nsACString &originScheme,
+AltSvcMapping::AltSvcMapping(DataStorage *storage, int32_t epoch,
+                             const nsACString &originScheme,
                              const nsACString &originHost,
                              int32_t originPort,
                              const nsACString &username,
@@ -150,7 +164,9 @@ AltSvcMapping::AltSvcMapping(const nsACString &originScheme,
                              const nsACString &alternateHost,
                              int32_t alternatePort,
                              const nsACString &npnToken)
-  : mAlternateHost(alternateHost)
+  : mStorage(storage)
+  , mStorageEpoch(epoch)
+  , mAlternateHost(alternateHost)
   , mAlternatePort(alternatePort)
   , mOriginHost(originHost)
   , mOriginPort(originPort)
@@ -158,9 +174,11 @@ AltSvcMapping::AltSvcMapping(const nsACString &originScheme,
   , mPrivate(privateBrowsing)
   , mExpiresAt(expiresAt)
   , mValidated(false)
-  , mRunning(false)
+  , mMixedScheme(false)
   , mNPNToken(npnToken)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (NS_FAILED(SchemeIsHTTPS(originScheme, mHttps))) {
     LOG(("AltSvcMapping ctor %p invalid scheme\n", this));
     mExpiresAt = 0; // invalid
@@ -222,9 +240,63 @@ AltSvcMapping::TTL()
 }
 
 void
+AltSvcMapping::SyncString(nsCString str)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mStorage->Put(HashKey(), str,
+                mPrivate ? DataStorage_Private : DataStorage_Persistent);
+}
+
+void
+AltSvcMapping::Sync()
+{
+  if (!mStorage) {
+    return;
+  }
+  nsCString value;
+  Serialize(value);
+
+  if (!NS_IsMainThread()) {
+    nsCOMPtr<nsIRunnable> r;
+    r = NewRunnableMethod<nsCString>(this,
+                                     &AltSvcMapping::SyncString,
+                                     value);
+    NS_DispatchToMainThread(r, NS_DISPATCH_NORMAL);
+    return;
+  }
+
+  mStorage->Put(HashKey(), value,
+                mPrivate ? DataStorage_Private : DataStorage_Persistent);
+}
+
+void
+AltSvcMapping::SetValidated(bool val)
+{
+  mValidated = val;
+  Sync();
+}
+
+void
+AltSvcMapping::SetMixedScheme(bool val)
+{
+  mMixedScheme = val;
+  Sync();
+}
+
+void
+AltSvcMapping::SetExpiresAt(int32_t val)
+{
+  mExpiresAt = val;
+  Sync();
+}
+
+void
 AltSvcMapping::SetExpired()
 {
+  LOG(("AltSvcMapping SetExpired %p origin %s alternate %s\n", this,
+       mOriginHost.get(), mAlternateHost.get()));
   mExpiresAt = NowInSeconds() - 1;
+  Sync();
 }
 
 bool
@@ -245,13 +317,92 @@ AltSvcMapping::GetConnectionInfo(nsHttpConnectionInfo **outCI,
     new nsHttpConnectionInfo(mOriginHost, mOriginPort, mNPNToken,
                              mUsername, pi, originAttributes,
                              mAlternateHost, mAlternatePort);
-  ci->SetInsecureScheme(!mHttps);
+
+  // http:// without the mixed-scheme attribute needs to be segmented in the
+  // connection manager connection information hash with this attribute
+  if (!mHttps && !mMixedScheme) {
+    ci->SetInsecureScheme(true);
+  }
   ci->SetPrivate(mPrivate);
   ci.forget(outCI);
 }
 
+void
+AltSvcMapping::Serialize(nsCString &out)
+{
+  out = mHttps ? NS_LITERAL_CSTRING("https:") : NS_LITERAL_CSTRING("http:");
+  out.Append(mOriginHost);
+  out.Append(':');
+  out.AppendInt(mOriginPort);
+  out.Append(':');
+  out.Append(mAlternateHost);
+  out.Append(':');
+  out.AppendInt(mAlternatePort);
+  out.Append(':');
+  out.Append(mUsername);
+  out.Append(':');
+  out.Append(mPrivate ? 'y' : 'n');
+  out.Append(':');
+  out.AppendInt(mExpiresAt);
+  out.Append(':');
+  out.Append(mNPNToken);
+  out.Append(':');
+  out.Append(mValidated ? 'y' : 'n');
+  out.Append(':');
+  out.AppendInt(mStorageEpoch);
+  out.Append(':');
+  out.Append(mMixedScheme ? 'y' : 'n');
+  out.Append(':');
+}
+
+AltSvcMapping::AltSvcMapping(DataStorage *storage, int32_t epoch, const nsCString &str)
+  : mStorage(storage)
+  , mStorageEpoch(epoch)
+{
+  mValidated = false;
+  nsresult code;
+
+  // The the do {} while(0) loop acts like try/catch(e){} with the break in _NS_NEXT_TOKEN
+  do {
+#ifdef _NS_NEXT_TOKEN
+COMPILER ERROR
+#endif
+    #define _NS_NEXT_TOKEN start = idx + 1; idx = str.FindChar(':', start); if (idx < 0) break;
+    int32_t start = 0;
+    int32_t idx;
+    idx = str.FindChar(':', start); if (idx < 0) break;
+    mHttps = Substring(str, start, idx - start).Equals(NS_LITERAL_CSTRING("https"));
+    _NS_NEXT_TOKEN;
+    mOriginHost = Substring(str, start, idx - start);
+    _NS_NEXT_TOKEN;
+    mOriginPort = nsCString(Substring(str, start, idx - start)).ToInteger(&code);
+    _NS_NEXT_TOKEN;
+    mAlternateHost = Substring(str, start, idx - start);
+    _NS_NEXT_TOKEN;
+    mAlternatePort = nsCString(Substring(str, start, idx - start)).ToInteger(&code);
+    _NS_NEXT_TOKEN;
+    mUsername = Substring(str, start, idx - start);
+    _NS_NEXT_TOKEN;
+    mPrivate = Substring(str, start, idx - start).Equals(NS_LITERAL_CSTRING("y"));
+    _NS_NEXT_TOKEN;
+    mExpiresAt = nsCString(Substring(str, start, idx - start)).ToInteger(&code);
+    _NS_NEXT_TOKEN;
+    mNPNToken = Substring(str, start, idx - start);
+    _NS_NEXT_TOKEN;
+    mValidated = Substring(str, start, idx - start).Equals(NS_LITERAL_CSTRING("y"));
+    _NS_NEXT_TOKEN;
+    mStorageEpoch = nsCString(Substring(str, start, idx - start)).ToInteger(&code);
+    _NS_NEXT_TOKEN;
+    mMixedScheme = Substring(str, start, idx - start).Equals(NS_LITERAL_CSTRING("y"));
+    #undef _NS_NEXT_TOKEN
+
+    MakeHashKey(mHashKey, mHttps ? NS_LITERAL_CSTRING("https") : NS_LITERAL_CSTRING("http"),
+                mOriginHost, mOriginPort, mPrivate);
+  } while (0);
+}
+
 // This is the asynchronous null transaction used to validate
-// an alt-svc advertisement
+// an alt-svc advertisement only for https://
 class AltSvcTransaction final : public NullHttpTransaction
 {
 public:
@@ -259,24 +410,24 @@ public:
                       nsHttpConnectionInfo *ci,
                       nsIInterfaceRequestor *callbacks,
                       uint32_t caps)
-    : NullHttpTransaction(ci, callbacks, caps)
+    : NullHttpTransaction(ci, callbacks, caps & ~NS_HTTP_ALLOW_KEEPALIVE)
     , mMapping(map)
-    , mRunning(false)
+    , mRunning(true)
     , mTriedToValidate(false)
     , mTriedToWrite(false)
   {
-    MOZ_ASSERT(mMapping);
     LOG(("AltSvcTransaction ctor %p map %p [%s -> %s]",
          this, map, map->OriginHost().get(), map->AlternateHost().get()));
+    MOZ_ASSERT(mMapping);
+    MOZ_ASSERT(mMapping->HTTPS());
   }
 
-  ~AltSvcTransaction()
+  ~AltSvcTransaction() override
   {
     LOG(("AltSvcTransaction dtor %p map %p running %d",
          this, mMapping.get(), mRunning));
 
     if (mRunning) {
-      MOZ_ASSERT(mMapping->IsRunning());
       MaybeValidate(NS_OK);
     }
     if (!mMapping->Validated()) {
@@ -286,22 +437,15 @@ public:
     LOG(("AltSvcTransaction dtor %p map %p validated %d [%s]",
          this, mMapping.get(), mMapping->Validated(),
          mMapping->HashKey().get()));
-    mMapping->SetRunning(false);
   }
 
-  void StartTransaction()
-  {
-    LOG(("AltSvcTransaction::StartTransaction() %p", this));
-
-    MOZ_ASSERT(!mRunning);
-    MOZ_ASSERT(!mMapping->IsRunning());
-    mCaps &= ~NS_HTTP_ALLOW_KEEPALIVE;
-    mRunning = true;
-    mMapping->SetRunning(true);
-  }
-
+private:
+  // check on alternate route.
+  // also evaluate 'reasonable assurances' for opportunistic security
   void MaybeValidate(nsresult reason)
   {
+    MOZ_ASSERT(mMapping->HTTPS()); // http:// uses the .wk path
+
     if (mTriedToValidate) {
       return;
     }
@@ -324,7 +468,7 @@ public:
     // insist on >= http/2
     uint32_t version = mConnection->Version();
     LOG(("AltSvcTransaction::MaybeValidate() %p version %d\n", this, version));
-    if (version < HTTP_VERSION_2) {
+    if (version != HTTP_VERSION_2) {
       LOG(("AltSvcTransaction::MaybeValidate %p Failed due to protocol version", this));
       return;
     }
@@ -332,26 +476,9 @@ public:
     nsCOMPtr<nsISupports> secInfo;
     mConnection->GetSecurityInfo(getter_AddRefs(secInfo));
     nsCOMPtr<nsISSLSocketControl> socketControl = do_QueryInterface(secInfo);
-    bool bypassAuth = socketControl
-                    ? socketControl->GetBypassAuthentication()
-                    : false;
 
-    LOG(("AltSvcTransaction::MaybeValidate() %p socketControl=%p bypass=%d",
-         this, socketControl.get(), bypassAuth));
-
-    if (bypassAuth) {
-      if (mMapping->HTTPS()) {
-        MOZ_ASSERT(false); // cannot happen but worth the runtime sanity check
-        LOG(("AltSvcTransaction::MaybeValidate %p"
-             "somehow indicates bypassAuth on https:// origin\n", this));
-        return;
-      }
-
-      LOG(("AltSvcTransaction::MaybeValidate() %p "
-           "validating alternate service because relaxed", this));
-      mMapping->SetValidated(true);
-      return;
-    }
+    LOG(("AltSvcTransaction::MaybeValidate() %p socketControl=%p\n",
+         this, socketControl.get()));
 
     if (socketControl->GetFailedVerification()) {
       LOG(("AltSvcTransaction::MaybeValidate() %p "
@@ -360,10 +487,11 @@ public:
     }
 
     LOG(("AltSvcTransaction::MaybeValidate() %p "
-         "validating alternate service with auth check", this));
+         "validating alternate service with successful auth check", this));
     mMapping->SetValidated(true);
   }
 
+public:
   void Close(nsresult reason) override
   {
     LOG(("AltSvcTransaction::Close() %p reason=%x running %d",
@@ -385,11 +513,307 @@ public:
   }
 
 private:
-  RefPtr<AltSvcMapping> mMapping;
+  RefPtr<AltSvcMapping>   mMapping;
   uint32_t                mRunning : 1;
   uint32_t                mTriedToValidate : 1;
   uint32_t                mTriedToWrite : 1;
 };
+
+class WellKnownChecker
+{
+public:
+  WellKnownChecker(nsIURI *uri, const nsCString &origin, uint32_t caps, nsHttpConnectionInfo *ci, AltSvcMapping *mapping)
+    : mWaiting(2) // waiting for 2 channels (default and alternate) to complete
+    , mOrigin(origin)
+    , mAlternatePort(ci->RoutedPort())
+    , mMapping(mapping)
+    , mCI(ci)
+    , mURI(uri)
+    , mCaps(caps)
+  {
+    LOG(("WellKnownChecker ctor %p\n", this));
+    MOZ_ASSERT(!mMapping->HTTPS());
+  }
+
+  nsresult Start()
+  {
+    LOG(("WellKnownChecker::Start %p\n", this));
+    nsCOMPtr<nsILoadInfo> loadInfo = new LoadInfo(nsContentUtils::GetSystemPrincipal(),
+                                                  nullptr, nullptr,
+                                                  nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                                                  nsIContentPolicy::TYPE_OTHER);
+
+    RefPtr<nsHttpChannel> chan = new nsHttpChannel();
+    nsresult rv;
+
+    mTransactionAlternate = new TransactionObserver(chan, this);
+    RefPtr<nsHttpConnectionInfo> newCI = mCI->Clone();
+    rv = MakeChannel(chan, mTransactionAlternate, newCI, mURI, mCaps, loadInfo);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    chan = new nsHttpChannel();
+    mTransactionOrigin = new TransactionObserver(chan, this);
+    newCI = nullptr;
+    return MakeChannel(chan, mTransactionOrigin, newCI, mURI, mCaps, loadInfo);
+  }
+
+  void Done(TransactionObserver *finished)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    LOG(("WellKnownChecker::Done %p waiting for %d\n", this, mWaiting));
+
+    mWaiting--; // another channel is complete
+    if (!mWaiting) { // there are all complete!
+      nsAutoCString mAlternateCT, mOriginCT;
+      mTransactionOrigin->mChannel->GetContentType(mOriginCT);
+      mTransactionAlternate->mChannel->GetContentType(mAlternateCT);
+      nsCOMPtr<nsIWellKnownOpportunisticUtils> uu = do_CreateInstance(NS_WELLKNOWNOPPORTUNISTICUTILS_CONTRACTID);
+      bool accepted = false;
+
+      if (!mTransactionOrigin->mStatusOK) {
+        LOG(("WellKnownChecker::Done %p origin was not 200 response code\n", this));
+      } else if (!mTransactionAlternate->mAuthOK) {
+        LOG(("WellKnownChecker::Done %p alternate was not TLS authenticated\n", this));
+      } else if (!mTransactionAlternate->mStatusOK) {
+        LOG(("WellKnownChecker::Done %p alternate was not 200 response code\n", this));
+      } else if (!mTransactionAlternate->mVersionOK) {
+        LOG(("WellKnownChecker::Done %p alternate was not at least h2\n", this));
+      } else if (!mTransactionAlternate->mWKResponse.Equals(mTransactionOrigin->mWKResponse)) {
+        LOG(("WellKnownChecker::Done %p alternate and origin "
+             ".wk representations don't match\norigin: %s\alternate:%s\n", this,
+             mTransactionOrigin->mWKResponse.get(),
+             mTransactionAlternate->mWKResponse.get()));
+      } else if (!mAlternateCT.Equals(mOriginCT)) {
+        LOG(("WellKnownChecker::Done %p alternate and origin content types dont match\n", this));
+      } else if (!mAlternateCT.Equals(NS_LITERAL_CSTRING("application/json"))) {
+        LOG(("WellKnownChecker::Done %p .wk content type is %s\n", this, mAlternateCT.get()));
+      } else if (!uu) {
+        LOG(("WellKnownChecker::Done %p json parser service unavailable\n", this));
+      } else {
+        accepted = true;
+      }
+
+      if (accepted) {
+        MOZ_ASSERT(!mMapping->HTTPS()); // https:// does not use .wk
+
+        nsresult rv = uu->Verify(mTransactionAlternate->mWKResponse, mOrigin, mAlternatePort);
+        if (NS_SUCCEEDED(rv)) {
+          bool validWK = false;
+          bool mixedScheme = false;
+          int32_t lifetime = 0;
+          uu->GetValid(&validWK);
+          uu->GetLifetime(&lifetime);
+          uu->GetMixed(&mixedScheme);
+          if (!validWK) {
+            LOG(("WellKnownChecker::Done %p json parser declares invalid\n%s\n", this, mTransactionAlternate->mWKResponse.get()));
+            accepted = false;
+          }
+          if (accepted && (lifetime > 0)) {
+            if (mMapping->TTL() > lifetime) {
+              LOG(("WellKnownChecker::Done %p atl-svc lifetime reduced by .wk\n", this));
+              mMapping->SetExpiresAt(NowInSeconds() + lifetime);
+            } else {
+              LOG(("WellKnownChecker::Done %p .wk lifetime exceeded alt-svc ma so ignored\n", this));
+            }
+          }
+          if (accepted && mixedScheme) {
+            mMapping->SetMixedScheme(true);
+            LOG(("WellKnownChecker::Done %p atl-svc .wk allows mixed scheme\n", this));
+          }
+        } else {
+          LOG(("WellKnownChecker::Done %p .wk jason eval failed to run\n", this));
+          accepted = false;
+        }
+      }
+
+      MOZ_ASSERT(!mMapping->Validated());
+      if (accepted) {
+        LOG(("WellKnownChecker::Done %p Alternate for %s ACCEPTED\n", this, mOrigin.get()));
+        mMapping->SetValidated(true);
+      } else {
+        LOG(("WellKnownChecker::Done %p Alternate for %s FAILED\n", this, mOrigin.get()));
+        // try again soon
+        mMapping->SetExpiresAt(NowInSeconds() + 2);
+      }
+
+      delete this;
+    }
+  }
+
+  ~WellKnownChecker()
+  {
+    LOG(("WellKnownChecker dtor %p\n", this));
+  }
+
+private:
+  nsresult
+  MakeChannel(nsHttpChannel *chan, TransactionObserver *obs, nsHttpConnectionInfo *ci,
+              nsIURI *uri, uint32_t caps, nsILoadInfo *loadInfo)
+  {
+    nsID channelId;
+    nsLoadFlags flags;
+    if (NS_FAILED(gHttpHandler->NewChannelId(&channelId)) ||
+        NS_FAILED(chan->Init(uri, caps, nullptr, 0, nullptr, channelId)) ||
+        NS_FAILED(chan->SetAllowAltSvc(false)) ||
+        NS_FAILED(chan->SetRedirectMode(nsIHttpChannelInternal::REDIRECT_MODE_ERROR)) ||
+        NS_FAILED(chan->SetLoadInfo(loadInfo)) ||
+        NS_FAILED(chan->GetLoadFlags(&flags))) {
+      return NS_ERROR_FAILURE;
+    }
+    flags |= HttpBaseChannel::LOAD_BYPASS_CACHE;
+    if (NS_FAILED(chan->SetLoadFlags(flags))) {
+      return NS_ERROR_FAILURE;
+    }
+    chan->SetTransactionObserver(obs);
+    chan->SetConnectionInfo(ci);
+    return chan->AsyncOpen2(obs);
+  }
+
+  RefPtr<TransactionObserver>  mTransactionAlternate;
+  RefPtr<TransactionObserver>  mTransactionOrigin;
+  uint32_t                     mWaiting; // semaphore
+  nsCString                    mOrigin;
+  int32_t                      mAlternatePort;
+  RefPtr<AltSvcMapping>        mMapping;
+  RefPtr<nsHttpConnectionInfo> mCI;
+  nsCOMPtr<nsIURI>             mURI;
+  uint32_t                     mCaps;
+};
+
+NS_IMPL_ISUPPORTS(TransactionObserver, nsIStreamListener)
+
+TransactionObserver::TransactionObserver(nsHttpChannel *channel, WellKnownChecker *checker)
+  : mChannel(channel)
+  , mChecker(checker)
+  , mRanOnce(false)
+  , mAuthOK(false)
+  , mVersionOK(false)
+  , mStatusOK(false)
+{
+  LOG(("TransactionObserver ctor %p channel %p checker %p\n", this, channel, checker));
+  mChannelRef = do_QueryInterface((nsIHttpChannel *)channel);
+}
+
+void
+TransactionObserver::Complete(nsHttpTransaction *aTrans, nsresult reason)
+{
+  // socket thread
+  MOZ_ASSERT(!NS_IsMainThread());
+  if (mRanOnce) {
+    return;
+  }
+  mRanOnce = true;
+
+  RefPtr<nsAHttpConnection> conn = aTrans->GetConnectionReference();
+  LOG(("TransactionObserver::Complete %p aTrans %p reason %x conn %p\n",
+       this, aTrans, reason, conn.get()));
+  if (!conn) {
+    return;
+  }
+  uint32_t version = conn->Version();
+  mVersionOK = (((reason == NS_BASE_STREAM_CLOSED) || (reason == NS_OK)) &&
+                conn->Version() == HTTP_VERSION_2);
+
+  nsCOMPtr<nsISupports> secInfo;
+  conn->GetSecurityInfo(getter_AddRefs(secInfo));
+  nsCOMPtr<nsISSLSocketControl> socketControl = do_QueryInterface(secInfo);
+  LOG(("TransactionObserver::Complete version %u socketControl %p\n",
+       version, socketControl.get()));
+  if (!socketControl) {
+    return;
+  }
+
+  mAuthOK = !socketControl->GetFailedVerification();
+  LOG(("TransactionObserve::Complete %p trans %p authOK %d versionOK %d\n",
+       this, aTrans, mAuthOK, mVersionOK));
+}
+
+#define MAX_WK 32768
+
+NS_IMETHODIMP
+TransactionObserver::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  // only consider the first 32KB.. because really.
+  mWKResponse.SetCapacity(MAX_WK);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TransactionObserver::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
+                                     nsIInputStream *aStream, uint64_t aOffset, uint32_t aCount)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  uint64_t newLen = aCount + mWKResponse.Length();
+  if (newLen < MAX_WK) {
+    char *startByte =  reinterpret_cast<char *>(mWKResponse.BeginWriting()) + mWKResponse.Length();
+    uint32_t amtRead;
+    if (NS_SUCCEEDED(aStream->Read(startByte, aCount, &amtRead))) {
+      MOZ_ASSERT(mWKResponse.Length() + amtRead < MAX_WK);
+      mWKResponse.SetLength(mWKResponse.Length() + amtRead);
+      LOG(("TransactionObserver onDataAvailable %p read %d of .wk [%d]\n",
+           this, amtRead, mWKResponse.Length()));
+    } else {
+      LOG(("TransactionObserver onDataAvailable %p read error\n", this));
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TransactionObserver::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext, nsresult code)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  LOG(("TransactionObserver onStopRequest %p code %x\n", this, code));
+  if (NS_SUCCEEDED(code)) {
+    nsHttpResponseHead *hdrs = mChannel->GetResponseHead();
+    LOG(("TransactionObserver onStopRequest %p http resp %d\n",
+         this, hdrs ? hdrs->Status() : -1));
+    mStatusOK = hdrs && (hdrs->Status() == 200);
+  }
+  if (mChecker) {
+    mChecker->Done(this);
+  }
+  return NS_OK;
+}
+
+already_AddRefed<AltSvcMapping>
+AltSvcCache::LookupMapping(const nsCString &key, bool privateBrowsing)
+{
+  LOG(("AltSvcCache::LookupMapping %p %s\n", this, key.get()));
+  if (!mStorage) {
+    LOG(("AltSvcCache::LookupMapping %p no backing store\n", this));
+    return nullptr;
+  }
+  nsCString val(mStorage->Get(key,
+                              privateBrowsing ? DataStorage_Private : DataStorage_Persistent));
+  if (val.IsEmpty()) {
+    LOG(("AltSvcCache::LookupMapping %p MISS\n", this));
+    return nullptr;
+  }
+  RefPtr<AltSvcMapping> rv = new AltSvcMapping(mStorage, mStorageEpoch, val);
+  if (!rv->Validated() && (rv->StorageEpoch() != mStorageEpoch)) {
+    // this was an in progress validation abandoned in a different session
+    // rare edge case will not detect session change - that's ok as only impact
+    // will be loss of alt-svc to this origin for this session.
+    LOG(("AltSvcCache::LookupMapping %p invalid hit - MISS\n", this));
+    mStorage->Remove(key,
+                     rv->Private() ? DataStorage_Private : DataStorage_Persistent);
+    return nullptr;
+  }
+
+  if (rv->TTL() <= 0) {
+    LOG(("AltSvcCache::LookupMapping %p expired hit - MISS\n", this));
+    mStorage->Remove(key,
+                     rv->Private() ? DataStorage_Private : DataStorage_Persistent);
+    return nullptr;
+  }
+
+  MOZ_ASSERT(rv->Private() == privateBrowsing);
+  LOG(("AltSvcCache::LookupMapping %p HIT %p\n", this, rv.get()));
+  return rv.forget();
+}
 
 void
 AltSvcCache::UpdateAltServiceMapping(AltSvcMapping *map, nsProxyInfo *pi,
@@ -398,58 +822,117 @@ AltSvcCache::UpdateAltServiceMapping(AltSvcMapping *map, nsProxyInfo *pi,
                                      const NeckoOriginAttributes &originAttributes)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  AltSvcMapping *existing = mHash.GetWeak(map->mHashKey);
-  LOG(("AltSvcCache::UpdateAltServiceMapping %p map %p existing %p %s",
-       this, map, existing, map->AlternateHost().get()));
-
-  if (existing && (existing->TTL() <= 0)) {
-    LOG(("AltSvcCache::UpdateAltServiceMapping %p map %p is expired",
-         this, map));
-    existing = nullptr;
-    mHash.Remove(map->mHashKey);
+  if (!mStorage) {
+    return;
   }
+  RefPtr<AltSvcMapping> existing = LookupMapping(map->HashKey(), map->Private());
+  LOG(("AltSvcCache::UpdateAltServiceMapping %p map %p existing %p %s validated=%d",
+       this, map, existing.get(), map->AlternateHost().get(),
+       existing ? existing->Validated() : 0));
 
-  if (existing && existing->mValidated) {
-    if (existing->RouteEquals(map)) {
-      // update expires
-      LOG(("AltSvcCache::UpdateAltServiceMapping %p map %p updates ttl of %p\n",
-           this, map, existing));
-      existing->SetExpiresAt(map->GetExpiresAt());
+  if (existing && existing->Validated()) {
+    if (existing->RouteEquals(map)){
+      // update expires in storage
+      // if this is http:// then a ttl can only be extended via .wk, so ignore this
+      // header path unless it is making things shorter
+      if (existing->HTTPS()) {
+        LOG(("AltSvcCache::UpdateAltServiceMapping %p map %p updates ttl of %p\n",
+             this, map, existing.get()));
+        existing->SetExpiresAt(map->GetExpiresAt());
+      } else {
+        if (map->GetExpiresAt() < existing->GetExpiresAt()) {
+          LOG(("AltSvcCache::UpdateAltServiceMapping %p map %p reduces ttl of %p\n",
+               this, map, existing.get()));
+          existing->SetExpiresAt(map->GetExpiresAt());
+        } else {
+          LOG(("AltSvcCache::UpdateAltServiceMapping %p map %p tries to extend %p but"
+               " cannot as without .wk\n",
+               this, map, existing.get()));
+        }
+      }
       return;
     }
 
+    // new alternate. remove old entry and start new validation
     LOG(("AltSvcCache::UpdateAltServiceMapping %p map %p overwrites %p\n",
-         this, map, existing));
+         this, map, existing.get()));
     existing = nullptr;
-    mHash.Remove(map->mHashKey);
+    mStorage->Remove(map->HashKey(),
+                     map->Private() ? DataStorage_Private : DataStorage_Persistent);
   }
 
-  if (existing) {
+  if (existing && !existing->Validated()) {
     LOG(("AltSvcCache::UpdateAltServiceMapping %p map %p ignored because %p "
-         "still in progress\n", this, map, existing));
+         "still in progress\n", this, map, existing.get()));
     return;
   }
 
-  mHash.Put(map->mHashKey, map);
+  // start new validation
+  MOZ_ASSERT(!map->Validated());
+  map->Sync();
 
   RefPtr<nsHttpConnectionInfo> ci;
   map->GetConnectionInfo(getter_AddRefs(ci), pi, originAttributes);
   caps |= ci->GetAnonymous() ? NS_HTTP_LOAD_ANONYMOUS : 0;
+  caps |= NS_HTTP_ERROR_SOFTLY;
 
-  nsCOMPtr<nsIInterfaceRequestor> callbacks = new AltSvcOverride(aCallbacks);
+  if (map->HTTPS()) {
+    LOG(("AltSvcCache::UpdateAltServiceMapping %p validation via "
+         "speculative connect started\n", this));
+    // for https resources we only establish a connection
+    nsCOMPtr<nsIInterfaceRequestor> callbacks = new AltSvcOverride(aCallbacks);
+    RefPtr<AltSvcTransaction> nullTransaction =
+      new AltSvcTransaction(map, ci, aCallbacks, caps);
+    gHttpHandler->ConnMgr()->SpeculativeConnect(ci, callbacks, caps, nullTransaction);
+  } else {
+    // for http:// resources we fetch .well-known too
+    nsAutoCString origin (NS_LITERAL_CSTRING("http://") + map->OriginHost());
+    if (map->OriginPort() != NS_HTTP_DEFAULT_PORT) {
+      origin.Append(':');
+      origin.AppendInt(map->OriginPort());
+    }
 
-  RefPtr<AltSvcTransaction> nullTransaction =
-    new AltSvcTransaction(map, ci, aCallbacks, caps);
-  nullTransaction->StartTransaction();
-  gHttpHandler->ConnMgr()->SpeculativeConnect(ci, callbacks, caps, nullTransaction);
+    nsCOMPtr<nsIURI> wellKnown;
+    nsAutoCString uri(origin);
+    uri.Append(NS_LITERAL_CSTRING("/.well-known/http-opportunistic"));
+    NS_NewURI(getter_AddRefs(wellKnown), uri);
+
+    WellKnownChecker *checker = new WellKnownChecker(wellKnown, origin, caps, ci, map);
+    if (NS_FAILED(checker->Start())) {
+      LOG(("AltSvcCache::UpdateAltServiceMapping %p .wk checker failed to start\n", this));
+      map->SetExpired();
+      delete checker;
+      checker = nullptr;
+    } else {
+      // object deletes itself when done if started
+      LOG(("AltSvcCache::UpdateAltServiceMapping %p .wk checker started %p\n", this, checker));
+    }
+  }
 }
 
-AltSvcMapping *
+already_AddRefed<AltSvcMapping>
 AltSvcCache::GetAltServiceMapping(const nsACString &scheme, const nsACString &host,
                                   int32_t port, bool privateBrowsing)
 {
   bool isHTTPS;
   MOZ_ASSERT(NS_IsMainThread());
+  if (!mStorage) {
+    // DataStorage gives synchronous access to a memory based hash table
+    // that is backed by disk where those writes are done asynchronously
+    // on another thread
+    mStorage = DataStorage::Get(NS_LITERAL_STRING("AlternateServices.txt"));
+    if (mStorage) {
+      bool storageWillPersist = false;
+      if (NS_FAILED(mStorage->Init(storageWillPersist))) {
+        mStorage = nullptr;
+      }
+    }
+    if (!mStorage) {
+      LOG(("AltSvcCache::GetAltServiceMapping WARN NO STORAGE\n"));
+    }
+    mStorageEpoch = NowInSeconds();
+  }
+
   if (NS_FAILED(SchemeIsHTTPS(scheme, isHTTPS))) {
     return nullptr;
   }
@@ -462,20 +945,15 @@ AltSvcCache::GetAltServiceMapping(const nsACString &scheme, const nsACString &ho
 
   nsAutoCString key;
   AltSvcMapping::MakeHashKey(key, scheme, host, port, privateBrowsing);
-  AltSvcMapping *existing = mHash.GetWeak(key);
+  RefPtr<AltSvcMapping> existing = LookupMapping(key, privateBrowsing);
   LOG(("AltSvcCache::GetAltServiceMapping %p key=%s "
-       "existing=%p validated=%d running=%d ttl=%d",
-       this, key.get(), existing, existing ? existing->mValidated : 0,
-       existing ? existing->mRunning : 0,
+       "existing=%p validated=%d ttl=%d",
+       this, key.get(), existing.get(), existing ? existing->Validated() : 0,
        existing ? existing->TTL() : 0));
-  if (existing && (existing->TTL() <= 0)) {
-    LOG(("AltSvcCache::GetAltServiceMapping %p map %p is expired", this, existing));
-    mHash.Remove(existing->mHashKey);
+  if (existing && !existing->Validated()) {
     existing = nullptr;
   }
-  if (existing && existing->mValidated)
-    return existing;
-  return nullptr;
+  return existing.forget();
 }
 
 class ProxyClearHostMapping : public Runnable {
@@ -506,29 +984,27 @@ AltSvcCache::ClearHostMapping(const nsACString &host, int32_t port)
     }
     return;
   }
-
   nsAutoCString key;
-
   AltSvcMapping::MakeHashKey(key, NS_LITERAL_CSTRING("http"), host, port, true);
-  AltSvcMapping *existing = mHash.GetWeak(key);
+  RefPtr<AltSvcMapping> existing = LookupMapping(key, true);
   if (existing) {
     existing->SetExpired();
   }
 
   AltSvcMapping::MakeHashKey(key, NS_LITERAL_CSTRING("https"), host, port, true);
-  existing = mHash.GetWeak(key);
+  existing = LookupMapping(key, true);
   if (existing) {
     existing->SetExpired();
   }
 
   AltSvcMapping::MakeHashKey(key, NS_LITERAL_CSTRING("http"), host, port, false);
-  existing = mHash.GetWeak(key);
+  existing = LookupMapping(key, false);
   if (existing) {
     existing->SetExpired();
   }
 
   AltSvcMapping::MakeHashKey(key, NS_LITERAL_CSTRING("https"), host, port, false);
-  existing = mHash.GetWeak(key);
+  existing = LookupMapping(key, false);
   if (existing) {
     existing->SetExpired();
   }
@@ -546,7 +1022,9 @@ void
 AltSvcCache::ClearAltServiceMappings()
 {
     MOZ_ASSERT(NS_IsMainThread());
-    mHash.Clear();
+    if (mStorage) {
+      mStorage->Clear();
+    }
 }
 
 NS_IMETHODIMP

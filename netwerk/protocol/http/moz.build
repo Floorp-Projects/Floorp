@@ -16,6 +16,7 @@ XPIDL_SOURCES += [
     'nsIHttpEventSink.idl',
     'nsIHttpHeaderVisitor.idl',
     'nsIHttpProtocolHandler.idl',
+    'nsIWellKnownOpportunisticUtils.idl',
 ]
 
 XPIDL_MODULE = 'necko_http'
@@ -114,4 +115,6 @@ LOCAL_INCLUDES += [
 EXTRA_COMPONENTS += [
     'PackagedAppUtils.js',
     'PackagedAppUtils.manifest',
+    'WellKnownOpportunisticUtils.js',
+    'WellKnownOpportunisticUtils.manifest',
 ]

@@ -55,6 +55,7 @@ function run_test() {
 
   h1Foo = new HttpServer();
   h1Foo.registerPathHandler("/altsvc-test", h1Server);
+  h1Foo.registerPathHandler("/.well-known/http-opportunistic", h1ServerWK);
   h1Foo.start(-1);
   h1Foo.identity.setPrimary("http", "foo.example.com", h1Foo.identity.primaryPort);
 
@@ -94,6 +95,19 @@ function h1Server(metadata, response) {
   } catch (e) {}
 
   var body = "Q: What did 0 say to 8? A: Nice Belt!\n";
+  response.bodyOutputStream.write(body, body.length);
+}
+
+function h1ServerWK(metadata, response) {
+  response.setStatusLine(metadata.httpVersion, 200, "OK");
+  response.setHeader("Content-Type", "application/json", false);
+  response.setHeader("Connection", "close", false);
+  response.setHeader("Cache-Control", "no-cache", false);
+  response.setHeader("Access-Control-Allow-Origin", "*", false);
+  response.setHeader("Access-Control-Allow-Method", "GET", false);
+  response.setHeader("Access-Control-Allow-Headers", "x-altsvc", false);
+
+  var body = '{"http://foo.example.com:' + h1Foo.identity.primaryPort + '": { "tls-ports": [' + h2Port + '] }}';
   response.bodyOutputStream.write(body, body.length);
 }
 
@@ -161,6 +175,7 @@ Listener.prototype = {
       routed = request.getRequestHeader("Alt-Used");
     } catch (e) {}
     dump("routed is " + routed + "\n");
+    do_check_eq(Components.isSuccessCode(status), expectPass);
 
     if (waitFor != 0) {
       do_check_eq(routed, "");
@@ -298,23 +313,29 @@ function doTest7()
 }
 
 // http://bar via h2 on bar
+// should not use TLS/h2 because h2BarRoute is not auth'd for bar
+// however the test ought to PASS (i.e. get a 200) because fallback
+// to plaintext happens.. thus the timeout
 function doTest8()
 {
   dump("doTest8()\n");
   origin = httpBarOrigin;
   xaltsvc = h2BarRoute;
   expectPass = true;
+  waitFor = 500;
   nextTest = doTest9;
   do_test_pending();
   doTest();
 }
 
-// http://bar served from h2=:port
+// http://bar served from h2=:port, which is like the bar route in 8
 function doTest9()
 {
   dump("doTest9()\n");
   origin = httpBarOrigin;
   xaltsvc = h2Route;
+  expectPass = true;
+  waitFor = 500;
   nextTest = doTest10;
   do_test_pending();
   doTest();
@@ -342,7 +363,7 @@ function doTest11()
   origin = httpBarOrigin;
   xaltsvc = h2FooRoute;
   expectPass = true;
-  waitFor = 1000;
+  waitFor = 500;
   nextTest = testsDone;
   do_test_pending();
   doTest();

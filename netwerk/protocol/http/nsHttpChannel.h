@@ -27,6 +27,7 @@
 #include "nsIStreamListener.h"
 #include "nsISupportsPrimitives.h"
 #include "nsICorsPreflightCallback.h"
+#include "AlternateServices.h"
 
 class nsDNSPrefetch;
 class nsICancelable;
@@ -257,6 +258,13 @@ public: /* internal necko use only */
     NS_IMETHOD GetResponseSynthesized(bool* aSynthesized) override;
     bool AwaitingCacheCallbacks();
     void SetCouldBeSynthesized();
+
+private: // used for alternate service validation
+    RefPtr<TransactionObserver> mTransactionObserver;
+public:
+    void SetConnectionInfo(nsHttpConnectionInfo *); // clones the argument
+    void SetTransactionObserver(TransactionObserver *arg) { mTransactionObserver = arg; }
+    TransactionObserver *GetTransactionObserver() { return mTransactionObserver; }
 
 protected:
     virtual ~nsHttpChannel();
