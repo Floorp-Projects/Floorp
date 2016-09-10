@@ -34,7 +34,7 @@
  *
  * can be used:
  *
- * JS_ReportErrorNumber(JSMSG_NOT_A_SUBSPECIES, "Rhino", "Monkey");
+ * JS_ReportErrorNumberASCII(JSMSG_NOT_A_SUBSPECIES, "Rhino", "Monkey");
  *
  * to report:
  *
