@@ -781,10 +781,6 @@ NON_IDL_EVENT(popupshown,
               eXULPopupShown,
               EventNameType_XUL,
               eBasicEventClass)
-NON_IDL_EVENT(popuppositioned,
-              eXULPopupPositioned,
-              EventNameType_XUL,
-              eBasicEventClass)
 NON_IDL_EVENT(popuphiding,
               eXULPopupHiding,
               EventNameType_XUL,
