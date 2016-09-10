@@ -61,7 +61,7 @@ AccurateSeekTask::Discard()
   AssertOwnerThread();
 
   // Disconnect MDSM.
-  RejectIfExist(__func__);
+  RejectIfExist(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
 
   // Disconnect MediaDecoderReaderWrapper.
   mSeekRequest.DisconnectIfExists();
@@ -120,7 +120,7 @@ AccurateSeekTask::DropAudioUpToSeekTarget(MediaData* aSample)
 
   CheckedInt64 sampleDuration = FramesToUsecs(audio->mFrames, mAudioRate);
   if (!sampleDuration.isValid()) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
   }
 
   if (audio->mTime + sampleDuration.value() <= mTarget.GetTime().ToMicroseconds()) {
@@ -154,7 +154,7 @@ AccurateSeekTask::DropAudioUpToSeekTarget(MediaData* aSample)
   CheckedInt64 framesToPrune =
     UsecsToFrames(mTarget.GetTime().ToMicroseconds() - audio->mTime, mAudioRate);
   if (!framesToPrune.isValid()) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
   }
   if (framesToPrune.value() > audio->mFrames) {
     // We've messed up somehow. Don't try to trim frames, the |frames|
@@ -174,7 +174,7 @@ AccurateSeekTask::DropAudioUpToSeekTarget(MediaData* aSample)
          frames * channels * sizeof(AudioDataValue));
   CheckedInt64 duration = FramesToUsecs(frames, mAudioRate);
   if (!duration.isValid()) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
   }
   RefPtr<AudioData> data(new AudioData(audio->mOffset,
                                        mTarget.GetTime().ToMicroseconds(),
@@ -260,7 +260,7 @@ AccurateSeekTask::OnSeekRejected(nsresult aResult)
 
   mSeekRequest.Complete();
   MOZ_ASSERT(NS_FAILED(aResult), "Cancels should also disconnect mSeekRequest");
-  RejectIfExist(__func__);
+  RejectIfExist(aResult, __func__);
 }
 
 void
@@ -308,10 +308,13 @@ AccurateSeekTask::OnAudioDecoded(MediaData* aAudioSample)
     // Non-precise seek; we can stop the seek at the first sample.
     mSeekedAudioData = audio;
     mDoneAudioSeeking = true;
-  } else if (NS_FAILED(DropAudioUpToSeekTarget(audio))) {
-    CancelCallbacks();
-    RejectIfExist(__func__);
-    return;
+  } else {
+    nsresult rv = DropAudioUpToSeekTarget(audio);
+    if (NS_FAILED(rv)) {
+      CancelCallbacks();
+      RejectIfExist(rv, __func__);
+      return;
+    }
   }
 
   if (!mDoneAudioSeeking) {
@@ -370,7 +373,7 @@ AccurateSeekTask::OnNotDecoded(MediaData::Type aType,
 
   // This is a decode error, delegate to the generic error path.
   CancelCallbacks();
-  RejectIfExist(__func__);
+  RejectIfExist(aError, __func__);
 }
 
 void
@@ -393,10 +396,13 @@ AccurateSeekTask::OnVideoDecoded(MediaData* aVideoSample)
     // Non-precise seek. We can stop the seek at the first sample.
     mSeekedVideoData = video;
     mDoneVideoSeeking = true;
-  } else if (NS_FAILED(DropVideoUpToSeekTarget(video.get()))) {
-    CancelCallbacks();
-    RejectIfExist(__func__);
-    return;
+  } else {
+    nsresult rv = DropVideoUpToSeekTarget(video.get());
+    if (NS_FAILED(rv)) {
+      CancelCallbacks();
+      RejectIfExist(rv, __func__);
+      return;
+    }
   }
 
   if (!mDoneVideoSeeking) {
