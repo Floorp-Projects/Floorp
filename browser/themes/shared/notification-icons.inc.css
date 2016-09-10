@@ -129,11 +129,6 @@
   list-style-image: url(chrome://browser/skin/notification-icons.svg#login-detailed);
 }
 
-#login-fill-notification-icon {
-  /* Temporary solution until the capture and fill doorhangers are unified. */
-  transform: scaleX(-1);
-}
-
 .camera-icon,
 .popup-notification-icon[popupid="webRTC-shareDevices"] {
   list-style-image: url(chrome://browser/skin/notification-icons.svg#camera);
