@@ -21,9 +21,11 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaError)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMMediaError)
 NS_INTERFACE_MAP_END
 
-MediaError::MediaError(HTMLMediaElement* aParent, uint16_t aCode)
+MediaError::MediaError(HTMLMediaElement* aParent, uint16_t aCode,
+                       const nsACString& aMessage)
   : mParent(aParent)
   , mCode(aCode)
+  , mMessage(aMessage)
 {
 }
 
@@ -37,6 +39,7 @@ NS_IMETHODIMP MediaError::GetCode(uint16_t* aCode)
 
 NS_IMETHODIMP MediaError::GetMessage(nsAString& aResult)
 {
+  CopyUTF8toUTF16(mMessage, aResult);
   return NS_OK;
 }
 
