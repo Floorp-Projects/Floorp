@@ -1,12 +1,17 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var { GetDevices, GetDeviceString, AddDevice } = require("devtools/client/shared/devices");
+const {
+  getDevices,
+  getDeviceString,
+  addDevice
+} = require("devtools/client/shared/devices");
 
 add_task(function* () {
-  Services.prefs.setCharPref("devtools.devices.url", TEST_URI_ROOT + "browser_devices.json");
+  Services.prefs.setCharPref("devtools.devices.url",
+                             TEST_URI_ROOT + "browser_devices.json");
 
-  let devices = yield GetDevices();
+  let devices = yield getDevices();
 
   is(devices.TYPES.length, 1, "Found 1 device type.");
 
@@ -14,7 +19,7 @@ add_task(function* () {
 
   is(devices[type1].length, 2, "Found 2 devices of type #1.");
 
-  let string = GetDeviceString(type1);
+  let string = getDeviceString(type1);
   ok(typeof string === "string" && string.length > 0, "Able to localize type #1.");
 
   let device1 = {
@@ -26,8 +31,8 @@ add_task(function* () {
     touch: true,
     firefoxOS: true
   };
-  AddDevice(device1, type1);
-  devices = yield GetDevices();
+  addDevice(device1, type1);
+  devices = yield getDevices();
 
   is(devices[type1].length, 3, "Added new device of type #1.");
   ok(devices[type1].filter(d => d.name === device1.name), "Found the new device.");
@@ -42,8 +47,8 @@ add_task(function* () {
     touch: true,
     firefoxOS: true
   };
-  AddDevice(device2, type2);
-  devices = yield GetDevices();
+  addDevice(device2, type2);
+  devices = yield getDevices();
 
   is(devices.TYPES.length, 2, "Added device type #2.");
   is(devices[type2].length, 1, "Added new device of type #2.");

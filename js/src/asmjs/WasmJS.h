@@ -163,6 +163,10 @@ class WasmMemoryObject : public NativeObject
     static const unsigned OBSERVERS_SLOT = 1;
     static const ClassOps classOps_;
     static void finalize(FreeOp* fop, JSObject* obj);
+    static bool bufferGetterImpl(JSContext* cx, const CallArgs& args);
+    static bool bufferGetter(JSContext* cx, unsigned argc, Value* vp);
+    static bool growImpl(JSContext* cx, const CallArgs& args);
+    static bool grow(JSContext* cx, unsigned argc, Value* vp);
 
     using InstanceSet = GCHashSet<ReadBarrieredWasmInstanceObject,
                                   MovableCellHasher<ReadBarrieredWasmInstanceObject>,
@@ -186,7 +190,7 @@ class WasmMemoryObject : public NativeObject
 
     bool movingGrowable() const;
     bool addMovingGrowObserver(JSContext* cx, WasmInstanceObject* instance);
-    uint32_t grow(uint32_t delta);
+    static uint32_t grow(HandleWasmMemoryObject memory, uint32_t delta, JSContext* cx);
 };
 
 // The class of WebAssembly.Table. A WasmTableObject holds a refcount on a
