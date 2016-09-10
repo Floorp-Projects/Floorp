@@ -278,8 +278,6 @@ private:
 
   void SetAudioCaptured(bool aCaptured);
 
-  void ReadMetadata();
-
   RefPtr<MediaDecoder::SeekPromise> Seek(SeekTarget aTarget);
 
   RefPtr<ShutdownPromise> Shutdown();
@@ -536,10 +534,6 @@ protected:
   // hardware, so this can only be used as a upper bound. The decoder monitor
   // must be held when calling this. Called on the decode thread.
   int64_t GetDecodedAudioDuration();
-
-  // Promise callbacks for metadata reading.
-  void OnMetadataRead(MetadataHolder* aMetadata);
-  void OnMetadataNotRead(ReadMetadataFailureReason aReason);
 
   // Notify FirstFrameLoaded if having decoded first frames and
   // transition to SEEKING if there is any pending seek, or DECODING otherwise.
@@ -816,11 +810,6 @@ private:
   // True if all video frames are already rendered.
   Watchable<bool> mVideoCompleted;
 
-  // True if we need to enter dormant state after reading metadata. Note that
-  // we can't enter dormant state until reading metadata is done for some
-  // limitations of the reader.
-  bool mPendingDormant = false;
-
   // Flag whether we notify metadata before decoding the first frame or after.
   //
   // Note that the odd semantics here are designed to replicate the current
@@ -852,9 +841,6 @@ private:
   // waiting to be awakened before it continues decoding. Synchronized
   // by the decoder monitor.
   bool mDecodeThreadWaiting;
-
-  // Track our request for metadata from the reader.
-  MozPromiseRequestHolder<MediaDecoderReader::MetadataPromise> mMetadataRequest;
 
   // Stores presentation info required for playback. The decoder monitor
   // must be held when accessing this.

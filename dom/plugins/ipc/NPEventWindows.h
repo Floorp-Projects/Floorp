@@ -25,6 +25,7 @@ struct NPRemoteEvent
         RECT rect;
         WINDOWPOS windowpos;
     } lParamData;
+    double contentsScaleFactor;
 };
 
 }

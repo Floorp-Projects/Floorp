@@ -10,6 +10,7 @@
 
 #include "gfxRect.h"
 #include "nsFont.h"
+#include "X11UndefineNone.h"
 
 // XXX fold this into nsStyleContext and group by nsStyleXXX struct
 
@@ -110,7 +111,7 @@ enum class StyleBoxShadowType : uint8_t {
 
 // clear
 enum class StyleClear : uint8_t {
-  None_ = 0,
+  None = 0,
   Left,
   Right,
   InlineStart,
@@ -143,7 +144,7 @@ enum class StyleFillRule : uint8_t {
 // float
 // https://developer.mozilla.org/en-US/docs/Web/CSS/float
 enum class StyleFloat : uint8_t {
-  None_,
+  None,
   Left,
   Right,
   InlineStart,
@@ -166,18 +167,16 @@ enum class StyleShapeOutsideShapeBox : uint8_t {
 };
 
 // Shape source type
-// X11 has a #define for None causing conflicts, so we use None_ here
 enum class StyleShapeSourceType : uint8_t {
-  None_,
+  None,
   URL,
   Shape,
   Box,
 };
 
 // user-focus
-// X11 has a #define for None causing conflicts, so we use None_ here
 enum class StyleUserFocus : uint8_t {
-  None_,
+  None,
   Ignore,
   Normal,
   SelectAll,
@@ -189,7 +188,7 @@ enum class StyleUserFocus : uint8_t {
 
 // user-select
 enum class StyleUserSelect : uint8_t {
-  None_,
+  None,
   Text,
   Element,
   Elements,
@@ -492,7 +491,7 @@ enum class FillMode : uint32_t;
 // the FrameConstructorDataByDisplay stuff (both the XUL and non-XUL version),
 // and ensure it's still correct!
 enum class StyleDisplay : uint8_t {
-  None_ = 0,
+  None = 0,
   Block,
   Inline,
   InlineBlock,

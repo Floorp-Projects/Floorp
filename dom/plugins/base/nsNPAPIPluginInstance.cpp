@@ -1005,7 +1005,7 @@ nsresult nsNPAPIPluginInstance::IsRemoteDrawingCoreAnimation(bool* aDrawing)
 nsresult
 nsNPAPIPluginInstance::ContentsScaleFactorChanged(double aContentsScaleFactor)
 {
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) || defined(XP_WIN)
   if (!mPlugin)
       return NS_ERROR_FAILURE;
 

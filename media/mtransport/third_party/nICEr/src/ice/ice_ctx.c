@@ -514,6 +514,16 @@ static void nr_ice_ctx_destroy_cb(NR_SOCKET s, int how, void *cb_arg)
     RFREE(ctx);
   }
 
+void nr_ice_ctx_add_flags(nr_ice_ctx *ctx, UINT4 flags)
+  {
+    ctx->flags |= flags;
+  }
+
+void nr_ice_ctx_remove_flags(nr_ice_ctx *ctx, UINT4 flags)
+  {
+    ctx->flags &= ~flags;
+  }
+
 int nr_ice_ctx_destroy(nr_ice_ctx **ctxp)
   {
     if(!ctxp || !*ctxp)
@@ -992,7 +1002,7 @@ int nr_ice_ctx_hide_candidate(nr_ice_ctx *ctx, nr_ice_candidate *cand)
       return 1;
     }
 
-    if (ctx->flags & NR_ICE_CTX_FLAGS_ONLY_DEFAULT_ADDRS) {
+    if (ctx->flags & NR_ICE_CTX_FLAGS_HIDE_HOST_CANDIDATES) {
       if (cand->type == HOST)
         return 1;
     }
