@@ -189,3 +189,6 @@ if CONFIG['ENABLE_TESTS']:
                 '/media/webrtc/signaling/test',
                 '/media/mtransport/test',
             ]
+
+if CONFIG['LIBFUZZER']:
+  DIRS += ['/tools/fuzzing/libfuzzer']
