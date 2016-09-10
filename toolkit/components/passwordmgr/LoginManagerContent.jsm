@@ -408,7 +408,7 @@ var LoginManagerContent = {
    * @param {Window} window
    */
   _fetchLoginsFromParentAndFillForm(form, window) {
-    this._updateLoginFormPresence(window);
+    this._detectInsecureFormLikes(window);
 
     let messageManager = messageManagerFromWindow(window);
     messageManager.sendAsyncMessage("LoginStats:LoginEncountered");
@@ -423,7 +423,7 @@ var LoginManagerContent = {
   },
 
   onPageShow(event, window) {
-    this._updateLoginFormPresence(window);
+    this._detectInsecureFormLikes(window);
   },
 
   /**
@@ -448,38 +448,11 @@ var LoginManagerContent = {
   },
 
   /**
-   * Compute whether there is a login form on any frame of the current page, and
-   * notify the parent process. This is one of the factors used to control the
-   * visibility of the password fill doorhanger anchor.
+   * Compute whether there is an insecure login form on any frame of the current page, and
+   * notify the parent process. This is used to control whether insecure password UI appears.
    */
-  _updateLoginFormPresence(topWindow) {
-    log("_updateLoginFormPresence", topWindow.location.href);
-    // For the login form presence notification, we currently support only one
-    // origin for each browser, so the form origin will always match the origin
-    // of the top level document.
-    let loginFormOrigin =
-        LoginUtils._getPasswordOrigin(topWindow.document.documentURI);
-
-    // Returns the first known loginForm present in this window or in any
-    // same-origin subframes. Returns null if no loginForm is currently present.
-    let getFirstLoginForm = thisWindow => {
-      let loginForms = this.stateForDocument(thisWindow.document).loginFormRootElements;
-      if (loginForms.size) {
-        return [...loginForms][0];
-      }
-      for (let i = 0; i < thisWindow.frames.length; i++) {
-        let frame = thisWindow.frames[i];
-        if (LoginUtils._getPasswordOrigin(frame.document.documentURI) !=
-            loginFormOrigin) {
-          continue;
-        }
-        let loginForm = getFirstLoginForm(frame);
-        if (loginForm) {
-          return loginForm;
-        }
-      }
-      return null;
-    };
+  _detectInsecureFormLikes(topWindow) {
+    log("_detectInsecureFormLikes", topWindow.location.href);
 
     // Returns true if this window or any subframes have insecure login forms.
     let hasInsecureLoginForms = (thisWindow, parentIsInsecure) => {
@@ -491,16 +464,8 @@ var LoginManagerContent = {
                         frame => hasInsecureLoginForms(frame, isInsecure));
     };
 
-    // Store the actual form to use on the state for the top-level document.
-    let topState = this.stateForDocument(topWindow.document);
-    topState.loginFormForFill = getFirstLoginForm(topWindow);
-    log("_updateLoginFormPresence: topState.loginFormForFill", topState.loginFormForFill);
-
-    // Determine whether to show the anchor icon for the current tab.
     let messageManager = messageManagerFromWindow(topWindow);
     messageManager.sendAsyncMessage("RemoteLogins:updateLoginFormPresence", {
-      loginFormOrigin,
-      loginFormPresent: !!topState.loginFormForFill,
       hasInsecureLoginForms: hasInsecureLoginForms(topWindow, false),
     });
   },
@@ -526,14 +491,12 @@ var LoginManagerContent = {
    *          recipes:
    *            Fill recipes transmitted together with the original message.
    *          inputElement:
-   *            Optional input password element from the form we want to fill.
+   *            Username or password input element from the form we want to fill.
    *        }
    */
   fillForm({ topDocument, loginFormOrigin, loginsFound, recipes, inputElement }) {
-    let topState = this.stateForDocument(topDocument);
-    if (!inputElement && !topState.loginFormForFill) {
-      log("fillForm: There is no login form anymore. The form may have been",
-          "removed or the document may have changed.");
+    if (!inputElement) {
+      log("fillForm: No input element specified");
       return;
     }
     if (LoginUtils._getPasswordOrigin(topDocument.documentURI) != loginFormOrigin) {
@@ -546,18 +509,15 @@ var LoginManagerContent = {
         return;
       }
     }
-    let form = topState.loginFormForFill;
+
     let clobberUsername = true;
     let options = {
       inputElement,
     };
 
-    // If we have a target input, fills it's form.
-    if (inputElement) {
-      form = FormLikeFactory.createFromField(inputElement);
-      if (inputElement.type == "password") {
-        clobberUsername = false;
-      }
+    let form = FormLikeFactory.createFromField(inputElement);
+    if (inputElement.type == "password") {
+      clobberUsername = false;
     }
     this._fillForm(form, true, clobberUsername, true, true, loginsFound, recipes, options);
   },
