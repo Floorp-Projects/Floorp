@@ -124,6 +124,7 @@ struct LinkedProgramInfo;
 class ShaderValidator;
 class TexUnpackBlob;
 struct UniformInfo;
+struct UniformBlockInfo;
 } // namespace webgl
 
 WebGLTexelFormat GetWebGLTexelFormat(TexInternalFormat format);
@@ -181,6 +182,19 @@ public:
     GLfloat AsFloat() const { return (mType == Float) ? mValue.f : GLfloat(mValue.i); }
 };
 
+struct IndexedBufferBinding
+{
+    WebGLRefPtr<WebGLBuffer> mBufferBinding;
+    uint64_t mRangeStart;
+    uint64_t mRangeSize;
+
+    IndexedBufferBinding();
+
+    uint64_t ByteCount() const;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 class WebGLContext
     : public nsIDOMWebGLRenderingContext
     , public nsICanvasRenderingContextInternal
@@ -189,6 +203,8 @@ class WebGLContext
     , public WebGLRectangleObject
     , public nsWrapperCache
 {
+    friend class ScopedDrawHelper;
+    friend class ScopedDrawWithTransformFeedback;
     friend class ScopedFBRebinder;
     friend class WebGL2Context;
     friend class WebGLContextUserData;
@@ -203,6 +219,7 @@ class WebGLContext
     friend class WebGLExtensionLoseContext;
     friend class WebGLExtensionVertexArray;
     friend class WebGLMemoryTracker;
+    friend struct webgl::UniformBlockInfo;
 
     enum {
         UNPACK_FLIP_Y_WEBGL = 0x9240,
@@ -726,11 +743,6 @@ public:
 
 // -----------------------------------------------------------------------------
 // Buffer Objects (WebGLContextBuffers.cpp)
-private:
-    void UpdateBoundBuffer(GLenum target, WebGLBuffer* buffer);
-    void UpdateBoundBufferIndexed(GLenum target, GLuint index, WebGLBuffer* buffer);
-
-public:
     void BindBuffer(GLenum target, WebGLBuffer* buffer);
     void BindBufferBase(GLenum target, GLuint index, WebGLBuffer* buf);
     void BindBufferRange(GLenum target, GLuint index, WebGLBuffer* buf,
@@ -772,11 +784,9 @@ protected:
     WebGLRefPtr<WebGLBuffer> mBoundCopyWriteBuffer;
     WebGLRefPtr<WebGLBuffer> mBoundPixelPackBuffer;
     WebGLRefPtr<WebGLBuffer> mBoundPixelUnpackBuffer;
-    WebGLRefPtr<WebGLBuffer> mBoundTransformFeedbackBuffer;
     WebGLRefPtr<WebGLBuffer> mBoundUniformBuffer;
 
-    nsTArray<WebGLRefPtr<WebGLBuffer>> mBoundUniformBuffers;
-    nsTArray<WebGLRefPtr<WebGLBuffer>> mBoundTransformFeedbackBuffers;
+    std::vector<IndexedBufferBinding> mIndexedUniformBufferBindings;
 
     WebGLRefPtr<WebGLBuffer>& GetBufferSlotByTarget(GLenum target);
     WebGLRefPtr<WebGLBuffer>& GetBufferSlotByTargetIndexed(GLenum target,
@@ -1044,11 +1054,11 @@ private:
     uint32_t mMaxFetchedInstances;
     bool mBufferFetch_IsAttrib0Active;
 
-    bool DrawArrays_check(GLint first, GLsizei count, GLsizei primcount,
-                          const char* info);
-    bool DrawElements_check(GLsizei count, GLenum type, WebGLintptr byteOffset,
-                            GLsizei primcount, const char* info,
-                            GLuint* out_upperBound);
+    bool DrawArrays_check(const char* funcName, GLenum mode, GLint first,
+                          GLsizei vertCount, GLsizei instanceCount);
+    bool DrawElements_check(const char* funcName, GLenum mode, GLsizei vertCount,
+                            GLenum type, WebGLintptr byteOffset,
+                            GLsizei instanceCount);
     bool DrawInstanced_check(const char* info);
     void Draw_cleanup(const char* funcName);
 
@@ -1253,7 +1263,6 @@ protected:
     bool ValidateBlendFuncSrcEnum(GLenum mode, const char* info);
     bool ValidateBlendFuncEnumsCompatibility(GLenum sfactor, GLenum dfactor,
                                              const char* info);
-    bool ValidateDataOffsetSize(WebGLintptr offset, WebGLsizeiptr size, WebGLsizeiptr bufferSize, const char* info);
     bool ValidateDataRanges(WebGLintptr readOffset, WebGLintptr writeOffset, WebGLsizeiptr size, const char* info);
     bool ValidateTextureTargetEnum(GLenum target, const char* info);
     bool ValidateComparisonEnum(GLenum target, const char* info);
@@ -1325,6 +1334,23 @@ protected:
                IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers);
     }
 
+    WebGLRefPtr<WebGLBuffer>* ValidateBufferSlot(const char* funcName, GLenum target);
+    WebGLBuffer* ValidateBufferSelection(const char* funcName, GLenum target);
+    IndexedBufferBinding* ValidateIndexedBufferSlot(const char* funcName, GLenum target,
+                                                    GLuint index);
+
+    bool ValidateIndexedBufferBinding(const char* funcName, GLenum target, GLuint index,
+                                      WebGLRefPtr<WebGLBuffer>** const out_genericBinding,
+                                      IndexedBufferBinding** const out_indexedBinding);
+
+    bool ValidateNonNegative(const char* funcName, const char* argName, int64_t val) {
+        if (MOZ_UNLIKELY(val < 0)) {
+            ErrorInvalidValue("%s: `%s` must be non-negative.", funcName, argName);
+            return false;
+        }
+        return true;
+    }
+
     void Invalidate();
     void DestroyResourcesAndContext();
 
@@ -1370,19 +1396,8 @@ private:
     virtual WebGLVertexArray* CreateVertexArrayImpl();
 
     virtual bool ValidateAttribPointerType(bool integerMode, GLenum type, uint32_t* alignment, const char* info) = 0;
-    virtual bool ValidateBufferTarget(GLenum target, const char* info) = 0;
-    virtual bool ValidateBufferIndexedTarget(GLenum target, const char* info) = 0;
-    virtual bool ValidateBufferForTarget(GLenum target, WebGLBuffer* buffer, const char* info);
-    virtual bool ValidateBufferUsageEnum(GLenum usage, const char* info) = 0;
     virtual bool ValidateQueryTarget(GLenum usage, const char* info) = 0;
     virtual bool ValidateUniformMatrixTranspose(bool transpose, const char* info) = 0;
-
-protected:
-    /** Like glBufferData, but if the call may change the buffer size, checks
-     *  any GL error generated by this glBufferData call and returns it.
-     */
-    GLenum CheckedBufferData(GLenum target, GLsizeiptr size, const GLvoid* data,
-                             GLenum usage);
 
 public:
     void ForceLoseContext(bool simulateLoss = false);
@@ -1834,6 +1849,16 @@ ZeroTextureData(WebGLContext* webgl, const char* funcName, GLuint tex,
                 TexImageTarget target, uint32_t level,
                 const webgl::FormatUsageInfo* usage, uint32_t xOffset, uint32_t yOffset,
                 uint32_t zOffset, uint32_t width, uint32_t height, uint32_t depth);
+
+////
+
+void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& callback,
+                            const std::vector<IndexedBufferBinding>& field,
+                            const char* name, uint32_t flags = 0);
+
+void
+ImplCycleCollectionUnlink(std::vector<IndexedBufferBinding>& field);
 
 } // namespace mozilla
 
