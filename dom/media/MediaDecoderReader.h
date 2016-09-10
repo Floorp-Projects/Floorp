@@ -13,6 +13,7 @@
 #include "AbstractMediaDecoder.h"
 #include "MediaInfo.h"
 #include "MediaData.h"
+#include "MediaResult.h"
 #include "MediaMetadataManager.h"
 #include "MediaQueue.h"
 #include "MediaTimer.h"
@@ -68,19 +69,12 @@ class MediaDecoderReader {
   static const bool IsExclusive = true;
 
 public:
-  enum NotDecodedReason {
-    END_OF_STREAM,
-    DECODE_ERROR,
-    WAITING_FOR_DATA,
-    CANCELED
-  };
-
   using TrackSet = EnumSet<TrackInfo::TrackType>;
 
   using MetadataPromise =
     MozPromise<RefPtr<MetadataHolder>, ReadMetadataFailureReason, IsExclusive>;
   using MediaDataPromise =
-    MozPromise<RefPtr<MediaData>, NotDecodedReason, IsExclusive>;
+    MozPromise<RefPtr<MediaData>, MediaResult, IsExclusive>;
   using SeekPromise = MozPromise<media::TimeUnit, nsresult, IsExclusive>;
 
   // Note that, conceptually, WaitForData makes sense in a non-exclusive sense.

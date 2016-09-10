@@ -50,7 +50,7 @@ private:
 
   void OnVideoDecoded(MediaData* aVideoSample);
 
-  void OnNotDecoded(MediaData::Type, MediaDecoderReader::NotDecodedReason);
+  void OnNotDecoded(MediaData::Type, const MediaResult&);
 
   void SetCallbacks();
 

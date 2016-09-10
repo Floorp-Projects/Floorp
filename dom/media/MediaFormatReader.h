@@ -355,7 +355,7 @@ private:
     virtual bool HasPromise() const = 0;
     virtual RefPtr<MediaDataPromise> EnsurePromise(const char* aMethodName) = 0;
     virtual void ResolvePromise(MediaData* aData, const char* aMethodName) = 0;
-    virtual void RejectPromise(MediaDecoderReader::NotDecodedReason aReason,
+    virtual void RejectPromise(const MediaResult& aError,
                                const char* aMethodName) = 0;
 
     // Clear track demuxer related data.
@@ -463,11 +463,11 @@ private:
       mHasPromise = false;
     }
 
-    void RejectPromise(MediaDecoderReader::NotDecodedReason aReason,
+    void RejectPromise(const MediaResult& aError,
                        const char* aMethodName) override
     {
       MOZ_ASSERT(mOwner->OnTaskQueue());
-      mPromise.Reject(aReason, aMethodName);
+      mPromise.Reject(aError, aMethodName);
       mHasPromise = false;
     }
 
