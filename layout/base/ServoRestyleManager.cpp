@@ -104,7 +104,7 @@ ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
       } else {
         const nsStyleDisplay* currentDisplay =
           Servo_GetStyleDisplay(computedValues);
-        if (currentDisplay->mDisplay != StyleDisplay::None_) {
+        if (currentDisplay->mDisplay != StyleDisplay::None) {
           changeHint |= nsChangeHint_ReconstructFrame;
         }
       }

@@ -6,7 +6,7 @@ var Cu = Components.utils;
 var Ci = Components.interfaces;
 
 const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-const { GetDevices, GetDeviceString } = require("devtools/client/shared/devices");
+const { getDevices, getDeviceString } = require("devtools/client/shared/devices");
 const { Simulators, Simulator } = require("devtools/client/webide/modules/simulators");
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
@@ -80,14 +80,14 @@ var SimulatorEditor = {
     form.device.innerHTML = "";
     form.device.classList.remove("custom");
     opt(form.device, "custom", Strings.GetStringFromName("simulator_custom_device"));
-    promises.push(GetDevices().then(devices => {
+    promises.push(getDevices().then(devices => {
       devices.TYPES.forEach(type => {
         let b2gDevices = devices[type].filter(d => d.firefoxOS);
         if (b2gDevices.length < 1) {
           return;
         }
         let optgroup = document.createElement("optgroup");
-        optgroup.label = GetDeviceString(type);
+        optgroup.label = getDeviceString(type);
         b2gDevices.forEach(device => {
           this._devices[device.name] = device;
           opt(optgroup, device.name, device.name);

@@ -41,6 +41,7 @@ NS_IMPL_ISUPPORTS(InterceptedChannelBase, nsIInterceptedChannel)
 InterceptedChannelBase::InterceptedChannelBase(nsINetworkInterceptController* aController)
 : mController(aController)
 , mReportCollector(new ConsoleReportCollector())
+, mClosed(false)
 {
 }
 
@@ -183,7 +184,7 @@ InterceptedChannelChrome::GetChannel(nsIChannel** aChannel)
 NS_IMETHODIMP
 InterceptedChannelChrome::ResetInterception()
 {
-  if (!mChannel) {
+  if (mClosed) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -202,6 +203,8 @@ InterceptedChannelChrome::ResetInterception()
 
   mResponseBody->Close();
   mResponseBody = nullptr;
+  mClosed = true;
+
   return NS_OK;
 }
 
@@ -228,7 +231,7 @@ InterceptedChannelChrome::SynthesizeHeader(const nsACString& aName, const nsACSt
 NS_IMETHODIMP
 InterceptedChannelChrome::FinishSynthesizedResponse(const nsACString& aFinalURLSpec)
 {
-  if (!mChannel) {
+  if (mClosed) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -299,6 +302,9 @@ InterceptedChannelChrome::FinishSynthesizedResponse(const nsACString& aFinalURLS
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
+
+  mClosed = true;
+
   return NS_OK;
 }
 
@@ -307,7 +313,7 @@ InterceptedChannelChrome::Cancel(nsresult aStatus)
 {
   MOZ_ASSERT(NS_FAILED(aStatus));
 
-  if (!mChannel) {
+  if (mClosed) {
     return NS_ERROR_FAILURE;
   }
 
@@ -317,13 +323,16 @@ InterceptedChannelChrome::Cancel(nsresult aStatus)
   // to cancel which will provide OnStart/OnStopRequest to the channel.
   nsresult rv = mChannel->AsyncAbort(aStatus);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  mClosed = true;
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 InterceptedChannelChrome::SetChannelInfo(dom::ChannelInfo* aChannelInfo)
 {
-  if (!mChannel) {
+  if (mClosed) {
     return NS_ERROR_FAILURE;
   }
 
@@ -380,7 +389,7 @@ InterceptedChannelContent::GetChannel(nsIChannel** aChannel)
 NS_IMETHODIMP
 InterceptedChannelContent::ResetInterception()
 {
-  if (!mChannel) {
+  if (mClosed) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -391,6 +400,9 @@ InterceptedChannelContent::ResetInterception()
   mSynthesizedInput = nullptr;
 
   mChannel->ResetInterception();
+
+  mClosed = true;
+
   return NS_OK;
 }
 
@@ -417,7 +429,7 @@ InterceptedChannelContent::SynthesizeHeader(const nsACString& aName, const nsACS
 NS_IMETHODIMP
 InterceptedChannelContent::FinishSynthesizedResponse(const nsACString& aFinalURLSpec)
 {
-  if (NS_WARN_IF(!mChannel)) {
+  if (NS_WARN_IF(mClosed)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -458,6 +470,8 @@ InterceptedChannelContent::FinishSynthesizedResponse(const nsACString& aFinalURL
 
   mResponseBody = nullptr;
   mStreamListener = nullptr;
+  mClosed = true;
+
   return NS_OK;
 }
 
@@ -466,7 +480,7 @@ InterceptedChannelContent::Cancel(nsresult aStatus)
 {
   MOZ_ASSERT(NS_FAILED(aStatus));
 
-  if (!mChannel) {
+  if (mClosed) {
     return NS_ERROR_FAILURE;
   }
 
@@ -477,13 +491,15 @@ InterceptedChannelContent::Cancel(nsresult aStatus)
   nsresult rv = mChannel->AsyncAbort(aStatus);
   NS_ENSURE_SUCCESS(rv, rv);
   mStreamListener = nullptr;
+  mClosed = true;
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 InterceptedChannelContent::SetChannelInfo(dom::ChannelInfo* aChannelInfo)
 {
-  if (!mChannel) {
+  if (mClosed) {
     return NS_ERROR_FAILURE;
   }
 

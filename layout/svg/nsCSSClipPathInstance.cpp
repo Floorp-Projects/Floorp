@@ -24,7 +24,7 @@ nsCSSClipPathInstance::ApplyBasicShapeClip(gfxContext& aContext,
 {
   auto& clipPathStyle = aFrame->StyleSVGReset()->mClipPath;
   StyleShapeSourceType type = clipPathStyle.GetType();
-  MOZ_ASSERT(type != StyleShapeSourceType::None_, "unexpected none value");
+  MOZ_ASSERT(type != StyleShapeSourceType::None, "unexpected none value");
   // In the future nsCSSClipPathInstance may handle <clipPath> references as
   // well. For the time being return early.
   if (type == StyleShapeSourceType::URL) {
@@ -45,7 +45,7 @@ nsCSSClipPathInstance::HitTestBasicShapeClip(nsIFrame* aFrame,
 {
   auto& clipPathStyle = aFrame->StyleSVGReset()->mClipPath;
   StyleShapeSourceType type = clipPathStyle.GetType();
-  MOZ_ASSERT(type != StyleShapeSourceType::None_, "unexpected none value");
+  MOZ_ASSERT(type != StyleShapeSourceType::None, "unexpected none value");
   // In the future nsCSSClipPathInstance may handle <clipPath> references as
   // well. For the time being return early.
   if (type == StyleShapeSourceType::URL) {

@@ -279,6 +279,8 @@ PluginPRLibrary::IsRemoteDrawingCoreAnimation(NPP instance, bool *aDrawing)
   *aDrawing = false; 
   return NS_OK;
 }
+#endif
+#if defined(XP_MACOSX) || defined(XP_WIN)
 nsresult
 PluginPRLibrary::ContentsScaleFactorChanged(NPP instance, double aContentsScaleFactor)
 {

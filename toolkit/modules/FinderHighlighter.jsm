@@ -88,6 +88,7 @@ const kModalOutlineAnim = {
   ],
   duration: 50,
 };
+const kNSHTML = "http://www.w3.org/1999/xhtml";
 
 function mockAnonymousContentNode(domNode) {
   return {
@@ -901,14 +902,14 @@ FinderHighlighter.prototype = {
 
     // The outline needs to be sitting inside a container, otherwise the anonymous
     // content API won't find it by its ID later...
-    let container = document.createElement("div");
+    let container = document.createElementNS(kNSHTML, "div");
 
     // Create the main (yellow) highlight outline box.
-    let outlineBox = document.createElement("div");
+    let outlineBox = document.createElementNS(kNSHTML, "div");
     outlineBox.setAttribute("id", kModalOutlineId);
     outlineBox.setAttribute("style", this._getStyleString(kModalStyles.outlineNode,
       kDebug ? kModalStyles.outlineNodeDebug : []));
-    let outlineBoxText = document.createElement("span");
+    let outlineBoxText = document.createElementNS(kNSHTML, "span");
     let attrValue = kModalOutlineId + "-text";
     outlineBoxText.setAttribute("id", attrValue);
     outlineBoxText.setAttribute("style", this._getStyleString(kModalStyles.outlineText));
@@ -916,7 +917,7 @@ FinderHighlighter.prototype = {
 
     container.appendChild(outlineBox);
     dict.modalHighlightOutline = kDebug ?
-      mockAnonymousContentNode(document.body.appendChild(container.firstChild)) :
+      mockAnonymousContentNode((document.body || document.documentElement).appendChild(container.firstChild)) :
       document.insertAnonymousContent(container);
 
     // Make sure to at least show the dimmed background.
@@ -937,7 +938,7 @@ FinderHighlighter.prototype = {
     let document = window.document;
 
     const kMaskId = kModalIdPrefix + "-findbar-modalHighlight-outlineMask";
-    let maskNode = document.createElement("div");
+    let maskNode = document.createElementNS(kNSHTML, "div");
 
     // Make sure the dimmed mask node takes the full width and height that's available.
     let {width, height} = dict.lastWindowDimensions = this._getWindowDimensions(window);
@@ -960,7 +961,7 @@ FinderHighlighter.prototype = {
         if (dict.updateAllRanges)
           rects = this._updateRangeRects(range);
         for (let rect of rects) {
-          maskContent.push(`<div style="${rectStyle}; top: ${rect.y}px;
+          maskContent.push(`<div xmlns="${kNSHTML}" style="${rectStyle}; top: ${rect.y}px;
             left: ${rect.x}px; height: ${rect.height}px; width: ${rect.width}px;"></div>`);
         }
       }
@@ -973,7 +974,7 @@ FinderHighlighter.prototype = {
     this._removeHighlightAllMask(window);
 
     dict.modalHighlightAllMask = kDebug ?
-      mockAnonymousContentNode(document.body.appendChild(maskNode)) :
+      mockAnonymousContentNode((document.body || document.documentElement).appendChild(maskNode)) :
       document.insertAnonymousContent(maskNode);
   },
 

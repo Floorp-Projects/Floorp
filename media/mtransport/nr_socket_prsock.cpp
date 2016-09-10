@@ -1331,6 +1331,7 @@ int NrUdpSocketIpc::create(nr_transport_addr *addr) {
   mon.Wait();
 
   if (err_) {
+    close();
     ABORT(R_INTERNAL);
   }
 

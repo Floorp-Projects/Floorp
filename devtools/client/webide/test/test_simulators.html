@@ -21,7 +21,7 @@
         const asyncStorage = require("devtools/shared/async-storage");
         const EventEmitter = require("devtools/shared/event-emitter");
         const { GetAvailableAddons } = require("devtools/client/webide/modules/addons");
-        const { GetDevices } = require("devtools/client/shared/devices");
+        const { getDevices } = require("devtools/client/shared/devices");
         const { Simulator, Simulators } = require("devtools/client/webide/modules/simulators");
         const { AddonSimulatorProcess,
                 OldAddonSimulatorProcess,
@@ -315,7 +315,7 @@
             is(form[param].value, String(defaults.phone[param]), "Default phone value for device " + param);
           }
 
-          let devices = yield GetDevices();
+          let devices = yield getDevices();
           devices = devices[devices.TYPES[0]];
           let device = devices[devices.length - 1];
 

@@ -10,7 +10,9 @@ const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 613280";
 function test() {
   loadTab(TEST_URI).then(() => {
     openConsole().then((HUD) => {
-      content.console.log("foobarBazBug613280");
+      ContentTask.spawn(gBrowser.selectedBrowser, null, function*(){
+        content.console.log("foobarBazBug613280");
+      });
       waitForMessages({
         webconsole: HUD,
         messages: [{
@@ -26,8 +28,6 @@ function test() {
 function performTest(HUD, [result]) {
   let msg = [...result.matched][0];
   let input = HUD.jsterm.inputNode;
-  let selection = getSelection();
-  let contentSelection = content.getSelection();
 
   let clipboardSetup = function () {
     goDoCommand("cmd_copy");
@@ -36,24 +36,6 @@ function performTest(HUD, [result]) {
   let clipboardCopyDone = function () {
     finishTest();
   };
-
-  // Check if we first need to clear any existing selections.
-  if (selection.rangeCount > 0 || contentSelection.rangeCount > 0 ||
-      input.selectionStart != input.selectionEnd) {
-    if (input.selectionStart != input.selectionEnd) {
-      input.selectionStart = input.selectionEnd = 0;
-    }
-
-    if (selection.rangeCount > 0) {
-      selection.removeAllRanges();
-    }
-
-    if (contentSelection.rangeCount > 0) {
-      contentSelection.removeAllRanges();
-    }
-
-    goUpdateCommand("cmd_copy");
-  }
 
   let controller = top.document.commandDispatcher
                                .getControllerForCommand("cmd_copy");

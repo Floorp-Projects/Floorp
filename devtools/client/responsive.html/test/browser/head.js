@@ -205,18 +205,25 @@ function openDeviceModal(ui) {
     "The device modal is displayed.");
 }
 
-function switchDevice(ui, device) {
-  let { document } = ui.toolWindow;
-  let select = document.querySelector(".viewport-device-selector");
-  select.scrollIntoView();
-  let deviceOption = [...select.options].filter(o => {
-    return o.value === device;
-  })[0];
-  EventUtils.synthesizeMouseAtCenter(select, {type: "mousedown"},
-    ui.toolWindow);
-  EventUtils.synthesizeMouseAtCenter(deviceOption, {type: "mouseup"},
-    ui.toolWindow);
-  is(select.selectedOptions[0], deviceOption, "Device should be selected");
+function switchDevice({ toolWindow }, name) {
+  return new Promise(resolve => {
+    let select = toolWindow.document.querySelector(".viewport-device-selector");
+
+    let event = new toolWindow.UIEvent("change", {
+      view: toolWindow,
+      bubbles: true,
+      cancelable: true
+    });
+
+    select.addEventListener("change", function onChange() {
+      is(select.value, name, "Device should be selected");
+      select.removeEventListener("change", onChange);
+      resolve();
+    });
+
+    select.value = name;
+    select.dispatchEvent(event);
+  });
 }
 
 function getSessionHistory(browser) {
