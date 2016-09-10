@@ -85,12 +85,19 @@ WebSocketChannelParent::RecvAsyncOpen(const OptionalURIParams& aURI,
     goto fail;
   }
 
-  rv = loadInfo->GetOriginAttributes(&attrs);
-  if (NS_FAILED(rv)) {
-    goto fail;
-  }
+  if (loadInfo) {
+    rv = loadInfo->GetOriginAttributes(&attrs);
+    if (NS_FAILED(rv)) {
+      goto fail;
+    }
 
-  appId = attrs.mAppId;
+    appId = attrs.mAppId;
+  } else {
+    // If the WebSocket is a server-side socket, then
+    // loadInfo will be null (since it's an incoming connection).
+    // AppID is irrelevant in these circumstances.
+    appId = NECKO_UNKNOWN_APP_ID;
+  }
   if (appId != NECKO_UNKNOWN_APP_ID &&
       appId != NECKO_NO_APP_ID) {
     gIOService->IsAppOffline(appId, &appOffline);

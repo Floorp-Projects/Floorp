@@ -86,8 +86,9 @@ bool OpusParser::DecodeHeader(unsigned char* aData, size_t aLength)
       mCoupledStreams = mChannels - 1;
       mMappingTable[0] = 0;
       mMappingTable[1] = 1;
-    } else if (mChannelMapping == 1) {
-      // Currently only up to 8 channels are defined for mapping family 1
+    } else if (mChannelMapping == 1 || mChannelMapping == 255) {
+      // Currently only up to 8 channels are defined for mapping family 1 and we
+      // only supports only up to 8 channels for mapping family 255.
       if (mChannels>8) {
         OPUS_LOG(LogLevel::Debug, ("Invalid Opus file: too many channels (%d) for"
                            " mapping family 1.", mChannels));

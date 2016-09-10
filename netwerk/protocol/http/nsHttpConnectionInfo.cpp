@@ -66,7 +66,6 @@ nsHttpConnectionInfo::nsHttpConnectionInfo(const nsACString &originHost,
                                            const NeckoOriginAttributes &originAttributes,
                                            const nsACString &routedHost,
                                            int32_t routedPort)
-
 {
     mEndToEndSSL = true; // so DefaultPort() works
     mRoutedPort = routedPort == -1 ? DefaultPort() : routedPort;

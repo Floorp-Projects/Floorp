@@ -1208,11 +1208,19 @@ RemoveFile::Execute()
     return OK;
   }
 
-  // Rename the old file. It will be removed in Finish.
-  rv = backup_create(mFile.get());
-  if (rv) {
-    LOG(("backup_create failed: %d", rv));
-    return rv;
+  if (sStagedUpdate) {
+    // Staged updates don't need backup files so just remove it.
+    rv = ensure_remove(mFile.get());
+    if (rv) {
+      return rv;
+    }
+  } else {
+    // Rename the old file. It will be removed in Finish.
+    rv = backup_create(mFile.get());
+    if (rv) {
+      LOG(("backup_create failed: %d", rv));
+      return rv;
+    }
   }
 
   return OK;
@@ -1221,12 +1229,16 @@ RemoveFile::Execute()
 void
 RemoveFile::Finish(int status)
 {
-  if (mSkip)
+  if (mSkip) {
     return;
+  }
 
   LOG(("FINISH REMOVEFILE " LOG_S, mRelPath.get()));
 
-  backup_finish(mFile.get(), mRelPath.get(), status);
+  // Staged updates don't create backup files.
+  if (!sStagedUpdate) {
+    backup_finish(mFile.get(), mRelPath.get(), status);
+  }
 }
 
 class RemoveDir : public Action
@@ -1401,9 +1413,15 @@ AddFile::Execute()
   // First make sure that we can actually get rid of any existing file.
   rv = NS_taccess(mFile.get(), F_OK);
   if (rv == 0) {
-    rv = backup_create(mFile.get());
-    if (rv)
+    if (sStagedUpdate) {
+      // Staged updates don't need backup files so just remove it.
+      rv = ensure_remove(mFile.get());
+    } else {
+      rv = backup_create(mFile.get());
+    }
+    if (rv) {
       return rv;
+    }
   } else {
     rv = ensure_parent_dir(mFile.get());
     if (rv)
@@ -1432,11 +1450,15 @@ void
 AddFile::Finish(int status)
 {
   LOG(("FINISH ADD " LOG_S, mRelPath.get()));
-  // When there is an update failure and a file has been added it is removed
-  // here since there might not be a backup to replace it.
-  if (status && mAdded)
-    NS_tremove(mFile.get());
-  backup_finish(mFile.get(), mRelPath.get(), status);
+  // Staged updates don't create backup files.
+  if (!sStagedUpdate) {
+    // When there is an update failure and a file has been added it is removed
+    // here since there might not be a backup to replace it.
+    if (status && mAdded) {
+      NS_tremove(mFile.get());
+    }
+    backup_finish(mFile.get(), mRelPath.get(), status);
+  }
 }
 
 class PatchFile : public Action
@@ -1662,9 +1684,12 @@ PatchFile::Execute()
     return READ_ERROR;
   }
 
-  rv = backup_create(mFile.get());
-  if (rv) {
-    return rv;
+  // Staged updates don't need backup files.
+  if (!sStagedUpdate) {
+    rv = backup_create(mFile.get());
+    if (rv) {
+      return rv;
+    }
   }
 
 #if defined(HAVE_POSIX_FALLOCATE)
@@ -1753,7 +1778,10 @@ PatchFile::Finish(int status)
 {
   LOG(("FINISH PATCH " LOG_S, mFileRelPath.get()));
 
-  backup_finish(mFile.get(), mFileRelPath.get(), status);
+  // Staged updates don't create backup files.
+  if (!sStagedUpdate) {
+    backup_finish(mFile.get(), mFileRelPath.get(), status);
+  }
 }
 
 class AddIfFile : public AddFile

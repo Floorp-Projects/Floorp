@@ -496,21 +496,19 @@ function handleRequest(req, res) {
   else if (u.pathname === "/altsvc1") {
     if (req.httpVersionMajor != 2 ||
       req.scheme != "http" ||
-      req.headers['alt-used'] != ("localhost:" + serverPort)) {
-      res.setHeader('Connection', 'close');
+      req.headers['alt-used'] != ("foo.example.com:" + serverPort)) {
       res.writeHead(400);
       res.end("WHAT?");
       return;
    }
    // test the alt svc frame for use with altsvc2
-   res.altsvc("localhost", serverPort, "h2", 3600, req.headers['x-redirect-origin']);
+   res.altsvc("foo.example.com", serverPort, "h2", 3600, req.headers['x-redirect-origin']);
   }
 
   else if (u.pathname === "/altsvc2") {
     if (req.httpVersionMajor != 2 ||
       req.scheme != "http" ||
-      req.headers['alt-used'] != ("localhost:" + serverPort)) {
-      res.setHeader('Connection', 'close');
+      req.headers['alt-used'] != ("foo.example.com:" + serverPort)) {
       res.writeHead(400);
       res.end("WHAT?");
       return;
@@ -521,6 +519,14 @@ function handleRequest(req, res) {
   else if (u.pathname === "/altsvc-test") {
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Alt-Svc', 'h2=' + req.headers['x-altsvc']);
+  }
+
+  else if (u.pathname === "/.well-known/http-opportunistic") {
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Content-Type', 'application/json');
+    res.writeHead(200, "OK");
+    res.end('{"http://' + req.headers['host'] + '": { "tls-ports": [' + serverPort + '] }}');
+    return;
   }
 
   // for PushService tests.

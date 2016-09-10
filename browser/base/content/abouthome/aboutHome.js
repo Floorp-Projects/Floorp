@@ -218,6 +218,11 @@ var gContentSearchController;
 
 function setupSearch()
 {
+  // Set submit button label for when CSS background are disabled (e.g.
+  // high contrast mode).
+  document.getElementById("searchSubmit").value =
+    document.body.getAttribute("dir") == "ltr" ? "\u25B6" : "\u25C0";
+
   // The "autofocus" attribute doesn't focus the form element
   // immediately when the element is first drawn, so the
   // attribute is also used for styling when the page first loads.

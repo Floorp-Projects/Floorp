@@ -43,9 +43,10 @@ namespace js {
 class AutoLockGC;
 class FreeOp;
 
-#ifdef DEBUG
 extern bool
 RuntimeFromMainThreadIsHeapMajorCollecting(JS::shadow::Zone* shadowZone);
+
+#ifdef DEBUG
 
 // Barriers can't be triggered during backend Ion compilation, which may run on
 // a helper thread.
@@ -1281,21 +1282,29 @@ TenuredCell::readBarrier(TenuredCell* thing)
 {
     MOZ_ASSERT(!CurrentThreadIsIonCompiling());
     MOZ_ASSERT(!isNullLike(thing));
-    if (thing->shadowRuntimeFromAnyThread()->isHeapCollecting())
-        return;
+
+    // It would be good if barriers were never triggered during collection, but
+    // at the moment this can happen e.g. when rekeying tables containing
+    // read-barriered GC things after a moving GC.
+    //
+    // TODO: Fix this and assert we're not collecting if we're on the main
+    // thread.
 
     JS::shadow::Zone* shadowZone = thing->shadowZoneFromAnyThread();
-    MOZ_ASSERT_IF(!CurrentThreadCanAccessRuntime(thing->runtimeFromAnyThread()),
-                  !shadowZone->needsIncrementalBarrier());
-
     if (shadowZone->needsIncrementalBarrier()) {
+        // Barriers are only enabled on the main thread and are disabled while collecting.
         MOZ_ASSERT(!RuntimeFromMainThreadIsHeapMajorCollecting(shadowZone));
         Cell* tmp = thing;
         TraceManuallyBarrieredGenericPointerEdge(shadowZone->barrierTracer(), &tmp, "read barrier");
         MOZ_ASSERT(tmp == thing);
     }
-    if (thing->isMarked(GRAY))
-        UnmarkGrayCellRecursively(thing, thing->getTraceKind());
+
+    if (thing->isMarked(GRAY)) {
+        // There shouldn't be anything marked grey unless we're on the main thread.
+        MOZ_ASSERT(CurrentThreadCanAccessRuntime(thing->runtimeFromAnyThread()));
+        if (!RuntimeFromMainThreadIsHeapMajorCollecting(shadowZone))
+            UnmarkGrayCellRecursively(thing, thing->getTraceKind());
+    }
 }
 
 void

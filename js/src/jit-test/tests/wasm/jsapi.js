@@ -1,9 +1,11 @@
 load(libdir + 'wasm.js');
 load(libdir + 'asserts.js');
 
+const WasmPage = 64 * 1024;
+
 const emptyModule = textToBinary('(module)');
 
-// 'WebAssembly' property on global object
+// 'WebAssembly' data property on global object
 const wasmDesc = Object.getOwnPropertyDescriptor(this, 'WebAssembly');
 assertEq(typeof wasmDesc.value, "object");
 assertEq(wasmDesc.writable, true);
@@ -14,7 +16,7 @@ assertEq(wasmDesc.configurable, true);
 assertEq(WebAssembly, wasmDesc.value);
 assertEq(String(WebAssembly), "[object WebAssembly]");
 
-// 'WebAssembly.Module' property
+// 'WebAssembly.Module' data property
 const moduleDesc = Object.getOwnPropertyDescriptor(WebAssembly, 'Module');
 assertEq(typeof moduleDesc.value, "function");
 assertEq(moduleDesc.writable, true);
@@ -36,7 +38,7 @@ assertErrorMessage(() => new Module(new ArrayBuffer()), /* TODO: WebAssembly.Com
 assertEq(new Module(emptyModule) instanceof Module, true);
 assertEq(new Module(emptyModule.buffer) instanceof Module, true);
 
-// 'WebAssembly.Module.prototype' property
+// 'WebAssembly.Module.prototype' data property
 const moduleProtoDesc = Object.getOwnPropertyDescriptor(Module, 'prototype');
 assertEq(typeof moduleProtoDesc.value, "object");
 assertEq(moduleProtoDesc.writable, false);
@@ -55,7 +57,7 @@ assertEq(typeof m1, "object");
 assertEq(String(m1), "[object WebAssembly.Module]");
 assertEq(Object.getPrototypeOf(m1), moduleProto);
 
-// 'WebAssembly.Instance' property
+// 'WebAssembly.Instance' data property
 const instanceDesc = Object.getOwnPropertyDescriptor(WebAssembly, 'Instance');
 assertEq(typeof instanceDesc.value, "function");
 assertEq(instanceDesc.writable, true);
@@ -74,7 +76,7 @@ assertErrorMessage(() => new Instance(m1, null), TypeError, "second argument, if
 assertEq(new Instance(m1) instanceof Instance, true);
 assertEq(new Instance(m1, {}) instanceof Instance, true);
 
-// 'WebAssembly.Instance.prototype' property
+// 'WebAssembly.Instance.prototype' data property
 const instanceProtoDesc = Object.getOwnPropertyDescriptor(Instance, 'prototype');
 assertEq(typeof instanceProtoDesc.value, "object");
 assertEq(instanceProtoDesc.writable, false);
@@ -93,16 +95,14 @@ assertEq(typeof i1, "object");
 assertEq(String(i1), "[object WebAssembly.Instance]");
 assertEq(Object.getPrototypeOf(i1), instanceProto);
 
-// 'WebAssembly.Instance' 'exports' property
+// 'WebAssembly.Instance' 'exports' data property
 const exportsDesc = Object.getOwnPropertyDescriptor(i1, 'exports');
 assertEq(typeof exportsDesc.value, "object");
 assertEq(exportsDesc.writable, true);
 assertEq(exportsDesc.enumerable, true);
 assertEq(exportsDesc.configurable, true);
 
-// TODO: test export object objects are ES6 module namespace objects.
-
-// 'WebAssembly.Memory' property
+// 'WebAssembly.Memory' data property
 const memoryDesc = Object.getOwnPropertyDescriptor(WebAssembly, 'Memory');
 assertEq(typeof memoryDesc.value, "function");
 assertEq(memoryDesc.writable, true);
@@ -123,9 +123,9 @@ assertErrorMessage(() => new Memory({initial:1, maximum: Math.pow(2,32)/Math.pow
 assertErrorMessage(() => new Memory({initial:2, maximum: 1 }), TypeError, /bad Memory maximum size/);
 assertErrorMessage(() => new Memory({maximum: -1 }), TypeError, /bad Memory maximum size/);
 assertEq(new Memory({initial:1}) instanceof Memory, true);
-assertEq(new Memory({initial:1.5}).buffer.byteLength, 64*1024);
+assertEq(new Memory({initial:1.5}).buffer.byteLength, WasmPage);
 
-// 'WebAssembly.Memory.prototype' property
+// 'WebAssembly.Memory.prototype' data property
 const memoryProtoDesc = Object.getOwnPropertyDescriptor(Memory, 'prototype');
 assertEq(typeof memoryProtoDesc.value, "object");
 assertEq(memoryProtoDesc.writable, false);
@@ -156,9 +156,38 @@ const bufferGetter = bufferDesc.get;
 assertErrorMessage(() => bufferGetter.call(), TypeError, /called on incompatible undefined/);
 assertErrorMessage(() => bufferGetter.call({}), TypeError, /called on incompatible Object/);
 assertEq(bufferGetter.call(mem1) instanceof ArrayBuffer, true);
-assertEq(bufferGetter.call(mem1).byteLength, 64 * 1024);
+assertEq(bufferGetter.call(mem1).byteLength, WasmPage);
 
-// 'WebAssembly.Table' property
+// 'WebAssembly.Memory.prototype.grow' data property
+const growDesc = Object.getOwnPropertyDescriptor(memoryProto, 'grow');
+assertEq(typeof growDesc.value, "function");
+assertEq(growDesc.enumerable, false);
+assertEq(growDesc.configurable, true);
+
+// 'WebAssembly.Memory.prototype.grow' method
+const grow = growDesc.value;
+assertEq(grow.length, 1);
+assertErrorMessage(() => grow.call(), TypeError, /called on incompatible undefined/);
+assertErrorMessage(() => grow.call({}), TypeError, /called on incompatible Object/);
+assertErrorMessage(() => grow.call(mem1, -1), Error, /failed to grow memory/);
+assertErrorMessage(() => grow.call(mem1, Math.pow(2,32)), Error, /failed to grow memory/);
+var mem = new Memory({initial:1, maximum:2});
+var buf = mem.buffer;
+assertEq(buf.byteLength, WasmPage);
+assertEq(mem.grow(0), 1);
+assertEq(buf !== mem.buffer, true);
+assertEq(buf.byteLength, 0);
+buf = mem.buffer;
+assertEq(buf.byteLength, WasmPage);
+assertEq(mem.grow(1), 1);
+assertEq(buf !== mem.buffer, true);
+assertEq(buf.byteLength, 0);
+buf = mem.buffer;
+assertEq(buf.byteLength, 2 * WasmPage);
+assertErrorMessage(() => mem.grow(1), Error, /failed to grow memory/);
+assertEq(buf, mem.buffer);
+
+// 'WebAssembly.Table' data property
 const tableDesc = Object.getOwnPropertyDescriptor(WebAssembly, 'Table');
 assertEq(typeof tableDesc.value, "function");
 assertEq(tableDesc.writable, true);
@@ -181,7 +210,7 @@ assertErrorMessage(() => new Table({initial:Math.pow(2,32), element:"anyfunc"}),
 assertEq(new Table({initial:1, element:"anyfunc"}) instanceof Table, true);
 assertEq(new Table({initial:1.5, element:"anyfunc"}) instanceof Table, true);
 
-// 'WebAssembly.Table.prototype' property
+// 'WebAssembly.Table.prototype' data property
 const tableProtoDesc = Object.getOwnPropertyDescriptor(Table, 'prototype');
 assertEq(typeof tableProtoDesc.value, "object");
 assertEq(tableProtoDesc.writable, false);
@@ -200,7 +229,7 @@ assertEq(typeof tbl1, "object");
 assertEq(String(tbl1), "[object WebAssembly.Table]");
 assertEq(Object.getPrototypeOf(tbl1), tableProto);
 
-// 'WebAssembly.Table.prototype.length' accessor property
+// 'WebAssembly.Table.prototype.length' accessor data property
 const lengthDesc = Object.getOwnPropertyDescriptor(tableProto, 'length');
 assertEq(typeof lengthDesc.get, "function");
 assertEq(lengthDesc.set, undefined);
@@ -215,7 +244,7 @@ assertErrorMessage(() => lengthGetter.call({}), TypeError, /called on incompatib
 assertEq(typeof lengthGetter.call(tbl1), "number");
 assertEq(lengthGetter.call(tbl1), 2);
 
-// 'WebAssembly.Table.prototype.get' property
+// 'WebAssembly.Table.prototype.get' data property
 const getDesc = Object.getOwnPropertyDescriptor(tableProto, 'get');
 assertEq(typeof getDesc.value, "function");
 assertEq(getDesc.enumerable, false);
@@ -235,7 +264,7 @@ assertErrorMessage(() => get.call(tbl1, -1), RangeError, /out-of-range index/);
 assertErrorMessage(() => get.call(tbl1, Math.pow(2,33)), RangeError, /out-of-range index/);
 assertErrorMessage(() => get.call(tbl1, {valueOf() { throw new Error("hi") }}), Error, "hi");
 
-// 'WebAssembly.Table.prototype.set' property
+// 'WebAssembly.Table.prototype.set' data property
 const setDesc = Object.getOwnPropertyDescriptor(tableProto, 'set');
 assertEq(typeof setDesc.value, "function");
 assertEq(setDesc.enumerable, false);
@@ -258,7 +287,7 @@ assertErrorMessage(() => set.call(tbl1, {valueOf() { throw Error("hai") }}, null
 assertEq(set.call(tbl1, 0, null), undefined);
 assertEq(set.call(tbl1, 1, null), undefined);
 
-// 'WebAssembly.compile' property
+// 'WebAssembly.compile' data property
 const compileDesc = Object.getOwnPropertyDescriptor(WebAssembly, 'compile');
 assertEq(typeof compileDesc.value, "function");
 assertEq(compileDesc.writable, true);

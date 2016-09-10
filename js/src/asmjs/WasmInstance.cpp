@@ -283,13 +283,26 @@ Instance::callImport_f64(Instance* instance, int32_t funcImportIndex, int32_t ar
 /* static */ uint32_t
 Instance::growMemory_i32(Instance* instance, uint32_t delta)
 {
-    return instance->growMemory(delta);
+    MOZ_ASSERT(!instance->isAsmJS());
+
+    JSContext* cx = instance->cx();
+    RootedWasmMemoryObject memory(cx, instance->memory_);
+
+    uint32_t ret = WasmMemoryObject::grow(memory, delta, cx);
+
+    // If there has been a moving grow, this Instance should have been notified.
+    MOZ_RELEASE_ASSERT(instance->tlsData_.memoryBase ==
+                       instance->memory_->buffer().dataPointerEither());
+
+    return ret;
 }
 
 /* static */ uint32_t
 Instance::currentMemory_i32(Instance* instance)
 {
-    return instance->currentMemory();
+    uint32_t byteLength = instance->memoryLength();
+    MOZ_ASSERT(byteLength % wasm::PageSize == 0);
+    return byteLength / wasm::PageSize;
 }
 
 Instance::Instance(JSContext* cx,
@@ -479,7 +492,7 @@ Instance::memoryBase() const
 size_t
 Instance::memoryLength() const
 {
-    return memory_->buffer().wasmActualByteLength();
+    return memory_->buffer().byteLength();
 }
 
 template<typename T>
@@ -774,24 +787,6 @@ Instance::callExport(JSContext* cx, uint32_t funcDefIndex, CallArgs args)
         args.rval().set(ObjectValue(*retObj));
 
     return true;
-}
-
-uint32_t
-Instance::currentMemory()
-{
-    MOZ_RELEASE_ASSERT(memory_);
-    uint32_t byteLength = memory_->buffer().wasmActualByteLength();
-    MOZ_ASSERT(byteLength % wasm::PageSize == 0);
-    return byteLength / wasm::PageSize;
-}
-
-uint32_t
-Instance::growMemory(uint32_t delta)
-{
-    MOZ_ASSERT(!isAsmJS());
-    uint32_t ret = memory_->grow(delta);
-    MOZ_RELEASE_ASSERT(tlsData_.memoryBase == memory_->buffer().dataPointerEither());
-    return ret;
 }
 
 void

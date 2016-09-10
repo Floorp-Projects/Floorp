@@ -349,6 +349,7 @@ MSG_DEF(JSMSG_WASM_FAIL,               1, JSEXN_TYPEERR,     "wasm error: {0}")
 MSG_DEF(JSMSG_WASM_DECODE_FAIL,        2, JSEXN_TYPEERR,     "wasm validation error at offset {0}: {1}")
 MSG_DEF(JSMSG_WASM_TEXT_FAIL,          1, JSEXN_SYNTAXERR,   "wasm text error: {0}")
 MSG_DEF(JSMSG_WASM_BAD_IND_CALL,       0, JSEXN_ERR,         "bad wasm indirect call")
+MSG_DEF(JSMSG_WASM_BAD_GROW,           0, JSEXN_ERR,         "failed to grow memory")
 MSG_DEF(JSMSG_WASM_BAD_BUF_ARG,        0, JSEXN_TYPEERR,     "first argument must be an ArrayBuffer or typed array object")
 MSG_DEF(JSMSG_WASM_BAD_MOD_ARG,        0, JSEXN_TYPEERR,     "first argument must be a WebAssembly.Module")
 MSG_DEF(JSMSG_WASM_BAD_DESC_ARG,       1, JSEXN_TYPEERR,     "first argument must be a {0} descriptor")
@@ -367,7 +368,7 @@ MSG_DEF(JSMSG_WASM_INVALID_CONVERSION, 0, JSEXN_ERR,         "invalid conversion
 MSG_DEF(JSMSG_WASM_INT_DIVIDE_BY_ZERO, 0, JSEXN_ERR,         "integer divide by zero")
 MSG_DEF(JSMSG_WASM_UNALIGNED_ACCESS,   0, JSEXN_ERR,         "unaligned memory access")
 MSG_DEF(JSMSG_WASM_OVERRECURSED,       0, JSEXN_INTERNALERR, "call stack exhausted")
-MSG_DEF(JSMSG_WASM_NO_TRANSFER,        0, JSEXN_INTERNALERR, "cannot transfer buffer aliasing WebAssembly Memory")
+MSG_DEF(JSMSG_WASM_NO_TRANSFER,        0, JSEXN_INTERNALERR, "cannot transfer WebAssembly/asm.js ArrayBuffer")
 
 // Proxy
 MSG_DEF(JSMSG_BAD_TRAP_RETURN_VALUE,   2, JSEXN_TYPEERR,"trap {1} for {0} returned a primitive value")

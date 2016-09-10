@@ -147,22 +147,6 @@ nsDebugImpl::Abort(const char* aFile, int32_t aLine)
   return NS_OK;
 }
 
-#ifdef MOZ_RUST
-// From toolkit/library/rust/lib.rs
-extern "C" void intentional_panic(const char* message);
-#endif
-
-NS_IMETHODIMP
-nsDebugImpl::RustPanic(const char* aMessage)
-{
-#ifdef MOZ_RUST
-  intentional_panic(aMessage);
-  return NS_OK;
-#else
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif
-}
-
 NS_IMETHODIMP
 nsDebugImpl::GetIsDebugBuild(bool* aResult)
 {
