@@ -57,6 +57,7 @@
 #include "MediaStreamTrack.h"
 #include "VideoStreamTrack.h"
 #include "MediaStreamError.h"
+#include "MediaManager.h"
 #endif
 
 
@@ -362,7 +363,6 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
 #else
   bool ice_tcp = false;
 #endif
-  bool default_address_only = GetPrefDefaultAddressOnly();
 
   // TODO(ekr@rtfm.com): need some way to set not offerer later
   // Looks like a bug in the NrIceCtx API.
@@ -371,7 +371,6 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
                                         mParent->GetAllowIceLoopback(),
                                         ice_tcp,
                                         mParent->GetAllowIceLinkLocal(),
-                                        default_address_only,
                                         policy);
   if(!mIceCtxHdlr) {
     CSFLogError(logTag, "%s: Failed to create Ice Context", __FUNCTION__);
@@ -661,10 +660,7 @@ PeerConnectionMedia::BeginIceRestart(const std::string& ufrag,
     return;
   }
 
-  bool default_address_only = GetPrefDefaultAddressOnly();
-  RefPtr<NrIceCtx> new_ctx = mIceCtxHdlr->CreateCtx(ufrag,
-                                                    pwd,
-                                                    default_address_only);
+  RefPtr<NrIceCtx> new_ctx = mIceCtxHdlr->CreateCtx(ufrag, pwd);
 
   RUN_ON_THREAD(GetSTSThread(),
                 WrapRunnable(
@@ -782,12 +778,28 @@ PeerConnectionMedia::GetPrefDefaultAddressOnly() const
   ASSERT_ON_THREAD(mMainThread); // will crash on STS thread
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
+  uint64_t winId = mParent->GetWindow()->WindowID();
+
   bool default_address_only = Preferences::GetBool(
     "media.peerconnection.ice.default_address_only", false);
+  default_address_only |=
+    !MediaManager::Get()->IsActivelyCapturingOrHasAPermission(winId);
 #else
-  bool default_address_only = false;
+  bool default_address_only = true;
 #endif
   return default_address_only;
+}
+
+bool
+PeerConnectionMedia::GetPrefProxyOnly() const
+{
+  ASSERT_ON_THREAD(mMainThread); // will crash on STS thread
+
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+  return Preferences::GetBool("media.peerconnection.ice.proxy_only", false);
+#else
+  return false;
+#endif
 }
 
 void
@@ -886,21 +898,28 @@ PeerConnectionMedia::GatherIfReady() {
 
   nsCOMPtr<nsIRunnable> runnable(WrapRunnable(
         RefPtr<PeerConnectionMedia>(this),
-        &PeerConnectionMedia::EnsureIceGathering_s));
+        &PeerConnectionMedia::EnsureIceGathering_s,
+        GetPrefDefaultAddressOnly(),
+        GetPrefProxyOnly()));
 
   PerformOrEnqueueIceCtxOperation(runnable);
 }
 
 void
-PeerConnectionMedia::EnsureIceGathering_s() {
+PeerConnectionMedia::EnsureIceGathering_s(bool aDefaultRouteOnly,
+                                          bool aProxyOnly) {
   if (mProxyServer) {
     mIceCtxHdlr->ctx()->SetProxyServer(*mProxyServer);
+  } else if (aProxyOnly) {
+    IceGatheringStateChange_s(mIceCtxHdlr->ctx().get(),
+                              NrIceCtx::ICE_CTX_GATHER_COMPLETE);
+    return;
   }
 
   // Start gathering, but only if there are streams
   for (size_t i = 0; i < mIceCtxHdlr->ctx()->GetStreamCount(); ++i) {
     if (mIceCtxHdlr->ctx()->GetStream(i)) {
-      mIceCtxHdlr->ctx()->StartGathering();
+      mIceCtxHdlr->ctx()->StartGathering(aDefaultRouteOnly, aProxyOnly);
       return;
     }
   }

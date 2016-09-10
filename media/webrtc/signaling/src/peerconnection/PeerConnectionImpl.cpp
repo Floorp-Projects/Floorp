@@ -482,7 +482,11 @@ PeerConnectionConfiguration::Init(const RTCConfiguration& aSrc)
       setIceTransportPolicy(NrIceCtx::ICE_POLICY_RELAY);
       break;
     case dom::RTCIceTransportPolicy::All:
-      setIceTransportPolicy(NrIceCtx::ICE_POLICY_ALL);
+      if (Preferences::GetBool("media.peerconnection.ice.no_host", false)) {
+        setIceTransportPolicy(NrIceCtx::ICE_POLICY_NO_HOST);
+      } else {
+        setIceTransportPolicy(NrIceCtx::ICE_POLICY_ALL);
+      }
       break;
     default:
       MOZ_CRASH();

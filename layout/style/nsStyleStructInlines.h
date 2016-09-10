@@ -118,7 +118,7 @@ mozilla::StyleDisplay
 nsStyleDisplay::GetDisplay(const nsIFrame* aContextFrame) const
 {
   NS_ASSERTION(aContextFrame->StyleDisplay() == this, "unexpected aContextFrame");
-  if (aContextFrame->IsSVGText() && mDisplay != mozilla::StyleDisplay::None_) {
+  if (aContextFrame->IsSVGText() && mDisplay != mozilla::StyleDisplay::None) {
     return aContextFrame->GetType() == nsGkAtoms::blockFrame ?
              mozilla::StyleDisplay::Block : mozilla::StyleDisplay::Inline;
   }

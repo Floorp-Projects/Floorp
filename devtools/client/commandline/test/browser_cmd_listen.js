@@ -38,12 +38,13 @@ var tests = {
         },
         check: {
           input:  "listen",
-          hints:        " [port]",
+          hints:        " [port] [protocol]",
           markup: "VVVVVV",
           status: "VALID"
         },
         exec: {
-          output: "Listening on port 6080"
+          output: "Listening on port " + Services.prefs
+          .getIntPref("devtools.debugger.remote-port")
         }
       },
       {

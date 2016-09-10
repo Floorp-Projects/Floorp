@@ -2485,7 +2485,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
                propagatedScrollFrom == aDocElement,
                "Scrollbars should have been propagated to the viewport");
 
-  if (MOZ_UNLIKELY(display->mDisplay == StyleDisplay::None_)) {
+  if (MOZ_UNLIKELY(display->mDisplay == StyleDisplay::None)) {
     SetUndisplayedContent(aDocElement, styleContext);
     return nullptr;
   }
@@ -4706,7 +4706,7 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
 
   // NOTE: Make sure to keep this up to date with the StyleDisplay definition!
   static const FrameConstructionDataByDisplay sDisplayData[] = {
-    FCDATA_FOR_DISPLAY(StyleDisplay::None_, UNREACHABLE_FCDATA()),
+    FCDATA_FOR_DISPLAY(StyleDisplay::None, UNREACHABLE_FCDATA()),
     FCDATA_FOR_DISPLAY(StyleDisplay::Block, UNREACHABLE_FCDATA()),
     // To keep the hash table small don't add inline frames (they're
     // typically things like FONT and B), because we can quickly
@@ -5702,7 +5702,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
 
   // Pre-check for display "none" - if we find that, don't create
   // any frame at all
-  if (StyleDisplay::None_ == display->mDisplay) {
+  if (StyleDisplay::None == display->mDisplay) {
     SetAsUndisplayedContent(aState, aItems, aContent, styleContext, isGeneratedContent);
     return;
   }
@@ -9200,7 +9200,7 @@ nsStyleContext*
 nsCSSFrameConstructor::MaybeRecreateFramesForElement(Element* aElement)
 {
   RefPtr<nsStyleContext> oldContext = GetUndisplayedContent(aElement);
-  StyleDisplay oldDisplay = StyleDisplay::None_;
+  StyleDisplay oldDisplay = StyleDisplay::None;
   if (!oldContext) {
     oldContext = GetDisplayContentsStyleFor(aElement);
     if (!oldContext) {
@@ -9213,7 +9213,7 @@ nsCSSFrameConstructor::MaybeRecreateFramesForElement(Element* aElement)
   RefPtr<nsStyleContext> newContext = mPresShell->StyleSet()->
     ResolveStyleFor(aElement, oldContext->GetParent());
 
-  if (oldDisplay == StyleDisplay::None_) {
+  if (oldDisplay == StyleDisplay::None) {
     ChangeUndisplayedContent(aElement, newContext);
   } else {
     ChangeDisplayContents(aElement, newContext);
@@ -11653,7 +11653,7 @@ nsCSSFrameConstructor::CreateListBoxContent(nsContainerFrame*      aParentFrame,
     // any frame at all
     const nsStyleDisplay* display = styleContext->StyleDisplay();
 
-    if (StyleDisplay::None_ == display->mDisplay) {
+    if (StyleDisplay::None == display->mDisplay) {
       *aNewFrame = nullptr;
       return NS_OK;
     }

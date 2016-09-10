@@ -168,7 +168,7 @@ nsBlockReflowContext::ComputeCollapsedBStartMargin(const ReflowInput& aRI,
                                                availSpace);
             // Record that we're being optimistic by assuming the kid
             // has no clearance
-            if (kid->StyleDisplay()->mBreakType != StyleClear::None_ ||
+            if (kid->StyleDisplay()->mBreakType != StyleClear::None ||
                 !nsBlockFrame::BlockCanIntersectFloats(kid)) {
               *aMayNeedRetry = true;
             }

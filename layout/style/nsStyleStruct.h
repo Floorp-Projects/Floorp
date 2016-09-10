@@ -37,6 +37,7 @@
 #include "CounterStyleManager.h"
 #include <cstddef> // offsetof()
 #include <utility>
+#include "X11UndefineNone.h"
 
 class nsIFrame;
 class nsIURI;
@@ -2662,7 +2663,7 @@ struct StyleShapeSource
     } else {
       ReleaseRef();
       mReferenceBox = ReferenceBox::NoBox;
-      mType = StyleShapeSourceType::None_;
+      mType = StyleShapeSourceType::None;
     }
     return *this;
   }
@@ -2776,7 +2777,7 @@ private:
     StyleBasicShape* mBasicShape;
     FragmentOrURL* mURL;
   };
-  StyleShapeSourceType mType = StyleShapeSourceType::None_;
+  StyleShapeSourceType mType = StyleShapeSourceType::None;
   ReferenceBox mReferenceBox = ReferenceBox::NoBox;
 };
 
@@ -2963,7 +2964,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   }
 
   bool IsFloatingStyle() const {
-    return mozilla::StyleFloat::None_ != mFloat;
+    return mozilla::StyleFloat::None != mFloat;
   }
 
   bool IsAbsolutelyPositionedStyle() const {
@@ -3794,7 +3795,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVGReset
   }
 
   bool HasClipPath() const {
-    return mClipPath.GetType() != mozilla::StyleShapeSourceType::None_;
+    return mClipPath.GetType() != mozilla::StyleShapeSourceType::None;
   }
 
   bool HasNonScalingStroke() const {

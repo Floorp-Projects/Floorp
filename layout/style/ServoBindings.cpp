@@ -328,6 +328,12 @@ Gecko_FillAllBackgroundLists(nsStyleImageLayers* aLayers, uint32_t aMaxLen)
   nsRuleNode::FillAllBackgroundLists(*aLayers, aMaxLen);
 }
 
+void
+Gecko_FillAllMaskLists(nsStyleImageLayers* aLayers, uint32_t aMaxLen)
+{
+  nsRuleNode::FillAllMaskLists(*aLayers, aMaxLen);
+}
+
 template <typename Implementor>
 static nsIAtom*
 AtomAttrValue(Implementor* aElement, nsIAtom* aName)
