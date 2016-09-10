@@ -79,11 +79,4 @@ interface nsIDebug2 : nsISupports
      */
     void abort(in string aFile, 
                in long aLine);
-
-    /**
-     * Request the process to trigger a fatal panic!() from Rust code.
-     *
-     * @param aMessage the string to pass to panic!().
-     */
-    void rustPanic(in string aMessage);
 };

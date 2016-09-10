@@ -541,9 +541,15 @@ FlyWebPublishedServerParent::HandleEvent(nsIDOMEvent* aEvent)
     uint64_t id = mNextRequestId++;
     mPendingRequests.Put(id, request);
 
+    nsTArray<PNeckoParent*> neckoParents;
+    Manager()->ManagedPNeckoParent(neckoParents);
+    if (neckoParents.Length() != 1) {
+      MOZ_CRASH("Expected exactly 1 PNeckoParent instance per PNeckoChild");
+    }
+
     RefPtr<TransportProviderParent> provider =
       static_cast<TransportProviderParent*>(
-        mozilla::net::gNeckoParent->SendPTransportProviderConstructor());
+        neckoParents[0]->SendPTransportProviderConstructor());
 
     IPCInternalRequest ipcReq;
     request->ToIPC(&ipcReq);

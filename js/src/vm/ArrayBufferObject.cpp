@@ -273,8 +273,7 @@ ArrayBufferObject::detach(JSContext* cx, Handle<ArrayBufferObject*> buffer,
                           BufferContents newContents)
 {
     assertSameCompartment(cx, buffer);
-
-    MOZ_ASSERT(!buffer->isWasm());
+    MOZ_ASSERT(!buffer->isPreparedForAsmJS());
 
     // When detaching buffers where we don't know all views, the new data must
     // match the old data. All missing views are typed objects, which do not
@@ -364,6 +363,7 @@ ArrayBufferObject::changeViewContents(JSContext* cx, ArrayBufferViewObject* view
 void
 ArrayBufferObject::changeContents(JSContext* cx, BufferContents newContents)
 {
+    MOZ_RELEASE_ASSERT(!isWasm());
     MOZ_ASSERT(!forInlineTypedObject());
 
     // Change buffer contents.
@@ -451,13 +451,12 @@ ArrayBufferObject::changeContents(JSContext* cx, BufferContents newContents)
 
 class js::WasmArrayRawBuffer
 {
-    uint32_t length_;
     Maybe<uint32_t> maxSize_;
     size_t mappedSize_;
 
   protected:
     WasmArrayRawBuffer(uint8_t* buffer, uint32_t length, Maybe<uint32_t> maxSize, size_t mappedSize)
-      : length_(length), maxSize_(maxSize), mappedSize_(mappedSize)
+      : maxSize_(maxSize), mappedSize_(mappedSize)
     {
         MOZ_ASSERT(buffer == dataPointer());
     }
@@ -473,14 +472,6 @@ class js::WasmArrayRawBuffer
 
     uint8_t* basePointer() {
         return dataPointer() - gc::SystemPageSize();
-    }
-
-    // TODO: actualByteLength in WasmArrayRawBuffer is a temporary hack to allow
-    // keeping track of the size of dynamically growing WASM memory. We can't
-    // keep it in the containg ArrayBufferObject's byte length field since those
-    // are immutable. This will be removed in a followup resizing patch.
-    uint32_t actualByteLength() const {
-        return length_;
     }
 
     size_t mappedSize() const {
@@ -504,15 +495,15 @@ class js::WasmArrayRawBuffer
     }
 #endif
 
-    MOZ_MUST_USE bool growToSizeInPlace(uint32_t newSize) {
-        MOZ_ASSERT(newSize >= actualByteLength());
+    MOZ_MUST_USE bool growToSizeInPlace(uint32_t oldSize, uint32_t newSize) {
+        MOZ_ASSERT(newSize >= oldSize);
         MOZ_ASSERT_IF(maxSize(), newSize <= maxSize().value());
         MOZ_ASSERT(newSize <= mappedSize());
 
-        uint32_t delta = newSize - actualByteLength();
+        uint32_t delta = newSize - oldSize;
         MOZ_ASSERT(delta % wasm::PageSize == 0);
 
-        uint8_t* dataEnd = dataPointer() + actualByteLength();
+        uint8_t* dataEnd = dataPointer() + oldSize;
         MOZ_ASSERT(uintptr_t(dataEnd) % gc::SystemPageSize() == 0);
 # ifdef XP_WIN
         if (delta && !VirtualAlloc(dataEnd, delta, MEM_COMMIT, PAGE_READWRITE))
@@ -527,8 +518,6 @@ class js::WasmArrayRawBuffer
 #  endif
 
         MemProfiler::SampleNative(dataEnd, delta);
-
-        length_ = newSize;
         return true;
     }
 
@@ -650,7 +639,7 @@ WasmArrayRawBuffer::Release(void* mem)
 WasmArrayRawBuffer*
 ArrayBufferObject::BufferContents::wasmBuffer() const
 {
-    MOZ_RELEASE_ASSERT(kind_ == WASM_MAPPED);
+    MOZ_RELEASE_ASSERT(kind_ == WASM);
     return (WasmArrayRawBuffer*)(data_ - sizeof(WasmArrayRawBuffer));
 }
 
@@ -708,12 +697,16 @@ ArrayBufferObject::createForWasm(JSContext* cx, uint32_t initialSize, Maybe<uint
 #endif
     }
 
-    auto contents = BufferContents::create<WASM_MAPPED>(wasmBuf->dataPointer());
+    auto contents = BufferContents::create<WASM>(wasmBuf->dataPointer());
     buffer->initialize(initialSize, contents, OwnsData);
     cx->zone()->updateMallocCounter(wasmBuf->mappedSize());
     return buffer;
 }
 
+// Note this function can return false with or without an exception pending. The
+// asm.js caller checks cx->isExceptionPending before propagating failure.
+// Returning false without throwing means that asm.js linking will fail which
+// will recompile as non-asm.js.
 /* static */ bool
 ArrayBufferObject::prepareForAsmJS(JSContext* cx, Handle<ArrayBufferObject*> buffer, bool needGuard)
 {
@@ -723,49 +716,44 @@ ArrayBufferObject::prepareForAsmJS(JSContext* cx, Handle<ArrayBufferObject*> buf
     MOZ_ASSERT(buffer->byteLength() % wasm::PageSize == 0);
     MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
 
-    if (buffer->forInlineTypedObject()) {
-        JS_ReportError(cx, "ArrayBuffer can't be used by asm.js");
+    if (buffer->forInlineTypedObject())
         return false;
-    }
-
-    // Since asm.js doesn't grow, assume max is same as length.
-    uint32_t length = buffer->byteLength();
-    uint32_t maxSize = length;
 
     if (needGuard) {
-        if (buffer->isWasmMapped())
+        if (buffer->isWasm() && buffer->isPreparedForAsmJS())
             return true;
 
-        if (buffer->isAsmJSMalloced()) {
-            // needGuard is only set for SIMD.js (which isn't shipping, so this
-            // error isn't content-visible).
-            JS_ReportError(cx, "ArrayBuffer can't be prepared for asm.js with SIMD.js");
+        // Non-prepared-for-asm.js wasm buffers can be detached at any time.
+        // This error can only be triggered for SIMD.js (which isn't shipping)
+        // on !WASM_HUGE_MEMORY so this error is only visible in testing.
+        if (buffer->isWasm() || buffer->isPreparedForAsmJS())
             return false;
-        }
 
-        WasmArrayRawBuffer* wasmBuf = WasmArrayRawBuffer::Allocate(length, Some(maxSize));
+        uint32_t length = buffer->byteLength();
+        WasmArrayRawBuffer* wasmBuf = WasmArrayRawBuffer::Allocate(length, Some(length));
         if (!wasmBuf) {
-            // Note - we don't need the same backoff search as in WASM, since we don't over-map to
-            // allow growth in asm.js
             ReportOutOfMemory(cx);
             return false;
         }
 
-        // Copy over the current contents of the typed array.
         void* data = wasmBuf->dataPointer();
         memcpy(data, buffer->dataPointer(), length);
 
         // Swap the new elements into the ArrayBufferObject. Mark the
         // ArrayBufferObject so we don't do this again.
-        BufferContents newContents = BufferContents::create<WASM_MAPPED>(data);
-        buffer->changeContents(cx, newContents);
+        buffer->changeContents(cx, BufferContents::create<WASM>(data));
+        buffer->setIsPreparedForAsmJS();
         MOZ_ASSERT(data == buffer->dataPointer());
         cx->zone()->updateMallocCounter(wasmBuf->mappedSize());
         return true;
     }
 
-    if (buffer->isAsmJSMalloced())
+    if (!buffer->isWasm() && buffer->isPreparedForAsmJS())
         return true;
+
+    // Non-prepared-for-asm.js wasm buffers can be detached at any time.
+    if (buffer->isWasm())
+        return false;
 
     if (!buffer->ownsData()) {
         BufferContents contents = AllocateArrayBufferContents(cx, buffer->byteLength());
@@ -775,7 +763,7 @@ ArrayBufferObject::prepareForAsmJS(JSContext* cx, Handle<ArrayBufferObject*> buf
         buffer->changeContents(cx, contents);
     }
 
-    buffer->setIsAsmJSMalloced();
+    buffer->setIsPreparedForAsmJS();
     return true;
 }
 
@@ -812,16 +800,17 @@ ArrayBufferObject::releaseData(FreeOp* fop)
 
     switch (bufferKind()) {
       case PLAIN:
-      case ASMJS_MALLOCED:
         fop->free_(dataPointer());
         break;
       case MAPPED:
         MemProfiler::RemoveNative(dataPointer());
         DeallocateMappedContent(dataPointer(), byteLength());
         break;
-      case WASM_MAPPED:
+      case WASM:
         WasmArrayRawBuffer::Release(dataPointer());
         break;
+      case KIND_MASK:
+        MOZ_CRASH("bad bufferKind()");
     }
 }
 
@@ -849,64 +838,92 @@ ArrayBufferObject::setByteLength(uint32_t length)
 size_t
 ArrayBufferObject::wasmMappedSize() const
 {
-    if (isWasmMapped()) {
+    if (isWasm())
         return contents().wasmBuffer()->mappedSize();
-    } else {
-        // Can use byteLength() instead of actualByteLength since if !wasmMapped()
-        // then this is an asm.js buffer, and thus cannot grow.
-        return byteLength();
-    }
+    return byteLength();
 }
 
 Maybe<uint32_t>
 ArrayBufferObject::wasmMaxSize() const
 {
-    if (isWasmMapped())
+    if (isWasm())
         return contents().wasmBuffer()->maxSize();
     else
         return Some<uint32_t>(byteLength());
 }
 
-uint32_t
-ArrayBufferObject::wasmActualByteLength() const
+/* static */ bool
+ArrayBufferObject::wasmGrowToSizeInPlace(uint32_t newSize,
+                                         HandleArrayBufferObject oldBuf,
+                                         MutableHandleArrayBufferObject newBuf,
+                                         JSContext* cx)
 {
-    if (isWasmMapped())
-        return contents().wasmBuffer()->actualByteLength();
-    else
-        return byteLength();
-}
+    // On failure, do not throw and ensure that the original buffer is
+    // unmodified and valid. After WasmArrayRawBuffer::growToSizeInPlace(), the
+    // wasm-visible length of the buffer has been increased so it must be the
+    // last fallible operation.
 
-bool
-ArrayBufferObject::wasmGrowToSizeInPlace(uint32_t newSize)
-{
-    return contents().wasmBuffer()->growToSizeInPlace(newSize);
+    // byteLength can be at most INT32_MAX.
+    if (newSize > INT32_MAX)
+        return false;
+
+    newBuf.set(ArrayBufferObject::createEmpty(cx));
+    if (!newBuf) {
+        cx->clearPendingException();
+        return false;
+    }
+
+    if (!oldBuf->contents().wasmBuffer()->growToSizeInPlace(oldBuf->byteLength(), newSize))
+        return false;
+
+    bool hasStealableContents = true;
+    BufferContents contents = ArrayBufferObject::stealContents(cx, oldBuf, hasStealableContents);
+    MOZ_ASSERT(contents);
+    newBuf->initialize(newSize, contents, OwnsData);
+    return true;
 }
 
 #ifndef WASM_HUGE_MEMORY
-bool
-ArrayBufferObject::wasmMovingGrowToSize(uint32_t newSize)
+/* static */ bool
+ArrayBufferObject::wasmMovingGrowToSize(uint32_t newSize,
+                                        HandleArrayBufferObject oldBuf,
+                                        MutableHandleArrayBufferObject newBuf,
+                                        JSContext* cx)
 {
-    WasmArrayRawBuffer* curBuf = contents().wasmBuffer();
+    // On failure, do not throw and ensure that the original buffer is
+    // unmodified and valid.
 
-    if (newSize <= curBuf->boundsCheckLimit() || curBuf->extendMappedSize(newSize))
-        return curBuf->growToSizeInPlace(newSize);
-
-    WasmArrayRawBuffer* newBuf = WasmArrayRawBuffer::Allocate(newSize, Nothing());
-    if (!newBuf)
+    // byteLength can be at most INT32_MAX.
+    if (newSize > INT32_MAX)
         return false;
 
-    void* newData = newBuf->dataPointer();
-    memcpy(newData, curBuf->dataPointer(), curBuf->actualByteLength());
+    if (newSize <= oldBuf->wasmBoundsCheckLimit() ||
+        oldBuf->contents().wasmBuffer()->extendMappedSize(newSize))
+    {
+        return wasmGrowToSizeInPlace(newSize, oldBuf, newBuf, cx);
+    }
 
-    BufferContents newContents = BufferContents::create<WASM_MAPPED>(newData);
-    changeContents(GetJSContextFromMainThread(), newContents);
+    newBuf.set(ArrayBufferObject::createEmpty(cx));
+    if (!newBuf) {
+        cx->clearPendingException();
+        return false;
+    }
+
+    WasmArrayRawBuffer* newRawBuf = WasmArrayRawBuffer::Allocate(newSize, Nothing());
+    if (!newRawBuf)
+        return false;
+    BufferContents contents = BufferContents::create<WASM>(newRawBuf->dataPointer());
+    newBuf->initialize(newSize, contents, OwnsData);
+
+    memcpy(newBuf->dataPointer(), oldBuf->dataPointer(), oldBuf->byteLength());
+    ArrayBufferObject::detach(cx, oldBuf, BufferContents::createPlain(nullptr));
     return true;
 }
 
 uint32_t
 ArrayBufferObject::wasmBoundsCheckLimit() const
 {
-    if (isWasmMapped())
+    if (isWasm())
         return contents().wasmBuffer()->boundsCheckLimit();
     else
         return byteLength();
@@ -956,7 +973,7 @@ ArrayBufferObject::create(JSContext* cx, uint32_t nbytes, BufferContents content
             size_t nAllocated = nbytes;
             if (contents.kind() == MAPPED)
                 nAllocated = JS_ROUNDUP(nbytes, js::gc::SystemPageSize());
-            else if (contents.kind() == WASM_MAPPED)
+            else if (contents.kind() == WASM)
                 nAllocated = contents.wasmBuffer()->allocatedBytes();
             cx->zone()->updateMallocCounter(nAllocated);
         }
@@ -1062,7 +1079,10 @@ ArrayBufferObject::createDataViewForThis(JSContext* cx, unsigned argc, Value* vp
 ArrayBufferObject::stealContents(JSContext* cx, Handle<ArrayBufferObject*> buffer,
                                  bool hasStealableContents)
 {
-    MOZ_ASSERT_IF(hasStealableContents, buffer->hasStealableContents());
+    // While wasm buffers cannot generally be transferred by content, the
+    // stealContents() is used internally by the impl of memory growth.
+    MOZ_ASSERT_IF(hasStealableContents, buffer->hasStealableContents() ||
+                                        (buffer->isWasm() && !buffer->isPreparedForAsmJS()));
     assertSameCompartment(cx, buffer);
 
     BufferContents oldContents(buffer->dataPointer(), buffer->bufferKind());
@@ -1105,12 +1125,11 @@ ArrayBufferObject::addSizeOfExcludingThis(JSObject* obj, mozilla::MallocSizeOf m
       case MAPPED:
         info->objectsNonHeapElementsNormal += buffer.byteLength();
         break;
-      case ASMJS_MALLOCED:
-        info->objectsMallocHeapElementsAsmJS += mallocSizeOf(buffer.dataPointer());
-        break;
-      case WASM_MAPPED:
+      case WASM:
         info->objectsNonHeapElementsAsmJS += buffer.byteLength();
         break;
+      case KIND_MASK:
+        MOZ_CRASH("bad bufferKind()");
     }
 }
 
@@ -1524,8 +1543,8 @@ JS_DetachArrayBuffer(JSContext* cx, HandleObject obj)
 
     Rooted<ArrayBufferObject*> buffer(cx, &obj->as<ArrayBufferObject>());
 
-    if (buffer->isWasm()) {
-        JS_ReportError(cx, "Cannot detach WebAssembly ArrayBuffer");
+    if (buffer->isWasm() || buffer->isPreparedForAsmJS()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_NO_TRANSFER);
         return false;
     }
 
@@ -1632,7 +1651,7 @@ JS_StealArrayBufferContents(JSContext* cx, HandleObject objArg)
         return nullptr;
     }
 
-    if (buffer->isWasm()) {
+    if (buffer->isWasm() || buffer->isPreparedForAsmJS()) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_NO_TRANSFER);
         return nullptr;
     }
