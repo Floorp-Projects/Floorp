@@ -28,6 +28,13 @@ add_task(function* testDetectLanguage() {
           return browser.tabs.remove(tab.id);
         });
       }).then(() => {
+        return loadTab(`http://example.co.jp/${BASE_PATH}/file_language_tlh.html`);
+      }).then(tab => {
+        return browser.tabs.detectLanguage(tab.id).then(lang => {
+          browser.test.assertEq("und", lang, "Klingon document should not be detected, should return 'und'");
+          return browser.tabs.remove(tab.id);
+        });
+      }).then(() => {
         browser.test.notifyPass("detectLanguage");
       }).catch(e => {
         browser.test.fail(`Error: ${e} :: ${e.stack}`);
