@@ -263,8 +263,8 @@ public:
         [this] (MetadataHolder* aMetadata) {
           OnMetadataRead(aMetadata);
         },
-        [this] (ReadMetadataFailureReason aReason) {
-          OnMetadataNotRead(aReason);
+        [this] (const MediaResult& aError) {
+          OnMetadataNotRead(aError);
         }));
   }
 
@@ -355,11 +355,11 @@ private:
     SetState(DECODER_STATE_DECODING_FIRSTFRAME);
   }
 
-  void OnMetadataNotRead(ReadMetadataFailureReason aReason)
+  void OnMetadataNotRead(const MediaResult& aError)
   {
     mMetadataRequest.Complete();
     SWARN("Decode metadata failed, shutting down decoder");
-    mMaster->DecodeError();
+    mMaster->DecodeError(aError);
   }
 
   MozPromiseRequestHolder<MediaDecoderReader::MetadataPromise> mMetadataRequest;

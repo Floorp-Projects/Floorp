@@ -360,8 +360,6 @@ MediaDecoderReader::GetBuffered()
 RefPtr<MediaDecoderReader::MetadataPromise>
 MediaDecoderReader::AsyncReadMetadata()
 {
-  typedef ReadMetadataFailureReason Reason;
-
   MOZ_ASSERT(OnTaskQueue());
   DECODER_LOG("MediaDecoderReader::AsyncReadMetadata");
 
@@ -374,7 +372,7 @@ MediaDecoderReader::AsyncReadMetadata()
   // error.
   if (NS_FAILED(rv) || !metadata->mInfo.HasValidMedia()) {
     DECODER_WARN("ReadMetadata failed, rv=%x HasValidMedia=%d", rv, metadata->mInfo.HasValidMedia());
-    return MetadataPromise::CreateAndReject(Reason::METADATA_ERROR, __func__);
+    return MetadataPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_METADATA_ERR, __func__);
   }
 
   // Success!

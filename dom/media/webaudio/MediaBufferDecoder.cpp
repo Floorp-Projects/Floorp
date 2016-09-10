@@ -132,7 +132,7 @@ private:
 
   void Decode();
   void OnMetadataRead(MetadataHolder* aMetadata);
-  void OnMetadataNotRead(ReadMetadataFailureReason aReason);
+  void OnMetadataNotRead(const MediaResult& aError);
   void RequestSample();
   void SampleDecoded(MediaData* aData);
   void SampleNotDecoded(const MediaResult& aError);
@@ -310,7 +310,7 @@ MediaDecodeTask::OnMetadataRead(MetadataHolder* aMetadata)
 }
 
 void
-MediaDecodeTask::OnMetadataNotRead(ReadMetadataFailureReason aReason)
+MediaDecodeTask::OnMetadataNotRead(const MediaResult& aReason)
 {
   mDecoderReader->Shutdown();
   ReportFailureOnMainThread(WebAudioDecodeJob::InvalidContent);
