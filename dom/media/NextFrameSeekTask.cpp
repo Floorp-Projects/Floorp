@@ -183,12 +183,12 @@ NextFrameSeekTask::OnAudioDecoded(MediaData* aAudioSample)
 }
 
 void
-NextFrameSeekTask::OnAudioNotDecoded(MediaDecoderReader::NotDecodedReason aReason)
+NextFrameSeekTask::OnAudioNotDecoded(const MediaResult& aError)
 {
   AssertOwnerThread();
   MOZ_ASSERT(!mSeekTaskPromise.IsEmpty(), "Seek shouldn't be finished");
 
-  SAMPLE_LOG("OnAudioNotDecoded (aReason=%u)", aReason);
+  SAMPLE_LOG("OnAudioNotDecoded (aError=%u)", aError.Code());
 
   // We don't really handle audio deocde error here. Let MDSM to trigger further
   // audio decoding tasks if it needs to play audio, and MDSM will then receive
@@ -224,36 +224,36 @@ NextFrameSeekTask::OnVideoDecoded(MediaData* aVideoSample)
 }
 
 void
-NextFrameSeekTask::OnVideoNotDecoded(MediaDecoderReader::NotDecodedReason aReason)
+NextFrameSeekTask::OnVideoNotDecoded(const MediaResult& aError)
 {
   AssertOwnerThread();
   MOZ_ASSERT(!mSeekTaskPromise.IsEmpty(), "Seek shouldn't be finished");
 
-  SAMPLE_LOG("OnVideoNotDecoded (aReason=%u)", aReason);
+  SAMPLE_LOG("OnVideoNotDecoded (aError=%u)", aError.Code());
 
-  if (aReason == MediaDecoderReader::END_OF_STREAM) {
+  if (aError == NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
     mIsVideoQueueFinished = true;
   }
 
   // Video seek not finished.
   if (NeedMoreVideo()) {
-    switch (aReason) {
-      case MediaDecoderReader::DECODE_ERROR:
+    switch (aError.Code()) {
+      case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
+        mReader->WaitForData(MediaData::VIDEO_DATA);
+        break;
+      case NS_ERROR_DOM_MEDIA_CANCELED:
+        RequestVideoData();
+        break;
+      case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
+        MOZ_ASSERT(false, "Shouldn't want more data for ended video.");
+        break;
+      default:
         // We might lose the audio sample after canceling the callbacks.
         // However it doesn't really matter because MDSM is gonna shut down
         // when seek fails.
         CancelCallbacks();
         // Reject the promise since we can't finish video seek anyway.
         RejectIfExist(__func__);
-        break;
-      case MediaDecoderReader::WAITING_FOR_DATA:
-        mReader->WaitForData(MediaData::VIDEO_DATA);
-        break;
-      case MediaDecoderReader::CANCELED:
-        RequestVideoData();
-        break;
-      case MediaDecoderReader::END_OF_STREAM:
-        MOZ_ASSERT(false, "Shouldn't want more data for ended video.");
         break;
     }
     return;
@@ -274,7 +274,7 @@ NextFrameSeekTask::SetCallbacks()
     if (aData.is<MediaData*>()) {
       OnAudioDecoded(aData.as<MediaData*>());
     } else {
-      OnAudioNotDecoded(aData.as<MediaDecoderReader::NotDecodedReason>());
+      OnAudioNotDecoded(aData.as<MediaResult>());
     }
   });
 
@@ -284,7 +284,7 @@ NextFrameSeekTask::SetCallbacks()
     if (aData.is<Type>()) {
       OnVideoDecoded(Get<0>(aData.as<Type>()));
     } else {
-      OnVideoNotDecoded(aData.as<MediaDecoderReader::NotDecodedReason>());
+      OnVideoNotDecoded(aData.as<MediaResult>());
     }
   });
 
