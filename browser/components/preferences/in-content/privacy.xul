@@ -277,7 +277,7 @@
   <checkbox id="openpageSuggestion" label="&locbar.openpage.label;"
             accesskey="&locbar.openpage.accesskey;"
             preference="browser.urlbar.suggest.openpage"/>
-  <label class="text-link" onclick="if (event.button == 0) gotoPref('search')">
+  <label class="text-link" onclick="gotoPref('search')">
     &suggestionSettings.label;
   </label>
 </groupbox>
