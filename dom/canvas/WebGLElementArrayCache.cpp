@@ -15,16 +15,6 @@
 
 namespace mozilla {
 
-static void
-UpdateUpperBound(uint32_t* const out_upperBound, uint32_t newBound)
-{
-    MOZ_ASSERT(out_upperBound);
-    // Move *out_upperBound to a local variable to work around a false positive
-    // -Wuninitialized gcc warning about std::max() in PGO builds.
-    uint32_t upperBound = *out_upperBound;
-    *out_upperBound = std::max(upperBound, newBound);
-}
-
 /* WebGLElementArrayCacheTree contains most of the implementation of
  * WebGLElementArrayCache, which performs WebGL element array buffer validation
  * for drawElements.
@@ -245,8 +235,7 @@ public:
         return ((numElements - 1) | kElementsPerLeafMask) + 1;
     }
 
-    bool Validate(T maxAllowed, size_t firstLeaf, size_t lastLeaf,
-                  uint32_t* const out_upperBound)
+    bool Validate(T maxAllowed, size_t firstLeaf, size_t lastLeaf)
     {
         size_t firstTreeIndex = TreeIndexForLeaf(firstLeaf);
         size_t lastTreeIndex  = TreeIndexForLeaf(lastLeaf);
@@ -260,7 +249,6 @@ public:
             // current tree level:
             if (lastTreeIndex == firstTreeIndex) {
                 const T& curData = mTreeData[firstTreeIndex];
-                UpdateUpperBound(out_upperBound, curData);
                 return curData <= maxAllowed;
             }
 
@@ -269,7 +257,6 @@ public:
             // a left node.
             if (IsRightNode(firstTreeIndex)) {
                 const T& curData = mTreeData[firstTreeIndex];
-                UpdateUpperBound(out_upperBound, curData);
                 if (curData > maxAllowed)
                   return false;
 
@@ -281,7 +268,6 @@ public:
             // right node.
             if (IsLeftNode(lastTreeIndex)) {
                 const T& curData = mTreeData[lastTreeIndex];
-                UpdateUpperBound(out_upperBound, curData);
                 if (curData > maxAllowed)
                     return false;
 
@@ -514,18 +500,13 @@ WebGLElementArrayCache::UpdateTrees(size_t firstByte, size_t lastByte)
 template<typename T>
 bool
 WebGLElementArrayCache::Validate(uint32_t maxAllowed, size_t firstElement,
-                                 size_t countElements,
-                                 uint32_t* const out_upperBound)
+                                 size_t countElements)
 {
-    *out_upperBound = 0;
-
     // If maxAllowed is >= the max T value, then there is no way that a T index
     // could be invalid.
     uint32_t maxTSize = std::numeric_limits<T>::max();
-    if (maxAllowed >= maxTSize) {
-        UpdateUpperBound(out_upperBound, maxTSize);
+    if (maxAllowed >= maxTSize)
         return true;
-    }
 
     T maxAllowedT(maxAllowed);
 
@@ -556,10 +537,8 @@ WebGLElementArrayCache::Validate(uint32_t maxAllowed, size_t firstElement,
     // Fast-exit path when the global maximum for the whole element array buffer
     // falls in the allowed range:
     T globalMax = tree->GlobalMaximum();
-    if (globalMax <= maxAllowedT) {
-        UpdateUpperBound(out_upperBound, globalMax);
+    if (globalMax <= maxAllowedT)
         return true;
-    }
 
     const T* elements = Elements<T>();
 
@@ -570,7 +549,6 @@ WebGLElementArrayCache::Validate(uint32_t maxAllowed, size_t firstElement,
                                                 tree->LastElementUnderSameLeaf(firstElement));
     while (firstElement <= firstElementAdjustmentEnd) {
         const T& curData = elements[firstElement];
-        UpdateUpperBound(out_upperBound, curData);
         if (curData > maxAllowedT)
             return false;
 
@@ -580,7 +558,6 @@ WebGLElementArrayCache::Validate(uint32_t maxAllowed, size_t firstElement,
                                                tree->FirstElementUnderSameLeaf(lastElement));
     while (lastElement >= lastElementAdjustmentEnd) {
         const T& curData = elements[lastElement];
-        UpdateUpperBound(out_upperBound, curData);
         if (curData > maxAllowedT)
             return false;
 
@@ -593,23 +570,19 @@ WebGLElementArrayCache::Validate(uint32_t maxAllowed, size_t firstElement,
 
     // general case
     return tree->Validate(maxAllowedT, tree->LeafForElement(firstElement),
-                          tree->LeafForElement(lastElement), out_upperBound);
+                          tree->LeafForElement(lastElement));
 }
 
 bool
 WebGLElementArrayCache::Validate(GLenum type, uint32_t maxAllowed,
-                                 size_t firstElement, size_t countElements,
-                                 uint32_t* const out_upperBound)
+                                 size_t firstElement, size_t countElements)
 {
     if (type == LOCAL_GL_UNSIGNED_BYTE)
-        return Validate<uint8_t>(maxAllowed, firstElement, countElements,
-                                 out_upperBound);
+        return Validate<uint8_t>(maxAllowed, firstElement, countElements);
     if (type == LOCAL_GL_UNSIGNED_SHORT)
-        return Validate<uint16_t>(maxAllowed, firstElement, countElements,
-                                  out_upperBound);
+        return Validate<uint16_t>(maxAllowed, firstElement, countElements);
     if (type == LOCAL_GL_UNSIGNED_INT)
-        return Validate<uint32_t>(maxAllowed, firstElement, countElements,
-                                  out_upperBound);
+        return Validate<uint32_t>(maxAllowed, firstElement, countElements);
 
     MOZ_ASSERT(false, "Invalid type.");
     return false;

@@ -122,36 +122,11 @@ WebGLContext::ValidateBlendFuncEnumsCompatibility(GLenum sfactor,
     return true;
 }
 
-bool
-WebGLContext::ValidateDataOffsetSize(WebGLintptr offset, WebGLsizeiptr size, WebGLsizeiptr bufferSize, const char* info)
-{
-    if (offset < 0) {
-        ErrorInvalidValue("%s: offset must be positive", info);
-        return false;
-    }
-
-    if (size < 0) {
-        ErrorInvalidValue("%s: size must be positive", info);
-        return false;
-    }
-
-    // *** Careful *** WebGLsizeiptr is always 64-bits but GLsizeiptr
-    // is like intptr_t. On some platforms it is 32-bits.
-    CheckedInt<GLsizeiptr> neededBytes = CheckedInt<GLsizeiptr>(offset) + size;
-    if (!neededBytes.isValid() || neededBytes.value() > bufferSize) {
-        ErrorInvalidValue("%s: invalid range", info);
-        return false;
-    }
-
-    return true;
-}
-
 /**
  * Check data ranges [readOffset, readOffset + size] and [writeOffset,
  * writeOffset + size] for overlap.
  *
- * It is assumed that offset and size have already been validated with
- * ValidateDataOffsetSize().
+ * It is assumed that offset and size have already been validated.
  */
 bool
 WebGLContext::ValidateDataRanges(WebGLintptr readOffset, WebGLintptr writeOffset, WebGLsizeiptr size, const char* info)
@@ -738,7 +713,6 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
     mBoundSamplers.Clear();
 
     mBoundArrayBuffer = nullptr;
-    mBoundTransformFeedbackBuffer = nullptr;
     mCurrentProgram = nullptr;
 
     mBoundDrawFramebuffer = nullptr;
@@ -980,7 +954,6 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
     // vertex array object (the name zero) is also deprecated. [...]"
 
     if (gl->IsCoreProfile()) {
-        MakeContextCurrent();
         mDefaultVertexArray->GenVertexArray();
         mDefaultVertexArray->BindVertexArray();
     }
