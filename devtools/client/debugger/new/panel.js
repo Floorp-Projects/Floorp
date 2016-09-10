@@ -14,7 +14,7 @@ DebuggerPanel.prototype = {
     if (!this.toolbox.target.isRemote) {
       targetPromise = this.toolbox.target.makeRemote();
     } else {
-      targetPromise = promise.resolve(this.toolbox.target);
+      targetPromise = Promise.resolve(this.toolbox.target);
     }
 
     return targetPromise.then(() => {

@@ -1473,7 +1473,7 @@ JSStructuredCloneWriter::transferOwnership()
             JSAutoCompartment ac(context(), arrayBuffer);
             size_t nbytes = arrayBuffer->byteLength();
 
-            if (arrayBuffer->isWasm()) {
+            if (arrayBuffer->isWasm() || arrayBuffer->isPreparedForAsmJS()) {
                 JS_ReportErrorNumber(context(), GetErrorMessage, nullptr, JSMSG_WASM_NO_TRANSFER);
                 return false;
             }

@@ -78,30 +78,23 @@ def build_dict(config, env=os.environ):
         d["bits"] = 32
     # other CPUs will wind up with unknown bits
 
+    d['debug'] = substs.get('MOZ_DEBUG') == '1'
+    d['nightly_build'] = substs.get('NIGHTLY_BUILD') == '1'
+    d['release_build'] = substs.get('RELEASE_BUILD') == '1'
+    d['pgo'] = substs.get('MOZ_PGO') == '1'
+    d['crashreporter'] = bool(substs.get('MOZ_CRASHREPORTER'))
+    d['datareporting'] = bool(substs.get('MOZ_DATA_REPORTING'))
+    d['healthreport'] = substs.get('MOZ_SERVICES_HEALTHREPORT') == '1'
+    d['sync'] = substs.get('MOZ_SERVICES_SYNC') == '1'
+    d['asan'] = substs.get('MOZ_ASAN') == '1'
+    d['tsan'] = substs.get('MOZ_TSAN') == '1'
+    d['telemetry'] = substs.get('MOZ_TELEMETRY_REPORTING') == '1'
+    d['tests_enabled'] = substs.get('ENABLE_TESTS') == "1"
     d['bin_suffix'] = substs.get('BIN_SUFFIX', '')
-
-    # This is where all bool-like values go.
-    for info_name, subst_name in [
-            ('debug', 'MOZ_DEBUG'),
-            ('nightly_build', 'NIGHTLY_BUILD'),
-            ('release_build', 'RELEASE_BUILD'),
-            ('pgo', 'MOZ_PGO'),
-            ('crashreporter', 'MOZ_CRASHREPORTER'),
-            ('datareporting', 'MOZ_DATA_REPORTING'),
-            ('healthreport', 'MOZ_SERVICES_HEALTHREPORT'),
-            ('sync', 'MOZ_SERVICES_SYNC'),
-            ('asan', 'MOZ_ASAN'),
-            ('tsan', 'MOZ_TSAN'),
-            ('telemetry', 'MOZ_TELEMETRY_REPORTING'),
-            ('tests_enabled', 'ENABLE_TESTS'),
-            ('addon_signing', 'MOZ_ADDON_SIGNING'),
-            ('require_signing', 'MOZ_REQUIRE_SIGNING'),
-            ('official', 'MOZILLA_OFFICIAL'),
-            ('sm_promise', 'SPIDERMONKEY_PROMISE'),
-            ('rust', 'MOZ_RUST'),
-    ]:
-        d[info_name] = bool(substs.get(subst_name))
-
+    d['addon_signing'] = substs.get('MOZ_ADDON_SIGNING') == '1'
+    d['require_signing'] = substs.get('MOZ_REQUIRE_SIGNING') == '1'
+    d['official'] = bool(substs.get('MOZILLA_OFFICIAL'))
+    d['sm_promise'] = bool(substs.get('SPIDERMONKEY_PROMISE'))
 
     def guess_platform():
         if d['buildapp'] in ('browser', 'mulet'):

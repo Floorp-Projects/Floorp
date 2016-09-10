@@ -44,8 +44,8 @@ let App = createClass({
 
   onChangeViewportDevice(id, device) {
     window.postMessage({
-      type: "update-user-agent",
-      userAgent: device.userAgent
+      type: "change-viewport-device",
+      device,
     }, "*");
     this.props.dispatch(changeDevice(id, device.name));
   },

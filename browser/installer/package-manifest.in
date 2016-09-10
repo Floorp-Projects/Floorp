@@ -361,6 +361,8 @@
 @RESPATH@/components/FeedProcessor.js
 @RESPATH@/components/PackagedAppUtils.js
 @RESPATH@/components/PackagedAppUtils.manifest
+@RESPATH@/components/WellKnownOpportunisticUtils.js
+@RESPATH@/components/WellKnownOpportunisticUtils.manifest
 #ifndef XP_MACOSX
 ; OSX uses native platform impl.  Windows, Linux, and Android uses fallback JS impl.
 @BINPATH@/components/nsDNSServiceDiscovery.manifest
