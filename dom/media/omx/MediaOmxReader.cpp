@@ -175,7 +175,7 @@ MediaOmxReader::Shutdown()
 void MediaOmxReader::ReleaseResources()
 {
   mMediaResourceRequest.DisconnectIfExists();
-  mMetadataPromise.RejectIfExists(ReadMetadataFailureReason::METADATA_ERROR, __func__);
+  mMetadataPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_METADATA_ERR, __func__);
 
   ResetDecode();
   // Before freeing a video codec, all video buffers needed to be released
@@ -221,7 +221,7 @@ MediaOmxReader::AsyncReadMetadata()
   nsresult rv = InitOmxDecoder();
   if (NS_FAILED(rv)) {
     return MediaDecoderReader::MetadataPromise::CreateAndReject(
-             ReadMetadataFailureReason::METADATA_ERROR, __func__);
+             NS_ERROR_DOM_MEDIA_METADATA_ERR, __func__);
   }
 
   bool isMP3 = mDecoder->GetResource()->GetContentType().EqualsASCII(AUDIO_MP3);
@@ -243,7 +243,7 @@ MediaOmxReader::AsyncReadMetadata()
         self->HandleResourceAllocated();
       }, [self] (bool) -> void {
         self->mMediaResourceRequest.Complete();
-        self->mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
+        self->mMetadataPromise.Reject(NS_ERROR_DOM_MEDIA_METADATA_ERR, __func__);
       }));
 
   return p;
@@ -255,7 +255,7 @@ void MediaOmxReader::HandleResourceAllocated()
 
   // After resources are available, set the metadata.
   if (!mOmxDecoder->EnsureMetadata()) {
-    mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
+    mMetadataPromise.Reject(NS_ERROR_DOM_MEDIA_METADATA_ERR, __func__);
     return;
   }
 
@@ -289,7 +289,7 @@ void MediaOmxReader::HandleResourceAllocated()
     nsIntSize displaySize(displayWidth, displayHeight);
     nsIntSize frameSize(width, height);
     if (!IsValidVideoRegion(frameSize, pictureRect, displaySize)) {
-      mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
+      mMetadataPromise.RejectNS_ERROR_DOM_MEDIA_METADATA_ERR, __func__);
       return;
     }
 
