@@ -53,7 +53,7 @@ NextFrameSeekTask::Discard()
   AssertOwnerThread();
 
   // Disconnect MDSM.
-  RejectIfExist(__func__);
+  RejectIfExist(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
 
   // Disconnect MediaDecoderReader.
   CancelCallbacks();
@@ -253,7 +253,7 @@ NextFrameSeekTask::OnVideoNotDecoded(const MediaResult& aError)
         // when seek fails.
         CancelCallbacks();
         // Reject the promise since we can't finish video seek anyway.
-        RejectIfExist(__func__);
+        RejectIfExist(aError, __func__);
         break;
     }
     return;
@@ -303,7 +303,7 @@ NextFrameSeekTask::SetCallbacks()
       } else {
         // Reject if we can't finish video seeking.
         CancelCallbacks();
-        RejectIfExist(__func__);
+        RejectIfExist(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
       }
       return;
     }
