@@ -39,6 +39,8 @@ protected:
   nsCOMPtr<nsIConsoleReportCollector> mReportCollector;
   nsCOMPtr<nsISupports> mReleaseHandle;
 
+  bool mClosed;
+
   void EnsureSynthesizedResponse();
   void DoNotifyController();
   nsresult DoSynthesizeStatus(uint16_t aStatus, const nsACString& aReason);

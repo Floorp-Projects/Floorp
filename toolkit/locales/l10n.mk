@@ -182,6 +182,10 @@ ifndef EN_US_BINARY_URL
 EN_US_BINARY_URL = $(error You must set EN_US_BINARY_URL)
 endif
 
+# Allow the overriding of PACKAGE format so we can get an EN_US build with a different
+# PACKAGE format than we are creating l10n packages with.
+EN_US_PACKAGE_NAME ?= $(PACKAGE)
+
 # This make target allows us to wget the latest en-US binary from a specified website
 # The make installers-% target needs the en-US binary in dist/
 # and for the windows repackages we need the .installer.exe in dist/sea
@@ -190,12 +194,14 @@ ifndef WGET
 	$(error Wget not installed)
 endif
 	$(NSINSTALL) -D $(ABS_DIST)/$(PKG_PATH)
-	(cd $(ABS_DIST)/$(PKG_PATH) && $(WGET) --no-cache -nv --no-iri -N  '$(EN_US_BINARY_URL)/$(PACKAGE)')
-	@echo 'Downloaded $(EN_US_BINARY_URL)/$(PACKAGE) to $(ABS_DIST)/$(PKG_PATH)/$(PACKAGE)'
+	(cd $(ABS_DIST)/$(PKG_PATH) && \
+        $(WGET) --no-cache -nv --no-iri -N -O $(PACKAGE) '$(EN_US_BINARY_URL)/$(EN_US_PACKAGE_NAME)')
+	@echo 'Downloaded $(EN_US_BINARY_URL)/$(EN_US_PACKAGE_NAME) to $(ABS_DIST)/$(PKG_PATH)/$(PACKAGE)'
 ifdef RETRIEVE_WINDOWS_INSTALLER
 ifeq ($(OS_ARCH), WINNT)
 	$(NSINSTALL) -D $(ABS_DIST)/$(PKG_INST_PATH)
-	(cd $(ABS_DIST)/$(PKG_INST_PATH) && $(WGET) --no-cache -nv --no-iri -N '$(EN_US_BINARY_URL)/$(PKG_PATH)$(PKG_INST_BASENAME).exe')
+	(cd $(ABS_DIST)/$(PKG_INST_PATH) && \
+        $(WGET) --no-cache -nv --no-iri -N '$(EN_US_BINARY_URL)/$(PKG_PATH)$(PKG_INST_BASENAME).exe')
 	@echo 'Downloaded $(EN_US_BINARY_URL)/$(PKG_PATH)$(PKG_INST_BASENAME).exe to $(ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe'
 endif
 endif

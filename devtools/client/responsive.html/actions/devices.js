@@ -14,7 +14,7 @@ const {
   UPDATE_DEVICE_MODAL_OPEN,
 } = require("./index");
 
-const { GetDevices } = require("devtools/client/shared/devices");
+const { getDevices } = require("devtools/client/shared/devices");
 
 const Services = require("Services");
 const DISPLAYED_DEVICES_PREF = "devtools.responsive.html.displayedDeviceList";
@@ -102,7 +102,7 @@ module.exports = {
       let devices;
 
       try {
-        devices = yield GetDevices();
+        devices = yield getDevices();
       } catch (e) {
         console.error("Could not load device list: " + e);
         dispatch({ type: LOAD_DEVICE_LIST_ERROR });

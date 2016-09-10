@@ -1290,7 +1290,7 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttribu
     nsCSSValue* display = aData->ValueForDisplay();
     if (display->GetUnit() == eCSSUnit_Null) {
       if (aAttributes->IndexOfAttr(nsGkAtoms::hidden) >= 0) {
-        display->SetIntValue(StyleDisplay::None_, eCSSUnit_Enumerated);
+        display->SetIntValue(StyleDisplay::None, eCSSUnit_Enumerated);
       }
     }
   }
@@ -3097,7 +3097,7 @@ IsOrHasAncestorWithDisplayNone(Element* aElement, nsIPresShell* aPresShell)
       sc = nsComputedDOMStyle::GetStyleContextForElementNoFlush(elementsToCheck[i],
                                                                 nullptr, aPresShell);
     }
-    if (sc->StyleDisplay()->mDisplay == StyleDisplay::None_) {
+    if (sc->StyleDisplay()->mDisplay == StyleDisplay::None) {
       return true;
     }
   }

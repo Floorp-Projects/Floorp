@@ -195,7 +195,7 @@ const char*
 nsLineBox::BreakTypeToString(StyleClear aBreakType) const
 {
   switch (aBreakType) {
-    case StyleClear::None_: return "nobr";
+    case StyleClear::None: return "nobr";
     case StyleClear::Left: return "leftbr";
     case StyleClear::Right: return "rightbr";
     case StyleClear::InlineStart: return "inlinestartbr";
