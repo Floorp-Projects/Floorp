@@ -804,7 +804,6 @@ PopupNotifications.prototype = {
     });
     if (!notificationsToShow.length)
       return;
-    let notificationIds = notificationsToShow.map(n => n.id);
 
     this._refreshPanel(notificationsToShow);
 
@@ -812,12 +811,6 @@ PopupNotifications.prototype = {
       notificationsToShow.forEach(function (n) {
         this._fireCallback(n, NOTIFICATION_EVENT_SHOWN);
       }, this);
-      // Let tests know that the panel was updated and what notifications it was
-      // updated with so that tests can wait for the correct notifications to be
-      // added.
-      let event = new this.window.CustomEvent("PanelUpdated",
-                                              {"detail": notificationIds});
-      this.panel.dispatchEvent(event);
       return;
     }
 
@@ -876,12 +869,9 @@ PopupNotifications.prototype = {
         notificationsToShow.forEach(function (n) {
           this._fireCallback(n, NOTIFICATION_EVENT_SHOWN);
         }, this);
-        // These notifications are used by tests to know when all the processing
+        // This notification is used by tests to know when all the processing
         // required to display the panel has happened.
         this.panel.dispatchEvent(new this.window.CustomEvent("Shown"));
-        let event = new this.window.CustomEvent("PanelUpdated",
-                                                {"detail": notificationIds});
-        this.panel.dispatchEvent(event);
       };
       this._popupshownListener = this._popupshownListener.bind(this);
       target.addEventListener("popupshown", this._popupshownListener, true);
