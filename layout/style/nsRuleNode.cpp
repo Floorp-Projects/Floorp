@@ -205,7 +205,7 @@ nsRuleNode::EnsureBlockDisplay(StyleDisplay& display,
       break;
     } // else, fall through to share the 'break' for non-changing display vals
     MOZ_FALLTHROUGH;
-  case StyleDisplay::None_:
+  case StyleDisplay::None:
   case StyleDisplay::Contents:
     // never change display:none or display:contents *ever*
   case StyleDisplay::Table:
@@ -1342,16 +1342,16 @@ struct SetEnumValueHelper
   DEFINE_ENUM_CLASS_SETTER(StyleBoxOrient, Horizontal, Vertical)
   DEFINE_ENUM_CLASS_SETTER(StyleBoxPack, Start, Justify)
   DEFINE_ENUM_CLASS_SETTER(StyleBoxSizing, Content, Border)
-  DEFINE_ENUM_CLASS_SETTER(StyleClear, None_, Both)
+  DEFINE_ENUM_CLASS_SETTER(StyleClear, None, Both)
   DEFINE_ENUM_CLASS_SETTER(StyleFillRule, Nonzero, Evenodd)
-  DEFINE_ENUM_CLASS_SETTER(StyleFloat, None_, InlineEnd)
+  DEFINE_ENUM_CLASS_SETTER(StyleFloat, None, InlineEnd)
   DEFINE_ENUM_CLASS_SETTER(StyleFloatEdge, ContentBox, MarginBox)
-  DEFINE_ENUM_CLASS_SETTER(StyleUserFocus, None_, SelectMenu)
-  DEFINE_ENUM_CLASS_SETTER(StyleUserSelect, None_, MozText)
+  DEFINE_ENUM_CLASS_SETTER(StyleUserFocus, None, SelectMenu)
+  DEFINE_ENUM_CLASS_SETTER(StyleUserSelect, None, MozText)
 #ifdef MOZ_XUL
-  DEFINE_ENUM_CLASS_SETTER(StyleDisplay, None_, Popup)
+  DEFINE_ENUM_CLASS_SETTER(StyleDisplay, None, Popup)
 #else
-  DEFINE_ENUM_CLASS_SETTER(StyleDisplay, None_, InlineBox)
+  DEFINE_ENUM_CLASS_SETTER(StyleDisplay, None, InlineBox)
 #endif
 
 #undef DEF_SET_ENUMERATED_VALUE
@@ -5149,7 +5149,7 @@ nsRuleNode::ComputeUserInterfaceData(void* aStartStruct,
            ui->mUserFocus, conditions,
            SETVAL_ENUMERATED | SETVAL_UNSET_INHERIT,
            parentUI->mUserFocus,
-           StyleUserFocus::None_);
+           StyleUserFocus::None);
 
   // pointer-events: enum, inherit, initial
   SetValue(*aRuleData->ValueForPointerEvents(), ui->mPointerEvents,
@@ -6045,7 +6045,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
   SetValue(*aRuleData->ValueForClear(), display->mBreakType, conditions,
            SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
            parentDisplay->mBreakType,
-           StyleClear::None_);
+           StyleClear::None);
 
   // temp fix for bug 24000
   // Map 'auto' and 'avoid' to false, and 'always', 'left', and
@@ -6104,7 +6104,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
            display->mFloat, conditions,
            SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
            parentDisplay->mFloat,
-           StyleFloat::None_);
+           StyleFloat::None);
   // Save mFloat in mOriginalFloat in case we need it later
   display->mOriginalFloat = display->mFloat;
 
@@ -6175,7 +6175,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
            parentDisplay->mResize,
            NS_STYLE_RESIZE_NONE);
 
-  if (display->mDisplay != StyleDisplay::None_) {
+  if (display->mDisplay != StyleDisplay::None) {
     // CSS2 9.7 specifies display type corrections dealing with 'float'
     // and 'position'.  Since generated content can't be floated or
     // positioned, we can deal with it here.
@@ -6231,7 +6231,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
       // 1) if position is 'absolute' or 'fixed' then display must be
       // block-level and float must be 'none'
       EnsureBlockDisplay(display->mDisplay);
-      display->mFloat = StyleFloat::None_;
+      display->mFloat = StyleFloat::None;
 
       // Note that it's OK to cache this struct in the ruletree
       // because it's fine as-is for any style context that points to
@@ -6239,7 +6239,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
       // more specific rule sets "position: static") will use
       // mOriginalDisplay and mOriginalFloat, which we have carefully
       // not changed.
-    } else if (display->mFloat != StyleFloat::None_) {
+    } else if (display->mFloat != StyleFloat::None) {
       // 2) if float is not none, and display is not none, then we must
       // set a block-level 'display' type per CSS2.1 section 9.7.
       EnsureBlockDisplay(display->mDisplay);
@@ -7166,7 +7166,7 @@ SetImageLayerPairList(nsStyleContext* aStyleContext,
 
 template <class ComputedValueItem>
 static void
-FillBackgroundList(
+FillImageLayerList(
     nsStyleAutoArray<nsStyleImageLayers::Layer>& aLayers,
     ComputedValueItem nsStyleImageLayers::Layer::* aResultLocation,
     uint32_t aItemCount, uint32_t aFillCount)
@@ -7180,10 +7180,10 @@ FillBackgroundList(
   }
 }
 
-// The same as FillBackgroundList, but for values stored in
+// The same as FillImageLayerList, but for values stored in
 // layer.mPosition.*aResultLocation instead of layer.*aResultLocation.
 static void
-FillBackgroundPositionCoordList(
+FillImageLayerPositionCoordList(
     nsStyleAutoArray<nsStyleImageLayers::Layer>& aLayers,
     Position::Coord
         Position::* aResultLocation,
@@ -7208,31 +7208,31 @@ nsRuleNode::FillAllBackgroundLists(nsStyleImageLayers& aImage,
   aImage.mLayers.TruncateLengthNonZero(aMaxItemCount);
 
   uint32_t fillCount = aImage.mImageCount;
-  FillBackgroundList(aImage.mLayers,
+  FillImageLayerList(aImage.mLayers,
                      &nsStyleImageLayers::Layer::mImage,
                      aImage.mImageCount, fillCount);
-  FillBackgroundList(aImage.mLayers,
+  FillImageLayerList(aImage.mLayers,
                      &nsStyleImageLayers::Layer::mRepeat,
                      aImage.mRepeatCount, fillCount);
-  FillBackgroundList(aImage.mLayers,
+  FillImageLayerList(aImage.mLayers,
                      &nsStyleImageLayers::Layer::mAttachment,
                      aImage.mAttachmentCount, fillCount);
-  FillBackgroundList(aImage.mLayers,
+  FillImageLayerList(aImage.mLayers,
                      &nsStyleImageLayers::Layer::mClip,
                      aImage.mClipCount, fillCount);
-  FillBackgroundList(aImage.mLayers,
+  FillImageLayerList(aImage.mLayers,
                      &nsStyleImageLayers::Layer::mBlendMode,
                      aImage.mBlendModeCount, fillCount);
-  FillBackgroundList(aImage.mLayers,
+  FillImageLayerList(aImage.mLayers,
                      &nsStyleImageLayers::Layer::mOrigin,
                      aImage.mOriginCount, fillCount);
-  FillBackgroundPositionCoordList(aImage.mLayers,
+  FillImageLayerPositionCoordList(aImage.mLayers,
                                   &Position::mXPosition,
                                   aImage.mPositionXCount, fillCount);
-  FillBackgroundPositionCoordList(aImage.mLayers,
+  FillImageLayerPositionCoordList(aImage.mLayers,
                                   &Position::mYPosition,
                                   aImage.mPositionYCount, fillCount);
-  FillBackgroundList(aImage.mLayers,
+  FillImageLayerList(aImage.mLayers,
                      &nsStyleImageLayers::Layer::mSize,
                      aImage.mSizeCount, fillCount);
 }
@@ -9396,6 +9396,50 @@ SetSVGOpacity(const nsCSSValue& aValue,
   }
 }
 
+/* static */
+void
+nsRuleNode::FillAllMaskLists(nsStyleImageLayers& aMask,
+                             uint32_t aMaxItemCount)
+{
+
+  // Delete any extra items.  We need to keep layers in which any
+  // property was specified.
+  aMask.mLayers.TruncateLengthNonZero(aMaxItemCount);
+
+  uint32_t fillCount = aMask.mImageCount;
+
+  FillImageLayerList(aMask.mLayers,
+                     &nsStyleImageLayers::Layer::mImage,
+                     aMask.mImageCount, fillCount);
+  FillImageLayerList(aMask.mLayers,
+                     &nsStyleImageLayers::Layer::mSourceURI,
+                     aMask.mImageCount, fillCount);
+  FillImageLayerList(aMask.mLayers,
+                     &nsStyleImageLayers::Layer::mRepeat,
+                     aMask.mRepeatCount, fillCount);
+  FillImageLayerList(aMask.mLayers,
+                     &nsStyleImageLayers::Layer::mClip,
+                     aMask.mClipCount, fillCount);
+  FillImageLayerList(aMask.mLayers,
+                     &nsStyleImageLayers::Layer::mOrigin,
+                     aMask.mOriginCount, fillCount);
+  FillImageLayerPositionCoordList(aMask.mLayers,
+                                  &Position::mXPosition,
+                                  aMask.mPositionXCount, fillCount);
+  FillImageLayerPositionCoordList(aMask.mLayers,
+                                  &Position::mYPosition,
+                                  aMask.mPositionYCount, fillCount);
+  FillImageLayerList(aMask.mLayers,
+                     &nsStyleImageLayers::Layer::mSize,
+                     aMask.mSizeCount, fillCount);
+  FillImageLayerList(aMask.mLayers,
+                     &nsStyleImageLayers::Layer::mMaskMode,
+                     aMask.mMaskModeCount, fillCount);
+  FillImageLayerList(aMask.mLayers,
+                     &nsStyleImageLayers::Layer::mComposite,
+                     aMask.mCompositeCount, fillCount);
+}
+
 const void*
 nsRuleNode::ComputeSVGData(void* aStartStruct,
                            const nsRuleData* aRuleData,
@@ -10120,42 +10164,7 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
                     svgReset->mMask.mCompositeCount, maxItemCount, rebuild, conditions);
 
   if (rebuild) {
-    // Delete any extra items.  We need to keep layers in which any
-    // property was specified.
-    svgReset->mMask.mLayers.TruncateLengthNonZero(maxItemCount);
-
-    uint32_t fillCount = svgReset->mMask.mImageCount;
-
-    FillBackgroundList(svgReset->mMask.mLayers,
-                       &nsStyleImageLayers::Layer::mImage,
-                       svgReset->mMask.mImageCount, fillCount);
-    FillBackgroundList(svgReset->mMask.mLayers,
-                       &nsStyleImageLayers::Layer::mSourceURI,
-                       svgReset->mMask.mImageCount, fillCount);
-    FillBackgroundList(svgReset->mMask.mLayers,
-                       &nsStyleImageLayers::Layer::mRepeat,
-                       svgReset->mMask.mRepeatCount, fillCount);
-    FillBackgroundList(svgReset->mMask.mLayers,
-                       &nsStyleImageLayers::Layer::mClip,
-                       svgReset->mMask.mClipCount, fillCount);
-    FillBackgroundList(svgReset->mMask.mLayers,
-                       &nsStyleImageLayers::Layer::mOrigin,
-                       svgReset->mMask.mOriginCount, fillCount);
-    FillBackgroundPositionCoordList(svgReset->mMask.mLayers,
-                                    &Position::mXPosition,
-                                    svgReset->mMask.mPositionXCount, fillCount);
-    FillBackgroundPositionCoordList(svgReset->mMask.mLayers,
-                                    &Position::mYPosition,
-                                    svgReset->mMask.mPositionYCount, fillCount);
-    FillBackgroundList(svgReset->mMask.mLayers,
-                       &nsStyleImageLayers::Layer::mSize,
-                       svgReset->mMask.mSizeCount, fillCount);
-    FillBackgroundList(svgReset->mMask.mLayers,
-                       &nsStyleImageLayers::Layer::mMaskMode,
-                       svgReset->mMask.mMaskModeCount, fillCount);
-    FillBackgroundList(svgReset->mMask.mLayers,
-                       &nsStyleImageLayers::Layer::mComposite,
-                       svgReset->mMask.mCompositeCount, fillCount);
+    FillAllBackgroundLists(svgReset->mMask, maxItemCount);
   }
 #else
   // mask: none | <url>
