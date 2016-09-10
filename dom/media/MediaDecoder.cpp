@@ -1016,7 +1016,7 @@ MediaDecoder::DecodeError(const MediaResult& aError)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!IsShutdown());
-  mOwner->DecodeError();
+  mOwner->DecodeError(aError);
   MOZ_ASSERT(IsShutdown());
 }
 
