@@ -289,12 +289,12 @@ nsresult MediaDecoderReader::ResetDecode(TrackSet aTracks)
 {
   if (aTracks.contains(TrackInfo::kVideoTrack)) {
     VideoQueue().Reset();
-    mBaseVideoPromise.RejectIfExists(CANCELED, __func__);
+    mBaseVideoPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
   }
 
   if (aTracks.contains(TrackInfo::kAudioTrack)) {
     AudioQueue().Reset();
-    mBaseAudioPromise.RejectIfExists(CANCELED, __func__);
+    mBaseAudioPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
   }
 
   return NS_OK;
@@ -323,7 +323,7 @@ MediaDecoderReader::DecodeToFirstVideoData()
     p->Resolve(self->VideoQueue().PeekFront(), __func__);
   }, [p] () {
     // We don't have a way to differentiate EOS, error, and shutdown here. :-(
-    p->Reject(END_OF_STREAM, __func__);
+    p->Reject(NS_ERROR_DOM_MEDIA_END_OF_STREAM, __func__);
   });
 
   return p.forget();
@@ -456,7 +456,7 @@ MediaDecoderReader::RequestVideoData(bool aSkipToNextKeyframe,
     RefPtr<VideoData> v = VideoQueue().PopFront();
     mBaseVideoPromise.Resolve(v, __func__);
   } else if (VideoQueue().IsFinished()) {
-    mBaseVideoPromise.Reject(END_OF_STREAM, __func__);
+    mBaseVideoPromise.Reject(NS_ERROR_DOM_MEDIA_END_OF_STREAM, __func__);
   } else {
     MOZ_ASSERT(false, "Dropping this promise on the floor");
   }
@@ -488,7 +488,9 @@ MediaDecoderReader::RequestAudioData()
     RefPtr<AudioData> a = AudioQueue().PopFront();
     mBaseAudioPromise.Resolve(a, __func__);
   } else if (AudioQueue().IsFinished()) {
-    mBaseAudioPromise.Reject(mHitAudioDecodeError ? DECODE_ERROR : END_OF_STREAM, __func__);
+    mBaseAudioPromise.Reject(mHitAudioDecodeError
+                             ? NS_ERROR_DOM_MEDIA_FATAL_ERR
+                             : NS_ERROR_DOM_MEDIA_END_OF_STREAM, __func__);
     mHitAudioDecodeError = false;
   } else {
     MOZ_ASSERT(false, "Dropping this promise on the floor");
@@ -503,8 +505,8 @@ MediaDecoderReader::Shutdown()
   MOZ_ASSERT(OnTaskQueue());
   mShutdown = true;
 
-  mBaseAudioPromise.RejectIfExists(END_OF_STREAM, __func__);
-  mBaseVideoPromise.RejectIfExists(END_OF_STREAM, __func__);
+  mBaseAudioPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_END_OF_STREAM, __func__);
+  mBaseVideoPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_END_OF_STREAM, __func__);
 
   mDataArrivedListener.DisconnectIfExists();
 

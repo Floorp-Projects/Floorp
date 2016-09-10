@@ -107,7 +107,7 @@ public:
     ReaderShutdown();
   }
 
-  void OnNotDemuxed(MediaDecoderReader::NotDecodedReason aReason)
+  void OnNotDemuxed(const MediaResult& aReason)
   {
     EXPECT_TRUE(false);
     ReaderShutdown();
