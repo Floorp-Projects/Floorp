@@ -52,7 +52,6 @@ public:
     bool CanLinkTo(const WebGLShader* prev, nsCString* const out_log) const;
     size_t CalcNumSamplerUniforms() const;
     size_t NumAttributes() const;
-    void BindAttribLocation(GLuint prog, const nsCString& userName, GLuint index) const;
     bool FindAttribUserNameByMappedName(const nsACString& mappedName,
                                         nsDependentCString* const out_userName) const;
     bool FindVaryingByMappedName(const nsACString& mappedName,
@@ -71,11 +70,12 @@ public:
         return mTranslationSuccessful && mCompilationSuccessful;
     }
 
-    void ApplyTransformFeedbackVaryings(GLuint prog,
-                                        const std::vector<nsCString>& varyings,
-                                        GLenum bufferMode,
-                                        std::vector<std::string>* out_mappedVaryings) const;
+private:
+    void BindAttribLocation(GLuint prog, const nsCString& userName, GLuint index) const;
+    void MapTransformFeedbackVaryings(const std::vector<nsString>& varyings,
+                                      std::vector<std::string>* out_mappedVaryings) const;
 
+public:
     // Other funcs
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
     void Delete();

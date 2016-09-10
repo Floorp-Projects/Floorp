@@ -8,7 +8,7 @@
 
 #include "GLDefs.h"
 #include "mozilla/LinkedList.h"
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsWrapperCache.h"
 
 #include "WebGLObjectModel.h"
@@ -24,8 +24,12 @@ class WebGLBuffer final
     , public LinkedListElement<WebGLBuffer>
     , public WebGLContextBoundObject
 {
-public:
+    friend class WebGLContext;
+    friend class WebGL2Context;
+    friend class WebGLTexture;
+    friend class WebGLTransformFeedback;
 
+public:
     enum class Kind {
         Undefined,
         ElementArray,
@@ -34,23 +38,21 @@ public:
 
     WebGLBuffer(WebGLContext* webgl, GLuint buf);
 
-    void BindTo(GLenum target);
+    void SetContentAfterBind(GLenum target);
     Kind Content() const { return mContent; }
 
     void Delete();
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
-    WebGLsizeiptr ByteLength() const { return mByteLength; }
-    void SetByteLength(WebGLsizeiptr byteLength) { mByteLength = byteLength; }
+    size_t ByteLength() const { return mByteLength; }
 
     bool ElementArrayCacheBufferData(const void* ptr, size_t bufferSizeInBytes);
 
     void ElementArrayCacheBufferSubData(size_t pos, const void* ptr,
                                         size_t updateSizeInBytes);
 
-    bool Validate(GLenum type, uint32_t max_allowed, size_t first, size_t count,
-                  uint32_t* const out_upperBound);
+    bool Validate(GLenum type, uint32_t max_allowed, size_t first, size_t count) const;
 
     bool IsElementArrayUsedWithMultipleTypes() const;
 
@@ -59,6 +61,8 @@ public:
     }
 
     virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) override;
+
+    void BufferData(GLenum target, size_t size, const void* data, GLenum usage);
 
     const GLenum mGLName;
 
@@ -69,8 +73,9 @@ protected:
     ~WebGLBuffer();
 
     Kind mContent;
-    WebGLsizeiptr mByteLength;
-    nsAutoPtr<WebGLElementArrayCache> mCache;
+    size_t mByteLength;
+    UniquePtr<WebGLElementArrayCache> mCache;
+    size_t mNumActiveTFOs;
 };
 
 } // namespace mozilla

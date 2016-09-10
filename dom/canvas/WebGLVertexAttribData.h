@@ -41,26 +41,19 @@ struct WebGLVertexAttribData
     GLuint componentSize() const {
         switch(type) {
         case LOCAL_GL_BYTE:
-            return sizeof(GLbyte);
-
         case LOCAL_GL_UNSIGNED_BYTE:
-            return sizeof(GLubyte);
+            return 1;
 
         case LOCAL_GL_SHORT:
-            return sizeof(GLshort);
-
         case LOCAL_GL_UNSIGNED_SHORT:
-            return sizeof(GLushort);
+        case LOCAL_GL_HALF_FLOAT:
+        case LOCAL_GL_HALF_FLOAT_OES:
+            return 2;
 
         case LOCAL_GL_INT:
-            return sizeof(GLint);
-
         case LOCAL_GL_UNSIGNED_INT:
-            return sizeof(GLuint);
-
-        // case LOCAL_GL_FIXED:
         case LOCAL_GL_FLOAT:
-            return sizeof(GLfloat);
+            return 4;
 
         default:
             MOZ_ASSERT(false, "Should never get here!");

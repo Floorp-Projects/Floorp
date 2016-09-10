@@ -19,6 +19,7 @@
 #include "mozilla/Unused.h"
 #include "ScopedGLHelpers.h"
 #include "TexUnpackBlob.h"
+#include "WebGLBuffer.h"
 #include "WebGLContext.h"
 #include "WebGLContextUtils.h"
 #include "WebGLFramebuffer.h"
@@ -213,6 +214,15 @@ WebGLContext::ValidateUnpackInfo(const char* funcName, bool usePBOs, GLenum form
         return false;
     }
 
+    if (mBoundPixelUnpackBuffer &&
+        mBoundPixelUnpackBuffer->mNumActiveTFOs)
+    {
+        ErrorInvalidOperation("%s: Buffer is bound to an active transform feedback"
+                              " object.",
+                              funcName);
+        return false;
+    }
+
     if (!mFormatUsage->AreUnpackEnumsValid(format, type)) {
         ErrorInvalidEnum("%s: Invalid unpack format/type: 0x%04x/0x%04x", funcName,
                          format, type);
@@ -315,7 +325,7 @@ WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarge
     const auto bufferByteCount = packBuffer->ByteLength();
 
     uint32_t byteCount = 0;
-    if (bufferByteCount >= offset) {
+    if (bufferByteCount >= uint64_t(offset)) {
         byteCount = bufferByteCount - offset;
     }
 
