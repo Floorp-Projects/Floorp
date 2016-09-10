@@ -111,6 +111,9 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
         super.onCreate(savedInstance);
 
         mHistoryAdapter = new CombinedHistoryAdapter(getResources());
+        if (mPanelStateChangeListener != null) {
+            mHistoryAdapter.setPanelStateChangeListener(mPanelStateChangeListener);
+        }
         mClientsAdapter = new ClientsAdapter(getContext());
         // The RecentTabsAdapter doesn't use a cursor and therefore can't use the CursorLoader's
         // onLoadFinished() callback for updating the panel state when the closed tab count changes.
@@ -237,6 +240,15 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
 
         final TextView recentTabsText = (TextView) mRecentTabsEmptyView.findViewById(R.id.home_empty_text);
         recentTabsText.setText(R.string.home_last_tabs_empty);
+    }
+
+    @Override
+    public void setPanelStateChangeListener(
+            PanelStateChangeListener panelStateChangeListener) {
+        super.setPanelStateChangeListener(panelStateChangeListener);
+        if (mHistoryAdapter != null) {
+            mHistoryAdapter.setPanelStateChangeListener(panelStateChangeListener);
+        }
     }
 
     @Override
