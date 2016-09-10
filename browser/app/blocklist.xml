@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1472235999000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1472845813000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -282,6 +282,12 @@
     </emItem>
       <emItem  blockID="i554" id="lightningnewtab@gmail.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i1266" id="@stopad">
+                        <versionRange  minVersion="0" maxVersion="0.0.4" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -716,7 +722,7 @@
               </prefs>
     </emItem>
       <emItem  blockID="i45" id="{22119944-ED35-4ab1-910B-E619EA06A115}">
-                        <versionRange  minVersion="0.1" maxVersion="7.6.1">
+                        <versionRange  minVersion="0.1" maxVersion="7.9.20.6" severity="1">
                       <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
                               <versionRange  minVersion="8.0a1" maxVersion="*" />
                           </targetApplication>
@@ -4154,6 +4160,18 @@
     </certItem>
         <certItem issuerName="MDsxCzAJBgNVBAYTAkVTMREwDwYDVQQKDAhGTk1ULVJDTTEZMBcGA1UECwwQQUMgUkFJWiBGTk1ULVJDTQ==">
       <serialNumber>Eg==</serialNumber>
+    </certItem>
+        <certItem issuerName="MG8xCzAJBgNVBAYTAlNFMRQwEgYDVQQKEwtBZGRUcnVzdCBBQjEmMCQGA1UECxMdQWRkVHJ1c3QgRXh0ZXJuYWwgVFRQIE5ldHdvcmsxIjAgBgNVBAMTGUFkZFRydXN0IEV4dGVybmFsIENBIFJvb3Q=">
+      <serialNumber>RurwlgVMxeP6Zepun0LGZA==</serialNumber>
+    </certItem>
+        <certItem issuerName="MG8xCzAJBgNVBAYTAlNFMRQwEgYDVQQKEwtBZGRUcnVzdCBBQjEmMCQGA1UECxMdQWRkVHJ1c3QgRXh0ZXJuYWwgVFRQIE5ldHdvcmsxIjAgBgNVBAMTGUFkZFRydXN0IEV4dGVybmFsIENBIFJvb3Q=">
+      <serialNumber>Os2rnHWYhryvdOXfgan06A==</serialNumber>
+    </certItem>
+        <certItem issuerName="MG8xCzAJBgNVBAYTAlNFMRQwEgYDVQQKEwtBZGRUcnVzdCBBQjEmMCQGA1UECxMdQWRkVHJ1c3QgRXh0ZXJuYWwgVFRQIE5ldHdvcmsxIjAgBgNVBAMTGUFkZFRydXN0IEV4dGVybmFsIENBIFJvb3Q=">
+      <serialNumber>U3t2Vk8pfxTcaUPpIq0seQ==</serialNumber>
+    </certItem>
+        <certItem issuerName="ME0xCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxJzAlBgNVBAMTHkRpZ2lDZXJ0IFNIQTIgU2VjdXJlIFNlcnZlciBDQQ==">
+      <serialNumber>Aa8e+91erglSMgsk/mtVaA==</serialNumber>
     </certItem>
       </certItems>
 
