@@ -7,7 +7,7 @@
 const { getJSON } = require("devtools/client/shared/getjson");
 
 const DEVICES_URL = "devtools.devices.url";
-const {LocalizationHelper} = require("devtools/shared/l10n");
+const { LocalizationHelper } = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/locale/device.properties");
 
 /* This is a catalog of common web-enabled devices and their properties,
@@ -29,24 +29,44 @@ const L10N = new LocalizationHelper("devtools/locale/device.properties");
  * addon) like so:
  *
  *   var myPhone = { name: "My Phone", ... };
- *   require("devtools/client/shared/devices").AddDevice(myPhone, "phones");
+ *   require("devtools/client/shared/devices").addDevice(myPhone, "phones");
  */
 
 // Local devices catalog that addons can add to.
-var localDevices = {};
+let localDevices = {};
 
 // Add a device to the local catalog.
-function AddDevice(device, type = "phones") {
+function addDevice(device, type = "phones") {
   let list = localDevices[type];
   if (!list) {
     list = localDevices[type] = [];
   }
   list.push(device);
 }
-exports.AddDevice = AddDevice;
+exports.addDevice = addDevice;
+
+// Remove a device from the local catalog.
+// returns `true` if the device is removed, `false` otherwise.
+function removeDevice(device, type = "phones") {
+  let list = localDevices[type];
+  if (!list) {
+    return false;
+  }
+
+  let index = list.findIndex(item => device);
+
+  if (index === -1) {
+    return false;
+  }
+
+  list.splice(index, 1);
+
+  return true;
+}
+exports.removeDevice = removeDevice;
 
 // Get the complete devices catalog.
-function GetDevices() {
+function getDevices() {
   // Fetch common devices from Mozilla's CDN.
   return getJSON(DEVICES_URL).then(devices => {
     for (let type in localDevices) {
@@ -59,10 +79,10 @@ function GetDevices() {
     return devices;
   });
 }
-exports.GetDevices = GetDevices;
+exports.getDevices = getDevices;
 
 // Get the localized string for a device type.
-function GetDeviceString(deviceType) {
+function getDeviceString(deviceType) {
   return L10N.getStr("device." + deviceType);
 }
-exports.GetDeviceString = GetDeviceString;
+exports.getDeviceString = getDeviceString;

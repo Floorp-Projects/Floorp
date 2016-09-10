@@ -54,6 +54,29 @@ const emulationSpec = generateActorSpec({
         valueChanged: RetVal("boolean")
       }
     },
+
+    setDPPXOverride: {
+      request: {
+        dppx: Arg(0, "number")
+      },
+      response: {
+        valueChanged: RetVal("boolean")
+      }
+    },
+
+    getDPPXOverride: {
+      request: {},
+      response: {
+        dppx: RetVal("number")
+      }
+    },
+
+    clearDPPXOverride: {
+      request: {},
+      response: {
+        valueChanged: RetVal("boolean")
+      }
+    },
   }
 });
 

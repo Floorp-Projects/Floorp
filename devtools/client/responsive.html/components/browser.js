@@ -102,6 +102,7 @@ module.exports = createClass({
 
   stopFrameScript: Task.async(function* () {
     let { onContentResize } = this;
+
     let browser = this.refs.browserContainer.querySelector("iframe.browser");
     let mm = browser.frameLoader.messageManager;
     e10s.off(mm, "OnContentResize", onContentResize);

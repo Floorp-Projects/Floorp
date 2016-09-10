@@ -76,6 +76,38 @@ let EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
     return false;
   },
 
+  /* DPPX override */
+
+  _previousDPPXOverride: null,
+
+  setDPPXOverride(dppx) {
+    let { contentViewer } = this.docShell;
+
+    if (contentViewer.overrideDPPX === dppx) {
+      return false;
+    }
+
+    if (this._previousDPPXOverride === null) {
+      this._previousDPPXOverride = contentViewer.overrideDPPX;
+    }
+
+    contentViewer.overrideDPPX = dppx;
+
+    return true;
+  },
+
+  getDPPXOverride() {
+    return this.docShell.contentViewer.overrideDPPX;
+  },
+
+  clearDPPXOverride() {
+    if (this._previousDPPXOverride !== null) {
+      return this.setDPPXOverride(this._previousDPPXOverride);
+    }
+
+    return false;
+  },
+
   disconnect() {
     this.destroy();
   },
@@ -83,6 +115,7 @@ let EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
   destroy() {
     this.clearTouchEventsOverride();
     this.clearUserAgentOverride();
+    this.clearDPPXOverride();
     this.docShell = null;
     this.simulatorCore = null;
     protocol.Actor.prototype.destroy.call(this);
