@@ -18,27 +18,43 @@ class WebGLTransformFeedback final
     , public LinkedListElement<WebGLTransformFeedback>
     , public WebGLContextBoundObject
 {
+    friend class ScopedDrawWithTransformFeedback;
     friend class WebGLContext;
     friend class WebGL2Context;
+    friend class WebGLProgram;
+
+public:
+    const GLuint mGLName;
+private:
+    // GLES 3.0.4 p267, Table 6.24 "Transform Feedback State"
+    WebGLRefPtr<WebGLBuffer> mGenericBufferBinding;
+    std::vector<IndexedBufferBinding> mIndexedBindings;
+    bool mIsPaused;
+    bool mIsActive;
+    // Not in state tables:
+    WebGLRefPtr<WebGLProgram> mActive_Program;
+    GLenum mActive_PrimMode;
+    size_t mActive_VertPosition;
+    size_t mActive_VertCapacity;
 
 public:
     WebGLTransformFeedback(WebGLContext* webgl, GLuint tf);
-
-    void Delete();
-    WebGLContext* GetParentObject() const;
-    virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) override;
-
-    const GLuint mGLName;
-
-    NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLTransformFeedback)
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLTransformFeedback)
-
 private:
     ~WebGLTransformFeedback();
 
-    GLenum mMode;
-    bool mIsActive;
-    bool mIsPaused;
+public:
+    NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLTransformFeedback)
+    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLTransformFeedback)
+
+    void Delete();
+    WebGLContext* GetParentObject() const { return mContext; }
+    virtual JSObject* WrapObject(JSContext*, JS::Handle<JSObject*>) override;
+
+    // GL Funcs
+    void BeginTransformFeedback(GLenum primMode);
+    void EndTransformFeedback();
+    void PauseTransformFeedback();
+    void ResumeTransformFeedback();
 };
 
 } // namespace mozilla

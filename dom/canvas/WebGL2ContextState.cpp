@@ -33,13 +33,16 @@ WebGL2Context::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
     /* GLboolean */
     case LOCAL_GL_RASTERIZER_DISCARD:
     case LOCAL_GL_SAMPLE_ALPHA_TO_COVERAGE:
-    case LOCAL_GL_SAMPLE_COVERAGE:
-    case LOCAL_GL_TRANSFORM_FEEDBACK_PAUSED:
-    case LOCAL_GL_TRANSFORM_FEEDBACK_ACTIVE: {
+    case LOCAL_GL_SAMPLE_COVERAGE: {
       realGLboolean b = 0;
       gl->fGetBooleanv(pname, &b);
       return JS::BooleanValue(bool(b));
     }
+
+    case LOCAL_GL_TRANSFORM_FEEDBACK_ACTIVE:
+      return JS::BooleanValue(mBoundTransformFeedback->mIsActive);
+    case LOCAL_GL_TRANSFORM_FEEDBACK_PAUSED:
+      return JS::BooleanValue(mBoundTransformFeedback->mIsPaused);
 
     /* GLenum */
     case LOCAL_GL_READ_BUFFER: {
@@ -149,7 +152,10 @@ WebGL2Context::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
       return WebGLObjectAsJSValue(cx, mBoundPixelUnpackBuffer.get(), rv);
 
     case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER_BINDING:
-      return WebGLObjectAsJSValue(cx, mBoundTransformFeedbackBuffer.get(), rv);
+      {
+        const auto& tf = mBoundTransformFeedback;
+        return WebGLObjectAsJSValue(cx, tf->mGenericBufferBinding.get(), rv);
+      }
 
     case LOCAL_GL_UNIFORM_BUFFER_BINDING:
       return WebGLObjectAsJSValue(cx, mBoundUniformBuffer.get(), rv);
@@ -167,11 +173,14 @@ WebGL2Context::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
     case LOCAL_GL_TEXTURE_BINDING_3D:
       return WebGLObjectAsJSValue(cx, mBound3DTextures[mActiveTexture].get(), rv);
 
-    case LOCAL_GL_TRANSFORM_FEEDBACK_BINDING: {
-      WebGLTransformFeedback* tf =
-        (mBoundTransformFeedback != mDefaultTransformFeedback) ? mBoundTransformFeedback.get() : nullptr;
-      return WebGLObjectAsJSValue(cx, tf, rv);
-    }
+    case LOCAL_GL_TRANSFORM_FEEDBACK_BINDING:
+      {
+        const WebGLTransformFeedback* tf = mBoundTransformFeedback;
+        if (tf == mDefaultTransformFeedback) {
+          tf = nullptr;
+        }
+        return WebGLObjectAsJSValue(cx, tf, rv);
+      }
 
     case LOCAL_GL_VERTEX_ARRAY_BINDING: {
       WebGLVertexArray* vao =
