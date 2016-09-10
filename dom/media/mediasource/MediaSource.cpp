@@ -330,7 +330,7 @@ MediaSource::EndOfStream(const Optional<MediaSourceEndOfStreamError>& aError, Er
     mDecoder->NetworkError();
     break;
   case MediaSourceEndOfStreamError::Decode:
-    mDecoder->DecodeError();
+    mDecoder->DecodeError(NS_ERROR_DOM_MEDIA_FATAL_ERR);
     break;
   default:
     aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
