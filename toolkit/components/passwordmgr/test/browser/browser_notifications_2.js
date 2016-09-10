@@ -19,8 +19,7 @@ add_task(function* test_empty_password() {
       // Submit the form in the content page with the credentials from the test
       // case. This will cause the doorhanger notification to be displayed.
       let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
-                                                       "popupshown",
-                                                       (event) => event.target == PopupNotifications.panel);
+                                                       "popupshown");
       yield ContentTask.spawn(browser, null,
         function* () {
           let doc = content.document;
@@ -62,8 +61,7 @@ add_task(function* test_toggle_password() {
       // Submit the form in the content page with the credentials from the test
       // case. This will cause the doorhanger notification to be displayed.
       let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
-                                                       "popupshown",
-                                                       (event) => event.target == PopupNotifications.panel);
+                                                       "popupshown");
       yield ContentTask.spawn(browser, null,
         function* () {
           let doc = content.document;
@@ -100,8 +98,7 @@ add_task(function* test_checkbox_disabled_if_has_master_password() {
       // Submit the form in the content page with the credentials from the test
       // case. This will cause the doorhanger notification to be displayed.
       let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
-                                                       "popupshown",
-                                                       (event) => event.target == PopupNotifications.panel);
+                                                       "popupshown");
 
       LoginTestUtils.masterPassword.enable();
 
