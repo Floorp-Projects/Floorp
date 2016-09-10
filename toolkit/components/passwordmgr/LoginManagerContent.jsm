@@ -465,7 +465,7 @@ var LoginManagerContent = {
     };
 
     let messageManager = messageManagerFromWindow(topWindow);
-    messageManager.sendAsyncMessage("RemoteLogins:updateLoginFormPresence", {
+    messageManager.sendAsyncMessage("RemoteLogins:insecureLoginFormPresent", {
       hasInsecureLoginForms: hasInsecureLoginForms(topWindow, false),
     });
   },
