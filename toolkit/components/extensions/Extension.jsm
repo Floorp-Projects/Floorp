@@ -233,13 +233,46 @@ let ProxyMessenger = {
   },
 };
 
+class BrowserDocshellFollower {
+  /**
+   * Follows the <browser> belonging to the `xulBrowser`'s current docshell.
+   *
+   * @param {XULElement} xulBrowser A <browser> tag.
+   * @param {function} onBrowserChange Called when the <browser> changes.
+   */
+  constructor(xulBrowser, onBrowserChange) {
+    this.xulBrowser = xulBrowser;
+    this.onBrowserChange = onBrowserChange;
+
+    xulBrowser.addEventListener("SwapDocShells", this);
+  }
+
+  destroy() {
+    this.xulBrowser.removeEventListener("SwapDocShells", this);
+    this.xulBrowser = null;
+  }
+
+  handleEvent({detail: otherBrowser}) {
+    this.xulBrowser.removeEventListener("SwapDocShells", this);
+    this.xulBrowser = otherBrowser;
+    this.xulBrowser.addEventListener("SwapDocShells", this);
+    this.onBrowserChange(otherBrowser);
+  }
+}
+
 class ProxyContext extends BaseContext {
-  constructor(envType, extension, params, messageManager, principal) {
+  constructor(envType, extension, params, xulBrowser, principal) {
     super(envType, extension);
 
     this.uri = NetUtil.newURI(params.url);
 
-    this.messageManager = messageManager;
+    // This message manager is used by ParentAPIManager to send messages and to
+    // close the ProxyContext if the underlying message manager closes. This
+    // message manager object may change when `xulBrowser` swaps docshells, e.g.
+    // when a tab is moved to a different window.
+    this.currentMessageManager = xulBrowser.messageManager;
+    this._docShellTracker = new BrowserDocshellFollower(xulBrowser,
+        this.onBrowserChange.bind(this));
     this.principal_ = principal;
 
     this.apiObj = {};
@@ -260,6 +293,17 @@ class ProxyContext extends BaseContext {
     return this.sandbox;
   }
 
+  onBrowserChange(browser) {
+    // Make sure that the message manager is set. Otherwise the ProxyContext may
+    // never be destroyed because the ParentAPIManager would fail to detect that
+    // the message manager is closed.
+    if (!browser.messageManager) {
+      throw new Error("BrowserDocshellFollower: The new browser has no message manager");
+    }
+
+    this.currentMessageManager = browser.messageManager;
+  }
+
   shutdown() {
     this.unload();
   }
@@ -268,6 +312,7 @@ class ProxyContext extends BaseContext {
     if (this.unloaded) {
       return;
     }
+    this._docShellTracker.destroy();
     super.unload();
     Management.emit("proxy-context-unload", this);
   }
@@ -276,9 +321,11 @@ class ProxyContext extends BaseContext {
 // The parent ProxyContext of an ExtensionContext in ExtensionChild.jsm.
 class ExtensionChildProxyContext extends ProxyContext {
   constructor(envType, extension, params, xulBrowser) {
-    super(envType, extension, params, xulBrowser.messageManager, extension.principal);
+    super(envType, extension, params, xulBrowser, extension.principal);
 
     this.viewType = params.viewType;
+    // WARNING: The xulBrowser may change when docShells are swapped, e.g. when
+    // the tab moves to a different window.
     this.xulBrowser = xulBrowser;
 
     // TODO(robwu): Remove this once all APIs can run in a separate process.
@@ -307,6 +354,11 @@ class ExtensionChildProxyContext extends ProxyContext {
     let {gBrowser} = this.xulBrowser.ownerGlobal;
     let tab = gBrowser && gBrowser.getTabForBrowser(this.xulBrowser);
     return tab && Management.global.TabManager.getId(tab);
+  }
+
+  onBrowserChange(browser) {
+    super.onBrowserChange(browser);
+    this.xulBrowser = browser;
   }
 
   shutdown() {
@@ -360,7 +412,7 @@ var ParentAPIManager = {
   observe(subject, topic, data) {
     let mm = subject;
     for (let [childId, context] of this.proxyContexts) {
-      if (context.messageManager == mm) {
+      if (context.currentMessageManager == mm) {
         this.closeProxyContext(childId);
       }
     }
@@ -422,7 +474,7 @@ var ParentAPIManager = {
       }
       context = new ExtensionChildProxyContext(envType, extension, data, target);
     } else if (envType == "content_parent") {
-      context = new ProxyContext(envType, extension, data, target.messageManager, principal);
+      context = new ProxyContext(envType, extension, data, target, principal);
     } else {
       Cu.reportError(`Invalid WebExtension context envType: ${envType}`);
       return;
@@ -445,10 +497,14 @@ var ParentAPIManager = {
       Cu.reportError("WebExtension context not found!");
       return;
     }
+    if (context.currentMessageManager !== target.messageManager) {
+      Cu.reportError("WebExtension warning: Message manager unexpectedly changed");
+    }
+
     function callback(...cbArgs) {
       let lastError = context.lastError;
 
-      target.messageManager.sendAsyncMessage("API:CallResult", {
+      context.currentMessageManager.sendAsyncMessage("API:CallResult", {
         childId: data.childId,
         callId: data.callId,
         args: cbArgs,
@@ -465,7 +521,7 @@ var ParentAPIManager = {
       findPathInObject(context.apiObj, data.path)(...args);
     } catch (e) {
       let msg = e.message || "API failed";
-      target.messageManager.sendAsyncMessage("API:CallResult", {
+      context.currentMessageManager.sendAsyncMessage("API:CallResult", {
         childId: data.childId,
         callId: data.callId,
         lastError: msg,
@@ -479,9 +535,12 @@ var ParentAPIManager = {
       Cu.reportError("WebExtension context not found!");
       return;
     }
+    if (context.currentMessageManager !== target.messageManager) {
+      Cu.reportError("WebExtension warning: Message manager unexpectedly changed");
+    }
 
     function listener(...listenerArgs) {
-      target.messageManager.sendAsyncMessage("API:RunListener", {
+      context.currentMessageManager.sendAsyncMessage("API:RunListener", {
         childId: data.childId,
         path: data.path,
         args: listenerArgs,
