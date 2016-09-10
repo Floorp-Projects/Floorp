@@ -78,8 +78,7 @@ add_task(function* test_edit_password() {
       // Submit the form in the content page with the credentials from the test
       // case. This will cause the doorhanger notification to be displayed.
       let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
-                                                       "popupshown",
-                                                       (event) => event.target == PopupNotifications.panel);
+                                                       "popupshown");
       yield ContentTask.spawn(browser, testCase,
         function* (testCase) {
           let doc = content.document;
@@ -88,20 +87,18 @@ add_task(function* test_edit_password() {
           doc.getElementById("form-basic").submit();
         });
       yield promiseShown;
-      let notificationElement = PopupNotifications.panel.childNodes[0];
-      // Style flush to make sure binding is attached
-      notificationElement.querySelector("#password-notification-password").clientTop;
 
+      let notificationElement = PopupNotifications.panel.childNodes[0];
       // Modify the username in the dialog if requested.
       if (testCase.usernameChangedTo) {
         notificationElement.querySelector("#password-notification-username")
-                .value = testCase.usernameChangedTo;
+                .setAttribute("value", testCase.usernameChangedTo);
       }
 
       // Modify the password in the dialog if requested.
       if (testCase.passwordChangedTo) {
         notificationElement.querySelector("#password-notification-password")
-                .value = testCase.passwordChangedTo;
+                .setAttribute("value", testCase.passwordChangedTo);
       }
 
       // We expect a modifyLogin notification if the final username used by the
