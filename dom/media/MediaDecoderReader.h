@@ -51,11 +51,6 @@ private:
   virtual ~MetadataHolder() {}
 };
 
-enum class ReadMetadataFailureReason : int8_t
-{
-  METADATA_ERROR
-};
-
 // Encapsulates the decoding and reading of media data. Reading can either
 // synchronous and done on the calling "decode" thread, or asynchronous and
 // performed on a background thread, with the result being returned by
@@ -72,7 +67,7 @@ public:
   using TrackSet = EnumSet<TrackInfo::TrackType>;
 
   using MetadataPromise =
-    MozPromise<RefPtr<MetadataHolder>, ReadMetadataFailureReason, IsExclusive>;
+    MozPromise<RefPtr<MetadataHolder>, MediaResult, IsExclusive>;
   using MediaDataPromise =
     MozPromise<RefPtr<MediaData>, MediaResult, IsExclusive>;
   using SeekPromise = MozPromise<media::TimeUnit, nsresult, IsExclusive>;

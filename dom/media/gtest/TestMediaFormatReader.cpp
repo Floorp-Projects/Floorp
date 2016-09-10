@@ -88,7 +88,7 @@ public:
              &MediaFormatReaderBinding::OnNotDemuxed);
   }
 
-  void OnMetadataNotRead(ReadMetadataFailureReason aReason) {
+  void OnMetadataNotRead(const MediaResult& aError) {
     EXPECT_TRUE(false);
     ReaderShutdown();
   }
