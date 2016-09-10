@@ -39,6 +39,8 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
         OLDER_THAN_SIX_MONTHS
     }
 
+    private HomeFragment.PanelStateChangeListener panelStateChangeListener;
+
     private Cursor historyCursor;
     private DevicesUpdateHandler devicesUpdateHandler;
     private int deviceCount = 0;
@@ -55,6 +57,11 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
         sectionHeaders = new SparseArray<>();
         HistorySectionsHelper.updateRecentSectionOffset(resources, sectionDateRangeArray);
         this.setHasStableIds(true);
+    }
+
+    public void setPanelStateChangeListener(
+            HomeFragment.PanelStateChangeListener panelStateChangeListener) {
+        this.panelStateChangeListener = panelStateChangeListener;
     }
 
     @UiThread
@@ -135,6 +142,10 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
                             }
                         } else {
                             notifyItemRemoved(RECENT_TABS_SMARTFOLDER_INDEX);
+                        }
+
+                        if (countReliable) {
+                            panelStateChangeListener.setCachedRecentTabsCount(recentTabsCount);
                         }
                     }
                 });
