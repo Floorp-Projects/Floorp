@@ -436,7 +436,7 @@ private:
   int64_t GetDownloadPosition();
 
   // Notifies the element that decoding has failed.
-  void DecodeError();
+  void DecodeError(const MediaResult& aError);
 
   // Indicate whether the media is same-origin with the element.
   void UpdateSameOriginStatus(bool aSameOrigin);
@@ -592,6 +592,7 @@ private:
   DataArrivedEvent() override { return &mDataArrivedEvent; }
 
   void OnPlaybackEvent(MediaEventType aEvent);
+  void OnPlaybackErrorEvent(const MediaResult& aError);
 
   void OnMediaNotSeekable()
   {
@@ -731,6 +732,7 @@ protected:
   MediaEventListener mFirstFrameLoadedListener;
 
   MediaEventListener mOnPlaybackEvent;
+  MediaEventListener mOnPlaybackErrorEvent;
   MediaEventListener mOnMediaNotSeekable;
 
 protected:

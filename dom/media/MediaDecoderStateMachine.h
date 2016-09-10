@@ -119,7 +119,6 @@ enum class MediaEventType : int8_t {
   PlaybackStopped,
   PlaybackEnded,
   SeekStarted,
-  DecodeError,
   Invalidate,
   EnterVideoSuspend,
   ExitVideoSuspend
@@ -245,6 +244,8 @@ public:
 
   MediaEventSource<MediaEventType>&
   OnPlaybackEvent() { return mOnPlaybackEvent; }
+  MediaEventSource<MediaResult>&
+  OnPlaybackErrorEvent() { return mOnPlaybackErrorEvent; }
 
   size_t SizeOfVideoQueue() const;
 
@@ -481,7 +482,7 @@ protected:
   // event to the media element. This begins shutting down the decoder.
   // The decoder monitor must be held. This is only called on the
   // decode thread.
-  void DecodeError();
+  void DecodeError(const MediaResult& aError);
 
   // Dispatches a LoadedMetadataEvent.
   // This is threadsafe and can be called on any thread.
@@ -892,6 +893,7 @@ private:
                         MediaDecoderEventVisibility> mFirstFrameLoadedEvent;
 
   MediaEventProducer<MediaEventType> mOnPlaybackEvent;
+  MediaEventProducer<MediaResult> mOnPlaybackErrorEvent;
 
   // True if audio is offloading.
   // Playback will not start when audio is offloading.
