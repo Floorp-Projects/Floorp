@@ -542,7 +542,7 @@ void
 nsHttpConnection::SetupSSL()
 {
     LOG(("nsHttpConnection::SetupSSL %p caps=0x%X %s\n",
-         this, mTransactionCaps,mConnInfo->HashKey().get()));
+         this, mTransactionCaps, mConnInfo->HashKey().get()));
 
     if (mSetupSSLCalled) // do only once
         return;
@@ -633,14 +633,6 @@ nsHttpConnection::AddTransaction(nsAHttpTransaction *httpTransaction,
     LOG(("nsHttpConnection::AddTransaction for SPDY%s",
          needTunnel ? " over tunnel" : ""));
 
-    // do a runtime check here just for defense in depth
-    if (transCI->GetInsecureScheme() &&
-        httpTransaction->RequestHead() && httpTransaction->RequestHead()->IsHTTPS()) {
-        LOG(("This Cannot happen - https on insecure scheme tls stream\n"));
-        MOZ_ASSERT(false, "https:// on tls insecure scheme");
-        return NS_ERROR_FAILURE;
-    }
-
     if (!mSpdySession->AddStream(httpTransaction, priority,
                                  needTunnel, mCallbacks)) {
         MOZ_ASSERT(false); // this cannot happen!
@@ -679,7 +671,7 @@ nsHttpConnection::Close(nsresult reason, bool aIsShutdown)
         // in case any previously validated ones are now invalid
         if (((reason == NS_ERROR_NET_RESET) ||
              (NS_ERROR_GET_MODULE(reason) == NS_ERROR_MODULE_SECURITY))
-            && mConnInfo) {
+            && mConnInfo && !(mTransactionCaps & NS_HTTP_ERROR_SOFTLY)) {
             gHttpHandler->ConnMgr()->ClearHostMapping(mConnInfo);
         }
 

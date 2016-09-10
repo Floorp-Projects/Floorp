@@ -4,13 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "pk11pub.h"
-#include "cryptohi.h"
-#include "nsNSSComponent.h"
+#include "CryptoKey.h"
+
 #include "ScopedNSSTypes.h"
-#include "mozilla/dom/CryptoKey.h"
+#include "cryptohi.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/SubtleCryptoBinding.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "nsNSSComponent.h"
+#include "pk11pub.h"
 
 // Templates taken from security/nss/lib/cryptohi/seckey.c
 // These would ideally be exported by NSS and until that
@@ -361,7 +363,7 @@ CryptoKey::AddPublicKeyData(SECKEYPublicKey* aPublicKey)
   };
 
   mPrivateKey = PrivateKeyFromPrivateKeyTemplate(keyTemplate,
-                                                 PR_ARRAY_SIZE(keyTemplate));
+                                                 ArrayLength(keyTemplate));
   NS_ENSURE_TRUE(mPrivateKey, NS_ERROR_DOM_OPERATION_ERR);
 
   return NS_OK;
@@ -797,7 +799,7 @@ CryptoKey::PrivateKeyFromJwk(const JsonWebKey& aJwk,
     };
 
     return PrivateKeyFromPrivateKeyTemplate(keyTemplate,
-                                            PR_ARRAY_SIZE(keyTemplate));
+                                            ArrayLength(keyTemplate));
   }
 
   if (aJwk.mKty.EqualsLiteral(JWK_TYPE_RSA)) {
@@ -840,7 +842,7 @@ CryptoKey::PrivateKeyFromJwk(const JsonWebKey& aJwk,
     };
 
     return PrivateKeyFromPrivateKeyTemplate(keyTemplate,
-                                            PR_ARRAY_SIZE(keyTemplate));
+                                            ArrayLength(keyTemplate));
   }
 
   return nullptr;

@@ -75,3 +75,41 @@ var exports2 = evalText(`(module
 )`, {a:{tbl, mem}}).exports;
 tbl.set(0, exports1.grow);
 assertEq(exports2.test(), 111);
+
+// Test for coherent length/contents
+
+var mem = new Memory({initial:1});
+new Int32Array(mem.buffer)[0] = 42;
+var mod = new Module(textToBinary(`(module
+    (import "" "mem" (memory 1))
+    (func $gm (param i32) (grow_memory (get_local 0)))
+    (export "grow_memory" $gm)
+    (func $cm (result i32) (current_memory))
+    (export "current_memory" $cm)
+    (func $ld (param i32) (result i32) (i32.load (get_local 0)))
+    (export "load" $ld)
+    (func $st (param i32) (param i32) (i32.store (get_local 0) (get_local 1)))
+    (export "store" $st)
+)`));
+var exp1 = new Instance(mod, {"":{mem}}).exports;
+var exp2 = new Instance(mod, {"":{mem}}).exports;
+assertEq(exp1.current_memory(), 1);
+assertEq(exp1.load(0), 42);
+assertEq(exp2.current_memory(), 1);
+assertEq(exp2.load(0), 42);
+mem.grow(1);
+assertEq(mem.buffer.byteLength, 2*64*1024);
+new Int32Array(mem.buffer)[64*1024/4] = 13;
+assertEq(exp1.current_memory(), 2);
+assertEq(exp1.load(0), 42);
+assertEq(exp1.load(64*1024), 13);
+assertEq(exp2.current_memory(), 2);
+assertEq(exp2.load(0), 42);
+assertEq(exp2.load(64*1024), 13);
+exp1.grow_memory(2);
+assertEq(exp1.current_memory(), 4);
+exp1.store(3*64*1024, 99);
+assertEq(exp2.current_memory(), 4);
+assertEq(exp2.load(3*64*1024), 99);
+assertEq(mem.buffer.byteLength, 4*64*1024);
+assertEq(new Int32Array(mem.buffer)[3*64*1024/4], 99);

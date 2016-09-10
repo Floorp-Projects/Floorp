@@ -7850,13 +7850,12 @@ CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata, HandleValue bufferVal,
         Rooted<ArrayBufferObject*> arrayBuffer(cx, &buffer->as<ArrayBufferObject>());
         if (!ArrayBufferObject::prepareForAsmJS(cx, arrayBuffer, needGuard))
             return LinkFail(cx, "Unable to prepare ArrayBuffer for asm.js use");
-
-        MOZ_ASSERT(arrayBuffer->isAsmJSMalloced() || arrayBuffer->isWasmMapped());
     } else {
         if (!buffer->as<SharedArrayBufferObject>().isPreparedForAsmJS())
             return LinkFail(cx, "SharedArrayBuffer must be created with wasm test mode enabled");
     }
 
+    MOZ_ASSERT(buffer->isPreparedForAsmJS());
     return true;
 }
 
