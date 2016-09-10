@@ -198,7 +198,7 @@ MediaDecoder::ResourceCallback::NotifyDecodeError()
   RefPtr<ResourceCallback> self = this;
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
     if (self->mDecoder) {
-      self->mDecoder->DecodeError();
+      self->mDecoder->DecodeError(NS_ERROR_DOM_MEDIA_FATAL_ERR);
     }
   });
   AbstractThread::MainThread()->Dispatch(r.forget());
@@ -607,6 +607,7 @@ MediaDecoder::Shutdown()
     mMetadataLoadedListener.Disconnect();
     mFirstFrameLoadedListener.Disconnect();
     mOnPlaybackEvent.Disconnect();
+    mOnPlaybackErrorEvent.Disconnect();
     mOnMediaNotSeekable.Disconnect();
 
     mDecoderStateMachine->BeginShutdown()
@@ -661,9 +662,6 @@ MediaDecoder::OnPlaybackEvent(MediaEventType aEvent)
     case MediaEventType::SeekStarted:
       SeekingStarted();
       break;
-    case MediaEventType::DecodeError:
-      DecodeError();
-      break;
     case MediaEventType::Invalidate:
       Invalidate();
       break;
@@ -674,6 +672,12 @@ MediaDecoder::OnPlaybackEvent(MediaEventType aEvent)
       mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("mozexitvideosuspend"));
       break;
   }
+}
+
+void
+MediaDecoder::OnPlaybackErrorEvent(const MediaResult& aError)
+{
+  DecodeError(aError);
 }
 
 void
@@ -749,6 +753,8 @@ MediaDecoder::SetStateMachineParameters()
 
   mOnPlaybackEvent = mDecoderStateMachine->OnPlaybackEvent().Connect(
     AbstractThread::MainThread(), this, &MediaDecoder::OnPlaybackEvent);
+  mOnPlaybackErrorEvent = mDecoderStateMachine->OnPlaybackErrorEvent().Connect(
+    AbstractThread::MainThread(), this, &MediaDecoder::OnPlaybackErrorEvent);
   mOnMediaNotSeekable = mDecoderStateMachine->OnMediaNotSeekable().Connect(
     AbstractThread::MainThread(), this, &MediaDecoder::OnMediaNotSeekable);
 }
@@ -1006,7 +1012,7 @@ MediaDecoder::NetworkError()
 }
 
 void
-MediaDecoder::DecodeError()
+MediaDecoder::DecodeError(const MediaResult& aError)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!IsShutdown());
