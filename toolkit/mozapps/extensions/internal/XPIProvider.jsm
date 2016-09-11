@@ -59,6 +59,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
                                   "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "isAddonPartOfE10SRollout",
                                   "resource://gre/modules/addons/E10SAddonsRollout.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "LegacyExtensionsUtils",
+                                  "resource://gre/modules/LegacyExtensionsUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "Blocklist",
                                    "@mozilla.org/extensions/blocklist;1",
@@ -177,7 +179,7 @@ const TOOLKIT_ID                      = "toolkit@mozilla.org";
 
 const XPI_SIGNATURE_CHECK_PERIOD      = 24 * 60 * 60;
 
-XPCOMUtils.defineConstant(this, "DB_SCHEMA", 17);
+XPCOMUtils.defineConstant(this, "DB_SCHEMA", 18);
 
 const NOTIFICATION_TOOLBOXPROCESS_LOADED      = "ToolboxProcessLoaded";
 
@@ -803,6 +805,7 @@ function createAddonDetails(id, aAddon) {
     multiprocessCompatible: aAddon.multiprocessCompatible,
     runInSafeMode: aAddon.runInSafeMode,
     dependencies: aAddon.dependencies,
+    hasEmbeddedWebExtension: aAddon.hasEmbeddedWebExtension,
   };
 }
 
@@ -1152,6 +1155,7 @@ function loadManifestFromRDF(aUri, aStream) {
   if (addon.type == "extension") {
     addon.bootstrap = getRDFProperty(ds, root, "bootstrap") == "true";
     addon.multiprocessCompatible = getRDFProperty(ds, root, "multiprocessCompatible") == "true";
+    addon.hasEmbeddedWebExtension = getRDFProperty(ds, root, "hasEmbeddedWebExtension") == "true";
     if (addon.optionsType &&
         addon.optionsType != AddonManager.OPTIONS_TYPE_DIALOG &&
         addon.optionsType != AddonManager.OPTIONS_TYPE_INLINE &&
@@ -4899,6 +4903,17 @@ this.XPIProvider = {
         }
       }
 
+      if (aAddon.hasEmbeddedWebExtension) {
+        if (aMethod == "startup") {
+          const webExtension = LegacyExtensionsUtils.getEmbeddedExtensionFor(params);
+          params.webExtension = {
+            startup: () => webExtension.startup(),
+          };
+        } else if (aMethod == "shutdown") {
+          LegacyExtensionsUtils.getEmbeddedExtensionFor(params).shutdown();
+        }
+      }
+
       logger.debug("Calling bootstrap method " + aMethod + " on " + aAddon.id + " version " +
                    aAddon.version);
       try {
@@ -6944,6 +6959,7 @@ AddonInternal.prototype = {
    *   add-ons is not installed and enabled.
    */
   dependencies: Object.freeze([]),
+  hasEmbeddedWebExtension: false,
 
   get selectedLocale() {
     if (this._selectedLocale)
@@ -7259,6 +7275,10 @@ AddonWrapper.prototype = {
 
   get seen() {
     return addonFor(this).seen;
+  },
+
+  get hasEmbeddedWebExtension() {
+    return addonFor(this).hasEmbeddedWebExtension;
   },
 
   markAsSeen: function() {
