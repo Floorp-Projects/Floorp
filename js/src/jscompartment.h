@@ -1041,7 +1041,7 @@ class MOZ_RAII AutoWrapperVector : public JS::AutoVectorRooterBase<WrapperValue>
 
 class MOZ_RAII AutoWrapperRooter : private JS::AutoGCRooter {
   public:
-    AutoWrapperRooter(JSContext* cx, WrapperValue v
+    AutoWrapperRooter(JSContext* cx, const WrapperValue& v
                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : JS::AutoGCRooter(cx, WRAPPER), value(v)
     {
