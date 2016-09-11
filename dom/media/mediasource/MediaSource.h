@@ -29,6 +29,7 @@ namespace mozilla {
 
 class ErrorResult;
 template <typename T> class AsyncEventRunner;
+class MediaResult;
 
 namespace dom {
 
@@ -60,6 +61,7 @@ public:
   void RemoveSourceBuffer(SourceBuffer& aSourceBuffer, ErrorResult& aRv);
 
   void EndOfStream(const Optional<MediaSourceEndOfStreamError>& aError, ErrorResult& aRv);
+  void EndOfStream(const MediaResult& aError);
 
   void SetLiveSeekableRange(double aStart, double aEnd, ErrorResult& aRv);
   void ClearLiveSeekableRange(ErrorResult& aRv);
