@@ -858,7 +858,7 @@ class NumLit
   public:
     NumLit() = default;
 
-    NumLit(Which w, Value v) : which_(w) {
+    NumLit(Which w, const Value& v) : which_(w) {
         u.scalar_ = v;
         MOZ_ASSERT(!isSimd());
     }
@@ -2648,7 +2648,7 @@ ExtractNumericLiteral(ModuleValidator& m, ParseNode* pn)
 }
 
 static inline bool
-IsLiteralInt(NumLit lit, uint32_t* u32)
+IsLiteralInt(const NumLit& lit, uint32_t* u32)
 {
     switch (lit.which()) {
       case NumLit::Fixnum:
@@ -3107,7 +3107,7 @@ class MOZ_STACK_CLASS FunctionValidator
         return encoder().writeExpr(Expr::I32Const) &&
                encoder().writeVarS32(i32);
     }
-    MOZ_MUST_USE bool writeConstExpr(NumLit lit) {
+    MOZ_MUST_USE bool writeConstExpr(const NumLit& lit) {
         switch (lit.which()) {
           case NumLit::Fixnum:
           case NumLit::NegativeInt:
