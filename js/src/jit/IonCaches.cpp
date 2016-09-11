@@ -532,7 +532,7 @@ IsOptimizableArgumentsObjectForLength(JSObject* obj)
 }
 
 static bool
-IsOptimizableArgumentsObjectForGetElem(JSObject* obj, Value idval)
+IsOptimizableArgumentsObjectForGetElem(JSObject* obj, const Value& idval)
 {
     if (!IsOptimizableArgumentsObjectForLength(obj))
         return false;
