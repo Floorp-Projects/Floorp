@@ -396,7 +396,7 @@ class MacroAssemblerNone : public Assembler
     Condition testStringTruthy(bool, ValueOperand) { MOZ_CRASH(); }
 
     template <typename T> void loadUnboxedValue(T, MIRType, AnyRegister) { MOZ_CRASH(); }
-    template <typename T> void storeUnboxedValue(ConstantOrRegister, MIRType, T, MIRType) { MOZ_CRASH(); }
+    template <typename T> void storeUnboxedValue(const ConstantOrRegister&, MIRType, T, MIRType) { MOZ_CRASH(); }
     template <typename T> void storeUnboxedPayload(ValueOperand value, T, size_t) { MOZ_CRASH(); }
 
     void convertUInt32ToDouble(Register, FloatRegister) { MOZ_CRASH(); }
