@@ -83,7 +83,6 @@ class WannabeChildAPIManager extends ChildAPIManager {
     delete data.principal;
     data = Cu.cloneInto(data, {});
     data.principal = principal;
-    data.cloneScopeInProcess = this.context.cloneScope;
     let name = "API:CreateProxyContext";
     // The <browser> that receives messages from `this.messageManager`.
     let target = this.context.contentWindow
@@ -93,6 +92,17 @@ class WannabeChildAPIManager extends ChildAPIManager {
     ParentAPIManager.receiveMessage({name, data, target});
 
     let proxyContext = ParentAPIManager.proxyContexts.get(this.id);
+
+    // Use an identical cloneScope in the parent as the child to have identical
+    // behavior for proxied vs direct calls. If all APIs are proxied, then the
+    // parent cloneScope does not really matter (because when the message
+    // arrives locally, the object is cloned into the local clone scope).
+    // If all calls are direct, then the parent cloneScope does matter, because
+    // the objects are not cloned again.
+    Object.defineProperty(proxyContext, "cloneScope", {
+      get: () => this.cloneScope,
+    });
+
     // Many APIs rely on this, so temporarily add it to keep the commit small.
     proxyContext.setContentWindow(this.context.contentWindow);
 
