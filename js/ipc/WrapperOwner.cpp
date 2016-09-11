@@ -93,7 +93,7 @@ class CPOWProxyHandler : public BaseProxyHandler
     constexpr CPOWProxyHandler()
       : BaseProxyHandler(&family) {}
 
-    virtual bool finalizeInBackground(Value priv) const override {
+    virtual bool finalizeInBackground(const Value& priv) const override {
         return false;
     }
 

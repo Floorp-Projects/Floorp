@@ -11633,7 +11633,7 @@ class CGDOMJSProxyHandler_className(ClassMethod):
 
 class CGDOMJSProxyHandler_finalizeInBackground(ClassMethod):
     def __init__(self, descriptor):
-        args = [Argument('JS::Value', 'priv')]
+        args = [Argument('const JS::Value&', 'priv')]
         ClassMethod.__init__(self, "finalizeInBackground", "bool", args,
                              virtual=True, override=True, const=True)
         self.descriptor = descriptor
