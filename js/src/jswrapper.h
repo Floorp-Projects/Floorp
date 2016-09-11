@@ -66,7 +66,7 @@ class JS_FRIEND_API(Wrapper) : public BaseProxyHandler
         mFlags(aFlags)
     { }
 
-    virtual bool finalizeInBackground(Value priv) const override;
+    virtual bool finalizeInBackground(const Value& priv) const override;
 
     /* Standard internal methods. */
     virtual bool getOwnPropertyDescriptor(JSContext* cx, HandleObject proxy, HandleId id,

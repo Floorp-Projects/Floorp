@@ -211,7 +211,7 @@ class JS_FRIEND_API(BaseProxyHandler)
         return offsetof(BaseProxyHandler, mFamily);
     }
 
-    virtual bool finalizeInBackground(Value priv) const {
+    virtual bool finalizeInBackground(const Value& priv) const {
         /*
          * Called on creation of a proxy to determine whether its finalize
          * method can be finalized on the background thread.
