@@ -315,7 +315,7 @@ ShouldMarkCrossCompartment(JSTracer* trc, JSObject* src, Cell* cell)
 }
 
 static bool
-ShouldMarkCrossCompartment(JSTracer* trc, JSObject* src, Value val)
+ShouldMarkCrossCompartment(JSTracer* trc, JSObject* src, const Value& val)
 {
     return val.isMarkable() && ShouldMarkCrossCompartment(trc, src, (Cell*)val.toGCThing());
 }
@@ -400,7 +400,7 @@ ConvertToBase(T* thingp)
 template <typename T> void DispatchToTracer(JSTracer* trc, T* thingp, const char* name);
 template <typename T> T DoCallback(JS::CallbackTracer* trc, T* thingp, const char* name);
 template <typename T> void DoMarking(GCMarker* gcmarker, T* thing);
-template <typename T> void DoMarking(GCMarker* gcmarker, T thing);
+template <typename T> void DoMarking(GCMarker* gcmarker, const T& thing);
 template <typename T> void NoteWeakEdge(GCMarker* gcmarker, T** thingp);
 template <typename T> void NoteWeakEdge(GCMarker* gcmarker, T* thingp);
 
@@ -807,7 +807,7 @@ struct DoMarkingFunctor : public VoidDefaultAdaptor<S> {
 
 template <typename T>
 void
-DoMarking(GCMarker* gcmarker, T thing)
+DoMarking(GCMarker* gcmarker, const T& thing)
 {
     DispatchTyped(DoMarkingFunctor<T>(), thing, gcmarker);
 }
@@ -956,7 +956,7 @@ template <typename V, typename S> struct TraverseEdgeFunctor : public VoidDefaul
 
 template <typename S, typename T>
 void
-js::GCMarker::traverseEdge(S source, T thing)
+js::GCMarker::traverseEdge(S source, const T& thing)
 {
     DispatchTyped(TraverseEdgeFunctor<T, S>(), thing, this, source);
 }

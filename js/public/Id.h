@@ -197,7 +197,7 @@ struct BarrierMethods<jsid>
 // the pointer. If the jsid is not a GC type, calls F::defaultValue.
 template <typename F, typename... Args>
 auto
-DispatchTyped(F f, jsid& id, Args&&... args)
+DispatchTyped(F f, const jsid& id, Args&&... args)
   -> decltype(f(static_cast<JSString*>(nullptr), mozilla::Forward<Args>(args)...))
 {
     if (JSID_IS_STRING(id))
