@@ -649,12 +649,14 @@ template <typename HeadType, typename... TailTypes>
 class ArgSeq<HeadType, TailTypes...> : public ArgSeq<TailTypes...>
 {
   private:
-    HeadType head_;
+    using RawHeadType = typename mozilla::RemoveReference<HeadType>::Type;
+    RawHeadType head_;
 
   public:
-    explicit ArgSeq(HeadType&& head, TailTypes&&... tail)
-      : ArgSeq<TailTypes...>(mozilla::Move(tail)...),
-        head_(mozilla::Move(head))
+    template <typename ProvidedHead, typename... ProvidedTail>
+    explicit ArgSeq(ProvidedHead&& head, ProvidedTail&&... tail)
+      : ArgSeq<TailTypes...>(mozilla::Forward<ProvidedTail>(tail)...),
+        head_(mozilla::Forward<ProvidedHead>(head))
     { }
 
     // Arguments are pushed in reverse order, from last argument to first
@@ -667,9 +669,9 @@ class ArgSeq<HeadType, TailTypes...> : public ArgSeq<TailTypes...>
 
 template <typename... ArgTypes>
 inline ArgSeq<ArgTypes...>
-ArgList(ArgTypes... args)
+ArgList(ArgTypes&&... args)
 {
-    return ArgSeq<ArgTypes...>(mozilla::Move(args)...);
+    return ArgSeq<ArgTypes...>(mozilla::Forward<ArgTypes>(args)...);
 }
 
 // Store wrappers, to generate the right move of data after the VM call.
