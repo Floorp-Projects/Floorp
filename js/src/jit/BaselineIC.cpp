@@ -5613,7 +5613,7 @@ GetTemplateObjectForClassHook(JSContext* cx, JSNative hook, CallArgs& args,
 }
 
 static bool
-IsOptimizableCallStringSplit(Value callee, int argc, Value* args)
+IsOptimizableCallStringSplit(const Value& callee, int argc, Value* args)
 {
     if (argc != 2 || !args[0].isString() || !args[1].isString())
         return false;
