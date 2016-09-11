@@ -614,8 +614,7 @@ ADTSTrackDemuxer::Duration(int64_t aNumFrames) const
     return media::TimeUnit::FromMicroseconds(-1);
   }
 
-  const double usPerFrame = USECS_PER_S * mSamplesPerFrame / mSamplesPerSecond;
-  return media::TimeUnit::FromMicroseconds(aNumFrames * usPerFrame);
+  return FramesToTimeUnit(aNumFrames * mSamplesPerFrame, mSamplesPerSecond);
 }
 
 const adts::Frame&
