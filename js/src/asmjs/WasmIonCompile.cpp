@@ -312,7 +312,7 @@ class FunctionCompiler
         return constant;
     }
 
-    MDefinition* constant(Value v, MIRType type)
+    MDefinition* constant(const Value& v, MIRType type)
     {
         if (inDeadCode())
             return nullptr;
