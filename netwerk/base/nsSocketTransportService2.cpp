@@ -1498,10 +1498,15 @@ nsSocketTransportService::AnalyzeConnection(nsTArray<SocketInfo> *data,
     bool tcp = PR_GetDescType(idLayer) == PR_DESC_SOCKET_TCP;
 
     PRNetAddr peer_addr;
-    PR_GetPeerName(aFD, &peer_addr);
+    PodZero(&peer_addr);
+    PRStatus rv = PR_GetPeerName(aFD, &peer_addr);
+    if (rv != PR_SUCCESS)
+       return;
 
     char host[64] = {0};
-    PR_NetAddrToString(&peer_addr, host, sizeof(host));
+    rv = PR_NetAddrToString(&peer_addr, host, sizeof(host));
+    if (rv != PR_SUCCESS)
+       return;
 
     uint16_t port;
     if (peer_addr.raw.family == PR_AF_INET)
