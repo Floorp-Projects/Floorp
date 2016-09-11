@@ -1410,7 +1410,7 @@ ExpressionDecompiler::getOutput(char** res)
 }  // anonymous namespace
 
 static bool
-FindStartPC(JSContext* cx, const FrameIter& iter, int spindex, int skipStackHits, Value v,
+FindStartPC(JSContext* cx, const FrameIter& iter, int spindex, int skipStackHits, const Value& v,
             jsbytecode** valuepc)
 {
     jsbytecode* current = *valuepc;
