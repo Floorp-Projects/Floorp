@@ -37885,6 +37885,12 @@
             "url": "/web-animations/interfaces/Animation/effect.html"
           }
         ],
+        "web-animations/interfaces/KeyframeEffect/iterationComposite.html": [
+          {
+            "path": "web-animations/interfaces/KeyframeEffect/iterationComposite.html",
+            "url": "/web-animations/interfaces/KeyframeEffect/iterationComposite.html"
+          }
+        ],
         "web-animations/interfaces/KeyframeEffect/spacing.html": [
           {
             "path": "web-animations/interfaces/KeyframeEffect/spacing.html",
