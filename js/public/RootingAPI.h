@@ -238,7 +238,7 @@ class Heap : public js::HeapBase<T>
                       "Heap<T> must be binary compatible with T.");
         init(GCPolicy<T>::initial());
     }
-    explicit Heap(T p) { init(p); }
+    explicit Heap(const T& p) { init(p); }
 
     /*
      * For Heap, move semantics are equivalent to copy semantics. In C++, a
@@ -271,12 +271,12 @@ class Heap : public js::HeapBase<T>
     }
 
   private:
-    void init(T newPtr) {
+    void init(const T& newPtr) {
         ptr = newPtr;
         post(GCPolicy<T>::initial(), ptr);
     }
 
-    void set(T newPtr) {
+    void set(const T& newPtr) {
         T tmp = ptr;
         ptr = newPtr;
         post(tmp, ptr);
@@ -492,7 +492,7 @@ class MOZ_STACK_CLASS MutableHandle : public js::MutableHandleBase<T>
     MutableHandle(decltype(nullptr)) = delete;
 
   public:
-    void set(T v) {
+    void set(const T& v) {
         *ptr = v;
     }
 
@@ -713,7 +713,7 @@ class MOZ_RAII Rooted : public js::RootedBase<T>
      * This method is public for Rooted so that Codegen.py can use a Rooted
      * interchangeably with a MutableHandleValue.
      */
-    void set(T value) {
+    void set(const T& value) {
         ptr = value;
     }
 
@@ -829,7 +829,7 @@ class FakeMutableHandle : public js::MutableHandleBase<T>
         ptr = root->address();
     }
 
-    void set(T v) {
+    void set(const T& v) {
         *ptr = v;
     }
 
@@ -886,7 +886,7 @@ template <typename T> class MaybeRooted<T, CanGC>
 template <typename T> class MaybeRooted<T, NoGC>
 {
   public:
-    typedef T HandleType;
+    typedef const T& HandleType;
     typedef FakeRooted<T> RootType;
     typedef FakeMutableHandle<T> MutableHandleType;
 

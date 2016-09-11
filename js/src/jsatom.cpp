@@ -535,7 +535,7 @@ template JSAtom*
 js::ToAtom<CanGC>(ExclusiveContext* cx, HandleValue v);
 
 template JSAtom*
-js::ToAtom<NoGC>(ExclusiveContext* cx, Value v);
+js::ToAtom<NoGC>(ExclusiveContext* cx, const Value& v);
 
 template<XDRMode mode>
 bool
