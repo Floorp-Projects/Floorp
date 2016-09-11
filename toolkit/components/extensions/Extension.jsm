@@ -1495,6 +1495,7 @@ this.Extension = class extends ExtensionData {
       whiteListedHosts: this.whiteListedHosts.serialize(),
       localeData: this.localeData.serialize(),
       permissions: this.permissions,
+      principal: this.principal,
     };
   }
 
