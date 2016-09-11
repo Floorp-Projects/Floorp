@@ -1922,9 +1922,9 @@ DispatchTyped(F f, const JS::Value& val, Args&&... args)
     return F::defaultValue(val);
 }
 
-template <class S> struct VoidDefaultAdaptor { static void defaultValue(S) {} };
+template <class S> struct VoidDefaultAdaptor { static void defaultValue(const S&) {} };
 template <class S> struct IdentityDefaultAdaptor { static S defaultValue(const S& v) {return v;} };
-template <class S, bool v> struct BoolDefaultAdaptor { static bool defaultValue(S) { return v; } };
+template <class S, bool v> struct BoolDefaultAdaptor { static bool defaultValue(const S&) { return v; } };
 
 } // namespace js
 
