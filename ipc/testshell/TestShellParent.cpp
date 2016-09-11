@@ -51,7 +51,7 @@ TestShellParent::CommandDone(TestShellCommandParent* command,
 
 bool
 TestShellCommandParent::SetCallback(JSContext* aCx,
-                                    JS::Value aCallback)
+                                    const JS::Value& aCallback)
 {
   if (!mCallback.initialized()) {
     mCallback.init(aCx, aCallback);
