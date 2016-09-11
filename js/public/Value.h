@@ -29,24 +29,6 @@ namespace JS { class Value; }
 #define JSVAL_INT_MIN           ((int32_t)0x80000000)
 #define JSVAL_INT_MAX           ((int32_t)0x7fffffff)
 
-/*
- * Try to get jsvals 64-bit aligned. We could almost assert that all values are
- * aligned, but MSVC and GCC occasionally break alignment.
- */
-#if defined(__GNUC__) || defined(__xlc__) || defined(__xlC__)
-# define JSVAL_ALIGNMENT        __attribute__((aligned (8)))
-#elif defined(_MSC_VER)
-  /*
-   * Structs can be aligned with MSVC, but not if they are used as parameters,
-   * so we just don't try to align.
-   */
-# define JSVAL_ALIGNMENT
-#elif defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-# define JSVAL_ALIGNMENT
-#elif defined(__HP_cc) || defined(__HP_aCC)
-# define JSVAL_ALIGNMENT
-#endif
-
 #if defined(JS_PUNBOX64)
 # define JSVAL_TAG_SHIFT 47
 #endif
@@ -239,7 +221,7 @@ typedef enum JSWhyMagic
 
 #if MOZ_LITTLE_ENDIAN
 # if defined(JS_NUNBOX32)
-typedef union jsval_layout
+union MOZ_NON_PARAM alignas(8) jsval_layout
 {
     uint64_t asBits;
     struct {
@@ -260,9 +242,9 @@ typedef union jsval_layout
     } s;
     double asDouble;
     void* asPtr;
-} JSVAL_ALIGNMENT jsval_layout;
+};
 # elif defined(JS_PUNBOX64)
-typedef union jsval_layout
+union MOZ_NON_PARAM alignas(8) jsval_layout
 {
     uint64_t asBits;
 #if !defined(_WIN64)
@@ -283,11 +265,11 @@ typedef union jsval_layout
     void* asPtr;
     size_t asWord;
     uintptr_t asUIntPtr;
-} JSVAL_ALIGNMENT jsval_layout;
+};
 # endif  /* JS_PUNBOX64 */
 #else   /* MOZ_LITTLE_ENDIAN */
 # if defined(JS_NUNBOX32)
-typedef union jsval_layout
+union MOZ_NON_PARAM alignas(8) jsval_layout
 {
     uint64_t asBits;
     struct {
@@ -308,9 +290,9 @@ typedef union jsval_layout
     } s;
     double asDouble;
     void* asPtr;
-} JSVAL_ALIGNMENT jsval_layout;
+};
 # elif defined(JS_PUNBOX64)
-typedef union jsval_layout
+union MOZ_NON_PARAM alignas(8) jsval_layout
 {
     uint64_t asBits;
     struct {
@@ -329,7 +311,7 @@ typedef union jsval_layout
     void* asPtr;
     size_t asWord;
     uintptr_t asUIntPtr;
-} JSVAL_ALIGNMENT jsval_layout;
+};
 # endif /* JS_PUNBOX64 */
 #endif  /* MOZ_LITTLE_ENDIAN */
 
