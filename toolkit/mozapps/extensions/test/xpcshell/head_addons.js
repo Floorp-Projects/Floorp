@@ -236,6 +236,17 @@ this.BootstrapMonitor = {
     let id = info.data.id;
     let installPath = new FileUtils.File(info.data.installPath);
 
+    if (subject && subject.wrappedJSObject) {
+      // NOTE: in some of the new tests, we need to received the real objects instead of
+      // their JSON representations, but most of the current tests expect intallPath
+      // and resourceURI to have been converted to strings.
+      const {installPath, resourceURI} = info.data;
+      info.data = Object.assign({}, subject.wrappedJSObject.data, {
+        installPath,
+        resourceURI,
+      });
+    }
+
     // If this is the install event the add-ons shouldn't already be installed
     if (info.event == "install") {
       this.checkAddonNotInstalled(id);
