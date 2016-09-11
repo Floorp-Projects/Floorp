@@ -961,7 +961,7 @@ JSVAL_IS_TRACEABLE_IMPL(const jsval_layout& l)
     return JSVAL_IS_GCTHING_IMPL(l) && !JSVAL_IS_NULL_IMPL(l);
 }
 
-static inline jsval_layout JSVAL_TO_IMPL(JS::Value v);
+static inline jsval_layout JSVAL_TO_IMPL(const JS::Value& v);
 static inline JS_VALUE_CONSTEXPR JS::Value IMPL_TO_JSVAL(const jsval_layout& l);
 
 namespace JS {
@@ -1402,7 +1402,7 @@ class Value
         JS_STATIC_ASSERT(sizeof(Value) == 8);
     }
 
-    friend jsval_layout (::JSVAL_TO_IMPL)(Value);
+    friend jsval_layout (::JSVAL_TO_IMPL)(const Value&);
     friend Value JS_VALUE_CONSTEXPR (::IMPL_TO_JSVAL)(const jsval_layout& l);
     friend Value JS_VALUE_CONSTEXPR (JS::UndefinedValue)();
 } JS_HAZ_GC_POINTER;
@@ -1929,7 +1929,7 @@ template <class S, bool v> struct BoolDefaultAdaptor { static bool defaultValue(
 } // namespace js
 
 inline jsval_layout
-JSVAL_TO_IMPL(JS::Value v)
+JSVAL_TO_IMPL(const JS::Value& v)
 {
     return v.data;
 }

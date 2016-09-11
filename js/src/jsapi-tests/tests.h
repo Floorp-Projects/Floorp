@@ -183,7 +183,7 @@ class JSAPITest
             return false; \
     } while (false)
 
-    bool checkSame(JS::Value actualArg, JS::Value expectedArg,
+    bool checkSame(const JS::Value& actualArg, const JS::Value& expectedArg,
                    const char* actualExpr, const char* expectedExpr,
                    const char* filename, int lineno) {
         bool same;
