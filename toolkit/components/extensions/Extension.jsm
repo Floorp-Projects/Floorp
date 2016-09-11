@@ -327,11 +327,6 @@ class ExtensionChildProxyContext extends ProxyContext {
     // WARNING: The xulBrowser may change when docShells are swapped, e.g. when
     // the tab moves to a different window.
     this.xulBrowser = xulBrowser;
-
-    // TODO(robwu): Remove this once all APIs can run in a separate process.
-    if (params.cloneScopeInProcess) {
-      this.sandbox = params.cloneScopeInProcess;
-    }
   }
 
   // The window that contains this context. This may change due to moving tabs.
