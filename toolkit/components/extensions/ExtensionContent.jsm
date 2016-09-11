@@ -696,6 +696,7 @@ function BrowserExtensionContent(data) {
   this.webAccessibleResources = new MatchGlobs(data.webAccessibleResources);
   this.whiteListedHosts = new MatchPattern(data.whiteListedHosts);
   this.permissions = data.permissions;
+  this.principal = data.principal;
 
   this.localeData = new LocaleData(data.localeData);
 
