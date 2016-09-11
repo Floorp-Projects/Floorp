@@ -445,24 +445,24 @@ SourceBuffer::AppendDataCompletedWithSuccess(SourceBufferTask::AppendBufferResul
 }
 
 void
-SourceBuffer::AppendDataErrored(nsresult aError)
+SourceBuffer::AppendDataErrored(const MediaResult& aError)
 {
   MOZ_ASSERT(mUpdating);
   mPendingAppend.Complete();
 
-  switch (aError) {
+  switch (aError.Code()) {
     case NS_ERROR_ABORT:
       // Nothing further to do as the trackbuffer has been shutdown.
       // or append was aborted and abort() has handled all the events.
       break;
     default:
-      AppendError(true);
+      AppendError(aError);
       break;
   }
 }
 
 void
-SourceBuffer::AppendError(bool aDecoderError)
+SourceBuffer::AppendError(const MediaResult& aDecodeError)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -473,12 +473,9 @@ SourceBuffer::AppendError(bool aDecoderError)
   QueueAsyncSimpleEvent("error");
   QueueAsyncSimpleEvent("updateend");
 
-  if (aDecoderError) {
-    Optional<MediaSourceEndOfStreamError> decodeError(
-      MediaSourceEndOfStreamError::Decode);
-    ErrorResult dummy;
-    mMediaSource->EndOfStream(decodeError, dummy);
-  }
+  MOZ_ASSERT(NS_FAILED(aDecodeError));
+
+  mMediaSource->EndOfStream(aDecodeError);
 }
 
 already_AddRefed<MediaByteBuffer>
