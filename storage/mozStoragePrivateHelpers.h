@@ -65,7 +65,7 @@ void checkAndLogStatementPerformance(sqlite3_stmt *aStatement);
  * @return the variant if conversion was successful, nullptr if conversion
  *         failed.  The caller is responsible for addref'ing if non-null.
  */
-nsIVariant *convertJSValToVariant(JSContext *aCtx, JS::Value aValue);
+nsIVariant *convertJSValToVariant(JSContext *aCtx, const JS::Value& aValue);
 
 /**
  * Convert a provided nsIVariant implementation to our own thread-safe
