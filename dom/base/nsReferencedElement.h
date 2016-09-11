@@ -36,7 +36,9 @@ class nsReferencedElement {
 public:
   typedef mozilla::dom::Element Element;
 
-  nsReferencedElement() {}
+  nsReferencedElement()
+    : mReferencingImage(false)
+  {}
   ~nsReferencedElement() {
     Unlink();
   }
