@@ -31,7 +31,7 @@ enum class StringifyBehavior {
  */
 extern bool
 Stringify(JSContext* cx, js::MutableHandleValue vp, JSObject* replacer,
-          Value space, StringBuffer& sb, StringifyBehavior stringifyBehavior);
+          const Value& space, StringBuffer& sb, StringifyBehavior stringifyBehavior);
 
 template <typename CharT>
 extern bool

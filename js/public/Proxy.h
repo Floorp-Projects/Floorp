@@ -534,7 +534,7 @@ NewProxyObject(JSContext* cx, const BaseProxyHandler* handler, HandleValue priv,
                JSObject* proto, const ProxyOptions& options = ProxyOptions());
 
 JSObject*
-RenewProxyObject(JSContext* cx, JSObject* obj, BaseProxyHandler* handler, Value priv);
+RenewProxyObject(JSContext* cx, JSObject* obj, BaseProxyHandler* handler, const Value& priv);
 
 class JS_FRIEND_API(AutoEnterPolicy)
 {
