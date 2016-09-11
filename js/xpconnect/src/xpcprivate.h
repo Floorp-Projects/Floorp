@@ -738,7 +738,7 @@ public:
     inline XPCWrappedNative* GetResolvingWrapper() const;
     inline XPCWrappedNative* SetResolvingWrapper(XPCWrappedNative* w);
 
-    inline void SetRetVal(JS::Value val);
+    inline void SetRetVal(const JS::Value& val);
 
     void SetName(jsid name);
     void SetArgsAndResultPtr(unsigned argc, JS::Value* argv, JS::Value* rval);
@@ -2873,7 +2873,7 @@ public:
     // if a given nsIVariant is in fact an XPCVariant.
     NS_DECLARE_STATIC_IID_ACCESSOR(XPCVARIANT_IID)
 
-    static already_AddRefed<XPCVariant> newVariant(JSContext* cx, JS::Value aJSVal);
+    static already_AddRefed<XPCVariant> newVariant(JSContext* cx, const JS::Value& aJSVal);
 
     /**
      * This getter clears the gray bit before handing out the Value if the Value
@@ -2897,7 +2897,7 @@ public:
      */
     JS::Value GetJSValPreserveColor() const {return mJSVal;}
 
-    XPCVariant(JSContext* cx, JS::Value aJSVal);
+    XPCVariant(JSContext* cx, const JS::Value& aJSVal);
 
     /**
      * Convert a variant into a JS::Value.
@@ -2945,7 +2945,7 @@ class XPCTraceableVariant: public XPCVariant,
                            public XPCRootSetElem
 {
 public:
-    XPCTraceableVariant(JSContext* cx, JS::Value aJSVal)
+    XPCTraceableVariant(JSContext* cx, const JS::Value& aJSVal)
         : XPCVariant(cx, aJSVal)
     {
          nsXPConnect::GetContextInstance()->AddVariantRoot(this);
