@@ -34,6 +34,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=810981
   const URL = "http://example.org/chrome/mobile/android/tests/browser/chrome/basic_article_mobile.html";
   // Something to test the zoom level scaling on rotation with.
   const URL_desktop = "http://example.org/chrome/mobile/android/tests/browser/chrome/basic_article.html";
+  // Reader mode URL
+  const URL_reader = "about:reader?url=http%3A%2F%2Fexample.org%2Fchrome%2Fmobile%2Fandroid%2Ftests%2Fbrowser%2Fchrome%2Fbasic_article_mobile.html";
 
   function dispatchUIEvent(browser, type) {
     let event = browser.contentDocument.createEvent("UIEvents");
@@ -96,6 +98,61 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=810981
     let closedTabData = ss.getClosedTabs(chromeWin)[0];
     let browser = ss.undoCloseTab(chromeWin, closedTabData);
     yield promiseBrowserEvent(browser, "pageshow");
+
+    // Check the scroll position.
+    let ifreq = browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor);
+    let utils = ifreq.getInterface(Ci.nsIDOMWindowUtils);
+    let scrollX = {}, scrollY = {};
+    utils.getScrollXY(false, scrollX, scrollY);
+    is(scrollX.value, SCROLL_X, "scrollX restored correctly");
+    is(scrollY.value, SCROLL_Y, "scrollY restored correctly");
+
+    // Remove the tab.
+    BrowserApp.closeTab(BrowserApp.getTabForBrowser(browser));
+  });
+
+  add_task(function* test_sessionStoreScrollPositionReaderMode() {
+    const SCROLL_X = 0;
+    const SCROLL_Y = 44;
+
+    chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+    let BrowserApp = chromeWin.BrowserApp;
+
+    // Creates a tab, sets a scroll position and closes the tab.
+    function createAndRemoveReaderTab() {
+      return Task.spawn(function () {
+        // Create a new tab.
+        tabScroll = BrowserApp.addTab(URL_reader);
+        let browser = tabScroll.browser;
+        yield promiseBrowserEvent(browser, "AboutReaderContentReady");
+
+        // Modify scroll position.
+        setScrollPosition(browser, SCROLL_X, SCROLL_Y);
+        yield promiseTabEvent(browser, "SSTabScrollCaptured");
+
+        // Check that we've actually scrolled.
+        let ifreq = browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor);
+        let utils = ifreq.getInterface(Ci.nsIDOMWindowUtils);
+        let scrollX = {}, scrollY = {};
+        utils.getScrollXY(false, scrollX, scrollY);
+        is(scrollX.value, SCROLL_X, "scrollX set correctly");
+        is(scrollY.value, SCROLL_Y, "scrollY set correctly");
+
+        // Remove the tab.
+        BrowserApp.closeTab(tabScroll);
+        yield promiseTabEvent(browser, "SSTabCloseProcessed");
+      });
+    }
+
+    yield createAndRemoveReaderTab();
+    let state = ss.getClosedTabs(chromeWin);
+    let [{scrolldata}] = state;
+    is(scrolldata.scroll, SCROLL_X + "," + SCROLL_Y, "stored scroll position is correct");
+
+    // Restore the closed tab.
+    let closedTabData = ss.getClosedTabs(chromeWin)[0];
+    let browser = ss.undoCloseTab(chromeWin, closedTabData);
+    yield promiseBrowserEvent(browser, "AboutReaderContentReady");
 
     // Check the scroll position.
     let ifreq = browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor);
