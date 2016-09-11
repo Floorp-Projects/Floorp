@@ -274,7 +274,7 @@ class Optional<JS::Value>
 private:
   Optional() = delete;
 
-  explicit Optional(JS::Value aValue) = delete;
+  explicit Optional(const JS::Value& aValue) = delete;
 };
 
 // A specialization of Optional for NonNull that lets us get a T& from Value()

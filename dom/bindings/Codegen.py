@@ -10453,7 +10453,7 @@ class CGClass(CGThing):
                 def declare(self, cgClass):
                     name = cgClass.getNameString()
                     return ("%s(const %s&) = delete;\n"
-                            "void operator=(const %s) = delete;\n" % (name, name, name))
+                            "void operator=(const %s&) = delete;\n" % (name, name, name))
 
             disallowedCopyConstructors = [DisallowedCopyConstructor()]
         else:
@@ -13843,7 +13843,7 @@ class CGNativeMember(ClassMethod):
         if self.member.isMethod() and self.member.isLegacycaller():
             # If it has an identifier, we can't deal with it yet
             assert self.member.isIdentifierLess()
-            args.insert(0, Argument("JS::Value", "aThisVal"))
+            args.insert(0, Argument("const JS::Value&", "aThisVal"))
         # And jscontext bits.
         if needCx(returnType, argList, self.extendedAttrs,
                   self.passJSBitsAsNeeded, self.member.isStatic()):
