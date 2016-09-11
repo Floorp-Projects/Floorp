@@ -99,7 +99,7 @@ public:
 protected:
   GetFilesHelper(nsIGlobalObject* aGlobal, bool aRecursiveFlag);
 
-  virtual ~GetFilesHelper() {}
+  virtual ~GetFilesHelper();
 
   void
   SetDirectoryPath(const nsAString& aDirectoryPath)
