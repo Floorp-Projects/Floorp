@@ -11,10 +11,10 @@ skip-if(B2G) == 41464-1b.html 41464-1b.html
 == 82711-1-ref.html 82711-1-ref.html
 == 468263-1a.html 468263-1a.html
 == 468263-1b.html 468263-1b.html
-fails == 468263-1c.html 468263-1c.html
-fails == 468263-1d.html 468263-1d.html
-fails == 468263-2.html 468263-2.html
-fails == 468263-2.html 468263-2.html
+== 468263-1c.html 468263-1c.html
+== 468263-1d.html 468263-1d.html
+== 468263-2.html 468263-2.html
+== 468263-2.html 468263-2.html
 == 484200-1.html 484200-1.html
 == 485377.html 485377.html
 == 557840.html 557840.html
@@ -35,7 +35,7 @@ skip-if(Android||B2G) == 649134-2.html 649134-2.html
 == bug448564-4a.html bug448564-4a.html
 == bug502168-1_malformed.html bug502168-1_malformed.html
 
-fails == responsive-image-load-shortcircuit.html responsive-image-load-shortcircuit.html
+== responsive-image-load-shortcircuit.html responsive-image-load-shortcircuit.html
 
 # Test that image documents taken into account CSS properties like
 # image-orientation when determining the size of the image.

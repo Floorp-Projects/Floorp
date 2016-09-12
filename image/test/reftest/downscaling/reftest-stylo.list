@@ -95,11 +95,11 @@ fails-if(OSX>=1008&&!skiaContent) == downscale-2e.html?205,53,bottom downscale-2
 == downscale-png.html?24,24,interlaced downscale-png.html?24,24,interlaced
 
 # Non-transparent and transparent ICO images
-fails == downscale-16px.html?ff-0RGB.ico downscale-16px.html?ff-0RGB.ico
-fails == downscale-16px.html?ff-ARGB.ico downscale-16px.html?ff-ARGB.ico
+== downscale-16px.html?ff-0RGB.ico downscale-16px.html?ff-0RGB.ico
+== downscale-16px.html?ff-ARGB.ico downscale-16px.html?ff-ARGB.ico
 
 # Upside-down (negative height) BMP
-fails == downscale-8px.html?top-to-bottom-16x16-24bpp.bmp downscale-8px.html?top-to-bottom-16x16-24bpp.bmp
+== downscale-8px.html?top-to-bottom-16x16-24bpp.bmp downscale-8px.html?top-to-bottom-16x16-24bpp.bmp
 
 # Test downscaling from all supported formats from 256 to 32.
 == downscale-32px.html?.bmp downscale-32px.html?.bmp
@@ -179,11 +179,11 @@ skip == downscale-2e.html?203,52,bottom downscale-2e.html?203,52,bottom
 == downscale-png.html?24,24,interlaced downscale-png.html?24,24,interlaced
 
 # Non-transparent and transparent ICO images
-fails == downscale-16px.html?ff-0RGB.ico downscale-16px.html?ff-0RGB.ico
-fails == downscale-16px.html?ff-ARGB.ico downscale-16px.html?ff-ARGB.ico
+== downscale-16px.html?ff-0RGB.ico downscale-16px.html?ff-0RGB.ico
+== downscale-16px.html?ff-ARGB.ico downscale-16px.html?ff-ARGB.ico
 
 # Upside-down (negative height) BMP
-fails == downscale-8px.html?top-to-bottom-16x16-24bpp.bmp downscale-8px.html?top-to-bottom-16x16-24bpp.bmp
+== downscale-8px.html?top-to-bottom-16x16-24bpp.bmp downscale-8px.html?top-to-bottom-16x16-24bpp.bmp
 
 # Test downscaling from all supported formats from 256 to 32.
 == downscale-32px.html?.bmp downscale-32px.html?.bmp

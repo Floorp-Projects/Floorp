@@ -72,7 +72,7 @@ fails == rgb16-231.bmp rgb16-231.bmp
 # "A 16-bit image with an alpha channel. There are 4 bits for each color
 # channel, and 4 bits for the alpha channel. It’s not clear if this is valid,
 # but I can’t find anything that suggests it isn’t."
-fails == rgba16-4444.bmp rgba16-4444.bmp
+== rgba16-4444.bmp rgba16-4444.bmp
 
 # BMP: bihsize=40, 127 x 64, bpp=24, compression=0, colors=300
 # "A 24-bit image, with a palette containing 300 colors. The fact that the
