@@ -675,7 +675,7 @@ ServiceWorkerClients::Get(const nsAString& aClientId, ErrorResult& aRv)
 
   RefPtr<GetRunnable> r =
     new GetRunnable(promiseProxy, aClientId);
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r));
+  MOZ_ALWAYS_SUCCEEDS(workerPrivate->DispatchToMainThread(r.forget()));
   return promise.forget();
 }
 
@@ -711,7 +711,7 @@ ServiceWorkerClients::MatchAll(const ClientQueryOptions& aOptions,
     new MatchAllRunnable(promiseProxy,
                          NS_ConvertUTF16toUTF8(scope),
                          aOptions.mIncludeUncontrolled);
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r));
+  MOZ_ALWAYS_SUCCEEDS(workerPrivate->DispatchToMainThread(r.forget()));
   return promise.forget();
 }
 
@@ -752,7 +752,7 @@ ServiceWorkerClients::OpenWindow(const nsAString& aUrl,
 
   RefPtr<OpenWindowRunnable> r = new OpenWindowRunnable(promiseProxy,
                                                           aUrl, scope);
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r));
+  MOZ_ALWAYS_SUCCEEDS(workerPrivate->DispatchToMainThread(r.forget()));
 
   return promise.forget();
 }
@@ -781,6 +781,6 @@ ServiceWorkerClients::Claim(ErrorResult& aRv)
   RefPtr<ClaimRunnable> runnable =
     new ClaimRunnable(promiseProxy, NS_ConvertUTF16toUTF8(scope));
 
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
+  MOZ_ALWAYS_SUCCEEDS(workerPrivate->DispatchToMainThread(runnable.forget()));
   return promise.forget();
 }
