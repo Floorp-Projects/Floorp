@@ -15,14 +15,15 @@ function* runTests() {
   removeThumbnail(url);
   // now load it up in a browser - it should *not* be red, otherwise the
   // cookie above was saved.
-  let tab = gBrowser.loadOneTab(url, { inBackground: false });
+  let tab = yield BrowserTestUtils.openNewForgroundTab(gBrowser, url);
   let browser = tab.linkedBrowser;
-  yield whenLoaded(browser);
 
   // The root element of the page shouldn't be red.
-  let redStr = "rgb(255, 0, 0)";
-  isnot(browser.contentDocument.documentElement.style.backgroundColor,
-        redStr,
-        "The page shouldn't be red.");
+  yield ContentTask.spawn(browser, null, function(){
+    Assert.notEqual(content.document.documentElement.style.backgroundColor,
+                    "rgb(255, 0, 0)",
+                    "The page shouldn't be red.");
+  });
+
   gBrowser.removeTab(tab);
 }
