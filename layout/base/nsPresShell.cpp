@@ -5793,7 +5793,9 @@ PresShell::AddFrameToVisibleRegions(nsIFrame* aFrame, VisibilityCounter aForCoun
     return;
   }
 
-  VisibleRegions& regions = mVisibleRegions->ForCounter(aForCounter);
+  VisibleRegions& regions = aForCounter == VisibilityCounter::MAY_BECOME_VISIBLE
+                          ? mVisibleRegions->mApproximate
+                          : mVisibleRegions->mInDisplayPort;
   CSSIntRegion* regionForView = regions.LookupOrAdd(viewID);
   MOZ_ASSERT(regionForView);
 
@@ -5864,7 +5866,9 @@ PresShell::InitVisibleRegionsIfVisualizationEnabled(VisibilityCounter aForCounte
   if (mVisibleRegions) {
     // Clear the regions we're about to update. We don't want to clear both,
     // or the two visibility tracking methods will interfere with each other.
-    VisibleRegions& regions = mVisibleRegions->ForCounter(aForCounter);
+    VisibleRegions& regions = aForCounter == VisibilityCounter::MAY_BECOME_VISIBLE
+                            ? mVisibleRegions->mApproximate
+                            : mVisibleRegions->mInDisplayPort;
     regions.Clear();
     return;
   }
@@ -6215,17 +6219,13 @@ PresShell::ScheduleApproximateFrameVisibilityUpdateNow()
 }
 
 void
-PresShell::MarkFrameVisible(nsIFrame* aFrame, VisibilityCounter aCounter)
+PresShell::MarkFrameVisibleInDisplayPort(nsIFrame* aFrame)
 {
-  MOZ_ASSERT(aCounter != VisibilityCounter::MAY_BECOME_VISIBLE,
-             "MAY_BECOME_VISIBLE should only be managed from within PresShell");
-
   if (!aFrame->TrackingVisibility()) {
     return;
   }
 
   if (AssumeAllFramesVisible()) {
-    // Force to maximum visibility (IN_DISPLAYPORT) regardless of aCounter's value.
     if (aFrame->GetVisibility() != Visibility::IN_DISPLAYPORT) {
       aFrame->IncVisibilityCount(VisibilityCounter::IN_DISPLAYPORT);
     }
@@ -6241,15 +6241,13 @@ PresShell::MarkFrameVisible(nsIFrame* aFrame, VisibilityCounter aCounter)
   }
 #endif
 
-  VisibleFrames& frameSet = VisibleFramesForCounter(aCounter);
-
-  if (!frameSet.Contains(aFrame)) {
+  if (!mInDisplayPortFrames.Contains(aFrame)) {
     MOZ_ASSERT(!AssumeAllFramesVisible());
-    frameSet.PutEntry(aFrame);
-    aFrame->IncVisibilityCount(aCounter);
+    mInDisplayPortFrames.PutEntry(aFrame);
+    aFrame->IncVisibilityCount(VisibilityCounter::IN_DISPLAYPORT);
   }
 
-  AddFrameToVisibleRegions(aFrame, aCounter);
+  AddFrameToVisibleRegions(aFrame, VisibilityCounter::IN_DISPLAYPORT);
 }
 
 static void
