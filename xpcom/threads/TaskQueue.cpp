@@ -195,7 +195,7 @@ TaskQueue::Runner::Run()
   // run in a loop here so that we don't hog the thread pool. This means we may
   // run on another thread next time, but we rely on the memory fences from
   // mQueueMonitor for thread safety of non-threadsafe tasks.
-  nsresult rv = mQueue->mPool->TailDispatch(this);
+  nsresult rv = mQueue->mPool->DispatchFromEndOfTaskInThisPool(this);
   if (NS_FAILED(rv)) {
     // Failed to dispatch, shutdown!
     MonitorAutoLock mon(mQueue->mQueueMonitor);
