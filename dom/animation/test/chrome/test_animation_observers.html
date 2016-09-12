@@ -9,6 +9,9 @@
 @keyframes anim {
   to { transform: translate(100px); }
 }
+@keyframes anotherAnim {
+  to { transform: translate(0px); }
+}
 #target {
   width: 100px;
   height: 100px;
@@ -1397,6 +1400,29 @@ function assert_records(expected, desc) {
 
     e.style = "";
   });
+
+  addAsyncAnimTest("animtion_order_change", aOptions, function*() {
+    e.style.animation = "anim 100s, anotherAnim 100s";
+
+    var animations = e.getAnimations();
+    yield await_frame();
+    assert_records([{ added: animations, changed: [], removed: []}],
+                   "records after creation");
+    e.style.animation = "anotherAnim 100s, anim 100s";
+    animations = e.getAnimations();
+    yield await_frame();
+    assert_records([{ added: [], changed: animations, removed: []}],
+                   "records after the order is changed");
+
+    e.style.animation = "anotherAnim 100s, anim 100s";
+    yield await_frame();
+    assert_records([],
+                   "no records after applying the same order");
+
+    e.style.animation = "";
+    yield await_frame();
+  });
+
 });
 
 addAsyncAnimTest("tree_ordering", { observe: div, subtree: true }, function*() {
