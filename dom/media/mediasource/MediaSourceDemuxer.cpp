@@ -247,7 +247,7 @@ MediaSourceDemuxer::GetManager(TrackType aTrack)
 
 MediaSourceDemuxer::~MediaSourceDemuxer()
 {
-  mInitPromise.RejectIfExists(DemuxerFailureReason::SHUTDOWN, __func__);
+  mInitPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
 }
 
 void
@@ -397,7 +397,7 @@ MediaSourceTrackDemuxer::DoSeek(media::TimeUnit aTime)
   if (!buffered.ContainsWithStrictEnd(seekTime)) {
     if (!buffered.ContainsWithStrictEnd(aTime)) {
       // We don't have the data to seek to.
-      return SeekPromise::CreateAndReject(DemuxerFailureReason::WAITING_FOR_DATA,
+      return SeekPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA,
                                           __func__);
     }
     // Theoretically we should reject the promise with WAITING_FOR_DATA,
@@ -438,11 +438,11 @@ MediaSourceTrackDemuxer::DoGetSamples(int32_t aNumSamples)
     buffered.SetFuzz(MediaSourceDemuxer::EOS_FUZZ / 2);
 
     if (!buffered.Length() && mManager->IsEnded()) {
-      return SamplesPromise::CreateAndReject(DemuxerFailureReason::END_OF_STREAM,
+      return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_END_OF_STREAM,
                                              __func__);
     }
     if (!buffered.ContainsWithStrictEnd(TimeUnit::FromMicroseconds(0))) {
-      return SamplesPromise::CreateAndReject(DemuxerFailureReason::WAITING_FOR_DATA,
+      return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA,
                                              __func__);
     }
     mReset = false;
@@ -456,12 +456,12 @@ MediaSourceTrackDemuxer::DoGetSamples(int32_t aNumSamples)
     sample = mManager->GetSample(mType, MediaSourceDemuxer::EOS_FUZZ, result);
     if (!sample) {
       if (result == Result::ERROR) {
-        return SamplesPromise::CreateAndReject(DemuxerFailureReason::DEMUXER_ERROR, __func__);
+        return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_DEMUXER_ERR, __func__);
       }
       return SamplesPromise::CreateAndReject(
         (result == Result::EOS && mManager->IsEnded())
-        ? DemuxerFailureReason::END_OF_STREAM
-        : DemuxerFailureReason::WAITING_FOR_DATA, __func__);
+        ? NS_ERROR_DOM_MEDIA_END_OF_STREAM
+        : NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA, __func__);
     }
   }
   RefPtr<SamplesHolder> samples = new SamplesHolder;
@@ -492,8 +492,8 @@ MediaSourceTrackDemuxer::DoSkipToNextRandomAccessPoint(media::TimeUnit aTimeThre
     }
   }
   SkipFailureHolder holder(
-    mManager->IsEnded() ? DemuxerFailureReason::END_OF_STREAM :
-                          DemuxerFailureReason::WAITING_FOR_DATA, parsed);
+    mManager->IsEnded() ? NS_ERROR_DOM_MEDIA_END_OF_STREAM :
+                          NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA, parsed);
   return SkipAccessPointPromise::CreateAndReject(holder, __func__);
 }
 

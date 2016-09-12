@@ -1095,12 +1095,12 @@ TrackBuffersManager::OnDemuxerInitDone(nsresult)
 }
 
 void
-TrackBuffersManager::OnDemuxerInitFailed(DemuxerFailureReason aFailure)
+TrackBuffersManager::OnDemuxerInitFailed(const MediaResult& aError)
 {
-  MOZ_ASSERT(aFailure != DemuxerFailureReason::WAITING_FOR_DATA);
+  MOZ_ASSERT(aError != NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA);
   mDemuxerInitRequest.Complete();
 
-  RejectAppend(NS_ERROR_FAILURE, __func__);
+  RejectAppend(aError, __func__);
 }
 
 RefPtr<TrackBuffersManager::CodedFrameProcessingPromise>
@@ -1149,29 +1149,22 @@ TrackBuffersManager::CodedFrameProcessing()
 
 void
 TrackBuffersManager::OnDemuxFailed(TrackType aTrack,
-                                   DemuxerFailureReason aFailure)
+                                   const MediaResult& aError)
 {
   MOZ_ASSERT(OnTaskQueue());
-  MSE_DEBUG("Failed to demux %s, failure:%d",
-            aTrack == TrackType::kVideoTrack ? "video" : "audio", aFailure);
-  switch (aFailure) {
-    case DemuxerFailureReason::END_OF_STREAM:
-    case DemuxerFailureReason::WAITING_FOR_DATA:
+  MSE_DEBUG("Failed to demux %s, failure:%u",
+            aTrack == TrackType::kVideoTrack ? "video" : "audio", aError.Code());
+  switch (aError.Code()) {
+    case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
+    case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
       if (aTrack == TrackType::kVideoTrack) {
         DoDemuxAudio();
       } else {
         CompleteCodedFrameProcessing();
       }
       break;
-    case DemuxerFailureReason::DEMUXER_ERROR:
-      RejectProcessing(NS_ERROR_FAILURE, __func__);
-      break;
-    case DemuxerFailureReason::CANCELED:
-    case DemuxerFailureReason::SHUTDOWN:
-      RejectProcessing(NS_ERROR_ABORT, __func__);
-      break;
     default:
-      MOZ_ASSERT(false);
+      RejectProcessing(aError, __func__);
       break;
   }
 }
