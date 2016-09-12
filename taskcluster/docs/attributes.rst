@@ -19,6 +19,24 @@ kind
 A task's ``kind`` attribute gives the name of the kind that generated it, e.g.,
 ``build`` or ``legacy``.
 
+
+run_on_projects
+===============
+
+The projects where this task should be in the target task set.  This is how
+requirements like "only run this on inbound" get implemented.  These are
+either project names or the aliases
+
+ * `integration` -- integration branches
+ * `release` -- release branches including mozilla-central
+ * `all` -- everywhere (the default)
+
+For try, this attribute applies only if ``-p all`` is specified.  All jobs can
+be specified by name regardless of ``run_on_projects``.
+
+If ``run_on_projects`` is set to an empty list, then the task will not run
+anywhere, unless specified explicitly in try syntax.
+
 task_duplicates
 ===============
 
