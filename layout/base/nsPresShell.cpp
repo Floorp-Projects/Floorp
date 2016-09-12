@@ -5831,17 +5831,18 @@ PresShell::MarkFramesInListApproximatelyVisible(const nsDisplayList& aList)
   }
 }
 
-template <typename Func> void
-ForAllTrackedFramesInVisibleSet(const VisibleFrames& aFrames, Func aFunc)
+/* static */ void
+PresShell::DecVisibleCount(const VisibleFrames& aFrames,
+                           VisibilityCounter aCounter,
+                           Maybe<OnNonvisible> aNonvisibleAction /* = Nothing() */)
 {
   for (auto iter = aFrames.ConstIter(); !iter.Done(); iter.Next()) {
     nsIFrame* frame = iter.Get()->GetKey();
-
-    // Call |aFunc| if we're still tracking the frame's visibility. (We may
-    // not be, if the frame disabled visibility tracking after we added it to
-    // the visible frames list.)
+    // Decrement the frame's visible count if we're still tracking its
+    // visibility. (We may not be, if the frame disabled visibility tracking
+    // after we added it to the visible frames list.)
     if (frame->TrackingVisibility()) {
-      aFunc(frame);
+      frame->DecVisibilityCount(aCounter, aNonvisibleAction);
     }
   }
 }
@@ -5886,9 +5887,8 @@ PresShell::RebuildApproximateFrameVisibilityDisplayList(const nsDisplayList& aLi
 
   MarkFramesInListApproximatelyVisible(aList);
 
-  ForAllTrackedFramesInVisibleSet(oldApproximatelyVisibleFrames, [&](nsIFrame* aFrame) {
-    aFrame->DecVisibilityCount(VisibilityCounter::MAY_BECOME_VISIBLE);
-  });
+  DecVisibleCount(oldApproximatelyVisibleFrames,
+                  VisibilityCounter::MAY_BECOME_VISIBLE);
 
   NotifyCompositorOfVisibleRegionsChange();
 }
@@ -5913,14 +5913,14 @@ void
 PresShell::ClearVisibleFramesSets(Maybe<OnNonvisible> aNonvisibleAction
                                     /* = Nothing() */)
 {
-  ForAllTrackedFramesInVisibleSet(mApproximatelyVisibleFrames, [&](nsIFrame* aFrame) {
-    aFrame->DecVisibilityCount(VisibilityCounter::MAY_BECOME_VISIBLE, aNonvisibleAction);
-  });
-  ForAllTrackedFramesInVisibleSet(mInDisplayPortFrames, [&](nsIFrame* aFrame) {
-    aFrame->DecVisibilityCount(VisibilityCounter::IN_DISPLAYPORT, aNonvisibleAction);
-  });
-
+  DecVisibleCount(mApproximatelyVisibleFrames,
+                  VisibilityCounter::MAY_BECOME_VISIBLE,
+                  aNonvisibleAction);
   mApproximatelyVisibleFrames.Clear();
+
+  DecVisibleCount(mInDisplayPortFrames,
+                  VisibilityCounter::IN_DISPLAYPORT,
+                  aNonvisibleAction);
   mInDisplayPortFrames.Clear();
 
   if (mVisibleRegions) {
@@ -6048,9 +6048,8 @@ PresShell::RebuildApproximateFrameVisibility(nsRect* aRect,
 
   MarkFramesInSubtreeApproximatelyVisible(rootFrame, vis, aRemoveOnly);
 
-  ForAllTrackedFramesInVisibleSet(oldApproximatelyVisibleFrames, [&](nsIFrame* aFrame) {
-    aFrame->DecVisibilityCount(VisibilityCounter::MAY_BECOME_VISIBLE);
-  });
+  DecVisibleCount(oldApproximatelyVisibleFrames,
+                  VisibilityCounter::MAY_BECOME_VISIBLE);
 
   NotifyCompositorOfVisibleRegionsChange();
 }
@@ -6489,9 +6488,7 @@ PresShell::Paint(nsView*        aViewToPaint,
     nsLayoutUtils::PaintFrame(nullptr, frame, aDirtyRegion, bgcolor,
                               nsDisplayListBuilderMode::PAINTING, flags);
 
-    ForAllTrackedFramesInVisibleSet(oldInDisplayPortFrames, [&](nsIFrame* aFrame) {
-      aFrame->DecVisibilityCount(VisibilityCounter::IN_DISPLAYPORT);
-    });
+    DecVisibleCount(oldInDisplayPortFrames, VisibilityCounter::IN_DISPLAYPORT);
 
     if (mVisibleRegions &&
         !mNotifyCompositorOfVisibleRegionsChangeEvent.IsPending()) {
