@@ -20,11 +20,7 @@ public:
   {
     pthread_mutexattr_t attr;
     pthread_mutexattr_init(&attr);
-#ifdef DEBUG
-    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK);
-#else
-    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_NORMAL);
-#endif
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
 
 #ifdef DEBUG
     int r =
