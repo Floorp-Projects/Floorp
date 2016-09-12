@@ -173,6 +173,9 @@ BottomHost.prototype = {
       Services.prefs.setIntPref(this.heightPref, this.frame.height);
       this._nbox.removeChild(this._splitter);
       this._nbox.removeChild(this.frame);
+      this.frame = null;
+      this._nbox = null;
+      this._splitter = null;
     }
 
     return promise.resolve(null);
