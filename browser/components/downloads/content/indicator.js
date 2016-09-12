@@ -369,10 +369,13 @@ const DownloadsIndicatorView = {
       notifier.style.transform = "translate(" +  translateX + ", " + translateY + ")";
     }
     notifier.setAttribute("notification", aType);
+    anchor.setAttribute("notification", aType);
     this._notificationTimeout = setTimeout(() => {
+      anchor.removeAttribute("notification");
       notifier.removeAttribute("notification");
       notifier.style.transform = '';
-    }, 1000);
+      // This value is determined by the overall duration of animation in CSS.
+    }, 2000);
   },
 
   //////////////////////////////////////////////////////////////////////////////
