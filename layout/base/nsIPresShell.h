@@ -46,6 +46,7 @@
 #include "nsRefPtrHashtable.h"
 #include "nsClassHashtable.h"
 #include "nsPresArena.h"
+#include "nsIImageLoadingContent.h"
 #include "nsMargin.h"
 #include "nsFrameState.h"
 #include "Units.h"
@@ -1606,12 +1607,11 @@ public:
   virtual void RebuildApproximateFrameVisibility(nsRect* aRect = nullptr,
                                                  bool aRemoveOnly = false) = 0;
 
-  /// Adds @aFrame to the list of frames which were visible within the
-  /// displayport during the last paint.
-  virtual void MarkFrameVisibleInDisplayPort(nsIFrame* aFrame) = 0;
+  /// Ensures @aFrame is in the list of approximately visible frames.
+  virtual void EnsureFrameInApproximatelyVisibleList(nsIFrame* aFrame) = 0;
 
-  /// Marks @aFrame nonvisible and removes it from all lists of visible frames.
-  virtual void MarkFrameNonvisible(nsIFrame* aFrame) = 0;
+  /// Removes @aFrame from the list of approximately visible frames if present.
+  virtual void RemoveFrameFromApproximatelyVisibleList(nsIFrame* aFrame) = 0;
 
   /// Whether we should assume all frames are visible.
   virtual bool AssumeAllFramesVisible() = 0;
