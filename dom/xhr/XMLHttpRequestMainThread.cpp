@@ -558,7 +558,6 @@ XMLHttpRequestMainThread::AppendToResponseText(const char * aSrcBuffer,
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   MOZ_ASSERT(destlen <= destBufferLen);
 
-  XMLHttpRequestBinding::ClearCachedResponseTextValue(this);
   helper.AddLength(destlen);
   return NS_OK;
 }
@@ -1699,6 +1698,7 @@ XMLHttpRequestMainThread::OnDataAvailable(nsIRequest *request,
   MOZ_ASSERT(mContext.get() == ctxt,"start context different from OnDataAvailable context");
 
   mProgressSinceLastProgressEvent = true;
+  XMLHttpRequestBinding::ClearCachedResponseTextValue(this);
 
   bool cancelable = false;
   if ((mResponseType == XMLHttpRequestResponseType::Blob ||
