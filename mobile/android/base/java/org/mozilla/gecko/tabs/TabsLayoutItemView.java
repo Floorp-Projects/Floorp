@@ -10,6 +10,7 @@ import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.widget.TabThumbnailWrapper;
+import org.mozilla.gecko.widget.themed.ThemedRelativeLayout;
 
 import android.content.Context;
 import android.graphics.Rect;
@@ -165,5 +166,9 @@ public class TabsLayoutItemView extends LinearLayout
 
     public void setCloseVisible(boolean visible) {
         mCloseButton.setVisibility(visible ? View.VISIBLE : View.INVISIBLE);
+    }
+
+    public void setPrivateMode(boolean isPrivate) {
+        ((ThemedRelativeLayout) findViewById(R.id.wrapper)).setPrivateMode(isPrivate);
     }
 }
