@@ -224,6 +224,7 @@ public:
   // Event handlers for various events.
   // Return true if the event is handled by this state object.
   virtual bool HandleDormant(bool aDormant) { return false; }
+  virtual bool HandleCDMProxyReady() { return false; }
 
 protected:
   using Master = MediaDecoderStateMachine;
@@ -378,6 +379,12 @@ public:
   State GetState() const override
   {
     return DECODER_STATE_WAIT_FOR_CDM;
+  }
+
+  bool HandleCDMProxyReady() override
+  {
+    SetState(DECODER_STATE_DECODING_FIRSTFRAME);
+    return true;
   }
 };
 
@@ -2954,9 +2961,7 @@ MediaDecoderStateMachine::OnCDMProxyReady(RefPtr<CDMProxy> aProxy)
   mCDMProxyPromise.Complete();
   mCDMProxy = aProxy;
   mReader->SetCDMProxy(aProxy);
-  if (mState == DECODER_STATE_WAIT_FOR_CDM) {
-    SetState(DECODER_STATE_DECODING_FIRSTFRAME);
-  }
+  mStateObj->HandleCDMProxyReady();
 }
 
 void
