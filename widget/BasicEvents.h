@@ -129,6 +129,9 @@ public:
   // If mComposed is true, the event fired by nodes in shadow DOM can cross the
   // boundary of shadow DOM and light DOM.
   bool mComposed : 1;
+  // Similar to mComposed. Set it to true to allow events cross the boundary
+  // between native non-anonymous content and native anonymouse content
+  bool mComposedInNativeAnonymousContent : 1;
 
   // If the event is being handled in target phase, returns true.
   inline bool InTargetPhase() const
@@ -343,6 +346,7 @@ protected:
     mFlags.mIsTrusted = aIsTrusted;
     SetDefaultCancelableAndBubbles();
     SetDefaultComposed();
+    SetDefaultComposedInNativeAnonymousContent();
   }
 
   WidgetEvent()
@@ -679,6 +683,20 @@ public:
   void SetComposed(bool aComposed)
   {
     mFlags.mComposed = aComposed;
+  }
+
+  void SetDefaultComposedInNativeAnonymousContent()
+  {
+    // For compatibility concerns, we set mComposedInNativeAnonymousContent to
+    // false for those events we want to stop propagation.
+    //
+    // nsVideoFrame may create anonymous image element which fires eLoad,
+    // eLoadStart, eLoadEnd, eLoadError. We don't want these events cross
+    // the boundary of NAC
+    mFlags.mComposedInNativeAnonymousContent = mMessage != eLoad &&
+                                               mMessage != eLoadStart &&
+                                               mMessage != eLoadEnd &&
+                                               mMessage != eLoadError;
   }
 };
 

@@ -575,6 +575,7 @@ Event::SetEventType(const nsAString& aEventTypeArg)
     mEvent->mSpecifiedEventTypeString = aEventTypeArg;
     mEvent->SetComposed(aEventTypeArg);
   }
+  mEvent->SetDefaultComposedInNativeAnonymousContent();
 }
 
 void
