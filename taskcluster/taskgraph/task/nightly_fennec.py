@@ -25,7 +25,10 @@ INDEX_URL = 'https://index.taskcluster.net/v1/task/{}'
 class NightlyFennecTask(base.Task):
 
     def __init__(self, *args, **kwargs):
-        self.task_dict = kwargs.pop('task_dict')
+        try:
+            self.task_dict = kwargs.pop('task_dict')
+        except KeyError:
+            pass
         super(NightlyFennecTask, self).__init__(*args, **kwargs)
 
     @classmethod
