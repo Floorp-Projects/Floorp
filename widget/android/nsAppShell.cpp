@@ -102,7 +102,9 @@ class GeckoThreadSupport final
     : public java::GeckoThread::Natives<GeckoThreadSupport>
     , public UsesGeckoThreadProxy
 {
-    static uint32_t sPauseCount;
+    // When this number goes above 0, the app is paused. When less than or
+    // equal to zero, the app is resumed.
+    static int32_t sPauseCount;
 
 public:
     template<typename Functor>
@@ -152,8 +154,10 @@ public:
     {
         MOZ_ASSERT(NS_IsMainThread());
 
-        if ((++sPauseCount) > 1) {
-            // Already paused.
+        sPauseCount++;
+        // If sPauseCount is now 1, we just crossed the threshold from "resumed"
+        // "paused". so we should notify observers and so on.
+        if (sPauseCount != 1) {
             return;
         }
 
@@ -184,8 +188,10 @@ public:
     {
         MOZ_ASSERT(NS_IsMainThread());
 
-        if (!sPauseCount || (--sPauseCount) > 0) {
-            // Still paused.
+        sPauseCount--;
+        // If sPauseCount is now 0, we just crossed the threshold from "paused"
+        // to "resumed", so we should notify observers and so on.
+        if (sPauseCount != 0) {
             return;
         }
 
@@ -215,7 +221,7 @@ public:
     }
 };
 
-uint32_t GeckoThreadSupport::sPauseCount;
+int32_t GeckoThreadSupport::sPauseCount;
 
 
 class GeckoAppShellSupport final
