@@ -18,9 +18,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1000870
         iframe.src = "pointerevent_pointerleave_pen-manual.html";
       }
       function executeTest(int_win) {
-        sendMouseEvent(int_win, "target0", "mousedown",  {inputSource:MouseEvent.MOZ_SOURCE_PEN});
-        sendMouseEvent(int_win, "target0", "mouseup",    {inputSource:MouseEvent.MOZ_SOURCE_PEN});
-        sendMouseEvent(int_win, "target0", "mouseleave", {inputSource:MouseEvent.MOZ_SOURCE_PEN});
+        sendMouseEvent(int_win, "target0", "mousedown",   {inputSource:MouseEvent.MOZ_SOURCE_PEN});
+        sendMouseEvent(int_win, "target0", "mouseup",     {inputSource:MouseEvent.MOZ_SOURCE_PEN});
+        sendMouseEvent(int_win, "target0", "mousecancel", {inputSource:MouseEvent.MOZ_SOURCE_PEN});
       }
     </script>
   </head>
