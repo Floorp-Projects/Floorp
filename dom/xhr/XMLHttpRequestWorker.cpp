@@ -1261,6 +1261,7 @@ EventRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   JS::Rooted<UniquePtr<XMLHttpRequestWorker::StateData>> state(aCx, new XMLHttpRequestWorker::StateData());
 
   state->mResponseTextResult = mResponseTextResult;
+
   state->mResponseText = mResponseText;
 
   if (NS_SUCCEEDED(mResponseTextResult)) {
@@ -2432,6 +2433,8 @@ XMLHttpRequestWorker::UpdateState(const StateData& aStateData,
   else {
     mStateData = aStateData;
   }
+
+  XMLHttpRequestBinding::ClearCachedResponseTextValue(this);
 }
 
 } // dom namespace

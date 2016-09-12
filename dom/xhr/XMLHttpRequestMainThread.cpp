@@ -288,7 +288,7 @@ XMLHttpRequestMainThread::ResetResponse()
 {
   mResponseXML = nullptr;
   mResponseBody.Truncate();
-  mResponseText.Truncate();
+  TruncateResponseText();
   mResponseBlob = nullptr;
   mDOMBlob = nullptr;
   mBlobSet = nullptr;
@@ -564,6 +564,7 @@ XMLHttpRequestMainThread::AppendToResponseText(const char * aSrcBuffer,
   }
 
   mResponseText.SetLength(totalChars.value());
+  XMLHttpRequestBinding::ClearCachedResponseTextValue(this);
   return NS_OK;
 }
 
@@ -823,7 +824,7 @@ XMLHttpRequestMainThread::GetResponse(JSContext* aCx,
 
     if (mResultJSON.isUndefined()) {
       aRv = CreateResponseParsedJSON(aCx);
-      mResponseText.Truncate();
+      TruncateResponseText();
       if (aRv.Failed()) {
         // Per spec, errors aren't propagated. null is returned instead.
         aRv = NS_OK;
@@ -1332,7 +1333,7 @@ XMLHttpRequestMainThread::DispatchProgressEvent(DOMEventTargetHelper* aTarget,
     if (mResponseType == XMLHttpRequestResponseType::Moz_chunked_text ||
         mResponseType == XMLHttpRequestResponseType::Moz_chunked_arraybuffer) {
       mResponseBody.Truncate();
-      mResponseText.Truncate();
+      TruncateResponseText();
       mResultArrayBuffer = nullptr;
       mArrayBufferBuilder.reset();
     }
@@ -2145,7 +2146,7 @@ XMLHttpRequestMainThread::MatchCharsetAndDecoderToResponseDocument()
 {
   if (mResponseXML && mResponseCharset != mResponseXML->GetDocumentCharacterSet()) {
     mResponseCharset = mResponseXML->GetDocumentCharacterSet();
-    mResponseText.Truncate();
+    TruncateResponseText();
     mResponseBodyDecodedPos = 0;
     mDecoder = EncodingUtils::DecoderForEncoding(mResponseCharset);
   }
@@ -3535,6 +3536,13 @@ XMLHttpRequestMainThread::ShouldBlockAuthPrompt()
   }
 
   return false;
+}
+
+void
+XMLHttpRequestMainThread::TruncateResponseText()
+{
+  mResponseText.Truncate();
+  XMLHttpRequestBinding::ClearCachedResponseTextValue(this);
 }
 
 NS_IMPL_ISUPPORTS(XMLHttpRequestMainThread::nsHeaderVisitor, nsIHttpHeaderVisitor)
