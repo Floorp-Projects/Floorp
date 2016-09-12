@@ -85,7 +85,7 @@ class TestOptimize(unittest.TestCase):
 
     def test_annotate_task_graph_no_optimize(self):
         "annotating marks everything as un-optimized if the kind returns that"
-        OptimizingTask.optimize = lambda self: (False, None)
+        OptimizingTask.optimize = lambda self, params: (False, None)
         graph = self.make_graph(
             self.make_task('task1'),
             self.make_task('task2'),
@@ -93,7 +93,7 @@ class TestOptimize(unittest.TestCase):
             ('task2', 'task1', 'build'),
             ('task2', 'task3', 'image'),
         )
-        annotate_task_graph(graph, set(), graph.graph.named_links_dict(), {}, None)
+        annotate_task_graph(graph, {}, set(), graph.graph.named_links_dict(), {}, None)
         self.assert_annotations(
             graph,
             task1=(False, None),
@@ -103,17 +103,17 @@ class TestOptimize(unittest.TestCase):
 
     def test_annotate_task_graph_taskid_without_optimize(self):
         "raises exception if kind returns a taskid without optimizing"
-        OptimizingTask.optimize = lambda self: (False, 'some-taskid')
+        OptimizingTask.optimize = lambda self, params: (False, 'some-taskid')
         graph = self.make_graph(self.make_task('task1'))
         self.assertRaises(
             Exception,
-            lambda: annotate_task_graph(graph, set(), graph.graph.named_links_dict(), {}, None)
+            lambda: annotate_task_graph(graph, {}, set(), graph.graph.named_links_dict(), {}, None)
         )
 
     def test_annotate_task_graph_optimize_away_dependency(self):
         "raises exception if kind optimizes away a task on which another depends"
         OptimizingTask.optimize = \
-            lambda self: (True, None) if self.label == 'task1' else (False, None)
+            lambda self, params: (True, None) if self.label == 'task1' else (False, None)
         graph = self.make_graph(
             self.make_task('task1'),
             self.make_task('task2'),
@@ -121,19 +121,19 @@ class TestOptimize(unittest.TestCase):
         )
         self.assertRaises(
             Exception,
-            lambda: annotate_task_graph(graph, set(), graph.graph.named_links_dict(), {}, None)
+            lambda: annotate_task_graph(graph, {}, set(), graph.graph.named_links_dict(), {}, None)
         )
 
     def test_annotate_task_graph_do_not_optimize(self):
         "annotating marks everything as un-optimized if in do_not_optimize"
-        OptimizingTask.optimize = lambda self: (True, 'taskid')
+        OptimizingTask.optimize = lambda self, params: (True, 'taskid')
         graph = self.make_graph(
             self.make_task('task1'),
             self.make_task('task2'),
             ('task2', 'task1', 'build'),
         )
         label_to_taskid = {}
-        annotate_task_graph(graph, {'task1', 'task2'},
+        annotate_task_graph(graph, {}, {'task1', 'task2'},
                             graph.graph.named_links_dict(), label_to_taskid, None)
         self.assert_annotations(
             graph,
@@ -145,7 +145,7 @@ class TestOptimize(unittest.TestCase):
     def test_annotate_task_graph_nos_do_not_propagate(self):
         "a task with a non-optimized dependency can be optimized"
         OptimizingTask.optimize = \
-            lambda self: (False, None) if self.label == 'task1' else (True, 'taskid')
+            lambda self, params: (False, None) if self.label == 'task1' else (True, 'taskid')
         graph = self.make_graph(
             self.make_task('task1'),
             self.make_task('task2'),
@@ -153,7 +153,7 @@ class TestOptimize(unittest.TestCase):
             ('task2', 'task1', 'build'),
             ('task2', 'task3', 'image'),
         )
-        annotate_task_graph(graph, set(),
+        annotate_task_graph(graph, {}, set(),
                             graph.graph.named_links_dict(), {}, None)
         self.assert_annotations(
             graph,
@@ -242,7 +242,7 @@ class TestOptimize(unittest.TestCase):
     def test_optimize(self):
         "optimize_task_graph annotates and extracts the subgraph from a simple graph"
         OptimizingTask.optimize = \
-            lambda self: (True, 'dep1') if self.label == 'task1' else (False, None)
+            lambda self, params: (True, 'dep1') if self.label == 'task1' else (False, None)
         input = self.make_graph(
             self.make_task('task1'),
             self.make_task('task2'),
@@ -250,7 +250,7 @@ class TestOptimize(unittest.TestCase):
             ('task2', 'task1', 'build'),
             ('task2', 'task3', 'image'),
         )
-        opt, label_to_taskid = optimize_task_graph(input, set())
+        opt, label_to_taskid = optimize_task_graph(input, {}, set())
         self.assertEqual(opt.graph, graph.Graph(
             {label_to_taskid['task2'], label_to_taskid['task3']},
             {(label_to_taskid['task2'], label_to_taskid['task3'], 'image')}))

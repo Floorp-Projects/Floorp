@@ -118,7 +118,7 @@ class DockerImageTask(base.Task):
     def get_dependencies(self, taskgraph):
         return []
 
-    def optimize(self):
+    def optimize(self, params):
         for index_path in self.index_paths:
             try:
                 url = INDEX_URL.format(index_path)
