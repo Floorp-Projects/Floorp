@@ -35,6 +35,13 @@ public class TabsListLayout extends TabsLayout {
         final TabsTouchHelperCallback callback = new TabsTouchHelperCallback(this);
         final ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
         touchHelper.attachToRecyclerView(this);
+
+        final TabsListLayoutAnimator animator = new TabsListLayoutAnimator();
+        animator.setRemoveDuration(ANIMATION_DURATION);
+        // A fade in/out each time the title/thumbnail/etc. gets updated isn't helpful, so disable
+        // the change animation.
+        animator.setSupportsChangeAnimations(false);
+        setItemAnimator(animator);
     }
 
     @Override

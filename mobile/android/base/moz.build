@@ -672,6 +672,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'tabs/TabsLayoutItemView.java',
     'tabs/TabsLayoutRecyclerAdapter.java',
     'tabs/TabsListLayout.java',
+    'tabs/TabsListLayoutAnimator.java',
     'tabs/TabsPanel.java',
     'tabs/TabsPanelThumbnailView.java',
     'tabs/TabsTouchHelperCallback.java',
