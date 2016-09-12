@@ -283,8 +283,9 @@ nsImageLoadingContent::OnUnlockedDraw()
     return;
   }
 
-  if (frame->IsVisibleOrMayBecomeVisibleSoon()) {
-    return;  // Nothing to do.
+  if (frame->GetVisibility() == Visibility::APPROXIMATELY_VISIBLE) {
+    // This frame is already marked visible; there's nothing to do.
+    return;
   }
 
   nsPresContext* presContext = frame->PresContext();
@@ -297,7 +298,7 @@ nsImageLoadingContent::OnUnlockedDraw()
     return;
   }
 
-  presShell->MarkFrameVisibleInDisplayPort(frame);
+  presShell->EnsureFrameInApproximatelyVisibleList(frame);
 }
 
 nsresult
@@ -524,7 +525,7 @@ nsImageLoadingContent::FrameDestroyed(nsIFrame* aFrame)
 
   nsIPresShell* presShell = presContext ? presContext->GetPresShell() : nullptr;
   if (presShell) {
-    presShell->MarkFrameNonvisible(aFrame);
+    presShell->RemoveFrameFromApproximatelyVisibleList(aFrame);
   }
 }
 
@@ -1436,13 +1437,12 @@ nsImageLoadingContent::OnVisibilityChange(Visibility aNewVisibility,
                                           const Maybe<OnNonvisible>& aNonvisibleAction)
 {
   switch (aNewVisibility) {
-    case Visibility::MAY_BECOME_VISIBLE:
-    case Visibility::IN_DISPLAYPORT:
+    case Visibility::APPROXIMATELY_VISIBLE:
       TrackImage(mCurrentRequest);
       TrackImage(mPendingRequest);
       break;
 
-    case Visibility::NONVISIBLE:
+    case Visibility::APPROXIMATELY_NONVISIBLE:
       UntrackImage(mCurrentRequest, aNonvisibleAction);
       UntrackImage(mPendingRequest, aNonvisibleAction);
       break;
@@ -1468,11 +1468,11 @@ nsImageLoadingContent::TrackImage(imgIRequest* aImage)
   }
 
   // We only want to track this request if we're visible. Ordinarily we check
-  // whether our frame considers itself visible, but in cases where
+  // the visible count, but that requires a frame; in cases where
   // GetOurPrimaryFrame() cannot obtain a frame (e.g. <feImage>), we assume
   // we're visible if FrameCreated() was called.
   nsIFrame* frame = GetOurPrimaryFrame();
-  if ((frame && !frame->IsVisibleOrMayBecomeVisibleSoon()) ||
+  if ((frame && frame->GetVisibility() == Visibility::APPROXIMATELY_NONVISIBLE) ||
       (!frame && !mFrameCreateCalled)) {
     return;
   }
