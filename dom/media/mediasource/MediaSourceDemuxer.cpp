@@ -379,8 +379,6 @@ MediaSourceTrackDemuxer::BreakCycles()
 RefPtr<MediaSourceTrackDemuxer::SeekPromise>
 MediaSourceTrackDemuxer::DoSeek(media::TimeUnit aTime)
 {
-  typedef TrackBuffersManager::GetSampleResult Result;
-
   TimeIntervals buffered = mManager->Buffered(mType);
   // Fuzz factor represents a +/- threshold. So when seeking it allows the gap
   // to be twice as big as the fuzz value. We only want to allow EOS_FUZZ gap.
@@ -410,12 +408,12 @@ MediaSourceTrackDemuxer::DoSeek(media::TimeUnit aTime)
     seekTime = buffered[index].mStart;
   }
   seekTime = mManager->Seek(mType, seekTime, MediaSourceDemuxer::EOS_FUZZ);
-  Result result;
+  MediaResult result = NS_OK;
   RefPtr<MediaRawData> sample =
     mManager->GetSample(mType,
                         media::TimeUnit(),
                         result);
-  MOZ_ASSERT(result != Result::ERROR && sample);
+  MOZ_ASSERT(NS_SUCCEEDED(result) && sample);
   mNextSample = Some(sample);
   mReset = false;
   {
@@ -429,8 +427,6 @@ MediaSourceTrackDemuxer::DoSeek(media::TimeUnit aTime)
 RefPtr<MediaSourceTrackDemuxer::SamplesPromise>
 MediaSourceTrackDemuxer::DoGetSamples(int32_t aNumSamples)
 {
-  typedef TrackBuffersManager::GetSampleResult Result;
-
   if (mReset) {
     // If a seek (or reset) was recently performed, we ensure that the data
     // we are about to retrieve is still available.
@@ -452,16 +448,17 @@ MediaSourceTrackDemuxer::DoGetSamples(int32_t aNumSamples)
     sample = mNextSample.ref();
     mNextSample.reset();
   } else {
-    Result result;
+    MediaResult result = NS_OK;
     sample = mManager->GetSample(mType, MediaSourceDemuxer::EOS_FUZZ, result);
     if (!sample) {
-      if (result == Result::ERROR) {
-        return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_DEMUXER_ERR, __func__);
+      if (result == NS_ERROR_DOM_MEDIA_END_OF_STREAM ||
+          result == NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA) {
+        return SamplesPromise::CreateAndReject(
+          (result == NS_ERROR_DOM_MEDIA_END_OF_STREAM && mManager->IsEnded())
+          ? NS_ERROR_DOM_MEDIA_END_OF_STREAM
+          : NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA, __func__);
       }
-      return SamplesPromise::CreateAndReject(
-        (result == Result::EOS && mManager->IsEnded())
-        ? NS_ERROR_DOM_MEDIA_END_OF_STREAM
-        : NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA, __func__);
+      return SamplesPromise::CreateAndReject(result, __func__);
     }
   }
   RefPtr<SamplesHolder> samples = new SamplesHolder;
