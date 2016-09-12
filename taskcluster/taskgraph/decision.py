@@ -32,9 +32,10 @@ GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..'))
 PER_PROJECT_PARAMETERS = {
     'try': {
         'target_tasks_method': 'try_option_syntax',
-        # for try, if a task was specified as a target, it should
-        # not be optimized away
-        'optimize_target_tasks': False,
+        # Always perform optimization.  This makes it difficult to use try
+        # pushes to run a task that would otherwise be optimized, but is a
+        # compromise to avoid essentially disabling optimization in try.
+        'optimize_target_tasks': True,
     },
 
     'ash': {
@@ -44,7 +45,7 @@ PER_PROJECT_PARAMETERS = {
 
     # the default parameters are used for projects that do not match above.
     'default': {
-        'target_tasks_method': 'all_builds_and_tests',
+        'target_tasks_method': 'default',
         'optimize_target_tasks': True,
     }
 }
