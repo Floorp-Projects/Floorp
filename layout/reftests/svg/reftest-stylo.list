@@ -58,9 +58,9 @@ fuzzy-if(skiaContent,1,320) == conditions-08.svg conditions-08.svg
 == currentColor-01.svg currentColor-01.svg
 == currentColor-02.svg currentColor-02.svg
 == currentColor-03.svg currentColor-03.svg
-fails == data-uri-with-filter-01.xhtml data-uri-with-filter-01.xhtml
+== data-uri-with-filter-01.xhtml data-uri-with-filter-01.xhtml
 == data-uri-with-gradient-01.xhtml data-uri-with-gradient-01.xhtml
-fails == data-uri-with-pattern-01.xhtml data-uri-with-pattern-01.xhtml
+== data-uri-with-pattern-01.xhtml data-uri-with-pattern-01.xhtml
 == dynamic-attr-removal-1.svg dynamic-attr-removal-1.svg
 == dynamic-attr-removal-2.svg dynamic-attr-removal-2.svg
 == dynamic-attr-change-1.svg dynamic-attr-change-1.svg

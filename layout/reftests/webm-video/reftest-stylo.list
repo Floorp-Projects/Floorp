@@ -75,13 +75,13 @@ default-preferences test-pref(layout.css.object-fit-and-position.enabled,true) t
 skip fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) == object-fit-contain-webm-001.html object-fit-contain-webm-001.html
 # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android/B2G failures
 # Initial mulet triage: parity with B2G/B2G Desktop
-fails fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) == object-fit-contain-webm-002.html object-fit-contain-webm-002.html
+fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) == object-fit-contain-webm-002.html object-fit-contain-webm-002.html
 # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android/B2G failures
 # Initial mulet triage: parity with B2G/B2G Desktop
-fails fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) == object-fit-cover-webm-001.html object-fit-cover-webm-001.html
+fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) == object-fit-cover-webm-001.html object-fit-cover-webm-001.html
 # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android/B2G failures
 # Initial mulet triage: parity with B2G/B2G Desktop
-fails fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) == object-fit-cover-webm-002.html object-fit-cover-webm-002.html
+fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) == object-fit-cover-webm-002.html object-fit-cover-webm-002.html
 # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android/B2G failures
 # Initial mulet triage: parity with B2G/B2G Desktop
 skip fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) == object-fit-fill-webm-001.html object-fit-fill-webm-001.html
@@ -90,16 +90,16 @@ skip fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) == object-fit-f
 skip fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) == object-fit-fill-webm-002.html object-fit-fill-webm-002.html
 # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android/B2G failures
 # Initial mulet triage: parity with B2G/B2G Desktop
-fails fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) == object-fit-none-webm-001.html object-fit-none-webm-001.html
+fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) == object-fit-none-webm-001.html object-fit-none-webm-001.html
 # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android/B2G failures
 # Initial mulet triage: parity with B2G/B2G Desktop
-fails fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) == object-fit-none-webm-002.html object-fit-none-webm-002.html
+fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) == object-fit-none-webm-002.html object-fit-none-webm-002.html
 # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android/B2G failures
 # Initial mulet triage: parity with B2G/B2G Desktop
-fails fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) == object-fit-scale-down-webm-001.html object-fit-scale-down-webm-001.html
+fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) == object-fit-scale-down-webm-001.html object-fit-scale-down-webm-001.html
 # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android/B2G failures
 # Initial mulet triage: parity with B2G/B2G Desktop
-fails fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) == object-fit-scale-down-webm-002.html object-fit-scale-down-webm-002.html
+fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) == object-fit-scale-down-webm-002.html object-fit-scale-down-webm-002.html
 # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android/B2G failures
 # Initial mulet triage: parity with B2G/B2G Desktop
 fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) fails == object-position-webm-001.html object-position-webm-001.html

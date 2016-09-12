@@ -294,8 +294,8 @@ HTTP(../..) == inline--position-relative--01.xhtml inline--position-relative--01
 random-if(Android) == object--auto-auto--0-0.html object--auto-auto--0-0.html
 # XXX add border
 fails random-if(Android) == object--auto-auto--0-pct.html object--auto-auto--0-pct.html
-fails random-if(Android) == object--auto-auto--0-px.html object--auto-auto--0-px.html
-fails random-if(Android) == object--auto-auto--pct-0.html object--auto-auto--pct-0.html
+random-if(Android) == object--auto-auto--0-px.html object--auto-auto--0-px.html
+random-if(Android) == object--auto-auto--pct-0.html object--auto-auto--pct-0.html
 # The following four commented out tests fail post bug 428023:
 #== object--auto-auto--pct-pct.html object--auto-auto--pct-pct.html
 #== object--auto-auto--pct-px.html object--auto-auto--pct-px.html
@@ -317,6 +317,6 @@ skip == dynamic--inline-resize-window-height.xhtml dynamic--inline-resize-window
 # XXX breaks the reftest run as the window height somehow is not restored
 skip == dynamic--inline-resize-window-width.xhtml dynamic--inline-resize-window-width.xhtml
 # Fails way too much
-fails random-if(Android) == dynamic--object-svg-unloaded.xhtml dynamic--object-svg-unloaded.xhtml
+random-if(Android) == dynamic--object-svg-unloaded.xhtml dynamic--object-svg-unloaded.xhtml
 # == ==
 

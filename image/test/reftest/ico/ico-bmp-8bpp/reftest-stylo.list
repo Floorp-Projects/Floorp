@@ -20,6 +20,6 @@ skip == ico-size-6x6-8bpp.ico ico-size-6x6-8bpp.ico
 skip-if(B2G) == ico-size-256x256-8bpp.ico ico-size-256x256-8bpp.ico
 # bug 773482
 == ico-partial-transparent-8bpp.ico ico-partial-transparent-8bpp.ico
-fails == ico-transparent-8bpp.ico ico-transparent-8bpp.ico
-== ico-not-square-transparent-8bpp.ico ico-not-square-transparent-8bpp.ico
+== ico-transparent-8bpp.ico ico-transparent-8bpp.ico
+fails == ico-not-square-transparent-8bpp.ico ico-not-square-transparent-8bpp.ico
 

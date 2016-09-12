@@ -6,7 +6,7 @@ skip == view-source:bug535530-2.html view-source:bug535530-2.html
 == bug582788-1.html bug582788-1.html
 skip-if(B2G) fuzzy-if(skiaContent,2,5) == bug582940-1.html bug582940-1.html
 fails == bug592656-1.html bug592656-1.html
-skip fuzzy-if(skiaContent,1,5) == bug599320-1.html bug599320-1.html
+# skip fuzzy-if(skiaContent,1,5) == bug599320-1.html bug599320-1.html
 skip fuzzy-if(skiaContent,2,5) == bug608373-1.html bug608373-1.html
 fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,73,1) == view-source:bug482921-1.html view-source:bug482921-1.html
 == view-source:bug482921-2.xhtml view-source:bug482921-2.xhtml

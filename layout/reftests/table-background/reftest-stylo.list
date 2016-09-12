@@ -97,4 +97,4 @@ fails skip-if(B2G||Mulet) fuzzy-if(skiaContent,1,95000) == border-separate-opaci
 == empty-cells-default-1.html empty-cells-default-1.html
 == empty-cells-default-2.html empty-cells-default-2.html
 fuzzy-if(OSX,1,113) fuzzy-if(winWidget,1,12) fuzzy-if(Android,1,39) fuzzy-if(winWidget&&!layersGPUAccelerated,82,116) fuzzy-if(skiaContent,77,5400) == table-row-opacity-dynamic-1.html table-row-opacity-dynamic-1.html
-fails == table-row-opacity-dynamic-2.html table-row-opacity-dynamic-2.html
+== table-row-opacity-dynamic-2.html table-row-opacity-dynamic-2.html

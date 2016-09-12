@@ -32,9 +32,9 @@ fails-if(Android||B2G) skip-if((B2G&&browserIsRemote)||Mulet||((browserIsRemote&
 # Initial mulet triage: parity with B2G/B2G Desktop, Windows: bug 1239170
 # There is no way to simulate a number textbox in windows XP/Vista/7 default theme using CSS.
 # Therefore, the equlity tests below should be marked as failing.
-fails skip-if((B2G&&browserIsRemote)||Mulet) == number-1.xul number-1.xul
+skip-if((B2G&&browserIsRemote)||Mulet) == number-1.xul number-1.xul
 # Initial mulet triage: parity with B2G/B2G Desktop
-fails skip-if((B2G&&browserIsRemote)||Mulet) == number-2.xul number-2.xul
+skip-if((B2G&&browserIsRemote)||Mulet) == number-2.xul number-2.xul
 # Initial mulet triage: parity with B2G/B2G Desktop
 fails-if(Android||B2G) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012]|10\.0)/.test(http.oscpu)) skip-if((B2G&&browserIsRemote)||Mulet) == number-3.xul number-3.xul
 # bug 783658
