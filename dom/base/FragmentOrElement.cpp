@@ -864,7 +864,11 @@ nsIContent::PreHandleEvent(EventChainPreVisitor& aVisitor)
     }
   }
 
-  if (parent) {
+  if (!aVisitor.mEvent->mFlags.mComposedInNativeAnonymousContent &&
+      IsRootOfNativeAnonymousSubtree() && OwnerDoc() &&
+      OwnerDoc()->GetWindow()) {
+    aVisitor.mParentTarget = OwnerDoc()->GetWindow()->GetParentTarget();
+  } else if (parent) {
     aVisitor.mParentTarget = parent;
   } else {
     aVisitor.mParentTarget = GetComposedDoc();
