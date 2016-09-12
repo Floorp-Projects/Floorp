@@ -13,23 +13,15 @@ module.exports = createClass({
   render() {
     let {
       onRecordButtonClick,
-      isRecording,
-      isLocked
+      isRecording
     } = this.props;
-
-    let classList = ["devtools-button", "record-button"];
-
-    if (isRecording) {
-      classList.push("checked");
-    }
 
     return button(
       {
-        className: classList.join(" "),
+        className: "devtools-toolbarbutton record-button",
         onClick: onRecordButtonClick,
         "data-standalone": "true",
         "data-text-only": "true",
-        disabled: isLocked
       },
       isRecording ? L10N.getStr("recordings.stop") : L10N.getStr("recordings.start")
     );

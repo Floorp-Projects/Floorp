@@ -116,10 +116,15 @@
   padding: 5px !important;
 }
 
-.notice-container .record-button.checked,
-.notice-container .record-button.checked {
+.notice-container .record-button[checked],
+.notice-container .record-button[checked] {
   color: var(--theme-selection-color) !important;
   background: var(--theme-selection-background) !important;
+}
+
+.record-button[locked] {
+  pointer-events: none;
+  opacity: 0.5;
 }
 
 /* Sidebar & recording items */
