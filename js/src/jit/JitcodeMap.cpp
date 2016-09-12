@@ -898,7 +898,7 @@ JitcodeGlobalEntry::IonEntry::mark(JSTracer* trc)
          iter != optsAllTypes_->end(); iter++)
     {
         if (ShouldMarkProvider::ShouldMark(&iter->type)) {
-            iter->type.trace(trc);
+            TypeSet::MarkTypeUnbarriered(trc, &iter->type, "jitcodeglobaltable-ionentry-type");
             markedAny = true;
         }
         if (iter->hasAllocationSite() && ShouldMarkProvider::ShouldMark(&iter->script)) {

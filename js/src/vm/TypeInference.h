@@ -350,7 +350,9 @@ class TypeSet
         inline ObjectGroup* group() const;
         inline ObjectGroup* groupNoBarrier() const;
 
-        inline void trace(JSTracer* trc);
+        void trace(JSTracer* trc) {
+            MarkTypeUnbarriered(trc, this, "TypeSet::Type");
+        }
 
         bool operator == (Type o) const { return data == o.data; }
         bool operator != (Type o) const { return data != o.data; }
@@ -528,6 +530,8 @@ class TypeSet
     // out of Ion, such as for argument and local types.
     static inline Type GetMaybeUntrackedValueType(const Value& val);
 
+    static void MarkTypeRoot(JSTracer* trc, Type* v, const char* name);
+    static void MarkTypeUnbarriered(JSTracer* trc, Type* v, const char* name);
     static bool IsTypeMarked(Type* v);
     static bool IsTypeAllocatedDuringIncremental(Type v);
     static bool IsTypeAboutToBeFinalized(Type* v);
