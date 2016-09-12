@@ -98,6 +98,19 @@ function checkDrawImageNotCleanRed() {
     .then(() => drawing.stop());
 }
 
+function checkEndedOnStop() {
+  let promises = [vauto, vmanual, vrate].map(elem => {
+    elem.srcObject.getTracks()[0].stop();
+    return new Promise(resolve =>
+      elem.addEventListener("ended", function endedListener(event) {
+        ok(true, "Element " + elem.id + " ended.");
+        resolve();
+        elem.removeEventListener("ended", endedListener);
+      }));
+  });
+  return Promise.all(promises);
+}
+
 function finish() {
   ok(true, 'Test complete.');
   SimpleTest.finish();
@@ -117,6 +130,7 @@ function beginTest() {
     .then(checkRequestFrameOrderGuarantee)
     .then(checkDrawColorGreen) // Restore video elements to green.
     .then(checkDrawImageNotCleanRed)
+    .then(checkEndedOnStop)
     .then(finish);
 }
 
