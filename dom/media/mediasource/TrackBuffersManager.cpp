@@ -2150,16 +2150,16 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
 already_AddRefed<MediaRawData>
 TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
                                const TimeUnit& aFuzz,
-                               GetSampleResult& aResult)
+                               MediaResult& aResult)
 {
   MOZ_ASSERT(OnTaskQueue());
   auto& trackData = GetTracksData(aTrack);
   const TrackBuffer& track = GetTrackBuffer(aTrack);
 
-  aResult = GetSampleResult::WAITING_FOR_DATA;
+  aResult = NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA;
 
   if (!track.Length()) {
-    aResult = GetSampleResult::EOS;
+    aResult = NS_ERROR_DOM_MEDIA_END_OF_STREAM;
     return nullptr;
   }
 
@@ -2171,7 +2171,7 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
 
   if (trackData.mNextGetSampleIndex.isSome()) {
     if (trackData.mNextGetSampleIndex.ref() >= track.Length()) {
-      aResult = GetSampleResult::EOS;
+      aResult = NS_ERROR_DOM_MEDIA_END_OF_STREAM;
       return nullptr;
     }
     const MediaRawData* sample =
@@ -2186,7 +2186,7 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
 
     RefPtr<MediaRawData> p = sample->Clone();
     if (!p) {
-      aResult = GetSampleResult::ERROR;
+      aResult = MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
       return nullptr;
     }
     trackData.mNextGetSampleIndex.ref()++;
@@ -2212,7 +2212,7 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
       trackData.mNextSampleTimecode = nextSampleTimecode;
       trackData.mNextSampleTime = nextSampleTime;
     }
-    aResult = GetSampleResult::NO_ERROR;
+    aResult = NS_OK;
     return p.forget();
   }
 
@@ -2220,7 +2220,7 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
       track.LastElement()->mTimecode + track.LastElement()->mDuration) {
     // The next element is past our last sample. We're done.
     trackData.mNextGetSampleIndex = Some(uint32_t(track.Length()));
-    aResult = GetSampleResult::EOS;
+    aResult = NS_ERROR_DOM_MEDIA_END_OF_STREAM;
     return nullptr;
   }
 
@@ -2237,7 +2237,7 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
   RefPtr<MediaRawData> p = sample->Clone();
   if (!p) {
     // OOM
-    aResult = GetSampleResult::ERROR;
+    aResult = MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
     return nullptr;
   }
   trackData.mNextGetSampleIndex = Some(uint32_t(pos)+1);
@@ -2245,7 +2245,7 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
     TimeUnit::FromMicroseconds(sample->mTimecode + sample->mDuration);
   trackData.mNextSampleTime =
     TimeUnit::FromMicroseconds(sample->GetEndTime());
-  aResult = GetSampleResult::NO_ERROR;
+  aResult = NS_OK;
   return p.forget();
 }
 
