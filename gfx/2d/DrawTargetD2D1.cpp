@@ -1318,7 +1318,9 @@ DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp, const Pattern &aPattern)
       return;
     }
 
-    RefPtr<ID2D1Image> tmpImage = GetImageForLayerContent();
+    // We don't need to preserve the current content of this layer as the output
+    // of the blend effect should completely replace it.
+    RefPtr<ID2D1Image> tmpImage = GetImageForLayerContent(false);
 
     blendEffect->SetInput(0, tmpImage);
     blendEffect->SetInput(1, source);
@@ -1407,7 +1409,7 @@ DrawTargetD2D1::GetDeviceSpaceClipRect(D2D1_RECT_F& aClipRect, bool& aIsPixelAli
 }
 
 already_AddRefed<ID2D1Image>
-DrawTargetD2D1::GetImageForLayerContent()
+DrawTargetD2D1::GetImageForLayerContent(bool aShouldPreserveContent)
 {
   if (!CurrentLayer().mCurrentList) {
     RefPtr<ID2D1Bitmap> tmpBitmap;
@@ -1444,7 +1446,10 @@ DrawTargetD2D1::GetImageForLayerContent()
     }
 
     DCCommandSink sink(mDC);
-    list->Stream(&sink);
+
+    if (aShouldPreserveContent) {
+      list->Stream(&sink);
+    }
 
     PushAllClips();
 
