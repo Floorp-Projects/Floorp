@@ -21,6 +21,14 @@ BUILD_TYPE_ALIASES = {
     'd': 'debug'
 }
 
+# consider anything in this whitelist of kinds to be governed by -b/-p
+BUILD_KINDS = set([
+])
+
+# anything in this list is governed by -j
+JOB_KINDS = set([
+])
+
 
 # mapping from shortcut name (usable with -u) to a boolean function identifying
 # matching test names
@@ -124,7 +132,8 @@ UNITTEST_PLATFORM_PRETTY_NAMES = {
 
 # We have a few platforms for which we want to do some "extra" builds, or at
 # least build-ish things.  Sort of.  Anyway, these other things are implemented
-# as different "platforms".
+# as different "platforms".  These do *not* automatically ride along with "-p
+# all"
 RIDEALONG_BUILDS = {
     'android-api-15': [
         'android-api-15-l10n',
@@ -245,7 +254,7 @@ class TryOptionSyntax(object):
             if build in RIDEALONG_BUILDS:
                 results.extend(RIDEALONG_BUILDS[build])
                 logger.info("platform %s triggers ridealong builds %s" %
-                            (build, RIDEALONG_BUILDS[build]))
+                            (build, ', '.join(RIDEALONG_BUILDS[build])))
 
         return results
 
@@ -508,6 +517,21 @@ class TryOptionSyntax(object):
             return False
         elif attr('kind') in ('desktop-test', 'android-test'):
             return match_test(self.unittests, 'unittest_try_name')
+        elif attr('kind') in JOB_KINDS:
+            if self.jobs is None:
+                return True
+            if attr('build_platform') in self.jobs:
+                return True
+        elif attr('kind') in BUILD_KINDS:
+            if attr('build_type') not in self.build_types:
+                return False
+            elif self.platforms is None:
+                # for "-p all", look for try in the 'run_on_projects' attribute
+                return set(['try', 'all']) & set(attr('run_on_projects', []))
+            else:
+                if attr('build_platform') not in self.platforms:
+                    return False
+            return True
         else:
             return False
 
