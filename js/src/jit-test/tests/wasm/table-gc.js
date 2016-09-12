@@ -79,8 +79,7 @@ t = null;
 gc();
 assertEq(finalizeCount(), 4);
 
-// The bad-indirect-call stub should (currently, could be changed later) keep
-// the instance containing that stub alive.
+// Null elements shouldn't keep anything alive.
 resetFinalizeCount();
 var i = evalText(`(module (table (resizable 2)) (export "tbl" table) ${caller})`);
 var e = i.exports;
@@ -96,7 +95,7 @@ gc();
 assertEq(finalizeCount(), 1);
 i = null;
 gc();
-assertEq(finalizeCount(), 1);
+assertEq(finalizeCount(), 2);
 t = null;
 gc();
 assertEq(finalizeCount(), 3);
@@ -144,14 +143,13 @@ assertEq(finalizeCount(), 2);
 t.set(0, null);
 assertEq(t.get(0), null);
 gc();
-assertEq(finalizeCount(), 2);
+assertEq(finalizeCount(), 3);
 t = null;
 gc();
 assertEq(finalizeCount(), 4);
 
-// Once all of an instance's elements in a Table (including the
-// bad-indirect-call stub) have been clobbered, the Instance should not be
-// rooted.
+// Once all of an instance's elements in a Table have been clobbered, the
+// Instance should not be reachable.
 resetFinalizeCount();
 var i1 = evalText(`(module (func $f1 (result i32) (i32.const 13)) (export "f1" $f1))`);
 var i2 = evalText(`(module (func $f2 (result i32) (i32.const 42)) (export "f2" $f2))`);

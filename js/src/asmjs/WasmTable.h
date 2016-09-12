@@ -36,7 +36,6 @@ class Table : public ShareableBase<Table>
     UniqueByteArray              array_;
     TableKind                    kind_;
     uint32_t                     length_;
-    bool                         initialized_;
     bool                         external_;
 
     void tracePrivate(JSTracer* trc);
@@ -47,21 +46,14 @@ class Table : public ShareableBase<Table>
                                 HandleWasmTableObject maybeObject);
     void trace(JSTracer* trc);
 
-    // These accessors may be used before initialization.
-
     bool external() const { return external_; }
     bool isTypedFunction() const { return kind_ == TableKind::TypedFunction; }
     uint32_t length() const { return length_; }
     uint8_t* base() const { return array_.get(); }
 
-    // A Table must be initialized before any dependent instance can execute.
-
-    bool initialized() const { return initialized_; }
-    void init(Instance& instance);
-
-    // After initialization, elements must be accessed. All updates must go
-    // through a set() function with the exception of (profiling) updates to the
-    // callee pointer that do not change which logical function is being called.
+    // All updates must go through a set() function with the exception of
+    // (profiling) updates to the callee pointer that do not change which
+    // logical function is being called.
 
     void** internalArray() const;
     ExternalTableElem* externalArray() const;
