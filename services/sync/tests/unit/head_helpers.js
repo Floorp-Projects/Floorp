@@ -278,6 +278,10 @@ function assert_success_ping(ping) {
     for (let e of record.engines) {
       ok(!e.failureReason);
       equal(undefined, e.status);
+      if (e.validation) {
+        equal(undefined, e.validation.problems);
+        equal(undefined, e.validation.failureReason);
+      }
       if (e.outgoing) {
         for (let o of e.outgoing) {
           equal(undefined, o.failed);

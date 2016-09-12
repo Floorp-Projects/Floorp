@@ -82,9 +82,22 @@
           "items": { "$ref": "#/definitions/outgoingBatch" }
         },
         "validation": {
-          "type": "array",
-          "minItems": 1,
-          "$ref": "#/definitions/validationProblem"
+          "type": "object",
+          "additionalProperties": false,
+          "anyOf": [
+            { "required": ["checked"] },
+            { "required": ["failureReason"] }
+          ],
+          "properties": {
+            "checked": { "type": "integer", "minimum": 0 },
+            "failureReason": { "$ref": "#/definitions/error" },
+            "took": { "type": "integer" },
+            "problems": {
+              "type": "array",
+              "minItems": 1,
+              "$ref": "#/definitions/validationProblem"
+            }
+          }
         }
       }
     },
