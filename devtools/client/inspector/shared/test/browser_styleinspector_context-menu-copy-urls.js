@@ -87,12 +87,12 @@ function* testCopyUrlToClipboard({view, inspector}, type, selector, expected) {
 
   if (type == "data-uri") {
     info("Click Copy Data URI and wait for clipboard");
-    yield waitForClipboard(() => {
+    yield waitForClipboardPromise(() => {
       return menuitemCopyImageDataUrl.click();
     }, expected);
   } else {
     info("Click Copy URL and wait for clipboard");
-    yield waitForClipboard(() => {
+    yield waitForClipboardPromise(() => {
       return menuitemCopyUrl.click();
     }, expected);
   }
