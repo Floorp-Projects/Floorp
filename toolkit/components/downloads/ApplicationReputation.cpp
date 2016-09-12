@@ -401,17 +401,17 @@ PendingLookup::IsBinaryFile()
     //StringEndsWith(fileName, NS_LITERAL_STRING(".001")) ||
     //StringEndsWith(fileName, NS_LITERAL_STRING(".7z")) ||
     //StringEndsWith(fileName, NS_LITERAL_STRING(".ace")) ||
-    StringEndsWith(fileName, NS_LITERAL_STRING(".action")) || // Mac script
-    StringEndsWith(fileName, NS_LITERAL_STRING(".ad")) || // AppleDouble encoded file
+    //StringEndsWith(fileName, NS_LITERAL_STRING(".action")) || // Mac script
+    //StringEndsWith(fileName, NS_LITERAL_STRING(".ad")) || // Windows
     StringEndsWith(fileName, NS_LITERAL_STRING(".ade")) || // MS Access
     StringEndsWith(fileName, NS_LITERAL_STRING(".adp")) || // MS Access
     StringEndsWith(fileName, NS_LITERAL_STRING(".apk")) || // Android package
-    StringEndsWith(fileName, NS_LITERAL_STRING(".app")) || // Mac app
-    //StringEndsWith(fileName, NS_LITERAL_STRING(".application")) ||
-    StringEndsWith(fileName, NS_LITERAL_STRING(".appref-ms")) || // Windows
+    StringEndsWith(fileName, NS_LITERAL_STRING(".app")) || // Executable application
+    StringEndsWith(fileName, NS_LITERAL_STRING(".application")) || // MS ClickOnce
+    StringEndsWith(fileName, NS_LITERAL_STRING(".appref-ms")) || // MS ClickOnce
     //StringEndsWith(fileName, NS_LITERAL_STRING(".arc")) ||
     //StringEndsWith(fileName, NS_LITERAL_STRING(".arj")) ||
-    StringEndsWith(fileName, NS_LITERAL_STRING(".as")) || // Adobe Flash
+    StringEndsWith(fileName, NS_LITERAL_STRING(".as")) || // Mac archive
     StringEndsWith(fileName, NS_LITERAL_STRING(".asp")) || // Windows Server script
     StringEndsWith(fileName, NS_LITERAL_STRING(".asx")) || // Windows Media Player
     //StringEndsWith(fileName, NS_LITERAL_STRING(".b64")) ||
@@ -420,46 +420,46 @@ PendingLookup::IsBinaryFile()
     StringEndsWith(fileName, NS_LITERAL_STRING(".bash")) || // Linux shell
     StringEndsWith(fileName, NS_LITERAL_STRING(".bat")) || // Windows shell
     //StringEndsWith(fileName, NS_LITERAL_STRING(".bhx")) ||
-    StringEndsWith(fileName, NS_LITERAL_STRING(".bin")) || // Generic binary
-    //StringEndsWith(fileName, NS_LITERAL_STRING(".bz")) || // Linux archive (bzip)
+    //StringEndsWith(fileName, NS_LITERAL_STRING(".bin")) ||
+    StringEndsWith(fileName, NS_LITERAL_STRING(".bz")) || // Linux archive (bzip)
     StringEndsWith(fileName, NS_LITERAL_STRING(".bz2")) || // Linux archive (bzip2)
     StringEndsWith(fileName, NS_LITERAL_STRING(".bzip2")) || // Linux archive (bzip2)
     StringEndsWith(fileName, NS_LITERAL_STRING(".cab")) || // Windows archive
-    //StringEndsWith(fileName, NS_LITERAL_STRING(".cdr")) || // Audio CD image
-    //StringEndsWith(fileName, NS_LITERAL_STRING(".cfg")) ||
+    StringEndsWith(fileName, NS_LITERAL_STRING(".cdr")) || // Mac disk image
+    StringEndsWith(fileName, NS_LITERAL_STRING(".cfg")) || // Windows
     StringEndsWith(fileName, NS_LITERAL_STRING(".chi")) || // Windows Help
     StringEndsWith(fileName, NS_LITERAL_STRING(".chm")) || // Windows Help
     StringEndsWith(fileName, NS_LITERAL_STRING(".class")) || // Java
     StringEndsWith(fileName, NS_LITERAL_STRING(".cmd")) || // Windows executable
     StringEndsWith(fileName, NS_LITERAL_STRING(".com")) || // Windows executable
     StringEndsWith(fileName, NS_LITERAL_STRING(".command")) || // Mac script
-    //StringEndsWith(fileName, NS_LITERAL_STRING(".cpgz")) ||
+    StringEndsWith(fileName, NS_LITERAL_STRING(".cpgz")) || // Mac archive
     //StringEndsWith(fileName, NS_LITERAL_STRING(".cpio")) ||
-    StringEndsWith(fileName, NS_LITERAL_STRING(".cpl")) || // Windows
-    StringEndsWith(fileName, NS_LITERAL_STRING(".crt")) || // Windows
+    StringEndsWith(fileName, NS_LITERAL_STRING(".cpl")) || // Windows executable
+    StringEndsWith(fileName, NS_LITERAL_STRING(".crt")) || // Windows signed certificate
     StringEndsWith(fileName, NS_LITERAL_STRING(".crx")) || // Chrome extensions
     StringEndsWith(fileName, NS_LITERAL_STRING(".csh")) || // Linux shell
-    StringEndsWith(fileName, NS_LITERAL_STRING(".dart")) || // Dart script
+    StringEndsWith(fileName, NS_LITERAL_STRING(".dart")) || // Mac disk image
     StringEndsWith(fileName, NS_LITERAL_STRING(".dc42")) || // Apple DiskCopy Image
     StringEndsWith(fileName, NS_LITERAL_STRING(".deb")) || // Linux package
-    StringEndsWith(fileName, NS_LITERAL_STRING(".dex")) || // MS Excel
+    StringEndsWith(fileName, NS_LITERAL_STRING(".dex")) || // Android
     StringEndsWith(fileName, NS_LITERAL_STRING(".diskcopy42")) || // Apple DiskCopy Image
-    StringEndsWith(fileName, NS_LITERAL_STRING(".dll")) || // Windows
+    StringEndsWith(fileName, NS_LITERAL_STRING(".dll")) || // Windows executable
     StringEndsWith(fileName, NS_LITERAL_STRING(".dmg")) || // Mac disk image
     StringEndsWith(fileName, NS_LITERAL_STRING(".dmgpart")) || // Mac disk image
-    //StringEndsWith(fileName, NS_LITERAL_STRING(".docb")) ||
-    StringEndsWith(fileName, NS_LITERAL_STRING(".docm")) || // MS Word
-    StringEndsWith(fileName, NS_LITERAL_STRING(".docx")) || // MS Word
-    StringEndsWith(fileName, NS_LITERAL_STRING(".dotm")) || // MS Word
-    //StringEndsWith(fileName, NS_LITERAL_STRING(".dott")) ||
+    //StringEndsWith(fileName, NS_LITERAL_STRING(".docb")) || // MS Office
+    //StringEndsWith(fileName, NS_LITERAL_STRING(".docm")) || // MS Word
+    //StringEndsWith(fileName, NS_LITERAL_STRING(".docx")) || // MS Word
+    //StringEndsWith(fileName, NS_LITERAL_STRING(".dotm")) || // MS Word
+    //StringEndsWith(fileName, NS_LITERAL_STRING(".dott")) || // MS Office
     StringEndsWith(fileName, NS_LITERAL_STRING(".drv")) || // Windows driver
-    //StringEndsWith(fileName, NS_LITERAL_STRING(".dvdr")) || // DVD image
+    StringEndsWith(fileName, NS_LITERAL_STRING(".dvdr")) || // Mac Disk image
     StringEndsWith(fileName, NS_LITERAL_STRING(".efi")) || // Firmware
-    StringEndsWith(fileName, NS_LITERAL_STRING(".eml")) || // Email
+    StringEndsWith(fileName, NS_LITERAL_STRING(".eml")) || // MS Outlook
     StringEndsWith(fileName, NS_LITERAL_STRING(".exe")) || // Windows executable
     //StringEndsWith(fileName, NS_LITERAL_STRING(".fat")) ||
     StringEndsWith(fileName, NS_LITERAL_STRING(".fon")) || // Windows font
-    //StringEndsWith(fileName, NS_LITERAL_STRING(".fxp")) ||
+    StringEndsWith(fileName, NS_LITERAL_STRING(".fxp")) || // MS FoxPro
     StringEndsWith(fileName, NS_LITERAL_STRING(".gadget")) || // Windows
     StringEndsWith(fileName, NS_LITERAL_STRING(".grp")) || // Windows
     StringEndsWith(fileName, NS_LITERAL_STRING(".gz")) || // Linux archive (gzip)
@@ -467,26 +467,26 @@ PendingLookup::IsBinaryFile()
     StringEndsWith(fileName, NS_LITERAL_STRING(".hfs")) || // Mac disk image
     StringEndsWith(fileName, NS_LITERAL_STRING(".hlp")) || // Windows Help
     StringEndsWith(fileName, NS_LITERAL_STRING(".hqx")) || // Mac archive
-    StringEndsWith(fileName, NS_LITERAL_STRING(".hta")) || // HTML program file
+    StringEndsWith(fileName, NS_LITERAL_STRING(".hta")) || // HTML trusted application
     StringEndsWith(fileName, NS_LITERAL_STRING(".htt")) || // MS HTML template
-    StringEndsWith(fileName, NS_LITERAL_STRING(".img")) || // Generic image
+    StringEndsWith(fileName, NS_LITERAL_STRING(".img")) || // Mac disk image
     StringEndsWith(fileName, NS_LITERAL_STRING(".imgpart")) || // Mac disk image
     StringEndsWith(fileName, NS_LITERAL_STRING(".inf")) || // Windows installer
-    //StringEndsWith(fileName, NS_LITERAL_STRING(".ini")) ||
-    StringEndsWith(fileName, NS_LITERAL_STRING(".ins")) || // InstallShield
-    StringEndsWith(fileName, NS_LITERAL_STRING(".inx")) || // InstallShield
+    StringEndsWith(fileName, NS_LITERAL_STRING(".ini")) || // Generic config file
+    StringEndsWith(fileName, NS_LITERAL_STRING(".ins")) || // IIS config
+    //StringEndsWith(fileName, NS_LITERAL_STRING(".inx")) || // InstallShield
     StringEndsWith(fileName, NS_LITERAL_STRING(".iso")) || // CD image
-    //StringEndsWith(fileName, NS_LITERAL_STRING(".isp")) ||
-    StringEndsWith(fileName, NS_LITERAL_STRING(".isu")) || // InstallShield
+    StringEndsWith(fileName, NS_LITERAL_STRING(".isp")) || // IIS config
+    //StringEndsWith(fileName, NS_LITERAL_STRING(".isu")) || // InstallShield
     StringEndsWith(fileName, NS_LITERAL_STRING(".jar")) || // Java
     StringEndsWith(fileName, NS_LITERAL_STRING(".jnlp")) || // Java
-    StringEndsWith(fileName, NS_LITERAL_STRING(".job")) || // Windows
+    //StringEndsWith(fileName, NS_LITERAL_STRING(".job")) || // Windows
     StringEndsWith(fileName, NS_LITERAL_STRING(".js")) || // JavaScript script
     StringEndsWith(fileName, NS_LITERAL_STRING(".jse")) || // JScript
     StringEndsWith(fileName, NS_LITERAL_STRING(".ksh")) || // Linux shell
     //StringEndsWith(fileName, NS_LITERAL_STRING(".lha")) ||
     StringEndsWith(fileName, NS_LITERAL_STRING(".lnk")) || // Windows
-    //StringEndsWith(fileName, NS_LITERAL_STRING(".local")) ||
+    StringEndsWith(fileName, NS_LITERAL_STRING(".local")) || // Windows
     //StringEndsWith(fileName, NS_LITERAL_STRING(".lpaq1")) ||
     //StringEndsWith(fileName, NS_LITERAL_STRING(".lpaq5")) ||
     //StringEndsWith(fileName, NS_LITERAL_STRING(".lpaq8")) ||
@@ -496,12 +496,12 @@ PendingLookup::IsBinaryFile()
     StringEndsWith(fileName, NS_LITERAL_STRING(".maf")) || // MS Access
     StringEndsWith(fileName, NS_LITERAL_STRING(".mag")) || // MS Access
     StringEndsWith(fileName, NS_LITERAL_STRING(".mam")) || // MS Access
-    //StringEndsWith(fileName, NS_LITERAL_STRING(".manifest")) ||
+    StringEndsWith(fileName, NS_LITERAL_STRING(".manifest")) || // Windows
     StringEndsWith(fileName, NS_LITERAL_STRING(".maq")) || // MS Access
     StringEndsWith(fileName, NS_LITERAL_STRING(".mar")) || // MS Access
     StringEndsWith(fileName, NS_LITERAL_STRING(".mas")) || // MS Access
     StringEndsWith(fileName, NS_LITERAL_STRING(".mat")) || // MS Access
-    //StringEndsWith(fileName, NS_LITERAL_STRING(".mau")) ||
+    StringEndsWith(fileName, NS_LITERAL_STRING(".mau")) || // Media attachment
     StringEndsWith(fileName, NS_LITERAL_STRING(".mav")) || // MS Access
     StringEndsWith(fileName, NS_LITERAL_STRING(".maw")) || // MS Access
     StringEndsWith(fileName, NS_LITERAL_STRING(".mda")) || // MS Access
@@ -514,10 +514,10 @@ PendingLookup::IsBinaryFile()
     StringEndsWith(fileName, NS_LITERAL_STRING(".mhtml")) || // MS HTML
     StringEndsWith(fileName, NS_LITERAL_STRING(".mim")) || // MS Mail
     StringEndsWith(fileName, NS_LITERAL_STRING(".mmc")) || // MS Office
-    //StringEndsWith(fileName, NS_LITERAL_STRING(".mof")) ||
-    //StringEndsWith(fileName, NS_LITERAL_STRING(".mpkg")) ||
-    StringEndsWith(fileName, NS_LITERAL_STRING(".msc")) || // MS Windows
-    StringEndsWith(fileName, NS_LITERAL_STRING(".msg")) || // Email
+    StringEndsWith(fileName, NS_LITERAL_STRING(".mof")) || // Windows
+    StringEndsWith(fileName, NS_LITERAL_STRING(".mpkg")) || // Mac installer
+    StringEndsWith(fileName, NS_LITERAL_STRING(".msc")) || // Windows executable
+    StringEndsWith(fileName, NS_LITERAL_STRING(".msg")) || // MS Outlook
     StringEndsWith(fileName, NS_LITERAL_STRING(".msh")) || // Windows shell
     StringEndsWith(fileName, NS_LITERAL_STRING(".msh1")) || // Windows shell
     StringEndsWith(fileName, NS_LITERAL_STRING(".msh1xml")) || // Windows shell
@@ -531,29 +531,29 @@ PendingLookup::IsBinaryFile()
     //StringEndsWith(fileName, NS_LITERAL_STRING(".ntfs")) || // 7z
     StringEndsWith(fileName, NS_LITERAL_STRING(".ocx")) || // ActiveX
     StringEndsWith(fileName, NS_LITERAL_STRING(".ops")) || // MS Office
-    StringEndsWith(fileName, NS_LITERAL_STRING(".out")) || // Linux binary
-    StringEndsWith(fileName, NS_LITERAL_STRING(".paf")) || // PortableApps package
+    //StringEndsWith(fileName, NS_LITERAL_STRING(".out")) || // Linux binary
+    //StringEndsWith(fileName, NS_LITERAL_STRING(".paf")) || // PortableApps package
     //StringEndsWith(fileName, NS_LITERAL_STRING(".paq8f")) ||
     //StringEndsWith(fileName, NS_LITERAL_STRING(".paq8jd")) ||
     //StringEndsWith(fileName, NS_LITERAL_STRING(".paq8l")) ||
     //StringEndsWith(fileName, NS_LITERAL_STRING(".paq8o")) ||
     StringEndsWith(fileName, NS_LITERAL_STRING(".partial")) || // Downloads
-    //StringEndsWith(fileName, NS_LITERAL_STRING(".pax")) ||
-    //StringEndsWith(fileName, NS_LITERAL_STRING(".pcd")) || // Kodak Picture CD
+    StringEndsWith(fileName, NS_LITERAL_STRING(".pax")) || // Mac archive
+    StringEndsWith(fileName, NS_LITERAL_STRING(".pcd")) || // Microsoft Visual Test
     StringEndsWith(fileName, NS_LITERAL_STRING(".pdf")) || // Adobe Acrobat
     //StringEndsWith(fileName, NS_LITERAL_STRING(".pea")) ||
     StringEndsWith(fileName, NS_LITERAL_STRING(".pet")) || // Linux package
     StringEndsWith(fileName, NS_LITERAL_STRING(".pif")) || // Windows
     StringEndsWith(fileName, NS_LITERAL_STRING(".pkg")) || // Mac installer
     StringEndsWith(fileName, NS_LITERAL_STRING(".pl")) || // Perl script
-    //StringEndsWith(fileName, NS_LITERAL_STRING(".plg")) ||
-    StringEndsWith(fileName, NS_LITERAL_STRING(".potx")) || // MS PowerPoint
-    StringEndsWith(fileName, NS_LITERAL_STRING(".ppam")) || // MS PowerPoint
-    StringEndsWith(fileName, NS_LITERAL_STRING(".ppsx")) || // MS PowerPoint
-    StringEndsWith(fileName, NS_LITERAL_STRING(".pptm")) || // MS PowerPoint
-    StringEndsWith(fileName, NS_LITERAL_STRING(".pptx")) || // MS PowerPoint
+    StringEndsWith(fileName, NS_LITERAL_STRING(".plg")) || // MS Visual Studio
+    //StringEndsWith(fileName, NS_LITERAL_STRING(".potx")) || // MS PowerPoint
+    //StringEndsWith(fileName, NS_LITERAL_STRING(".ppam")) || // MS PowerPoint
+    //StringEndsWith(fileName, NS_LITERAL_STRING(".ppsx")) || // MS PowerPoint
+    //StringEndsWith(fileName, NS_LITERAL_STRING(".pptm")) || // MS PowerPoint
+    //StringEndsWith(fileName, NS_LITERAL_STRING(".pptx")) || // MS PowerPoint
     StringEndsWith(fileName, NS_LITERAL_STRING(".prf")) || // MS Outlook
-    //StringEndsWith(fileName, NS_LITERAL_STRING(".prg")) ||
+    StringEndsWith(fileName, NS_LITERAL_STRING(".prg")) || // Windows
     StringEndsWith(fileName, NS_LITERAL_STRING(".ps1")) || // Windows shell
     StringEndsWith(fileName, NS_LITERAL_STRING(".ps1xml")) || // Windows shell
     StringEndsWith(fileName, NS_LITERAL_STRING(".ps2")) || // Windows shell
@@ -598,12 +598,12 @@ PendingLookup::IsBinaryFile()
     //StringEndsWith(fileName, NS_LITERAL_STRING(".r29")) ||
     //StringEndsWith(fileName, NS_LITERAL_STRING(".rar")) ||
     StringEndsWith(fileName, NS_LITERAL_STRING(".rb")) || // Ruby script
-    StringEndsWith(fileName, NS_LITERAL_STRING(".reg")) || // Windows
+    StringEndsWith(fileName, NS_LITERAL_STRING(".reg")) || // Windows Registry
     StringEndsWith(fileName, NS_LITERAL_STRING(".rels")) || // MS Office
-    StringEndsWith(fileName, NS_LITERAL_STRING(".rgs")) || // InstallShield
+    //StringEndsWith(fileName, NS_LITERAL_STRING(".rgs")) || // Windows Registry
     StringEndsWith(fileName, NS_LITERAL_STRING(".rpm")) || // Linux package
-    StringEndsWith(fileName, NS_LITERAL_STRING(".rtf")) || // MS Office
-    StringEndsWith(fileName, NS_LITERAL_STRING(".run")) || // Linux shell
+    //StringEndsWith(fileName, NS_LITERAL_STRING(".rtf")) || // MS Office
+    //StringEndsWith(fileName, NS_LITERAL_STRING(".run")) || // Linux shell
     StringEndsWith(fileName, NS_LITERAL_STRING(".scf")) || // Windows shell
     StringEndsWith(fileName, NS_LITERAL_STRING(".scr")) || // Windows
     StringEndsWith(fileName, NS_LITERAL_STRING(".sct")) || // Windows shell
@@ -612,13 +612,13 @@ PendingLookup::IsBinaryFile()
     StringEndsWith(fileName, NS_LITERAL_STRING(".shar")) || // Linux shell
     StringEndsWith(fileName, NS_LITERAL_STRING(".shb")) || // Windows
     StringEndsWith(fileName, NS_LITERAL_STRING(".shs")) || // Windows shell
-    StringEndsWith(fileName, NS_LITERAL_STRING(".sldm")) || // MS PowerPoint
-    StringEndsWith(fileName, NS_LITERAL_STRING(".sldx")) || // MS PowerPoint
+    //StringEndsWith(fileName, NS_LITERAL_STRING(".sldm")) || // MS PowerPoint
+    //StringEndsWith(fileName, NS_LITERAL_STRING(".sldx")) || // MS PowerPoint
     StringEndsWith(fileName, NS_LITERAL_STRING(".slp")) || // Linux package
     StringEndsWith(fileName, NS_LITERAL_STRING(".smi")) || // Mac disk image
     StringEndsWith(fileName, NS_LITERAL_STRING(".sparsebundle")) || // Mac disk image
     StringEndsWith(fileName, NS_LITERAL_STRING(".sparseimage")) || // Mac disk image
-    StringEndsWith(fileName, NS_LITERAL_STRING(".spl")) || // Windows
+    StringEndsWith(fileName, NS_LITERAL_STRING(".spl")) || // Adobe Flash
     //StringEndsWith(fileName, NS_LITERAL_STRING(".squashfs")) ||
     StringEndsWith(fileName, NS_LITERAL_STRING(".svg")) ||
     StringEndsWith(fileName, NS_LITERAL_STRING(".swf")) || // Adobe Flash
@@ -630,12 +630,12 @@ PendingLookup::IsBinaryFile()
     StringEndsWith(fileName, NS_LITERAL_STRING(".tbz2")) || // Linux archive (bzip2)
     StringEndsWith(fileName, NS_LITERAL_STRING(".tcsh")) || // Linux shell
     StringEndsWith(fileName, NS_LITERAL_STRING(".tgz")) || // Linux archive (gzip)
-    //StringEndsWith(fileName, NS_LITERAL_STRING(".toast")) ||
+    //StringEndsWith(fileName, NS_LITERAL_STRING(".toast")) || // Roxio disk image
     //StringEndsWith(fileName, NS_LITERAL_STRING(".torrent")) || // Bittorrent
     StringEndsWith(fileName, NS_LITERAL_STRING(".tpz")) || // Linux archive (gzip)
     StringEndsWith(fileName, NS_LITERAL_STRING(".txz")) || // Linux archive (xz)
     StringEndsWith(fileName, NS_LITERAL_STRING(".tz")) || // Linux archive (gzip)
-    //StringEndsWith(fileName, NS_LITERAL_STRING(".u3p")) ||
+    //StringEndsWith(fileName, NS_LITERAL_STRING(".u3p")) || // U3 Smart Apps
     StringEndsWith(fileName, NS_LITERAL_STRING(".udf")) || // MS Excel
     StringEndsWith(fileName, NS_LITERAL_STRING(".udif")) || // Mac disk image
     StringEndsWith(fileName, NS_LITERAL_STRING(".url")) || // Windows
@@ -644,7 +644,7 @@ PendingLookup::IsBinaryFile()
     StringEndsWith(fileName, NS_LITERAL_STRING(".vb")) || // Visual Basic script
     StringEndsWith(fileName, NS_LITERAL_STRING(".vbe")) || // Visual Basic script
     StringEndsWith(fileName, NS_LITERAL_STRING(".vbs")) || // Visual Basic script
-    StringEndsWith(fileName, NS_LITERAL_STRING(".vbscript")) || // Visual Basic script
+    //StringEndsWith(fileName, NS_LITERAL_STRING(".vbscript")) || // Visual Basic script
     StringEndsWith(fileName, NS_LITERAL_STRING(".vhd")) || // Windows virtual hard drive
     StringEndsWith(fileName, NS_LITERAL_STRING(".vhdx")) || // Windows virtual hard drive
     StringEndsWith(fileName, NS_LITERAL_STRING(".vmdk")) || // VMware virtual disk
@@ -653,21 +653,21 @@ PendingLookup::IsBinaryFile()
     StringEndsWith(fileName, NS_LITERAL_STRING(".vss")) || // MS Visio
     StringEndsWith(fileName, NS_LITERAL_STRING(".vst")) || // MS Visio
     StringEndsWith(fileName, NS_LITERAL_STRING(".vsw")) || // MS Visio
-    StringEndsWith(fileName, NS_LITERAL_STRING(".website")) ||  // MSIE
+    StringEndsWith(fileName, NS_LITERAL_STRING(".website")) ||  // Windows
     StringEndsWith(fileName, NS_LITERAL_STRING(".wim")) || // Windows Imaging
-    StringEndsWith(fileName, NS_LITERAL_STRING(".workflow")) || // Mac Automator
+    //StringEndsWith(fileName, NS_LITERAL_STRING(".workflow")) || // Mac Automator
     //StringEndsWith(fileName, NS_LITERAL_STRING(".wrc")) || // FreeArc archive
     StringEndsWith(fileName, NS_LITERAL_STRING(".ws")) || // Windows script
     StringEndsWith(fileName, NS_LITERAL_STRING(".wsc")) || // Windows script
     StringEndsWith(fileName, NS_LITERAL_STRING(".wsf")) || // Windows script
     StringEndsWith(fileName, NS_LITERAL_STRING(".wsh")) || // Windows script
     StringEndsWith(fileName, NS_LITERAL_STRING(".xar")) || // MS Excel
-    StringEndsWith(fileName, NS_LITERAL_STRING(".xbap")) || // MS Silverlight
-    //StringEndsWith(fileName, NS_LITERAL_STRING(".xip")) ||
-    StringEndsWith(fileName, NS_LITERAL_STRING(".xlsm")) || // MS Excel
-    StringEndsWith(fileName, NS_LITERAL_STRING(".xlsx")) || // MS Excel
-    StringEndsWith(fileName, NS_LITERAL_STRING(".xltm")) || // MS Excel
-    StringEndsWith(fileName, NS_LITERAL_STRING(".xltx")) || // MS Excel
+    StringEndsWith(fileName, NS_LITERAL_STRING(".xbap")) || // XAML Browser Application
+    StringEndsWith(fileName, NS_LITERAL_STRING(".xip")) || // Mac archive
+    //StringEndsWith(fileName, NS_LITERAL_STRING(".xlsm")) || // MS Excel
+    //StringEndsWith(fileName, NS_LITERAL_STRING(".xlsx")) || // MS Excel
+    //StringEndsWith(fileName, NS_LITERAL_STRING(".xltm")) || // MS Excel
+    //StringEndsWith(fileName, NS_LITERAL_STRING(".xltx")) || // MS Excel
     StringEndsWith(fileName, NS_LITERAL_STRING(".xml")) ||
     StringEndsWith(fileName, NS_LITERAL_STRING(".xnk")) || // MS Exchange
     StringEndsWith(fileName, NS_LITERAL_STRING(".xrm-ms")) || // Windows
