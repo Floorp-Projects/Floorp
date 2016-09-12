@@ -6,66 +6,15 @@
 
 #include "mozilla/TaskQueue.h"
 
-#include "nsIEventTarget.h"
 #include "nsThreadUtils.h"
+#include "mozilla/SharedThreadPool.h"
 
 namespace mozilla {
 
-class TaskQueue::EventTargetWrapper final : public nsIEventTarget
-{
-  RefPtr<TaskQueue> mTaskQueue;
-
-  ~EventTargetWrapper()
-  {
-  }
-
-public:
-  explicit EventTargetWrapper(TaskQueue* aTaskQueue)
-    : mTaskQueue(aTaskQueue)
-  {
-    MOZ_ASSERT(mTaskQueue);
-  }
-
-  NS_IMETHOD
-  DispatchFromScript(nsIRunnable* aEvent, uint32_t aFlags) override
-  {
-    nsCOMPtr<nsIRunnable> ref = aEvent;
-    return Dispatch(ref.forget(), aFlags);
-  }
-
-  NS_IMETHOD
-  Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags) override
-  {
-    nsCOMPtr<nsIRunnable> runnable = aEvent;
-    MonitorAutoLock mon(mTaskQueue->mQueueMonitor);
-    return mTaskQueue->DispatchLocked(/* passed by ref */runnable,
-                                      AbortIfFlushing,
-                                      DontAssertDispatchSuccess,
-                                      NormalDispatch);
-  }
-
-  NS_IMETHOD
-  DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t aFlags) override
-  {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  NS_IMETHOD
-  IsOnCurrentThread(bool* aResult) override
-  {
-    *aResult = mTaskQueue->IsCurrentThreadIn();
-    return NS_OK;
-  }
-
-  NS_DECL_THREADSAFE_ISUPPORTS
-};
-
-NS_IMPL_ISUPPORTS(TaskQueue::EventTargetWrapper, nsIEventTarget)
-
-TaskQueue::TaskQueue(already_AddRefed<nsIEventTarget> aTarget,
-                     bool aRequireTailDispatch)
+TaskQueue::TaskQueue(already_AddRefed<SharedThreadPool> aPool,
+                               bool aRequireTailDispatch)
   : AbstractThread(aRequireTailDispatch)
-  , mTarget(aTarget)
+  , mPool(aPool)
   , mQueueMonitor("TaskQueue::Queue")
   , mTailDispatcher(nullptr)
   , mIsRunning(false)
@@ -115,7 +64,7 @@ TaskQueue::DispatchLocked(nsCOMPtr<nsIRunnable>& aRunnable,
     return NS_OK;
   }
   RefPtr<nsIRunnable> runner(new Runner(this));
-  nsresult rv = mTarget->Dispatch(runner.forget(), NS_DISPATCH_NORMAL);
+  nsresult rv = mPool->Dispatch(runner.forget(), NS_DISPATCH_NORMAL);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to dispatch runnable to run TaskQueue");
     return rv;
@@ -187,25 +136,12 @@ TaskQueue::IsEmpty()
   return mTasks.empty();
 }
 
-uint32_t
-TaskQueue::ImpreciseLengthForHeuristics()
-{
-  MonitorAutoLock mon(mQueueMonitor);
-  return mTasks.size();
-}
-
 bool
 TaskQueue::IsCurrentThreadIn()
 {
   bool in = NS_GetCurrentThread() == mRunningThread;
+  MOZ_ASSERT(in == (GetCurrent() == this));
   return in;
-}
-
-already_AddRefed<nsIEventTarget>
-TaskQueue::WrapAsEventTarget()
-{
-  nsCOMPtr<nsIEventTarget> ref = new EventTargetWrapper(this);
-  return ref.forget();
 }
 
 nsresult
@@ -255,11 +191,11 @@ TaskQueue::Runner::Run()
   }
 
   // There's at least one more event that we can run. Dispatch this Runner
-  // to the target again to ensure it runs again. Note that we don't just
-  // run in a loop here so that we don't hog the target. This means we may
+  // to the thread pool again to ensure it runs again. Note that we don't just
+  // run in a loop here so that we don't hog the thread pool. This means we may
   // run on another thread next time, but we rely on the memory fences from
   // mQueueMonitor for thread safety of non-threadsafe tasks.
-  nsresult rv = mQueue->mTarget->Dispatch(this, NS_DISPATCH_AT_END);
+  nsresult rv = mQueue->mPool->TailDispatch(this);
   if (NS_FAILED(rv)) {
     // Failed to dispatch, shutdown!
     MonitorAutoLock mon(mQueue->mQueueMonitor);

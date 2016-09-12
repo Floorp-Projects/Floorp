@@ -8,7 +8,6 @@
 #define MOZILLA_AUTOTASKQUEUE_H_
 
 #include "mozilla/RefPtr.h"
-#include "mozilla/SharedThreadPool.h"
 #include "mozilla/TaskQueue.h"
 
 namespace mozilla {

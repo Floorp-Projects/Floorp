@@ -50,7 +50,7 @@ interface nsIEventTarget : nsISupports
    *
    * These events are always async.
    */
-  const unsigned long DISPATCH_AT_END = 2;
+  const unsigned long DISPATCH_TAIL = 2;
 
   /**
    * Check to see if this event target is associated with the current thread.
@@ -123,5 +123,5 @@ interface nsIEventTarget : nsISupports
 // convenient aliases:
 #define NS_DISPATCH_NORMAL nsIEventTarget::DISPATCH_NORMAL
 #define NS_DISPATCH_SYNC   nsIEventTarget::DISPATCH_SYNC
-#define NS_DISPATCH_AT_END nsIEventTarget::DISPATCH_AT_END
+#define NS_DISPATCH_TAIL   nsIEventTarget::DISPATCH_TAIL
 %}
