@@ -667,23 +667,21 @@ nsVideoFrame::AttributeChanged(int32_t aNameSpaceID,
 }
 
 void
-nsVideoFrame::OnVisibilityChange(Visibility aOldVisibility,
-                                 Visibility aNewVisibility,
+nsVideoFrame::OnVisibilityChange(Visibility aNewVisibility,
                                  Maybe<OnNonvisible> aNonvisibleAction)
 {
   if (HasVideoElement()) {
     nsCOMPtr<nsIDOMHTMLMediaElement> mediaDomElement = do_QueryInterface(mContent);
-    mediaDomElement->OnVisibilityChange(aOldVisibility, aNewVisibility);
+    mediaDomElement->OnVisibilityChange(aNewVisibility);
   }
 
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mPosterImage);
   if (imageLoader) {
-    imageLoader->OnVisibilityChange(aOldVisibility, aNewVisibility,
+    imageLoader->OnVisibilityChange(aNewVisibility,
                                     aNonvisibleAction);
   }
 
-  nsContainerFrame::OnVisibilityChange(aOldVisibility, aNewVisibility,
-                                       aNonvisibleAction);
+  nsContainerFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
 }
 
 bool nsVideoFrame::HasVideoElement() {

@@ -802,26 +802,26 @@ CompositorBridgeChild::SendRequestNotifyAfterRemotePaint()
 }
 
 bool
-CompositorBridgeChild::SendClearVisibleRegions(uint64_t aLayersId,
-                                               uint32_t aPresShellId)
+CompositorBridgeChild::SendClearApproximatelyVisibleRegions(uint64_t aLayersId,
+                                                            uint32_t aPresShellId)
 {
   MOZ_ASSERT(mCanSend);
   if (!mCanSend) {
     return true;
   }
-  return PCompositorBridgeChild::SendClearVisibleRegions(aLayersId, aPresShellId);
+  return PCompositorBridgeChild::SendClearApproximatelyVisibleRegions(aLayersId,
+                                                                aPresShellId);
 }
 
 bool
-CompositorBridgeChild::SendUpdateVisibleRegion(VisibilityCounter aCounter,
-                                               const ScrollableLayerGuid& aGuid,
-                                               const CSSIntRegion& aRegion)
+CompositorBridgeChild::SendNotifyApproximatelyVisibleRegion(const ScrollableLayerGuid& aGuid,
+                                                            const CSSIntRegion& aRegion)
 {
   MOZ_ASSERT(mCanSend);
   if (!mCanSend) {
     return true;
   }
-  return PCompositorBridgeChild::SendUpdateVisibleRegion(aCounter, aGuid, aRegion);
+  return PCompositorBridgeChild::SendNotifyApproximatelyVisibleRegion(aGuid, aRegion);
 }
 
 PTextureChild*
