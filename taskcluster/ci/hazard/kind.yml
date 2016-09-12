@@ -1,0 +1,93 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+implementation: taskgraph.task.transform:TransformTask
+
+transforms:
+   - taskgraph.transforms.build_attrs:transforms
+   - taskgraph.transforms.job:transforms
+   - taskgraph.transforms.task:transforms
+
+job-defaults:
+    treeherder:
+        kind: build
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        implementation: docker-worker
+        max-run-time: 36000
+        docker-image: {in-tree: desktop-build}
+
+jobs:
+    linux64-shell-haz/debug:
+        description: "JS Shell Hazard Analysis Linux"
+        index:
+            product: firefox
+            job-name:
+                gecko-v1: shell-haz.debug
+                gecko-v2: shell-haz-debug
+        treeherder:
+            platform: linux64/debug
+            symbol: SM-tc(H)
+        run:
+            using: hazard
+            tooltool-manifest: "browser/config/tooltool-manifests/linux64/hazard.manifest"
+            secrets: true  # TODO(taskdiff): don't use secrets for these jobs
+            command: >
+                tc-vcs checkout workspace/gecko "$GECKO_BASE_REPOSITORY" "$GECKO_HEAD_REPOSITORY" "$GECKO_HEAD_REV" "$GECKO_HEAD_REF"
+                && cd ./workspace/gecko/taskcluster/scripts/builder
+                && ./build-haz-linux.sh --project shell $HOME/workspace
+        run-on-projects:
+            - integration
+            - release
+        when:
+            files-changed:
+                - js/public/**
+                - js/src/**
+
+    linux64-haz/debug:
+        description: "Browser Hazard Analysis Linux"
+        index:
+            product: firefox
+            job-name:
+                gecko-v1: browser-haz.debug
+                gecko-v2: browser-haz-debug
+        treeherder:
+            platform: linux64/debug
+            symbol: tc(H)
+        run:
+            using: hazard
+            tooltool-manifest: "browser/config/tooltool-manifests/linux64/hazard.manifest"
+            mozconfig: "browser/config/mozconfigs/linux64/hazards"
+            secrets: true  # TODO(taskdiff): don't use secrets for these jobs
+            command: >
+                tc-vcs checkout workspace/gecko "$GECKO_BASE_REPOSITORY" "$GECKO_HEAD_REPOSITORY" "$GECKO_HEAD_REV" "$GECKO_HEAD_REF"
+                && cd ./workspace/gecko/taskcluster/scripts/builder
+                && ./build-haz-linux.sh --project browser $HOME/workspace
+
+    linux64-mulet-haz/debug:
+        description: "Mulet Hazard Analysis Linux"
+        index:
+            product: b2g
+            job-name:
+                buildbot: linux64-haz-mulet
+                gecko-v1: mulet-haz.debug
+                gecko-v2: mulet-haz-debug
+        treeherder:
+            platform: mulet-linux64/opt
+            symbol: tc(H)
+            tier: 3
+        run-on-projects:
+            - try
+        worker-type: aws-provisioner-v1/mulet-debug  # TODO (taskdiff): change to default
+        worker:
+            docker-image: {in-tree: builder}
+        run:
+            using: hazard
+            tooltool-manifest: "gecko/b2g/dev/config/tooltool-manifests/linux64/hazard.manifest"
+            mozconfig: "b2g/dev/config/mozconfigs/linux64/mulet-hazards"
+            secrets: false  # TODO(taskdiff): don't use secrets for these jobs
+            command: >
+                checkout-gecko workspace && cd ./workspace/gecko/taskcluster/scripts/builder
+                && buildbot_step 'Build' ./build-mulet-haz-linux.sh $HOME/workspace
