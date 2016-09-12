@@ -32,7 +32,13 @@ public class TabsListLayout extends TabsLayout {
         setLayoutManager(new LinearLayoutManager(context));
 
         // A TouchHelper handler for swipe to close.
-        final TabsTouchHelperCallback callback = new TabsTouchHelperCallback(this);
+        final TabsTouchHelperCallback callback = new TabsTouchHelperCallback(this) {
+            @Override
+            protected float alphaForItemSwipeDx(float dX, int distanceToAlphaMin) {
+                return Math.max(0.1f,
+                        Math.min(1f, 1f - 2f * Math.abs(dX) / distanceToAlphaMin));
+            }
+        };
         final ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
         touchHelper.attachToRecyclerView(this);
 

@@ -10,6 +10,7 @@ import org.mozilla.gecko.R;
 import android.content.Context;
 import android.content.res.Resources;
 import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.AttributeSet;
 
 public class TabsGridLayout extends TabsLayout {
@@ -33,6 +34,16 @@ public class TabsGridLayout extends TabsLayout {
         setItemAnimator(new TabsGridLayoutAnimator());
 
         // TODO Add ItemDecoration.
+
+        // A TouchHelper handler for swipe to close.
+        final TabsTouchHelperCallback callback = new TabsTouchHelperCallback(this) {
+            @Override
+            protected float alphaForItemSwipeDx(float dX, int distanceToAlphaMin) {
+                return 1f - 2f * Math.abs(dX) / distanceToAlphaMin;
+            }
+        };
+        final ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
+        touchHelper.attachToRecyclerView(this);
     }
 
     @Override
