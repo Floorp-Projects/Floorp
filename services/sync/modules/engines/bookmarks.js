@@ -21,6 +21,8 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/bookmark_utils.js");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/PlacesBackups.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "BookmarkValidator",
+                                  "resource://services-sync/bookmark_validator.js");
 
 const ANNOS_TO_TRACK = [BookmarkAnnos.DESCRIPTION_ANNO, BookmarkAnnos.SIDEBAR_ANNO,
                         PlacesUtils.LMANNO_FEEDURI, PlacesUtils.LMANNO_SITEURI];
@@ -560,6 +562,9 @@ BookmarksEngine.prototype = {
     // Simply adding this (now non-existing) ID to the tracker is enough.
     this._modified.set(localDupeGUID, { modified: now, deleted: true });
   },
+  getValidator() {
+    return new BookmarkValidator();
+  }
 };
 
 function BookmarksStore(name, engine) {
