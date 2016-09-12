@@ -58,17 +58,18 @@ use zip;
 const DEFAULT_HOST: &'static str = "localhost";
 
 lazy_static! {
-    pub static ref FIREFOX_DEFAULT_PREFERENCES: [(&'static str, Pref); 46] = [
+    pub static ref FIREFOX_DEFAULT_PREFERENCES: [(&'static str, Pref); 49] = [
         ("app.update.auto", Pref::new(false)),
         ("app.update.enabled", Pref::new(false)),
+        ("browser.EULA.3.accepted", Pref::new(true)),
+        ("browser.EULA.override", Pref::new(true)),
+        ("browser.displayedE10SPrompt", Pref::new(5)),
         ("browser.displayedE10SPrompt.1", Pref::new(5)),
         ("browser.displayedE10SPrompt.2", Pref::new(5)),
         ("browser.displayedE10SPrompt.3", Pref::new(5)),
         ("browser.displayedE10SPrompt.4", Pref::new(5)),
-        ("browser.displayedE10SPrompt", Pref::new(5)),
         ("browser.dom.window.dump.enabled", Pref::new(true)),
-        ("browser.EULA.3.accepted", Pref::new(true)),
-        ("browser.EULA.override", Pref::new(true)),
+        ("browser.firstrun-content.dismissed", Pref::new("")),
         ("browser.offline", Pref::new(false)),
         ("browser.safebrowsing.enabled", Pref::new(false)),
         ("browser.safebrowsing.malware.enabled", Pref::new(false)),
@@ -77,6 +78,7 @@ lazy_static! {
         ("browser.shell.checkDefaultBrowser", Pref::new(false)),
         ("browser.startup.page", Pref::new(0)),
         ("browser.tabs.warnOnOpen", Pref::new(false)),
+        ("browser.usedOnWindows10.introURL", Pref::new("")),
         ("datareporting.healthreport.logging.consoleEnabled", Pref::new(false)),
         ("datareporting.healthreport.service.enabled", Pref::new(false)),
         ("datareporting.healthreport.service.firstRun", Pref::new(false)),
@@ -101,6 +103,7 @@ lazy_static! {
         ("signon.autofillForms", Pref::new(false)),
         ("signon.rememberSignons", Pref::new(false)),
         ("startup.homepage_welcome_url", Pref::new("about:blank")),
+        ("startup.homepage_welcome_url.additional", Pref::new("about:blank")),
         ("toolkit.networkmanager.disable", Pref::new(true)),
         ("toolkit.telemetry.enabled", Pref::new(false)),
         ("toolkit.telemetry.prompted", Pref::new(2)),
