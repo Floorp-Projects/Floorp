@@ -1613,7 +1613,7 @@ XMLHttpRequestWorker::ReleaseProxy(ReleaseType aType)
         new AsyncTeardownRunnable(mProxy);
       mProxy = nullptr;
 
-      if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
+      if (NS_FAILED(mWorkerPrivate->DispatchToMainThread(runnable.forget()))) {
         NS_ERROR("Failed to dispatch teardown runnable!");
       }
     } else {
