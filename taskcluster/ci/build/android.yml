@@ -1,0 +1,102 @@
+android-api-15/debug:
+    description: "Android 4.0 API15+ Debug"
+    index:
+        product: mobile
+        job-name:
+            buildbot: android-api-15-debug
+            gecko-v1: android-api-15.debug
+            gecko-v2: android-api-15-debug
+    treeherder:
+        platform: android-4-0-armv7-api15/debug
+        symbol: tc(B)
+    worker-type: aws-provisioner-v1/android-api-15
+    worker:
+        implementation: docker-worker
+        max-run-time: 7200
+    run:
+        using: mozharness
+        actions: [get-secrets build multi-l10n update]
+        config:
+            - builds/releng_base_android_64_builds.py
+            - disable_signing.py
+            - platform_supports_post_upload_to_latest.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        custom-build-variant-cfg: api-15-debug
+        tooltool-downloads: internal
+
+android-x86/opt:
+    description: "Android 4.2 x86 Opt"
+    index:
+        product: mobile
+        job-name: android-x86-opt
+    treeherder:
+        platform: android-4-2-x86/opt
+        symbol: tc(B)
+        tier: 1
+    worker-type: aws-provisioner-v1/android-api-15
+    worker:
+        implementation: docker-worker
+        max-run-time: 7200
+    run:
+        using: mozharness
+        actions: [get-secrets build multi-l10n update]
+        config:
+            - builds/releng_base_android_64_builds.py
+            - disable_signing.py
+            - platform_supports_post_upload_to_latest.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        custom-build-variant-cfg: x86
+        tooltool-downloads: internal
+
+android-api-15/opt:
+    description: "Android 4.0 API15+ Opt"
+    index:
+        product: mobile
+        job-name: android-api-15-opt
+    treeherder:
+        platform: android-4-0-armv7-api15/opt
+        symbol: tc(B)
+        tier: 2
+    worker-type: aws-provisioner-v1/android-api-15
+    worker:
+        implementation: docker-worker
+        max-run-time: 7200
+    run:
+        using: mozharness
+        actions: [get-secrets build multi-l10n update]
+        config:
+            - builds/releng_base_android_64_builds.py
+            - disable_signing.py
+            - platform_supports_post_upload_to_latest.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        custom-build-variant-cfg: api-15
+        tooltool-downloads: internal
+
+android-api-15-gradle/opt:
+    description: "Android 4.0 API15+ (Gradle) Opt"
+    index:
+        product: mobile
+        job-name: android-api-15-gradle-opt
+    treeherder:
+        platform: android-4-0-armv7-api15/opt
+        symbol: tc(Bg)
+        tier: 2
+    worker-type: aws-provisioner-v1/android-api-15
+    worker:
+        implementation: docker-worker
+        max-run-time: 7200
+        env:
+            # Bug 1292762 - Set GRADLE_USER_HOME to avoid sdk-manager-plugin intermittent
+            GRADLE_USER_HOME: /home/worker/workspace/build/src/dotgradle
+    run:
+        using: mozharness
+        actions: [get-secrets build multi-l10n update]
+        config:
+            - builds/releng_base_android_64_builds.py
+            - disable_signing.py
+            - platform_supports_post_upload_to_latest.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        custom-build-variant-cfg: api-15-gradle
+        tooltool-downloads: internal
+
+

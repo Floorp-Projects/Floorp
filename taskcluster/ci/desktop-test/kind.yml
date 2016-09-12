@@ -1,7 +1,7 @@
 implementation: taskgraph.task.test:TestTask
 
 kind-dependencies:
-    - legacy
+    - build
 
 transforms:
    - taskgraph.transforms.tests.test_description:validate
