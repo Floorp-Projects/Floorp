@@ -23,6 +23,7 @@ BUILD_TYPE_ALIASES = {
 
 # consider anything in this whitelist of kinds to be governed by -b/-p
 BUILD_KINDS = set([
+    'build',
 ])
 
 # anything in this list is governed by -j

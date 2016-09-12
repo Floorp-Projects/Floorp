@@ -62,9 +62,6 @@ class TestTask(transform.TransformTask):
         for task in loaded_tasks:
             if task.kind != dep_kind:
                 continue
-            # remove this check when builds are no longer legacy
-            if task.attributes['legacy_kind'] != 'build':
-                continue
 
             build_platform = task.attributes.get('build_platform')
             build_type = task.attributes.get('build_type')
