@@ -23,7 +23,8 @@ import java.util.ArrayList;
 public abstract class TabsLayout extends RecyclerView
         implements TabsPanel.TabsLayout,
         Tabs.OnTabsChangedListener,
-        RecyclerViewClickSupport.OnItemClickListener {
+        RecyclerViewClickSupport.OnItemClickListener,
+        TabsTouchHelperCallback.DismissListener {
 
     private static final String LOGTAG = "Gecko" + TabsLayout.class.getSimpleName();
 
@@ -172,6 +173,11 @@ public abstract class TabsLayout extends RecyclerView
                 Tabs.getInstance().closeTab(tab, false);
             }
         }
+    }
+
+    @Override
+    public void onItemDismiss(View view) {
+        closeTab(view);
     }
 
     private Tab getTabForView(View view) {
