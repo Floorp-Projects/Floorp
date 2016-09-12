@@ -120,6 +120,8 @@ public:
       return;
     }
 
+    mOwningElement->ProcessDestroyedFrameListeners();
+
     if (!mOwningElement->IsFrameCaptureRequested()) {
       return;
     }
@@ -1199,11 +1201,8 @@ HTMLCanvasElement::IsFrameCaptureRequested() const
 }
 
 void
-HTMLCanvasElement::SetFrameCapture(already_AddRefed<SourceSurface> aSurface)
+HTMLCanvasElement::ProcessDestroyedFrameListeners()
 {
-  RefPtr<SourceSurface> surface = aSurface;
-  RefPtr<SourceSurfaceImage> image = new SourceSurfaceImage(surface->GetSize(), surface);
-
   // Loop backwards to allow removing elements in the loop.
   for (int i = mRequestedFrameListeners.Length() - 1; i >= 0; --i) {
     WeakPtr<FrameCaptureListener> listener = mRequestedFrameListeners[i];
@@ -1212,13 +1211,26 @@ HTMLCanvasElement::SetFrameCapture(already_AddRefed<SourceSurface> aSurface)
       mRequestedFrameListeners.RemoveElementAt(i);
       continue;
     }
-
-    RefPtr<Image> imageRefCopy = image.get();
-    listener->NewFrame(imageRefCopy.forget());
   }
 
   if (mRequestedFrameListeners.IsEmpty()) {
     mRequestedFrameRefreshObserver->Unregister();
+  }
+}
+
+void
+HTMLCanvasElement::SetFrameCapture(already_AddRefed<SourceSurface> aSurface)
+{
+  RefPtr<SourceSurface> surface = aSurface;
+  RefPtr<SourceSurfaceImage> image = new SourceSurfaceImage(surface->GetSize(), surface);
+
+  for (WeakPtr<FrameCaptureListener> listener : mRequestedFrameListeners) {
+    if (!listener) {
+      continue;
+    }
+
+    RefPtr<Image> imageRefCopy = image.get();
+    listener->NewFrame(imageRefCopy.forget());
   }
 }
 
