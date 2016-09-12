@@ -18,9 +18,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1000870
         iframe.src = "pointerevent_setpointercapture_inactive_button_mouse-manual.html";
       }
       function executeTest(int_win) {
-        sendPointerEvent(int_win, "target1", "pointermove", MouseEvent.MOZ_SOURCE_MOUSE);
-        sendPointerEvent(int_win, "target0", "pointermove", MouseEvent.MOZ_SOURCE_MOUSE);
-        sendPointerEvent(int_win, "target1", "pointermove", MouseEvent.MOZ_SOURCE_MOUSE);
+        sendMouseEvent(int_win, "target1", "mousemove");
+        sendMouseEvent(int_win, "target0", "mousemove");
+        sendMouseEvent(int_win, "target1", "mousemove");
       }
     </script>
   </head>

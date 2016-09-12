@@ -18,14 +18,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1000870
         iframe.src = "pointerevent_capture_suppressing_mouse-manual.html";
       }
       function executeTest(int_win) {
-        sendPointerEvent(int_win, "target0",    "pointermove", MouseEvent.MOZ_SOURCE_MOUSE);
-        sendPointerEvent(int_win, "target1",    "pointermove", MouseEvent.MOZ_SOURCE_MOUSE);
-        sendPointerEvent(int_win, "btnCapture", "pointerdown", MouseEvent.MOZ_SOURCE_MOUSE, {button:1});
-        sendPointerEvent(int_win, "target1",    "pointermove", MouseEvent.MOZ_SOURCE_MOUSE);
-        sendPointerEvent(int_win, "target0",    "pointermove", MouseEvent.MOZ_SOURCE_MOUSE);
-        sendPointerEvent(int_win, "target1",    "pointermove", MouseEvent.MOZ_SOURCE_MOUSE);
-        sendPointerEvent(int_win, "target1",    "pointerup",   MouseEvent.MOZ_SOURCE_MOUSE);
-        sendPointerEvent(int_win, "target1",    "pointermove", MouseEvent.MOZ_SOURCE_MOUSE);
+        sendMouseEvent(int_win, "target0",    "mousemove");
+        sendMouseEvent(int_win, "target1",    "mousemove");
+        sendMouseEvent(int_win, "btnCapture", "mousedown", {button:1});
+        sendMouseEvent(int_win, "target1",    "mousemove");
+        sendMouseEvent(int_win, "target0",    "mousemove");
+        sendMouseEvent(int_win, "target1",    "mousemove");
+        sendMouseEvent(int_win, "target1",    "mouseup");
+        sendMouseEvent(int_win, "target1",    "mousemove");
       }
     </script>
   </head>
