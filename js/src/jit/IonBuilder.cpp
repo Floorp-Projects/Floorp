@@ -12036,8 +12036,10 @@ IonBuilder::loadUnboxedValue(MDefinition* elements, size_t elementsOffset,
 
       case JSVAL_TYPE_OBJECT: {
         MLoadUnboxedObjectOrNull::NullBehavior nullBehavior;
-        if (types->hasType(TypeSet::NullType()) || barrier != BarrierKind::NoBarrier)
+        if (types->hasType(TypeSet::NullType()))
             nullBehavior = MLoadUnboxedObjectOrNull::HandleNull;
+        else if (barrier != BarrierKind::NoBarrier)
+            nullBehavior = MLoadUnboxedObjectOrNull::BailOnNull;
         else
             nullBehavior = MLoadUnboxedObjectOrNull::NullNotPossible;
         load = MLoadUnboxedObjectOrNull::New(alloc(), elements, index, nullBehavior,
