@@ -31,6 +31,7 @@ BUILD_KINDS = set([
     'valgrind',
     'static-analysis',
     'spidermonkey',
+    'b2g-device',
 ])
 
 # anything in this list is governed by -j
