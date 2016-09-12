@@ -148,13 +148,14 @@ protected:
   public:
     explicit AutoTaskGuard(TaskQueue* aQueue)
       : AutoTaskDispatcher(/* aIsTailDispatcher = */ true), mQueue(aQueue)
+      , mLastCurrentThread(nullptr)
     {
       // NB: We don't hold the lock to aQueue here. Don't do anything that
       // might require it.
       MOZ_ASSERT(!mQueue->mTailDispatcher);
       mQueue->mTailDispatcher = this;
 
-      MOZ_ASSERT(sCurrentThreadTLS.get() == nullptr);
+      mLastCurrentThread = sCurrentThreadTLS.get();
       sCurrentThreadTLS.set(aQueue);
 
       MOZ_ASSERT(mQueue->mRunningThread == nullptr);
@@ -168,12 +169,13 @@ protected:
       MOZ_ASSERT(mQueue->mRunningThread == NS_GetCurrentThread());
       mQueue->mRunningThread = nullptr;
 
-      sCurrentThreadTLS.set(nullptr);
+      sCurrentThreadTLS.set(mLastCurrentThread);
       mQueue->mTailDispatcher = nullptr;
     }
 
   private:
   TaskQueue* mQueue;
+  AbstractThread* mLastCurrentThread;
   };
 
   TaskDispatcher* mTailDispatcher;
