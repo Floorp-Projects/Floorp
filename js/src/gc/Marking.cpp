@@ -2808,30 +2808,6 @@ FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(INSTANTIATE_ALL_VALID_HEAP_TRACE_FUNCTION
 } /* namespace js */
 
 
-/*** Type Marking *********************************************************************************/
-
-void
-TypeSet::MarkTypeRoot(JSTracer* trc, TypeSet::Type* v, const char* name)
-{
-    AssertRootMarkingPhase(trc);
-    MarkTypeUnbarriered(trc, v, name);
-}
-
-void
-TypeSet::MarkTypeUnbarriered(JSTracer* trc, TypeSet::Type* v, const char* name)
-{
-    if (v->isSingletonUnchecked()) {
-        JSObject* obj = v->singletonNoBarrier();
-        DispatchToTracer(trc, &obj, name);
-        *v = TypeSet::ObjectType(obj);
-    } else if (v->isGroupUnchecked()) {
-        ObjectGroup* group = v->groupNoBarrier();
-        DispatchToTracer(trc, &group, name);
-        *v = TypeSet::ObjectType(group);
-    }
-}
-
-
 /*** Cycle Collector Barrier Implementation *******************************************************/
 
 #ifdef DEBUG
