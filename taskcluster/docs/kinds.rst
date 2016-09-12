@@ -3,10 +3,13 @@ Task Kinds
 
 This section lists and documents the available task kinds.
 
-Builds
+build
 ------
 
-Builds are currently implemented by the ``legacy`` kind.
+Builds are tasks that produce an installer or other output that can be run by
+users or automated tests.  This is more restrictive than most definitions of
+"build" in a Mozilla context: it does not include tasks that run build-like
+actions for static analysis or to produce instrumented artifacts.
 
 Tests
 -----
