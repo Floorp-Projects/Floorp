@@ -21,7 +21,7 @@ class UnsafeBareReadBarriered : public ReadBarrieredBase<T>
     MOZ_IMPLICIT UnsafeBareReadBarriered(const T& v) : ReadBarrieredBase<T>(v) {}
     explicit UnsafeBareReadBarriered(const UnsafeBareReadBarriered& v) : ReadBarrieredBase<T>(v) {}
     UnsafeBareReadBarriered(UnsafeBareReadBarriered&& v)
-      : ReadBarrieredBase<T>(mozilla::Forward<UnsafeBareReadBarriered<T>>(v))
+      : ReadBarrieredBase<T>(mozilla::Move(v))
     {}
 
     UnsafeBareReadBarriered& operator=(const UnsafeBareReadBarriered& v) {
