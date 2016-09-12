@@ -11,6 +11,10 @@
 #ifndef mozilla_MacroArgs_h
 #define mozilla_MacroArgs_h
 
+// Concatenates pre-processor tokens in a way that can be used with __LINE__.
+#define MOZ_CONCAT2(x, y) x ## y
+#define MOZ_CONCAT(x, y) MOZ_CONCAT2(x, y)
+
 /*
  * MOZ_PASTE_PREFIX_AND_ARG_COUNT(aPrefix, ...) counts the number of variadic
  * arguments and prefixes it with |aPrefix|. For example:
