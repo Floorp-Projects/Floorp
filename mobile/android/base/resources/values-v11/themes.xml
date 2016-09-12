@@ -39,7 +39,6 @@
         <item name="menuItemSwitcherLayoutStyle">@style/Widget.MenuItemSwitcherLayout</item>
         <item name="menuItemDefaultStyle">@style/Widget.MenuItemDefault</item>
         <item name="menuItemSecondaryActionBarStyle">@style/Widget.MenuItemSecondaryActionBar</item>
-        <item name="tabGridLayoutViewStyle">@style/Widget.TabsGridLayout</item>
     </style>
 
 </resources>

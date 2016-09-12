@@ -612,54 +612,15 @@ abstract class BaseTest extends BaseRobocopTest {
         }
     }
 
-    // A temporary tabs list/grid holder while the list and grid views are being transitioned to
-    // RecyclerViews (bug 1116415 and bug 1310081).
-    private static class TabsView {
-        private AdapterView<ListAdapter> gridView;
-        private RecyclerView listView;
-
-        public TabsView(View view) {
-            if (view instanceof RecyclerView) {
-                listView = (RecyclerView) view;
-            } else {
-                gridView = (AdapterView<ListAdapter>) view;
-            }
-        }
-
-        public void bringPositionIntoView(int index) {
-            if (gridView != null) {
-                gridView.setSelection(index);
-            } else {
-                listView.scrollToPosition(index);
-            }
-        }
-
-        public View getViewAtIndex(int index) {
-            if (gridView != null) {
-                return gridView.getChildAt(index - gridView.getFirstVisiblePosition());
-            } else {
-                final RecyclerView.ViewHolder itemViewHolder = listView.findViewHolderForLayoutPosition(index);
-                return itemViewHolder == null ? null : itemViewHolder.itemView;
-            }
-        }
-
-        public void post(Runnable runnable) {
-            if (gridView != null) {
-                gridView.post(runnable);
-            } else {
-                listView.post(runnable);
-            }
-        }
-    }
     /**
-     * Gets the AdapterView of the tabs list.
+     * Gets the RecyclerView of the tabs list.
      *
      * @return List view in the tabs panel
      */
-    private final TabsView getTabsLayout() {
+    private final RecyclerView getTabsLayout() {
         Element tabs = mDriver.findElement(getActivity(), R.id.tabs);
         tabs.click();
-        return new TabsView(getActivity().findViewById(R.id.normal_tabs));
+        return (RecyclerView) getActivity().findViewById(R.id.normal_tabs);
     }
 
     /**
@@ -670,12 +631,12 @@ abstract class BaseTest extends BaseRobocopTest {
     private View getTabViewAt(final int index) {
         final View[] childView = { null };
 
-        final TabsView view = getTabsLayout();
+        final RecyclerView view = getTabsLayout();
 
         runOnUiThreadSync(new Runnable() {
             @Override
             public void run() {
-                view.bringPositionIntoView(index);
+                view.scrollToPosition(index);
 
                 // The selection isn't updated synchronously; posting a
                 // runnable to the view's queue guarantees we'll run after the
@@ -684,7 +645,9 @@ abstract class BaseTest extends BaseRobocopTest {
                     @Override
                     public void run() {
                         // Index is relative to all views in the list.
-                        childView[0] = view.getViewAtIndex(index);
+                        final RecyclerView.ViewHolder itemViewHolder =
+                                view.findViewHolderForLayoutPosition(index);
+                        childView[0] = itemViewHolder == null ? null : itemViewHolder.itemView;
                     }
                 });
             }

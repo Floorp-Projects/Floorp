@@ -30,7 +30,7 @@ public abstract class TabsLayout extends RecyclerView
 
     private final boolean isPrivate;
     private TabsPanel tabsPanel;
-    private final TabsLayoutRecyclerAdapter tabsAdapter;
+    private final TabsLayoutAdapter tabsAdapter;
 
     public TabsLayout(Context context, AttributeSet attrs, int itemViewLayoutResId) {
         super(context, attrs);
@@ -39,7 +39,7 @@ public abstract class TabsLayout extends RecyclerView
         isPrivate = (a.getInt(R.styleable.TabsLayout_tabs, 0x0) == 1);
         a.recycle();
 
-        tabsAdapter = new TabsLayoutRecyclerAdapter(context, itemViewLayoutResId, isPrivate,
+        tabsAdapter = new TabsLayoutAdapter(context, itemViewLayoutResId, isPrivate,
                 /* close on click listener */
                 new Button.OnClickListener() {
                     @Override
@@ -101,8 +101,8 @@ public abstract class TabsLayout extends RecyclerView
                 final int tabIndex = Integer.parseInt(data);
                 tabsAdapter.notifyTabInserted(tab, tabIndex);
                 if (addAtIndexRequiresScroll(tabIndex)) {
-                    // (The current Tabs implementation updates the SELECTED tab *after* this
-                    // call to ADDED, so don't just call updateSelectedPosition().)
+                    // (The SELECTED tab is updated *after* this call to ADDED, so don't just call
+                    // updateSelectedPosition().)
                     scrollToPosition(tabIndex);
                 }
                 break;
@@ -124,9 +124,15 @@ public abstract class TabsLayout extends RecyclerView
         }
     }
 
-    // Addition of a tab at selected positions (dependent on LayoutManager) will result in a tab
-    // being added out of view - return true if index is such a position.
+    /**
+     * Addition of a tab at selected positions (dependent on LayoutManager) will result in a tab
+     * being added out of view - return true if {@code index} is such a position.
+     */
     abstract protected boolean addAtIndexRequiresScroll(int index);
+
+    protected int getSelectedAdapterPosition() {
+        return tabsAdapter.getPositionForTab(Tabs.getInstance().getSelectedTab());
+    }
 
     @Override
     public void onItemClicked(RecyclerView recyclerView, int position, View v) {
@@ -143,9 +149,9 @@ public abstract class TabsLayout extends RecyclerView
         Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.OPENED_FROM_TABS_TRAY);
     }
 
-    // Updates the selected position in the list so that it will be scrolled to the right place.
+    /** Updates the selected position in the list so that it will be scrolled to the right place. */
     private void updateSelectedPosition() {
-        final int selected = tabsAdapter.getPositionForTab(Tabs.getInstance().getSelectedTab());
+        final int selected = getSelectedAdapterPosition();
         if (selected != NO_POSITION) {
             scrollToPosition(selected);
         }
@@ -197,6 +203,15 @@ public abstract class TabsLayout extends RecyclerView
     @Override
     public void onItemDismiss(View view) {
         closeTab(view);
+    }
+
+    @Override
+    public void onChildAttachedToWindow(View child) {
+        // Make sure we reset any attributes that may have been animated in this child's previous
+        // incarnation.
+        child.setTranslationX(0);
+        child.setTranslationY(0);
+        child.setAlpha(1);
     }
 
     private Tab getTabForView(View view) {

@@ -95,7 +95,6 @@
         <item name="android:spinnerStyle">@style/Widget.Spinner</item>
         <item name="android:windowBackground">@android:color/white</item>
         <item name="bookmarksListViewStyle">@style/Widget.BookmarksListView</item>
-        <item name="tabGridLayoutViewStyle">@style/Widget.TabsGridLayout</item>
         <item name="geckoMenuListViewStyle">@style/Widget.GeckoMenuListView</item>
         <item name="homeListViewStyle">@style/Widget.HomeListView</item>
         <item name="menuItemActionBarStyle">@style/Widget.MenuItemActionBar</item>
