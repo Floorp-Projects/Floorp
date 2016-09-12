@@ -64,6 +64,12 @@ Toolchain builds create the compiler toolchains used to build Firefox.  These
 will eventually be dependencies of the builds themselves, but for the moment
 are run manually via try pushes and the results uploaded to tooltool.
 
+spidermonkey
+------------
+
+Spidermonkey tasks check out the full gecko source tree, then compile only the
+spidermonkey portion.  Each task runs specific tests after the build.
+
 Tests
 -----
 

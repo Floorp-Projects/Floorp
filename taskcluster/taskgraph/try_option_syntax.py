@@ -30,6 +30,7 @@ BUILD_KINDS = set([
     'upload-symbols',
     'valgrind',
     'static-analysis',
+    'spidermonkey',
 ])
 
 # anything in this list is governed by -j
