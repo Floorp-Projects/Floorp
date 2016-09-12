@@ -22,14 +22,26 @@ add_task(function* () {
   info("Clearing the browser cache");
   cache.clear();
 
-  let { ui } = yield openStyleEditorForURL(TEST_URL, win);
+  let { toolbox, ui } = yield openStyleEditorForURL(TEST_URL, win);
 
   is(ui.editors.length, 1, "The style editor contains one sheet.");
   let editor = ui.editors[0];
 
   yield editor.getSourceEditor();
   yield checkDiskCacheFor(TEST_HOST);
+
+  yield toolbox.destroy();
+
+  let onUnload = new Promise(done => {
+    win.addEventListener("unload", function listener(event) {
+      if (event.target == win.document) {
+        win.removeEventListener("unload", listener);
+        done();
+      }
+    });
+  });
   win.close();
+  yield onUnload;
 });
 
 function checkDiskCacheFor(host) {
