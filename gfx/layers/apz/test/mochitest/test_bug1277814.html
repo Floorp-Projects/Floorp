@@ -17,15 +17,27 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1277814
       var subframe = document.getElementById('bug1277814-div');
       subframe.classList.add('a');
 
+      // The transform change is animated, so let's step through 1s of animation
+      var utils = SpecialPowers.getDOMWindowUtils(window);
+      for (var i = 0; i < 60; i++) {
+        utils.advanceTimeAndRefresh(16);
+      }
+      utils.restoreNormalRefresh();
+
+      // Wait for the layer tree with any updated dispatch-to-content region to
+      // get pushed over to the APZ
+      yield waitForAllPaints(function() {
+        flushApzRepaints(testDriver);
+      });
+
       // Trigger layerization of the subframe by scrolling the wheel over it
-      moveMouseAndScrollWheelOver(subframe, 10, 10, testDriver);
+      yield moveMouseAndScrollWheelOver(subframe, 10, 10, testDriver);
 
       // Give APZ the chance to compute a displayport, and content
       // to render based on it.
       yield waitForApzFlushedRepaints(testDriver);
 
       // Examine the content-side APZ test data
-      var utils = SpecialPowers.getDOMWindowUtils(window);
       var contentTestData = utils.getContentAPZTestData();
 
       // Test that the scroll frame for the div 'bug1277814-div' appears in
