@@ -104,8 +104,7 @@ public:
                                     nsIAtom* aAttribute,
                                     int32_t aModType) override;
 
-  void OnVisibilityChange(Visibility aOldVisibility,
-                          Visibility aNewVisibility,
+  void OnVisibilityChange(Visibility aNewVisibility,
                           Maybe<OnNonvisible> aNonvisibleAction = Nothing()) override;
 
 #ifdef ACCESSIBILITY
