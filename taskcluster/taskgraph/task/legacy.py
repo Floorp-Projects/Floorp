@@ -515,7 +515,11 @@ class LegacyTask(base.Task):
 
             # Ensure each build graph is valid after construction.
             validate_build_task(build_task)
-            attributes = build_task['attributes'] = {'kind': 'legacy', 'legacy_kind': 'build'}
+            attributes = build_task['attributes'] = {
+                'kind': 'legacy',
+                'legacy_kind': 'build',
+                'run_on_projects': ['all'],
+            }
             if 'build_name' in build:
                 attributes['build_platform'] = build['build_name']
             if 'build_type' in task_extra:
