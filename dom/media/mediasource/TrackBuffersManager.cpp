@@ -717,7 +717,7 @@ TrackBuffersManager::SegmentParserLoop()
                      self->ScheduleSegmentParserLoop();
                    }
                  },
-                 [self] (nsresult aRejectValue) {
+                 [self] (const MediaResult& aRejectValue) {
                    self->mProcessingRequest.Complete();
                    self->RejectAppend(aRejectValue, __func__);
                  }));
@@ -743,9 +743,9 @@ TrackBuffersManager::NeedMoreData()
 }
 
 void
-TrackBuffersManager::RejectAppend(nsresult aRejectValue, const char* aName)
+TrackBuffersManager::RejectAppend(const MediaResult& aRejectValue, const char* aName)
 {
-  MSE_DEBUG("rv=%d", aRejectValue);
+  MSE_DEBUG("rv=%u", aRejectValue.Code());
   MOZ_DIAGNOSTIC_ASSERT(mCurrentTask && mCurrentTask->GetType() == SourceBufferTask::Type::AppendBuffer);
 
   mCurrentTask->As<AppendBufferTask>()->mPromise.Reject(aRejectValue, __func__);
@@ -1316,7 +1316,7 @@ TrackBuffersManager::CompleteCodedFrameProcessing()
 }
 
 void
-TrackBuffersManager::RejectProcessing(nsresult aRejectValue, const char* aName)
+TrackBuffersManager::RejectProcessing(const MediaResult& aRejectValue, const char* aName)
 {
   mProcessingPromise.RejectIfExists(aRejectValue, __func__);
 }
