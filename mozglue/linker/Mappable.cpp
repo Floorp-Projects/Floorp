@@ -506,22 +506,6 @@ MappableSeekableZStream::munmap(void *addr, size_t length)
 void
 MappableSeekableZStream::finalize() { }
 
-class AutoLock {
-public:
-  AutoLock(pthread_mutex_t *mutex): mutex(mutex)
-  {
-    if (pthread_mutex_lock(mutex))
-      MOZ_CRASH("pthread_mutex_lock failed");
-  }
-  ~AutoLock()
-  {
-    if (pthread_mutex_unlock(mutex))
-      MOZ_CRASH("pthread_mutex_unlock failed");
-  }
-private:
-  pthread_mutex_t *mutex;
-};
-
 bool
 MappableSeekableZStream::ensure(const void *addr)
 {
