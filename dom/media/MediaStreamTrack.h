@@ -61,10 +61,8 @@ public:
   };
 
   MediaStreamTrackSource(nsIPrincipal* aPrincipal,
-                         const bool aIsRemote,
                          const nsString& aLabel)
     : mPrincipal(aPrincipal),
-      mIsRemote(aIsRemote),
       mLabel(aLabel),
       mStopped(false)
   {
@@ -105,12 +103,6 @@ public:
    * lifetime.
    */
   virtual const PeerIdentity* GetPeerIdentity() const { return nullptr; }
-
-  /**
-   * Indicates whether the track is remote or not per the MediaCapture and
-   * Streams spec.
-   */
-  virtual bool IsRemote() const { return mIsRemote; }
 
   /**
    * MediaStreamTrack::GetLabel (see spec) calls through to here.
@@ -164,7 +156,7 @@ public:
   void UnregisterSink(Sink* aSink)
   {
     MOZ_ASSERT(NS_IsMainThread());
-    if (mSinks.RemoveElement(aSink) && mSinks.IsEmpty() && !IsRemote()) {
+    if (mSinks.RemoveElement(aSink) && mSinks.IsEmpty()) {
       Stop();
       mStopped = true;
     }
@@ -193,14 +185,11 @@ protected:
   // Currently registered sinks.
   nsTArray<Sink*> mSinks;
 
-  // True if this is a remote track source, i.e., a PeerConnection.
-  const bool mIsRemote;
-
   // The label of the track we are the source of per the MediaStreamTrack spec.
   const nsString mLabel;
 
-  // True if this source is not remote, all MediaStreamTrack users have
-  // unregistered from this source and Stop() has been called.
+  // True if all MediaStreamTrack users have unregistered from this source and
+  // Stop() has been called.
   bool mStopped;
 };
 
@@ -213,14 +202,13 @@ public:
   explicit BasicUnstoppableTrackSource(nsIPrincipal* aPrincipal,
                                        const MediaSourceEnum aMediaSource =
                                          MediaSourceEnum::Other)
-    : MediaStreamTrackSource(aPrincipal, true, nsString())
+    : MediaStreamTrackSource(aPrincipal, nsString())
     , mMediaSource(aMediaSource)
   {}
 
   MediaSourceEnum GetMediaSource() const override { return mMediaSource; }
 
-  void
-  GetSettings(dom::MediaTrackSettings& aResult) override {}
+  void GetSettings(dom::MediaTrackSettings& aResult) override {}
 
   void Stop() override {}
 
@@ -485,7 +473,6 @@ protected:
   nsString mID;
   MediaStreamTrackState mReadyState;
   bool mEnabled;
-  const bool mRemote;
   dom::MediaTrackConstraints mConstraints;
 };
 

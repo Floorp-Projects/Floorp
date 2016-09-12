@@ -161,7 +161,7 @@ class RemoteTrackSource : public dom::MediaStreamTrackSource
 {
 public:
   explicit RemoteTrackSource(nsIPrincipal* aPrincipal, const nsString& aLabel)
-    : dom::MediaStreamTrackSource(aPrincipal, true, aLabel) {}
+    : dom::MediaStreamTrackSource(aPrincipal, aLabel) {}
 
   dom::MediaSourceEnum GetMediaSource() const override
   {
@@ -172,7 +172,11 @@ public:
   ApplyConstraints(nsPIDOMWindowInner* aWindow,
                    const dom::MediaTrackConstraints& aConstraints) override;
 
-  void Stop() override { NS_ERROR("Can't stop a remote source!"); }
+  void Stop() override
+  {
+    // XXX Fix in later patch.
+    NS_ERROR("Can't stop a remote source!");
+  }
 
   void SetPrincipal(nsIPrincipal* aPrincipal)
   {
