@@ -215,24 +215,19 @@ OggDemuxer::Init()
 {
   int ret = ogg_sync_init(OggSyncState(TrackInfo::kAudioTrack));
   if (ret != 0) {
-    return InitPromise::CreateAndReject(DemuxerFailureReason::DEMUXER_ERROR, __func__);
+    return InitPromise::CreateAndReject(NS_ERROR_OUT_OF_MEMORY, __func__);
   }
   ret = ogg_sync_init(OggSyncState(TrackInfo::kVideoTrack));
   if (ret != 0) {
-    return InitPromise::CreateAndReject(DemuxerFailureReason::DEMUXER_ERROR, __func__);
+    return InitPromise::CreateAndReject(NS_ERROR_OUT_OF_MEMORY, __func__);
   }
-  /*
-  if (InitBufferedState() != NS_OK) {
-    return InitPromise::CreateAndReject(DemuxerFailureReason::WAITING_FOR_DATA, __func__);
-  }
-  */
   if (ReadMetadata() != NS_OK) {
-    return InitPromise::CreateAndReject(DemuxerFailureReason::DEMUXER_ERROR, __func__);
+    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_METADATA_ERR, __func__);
   }
 
   if (!GetNumberTracks(TrackInfo::kAudioTrack) &&
       !GetNumberTracks(TrackInfo::kVideoTrack)) {
-    return InitPromise::CreateAndReject(DemuxerFailureReason::DEMUXER_ERROR, __func__);
+    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_METADATA_ERR, __func__);
   }
 
   return InitPromise::CreateAndResolve(NS_OK, __func__);
@@ -1483,7 +1478,7 @@ OggTrackDemuxer::Seek(TimeUnit aTime)
 
     return SeekPromise::CreateAndResolve(seekTime, __func__);
   } else {
-    return SeekPromise::CreateAndReject(DemuxerFailureReason::DEMUXER_ERROR, __func__);
+    return SeekPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_DEMUXER_ERR, __func__);
   }
 }
 
@@ -1516,7 +1511,7 @@ OggTrackDemuxer::GetSamples(int32_t aNumSamples)
 {
   RefPtr<SamplesHolder> samples = new SamplesHolder;
   if (!aNumSamples) {
-    return SamplesPromise::CreateAndReject(DemuxerFailureReason::DEMUXER_ERROR, __func__);
+    return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_DEMUXER_ERR, __func__);
   }
 
   while (aNumSamples) {
@@ -1529,7 +1524,7 @@ OggTrackDemuxer::GetSamples(int32_t aNumSamples)
   }
 
   if (samples->mSamples.IsEmpty()) {
-    return SamplesPromise::CreateAndReject(DemuxerFailureReason::END_OF_STREAM, __func__);
+    return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_END_OF_STREAM, __func__);
   } else {
     return SamplesPromise::CreateAndResolve(samples, __func__);
   }
@@ -1563,7 +1558,7 @@ OggTrackDemuxer::SkipToNextRandomAccessPoint(TimeUnit aTimeThreshold)
                parsed);
     return SkipAccessPointPromise::CreateAndResolve(parsed, __func__);
   } else {
-    SkipFailureHolder failure(DemuxerFailureReason::END_OF_STREAM, parsed);
+    SkipFailureHolder failure(NS_ERROR_DOM_MEDIA_END_OF_STREAM, parsed);
     return SkipAccessPointPromise::CreateAndReject(Move(failure), __func__);
   }
 }

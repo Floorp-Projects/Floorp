@@ -451,7 +451,7 @@ SourceBuffer::AppendDataErrored(const MediaResult& aError)
   mPendingAppend.Complete();
 
   switch (aError.Code()) {
-    case NS_ERROR_ABORT:
+    case NS_ERROR_DOM_MEDIA_CANCELED:
       // Nothing further to do as the trackbuffer has been shutdown.
       // or append was aborted and abort() has handled all the events.
       break;

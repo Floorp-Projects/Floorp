@@ -488,22 +488,22 @@ private:
   RefPtr<MediaDataDemuxer> mDemuxer;
   bool mDemuxerInitDone;
   void OnDemuxerInitDone(nsresult);
-  void OnDemuxerInitFailed(DemuxerFailureReason aFailure);
+  void OnDemuxerInitFailed(const MediaResult& aError);
   MozPromiseRequestHolder<MediaDataDemuxer::InitPromise> mDemuxerInitRequest;
-  void OnDemuxFailed(TrackType aTrack, DemuxerFailureReason aFailure);
+  void OnDemuxFailed(TrackType aTrack, const MediaResult& aError);
 
   void DoDemuxVideo();
   void OnVideoDemuxCompleted(RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples);
-  void OnVideoDemuxFailed(DemuxerFailureReason aFailure)
+  void OnVideoDemuxFailed(const MediaResult& aError)
   {
-    OnDemuxFailed(TrackType::kVideoTrack, aFailure);
+    OnDemuxFailed(TrackType::kVideoTrack, aError);
   }
 
   void DoDemuxAudio();
   void OnAudioDemuxCompleted(RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples);
-  void OnAudioDemuxFailed(DemuxerFailureReason aFailure)
+  void OnAudioDemuxFailed(const MediaResult& aError)
   {
-    OnDemuxFailed(TrackType::kAudioTrack, aFailure);
+    OnDemuxFailed(TrackType::kAudioTrack, aError);
   }
 
   void SkipVideoDemuxToNextKeyFrame(media::TimeUnit aTimeThreshold);
@@ -551,15 +551,15 @@ private:
   }
   void ScheduleSeek();
   void AttemptSeek();
-  void OnSeekFailed(TrackType aTrack, DemuxerFailureReason aFailure);
+  void OnSeekFailed(TrackType aTrack, const MediaResult& aError);
   void DoVideoSeek();
   void OnVideoSeekCompleted(media::TimeUnit aTime);
-  void OnVideoSeekFailed(DemuxerFailureReason aFailure);
+  void OnVideoSeekFailed(const MediaResult& aError);
   bool mSeekScheduled;
 
   void DoAudioSeek();
   void OnAudioSeekCompleted(media::TimeUnit aTime);
-  void OnAudioSeekFailed(DemuxerFailureReason aFailure);
+  void OnAudioSeekFailed(const MediaResult& aError);
   // The SeekTarget that was last given to Seek()
   SeekTarget mOriginalSeekTarget;
   // Temporary seek information while we wait for the data
