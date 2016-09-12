@@ -33,6 +33,9 @@
   --toolbarbutton-checkedhover-backgroundcolor: rgba(200,200,200,.5);
 
   --panel-separator-color: ThreeDShadow;
+  --arrowpanel-dimmed: hsla(210,4%,10%,.07);
+  --arrowpanel-dimmed-further: hsla(210,4%,10%,.12);
+  --arrowpanel-dimmed-even-further: hsla(210,4%,10%,.17);
 
   --urlbar-separator-color: ThreeDShadow;
 }
@@ -995,7 +998,7 @@ toolbaritem[cui-areatype="menu-panel"] > :-moz-any(@nestedButtons@) > .toolbarbu
 
 #urlbar-search-footer {
   border-top: 1px solid var(--panel-separator-color);
-  background-color: hsla(210,4%,10%,.07);
+  background-color: var(--arrowpanel-dimmed);
 }
 
 #urlbar-search-settings {
@@ -1009,11 +1012,11 @@ toolbaritem[cui-areatype="menu-panel"] > :-moz-any(@nestedButtons@) > .toolbarbu
 }
 
 #urlbar-search-settings:hover {
-  background-color: hsla(210,4%,10%,.07);
+  background-color: var(--arrowpanel-dimmed);
 }
 
 #urlbar-search-settings:hover:active {
-  background-color: hsla(210,4%,10%,.12);
+  background-color: var(--arrowpanel-dimmed-further);
 }
 
 #urlbar-search-splitter {
