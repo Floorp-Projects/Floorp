@@ -70,6 +70,7 @@ public:
     PRThread* thread = nullptr;
     mTarget->GetPRThread(&thread);
     bool in = PR_GetCurrentThread() == thread;
+    MOZ_ASSERT(in == (GetCurrent() == this));
     return in;
   }
 

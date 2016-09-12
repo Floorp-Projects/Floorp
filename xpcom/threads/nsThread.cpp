@@ -748,8 +748,7 @@ nsThread::DispatchInternal(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags
     return NS_OK;
   }
 
-  NS_ASSERTION(aFlags == NS_DISPATCH_NORMAL ||
-               aFlags == NS_DISPATCH_AT_END, "unexpected dispatch flags");
+  NS_ASSERTION(aFlags == NS_DISPATCH_NORMAL, "unexpected dispatch flags");
   return PutEvent(event.take(), aTarget);
 }
 
