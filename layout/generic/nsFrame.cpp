@@ -2740,6 +2740,13 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
       !PresContext()->GetTheme()->WidgetIsContainer(ourDisp->mAppearance))
     return;
 
+  // Since we're now sure that we're adding this frame to the display list
+  // (which means we're painting it, modulo occlusion), mark it as visible
+  // within the displayport.
+  if (aBuilder->IsPaintingToWindow() && child->TrackingVisibility()) {
+    child->PresContext()->PresShell()->EnsureFrameInApproximatelyVisibleList(child);
+  }
+
   // Child is composited if it's transformed, partially transparent, or has
   // SVG effects or a blend mode..
   const nsStyleDisplay* disp = child->StyleDisplay();
