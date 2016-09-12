@@ -17,7 +17,7 @@ const TEST_THRESHOLD = {
 };
 
 const ADDON_ROLLOUT_POLICY = {
-  "beta"    : "49a", // 10 tested add-ons + any WebExtension
+  "beta"    : "50allmpc", // Any WebExtension or addon with mpc = true
   "release" : "49a", // 10 tested add-ons + any WebExtension
 };
 
@@ -28,6 +28,7 @@ const PREF_E10S_FORCE_ENABLED  = "browser.tabs.remote.force-enable";
 const PREF_E10S_FORCE_DISABLED = "browser.tabs.remote.force-disable";
 const PREF_TOGGLE_E10S         = "browser.tabs.remote.autostart.2";
 const PREF_E10S_ADDON_POLICY   = "extensions.e10s.rollout.policy";
+const PREF_E10S_ADDON_BLOCKLIST = "extensions.e10s.rollout.blocklist";
 const PREF_E10S_HAS_NONEXEMPT_ADDON = "extensions.e10s.rollout.hasAddon";
 
 function startup() {
@@ -64,9 +65,13 @@ function defineCohort() {
   let addonPolicy = "unknown";
   if (updateChannel in ADDON_ROLLOUT_POLICY) {
     addonPolicy = ADDON_ROLLOUT_POLICY[updateChannel];
-    Preferences.set(PREF_E10S_ADDON_POLICY, ADDON_ROLLOUT_POLICY[updateChannel]);
+    Preferences.set(PREF_E10S_ADDON_POLICY, addonPolicy);
     // This is also the proper place to set the blocklist pref
     // in case it is necessary.
+
+    // Tab Mix Plus exception tracked at bug 1185672.
+    Preferences.set(PREF_E10S_ADDON_BLOCKLIST,
+                    "{dc572301-7619-498c-a57d-39143191b318}");
   } else {
     Preferences.reset(PREF_E10S_ADDON_POLICY);
   }
