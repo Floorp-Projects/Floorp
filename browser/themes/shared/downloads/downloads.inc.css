@@ -41,7 +41,7 @@
 }
 
 .downloadsPanelFooter {
-  background-color: hsla(210,4%,10%,.07);
+  background-color: var(--arrowpanel-dimmed);
   border-top: 1px solid var(--panel-separator-color);
 }
 
@@ -65,14 +65,14 @@
 }
 
 .downloadsPanelFooterButton:hover {
-  outline: 1px solid hsla(210,4%,10%,.07);
-  background-color: hsla(210,4%,10%,.07);
+  outline: 1px solid var(--arrowpanel-dimmed);
+  background-color: var(--arrowpanel-dimmed);
 }
 
 .downloadsPanelFooterButton:hover:active,
 .downloadsPanelFooterButton[open="true"] {
-  outline: 1px solid hsla(210,4%,10%,.12);
-  background-color: hsla(210,4%,10%,.12);
+  outline: 1px solid var(--arrowpanel-dimmed-further);
+  background-color: var(--arrowpanel-dimmed-further);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
 }
 
