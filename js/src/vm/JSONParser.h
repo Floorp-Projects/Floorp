@@ -214,7 +214,7 @@ class MOZ_STACK_CLASS JSONParser : public JSONParserBase
 
     /* Allow move construction for use with Rooted. */
     JSONParser(JSONParser&& other)
-      : JSONParserBase(mozilla::Forward<JSONParser>(other)),
+      : JSONParserBase(mozilla::Move(other)),
         current(other.current),
         begin(other.begin),
         end(other.end)

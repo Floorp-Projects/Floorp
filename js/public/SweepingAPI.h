@@ -50,7 +50,7 @@ class WeakCache : public js::WeakCacheBase<T>,
     }
     WeakCache(WeakCache&& other)
       : sweeper(other.sweeper),
-        cache(mozilla::Forward<T>(other.cache))
+        cache(mozilla::Move(other.cache))
     {
     }
 
