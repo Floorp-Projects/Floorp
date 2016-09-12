@@ -112,6 +112,12 @@ a {
   max-width: 40%;
 }
 
+.stack-trace {
+  /* The markup contains extra whitespace to improve formatting of clipboard text.
+     Make sure this whitespace doesn't affect the HTML rendering */
+  white-space: normal;
+}
+
 .stack-trace .frame-link-source,
 .message-location .frame-link-source {
   /* Makes the file name truncated (and ellipsis shown) on the left side */
