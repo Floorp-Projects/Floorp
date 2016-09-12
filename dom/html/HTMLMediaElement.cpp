@@ -6017,6 +6017,56 @@ HTMLMediaElement::IsAllowedToPlay()
   return true;
 }
 
+static const char* VisibilityString(Visibility aVisibility) {
+  switch(aVisibility) {
+    case Visibility::UNTRACKED: {
+      return "UNTRACKED";
+    }
+    case Visibility::APPROXIMATELY_NONVISIBLE: {
+      return "APPROXIMATELY_NONVISIBLE";
+    }
+    case Visibility::APPROXIMATELY_VISIBLE: {
+      return "APPROXIMATELY_VISIBLE";
+    }
+  }
+
+  return "NAN";
+}
+
+void
+HTMLMediaElement::OnVisibilityChange(Visibility aNewVisibility)
+{
+  LOG(LogLevel::Debug, ("OnVisibilityChange(): %s\n",
+      VisibilityString(aNewVisibility)));
+
+  if (!mDecoder) {
+    return;
+  }
+
+  switch (aNewVisibility) {
+    case Visibility::UNTRACKED: {
+        MOZ_ASSERT_UNREACHABLE("Shouldn't notify for untracked visibility");
+        break;
+    }
+    case Visibility::APPROXIMATELY_NONVISIBLE: {
+      if (mPlayTime.IsStarted()) {
+        // Not visible, play time is running -> Start hidden play time if needed.
+        HiddenVideoStart();
+      }
+
+      mDecoder->NotifyOwnerActivityChanged(false);
+      break;
+    }
+    case Visibility::APPROXIMATELY_VISIBLE: {
+      // Visible -> Just pause hidden play time (no-op if already paused).
+      HiddenVideoStop();
+
+      mDecoder->NotifyOwnerActivityChanged(true);
+      break;
+    }
+  }
+
+}
 #ifdef MOZ_EME
 MediaKeys*
 HTMLMediaElement::GetMediaKeys() const
@@ -6454,84 +6504,6 @@ HTMLMediaElement::OpenUnsupportedMediaWithExtenalAppIfNeeded()
                                        NS_LITERAL_STRING("OpenMediaWithExternalApp"),
                                        true,
                                        true);
-}
-
-static const char* VisibilityString(Visibility aVisibility) {
-  switch(aVisibility) {
-    case Visibility::UNTRACKED: {
-      return "UNTRACKED";
-    }
-    case Visibility::NONVISIBLE: {
-      return "NONVISIBLE";
-    }
-    case Visibility::MAY_BECOME_VISIBLE: {
-      return "MAY_BECOME_VISIBLE";
-    }
-    case Visibility::IN_DISPLAYPORT: {
-      return "IN_DISPLAYPORT";
-    }
-  }
-
-  return "NAN";
-}
-
-// The visibility enumeration contains three states:
-// {NONVISIBLE, MAY_BECOME_VISIBLE, IN_DISPLAYPORT}.
-// Here, I implement a conservative mechanism:
-// (1) {MAY_BECOME_VISIBLE, IN_DISPLAYPORT} -> NONVISIBLE:
-//     notify the decoder to suspend.
-// (2) {NONVISIBLE, MAY_BECOME_VISIBLE} -> IN_DISPLAYPORT:
-//     notify the decoder to resume.
-// (3) IN_DISPLAYPORT -> MAY_BECOME_VISIBLE:
-//     do nothing here because users might scroll back immediately.
-// (4) NONVISIBLE -> MAY_BECOME_VISIBLE:
-//     notify the decoder to resume because users might continue their scroll
-//     direction and the video might be IN_DISPLAYPORT soon.
-void
-HTMLMediaElement::OnVisibilityChange(Visibility aOldVisibility,
-                                     Visibility aNewVisibility)
-{
-  LOG(LogLevel::Debug, ("OnVisibilityChange(): %s -> %s\n",
-      VisibilityString(aOldVisibility),VisibilityString(aNewVisibility)));
-
-  if (!mDecoder) {
-    return;
-  }
-
-  switch (aNewVisibility) {
-    case Visibility::UNTRACKED: {
-        MOZ_ASSERT_UNREACHABLE("Shouldn't notify for untracked visibility");
-        break;
-    }
-    case Visibility::NONVISIBLE: {
-      if (mPlayTime.IsStarted()) {
-        // Not visible, play time is running -> Start hidden play time if needed.
-        HiddenVideoStart();
-      }
-
-      mDecoder->NotifyOwnerActivityChanged(false);
-      break;
-    }
-    case Visibility::MAY_BECOME_VISIBLE: {
-      if (aOldVisibility == Visibility::NONVISIBLE) {
-        // Visible -> Just pause hidden play time (no-op if already paused).
-        HiddenVideoStop();
-
-        mDecoder->NotifyOwnerActivityChanged(true);
-      } else if (aOldVisibility == Visibility::IN_DISPLAYPORT) {
-        // Do nothing.
-      }
-      break;
-    }
-    case Visibility::IN_DISPLAYPORT: {
-      // Visible -> Just pause hidden play time (no-op if already paused).
-      HiddenVideoStop();
-
-      mDecoder->NotifyOwnerActivityChanged(true);
-      break;
-    }
-  }
-
 }
 
 bool

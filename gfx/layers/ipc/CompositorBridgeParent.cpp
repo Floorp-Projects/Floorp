@@ -946,19 +946,19 @@ CompositorBridgeParent::RecvStopFrameTimeRecording(const uint32_t& aStartIndex,
 }
 
 bool
-CompositorBridgeParent::RecvClearVisibleRegions(const uint64_t& aLayersId,
-                                                const uint32_t& aPresShellId)
+CompositorBridgeParent::RecvClearApproximatelyVisibleRegions(const uint64_t& aLayersId,
+                                                            const uint32_t& aPresShellId)
 {
-  ClearVisibleRegions(aLayersId, Some(aPresShellId));
+  ClearApproximatelyVisibleRegions(aLayersId, Some(aPresShellId));
   return true;
 }
 
 void
-CompositorBridgeParent::ClearVisibleRegions(const uint64_t& aLayersId,
-                                            const Maybe<uint32_t>& aPresShellId)
+CompositorBridgeParent::ClearApproximatelyVisibleRegions(const uint64_t& aLayersId,
+                                                         const Maybe<uint32_t>& aPresShellId)
 {
   if (mLayerManager) {
-    mLayerManager->ClearVisibleRegions(aLayersId, aPresShellId);
+    mLayerManager->ClearApproximatelyVisibleRegions(aLayersId, aPresShellId);
 
     // We need to recomposite to update the minimap.
     ScheduleComposition();
@@ -966,25 +966,16 @@ CompositorBridgeParent::ClearVisibleRegions(const uint64_t& aLayersId,
 }
 
 bool
-CompositorBridgeParent::RecvUpdateVisibleRegion(const VisibilityCounter& aCounter,
-                                                const ScrollableLayerGuid& aGuid,
-                                                const CSSIntRegion& aRegion)
-{
-  UpdateVisibleRegion(aCounter, aGuid, aRegion);
-  return true;
-}
-
-void
-CompositorBridgeParent::UpdateVisibleRegion(const VisibilityCounter& aCounter,
-                                            const ScrollableLayerGuid& aGuid,
-                                            const CSSIntRegion& aRegion)
+CompositorBridgeParent::RecvNotifyApproximatelyVisibleRegion(const ScrollableLayerGuid& aGuid,
+                                                             const CSSIntRegion& aRegion)
 {
   if (mLayerManager) {
-    mLayerManager->UpdateVisibleRegion(aCounter, aGuid, aRegion);
+    mLayerManager->UpdateApproximatelyVisibleRegion(aGuid, aRegion);
 
     // We need to recomposite to update the minimap.
     ScheduleComposition();
   }
+  return true;
 }
 
 void
@@ -1929,7 +1920,7 @@ EraseLayerState(uint64_t aId)
   if (iter != sIndirectLayerTrees.end()) {
     CompositorBridgeParent* parent = iter->second.mParent;
     if (parent) {
-      parent->ClearVisibleRegions(aId, Nothing());
+      parent->ClearApproximatelyVisibleRegions(aId, Nothing());
     }
 
     sIndirectLayerTrees.erase(iter);
@@ -2152,38 +2143,31 @@ public:
   virtual bool RecvStartFrameTimeRecording(const int32_t& aBufferSize, uint32_t* aOutStartIndex) override { return true; }
   virtual bool RecvStopFrameTimeRecording(const uint32_t& aStartIndex, InfallibleTArray<float>* intervals) override  { return true; }
 
-  virtual bool RecvClearVisibleRegions(const uint64_t& aLayersId,
-                                       const uint32_t& aPresShellId) override
+  virtual bool RecvClearApproximatelyVisibleRegions(const uint64_t& aLayersId,
+                                                    const uint32_t& aPresShellId) override
   {
     CompositorBridgeParent* parent;
     { // scope lock
       MonitorAutoLock lock(*sIndirectLayerTreesLock);
       parent = sIndirectLayerTrees[aLayersId].mParent;
     }
-
-    if (!parent) {
-      return false;
+    if (parent) {
+      parent->ClearApproximatelyVisibleRegions(aLayersId, Some(aPresShellId));
     }
-
-    parent->ClearVisibleRegions(aLayersId, Some(aPresShellId));
     return true;
   }
 
-  virtual bool RecvUpdateVisibleRegion(const VisibilityCounter& aCounter,
-                                       const ScrollableLayerGuid& aGuid,
-                                       const CSSIntRegion& aRegion) override
+  virtual bool RecvNotifyApproximatelyVisibleRegion(const ScrollableLayerGuid& aGuid,
+                                                    const CSSIntRegion& aRegion) override
   {
     CompositorBridgeParent* parent;
     { // scope lock
       MonitorAutoLock lock(*sIndirectLayerTreesLock);
       parent = sIndirectLayerTrees[aGuid.mLayersId].mParent;
     }
-
-    if (!parent) {
-      return false;
+    if (parent) {
+      return parent->RecvNotifyApproximatelyVisibleRegion(aGuid, aRegion);
     }
-
-    parent->UpdateVisibleRegion(aCounter, aGuid, aRegion);
     return true;
   }
 
