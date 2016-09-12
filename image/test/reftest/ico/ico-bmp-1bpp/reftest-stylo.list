@@ -3,7 +3,7 @@
 
 # Images of various sizes
 == ico-size-1x1-1bpp.ico ico-size-1x1-1bpp.ico
-fails == ico-size-2x2-1bpp.ico ico-size-2x2-1bpp.ico
+== ico-size-2x2-1bpp.ico ico-size-2x2-1bpp.ico
 == ico-size-3x3-1bpp.ico ico-size-3x3-1bpp.ico
 == ico-size-4x4-1bpp.ico ico-size-4x4-1bpp.ico
 == ico-size-5x5-1bpp.ico ico-size-5x5-1bpp.ico

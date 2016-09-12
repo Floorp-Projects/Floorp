@@ -2,7 +2,7 @@
 skip-if(B2G||Mulet) == ellipsis-font-fallback.html ellipsis-font-fallback.html
 # Initial mulet triage: parity with B2G/B2G Desktop
 == line-clipping.html line-clipping.html
-fuzzy-if(Android,16,244) skip-if(B2G||Mulet) HTTP(..) == marker-basic.html marker-basic.html
+skip HTTP(..) == marker-basic.html marker-basic.html
 # Bug 1128229
 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) HTTP(..) == marker-string.html marker-string.html

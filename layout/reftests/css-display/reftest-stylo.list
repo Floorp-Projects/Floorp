@@ -3,9 +3,9 @@
 # http://dev.w3.org/csswg/css-display
 
 fuzzy-if(Android,8,604) pref(layout.css.display-contents.enabled,true) == display-contents-acid.html display-contents-acid.html
-fails fuzzy-if(Android,8,604) pref(layout.css.display-contents.enabled,true) == display-contents-acid-dyn-1.html display-contents-acid-dyn-1.html
-fails fuzzy-if(Android,8,604) pref(layout.css.display-contents.enabled,true) == display-contents-acid-dyn-2.html display-contents-acid-dyn-2.html
-fails fuzzy-if(Android,8,604) pref(layout.css.display-contents.enabled,true) == display-contents-acid-dyn-3.html display-contents-acid-dyn-3.html
+random pref(layout.css.display-contents.enabled,true) == display-contents-acid-dyn-1.html display-contents-acid-dyn-1.html
+random pref(layout.css.display-contents.enabled,true) == display-contents-acid-dyn-2.html display-contents-acid-dyn-2.html
+random pref(layout.css.display-contents.enabled,true) == display-contents-acid-dyn-3.html display-contents-acid-dyn-3.html
 pref(layout.css.display-contents.enabled,true) == display-contents-generated-content.html display-contents-generated-content.html
 pref(layout.css.display-contents.enabled,true) == display-contents-generated-content-2.html display-contents-generated-content-2.html
 pref(layout.css.display-contents.enabled,true) == display-contents-style-inheritance-1.html display-contents-style-inheritance-1.html
@@ -16,7 +16,7 @@ pref(layout.css.display-contents.enabled,true) == display-contents-tables-2.xhtm
 pref(layout.css.display-contents.enabled,true) == display-contents-tables-3.xhtml display-contents-tables-3.xhtml
 pref(layout.css.display-contents.enabled,true) == display-contents-visibility-hidden.html display-contents-visibility-hidden.html
 pref(layout.css.display-contents.enabled,true) == display-contents-visibility-hidden-2.html display-contents-visibility-hidden-2.html
-pref(layout.css.display-contents.enabled,true) == display-contents-495385-2d.html display-contents-495385-2d.html
+random pref(layout.css.display-contents.enabled,true) == display-contents-495385-2d.html display-contents-495385-2d.html
 skip-if(B2G||Mulet) fuzzy-if(Android,7,3935) pref(layout.css.display-contents.enabled,true) == display-contents-xbl.xhtml display-contents-xbl.xhtml
 # Initial mulet triage: parity with B2G/B2G Desktop
 # fuzzy-if(Android,7,1186) pref(layout.css.display-contents.enabled,true) pref(dom.webcomponents.enabled,true) == display-contents-shadow-dom-1.html display-contents-shadow-dom-1.html

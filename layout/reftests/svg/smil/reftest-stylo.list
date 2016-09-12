@@ -144,7 +144,7 @@ fuzzy-if(skiaContent,1,600) == anim-feGaussianBlur-01.svg anim-feGaussianBlur-01
 fuzzy-if(Android,4,1) == anim-svg-viewBox-01.svg anim-svg-viewBox-01.svg
 == anim-svg-viewBox-02.svg anim-svg-viewBox-02.svg
 == anim-svg-viewBox-03.svg anim-svg-viewBox-03.svg
-== anim-view-01.svg#view anim-view-01.svg#view
+skip == anim-view-01.svg#view anim-view-01.svg#view
 
 # animate some preserveAspectRatio attributes
 == anim-feImage-preserveAspectRatio-01.svg anim-feImage-preserveAspectRatio-01.svg

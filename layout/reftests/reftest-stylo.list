@@ -57,7 +57,8 @@ include canvas/reftest-stylo.list
 include ../../dom/canvas/test/reftest/reftest-stylo.list
 
 # css animations
-include css-animations/reftest-stylo.list
+# disabled due to timeouts
+# include css-animations/reftest-stylo.list
 
 # blending/
 include css-blending/reftest-stylo.list
@@ -186,7 +187,8 @@ include css-grid/reftest-stylo.list
 include floats/reftest-stylo.list
 
 # font-face
-include font-face/reftest-stylo.list
+# Lots of Stylo intermittents
+# include font-face/reftest-stylo.list
 
 # font features (opentype)
 include font-features/reftest-stylo.list
@@ -261,13 +263,13 @@ include ../../netwerk/test/reftest/reftest-stylo.list
 include outline/reftest-stylo.list
 
 # object/
-include object/reftest-stylo.list
+# include object/reftest-stylo.list
 
 # ogg-video/
 skip-if(!B2G&&browserIsRemote) include ogg-video/reftest-stylo.list
 
 # webm-video/
-skip-if(!B2G&&browserIsRemote) include webm-video/reftest-stylo.list
+# skip-if(!B2G&&browserIsRemote) include webm-video/reftest-stylo.list
 
 # mp4-video/
 skip-if(!B2G&&browserIsRemote) include mp4-video/reftest-stylo.list
@@ -282,7 +284,7 @@ include percent-overflow-sizing/reftest-stylo.list
 include pixel-rounding/reftest-stylo.list
 
 # plugin/
-include ../../dom/plugins/test/reftest/reftest-stylo.list
+# include ../../dom/plugins/test/reftest/reftest-stylo.list
 
 # position-dynamic-changes/
 include position-dynamic-changes/reftest-stylo.list
