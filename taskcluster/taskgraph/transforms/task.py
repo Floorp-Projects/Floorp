@@ -212,6 +212,16 @@ task_description_schema = Schema({
             Extra: basestring,  # additional properties are allowed
         },
     }),
+
+    # The "when" section contains descriptions of the circumstances
+    # under which this task can be "optimized", that is, left out of the
+    # task graph because it is unnecessary.
+    Optional('when'): Any({
+        # This task only needs to be run if a file matching one of the given
+        # patterns has changed in the push.  The patterns use the mozpack
+        # match function (python/mozbuild/mozpack/path.py).
+        Optional('files-changed'): [basestring],
+    }),
 })
 
 GROUP_NAMES = {

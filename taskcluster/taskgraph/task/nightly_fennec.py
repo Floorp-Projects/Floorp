@@ -109,5 +109,5 @@ class NightlyFennecTask(base.Task):
 
         return deps
 
-    def optimize(self):
+    def optimize(self, params):
         return False, None

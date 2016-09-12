@@ -1,0 +1,425 @@
+{
+    "changesets": [
+        {
+            "author": "James Long <longster@gmail.com>",
+            "backsoutnodes": [],
+            "bugs": [
+                {
+                    "no": "1300866",
+                    "url": "https://bugzilla.mozilla.org/show_bug.cgi?id=1300866"
+                }
+            ],
+            "date": [
+                1473196655.0,
+                14400
+            ],
+            "desc": "Bug 1300866 - expose devtools require to new debugger r=jlast,bgrins",
+            "extra": {
+                "branch": "default"
+            },
+            "files": [
+                "devtools/client/debugger/new/index.html"
+            ],
+            "node": "ae2144aa4356b65c2f8c0de8c9082dcb7e330e24",
+            "parents": [
+                "37c9349b4e8167a61b08b7e119c21ea177b98942"
+            ],
+            "perfherderurl": "https://treeherder.mozilla.org/perf.html#/compare?originalProject=mozilla-central&originalRevision=a14f88a9af7a59e677478694bafd9375ac53683e&newProject=mozilla-central&newRevision=ae2144aa4356b65c2f8c0de8c9082dcb7e330e24",
+            "pushdate": [
+                1473261248,
+                0
+            ],
+            "pushhead": "a14f88a9af7a59e677478694bafd9375ac53683e",
+            "pushid": 30664,
+            "pushnodes": [
+                "ae2144aa4356b65c2f8c0de8c9082dcb7e330e24",
+                "73a6a267a50a0e1c41e689b265ad3eebe43d7ac6",
+                "16a1a91f9269ab95dd83eb29dc5d0227665f7d94",
+                "99c542fa43a72ee863c813b5624048d1b443549b",
+                "a6b6a93eb41a05e310a11f0172f01ba9b21d3eac",
+                "541c9086c0f27fba60beecc9bc94543103895c86",
+                "041a925171e431bf51fb50193ab19d156088c89a",
+                "a14f88a9af7a59e677478694bafd9375ac53683e"
+            ],
+            "pushuser": "cbook@mozilla.com",
+            "rev": 312890,
+            "reviewers": [
+                {
+                    "name": "jlast",
+                    "revset": "reviewer(jlast)"
+                },
+                {
+                    "name": "bgrins",
+                    "revset": "reviewer(bgrins)"
+                }
+            ],
+            "treeherderrepo": "mozilla-central",
+            "treeherderrepourl": "https://treeherder.mozilla.org/#/jobs?repo=mozilla-central"
+        },
+        {
+            "author": "Wes Kocher <wkocher@mozilla.com>",
+            "backsoutnodes": [],
+            "bugs": [],
+            "date": [
+                1473208638.0,
+                25200
+            ],
+            "desc": "Merge m-c to fx-team, a=merge",
+            "extra": {
+                "branch": "default"
+            },
+            "files": [
+                "taskcluster/scripts/builder/build-l10n.sh"
+            ],
+            "node": "73a6a267a50a0e1c41e689b265ad3eebe43d7ac6",
+            "parents": [
+                "ae2144aa4356b65c2f8c0de8c9082dcb7e330e24",
+                "91c2b9d5c1354ca79e5b174591dbb03b32b15bbf"
+            ],
+            "perfherderurl": "https://treeherder.mozilla.org/perf.html#/compare?originalProject=mozilla-central&originalRevision=a14f88a9af7a59e677478694bafd9375ac53683e&newProject=mozilla-central&newRevision=ae2144aa4356b65c2f8c0de8c9082dcb7e330e24",
+            "pushdate": [
+                1473261248,
+                0
+            ],
+            "pushhead": "a14f88a9af7a59e677478694bafd9375ac53683e",
+            "pushid": 30664,
+            "pushnodes": [
+                "ae2144aa4356b65c2f8c0de8c9082dcb7e330e24",
+                "73a6a267a50a0e1c41e689b265ad3eebe43d7ac6",
+                "16a1a91f9269ab95dd83eb29dc5d0227665f7d94",
+                "99c542fa43a72ee863c813b5624048d1b443549b",
+                "a6b6a93eb41a05e310a11f0172f01ba9b21d3eac",
+                "541c9086c0f27fba60beecc9bc94543103895c86",
+                "041a925171e431bf51fb50193ab19d156088c89a",
+                "a14f88a9af7a59e677478694bafd9375ac53683e"
+            ],
+            "pushuser": "cbook@mozilla.com",
+            "rev": 312891,
+            "reviewers": [
+                {
+                    "name": "merge",
+                    "revset": "reviewer(merge)"
+                }
+            ],
+            "treeherderrepo": "mozilla-central",
+            "treeherderrepourl": "https://treeherder.mozilla.org/#/jobs?repo=mozilla-central"
+        },
+        {
+            "author": "Towkir Ahmed <towkir17@gmail.com>",
+            "backsoutnodes": [],
+            "bugs": [
+                {
+                    "no": "1296648",
+                    "url": "https://bugzilla.mozilla.org/show_bug.cgi?id=1296648"
+                }
+            ],
+            "date": [
+                1472957580.0,
+                14400
+            ],
+            "desc": "Bug 1296648 - Fix direction of .ruleview-expander.theme-twisty in RTL locales. r=ntim",
+            "extra": {
+                "branch": "default"
+            },
+            "files": [
+                "devtools/client/themes/rules.css"
+            ],
+            "node": "16a1a91f9269ab95dd83eb29dc5d0227665f7d94",
+            "parents": [
+                "73a6a267a50a0e1c41e689b265ad3eebe43d7ac6"
+            ],
+            "perfherderurl": "https://treeherder.mozilla.org/perf.html#/compare?originalProject=mozilla-central&originalRevision=a14f88a9af7a59e677478694bafd9375ac53683e&newProject=mozilla-central&newRevision=ae2144aa4356b65c2f8c0de8c9082dcb7e330e24",
+            "pushdate": [
+                1473261248,
+                0
+            ],
+            "pushhead": "a14f88a9af7a59e677478694bafd9375ac53683e",
+            "pushid": 30664,
+            "pushnodes": [
+                "ae2144aa4356b65c2f8c0de8c9082dcb7e330e24",
+                "73a6a267a50a0e1c41e689b265ad3eebe43d7ac6",
+                "16a1a91f9269ab95dd83eb29dc5d0227665f7d94",
+                "99c542fa43a72ee863c813b5624048d1b443549b",
+                "a6b6a93eb41a05e310a11f0172f01ba9b21d3eac",
+                "541c9086c0f27fba60beecc9bc94543103895c86",
+                "041a925171e431bf51fb50193ab19d156088c89a",
+                "a14f88a9af7a59e677478694bafd9375ac53683e"
+            ],
+            "pushuser": "cbook@mozilla.com",
+            "rev": 312892,
+            "reviewers": [
+                {
+                    "name": "ntim",
+                    "revset": "reviewer(ntim)"
+                }
+            ],
+            "treeherderrepo": "mozilla-central",
+            "treeherderrepourl": "https://treeherder.mozilla.org/#/jobs?repo=mozilla-central"
+        },
+        {
+            "author": "Oriol <oriol-bugzilla@hotmail.com>",
+            "backsoutnodes": [],
+            "bugs": [
+                {
+                    "no": "1300336",
+                    "url": "https://bugzilla.mozilla.org/show_bug.cgi?id=1300336"
+                }
+            ],
+            "date": [
+                1472921160.0,
+                14400
+            ],
+            "desc": "Bug 1300336 - Allow pseudo-arrays to have a length property. r=fitzgen",
+            "extra": {
+                "branch": "default"
+            },
+            "files": [
+                "devtools/client/webconsole/test/browser_webconsole_output_06.js",
+                "devtools/server/actors/object.js"
+            ],
+            "node": "99c542fa43a72ee863c813b5624048d1b443549b",
+            "parents": [
+                "16a1a91f9269ab95dd83eb29dc5d0227665f7d94"
+            ],
+            "perfherderurl": "https://treeherder.mozilla.org/perf.html#/compare?originalProject=mozilla-central&originalRevision=a14f88a9af7a59e677478694bafd9375ac53683e&newProject=mozilla-central&newRevision=ae2144aa4356b65c2f8c0de8c9082dcb7e330e24",
+            "pushdate": [
+                1473261248,
+                0
+            ],
+            "pushhead": "a14f88a9af7a59e677478694bafd9375ac53683e",
+            "pushid": 30664,
+            "pushnodes": [
+                "ae2144aa4356b65c2f8c0de8c9082dcb7e330e24",
+                "73a6a267a50a0e1c41e689b265ad3eebe43d7ac6",
+                "16a1a91f9269ab95dd83eb29dc5d0227665f7d94",
+                "99c542fa43a72ee863c813b5624048d1b443549b",
+                "a6b6a93eb41a05e310a11f0172f01ba9b21d3eac",
+                "541c9086c0f27fba60beecc9bc94543103895c86",
+                "041a925171e431bf51fb50193ab19d156088c89a",
+                "a14f88a9af7a59e677478694bafd9375ac53683e"
+            ],
+            "pushuser": "cbook@mozilla.com",
+            "rev": 312893,
+            "reviewers": [
+                {
+                    "name": "fitzgen",
+                    "revset": "reviewer(fitzgen)"
+                }
+            ],
+            "treeherderrepo": "mozilla-central",
+            "treeherderrepourl": "https://treeherder.mozilla.org/#/jobs?repo=mozilla-central"
+        },
+        {
+            "author": "Ruturaj Vartak <ruturaj@gmail.com>",
+            "backsoutnodes": [],
+            "bugs": [
+                {
+                    "no": "1295010",
+                    "url": "https://bugzilla.mozilla.org/show_bug.cgi?id=1295010"
+                }
+            ],
+            "date": [
+                1472854020.0,
+                -7200
+            ],
+            "desc": "Bug 1295010 - Don't move the eyedropper to the out of browser window by keyboard navigation. r=pbro\n\nMozReview-Commit-ID: vBwmSxVNXK",
+            "extra": {
+                "amend_source": "6885024ef00cfa33d73c59dc03c48ebcda9ccbdd",
+                "branch": "default",
+                "histedit_source": "c43167f0a7cbe9f4c733b15da726e5150a9529ba",
+                "rebase_source": "b74df421630fc46dab6b6cc026bf3e0ae6b4a651"
+            },
+            "files": [
+                "devtools/client/inspector/test/browser_inspector_highlighter-eyedropper-events.js",
+                "devtools/client/inspector/test/head.js",
+                "devtools/server/actors/highlighters/eye-dropper.js"
+            ],
+            "node": "a6b6a93eb41a05e310a11f0172f01ba9b21d3eac",
+            "parents": [
+                "99c542fa43a72ee863c813b5624048d1b443549b"
+            ],
+            "perfherderurl": "https://treeherder.mozilla.org/perf.html#/compare?originalProject=mozilla-central&originalRevision=a14f88a9af7a59e677478694bafd9375ac53683e&newProject=mozilla-central&newRevision=ae2144aa4356b65c2f8c0de8c9082dcb7e330e24",
+            "pushdate": [
+                1473261248,
+                0
+            ],
+            "pushhead": "a14f88a9af7a59e677478694bafd9375ac53683e",
+            "pushid": 30664,
+            "pushnodes": [
+                "ae2144aa4356b65c2f8c0de8c9082dcb7e330e24",
+                "73a6a267a50a0e1c41e689b265ad3eebe43d7ac6",
+                "16a1a91f9269ab95dd83eb29dc5d0227665f7d94",
+                "99c542fa43a72ee863c813b5624048d1b443549b",
+                "a6b6a93eb41a05e310a11f0172f01ba9b21d3eac",
+                "541c9086c0f27fba60beecc9bc94543103895c86",
+                "041a925171e431bf51fb50193ab19d156088c89a",
+                "a14f88a9af7a59e677478694bafd9375ac53683e"
+            ],
+            "pushuser": "cbook@mozilla.com",
+            "rev": 312894,
+            "reviewers": [
+                {
+                    "name": "pbro",
+                    "revset": "reviewer(pbro)"
+                }
+            ],
+            "treeherderrepo": "mozilla-central",
+            "treeherderrepourl": "https://treeherder.mozilla.org/#/jobs?repo=mozilla-central"
+        },
+        {
+            "author": "Matteo Ferretti <mferretti@mozilla.com>",
+            "backsoutnodes": [],
+            "bugs": [
+                {
+                    "no": "1299154",
+                    "url": "https://bugzilla.mozilla.org/show_bug.cgi?id=1299154"
+                }
+            ],
+            "date": [
+                1472629906.0,
+                -7200
+            ],
+            "desc": "Bug 1299154 - added Set/GetOverrideDPPX to restorefromHistory; r=mstange\n\nMozReview-Commit-ID: AsyAcG3Igbn\n",
+            "extra": {
+                "branch": "default",
+                "committer": "Matteo Ferretti <mferretti@mozilla.com> 1473236511 -7200"
+            },
+            "files": [
+                "docshell/base/nsDocShell.cpp",
+                "dom/tests/mochitest/general/test_contentViewer_overrideDPPX.html"
+            ],
+            "node": "541c9086c0f27fba60beecc9bc94543103895c86",
+            "parents": [
+                "a6b6a93eb41a05e310a11f0172f01ba9b21d3eac"
+            ],
+            "perfherderurl": "https://treeherder.mozilla.org/perf.html#/compare?originalProject=mozilla-central&originalRevision=a14f88a9af7a59e677478694bafd9375ac53683e&newProject=mozilla-central&newRevision=ae2144aa4356b65c2f8c0de8c9082dcb7e330e24",
+            "pushdate": [
+                1473261248,
+                0
+            ],
+            "pushhead": "a14f88a9af7a59e677478694bafd9375ac53683e",
+            "pushid": 30664,
+            "pushnodes": [
+                "ae2144aa4356b65c2f8c0de8c9082dcb7e330e24",
+                "73a6a267a50a0e1c41e689b265ad3eebe43d7ac6",
+                "16a1a91f9269ab95dd83eb29dc5d0227665f7d94",
+                "99c542fa43a72ee863c813b5624048d1b443549b",
+                "a6b6a93eb41a05e310a11f0172f01ba9b21d3eac",
+                "541c9086c0f27fba60beecc9bc94543103895c86",
+                "041a925171e431bf51fb50193ab19d156088c89a",
+                "a14f88a9af7a59e677478694bafd9375ac53683e"
+            ],
+            "pushuser": "cbook@mozilla.com",
+            "rev": 312895,
+            "reviewers": [
+                {
+                    "name": "mstange",
+                    "revset": "reviewer(mstange)"
+                }
+            ],
+            "treeherderrepo": "mozilla-central",
+            "treeherderrepourl": "https://treeherder.mozilla.org/#/jobs?repo=mozilla-central"
+        },
+        {
+            "author": "Patrick Brosset <pbrosset@mozilla.com>",
+            "backsoutnodes": [],
+            "bugs": [
+                {
+                    "no": "1295010",
+                    "url": "https://bugzilla.mozilla.org/show_bug.cgi?id=1295010"
+                }
+            ],
+            "date": [
+                1473239449.0,
+                -7200
+            ],
+            "desc": "Bug 1295010 - Removed testActor from highlighterHelper in inspector tests; r=me\n\nMozReview-Commit-ID: GMksl81iGcp",
+            "extra": {
+                "branch": "default"
+            },
+            "files": [
+                "devtools/client/inspector/test/browser_inspector_highlighter-eyedropper-events.js",
+                "devtools/client/inspector/test/head.js"
+            ],
+            "node": "041a925171e431bf51fb50193ab19d156088c89a",
+            "parents": [
+                "541c9086c0f27fba60beecc9bc94543103895c86"
+            ],
+            "perfherderurl": "https://treeherder.mozilla.org/perf.html#/compare?originalProject=mozilla-central&originalRevision=a14f88a9af7a59e677478694bafd9375ac53683e&newProject=mozilla-central&newRevision=ae2144aa4356b65c2f8c0de8c9082dcb7e330e24",
+            "pushdate": [
+                1473261248,
+                0
+            ],
+            "pushhead": "a14f88a9af7a59e677478694bafd9375ac53683e",
+            "pushid": 30664,
+            "pushnodes": [
+                "ae2144aa4356b65c2f8c0de8c9082dcb7e330e24",
+                "73a6a267a50a0e1c41e689b265ad3eebe43d7ac6",
+                "16a1a91f9269ab95dd83eb29dc5d0227665f7d94",
+                "99c542fa43a72ee863c813b5624048d1b443549b",
+                "a6b6a93eb41a05e310a11f0172f01ba9b21d3eac",
+                "541c9086c0f27fba60beecc9bc94543103895c86",
+                "041a925171e431bf51fb50193ab19d156088c89a",
+                "a14f88a9af7a59e677478694bafd9375ac53683e"
+            ],
+            "pushuser": "cbook@mozilla.com",
+            "rev": 312896,
+            "reviewers": [
+                {
+                    "name": "me",
+                    "revset": "reviewer(me)"
+                }
+            ],
+            "treeherderrepo": "mozilla-central",
+            "treeherderrepourl": "https://treeherder.mozilla.org/#/jobs?repo=mozilla-central"
+        },
+        {
+            "author": "Carsten \"Tomcat\" Book <cbook@mozilla.com>",
+            "backsoutnodes": [],
+            "bugs": [],
+            "date": [
+                1473261233.0,
+                -7200
+            ],
+            "desc": "merge fx-team to mozilla-central a=merge",
+            "extra": {
+                "branch": "default"
+            },
+            "files": [],
+            "node": "a14f88a9af7a59e677478694bafd9375ac53683e",
+            "parents": [
+                "3d0b41fdd93bd8233745eadb4e0358e385bf2cb9",
+                "041a925171e431bf51fb50193ab19d156088c89a"
+            ],
+            "perfherderurl": "https://treeherder.mozilla.org/perf.html#/compare?originalProject=mozilla-central&originalRevision=a14f88a9af7a59e677478694bafd9375ac53683e&newProject=mozilla-central&newRevision=ae2144aa4356b65c2f8c0de8c9082dcb7e330e24",
+            "pushdate": [
+                1473261248,
+                0
+            ],
+            "pushhead": "a14f88a9af7a59e677478694bafd9375ac53683e",
+            "pushid": 30664,
+            "pushnodes": [
+                "ae2144aa4356b65c2f8c0de8c9082dcb7e330e24",
+                "73a6a267a50a0e1c41e689b265ad3eebe43d7ac6",
+                "16a1a91f9269ab95dd83eb29dc5d0227665f7d94",
+                "99c542fa43a72ee863c813b5624048d1b443549b",
+                "a6b6a93eb41a05e310a11f0172f01ba9b21d3eac",
+                "541c9086c0f27fba60beecc9bc94543103895c86",
+                "041a925171e431bf51fb50193ab19d156088c89a",
+                "a14f88a9af7a59e677478694bafd9375ac53683e"
+            ],
+            "pushuser": "cbook@mozilla.com",
+            "rev": 312897,
+            "reviewers": [
+                {
+                    "name": "merge",
+                    "revset": "reviewer(merge)"
+                }
+            ],
+            "treeherderrepo": "mozilla-central",
+            "treeherderrepourl": "https://treeherder.mozilla.org/#/jobs?repo=mozilla-central"
+        }
+    ],
+    "visible": true
+}
+

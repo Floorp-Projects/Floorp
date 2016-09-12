@@ -34,7 +34,7 @@ class FakeTask(base.Task):
         else:
             return []
 
-    def optimize(self):
+    def optimize(self, params):
         return False, None
 
 
