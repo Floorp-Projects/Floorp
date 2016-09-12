@@ -30,6 +30,14 @@ l10n
 
 TBD (Callek)
 
+source-check
+------------
+
+Source-checks are tasks that look at the Gecko source directly to check
+correctness.  This can include linting, Python unit tests, source-code
+analysis, or measurement work -- basically anything that does not require a
+build.
+
 Tests
 -----
 

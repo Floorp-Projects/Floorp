@@ -1,0 +1,107 @@
+mozlint-eslint/opt:
+    description: JS lint check
+    index:
+        product: lint
+        job-name:
+            gecko-v2: eslint-gecko-opt
+    treeherder:
+        symbol: ES
+        kind: test
+        tier: 1
+        platform: lint/opt
+    worker-type: aws-provisioner-v1/b2gtest
+    worker:
+        implementation: docker-worker
+        docker-image: {in-tree: "lint"}
+        max-run-time: 1800
+    run:
+        using: run-task
+        command: >
+            cd /home/worker/checkouts/gecko/tools/lint/eslint &&
+            /build/tooltool.py fetch -m manifest.tt &&
+            tar xvfz eslint.tar.gz &&
+            rm eslint.tar.gz &&
+            ln -s ../eslint-plugin-mozilla node_modules &&
+            cd ../../.. &&
+            ./mach lint -l eslint -f treeherder --quiet
+    run-on-projects:
+        - integration
+        - release
+    when:
+        files-changed:
+            # Files that are likely audited.
+            - '**/*.js'
+            - '**/*.jsm'
+            - '**/*.jsx'
+            - '**/*.html'
+            - '**/*.xhtml'
+            - '**/*.xml'
+            # Run when eslint policies change.
+            - '**/.eslintignore'
+            - '**/*eslintrc*'
+            # The plugin implementing custom checks.
+            - 'tools/lint/eslint/eslint-plugin-mozilla/**'
+            # Other misc lint related files.
+            - 'python/mozlint/**'
+            - 'tools/lint/**'
+            - 'testing/docker/lint/**'
+
+mozlint-flake8/opt:
+    description: flake8 run over the gecko codebase
+    index:
+        product: lint
+        job-name:
+            gecko-v2: mozlint-flake8-opt
+    treeherder:
+        symbol: f8
+        kind: test
+        tier: 2
+        platform: lint/opt
+    worker-type: aws-provisioner-v1/b2gtest
+    worker:
+        implementation: docker-worker
+        docker-image: {in-tree: "lint"}
+        max-run-time: 1800
+    run:
+        using: mach
+        mach: lint -l flake8 -f treeherder
+    run-on-projects:
+        - integration
+        - release
+    when:
+        files-changed:
+            - '**/*.py'
+            - '**/.flake8'
+            - 'python/mozlint/**'
+            - 'tools/lint/**'
+            - 'testing/docker/lint/**'
+
+wptlint-gecko/opt:
+    description: web-platform-tests linter
+    index:
+        product: lint
+        job-name:
+            gecko-v2: wpt-lint-gecko-opt
+    treeherder:
+        symbol: W
+        kind: test
+        tier: 2
+        platform: lint/opt
+    worker-type: aws-provisioner-v1/b2gtest
+    worker:
+        implementation: docker-worker
+        docker-image: {in-tree: "lint"}
+        max-run-time: 1800
+    run:
+        using: mach
+        mach: lint -l wpt -f treeherder
+    run-on-projects:
+        - integration
+        - release
+    when:
+        files-changed:
+            - 'testing/web-platform/tests/**'
+            - 'python/mozlint/**'
+            - 'tools/lint/**'
+            - 'testing/docker/lint/**'
+
