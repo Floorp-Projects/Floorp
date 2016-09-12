@@ -1908,6 +1908,8 @@ CanvasRenderingContext2D::ReturnTarget(bool aForceReset)
         // balance out here. See the comment in RestoreClipsAndTransformToTarget.
         mTarget->PopClip();
       }
+
+      mTarget->SetTransform(Matrix());
     }
 
     mBufferProvider->ReturnDrawTarget(mTarget.forget());
