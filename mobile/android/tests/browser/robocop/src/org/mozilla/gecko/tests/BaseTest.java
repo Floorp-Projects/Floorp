@@ -32,6 +32,7 @@ import android.os.Build;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
+import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.view.View;
@@ -611,15 +612,54 @@ abstract class BaseTest extends BaseRobocopTest {
         }
     }
 
+    // A temporary tabs list/grid holder while the list and grid views are being transitioned to
+    // RecyclerViews (bug 1116415 and bug 1310081).
+    private static class TabsView {
+        private AdapterView<ListAdapter> gridView;
+        private RecyclerView listView;
+
+        public TabsView(View view) {
+            if (view instanceof RecyclerView) {
+                listView = (RecyclerView) view;
+            } else {
+                gridView = (AdapterView<ListAdapter>) view;
+            }
+        }
+
+        public void bringPositionIntoView(int index) {
+            if (gridView != null) {
+                gridView.setSelection(index);
+            } else {
+                listView.scrollToPosition(index);
+            }
+        }
+
+        public View getViewAtIndex(int index) {
+            if (gridView != null) {
+                return gridView.getChildAt(index - gridView.getFirstVisiblePosition());
+            } else {
+                final RecyclerView.ViewHolder itemViewHolder = listView.findViewHolderForLayoutPosition(index);
+                return itemViewHolder == null ? null : itemViewHolder.itemView;
+            }
+        }
+
+        public void post(Runnable runnable) {
+            if (gridView != null) {
+                gridView.post(runnable);
+            } else {
+                listView.post(runnable);
+            }
+        }
+    }
     /**
      * Gets the AdapterView of the tabs list.
      *
      * @return List view in the tabs panel
      */
-    private final AdapterView<ListAdapter> getTabsLayout() {
+    private final TabsView getTabsLayout() {
         Element tabs = mDriver.findElement(getActivity(), R.id.tabs);
         tabs.click();
-        return (AdapterView<ListAdapter>) getActivity().findViewById(R.id.normal_tabs);
+        return new TabsView(getActivity().findViewById(R.id.normal_tabs));
     }
 
     /**
@@ -630,12 +670,12 @@ abstract class BaseTest extends BaseRobocopTest {
     private View getTabViewAt(final int index) {
         final View[] childView = { null };
 
-        final AdapterView<ListAdapter> view = getTabsLayout();
+        final TabsView view = getTabsLayout();
 
         runOnUiThreadSync(new Runnable() {
             @Override
             public void run() {
-                view.setSelection(index);
+                view.bringPositionIntoView(index);
 
                 // The selection isn't updated synchronously; posting a
                 // runnable to the view's queue guarantees we'll run after the
@@ -643,11 +683,8 @@ abstract class BaseTest extends BaseRobocopTest {
                 view.post(new Runnable() {
                     @Override
                     public void run() {
-                        // getChildAt() is relative to the list of visible
-                        // views, but our index is relative to all views in the
-                        // list. Subtract the first visible list position for
-                        // the correct offset.
-                        childView[0] = view.getChildAt(index - view.getFirstVisiblePosition());
+                        // Index is relative to all views in the list.
+                        childView[0] = view.getViewAtIndex(index);
                     }
                 });
             }
