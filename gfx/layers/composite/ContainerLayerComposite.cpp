@@ -215,22 +215,6 @@ ContainerPrepare(ContainerT* aContainer,
   }
 }
 
-template <typename RectPainter> void
-DrawRegion(CSSIntRegion* aRegion,
-           gfx::Color aColor,
-           const RectPainter& aRectPainter)
-{
-  MOZ_ASSERT(aRegion);
-
-  // Iterate through and draw the rects in the region using the provided lambda.
-  for (CSSIntRegion::RectIterator iterator = aRegion->RectIter();
-       !iterator.Done();
-       iterator.Next())
-  {
-    aRectPainter(iterator.Get(), aColor);
-  }
-}
-
 template<class ContainerT> void
 RenderMinimap(ContainerT* aContainer, LayerManagerComposite* aManager,
                    const RenderTargetIntRect& aClipRect, Layer* aLayer)
@@ -258,8 +242,7 @@ RenderMinimap(ContainerT* aContainer, LayerManagerComposite* aManager,
   gfx::Color criticalDisplayPortColor(1.f, 1.f, 0);
   gfx::Color displayPortColor(0, 1.f, 0);
   gfx::Color viewPortColor(0, 0, 1.f, 0.3f);
-  gfx::Color approxVisibilityColor(1.f, 0, 0);
-  gfx::Color inDisplayPortVisibilityColor(1.f, 1.f, 0);
+  gfx::Color visibilityColor(1.f, 0, 0);
 
   // Rects
   const FrameMetrics& fm = aLayer->GetFrameMetrics(0);
@@ -316,21 +299,23 @@ RenderMinimap(ContainerT* aContainer, LayerManagerComposite* aManager,
 
     ScrollableLayerGuid guid = controller->GetGuid();
 
-    auto rectPainter = [&](const CSSIntRect& aRect, const gfx::Color& aColor) {
-      LayerRect scaledRect = aRect * fm.LayersPixelsPerCSSPixel();
+    // Get the approximately visible region.
+    static CSSIntRegion emptyRegion;
+    CSSIntRegion* visibleRegion = aManager->GetApproximatelyVisibleRegion(guid);
+    if (!visibleRegion) {
+      visibleRegion = &emptyRegion;
+    }
+
+    // Iterate through and draw the rects in the region.
+    for (CSSIntRegion::RectIterator iterator = visibleRegion->RectIter();
+         !iterator.Done();
+         iterator.Next())
+    {
+      CSSIntRect rect = iterator.Get();
+      LayerRect scaledRect = rect * fm.LayersPixelsPerCSSPixel();
       Rect r = transform.TransformBounds(scaledRect.ToUnknownRect());
-      compositor->FillRect(r, aColor, clipRect, aContainer->GetEffectiveTransform());
-    };
-
-    // Draw the approximately visible region.
-    CSSIntRegion* approxVisibleRegion =
-      aManager->GetVisibleRegion(VisibilityCounter::MAY_BECOME_VISIBLE, guid);
-    DrawRegion(approxVisibleRegion, approxVisibilityColor, rectPainter);
-
-    // Draw the in-displayport visible region.
-    CSSIntRegion* inDisplayPortVisibleRegion =
-      aManager->GetVisibleRegion(VisibilityCounter::IN_DISPLAYPORT, guid);
-    DrawRegion(inDisplayPortVisibleRegion, inDisplayPortVisibilityColor, rectPainter);
+      compositor->FillRect(r, visibilityColor, clipRect, aContainer->GetEffectiveTransform());
+    }
   }
 
   // Render the displayport.
