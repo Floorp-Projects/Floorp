@@ -45,7 +45,7 @@ The ``transforms`` object is an instance of
 mechanism to combine a sequence of transforms into one.
 
 Schemas
--------
+.......
 
 The items used in transforms are validated against some simple schemas at
 various points in the transformation process.  These schemas accomplish two
@@ -53,7 +53,7 @@ things: they provide a place to add comments about the meaning of each field,
 and they enforce that the fields are actually used in the documented fashion.
 
 Keyed By
---------
+........
 
 Several fields in the input items can be "keyed by" another value in the item.
 For example, a test description's chunks may be keyed by ``test-platform``.
@@ -73,33 +73,19 @@ transforms themselves.  If you are implementing a new business rule, prefer
 this mode where possible.  The structure is easily resolved to a single value
 using :func:`taskgraph.transform.base.get_keyed_by`.
 
-Task-Generation Transforms
---------------------------
+Organization
+-------------
 
-Every kind needs to create tasks, and all of those tasks have some things in
-common.  They all run on one of a small set of worker implementations, each
-with their own idiosyncracies.  And they all report to TreeHerder in a similar
-way.
+Task creation operates broadly in a few phases, with the interfaces of those
+stages defined by schemas.  The process begins with the raw data structures
+parsed from the YAML files in the kind configuration.  This data can processed
+by kind-specific transforms resulting, for test jobs, in a "test description".
+The shared test-description transforms then create a "task description", which
+the task-generation transforms then convert into a task definition suitable for
+``queue.createTask``.
 
-The transforms in ``taskcluster/taskgraph/transforms/task.py`` implement
-this common functionality.  They expect a "task description", and produce a
-task definition.  The schema for a task description is defined at the top of
-``task.py``, with copious comments.  The parts of the task description
-that are specific to a worker implementation are isolated in a ``worker``
-object which has an ``implementation`` property naming the worker
-implementation.  Thus the transforms that produce a task description must be
-aware of the worker implementation to be used, but need not be aware of the
-details of its payload format.
-
-The result is a dictionary with keys ``label``, ``attributes``, ``task``, and
-``dependencies``, with the latter having the same format as the input
-dependencies.
-
-These transforms assign names to treeherder groups using an internal list of
-group names.  Feel free to add additional groups to this list as necessary.
-
-Test Transforms
----------------
+Test Descriptions
+-----------------
 
 The transforms configured for test kinds proceed as follows, based on
 configuration in ``kind.yml``:
@@ -135,3 +121,39 @@ configuration in ``kind.yml``:
 
 Test dependencies are produced in the form of a dictionary mapping dependency
 name to task label.
+
+Task Descriptions
+-----------------
+
+Every kind needs to create tasks, and all of those tasks have some things in
+common.  They all run on one of a small set of worker implementations, each
+with their own idiosyncracies.  And they all report to TreeHerder in a similar
+way.
+
+The transforms in ``taskcluster/taskgraph/transforms/task.py`` implement
+this common functionality.  They expect a "task description", and produce a
+task definition.  The schema for a task description is defined at the top of
+``task.py``, with copious comments.  In general, these transforms handle
+functionality that is common to all Gecko tasks.  While the schema is the
+definitive reference, the functionality includes:
+
+* TreeHerder metadata
+
+* Build index routes
+
+* Information about the projects on which this task should run
+
+* Optimizations
+
+* Defaults for ``expires-after`` and and ``deadline-after``, based on project
+
+* Worker configuration
+
+The parts of the task description that are specific to a worker implementation
+are isolated in a ``worker`` object which has an ``implementation`` property
+naming the worker implementation.  Thus the transforms that produce a task
+description must be aware of the worker implementation to be used, but need not
+be aware of the details of its payload format.
+
+This file maps treeherder groups to group names using an internal list of group
+names.  Feel free to add additional groups to this list as necessary.
