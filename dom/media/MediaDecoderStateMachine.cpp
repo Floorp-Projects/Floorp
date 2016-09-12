@@ -1367,20 +1367,33 @@ MediaDecoderStateMachine::MaybeStartBuffering()
   MOZ_ASSERT(mSentFirstFrameLoadedEvent);
   MOZ_ASSERT(mState == DECODER_STATE_DECODING);
 
-  if (mPlayState == MediaDecoder::PLAY_STATE_PLAYING &&
-      mResource->IsExpectingMoreData()) {
-    bool shouldBuffer;
-    if (mReader->UseBufferingHeuristics()) {
-      shouldBuffer = HasLowDecodedData(EXHAUSTED_DATA_MARGIN_USECS) &&
-                     (JustExitedQuickBuffering() || HasLowUndecodedData());
-    } else {
-      MOZ_ASSERT(mReader->IsWaitForDataSupported());
-      shouldBuffer = (OutOfDecodedAudio() && mReader->IsWaitingAudioData()) ||
-                     (OutOfDecodedVideo() && mReader->IsWaitingVideoData());
-    }
-    if (shouldBuffer) {
-      SetState(DECODER_STATE_BUFFERING);
-    }
+  // Don't enter buffering when MediaDecoder is not playing.
+  if (mPlayState != MediaDecoder::PLAY_STATE_PLAYING) {
+    return;
+  }
+
+  // Don't enter buffering while prerolling so that the decoder has a chance to
+  // enqueue some decoded data before we give up and start buffering.
+  if (!IsPlaying()) {
+    return;
+  }
+
+  // No more data to download. No need to enter buffering.
+  if (!mResource->IsExpectingMoreData()) {
+    return;
+  }
+
+  bool shouldBuffer;
+  if (mReader->UseBufferingHeuristics()) {
+    shouldBuffer = HasLowDecodedData(EXHAUSTED_DATA_MARGIN_USECS) &&
+                   (JustExitedQuickBuffering() || HasLowUndecodedData());
+  } else {
+    MOZ_ASSERT(mReader->IsWaitForDataSupported());
+    shouldBuffer = (OutOfDecodedAudio() && mReader->IsWaitingAudioData()) ||
+                   (OutOfDecodedVideo() && mReader->IsWaitingVideoData());
+  }
+  if (shouldBuffer) {
+    SetState(DECODER_STATE_BUFFERING);
   }
 }
 
