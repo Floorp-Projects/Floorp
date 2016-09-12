@@ -1166,7 +1166,6 @@ protected:
    * Called when a frame transitions between visibility states (for example,
    * from nonvisible to visible, or from visible to nonvisible).
    *
-   * @param aOldVisibility    The previous visibility state.
    * @param aNewVisibility    The new visibility state.
    * @param aNonvisibleAction A requested action if the frame has become
    *                          nonvisible. If Nothing(), no action is
@@ -1178,8 +1177,7 @@ protected:
    * Subclasses which override this method should call their parent class's
    * implementation.
    */
-  virtual void OnVisibilityChange(Visibility aOldVisibility,
-                                  Visibility aNewVisibility,
+  virtual void OnVisibilityChange(Visibility aNewVisibility,
                                   Maybe<OnNonvisible> aNonvisibleAction = Nothing());
 
 public:
