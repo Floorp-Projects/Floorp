@@ -652,6 +652,49 @@ HTMLCanvasElement::GetMozPrintCallback() const
   return mPrintCallback;
 }
 
+class CanvasCaptureTrackSource : public MediaStreamTrackSource
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CanvasCaptureTrackSource,
+                                           MediaStreamTrackSource)
+
+  CanvasCaptureTrackSource(nsIPrincipal* aPrincipal,
+                           CanvasCaptureMediaStream* aCaptureStream)
+    : MediaStreamTrackSource(aPrincipal, nsString())
+    , mCaptureStream(aCaptureStream) {}
+
+  MediaSourceEnum GetMediaSource() const override
+  {
+    return MediaSourceEnum::Other;
+  }
+
+  void Stop() override
+  {
+    if (!mCaptureStream) {
+      NS_ERROR("No stream");
+      return;
+    }
+
+    mCaptureStream->StopCapture();
+  }
+
+private:
+  virtual ~CanvasCaptureTrackSource() {}
+
+  RefPtr<CanvasCaptureMediaStream> mCaptureStream;
+};
+
+NS_IMPL_ADDREF_INHERITED(CanvasCaptureTrackSource,
+                         MediaStreamTrackSource)
+NS_IMPL_RELEASE_INHERITED(CanvasCaptureTrackSource,
+                          MediaStreamTrackSource)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(CanvasCaptureTrackSource)
+NS_INTERFACE_MAP_END_INHERITING(MediaStreamTrackSource)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(CanvasCaptureTrackSource,
+                                   MediaStreamTrackSource,
+                                   mCaptureStream)
+
 already_AddRefed<CanvasCaptureMediaStream>
 HTMLCanvasElement::CaptureStream(const Optional<double>& aFrameRate,
                                  ErrorResult& aRv)
@@ -690,7 +733,7 @@ HTMLCanvasElement::CaptureStream(const Optional<double>& aFrameRate,
 
   RefPtr<MediaStreamTrack> track =
   stream->CreateDOMTrack(videoTrackId, MediaSegment::VIDEO,
-                         new BasicUnstoppableTrackSource(principal));
+                         new CanvasCaptureTrackSource(principal, stream));
   stream->AddTrackInternal(track);
 
   rv = RegisterFrameCaptureListener(stream->FrameCaptureListener());
