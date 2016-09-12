@@ -58,7 +58,10 @@ public:
   // Call this when dispatching from an event on the same
   // threadpool that is about to complete. We should not create a new thread
   // in that case since a thread is about to become idle.
-  nsresult TailDispatch(nsIRunnable *event) { return Dispatch(event, NS_DISPATCH_TAIL); }
+  nsresult DispatchFromEndOfTaskInThisPool(nsIRunnable *event)
+  {
+    return Dispatch(event, NS_DISPATCH_AT_END);
+  }
 
   NS_IMETHOD DispatchFromScript(nsIRunnable *event, uint32_t flags) override {
       return Dispatch(event, flags);
