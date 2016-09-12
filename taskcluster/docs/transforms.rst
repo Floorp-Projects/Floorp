@@ -80,9 +80,13 @@ Task creation operates broadly in a few phases, with the interfaces of those
 stages defined by schemas.  The process begins with the raw data structures
 parsed from the YAML files in the kind configuration.  This data can processed
 by kind-specific transforms resulting, for test jobs, in a "test description".
-The shared test-description transforms then create a "task description", which
-the task-generation transforms then convert into a task definition suitable for
-``queue.createTask``.
+For non-test jobs, the next step is a "job description".  These transformations
+may also "duplicate" tasks, for example to implement chunking or several
+variations of the same task.
+
+In any case, shared transforms then convert this into a "task description",
+which the task-generation transforms then convert into a task definition
+suitable for ``queue.createTask``.
 
 Test Descriptions
 -----------------
@@ -121,6 +125,25 @@ configuration in ``kind.yml``:
 
 Test dependencies are produced in the form of a dictionary mapping dependency
 name to task label.
+
+Job Descriptions
+----------------
+
+A job description says what to run in the task.  It is a combination of a
+``run`` section and all of the fields from a task description.  The run section
+has a ``using`` property that defines how this task should be run; for example,
+``mozharness`` to run a mozharness script, or ``mach`` to run a mach command.
+The remainder of the run section is specific to the run-using implementation.
+
+The effect of a job description is to say "run this thing on this worker".  The
+job description must contain enough information about the worker to identify
+the workerType and the implementation (docker-worker, generic-worker, etc.).
+Any other task-description information is passed along verbatim, although it is
+augmented by the run-using implementation.
+
+The run-using implementations are all located in
+``taskcluster/taskgraph/transforms/job``, along with the schemas for their
+implementations.  Those source files are the canonical documentation.
 
 Task Descriptions
 -----------------
