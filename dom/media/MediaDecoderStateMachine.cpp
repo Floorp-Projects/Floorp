@@ -468,6 +468,26 @@ public:
   {
     return DECODER_STATE_SEEKING;
   }
+
+  bool HandleDormant(bool aDormant) override
+  {
+    if (!aDormant) {
+      return true;
+    }
+    MOZ_ASSERT(!mMaster->mQueuedSeek.Exists());
+    MOZ_ASSERT(mMaster->mCurrentSeek.Exists());
+    // Because both audio and video decoders are going to be reset in this
+    // method later, we treat a VideoOnly seek task as a normal Accurate
+    // seek task so that while it is resumed, both audio and video playback
+    // are handled.
+    if (mMaster->mCurrentSeek.mTarget.IsVideoOnly()) {
+      mMaster->mCurrentSeek.mTarget.SetType(SeekTarget::Accurate);
+      mMaster->mCurrentSeek.mTarget.SetVideoOnly(false);
+    }
+    mMaster->mQueuedSeek = Move(mMaster->mCurrentSeek);
+    SetState(DECODER_STATE_DORMANT);
+    return true;
+  }
 };
 
 class MediaDecoderStateMachine::BufferingState
@@ -1507,9 +1527,9 @@ MediaDecoderStateMachine::SetDormant(bool aDormant)
     return;
   }
 
-  // |mState == DECODER_STATE_DORMANT| is already
-  // handled by |mStateObj->HandleDormant| above.
-  MOZ_ASSERT(mState != DECODER_STATE_DORMANT);
+  // These states are already handled by |mStateObj->HandleDormant| above.
+  MOZ_ASSERT(mState != DECODER_STATE_DORMANT &&
+             mState != DECODER_STATE_SEEKING);
 
   // Nothing to do for we are not in dormant state.
   if (!aDormant) {
@@ -1518,26 +1538,12 @@ MediaDecoderStateMachine::SetDormant(bool aDormant)
 
   DECODER_LOG("Enter dormant state");
 
-  if (mState == DECODER_STATE_SEEKING) {
-    MOZ_ASSERT(!mQueuedSeek.Exists());
-    MOZ_ASSERT(mCurrentSeek.Exists());
-    // Because both audio and video decoders are going to be reset in this
-    // method later, we treat a VideoOnly seek task as a normal Accurate
-    // seek task so that while it is resumed, both audio and video playback
-    // are handled.
-    if (mCurrentSeek.mTarget.IsVideoOnly()) {
-      mCurrentSeek.mTarget.SetType(SeekTarget::Accurate);
-      mCurrentSeek.mTarget.SetVideoOnly(false);
-    }
-    mQueuedSeek = Move(mCurrentSeek);
-  } else {
-    mQueuedSeek.mTarget = SeekTarget(mCurrentPosition,
-                                     SeekTarget::Accurate,
-                                     MediaDecoderEventVisibility::Suppressed);
-    // SeekJob asserts |mTarget.IsValid() == !mPromise.IsEmpty()| so we
-    // need to create the promise even it is not used at all.
-    RefPtr<MediaDecoder::SeekPromise> unused = mQueuedSeek.mPromise.Ensure(__func__);
-  }
+  mQueuedSeek.mTarget = SeekTarget(mCurrentPosition,
+                                   SeekTarget::Accurate,
+                                   MediaDecoderEventVisibility::Suppressed);
+  // SeekJob asserts |mTarget.IsValid() == !mPromise.IsEmpty()| so we
+  // need to create the promise even it is not used at all.
+  RefPtr<MediaDecoder::SeekPromise> unused = mQueuedSeek.mPromise.Ensure(__func__);
 
   SetState(DECODER_STATE_DORMANT);
 }
