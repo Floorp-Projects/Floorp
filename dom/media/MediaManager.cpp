@@ -1170,7 +1170,7 @@ public:
                          const MediaSourceEnum aSource,
                          const TrackID aTrackID,
                          const PeerIdentity* aPeerIdentity)
-          : MediaStreamTrackSource(aPrincipal, false, aLabel), mListener(aListener),
+          : MediaStreamTrackSource(aPrincipal, aLabel), mListener(aListener),
             mSource(aSource), mTrackID(aTrackID), mPeerIdentity(aPeerIdentity) {}
 
         MediaSourceEnum GetMediaSource() const override
