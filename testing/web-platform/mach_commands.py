@@ -236,6 +236,27 @@ testing/web-platform/tests for tests that may be shared
             proc.wait()
 
 
+class WPTManifestUpdater(MozbuildObject):
+    def run_update(self):
+        import imp
+        from wptrunner import wptlogging
+        from wptrunner.wptcommandline import get_test_paths, set_from_config
+        from wptrunner.testloader import ManifestLoader
+
+        wpt_dir = os.path.abspath(os.path.join(self.topsrcdir, 'testing', 'web-platform'))
+
+        localpaths = imp.load_source("localpaths",
+                                     os.path.join(wpt_dir, "tests", "tools", "localpaths.py"))
+        kwargs = {"config": os.path.join(wpt_dir, "wptrunner.ini"),
+                  "tests_root": None,
+                  "metadata_root": None}
+
+        wptlogging.setup({}, {"mach": sys.stdout})
+        set_from_config(kwargs)
+        test_paths = get_test_paths(kwargs["config"])
+        ManifestLoader(test_paths, force_manifest_update=True).load()
+
+
 def create_parser_wpt():
     from wptrunner import wptcommandline
     return wptcommandline.create_parser(["firefox"])
@@ -322,3 +343,10 @@ class MachCommands(MachCommandBase):
         self.setup()
         wpt_creator = self._spawn(WebPlatformTestsCreator)
         wpt_creator.run_create(self._mach_context, **params)
+
+    @Command("wpt-manifest-update",
+             category="testing")
+    def wpt_manifest_update(self, **parms):
+        self.setup()
+        wpt_manifest_updater = self._spawn(WPTManifestUpdater)
+        wpt_manifest_updater.run_update()
