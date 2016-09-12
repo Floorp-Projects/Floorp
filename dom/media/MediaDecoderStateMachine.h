@@ -401,12 +401,11 @@ protected:
   }
 
 
-  // Returns true if we're running low on data which is not yet decoded.
-  // The decoder monitor must be held.
-  bool HasLowUndecodedData();
+  // Returns true if we're running low on buffered data.
+  bool HasLowBufferedData();
 
-  // Returns true if we have less than aUsecs of undecoded data available.
-  bool HasLowUndecodedData(int64_t aUsecs);
+  // Returns true if we have less than aUsecs of buffered data available.
+  bool HasLowBufferedData(int64_t aUsecs);
 
   // Returns true when there's decoded audio waiting to play.
   // The decoder monitor must be held.

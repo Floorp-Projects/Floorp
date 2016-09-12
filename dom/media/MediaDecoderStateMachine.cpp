@@ -916,11 +916,11 @@ MediaDecoderStateMachine::NeedToSkipToNextKeyframe()
   bool isLowOnDecodedVideo = !mIsVideoPrerolling &&
                              ((GetClock() - mDecodedVideoEndTime) * mPlaybackRate >
                               LOW_VIDEO_THRESHOLD_USECS);
-  bool lowUndecoded = HasLowUndecodedData();
+  bool lowBuffered = HasLowBufferedData();
 
-  if ((isLowOnDecodedAudio || isLowOnDecodedVideo) && !lowUndecoded) {
+  if ((isLowOnDecodedAudio || isLowOnDecodedVideo) && !lowBuffered) {
     DECODER_LOG("Skipping video decode to the next keyframe lowAudio=%d lowVideo=%d lowUndecoded=%d async=%d",
-                isLowOnDecodedAudio, isLowOnDecodedVideo, lowUndecoded, mReader->IsAsync());
+                isLowOnDecodedAudio, isLowOnDecodedVideo, lowBuffered, mReader->IsAsync());
     return true;
   }
 
@@ -1173,7 +1173,7 @@ MediaDecoderStateMachine::OnVideoDecoded(MediaData* aVideoSample,
       }
       TimeDuration decodeTime = TimeStamp::Now() - aDecodeStartTime;
       if (THRESHOLD_FACTOR * DurationToUsecs(decodeTime) > mLowAudioThresholdUsecs &&
-          !HasLowUndecodedData())
+          !HasLowBufferedData())
       {
         mLowAudioThresholdUsecs =
           std::min(THRESHOLD_FACTOR * DurationToUsecs(decodeTime), mAmpleAudioThresholdUsecs);
@@ -1386,7 +1386,7 @@ MediaDecoderStateMachine::MaybeStartBuffering()
   bool shouldBuffer;
   if (mReader->UseBufferingHeuristics()) {
     shouldBuffer = HasLowDecodedData(EXHAUSTED_DATA_MARGIN_USECS) &&
-                   (JustExitedQuickBuffering() || HasLowUndecodedData());
+                   (JustExitedQuickBuffering() || HasLowBufferedData());
   } else {
     MOZ_ASSERT(mReader->IsWaitForDataSupported());
     shouldBuffer = (OutOfDecodedAudio() && mReader->IsWaitingAudioData()) ||
@@ -2265,13 +2265,13 @@ bool MediaDecoderStateMachine::OutOfDecodedAudio()
            !mMediaSink->HasUnplayedFrames(TrackInfo::kAudioTrack);
 }
 
-bool MediaDecoderStateMachine::HasLowUndecodedData()
+bool MediaDecoderStateMachine::HasLowBufferedData()
 {
   MOZ_ASSERT(OnTaskQueue());
-  return HasLowUndecodedData(mLowDataThresholdUsecs);
+  return HasLowBufferedData(mLowDataThresholdUsecs);
 }
 
-bool MediaDecoderStateMachine::HasLowUndecodedData(int64_t aUsecs)
+bool MediaDecoderStateMachine::HasLowBufferedData(int64_t aUsecs)
 {
   MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(mState >= DECODER_STATE_DECODING,
@@ -2304,9 +2304,17 @@ bool MediaDecoderStateMachine::HasLowUndecodedData(int64_t aUsecs)
     // Our duration is not up to date. No point buffering.
     return false;
   }
-  media::TimeInterval interval(media::TimeUnit::FromMicroseconds(endOfDecodedData),
-                               media::TimeUnit::FromMicroseconds(std::min(endOfDecodedData + aUsecs, Duration().ToMicroseconds())));
-  return endOfDecodedData != INT64_MAX && !mBuffered.Ref().Contains(interval);
+
+  if (endOfDecodedData == INT64_MAX) {
+    // Have decoded all samples. No point buffering.
+    return false;
+  }
+
+  int64_t start = endOfDecodedData;
+  int64_t end = std::min(GetMediaTime() + aUsecs, Duration().ToMicroseconds());
+  media::TimeInterval interval(media::TimeUnit::FromMicroseconds(start),
+                               media::TimeUnit::FromMicroseconds(end));
+  return !mBuffered.Ref().Contains(interval);
 }
 
 void
@@ -2543,7 +2551,7 @@ MediaDecoderStateMachine::StepBuffering()
     if ((isLiveStream || !CanPlayThrough()) &&
         elapsed < TimeDuration::FromSeconds(mBufferingWait * mPlaybackRate) &&
         (mQuickBuffering ? HasLowDecodedData(mQuickBufferingLowDataThresholdUsecs)
-                         : HasLowUndecodedData(mBufferingWait * USECS_PER_S)) &&
+                         : HasLowBufferedData(mBufferingWait * USECS_PER_S)) &&
         mResource->IsExpectingMoreData()) {
       DECODER_LOG("Buffering: wait %ds, timeout in %.3lfs %s",
                   mBufferingWait, mBufferingWait - elapsed.ToSeconds(),
