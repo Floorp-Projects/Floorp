@@ -531,7 +531,6 @@ PendingLookup::IsBinaryFile()
     //StringEndsWith(fileName, NS_LITERAL_STRING(".ntfs")) || // 7z
     StringEndsWith(fileName, NS_LITERAL_STRING(".ocx")) || // ActiveX
     StringEndsWith(fileName, NS_LITERAL_STRING(".ops")) || // MS Office
-    StringEndsWith(fileName, NS_LITERAL_STRING(".osx")) || // Mac PowerPC executable
     StringEndsWith(fileName, NS_LITERAL_STRING(".out")) || // Linux binary
     StringEndsWith(fileName, NS_LITERAL_STRING(".paf")) || // PortableApps package
     //StringEndsWith(fileName, NS_LITERAL_STRING(".paq8f")) ||
@@ -705,7 +704,6 @@ PendingLookup::GetDownloadType(const nsAString& aFilename) {
              StringEndsWith(aFilename, NS_LITERAL_STRING(".iso")) ||
              StringEndsWith(aFilename, NS_LITERAL_STRING(".mpkg")) ||
              StringEndsWith(aFilename, NS_LITERAL_STRING(".ndif")) ||
-             StringEndsWith(aFilename, NS_LITERAL_STRING(".osx")) ||
              StringEndsWith(aFilename, NS_LITERAL_STRING(".pkg")) ||
              StringEndsWith(aFilename, NS_LITERAL_STRING(".smi")) ||
              StringEndsWith(aFilename, NS_LITERAL_STRING(".sparsebundle")) ||
