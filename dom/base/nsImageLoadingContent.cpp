@@ -1432,17 +1432,14 @@ nsImageLoadingContent::UnbindFromTree(bool aDeep, bool aNullParent)
 }
 
 void
-nsImageLoadingContent::OnVisibilityChange(Visibility aOldVisibility,
-                                          Visibility aNewVisibility,
+nsImageLoadingContent::OnVisibilityChange(Visibility aNewVisibility,
                                           const Maybe<OnNonvisible>& aNonvisibleAction)
 {
   switch (aNewVisibility) {
     case Visibility::MAY_BECOME_VISIBLE:
     case Visibility::IN_DISPLAYPORT:
-      if (aOldVisibility == Visibility::NONVISIBLE) {
-        TrackImage(mCurrentRequest);
-        TrackImage(mPendingRequest);
-      }
+      TrackImage(mCurrentRequest);
+      TrackImage(mPendingRequest);
       break;
 
     case Visibility::NONVISIBLE:
