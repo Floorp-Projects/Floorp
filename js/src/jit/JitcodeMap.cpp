@@ -24,6 +24,8 @@
 
 #include "jsscriptinlines.h"
 
+#include "vm/TypeInference-inl.h"
+
 using mozilla::Maybe;
 
 namespace js {
@@ -898,7 +900,7 @@ JitcodeGlobalEntry::IonEntry::mark(JSTracer* trc)
          iter != optsAllTypes_->end(); iter++)
     {
         if (ShouldMarkProvider::ShouldMark(&iter->type)) {
-            TypeSet::MarkTypeUnbarriered(trc, &iter->type, "jitcodeglobaltable-ionentry-type");
+            iter->type.trace(trc);
             markedAny = true;
         }
         if (iter->hasAllocationSite() && ShouldMarkProvider::ShouldMark(&iter->script)) {
