@@ -90,15 +90,6 @@
             );
         } else {
           SimpleTest.ok(true, "Testing Firefox tabbrowser UI.");
-          let newTabChildren = [];
-          if (SpecialPowers.getBoolPref("privacy.userContext.enabled")) {
-            newTabChildren = [
-              {
-                role: ROLE_MENUPOPUP,
-                children: []
-              }
-            ];
-          }
 
           // NB: The (3) buttons are not visible, unless manually hovered,
           //     probably due to size reduction in this test.
@@ -128,7 +119,7 @@
             {
               // xul:toolbarbutton ("Open a new tab")
               role: ROLE_PUSHBUTTON,
-              children: newTabChildren
+              children: []
             }
             // "List all tabs" dropdown
             // XXX: This child(?) is not present in this test.
