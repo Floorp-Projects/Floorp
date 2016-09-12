@@ -63,9 +63,9 @@ pref(layers.single-tile.enabled,false) == paintedlayer-recycling-3.html paintedl
 == paintedlayer-recycling-7.html paintedlayer-recycling-7.html
 == masklayer-1.html masklayer-1.html
 == masklayer-2.html masklayer-2.html
-== layer-splitting-1.html layer-splitting-1.html
-== layer-splitting-2.html layer-splitting-2.html
-== layer-splitting-3.html layer-splitting-3.html
+random == layer-splitting-1.html layer-splitting-1.html
+random == layer-splitting-2.html layer-splitting-2.html
+random == layer-splitting-3.html layer-splitting-3.html
 fails == layer-splitting-4.html layer-splitting-4.html
 == layer-splitting-5.html layer-splitting-5.html
 == layer-splitting-6.html layer-splitting-6.html

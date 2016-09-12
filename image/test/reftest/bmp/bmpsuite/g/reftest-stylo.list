@@ -77,7 +77,7 @@ fails == pal8v5.bmp pal8v5.bmp
 # "A 16-bit image with the default color format: 5 bits each for red, green, and
 # blue, and 1 unused bit. The whitest colors should (I assume) be displayed as
 # pure white: (255,255,255), not (248,248,248)."
-== rgb16.bmp rgb16.bmp
+fails == rgb16.bmp rgb16.bmp
 
 # BMP: bihsize=40, 127 x 64, bpp=16, compression=3, colors=0
 # "A 16-bit image with a BITFIELDS segment indicating 5 red, 6 green, and 5 blue

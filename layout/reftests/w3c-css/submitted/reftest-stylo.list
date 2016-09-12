@@ -30,7 +30,8 @@ include flexbox/reftest-stylo.list
 include fonts3/reftest-stylo.list
 
 # Image Values and Replaced Content Level 3
-include images3/reftest-stylo.list
+# Disabled due to svg intermittents
+# include images3/reftest-stylo.list
 
 # Lists and Counters Level 3
 include lists-3/reftest-stylo.list

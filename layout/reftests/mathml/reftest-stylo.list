@@ -98,7 +98,7 @@ skip-if(B2G||Mulet) == quotes-1.xhtml quotes-1.xhtml
 == table-width-3.html table-width-3.html
 == table-width-4.html table-width-4.html
 == underbar-width-1.xhtml underbar-width-1.xhtml
-fails == mathml-type-supported.xhtml mathml-type-supported.xhtml
+skip == mathml-type-supported.xhtml mathml-type-supported.xhtml
 == mtable-align-negative-rownumber.html mtable-align-negative-rownumber.html
 == embellished-op-1-1.html embellished-op-1-1.html
 == embellished-op-1-2.html embellished-op-1-2.html
@@ -395,7 +395,7 @@ fuzzy-if(OSX,1,100) fuzzy-if(skiaContent,1,14) == mfrac-D-1.html mfrac-D-1.html
 == mfrac-D-3.html mfrac-D-3.html
 == mfrac-D-4.html mfrac-D-4.html
 == mfrac-E-1.html mfrac-E-1.html
-test-pref(dom.webcomponents.enabled,true) == shadow-dom-1.html shadow-dom-1.html
+skip == shadow-dom-1.html shadow-dom-1.html
 pref(font.size.inflation.emPerLine,25) == font-inflation-1.html font-inflation-1.html
 test-pref(font.minimum-size.x-math,40) == default-font.html default-font.html
 == radicalbar-1.html radicalbar-1.html
