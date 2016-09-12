@@ -137,6 +137,10 @@ public:
   void SetAnimationIndex(uint64_t aIndex)
   {
     MOZ_ASSERT(IsTiedToMarkup());
+    if (IsRelevant() &&
+        mAnimationIndex != aIndex) {
+      nsNodeUtils::AnimationChanged(this);
+    }
     mAnimationIndex = aIndex;
   }
 
