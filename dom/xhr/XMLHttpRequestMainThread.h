@@ -470,6 +470,10 @@ public:
   virtual void
   GetResponseText(nsAString& aResponseText, ErrorResult& aRv) override;
 
+  void
+  GetResponseText(XMLHttpRequestStringSnapshot& aSnapshot,
+                  ErrorResult& aRv);
+
   virtual nsIDocument*
   GetResponseXML(ErrorResult& aRv) override;
 

@@ -476,7 +476,7 @@ class EventRunnable final : public MainThreadProxyRunnable
   nsString mType;
   nsString mResponseType;
   JS::Heap<JS::Value> mResponse;
-  nsString mResponseText;
+  XMLHttpRequestStringSnapshot mResponseText;
   nsString mResponseURL;
   nsCString mStatusText;
   uint64_t mLoaded;
@@ -1129,7 +1129,10 @@ EventRunnable::PreDispatch(WorkerPrivate* /* unused */)
     MOZ_ASSERT(false, "This should never fail!");
   }
 
-  mResponseTextResult = xhr->GetResponseText(mResponseText);
+  ErrorResult rv;
+  xhr->GetResponseText(mResponseText, rv);
+  mResponseTextResult = rv.StealNSResult();
+
   if (NS_SUCCEEDED(mResponseTextResult)) {
     mResponseResult = mResponseTextResult;
     if (mResponseText.IsVoid()) {
@@ -1172,7 +1175,6 @@ EventRunnable::PreDispatch(WorkerPrivate* /* unused */)
         }
 
         if (doClone) {
-          ErrorResult rv;
           Write(cx, response, transferable, rv);
           if (NS_WARN_IF(rv.Failed())) {
             NS_WARNING("Failed to clone response!");
@@ -1186,7 +1188,6 @@ EventRunnable::PreDispatch(WorkerPrivate* /* unused */)
 
   mStatusResult = xhr->GetStatus(&mStatus);
 
-  ErrorResult rv;
   xhr->GetStatusText(mStatusText, rv);
   MOZ_ASSERT(!rv.Failed());
 
@@ -2391,10 +2392,11 @@ XMLHttpRequestWorker::GetResponse(JSContext* /* unused */,
       mStateData.mResponse =
         JS_GetEmptyStringValue(mWorkerPrivate->GetJSContext());
     } else {
+      XMLHttpRequestStringSnapshotReaderHelper helper(mStateData.mResponseText);
+
       JSString* str =
         JS_NewUCStringCopyN(mWorkerPrivate->GetJSContext(),
-                            mStateData.mResponseText.get(),
-                            mStateData.mResponseText.Length());
+                            helper.Buffer(), helper.Length());
 
       if (!str) {
         aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
@@ -2414,7 +2416,13 @@ void
 XMLHttpRequestWorker::GetResponseText(nsAString& aResponseText, ErrorResult& aRv)
 {
   aRv = mStateData.mResponseTextResult;
-  aResponseText = mStateData.mResponseText;
+  if (aRv.Failed()) {
+    return;
+  }
+
+  nsAutoString foo;
+  mStateData.mResponseText.GetAsString(foo);
+  aResponseText.Assign(foo.BeginReading(), foo.Length());
 }
 
 void

@@ -567,9 +567,7 @@ NS_IMETHODIMP
 XMLHttpRequestMainThread::GetResponseText(nsAString& aResponseText)
 {
   ErrorResult rv;
-  nsString responseText;
-  GetResponseText(responseText, rv);
-  aResponseText = responseText;
+  GetResponseText(aResponseText, rv);
   return rv.StealNSResult();
 }
 
@@ -577,7 +575,20 @@ void
 XMLHttpRequestMainThread::GetResponseText(nsAString& aResponseText,
                                           ErrorResult& aRv)
 {
-  aResponseText.Truncate();
+  XMLHttpRequestStringSnapshot snapshot;
+  GetResponseText(snapshot, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  snapshot.GetAsString(aResponseText);
+}
+
+void
+XMLHttpRequestMainThread::GetResponseText(XMLHttpRequestStringSnapshot& aSnapshot,
+                                          ErrorResult& aRv)
+{
+  aSnapshot.Reset();
 
   if (mResponseType != XMLHttpRequestResponseType::_empty &&
       mResponseType != XMLHttpRequestResponseType::Text &&
@@ -588,7 +599,7 @@ XMLHttpRequestMainThread::GetResponseText(nsAString& aResponseText,
 
   if (mResponseType == XMLHttpRequestResponseType::Moz_chunked_text &&
       !mInLoadProgressEvent) {
-    aResponseText.SetIsVoid(true);
+    aSnapshot.SetVoid();
     return;
   }
 
@@ -601,7 +612,7 @@ XMLHttpRequestMainThread::GetResponseText(nsAString& aResponseText,
   // more.
   if ((!mResponseXML && !mErrorParsingXML) ||
       mResponseBodyDecodedPos == mResponseBody.Length()) {
-    mResponseText.GetAsString(aResponseText);
+    mResponseText.CreateSnapshot(aSnapshot);
     return;
   }
 
@@ -623,7 +634,7 @@ XMLHttpRequestMainThread::GetResponseText(nsAString& aResponseText,
     mResponseBodyDecodedPos = 0;
   }
 
-  mResponseText.GetAsString(aResponseText);
+  mResponseText.CreateSnapshot(aSnapshot);
 }
 
 nsresult
@@ -746,7 +757,7 @@ XMLHttpRequestMainThread::GetResponse(JSContext* aCx,
   case XMLHttpRequestResponseType::Text:
   case XMLHttpRequestResponseType::Moz_chunked_text:
   {
-    nsString str;
+    nsAutoString str;
     aRv = GetResponseText(str);
     if (aRv.Failed()) {
       return;
