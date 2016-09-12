@@ -1300,6 +1300,21 @@ function defineSyncGUID(aAddon) {
   });
 }
 
+// Generate a unique ID based on the path to this temporary add-on location.
+function generateTemporaryInstallID(aFile) {
+  const hasher = Cc["@mozilla.org/security/hash;1"]
+        .createInstance(Ci.nsICryptoHash);
+  hasher.init(hasher.SHA1);
+  const data = new TextEncoder().encode(aFile.path);
+  // Make it so this ID cannot be guessed.
+  const sess = TEMP_INSTALL_ID_GEN_SESSION;
+  hasher.update(sess, sess.length);
+  hasher.update(data, data.length);
+  let id = `${getHashStringForCrypto(hasher)}@temporary-addon`;
+  logger.info(`Generated temp id ${id} (${sess.join("")}) for ${aFile.path}`);
+  return id;
+}
+
 /**
  * Loads an AddonInternal object from an add-on extracted in a directory.
  *
@@ -1375,19 +1390,7 @@ var loadManifestFromDir = Task.async(function*(aDir, aInstallLocation) {
     addon = yield loadManifestFromWebManifest(uri);
     if (!addon.id) {
       if (aInstallLocation == TemporaryInstallLocation) {
-        // Generate a unique ID based on the directory path of
-        // this temporary add-on location.
-        const hasher = Cc["@mozilla.org/security/hash;1"]
-          .createInstance(Ci.nsICryptoHash);
-        hasher.init(hasher.SHA1);
-        const data = new TextEncoder().encode(aDir.path);
-        // Make it so this ID cannot be guessed.
-        const sess = TEMP_INSTALL_ID_GEN_SESSION;
-        hasher.update(sess, sess.length);
-        hasher.update(data, data.length);
-        addon.id = `${getHashStringForCrypto(hasher)}@temporary-addon`;
-        logger.info(
-          `Generated temp id ${addon.id} (${sess.join("")}) for ${aDir.path}`);
+        addon.id = generateTemporaryInstallID(aDir);
       } else {
         addon.id = aDir.leafName;
       }
@@ -1475,10 +1478,15 @@ var loadManifestFromZipReader = Task.async(function*(aZipReader, aInstallLocatio
 
   let {signedState, cert} = yield verifyZipSignedState(aZipReader.file, addon);
   addon.signedState = signedState;
-  if (isWebExtension && !addon.id && cert) {
-    addon.id = cert.commonName;
-    if (!gIDTest.test(addon.id)) {
-      throw new Error(`Webextension is signed with an invalid id (${addon.id})`);
+  if (isWebExtension && !addon.id) {
+    if (cert) {
+      addon.id = cert.commonName;
+      if (!gIDTest.test(addon.id)) {
+        throw new Error(`Webextension is signed with an invalid id (${addon.id})`);
+      }
+    }
+    if (!addon.id && aInstallLocation == TemporaryInstallLocation) {
+      addon.id = generateTemporaryInstallID(aZipReader.file);
     }
   }
   addon.appDisabled = !isUsableAddon(addon);
@@ -4819,8 +4827,7 @@ this.XPIProvider = {
    */
   callBootstrapMethod: function(aAddon, aFile, aMethod, aReason, aExtraParams) {
     if (!aAddon.id || !aAddon.version || !aAddon.type) {
-      logger.error(new Error("aAddon must include an id, version, and type"));
-      return;
+      throw new Error("aAddon must include an id, version, and type");
     }
 
     // Only run in safe mode if allowed to
