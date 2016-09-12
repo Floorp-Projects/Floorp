@@ -62,7 +62,7 @@ function* checkCopySelection(view) {
                         "font-variant-caps: small-caps;[\\r\\n]*";
 
   try {
-    yield waitForClipboard(() => fireCopyEvent(props[0]),
+    yield waitForClipboardPromise(() => fireCopyEvent(props[0]),
                            () => checkClipboardData(expectedPattern));
   } catch (e) {
     failedClipboard(expectedPattern);
@@ -84,7 +84,7 @@ function* checkSelectAll(view) {
                         "font-variant-caps: small-caps;[\\r\\n]*";
 
   try {
-    yield waitForClipboard(() => fireCopyEvent(prop),
+    yield waitForClipboardPromise(() => fireCopyEvent(prop),
                            () => checkClipboardData(expectedPattern));
   } catch (e) {
     failedClipboard(expectedPattern);
