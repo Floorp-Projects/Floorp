@@ -9833,23 +9833,23 @@ nsDocShell::InternalLoad(nsIURI* aURI,
     contentType = nsIContentPolicy::TYPE_DOCUMENT;
   }
 
-  nsISupports* context = requestingElement;
-  if (!context) {
-    context = ToSupports(scriptGlobal);
+  nsISupports* requestingContext = requestingElement;
+  if (!requestingContext) {
+    requestingContext = ToSupports(scriptGlobal);
   }
 
   // XXXbz would be nice to know the loading principal here... but we don't
-  nsCOMPtr<nsIPrincipal> loadingPrincipal = aTriggeringPrincipal;
-  if (!loadingPrincipal && aReferrer) {
+  nsCOMPtr<nsIPrincipal> requestingPrincipal = aTriggeringPrincipal;
+  if (!requestingPrincipal && aReferrer) {
     rv =
-      CreatePrincipalFromReferrer(aReferrer, getter_AddRefs(loadingPrincipal));
+      CreatePrincipalFromReferrer(aReferrer, getter_AddRefs(requestingPrincipal));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   rv = NS_CheckContentLoadPolicy(contentType,
                                  aURI,
-                                 loadingPrincipal,
-                                 context,
+                                 requestingPrincipal,
+                                 requestingContext,
                                  EmptyCString(),  // mime guess
                                  nullptr,  // extra
                                  &shouldLoad);
@@ -9865,7 +9865,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
   // If HSTS priming was set by nsMixedContentBlocker::ShouldLoad, and we
   // would block due to mixed content, go ahead and block here. If we try to
   // proceed with priming, we will error out later on.
-  nsCOMPtr<nsIDocShell> docShell = NS_CP_GetDocShellFromContext(context);
+  nsCOMPtr<nsIDocShell> docShell = NS_CP_GetDocShellFromContext(requestingContext);
   NS_ENSURE_TRUE(docShell, NS_OK);
   if (docShell) {
     nsIDocument* document = docShell->GetDocument();
