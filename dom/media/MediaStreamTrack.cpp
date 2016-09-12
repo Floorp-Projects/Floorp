@@ -124,8 +124,7 @@ MediaStreamTrack::MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID,
     mInputTrackID(aInputTrackID), mSource(aSource),
     mPrincipal(aSource->GetPrincipal()),
     mReadyState(MediaStreamTrackState::Live),
-    mEnabled(true), mRemote(aSource->IsRemote()),
-    mConstraints(aConstraints)
+    mEnabled(true), mConstraints(aConstraints)
 {
 
   GetSource().RegisterSink(this);
@@ -233,11 +232,6 @@ MediaStreamTrack::Stop()
 
   if (Ended()) {
     LOG(LogLevel::Warning, ("MediaStreamTrack %p Already ended", this));
-    return;
-  }
-
-  if (mRemote) {
-    LOG(LogLevel::Warning, ("MediaStreamTrack %p is remote. Can't be stopped.", this));
     return;
   }
 
