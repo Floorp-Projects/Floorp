@@ -1437,7 +1437,9 @@ GetWorkerPrivateFromContext(JSContext* aCx)
   MOZ_ASSERT(aCx);
 
   void* cxPrivate = JS_GetContextPrivate(aCx);
-  MOZ_ASSERT(cxPrivate);
+  if (!cxPrivate) {
+    return nullptr;
+  }
 
   return
     static_cast<WorkerThreadContextPrivate*>(cxPrivate)->GetWorkerPrivate();
@@ -1457,7 +1459,13 @@ GetCurrentThreadWorkerPrivate()
   MOZ_ASSERT(cx);
 
   void* cxPrivate = JS_GetContextPrivate(cx);
-  MOZ_ASSERT(cxPrivate);
+  if (!cxPrivate) {
+    // This can happen if the nsCycleCollector_shutdown() in ~WorkerJSRuntime()
+    // triggers any calls to GetCurrentThreadWorkerPrivate().  At this stage
+    // CycleCollectedJSRuntime::Get() will still return a runtime, but
+    // the context private has already been cleared.
+    return nullptr;
+  }
 
   return
     static_cast<WorkerThreadContextPrivate*>(cxPrivate)->GetWorkerPrivate();
