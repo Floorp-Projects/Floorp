@@ -376,10 +376,10 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
 }
 
 void
-MediaFormatReader::OnDemuxerInitFailed(DemuxerFailureReason aFailure)
+MediaFormatReader::OnDemuxerInitFailed(const MediaResult& aError)
 {
   mDemuxerInitRequest.Complete();
-  mMetadataPromise.Reject(NS_ERROR_DOM_MEDIA_METADATA_ERR, __func__);
+  mMetadataPromise.Reject(aError, __func__);
 }
 
 bool
@@ -568,37 +568,33 @@ MediaFormatReader::RequestVideoData(bool aSkipToNextKeyframe,
 }
 
 void
-MediaFormatReader::OnDemuxFailed(TrackType aTrack, DemuxerFailureReason aFailure)
+MediaFormatReader::OnDemuxFailed(TrackType aTrack, const MediaResult& aError)
 {
   MOZ_ASSERT(OnTaskQueue());
-  LOG("Failed to demux %s, failure:%d",
-      aTrack == TrackType::kVideoTrack ? "video" : "audio", aFailure);
+  LOG("Failed to demux %s, failure:%u",
+      aTrack == TrackType::kVideoTrack ? "video" : "audio", aError.Code());
   auto& decoder = GetDecoderData(aTrack);
   decoder.mDemuxRequest.Complete();
-  switch (aFailure) {
-    case DemuxerFailureReason::END_OF_STREAM:
+  switch (aError.Code()) {
+    case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
       if (!decoder.mWaitingForData) {
         decoder.mNeedDraining = true;
       }
       NotifyEndOfStream(aTrack);
       break;
-    case DemuxerFailureReason::DEMUXER_ERROR:
-      NotifyError(aTrack);
-      break;
-    case DemuxerFailureReason::WAITING_FOR_DATA:
+    case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
       if (!decoder.mWaitingForData) {
         decoder.mNeedDraining = true;
       }
       NotifyWaitingForData(aTrack);
       break;
-    case DemuxerFailureReason::CANCELED: MOZ_FALLTHROUGH;
-    case DemuxerFailureReason::SHUTDOWN:
+    case NS_ERROR_DOM_MEDIA_CANCELED:
       if (decoder.HasPromise()) {
         decoder.RejectPromise(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
       }
       break;
     default:
-      MOZ_ASSERT(false);
+      NotifyError(aTrack, aError);
       break;
   }
 }
@@ -1052,24 +1048,23 @@ MediaFormatReader::InternalSeek(TrackType aTrack, const InternalSeekTarget& aTar
                       self->SetVideoDecodeThreshold();
                       self->ScheduleUpdate(aTrack);
                     },
-                    [self, aTrack] (DemuxerFailureReason aResult) {
+                    [self, aTrack] (const MediaResult& aError) {
                       auto& decoder = self->GetDecoderData(aTrack);
                       decoder.mSeekRequest.Complete();
-                      switch (aResult) {
-                        case DemuxerFailureReason::WAITING_FOR_DATA:
+                      switch (aError.Code()) {
+                        case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
                           self->NotifyWaitingForData(aTrack);
                           break;
-                        case DemuxerFailureReason::END_OF_STREAM:
+                        case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
                           decoder.mTimeThreshold.reset();
                           self->NotifyEndOfStream(aTrack);
                           break;
-                        case DemuxerFailureReason::CANCELED: MOZ_FALLTHROUGH;
-                        case DemuxerFailureReason::SHUTDOWN:
+                        case NS_ERROR_DOM_MEDIA_CANCELED:
                           decoder.mTimeThreshold.reset();
                           break;
                         default:
                           decoder.mTimeThreshold.reset();
-                          self->NotifyError(aTrack);
+                          self->NotifyError(aTrack, aError);
                           break;
                       }
                     }));
@@ -1566,9 +1561,9 @@ MediaFormatReader::OnVideoSkipFailed(MediaTrackDemuxer::SkipFailureHolder aFailu
   LOG("Skipping failed, skipped %u frames", aFailure.mSkipped);
   mSkipRequest.Complete();
 
-  switch (aFailure.mFailure) {
-    case DemuxerFailureReason::END_OF_STREAM: MOZ_FALLTHROUGH;
-    case DemuxerFailureReason::WAITING_FOR_DATA:
+  switch (aFailure.mFailure.Code()) {
+    case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
+    case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
       // Some frames may have been output by the decoder since we initiated the
       // videoskip process and we know they would be late.
       DropDecodedSamples(TrackInfo::kVideoTrack);
@@ -1576,14 +1571,13 @@ MediaFormatReader::OnVideoSkipFailed(MediaTrackDemuxer::SkipFailureHolder aFailu
       // normally.
       ScheduleUpdate(TrackInfo::kVideoTrack);
       break;
-    case DemuxerFailureReason::CANCELED: MOZ_FALLTHROUGH;
-    case DemuxerFailureReason::SHUTDOWN:
+    case NS_ERROR_DOM_MEDIA_CANCELED:
       if (mVideo.HasPromise()) {
-        mVideo.RejectPromise(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
+        mVideo.RejectPromise(aFailure.mFailure, __func__);
       }
       break;
     default:
-      NotifyError(TrackType::kVideoTrack);
+      NotifyError(TrackType::kVideoTrack, aFailure.mFailure);
       break;
   }
 }
@@ -1695,17 +1689,17 @@ MediaFormatReader::AttemptSeek()
 }
 
 void
-MediaFormatReader::OnSeekFailed(TrackType aTrack, DemuxerFailureReason aResult)
+MediaFormatReader::OnSeekFailed(TrackType aTrack, const MediaResult& aError)
 {
   MOZ_ASSERT(OnTaskQueue());
-  LOGV("%s failure:%d", TrackTypeToStr(aTrack), aResult);
+  LOGV("%s failure:%u", TrackTypeToStr(aTrack), aError.Code());
   if (aTrack == TrackType::kVideoTrack) {
     mVideo.mSeekRequest.Complete();
   } else {
     mAudio.mSeekRequest.Complete();
   }
 
-  if (aResult == DemuxerFailureReason::WAITING_FOR_DATA) {
+  if (aError == NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA) {
     if (HasVideo() && aTrack == TrackType::kAudioTrack &&
         mFallbackSeekTime.isSome() &&
         mPendingSeekTime.ref() != mFallbackSeekTime.ref()) {
@@ -1739,7 +1733,7 @@ MediaFormatReader::OnSeekFailed(TrackType aTrack, DemuxerFailureReason aResult)
   }
   MOZ_ASSERT(!mVideo.mSeekRequest.Exists() && !mAudio.mSeekRequest.Exists());
   mPendingSeekTime.reset();
-  mSeekPromise.Reject(NS_ERROR_FAILURE, __func__);
+  mSeekPromise.Reject(aError, __func__);
 }
 
 void
@@ -1780,10 +1774,10 @@ MediaFormatReader::OnVideoSeekCompleted(media::TimeUnit aTime)
 }
 
 void
-MediaFormatReader::OnVideoSeekFailed(DemuxerFailureReason aFailure)
+MediaFormatReader::OnVideoSeekFailed(const MediaResult& aError)
 {
   mPreviousDecodedKeyframeTime_us = sNoPreviousDecodedKeyframe;
-  OnSeekFailed(TrackType::kVideoTrack, aFailure);
+  OnSeekFailed(TrackType::kVideoTrack, aError);
 }
 
 void
@@ -1847,9 +1841,9 @@ MediaFormatReader::OnAudioSeekCompleted(media::TimeUnit aTime)
 }
 
 void
-MediaFormatReader::OnAudioSeekFailed(DemuxerFailureReason aFailure)
+MediaFormatReader::OnAudioSeekFailed(const MediaResult& aError)
 {
-  OnSeekFailed(TrackType::kAudioTrack, aFailure);
+  OnSeekFailed(TrackType::kAudioTrack, aError);
 }
 
 media::TimeIntervals

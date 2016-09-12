@@ -169,7 +169,7 @@ BenchmarkPlayback::DemuxSamples()
       }
       DemuxNextSample();
     },
-    [this, ref](DemuxerFailureReason aReason) { MainThreadShutdown(); });
+    [this, ref](const MediaResult& aError) { MainThreadShutdown(); });
 }
 
 void
@@ -190,9 +190,9 @@ BenchmarkPlayback::DemuxNextSample()
         Dispatch(NS_NewRunnableFunction([this, ref]() { DemuxNextSample(); }));
       }
     },
-    [this, ref](DemuxerFailureReason aReason) {
-      switch (aReason) {
-        case DemuxerFailureReason::END_OF_STREAM:
+    [this, ref](const MediaResult& aError) {
+      switch (aError.Code()) {
+        case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
           InitDecoder(Move(*mTrackDemuxer->GetInfo()));
           break;
         default:
