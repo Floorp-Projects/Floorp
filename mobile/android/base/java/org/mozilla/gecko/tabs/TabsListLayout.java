@@ -11,6 +11,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
 import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.AttributeSet;
 import android.view.View;
 
@@ -29,6 +30,11 @@ public class TabsListLayout extends TabsLayout {
         setHasFixedSize(true);
 
         setLayoutManager(new LinearLayoutManager(context));
+
+        // A TouchHelper handler for swipe to close.
+        final TabsTouchHelperCallback callback = new TabsTouchHelperCallback(this);
+        final ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
+        touchHelper.attachToRecyclerView(this);
     }
 
     @Override
