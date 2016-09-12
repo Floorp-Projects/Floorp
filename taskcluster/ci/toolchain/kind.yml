@@ -1,0 +1,53 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+implementation: taskgraph.task.transform:TransformTask
+
+transforms:
+   - taskgraph.transforms.build_attrs:transforms
+   - taskgraph.transforms.job:transforms
+   - taskgraph.transforms.task:transforms
+
+job-defaults:
+    description: toolchain build
+    treeherder:
+        kind: build
+        tier: 1
+        platform: linux64/opt
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        implementation: docker-worker
+        docker-image: {in-tree: desktop-build}
+        max-run-time: 36000
+
+jobs:
+    linux64-clang/opt:
+        index:
+            product: firefox
+            job-name:
+                gecko-v2: linux64-clang-opt
+        treeherder:
+            symbol: Cc(Clang)
+        run:
+            using: toolchain-script
+            script: build-clang-linux.sh
+        when:
+            files-changed:
+                - 'build/build-clang/**'
+                - 'taskcluster/scripts/misc/build-clang-linux.sh'
+
+    linux64-gcc/opt:
+        index:
+            product: firefox
+            job-name:
+                gecko-v2: linux64-gcc-opt
+        treeherder:
+            symbol: Cc(GCC)
+        run:
+            using: toolchain-script
+            script: build-gcc-linux.sh
+        when:
+            files-changed:
+                - 'build/unix/build-gcc/**'
+                - 'taskcluster/scripts/misc/build-gcc-linux.sh'

@@ -35,6 +35,7 @@ BUILD_KINDS = set([
 # anything in this list is governed by -j
 JOB_KINDS = set([
     'source-check',
+    'toolchain',
 ])
 
 
