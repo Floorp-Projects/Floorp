@@ -212,7 +212,7 @@ private:
     mDone = true;
 #endif
     mCallback->SetResult(aResult);
-    MOZ_ALWAYS_SUCCEEDS(mWorkerPrivate->DispatchToMainThread(mCallback));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(mCallback));
   }
 };
 
@@ -495,7 +495,7 @@ public:
   {
     nsCOMPtr<nsIRunnable> runnable =
       new RegistrationUpdateRunnable(mRegistration, true /* time check */);
-    aWorkerPrivate->DispatchToMainThread(runnable.forget());
+    NS_DispatchToMainThread(runnable.forget());
 
     ExtendableEventWorkerRunnable::PostRun(aCx, aWorkerPrivate, aRunResult);
   }
@@ -535,7 +535,7 @@ public:
   Cancel() override
   {
     mCallback->SetResult(false);
-    MOZ_ALWAYS_SUCCEEDS(mWorkerPrivate->DispatchToMainThread(mCallback));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(mCallback));
 
     return WorkerRunnable::Cancel();
   }
@@ -631,7 +631,7 @@ public:
     mDone = true;
 
     mCallback->SetResult(aResult);
-    nsresult rv = mWorkerPrivate->DispatchToMainThread(mCallback);
+    nsresult rv = NS_DispatchToMainThread(mCallback);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       NS_RUNTIMEABORT("Failed to dispatch life cycle event handler.");
     }
@@ -762,7 +762,6 @@ public:
 
   void Report(uint16_t aReason = nsIPushErrorReporter::DELIVERY_INTERNAL_ERROR)
   {
-    WorkerPrivate* workerPrivate = mWorkerPrivate;
     mWorkerPrivate->AssertIsOnWorkerThread();
     mWorkerPrivate = nullptr;
 
@@ -774,7 +773,7 @@ public:
       NewRunnableMethod<uint16_t>(this,
         &PushErrorReporter::ReportOnMainThread, aReason);
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      workerPrivate->DispatchToMainThread(runnable.forget())));
+      NS_DispatchToMainThread(runnable.forget())));
   }
 
   void ReportOnMainThread(uint16_t aReason)
@@ -1421,7 +1420,7 @@ public:
   Cancel() override
   {
     nsCOMPtr<nsIRunnable> runnable = new ResumeRequest(mInterceptedChannel);
-    if (NS_FAILED(mWorkerPrivate->DispatchToMainThread(runnable))) {
+    if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
       NS_WARNING("Failed to resume channel on FetchEventRunnable::Cancel()!\n");
     }
     WorkerRunnable::Cancel();
@@ -1535,7 +1534,7 @@ private:
                                              NS_ERROR_INTERCEPTION_FAILED);
       }
 
-      MOZ_ALWAYS_SUCCEEDS(mWorkerPrivate->DispatchToMainThread(runnable.forget()));
+      MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
     }
 
     RefPtr<Promise> waitUntilPromise = event->GetPromise();

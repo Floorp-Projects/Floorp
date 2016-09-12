@@ -59,7 +59,6 @@ struct RuntimeStats;
 } // namespace JS
 
 namespace mozilla {
-class TaskQueue;
 namespace dom {
 class Function;
 class MessagePort;
@@ -918,8 +917,6 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   nsTObserverArray<WorkerHolder*> mHolders;
   nsTArray<nsAutoPtr<TimeoutInfo>> mTimeouts;
   uint32_t mDebuggerEventLoopLevel;
-  RefPtr<TaskQueue> mMainThreadTaskQueue;
-  nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
 
   struct SyncLoopInfo
   {
@@ -1343,20 +1340,6 @@ public:
 
   void
   MaybeDispatchLoadFailedRunnable();
-
-  // Get the event target to use when dispatching to the main thread
-  // from this Worker thread.  This may be the main thread itself or
-  // a TaskQueue throttling runnables to the main thread.
-  nsIEventTarget*
-  MainThreadEventTarget();
-
-  nsresult
-  DispatchToMainThread(nsIRunnable* aRunnable,
-                       uint32_t aFlags = NS_DISPATCH_NORMAL);
-
-  nsresult
-  DispatchToMainThread(already_AddRefed<nsIRunnable> aRunnable,
-                       uint32_t aFlags = NS_DISPATCH_NORMAL);
 
 private:
   WorkerPrivate(WorkerPrivate* aParent,
