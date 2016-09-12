@@ -223,7 +223,23 @@ public:
 
   // Event handlers for various events.
   // Return true if the event is handled by this state object.
-  virtual bool HandleDormant(bool aDormant) { return false; }
+  virtual bool HandleDormant(bool aDormant)
+  {
+    if (!aDormant) {
+      return true;
+    }
+    mMaster->mQueuedSeek.mTarget =
+      SeekTarget(mMaster->mCurrentPosition,
+                 SeekTarget::Accurate,
+                 MediaDecoderEventVisibility::Suppressed);
+    // SeekJob asserts |mTarget.IsValid() == !mPromise.IsEmpty()| so we
+    // need to create the promise even it is not used at all.
+    RefPtr<MediaDecoder::SeekPromise> unused =
+      mMaster->mQueuedSeek.mPromise.Ensure(__func__);
+    SetState(DECODER_STATE_DORMANT);
+    return true;
+  }
+
   virtual bool HandleCDMProxyReady() { return false; }
 
 protected:
@@ -1522,30 +1538,7 @@ void
 MediaDecoderStateMachine::SetDormant(bool aDormant)
 {
   MOZ_ASSERT(OnTaskQueue());
-
-  if (mStateObj->HandleDormant(aDormant)) {
-    return;
-  }
-
-  // These states are already handled by |mStateObj->HandleDormant| above.
-  MOZ_ASSERT(mState != DECODER_STATE_DORMANT &&
-             mState != DECODER_STATE_SEEKING);
-
-  // Nothing to do for we are not in dormant state.
-  if (!aDormant) {
-    return;
-  }
-
-  DECODER_LOG("Enter dormant state");
-
-  mQueuedSeek.mTarget = SeekTarget(mCurrentPosition,
-                                   SeekTarget::Accurate,
-                                   MediaDecoderEventVisibility::Suppressed);
-  // SeekJob asserts |mTarget.IsValid() == !mPromise.IsEmpty()| so we
-  // need to create the promise even it is not used at all.
-  RefPtr<MediaDecoder::SeekPromise> unused = mQueuedSeek.mPromise.Ensure(__func__);
-
-  SetState(DECODER_STATE_DORMANT);
+  mStateObj->HandleDormant(aDormant);
 }
 
 RefPtr<ShutdownPromise>
