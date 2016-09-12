@@ -618,7 +618,7 @@ class LegacyTask(base.Task):
 
         return deps
 
-    def optimize(self):
+    def optimize(self, params):
         # no optimization for the moment
         return False, None
 

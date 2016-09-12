@@ -54,6 +54,7 @@ job_description_schema = Schema({
     Optional('coalesce-name'): task_description_schema['coalesce-name'],
     Optional('worker-type'): task_description_schema['worker-type'],
     Required('worker'): task_description_schema['worker'],
+    Optional('when'): task_description_schema['when'],
 
     # A description of how to run this job.
     'run': {
