@@ -718,7 +718,7 @@ nsImageFrame::MaybeDecodeForPredictedSize()
     return;  // We won't draw anything, so no point in decoding.
   }
 
-  if (!IsVisibleOrMayBecomeVisibleSoon()) {
+  if (GetVisibility() != Visibility::APPROXIMATELY_VISIBLE) {
     return;  // We're not visible, so don't decode.
   }
 
@@ -2093,29 +2093,23 @@ nsImageFrame::AttributeChanged(int32_t aNameSpaceID,
 }
 
 void
-nsImageFrame::OnVisibilityChange(Visibility aOldVisibility,
-                                 Visibility aNewVisibility,
+nsImageFrame::OnVisibilityChange(Visibility aNewVisibility,
                                  Maybe<OnNonvisible> aNonvisibleAction)
 {
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
   if (!imageLoader) {
     MOZ_ASSERT_UNREACHABLE("Should have an nsIImageLoadingContent");
-    nsAtomicContainerFrame::OnVisibilityChange(aOldVisibility, aNewVisibility,
-                                               aNonvisibleAction);
+    nsAtomicContainerFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
     return;
   }
 
-  imageLoader->OnVisibilityChange(aOldVisibility, aNewVisibility,
-                                  aNonvisibleAction);
+  imageLoader->OnVisibilityChange(aNewVisibility, aNonvisibleAction);
 
-  if (aOldVisibility == Visibility::NONVISIBLE &&
-        (aNewVisibility == Visibility::MAY_BECOME_VISIBLE ||
-         aNewVisibility == Visibility::IN_DISPLAYPORT)) {
+  if (aNewVisibility == Visibility::APPROXIMATELY_VISIBLE) {
     MaybeDecodeForPredictedSize();
   }
 
-  nsAtomicContainerFrame::OnVisibilityChange(aOldVisibility, aNewVisibility,
-                                             aNonvisibleAction);
+  nsAtomicContainerFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
 }
 
 nsIAtom*

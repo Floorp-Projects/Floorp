@@ -64,8 +64,7 @@ public:
                                     nsIAtom* aAttribute,
                                     int32_t  aModType) override;
 
-  void OnVisibilityChange(Visibility aOldVisibility,
-                          Visibility aNewVisibility,
+  void OnVisibilityChange(Visibility aNewVisibility,
                           Maybe<OnNonvisible> aNonvisibleAction = Nothing()) override;
 
   virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override {
@@ -85,7 +84,7 @@ NS_IMPL_FRAMEARENA_HELPERS(SVGFEImageFrame)
 /* virtual */ void
 SVGFEImageFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  DecVisibilityCount(VisibilityCounter::IN_DISPLAYPORT);
+  DecApproximateVisibleCount();
 
   nsCOMPtr<nsIImageLoadingContent> imageLoader =
     do_QueryInterface(nsFrame::mContent);
@@ -108,7 +107,7 @@ SVGFEImageFrame::Init(nsIContent*       aContent,
   nsFrame::Init(aContent, aParent, aPrevInFlow);
 
   // We assume that feImage's are always visible.
-  IncVisibilityCount(VisibilityCounter::IN_DISPLAYPORT);
+  IncApproximateVisibleCount();
 
   nsCOMPtr<nsIImageLoadingContent> imageLoader =
     do_QueryInterface(nsFrame::mContent);
@@ -152,22 +151,18 @@ SVGFEImageFrame::AttributeChanged(int32_t  aNameSpaceID,
 }
 
 void
-SVGFEImageFrame::OnVisibilityChange(Visibility aOldVisibility,
-                                    Visibility aNewVisibility,
+SVGFEImageFrame::OnVisibilityChange(Visibility aNewVisibility,
                                     Maybe<OnNonvisible> aNonvisibleAction)
 {
   nsCOMPtr<nsIImageLoadingContent> imageLoader =
     do_QueryInterface(nsFrame::mContent);
   if (!imageLoader) {
     MOZ_ASSERT_UNREACHABLE("Should have an nsIImageLoadingContent");
-    nsFrame::OnVisibilityChange(aOldVisibility, aNewVisibility,
-                                aNonvisibleAction);
+    nsFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
     return;
   }
 
-  imageLoader->OnVisibilityChange(aOldVisibility, aNewVisibility,
-                                  aNonvisibleAction);
+  imageLoader->OnVisibilityChange(aNewVisibility, aNonvisibleAction);
 
-  nsFrame::OnVisibilityChange(aOldVisibility, aNewVisibility,
-                              aNonvisibleAction);
+  nsFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
 }

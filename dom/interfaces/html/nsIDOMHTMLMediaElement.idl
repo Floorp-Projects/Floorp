@@ -140,6 +140,5 @@ interface nsIDOMHTMLMediaElement : nsISupports
    * @param aOldVisibility    The previous visibility state.
    * @param aNewVisibility    The new visibility state.
    */
-  [noscript, notxpcom] void onVisibilityChange(in Visibility aOldVisibility,
-                                               in Visibility aNewVisibility);
+  [noscript, notxpcom] void onVisibilityChange(in Visibility aNewVisibility);
 };
