@@ -407,7 +407,7 @@ toolbarpaletteitem:-moz-any([place="palette"], [place="panel"]) > toolbaritem[sd
 }
 
 .panelUI-grid .toolbarbutton-1:not([buttonover])@buttonStateHover@ > .toolbarbutton-menubutton-dropmarker {
-  background-color: hsla(210,4%,10%,.1) !important;
+  background-color: var(--arrowpanel-dimmed) !important;
   border-radius: 0 0 0 2px;
 }
 
@@ -434,7 +434,7 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"] > iframe {
 }
 
 #PanelUI-multiView[viewtype="subview"] > .panel-viewcontainer > .panel-viewstack > .panel-mainview >  #PanelUI-mainView {
-  background-color: hsla(210,4%,10%,.1);
+  background-color: var(--arrowpanel-dimmed);
 }
 
 #PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-contents-scroller > #PanelUI-contents > .panel-wide-item,
@@ -535,7 +535,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   display: flex;
   flex-shrink: 0;
   flex-direction: column;
-  background-color: hsla(210,4%,10%,.07);
+  background-color: var(--arrowpanel-dimmed);
   padding: 0;
   margin: 0;
 }
@@ -552,7 +552,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 
 #PanelUI-footer-fxa[fxastatus="error"] > #PanelUI-fxa-status::after {
   content: url(chrome://browser/skin/warning.svg);
-  filter: drop-shadow(0 1px 0 hsla(206, 50%, 10%, .15));
+  filter: drop-shadow(0 1px 0 hsla(206,50%,10%,.15));
   width: 47px;
   padding-top: 1px;
   display: block;
@@ -566,7 +566,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   width: 14px;
   height: 14px;
   margin-right: 16.5px;
-  box-shadow: 0px 1px 0px rgba(255, 255, 255, 0.2) inset, 0px -1px 0px rgba(0, 0, 0, 0.1) inset, 0px 1px 0px rgba(12, 27, 38, 0.2);
+  box-shadow: 0px 1px 0px rgba(255,255,255,.2) inset, 0px -1px 0px rgba(0,0,0,.1) inset, 0px 1px 0px rgba(12,27,38,.2);
   border-radius: 2px;
   background-size: contain;
   display: -moz-box;
@@ -909,8 +909,8 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 #PanelUI-help:not([disabled]):hover,
 #PanelUI-customize:hover,
 #PanelUI-quit:not([disabled]):hover {
-  outline: 1px solid hsla(210,4%,10%,.07);
-  background-color: hsla(210,4%,10%,.07);
+  outline: 1px solid var(--arrowpanel-dimmed);
+  background-color: var(--arrowpanel-dimmed);
 }
 
 #PanelUI-fxa-status:not([disabled]):hover:active,
@@ -918,8 +918,8 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 #PanelUI-help:not([disabled]):hover:active,
 #PanelUI-customize:hover:active,
 #PanelUI-quit:not([disabled]):hover:active {
-  outline: 1px solid hsla(210,4%,10%,.12);
-  background-color: hsla(210,4%,10%,.12);
+  outline: 1px solid var(--arrowpanel-dimmed-further);
+  background-color: var(--arrowpanel-dimmed-further);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
 }
 
@@ -931,16 +931,16 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 }
 
 #PanelUI-footer-fxa[fxastatus="error"] {
-  background-color: hsla(42, 94%, 88%, 1.0);
-  border-top: 1px solid hsla(42, 94%, 70%, 1.0);
+  background-color: hsl(42,94%,88%);
+  border-top: 1px solid hsl(42,94%,70%);
 }
 
 #PanelUI-footer-fxa[fxastatus="error"] > #PanelUI-fxa-status:hover {
-  background-color: hsla(42, 94%, 85%, 1.0);
+  background-color: hsl(42,94%,85%);
 }
 
 #PanelUI-footer-fxa[fxastatus="error"] > #PanelUI-fxa-status:hover:active {
-  background-color: hsla(42, 94%, 82%, 1.0);
+  background-color: hsl(42,94%,82%);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
 }
 
@@ -949,27 +949,27 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 }
 
 #PanelUI-update-status[update-status="succeeded"] {
-  background-color: hsla(96, 65%, 75%, 0.5);
+  background-color: hsla(96,65%,75%,.5);
 }
 
 #PanelUI-update-status[update-status="succeeded"]:not([disabled]):hover {
-  background-color: hsla(96, 65%, 75%, 0.8);
+  background-color: hsla(96,65%,75%,.8);
 }
 
 #PanelUI-update-status[update-status="succeeded"]:not([disabled]):hover:active {
-  background-color: hsl(96, 65%, 75%);
+  background-color: hsl(96,65%,75%);
 }
 
 #PanelUI-update-status[update-status="failed"] {
-  background-color: hsla(359, 69%, 84%, 0.5);
+  background-color: hsla(359,69%,84%,.5);
 }
 
 #PanelUI-update-status[update-status="failed"]:not([disabled]):hover {
-  background-color: hsla(359, 69%, 84%, 0.8);
+  background-color: hsla(359,69%,84%,.8);
 }
 
 #PanelUI-update-status[update-status="failed"]:not([disabled]):hover:active {
-  background-color: hsl(359, 69%, 84%);
+  background-color: hsl(359,69%,84%);
 }
 
 #PanelUI-quit:not([disabled]):hover {
@@ -1011,10 +1011,10 @@ panelview .toolbarbutton-1,
 .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton {
   -moz-appearance: none;
   padding: 0 6px;
-  background-color: hsla(210,4%,10%,0);
+  background-color: transparent;
   border-radius: 2px;
   border-style: solid;
-  border-color: hsla(210,4%,10%,0);
+  border-color: transparent;
 }
 
 panelview .toolbarbutton-1,
@@ -1097,12 +1097,12 @@ menuitem.subviewbutton@menuStateHover@,
 .share-provider-button@buttonStateHover@:not([checked="true"]),
 .widget-overflow-list .toolbarbutton-1@buttonStateHover@,
 .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateHover@ {
-  background-color: hsla(210,4%,10%,.08);
-  border-color: hsla(210,4%,10%,.11);
+  background-color: var(--arrowpanel-dimmed);
+  border-color: var(--panel-separator-color);
 }
 
 .toolbaritem-combined-buttons@inAnyPanel@@buttonStateHover@ {
-  border-color: hsla(210,4%,10%,.11);
+  border-color: var(--panel-separator-color);
 }
 
 panelview .toolbarbutton-1:-moz-any(@buttonStateActive@,[checked=true]),
@@ -1112,26 +1112,26 @@ menuitem.subviewbutton@menuStateActive@,
 .share-provider-button:-moz-any(@buttonStateActive@,[checked=true]),
 .widget-overflow-list .toolbarbutton-1@buttonStateActive@,
 .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateActive@ {
-  background-color: hsla(210,4%,10%,.12);
+  background-color: var(--arrowpanel-dimmed-further);
   border-color: var(--panel-separator-color);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
 }
 
 .subviewbutton.panel-subview-footer {
   margin: 4px -4px -4px;
-  background-color: hsla(210,4%,10%,.07);
+  background-color: var(--arrowpanel-dimmed);
   border-top: 1px solid var(--panel-separator-color);
   border-radius: 0;
 }
 
 menuitem.panel-subview-footer@menuStateHover@,
 .subviewbutton.panel-subview-footer@buttonStateHover@ {
-  background-color: hsla(210,4%,10%,.15);
+  background-color: var(--arrowpanel-dimmed-further);
 }
 
 menuitem.panel-subview-footer@menuStateActive@,
 .subviewbutton.panel-subview-footer@buttonStateActive@ {
-  background-color: hsla(210,4%,10%,.19);
+  background-color: var(--arrowpanel-dimmed-even-further);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
 }
 
@@ -1298,11 +1298,11 @@ toolbarpaletteitem[place="palette"] > #search-container {
 }
 
 .toolbaritem-combined-buttons@inAnyPanel@ {
-  background-color: hsla(210,4%,10%,0);
+  background-color: transparent;
   border-radius: 2px;
   border: 1px solid;
-  border-color: hsla(210,4%,10%,0);
-  border-bottom-color: hsla(210,4%,10%,.1);
+  border-color: transparent;
+  border-bottom-color: var(--panel-separator-color);
   padding: 0;
   transition-property: background-color, border-color;
   transition-duration: 150ms;
@@ -1481,7 +1481,7 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
 
 #PanelUI-panic-timeframe {
   padding: 15px;
-  border-bottom: 1px solid rgba(0,0,0,0.1);
+  border-bottom: 1px solid var(--panel-separator-color);
 }
 
 #panic-button-success-icon,
@@ -1540,14 +1540,14 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
 }
 
 .subviewradio@buttonStateHover@ {
-  background-color: hsla(210,4%,10%,.08);
+  background-color: var(--arrowpanel-dimmed);
   border-color: var(--panel-separator-color);
 }
 
 .subviewradio[selected],
 .subviewradio[selected]:hover,
 .subviewradio@buttonStateActive@ {
-  background-color: hsla(210,4%,10%,.12);
+  background-color: var(--arrowpanel-dimmed-further);
   border-color: var(--panel-separator-color);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
 }
