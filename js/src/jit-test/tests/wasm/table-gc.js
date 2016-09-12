@@ -22,7 +22,7 @@ var e = i.exports;
 var t = e.tbl;
 var f = t.get(0);
 assertEq(f(), e.call(0));
-assertErrorMessage(() => e.call(1), Error, /bad wasm indirect call/);
+assertErrorMessage(() => e.call(1), Error, /indirect call to null/);
 assertErrorMessage(() => e.call(2), Error, /out-of-range/);
 assertEq(finalizeCount(), 0);
 i.edge = makeFinalizeObserver();
