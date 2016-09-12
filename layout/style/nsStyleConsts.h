@@ -10,6 +10,7 @@
 
 #include "gfxRect.h"
 #include "nsFont.h"
+#include "mozilla/MacroArgs.h" // for MOZ_CONCAT
 #include "X11UndefineNone.h"
 
 // XXX fold this into nsStyleContext and group by nsStyleXXX struct
@@ -19,7 +20,17 @@ namespace css {
 typedef mozilla::Side Side;
 } // namespace css
 
-#define NS_FOR_CSS_SIDES(var_) for (mozilla::css::Side var_ = NS_SIDE_TOP; var_ <= NS_SIDE_LEFT; var_++)
+// Creates a for loop that walks over the four mozilla::css::Side values.
+// We use an int32_t helper variable (instead of a Side) for our loop counter,
+// to avoid triggering undefined behavior just before we exit the loop (at
+// which point the counter is incremented beyond the largest valid Side value).
+#define NS_FOR_CSS_SIDES(var_)                                           \
+  int32_t MOZ_CONCAT(var_,__LINE__) = NS_SIDE_TOP;                       \
+  for (mozilla::css::Side var_;                                          \
+       MOZ_CONCAT(var_,__LINE__) <= NS_SIDE_LEFT &&                      \
+         ((var_ = mozilla::css::Side(MOZ_CONCAT(var_,__LINE__))), true); \
+       MOZ_CONCAT(var_,__LINE__)++)
+
 static inline css::Side operator++(css::Side& side, int) {
     NS_PRECONDITION(side >= NS_SIDE_TOP &&
                     side <= NS_SIDE_LEFT, "Out of range side");

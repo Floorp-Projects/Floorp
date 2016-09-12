@@ -11,6 +11,53 @@
 namespace mozilla {
 namespace dom {
 
+namespace {
+
+// This class is used in the DTOR of GetFilesHelper to release resources in the
+// correct thread.
+class ReleaseRunnable final : public Runnable
+{
+public:
+  static void
+  MaybeReleaseOnMainThread(nsTArray<RefPtr<Promise>>& aPromises,
+                           nsTArray<RefPtr<GetFilesCallback>>& aCallbacks)
+  {
+    if (NS_IsMainThread()) {
+      return;
+    }
+
+    if (!aPromises.IsEmpty() || !aCallbacks.IsEmpty()) {
+      RefPtr<ReleaseRunnable> runnable =
+        new ReleaseRunnable(aPromises, aCallbacks);
+      NS_DispatchToMainThread(runnable);
+    }
+  }
+
+  NS_IMETHOD
+  Run() override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    mPromises.Clear();
+    mCallbacks.Clear();
+
+    return NS_OK;
+  }
+
+private:
+  ReleaseRunnable(nsTArray<RefPtr<Promise>>& aPromises,
+                  nsTArray<RefPtr<GetFilesCallback>>& aCallbacks)
+  {
+    mPromises.SwapElements(aPromises);
+    mCallbacks.SwapElements(aCallbacks);
+  }
+
+  nsTArray<RefPtr<Promise>> mPromises;
+  nsTArray<RefPtr<GetFilesCallback>> mCallbacks;
+};
+
+} // anonymous
+
 ///////////////////////////////////////////////////////////////////////////////
 // GetFilesHelper Base class
 
@@ -79,6 +126,11 @@ GetFilesHelper::GetFilesHelper(nsIGlobalObject* aGlobal, bool aRecursiveFlag)
   , mMutex("GetFilesHelper::mMutex")
   , mCanceled(false)
 {
+}
+
+GetFilesHelper::~GetFilesHelper()
+{
+  ReleaseRunnable::MaybeReleaseOnMainThread(mPromises, mCallbacks);
 }
 
 void
