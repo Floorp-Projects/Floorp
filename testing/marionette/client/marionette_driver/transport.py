@@ -119,7 +119,7 @@ class TcpTransport(object):
     """
     max_packet_length = 4096
 
-    def __init__(self, addr, port, socket_timeout=360.0):
+    def __init__(self, addr, port, socket_timeout=60.0):
         """If `socket_timeout` is `0` or `0.0`, non-blocking socket mode
         will be used.  Setting it to `1` or `None` disables timeouts on
         socket operations altogether.

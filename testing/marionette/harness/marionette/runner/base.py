@@ -243,7 +243,7 @@ class MarionetteTextTestRunner(StructuredTestRunner):
 
 
 class BaseMarionetteArguments(ArgumentParser):
-    socket_timeout_default = 360.0
+    socket_timeout_default = 60.0
 
     def __init__(self, **kwargs):
         ArgumentParser.__init__(self, **kwargs)
