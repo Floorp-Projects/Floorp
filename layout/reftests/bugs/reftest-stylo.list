@@ -88,7 +88,7 @@ fails fuzzy-if(gtkWidget,6,26200) == 28811-2b.html 28811-2b.html
 == 68061-1.xml 68061-1.xml
 == 68061-2.xml 68061-2.xml
 == 76331-1.html 76331-1.html
-== 81947-1.html 81947-1.html
+random == 81947-1.html 81947-1.html
 == 82711-1.html 82711-1.html
 == 82711-2.html 82711-2.html
 == 82711-3.html 82711-3.html
@@ -148,7 +148,7 @@ random == 99850-1b.html 99850-1b.html
 == 144004-2.html 144004-2.html
 == 144004-3.html 144004-3.html
 == 163504-1a.html 163504-1a.html
-== 163504-1b.html 163504-1b.html
+random == 163504-1b.html 163504-1b.html
 == 163504-2a.html 163504-2a.html
 == 163504-2b.html 163504-2b.html
 == 167496-1.html 167496-1.html
@@ -267,25 +267,25 @@ skip-if((B2G&&browserIsRemote)||Mulet) == 232990-1b.xhtml 232990-1b.xhtml
 == 233094-2a.html 233094-2a.html
 == 233094-2b.html 233094-2b.html
 == 233094-2c.html 233094-2c.html
-fails == 234686-1.html 234686-1.html
-fails == 234686-2.html 234686-2.html
-fails == 234686-3.html 234686-3.html
-== 234686-4.html 234686-4.html
-== 234686-5.html 234686-5.html
-fails == 234686-6.html 234686-6.html
-== 234686-7.html 234686-7.html
+random == 234686-1.html 234686-1.html
+random == 234686-2.html 234686-2.html
+random == 234686-3.html 234686-3.html
+random == 234686-4.html 234686-4.html
+random == 234686-5.html 234686-5.html
+random == 234686-6.html 234686-6.html
+random == 234686-7.html 234686-7.html
 # == 234686-8.html 234686-8.html
-== 234686-9.html 234686-9.html
-fails == 234686-10.html 234686-10.html
-fails == 234686-11.html 234686-11.html
-== 234686-12.html 234686-12.html
-== 234686-13.html 234686-13.html
-fails == 234686-14.html 234686-14.html
-== 234686-15.html 234686-15.html
-== 234686-16.html 234686-16.html
-== 234686-17.html 234686-17.html
-fails == 234686-18.html 234686-18.html
-fails == 234686-19.html 234686-19.html
+random == 234686-9.html 234686-9.html
+random == 234686-10.html 234686-10.html
+random == 234686-11.html 234686-11.html
+random == 234686-12.html 234686-12.html
+random == 234686-13.html 234686-13.html
+random == 234686-14.html 234686-14.html
+random == 234686-15.html 234686-15.html
+random == 234686-16.html 234686-16.html
+random == 234686-17.html 234686-17.html
+random == 234686-18.html 234686-18.html
+random == 234686-19.html 234686-19.html
 skip-if(B2G||Mulet) == 234964-1.html 234964-1.html
 # Initial mulet triage: parity with B2G/B2G Desktop
 == 234964-2.html 234964-2.html
@@ -338,7 +338,7 @@ skip-if((B2G&&browserIsRemote)||Mulet) == 261826-1.xul 261826-1.xul
 # bug 974780
 # Initial mulet triage: parity with B2G/B2G Desktop
 == 262151-1.html 262151-1.html
-fuzzy-if(skiaContent,1,5) == 262998-1.html 262998-1.html
+skip == 262998-1.html 262998-1.html
 == 267353-1.html 267353-1.html
 == 269908-1.html 269908-1.html
 == 269908-2.html 269908-2.html
@@ -569,7 +569,7 @@ skip-if((B2G&&browserIsRemote)||Mulet) == 348049-1.xhtml 348049-1.xhtml
 == 348516-1.html 348516-1.html
 == 348516-2.html 348516-2.html
 == 348516-2.html 348516-2.html
-== 348516-3.html 348516-3.html
+random == 348516-3.html 348516-3.html
 == 348597-1.html 348597-1.html
 == 348809-1a.html 348809-1a.html
 == 348809-1b.html 348809-1b.html
@@ -691,7 +691,7 @@ skip-if(B2G||Mulet) fails-if(Android) == 367247-s-auto.html 367247-s-auto.html
 == 367247-l-visible.html 367247-l-visible.html
 skip-if(B2G||Mulet) fails-if(Android&&!asyncPan) == 367247-l-hidden.html 367247-l-hidden.html
 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == 367247-l-scroll.html 367247-l-scroll.html
+skip == 367247-l-scroll.html 367247-l-scroll.html
 # Initial mulet triage: parity with B2G/B2G Desktop
 == 367332-1a.html 367332-1a.html
 skip == 367332-1b.html 367332-1b.html
@@ -754,7 +754,7 @@ skip-if((B2G&&browserIsRemote)||Mulet) == 369882.xul 369882.xul
 == 370525-rowspan-4.html 370525-rowspan-4.html
 == 370525-sib.html 370525-sib.html
 == 370586-1.xhtml 370586-1.xhtml
-skip-if(B2G||Mulet) == 370629-1.html 370629-1.html
+skip == 370629-1.html 370629-1.html
 # bug 1060869
 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) == 370629-2.html 370629-2.html
@@ -762,7 +762,7 @@ skip-if(B2G||Mulet) == 370629-2.html 370629-2.html
 == 370692-1.xhtml 370692-1.xhtml
 == 371041-1.html 371041-1.html
 == 371043-1.html 371043-1.html
-== 371354-1.html 371354-1.html
+random == 371354-1.html 371354-1.html
 == 371483-1.html 371483-1.html
 # assertion test
 fails-if(Android&&!asyncPan) == 371561-1.html 371561-1.html
@@ -828,7 +828,7 @@ skip-if(B2G||Mulet) == 378933-1.html 378933-1.html
 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) == 378935-1.html 378935-1.html
 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == 378937-1.html 378937-1.html
+skip == 378937-1.html 378937-1.html
 # Initial mulet triage: parity with B2G/B2G Desktop
 == 379178-xhtml.xhtml 379178-xhtml.xhtml
 == 379178-html.html 379178-html.html
@@ -853,9 +853,9 @@ skip-if(B2G||Mulet) fuzzy-if(Android,2,140) == 379349-3b.xhtml 379349-3b.xhtml
 == 379361-3.html 379361-3.html
 == 379461-1.xhtml 379461-1.xhtml
 == 379461-2.xhtml 379461-2.xhtml
-skip-if(B2G||Mulet) == 379461-3-container-xhtml.html 379461-3-container-xhtml.html
+skip == 379461-3-container-xhtml.html 379461-3-container-xhtml.html
 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) fails-if(Android&&!asyncPan) == 379461-3-container-xhtml.html 379461-3-container-xhtml.html
+skip == 379461-3-container-xhtml.html 379461-3-container-xhtml.html
 # there is a scrollbar
 # Initial mulet triage: parity with B2G/B2G Desktop
 fuzzy-if(skiaContent,1,5) == 380004-1.html 380004-1.html
@@ -897,9 +897,9 @@ fuzzy-if(skiaContent,2,3) == 385870-2.html 385870-2.html
 == 386014-1c.html 386014-1c.html
 == 386065-1.html 386065-1.html
 == 386065-2.html 386065-2.html
-test-pref(layout.float-fragments-inside-column.enabled,false) skip-if(B2G||Mulet) fails == 386147-1.html 386147-1.html
+skip == 386147-1.html 386147-1.html
 # Initial mulet triage: parity with B2G/B2G Desktop
-test-pref(layout.float-fragments-inside-column.enabled,true) skip-if(B2G||Mulet) == 386147-1.html 386147-1.html
+skip == 386147-1.html 386147-1.html
 # Initial mulet triage: parity with B2G/B2G Desktop
 == 386310-1a.html 386310-1a.html
 == 386310-1b.html 386310-1b.html
@@ -975,7 +975,7 @@ fuzzy-if(skiaContent,1,400) == 393760-2.xml 393760-2.xml
 == 394111-1.html 394111-1.html
 # Really an assertion test rather than a rendering test
 == 394534-1.html 394534-1.html
-skip-if((B2G&&browserIsRemote)||Mulet) == 394676-1.xhtml 394676-1.xhtml
+skip == 394676-1.xhtml 394676-1.xhtml
 # bug 975911
 # Initial mulet triage: parity with B2G/B2G Desktop
 == 395107-1.html 395107-1.html
@@ -1143,7 +1143,7 @@ fuzzy-if(winWidget,123,1900) == 409659-1d.html 409659-1d.html
 == 411367-3.html 411367-3.html
 == 411585-1.html 411585-1.html
 == 411585-2.html 411585-2.html
-fails-if(!B2G&&!Mulet) == 411585-3.html 411585-3.html
+skip == 411585-3.html 411585-3.html
 # bug 426909
 # Initial mulet triage: parity with B2G/B2G Desktop
 == 411792-1.html 411792-1.html
@@ -1455,7 +1455,7 @@ fails fuzzy-if(Android||B2G,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d
 fails fuzzy-if(Android||B2G,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,4,69) == 456219-1c.html 456219-1c.html
 # bug 1128229
 fuzzy-if(skiaContent,1,45) == 456219-2.html 456219-2.html
-== 456330-1.gif 456330-1.gif
+skip == 456330-1.gif 456330-1.gif
 == 456484-1.html 456484-1.html
 == 457398-1.html 457398-1.html
 == 457398-2.html 457398-2.html
@@ -1608,8 +1608,8 @@ skip-if(B2G||Mulet) fails-if(Android) == 481024-1c.html 481024-1c.html
 == 481024-1d.html 481024-1d.html
 == 481024-1e.html 481024-1e.html
 == 481948-1.html 481948-1.html
-== 481948-2.html 481948-2.html
-skip-if(B2G||Mulet) fails-if(Android) random-if(winWidget) fails-if(gtkWidget) == 481948-3.html 481948-3.html
+skip == 481948-2.html 481948-2.html
+skip == 481948-3.html 481948-3.html
 # questionable test, see bug 488364
 # Initial mulet triage: parity with B2G/B2G Desktop
 == 482398-1.html 482398-1.html
@@ -1683,7 +1683,7 @@ skip-if((B2G&&browserIsRemote)||Mulet) == 495354-1b.xhtml 495354-1b.xhtml
 == 495385-2a.html 495385-2a.html
 == 495385-2b.html 495385-2b.html
 == 495385-2c.html 495385-2c.html
-== 495385-2d.html 495385-2d.html
+random == 495385-2d.html 495385-2d.html
 == 495385-2e.html 495385-2e.html
 pref(dom.use_xbl_scopes_for_remote_xul,true) skip-if((B2G&&browserIsRemote)||Mulet) == 495385-2f.xhtml 495385-2f.xhtml
 # Initial mulet triage: parity with B2G/B2G Desktop
@@ -1712,7 +1712,7 @@ skip-if(B2G||Mulet) == 502447-1.html 502447-1.html
 == 503364-1b.html 503364-1b.html
 # Reftest for bug 503531 marked as failing; should be re-enabled when
 # bug 607548 gets resolved.
-needs-focus fails == 503531-1.html 503531-1.html
+random == 503531-1.html 503531-1.html
 == 504032-1.html 504032-1.html
 == 505743-1.html 505743-1.html
 skip-if(B2G||Mulet) fuzzy-if(Android,5,2800) == 506481-1.html 506481-1.html
@@ -1801,7 +1801,7 @@ skip-if((B2G&&browserIsRemote)||Mulet) == 537507-2.html 537507-2.html
 == 539323-3.html 539323-3.html
 == 539880-1.html 539880-1.html
 == 539880-1-dynamic.html 539880-1-dynamic.html
-skip-if(B2G||Mulet) fuzzy-if(Android,12,1000) == 539949-1.html#test2 539949-1.html#test2
+skip == 539949-1.html#test2 539949-1.html#test2
 # Initial mulet triage: parity with B2G/B2G Desktop
 == 541382-1.html 541382-1.html
 skip random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)||!haveTestPlugin) == 541406-1.html 541406-1.html
@@ -1951,16 +1951,16 @@ skip-if(B2G||Mulet) fuzzy-if(d2d,52,1051) fuzzy-if(OSX==1008,129,1068) == 586683
 == 589615-1b.html 589615-1b.html
 == 589672-1.html 589672-1.html
 == 589682-1.html 589682-1.html
-fails pref(dom.meta-viewport.enabled,true) skip-if(Android) == 593243-1.html 593243-1.html
+skip == 593243-1.html 593243-1.html
 # bug 593168
-pref(dom.meta-viewport.enabled,true) skip-if(Android) == 593243-2.html 593243-2.html
+skip == 593243-2.html 593243-2.html
 # bug 593168
 == 593544-1.html 593544-1.html
 random-if(Android) == 594333-1.html 594333-1.html
 fuzzy-if(B2G,1,40000) == 594624-1.html 594624-1.html
 == 594737-1.html 594737-1.html
 fails fuzzy-if(skiaContent,1,80) == 597721-1.html 597721-1.html
-random-if(winWidget) fuzzy-if(B2G,3,40) fuzzy-if(Android,38,539) fuzzy-if(skiaContent,1,480) needs-focus == 598726-1.html 598726-1.html
+skip == 598726-1.html 598726-1.html
 # Fails on Windows, bug 782196
 == 599113-1.html 599113-1.html
 fails skip fails-if(!haveTestPlugin) == 599476.html 599476.html
@@ -2154,7 +2154,7 @@ fuzzy-if(skiaContent,1,5) == 816948-1.html 816948-1.html
 == 817019-1.html 817019-1.html
 skip-if(B2G||Mulet) fuzzy-if(skiaContent,1,5) == 818276-1.html 818276-1.html
 # Initial mulet triage: parity with B2G/B2G Desktop
-fuzzy-if(asyncPan,190,510) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,510) == 825999.html 825999.html
+random == 825999.html 825999.html
 == 827577-1a.html 827577-1a.html
 == 827577-1b.html 827577-1b.html
 == 827799-1.html 827799-1.html
@@ -2215,9 +2215,9 @@ skip-if(Android) == 966510-1.html 966510-1.html
 skip-if(Android) == 966510-2.html 966510-2.html
 # same as above
 fuzzy-if(skiaContent,1,123) == 978911-1.svg 978911-1.svg
-== 983084-1.html 983084-1.html
-== 983084-2.html 983084-2.html
-== 983084-3.html 983084-3.html
+skip == 983084-1.html 983084-1.html
+skip == 983084-2.html 983084-2.html
+skip == 983084-3.html 983084-3.html
 == 983691-1.html 983691-1.html
 HTTP(..) == 983985-1.html 983985-1.html
 HTTP(..) == 983985-2.html 983985-2.html
@@ -2256,7 +2256,7 @@ skip-if(Mulet) == 1062108-1.html 1062108-1.html
 # Bug 1139893: font rounding failure, tracked in bug 1141535
 fuzzy-if(Mulet,1,5) == 1062792-1.html 1062792-1.html
 == 1062963-floatmanager-reflow.html 1062963-floatmanager-reflow.html
-test-pref(dom.webcomponents.enabled,true) == 1066554-1.html 1066554-1.html
+skip == 1066554-1.html 1066554-1.html
 == 1069716-1.html 1069716-1.html
 == 1078262-1.html 1078262-1.html
 test-pref(layout.testing.overlay-scrollbars.always-visible,false) == 1081072-1.html 1081072-1.html
@@ -2266,7 +2266,7 @@ test-pref(layout.testing.overlay-scrollbars.always-visible,false) == 1081072-1.h
 # assertion crash test with layers culling test
 == 1105137-1.html 1105137-1.html
 fuzzy-if(d2d,36,304) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&d2d,127,701) HTTP(..) == 1116480-1-fakeitalic-overflow.html 1116480-1-fakeitalic-overflow.html
-== 1111753-1.html 1111753-1.html
+skip == 1111753-1.html 1111753-1.html
 == 1114526-1.html 1114526-1.html
 fuzzy-if(skiaContent,1,800000) == 1119117-1a.html 1119117-1a.html
 fuzzy-if(skiaContent,1,800000) == 1119117-1b.html 1119117-1b.html

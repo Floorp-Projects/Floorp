@@ -291,17 +291,17 @@ HTTP(../..) == inline--position-relative--01.xhtml inline--position-relative--01
 # tests do not have any width or height on the <object> element so they should
 # be sized purely by the embedded SVG's intrinsic size.
 
-random-if(Android) == object--auto-auto--0-0.html object--auto-auto--0-0.html
+skip == object--auto-auto--0-0.html object--auto-auto--0-0.html
 # XXX add border
-fails random-if(Android) == object--auto-auto--0-pct.html object--auto-auto--0-pct.html
-random-if(Android) == object--auto-auto--0-px.html object--auto-auto--0-px.html
-random-if(Android) == object--auto-auto--pct-0.html object--auto-auto--pct-0.html
+skip == object--auto-auto--0-pct.html object--auto-auto--0-pct.html
+skip == object--auto-auto--0-px.html object--auto-auto--0-px.html
+skip == object--auto-auto--pct-0.html object--auto-auto--pct-0.html
 # The following four commented out tests fail post bug 428023:
 #== object--auto-auto--pct-pct.html object--auto-auto--pct-pct.html
 #== object--auto-auto--pct-px.html object--auto-auto--pct-px.html
-random-if(Android) == object--auto-auto--px-0.html object--auto-auto--px-0.html
+skip == object--auto-auto--px-0.html object--auto-auto--px-0.html
 #== object--auto-auto--px-pct.html object--auto-auto--px-pct.html
-random-if(Android) == object--auto-auto--px-px.html object--auto-auto--px-px.html
+skip == object--auto-auto--px-px.html object--auto-auto--px-px.html
 #== object--pct-pct--0-0.html object--pct-pct--0-0.html
 
 
@@ -311,12 +311,12 @@ random-if(Android) == object--auto-auto--px-px.html object--auto-auto--px-px.htm
 # correctly when changes are made that should result in a change in the size
 # or position of the SVG.
 
-== dynamic--inline-css-height.xhtml dynamic--inline-css-height.xhtml
-== dynamic--inline-css-width.xhtml dynamic--inline-css-width.xhtml
+skip == dynamic--inline-css-height.xhtml dynamic--inline-css-height.xhtml
+skip == dynamic--inline-css-width.xhtml dynamic--inline-css-width.xhtml
 skip == dynamic--inline-resize-window-height.xhtml dynamic--inline-resize-window-height.xhtml
 # XXX breaks the reftest run as the window height somehow is not restored
 skip == dynamic--inline-resize-window-width.xhtml dynamic--inline-resize-window-width.xhtml
 # Fails way too much
-random-if(Android) == dynamic--object-svg-unloaded.xhtml dynamic--object-svg-unloaded.xhtml
+skip == dynamic--object-svg-unloaded.xhtml dynamic--object-svg-unloaded.xhtml
 # == ==
 

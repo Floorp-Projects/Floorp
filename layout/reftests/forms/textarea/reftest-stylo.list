@@ -8,7 +8,7 @@ skip-if(B2G||Mulet||Android) == ltr.html ltr.html
 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet||Android) == ltr-scrollbar.html ltr-scrollbar.html
 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet||Android) == in-ltr-doc-scrollbar.html in-ltr-doc-scrollbar.html
+skip == in-ltr-doc-scrollbar.html in-ltr-doc-scrollbar.html
 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet||Android) == ltr.html ltr.html
 # Initial mulet triage: parity with B2G/B2G Desktop

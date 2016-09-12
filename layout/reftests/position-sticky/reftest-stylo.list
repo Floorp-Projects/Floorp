@@ -28,7 +28,7 @@ random-if(B2G||Mulet) == padding-3.html padding-3.html
 == scrollframe-reflow-1.html scrollframe-reflow-1.html
 == scrollframe-reflow-2.html scrollframe-reflow-2.html
 == scrollframe-auto-1.html scrollframe-auto-1.html
-fails fuzzy-if(Android,2,3) == stacking-context-1.html stacking-context-1.html
+== stacking-context-1.html stacking-context-1.html
 == top-bottom-1.html top-bottom-1.html
 == top-bottom-2.html top-bottom-2.html
 == top-bottom-3.html top-bottom-3.html

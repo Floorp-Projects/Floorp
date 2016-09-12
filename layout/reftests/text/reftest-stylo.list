@@ -190,11 +190,11 @@ random-if(!winWidget) == arial-bold-lam-alef-1.html arial-bold-lam-alef-1.html
 # Fallback (presentation-forms) shaping with a font that lacks GSUB/GPOS
 # These tests are not valid with Mac or FT2 font backends because our masking of complex-script ranges
 # in the 'cmap' will prevent the test font (without GSUB) being used.
-skip-if(B2G||Mulet) fails-if(cocoaWidget||Android) HTTP(..) == arabic-fallback-1.html arabic-fallback-1.html
+random HTTP(..) == arabic-fallback-1.html arabic-fallback-1.html
 # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(cocoaWidget||Android||B2G) HTTP(..) == arabic-fallback-2.html arabic-fallback-2.html
-fails-if(cocoaWidget||Android||B2G) HTTP(..) == arabic-fallback-3.html arabic-fallback-3.html
-fails-if(!cocoaWidget&&!Android&&!B2G) HTTP(..) == arabic-fallback-4.html arabic-fallback-4.html
+random HTTP(..) == arabic-fallback-2.html arabic-fallback-2.html
+random HTTP(..) == arabic-fallback-3.html arabic-fallback-3.html
+random HTTP(..) == arabic-fallback-4.html arabic-fallback-4.html
 == arabic-marks-1.html arabic-marks-1.html
 fails-if(OSX<1008) == arabic-final-ligature-spacing.html arabic-final-ligature-spacing.html
 # harfbuzz fallback mark stacking in the absence of GPOS:
@@ -340,8 +340,8 @@ skip == auto-hyphenation-xmllang-11b.xhtml auto-hyphenation-xmllang-11b.xhtml
 == auto-hyphenation-transformed-1.html auto-hyphenation-transformed-1.html
 
 # osx-font-smoothing - with and without subpixel AA, only under OSX
-fails-if(!cocoaWidget||OSX==1006||OSX==1007) == osx-font-smoothing.html osx-font-smoothing.html
-fails-if(!cocoaWidget||OSX==1006||OSX==1007) == osx-font-smoothing-2.html osx-font-smoothing-2.html
+skip == osx-font-smoothing.html osx-font-smoothing.html
+skip == osx-font-smoothing-2.html osx-font-smoothing-2.html
 == osx-font-smoothing-2.html osx-font-smoothing-2.html
 
 pref(layout.css.text-align-unsafe-value.enabled,true) == text-align-unsafe.html text-align-unsafe.html

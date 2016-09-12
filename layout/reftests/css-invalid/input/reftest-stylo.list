@@ -9,8 +9,8 @@ skip-if(B2G||Mulet) == input-dyn-disabled.html input-dyn-disabled.html
 == input-readonly.html input-readonly.html
 == input-dyn-readonly.html input-dyn-readonly.html
 == input-dyn-not-readonly.html input-dyn-not-readonly.html
-fails == input-maxlength-valid.html input-maxlength-valid.html
-fails == input-maxlength-invalid.html input-maxlength-invalid.html
+skip == input-maxlength-valid.html input-maxlength-valid.html
+skip == input-maxlength-invalid.html input-maxlength-invalid.html
 == input-required-valid.html input-required-valid.html
 == input-required-invalid.html input-required-invalid.html
 == input-button.html input-button.html
@@ -32,7 +32,7 @@ fuzzy-if(skiaContent,2,10) == input-radio-dyn-valid-1.html input-radio-dyn-valid
 fuzzy-if(skiaContent,2,10) == input-radio-dyn-valid-2.html input-radio-dyn-valid-2.html
 fuzzy-if(skiaContent,2,10) == input-radio-nogroup-required-valid.html input-radio-nogroup-required-valid.html
 fuzzy-if(skiaContent,2,10) == input-radio-nogroup-required-invalid.html input-radio-nogroup-required-invalid.html
-fails fuzzy-if(skiaContent,2,10) == input-radio-focus-click.html input-radio-focus-click.html
+skip == input-radio-focus-click.html input-radio-focus-click.html
 == input-submit.html input-submit.html
 == input-image.html input-image.html
 # input type='hidden' shouldn't show
