@@ -15,6 +15,7 @@
 
 #include "MediaData.h"
 #include "MediaDataDemuxer.h"
+#include "MediaResult.h"
 #include "MediaSourceDecoder.h"
 #include "SourceBufferTask.h"
 #include "TimeUnits.h"
@@ -28,7 +29,6 @@ namespace mozilla {
 class ContainerParser;
 class MediaByteBuffer;
 class MediaRawData;
-class MediaResult;
 class MediaSourceDemuxer;
 class SourceBufferResource;
 
@@ -174,7 +174,7 @@ public:
   void AddSizeOfResources(MediaSourceDecoder::ResourceSizes* aSizes);
 
 private:
-  typedef MozPromise<bool, nsresult, /* IsExclusive = */ true> CodedFrameProcessingPromise;
+  typedef MozPromise<bool, MediaResult, /* IsExclusive = */ true> CodedFrameProcessingPromise;
 
   // for MediaSourceDemuxer::GetMozDebugReaderData
   friend class MediaSourceDemuxer;
@@ -189,7 +189,7 @@ private:
   void CreateDemuxerforMIMEType();
   void ResetDemuxingState();
   void NeedMoreData();
-  void RejectAppend(nsresult aRejectValue, const char* aName);
+  void RejectAppend(const MediaResult& aRejectValue, const char* aName);
   // Will return a promise that will be resolved once all frames of the current
   // media segment have been processed.
   RefPtr<CodedFrameProcessingPromise> CodedFrameProcessing();
@@ -380,7 +380,7 @@ private:
                                 const media::TimeUnit& aExpectedPts,
                                 const media::TimeUnit& aFuzz);
   void UpdateBufferedRanges();
-  void RejectProcessing(nsresult aRejectValue, const char* aName);
+  void RejectProcessing(const MediaResult& aRejectValue, const char* aName);
   void ResolveProcessing(bool aResolveValue, const char* aName);
   MozPromiseRequestHolder<CodedFrameProcessingPromise> mProcessingRequest;
   MozPromiseHolder<CodedFrameProcessingPromise> mProcessingPromise;
