@@ -10,24 +10,6 @@ const {div, button} = DOM;
 module.exports = createClass({
   displayName: "Recording Controls",
 
-  /**
-   * Manually handle the "checked" and "locked" attributes, as the DOM element won't
-   * change by just by changing the checked attribute through React.
-   */
-  componentDidUpdate() {
-    if (this.props.isRecording) {
-      this._recordButton.setAttribute("checked", true);
-    } else {
-      this._recordButton.removeAttribute("checked");
-    }
-
-    if (this.props.isLocked) {
-      this._recordButton.setAttribute("locked", true);
-    } else {
-      this._recordButton.removeAttribute("locked");
-    }
-  },
-
   render() {
     let {
       onClearButtonClick,
@@ -36,6 +18,12 @@ module.exports = createClass({
       isRecording,
       isLocked
     } = this.props;
+
+    let recordButtonClassList = ["devtools-button", "record-button"];
+
+    if (isRecording) {
+      recordButtonClassList.push("checked");
+    }
 
     return (
       div({ className: "devtools-toolbar" },
@@ -48,14 +36,10 @@ module.exports = createClass({
           }),
           button({
             id: "main-record-button",
-            className: "devtools-button record-button",
+            className: recordButtonClassList.join(" "),
+            disabled: isLocked,
             title: L10N.getStr("recordings.start.tooltip"),
-            onClick: onRecordButtonClick,
-            checked: isRecording,
-            ref: (el) => {
-              this._recordButton = el;
-            },
-            locked: isLocked
+            onClick: onRecordButtonClick
           }),
           button({
             id: "import-button",
