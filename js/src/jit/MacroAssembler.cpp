@@ -2818,11 +2818,14 @@ MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc, const wasm::Cal
         }
 
         loadPtr(Address(scratch, offsetof(wasm::ExternalTableElem, tls)), WasmTlsReg);
+        branchTest32(Assembler::Zero, WasmTlsReg, WasmTlsReg, wasm::JumpTarget::BadIndirectCall);
+
         loadWasmPinnedRegsFromTls();
 
         loadPtr(Address(scratch, offsetof(wasm::ExternalTableElem, code)), scratch);
     } else {
         loadPtr(BaseIndex(scratch, index, ScalePointer), scratch);
+        branchTest32(Assembler::Zero, scratch, scratch, wasm::JumpTarget::BadIndirectCall);
     }
 
     call(desc, scratch);
