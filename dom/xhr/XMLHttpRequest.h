@@ -53,9 +53,8 @@ public:
   Open(const nsACString& aMethod, const nsAString& aUrl, ErrorResult& aRv) = 0;
 
   virtual void
-  Open(const nsACString& aMethod, const nsAString& aUrl,
-       bool aAsync, const Optional<nsAString>& aUser,
-       const Optional<nsAString>& aPassword, ErrorResult& aRv) = 0;
+  Open(const nsACString& aMethod, const nsAString& aUrl, bool aAsync,
+       const nsAString& aUser, const nsAString& aPassword, ErrorResult& aRv) = 0;
 
   virtual void
   SetRequestHeader(const nsACString& aHeader, const nsACString& aValue,

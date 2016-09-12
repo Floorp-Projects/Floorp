@@ -1426,16 +1426,15 @@ OpenRunnable::MainThreadRunInternal()
   MOZ_ASSERT(!mProxy->mInOpen);
   mProxy->mInOpen = true;
 
-  ErrorResult rv2;
-  mProxy->mXHR->Open(mMethod, mURL, true, mUser, mPassword, rv2);
+  rv = mProxy->mXHR->Open(mMethod, NS_ConvertUTF16toUTF8(mURL),
+                          Optional<bool>(true), mUser, mPassword);
 
   MOZ_ASSERT(mProxy->mInOpen);
   mProxy->mInOpen = false;
 
-  if (rv2.Failed()) {
-    return rv2.StealNSResult();
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
+  ErrorResult rv2;
   mProxy->mXHR->SetResponseType(mResponseType, rv2);
   if (rv2.Failed()) {
     return rv2.StealNSResult();
@@ -1849,9 +1848,11 @@ XMLHttpRequestWorker::Notify(Status aStatus)
 }
 
 void
-XMLHttpRequestWorker::Open(const nsACString& aMethod, const nsAString& aUrl,
-                           bool aAsync, const Optional<nsAString>& aUser,
-                           const Optional<nsAString>& aPassword, ErrorResult& aRv)
+XMLHttpRequestWorker::Open(const nsACString& aMethod,
+                           const nsAString& aUrl, bool aAsync,
+                           const Optional<nsAString>& aUser,
+                           const Optional<nsAString>& aPassword,
+                           ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
