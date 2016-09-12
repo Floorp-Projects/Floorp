@@ -573,6 +573,8 @@ protected:
   already_AddRefed<nsIHttpChannel> GetCurrentHttpChannel();
   already_AddRefed<nsIJARChannel> GetCurrentJARChannel();
 
+  void TruncateResponseText();
+
   bool IsSystemXHR() const;
   bool InUploadPhase() const;
 
