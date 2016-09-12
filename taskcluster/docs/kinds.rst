@@ -57,6 +57,13 @@ the source code while building.  The useful output from these tasks are their
 build logs, and while they produce a binary, they do not upload it as an
 artifact.
 
+toolchain
+---------
+
+Toolchain builds create the compiler toolchains used to build Firefox.  These
+will eventually be dependencies of the builds themselves, but for the moment
+are run manually via try pushes and the results uploaded to tooltool.
+
 Tests
 -----
 
