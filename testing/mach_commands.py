@@ -61,6 +61,16 @@ TEST_SUITES = {
         'mach_command': 'crashtest-ipc',
         'kwargs': {'test_file': None},
     },
+    'firefox-ui-functional': {
+        'aliases': ('Fxfn',),
+        'mach_command': 'firefox-ui-functional',
+        'kwargs': {},
+    },
+    'firefox-ui-update': {
+        'aliases': ('Fxup',),
+        'mach_command': 'firefox-ui-update',
+        'kwargs': {},
+    },
     'jetpack': {
         'aliases': ('J',),
         'mach_command': 'jetpack-test',
@@ -142,6 +152,14 @@ TEST_FLAVORS = {
     'chrome': {
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'chrome', 'test_paths': []},
+    },
+    'firefox-ui-functional': {
+        'mach_command': 'firefox-ui-functional',
+        'kwargs': {'tests': []},
+    },
+    'firefox-ui-update': {
+        'mach_command': 'firefox-ui-update',
+        'kwargs': {'tests': []},
     },
     'marionette': {
         'mach_command': 'marionette-test',
