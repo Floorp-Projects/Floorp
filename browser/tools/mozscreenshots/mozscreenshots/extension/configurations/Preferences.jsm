@@ -10,21 +10,19 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://testing-common/TestUtils.jsm");
 Cu.import("resource://testing-common/ContentTask.jsm");
 
 this.Preferences = {
 
   init(libDir) {
-    Services.prefs.setBoolPref("browser.preferences.inContent", true);
-
     let panes = [
       ["paneGeneral", null],
       ["paneSearch", null],
       ["paneContent", null],
       ["paneApplications", null],
       ["panePrivacy", null],
+      ["panePrivacy", null, DNTDialog],
       ["paneSecurity", null],
       ["paneSync", null],
       ["paneAdvanced", "generalTab"],
@@ -33,39 +31,39 @@ this.Preferences = {
       ["paneAdvanced", "updateTab"],
       ["paneAdvanced", "encryptionTab"],
     ];
-    for (let [primary, advanced] of panes) {
+    for (let [primary, advanced, customFn] of panes) {
       let configName = primary.replace(/^pane/, "prefs") + (advanced ? "-" + advanced : "");
+      if (customFn) {
+        configName += "-" + customFn.name;
+      }
       this.configurations[configName] = {};
-      this.configurations[configName].applyConfig = prefHelper.bind(null, primary, advanced);
+      this.configurations[configName].applyConfig = prefHelper.bind(null, primary, advanced, customFn);
     }
   },
 
-  configurations: {
-    "panePrivacy-DNTDialog": {
-      applyConfig: Task.async(function*() {
-        let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-        yield prefHelper("panePrivacy", null);
-
-        yield ContentTask.spawn(browserWindow.gBrowser.selectedBrowser, null, function* () {
-          content.document.getElementById("doNotTrackSettings").click();
-        });
-      }),
-    },
-  },
+  configurations: {},
 };
 
-let prefHelper = Task.async(function*(primary, advanced) {
+let prefHelper = Task.async(function*(primary, advanced = null, customFn = null) {
   let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-  let selectedBrowser = browserWindow.gBrowser;
+  let selectedBrowser = browserWindow.gBrowser.selectedBrowser;
+
+  // close any dialog that might still be open
+  yield ContentTask.spawn(selectedBrowser, null, function*() {
+    if (!content.window.gSubDialog) {
+      return;
+    }
+    content.window.gSubDialog.close();
+  });
+
   let readyPromise = null;
   if (selectedBrowser.currentURI.specIgnoringRef == "about:preferences") {
-    readyPromise = new Promise((resolve) => {
-      browserWindow.addEventListener("MozAfterPaint", function paneSwitch() {
-        browserWindow.removeEventListener("MozAfterPaint", paneSwitch);
-        resolve();
-      });
-    });
-
+    if (selectedBrowser.currentURI.spec == "about:preferences#" + primary.replace(/^pane/, "")) {
+      // We're already on the correct pane.
+      readyPromise = Promise.resolve();
+    } else {
+      readyPromise = paintPromise(browserWindow);
+    }
   } else {
     readyPromise = TestUtils.topicObserved("advanced-pane-loaded");
   }
@@ -78,8 +76,24 @@ let prefHelper = Task.async(function*(primary, advanced) {
 
   yield readyPromise;
 
-  // close any dialog that might still be open
-  yield ContentTask.spawn(selectedBrowser.selectedBrowser, null, function*() {
-    content.window.gSubDialog.close();
-  });
+  if (customFn) {
+    let customPaintPromise = paintPromise(browserWindow);
+    yield* customFn(selectedBrowser);
+    yield customPaintPromise;
+  }
 });
+
+function paintPromise(browserWindow) {
+  return new Promise((resolve) => {
+    browserWindow.addEventListener("MozAfterPaint", function onPaint() {
+      browserWindow.removeEventListener("MozAfterPaint", onPaint);
+      resolve();
+    });
+  });
+}
+
+function* DNTDialog(aBrowser) {
+  yield ContentTask.spawn(aBrowser, null, function* () {
+    content.document.getElementById("doNotTrackSettings").click();
+  });
+}
