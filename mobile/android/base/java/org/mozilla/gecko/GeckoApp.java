@@ -2521,6 +2521,11 @@ public abstract class GeckoApp
 
                         if (tab.isExternal()) {
                             moveTaskToBack(true);
+                            Tab nextSelectedTab = Tabs.getInstance().getNextTab(tab);
+                            if (nextSelectedTab != null) {
+                                int nextSelectedTabId = nextSelectedTab.getId();
+                                GeckoAppShell.notifyObservers("Tab:KeepZombified", Integer.toString(nextSelectedTabId));
+                            }
                             tabs.closeTab(tab);
                             return;
                         }
