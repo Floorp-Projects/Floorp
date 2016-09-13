@@ -102,7 +102,11 @@ function backgroundScript() {
     return storage.set({"test-prop1": "value1", "test-prop2": "value2"});
   }).then(() => {
     globalChanges = {};
-    browser.test.sendMessage("invalidate");
+    // Schedule sendMessage after onMessage because the other end immediately
+    // sends a message.
+    Promise.resolve().then(() => {
+      browser.test.sendMessage("invalidate");
+    });
     return new Promise(resolve => browser.test.onMessage.addListener(resolve));
   }).then(() => {
     return check("test-prop1", "value1");
