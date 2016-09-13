@@ -3871,7 +3871,11 @@ public:
     mMutex(aName),
     mPendingNotifyOutput(false)
   {}
-  void Forget() { mElement = nullptr; }
+  void Forget()
+  {
+    mElement = nullptr;
+    NotifyWatchers();
+  }
 
   // Main thread
 
