@@ -215,6 +215,7 @@ RESULT_OMNIJAR.update({
             'components/foo.js',
         )
     },
+    'app/chrome.manifest': [],
 })
 
 RESULT_OMNIJAR['omni.foo'].update({
