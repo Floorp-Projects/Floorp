@@ -78,6 +78,7 @@ interface nsIEventListenerService : nsISupports
    *       event target chain than what this methods returns.
    */
   void getEventTargetChainFor(in nsIDOMEventTarget aEventTarget,
+                              in boolean composed,
                               [optional] out unsigned long aCount,
                               [retval, array, size_is(aCount)] out
                                 nsIDOMEventTarget aOutArray);
