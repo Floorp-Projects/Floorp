@@ -562,6 +562,12 @@ ReadCustomDoubleNaNObject(JSContext* cx, HandleValue v, double* ret)
 }
 
 WasmInstanceObject*
+Instance::objectUnbarriered() const
+{
+    return object_.unbarrieredGet();
+}
+
+WasmInstanceObject*
 Instance::object() const
 {
     return object_;
