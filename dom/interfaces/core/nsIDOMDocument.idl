@@ -397,9 +397,7 @@ interface nsIDOMDocument : nsIDOMNode
    * Visibility API implementation.
    */
   readonly attribute boolean hidden;
-  readonly attribute boolean mozHidden;
   readonly attribute DOMString visibilityState;
-  readonly attribute DOMString mozVisibilityState;
 
   /**
    * Returns "BackCompat" if we're in quirks mode or "CSS1Compat" if we're in

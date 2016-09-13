@@ -2606,19 +2606,9 @@ public:
   {
     return mVisibilityState != mozilla::dom::VisibilityState::Visible;
   }
-  bool MozHidden() const
-  {
-    WarnOnceAbout(ePrefixedVisibilityAPI);
-    return Hidden();
-  }
   mozilla::dom::VisibilityState VisibilityState() const
   {
     return mVisibilityState;
-  }
-  mozilla::dom::VisibilityState MozVisibilityState() const
-  {
-    WarnOnceAbout(ePrefixedVisibilityAPI);
-    return VisibilityState();
   }
 #endif
   virtual mozilla::dom::StyleSheetList* StyleSheets() = 0;
