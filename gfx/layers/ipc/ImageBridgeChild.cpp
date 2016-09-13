@@ -34,6 +34,7 @@
 #include "mozilla/layers/TextureClient.h"  // for TextureClient
 #include "mozilla/mozalloc.h"           // for operator new, etc
 #include "mtransport/runnable_utils.h"
+#include "nsContentUtils.h"
 #include "nsISupportsImpl.h"            // for ImageContainer::AddRef, etc
 #include "nsTArray.h"                   // for AutoTArray, nsTArray, etc
 #include "nsTArrayForwardDeclare.h"     // for AutoTArray
@@ -531,10 +532,15 @@ ImageBridgeChild::ImageBridgeChild()
   MOZ_ASSERT(NS_IsMainThread());
 
   mTxn = new CompositableTransaction();
+  mShutdownObserver = new ShutdownObserver(this);
 }
 
 ImageBridgeChild::~ImageBridgeChild()
 {
+  // We should have already removed this in WillShutdown, since it must be
+  // removed on the main thread.
+  MOZ_ASSERT(!mShutdownObserver);
+
   delete mTxn;
 }
 
@@ -921,37 +927,48 @@ void ImageBridgeChild::ShutDown()
   sIsShutDown = true;
 
   if (RefPtr<ImageBridgeChild> child = GetSingleton()) {
-    MOZ_ASSERT(!child->mShuttingDown);
-
-    {
-      SynchronousTask task("ImageBridge ShutdownStep1 lock");
-
-      RefPtr<Runnable> runnable = WrapRunnable(
-        child,
-        &ImageBridgeChild::ShutdownStep1,
-        &task);
-      child->GetMessageLoop()->PostTask(runnable.forget());
-
-      task.Wait();
-    }
-
-    {
-      SynchronousTask task("ImageBridge ShutdownStep2 lock");
-
-      RefPtr<Runnable> runnable = WrapRunnable(
-        child,
-        &ImageBridgeChild::ShutdownStep2,
-        &task);
-      child->GetMessageLoop()->PostTask(runnable.forget());
-
-      task.Wait();
-    }
+    child->WillShutdown();
 
     sImageBridgeChildSingleton = nullptr;
   }
 
   delete sImageBridgeChildThread;
   sImageBridgeChildThread = nullptr;
+}
+
+void
+ImageBridgeChild::WillShutdown()
+{
+  MOZ_ASSERT(!mShuttingDown);
+
+  {
+    SynchronousTask task("ImageBridge ShutdownStep1 lock");
+
+    RefPtr<Runnable> runnable = WrapRunnable(
+      RefPtr<ImageBridgeChild>(this),
+      &ImageBridgeChild::ShutdownStep1,
+      &task);
+    GetMessageLoop()->PostTask(runnable.forget());
+
+    task.Wait();
+  }
+
+  {
+    SynchronousTask task("ImageBridge ShutdownStep2 lock");
+
+    RefPtr<Runnable> runnable = WrapRunnable(
+      RefPtr<ImageBridgeChild>(this),
+      &ImageBridgeChild::ShutdownStep2,
+      &task);
+    GetMessageLoop()->PostTask(runnable.forget());
+
+    task.Wait();
+  }
+
+  if (mShutdownObserver) {
+    mShutdownObserver->Unregister();
+    mShutdownObserver = nullptr;
+  }
 }
 
 void
@@ -1438,6 +1455,42 @@ ImageBridgeChild::Destroy(CompositableChild* aCompositable)
   }
   CompositableForwarder::Destroy(aCompositable);
 }
+
+void
+ImageBridgeChild::OnXPCOMShutdown()
+{
+  // This uses nsIObserverService, so it must be cleaned up. Other threads may
+  // hold references to ImageBridgeChild and we may actually be destroyed well
+  // after XPCOM shutdown.
+  mActiveResourceTracker = nullptr;
+}
+
+NS_IMPL_ISUPPORTS(ImageBridgeChild::ShutdownObserver, nsIObserver);
+
+ImageBridgeChild::ShutdownObserver::ShutdownObserver(ImageBridgeChild* aImageBridge)
+ : mImageBridge(aImageBridge)
+{
+  nsContentUtils::RegisterShutdownObserver(this);
+}
+
+void
+ImageBridgeChild::ShutdownObserver::Unregister()
+{
+  nsContentUtils::UnregisterShutdownObserver(this);
+  mImageBridge = nullptr;
+}
+
+NS_IMETHODIMP
+ImageBridgeChild::ShutdownObserver::Observe(nsISupports* aSubject,
+                                            const char* aTopic,
+                                            const char16_t* aData)
+{
+  if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+    mImageBridge->OnXPCOMShutdown();
+  }
+  return NS_OK;
+}
+
 
 } // namespace layers
 } // namespace mozilla
