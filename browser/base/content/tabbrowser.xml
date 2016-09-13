@@ -3049,6 +3049,9 @@
         </getter>
         <setter>
           <![CDATA[
+          if (gNavToolbox.collapsed) {
+            return this.mTabBox.selectedTab;
+          }
           // Update the tab
           this.mTabBox.selectedTab = val;
           return val;
