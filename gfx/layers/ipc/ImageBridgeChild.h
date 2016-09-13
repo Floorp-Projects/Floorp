@@ -45,6 +45,8 @@ class CompositableClient;
 struct CompositableTransaction;
 class Image;
 class TextureClient;
+class SynchronousTask;
+struct AllocShmemParams;
 
 /**
  * Returns true if the current thread is the ImageBrdigeChild's thread.
@@ -233,21 +235,54 @@ public:
 
   already_AddRefed<CanvasClient> CreateCanvasClient(CanvasClient::CanvasClientType aType,
                                                     TextureFlags aFlag);
-  already_AddRefed<CanvasClient> CreateCanvasClientNow(CanvasClient::CanvasClientType aType,
-                                                       TextureFlags aFlag);
-
-  static void DispatchReleaseImageContainer(ImageContainerChild* aChild);
+  void ReleaseImageContainer(RefPtr<ImageContainerChild> aChild);
+  void UpdateAsyncCanvasRenderer(AsyncCanvasRenderer* aClient);
+  void UpdateImageClient(RefPtr<ImageClient> aClient, RefPtr<ImageContainer> aContainer);
   static void DispatchReleaseTextureClient(TextureClient* aClient);
-  static void DispatchImageClientUpdate(ImageClient* aClient, ImageContainer* aContainer);
-
-  static void UpdateAsyncCanvasRenderer(AsyncCanvasRenderer* aClient);
-  static void UpdateAsyncCanvasRendererNow(AsyncCanvasRenderer* aClient);
 
   /**
    * Flush all Images sent to CompositableHost.
    */
-  static void FlushAllImages(ImageClient* aClient, ImageContainer* aContainer);
+  void FlushAllImages(ImageClient* aClient, ImageContainer* aContainer);
 
+private:
+  // Helpers for dispatching.
+  already_AddRefed<CanvasClient> CreateCanvasClientNow(
+    CanvasClient::CanvasClientType aType,
+    TextureFlags aFlags);
+  void CreateCanvasClientSync(
+    SynchronousTask* aTask,
+    CanvasClient::CanvasClientType aType,
+    TextureFlags aFlags,
+    RefPtr<CanvasClient>* const outResult);
+
+  void CreateImageClientSync(
+    SynchronousTask* aTask,
+    RefPtr<ImageClient>* result,
+    CompositableType aType,
+    ImageContainer* aImageContainer,
+    ImageContainerChild* aContainerChild);
+
+  void ReleaseTextureClientNow(TextureClient* aClient);
+
+  void UpdateAsyncCanvasRendererNow(AsyncCanvasRenderer* aClient);
+  void UpdateAsyncCanvasRendererSync(
+    SynchronousTask* aTask,
+    AsyncCanvasRenderer* aWrapper);
+
+  void FlushAllImagesSync(
+    SynchronousTask* aTask,
+    ImageClient* aClient,
+    ImageContainer* aContainer,
+    RefPtr<AsyncTransactionWaiter> aWaiter);
+
+  void ProxyAllocShmemNow(SynchronousTask* aTask, AllocShmemParams* aParams);
+  void ProxyDeallocShmemNow(
+    SynchronousTask* aTask,
+    ISurfaceAllocator* aAllocator,
+    Shmem* aShmem);
+
+public:
   // CompositableForwarder
 
   virtual void Connect(CompositableClient* aCompositable,
