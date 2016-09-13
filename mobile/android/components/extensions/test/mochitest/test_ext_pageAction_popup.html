@@ -54,7 +54,12 @@ add_task(function* test_contentscript() {
       browser.test.sendMessage("page-action-onClicked-fired");
     });
 
-    browser.test.sendMessage("ready");
+    let extensionInfo = {
+      // Extract the assigned uuid from the background page url.
+      uuid: `{${window.location.hostname}}`,
+    };
+
+    browser.test.sendMessage("ready", extensionInfo);
   }
 
   function popupScript() {
@@ -107,7 +112,7 @@ add_task(function* test_contentscript() {
     });
   };
 
-  function* testPopup(name) {
+  function* testPopup(name, uuid) {
     // We don't need to set the popup when testing default_popup.
     if (name != "default.html") {
       extension.sendMessage("page-action-set-popup", {name});
@@ -124,7 +129,7 @@ add_task(function* test_contentscript() {
       extension.sendMessage("page-action-enable-onClicked-listener");
       yield extension.awaitMessage("page-action-onClicked-listener-enabled");
 
-      clickPageAction(extension.id);
+      clickPageAction(uuid);
       yield extension.awaitMessage("page-action-onClicked-fired");
 
       extension.sendMessage("page-action-disable-onClicked-listener");
@@ -132,7 +137,7 @@ add_task(function* test_contentscript() {
     } else {
       ok(url.includes(name), "Calling pageAction.getPopup should return the correct popup URL when the popup is set.");
 
-      clickPageAction(extension.id);
+      clickPageAction(uuid);
       let location = yield extension.awaitMessage("page-action-from-popup");
       ok(location.includes(name), "The popup with the correct URL should be shown.");
 
@@ -144,19 +149,19 @@ add_task(function* test_contentscript() {
   }
 
   yield extension.startup();
-  yield extension.awaitMessage("ready");
+  let {uuid} = yield extension.awaitMessage("ready");
 
   extension.sendMessage("page-action-show");
   yield extension.awaitMessage("page-action-shown");
-  ok(isPageActionShown(extension.id), "The PageAction should be shown.");
+  ok(isPageActionShown(uuid), "The PageAction should be shown.");
 
-  yield testPopup("default.html");
-  yield testPopup("a.html");
-  yield testPopup("");
-  yield testPopup("b.html");
+  yield testPopup("default.html", uuid);
+  yield testPopup("a.html", uuid);
+  yield testPopup("", uuid);
+  yield testPopup("b.html", uuid);
 
   yield extension.unload();
-  ok(!isPageActionShown(extension.id), "The PageAction should be removed after unload.");
+  ok(!isPageActionShown(uuid), "The PageAction should be removed after unload.");
 });
 </script>
 
