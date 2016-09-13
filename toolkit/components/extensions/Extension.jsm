@@ -740,6 +740,10 @@ GlobalManager = {
         if (context.envType === "content_parent" && !allowedContexts.includes("content")) {
           return false;
         }
+        if (context.envType !== "addon_parent" &&
+            allowedContexts.includes("addon_parent_only")) {
+          return false;
+        }
         return findPathInObject(apis, namespace, false) !== null;
       },
 

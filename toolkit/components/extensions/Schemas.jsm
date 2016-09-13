@@ -1035,7 +1035,7 @@ class ObjectType extends Type {
     } else if (!optional) {
       error = context.error(`Property "${prop}" is required`,
                             `contain the required "${prop}" property`);
-    } else {
+    } else if (optional !== "omit-key-if-missing") {
       result[prop] = null;
     }
 
