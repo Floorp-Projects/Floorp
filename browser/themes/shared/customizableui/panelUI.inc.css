@@ -984,7 +984,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 
 #customization-panelHolder #PanelUI-customize {
   color: white;
-  background-color: rgb(116,191,67);
+  background-color: hsl(108,66%,30%);
   text-shadow: none;
   margin-top: -1px;
 }
@@ -993,9 +993,12 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   display: none;
 }
 
-#customization-panelHolder #PanelUI-customize:hover,
+#customization-panelHolder #PanelUI-customize:hover {
+  background-color: hsl(109,65%,26%);
+}
+
 #customization-panelHolder #PanelUI-customize:hover:active {
-  background-color: rgb(105,173,61);
+  background-color: hsl(109,65%,22%);
 }
 
 #customization-palette .toolbarbutton-multiline-text,
