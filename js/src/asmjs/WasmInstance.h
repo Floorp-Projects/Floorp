@@ -69,6 +69,10 @@ class Instance
     friend class js::WasmMemoryObject;
     void onMovingGrow(uint8_t* prevMemoryBase);
 
+    // Called by WasmTableObject to barrier table writes.
+    friend class Table;
+    WasmInstanceObject* objectUnbarriered() const;
+
   public:
     Instance(JSContext* cx,
              HandleWasmInstanceObject object,

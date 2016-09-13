@@ -109,8 +109,13 @@ Table::set(uint32_t index, void* code, Instance& instance)
 {
     if (external_) {
         ExternalTableElem& elem = externalArray()[index];
+        if (elem.tls)
+            JSObject::writeBarrierPre(elem.tls->instance->objectUnbarriered());
+
         elem.code = code;
         elem.tls = &instance.tlsData();
+
+        MOZ_ASSERT(elem.tls->instance->objectUnbarriered()->isTenured(), "no writeBarrierPost");
     } else {
         internalArray()[index] = code;
     }
@@ -121,6 +126,9 @@ Table::setNull(uint32_t index)
 {
     // Only external tables can set elements to null after initialization.
     ExternalTableElem& elem = externalArray()[index];
+    if (elem.tls)
+        JSObject::writeBarrierPre(elem.tls->instance->objectUnbarriered());
+
     elem.code = nullptr;
     elem.tls = nullptr;
 }
