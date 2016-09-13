@@ -111,12 +111,7 @@ KeyframeEffectReadOnly::NotifyAnimationTimingUpdated()
   }
 
   // Request restyle if necessary.
-  //
-  // Bug 1216843: When we implement iteration composite modes, we need to
-  // also detect if the current iteration has changed.
-  if (mAnimation &&
-      !mProperties.IsEmpty() &&
-      GetComputedTiming().mProgress != mProgressOnLastCompose) {
+  if (mAnimation && !mProperties.IsEmpty() && HasComputedTimingChanged()) {
     EffectCompositor::RestyleType restyleType =
       CanThrottle() ?
       EffectCompositor::RestyleType::Throttled :
@@ -125,11 +120,13 @@ KeyframeEffectReadOnly::NotifyAnimationTimingUpdated()
   }
 
   // If we're no longer "in effect", our ComposeStyle method will never be
-  // called and we will never have a chance to update mProgressOnLastCompose.
-  // We clear mProgressOnLastCompose here to ensure that if we later become
-  // "in effect" we will request a restyle (above).
+  // called and we will never have a chance to update mProgressOnLastCompose
+  // and mCurrentIterationOnLastCompose.
+  // We clear them here to ensure that if we later become "in effect" we will
+  // request a restyle (above).
   if (!inEffect) {
      mProgressOnLastCompose.SetNull();
+     mCurrentIterationOnLastCompose = 0;
   }
 }
 
@@ -312,6 +309,7 @@ KeyframeEffectReadOnly::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
 {
   ComputedTiming computedTiming = GetComputedTiming();
   mProgressOnLastCompose = computedTiming.mProgress;
+  mCurrentIterationOnLastCompose = computedTiming.mCurrentIteration;
 
   // If the progress is null, we don't have fill data for the current
   // time so we shouldn't animate.
@@ -1309,6 +1307,21 @@ KeyframeEffectReadOnly::MarkCascadeNeedsUpdate()
     return;
   }
   effectSet->MarkCascadeNeedsUpdate();
+}
+
+bool
+KeyframeEffectReadOnly::HasComputedTimingChanged() const
+{
+  // Typically we don't need to request a restyle if the progress hasn't
+  // changed since the last call to ComposeStyle. The one exception is if the
+  // iteration composite mode is 'accumulate' and the current iteration has
+  // changed, since that will often produce a different result.
+  ComputedTiming computedTiming = GetComputedTiming();
+  return computedTiming.mProgress != mProgressOnLastCompose ||
+         (mEffectOptions.mIterationComposite ==
+            IterationCompositeOperation::Accumulate &&
+         computedTiming.mCurrentIteration !=
+          mCurrentIterationOnLastCompose);
 }
 
 } // namespace dom
