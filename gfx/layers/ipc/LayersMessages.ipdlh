@@ -204,6 +204,7 @@ struct Animation {
   float playbackRate;
   // This is used in the transformed progress calculation.
   TimingFunction easingFunction;
+  uint8_t iterationComposite;
 };
 
 // Change a layer's attributes

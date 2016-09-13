@@ -127,6 +127,22 @@ KeyframeEffect::SetTarget(const Nullable<ElementOrCSSPseudoElement>& aTarget)
 }
 
 void
+KeyframeEffect::SetIterationComposite(
+  const IterationCompositeOperation& aIterationComposite)
+{
+  if (mEffectOptions.mIterationComposite == aIterationComposite) {
+    return;
+  }
+
+  if (mAnimation && mAnimation->IsRelevant()) {
+    nsNodeUtils::AnimationChanged(mAnimation);
+  }
+
+  mEffectOptions.mIterationComposite = aIterationComposite;
+  RequestRestyle(EffectCompositor::RestyleType::Layer);
+}
+
+void
 KeyframeEffect::SetSpacing(JSContext* aCx,
                            const nsAString& aSpacing,
                            ErrorResult& aRv)
