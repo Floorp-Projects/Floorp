@@ -182,7 +182,7 @@ class SPSProfiler
     void updatePC(JSScript* script, jsbytecode* pc) {
         if (enabled() && *size_ - 1 < max_) {
             MOZ_ASSERT(*size_ > 0);
-            MOZ_ASSERT(stack_[*size_ - 1].script() == script);
+            MOZ_ASSERT(stack_[*size_ - 1].rawScript() == script);
             stack_[*size_ - 1].setPC(pc);
         }
     }
