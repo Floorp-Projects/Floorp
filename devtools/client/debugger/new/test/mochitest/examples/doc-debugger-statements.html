@@ -1,0 +1,27 @@
+<html>
+  <head>
+    <title>Debugger Statements</title>
+  </head>
+
+  <body>
+    <script>
+      debugger;
+      test();
+
+      function test() {
+        debugger;
+        stepIntoMe();
+      }
+
+      function stepIntoMe() {
+        // step in
+        stepOverMe();
+        // step out
+      }
+
+      function stepOverMe() {
+      }
+    </script>
+  </body>
+
+</html>

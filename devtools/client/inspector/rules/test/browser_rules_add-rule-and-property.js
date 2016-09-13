@@ -20,7 +20,7 @@ add_task(function* () {
   let ruleEditor = getRuleViewRuleEditor(view, 1);
 
   let onRuleViewChanged = view.once("ruleview-changed");
-  ruleEditor.addProperty("font-weight", "bold", "");
+  ruleEditor.addProperty("font-weight", "bold", "", true);
   yield onRuleViewChanged;
 
   let textProps = ruleEditor.rule.textProps;

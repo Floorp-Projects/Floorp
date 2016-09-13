@@ -16,7 +16,7 @@
 
   <panelmultiview id="identity-popup-multiView"
                   mainViewId="identity-popup-mainView">
-    <panelview id="identity-popup-mainView">
+    <panelview id="identity-popup-mainView" flex="1">
 
       <!-- Security Section -->
       <hbox id="identity-popup-security" class="identity-popup-section">
@@ -91,8 +91,8 @@
                  class="identity-popup-headline"
                  value="&identity.permissions;"/>
           <vbox id="identity-popup-permission-list"/>
-          <description id="identity-popup-permission-empty-hint">&identity.permissionsEmpty;</description>
           <description id="identity-popup-permission-reload-hint">&identity.permissionsReloadHint;</description>
+          <description id="identity-popup-permission-empty-hint">&identity.permissionsEmpty;</description>
         </vbox>
       </hbox>
     </panelview>
