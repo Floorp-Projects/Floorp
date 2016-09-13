@@ -280,8 +280,8 @@ interface nsIDOMWindowUtils : nsISupports {
   const long MODIFIER_OS         = 0x1000;
 
   /** Synthesize a mouse event. The event types supported are:
-   *    mousedown, mouseup, mousemove, mouseover, mouseout, contextmenu,
-   *    MozMouseHittest
+   *    mousedown, mouseup, mousemove, mouseover, mouseout, mousecancel,
+   *    contextmenu, MozMouseHittest
    *
    * Events are sent in coordinates offset by aX and aY from the window.
    *
@@ -300,6 +300,11 @@ interface nsIDOMWindowUtils : nsISupports {
    * The event is dispatched via the toplevel window, so it could go to any
    * window under the toplevel window, in some cases it could never reach this
    * window at all.
+   *
+   * NOTE: mousecancel is used to represent the vanishing of an input device
+   * such as a pen leaving its digitizer by synthesizing a WidgetMouseEvent,
+   * whose mMessage is eMouseExitFromWidget and mExitFrom is
+   * WidgetMouseEvent::eTopLevel.
    *
    * @param aType event type
    * @param aX x offset in CSS pixels

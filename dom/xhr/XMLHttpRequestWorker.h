@@ -97,8 +97,20 @@ public:
 
   virtual void
   Open(const nsACString& aMethod, const nsAString& aUrl, bool aAsync,
-       const Optional<nsAString>& aUser, const Optional<nsAString>& aPassword,
-       ErrorResult& aRv) override;
+       const nsAString& aUsername, const nsAString& aPassword,
+       ErrorResult& aRv) override
+  {
+    Optional<nsAString> username;
+    username = &aUsername;
+    Optional<nsAString> password;
+    password = &aPassword;
+    Open(aMethod, aUrl, aAsync, username, password, aRv);
+  }
+
+  void
+  Open(const nsACString& aMethod, const nsAString& aUrl,
+       bool aAsync, const Optional<nsAString>& aUser,
+       const Optional<nsAString>& aPassword, ErrorResult& aRv);
 
   virtual void
   SetRequestHeader(const nsACString& aHeader, const nsACString& aValue,

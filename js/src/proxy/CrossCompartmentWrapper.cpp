@@ -473,6 +473,7 @@ js::IsCrossCompartmentWrapper(JSObject* obj)
 void
 js::NukeCrossCompartmentWrapper(JSContext* cx, JSObject* wrapper)
 {
+    MOZ_ASSERT(!IsInsideNursery(wrapper));
     MOZ_ASSERT(wrapper->is<CrossCompartmentWrapperObject>());
 
     NotifyGCNukeWrapper(wrapper);
@@ -498,6 +499,8 @@ js::NukeCrossCompartmentWrappers(JSContext* cx,
 {
     CHECK_REQUEST(cx);
     JSRuntime* rt = cx->runtime();
+
+    rt->gc.evictNursery(JS::gcreason::EVICT_NURSERY);
 
     // Iterate through scopes looking for system cross compartment wrappers
     // that point to an object that shares a global with obj.
@@ -542,6 +545,9 @@ js::NukeCrossCompartmentWrappers(JSContext* cx,
 void
 js::RemapWrapper(JSContext* cx, JSObject* wobjArg, JSObject* newTargetArg)
 {
+    MOZ_ASSERT(!IsInsideNursery(wobjArg));
+    MOZ_ASSERT(!IsInsideNursery(newTargetArg));
+
     RootedObject wobj(cx, wobjArg);
     RootedObject newTarget(cx, newTargetArg);
     MOZ_ASSERT(wobj->is<CrossCompartmentWrapperObject>());
@@ -606,6 +612,9 @@ JS_FRIEND_API(bool)
 js::RemapAllWrappersForObject(JSContext* cx, JSObject* oldTargetArg,
                               JSObject* newTargetArg)
 {
+    MOZ_ASSERT(!IsInsideNursery(oldTargetArg));
+    MOZ_ASSERT(!IsInsideNursery(newTargetArg));
+
     RootedValue origv(cx, ObjectValue(*oldTargetArg));
     RootedObject newTarget(cx, newTargetArg);
 
@@ -630,8 +639,10 @@ JS_FRIEND_API(bool)
 js::RecomputeWrappers(JSContext* cx, const CompartmentFilter& sourceFilter,
                       const CompartmentFilter& targetFilter)
 {
-    AutoWrapperVector toRecompute(cx);
+    // Drop any nursery-allocated wrappers.
+    cx->runtime()->gc.evictNursery(JS::gcreason::EVICT_NURSERY);
 
+    AutoWrapperVector toRecompute(cx);
     for (CompartmentsIter c(cx->runtime(), SkipAtoms); !c.done(); c.next()) {
         // Filter by source compartment.
         if (!sourceFilter.match(c))

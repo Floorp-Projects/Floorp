@@ -11410,10 +11410,6 @@
         "url": "/IndexedDB/idbcursor-continue.htm"
       },
       {
-        "path": "IndexedDB/idbcursor-continuePrimaryKey-exception-order.htm",
-        "url": "/IndexedDB/idbcursor-continuePrimaryKey-exception-order.htm"
-      },
-      {
         "path": "IndexedDB/idbcursor-continuePrimaryKey.htm",
         "url": "/IndexedDB/idbcursor-continuePrimaryKey.htm"
       },
@@ -35722,6 +35718,11 @@
         "url": "/workers/semantics/xhr/006.html"
       },
       {
+        "path": "IndexedDB/idbcursor-continuePrimaryKey-exception-order.htm",
+        "timeout": "long",
+        "url": "/IndexedDB/idbcursor-continuePrimaryKey-exception-order.htm"
+      },
+      {
         "path": "IndexedDB/idbdatabase_createObjectStore10-1000ends.htm",
         "timeout": "long",
         "url": "/IndexedDB/idbdatabase_createObjectStore10-1000ends.htm"
@@ -37882,6 +37883,12 @@
           {
             "path": "web-animations/interfaces/Animation/effect.html",
             "url": "/web-animations/interfaces/Animation/effect.html"
+          }
+        ],
+        "web-animations/interfaces/KeyframeEffect/iterationComposite.html": [
+          {
+            "path": "web-animations/interfaces/KeyframeEffect/iterationComposite.html",
+            "url": "/web-animations/interfaces/KeyframeEffect/iterationComposite.html"
           }
         ],
         "web-animations/interfaces/KeyframeEffect/spacing.html": [

@@ -233,12 +233,6 @@ JSCompartment::checkWrapperMapAfterMovingGC()
 }
 #endif
 
-namespace {
-struct IsInsideNurseryFunctor {
-    template <class T> bool operator()(T tp) { return IsInsideNursery(*tp); }
-};
-} // namespace (anonymous)
-
 bool
 JSCompartment::putWrapper(JSContext* cx, const CrossCompartmentKey& wrapped,
                           const js::Value& wrapper)
@@ -246,21 +240,7 @@ JSCompartment::putWrapper(JSContext* cx, const CrossCompartmentKey& wrapped,
     MOZ_ASSERT(wrapped.is<JSString*>() == wrapper.isString());
     MOZ_ASSERT_IF(!wrapped.is<JSString*>(), wrapper.isObject());
 
-    /* There's no point allocating wrappers in the nursery since we will tenure them anyway. */
-    MOZ_ASSERT(!IsInsideNursery(static_cast<gc::Cell*>(wrapper.toGCThing())));
-
-    bool isNuseryKey =
-        const_cast<CrossCompartmentKey&>(wrapped).applyToWrapped(IsInsideNurseryFunctor()) ||
-        const_cast<CrossCompartmentKey&>(wrapped).applyToDebugger(IsInsideNurseryFunctor());
-
-    if (isNuseryKey && !nurseryCCKeys.append(wrapped)) {
-        ReportOutOfMemory(cx);
-        return false;
-    }
-
-    if (!crossCompartmentWrappers.put(wrapped, ReadBarriered<Value>(wrapper))) {
-        if (isNuseryKey)
-            nurseryCCKeys.popBack();
+    if (!crossCompartmentWrappers.put(wrapped, wrapper)) {
         ReportOutOfMemory(cx);
         return false;
     }
@@ -606,16 +586,6 @@ JSCompartment::trace(JSTracer* trc)
         varNames_.trace(trc);
 }
 
-struct TraceFunctor {
-    JSTracer* trc_;
-    const char* name_;
-    TraceFunctor(JSTracer *trc, const char* name)
-      : trc_(trc), name_(name) {}
-    template <class T> void operator()(T* t) {
-        TraceManuallyBarrieredEdge(trc_, t, name_);
-    }
-};
-
 void
 JSCompartment::traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime traceOrMark)
 {
@@ -687,18 +657,6 @@ JSCompartment::traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime t
     if (nonSyntacticLexicalEnvironments_)
         nonSyntacticLexicalEnvironments_->trace(trc);
 
-    // In a minor GC we need to mark nursery objects that are the targets of
-    // cross compartment wrappers.
-    if (trc->runtime()->isHeapMinorCollecting()) {
-        for (auto key : nurseryCCKeys) {
-            CrossCompartmentKey prior = key;
-            key.applyToWrapped(TraceFunctor(trc, "ccw wrapped"));
-            key.applyToDebugger(TraceFunctor(trc, "ccw debugger"));
-            crossCompartmentWrappers.rekeyIfMoved(prior, key);
-        }
-        nurseryCCKeys.clear();
-    }
-
     wasm.trace(trc);
 }
 
@@ -724,12 +682,14 @@ JSCompartment::finishRoots()
 }
 
 void
-JSCompartment::sweepAfterMinorGC()
+JSCompartment::sweepAfterMinorGC(JSTracer* trc)
 {
     globalWriteBarriered = 0;
 
     if (innerViews.needsSweepAfterMinorGC())
         innerViews.sweepAfterMinorGC();
+
+    crossCompartmentWrappers.sweepAfterMinorGC(trc);
 }
 
 void

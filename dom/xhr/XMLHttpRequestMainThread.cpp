@@ -1400,7 +1400,7 @@ XMLHttpRequestMainThread::Open(const nsACString& aMethod, const nsACString& aUrl
   if (optional_argc > 2) {
     password = &aPassword;
   }
-  return OpenInternal(aMethod, aUrl, async, username, password);
+  return Open(aMethod, aUrl, async, username, password);
 }
 
 // This case is hit when the async parameter is outright omitted, which
@@ -1409,8 +1409,8 @@ void
 XMLHttpRequestMainThread::Open(const nsACString& aMethod, const nsAString& aUrl,
                                ErrorResult& aRv)
 {
-  aRv = OpenInternal(aMethod, NS_ConvertUTF16toUTF8(aUrl), Optional<bool>(true),
-                     Optional<nsAString>(), Optional<nsAString>());
+  aRv = Open(aMethod, NS_ConvertUTF16toUTF8(aUrl), Optional<bool>(true),
+             Optional<nsAString>(), Optional<nsAString>());
 }
 
 // This case is hit when the async parameter is specified, even if the
@@ -1420,20 +1420,24 @@ void
 XMLHttpRequestMainThread::Open(const nsACString& aMethod,
                                const nsAString& aUrl,
                                bool aAsync,
-                               const Optional<nsAString>& aUsername,
-                               const Optional<nsAString>& aPassword,
+                               const nsAString& aUsername,
+                               const nsAString& aPassword,
                                ErrorResult& aRv)
 {
-  aRv = OpenInternal(aMethod, NS_ConvertUTF16toUTF8(aUrl),
-                     Optional<bool>(aAsync), aUsername, aPassword);
+  Optional<nsAString> username;
+  username = &aUsername;
+  Optional<nsAString> password;
+  password = &aPassword;
+  aRv = Open(aMethod, NS_ConvertUTF16toUTF8(aUrl),
+             Optional<bool>(aAsync), username, password);
 }
 
 nsresult
-XMLHttpRequestMainThread::OpenInternal(const nsACString& aMethod,
-                                       const nsACString& aUrl,
-                                       const Optional<bool>& aAsync,
-                                       const Optional<nsAString>& aUsername,
-                                       const Optional<nsAString>& aPassword)
+XMLHttpRequestMainThread::Open(const nsACString& aMethod,
+                               const nsACString& aUrl,
+                               const Optional<bool>& aAsync,
+                               const Optional<nsAString>& aUsername,
+                               const Optional<nsAString>& aPassword)
 {
   bool async = aAsync.WasPassed() ? aAsync.Value() : true;
 

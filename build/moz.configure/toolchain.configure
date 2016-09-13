@@ -756,6 +756,23 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
     valid_compiler.try_compile(check_msg='%s works' % what,
                                onerror=compiler_error)
 
+
+    # Set CPP/CXXCPP for both the build system and old-configure. We don't
+    # need to check this works for preprocessing, because we already relied
+    # on $CC -E/$CXX -E doing preprocessing work to validate the compiler
+    # in the first place.
+    if host_or_target == target:
+        pp_var = {
+            'C': 'CPP',
+            'C++': 'CXXCPP',
+        }[language]
+
+        preprocessor = depends_if(valid_compiler)(
+                lambda x: list(x.wrapper) + [x.compiler, '-E'] + list(x.flags))
+
+        set_config(pp_var, preprocessor)
+        add_old_configure_assignment(pp_var, preprocessor)
+
     return valid_compiler
 
 

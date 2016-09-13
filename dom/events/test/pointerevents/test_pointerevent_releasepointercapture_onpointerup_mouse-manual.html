@@ -18,8 +18,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1000870
         iframe.src = "pointerevent_releasepointercapture_onpointerup_mouse-manual.html";
       }
       function executeTest(int_win) {
-        sendPointerEvent(int_win, "btnCapture", "pointerdown", MouseEvent.MOZ_SOURCE_MOUSE);
-        sendPointerEvent(int_win, "btnCapture", "pointerup",   MouseEvent.MOZ_SOURCE_MOUSE);
+        sendMouseEvent(int_win, "btnCapture", "mousedown");
+        sendMouseEvent(int_win, "btnCapture", "mouseup");
       }
     </script>
   </head>

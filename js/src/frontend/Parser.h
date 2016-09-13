@@ -981,10 +981,14 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     // Determine whether |yield| is a valid name in the current context, or
     // whether it's prohibited due to strictness, JS version, or occurrence
     // inside a star generator.
-    bool checkYieldNameValidity();
     bool yieldExpressionsSupported() {
         return versionNumber() >= JSVERSION_1_7 || pc->isGenerator();
     }
+
+    // Match the current token against the BindingIdentifier production with
+    // the given Yield parameter.  If there is no match, report a syntax
+    // error.
+    PropertyName* bindingIdentifier(YieldHandling yieldHandling);
 
     virtual bool strictMode() { return pc->sc()->strict(); }
     bool setLocalStrictMode(bool strict) {
@@ -1206,7 +1210,21 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     Node classDefinition(YieldHandling yieldHandling, ClassContext classContext,
                          DefaultHandling defaultHandling);
 
-    Node identifierName(YieldHandling yieldHandling);
+    PropertyName* labelOrIdentifierReference(YieldHandling yieldHandling);
+
+    PropertyName* labelIdentifier(YieldHandling yieldHandling) {
+        return labelOrIdentifierReference(yieldHandling);
+    }
+
+    PropertyName* identifierReference(YieldHandling yieldHandling) {
+        return labelOrIdentifierReference(yieldHandling);
+    }
+
+    PropertyName* importedBinding() {
+        return bindingIdentifier(YieldIsName);
+    }
+
+    Node identifierReference(Handle<PropertyName*> name);
 
     bool matchLabel(YieldHandling yieldHandling, MutableHandle<PropertyName*> label);
 

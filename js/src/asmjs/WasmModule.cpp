@@ -462,13 +462,6 @@ Module::initSegments(JSContext* cx,
         MOZ_ASSERT(dataSegments_.empty());
     }
 
-    // Ensure all tables are initialized before storing into them.
-
-    for (const SharedTable& table : tables) {
-        if (!table->initialized())
-            table->init(instance);
-    }
-
     // Now that initialization can't fail partway through, write data/elem
     // segments into memories/tables.
 

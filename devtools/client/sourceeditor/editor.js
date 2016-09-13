@@ -278,7 +278,7 @@ Editor.prototype = {
         win, "utf8"
       );
       this.container = env;
-      this._setup(win.document.body);
+      this._setup(win.document.body, el.ownerDocument);
       env.removeEventListener("load", onLoad, true);
 
       def.resolve();
@@ -301,7 +301,8 @@ Editor.prototype = {
    * used by both append functions above, and does all the hard work to
    * configure CodeMirror with all the right options/modes/etc.
    */
-  _setup: function (el) {
+  _setup: function (el, doc) {
+    doc = doc || el.ownerDocument;
     let win = el.ownerDocument.defaultView;
 
     let scriptsToInject = CM_SCRIPTS.concat(this.config.externalScripts);
@@ -373,7 +374,7 @@ Editor.prototype = {
 
       let popup = this.config.contextMenu;
       if (typeof popup == "string") {
-        popup = el.ownerDocument.getElementById(this.config.contextMenu);
+        popup = doc.getElementById(this.config.contextMenu);
       }
 
       this.emit("popupOpen", ev, popup);
