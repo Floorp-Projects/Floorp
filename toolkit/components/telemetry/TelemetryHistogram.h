@@ -57,12 +57,6 @@ const char*
 GetHistogramName(mozilla::Telemetry::ID id);
 
 nsresult
-NewKeyedHistogram(const nsACString &name, const nsACString &expiration,
-                  uint32_t histogramType, uint32_t min, uint32_t max,
-                  uint32_t bucketCount, JSContext *cx,
-                  uint8_t optArgCount, JS::MutableHandle<JS::Value> ret);
-
-nsresult
 HistogramFrom(const nsACString &name, const nsACString &existing_name,
               JSContext *cx, JS::MutableHandle<JS::Value> ret);
 
