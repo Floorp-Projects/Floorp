@@ -561,10 +561,18 @@ function stopRecordingTelemetryLogs(Telemetry) {
 }
 
 /**
- * Clean the OS clipboard content.
+ * Clean the logical clipboard content. This method only clears the OS clipboard on
+ * Windows (see Bug 666254).
  */
 function emptyClipboard() {
   let clipboard = Cc["@mozilla.org/widget/clipboard;1"]
     .getService(SpecialPowers.Ci.nsIClipboard);
-  clipboard.emptyClipboard(1);
+  clipboard.emptyClipboard(clipboard.kGlobalClipboard);
+}
+
+/**
+ * Check if the current operating system is Windows.
+ */
+function isWindows() {
+  return Services.appinfo.OS === "WINNT";
 }
