@@ -88,8 +88,8 @@ class TransformTask(base.Task):
             changed = files_changed.check(
                 params, self.when['files-changed'])
             if not changed:
-                logger.debug('no files found matching a pattern in `when.files-changed` for '
-                             + self.label)
+                logger.debug('no files found matching a pattern in `when.files-changed` for ' +
+                             self.label)
                 return True, None
         return False, None
 
