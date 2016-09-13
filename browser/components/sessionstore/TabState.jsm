@@ -16,6 +16,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "TabStateCache",
   "resource:///modules/sessionstore/TabStateCache.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TabAttributes",
   "resource:///modules/sessionstore/TabAttributes.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Utils",
+  "resource:///modules/sessionstore/Utils.jsm");
 
 /**
  * Module that contains tab state collection methods.
@@ -120,6 +122,11 @@ var TabStateInternal = {
     if (!("image" in tabData)) {
       let tabbrowser = tab.ownerGlobal.gBrowser;
       tabData.image = tabbrowser.getIcon(tab);
+    }
+
+    // Store the serialized contentPrincipal of this tab to use for the icon.
+    if (!("iconLoadingPrincipal" in tabData)) {
+      tabData.iconLoadingPrincipal = Utils.serializePrincipal(browser.contentPrincipal);
     }
 
     // If there is a userTypedValue set, then either the user has typed something
