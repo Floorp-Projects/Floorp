@@ -30,6 +30,7 @@ this.Preferences = {
       ["paneAdvanced", "networkTab"],
       ["paneAdvanced", "updateTab"],
       ["paneAdvanced", "encryptionTab"],
+      ["paneAdvanced", "encryptionTab", certManager],
     ];
     for (let [primary, advanced, customFn] of panes) {
       let configName = primary.replace(/^pane/, "prefs") + (advanced ? "-" + advanced : "");
@@ -95,5 +96,11 @@ function paintPromise(browserWindow) {
 function* DNTDialog(aBrowser) {
   yield ContentTask.spawn(aBrowser, null, function* () {
     content.document.getElementById("doNotTrackSettings").click();
+  });
+}
+
+function* certManager(aBrowser) {
+  yield ContentTask.spawn(aBrowser, null, function* () {
+    content.document.getElementById("viewCertificatesButton").click();
   });
 }
