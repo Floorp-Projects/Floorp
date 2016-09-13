@@ -94,7 +94,7 @@ function runTests() {
   l2 = document.getElementById("testlevel2");
   l3 = document.getElementById("testlevel3");
   var textnode = l3.firstChild;
-  var chain = els.getEventTargetChainFor(textnode, {});
+  var chain = els.getEventTargetChainFor(textnode, true, {});
   ok(chain.length > 3, "Too short event target chain.");
   ok(SpecialPowers.compare(chain[0], textnode), "Wrong chain item (1)");
   ok(SpecialPowers.compare(chain[1], l3), "Wrong chain item (2)");
@@ -167,14 +167,14 @@ function testAllListener() {
 
   els.addListenerForAllEvents(root, allListener, false, true, true);
   els.addListenerForAllEvents(root, allListenerTrustedOnly, false, false, true);
-  l3.dispatchEvent(new Event("testevent", { bubbles: true }));
-  dispatchTrusted(l3, { bubbles: true });
+  l3.dispatchEvent(new Event("testevent", { bubbles: true, composed: true }));
+  dispatchTrusted(l3, { bubbles: true, composed: true });
   els.removeListenerForAllEvents(root, allListener, false);
   els.removeListenerForAllEvents(root, allListener, false, true);
   els.removeListenerForAllEvents(root, allListenerTrustedOnly, false, true);
   // make sure removeListenerForAllEvents works.
-  l3.dispatchEvent(new Event("testevent", { bubbles: true }));
-  dispatchTrusted(l3, { bubbles: true });
+  l3.dispatchEvent(new Event("testevent", { bubbles: true, composed : true }));
+  dispatchTrusted(l3, { bubbles: true, composed: true });
 
   // Test the order of event listeners.
   var clickListenerCalled = false;
