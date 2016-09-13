@@ -9782,17 +9782,6 @@ nsDocShell::InternalLoad(nsIURI* aURI,
     isJavaScript = false;
   }
 
-  RefPtr<nsGlobalWindow> scriptGlobal = mScriptGlobal;
-
-  // First, notify any nsIContentPolicy listeners about the document load.
-  // Only abort the load if a content policy listener explicitly vetos it!
-  // Use nsPIDOMWindow since we _want_ to cross the chrome boundary if needed
-  nsCOMPtr<Element> requestingElement =
-    scriptGlobal->AsOuter()->GetFrameElementInternal();
-
-
-  int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-  uint32_t contentType;
   bool isTargetTopLevelDocShell = false;
   nsCOMPtr<nsIDocShell> targetDocShell;
   if (aWindowTarget && *aWindowTarget) {
@@ -9832,7 +9821,13 @@ nsDocShell::InternalLoad(nsIURI* aURI,
   // The contentType will be INTERNAL_(I)FRAME if:
   // 1. This docshell is for iframe.
   // 2. AND aWindowTarget is not a new window, nor a top-level window.
+  //
+  // This variable will be used when we call NS_CheckContentLoadPolicy, and
+  // later when we call DoURILoad.
+  uint32_t contentType;
   if (IsFrame() && !isTargetTopLevelDocShell) {
+    nsCOMPtr<Element> requestingElement =
+      mScriptGlobal->AsOuter()->GetFrameElementInternal();
     NS_ASSERTION(requestingElement, "A frame but no DOM element!?");
     contentType = requestingElement->IsHTMLElement(nsGkAtoms::iframe) ?
       nsIContentPolicy::TYPE_INTERNAL_IFRAME : nsIContentPolicy::TYPE_INTERNAL_FRAME;
@@ -9840,51 +9835,58 @@ nsDocShell::InternalLoad(nsIURI* aURI,
     contentType = nsIContentPolicy::TYPE_DOCUMENT;
   }
 
-  nsISupports* requestingContext = requestingElement;
-  if (!requestingContext) {
-    requestingContext = ToSupports(scriptGlobal);
-  }
-
-  // XXXbz would be nice to know the loading principal here... but we don't
-  nsCOMPtr<nsIPrincipal> requestingPrincipal = aTriggeringPrincipal;
-  if (!requestingPrincipal && aReferrer) {
-    rv =
-      CreatePrincipalFromReferrer(aReferrer, getter_AddRefs(requestingPrincipal));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  rv = NS_CheckContentLoadPolicy(contentType,
-                                 aURI,
-                                 requestingPrincipal,
-                                 requestingContext,
-                                 EmptyCString(),  // mime guess
-                                 nullptr,  // extra
-                                 &shouldLoad);
-
-  if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
-    if (NS_SUCCEEDED(rv) && shouldLoad == nsIContentPolicy::REJECT_TYPE) {
-      return NS_ERROR_CONTENT_BLOCKED_SHOW_ALT;
+  // If there's no targetDocShell, that means we are about to create a new window,
+  // perform a content policy check before creating the window.
+  if (!targetDocShell) {
+    nsCOMPtr<Element> requestingElement =
+      mScriptGlobal->AsOuter()->GetFrameElementInternal();
+    nsISupports* requestingContext = requestingElement;
+    if (!requestingContext) {
+      requestingContext = ToSupports(mScriptGlobal);
     }
 
-    return NS_ERROR_CONTENT_BLOCKED;
-  }
+    // XXXbz would be nice to know the loading principal here... but we don't
+    nsCOMPtr<nsIPrincipal> requestingPrincipal = aTriggeringPrincipal;
+    if (!requestingPrincipal && aReferrer) {
+      rv =
+        CreatePrincipalFromReferrer(aReferrer, getter_AddRefs(requestingPrincipal));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
 
-  // If HSTS priming was set by nsMixedContentBlocker::ShouldLoad, and we
-  // would block due to mixed content, go ahead and block here. If we try to
-  // proceed with priming, we will error out later on.
-  nsCOMPtr<nsIDocShell> docShell = NS_CP_GetDocShellFromContext(requestingContext);
-  NS_ENSURE_TRUE(docShell, NS_OK);
-  if (docShell) {
-    nsIDocument* document = docShell->GetDocument();
-    NS_ENSURE_TRUE(document, NS_OK);
+    int16_t shouldLoad = nsIContentPolicy::ACCEPT;
+    rv = NS_CheckContentLoadPolicy(contentType,
+                                   aURI,
+                                   requestingPrincipal,
+                                   requestingContext,
+                                   EmptyCString(),  // mime guess
+                                   nullptr,  // extra
+                                   &shouldLoad);
 
-    HSTSPrimingState state = document->GetHSTSPrimingStateForLocation(aURI);
-    if (state == HSTSPrimingState::eHSTS_PRIMING_BLOCK) {
-      // HSTS Priming currently disabled for InternalLoad, so we need to clear
-      // the location that was added by nsMixedContentBlocker::ShouldLoad
-      // Bug 1269815 will address images loaded via InternalLoad
-      document->ClearHSTSPrimingLocation(aURI);
+    if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
+      if (NS_SUCCEEDED(rv) && shouldLoad == nsIContentPolicy::REJECT_TYPE) {
+        return NS_ERROR_CONTENT_BLOCKED_SHOW_ALT;
+      }
+
       return NS_ERROR_CONTENT_BLOCKED;
+    }
+
+    // If HSTS priming was set by nsMixedContentBlocker::ShouldLoad, and we
+    // would block due to mixed content, go ahead and block here. If we try to
+    // proceed with priming, we will error out later on.
+    nsCOMPtr<nsIDocShell> docShell = NS_CP_GetDocShellFromContext(requestingContext);
+    NS_ENSURE_TRUE(docShell, NS_OK);
+    if (docShell) {
+      nsIDocument* document = docShell->GetDocument();
+      NS_ENSURE_TRUE(document, NS_OK);
+
+      HSTSPrimingState state = document->GetHSTSPrimingStateForLocation(aURI);
+      if (state == HSTSPrimingState::eHSTS_PRIMING_BLOCK) {
+        // HSTS Priming currently disabled for InternalLoad, so we need to clear
+        // the location that was added by nsMixedContentBlocker::ShouldLoad
+        // Bug 1269815 will address images loaded via InternalLoad
+        document->ClearHSTSPrimingLocation(aURI);
+        return NS_ERROR_CONTENT_BLOCKED;
+      }
     }
   }
 
@@ -10371,6 +10373,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
       // applies to aURI.
       CopyFavicon(currentURI, aURI, doc->NodePrincipal(), UsePrivateBrowsing());
 
+      RefPtr<nsGlobalWindow> scriptGlobal = mScriptGlobal;
       RefPtr<nsGlobalWindow> win = scriptGlobal ?
         scriptGlobal->GetCurrentInnerWindowInternal() : nullptr;
 
