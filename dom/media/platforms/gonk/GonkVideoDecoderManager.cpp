@@ -130,25 +130,25 @@ GonkVideoDecoderManager::Init()
 
   if (uint32_t(mConfig.mImage.width * mConfig.mImage.height) > maxWidth * maxHeight) {
     GVDM_LOG("Video resolution exceeds hw codec capability");
-    return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
+    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
   }
 
   // Validate the container-reported frame and pictureRect sizes. This ensures
   // that our video frame creation code doesn't overflow.
   if (!IsValidVideoRegion(mConfig.mImage, mConfig.ImageRect(), mConfig.mDisplay)) {
     GVDM_LOG("It is not a valid region");
-    return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
+    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
   }
 
   mReaderTaskQueue = AbstractThread::GetCurrent()->AsTaskQueue();
   MOZ_ASSERT(mReaderTaskQueue);
 
   if (mDecodeLooper.get() != nullptr) {
-    return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
+    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
   }
 
   if (!InitLoopers(MediaData::VIDEO_DATA)) {
-    return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
+    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
   }
 
   RefPtr<InitPromise> p = mInitPromise.Ensure(__func__);
@@ -672,7 +672,7 @@ GonkVideoDecoderManager::codecReserved()
 
   if (rv != OK) {
     GVDM_LOG("Failed to configure codec!!!!");
-    mInitPromise.Reject(DecoderFailureReason::INIT_ERROR, __func__);
+    mInitPromise.Reject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
     return;
   }
 
@@ -683,7 +683,7 @@ void
 GonkVideoDecoderManager::codecCanceled()
 {
   GVDM_LOG("codecCanceled");
-  mInitPromise.RejectIfExists(DecoderFailureReason::CANCELED, __func__);
+  mInitPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
 }
 
 // Called on GonkDecoderManager::mTaskLooper thread.

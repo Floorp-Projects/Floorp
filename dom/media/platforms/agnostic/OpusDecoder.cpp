@@ -61,14 +61,14 @@ OpusDataDecoder::Init()
   uint8_t *p = mInfo.mCodecSpecificConfig->Elements();
   if (length < sizeof(uint64_t)) {
     OPUS_DEBUG("CodecSpecificConfig too short to read codecDelay!");
-    return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
+    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
   }
   int64_t codecDelay = BigEndian::readUint64(p);
   length -= sizeof(uint64_t);
   p += sizeof(uint64_t);
   if (NS_FAILED(DecodeHeader(p, length))) {
     OPUS_DEBUG("Error decoding header!");
-    return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
+    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
   }
 
   int r;
@@ -84,7 +84,7 @@ OpusDataDecoder::Init()
   if (codecDelay != FramesToUsecs(mOpusParser->mPreSkip,
                                   mOpusParser->mRate).value()) {
     NS_WARNING("Invalid Opus header: CodecDelay and pre-skip do not match!");
-    return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
+    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
   }
 
   if (mInfo.mRate != (uint32_t)mOpusParser->mRate) {
@@ -95,7 +95,7 @@ OpusDataDecoder::Init()
   }
 
   return r == OPUS_OK ? InitPromise::CreateAndResolve(TrackInfo::kAudioTrack, __func__)
-                      : InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
+                      : InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
 }
 
 nsresult

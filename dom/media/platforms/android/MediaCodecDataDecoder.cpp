@@ -75,11 +75,11 @@ public:
     mSurfaceTexture = AndroidSurfaceTexture::Create();
     if (!mSurfaceTexture) {
       NS_WARNING("Failed to create SurfaceTexture for video decode\n");
-      return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
+      return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
     }
 
     if (NS_FAILED(InitDecoder(mSurfaceTexture->JavaSurface()))) {
-      return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
+      return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
     }
 
     return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
@@ -260,7 +260,7 @@ MediaCodecDataDecoder::Init()
   return NS_SUCCEEDED(rv) ?
            InitPromise::CreateAndResolve(type, __func__) :
            InitPromise::CreateAndReject(
-               MediaDataDecoder::DecoderFailureReason::INIT_ERROR, __func__);
+               NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
 }
 
 nsresult

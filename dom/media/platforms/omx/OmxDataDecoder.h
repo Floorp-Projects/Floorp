@@ -87,7 +87,7 @@ protected:
 
   void ResolveInitPromise(const char* aMethodName);
 
-  void RejectInitPromise(DecoderFailureReason aReason, const char* aMethodName);
+  void RejectInitPromise(MediaResult aError, const char* aMethodName);
 
   void OmxStateRunner();
 

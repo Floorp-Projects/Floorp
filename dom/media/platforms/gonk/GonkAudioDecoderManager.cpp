@@ -57,7 +57,7 @@ GonkAudioDecoderManager::Init()
   if (InitMediaCodecProxy()) {
     return InitPromise::CreateAndResolve(TrackType::kAudioTrack, __func__);
   } else {
-    return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
+    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
   }
 }
 

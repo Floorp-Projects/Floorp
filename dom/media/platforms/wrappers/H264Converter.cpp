@@ -249,7 +249,7 @@ H264Converter::OnDecoderInitDone(const TrackType aTrackType)
 }
 
 void
-H264Converter::OnDecoderInitFailed(MediaDataDecoder::DecoderFailureReason aReason)
+H264Converter::OnDecoderInitFailed(MediaResult aError)
 {
   mInitPromiseRequest.Complete();
   mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
