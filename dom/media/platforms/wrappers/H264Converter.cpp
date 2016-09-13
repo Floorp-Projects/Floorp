@@ -149,6 +149,16 @@ H264Converter::IsHardwareAccelerated(nsACString& aFailureReason) const
   return MediaDataDecoder::IsHardwareAccelerated(aFailureReason);
 }
 
+void
+H264Converter::SetSeekThreshold(const media::TimeUnit& aTime)
+{
+  if (mDecoder) {
+    mDecoder->SetSeekThreshold(aTime);
+  } else {
+    MediaDataDecoder::SetSeekThreshold(aTime);
+  }
+}
+
 nsresult
 H264Converter::CreateDecoder(DecoderDoctorDiagnostics* aDiagnostics)
 {
