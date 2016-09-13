@@ -38,11 +38,13 @@
 
 <!-- Device Settings -->
 <!ENTITY syncDeviceName.label       "Device Name:">
-<!ENTITY syncDeviceName.accesskey   "c">
 <!ENTITY fxaSyncDeviceName.label       "Device Name">
 <!ENTITY changeSyncDeviceName.label "Change Device Name…">
+<!ENTITY changeSyncDeviceName.label.accesskey "h">
 <!ENTITY cancelChangeSyncDeviceName.label "Cancel">
+<!ENTITY cancelChangeSyncDeviceName.label.accesskey "n">
 <!ENTITY saveChangeSyncDeviceName.label "Save">
+<!ENTITY saveChangeSyncDeviceName.label.accesskey "v">
 <!ENTITY unlinkDevice.label           "Unlink This Device">
 
 <!-- Footer stuff -->
@@ -71,11 +73,17 @@ both, to better adapt this sentence to their language.
 
 <!ENTITY notSignedIn.label           "You are not signed in.">
 <!ENTITY signIn.label                "Sign in">
+<!ENTITY signIn.label.accesskey            "g">
 <!ENTITY profilePicture.tooltip      "Change profile picture">
 <!ENTITY verifiedManage.label        "Manage Account">
+<!ENTITY verifiedManage.label.accesskey    "o">
 <!ENTITY disconnect.label            "Disconnect…">
+<!ENTITY disconnect.label.accesskey        "D">
 <!ENTITY verify.label                "Verify Email">
+<!ENTITY verify.label.accesskey            "V">
 <!ENTITY forget.label                "Forget this Email">
+<!ENTITY forget.label.accesskey            "F">
+<!ENTITY rejectUnlinkFxaAccount.forget.label.accesskey            "e">
 
 <!ENTITY welcome.description "Access your tabs, bookmarks, passwords and more wherever you use &brandShortName;.">
 <!ENTITY welcome.signIn.label "Sign In">
@@ -87,7 +95,9 @@ both, to better adapt this sentence to their language.
 <!ENTITY signedOut.description        "Synchronize your bookmarks, history, tabs, passwords, add-ons, and preferences across all your devices.">
 <!ENTITY signedOut.accountBox.title   "Connect with a &syncBrand.fxAccount.label;">
 <!ENTITY signedOut.accountBox.create  "Create Account">
+<!ENTITY signedOut.accountBox.create.accesskey  "C">
 <!ENTITY signedOut.accountBox.signin  "Sign In">
+<!ENTITY signedOut.accountBox.signin.accesskey  "I">
 
 <!ENTITY signedIn.engines.label       "Sync across all devices">
 
