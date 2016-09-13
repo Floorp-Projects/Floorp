@@ -65,6 +65,8 @@ DebuggerPanel.prototype = {
   },
 
   destroy: function() {
+    this.panelWin.Debugger.destroy();
+    this.emit("destroyed");
   }
 };
 
