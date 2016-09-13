@@ -102,13 +102,12 @@
       checkMediaStreamContains(stream, [audioTrack, videoTrack],
                                "List constructed WebAudio and gUM-video tracks");
 
-      // TODO (bug 1301675) When WebAudio tracks support stop(), uncomment:
-      // var playback = new MediaStreamPlayback(videoElement, stream);
-      // return playback.playMedia(false).then(() => {
+      var playback = new MediaStreamPlayback(videoElement, stream);
+      return playback.playMedia(false).then(() => {
         gUMStream.getTracks().forEach(t => t.stop());
         ok(!gUMStream.active, "gUMStream should be inactive after stopping");
-      //   ok(!stream.active, "stream with stopped tracks should be inactive");
-      // });
+        ok(!stream.active, "stream with stopped tracks should be inactive");
+      });
     })
     .then(() => {
       var osc1k = createOscillatorStream(audioContext, 1000);
