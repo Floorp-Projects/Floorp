@@ -5,6 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
+    'box-model.js',
     'inspector-tab-panel.css',
     'inspector-tab-panel.js',
 )
+
+BROWSER_CHROME_MANIFESTS += ['test/browser.ini']

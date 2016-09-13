@@ -17,7 +17,7 @@ const TEST_URI = "<style>" +
 
 add_task(function* () {
   yield addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  let {inspector, view, testActor} = yield openLayoutView();
+  let {inspector, view, testActor} = yield openBoxModelView();
 
   yield testUnits(inspector, view, testActor);
   yield testValueComesFromStyleRule(inspector, view, testActor);
@@ -31,7 +31,7 @@ function* testUnits(inspector, view, testActor) {
      "Should have the right padding");
   yield selectNode("#div1", inspector);
 
-  let span = view.doc.querySelector(".layout-padding.layout-top > span");
+  let span = view.doc.querySelector(".boxmodel-padding.boxmodel-top > span");
   is(span.textContent, 3, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
@@ -68,7 +68,7 @@ function* testValueComesFromStyleRule(inspector, view, testActor) {
      "Should have the right border-bottom-width");
   yield selectNode("#div2", inspector);
 
-  let span = view.doc.querySelector(".layout-border.layout-bottom > span");
+  let span = view.doc.querySelector(".boxmodel-border.boxmodel-bottom > span");
   is(span.textContent, 16, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
@@ -97,7 +97,7 @@ function* testShorthandsAreParsed(inspector, view, testActor) {
      "Should have the right padding");
   yield selectNode("#div3", inspector);
 
-  let span = view.doc.querySelector(".layout-padding.layout-right > span");
+  let span = view.doc.querySelector(".boxmodel-padding.boxmodel-right > span");
   is(span.textContent, 32, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
