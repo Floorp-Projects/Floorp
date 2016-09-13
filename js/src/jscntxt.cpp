@@ -317,6 +317,17 @@ checkReportFlags(JSContext* cx, unsigned* flags)
     return false;
 }
 
+#ifdef DEBUG
+static void
+AssertIsASCII(const char* s)
+{
+    while (*s) {
+        MOZ_ASSERT((*s & 0x80) == 0);
+        s++;
+    }
+}
+#endif
+
 bool
 js::ReportErrorVA(JSContext* cx, unsigned flags, const char* format,
                   ErrorArgumentsType argumentsType, va_list ap)
@@ -336,6 +347,11 @@ js::ReportErrorVA(JSContext* cx, unsigned flags, const char* format,
         return false;
     }
     messagelen = strlen(message);
+
+#ifdef DEBUG
+    if (argumentsType == ArgumentsAreASCII)
+        AssertIsASCII(message);
+#endif
 
     report.flags = flags;
     report.errorNumber = JSMSG_USER_DEFINED_ERROR;
@@ -553,6 +569,12 @@ class MOZ_RAII AutoMessageArgs
             } else if (typeArg == ArgumentsAreASCII || typeArg == ArgumentsAreLatin1) {
                 const char* charArg = va_arg(ap, char*);
                 size_t charArgLength = strlen(charArg);
+
+#ifdef DEBUG
+                if (typeArg == ArgumentsAreASCII)
+                    AssertIsASCII(charArg);
+#endif
+
                 args_[i] = InflateString(cx, charArg, &charArgLength);
                 if (!args_[i])
                     return false;
@@ -608,6 +630,11 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
 
     if (efs) {
         reportp->exnType = efs->exnType;
+
+#ifdef DEBUG
+        if (argumentsType == ArgumentsAreASCII)
+            AssertIsASCII(efs->format);
+#endif
 
         uint16_t argCount = efs->argCount;
         MOZ_RELEASE_ASSERT(argCount <= JS::MaxNumErrorArguments);
