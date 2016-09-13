@@ -50,6 +50,17 @@ const REASON = {
   UPDATE: "update"
 };
 
+const COOKIE_KEY_MAP = {
+  path: "Path",
+  host: "Domain",
+  expires: "Expires",
+  isSecure: "Secure",
+  isHttpOnly: "HttpOnly",
+  isDomain: "HostOnly",
+  creationTime: "CreationTime",
+  lastAccessed: "LastAccessed"
+};
+
 // Maximum length of item name to show in context menu label - will be
 // trimmed with ellipsis if it's longer.
 const ITEM_NAME_MAX_LENGTH = 32;
@@ -607,7 +618,9 @@ StorageUI.prototype = {
         let otherProps = itemProps.filter(
           e => !["name", "value", "valueActor"].includes(e));
         for (let prop of otherProps) {
-          rawObject[prop] = item[prop];
+          let cookieProp = COOKIE_KEY_MAP[prop] || prop;
+          // The pseduo property of HostOnly refers to converse of isDomain property
+          rawObject[cookieProp] = (prop === "isDomain") ? !item[prop] : item[prop];
         }
         itemVar.populate(rawObject, {sorted: true});
         itemVar.twisty = true;
@@ -777,11 +790,17 @@ StorageUI.prototype = {
       }
 
       columns[f.name] = f.name;
+      let columnName;
       try {
-        columns[f.name] = L10N.getStr("table.headers." + type + "." + f.name);
+        columnName = L10N.getStr("table.headers." + type + "." + f.name);
       } catch (e) {
-        console.error("Unable to localize table header type:" + type +
-                      " key:" + f.name);
+        columnName = COOKIE_KEY_MAP[f.name];
+      }
+
+      if (!columnName) {
+        console.error("Unable to localize table header type:" + type + " key:" + f.name);
+      } else {
+        columns[f.name] = columnName;
       }
     });
 

@@ -18,7 +18,7 @@ add_task(function* () {
   // test that value is something initially
   let initialValue = [[
     {name: "c1", value: "1.2.3.4.5.6.7"},
-    {name: "c1.path", value: "/browser"}
+    {name: "c1.Path", value: "/browser"}
   ], [
     {name: "c1", value: "Array"},
     {name: "c1.0", value: "1"},
@@ -28,7 +28,7 @@ add_task(function* () {
   // test that value is something initially
   let finalValue = [[
     {name: "c1", value: '{"foo": 4,"bar":6}'},
-    {name: "c1.path", value: "/browser"}
+    {name: "c1.Path", value: "/browser"}
   ], [
     {name: "c1", value: "Object"},
     {name: "c1.foo", value: "4"},
