@@ -10,6 +10,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
   "resource://testing-common/PlacesTestUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TabCrashHandler",
   "resource:///modules/ContentCrashHandlers.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
+  "resource://gre/modules/Preferences.jsm");
 
 function waitForCondition(condition, nextTest, errorMsg, retryTimes) {
   retryTimes = typeof retryTimes !== 'undefined' ?  retryTimes : 30;

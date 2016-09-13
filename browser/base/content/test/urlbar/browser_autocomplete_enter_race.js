@@ -41,3 +41,50 @@ add_task(function* test_sametext() {
   yield BrowserTestUtils.browserLoaded(gBrowser.selectedTab.linkedBrowser,
                                        false, "http://example.com/");
 });
+
+add_task(function* test_after_empty_search() {
+  yield promiseAutocompleteResultPopup("");
+  gURLBar.focus();
+  gURLBar.value = "e";
+  EventUtils.synthesizeKey("x", {});
+  EventUtils.synthesizeKey("VK_RETURN", {});
+
+  info("wait for the page to load");
+  yield BrowserTestUtils.browserLoaded(gBrowser.selectedTab.linkedBrowser,
+                                       false, "http://example.com/");
+});
+
+add_task(function* test_disabled_ac() {
+  // Disable autocomplete.
+  let suggestHistory = Preferences.get("browser.urlbar.suggest.history");
+  Preferences.set("browser.urlbar.suggest.history", false);
+  let suggestBookmarks = Preferences.get("browser.urlbar.suggest.bookmark");
+  Preferences.set("browser.urlbar.suggest.bookmark", false);
+  let suggestOpenPages = Preferences.get("browser.urlbar.suggest.openpage");
+  Preferences.set("browser.urlbar.suggest.openpages", false);
+
+  Services.search.addEngineWithDetails("MozSearch", "", "", "", "GET",
+                                       "http://example.com/?q={searchTerms}");
+  let engine = Services.search.getEngineByName("MozSearch");
+  let originalEngine = Services.search.currentEngine;
+  Services.search.currentEngine = engine;
+
+  registerCleanupFunction(function* () {
+    Preferences.set("browser.urlbar.suggest.history", suggestHistory);
+    Preferences.set("browser.urlbar.suggest.bookmark", suggestBookmarks);
+    Preferences.set("browser.urlbar.suggest.openpage", suggestOpenPages);
+
+    Services.search.currentEngine = originalEngine;
+    let engine = Services.search.getEngineByName("MozSearch");
+    Services.search.removeEngine(engine);
+  });
+
+  gURLBar.focus();
+  gURLBar.value = "e";
+  EventUtils.synthesizeKey("x", {});
+  EventUtils.synthesizeKey("VK_RETURN", {});
+
+  info("wait for the page to load");
+  yield BrowserTestUtils.browserLoaded(gBrowser.selectedTab.linkedBrowser,
+                                       false, "http://example.com/?q=ex");
+});
