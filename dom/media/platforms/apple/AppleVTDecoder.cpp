@@ -420,7 +420,7 @@ TimingInfoFromSample(MediaRawData* aSample)
   return timestamp;
 }
 
-nsresult
+MediaResult
 AppleVTDecoder::DoDecode(MediaRawData* aSample)
 {
   AssertOnTaskQueueThread();
@@ -447,14 +447,14 @@ AppleVTDecoder::DoDecode(MediaRawData* aSample)
   if (rv != noErr) {
     NS_ERROR("Couldn't create CMBlockBuffer");
     mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
-    return NS_ERROR_OUT_OF_MEMORY;
+    return MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
   }
   CMSampleTimingInfo timestamp = TimingInfoFromSample(aSample);
   rv = CMSampleBufferCreate(kCFAllocatorDefault, block, true, 0, 0, mFormat, 1, 1, &timestamp, 0, NULL, sample.receive());
   if (rv != noErr) {
     NS_ERROR("Couldn't create CMSampleBuffer");
     mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
-    return NS_ERROR_OUT_OF_MEMORY;
+    return MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
   }
 
   VTDecodeFrameFlags decodeFlags =

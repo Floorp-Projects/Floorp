@@ -117,7 +117,7 @@ CopyAndPackAudio(AVFrame* aFrame, uint32_t aNumChannels, uint32_t aNumAFrames)
   return audio;
 }
 
-FFmpegAudioDecoder<LIBAV_VER>::DecodeResult
+MediaResult
 FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample)
 {
   AVPacket packet;
@@ -128,12 +128,11 @@ FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample)
 
   if (!PrepareFrame()) {
     NS_WARNING("FFmpeg audio decoder failed to allocate frame.");
-    return DecodeResult::FATAL_ERROR;
+    return MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
   }
 
   int64_t samplePosition = aSample->mOffset;
   media::TimeUnit pts = media::TimeUnit::FromMicroseconds(aSample->mTime);
-  bool didOutput = false;
 
   while (packet.size > 0) {
     int decoded;
@@ -142,7 +141,7 @@ FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample)
 
     if (bytesConsumed < 0) {
       NS_WARNING("FFmpeg audio decoder error.");
-      return DecodeResult::DECODE_ERROR;
+      return NS_ERROR_DOM_MEDIA_DECODE_ERR;
     }
 
     if (mFrame->format != AV_SAMPLE_FMT_FLT &&
@@ -152,14 +151,14 @@ FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample)
         mFrame->format != AV_SAMPLE_FMT_S32 &&
         mFrame->format != AV_SAMPLE_FMT_S32P) {
       NS_WARNING("FFmpeg audio decoder outputs unsupported audio format.");
-      return DecodeResult::DECODE_ERROR;
+      return NS_ERROR_DOM_MEDIA_DECODE_ERR;
     }
 
     if (decoded) {
       uint32_t numChannels = mCodecContext->channels;
       AudioConfig::ChannelLayout layout(numChannels);
       if (!layout.IsValid()) {
-        return DecodeResult::FATAL_ERROR;
+        return NS_ERROR_DOM_MEDIA_FATAL_ERR;
       }
 
       uint32_t samplingRate = mCodecContext->sample_rate;
@@ -171,7 +170,7 @@ FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample)
         FramesToTimeUnit(mFrame->nb_samples, samplingRate);
       if (!audio || !duration.IsValid()) {
         NS_WARNING("Invalid count of accumulated audio samples");
-        return DecodeResult::DECODE_ERROR;
+        return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
       }
 
       RefPtr<AudioData> data = new AudioData(samplePosition,
@@ -182,19 +181,17 @@ FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample)
                                              numChannels,
                                              samplingRate);
       mCallback->Output(data);
-      didOutput = true;
       pts += duration;
       if (!pts.IsValid()) {
         NS_WARNING("Invalid count of accumulated audio samples");
-        return DecodeResult::DECODE_ERROR;
+        return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
       }
     }
     packet.data += bytesConsumed;
     packet.size -= bytesConsumed;
     samplePosition += bytesConsumed;
   }
-
-  return didOutput ? DecodeResult::DECODE_FRAME : DecodeResult::DECODE_NO_FRAME;
+  return NS_OK;
 }
 
 void

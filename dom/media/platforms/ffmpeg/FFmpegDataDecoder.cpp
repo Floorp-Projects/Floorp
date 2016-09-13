@@ -109,19 +109,11 @@ FFmpegDataDecoder<LIBAV_VER>::ProcessDecode(MediaRawData* aSample)
   if (mIsFlushing) {
     return;
   }
-  switch (DoDecode(aSample)) {
-    case DecodeResult::DECODE_ERROR:
-      mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__));
-      break;
-    case DecodeResult::FATAL_ERROR:
-      mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__));
-      break;
-    case DecodeResult::DECODE_NO_FRAME:
-    case DecodeResult::DECODE_FRAME:
-      mCallback->InputExhausted();
-      break;
-    default:
-      break;
+  MediaResult rv = DoDecode(aSample);
+  if (NS_FAILED(rv)) {
+    mCallback->Error(rv);
+  } else {
+    mCallback->InputExhausted();
   }
 }
 
