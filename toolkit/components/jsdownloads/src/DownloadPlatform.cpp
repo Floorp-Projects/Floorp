@@ -24,6 +24,7 @@
 
 #ifdef XP_MACOSX
 #include <CoreFoundation/CoreFoundation.h>
+#include "../../../../../xpcom/io/CocoaFileUtils.h"
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -69,7 +70,32 @@ static void gio_set_metadata_done(GObject *source_obj, GAsyncResult *res, gpoint
 }
 #endif
 
-nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIFile* aTarget,
+#ifdef XP_MACOSX
+// Caller is responsible for freeing any result (CF Create Rule)
+CFURLRef CreateCFURLFromNSIURI(nsIURI *aURI) {
+  nsAutoCString spec;
+  if (aURI) {
+    aURI->GetSpec(spec);
+  }
+
+  CFStringRef urlStr = ::CFStringCreateWithCString(kCFAllocatorDefault,
+                                                   spec.get(),
+                                                   kCFStringEncodingUTF8);
+  if (!urlStr) {
+    return NULL;
+  }
+
+  CFURLRef url = ::CFURLCreateWithString(kCFAllocatorDefault,
+                                         urlStr,
+                                         NULL);
+
+  ::CFRelease(urlStr);
+
+  return url;
+}
+#endif
+
+nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIURI* aReferrer, nsIFile* aTarget,
                                         const nsACString& aContentType, bool aIsPrivate)
 {
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_ANDROID) \
@@ -130,6 +156,33 @@ nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIFile* aTarget,
     ::CFNotificationCenterPostNotification(center, CFSTR("com.apple.DownloadFileFinished"),
                                            observedObject, nullptr, TRUE);
     ::CFRelease(observedObject);
+
+    // Add OS X origin and referrer file metadata
+    CFStringRef pathCFStr = NULL;
+    if (!path.IsEmpty()) {
+      pathCFStr = ::CFStringCreateWithCharacters(kCFAllocatorDefault,
+                                                 (const UniChar*)path.get(),
+                                                 path.Length());
+    }
+    if (pathCFStr) {
+      CFURLRef sourceCFURL = CreateCFURLFromNSIURI(aSource);
+      CFURLRef referrerCFURL = CreateCFURLFromNSIURI(aReferrer);
+
+      CocoaFileUtils::AddOriginMetadataToFile(pathCFStr,
+                                              sourceCFURL,
+                                              referrerCFURL);
+      CocoaFileUtils::AddQuarantineMetadataToFile(pathCFStr,
+                                                  sourceCFURL,
+                                                  referrerCFURL);
+
+      ::CFRelease(pathCFStr);
+      if (sourceCFURL) {
+        ::CFRelease(sourceCFURL);
+      }
+      if (referrerCFURL) {
+        ::CFRelease(referrerCFURL);
+      }
+    }
 #endif
     if (mozilla::Preferences::GetBool("device.storage.enabled", true)) {
       // Tell DeviceStorage that a new file may have been added.
