@@ -157,6 +157,7 @@ class Dict(DataType):
     def convert(self, data):
         return dict(data)
 
+
 class List(DataType):
     def __init__(self, name, item_type, default=no_default, optional=False):
         DataType.__init__(self, name, default, optional)
@@ -169,6 +170,19 @@ class Int(DataType):
     def convert(self, data):
         return int(data)
 
+
 class Any(DataType):
     def convert(self, data):
         return data
+
+
+class Tuple(DataType):
+    def __init__(self, name, item_types, default=no_default, optional=False):
+        DataType.__init__(self, name, default, optional)
+        self.item_types = item_types
+
+    def convert(self, data):
+        if len(data) != len(self.item_types):
+            raise ValueError("Expected %i items got %i" % (len(self.item_types), len(data)))
+        return tuple(item_type.convert(value)
+                     for item_type, value in zip(self.item_types, data))
