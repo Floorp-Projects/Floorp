@@ -566,8 +566,8 @@ StyleAnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
       // colors are premultiplied, but things work better when they are,
       // so use premultiplication.  Spec issue is still open per
       // http://lists.w3.org/Archives/Public/www-style/2009Jul/0050.html
-      nscolor startColor = aStartValue.GetColorValue();
-      nscolor endColor = aEndValue.GetColorValue();
+      nscolor startColor = aStartValue.GetCSSValueValue()->GetColorValue();
+      nscolor endColor = aEndValue.GetCSSValueValue()->GetColorValue();
 
       // Get a color component on a 0-1 scale, which is much easier to
       // deal with when working with alpha.
@@ -1268,7 +1268,8 @@ AddShadowItems(double aCoeff1, const nsCSSValue &aValue1,
                                        aCoeff2, color2Value,
                                        resultColorValue);
     MOZ_ASSERT(ok, "should not fail");
-    resultArray->Item(4).SetColorValue(resultColorValue.GetColorValue());
+    resultArray->Item(4).SetColorValue(
+      resultColorValue.GetCSSValueValue()->GetColorValue());
   }
 
   MOZ_ASSERT(inset1 == inset2, "should match");
@@ -2408,8 +2409,8 @@ StyleAnimationValue::AddWeighted(nsCSSPropertyID aProperty,
       return true;
     }
     case eUnit_Color: {
-      nscolor color1 = aValue1.GetColorValue();
-      nscolor color2 = aValue2.GetColorValue();
+      nscolor color1 = aValue1.GetCSSValueValue()->GetColorValue();
+      nscolor color2 = aValue2.GetCSSValueValue()->GetColorValue();
       nscolor resultColor;
 
       // We are using AddWeighted() with a zero aCoeff2 for colors to
@@ -3118,14 +3119,11 @@ StyleAnimationValue::UncomputeValue(nsCSSPropertyID aProperty,
       aSpecifiedValue.
         SetFloatValue(aComputedValue.GetFloatValue(), eCSSUnit_Number);
       break;
-    case eUnit_Color:
-      // colors can be alone, or part of a paint server
-      aSpecifiedValue.SetColorValue(aComputedValue.GetColorValue());
-      break;
     case eUnit_CurrentColor:
       aSpecifiedValue.SetIntValue(NS_COLOR_CURRENTCOLOR, eCSSUnit_EnumColor);
       break;
     case eUnit_Calc:
+    case eUnit_Color:
     case eUnit_ObjectPosition:
     case eUnit_URL:
     case eUnit_DiscreteCSSValue: {
@@ -3133,6 +3131,8 @@ StyleAnimationValue::UncomputeValue(nsCSSPropertyID aProperty,
       // Sanity-check that the underlying unit in the nsCSSValue is what we
       // expect for our StyleAnimationValue::Unit:
       MOZ_ASSERT((unit == eUnit_Calc && val->GetUnit() == eCSSUnit_Calc) ||
+                 (unit == eUnit_Color &&
+                  nsCSSValue::IsNumericColorUnit(val->GetUnit())) ||
                  (unit == eUnit_ObjectPosition &&
                   val->GetUnit() == eCSSUnit_Array) ||
                  (unit == eUnit_URL && val->GetUnit() == eCSSUnit_URL) ||
@@ -4356,7 +4356,8 @@ StyleAnimationValue::StyleAnimationValue(float aFloat, FloatConstructorType)
 StyleAnimationValue::StyleAnimationValue(nscolor aColor, ColorConstructorType)
 {
   mUnit = eUnit_Color;
-  mValue.mColor = aColor;
+  mValue.mCSSValue = new nsCSSValue();
+  mValue.mCSSValue->SetColorValue(aColor);
 }
 
 StyleAnimationValue&
@@ -4389,10 +4390,8 @@ StyleAnimationValue::operator=(const StyleAnimationValue& aOther)
       mValue.mFloat = aOther.mValue.mFloat;
       MOZ_ASSERT(!mozilla::IsNaN(mValue.mFloat));
       break;
-    case eUnit_Color:
-      mValue.mColor = aOther.mValue.mColor;
-      break;
     case eUnit_Calc:
+    case eUnit_Color:
     case eUnit_ObjectPosition:
     case eUnit_URL:
     case eUnit_DiscreteCSSValue:
@@ -4514,7 +4513,8 @@ StyleAnimationValue::SetColorValue(nscolor aColor)
 {
   FreeValue();
   mUnit = eUnit_Color;
-  mValue.mColor = aColor;
+  mValue.mCSSValue = new nsCSSValue();
+  mValue.mCSSValue->SetColorValue(aColor);
 }
 
 void
@@ -4668,9 +4668,8 @@ StyleAnimationValue::operator==(const StyleAnimationValue& aOther) const
     case eUnit_Percent:
     case eUnit_Float:
       return mValue.mFloat == aOther.mValue.mFloat;
-    case eUnit_Color:
-      return mValue.mColor == aOther.mValue.mColor;
     case eUnit_Calc:
+    case eUnit_Color:
     case eUnit_ObjectPosition:
     case eUnit_URL:
     case eUnit_DiscreteCSSValue:
