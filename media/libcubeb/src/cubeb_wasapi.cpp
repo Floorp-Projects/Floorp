@@ -760,8 +760,10 @@ refill_callback_output(cubeb_stream * stm)
                     0,
                     output_buffer,
                     output_frames);
+  XASSERT(got >= 0);
+  XASSERT(got == output_frames || stm->draining);
 
-  hr = stm->render_client->ReleaseBuffer(output_frames, 0);
+  hr = stm->render_client->ReleaseBuffer(got, 0);
   if (FAILED(hr)) {
     LOG("failed to release buffer: %x\n", hr);
     return false;
@@ -1022,7 +1024,7 @@ current_stream_delay(cubeb_stream * stm)
   double cur_pos = static_cast<double>(pos) / freq;
   double max_pos = static_cast<double>(stm->frames_written)  / stm->output_mix_params.rate;
   double delay = max_pos - cur_pos;
-  XASSERT(delay >= 0 || stm->draining);
+  XASSERT(delay >= 0);
 
   return delay;
 }
