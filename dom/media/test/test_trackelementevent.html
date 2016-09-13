@@ -32,8 +32,16 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.regions.enabled", true]]},
     trackThree.kind = "chapters";
 
     var events = 0;
-    function countEvent() {
-      ok(true, "A load or error event should have happened.");
+    function trackOneEvent() {
+      ok(true, "A load event for trackOne should have happened.");
+      events++ && events == 3 && SimpleTest.finish();
+    }
+    function trackTwoEvent() {
+      ok(true, "An error event for trackTwo should have happened.");
+      events++ && events == 3 && SimpleTest.finish();
+    }
+    function trackThreeEvent() {
+      ok(true, "An error event for trackThree should have happened.");
       events++ && events == 3 && SimpleTest.finish();
     }
 
@@ -41,12 +49,12 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.regions.enabled", true]]},
       ok(false, "Event should not have been called.");
     }
 
-    trackOne.addEventListener("load", countEvent);
+    trackOne.addEventListener("load", trackOneEvent);
     trackOne.addEventListener("error", shouldNotBeCalled)
     trackTwo.addEventListener("load", shouldNotBeCalled);
-    trackTwo.addEventListener("error", countEvent);
+    trackTwo.addEventListener("error", trackTwoEvent);
     trackThree.addEventListener("load", shouldNotBeCalled);
-    trackThree.addEventListener("error", countEvent);
+    trackThree.addEventListener("error", trackThreeEvent);
 
     document.getElementById("content").appendChild(video);
     video.appendChild(trackOne);

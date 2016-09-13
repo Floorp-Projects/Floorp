@@ -11,6 +11,13 @@
 
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/test-eval-in-stackframe.html";
+
+// Force the old debugger UI since it's directly used (see Bug 1301705)
+Services.prefs.setBoolPref("devtools.debugger.new-debugger-frontend", false);
+registerCleanupFunction(function* () {
+  Services.prefs.clearUserPref("devtools.debugger.new-debugger-frontend");
+});
+
 add_task(function* () {
   yield loadTab(TEST_URI);
 

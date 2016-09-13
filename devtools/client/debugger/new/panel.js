@@ -22,6 +22,7 @@ DebuggerPanel.prototype = {
         threadClient: this.toolbox.threadClient,
         tabTarget: this.toolbox.target
       });
+      this.isReady = true;
       return this;
     });
   },
