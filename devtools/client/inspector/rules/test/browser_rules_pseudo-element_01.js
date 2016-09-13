@@ -70,12 +70,12 @@ function* testTopLeft(inspector, view) {
 
   let onAdded = view.once("ruleview-changed");
   let firstProp = elementFirstLineRuleView.addProperty("background-color",
-    "rgb(0, 255, 0)", "");
+    "rgb(0, 255, 0)", "", true);
   yield onAdded;
 
   onAdded = view.once("ruleview-changed");
   let secondProp = elementFirstLineRuleView.addProperty("font-style",
-    "italic", "");
+    "italic", "", true);
   yield onAdded;
 
   is(firstProp,
@@ -108,7 +108,7 @@ function* testTopLeft(inspector, view) {
 
   onAdded = view.once("ruleview-changed");
   firstProp = elementRuleView.addProperty("background-color",
-                                          "rgb(0, 0, 255)", "");
+                                          "rgb(0, 0, 255)", "", true);
   yield onAdded;
 
   is((yield getComputedStyleProperty(id, null, "background-color")),
