@@ -183,9 +183,8 @@ You can obtain a copy of the license at https://mozilla.org/MPL/2.0/.");
 
     let handler = MarionetteHandler::new(settings);
     let listening = try!(webdriver::server::start(addr, handler, extension_routes())
-        .or(Err((ExitCode::Usage, "Invalid host address".to_owned()))));
+        .map_err(|err| (ExitCode::Usage, err.to_string())));
     info!("Listening on {}", listening.socket);
-
     Ok(())
 }
 
