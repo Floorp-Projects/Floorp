@@ -686,8 +686,11 @@ WebGLContext::CreateAndInitGLWith(FnCreateGL_T fnCreateGL,
 
         fallbackCaps.pop();
     }
-    if (!potentialGL)
+    if (!potentialGL) {
+        out_failReasons->push_back(FailureReason("FEATURE_FAILURE_WEBGL_EXHAUSTED_CAPS",
+                                                 "Exhausted GL driver caps."));
         return false;
+    }
 
     FailureReason reason;
 
