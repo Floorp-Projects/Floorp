@@ -19,7 +19,7 @@ function* runTests() {
   let browser = tab.linkedBrowser;
 
   // The root element of the page shouldn't be red.
-  yield ContentTask.spawn(browser, null, function(){
+  yield ContentTask.spawn(browser, null, function() {
     Assert.notEqual(content.document.documentElement.style.backgroundColor,
                     "rgb(255, 0, 0)",
                     "The page shouldn't be red.");
