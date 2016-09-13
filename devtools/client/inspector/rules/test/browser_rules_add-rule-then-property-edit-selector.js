@@ -39,7 +39,7 @@ add_task(function* () {
 
 function* testAddingProperty(view, index) {
   let ruleEditor = getRuleViewRuleEditor(view, index);
-  ruleEditor.addProperty("font-weight", "bold", "");
+  ruleEditor.addProperty("font-weight", "bold", "", true);
   let textProps = ruleEditor.rule.textProps;
   let lastRule = textProps[textProps.length - 1];
   is(lastRule.name, "font-weight", "Last rule name is font-weight");

@@ -47,7 +47,7 @@ function* addNewProperty(view, index, name, value) {
   info(`Adding new property "${name}: ${value};"`);
 
   let onRuleViewChanged = view.once("ruleview-changed");
-  idRuleEditor.addProperty(name, value, "");
+  idRuleEditor.addProperty(name, value, "", true);
   yield onRuleViewChanged;
 
   let textProps = idRuleEditor.rule.textProps;
