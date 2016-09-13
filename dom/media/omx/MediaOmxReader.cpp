@@ -289,7 +289,7 @@ void MediaOmxReader::HandleResourceAllocated()
     nsIntSize displaySize(displayWidth, displayHeight);
     nsIntSize frameSize(width, height);
     if (!IsValidVideoRegion(frameSize, pictureRect, displaySize)) {
-      mMetadataPromise.RejectNS_ERROR_DOM_MEDIA_METADATA_ERR, __func__);
+      mMetadataPromise.Reject(NS_ERROR_DOM_MEDIA_METADATA_ERR, __func__);
       return;
     }
 
