@@ -1269,19 +1269,11 @@ AddShadowItems(double aCoeff1, const nsCSSValue &aValue1,
   }
 
   if (color1.GetUnit() != eCSSUnit_Null) {
-    StyleAnimationValue color1Value
-      (color1.GetColorValue(), StyleAnimationValue::ColorConstructor);
-    StyleAnimationValue color2Value
-      (color2.GetColorValue(), StyleAnimationValue::ColorConstructor);
-    StyleAnimationValue resultColorValue;
-    DebugOnly<bool> ok =
-      StyleAnimationValue::AddWeighted(eCSSProperty_color,
-                                       aCoeff1, color1Value,
-                                       aCoeff2, color2Value,
-                                       resultColorValue);
-    MOZ_ASSERT(ok, "should not fail");
-    resultArray->Item(4).SetColorValue(
-      resultColorValue.GetCSSValueValue()->GetColorValue());
+    if (aCoeff2 == 0.0 && aCoeff1 != 1.0) {
+      DiluteColor(color1, aCoeff1, resultArray->Item(4));
+    } else {
+      AddWeightedColors(aCoeff1, color1, aCoeff2, color2, resultArray->Item(4));
+    }
   }
 
   MOZ_ASSERT(inset1 == inset2, "should match");
