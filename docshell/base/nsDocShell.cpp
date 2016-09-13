@@ -9838,11 +9838,35 @@ nsDocShell::InternalLoad(nsIURI* aURI,
   // If there's no targetDocShell, that means we are about to create a new window,
   // perform a content policy check before creating the window.
   if (!targetDocShell) {
-    nsCOMPtr<Element> requestingElement =
-      mScriptGlobal->AsOuter()->GetFrameElementInternal();
-    nsISupports* requestingContext = requestingElement;
-    if (!requestingContext) {
-      requestingContext = ToSupports(mScriptGlobal);
+    nsCOMPtr<Element> requestingElement;
+    nsISupports* requestingContext = nullptr;
+
+    if (contentType == nsIContentPolicy::TYPE_DOCUMENT) {
+      if (XRE_IsContentProcess()) {
+        // In e10s the child process doesn't have access to the element that
+        // contains the browsing context (because that element is in the chrome
+        // process). So we just pass mScriptGlobal.
+        requestingContext = ToSupports(mScriptGlobal);
+      } else {
+        // This is for loading non-e10s tabs and toplevel windows of various
+        // sorts.
+        // For the toplevel window cases, requestingElement will be null.
+        requestingElement = mScriptGlobal->AsOuter()->GetFrameElementInternal();
+        requestingContext = requestingElement;
+      }
+    } else {
+      requestingElement = mScriptGlobal->AsOuter()->GetFrameElementInternal();
+      requestingContext = requestingElement;
+
+#ifdef DEBUG
+      // Get the docshell type for requestingElement.
+      nsCOMPtr<nsIDocument> requestingDoc = requestingElement->OwnerDoc();
+      nsCOMPtr<nsIDocShell> elementDocShell = requestingDoc->GetDocShell();
+
+      // requestingElement docshell type = current docshell type.
+      MOZ_ASSERT(mItemType == elementDocShell->ItemType(),
+                "subframes should have the same docshell type as their parent");
+#endif
     }
 
     // XXXbz would be nice to know the loading principal here... but we don't
@@ -9874,7 +9898,9 @@ nsDocShell::InternalLoad(nsIURI* aURI,
     // would block due to mixed content, go ahead and block here. If we try to
     // proceed with priming, we will error out later on.
     nsCOMPtr<nsIDocShell> docShell = NS_CP_GetDocShellFromContext(requestingContext);
-    NS_ENSURE_TRUE(docShell, NS_OK);
+    // When loading toplevel windows, requestingContext can be null.  We don't
+    // really care about HSTS in that situation, though; loads in toplevel
+    // windows should all be browser UI.
     if (docShell) {
       nsIDocument* document = docShell->GetDocument();
       NS_ENSURE_TRUE(document, NS_OK);
