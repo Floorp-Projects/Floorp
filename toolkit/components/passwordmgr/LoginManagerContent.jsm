@@ -14,6 +14,7 @@ const PASSWORD_INPUT_ADDED_COALESCING_THRESHOLD_MS = 1;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+Cu.import("resource://gre/modules/InsecurePasswordUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask", "resource://gre/modules/DeferredTask.jsm");
@@ -919,6 +920,7 @@ var LoginManagerContent = {
       MULTIPLE_LOGINS: 7,
       NO_AUTOFILL_FORMS: 8,
       AUTOCOMPLETE_OFF: 9,
+      INSECURE: 10,
     };
 
     function recordAutofillResult(result) {
@@ -972,6 +974,14 @@ var LoginManagerContent = {
       if (passwordField.disabled || passwordField.readOnly) {
         log("not filling form, password field disabled or read-only");
         recordAutofillResult(AUTOFILL_RESULT.PASSWORD_DISABLED_READONLY);
+        return;
+      }
+
+      // Prevent autofilling insecure forms.
+      if (!userTriggered && !LoginHelper.insecureAutofill &&
+          !InsecurePasswordUtils.isFormSecure(form)) {
+        log("not filling form since it's insecure");
+        recordAutofillResult(AUTOFILL_RESULT.INSECURE);
         return;
       }
 
