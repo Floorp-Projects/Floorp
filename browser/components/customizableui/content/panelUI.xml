@@ -338,7 +338,7 @@
               break;
             case "popuphidden":
               this.removeAttribute("panelopen");
-              this._mainView.style.removeProperty("max-height");
+              this._mainView.style.removeProperty("height");
               this.showMainView();
               this._mainViewObserver.disconnect();
               break;
@@ -366,7 +366,7 @@
           // Ignore the mutation that'll fire when we set the height of
           // the main view.
           this.ignoreMutations = true;
-          this._mainView.style.maxHeight =
+          this._mainView.style.height =
             this.getBoundingClientRect().height + "px";
           this.ignoreMutations = false;
         ]]></body>
@@ -416,8 +416,11 @@
 
       <!-- Call this when the height of one of your views (the main view or a
            subview) changes and you want the heights of the multiview and panel
-           to be the same as the view's height. -->
+           to be the same as the view's height.
+           If the caller can give a hint of the expected height change with the
+           optional aExpectedChange parameter, it prevents flicker. -->
       <method name="setHeightToFit">
+        <parameter name="aExpectedChange"/>
         <body><![CDATA[
           // Set the max-height to zero, wait until the height is actually
           // updated, and then remove it.  If it's not removed, weird things can
@@ -425,7 +428,10 @@
           // though they're visible.
           let count = 5;
           let height = getComputedStyle(this).height;
-          this.style.maxHeight = "0";
+          if (aExpectedChange)
+            this.style.maxHeight = (parseInt(height) + aExpectedChange) + "px";
+          else
+            this.style.maxHeight = "0";
           let interval = setInterval(() => {
             if (height != getComputedStyle(this).height || --count == 0) {
               clearInterval(interval);

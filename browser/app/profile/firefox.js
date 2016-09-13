@@ -1220,8 +1220,8 @@ pref("social.shareDirectory", "https://activations.cdn.mozilla.net/sharePanel.ht
 pref("security.mixed_content.block_active_content", true);
 
 // Show degraded UI for http pages with password fields.
-// Only for Nightly and Dev Edition for not, not for beta or release.
-#ifndef RELEASE_BUILD
+// Only for Nightly, Dev Edition and early beta, not for late beta or release.
+#ifdef EARLY_BETA_OR_EARLIER
 pref("security.insecure_password.ui.enabled", true);
 #else
 pref("security.insecure_password.ui.enabled", false);
