@@ -260,6 +260,15 @@ private:
                                int32_t index);
 
     void MarkTheLastElementOfPendingQueue();
+
+#if defined(XP_WIN)
+    Atomic<bool> mPolling;
+    nsCOMPtr<nsITimer> mPollRepairTimer;
+    void StartPollWatchdog();
+    void DoPollRepair();
+    void StartPolling();
+    void EndPolling();
+#endif
 };
 
 extern nsSocketTransportService *gSocketTransportService;
