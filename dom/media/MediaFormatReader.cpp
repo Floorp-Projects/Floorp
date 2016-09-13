@@ -1249,11 +1249,11 @@ MediaFormatReader::Update(TrackType aTrack)
 
   if (decoder.mError && !decoder.HasFatalError()) {
     decoder.mDecodePending = false;
-    decoder.mError.reset();
     if (++decoder.mNumOfConsecutiveError > decoder.mMaxConsecutiveError) {
-      NotifyError(aTrack);
+      NotifyError(aTrack, decoder.mError.ref());
       return;
     }
+    decoder.mError.reset();
     LOG("%s decoded error count %d", TrackTypeToStr(aTrack),
                                      decoder.mNumOfConsecutiveError);
     media::TimeUnit nextKeyframe;
