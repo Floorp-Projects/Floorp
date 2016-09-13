@@ -3305,6 +3305,11 @@ var PrintPreviewListener = {
     return gNavToolbox;
   },
   onEnter: function () {
+    // We might have accidentally switched tabs since the user invoked print
+    // preview
+    if (gBrowser.selectedTab != this._printPreviewTab) {
+      gBrowser.selectedTab = this._printPreviewTab;
+    }
     gInPrintPreviewMode = true;
     this._toggleAffectedChrome();
   },
