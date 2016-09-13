@@ -2163,14 +2163,6 @@ Toolbox.prototype = {
           // to destroyed listeners to still query toolbox attributes
           this._host = null;
           this._toolPanels.clear();
-
-          // Force GC to prevent long GC pauses when running tests and to free up
-          // memory in general when the toolbox is closed.
-          if (flags.testing) {
-            win.QueryInterface(Ci.nsIInterfaceRequestor)
-              .getInterface(Ci.nsIDOMWindowUtils)
-              .garbageCollect();
-          }
         }).then(null, console.error);
 
     let leakCheckObserver = ({wrappedJSObject: barrier}) => {

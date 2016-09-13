@@ -102,6 +102,10 @@ registerCleanupFunction(function* cleanup() {
   while (gBrowser.tabs.length > 1) {
     yield closeTabAndToolbox(gBrowser.selectedTab);
   }
+
+  // Force GC and CC to get rid of disconnected docshells and windows (see Bug 1281341).
+  Cu.forceGC();
+  Cu.forceCC();
 });
 
 /**
