@@ -3903,7 +3903,7 @@ BuildTypeName(JSContext* cx, JSObject* typeObj_)
   // of the rules for building C type declarations can be found at:
   // http://unixwiz.net/techtips/reading-cdecl.html
   TypeCode prevGrouping = CType::GetTypeCode(typeObj), currentGrouping;
-  while (1) {
+  while (true) {
     currentGrouping = CType::GetTypeCode(typeObj);
     switch (currentGrouping) {
     case TYPE_pointer: {
