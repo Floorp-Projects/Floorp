@@ -287,17 +287,21 @@ TrackBuffersManager::EvictData(const TimeUnit& aPlaybackTime, int64_t aSize)
     return EvictDataResult::CANT_EVICT;
   }
 
+  EvictDataResult result;
+
   if (mBufferFull && mEvictionState == EvictionState::EVICTION_COMPLETED) {
-    return EvictDataResult::BUFFER_FULL;
+    // Our buffer is currently full. We will make another eviction attempt.
+    // However, the current appendBuffer will fail as we can't know ahead of
+    // time if the eviction will later succeed.
+    result = EvictDataResult::BUFFER_FULL;
+  } else {
+    mEvictionState = EvictionState::EVICTION_NEEDED;
+    result = EvictDataResult::NO_DATA_EVICTED;
   }
-
-  MSE_DEBUG("Reaching our size limit, schedule eviction of %lld bytes", toEvict);
-
-  mEvictionState = EvictionState::EVICTION_NEEDED;
-
+  MSE_DEBUG("Reached our size limit, schedule eviction of %lld bytes", toEvict);
   QueueTask(new EvictDataTask(aPlaybackTime, toEvict));
 
-  return EvictDataResult::NO_DATA_EVICTED;
+  return result;
 }
 
 TimeIntervals
