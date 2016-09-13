@@ -210,12 +210,14 @@ class ReftestRunner(MozbuildObject):
 
     def run_android_test(self, **kwargs):
         """Runs a reftest, in Firefox for Android."""
-        import runreftest
 
         if kwargs["suite"] not in ('reftest', 'crashtest', 'jstestbrowser'):
             raise Exception('None or unrecognized reftest suite type.')
         if "ipc" in kwargs.keys():
             raise Exception('IPC tests not supported on Android.')
+
+        self._setup_objdir(**kwargs)
+        import remotereftest
 
         default_manifest = {
             "reftest": (self.topsrcdir, "layout", "reftests", "reftest.list"),
@@ -273,23 +275,9 @@ class ReftestRunner(MozbuildObject):
                     path = os.path.relpath(path, os.path.join(self.topsrcdir))
                 kwargs["tests"][i] = os.path.join('tests', path)
 
-        # Need to chdir to reftest_dir otherwise imports fail below.
-        os.chdir(self.reftest_dir)
-
-        # The imp module can spew warnings if the modules below have
-        # already been imported, ignore them.
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-
-            import imp
-            path = os.path.join(self.reftest_dir, 'remotereftest.py')
-            with open(path, 'r') as fh:
-                imp.load_module('reftest', fh, path, ('.py', 'r', imp.PY_SOURCE))
-            import reftest
-
         self.log_manager.enable_unstructured()
         try:
-            rv = reftest.run(**kwargs)
+            rv = remotereftest.run(**kwargs)
         finally:
             self.log_manager.disable_unstructured()
 
