@@ -112,11 +112,14 @@ class WannabeChildAPIManager extends ChildAPIManager {
 
   getFallbackImplementation(namespace, name) {
     // This is gross and should be removed ASAP.
-    let shouldSynchronouslyUseParentAPI = true;
-    // The test API is known to be fully compatible with webext-oop,
-    // except for events due to bugzil.la/1300234
-    if (namespace == "test" && name != "onMessage") {
-      shouldSynchronouslyUseParentAPI = false;
+    let shouldSynchronouslyUseParentAPI = false;
+    // Incompatible APIs are listed here.
+    if (namespace == "runtime" && name == "connectNative" || // Returns a custom Port.
+        namespace == "runtime" && name == "sendNativeMessage" || // Fix together with connectNative.
+        namespace == "tabs" && name == "onRemoved" || // bugzil.la/1300234
+        namespace == "webNavigation" || // ChildAPIManager is oblivious to filters.
+        namespace == "webRequest") { // Incompatible by design (synchronous).
+      shouldSynchronouslyUseParentAPI = true;
     }
     if (shouldSynchronouslyUseParentAPI) {
       let proxyContext = ParentAPIManager.proxyContexts.get(this.id);
