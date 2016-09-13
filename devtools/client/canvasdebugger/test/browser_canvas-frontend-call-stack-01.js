@@ -5,6 +5,12 @@
  * Tests if the a function call's stack is properly displayed in the UI.
  */
 
+// Force the old debugger UI since it's directly used (see Bug 1301705)
+Services.prefs.setBoolPref("devtools.debugger.new-debugger-frontend", false);
+registerCleanupFunction(function* () {
+  Services.prefs.clearUserPref("devtools.debugger.new-debugger-frontend");
+});
+
 function* ifTestingSupported() {
   let { target, panel } = yield initCanvasDebuggerFrontend(SIMPLE_CANVAS_DEEP_STACK_URL);
   let { window, $, $all, EVENTS, SnapshotsListView, CallsListView } = panel.panelWin;

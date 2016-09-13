@@ -14,6 +14,12 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
 var gWebConsole, gJSTerm, gDebuggerWin, gThread, gDebuggerController;
 var gStackframes;
 
+// Force the old debugger UI since it's directly used (see Bug 1301705)
+Services.prefs.setBoolPref("devtools.debugger.new-debugger-frontend", false);
+registerCleanupFunction(function* () {
+  Services.prefs.clearUserPref("devtools.debugger.new-debugger-frontend");
+});
+
 function test() {
   loadTab(TEST_URI).then(() => {
     openConsole().then(consoleOpened);
