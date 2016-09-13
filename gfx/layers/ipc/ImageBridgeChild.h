@@ -398,6 +398,9 @@ protected:
 
   void SendImageBridgeThreadId();
 
+  void ShutdownStep1(SynchronousTask* aTask);
+  void ShutdownStep2(SynchronousTask* aTask);
+
 private:
   CompositableTransaction* mTxn;
   Atomic<bool> mShuttingDown;

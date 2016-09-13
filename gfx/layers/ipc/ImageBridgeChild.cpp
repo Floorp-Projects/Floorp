@@ -451,7 +451,8 @@ private:
 };
 
 // dispatched function
-static void ImageBridgeShutdownStep1(SynchronousTask* aTask)
+void
+ImageBridgeChild::ShutdownStep1(SynchronousTask* aTask)
 {
   AutoCompleteTask complete(aTask);
 
@@ -460,43 +461,42 @@ static void ImageBridgeShutdownStep1(SynchronousTask* aTask)
 
   MediaSystemResourceManager::Shutdown();
 
-  if (sImageBridgeChildSingleton) {
-    // Force all managed protocols to shut themselves down cleanly
-    InfallibleTArray<PCompositableChild*> compositables;
-    sImageBridgeChildSingleton->ManagedPCompositableChild(compositables);
-    for (int i = compositables.Length() - 1; i >= 0; --i) {
-      auto compositable = CompositableClient::FromIPDLActor(compositables[i]);
-      if (compositable) {
-        compositable->Destroy();
-      }
+  // Force all managed protocols to shut themselves down cleanly
+  InfallibleTArray<PCompositableChild*> compositables;
+  ManagedPCompositableChild(compositables);
+  for (int i = compositables.Length() - 1; i >= 0; --i) {
+    auto compositable = CompositableClient::FromIPDLActor(compositables[i]);
+    if (compositable) {
+      compositable->Destroy();
     }
-    InfallibleTArray<PTextureChild*> textures;
-    sImageBridgeChildSingleton->ManagedPTextureChild(textures);
-    for (int i = textures.Length() - 1; i >= 0; --i) {
-      RefPtr<TextureClient> client = TextureClient::AsTextureClient(textures[i]);
-      if (client) {
-        client->Destroy();
-      }
-    }
-    sImageBridgeChildSingleton->FallbackDestroyActors();
-
-    sImageBridgeChildSingleton->SendWillClose();
-    sImageBridgeChildSingleton->MarkShutDown();
-    // From now on, no message can be sent through the image bridge from the
-    // client side except the final Stop message.
   }
+  InfallibleTArray<PTextureChild*> textures;
+  ManagedPTextureChild(textures);
+  for (int i = textures.Length() - 1; i >= 0; --i) {
+    RefPtr<TextureClient> client = TextureClient::AsTextureClient(textures[i]);
+    if (client) {
+      client->Destroy();
+    }
+  }
+  FallbackDestroyActors();
+
+  SendWillClose();
+  MarkShutDown();
+
+  // From now on, no message can be sent through the image bridge from the
+  // client side except the final Stop message.
 }
 
 // dispatched function
-static void
-ImageBridgeShutdownStep2(SynchronousTask* aTask)
+void
+ImageBridgeChild::ShutdownStep2(SynchronousTask* aTask)
 {
   AutoCompleteTask complete(aTask);
 
   MOZ_ASSERT(InImageBridgeChildThread(),
              "Should be in ImageBridgeChild thread.");
 
-  sImageBridgeChildSingleton->Close();
+  Close();
 }
 
 void
@@ -920,14 +920,17 @@ void ImageBridgeChild::ShutDown()
 
   sIsShutDown = true;
 
-  if (ImageBridgeChild::IsCreated()) {
-    MOZ_ASSERT(!sImageBridgeChildSingleton->mShuttingDown);
+  if (RefPtr<ImageBridgeChild> child = GetSingleton()) {
+    MOZ_ASSERT(!child->mShuttingDown);
 
     {
       SynchronousTask task("ImageBridge ShutdownStep1 lock");
 
-      sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
-                      NewRunnableFunction(&ImageBridgeShutdownStep1, &task));
+      RefPtr<Runnable> runnable = WrapRunnable(
+        child,
+        &ImageBridgeChild::ShutdownStep1,
+        &task);
+      child->GetMessageLoop()->PostTask(runnable.forget());
 
       task.Wait();
     }
@@ -935,17 +938,20 @@ void ImageBridgeChild::ShutDown()
     {
       SynchronousTask task("ImageBridge ShutdownStep2 lock");
 
-      sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
-                      NewRunnableFunction(&ImageBridgeShutdownStep2, &task));
+      RefPtr<Runnable> runnable = WrapRunnable(
+        child,
+        &ImageBridgeChild::ShutdownStep2,
+        &task);
+      child->GetMessageLoop()->PostTask(runnable.forget());
 
       task.Wait();
     }
 
     sImageBridgeChildSingleton = nullptr;
-
-    delete sImageBridgeChildThread;
-    sImageBridgeChildThread = nullptr;
   }
+
+  delete sImageBridgeChildThread;
+  sImageBridgeChildThread = nullptr;
 }
 
 void
