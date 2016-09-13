@@ -19,6 +19,7 @@
 #include "mozilla/layers/PImageBridgeChild.h"
 #include "mozilla/Mutex.h"
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT
+#include "nsIObserver.h"
 #include "nsRegion.h"                   // for nsIntRegion
 #include "mozilla/gfx/Rect.h"
 
@@ -111,6 +112,7 @@ class ImageBridgeChild final : public PImageBridgeChild
                              , public ShmemAllocator
 {
   friend class ImageContainer;
+
   typedef InfallibleTArray<AsyncParentMessageData> AsyncParentMessageArray;
 public:
 
@@ -381,11 +383,6 @@ public:
     return InImageBridgeChildThread();
   }
 
-
-  void MarkShutDown();
-
-  void FallbackDestroyActors();
-
 protected:
   ImageBridgeChild();
   bool DispatchAllocShmemInternal(size_t aSize,
@@ -398,8 +395,30 @@ protected:
 
   void SendImageBridgeThreadId();
 
+  void WillShutdown();
   void ShutdownStep1(SynchronousTask* aTask);
   void ShutdownStep2(SynchronousTask* aTask);
+  void MarkShutDown();
+  void FallbackDestroyActors();
+
+private:
+  class ShutdownObserver final : public nsIObserver
+  {
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIOBSERVER
+
+    explicit ShutdownObserver(ImageBridgeChild* aImageBridge);
+    void Unregister();
+
+  private:
+    ~ShutdownObserver() {};
+
+    ImageBridgeChild* mImageBridge;
+  };
+  friend class ShutdownObserver;
+
+  void OnXPCOMShutdown();
 
 private:
   CompositableTransaction* mTxn;
@@ -424,6 +443,8 @@ private:
   Mutex mWaitingFenceHandleMutex;
   nsDataHashtable<nsUint64HashKey, RefPtr<TextureClient> > mTexturesWaitingFenceHandle;
 #endif
+
+  RefPtr<ShutdownObserver> mShutdownObserver;
 };
 
 } // namespace layers
