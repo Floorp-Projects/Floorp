@@ -62,6 +62,7 @@ browser/base/content/nsContextMenu.js
 browser/base/content/sanitizeDialog.js
 browser/base/content/test/**
 browser/base/content/newtab/**
+browser/branding/official/pref/firefox-branding.js
 browser/components/downloads/**
 browser/components/feeds/**
 browser/components/preferences/**

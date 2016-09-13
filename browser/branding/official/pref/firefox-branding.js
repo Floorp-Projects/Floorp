@@ -3,8 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 pref("startup.homepage_override_url", "");
+#if MOZ_UPDATE_CHANNEL == beta
+pref("startup.homepage_welcome_url", "");
+pref("startup.homepage_welcome_url.additional", "");
+#else
 pref("startup.homepage_welcome_url", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%/firstrun/");
 pref("startup.homepage_welcome_url.additional", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%/firstrun/learnmore/");
+#endif
 // Interval: Time between checks for a new version (in seconds)
 pref("app.update.interval", 43200); // 12 hours
 // The time interval between the downloading of mar file chunks in the
