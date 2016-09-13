@@ -8,11 +8,7 @@ authors = [
 [lib]
 crate-type = ["rlib"]
 
-[dependencies]
-deep-crate = { version = "0.1.0", path = "the/depths" }
-
 [profile.dev]
-panic = "abort"
+panic = "unwind"
 
 [profile.release]
-panic = "abort"

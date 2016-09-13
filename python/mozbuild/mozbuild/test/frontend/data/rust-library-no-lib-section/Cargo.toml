@@ -4,3 +4,9 @@ version = "0.1.0"
 authors = [
   "Nobody <nobody@mozilla.org>",
 ]
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
