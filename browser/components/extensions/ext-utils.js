@@ -81,7 +81,8 @@ XPCOMUtils.defineLazyGetter(this, "standaloneStylesheets", () => {
 /* eslint-disable mozilla/balanced-listeners */
 extensions.on("page-shutdown", (type, context) => {
   if (context.viewType == "popup" && context.active) {
-    context.contentWindow.close();
+    // TODO(robwu): This is not webext-oop compatible.
+    context.xulBrowser.contentWindow.close();
   }
 });
 /* eslint-enable mozilla/balanced-listeners */

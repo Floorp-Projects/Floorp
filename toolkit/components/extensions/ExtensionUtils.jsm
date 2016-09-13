@@ -597,11 +597,11 @@ let IconDetails = {
     return {size, icon: DEFAULT};
   },
 
-  convertImageURLToDataURL(imageURL, context, browserWindow, size = 18) {
+  convertImageURLToDataURL(imageURL, contentWindow, browserWindow, size = 18) {
     return new Promise((resolve, reject) => {
-      let image = new context.contentWindow.Image();
+      let image = new contentWindow.Image();
       image.onload = function() {
-        let canvas = context.contentWindow.document.createElement("canvas");
+        let canvas = contentWindow.document.createElement("canvas");
         let ctx = canvas.getContext("2d");
         let dSize = size * browserWindow.devicePixelRatio;
 
@@ -1066,14 +1066,11 @@ function ignoreEvent(context, name) {
       let id = context.extension.id;
       let frame = Components.stack.caller;
       let msg = `In add-on ${id}, attempting to use listener "${name}", which is unimplemented.`;
-      let winID = context.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
       let scriptError = Cc["@mozilla.org/scripterror;1"]
         .createInstance(Ci.nsIScriptError);
-      scriptError.initWithWindowID(msg, frame.filename, null,
-                                   frame.lineNumber, frame.columnNumber,
-                                   Ci.nsIScriptError.warningFlag,
-                                   "content javascript", winID);
+      scriptError.init(msg, frame.filename, null, frame.lineNumber,
+                       frame.columnNumber, Ci.nsIScriptError.warningFlag,
+                       "content javascript");
       let consoleService = Cc["@mozilla.org/consoleservice;1"]
         .getService(Ci.nsIConsoleService);
       consoleService.logMessage(scriptError);
