@@ -12,6 +12,7 @@
 #include "gfxPlatform.h"
 #include "gfxDrawable.h"
 #include "imgIEncoder.h"
+#include "libyuv.h"
 #include "mozilla/Base64.h"
 #include "mozilla/dom/ImageEncoder.h"
 #include "mozilla/dom/WorkerPrivate.h"
@@ -373,20 +374,7 @@ void
 gfxUtils::ConvertBGRAtoRGBA(uint8_t* aData, uint32_t aLength)
 {
     MOZ_ASSERT((aLength % 4) == 0, "Loop below will pass srcEnd!");
-
-    uint8_t *src = aData;
-    uint8_t *srcEnd = src + aLength;
-
-    uint8_t buffer[4];
-    for (; src != srcEnd; src += 4) {
-        buffer[0] = src[2];
-        buffer[1] = src[1];
-        buffer[2] = src[0];
-
-        src[0] = buffer[0];
-        src[1] = buffer[1];
-        src[2] = buffer[2];
-    }
+    libyuv::ABGRToARGB(aData, aLength, aData, aLength, aLength / 4, 1);
 }
 
 #if !defined(MOZ_GFX_OPTIMIZE_MOBILE)
