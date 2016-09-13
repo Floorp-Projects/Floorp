@@ -286,11 +286,10 @@ class XPCShellTestThread(Thread):
             message = "%s | Process still running after test!" % self.test_object['id']
             if self.retry:
                 self.log.info(message)
-                self.log_full_output(self.output_lines)
                 return
 
             self.log.error(message)
-            self.log_full_output(self.output_lines)
+            self.log_full_output()
             self.failCount = 1
 
     def testTimeout(self, proc):
@@ -308,7 +307,7 @@ class XPCShellTestThread(Thread):
             self.log.test_end(self.test_object['id'], 'TIMEOUT',
                               expected=expected,
                               message="Test timed out")
-            self.log_full_output(self.output_lines)
+            self.log_full_output()
 
         self.done = True
         self.timedout = True
@@ -529,23 +528,22 @@ class XPCShellTestThread(Thread):
                 line['thread'] = current_thread().name
             self.log.log_raw(line)
 
-    def log_full_output(self, output):
-        """Log output any buffered output from the test process"""
-        if not output:
+    def log_full_output(self):
+        """Logs any buffered output from the test process, and clears the buffer."""
+        if not self.output_lines:
             return
         self.log.info(">>>>>>>")
-        for line in output:
+        for line in self.output_lines:
             self.log_line(line)
         self.log.info("<<<<<<<")
+        self.output_lines = []
 
     def report_message(self, message):
         """Stores or logs a json log message in mozlog format."""
         if self.verbose:
             self.log_line(message)
         else:
-            # Tests eligible to retry will never dump their buffered output.
-            if not self.retry:
-                self.output_lines.append(message)
+            self.output_lines.append(message)
 
     def process_line(self, line_string):
         """ Parses a single line of output, determining its significance and
@@ -746,7 +744,7 @@ class XPCShellTestThread(Thread):
                     return
 
                 self.log.test_end(name, status, expected=expected, message=message)
-                self.log_full_output(self.output_lines)
+                self.log_full_output()
 
                 self.failCount += 1
 
@@ -761,11 +759,11 @@ class XPCShellTestThread(Thread):
                 # diagnose what the problem was.  See comments above about
                 # the significance of TSAN_EXIT_CODE_WITH_RACES.
                 if self.usingTSan and return_code == TSAN_EXIT_CODE_WITH_RACES:
-                    self.log_full_output(self.output_lines)
+                    self.log_full_output()
 
                 self.log.test_end(name, status, expected=expected, message=message)
                 if self.verbose:
-                    self.log_full_output(self.output_lines)
+                    self.log_full_output()
 
                 self.retry = False
 
@@ -779,6 +777,9 @@ class XPCShellTestThread(Thread):
                     self.clean_temp_dirs(path)
                     return
 
+                # If we assert during shutdown there's a chance the test has passed
+                # but we haven't logged full output, so do so here.
+                self.log_full_output()
                 self.failCount = 1
 
             if self.logfiles and process_output:
