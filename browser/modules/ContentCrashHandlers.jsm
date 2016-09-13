@@ -7,6 +7,7 @@
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
+var Cr = Components.results;
 
 this.EXPORTED_SYMBOLS = [ "TabCrashHandler",
                           "PluginCrashReporter",
@@ -38,6 +39,8 @@ XPCOMUtils.defineLazyGetter(this, "gNavigatorBundle", function() {
 // We don't process crash reports older than 28 days, so don't bother
 // submitting them
 const PENDING_CRASH_REPORT_DAYS = 28;
+const DAY = 24 * 60 * 60 * 1000; // milliseconds
+const DAYS_TO_SUPPRESS = 30;
 
 this.TabCrashHandler = {
   _crashedTabCount: 0,
@@ -344,6 +347,23 @@ this.TabCrashHandler = {
  * the user has opted in.
  */
 this.UnsubmittedCrashHandler = {
+  get prefs() {
+    delete this.prefs;
+    return this.prefs =
+      Services.prefs.getBranch("browser.crashReports.unsubmittedCheck.");
+  },
+
+  // showingNotification is set to true once a notification
+  // is successfully shown, and then set back to false if
+  // the notification is dismissed by an action by the user.
+  showingNotification: false,
+  // suppressed is true if we've determined that we've shown
+  // the notification too many times across too many days without
+  // user interaction, so we're suppressing the notification for
+  // some number of days. See the documentation for
+  // shouldShowPendingSubmissionsNotification().
+  suppressed: false,
+
   init() {
     if (this.initialized) {
       return;
@@ -351,22 +371,71 @@ this.UnsubmittedCrashHandler = {
 
     this.initialized = true;
 
-    let pref = "browser.crashReports.unsubmittedCheck.enabled";
-    let shouldCheck = Services.prefs.getBoolPref(pref);
+    let shouldCheck = this.prefs.getBoolPref("enabled");
 
     if (shouldCheck) {
+      if (this.prefs.prefHasUserValue("suppressUntilDate")) {
+        if (this.prefs.getCharPref("suppressUntilDate") > this.dateString()) {
+          // We'll be suppressing any notifications until after suppressedDate,
+          // so there's no need to do anything more.
+          this.suppressed = true;
+          return;
+        }
+
+        // We're done suppressing, so we don't need this pref anymore.
+        this.prefs.clearUserPref("suppressUntilDate");
+      }
+
       Services.obs.addObserver(this, "browser-delayed-startup-finished",
+                               false);
+      Services.obs.addObserver(this, "profile-before-change",
                                false);
     }
   },
 
-  observe(subject, topic, data) {
-    if (topic != "browser-delayed-startup-finished") {
+  uninit() {
+    if (!this.initialized) {
       return;
     }
 
-    Services.obs.removeObserver(this, topic);
-    this.checkForUnsubmittedCrashReports();
+    this.initialized = false;
+
+    if (this.suppressed) {
+      this.suppressed = false;
+      // No need to do any more clean-up, since we were suppressed.
+      return;
+    }
+
+    if (this.showingNotification) {
+      this.prefs.setBoolPref("shutdownWhileShowing", true);
+      this.showingNotification = false;
+    }
+
+    try {
+      Services.obs.removeObserver(this, "browser-delayed-startup-finished");
+    } catch (e) {
+      // The browser-delayed-startup-finished observer might have already
+      // fired and removed itself, so if this fails, it's okay.
+      if (e.result != Cr.NS_ERROR_FAILURE) {
+        throw e;
+      }
+    }
+
+    Services.obs.removeObserver(this, "profile-before-change");
+  },
+
+  observe(subject, topic, data) {
+    switch (topic) {
+      case "browser-delayed-startup-finished": {
+        Services.obs.removeObserver(this, topic);
+        this.checkForUnsubmittedCrashReports();
+        break;
+      }
+      case "profile-before-change": {
+        this.uninit();
+        break;
+      }
+    }
   },
 
   /**
@@ -395,12 +464,60 @@ this.UnsubmittedCrashHandler = {
     if (reportIDs.length) {
       if (CrashNotificationBar.autoSubmit) {
         CrashNotificationBar.submitReports(reportIDs);
-      } else {
+      } else if (this.shouldShowPendingSubmissionsNotification()) {
         return this.showPendingSubmissionsNotification(reportIDs);
       }
     }
     return null;
   }),
+
+  /**
+   * Returns true if the notification should be shown.
+   * shouldShowPendingSubmissionsNotification makes this decision
+   * by looking at whether or not the user has seen the notification
+   * over several days without ever interacting with it. If this occurs
+   * too many times, we suppress the notification for DAYS_TO_SUPPRESS
+   * days.
+   *
+   * @returns bool
+   */
+  shouldShowPendingSubmissionsNotification() {
+    if (!this.prefs.prefHasUserValue("shutdownWhileShowing")) {
+      return true;
+    }
+
+    let shutdownWhileShowing = this.prefs.getBoolPref("shutdownWhileShowing");
+    this.prefs.clearUserPref("shutdownWhileShowing");
+
+    if (!this.prefs.prefHasUserValue("lastShownDate")) {
+      // This isn't expected, but we're being defensive here. We'll
+      // opt for showing the notification in this case.
+      return true;
+    }
+
+    let lastShownDate = this.prefs.getCharPref("lastShownDate");
+    if (this.dateString() > lastShownDate && shutdownWhileShowing) {
+      // We're on a newer day then when we last showed the
+      // notification without closing it. We don't want to do
+      // this too many times, so we'll decrement a counter for
+      // this situation. Too many of these, and we'll assume the
+      // user doesn't know or care about unsubmitted notifications,
+      // and we'll suppress the notification for a while.
+      let chances = this.prefs.getIntPref("chancesUntilSuppress");
+      if (--chances < 0) {
+        // We're out of chances!
+        this.prefs.clearUserPref("chancesUntilSuppress");
+        // We'll suppress for DAYS_TO_SUPPRESS days.
+        let suppressUntil =
+          this.dateString(new Date(Date.now() + (DAY * DAYS_TO_SUPPRESS)));
+        this.prefs.setCharPref("suppressUntilDate", suppressUntil);
+        return false;
+      }
+      this.prefs.setIntPref("chancesUntilSuppress", chances);
+    }
+
+    return true;
+  },
 
   /**
    * Given an array of unsubmitted crash report IDs, try to open
@@ -421,11 +538,34 @@ this.UnsubmittedCrashHandler = {
 
     let message = PluralForm.get(count, messageTemplate).replace("#1", count);
 
-    return CrashNotificationBar.show({
+    let notification = CrashNotificationBar.show({
       notificationID: "pending-crash-reports",
       message,
       reportIDs,
+      onAction: () => {
+        this.showingNotification = false;
+      },
     });
+
+    if (notification) {
+      this.showingNotification = true;
+      this.prefs.setCharPref("lastShownDate", this.dateString());
+    }
+
+    return notification;
+  },
+
+  /**
+   * Returns a string representation of a Date in the format
+   * YYYYMMDD.
+   *
+   * @param someDate (Date, optional)
+   *        The Date to convert to the string. If not provided,
+   *        defaults to today's date.
+   * @returns String
+   */
+  dateString(someDate = new Date()) {
+    return someDate.toLocaleFormat("%Y%m%d");
   },
 };
 
@@ -452,9 +592,15 @@ this.CrashNotificationBar = {
    *
    *        reportIDs (Array<string>)
    *          The array of report IDs to offer to the user.
+   *
+   *        onAction (function, optional)
+   *          A callback to fire once the user performs an
+   *          action on the notification bar (this includes
+   *          dismissing the notification).
+   *
    * @returns The <xul:notification> if one is shown. null otherwise.
    */
-  show({ notificationID, message, reportIDs }) {
+  show({ notificationID, message, reportIDs, onAction }) {
     let chromeWin = RecentWindow.getMostRecentBrowserWindow();
     if (!chromeWin) {
       // Can't show a notification in this case. We'll hopefully
@@ -473,6 +619,9 @@ this.CrashNotificationBar = {
       label: gNavigatorBundle.GetStringFromName("pendingCrashReports.send"),
       callback: () => {
         this.submitReports(reportIDs);
+        if (onAction) {
+          onAction();
+        }
       },
     },
     {
@@ -480,6 +629,9 @@ this.CrashNotificationBar = {
       callback: () => {
         this.autoSubmit = true;
         this.submitReports(reportIDs);
+        if (onAction) {
+          onAction();
+        }
       },
     },
     {
@@ -499,6 +651,9 @@ this.CrashNotificationBar = {
         reportIDs.forEach(function(reportID) {
           CrashSubmit.ignore(reportID);
         });
+        if (onAction) {
+          onAction();
+        }
       }
     };
 
