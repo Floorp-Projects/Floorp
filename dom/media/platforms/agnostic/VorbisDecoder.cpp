@@ -137,15 +137,16 @@ VorbisDataDecoder::ProcessDecode(MediaRawData* aSample)
   if (mIsFlushing) {
     return;
   }
-  if (DoDecode(aSample) == -1) {
-    mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
-                                      __func__));
+
+  MediaResult rv = DoDecode(aSample);
+  if (NS_FAILED(rv)) {
+    mCallback->Error(rv);
   } else {
     mCallback->InputExhausted();
   }
 }
 
-int
+MediaResult
 VorbisDataDecoder::DoDecode(MediaRawData* aSample)
 {
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
@@ -168,26 +169,25 @@ VorbisDataDecoder::DoDecode(MediaRawData* aSample)
                                     aSample->mTimecode, mPacketCount++);
 
   if (vorbis_synthesis(&mVorbisBlock, &pkt) != 0) {
-    return -1;
+    return NS_ERROR_DOM_MEDIA_DECODE_ERR;
   }
 
   if (vorbis_synthesis_blockin(&mVorbisDsp,
                                &mVorbisBlock) != 0) {
-    return -1;
+    return NS_ERROR_DOM_MEDIA_DECODE_ERR;
   }
 
   VorbisPCMValue** pcm = 0;
   int32_t frames = vorbis_synthesis_pcmout(&mVorbisDsp, &pcm);
   if (frames == 0) {
-    mCallback->InputExhausted();
-    return 0;
+    return NS_OK;
   }
   while (frames > 0) {
     uint32_t channels = mVorbisDsp.vi->channels;
     uint32_t rate = mVorbisDsp.vi->rate;
     AlignedAudioBuffer buffer(frames*channels);
     if (!buffer) {
-      return -1;
+      return MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
     }
     for (uint32_t j = 0; j < channels; ++j) {
       VorbisPCMValue* channel = pcm[j];
@@ -199,18 +199,18 @@ VorbisDataDecoder::DoDecode(MediaRawData* aSample)
     CheckedInt64 duration = FramesToUsecs(frames, rate);
     if (!duration.isValid()) {
       NS_WARNING("Int overflow converting WebM audio duration");
-      return -1;
+      return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
     }
     CheckedInt64 total_duration = FramesToUsecs(mFrames, rate);
     if (!total_duration.isValid()) {
       NS_WARNING("Int overflow converting WebM audio total_duration");
-      return -1;
+      return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
     }
 
     CheckedInt64 time = total_duration + aTstampUsecs;
     if (!time.isValid()) {
       NS_WARNING("Int overflow adding total_duration and aTstampUsecs");
-      return -1;
+      return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
     };
 
     if (!mAudioConverter) {
@@ -218,7 +218,7 @@ VorbisDataDecoder::DoDecode(MediaRawData* aSample)
                      rate);
       AudioConfig out(channels, rate);
       if (!in.IsValid() || !out.IsValid()) {
-       return -1;
+       return NS_ERROR_DOM_MEDIA_FATAL_ERR;
       }
       mAudioConverter = MakeUnique<AudioConverter>(in, out);
     }
@@ -236,13 +236,13 @@ VorbisDataDecoder::DoDecode(MediaRawData* aSample)
                                     rate));
     mFrames += frames;
     if (vorbis_synthesis_read(&mVorbisDsp, frames) != 0) {
-      return -1;
+      return NS_ERROR_DOM_MEDIA_DECODE_ERR;
     }
 
     frames = vorbis_synthesis_pcmout(&mVorbisDsp, &pcm);
   }
 
-  return aTotalFrames > 0 ? 1 : 0;
+  return NS_OK;
 }
 
 void
