@@ -60,9 +60,17 @@ public class DynamicToolbar {
         // the following model numbers:
         //  GT-N8000, GT-N8005, GT-N8010, GT-N8013, GT-N8020
         //  GT-N5100, GT-N5110, GT-N5120
-        return Build.VERSION.SDK_INT == Build.VERSION_CODES.JELLY_BEAN
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.JELLY_BEAN
             && (Build.MODEL.startsWith("GT-N80") ||
-                Build.MODEL.startsWith("GT-N51"));
+                Build.MODEL.startsWith("GT-N51"))) {
+            return true;
+        }
+        // Also disable variants of the Galaxy Note 4 on Android 5.0.1 (Bug 1301593)
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP
+            && (Build.MODEL.startsWith("SM-910"))) {
+            return true;
+        }
+        return false;
     }
 
     public void destroy() {
