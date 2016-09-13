@@ -5513,6 +5513,14 @@
     "keyed": true,
     "description": "a testing histogram; not meant to be touched"
   },
+    "TELEMETRY_TEST_KEYED_BOOLEAN": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "keyed": true,
+    "bug_numbers": [1299144],
+    "description": "a testing histogram; not meant to be touched"
+  },
   "TELEMETRY_TEST_RELEASE_OPTOUT": {
     "expires_in_version": "never",
     "kind": "flag",
