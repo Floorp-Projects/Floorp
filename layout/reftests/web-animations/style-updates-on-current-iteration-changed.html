@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<title>Update styles when current iteration changed</title>
+<script src="animation-utils.js"></script>
+<style>
+#test {
+  width: 100px; height: 100px;
+  background: blue;
+}
+</style>
+<div id="test"></div>
+<script>
+  var anim = document.getElementById("test")
+    .animate({ marginLeft: [ "0px", "100px" ] },
+             { duration: 100000,
+               delay: -99999, // For starting right before second iteration.
+               easing: "steps(1, start)",
+               iterations: 2,
+               iterationComposite: "accumulate" });
+
+  waitForIterationChange(anim).then(() => {
+    // Wait for painting the result of the second iteration.
+    requestAnimationFrame(() => {
+      document.documentElement.classList.remove("reftest-wait");
+    });
+  });
+</script>
