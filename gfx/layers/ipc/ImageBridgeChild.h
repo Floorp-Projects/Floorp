@@ -160,14 +160,6 @@ public:
   static ImageBridgeChild* GetSingleton();
 
 
-  /**
-   * Dispatches a task to the ImageBridgeChild thread to do the connection
-   */
-  void ConnectAsync(ImageBridgeParent* aParent);
-
-  using PImageBridgeChild::SendImageBridgeThreadId;
-  void SendImageBridgeThreadId();
-
   static void IdentifyCompositorTextureHost(const TextureFactoryIdentifier& aIdentifier);
 
   void BeginTransaction();
@@ -402,6 +394,9 @@ protected:
                                   bool aUnsafe);
 
   void Bind(Endpoint<PImageBridgeChild>&& aEndpoint);
+  void BindSameProcess(RefPtr<ImageBridgeParent> aParent);
+
+  void SendImageBridgeThreadId();
 
 private:
   CompositableTransaction* mTxn;
