@@ -3493,10 +3493,6 @@ XPCJSRuntime::Initialize()
     js::SetActivityCallback(cx, ActivityCallback, this);
     JS_SetInterruptCallback(cx, InterruptCallback);
     js::SetWindowProxyClass(cx, &OuterWindowProxyClass);
-#ifdef MOZ_CRASHREPORTER
-    js::AutoEnterOOMUnsafeRegion::setAnnotateOOMAllocationSizeCallback(
-            CrashReporter::AnnotateOOMAllocationSize);
-#endif
 
     // The JS engine needs to keep the source code around in order to implement
     // Function.prototype.toSource(). It'd be nice to not have to do this for
