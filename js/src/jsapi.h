@@ -5187,6 +5187,9 @@ extern JS_PUBLIC_API(void)
 JS_ReportError(JSContext* cx, const char* format, ...);
 
 extern JS_PUBLIC_API(void)
+JS_ReportErrorASCII(JSContext* cx, const char* format, ...);
+
+extern JS_PUBLIC_API(void)
 JS_ReportErrorLatin1(JSContext* cx, const char* format, ...);
 
 extern JS_PUBLIC_API(void)
@@ -5204,6 +5207,14 @@ extern JS_PUBLIC_API(void)
 JS_ReportErrorNumberVA(JSContext* cx, JSErrorCallback errorCallback,
                        void* userRef, const unsigned errorNumber, va_list ap);
 #endif
+
+extern JS_PUBLIC_API(void)
+JS_ReportErrorNumberASCII(JSContext* cx, JSErrorCallback errorCallback,
+                          void* userRef, const unsigned errorNumber, ...);
+
+extern JS_PUBLIC_API(void)
+JS_ReportErrorNumberASCIIVA(JSContext* cx, JSErrorCallback errorCallback,
+                            void* userRef, const unsigned errorNumber, va_list ap);
 
 extern JS_PUBLIC_API(void)
 JS_ReportErrorNumberLatin1(JSContext* cx, JSErrorCallback errorCallback,
@@ -5247,6 +5258,9 @@ extern JS_PUBLIC_API(bool)
 JS_ReportWarning(JSContext* cx, const char* format, ...);
 
 extern JS_PUBLIC_API(bool)
+JS_ReportWarningASCII(JSContext* cx, const char* format, ...);
+
+extern JS_PUBLIC_API(bool)
 JS_ReportWarningLatin1(JSContext* cx, const char* format, ...);
 
 extern JS_PUBLIC_API(bool)
@@ -5256,6 +5270,11 @@ extern JS_PUBLIC_API(bool)
 JS_ReportErrorFlagsAndNumber(JSContext* cx, unsigned flags,
                              JSErrorCallback errorCallback, void* userRef,
                              const unsigned errorNumber, ...);
+
+extern JS_PUBLIC_API(bool)
+JS_ReportErrorFlagsAndNumberASCII(JSContext* cx, unsigned flags,
+                                  JSErrorCallback errorCallback, void* userRef,
+                                  const unsigned errorNumber, ...);
 
 extern JS_PUBLIC_API(bool)
 JS_ReportErrorFlagsAndNumberLatin1(JSContext* cx, unsigned flags,
