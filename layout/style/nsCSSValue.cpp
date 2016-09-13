@@ -318,19 +318,20 @@ bool nsCSSValue::operator==(const nsCSSValue& aOther) const
   return false;
 }
 
-double nsCSSValue::GetAngleValueInRadians() const
+double
+nsCSSValue::GetAngleValueInRadians() const
 {
   double angle = GetFloatValue();
 
   switch (GetUnit()) {
-  case eCSSUnit_Radian: return angle;
-  case eCSSUnit_Turn:   return angle * 2 * M_PI;
-  case eCSSUnit_Degree: return angle * M_PI / 180.0;
-  case eCSSUnit_Grad:   return angle * M_PI / 200.0;
+    case eCSSUnit_Radian: return angle;
+    case eCSSUnit_Turn:   return angle * 2 * M_PI;
+    case eCSSUnit_Degree: return angle * M_PI / 180.0;
+    case eCSSUnit_Grad:   return angle * M_PI / 200.0;
 
-  default:
-    MOZ_ASSERT(false, "unrecognized angular unit");
-    return 0.0;
+    default:
+      MOZ_ASSERT(false, "unrecognized angular unit");
+      return 0.0;
   }
 }
 

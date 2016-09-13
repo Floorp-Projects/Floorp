@@ -189,7 +189,7 @@ Rule.prototype = {
     }
 
     this.applyProperties((modifications) => {
-      modifications.createProperty(ind, name, value, priority);
+      modifications.createProperty(ind, name, value, priority, enabled);
       // Now that the rule has been updated, the server might have given us data
       // that changes the state of the property. Update it now.
       prop.updateEditor();

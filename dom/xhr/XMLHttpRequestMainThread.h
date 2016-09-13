@@ -38,6 +38,7 @@
 #include "mozilla/dom/XMLHttpRequest.h"
 #include "mozilla/dom/XMLHttpRequestBinding.h"
 #include "mozilla/dom/XMLHttpRequestEventTarget.h"
+#include "mozilla/dom/XMLHttpRequestString.h"
 
 #ifdef Status
 /* Xlib headers insist on this for some reason... Nuke it because
@@ -469,6 +470,10 @@ public:
   virtual void
   GetResponseText(nsAString& aResponseText, ErrorResult& aRv) override;
 
+  void
+  GetResponseText(XMLHttpRequestStringSnapshot& aSnapshot,
+                  ErrorResult& aRv);
+
   virtual nsIDocument*
   GetResponseXML(ErrorResult& aRv) override;
 
@@ -573,6 +578,8 @@ protected:
   already_AddRefed<nsIHttpChannel> GetCurrentHttpChannel();
   already_AddRefed<nsIJARChannel> GetCurrentJARChannel();
 
+  void TruncateResponseText();
+
   bool IsSystemXHR() const;
   bool InUploadPhase() const;
 
@@ -628,7 +635,7 @@ protected:
   // lazily decode into this from mResponseBody only when .responseText is
   // accessed.
   // Only used for DEFAULT and TEXT responseTypes.
-  nsString mResponseText;
+  XMLHttpRequestString mResponseText;
 
   // For DEFAULT responseType we use this to keep track of how far we've
   // lazily decoded from mResponseBody to mResponseText
