@@ -60,7 +60,7 @@ function promiseEnterStringIntoFindField(findbar, str) {
 function promiseTestHighlighterOutput(browser, word, expectedResult, extraTest = () => {}) {
   return ContentTask.spawn(browser, { word, expectedResult, extraTest: extraTest.toSource() },
     function* ({ word, expectedResult, extraTest }) {
-    let document = content.document;
+    Cu.import("resource://gre/modules/Timer.jsm", this);
 
     return new Promise((resolve, reject) => {
       let stubbed = {};
@@ -73,14 +73,16 @@ function promiseTestHighlighterOutput(browser, word, expectedResult, extraTest =
       // was called.
       const kTimeoutMs = 1000;
       // The initial timeout may wait for a while for results to come in.
-      let timeout = content.setTimeout(() => finish(false, "Timeout"), kTimeoutMs * 5);
+      let timeout = setTimeout(() => finish(false, "Timeout"), kTimeoutMs * 5);
 
       function finish(ok = true, message = "finished with error") {
         // Restore the functions we stubbed out.
-        document.insertAnonymousContent = stubbed.insert;
-        document.removeAnonymousContent = stubbed.remove;
+        try {
+          content.document.insertAnonymousContent = stubbed.insert;
+          content.document.removeAnonymousContent = stubbed.remove;
+        } catch(ex) {}
         stubbed = {};
-        content.clearTimeout(timeout);
+        clearTimeout(timeout);
 
         if (expectedResult.rectCount !== 0)
           Assert.ok(ok, message);
@@ -116,17 +118,19 @@ function promiseTestHighlighterOutput(browser, word, expectedResult, extraTest =
       // Create a function that will stub the original version and collects
       // the arguments so we can check the results later.
       function stub(which) {
-        stubbed[which] = document[which + "AnonymousContent"];
+        stubbed[which] = content.document[which + "AnonymousContent"];
         let prop = which + "Calls";
         return function(node) {
           callCounts[prop].push(node);
-          content.clearTimeout(timeout);
-          timeout = content.setTimeout(finish, kTimeoutMs);
-          return stubbed[which].call(document, node);
+          clearTimeout(timeout);
+          timeout = setTimeout(() => {
+            finish();
+          }, kTimeoutMs);
+          return stubbed[which].call(content.document, node);
         };
       }
-      document.insertAnonymousContent = stub("insert");
-      document.removeAnonymousContent = stub("remove");
+      content.document.insertAnonymousContent = stub("insert");
+      content.document.removeAnonymousContent = stub("remove");
     });
   });
 }
@@ -339,4 +343,34 @@ add_task(function* testXMLDocument() {
 
     findbar.close(true);
   });
+});
+
+add_task(function* testHideOnLocationChange() {
+  let url = kFixtureBaseURL + "file_FinderSample.html";
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  let browser = tab.linkedBrowser;
+  let findbar = gBrowser.getFindBar();
+
+  yield promiseOpenFindbar(findbar);
+
+  let word = "Roland";
+  let expectedResult = {
+    rectCount: 1,
+    insertCalls: [2, 4],
+    removeCalls: [1, 2]
+  };
+  let promise = promiseTestHighlighterOutput(browser, word, expectedResult);
+  yield promiseEnterStringIntoFindField(findbar, word);
+  yield promise;
+
+  // Now we try to navigate away! (Using the same page)
+  promise = promiseTestHighlighterOutput(browser, word, {
+    rectCount: 0,
+    insertCalls: [0, 0],
+    removeCalls: [1, 2]
+  });
+  yield BrowserTestUtils.loadURI(browser, url);
+  yield promise;
+
+  yield BrowserTestUtils.removeTab(tab);
 });
