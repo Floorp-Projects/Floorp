@@ -167,7 +167,8 @@ public:
       nscolor mColor;
     } mPaintDefinition;
 
-    nsIFrame* mFrame;
+    // Initialized (if needed) in SetPaintServer():
+    MOZ_INIT_OUTSIDE_CTOR nsIFrame* mFrame;
     // CTM defining the user space for the pattern we will use.
     gfxMatrix mContextMatrix;
     nsStyleSVGPaintType mPaintType;
