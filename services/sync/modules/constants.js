@@ -148,6 +148,8 @@ ENGINE_UNKNOWN_FAIL:                   "error.engine.reason.unknown_fail",
 ENGINE_APPLY_FAIL:                     "error.engine.reason.apply_fail",
 ENGINE_METARECORD_DOWNLOAD_FAIL:       "error.engine.reason.metarecord_download_fail",
 ENGINE_METARECORD_UPLOAD_FAIL:         "error.engine.reason.metarecord_upload_fail",
+// an upload failure where the batch was interrupted with a 412
+ENGINE_BATCH_INTERRUPTED:              "error.engine.reason.batch_interrupted",
 
 JPAKE_ERROR_CHANNEL:                   "jpake.error.channel",
 JPAKE_ERROR_NETWORK:                   "jpake.error.network",

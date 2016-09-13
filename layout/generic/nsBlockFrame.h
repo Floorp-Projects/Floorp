@@ -396,11 +396,6 @@ protected:
                    bool*        aInOverflowLines,
                    FrameLines** aOverflowLines);
 
-  void SetFlags(nsFrameState aFlags) {
-    mState &= ~NS_BLOCK_FLAGS_MASK;
-    mState |= aFlags;
-  }
-
   /** move the frames contained by aLine by aDeltaBCoord
     * if aLine is a block, its child floats are added to the state manager
     */

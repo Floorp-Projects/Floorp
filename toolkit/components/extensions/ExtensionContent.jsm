@@ -852,7 +852,7 @@ class ExtensionGlobal {
       let encoding = doc.characterSet;
 
       return LanguageDetector.detectLanguage({language, tld, text, encoding})
-                             .then(result => result.language);
+        .then(result => result.language === "un" ? "und" : result.language);
     });
   }
 

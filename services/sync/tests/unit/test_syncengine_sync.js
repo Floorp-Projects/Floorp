@@ -1431,7 +1431,10 @@ add_task(function *test_uploadOutgoing_failed() {
   }
 });
 
-
+/* A couple of "functional" tests to ensure we split records into appropriate
+   POST requests. More comprehensive unit-tests for this "batching" are in
+   test_postqueue.js.
+*/
 add_test(function test_uploadOutgoing_MAX_UPLOAD_RECORDS() {
   _("SyncEngine._uploadOutgoing uploads in batches of MAX_UPLOAD_RECORDS");
 
@@ -1441,9 +1444,18 @@ add_test(function test_uploadOutgoing_MAX_UPLOAD_RECORDS() {
   // Let's count how many times the client posts to the server
   var noOfUploads = 0;
   collection.post = (function(orig) {
-    return function() {
+    return function(data, request) {
+      // This test doesn't arrange for batch semantics - so we expect the
+      // first request to come in with batch=true and the others to have no
+      // batch related headers at all (as the first response did not provide
+      // a batch ID)
+      if (noOfUploads == 0) {
+        do_check_eq(request.queryString, "batch=true");
+      } else {
+        do_check_eq(request.queryString, "");
+      }
       noOfUploads++;
-      return orig.apply(this, arguments);
+      return orig.call(this, data, request);
     };
   }(collection.post));
 
@@ -1488,66 +1500,18 @@ add_test(function test_uploadOutgoing_MAX_UPLOAD_RECORDS() {
   }
 });
 
-add_test(function test_uploadOutgoing_MAX_UPLOAD_BYTES() {
-  _("SyncEngine._uploadOutgoing uploads in batches of MAX_UPLOAD_BYTES");
+add_test(function test_uploadOutgoing_largeRecords() {
+  _("SyncEngine._uploadOutgoing throws on records larger than MAX_UPLOAD_BYTES");
 
   Service.identity.username = "foo";
   let collection = new ServerCollection();
 
-  // Let's count how many times the client posts to the server
-  let uploadCounts = [];
-  collection.post = (function(orig) {
-    return function(data) {
-      uploadCounts.push(JSON.parse(data).length);
-      return orig.call(this, data);
-    };
-  }(collection.post));
-
   let engine = makeRotaryEngine();
 
-  // A helper function that calculates the overhead of a record as uploaded
-  // to the server - it returns the size of a record with an empty string.
-  // This is so we can calculate exactly how many records we can fit into a
-  // batch (ie, we expect the record size that's actually uploaded to be the
-  // result of this function + the length of the data)
-  let calculateRecordOverhead = function() {
-    engine._store.items["string-no-x"] = "";
-    let x = engine._createRecord("string-no-x");
-    x.encrypt(Service.collectionKeys.keyForCollection(engine.name));
-    delete engine._store.items["string-no-x"];
-    return JSON.stringify(x).length;
-  }
-
-  let allIds = [];
-  // Create a bunch of records (and server side handlers) - make 20 that will
-  // fit inside our byte limit.
-  let fullItemSize = (MAX_UPLOAD_BYTES - 2) / 20;
-  // fullItemSize includes the "," between records and quote characters (as we
-  // will use strings)
-  let itemSize = fullItemSize - calculateRecordOverhead() - (3 * 20);
-  // Add 21 of this size - the first 20 should fit in the first batch.
-  for (let i = 0; i < 21; i++) {
-    let id = 'string-no-' + i;
-    engine._store.items[id] = "X".repeat(itemSize);
-    engine._tracker.addChangedID(id, 0);
-    collection.insert(id);
-    allIds.push(id);
-  }
-  // Now a single large item that's greater than MAX_UPLOAD_BYTES. This should
-  // cause the 1 item that didn't fit in the previous batch to be uploaded
-  // by itself, then this large one by itself.
   engine._store.items["large-item"] = "Y".repeat(MAX_UPLOAD_BYTES*2);
   engine._tracker.addChangedID("large-item", 0);
   collection.insert("large-item");
-    allIds.push("large-item");
-  // And a few more small items - these should all be uploaded together.
-  for (let i = 0; i < 20; i++) {
-    let id = 'small-no-' + i;
-    engine._store.items[id] = "ZZZZ";
-    engine._tracker.addChangedID(id, 0);
-    collection.insert(id);
-    allIds.push(id);
-  }
+
 
   let meta_global = Service.recordManager.set(engine.metaURL,
                                               new WBORecord(engine.metaURL));
@@ -1561,21 +1525,14 @@ add_test(function test_uploadOutgoing_MAX_UPLOAD_BYTES() {
   let syncTesting = new SyncTestingInfrastructure(server);
 
   try {
-
-    // Confirm initial environment.
-    do_check_eq(uploadCounts.length, 0);
-
     engine._syncStartup();
-    engine._uploadOutgoing();
-
-    // Ensure all records have been uploaded.
-    for (let checkId of allIds) {
-      do_check_true(!!collection.payload(checkId));
+    let error = null;
+    try {
+      engine._uploadOutgoing();
+    } catch (e) {
+      error = e;
     }
-
-    // Ensure that the uploads were performed in the batch sizes we expect.
-    Assert.deepEqual(uploadCounts, [20, 1, 1, 20]);
-
+    ok(!!error);
   } finally {
     cleanAndGo(server);
   }
