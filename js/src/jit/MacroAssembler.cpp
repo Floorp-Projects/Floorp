@@ -1062,6 +1062,12 @@ JS_FOR_EACH_TYPED_ARRAY(CREATE_TYPED_ARRAY)
         MOZ_CRASH("Unsupported TypedArray type");
     }
 
+    // Prevent an overflow caused by the JS_ROUNDUP since |allocateBuffer|
+    // converts |nbytes| of type size_t to uint32_t. The value for |nbytes| will
+    // truncate to zero when |new Int32Array(2147483647)| is used.
+    if (nbytes >= TypedArrayObject::SINGLETON_BYTE_LENGTH)
+        return;
+
     nbytes = JS_ROUNDUP(nbytes, sizeof(Value));
     Nursery& nursery = cx->runtime()->gc.nursery;
     void* buf = nursery.allocateBuffer(obj, nbytes);
