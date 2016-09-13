@@ -13,6 +13,8 @@ from mach.decorators import (
     Command,
 )
 
+here = os.path.abspath(os.path.dirname(__file__))
+
 
 def run_reftest(context, **kwargs):
     import mozinfo
@@ -27,6 +29,8 @@ def run_reftest(context, **kwargs):
     normalize = partial(context.normalize_test_path, test_root)
     args.tests = map(normalize, args.tests)
 
+    if mozinfo.info['buildapp'] == 'mobile/android':
+        return run_reftest_android(context, args)
     return run_reftest_desktop(context, args)
 
 
@@ -40,10 +44,37 @@ def run_reftest_desktop(context, args):
     return run_test_harness(parser, args)
 
 
+def run_reftest_android(context, args):
+    from remotereftest import run_test_harness
+
+    args.app = args.app or 'org.mozilla.fennec'
+    args.utilityPath = context.hostutils
+    args.xrePath = context.hostutils
+    args.httpdPath = context.module_dir
+    args.dm_trans = 'adb'
+    args.ignoreWindowSize = True
+    args.printDeviceInfo = False
+
+    config = context.mozharness_config
+    if config:
+        args.remoteWebServer = config['remote_webserver']
+        args.httpPort = config['emulator']['http_port']
+        args.sslPort = config['emulator']['ssl_port']
+        args.adb_path = config['exes']['adb'] % {'abs_work_dir': context.mozharness_workdir}
+
+    return run_test_harness(parser, args)
+
+
 def setup_argument_parser():
+    import mozinfo
     import reftestcommandline
+
     global parser
-    parser = reftestcommandline.DesktopArgumentsParser()
+    mozinfo.find_and_update_from_json(os.path.dirname(here))
+    if mozinfo.info.get('buildapp') == 'mobile/android':
+        parser = reftestcommandline.RemoteArgumentsParser()
+    else:
+        parser = reftestcommandline.DesktopArgumentsParser()
     return parser
 
 
