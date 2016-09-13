@@ -475,6 +475,7 @@ FinderHighlighter.prototype = {
    */
   onLocationChange() {
     let window = this.finder._getWindow();
+    this.hide(window);
     let dict = this.getForWindow(window);
     this.clear(window);
     dict.currentFoundRange = null;
