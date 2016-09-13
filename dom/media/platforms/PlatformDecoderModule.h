@@ -215,13 +215,8 @@ protected:
   virtual ~MediaDataDecoder() {};
 
 public:
-  enum class DecoderFailureReason : uint8_t {
-    INIT_ERROR,
-    CANCELED
-  };
-
   typedef TrackInfo::TrackType TrackType;
-  typedef MozPromise<TrackType, DecoderFailureReason, /* IsExclusive = */ true> InitPromise;
+  typedef MozPromise<TrackType, MediaResult, /* IsExclusive = */ true> InitPromise;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDataDecoder)
 

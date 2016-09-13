@@ -33,7 +33,7 @@ FFmpegAudioDecoder<LIBAV_VER>::Init()
   nsresult rv = InitDecoder();
 
   return rv == NS_OK ? InitPromise::CreateAndResolve(TrackInfo::kAudioTrack, __func__)
-                     : InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
+                     : InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
 }
 
 void

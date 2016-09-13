@@ -23,7 +23,6 @@ class GonkDecoderManager : public android::AHandler {
 public:
   typedef TrackInfo::TrackType TrackType;
   typedef MediaDataDecoder::InitPromise InitPromise;
-  typedef MediaDataDecoder::DecoderFailureReason DecoderFailureReason;
 
   virtual ~GonkDecoderManager() {}
 

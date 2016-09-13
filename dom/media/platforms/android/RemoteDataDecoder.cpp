@@ -196,7 +196,7 @@ public:
     mSurfaceTexture = AndroidSurfaceTexture::Create();
     if (!mSurfaceTexture) {
       NS_WARNING("Failed to create SurfaceTexture for video decode\n");
-      return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
+      return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
     }
 
     // Register native methods.
@@ -208,7 +208,7 @@ public:
 
     mJavaDecoder = CodecProxy::Create(mFormat, mSurfaceTexture->JavaSurface(), mJavaCallbacks);
     if (mJavaDecoder == nullptr) {
-      return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
+      return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
     }
 
     mInputDurations.Clear();
@@ -306,7 +306,7 @@ public:
 
     mJavaDecoder = CodecProxy::Create(mFormat, nullptr, mJavaCallbacks);
     if (mJavaDecoder == nullptr) {
-      return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
+      return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
     }
 
     return InitPromise::CreateAndResolve(TrackInfo::kAudioTrack, __func__);

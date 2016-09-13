@@ -141,7 +141,7 @@ GonkDecoderManager::Shutdown()
     mDecoder = nullptr;
   }
 
-  mInitPromise.RejectIfExists(DecoderFailureReason::CANCELED, __func__);
+  mInitPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
 
   return NS_OK;
 }
