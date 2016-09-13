@@ -1856,6 +1856,30 @@ class ChildAPIManager {
     return this.context.wrapPromise(deferred.promise, callback);
   }
 
+  /**
+   * Create a proxy for an event in the parent process. The returned event
+   * object shares its internal state with other instances. For instance, if
+   * `removeListener` is used on a listener that was added on another object
+   * through `addListener`, then the event is unregistered.
+   *
+   * @param {string} path The full name of the event, e.g. "tabs.onCreated".
+   * @returns {object} An object with the addListener, removeListener and
+   *   hasListener methods. See SchemaAPIInterface for documentation.
+   */
+  getParentEvent(path) {
+    let parsed = /^(.+)\.(on[A-Z][^.]+)$/.exec(path);
+    if (!parsed) {
+      throw new Error("getParentEvent: Invalid event name: " + path);
+    }
+    let [, namespace, name] = parsed;
+    let impl = new ProxyAPIImplementation(namespace, name, this);
+    return {
+      addListener: (listener, ...args) => impl.addListener(listener, args),
+      removeListener: (listener) => impl.removeListener(listener),
+      hasListener: (listener) => impl.hasListener(listener),
+    };
+  }
+
   close() {
     this.messageManager.sendAsyncMessage("API:CloseProxyContext", {childId: this.id});
   }
@@ -1870,7 +1894,14 @@ class ChildAPIManager {
 
   shouldInject(namespace, name, allowedContexts) {
     // Do not generate content script APIs, unless explicitly allowed.
-    return this.context.envType !== "content_child" || allowedContexts.includes("content");
+    if (this.context.envType === "content_child" &&
+        !allowedContexts.includes("content")) {
+      return false;
+    }
+    if (allowedContexts.includes("addon_parent_only")) {
+      return false;
+    }
+    return true;
   }
 
   getImplementation(namespace, name) {
