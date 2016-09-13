@@ -305,7 +305,8 @@ public:
     eUnit_Coord,
     eUnit_Percent,
     eUnit_Float,
-    eUnit_Color,
+    eUnit_Color, // nsCSSValue* (never null), always with an nscolor or
+                 // an nsCSSValueFloatColor
     eUnit_CurrentColor,
     eUnit_Calc, // nsCSSValue* (never null), always with a single
                 // calc() expression that's either length or length+percent
@@ -332,7 +333,6 @@ private:
     int32_t mInt;
     nscoord mCoord;
     float mFloat;
-    nscolor mColor;
     nsCSSValue* mCSSValue;
     nsCSSValuePair* mCSSValuePair;
     nsCSSValueTriplet* mCSSValueTriplet;
@@ -371,10 +371,6 @@ public:
   float GetFloatValue() const {
     NS_ASSERTION(mUnit == eUnit_Float, "unit mismatch");
     return mValue.mFloat;
-  }
-  nscolor GetColorValue() const {
-    NS_ASSERTION(mUnit == eUnit_Color, "unit mismatch");
-    return mValue.mColor;
   }
   nsCSSValue* GetCSSValueValue() const {
     NS_ASSERTION(IsCSSValueUnit(mUnit), "unit mismatch");
@@ -511,7 +507,8 @@ private:
            aUnit == eUnit_Integer;
   }
   static bool IsCSSValueUnit(Unit aUnit) {
-    return aUnit == eUnit_Calc ||
+    return aUnit == eUnit_Color ||
+           aUnit == eUnit_Calc ||
            aUnit == eUnit_ObjectPosition ||
            aUnit == eUnit_URL ||
            aUnit == eUnit_DiscreteCSSValue;
