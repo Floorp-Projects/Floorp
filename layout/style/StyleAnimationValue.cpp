@@ -1278,10 +1278,25 @@ DiluteColor(const nsCSSValue& aValue, double aDilutionRatio,
             NSToIntRound(Aresf * 255.0)));
 }
 
-static bool
-AddShadowItems(double aCoeff1, const nsCSSValue &aValue1,
-               double aCoeff2, const nsCSSValue &aValue2,
-               nsCSSValueList **&aResultTail)
+void
+AppendToCSSValueList(UniquePtr<nsCSSValueList>& aHead,
+                     UniquePtr<nsCSSValueList>&& aValueToAppend,
+                     nsCSSValueList** aTail)
+{
+  MOZ_ASSERT(!aHead == !*aTail,
+             "Can't have head w/o tail, & vice versa");
+
+  if (!aHead) {
+    aHead = Move(aValueToAppend);
+    *aTail = aHead.get();
+  } else {
+    (*aTail) = (*aTail)->mNext = aValueToAppend.release();
+  }
+}
+
+static UniquePtr<nsCSSValueList>
+AddWeightedShadowItems(double aCoeff1, const nsCSSValue &aValue1,
+                       double aCoeff2, const nsCSSValue &aValue2)
 {
   // X, Y, Radius, Spread, Color, Inset
   MOZ_ASSERT(aValue1.GetUnit() == eCSSUnit_Array,
@@ -1310,7 +1325,7 @@ AddShadowItems(double aCoeff1, const nsCSSValue &aValue1,
     // between inset and not-inset.
     // NOTE: In case when both colors' units are eCSSUnit_Null, that means
     // neither color value was specified, so we can interpolate.
-    return false;
+    return nullptr;
   }
 
   if (color1.GetUnit() != eCSSUnit_Null) {
@@ -1326,11 +1341,9 @@ AddShadowItems(double aCoeff1, const nsCSSValue &aValue1,
   MOZ_ASSERT(inset1 == inset2, "should match");
   resultArray->Item(5) = inset1;
 
-  nsCSSValueList *resultItem = new nsCSSValueList;
+  auto resultItem = MakeUnique<nsCSSValueList>();
   resultItem->mValue.SetArrayValue(resultArray, eCSSUnit_Array);
-  *aResultTail = resultItem;
-  aResultTail = &resultItem->mNext;
-  return true;
+  return resultItem;
 }
 
 static void
@@ -1859,18 +1872,16 @@ AddFilterFunctionImpl(double aCoeff1, const nsCSSValueList* aList1,
                        resultArg);
       break;
     case eCSSKeyword_drop_shadow: {
-      nsCSSValueList* resultShadow = resultArg.SetListValue();
-      nsAutoPtr<nsCSSValueList> shadowValue;
-      nsCSSValueList **shadowTail = getter_Transfers(shadowValue);
       MOZ_ASSERT(!funcArg1.GetListValue()->mNext &&
                  !funcArg2.GetListValue()->mNext,
                  "drop-shadow filter func doesn't support lists");
-      if (!AddShadowItems(aCoeff1, funcArg1.GetListValue()->mValue,
-                          aCoeff2, funcArg2.GetListValue()->mValue,
-                          shadowTail)) {
+      UniquePtr<nsCSSValueList> shadowValue =
+        AddWeightedShadowItems(aCoeff1, funcArg1.GetListValue()->mValue,
+                               aCoeff2, funcArg2.GetListValue()->mValue);
+      if (!shadowValue) {
         return false;
       }
-      *resultShadow = *shadowValue;
+      resultArg.AdoptListValue(Move(shadowValue));
       break;
     }
     default:
@@ -2665,16 +2676,18 @@ StyleAnimationValue::AddWeighted(nsCSSPropertyID aProperty,
       // http://lists.w3.org/Archives/Public/www-style/2009Jul/0050.html
       const nsCSSValueList *shadow1 = aValue1.GetCSSValueListValue();
       const nsCSSValueList *shadow2 = aValue2.GetCSSValueListValue();
-      nsAutoPtr<nsCSSValueList> result;
-      nsCSSValueList **resultTail = getter_Transfers(result);
+      UniquePtr<nsCSSValueList> result;
+      nsCSSValueList* tail = nullptr;
       while (shadow1 && shadow2) {
-        if (!AddShadowItems(aCoeff1, shadow1->mValue,
-                            aCoeff2, shadow2->mValue,
-                            resultTail)) {
+        UniquePtr<nsCSSValueList> shadowValue =
+          AddWeightedShadowItems(aCoeff1, shadow1->mValue,
+                                 aCoeff2, shadow2->mValue);
+        if (!shadowValue) {
           return false;
         }
         shadow1 = shadow1->mNext;
         shadow2 = shadow2->mNext;
+        AppendToCSSValueList(result, Move(shadowValue), &tail);
       }
       if (shadow1 || shadow2) {
         const nsCSSValueList *longShadow;
@@ -2691,16 +2704,18 @@ StyleAnimationValue::AddWeighted(nsCSSPropertyID aProperty,
           // Passing coefficients that add to less than 1 produces the
           // desired result of interpolating "0 0 0 transparent" with
           // the current shadow.
-          if (!AddShadowItems(longCoeff, longShadow->mValue,
-                              0.0, longShadow->mValue,
-                              resultTail)) {
+          UniquePtr<nsCSSValueList> shadowValue =
+            AddWeightedShadowItems(longCoeff, longShadow->mValue,
+                                   0.0, longShadow->mValue);
+          if (!shadowValue) {
             return false;
           }
 
           longShadow = longShadow->mNext;
+          AppendToCSSValueList(result, Move(shadowValue), &tail);
         }
       }
-      aResultValue.SetAndAdoptCSSValueListValue(result.forget(), eUnit_Shadow);
+      aResultValue.SetAndAdoptCSSValueListValue(result.release(), eUnit_Shadow);
       return true;
     }
     case eUnit_Shape: {
