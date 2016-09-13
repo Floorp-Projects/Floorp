@@ -139,22 +139,6 @@ public:
   static void ShutDown();
 
   /**
-   * Returns true if the singleton has been created.
-   *
-   * Can be called from any thread.
-   */
-  static bool IsCreated();
-  /**
-   * Returns true if the singleton's ShutDown() was called.
-   *
-   * Can be called from any thread.
-   */
-  static bool IsShutDown()
-  {
-    return sIsShutDown;
-  }
-
-  /**
    * returns the singleton instance.
    *
    * can be called from any thread.
@@ -401,6 +385,10 @@ protected:
   void MarkShutDown();
   void FallbackDestroyActors();
 
+  void ActorDestroy(ActorDestroyReason aWhy) override;
+
+  bool CanSend() const;
+
 private:
   class ShutdownObserver final : public nsIObserver
   {
@@ -422,8 +410,9 @@ private:
 
 private:
   CompositableTransaction* mTxn;
-  Atomic<bool> mShuttingDown;
-  static Atomic<bool> sIsShutDown;
+
+  bool mCanSend;
+  bool mCalledClose;
 
   /**
    * Transaction id of CompositableForwarder.
