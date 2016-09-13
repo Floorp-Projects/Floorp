@@ -110,7 +110,7 @@ JSCompartment::wrap(JSContext* cx, JS::MutableHandleValue vp)
 #ifdef DEBUG
         cacheResult = &p->value().get().toObject();
 #else
-        vp.set(p->value());
+        vp.set(p->value().get());
         return true;
 #endif
     }

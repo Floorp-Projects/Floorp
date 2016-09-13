@@ -6185,7 +6185,7 @@ Debugger::observesFrame(const FrameIter& iter) const
     if (iter.isInterp() && iter.isFunctionFrame()) {
         const Value& thisVal = iter.interpFrame()->thisArgument();
         if (thisVal.isMagic() && thisVal.whyMagic() == JS_IS_CONSTRUCTING)
-            return false;;
+            return false;
     }
     if (iter.isWasm())
         return false;
@@ -9314,7 +9314,8 @@ DebuggerObject::initClass(JSContext* cx, HandleObject obj, HandleObject debugCto
 DebuggerObject::create(JSContext* cx, HandleObject proto, HandleObject referent,
                        HandleNativeObject debugger)
 {
-  JSObject* obj = NewObjectWithGivenProto(cx, &DebuggerObject::class_, proto, TenuredObject);
+  NewObjectKind newKind = IsInsideNursery(referent) ? GenericObject : TenuredObject;
+  JSObject* obj = NewObjectWithGivenProto(cx, &DebuggerObject::class_, proto, newKind);
   if (!obj)
     return nullptr;
 
@@ -10453,8 +10454,8 @@ DebuggerEnvironment::initClass(JSContext* cx, HandleObject dbgCtor, HandleObject
 DebuggerEnvironment::create(JSContext* cx, HandleObject proto, HandleObject referent,
                             HandleNativeObject debugger)
 {
-    RootedObject obj(cx, NewObjectWithGivenProto(cx, &DebuggerEnvironment::class_, proto,
-                                                 TenuredObject));
+    NewObjectKind newKind = IsInsideNursery(referent) ? GenericObject : TenuredObject;
+    RootedObject obj(cx, NewObjectWithGivenProto(cx, &DebuggerEnvironment::class_, proto, newKind));
     if (!obj)
         return nullptr;
 

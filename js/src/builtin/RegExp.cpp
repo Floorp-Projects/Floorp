@@ -24,8 +24,8 @@
 using namespace js;
 using namespace js::unicode;
 
-using mozilla::CheckedInt;
 using mozilla::ArrayLength;
+using mozilla::CheckedInt;
 using mozilla::Maybe;
 
 /*
@@ -187,8 +187,18 @@ enum RegExpSharedUse {
 
 /*
  * ES 2016 draft Mar 25, 2016 21.2.3.2.2.
- * Because this function only ever returns |obj| in the spec, provided by the
- * user, we omit it and just return the usual success/failure.
+ *
+ * Steps 14-15 set |obj|'s "lastIndex" property to zero.  Some of
+ * RegExpInitialize's callers have a fresh RegExp not yet exposed to script:
+ * in these cases zeroing "lastIndex" is infallible.  But others have a RegExp
+ * whose "lastIndex" property might have been made non-writable: here, zeroing
+ * "lastIndex" can fail.  We efficiently solve this problem by completely
+ * removing "lastIndex" zeroing from the provided function.
+ *
+ * CALLERS MUST HANDLE "lastIndex" ZEROING THEMSELVES!
+ *
+ * Because this function only ever returns a user-provided |obj| in the spec,
+ * we omit it and just return the usual success/failure.
  */
 static bool
 RegExpInitializeIgnoringLastIndex(JSContext* cx, Handle<RegExpObject*> obj,
@@ -347,6 +357,10 @@ regexp_compile_impl(JSContext* cx, const CallArgs& args)
             return false;
     }
 
+    // The final niggling bit of step 5.
+    //
+    // |regexp| is user-exposed, but if its "lastIndex" property hasn't been
+    // made non-writable, we can still use a fast path to zero it.
     if (regexp->lookupPure(cx->names().lastIndex)->writable()) {
         regexp->zeroLastIndex(cx);
     } else {

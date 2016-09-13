@@ -3691,8 +3691,9 @@ JSObject::allocKindForTenure(const js::Nursery& nursery) const
         return GetBackgroundAllocKind(TypedArrayObject::AllocKindForLazyBuffer(nbytes));
     }
 
-    // Proxies have finalizers and are not nursery allocated.
-    MOZ_ASSERT(!IsProxy(this));
+    // Proxies that are CrossCompartmentWrappers may be nursery allocated.
+    if (IsProxy(this))
+        return as<ProxyObject>().allocKindForTenure();
 
     // Unboxed plain objects are sized according to the data they store.
     if (is<UnboxedPlainObject>()) {

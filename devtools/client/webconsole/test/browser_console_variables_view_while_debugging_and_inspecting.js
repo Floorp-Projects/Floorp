@@ -11,20 +11,28 @@
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/test-eval-in-stackframe.html";
 
+// Force the old debugger UI since it's directly used (see Bug 1301705)
+Services.prefs.setBoolPref("devtools.debugger.new-debugger-frontend", false);
+registerCleanupFunction(function* () {
+  Services.prefs.clearUserPref("devtools.debugger.new-debugger-frontend");
+});
+
 add_task(function* () {
   yield loadTab(TEST_URI);
   let hud = yield openConsole();
 
   let dbgPanel = yield openDebugger();
   yield openInspector();
-  yield waitForFrameAdded(dbgPanel);
+  yield waitForFrameAdded();
 
   yield openConsole();
   yield testVariablesView(hud);
 });
 
-function* waitForFrameAdded(dbgPanel) {
-  let thread = dbgPanel.panelWin.DebuggerController.activeThread;
+function* waitForFrameAdded() {
+  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  let toolbox = gDevTools.getToolbox(target);
+  let thread = toolbox.threadClient;
 
   info("Waiting for framesadded");
   yield new Promise(resolve => {

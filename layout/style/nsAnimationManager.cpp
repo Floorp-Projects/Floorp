@@ -782,7 +782,7 @@ CSSAnimationBuilder::BuildAnimationFrames(nsPresContext* aPresContext,
     // Otherwise, we should update the existing keyframe with only the
     // unique properties.
     //
-    // Bug 1216843: We should also match composite modes here.
+    // Bug 1293490: We should also match composite modes here.
     Keyframe* existingKeyframe = nullptr;
     // Don't bother searching for an existing keyframe if we don't
     // have anything to contribute to it.
