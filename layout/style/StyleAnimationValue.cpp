@@ -2801,6 +2801,26 @@ StyleAnimationValue::AddWeighted(nsCSSPropertyID aProperty,
   return false;
 }
 
+bool
+StyleAnimationValue::Accumulate(nsCSSPropertyID aProperty,
+                                StyleAnimationValue& aDest,
+                                const StyleAnimationValue& aValueToAccumulate,
+                                uint64_t aCount)
+{
+  Unit commonUnit =
+    GetCommonUnit(aProperty, aDest.GetUnit(), aValueToAccumulate.GetUnit());
+  switch (commonUnit) {
+    // FIXME: implement them!
+    //case eUnit_Color:
+    //case eUnit_Shadow:
+    //case eUnit_Filter:
+    default:
+      return Add(aProperty, aDest, aValueToAccumulate, aCount);
+  }
+  MOZ_ASSERT_UNREACHABLE("Can't accumulate using the given common unit");
+  return false;
+}
+
 already_AddRefed<css::StyleRule>
 BuildStyleRule(nsCSSPropertyID aProperty,
                dom::Element* aTargetElement,

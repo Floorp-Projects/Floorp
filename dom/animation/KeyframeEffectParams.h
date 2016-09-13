@@ -9,6 +9,11 @@
 
 #include "nsCSSProps.h"
 #include "nsString.h"
+// X11 has a #define for None
+#ifdef None
+#undef None
+#endif
+#include "mozilla/dom/KeyframeEffectBinding.h" // IterationCompositeOperation
 
 namespace mozilla {
 
@@ -51,8 +56,9 @@ struct KeyframeEffectParams
                            nsAString& aInvalidPacedProperty,
                            ErrorResult& aRv);
 
-  // FIXME: Bug 1216843: Add IterationCompositeOperations and
-  //        Bug 1216844: Add CompositeOperation
+  dom::IterationCompositeOperation mIterationComposite =
+    dom::IterationCompositeOperation::Replace;
+  // FIXME: Bug 1216844: Add CompositeOperation
   SpacingMode mSpacingMode = SpacingMode::distribute;
   nsCSSPropertyID mPacedProperty = eCSSProperty_UNKNOWN;
 };
