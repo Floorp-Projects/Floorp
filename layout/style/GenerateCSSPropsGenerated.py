@@ -10,7 +10,7 @@ import buildconfig
 from mozbuild import shellutil
 
 def get_properties(preprocessorHeader):
-    cpp = shellutil.split(buildconfig.substs['CPP'])
+    cpp = list(buildconfig.substs['CPP'])
     cpp += shellutil.split(buildconfig.substs['ACDEFINES'])
     cpp.append(preprocessorHeader)
     preprocessed = subprocess.check_output(cpp)

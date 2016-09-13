@@ -48,30 +48,8 @@ Table::create(JSContext* cx, const TableDesc& desc, HandleWasmTableObject maybeO
     table->array_.reset((uint8_t*)array);
     table->kind_ = desc.kind;
     table->length_ = desc.initial;
-    table->initialized_ = false;
     table->external_ = desc.external;
     return table;
-}
-
-void
-Table::init(Instance& instance)
-{
-    MOZ_ASSERT(!initialized());
-    initialized_ = true;
-
-    void* code = instance.codeSegment().badIndirectCallCode();
-    if (external_) {
-        ExternalTableElem* array = externalArray();
-        TlsData* tls = &instance.tlsData();
-        for (uint32_t i = 0; i < length_; i++) {
-            array[i].code = code;
-            array[i].tls = tls;
-        }
-    } else {
-        void** array = internalArray();
-        for (uint32_t i = 0; i < length_; i++)
-            array[i] = code;
-    }
 }
 
 void
@@ -87,12 +65,15 @@ Table::tracePrivate(JSTracer* trc)
         TraceEdge(trc, &maybeObject_, "wasm table object");
     }
 
-    if (!initialized_ || !external_)
-        return;
-
-    ExternalTableElem* array = externalArray();
-    for (uint32_t i = 0; i < length_; i++)
-        array[i].tls->instance->trace(trc);
+    if (external_) {
+        ExternalTableElem* array = externalArray();
+        for (uint32_t i = 0; i < length_; i++) {
+            if (array[i].tls)
+                array[i].tls->instance->trace(trc);
+            else
+                MOZ_ASSERT(!array[i].code);
+        }
+    }
 }
 
 void
@@ -112,7 +93,6 @@ Table::trace(JSTracer* trc)
 void**
 Table::internalArray() const
 {
-    MOZ_ASSERT(initialized_);
     MOZ_ASSERT(!external_);
     return (void**)array_.get();
 }
@@ -120,7 +100,6 @@ Table::internalArray() const
 ExternalTableElem*
 Table::externalArray() const
 {
-    MOZ_ASSERT(initialized_);
     MOZ_ASSERT(external_);
     return (ExternalTableElem*)array_.get();
 }
@@ -130,8 +109,13 @@ Table::set(uint32_t index, void* code, Instance& instance)
 {
     if (external_) {
         ExternalTableElem& elem = externalArray()[index];
+        if (elem.tls)
+            JSObject::writeBarrierPre(elem.tls->instance->objectUnbarriered());
+
         elem.code = code;
         elem.tls = &instance.tlsData();
+
+        MOZ_ASSERT(elem.tls->instance->objectUnbarriered()->isTenured(), "no writeBarrierPost");
     } else {
         internalArray()[index] = code;
     }
@@ -142,7 +126,11 @@ Table::setNull(uint32_t index)
 {
     // Only external tables can set elements to null after initialization.
     ExternalTableElem& elem = externalArray()[index];
-    elem.code = elem.tls->instance->codeSegment().badIndirectCallCode();
+    if (elem.tls)
+        JSObject::writeBarrierPre(elem.tls->instance->objectUnbarriered());
+
+    elem.code = nullptr;
+    elem.tls = nullptr;
 }
 
 size_t

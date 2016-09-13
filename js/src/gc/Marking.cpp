@@ -2529,11 +2529,14 @@ js::TenuringTracer::moveObjectToTenured(JSObject* dst, JSObject* src, AllocKind 
         tenuredSize += UnboxedArrayObject::objectMovedDuringMinorGC(this, dst, src, dstKind);
     } else if (src->is<ArgumentsObject>()) {
         tenuredSize += ArgumentsObject::objectMovedDuringMinorGC(this, dst, src);
+    } else if (src->is<ProxyObject>()) {
+        tenuredSize += ProxyObject::objectMovedDuringMinorGC(this, dst, src);
     } else if (JSObjectMovedOp op = dst->getClass()->extObjectMovedOp()) {
         op(dst, src);
-    } else if (src->getClass()->flags & JSCLASS_SKIP_NURSERY_FINALIZE) {
-        // Objects with JSCLASS_SKIP_NURSERY_FINALIZE need to be handled above
-        // to ensure any additional nursery buffers they hold are moved.
+    } else if (src->getClass()->hasFinalize()) {
+        // Such objects need to be handled specially above to ensure any
+        // additional nursery buffers they hold are moved.
+        MOZ_RELEASE_ASSERT(CanNurseryAllocateFinalizedClass(src->getClass()));
         MOZ_CRASH("Unhandled JSCLASS_SKIP_NURSERY_FINALIZE Class");
     }
 
@@ -2803,30 +2806,6 @@ FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(INSTANTIATE_ALL_VALID_HEAP_TRACE_FUNCTION
 
 } /* namespace gc */
 } /* namespace js */
-
-
-/*** Type Marking *********************************************************************************/
-
-void
-TypeSet::MarkTypeRoot(JSTracer* trc, TypeSet::Type* v, const char* name)
-{
-    AssertRootMarkingPhase(trc);
-    MarkTypeUnbarriered(trc, v, name);
-}
-
-void
-TypeSet::MarkTypeUnbarriered(JSTracer* trc, TypeSet::Type* v, const char* name)
-{
-    if (v->isSingletonUnchecked()) {
-        JSObject* obj = v->singletonNoBarrier();
-        DispatchToTracer(trc, &obj, name);
-        *v = TypeSet::ObjectType(obj);
-    } else if (v->isGroupUnchecked()) {
-        ObjectGroup* group = v->groupNoBarrier();
-        DispatchToTracer(trc, &group, name);
-        *v = TypeSet::ObjectType(group);
-    }
-}
 
 
 /*** Cycle Collector Barrier Implementation *******************************************************/

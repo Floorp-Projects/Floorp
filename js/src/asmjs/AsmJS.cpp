@@ -6966,20 +6966,15 @@ ParseFunction(ModuleValidator& m, ParseNode** fnOut, unsigned* line)
     tokenStream.consumeKnownToken(TOK_FUNCTION, TokenStream::Operand);
     *line = tokenStream.srcCoords.lineNum(tokenStream.currentToken().pos.end);
 
-    RootedPropertyName name(m.cx());
-
     TokenKind tk;
     if (!tokenStream.getToken(&tk, TokenStream::Operand))
         return false;
-    if (tk == TOK_NAME) {
-        name = tokenStream.currentName();
-    } else if (tk == TOK_YIELD) {
-        if (!m.parser().checkYieldNameValidity())
-            return false;
-        name = m.cx()->names().yield;
-    } else {
+    if (tk != TOK_NAME && tk != TOK_YIELD)
         return false;  // The regular parser will throw a SyntaxError, no need to m.fail.
-    }
+
+    RootedPropertyName name(m.cx(), m.parser().bindingIdentifier(YieldIsName));
+    if (!name)
+        return false;
 
     ParseNode* fn = m.parser().handler.newFunctionDefinition();
     if (!fn)

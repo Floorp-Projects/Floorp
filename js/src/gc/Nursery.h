@@ -112,6 +112,20 @@ class TenuringTracer : public JSTracer
     void traceSlots(JS::Value* vp, JS::Value* end);
 };
 
+/*
+ * Classes with JSCLASS_SKIP_NURSERY_FINALIZE or Wrapper classes with
+ * CROSS_COMPARTMENT flags will not have their finalizer called if they are
+ * nursery allocated and not promoted to the tenured heap. The finalizers for
+ * these classes must do nothing except free data which was allocated via
+ * Nursery::allocateBuffer.
+ */
+inline bool
+CanNurseryAllocateFinalizedClass(const js::Class* const clasp)
+{
+    MOZ_ASSERT(clasp->hasFinalize());
+    return clasp->flags & JSCLASS_SKIP_NURSERY_FINALIZE;
+}
+
 class Nursery
 {
   public:

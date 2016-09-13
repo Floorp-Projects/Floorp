@@ -875,8 +875,10 @@ enum class Trap
     OutOfBounds,
     // Unaligned memory access.
     UnalignedAccess,
-    // Bad signature for an indirect call.
-    BadIndirectCall,
+    // call_indirect to null.
+    IndirectCallToNull,
+    // call_indirect signature mismatch.
+    IndirectCallBadSig,
 
     // (asm.js only) SIMD float to int conversion failed because the input
     // wasn't in bounds.
@@ -899,7 +901,8 @@ enum class JumpTarget
     IntegerDivideByZero = unsigned(Trap::IntegerDivideByZero),
     OutOfBounds = unsigned(Trap::OutOfBounds),
     UnalignedAccess = unsigned(Trap::UnalignedAccess),
-    BadIndirectCall = unsigned(Trap::BadIndirectCall),
+    IndirectCallToNull = unsigned(Trap::IndirectCallToNull),
+    IndirectCallBadSig = unsigned(Trap::IndirectCallBadSig),
     ImpreciseSimdConversion = unsigned(Trap::ImpreciseSimdConversion),
     // Non-traps
     StackOverflow,

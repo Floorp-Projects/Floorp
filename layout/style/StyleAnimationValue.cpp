@@ -10,6 +10,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/RuleNodeCacheConditions.h"
 #include "mozilla/StyleAnimationValue.h"
+#include "mozilla/Tuple.h"
 #include "mozilla/UniquePtr.h"
 #include "nsStyleTransformMatrix.h"
 #include "nsAutoPtr.h"
@@ -566,8 +567,8 @@ StyleAnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
       // colors are premultiplied, but things work better when they are,
       // so use premultiplication.  Spec issue is still open per
       // http://lists.w3.org/Archives/Public/www-style/2009Jul/0050.html
-      nscolor startColor = aStartValue.GetColorValue();
-      nscolor endColor = aEndValue.GetColorValue();
+      nscolor startColor = aStartValue.GetCSSValueValue()->GetColorValue();
+      nscolor endColor = aEndValue.GetCSSValueValue()->GetColorValue();
 
       // Get a color component on a 0-1 scale, which is much easier to
       // deal with when working with alpha.
@@ -1162,10 +1163,51 @@ AddCSSValuePercentNumber(const uint32_t aValueRestrictions,
                         eCSSUnit_Number);
 }
 
-static nscolor
-AddWeightedColors(double aCoeff1, nscolor aColor1,
-                  double aCoeff2, nscolor aColor2)
+// Returns Tuple(Red, Green, Blue, Alpha).
+// Red, Green, and Blue are scaled to the [0, 255] range, and Alpha is scaled
+// to the [0, 1] range (though values are allowed to fall outside of these
+// ranges).
+static Tuple<double, double, double, double>
+GetPremultipliedColorComponents(const nsCSSValue& aValue)
 {
+  // PercentageRGBColor and PercentageRGBAColor component value might be
+  // greater than 1.0 in case when the color value is accumulated, so we
+  // can't use nsCSSValue::GetColorValue() here because that function
+  // clamps its values.
+  if (aValue.GetUnit() == eCSSUnit_PercentageRGBColor ||
+      aValue.GetUnit() == eCSSUnit_PercentageRGBAColor) {
+    nsCSSValueFloatColor* floatColor = aValue.GetFloatColorValue();
+    double alpha = floatColor->Alpha();
+    return MakeTuple(floatColor->Comp1() * 255.0 * alpha,
+                     floatColor->Comp2() * 255.0 * alpha,
+                     floatColor->Comp3() * 255.0 * alpha,
+                     alpha);
+  }
+
+  nscolor color = aValue.GetColorValue();
+  double alpha = NS_GET_A(color) * (1.0 / 255.0);
+  return MakeTuple(NS_GET_R(color) * alpha,
+                   NS_GET_G(color) * alpha,
+                   NS_GET_B(color) * alpha,
+                   alpha);
+}
+
+enum class ColorAdditionType {
+  Clamped, // Clamp each color channel after adding.
+  Unclamped // Do not clamp color channels after adding.
+};
+
+// |aAdditionType| should be Clamped in case of interpolation or SMIL
+// animation (e.g. 'by' attribute). For now, Unclamped is only for
+// accumulation.
+static void
+AddWeightedColors(double aCoeff1, const nsCSSValue& aValue1,
+                  double aCoeff2, const nsCSSValue& aValue2,
+                  ColorAdditionType aAdditionType,
+                  nsCSSValue& aResult)
+{
+  MOZ_ASSERT(aValue1.IsNumericColorUnit() && aValue2.IsNumericColorUnit(),
+             "The unit should be color");
   // FIXME (spec): The CSS transitions spec doesn't say whether
   // colors are premultiplied, but things work better when they are,
   // so use premultiplication.  Spec issue is still open per
@@ -1173,17 +1215,15 @@ AddWeightedColors(double aCoeff1, nscolor aColor1,
 
   // To save some math, scale the alpha down to a 0-1 scale, but
   // leave the color components on a 0-255 scale.
-  double A1 = NS_GET_A(aColor1) * (1.0 / 255.0);
-  double R1 = NS_GET_R(aColor1) * A1;
-  double G1 = NS_GET_G(aColor1) * A1;
-  double B1 = NS_GET_B(aColor1) * A1;
-  double A2 = NS_GET_A(aColor2) * (1.0 / 255.0);
-  double R2 = NS_GET_R(aColor2) * A2;
-  double G2 = NS_GET_G(aColor2) * A2;
-  double B2 = NS_GET_B(aColor2) * A2;
+
+  double R1, G1, B1, A1;
+  Tie(R1, G1, B1, A1) = GetPremultipliedColorComponents(aValue1);
+  double R2, G2, B2, A2;
+  Tie(R2, G2, B2, A2) = GetPremultipliedColorComponents(aValue2);
   double Aresf = (A1 * aCoeff1 + A2 * aCoeff2);
   if (Aresf <= 0.0) {
-    return NS_RGBA(0, 0, 0, 0);
+    aResult.SetColorValue(NS_RGBA(0, 0, 0, 0));
+    return;
   }
 
   if (Aresf > 1.0) {
@@ -1191,43 +1231,73 @@ AddWeightedColors(double aCoeff1, nscolor aColor1,
   }
 
   double factor = 1.0 / Aresf;
-  uint8_t Ares = NSToIntRound(Aresf * 255.0);
-  uint8_t Rres = ClampColor((R1 * aCoeff1 + R2 * aCoeff2) * factor);
-  uint8_t Gres = ClampColor((G1 * aCoeff1 + G2 * aCoeff2) * factor);
-  uint8_t Bres = ClampColor((B1 * aCoeff1 + B2 * aCoeff2) * factor);
-  return NS_RGBA(Rres, Gres, Bres, Ares);
+  double Rres = (R1 * aCoeff1 + R2 * aCoeff2) * factor;
+  double Gres = (G1 * aCoeff1 + G2 * aCoeff2) * factor;
+  double Bres = (B1 * aCoeff1 + B2 * aCoeff2) * factor;
+
+  if (aAdditionType == ColorAdditionType::Clamped) {
+    aResult.SetColorValue(
+      NS_RGBA(ClampColor(Rres), ClampColor(Gres), ClampColor(Bres),
+              NSToIntRound(Aresf * 255.0)));
+    return;
+  }
+
+  Rres = Rres * (1.0 / 255.0);
+  Gres = Gres * (1.0 / 255.0);
+  Bres = Bres * (1.0 / 255.0);
+
+  aResult.SetFloatColorValue(Rres, Gres, Bres, Aresf,
+                             eCSSUnit_PercentageRGBAColor);
 }
 
-// Multiplies |aColor| by |aDilutionRatio| with premultiplication.
+// Multiplies |aValue| color by |aDilutionRation| with premultiplication.
+// The result is stored in |aResult|.
 // (The logic here should pretty closely match AddWeightedColors()' logic.)
-static nscolor
-DiluteColor(nscolor aColor, double aDilutionRatio)
+static void
+DiluteColor(const nsCSSValue& aValue, double aDilutionRatio,
+            nsCSSValue& aResult)
 {
+  MOZ_ASSERT(aValue.IsNumericColorUnit(), "The unit should be color");
   MOZ_ASSERT(aDilutionRatio >= 0.0 && aDilutionRatio <= 1.0,
              "Dilution ratio should be in [0, 1]");
 
-  double A = NS_GET_A(aColor) * (1.0 / 255.0);
+  // Premultiplication
+  double R, G, B, A;
+  Tie(R, G, B, A) = GetPremultipliedColorComponents(aValue);
   double Aresf = A * aDilutionRatio;
   if (Aresf <= 0.0) {
-    return NS_RGBA(0, 0, 0, 0);
+    aResult.SetColorValue(NS_RGBA(0, 0, 0, 0));
+    return;
   }
 
-  // Premultiplication
-  double R = NS_GET_R(aColor) * A;
-  double G = NS_GET_G(aColor) * A;
-  double B = NS_GET_B(aColor) * A;
-
   double factor = 1.0 / Aresf;
-  return NS_RGBA(ClampColor(R * aDilutionRatio * factor),
-                 ClampColor(G * aDilutionRatio * factor),
-                 ClampColor(B * aDilutionRatio * factor),
-                 NSToIntRound(Aresf * 255.0));
+  aResult.SetColorValue(
+    NS_RGBA(ClampColor(R * aDilutionRatio * factor),
+            ClampColor(G * aDilutionRatio * factor),
+            ClampColor(B * aDilutionRatio * factor),
+            NSToIntRound(Aresf * 255.0)));
 }
 
-static bool
-AddShadowItems(double aCoeff1, const nsCSSValue &aValue1,
-               double aCoeff2, const nsCSSValue &aValue2,
-               nsCSSValueList **&aResultTail)
+void
+AppendToCSSValueList(UniquePtr<nsCSSValueList>& aHead,
+                     UniquePtr<nsCSSValueList>&& aValueToAppend,
+                     nsCSSValueList** aTail)
+{
+  MOZ_ASSERT(!aHead == !*aTail,
+             "Can't have head w/o tail, & vice versa");
+
+  if (!aHead) {
+    aHead = Move(aValueToAppend);
+    *aTail = aHead.get();
+  } else {
+    (*aTail) = (*aTail)->mNext = aValueToAppend.release();
+  }
+}
+
+static UniquePtr<nsCSSValueList>
+AddWeightedShadowItems(double aCoeff1, const nsCSSValue &aValue1,
+                       double aCoeff2, const nsCSSValue &aValue2,
+                       ColorAdditionType aColorAdditionType)
 {
   // X, Y, Radius, Spread, Color, Inset
   MOZ_ASSERT(aValue1.GetUnit() == eCSSUnit_Array,
@@ -1249,36 +1319,32 @@ AddShadowItems(double aCoeff1, const nsCSSValue &aValue1,
   const nsCSSValue& color2 = array2->Item(4);
   const nsCSSValue& inset1 = array1->Item(5);
   const nsCSSValue& inset2 = array2->Item(5);
-  if (color1.GetUnit() != color2.GetUnit() ||
+  if ((color1.GetUnit() != color2.GetUnit() &&
+       (!color1.IsNumericColorUnit() || !color2.IsNumericColorUnit())) ||
       inset1.GetUnit() != inset2.GetUnit()) {
     // We don't know how to animate between color and no-color, or
     // between inset and not-inset.
-    return false;
+    // NOTE: In case when both colors' units are eCSSUnit_Null, that means
+    // neither color value was specified, so we can interpolate.
+    return nullptr;
   }
 
   if (color1.GetUnit() != eCSSUnit_Null) {
-    StyleAnimationValue color1Value
-      (color1.GetColorValue(), StyleAnimationValue::ColorConstructor);
-    StyleAnimationValue color2Value
-      (color2.GetColorValue(), StyleAnimationValue::ColorConstructor);
-    StyleAnimationValue resultColorValue;
-    DebugOnly<bool> ok =
-      StyleAnimationValue::AddWeighted(eCSSProperty_color,
-                                       aCoeff1, color1Value,
-                                       aCoeff2, color2Value,
-                                       resultColorValue);
-    MOZ_ASSERT(ok, "should not fail");
-    resultArray->Item(4).SetColorValue(resultColorValue.GetColorValue());
+    if (aCoeff2 == 0.0 && aCoeff1 != 1.0) {
+      DiluteColor(color1, aCoeff1, resultArray->Item(4));
+    } else {
+      AddWeightedColors(aCoeff1, color1, aCoeff2, color2,
+                        aColorAdditionType,
+                        resultArray->Item(4));
+    }
   }
 
   MOZ_ASSERT(inset1 == inset2, "should match");
   resultArray->Item(5) = inset1;
 
-  nsCSSValueList *resultItem = new nsCSSValueList;
+  auto resultItem = MakeUnique<nsCSSValueList>();
   resultItem->mValue.SetArrayValue(resultArray, eCSSUnit_Array);
-  *aResultTail = resultItem;
-  aResultTail = &resultItem->mNext;
-  return true;
+  return resultItem;
 }
 
 static void
@@ -1738,13 +1804,13 @@ TransformFunctionsMatch(nsCSSKeyword func1, nsCSSKeyword func2)
   return ToPrimitive(func1) == ToPrimitive(func2);
 }
 
-static bool
-AddFilterFunctionImpl(double aCoeff1, const nsCSSValueList* aList1,
-                      double aCoeff2, const nsCSSValueList* aList2,
-                      nsCSSValueList**& aResultTail)
+static UniquePtr<nsCSSValueList>
+AddWeightedFilterFunctionImpl(double aCoeff1, const nsCSSValueList* aList1,
+                              double aCoeff2, const nsCSSValueList* aList2,
+                              ColorAdditionType aColorAdditionType)
 {
-  // AddFilterFunction should be our only caller, and it should ensure that both
-  // args are non-null.
+  // AddWeightedFilterFunction should be our only caller, and it should ensure
+  // that both args are non-null.
   MOZ_ASSERT(aList1, "expected filter list");
   MOZ_ASSERT(aList2, "expected filter list");
   MOZ_ASSERT(aList1->mValue.GetUnit() == eCSSUnit_Function,
@@ -1754,12 +1820,13 @@ AddFilterFunctionImpl(double aCoeff1, const nsCSSValueList* aList1,
   RefPtr<nsCSSValue::Array> a1 = aList1->mValue.GetArrayValue(),
                               a2 = aList2->mValue.GetArrayValue();
   nsCSSKeyword filterFunction = a1->Item(0).GetKeywordValue();
-  if (filterFunction != a2->Item(0).GetKeywordValue())
-    return false; // Can't add two filters of different types.
+  if (filterFunction != a2->Item(0).GetKeywordValue()) {
+    return nullptr; // Can't add two filters of different types.
+  }
 
-  nsAutoPtr<nsCSSValueList> resultListEntry(new nsCSSValueList);
+  auto resultList = MakeUnique<nsCSSValueList>();
   nsCSSValue::Array* result =
-    resultListEntry->mValue.InitFunction(filterFunction, 1);
+    resultList->mValue.InitFunction(filterFunction, 1);
 
   // "hue-rotate" is the only filter-function that accepts negative values, and
   // we don't use this "restrictions" variable in its clause below.
@@ -1782,7 +1849,7 @@ AddFilterFunctionImpl(double aCoeff1, const nsCSSValueList* aList1,
                                        aCoeff1, funcArg1,
                                        aCoeff2, funcArg2,
                                        resultArg)) {
-        return false;
+        return nullptr;
       }
       break;
     }
@@ -1807,51 +1874,52 @@ AddFilterFunctionImpl(double aCoeff1, const nsCSSValueList* aList1,
                        resultArg);
       break;
     case eCSSKeyword_drop_shadow: {
-      nsCSSValueList* resultShadow = resultArg.SetListValue();
-      nsAutoPtr<nsCSSValueList> shadowValue;
-      nsCSSValueList **shadowTail = getter_Transfers(shadowValue);
       MOZ_ASSERT(!funcArg1.GetListValue()->mNext &&
                  !funcArg2.GetListValue()->mNext,
                  "drop-shadow filter func doesn't support lists");
-      if (!AddShadowItems(aCoeff1, funcArg1.GetListValue()->mValue,
-                          aCoeff2, funcArg2.GetListValue()->mValue,
-                          shadowTail)) {
-        return false;
+      UniquePtr<nsCSSValueList> shadowValue =
+        AddWeightedShadowItems(aCoeff1,
+                               funcArg1.GetListValue()->mValue,
+                               aCoeff2,
+                               funcArg2.GetListValue()->mValue,
+                               aColorAdditionType);
+      if (!shadowValue) {
+        return nullptr;
       }
-      *resultShadow = *shadowValue;
+      resultArg.AdoptListValue(Move(shadowValue));
       break;
     }
     default:
       MOZ_ASSERT(false, "unknown filter function");
-      return false;
+      return nullptr;
   }
 
-  *aResultTail = resultListEntry.forget();
-  aResultTail = &(*aResultTail)->mNext;
-
-  return true;
+  return resultList;
 }
 
-static bool
-AddFilterFunction(double aCoeff1, const nsCSSValueList* aList1,
-                  double aCoeff2, const nsCSSValueList* aList2,
-                  nsCSSValueList**& aResultTail)
+static UniquePtr<nsCSSValueList>
+AddWeightedFilterFunction(double aCoeff1, const nsCSSValueList* aList1,
+                          double aCoeff2, const nsCSSValueList* aList2,
+                          ColorAdditionType aColorAdditionType)
 {
   MOZ_ASSERT(aList1 || aList2,
              "one function list item must not be null");
   // Note that one of our arguments could be null, indicating that
   // it's the initial value. Rather than adding special null-handling
   // logic, we just check for null values and replace them with
-  // 0 * the other value. That way, AddFilterFunctionImpl can assume
+  // 0 * the other value. That way, AddWeightedFilterFunctionImpl can assume
   // its args are non-null.
   if (!aList1) {
-    return AddFilterFunctionImpl(aCoeff2, aList2, 0, aList2, aResultTail);
+    return AddWeightedFilterFunctionImpl(aCoeff2, aList2, 0, aList2,
+                                         aColorAdditionType);
   }
   if (!aList2) {
-    return AddFilterFunctionImpl(aCoeff1, aList1, 0, aList1, aResultTail);
+    return AddWeightedFilterFunctionImpl(aCoeff1, aList1, 0, aList1,
+                                         aColorAdditionType);
   }
 
-  return AddFilterFunctionImpl(aCoeff1, aList1, aCoeff2, aList2, aResultTail);
+  return AddWeightedFilterFunctionImpl(aCoeff1, aList1, aCoeff2, aList2,
+                                       aColorAdditionType);
 }
 
 static inline uint32_t
@@ -2309,6 +2377,98 @@ AddPositionCoords(double aCoeff1, const nsCSSValue& aPos1,
                            aCoeff2, v2, vr);
 }
 
+static UniquePtr<nsCSSValueList>
+AddWeightedShadowList(double aCoeff1,
+                      const nsCSSValueList* aShadow1,
+                      double aCoeff2,
+                      const nsCSSValueList* aShadow2,
+                      ColorAdditionType aColorAdditionType)
+{
+  // This is implemented according to:
+  // http://dev.w3.org/csswg/css3-transitions/#animation-of-property-types-
+  // and the third item in the summary of:
+  // http://lists.w3.org/Archives/Public/www-style/2009Jul/0050.html
+  UniquePtr<nsCSSValueList> result;
+  nsCSSValueList* tail = nullptr;
+  while (aShadow1 && aShadow2) {
+    UniquePtr<nsCSSValueList> shadowValue =
+      AddWeightedShadowItems(aCoeff1, aShadow1->mValue,
+                             aCoeff2, aShadow2->mValue,
+                             aColorAdditionType);
+    if (!shadowValue) {
+      return nullptr;
+    }
+    aShadow1 = aShadow1->mNext;
+    aShadow2 = aShadow2->mNext;
+    AppendToCSSValueList(result, Move(shadowValue), &tail);
+  }
+  if (aShadow1 || aShadow2) {
+    const nsCSSValueList *longShadow;
+    double longCoeff;
+    if (aShadow1) {
+      longShadow = aShadow1;
+      longCoeff = aCoeff1;
+    } else {
+      longShadow = aShadow2;
+      longCoeff = aCoeff2;
+    }
+
+    while (longShadow) {
+      // Passing coefficients that add to less than 1 produces the
+      // desired result of interpolating "0 0 0 transparent" with
+      // the current shadow.
+      UniquePtr<nsCSSValueList> shadowValue =
+        AddWeightedShadowItems(longCoeff, longShadow->mValue,
+                               0.0, longShadow->mValue,
+                               aColorAdditionType);
+      if (!shadowValue) {
+        return nullptr;
+      }
+
+      longShadow = longShadow->mNext;
+      AppendToCSSValueList(result, Move(shadowValue), &tail);
+    }
+  }
+  return result;
+}
+
+static UniquePtr<nsCSSValueList>
+AddWeightedFilterList(double aCoeff1, const nsCSSValueList* aList1,
+                      double aCoeff2, const nsCSSValueList* aList2,
+                      ColorAdditionType aColorAdditionType)
+{
+  UniquePtr<nsCSSValueList> result;
+  nsCSSValueList* tail = nullptr;
+  while (aList1 || aList2) {
+    if ((aList1 && aList1->mValue.GetUnit() != eCSSUnit_Function) ||
+        (aList2 && aList2->mValue.GetUnit() != eCSSUnit_Function)) {
+      // If we don't have filter-functions, we must have filter-URLs, which
+      // we can't add or interpolate.
+      return nullptr;
+    }
+
+    UniquePtr<nsCSSValueList> resultFunction =
+      AddWeightedFilterFunction(aCoeff1, aList1, aCoeff2, aList2,
+                                aColorAdditionType);
+    if (!resultFunction) {
+      // filter function mismatch
+      return nullptr;
+    }
+
+    AppendToCSSValueList(result, Move(resultFunction), &tail);
+
+    // move to next aList items
+    if (aList1) {
+      aList1 = aList1->mNext;
+    }
+    if (aList2) {
+      aList2 = aList2->mNext;
+    }
+  }
+
+  return result;
+}
+
 bool
 StyleAnimationValue::AddWeighted(nsCSSPropertyID aProperty,
                                  double aCoeff1,
@@ -2408,9 +2568,10 @@ StyleAnimationValue::AddWeighted(nsCSSPropertyID aProperty,
       return true;
     }
     case eUnit_Color: {
-      nscolor color1 = aValue1.GetColorValue();
-      nscolor color2 = aValue2.GetColorValue();
-      nscolor resultColor;
+      const nsCSSValue* value1 = aValue1.GetCSSValueValue();
+      const nsCSSValue* value2 = aValue2.GetCSSValueValue();
+      MOZ_ASSERT(value1 && value2, "Both of CSS value should be valid");
+      auto resultColor = MakeUnique<nsCSSValue>();
 
       // We are using AddWeighted() with a zero aCoeff2 for colors to
       // pretend AddWeighted() against transparent color, i.e. rgba(0, 0, 0, 0).
@@ -2418,11 +2579,13 @@ StyleAnimationValue::AddWeighted(nsCSSPropertyID aProperty,
       // for such cases, so we use another function named DiluteColor() which
       // has a similar logic to AddWeightedColors().
       if (aCoeff2 == 0.0) {
-        resultColor = DiluteColor(color1, aCoeff1);
+        DiluteColor(*value1, aCoeff1, *resultColor);
       } else {
-        resultColor = AddWeightedColors(aCoeff1, color1, aCoeff2, color2);
+        AddWeightedColors(aCoeff1, *value1, aCoeff2, *value2,
+                          ColorAdditionType::Clamped,
+                          *resultColor);
       }
-      aResultValue.SetColorValue(resultColor);
+      aResultValue.SetAndAdoptCSSValueValue(resultColor.release(), eUnit_Color);
       return true;
     }
     case eUnit_Calc: {
@@ -2604,48 +2767,16 @@ StyleAnimationValue::AddWeighted(nsCSSPropertyID aProperty,
       return true;
     }
     case eUnit_Shadow: {
-      // This is implemented according to:
-      // http://dev.w3.org/csswg/css3-transitions/#animation-of-property-types-
-      // and the third item in the summary of:
-      // http://lists.w3.org/Archives/Public/www-style/2009Jul/0050.html
-      const nsCSSValueList *shadow1 = aValue1.GetCSSValueListValue();
-      const nsCSSValueList *shadow2 = aValue2.GetCSSValueListValue();
-      nsAutoPtr<nsCSSValueList> result;
-      nsCSSValueList **resultTail = getter_Transfers(result);
-      while (shadow1 && shadow2) {
-        if (!AddShadowItems(aCoeff1, shadow1->mValue,
-                            aCoeff2, shadow2->mValue,
-                            resultTail)) {
-          return false;
-        }
-        shadow1 = shadow1->mNext;
-        shadow2 = shadow2->mNext;
+      UniquePtr<nsCSSValueList> result =
+        AddWeightedShadowList(aCoeff1,
+                              aValue1.GetCSSValueListValue(),
+                              aCoeff2,
+                              aValue2.GetCSSValueListValue(),
+                              ColorAdditionType::Clamped);
+      if (!result) {
+        return false;
       }
-      if (shadow1 || shadow2) {
-        const nsCSSValueList *longShadow;
-        double longCoeff;
-        if (shadow1) {
-          longShadow = shadow1;
-          longCoeff = aCoeff1;
-        } else {
-          longShadow = shadow2;
-          longCoeff = aCoeff2;
-        }
-
-        while (longShadow) {
-          // Passing coefficients that add to less than 1 produces the
-          // desired result of interpolating "0 0 0 transparent" with
-          // the current shadow.
-          if (!AddShadowItems(longCoeff, longShadow->mValue,
-                              0.0, longShadow->mValue,
-                              resultTail)) {
-            return false;
-          }
-
-          longShadow = longShadow->mNext;
-        }
-      }
-      aResultValue.SetAndAdoptCSSValueListValue(result.forget(), eUnit_Shadow);
+      aResultValue.SetAndAdoptCSSValueListValue(result.release(), eUnit_Shadow);
       return true;
     }
     case eUnit_Shape: {
@@ -2660,38 +2791,15 @@ StyleAnimationValue::AddWeighted(nsCSSPropertyID aProperty,
       return true;
     }
     case eUnit_Filter: {
-      const nsCSSValueList *list1 = aValue1.GetCSSValueListValue();
-      const nsCSSValueList *list2 = aValue2.GetCSSValueListValue();
-
-      nsAutoPtr<nsCSSValueList> result;
-      nsCSSValueList **resultTail = getter_Transfers(result);
-      while (list1 || list2) {
-        MOZ_ASSERT(!*resultTail,
-          "resultTail isn't pointing to the tail (may leak)");
-        if ((list1 && list1->mValue.GetUnit() != eCSSUnit_Function) ||
-            (list2 && list2->mValue.GetUnit() != eCSSUnit_Function)) {
-          // If we don't have filter-functions, we must have filter-URLs, which
-          // we can't add or interpolate.
-          return false;
-        }
-
-        if (!AddFilterFunction(aCoeff1, list1, aCoeff2, list2, resultTail)) {
-          // filter function mismatch
-          return false;
-        }
-
-        // move to next list items
-        if (list1) {
-          list1 = list1->mNext;
-        }
-        if (list2) {
-          list2 = list2->mNext;
-        }
+      UniquePtr<nsCSSValueList> result =
+        AddWeightedFilterList(aCoeff1, aValue1.GetCSSValueListValue(),
+                              aCoeff2, aValue2.GetCSSValueListValue(),
+                              ColorAdditionType::Clamped);
+      if (!result) {
+        return false;
       }
-      MOZ_ASSERT(!*resultTail,
-                 "resultTail isn't pointing to the tail (may leak)");
 
-      aResultValue.SetAndAdoptCSSValueListValue(result.forget(),
+      aResultValue.SetAndAdoptCSSValueListValue(result.release(),
                                                 eUnit_Filter);
       return true;
     }
@@ -2798,6 +2906,57 @@ StyleAnimationValue::AddWeighted(nsCSSPropertyID aProperty,
   }
 
   MOZ_ASSERT(false, "Can't interpolate using the given common unit");
+  return false;
+}
+
+bool
+StyleAnimationValue::Accumulate(nsCSSPropertyID aProperty,
+                                StyleAnimationValue& aDest,
+                                const StyleAnimationValue& aValueToAccumulate,
+                                uint64_t aCount)
+{
+  Unit commonUnit =
+    GetCommonUnit(aProperty, aDest.GetUnit(), aValueToAccumulate.GetUnit());
+  switch (commonUnit) {
+    case eUnit_Filter: {
+      UniquePtr<nsCSSValueList> result =
+        AddWeightedFilterList(1.0, aDest.GetCSSValueListValue(),
+                              aCount, aValueToAccumulate.GetCSSValueListValue(),
+                              ColorAdditionType::Unclamped);
+      if (!result) {
+        return false;
+      }
+
+      aDest.SetAndAdoptCSSValueListValue(result.release(), eUnit_Filter);
+      return true;
+    }
+    case eUnit_Shadow: {
+      UniquePtr<nsCSSValueList> result =
+        AddWeightedShadowList(1.0, aDest.GetCSSValueListValue(),
+                              aCount, aValueToAccumulate.GetCSSValueListValue(),
+                              ColorAdditionType::Unclamped);
+      if (!result) {
+        return false;
+      }
+      aDest.SetAndAdoptCSSValueListValue(result.release(), eUnit_Shadow);
+      return true;
+    }
+    case eUnit_Color: {
+      auto resultColor = MakeUnique<nsCSSValue>();
+      AddWeightedColors(1.0,
+                        *aDest.GetCSSValueValue(),
+                        aCount,
+                        *aValueToAccumulate.GetCSSValueValue(),
+                        ColorAdditionType::Unclamped,
+                        *resultColor);
+
+      aDest.SetAndAdoptCSSValueValue(resultColor.release(), eUnit_Color);
+      return true;
+    }
+    default:
+      return Add(aProperty, aDest, aValueToAccumulate, aCount);
+  }
+  MOZ_ASSERT_UNREACHABLE("Can't accumulate using the given common unit");
   return false;
 }
 
@@ -3098,14 +3257,11 @@ StyleAnimationValue::UncomputeValue(nsCSSPropertyID aProperty,
       aSpecifiedValue.
         SetFloatValue(aComputedValue.GetFloatValue(), eCSSUnit_Number);
       break;
-    case eUnit_Color:
-      // colors can be alone, or part of a paint server
-      aSpecifiedValue.SetColorValue(aComputedValue.GetColorValue());
-      break;
     case eUnit_CurrentColor:
       aSpecifiedValue.SetIntValue(NS_COLOR_CURRENTCOLOR, eCSSUnit_EnumColor);
       break;
     case eUnit_Calc:
+    case eUnit_Color:
     case eUnit_ObjectPosition:
     case eUnit_URL:
     case eUnit_DiscreteCSSValue: {
@@ -3113,6 +3269,8 @@ StyleAnimationValue::UncomputeValue(nsCSSPropertyID aProperty,
       // Sanity-check that the underlying unit in the nsCSSValue is what we
       // expect for our StyleAnimationValue::Unit:
       MOZ_ASSERT((unit == eUnit_Calc && val->GetUnit() == eCSSUnit_Calc) ||
+                 (unit == eUnit_Color &&
+                  nsCSSValue::IsNumericColorUnit(val->GetUnit())) ||
                  (unit == eUnit_ObjectPosition &&
                   val->GetUnit() == eCSSUnit_Array) ||
                  (unit == eUnit_URL && val->GetUnit() == eCSSUnit_URL) ||
@@ -4336,7 +4494,8 @@ StyleAnimationValue::StyleAnimationValue(float aFloat, FloatConstructorType)
 StyleAnimationValue::StyleAnimationValue(nscolor aColor, ColorConstructorType)
 {
   mUnit = eUnit_Color;
-  mValue.mColor = aColor;
+  mValue.mCSSValue = new nsCSSValue();
+  mValue.mCSSValue->SetColorValue(aColor);
 }
 
 StyleAnimationValue&
@@ -4369,10 +4528,8 @@ StyleAnimationValue::operator=(const StyleAnimationValue& aOther)
       mValue.mFloat = aOther.mValue.mFloat;
       MOZ_ASSERT(!mozilla::IsNaN(mValue.mFloat));
       break;
-    case eUnit_Color:
-      mValue.mColor = aOther.mValue.mColor;
-      break;
     case eUnit_Calc:
+    case eUnit_Color:
     case eUnit_ObjectPosition:
     case eUnit_URL:
     case eUnit_DiscreteCSSValue:
@@ -4494,7 +4651,8 @@ StyleAnimationValue::SetColorValue(nscolor aColor)
 {
   FreeValue();
   mUnit = eUnit_Color;
-  mValue.mColor = aColor;
+  mValue.mCSSValue = new nsCSSValue();
+  mValue.mCSSValue->SetColorValue(aColor);
 }
 
 void
@@ -4648,9 +4806,8 @@ StyleAnimationValue::operator==(const StyleAnimationValue& aOther) const
     case eUnit_Percent:
     case eUnit_Float:
       return mValue.mFloat == aOther.mValue.mFloat;
-    case eUnit_Color:
-      return mValue.mColor == aOther.mValue.mColor;
     case eUnit_Calc:
+    case eUnit_Color:
     case eUnit_ObjectPosition:
     case eUnit_URL:
     case eUnit_DiscreteCSSValue:

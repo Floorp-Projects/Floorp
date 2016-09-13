@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<title>Update styles when iteration composition changed from accumulate to
+replace</title>
+<script src="animation-utils.js"></script>
+<style>
+#test {
+  width: 100px; height: 100px;
+  background: blue;
+}
+</style>
+<div id="test"></div>
+<script>
+  var anim = document.getElementById("test")
+    .animate({ marginLeft: [ "0px", "200px" ] },
+             { duration: 100000,
+               delay: -99999, // For starting right before second iteration.
+               easing: "steps(1, start)",
+               iterations: 2,
+               iterationComposite: "accumulate" });
+
+  waitForIterationChange(anim).then(() => {
+    // Changing iterationComposite updates the element style.
+    anim.effect.iterationComposite = "replace";
+    requestAnimationFrame(() => {
+      // Now margin-left of the element should be 200px.
+      document.documentElement.classList.remove("reftest-wait");
+    });
+  });
+</script>

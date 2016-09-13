@@ -40,27 +40,27 @@ var caller = `(type $v2i (func (result i32))) (func $call (param $i i32) (result
 var callee = i => `(func $f${i} (type $v2i) (result i32) (i32.const ${i}))`;
 
 var call = evalText(`(module (table (resizable 10)) ${callee(0)} ${caller})`).exports.call;
-assertErrorMessage(() => call(0), Error, /bad wasm indirect call/);
+assertErrorMessage(() => call(0), Error, /indirect call to null/);
 assertErrorMessage(() => call(10), Error, /out-of-range/);
 
 var call = evalText(`(module (table (resizable 10)) (elem (i32.const 0)) ${callee(0)} ${caller})`).exports.call;
-assertErrorMessage(() => call(0), Error, /bad wasm indirect call/);
+assertErrorMessage(() => call(0), Error, /indirect call to null/);
 assertErrorMessage(() => call(10), Error, /out-of-range/);
 
 var call = evalText(`(module (table (resizable 10)) (elem (i32.const 0) $f0) ${callee(0)} ${caller})`).exports.call;
 assertEq(call(0), 0);
-assertErrorMessage(() => call(1), Error, /bad wasm indirect call/);
-assertErrorMessage(() => call(2), Error, /bad wasm indirect call/);
+assertErrorMessage(() => call(1), Error, /indirect call to null/);
+assertErrorMessage(() => call(2), Error, /indirect call to null/);
 assertErrorMessage(() => call(10), Error, /out-of-range/);
 
 var call = evalText(`(module (table (resizable 10)) (elem (i32.const 1) $f0 $f1) (elem (i32.const 4) $f0 $f2) ${callee(0)} ${callee(1)} ${callee(2)} ${caller})`).exports.call;
-assertErrorMessage(() => call(0), Error, /bad wasm indirect call/);
+assertErrorMessage(() => call(0), Error, /indirect call to null/);
 assertEq(call(1), 0);
 assertEq(call(2), 1);
-assertErrorMessage(() => call(3), Error, /bad wasm indirect call/);
+assertErrorMessage(() => call(3), Error, /indirect call to null/);
 assertEq(call(4), 0);
 assertEq(call(5), 2);
-assertErrorMessage(() => call(6), Error, /bad wasm indirect call/);
+assertErrorMessage(() => call(6), Error, /indirect call to null/);
 assertErrorMessage(() => call(10), Error, /out-of-range/);
 
 var tbl = new Table({initial:3, element:"anyfunc"});
@@ -69,7 +69,7 @@ assertEq(call(0), 0);
 assertEq(call(1), 1);
 assertEq(tbl.get(0)(), 0);
 assertEq(tbl.get(1)(), 1);
-assertErrorMessage(() => call(2), Error, /bad wasm indirect call/);
+assertErrorMessage(() => call(2), Error, /indirect call to null/);
 assertEq(tbl.get(2), null);
 
 var exp = evalText(`(module (import "a" "b" (table 3)) (export "tbl" table) (elem (i32.const 2) $f2) ${callee(2)} ${caller})`, {a:{b:tbl}}).exports;
@@ -90,7 +90,7 @@ assertEq(exp1.tbl.get(1), exp1.f0);
 assertEq(exp1.tbl.get(2), null);
 assertEq(exp1.call(0), 0);
 assertEq(exp1.call(1), 0);
-assertErrorMessage(() => exp1.call(2), Error, /bad wasm indirect call/);
+assertErrorMessage(() => exp1.call(2), Error, /indirect call to null/);
 var exp2 = evalText(`(module (import "a" "b" (table 10)) (export "tbl" table) (elem (i32.const 1) $f1 $f1) ${callee(1)} (export "f1" $f1) ${caller})`, {a:{b:exp1.tbl}}).exports
 assertEq(exp1.tbl, exp2.tbl);
 assertEq(exp2.tbl.get(0), exp1.f0);
@@ -112,7 +112,7 @@ tbl.set(1, e2.g);
 tbl.set(2, e3.h);
 var e4 = evalText(`(module (import "a" "b" (table 3)) ${caller})`, {a:{b:tbl}}).exports;
 assertEq(e4.call(0), 42);
-assertErrorMessage(() => e4.call(1), Error, /bad wasm indirect call/);
+assertErrorMessage(() => e4.call(1), Error, /indirect call signature mismatch/);
 assertEq(e4.call(2), 13);
 
 var m = new Module(textToBinary(`(module
@@ -164,7 +164,7 @@ var call = evalText(`(module
 )`).exports.call;
 assertEq(call(0), 0);
 assertEq(call(1), 1);
-assertErrorMessage(() => call(2), Error, /bad wasm indirect call/);
+assertErrorMessage(() => call(2), Error, /indirect call signature mismatch/);
 
 var call = evalText(`(module
     (type $A (func (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (result i32)))
@@ -188,5 +188,5 @@ var call = evalText(`(module
 )`).exports.call;
 assertEq(call(0), 42);
 for (var i = 1; i < 7; i++)
-    assertErrorMessage(() => call(i), Error, /bad wasm indirect call/);
+    assertErrorMessage(() => call(i), Error, /indirect call signature mismatch/);
 assertErrorMessage(() => call(7), Error, /out-of-range/);

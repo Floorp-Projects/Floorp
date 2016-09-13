@@ -215,6 +215,9 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
     virtual bool regexp_toShared(JSContext* cx, HandleObject proxy, RegExpGuard* g) const override;
     virtual bool boxedValue_unbox(JSContext* cx, HandleObject proxy, MutableHandleValue vp) const override;
 
+    // Allocate CrossCompartmentWrappers in the nursery.
+    virtual bool canNurseryAllocate() const override { return true; }
+
     static const CrossCompartmentWrapper singleton;
     static const CrossCompartmentWrapper singletonWithPrototype;
 };

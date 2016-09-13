@@ -385,12 +385,12 @@ wasm::GenerateFunctionPrologue(MacroAssembler& masm, unsigned framePushed, const
         Register scratch = WasmTableCallScratchReg;
         masm.loadWasmGlobalPtr(sigId.globalDataOffset(), scratch);
         masm.branch32(Assembler::Condition::NotEqual, WasmTableCallSigReg, scratch,
-                      JumpTarget::BadIndirectCall);
+                      JumpTarget::IndirectCallBadSig);
         break;
       }
       case SigIdDesc::Kind::Immediate:
         masm.branch32(Assembler::Condition::NotEqual, WasmTableCallSigReg, Imm32(sigId.immediate()),
-                      JumpTarget::BadIndirectCall);
+                      JumpTarget::IndirectCallBadSig);
         break;
       case SigIdDesc::Kind::None:
         break;

@@ -375,6 +375,11 @@ protected:
   // timing function) so we can avoid unnecessary style updates.
   Nullable<double> mProgressOnLastCompose;
 
+  // The purpose of this value is the same as mProgressOnLastCompose but
+  // this is used to detect when the current iteration is not changing
+  // in the case when iterationComposite is accumulate.
+  uint64_t mCurrentIterationOnLastCompose = 0;
+
   // We need to track when we go to or from being "in effect" since
   // we need to re-evaluate the cascade of animations when that changes.
   bool mInEffectOnLastAnimationTimingUpdate;
@@ -386,6 +391,10 @@ private:
 
   bool CanThrottle() const;
   bool CanThrottleTransformChanges(nsIFrame& aFrame) const;
+
+  // Returns true if the computedTiming has changed since the last
+  // composition.
+  bool HasComputedTimingChanged() const;
 
   // Returns true unless Gecko limitations prevent performing transform
   // animations for |aFrame|. When returning true, the reason for the

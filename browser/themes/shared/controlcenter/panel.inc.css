@@ -156,11 +156,11 @@
 }
 
 .identity-popup-expander:hover {
-  background-color: hsla(210,4%,10%,.07);
+  background-color: var(--arrowpanel-dimmed);
 }
 
 .identity-popup-expander:hover:active {
-  background-color: hsla(210,4%,10%,.12);
+  background-color: var(--arrowpanel-dimmed-further);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
 }
 
@@ -278,7 +278,7 @@
 
 #identity-popup-securityView-footer {
   margin-top: 1em;
-  background-color: hsla(210,4%,10%,.07);
+  background-color: var(--arrowpanel-dimmed);
 }
 
 #identity-popup-securityView-footer > button {
@@ -293,11 +293,11 @@
 
 #identity-popup-securityView-footer > button:hover,
 #identity-popup-securityView-footer > button:focus {
-  background-color: hsla(210,4%,10%,.07);
+  background-color: var(--arrowpanel-dimmed);
 }
 
 #identity-popup-securityView-footer > button:hover:active {
-  background-color: hsla(210,4%,10%,.12);
+  background-color: var(--arrowpanel-dimmed-further);
 }
 
 #identity-popup-content-verifier ~ description {
