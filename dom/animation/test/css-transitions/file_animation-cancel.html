@@ -118,6 +118,20 @@ test(function(t) {
 }, 'After cancelling a transition, updating transition properties doesn\'t make'
    + ' it live again');
 
+test(function(t) {
+  var div = addDiv(t, { style: 'margin-left: 0px' });
+  flushComputedStyle(div);
+
+  div.style.transition = 'margin-left 100s';
+  div.style.marginLeft = '1000px';
+  flushComputedStyle(div);
+
+  var animation = div.getAnimations()[0];
+  div.style.display = 'none';
+  assert_equals(animation.playState, 'idle');
+  assert_equals(getComputedStyle(div).marginLeft, '1000px');
+}, 'Setting display:none on an element cancels its transitions');
+
 done();
 </script>
 </body>
