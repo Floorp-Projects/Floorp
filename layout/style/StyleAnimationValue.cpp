@@ -2372,6 +2372,56 @@ AddPositionCoords(double aCoeff1, const nsCSSValue& aPos1,
                            aCoeff2, v2, vr);
 }
 
+static UniquePtr<nsCSSValueList>
+AddWeightedShadowList(double aCoeff1, const nsCSSValueList* aShadow1,
+                      double aCoeff2, const nsCSSValueList* aShadow2)
+{
+  // This is implemented according to:
+  // http://dev.w3.org/csswg/css3-transitions/#animation-of-property-types-
+  // and the third item in the summary of:
+  // http://lists.w3.org/Archives/Public/www-style/2009Jul/0050.html
+  UniquePtr<nsCSSValueList> result;
+  nsCSSValueList* tail = nullptr;
+  while (aShadow1 && aShadow2) {
+    UniquePtr<nsCSSValueList> shadowValue =
+      AddWeightedShadowItems(aCoeff1, aShadow1->mValue,
+                             aCoeff2, aShadow2->mValue);
+    if (!shadowValue) {
+      return nullptr;
+    }
+    aShadow1 = aShadow1->mNext;
+    aShadow2 = aShadow2->mNext;
+    AppendToCSSValueList(result, Move(shadowValue), &tail);
+  }
+  if (aShadow1 || aShadow2) {
+    const nsCSSValueList *longShadow;
+    double longCoeff;
+    if (aShadow1) {
+      longShadow = aShadow1;
+      longCoeff = aCoeff1;
+    } else {
+      longShadow = aShadow2;
+      longCoeff = aCoeff2;
+    }
+
+    while (longShadow) {
+      // Passing coefficients that add to less than 1 produces the
+      // desired result of interpolating "0 0 0 transparent" with
+      // the current shadow.
+      UniquePtr<nsCSSValueList> shadowValue =
+        AddWeightedShadowItems(longCoeff, longShadow->mValue,
+                               0.0, longShadow->mValue);
+      if (!shadowValue) {
+        return nullptr;
+      }
+
+      longShadow = longShadow->mNext;
+      AppendToCSSValueList(result, Move(shadowValue), &tail);
+    }
+  }
+  return result;
+}
+
 bool
 StyleAnimationValue::AddWeighted(nsCSSPropertyID aProperty,
                                  double aCoeff1,
@@ -2670,50 +2720,11 @@ StyleAnimationValue::AddWeighted(nsCSSPropertyID aProperty,
       return true;
     }
     case eUnit_Shadow: {
-      // This is implemented according to:
-      // http://dev.w3.org/csswg/css3-transitions/#animation-of-property-types-
-      // and the third item in the summary of:
-      // http://lists.w3.org/Archives/Public/www-style/2009Jul/0050.html
-      const nsCSSValueList *shadow1 = aValue1.GetCSSValueListValue();
-      const nsCSSValueList *shadow2 = aValue2.GetCSSValueListValue();
-      UniquePtr<nsCSSValueList> result;
-      nsCSSValueList* tail = nullptr;
-      while (shadow1 && shadow2) {
-        UniquePtr<nsCSSValueList> shadowValue =
-          AddWeightedShadowItems(aCoeff1, shadow1->mValue,
-                                 aCoeff2, shadow2->mValue);
-        if (!shadowValue) {
-          return false;
-        }
-        shadow1 = shadow1->mNext;
-        shadow2 = shadow2->mNext;
-        AppendToCSSValueList(result, Move(shadowValue), &tail);
-      }
-      if (shadow1 || shadow2) {
-        const nsCSSValueList *longShadow;
-        double longCoeff;
-        if (shadow1) {
-          longShadow = shadow1;
-          longCoeff = aCoeff1;
-        } else {
-          longShadow = shadow2;
-          longCoeff = aCoeff2;
-        }
-
-        while (longShadow) {
-          // Passing coefficients that add to less than 1 produces the
-          // desired result of interpolating "0 0 0 transparent" with
-          // the current shadow.
-          UniquePtr<nsCSSValueList> shadowValue =
-            AddWeightedShadowItems(longCoeff, longShadow->mValue,
-                                   0.0, longShadow->mValue);
-          if (!shadowValue) {
-            return false;
-          }
-
-          longShadow = longShadow->mNext;
-          AppendToCSSValueList(result, Move(shadowValue), &tail);
-        }
+      UniquePtr<nsCSSValueList> result =
+        AddWeightedShadowList(aCoeff1, aValue1.GetCSSValueListValue(),
+                              aCoeff2, aValue2.GetCSSValueListValue());
+      if (!result) {
+        return false;
       }
       aResultValue.SetAndAdoptCSSValueListValue(result.release(), eUnit_Shadow);
       return true;
