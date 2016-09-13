@@ -80,7 +80,7 @@ VPXDecoder::Init()
   config.w = config.h = 0; // set after decode
 
   if (!dx || vpx_codec_dec_init(&mVPX, dx, &config, 0)) {
-    return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
+    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
   }
   return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
 }

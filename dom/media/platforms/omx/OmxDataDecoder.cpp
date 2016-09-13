@@ -169,7 +169,7 @@ OmxDataDecoder::Init()
         MOZ_ASSERT(self->mOmxState != OMX_StateIdle);
       },
       [self] () {
-        self->RejectInitPromise(DecoderFailureReason::INIT_ERROR, __func__);
+        self->RejectInitPromise(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
       });
 
   return p;
@@ -551,13 +551,13 @@ OmxDataDecoder::ResolveInitPromise(const char* aMethodName)
 }
 
 void
-OmxDataDecoder::RejectInitPromise(DecoderFailureReason aReason, const char* aMethodName)
+OmxDataDecoder::RejectInitPromise(MediaResult aError, const char* aMethodName)
 {
   RefPtr<OmxDataDecoder> self = this;
   nsCOMPtr<nsIRunnable> r =
-    NS_NewRunnableFunction([self, aReason, aMethodName] () {
+    NS_NewRunnableFunction([self, aError, aMethodName] () {
       MOZ_ASSERT(self->mReaderTaskQueue->IsCurrentThreadIn());
-      self->mInitPromise.RejectIfExists(aReason, aMethodName);
+      self->mInitPromise.RejectIfExists(aError, aMethodName);
     });
   mReaderTaskQueue->Dispatch(r.forget());
 }
@@ -583,7 +583,7 @@ OmxDataDecoder::OmxStateRunner()
                MOZ_ASSERT(self->mOmxState == OMX_StateIdle);
              },
              [self] () {
-               self->RejectInitPromise(DecoderFailureReason::INIT_ERROR, __func__);
+               self->RejectInitPromise(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
              });
 
     // Allocate input and output buffers.
@@ -591,7 +591,7 @@ OmxDataDecoder::OmxStateRunner()
     for(const auto id : types) {
       if (NS_FAILED(AllocateBuffers(id))) {
         LOG("Failed to allocate buffer on port %d", id);
-        RejectInitPromise(DecoderFailureReason::INIT_ERROR, __func__);
+        RejectInitPromise(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
         break;
       }
     }
@@ -606,7 +606,7 @@ OmxDataDecoder::OmxStateRunner()
                self->ResolveInitPromise(__func__);
              },
              [self] () {
-               self->RejectInitPromise(DecoderFailureReason::INIT_ERROR, __func__);
+               self->RejectInitPromise(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
              });
   } else if (mOmxState == OMX_StateExecuting) {
     // Configure codec once it gets OMX_StateExecuting state.

@@ -71,7 +71,7 @@ AppleVTDecoder::Init()
     return InitPromise::CreateAndResolve(TrackType::kVideoTrack, __func__);
   }
 
-  return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
+  return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
 }
 
 void

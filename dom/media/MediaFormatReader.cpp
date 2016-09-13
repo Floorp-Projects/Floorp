@@ -479,11 +479,11 @@ MediaFormatReader::EnsureDecoderInitialized(TrackType aTrack)
                 self->SetVideoDecodeThreshold();
                 self->ScheduleUpdate(aTrack);
               },
-              [self, aTrack] (MediaDataDecoder::DecoderFailureReason aResult) {
+              [self, aTrack] (MediaResult aError) {
                 auto& decoder = self->GetDecoderData(aTrack);
                 decoder.mInitPromise.Complete();
                 decoder.ShutdownDecoder();
-                self->NotifyError(aTrack);
+                self->NotifyError(aTrack, aError);
               }));
   return false;
 }

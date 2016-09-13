@@ -196,7 +196,7 @@ GMPAudioDecoder::GMPInitDone(GMPAudioDecoderProxy* aGMP)
   MOZ_ASSERT(IsOnGMPThread());
 
   if (!aGMP) {
-    mInitPromise.RejectIfExists(MediaDataDecoder::DecoderFailureReason::INIT_ERROR, __func__);
+    mInitPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
     return;
   }
   if (mInitPromise.IsEmpty()) {
@@ -217,7 +217,7 @@ GMPAudioDecoder::GMPInitDone(GMPAudioDecoderProxy* aGMP)
                                  mAdapter);
   if (NS_FAILED(rv)) {
     aGMP->Close();
-    mInitPromise.Reject(MediaDataDecoder::DecoderFailureReason::INIT_ERROR, __func__);
+    mInitPromise.Reject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
     return;
   }
 
@@ -239,7 +239,7 @@ GMPAudioDecoder::Init()
   InitTags(tags);
   UniquePtr<GetGMPAudioDecoderCallback> callback(new GMPInitDoneCallback(this));
   if (NS_FAILED(mMPS->GetGMPAudioDecoder(mCrashHelper, &tags, GetNodeId(), Move(callback)))) {
-    mInitPromise.Reject(MediaDataDecoder::DecoderFailureReason::INIT_ERROR, __func__);
+    mInitPromise.Reject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
   }
 
   return promise;
@@ -291,7 +291,7 @@ GMPAudioDecoder::Drain()
 void
 GMPAudioDecoder::Shutdown()
 {
-  mInitPromise.RejectIfExists(MediaDataDecoder::DecoderFailureReason::CANCELED, __func__);
+  mInitPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
   if (!mGMP) {
     return;
   }

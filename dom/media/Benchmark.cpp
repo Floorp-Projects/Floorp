@@ -218,7 +218,7 @@ BenchmarkPlayback::InitDecoder(TrackInfo&& aInfo)
     [this, ref](TrackInfo::TrackType aTrackType) {
       InputExhausted();
     },
-    [this, ref](MediaDataDecoder::DecoderFailureReason aReason) {
+    [this, ref](MediaResult aError) {
       MainThreadShutdown();
     });
 }
