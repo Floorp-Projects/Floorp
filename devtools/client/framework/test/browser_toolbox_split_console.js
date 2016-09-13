@@ -13,6 +13,12 @@ let panelWin = null;
 const URL = "data:text/html;charset=utf8,test split console key delegation";
 const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
+// Force the old debugger UI since it's directly used (see Bug 1301705)
+Services.prefs.setBoolPref("devtools.debugger.new-debugger-frontend", false);
+registerCleanupFunction(function* () {
+  Services.prefs.clearUserPref("devtools.debugger.new-debugger-frontend");
+});
+
 add_task(function* () {
   let tab = yield addTab(URL);
   let target = TargetFactory.forTab(tab);

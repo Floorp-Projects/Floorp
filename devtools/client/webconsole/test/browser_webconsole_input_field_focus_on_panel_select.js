@@ -26,7 +26,7 @@ add_task(function* () {
   is(hud.jsterm.inputNode.hasAttribute("focused"), false,
      "inputNode shouldn't be focused");
 
-  yield openDebugger();
+  yield openInspector();
   hud = yield openConsole();
 
   is(hud.jsterm.inputNode.hasAttribute("focused"), true,
