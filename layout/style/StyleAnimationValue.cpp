@@ -10,6 +10,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/RuleNodeCacheConditions.h"
 #include "mozilla/StyleAnimationValue.h"
+#include "mozilla/Tuple.h"
 #include "mozilla/UniquePtr.h"
 #include "nsStyleTransformMatrix.h"
 #include "nsAutoPtr.h"
@@ -1162,6 +1163,35 @@ AddCSSValuePercentNumber(const uint32_t aValueRestrictions,
                         eCSSUnit_Number);
 }
 
+// Returns Tuple(Red, Green, Blue, Alpha).
+// Red, Green, and Blue are scaled to the [0, 255] range, and Alpha is scaled
+// to the [0, 1] range (though values are allowed to fall outside of these
+// ranges).
+static Tuple<double, double, double, double>
+GetPremultipliedColorComponents(const nsCSSValue& aValue)
+{
+  // PercentageRGBColor and PercentageRGBAColor component value might be
+  // greater than 1.0 in case when the color value is accumulated, so we
+  // can't use nsCSSValue::GetColorValue() here because that function
+  // clamps its values.
+  if (aValue.GetUnit() == eCSSUnit_PercentageRGBColor ||
+      aValue.GetUnit() == eCSSUnit_PercentageRGBAColor) {
+    nsCSSValueFloatColor* floatColor = aValue.GetFloatColorValue();
+    double alpha = floatColor->Alpha();
+    return MakeTuple(floatColor->Comp1() * 255.0 * alpha,
+                     floatColor->Comp2() * 255.0 * alpha,
+                     floatColor->Comp3() * 255.0 * alpha,
+                     alpha);
+  }
+
+  nscolor color = aValue.GetColorValue();
+  double alpha = NS_GET_A(color) * (1.0 / 255.0);
+  return MakeTuple(NS_GET_R(color) * alpha,
+                   NS_GET_G(color) * alpha,
+                   NS_GET_B(color) * alpha,
+                   alpha);
+}
+
 static void
 AddWeightedColors(double aCoeff1, const nsCSSValue& aValue1,
                   double aCoeff2, const nsCSSValue& aValue2,
@@ -1169,8 +1199,6 @@ AddWeightedColors(double aCoeff1, const nsCSSValue& aValue1,
 {
   MOZ_ASSERT(aValue1.IsNumericColorUnit() && aValue2.IsNumericColorUnit(),
              "The unit should be color");
-  nscolor color1 = aValue1.GetColorValue();
-  nscolor color2 = aValue2.GetColorValue();
   // FIXME (spec): The CSS transitions spec doesn't say whether
   // colors are premultiplied, but things work better when they are,
   // so use premultiplication.  Spec issue is still open per
@@ -1178,14 +1206,11 @@ AddWeightedColors(double aCoeff1, const nsCSSValue& aValue1,
 
   // To save some math, scale the alpha down to a 0-1 scale, but
   // leave the color components on a 0-255 scale.
-  double A1 = NS_GET_A(color1) * (1.0 / 255.0);
-  double R1 = NS_GET_R(color1) * A1;
-  double G1 = NS_GET_G(color1) * A1;
-  double B1 = NS_GET_B(color1) * A1;
-  double A2 = NS_GET_A(color2) * (1.0 / 255.0);
-  double R2 = NS_GET_R(color2) * A2;
-  double G2 = NS_GET_G(color2) * A2;
-  double B2 = NS_GET_B(color2) * A2;
+
+  double R1, G1, B1, A1;
+  Tie(R1, G1, B1, A1) = GetPremultipliedColorComponents(aValue1);
+  double R2, G2, B2, A2;
+  Tie(R2, G2, B2, A2) = GetPremultipliedColorComponents(aValue2);
   double Aresf = (A1 * aCoeff1 + A2 * aCoeff2);
   if (Aresf <= 0.0) {
     aResult.SetColorValue(NS_RGBA(0, 0, 0, 0));
@@ -1215,18 +1240,14 @@ DiluteColor(const nsCSSValue& aValue, double aDilutionRatio,
   MOZ_ASSERT(aDilutionRatio >= 0.0 && aDilutionRatio <= 1.0,
              "Dilution ratio should be in [0, 1]");
 
-  nscolor color = aValue.GetColorValue();
-  double A = NS_GET_A(color) * (1.0 / 255.0);
+  // Premultiplication
+  double R, G, B, A;
+  Tie(R, G, B, A) = GetPremultipliedColorComponents(aValue);
   double Aresf = A * aDilutionRatio;
   if (Aresf <= 0.0) {
     aResult.SetColorValue(NS_RGBA(0, 0, 0, 0));
     return;
   }
-
-  // Premultiplication
-  double R = NS_GET_R(color) * A;
-  double G = NS_GET_G(color) * A;
-  double B = NS_GET_B(color) * A;
 
   double factor = 1.0 / Aresf;
   aResult.SetColorValue(
