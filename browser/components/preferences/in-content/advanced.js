@@ -762,9 +762,7 @@ var gAdvancedPane = {
    */
   showCertificates: function ()
   {
-    openDialog("chrome://pippki/content/certManager.xul",
-               "mozilla:certmanager",
-               "modal=yes", null);
+    gSubDialog.open("chrome://pippki/content/certManager.xul");
   },
 
   /**
