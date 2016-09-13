@@ -367,28 +367,28 @@ var {v2i, i2i, i2v} = wasmEvalText(`(module
     (export "i2v" 8)
 )`);
 
-const badIndirectCall = /bad wasm indirect call/;
+const signatureMismatch = /indirect call signature mismatch/;
 
 assertEq(v2i(0), 13);
 assertEq(v2i(1), 42);
-assertErrorMessage(() => v2i(2), Error, badIndirectCall);
-assertErrorMessage(() => v2i(3), Error, badIndirectCall);
-assertErrorMessage(() => v2i(4), Error, badIndirectCall);
-assertErrorMessage(() => v2i(5), Error, badIndirectCall);
+assertErrorMessage(() => v2i(2), Error, signatureMismatch);
+assertErrorMessage(() => v2i(3), Error, signatureMismatch);
+assertErrorMessage(() => v2i(4), Error, signatureMismatch);
+assertErrorMessage(() => v2i(5), Error, signatureMismatch);
 
-assertErrorMessage(() => i2i(0), Error, badIndirectCall);
-assertErrorMessage(() => i2i(1), Error, badIndirectCall);
+assertErrorMessage(() => i2i(0), Error, signatureMismatch);
+assertErrorMessage(() => i2i(1), Error, signatureMismatch);
 assertEq(i2i(2, 100), 101);
 assertEq(i2i(3, 100), 102);
 assertEq(i2i(4, 100), 103);
 assertEq(i2i(5, 100), 104);
 
-assertErrorMessage(() => i2v(0), Error, badIndirectCall);
-assertErrorMessage(() => i2v(1), Error, badIndirectCall);
-assertErrorMessage(() => i2v(2), Error, badIndirectCall);
-assertErrorMessage(() => i2v(3), Error, badIndirectCall);
-assertErrorMessage(() => i2v(4), Error, badIndirectCall);
-assertErrorMessage(() => i2v(5), Error, badIndirectCall);
+assertErrorMessage(() => i2v(0), Error, signatureMismatch);
+assertErrorMessage(() => i2v(1), Error, signatureMismatch);
+assertErrorMessage(() => i2v(2), Error, signatureMismatch);
+assertErrorMessage(() => i2v(3), Error, signatureMismatch);
+assertErrorMessage(() => i2v(4), Error, signatureMismatch);
+assertErrorMessage(() => i2v(5), Error, signatureMismatch);
 
 {
     enableSPSProfiling();
