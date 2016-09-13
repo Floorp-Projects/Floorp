@@ -241,15 +241,14 @@ pub fn start<T, U>(address: SocketAddr,
 
     let api = WebDriverHttpApi::new(extension_routes);
     let http_handler = HttpHandler::new(api, msg_send);
-    let mut server = Server::http(address).unwrap();
+    let mut server = try!(Server::http(address));
     server.keep_alive(None);
 
     let builder = thread::Builder::new().name("webdriver dispatcher".to_string());
-    builder.spawn(move || {
-            let mut dispatcher = Dispatcher::new(handler);
-            dispatcher.run(msg_recv);
-        })
-        .unwrap();
+    try!(builder.spawn(move || {
+        let mut dispatcher = Dispatcher::new(handler);
+        dispatcher.run(msg_recv);
+    }));
 
     server.handle(http_handler)
 }
