@@ -1804,13 +1804,12 @@ TransformFunctionsMatch(nsCSSKeyword func1, nsCSSKeyword func2)
   return ToPrimitive(func1) == ToPrimitive(func2);
 }
 
-static bool
-AddFilterFunctionImpl(double aCoeff1, const nsCSSValueList* aList1,
-                      double aCoeff2, const nsCSSValueList* aList2,
-                      nsCSSValueList**& aResultTail)
+static UniquePtr<nsCSSValueList>
+AddWeightedFilterFunctionImpl(double aCoeff1, const nsCSSValueList* aList1,
+                              double aCoeff2, const nsCSSValueList* aList2)
 {
-  // AddFilterFunction should be our only caller, and it should ensure that both
-  // args are non-null.
+  // AddWeightedFilterFunction should be our only caller, and it should ensure
+  // that both args are non-null.
   MOZ_ASSERT(aList1, "expected filter list");
   MOZ_ASSERT(aList2, "expected filter list");
   MOZ_ASSERT(aList1->mValue.GetUnit() == eCSSUnit_Function,
@@ -1820,12 +1819,13 @@ AddFilterFunctionImpl(double aCoeff1, const nsCSSValueList* aList1,
   RefPtr<nsCSSValue::Array> a1 = aList1->mValue.GetArrayValue(),
                               a2 = aList2->mValue.GetArrayValue();
   nsCSSKeyword filterFunction = a1->Item(0).GetKeywordValue();
-  if (filterFunction != a2->Item(0).GetKeywordValue())
-    return false; // Can't add two filters of different types.
+  if (filterFunction != a2->Item(0).GetKeywordValue()) {
+    return nullptr; // Can't add two filters of different types.
+  }
 
-  nsAutoPtr<nsCSSValueList> resultListEntry(new nsCSSValueList);
+  auto resultList = MakeUnique<nsCSSValueList>();
   nsCSSValue::Array* result =
-    resultListEntry->mValue.InitFunction(filterFunction, 1);
+    resultList->mValue.InitFunction(filterFunction, 1);
 
   // "hue-rotate" is the only filter-function that accepts negative values, and
   // we don't use this "restrictions" variable in its clause below.
@@ -1848,7 +1848,7 @@ AddFilterFunctionImpl(double aCoeff1, const nsCSSValueList* aList1,
                                        aCoeff1, funcArg1,
                                        aCoeff2, funcArg2,
                                        resultArg)) {
-        return false;
+        return nullptr;
       }
       break;
     }
@@ -1883,42 +1883,38 @@ AddFilterFunctionImpl(double aCoeff1, const nsCSSValueList* aList1,
                                funcArg2.GetListValue()->mValue,
                                ColorAdditionType::Clamped);
       if (!shadowValue) {
-        return false;
+        return nullptr;
       }
       resultArg.AdoptListValue(Move(shadowValue));
       break;
     }
     default:
       MOZ_ASSERT(false, "unknown filter function");
-      return false;
+      return nullptr;
   }
 
-  *aResultTail = resultListEntry.forget();
-  aResultTail = &(*aResultTail)->mNext;
-
-  return true;
+  return resultList;
 }
 
-static bool
-AddFilterFunction(double aCoeff1, const nsCSSValueList* aList1,
-                  double aCoeff2, const nsCSSValueList* aList2,
-                  nsCSSValueList**& aResultTail)
+static UniquePtr<nsCSSValueList>
+AddWeightedFilterFunction(double aCoeff1, const nsCSSValueList* aList1,
+                          double aCoeff2, const nsCSSValueList* aList2)
 {
   MOZ_ASSERT(aList1 || aList2,
              "one function list item must not be null");
   // Note that one of our arguments could be null, indicating that
   // it's the initial value. Rather than adding special null-handling
   // logic, we just check for null values and replace them with
-  // 0 * the other value. That way, AddFilterFunctionImpl can assume
+  // 0 * the other value. That way, AddWeightedFilterFunctionImpl can assume
   // its args are non-null.
   if (!aList1) {
-    return AddFilterFunctionImpl(aCoeff2, aList2, 0, aList2, aResultTail);
+    return AddWeightedFilterFunctionImpl(aCoeff2, aList2, 0, aList2);
   }
   if (!aList2) {
-    return AddFilterFunctionImpl(aCoeff1, aList1, 0, aList1, aResultTail);
+    return AddWeightedFilterFunctionImpl(aCoeff1, aList1, 0, aList1);
   }
 
-  return AddFilterFunctionImpl(aCoeff1, aList1, aCoeff2, aList2, aResultTail);
+  return AddWeightedFilterFunctionImpl(aCoeff1, aList1, aCoeff2, aList2);
 }
 
 static inline uint32_t
@@ -2756,11 +2752,9 @@ StyleAnimationValue::AddWeighted(nsCSSPropertyID aProperty,
       const nsCSSValueList *list1 = aValue1.GetCSSValueListValue();
       const nsCSSValueList *list2 = aValue2.GetCSSValueListValue();
 
-      nsAutoPtr<nsCSSValueList> result;
-      nsCSSValueList **resultTail = getter_Transfers(result);
+      UniquePtr<nsCSSValueList> result;
+      nsCSSValueList* tail = nullptr;
       while (list1 || list2) {
-        MOZ_ASSERT(!*resultTail,
-          "resultTail isn't pointing to the tail (may leak)");
         if ((list1 && list1->mValue.GetUnit() != eCSSUnit_Function) ||
             (list2 && list2->mValue.GetUnit() != eCSSUnit_Function)) {
           // If we don't have filter-functions, we must have filter-URLs, which
@@ -2768,10 +2762,14 @@ StyleAnimationValue::AddWeighted(nsCSSPropertyID aProperty,
           return false;
         }
 
-        if (!AddFilterFunction(aCoeff1, list1, aCoeff2, list2, resultTail)) {
+        UniquePtr<nsCSSValueList> resultFunction =
+          AddWeightedFilterFunction(aCoeff1, list1, aCoeff2, list2);
+        if (!resultFunction) {
           // filter function mismatch
           return false;
         }
+
+        AppendToCSSValueList(result, Move(resultFunction), &tail);
 
         // move to next list items
         if (list1) {
@@ -2781,10 +2779,8 @@ StyleAnimationValue::AddWeighted(nsCSSPropertyID aProperty,
           list2 = list2->mNext;
         }
       }
-      MOZ_ASSERT(!*resultTail,
-                 "resultTail isn't pointing to the tail (may leak)");
 
-      aResultValue.SetAndAdoptCSSValueListValue(result.forget(),
+      aResultValue.SetAndAdoptCSSValueListValue(result.release(),
                                                 eUnit_Filter);
       return true;
     }
