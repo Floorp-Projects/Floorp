@@ -37,7 +37,7 @@ add_task(function* testMainViewVisible() {
   yield promiseTabLoadEvent(tab, PERMISSIONS_PAGE);
 
   let permissionsList = document.getElementById("identity-popup-permission-list");
-  let emptyLabel = permissionsList.nextSibling;
+  let emptyLabel = permissionsList.nextSibling.nextSibling;
 
   yield openIdentityPopup();
 
@@ -107,7 +107,7 @@ add_task(function* testCancelPermission() {
   yield promiseTabLoadEvent(tab, PERMISSIONS_PAGE);
 
   let permissionsList = document.getElementById("identity-popup-permission-list");
-  let emptyLabel = permissionsList.nextSibling;
+  let emptyLabel = permissionsList.nextSibling.nextSibling;
 
   SitePermissions.set(gBrowser.currentURI, "geo", SitePermissions.ALLOW);
   SitePermissions.set(gBrowser.currentURI, "camera", SitePermissions.BLOCK);
