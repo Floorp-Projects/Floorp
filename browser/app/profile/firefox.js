@@ -1517,4 +1517,9 @@ pref("browser.crashReports.unsubmittedCheck.enabled", false);
 pref("browser.crashReports.unsubmittedCheck.enabled", true);
 #endif
 
+// chancesUntilSuppress is how many times we'll show the unsubmitted
+// crash report notification across different days and shutdown
+// without a user choice before we suppress the notification for
+// some number of days.
+pref("browser.crashReports.unsubmittedCheck.chancesUntilSuppress", 4);
 pref("browser.crashReports.unsubmittedCheck.autoSubmit", false);
