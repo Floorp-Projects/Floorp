@@ -43,7 +43,7 @@ class ProfileEntry
     void * volatile spOrScript;
 
     // Line number for non-JS entries, the bytecode offset otherwise.
-    int32_t volatile lineOrPc;
+    int32_t volatile lineOrPcOffset;
 
     // General purpose storage describing this frame.
     uint32_t volatile flags_;
@@ -116,7 +116,7 @@ class ProfileEntry
     void initCppFrame(void* aSp, uint32_t aLine) volatile {
         flags_ = IS_CPP_ENTRY;
         spOrScript = aSp;
-        lineOrPc = static_cast<int32_t>(aLine);
+        lineOrPcOffset = static_cast<int32_t>(aLine);
     }
 
     void setFlag(uint32_t flag) volatile {
@@ -161,13 +161,16 @@ class ProfileEntry
         MOZ_ASSERT(!isJs());
         return spOrScript;
     }
-    JSScript* script() const volatile {
-        MOZ_ASSERT(isJs());
-        return (JSScript*)spOrScript;
-    }
+    JSScript* script() const volatile;
     uint32_t line() const volatile {
         MOZ_ASSERT(!isJs());
-        return static_cast<uint32_t>(lineOrPc);
+        return static_cast<uint32_t>(lineOrPcOffset);
+    }
+
+    // Note that the pointer returned might be invalid.
+    JSScript* rawScript() const volatile {
+        MOZ_ASSERT(isJs());
+        return (JSScript*)spOrScript;
     }
 
     // We can't know the layout of JSScript, so look in vm/SPSProfiler.cpp.
@@ -183,7 +186,7 @@ class ProfileEntry
 
     static size_t offsetOfLabel() { return offsetof(ProfileEntry, string); }
     static size_t offsetOfSpOrScript() { return offsetof(ProfileEntry, spOrScript); }
-    static size_t offsetOfLineOrPc() { return offsetof(ProfileEntry, lineOrPc); }
+    static size_t offsetOfLineOrPcOffset() { return offsetof(ProfileEntry, lineOrPcOffset); }
     static size_t offsetOfFlags() { return offsetof(ProfileEntry, flags_); }
 };
 
