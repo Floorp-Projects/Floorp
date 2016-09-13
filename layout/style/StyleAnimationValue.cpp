@@ -1296,7 +1296,8 @@ AppendToCSSValueList(UniquePtr<nsCSSValueList>& aHead,
 
 static UniquePtr<nsCSSValueList>
 AddWeightedShadowItems(double aCoeff1, const nsCSSValue &aValue1,
-                       double aCoeff2, const nsCSSValue &aValue2)
+                       double aCoeff2, const nsCSSValue &aValue2,
+                       ColorAdditionType aColorAdditionType)
 {
   // X, Y, Radius, Spread, Color, Inset
   MOZ_ASSERT(aValue1.GetUnit() == eCSSUnit_Array,
@@ -1333,7 +1334,7 @@ AddWeightedShadowItems(double aCoeff1, const nsCSSValue &aValue1,
       DiluteColor(color1, aCoeff1, resultArray->Item(4));
     } else {
       AddWeightedColors(aCoeff1, color1, aCoeff2, color2,
-                        ColorAdditionType::Clamped,
+                        aColorAdditionType,
                         resultArray->Item(4));
     }
   }
@@ -1876,8 +1877,11 @@ AddFilterFunctionImpl(double aCoeff1, const nsCSSValueList* aList1,
                  !funcArg2.GetListValue()->mNext,
                  "drop-shadow filter func doesn't support lists");
       UniquePtr<nsCSSValueList> shadowValue =
-        AddWeightedShadowItems(aCoeff1, funcArg1.GetListValue()->mValue,
-                               aCoeff2, funcArg2.GetListValue()->mValue);
+        AddWeightedShadowItems(aCoeff1,
+                               funcArg1.GetListValue()->mValue,
+                               aCoeff2,
+                               funcArg2.GetListValue()->mValue,
+                               ColorAdditionType::Clamped);
       if (!shadowValue) {
         return false;
       }
@@ -2373,8 +2377,11 @@ AddPositionCoords(double aCoeff1, const nsCSSValue& aPos1,
 }
 
 static UniquePtr<nsCSSValueList>
-AddWeightedShadowList(double aCoeff1, const nsCSSValueList* aShadow1,
-                      double aCoeff2, const nsCSSValueList* aShadow2)
+AddWeightedShadowList(double aCoeff1,
+                      const nsCSSValueList* aShadow1,
+                      double aCoeff2,
+                      const nsCSSValueList* aShadow2,
+                      ColorAdditionType aColorAdditionType)
 {
   // This is implemented according to:
   // http://dev.w3.org/csswg/css3-transitions/#animation-of-property-types-
@@ -2385,7 +2392,8 @@ AddWeightedShadowList(double aCoeff1, const nsCSSValueList* aShadow1,
   while (aShadow1 && aShadow2) {
     UniquePtr<nsCSSValueList> shadowValue =
       AddWeightedShadowItems(aCoeff1, aShadow1->mValue,
-                             aCoeff2, aShadow2->mValue);
+                             aCoeff2, aShadow2->mValue,
+                             aColorAdditionType);
     if (!shadowValue) {
       return nullptr;
     }
@@ -2410,7 +2418,8 @@ AddWeightedShadowList(double aCoeff1, const nsCSSValueList* aShadow1,
       // the current shadow.
       UniquePtr<nsCSSValueList> shadowValue =
         AddWeightedShadowItems(longCoeff, longShadow->mValue,
-                               0.0, longShadow->mValue);
+                               0.0, longShadow->mValue,
+                               aColorAdditionType);
       if (!shadowValue) {
         return nullptr;
       }
@@ -2721,8 +2730,11 @@ StyleAnimationValue::AddWeighted(nsCSSPropertyID aProperty,
     }
     case eUnit_Shadow: {
       UniquePtr<nsCSSValueList> result =
-        AddWeightedShadowList(aCoeff1, aValue1.GetCSSValueListValue(),
-                              aCoeff2, aValue2.GetCSSValueListValue());
+        AddWeightedShadowList(aCoeff1,
+                              aValue1.GetCSSValueListValue(),
+                              aCoeff2,
+                              aValue2.GetCSSValueListValue(),
+                              ColorAdditionType::Clamped);
       if (!result) {
         return false;
       }
@@ -2892,8 +2904,18 @@ StyleAnimationValue::Accumulate(nsCSSPropertyID aProperty,
     GetCommonUnit(aProperty, aDest.GetUnit(), aValueToAccumulate.GetUnit());
   switch (commonUnit) {
     // FIXME: implement them!
-    //case eUnit_Shadow:
     //case eUnit_Filter:
+    case eUnit_Shadow: {
+      UniquePtr<nsCSSValueList> result =
+        AddWeightedShadowList(1.0, aDest.GetCSSValueListValue(),
+                              aCount, aValueToAccumulate.GetCSSValueListValue(),
+                              ColorAdditionType::Unclamped);
+      if (!result) {
+        return false;
+      }
+      aDest.SetAndAdoptCSSValueListValue(result.release(), eUnit_Shadow);
+      return true;
+    }
     case eUnit_Color: {
       auto resultColor = MakeUnique<nsCSSValue>();
       AddWeightedColors(1.0,
