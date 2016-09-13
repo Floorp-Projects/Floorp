@@ -666,19 +666,22 @@ void addPseudoEntry(volatile StackEntry &entry, ThreadProfile &aProfile,
     addDynamicTag(aProfile, 'c', sampleLabel);
 #ifndef SPS_STANDALONE
     if (entry.isJs()) {
-      if (!entry.pc()) {
-        // The JIT only allows the top-most entry to have a nullptr pc
-        MOZ_ASSERT(&entry == &stack->mStack[stack->stackSize() - 1]);
-        // If stack-walking was disabled, then that's just unfortunate
-        if (lastpc) {
-          jsbytecode *jspc = js::ProfilingGetPC(stack->mContext, entry.script(),
-                                                lastpc);
-          if (jspc) {
-            lineno = JS_PCToLineNumber(entry.script(), jspc);
+      JSScript* script = entry.script();
+      if (script) {
+        if (!entry.pc()) {
+          // The JIT only allows the top-most entry to have a nullptr pc
+          MOZ_ASSERT(&entry == &stack->mStack[stack->stackSize() - 1]);
+          // If stack-walking was disabled, then that's just unfortunate
+          if (lastpc) {
+            jsbytecode *jspc = js::ProfilingGetPC(stack->mContext, script,
+                                                  lastpc);
+            if (jspc) {
+              lineno = JS_PCToLineNumber(script, jspc);
+            }
           }
+        } else {
+          lineno = JS_PCToLineNumber(script, entry.pc());
         }
-      } else {
-        lineno = JS_PCToLineNumber(entry.script(), entry.pc());
       }
     } else {
       lineno = entry.line();
