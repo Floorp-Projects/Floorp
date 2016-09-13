@@ -103,9 +103,6 @@ class WannabeChildAPIManager extends ChildAPIManager {
       get: () => this.cloneScope,
     });
 
-    // Many APIs rely on this, so temporarily add it to keep the commit small.
-    proxyContext.setContentWindow(this.context.contentWindow);
-
     // Synchronously unload the ProxyContext because we synchronously create it.
     this.context.callOnClose({close: proxyContext.unload.bind(proxyContext)});
   }
