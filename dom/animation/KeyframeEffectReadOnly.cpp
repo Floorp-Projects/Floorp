@@ -77,7 +77,7 @@ KeyframeEffectReadOnly::WrapObject(JSContext* aCx,
 IterationCompositeOperation
 KeyframeEffectReadOnly::IterationComposite() const
 {
-  return IterationCompositeOperation::Replace;
+  return mEffectOptions.mIterationComposite;
 }
 
 CompositeOperation
@@ -373,12 +373,42 @@ KeyframeEffectReadOnly::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
       aStyleRule = new AnimValuesStyleRule();
     }
 
+    StyleAnimationValue fromValue = segment->mFromValue;
+    StyleAnimationValue toValue = segment->mToValue;
+    // Iteration composition for accumulate
+    if (mEffectOptions.mIterationComposite ==
+          IterationCompositeOperation::Accumulate &&
+        computedTiming.mCurrentIteration > 0) {
+      const AnimationPropertySegment& lastSegment =
+        prop.mSegments.LastElement();
+      // FIXME: Bug 1293492: Add a utility function to calculate both of
+      // below StyleAnimationValues.
+      DebugOnly<bool> accumulateResult =
+        StyleAnimationValue::Accumulate(prop.mProperty,
+                                        fromValue,
+                                        lastSegment.mToValue,
+                                        computedTiming.mCurrentIteration);
+      // We can't check the accumulation result in case of filter property.
+      // That's because some filter property can't accumulate,
+      // e.g. 'contrast(2) brightness(2)' onto 'brightness(1) contrast(1)'
+      // because of mismatch of the order.
+      MOZ_ASSERT(accumulateResult || prop.mProperty == eCSSProperty_filter,
+                 "could not accumulate value");
+      accumulateResult =
+        StyleAnimationValue::Accumulate(prop.mProperty,
+                                        toValue,
+                                        lastSegment.mToValue,
+                                        computedTiming.mCurrentIteration);
+      MOZ_ASSERT(accumulateResult || prop.mProperty == eCSSProperty_filter,
+                 "could not accumulate value");
+    }
+
     // Special handling for zero-length segments
     if (segment->mToKey == segment->mFromKey) {
       if (computedTiming.mProgress.Value() < 0) {
-        aStyleRule->AddValue(prop.mProperty, segment->mFromValue);
+        aStyleRule->AddValue(prop.mProperty, Move(fromValue));
       } else {
-        aStyleRule->AddValue(prop.mProperty, segment->mToValue);
+        aStyleRule->AddValue(prop.mProperty, Move(toValue));
       }
       continue;
     }
@@ -394,14 +424,14 @@ KeyframeEffectReadOnly::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
     MOZ_ASSERT(IsFinite(valuePosition), "Position value should be finite");
     StyleAnimationValue val;
     if (StyleAnimationValue::Interpolate(prop.mProperty,
-                                         segment->mFromValue,
-                                         segment->mToValue,
+                                         fromValue,
+                                         toValue,
                                          valuePosition, val)) {
       aStyleRule->AddValue(prop.mProperty, Move(val));
     } else if (valuePosition < 0.5) {
-      aStyleRule->AddValue(prop.mProperty, segment->mFromValue);
+      aStyleRule->AddValue(prop.mProperty, Move(fromValue));
     } else {
-      aStyleRule->AddValue(prop.mProperty, segment->mToValue);
+      aStyleRule->AddValue(prop.mProperty, Move(toValue));
     }
   }
 }
@@ -482,6 +512,7 @@ KeyframeEffectParamsFromUnion(const OptionsType& aOptions,
                                        result.mPacedProperty,
                                        aInvalidPacedProperty,
                                        aRv);
+    result.mIterationComposite = options.mIterationComposite;
   }
   return result;
 }

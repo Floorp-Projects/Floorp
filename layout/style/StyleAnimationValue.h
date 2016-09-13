@@ -129,6 +129,27 @@ public:
               double aCoeff2, const StyleAnimationValue& aValue2,
               StyleAnimationValue& aResultValue);
 
+  /**
+   * Accumulates |aValueToAccumulate| onto |aDest| |aCount| times.
+   * The result is stored in |aDest| on success.
+   *
+   * @param aDest              The base value to be accumulated.
+   * @param aValueToAccumulate The value to accumulate.
+   * @param aCount             The number of times to accumulate
+   *                           aValueToAccumulate.
+   * @return true on success, false on failure.
+   *
+   * NOTE: This function will work as a wrapper of StyleAnimationValue::Add()
+   * if |aProperty| isn't color or shadow or filter.  For these properties,
+   * this function may return a color value that at least one of its components
+   * has a value which is outside the range [0, 1] so that we can calculate
+   * plausible values as interpolation with the return value.
+   */
+  static MOZ_MUST_USE bool
+  Accumulate(nsCSSPropertyID aProperty, StyleAnimationValue& aDest,
+             const StyleAnimationValue& aValueToAccumulate,
+             uint64_t aCount);
+
   // Type-conversion methods
   // -----------------------
   /**

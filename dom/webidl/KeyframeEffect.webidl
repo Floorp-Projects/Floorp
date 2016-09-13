@@ -69,8 +69,7 @@ partial interface KeyframeEffectReadOnly {
               optional (unrestricted double or KeyframeEffectOptions) options)]
 interface KeyframeEffect : KeyframeEffectReadOnly {
   inherit attribute (Element or CSSPseudoElement)? target;
-  // Bug 1216843 - implement animation composition
-  // inherit attribute IterationCompositeOperation iterationComposite;
+  inherit attribute IterationCompositeOperation    iterationComposite;
   // Bug 1216844 - implement additive animation
   // inherit attribute CompositeOperation          composite;
   [SetterThrows]
