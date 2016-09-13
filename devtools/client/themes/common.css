@@ -367,6 +367,7 @@ checkbox:-moz-focusring {
 }
 
 .devtools-button:hover:empty::before,
+.devtools-button.checked:empty::before,
 .devtools-button[checked]:empty::before,
 .devtools-button[open]:empty::before,
 .devtools-toolbarbutton:not([label]):hover > image,
@@ -378,6 +379,7 @@ checkbox:-moz-focusring {
 .devtools-button:disabled,
 .devtools-button[disabled],
 .devtools-toolbarbutton[disabled] {
+  pointer-events: none;
   opacity: 0.5 !important;
 }
 
@@ -397,29 +399,31 @@ checkbox:-moz-focusring {
 
 /* Text-only buttons */
 .theme-light .devtools-toolbarbutton[label]:not([text-as-image]):not([type=menu-button]),
-.theme-light .devtools-toolbarbutton[data-text-only] {
+.theme-light .devtools-toolbarbutton[data-text-only],
+.theme-light .devtools-button:not(:empty) {
   background-color: var(--toolbar-tab-hover);
 }
 .theme-dark .devtools-toolbarbutton[label]:not([text-as-image]):not([type=menu-button]),
-.theme-dark .devtools-toolbarbutton[data-text-only] {
+.theme-dark .devtools-toolbarbutton[data-text-only],
+.theme-dark .devtools-button:not(:empty) {
   background-color: rgba(0, 0, 0, .2); /* Splitter */
 }
 
 /* Text-only button states */
-.theme-dark .devtools-button:not(:empty):not([disabled]):hover,
+.theme-dark .devtools-button:not(:empty):not(:disabled):hover,
 .theme-dark .devtools-toolbarbutton:not(:-moz-any([checked=true],[disabled],[text-as-image]))[label]:hover {
   background: rgba(0, 0, 0, .3); /* Splitters */
 }
-.theme-light .devtools-button:not(:empty):not([disabled]):hover,
+.theme-light .devtools-button:not(:empty):not(:disabled):hover,
 .theme-light .devtools-toolbarbutton:not(:-moz-any([checked=true],[disabled],[text-as-image]))[label]:hover {
   background: rgba(170, 170, 170, .3); /* Splitters */
 }
 
-.theme-dark .devtools-button:not(:empty):not([disabled]):hover:active,
+.theme-dark .devtools-button:not(:empty):not(:disabled):hover:active,
 .theme-dark .devtools-toolbarbutton:not(:-moz-any([checked=true],[disabled],[text-as-image]))[label]:hover:active {
   background: rgba(0, 0, 0, .4); /* Splitters */
 }
-.theme-light .devtools-button:not(:empty):not([disabled]):hover:active,
+.theme-light .devtools-button:not(:empty):not(:disabled):hover:active,
 .theme-light .devtools-toolbarbutton:not(:-moz-any([checked=true],[disabled],[text-as-image]))[label]:hover:active {
   background: var(--toolbar-tab-hover-active);
 }

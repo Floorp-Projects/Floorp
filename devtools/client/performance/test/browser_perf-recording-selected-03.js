@@ -32,9 +32,9 @@ add_task(function* () {
   RecordingsView.selectedIndex = 0;
   yield selected;
 
-  ok($("#main-record-button").hasAttribute("checked"),
+  ok($("#main-record-button").classList.contains("checked"),
     "Button is still checked after selecting another item.");
-  ok(!$("#main-record-button").hasAttribute("locked"),
+  ok(!$("#main-record-button").hasAttribute("disabled"),
     "Button is not locked after selecting another item.");
 
   yield stopRecording(panel);
