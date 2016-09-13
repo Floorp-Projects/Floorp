@@ -21,16 +21,12 @@ browser.jar:
   skin/classic/browser/subtle-pattern.png
   skin/classic/browser/menu-back.png
   skin/classic/browser/menu-forward.png
-  skin/classic/browser/menuPanel.png
-  skin/classic/browser/menuPanel@2x.png
   skin/classic/browser/menuPanel-customize.png
   skin/classic/browser/menuPanel-customize@2x.png
   skin/classic/browser/menuPanel-exit.png
   skin/classic/browser/menuPanel-exit@2x.png
   skin/classic/browser/menuPanel-help.png
   skin/classic/browser/menuPanel-help@2x.png
-  skin/classic/browser/menuPanel-small.png
-  skin/classic/browser/menuPanel-small@2x.png
   skin/classic/browser/panel-expander-closed.png
   skin/classic/browser/panel-expander-closed@2x.png
   skin/classic/browser/panel-expander-open.png
@@ -197,16 +193,12 @@ browser.jar:
   skin/classic/browser/lion/places/toolbar.png                         (places/toolbar-lion.png)
   skin/classic/browser/yosemite/Toolbar.png                            (Toolbar-yosemite.png)
   skin/classic/browser/yosemite/Toolbar@2x.png                         (Toolbar-yosemite@2x.png)
-  skin/classic/browser/yosemite/menuPanel.png                          (menuPanel-yosemite.png)
-  skin/classic/browser/yosemite/menuPanel@2x.png                       (menuPanel-yosemite@2x.png)
   skin/classic/browser/yosemite/menuPanel-customize.png                (menuPanel-customize-yosemite.png)
   skin/classic/browser/yosemite/menuPanel-customize@2x.png             (menuPanel-customize-yosemite@2x.png)
   skin/classic/browser/yosemite/menuPanel-exit.png                     (menuPanel-exit-yosemite.png)
   skin/classic/browser/yosemite/menuPanel-exit@2x.png                  (menuPanel-exit-yosemite@2x.png)
   skin/classic/browser/yosemite/menuPanel-help.png                     (menuPanel-help-yosemite.png)
   skin/classic/browser/yosemite/menuPanel-help@2x.png                  (menuPanel-help-yosemite@2x.png)
-  skin/classic/browser/yosemite/menuPanel-small.png                    (menuPanel-small-yosemite.png)
-  skin/classic/browser/yosemite/menuPanel-small@2x.png                 (menuPanel-small-yosemite@2x.png)
   skin/classic/browser/yosemite/reload-stop-go.png                     (reload-stop-go-yosemite.png)
   skin/classic/browser/yosemite/reload-stop-go@2x.png                  (reload-stop-go-yosemite@2x.png)
   skin/classic/browser/yosemite/sync-horizontalbar.png                 (sync-horizontalbar-yosemite.png)
@@ -233,16 +225,12 @@ browser.jar:
 % override chrome://browser/skin/places/toolbar.png                        chrome://browser/skin/lion/places/toolbar.png                           os=Darwin osversion>=10.7
 % override chrome://browser/skin/Toolbar.png                               chrome://browser/skin/yosemite/Toolbar.png                              os=Darwin osversion>=10.10
 % override chrome://browser/skin/Toolbar@2x.png                            chrome://browser/skin/yosemite/Toolbar@2x.png                           os=Darwin osversion>=10.10
-% override chrome://browser/skin/menuPanel.png                             chrome://browser/skin/yosemite/menuPanel.png                            os=Darwin osversion>=10.10
-% override chrome://browser/skin/menuPanel@2x.png                          chrome://browser/skin/yosemite/menuPanel@2x.png                         os=Darwin osversion>=10.10
 % override chrome://browser/skin/menuPanel-customize.png                   chrome://browser/skin/yosemite/menuPanel-customize.png                  os=Darwin osversion>=10.10
 % override chrome://browser/skin/menuPanel-customize@2x.png                chrome://browser/skin/yosemite/menuPanel-customize@2x.png               os=Darwin osversion>=10.10
 % override chrome://browser/skin/menuPanel-exit.png                        chrome://browser/skin/yosemite/menuPanel-exit.png                       os=Darwin osversion>=10.10
 % override chrome://browser/skin/menuPanel-exit@2x.png                     chrome://browser/skin/yosemite/menuPanel-exit@2x.png                    os=Darwin osversion>=10.10
 % override chrome://browser/skin/menuPanel-help.png                        chrome://browser/skin/yosemite/menuPanel-help.png                       os=Darwin osversion>=10.10
 % override chrome://browser/skin/menuPanel-help@2x.png                     chrome://browser/skin/yosemite/menuPanel-help@2x.png                    os=Darwin osversion>=10.10
-% override chrome://browser/skin/menuPanel-small.png                       chrome://browser/skin/yosemite/menuPanel-small.png                      os=Darwin osversion>=10.10
-% override chrome://browser/skin/menuPanel-small@2x.png                    chrome://browser/skin/yosemite/menuPanel-small@2x.png                   os=Darwin osversion>=10.10
 % override chrome://browser/skin/reload-stop-go.png                        chrome://browser/skin/yosemite/reload-stop-go.png                       os=Darwin osversion>=10.10
 % override chrome://browser/skin/reload-stop-go@2x.png                     chrome://browser/skin/yosemite/reload-stop-go@2x.png                    os=Darwin osversion>=10.10
 % override chrome://browser/skin/sync-horizontalbar.png                    chrome://browser/skin/yosemite/sync-horizontalbar.png               os=Darwin osversion>=10.10
