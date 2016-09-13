@@ -260,10 +260,12 @@ class TestResolver(MozbuildObject):
 # Keys are variable prefixes and values are tuples describing how these
 # manifests should be handled:
 #
-#    (flavor, install_prefix, package_tests)
+#    (flavor, install_root, install_subdir, package_tests)
 #
 # flavor identifies the flavor of this test.
-# install_prefix is the path prefix of where to install the files in
+# install_root is the path prefix to install the files starting from the root
+#     directory and not as specified by the manifest location. (bug 972168)
+# install_subdir is the path of where to install the files in
 #     the tests directory.
 # package_tests indicates whether to package test files into the test
 #     package; suites that compile the test files should not install
