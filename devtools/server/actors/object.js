@@ -1793,36 +1793,45 @@ DebuggerServer.ObjectActorPreviewers.Object = [
   },
 
   function PseudoArray({obj, hooks}, grip, rawObj) {
-    let length = 0;
+    let length;
 
     let keys = obj.getOwnPropertyNames();
     if (keys.length == 0) {
       return false;
     }
 
-    // Pseudo-arrays should only have array indices and, optionally, a "length" property.
-    // Since array indices are sorted first, check if the last property is "length".
-    if(keys[keys.length-1] === "length") {
-      keys.pop();
-      // The value of "length" should equal the number of other properties. If eventually
-      // we allow sparse pseudo-arrays, we should check whether it's a Uint32 instead.
-      if(rawObj.length !== keys.length) {
-        return false;
-      }
-    }
-
-    // Ensure that the keys are consecutive integers starting at "0". If eventually we
-    // allow sparse pseudo-arrays, we should check that they are array indices, that is:
-    // `(key >>> 0) + '' === key && key !== "4294967295"`.
-    // Checking the last property first allows us to avoid useless iterations when
-    // there is any property which is not an array index.
-    if(keys.length && keys[keys.length-1] !== keys.length - 1 + '') {
+    // If no item is going to be displayed in preview, better display as sparse object.
+    // The first key should contain the smallest integer index (if any).
+    if(keys[0] >= OBJECT_PREVIEW_MAX_ITEMS) {
       return false;
     }
-    for (let key of keys) {
-      if (key !== (length++) + '') {
+
+    // Pseudo-arrays should only have array indices and, optionally, a "length" property.
+    // Since integer indices are sorted first, check if the last property is "length".
+    if(keys[keys.length-1] === "length") {
+      keys.pop();
+      length = DevToolsUtils.getProperty(obj, "length");
+    } else {
+      // Otherwise, let length be the (presumably) greatest array index plus 1.
+      length = +keys[keys.length-1] + 1;
+    }
+    // Check if length is a valid array length, i.e. is a Uint32 number.
+    if(typeof length !== "number" || length >>> 0 !== length) {
+      return false;
+    }
+
+    // Ensure all keys are increasing array indices smaller than length. The order is not
+    // guaranteed for exotic objects but, in most cases, big array indices and properties
+    // which are not integer indices should be at the end. Then, iterating backwards
+    // allows us to return earlier when the object is not completely a pseudo-array.
+    let prev = length;
+    for(let i = keys.length - 1; i >= 0; --i) {
+      let key = keys[i];
+      let numKey = key >>> 0; // ToUint32(key)
+      if (numKey + '' !== key || numKey >= prev) {
         return false;
       }
+      prev = numKey;
     }
 
     grip.preview = {
@@ -1836,12 +1845,14 @@ DebuggerServer.ObjectActorPreviewers.Object = [
     }
 
     let items = grip.preview.items = [];
+    let numItems = Math.min(OBJECT_PREVIEW_MAX_ITEMS, length);
 
-    let i = 0;
-    for (let key of keys) {
-      if (rawObj.hasOwnProperty(key) && i++ < OBJECT_PREVIEW_MAX_ITEMS) {
-        let value = makeDebuggeeValueIfNeeded(obj, rawObj[key]);
-        items.push(hooks.createValueGrip(value));
+    for (let i = 0; i < numItems; ++i) {
+      let desc = obj.getOwnPropertyDescriptor(i);
+      if (desc && 'value' in desc) {
+        items.push(hooks.createValueGrip(desc.value));
+      } else {
+        items.push(null);
       }
     }
 

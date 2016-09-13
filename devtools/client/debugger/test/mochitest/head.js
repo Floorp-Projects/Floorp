@@ -31,7 +31,11 @@ const FRAME_SCRIPT_URL = getRootDirectory(gTestPath) + "code_frame-script.js";
 const CHROME_URL = "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/";
 const CHROME_URI = Services.io.newURI(CHROME_URL, null, null);
 
+Services.prefs.setBoolPref("devtools.debugger.new-debugger-frontend", false);
+
 registerCleanupFunction(function* () {
+  Services.prefs.clearUserPref("devtools.debugger.new-debugger-frontend");
+
   info("finish() was called, cleaning up...");
   Services.prefs.setBoolPref("devtools.debugger.log", gEnableLogging);
 

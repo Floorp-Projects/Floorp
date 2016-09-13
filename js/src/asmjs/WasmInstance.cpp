@@ -562,6 +562,12 @@ ReadCustomDoubleNaNObject(JSContext* cx, HandleValue v, double* ret)
 }
 
 WasmInstanceObject*
+Instance::objectUnbarriered() const
+{
+    return object_.unbarrieredGet();
+}
+
+WasmInstanceObject*
 Instance::object() const
 {
     return object_;
@@ -843,7 +849,7 @@ Instance::ensureProfilingState(JSContext* cx, bool newProfilingEnabled)
     }
 
     for (const SharedTable& table : tables_) {
-        if (!table->isTypedFunction() || !table->initialized())
+        if (!table->isTypedFunction())
             continue;
 
         // This logic will have to be generalized to match the import logic
@@ -853,8 +859,10 @@ Instance::ensureProfilingState(JSContext* cx, bool newProfilingEnabled)
 
         void** array = table->internalArray();
         uint32_t length = table->length();
-        for (size_t i = 0; i < length; i++)
-            UpdateEntry(*code_, newProfilingEnabled, &array[i]);
+        for (size_t i = 0; i < length; i++) {
+            if (array[i])
+                UpdateEntry(*code_, newProfilingEnabled, &array[i]);
+        }
     }
 
     return true;

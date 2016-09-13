@@ -2581,6 +2581,44 @@ void
 nsJSContext::NotifyDidPaint()
 {
   sDidPaintAfterPreviousICCSlice = true;
+  if (sICCTimer) {
+    static uint32_t sCount = 0;
+    // 16 here is the common value for refresh driver tick frequency.
+    static const uint32_t kTicksPerSliceDelay = kICCIntersliceDelay / 16;
+    if (++sCount % kTicksPerSliceDelay != 0) {
+      // Don't trigger CC slice all the time after paint, but often still.
+      // The key point is to trigger it right after paint, especially when
+      // we're running RefreshDriver constantly.
+      return;
+    }
+
+    sICCTimer->Cancel();
+    ICCTimerFired(nullptr, nullptr);
+    if (sICCTimer) {
+      sICCTimer->InitWithNamedFuncCallback(ICCTimerFired, nullptr,
+                                           kICCIntersliceDelay,
+                                           nsITimer::TYPE_REPEATING_SLACK,
+                                           "ICCTimerFired");
+    }
+  } else if (sCCTimer) {
+    static uint32_t sCount = 0;
+    static const uint32_t kTicksPerForgetSkippableDelay =
+      NS_CC_SKIPPABLE_DELAY / 16;
+    if (++sCount % kTicksPerForgetSkippableDelay != 0) {
+      // The comment above about triggering CC slice applies to forget skippable
+      // too.
+      return;
+    }
+
+    sCCTimer->Cancel();
+    CCTimerFired(nullptr, nullptr);
+    if (sCCTimer) {
+      sCCTimer->InitWithNamedFuncCallback(CCTimerFired, nullptr,
+                                          NS_CC_SKIPPABLE_DELAY,
+                                          nsITimer::TYPE_REPEATING_SLACK,
+                                          "CCTimerFired");
+    }
+  }
 }
 
 nsScriptNameSpaceManager*

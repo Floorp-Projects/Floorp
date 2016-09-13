@@ -46,6 +46,9 @@
   --urlbar-dropmarker-active-2x-region: rect(0, 66px, 28px, 44px);
 
   --panel-separator-color: ThreeDLightShadow;
+  --arrowpanel-dimmed: hsla(210,4%,10%,.07);
+  --arrowpanel-dimmed-further: hsla(210,4%,10%,.12);
+  --arrowpanel-dimmed-even-further: hsla(210,4%,10%,.17);
 
   --urlbar-separator-color: ThreeDLightShadow;
 }
@@ -1444,7 +1447,7 @@ html|*.urlbar-input:-moz-lwtheme::placeholder,
 
 #urlbar-search-footer {
   border-top: 1px solid var(--panel-separator-color);
-  background-color: hsla(210,4%,10%,.07);
+  background-color: var(--arrowpanel-dimmed);
 }
 
 #urlbar-search-settings {
@@ -1458,11 +1461,11 @@ html|*.urlbar-input:-moz-lwtheme::placeholder,
 }
 
 #urlbar-search-settings:hover {
-  background-color: hsla(210,4%,10%,.07);
+  background-color: var(--arrowpanel-dimmed);
 }
 
 #urlbar-search-settings:hover:active {
-  background-color: hsla(210,4%,10%,.12);
+  background-color: var(--arrowpanel-dimmed-further);
 }
 
 #urlbar-search-splitter {

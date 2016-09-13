@@ -77,7 +77,7 @@ KeyframeEffectReadOnly::WrapObject(JSContext* aCx,
 IterationCompositeOperation
 KeyframeEffectReadOnly::IterationComposite() const
 {
-  return IterationCompositeOperation::Replace;
+  return mEffectOptions.mIterationComposite;
 }
 
 CompositeOperation
@@ -111,12 +111,7 @@ KeyframeEffectReadOnly::NotifyAnimationTimingUpdated()
   }
 
   // Request restyle if necessary.
-  //
-  // Bug 1216843: When we implement iteration composite modes, we need to
-  // also detect if the current iteration has changed.
-  if (mAnimation &&
-      !mProperties.IsEmpty() &&
-      GetComputedTiming().mProgress != mProgressOnLastCompose) {
+  if (mAnimation && !mProperties.IsEmpty() && HasComputedTimingChanged()) {
     EffectCompositor::RestyleType restyleType =
       CanThrottle() ?
       EffectCompositor::RestyleType::Throttled :
@@ -125,11 +120,13 @@ KeyframeEffectReadOnly::NotifyAnimationTimingUpdated()
   }
 
   // If we're no longer "in effect", our ComposeStyle method will never be
-  // called and we will never have a chance to update mProgressOnLastCompose.
-  // We clear mProgressOnLastCompose here to ensure that if we later become
-  // "in effect" we will request a restyle (above).
+  // called and we will never have a chance to update mProgressOnLastCompose
+  // and mCurrentIterationOnLastCompose.
+  // We clear them here to ensure that if we later become "in effect" we will
+  // request a restyle (above).
   if (!inEffect) {
      mProgressOnLastCompose.SetNull();
+     mCurrentIterationOnLastCompose = 0;
   }
 }
 
@@ -312,6 +309,7 @@ KeyframeEffectReadOnly::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
 {
   ComputedTiming computedTiming = GetComputedTiming();
   mProgressOnLastCompose = computedTiming.mProgress;
+  mCurrentIterationOnLastCompose = computedTiming.mCurrentIteration;
 
   // If the progress is null, we don't have fill data for the current
   // time so we shouldn't animate.
@@ -373,12 +371,42 @@ KeyframeEffectReadOnly::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
       aStyleRule = new AnimValuesStyleRule();
     }
 
+    StyleAnimationValue fromValue = segment->mFromValue;
+    StyleAnimationValue toValue = segment->mToValue;
+    // Iteration composition for accumulate
+    if (mEffectOptions.mIterationComposite ==
+          IterationCompositeOperation::Accumulate &&
+        computedTiming.mCurrentIteration > 0) {
+      const AnimationPropertySegment& lastSegment =
+        prop.mSegments.LastElement();
+      // FIXME: Bug 1293492: Add a utility function to calculate both of
+      // below StyleAnimationValues.
+      DebugOnly<bool> accumulateResult =
+        StyleAnimationValue::Accumulate(prop.mProperty,
+                                        fromValue,
+                                        lastSegment.mToValue,
+                                        computedTiming.mCurrentIteration);
+      // We can't check the accumulation result in case of filter property.
+      // That's because some filter property can't accumulate,
+      // e.g. 'contrast(2) brightness(2)' onto 'brightness(1) contrast(1)'
+      // because of mismatch of the order.
+      MOZ_ASSERT(accumulateResult || prop.mProperty == eCSSProperty_filter,
+                 "could not accumulate value");
+      accumulateResult =
+        StyleAnimationValue::Accumulate(prop.mProperty,
+                                        toValue,
+                                        lastSegment.mToValue,
+                                        computedTiming.mCurrentIteration);
+      MOZ_ASSERT(accumulateResult || prop.mProperty == eCSSProperty_filter,
+                 "could not accumulate value");
+    }
+
     // Special handling for zero-length segments
     if (segment->mToKey == segment->mFromKey) {
       if (computedTiming.mProgress.Value() < 0) {
-        aStyleRule->AddValue(prop.mProperty, segment->mFromValue);
+        aStyleRule->AddValue(prop.mProperty, Move(fromValue));
       } else {
-        aStyleRule->AddValue(prop.mProperty, segment->mToValue);
+        aStyleRule->AddValue(prop.mProperty, Move(toValue));
       }
       continue;
     }
@@ -394,14 +422,14 @@ KeyframeEffectReadOnly::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
     MOZ_ASSERT(IsFinite(valuePosition), "Position value should be finite");
     StyleAnimationValue val;
     if (StyleAnimationValue::Interpolate(prop.mProperty,
-                                         segment->mFromValue,
-                                         segment->mToValue,
+                                         fromValue,
+                                         toValue,
                                          valuePosition, val)) {
       aStyleRule->AddValue(prop.mProperty, Move(val));
     } else if (valuePosition < 0.5) {
-      aStyleRule->AddValue(prop.mProperty, segment->mFromValue);
+      aStyleRule->AddValue(prop.mProperty, Move(fromValue));
     } else {
-      aStyleRule->AddValue(prop.mProperty, segment->mToValue);
+      aStyleRule->AddValue(prop.mProperty, Move(toValue));
     }
   }
 }
@@ -482,6 +510,7 @@ KeyframeEffectParamsFromUnion(const OptionsType& aOptions,
                                        result.mPacedProperty,
                                        aInvalidPacedProperty,
                                        aRv);
+    result.mIterationComposite = options.mIterationComposite;
   }
   return result;
 }
@@ -1278,6 +1307,21 @@ KeyframeEffectReadOnly::MarkCascadeNeedsUpdate()
     return;
   }
   effectSet->MarkCascadeNeedsUpdate();
+}
+
+bool
+KeyframeEffectReadOnly::HasComputedTimingChanged() const
+{
+  // Typically we don't need to request a restyle if the progress hasn't
+  // changed since the last call to ComposeStyle. The one exception is if the
+  // iteration composite mode is 'accumulate' and the current iteration has
+  // changed, since that will often produce a different result.
+  ComputedTiming computedTiming = GetComputedTiming();
+  return computedTiming.mProgress != mProgressOnLastCompose ||
+         (mEffectOptions.mIterationComposite ==
+            IterationCompositeOperation::Accumulate &&
+         computedTiming.mCurrentIteration !=
+          mCurrentIterationOnLastCompose);
 }
 
 } // namespace dom

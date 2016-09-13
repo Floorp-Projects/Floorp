@@ -249,9 +249,15 @@ public:
 
   virtual void
   Open(const nsACString& aMethod, const nsAString& aUrl, bool aAsync,
-       const Optional<nsAString>& aUser,
-       const Optional<nsAString>& aPassword,
+       const nsAString& aUsername, const nsAString& aPassword,
        ErrorResult& aRv) override;
+
+  nsresult
+  Open(const nsACString& aMethod,
+       const nsACString& aUrl,
+       const Optional<bool>& aAsync,
+       const Optional<nsAString>& aUsername,
+       const Optional<nsAString>& aPassword);
 
   virtual void
   SetRequestHeader(const nsACString& aName, const nsACString& aValue,
@@ -590,12 +596,6 @@ protected:
   void StopProgressEventTimer();
 
   nsresult OnRedirectVerifyCallback(nsresult result);
-
-  nsresult OpenInternal(const nsACString& aMethod,
-                        const nsACString& aUrl,
-                        const Optional<bool>& aAsync,
-                        const Optional<nsAString>& aUsername,
-                        const Optional<nsAString>& aPassword);
 
   already_AddRefed<nsXMLHttpRequestXPCOMifier> EnsureXPCOMifier();
 

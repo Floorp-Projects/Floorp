@@ -42,26 +42,6 @@ function completion_function() {
   }
 }
 
-// Helper function to send PointerEvent with different parameters
-function sendPointerEvent(int_win, elemId, pointerEventType, inputSource, params) {
-  var elem = int_win.document.getElementById(elemId);
-  if(!!elem) {
-    var rect = elem.getBoundingClientRect();
-    var eventObj = {type: pointerEventType, inputSource: inputSource};
-    if(params && "button" in params)
-      eventObj.button = params.button;
-    if(params && "isPrimary" in params)
-      eventObj.isPrimary = params.isPrimary;
-    else if(MouseEvent.MOZ_SOURCE_MOUSE == inputSource)
-      eventObj.isPrimary = true;
-    console.log(elemId, eventObj);
-    var salt = ("pointermove" == pointerEventType) ? 1 : 2;
-    synthesizePointer(elem, rect.width*salt/5, rect.height/2, eventObj, int_win);
-  } else {
-    is(!!elem, true, "Document should have element with id: " + elemId);
-  }
-}
-
 // Helper function to send MouseEvent with different parameters
 function sendMouseEvent(int_win, elemId, mouseEventType, params) {
   var elem = int_win.document.getElementById(elemId);
