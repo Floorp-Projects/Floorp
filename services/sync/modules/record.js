@@ -531,6 +531,9 @@ this.Collection = function Collection(uri, recordObj, service) {
   this._older = 0;
   this._newer = 0;
   this._data = [];
+  // optional members used by batch operations.
+  this._batch = null;
+  this._commit = false;
 }
 Collection.prototype = {
   __proto__: Resource.prototype,
@@ -554,6 +557,10 @@ Collection.prototype = {
       args.push("ids=" + this.ids);
     if (this.limit > 0 && this.limit != Infinity)
       args.push("limit=" + this.limit);
+    if (this._batch)
+      args.push("batch=" + this._batch);
+    if (this._commit)
+      args.push("commit=true");
 
     this.uri.query = (args.length > 0)? '?' + args.join('&') : '';
   },
@@ -603,6 +610,19 @@ Collection.prototype = {
     this._rebuildURL();
   },
 
+  // Set information about the batch for this request.
+  get batch() { return _batch; },
+  set batch(value) {
+    this._batch = value;
+    this._rebuildURL();
+  },
+
+  get commit() { return _commit; },
+  set commit(value) {
+    this._commit = value && true;
+    this._rebuildURL();
+  },
+
   set recordHandler(onRecord) {
     // Save this because onProgress is called with this as the ChannelListener
     let coll = this;
@@ -630,35 +650,103 @@ Collection.prototype = {
     throw new Error("Don't directly post to a collection - use newPostQueue instead");
   },
 
-  newPostQueue(log, postCallback) {
-    let poster = data => {
+  newPostQueue(log, timestamp, postCallback) {
+    let poster = (data, headers, batch, commit) => {
+      this.batch = batch;
+      this.commit = commit;
+      for (let [header, value] of headers) {
+        this.setHeader(header, value);
+      }
       return Resource.prototype.post.call(this, data);
     }
-    return new PostQueue(poster, log, postCallback);
+    let getConfig = (name, defaultVal) => {
+      if (this._service.serverConfiguration && this._service.serverConfiguration.hasOwnProperty(name)) {
+        return this._service.serverConfiguration[name];
+      }
+      return defaultVal;
+    }
+
+    let config = {
+      max_post_bytes: getConfig("max_post_bytes", MAX_UPLOAD_BYTES),
+      max_post_records: getConfig("max_post_records", MAX_UPLOAD_RECORDS),
+
+      max_batch_bytes: getConfig("max_total_bytes", Infinity),
+      max_batch_records: getConfig("max_total_records", Infinity),
+    }
+
+    // Handle config edge cases
+    if (config.max_post_records <= 0) { config.max_post_records = MAX_UPLOAD_RECORDS; }
+    if (config.max_batch_records <= 0) { config.max_post_records = Infinity; }
+    if (config.max_post_bytes <= 0) { config.max_post_records = MAX_UPLOAD_BYTES; }
+    if (config.max_batch_bytes <= 0) { config.max_post_records = Infinity; }
+
+    // Max size of BSO payload is 256k. This assumes at most 4k of overhead,
+    // which sounds like plenty. If the server says it can't handle this, we
+    // might have valid records we can't sync, so we give up on syncing.
+    let requiredMax = 260 * 1024;
+    if (config.max_post_bytes < requiredMax) {
+      this._log.error("Server configuration max_post_bytes is too low", config);
+      throw new Error("Server configuration max_post_bytes is too low");
+    }
+
+    return new PostQueue(poster, timestamp, config, log, postCallback);
   },
 };
 
 /* A helper to manage the posting of records while respecting the various
    size limits.
+
+   This supports the concept of a server-side "batch". The general idea is:
+   * We queue as many records as allowed in memory, then make a single POST.
+   * This first POST (optionally) gives us a batch ID, which we use for
+     all subsequent posts, until...
+   * At some point we hit a batch-maximum, and jump through a few hoops to
+     commit the current batch (ie, all previous POSTs) and start a new one.
+   * Eventually commit the final batch.
+
+  In most cases we expect there to be exactly 1 batch consisting of possibly
+  multiple POSTs.
 */
-function PostQueue(poster, log, postCallback) {
+function PostQueue(poster, timestamp, config, log, postCallback) {
   // The "post" function we should use when it comes time to do the post.
   this.poster = poster;
   this.log = log;
+
+  // The config we use. We expect it to have fields "max_post_records",
+  // "max_batch_records", "max_post_bytes", and "max_batch_bytes"
+  this.config = config;
 
   // The callback we make with the response when we do get around to making the
   // post (which could be during any of the enqueue() calls or the final flush())
   // This callback may be called multiple times and must not add new items to
   // the queue.
+  // The second argument passed to this callback is a boolean value that is true
+  // if we're in the middle of a batch, and false if either the batch is
+  // complete, or it's a post to a server that does not understand batching.
   this.postCallback = postCallback;
 
   // The string where we are capturing the stringified version of the records
   // queued so far. It will always be invalid JSON as it is always missing the
-  // close bracket.
+  // closing bracket.
   this.queued = "";
 
-  // The number of records we've queued so far.
+  // The number of records we've queued so far but are yet to POST.
   this.numQueued = 0;
+
+  // The number of records/bytes we've processed in previous POSTs for our
+  // current batch. Does *not* include records currently queued for the next POST.
+  this.numAlreadyBatched = 0;
+  this.bytesAlreadyBatched = 0;
+
+  // The ID of our current batch. Can be undefined (meaning we are yet to make
+  // the first post of a patch, so don't know if we have a batch), null (meaning
+  // we've made the first post but the server response indicated no batching
+  // semantics), otherwise we have made the first post and it holds the batch ID
+  // returned from the server.
+  this.batchID = undefined;
+
+  // Time used for X-If-Unmodified-Since -- should be the timestamp from the last GET.
+  this.lastModified = timestamp;
 }
 
 PostQueue.prototype = {
@@ -671,35 +759,128 @@ PostQueue.prototype = {
       throw new Error("You must only call this with objects that explicitly support JSON");
     }
     let bytes = JSON.stringify(jsonRepr);
-    // Note that we purposely don't check if a single record would exceed our
-    // limit - we still attempt the post and if it sees a 413 like we think it
-    // will, we just let that do whatever it does (which is probably cause
-    // ongoing sync failures for that engine - bug 1241356 exists to fix this)
-    // (Note that counter-intuitively, the post of the oversized record will
-    // not happen here but on the next .enqueue/.flush.)
 
-    // Do a flush if we can't add this record without exceeding our limits.
-    let newLength = this.queued.length + bytes.length + 1; // extra 1 for trailing "]"
-    if (this.numQueued >= MAX_UPLOAD_RECORDS || newLength >= MAX_UPLOAD_BYTES) {
-      this.log.trace("PostQueue flushing"); // flush logs more info...
-      // We need to write the queue out before handling this one.
-      this.flush();
+    // Do a flush if we can't add this record without exceeding our single-request
+    // limits, or without exceeding the total limit for a single batch.
+    let newLength = this.queued.length + bytes.length + 2; // extras for leading "[" / "," and trailing "]"
+
+    let maxAllowedBytes = Math.min(256 * 1024, this.config.max_post_bytes);
+
+    let postSizeExceeded = this.numQueued >= this.config.max_post_records ||
+                           newLength >= maxAllowedBytes;
+
+    let batchSizeExceeded = (this.numQueued + this.numAlreadyBatched) >= this.config.max_batch_records ||
+                            (newLength + this.bytesAlreadyBatched) >= this.config.max_batch_bytes;
+
+    let singleRecordTooBig = bytes.length + 2 > maxAllowedBytes;
+
+    if (postSizeExceeded || batchSizeExceeded) {
+      this.log.trace(`PostQueue flushing due to postSizeExceeded=${postSizeExceeded}, batchSizeExceeded=${batchSizeExceeded}` +
+                     `, max_batch_bytes: ${this.config.max_batch_bytes}, max_post_bytes: ${this.config.max_post_bytes}`);
+
+      if (singleRecordTooBig) {
+        return { enqueued: false, error: new Error("Single record too large to submit to server") };
+      }
+
+      // We need to write the queue out before handling this one, but we only
+      // commit the batch (and thus start a new one) if the batch is full.
+      // Note that if a single record is too big for the batch or post, then
+      // the batch may be empty, and so we don't flush in that case.
+      if (this.numQueued) {
+        this.flush(batchSizeExceeded || singleRecordTooBig);
+      }
     }
     // Either a ',' or a '[' depending on whether this is the first record.
     this.queued += this.numQueued ? "," : "[";
     this.queued += bytes;
     this.numQueued++;
+    return { enqueued: true };
   },
 
-  flush() {
+  flush(finalBatchPost) {
     if (!this.queued) {
-      // nothing queued.
+      // nothing queued - we can't be in a batch, and something has gone very
+      // bad if we think we are.
+      if (this.batchID) {
+        throw new Error(`Flush called when no queued records but we are in a batch ${this.batchID}`);
+      }
       return;
     }
-    this.log.info(`Posting ${this.numQueued} records of ${this.queued.length+1} bytes`);
+    // the batch query-param and headers we'll send.
+    let batch;
+    let headers = [];
+    if (this.batchID === undefined) {
+      // First commit in a (possible) batch.
+      batch = "true";
+    } else if (this.batchID) {
+      // We have an existing batch.
+      batch = this.batchID;
+    } else {
+      // Not the first post and we know we have no batch semantics.
+      batch = null;
+    }
+
+    headers.push(["x-if-unmodified-since", this.lastModified]);
+
+    this.log.info(`Posting ${this.numQueued} records of ${this.queued.length+1} bytes with batch=${batch}`);
     let queued = this.queued + "]";
+    if (finalBatchPost) {
+      this.bytesAlreadyBatched = 0;
+      this.numAlreadyBatched = 0;
+    } else {
+      this.bytesAlreadyBatched += queued.length;
+      this.numAlreadyBatched += this.numQueued;
+    }
     this.queued = "";
     this.numQueued = 0;
-    this.postCallback(this.poster(queued));
+    let response = this.poster(queued, headers, batch, !!(finalBatchPost && this.batchID !== null));
+
+    if (!response.success) {
+      this.log.trace("Server error response during a batch", response);
+      // not clear what we should do here - we expect the consumer of this to
+      // abort by throwing in the postCallback below.
+      return this.postCallback(response, !finalBatchPost);
+    }
+
+    if (finalBatchPost) {
+      this.log.trace("Committed batch", this.batchID);
+      this.batchID = undefined; // we are now in "first post for the batch" state.
+      this.lastModified = response.headers["x-last-modified"];
+      return this.postCallback(response, false);
+    }
+
+    if (response.status != 202) {
+      if (this.batchID) {
+        throw new Error("Server responded non-202 success code while a batch was in progress");
+      }
+      this.batchID = null; // no batch semantics are in place.
+      this.lastModified = response.headers["x-last-modified"];
+      return this.postCallback(response, false);
+    }
+
+    // this response is saying the server has batch semantics - we should
+    // always have a batch ID in the response.
+    let responseBatchID = response.obj.batch;
+    this.log.trace("Server responsed 202 with batch", responseBatchID);
+    if (!responseBatchID) {
+      this.log.error("Invalid server response: 202 without a batch ID", response);
+      throw new Error("Invalid server response: 202 without a batch ID");
+    }
+
+    if (this.batchID === undefined) {
+      this.batchID = responseBatchID;
+      if (!this.lastModified) {
+        this.lastModified = response.headers["x-last-modified"];
+        if (!this.lastModified) {
+          throw new Error("Batch response without x-last-modified");
+        }
+      }
+    }
+
+    if (this.batchID != responseBatchID) {
+      throw new Error(`Invalid client/server batch state - client has ${this.batchID}, server has ${responseBatchID}`);
+    }
+
+    this.postCallback(response, true);
   },
 }
