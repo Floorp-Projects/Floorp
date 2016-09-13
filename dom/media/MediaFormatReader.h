@@ -117,7 +117,7 @@ private:
   void NotifyDemuxer();
   void ReturnOutput(MediaData* aData, TrackType aTrack);
 
-  bool EnsureDecoderCreated(TrackType aTrack);
+  MediaResult EnsureDecoderCreated(TrackType aTrack);
   bool EnsureDecoderInitialized(TrackType aTrack);
 
   // Enqueues a task to call Update(aTrack) on the decoder task queue.
@@ -166,8 +166,7 @@ private:
   void NotifyNewOutput(TrackType aTrack, MediaData* aSample);
   void NotifyInputExhausted(TrackType aTrack);
   void NotifyDrainComplete(TrackType aTrack);
-  void NotifyError(TrackType aTrack,
-                   const MediaResult& aError = MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR));
+  void NotifyError(TrackType aTrack, const MediaResult& aError);
   void NotifyWaitingForData(TrackType aTrack);
   void NotifyEndOfStream(TrackType aTrack);
 
