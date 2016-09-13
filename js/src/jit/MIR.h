@@ -6180,7 +6180,7 @@ class MAbs
     TRIVIAL_NEW_WRAPPERS
 
     static MAbs* NewAsmJS(TempAllocator& alloc, MDefinition* num, MIRType type) {
-        MAbs* ins = new(alloc) MAbs(num, type);
+        auto* ins = new(alloc) MAbs(num, type);
         if (type == MIRType::Int32)
             ins->implicitTruncate_ = true;
         return ins;
@@ -6718,7 +6718,7 @@ class MAdd : public MBinaryArithInstruction
     static MAdd* NewAsmJS(TempAllocator& alloc, MDefinition* left, MDefinition* right,
                           MIRType type)
     {
-        MAdd* add = new(alloc) MAdd(left, right);
+        auto* add = new(alloc) MAdd(left, right);
         add->specialization_ = type;
         add->setResultType(type);
         if (type == MIRType::Int32) {
@@ -6763,7 +6763,7 @@ class MSub : public MBinaryArithInstruction
     static MSub* NewAsmJS(TempAllocator& alloc, MDefinition* left, MDefinition* right,
                           MIRType type, bool mustPreserveNaN = false)
     {
-        MSub* sub = new(alloc) MSub(left, right);
+        auto* sub = new(alloc) MSub(left, right);
         sub->specialization_ = type;
         sub->setResultType(type);
         sub->setMustPreserveNaN(mustPreserveNaN);
@@ -6941,7 +6941,7 @@ class MDiv : public MBinaryArithInstruction
                           MIRType type, bool unsignd, bool trapOnError = false,
                           bool mustPreserveNaN = false)
     {
-        MDiv* div = new(alloc) MDiv(left, right, type);
+        auto* div = new(alloc) MDiv(left, right, type);
         div->unsigned_ = unsignd;
         div->trapOnError_ = trapOnError;
         if (trapOnError)
@@ -7068,7 +7068,7 @@ class MMod : public MBinaryArithInstruction
     static MMod* NewAsmJS(TempAllocator& alloc, MDefinition* left, MDefinition* right,
                           MIRType type, bool unsignd, bool trapOnError = false)
     {
-        MMod* mod = new(alloc) MMod(left, right, type);
+        auto* mod = new(alloc) MMod(left, right, type);
         mod->unsigned_ = unsignd;
         mod->trapOnError_ = trapOnError;
         if (trapOnError)
@@ -8893,7 +8893,7 @@ class MNot
   public:
     static MNot* NewAsmJS(TempAllocator& alloc, MDefinition* input) {
         MOZ_ASSERT(input->type() == MIRType::Int32 || input->type() == MIRType::Int64);
-        MNot* ins = new(alloc) MNot(input);
+        auto* ins = new(alloc) MNot(input);
         ins->setResultType(MIRType::Int32);
         return ins;
     }
@@ -11718,7 +11718,7 @@ class MGetDOMProperty
     static MGetDOMProperty* New(TempAllocator& alloc, const JSJitInfo* info, MDefinition* obj,
                                 MDefinition* guard, MDefinition* globalGuard)
     {
-        MGetDOMProperty* res = new(alloc) MGetDOMProperty(info);
+        auto* res = new(alloc) MGetDOMProperty(info);
         if (!res || !res->init(alloc, obj, guard, globalGuard))
             return nullptr;
         return res;
@@ -11792,7 +11792,7 @@ class MGetDOMMember : public MGetDOMProperty
     static MGetDOMMember* New(TempAllocator& alloc, const JSJitInfo* info, MDefinition* obj,
                               MDefinition* guard, MDefinition* globalGuard)
     {
-        MGetDOMMember* res = new(alloc) MGetDOMMember(info);
+        auto* res = new(alloc) MGetDOMMember(info);
         if (!res || !res->init(alloc, obj, guard, globalGuard))
             return nullptr;
         return res;
