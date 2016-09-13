@@ -760,7 +760,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
 
     let layout = {};
 
-    // First, we update the first part of the layout view, with
+    // First, we update the first part of the box model view, with
     // the size of the element.
 
     let clientRect = node.rawNode.getBoundingClientRect();
