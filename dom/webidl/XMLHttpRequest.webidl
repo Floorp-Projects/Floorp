@@ -130,7 +130,7 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   attribute XMLHttpRequestResponseType responseType;
   [Throws]
   readonly attribute any response;
-  [Throws]
+  [Cached, Pure, Throws]
   readonly attribute DOMString? responseText;
 
   [Throws, Exposed=Window]
