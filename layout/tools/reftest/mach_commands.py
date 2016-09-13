@@ -285,7 +285,7 @@ class ReftestRunner(MozbuildObject):
 
         self.log_manager.enable_unstructured()
         try:
-            rv = remotereftest.run(**kwargs)
+            rv = remotereftest.run_test_harness(parser, args)
         finally:
             self.log_manager.disable_unstructured()
 

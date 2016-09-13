@@ -322,28 +322,34 @@ class RemoteReftest(RefTest):
 
 
 def run_test_harness(parser, options):
-    if (options.dm_trans == 'sut' and options.deviceIP == None):
+    if options.dm_trans == 'sut' and options.deviceIP == None:
         print "Error: If --dm_trans = sut, you must provide a device IP to connect to via the --deviceIP option"
         return 1
 
+    dm_args = {
+        'deviceRoot': options.remoteTestRoot,
+        'host': options.deviceIP,
+        'port': options.devicePort,
+    }
+
+    dm_cls = mozdevice.DroidSUT
+    if options.dm_trans == 'adb':
+        dm_args['adbPath'] = options.adb_path
+        if not dm_args['host']:
+            dm_args['deviceSerial'] = options.deviceSerial
+        dm_cls = mozdevice.DroidADB
+
     try:
-        if (options.dm_trans == "adb"):
-            if (options.deviceIP):
-                dm = mozdevice.DroidADB(options.deviceIP, options.devicePort, deviceRoot=options.remoteTestRoot)
-            elif (options.deviceSerial):
-                dm = mozdevice.DroidADB(None, None, deviceSerial=options.deviceSerial, deviceRoot=options.remoteTestRoot)
-            else:
-                dm = mozdevice.DroidADB(None, None, deviceRoot=options.remoteTestRoot)
-        else:
-            dm = mozdevice.DroidSUT(options.deviceIP, options.devicePort, deviceRoot=options.remoteTestRoot)
+        dm = dm_cls(**dm_args)
     except mozdevice.DMError:
+        traceback.print_exc()
         print "Automation Error: exception while initializing devicemanager.  Most likely the device is not in a testable state."
         return 1
 
     automation = RemoteAutomation(None)
     automation.setDeviceManager(dm)
 
-    if (options.remoteProductName != None):
+    if options.remoteProductName:
         automation.setProduct(options.remoteProductName)
 
     # Set up the defaults and ensure options are set
