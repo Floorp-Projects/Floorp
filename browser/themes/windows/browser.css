@@ -46,9 +46,9 @@
   --urlbar-dropmarker-active-2x-region: rect(0, 66px, 28px, 44px);
 
   --panel-separator-color: ThreeDLightShadow;
-  --arrowpanel-dimmed: hsla(210,4%,10%,.07);
-  --arrowpanel-dimmed-further: hsla(210,4%,10%,.12);
-  --arrowpanel-dimmed-even-further: hsla(210,4%,10%,.17);
+  --arrowpanel-dimmed: hsla(0,0%,80%,.3);
+  --arrowpanel-dimmed-further: hsla(0,0%,80%,.45);
+  --arrowpanel-dimmed-even-further: hsla(0,0%,80%,.8);
 
   --urlbar-separator-color: ThreeDLightShadow;
 }
