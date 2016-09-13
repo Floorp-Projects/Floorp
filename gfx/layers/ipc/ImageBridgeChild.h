@@ -386,6 +386,7 @@ protected:
   void FallbackDestroyActors();
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
+  void DeallocPImageBridgeChild() override;
 
   bool CanSend() const;
 

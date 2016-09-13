@@ -510,6 +510,12 @@ ImageBridgeChild::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 void
+ImageBridgeChild::DeallocPImageBridgeChild()
+{
+  this->Release();
+}
+
+void
 ImageBridgeChild::CreateImageClientSync(SynchronousTask* aTask,
                                         RefPtr<ImageClient>* result,
                                         CompositableType aType,
@@ -911,8 +917,10 @@ ImageBridgeChild::Bind(Endpoint<PImageBridgeChild>&& aEndpoint)
     return;
   }
 
-  mCanSend = true;
+  // This reference is dropped in DeallocPImageBridgeChild.
+  this->AddRef();
 
+  mCanSend = true;
   SendImageBridgeThreadId();
 }
 
@@ -923,8 +931,10 @@ ImageBridgeChild::BindSameProcess(RefPtr<ImageBridgeParent> aParent)
   ipc::MessageChannel *parentChannel = aParent->GetIPCChannel();
   Open(parentChannel, parentMsgLoop, mozilla::ipc::ChildSide);
 
-  mCanSend = true;
+  // This reference is dropped in DeallocPImageBridgeChild.
+  this->AddRef();
 
+  mCanSend = true;
   SendImageBridgeThreadId();
 }
 
