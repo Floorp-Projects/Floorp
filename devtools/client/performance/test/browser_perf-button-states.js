@@ -16,13 +16,11 @@ add_task(function* () {
     win: window
   });
 
-  let { $, EVENTS, PerformanceController, PerformanceView } = panel.panelWin;
+  let { $, $$, EVENTS, PerformanceController, PerformanceView } = panel.panelWin;
+
   let recordButton = $("#main-record-button");
 
-  ok(!recordButton.hasAttribute("checked"),
-    "The record button should not be checked yet.");
-  ok(!recordButton.hasAttribute("locked"),
-    "The record button should not be locked yet.");
+  checkRecordButtonsStates(false, false);
 
   let uiStartClick = once(PerformanceView, EVENTS.UI_START_RECORDING);
   let recordingStarted = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
@@ -37,17 +35,11 @@ add_task(function* () {
   click(recordButton);
   yield uiStartClick;
 
-  ok(recordButton.hasAttribute("checked"),
-    "The record button should now be checked.");
-  ok(recordButton.hasAttribute("locked"),
-    "The record button should be locked.");
+  checkRecordButtonsStates(true, true);
 
   yield recordingStarted;
 
-  ok(recordButton.hasAttribute("checked"),
-    "The record button should still be checked.");
-  ok(!recordButton.hasAttribute("locked"),
-    "The record button should not be locked.");
+  checkRecordButtonsStates(true, false);
 
   yield backendStartReady;
   yield uiStateRecording;
@@ -66,13 +58,19 @@ add_task(function* () {
   yield uiStopClick;
   yield recordingStopped;
 
-  ok(!recordButton.hasAttribute("checked"),
-    "The record button should not be checked.");
-  ok(!recordButton.hasAttribute("locked"),
-    "The record button should not be locked.");
+  checkRecordButtonsStates(false, false);
 
   yield backendStopReady;
   yield uiStateRecorded;
 
   yield teardownToolboxAndRemoveTab(panel);
+
+  function checkRecordButtonsStates(checked, locked) {
+    for (let button of $$(".record-button")) {
+      is(button.classList.contains("checked"), checked,
+         "The record button checked state should be " + checked);
+      is(button.disabled, locked,
+         "The record button locked state should be " + locked);
+    }
+  }
 });

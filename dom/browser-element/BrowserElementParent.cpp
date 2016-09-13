@@ -111,8 +111,8 @@ DispatchCustomDOMEvent(Element* aFrameElement, const nsAString& aEventName,
   ErrorResult res;
   event->InitCustomEvent(cx,
                          aEventName,
-                         /* bubbles = */ true,
-                         /* cancelable = */ true,
+                         /* aCanBubble = */ true,
+                         /* aCancelable = */ true,
                          aDetailValue,
                          res);
   if (res.Failed()) {

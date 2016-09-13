@@ -3338,6 +3338,7 @@ static PRFileDesc *pt_SetMethods(
             case PR_DESC_PIPE:
                 fd->methods = PR_GetPipeMethods();
                 pt_MakeFdNonblock(osfd);
+                fd->secret->nonblocking = PR_TRUE;
                 break;
             default:
                 break;

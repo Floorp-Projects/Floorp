@@ -6852,7 +6852,7 @@ var gIdentityHandler = {
     this._sharingState = tab._sharingState;
 
     if (this._identityPopup.state == "open") {
-      this.updateSitePermissions();
+      this._handleHeightChange(() => this.updateSitePermissions());
     }
   },
 
@@ -7364,6 +7364,20 @@ var gIdentityHandler = {
     this.updatePermissionHint();
   },
 
+  _handleHeightChange: function(aFunction, aWillShowReloadHint) {
+    let heightBefore = getComputedStyle(this._permissionList).height;
+    aFunction();
+    let heightAfter = getComputedStyle(this._permissionList).height;
+    // Showing the reload hint increases the height, we need to account for it.
+    if (aWillShowReloadHint) {
+      heightAfter = parseInt(heightAfter) +
+                    parseInt(getComputedStyle(this._permissionList.nextSibling).height);
+    }
+    let heightChange = parseInt(heightAfter) - parseInt(heightBefore);
+    if (heightChange)
+      this._identityPopupMultiView.setHeightToFit(heightChange);
+  },
+
   _createPermissionItem: function (aPermission) {
     let container = document.createElement("hbox");
     container.setAttribute("class", "identity-popup-permission-item");
@@ -7393,7 +7407,8 @@ var gIdentityHandler = {
     let tooltiptext = gNavigatorBundle.getString("permissions.remove.tooltip");
     button.setAttribute("tooltiptext", tooltiptext);
     button.addEventListener("command", () => {
-      this._permissionList.removeChild(container);
+      this._handleHeightChange(() =>
+        this._permissionList.removeChild(container), !this._permissionJustRemoved);
       if (aPermission.inUse &&
           ["camera", "microphone", "screen"].includes(aPermission.id)) {
         let windowId = this._sharingState.windowId;

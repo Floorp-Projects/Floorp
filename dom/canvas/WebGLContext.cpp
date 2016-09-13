@@ -729,11 +729,8 @@ WebGLContext::CreateAndInitGL(bool forceEnabled,
     const bool useEGL = PR_GetEnv("MOZ_WEBGL_FORCE_EGL");
 
 #ifdef XP_WIN
-    if (!IsWebGL2()) {
-        // Use only ANGLE on Windows for WebGL 1.
-        tryNativeGL = false;
-        tryANGLE = true;
-    }
+    tryNativeGL = false;
+    tryANGLE = true;
 
     if (gfxPrefs::WebGLDisableWGL()) {
         tryNativeGL = false;
