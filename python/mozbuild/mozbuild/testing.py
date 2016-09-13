@@ -277,6 +277,9 @@ TEST_MANIFESTS = dict(
     ANDROID_INSTRUMENTATION=('instrumentation', 'instrumentation', '.', False),
     JETPACK_PACKAGE=('jetpack-package', 'testing/mochitest', 'jetpack-package', True),
     JETPACK_ADDON=('jetpack-addon', 'testing/mochitest', 'jetpack-addon', False),
+    FIREFOX_UI_FUNCTIONAL=('firefox-ui-functional', 'firefox-ui', '.', False),
+    FIREFOX_UI_UPDATE=('firefox-ui-update', 'firefox-ui', '.', False),
+    PUPPETEER_FIREFOX=('firefox-ui-functional', 'firefox-ui', '.', False),
 
     # marionette tests are run from the srcdir
     # TODO(ato): make packaging work as for other test suites
