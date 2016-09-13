@@ -1806,7 +1806,8 @@ TransformFunctionsMatch(nsCSSKeyword func1, nsCSSKeyword func2)
 
 static UniquePtr<nsCSSValueList>
 AddWeightedFilterFunctionImpl(double aCoeff1, const nsCSSValueList* aList1,
-                              double aCoeff2, const nsCSSValueList* aList2)
+                              double aCoeff2, const nsCSSValueList* aList2,
+                              ColorAdditionType aColorAdditionType)
 {
   // AddWeightedFilterFunction should be our only caller, and it should ensure
   // that both args are non-null.
@@ -1881,7 +1882,7 @@ AddWeightedFilterFunctionImpl(double aCoeff1, const nsCSSValueList* aList1,
                                funcArg1.GetListValue()->mValue,
                                aCoeff2,
                                funcArg2.GetListValue()->mValue,
-                               ColorAdditionType::Clamped);
+                               aColorAdditionType);
       if (!shadowValue) {
         return nullptr;
       }
@@ -1898,7 +1899,8 @@ AddWeightedFilterFunctionImpl(double aCoeff1, const nsCSSValueList* aList1,
 
 static UniquePtr<nsCSSValueList>
 AddWeightedFilterFunction(double aCoeff1, const nsCSSValueList* aList1,
-                          double aCoeff2, const nsCSSValueList* aList2)
+                          double aCoeff2, const nsCSSValueList* aList2,
+                          ColorAdditionType aColorAdditionType)
 {
   MOZ_ASSERT(aList1 || aList2,
              "one function list item must not be null");
@@ -1908,13 +1910,16 @@ AddWeightedFilterFunction(double aCoeff1, const nsCSSValueList* aList1,
   // 0 * the other value. That way, AddWeightedFilterFunctionImpl can assume
   // its args are non-null.
   if (!aList1) {
-    return AddWeightedFilterFunctionImpl(aCoeff2, aList2, 0, aList2);
+    return AddWeightedFilterFunctionImpl(aCoeff2, aList2, 0, aList2,
+                                         aColorAdditionType);
   }
   if (!aList2) {
-    return AddWeightedFilterFunctionImpl(aCoeff1, aList1, 0, aList1);
+    return AddWeightedFilterFunctionImpl(aCoeff1, aList1, 0, aList1,
+                                         aColorAdditionType);
   }
 
-  return AddWeightedFilterFunctionImpl(aCoeff1, aList1, aCoeff2, aList2);
+  return AddWeightedFilterFunctionImpl(aCoeff1, aList1, aCoeff2, aList2,
+                                       aColorAdditionType);
 }
 
 static inline uint32_t
@@ -2429,7 +2434,8 @@ AddWeightedShadowList(double aCoeff1,
 
 static UniquePtr<nsCSSValueList>
 AddWeightedFilterList(double aCoeff1, const nsCSSValueList* aList1,
-                      double aCoeff2, const nsCSSValueList* aList2)
+                      double aCoeff2, const nsCSSValueList* aList2,
+                      ColorAdditionType aColorAdditionType)
 {
   UniquePtr<nsCSSValueList> result;
   nsCSSValueList* tail = nullptr;
@@ -2442,7 +2448,8 @@ AddWeightedFilterList(double aCoeff1, const nsCSSValueList* aList1,
     }
 
     UniquePtr<nsCSSValueList> resultFunction =
-      AddWeightedFilterFunction(aCoeff1, aList1, aCoeff2, aList2);
+      AddWeightedFilterFunction(aCoeff1, aList1, aCoeff2, aList2,
+                                aColorAdditionType);
     if (!resultFunction) {
       // filter function mismatch
       return nullptr;
@@ -2786,7 +2793,8 @@ StyleAnimationValue::AddWeighted(nsCSSPropertyID aProperty,
     case eUnit_Filter: {
       UniquePtr<nsCSSValueList> result =
         AddWeightedFilterList(aCoeff1, aValue1.GetCSSValueListValue(),
-                              aCoeff2, aValue2.GetCSSValueListValue());
+                              aCoeff2, aValue2.GetCSSValueListValue(),
+                              ColorAdditionType::Clamped);
       if (!result) {
         return false;
       }
@@ -2910,8 +2918,18 @@ StyleAnimationValue::Accumulate(nsCSSPropertyID aProperty,
   Unit commonUnit =
     GetCommonUnit(aProperty, aDest.GetUnit(), aValueToAccumulate.GetUnit());
   switch (commonUnit) {
-    // FIXME: implement them!
-    //case eUnit_Filter:
+    case eUnit_Filter: {
+      UniquePtr<nsCSSValueList> result =
+        AddWeightedFilterList(1.0, aDest.GetCSSValueListValue(),
+                              aCount, aValueToAccumulate.GetCSSValueListValue(),
+                              ColorAdditionType::Unclamped);
+      if (!result) {
+        return false;
+      }
+
+      aDest.SetAndAdoptCSSValueListValue(result.release(), eUnit_Filter);
+      return true;
+    }
     case eUnit_Shadow: {
       UniquePtr<nsCSSValueList> result =
         AddWeightedShadowList(1.0, aDest.GetCSSValueListValue(),
