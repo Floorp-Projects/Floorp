@@ -41,16 +41,10 @@ public:
   static void AppendCodecDelay(MediaByteBuffer* config, uint64_t codecDelayUS);
 
 private:
-  enum DecodeError {
-    DECODE_SUCCESS,
-    DECODE_ERROR,
-    FATAL_ERROR
-  };
-
   nsresult DecodeHeader(const unsigned char* aData, size_t aLength);
 
   void ProcessDecode(MediaRawData* aSample);
-  DecodeError DoDecode(MediaRawData* aSample);
+  MediaResult DoDecode(MediaRawData* aSample);
   void ProcessDrain();
 
   const AudioInfo& mInfo;

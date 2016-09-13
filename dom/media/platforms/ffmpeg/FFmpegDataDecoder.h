@@ -40,13 +40,6 @@ public:
   static AVCodec* FindAVCodec(FFmpegLibWrapper* aLib, AVCodecID aCodec);
 
 protected:
-  enum DecodeResult {
-    DECODE_FRAME,
-    DECODE_NO_FRAME,
-    DECODE_ERROR,
-    FATAL_ERROR
-  };
-
   // Flush and Drain operation, always run
   virtual void ProcessFlush();
   virtual void ProcessShutdown();
@@ -64,7 +57,7 @@ protected:
 
 private:
   void ProcessDecode(MediaRawData* aSample);
-  virtual DecodeResult DoDecode(MediaRawData* aSample) = 0;
+  virtual MediaResult DoDecode(MediaRawData* aSample) = 0;
   virtual void ProcessDrain() = 0;
 
   static StaticMutex sMonitor;

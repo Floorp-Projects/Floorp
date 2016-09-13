@@ -161,8 +161,15 @@ FFmpegVideoDecoder<LIBAV_VER>::InitCodecContext()
   }
 }
 
-FFmpegVideoDecoder<LIBAV_VER>::DecodeResult
+MediaResult
 FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample)
+{
+  bool gotFrame = false;
+  return DoDecode(aSample, &gotFrame);
+}
+
+MediaResult
+FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample, bool* aGotFrame)
 {
   uint8_t* inputData = const_cast<uint8_t*>(aSample->Data());
   size_t inputSize = aSample->Size();
@@ -173,7 +180,6 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample)
       || mCodecID == AV_CODEC_ID_VP9
 #endif
       )) {
-    bool gotFrame = false;
     while (inputSize) {
       uint8_t* data;
       int size;
@@ -182,31 +188,31 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample)
                                        aSample->mTime, aSample->mTimecode,
                                        aSample->mOffset);
       if (size_t(len) > inputSize) {
-        return DecodeResult::DECODE_ERROR;
+        return NS_ERROR_DOM_MEDIA_DECODE_ERR;
       }
       inputData += len;
       inputSize -= len;
       if (size) {
-        switch (DoDecode(aSample, data, size)) {
-          case DecodeResult::DECODE_ERROR:
-            return DecodeResult::DECODE_ERROR;
-          case DecodeResult::DECODE_FRAME:
-            gotFrame = true;
-            break;
-          default:
-            break;
+        bool gotFrame = false;
+        MediaResult rv = DoDecode(aSample, data, size, &gotFrame);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+        if (gotFrame && aGotFrame) {
+          *aGotFrame = true;
         }
       }
     }
-    return gotFrame ? DecodeResult::DECODE_FRAME : DecodeResult::DECODE_NO_FRAME;
+    return NS_OK;
   }
 #endif
-  return DoDecode(aSample, inputData, inputSize);
+  return DoDecode(aSample, inputData, inputSize, aGotFrame);
 }
 
-FFmpegVideoDecoder<LIBAV_VER>::DecodeResult
+MediaResult
 FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
-                                        uint8_t* aData, int aSize)
+                                        uint8_t* aData, int aSize,
+                                        bool* aGotFrame)
 {
   AVPacket packet;
   mLib->av_init_packet(&packet);
@@ -227,7 +233,7 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
 
   if (!PrepareFrame()) {
     NS_WARNING("FFmpeg h264 decoder failed to allocate frame.");
-    return DecodeResult::FATAL_ERROR;
+    return MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
   }
 
   // Required with old version of FFmpeg/LibAV
@@ -245,71 +251,78 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
 
   if (bytesConsumed < 0) {
     NS_WARNING("FFmpeg video decoder error.");
-    return DecodeResult::DECODE_ERROR;
+    return NS_ERROR_DOM_MEDIA_DECODE_ERR;
+  }
+
+  if (!decoded) {
+    if (aGotFrame) {
+      *aGotFrame = false;
+    }
+    return NS_OK;
   }
 
   // If we've decoded a frame then we need to output it
-  if (decoded) {
-    int64_t pts = mPtsContext.GuessCorrectPts(mFrame->pkt_pts, mFrame->pkt_dts);
-    // Retrieve duration from dts.
-    // We use the first entry found matching this dts (this is done to
-    // handle damaged file with multiple frames with the same dts)
+  int64_t pts = mPtsContext.GuessCorrectPts(mFrame->pkt_pts, mFrame->pkt_dts);
+  // Retrieve duration from dts.
+  // We use the first entry found matching this dts (this is done to
+  // handle damaged file with multiple frames with the same dts)
 
-    int64_t duration;
-    if (!mDurationMap.Find(mFrame->pkt_dts, duration)) {
-      NS_WARNING("Unable to retrieve duration from map");
-      duration = aSample->mDuration;
-      // dts are probably incorrectly reported ; so clear the map as we're
-      // unlikely to find them in the future anyway. This also guards
-      // against the map becoming extremely big.
-      mDurationMap.Clear();
-    }
-    FFMPEG_LOG("Got one frame output with pts=%lld dts=%lld duration=%lld opaque=%lld",
-               pts, mFrame->pkt_dts, duration, mCodecContext->reordered_opaque);
-
-    VideoData::YCbCrBuffer b;
-    b.mPlanes[0].mData = mFrame->data[0];
-    b.mPlanes[1].mData = mFrame->data[1];
-    b.mPlanes[2].mData = mFrame->data[2];
-
-    b.mPlanes[0].mStride = mFrame->linesize[0];
-    b.mPlanes[1].mStride = mFrame->linesize[1];
-    b.mPlanes[2].mStride = mFrame->linesize[2];
-
-    b.mPlanes[0].mOffset = b.mPlanes[0].mSkip = 0;
-    b.mPlanes[1].mOffset = b.mPlanes[1].mSkip = 0;
-    b.mPlanes[2].mOffset = b.mPlanes[2].mSkip = 0;
-
-    b.mPlanes[0].mWidth = mFrame->width;
-    b.mPlanes[0].mHeight = mFrame->height;
-    if (mCodecContext->pix_fmt == AV_PIX_FMT_YUV444P) {
-      b.mPlanes[1].mWidth = b.mPlanes[2].mWidth = mFrame->width;
-      b.mPlanes[1].mHeight = b.mPlanes[2].mHeight = mFrame->height;
-    } else {
-      b.mPlanes[1].mWidth = b.mPlanes[2].mWidth = (mFrame->width + 1) >> 1;
-      b.mPlanes[1].mHeight = b.mPlanes[2].mHeight = (mFrame->height + 1) >> 1;
-    }
-
-    RefPtr<VideoData> v =
-      VideoData::CreateAndCopyData(mInfo,
-                                   mImageContainer,
-                                   aSample->mOffset,
-                                   pts,
-                                   duration,
-                                   b,
-                                   !!mFrame->key_frame,
-                                   -1,
-                                   mInfo.ScaledImageRect(mFrame->width,
-                                                         mFrame->height));
-
-    if (!v) {
-      NS_WARNING("image allocation error.");
-      return DecodeResult::FATAL_ERROR;
-    }
-    mCallback->Output(v);
-    return DecodeResult::DECODE_FRAME;
+  int64_t duration;
+  if (!mDurationMap.Find(mFrame->pkt_dts, duration)) {
+    NS_WARNING("Unable to retrieve duration from map");
+    duration = aSample->mDuration;
+    // dts are probably incorrectly reported ; so clear the map as we're
+    // unlikely to find them in the future anyway. This also guards
+    // against the map becoming extremely big.
+    mDurationMap.Clear();
   }
-  return DecodeResult::DECODE_NO_FRAME;
+  FFMPEG_LOG("Got one frame output with pts=%lld dts=%lld duration=%lld opaque=%lld",
+              pts, mFrame->pkt_dts, duration, mCodecContext->reordered_opaque);
+
+  VideoData::YCbCrBuffer b;
+  b.mPlanes[0].mData = mFrame->data[0];
+  b.mPlanes[1].mData = mFrame->data[1];
+  b.mPlanes[2].mData = mFrame->data[2];
+
+  b.mPlanes[0].mStride = mFrame->linesize[0];
+  b.mPlanes[1].mStride = mFrame->linesize[1];
+  b.mPlanes[2].mStride = mFrame->linesize[2];
+
+  b.mPlanes[0].mOffset = b.mPlanes[0].mSkip = 0;
+  b.mPlanes[1].mOffset = b.mPlanes[1].mSkip = 0;
+  b.mPlanes[2].mOffset = b.mPlanes[2].mSkip = 0;
+
+  b.mPlanes[0].mWidth = mFrame->width;
+  b.mPlanes[0].mHeight = mFrame->height;
+  if (mCodecContext->pix_fmt == AV_PIX_FMT_YUV444P) {
+    b.mPlanes[1].mWidth = b.mPlanes[2].mWidth = mFrame->width;
+    b.mPlanes[1].mHeight = b.mPlanes[2].mHeight = mFrame->height;
+  } else {
+    b.mPlanes[1].mWidth = b.mPlanes[2].mWidth = (mFrame->width + 1) >> 1;
+    b.mPlanes[1].mHeight = b.mPlanes[2].mHeight = (mFrame->height + 1) >> 1;
+  }
+
+  RefPtr<VideoData> v =
+    VideoData::CreateAndCopyData(mInfo,
+                                  mImageContainer,
+                                  aSample->mOffset,
+                                  pts,
+                                  duration,
+                                  b,
+                                  !!mFrame->key_frame,
+                                  -1,
+                                  mInfo.ScaledImageRect(mFrame->width,
+                                                        mFrame->height));
+
+  if (!v) {
+    NS_WARNING("image allocation error.");
+    return MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
+  }
+  mCallback->Output(v);
+  if (aGotFrame) {
+    *aGotFrame = true;
+  }
+  return NS_OK;
 }
 
 void
@@ -317,8 +330,8 @@ FFmpegVideoDecoder<LIBAV_VER>::ProcessDrain()
 {
   RefPtr<MediaRawData> empty(new MediaRawData());
   empty->mTimecode = mLastInputDts;
-  while (DoDecode(empty) == DecodeResult::DECODE_FRAME) {
-  }
+  bool gotFrame = false;
+  while (NS_SUCCEEDED(DoDecode(empty, &gotFrame)) && gotFrame);
   mCallback->DrainComplete();
 }
 
