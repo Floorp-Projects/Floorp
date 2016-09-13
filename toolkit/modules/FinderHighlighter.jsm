@@ -49,6 +49,7 @@ const kModalStyles = {
     ["transition-property", "opacity, transform, top, left"],
     ["transition-duration", "50ms"],
     ["transition-timing-function", "linear"],
+    ["white-space", "nowrap"],
     ["z-index", 2]
   ],
   outlineNodeDebug: [ ["z-index", 2147483647] ],
@@ -76,7 +77,8 @@ const kModalStyles = {
     ["border-radius", "3px"],
     ["margin", "-1px 0 0 -1px !important"],
     ["padding", "0 1px 2px 1px !important"],
-    ["position", "absolute"]
+    ["position", "absolute"],
+    ["white-space", "nowrap"]
   ],
   maskRectBrightText: [ ["background", "#000"] ]
 };
