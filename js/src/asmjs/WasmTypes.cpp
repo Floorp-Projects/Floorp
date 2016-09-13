@@ -117,8 +117,11 @@ HandleTrap(int32_t trapIndex)
       case Trap::IntegerDivideByZero:
         errorNumber = JSMSG_WASM_INT_DIVIDE_BY_ZERO;
         break;
-      case Trap::BadIndirectCall:
-        errorNumber = JSMSG_WASM_BAD_IND_CALL;
+      case Trap::IndirectCallToNull:
+        errorNumber = JSMSG_WASM_IND_CALL_TO_NULL;
+        break;
+      case Trap::IndirectCallBadSig:
+        errorNumber = JSMSG_WASM_IND_CALL_BAD_SIG;
         break;
       case Trap::ImpreciseSimdConversion:
         errorNumber = JSMSG_SIMD_FAILED_CONVERSION;

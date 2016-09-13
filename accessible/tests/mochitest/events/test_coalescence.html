@@ -446,6 +446,47 @@
       }
     }
 
+    /**
+     * Insert accessibles with a child node moved by aria-owns
+     * Markup:
+     * <div id="t6_fc">
+     *   <div id="t6_owns"></div>
+     * </div>
+     * <div id="t6_sc" aria-owns="t6_owns"></div>
+     */
+    function test6()
+    {
+      this.parent = getNode("t6");
+      this.fc = document.createElement("div");
+      this.fc.setAttribute("id", "t6_fc");
+      this.owns = document.createElement("div");
+      this.owns.setAttribute("id", "t6_owns");
+      this.sc = document.createElement("div");
+      this.sc.setAttribute("id", "t6_sc");
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, this.fc),
+        new invokerChecker(EVENT_SHOW, this.sc),
+        new invokerChecker(EVENT_REORDER, this.parent),
+        new unexpectedInvokerChecker(EVENT_REORDER, this.fc),
+        new unexpectedInvokerChecker(EVENT_REORDER, this.sc),
+        new unexpectedInvokerChecker(EVENT_HIDE, this.owns),
+        new unexpectedInvokerChecker(EVENT_SHOW, this.owns)
+      ];
+
+      this.invoke = function test6_invoke()
+      {
+        getNode("t6").appendChild(this.fc);
+        getNode("t6_fc").appendChild(this.owns);
+        getNode("t6").appendChild(this.sc);
+        getNode("t6_sc").setAttribute("aria-owns", "t6_owns");
+      };
+
+      this.getID = function test6_getID() {
+        return "Insert accessibles with a child node moved by aria-owns";
+      };
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     // Do tests.
 
@@ -477,6 +518,7 @@
       gQueue.push(new test3());
       gQueue.push(new test4());
       gQueue.push(new test5());
+      gQueue.push(new test6());
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -566,6 +608,9 @@
     <div role="listbox" id="t5_lb">
       <div role="option" id="t5_o">opt</div>
     </div>
+  </div>
+
+  <div id="t6">
   </div>
 </body>
 </html>

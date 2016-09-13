@@ -285,6 +285,7 @@ CodeGeneratorX86::visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic*
     Operand srcAddr(ptr, int32_t(mir->base().asValue()) + int32_t(offset));
     switch (accessType) {
       case Scalar::Int8:         masm.movsblWithPatch(srcAddr, out.gpr()); break;
+      case Scalar::Uint8Clamped:
       case Scalar::Uint8:        masm.movzblWithPatch(srcAddr, out.gpr()); break;
       case Scalar::Int16:        masm.movswlWithPatch(srcAddr, out.gpr()); break;
       case Scalar::Uint16:       masm.movzwlWithPatch(srcAddr, out.gpr()); break;

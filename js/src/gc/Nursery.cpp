@@ -254,13 +254,9 @@ js::Nursery::allocateObject(JSContext* cx, size_t size, size_t numDynamic, const
     /* Ensure there's enough space to replace the contents with a RelocationOverlay. */
     MOZ_ASSERT(size >= sizeof(RelocationOverlay));
 
-    /*
-     * Classes with JSCLASS_SKIP_NURSERY_FINALIZE will not have their finalizer
-     * called if they are nursery allocated and not promoted to the tenured
-     * heap. The finalizers for these classes must do nothing except free data
-     * which was allocated via Nursery::allocateBuffer.
-     */
-    MOZ_ASSERT_IF(clasp->hasFinalize(), clasp->flags & JSCLASS_SKIP_NURSERY_FINALIZE);
+    /* Sanity check the finalizer. */
+    MOZ_ASSERT_IF(clasp->hasFinalize(), CanNurseryAllocateFinalizedClass(clasp) ||
+                                        clasp->isProxy());
 
     /* Make the object allocation. */
     JSObject* obj = static_cast<JSObject*>(allocate(size));
@@ -270,7 +266,7 @@ js::Nursery::allocateObject(JSContext* cx, size_t size, size_t numDynamic, const
     /* If we want external slots, add them. */
     HeapSlot* slots = nullptr;
     if (numDynamic) {
-        MOZ_ASSERT(clasp->isNative());
+        MOZ_ASSERT(clasp->isNative() || clasp->isProxy());
         slots = static_cast<HeapSlot*>(allocateBuffer(cx->zone(), numDynamic * sizeof(HeapSlot)));
         if (!slots) {
             /*
@@ -700,7 +696,7 @@ js::Nursery::doCollection(JSRuntime* rt, JS::gcreason::Reason reason,
     // Sweep compartments to update the array buffer object's view lists.
     maybeStartProfile(ProfileKey::SweepArrayBufferViewList);
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next())
-        c->sweepAfterMinorGC();
+        c->sweepAfterMinorGC(&mover);
     maybeEndProfile(ProfileKey::SweepArrayBufferViewList);
 
     // Update any slot or element pointers whose destination has been tenured.

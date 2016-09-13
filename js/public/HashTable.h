@@ -35,6 +35,16 @@ namespace detail {
 
 /*****************************************************************************/
 
+// The "generation" of a hash table is an opaque value indicating the state of
+// modification of the hash table through its lifetime.  If the generation of
+// a hash table compares equal at times T1 and T2, then lookups in the hash
+// table, pointers to (or into) hash table entries, etc. at time T1 are valid
+// at time T2.  If the generation compares unequal, these computations are all
+// invalid and must be performed again to be used.
+//
+// Generations are meaningfully comparable only with respect to a single hash
+// table.  It's always nonsensical to compare the generation of distinct hash
+// tables H1 and H2.
 using Generation = mozilla::Opaque<uint64_t>;
 
 // A JS-friendly, STL-like container providing a hash-based map from keys to
@@ -210,8 +220,6 @@ class HashMap
         return mallocSizeOf(this) + impl.sizeOfExcludingThis(mallocSizeOf);
     }
 
-    // If |generation()| is the same before and after a HashMap operation,
-    // pointers into the table remain valid.
     Generation generation() const {
         return impl.generation();
     }
@@ -451,8 +459,6 @@ class HashSet
         return mallocSizeOf(this) + impl.sizeOfExcludingThis(mallocSizeOf);
     }
 
-    // If |generation()| is the same before and after a HashSet operation,
-    // pointers into the table remain valid.
     Generation generation() const {
         return impl.generation();
     }

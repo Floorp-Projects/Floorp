@@ -191,6 +191,11 @@ JSObject* newCCW(JS::HandleObject sourceZone, JS::HandleObject destZone)
         if (!JS_WrapObject(cx, &object))
             return nullptr;
     }
+
+    // In order to test the SCC algorithm, we need the wrapper/wrappee to be
+    // tenured.
+    cx->gc.evictNursery();
+
     return object;
 }
 

@@ -77,6 +77,9 @@ class ProxyObject : public ShapedObject
         SetProxyExtra(this, n, extra);
     }
 
+    gc::AllocKind allocKindForTenure() const;
+    static size_t objectMovedDuringMinorGC(TenuringTracer* trc, JSObject* dst, JSObject* src);
+
   private:
     GCPtrValue* slotOfExtra(size_t n) {
         MOZ_ASSERT(n < detail::PROXY_EXTRA_SLOTS);

@@ -18,8 +18,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1000870
         iframe.src = "pointerevent_pointerleave_descendants-manual.html";
       }
       function executeTest(int_win) {
-        sendPointerEvent(int_win, "target0", "pointermove", MouseEvent.MOZ_SOURCE_MOUSE);
-        sendPointerEvent(int_win, "log",     "pointermove", MouseEvent.MOZ_SOURCE_MOUSE);
+        sendMouseEvent(int_win, "target0", "mousemove");
+        sendMouseEvent(int_win, "log",     "mousemove");
       }
     </script>
   </head>

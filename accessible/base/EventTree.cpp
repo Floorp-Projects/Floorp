@@ -258,6 +258,24 @@ EventTree::FindOrInsert(Accessible* aContainer)
 
       // We got a match.
       if (parent->Parent() == node->mContainer) {
+        // Reject the node if it's contained by a show/hide event target
+        uint32_t evCount = node->mDependentEvents.Length();
+        for (uint32_t idx = 0; idx < evCount; idx++) {
+          AccMutationEvent* ev = node->mDependentEvents[idx];
+          if (ev->GetAccessible() == parent) {
+#ifdef A11Y_LOG
+            if (logging::IsEnabledAll(logging::eEventTree |
+                                      logging::eVerbose)) {
+              logging::MsgBegin("EVENTS_TREE",
+                "Rejecting node since contained by show/hide target");
+              logging::AccessibleInfo("Container", aContainer);
+              logging::MsgEnd();
+            }
+#endif
+            return nullptr;
+          }
+        }
+
         return node->FindOrInsert(aContainer);
       }
 

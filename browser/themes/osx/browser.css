@@ -44,6 +44,9 @@
   --urlbar-dropmarker-active-2x-region: rect(0, 44px, 28px, 22px);
 
   --panel-separator-color: hsla(210,4%,10%,.14);
+  --arrowpanel-dimmed: hsla(210,4%,10%,.07);
+  --arrowpanel-dimmed-further: hsla(210,4%,10%,.12);
+  --arrowpanel-dimmed-even-further: hsla(210,4%,10%,.17);
 
   --urlbar-separator-color: hsla(0,0%,16%,.2);
 }
@@ -1708,7 +1711,7 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 
 #urlbar-search-footer {
   border-top: 1px solid var(--panel-separator-color);
-  background-color: hsla(210,4%,10%,.07);
+  background-color: var(--arrowpanel-dimmed);
 }
 
 #urlbar-search-settings {
@@ -1720,11 +1723,11 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 }
 
 #urlbar-search-settings:hover {
-  background-color: hsla(210,4%,10%,.07);
+  background-color: var(--arrowpanel-dimmed);
 }
 
 #urlbar-search-settings:hover:active {
-  background-color: hsla(210,4%,10%,.12);
+  background-color: var(--arrowpanel-dimmed-further);
 }
 
 #urlbar-search-splitter {

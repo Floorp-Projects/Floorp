@@ -717,6 +717,8 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
 
     // Steps 3-7.
     Rooted<PromiseObject*> promise(cx, CreatePromiseObjectInternal(cx, usedProto, wrappedProto));
+    if (!promise)
+        return nullptr;
 
     RootedValue promiseVal(cx, ObjectValue(*promise));
     if (wrappedProto && !cx->compartment()->wrap(cx, &promiseVal))

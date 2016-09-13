@@ -430,6 +430,9 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
   animation->playbackRate() = aAnimation->PlaybackRate();
   animation->data() = aData;
   animation->easingFunction() = ToTimingFunction(timing.mFunction);
+  animation->iterationComposite() =
+    static_cast<uint8_t>(aAnimation->GetEffect()->
+                         AsKeyframeEffect()->IterationComposite());
 
   for (uint32_t segIdx = 0; segIdx < aProperty.mSegments.Length(); segIdx++) {
     const AnimationPropertySegment& segment = aProperty.mSegments[segIdx];

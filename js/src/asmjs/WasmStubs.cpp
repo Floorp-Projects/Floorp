@@ -916,7 +916,8 @@ wasm::GenerateJumpTarget(MacroAssembler& masm, JumpTarget target)
         return GenerateStackOverflow(masm);
       case JumpTarget::Throw:
         return GenerateThrow(masm);
-      case JumpTarget::BadIndirectCall:
+      case JumpTarget::IndirectCallToNull:
+      case JumpTarget::IndirectCallBadSig:
       case JumpTarget::OutOfBounds:
       case JumpTarget::UnalignedAccess:
       case JumpTarget::Unreachable:

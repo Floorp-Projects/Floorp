@@ -534,6 +534,8 @@ WasmInstanceObject::create(JSContext* cx,
     obj->setReservedSlot(EXPORTS_SLOT, PrivateValue(exports.release()));
     MOZ_ASSERT(obj->isNewborn());
 
+    MOZ_ASSERT(obj->isTenured(), "assumed by WasmTableObject write barriers");
+
     // Root the Instance via WasmInstanceObject before any possible GC.
     auto* instance = cx->new_<Instance>(cx,
                                         obj,
@@ -1200,24 +1202,19 @@ WasmTableObject::getImpl(JSContext* cx, const CallArgs& args)
     uint32_t index = uint32_t(indexDbl);
     MOZ_ASSERT(double(index) == indexDbl);
 
-    if (!table.initialized()) {
-        args.rval().setNull();
-        return true;
-    }
-
     ExternalTableElem& elem = table.externalArray()[index];
-    Instance& instance = *elem.tls->instance;
-    const CodeRange* codeRange = instance.code().lookupRange(elem.code);
-
-    // A non-function code range means the bad-indirect-call stub, so a null element.
-    if (!codeRange || !codeRange->isFunction()) {
+    if (!elem.code) {
         args.rval().setNull();
         return true;
     }
+
+    Instance& instance = *elem.tls->instance;
+    const CodeRange& codeRange = *instance.code().lookupRange(elem.code);
+    MOZ_ASSERT(codeRange.isFunction());
 
     RootedWasmInstanceObject instanceObj(cx, instance.object());
     RootedFunction fun(cx);
-    if (!instanceObj->getExportedFunction(cx, instanceObj, codeRange->funcDefIndex(), &fun))
+    if (!instanceObj->getExportedFunction(cx, instanceObj, codeRange.funcDefIndex(), &fun))
         return false;
 
     args.rval().setObject(*fun);
@@ -1256,15 +1253,6 @@ WasmTableObject::setImpl(JSContext* cx, const CallArgs& args)
     if (!IsExportedFunction(args[1], &value) && !args[1].isNull()) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_TABLE_VALUE);
         return false;
-    }
-
-    if (!table.initialized()) {
-        if (!value) {
-            args.rval().setUndefined();
-            return true;
-        }
-
-        table.init(ExportedFunctionToInstance(value));
     }
 
     if (value) {

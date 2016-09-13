@@ -351,6 +351,13 @@ class MOZ_STACK_CLASS TokenStream
         return nextToken().name();
     }
 
+    bool nextNameContainsEscape() const {
+        if (nextToken().type == TOK_YIELD)
+            return false;
+        MOZ_ASSERT(nextToken().type == TOK_NAME);
+        return nextToken().nameContainsEscape();
+    }
+
     bool isCurrentTokenAssignment() const {
         return TokenKindIsAssignment(currentToken().type);
     }

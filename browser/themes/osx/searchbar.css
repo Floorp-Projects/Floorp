@@ -127,7 +127,7 @@
 .search-panel-header {
   font-size: 10px;
   font-weight: normal;
-  background-color: hsla(210,4%,10%,.07);
+  background-color: var(--arrowpanel-dimmed);
   border-top: 1px solid var(--panel-separator-color);
   margin: 0;
   padding: 3px 6px;
@@ -283,7 +283,7 @@
 }
 
 .search-setting-button[selected] {
-  background-color: hsla(210,4%,10%,.15);
+  background-color: var(--arrowpanel-dimmed-further);
 }
 
 .search-setting-button-compact {

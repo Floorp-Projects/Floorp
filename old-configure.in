@@ -241,9 +241,6 @@ fi
 
 MOZ_TOOL_VARIABLES
 
-AC_PROG_CPP
-AC_PROG_CXXCPP
-
 dnl ========================================================
 dnl Special win32 checks
 dnl ========================================================

@@ -107,7 +107,6 @@
     macro(THROW,        "keyword 'throw'") \
     macro(DEBUGGER,     "keyword 'debugger'") \
     macro(YIELD,        "keyword 'yield'") \
-    macro(LET,          "keyword 'let'") \
     macro(EXPORT,       "keyword 'export'") \
     macro(IMPORT,       "keyword 'import'") \
     macro(CLASS,        "keyword 'class'") \
@@ -237,12 +236,6 @@ inline bool
 TokenKindIsAssignment(TokenKind tt)
 {
     return TOK_ASSIGNMENT_START <= tt && tt <= TOK_ASSIGNMENT_LAST;
-}
-
-inline bool
-TokenKindIsDecl(TokenKind tt)
-{
-    return tt == TOK_VAR || tt == TOK_LET;
 }
 
 } // namespace frontend
