@@ -82,9 +82,10 @@ public:
   }
 
 private:
+  // Member-vars are initialized in InitStrokeGeometry.
   FallibleTArray<gfxFloat> mDashes;
-  gfxFloat mDashOffset;
-  gfxFloat mStrokeWidth;
+  MOZ_INIT_OUTSIDE_CTOR gfxFloat mDashOffset;
+  MOZ_INIT_OUTSIDE_CTOR gfxFloat mStrokeWidth;
 };
 
 /**
