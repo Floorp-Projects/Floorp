@@ -320,7 +320,8 @@ class RemoteReftest(RefTest):
             except:
                 print "Warning: cleaning up pidfile '%s' was unsuccessful from the test harness" % self.pidFile
 
-def runTests(options, parser):
+
+def run_test_harness(parser, options):
     if (options.dm_trans == 'sut' and options.deviceIP == None):
         print "Error: If --dm_trans = sut, you must provide a device IP to connect to via the --deviceIP option"
         return 1
@@ -398,20 +399,8 @@ def runTests(options, parser):
 
     return retVal
 
-def run(**kwargs):
-    # Mach gives us kwargs; this is a way to turn them back into an
-    # options object
-    parser = reftestcommandline.RemoteArgumentsParser()
-    parser.set_defaults(**kwargs)
-    options = parser.parse_args(kwargs["tests"])
-    retVal = runTests(options, parser)
-    return retVal
-
-def main():
-    parser = reftestcommandline.RemoteArgumentsParser()
-    options = parser.parse_args()
-    retVal = runTests(options, parser)
-    return retVal
 
 if __name__ == "__main__":
-    sys.exit(main())
+    parser = reftestcommandline.RemoteArgumentsParser()
+    options = parser.parse_args()
+    sys.exit(run_test_harness(parser, options))

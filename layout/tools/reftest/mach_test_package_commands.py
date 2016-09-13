@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 
 import os
+from argparse import Namespace
 from functools import partial
 
 from mach.decorators import (
@@ -14,26 +15,36 @@ from mach.decorators import (
 
 
 def run_reftest(context, **kwargs):
-    kwargs['app'] = kwargs['app'] or context.firefox_bin
-    kwargs['e10s'] = context.mozharness_config.get('e10s', kwargs['e10s'])
-    kwargs['certPath'] = context.certs_dir
-    kwargs['utilityPath'] = context.bin_dir
-    kwargs['extraProfileFiles'].append(os.path.join(context.bin_dir, 'plugins'))
+    import mozinfo
 
-    if not kwargs['tests']:
-        kwargs['tests'] = [os.path.join('layout', 'reftests', 'reftest.list')]
+    args = Namespace(**kwargs)
+    args.e10s = context.mozharness_config.get('e10s', args.e10s)
+
+    if not args.tests:
+        args.tests = [os.path.join('layout', 'reftests', 'reftest.list')]
 
     test_root = os.path.join(context.package_root, 'reftest', 'tests')
     normalize = partial(context.normalize_test_path, test_root)
-    kwargs['tests'] = map(normalize, kwargs['tests'])
+    args.tests = map(normalize, args.tests)
 
-    from runreftest import run as run_test_harness
-    return run_test_harness(**kwargs)
+    return run_reftest_desktop(context, args)
+
+
+def run_reftest_desktop(context, args):
+    from runreftest import run_test_harness
+
+    args.app = args.app or context.firefox_bin
+    args.extraProfileFiles.append(os.path.join(context.bin_dir, 'plugins'))
+    args.utilityPath = context.bin_dir
+
+    return run_test_harness(parser, args)
 
 
 def setup_argument_parser():
-    from reftestcommandline import DesktopArgumentsParser
-    return DesktopArgumentsParser()
+    import reftestcommandline
+    global parser
+    parser = reftestcommandline.DesktopArgumentsParser()
+    return parser
 
 
 @CommandProvider
