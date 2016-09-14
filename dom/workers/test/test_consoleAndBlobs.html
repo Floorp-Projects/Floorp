@@ -22,12 +22,14 @@
     observe: function(aSubject, aTopic, aData) {
       ok(true, "Something has been received");
       is(aTopic, "console-api-log-event");
-      SpecialPowers.removeObserver(this, "console-api-log-event");
 
       var obj = aSubject.wrappedJSObject;
-      is(obj.arguments[0].size, 3, "The size is correct");
-      is(obj.arguments[0].type, 'foo/bar', "The type is correct");
-      SimpleTest.finish();
+      if (obj.arguments[0] && obj.arguments[0].msg === 'consoleAndBlobs') {
+        SpecialPowers.removeObserver(this, "console-api-log-event");
+        is(obj.arguments[0].blob.size, 3, "The size is correct");
+        is(obj.arguments[0].blob.type, 'foo/bar', "The type is correct");
+        SimpleTest.finish();
+      }
     }
   }
 
