@@ -10,7 +10,7 @@
 #ifndef LIBANGLE_RENDERER_D3D_D3D9_RENDERER9UTILS_H_
 #define LIBANGLE_RENDERER_D3D_D3D9_RENDERER9UTILS_H_
 
-#include "libANGLE/angletypes.h"
+#include "common/Color.h"
 #include "libANGLE/Caps.h"
 #include "libANGLE/Error.h"
 

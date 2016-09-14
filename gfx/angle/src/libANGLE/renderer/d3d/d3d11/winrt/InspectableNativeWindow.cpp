@@ -267,4 +267,10 @@ HRESULT GetOptionalSinglePropertyValue(const ComPtr<ABI::Windows::Foundation::Co
     return result;
 }
 
+RECT InspectableNativeWindow::clientRect(const Size &size)
+{
+    // We don't have to check if a swapchain scale was specified here; the default value is 1.0f
+    // which will have no effect.
+    return {0, 0, lround(size.Width * mSwapChainScale), lround(size.Height * mSwapChainScale)};
+}
 }

@@ -79,6 +79,12 @@ class ProgramImpl : angle::NonCopyable
     // Returns false for inactive members.
     virtual bool getUniformBlockMemberInfo(const std::string &memberUniformName,
                                            sh::BlockMemberInfo *memberInfoOut) const = 0;
+    // CHROMIUM_path_rendering
+    // Set parameters to control fragment shader input variable interpolation
+    virtual void setPathFragmentInputGen(const std::string &inputName,
+                                         GLenum genMode,
+                                         GLint components,
+                                         const GLfloat *coeffs) = 0;
 
   protected:
     const gl::ProgramState &mState;

@@ -28,6 +28,7 @@ UNIFIED_SOURCES += [
     'src/compiler/preprocessor/Preprocessor.cpp',
     'src/compiler/preprocessor/Token.cpp',
     'src/compiler/preprocessor/Tokenizer.cpp',
+    'src/compiler/translator/AddDefaultReturnStatements.cpp',
     'src/compiler/translator/ArrayReturnValueToOutParameter.cpp',
     'src/compiler/translator/ASTMetadataHLSL.cpp',
     'src/compiler/translator/blocklayout.cpp',
@@ -47,6 +48,7 @@ UNIFIED_SOURCES += [
     'src/compiler/translator/Diagnostics.cpp',
     'src/compiler/translator/DirectiveHandler.cpp',
     'src/compiler/translator/EmulatePrecision.cpp',
+    'src/compiler/translator/ExpandIntegerPowExpressions.cpp',
     'src/compiler/translator/ExtensionGLSL.cpp',
     'src/compiler/translator/FlagStd140Structs.cpp',
     'src/compiler/translator/ForLoopUnroll.cpp',
@@ -57,6 +59,7 @@ UNIFIED_SOURCES += [
     'src/compiler/translator/InitializeVariables.cpp',
     'src/compiler/translator/Intermediate.cpp',
     'src/compiler/translator/IntermNode.cpp',
+    'src/compiler/translator/IntermNodePatternMatcher.cpp',
     'src/compiler/translator/intermOut.cpp',
     'src/compiler/translator/IntermTraverse.cpp',
     'src/compiler/translator/LoopInfo.cpp',
@@ -75,6 +78,7 @@ UNIFIED_SOURCES += [
     'src/compiler/translator/RemoveSwitchFallThrough.cpp',
     'src/compiler/translator/RewriteDoWhile.cpp',
     'src/compiler/translator/RewriteElseBlocks.cpp',
+    'src/compiler/translator/RewriteTexelFetchOffset.cpp',
     'src/compiler/translator/ScalarizeVecAndMatConstructorArgs.cpp',
     'src/compiler/translator/SearchSymbol.cpp',
     'src/compiler/translator/SeparateArrayInitialization.cpp',
@@ -82,6 +86,8 @@ UNIFIED_SOURCES += [
     'src/compiler/translator/SeparateExpressionsReturningArrays.cpp',
     'src/compiler/translator/ShaderLang.cpp',
     'src/compiler/translator/ShaderVars.cpp',
+    'src/compiler/translator/SimplifyLoopConditions.cpp',
+    'src/compiler/translator/SplitSequenceOperator.cpp',
     'src/compiler/translator/StructureHLSL.cpp',
     'src/compiler/translator/SymbolTable.cpp',
     'src/compiler/translator/TextureFunctionHLSL.cpp',
@@ -107,6 +113,7 @@ UNIFIED_SOURCES += [
     'src/third_party/compiler/ArrayBoundsClamper.cpp',
 ]
 SOURCES += [
+    'src/compiler/translator/EmulateGLFragColorBroadcast.cpp',
     'src/compiler/translator/glslang_lex.cpp',
     'src/compiler/translator/glslang_tab.cpp',
 ]
@@ -164,7 +171,6 @@ DEFINES['ANGLE_ENABLE_ESSL'] = "1"
 DEFINES['ANGLE_ENABLE_KEYEDMUTEX'] = "1"
 
 EXPORTS.angle += [ 'include/GLSLANG/ShaderLang.h', 'include/GLSLANG/ShaderVars.h', 'include/platform/Platform.h' ]
-
 EXPORTS.angle.KHR += [ 'include/KHR/khrplatform.h' ]
 
 LOCAL_INCLUDES += [ 'include', 'src', 'src/common/third_party/numerics' ]

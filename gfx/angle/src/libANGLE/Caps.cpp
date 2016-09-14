@@ -160,6 +160,7 @@ Extensions::Extensions()
       lossyETCDecode(false),
       bindUniformLocation(false),
       syncQuery(false),
+      copyTexture(false),
       colorBufferFloat(false),
       multisampleCompatibility(false),
       framebufferMixedSamples(false),
@@ -238,6 +239,7 @@ std::vector<std::string> Extensions::getStrings() const
     InsertExtensionString("GL_ANGLE_lossy_etc_decode",             lossyETCDecode,            &extensionStrings);
     InsertExtensionString("GL_CHROMIUM_bind_uniform_location",     bindUniformLocation,       &extensionStrings);
     InsertExtensionString("GL_CHROMIUM_sync_query",                syncQuery,                 &extensionStrings);
+    InsertExtensionString("GL_CHROMIUM_copy_texture",              copyTexture,               &extensionStrings);
     InsertExtensionString("GL_EXT_multisample_compatibility",      multisampleCompatibility,  &extensionStrings);
     InsertExtensionString("GL_CHROMIUM_framebuffer_mixed_samples", framebufferMixedSamples,   &extensionStrings);
     InsertExtensionString("GL_EXT_texture_norm16",                 textureNorm16,             &extensionStrings);
@@ -596,33 +598,72 @@ Caps::Caps()
       maxLODBias(0),
       maxCubeMapTextureSize(0),
       maxRenderbufferSize(0),
-      maxDrawBuffers(0),
-      maxColorAttachments(0),
-      maxViewportWidth(0),
-      maxViewportHeight(0),
       minAliasedPointSize(0),
       maxAliasedPointSize(0),
       minAliasedLineWidth(0),
-      // Table 6.29
+      maxAliasedLineWidth(0),
+
+      // Table 20.40
+      maxDrawBuffers(0),
+      maxFramebufferWidth(0),
+      maxFramebufferHeight(0),
+      maxFramebufferSamples(0),
+      maxColorAttachments(0),
+      maxViewportWidth(0),
+      maxViewportHeight(0),
+      maxSampleMaskWords(0),
+      maxColorTextureSamples(0),
+      maxDepthTextureSamples(0),
+      maxIntegerSamples(0),
+      maxServerWaitTimeout(0),
+
+      // Table 20.41
+      maxVertexAttribRelativeOffset(0),
+      maxVertexAttribBindings(0),
+      maxVertexAttribStride(0),
       maxElementsIndices(0),
       maxElementsVertices(0),
-      maxServerWaitTimeout(0),
-      // Table 6.31
+
+      // Table 20.43
       maxVertexAttributes(0),
       maxVertexUniformComponents(0),
       maxVertexUniformVectors(0),
       maxVertexUniformBlocks(0),
       maxVertexOutputComponents(0),
       maxVertexTextureImageUnits(0),
-      // Table 6.32
+      maxVertexAtomicCounterBuffers(0),
+      maxVertexAtomicCounters(0),
+      maxVertexImageUniforms(0),
+      maxVertexShaderStorageBlocks(0),
+
+      // Table 20.44
       maxFragmentUniformComponents(0),
       maxFragmentUniformVectors(0),
       maxFragmentUniformBlocks(0),
       maxFragmentInputComponents(0),
       maxTextureImageUnits(0),
+      maxFragmentAtomicCounterBuffers(0),
+      maxFragmentAtomicCounters(0),
+      maxFragmentImageUniforms(0),
+      maxFragmentShaderStorageBlocks(0),
+      minProgramTextureGatherOffset(0),
+      maxProgramTextureGatherOffset(0),
       minProgramTexelOffset(0),
       maxProgramTexelOffset(0),
-      // Table 6.33
+
+      // Table 20.45
+      maxComputeWorkGroupInvocations(0),
+      maxComputeUniformBlocks(0),
+      maxComputeTextureImageUnits(0),
+      maxComputeSharedMemorySize(0),
+      maxComputeUniformComponents(0),
+      maxComputeAtomicCounterBuffers(0),
+      maxComputeAtomicCounters(0),
+      maxComputeImageUniforms(0),
+      maxCombinedComputeUniformComponents(0),
+      maxComputeShaderStorageBlocks(0),
+
+      // Table 20.46
       maxUniformBufferBindings(0),
       maxUniformBlockSize(0),
       uniformBufferOffsetAlignment(0),
@@ -632,13 +673,35 @@ Caps::Caps()
       maxVaryingComponents(0),
       maxVaryingVectors(0),
       maxCombinedTextureImageUnits(0),
-      // Table 6.34
+      maxCombinedShaderOutputResources(0),
+
+      // Table 20.47
+      maxUniformLocations(0),
+      maxAtomicCounterBufferBindings(0),
+      maxAtomicCounterBufferSize(0),
+      maxCombinedAtomicCounterBuffers(0),
+      maxCombinedAtomicCounters(0),
+      maxImageUnits(0),
+      maxCombinedImageUniforms(0),
+      maxShaderStorageBufferBindings(0),
+      maxShaderStorageBlockSize(0),
+      maxCombinedShaderStorageBlocks(0),
+      shaderStorageBufferOffsetAlignment(0),
+
+      // Table 20.48
       maxTransformFeedbackInterleavedComponents(0),
       maxTransformFeedbackSeparateAttributes(0),
       maxTransformFeedbackSeparateComponents(0),
-      // Table 6.35
+
+      // Table 20.49
       maxSamples(0)
+
 {
+    for (size_t i = 0; i < 3; ++i)
+    {
+        maxComputeWorkGroupCount[i] = 0;
+        maxComputeWorkGroupSize[i]  = 0;
+    }
 }
 
 }

@@ -129,11 +129,15 @@ PlatformParameters ES2_OPENGL();
 PlatformParameters ES2_OPENGL(EGLint major, EGLint minor);
 PlatformParameters ES3_OPENGL();
 PlatformParameters ES3_OPENGL(EGLint major, EGLint minor);
+PlatformParameters ES31_OPENGL();
+PlatformParameters ES31_OPENGL(EGLint major, EGLint minor);
 
 PlatformParameters ES2_OPENGLES();
 PlatformParameters ES2_OPENGLES(EGLint major, EGLint minor);
 PlatformParameters ES3_OPENGLES();
 PlatformParameters ES3_OPENGLES(EGLint major, EGLint minor);
+PlatformParameters ES31_OPENGLES();
+PlatformParameters ES31_OPENGLES(EGLint major, EGLint minor);
 
 } // namespace angle
 

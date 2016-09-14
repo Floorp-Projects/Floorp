@@ -10,6 +10,8 @@
 #include "test_utils/ANGLETest.h"
 #include "shader_utils.h"
 
+#include "common/angleutils.h"
+
 #include <cmath>
 #include <cstring>
 #include <cstddef>
@@ -33,7 +35,7 @@ bool CheckPixels(GLint x,
         {
             const auto px = x + xx;
             const auto py = y + yy;
-            EXPECT_PIXEL_COLOR_EQ(px, py, color);
+            EXPECT_PIXEL_NEAR(px, py, color.R, color.G, color.B, color.A, tolerance);
         }
     }
 
@@ -212,15 +214,15 @@ TEST_P(CHROMIUMPathRenderingTest, TestGenDelete)
     // it has actually been specified with a path data.
 
     path = glGenPathsCHROMIUM(1);
-    EXPECT_TRUE(glIsPathCHROMIUM(path) == GL_FALSE);
+    ASSERT_TRUE(glIsPathCHROMIUM(path) == GL_FALSE);
 
     // specify the data.
     GLubyte commands[] = {GL_MOVE_TO_CHROMIUM, GL_CLOSE_PATH_CHROMIUM};
     GLfloat coords[] = {50.0f, 50.0f};
     glPathCommandsCHROMIUM(path, 2, commands, 2, GL_FLOAT, coords);
-    EXPECT_TRUE(glIsPathCHROMIUM(path) == GL_TRUE);
+    ASSERT_TRUE(glIsPathCHROMIUM(path) == GL_TRUE);
     glDeletePathsCHROMIUM(path, 1);
-    EXPECT_TRUE(glIsPathCHROMIUM(path) == GL_FALSE);
+    ASSERT_TRUE(glIsPathCHROMIUM(path) == GL_FALSE);
 }
 
 // Test incorrect path creation and deletion and expect GL errors.
@@ -483,38 +485,185 @@ TEST_P(CHROMIUMPathRenderingTest, TestPathRenderingInvalidArgs)
                                        GL_BOUNDING_BOX_CHROMIUM + 1);
     EXPECT_GL_ERROR(GL_INVALID_ENUM);
 
-    // For instanced variants, we need this to error the same way
-    // regardless of whether # of paths == 0 would cause an early return.
-
-    // TODO: enable this once instanced path rendering is implemented.
-    // for (int path_count = 0; path_count <= 1; ++path_count)
-    // {
-    //     glStencilFillPathInstancedCHROMIUM(path_count, GL_UNSIGNED_INT, &path, 0,
-    //         GL_COUNT_UP_CHROMIUM - 1, 0x7F, GL_NONE, NULL);
-    //     EXPECT_EQ(static_cast<GLenum>(GL_INVALID_ENUM), glGetError());
-    //     glStencilThenCoverFillPathInstancedCHROMIUM(
-    //         path_count, GL_UNSIGNED_INT, &path, 0, GL_COUNT_UP_CHROMIUM - 1, 0x7F,
-    //         GL_BOUNDING_BOX_OF_BOUNDING_BOXES_CHROMIUM, GL_NONE, NULL);
-    //     EXPECT_EQ(static_cast<GLenum>(GL_INVALID_ENUM), glGetError());
-    // }
-
     // Using mask+1 not being power of two causes INVALID_VALUE with up/down fill mode
     glStencilFillPathCHROMIUM(path, GL_COUNT_UP_CHROMIUM, 0x40);
     EXPECT_GL_ERROR(GL_INVALID_VALUE);
+
     glStencilThenCoverFillPathCHROMIUM(path, GL_COUNT_DOWN_CHROMIUM, 12, GL_BOUNDING_BOX_CHROMIUM);
     EXPECT_GL_ERROR(GL_INVALID_VALUE);
 
-    // TODO: enable this once instanced path rendering is implemented.
-    // for (int path_count = 0; path_count <= 1; ++path_count)
-    // {
-    //     glStencilFillPathInstancedCHROMIUM(path_count, GL_UNSIGNED_INT, &path, 0,
-    //         GL_COUNT_UP_CHROMIUM, 0x30, GL_NONE, NULL);
-    //     EXPECT_EQ(static_cast<GLenum>(GL_INVALID_VALUE), glGetError());
-    //     glStencilThenCoverFillPathInstancedCHROMIUM(
-    //         path_count, GL_UNSIGNED_INT, &path, 0, GL_COUNT_DOWN_CHROMIUM, 0xFE,
-    //         GL_BOUNDING_BOX_OF_BOUNDING_BOXES_CHROMIUM, GL_NONE, NULL);
-    //     EXPECT_EQ(static_cast<GLenum>(GL_INVALID_VALUE), glGetError());
-    // }
+    // check incorrect instance parameters.
+
+    // CoverFillPathInstanced
+    {
+        glCoverFillPathInstancedCHROMIUM(-1, GL_UNSIGNED_INT, &path, 0, GL_CONVEX_HULL_CHROMIUM,
+                                         GL_NONE, NULL);
+        EXPECT_GL_ERROR(GL_INVALID_VALUE);
+
+        glCoverFillPathInstancedCHROMIUM(1, GL_FLOAT, &path, 0, GL_CONVEX_HULL_CHROMIUM, GL_NONE,
+                                         NULL);
+        EXPECT_GL_ERROR(GL_INVALID_ENUM);
+
+        glCoverFillPathInstancedCHROMIUM(1, GL_UNSIGNED_INT, NULL, 0, GL_CONVEX_HULL_CHROMIUM,
+                                         GL_NONE, NULL);
+        EXPECT_GL_ERROR(GL_INVALID_VALUE);
+
+        glCoverFillPathInstancedCHROMIUM(1, GL_UNSIGNED_INT, &path, 0, GL_UNSIGNED_INT, GL_NONE,
+                                         NULL);
+        EXPECT_GL_ERROR(GL_INVALID_ENUM);
+
+        glCoverFillPathInstancedCHROMIUM(1, GL_UNSIGNED_INT, &path, 0, GL_CONVEX_HULL_CHROMIUM,
+                                         GL_UNSIGNED_INT, NULL);
+        EXPECT_GL_ERROR(GL_INVALID_ENUM);
+
+        glCoverFillPathInstancedCHROMIUM(1, GL_UNSIGNED_INT, &path, 0, GL_CONVEX_HULL_CHROMIUM,
+                                         GL_TRANSLATE_X_CHROMIUM, NULL);
+        EXPECT_GL_ERROR(GL_INVALID_VALUE);
+    }
+
+    // CoverStrokePathInstanced
+    {
+        glCoverStrokePathInstancedCHROMIUM(-1, GL_UNSIGNED_INT, &path, 0, GL_CONVEX_HULL_CHROMIUM,
+                                           GL_NONE, NULL);
+        EXPECT_GL_ERROR(GL_INVALID_VALUE);
+
+        glCoverStrokePathInstancedCHROMIUM(1, GL_FLOAT, &path, 0, GL_CONVEX_HULL_CHROMIUM, GL_NONE,
+                                           NULL);
+        EXPECT_GL_ERROR(GL_INVALID_ENUM);
+
+        glCoverStrokePathInstancedCHROMIUM(1, GL_UNSIGNED_INT, NULL, 0, GL_CONVEX_HULL_CHROMIUM,
+                                           GL_NONE, NULL);
+        EXPECT_GL_ERROR(GL_INVALID_VALUE);
+
+        glCoverStrokePathInstancedCHROMIUM(1, GL_UNSIGNED_INT, &path, 0, GL_UNSIGNED_INT, GL_NONE,
+                                           NULL);
+        EXPECT_GL_ERROR(GL_INVALID_ENUM);
+
+        glCoverStrokePathInstancedCHROMIUM(1, GL_UNSIGNED_INT, &path, 0, GL_CONVEX_HULL_CHROMIUM,
+                                           GL_UNSIGNED_INT, NULL);
+        EXPECT_GL_ERROR(GL_INVALID_ENUM);
+
+        glCoverStrokePathInstancedCHROMIUM(1, GL_UNSIGNED_INT, &path, 0, GL_CONVEX_HULL_CHROMIUM,
+                                           GL_TRANSLATE_X_CHROMIUM, NULL);
+        EXPECT_GL_ERROR(GL_INVALID_VALUE);
+    }
+
+    // StencilFillPathInstanced
+    {
+        glStencilFillPathInstancedCHROMIUM(-1, GL_UNSIGNED_INT, &path, 0, GL_COUNT_UP_CHROMIUM, 0x0,
+                                           GL_NONE, NULL);
+        EXPECT_GL_ERROR(GL_INVALID_VALUE);
+
+        glStencilFillPathInstancedCHROMIUM(1, GL_FLOAT, &path, 0, GL_COUNT_UP_CHROMIUM, 0x0,
+                                           GL_NONE, NULL);
+        EXPECT_GL_ERROR(GL_INVALID_ENUM);
+
+        glStencilFillPathInstancedCHROMIUM(1, GL_UNSIGNED_INT, NULL, 0, GL_COUNT_UP_CHROMIUM, 0x0,
+                                           GL_NONE, NULL);
+        EXPECT_GL_ERROR(GL_INVALID_VALUE);
+
+        glStencilFillPathInstancedCHROMIUM(1, GL_UNSIGNED_INT, &path, 0, GL_UNSIGNED_INT, 0x0,
+                                           GL_NONE, NULL);
+        EXPECT_GL_ERROR(GL_INVALID_ENUM);
+
+        glStencilFillPathInstancedCHROMIUM(1, GL_UNSIGNED_INT, &path, 0, GL_COUNT_UP_CHROMIUM, 0x2,
+                                           GL_NONE, NULL);
+        EXPECT_GL_ERROR(GL_INVALID_VALUE);
+
+        glStencilFillPathInstancedCHROMIUM(1, GL_UNSIGNED_INT, &path, 0, GL_COUNT_UP_CHROMIUM, 0x0,
+                                           GL_UNSIGNED_INT, NULL);
+        EXPECT_GL_ERROR(GL_INVALID_ENUM);
+
+        glStencilFillPathInstancedCHROMIUM(1, GL_UNSIGNED_INT, &path, 0, GL_COUNT_UP_CHROMIUM, 0x0,
+                                           GL_TRANSLATE_X_CHROMIUM, NULL);
+        EXPECT_GL_ERROR(GL_INVALID_VALUE);
+    }
+
+    // StencilStrokePathInstanced
+    {
+        glStencilStrokePathInstancedCHROMIUM(-1, GL_UNSIGNED_INT, &path, 0, 0x00, 0x00, GL_NONE,
+                                             NULL);
+        EXPECT_GL_ERROR(GL_INVALID_VALUE);
+
+        glStencilStrokePathInstancedCHROMIUM(1, GL_FLOAT, &path, 0, 0x00, 0x00, GL_NONE, NULL);
+        EXPECT_GL_ERROR(GL_INVALID_ENUM);
+
+        glStencilStrokePathInstancedCHROMIUM(1, GL_UNSIGNED_INT, nullptr, 0, 0x00, 0x00, GL_NONE,
+                                             NULL);
+        EXPECT_GL_ERROR(GL_INVALID_VALUE);
+
+        glStencilStrokePathInstancedCHROMIUM(1, GL_UNSIGNED_INT, &path, 0, 0x00, 0x00,
+                                             GL_UNSIGNED_INT, NULL);
+        EXPECT_GL_ERROR(GL_INVALID_ENUM);
+
+        glStencilStrokePathInstancedCHROMIUM(1, GL_UNSIGNED_INT, &path, 0, 0x00, 0x00,
+                                             GL_TRANSLATE_X_CHROMIUM, NULL);
+        EXPECT_GL_ERROR(GL_INVALID_VALUE);
+    }
+
+    // StencilThenCoverFillPathInstanced
+    {
+        glStencilThenCoverFillPathInstancedCHROMIUM(-1, GL_UNSIGNED_INT, &path, 0,
+                                                    GL_COUNT_UP_CHROMIUM, 0, GL_COUNT_UP_CHROMIUM,
+                                                    GL_NONE, NULL);
+        EXPECT_GL_ERROR(GL_INVALID_VALUE);
+
+        glStencilThenCoverFillPathInstancedCHROMIUM(1, GL_FLOAT, &path, 0, GL_CONVEX_HULL_CHROMIUM,
+                                                    0, GL_COUNT_UP_CHROMIUM, GL_NONE, NULL);
+        EXPECT_GL_ERROR(GL_INVALID_ENUM);
+
+        glStencilThenCoverFillPathInstancedCHROMIUM(1, GL_UNSIGNED_INT, NULL, 0,
+                                                    GL_CONVEX_HULL_CHROMIUM, 0,
+                                                    GL_COUNT_UP_CHROMIUM, GL_NONE, NULL);
+        EXPECT_GL_ERROR(GL_INVALID_VALUE);
+
+        glStencilThenCoverFillPathInstancedCHROMIUM(1, GL_UNSIGNED_INT, &path, 0, GL_UNSIGNED_INT,
+                                                    0, GL_COUNT_UP_CHROMIUM, GL_NONE, NULL);
+        EXPECT_GL_ERROR(GL_INVALID_ENUM);
+
+        glStencilThenCoverFillPathInstancedCHROMIUM(1, GL_UNSIGNED_INT, &path, 0,
+                                                    GL_CONVEX_HULL_CHROMIUM, 0, GL_UNSIGNED_INT,
+                                                    GL_NONE, NULL);
+        EXPECT_GL_ERROR(GL_INVALID_ENUM);
+
+        glStencilThenCoverFillPathInstancedCHROMIUM(1, GL_UNSIGNED_INT, &path, 0,
+                                                    GL_CONVEX_HULL_CHROMIUM, 0,
+                                                    GL_COUNT_UP_CHROMIUM, GL_FLOAT, NULL);
+        EXPECT_GL_ERROR(GL_INVALID_ENUM);
+
+        glStencilThenCoverFillPathInstancedCHROMIUM(
+            1, GL_UNSIGNED_INT, &path, 0, GL_CONVEX_HULL_CHROMIUM, 0, GL_COUNT_UP_CHROMIUM,
+            GL_TRANSLATE_X_CHROMIUM, NULL);
+        EXPECT_GL_ERROR(GL_INVALID_VALUE);
+    }
+
+    // StencilThenCoverStrokePathInstanced
+    {
+        glStencilThenCoverStrokePathInstancedCHROMIUM(-1, GL_UNSIGNED_INT, &path, 0, 0x0, 0x0,
+                                                      GL_CONVEX_HULL_CHROMIUM, GL_NONE, NULL);
+        EXPECT_GL_ERROR(GL_INVALID_VALUE);
+
+        glStencilThenCoverStrokePathInstancedCHROMIUM(1, GL_FLOAT, &path, 0, 0x0, 0x0,
+                                                      GL_CONVEX_HULL_CHROMIUM, GL_NONE, NULL);
+        EXPECT_GL_ERROR(GL_INVALID_ENUM);
+
+        glStencilThenCoverStrokePathInstancedCHROMIUM(1, GL_UNSIGNED_INT, NULL, 0, 0x0, 0x0,
+                                                      GL_CONVEX_HULL_CHROMIUM, GL_NONE, NULL);
+        EXPECT_GL_ERROR(GL_INVALID_VALUE);
+
+        glStencilThenCoverStrokePathInstancedCHROMIUM(1, GL_UNSIGNED_INT, &path, 0, 0x0, 0x0,
+                                                      GL_FLOAT, GL_NONE, NULL);
+        EXPECT_GL_ERROR(GL_INVALID_ENUM);
+
+        glStencilThenCoverStrokePathInstancedCHROMIUM(1, GL_UNSIGNED_INT, &path, 0, 0x0, 0x0,
+                                                      GL_CONVEX_HULL_CHROMIUM, GL_FLOAT, NULL);
+        EXPECT_GL_ERROR(GL_INVALID_ENUM);
+
+        glStencilThenCoverStrokePathInstancedCHROMIUM(1, GL_UNSIGNED_INT, &path, 0, 0x0, 0x0,
+                                                      GL_CONVEX_HULL_CHROMIUM,
+                                                      GL_TRANSLATE_X_CHROMIUM, NULL);
+        EXPECT_GL_ERROR(GL_INVALID_VALUE);
+    }
 
     glDeletePathsCHROMIUM(path, 1);
 }
@@ -604,10 +753,13 @@ class CHROMIUMPathRenderingDrawTest : public ANGLETest
         ASSERT_GL_NO_ERROR();
     }
 
-    void verifyTestPatternFill(GLint x, GLint y)
+    void verifyTestPatternFill(GLfloat flx, GLfloat fly)
     {
         static const GLint kFillCoords[]  = {55, 54, 50, 28, 66, 63};
         static const angle::GLColor kBlue = {0, 0, 255, 255};
+
+        GLint x = static_cast<GLint>(flx);
+        GLint y = static_cast<GLint>(fly);
 
         for (size_t i = 0; i < 6; i += 2)
         {
@@ -616,10 +768,13 @@ class CHROMIUMPathRenderingDrawTest : public ANGLETest
             EXPECT_TRUE(CheckPixels(x + fx, y + fy, 1, 1, 0, kBlue));
         }
     }
-    void verifyTestPatternBg(GLint x, GLint y)
+    void verifyTestPatternBg(GLfloat fx, GLfloat fy)
     {
         static const GLint kBackgroundCoords[]     = {80, 80, 20, 20, 90, 1};
         static const angle::GLColor kExpectedColor = {0, 0, 0, 0};
+
+        GLint x = static_cast<GLint>(fx);
+        GLint y = static_cast<GLint>(fy);
 
         for (size_t i = 0; i < 6; i += 2)
         {
@@ -629,8 +784,11 @@ class CHROMIUMPathRenderingDrawTest : public ANGLETest
         }
     }
 
-    void verifyTestPatternStroke(GLint x, GLint y)
+    void verifyTestPatternStroke(GLfloat fx, GLfloat fy)
     {
+        GLint x = static_cast<GLint>(fx);
+        GLint y = static_cast<GLint>(fy);
+
         // Inside the stroke we should have green.
         static const angle::GLColor kGreen = {0, 255, 0, 255};
         EXPECT_TRUE(CheckPixels(x + 50, y + 53, 1, 1, 0, kGreen));
@@ -728,6 +886,1084 @@ TEST_P(CHROMIUMPathRenderingDrawTest, TestPathRenderingThenFunctions)
     verifyTestPatternStroke(0, 0);
 }
 
+// Tests that drawing with *Instanced functions work.
+TEST_P(CHROMIUMPathRenderingDrawTest, TestPathRenderingInstanced)
+{
+    if (!isApplicable())
+        return;
+
+    static const float kBlue[]  = {0.0f, 0.0f, 1.0f, 1.0f};
+    static const float kGreen[] = {0.0f, 1.0f, 0.0f, 1.0f};
+
+    setupStateForTestPattern();
+
+    GLuint path = glGenPathsCHROMIUM(1);
+    setupPathStateForTestPattern(path);
+
+    const GLuint kPaths[]                             = {1, 1, 1, 1, 1};
+    const GLsizei kPathCount                          = 5;
+    const GLfloat kShapeSize                          = 80.0f;
+    static const GLfloat kTransforms[kPathCount * 12] = {
+        1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,           0.0f,       0.0f,
+        1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, kShapeSize,     0.0f,       0.0f,
+        1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, kShapeSize * 2, 0.0f,       0.0f,
+        1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,           kShapeSize, 0.0f,
+        1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, kShapeSize,     kShapeSize, 0.0f};
+
+    // The test pattern is the same as in the simple draw case above,
+    // except that the path is drawn kPathCount times with different offsets.
+    glPathStencilFuncCHROMIUM(GL_ALWAYS, 0, 0xFF);
+    glStencilStrokePathInstancedCHROMIUM(kPathCount, GL_UNSIGNED_INT, kPaths, path - 1, 0x80, 0x80,
+                                         GL_AFFINE_3D_CHROMIUM, kTransforms);
+
+    glPathStencilFuncCHROMIUM(GL_ALWAYS, 0, 0x7F);
+    glUniform4fv(mColorLoc, 1, kBlue);
+    glStencilFillPathInstancedCHROMIUM(kPathCount, GL_UNSIGNED_INT, kPaths, path - 1,
+                                       GL_COUNT_UP_CHROMIUM, 0x7F, GL_AFFINE_3D_CHROMIUM,
+                                       kTransforms);
+
+    ASSERT_GL_NO_ERROR();
+
+    glStencilFunc(GL_LESS, 0, 0x7F);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_ZERO);
+    glCoverFillPathInstancedCHROMIUM(kPathCount, GL_UNSIGNED_INT, kPaths, path - 1,
+                                     GL_BOUNDING_BOX_OF_BOUNDING_BOXES_CHROMIUM,
+                                     GL_AFFINE_3D_CHROMIUM, kTransforms);
+
+    ASSERT_GL_NO_ERROR();
+
+    glStencilFunc(GL_EQUAL, 0x80, 0x80);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_ZERO);
+    glUniform4fv(mColorLoc, 1, kGreen);
+    glCoverStrokePathInstancedCHROMIUM(kPathCount, GL_UNSIGNED_INT, kPaths, path - 1,
+                                       GL_BOUNDING_BOX_OF_BOUNDING_BOXES_CHROMIUM,
+                                       GL_AFFINE_3D_CHROMIUM, kTransforms);
+
+    ASSERT_GL_NO_ERROR();
+
+    glDeletePathsCHROMIUM(path, 1);
+
+    // Verify the image.
+    verifyTestPatternFill(0.0f, 0.0f);
+    verifyTestPatternBg(0.0f, 0.0f);
+    verifyTestPatternStroke(0.0f, 0.0f);
+
+    verifyTestPatternFill(kShapeSize, 0.0f);
+    verifyTestPatternBg(kShapeSize, 0.0f);
+    verifyTestPatternStroke(kShapeSize, 0.0f);
+
+    verifyTestPatternFill(kShapeSize * 2, 0.0f);
+    verifyTestPatternBg(kShapeSize * 2, 0.0f);
+    verifyTestPatternStroke(kShapeSize * 2, 0.0f);
+
+    verifyTestPatternFill(0.0f, kShapeSize);
+    verifyTestPatternBg(0.0f, kShapeSize);
+    verifyTestPatternStroke(0.0f, kShapeSize);
+
+    verifyTestPatternFill(kShapeSize, kShapeSize);
+    verifyTestPatternBg(kShapeSize, kShapeSize);
+    verifyTestPatternStroke(kShapeSize, kShapeSize);
+}
+
+// Test that instanced fill/stroke then cover functions work.
+TEST_P(CHROMIUMPathRenderingDrawTest, TestPathRenderingThenFunctionsInstanced)
+{
+    if (!isApplicable())
+        return;
+
+    static const float kBlue[]  = {0.0f, 0.0f, 1.0f, 1.0f};
+    static const float kGreen[] = {0.0f, 1.0f, 0.0f, 1.0f};
+
+    setupStateForTestPattern();
+
+    GLuint path = glGenPathsCHROMIUM(1);
+    setupPathStateForTestPattern(path);
+
+    const GLuint kPaths[]              = {1, 1, 1, 1, 1};
+    const GLsizei kPathCount           = 5;
+    const GLfloat kShapeSize           = 80.0f;
+    static const GLfloat kTransforms[] = {
+        0.0f, 0.0f, kShapeSize, 0.0f,       kShapeSize * 2,
+        0.0f, 0.0f, kShapeSize, kShapeSize, kShapeSize,
+    };
+
+    glPathStencilFuncCHROMIUM(GL_ALWAYS, 0, 0xFF);
+    glStencilFunc(GL_EQUAL, 0x80, 0x80);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_ZERO);
+    glUniform4fv(mColorLoc, 1, kGreen);
+    glStencilThenCoverStrokePathInstancedCHROMIUM(
+        kPathCount, GL_UNSIGNED_INT, kPaths, path - 1, 0x80, 0x80,
+        GL_BOUNDING_BOX_OF_BOUNDING_BOXES_CHROMIUM, GL_TRANSLATE_2D_CHROMIUM, kTransforms);
+
+    ASSERT_GL_NO_ERROR();
+
+    glPathStencilFuncCHROMIUM(GL_ALWAYS, 0, 0x7F);
+    glStencilFunc(GL_LESS, 0, 0x7F);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_ZERO);
+    glUniform4fv(mColorLoc, 1, kBlue);
+    glStencilThenCoverFillPathInstancedCHROMIUM(
+        kPathCount, GL_UNSIGNED_INT, kPaths, path - 1, GL_COUNT_UP_CHROMIUM, 0x7F,
+        GL_BOUNDING_BOX_OF_BOUNDING_BOXES_CHROMIUM, GL_TRANSLATE_2D_CHROMIUM, kTransforms);
+
+    ASSERT_GL_NO_ERROR();
+
+    glDeletePathsCHROMIUM(path, 1);
+
+    // Verify the image.
+    verifyTestPatternFill(0.0f, 0.0f);
+    verifyTestPatternBg(0.0f, 0.0f);
+    verifyTestPatternStroke(0.0f, 0.0f);
+
+    verifyTestPatternFill(kShapeSize, 0.0f);
+    verifyTestPatternBg(kShapeSize, 0.0f);
+    verifyTestPatternStroke(kShapeSize, 0.0f);
+
+    verifyTestPatternFill(kShapeSize * 2, 0.0f);
+    verifyTestPatternBg(kShapeSize * 2, 0.0f);
+    verifyTestPatternStroke(kShapeSize * 2, 0.0f);
+
+    verifyTestPatternFill(0.0f, kShapeSize);
+    verifyTestPatternBg(0.0f, kShapeSize);
+    verifyTestPatternStroke(0.0f, kShapeSize);
+
+    verifyTestPatternFill(kShapeSize, kShapeSize);
+    verifyTestPatternBg(kShapeSize, kShapeSize);
+    verifyTestPatternStroke(kShapeSize, kShapeSize);
+}
+
+
+// This class implements a test that draws a grid of v-shapes. The grid is
+// drawn so that even rows (from the bottom) are drawn with DrawArrays and odd
+// rows are drawn with path rendering.  It can be used to test various texturing
+// modes, comparing how the fill would work in normal GL rendering and how to
+// setup same sort of fill with path rendering.
+// The texturing test is parametrized to run the test with and without
+// ANGLE name hashing.
+class CHROMIUMPathRenderingWithTexturingTest : public ANGLETest
+{
+  protected:
+    CHROMIUMPathRenderingWithTexturingTest() : mProgram(0)
+    {
+        setWindowWidth(kResolution);
+        setWindowHeight(kResolution);
+        setConfigRedBits(8);
+        setConfigGreenBits(8);
+        setConfigBlueBits(8);
+        setConfigAlphaBits(8);
+        setConfigDepthBits(8);
+        setConfigStencilBits(8);
+    }
+
+    bool isApplicable() const { return extensionEnabled("GL_CHROMIUM_path_rendering"); }
+
+    void TearDown() override
+    {
+        if (mProgram)
+        {
+            glDeleteProgram(mProgram);
+            ASSERT_GL_NO_ERROR();
+        }
+
+        ANGLETest::TearDown();
+    }
+
+    void SetUp() override
+    {
+        ANGLETest::SetUp();
+        mBindUniformLocation = reinterpret_cast<PFNGLBINDUNIFORMLOCATIONCHROMIUMPROC>(
+            eglGetProcAddress("glBindUniformLocationCHROMIUM"));
+    }
+
+    // Sets up the GL program state for the test.
+    // Vertex shader needs at least following variables:
+    //  uniform mat4 view_matrix;
+    //  uniform mat? color_matrix; (accessible with kColorMatrixLocation)
+    //  uniform vec2 model_translate;
+    //  attribute vec2 position;
+    //  varying vec4 color;
+    //
+    // Fragment shader needs at least following variables:
+    //  varying vec4 color;
+    //
+    //  (? can be anything)
+    void compileProgram(const char *vertexShaderSource, const char *fragmentShaderSource)
+    {
+        glViewport(0, 0, kResolution, kResolution);
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glStencilMask(0xffffffff);
+        glClearStencil(0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        ASSERT_GL_NO_ERROR();
+
+        GLuint vShader = compileShader(GL_VERTEX_SHADER, vertexShaderSource);
+        GLuint fShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
+        ASSERT_NE(0u, vShader);
+        ASSERT_NE(0u, fShader);
+
+        mProgram = glCreateProgram();
+
+        glAttachShader(mProgram, vShader);
+        glAttachShader(mProgram, fShader);
+        glDeleteShader(vShader);
+        glDeleteShader(fShader);
+
+        ASSERT_GL_NO_ERROR();
+    }
+
+    void bindProgram()
+    {
+        glBindAttribLocation(mProgram, kPositionLocation, "position");
+        mBindUniformLocation(mProgram, kViewMatrixLocation, "view_matrix");
+        mBindUniformLocation(mProgram, kColorMatrixLocation, "color_matrix");
+        mBindUniformLocation(mProgram, kModelTranslateLocation, "model_translate");
+        glBindFragmentInputLocationCHROMIUM(mProgram, kColorFragmentInputLocation, "color");
+
+        ASSERT_GL_NO_ERROR();
+    }
+
+    bool linkProgram()
+    {
+        glLinkProgram(mProgram);
+
+        GLint linked = 0;
+        glGetProgramiv(mProgram, GL_LINK_STATUS, &linked);
+        if (linked)
+        {
+            glUseProgram(mProgram);
+        }
+
+        return (linked == 1);
+    }
+
+    void drawTestPattern()
+    {
+        // This v-shape is used both for DrawArrays and path rendering.
+        static const GLfloat kVertices[] = {75.0f, 75.0f, 50.0f, 25.5f, 50.0f, 50.0f, 25.0f, 75.0f};
+
+        GLuint vbo = 0;
+        glGenBuffers(1, &vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(kVertices), kVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(kPositionLocation);
+        glVertexAttribPointer(kPositionLocation, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+        // Setup state for drawing the shape with path rendering.
+        glPathStencilFuncCHROMIUM(GL_ALWAYS, 0, 0x7F);
+        glStencilFunc(GL_LESS, 0, 0x7F);
+        glStencilOp(GL_KEEP, GL_KEEP, GL_ZERO);
+        glMatrixLoadfCHROMIUM(GL_PATH_PROJECTION_CHROMIUM, kProjectionMatrix);
+        glMatrixLoadIdentityCHROMIUM(GL_PATH_MODELVIEW_CHROMIUM);
+
+        static const GLubyte kCommands[] = {GL_MOVE_TO_CHROMIUM, GL_LINE_TO_CHROMIUM,
+                                            GL_LINE_TO_CHROMIUM, GL_LINE_TO_CHROMIUM,
+                                            GL_CLOSE_PATH_CHROMIUM};
+
+        static const GLfloat kCoords[] = {
+            kVertices[0], kVertices[1], kVertices[2], kVertices[3],
+            kVertices[6], kVertices[7], kVertices[4], kVertices[5],
+        };
+
+        GLuint path = glGenPathsCHROMIUM(1);
+        glPathCommandsCHROMIUM(path, static_cast<GLsizei>(ArraySize(kCommands)), kCommands,
+            static_cast<GLsizei>(ArraySize(kCoords)), GL_FLOAT, kCoords);
+        ASSERT_GL_NO_ERROR();
+
+        GLfloat path_model_translate[16] = {
+            1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+        };
+
+        // Draws the shapes. Every even row from the bottom is drawn with
+        // DrawArrays, odd row with path rendering. The shader program is
+        // the same for the both draws.
+        for (int j = 0; j < kTestRows; ++j)
+        {
+            for (int i = 0; i < kTestColumns; ++i)
+            {
+                if (j % 2 == 0)
+                {
+                    glDisable(GL_STENCIL_TEST);
+                    glUniform2f(kModelTranslateLocation, static_cast<GLfloat>(i * kShapeWidth),
+                                static_cast<GLfloat>(j * kShapeHeight));
+                    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+                }
+                else
+                {
+                    glEnable(GL_STENCIL_TEST);
+                    path_model_translate[12] = static_cast<GLfloat>(i * kShapeWidth);
+                    path_model_translate[13] = static_cast<GLfloat>(j * kShapeHeight);
+                    glMatrixLoadfCHROMIUM(GL_PATH_MODELVIEW_CHROMIUM, path_model_translate);
+                    glStencilThenCoverFillPathCHROMIUM(path, GL_COUNT_UP_CHROMIUM, 0x7F,
+                                                       GL_BOUNDING_BOX_CHROMIUM);
+                }
+            }
+        }
+        ASSERT_GL_NO_ERROR();
+
+        glDisableVertexAttribArray(kPositionLocation);
+        glDeleteBuffers(1, &vbo);
+        glDeletePathsCHROMIUM(path, 1);
+        ASSERT_GL_NO_ERROR();
+    }
+
+    enum
+    {
+        kShapeWidth  = 75,
+        kShapeHeight = 75,
+        kTestRows    = kResolution / kShapeHeight,
+        kTestColumns = kResolution / kShapeWidth,
+    };
+
+    typedef void(GL_APIENTRYP PFNGLBINDUNIFORMLOCATIONCHROMIUMPROC)(GLuint mProgram,
+                                                                    GLint location,
+                                                                    const GLchar *name);
+    PFNGLBINDUNIFORMLOCATIONCHROMIUMPROC mBindUniformLocation = nullptr;
+
+    GLuint mProgram;
+
+    // This uniform be can set by the test. It should be used to set the color for
+    // drawing with DrawArrays.
+    static const GLint kColorMatrixLocation = 4;
+
+    // This fragment input can be set by the test. It should be used to set the
+    // color for drawing with path rendering.
+    static const GLint kColorFragmentInputLocation = 7;
+
+    static const GLint kModelTranslateLocation = 3;
+    static const GLint kPositionLocation       = 0;
+    static const GLint kViewMatrixLocation     = 7;
+};
+
+// Test success and error cases for binding fragment input location.
+TEST_P(CHROMIUMPathRenderingWithTexturingTest, TestBindFragmentInputLocation)
+{
+    if (!isApplicable())
+        return;
+
+    // original NV_path_rendering specification doesn't define whether the
+    // fragment shader input variables should be defined in the vertex shader or
+    // not. In fact it doesn't even require a vertex shader.
+    // However the GLES3.1 spec basically says that fragment inputs are
+    // either built-ins or come from the previous shader stage.
+    // (§ 14.1, Fragment Shader Variables).
+    // Additionally there are many places that are based on the assumption of having
+    // a vertex shader (command buffer, angle) so we're going to stick to the same
+    // semantics and require a vertex shader and to have the vertex shader define the
+    // varying fragment shader input.
+
+    // clang-format off
+    const char* kVertexShaderSource =
+       "varying vec4 color;\n"
+       "void main() {}\n";
+
+    const char* kFragmentShaderSource =
+        "precision mediump float;\n"
+        "varying vec4 color;\n"
+        "void main() {\n"
+        "  gl_FragColor = vec4(1.0);\n"
+        "}\n";
+
+    // clang-format on
+    compileProgram(kVertexShaderSource, kFragmentShaderSource);
+
+    enum kBindLocations
+    {
+        kColorLocation     = 5,
+        kFragColorLocation = 6
+    };
+
+    // successful bind.
+    glBindFragmentInputLocationCHROMIUM(mProgram, kColorLocation, "color");
+    ASSERT_GL_NO_ERROR();
+
+    // any name can be bound and names that do not actually exist in the program after
+    // linking are ignored.
+    glBindFragmentInputLocationCHROMIUM(mProgram, kColorLocation, "doesnt_exist");
+    ASSERT_GL_NO_ERROR();
+
+    // illegal program
+    glBindFragmentInputLocationCHROMIUM(mProgram + 1, kColorLocation, "color");
+    EXPECT_GL_ERROR(GL_INVALID_OPERATION);
+
+    // illegal bind (built-in)
+    glBindFragmentInputLocationCHROMIUM(mProgram, kFragColorLocation, "gl_FragColor");
+    EXPECT_GL_ERROR(GL_INVALID_OPERATION);
+
+    glBindFragmentInputLocationCHROMIUM(mProgram, kFragColorLocation, NULL);
+    EXPECT_GL_ERROR(GL_INVALID_VALUE);
+
+    glBindFragmentInputLocationCHROMIUM(mProgram, 0xffffff, "color");
+    EXPECT_GL_ERROR(GL_INVALID_VALUE);
+
+    ASSERT_TRUE(linkProgram() == true);
+
+    const GLfloat kCoefficients16[] = {1.0f, 2.0f,  3.0f,  4.0f,  5.0f,  6.0f,  7.0f,  8.0f,
+                                       9.0f, 10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f};
+
+    glProgramPathFragmentInputGenCHROMIUM(mProgram, kColorLocation, GL_EYE_LINEAR_CHROMIUM, 4,
+                                          kCoefficients16);
+    ASSERT_GL_NO_ERROR();
+
+    glProgramPathFragmentInputGenCHROMIUM(mProgram, -1, GL_EYE_LINEAR_CHROMIUM, 4, kCoefficients16);
+    ASSERT_GL_NO_ERROR();
+}
+
+// Test fragment input interpolation in CHROMIUM_EYE coordinates.
+TEST_P(CHROMIUMPathRenderingWithTexturingTest, TestProgramPathFragmentInputGenCHROMIUM_EYE)
+{
+    if (!isApplicable())
+        return;
+
+    // clang-format off
+    const char *kVertexShaderSource =
+        "uniform mat4 view_matrix;\n"
+        "uniform mat4 color_matrix;\n"
+        "uniform vec2 model_translate;\n"
+        "attribute vec2 position;\n"
+        "varying vec3 color;\n"
+        "void main() {\n"
+        "  vec4 p = vec4(model_translate + position, 1.0, 1.0);\n"
+        "  color = (color_matrix * p).rgb;\n"
+        "  gl_Position = view_matrix * p;\n"
+        "}\n";
+
+    const char *kFragmentShaderSource =
+        "precision mediump float;\n"
+        "varying vec3 color;\n"
+        "void main() {\n"
+        "  gl_FragColor = vec4(color, 1.0);\n"
+        "}\n";
+    // clang-format on
+
+    compileProgram(kVertexShaderSource, kFragmentShaderSource);
+    bindProgram();
+    ASSERT_TRUE(linkProgram() == true);
+
+    glUniformMatrix4fv(kViewMatrixLocation, 1, GL_FALSE, kProjectionMatrix);
+
+    static const GLfloat kColorMatrix[16] = {
+        1.0f / kResolution, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f / kResolution, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f};
+
+    glUniformMatrix4fv(kColorMatrixLocation, 1, GL_FALSE, kColorMatrix);
+
+    // This is the functionality we are testing: ProgramPathFragmentInputGen
+    // does the same work as the color transform in vertex shader.
+    static const GLfloat kColorCoefficients[12] = {
+        1.0f / kResolution, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f / kResolution,
+        0.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f};
+    glProgramPathFragmentInputGenCHROMIUM(mProgram, kColorFragmentInputLocation,
+                                          GL_EYE_LINEAR_CHROMIUM, 3, kColorCoefficients);
+    ASSERT_GL_NO_ERROR();
+
+    drawTestPattern();
+
+    const GLfloat kFillCoords[6] = {59.0f, 50.0f, 50.0f, 28.0f, 66.0f, 63.0f};
+
+    for (int j = 0; j < kTestRows; ++j)
+    {
+        for (int i = 0; i < kTestColumns; ++i)
+        {
+            for (size_t k = 0; k < ArraySize(kFillCoords); k += 2)
+            {
+                const float fx = kFillCoords[k];
+                const float fy = kFillCoords[k + 1];
+                const float px = static_cast<float>(i * kShapeWidth);
+                const float py = static_cast<float>(j * kShapeHeight);
+
+                angle::GLColor color;
+                color.R = static_cast<GLubyte>(std::roundf((px + fx) / kResolution * 255.0f));
+                color.G = static_cast<GLubyte>(std::roundf((py + fy) / kResolution * 255.0f));
+                color.B = 0;
+                color.A = 255;
+                CheckPixels(static_cast<GLint>(px + fx), static_cast<GLint>(py + fy), 1, 1, 2,
+                            color);
+            }
+        }
+    }
+}
+
+// Test fragment input interpolation in CHROMIUM_OBJECT coordinates.
+TEST_P(CHROMIUMPathRenderingWithTexturingTest, TestProgramPathFragmentInputGenCHROMIUM_OBJECT)
+{
+    if (!isApplicable())
+        return;
+
+    // clang-format off
+    const char *kVertexShaderSource =
+        "uniform mat4 view_matrix;\n"
+        "uniform mat4 color_matrix;\n"
+        "uniform vec2 model_translate;\n"
+        "attribute vec2 position;\n"
+        "varying vec3 color;\n"
+        "void main() {\n"
+        "  color = (color_matrix * vec4(position, 1.0, 1.0)).rgb;\n"
+        "  vec4 p = vec4(model_translate + position, 1.0, 1.0);\n"
+        "  gl_Position = view_matrix * p;\n"
+        "}";
+
+    const char *kFragmentShaderSource =
+        "precision mediump float;\n"
+        "varying vec3 color;\n"
+        "void main() {\n"
+        "  gl_FragColor = vec4(color.rgb, 1.0);\n"
+        "}";
+    // clang-format on
+
+    compileProgram(kVertexShaderSource, kFragmentShaderSource);
+    bindProgram();
+    ASSERT_TRUE(linkProgram() == true);
+
+    glUniformMatrix4fv(kViewMatrixLocation, 1, GL_FALSE, kProjectionMatrix);
+
+    static const GLfloat kColorMatrix[16] = {
+        1.0f / kShapeWidth, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f / kShapeHeight, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f };
+    glUniformMatrix4fv(kColorMatrixLocation, 1, GL_FALSE, kColorMatrix);
+
+    // This is the functionality we are testing: ProgramPathFragmentInputGen
+    // does the same work as the color transform in vertex shader.
+    static const GLfloat kColorCoefficients[9] = {
+        1.0f / kShapeWidth, 0.0f, 0.0f, 0.0f, 1.0f / kShapeHeight, 0.0f, 0.0f, 0.0f, 0.0f};
+    glProgramPathFragmentInputGenCHROMIUM(mProgram, kColorFragmentInputLocation,
+                                          GL_OBJECT_LINEAR_CHROMIUM, 3, kColorCoefficients);
+
+    ASSERT_GL_NO_ERROR();
+
+    drawTestPattern();
+
+    const GLfloat kFillCoords[6] = {59.0f, 50.0f, 50.0f, 28.0f, 66.0f, 63.0f};
+
+    for (int j = 0; j < kTestRows; ++j)
+    {
+        for (int i = 0; i < kTestColumns; ++i)
+        {
+            for (size_t k = 0; k < ArraySize(kFillCoords); k += 2)
+            {
+                const float fx = kFillCoords[k];
+                const float fy = kFillCoords[k + 1];
+                const float px = static_cast<float>(i * kShapeWidth);
+                const float py = static_cast<float>(j * kShapeHeight);
+
+                angle::GLColor color;
+                color.R = static_cast<GLubyte>(std::roundf(fx / kShapeWidth * 255.0f));
+                color.G = static_cast<GLubyte>(std::roundf(fy / kShapeHeight * 255.0f));
+                color.B = 0;
+                color.A = 255;
+                CheckPixels(static_cast<GLint>(px + fx), static_cast<GLint>(py + fy), 1, 1, 2,
+                            color);
+            }
+        }
+    }
+}
+
+// Test success and error cases for setting interpolation parameters.
+TEST_P(CHROMIUMPathRenderingWithTexturingTest, TestProgramPathFragmentInputGenArgs)
+{
+    if (!isApplicable())
+        return;
+
+    // clang-format off
+    const char *kVertexShaderSource =
+        "varying vec2 vec2_var;\n"
+        "varying vec3 vec3_var;\n"
+        "varying vec4 vec4_var;\n"
+        "varying float float_var;\n"
+        "varying mat2 mat2_var;\n"
+        "varying mat3 mat3_var;\n"
+        "varying mat4 mat4_var;\n"
+        "attribute float avoid_opt;\n"
+        "void main() {\n"
+        "  vec2_var = vec2(1.0, 2.0 + avoid_opt);\n"
+        "  vec3_var = vec3(1.0, 2.0, 3.0 + avoid_opt);\n"
+        "  vec4_var = vec4(1.0, 2.0, 3.0, 4.0 + avoid_opt);\n"
+        "  float_var = 5.0 + avoid_opt;\n"
+        "  mat2_var = mat2(2.0 + avoid_opt);\n"
+        "  mat3_var = mat3(3.0 + avoid_opt);\n"
+        "  mat4_var = mat4(4.0 + avoid_opt);\n"
+        "  gl_Position = vec4(1.0);\n"
+        "}";
+
+    const char* kFragmentShaderSource =
+        "precision mediump float;\n"
+        "varying vec2 vec2_var;\n"
+        "varying vec3 vec3_var;\n"
+        "varying vec4 vec4_var;\n"
+        "varying float float_var;\n"
+        "varying mat2 mat2_var;\n"
+        "varying mat3 mat3_var;\n"
+        "varying mat4 mat4_var;\n"
+        "void main() {\n"
+        "  gl_FragColor = vec4(vec2_var, 0, 0) + vec4(vec3_var, 0) + vec4_var + "
+        "               vec4(float_var) + "
+        "               vec4(mat2_var[0][0], mat3_var[1][1], mat4_var[2][2], 1);\n"
+        "}";
+    // clang-format on
+
+    enum
+    {
+        kVec2Location = 0,
+        kVec3Location,
+        kVec4Location,
+        kFloatLocation,
+        kMat2Location,
+        kMat3Location,
+        kMat4Location,
+    };
+    struct
+    {
+        GLint location;
+        const char *name;
+        GLint components;
+    } variables[] = {
+        {kVec2Location, "vec2_var", 2},
+        {kVec3Location, "vec3_var", 3},
+        {kVec4Location, "vec4_var", 4},
+        {kFloatLocation, "float_var", 1},
+        // If a varying is not single-precision floating-point scalar or
+        // vector, it always causes an invalid operation.
+        {kMat2Location, "mat2_var", -1},
+        {kMat3Location, "mat3_var", -1},
+        {kMat4Location, "mat4_var", -1},
+    };
+
+    compileProgram(kVertexShaderSource, kFragmentShaderSource);
+
+    for (size_t i = 0; i < ArraySize(variables); ++i)
+    {
+        glBindFragmentInputLocationCHROMIUM(mProgram, variables[i].location, variables[i].name);
+    }
+
+    // test that using invalid (not linked) program is an invalid operation.
+    // See similar calls at the end of the test for discussion about the arguments.
+    glProgramPathFragmentInputGenCHROMIUM(mProgram, -1, GL_NONE, 0, NULL);
+    EXPECT_GL_ERROR(GL_INVALID_OPERATION);
+
+    ASSERT_TRUE(linkProgram() == true);
+
+    const GLfloat kCoefficients16[] = {1.0f, 2.0f,  3.0f,  4.0f,  5.0f,  6.0f,  7.0f,  8.0f,
+                                       9.0f, 10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f};
+    const GLenum kGenModes[] = {GL_NONE, GL_EYE_LINEAR_CHROMIUM, GL_OBJECT_LINEAR_CHROMIUM,
+                                GL_CONSTANT_CHROMIUM};
+
+    for (size_t variable = 0; variable < ArraySize(variables); ++variable)
+    {
+        for (GLint components = 0; components <= 4; ++components)
+        {
+            for (size_t genmode = 0; genmode < ArraySize(kGenModes); ++genmode)
+            {
+                glProgramPathFragmentInputGenCHROMIUM(mProgram, variables[variable].location,
+                                                      kGenModes[genmode], components,
+                                                      kCoefficients16);
+
+                if (components == 0 && kGenModes[genmode] == GL_NONE)
+                {
+                    if (variables[variable].components == -1)
+                    {
+                        // Clearing a fragment input that is not single-precision floating
+                        // point scalar or vector is an invalid operation.
+                        ASSERT_GL_ERROR(GL_INVALID_OPERATION);
+                    }
+                    else
+                    {
+                        // Clearing a valid fragment input is ok.
+                        ASSERT_GL_NO_ERROR();
+                    }
+                }
+                else if (components == 0 || kGenModes[genmode] == GL_NONE)
+                {
+                    ASSERT_GL_ERROR(GL_INVALID_VALUE);
+                }
+                else
+                {
+                    if (components == variables[variable].components)
+                    {
+                        // Setting a generator for a single-precision floating point
+                        // scalar or vector fragment input is ok.
+                        ASSERT_GL_NO_ERROR();
+                    }
+                    else
+                    {
+                        // Setting a generator when components do not match is an invalid operation.
+                        ASSERT_GL_ERROR(GL_INVALID_OPERATION);
+                    }
+                }
+            }
+        }
+    }
+
+    enum
+    {
+        kValidGenMode      = GL_CONSTANT_CHROMIUM,
+        kValidComponents   = 3,
+        kInvalidGenMode    = 0xAB,
+        kInvalidComponents = 5,
+    };
+
+    // The location == -1 would mean fragment input was optimized away. At the
+    // time of writing, -1 can not happen because the only way to obtain the
+    // location numbers is through bind. Test just to be consistent.
+    glProgramPathFragmentInputGenCHROMIUM(mProgram, -1, kValidGenMode, kValidComponents,
+                                          kCoefficients16);
+    ASSERT_GL_NO_ERROR();
+
+    // Test that even though the spec says location == -1 causes the operation to
+    // be skipped, the verification of other parameters is still done. This is a
+    // GL policy.
+    glProgramPathFragmentInputGenCHROMIUM(mProgram, -1, kInvalidGenMode, kValidComponents,
+                                          kCoefficients16);
+    ASSERT_GL_ERROR(GL_INVALID_ENUM);
+
+    glProgramPathFragmentInputGenCHROMIUM(mProgram, -1, kInvalidGenMode, kInvalidComponents,
+                                          kCoefficients16);
+    ASSERT_GL_ERROR(GL_INVALID_ENUM);
+
+    glProgramPathFragmentInputGenCHROMIUM(mProgram, -1, kValidGenMode, kInvalidComponents,
+                                          kCoefficients16);
+    ASSERT_GL_ERROR(GL_INVALID_VALUE);
+
+    glDeleteProgram(mProgram);
+
+    // Test that using invalid (deleted) program is an invalid operation.
+    EXPECT_FALSE(glIsProgram(mProgram) == GL_FALSE);
+
+    glProgramPathFragmentInputGenCHROMIUM(mProgram, -1, kValidGenMode, kValidComponents,
+                                          kCoefficients16);
+    ASSERT_GL_ERROR(GL_INVALID_OPERATION);
+
+    glProgramPathFragmentInputGenCHROMIUM(mProgram, -1, kInvalidGenMode, kValidComponents,
+                                          kCoefficients16);
+    ASSERT_GL_ERROR(GL_INVALID_OPERATION);
+
+    glProgramPathFragmentInputGenCHROMIUM(mProgram, -1, kInvalidGenMode, kInvalidComponents,
+                                          kCoefficients16);
+    ASSERT_GL_ERROR(GL_INVALID_OPERATION);
+
+    glProgramPathFragmentInputGenCHROMIUM(mProgram, -1, kValidGenMode, kInvalidComponents,
+                                          kCoefficients16);
+    ASSERT_GL_ERROR(GL_INVALID_OPERATION);
+
+    mProgram = 0u;
+}
+
+// Test that having input statically aliased fragment inputs the linking fails
+// and then succeeds when the conflict is resolved.
+TEST_P(CHROMIUMPathRenderingWithTexturingTest, TestConflictingBind)
+{
+    if (!isApplicable())
+        return;
+
+    // clang-format off
+    const char* kVertexShaderSource =
+        "attribute vec4 position;\n"
+        "varying vec4 colorA;\n"
+        "varying vec4 colorB;\n"
+        "void main() {\n"
+        "  gl_Position = position;\n"
+        "  colorA = position + vec4(1);\n"
+        "  colorB = position + vec4(2);\n"
+        "}";
+
+    const char* kFragmentShaderSource =
+        "precision mediump float;\n"
+        "varying vec4 colorA;\n"
+        "varying vec4 colorB;\n"
+        "void main() {\n"
+        "  gl_FragColor = colorA + colorB;\n"
+        "}";
+    // clang-format on
+
+    const GLint kColorALocation = 3;
+    const GLint kColorBLocation = 4;
+
+    compileProgram(kVertexShaderSource, kFragmentShaderSource);
+
+    glBindFragmentInputLocationCHROMIUM(mProgram, kColorALocation, "colorA");
+    // Bind colorB to location a, causing conflicts. Linking should fail.
+    glBindFragmentInputLocationCHROMIUM(mProgram, kColorALocation, "colorB");
+
+    // Should fail now.
+    ASSERT_TRUE(linkProgram() == false);
+    ASSERT_GL_NO_ERROR();
+
+    // Resolve the bind conflict.
+    glBindFragmentInputLocationCHROMIUM(mProgram, kColorBLocation, "colorB");
+
+    ASSERT_TRUE(linkProgram() == true);
+    ASSERT_GL_NO_ERROR();
+}
+
+// Test binding with array variables, using zero indices. Tests that
+// binding colorA[0] with explicit "colorA[0]" as well as "colorA" produces
+// a correct location that can be used with PathProgramFragmentInputGen.
+// For path rendering, colorA[0] is bound to a location. The input generator for
+// the location is set to produce vec4(0, 0.1, 0, 0.1).
+// The default varying, color, is bound to a location and its generator
+// will produce vec4(10.0).  The shader program produces green pixels.
+// For vertex-based rendering, the vertex shader produces the same effect as
+// the input generator for path rendering.
+TEST_P(CHROMIUMPathRenderingWithTexturingTest, BindFragmentInputArray)
+{
+    if (!isApplicable())
+        return;
+
+    //clang-format off
+    const char* kVertexShaderSource =
+        "uniform mat4 view_matrix;\n"
+        "uniform mat4 color_matrix;\n"
+        "uniform vec2 model_translate;\n"
+        "attribute vec2 position;\n"
+        "varying vec4 color;\n"
+        "varying vec4 colorA[4];\n"
+        "void main() {\n"
+        "  vec4 p = vec4(model_translate + position, 1, 1);\n"
+        "  gl_Position = view_matrix * p;\n"
+        "  colorA[0] = vec4(0.0, 0.1, 0, 0.1);\n"
+        "  colorA[1] = vec4(0.2);\n"
+        "  colorA[2] = vec4(0.3);\n"
+        "  colorA[3] = vec4(0.4);\n"
+        "  color = vec4(10.0);\n"
+        "}";
+
+    const char* kFragmentShaderSource =
+        "precision mediump float;\n"
+        "varying vec4 color;\n"
+        "varying vec4 colorA[4];\n"
+        "void main() {\n"
+        "  gl_FragColor = colorA[0] * color;\n"
+        "}";
+    // clang-format on
+
+    const GLint kColorA0Location = 4;
+    const GLint kUnusedLocation  = 5;
+    const GLfloat kColorA0[]     = {0.0f, 0.1f, 0.0f, 0.1f};
+    const GLfloat kColor[]       = {10.0f, 10.0f, 10.0f, 10.0f};
+    const GLfloat kFillCoords[6] = {59.0f, 50.0f, 50.0f, 28.0f, 66.0f, 63.0f};
+
+    for (int pass = 0; pass < 2; ++pass)
+    {
+        compileProgram(kVertexShaderSource, kFragmentShaderSource);
+        if (pass == 0)
+        {
+            glBindFragmentInputLocationCHROMIUM(mProgram, kUnusedLocation, "colorA[0]");
+            glBindFragmentInputLocationCHROMIUM(mProgram, kColorA0Location, "colorA");
+        }
+        else
+        {
+            glBindFragmentInputLocationCHROMIUM(mProgram, kUnusedLocation, "colorA");
+            glBindFragmentInputLocationCHROMIUM(mProgram, kColorA0Location, "colorA[0]");
+        }
+
+        bindProgram();
+
+        ASSERT_TRUE(linkProgram() == true);
+
+        glUniformMatrix4fv(kViewMatrixLocation, 1, GL_FALSE, kProjectionMatrix);
+        glProgramPathFragmentInputGenCHROMIUM(mProgram, kColorA0Location, GL_CONSTANT_CHROMIUM, 4, kColorA0);
+        glProgramPathFragmentInputGenCHROMIUM(mProgram, kColorFragmentInputLocation, GL_CONSTANT_CHROMIUM, 4, kColor);
+        ASSERT_GL_NO_ERROR();
+
+        drawTestPattern();
+
+        for (int j = 0; j < kTestRows; ++j)
+        {
+            for (int i = 0; i < kTestColumns; ++i)
+            {
+                for (size_t k = 0; k < ArraySize(kFillCoords); k += 2)
+                {
+                    const float fx = kFillCoords[k];
+                    const float fy = kFillCoords[k + 1];
+                    const float px = static_cast<float>(i * kShapeWidth);
+                    const float py = static_cast<float>(j * kShapeHeight);
+
+                    angle::GLColor color;
+                    color.R = 0;
+                    color.G = 255;
+                    color.B = 0;
+                    color.A = 255;
+                    CheckPixels(static_cast<GLint>(px + fx), static_cast<GLint>(py + fy), 1, 1, 2,
+                                color);
+                }
+            }
+        }
+    }
+}
+
+// Test binding array variables. This is like BindFragmentInputArray.
+// Currently disabled since it seems there's a driver bug with the
+// older drivers. This should work with driver >= 364.12
+TEST_P(CHROMIUMPathRenderingWithTexturingTest,
+    DISABLED_BindFragmentInputArrayNonZeroIndex)
+{
+    if (!isApplicable())
+        return;
+
+    // clang-format off
+    const char* kVertexShaderSource =
+        "uniform mat4 view_matrix;\n"
+        "uniform mat4 color_matrix;\n"
+        "uniform vec2 model_translate;\n"
+        "attribute vec2 position;\n"
+        "varying vec4 color;\n"
+        "varying vec4 colorA[4];\n"
+        "void main() {\n"
+        "  vec4 p = vec4(model_translate + position, 1, 1);\n"
+        "  gl_Position = view_matrix * p;\n"
+        "  colorA[0] = vec4(0, 0.1, 0, 0.1);\n"
+        "  colorA[1] = vec4(0, 1, 0, 1);\n"
+        "  colorA[2] = vec4(0, 0.8, 0, 0.8);\n"
+        "  colorA[3] = vec4(0, 0.5, 0, 0.5);\n"
+        "  color = vec4(0.2);\n"
+        "}\n";
+
+    const char* kFragmentShaderSource =
+        "precision mediump float;\n"
+        "varying vec4 colorA[4];\n"
+        "varying vec4 color;\n"
+        "void main() {\n"
+        "  gl_FragColor = (colorA[0] * colorA[1]) +\n"
+        "      colorA[2] + (colorA[3] * color);\n"
+        "}\n";
+    // clang-format on
+
+    const GLint kColorA0Location = 4;
+    const GLint kColorA1Location = 1;
+    const GLint kColorA2Location = 2;
+    const GLint kColorA3Location = 3;
+    const GLint kUnusedLocation = 5;
+    const GLfloat kColorA0[] = {0.0f, 0.1f, 0.0f, 0.1f};
+    const GLfloat kColorA1[] = {0.0f, 1.0f, 0.0f, 1.0f};
+    const GLfloat kColorA2[] = {0.0f, 0.8f, 0.0f, 0.8f};
+    const GLfloat kColorA3[] = {0.0f, 0.5f, 0.0f, 0.5f};
+    const GLfloat kColor[] = {0.2f, 0.2f, 0.2f, 0.2f};
+    const GLfloat kFillCoords[6] = {59.0f, 50.0f, 50.0f, 28.0f, 66.0f, 63.0f};
+
+    compileProgram(kVertexShaderSource, kFragmentShaderSource);
+
+    glBindFragmentInputLocationCHROMIUM(mProgram, kUnusedLocation, "colorA[0]");
+    glBindFragmentInputLocationCHROMIUM(mProgram, kColorA1Location, "colorA[1]");
+    glBindFragmentInputLocationCHROMIUM(mProgram, kColorA2Location, "colorA[2]");
+    glBindFragmentInputLocationCHROMIUM(mProgram, kColorA3Location, "colorA[3]");
+    glBindFragmentInputLocationCHROMIUM(mProgram, kColorA0Location, "colorA");
+    ASSERT_GL_NO_ERROR();
+
+    bindProgram();
+    ASSERT_TRUE(linkProgram() == true);
+
+    glUniformMatrix4fv(kViewMatrixLocation, 1, GL_FALSE, kProjectionMatrix);
+
+    glProgramPathFragmentInputGenCHROMIUM(mProgram, kColorA0Location, GL_CONSTANT_CHROMIUM, 4, kColorA0);
+    glProgramPathFragmentInputGenCHROMIUM(mProgram, kColorA1Location, GL_CONSTANT_CHROMIUM, 4, kColorA1);
+    glProgramPathFragmentInputGenCHROMIUM(mProgram, kColorA2Location, GL_CONSTANT_CHROMIUM, 4, kColorA2);
+    glProgramPathFragmentInputGenCHROMIUM(mProgram, kColorA3Location, GL_CONSTANT_CHROMIUM, 4, kColorA3);
+    glProgramPathFragmentInputGenCHROMIUM(mProgram, kColorFragmentInputLocation,
+        GL_CONSTANT_CHROMIUM, 4, kColor);
+    ASSERT_GL_NO_ERROR();
+
+    drawTestPattern();
+
+    for (int j = 0; j < kTestRows; ++j)
+    {
+        for (int i = 0; i < kTestColumns; ++i)
+        {
+            for (size_t k = 0; k < ArraySize(kFillCoords); k += 2)
+            {
+                const float fx = kFillCoords[k];
+                const float fy = kFillCoords[k + 1];
+                const float px = static_cast<float>(i * kShapeWidth);
+                const float py = static_cast<float>(j * kShapeHeight);
+
+                angle::GLColor color;
+                color.R = 0;
+                color.G = 255;
+                color.B = 0;
+                color.A = 255;
+                CheckPixels(static_cast<GLint>(px + fx), static_cast<GLint>(py + fy), 1, 1, 2,
+                            color);
+            }
+        }
+    }
+}
+
+TEST_P(CHROMIUMPathRenderingWithTexturingTest, UnusedFragmentInputUpdate)
+{
+    if (!isApplicable())
+        return;
+
+  // clang-format off
+    const char* kVertexShaderString =
+        "attribute vec4 a_position;\n"
+        "void main() {\n"
+        "  gl_Position = a_position;\n"
+        "}";
+
+    const char* kFragmentShaderString =
+        "precision mediump float;\n"
+        "uniform vec4 u_colorA;\n"
+        "uniform float u_colorU;\n"
+        "uniform vec4 u_colorC;\n"
+        "void main() {\n"
+        "  gl_FragColor = u_colorA + u_colorC;\n"
+        "}";
+    // clang-format on
+
+    const GLint kColorULocation = 1;
+    const GLint kNonexistingLocation = 5;
+    const GLint kUnboundLocation = 6;
+
+    compileProgram(kVertexShaderString, kFragmentShaderString);
+
+    glBindFragmentInputLocationCHROMIUM(mProgram, kColorULocation, "u_colorU");
+
+    // The non-existing input should behave like existing but optimized away input.
+    glBindFragmentInputLocationCHROMIUM(mProgram, kNonexistingLocation, "nonexisting");
+
+    // Let A and C be assigned automatic locations.
+    ASSERT_TRUE(linkProgram() == true);
+
+    const GLfloat kColor[16] = {};
+
+    // No errors on bound locations, since caller does not know
+    // if the driver optimizes them away or not.
+    glProgramPathFragmentInputGenCHROMIUM(mProgram, kColorULocation, GL_CONSTANT_CHROMIUM, 1, kColor);
+    ASSERT_GL_NO_ERROR();
+
+    // No errors on bound locations of names that do not exist
+    // in the shader. Otherwise it would be inconsistent wrt the
+    // optimization case.
+    glProgramPathFragmentInputGenCHROMIUM(mProgram, kNonexistingLocation, GL_CONSTANT_CHROMIUM, 1, kColor);
+    ASSERT_GL_NO_ERROR();
+
+    // The above are equal to updating -1.
+    glProgramPathFragmentInputGenCHROMIUM(mProgram, -1, GL_CONSTANT_CHROMIUM, 1, kColor);
+    ASSERT_GL_NO_ERROR();
+
+    // No errors when updating with other type either.
+    // The type can not be known with the non-existing case.
+    glProgramPathFragmentInputGenCHROMIUM(mProgram, kColorULocation, GL_CONSTANT_CHROMIUM, 4, kColor);
+    ASSERT_GL_NO_ERROR();
+
+    glProgramPathFragmentInputGenCHROMIUM(mProgram, kNonexistingLocation, GL_CONSTANT_CHROMIUM, 4, kColor);
+    ASSERT_GL_NO_ERROR();
+
+    glProgramPathFragmentInputGenCHROMIUM(mProgram, -1, GL_CONSTANT_CHROMIUM, 4, kColor);
+    ASSERT_GL_NO_ERROR();
+
+    // Updating an unbound, non-existing location still causes an error.
+    glProgramPathFragmentInputGenCHROMIUM(mProgram, kUnboundLocation, GL_CONSTANT_CHROMIUM, 4, kColor);
+    ASSERT_GL_ERROR(GL_INVALID_OPERATION);
+}
+
+
 }  // namespace
 
 ANGLE_INSTANTIATE_TEST(CHROMIUMPathRenderingTest,
@@ -736,6 +1972,12 @@ ANGLE_INSTANTIATE_TEST(CHROMIUMPathRenderingTest,
                        ES3_OPENGL(),
                        ES3_OPENGLES());
 ANGLE_INSTANTIATE_TEST(CHROMIUMPathRenderingDrawTest,
+                       ES2_OPENGL(),
+                       ES2_OPENGLES(),
+                       ES3_OPENGL(),
+                       ES3_OPENGLES());
+
+ANGLE_INSTANTIATE_TEST(CHROMIUMPathRenderingWithTexturingTest,
                        ES2_OPENGL(),
                        ES2_OPENGLES(),
                        ES3_OPENGL(),

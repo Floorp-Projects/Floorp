@@ -102,11 +102,11 @@ class ReadPixelsPBOTest : public ReadPixelsTest
 
     void TearDown() override
     {
-        ANGLETest::TearDown();
-
         glDeleteBuffers(1, &mPBO);
         glDeleteTextures(1, &mTexture);
         glDeleteFramebuffers(1, &mFBO);
+
+        ANGLETest::TearDown();
     }
 
     GLuint mPBO;
@@ -395,7 +395,7 @@ class ReadPixelsMultisampleTest : public ReadPixelsTest
 // Test ReadPixels from a multisampled framebuffer.
 TEST_P(ReadPixelsMultisampleTest, BasicClear)
 {
-    if (getClientVersion() < 3 && !extensionEnabled("GL_ANGLE_framebuffer_multisample"))
+    if (getClientMajorVersion() < 3 && !extensionEnabled("GL_ANGLE_framebuffer_multisample"))
     {
         std::cout << "Test skipped because ES3 or GL_ANGLE_framebuffer_multisample is not available." << std::endl;
         return;
@@ -642,6 +642,52 @@ TEST_P(ReadPixelsTextureTest, MipLayerAttachment2DArrayPBO)
     testPBORead(GL_TEXTURE_2D_ARRAY, 2, 1, 1);
 }
 
+// a test class to be used for error checking of glReadPixels
+class ReadPixelsErrorTest : public ReadPixelsTest
+{
+  protected:
+    ReadPixelsErrorTest() : mTexture(0), mFBO(0) {}
+
+    void SetUp() override
+    {
+        ANGLETest::SetUp();
+
+        glGenTextures(1, &mTexture);
+        glBindTexture(GL_TEXTURE_2D, mTexture);
+        glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, 4, 1);
+
+        glGenFramebuffers(1, &mFBO);
+        glBindFramebuffer(GL_FRAMEBUFFER, mFBO);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mTexture, 0);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        ASSERT_GL_NO_ERROR();
+    }
+
+    void TearDown() override
+    {
+        ANGLETest::TearDown();
+
+        glDeleteTextures(1, &mTexture);
+        glDeleteFramebuffers(1, &mFBO);
+    }
+
+    GLuint mTexture;
+    GLuint mFBO;
+};
+
+//  The test verifies that glReadPixels generates a GL_INVALID_OPERATION error
+//  when the read buffer is GL_NONE.
+//  Reference: GLES 3.0.4, Section 4.3.2 Reading Pixels
+TEST_P(ReadPixelsErrorTest, ReadBufferIsNone)
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, mFBO);
+    glReadBuffer(GL_NONE);
+    std::vector<GLubyte> pixels(4);
+    glReadPixels(0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+    EXPECT_GL_ERROR(GL_INVALID_OPERATION);
+}
+
 }  // anonymous namespace
 
 // Use this to select which configurations (e.g. which renderer, which GLES major version) these tests should be run against.
@@ -650,3 +696,4 @@ ANGLE_INSTANTIATE_TEST(ReadPixelsPBOTest, ES3_D3D11(), ES3_OPENGL(), ES3_OPENGLE
 ANGLE_INSTANTIATE_TEST(ReadPixelsPBODrawTest, ES3_D3D11(), ES3_OPENGL(), ES3_OPENGLES());
 ANGLE_INSTANTIATE_TEST(ReadPixelsMultisampleTest, ES3_D3D11(), ES3_OPENGL(), ES3_OPENGLES());
 ANGLE_INSTANTIATE_TEST(ReadPixelsTextureTest, ES3_D3D11(), ES3_OPENGL(), ES3_OPENGLES());
+ANGLE_INSTANTIATE_TEST(ReadPixelsErrorTest, ES3_D3D11(), ES3_OPENGL(), ES3_OPENGLES());

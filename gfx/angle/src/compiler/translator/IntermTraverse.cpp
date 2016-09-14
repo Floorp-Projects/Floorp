@@ -63,6 +63,21 @@ void TIntermBranch::traverse(TIntermTraverser *it)
     it->traverseBranch(this);
 }
 
+TIntermTraverser::TIntermTraverser(bool preVisit, bool inVisit, bool postVisit)
+    : preVisit(preVisit),
+      inVisit(inVisit),
+      postVisit(postVisit),
+      mDepth(0),
+      mMaxDepth(0),
+      mInGlobalScope(true),
+      mTemporaryIndex(nullptr)
+{
+}
+
+TIntermTraverser::~TIntermTraverser()
+{
+}
+
 void TIntermTraverser::pushParentBlock(TIntermAggregate *node)
 {
     mParentBlockStack.push_back(ParentBlock(node, 0));
@@ -92,6 +107,13 @@ void TIntermTraverser::insertStatementsInParentBlock(const TIntermSequence &inse
     NodeInsertMultipleEntry insert(mParentBlockStack.back().node, mParentBlockStack.back().pos,
                                    insertionsBefore, insertionsAfter);
     mInsertions.push_back(insert);
+}
+
+void TIntermTraverser::insertStatementInParentBlock(TIntermNode *statement)
+{
+    TIntermSequence insertions;
+    insertions.push_back(statement);
+    insertStatementsInParentBlock(insertions);
 }
 
 TIntermSymbol *TIntermTraverser::createTempSymbol(const TType &type, TQualifier qualifier)

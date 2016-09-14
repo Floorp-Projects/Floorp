@@ -118,8 +118,8 @@ void skipUntilEOD(pp::Lexer *lexer, pp::Token *token)
 
 bool isMacroNameReserved(const std::string &name)
 {
-    // Names prefixed with "GL_" are reserved.
-    return (name.substr(0, 3) == "GL_");
+    // Names prefixed with "GL_" and the name "defined" are reserved.
+    return name == "defined" || (name.substr(0, 3) == "GL_");
 }
 
 bool hasDoubleUnderscores(const std::string &name)
@@ -138,6 +138,66 @@ bool isMacroPredefined(const std::string &name,
 
 namespace pp
 {
+
+class DefinedParser : public Lexer
+{
+  public:
+    DefinedParser(Lexer *lexer, const MacroSet *macroSet, Diagnostics *diagnostics)
+        : mLexer(lexer), mMacroSet(macroSet), mDiagnostics(diagnostics)
+    {
+    }
+
+  protected:
+    void lex(Token *token) override
+    {
+        const char kDefined[] = "defined";
+
+        mLexer->lex(token);
+        if (token->type != Token::IDENTIFIER)
+            return;
+        if (token->text != kDefined)
+            return;
+
+        bool paren = false;
+        mLexer->lex(token);
+        if (token->type == '(')
+        {
+            paren = true;
+            mLexer->lex(token);
+        }
+
+        if (token->type != Token::IDENTIFIER)
+        {
+            mDiagnostics->report(Diagnostics::PP_UNEXPECTED_TOKEN, token->location, token->text);
+            skipUntilEOD(mLexer, token);
+            return;
+        }
+        MacroSet::const_iterator iter = mMacroSet->find(token->text);
+        std::string expression        = iter != mMacroSet->end() ? "1" : "0";
+
+        if (paren)
+        {
+            mLexer->lex(token);
+            if (token->type != ')')
+            {
+                mDiagnostics->report(Diagnostics::PP_UNEXPECTED_TOKEN, token->location,
+                                     token->text);
+                skipUntilEOD(mLexer, token);
+                return;
+            }
+        }
+
+        // We have a valid defined operator.
+        // Convert the current token into a CONST_INT token.
+        token->type = Token::CONST_INT;
+        token->text = expression;
+    }
+
+  private:
+    Lexer *mLexer;
+    const MacroSet *mMacroSet;
+    Diagnostics *mDiagnostics;
+};
 
 DirectiveParser::DirectiveParser(Tokenizer *tokenizer,
                                  MacroSet *macroSet,
@@ -776,7 +836,7 @@ void DirectiveParser::parseLine(Token *token)
     bool parsedFileNumber = false;
     int line = 0, file = 0;
 
-    MacroExpander macroExpander(mTokenizer, mMacroSet, mDiagnostics, false);
+    MacroExpander macroExpander(mTokenizer, mMacroSet, mDiagnostics);
 
     // Lex the first token after "#line" so we can check it for EOD.
     macroExpander.lex(token);
@@ -885,7 +945,8 @@ int DirectiveParser::parseExpressionIf(Token *token)
     assert((getDirective(token) == DIRECTIVE_IF) ||
            (getDirective(token) == DIRECTIVE_ELIF));
 
-    MacroExpander macroExpander(mTokenizer, mMacroSet, mDiagnostics, true);
+    DefinedParser definedParser(mTokenizer, mMacroSet, mDiagnostics);
+    MacroExpander macroExpander(&definedParser, mMacroSet, mDiagnostics);
     ExpressionParser expressionParser(&macroExpander, mDiagnostics);
 
     int expression = 0;

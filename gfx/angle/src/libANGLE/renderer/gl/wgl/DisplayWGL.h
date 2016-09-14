@@ -46,7 +46,6 @@ class DisplayWGL : public DisplayGL
 
     egl::ConfigSet generateConfigs() override;
 
-    bool isDeviceLost() const override;
     bool testDeviceLost() override;
     egl::Error restoreLostDevice() override;
 
@@ -78,6 +77,8 @@ class DisplayWGL : public DisplayGL
 
     FunctionsWGL *mFunctionsWGL;
     FunctionsGL *mFunctionsGL;
+
+    bool mHasARBCreateContextRobustness;
 
     ATOM mWindowClass;
     HWND mWindow;

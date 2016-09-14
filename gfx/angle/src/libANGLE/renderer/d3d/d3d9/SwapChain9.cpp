@@ -335,7 +335,7 @@ EGLint SwapChain9::swapRect(EGLint x, EGLint y, EGLint width, EGLint height)
     // On Windows 8 systems, IDirect3DSwapChain9::Present sometimes returns 0x88760873 when the windows is
     // in the process of entering/exiting fullscreen. This code doesn't seem to have any documentation.  The
     // device appears to be ok after emitting this error so simply return a failure to swap.
-    if (result == 0x88760873)
+    if (result == static_cast<HRESULT>(0x88760873))
     {
         return EGL_BAD_MATCH;
     }

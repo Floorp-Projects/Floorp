@@ -38,61 +38,6 @@ TIntermSymbol *TIntermediate::addSymbol(
 }
 
 //
-// Connect two nodes with a new parent that does a binary operation on the nodes.
-//
-// Returns the added node.
-//
-TIntermTyped *TIntermediate::addBinaryMath(
-    TOperator op, TIntermTyped *left, TIntermTyped *right, const TSourceLoc &line)
-{
-    //
-    // Need a new node holding things together then.  Make
-    // one and promote it to the right type.
-    //
-    TIntermBinary *node = new TIntermBinary(op);
-    node->setLine(line);
-
-    node->setLeft(left);
-    node->setRight(right);
-    if (!node->promote(mInfoSink))
-        return NULL;
-
-    // See if we can fold constants.
-    TIntermTyped *foldedNode = node->fold(mInfoSink);
-    if (foldedNode)
-        return foldedNode;
-
-    return node;
-}
-
-//
-// Connect two nodes through an assignment.
-//
-// Returns the added node.
-//
-TIntermTyped *TIntermediate::addAssign(
-    TOperator op, TIntermTyped *left, TIntermTyped *right, const TSourceLoc &line)
-{
-    if (left->getType().getStruct() || right->getType().getStruct())
-    {
-        if (left->getType() != right->getType())
-        {
-            return NULL;
-        }
-    }
-
-    TIntermBinary *node = new TIntermBinary(op);
-    node->setLine(line);
-
-    node->setLeft(left);
-    node->setRight(right);
-    if (!node->promote(mInfoSink))
-        return NULL;
-
-    return node;
-}
-
-//
 // Connect two nodes through an index operator, where the left node is the base
 // of an array or struct, and the right node is a direct or indirect offset.
 //
@@ -503,6 +448,4 @@ TIntermTyped *TIntermediate::foldAggregateBuiltIn(TIntermAggregate *aggregate)
             // Constant folding not supported for the built-in.
             return nullptr;
     }
-
-    return nullptr;
 }

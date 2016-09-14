@@ -254,23 +254,22 @@ gl::Error TextureGL::setSubImageRowByRowWorkaround(GLenum target,
     unpackToUse.pixelBuffer = unpack.pixelBuffer;
     mStateManager->setPixelUnpackState(unpackToUse);
     unpackToUse.pixelBuffer.set(nullptr);
-    GLenum sizedFormat =
-        gl::GetSizedInternalFormat(mState.getImageDesc(mState.mTarget, level).internalFormat, type);
-    const gl::InternalFormat &formatInfo = gl::GetInternalFormatInfo(sizedFormat);
+    const gl::Format &glFormat           = mState.getImageDesc(mState.mTarget, level).format;
     GLuint rowBytes                      = 0;
     ANGLE_TRY_RESULT(
-        formatInfo.computeRowPitch(GL_NONE, area.width, unpack.alignment, unpack.rowLength),
+        glFormat.info->computeRowPitch(GL_NONE, area.width, unpack.alignment, unpack.rowLength),
         rowBytes);
     GLuint imageBytes = 0;
     ANGLE_TRY_RESULT(
-        formatInfo.computeDepthPitch(GL_NONE, area.width, area.height, unpack.alignment,
-                                     unpack.rowLength, unpack.imageHeight),
+        glFormat.info->computeDepthPitch(GL_NONE, area.width, area.height, unpack.alignment,
+                                         unpack.rowLength, unpack.imageHeight),
         imageBytes);
     bool useTexImage3D = UseTexImage3D(mState.mTarget);
     GLuint skipBytes   = 0;
-    ANGLE_TRY_RESULT(formatInfo.computeSkipBytes(rowBytes, imageBytes, unpack.skipImages,
-                                                 unpack.skipRows, unpack.skipPixels, useTexImage3D),
-                     skipBytes);
+    ANGLE_TRY_RESULT(
+        glFormat.info->computeSkipBytes(rowBytes, imageBytes, unpack.skipImages, unpack.skipRows,
+                                        unpack.skipPixels, useTexImage3D),
+        skipBytes);
 
     const uint8_t *pixelsWithSkip = pixels + skipBytes;
     if (useTexImage3D)

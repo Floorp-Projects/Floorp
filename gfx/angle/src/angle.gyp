@@ -143,6 +143,33 @@
         },
 
         {
+            'target_name': 'angle_image_util',
+            'type': 'static_library',
+            'includes': [ '../build/common_defines.gypi', ],
+            'sources':
+            [
+                '<@(libangle_image_util_sources)',
+            ],
+            'include_dirs':
+            [
+                '.',
+                '../include',
+            ],
+            'dependencies':
+            [
+                'angle_common',
+            ],
+            'direct_dependent_settings':
+            {
+                'include_dirs':
+                [
+                    '<(angle_path)/include',
+                    '<(angle_path)/src',
+                ],
+            },
+        },
+
+        {
             'target_name': 'copy_scripts',
             'type': 'none',
             'includes': [ '../build/common_defines.gypi', ],

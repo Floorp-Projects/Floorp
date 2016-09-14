@@ -102,6 +102,51 @@ class MalformedWebGL1ShaderTest : public MalformedShaderTest
     }
 };
 
+class MalformedVertexShaderGLES31Test : public MalformedShaderTest
+{
+  public:
+    MalformedVertexShaderGLES31Test() {}
+
+  private:
+    void SetUp() override
+    {
+        ShBuiltInResources resources;
+        ShInitBuiltInResources(&resources);
+        mTranslator = new TranslatorESSL(GL_VERTEX_SHADER, SH_GLES3_1_SPEC);
+        ASSERT_TRUE(mTranslator->Init(resources));
+    }
+};
+
+class MalformedFragmentShaderGLES31Test : public MalformedShaderTest
+{
+  public:
+    MalformedFragmentShaderGLES31Test() {}
+
+  private:
+    void SetUp() override
+    {
+        ShBuiltInResources resources;
+        ShInitBuiltInResources(&resources);
+        mTranslator = new TranslatorESSL(GL_FRAGMENT_SHADER, SH_GLES3_1_SPEC);
+        ASSERT_TRUE(mTranslator->Init(resources));
+    }
+};
+
+class MalformedComputeShaderTest : public MalformedShaderTest
+{
+  public:
+    MalformedComputeShaderTest() {}
+
+  private:
+    void SetUp() override
+    {
+        ShBuiltInResources resources;
+        ShInitBuiltInResources(&resources);
+        mTranslator = new TranslatorESSL(GL_COMPUTE_SHADER, SH_GLES3_1_SPEC);
+        ASSERT_TRUE(mTranslator->Init(resources));
+    }
+};
+
 class UnrollForLoopsTest : public MalformedShaderTest
 {
   public:
@@ -1204,7 +1249,7 @@ TEST_F(MalformedShaderTest, EmptyArrayConstructor)
 TEST_F(MalformedShaderTest, DynamicallyIndexedFragmentOutput)
 {
     const std::string &shaderString =
-        "#version 300 es"
+        "#version 300 es\n"
         "precision mediump float;\n"
         "uniform int a;\n"
         "out vec4[2] my_FragData;\n"
@@ -1223,7 +1268,7 @@ TEST_F(MalformedShaderTest, DynamicallyIndexedFragmentOutput)
 TEST_F(MalformedShaderTest, DynamicallyIndexedInterfaceBlock)
 {
     const std::string &shaderString =
-        "#version 300 es"
+        "#version 300 es\n"
         "precision mediump float;\n"
         "uniform int a;\n"
         "uniform B\n"
@@ -1566,6 +1611,824 @@ TEST_F(MalformedShaderTest, ESSL300BuiltInFunctionOverload)
         "void main()\n"
         "{\n"
         "   my_FragColor = vec4(sin(1));"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Multiplying a 4x2 matrix with a 4x2 matrix should not work.
+TEST_F(MalformedShaderTest, CompoundMultiplyMatrixIdenticalNonSquareDimensions)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 my_FragColor;\n"
+        "void main()\n"
+        "{\n"
+        "   mat4x2 foo;\n"
+        "   foo *= mat4x2(4.0);\n"
+        "   my_FragColor = vec4(0.0);\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Multiplying a matrix with 2 columns and 4 rows with a 2x2 matrix should work.
+TEST_F(MalformedShaderTest, CompoundMultiplyMatrixValidNonSquareDimensions)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 my_FragColor;\n"
+        "void main()\n"
+        "{\n"
+        "   mat2x4 foo;\n"
+        "   foo *= mat2x2(4.0);\n"
+        "   my_FragColor = vec4(0.0);\n"
+        "}\n";
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// Covers a bug where we would set the incorrect result size on an out-of-bounds vector swizzle.
+TEST_F(MalformedShaderTest, OutOfBoundsVectorSwizzle)
+{
+    const std::string &shaderString =
+        "void main() {\n"
+        "   vec2(0).qq;\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Covers a bug where strange preprocessor defines could trigger asserts.
+TEST_F(MalformedShaderTest, DefineWithSemicolon)
+{
+    const std::string &shaderString =
+        "#define Def; highp\n"
+        "uniform Def vec2 a;\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Covers a bug in our parsing of malformed shift preprocessor expressions.
+TEST_F(MalformedShaderTest, LineDirectiveUndefinedShift)
+{
+    const std::string &shaderString = "#line x << y";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Covers a bug in our parsing of malformed shift preprocessor expressions.
+TEST_F(MalformedShaderTest, LineDirectiveNegativeShift)
+{
+    const std::string &shaderString = "#line x << -1";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// gl_MaxImageUnits is only available in ES 3.1 shaders.
+TEST_F(MalformedShaderTest, MaxImageUnitsInES3Shader)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 myOutput;"
+        "void main() {\n"
+        "   float ff = float(gl_MaxImageUnits);\n"
+        "   myOutput = vec4(ff);\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// struct += struct is an invalid operation.
+TEST_F(MalformedShaderTest, StructCompoundAssignStruct)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 myOutput;\n"
+        "struct S { float foo; };\n"
+        "void main() {\n"
+        "   S a, b;\n"
+        "   a += b;\n"
+        "   myOutput = vec4(0);\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// struct == different struct is an invalid operation.
+TEST_F(MalformedShaderTest, StructEqDifferentStruct)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 myOutput;\n"
+        "struct S { float foo; };\n"
+        "struct S2 { float foobar; };\n"
+        "void main() {\n"
+        "   S a;\n"
+        "   S2 b;\n"
+        "   a == b;\n"
+        "   myOutput = vec4(0);\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Compute shaders are not supported in versions lower than 310.
+TEST_F(MalformedComputeShaderTest, Version100)
+{
+    const std::string &shaderString =
+        "void main()\n"
+        "layout(local_size_x=1) in;\n"
+        "{\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Compute shaders are not supported in versions lower than 310.
+TEST_F(MalformedComputeShaderTest, Version300)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "void main()\n"
+        "layout(local_size_x=1) in;\n"
+        "{\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Compute shaders should have work group size specified. However, it is not a compile time error
+// to not have the size specified, but rather a link time one.
+// GLSL ES 3.10 Revision 4, 4.4.1.1 Compute Shader Inputs
+TEST_F(MalformedComputeShaderTest, NoWorkGroupSizeSpecified)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "void main()\n"
+        "{\n"
+        "}\n";
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// Work group size is less than 1. It should be at least 1.
+// GLSL ES 3.10 Revision 4, 7.1.3 Compute Shader Special Variables
+// The spec is not clear whether having a local size qualifier equal zero
+// is correct.
+// TODO (mradev): Ask people from Khronos to clarify the spec.
+TEST_F(MalformedComputeShaderTest, WorkGroupSizeTooSmallXdimension)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 0) in;\n"
+        "void main()\n"
+        "{\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Work group size is correct for the x and y dimensions, but not for the z dimension.
+// GLSL ES 3.10 Revision 4, 7.1.3 Compute Shader Special Variables
+TEST_F(MalformedComputeShaderTest, WorkGroupSizeTooSmallZDimension)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 4, local_size_y = 6, local_size_z = 0) in;\n"
+        "void main()\n"
+        "{\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Work group size is bigger than the minimum in the x dimension.
+// GLSL ES 3.10 Revision 4, 4.4.1.1 Compute Shader Inputs
+TEST_F(MalformedComputeShaderTest, WorkGroupSizeTooBigXDimension)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 9989899) in;\n"
+        "void main()\n"
+        "{\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Work group size is bigger than the minimum in the y dimension.
+// GLSL ES 3.10 Revision 4, 4.4.1.1 Compute Shader Inputs
+TEST_F(MalformedComputeShaderTest, WorkGroupSizeTooBigYDimension)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 5, local_size_y = 9989899) in;\n"
+        "void main()\n"
+        "{\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Work group size is definitely bigger than the minimum in the z dimension.
+// GLSL ES 3.10 Revision 4, 4.4.1.1 Compute Shader Inputs
+TEST_F(MalformedComputeShaderTest, WorkGroupSizeTooBigZDimension)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 5, local_size_y = 5, local_size_z = 9989899) in;\n"
+        "void main()\n"
+        "{\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Work group size specified through macro expansion.
+TEST_F(MalformedComputeShaderTest, WorkGroupSizeMacro)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "#define MYDEF(x) x"
+        "layout(local_size_x = MYDEF(127)) in;\n"
+        "void main()\n"
+        "{\n"
+        "}\n";
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// Work group size specified as an unsigned integer.
+TEST_F(MalformedComputeShaderTest, WorkGroupSizeUnsignedInteger)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 123u) in;\n"
+        "void main()\n"
+        "{\n"
+        "}\n";
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// Work group size specified in hexadecimal.
+TEST_F(MalformedComputeShaderTest, WorkGroupSizeHexadecimal)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 0x3A) in;\n"
+        "void main()\n"
+        "{\n"
+        "}\n";
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// local_size_x is -1 in hexadecimal format.
+// -1 is used as unspecified value in the TLayoutQualifier structure.
+TEST_F(MalformedComputeShaderTest, WorkGroupSizeMinusOneHexadecimal)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 0xFFFFFFFF) in;\n"
+        "void main()\n"
+        "{\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Work group size specified in octal.
+TEST_F(MalformedComputeShaderTest, WorkGroupSizeOctal)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 013) in;\n"
+        "void main()\n"
+        "{\n"
+        "}\n";
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// Work group size is negative. It is specified in hexadecimal.
+TEST_F(MalformedComputeShaderTest, WorkGroupSizeNegativeHexadecimal)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 0xFFFFFFEC) in;\n"
+        "void main()\n"
+        "{\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Multiple work group layout qualifiers with differing values.
+// GLSL ES 3.10 Revision 4, 4.4.1.1 Compute Shader Inputs
+TEST_F(MalformedComputeShaderTest, DifferingLayoutQualifiers)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 5, local_size_x = 6) in;\n"
+        "void main()\n"
+        "{\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Multiple work group input variables with differing local size values.
+// GLSL ES 3.10 Revision 4, 4.4.1.1 Compute Shader Inputs
+TEST_F(MalformedComputeShaderTest, MultipleInputVariablesDifferingLocalSize)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 5, local_size_y = 6) in;\n"
+        "layout(local_size_x = 5, local_size_y = 7) in;\n"
+        "void main()\n"
+        "{\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Multiple work group input variables with differing local size values.
+// GLSL ES 3.10 Revision 4, 4.4.1.1 Compute Shader Inputs
+TEST_F(MalformedComputeShaderTest, MultipleInputVariablesDifferingLocalSize2)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 5) in;\n"
+        "layout(local_size_x = 5, local_size_y = 7) in;\n"
+        "void main()\n"
+        "{\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Multiple work group input variables with the same local size values. It should compile.
+// GLSL ES 3.10 Revision 4, 4.4.1.1 Compute Shader Inputs
+TEST_F(MalformedComputeShaderTest, MultipleInputVariablesSameLocalSize)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 5, local_size_y = 6) in;\n"
+        "layout(local_size_x = 5, local_size_y = 6) in;\n"
+        "void main()\n"
+        "{\n"
+        "}\n";
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// Multiple work group input variables with the same local size values. It should compile.
+// Since the default value is 1, it should compile.
+// GLSL ES 3.10 Revision 4, 4.4.1.1 Compute Shader Inputs
+TEST_F(MalformedComputeShaderTest, MultipleInputVariablesSameLocalSize2)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 5) in;\n"
+        "layout(local_size_x = 5, local_size_y = 1) in;\n"
+        "void main()\n"
+        "{\n"
+        "}\n";
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// Multiple work group input variables with the same local size values. It should compile.
+// Since the default value is 1, it should compile.
+// GLSL ES 3.10 Revision 4, 4.4.1.1 Compute Shader Inputs
+TEST_F(MalformedComputeShaderTest, MultipleInputVariablesSameLocalSize3)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 5, local_size_y = 1) in;\n"
+        "layout(local_size_x = 5) in;\n"
+        "void main()\n"
+        "{\n"
+        "}\n";
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// Specifying row_major qualifier in a work group size layout.
+// GLSL ES 3.10 Revision 4, 4.4.1.1 Compute Shader Inputs
+TEST_F(MalformedComputeShaderTest, RowMajorInComputeInputLayout)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 5, row_major) in;\n"
+        "void main()\n"
+        "{\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// local size layout can be used only with compute input variables
+// GLSL ES 3.10 Revision 4, 4.4.1.1 Compute Shader Inputs
+TEST_F(MalformedComputeShaderTest, UniformComputeInputLayout)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 5) uniform;\n"
+        "void main()\n"
+        "{\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// local size layout can be used only with compute input variables
+// GLSL ES 3.10 Revision 4, 4.4.1.1 Compute Shader Inputs
+TEST_F(MalformedComputeShaderTest, UniformBufferComputeInputLayout)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 5) uniform SomeBuffer { vec4 something; };\n"
+        "void main()\n"
+        "{\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// local size layout can be used only with compute input variables
+// GLSL ES 3.10 Revision 4, 4.4.1.1 Compute Shader Inputs
+TEST_F(MalformedComputeShaderTest, StructComputeInputLayout)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 5) struct SomeBuffer { vec4 something; };\n"
+        "void main()\n"
+        "{\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// local size layout can be used only with compute input variables
+// GLSL ES 3.10 Revision 4, 4.4.1.1 Compute Shader Inputs
+TEST_F(MalformedComputeShaderTest, StructBodyComputeInputLayout)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "struct S {\n"
+        "   layout(local_size_x = 12) vec4 foo;\n"
+        "};\n"
+        "void main()"
+        "{"
+        "}";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// local size layout can be used only with compute input variables
+// GLSL ES 3.10 Revision 4, 4.4.1.1 Compute Shader Inputs
+TEST_F(MalformedComputeShaderTest, TypeComputeInputLayout)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 5) vec4;\n"
+        "void main()\n"
+        "{\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Invalid use of the out storage qualifier in a compute shader.
+// GLSL ES 3.10 Revision 4, 4.4.1.1 Compute Shader Inputs
+TEST_F(MalformedComputeShaderTest, InvalidOutStorageQualifier)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 15) in;\n"
+        "out vec4 myOutput;\n"
+        "void main() {\n"
+        "}\n";
+
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Invalid use of the out storage qualifier in a compute shader.
+// GLSL ES 3.10 Revision 4, 4.4.1.1 Compute Shader Inputs
+TEST_F(MalformedComputeShaderTest, InvalidOutStorageQualifier2)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 15) in;\n"
+        "out myOutput;\n"
+        "void main() {\n"
+        "}\n";
+
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Invalid use of the in storage qualifier. Can be only used to describe the local block size.
+// GLSL ES 3.10 Revision 4, 4.4.1.1 Compute Shader Inputs
+TEST_F(MalformedComputeShaderTest, InvalidInStorageQualifier)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 15) in;\n"
+        "in vec4 myInput;\n"
+        "void main() {\n"
+        "}\n";
+
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Invalid use of the in storage qualifier. Can be only used to describe the local block size.
+// The test checks a different part of the GLSL grammar than what InvalidInStorageQualifier checks.
+// GLSL ES 3.10 Revision 4, 4.4.1.1 Compute Shader Inputs
+TEST_F(MalformedComputeShaderTest, InvalidInStorageQualifier2)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 15) in;\n"
+        "in myInput;\n"
+        "void main() {\n"
+        "}\n";
+
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// The local_size layout qualifier is only available in compute shaders.
+TEST_F(MalformedVertexShaderGLES31Test, InvalidUseOfLocalSizeX)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "precision mediump float;\n"
+        "layout(local_size_x = 15) in vec4 myInput;\n"
+        "out vec4 myOutput;\n"
+        "void main() {\n"
+        "   myOutput = myInput;\n"
+        "}\n";
+
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// The local_size layout qualifier is only available in compute shaders.
+TEST_F(MalformedFragmentShaderGLES31Test, InvalidUseOfLocalSizeX)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "precision mediump float;\n"
+        "layout(local_size_x = 15) in vec4 myInput;\n"
+        "out vec4 myOutput;\n"
+        "void main() {\n"
+        "   myOutput = myInput;\n"
+        "}\n";
+
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// It is a compile time error to use the gl_WorkGroupSize constant if
+// the local size has not been declared yet.
+// GLSL ES 3.10 Revision 4, 7.1.3 Compute Shader Special Variables
+TEST_F(MalformedComputeShaderTest, InvalidUsageOfWorkGroupSize)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "void main()\n"
+        "{\n"
+        "   uvec3 WorkGroupSize = gl_WorkGroupSize;\n"
+        "}\n"
+        "layout(local_size_x = 12) in;\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// The test covers the compute shader built-in variables and constants.
+TEST_F(MalformedComputeShaderTest, CorrectUsageOfComputeBuiltins)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 12) in;\n"
+        "void main()\n"
+        "{\n"
+        "   uvec3 NumWorkGroups = gl_NumWorkGroups;\n"
+        "   uvec3 WorkGroupSize = gl_WorkGroupSize;\n"
+        "   uvec3 WorkGroupID = gl_WorkGroupID;\n"
+        "   uvec3 GlobalInvocationID = gl_GlobalInvocationID;\n"
+        "   uvec3 LocalInvocationID = gl_LocalInvocationID;\n"
+        "   uint LocalInvocationIndex = gl_LocalInvocationIndex;\n"
+        "}\n";
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// It is illegal to write to a special variable
+TEST_F(MalformedComputeShaderTest, SpecialVariableNumWorkGroups)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 12) in;\n"
+        "void main()\n"
+        "{\n"
+        "   gl_NumWorkGroups = uvec3(1); \n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// It is illegal to write to a special variable
+TEST_F(MalformedComputeShaderTest, SpecialVariableWorkGroupID)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 12) in;\n"
+        "void main()\n"
+        "{\n"
+        "   gl_WorkGroupID = uvec3(1); \n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// It is illegal to write to a special variable
+TEST_F(MalformedComputeShaderTest, SpecialVariableLocalInvocationID)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 12) in;\n"
+        "void main()\n"
+        "{\n"
+        "   gl_LocalInvocationID = uvec3(1); \n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// It is illegal to write to a special variable
+TEST_F(MalformedComputeShaderTest, SpecialVariableGlobalInvocationID)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 12) in;\n"
+        "void main()\n"
+        "{\n"
+        "   gl_GlobalInvocationID = uvec3(1); \n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// It is illegal to write to a special variable
+TEST_F(MalformedComputeShaderTest, SpecialVariableLocalInvocationIndex)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 12) in;\n"
+        "void main()\n"
+        "{\n"
+        "   gl_LocalInvocationIndex = 1; \n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// It is illegal to write to a special variable
+TEST_F(MalformedComputeShaderTest, SpecialVariableWorkGroupSize)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 12) in;\n"
+        "void main()\n"
+        "{\n"
+        "   gl_WorkGroupSize = uvec3(1); \n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// It is illegal to apply an unary operator to a sampler.
+TEST_F(MalformedShaderTest, SamplerUnaryOperator)
+{
+    const std::string &shaderString =
+        "precision mediump float;\n"
+        "uniform sampler2D s;\n"
+        "void main()\n"
+        "{\n"
+        "   -s;\n"
+        "   gl_FragColor = vec4(0);\n"
         "}\n";
     if (compile(shaderString))
     {
