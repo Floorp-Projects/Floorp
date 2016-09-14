@@ -75,7 +75,7 @@ EXPORTS.mozilla += [
     'AvailableMemoryTracker.h',
     'ClearOnShutdown.h',
     'CountingAllocatorBase.h',
-    'CycleCollectedJSRuntime.h',
+    'CycleCollectedJSContext.h',
     'Debug.h',
     'DebuggerOnGCRunnable.h',
     'DeferredFinalize.h',
@@ -101,7 +101,7 @@ SOURCES['nsDebugImpl.cpp'].no_pgo = True
 UNIFIED_SOURCES += [
     'AvailableMemoryTracker.cpp',
     'ClearOnShutdown.cpp',
-    'CycleCollectedJSRuntime.cpp',
+    'CycleCollectedJSContext.cpp',
     'Debug.cpp',
     'DebuggerOnGCRunnable.cpp',
     'DeferredFinalize.cpp',
