@@ -311,7 +311,7 @@ ClientEngine.prototype = {
     const clientWithPendingCommands = Object.keys(this._currentlySyncingCommands);
     for (let clientId of clientWithPendingCommands) {
       if (this._store._remoteClients[clientId] || this.localID == clientId) {
-        this._modified[clientId] = 0;
+        this._modified.set(clientId, 0);
       }
     }
     SyncEngine.prototype._uploadOutgoing.call(this);

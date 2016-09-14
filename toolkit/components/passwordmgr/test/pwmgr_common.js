@@ -320,6 +320,17 @@ function promiseStorageChanged(expectedChangeTypes) {
   });
 }
 
+function promisePromptShown(expectedTopic) {
+  return new Promise((resolve, reject) => {
+    function onPromptShown({ topic, data }) {
+      is(topic, expectedTopic, "Check expected prompt topic");
+      chromeScript.removeMessageListener("promptShown", onPromptShown);
+      resolve();
+    }
+    chromeScript.addMessageListener("promptShown", onPromptShown);
+  });
+}
+
 /**
  * Run a function synchronously in the parent process and destroy it in the test cleanup function.
  * @param {Function|String} aFunctionOrURL - either a function that will be stringified and run
@@ -371,6 +382,15 @@ if (this.addMessageListener) {
     });
   }
   Services.obs.addObserver(onStorageChanged, "passwordmgr-storage-changed", false);
+
+  function onPrompt(subject, topic, data) {
+    sendAsyncMessage("promptShown", {
+      topic,
+      data,
+    });
+  }
+  Services.obs.addObserver(onPrompt, "passwordmgr-prompt-change", false);
+  Services.obs.addObserver(onPrompt, "passwordmgr-prompt-save", false);
 
   addMessageListener("setupParent", ({selfFilling = false} = {selfFilling: false}) => {
     // Force LoginManagerParent to init for the tests since it's normally delayed
@@ -431,6 +451,18 @@ if (this.addMessageListener) {
 
       if (LoginManagerParent._recipeManager) {
         LoginManagerParent._recipeManager.reset();
+      }
+
+      // Cleanup PopupNotifications (if on a relevant platform)
+      let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+      if (chromeWin && chromeWin.PopupNotifications) {
+        let notes = chromeWin.PopupNotifications._currentNotifications;
+        if (notes.length > 0) {
+          dump("Removing " + notes.length + " popup notifications.\n");
+        }
+        for (let note of notes) {
+	  note.remove();
+        }
       }
     });
   });

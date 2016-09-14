@@ -106,6 +106,13 @@ this.CryptoUtils = {
     return CommonUtils.encodeBase32(CryptoUtils.UTF8AndSHA1(message));
   },
 
+  sha256(message) {
+    let hasher = Cc["@mozilla.org/security/hash;1"]
+                 .createInstance(Ci.nsICryptoHash);
+    hasher.init(hasher.SHA256);
+    return CommonUtils.bytesAsHex(CryptoUtils.digestUTF8(message, hasher));
+  },
+
   /**
    * Produce an HMAC key object from a key string.
    */

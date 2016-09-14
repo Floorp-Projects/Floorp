@@ -287,17 +287,21 @@ TrackBuffersManager::EvictData(const TimeUnit& aPlaybackTime, int64_t aSize)
     return EvictDataResult::CANT_EVICT;
   }
 
+  EvictDataResult result;
+
   if (mBufferFull && mEvictionState == EvictionState::EVICTION_COMPLETED) {
-    return EvictDataResult::BUFFER_FULL;
+    // Our buffer is currently full. We will make another eviction attempt.
+    // However, the current appendBuffer will fail as we can't know ahead of
+    // time if the eviction will later succeed.
+    result = EvictDataResult::BUFFER_FULL;
+  } else {
+    mEvictionState = EvictionState::EVICTION_NEEDED;
+    result = EvictDataResult::NO_DATA_EVICTED;
   }
-
-  MSE_DEBUG("Reaching our size limit, schedule eviction of %lld bytes", toEvict);
-
-  mEvictionState = EvictionState::EVICTION_NEEDED;
-
+  MSE_DEBUG("Reached our size limit, schedule eviction of %lld bytes", toEvict);
   QueueTask(new EvictDataTask(aPlaybackTime, toEvict));
 
-  return EvictDataResult::NO_DATA_EVICTED;
+  return result;
 }
 
 TimeIntervals
@@ -717,7 +721,7 @@ TrackBuffersManager::SegmentParserLoop()
                      self->ScheduleSegmentParserLoop();
                    }
                  },
-                 [self] (nsresult aRejectValue) {
+                 [self] (const MediaResult& aRejectValue) {
                    self->mProcessingRequest.Complete();
                    self->RejectAppend(aRejectValue, __func__);
                  }));
@@ -743,9 +747,9 @@ TrackBuffersManager::NeedMoreData()
 }
 
 void
-TrackBuffersManager::RejectAppend(nsresult aRejectValue, const char* aName)
+TrackBuffersManager::RejectAppend(const MediaResult& aRejectValue, const char* aName)
 {
-  MSE_DEBUG("rv=%d", aRejectValue);
+  MSE_DEBUG("rv=%u", aRejectValue.Code());
   MOZ_DIAGNOSTIC_ASSERT(mCurrentTask && mCurrentTask->GetType() == SourceBufferTask::Type::AppendBuffer);
 
   mCurrentTask->As<AppendBufferTask>()->mPromise.Reject(aRejectValue, __func__);
@@ -1095,12 +1099,12 @@ TrackBuffersManager::OnDemuxerInitDone(nsresult)
 }
 
 void
-TrackBuffersManager::OnDemuxerInitFailed(DemuxerFailureReason aFailure)
+TrackBuffersManager::OnDemuxerInitFailed(const MediaResult& aError)
 {
-  MOZ_ASSERT(aFailure != DemuxerFailureReason::WAITING_FOR_DATA);
+  MOZ_ASSERT(aError != NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA);
   mDemuxerInitRequest.Complete();
 
-  RejectAppend(NS_ERROR_FAILURE, __func__);
+  RejectAppend(aError, __func__);
 }
 
 RefPtr<TrackBuffersManager::CodedFrameProcessingPromise>
@@ -1149,29 +1153,22 @@ TrackBuffersManager::CodedFrameProcessing()
 
 void
 TrackBuffersManager::OnDemuxFailed(TrackType aTrack,
-                                   DemuxerFailureReason aFailure)
+                                   const MediaResult& aError)
 {
   MOZ_ASSERT(OnTaskQueue());
-  MSE_DEBUG("Failed to demux %s, failure:%d",
-            aTrack == TrackType::kVideoTrack ? "video" : "audio", aFailure);
-  switch (aFailure) {
-    case DemuxerFailureReason::END_OF_STREAM:
-    case DemuxerFailureReason::WAITING_FOR_DATA:
+  MSE_DEBUG("Failed to demux %s, failure:%u",
+            aTrack == TrackType::kVideoTrack ? "video" : "audio", aError.Code());
+  switch (aError.Code()) {
+    case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
+    case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
       if (aTrack == TrackType::kVideoTrack) {
         DoDemuxAudio();
       } else {
         CompleteCodedFrameProcessing();
       }
       break;
-    case DemuxerFailureReason::DEMUXER_ERROR:
-      RejectProcessing(NS_ERROR_FAILURE, __func__);
-      break;
-    case DemuxerFailureReason::CANCELED:
-    case DemuxerFailureReason::SHUTDOWN:
-      RejectProcessing(NS_ERROR_ABORT, __func__);
-      break;
     default:
-      MOZ_ASSERT(false);
+      RejectProcessing(aError, __func__);
       break;
   }
 }
@@ -1323,7 +1320,7 @@ TrackBuffersManager::CompleteCodedFrameProcessing()
 }
 
 void
-TrackBuffersManager::RejectProcessing(nsresult aRejectValue, const char* aName)
+TrackBuffersManager::RejectProcessing(const MediaResult& aRejectValue, const char* aName)
 {
   mProcessingPromise.RejectIfExists(aRejectValue, __func__);
 }
@@ -2157,16 +2154,16 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
 already_AddRefed<MediaRawData>
 TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
                                const TimeUnit& aFuzz,
-                               GetSampleResult& aResult)
+                               MediaResult& aResult)
 {
   MOZ_ASSERT(OnTaskQueue());
   auto& trackData = GetTracksData(aTrack);
   const TrackBuffer& track = GetTrackBuffer(aTrack);
 
-  aResult = GetSampleResult::WAITING_FOR_DATA;
+  aResult = NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA;
 
   if (!track.Length()) {
-    aResult = GetSampleResult::EOS;
+    aResult = NS_ERROR_DOM_MEDIA_END_OF_STREAM;
     return nullptr;
   }
 
@@ -2178,7 +2175,7 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
 
   if (trackData.mNextGetSampleIndex.isSome()) {
     if (trackData.mNextGetSampleIndex.ref() >= track.Length()) {
-      aResult = GetSampleResult::EOS;
+      aResult = NS_ERROR_DOM_MEDIA_END_OF_STREAM;
       return nullptr;
     }
     const MediaRawData* sample =
@@ -2193,7 +2190,7 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
 
     RefPtr<MediaRawData> p = sample->Clone();
     if (!p) {
-      aResult = GetSampleResult::ERROR;
+      aResult = MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
       return nullptr;
     }
     trackData.mNextGetSampleIndex.ref()++;
@@ -2219,7 +2216,7 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
       trackData.mNextSampleTimecode = nextSampleTimecode;
       trackData.mNextSampleTime = nextSampleTime;
     }
-    aResult = GetSampleResult::NO_ERROR;
+    aResult = NS_OK;
     return p.forget();
   }
 
@@ -2227,7 +2224,7 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
       track.LastElement()->mTimecode + track.LastElement()->mDuration) {
     // The next element is past our last sample. We're done.
     trackData.mNextGetSampleIndex = Some(uint32_t(track.Length()));
-    aResult = GetSampleResult::EOS;
+    aResult = NS_ERROR_DOM_MEDIA_END_OF_STREAM;
     return nullptr;
   }
 
@@ -2244,7 +2241,7 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
   RefPtr<MediaRawData> p = sample->Clone();
   if (!p) {
     // OOM
-    aResult = GetSampleResult::ERROR;
+    aResult = MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
     return nullptr;
   }
   trackData.mNextGetSampleIndex = Some(uint32_t(pos)+1);
@@ -2252,7 +2249,7 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
     TimeUnit::FromMicroseconds(sample->mTimecode + sample->mDuration);
   trackData.mNextSampleTime =
     TimeUnit::FromMicroseconds(sample->GetEndTime());
-  aResult = GetSampleResult::NO_ERROR;
+  aResult = NS_OK;
   return p.forget();
 }
 
