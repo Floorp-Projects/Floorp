@@ -8559,6 +8559,14 @@
     "n_buckets": 100,
     "bug_numbers": [1294349]
   },
+  "VIDEO_AS_CONTENT_SOURCE" : {
+    "alert_emails": ["ajones@mozilla.com", "kaku@mozilla.com"],
+    "expires_in_version": "56",
+    "description": "Usage of a {visible / invisible} video element as the source of {drawImage(), createPattern(), createImageBitmap() and captureStream()} APIs. (0 = ALL_VISIBLE, 1 = ALL_INVISIBLE, 2 = drawImage_VISIBLE, 3 = drawImage_INVISIBLE, 4 = createPattern_VISIBLE, 5 = createPattern_INVISIBLE, 6 = createImageBitmap_VISIBLE, 7 = createImageBitmap_INVISIBLE, 8 = captureStream_VISIBLE, 9 = captureStream_INVISIBLE)",
+    "kind": "enumerated",
+    "n_values": 12,
+    "bug_numbers": [1299718]
+  },
   "VIDEO_UNLOAD_STATE": {
     "alert_emails": ["ajones@mozilla.com"],
     "expires_in_version": "55",
@@ -10307,5 +10315,13 @@
     "keyed": true,
     "n_values": 6,
     "description": "Number of revoke actions on permissions in the control center, keyed by permission id. Values represent the permission type that was revoked. (0=unknown, 1=permanently allowed, 2=permanently blocked, 3=temporarily allowed, 4=temporarily blocked)"
+  },
+  "JS_AOT_USAGE": {
+    "alert_emails": ["luke@mozilla.com", "bbouvier@mozilla.com"],
+    "bug_numbers": [1288778],
+    "expires_in_version": "56",
+    "kind": "enumerated",
+    "n_values": 4,
+    "description": "Counts the number of asm.js vs WebAssembly modules instanciations, at the time modules are getting instanciated."
   }
 }
