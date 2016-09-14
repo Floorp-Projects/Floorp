@@ -358,11 +358,11 @@ if (!testUtils.hasOwnProperty("specialPowersObserver")) {
         timeout = JSTest.timeout_re.search(js)
         if timeout:
             timeout = timeout.group(3)
-            marionette.set_script_timeout(timeout)
+            marionette.set_script_timeout(int(timeout))
 
         inactivity_timeout = JSTest.inactivity_timeout_re.search(js)
         if inactivity_timeout:
-            inactivity_timeout = inactivity_timeout.group(3)
+            inactivity_timeout = int(inactivity_timeout.group(3))
 
         try:
             results = marionette.execute_js_script(
