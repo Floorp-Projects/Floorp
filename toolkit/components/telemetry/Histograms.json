@@ -8176,7 +8176,7 @@
     "expires_in_version": "default",
     "kind": "enumerated",
     "n_values": 6,
-    "description": "1 = No SHA1 signatures, 2 = SHA1 certificates issued before 2016, 3 = SHA1 certificates issued by an imported root, 4 = SHA1 certificates issued after 2015, 5 = another error prevented successful verification"
+    "description": "1 = No SHA1 signatures, 2 = SHA1 certificates issued by an imported root, 3 = SHA1 certificates issued before 2016, 4 = SHA1 certificates issued after 2015, 5 = another error prevented successful verification"
   },
   "WEAVE_CONFIGURED": {
     "expires_in_version": "default",
