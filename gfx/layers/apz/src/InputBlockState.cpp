@@ -13,6 +13,7 @@
 #include "mozilla/Telemetry.h"              // for Telemetry
 #include "mozilla/layers/APZCTreeManager.h" // for AllowedTouchBehavior
 #include "OverscrollHandoffState.h"
+#include "QueuedInput.h"
 
 #define TBS_LOG(...)
 // #define TBS_LOG(...) printf_stderr("TBS: " __VA_ARGS__)
@@ -307,18 +308,28 @@ DragBlockState::HasEvents() const
 }
 
 void
-DragBlockState::DropEvents()
+DragBlockState::DropEvents(nsTArray<UniquePtr<QueuedInput>>* aQueued)
 {
   TBS_LOG("%p dropping %" PRIuSIZE " events\n", this, mEvents.Length());
+  MOZ_ASSERT(aQueued->Length() >= mEvents.Length());
+  for (size_t i = 0; i < mEvents.Length(); i++) {
+    MOZ_ASSERT(aQueued->ElementAt(i)->Block() == this);
+    MOZ_ASSERT(aQueued->ElementAt(i)->Input()->mInputType == mEvents[i].mInputType);
+  }
+  aQueued->RemoveElementsAt(0, mEvents.Length());
   mEvents.Clear();
 }
 
 void
-DragBlockState::HandleEvents()
+DragBlockState::HandleEvents(nsTArray<UniquePtr<QueuedInput>>* aQueued)
 {
   while (HasEvents()) {
     TBS_LOG("%p returning first of %" PRIuSIZE " events\n", this, mEvents.Length());
     MouseInput event = mEvents[0];
+    MOZ_ASSERT(aQueued->Length() > 0);
+    MOZ_ASSERT(aQueued->ElementAt(0)->Block() == this);
+    MOZ_ASSERT(aQueued->ElementAt(0)->Input()->mInputType == event.mInputType);
+    aQueued->RemoveElementAt(0);
     mEvents.RemoveElementAt(0);
     DispatchEvent(event);
   }
@@ -446,18 +457,28 @@ WheelBlockState::HasEvents() const
 }
 
 void
-WheelBlockState::DropEvents()
+WheelBlockState::DropEvents(nsTArray<UniquePtr<QueuedInput>>* aQueued)
 {
   TBS_LOG("%p dropping %" PRIuSIZE " events\n", this, mEvents.Length());
+  MOZ_ASSERT(aQueued->Length() >= mEvents.Length());
+  for (size_t i = 0; i < mEvents.Length(); i++) {
+    MOZ_ASSERT(aQueued->ElementAt(i)->Block() == this);
+    MOZ_ASSERT(aQueued->ElementAt(i)->Input()->mInputType == mEvents[i].mInputType);
+  }
+  aQueued->RemoveElementsAt(0, mEvents.Length());
   mEvents.Clear();
 }
 
 void
-WheelBlockState::HandleEvents()
+WheelBlockState::HandleEvents(nsTArray<UniquePtr<QueuedInput>>* aQueued)
 {
   while (HasEvents()) {
     TBS_LOG("%p returning first of %" PRIuSIZE " events\n", this, mEvents.Length());
     ScrollWheelInput event = mEvents[0];
+    MOZ_ASSERT(aQueued->Length() > 0);
+    MOZ_ASSERT(aQueued->ElementAt(0)->Block() == this);
+    MOZ_ASSERT(aQueued->ElementAt(0)->Input()->mInputType == event.mInputType);
+    aQueued->RemoveElementAt(0);
     mEvents.RemoveElementAt(0);
     DispatchEvent(event);
   }
@@ -656,18 +677,28 @@ PanGestureBlockState::HasEvents() const
 }
 
 void
-PanGestureBlockState::DropEvents()
+PanGestureBlockState::DropEvents(nsTArray<UniquePtr<QueuedInput>>* aQueued)
 {
   TBS_LOG("%p dropping %" PRIuSIZE " events\n", this, mEvents.Length());
+  MOZ_ASSERT(aQueued->Length() >= mEvents.Length());
+  for (size_t i = 0; i < mEvents.Length(); i++) {
+    MOZ_ASSERT(aQueued->ElementAt(i)->Block() == this);
+    MOZ_ASSERT(aQueued->ElementAt(i)->Input()->mInputType == mEvents[i].mInputType);
+  }
+  aQueued->RemoveElementsAt(0, mEvents.Length());
   mEvents.Clear();
 }
 
 void
-PanGestureBlockState::HandleEvents()
+PanGestureBlockState::HandleEvents(nsTArray<UniquePtr<QueuedInput>>* aQueued)
 {
   while (HasEvents()) {
     TBS_LOG("%p returning first of %" PRIuSIZE " events\n", this, mEvents.Length());
     PanGestureInput event = mEvents[0];
+    MOZ_ASSERT(aQueued->Length() > 0);
+    MOZ_ASSERT(aQueued->ElementAt(0)->Block() == this);
+    MOZ_ASSERT(aQueued->ElementAt(0)->Input()->mInputType == event.mInputType);
+    aQueued->RemoveElementAt(0);
     mEvents.RemoveElementAt(0);
     DispatchEvent(event);
   }
@@ -857,18 +888,28 @@ TouchBlockState::Type()
 }
 
 void
-TouchBlockState::DropEvents()
+TouchBlockState::DropEvents(nsTArray<UniquePtr<QueuedInput>>* aQueued)
 {
   TBS_LOG("%p dropping %" PRIuSIZE " events\n", this, mEvents.Length());
+  MOZ_ASSERT(aQueued->Length() >= mEvents.Length());
+  for (size_t i = 0; i < mEvents.Length(); i++) {
+    MOZ_ASSERT(aQueued->ElementAt(i)->Block() == this);
+    MOZ_ASSERT(aQueued->ElementAt(i)->Input()->mInputType == mEvents[i].mInputType);
+  }
+  aQueued->RemoveElementsAt(0, mEvents.Length());
   mEvents.Clear();
 }
 
 void
-TouchBlockState::HandleEvents()
+TouchBlockState::HandleEvents(nsTArray<UniquePtr<QueuedInput>>* aQueued)
 {
   while (HasEvents()) {
     TBS_LOG("%p returning first of %" PRIuSIZE " events\n", this, mEvents.Length());
     MultiTouchInput event = mEvents[0];
+    MOZ_ASSERT(aQueued->Length() > 0);
+    MOZ_ASSERT(aQueued->ElementAt(0)->Block() == this);
+    MOZ_ASSERT(aQueued->ElementAt(0)->Input()->mInputType == event.mInputType);
+    aQueued->RemoveElementAt(0);
     mEvents.RemoveElementAt(0);
     DispatchEvent(event);
   }
