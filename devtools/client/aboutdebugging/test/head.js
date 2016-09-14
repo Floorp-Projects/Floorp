@@ -31,7 +31,7 @@ function* openAboutDebugging(page, win) {
     url += "#" + page;
   }
 
-  let tab = yield addTab(url, win);
+  let tab = yield addTab(url, { window: win });
   let browser = tab.linkedBrowser;
   let document = browser.contentDocument;
 
@@ -63,49 +63,9 @@ function openPanel(document, panelId) {
     document.querySelector(".main-content"), {childList: true});
 }
 
-function closeAboutDebugging(tab, win) {
+function closeAboutDebugging(tab) {
   info("Closing about:debugging");
-  return removeTab(tab, win);
-}
-
-function addTab(url, win, backgroundTab = false) {
-  info("Adding tab: " + url);
-
-  return new Promise(done => {
-    let targetWindow = win || window;
-    let targetBrowser = targetWindow.gBrowser;
-
-    targetWindow.focus();
-    let tab = targetBrowser.addTab(url);
-    if (!backgroundTab) {
-      targetBrowser.selectedTab = tab;
-    }
-    let linkedBrowser = tab.linkedBrowser;
-
-    BrowserTestUtils.browserLoaded(linkedBrowser)
-      .then(function () {
-        info("Tab added and finished loading: " + url);
-        done(tab);
-      });
-  });
-}
-
-function removeTab(tab, win) {
-  info("Removing tab.");
-
-  return new Promise(done => {
-    let targetWindow = win || window;
-    let targetBrowser = targetWindow.gBrowser;
-    let tabContainer = targetBrowser.tabContainer;
-
-    tabContainer.addEventListener("TabClose", function onClose() {
-      tabContainer.removeEventListener("TabClose", onClose, false);
-      info("Tab removed and finished closing.");
-      done();
-    }, false);
-
-    targetBrowser.removeTab(tab);
-  });
+  return removeTab(tab);
 }
 
 function getSupportsFile(path) {
