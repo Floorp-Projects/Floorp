@@ -6,48 +6,47 @@ from marionette import MarionetteTestCase
 from marionette_driver.marionette import HTMLElement
 from marionette_driver.errors import (NoSuchElementException,
                                       MarionetteException,
+                                      InvalidArgumentException,
                                       ScriptTimeoutException)
 from marionette_driver.by import By
 
 
 class TestTimeouts(MarionetteTestCase):
-
     def tearDown(self):
         self.marionette.reset_timeouts()
-
         MarionetteTestCase.tearDown(self)
 
-    def test_pagetimeout_notdefinetimeout_pass(self):
+    def test_page_timeout_notdefinetimeout_pass(self):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
 
-    def test_pagetimeout_fail(self):
-        self.marionette.timeouts("page load", 0)
+    def test_page_timeout_fail(self):
+        self.marionette.set_page_load_timeout(0)
         test_html = self.marionette.absolute_url("test.html")
         self.assertRaises(MarionetteException, self.marionette.navigate, test_html)
 
-    def test_pagetimeout_pass(self):
-        self.marionette.timeouts("page load", 60000)
+    def test_page_timeout_pass(self):
+        self.marionette.set_page_load_timeout(60000)
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
 
-    def test_searchtimeout_notfound_settimeout(self):
+    def test_search_timeout_notfound_settimeout(self):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
-        self.marionette.timeouts("implicit", 1000)
+        self.marionette.set_search_timeout(1000)
         self.assertRaises(NoSuchElementException, self.marionette.find_element, By.ID, "I'm not on the page")
-        self.marionette.timeouts("implicit", 0)
+        self.marionette.set_search_timeout(0)
         self.assertRaises(NoSuchElementException, self.marionette.find_element, By.ID, "I'm not on the page")
 
-    def test_searchtimeout_found_settimeout(self):
+    def test_search_timeout_found_settimeout(self):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
         button = self.marionette.find_element(By.ID, "createDivButton")
         button.click()
-        self.marionette.timeouts("implicit", 8000)
+        self.marionette.set_search_timeout(8000)
         self.assertEqual(HTMLElement, type(self.marionette.find_element(By.ID, "newDiv")))
 
-    def test_searchtimeout_found(self):
+    def test_search_timeout_found(self):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
         button = self.marionette.find_element(By.ID, "createDivButton")
@@ -57,19 +56,21 @@ class TestTimeouts(MarionetteTestCase):
     def test_execute_async_timeout_settimeout(self):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
-        self.marionette.timeouts("script", 10000)
+        self.marionette.set_script_timeout(10000)
         self.assertRaises(ScriptTimeoutException, self.marionette.execute_async_script, "var x = 1;")
 
     def test_no_timeout_settimeout(self):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
-        self.marionette.timeouts("script", 10000)
+        self.marionette.set_script_timeout(10000)
         self.assertTrue(self.marionette.execute_async_script("""
              var callback = arguments[arguments.length - 1];
              setTimeout(function() { callback(true); }, 500);
              """))
 
-    def test_invalid_timeout_type(self):
-        self.assertRaises(ValueError, self.marionette.timeouts, "foobar", 1000)
-        self.assertRaises(ValueError, self.marionette.timeouts, 42, 1000)
-        self.assertRaises(MarionetteException, self.marionette.timeouts, "page load", "foobar")
+    def test_invalid_timeout_types(self):
+        for val in [3.14, True, [], {}, "foo"]:
+            print "testing %s" % type(val)
+            self.assertRaises(InvalidArgumentException, self.marionette.set_search_timeout, val)
+            self.assertRaises(InvalidArgumentException, self.marionette.set_script_timeout, val)
+            self.assertRaises(InvalidArgumentException, self.marionette.set_page_load_timeout, val)
