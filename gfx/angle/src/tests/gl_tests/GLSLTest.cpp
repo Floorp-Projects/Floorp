@@ -8,8 +8,12 @@
 
 #include "libANGLE/Context.h"
 #include "libANGLE/Program.h"
+#include "test_utils/gl_raii.h"
 
 using namespace angle;
+
+namespace
+{
 
 class GLSLTest : public ANGLETest
 {
@@ -436,6 +440,18 @@ class GLSLTest : public ANGLETest
 
 class GLSLTest_ES3 : public GLSLTest
 {
+    void SetUp() override
+    {
+        ANGLETest::SetUp();
+
+        mSimpleVSSource =
+            "#version 300 es\n"
+            "in vec4 inputAttribute;"
+            "void main()"
+            "{"
+            "    gl_Position = inputAttribute;"
+            "}";
+    }
 };
 
 TEST_P(GLSLTest, NamelessScopedStructs)
@@ -889,6 +905,159 @@ TEST_P(GLSLTest, InvariantAllBoth)
         "attribute vec4 a_position;\n"
         "varying float v_varying;\n"
         "void main() { v_varying = a_position.x; gl_Position = a_position; }\n";
+
+    GLuint program = CompileProgram(vertexShaderSource, fragmentShaderSource);
+    EXPECT_NE(0u, program);
+}
+
+// Verify that functions without return statements still compile
+TEST_P(GLSLTest, MissingReturnFloat)
+{
+    const std::string vertexShaderSource =
+        "varying float v_varying;\n"
+        "float f() { if (v_varying > 0.0) return 1.0; }\n"
+        "void main() { gl_Position = vec4(f(), 0, 0, 1); }\n";
+
+    const std::string fragmentShaderSource =
+        "precision mediump float;\n"
+        "void main() { gl_FragColor = vec4(0, 0, 0, 1); }\n";
+
+    GLuint program = CompileProgram(vertexShaderSource, fragmentShaderSource);
+    EXPECT_NE(0u, program);
+}
+
+// Verify that functions without return statements still compile
+TEST_P(GLSLTest, MissingReturnVec2)
+{
+    const std::string vertexShaderSource =
+        "varying float v_varying;\n"
+        "vec2 f() { if (v_varying > 0.0) return vec2(1.0, 1.0); }\n"
+        "void main() { gl_Position = vec4(f().x, 0, 0, 1); }\n";
+
+    const std::string fragmentShaderSource =
+        "precision mediump float;\n"
+        "void main() { gl_FragColor = vec4(0, 0, 0, 1); }\n";
+
+    GLuint program = CompileProgram(vertexShaderSource, fragmentShaderSource);
+    EXPECT_NE(0u, program);
+}
+
+// Verify that functions without return statements still compile
+TEST_P(GLSLTest, MissingReturnVec3)
+{
+    const std::string vertexShaderSource =
+        "varying float v_varying;\n"
+        "vec3 f() { if (v_varying > 0.0) return vec3(1.0, 1.0, 1.0); }\n"
+        "void main() { gl_Position = vec4(f().x, 0, 0, 1); }\n";
+
+    const std::string fragmentShaderSource =
+        "precision mediump float;\n"
+        "void main() { gl_FragColor = vec4(0, 0, 0, 1); }\n";
+
+    GLuint program = CompileProgram(vertexShaderSource, fragmentShaderSource);
+    EXPECT_NE(0u, program);
+}
+
+// Verify that functions without return statements still compile
+TEST_P(GLSLTest, MissingReturnVec4)
+{
+    const std::string vertexShaderSource =
+        "varying float v_varying;\n"
+        "vec4 f() { if (v_varying > 0.0) return vec4(1.0, 1.0, 1.0, 1.0); }\n"
+        "void main() { gl_Position = vec4(f().x, 0, 0, 1); }\n";
+
+    const std::string fragmentShaderSource =
+        "precision mediump float;\n"
+        "void main() { gl_FragColor = vec4(0, 0, 0, 1); }\n";
+
+    GLuint program = CompileProgram(vertexShaderSource, fragmentShaderSource);
+    EXPECT_NE(0u, program);
+}
+
+// Verify that functions without return statements still compile
+TEST_P(GLSLTest, MissingReturnIVec4)
+{
+    const std::string vertexShaderSource =
+        "varying float v_varying;\n"
+        "ivec4 f() { if (v_varying > 0.0) return ivec4(1, 1, 1, 1); }\n"
+        "void main() { gl_Position = vec4(f().x, 0, 0, 1); }\n";
+
+    const std::string fragmentShaderSource =
+        "precision mediump float;\n"
+        "void main() { gl_FragColor = vec4(0, 0, 0, 1); }\n";
+
+    GLuint program = CompileProgram(vertexShaderSource, fragmentShaderSource);
+    EXPECT_NE(0u, program);
+}
+
+// Verify that functions without return statements still compile
+TEST_P(GLSLTest, MissingReturnMat4)
+{
+    const std::string vertexShaderSource =
+        "varying float v_varying;\n"
+        "mat4 f() { if (v_varying > 0.0) return mat4(1.0); }\n"
+        "void main() { gl_Position = vec4(f()[0][0], 0, 0, 1); }\n";
+
+    const std::string fragmentShaderSource =
+        "precision mediump float;\n"
+        "void main() { gl_FragColor = vec4(0, 0, 0, 1); }\n";
+
+    GLuint program = CompileProgram(vertexShaderSource, fragmentShaderSource);
+    EXPECT_NE(0u, program);
+}
+
+// Verify that functions without return statements still compile
+TEST_P(GLSLTest, MissingReturnStruct)
+{
+    const std::string vertexShaderSource =
+        "varying float v_varying;\n"
+        "struct s { float a; int b; vec2 c; };\n"
+        "s f() { if (v_varying > 0.0) return s(1.0, 1, vec2(1.0, 1.0)); }\n"
+        "void main() { gl_Position = vec4(f().a, 0, 0, 1); }\n";
+
+    const std::string fragmentShaderSource =
+        "precision mediump float;\n"
+        "void main() { gl_FragColor = vec4(0, 0, 0, 1); }\n";
+
+    GLuint program = CompileProgram(vertexShaderSource, fragmentShaderSource);
+    EXPECT_NE(0u, program);
+}
+
+// Verify that functions without return statements still compile
+TEST_P(GLSLTest_ES3, MissingReturnArray)
+{
+    const std::string vertexShaderSource =
+        "#version 300 es\n"
+        "in float v_varying;\n"
+        "vec2[2] f() { if (v_varying > 0.0) { return vec2[2](vec2(1.0, 1.0), vec2(1.0, 1.0)); } }\n"
+        "void main() { gl_Position = vec4(f()[0].x, 0, 0, 1); }\n";
+
+    const std::string fragmentShaderSource =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 my_FragColor;\n"
+        "void main() { my_FragColor = vec4(0, 0, 0, 1); }\n";
+
+    GLuint program = CompileProgram(vertexShaderSource, fragmentShaderSource);
+    EXPECT_NE(0u, program);
+}
+
+// Verify that functions without return statements still compile
+TEST_P(GLSLTest_ES3, MissingReturnArrayOfStructs)
+{
+    const std::string vertexShaderSource =
+        "#version 300 es\n"
+        "in float v_varying;\n"
+        "struct s { float a; int b; vec2 c; };\n"
+        "s[2] f() { if (v_varying > 0.0) { return s[2](s(1.0, 1, vec2(1.0, 1.0)), s(1.0, 1, "
+        "vec2(1.0, 1.0))); } }\n"
+        "void main() { gl_Position = vec4(f()[0].a, 0, 0, 1); }\n";
+
+    const std::string fragmentShaderSource =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 my_FragColor;\n"
+        "void main() { my_FragColor = vec4(0, 0, 0, 1); }\n";
 
     GLuint program = CompileProgram(vertexShaderSource, fragmentShaderSource);
     EXPECT_NE(0u, program);
@@ -1441,45 +1610,65 @@ TEST_P(GLSLTest, DepthRangeUniforms)
     glDeleteProgram(program);
 }
 
-// Covers the WebGL test 'glsl/bugs/pow-of-small-constant-in-user-defined-function'
-// See https://code.google.com/p/angleproject/issues/detail?id=851
-// TODO(jmadill): ANGLE constant folding can fix this
-TEST_P(GLSLTest, DISABLED_PowOfSmallConstant)
+std::string GenerateSmallPowShader(double base, double exponent)
 {
-    const std::string &fragmentShaderSource = SHADER_SOURCE
-    (
-        precision highp float;
+    std::stringstream stream;
 
-        float fun(float arg)
+    stream.precision(8);
+
+    double result = pow(base, exponent);
+
+    stream << "precision highp float;\n"
+           << "float fun(float arg)\n"
+           << "{\n"
+           << "    return pow(arg, " << std::fixed << exponent << ");\n"
+           << "}\n"
+           << "\n"
+           << "void main()\n"
+           << "{\n"
+           << "    const float a = " << std::scientific << base << ";\n"
+           << "    float b = fun(a);\n"
+           << "    if (abs(" << result << " - b) < " << std::abs(result * 0.001) << ")\n"
+           << "    {\n"
+           << "        gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);\n"
+           << "    }\n"
+           << "    else\n"
+           << "    {\n"
+           << "        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n"
+           << "    }\n"
+           << "}\n";
+
+    return stream.str();
+}
+
+// Covers the WebGL test 'glsl/bugs/pow-of-small-constant-in-user-defined-function'
+// See http://anglebug.com/851
+TEST_P(GLSLTest, PowOfSmallConstant)
+{
+    std::vector<double> bads;
+    for (int eps = -1; eps <= 1; ++eps)
+    {
+        for (int i = -4; i <= 5; ++i)
         {
-            // These values are still easily within the highp range.
-            // The minimum range in terms of 10's exponent is around -19 to 19, and IEEE-754 single precision range is higher than that.
-            return pow(arg, 2.0);
+            if (i >= -1 && i <= 1)
+                continue;
+            const double epsilon = 1.0e-8;
+            double bad           = static_cast<double>(i) + static_cast<double>(eps) * epsilon;
+            bads.push_back(bad);
         }
+    }
 
-        void main()
-        {
-            // Note that the bug did not reproduce if an uniform was passed to the function instead of a constant,
-            // or if the expression was moved outside the user-defined function.
-            const float a = 1.0e-6;
-            float b = 1.0e12 * fun(a);
-            if (abs(b - 1.0) < 0.01)
-            {
-                gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0); // green
-            }
-            else
-            {
-                gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); // red
-            }
-        }
-    );
+    for (double bad : bads)
+    {
+        const std::string &fragmentShaderSource = GenerateSmallPowShader(1.0e-6, bad);
 
-    GLuint program = CompileProgram(mSimpleVSSource, fragmentShaderSource);
-    EXPECT_NE(0u, program);
+        ANGLE_GL_PROGRAM(program, mSimpleVSSource, fragmentShaderSource);
 
-    drawQuad(program, "inputAttribute", 0.5f);
-    EXPECT_PIXEL_EQ(0, 0, 0, 255, 0, 255);
-    EXPECT_GL_NO_ERROR();
+        drawQuad(program.get(), "inputAttribute", 0.5f);
+
+        EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+        EXPECT_GL_NO_ERROR();
+    }
 }
 
 // Test that fragment shaders which contain non-constant loop indexers and compiled for FL9_3 and
@@ -1790,6 +1979,13 @@ TEST_P(GLSLTest_ES3, LargeNumberOfFloat4Parameters)
 // transformations are applied to the declaration also in the case of ESSL output.
 TEST_P(GLSLTest_ES3, InitGlobalArrayWithArrayIndexing)
 {
+    // TODO(ynovikov): re-enable once root cause of http://anglebug.com/1428 is fixed
+    if (IsAndroid() && IsAdreno() && IsOpenGLES())
+    {
+        std::cout << "Test skipped on Adreno OpenGLES on Android." << std::endl;
+        return;
+    }
+
     const std::string vertexShaderSource =
         "#version 300 es\n"
         "precision highp float;\n"
@@ -1813,6 +2009,237 @@ TEST_P(GLSLTest_ES3, InitGlobalArrayWithArrayIndexing)
     GLuint program = CompileProgram(vertexShaderSource, fragmentShaderSource);
     EXPECT_NE(0u, program);
 }
+
+// Test that index-constant sampler array indexing is supported.
+TEST_P(GLSLTest, IndexConstantSamplerArrayIndexing)
+{
+    if (IsD3D11_FL93()) {
+        std::cout << "Test skipped on D3D11 FL 9.3." << std::endl;
+        return;
+    }
+
+    const std::string vertexShaderSource =
+        "attribute vec4 vPosition;\n"
+        "void main()\n"
+        "{\n"
+        "      gl_Position = vPosition;\n"
+        "}";
+
+    const std::string fragmentShaderSource =
+        "precision mediump float;\n"
+        "uniform sampler2D uni[2];\n"
+        "\n"
+        "float zero(int x)\n"
+        "{\n"
+        "    return float(x) - float(x);\n"
+        "}\n"
+        "\n"
+        "void main()\n"
+        "{\n"
+        "    vec4 c = vec4(0,0,0,0);\n"
+        "    for (int ii = 1; ii < 3; ++ii) {\n"
+        "        if (c.x > 255.0) {\n"
+        "            c.x = 255.0 + zero(ii);\n"
+        "            break;\n"
+        "        }\n"
+        // Index the sampler array with a predictable loop index (index-constant) as opposed to
+        // a true constant. This is valid in OpenGL ES but isn't in many Desktop OpenGL versions,
+        // without an extension.
+        "        c += texture2D(uni[ii - 1], vec2(0.5, 0.5));\n"
+        "    }\n"
+        "    gl_FragColor = c;\n"
+        "}";
+
+    GLuint program = CompileProgram(vertexShaderSource, fragmentShaderSource);
+    EXPECT_NE(0u, program);
+}
+
+// Test that the #pragma directive is supported and doesn't trigger a compilation failure on the
+// native driver. The only pragma that gets passed to the OpenGL driver is "invariant" but we don't
+// want to test its behavior, so don't use any varyings.
+TEST_P(GLSLTest, PragmaDirective)
+{
+    const std::string vertexShaderSource =
+        "#pragma STDGL invariant(all)\n"
+        "void main()\n"
+        "{\n"
+        "    gl_Position = vec4(1.0, 0.0, 0.0, 1.0);\n"
+        "}\n";
+
+    const std::string fragmentShaderSource =
+        "precision mediump float;\n"
+        "void main()\n"
+        "{\n"
+        "    gl_FragColor = vec4(1.0);\n"
+        "}\n";
+
+    GLuint program = CompileProgram(vertexShaderSource, fragmentShaderSource);
+    EXPECT_NE(0u, program);
+}
+
+// Sequence operator evaluates operands from left to right (ESSL 3.00 section 5.9).
+// The function call that returns the array needs to be evaluated after ++j for the expression to
+// return the correct value (true).
+TEST_P(GLSLTest_ES3, SequenceOperatorEvaluationOrderArray)
+{
+    const std::string &fragmentShaderSource =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 my_FragColor; \n"
+        "int[2] func(int param) {\n"
+        "    return int[2](param, param);\n"
+        "}\n"
+        "void main() {\n"
+        "    int a[2]; \n"
+        "    for (int i = 0; i < 2; ++i) {\n"
+        "        a[i] = 1;\n"
+        "    }\n"
+        "    int j = 0; \n"
+        "    bool result = ((++j), (a == func(j)));\n"
+        "    my_FragColor = vec4(0.0, (result ? 1.0 : 0.0), 0.0, 1.0);\n"
+        "}\n";
+
+    GLuint program = CompileProgram(mSimpleVSSource, fragmentShaderSource);
+    ASSERT_NE(0u, program);
+
+    drawQuad(program, "inputAttribute", 0.5f);
+
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
+// Sequence operator evaluates operands from left to right (ESSL 3.00 section 5.9).
+// The short-circuiting expression needs to be evaluated after ++j for the expression to return the
+// correct value (true).
+TEST_P(GLSLTest_ES3, SequenceOperatorEvaluationOrderShortCircuit)
+{
+    const std::string &fragmentShaderSource =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 my_FragColor; \n"
+        "void main() {\n"
+        "    int j = 0; \n"
+        "    bool result = ((++j), (j == 1 ? true : (++j == 3)));\n"
+        "    my_FragColor = vec4(0.0, ((result && j == 1) ? 1.0 : 0.0), 0.0, 1.0);\n"
+        "}\n";
+
+    GLuint program = CompileProgram(mSimpleVSSource, fragmentShaderSource);
+    ASSERT_NE(0u, program);
+
+    drawQuad(program, "inputAttribute", 0.5f);
+
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
+// Sequence operator evaluates operands from left to right (ESSL 3.00 section 5.9).
+// Indexing the vector needs to be evaluated after func() for the right result.
+TEST_P(GLSLTest_ES3, SequenceOperatorEvaluationOrderDynamicVectorIndexingInLValue)
+{
+    const std::string &fragmentShaderSource =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 my_FragColor;\n"
+        "uniform int u_zero;\n"
+        "int sideEffectCount = 0;\n"
+        "float func() {\n"
+        "    ++sideEffectCount;\n"
+        "    return -1.0;\n"
+        "}\n"
+        "void main() {\n"
+        "    vec4 v = vec4(0.0, 2.0, 4.0, 6.0); \n"
+        "    float f = (func(), (++v[u_zero + sideEffectCount]));\n"
+        "    bool green = abs(f - 3.0) < 0.01 && abs(v[1] - 3.0) < 0.01 && sideEffectCount == 1;\n"
+        "    my_FragColor = vec4(0.0, (green ? 1.0 : 0.0), 0.0, 1.0);\n"
+        "}\n";
+
+    GLuint program = CompileProgram(mSimpleVSSource, fragmentShaderSource);
+    ASSERT_NE(0u, program);
+
+    drawQuad(program, "inputAttribute", 0.5f);
+
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
+// Test that using gl_PointCoord with GL_TRIANGLES doesn't produce a link error.
+// From WebGL test conformance/rendering/point-specific-shader-variables.html
+// See http://anglebug.com/1380
+TEST_P(GLSLTest, RenderTrisWithPointCoord)
+{
+    const std::string &vert =
+        "attribute vec2 aPosition;\n"
+        "void main()\n"
+        "{\n"
+        "    gl_Position = vec4(aPosition, 0, 1);\n"
+        "    gl_PointSize = 1.0;\n"
+        "}";
+    const std::string &frag =
+        "void main()\n"
+        "{\n"
+        "    gl_FragColor = vec4(gl_PointCoord.xy, 0, 1);\n"
+        "    gl_FragColor = vec4(0, 1, 0, 1);\n"
+        "}";
+
+    ANGLE_GL_PROGRAM(prog, vert, frag);
+    drawQuad(prog.get(), "aPosition", 0.5f);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
+// Convers a bug with the integer pow statement workaround.
+TEST_P(GLSLTest, NestedPowStatements)
+{
+    const std::string &vert =
+        "attribute vec2 position;\n"
+        "void main()\n"
+        "{\n"
+        "    gl_Position = vec4(position, 0, 1);\n"
+        "}";
+    const std::string &frag =
+        "precision mediump float;\n"
+        "float func(float v)\n"
+        "{\n"
+        "   float f1 = pow(v, 2.0);\n"
+        "   return pow(f1 + v, 2.0);\n"
+        "}\n"
+        "void main()\n"
+        "{\n"
+        "    float v = func(2.0);\n"
+        "    gl_FragColor = abs(v - 36.0) < 0.001 ? vec4(0, 1, 0, 1) : vec4(1, 0, 0, 1);\n"
+        "}";
+
+    ANGLE_GL_PROGRAM(prog, vert, frag);
+    drawQuad(prog.get(), "position", 0.5f);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
+// Test a nested sequence operator with a ternary operator inside. The ternary operator is
+// intended to be such that it gets converted to an if statement on the HLSL backend.
+TEST_P(GLSLTest, NestedSequenceOperatorWithTernaryInside)
+{
+    const std::string &vert =
+        "attribute vec2 position;\n"
+        "void main()\n"
+        "{\n"
+        "    gl_Position = vec4(position, 0, 1);\n"
+        "}";
+
+    // Note that the uniform keep_flop_positive doesn't need to be set - the test expects it to have
+    // its default value false.
+    const std::string &frag =
+        "precision mediump float;\n"
+        "uniform bool keep_flop_positive;\n"
+        "float flop;\n"
+        "void main() {\n"
+        "    flop = -1.0,\n"
+        "    (flop *= -1.0,\n"
+        "    keep_flop_positive ? 0.0 : flop *= -1.0),\n"
+        "    gl_FragColor = vec4(0, -flop, 0, 1);\n"
+        "}";
+
+    ANGLE_GL_PROGRAM(prog, vert, frag);
+    drawQuad(prog.get(), "position", 0.5f);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
+}  // anonymous namespace
 
 // Use this to select which configurations (e.g. which renderer, which GLES major version) these tests should be run against.
 ANGLE_INSTANTIATE_TEST(GLSLTest,

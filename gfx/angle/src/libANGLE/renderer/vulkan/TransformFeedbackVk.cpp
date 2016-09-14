@@ -14,7 +14,8 @@
 namespace rx
 {
 
-TransformFeedbackVk::TransformFeedbackVk() : TransformFeedbackImpl()
+TransformFeedbackVk::TransformFeedbackVk(const gl::TransformFeedbackState &state)
+    : TransformFeedbackImpl(state)
 {
 }
 

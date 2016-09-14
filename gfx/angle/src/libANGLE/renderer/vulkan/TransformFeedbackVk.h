@@ -18,7 +18,7 @@ namespace rx
 class TransformFeedbackVk : public TransformFeedbackImpl
 {
   public:
-    TransformFeedbackVk();
+    TransformFeedbackVk(const gl::TransformFeedbackState &state);
     ~TransformFeedbackVk() override;
 
     void begin(GLenum primitiveMode) override;
