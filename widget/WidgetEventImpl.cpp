@@ -12,6 +12,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
+#include "nsPrintfCString.h"
 
 namespace mozilla {
 
@@ -55,6 +56,47 @@ ToChar(EventClassID aEventClassID)
 #undef NS_ROOT_EVENT_CLASS
     default:
       return "illegal event class ID";
+  }
+}
+
+const nsCString
+ToString(KeyNameIndex aKeyNameIndex)
+{
+  if (aKeyNameIndex == KEY_NAME_INDEX_USE_STRING) {
+    return NS_LITERAL_CSTRING("USE_STRING");
+  }
+  nsAutoString keyName;
+  WidgetKeyboardEvent::GetDOMKeyName(aKeyNameIndex, keyName);
+  return NS_ConvertUTF16toUTF8(keyName);
+}
+
+const nsCString
+ToString(CodeNameIndex aCodeNameIndex)
+{
+  if (aCodeNameIndex == CODE_NAME_INDEX_USE_STRING) {
+    return NS_LITERAL_CSTRING("USE_STRING");
+  }
+  nsAutoString codeName;
+  WidgetKeyboardEvent::GetDOMCodeName(aCodeNameIndex, codeName);
+  return NS_ConvertUTF16toUTF8(codeName);
+}
+
+const nsCString
+GetDOMKeyCodeName(uint32_t aKeyCode)
+{
+  switch (aKeyCode) {
+#define NS_DISALLOW_SAME_KEYCODE
+#define NS_DEFINE_VK(aDOMKeyName, aDOMKeyCode) \
+    case aDOMKeyCode: \
+      return NS_LITERAL_CSTRING(#aDOMKeyName);
+
+#include "mozilla/VirtualKeyCodeList.h"
+
+#undef NS_DEFINE_VK
+#undef NS_DISALLOW_SAME_KEYCODE
+
+    default:
+      return nsPrintfCString("Invalid DOM keyCode (0x%08X)", aKeyCode);
   }
 }
 
