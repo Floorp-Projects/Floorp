@@ -79,7 +79,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/CycleCollectedJSRuntime.h"
+#include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
@@ -409,7 +409,7 @@ private:
     mozilla::Maybe<StringType> mStrings[2];
 };
 
-class XPCJSRuntime final : public mozilla::CycleCollectedJSRuntime
+class XPCJSRuntime final : public mozilla::CycleCollectedJSContext
 {
 public:
     static XPCJSRuntime* newXPCJSRuntime();

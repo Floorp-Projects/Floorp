@@ -54,7 +54,7 @@
 // To improve debugging, if WantAllTraces() is true all JS objects are
 // traversed.
 
-#include "mozilla/CycleCollectedJSRuntime.h"
+#include "mozilla/CycleCollectedJSContext.h"
 #include <algorithm>
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/AutoRestore.h"
@@ -106,9 +106,9 @@ struct DeferredFinalizeFunctionHolder
 class IncrementalFinalizeRunnable : public Runnable
 {
   typedef AutoTArray<DeferredFinalizeFunctionHolder, 16> DeferredFinalizeArray;
-  typedef CycleCollectedJSRuntime::DeferredFinalizerTable DeferredFinalizerTable;
+  typedef CycleCollectedJSContext::DeferredFinalizerTable DeferredFinalizerTable;
 
-  CycleCollectedJSRuntime* mRuntime;
+  CycleCollectedJSContext* mContext;
   DeferredFinalizeArray mDeferredFinalizeFunctions;
   uint32_t mFinalizeFunctionToRun;
   bool mReleasing;
@@ -116,7 +116,7 @@ class IncrementalFinalizeRunnable : public Runnable
   static const PRTime SliceMillis = 5; /* ms */
 
 public:
-  IncrementalFinalizeRunnable(CycleCollectedJSRuntime* aRt,
+  IncrementalFinalizeRunnable(CycleCollectedJSContext* aCx,
                               DeferredFinalizerTable& aFinalizerTable);
   virtual ~IncrementalFinalizeRunnable();
 
@@ -297,24 +297,24 @@ NS_IMETHODIMP
 JSGCThingParticipant::Traverse(void* aPtr,
                                nsCycleCollectionTraversalCallback& aCb)
 {
-  auto runtime = reinterpret_cast<CycleCollectedJSRuntime*>(
-    reinterpret_cast<char*>(this) - offsetof(CycleCollectedJSRuntime,
+  auto runtime = reinterpret_cast<CycleCollectedJSContext*>(
+    reinterpret_cast<char*>(this) - offsetof(CycleCollectedJSContext,
                                              mGCThingCycleCollectorGlobal));
 
   JS::GCCellPtr cellPtr(aPtr, JS::GCThingTraceKind(aPtr));
-  runtime->TraverseGCThing(CycleCollectedJSRuntime::TRAVERSE_FULL, cellPtr, aCb);
+  runtime->TraverseGCThing(CycleCollectedJSContext::TRAVERSE_FULL, cellPtr, aCb);
   return NS_OK;
 }
 
 // NB: This is only used to initialize the participant in
-// CycleCollectedJSRuntime. It should never be used directly.
+// CycleCollectedJSContext. It should never be used directly.
 static JSGCThingParticipant sGCThingCycleCollectorGlobal;
 
 NS_IMETHODIMP
 JSZoneParticipant::Traverse(void* aPtr, nsCycleCollectionTraversalCallback& aCb)
 {
-  auto runtime = reinterpret_cast<CycleCollectedJSRuntime*>(
-    reinterpret_cast<char*>(this) - offsetof(CycleCollectedJSRuntime,
+  auto runtime = reinterpret_cast<CycleCollectedJSContext*>(
+    reinterpret_cast<char*>(this) - offsetof(CycleCollectedJSContext,
                                              mJSZoneCycleCollectorGlobal));
 
   MOZ_ASSERT(!aCb.WantAllTraces());
@@ -403,13 +403,13 @@ NoteJSChildGrayWrapperShim(void* aData, JS::GCCellPtr aThing)
  */
 
 // NB: This is only used to initialize the participant in
-// CycleCollectedJSRuntime. It should never be used directly.
+// CycleCollectedJSContext. It should never be used directly.
 static const JSZoneParticipant sJSZoneCycleCollectorGlobal;
 
 static
 void JSObjectsTenuredCb(JSContext* aContext, void* aData)
 {
-  static_cast<CycleCollectedJSRuntime*>(aData)->JSObjectsTenured();
+  static_cast<CycleCollectedJSContext*>(aData)->JSObjectsTenured();
 }
 
 bool
@@ -435,7 +435,7 @@ mozilla::GetBuildId(JS::BuildIdCharVector* aBuildID)
   return true;
 }
 
-CycleCollectedJSRuntime::CycleCollectedJSRuntime()
+CycleCollectedJSContext::CycleCollectedJSContext()
   : mGCThingCycleCollectorGlobal(sGCThingCycleCollectorGlobal)
   , mJSZoneCycleCollectorGlobal(sJSZoneCycleCollectorGlobal)
   , mJSContext(nullptr)
@@ -452,7 +452,7 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime()
   MOZ_RELEASE_ASSERT(mOwningThread);
 }
 
-CycleCollectedJSRuntime::~CycleCollectedJSRuntime()
+CycleCollectedJSContext::~CycleCollectedJSContext()
 {
   // If the allocation failed, here we are.
   if (!mJSContext) {
@@ -481,7 +481,7 @@ CycleCollectedJSRuntime::~CycleCollectedJSRuntime()
 
   JS_DestroyContext(mJSContext);
   mJSContext = nullptr;
-  nsCycleCollector_forgetJSRuntime();
+  nsCycleCollector_forgetJSContext();
 
   mozilla::dom::DestroyScriptSettings();
 
@@ -496,7 +496,7 @@ MozCrashWarningReporter(JSContext*, const char*, JSErrorReport*)
 }
 
 nsresult
-CycleCollectedJSRuntime::Initialize(JSContext* aParentContext,
+CycleCollectedJSContext::Initialize(JSContext* aParentContext,
                                     uint32_t aMaxBytes,
                                     uint32_t aMaxNurseryBytes)
 {
@@ -561,13 +561,13 @@ CycleCollectedJSRuntime::Initialize(JSContext* aParentContext,
 
   JS::dbg::SetDebuggerMallocSizeOf(mJSContext, moz_malloc_size_of);
 
-  nsCycleCollector_registerJSRuntime(this);
+  nsCycleCollector_registerJSContext(this);
 
   return NS_OK;
 }
 
 size_t
-CycleCollectedJSRuntime::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+CycleCollectedJSContext::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t n = 0;
 
@@ -579,7 +579,7 @@ CycleCollectedJSRuntime::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 }
 
 void
-CycleCollectedJSRuntime::UnmarkSkippableJSHolders()
+CycleCollectedJSContext::UnmarkSkippableJSHolders()
 {
   for (auto iter = mJSHolders.Iter(); !iter.Done(); iter.Next()) {
     void* holder = iter.Key();
@@ -589,7 +589,7 @@ CycleCollectedJSRuntime::UnmarkSkippableJSHolders()
 }
 
 void
-CycleCollectedJSRuntime::DescribeGCThing(bool aIsMarked, JS::GCCellPtr aThing,
+CycleCollectedJSContext::DescribeGCThing(bool aIsMarked, JS::GCCellPtr aThing,
                                          nsCycleCollectionTraversalCallback& aCb) const
 {
   if (!aCb.WantDebugInfo()) {
@@ -631,7 +631,7 @@ CycleCollectedJSRuntime::DescribeGCThing(bool aIsMarked, JS::GCCellPtr aThing,
 }
 
 void
-CycleCollectedJSRuntime::NoteGCThingJSChildren(JS::GCCellPtr aThing,
+CycleCollectedJSContext::NoteGCThingJSChildren(JS::GCCellPtr aThing,
                                                nsCycleCollectionTraversalCallback& aCb) const
 {
   MOZ_ASSERT(mJSContext);
@@ -640,7 +640,7 @@ CycleCollectedJSRuntime::NoteGCThingJSChildren(JS::GCCellPtr aThing,
 }
 
 void
-CycleCollectedJSRuntime::NoteGCThingXPCOMChildren(const js::Class* aClasp,
+CycleCollectedJSContext::NoteGCThingXPCOMChildren(const js::Class* aClasp,
                                                   JSObject* aObj,
                                                   nsCycleCollectionTraversalCallback& aCb) const
 {
@@ -676,7 +676,7 @@ CycleCollectedJSRuntime::NoteGCThingXPCOMChildren(const js::Class* aClasp,
 }
 
 void
-CycleCollectedJSRuntime::TraverseGCThing(TraverseSelect aTs, JS::GCCellPtr aThing,
+CycleCollectedJSContext::TraverseGCThing(TraverseSelect aTs, JS::GCCellPtr aThing,
                                          nsCycleCollectionTraversalCallback& aCb)
 {
   bool isMarkedGray = JS::GCThingIsMarkedGray(aThing);
@@ -706,11 +706,11 @@ CycleCollectedJSRuntime::TraverseGCThing(TraverseSelect aTs, JS::GCCellPtr aThin
 struct TraverseObjectShimClosure
 {
   nsCycleCollectionTraversalCallback& cb;
-  CycleCollectedJSRuntime* self;
+  CycleCollectedJSContext* self;
 };
 
 void
-CycleCollectedJSRuntime::TraverseZone(JS::Zone* aZone,
+CycleCollectedJSContext::TraverseZone(JS::Zone* aZone,
                                       nsCycleCollectionTraversalCallback& aCb)
 {
   MOZ_ASSERT(mJSContext);
@@ -747,18 +747,18 @@ CycleCollectedJSRuntime::TraverseZone(JS::Zone* aZone,
 }
 
 /* static */ void
-CycleCollectedJSRuntime::TraverseObjectShim(void* aData, JS::GCCellPtr aThing)
+CycleCollectedJSContext::TraverseObjectShim(void* aData, JS::GCCellPtr aThing)
 {
   TraverseObjectShimClosure* closure =
     static_cast<TraverseObjectShimClosure*>(aData);
 
   MOZ_ASSERT(aThing.is<JSObject>());
-  closure->self->TraverseGCThing(CycleCollectedJSRuntime::TRAVERSE_CPP,
+  closure->self->TraverseGCThing(CycleCollectedJSContext::TRAVERSE_CPP,
                                  aThing, closure->cb);
 }
 
 void
-CycleCollectedJSRuntime::TraverseNativeRoots(nsCycleCollectionNoteRootCallback& aCb)
+CycleCollectedJSContext::TraverseNativeRoots(nsCycleCollectionNoteRootCallback& aCb)
 {
   // NB: This is here just to preserve the existing XPConnect order. I doubt it
   // would hurt to do this after the JS holders.
@@ -784,28 +784,28 @@ CycleCollectedJSRuntime::TraverseNativeRoots(nsCycleCollectionNoteRootCallback& 
 }
 
 /* static */ void
-CycleCollectedJSRuntime::TraceBlackJS(JSTracer* aTracer, void* aData)
+CycleCollectedJSContext::TraceBlackJS(JSTracer* aTracer, void* aData)
 {
-  CycleCollectedJSRuntime* self = static_cast<CycleCollectedJSRuntime*>(aData);
+  CycleCollectedJSContext* self = static_cast<CycleCollectedJSContext*>(aData);
 
   self->TraceNativeBlackRoots(aTracer);
 }
 
 /* static */ void
-CycleCollectedJSRuntime::TraceGrayJS(JSTracer* aTracer, void* aData)
+CycleCollectedJSContext::TraceGrayJS(JSTracer* aTracer, void* aData)
 {
-  CycleCollectedJSRuntime* self = static_cast<CycleCollectedJSRuntime*>(aData);
+  CycleCollectedJSContext* self = static_cast<CycleCollectedJSContext*>(aData);
 
   // Mark these roots as gray so the CC can walk them later.
   self->TraceNativeGrayRoots(aTracer);
 }
 
 /* static */ void
-CycleCollectedJSRuntime::GCCallback(JSContext* aContext,
+CycleCollectedJSContext::GCCallback(JSContext* aContext,
                                     JSGCStatus aStatus,
                                     void* aData)
 {
-  CycleCollectedJSRuntime* self = static_cast<CycleCollectedJSRuntime*>(aData);
+  CycleCollectedJSContext* self = static_cast<CycleCollectedJSContext*>(aData);
 
   MOZ_ASSERT(aContext == self->Context());
 
@@ -813,11 +813,11 @@ CycleCollectedJSRuntime::GCCallback(JSContext* aContext,
 }
 
 /* static */ void
-CycleCollectedJSRuntime::GCSliceCallback(JSContext* aContext,
+CycleCollectedJSContext::GCSliceCallback(JSContext* aContext,
                                          JS::GCProgress aProgress,
                                          const JS::GCDescription& aDesc)
 {
-  CycleCollectedJSRuntime* self = CycleCollectedJSRuntime::Get();
+  CycleCollectedJSContext* self = CycleCollectedJSContext::Get();
   MOZ_ASSERT(self->Context() == aContext);
 
   if (aProgress == JS::GC_CYCLE_END) {
@@ -883,11 +883,11 @@ public:
 };
 
 /* static */ void
-CycleCollectedJSRuntime::GCNurseryCollectionCallback(JSContext* aContext,
+CycleCollectedJSContext::GCNurseryCollectionCallback(JSContext* aContext,
                                                      JS::GCNurseryProgress aProgress,
                                                      JS::gcreason::Reason aReason)
 {
-  CycleCollectedJSRuntime* self = CycleCollectedJSRuntime::Get();
+  CycleCollectedJSContext* self = CycleCollectedJSContext::Get();
   MOZ_ASSERT(self->Context() == aContext);
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -905,10 +905,10 @@ CycleCollectedJSRuntime::GCNurseryCollectionCallback(JSContext* aContext,
 
 
 /* static */ void
-CycleCollectedJSRuntime::OutOfMemoryCallback(JSContext* aContext,
+CycleCollectedJSContext::OutOfMemoryCallback(JSContext* aContext,
                                              void* aData)
 {
-  CycleCollectedJSRuntime* self = static_cast<CycleCollectedJSRuntime*>(aData);
+  CycleCollectedJSContext* self = static_cast<CycleCollectedJSContext*>(aData);
 
   MOZ_ASSERT(aContext == self->Context());
 
@@ -916,9 +916,9 @@ CycleCollectedJSRuntime::OutOfMemoryCallback(JSContext* aContext,
 }
 
 /* static */ void
-CycleCollectedJSRuntime::LargeAllocationFailureCallback(void* aData)
+CycleCollectedJSContext::LargeAllocationFailureCallback(void* aData)
 {
-  CycleCollectedJSRuntime* self = static_cast<CycleCollectedJSRuntime*>(aData);
+  CycleCollectedJSContext* self = static_cast<CycleCollectedJSContext*>(aData);
 
   self->OnLargeAllocationFailure();
 }
@@ -953,7 +953,7 @@ private:
 
 /* static */
 JSObject*
-CycleCollectedJSRuntime::GetIncumbentGlobalCallback(JSContext* aCx)
+CycleCollectedJSContext::GetIncumbentGlobalCallback(JSContext* aCx)
 {
   nsIGlobalObject* global = mozilla::dom::GetIncumbentGlobal();
   if (global) {
@@ -964,13 +964,13 @@ CycleCollectedJSRuntime::GetIncumbentGlobalCallback(JSContext* aCx)
 
 /* static */
 bool
-CycleCollectedJSRuntime::EnqueuePromiseJobCallback(JSContext* aCx,
+CycleCollectedJSContext::EnqueuePromiseJobCallback(JSContext* aCx,
                                                    JS::HandleObject aJob,
                                                    JS::HandleObject aAllocationSite,
                                                    JS::HandleObject aIncumbentGlobal,
                                                    void* aData)
 {
-  CycleCollectedJSRuntime* self = static_cast<CycleCollectedJSRuntime*>(aData);
+  CycleCollectedJSContext* self = static_cast<CycleCollectedJSContext*>(aData);
   MOZ_ASSERT(aCx == self->Context());
   MOZ_ASSERT(Get() == self);
 
@@ -986,13 +986,13 @@ CycleCollectedJSRuntime::EnqueuePromiseJobCallback(JSContext* aCx,
 #ifdef SPIDERMONKEY_PROMISE
 /* static */
 void
-CycleCollectedJSRuntime::PromiseRejectionTrackerCallback(JSContext* aCx,
+CycleCollectedJSContext::PromiseRejectionTrackerCallback(JSContext* aCx,
                                                          JS::HandleObject aPromise,
                                                          PromiseRejectionHandlingState state,
                                                          void* aData)
 {
 #ifdef DEBUG
-  CycleCollectedJSRuntime* self = static_cast<CycleCollectedJSRuntime*>(aData);
+  CycleCollectedJSContext* self = static_cast<CycleCollectedJSContext*>(aData);
 #endif // DEBUG
   MOZ_ASSERT(aCx == self->Context());
   MOZ_ASSERT(Get() == self);
@@ -1058,7 +1058,7 @@ mozilla::TraceScriptHolder(nsISupports* aHolder, JSTracer* aTracer)
 }
 
 void
-CycleCollectedJSRuntime::TraceNativeGrayRoots(JSTracer* aTracer)
+CycleCollectedJSContext::TraceNativeGrayRoots(JSTracer* aTracer)
 {
   MOZ_ASSERT(mJSContext);
 
@@ -1074,7 +1074,7 @@ CycleCollectedJSRuntime::TraceNativeGrayRoots(JSTracer* aTracer)
 }
 
 void
-CycleCollectedJSRuntime::AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer)
+CycleCollectedJSContext::AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer)
 {
   MOZ_ASSERT(mJSContext);
   mJSHolders.Put(aHolder, aTracer);
@@ -1125,7 +1125,7 @@ struct ClearJSHolder : public TraceCallbacks
 };
 
 void
-CycleCollectedJSRuntime::RemoveJSHolder(void* aHolder)
+CycleCollectedJSContext::RemoveJSHolder(void* aHolder)
 {
   MOZ_ASSERT(mJSContext);
 
@@ -1139,7 +1139,7 @@ CycleCollectedJSRuntime::RemoveJSHolder(void* aHolder)
 
 #ifdef DEBUG
 bool
-CycleCollectedJSRuntime::IsJSHolder(void* aHolder)
+CycleCollectedJSContext::IsJSHolder(void* aHolder)
 {
   MOZ_ASSERT(mJSContext);
   return mJSHolders.Get(aHolder, nullptr);
@@ -1152,7 +1152,7 @@ AssertNoGcThing(JS::GCCellPtr aGCThing, const char* aName, void* aClosure)
 }
 
 void
-CycleCollectedJSRuntime::AssertNoObjectsToTrace(void* aPossibleJSHolder)
+CycleCollectedJSContext::AssertNoObjectsToTrace(void* aPossibleJSHolder)
 {
   MOZ_ASSERT(mJSContext);
 
@@ -1164,7 +1164,7 @@ CycleCollectedJSRuntime::AssertNoObjectsToTrace(void* aPossibleJSHolder)
 #endif
 
 already_AddRefed<nsIException>
-CycleCollectedJSRuntime::GetPendingException() const
+CycleCollectedJSContext::GetPendingException() const
 {
   MOZ_ASSERT(mJSContext);
 
@@ -1173,42 +1173,42 @@ CycleCollectedJSRuntime::GetPendingException() const
 }
 
 void
-CycleCollectedJSRuntime::SetPendingException(nsIException* aException)
+CycleCollectedJSContext::SetPendingException(nsIException* aException)
 {
   MOZ_ASSERT(mJSContext);
   mPendingException = aException;
 }
 
 std::queue<nsCOMPtr<nsIRunnable>>&
-CycleCollectedJSRuntime::GetPromiseMicroTaskQueue()
+CycleCollectedJSContext::GetPromiseMicroTaskQueue()
 {
   MOZ_ASSERT(mJSContext);
   return mPromiseMicroTaskQueue;
 }
 
 std::queue<nsCOMPtr<nsIRunnable>>&
-CycleCollectedJSRuntime::GetDebuggerPromiseMicroTaskQueue()
+CycleCollectedJSContext::GetDebuggerPromiseMicroTaskQueue()
 {
   MOZ_ASSERT(mJSContext);
   return mDebuggerPromiseMicroTaskQueue;
 }
 
 nsCycleCollectionParticipant*
-CycleCollectedJSRuntime::GCThingParticipant()
+CycleCollectedJSContext::GCThingParticipant()
 {
   MOZ_ASSERT(mJSContext);
   return &mGCThingCycleCollectorGlobal;
 }
 
 nsCycleCollectionParticipant*
-CycleCollectedJSRuntime::ZoneParticipant()
+CycleCollectedJSContext::ZoneParticipant()
 {
   MOZ_ASSERT(mJSContext);
   return &mJSZoneCycleCollectorGlobal;
 }
 
 nsresult
-CycleCollectedJSRuntime::TraverseRoots(nsCycleCollectionNoteRootCallback& aCb)
+CycleCollectedJSContext::TraverseRoots(nsCycleCollectionNoteRootCallback& aCb)
 {
   MOZ_ASSERT(mJSContext);
 
@@ -1221,13 +1221,13 @@ CycleCollectedJSRuntime::TraverseRoots(nsCycleCollectionNoteRootCallback& aCb)
 }
 
 bool
-CycleCollectedJSRuntime::UsefulToMergeZones() const
+CycleCollectedJSContext::UsefulToMergeZones() const
 {
   return false;
 }
 
 void
-CycleCollectedJSRuntime::FixWeakMappingGrayBits() const
+CycleCollectedJSContext::FixWeakMappingGrayBits() const
 {
   MOZ_ASSERT(mJSContext);
   MOZ_ASSERT(!JS::IsIncrementalGCInProgress(mJSContext),
@@ -1237,14 +1237,14 @@ CycleCollectedJSRuntime::FixWeakMappingGrayBits() const
 }
 
 bool
-CycleCollectedJSRuntime::AreGCGrayBitsValid() const
+CycleCollectedJSContext::AreGCGrayBitsValid() const
 {
   MOZ_ASSERT(mJSContext);
   return js::AreGCGrayBitsValid(mJSContext);
 }
 
 void
-CycleCollectedJSRuntime::GarbageCollect(uint32_t aReason) const
+CycleCollectedJSContext::GarbageCollect(uint32_t aReason) const
 {
   MOZ_ASSERT(mJSContext);
 
@@ -1256,7 +1256,7 @@ CycleCollectedJSRuntime::GarbageCollect(uint32_t aReason) const
 }
 
 void
-CycleCollectedJSRuntime::JSObjectsTenured()
+CycleCollectedJSContext::JSObjectsTenured()
 {
   MOZ_ASSERT(mJSContext);
 
@@ -1282,7 +1282,7 @@ for (auto iter = mPreservedNurseryObjects.Iter(); !iter.Done(); iter.Next()) {
 }
 
 void
-CycleCollectedJSRuntime::NurseryWrapperAdded(nsWrapperCache* aCache)
+CycleCollectedJSContext::NurseryWrapperAdded(nsWrapperCache* aCache)
 {
   MOZ_ASSERT(mJSContext);
   MOZ_ASSERT(aCache);
@@ -1292,7 +1292,7 @@ CycleCollectedJSRuntime::NurseryWrapperAdded(nsWrapperCache* aCache)
 }
 
 void
-CycleCollectedJSRuntime::NurseryWrapperPreserved(JSObject* aWrapper)
+CycleCollectedJSContext::NurseryWrapperPreserved(JSObject* aWrapper)
 {
   MOZ_ASSERT(mJSContext);
 
@@ -1301,7 +1301,7 @@ CycleCollectedJSRuntime::NurseryWrapperPreserved(JSObject* aWrapper)
 }
 
 void
-CycleCollectedJSRuntime::DeferredFinalize(DeferredFinalizeAppendFunction aAppendFunc,
+CycleCollectedJSContext::DeferredFinalize(DeferredFinalizeAppendFunction aAppendFunc,
                                           DeferredFinalizeFunction aFunc,
                                           void* aThing)
 {
@@ -1317,7 +1317,7 @@ CycleCollectedJSRuntime::DeferredFinalize(DeferredFinalizeAppendFunction aAppend
 }
 
 void
-CycleCollectedJSRuntime::DeferredFinalize(nsISupports* aSupports)
+CycleCollectedJSContext::DeferredFinalize(nsISupports* aSupports)
 {
   MOZ_ASSERT(mJSContext);
 
@@ -1327,13 +1327,13 @@ CycleCollectedJSRuntime::DeferredFinalize(nsISupports* aSupports)
 }
 
 void
-CycleCollectedJSRuntime::DumpJSHeap(FILE* aFile)
+CycleCollectedJSContext::DumpJSHeap(FILE* aFile)
 {
   js::DumpHeap(Context(), aFile, js::CollectNurseryBeforeDump);
 }
 
 void
-CycleCollectedJSRuntime::ProcessStableStateQueue()
+CycleCollectedJSContext::ProcessStableStateQueue()
 {
   MOZ_ASSERT(mJSContext);
   MOZ_RELEASE_ASSERT(!mDoingStableStates);
@@ -1349,7 +1349,7 @@ CycleCollectedJSRuntime::ProcessStableStateQueue()
 }
 
 void
-CycleCollectedJSRuntime::ProcessMetastableStateQueue(uint32_t aRecursionDepth)
+CycleCollectedJSContext::ProcessMetastableStateQueue(uint32_t aRecursionDepth)
 {
   MOZ_ASSERT(mJSContext);
   MOZ_RELEASE_ASSERT(!mDoingStableStates);
@@ -1380,7 +1380,7 @@ CycleCollectedJSRuntime::ProcessMetastableStateQueue(uint32_t aRecursionDepth)
 }
 
 void
-CycleCollectedJSRuntime::AfterProcessTask(uint32_t aRecursionDepth)
+CycleCollectedJSContext::AfterProcessTask(uint32_t aRecursionDepth)
 {
   MOZ_ASSERT(mJSContext);
 
@@ -1405,14 +1405,14 @@ CycleCollectedJSRuntime::AfterProcessTask(uint32_t aRecursionDepth)
 }
 
 void
-CycleCollectedJSRuntime::AfterProcessMicrotask()
+CycleCollectedJSContext::AfterProcessMicrotask()
 {
   MOZ_ASSERT(mJSContext);
   AfterProcessMicrotask(RecursionDepth());
 }
 
 void
-CycleCollectedJSRuntime::AfterProcessMicrotask(uint32_t aRecursionDepth)
+CycleCollectedJSContext::AfterProcessMicrotask(uint32_t aRecursionDepth)
 {
   MOZ_ASSERT(mJSContext);
 
@@ -1422,20 +1422,20 @@ CycleCollectedJSRuntime::AfterProcessMicrotask(uint32_t aRecursionDepth)
 }
 
 uint32_t
-CycleCollectedJSRuntime::RecursionDepth()
+CycleCollectedJSContext::RecursionDepth()
 {
   return mOwningThread->RecursionDepth();
 }
 
 void
-CycleCollectedJSRuntime::RunInStableState(already_AddRefed<nsIRunnable>&& aRunnable)
+CycleCollectedJSContext::RunInStableState(already_AddRefed<nsIRunnable>&& aRunnable)
 {
   MOZ_ASSERT(mJSContext);
   mStableStateEvents.AppendElement(Move(aRunnable));
 }
 
 void
-CycleCollectedJSRuntime::RunInMetastableState(already_AddRefed<nsIRunnable>&& aRunnable)
+CycleCollectedJSContext::RunInMetastableState(already_AddRefed<nsIRunnable>&& aRunnable)
 {
   MOZ_ASSERT(mJSContext);
 
@@ -1460,9 +1460,9 @@ CycleCollectedJSRuntime::RunInMetastableState(already_AddRefed<nsIRunnable>&& aR
   mMetastableStateEvents.AppendElement(Move(data));
 }
 
-IncrementalFinalizeRunnable::IncrementalFinalizeRunnable(CycleCollectedJSRuntime* aRt,
+IncrementalFinalizeRunnable::IncrementalFinalizeRunnable(CycleCollectedJSContext* aCx,
                                                          DeferredFinalizerTable& aFinalizers)
-  : mRuntime(aRt)
+  : mContext(aCx)
   , mFinalizeFunctionToRun(0)
   , mReleasing(false)
 {
@@ -1481,7 +1481,7 @@ IncrementalFinalizeRunnable::IncrementalFinalizeRunnable(CycleCollectedJSRuntime
 
 IncrementalFinalizeRunnable::~IncrementalFinalizeRunnable()
 {
-  MOZ_ASSERT(this != mRuntime->mFinalizeRunnable);
+  MOZ_ASSERT(this != mContext->mFinalizeRunnable);
 }
 
 void
@@ -1529,17 +1529,17 @@ IncrementalFinalizeRunnable::ReleaseNow(bool aLimited)
   }
 
   if (mFinalizeFunctionToRun == mDeferredFinalizeFunctions.Length()) {
-    MOZ_ASSERT(mRuntime->mFinalizeRunnable == this);
+    MOZ_ASSERT(mContext->mFinalizeRunnable == this);
     mDeferredFinalizeFunctions.Clear();
     // NB: This may delete this!
-    mRuntime->mFinalizeRunnable = nullptr;
+    mContext->mFinalizeRunnable = nullptr;
   }
 }
 
 NS_IMETHODIMP
 IncrementalFinalizeRunnable::Run()
 {
-  if (mRuntime->mFinalizeRunnable != this) {
+  if (mContext->mFinalizeRunnable != this) {
     /* These items were already processed synchronously in JSGC_END. */
     MOZ_ASSERT(!mDeferredFinalizeFunctions.Length());
     return NS_OK;
@@ -1562,7 +1562,7 @@ IncrementalFinalizeRunnable::Run()
 }
 
 void
-CycleCollectedJSRuntime::FinalizeDeferredThings(DeferredFinalizeType aType)
+CycleCollectedJSContext::FinalizeDeferredThings(DeferredFinalizeType aType)
 {
   MOZ_ASSERT(mJSContext);
 
@@ -1601,7 +1601,7 @@ CycleCollectedJSRuntime::FinalizeDeferredThings(DeferredFinalizeType aType)
 }
 
 void
-CycleCollectedJSRuntime::AnnotateAndSetOutOfMemory(OOMState* aStatePtr,
+CycleCollectedJSContext::AnnotateAndSetOutOfMemory(OOMState* aStatePtr,
                                                    OOMState aNewState)
 {
   MOZ_ASSERT(mJSContext);
@@ -1620,7 +1620,7 @@ CycleCollectedJSRuntime::AnnotateAndSetOutOfMemory(OOMState* aStatePtr,
 }
 
 void
-CycleCollectedJSRuntime::OnGC(JSGCStatus aStatus)
+CycleCollectedJSContext::OnGC(JSGCStatus aStatus)
 {
   MOZ_ASSERT(mJSContext);
 
@@ -1652,7 +1652,7 @@ CycleCollectedJSRuntime::OnGC(JSGCStatus aStatus)
 }
 
 void
-CycleCollectedJSRuntime::OnOutOfMemory()
+CycleCollectedJSContext::OnOutOfMemory()
 {
   MOZ_ASSERT(mJSContext);
 
@@ -1662,7 +1662,7 @@ CycleCollectedJSRuntime::OnOutOfMemory()
 }
 
 void
-CycleCollectedJSRuntime::OnLargeAllocationFailure()
+CycleCollectedJSContext::OnLargeAllocationFailure()
 {
   MOZ_ASSERT(mJSContext);
 
@@ -1672,7 +1672,7 @@ CycleCollectedJSRuntime::OnLargeAllocationFailure()
 }
 
 void
-CycleCollectedJSRuntime::PrepareWaitingZonesForGC()
+CycleCollectedJSContext::PrepareWaitingZonesForGC()
 {
   if (mZonesWaitingForGC.Count() == 0) {
     JS::PrepareForFullGC(Context());
@@ -1685,7 +1685,7 @@ CycleCollectedJSRuntime::PrepareWaitingZonesForGC()
 }
 
 void
-CycleCollectedJSRuntime::DispatchToMicroTask(already_AddRefed<nsIRunnable> aRunnable)
+CycleCollectedJSContext::DispatchToMicroTask(already_AddRefed<nsIRunnable> aRunnable)
 {
   RefPtr<nsIRunnable> runnable(aRunnable);
 
@@ -1696,7 +1696,7 @@ CycleCollectedJSRuntime::DispatchToMicroTask(already_AddRefed<nsIRunnable> aRunn
 }
 
 void
-CycleCollectedJSRuntime::EnvironmentPreparer::invoke(JS::HandleObject scope,
+CycleCollectedJSContext::EnvironmentPreparer::invoke(JS::HandleObject scope,
                                                      js::ScriptEnvironmentPreparer::Closure& closure)
 {
   nsIGlobalObject* global = xpc::NativeGlobal(scope);

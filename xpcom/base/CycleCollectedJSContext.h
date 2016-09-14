@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_CycleCollectedJSRuntime_h__
-#define mozilla_CycleCollectedJSRuntime_h__
+#ifndef mozilla_CycleCollectedJSContext_h__
+#define mozilla_CycleCollectedJSContext_h__
 
 #include <queue>
 
@@ -134,14 +134,14 @@ struct CycleCollectorResults
   uint32_t mNumSlices;
 };
 
-class CycleCollectedJSRuntime
+class CycleCollectedJSContext
 {
   friend class JSGCThingParticipant;
   friend class JSZoneParticipant;
   friend class IncrementalFinalizeRunnable;
 protected:
-  CycleCollectedJSRuntime();
-  virtual ~CycleCollectedJSRuntime();
+  CycleCollectedJSContext();
+  virtual ~CycleCollectedJSContext();
 
   nsresult Initialize(JSContext* aParentContext,
                       uint32_t aMaxBytes,
@@ -350,18 +350,18 @@ public:
   {
     public:
     AutoDisableMicroTaskCheckpoint()
-    : mCCRT(CycleCollectedJSRuntime::Get())
+    : mCCJSCX(CycleCollectedJSContext::Get())
     {
-      mOldValue = mCCRT->MicroTaskCheckpointDisabled();
-      mCCRT->DisableMicroTaskCheckpoint(true);
+      mOldValue = mCCJSCX->MicroTaskCheckpointDisabled();
+      mCCJSCX->DisableMicroTaskCheckpoint(true);
     }
 
     ~AutoDisableMicroTaskCheckpoint()
     {
-      mCCRT->DisableMicroTaskCheckpoint(mOldValue);
+      mCCJSCX->DisableMicroTaskCheckpoint(mOldValue);
     }
 
-    CycleCollectedJSRuntime* mCCRT;
+    CycleCollectedJSContext* mCCJSCX;
     bool mOldValue;
   };
 
@@ -384,9 +384,9 @@ public:
   // Runs after the current microtask completes.
   void RunInMetastableState(already_AddRefed<nsIRunnable>&& aRunnable);
 
-  // Get the current thread's CycleCollectedJSRuntime.  Returns null if there
+  // Get the current thread's CycleCollectedJSContext.  Returns null if there
   // isn't one.
-  static CycleCollectedJSRuntime* Get();
+  static CycleCollectedJSContext* Get();
 
   // Add aZone to the set of zones waiting for a GC.
   void AddZoneWaitingForGC(JS::Zone* aZone)
@@ -490,4 +490,4 @@ GetBuildId(JS::BuildIdCharVector* aBuildID);
 
 } // namespace mozilla
 
-#endif // mozilla_CycleCollectedJSRuntime_h__
+#endif // mozilla_CycleCollectedJSContext_h__
