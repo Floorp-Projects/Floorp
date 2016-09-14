@@ -5050,6 +5050,12 @@ if test "$USE_FC_FREETYPE"; then
 fi
 
 dnl ========================================================
+dnl Check if we need the 32-bit Linux SSE2 error dialog
+dnl ========================================================
+
+AC_SUBST(MOZ_LINUX_32_SSE2_STARTUP_ERROR)
+
+dnl ========================================================
 dnl Check for pixman and cairo
 dnl ========================================================
 
