@@ -27,6 +27,12 @@
       case 'good_nonsriBlocked':
         ok(true, "Eligible non-SRI resources was correctly blocked by the CSP.");
         break;
+      case 'bad_svg_nonsriLoaded':
+        ok(false, 'Eligible non-SRI resource should be blocked by the CSP.');
+        break;
+      case 'good_svg_nonsriBlocked':
+        ok(true, 'Eligible non-SRI svg script was correctly blocked by the CSP.');
+        break;
       case 'finish':
         var blackText = frame.contentDocument.getElementById('black-text');
         var blackTextColor = frame.contentWindow.getComputedStyle(blackText, null).getPropertyValue('color');

@@ -93,6 +93,7 @@ function test() {
         yield test.run();
       }
     }).then(finish, ex => {
+     Cu.reportError(ex);
      ok(false, "Unexpected Exception: " + ex);
      finish();
     });

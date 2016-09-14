@@ -198,7 +198,7 @@ var inputTests = [
   // 21
   {
     input: '({0: "a", 1: "b", length: 1})',
-    output: 'Object { 1: "b", length: 1, 1 more\u2026 }',
+    output: 'Object { 0: "a", 1: "b", length: 1 }',
     printOutput: "[object Object]",
     inspectable: true,
     variablesViewLabel: "Object",
@@ -225,7 +225,7 @@ var inputTests = [
   // 24
   {
     input: '({0: "a", 2: "b", length: 2})',
-    output: 'Object { 2: "b", length: 2, 1 more\u2026 }',
+    output: 'Object { 0: "a", 2: "b", length: 2 }',
     printOutput: "[object Object]",
     inspectable: true,
     variablesViewLabel: "Object",
@@ -243,7 +243,7 @@ var inputTests = [
   // 26
   {
     input: '({0: "a", b: "b", length: 1})',
-    output: 'Object { b: "b", length: 1, 1 more\u2026 }',
+    output: 'Object { 0: "a", b: "b", length: 1 }',
     printOutput: "[object Object]",
     inspectable: true,
     variablesViewLabel: "Object",
@@ -252,7 +252,7 @@ var inputTests = [
   // 27
   {
     input: '({0: "a", b: "b", length: 2})',
-    output: 'Object { b: "b", length: 2, 1 more\u2026 }',
+    output: 'Object { 0: "a", b: "b", length: 2 }',
     printOutput: "[object Object]",
     inspectable: true,
     variablesViewLabel: "Object",

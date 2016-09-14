@@ -150,7 +150,9 @@ ImageContainer::~ImageContainer()
 {
   if (mIPDLChild) {
     mIPDLChild->ForgetImageContainer();
-    ImageBridgeChild::DispatchReleaseImageContainer(mIPDLChild);
+    if (RefPtr<ImageBridgeChild> imageBridge = ImageBridgeChild::GetSingleton()) {
+      imageBridge->ReleaseImageContainer(mIPDLChild);
+    }
   }
 }
 
@@ -269,7 +271,9 @@ ImageContainer::SetCurrentImages(const nsTArray<NonOwningImage>& aImages)
   MOZ_ASSERT(!aImages.IsEmpty());
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   if (mImageClient) {
-    ImageBridgeChild::DispatchImageClientUpdate(mImageClient, this);
+    if (RefPtr<ImageBridgeChild> imageBridge = ImageBridgeChild::GetSingleton()) {
+      imageBridge->UpdateImageClient(mImageClient, this);
+    }
   }
   SetCurrentImageInternal(aImages);
 }
@@ -280,7 +284,9 @@ ImageContainer::ClearAllImages()
   if (mImageClient) {
     // Let ImageClient release all TextureClients. This doesn't return
     // until ImageBridge has called ClearCurrentImageFromImageBridge.
-    ImageBridgeChild::FlushAllImages(mImageClient, this);
+    if (RefPtr<ImageBridgeChild> imageBridge = ImageBridgeChild::GetSingleton()) {
+      imageBridge->FlushAllImages(mImageClient, this);
+    }
     return;
   }
 

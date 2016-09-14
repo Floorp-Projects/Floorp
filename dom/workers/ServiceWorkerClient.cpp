@@ -231,7 +231,7 @@ ServiceWorkerClient::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
     return;
   }
 
-  aRv = NS_DispatchToMainThread(runnable);
+  aRv = workerPrivate->DispatchToMainThread(runnable.forget());
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
