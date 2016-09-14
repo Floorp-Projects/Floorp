@@ -13,6 +13,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Sprintf.h"
 
 #include <ctype.h>
 #include <stdarg.h>
@@ -834,7 +835,7 @@ js::ReportMissingArg(JSContext* cx, HandleValue v, unsigned arg)
     char argbuf[11];
     UniqueChars bytes;
 
-    snprintf(argbuf, sizeof argbuf, "%u", arg);
+    SprintfLiteral(argbuf, "%u", arg);
     if (IsFunctionObject(v)) {
         RootedAtom name(cx, v.toObject().as<JSFunction>().name());
         bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, name);
@@ -1182,7 +1183,7 @@ void
 AutoEnterOOMUnsafeRegion::crash(const char* reason)
 {
     char msgbuf[1024];
-    snprintf(msgbuf, sizeof(msgbuf), "[unhandlable oom] %s", reason);
+    SprintfLiteral(msgbuf, "[unhandlable oom] %s", reason);
     MOZ_ReportAssertionFailure(msgbuf, __FILE__, __LINE__);
     MOZ_CRASH();
 }
