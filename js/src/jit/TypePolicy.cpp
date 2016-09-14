@@ -646,11 +646,7 @@ BoxExceptPolicy<Op, Type>::staticAdjustInputs(TempAllocator& alloc, MInstruction
     return BoxPolicy<Op>::staticAdjustInputs(alloc, ins);
 }
 
-template bool BoxExceptPolicy<0, MIRType::String>::staticAdjustInputs(TempAllocator& alloc,
-                                                                     MInstruction* ins);
-template bool BoxExceptPolicy<1, MIRType::String>::staticAdjustInputs(TempAllocator& alloc,
-                                                                     MInstruction* ins);
-template bool BoxExceptPolicy<2, MIRType::String>::staticAdjustInputs(TempAllocator& alloc,
+template bool BoxExceptPolicy<0, MIRType::Object>::staticAdjustInputs(TempAllocator& alloc,
                                                                      MInstruction* ins);
 
 template <unsigned Op>
@@ -1212,7 +1208,7 @@ FilterTypeSetPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
     _(TypeBarrierPolicy)
 
 #define TEMPLATE_TYPE_POLICY_LIST(_)                                    \
-    _(BoxExceptPolicy<0, MIRType::String>)                               \
+    _(BoxExceptPolicy<0, MIRType::Object>)                              \
     _(BoxPolicy<0>)                                                     \
     _(ConvertToInt32Policy<0>)                                          \
     _(ConvertToStringPolicy<0>)                                         \

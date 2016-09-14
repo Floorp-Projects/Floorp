@@ -3159,6 +3159,9 @@ AccumulateTelemetryCallback(int id, uint32_t sample, const char* key)
       case JS_TELEMETRY_ADDON_EXCEPTIONS:
         Telemetry::Accumulate(Telemetry::JS_TELEMETRY_ADDON_EXCEPTIONS, nsDependentCString(key), sample);
         break;
+      case JS_TELEMETRY_AOT_USAGE:
+        Telemetry::Accumulate(Telemetry::JS_AOT_USAGE, sample);
+        break;
       default:
         MOZ_ASSERT_UNREACHABLE("Unexpected JS_TELEMETRY id");
     }

@@ -198,6 +198,8 @@ private:
   GetFilesHelperParent(const nsID& aUUID, ContentParent* aContentParent,
                        bool aRecursiveFlag);
 
+  ~GetFilesHelperParent();
+
   RefPtr<ContentParent> mContentParent;
   nsID mUUID;
 };
