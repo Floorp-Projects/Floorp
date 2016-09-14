@@ -1574,6 +1574,27 @@ CheckResumptionValue(JSContext* cx, AbstractFramePtr frame, const Maybe<HandleVa
     return true;
 }
 
+static bool
+GetThisValueForCheck(JSContext* cx, AbstractFramePtr frame, jsbytecode* pc,
+                     MutableHandleValue thisv, Maybe<HandleValue>& maybeThisv)
+{
+    if (frame.debuggerNeedsCheckPrimitiveReturn()) {
+        {
+            AutoCompartment ac(cx, frame.environmentChain());
+            if (!GetThisValueForDebuggerMaybeOptimizedOut(cx, frame, pc, thisv))
+                return false;
+        }
+
+        if (!cx->compartment()->wrap(cx, thisv))
+            return false;
+
+        MOZ_ASSERT_IF(thisv.isMagic(), thisv.isMagic(JS_UNINITIALIZED_LEXICAL));
+        maybeThisv.emplace(HandleValue(thisv));
+    }
+
+    return true;
+}
+
 bool
 Debugger::processResumptionValue(Maybe<AutoCompartment>& ac, AbstractFramePtr frame,
                                  const Maybe<HandleValue>& maybeThisv, HandleValue rval,
@@ -1598,37 +1619,68 @@ Debugger::processResumptionValue(Maybe<AutoCompartment>& ac, AbstractFramePtr fr
 }
 
 JSTrapStatus
-Debugger::processHandlerResult(Maybe<AutoCompartment>& ac, bool ok, const Value& rv,
+Debugger::processParsedHandlerResultHelper(Maybe<AutoCompartment>& ac, AbstractFramePtr frame,
+                                           const Maybe<HandleValue>& maybeThisv, bool success,
+                                           JSTrapStatus status, MutableHandleValue vp)
+{
+    if (!success)
+        return handleUncaughtException(ac, vp, maybeThisv, frame);
+
+    JSContext* cx = ac->context()->asJSContext();
+
+    if (!unwrapDebuggeeValue(cx, vp) ||
+        !CheckResumptionValue(cx, frame, maybeThisv, status, vp))
+    {
+        return handleUncaughtException(ac, vp, maybeThisv, frame);
+    }
+
+    ac.reset();
+    if (!cx->compartment()->wrap(cx, vp)) {
+        status = JSTRAP_ERROR;
+        vp.setUndefined();
+    }
+
+    return status;
+}
+
+JSTrapStatus
+Debugger::processParsedHandlerResult(Maybe<AutoCompartment>& ac, AbstractFramePtr frame,
+                                     jsbytecode* pc, bool success, JSTrapStatus status,
+                                     MutableHandleValue vp)
+{
+    JSContext* cx = ac->context()->asJSContext();
+
+    RootedValue thisv(cx);
+    Maybe<HandleValue> maybeThisv;
+    if (!GetThisValueForCheck(cx, frame, pc, &thisv, maybeThisv)) {
+        ac.reset();
+        return JSTRAP_ERROR;
+    }
+
+    return processParsedHandlerResultHelper(ac, frame, maybeThisv, success, status, vp);
+}
+
+JSTrapStatus
+Debugger::processHandlerResult(Maybe<AutoCompartment>& ac, bool success, const Value& rv,
                                AbstractFramePtr frame, jsbytecode* pc, MutableHandleValue vp)
 {
     JSContext* cx = ac->context()->asJSContext();
 
     RootedValue thisv(cx);
     Maybe<HandleValue> maybeThisv;
-    if (frame.debuggerNeedsCheckPrimitiveReturn()) {
-        bool success;
-        {
-            AutoCompartment ac2(cx, frame.environmentChain());
-            success = GetThisValueForDebuggerMaybeOptimizedOut(cx, frame, pc, &thisv);
-        }
-        if (!success || !cx->compartment()->wrap(cx, &thisv)) {
-            ac.reset();
-            return JSTRAP_ERROR;
-        }
-        MOZ_ASSERT_IF(thisv.isMagic(), thisv.isMagic(JS_UNINITIALIZED_LEXICAL));
-        maybeThisv.emplace(HandleValue(thisv));
+    if (!GetThisValueForCheck(cx, frame, pc, &thisv, maybeThisv)) {
+        ac.reset();
+        return JSTRAP_ERROR;
     }
 
-    if (!ok)
+    if (!success)
         return handleUncaughtException(ac, vp, maybeThisv, frame);
 
-    RootedValue rvRoot(cx, rv);
+    RootedValue rootRv(cx, rv);
     JSTrapStatus status = JSTRAP_CONTINUE;
-    RootedValue v(cx);
-    if (!processResumptionValue(ac, frame, maybeThisv, rvRoot, status, &v))
-        return handleUncaughtException(ac, vp, maybeThisv, frame);
-    vp.set(v);
-    return status;
+    success = ParseResumptionValue(cx, rootRv, status, vp);
+
+    return processParsedHandlerResultHelper(ac, frame, maybeThisv, success, status, vp);
 }
 
 static bool
