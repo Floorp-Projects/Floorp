@@ -52,6 +52,7 @@ this.Utils = {
   digestBytes: CryptoUtils.digestBytes,
   sha1: CryptoUtils.sha1,
   sha1Base32: CryptoUtils.sha1Base32,
+  sha256: CryptoUtils.sha256,
   makeHMACKey: CryptoUtils.makeHMACKey,
   makeHMACHasher: CryptoUtils.makeHMACHasher,
   hkdfExpand: CryptoUtils.hkdfExpand,

@@ -12,7 +12,7 @@ const {
 
 module.exports = {
 
-  updateTouchSimulationEnabled(enabled) {
+  updateTouchSimulationEnabled(enabled = false) {
     return {
       type: UPDATE_TOUCH_SIMULATION_ENABLED,
       enabled,

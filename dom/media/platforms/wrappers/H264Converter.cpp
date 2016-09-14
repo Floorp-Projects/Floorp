@@ -55,7 +55,7 @@ H264Converter::Input(MediaRawData* aSample)
   if (!mp4_demuxer::AnnexB::ConvertSampleToAVCC(aSample)) {
     // We need AVCC content to be able to later parse the SPS.
     // This is a no-op if the data is already AVCC.
-    mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
+    mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__));
     return;
   }
 
@@ -88,7 +88,7 @@ H264Converter::Input(MediaRawData* aSample)
     rv = CheckForSPSChange(aSample);
   }
   if (NS_FAILED(rv)) {
-    mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
+    mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__));
     return;
   }
 
@@ -99,7 +99,7 @@ H264Converter::Input(MediaRawData* aSample)
 
   if (!mNeedAVCC &&
       !mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample)) {
-    mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
+    mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__));
     return;
   }
 
@@ -249,10 +249,11 @@ H264Converter::OnDecoderInitDone(const TrackType aTrackType)
 }
 
 void
-H264Converter::OnDecoderInitFailed(MediaDataDecoder::DecoderFailureReason aReason)
+H264Converter::OnDecoderInitFailed(MediaResult aError)
 {
   mInitPromiseRequest.Complete();
-  mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
+  mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                                    __func__));
 }
 
 nsresult

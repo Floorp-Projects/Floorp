@@ -48,7 +48,7 @@ public:
 
 private:
   void ProcessDecode(MediaRawData* aSample);
-  int DoDecode(MediaRawData* aSample);
+  MediaResult DoDecode(MediaRawData* aSample);
   void ProcessDrain();
 
   const RefPtr<ImageContainer> mImageContainer;

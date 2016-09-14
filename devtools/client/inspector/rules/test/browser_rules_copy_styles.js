@@ -267,7 +267,7 @@ function* checkCopyStyle(view, node, menuItemLabel, expectedPattern, visible) {
      visible.copyRule);
 
   try {
-    yield waitForClipboard(() => menuItem.click(),
+    yield waitForClipboardPromise(() => menuItem.click(),
       () => checkClipboardData(expectedPattern));
   } catch (e) {
     failedClipboard(expectedPattern);

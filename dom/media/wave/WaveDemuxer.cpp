@@ -43,7 +43,7 @@ WAVDemuxer::Init()
 {
   if (!InitInternal()) {
     return InitPromise::CreateAndReject(
-      DemuxerFailureReason::DEMUXER_ERROR, __func__);
+      NS_ERROR_DOM_MEDIA_METADATA_ERR, __func__);
   }
   return InitPromise::CreateAndResolve(NS_OK, __func__);
 }
@@ -340,10 +340,7 @@ WAVTrackDemuxer::ScanUntil(const TimeUnit& aTime)
 RefPtr<WAVTrackDemuxer::SamplesPromise>
 WAVTrackDemuxer::GetSamples(int32_t aNumSamples)
 {
-  if (!aNumSamples) {
-    return SamplesPromise::CreateAndReject(
-        DemuxerFailureReason::DEMUXER_ERROR, __func__);
-  }
+  MOZ_ASSERT(aNumSamples);
 
   RefPtr<SamplesHolder> datachunks = new SamplesHolder();
 
@@ -357,7 +354,7 @@ WAVTrackDemuxer::GetSamples(int32_t aNumSamples)
 
   if (datachunks->mSamples.IsEmpty()) {
     return SamplesPromise::CreateAndReject(
-        DemuxerFailureReason::END_OF_STREAM, __func__);
+        NS_ERROR_DOM_MEDIA_END_OF_STREAM, __func__);
   }
 
   return SamplesPromise::CreateAndResolve(datachunks, __func__);
@@ -377,7 +374,7 @@ RefPtr<WAVTrackDemuxer::SkipAccessPointPromise>
 WAVTrackDemuxer::SkipToNextRandomAccessPoint(TimeUnit aTimeThreshold)
 {
   return SkipAccessPointPromise::CreateAndReject(
-    SkipFailureHolder(DemuxerFailureReason::DEMUXER_ERROR, 0), __func__);
+    SkipFailureHolder(NS_ERROR_DOM_MEDIA_DEMUXER_ERR, 0), __func__);
 }
 
 int64_t

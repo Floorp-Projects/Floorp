@@ -274,9 +274,11 @@ def get_compiler_info(compiler, language):
         raise FatalCheckError(
             'Unknown compiler or compiler not supported.')
 
+    # Metadata emitted by preprocessors such as GCC with LANG=ja_JP.utf-8 may
+    # have non-ASCII characters. Treat the output as bytearray.
     data = {}
     for line in result.splitlines():
-        if line.startswith('%'):
+        if line.startswith(b'%'):
             k, _, v = line.partition(' ')
             k = k.lstrip('%')
             data[k] = v.replace(' ', '').lstrip('"').rstrip('"')

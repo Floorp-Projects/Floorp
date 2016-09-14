@@ -395,7 +395,7 @@
                            class="messageCloseButton close-icon tabbable"
                            xbl:inherits="hidden=hideclose"
                            tooltiptext="&closeNotification.tooltip;"
-                           oncommand="document.getBindingParent(this).close();"/>
+                           oncommand="document.getBindingParent(this).dismiss();"/>
       </xul:hbox>
     </content>
     <resources>
@@ -429,6 +429,21 @@
           ]]>
         </getter>
       </property>
+
+      <!-- This method should only be called when the user has
+           manually closed the notification. If you want to
+           programmatically close the notification, you should
+           call close() instead. -->
+      <method name="dismiss">
+        <body>
+          <![CDATA[
+            if (this.eventCallback) {
+              this.eventCallback("dismissed");
+            }
+            this.close();
+          ]]>
+        </body>
+      </method>
 
       <method name="close">
         <body>

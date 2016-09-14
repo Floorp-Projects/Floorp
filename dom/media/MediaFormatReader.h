@@ -117,7 +117,7 @@ private:
   void NotifyDemuxer();
   void ReturnOutput(MediaData* aData, TrackType aTrack);
 
-  bool EnsureDecoderCreated(TrackType aTrack);
+  MediaResult EnsureDecoderCreated(TrackType aTrack);
   bool EnsureDecoderInitialized(TrackType aTrack);
 
   // Enqueues a task to call Update(aTrack) on the decoder task queue.
@@ -166,7 +166,7 @@ private:
   void NotifyNewOutput(TrackType aTrack, MediaData* aSample);
   void NotifyInputExhausted(TrackType aTrack);
   void NotifyDrainComplete(TrackType aTrack);
-  void NotifyError(TrackType aTrack, MediaDataDecoderError aError = MediaDataDecoderError::FATAL_ERROR);
+  void NotifyError(TrackType aTrack, const MediaResult& aError);
   void NotifyWaitingForData(TrackType aTrack);
   void NotifyEndOfStream(TrackType aTrack);
 
@@ -179,7 +179,7 @@ private:
   // functions.
   void Output(TrackType aType, MediaData* aSample);
   void InputExhausted(TrackType aTrack);
-  void Error(TrackType aTrack, MediaDataDecoderError aError = MediaDataDecoderError::FATAL_ERROR);
+  void Error(TrackType aTrack, const MediaResult& aError);
   void Reset(TrackType aTrack);
   void DrainComplete(TrackType aTrack);
   void DropDecodedSamples(TrackType aTrack);
@@ -206,7 +206,7 @@ private:
     void InputExhausted() override {
       mReader->InputExhausted(mType);
     }
-    void Error(MediaDataDecoderError aError) override {
+    void Error(const MediaResult& aError) override {
       mReader->Error(mType, aError);
     }
     void DrainComplete() override {
@@ -327,10 +327,10 @@ private:
     uint32_t mNumOfConsecutiveError;
     uint32_t mMaxConsecutiveError;
 
-    Maybe<MediaDataDecoderError> mError;
+    Maybe<MediaResult> mError;
     bool HasFatalError() const
     {
-      return mError.isSome() && mError.ref() == MediaDataDecoderError::FATAL_ERROR;
+      return mError.isSome() && mError.ref() != NS_ERROR_DOM_MEDIA_DECODE_ERR;
     }
 
     // If set, all decoded samples prior mTimeThreshold will be dropped.
@@ -354,7 +354,7 @@ private:
     virtual bool HasPromise() const = 0;
     virtual RefPtr<MediaDataPromise> EnsurePromise(const char* aMethodName) = 0;
     virtual void ResolvePromise(MediaData* aData, const char* aMethodName) = 0;
-    virtual void RejectPromise(MediaDecoderReader::NotDecodedReason aReason,
+    virtual void RejectPromise(const MediaResult& aError,
                                const char* aMethodName) = 0;
 
     // Clear track demuxer related data.
@@ -462,11 +462,11 @@ private:
       mHasPromise = false;
     }
 
-    void RejectPromise(MediaDecoderReader::NotDecodedReason aReason,
+    void RejectPromise(const MediaResult& aError,
                        const char* aMethodName) override
     {
       MOZ_ASSERT(mOwner->OnTaskQueue());
-      mPromise.Reject(aReason, aMethodName);
+      mPromise.Reject(aError, aMethodName);
       mHasPromise = false;
     }
 
@@ -487,22 +487,22 @@ private:
   RefPtr<MediaDataDemuxer> mDemuxer;
   bool mDemuxerInitDone;
   void OnDemuxerInitDone(nsresult);
-  void OnDemuxerInitFailed(DemuxerFailureReason aFailure);
+  void OnDemuxerInitFailed(const MediaResult& aError);
   MozPromiseRequestHolder<MediaDataDemuxer::InitPromise> mDemuxerInitRequest;
-  void OnDemuxFailed(TrackType aTrack, DemuxerFailureReason aFailure);
+  void OnDemuxFailed(TrackType aTrack, const MediaResult& aError);
 
   void DoDemuxVideo();
   void OnVideoDemuxCompleted(RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples);
-  void OnVideoDemuxFailed(DemuxerFailureReason aFailure)
+  void OnVideoDemuxFailed(const MediaResult& aError)
   {
-    OnDemuxFailed(TrackType::kVideoTrack, aFailure);
+    OnDemuxFailed(TrackType::kVideoTrack, aError);
   }
 
   void DoDemuxAudio();
   void OnAudioDemuxCompleted(RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples);
-  void OnAudioDemuxFailed(DemuxerFailureReason aFailure)
+  void OnAudioDemuxFailed(const MediaResult& aError)
   {
-    OnDemuxFailed(TrackType::kAudioTrack, aFailure);
+    OnDemuxFailed(TrackType::kAudioTrack, aError);
   }
 
   void SkipVideoDemuxToNextKeyFrame(media::TimeUnit aTimeThreshold);
@@ -550,15 +550,15 @@ private:
   }
   void ScheduleSeek();
   void AttemptSeek();
-  void OnSeekFailed(TrackType aTrack, DemuxerFailureReason aFailure);
+  void OnSeekFailed(TrackType aTrack, const MediaResult& aError);
   void DoVideoSeek();
   void OnVideoSeekCompleted(media::TimeUnit aTime);
-  void OnVideoSeekFailed(DemuxerFailureReason aFailure);
+  void OnVideoSeekFailed(const MediaResult& aError);
   bool mSeekScheduled;
 
   void DoAudioSeek();
   void OnAudioSeekCompleted(media::TimeUnit aTime);
-  void OnAudioSeekFailed(DemuxerFailureReason aFailure);
+  void OnAudioSeekFailed(const MediaResult& aError);
   // The SeekTarget that was last given to Seek()
   SeekTarget mOriginalSeekTarget;
   // Temporary seek information while we wait for the data

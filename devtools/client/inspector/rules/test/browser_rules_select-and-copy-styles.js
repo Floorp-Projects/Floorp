@@ -75,7 +75,7 @@ function* checkCopySelection(view) {
     "Copy menu item is displayed as expected");
 
   try {
-    yield waitForClipboard(() => menuitemCopy.click(),
+    yield waitForClipboardPromise(() => menuitemCopy.click(),
       () => checkClipboardData(expectedPattern));
   } catch (e) {
     failedClipboard(expectedPattern);
@@ -109,7 +109,7 @@ function* checkSelectAll(view) {
     "Copy menu item is displayed as expected");
 
   try {
-    yield waitForClipboard(() => menuitemCopy.click(),
+    yield waitForClipboardPromise(() => menuitemCopy.click(),
       () => checkClipboardData(expectedPattern));
   } catch (e) {
     failedClipboard(expectedPattern);
@@ -137,7 +137,7 @@ function* checkCopyEditorValue(view) {
     "Copy menu item is displayed as expected");
 
   try {
-    yield waitForClipboard(() => menuitemCopy.click(),
+    yield waitForClipboardPromise(() => menuitemCopy.click(),
       () => checkClipboardData(expectedPattern));
   } catch (e) {
     failedClipboard(expectedPattern);

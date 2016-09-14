@@ -584,7 +584,7 @@ FlacDemuxer::Init()
     LOG("Init() failure: waiting for data");
 
     return InitPromise::CreateAndReject(
-      DemuxerFailureReason::DEMUXER_ERROR, __func__);
+      NS_ERROR_DOM_MEDIA_DEMUXER_ERR, __func__);
   }
 
   LOG("Init() successful");
@@ -855,7 +855,7 @@ FlacTrackDemuxer::GetSamples(int32_t aNumSamples)
 
   if (!aNumSamples) {
     return SamplesPromise::CreateAndReject(
-      DemuxerFailureReason::DEMUXER_ERROR, __func__);
+      NS_ERROR_DOM_MEDIA_DEMUXER_ERR, __func__);
   }
 
   RefPtr<SamplesHolder> frames = new SamplesHolder();
@@ -875,7 +875,7 @@ FlacTrackDemuxer::GetSamples(int32_t aNumSamples)
 
   if (frames->mSamples.IsEmpty()) {
     return SamplesPromise::CreateAndReject(
-      DemuxerFailureReason::END_OF_STREAM, __func__);
+      NS_ERROR_DOM_MEDIA_END_OF_STREAM, __func__);
   }
 
   return SamplesPromise::CreateAndResolve(frames, __func__);
@@ -899,7 +899,7 @@ FlacTrackDemuxer::SkipToNextRandomAccessPoint(TimeUnit aTimeThreshold)
 {
   // Will not be called for audio-only resources.
   return SkipAccessPointPromise::CreateAndReject(
-    SkipFailureHolder(DemuxerFailureReason::DEMUXER_ERROR, 0), __func__);
+    SkipFailureHolder(NS_ERROR_DOM_MEDIA_DEMUXER_ERR, 0), __func__);
 }
 
 int64_t

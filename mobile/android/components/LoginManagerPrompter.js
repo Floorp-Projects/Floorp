@@ -129,6 +129,7 @@ LoginManagerPrompter.prototype = {
   promptToSavePassword : function (aLogin) {
     this._showSaveLoginNotification(aLogin);
       Services.telemetry.getHistogramById("PWMGR_PROMPT_REMEMBER_ACTION").add(PROMPT_DISPLAYED);
+    Services.obs.notifyObservers(aLogin, "passwordmgr-prompt-save", null);
   },
 
   /*
@@ -228,6 +229,8 @@ LoginManagerPrompter.prototype = {
   promptToChangePassword : function (aOldLogin, aNewLogin) {
     this._showChangeLoginNotification(aOldLogin, aNewLogin.password);
     Services.telemetry.getHistogramById("PWMGR_PROMPT_UPDATE_ACTION").add(PROMPT_DISPLAYED);
+    let oldGUID = aOldLogin.QueryInterface(Ci.nsILoginMetaInfo).guid;
+    Services.obs.notifyObservers(aNewLogin, "passwordmgr-prompt-change", oldGUID);
   },
 
   /*
