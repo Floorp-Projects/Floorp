@@ -225,14 +225,6 @@ CancelableBlockState::IsReadyForHandling() const
 }
 
 void
-CancelableBlockState::DispatchImmediate(const InputData& aEvent) const
-{
-  MOZ_ASSERT(!HasEvents());
-  MOZ_ASSERT(GetTargetApzc());
-  DispatchEvent(aEvent);
-}
-
-void
 CancelableBlockState::DispatchEvent(const InputData& aEvent) const
 {
   GetTargetApzc()->HandleInputEvent(aEvent, mTransformToApzc);

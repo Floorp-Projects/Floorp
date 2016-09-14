@@ -172,13 +172,6 @@ private:
    */
   void SweepDepletedBlocks();
 
-  /**
-   * Processes the current block if it's ready for handling, using the block's
-   * target APZC.
-   */
-  bool MaybeHandleCurrentBlock(CancelableBlockState* block,
-                               const InputData& aEvent);
-
   void ScheduleMainThreadTimeout(const RefPtr<AsyncPanZoomController>& aTarget,
                                  CancelableBlockState* aBlock);
   void MainThreadTimeout(const uint64_t& aInputBlockId);
