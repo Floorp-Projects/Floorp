@@ -609,15 +609,11 @@ else:
         'perf/pm_stub.cpp'
     ]
 
-HostSimplePrograms([
-    'host_jskwgen',
-])
-
 GENERATED_FILES += ['jsautokw.h']
 jsautokw = GENERATED_FILES['jsautokw.h']
 jsautokw.script = 'jsautokw.py'
 jsautokw.inputs += [
-    '!host_jskwgen%s' % CONFIG['HOST_BIN_SUFFIX'],
+    'vm/Keywords.h'
 ]
 
 # JavaScript must be built shared, even for static builds, as it is used by

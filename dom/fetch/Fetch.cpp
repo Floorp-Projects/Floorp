@@ -265,7 +265,7 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
     }
 
     RefPtr<MainThreadFetchRunnable> run = new MainThreadFetchRunnable(resolver, r);
-    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(run));
+    worker->DispatchToMainThread(run.forget());
   }
 
   return p.forget();
@@ -1032,7 +1032,12 @@ FetchBody<Derived>::BeginConsumeBody()
   }
 
   nsCOMPtr<nsIRunnable> r = new BeginConsumeBodyRunnable<Derived>(this);
-  nsresult rv = NS_DispatchToMainThread(r);
+  nsresult rv = NS_OK;
+  if (mWorkerPrivate) {
+    rv = mWorkerPrivate->DispatchToMainThread(r.forget());
+  } else {
+    rv = NS_DispatchToMainThread(r.forget());
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     ReleaseObject();
     return rv;

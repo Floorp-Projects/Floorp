@@ -543,6 +543,7 @@ function test() {
         yield expectNoObserverCalled();
       }
     }).then(finish, ex => {
+     Cu.reportError(ex);
      ok(false, "Unexpected Exception: " + ex);
      finish();
     });
