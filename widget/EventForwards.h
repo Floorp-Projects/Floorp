@@ -10,6 +10,8 @@
 
 #include "nsTArray.h"
 
+class nsCString;
+
 /**
  * XXX Following enums should be in BasicEvents.h.  However, currently, it's
  *     impossible to use foward delearation for enum.
@@ -94,6 +96,8 @@ enum KeyNameIndex : KeyNameIndexType
 
 #undef NS_DEFINE_KEYNAME
 
+const nsCString ToString(KeyNameIndex aKeyNameIndex);
+
 #define NS_DEFINE_PHYSICAL_KEY_CODE_NAME(aCPPName, aDOMCodeName) \
   CODE_NAME_INDEX_##aCPPName,
 
@@ -107,6 +111,8 @@ enum CodeNameIndex : CodeNameIndexType
 };
 
 #undef NS_DEFINE_PHYSICAL_KEY_CODE_NAME
+
+const nsCString ToString(CodeNameIndex aCodeNameIndex);
 
 #define NS_DEFINE_COMMAND(aName, aCommandStr) , Command##aName
 

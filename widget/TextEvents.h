@@ -31,16 +31,17 @@ template<class, class> class nsDataHashtable;
  * virtual keycode values
  ******************************************************************************/
 
-#define NS_DEFINE_VK(aDOMKeyName, aDOMKeyCode) NS_##aDOMKeyName = aDOMKeyCode
-
 enum
 {
+#define NS_DEFINE_VK(aDOMKeyName, aDOMKeyCode) NS_##aDOMKeyName = aDOMKeyCode,
 #include "mozilla/VirtualKeyCodeList.h"
+#undef NS_DEFINE_VK
+  NS_VK_UNKNOWN = 0xFF
 };
 
-#undef NS_DEFINE_VK
-
 namespace mozilla {
+
+const nsCString GetDOMKeyCodeName(uint32_t aKeyCode);
 
 namespace dom {
   class PBrowserParent;
