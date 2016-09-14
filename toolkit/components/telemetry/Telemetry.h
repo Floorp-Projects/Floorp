@@ -379,6 +379,14 @@ void ScalarSet(mozilla::Telemetry::ScalarID aId, uint32_t aValue);
  * Sets the scalar to the given value.
  *
  * @param aId The scalar enum id.
+ * @param aValue The value to set the scalar to.
+ */
+void ScalarSet(mozilla::Telemetry::ScalarID aId, bool aValue);
+
+/**
+ * Sets the scalar to the given value.
+ *
+ * @param aId The scalar enum id.
  * @param aValue The value to set the scalar to, truncated to
  *        50 characters if exceeding that length.
  */
