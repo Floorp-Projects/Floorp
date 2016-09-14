@@ -103,6 +103,7 @@ SEARCH_PATHS = [
 MACH_MODULES = [
     'addon-sdk/mach_commands.py',
     'build/valgrind/mach_commands.py',
+    'devtools/shared/css/generated/mach_commands.py',
     'dom/bindings/mach_commands.py',
     'dom/media/test/external/mach_commands.py',
     'layout/tools/reftest/mach_commands.py',
