@@ -320,11 +320,11 @@ VRDisplayOculus::VRDisplayOculus(ovrSession aSession)
   , mTextureSet(nullptr)
   , mQuadVS(nullptr)
   , mQuadPS(nullptr)
+  , mLinearSamplerState(nullptr)
   , mVSConstantBuffer(nullptr)
   , mPSConstantBuffer(nullptr)
   , mVertexBuffer(nullptr)
   , mInputLayout(nullptr)
-  , mLinearSamplerState(nullptr)
   , mIsPresenting(false)
 {
   MOZ_COUNT_CTOR_INHERITED(VRDisplayOculus, VRDisplayHost);
