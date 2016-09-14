@@ -9,56 +9,20 @@
 
 #include "libANGLE/renderer/d3d/d3d11/formatutils11.h"
 
+#include "image_util/copyimage.h"
+#include "image_util/generatemip.h"
+#include "image_util/loadimage.h"
+
 #include "libANGLE/formatutils.h"
-#include "libANGLE/renderer/copyimage.h"
 #include "libANGLE/renderer/d3d/d3d11/copyvertex.h"
 #include "libANGLE/renderer/d3d/d3d11/renderer11_utils.h"
 #include "libANGLE/renderer/d3d/d3d11/Renderer11.h"
-#include "libANGLE/renderer/d3d/generatemip.h"
-#include "libANGLE/renderer/d3d/loadimage.h"
 
 namespace rx
 {
 
 namespace d3d11
 {
-
-struct D3D11FastCopyFormat
-{
-    GLenum destFormat;
-    GLenum destType;
-    ColorCopyFunction copyFunction;
-
-    D3D11FastCopyFormat(GLenum destFormat, GLenum destType, ColorCopyFunction copyFunction)
-        : destFormat(destFormat), destType(destType), copyFunction(copyFunction)
-    { }
-
-    bool operator<(const D3D11FastCopyFormat& other) const
-    {
-        return memcmp(this, &other, sizeof(D3D11FastCopyFormat)) < 0;
-    }
-};
-
-static const FastCopyFunctionMap &GetFastCopyFunctionMap(DXGI_FORMAT dxgiFormat)
-{
-    switch (dxgiFormat)
-    {
-        case DXGI_FORMAT_B8G8R8A8_UNORM:
-        {
-            static FastCopyFunctionMap fastCopyMap;
-            if (fastCopyMap.empty())
-            {
-                fastCopyMap[gl::FormatType(GL_RGBA, GL_UNSIGNED_BYTE)] = CopyBGRA8ToRGBA8;
-            }
-            return fastCopyMap;
-        }
-        default:
-        {
-            static FastCopyFunctionMap emptyMap;
-            return emptyMap;
-        }
-    }
-}
 
 struct DXGIColorFormatInfo
 {
@@ -219,7 +183,6 @@ DXGIFormat::DXGIFormat()
       depthBits(0),
       stencilBits(0),
       componentType(GL_NONE),
-      fastCopyFunctions(),
       nativeMipmapSupport(NULL)
 {
 }
@@ -264,7 +227,6 @@ void AddDXGIFormat(DXGIFormatInfoMap *map,
     }
 
     info.componentType = componentType;
-    info.fastCopyFunctions   = GetFastCopyFunctionMap(dxgiFormat);
     info.nativeMipmapSupport = nativeMipmapSupport;
 
     map->insert(std::make_pair(dxgiFormat, info));

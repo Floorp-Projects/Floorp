@@ -27,6 +27,7 @@
 
 #include "KHR/khrplatform.h"
 
+#include <array>
 #include <map>
 #include <string>
 #include <vector>
@@ -48,36 +49,39 @@ typedef unsigned int GLenum;
 
 // Version number for shader translation API.
 // It is incremented every time the API changes.
-#define ANGLE_SH_VERSION 146
+#define ANGLE_SH_VERSION 155
 
 typedef enum {
-  SH_GLES2_SPEC = 0x8B40,
-  SH_WEBGL_SPEC = 0x8B41,
+    SH_GLES2_SPEC,
+    SH_WEBGL_SPEC,
 
-  SH_GLES3_SPEC = 0x8B86,
-  SH_WEBGL2_SPEC = 0x8B87,
+    SH_GLES3_SPEC,
+    SH_WEBGL2_SPEC,
 
-  // The CSS Shaders spec is a subset of the WebGL spec.
-  //
-  // In both CSS vertex and fragment shaders, ANGLE:
-  // (1) Reserves the "css_" prefix.
-  // (2) Renames the main function to css_main.
-  // (3) Disables the gl_MaxDrawBuffers built-in.
-  //
-  // In CSS fragment shaders, ANGLE:
-  // (1) Disables the gl_FragColor built-in.
-  // (2) Disables the gl_FragData built-in.
-  // (3) Enables the css_MixColor built-in.
-  // (4) Enables the css_ColorMatrix built-in.
-  //
-  // After passing a CSS shader through ANGLE, the browser is expected to append
-  // a new main function to it.
-  // This new main function will call the css_main function.
-  // It may also perform additional operations like varying assignment, texture
-  // access, and gl_FragColor assignment in order to implement the CSS Shaders
-  // blend modes.
-  //
-  SH_CSS_SHADERS_SPEC = 0x8B42
+    SH_GLES3_1_SPEC,
+    SH_WEBGL3_SPEC,
+
+    // The CSS Shaders spec is a subset of the WebGL spec.
+    //
+    // In both CSS vertex and fragment shaders, ANGLE:
+    // (1) Reserves the "css_" prefix.
+    // (2) Renames the main function to css_main.
+    // (3) Disables the gl_MaxDrawBuffers built-in.
+    //
+    // In CSS fragment shaders, ANGLE:
+    // (1) Disables the gl_FragColor built-in.
+    // (2) Disables the gl_FragData built-in.
+    // (3) Enables the css_MixColor built-in.
+    // (4) Enables the css_ColorMatrix built-in.
+    //
+    // After passing a CSS shader through ANGLE, the browser is expected to append
+    // a new main function to it.
+    // This new main function will call the css_main function.
+    // It may also perform additional operations like varying assignment, texture
+    // access, and gl_FragColor assignment in order to implement the CSS Shaders
+    // blend modes.
+    //
+    SH_CSS_SHADERS_SPEC
 } ShShaderSpec;
 
 typedef enum
@@ -113,101 +117,120 @@ typedef enum
 
 // Compile options.
 typedef enum {
-  SH_VALIDATE                = 0,
-  SH_VALIDATE_LOOP_INDEXING  = 0x0001,
-  SH_INTERMEDIATE_TREE       = 0x0002,
-  SH_OBJECT_CODE             = 0x0004,
-  SH_VARIABLES               = 0x0008,
-  SH_LINE_DIRECTIVES         = 0x0010,
-  SH_SOURCE_PATH             = 0x0020,
-  SH_UNROLL_FOR_LOOP_WITH_INTEGER_INDEX = 0x0040,
-  // If a sampler array index happens to be a loop index,
-  //   1) if its type is integer, unroll the loop.
-  //   2) if its type is float, fail the shader compile.
-  // This is to work around a mac driver bug.
-  SH_UNROLL_FOR_LOOP_WITH_SAMPLER_ARRAY_INDEX = 0x0080,
+    SH_VALIDATE                           = 0,
+    SH_VALIDATE_LOOP_INDEXING             = 0x0001,
+    SH_INTERMEDIATE_TREE                  = 0x0002,
+    SH_OBJECT_CODE                        = 0x0004,
+    SH_VARIABLES                          = 0x0008,
+    SH_LINE_DIRECTIVES                    = 0x0010,
+    SH_SOURCE_PATH                        = 0x0020,
+    SH_UNROLL_FOR_LOOP_WITH_INTEGER_INDEX = 0x0040,
+    // If a sampler array index happens to be a loop index,
+    //   1) if its type is integer, unroll the loop.
+    //   2) if its type is float, fail the shader compile.
+    // This is to work around a mac driver bug.
+    SH_UNROLL_FOR_LOOP_WITH_SAMPLER_ARRAY_INDEX = 0x0080,
 
-  // This is needed only as a workaround for certain OpenGL driver bugs.
-  SH_EMULATE_BUILT_IN_FUNCTIONS = 0x0100,
+    // This is needed only as a workaround for certain OpenGL driver bugs.
+    SH_EMULATE_BUILT_IN_FUNCTIONS = 0x0100,
 
-  // This is an experimental flag to enforce restrictions that aim to prevent
-  // timing attacks.
-  // It generates compilation errors for shaders that could expose sensitive
-  // texture information via the timing channel.
-  // To use this flag, you must compile the shader under the WebGL spec
-  // (using the SH_WEBGL_SPEC flag).
-  SH_TIMING_RESTRICTIONS = 0x0200,
+    // This is an experimental flag to enforce restrictions that aim to prevent
+    // timing attacks.
+    // It generates compilation errors for shaders that could expose sensitive
+    // texture information via the timing channel.
+    // To use this flag, you must compile the shader under the WebGL spec
+    // (using the SH_WEBGL_SPEC flag).
+    SH_TIMING_RESTRICTIONS = 0x0200,
 
-  // This flag prints the dependency graph that is used to enforce timing
-  // restrictions on fragment shaders.
-  // This flag only has an effect if all of the following are true:
-  // - The shader spec is SH_WEBGL_SPEC.
-  // - The compile options contain the SH_TIMING_RESTRICTIONS flag.
-  // - The shader type is GL_FRAGMENT_SHADER.
-  SH_DEPENDENCY_GRAPH = 0x0400,
+    // This flag prints the dependency graph that is used to enforce timing
+    // restrictions on fragment shaders.
+    // This flag only has an effect if all of the following are true:
+    // - The shader spec is SH_WEBGL_SPEC.
+    // - The compile options contain the SH_TIMING_RESTRICTIONS flag.
+    // - The shader type is GL_FRAGMENT_SHADER.
+    SH_DEPENDENCY_GRAPH = 0x0400,
 
-  // Enforce the GLSL 1.017 Appendix A section 7 packing restrictions.
-  // This flag only enforces (and can only enforce) the packing
-  // restrictions for uniform variables in both vertex and fragment
-  // shaders. ShCheckVariablesWithinPackingLimits() lets embedders
-  // enforce the packing restrictions for varying variables during
-  // program link time.
-  SH_ENFORCE_PACKING_RESTRICTIONS = 0x0800,
+    // Enforce the GLSL 1.017 Appendix A section 7 packing restrictions.
+    // This flag only enforces (and can only enforce) the packing
+    // restrictions for uniform variables in both vertex and fragment
+    // shaders. ShCheckVariablesWithinPackingLimits() lets embedders
+    // enforce the packing restrictions for varying variables during
+    // program link time.
+    SH_ENFORCE_PACKING_RESTRICTIONS = 0x0800,
 
-  // This flag ensures all indirect (expression-based) array indexing
-  // is clamped to the bounds of the array. This ensures, for example,
-  // that you cannot read off the end of a uniform, whether an array
-  // vec234, or mat234 type. The ShArrayIndexClampingStrategy enum,
-  // specified in the ShBuiltInResources when constructing the
-  // compiler, selects the strategy for the clamping implementation.
-  SH_CLAMP_INDIRECT_ARRAY_BOUNDS = 0x1000,
+    // This flag ensures all indirect (expression-based) array indexing
+    // is clamped to the bounds of the array. This ensures, for example,
+    // that you cannot read off the end of a uniform, whether an array
+    // vec234, or mat234 type. The ShArrayIndexClampingStrategy enum,
+    // specified in the ShBuiltInResources when constructing the
+    // compiler, selects the strategy for the clamping implementation.
+    SH_CLAMP_INDIRECT_ARRAY_BOUNDS = 0x1000,
 
-  // This flag limits the complexity of an expression.
-  SH_LIMIT_EXPRESSION_COMPLEXITY = 0x2000,
+    // This flag limits the complexity of an expression.
+    SH_LIMIT_EXPRESSION_COMPLEXITY = 0x2000,
 
-  // This flag limits the depth of the call stack.
-  SH_LIMIT_CALL_STACK_DEPTH = 0x4000,
+    // This flag limits the depth of the call stack.
+    SH_LIMIT_CALL_STACK_DEPTH = 0x4000,
 
-  // This flag initializes gl_Position to vec4(0,0,0,0) at the
-  // beginning of the vertex shader's main(), and has no effect in the
-  // fragment shader. It is intended as a workaround for drivers which
-  // incorrectly fail to link programs if gl_Position is not written.
-  SH_INIT_GL_POSITION = 0x8000,
+    // This flag initializes gl_Position to vec4(0,0,0,0) at the
+    // beginning of the vertex shader's main(), and has no effect in the
+    // fragment shader. It is intended as a workaround for drivers which
+    // incorrectly fail to link programs if gl_Position is not written.
+    SH_INIT_GL_POSITION = 0x8000,
 
-  // This flag replaces
-  //   "a && b" with "a ? b : false",
-  //   "a || b" with "a ? true : b".
-  // This is to work around a MacOSX driver bug that |b| is executed
-  // independent of |a|'s value.
-  SH_UNFOLD_SHORT_CIRCUIT = 0x10000,
+    // This flag replaces
+    //   "a && b" with "a ? b : false",
+    //   "a || b" with "a ? true : b".
+    // This is to work around a MacOSX driver bug that |b| is executed
+    // independent of |a|'s value.
+    SH_UNFOLD_SHORT_CIRCUIT = 0x10000,
 
-  // This flag initializes varyings without static use in vertex shader
-  // at the beginning of main(), and has no effects in the fragment shader.
-  // It is intended as a workaround for drivers which incorrectly optimize
-  // out such varyings and cause a link failure.
-  SH_INIT_VARYINGS_WITHOUT_STATIC_USE = 0x20000,
+    // This flag initializes output variables to 0 at the beginning of main().
+    // It is to avoid undefined behaviors.
+    SH_INIT_OUTPUT_VARIABLES = 0x20000,
+    // TODO(zmo): obsolete, remove after ANGLE roll into Chromium.
+    SH_INIT_VARYINGS_WITHOUT_STATIC_USE = 0x20000,
 
-  // This flag scalarizes vec/ivec/bvec/mat constructor args.
-  // It is intended as a workaround for Linux/Mac driver bugs.
-  SH_SCALARIZE_VEC_AND_MAT_CONSTRUCTOR_ARGS = 0x40000,
+    // This flag scalarizes vec/ivec/bvec/mat constructor args.
+    // It is intended as a workaround for Linux/Mac driver bugs.
+    SH_SCALARIZE_VEC_AND_MAT_CONSTRUCTOR_ARGS = 0x40000,
 
-  // This flag overwrites a struct name with a unique prefix.
-  // It is intended as a workaround for drivers that do not handle
-  // struct scopes correctly, including all Mac drivers and Linux AMD.
-  SH_REGENERATE_STRUCT_NAMES = 0x80000,
+    // This flag overwrites a struct name with a unique prefix.
+    // It is intended as a workaround for drivers that do not handle
+    // struct scopes correctly, including all Mac drivers and Linux AMD.
+    SH_REGENERATE_STRUCT_NAMES = 0x80000,
 
-  // This flag makes the compiler not prune unused function early in the
-  // compilation process. Pruning coupled with SH_LIMIT_CALL_STACK_DEPTH
-  // helps avoid bad shaders causing stack overflows.
-  SH_DONT_PRUNE_UNUSED_FUNCTIONS = 0x100000,
+    // This flag makes the compiler not prune unused function early in the
+    // compilation process. Pruning coupled with SH_LIMIT_CALL_STACK_DEPTH
+    // helps avoid bad shaders causing stack overflows.
+    SH_DONT_PRUNE_UNUSED_FUNCTIONS = 0x100000,
 
-  // This flag works around a bug in NVIDIA 331 series drivers related
-  // to pow(x, y) where y is a constant vector.
-  SH_REMOVE_POW_WITH_CONSTANT_EXPONENT = 0x200000,
+    // This flag works around a bug in NVIDIA 331 series drivers related
+    // to pow(x, y) where y is a constant vector.
+    SH_REMOVE_POW_WITH_CONSTANT_EXPONENT = 0x200000,
 
-  // This flag works around bugs in Mac drivers related to do-while by
-  // transforming them into an other construct.
-  SH_REWRITE_DO_WHILE_LOOPS = 0x400000,
+    // This flag works around bugs in Mac drivers related to do-while by
+    // transforming them into an other construct.
+    SH_REWRITE_DO_WHILE_LOOPS = 0x400000,
+
+    // This flag works around a bug in the HLSL compiler optimizer that folds certain
+    // constant pow expressions incorrectly. Only applies to the HLSL back-end. It works
+    // by expanding the integer pow expressions into a series of multiplies.
+    SH_EXPAND_SELECT_HLSL_INTEGER_POW_EXPRESSIONS = 0x800000,
+
+    // Flatten "#pragma STDGL invariant(all)" into the declarations of
+    // varying variables and built-in GLSL variables. This compiler
+    // option is enabled automatically when needed.
+    SH_FLATTEN_PRAGMA_STDGL_INVARIANT_ALL = 0x1000000,
+
+    // Some drivers do not take into account the base level of the texture in the results of the
+    // HLSL GetDimensions builtin.  This flag instructs the compiler to manually add the base level
+    // offsetting.
+    SH_HLSL_GET_DIMENSIONS_IGNORES_BASE_LEVEL = 0x2000000,
+
+    // This flag works around an issue in translating GLSL function texelFetchOffset on
+    // INTEL drivers. It works by translating texelFetchOffset into texelFetch.
+    SH_REWRITE_TEXELFETCHOFFSET_TO_TEXELFETCH = 0x4000000,
 } ShCompileOptions;
 
 // Defines alternate strategies for implementing array index clamping.
@@ -310,6 +333,68 @@ typedef struct
     // The maximum number of parameters a function can have when SH_LIMIT_EXPRESSION_COMPLEXITY is
     // turned on.
     int MaxFunctionParameters;
+
+    // GLES 3.1 constants
+
+    // maximum number of available image units
+    int MaxImageUnits;
+
+    // maximum number of image uniforms in a vertex shader
+    int MaxVertexImageUniforms;
+
+    // maximum number of image uniforms in a fragment shader
+    int MaxFragmentImageUniforms;
+
+    // maximum number of image uniforms in a compute shader
+    int MaxComputeImageUniforms;
+
+    // maximum total number of image uniforms in a program
+    int MaxCombinedImageUniforms;
+
+    // maximum number of ssbos and images in a shader
+    int MaxCombinedShaderOutputResources;
+
+    // maximum number of groups in each dimension
+    std::array<int, 3> MaxComputeWorkGroupCount;
+    // maximum number of threads per work group in each dimension
+    std::array<int, 3> MaxComputeWorkGroupSize;
+
+    // maximum number of total uniform components
+    int MaxComputeUniformComponents;
+
+    // maximum number of texture image units in a compute shader
+    int MaxComputeTextureImageUnits;
+
+    // maximum number of atomic counters in a compute shader
+    int MaxComputeAtomicCounters;
+
+    // maximum number of atomic counter buffers in a compute shader
+    int MaxComputeAtomicCounterBuffers;
+
+    // maximum number of atomic counters in a vertex shader
+    int MaxVertexAtomicCounters;
+
+    // maximum number of atomic counters in a fragment shader
+    int MaxFragmentAtomicCounters;
+
+    // maximum number of atomic counters in a program
+    int MaxCombinedAtomicCounters;
+
+    // maximum binding for an atomic counter
+    int MaxAtomicCounterBindings;
+
+    // maximum number of atomic counter buffers in a vertex shader
+    int MaxVertexAtomicCounterBuffers;
+
+    // maximum number of atomic counter buffers in a fragment shader
+    int MaxFragmentAtomicCounterBuffers;
+
+    // maximum number of atomic counter buffers in a program
+    int MaxCombinedAtomicCounterBuffers;
+
+    // maximum number of buffer object storage in machine units
+    int MaxAtomicCounterBufferSize;
+
 } ShBuiltInResources;
 
 //
@@ -425,6 +510,7 @@ COMPILER_EXPORT const std::vector<sh::Varying> *ShGetVaryings(const ShHandle han
 COMPILER_EXPORT const std::vector<sh::Attribute> *ShGetAttributes(const ShHandle handle);
 COMPILER_EXPORT const std::vector<sh::OutputVariable> *ShGetOutputVariables(const ShHandle handle);
 COMPILER_EXPORT const std::vector<sh::InterfaceBlock> *ShGetInterfaceBlocks(const ShHandle handle);
+COMPILER_EXPORT sh::WorkGroupSize ShGetComputeShaderLocalGroupSize(const ShHandle handle);
 
 typedef struct
 {
@@ -438,12 +524,10 @@ typedef struct
 // flag above.
 // Parameters:
 // maxVectors: the available rows of registers.
-// varInfoArray: an array of variable info (types and sizes).
-// varInfoArraySize: the size of the variable array.
+// variables: an array of variables.
 COMPILER_EXPORT bool ShCheckVariablesWithinPackingLimits(
     int maxVectors,
-    ShVariableInfo *varInfoArray,
-    size_t varInfoArraySize);
+    const std::vector<sh::ShaderVariable> &variables);
 
 // Gives the compiler-assigned register for an interface block.
 // The method writes the value to the output variable "indexOut".

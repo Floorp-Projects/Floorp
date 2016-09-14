@@ -262,7 +262,7 @@ TEST_P(StateChangeTest, FramebufferIncompleteStencilAttachment)
 // Test that Framebuffer completeness caching works when depth-stencil attachments change.
 TEST_P(StateChangeTest, FramebufferIncompleteDepthStencilAttachment)
 {
-    if (getClientVersion() < 3 && !extensionEnabled("GL_OES_packed_depth_stencil"))
+    if (getClientMajorVersion() < 3 && !extensionEnabled("GL_OES_packed_depth_stencil"))
     {
         std::cout << "Test skipped because packed depth+stencil not availble." << std::endl;
         return;
@@ -272,6 +272,7 @@ TEST_P(StateChangeTest, FramebufferIncompleteDepthStencilAttachment)
     {
         // TODO(jmadill): Investigate the failure (https://anglebug.com/1388)
         std::cout << "Test disabled on Windows Intel OpenGL." << std::endl;
+        return;
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, mFramebuffer);

@@ -12,6 +12,7 @@
 #include <vector>
 #include <cstdint>
 
+#include "common/Color.h"
 #include "common/Optional.h"
 #include "libANGLE/angletypes.h"
 #include "libANGLE/renderer/FramebufferImpl.h"

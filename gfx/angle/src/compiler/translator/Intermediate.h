@@ -28,10 +28,6 @@ class TIntermediate
 
     TIntermSymbol *addSymbol(
         int id, const TString &, const TType &, const TSourceLoc &);
-    TIntermTyped *addBinaryMath(
-        TOperator op, TIntermTyped *left, TIntermTyped *right, const TSourceLoc &);
-    TIntermTyped *addAssign(
-        TOperator op, TIntermTyped *left, TIntermTyped *right, const TSourceLoc &);
     TIntermTyped *addIndex(
         TOperator op, TIntermTyped *base, TIntermTyped *index, const TSourceLoc &);
     TIntermTyped *addUnaryMath(

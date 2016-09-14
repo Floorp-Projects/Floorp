@@ -281,17 +281,18 @@ gl::Error Clear11::clearFramebuffer(const ClearParameters &clearParams,
                 return error;
             }
 
-            const gl::InternalFormat &formatInfo = gl::GetInternalFormatInfo(attachment.getInternalFormat());
+            const gl::InternalFormat &formatInfo = *attachment.getFormat().info;
 
             if (clearParams.colorClearType == GL_FLOAT &&
-                !(formatInfo.componentType == GL_FLOAT || formatInfo.componentType == GL_UNSIGNED_NORMALIZED || formatInfo.componentType == GL_SIGNED_NORMALIZED))
+                !(formatInfo.componentType == GL_FLOAT ||
+                  formatInfo.componentType == GL_UNSIGNED_NORMALIZED ||
+                  formatInfo.componentType == GL_SIGNED_NORMALIZED))
             {
-                ERR(
-                    "It is undefined behaviour to clear a render buffer which is not normalized "
+                ERR("It is undefined behaviour to clear a render buffer which is not normalized "
                     "fixed point or floating-"
                     "point to floating point values (color attachment %u has internal format "
                     "0x%X).",
-                    colorAttachmentIndex, attachment.getInternalFormat());
+                    colorAttachmentIndex, attachment.getFormat().asSized());
             }
 
             if ((formatInfo.redBits == 0 || !clearParams.colorMaskRed) &&
@@ -302,10 +303,12 @@ gl::Error Clear11::clearFramebuffer(const ClearParameters &clearParams,
                 // Every channel either does not exist in the render target or is masked out
                 continue;
             }
-            else if ((!(mRenderer->getRenderer11DeviceCaps().supportsClearView) && needScissoredClear) || clearParams.colorClearType != GL_FLOAT ||
-                     (formatInfo.redBits   > 0 && !clearParams.colorMaskRed)   ||
+            else if ((!(mRenderer->getRenderer11DeviceCaps().supportsClearView) &&
+                      needScissoredClear) ||
+                     clearParams.colorClearType != GL_FLOAT ||
+                     (formatInfo.redBits > 0 && !clearParams.colorMaskRed) ||
                      (formatInfo.greenBits > 0 && !clearParams.colorMaskGreen) ||
-                     (formatInfo.blueBits  > 0 && !clearParams.colorMaskBlue) ||
+                     (formatInfo.blueBits > 0 && !clearParams.colorMaskBlue) ||
                      (formatInfo.alphaBits > 0 && !clearParams.colorMaskAlpha))
             {
                 // A masked clear is required, or a scissored clear is required and ID3D11DeviceContext1::ClearView is unavailable
@@ -328,17 +331,24 @@ gl::Error Clear11::clearFramebuffer(const ClearParameters &clearParams,
                     return gl::Error(GL_OUT_OF_MEMORY, "Internal render target view pointer unexpectedly null.");
                 }
 
-                const auto &dxgiFormatInfo = d3d11::GetDXGIFormatInfo(
-                    d3d11::GetANGLEFormatSet(renderTarget->getANGLEFormat()).rtvFormat);
+                const auto &dxgiFormatInfo =
+                    d3d11::GetDXGIFormatInfo(renderTarget->getFormatSet().rtvFormat);
 
                 // Check if the actual format has a channel that the internal format does not and set them to the
                 // default values
-                float clearValues[4] =
-                {
-                    ((formatInfo.redBits   == 0 && dxgiFormatInfo.redBits   > 0) ? 0.0f : clearParams.colorFClearValue.red),
-                    ((formatInfo.greenBits == 0 && dxgiFormatInfo.greenBits > 0) ? 0.0f : clearParams.colorFClearValue.green),
-                    ((formatInfo.blueBits  == 0 && dxgiFormatInfo.blueBits  > 0) ? 0.0f : clearParams.colorFClearValue.blue),
-                    ((formatInfo.alphaBits == 0 && dxgiFormatInfo.alphaBits > 0) ? 1.0f : clearParams.colorFClearValue.alpha),
+                float clearValues[4] = {
+                    ((formatInfo.redBits == 0 && dxgiFormatInfo.redBits > 0)
+                         ? 0.0f
+                         : clearParams.colorFClearValue.red),
+                    ((formatInfo.greenBits == 0 && dxgiFormatInfo.greenBits > 0)
+                         ? 0.0f
+                         : clearParams.colorFClearValue.green),
+                    ((formatInfo.blueBits == 0 && dxgiFormatInfo.blueBits > 0)
+                         ? 0.0f
+                         : clearParams.colorFClearValue.blue),
+                    ((formatInfo.alphaBits == 0 && dxgiFormatInfo.alphaBits > 0)
+                         ? 1.0f
+                         : clearParams.colorFClearValue.alpha),
                 };
 
                 if (dxgiFormatInfo.alphaBits == 1)
@@ -382,8 +392,8 @@ gl::Error Clear11::clearFramebuffer(const ClearParameters &clearParams,
             return error;
         }
 
-        const auto &dxgiFormatInfo = d3d11::GetDXGIFormatInfo(
-            d3d11::GetANGLEFormatSet(renderTarget->getANGLEFormat()).dsvFormat);
+        const auto &dxgiFormatInfo =
+            d3d11::GetDXGIFormatInfo(renderTarget->getFormatSet().dsvFormat);
 
         unsigned int stencilUnmasked = (stencilAttachment != nullptr) ? (1 << dxgiFormatInfo.stencilBits) - 1 : 0;
         bool needMaskedStencilClear = clearParams.clearStencil && (clearParams.stencilWriteMask & stencilUnmasked) != stencilUnmasked;

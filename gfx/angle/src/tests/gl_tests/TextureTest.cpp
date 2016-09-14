@@ -188,7 +188,7 @@ class Texture2DTest : public TexCoordDrawTest
 
         setUpProgram();
 
-        if (getClientVersion() < 3)
+        if (getClientMajorVersion() < 3)
         {
             if (!extensionEnabled("GL_OES_texture_float"))
             {
@@ -2532,11 +2532,18 @@ TEST_P(Texture2DTestES3, TextureLuminance16ImplicitAlpha1)
 {
     if (extensionEnabled("GL_OES_texture_half_float"))
     {
-        if (IsNVIDIA() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGLES_ANGLE)
+        if (IsNVIDIA() && IsOpenGLES())
         {
             std::cout << "Test skipped on NVIDIA" << std::endl;
             return;
         }
+        // TODO(ynovikov): re-enable once root cause of http://anglebug.com/1420 is fixed
+        if (IsAndroid() && IsAdreno() && IsOpenGLES())
+        {
+            std::cout << "Test skipped on Adreno OpenGLES on Android." << std::endl;
+            return;
+        }
+
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, mTexture2D);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 1, 1, 0, GL_LUMINANCE, GL_HALF_FLOAT_OES,
@@ -2749,6 +2756,12 @@ TEST_P(SamplerInStructTest, SamplerInStruct)
 // Use a sampler in a uniform struct that's passed as a function parameter.
 TEST_P(SamplerInStructAsFunctionParameterTest, SamplerInStructAsFunctionParameter)
 {
+    // TODO(ynovikov): re-enable once root cause of http://anglebug.com/1427 is fixed
+    if (IsAndroid() && IsAdreno() && IsOpenGLES())
+    {
+        std::cout << "Test skipped on Adreno OpenGLES on Android." << std::endl;
+        return;
+    }
     runSamplerInStructTest();
 }
 
@@ -2761,6 +2774,12 @@ TEST_P(SamplerInStructArrayAsFunctionParameterTest, SamplerInStructArrayAsFuncti
         std::cout << "Test skipped on Intel OpenGL." << std::endl;
         return;
     }
+    // TODO(ynovikov): re-enable once root cause of http://anglebug.com/1427 is fixed
+    if (IsAndroid() && IsAdreno() && IsOpenGLES())
+    {
+        std::cout << "Test skipped on Adreno OpenGLES on Android." << std::endl;
+        return;
+    }
     runSamplerInStructTest();
 }
 
@@ -2771,6 +2790,12 @@ TEST_P(SamplerInNestedStructAsFunctionParameterTest, SamplerInNestedStructAsFunc
     if (IsIntel() && GetParam().getRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
     {
         std::cout << "Test skipped on Intel OpenGL." << std::endl;
+        return;
+    }
+    // TODO(ynovikov): re-enable once root cause of http://anglebug.com/1427 is fixed
+    if (IsAndroid() && IsAdreno() && IsOpenGLES())
+    {
+        std::cout << "Test skipped on Adreno OpenGLES on Android." << std::endl;
         return;
     }
     runSamplerInStructTest();
@@ -3326,6 +3351,12 @@ TEST_P(Texture2DTestES3, UnpackSkipImages2D)
     if (IsIntel() && IsDesktopOpenGL())
     {
         std::cout << "Test skipped on Intel OpenGL." << std::endl;
+        return;
+    }
+    // TODO(ynovikov): re-enable once root cause of http://anglebug.com/1429 is fixed
+    if (IsAndroid() && IsAdreno() && IsOpenGLES())
+    {
+        std::cout << "Test skipped on Adreno OpenGLES on Android." << std::endl;
         return;
     }
 

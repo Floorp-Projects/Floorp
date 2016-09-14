@@ -21,7 +21,7 @@ class MaxTextureSizeTest : public ANGLETest
         setConfigAlphaBits(8);
     }
 
-    virtual void SetUp()
+    void SetUp() override
     {
         ANGLETest::SetUp();
 
@@ -76,7 +76,7 @@ class MaxTextureSizeTest : public ANGLETest
         ASSERT_GL_NO_ERROR();
     }
 
-    virtual void TearDown()
+    void TearDown() override
     {
         glDeleteProgram(mTextureProgram);
         glDeleteProgram(mBlueProgram);
@@ -151,7 +151,8 @@ TEST_P(MaxTextureSizeTest, SpecificationTexImage)
 
 TEST_P(MaxTextureSizeTest, SpecificationTexStorage)
 {
-    if (getClientVersion() < 3 && (!extensionEnabled("GL_EXT_texture_storage") || !extensionEnabled("GL_OES_rgb8_rgba8")))
+    if (getClientMajorVersion() < 3 &&
+        (!extensionEnabled("GL_EXT_texture_storage") || !extensionEnabled("GL_OES_rgb8_rgba8")))
     {
         return;
     }
@@ -183,7 +184,7 @@ TEST_P(MaxTextureSizeTest, SpecificationTexStorage)
         }
     }
 
-    if (getClientVersion() < 3)
+    if (getClientMajorVersion() < 3)
     {
         glTexStorage2DEXT(GL_TEXTURE_2D, 1, GL_RGBA8_OES, textureWidth, textureHeight);
     }
@@ -221,7 +222,7 @@ TEST_P(MaxTextureSizeTest, SpecificationTexStorage)
 
 TEST_P(MaxTextureSizeTest, RenderToTexture)
 {
-    if (getClientVersion() < 3 && (!extensionEnabled("GL_ANGLE_framebuffer_blit")))
+    if (getClientMajorVersion() < 3 && (!extensionEnabled("GL_ANGLE_framebuffer_blit")))
     {
         std::cout << "Test skipped due to missing glBlitFramebuffer[ANGLE] support." << std::endl;
         return;

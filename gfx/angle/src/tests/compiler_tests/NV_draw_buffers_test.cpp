@@ -12,36 +12,16 @@
 #include "GLSLANG/ShaderLang.h"
 #include "tests/test_utils/compiler_test.h"
 
-class NVDrawBuffersTest : public testing::Test
+class NVDrawBuffersTest : public MatchOutputCodeTest
 {
   public:
-    NVDrawBuffersTest() {}
-
-  protected:
-    void compile(const std::string &shaderString)
+    NVDrawBuffersTest() : MatchOutputCodeTest(GL_FRAGMENT_SHADER, 0, SH_ESSL_OUTPUT)
     {
-        ShBuiltInResources resources;
-        ShInitBuiltInResources(&resources);
-        resources.MaxDrawBuffers = 8;
-        resources.EXT_draw_buffers = 1;
-        resources.NV_draw_buffers = 1;
-
-        std::string infoLog;
-        bool compilationSuccess = compileTestShader(GL_FRAGMENT_SHADER, SH_GLES2_SPEC, SH_ESSL_OUTPUT,
-                                                    shaderString, &resources, &mGLSLCode, &infoLog);
-        if (!compilationSuccess)
-        {
-            FAIL() << "Shader compilation into ESSL failed " << infoLog;
-        }
+        ShBuiltInResources *resources = getResources();
+        resources->MaxDrawBuffers     = 8;
+        resources->EXT_draw_buffers   = 1;
+        resources->NV_draw_buffers    = 1;
     }
-
-    bool foundInCode(const char *stringToFind)
-    {
-        return mGLSLCode.find(stringToFind) != std::string::npos;
-    }
-
-  private:
-    std::string mGLSLCode;
 };
 
 TEST_F(NVDrawBuffersTest, NVDrawBuffers)

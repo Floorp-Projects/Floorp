@@ -7,6 +7,8 @@
 #include "PreprocessorTest.h"
 #include "compiler/preprocessor/Token.h"
 
+using testing::_;
+
 class DefineTest : public PreprocessorTest
 {
 };
@@ -916,5 +918,24 @@ TEST_F(DefineTest, ExpandedDefinedNotParsedOutsideIf)
     const char *expected =
         "\n"
         "defined(bar)\n";
+    preprocess(input, expected);
+}
+
+// Test that line directive expressions give errors on negative or undefined shifts.
+TEST_F(DefineTest, NegativeShiftInLineDirective)
+{
+    const char *input =
+        "#line 1 << -1\n"
+        "#line 1 >> -1\n"
+        "#line 1 << x\n"
+        "#line 1 >> x\n";
+    const char *expected =
+        "\n"
+        "\n"
+        "\n"
+        "\n";
+
+    EXPECT_CALL(mDiagnostics, print(pp::Diagnostics::PP_UNDEFINED_SHIFT, _, _)).Times(4);
+    EXPECT_CALL(mDiagnostics, print(pp::Diagnostics::PP_INVALID_LINE_NUMBER, _, _)).Times(2);
     preprocess(input, expected);
 }

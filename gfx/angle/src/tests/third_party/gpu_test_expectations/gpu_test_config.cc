@@ -191,6 +191,16 @@ CollectInfoResult CollectGpuID(uint32* vendor_id, uint32* device_id) {
 
 #endif
 
+#if defined(OS_ANDROID)
+CollectInfoResult CollectGpuID(uint32 *vendor_id, uint32 *device_id)
+{
+    DCHECK(vendor_id && device_id);
+    *vendor_id = 0;
+    *device_id = 0;
+    return kCollectInfoNonFatalFailure;
+}
+#endif  // defined(OS_ANDROID)
+
 namespace gpu {
 
 namespace {

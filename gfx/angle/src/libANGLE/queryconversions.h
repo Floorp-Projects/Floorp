@@ -31,6 +31,14 @@ template <typename QueryT>
 void CastStateValues(Context *context, GLenum nativeType, GLenum pname,
                      unsigned int numParams, QueryT *outParams);
 
+// The GL state query API types are: bool, int, uint, float, int64
+template <typename QueryT>
+void CastIndexedStateValues(Context *context,
+                            GLenum nativeType,
+                            GLenum pname,
+                            GLuint index,
+                            unsigned int numParams,
+                            QueryT *outParams);
 }
 
 #endif  // LIBANGLE_QUERY_CONVERSIONS_H_
