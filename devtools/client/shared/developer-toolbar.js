@@ -105,9 +105,8 @@ var CommandUtils = {
           button.setAttribute("title", command.description);
         }
 
-        button.addEventListener("click", () => {
-          requisition.updateExec(typed);
-        }, false);
+        button.addEventListener("click",
+          requisition.updateExec.bind(requisition, typed));
 
         button.addEventListener("keypress", (event) => {
           if (ViewHelpers.isSpaceOrReturn(event)) {
@@ -117,6 +116,7 @@ var CommandUtils = {
         }, false);
 
         // Allow the command button to be toggleable
+        let onChange = null;
         if (command.state) {
           button.setAttribute("autocheck", false);
 
@@ -126,7 +126,7 @@ var CommandUtils = {
            * applies to. For legacy reasons the event object can also contain
            * a tab property.
            */
-          let onChange = (eventName, ev) => {
+          onChange = (eventName, ev) => {
             if (ev.target == target || ev.tab == target.tab) {
 
               let updateChecked = (checked) => {
@@ -155,12 +155,14 @@ var CommandUtils = {
 
           command.state.onChange(target, onChange);
           onChange("", { target: target });
-          document.defaultView.addEventListener("unload", () => {
-            if (command.state.offChange) {
-              command.state.offChange(target, onChange);
-            }
-          }, false);
-        }
+        };
+        document.defaultView.addEventListener("unload", function (event) {
+          if (onChange && command.state.offChange) {
+            command.state.offChange(target, onChange);
+          }
+          button.remove();
+          button = null;
+        }, { once: true });
 
         requisition.clear();
 
