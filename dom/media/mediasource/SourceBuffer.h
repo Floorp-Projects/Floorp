@@ -155,7 +155,7 @@ private:
   // Will call endOfStream() with "decode" error if aDecodeError is true.
   // 3.5.3 Append Error Algorithm
   // http://w3c.github.io/media-source/#sourcebuffer-append-error
-  void AppendError(bool aDecoderError);
+  void AppendError(const MediaResult& aDecodeError);
 
   // Implements the "Prepare Append Algorithm". Returns MediaByteBuffer object
   // on success or nullptr (with aRv set) on error.
@@ -164,7 +164,7 @@ private:
                                                   ErrorResult& aRv);
 
   void AppendDataCompletedWithSuccess(SourceBufferTask::AppendBufferResult aResult);
-  void AppendDataErrored(nsresult aError);
+  void AppendDataErrored(const MediaResult& aError);
 
   RefPtr<MediaSource> mMediaSource;
 

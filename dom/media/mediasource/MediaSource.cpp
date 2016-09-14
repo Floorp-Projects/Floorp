@@ -10,6 +10,7 @@
 #include "DecoderTraits.h"
 #include "Benchmark.h"
 #include "DecoderDoctorDiagnostics.h"
+#include "MediaResult.h"
 #include "MediaSourceUtils.h"
 #include "SourceBuffer.h"
 #include "SourceBufferList.h"
@@ -330,11 +331,22 @@ MediaSource::EndOfStream(const Optional<MediaSourceEndOfStreamError>& aError, Er
     mDecoder->NetworkError();
     break;
   case MediaSourceEndOfStreamError::Decode:
-    mDecoder->DecodeError();
+    mDecoder->DecodeError(NS_ERROR_DOM_MEDIA_FATAL_ERR);
     break;
   default:
     aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
   }
+}
+
+void
+MediaSource::EndOfStream(const MediaResult& aError)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MSE_API("EndOfStream(aError=%d)", aError.Code());
+
+  SetReadyState(MediaSourceReadyState::Ended);
+  mSourceBuffers->Ended();
+  mDecoder->DecodeError(aError);
 }
 
 /* static */ bool

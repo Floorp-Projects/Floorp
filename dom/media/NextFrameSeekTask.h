@@ -57,11 +57,11 @@ private:
 
   void OnAudioDecoded(MediaData* aAudioSample);
 
-  void OnAudioNotDecoded(MediaDecoderReader::NotDecodedReason aReason);
+  void OnAudioNotDecoded(const MediaResult& aError);
 
   void OnVideoDecoded(MediaData* aVideoSample);
 
-  void OnVideoNotDecoded(MediaDecoderReader::NotDecodedReason aReason);
+  void OnVideoNotDecoded(const MediaResult& aError);
 
   void SetCallbacks();
 

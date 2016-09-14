@@ -11,6 +11,7 @@
 #include "mozilla/mozalloc.h" // for operator new, and new (fallible)
 #include "mozilla/RefPtr.h"
 #include "mozilla/TaskQueue.h"
+#include "mp4_demuxer/AnnexB.h"
 #include "mp4_demuxer/H264.h"
 #include "MP4Decoder.h"
 #include "nsAutoPtr.h"
@@ -34,7 +35,9 @@ public:
     , mCallback(aParams.mCallback)
     , mMaxRefFrames(aParams.mConfig.GetType() == TrackInfo::kVideoTrack &&
                     MP4Decoder::IsH264(aParams.mConfig.mMimeType)
-                    ? mp4_demuxer::H264::ComputeMaxRefFrames(aParams.VideoConfig().mExtraData)
+                    ? mp4_demuxer::AnnexB::HasSPS(aParams.VideoConfig().mExtraData)
+                      ? mp4_demuxer::H264::ComputeMaxRefFrames(aParams.VideoConfig().mExtraData)
+                      : 16
                     : 0)
     , mType(aParams.mConfig.GetType())
   {
@@ -79,7 +82,7 @@ private:
   void OutputFrame(MediaData* aData)
   {
     if (!aData) {
-      mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
+      mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__));
       return;
     }
 

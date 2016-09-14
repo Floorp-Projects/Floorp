@@ -8,6 +8,7 @@
 #define SEEK_TASK_H
 
 #include "mozilla/MozPromise.h"
+#include "MediaResult.h"
 #include "SeekTarget.h"
 
 namespace mozilla {
@@ -30,8 +31,15 @@ struct SeekTaskResolveValue
 
 struct SeekTaskRejectValue
 {
+  SeekTaskRejectValue()
+    : mIsAudioQueueFinished(false)
+    , mIsVideoQueueFinished(false)
+    , mError(NS_ERROR_DOM_MEDIA_FATAL_ERR)
+  {
+  }
   bool mIsAudioQueueFinished;
   bool mIsVideoQueueFinished;
+  MediaResult mError;
 };
 
 class SeekTask {
@@ -62,7 +70,7 @@ protected:
 
   void Resolve(const char* aCallSite);
 
-  void RejectIfExist(const char* aCallSite);
+  void RejectIfExist(const MediaResult& aError, const char* aCallSite);
 
   void AssertOwnerThread() const;
 

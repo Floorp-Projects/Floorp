@@ -718,8 +718,6 @@
                          tooltiptext="&urlbar.addonsNotificationAnchor.tooltip;"/>
                   <image id="indexedDB-notification-icon" class="notification-anchor-icon indexedDB-icon" role="button"
                          tooltiptext="&urlbar.indexedDBNotificationAnchor.tooltip;"/>
-                  <image id="login-fill-notification-icon" class="notification-anchor-icon login-icon" role="button"
-                         tooltiptext="&urlbar.loginFillNotificationAnchor.tooltip;"/>
                   <image id="password-notification-icon" class="notification-anchor-icon login-icon" role="button"
                          tooltiptext="&urlbar.passwordNotificationAnchor.tooltip;"/>
                   <image id="plugins-notification-icon" class="notification-anchor-icon plugin-icon" role="button"

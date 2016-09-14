@@ -35,7 +35,7 @@ public:
   }
 
 private:
-  DecodeResult DoDecode(MediaRawData* aSample) override;
+  MediaResult DoDecode(MediaRawData* aSample) override;
   void ProcessDrain() override;
 };
 

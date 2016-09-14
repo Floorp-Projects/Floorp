@@ -50,6 +50,8 @@ add_task(function* test_clickNever() {
     ok(notif, "got notification popup");
     is(true, Services.logins.getLoginSavingEnabled("http://example.com"),
        "Checking for login saving enabled");
+
+    yield* checkDoorhangerUsernamePassword("notifyu1", "notifyp1");
     clickDoorhangerButton(notif, NEVER_BUTTON);
   });
 
@@ -77,6 +79,8 @@ add_task(function* test_clickRemember() {
     ok(notif, "got notification popup");
 
     is(Services.logins.getAllLogins().length, 0, "Should not have any logins yet");
+
+    yield* checkDoorhangerUsernamePassword("notifyu1", "notifyp1");
     clickDoorhangerButton(notif, REMEMBER_BUTTON);
   });
 
@@ -271,6 +275,8 @@ add_task(function* test_changeUPLoginOnUPForm_dont() {
     is(fieldValues.password, "pass2", "Checking submitted password");
     let notif = getCaptureDoorhanger("password-change");
     ok(notif, "got notification popup");
+
+    yield* checkDoorhangerUsernamePassword("notifyu1", "pass2");
     clickDoorhangerButton(notif, DONT_CHANGE_BUTTON);
   });
 
@@ -293,7 +299,10 @@ add_task(function* test_changeUPLoginOnUPForm_change() {
     is(fieldValues.password, "pass2", "Checking submitted password");
     let notif = getCaptureDoorhanger("password-change");
     ok(notif, "got notification popup");
+
+    yield* checkDoorhangerUsernamePassword("notifyu1", "pass2");
     clickDoorhangerButton(notif, CHANGE_BUTTON);
+
     ok(!getCaptureDoorhanger("password-change"), "popup should be gone");
   });
 
@@ -321,7 +330,10 @@ add_task(function* test_changePLoginOnUPForm() {
     is(fieldValues.password, "pass2", "Checking submitted password");
     let notif = getCaptureDoorhanger("password-change");
     ok(notif, "got notification popup");
+
+    yield* checkDoorhangerUsernamePassword("", "pass2");
     clickDoorhangerButton(notif, CHANGE_BUTTON);
+
     ok(!getCaptureDoorhanger("password-change"), "popup should be gone");
   });
 
@@ -343,7 +355,10 @@ add_task(function* test_changePLoginOnPForm() {
     is(fieldValues.password, "notifyp1", "Checking submitted password");
     let notif = getCaptureDoorhanger("password-change");
     ok(notif, "got notification popup");
+
+    yield* checkDoorhangerUsernamePassword("", "notifyp1");
     clickDoorhangerButton(notif, CHANGE_BUTTON);
+
     ok(!getCaptureDoorhanger("password-change"), "popup should be gone");
   });
 
@@ -490,7 +505,10 @@ add_task(function* test_changeUPLoginOnPUpdateForm() {
     is(fieldValues.password, "pass2", "Checking submitted password");
     let notif = getCaptureDoorhanger("password-change");
     ok(notif, "got notification popup");
+
+    yield* checkDoorhangerUsernamePassword("notifyu1", "pass2");
     clickDoorhangerButton(notif, CHANGE_BUTTON);
+
     ok(!getCaptureDoorhanger("password-change"), "popup should be gone");
   });
 
@@ -522,7 +540,9 @@ add_task(function* test_recipeCaptureFields_NewLogin() {
     let logins = Services.logins.getAllLogins();
     is(logins.length, 0, "Should not have any logins yet");
 
+    yield* checkDoorhangerUsernamePassword("notifyu1", "notifyp1");
     clickDoorhangerButton(notif, REMEMBER_BUTTON);
+
   }, "http://example.org"); // The recipe is for example.org
 
   let logins = Services.logins.getAllLogins();
@@ -615,7 +635,10 @@ add_task(function* test_httpsUpgradeCaptureFields_changePW() {
     is(fieldValues.password, "pass2", "Checking submitted password");
     let notif = getCaptureDoorhanger("password-change");
     ok(notif, "checking for a change popup");
+
+    yield* checkDoorhangerUsernamePassword("notifyu1", "pass2");
     clickDoorhangerButton(notif, CHANGE_BUTTON);
+
     ok(!getCaptureDoorhanger("password-change"), "popup should be gone");
   }, "https://example.com"); // This is HTTPS whereas the saved login is HTTP
 
@@ -643,6 +666,8 @@ add_task(function* test_httpsUpgradeCaptureFields_captureMatchingHTTP() {
     ok(notif, "got notification popup");
 
     is(Services.logins.getAllLogins().length, 1, "Should only have the HTTPS login");
+
+    yield* checkDoorhangerUsernamePassword("notifyu1", "notifyp1");
     clickDoorhangerButton(notif, REMEMBER_BUTTON);
   });
 

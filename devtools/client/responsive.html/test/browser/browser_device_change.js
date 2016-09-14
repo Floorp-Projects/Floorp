@@ -40,31 +40,31 @@ addRDMTask(TEST_URL, function* ({ ui, manager }) {
   // Test defaults
   testViewportDimensions(ui, 320, 480);
   yield testUserAgent(ui, DEFAULT_UA);
-  testDevicePixelRatio(yield getViewportDevicePixelRatio(ui), DEFAULT_DPPX);
+  yield testDevicePixelRatio(ui, DEFAULT_DPPX);
+  yield testTouchEventsOverride(ui, false);
   testViewportSelectLabel(ui, "no device selected");
 
-  let waitingPixelRatio = onceDevicePixelRatioChange(ui);
-
-  // Test device with custom UA
+  // Test device with custom properties
   yield switchDevice(ui, "Fake Phone RDM Test");
   yield waitForViewportResizeTo(ui, testDevice.width, testDevice.height);
   yield testUserAgent(ui, testDevice.userAgent);
-
-  // Test device with custom pixelRatio
-  testDevicePixelRatio(yield waitingPixelRatio, testDevice.pixelRatio);
-  waitingPixelRatio = onceDevicePixelRatioChange(ui);
+  yield testDevicePixelRatio(ui, testDevice.pixelRatio);
+  yield testTouchEventsOverride(ui, true);
 
   // Test resetting device when resizing viewport
   yield testViewportResize(ui, ".viewport-vertical-resize-handle",
     [-10, -10], [testDevice.width, testDevice.height - 10], [0, -10], ui);
   yield testUserAgent(ui, DEFAULT_UA);
+  yield testDevicePixelRatio(ui, DEFAULT_DPPX);
+  yield testTouchEventsOverride(ui, false);
   testViewportSelectLabel(ui, "no device selected");
-  testDevicePixelRatio(yield waitingPixelRatio, DEFAULT_DPPX);
 
-  // Test device where UA field is blank
+  // Test device with generic properties
   yield switchDevice(ui, "Laptop (1366 x 768)");
   yield waitForViewportResizeTo(ui, 1366, 768);
   yield testUserAgent(ui, DEFAULT_UA);
+  yield testDevicePixelRatio(ui, 1);
+  yield testTouchEventsOverride(ui, false);
 
   ok(removeDevice(testDevice),
     "Test Device properly removed.");
@@ -79,39 +79,37 @@ function testViewportDimensions(ui, w, h) {
      `${h}px`, `Viewport should have height of ${h}px`);
 }
 
-function testViewportSelectLabel(ui, label) {
+function testViewportSelectLabel(ui, expected) {
   let select = ui.toolWindow.document.querySelector(".viewport-device-selector");
-  is(select.selectedOptions[0].textContent, label,
-     `Select label should be changed to ${label}`);
+  is(select.selectedOptions[0].textContent, expected,
+     `Select label should be changed to ${expected}`);
 }
 
-function* testUserAgent(ui, value) {
+function* testUserAgent(ui, expected) {
   let ua = yield ContentTask.spawn(ui.getViewportBrowser(), {}, function* () {
     return content.navigator.userAgent;
   });
-  is(ua, value, `UA should be set to ${value}`);
+  is(ua, expected, `UA should be set to ${expected}`);
 }
 
-function testDevicePixelRatio(dppx, expected) {
+function* testDevicePixelRatio(ui, expected) {
+  let dppx = yield getViewportDevicePixelRatio(ui);
   is(dppx, expected, `devicePixelRatio should be set to ${expected}`);
+}
+
+function* testTouchEventsOverride(ui, expected) {
+  let { document } = ui.toolWindow;
+  let touchButton = document.querySelector("#global-touch-simulation-button");
+
+  let flag = yield ui.emulationFront.getTouchEventsOverride();
+  is(flag === Ci.nsIDocShell.TOUCHEVENTS_OVERRIDE_ENABLED, expected,
+    `Touch events override should be ${expected ? "enabled" : "disabled"}`);
+  is(touchButton.classList.contains("active"), expected,
+    `Touch simulation button should be ${expected ? "" : "not"} active.`);
 }
 
 function* getViewportDevicePixelRatio(ui) {
   return yield ContentTask.spawn(ui.getViewportBrowser(), {}, function* () {
     return content.devicePixelRatio;
-  });
-}
-
-function onceDevicePixelRatioChange(ui) {
-  return ContentTask.spawn(ui.getViewportBrowser(), {}, function* () {
-    let pixelRatio = content.devicePixelRatio;
-    let mql = content.matchMedia(`(resolution: ${pixelRatio}dppx)`);
-
-    return new Promise(resolve => {
-      mql.addListener(function listener() {
-        mql.removeListener(listener);
-        resolve(content.devicePixelRatio);
-      });
-    });
   });
 }

@@ -424,9 +424,10 @@ ResponsiveUI.prototype = {
 
     switch (event.data.type) {
       case "change-viewport-device":
-        let { userAgent, pixelRatio } = event.data.device;
+        let { userAgent, pixelRatio, touch } = event.data.device;
         this.updateUserAgent(userAgent);
         this.updateDPPX(pixelRatio);
+        this.updateTouchSimulation(touch);
         break;
       case "content-resize":
         let { width, height } = event.data;

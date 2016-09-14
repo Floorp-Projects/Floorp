@@ -51,7 +51,7 @@ Once Visual Studio 2015 Community has been installed, from a checkout
 of mozilla-central, run something like the following to produce a ZIP
 archive::
 
-   $ ./mach python build/windows_toolchain.py create-zip vs2015u2
+   $ ./mach python build/windows_toolchain.py create-zip vs2015u3
 
 The produced archive will be the argument to ``create-zip`` + ``.zip``.
 

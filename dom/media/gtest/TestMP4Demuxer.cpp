@@ -119,11 +119,8 @@ public:
               binding->CheckTrackSamples(track);
             }
           },
-          [binding] (DemuxerFailureReason aReason) {
-            if (aReason == DemuxerFailureReason::DEMUXER_ERROR) {
-              EXPECT_TRUE(false);
-              binding->mCheckTrackSamples.Reject(NS_ERROR_FAILURE, __func__);
-            } else if (aReason == DemuxerFailureReason::END_OF_STREAM) {
+          [binding] (const MediaResult& aError) {
+            if (aError == NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
               EXPECT_TRUE(binding->mSamples.Length() > 1);
               for (uint32_t i = 0; i < (binding->mSamples.Length() - 1); i++) {
                 EXPECT_LT(binding->mSamples[i]->mTimecode, binding->mSamples[i + 1]->mTimecode);
@@ -132,6 +129,9 @@ public:
                 }
               }
               binding->mCheckTrackSamples.Resolve(true, __func__);
+            } else {
+              EXPECT_TRUE(false);
+              binding->mCheckTrackSamples.Reject(aError, __func__);
             }
           }
         );

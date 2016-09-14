@@ -60,10 +60,7 @@ var gAdvancedPane = {
       setEventListener("submitHealthReportBox", "command",
                        gAdvancedPane.updateSubmitHealthReport);
     }
-    if (AppConstants.MOZ_CRASHREPORTER) {
-      setEventListener("submitCrashesBox", "command",
-                       gAdvancedPane.updateSubmitCrashes);
-    }
+
     setEventListener("connectionSettings", "command",
                      gAdvancedPane.showConnections);
     setEventListener("clearCacheButton", "command",
@@ -243,28 +240,6 @@ var gAdvancedPane = {
   {
     this._setupLearnMoreLink("toolkit.crashreporter.infoURL",
                              "crashReporterLearnMore");
-
-    var checkbox = document.getElementById("submitCrashesBox");
-    try {
-      var cr = Components.classes["@mozilla.org/toolkit/crash-reporter;1"].
-               getService(Components.interfaces.nsICrashReporter);
-      checkbox.checked = cr.submitReports;
-    } catch (e) {
-      checkbox.style.display = "none";
-    }
-  },
-
-  /**
-   *
-   */
-  updateSubmitCrashes: function ()
-  {
-    var checkbox = document.getElementById("submitCrashesBox");
-    try {
-      var cr = Components.classes["@mozilla.org/toolkit/crash-reporter;1"].
-               getService(Components.interfaces.nsICrashReporter);
-      cr.submitReports = checkbox.checked;
-    } catch (e) { }
   },
 
   /**
@@ -762,9 +737,7 @@ var gAdvancedPane = {
    */
   showCertificates: function ()
   {
-    openDialog("chrome://pippki/content/certManager.xul",
-               "mozilla:certmanager",
-               "modal=yes", null);
+    gSubDialog.open("chrome://pippki/content/certManager.xul");
   },
 
   /**
