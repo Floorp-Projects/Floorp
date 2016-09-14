@@ -11,6 +11,11 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
+
+XPCOMUtils.defineLazyServiceGetter(this, "serializationHelper",
+                                   "@mozilla.org/network/serialization-helper;1",
+                                   "nsISerializationHelper");
 
 this.Utils = Object.freeze({
   makeURI: function (url) {
@@ -60,5 +65,35 @@ this.Utils = Object.freeze({
     }
 
     return retval;
+  },
+
+  /**
+   * Serialize principal data.
+   *
+   * @param {nsIPrincipal} principal The principal to serialize.
+   * @return {String} The base64 encoded principal data.
+   */
+  serializePrincipal(principal) {
+    if (!principal)
+      return null;
+
+    return serializationHelper.serializeToString(principal);
+  },
+
+  /**
+   * Deserialize a base64 encoded principal (serialized with
+   * Utils::serializePrincipal).
+   *
+   * @param {String} principal_b64 A base64 encoded serialized principal.
+   * @return {nsIPrincipal} A deserialized principal.
+   */
+  deserializePrincipal(principal_b64) {
+    if (!principal_b64)
+      return null;
+
+    let principal = serializationHelper.deserializeObject(principal_b64);
+    principal.QueryInterface(Ci.nsIPrincipal);
+
+    return principal;
   }
 });

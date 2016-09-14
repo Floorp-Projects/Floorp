@@ -1110,7 +1110,7 @@ ServiceWorkerRegistrationWorkerThread::Update(ErrorResult& aRv)
   }
 
   RefPtr<UpdateRunnable> r = new UpdateRunnable(proxy, mScope);
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r));
+  MOZ_ALWAYS_SUCCEEDS(worker->DispatchToMainThread(r.forget()));
 
   return promise.forget();
 }
@@ -1142,7 +1142,7 @@ ServiceWorkerRegistrationWorkerThread::Unregister(ErrorResult& aRv)
   }
 
   RefPtr<StartUnregisterRunnable> r = new StartUnregisterRunnable(proxy, mScope);
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r));
+  MOZ_ALWAYS_SUCCEEDS(worker->DispatchToMainThread(r.forget()));
 
   return promise.forget();
 }
@@ -1180,7 +1180,7 @@ ServiceWorkerRegistrationWorkerThread::InitListener()
 
   RefPtr<StartListeningRunnable> r =
     new StartListeningRunnable(mListener);
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r));
+  MOZ_ALWAYS_SUCCEEDS(worker->DispatchToMainThread(r.forget()));
 }
 
 class AsyncStopListeningRunnable final : public Runnable
@@ -1238,7 +1238,7 @@ ServiceWorkerRegistrationWorkerThread::ReleaseListener(Reason aReason)
   if (aReason == RegistrationIsGoingAway) {
     RefPtr<AsyncStopListeningRunnable> r =
       new AsyncStopListeningRunnable(mListener);
-    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r));
+    MOZ_ALWAYS_SUCCEEDS(mWorkerPrivate->DispatchToMainThread(r.forget()));
   } else if (aReason == WorkerIsGoingAway) {
     RefPtr<SyncStopListeningRunnable> r =
       new SyncStopListeningRunnable(mWorkerPrivate, mListener);

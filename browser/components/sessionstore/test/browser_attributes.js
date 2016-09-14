@@ -17,8 +17,9 @@ add_task(function* test() {
   let tab = gBrowser.addTab("about:robots");
   yield promiseBrowserLoaded(tab.linkedBrowser);
 
-  // Check that the tab has an 'image' attribute.
+  // Check that the tab has 'image' and 'iconLoadingPrincipal' attributes.
   ok(tab.hasAttribute("image"), "tab.image exists");
+  ok(tab.hasAttribute("iconLoadingPrincipal"), "tab.iconLoadingPrincipal exists");
 
   tab.toggleMuteAudio();
   // Check that the tab has a 'muted' attribute.
@@ -27,8 +28,10 @@ add_task(function* test() {
   // Make sure we do not persist 'image' or 'muted' attributes.
   ss.persistTabAttribute("image");
   ss.persistTabAttribute("muted");
+  ss.persistTabAttribute("iconLoadingPrincipal");
   let {attributes} = JSON.parse(ss.getTabState(tab));
   ok(!("image" in attributes), "'image' attribute not saved");
+  ok(!("iconLoadingPrincipal" in attributes), "'iconLoadingPrincipal' attribute not saved");
   ok(!("muted" in attributes), "'muted' attribute not saved");
   ok(!("custom" in attributes), "'custom' attribute not saved");
 
