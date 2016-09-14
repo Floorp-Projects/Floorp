@@ -938,11 +938,6 @@ public final class GeckoProfile {
         if (!isDefaultSet) {
             // only set as default if this is the first profile we're creating
             profileSection.setProperty("Default", 1);
-
-            // We have no intention of stopping this session. The FIRSTRUN session
-            // ends when the browsing session/activity has ended. All events
-            // during firstrun will be tagged as FIRSTRUN.
-            Telemetry.startUISession(TelemetryContract.Session.FIRSTRUN);
         }
 
         parser.addSection(profileSection);

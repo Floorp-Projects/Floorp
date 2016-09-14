@@ -933,8 +933,14 @@ public class BrowserApp extends GeckoApp
                         });
                     }
                 }
+
                 // Don't bother trying again to show the v1 minimal first run.
                 prefs.edit().putBoolean(FirstrunAnimationContainer.PREF_FIRSTRUN_ENABLED, false).apply();
+
+                // We have no intention of stopping this session. The FIRSTRUN session
+                // ends when the browsing session/activity has ended. All events
+                // during firstrun will be tagged as FIRSTRUN.
+                Telemetry.startUISession(TelemetryContract.Session.FIRSTRUN);
             }
         } finally {
             StrictMode.setThreadPolicy(savedPolicy);
