@@ -32,6 +32,7 @@ addons = [
     'e10s-remote',
     'e10s-tabs',
     'e10s',
+    'embedded-webextension',
     'l10n-properties',
     'l10n',
     'layout-change',
