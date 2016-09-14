@@ -24,7 +24,7 @@
 
 #ifdef XP_MACOSX
 #include <CoreFoundation/CoreFoundation.h>
-#include "../../../../../xpcom/io/CocoaFileUtils.h"
+#include "../../../../xpcom/io/CocoaFileUtils.h"
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
