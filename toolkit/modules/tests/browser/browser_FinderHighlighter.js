@@ -68,6 +68,7 @@ function promiseTestHighlighterOutput(browser, word, expectedResult, extraTest =
         insertCalls: [],
         removeCalls: []
       };
+      let lastMaskNode, lastOutlineNode;
 
       // Amount of milliseconds to wait after the last time one of our stubs
       // was called.
@@ -98,7 +99,6 @@ function promiseTestHighlighterOutput(browser, word, expectedResult, extraTest =
 
         // We reached the amount of calls we expected, so now we can check
         // the amount of rects.
-        let lastMaskNode = callCounts.insertCalls.pop();
         if (!lastMaskNode && expectedResult.rectCount !== 0) {
           Assert.ok(false, `No mask node found, but expected ${expectedResult.rectCount} rects.`);
         }
@@ -110,7 +110,7 @@ function promiseTestHighlighterOutput(browser, word, expectedResult, extraTest =
 
         // Allow more specific assertions to be tested in `extraTest`.
         extraTest = eval(extraTest);
-        extraTest(lastMaskNode);
+        extraTest(lastMaskNode, lastOutlineNode);
 
         resolve();
       }
@@ -122,6 +122,12 @@ function promiseTestHighlighterOutput(browser, word, expectedResult, extraTest =
         let prop = which + "Calls";
         return function(node) {
           callCounts[prop].push(node);
+          if (which == "insert") {
+            if (node.outerHTML.indexOf("outlineMask") > -1)
+              lastMaskNode = node;
+            else
+              lastOutlineNode = node;
+          }
           clearTimeout(timeout);
           timeout = setTimeout(() => {
             finish();
@@ -150,6 +156,15 @@ add_task(function* testModalResults() {
       insertCalls: [2, 4],
       removeCalls: [1, 2]
     }],
+    ["their law might propagate their kind", {
+      rectCount: 0,
+      insertCalls: [31, 32],
+      removeCalls: [31, 32],
+      extraTest: function(maskNode, outlineNode) {
+        Assert.equal(outlineNode.getElementsByTagName("div").length, 3,
+          "There should be multiple rects drawn");
+      }
+    }],
     ["ro", {
       rectCount: 40,
       insertCalls: [1, 4],
@@ -162,8 +177,8 @@ add_task(function* testModalResults() {
     }],
     ["o", {
       rectCount: 491,
-      insertCalls: [1, 5],
-      removeCalls: [1, 4]
+      insertCalls: [3, 7],
+      removeCalls: [3, 6]
     }]
   ]);
   let url = kFixtureBaseURL + "file_FinderSample.html";
@@ -175,7 +190,8 @@ add_task(function* testModalResults() {
       Assert.ok(!findbar.hidden, "Findbar should be open now.");
 
       yield new Promise(resolve => setTimeout(resolve, kIteratorTimeout));
-      let promise = promiseTestHighlighterOutput(browser, word, expectedResult);
+      let promise = promiseTestHighlighterOutput(browser, word, expectedResult,
+        expectedResult.extraTest);
       yield promiseEnterStringIntoFindField(findbar, word);
       yield promise;
 
