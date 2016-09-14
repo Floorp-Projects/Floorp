@@ -99,17 +99,50 @@ class RendererGL : angle::NonCopyable
                                     GLint reference,
                                     GLuint mask,
                                     GLenum coverMode);
+    void coverFillPathInstanced(const gl::ContextState &state,
+                                const std::vector<gl::Path *> &paths,
+                                GLenum coverMode,
+                                GLenum transformType,
+                                const GLfloat *transformValues);
+    void coverStrokePathInstanced(const gl::ContextState &state,
+                                  const std::vector<gl::Path *> &paths,
+                                  GLenum coverMode,
+                                  GLenum transformType,
+                                  const GLfloat *transformValues);
+    void stencilFillPathInstanced(const gl::ContextState &state,
+                                  const std::vector<gl::Path *> &paths,
+                                  GLenum fillMode,
+                                  GLuint mask,
+                                  GLenum transformType,
+                                  const GLfloat *transformValues);
+    void stencilStrokePathInstanced(const gl::ContextState &state,
+                                    const std::vector<gl::Path *> &paths,
+                                    GLint reference,
+                                    GLuint mask,
+                                    GLenum transformType,
+                                    const GLfloat *transformValues);
+
+    void stencilThenCoverFillPathInstanced(const gl::ContextState &state,
+                                           const std::vector<gl::Path *> &paths,
+                                           GLenum coverMode,
+                                           GLenum fillMode,
+                                           GLuint mask,
+                                           GLenum transformType,
+                                           const GLfloat *transformValues);
+    void stencilThenCoverStrokePathInstanced(const gl::ContextState &state,
+                                             const std::vector<gl::Path *> &paths,
+                                             GLenum coverMode,
+                                             GLint reference,
+                                             GLuint mask,
+                                             GLenum transformType,
+                                             const GLfloat *transformValues);
+
+    GLenum getResetStatus();
 
     // EXT_debug_marker
     void insertEventMarker(GLsizei length, const char *marker);
     void pushGroupMarker(GLsizei length, const char *marker);
     void popGroupMarker();
-
-    // lost device
-    void notifyDeviceLost();
-    bool isDeviceLost() const;
-    bool testDeviceLost();
-    bool testDeviceResettable();
 
     std::string getVendorString() const;
     std::string getRendererDescription() const;

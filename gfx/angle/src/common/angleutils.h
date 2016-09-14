@@ -34,10 +34,10 @@ class NonCopyable
 };
 
 extern const uintptr_t DirtyPointer;
-}
+}  // namespace angle
 
 template <typename T, size_t N>
-inline size_t ArraySize(T(&)[N])
+constexpr inline size_t ArraySize(T (&)[N])
 {
     return N;
 }
@@ -62,7 +62,7 @@ void SafeRelease(T& resource)
 }
 
 template <typename T>
-void SafeDelete(T*& resource)
+void SafeDelete(T *&resource)
 {
     delete resource;
     resource = NULL;
@@ -161,6 +161,7 @@ std::string FormatString(const char *fmt, ...);
 #define snprintf _snprintf
 #endif
 
+#define GL_BGR565_ANGLEX 0x6ABB
 #define GL_BGRA4_ANGLEX 0x6ABC
 #define GL_BGR5_A1_ANGLEX 0x6ABD
 #define GL_INT_64_ANGLEX 0x6ABE

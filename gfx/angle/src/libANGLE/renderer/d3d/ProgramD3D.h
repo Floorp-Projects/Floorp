@@ -97,13 +97,10 @@ struct D3DVarying final
     unsigned int outputSlot;
 };
 
-class ProgramD3DMetadata : angle::NonCopyable
+class ProgramD3DMetadata final : angle::NonCopyable
 {
   public:
-    ProgramD3DMetadata(int rendererMajorShaderModel,
-                       const std::string &shaderModelSuffix,
-                       bool usesInstancedPointSpriteEmulation,
-                       bool usesViewScale,
+    ProgramD3DMetadata(RendererD3D *renderer,
                        const ShaderD3D *vertexShader,
                        const ShaderD3D *fragmentShader);
 
@@ -174,6 +171,10 @@ class ProgramD3D : public ProgramImpl
     bool getUniformBlockSize(const std::string &blockName, size_t *sizeOut) const override;
     bool getUniformBlockMemberInfo(const std::string &memberUniformName,
                                    sh::BlockMemberInfo *memberInfoOut) const override;
+    void setPathFragmentInputGen(const std::string &inputName,
+                                 GLenum genMode,
+                                 GLint components,
+                                 const GLfloat *coeffs) override;
 
     void initializeUniformStorage();
     gl::Error applyUniforms(GLenum drawMode);

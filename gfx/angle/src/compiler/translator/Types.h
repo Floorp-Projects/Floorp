@@ -123,7 +123,7 @@ class TStructure : public TFieldListCollection
 
     void createSamplerSymbols(const TString &structName,
                               const TString &structAPIName,
-                              const int arrayOfStructsSize,
+                              const unsigned int arrayOfStructsSize,
                               TVector<TIntermSymbol *> *outputSymbols,
                               TMap<TIntermSymbol *, TString> *outputSymbolsToAPINames) const;
 
@@ -241,11 +241,18 @@ class TType
           interfaceBlock(nullptr), structure(nullptr)
     {
     }
-    TType(TBasicType t, unsigned char ps = 1, unsigned char ss = 1)
-        : type(t), precision(EbpUndefined), qualifier(EvqGlobal), invariant(false),
+    explicit TType(TBasicType t, unsigned char ps = 1, unsigned char ss = 1)
+        : type(t),
+          precision(EbpUndefined),
+          qualifier(EvqGlobal),
+          invariant(false),
           layoutQualifier(TLayoutQualifier::create()),
-          primarySize(ps), secondarySize(ss), array(false), arraySize(0),
-          interfaceBlock(0), structure(0)
+          primarySize(ps),
+          secondarySize(ss),
+          array(false),
+          arraySize(0),
+          interfaceBlock(0),
+          structure(0)
     {
     }
     TType(TBasicType t, TPrecision p, TQualifier q = EvqTemporary,
@@ -257,11 +264,18 @@ class TType
     {
     }
     explicit TType(const TPublicType &p);
-    TType(TStructure *userDef, TPrecision p = EbpUndefined)
-        : type(EbtStruct), precision(p), qualifier(EvqTemporary), invariant(false),
+    explicit TType(TStructure *userDef, TPrecision p = EbpUndefined)
+        : type(EbtStruct),
+          precision(p),
+          qualifier(EvqTemporary),
+          invariant(false),
           layoutQualifier(TLayoutQualifier::create()),
-          primarySize(1), secondarySize(1), array(false), arraySize(0),
-          interfaceBlock(0), structure(userDef)
+          primarySize(1),
+          secondarySize(1),
+          array(false),
+          arraySize(0),
+          interfaceBlock(0),
+          structure(userDef)
     {
     }
     TType(TInterfaceBlock *interfaceBlockIn, TQualifier qualifierIn,
@@ -311,6 +325,8 @@ class TType
     {
         return invariant;
     }
+
+    void setInvariant(bool i) { invariant = i; }
 
     TLayoutQualifier getLayoutQualifier() const
     {
@@ -373,13 +389,10 @@ class TType
     }
     bool isUnsizedArray() const
     {
-        return array && arraySize == 0;
+        return array && arraySize == 0u;
     }
-    int getArraySize() const
-    {
-        return arraySize;
-    }
-    void setArraySize(int s)
+    unsigned int getArraySize() const { return arraySize; }
+    void setArraySize(unsigned int s)
     {
         if (!array || arraySize != s)
         {
@@ -393,7 +406,7 @@ class TType
         if (array)
         {
             array     = false;
-            arraySize = 0;
+            arraySize = 0u;
             invalidateMangledName();
         }
     }
@@ -494,6 +507,7 @@ class TType
     {
         return ::getBasicString(type);
     }
+
     const char *getPrecisionString() const
     {
         return ::getPrecisionString(precision);
@@ -502,6 +516,9 @@ class TType
     {
         return ::getQualifierString(qualifier);
     }
+
+    const char *getBuiltInTypeNameString() const;
+
     TString getCompleteString() const;
 
     // If this type is a struct, returns the deepest struct nesting of
@@ -538,7 +555,7 @@ class TType
 
     void createSamplerSymbols(const TString &structName,
                               const TString &structAPIName,
-                              const int arrayOfStructsSize,
+                              const unsigned int arrayOfStructsSize,
                               TVector<TIntermSymbol *> *outputSymbols,
                               TMap<TIntermSymbol *, TString> *outputSymbolsToAPINames) const
     {
@@ -566,7 +583,7 @@ class TType
     unsigned char primarySize; // size of vector or cols matrix
     unsigned char secondarySize; // rows of a matrix
     bool array;
-    int arraySize;
+    unsigned int arraySize;
 
     // 0 unless this is an interface block, or interface block member variable
     TInterfaceBlock *interfaceBlock;

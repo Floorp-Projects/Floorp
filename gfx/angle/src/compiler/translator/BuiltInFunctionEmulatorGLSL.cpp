@@ -43,6 +43,31 @@ void InitBuiltInFunctionEmulatorForGLSLWorkarounds(BuiltInFunctionEmulator *emu,
 void InitBuiltInFunctionEmulatorForGLSLMissingFunctions(BuiltInFunctionEmulator *emu, sh::GLenum shaderType,
                                                         int targetGLSLVersion)
 {
+    // Emulate packUnorm2x16 and unpackUnorm2x16 (GLSL 4.10)
+    if (targetGLSLVersion < GLSL_VERSION_410)
+    {
+        const TType *float2 = TCache::getType(EbtFloat, 2);
+        const TType *uint1  = TCache::getType(EbtUInt);
+
+        // clang-format off
+        emu->addEmulatedFunction(EOpPackUnorm2x16, float2,
+            "uint webgl_packUnorm2x16_emu(vec2 v)\n"
+            "{\n"
+            "    int x = int(round(clamp(v.x, 0.0, 1.0) * 65535.0));\n"
+            "    int y = int(round(clamp(v.y, 0.0, 1.0) * 65535.0));\n"
+            "    return uint((y << 16) | (x & 0xFFFF));\n"
+            "}\n");
+
+        emu->addEmulatedFunction(EOpUnpackUnorm2x16, uint1,
+            "vec2 webgl_unpackUnorm2x16_emu(uint u)\n"
+            "{\n"
+            "    float x = float(u & 0xFFFFu) / 65535.0;\n"
+            "    float y = float(u >> 16) / 65535.0;\n"
+            "    return vec2(x, y);\n"
+            "}\n");
+        // clang-format on
+    }
+
     // Emulate packSnorm2x16, packHalf2x16, unpackSnorm2x16, and unpackHalf2x16 (GLSL 4.20)
     // by using floatBitsToInt, floatBitsToUint, intBitsToFloat, and uintBitsToFloat (GLSL 3.30).
     if (targetGLSLVersion >= GLSL_VERSION_330 && targetGLSLVersion < GLSL_VERSION_420)

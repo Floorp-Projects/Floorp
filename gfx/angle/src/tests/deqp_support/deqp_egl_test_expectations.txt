@@ -253,3 +253,4 @@
 1340 WIN : dEQP-EGL.functional.native_coord_mapping.native_window.rgba8888_depth_no_stencil_render = FAIL
 1340 WIN : dEQP-EGL.functional.native_coord_mapping.native_window.rgba8888_depth_stencil_clear = FAIL
 1340 WIN : dEQP-EGL.functional.native_coord_mapping.native_window.rgba8888_depth_stencil_render = FAIL
+1340 WIN : dEQP-EGL.functional.get_proc_address.extension.egl_ext_platform_base = FAIL

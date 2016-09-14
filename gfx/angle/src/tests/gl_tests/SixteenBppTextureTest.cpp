@@ -9,10 +9,29 @@
 #include "test_utils/ANGLETest.h"
 #include "test_utils/gl_raii.h"
 
+#include "image_util/imageformats.h"
+
 using namespace angle;
 
 namespace
 {
+
+GLColor Convert565(const R5G6B5 &rgb565)
+{
+    gl::ColorF colorf;
+    R5G6B5::readColor(&colorf, &rgb565);
+    Vector4 vecColor(colorf.red, colorf.green, colorf.blue, colorf.alpha);
+    return GLColor(vecColor);
+}
+
+R5G6B5 Convert565(const GLColor &glColor)
+{
+    const Vector4 &vecColor = glColor.toNormalizedVector();
+    gl::ColorF colorf(vecColor.x, vecColor.y, vecColor.z, vecColor.w);
+    R5G6B5 rgb565;
+    R5G6B5::writeColor(&rgb565, &colorf);
+    return rgb565;
+}
 
 class SixteenBppTextureTest : public ANGLETest
 {
@@ -143,13 +162,11 @@ TEST_P(SixteenBppTextureTest, RGB565Validation)
         return;
     }
 
-    GLushort pixels[4] =
-    {
-        0xF800, // Red
-        0x07E0, // Green
-        0x001F, // Blue
-        0xFFE0  // Red + Green
-    };
+    GLuint test;
+    memcpy(&test, &GLColor::black, 4);
+
+    R5G6B5 pixels[4] = {Convert565(GLColor::red), Convert565(GLColor::green),
+                        Convert565(GLColor::blue), Convert565(GLColor::yellow)};
 
     glClearColor(0, 0, 0, 0);
 
@@ -377,6 +394,148 @@ TEST_P(SixteenBppTextureTestES3, RGB5A1UploadRGB10A2)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     ASSERT_GL_NO_ERROR();
     simpleValidationBase(tex.get());
+}
+
+// Test reading from RGBA4 textures attached to FBO.
+TEST_P(SixteenBppTextureTestES3, RGBA4FramebufferReadback)
+{
+    // TODO(jmadill): Fix bug with GLES
+    if (IsOpenGLES())
+    {
+        std::cout << "Test skipped on GLES." << std::endl;
+        return;
+    }
+
+    Vector4 rawColor(0.5f, 0.7f, 1.0f, 0.0f);
+    GLColor expectedColor(rawColor);
+
+    GLFramebuffer fbo;
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo.get());
+
+    GLTexture tex;
+    glBindTexture(GL_TEXTURE_2D, tex.get());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA4, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex.get(), 0);
+
+    glClearColor(rawColor.x, rawColor.y, rawColor.z, rawColor.w);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    ASSERT_GL_NO_ERROR();
+
+    GLenum colorReadFormat = GL_NONE;
+    GLenum colorReadType   = GL_NONE;
+    glGetIntegerv(GL_IMPLEMENTATION_COLOR_READ_FORMAT, reinterpret_cast<GLint *>(&colorReadFormat));
+    glGetIntegerv(GL_IMPLEMENTATION_COLOR_READ_TYPE, reinterpret_cast<GLint *>(&colorReadType));
+
+    if (colorReadFormat == GL_RGBA && colorReadType == GL_UNSIGNED_BYTE)
+    {
+        GLColor actualColor = GLColor::black;
+        glReadPixels(0, 0, 1, 1, colorReadFormat, colorReadType, &actualColor);
+        EXPECT_COLOR_NEAR(expectedColor, actualColor, 20);
+    }
+    else
+    {
+        ASSERT_GLENUM_EQ(GL_RGBA, colorReadFormat);
+        ASSERT_TRUE(colorReadType == GL_UNSIGNED_SHORT_4_4_4_4_REV_EXT ||
+                    colorReadType == GL_UNSIGNED_SHORT_4_4_4_4);
+
+        uint16_t rgba = 0;
+        glReadPixels(0, 0, 1, 1, colorReadFormat, colorReadType, &rgba);
+
+        GLubyte r8 = static_cast<GLubyte>((rgba & 0xF000) >> 12);
+        GLubyte g8 = static_cast<GLubyte>((rgba & 0x0F00) >> 8);
+        GLubyte b8 = static_cast<GLubyte>((rgba & 0x00F0) >> 4);
+        GLubyte a8 = static_cast<GLubyte>((rgba & 0x000F));
+
+        GLColor actualColor(r8 << 4, g8 << 4, b8 << 4, a8 << 4);
+        EXPECT_COLOR_NEAR(expectedColor, actualColor, 20);
+    }
+
+    ASSERT_GL_NO_ERROR();
+}
+
+// Test reading from RGB565 textures attached to FBO.
+TEST_P(SixteenBppTextureTestES3, RGB565FramebufferReadback)
+{
+    // TODO(jmadill): Fix bug with GLES
+    if (IsOpenGLES())
+    {
+        std::cout << "Test skipped on GLES." << std::endl;
+        return;
+    }
+
+    GLFramebuffer fbo;
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo.get());
+
+    std::vector<GLColor> fourColors;
+    fourColors.push_back(GLColor::red);
+    fourColors.push_back(GLColor::green);
+    fourColors.push_back(GLColor::blue);
+    fourColors.push_back(GLColor::white);
+
+    const std::string &vertexShader =
+        "#version 300 es\n"
+        "in vec4 color;\n"
+        "in vec2 position;\n"
+        "out vec4 fcolor;\n"
+        "void main() {\n"
+        "    fcolor = color;\n"
+        "    gl_Position = vec4(position, 0.5, 1.0);\n"
+        "}";
+    const std::string &fragmentShader =
+        "#version 300 es\n"
+        "in mediump vec4 fcolor;\n"
+        "out mediump vec4 color;\n"
+        "void main() {\n"
+        "    color = fcolor;\n"
+        "}";
+
+    GLuint program = CompileProgram(vertexShader, fragmentShader);
+    glUseProgram(program);
+
+    GLint colorLocation = glGetAttribLocation(program, "color");
+    ASSERT_NE(-1, colorLocation);
+    glEnableVertexAttribArray(colorLocation);
+    glVertexAttribPointer(colorLocation, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, fourColors.data());
+
+    int w = getWindowWidth();
+    int h = getWindowHeight();
+
+    glViewport(0, 0, w, h);
+
+    GLTexture tex;
+    glBindTexture(GL_TEXTURE_2D, tex.get());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB565, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex.get(), 0);
+
+    drawIndexedQuad(program, "position", 0.5f);
+
+    ASSERT_GL_NO_ERROR();
+
+    int t = 12;
+    EXPECT_PIXEL_COLOR_NEAR(0, h - 1, GLColor::red, t);
+    EXPECT_PIXEL_COLOR_NEAR(0, 0, GLColor::green, t);
+    EXPECT_PIXEL_COLOR_NEAR(w - 1, 0, GLColor::blue, t);
+    EXPECT_PIXEL_COLOR_NEAR(w - 1, h - 1, GLColor::white, t);
+
+    GLenum colorReadFormat = GL_NONE;
+    GLenum colorReadType   = GL_NONE;
+    glGetIntegerv(GL_IMPLEMENTATION_COLOR_READ_FORMAT, reinterpret_cast<GLint *>(&colorReadFormat));
+    glGetIntegerv(GL_IMPLEMENTATION_COLOR_READ_TYPE, reinterpret_cast<GLint *>(&colorReadType));
+
+    if (colorReadFormat == GL_RGB && colorReadType == GL_UNSIGNED_SHORT_5_6_5)
+    {
+        std::vector<R5G6B5> readColors(w * h);
+        glReadPixels(0, 0, w, h, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, readColors.data());
+
+        int hoffset = (h - 1) * w;
+        EXPECT_COLOR_NEAR(GLColor::red, Convert565(readColors[hoffset]), t);
+        EXPECT_COLOR_NEAR(GLColor::green, Convert565(readColors[0]), t);
+        EXPECT_COLOR_NEAR(GLColor::blue, Convert565(readColors[w - 1]), t);
+        EXPECT_COLOR_NEAR(GLColor::white, Convert565(readColors[w - 1 + hoffset]), t);
+    }
+
+    glDeleteProgram(program);
 }
 
 // Use this to select which configurations (e.g. which renderer, which GLES major version) these tests should be run against.
