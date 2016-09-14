@@ -78,6 +78,29 @@ public final class ThumbnailHelper {
         mHeight = -1;
     }
 
+    public void getAndProcessThumbnailFor(final int tabId, final BitmapUtils.BitmapLoader loader) {
+        final Tab tab = Tabs.getInstance().getTab(tabId);
+        if (tab != null) {
+            getAndProcessThumbnailFor(tab, loader);
+        }
+    }
+
+    public void getAndProcessThumbnailFor(final Tab tab, final BitmapUtils.BitmapLoader loader) {
+        BitmapUtils.runOnBitmapFoundOnUiThread(loader, tab.getThumbnail());
+
+        Tabs.registerOnTabsChangedListener(new Tabs.OnTabsChangedListener() {
+                @Override
+                public void onTabChanged(final Tab t, final Tabs.TabEvents msg, final String data) {
+                    if (tab != t || msg != Tabs.TabEvents.THUMBNAIL) {
+                        return;
+                    }
+                    Tabs.unregisterOnTabsChangedListener(this);
+                    BitmapUtils.runOnBitmapFoundOnUiThread(loader, t.getThumbnail());
+                }
+            });
+        getAndProcessThumbnailFor(tab);
+    }
+
     public void getAndProcessThumbnailFor(Tab tab) {
         if (AboutPages.isAboutHome(tab.getURL()) || AboutPages.isAboutPrivateBrowsing(tab.getURL())) {
             tab.updateThumbnail(null, CachePolicy.NO_STORE);

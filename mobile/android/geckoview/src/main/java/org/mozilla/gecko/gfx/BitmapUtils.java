@@ -15,9 +15,6 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.GeckoJarReader;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UIAsyncTask;
-import org.mozilla.gecko.Tab;
-import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.ThumbnailHelper;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -47,7 +44,7 @@ public final class BitmapUtils {
         public void onBitmapFound(Drawable d);
     }
 
-    private static void runOnBitmapFoundOnUiThread(final BitmapLoader loader, final Drawable d) {
+    public static void runOnBitmapFoundOnUiThread(final BitmapLoader loader, final Drawable d) {
         if (ThreadUtils.isOnUiThread()) {
             loader.onBitmapFound(d);
             return;
@@ -77,11 +74,6 @@ public final class BitmapUtils {
         if (data.startsWith("data")) {
             final BitmapDrawable d = new BitmapDrawable(context.getResources(), getBitmapFromDataURI(data));
             runOnBitmapFoundOnUiThread(loader, d);
-            return;
-        }
-
-        if (data.startsWith("thumbnail:")) {
-            getThumbnailDrawable(context, data, loader);
             return;
         }
 
@@ -145,22 +137,6 @@ public final class BitmapUtils {
         }
 
         runOnBitmapFoundOnUiThread(loader, null);
-    }
-
-    public static void getThumbnailDrawable(final Context context, final String data, final BitmapLoader loader) {
-         int id = Integer.parseInt(data.substring(10), 10);
-         final Tab tab = Tabs.getInstance().getTab(id);
-         runOnBitmapFoundOnUiThread(loader, tab.getThumbnail());
-         Tabs.registerOnTabsChangedListener(new Tabs.OnTabsChangedListener() {
-                 @Override
-                 public void onTabChanged(Tab t, Tabs.TabEvents msg, String data) {
-                     if (tab == t && msg == Tabs.TabEvents.THUMBNAIL) {
-                         Tabs.unregisterOnTabsChangedListener(this);
-                         runOnBitmapFoundOnUiThread(loader, t.getThumbnail());
-                     }
-                 }
-             });
-         ThumbnailHelper.getInstance().getAndProcessThumbnailFor(tab);
     }
 
     public static Bitmap decodeByteArray(byte[] bytes) {
