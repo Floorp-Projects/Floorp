@@ -1721,6 +1721,30 @@
     "releaseChannelCollection": "opt-out",
     "description": "Recorded once for each HTTP 401 response. The value records the type of authentication and the TLS-enabled status. (0=basic/clear, 1=basic/tls, 2=digest/clear, 3=digest/tls, 4=ntlm/clear, 5=ntlm/tls, 6=negotiate/clear, 7=negotiate/tls)"
   },
+  "TLS_EARLY_DATA_NEGOTIATED": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 3,
+    "description": "TLS early data was available: 0 - not available, 1 - avaialable but not used, 2 - available and used.",
+    "alert_emails": ["necko@mozilla.com"],
+    "bug_numbers": [1296288]
+  },
+  "TLS_EARLY_DATA_ACCEPTED": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "TLS early data was used and it was accepted or rejected by the remote host.",
+    "alert_emails": ["necko@mozilla.com"],
+    "bug_numbers": [1296288]
+  },
+  "TLS_EARLY_DATA_BYTES_WRITTEN": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 100,
+    "description": "Amount of bytes sent using TLS early data.",
+    "alert_emails": ["necko@mozilla.com"],
+    "bug_numbers": [1296288]
+  },
   "SSL_HANDSHAKE_VERSION": {
     "alert_emails": ["seceng-telemetry@mozilla.com"],
     "bug_numbers": [1250568],

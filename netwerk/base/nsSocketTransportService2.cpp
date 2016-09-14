@@ -54,6 +54,8 @@ Atomic<PRThread*, Relaxed> gSocketThread;
 #define TELEMETRY_PREF "toolkit.telemetry.enabled"
 #define MAX_TIME_FOR_PR_CLOSE_DURING_SHUTDOWN "network.sts.max_time_for_pr_close_during_shutdown"
 
+#define REPAIR_POLLABLE_EVENT_TIME 10
+
 uint32_t nsSocketTransportService::gMaxCount;
 PRCallOnceType nsSocketTransportService::gMaxCountInitOnce;
 
@@ -85,6 +87,9 @@ nsSocketTransportService::nsSocketTransportService()
     , mMaxTimeForPrClosePref(PR_SecondsToInterval(5))
     , mSleepPhase(false)
     , mProbedMaxCount(false)
+#if defined(XP_WIN)
+    , mPolling(false)
+#endif
 {
     NS_ASSERTION(NS_IsMainThread(), "wrong thread");
 
@@ -761,6 +766,13 @@ nsSocketTransportService::OnDispatchedEvent(nsIThreadInternal *thread)
         SOCKET_LOG(("OnDispatchedEvent Same Thread Skip Signal\n"));
         return NS_OK;
     }
+#else
+    if (gIOService->IsNetTearingDown()) {
+        // Poll can hang sometimes. If we are in shutdown, we are going to
+        // start a watchdog. If we do not exit poll within
+        // REPAIR_POLLABLE_EVENT_TIME signal a pollable event again.
+        StartPollWatchdog();
+    }
 #endif
 
     MutexAutoLock lock(mLock);
@@ -1068,7 +1080,13 @@ nsSocketTransportService::DoPollIteration(TimeDuration *pollDuration)
     *pollDuration = 0;
     if (!gIOService->IsNetTearingDown()) {
         // Let's not do polling during shutdown.
+#if defined(XP_WIN)
+        StartPolling();
+#endif
         n = Poll(&pollInterval, pollDuration);
+#if defined(XP_WIN)
+        EndPolling();
+#endif
     }
 
     if (n < 0) {
@@ -1309,6 +1327,13 @@ nsSocketTransportService::Observe(nsISupports *subject,
             mAfterWakeUpTimer = nullptr;
             mSleepPhase = false;
         }
+
+#if defined(XP_WIN)
+        if (timer == mPollRepairTimer) {
+            DoPollRepair();
+        }
+#endif
+
     } else if (!strcmp(topic, NS_WIDGET_SLEEP_OBSERVER_TOPIC)) {
         mSleepPhase = true;
         if (mAfterWakeUpTimer) {
@@ -1530,6 +1555,52 @@ nsSocketTransportService::GetSocketConnections(nsTArray<SocketInfo> *data)
     for (uint32_t i = 0; i < mIdleCount; i++)
         AnalyzeConnection(data, &mIdleList[i], false);
 }
+
+#if defined(XP_WIN)
+void
+nsSocketTransportService::StartPollWatchdog()
+{
+    MutexAutoLock lock(mLock);
+
+    // Poll can hang sometimes. If we are in shutdown, we are going to start a
+    // watchdog. If we do not exit poll within REPAIR_POLLABLE_EVENT_TIME
+    // signal a pollable event again.
+    MOZ_ASSERT(gIOService->IsNetTearingDown());
+    if (mPolling && !mPollRepairTimer) {
+        mPollRepairTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+        mPollRepairTimer->Init(this, REPAIR_POLLABLE_EVENT_TIME,
+                               nsITimer::TYPE_REPEATING_SLACK);
+    }
+}
+
+void
+nsSocketTransportService::DoPollRepair()
+{
+    MutexAutoLock lock(mLock);
+    if (mPolling && mPollableEvent) {
+        mPollableEvent->Signal();
+    } else if (mPollRepairTimer) {
+        mPollRepairTimer->Cancel();
+    }
+}
+
+void
+nsSocketTransportService::StartPolling()
+{
+    MutexAutoLock lock(mLock);
+    mPolling = true;
+}
+
+void
+nsSocketTransportService::EndPolling()
+{
+    MutexAutoLock lock(mLock);
+    mPolling = false;
+    if (mPollRepairTimer) {
+        mPollRepairTimer->Cancel();
+    }
+}
+#endif
 
 } // namespace net
 } // namespace mozilla

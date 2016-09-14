@@ -13,14 +13,14 @@
 
 <!DOCTYPE dialog SYSTEM "chrome://pippki/locale/certManager.dtd">
 
-<dialog id="certmanager" 
+<dialog id="certmanager"
 	windowtype="mozilla:certmanager"
-	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&certmgr.title;"
         onload="LoadCerts();"
         onunload="DeregisterSmartCardObservers();"
         buttons="accept"
-        style="width: 48em; height: 32em;"
+        style="width: 63em; height: 32em;"
         persist="screenX screenY width height">
 
   <stringbundle id="pippki_bundle" src="chrome://pippki/locale/pippki.properties"/>
