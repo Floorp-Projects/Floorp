@@ -684,7 +684,7 @@ nsCookieService::AppClearDataObserverInit()
   nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
   nsCOMPtr<nsIObserver> obs = new AppClearDataObserver();
   observerService->AddObserver(obs, TOPIC_CLEAR_ORIGIN_DATA,
-                               /* holdsWeak= */ false);
+                               /* ownsWeak= */ false);
 }
 
 /******************************************************************************
