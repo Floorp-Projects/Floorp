@@ -62,7 +62,7 @@ function run_test() {
   do_get_profile();
   Services.prefs.setBoolPref("security.ssl.enable_ocsp_stapling", true);
   Services.prefs.setIntPref("security.OCSP.enabled", 1);
-  Services.prefs.setIntPref("security.pki.sha1_enforcement_level", 3);
+  Services.prefs.setIntPref("security.pki.sha1_enforcement_level", 4);
   add_tls_server_setup("OCSPStaplingServer", "ocsp_certs");
 
   let ocspResponder = new HttpServer();
