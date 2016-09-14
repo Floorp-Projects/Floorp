@@ -569,14 +569,6 @@ PuppetWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,
                               LayersBackend aBackendHint,
                               LayerManagerPersistence aPersistence)
 {
-  if (XRE_IsParentProcess()) {
-    // A PuppetWidget in the parent process is for a windowless browser. Let's
-    // try to pretend this is a normal top-level window.
-    return nsBaseWidget::GetLayerManager(aShadowManager,
-                                         aBackendHint,
-                                         aPersistence);
-  }
-
   if (!mLayerManager) {
     mLayerManager = new ClientLayerManager(this);
   }
