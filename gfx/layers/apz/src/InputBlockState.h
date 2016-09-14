@@ -30,7 +30,6 @@ class PanGestureBlockState;
 
 /**
  * A base class that stores state common to various input blocks.
- * Currently, it just stores the overscroll handoff chain.
  * Note that the InputBlockState constructor acquires the tree lock, so callers
  * from inside AsyncPanZoomController should ensure that the APZC lock is not
  * held.
