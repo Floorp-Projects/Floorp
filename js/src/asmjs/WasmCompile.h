@@ -40,7 +40,7 @@ struct CompileArgs
 {
     Assumptions assumptions;
     ScriptedCaller scriptedCaller;
-    bool alwaysBaseline;
+    MOZ_INIT_OUTSIDE_CTOR bool alwaysBaseline;
 
     CompileArgs(Assumptions&& assumptions, ScriptedCaller&& scriptedCaller)
       : assumptions(Move(assumptions)),

@@ -180,8 +180,8 @@ NewEmptyPropertyIterator(JSContext* cx, unsigned flags, MutableHandleObject objp
  * for-in semantics are required, and when the caller can guarantee that the
  * iterator will never be exposed to scripts.
  */
-bool
-ValueToIterator(JSContext* cx, unsigned flags, MutableHandleValue vp);
+JSObject*
+ValueToIterator(JSContext* cx, unsigned flags, HandleValue vp);
 
 bool
 CloseIterator(JSContext* cx, HandleObject iterObj);

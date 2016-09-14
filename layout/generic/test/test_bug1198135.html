@@ -77,8 +77,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1198135
 
 <script>
   is(document.getElementById("first").scrollHeight, 600, "Scroll height should be computed correctly");
+  document.getElementById("first").scrollTop = 150;
+  is(document.getElementById("first").scrollHeight, 600, "Scroll height should be a constant when scrolling");
+
   // The true height is 727.5 and we don't always snap the same direction.
   isfuzzy(document.getElementById("second").scrollHeight, 728, 1, "Scroll height should be computed correctly");
+  document.getElementById("second").scrollTop = 150;
+  isfuzzy(document.getElementById("second").scrollHeight, 728, 1, "Scroll height should be a constant when scrolling");
 </script>
 
 </body></html>
