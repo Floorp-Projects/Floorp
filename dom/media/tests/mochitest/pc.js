@@ -862,12 +862,12 @@ PeerConnectionWrapper.prototype = {
     this._pc.setIdentityProvider(provider, protocol, identity);
   },
 
-  ensureMediaElement : function(track, stream, direction) {
-    var element = getMediaElement(this.label, direction, stream.id);
+  ensureMediaElement : function(track, direction) {
+    const idPrefix = [this.label, direction].join('_');
+    var element = getMediaElementForTrack(track, idPrefix);
 
     if (!element) {
-      element = createMediaElement(this.label, direction, stream.id,
-                                   this.audioElementsOnly);
+      element = createMediaElementForTrack(track, idPrefix);
       if (direction == "local") {
         this.localMediaElements.push(element);
       } else if (direction == "remote") {
@@ -878,7 +878,7 @@ PeerConnectionWrapper.prototype = {
     // We do this regardless, because sometimes we end up with a new stream with
     // an old id (ie; the rollback tests cause the same stream to be added
     // twice)
-    element.srcObject = stream;
+    element.srcObject = new MediaStream([track]);
     element.play();
   },
 
@@ -912,14 +912,14 @@ PeerConnectionWrapper.prototype = {
     // This will create one media element per track, which might not be how
     // we set up things with the RTCPeerConnection. It's the only way
     // we can ensure all sent tracks are flowing however.
-    this.ensureMediaElement(track, new MediaStream([track]), "local");
+    this.ensureMediaElement(track, "local");
 
     return this.observedNegotiationNeeded;
   },
 
   /**
    * Callback when we get local media. Also an appropriate HTML media element
-   * will be created, which may be obtained later with |getMediaElement|.
+   * will be created and added to the content node.
    *
    * @param {MediaStream} stream
    *        Media stream to handle
@@ -950,7 +950,7 @@ PeerConnectionWrapper.prototype = {
           type: track.kind,
           streamId: stream.id
         };
-      this.ensureMediaElement(track, stream, "local");
+      this.ensureMediaElement(track, "local");
     });
   },
 
@@ -1181,7 +1181,7 @@ PeerConnectionWrapper.prototype = {
                                 this.observedRemoteTrackInfoById);
       ok(this.isTrackOnPC(event.track), "Found track " + event.track.id);
 
-      this.ensureMediaElement(event.track, event.streams[0], 'remote');
+      this.ensureMediaElement(event.track, 'remote');
     });
   },
 
@@ -1368,45 +1368,42 @@ PeerConnectionWrapper.prototype = {
   },
 
   /**
-   * Check that media flow is present on the given media element by waiting for
-   * it to reach ready state HAVE_ENOUGH_DATA and progress time further than
-   * the start of the check.
+   * Check that media flow is present for the given media element by checking
+   * that it reaches ready state HAVE_ENOUGH_DATA and progresses time further
+   * than the start of the check.
    *
    * This ensures, that the stream being played is producing
-   * data and that at least one video frame has been displayed.
+   * data and, in case it contains a video track, that at least one video frame
+   * has been displayed.
    *
-   * @param {object} element
-   *        A media element to wait for data flow on.
+   * @param {HTMLMediaElement} track
+   *        The media element to check
    * @returns {Promise}
-   *        A promise that resolves when media is flowing.
+   *        A promise that resolves when media data is flowing.
    */
   waitForMediaElementFlow : function(element) {
-    return new Promise(resolve => {
-      info("Checking data flow to element: " + element.id);
-      if (element.ended && element.readyState >= element.HAVE_CURRENT_DATA) {
-        resolve();
-        return;
-      }
-      var haveEnoughData = false;
-      var oncanplay = () => {
-        info("Element " + element.id + " saw 'canplay', " +
-             "meaning HAVE_ENOUGH_DATA was just reached.");
-        haveEnoughData = true;
-        element.removeEventListener("canplay", oncanplay);
-      };
-      var ontimeupdate = () => {
-        info("Element " + element.id + " saw 'timeupdate'" +
-             ", currentTime=" + element.currentTime +
-             "s, readyState=" + element.readyState);
-        if (haveEnoughData || element.readyState == element.HAVE_ENOUGH_DATA) {
-          element.removeEventListener("timeupdate", ontimeupdate);
-          ok(true, "Media flowing for element: " + element.id);
-          resolve();
-        }
-      };
-      element.addEventListener("canplay", oncanplay);
-      element.addEventListener("timeupdate", ontimeupdate);
-    });
+    info("Checking data flow for element: " + element.id);
+    is(element.ended, !element.srcObject.active,
+       "Element ended should be the inverse of the MediaStream's active state");
+    if (element.ended) {
+      is(element.readyState, element.HAVE_CURRENT_DATA,
+         "Element " + element.id + " is ended and should have had data");
+      return Promise.resolve();
+    }
+
+    const haveEnoughData = (element.readyState == element.HAVE_ENOUGH_DATA ?
+        Promise.resolve() :
+        haveEvent(element, "canplay", wait(60000,
+            new Error("Timeout for element " + element.id))))
+      .then(_ => info("Element " + element.id + " has enough data."));
+
+    const startTime = element.currentTime;
+    const timeProgressed = timeout(
+        listenUntil(element, "timeupdate", _ => element.currentTime > startTime),
+        60000, "Element " + element.id + " should progress currentTime")
+      .then();
+
+    return Promise.all([haveEnoughData, timeProgressed]);
   },
 
   /**
