@@ -352,9 +352,6 @@ VRDisplayOculus::VRDisplayOculus(ovrSession aSession)
   mDisplayInfo.mEyeFOV[VRDisplayInfo::Eye_Left] = FromFovPort(mFOVPort[VRDisplayInfo::Eye_Left]);
   mDisplayInfo.mEyeFOV[VRDisplayInfo::Eye_Right] = FromFovPort(mFOVPort[VRDisplayInfo::Eye_Right]);
 
-  uint32_t w = mDesc.Resolution.w;
-  uint32_t h = mDesc.Resolution.h;
-
   float pixelsPerDisplayPixel = 1.0;
   ovrSizei texSize[2];
 
