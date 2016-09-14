@@ -79,6 +79,7 @@ struct RTCConfiguration;
 struct RTCIceServer;
 struct RTCOfferOptions;
 struct RTCRtpParameters;
+class RTCRtpSender;
 #ifdef USE_FAKE_MEDIA_STREAMS
 typedef Fake_MediaStreamTrack MediaStreamTrack;
 #else
@@ -435,6 +436,19 @@ public:
 
   nsresult
   AddTrack(mozilla::dom::MediaStreamTrack& aTrack, DOMMediaStream& aStream);
+
+  NS_IMETHODIMP_TO_ERRORRESULT(InsertDTMF, ErrorResult &rv,
+                               mozilla::dom::RTCRtpSender& sender,
+                               const nsAString& tones, uint32_t duration,
+                               uint32_t interToneGap) {
+    rv = InsertDTMF(sender, tones, duration, interToneGap);
+  }
+
+  NS_IMETHODIMP_TO_ERRORRESULT(GetDTMFToneBuffer, ErrorResult &rv,
+                               mozilla::dom::RTCRtpSender& sender,
+                               nsAString& outToneBuffer) {
+    rv = GetDTMFToneBuffer(sender, outToneBuffer);
+  }
 
   NS_IMETHODIMP_TO_ERRORRESULT(ReplaceTrack, ErrorResult &rv,
                                mozilla::dom::MediaStreamTrack& aThisTrack,
