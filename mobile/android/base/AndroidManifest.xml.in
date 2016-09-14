@@ -421,7 +421,7 @@
 #endif
 
         <service
-            android:name="org.mozilla.gecko.media.CodecManager"
+            android:name="org.mozilla.gecko.media.MediaManager"
             android:enabled="true"
             android:exported="false"
             android:process=":media"
