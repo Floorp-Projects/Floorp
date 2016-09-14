@@ -15,6 +15,7 @@ UNIFIED_SOURCES += [
     'TestSafeBrowsingProtobuf.cpp',
     'TestTable.cpp',
     'TestUrlClassifierUtils.cpp',
+    'TestVariableLengthPrefixSet.cpp',
 ]
 
 FINAL_LIBRARY = 'xul-gtest'
