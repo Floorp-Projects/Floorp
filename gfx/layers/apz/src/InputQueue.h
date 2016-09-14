@@ -33,9 +33,8 @@ class AsyncDragMetrics;
 class QueuedInput;
 
 /**
- * This class stores incoming input events, separated into "input blocks", until
- * they are ready for handling. Currently input blocks are only created from
- * touch input.
+ * This class stores incoming input events, associated with "input blocks", until
+ * they are ready for handling.
  */
 class InputQueue {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(InputQueue)
@@ -107,15 +106,17 @@ public:
   DragBlockState* GetCurrentDragBlock() const;
   PanGestureBlockState* GetCurrentPanGestureBlock() const;
   /**
-   * Returns true iff the pending block at the head of the queue is ready for
-   * handling.
+   * Returns true iff the pending block at the head of the queue is a touch
+   * block and is ready for handling.
    */
   bool HasReadyTouchBlock() const;
   /**
-   * If there is a wheel transaction, returns the WheelBlockState representing
-   * the transaction. Otherwise, returns null.
+   * If there is an active wheel transaction, returns the WheelBlockState
+   * representing the transaction. Otherwise, returns null. "Active" in this
+   * function name is the same kind of "active" as in mActiveWheelBlock - that
+   * is, new incoming wheel events will go into the "active" block.
    */
-  WheelBlockState* GetCurrentWheelTransaction() const;
+  WheelBlockState* GetActiveWheelTransaction() const;
   /**
    * Remove all input blocks from the input queue.
    */
@@ -181,7 +182,7 @@ private:
   void ScheduleMainThreadTimeout(const RefPtr<AsyncPanZoomController>& aTarget,
                                  CancelableBlockState* aBlock);
   void MainThreadTimeout(const uint64_t& aInputBlockId);
-  void ProcessInputBlocks();
+  void ProcessQueue();
   bool CanDiscardBlock(CancelableBlockState* aBlock);
   void UpdateActiveApzc(const RefPtr<AsyncPanZoomController>& aNewActive);
 
