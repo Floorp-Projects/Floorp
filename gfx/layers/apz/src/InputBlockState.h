@@ -8,6 +8,7 @@
 #define mozilla_layers_InputBlockState_h
 
 #include "InputData.h"                      // for MultiTouchInput
+#include "mozilla/RefCounted.h"             // for RefCounted
 #include "mozilla/RefPtr.h"                 // for RefPtr
 #include "mozilla/gfx/Matrix.h"             // for Matrix4x4
 #include "mozilla/layers/APZUtils.h"        // for TouchBehaviorFlags
@@ -34,9 +35,11 @@ class PanGestureBlockState;
  * from inside AsyncPanZoomController should ensure that the APZC lock is not
  * held.
  */
-class InputBlockState
+class InputBlockState : public RefCounted<InputBlockState>
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(InputBlockState)
+
   static const uint64_t NO_BLOCK_ID = 0;
 
   enum class TargetConfirmationState {
