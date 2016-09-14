@@ -241,12 +241,7 @@ class CommonTestCase(unittest.TestCase):
         self.marionette = Marionette(bin=self.binary, profile=self.profile)
         if self.marionette.session is None:
             self.marionette.start_session()
-        if self.marionette.timeout is not None:
-            self.marionette.timeouts(self.marionette.TIMEOUT_SEARCH, self.marionette.timeout)
-            self.marionette.timeouts(self.marionette.TIMEOUT_SCRIPT, self.marionette.timeout)
-            self.marionette.timeouts(self.marionette.TIMEOUT_PAGE, self.marionette.timeout)
-        else:
-            self.marionette.timeouts(self.marionette.TIMEOUT_PAGE, 30000)
+        self.marionette.reset_timeouts()
 
     def tearDown(self):
         self.marionette.cleanup()
