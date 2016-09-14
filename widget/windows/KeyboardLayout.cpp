@@ -1112,6 +1112,8 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
         mCommittedCharsAndModifiers.Append(ch, mModKeyState.GetModifiers());
       }
     }
+    // Remove odd char messages if there are.
+    RemoveFollowingOddCharMessages();
   }
 }
 
@@ -1279,6 +1281,47 @@ NativeKey::IsIMEDoingKakuteiUndo() const
          charMsg.wParam == VK_BACK && charMsg.lParam == 0x1 &&
          startCompositionMsg.time <= compositionMsg.time &&
          compositionMsg.time <= charMsg.time;
+}
+
+void
+NativeKey::RemoveFollowingOddCharMessages()
+{
+  MOZ_ASSERT(IsKeyDownMessage());
+
+  // If the keydown message is synthesized for automated tests, there is
+  // nothing to do here.
+  if (mFakeCharMsgs) {
+    return;
+  }
+
+  // If there are some following char messages before another key message,
+  // there is nothing to do here.
+  if (!mFollowingCharMsgs.IsEmpty()) {
+    return;
+  }
+
+  // If the handling key isn't Backspace, there is nothing to do here.
+  if (mOriginalVirtualKeyCode != VK_BACK) {
+    return;
+  }
+
+  // If we don't see the odd message pattern, there is nothing to do here.
+  if (!IsIMEDoingKakuteiUndo()) {
+    return;
+  }
+
+  // Otherwise, we need to remove odd WM_CHAR messages for ATOK or WXG (both
+  // of them are Japanese IME).
+  MSG msg;
+  while (WinUtils::PeekMessage(&msg, mMsg.hwnd, WM_CHAR, WM_CHAR,
+                               PM_REMOVE | PM_NOYIELD)) {
+    if (msg.message != WM_CHAR) {
+      MOZ_RELEASE_ASSERT(msg.message == WM_NULL,
+                         "Unexpected message was removed");
+      continue;
+    }
+    mRemovedOddCharMsgs.AppendElement(msg);
+  }
 }
 
 UINT
@@ -2350,9 +2393,7 @@ NativeKey::DispatchPluginEventsAndDiscardsCharMessages() const
   MOZ_ASSERT(IsKeyDownMessage());
   MOZ_ASSERT(!IsKeyMessageOnPlugin());
 
-  bool anyCharMessagesRemoved = false;
   for (size_t i = 0; i < mFollowingCharMsgs.Length(); ++i) {
-    anyCharMessagesRemoved = true;
     MOZ_RELEASE_ASSERT(!mWidget->Destroyed(),
       "NativeKey tries to dispatch a plugin event on destroyed widget");
     mWidget->DispatchPluginEvent(mFollowingCharMsgs[i]);
@@ -2361,23 +2402,15 @@ NativeKey::DispatchPluginEventsAndDiscardsCharMessages() const
     }
   }
 
-  if (!mFakeCharMsgs && !anyCharMessagesRemoved &&
-      mDOMKeyCode == NS_VK_BACK && IsIMEDoingKakuteiUndo()) {
-    // This is for a hack for ATOK and WXG.  So, PeekMessage() must scceed!
-    MSG msg;
-    while (WinUtils::PeekMessage(&msg, mMsg.hwnd, WM_CHAR, WM_CHAR,
-                                 PM_REMOVE | PM_NOYIELD)) {
-      if (msg.message != WM_CHAR) {
-        MOZ_RELEASE_ASSERT(msg.message == WM_NULL,
-                           "Unexpected message was removed");
-        continue;
-      }
-      MOZ_RELEASE_ASSERT(!mWidget->Destroyed(),
-        "NativeKey tries to dispatch a plugin event on destroyed widget");
-      mWidget->DispatchPluginEvent(msg);
-      return mWidget->Destroyed();
+  // Dispatch odd char messages which are caused by ATOK or WXG (both of them
+  // are Japanese IME) and removed by RemoveFollowingOddCharMessages().
+  for (size_t i = 0; i < mRemovedOddCharMsgs.Length(); ++i) {
+    MOZ_RELEASE_ASSERT(!mWidget->Destroyed(),
+      "NativeKey tries to dispatch a plugin event on destroyed widget");
+    mWidget->DispatchPluginEvent(mRemovedOddCharMsgs[i]);
+    if (mWidget->Destroyed() || IsFocusedWindowChanged()) {
+      return true;
     }
-    MOZ_CRASH("NativeKey failed to get WM_CHAR for ATOK or WXG");
   }
 
   return false;
