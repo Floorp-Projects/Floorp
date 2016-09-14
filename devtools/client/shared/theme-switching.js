@@ -27,6 +27,7 @@
   }
 
   let devtoolsStyleSheets = new WeakMap();
+  let gOldTheme = "";
 
   function forceStyle() {
     let computedStyle = window.getComputedStyle(documentElement);
@@ -83,10 +84,12 @@
    * Apply all the sheets from `newTheme` and remove all of the sheets
    * from `oldTheme`
    */
-  function switchTheme(newTheme, oldTheme) {
-    if (newTheme === oldTheme) {
+  function switchTheme(newTheme) {
+    if (newTheme === gOldTheme) {
       return;
     }
+    let oldTheme = gOldTheme;
+    gOldTheme = newTheme;
 
     let oldThemeDef = gDevTools.getThemeDefinition(oldTheme);
     let newThemeDef = gDevTools.getThemeDefinition(newTheme);
@@ -156,10 +159,8 @@
     }, console.error.bind(console));
   }
 
-  function handlePrefChange(event, data) {
-    if (data.pref == "devtools.theme") {
-      switchTheme(data.newValue, data.oldValue);
-    }
+  function handlePrefChange() {
+    switchTheme(Services.prefs.getCharPref("devtools.theme"));
   }
 
   const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
@@ -174,10 +175,10 @@
   } else {
     switchTheme(Services.prefs.getCharPref("devtools.theme"));
 
-    gDevTools.on("pref-changed", handlePrefChange);
+    Services.prefs.addObserver("devtools.theme", handlePrefChange, false);
     window.addEventListener("unload", function () {
-      gDevTools.off("pref-changed", handlePrefChange);
-    });
+      Services.prefs.removeObserver("devtools.theme", handlePrefChange);
+    }, { once: true });
   }
 
   watchCSS(window);
