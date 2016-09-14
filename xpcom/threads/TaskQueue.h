@@ -15,25 +15,24 @@
 
 #include <queue>
 
-#include "mozilla/SharedThreadPool.h"
 #include "nsThreadUtils.h"
 
+class nsIEventTarget;
 class nsIRunnable;
 
 namespace mozilla {
 
-class SharedThreadPool;
-
 typedef MozPromise<bool, bool, false> ShutdownPromise;
 
-// Abstracts executing runnables in order in a thread pool. The runnables
-// dispatched to the TaskQueue will be executed in the order in which
+// Abstracts executing runnables in order on an arbitrary event target. The
+// runnables dispatched to the TaskQueue will be executed in the order in which
 // they're received, and are guaranteed to not be executed concurrently.
 // They may be executed on different threads, and a memory barrier is used
 // to make this threadsafe for objects that aren't already threadsafe.
 class TaskQueue : public AbstractThread {
 public:
-  explicit TaskQueue(already_AddRefed<SharedThreadPool> aPool, bool aSupportsTailDispatch = false);
+  explicit TaskQueue(already_AddRefed<nsIEventTarget> aTarget,
+                     bool aSupportsTailDispatch = false);
 
   TaskDispatcher& TailDispatcher() override;
 
@@ -59,7 +58,7 @@ public:
   // Puts the queue in a shutdown state and returns immediately. The queue will
   // remain alive at least until all the events are drained, because the Runners
   // hold a strong reference to the task queue, and one of them is always held
-  // by the threadpool event queue when the task queue is non-empty.
+  // by the target event queue when the task queue is non-empty.
   //
   // The returned promise is resolved when the queue goes empty.
   RefPtr<ShutdownPromise> BeginShutdown();
@@ -98,11 +97,11 @@ protected:
     mQueueMonitor.AssertCurrentThreadOwns();
     if (mIsShutdown && !mIsRunning) {
       mShutdownPromise.ResolveIfExists(true, __func__);
-      mPool = nullptr;
+      mTarget = nullptr;
     }
   }
 
-  RefPtr<SharedThreadPool> mPool;
+  nsCOMPtr<nsIEventTarget> mTarget;
 
   // Monitor that protects the queue and mIsRunning;
   Monitor mQueueMonitor;
@@ -156,7 +155,7 @@ protected:
 
   TaskDispatcher* mTailDispatcher;
 
-  // True if we've dispatched an event to the pool to execute events from
+  // True if we've dispatched an event to the target to execute events from
   // the queue.
   bool mIsRunning;
 
