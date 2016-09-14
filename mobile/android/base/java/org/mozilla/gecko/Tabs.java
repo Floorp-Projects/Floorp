@@ -108,7 +108,6 @@ public class Tabs implements GeckoEventListener {
             "Tab:Added",
             "Tab:Close",
             "Tab:Select",
-            "Tab:LoadedFromCache",
             "Content:LocationChange",
             "Content:SecurityChange",
             "Content:StateChange",
@@ -120,7 +119,6 @@ public class Tabs implements GeckoEventListener {
             "Link:Feed",
             "Link:OpenSearch",
             "DesktopMode:Changed",
-            "Tab:ViewportMetadata",
             "Tab:StreamStart",
             "Tab:StreamStop",
             "Tab:AudioPlayingChange",
@@ -561,10 +559,6 @@ public class Tabs implements GeckoEventListener {
             } else if (event.equals("DesktopMode:Changed")) {
                 tab.setDesktopMode(message.getBoolean("desktopMode"));
                 notifyListeners(tab, TabEvents.DESKTOP_MODE_CHANGE);
-            } else if (event.equals("Tab:ViewportMetadata")) {
-                tab.setZoomConstraints(new ZoomConstraints(message));
-                tab.setIsRTL(message.getBoolean("isRTL"));
-                notifyListeners(tab, TabEvents.VIEWPORT_CHANGE);
             } else if (event.equals("Tab:StreamStart")) {
                 tab.setRecording(true);
                 notifyListeners(tab, TabEvents.RECORDING_CHANGE);
@@ -631,7 +625,6 @@ public class Tabs implements GeckoEventListener {
         LINK_FEED,
         SECURITY_CHANGE,
         DESKTOP_MODE_CHANGE,
-        VIEWPORT_CHANGE,
         RECORDING_CHANGE,
         BOOKMARK_ADDED,
         BOOKMARK_REMOVED,
