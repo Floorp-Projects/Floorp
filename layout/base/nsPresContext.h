@@ -957,7 +957,6 @@ public:
   void ClearMozAfterPaintEvents() {
     mInvalidateRequestsSinceLastPaint.mRequests.Clear();
     mUndeliveredInvalidateRequestsBeforeLastPaint.mRequests.Clear();
-    mAllInvalidated = false;
   }
 
   /**
@@ -1351,9 +1350,6 @@ protected:
   unsigned              mPendingMediaFeatureValuesChanged : 1;
   unsigned              mPrefChangePendingNeedsReflow : 1;
   unsigned              mIsEmulatingMedia : 1;
-  // True if the requests in mInvalidateRequestsSinceLastPaint cover the
-  // entire viewport
-  unsigned              mAllInvalidated : 1;
 
   // Are we currently drawing an SVG glyph?
   unsigned              mIsGlyph : 1;
