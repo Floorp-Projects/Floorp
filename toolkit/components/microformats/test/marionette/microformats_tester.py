@@ -75,7 +75,7 @@ class BaseTestFrontendUnits(MarionetteTestCase):
         # take an amount of time to run after loading, which we have to wait for.
         self.marionette.set_search_timeout(120000)
 
-        self.marionette.timeouts("page load", 120000)
+        self.marionette.set_page_load_timeout(120000)
 
     # srcdir_path should be the directory relative to this file.
     def set_server_prefix(self, srcdir_path):

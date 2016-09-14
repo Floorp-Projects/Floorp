@@ -126,7 +126,7 @@ class TestNavigate(MarionetteTestCase):
     @unittest.skip("Bug 1302707 - No timeout exception raised.")
     def test_should_throw_a_timeoutexception_when_loading_page(self):
         try:
-            self.marionette.timeouts("page load", 0)
+            self.marionette.set_page_load_timeout(0)
             self.marionette.navigate(self.test_doc)
             self.assertTrue(self.marionette.find_element(By.ID, "mozLink"))
             self.fail("Should have thrown a MarionetteException")
