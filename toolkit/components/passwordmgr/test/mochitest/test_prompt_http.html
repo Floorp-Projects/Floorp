@@ -24,6 +24,8 @@ var iframe = document.getElementById("iframe");
 // Force parent to not look for tab-modal prompts, as they're not used for auth prompts.
 isTabModal = false;
 
+const AUTHENTICATE_PATH = new URL("authenticate.sjs", window.location.href).pathname;
+
 let chromeScript = runInParent(SimpleTest.getTestFileURL("pwmgr_common.js"));
 
 runInParent(() => {
@@ -40,17 +42,41 @@ runInParent(() => {
             createInstance(Ci.nsILoginInfo);
   login4  = Cc["@mozilla.org/login-manager/loginInfo;1"].
             createInstance(Ci.nsILoginInfo);
+  let httpUpgradeLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                         createInstance(Ci.nsILoginInfo);
+  let httpsDowngradeLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                            createInstance(Ci.nsILoginInfo);
+  let dedupeHttpUpgradeLogin  = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                                createInstance(Ci.nsILoginInfo);
+  let dedupeHttpsUpgradeLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                                createInstance(Ci.nsILoginInfo);
+
 
   login3A.init("http://mochi.test:8888", null, "mochitest",
                "mochiuser1", "mochipass1", "", "");
   login3B.init("http://mochi.test:8888", null, "mochitest2",
                "mochiuser2", "mochipass2", "", "");
   login4.init("http://mochi.test:8888", null, "mochitest3",
-               "mochiuser3", "mochipass3-old", "", "");
+              "mochiuser3", "mochipass3-old", "", "");
+  // Logins to test scheme upgrades (allowed) and downgrades (disallowed)
+  httpUpgradeLogin.init("http://example.com", null, "schemeUpgrade",
+                        "httpUser", "httpPass", "", "");
+  httpsDowngradeLogin.init("https://example.com", null, "schemeDowngrade",
+                           "httpsUser", "httpsPass", "", "");
+  // HTTP and HTTPS version of the same domain and realm but with different passwords.
+  dedupeHttpUpgradeLogin.init("http://example.org", null, "schemeUpgradeDedupe",
+                              "dedupeUser", "httpPass", "", "");
+  dedupeHttpsUpgradeLogin.init("https://example.org", null, "schemeUpgradeDedupe",
+                               "dedupeUser", "httpsPass", "", "");
+
 
   pwmgr.addLogin(login3A);
   pwmgr.addLogin(login3B);
   pwmgr.addLogin(login4);
+  pwmgr.addLogin(httpUpgradeLogin);
+  pwmgr.addLogin(httpsDowngradeLogin);
+  pwmgr.addLogin(dedupeHttpUpgradeLogin);
+  pwmgr.addLogin(dedupeHttpsUpgradeLogin);
 });
 
 add_task(function* test_iframe() {
@@ -233,6 +259,103 @@ add_task(function* test_iframe() {
   checkEchoedAuthInfo({user: "mochiuser3", pass: "mochipass3-old"},
                       iframe.contentDocument);
   yield promptShownPromise;
+});
+
+add_task(function* test_schemeUpgrade() {
+  let state = {
+    msg         : "https://example.com is requesting your username and password.\n\n" +
+                  "WARNING: Your password will not be sent to the website you are currently visiting!",
+    title       : "Authentication Required",
+    textValue   : "httpUser",
+    passValue   : "httpPass",
+    iconClass   : "authentication-icon question-icon",
+    titleHidden : true,
+    textHidden  : false,
+    passHidden  : false,
+    checkHidden : true,
+    checkMsg    : "",
+    checked     : false,
+    focused     : "textField",
+    defButton   : "button0",
+  };
+  let action = {
+    buttonClick : "ok",
+  };
+  let promptDone = handlePrompt(state, action);
+
+  // The following tests are driven by iframe loads
+
+  let iframeLoaded = onloadPromiseFor("iframe");
+  iframe.src = "https://example.com" + AUTHENTICATE_PATH +
+               "?user=httpUser&pass=httpPass&realm=schemeUpgrade";
+  yield promptDone;
+  yield iframeLoaded;
+  checkEchoedAuthInfo({user: "httpUser", pass: "httpPass"},
+                      SpecialPowers.wrap(iframe).contentDocument);
+});
+
+add_task(function* test_schemeDowngrade() {
+  let state = {
+    msg         : "http://example.com is requesting your username and password.\n\n" +
+                  "WARNING: Your password will not be sent to the website you are currently visiting!",
+    title       : "Authentication Required",
+    textValue   : "", // empty because we shouldn't downgrade
+    passValue   : "",
+    iconClass   : "authentication-icon question-icon",
+    titleHidden : true,
+    textHidden  : false,
+    passHidden  : false,
+    checkHidden : true,
+    checkMsg    : "",
+    checked     : false,
+    focused     : "textField",
+    defButton   : "button0",
+  };
+  let action = {
+    buttonClick : "cancel",
+  };
+  let promptDone = handlePrompt(state, action);
+
+  // The following tests are driven by iframe loads
+
+  let iframeLoaded = onloadPromiseFor("iframe");
+  iframe.src = "http://example.com" + AUTHENTICATE_PATH +
+               "?user=unused&pass=unused&realm=schemeDowngrade";
+  yield promptDone;
+  yield iframeLoaded;
+});
+
+add_task(function* test_schemeUpgrade_dedupe() {
+  let state = {
+    msg         : "https://example.org is requesting your username and password.\n\n" +
+                  "WARNING: Your password will not be sent to the website you are currently visiting!",
+    title       : "Authentication Required",
+    textValue   : "dedupeUser",
+    passValue   : "httpsPass",
+    iconClass   : "authentication-icon question-icon",
+    titleHidden : true,
+    textHidden  : false,
+    passHidden  : false,
+    checkHidden : true,
+    checkMsg    : "",
+    checked     : false,
+    focused     : "textField",
+    defButton   : "button0",
+  };
+  let action = {
+    buttonClick : "ok",
+  };
+  let promptDone = handlePrompt(state, action);
+
+  // The following tests are driven by iframe loads
+
+  let iframeLoaded = onloadPromiseFor("iframe");
+  iframe.src = "https://example.org" + AUTHENTICATE_PATH +
+               "?user=dedupeUser&pass=httpsPass&realm=schemeUpgradeDedupe";
+  yield promptDone;
+  yield iframeLoaded;
+  checkEchoedAuthInfo({user: "dedupeUser", pass: "httpsPass"},
+                      SpecialPowers.wrap(iframe).contentDocument);
 });
 </script>
 </pre>
