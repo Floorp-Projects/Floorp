@@ -2124,10 +2124,12 @@ CASE(JSOP_ITER)
 {
     MOZ_ASSERT(REGS.stackDepth() >= 1);
     uint8_t flags = GET_UINT8(REGS.pc);
-    MutableHandleValue res = REGS.stackHandleAt(-1);
-    if (!ValueToIterator(cx, flags, res))
+    HandleValue val = REGS.stackHandleAt(-1);
+    ReservedRooted<JSObject*> iter(&rootObject0);
+    iter.set(ValueToIterator(cx, flags, val));
+    if (!iter)
         goto error;
-    MOZ_ASSERT(res.isObject());
+    REGS.sp[-1].setObject(*iter);
 }
 END_CASE(JSOP_ITER)
 
