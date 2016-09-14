@@ -327,6 +327,58 @@ js::InitWasmClass(JSContext* cx, HandleObject global)
 }
 
 // ============================================================================
+// Common functions
+
+static bool
+GetResizableLimits(JSContext* cx, HandleObject obj, const char* kind, ResizableLimits* limits)
+{
+    JSAtom* initialAtom = Atomize(cx, "initial", strlen("initial"));
+    if (!initialAtom)
+        return false;
+    RootedId initialId(cx, AtomToId(initialAtom));
+
+    RootedValue initialVal(cx);
+    if (!GetProperty(cx, obj, obj, initialId, &initialVal))
+        return false;
+
+    double initialDbl;
+    if (!ToInteger(cx, initialVal, &initialDbl))
+        return false;
+
+    if (initialDbl < 0 || initialDbl > UINT32_MAX) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_SIZE, kind, "initial");
+        return false;
+    }
+
+    limits->initial = uint32_t(initialDbl);
+
+    JSAtom* maximumAtom = Atomize(cx, "maximum", strlen("maximum"));
+    if (!maximumAtom)
+        return false;
+    RootedId maximumId(cx, AtomToId(maximumAtom));
+
+    bool found;
+    if (HasProperty(cx, obj, maximumId, &found) && found) {
+        RootedValue maxVal(cx);
+        if (!GetProperty(cx, obj, obj, maximumId, &maxVal))
+            return false;
+
+        double maxDbl;
+        if (!ToInteger(cx, maxVal, &maxDbl))
+            return false;
+
+        if (maxDbl < initialDbl || maxDbl > UINT32_MAX) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_SIZE, kind, "maximum");
+            return false;
+        }
+
+        limits->maximum = Some(uint32_t(maxDbl));
+    }
+
+    return true;
+}
+
+// ============================================================================
 // WebAssembly.Module class and methods
 
 const ClassOps WasmModuleObject::classOps_ =
@@ -773,53 +825,29 @@ WasmMemoryObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    JSAtom* initialAtom = Atomize(cx, "initial", strlen("initial"));
-    if (!initialAtom)
-        return false;
-    RootedId initialId(cx, AtomToId(initialAtom));
-
-    JSAtom* maximumAtom = Atomize(cx, "maximum", strlen("maximum"));
-    if (!maximumAtom)
-        return false;
-    RootedId maximumId(cx, AtomToId(maximumAtom));
-
     RootedObject obj(cx, &args[0].toObject());
-    RootedValue initialVal(cx);
-    if (!GetProperty(cx, obj, obj, initialId, &initialVal))
+    ResizableLimits limits;
+    if (!GetResizableLimits(cx, obj, "Memory", &limits))
         return false;
 
-    double initialDbl;
-    if (!ToInteger(cx, initialVal, &initialDbl))
-        return false;
-
-    if (initialDbl < 0 || initialDbl > INT32_MAX / PageSize) {
+    if (limits.initial > UINT32_MAX / PageSize) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_SIZE, "Memory", "initial");
         return false;
     }
 
-    Maybe<uint32_t> maxSize;
+    limits.initial *= PageSize;
 
-    bool found;
-    if (HasProperty(cx, obj, maximumId, &found) && found) {
-        RootedValue maxVal(cx);
-        if (!GetProperty(cx, obj, obj, maximumId, &maxVal))
-            return false;
-
-        double maxDbl;
-        if (!ToInteger(cx, maxVal, &maxDbl))
-            return false;
-
-        if (maxDbl < initialDbl || maxDbl > UINT32_MAX / PageSize) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_SIZE, "Memory",
-                                 "maximum");
+    if (limits.maximum) {
+        if (limits.maximum.value() > UINT32_MAX / PageSize) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_SIZE, "Memory", "maximum");
             return false;
         }
 
-        maxSize = Some<uint32_t>(uint32_t(maxDbl) * PageSize);
+        limits.maximum = Some(limits.maximum.value() * PageSize);
     }
 
-    uint32_t initialSize = uint32_t(initialDbl) * PageSize;
-    RootedArrayBufferObject buffer(cx, ArrayBufferObject::createForWasm(cx, initialSize, maxSize));
+    RootedArrayBufferObject buffer(cx,
+        ArrayBufferObject::createForWasm(cx, limits.initial, limits.maximum));
     if (!buffer)
         return false;
 
@@ -868,14 +896,14 @@ WasmMemoryObject::growImpl(JSContext* cx, const CallArgs& args)
         return false;
 
     if (deltaDbl < 0 || deltaDbl > UINT32_MAX) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_GROW);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_GROW, "memory");
         return false;
     }
 
     uint32_t ret = grow(memory, uint32_t(deltaDbl), cx);
 
     if (ret == uint32_t(-1)) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_GROW);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_GROW, "memory");
         return false;
     }
 
@@ -1000,7 +1028,7 @@ WasmMemoryObject::grow(HandleWasmMemoryObject memory, uint32_t delta, JSContext*
     if (memory->hasObservers()) {
         MOZ_ASSERT(prevMemoryBase);
         for (InstanceSet::Range r = memory->observers().all(); !r.empty(); r.popFront())
-            r.front()->instance().onMovingGrow(prevMemoryBase);
+            r.front()->instance().onMovingGrowMemory(prevMemoryBase);
     }
 
     return oldNumPages;
@@ -1058,7 +1086,7 @@ WasmTableObject::trace(JSTracer* trc, JSObject* obj)
 }
 
 /* static */ WasmTableObject*
-WasmTableObject::create(JSContext* cx, uint32_t length)
+WasmTableObject::create(JSContext* cx, ResizableLimits limits)
 {
     RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmTable).toObject());
 
@@ -1069,13 +1097,10 @@ WasmTableObject::create(JSContext* cx, uint32_t length)
 
     MOZ_ASSERT(obj->isNewborn());
 
-    TableDesc desc;
-    desc.kind = TableKind::AnyFunction;
-    desc.external = true;
-    desc.initial = length;
-    desc.maximum = length;
+    TableDesc td(TableKind::AnyFunction, limits);
+    td.external = true;
 
-    SharedTable table = Table::create(cx, desc, obj);
+    SharedTable table = Table::create(cx, td, obj);
     if (!table)
         return nullptr;
 
@@ -1102,55 +1127,35 @@ WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp)
     }
 
     RootedObject obj(cx, &args[0].toObject());
-    RootedId id(cx);
-    RootedValue val(cx);
 
     JSAtom* elementAtom = Atomize(cx, "element", strlen("element"));
     if (!elementAtom)
         return false;
-    id = AtomToId(elementAtom);
-    if (!GetProperty(cx, obj, obj, id, &val))
+    RootedId elementId(cx, AtomToId(elementAtom));
+
+    RootedValue elementVal(cx);
+    if (!GetProperty(cx, obj, obj, elementId, &elementVal))
         return false;
 
-    if (!val.isString()) {
+    if (!elementVal.isString()) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_ELEMENT);
         return false;
     }
 
-    JSLinearString* str = val.toString()->ensureLinear(cx);
-    if (!str)
+    JSLinearString* elementStr = elementVal.toString()->ensureLinear(cx);
+    if (!elementStr)
         return false;
 
-    if (!StringEqualsAscii(str, "anyfunc")) {
+    if (!StringEqualsAscii(elementStr, "anyfunc")) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_ELEMENT);
         return false;
     }
 
-    JSAtom* initialAtom = Atomize(cx, "initial", strlen("initial"));
-    if (!initialAtom)
-        return false;
-    id = AtomToId(initialAtom);
-    if (!GetProperty(cx, obj, obj, id, &val))
+    ResizableLimits limits;
+    if (!GetResizableLimits(cx, obj, "Table", &limits))
         return false;
 
-    double initialDbl;
-    if (!ToInteger(cx, val, &initialDbl))
-        return false;
-
-    if (initialDbl < 0 || initialDbl > INT32_MAX) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_SIZE, "Table", "initial");
-        return false;
-    }
-
-    uint32_t initial = uint32_t(initialDbl);
-    MOZ_ASSERT(double(initial) == initialDbl);
-
-    if (initial > MaxTableElems) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_SIZE, "Table", "initial");
-        return false;
-    }
-
-    RootedWasmTableObject table(cx, WasmTableObject::create(cx, initial));
+    RootedWasmTableObject table(cx, WasmTableObject::create(cx, limits));
     if (!table)
         return false;
 
@@ -1285,10 +1290,43 @@ WasmTableObject::set(JSContext* cx, unsigned argc, Value* vp)
     return CallNonGenericMethod<IsTable, setImpl>(cx, args);
 }
 
+/* static */ bool
+WasmTableObject::growImpl(JSContext* cx, const CallArgs& args)
+{
+    RootedWasmTableObject table(cx, &args.thisv().toObject().as<WasmTableObject>());
+
+    double deltaDbl;
+    if (!ToInteger(cx, args.get(0), &deltaDbl))
+        return false;
+
+    if (deltaDbl < 0 || deltaDbl > UINT32_MAX) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_GROW, "table");
+        return false;
+    }
+
+    uint32_t ret = table->table().grow(uint32_t(deltaDbl), cx);
+
+    if (ret == uint32_t(-1)) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_GROW, "table");
+        return false;
+    }
+
+    args.rval().setInt32(ret);
+    return true;
+}
+
+/* static */ bool
+WasmTableObject::grow(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod<IsTable, growImpl>(cx, args);
+}
+
 const JSFunctionSpec WasmTableObject::methods[] =
 {
     JS_FN("get", WasmTableObject::get, 1, 0),
     JS_FN("set", WasmTableObject::set, 2, 0),
+    JS_FN("grow", WasmTableObject::grow, 1, 0),
     JS_FS_END
 };
 

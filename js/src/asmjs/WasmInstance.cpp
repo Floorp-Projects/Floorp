@@ -88,13 +88,6 @@ class SigIdSet
 
 ExclusiveData<SigIdSet> sigIdSet;
 
-void**
-Instance::addressOfTableBase(size_t tableIndex) const
-{
-    MOZ_ASSERT(metadata().tables[tableIndex].globalDataOffset >= InitialGlobalDataBytes);
-    return (void**)(codeSegment().globalData() + metadata().tables[tableIndex].globalDataOffset);
-}
-
 const void**
 Instance::addressOfSigId(const SigIdDesc& sigId) const
 {
@@ -107,6 +100,13 @@ Instance::funcImportTls(const FuncImport& fi)
 {
     MOZ_ASSERT(fi.tlsDataOffset() >= InitialGlobalDataBytes);
     return *(FuncImportTls*)(codeSegment().globalData() + fi.tlsDataOffset());
+}
+
+TableTls&
+Instance::tableTls(const TableDesc& td) const
+{
+    MOZ_ASSERT(td.globalDataOffset >= InitialGlobalDataBytes);
+    return *(TableTls*)(codeSegment().globalData() + td.globalDataOffset);
 }
 
 bool
@@ -347,6 +347,13 @@ Instance::Instance(JSContext* cx,
         }
     }
 
+    for (size_t i = 0; i < tables_.length(); i++) {
+        const TableDesc& td = metadata().tables[i];
+        TableTls& table = tableTls(td);
+        table.length = tables_[i]->length();
+        table.base = tables_[i]->base();
+    }
+
     uint8_t* globalData = code_->segment().globalData();
 
     for (size_t i = 0; i < metadata().globals.length(); i++) {
@@ -380,9 +387,6 @@ Instance::Instance(JSContext* cx,
           }
         }
     }
-
-    for (size_t i = 0; i < tables_.length(); i++)
-        *addressOfTableBase(i) = tables_[i]->base();
 }
 
 bool
@@ -390,6 +394,11 @@ Instance::init(JSContext* cx)
 {
     if (memory_ && memory_->movingGrowable() && !memory_->addMovingGrowObserver(cx, object_))
         return false;
+
+    for (const SharedTable& table : tables_) {
+        if (table->movingGrowable() && !table->addMovingGrowObserver(cx, object_))
+            return false;
+    }
 
     if (!metadata().sigIds.empty()) {
         ExclusiveData<SigIdSet>::Guard lockedSigIdSet = sigIdSet.lock();
@@ -796,12 +805,22 @@ Instance::callExport(JSContext* cx, uint32_t funcDefIndex, CallArgs args)
 }
 
 void
-Instance::onMovingGrow(uint8_t* prevMemoryBase)
+Instance::onMovingGrowMemory(uint8_t* prevMemoryBase)
 {
     MOZ_ASSERT(!isAsmJS());
     ArrayBufferObject& buffer = memory_->buffer().as<ArrayBufferObject>();
     tlsData_.memoryBase = buffer.dataPointer();
     code_->segment().onMovingGrow(prevMemoryBase, metadata(), buffer);
+}
+
+void
+Instance::onMovingGrowTable()
+{
+    MOZ_ASSERT(!isAsmJS());
+    MOZ_ASSERT(tables_.length() == 1);
+    TableTls& table = tableTls(metadata().tables[0]);
+    table.length = tables_[0]->length();
+    table.base = tables_[0]->base();
 }
 
 void

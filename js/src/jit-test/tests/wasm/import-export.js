@@ -40,12 +40,12 @@ assertErrorMessage(() => new Instance(m2, {x:{y:mem1Page}}), TypeError, /importe
 assertErrorMessage(() => new Instance(m2, {x:{y:mem1PageMax1}}), TypeError, /imported Memory with incompatible size/);
 assertErrorMessage(() => new Instance(m2, {x:{y:mem4Page}}), TypeError, /imported Memory with incompatible size/);
 assertErrorMessage(() => new Instance(m2, {x:{y:mem4PageMax4}}), TypeError, /imported Memory with incompatible size/);
-assertErrorMessage(() => new Instance(m2, {x:{y:mem2Page}}), TypeError, /imported Memory with incompatible size/);
+assertErrorMessage(() => new Instance(m2, {x:{y:mem2Page}}), TypeError, /imported Memory with incompatible maximum size/);
 assertEq(new Instance(m2, {x:{y:mem2PageMax2}}) instanceof Instance, true);
-assertErrorMessage(() => new Instance(m2, {x:{y:mem3Page}}), TypeError, /imported Memory with incompatible size/);
+assertErrorMessage(() => new Instance(m2, {x:{y:mem3Page}}), TypeError, /imported Memory with incompatible maximum size/);
 assertEq(new Instance(m2, {x:{y:mem3PageMax3}}) instanceof Instance, true);
 assertEq(new Instance(m2, {x:{y:mem2PageMax3}}) instanceof Instance, true);
-assertErrorMessage(() => new Instance(m2, {x:{y:mem2PageMax4}}), TypeError, /imported Memory with incompatible size/);
+assertErrorMessage(() => new Instance(m2, {x:{y:mem2PageMax4}}), TypeError, /imported Memory with incompatible maximum size/);
 
 const m3 = new Module(textToBinary('(module (import "foo" "bar" (memory 1 1)) (import "baz" "quux"))'));
 assertErrorMessage(() => new Instance(m3), TypeError, /no import object given/);
@@ -53,7 +53,7 @@ assertErrorMessage(() => new Instance(m3, {foo:null}), TypeError, /import object
 assertErrorMessage(() => new Instance(m3, {foo:{bar:{}}}), TypeError, /import object field is not a Memory/);
 assertErrorMessage(() => new Instance(m3, {foo:{bar:mem1Page}, baz:null}), TypeError, /import object field is not an Object/);
 assertErrorMessage(() => new Instance(m3, {foo:{bar:mem1Page}, baz:{quux:mem1Page}}), TypeError, /import object field is not a Function/);
-assertErrorMessage(() => new Instance(m3, {foo:{bar:mem1Page}, baz:{quux:()=>{}}}), TypeError, /imported Memory with incompatible size/);
+assertErrorMessage(() => new Instance(m3, {foo:{bar:mem1Page}, baz:{quux:()=>{}}}), TypeError, /imported Memory with incompatible maximum size/);
 assertEq(new Instance(m3, {foo:{bar:mem1PageMax1}, baz:{quux:()=>{}}}) instanceof Instance, true);
 
 const m4 = new Module(textToBinary('(module (import "baz" "quux") (import "foo" "bar" (memory 1 1)))'));
@@ -62,7 +62,7 @@ assertErrorMessage(() => new Instance(m4, {baz:null}), TypeError, /import object
 assertErrorMessage(() => new Instance(m4, {baz:{quux:{}}}), TypeError, /import object field is not a Function/);
 assertErrorMessage(() => new Instance(m4, {baz:{quux:()=>{}}, foo:null}), TypeError, /import object field is not an Object/);
 assertErrorMessage(() => new Instance(m4, {baz:{quux:()=>{}}, foo:{bar:()=>{}}}), TypeError, /import object field is not a Memory/);
-assertErrorMessage(() => new Instance(m4, {baz:{quux:()=>{}}, foo:{bar:mem1Page}}), TypeError, /imported Memory with incompatible size/);
+assertErrorMessage(() => new Instance(m4, {baz:{quux:()=>{}}, foo:{bar:mem1Page}}), TypeError, /imported Memory with incompatible maximum size/);
 assertEq(new Instance(m3, {baz:{quux:()=>{}}, foo:{bar:mem1PageMax1}}) instanceof Instance, true);
 
 const m5 = new Module(textToBinary('(module (import "a" "b" (memory 2)))'));
@@ -79,8 +79,8 @@ assertEq(new Instance(m6, {a:{b:tab4Elem}}) instanceof Instance, true);
 
 const m7 = new Module(textToBinary('(module (import "a" "b" (table 2 3)))'));
 assertErrorMessage(() => new Instance(m7, {a:{b:tab1Elem}}), TypeError, /imported Table with incompatible size/);
-assertEq(new Instance(m7, {a:{b:tab2Elem}}) instanceof Instance, true);
-assertEq(new Instance(m7, {a:{b:tab3Elem}}) instanceof Instance, true);
+assertErrorMessage(() => new Instance(m7, {a:{b:tab2Elem}}), TypeError, /imported Table with incompatible maximum size/);
+assertErrorMessage(() => new Instance(m7, {a:{b:tab3Elem}}), TypeError, /imported Table with incompatible maximum size/);
 assertErrorMessage(() => new Instance(m7, {a:{b:tab4Elem}}), TypeError, /imported Table with incompatible size/);
 
 assertErrorMessage(() => new Module(textToBinary('(module (memory 2 1))')), TypeError, /maximum length less than initial length/);
@@ -282,13 +282,13 @@ assertEq(mem, e.foo);
 assertEq(mem, e.bar);
 
 var code = textToBinary('(module (import "a" "b" (table 1 1)) (export "foo" table) (export "bar" table))');
-var tbl = new Table({initial:1, element:"anyfunc"});
+var tbl = new Table({initial:1, maximum:1, element:"anyfunc"});
 var e = new Instance(new Module(code), {a:{b:tbl}}).exports;
 assertEq(tbl, e.foo);
 assertEq(tbl, e.bar);
 
 var code = textToBinary('(module (import "a" "b" (table 2 2)) (func $foo) (elem (i32.const 0) $foo) (export "foo" $foo))');
-var tbl = new Table({initial:2, element:"anyfunc"});
+var tbl = new Table({initial:2, maximum:2, element:"anyfunc"});
 var e1 = new Instance(new Module(code), {a:{b:tbl}}).exports;
 assertEq(e1.foo, tbl.get(0));
 tbl.set(1, e1.foo);

@@ -1010,11 +1010,11 @@ class FunctionCompiler
         if (mg_.isAsmJS()) {
             MOZ_ASSERT(sig.id.kind() == SigIdDesc::Kind::None);
             const TableDesc& table = mg_.tables[mg_.asmJSSigToTableIndex[sigIndex]];
-            MOZ_ASSERT(IsPowerOfTwo(table.initial));
+            MOZ_ASSERT(IsPowerOfTwo(table.limits.initial));
             MOZ_ASSERT(!table.external);
             MOZ_ASSERT(call.tlsStackOffset_ == MWasmCall::DontSaveTls);
 
-            MConstant* mask = MConstant::New(alloc(), Int32Value(table.initial - 1));
+            MConstant* mask = MConstant::New(alloc(), Int32Value(table.limits.initial - 1));
             curBlock_->add(mask);
             MBitAnd* maskedIndex = MBitAnd::NewAsmJS(alloc(), index, mask, MIRType::Int32);
             curBlock_->add(maskedIndex);
