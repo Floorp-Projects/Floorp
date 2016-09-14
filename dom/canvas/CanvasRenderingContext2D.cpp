@@ -1689,7 +1689,8 @@ CanvasRenderingContext2D::RegisterAllocation()
   // XXX - It would make more sense to track the allocation in
   // PeristentBufferProvider, rather than here.
   static bool registered = false;
-  if (!registered) {
+  // FIXME: Disable the reporter for now, see bug 1241865
+  if (!registered && false) {
     registered = true;
     RegisterStrongMemoryReporter(new Canvas2dPixelsReporter());
   }
