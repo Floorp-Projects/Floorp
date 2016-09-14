@@ -295,16 +295,13 @@ ShaderValidator::CanLinkTo(const ShaderValidator* prev, nsCString* const out_log
     }
 
     {
-        std::vector<ShVariableInfo> staticUseVaryingList;
+        std::vector<sh::ShaderVariable> staticUseVaryingList;
 
         for (const auto& fragVarying : *fragVaryings) {
-            const ShVariableInfo varInfo = { fragVarying.type,
-                                             (int)fragVarying.elementCount() };
-
             static const char prefix[] = "gl_";
             if (StartsWith(fragVarying.name, prefix)) {
                 if (fragVarying.staticUse) {
-                    staticUseVaryingList.push_back(varInfo);
+                    staticUseVaryingList.push_back(fragVarying);
                 }
                 continue;
             }
@@ -338,13 +335,12 @@ ShaderValidator::CanLinkTo(const ShaderValidator* prev, nsCString* const out_log
             }
 
             if (staticVertUse && fragVarying.staticUse) {
-                staticUseVaryingList.push_back(varInfo);
+                staticUseVaryingList.push_back(fragVarying);
             }
         }
 
         if (!ShCheckVariablesWithinPackingLimits(mMaxVaryingVectors,
-                                                 staticUseVaryingList.data(),
-                                                 staticUseVaryingList.size()))
+                                                 staticUseVaryingList))
         {
             *out_log = "Statically used varyings do not fit within packing limits. (see"
                        " GLSL ES Specification 1.0.17, p111)";
