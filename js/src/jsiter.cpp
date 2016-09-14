@@ -1001,9 +1001,10 @@ js::IteratorConstructor(JSContext* cx, unsigned argc, Value* vp)
         keyonly = ToBoolean(args[1]);
     unsigned flags = JSITER_OWNONLY | (keyonly ? 0 : (JSITER_FOREACH | JSITER_KEYVALUE));
 
-    if (!ValueToIterator(cx, flags, args[0]))
+    RootedObject iterobj(cx, ValueToIterator(cx, flags, args[0]));
+    if (!iterobj)
         return false;
-    args.rval().set(args[0]);
+    args.rval().setObject(*iterobj);
     return true;
 }
 
@@ -1179,8 +1180,8 @@ const Class ListIteratorObject::class_ = {
     JSCLASS_HAS_RESERVED_SLOTS(ListIteratorSlotCount)
 };
 
-bool
-js::ValueToIterator(JSContext* cx, unsigned flags, MutableHandleValue vp)
+JSObject*
+js::ValueToIterator(JSContext* cx, unsigned flags, HandleValue vp)
 {
     /* JSITER_KEYVALUE must always come with JSITER_FOREACH */
     MOZ_ASSERT_IF(flags & JSITER_KEYVALUE, flags & JSITER_FOREACH);
@@ -1197,20 +1198,18 @@ js::ValueToIterator(JSContext* cx, unsigned flags, MutableHandleValue vp)
          */
         RootedObject iter(cx);
         if (!NewEmptyPropertyIterator(cx, flags, &iter))
-            return false;
-        vp.setObject(*iter);
-        return true;
+            return nullptr;
+        return iter;
     } else {
         obj = ToObject(cx, vp);
         if (!obj)
-            return false;
+            return nullptr;
     }
 
     RootedObject iter(cx);
     if (!GetIterator(cx, obj, flags, &iter))
-        return false;
-    vp.setObject(*iter);
-    return true;
+        return nullptr;
+    return iter;
 }
 
 bool

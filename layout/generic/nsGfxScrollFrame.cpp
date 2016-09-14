@@ -947,7 +947,7 @@ GetScrollableOverflowForPerspective(nsIFrame* aScrolledFrame,
         // Take the minimum overflow rect that would allow the current scroll
         // position, using the size of the scroll port and offset by the
         // inverse of the scroll position.
-        nsRect overflow(0, 0, aScrollPort.width, aScrollPort.height);
+        nsRect overflow = aScrollPort - scrollPos;
 
         // Expand it by our margins to get an overflow rect that would allow all
         // edges of our transformed content to be scrolled into view.
