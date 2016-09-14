@@ -850,7 +850,7 @@ ContentParent::SendAsyncUpdate(nsIWidget* aWidget)
   ContentParent* cp = reinterpret_cast<ContentParent*>(
     ::GetPropW(hwnd, kPluginWidgetContentParentProperty));
   if (cp && !cp->IsDestroyed()) {
-    cp->SendUpdateWindow((uintptr_t)hwnd);
+    Unused << cp->SendUpdateWindow((uintptr_t)hwnd);
   }
 }
 #endif // defined(XP_WIN)
