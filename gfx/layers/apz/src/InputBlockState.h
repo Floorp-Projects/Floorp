@@ -165,13 +165,6 @@ public:
   bool IsDefaultPrevented() const;
 
   /**
-   * Process the given event using this input block's target apzc.
-   * This input block must not have pending events, and its apzc must not be
-   * nullptr.
-   */
-  void DispatchImmediate(const InputData& aEvent) const;
-
-  /**
    * Dispatch the event to the target APZC. Mostly this is a hook for
    * subclasses to do any per-event processing they need to.
    */
