@@ -23,6 +23,15 @@ NSDISTMODE = copy
 
 include $(topsrcdir)/config/config.mk
 
+# If we are trying to show an error dialog about the lack of SSE2 support,
+# make sure that code itself doesn't use SSE2.
+ifdef MOZ_LINUX_32_SSE2_STARTUP_ERROR
+CXXFLAGS := $(filter-out -march=% -msse -msse2 -mfpmath=sse,$(CXXFLAGS))
+CXX := $(filter-out -march=% -msse -msse2 -mfpmath=sse,$(CXX))
+CXXFLAGS += -mno-sse -mno-sse2 -mfpmath=387
+CXX += -march=pentiumpro
+endif
+
 ifeq ($(OS_ARCH),WINNT)
 # Rebuild firefox.exe if the manifest changes - it's included by splash.rc.
 # (this dependency should really be just for firefox.exe, not other targets)

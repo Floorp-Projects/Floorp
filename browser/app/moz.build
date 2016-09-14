@@ -86,6 +86,9 @@ if CONFIG['HAVE_CLOCK_MONOTONIC']:
 if CONFIG['MOZ_GPSD']:
     DEFINES['MOZ_GPSD'] = True
 
+if CONFIG['MOZ_LINUX_32_SSE2_STARTUP_ERROR']:
+    DEFINES['MOZ_LINUX_32_SSE2_STARTUP_ERROR'] = True
+
 for icon in ('firefox', 'document', 'newwindow', 'newtab', 'pbmode'):
     DEFINES[icon.upper() + '_ICO'] = '"%s/dist/branding/%s.ico"' % (
         TOPOBJDIR, icon)
