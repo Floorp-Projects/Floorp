@@ -142,18 +142,18 @@ InputQueue::ReceiveTouchInput(const RefPtr<AsyncPanZoomController>& aTarget,
   if (block->IsDuringFastFling()) {
     INPQ_LOG("dropping event due to block %p being in fast motion\n", block);
     result = nsEventStatus_eConsumeNoDefault;
-  } else if (target && target->ArePointerEventsConsumable(block, aEvent.AsMultiTouchInput().mTouches.Length())) {
-    if (block->UpdateSlopState(aEvent.AsMultiTouchInput(), true)) {
+  } else if (target && target->ArePointerEventsConsumable(block, aEvent.mTouches.Length())) {
+    if (block->UpdateSlopState(aEvent, true)) {
       INPQ_LOG("dropping event due to block %p being in slop\n", block);
       result = nsEventStatus_eConsumeNoDefault;
     } else {
       result = nsEventStatus_eConsumeDoDefault;
     }
-  } else if (block->UpdateSlopState(aEvent.AsMultiTouchInput(), false)) {
+  } else if (block->UpdateSlopState(aEvent, false)) {
     INPQ_LOG("dropping event due to block %p being in mini-slop\n", block);
     result = nsEventStatus_eConsumeNoDefault;
   }
-  mQueuedInputs.AppendElement(MakeUnique<QueuedInput>(aEvent.AsMultiTouchInput(), *block));
+  mQueuedInputs.AppendElement(MakeUnique<QueuedInput>(aEvent, *block));
   ProcessQueue();
   return result;
 }
@@ -205,7 +205,7 @@ InputQueue::ReceiveMouseInput(const RefPtr<AsyncPanZoomController>& aTarget,
     *aOutInputBlockId = block->GetBlockId();
   }
 
-  mQueuedInputs.AppendElement(MakeUnique<QueuedInput>(aEvent.AsMouseInput(), *block));
+  mQueuedInputs.AppendElement(MakeUnique<QueuedInput>(aEvent, *block));
   ProcessQueue();
 
   if (DragTracker::EndsDrag(aEvent)) {
@@ -251,16 +251,18 @@ InputQueue::ReceiveScrollWheelInput(const RefPtr<AsyncPanZoomController>& aTarge
     *aOutInputBlockId = block->GetBlockId();
   }
 
-  // Copy the event, since WheelBlockState needs to affix a counter.
-  ScrollWheelInput event(aEvent);
-  block->Update(event);
-
   // Note that the |aTarget| the APZCTM sent us may contradict the confirmed
   // target set on the block. In this case the confirmed target (which may be
   // null) should take priority. This is equivalent to just always using the
   // target (confirmed or not) from the block, which is what
   // ProcessQueue() does.
-  mQueuedInputs.AppendElement(MakeUnique<QueuedInput>(event, *block));
+  mQueuedInputs.AppendElement(MakeUnique<QueuedInput>(aEvent, *block));
+
+  // The WheelBlockState needs to affix a counter to the event before we process
+  // it. Note that the counter is affixed to the copy in the queue rather than
+  // |aEvent|.
+  block->Update(mQueuedInputs.LastElement()->Input()->AsScrollWheelInput());
+
   ProcessQueue();
 
   return nsEventStatus_eConsumeDoDefault;
@@ -340,7 +342,7 @@ InputQueue::ReceivePanGestureInput(const RefPtr<AsyncPanZoomController>& aTarget
   // null) should take priority. This is equivalent to just always using the
   // target (confirmed or not) from the block, which is what
   // ProcessQueue() does.
-  mQueuedInputs.AppendElement(MakeUnique<QueuedInput>(event.AsPanGestureInput(), *block));
+  mQueuedInputs.AppendElement(MakeUnique<QueuedInput>(event, *block));
   ProcessQueue();
 
   return result;
@@ -512,15 +514,15 @@ InputQueue::ScheduleMainThreadTimeout(const RefPtr<AsyncPanZoomController>& aTar
 }
 
 CancelableBlockState*
-InputQueue::FindBlockForId(const uint64_t& aInputBlockId,
+InputQueue::FindBlockForId(uint64_t aInputBlockId,
                            InputData** aOutFirstInput)
 {
-  for (size_t i = 0; i < mQueuedInputs.Length(); i++) {
-    if (mQueuedInputs[i]->Block()->GetBlockId() == aInputBlockId) {
+  for (const auto& queuedInput : mQueuedInputs) {
+    if (queuedInput->Block()->GetBlockId() == aInputBlockId) {
       if (aOutFirstInput) {
-        *aOutFirstInput = mQueuedInputs[i]->Input();
+        *aOutFirstInput = queuedInput->Input();
       }
-      return mQueuedInputs[i]->Block();
+      return queuedInput->Block();
     }
   }
 
@@ -543,7 +545,7 @@ InputQueue::FindBlockForId(const uint64_t& aInputBlockId,
 }
 
 void
-InputQueue::MainThreadTimeout(const uint64_t& aInputBlockId) {
+InputQueue::MainThreadTimeout(uint64_t aInputBlockId) {
   APZThreadUtils::AssertOnControllerThread();
 
   INPQ_LOG("got a main thread timeout; block=%" PRIu64 "\n", aInputBlockId);
