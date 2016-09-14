@@ -19,6 +19,8 @@ from taskgraph.transforms.base import (
 )
 from voluptuous import Schema, Any, Required, Optional, Extra
 
+from .gecko_v2_whitelist import JOB_NAME_WHITELIST, JOB_NAME_WHITELIST_ERROR
+
 # shortcut for a string where task references are allowed
 taskref_or_string = Any(
     basestring,
@@ -408,6 +410,10 @@ def add_index_routes(config, tasks):
                 'gecko-v1': '{}.{}'.format(base_name, type_name),
                 'gecko-v2': '{}-{}'.format(base_name, type_name),
             }
+
+        if job_name['gecko-v2'] not in JOB_NAME_WHITELIST:
+            raise Exception(JOB_NAME_WHITELIST_ERROR.format(job_name['gecko-v2']))
+
         subs = config.params.copy()
         for n in job_name:
             subs['job-name-' + n] = job_name[n]
