@@ -4416,7 +4416,11 @@ void HTMLMediaElement::NetworkError()
   if (mDecoder) {
     ShutdownDecoder();
   }
-  Error(MEDIA_ERR_NETWORK);
+  if (mReadyState == nsIDOMHTMLMediaElement::HAVE_NOTHING) {
+    NoSupportedMediaSourceError();
+  } else {
+    Error(MEDIA_ERR_NETWORK);
+  }
 }
 
 void HTMLMediaElement::DecodeError(const MediaResult& aError)
@@ -4442,6 +4446,8 @@ void HTMLMediaElement::DecodeError(const MediaResult& aError)
     } else {
       NS_WARNING("Should know the source we were loading from!");
     }
+  } else if (mReadyState == nsIDOMHTMLMediaElement::HAVE_NOTHING) {
+    NoSupportedMediaSourceError();
   } else {
     Error(MEDIA_ERR_DECODE, aError);
   }
