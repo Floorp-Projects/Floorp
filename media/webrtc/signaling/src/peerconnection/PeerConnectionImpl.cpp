@@ -2526,6 +2526,19 @@ PeerConnectionImpl::RemoveTrack(MediaStreamTrack& aTrack) {
 }
 
 NS_IMETHODIMP
+PeerConnectionImpl::InsertDTMF(mozilla::dom::RTCRtpSender& sender,
+                               const nsAString& tones, uint32_t duration,
+                               uint32_t interToneGap) {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PeerConnectionImpl::GetDTMFToneBuffer(mozilla::dom::RTCRtpSender& sender,
+                                      nsAString& outTones) {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 PeerConnectionImpl::ReplaceTrack(MediaStreamTrack& aThisTrack,
                                  MediaStreamTrack& aWithTrack) {
   PC_AUTO_ENTER_API_CALL(true);

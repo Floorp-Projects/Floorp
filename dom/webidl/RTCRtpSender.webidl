@@ -73,4 +73,5 @@ interface RTCRtpSender {
   Promise<void> setParameters (optional RTCRtpParameters parameters);
   RTCRtpParameters getParameters();
   Promise<void> replaceTrack(MediaStreamTrack track);
+  readonly attribute RTCDTMFSender? dtmf;
 };

@@ -1558,6 +1558,9 @@ PeerConnectionObserver.prototype = {
   notifyDataChannel: function(channel) {
     this.dispatchEvent(new this._dompc._win.RTCDataChannelEvent("datachannel",
                                                                 { channel: channel }));
+  },
+
+  onDTMFToneChangeEvent: function(trackId, tone) {
   }
 };
 
