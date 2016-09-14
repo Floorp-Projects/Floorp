@@ -6,6 +6,8 @@
 
 #include "jit/x86-shared/AssemblerBuffer-x86-shared.h"
 
+#include "mozilla/Sprintf.h"
+
 #include "jsopcode.h"
 
 void js::jit::GenericAssembler::spew(const char* fmt, va_list va)
@@ -14,8 +16,7 @@ void js::jit::GenericAssembler::spew(const char* fmt, va_list va)
     // '%' characters, so do not pass it directly to printf functions.
     char buf[200];
 
-    int i = vsnprintf(buf, sizeof(buf), fmt, va);
-
+    int i = VsprintfLiteral(buf, fmt, va);
     if (i > -1) {
         if (printer)
             printer->printf("%s\n", buf);

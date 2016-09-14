@@ -6,6 +6,7 @@
 #ifndef ctypes_CTypes_h
 #define ctypes_CTypes_h
 
+#include "mozilla/Sprintf.h"
 #include "mozilla/Vector.h"
 
 #include "ffi.h"
@@ -64,7 +65,7 @@ void
 AppendUInt(mozilla::Vector<T, N, AP>& v, unsigned n)
 {
   char array[16];
-  size_t alen = snprintf(array, sizeof(array), "%u", n);
+  size_t alen = SprintfLiteral(array, "%u", n);
   size_t vlen = v.length();
   if (!v.resize(vlen + alen))
     return;
