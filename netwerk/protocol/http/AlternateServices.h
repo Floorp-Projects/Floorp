@@ -105,21 +105,21 @@ private:
 
   // If you change any of these members, update Serialize()
   nsCString mAlternateHost;
-  int32_t mAlternatePort;
+  MOZ_INIT_OUTSIDE_CTOR int32_t mAlternatePort;
 
   nsCString mOriginHost;
-  int32_t mOriginPort;
+  MOZ_INIT_OUTSIDE_CTOR int32_t mOriginPort;
 
   nsCString mUsername;
-  bool mPrivate;
+  MOZ_INIT_OUTSIDE_CTOR bool mPrivate;
 
-  uint32_t mExpiresAt; // alt-svc mappping
+  MOZ_INIT_OUTSIDE_CTOR uint32_t mExpiresAt; // alt-svc mappping
 
-  bool mValidated;
-  bool mHttps; // origin is https://
-  bool mMixedScheme; // .wk allows http and https on same con
+  MOZ_INIT_OUTSIDE_CTOR bool mValidated;
+  MOZ_INIT_OUTSIDE_CTOR bool mHttps; // origin is https://
+  MOZ_INIT_OUTSIDE_CTOR bool mMixedScheme; // .wk allows http and https on same con
 
-  nsCString        mNPNToken;
+  nsCString mNPNToken;
 };
 
 class AltSvcOverride : public nsIInterfaceRequestor
