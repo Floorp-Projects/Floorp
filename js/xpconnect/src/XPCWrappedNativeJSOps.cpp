@@ -78,7 +78,7 @@ XPC_WN_Shared_ToString(JSContext* cx, unsigned argc, Value* vp)
     XPCCallContext ccx(cx, obj);
     if (!ccx.IsValid())
         return Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);
-    ccx.SetName(ccx.GetRuntime()->GetStringID(XPCJSRuntime::IDX_TO_STRING));
+    ccx.SetName(ccx.GetContext()->GetStringID(XPCJSContext::IDX_TO_STRING));
     ccx.SetArgsAndResultPtr(args.length(), args.array(), vp);
     return ToStringGuts(ccx);
 }
@@ -118,7 +118,7 @@ XPC_WN_Shared_toPrimitive(JSContext* cx, unsigned argc, Value* vp)
     }
 
     MOZ_ASSERT(hint == JSTYPE_STRING || hint == JSTYPE_VOID);
-    ccx.SetName(ccx.GetRuntime()->GetStringID(XPCJSRuntime::IDX_TO_STRING));
+    ccx.SetName(ccx.GetContext()->GetStringID(XPCJSContext::IDX_TO_STRING));
     ccx.SetArgsAndResultPtr(0, nullptr, args.rval().address());
 
     XPCNativeMember* member = ccx.GetMember();
@@ -155,8 +155,8 @@ GetDoubleWrappedJSObject(XPCCallContext& ccx, XPCWrappedNative* wrapper)
     if (underware) {
         RootedObject mainObj(ccx, underware->GetJSObject());
         if (mainObj) {
-            RootedId id(ccx, ccx.GetRuntime()->
-                            GetStringID(XPCJSRuntime::IDX_WRAPPED_JSOBJECT));
+            RootedId id(ccx, ccx.GetContext()->
+                            GetStringID(XPCJSContext::IDX_WRAPPED_JSOBJECT));
 
             JSAutoCompartment ac(ccx, mainObj);
 
@@ -234,7 +234,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
 {
     RootedId id(ccx, idArg);
     RefPtr<XPCNativeInterface> iface = ifaceArg;
-    XPCJSRuntime* rt = ccx.GetRuntime();
+    XPCJSContext* xpccx = ccx.GetContext();
     bool found;
     const char* name;
 
@@ -267,14 +267,14 @@ DefinePropertyIfFound(XPCCallContext& ccx,
             bool overwriteToString = !(flags & nsIClassInfo::DOM_OBJECT)
                 || Preferences::GetBool("dom.XPCToStringForDOMClasses", false);
 
-            if(id == rt->GetStringID(XPCJSRuntime::IDX_TO_STRING)
+            if(id == xpccx->GetStringID(XPCJSContext::IDX_TO_STRING)
                 && overwriteToString)
             {
                 call = XPC_WN_Shared_ToString;
-                name = rt->GetStringName(XPCJSRuntime::IDX_TO_STRING);
-            } else if (id == rt->GetStringID(XPCJSRuntime::IDX_TO_SOURCE)) {
+                name = xpccx->GetStringName(XPCJSContext::IDX_TO_STRING);
+            } else if (id == xpccx->GetStringID(XPCJSContext::IDX_TO_SOURCE)) {
                 call = XPC_WN_Shared_ToSource;
-                name = rt->GetStringName(XPCJSRuntime::IDX_TO_SOURCE);
+                name = xpccx->GetStringName(XPCJSContext::IDX_TO_SOURCE);
             } else if (id == SYMBOL_TO_JSID(
                                JS::GetWellKnownSymbol(ccx, JS::SymbolCode::toPrimitive)))
             {
@@ -331,15 +331,15 @@ DefinePropertyIfFound(XPCCallContext& ccx,
 
         // This *might* be a double wrapped JSObject
         if (wrapperToReflectDoubleWrap &&
-            id == rt->GetStringID(XPCJSRuntime::IDX_WRAPPED_JSOBJECT) &&
+            id == xpccx->GetStringID(XPCJSContext::IDX_WRAPPED_JSOBJECT) &&
             GetDoubleWrappedJSObject(ccx, wrapperToReflectDoubleWrap)) {
             // We build and add a getter function.
             // A security check is done on a per-get basis.
 
             JSFunction* fun;
 
-            id = rt->GetStringID(XPCJSRuntime::IDX_WRAPPED_JSOBJECT);
-            name = rt->GetStringName(XPCJSRuntime::IDX_WRAPPED_JSOBJECT);
+            id = xpccx->GetStringID(XPCJSContext::IDX_WRAPPED_JSOBJECT);
+            name = xpccx->GetStringName(XPCJSContext::IDX_WRAPPED_JSOBJECT);
 
             fun = JS_NewFunction(ccx, XPC_WN_DoubleWrappedGetter,
                                  0, 0, name);
@@ -412,11 +412,11 @@ DefinePropertyIfFound(XPCCallContext& ccx,
         }
     }
 
-    if (id == rt->GetStringID(XPCJSRuntime::IDX_TO_STRING) ||
-        id == rt->GetStringID(XPCJSRuntime::IDX_TO_SOURCE) ||
+    if (id == xpccx->GetStringID(XPCJSContext::IDX_TO_STRING) ||
+        id == xpccx->GetStringID(XPCJSContext::IDX_TO_SOURCE) ||
         (scriptableInfo &&
          scriptableInfo->GetFlags().DontEnumQueryInterface() &&
-         id == rt->GetStringID(XPCJSRuntime::IDX_QUERY_INTERFACE)))
+         id == xpccx->GetStringID(XPCJSContext::IDX_QUERY_INTERFACE)))
         propFlags &= ~JSPROP_ENUMERATE;
 
     RootedValue funval(ccx);
@@ -932,8 +932,8 @@ XPCNativeScriptableInfo::Construct(const XPCNativeScriptableCreateInfo* sci)
 
     bool success;
 
-    XPCJSRuntime* rt = XPCJSRuntime::Get();
-    XPCNativeScriptableSharedMap* map = rt->GetNativeScriptableSharedMap();
+    XPCJSContext* cx = XPCJSContext::Get();
+    XPCNativeScriptableSharedMap* map = cx->GetNativeScriptableSharedMap();
     success = map->GetNewOrUsed(sci->GetFlags(), name, newObj);
 
     if (!success) {
@@ -1067,7 +1067,7 @@ XPCNativeScriptableShared::~XPCNativeScriptableShared()
     // removed.
 
     if (mJSClass.cOps) {
-        XPCJSRuntime::Get()->GetNativeScriptableSharedMap()->Remove(this);
+        XPCJSContext::Get()->GetNativeScriptableSharedMap()->Remove(this);
         free((void*)mJSClass.cOps);
     }
 

@@ -291,7 +291,7 @@ nsInProcessTabChildGlobal::PreHandleEvent(EventChainPreVisitor& aVisitor)
 nsresult
 nsInProcessTabChildGlobal::InitTabChildGlobal()
 {
-  // If you change this, please change GetCompartmentName() in XPCJSRuntime.cpp
+  // If you change this, please change GetCompartmentName() in XPCJSContext.cpp
   // accordingly.
   nsAutoCString id;
   id.AssignLiteral("inProcessTabChildGlobal");
