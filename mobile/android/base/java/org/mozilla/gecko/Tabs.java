@@ -89,7 +89,7 @@ public class Tabs implements GeckoEventListener {
 
         public PersistTabsRunnable(final Context context, Iterable<Tab> tabsInOrder) {
             this.context = context;
-            this.db = GeckoProfile.get(context).getDB();
+            this.db = BrowserDB.from(context);
             this.tabs = tabsInOrder;
         }
 
@@ -157,7 +157,7 @@ public class Tabs implements GeckoEventListener {
         if (mBookmarksContentObserver != null) {
             // It's safe to use the db here since we aren't doing any I/O.
             final GeckoProfile profile = GeckoProfile.get(context);
-            profile.getDB().registerBookmarkObserver(getContentResolver(), mBookmarksContentObserver);
+            BrowserDB.from(profile).registerBookmarkObserver(getContentResolver(), mBookmarksContentObserver);
         }
     }
 
@@ -207,7 +207,7 @@ public class Tabs implements GeckoEventListener {
 
             // It's safe to use the db here since we aren't doing any I/O.
             final GeckoProfile profile = GeckoProfile.get(mAppContext);
-            profile.getDB().registerBookmarkObserver(getContentResolver(), mBookmarksContentObserver);
+            BrowserDB.from(profile).registerBookmarkObserver(getContentResolver(), mBookmarksContentObserver);
         }
     }
 
@@ -579,7 +579,7 @@ public class Tabs implements GeckoEventListener {
     }
 
     public void refreshThumbnails() {
-        final BrowserDB db = GeckoProfile.get(mAppContext).getDB();
+        final BrowserDB db = BrowserDB.from(mAppContext);
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {

@@ -6,6 +6,7 @@ package org.mozilla.gecko.background.db;
 
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.SuggestedSites;
 import org.mozilla.gecko.sync.setup.Constants;
@@ -37,12 +38,12 @@ public class TestTopSites extends ActivityInstrumentationTestCase2<Activity> {
         mSuggestedSites = new SuggestedSites(mContext);
 
         // By default we're using StubBrowserDB which has no suggested sites available.
-        GeckoProfile.get(mContext, Constants.DEFAULT_PROFILE).getDB().setSuggestedSites(mSuggestedSites);
+        BrowserDB.from(GeckoProfile.get(mContext, Constants.DEFAULT_PROFILE)).setSuggestedSites(mSuggestedSites);
     }
 
     @Override
     public void tearDown() {
-        GeckoProfile.get(mContext, Constants.DEFAULT_PROFILE).getDB().setSuggestedSites(null);
+        BrowserDB.from(GeckoProfile.get(mContext, Constants.DEFAULT_PROFILE)).setSuggestedSites(null);
     }
 
     public void testGetTopSites() {

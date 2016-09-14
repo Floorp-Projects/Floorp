@@ -122,7 +122,7 @@ public class GeckoApplication extends Application
             GeckoThread.onPause();
             mPausedGecko = true;
 
-            final BrowserDB db = GeckoProfile.get(this).getDB();
+            final BrowserDB db = BrowserDB.from(this);
             ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
                 public void run() {

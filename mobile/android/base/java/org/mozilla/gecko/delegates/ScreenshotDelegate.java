@@ -20,6 +20,7 @@ import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.db.BrowserDB;
 
 import java.lang.ref.WeakReference;
 
@@ -58,7 +59,7 @@ public class ScreenshotDelegate extends BrowserAppDelegateWithReference implemen
             return;
         }
 
-        GeckoProfile.get(activity).getDB().getUrlAnnotations().insertScreenshot(
+        BrowserDB.from(activity).getUrlAnnotations().insertScreenshot(
                 activity.getContentResolver(), selectedTab.getURL(), screenshotPath);
 
         SnackbarBuilder.builder(activity)

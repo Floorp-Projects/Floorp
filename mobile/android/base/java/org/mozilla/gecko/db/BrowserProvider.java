@@ -858,7 +858,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         }
 
         // If we don't have enough data: get suggested sites too
-        final SuggestedSites suggestedSites = GeckoProfile.get(getContext(), uri.getQueryParameter(BrowserContract.PARAM_PROFILE)).getDB().getSuggestedSites();
+        final SuggestedSites suggestedSites = BrowserDB.from(GeckoProfile.get(
+                getContext(), uri.getQueryParameter(BrowserContract.PARAM_PROFILE))).getSuggestedSites();
 
         final Cursor suggestedSitesCursor = suggestedSites.get(limit - c.getCount());
 
@@ -947,7 +948,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
         // Stuff the suggested sites into SQL: this allows us to filter pinned and topsites out of the suggested
         // sites list as part of the final query (as opposed to walking cursors in java)
-        final SuggestedSites suggestedSites = GeckoProfile.get(getContext(), uri.getQueryParameter(BrowserContract.PARAM_PROFILE)).getDB().getSuggestedSites();
+        final SuggestedSites suggestedSites = BrowserDB.from(GeckoProfile.get(
+                getContext(), uri.getQueryParameter(BrowserContract.PARAM_PROFILE))).getSuggestedSites();
 
         StringBuilder suggestedSitesBuilder = new StringBuilder();
         // We could access the underlying data here, however SuggestedSites also performs filtering on the suggested
