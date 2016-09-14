@@ -655,7 +655,7 @@ XPCJSRuntime::TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback& c
 void
 XPCJSRuntime::UnmarkSkippableJSHolders()
 {
-    CycleCollectedJSRuntime::UnmarkSkippableJSHolders();
+    CycleCollectedJSContext::UnmarkSkippableJSHolders();
 }
 
 void
@@ -1475,7 +1475,7 @@ XPCJSRuntime::SizeOfIncludingThis(MallocSizeOf mallocSizeOf)
     n += mClassInfo2NativeSetMap->ShallowSizeOfIncludingThis(mallocSizeOf);
     n += mNativeSetMap->SizeOfIncludingThis(mallocSizeOf);
 
-    n += CycleCollectedJSRuntime::SizeOfExcludingThis(mallocSizeOf);
+    n += CycleCollectedJSContext::SizeOfExcludingThis(mallocSizeOf);
 
     // There are other XPCJSRuntime members that could be measured; the above
     // ones have been seen by DMD to be worth measuring.  More stuff may be
@@ -1591,10 +1591,10 @@ XPCJSRuntime::~XPCJSRuntime()
     // Therefore the context must be non-null.
     MOZ_ASSERT(MaybeContext());
 
-    // This destructor runs before ~CycleCollectedJSRuntime, which does the
-    // actual JS_DestroyRuntime() call. But destroying the runtime triggers
-    // one final GC, which can call back into the runtime with various
-    // callback if we aren't careful. Null out the relevant callbacks.
+    // This destructor runs before ~CycleCollectedJSContext, which does the
+    // actual JS_DestroyContext() call. But destroying the context triggers
+    // one final GC, which can call back into the context with various
+    // callbacks if we aren't careful. Null out the relevant callbacks.
     js::SetActivityCallback(Context(), nullptr, nullptr);
     JS_RemoveFinalizeCallback(Context(), FinalizeCallback);
     JS_RemoveWeakPointerZoneGroupCallback(Context(), WeakPointerZoneGroupCallback);
@@ -3371,7 +3371,7 @@ GetWindowsStackSize()
 nsresult
 XPCJSRuntime::Initialize()
 {
-    nsresult rv = CycleCollectedJSRuntime::Initialize(nullptr,
+    nsresult rv = CycleCollectedJSContext::Initialize(nullptr,
                                                       JS::DefaultHeapMaxBytes,
                                                       JS::DefaultNurseryBytes);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -3665,7 +3665,7 @@ XPCJSRuntime::BeforeProcessTask(bool aMightBlock)
     // cancel any ongoing performance measurement.
     js::ResetPerformanceMonitoring(Get()->Context());
 
-    CycleCollectedJSRuntime::BeforeProcessTask(aMightBlock);
+    CycleCollectedJSContext::BeforeProcessTask(aMightBlock);
 }
 
 void
@@ -3679,7 +3679,7 @@ XPCJSRuntime::AfterProcessTask(uint32_t aNewRecursionDepth)
     MOZ_ASSERT(NS_IsMainThread());
     nsJSContext::MaybePokeCC();
 
-    CycleCollectedJSRuntime::AfterProcessTask(aNewRecursionDepth);
+    CycleCollectedJSContext::AfterProcessTask(aNewRecursionDepth);
 
     // Now that we are certain that the event is complete,
     // we can flush any ongoing performance measurement.
