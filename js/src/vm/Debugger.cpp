@@ -838,7 +838,7 @@ Debugger::slowPathOnEnterFrame(JSContext* cx, AbstractFramePtr frame)
             return dbg->observesFrame(frame) && dbg->observesEnterFrame();
         },
         [&](Debugger* dbg) -> JSTrapStatus {
-            return dbg->fireEnterFrame(cx, frame, &rval);
+            return dbg->fireEnterFrame(cx, &rval);
         });
 
     switch (status) {
@@ -1598,57 +1598,37 @@ Debugger::processResumptionValue(Maybe<AutoCompartment>& ac, AbstractFramePtr fr
 }
 
 JSTrapStatus
-Debugger::processHandlerResultHelper(Maybe<AutoCompartment>& ac, bool ok, const Value& rv,
-                                     const Maybe<HandleValue>& thisVForCheck, AbstractFramePtr frame,
-                                     MutableHandleValue vp)
-{
-    if (!ok)
-        return handleUncaughtException(ac, vp, thisVForCheck, frame);
-
-    JSContext* cx = ac->context()->asJSContext();
-    RootedValue rvRoot(cx, rv);
-    JSTrapStatus status = JSTRAP_CONTINUE;
-    RootedValue v(cx);
-    if (!processResumptionValue(ac, frame, thisVForCheck, rvRoot, status, &v))
-        return handleUncaughtException(ac, vp, thisVForCheck, frame);
-    vp.set(v);
-    return status;
-}
-
-JSTrapStatus
 Debugger::processHandlerResult(Maybe<AutoCompartment>& ac, bool ok, const Value& rv,
                                AbstractFramePtr frame, jsbytecode* pc, MutableHandleValue vp)
 {
     JSContext* cx = ac->context()->asJSContext();
-    RootedValue rootThis(cx);
-    Maybe<HandleValue> thisArg;
+
+    RootedValue thisv(cx);
+    Maybe<HandleValue> maybeThisv;
     if (frame.debuggerNeedsCheckPrimitiveReturn()) {
         bool success;
         {
             AutoCompartment ac2(cx, frame.environmentChain());
-            success = GetThisValueForDebuggerMaybeOptimizedOut(cx, frame, pc, &rootThis);
+            success = GetThisValueForDebuggerMaybeOptimizedOut(cx, frame, pc, &thisv);
         }
-        if (!success || !cx->compartment()->wrap(cx, &rootThis)) {
+        if (!success || !cx->compartment()->wrap(cx, &thisv)) {
             ac.reset();
             return JSTRAP_ERROR;
         }
-        MOZ_ASSERT_IF(rootThis.isMagic(), rootThis.isMagic(JS_UNINITIALIZED_LEXICAL));
-        thisArg.emplace(HandleValue(rootThis));
+        MOZ_ASSERT_IF(thisv.isMagic(), thisv.isMagic(JS_UNINITIALIZED_LEXICAL));
+        maybeThisv.emplace(HandleValue(thisv));
     }
-    return processHandlerResultHelper(ac, ok, rv, thisArg, frame, vp);
-}
 
-JSTrapStatus
-Debugger::processHandlerResult(Maybe<AutoCompartment>& ac, bool ok, const Value& rv,
-                               const Value& thisV, AbstractFramePtr frame, MutableHandleValue vp)
-{
-    JSContext* cx = ac->context()->asJSContext();
-    RootedValue rootThis(cx, thisV);
-    Maybe<HandleValue> thisArg;
-    if (frame.debuggerNeedsCheckPrimitiveReturn())
-        thisArg.emplace(rootThis);
+    if (!ok)
+        return handleUncaughtException(ac, vp, maybeThisv, frame);
 
-    return processHandlerResultHelper(ac, ok, rv, thisArg, frame, vp);
+    RootedValue rvRoot(cx, rv);
+    JSTrapStatus status = JSTRAP_CONTINUE;
+    RootedValue v(cx);
+    if (!processResumptionValue(ac, frame, maybeThisv, rvRoot, status, &v))
+        return handleUncaughtException(ac, vp, maybeThisv, frame);
+    vp.set(v);
+    return status;
 }
 
 static bool
@@ -1732,7 +1712,7 @@ Debugger::fireExceptionUnwind(JSContext* cx, MutableHandleValue vp)
 }
 
 JSTrapStatus
-Debugger::fireEnterFrame(JSContext* cx, AbstractFramePtr frame, MutableHandleValue vp)
+Debugger::fireEnterFrame(JSContext* cx, MutableHandleValue vp)
 {
     RootedObject hook(cx, getHook(OnEnterFrame));
     MOZ_ASSERT(hook);
@@ -1742,14 +1722,16 @@ Debugger::fireEnterFrame(JSContext* cx, AbstractFramePtr frame, MutableHandleVal
     ac.emplace(cx, object);
 
     RootedValue scriptFrame(cx);
-    if (!getScriptFrame(cx, frame, &scriptFrame))
+
+    ScriptFrameIter iter(cx);
+    if (!getScriptFrame(cx, iter, &scriptFrame))
         return reportUncaughtException(ac);
 
     RootedValue fval(cx, ObjectValue(*hook));
     RootedValue rv(cx);
     bool ok = js::Call(cx, fval, object, scriptFrame, &rv);
 
-    return processHandlerResult(ac, ok, rv, MagicValue(JS_UNINITIALIZED_LEXICAL), frame, vp);
+    return processHandlerResult(ac, ok, rv, iter.abstractFramePtr(), iter.pc(), vp);
 }
 
 void
