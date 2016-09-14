@@ -160,7 +160,7 @@ WebVTTListener::OnCue(JS::Handle<JS::Value> aCue, JSContext* aCx)
     return NS_ERROR_FAILURE;
   }
 
-  TextTrackCue* cue;
+  TextTrackCue* cue = nullptr;
   nsresult rv = UNWRAP_OBJECT(VTTCue, &aCue.toObject(), cue);
   NS_ENSURE_SUCCESS(rv, rv);
 
