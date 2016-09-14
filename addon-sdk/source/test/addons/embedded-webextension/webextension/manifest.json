@@ -1,0 +1,18 @@
+{
+  "name": "Test SDK Embedded WebExtension",
+  "description": "",
+  "version": "0.1.0",
+  "applications": {
+    "gecko": {
+      "id": "embedded-webextension@jetpack"
+    }
+  },
+  "manifest_version": 2,
+  "permissions": ["tabs"],
+  "background": {
+    "scripts": ["background-page.js"]
+  },
+  "content_scripts": [
+    {"matches": ["<all_urls>"], "js": ["content-script.js"]}
+  ]
+}
