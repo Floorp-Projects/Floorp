@@ -1662,7 +1662,6 @@ public abstract class GeckoApp
 
             if (GeckoThread.isRunning()) {
                 geckoConnected();
-                GeckoAppShell.notifyObservers("Viewport:Flush", null);
             }
         }
 
