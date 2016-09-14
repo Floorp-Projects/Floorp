@@ -19,10 +19,7 @@ import org.mozilla.gecko.GeckoAccessibility;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.mozglue.JNIObject;
-import org.mozilla.gecko.Tab;
-import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.ZoomConstraints;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -47,7 +44,7 @@ import android.widget.FrameLayout;
 /**
  * A view rendered by the layer compositor.
  */
-public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener {
+public class LayerView extends FrameLayout {
     private static final String LOGTAG = "GeckoLayerView";
 
     private GeckoLayerClient mLayerClient;
@@ -169,7 +166,6 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
         } else {
             mOverscroll = null;
         }
-        Tabs.registerOnTabsChangedListener(this);
     }
 
     public LayerView(Context context) {
@@ -223,7 +219,6 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
         if (mRenderer != null) {
             mRenderer.destroy();
         }
-        Tabs.unregisterOnTabsChangedListener(this);
     }
 
     @Override
@@ -372,10 +367,6 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
         if (mSurfaceView != null) {
             mSurfaceView.setBackgroundColor(newColor);
         }
-    }
-
-    public void setIsRTL(boolean aIsRTL) {
-        mLayerClient.setIsRTL(aIsRTL);
     }
 
     public void requestRender() {
@@ -700,13 +691,6 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
 
     public float getSurfaceTranslation() {
         return ViewHelper.getTranslationY(this);
-    }
-
-    @Override
-    public void onTabChanged(Tab tab, Tabs.TabEvents msg, String data) {
-        if (msg == Tabs.TabEvents.VIEWPORT_CHANGE && Tabs.getInstance().isSelectedTab(tab) && mLayerClient != null) {
-            setIsRTL(tab.getIsRTL());
-        }
     }
 
     // Public hooks for dynamic toolbar translation

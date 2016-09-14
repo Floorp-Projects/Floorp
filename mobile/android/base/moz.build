@@ -291,7 +291,6 @@ geckoview_java_files = [
     'sqlite/SQLiteBridgeException.java',
     'TouchEventInterceptor.java',
     'widget/SwipeDismissListViewTouchListener.java',
-    'ZoomConstraints.java',
 ]
 
 gbjar = add_java_jar('gecko-browser')
