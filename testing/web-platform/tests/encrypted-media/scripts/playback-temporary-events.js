@@ -33,7 +33,7 @@ function runTest(config) {
                 _events.push( event.messageType );
             }
 
-            config.messagehandler( config.keysystem, event.messageType, event.message ).then( function( response ) {
+            config.messagehandler( event.messageType, event.message ).then( function( response ) {
                 _events.push( 'license-response' );
 
                 waitForEventAndRunStep('keystatuseschange', _mediaKeySession, onKeyStatusesChange, test);
@@ -112,7 +112,7 @@ function runTest(config) {
         }
 
         function onTimeupdate(event) {
-            if ( _video.currentTime > ( config.duration || 5 ) && !_timeupdateEvent ) {
+            if ( _video.currentTime > ( config.duration || 2 ) && !_timeupdateEvent ) {
                 _timeupdateEvent = true;
                 _video.pause();
 

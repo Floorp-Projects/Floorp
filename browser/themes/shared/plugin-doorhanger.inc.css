@@ -50,8 +50,9 @@
 }
 
 .messageImage[value="plugin-hidden"] {
-  list-style-image: url("chrome://browser/skin/notification-pluginNormal.png");
-  -moz-image-region: rect(0, 16px, 16px, 0);
+  list-style-image: url(chrome://browser/skin/notification-icons.svg#plugin);
+  filter: url(chrome://browser/skin/filters.svg#fill);
+  fill: currentColor;
 }
 
 /* Keep any changes to this style in sync with pluginProblem.css */
@@ -62,5 +63,7 @@ notification.pluginVulnerable {
 }
 
 notification.pluginVulnerable .messageImage {
-  list-style-image: url("chrome://browser/skin/notification-pluginBlocked.png");
+  list-style-image: url(chrome://browser/skin/notification-icons.svg#plugin-blocked);
+  filter: url(chrome://browser/skin/filters.svg#fill);
+  fill: #d92215;
 }

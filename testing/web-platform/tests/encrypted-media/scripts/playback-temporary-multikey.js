@@ -58,7 +58,7 @@ function runTest(config) {
                         event.messageType,
                         [ 'license-request', 'individualization-request' ] );
 
-            config.messagehandler( config.keysystem, event.messageType, event.message )
+            config.messagehandler( event.messageType, event.message )
             .then( function( response ) {
 
                 event.target.update( response )
@@ -76,7 +76,7 @@ function runTest(config) {
         }
 
         function onTimeupdate(event) {
-            if ( _video.currentTime > ( config.duration || 5 ) ) {
+            if ( _video.currentTime > ( config.duration || 2 ) ) {
 
                 consoleWrite("Session 0:");
                 dumpKeyStatuses( _mediaKeySessions[ 0 ].keyStatuses );

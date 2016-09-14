@@ -30,14 +30,39 @@ class TestTargetTasks(unittest.TestCase):
         self.assertEqual(method(None, {'target_tasks': ['a', 'b']}),
                          ['a', 'b'])
 
-    def test_all_builds_and_tests(self):
-        method = target_tasks.get_method('all_builds_and_tests')
+    def default_matches(self, run_on_projects, project):
+        method = target_tasks.get_method('default')
         graph = TaskGraph(tasks={
-            'a': TestTask(kind='legacy', label='a'),
-            'b': TestTask(kind='legacy', label='b'),
-            'boring': TestTask(kind='docker', label='boring'),
-        }, graph=Graph(nodes={'a', 'b', 'boring'}, edges=set()))
-        self.assertEqual(sorted(method(graph, {})), sorted(['a', 'b']))
+            'a': TestTask(kind='build', label='a',
+                          attributes={'run_on_projects': run_on_projects}),
+        }, graph=Graph(nodes={'a'}, edges=set()))
+        parameters = {'project': project}
+        return 'a' in method(graph, parameters)
+
+    def test_default_all(self):
+        """run_on_projects=[all] includes release, integration, and other projects"""
+        self.assertTrue(self.default_matches(['all'], 'mozilla-central'))
+        self.assertTrue(self.default_matches(['all'], 'mozilla-inbound'))
+        self.assertTrue(self.default_matches(['all'], 'mozilla-aurora'))
+        self.assertTrue(self.default_matches(['all'], 'baobab'))
+
+    def test_default_integration(self):
+        """run_on_projects=[integration] includes integration projects"""
+        self.assertFalse(self.default_matches(['integration'], 'mozilla-central'))
+        self.assertTrue(self.default_matches(['integration'], 'mozilla-inbound'))
+        self.assertFalse(self.default_matches(['integration'], 'baobab'))
+
+    def test_default_relesae(self):
+        """run_on_projects=[release] includes release projects"""
+        self.assertTrue(self.default_matches(['release'], 'mozilla-central'))
+        self.assertFalse(self.default_matches(['release'], 'mozilla-inbound'))
+        self.assertFalse(self.default_matches(['release'], 'baobab'))
+
+    def test_default_nothing(self):
+        """run_on_projects=[] includes nothing"""
+        self.assertFalse(self.default_matches([], 'mozilla-central'))
+        self.assertFalse(self.default_matches([], 'mozilla-inbound'))
+        self.assertFalse(self.default_matches([], 'baobab'))
 
     def test_try_option_syntax(self):
         tasks = {

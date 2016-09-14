@@ -1,0 +1,98 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+implementation: taskgraph.task.transform:TransformTask
+
+transforms:
+   - taskgraph.transforms.build_attrs:transforms
+   - taskgraph.transforms.job:transforms
+   - taskgraph.transforms.task:transforms
+
+job-defaults:
+    worker-type: aws-provisioner-v1/flame-kk
+    worker:
+        implementation: docker-worker
+        docker-image: {in-tree: phone-builder}
+        max-run-time: 14400
+        env:
+            MOZILLA_OFFICIAL: '1'
+            ENABLE_DEFAULT_BOOTANIMATION: 'true'
+            B2G_UPDATER: '1'
+            REPO_TRACE: '1'
+            DEBUG: '0' 
+            VARIANT: eng
+            GAIA_OPTIMIZE: '1'
+            B2G_SYSTEM_APPS: '1'
+            MOZ_TELEMETRY_REPORTING: '1'
+            MOZ_CRASHREPORTER_NO_REPORT: '1'
+            GAIA_KEYBOARD_LAYOUTS: 'en,pt-BR,es,de,fr,pl,zh-Hans-Pinyin,zh-Hant-Zhuyin,en-Dvorak'
+            B2G_UPDATE_CHANNEL: 'default'
+    treeherder:
+        kind: build
+        tier: 3
+    run-on-projects:
+      - try
+      - mozilla-central
+      - integration
+      - pine
+
+
+jobs:
+    aries-eng/opt:
+        description: "B2G Aries Opt"
+        index:
+            product: b2g
+            job-name:
+                gecko-v1: aries-eng.opt
+                gecko-v2: aries-eng-opt
+        treeherder:
+            platform: b2g-device-image/opt
+            symbol: Aries(Be)
+        run:
+            using: phone-builder
+            target: aries
+
+    aries-eng/debug:
+        description: "B2G Aries Debug"
+        index:
+            product: b2g
+            job-name:
+                gecko-v1: aries.debug
+                gecko-v2: aries-debug
+        treeherder:
+            platform: b2g-device-image/debug
+            symbol: Aries(Bd)
+        run:
+            using: phone-builder
+            target: aries
+            debug: true
+
+    nexus-5l-eng/opt:
+        description: "B2G Nexus 5-L Opt"
+        index:
+            product: b2g
+            job-name:
+                gecko-v1: nexus-5-l-eng.opt
+                gecko-v2: nexus-5-l-eng-opt
+        treeherder:
+            platform: b2g-device-image/opt
+            symbol: Nexus 5-L(Be)
+        run:
+            using: phone-builder
+            target: nexus-5-l
+
+    nexus-5l-eng/debug:
+        description: "B2G Nexus 5-L Debug"
+        index:
+            product: b2g
+            job-name:
+                gecko-v1: nexus-5-l-eng.debug
+                gecko-v2: nexus-5-l-eng-debug
+        treeherder:
+            platform: b2g-device-image/debug
+            symbol: Nexus 5-L(Bd)
+        run:
+            using: phone-builder
+            target: nexus-5-l
+            debug: true
