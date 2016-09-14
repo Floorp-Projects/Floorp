@@ -444,6 +444,10 @@ const kEventConstructors = {
                                                          return new RTCDataChannelEvent(aName, aProps);
                                                        },
                                              },
+  RTCDTMFToneChangeEvent:                       { create: function (aName, aProps) {
+                                                         return new RTCDTMFToneChangeEvent(aName, aProps);
+                                                       },
+                                             },
   RTCPeerConnectionIceEvent:                 { create: function (aName, aProps) {
                                                          return new RTCPeerConnectionIceEvent(aName, aProps);
                                                        },
