@@ -1,4 +1,4 @@
-// |reftest| skip-if(!this.hasOwnProperty("Intl")||!this.newGlobal||!newGlobal({experimentalDateTimeFormatFormatToPartsEnabled:true}).Intl.DateTimeFormat().formatToParts)
+// |reftest| skip-if(!this.hasOwnProperty("Intl"))
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/licenses/publicdomain/
 
@@ -47,14 +47,8 @@ function composeDate(parts) {
 var format;
 var date = Date.UTC(2012, 11, 17, 3, 0, 42);
 
-// The experimental formatToParts method is only exposed if specifically
-// requested.  Perform all tests using DateTimeFormat instances from a global
-// object with this method enabled.
-var DateTimeFormat =
-  newGlobal({experimentalDateTimeFormatFormatToPartsEnabled:true}).Intl.DateTimeFormat;
-
 // Locale en-US; default options.
-format = new DateTimeFormat("en-us", {timeZone: "UTC"});
+format = new Intl.DateTimeFormat("en-us", {timeZone: "UTC"});
 assertEq(deepEqual(format.formatToParts(date), [
   { type: 'month', value: '12' },
   { type: 'literal', value: '/' },
@@ -64,7 +58,7 @@ assertEq(deepEqual(format.formatToParts(date), [
 ]), true);
 
 // Just date
-format = new DateTimeFormat("en-us", {
+format = new Intl.DateTimeFormat("en-us", {
   year: 'numeric',
   month: 'numeric',
   day: 'numeric',
@@ -79,7 +73,7 @@ assertEq(deepEqual(format.formatToParts(date), [
 assertEq(composeDate(format.formatToParts(date)), format.format(date));
 
 // Just time in hour24
-format = new DateTimeFormat("en-us", {
+format = new Intl.DateTimeFormat("en-us", {
   hour: 'numeric',
   minute: 'numeric',
   second: 'numeric',
@@ -95,7 +89,7 @@ assertEq(deepEqual(format.formatToParts(date), [
 assertEq(composeDate(format.formatToParts(date)), format.format(date));
 
 // Just time in hour12
-format = new DateTimeFormat("en-us", {
+format = new Intl.DateTimeFormat("en-us", {
   hour: 'numeric',
   minute: 'numeric',
   second: 'numeric',
@@ -113,7 +107,7 @@ assertEq(deepEqual(format.formatToParts(date), [
 assertEq(composeDate(format.formatToParts(date)), format.format(date));
 
 // Just month.
-format = new DateTimeFormat("en-us", {
+format = new Intl.DateTimeFormat("en-us", {
   month: "narrow",
   timeZone: "UTC"});
 assertEq(deepEqual(format.formatToParts(date), [
@@ -122,7 +116,7 @@ assertEq(deepEqual(format.formatToParts(date), [
 assertEq(composeDate(format.formatToParts(date)), format.format(date));
 
 // Just weekday.
-format = new DateTimeFormat("en-us", {
+format = new Intl.DateTimeFormat("en-us", {
   weekday: "narrow",
   timeZone: "UTC"});
 assertEq(deepEqual(format.formatToParts(date), [
@@ -131,7 +125,7 @@ assertEq(deepEqual(format.formatToParts(date), [
 assertEq(composeDate(format.formatToParts(date)), format.format(date));
 
 // Year and era.
-format = new DateTimeFormat("en-us", {
+format = new Intl.DateTimeFormat("en-us", {
   year: "numeric",
   era: "short",
   timeZone: "UTC"});
@@ -143,7 +137,7 @@ assertEq(deepEqual(format.formatToParts(date), [
 assertEq(composeDate(format.formatToParts(date)), format.format(date));
 
 // Time and date
-format = new DateTimeFormat("en-us", {
+format = new Intl.DateTimeFormat("en-us", {
   weekday: 'long',
   year: 'numeric',
   month: 'numeric',
