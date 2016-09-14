@@ -306,7 +306,7 @@ GLsizei GetSamplesCount(D3DMULTISAMPLE_TYPE type)
 
 bool IsFormatChannelEquivalent(D3DFORMAT d3dformat, GLenum format)
 {
-    GLenum internalFormat = d3d9::GetD3DFormatInfo(d3dformat).internalFormat;
+    GLenum internalFormat  = d3d9::GetD3DFormatInfo(d3dformat).info->glInternalFormat;
     GLenum convertedFormat = gl::GetInternalFormatInfo(internalFormat).format;
     return convertedFormat == format;
 }
@@ -646,9 +646,13 @@ WorkaroundsD3D GenerateWorkarounds()
     workarounds.mrtPerfWorkaround = true;
     workarounds.setDataFasterThanImageUpload = false;
     workarounds.useInstancedPointSpriteEmulation = false;
+
+    // TODO(jmadill): Disable workaround when we have a fixed compiler DLL.
+    workarounds.expandIntegerPowExpressions = true;
+
     return workarounds;
 }
 
-}
+}  // namespace d3d9
 
-}
+}  // namespace rx

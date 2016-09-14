@@ -550,7 +550,7 @@ gl::ErrorOrResult<ID3D11Buffer *> Buffer11::getConstantBufferRange(GLintptr offs
 
     BufferStorage *bufferStorage = nullptr;
 
-    if (offset == 0)
+    if (offset == 0 || mRenderer->getRenderer11DeviceCaps().supportsConstantBufferOffsets)
     {
         ANGLE_TRY_RESULT(getBufferStorage(BUFFER_USAGE_UNIFORM), bufferStorage);
     }
@@ -1267,9 +1267,16 @@ gl::ErrorOrResult<CopyResult> Buffer11::PackStorage::copyFromStorage(BufferStora
                                                                      size_t size,
                                                                      size_t destOffset)
 {
-    // We copy through a staging buffer when drawing with a pack buffer,
-    // or for other cases where we access the pack buffer
-    UNREACHABLE();
+    ANGLE_TRY(flushQueuedPackCommand());
+
+    // We copy through a staging buffer when drawing with a pack buffer, or for other cases where we
+    // access the pack buffer
+    ASSERT(source->isMappable() && source->getUsage() == BUFFER_USAGE_STAGING);
+    uint8_t *sourceData = nullptr;
+    ANGLE_TRY(source->map(sourceOffset, size, GL_MAP_READ_BIT, &sourceData));
+    ASSERT(destOffset + size <= mMemoryBuffer.size());
+    memcpy(mMemoryBuffer.data() + destOffset, sourceData, size);
+    source->unmap();
     return CopyResult::NOT_RECREATED;
 }
 
@@ -1324,7 +1331,7 @@ gl::Error Buffer11::PackStorage::packPixels(const gl::FramebufferAttachment &rea
 
     unsigned int srcSubresource = renderTarget->getSubresourceIndex();
     TextureHelper11 srcTexture =
-        TextureHelper11::MakeAndReference(renderTargetResource, renderTarget->getANGLEFormat());
+        TextureHelper11::MakeAndReference(renderTargetResource, renderTarget->getFormatSet());
 
     mQueuedPackCommand.reset(new PackPixelsParams(params));
 
@@ -1332,10 +1339,10 @@ gl::Error Buffer11::PackStorage::packPixels(const gl::FramebufferAttachment &rea
     if (!mStagingTexture.getResource() || mStagingTexture.getFormat() != srcTexture.getFormat() ||
         mStagingTexture.getExtents() != srcTextureSize)
     {
-        ANGLE_TRY_RESULT(CreateStagingTexture(srcTexture.getTextureType(), srcTexture.getFormat(),
-                                              srcTexture.getANGLEFormat(), srcTextureSize,
-                                              mRenderer->getDevice()),
-                         mStagingTexture);
+        ANGLE_TRY_RESULT(
+            CreateStagingTexture(srcTexture.getTextureType(), srcTexture.getFormatSet(),
+                                 srcTextureSize, StagingAccess::READ, mRenderer->getDevice()),
+            mStagingTexture);
     }
 
     // ReadPixels from multisampled FBOs isn't supported in current GL

@@ -146,6 +146,7 @@ class StateManagerGL final : angle::NonCopyable
                                    GLsizei instanceCount,
                                    const GLvoid **outIndices);
 
+    gl::Error pauseTransformFeedback(const gl::ContextState &data);
     gl::Error onMakeCurrent(const gl::ContextState &data);
 
     void syncState(const gl::State &state, const gl::State::DirtyBits &glDirtyBits);

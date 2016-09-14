@@ -555,6 +555,16 @@ PlatformParameters ES3_OPENGLES(EGLint major, EGLint minor)
     return PlatformParameters(3, 0, egl_platform::OPENGLES(major, minor));
 }
 
+PlatformParameters ES31_OPENGLES()
+{
+    return PlatformParameters(3, 1, egl_platform::OPENGLES());
+}
+
+PlatformParameters ES31_OPENGLES(EGLint major, EGLint minor)
+{
+    return PlatformParameters(3, 1, egl_platform::OPENGLES(major, minor));
+}
+
 PlatformParameters ES2_OPENGL()
 {
     return PlatformParameters(2, 0, egl_platform::OPENGL());
@@ -573,6 +583,16 @@ PlatformParameters ES3_OPENGL()
 PlatformParameters ES3_OPENGL(EGLint major, EGLint minor)
 {
     return PlatformParameters(3, 0, egl_platform::OPENGL(major, minor));
+}
+
+PlatformParameters ES31_OPENGL()
+{
+    return PlatformParameters(3, 1, egl_platform::OPENGL());
+}
+
+PlatformParameters ES31_OPENGL(EGLint major, EGLint minor)
+{
+    return PlatformParameters(3, 1, egl_platform::OPENGL(major, minor));
 }
 
 } // namespace angle

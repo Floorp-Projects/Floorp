@@ -12,30 +12,13 @@
 #include "GLSLANG/ShaderLang.h"
 #include "tests/test_utils/compiler_test.h"
 
-class GLSLCompatibilityOutputTest : public testing::Test
+class GLSLCompatibilityOutputTest : public MatchOutputCodeTest
 {
   public:
-    GLSLCompatibilityOutputTest() {}
-
-  protected:
-    void compile(const std::string &shaderString)
+    GLSLCompatibilityOutputTest()
+        : MatchOutputCodeTest(GL_VERTEX_SHADER, SH_VARIABLES, SH_GLSL_COMPATIBILITY_OUTPUT)
     {
-        int compilationFlags = SH_VARIABLES;
-
-        std::string infoLog;
-        bool compilationSuccess =
-            compileTestShader(GL_VERTEX_SHADER, SH_GLES2_SPEC, SH_GLSL_COMPATIBILITY_OUTPUT,
-                              shaderString, compilationFlags, &mTranslatedSource, &infoLog);
-        if (!compilationSuccess)
-        {
-            FAIL() << "Shader compilation failed " << infoLog;
-        }
     }
-
-    bool find(const char *name) const { return mTranslatedSource.find(name) != std::string::npos; }
-
-  private:
-    std::string mTranslatedSource;
 };
 
 // Verify gl_Position is written when compiling in compatibility mode
@@ -46,5 +29,5 @@ TEST_F(GLSLCompatibilityOutputTest, GLPositionWrittenTest)
         "void main() {\n"
         "}";
     compile(shaderString);
-    EXPECT_TRUE(find("gl_Position"));
+    EXPECT_TRUE(foundInCode("gl_Position"));
 }

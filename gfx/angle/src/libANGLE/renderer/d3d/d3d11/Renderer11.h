@@ -52,6 +52,7 @@ struct Renderer11DeviceCaps
     UINT B5G6R5support;                 // Bitfield of D3D11_FORMAT_SUPPORT values for DXGI_FORMAT_B5G6R5_UNORM
     UINT B4G4R4A4support;               // Bitfield of D3D11_FORMAT_SUPPORT values for DXGI_FORMAT_B4G4R4A4_UNORM
     UINT B5G5R5A1support;               // Bitfield of D3D11_FORMAT_SUPPORT values for DXGI_FORMAT_B5G5R5A1_UNORM
+    Optional<LARGE_INTEGER> driverVersion;  // Four-part driver version number.
 };
 
 enum
@@ -105,7 +106,7 @@ class Renderer11 : public RendererD3D
     virtual ~Renderer11();
 
     egl::Error initialize() override;
-    virtual bool resetDevice();
+    bool resetDevice() override;
 
     egl::ConfigSet generateConfigs() override;
     void generateDisplayExtensions(egl::DisplayExtensions *outExtensions) const override;
@@ -126,8 +127,11 @@ class Renderer11 : public RendererD3D
                                   GLenum depthBufferFormat,
                                   EGLint orientation) override;
 
-    virtual gl::Error setSamplerState(gl::SamplerType type, int index, gl::Texture *texture, const gl::SamplerState &sampler);
-    virtual gl::Error setTexture(gl::SamplerType type, int index, gl::Texture *texture);
+    gl::Error setSamplerState(gl::SamplerType type,
+                              int index,
+                              gl::Texture *texture,
+                              const gl::SamplerState &sampler) override;
+    gl::Error setTexture(gl::SamplerType type, int index, gl::Texture *texture) override;
 
     gl::Error setUniformBuffers(const gl::ContextState &data,
                                 const std::vector<GLint> &vertexUniformBuffers,
@@ -152,11 +156,11 @@ class Renderer11 : public RendererD3D
                                GLenum mode,
                                GLenum type,
                                TranslatedIndexData *indexInfo);
-    gl::Error applyTransformFeedbackBuffers(const gl::State &state);
+    gl::Error applyTransformFeedbackBuffers(const gl::ContextState &data);
 
     // lost device
     bool testDeviceLost() override;
-    bool testDeviceResettable();
+    bool testDeviceResettable() override;
 
     VendorID getVendorId() const;
     SIZE_T getMaxResourceSize() const;
@@ -172,7 +176,7 @@ class Renderer11 : public RendererD3D
 
     bool getNV12TextureSupport() const;
 
-    virtual int getMajorShaderModel() const;
+    int getMajorShaderModel() const override;
     int getMinorShaderModel() const override;
     std::string getShaderModelSuffix() const override;
 
@@ -202,6 +206,17 @@ class Renderer11 : public RendererD3D
                                const gl::Offset &destOffset,
                                TextureStorage *storage,
                                GLint level) override;
+
+    gl::Error copyTexture(const gl::Texture *source,
+                          GLint sourceLevel,
+                          const gl::Rectangle &sourceRect,
+                          GLenum destFormat,
+                          const gl::Offset &destOffset,
+                          TextureStorage *storage,
+                          GLint destLevel,
+                          bool unpackFlipY,
+                          bool unpackPremultiplyAlpha,
+                          bool unpackUnmultiplyAlpha) override;
 
     // RenderTarget creation
     gl::Error createRenderTarget(int width,
@@ -233,7 +248,8 @@ class Renderer11 : public RendererD3D
     gl::Error generateMipmapUsingD3D(TextureStorage *storage,
                                      const gl::TextureState &textureState) override;
     TextureStorage *createTextureStorage2D(SwapChainD3D *swapChain) override;
-    TextureStorage *createTextureStorageEGLImage(EGLImageD3D *eglImage) override;
+    TextureStorage *createTextureStorageEGLImage(EGLImageD3D *eglImage,
+                                                 RenderTargetD3D *renderTargetD3D) override;
     TextureStorage *createTextureStorageExternal(
         egl::Stream *stream,
         const egl::Stream::GLTextureDescription &desc) override;
@@ -283,9 +299,13 @@ class Renderer11 : public RendererD3D
     gl::DebugAnnotator *getAnnotator();
 
     // Buffer-to-texture and Texture-to-buffer copies
-    virtual bool supportsFastCopyBufferToTexture(GLenum internalFormat) const;
-    virtual gl::Error fastCopyBufferToTexture(const gl::PixelUnpackState &unpack, unsigned int offset, RenderTargetD3D *destRenderTarget,
-                                              GLenum destinationFormat, GLenum sourcePixelsType, const gl::Box &destArea);
+    bool supportsFastCopyBufferToTexture(GLenum internalFormat) const override;
+    gl::Error fastCopyBufferToTexture(const gl::PixelUnpackState &unpack,
+                                      unsigned int offset,
+                                      RenderTargetD3D *destRenderTarget,
+                                      GLenum destinationFormat,
+                                      GLenum sourcePixelsType,
+                                      const gl::Box &destArea) override;
 
     void markAllStateDirty();
     gl::Error packPixels(const TextureHelper11 &textureHelper,
@@ -343,6 +363,8 @@ class Renderer11 : public RendererD3D
 
     gl::Error getScratchMemoryBuffer(size_t requestedSize, MemoryBuffer **bufferOut);
 
+    gl::Version getMaxSupportedESVersion() const override;
+
   protected:
     gl::Error clearTextures(gl::SamplerType samplerType, size_t rangeStart, size_t rangeEnd) override;
 
@@ -384,7 +406,9 @@ class Renderer11 : public RendererD3D
     gl::Error generateSwizzles(const gl::ContextState &data, gl::SamplerType type);
     gl::Error generateSwizzles(const gl::ContextState &data);
 
-    ID3D11Texture2D *resolveMultisampledTexture(ID3D11Texture2D *source, unsigned int subresource);
+    gl::ErrorOrResult<TextureHelper11> resolveMultisampledTexture(RenderTarget11 *renderTarget,
+                                                                  bool depth,
+                                                                  bool stencil);
 
     void populateRenderer11DeviceCaps();
 
@@ -470,15 +494,7 @@ class Renderer11 : public RendererD3D
     bool mAppliedIBChanged;
 
     // Currently applied transform feedback buffers
-    size_t mAppliedNumXFBBindings;
-    ID3D11Buffer *mAppliedTFBuffers[gl::IMPLEMENTATION_MAX_TRANSFORM_FEEDBACK_BUFFERS]; // Tracks the current D3D buffers
-                                                                                        // in use for streamout
-    GLintptr mAppliedTFOffsets[gl::IMPLEMENTATION_MAX_TRANSFORM_FEEDBACK_BUFFERS]; // Tracks the current GL-specified
-                                                                                   // buffer offsets to transform feedback
-                                                                                   // buffers
-    UINT mCurrentD3DOffsets[gl::IMPLEMENTATION_MAX_TRANSFORM_FEEDBACK_BUFFERS];  // Tracks the D3D buffer offsets,
-                                                                                 // which may differ from GLs, due
-                                                                                 // to different append behavior
+    uintptr_t mAppliedTFObject;
 
     // Currently applied shaders
     uintptr_t mAppliedVertexShader;
@@ -549,5 +565,5 @@ class Renderer11 : public RendererD3D
     mutable Optional<bool> mSupportsShareHandles;
 };
 
-}
+}  // namespace rx
 #endif // LIBANGLE_RENDERER_D3D_D3D11_RENDERER11_H_

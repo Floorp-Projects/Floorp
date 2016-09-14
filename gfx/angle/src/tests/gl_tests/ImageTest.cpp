@@ -693,7 +693,7 @@ TEST_P(ImageTest, ValidationGLImage)
     }
 
     if (eglDisplayExtensionEnabled(window->getDisplay(), "EGL_KHR_gl_texture_3D_image") &&
-        getClientVersion() >= 3)
+        getClientMajorVersion() >= 3)
     {
         // If <target> is EGL_GL_TEXTURE_3D_KHR, and the value specified in <attr_list> for
         // EGL_GL_TEXTURE_ZOFFSET_KHR exceeds the depth of the specified mipmap level - of - detail
@@ -741,7 +741,7 @@ TEST_P(ImageTest, ValidationGLImage)
             EXPECT_EGL_ERROR(EGL_BAD_PARAMETER);
         }
 
-        if (getClientVersion() >= 3)
+        if (getClientMajorVersion() >= 3)
         {
             GLuint texture3D;
             glGenTextures(1, &texture3D);
@@ -949,7 +949,7 @@ TEST_P(ImageTest, ValidationGLEGLImageExternalESSL3)
     }
 
     // Make sure this extension is not exposed without ES3.
-    ASSERT_GE(getClientVersion(), 3);
+    ASSERT_GE(getClientMajorVersion(), 3);
 
     GLuint texture;
     glGenTextures(1, &texture);
@@ -1283,7 +1283,7 @@ TEST_P(ImageTest, Source3DTargetTexture)
         return;
     }
 
-    if (getClientVersion() < 3 && !extensionEnabled("GL_OES_texture_3D"))
+    if (getClientMajorVersion() < 3 && !extensionEnabled("GL_OES_texture_3D"))
     {
         std::cout << "Test skipped because 3D textures are not available." << std::endl;
         return;
@@ -1329,7 +1329,7 @@ TEST_P(ImageTest, Source3DTargetRenderbuffer)
         return;
     }
 
-    if (getClientVersion() < 3 && !extensionEnabled("GL_OES_texture_3D"))
+    if (getClientMajorVersion() < 3 && !extensionEnabled("GL_OES_texture_3D"))
     {
         std::cout << "Test skipped because 3D textures are not available." << std::endl;
         return;
@@ -1377,7 +1377,7 @@ TEST_P(ImageTest, Source3DTargetExternal)
         return;
     }
 
-    if (getClientVersion() < 3 && !extensionEnabled("GL_OES_texture_3D"))
+    if (getClientMajorVersion() < 3 && !extensionEnabled("GL_OES_texture_3D"))
     {
         std::cout << "Test skipped because 3D textures are not available." << std::endl;
         return;
@@ -1425,7 +1425,7 @@ TEST_P(ImageTestES3, Source3DTargetExternalESSL3)
         return;
     }
 
-    if (getClientVersion() < 3 && !extensionEnabled("GL_OES_texture_3D"))
+    if (getClientMajorVersion() < 3 && !extensionEnabled("GL_OES_texture_3D"))
     {
         std::cout << "Test skipped because 3D textures are not available." << std::endl;
         return;

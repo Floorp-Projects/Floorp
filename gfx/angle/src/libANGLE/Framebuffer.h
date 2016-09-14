@@ -58,6 +58,7 @@ class FramebufferState final : angle::NonCopyable
 
     const std::string &getLabel();
 
+    const FramebufferAttachment *getAttachment(GLenum attachment) const;
     const FramebufferAttachment *getReadAttachment() const;
     const FramebufferAttachment *getFirstColorAttachment() const;
     const FramebufferAttachment *getDepthOrStencilAttachment() const;
@@ -74,6 +75,10 @@ class FramebufferState final : angle::NonCopyable
     }
 
     bool attachmentsHaveSameDimensions() const;
+    bool colorAttachmentsAreUniqueImages() const;
+
+    const FramebufferAttachment *getDrawBuffer(size_t drawBufferIdx) const;
+    size_t getDrawBufferCount() const;
 
   private:
     friend class Framebuffer;

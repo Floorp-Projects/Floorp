@@ -17,6 +17,7 @@
 #include "libANGLE/Error.h"
 #include "libANGLE/FramebufferAttachment.h"
 #include "libANGLE/RefCountObject.h"
+#include "libANGLE/formatutils.h"
 #include "libANGLE/renderer/SurfaceImpl.h"
 
 namespace gl
@@ -83,7 +84,8 @@ class Surface : public gl::FramebufferAttachmentObject
 
     // FramebufferAttachmentObject implementation
     gl::Extents getAttachmentSize(const gl::FramebufferAttachment::Target &target) const override;
-    GLenum getAttachmentInternalFormat(const gl::FramebufferAttachment::Target &target) const override;
+    const gl::Format &getAttachmentFormat(
+        const gl::FramebufferAttachment::Target &target) const override;
     GLsizei getAttachmentSamples(const gl::FramebufferAttachment::Target &target) const override;
 
     void onAttach() override {}
@@ -136,6 +138,9 @@ class Surface : public gl::FramebufferAttachmentObject
     EGLint mOrientation;
 
     BindingPointer<gl::Texture> mTexture;
+
+    gl::Format mBackFormat;
+    gl::Format mDSFormat;
 };
 
 class WindowSurface final : public Surface

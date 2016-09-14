@@ -18,7 +18,7 @@ namespace rx
 class Renderer11;
 class NativeWindow11;
 
-class SwapChain11 : public SwapChainD3D
+class SwapChain11 final : public SwapChainD3D
 {
   public:
     SwapChain11(Renderer11 *renderer,
@@ -30,20 +30,20 @@ class SwapChain11 : public SwapChainD3D
     virtual ~SwapChain11();
 
     EGLint resize(EGLint backbufferWidth, EGLint backbufferHeight);
-    virtual EGLint reset(EGLint backbufferWidth, EGLint backbufferHeight, EGLint swapInterval);
-    virtual EGLint swapRect(EGLint x, EGLint y, EGLint width, EGLint height);
-    virtual void recreate();
+    EGLint reset(EGLint backbufferWidth, EGLint backbufferHeight, EGLint swapInterval) override;
+    EGLint swapRect(EGLint x, EGLint y, EGLint width, EGLint height) override;
+    void recreate() override;
 
     RenderTargetD3D *getColorRenderTarget() override { return &mColorRenderTarget; }
     RenderTargetD3D *getDepthStencilRenderTarget() override { return &mDepthStencilRenderTarget; }
 
-    virtual ID3D11Texture2D *getOffscreenTexture();
-    virtual ID3D11RenderTargetView *getRenderTarget();
-    virtual ID3D11ShaderResourceView *getRenderTargetShaderResource();
+    ID3D11Texture2D *getOffscreenTexture();
+    ID3D11RenderTargetView *getRenderTarget();
+    ID3D11ShaderResourceView *getRenderTargetShaderResource();
 
-    virtual ID3D11Texture2D *getDepthStencilTexture();
-    virtual ID3D11DepthStencilView *getDepthStencil();
-    virtual ID3D11ShaderResourceView *getDepthStencilShaderResource();
+    ID3D11Texture2D *getDepthStencilTexture();
+    ID3D11DepthStencilView *getDepthStencil();
+    ID3D11ShaderResourceView *getDepthStencilShaderResource();
 
     EGLint getWidth() const { return mWidth; }
     EGLint getHeight() const { return mHeight; }
@@ -103,5 +103,5 @@ class SwapChain11 : public SwapChainD3D
     SurfaceRenderTarget11 mDepthStencilRenderTarget;
 };
 
-}
+}  // namespace rx
 #endif // LIBANGLE_RENDERER_D3D_D3D11_SWAPCHAIN11_H_

@@ -8,6 +8,8 @@
 
 #include "libANGLE/renderer/d3d/DisplayD3D.h"
 
+#include <EGL/eglext.h>
+
 #include "libANGLE/Context.h"
 #include "libANGLE/Config.h"
 #include "libANGLE/Display.h"
@@ -18,8 +20,6 @@
 #include "libANGLE/renderer/d3d/SurfaceD3D.h"
 #include "libANGLE/renderer/d3d/SwapChainD3D.h"
 #include "libANGLE/renderer/d3d/DeviceD3D.h"
-
-#include <EGL/eglext.h>
 
 #if defined (ANGLE_ENABLE_D3D9)
 #   include "libANGLE/renderer/d3d/d3d9/Renderer9.h"
@@ -247,12 +247,6 @@ egl::ConfigSet DisplayD3D::generateConfigs()
     return mRenderer->generateConfigs();
 }
 
-bool DisplayD3D::isDeviceLost() const
-{
-    ASSERT(mRenderer != nullptr);
-    return mRenderer->isDeviceLost();
-}
-
 bool DisplayD3D::testDeviceLost()
 {
     ASSERT(mRenderer != nullptr);
@@ -323,7 +317,12 @@ void DisplayD3D::generateCaps(egl::Caps *outCaps) const
 
 egl::Error DisplayD3D::waitClient() const
 {
-    // Unimplemented as it is a noop on D3D
+    for (auto &surface : getSurfaceSet())
+    {
+        SurfaceD3D *surfaceD3D = GetImplAs<SurfaceD3D>(surface);
+        surfaceD3D->checkForOutOfDateSwapChain();
+    }
+
     return egl::Error(EGL_SUCCESS);
 }
 
@@ -331,7 +330,24 @@ egl::Error DisplayD3D::waitNative(EGLint engine,
                                   egl::Surface *drawSurface,
                                   egl::Surface *readSurface) const
 {
-    // Unimplemented as it is a noop on D3D
+    if (drawSurface != nullptr)
+    {
+        SurfaceD3D *drawSurfaceD3D = GetImplAs<SurfaceD3D>(drawSurface);
+        drawSurfaceD3D->checkForOutOfDateSwapChain();
+    }
+
+    if (readSurface != nullptr)
+    {
+        SurfaceD3D *readurfaceD3D = GetImplAs<SurfaceD3D>(readSurface);
+        readurfaceD3D->checkForOutOfDateSwapChain();
+    }
+
     return egl::Error(EGL_SUCCESS);
 }
+
+gl::Version DisplayD3D::getMaxSupportedESVersion() const
+{
+    return mRenderer->getMaxSupportedESVersion();
+}
+
 }  // namespace rx

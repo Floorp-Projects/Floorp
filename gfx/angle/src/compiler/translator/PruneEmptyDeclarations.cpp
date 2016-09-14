@@ -66,6 +66,27 @@ bool PruneEmptyDeclarationsTraverser::visitAggregate(Visit, TIntermAggregate *no
                     ASSERT(parentAgg != nullptr);
                     mMultiReplacements.push_back(NodeReplaceWithMultipleEntry(parentAgg, node, emptyReplacement));
                 }
+                else if (sym->getType().getQualifier() != EvqGlobal &&
+                         sym->getType().getQualifier() != EvqTemporary)
+                {
+                    // We've hit an empty struct declaration with a qualifier, for example like
+                    // this:
+                    // const struct a { int i; };
+                    // NVIDIA GL driver version 367.27 doesn't accept this kind of declarations, so
+                    // we convert the declaration to a regular struct declaration. This is okay,
+                    // since ESSL 1.00 spec section 4.1.8 says about structs that "The optional
+                    // qualifiers only apply to any declarators, and are not part of the type being
+                    // defined for name."
+
+                    if (mInGlobalScope)
+                    {
+                        sym->getTypePointer()->setQualifier(EvqGlobal);
+                    }
+                    else
+                    {
+                        sym->getTypePointer()->setQualifier(EvqTemporary);
+                    }
+                }
             }
         }
         return false;

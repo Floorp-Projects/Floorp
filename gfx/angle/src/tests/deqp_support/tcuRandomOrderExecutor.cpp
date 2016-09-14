@@ -268,12 +268,6 @@ tcu::TestStatus RandomOrderExecutor::executeInner(TestCase *testCase, const std:
         m_testCtx.setTerminateAfter(true);
     }
 
-    {
-        const deInt64 duration = deGetMicroseconds() - testStartTime;
-        m_testCtx.getLog() << TestLog::Integer("TestDuration", "Test case duration in microseconds",
-                                               "us", QP_KEY_TAG_TIME, duration);
-    }
-
     if (m_testCtx.getWatchDog())
         qpWatchDog_reset(m_testCtx.getWatchDog());
 

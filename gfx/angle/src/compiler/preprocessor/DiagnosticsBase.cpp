@@ -115,6 +115,8 @@ std::string Diagnostics::message(ID id)
         return "invalid line directive";
       case PP_NON_PP_TOKEN_BEFORE_EXTENSION_ESSL3:
         return "extension directive must occur before any non-preprocessor tokens in ESSL3";
+      case PP_UNDEFINED_SHIFT:
+          return "shift exponent is negative or undefined";
       // Errors end.
       // Warnings begin.
       case PP_EOF_IN_DIRECTIVE:

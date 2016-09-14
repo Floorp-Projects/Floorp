@@ -75,6 +75,7 @@ bool CompareShaderVar(const sh::ShaderVariable &x, const sh::ShaderVariable &y)
 
 ShaderState::ShaderState(GLenum shaderType) : mLabel(), mShaderType(shaderType), mShaderVersion(100)
 {
+    mLocalSize.fill(-1);
 }
 
 ShaderState::~ShaderState()
@@ -306,18 +307,28 @@ void Shader::compile(Compiler *compiler)
     mState.mUniforms        = GetShaderVariables(ShGetUniforms(compilerHandle));
     mState.mInterfaceBlocks = GetShaderVariables(ShGetInterfaceBlocks(compilerHandle));
 
-    if (mState.mShaderType == GL_VERTEX_SHADER)
+    switch (mState.mShaderType)
     {
-        mState.mActiveAttributes = GetActiveShaderVariables(ShGetAttributes(compilerHandle));
-    }
-    else
-    {
-        ASSERT(mState.mShaderType == GL_FRAGMENT_SHADER);
-
-        // TODO(jmadill): Figure out why we only sort in the FS, and if we need to.
-        std::sort(mState.mVaryings.begin(), mState.mVaryings.end(), CompareShaderVar);
-        mState.mActiveOutputVariables =
-            GetActiveShaderVariables(ShGetOutputVariables(compilerHandle));
+        case GL_COMPUTE_SHADER:
+        {
+            mState.mLocalSize = ShGetComputeShaderLocalGroupSize(compilerHandle);
+            break;
+        }
+        case GL_VERTEX_SHADER:
+        {
+            mState.mActiveAttributes = GetActiveShaderVariables(ShGetAttributes(compilerHandle));
+            break;
+        }
+        case GL_FRAGMENT_SHADER:
+        {
+            // TODO(jmadill): Figure out why we only sort in the FS, and if we need to.
+            std::sort(mState.mVaryings.begin(), mState.mVaryings.end(), CompareShaderVar);
+            mState.mActiveOutputVariables =
+                GetActiveShaderVariables(ShGetOutputVariables(compilerHandle));
+            break;
+        }
+        default:
+            UNREACHABLE();
     }
 
     ASSERT(!mState.mTranslatedSource.empty());
