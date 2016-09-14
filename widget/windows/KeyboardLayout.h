@@ -263,6 +263,10 @@ private:
   RefPtr<TextEventDispatcher> mDispatcher;
   HKL mKeyboardLayout;
   MSG mMsg;
+  // mFollowingCharMsgs stores WM_CHAR, WM_SYSCHAR, WM_DEADCHAR or
+  // WM_SYSDEADCHAR message which follows WM_KEYDOWN.
+  // Note that the stored messaged are already removed from the queue.
+  nsTArray<MSG> mFollowingCharMsgs;
 
   uint32_t mDOMKeyCode;
   KeyNameIndex mKeyNameIndex;
