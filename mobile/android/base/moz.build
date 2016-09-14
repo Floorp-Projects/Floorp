@@ -335,7 +335,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'db/SearchHistoryProvider.java',
     'db/SharedBrowserDatabaseProvider.java',
     'db/SQLiteBridgeContentProvider.java',
-    'db/StubBrowserDB.java',
     'db/SuggestedSites.java',
     'db/Table.java',
     'db/TabsAccessor.java',
