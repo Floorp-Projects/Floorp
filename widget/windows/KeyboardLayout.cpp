@@ -886,10 +886,23 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
   mIsExtended = WinUtils::IsExtendedScanCode(mMsg.lParam);
   switch (mMsg.message) {
     case WM_KEYDOWN:
-    case WM_SYSKEYDOWN:
-    case MOZ_WM_KEYDOWN:
+    case WM_SYSKEYDOWN: {
+      // If next message is WM_*CHAR message, let's consume it now.
+      MSG charMsg;
+      while (GetFollowingCharMessage(charMsg)) {
+        // Although, got message shouldn't be WM_NULL in desktop apps,
+        // we should keep checking this.  FYI: This was added for Metrofox.
+        if (charMsg.message == WM_NULL) {
+          continue;
+        }
+        NS_WARN_IF(charMsg.hwnd != mMsg.hwnd);
+        mFollowingCharMsgs.AppendElement(charMsg);
+      }
+      MOZ_FALLTHROUGH;
+    }
     case WM_KEYUP:
     case WM_SYSKEYUP:
+    case MOZ_WM_KEYDOWN:
     case MOZ_WM_KEYUP: {
       // First, resolve the IME converted virtual keycode to its original
       // keycode.
@@ -1077,8 +1090,8 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
       ComputeInputtingStringWithKeyboardLayout();
     } else {
       // This message might be sent by SendInput() API to input a Unicode
-      // character, in such case, we can only know what char will be inputted
-      // with following WM_CHAR message.
+      // character, in such case, we can only know what chars will be inputted
+      // with following WM_CHAR messages.
       // TODO: We cannot initialize mCommittedCharsAndModifiers for VK_PACKET
       //       if the message is WM_KEYUP because we don't have preceding
       //       WM_CHAR message.  Therefore, we should dispatch eKeyUp event at
@@ -1089,13 +1102,14 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
       //       keypress event's default is prevented.  I guess, we should store
       //       key message information globally and we should wait following
       //       WM_KEYDOWN if following WM_CHAR is a part of a Unicode character.
-      MSG followingCharMsg;
-      if (GetFollowingCharMessage(followingCharMsg, false) &&
-          !IsControlChar(static_cast<char16_t>(followingCharMsg.wParam))) {
-        mCommittedCharsAndModifiers.Clear();
-        mCommittedCharsAndModifiers.Append(
-          static_cast<char16_t>(followingCharMsg.wParam),
-          mModKeyState.GetModifiers());
+      mCommittedCharsAndModifiers.Clear();
+      for (size_t i = 0; i < mFollowingCharMsgs.Length(); ++i) {
+        char16_t ch = static_cast<char16_t>(mFollowingCharMsgs[i].wParam);
+        // Skip control characters.
+        if (IsControlChar(ch)) {
+          continue;
+        }
+        mCommittedCharsAndModifiers.Append(ch, mModKeyState.GetModifiers());
       }
     }
   }
@@ -1217,36 +1231,20 @@ NativeKey::IsControlChar(char16_t aChar)
 bool
 NativeKey::IsFollowedByDeadCharMessage() const
 {
-  MSG nextMsg;
-  if (mFakeCharMsgs) {
-    nextMsg = mFakeCharMsgs->ElementAt(0).GetCharMsg(mMsg.hwnd);
-  } else if (IsKeyMessageOnPlugin()) {
+  if (mFollowingCharMsgs.IsEmpty()) {
     return false;
-  } else {
-    if (!WinUtils::PeekMessage(&nextMsg, mMsg.hwnd, WM_KEYFIRST, WM_KEYLAST,
-                               PM_NOREMOVE | PM_NOYIELD)) {
-      return false;
-    }
   }
-  return IsDeadCharMessage(nextMsg);
+  return IsDeadCharMessage(mFollowingCharMsgs[0]);
 }
 
 bool
 NativeKey::IsFollowedByNonControlCharMessage() const
 {
-  MSG nextMsg;
-  if (mFakeCharMsgs) {
-    nextMsg = mFakeCharMsgs->ElementAt(0).GetCharMsg(mMsg.hwnd);
-  } else if (IsKeyMessageOnPlugin()) {
+  if (mFollowingCharMsgs.IsEmpty()) {
     return false;
-  } else {
-    if (!WinUtils::PeekMessage(&nextMsg, mMsg.hwnd, WM_KEYFIRST, WM_KEYLAST,
-                               PM_NOREMOVE | PM_NOYIELD)) {
-      return false;
-    }
   }
-  return nextMsg.message == WM_CHAR &&
-         !IsControlChar(static_cast<char16_t>(nextMsg.wParam));
+  return mFollowingCharMsgs[0].message == WM_CHAR &&
+         !IsControlChar(static_cast<char16_t>(mFollowingCharMsgs[0].wParam));
 }
 
 bool
@@ -1817,16 +1815,17 @@ NativeKey::HandleKeyDownMessage(bool* aEventDispatched) const
             DispatchKeyPressEventsWithoutCharMessage());
   }
 
-  MSG followingCharMsg;
-  if (GetFollowingCharMessage(followingCharMsg)) {
-    // Even if there was char message, it might be redirected by different
-    // window (perhaps, focus move?).  Then, we shouldn't continue to handle
-    // the message since no input should occur on the window.
-    if (followingCharMsg.message == WM_NULL ||
-        followingCharMsg.hwnd != mMsg.hwnd) {
-      return false;
+  if (!mFollowingCharMsgs.IsEmpty()) {
+    bool consumed = false;
+    for (size_t i = 0; i < mFollowingCharMsgs.Length(); ++i) {
+      consumed =
+        DispatchKeyPressEventForFollowingCharMessage(mFollowingCharMsgs[i]) ||
+        consumed;
+      if (mWidget->Destroyed()) {
+        return true;
+      }
     }
-    return DispatchKeyPressEventForFollowingCharMessage(followingCharMsg);
+    return consumed;
   }
 
   // If WM_KEYDOWN of VK_PACKET isn't followed by WM_CHAR, we don't need to
@@ -2349,31 +2348,19 @@ NativeKey::GetFollowingCharMessage(MSG& aCharMsg, bool aRemove) const
   return false;
 }
 
+// TODO: Rename this method later.
 bool
 NativeKey::DispatchPluginEventsAndDiscardsCharMessages() const
 {
   MOZ_ASSERT(IsKeyDownMessage());
   MOZ_ASSERT(!IsKeyMessageOnPlugin());
 
-  // Remove a possible WM_CHAR or WM_SYSCHAR messages from the message queue.
-  // They can be more than one because of:
-  //  * Dead-keys not pairing with base character
-  //  * Some keyboard layouts may map up to 4 characters to the single key
   bool anyCharMessagesRemoved = false;
-  MSG msg;
-  while (GetFollowingCharMessage(msg)) {
-    if (msg.message == WM_NULL) {
-      continue;
-    }
+  for (size_t i = 0; i < mFollowingCharMsgs.Length(); ++i) {
     anyCharMessagesRemoved = true;
-    // If the window handle is changed, focused window must be changed.
-    // So, plugin shouldn't handle it anymore.
-    if (msg.hwnd != mMsg.hwnd) {
-      break;
-    }
     MOZ_RELEASE_ASSERT(!mWidget->Destroyed(),
       "NativeKey tries to dispatch a plugin event on destroyed widget");
-    mWidget->DispatchPluginEvent(msg);
+    mWidget->DispatchPluginEvent(mFollowingCharMsgs[i]);
     if (mWidget->Destroyed()) {
       return true;
     }
@@ -2382,6 +2369,7 @@ NativeKey::DispatchPluginEventsAndDiscardsCharMessages() const
   if (!mFakeCharMsgs && !anyCharMessagesRemoved &&
       mDOMKeyCode == NS_VK_BACK && IsIMEDoingKakuteiUndo()) {
     // This is for a hack for ATOK and WXG.  So, PeekMessage() must scceed!
+    MSG msg;
     while (WinUtils::PeekMessage(&msg, mMsg.hwnd, WM_CHAR, WM_CHAR,
                                  PM_REMOVE | PM_NOYIELD)) {
       if (msg.message != WM_CHAR) {
