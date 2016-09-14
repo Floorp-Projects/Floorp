@@ -178,12 +178,23 @@ private:
                                  CancelableBlockState* aBlock);
   void MainThreadTimeout(const uint64_t& aInputBlockId);
   void ProcessInputBlocks();
+  void ClearActiveBlock(CancelableBlockState* aBlock);
   void UpdateActiveApzc(const RefPtr<AsyncPanZoomController>& aNewActive);
 
 private:
   // The queue of input blocks that have not yet been fully processed.
   // This member must only be accessed on the controller/UI thread.
   nsTArray<RefPtr<CancelableBlockState>> mInputBlockQueue;
+
+  // These are the most recently created blocks of each input type. They are
+  // "active" in the sense that new inputs of that type are associated with
+  // them. Note that these pointers may be null if no inputs of the type have
+  // arrived, or if the inputs for the type formed a complete block that was
+  // then discarded.
+  RefPtr<TouchBlockState> mActiveTouchBlock;
+  RefPtr<WheelBlockState> mActiveWheelBlock;
+  RefPtr<DragBlockState> mActiveDragBlock;
+  RefPtr<PanGestureBlockState> mActivePanGestureBlock;
 
   // The APZC to which the last event was delivered
   RefPtr<AsyncPanZoomController> mLastActiveApzc;
