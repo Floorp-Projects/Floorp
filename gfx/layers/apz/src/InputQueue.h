@@ -168,11 +168,6 @@ private:
                                         uint64_t* aOutInputBlockId);
 
   /**
-   * Remove any blocks that are inactive - not ready, and having no events.
-   */
-  void SweepDepletedBlocks();
-
-  /**
    * Helper function that searches mQueuedInputs for the first block matching
    * the given id, and returns it. If |aOutFirstInput| is non-null, it is
    * populated with a pointer to the first input in mQueuedInputs that
@@ -187,13 +182,10 @@ private:
                                  CancelableBlockState* aBlock);
   void MainThreadTimeout(const uint64_t& aInputBlockId);
   void ProcessInputBlocks();
-  void ClearActiveBlock(CancelableBlockState* aBlock);
+  bool CanDiscardBlock(CancelableBlockState* aBlock);
   void UpdateActiveApzc(const RefPtr<AsyncPanZoomController>& aNewActive);
 
 private:
-  // The queue of input blocks that have not yet been fully processed.
-  // This member must only be accessed on the controller/UI thread.
-  nsTArray<RefPtr<CancelableBlockState>> mInputBlockQueue;
   // The queue of input events that have not yet been fully processed.
   // This member must only be accessed on the controller/UI thread.
   nsTArray<UniquePtr<QueuedInput>> mQueuedInputs;
