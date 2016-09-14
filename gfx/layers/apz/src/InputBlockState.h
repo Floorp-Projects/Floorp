@@ -197,13 +197,13 @@ public:
   /**
    * Throw away all the events in this input block.
    */
-  virtual void DropEvents() = 0;
+  virtual void DropEvents(nsTArray<UniquePtr<QueuedInput>>* aQueued) = 0;
 
   /**
    * Process all events using this input block's target apzc, leaving this
    * block depleted. This input block's apzc must not be nullptr.
    */
-  virtual void HandleEvents() = 0;
+  virtual void HandleEvents(nsTArray<UniquePtr<QueuedInput>>* aQueued) = 0;
 
   /**
    * Return true if this input block must stay active if it would otherwise
@@ -235,8 +235,8 @@ public:
 
   bool SetContentResponse(bool aPreventDefault) override;
   bool HasEvents() const override;
-  void DropEvents() override;
-  void HandleEvents() override;
+  void DropEvents(nsTArray<UniquePtr<QueuedInput>>* aQueued) override;
+  void HandleEvents(nsTArray<UniquePtr<QueuedInput>>* aQueued) override;
   bool MustStayActive() override;
   const char* Type() override;
   bool SetConfirmedTargetApzc(const RefPtr<AsyncPanZoomController>& aTargetApzc,
@@ -320,8 +320,8 @@ public:
                  const MouseInput& aEvent);
 
   bool HasEvents() const override;
-  void DropEvents() override;
-  void HandleEvents() override;
+  void DropEvents(nsTArray<UniquePtr<QueuedInput>>* aQueued) override;
+  void HandleEvents(nsTArray<UniquePtr<QueuedInput>>* aQueued) override;
   bool MustStayActive() override;
   const char* Type() override;
 
@@ -357,8 +357,8 @@ public:
   bool HasReceivedAllContentNotifications() const override;
   bool IsReadyForHandling() const override;
   bool HasEvents() const override;
-  void DropEvents() override;
-  void HandleEvents() override;
+  void DropEvents(nsTArray<UniquePtr<QueuedInput>>* aQueued) override;
+  void HandleEvents(nsTArray<UniquePtr<QueuedInput>>* aQueued) override;
   bool MustStayActive() override;
   const char* Type() override;
   bool SetConfirmedTargetApzc(const RefPtr<AsyncPanZoomController>& aTargetApzc,
@@ -507,8 +507,8 @@ public:
   uint32_t GetActiveTouchCount() const;
 
   bool HasEvents() const override;
-  void DropEvents() override;
-  void HandleEvents() override;
+  void DropEvents(nsTArray<UniquePtr<QueuedInput>>* aQueued) override;
+  void HandleEvents(nsTArray<UniquePtr<QueuedInput>>* aQueued) override;
   void DispatchEvent(const InputData& aEvent) const override;
   bool MustStayActive() override;
   const char* Type() override;
