@@ -1847,14 +1847,14 @@ NativeKey::HandleKeyDownMessage(bool* aEventDispatched) const
   }
 
   if (defaultPrevented) {
-    DispatchPluginEventsAndDiscardsCharMessages();
+    MaybeDispatchPluginEventsForRemovedCharMessages();
     return true;
   }
 
   // If we won't be getting a WM_CHAR, WM_SYSCHAR or WM_DEADCHAR, synthesize a
   // keypress for almost all keys
   if (NeedsToHandleWithoutFollowingCharMessages()) {
-    return (DispatchPluginEventsAndDiscardsCharMessages() ||
+    return (MaybeDispatchPluginEventsForRemovedCharMessages() ||
             DispatchKeyPressEventsWithoutCharMessage());
   }
 
@@ -2386,14 +2386,15 @@ NativeKey::GetFollowingCharMessage(MSG& aCharMsg) const
   return false;
 }
 
-// TODO: Rename this method later.
 bool
-NativeKey::DispatchPluginEventsAndDiscardsCharMessages() const
+NativeKey::MaybeDispatchPluginEventsForRemovedCharMessages() const
 {
   MOZ_ASSERT(IsKeyDownMessage());
   MOZ_ASSERT(!IsKeyMessageOnPlugin());
 
-  for (size_t i = 0; i < mFollowingCharMsgs.Length(); ++i) {
+  for (size_t i = 0;
+       i < mFollowingCharMsgs.Length() && mWidget->ShouldDispatchPluginEvent();
+       ++i) {
     MOZ_RELEASE_ASSERT(!mWidget->Destroyed(),
       "NativeKey tries to dispatch a plugin event on destroyed widget");
     mWidget->DispatchPluginEvent(mFollowingCharMsgs[i]);
@@ -2404,7 +2405,9 @@ NativeKey::DispatchPluginEventsAndDiscardsCharMessages() const
 
   // Dispatch odd char messages which are caused by ATOK or WXG (both of them
   // are Japanese IME) and removed by RemoveFollowingOddCharMessages().
-  for (size_t i = 0; i < mRemovedOddCharMsgs.Length(); ++i) {
+  for (size_t i = 0;
+       i < mRemovedOddCharMsgs.Length() && mWidget->ShouldDispatchPluginEvent();
+       ++i) {
     MOZ_RELEASE_ASSERT(!mWidget->Destroyed(),
       "NativeKey tries to dispatch a plugin event on destroyed widget");
     mWidget->DispatchPluginEvent(mRemovedOddCharMsgs[i]);
