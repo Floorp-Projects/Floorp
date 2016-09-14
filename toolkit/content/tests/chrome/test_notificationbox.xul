@@ -48,22 +48,35 @@ function testtag_notificationbox(nb)
   runTimedTests(tests, -1, nb, null);
 }
 
-var notification_last_event, notification_last_event_item;
+var notification_last_events = [];
 function notification_eventCallback(event)
 {
-  notification_last_event = event;
-  notification_last_event_item = this;
+  notification_last_events.push({ actualEvent: event , item: this });
 }
 
-function testtag_notification_eventCallback(expectedEvent, ntf, testName)
+/**
+ * For any notifications that have the notification_eventCallback on
+ * them, we will have recorded instances of those callbacks firing
+ * and stored them. This checks to see that the expected event types
+ * are being fired in order, and targeting the right item.
+ *
+ * @param {Array<string>} expectedEvents
+ *        The list of event types, in order, that we expect to have been
+ *        fired on the item.
+ * @param {<xul:notification>} ntf
+ *        The notification we expect the callback to have been fired from.
+ * @param {string} testName
+ *        The name of the current test, for logging.
+ */
+function testtag_notification_eventCallback(expectedEvents, ntf, testName)
 {
-  SimpleTest.is(notification_last_event, expectedEvent,
-                testName + ": event name");
-  SimpleTest.is(notification_last_event_item, ntf,
-                testName + ": event item");
-
-  notification_last_event = null;
-  notification_last_event_item = null;
+  for (let i = 0; i < expectedEvents; ++i) {
+    let expected = expectedEvents[i];
+    let { actualEvent, item } = notification_last_events[i];
+    SimpleTest.is(actualEvent, expected, testName + ": event name");
+    SimpleTest.is(item, ntf, testName + ": event item");
+  }
+  notification_last_events = [];
 }
 
 var tests =
@@ -133,7 +146,36 @@ var tests =
       testtag_notificationbox_State(nb, "removeNotification with callback",
                                     null, 0);
 
-      testtag_notification_eventCallback("removed", ntf, "removeNotification()");
+      testtag_notification_eventCallback(["removed"], ntf, "removeNotification()");
+      return ntf;
+    }
+  },
+  {
+    test: function(nb, ntf) {
+      var ntf = nb.appendNotification("Notification", "note", "happy.png",
+                                      nb.PRIORITY_INFO_LOW,
+                                      testtag_notificationbox_buttons,
+                                      notification_eventCallback);
+      SimpleTest.is(ntf && ntf.localName == "notification", true, "append notification with callback");
+      return ntf;
+    },
+    result: function(nb, ntf) {
+      testtag_notificationbox_State(nb, "append with callback", ntf, 1);
+      return ntf;
+    }
+  },
+  {
+    test: function(rb, ntf) {
+      // Dismissing the notification instead of removing it should
+      // fire a dismissed "event" on the callback, followed by
+      // a removed "event".
+      ntf.dismiss();
+      return ntf;
+    },
+    result: function(nb, ntf) {
+      testtag_notificationbox_State(nb, "called dismiss()", null, 0);
+      testtag_notification_eventCallback(["dismissed", "removed"], ntf,
+                                         "dismiss()");
       return ntf;
     }
   },

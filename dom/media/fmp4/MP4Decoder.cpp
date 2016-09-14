@@ -13,6 +13,7 @@
 #include "mozilla/CDMProxy.h"
 #endif
 #include "mozilla/Logging.h"
+#include "mozilla/SharedThreadPool.h"
 #include "nsMimeTypes.h"
 #include "nsContentTypeParser.h"
 #include "VideoUtils.h"
@@ -279,7 +280,7 @@ MP4Decoder::IsVideoAccelerated(layers::LayersBackend aBackend, nsIGlobalObject* 
              taskQueue->AwaitShutdownAndIdle();
              promise->MaybeResolve(result);
            },
-           [promise, decoder, taskQueue] (MediaDataDecoder::DecoderFailureReason aResult) {
+           [promise, decoder, taskQueue] (MediaResult aError) {
              decoder->Shutdown();
              taskQueue->BeginShutdown();
              taskQueue->AwaitShutdownAndIdle();

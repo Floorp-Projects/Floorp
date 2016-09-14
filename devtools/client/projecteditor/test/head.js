@@ -57,15 +57,13 @@ function addTab(url) {
   info("Adding a new tab with URL: '" + url + "'");
   let def = promise.defer();
 
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onload() {
-    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
+  let tab = gBrowser.selectedTab = gBrowser.addTab(url);
+  BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(function () {
     info("URL '" + url + "' loading complete");
     waitForFocus(() => {
       def.resolve(tab);
     }, content);
-  }, true);
-  content.location = url;
+  });
 
   return def.promise;
 }

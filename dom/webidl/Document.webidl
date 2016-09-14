@@ -278,9 +278,7 @@ partial interface Document {
 // http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/PageVisibility/Overview.html#sec-document-interface
 partial interface Document {
   readonly attribute boolean hidden;
-  readonly attribute boolean mozHidden;
   readonly attribute VisibilityState visibilityState;
-  readonly attribute VisibilityState mozVisibilityState;
 };
 
 // http://dev.w3.org/csswg/cssom/#extensions-to-the-document-interface

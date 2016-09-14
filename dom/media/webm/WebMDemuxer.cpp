@@ -188,12 +188,12 @@ WebMDemuxer::Init()
   InitBufferedState();
 
   if (NS_FAILED(ReadMetadata())) {
-    return InitPromise::CreateAndReject(DemuxerFailureReason::DEMUXER_ERROR, __func__);
+    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_METADATA_ERR, __func__);
   }
 
   if (!GetNumberTracks(TrackInfo::kAudioTrack) &&
       !GetNumberTracks(TrackInfo::kVideoTrack)) {
-    return InitPromise::CreateAndReject(DemuxerFailureReason::DEMUXER_ERROR, __func__);
+    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_METADATA_ERR, __func__);
   }
 
   return InitPromise::CreateAndResolve(NS_OK, __func__);
@@ -955,9 +955,7 @@ RefPtr<WebMTrackDemuxer::SamplesPromise>
 WebMTrackDemuxer::GetSamples(int32_t aNumSamples)
 {
   RefPtr<SamplesHolder> samples = new SamplesHolder;
-  if (!aNumSamples) {
-    return SamplesPromise::CreateAndReject(DemuxerFailureReason::DEMUXER_ERROR, __func__);
-  }
+  MOZ_ASSERT(aNumSamples);
 
   while (aNumSamples) {
     RefPtr<MediaRawData> sample(NextSample());
@@ -973,7 +971,7 @@ WebMTrackDemuxer::GetSamples(int32_t aNumSamples)
   }
 
   if (samples->mSamples.IsEmpty()) {
-    return SamplesPromise::CreateAndReject(DemuxerFailureReason::END_OF_STREAM, __func__);
+    return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_END_OF_STREAM, __func__);
   } else {
     UpdateSamples(samples->mSamples);
     return SamplesPromise::CreateAndResolve(samples, __func__);
@@ -1109,7 +1107,7 @@ WebMTrackDemuxer::SkipToNextRandomAccessPoint(media::TimeUnit aTimeThreshold)
                parsed);
     return SkipAccessPointPromise::CreateAndResolve(parsed, __func__);
   } else {
-    SkipFailureHolder failure(DemuxerFailureReason::END_OF_STREAM, parsed);
+    SkipFailureHolder failure(NS_ERROR_DOM_MEDIA_END_OF_STREAM, parsed);
     return SkipAccessPointPromise::CreateAndReject(Move(failure), __func__);
   }
 }

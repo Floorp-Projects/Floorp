@@ -394,7 +394,13 @@ void RespondWithCopyComplete(void* aClosure, nsresult aStatus)
                                data->mScriptSpec,
                                data->mResponseURLSpec);
   }
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(event));
+  // In theory this can happen after the worker thread is terminated.
+  WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
+  if (worker) {
+    MOZ_ALWAYS_SUCCEEDS(worker->DispatchToMainThread(event.forget()));
+  } else {
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(event.forget()));
+  }
 }
 
 namespace {
@@ -724,7 +730,13 @@ RespondWithHandler::CancelRequest(nsresult aStatus)
 {
   nsCOMPtr<nsIRunnable> runnable =
     new CancelChannelRunnable(mInterceptedChannel, mRegistration, aStatus);
-  NS_DispatchToMainThread(runnable);
+  // Note, this may run off the worker thread during worker termination.
+  WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
+  if (worker) {
+    MOZ_ALWAYS_SUCCEEDS(worker->DispatchToMainThread(runnable.forget()));
+  } else {
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable.forget()));
+  }
   mRequestWasHandled = true;
 }
 
@@ -857,8 +869,8 @@ public:
       mColumn = column;
     }
 
-    MOZ_ALWAYS_SUCCEEDS(
-      NS_DispatchToMainThread(NewRunnableMethod(this, &WaitUntilHandler::ReportOnMainThread)));
+    MOZ_ALWAYS_SUCCEEDS(mWorkerPrivate->DispatchToMainThread(
+        NewRunnableMethod(this, &WaitUntilHandler::ReportOnMainThread)));
   }
 
   void

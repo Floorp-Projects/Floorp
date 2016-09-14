@@ -15,6 +15,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/TaskQueue.h"
 #include "mozilla/Telemetry.h"
 
 #include "js/RootingAPI.h"
@@ -118,10 +119,7 @@ WorkerRunnable::DispatchInternal()
     return NS_SUCCEEDED(parent->Dispatch(runnable.forget()));
   }
 
-  nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-  MOZ_ASSERT(mainThread);
-
-  return NS_SUCCEEDED(mainThread->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL));
+  return NS_SUCCEEDED(mWorkerPrivate->DispatchToMainThread(runnable.forget()));
 }
 
 void
@@ -557,10 +555,7 @@ WorkerControlRunnable::DispatchInternal()
     return NS_SUCCEEDED(parent->DispatchControlRunnable(runnable.forget()));
   }
 
-  nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-  MOZ_ASSERT(mainThread);
-
-  return NS_SUCCEEDED(mainThread->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL));
+  return NS_SUCCEEDED(mWorkerPrivate->DispatchToMainThread(runnable.forget()));
 }
 
 NS_IMPL_ISUPPORTS_INHERITED0(WorkerControlRunnable, WorkerRunnable)
@@ -583,10 +578,8 @@ WorkerMainThreadRunnable::Dispatch(ErrorResult& aRv)
   AutoSyncLoopHolder syncLoop(mWorkerPrivate);
 
   mSyncLoopTarget = syncLoop.EventTarget();
-  RefPtr<WorkerMainThreadRunnable> runnable(this);
 
-  DebugOnly<nsresult> rv =
-    NS_DispatchToMainThread(runnable.forget(), NS_DISPATCH_NORMAL);
+  DebugOnly<nsresult> rv = mWorkerPrivate->DispatchToMainThread(this);
   MOZ_ASSERT(NS_SUCCEEDED(rv),
              "Should only fail after xpcom-shutdown-threads and we're gone by then");
 
@@ -682,7 +675,7 @@ WorkerProxyToMainThreadRunnable::Dispatch()
     return false;
   }
 
-  if (NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(this)))) {
+  if (NS_WARN_IF(NS_FAILED(mWorkerPrivate->DispatchToMainThread(this)))) {
     ReleaseWorker();
     RunBackOnWorkerThread();
     return false;

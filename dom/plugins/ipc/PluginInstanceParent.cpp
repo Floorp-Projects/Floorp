@@ -677,7 +677,7 @@ PluginInstanceParent::RecvInitDXGISurface(const gfx::SurfaceFormat& format,
         return true;
     }
 
-    ImageBridgeChild* forwarder = ImageBridgeChild::GetSingleton();
+    RefPtr<ImageBridgeChild> forwarder = ImageBridgeChild::GetSingleton();
     if (!forwarder) {
         return true;
     }

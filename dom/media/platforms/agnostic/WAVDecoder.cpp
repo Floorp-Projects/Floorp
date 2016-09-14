@@ -65,14 +65,15 @@ WaveDataDecoder::Init()
 void
 WaveDataDecoder::Input(MediaRawData* aSample)
 {
-  if (!DoDecode(aSample)) {
-    mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
+  MediaResult rv = DoDecode(aSample);
+  if (NS_FAILED(rv)) {
+    mCallback->Error(rv);
   } else {
     mCallback->InputExhausted();
   }
 }
 
-bool
+MediaResult
 WaveDataDecoder::DoDecode(MediaRawData* aSample)
 {
   size_t aLength = aSample->Size();
@@ -84,7 +85,7 @@ WaveDataDecoder::DoDecode(MediaRawData* aSample)
 
   AlignedAudioBuffer buffer(frames * mInfo.mChannels);
   if (!buffer) {
-    return false;
+    return MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
   }
   for (int i = 0; i < frames; ++i) {
     for (unsigned int j = 0; j < mInfo.mChannels; ++j) {
@@ -126,7 +127,7 @@ WaveDataDecoder::DoDecode(MediaRawData* aSample)
                                   mInfo.mChannels,
                                   mInfo.mRate));
 
-  return true;
+  return NS_OK;
 }
 
 void

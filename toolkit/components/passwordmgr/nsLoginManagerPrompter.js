@@ -1065,6 +1065,8 @@ LoginManagerPrompter.prototype = {
       this._showLoginNotification(aNotifyObj, "password-save",
                                   notificationText, buttons);
     }
+
+    Services.obs.notifyObservers(aLogin, "passwordmgr-prompt-save", null);
   },
 
   _removeLoginNotifications : function () {
@@ -1144,6 +1146,8 @@ LoginManagerPrompter.prototype = {
       // userChoice == 1 --> just ignore the login.
       this.log("Ignoring login.");
     }
+
+    Services.obs.notifyObservers(aLogin, "passwordmgr-prompt-save", null);
   },
 
 
@@ -1235,6 +1239,9 @@ LoginManagerPrompter.prototype = {
       this._showLoginNotification(aNotifyObj, "password-change",
                                   notificationText, buttons);
     }
+
+    let oldGUID = aOldLogin.QueryInterface(Ci.nsILoginMetaInfo).guid;
+    Services.obs.notifyObservers(aNewLogin, "passwordmgr-prompt-change", oldGUID);
   },
 
 
@@ -1265,6 +1272,9 @@ LoginManagerPrompter.prototype = {
       this.log("Updating password for user " + aOldLogin.username);
       this._updateLogin(aOldLogin, aNewLogin);
     }
+
+    let oldGUID = aOldLogin.QueryInterface(Ci.nsILoginMetaInfo).guid;
+    Services.obs.notifyObservers(aNewLogin, "passwordmgr-prompt-change", oldGUID);
   },
 
 

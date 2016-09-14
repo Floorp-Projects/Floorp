@@ -22,8 +22,9 @@ const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
 // Test helpers.
 function* verifyTrackerEmpty() {
-  do_check_empty(tracker.changedIDs);
-  do_check_eq(tracker.score, 0);
+  let changes = engine.pullNewChanges();
+  equal(changes.count(), 0);
+  equal(tracker.score, 0);
 }
 
 function* resetTracker() {
@@ -48,9 +49,12 @@ function* stopTracking() {
 }
 
 function* verifyTrackedItems(tracked) {
-  let trackedIDs = new Set(Object.keys(tracker.changedIDs));
+  let changes = engine.pullNewChanges();
+  let trackedIDs = new Set(changes.ids());
   for (let guid of tracked) {
-    ok(tracker.changedIDs[guid] > 0, `${guid} should be tracked`);
+    ok(changes.has(guid), `${guid} should be tracked`);
+    ok(changes.getModifiedTimestamp(guid) > 0,
+      `${guid} should have a modified time`);
     trackedIDs.delete(guid);
   }
   equal(trackedIDs.size, 0, `Unhandled tracked IDs: ${
@@ -58,7 +62,8 @@ function* verifyTrackedItems(tracked) {
 }
 
 function* verifyTrackedCount(expected) {
-  do_check_attribute_count(tracker.changedIDs, expected);
+  let changes = engine.pullNewChanges();
+  equal(changes.count(), expected);
 }
 
 add_task(function* test_tracking() {
@@ -389,7 +394,7 @@ add_task(function* test_onItemTagged() {
 
     // bookmark should be tracked, folder should not be.
     yield verifyTrackedItems([bGUID]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 5);
   } finally {
     _("Clean up.");
     yield cleanup();
@@ -522,7 +527,7 @@ add_task(function* test_async_onItemTagged() {
     });
 
     yield verifyTrackedItems([fxBmk1.guid, fxBmk2.guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 6);
   } finally {
     _("Clean up.");
     yield cleanup();
@@ -700,31 +705,73 @@ add_task(function* test_onItemAnnoChanged() {
   }
 });
 
-add_task(function* test_onItemExcluded() {
-  _("Items excluded from backups should not be tracked");
+add_task(function* test_onItemAdded_filtered_root() {
+  _("Items outside the change roots should not be tracked");
+
+  try {
+    yield startTracking();
+
+    _("Create a new root");
+    let rootID = PlacesUtils.bookmarks.createFolder(
+      PlacesUtils.bookmarks.placesRoot,
+      "New root",
+      PlacesUtils.bookmarks.DEFAULT_INDEX);
+    let rootGUID = engine._store.GUIDForId(rootID);
+    _(`New root GUID: ${rootGUID}`);
+
+    _("Insert a bookmark underneath the new root");
+    let untrackedBmkID = PlacesUtils.bookmarks.insertBookmark(
+      rootID,
+      Utils.makeURI("http://getthunderbird.com"),
+      PlacesUtils.bookmarks.DEFAULT_INDEX,
+      "Get Thunderbird!");
+    let untrackedBmkGUID = engine._store.GUIDForId(untrackedBmkID);
+    _(`New untracked bookmark GUID: ${untrackedBmkGUID}`);
+
+    _("Insert a bookmark underneath the Places root");
+    let rootBmkID = PlacesUtils.bookmarks.insertBookmark(
+      PlacesUtils.bookmarks.placesRoot,
+      Utils.makeURI("http://getfirefox.com"),
+      PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Firefox!");
+    let rootBmkGUID = engine._store.GUIDForId(rootBmkID);
+    _(`New Places root bookmark GUID: ${rootBmkGUID}`);
+
+    _("New root and bookmark should be ignored");
+    yield verifyTrackedItems([]);
+    // ...But we'll still increment the score and filter out the changes at
+    // sync time.
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 6);
+  } finally {
+    _("Clean up.");
+    yield cleanup();
+  }
+});
+
+add_task(function* test_onItemDeleted_filtered_root() {
+  _("Deleted items outside the change roots should be tracked");
 
   try {
     yield stopTracking();
 
-    _("Create a bookmark");
-    let b = PlacesUtils.bookmarks.insertBookmark(
-      PlacesUtils.bookmarks.bookmarksMenuFolder,
+    _("Insert a bookmark underneath the Places root");
+    let rootBmkID = PlacesUtils.bookmarks.insertBookmark(
+      PlacesUtils.bookmarks.placesRoot,
       Utils.makeURI("http://getfirefox.com"),
       PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Firefox!");
-    let bGUID = engine._store.GUIDForId(b);
+    let rootBmkGUID = engine._store.GUIDForId(rootBmkID);
+    _(`New Places root bookmark GUID: ${rootBmkGUID}`);
 
     yield startTracking();
 
-    _("Exclude the bookmark from backups");
-    PlacesUtils.annotations.setItemAnnotation(
-      b, BookmarkAnnos.EXCLUDEBACKUP_ANNO, "Don't back this up", 0,
-      PlacesUtils.annotations.EXPIRE_NEVER);
+    PlacesUtils.bookmarks.removeItem(rootBmkID);
 
-    _("Modify the bookmark");
-    PlacesUtils.bookmarks.setItemTitle(b, "Download Firefox");
-
-    _("Excluded items should be ignored");
-    yield verifyTrackerEmpty();
+    // We shouldn't upload tombstones for items in filtered roots, but the
+    // `onItemRemoved` observer doesn't have enough context to determine
+    // the root, so we'll end up uploading it.
+    yield verifyTrackedItems([rootBmkGUID]);
+    // We'll increment the counter twice (once for the removed item, and once
+    // for the Places root), then filter out the root.
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
   } finally {
     _("Clean up.");
     yield cleanup();
@@ -1254,22 +1301,43 @@ add_task(function* test_async_onItemDeleted_eraseEverything() {
       url: "https://developer.mozilla.org",
       title: "MDN",
     });
+    _(`MDN GUID: ${mdnBmk.guid}`);
     let bugsFolder = yield PlacesUtils.bookmarks.insert({
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       parentGuid: PlacesUtils.bookmarks.toolbarGuid,
       title: "Bugs",
     });
+    _(`Bugs folder GUID: ${bugsFolder.guid}`);
     let bzBmk = yield PlacesUtils.bookmarks.insert({
       type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
       parentGuid: bugsFolder.guid,
       url: "https://bugzilla.mozilla.org",
       title: "Bugzilla",
     });
+    _(`Bugzilla GUID: ${bzBmk.guid}`);
+    let bugsChildFolder = yield PlacesUtils.bookmarks.insert({
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      parentGuid: bugsFolder.guid,
+      title: "Bugs child",
+    });
+    _(`Bugs child GUID: ${bugsChildFolder.guid}`);
+    let bugsGrandChildBmk = yield PlacesUtils.bookmarks.insert({
+      type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      parentGuid: bugsChildFolder.guid,
+      url: "https://example.com",
+      title: "Bugs grandchild",
+    });
+    _(`Bugs grandchild GUID: ${bugsGrandChildBmk.guid}`);
 
     yield startTracking();
 
     yield PlacesUtils.bookmarks.eraseEverything();
 
+    // `eraseEverything` removes all items from the database before notifying
+    // observers. Because of this, grandchild lookup in the tracker's
+    // `onItemRemoved` observer will fail. That means we won't track
+    // (bzBmk.guid, bugsGrandChildBmk.guid, bugsChildFolder.guid), even
+    // though we should.
     yield verifyTrackedItems(["menu", mozBmk.guid, mdnBmk.guid, "toolbar",
                               bugsFolder.guid]);
     do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 6);

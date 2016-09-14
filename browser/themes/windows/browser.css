@@ -2434,7 +2434,6 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton {
   }
 }
 
-%include ../shared/login-doorhanger.inc.css
 
 %include downloads/indicator.css
 

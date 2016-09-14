@@ -95,8 +95,7 @@ add_task(function* test_search() {
   do_register_cleanup(() => {
     Services.prefs.clearUserPref("browser.download.folderList");
     Services.prefs.clearUserPref("browser.download.dir");
-    downloadDir.remove(true);
-    return clearDownloads();
+    return cleanupDir(downloadDir).then(clearDownloads);
   });
 
   yield clearDownloads().then(downloads => {

@@ -93,7 +93,7 @@ public:
     mObserver = new ExpirationTrackerObserver();
     mObserver->Init(this);
   }
-  ~nsExpirationTracker()
+  virtual ~nsExpirationTracker()
   {
     if (mTimer) {
       mTimer->Cancel();

@@ -236,6 +236,27 @@ testing/web-platform/tests for tests that may be shared
             proc.wait()
 
 
+class WPTManifestUpdater(MozbuildObject):
+    def run_update(self):
+        import imp
+        from wptrunner import wptlogging
+        from wptrunner.wptcommandline import get_test_paths, set_from_config
+        from wptrunner.testloader import ManifestLoader
+
+        wpt_dir = os.path.abspath(os.path.join(self.topsrcdir, 'testing', 'web-platform'))
+
+        localpaths = imp.load_source("localpaths",
+                                     os.path.join(wpt_dir, "tests", "tools", "localpaths.py"))
+        kwargs = {"config": os.path.join(wpt_dir, "wptrunner.ini"),
+                  "tests_root": None,
+                  "metadata_root": None}
+
+        wptlogging.setup({}, {"mach": sys.stdout})
+        set_from_config(kwargs)
+        test_paths = get_test_paths(kwargs["config"])
+        ManifestLoader(test_paths, force_manifest_update=True).load()
+
+
 def create_parser_wpt():
     from wptrunner import wptcommandline
     return wptcommandline.create_parser(["firefox"])
@@ -292,6 +313,13 @@ class MachCommands(MachCommandBase):
         else:
             return wpt_runner.run_tests(**params)
 
+    @Command("wpt",
+             category="testing",
+             conditions=[conditions.is_firefox],
+             parser=create_parser_wpt)
+    def run_wpt(self, **params):
+        return self.run_web_platform_tests(**params)
+
     @Command("web-platform-tests-update",
              category="testing",
              parser=create_parser_update)
@@ -301,6 +329,12 @@ class MachCommands(MachCommandBase):
         self.virtualenv_manager.install_pip_package('requests')
         wpt_updater = self._spawn(WebPlatformTestsUpdater)
         return wpt_updater.run_update(**params)
+
+    @Command("wpt-update",
+             category="testing",
+             parser=create_parser_update)
+    def update_wpt(self, **params):
+        return self.update_web_platform_tests(**params)
 
     def setup(self):
         self._activate_virtualenv()
@@ -314,6 +348,13 @@ class MachCommands(MachCommandBase):
         wpt_reduce = self._spawn(WebPlatformTestsReduce)
         return wpt_reduce.run_reduce(**params)
 
+    @Command("wpt-reduce",
+             category="testing",
+             conditions=[conditions.is_firefox],
+             parser=create_parser_reduce)
+    def unstable_wpt(self, **params):
+        return self.unstable_web_platform_tests(**params)
+
     @Command("web-platform-tests-create",
              category="testing",
              conditions=[conditions.is_firefox],
@@ -322,3 +363,17 @@ class MachCommands(MachCommandBase):
         self.setup()
         wpt_creator = self._spawn(WebPlatformTestsCreator)
         wpt_creator.run_create(self._mach_context, **params)
+
+    @Command("wpt-create",
+             category="testing",
+             conditions=[conditions.is_firefox],
+             parser=create_parser_create)
+    def create_wpt(self, **params):
+        return self.create_web_platform_test(**params)
+
+    @Command("wpt-manifest-update",
+             category="testing")
+    def wpt_manifest_update(self, **parms):
+        self.setup()
+        wpt_manifest_updater = self._spawn(WPTManifestUpdater)
+        wpt_manifest_updater.run_update()

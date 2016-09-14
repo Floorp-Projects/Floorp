@@ -22,7 +22,8 @@ class MediaError final : public nsIDOMMediaError,
   ~MediaError() {}
 
 public:
-  MediaError(HTMLMediaElement* aParent, uint16_t aCode);
+  MediaError(HTMLMediaElement* aParent, uint16_t aCode,
+             const nsACString& aMessage = nsCString());
 
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -48,6 +49,8 @@ private:
 
   // Error code
   const uint16_t mCode;
+  // Error details;
+  const nsCString mMessage;
 };
 
 } // namespace dom

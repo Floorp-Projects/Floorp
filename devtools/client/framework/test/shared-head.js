@@ -117,7 +117,7 @@ var addTab = Task.async(function* (url) {
   info("Adding a new tab with URL: " + url);
 
   let tab = gBrowser.selectedTab = gBrowser.addTab(url);
-  yield once(gBrowser.selectedBrowser, "load", true);
+  yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   info("Tab added and finished loading");
 
@@ -146,7 +146,7 @@ var removeTab = Task.async(function* (tab) {
  */
 var refreshTab = Task.async(function*(tab) {
   info("Refreshing tab.");
-  const finished = once(gBrowser.selectedBrowser, "load", true);
+  const finished = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   gBrowser.reloadTab(gBrowser.selectedTab);
   yield finished;
   info("Tab finished refreshing.");
@@ -295,9 +295,7 @@ function waitForTick() {
  * @return A promise that resolves when the time is passed
  */
 function wait(ms) {
-  let def = defer();
-  content.setTimeout(def.resolve, ms);
-  return def.promise;
+  return new promise(resolve => setTimeout(resolve, ms));
 }
 
 /**

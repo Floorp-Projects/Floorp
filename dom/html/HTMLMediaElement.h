@@ -179,7 +179,7 @@ public:
 
   // Called by the video decoder object, on the main thread, when the
   // resource has a decode error during metadata loading or decoding.
-  virtual void DecodeError() final override;
+  virtual void DecodeError(const MediaResult& aError) final override;
 
   // Return true if error attribute is not null.
   virtual bool HasError() const final override;
@@ -1116,7 +1116,7 @@ protected:
    * Resets the media element for an error condition as per aErrorCode.
    * aErrorCode must be one of nsIDOMHTMLMediaError codes.
    */
-  void Error(uint16_t aErrorCode);
+  void Error(uint16_t aErrorCode, const MediaResult& aErrorDetails = NS_OK);
 
   /**
    * Returns the URL spec of the currentSrc.

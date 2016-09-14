@@ -169,7 +169,7 @@ OmxDataDecoder::Init()
         MOZ_ASSERT(self->mOmxState != OMX_StateIdle);
       },
       [self] () {
-        self->RejectInitPromise(DecoderFailureReason::INIT_ERROR, __func__);
+        self->RejectInitPromise(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
       });
 
   return p;
@@ -430,9 +430,9 @@ OmxDataDecoder::EmptyBufferFailure(OmxBufferFailureHolder aFailureHolder)
 }
 
 void
-OmxDataDecoder::NotifyError(OMX_ERRORTYPE aOmxError, const char* aLine, MediaDataDecoderError aError)
+OmxDataDecoder::NotifyError(OMX_ERRORTYPE aOmxError, const char* aLine, const MediaResult& aError)
 {
-  LOG("NotifyError %d (%d) at %s", aOmxError, aError, aLine);
+  LOG("NotifyError %d (%d) at %s", aOmxError, aError.Code(), aLine);
   mCallback->Error(aError);
 }
 
@@ -551,13 +551,13 @@ OmxDataDecoder::ResolveInitPromise(const char* aMethodName)
 }
 
 void
-OmxDataDecoder::RejectInitPromise(DecoderFailureReason aReason, const char* aMethodName)
+OmxDataDecoder::RejectInitPromise(MediaResult aError, const char* aMethodName)
 {
   RefPtr<OmxDataDecoder> self = this;
   nsCOMPtr<nsIRunnable> r =
-    NS_NewRunnableFunction([self, aReason, aMethodName] () {
+    NS_NewRunnableFunction([self, aError, aMethodName] () {
       MOZ_ASSERT(self->mReaderTaskQueue->IsCurrentThreadIn());
-      self->mInitPromise.RejectIfExists(aReason, aMethodName);
+      self->mInitPromise.RejectIfExists(aError, aMethodName);
     });
   mReaderTaskQueue->Dispatch(r.forget());
 }
@@ -583,7 +583,7 @@ OmxDataDecoder::OmxStateRunner()
                MOZ_ASSERT(self->mOmxState == OMX_StateIdle);
              },
              [self] () {
-               self->RejectInitPromise(DecoderFailureReason::INIT_ERROR, __func__);
+               self->RejectInitPromise(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
              });
 
     // Allocate input and output buffers.
@@ -591,7 +591,7 @@ OmxDataDecoder::OmxStateRunner()
     for(const auto id : types) {
       if (NS_FAILED(AllocateBuffers(id))) {
         LOG("Failed to allocate buffer on port %d", id);
-        RejectInitPromise(DecoderFailureReason::INIT_ERROR, __func__);
+        RejectInitPromise(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
         break;
       }
     }
@@ -606,7 +606,7 @@ OmxDataDecoder::OmxStateRunner()
                self->ResolveInitPromise(__func__);
              },
              [self] () {
-               self->RejectInitPromise(DecoderFailureReason::INIT_ERROR, __func__);
+               self->RejectInitPromise(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
              });
   } else if (mOmxState == OMX_StateExecuting) {
     // Configure codec once it gets OMX_StateExecuting state.
@@ -690,7 +690,8 @@ OmxDataDecoder::Event(OMX_EVENTTYPE aEvent, OMX_U32 aData1, OMX_U32 aData2)
     {
       // Got error during decoding, send msg to MFR skipping to next key frame.
       if (aEvent == OMX_EventError && mOmxState == OMX_StateExecuting) {
-        NotifyError((OMX_ERRORTYPE)aData1, __func__, MediaDataDecoderError::DECODE_ERROR);
+        NotifyError((OMX_ERRORTYPE)aData1, __func__,
+                    MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__));
         return true;
       }
       LOG("WARNING: got none handle event: %d, aData1: %d, aData2: %d",

@@ -8,6 +8,7 @@
 
 #include "base/win/windows_version.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Logging.h"
 #include "sandbox/win/src/sandbox.h"
 #include "sandbox/win/src/security_level.h"
 
@@ -15,6 +16,10 @@ namespace mozilla
 {
 
 sandbox::BrokerServices *SandboxBroker::sBrokerService = nullptr;
+
+static LazyLogModule sSandboxBrokerLog("SandboxBroker");
+
+#define LOG_E(...) MOZ_LOG(sSandboxBrokerLog, LogLevel::Error, (__VA_ARGS__))
 
 /* static */
 void
@@ -458,7 +463,12 @@ SandboxBroker::AllowReadFile(wchar_t const *file)
     mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_FILES,
                      sandbox::TargetPolicy::FILES_ALLOW_READONLY,
                      file);
-  return (sandbox::SBOX_ALL_OK == result);
+  if (sandbox::SBOX_ALL_OK != result) {
+    LOG_E("Failed (ResultCode %d) to add read access to: %S", result, file);
+    return false;
+  }
+
+  return true;
 }
 
 bool
@@ -472,7 +482,13 @@ SandboxBroker::AllowReadWriteFile(wchar_t const *file)
     mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_FILES,
                      sandbox::TargetPolicy::FILES_ALLOW_ANY,
                      file);
-  return (sandbox::SBOX_ALL_OK == result);
+  if (sandbox::SBOX_ALL_OK != result) {
+    LOG_E("Failed (ResultCode %d) to add read/write access to: %S",
+          result, file);
+    return false;
+  }
+
+  return true;
 }
 
 bool
@@ -486,7 +502,12 @@ SandboxBroker::AllowDirectory(wchar_t const *dir)
     mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_FILES,
                      sandbox::TargetPolicy::FILES_ALLOW_DIR_ANY,
                      dir);
-  return (sandbox::SBOX_ALL_OK == result);
+  if (sandbox::SBOX_ALL_OK != result) {
+    LOG_E("Failed (ResultCode %d) to add directory access to: %S", result, dir);
+    return false;
+  }
+
+  return true;
 }
 
 bool
