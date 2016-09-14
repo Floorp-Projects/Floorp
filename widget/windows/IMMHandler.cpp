@@ -1470,13 +1470,14 @@ IMMHandler::HandleComposition(nsWindow* aWindow,
         clauseArrayLength = clauseArrayLength2;
     }
 
-    if (useA_API) {
+    if (useA_API && clauseArrayLength > 0) {
       // Convert each values of sIMECompClauseArray. The values mean offset of
       // the clauses in ANSI string. But we need the values in Unicode string.
       nsAutoCString compANSIStr;
       if (ConvertToANSIString(mCompositionString, GetKeyboardCodePage(),
                               compANSIStr)) {
         uint32_t maxlen = compANSIStr.Length();
+        mClauseArray.SetLength(clauseArrayLength);
         mClauseArray[0] = 0; // first value must be 0
         for (int32_t i = 1; i < clauseArrayLength; i++) {
           uint32_t len = std::min(mClauseArray[i], maxlen);
