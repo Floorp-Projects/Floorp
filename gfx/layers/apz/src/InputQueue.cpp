@@ -154,7 +154,7 @@ InputQueue::ReceiveTouchInput(const RefPtr<AsyncPanZoomController>& aTarget,
     result = nsEventStatus_eConsumeNoDefault;
   }
   mQueuedInputs.AppendElement(MakeUnique<QueuedInput>(aEvent.AsMultiTouchInput(), *block));
-  ProcessInputBlocks();
+  ProcessQueue();
   return result;
 }
 
@@ -206,7 +206,7 @@ InputQueue::ReceiveMouseInput(const RefPtr<AsyncPanZoomController>& aTarget,
   }
 
   mQueuedInputs.AppendElement(MakeUnique<QueuedInput>(aEvent.AsMouseInput(), *block));
-  ProcessInputBlocks();
+  ProcessQueue();
 
   if (DragTracker::EndsDrag(aEvent)) {
     block->MarkMouseUpReceived();
@@ -259,9 +259,9 @@ InputQueue::ReceiveScrollWheelInput(const RefPtr<AsyncPanZoomController>& aTarge
   // target set on the block. In this case the confirmed target (which may be
   // null) should take priority. This is equivalent to just always using the
   // target (confirmed or not) from the block, which is what
-  // ProcessInputBlocks() does.
+  // ProcessQueue() does.
   mQueuedInputs.AppendElement(MakeUnique<QueuedInput>(event, *block));
-  ProcessInputBlocks();
+  ProcessQueue();
 
   return nsEventStatus_eConsumeDoDefault;
 }
@@ -339,9 +339,9 @@ InputQueue::ReceivePanGestureInput(const RefPtr<AsyncPanZoomController>& aTarget
   // target set on the block. In this case the confirmed target (which may be
   // null) should take priority. This is equivalent to just always using the
   // target (confirmed or not) from the block, which is what
-  // ProcessInputBlocks() does.
+  // ProcessQueue() does.
   mQueuedInputs.AppendElement(MakeUnique<QueuedInput>(event.AsPanGestureInput(), *block));
-  ProcessInputBlocks();
+  ProcessQueue();
 
   return result;
 }
@@ -458,7 +458,7 @@ InputQueue::GetCurrentPanGestureBlock() const
 }
 
 WheelBlockState*
-InputQueue::GetCurrentWheelTransaction() const
+InputQueue::GetActiveWheelTransaction() const
 {
   WheelBlockState* block = mActiveWheelBlock.get();
   if (!block || !block->InTransaction()) {
@@ -561,7 +561,7 @@ InputQueue::MainThreadTimeout(const uint64_t& aInputBlockId) {
         firstInput);
   }
   if (success) {
-    ProcessInputBlocks();
+    ProcessQueue();
   }
 }
 
@@ -577,7 +577,7 @@ InputQueue::ContentReceivedInputBlock(uint64_t aInputBlockId, bool aPreventDefau
     block->RecordContentResponseTime();
   }
   if (success) {
-    ProcessInputBlocks();
+    ProcessQueue();
   }
 }
 
@@ -597,7 +597,7 @@ InputQueue::SetConfirmedTargetApzc(uint64_t aInputBlockId, const RefPtr<AsyncPan
     block->RecordContentResponseTime();
   }
   if (success) {
-    ProcessInputBlocks();
+    ProcessQueue();
   }
 }
 
@@ -620,7 +620,7 @@ InputQueue::ConfirmDragBlock(uint64_t aInputBlockId, const RefPtr<AsyncPanZoomCo
     block->RecordContentResponseTime();
   }
   if (success) {
-    ProcessInputBlocks();
+    ProcessQueue();
   }
 }
 
@@ -638,12 +638,12 @@ InputQueue::SetAllowedTouchBehavior(uint64_t aInputBlockId, const nsTArray<Touch
     NS_WARNING("input block is not a touch block");
   }
   if (success) {
-    ProcessInputBlocks();
+    ProcessQueue();
   }
 }
 
 void
-InputQueue::ProcessInputBlocks() {
+InputQueue::ProcessQueue() {
   APZThreadUtils::AssertOnControllerThread();
 
   while (!mQueuedInputs.IsEmpty()) {
