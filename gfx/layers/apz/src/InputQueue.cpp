@@ -69,7 +69,7 @@ InputQueue::ReceiveInputEvent(const RefPtr<AsyncPanZoomController>& aTarget,
 bool
 InputQueue::MaybeHandleCurrentBlock(CancelableBlockState *block,
                                     const InputData& aEvent) {
-  if (block == CurrentBlock() && block->IsReadyForHandling()) {
+  if (mQueuedInputs.IsEmpty() && block->IsReadyForHandling()) {
     const RefPtr<AsyncPanZoomController>& target = block->GetTargetApzc();
     INPQ_LOG("current block is ready with target %p preventdefault %d\n",
         target.get(), block->IsDefaultPrevented());
@@ -110,7 +110,7 @@ InputQueue::ReceiveTouchInput(const RefPtr<AsyncPanZoomController>& aTarget,
     // XXX using the chain from |block| here may be wrong in cases where the
     // target isn't confirmed and the real target turns out to be something
     // else. For now assume this is rare enough that it's not an issue.
-    if (block == CurrentBlock() &&
+    if (mQueuedInputs.IsEmpty() &&
         aEvent.mTouches.Length() == 1 &&
         block->GetOverscrollHandoffChain()->HasFastFlungApzc() &&
         haveBehaviors) {
@@ -386,7 +386,7 @@ InputQueue::CancelAnimationsForNewBlock(CancelableBlockState* aBlock)
   // interfering with "past" animations (i.e. from a previous touch block that is still
   // being processed) we only do this animation-cancellation if there are no older
   // touch blocks still in the queue.
-  if (aBlock == CurrentBlock()) {
+  if (mQueuedInputs.IsEmpty()) {
     aBlock->GetOverscrollHandoffChain()->CancelAnimations(ExcludeOverscroll | ScrollSnap);
   }
 }
