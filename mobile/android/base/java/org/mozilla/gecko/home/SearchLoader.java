@@ -9,6 +9,7 @@ import java.util.EnumSet;
 
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.FilterFlags;
 
 import android.content.Context;
@@ -98,7 +99,7 @@ class SearchLoader {
         @Override
         public Cursor loadCursor() {
             final long start = SystemClock.uptimeMillis();
-            final Cursor cursor = mProfile.getDB().filter(getContext().getContentResolver(), mSearchTerm, SEARCH_LIMIT, mFlags);
+            final Cursor cursor = BrowserDB.from(mProfile).filter(getContext().getContentResolver(), mSearchTerm, SEARCH_LIMIT, mFlags);
             final long end = SystemClock.uptimeMillis();
             final long took = end - start;
             Telemetry.addToHistogram(TELEMETRY_HISTOGRAM_LOAD_CURSOR, (int) Math.min(took, Integer.MAX_VALUE));

@@ -613,7 +613,7 @@ public abstract class GeckoApp
             final String url = message.getString("url");
             final String title = message.getString("title");
             final Context context = this;
-            final BrowserDB db = getProfile().getDB();
+            final BrowserDB db = BrowserDB.from(getProfile());
             ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
                 public void run() {
@@ -1941,7 +1941,7 @@ public abstract class GeckoApp
         getApplicationContext().sendBroadcast(intent);
 
         // Remember interaction
-        final UrlAnnotations urlAnnotations = GeckoProfile.get(getApplicationContext()).getDB().getUrlAnnotations();
+        final UrlAnnotations urlAnnotations = BrowserDB.from(getApplicationContext()).getUrlAnnotations();
         urlAnnotations.insertHomeScreenShortcut(getContentResolver(), aURI, true);
     }
 
@@ -2832,7 +2832,7 @@ public abstract class GeckoApp
     @Override
     public void markUriVisited(final String uri) {
         final Context context = getApplicationContext();
-        final BrowserDB db = GeckoProfile.get(context).getDB();
+        final BrowserDB db = BrowserDB.from(context);
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
@@ -2844,7 +2844,7 @@ public abstract class GeckoApp
     @Override
     public void setUriTitle(final String uri, final String title) {
         final Context context = getApplicationContext();
-        final BrowserDB db = GeckoProfile.get(context).getDB();
+        final BrowserDB db = BrowserDB.from(context);
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
