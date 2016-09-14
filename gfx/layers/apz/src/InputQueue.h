@@ -11,7 +11,6 @@
 #include "InputData.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
 #include "TouchCounter.h"
 
@@ -184,7 +183,7 @@ private:
 private:
   // The queue of input blocks that have not yet been fully processed.
   // This member must only be accessed on the controller/UI thread.
-  nsTArray<UniquePtr<CancelableBlockState>> mInputBlockQueue;
+  nsTArray<RefPtr<CancelableBlockState>> mInputBlockQueue;
 
   // The APZC to which the last event was delivered
   RefPtr<AsyncPanZoomController> mLastActiveApzc;
