@@ -12,6 +12,7 @@
 #include "LayersLogging.h"
 #include "mozilla/layers/APZThreadUtils.h"
 #include "OverscrollHandoffState.h"
+#include "QueuedInput.h"
 
 #define INPQ_LOG(...)
 // #define INPQ_LOG(...) printf_stderr("INPQ: " __VA_ARGS__)

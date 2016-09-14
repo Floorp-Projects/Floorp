@@ -11,6 +11,7 @@
 #include "InputData.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
 #include "TouchCounter.h"
 
@@ -29,6 +30,7 @@ class WheelBlockState;
 class DragBlockState;
 class PanGestureBlockState;
 class AsyncDragMetrics;
+class QueuedInput;
 
 /**
  * This class stores incoming input events, separated into "input blocks", until
@@ -185,6 +187,9 @@ private:
   // The queue of input blocks that have not yet been fully processed.
   // This member must only be accessed on the controller/UI thread.
   nsTArray<RefPtr<CancelableBlockState>> mInputBlockQueue;
+  // The queue of input events that have not yet been fully processed.
+  // This member must only be accessed on the controller/UI thread.
+  nsTArray<UniquePtr<QueuedInput>> mQueuedInputs;
 
   // These are the most recently created blocks of each input type. They are
   // "active" in the sense that new inputs of that type are associated with
