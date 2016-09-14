@@ -1,0 +1,233 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# The name of this kind should suggest it's not meant to be permanent.  This is
+# a temporary place to generate these tasks in Bug 1286075 until they are
+# rewritten in a better way.
+
+implementation: taskgraph.task.transform:TransformTask
+
+transforms:
+   - taskgraph.transforms.android_stuff:transforms
+   - taskgraph.transforms.task:transforms
+
+jobs:
+    android-api-15-gradle-dependencies:
+        description: "Android armv7 API 15+ gradle dependencies"
+        attributes:
+            build_platform: android-api-15-gradle-dependencies
+            build_type: opt
+        index:
+            product: mobile
+            job-name: android-api-15-gradle-dependencies-opt
+        treeherder:
+            platform: android-4-0-armv7-api15/opt
+            kind: build
+            tier: 2
+            symbol: tc(Deps)
+        worker-type: aws-provisioner-v1/android-api-15
+        worker:
+            implementation: docker-worker
+            docker-image: {in-tree: android-gradle-build}
+            env:
+                GRADLE_USER_HOME: "/home/worker/workspace/build/src/dotgradle-online"
+                MH_BUILD_POOL: "taskcluster"
+                MH_CUSTOM_BUILD_VARIANT_CFG: "api-15-gradle-dependencies"
+                MOZHARNESS_ACTIONS: "get-secrets build multi-l10n update"
+                MOZHARNESS_CONFIG: >
+                    builds/releng_base_android_64_builds.py
+                    disable_signing.py
+                    platform_supports_post_upload_to_latest.py
+                MOZHARNESS_SCRIPT: "mozharness/scripts/fx_desktop_build.py"
+                TOOLTOOL_CACHE: "/home/worker/tooltool-cache"
+                TOOLTOOL_REPO: "https://github.com/mozilla/build-tooltool"
+                TOOLTOOL_REV: "master"
+            artifacts:
+              - name: public/build
+                path: /home/worker/artifacts/
+                type: directory
+            caches:
+              - name: tooltool-cache
+                mount-point: /home/worker/tooltool-cache
+                type: persistent
+            relengapi-proxy: true
+            command:
+              - "/bin/bash"
+              - "-c"
+              - "/home/worker/bin/before.sh && /home/worker/bin/build.sh && /home/worker/bin/after.sh && true\n"
+            max-run-time: 36000
+        scopes:
+          - docker-worker:relengapi-proxy:tooltool.download.internal
+          - docker-worker:relengapi-proxy:tooltool.download.public
+        when:
+            files-changed:
+              - "mobile/android/config/**"
+              - "testing/docker/android-gradle-build/**"
+              - "testing/mozharness/configs/builds/releng_sub_android_configs/*gradle_dependencies.py"
+              - "**/*.gradle"
+
+    android-test:
+        description: "Android armv7 unit tests"
+        attributes:
+            build_platform: android-test
+            build_type: opt
+        treeherder:
+            platform: android-4-0-armv7-api15/opt
+            kind: build
+            tier: 2
+            symbol: tc(test)
+        worker-type: aws-provisioner-v1/android-api-15
+        worker:
+            implementation: docker-worker
+            docker-image: {in-tree: desktop-build}
+            env:
+                GRADLE_USER_HOME: "/home/worker/workspace/build/src/dotgradle"
+                MH_BUILD_POOL: "taskcluster"
+                MH_CUSTOM_BUILD_VARIANT_CFG: "android-test"
+                MOZHARNESS_ACTIONS: "get-secrets build multi-l10n update"
+                MOZHARNESS_CONFIG: >
+                    builds/releng_base_android_64_builds.py
+                    disable_signing.py
+                    platform_supports_post_upload_to_latest.py
+                MOZHARNESS_SCRIPT: "mozharness/scripts/fx_desktop_build.py"
+                TOOLTOOL_REPO: "https://github.com/mozilla/build-tooltool"
+                TOOLTOOL_REV: "master"
+            artifacts:
+              - name: public/android/unittest
+                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/tests
+                type: directory
+              - name: public/build
+                path: /home/worker/artifacts/
+                type: directory
+            caches:
+              - name: tooltool-cache
+                mount-point: /home/worker/tooltool-cache
+                type: persistent
+            relengapi-proxy: true
+            command:
+              # NOTE: this could probably be a job description with run.using = 'mozharness'
+              - "/bin/bash"
+              - "bin/build.sh"
+            max-run-time: 36000
+        scopes:
+          - docker-worker:relengapi-proxy:tooltool.download.internal
+          - docker-worker:relengapi-proxy:tooltool.download.public
+        when:
+            files-changed:
+              - "mobile/android/base/**"
+              - "mobile/android/tests/background/junit4/**"
+
+    android-lint:
+        description: "Android lint"
+        attributes:
+            build_platform: android-lint
+            build_type: opt
+        treeherder:
+            platform: android-4-0-armv7-api15/opt
+            kind: build
+            tier: 2
+            symbol: tc(lint)
+        worker-type: aws-provisioner-v1/android-api-15
+        worker:
+            implementation: docker-worker
+            docker-image: {in-tree: desktop-build}
+            env:
+                GRADLE_USER_HOME: "/home/worker/workspace/build/src/dotgradle"
+                MH_BUILD_POOL: "taskcluster"
+                MH_CUSTOM_BUILD_VARIANT_CFG: "android-lint"
+                MOZHARNESS_ACTIONS: "get-secrets build multi-l10n update"
+                MOZHARNESS_CONFIG: >
+                    builds/releng_base_android_64_builds.py
+                    disable_signing.py
+                    platform_supports_post_upload_to_latest.py
+                MOZHARNESS_SCRIPT: "mozharness/scripts/fx_desktop_build.py"
+                TOOLTOOL_REPO: "https://github.com/mozilla/build-tooltool"
+                TOOLTOOL_REV: "master"
+            artifacts:
+              - name: public/android/lint/lint-results-automationDebug.html
+                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-automationDebug.html
+                type: file
+              - name: public/android/lint/lint-results-automationDebug.xml
+                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-automationDebug.xml
+                type: file
+              - name: public/android/lint/lint-results-automationDebug_files
+                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-automationDebug_files
+                type: directory
+              - name: public/build
+                path: /home/worker/artifacts/
+                type: directory
+            caches:
+              - name: tooltool-cache
+                mount-point: /home/worker/tooltool-cache
+                type: persistent
+            relengapi-proxy: true
+            command:
+              # NOTE: this could probably be a job description with run.using = 'mozharness'
+              - "/bin/bash"
+              - "bin/build.sh"
+            max-run-time: 36000
+        scopes:
+          - docker-worker:relengapi-proxy:tooltool.download.internal
+          - docker-worker:relengapi-proxy:tooltool.download.public
+        when:
+            files-changed:
+              - "mobile/android/**/*.java"
+              - "mobile/android/**/*.jpeg"
+              - "mobile/android/**/*.jpg"
+              - "mobile/android/**/*.png"
+              - "mobile/android/**/*.svg"
+              - "mobile/android/**/*.xml" # Manifest & android resources
+              - "mobile/android/**/build.gradle"
+
+    android-checkstyle:
+        description: "Android checkstyle"
+        attributes:
+            build_platform: android-checkstyle
+            build_type: opt
+        treeherder:
+            platform: android-4-0-armv7-api15/opt
+            kind: build
+            tier: 2
+            symbol: tc(checkstyle)
+        worker-type: aws-provisioner-v1/android-api-15
+        worker:
+            implementation: docker-worker
+            docker-image: {in-tree: desktop-build}
+            env:
+                GRADLE_USER_HOME: "/home/worker/workspace/build/src/dotgradle"
+                MH_BUILD_POOL: "taskcluster"
+                MH_CUSTOM_BUILD_VARIANT_CFG: "android-checkstyle"
+                MOZHARNESS_ACTIONS: "get-secrets build multi-l10n update"
+                MOZHARNESS_CONFIG: >
+                    builds/releng_base_android_64_builds.py
+                    disable_signing.py
+                    platform_supports_post_upload_to_latest.py
+                MOZHARNESS_SCRIPT: "mozharness/scripts/fx_desktop_build.py"
+                TOOLTOOL_REPO: "https://github.com/mozilla/build-tooltool"
+                TOOLTOOL_REV: "master"
+            artifacts:
+              - name: public/android/checkstyle/checkstyle.xml
+                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/checkstyle/checkstyle.xml
+                type: file
+              - name: public/build
+                path: /home/worker/artifacts/
+                type: directory
+            caches:
+              - name: tooltool-cache
+                mount-point: /home/worker/tooltool-cache
+                type: persistent
+            relengapi-proxy: true
+            command:
+              # NOTE: this could probably be a job description with run.using = 'mozharness'
+              - "/bin/bash"
+              - "bin/build.sh"
+            max-run-time: 36000
+        scopes:
+          - docker-worker:relengapi-proxy:tooltool.download.internal
+          - docker-worker:relengapi-proxy:tooltool.download.public
+        when:
+            files-changed:
+              - "mobile/android/**/checkstyle.xml"
+              - "mobile/android/**/*.gradle"
+              - "mobile/android/**/*.java"

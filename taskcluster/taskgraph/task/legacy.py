@@ -103,22 +103,24 @@ def configure_dependent_task(task_path, parameters, taskid, templates, build_tre
 
     task['requires'].append(parameters['build_slugid'])
 
-    if 'treeherder' not in task['task']['extra']:
-        task['task']['extra']['treeherder'] = {}
+    if 'extra' not in task['task']:
+        task['task']['extra'] = {}
 
-    # Copy over any treeherder configuration from the build so
-    # tests show up under the same platform...
-    treeherder_config = task['task']['extra']['treeherder']
+    # only set up treeherder information if the task contained any to begin with
+    if 'treeherder' in task['task']['extra']:
+        # Copy over any treeherder configuration from the build so
+        # tests show up under the same platform...
+        treeherder_config = task['task']['extra']['treeherder']
 
-    treeherder_config['collection'] = \
-        build_treeherder_config.get('collection', {})
+        treeherder_config['collection'] = \
+            build_treeherder_config.get('collection', {})
 
-    treeherder_config['build'] = \
-        build_treeherder_config.get('build', {})
+        treeherder_config['build'] = \
+            build_treeherder_config.get('build', {})
 
-    if 'machine' not in treeherder_config:
-        treeherder_config['machine'] = \
-            build_treeherder_config.get('machine', {})
+        if 'machine' not in treeherder_config:
+            treeherder_config['machine'] = \
+                build_treeherder_config.get('machine', {})
 
     if 'routes' not in task['task']:
         task['task']['routes'] = []
@@ -178,15 +180,12 @@ def remove_coalescing_from_task(task):
 
     :param task: task definition.
     """
-    patterns = [
-        re.compile("^coalesce.v1.builds.*pgo$"),
-    ]
 
     try:
         payload = task["task"]["payload"]
         routes = task["task"]["routes"]
         removable_routes = [route for route in list(routes)
-                            if any([p.match(route) for p in patterns])]
+                            if route.startswith('coalesce.')]
         if removable_routes:
             # we remove supersederUrl only when we have also routes to remove
             payload.pop("supersederUrl")
@@ -516,7 +515,11 @@ class LegacyTask(base.Task):
 
             # Ensure each build graph is valid after construction.
             validate_build_task(build_task)
-            attributes = build_task['attributes'] = {'kind': 'legacy', 'legacy_kind': 'build'}
+            attributes = build_task['attributes'] = {
+                'kind': 'legacy',
+                'legacy_kind': 'build',
+                'run_on_projects': ['all'],
+            }
             if 'build_name' in build:
                 attributes['build_platform'] = build['build_name']
             if 'build_type' in task_extra:
@@ -615,7 +618,7 @@ class LegacyTask(base.Task):
 
         return deps
 
-    def optimize(self):
+    def optimize(self, params):
         # no optimization for the moment
         return False, None
 

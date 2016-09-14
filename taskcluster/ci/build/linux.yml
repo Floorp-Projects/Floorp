@@ -1,0 +1,176 @@
+linux64/opt:
+    description: "Linux64 Opt"
+    index:
+        product: firefox
+        job-name: linux64-opt
+    treeherder:
+        platform: linux64/opt
+        symbol: tc(B)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        implementation: docker-worker
+        max-run-time: 36000
+    run:
+        using: mozharness
+        actions: [get-secrets build check-test generate-build-stats update]
+        config:
+            - builds/releng_base_linux_64_builds.py
+            - balrog/production.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
+        tooltool-downloads: public
+        need-xvfb: true
+
+linux64/pgo:
+    description: "Linux64 Opt PGO"
+    index:
+        product: firefox
+        job-name: linux64-pgo-opt
+    treeherder:
+        platform: linux64/pgo
+        symbol: tc(B)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        implementation: docker-worker
+        max-run-time: 36000
+    coalesce-name: linux64-pgo
+    run:
+        using: mozharness
+        actions: [get-secrets build check-test generate-build-stats update]
+        options: [enable-pgo]
+        config:
+            - builds/releng_base_linux_64_builds.py
+            - balrog/production.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
+        tooltool-downloads: public
+        need-xvfb: true
+
+linux64/debug:
+    description: "Linux64 Debug"
+    index:
+        product: firefox
+        job-name:
+            buildbot: linux64-debug
+            gecko-v1: linux64.debug
+            gecko-v2: linux64-debug
+    treeherder:
+        platform: linux64/debug
+        symbol: tc(B)
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        implementation: docker-worker
+        max-run-time: 36000
+    run:
+        using: mozharness
+        actions: [get-secrets build check-test generate-build-stats update]
+        config:
+            - builds/releng_base_linux_64_builds.py
+            - balrog/production.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
+        custom-build-variant-cfg: debug
+        tooltool-downloads: public
+        need-xvfb: true
+
+linux/opt:
+    description: "Linux32 Opt"
+    index:
+        product: firefox
+        job-name: linux-opt
+    treeherder:
+        platform: linux32/opt
+        symbol: tc(B)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        implementation: docker-worker
+        max-run-time: 36000
+    coalesce-name: opt_linux32
+    run:
+        using: mozharness
+        actions: [get-secrets build check-test generate-build-stats update]
+        config:
+            - builds/releng_base_linux_32_builds.py
+            - balrog/production.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
+        tooltool-downloads: public
+        need-xvfb: true
+
+linux/debug:
+    description: "Linux32 Debug"
+    index:
+        product: firefox
+        job-name: linux-debug
+    treeherder:
+        platform: linux32/debug
+        symbol: tc(B)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        implementation: docker-worker
+        max-run-time: 36000
+    coalesce-name: dbg_linux32
+    run:
+        using: mozharness
+        actions: [get-secrets build check-test generate-build-stats update]
+        config:
+            - builds/releng_base_linux_32_builds.py
+            - balrog/production.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
+        custom-build-variant-cfg: debug
+        tooltool-downloads: public
+        need-xvfb: true
+
+linux64-asan/opt:
+    description: "Linux64 Opt ASAN"
+    index:
+        product: firefox
+        job-name: linux64-asan-opt
+    treeherder:
+        platform: linux64/asan
+        symbol: tc(Bo)
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        implementation: docker-worker
+        max-run-time: 36000
+    run:
+        using: mozharness
+        actions: [get-secrets build check-test generate-build-stats update]
+        config:
+            - builds/releng_base_linux_64_builds.py
+            - balrog/production.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
+        custom-build-variant-cfg: asan-tc
+        tooltool-downloads: public
+        need-xvfb: true
+
+linux64-asan/debug:
+    description: "Linux64 Debug ASAN"
+    index:
+        product: firefox
+        job-name: linux64-asan-debug
+    treeherder:
+        platform: linux64/asan
+        symbol: tc(Bd)
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        implementation: docker-worker
+        max-run-time: 36000
+    run:
+        using: mozharness
+        actions: [get-secrets build check-test generate-build-stats update]
+        config:
+            - builds/releng_base_linux_64_builds.py
+            - balrog/production.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
+        custom-build-variant-cfg: asan-tc-and-debug
+        tooltool-downloads: public
+        need-xvfb: true
+

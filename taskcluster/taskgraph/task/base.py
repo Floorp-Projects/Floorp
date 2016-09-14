@@ -79,7 +79,7 @@ class Task(object):
         dependencies.
         """
 
-    def optimize(self):
+    def optimize(self, params):
         """
         Determine whether this task can be optimized, and if it can, what taskId
         it should be replaced with.

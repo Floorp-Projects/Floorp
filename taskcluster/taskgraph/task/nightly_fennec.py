@@ -2,16 +2,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+"""
+Temporary placeholder for nightly builds
+"""
+
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 import json
 import os
 import time
+from collections import namedtuple
 
 from . import base
-from .legacy import query_vcs_info, decorate_task_json_routes, gaia_info, \
-    mklabel
+from slugid import nice as slugid
 from taskgraph.util.templates import Templates
 from taskgraph.util.docker import docker_image
 
@@ -20,6 +24,87 @@ logger = logging.getLogger(__name__)
 GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..', '..'))
 ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
 INDEX_URL = 'https://index.taskcluster.net/v1/task/{}'
+TASKID_PLACEHOLDER = 'TaskLabel=={}'
+
+
+def mklabel():
+    return TASKID_PLACEHOLDER.format(slugid())
+
+
+def gaia_info():
+    '''Fetch details from in tree gaia.json (which links this version of
+    gecko->gaia) and construct the usual base/head/ref/rev pairing...'''
+    gaia = json.load(open(os.path.join(GECKO, 'b2g', 'config', 'gaia.json')))
+
+    if gaia['git'] is None or \
+       gaia['git']['remote'] == '' or \
+       gaia['git']['git_revision'] == '' or \
+       gaia['git']['branch'] == '':
+
+        # Just use the hg params...
+        return {
+            'gaia_base_repository': 'https://hg.mozilla.org/{}'.format(gaia['repo_path']),
+            'gaia_head_repository': 'https://hg.mozilla.org/{}'.format(gaia['repo_path']),
+            'gaia_ref': gaia['revision'],
+            'gaia_rev': gaia['revision']
+        }
+
+    else:
+        # Use git
+        return {
+            'gaia_base_repository': gaia['git']['remote'],
+            'gaia_head_repository': gaia['git']['remote'],
+            'gaia_rev': gaia['git']['git_revision'],
+            'gaia_ref': gaia['git']['branch'],
+        }
+
+
+def decorate_task_json_routes(task, json_routes, parameters):
+    """Decorate the given task with routes.json routes.
+
+    :param dict task: task definition.
+    :param json_routes: the list of routes to use from routes.json
+    :param parameters: dictionary of parameters to use in route templates
+    """
+    routes = task.get('routes', [])
+    for route in json_routes:
+        routes.append(route.format(**parameters))
+
+    task['routes'] = routes
+
+
+def query_vcs_info(repository, revision):
+    """Query the pushdate and pushid of a repository/revision.
+
+    This is intended to be used on hg.mozilla.org/mozilla-central and
+    similar. It may or may not work for other hg repositories.
+    """
+    if not repository or not revision:
+        logger.warning('cannot query vcs info because vcs info not provided')
+        return None
+
+    VCSInfo = namedtuple('VCSInfo', ['pushid', 'pushdate', 'changesets'])
+
+    try:
+        import requests
+        url = '%s/json-automationrelevance/%s' % (repository.rstrip('/'),
+                                                  revision)
+        logger.debug("Querying version control for metadata: %s", url)
+        contents = requests.get(url).json()
+
+        changesets = []
+        for c in contents['changesets']:
+            changesets.append({k: c[k] for k in ('desc', 'files', 'node')})
+
+        pushid = contents['changesets'][-1]['pushid']
+        pushdate = contents['changesets'][-1]['pushdate'][0]
+
+        return VCSInfo(pushid, pushdate, changesets)
+
+    except Exception:
+        logger.exception("Error querying VCS info for '%s' revision '%s'",
+                         repository, revision)
+        return None
 
 
 class NightlyFennecTask(base.Task):
@@ -109,5 +194,5 @@ class NightlyFennecTask(base.Task):
 
         return deps
 
-    def optimize(self):
+    def optimize(self, params):
         return False, None

@@ -57,6 +57,11 @@ interface nsIUDPSocket : nsISupports
                               in nsIPrincipal aPrincipal,
                               [optional] in boolean aAddressReuse);
 
+    [optional_argc] void init2(in AUTF8String aAddr,
+                               in long aPort,
+                               in nsIPrincipal aPrincipal,
+                               [optional] in boolean aAddressReuse);
+
     /**
      * initWithAddress
      *
