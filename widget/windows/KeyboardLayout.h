@@ -267,6 +267,10 @@ private:
   // WM_SYSDEADCHAR message which follows WM_KEYDOWN.
   // Note that the stored messaged are already removed from the queue.
   nsTArray<MSG> mFollowingCharMsgs;
+  // mRemovedOddCharMsgs stores WM_CHAR messages which are caused by ATOK or
+  // WXG (they are Japanese IME) when the user tries to do "Kakutei-undo"
+  // (it means "undo the last commit").
+  nsTArray<MSG> mRemovedOddCharMsgs;
   // If dispatching eKeyDown or eKeyPress event causes focus change,
   // the instance shouldn't handle remaning char messages.  For checking it,
   // this should store first focused window.
@@ -375,6 +379,12 @@ private:
 
   // The result is one of nsIDOMKeyEvent::DOM_KEY_LOCATION_*.
   uint32_t GetKeyLocation() const;
+
+  /**
+   * RemoveFollowingOddCharMessages() removes odd WM_CHAR messages from the
+   * queue when IsIMEDoingKakuteiUndo() returns true.
+   */
+  void RemoveFollowingOddCharMessages();
 
   /**
    * "Kakutei-Undo" of ATOK or WXG (both of them are Japanese IME) causes
