@@ -160,7 +160,7 @@ public class GeckoThread extends Thread {
 
         if (profile == null) {
             // We haven't initialized; any profile is okay as long as we follow the guest mode setting.
-            return GuestSession.shouldUse(context) ==
+            return GeckoProfile.shouldUseGuestMode(context) ==
                     GeckoProfile.isGuestProfile(context, profileName, profileDir);
         }
 
