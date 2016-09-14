@@ -15,12 +15,6 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.restrictions.DefaultConfiguration;
-import org.mozilla.gecko.restrictions.GuestProfileConfiguration;
-import org.mozilla.gecko.restrictions.Restrictable;
-import org.mozilla.gecko.restrictions.RestrictedProfileConfiguration;
-import org.mozilla.gecko.restrictions.RestrictionCache;
-import org.mozilla.gecko.restrictions.RestrictionConfiguration;
 
 @RobocopTarget
 public class Restrictions {
