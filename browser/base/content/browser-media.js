@@ -231,12 +231,18 @@ let gDecoderDoctorHandler = {
         return gNavigatorBundle.getString("decoder.noCodecsLinux.message");
       }
     }
+    if (type == "cannot-initialize-pulseaudio") {
+      return gNavigatorBundle.getString("decoder.noPulseAudio.message");
+    }
     return "";
   },
 
   getSumoForLearnHowButton(type) {
     if (AppConstants.platform == "win") {
       return "fix-video-audio-problems-firefox-windows";
+    }
+    if (type == "cannot-initialize-pulseaudio") {
+      return "fix-common-audio-and-video-issues";
     }
     return "";
   },
