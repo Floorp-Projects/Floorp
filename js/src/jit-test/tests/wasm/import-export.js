@@ -22,7 +22,7 @@ const tab2Elem = new Table({initial:2, element:"anyfunc"});
 const tab3Elem = new Table({initial:3, element:"anyfunc"});
 const tab4Elem = new Table({initial:4, element:"anyfunc"});
 
-assertErrorMessage(() => new Memory({initial:2, maximum:1}), TypeError, /bad Memory maximum size/);
+assertErrorMessage(() => new Memory({initial:2, maximum:1}), RangeError, /bad Memory maximum size/);
 
 const m1 = new Module(textToBinary('(module (import "foo" "bar") (import "baz" "quux"))'));
 assertErrorMessage(() => new Instance(m1), TypeError, /no import object given/);
@@ -264,7 +264,7 @@ assertEq(e.tbl1.get(1), null);
 assertEq(e.tbl1.get(2), e.tbl1.get(2));
 assertEq(e.tbl1.get(2)(), 2);
 assertEq(e.tbl1.get(3), null);
-assertErrorMessage(() => e.tbl1.get(4), RangeError, /out-of-range index/);
+assertErrorMessage(() => e.tbl1.get(4), RangeError, /bad Table get index/);
 assertEq(e.tbl1.get(1), null);
 e.tbl1.set(1, e.f3);
 assertEq(e.tbl1.get(1), e.f3);
