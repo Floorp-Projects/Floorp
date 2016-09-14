@@ -30,17 +30,14 @@ function test() {
 
 function openTabs() {
   // Open two tabs, select the second
-  gTab1 = gBrowser.addTab(TAB_URL_1);
-  gTab1.linkedBrowser.addEventListener("load", function onLoad1(evt) {
-    gTab1.linkedBrowser.removeEventListener("load", onLoad1);
-
-    gTab2 = gBrowser.selectedTab = gBrowser.addTab(TAB_URL_2);
-    gTab2.linkedBrowser.addEventListener("load", function onLoad2(evt) {
-      gTab2.linkedBrowser.removeEventListener("load", onLoad2);
+  addTab(TAB_URL_1).then(tab1 => {
+    gTab1 = tab1;
+    addTab(TAB_URL_2).then(tab2 => {
+      gTab2 = tab2;
 
       connect();
-    }, true);
-  }, true);
+    });
+  });
 }
 
 function connect() {

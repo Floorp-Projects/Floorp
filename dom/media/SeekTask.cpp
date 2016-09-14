@@ -46,13 +46,14 @@ SeekTask::Resolve(const char* aCallSite)
 }
 
 void
-SeekTask::RejectIfExist(const char* aCallSite)
+SeekTask::RejectIfExist(const MediaResult& aError, const char* aCallSite)
 {
   AssertOwnerThread();
 
   SeekTaskRejectValue val;
   val.mIsAudioQueueFinished = mIsAudioQueueFinished;
   val.mIsVideoQueueFinished = mIsVideoQueueFinished;
+  val.mError = aError;
 
   mSeekTaskPromise.RejectIfExists(val, aCallSite);
 }

@@ -218,6 +218,7 @@ static const struct {
 
   // For testing purpose.
   { "test-phish-proto",    SOCIAL_ENGINEERING_PUBLIC}, // 2
+  { "test-unwanted-proto", UNWANTED_SOFTWARE}, // 3
 };
 
 NS_IMETHODIMP

@@ -132,9 +132,6 @@ add_task(function* bad_record_allIDs() {
   _("Record is " + badRecordID);
   _("Type: " + PlacesUtils.bookmarks.getItemType(badRecordID));
 
-  _("Fetching children.");
-  store._getChildren("toolbar", {});
-
   _("Fetching all IDs.");
   let all = store.getAllIDs();
 

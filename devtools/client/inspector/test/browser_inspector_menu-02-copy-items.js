@@ -44,6 +44,6 @@ add_task(function* () {
     let item = allMenuItems.find(i => i.id === id);
     ok(item, "The popup has a " + desc + " menu item.");
 
-    yield waitForClipboard(() => item.click(), text);
+    yield waitForClipboardPromise(() => item.click(), text);
   }
 });

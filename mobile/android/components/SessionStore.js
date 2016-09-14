@@ -86,6 +86,11 @@ SessionStore.prototype = {
   // Whether or not to send notifications for changes to the closed tabs.
   _notifyClosedTabs: false,
 
+  // If we're simultaneously closing both a tab and Firefox, we don't want
+  // to bother reloading the newly selected tab if it is zombified.
+  // The Java UI will tell us which tab to watch out for.
+  _keepAsZombieTabId: -1,
+
   init: function ss_init() {
     loggingEnabled = Services.prefs.getBoolPref("browser.sessionstore.debug_logging");
 
@@ -141,6 +146,7 @@ SessionStore.prototype = {
         observerService.addObserver(this, "quit-application", true);
         observerService.addObserver(this, "Session:Restore", true);
         observerService.addObserver(this, "Session:NotifyLocationChange", true);
+        observerService.addObserver(this, "Tab:KeepZombified", true);
         observerService.addObserver(this, "application-background", true);
         observerService.addObserver(this, "application-foreground", true);
         observerService.addObserver(this, "ClosedTabs:StartNotifications", true);
@@ -284,6 +290,13 @@ SessionStore.prototype = {
         }
         break;
       }
+      case "Tab:KeepZombified": {
+        if (aData >= 0) {
+          this._keepAsZombieTabId = aData;
+          log("Tab:KeepZombified " + aData);
+        }
+        break;
+      }
       case "application-background":
         // We receive this notification when Android's onPause callback is
         // executed. After onPause, the application may be terminated at any
@@ -301,6 +314,15 @@ SessionStore.prototype = {
         log("application-foreground");
         this._interval = Services.prefs.getIntPref("browser.sessionstore.interval");
         this._minSaveDelay = MINIMUM_SAVE_DELAY;
+
+        // If we skipped restoring a zombified tab before backgrounding,
+        // we might have to do it now instead.
+        let window = Services.wm.getMostRecentWindow("navigator:browser");
+        let tab = window.BrowserApp.selectedTab;
+
+        if (tab.browser.__SS_restore) {
+          this._restoreZombieTab(tab.browser, tab.id);
+        }
         break;
       case "ClosedTabs:StartNotifications":
         this._notifyClosedTabs = true;
@@ -388,11 +410,19 @@ SessionStore.prototype = {
         }
         break;
       }
-      case "pageshow": {
+      case "pageshow":
+      case "AboutReaderContentReady": {
         let browser = aEvent.currentTarget;
 
         // Skip subframe pageshows.
         if (browser.contentDocument !== aEvent.originalTarget) {
+          return;
+        }
+
+        if (browser.currentURI.spec.startsWith("about:reader") &&
+            !browser.contentDocument.body.classList.contains("loaded")) {
+          // Don't restore the scroll position of an about:reader page at this point;
+          // wait for the custom event dispatched from AboutReader.jsm instead.
           return;
         }
 
@@ -401,7 +431,7 @@ SessionStore.prototype = {
         // or on load, whichever comes first.
         // In the latter case, our load handler runs before the MVM's one, which is the
         // wrong way around, so we have to use a later event instead.
-        log("pageshow for tab " + window.BrowserApp.getTabForBrowser(browser).id);
+        log(aEvent.type + " for tab " + window.BrowserApp.getTabForBrowser(browser).id);
         if (browser.__SS_restoreDataOnPageshow) {
           delete browser.__SS_restoreDataOnPageshow;
           this._restoreScrollPosition(browser.__SS_data.scrolldata, browser);
@@ -514,6 +544,7 @@ SessionStore.prototype = {
     // Gecko might set the initial zoom level after the JS "load" event,
     // so we have to restore zoom and scroll position after that.
     aBrowser.addEventListener("pageshow", this, true);
+    aBrowser.addEventListener("AboutReaderContentReady", this, true);
 
     // Use a combination of events to watch for text data changes
     aBrowser.addEventListener("change", this, true);
@@ -537,6 +568,7 @@ SessionStore.prototype = {
     aBrowser.removeEventListener("DOMTitleChanged", this, true);
     aBrowser.removeEventListener("load", this, true);
     aBrowser.removeEventListener("pageshow", this, true);
+    aBrowser.removeListener("AboutReaderContentReady", this, true);
     aBrowser.removeEventListener("change", this, true);
     aBrowser.removeEventListener("input", this, true);
     aBrowser.removeEventListener("DOMAutoComplete", this, true);
@@ -657,13 +689,14 @@ SessionStore.prototype = {
 
     // Restore the resurrected browser
     if (aBrowser.__SS_restore) {
-      let data = aBrowser.__SS_data;
-      this._restoreTab(data, aBrowser);
-
-      delete aBrowser.__SS_restore;
-      aBrowser.removeAttribute("pending");
-      log("onTabSelect() restored zombie tab " + tabId);
+      if (tabId != this._keepAsZombieTabId) {
+        this._restoreZombieTab(aBrowser, tabId);
+      } else {
+        log("keeping as zombie tab " + tabId);
+      }
     }
+    // The tab id passed through Tab:KeepZombified is valid for one TabSelect only.
+    this._keepAsZombieTabId = -1;
 
     log("onTabSelect() ran for tab " + tabId);
     this.saveStateDelayed();
@@ -675,6 +708,15 @@ SessionStore.prototype = {
     if (this._notifyClosedTabs) {
       this._sendClosedTabsToJava(aWindow);
     }
+  },
+
+  _restoreZombieTab: function ss_restoreZombieTab(aBrowser, aTabId) {
+    let data = aBrowser.__SS_data;
+    this._restoreTab(data, aBrowser);
+
+    delete aBrowser.__SS_restore;
+    aBrowser.removeAttribute("pending");
+    log("restoring zombie tab " + aTabId);
   },
 
   onTabInput: function ss_onTabInput(aWindow, aBrowser) {

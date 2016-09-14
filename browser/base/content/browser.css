@@ -777,13 +777,6 @@ html|*#fullscreen-exit-button {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#click-to-play-plugins-notification");
 }
 
-#login-fill-notification {
-  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#login-fill-notification");
-}
-
-.login-fill-item {
-  -moz-binding: url("chrome://passwordmgr/content/login.xml#login");
-}
 
 .plugin-popupnotification-centeritem {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#plugin-popupnotification-center-item");
@@ -1183,10 +1176,6 @@ toolbarpaletteitem[place="palette"][hidden] {
 #context-navigation > .menuitem-iconic > .menu-iconic-text,
 #context-navigation > .menuitem-iconic > .menu-accel-container {
   display: none;
-}
-
-#login-fill-doorhanger:not([inDetailView]) > #login-fill-clickcapturer {
-  pointer-events: none;
 }
 
 .popup-notification-invalid-input {

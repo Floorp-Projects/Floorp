@@ -25,6 +25,7 @@ Structure:
           when: <integer milliseconds since epoch>,
           took: <integer duration in milliseconds>,
           uid: <string>, // Hashed FxA unique ID, or string of 32 zeros.
+          deviceID: <string>, // Hashed FxA Device ID, hex string of 64 characters, not included if the user is not logged in.
           didLogin: <bool>, // Optional, is this the first sync after login? Excluded if we don't know.
           why: <string>, // Optional, why the sync occured, excluded if we don't know.
 

@@ -41,7 +41,7 @@ private:
   nsresult DoDecodeHeader(const unsigned char* aData, size_t aLength);
 
   void ProcessDecode(MediaRawData* aSample);
-  int DoDecode(MediaRawData* aSample);
+  MediaResult DoDecode(MediaRawData* aSample);
   void ProcessDrain();
 
   RefPtr<ImageContainer> mImageContainer;

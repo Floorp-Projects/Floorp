@@ -12,11 +12,11 @@ interface nsIDOMMediaError : nsISupports
      the user agent at the user's requet */
   const unsigned short MEDIA_ERR_ABORTED = 1;
 
-  /* A network error of some description caused the 
+  /* A network error of some description caused the
      user agent to stop downloading the media resource */
   const unsigned short MEDIA_ERR_NETWORK = 2;
 
-  /* An error of some description occurred while decoding 
+  /* An error of some description occurred while decoding
      the media resource */
   const unsigned short MEDIA_ERR_DECODE  = 3;
 
@@ -24,4 +24,6 @@ interface nsIDOMMediaError : nsISupports
   const unsigned short MEDIA_ERR_SRC_NOT_SUPPORTED = 4;
 
   readonly attribute unsigned short code;
+
+  readonly attribute DOMString message;
 };

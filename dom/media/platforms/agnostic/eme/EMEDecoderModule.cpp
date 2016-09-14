@@ -93,7 +93,8 @@ public:
       Input(aDecrypted.mSample);
     } else if (aDecrypted.mStatus != Ok) {
       if (mCallback) {
-        mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
+        mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                                          __func__));
       }
     } else {
       MOZ_ASSERT(!mIsShutdown);

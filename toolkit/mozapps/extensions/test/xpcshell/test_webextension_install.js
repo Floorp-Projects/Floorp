@@ -69,10 +69,7 @@ add_task(function* test_implicit_id_temp() {
 // We should be able to temporarily install an unsigned web extension
 // that does not have an ID in its manifest.
 add_task(function* test_unsigned_no_id_temp_install() {
-  if (!TEST_UNPACKED) {
-    do_print("This test does not apply when using packed extensions");
-    return;
-  }
+  AddonTestUtils.useRealCertChecks = true;
   const manifest = {
     name: "no ID",
     description: "extension without an ID",
@@ -97,16 +94,15 @@ add_task(function* test_unsigned_no_id_temp_install() {
   equal(secondAddon.id, addon.id, "Reinstalled add-on has the expected ID");
 
   secondAddon.uninstall();
+  Services.obs.notifyObservers(addonDir, "flush-cache-entry", null);
   addonDir.remove(true);
+  AddonTestUtils.useRealCertChecks = false;
 });
 
 // We should be able to install two extensions from manifests without IDs
 // at different locations and get two unique extensions.
 add_task(function* test_multiple_no_id_extensions() {
-  if (!TEST_UNPACKED) {
-    do_print("This test does not apply when using packed extensions");
-    return;
-  }
+  AddonTestUtils.useRealCertChecks = true;
   const manifest = {
     name: "no ID",
     description: "extension without an ID",
@@ -132,9 +128,12 @@ add_task(function* test_multiple_no_id_extensions() {
   equal(filtered.length, 2, "Two add-ons are installed with the same name");
 
   firstAddon.uninstall();
+  Services.obs.notifyObservers(firstAddonDir, "flush-cache-entry", null);
   firstAddonDir.remove(true);
   secondAddon.uninstall();
+  Services.obs.notifyObservers(secondAddonDir, "flush-cache-entry", null);
   secondAddonDir.remove(true);
+  AddonTestUtils.useRealCertChecks = false;
 });
 
 // Test that we can get the ID from browser_specific_settings

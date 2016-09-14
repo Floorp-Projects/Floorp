@@ -34,7 +34,7 @@ function* setSelectionNodeFront(node, inspector) {
 
 function* checkClipboard(expectedText, node) {
   try {
-    yield waitForClipboard(() => fireCopyEvent(node), expectedText);
+    yield waitForClipboardPromise(() => fireCopyEvent(node), expectedText);
     ok(true, "Clipboard successfully filled with : " + expectedText);
   } catch (e) {
     ok(false, "Clipboard could not be filled with the expected text : " +
