@@ -1995,6 +1995,12 @@ IMMHandler::DispatchCompositionChangeEvent(nsWindow* aWindow,
       }
 
       uint32_t length = current - lastOffset;
+      if (NS_WARN_IF(lastOffset >= mAttributeArray.Length())) {
+        MOZ_LOG(gIMMLog, LogLevel::Error,
+          ("DispatchCompositionChangeEvent, FAILED due to invalid data of "
+            "mClauseArray or mAttributeArray"));
+        return;
+      }
       TextRangeType textRangeType =
         PlatformToNSAttr(mAttributeArray[lastOffset]);
       rv = dispatcher->AppendClauseToPendingComposition(length, textRangeType);
