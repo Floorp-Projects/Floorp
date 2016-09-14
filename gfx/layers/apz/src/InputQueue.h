@@ -91,18 +91,21 @@ public:
    */
   uint64_t InjectNewTouchBlock(AsyncPanZoomController* aTarget);
   /**
-   * Returns the pending input block at the head of the queue.
+   * Returns the pending input block at the head of the queue, if there is one.
+   * This may return null if there all input events have been processed.
    */
-  CancelableBlockState* CurrentBlock() const;
-  /**
-   * Returns the current pending input block as a specific kind of block.
-   * These methods must only be called if the current pending block is of the
-   * requested type.
+  CancelableBlockState* GetCurrentBlock() const;
+  /*
+   * Returns the current pending input block as a specific kind of block. If
+   * GetCurrentBlock() returns null, these functions additionally check the
+   * mActiveXXXBlock field of the corresponding input type to see if there is
+   * a depleted but still active input block, and returns that if found. These
+   * functions may return null if no block is found.
    */
-  TouchBlockState* CurrentTouchBlock() const;
-  WheelBlockState* CurrentWheelBlock() const;
-  DragBlockState* CurrentDragBlock() const;
-  PanGestureBlockState* CurrentPanGestureBlock() const;
+  TouchBlockState* GetCurrentTouchBlock() const;
+  WheelBlockState* GetCurrentWheelBlock() const;
+  DragBlockState* GetCurrentDragBlock() const;
+  PanGestureBlockState* GetCurrentPanGestureBlock() const;
   /**
    * Returns true iff the pending block at the head of the queue is ready for
    * handling.
