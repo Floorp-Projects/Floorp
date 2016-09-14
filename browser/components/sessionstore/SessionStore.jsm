@@ -811,12 +811,10 @@ var SessionStoreInternal = {
 
         // Restore the tab icon.
         if ("image" in tabData) {
-          // Using null as the loadingPrincipal because serializing
-          // the principal would be overkill. Within SetIcon we
-          // default to the systemPrincipal if aLoadingPrincipal is
-          // null which will allow the favicon to load.
-          win.gBrowser.setIcon(tab, tabData.image, null);
-          TabStateCache.update(browser, {image: null});
+          // Use the serialized contentPrincipal with the new icon load.
+          let loadingPrincipal = Utils.deserializePrincipal(tabData.iconLoadingPrincipal);
+          win.gBrowser.setIcon(tab, tabData.image, loadingPrincipal);
+          TabStateCache.update(browser, { image: null, iconLoadingPrincipal: null });
         }
 
         let event = win.document.createEvent("Events");
@@ -1775,6 +1773,7 @@ var SessionStoreInternal = {
       state: tabState,
       title: tabTitle,
       image: tabbrowser.getIcon(aTab),
+      iconLoadingPrincipal: Utils.serializePrincipal(aTab.linkedBrowser.contentPrincipal),
       pos: aTab._tPos,
       closedAt: Date.now()
     };
@@ -3321,6 +3320,7 @@ var SessionStoreInternal = {
       // When that's done it will be removed from the cache and we always
       // collect it in TabState._collectBaseTabData().
       image: tabData.image || "",
+      iconLoadingPrincipal: tabData.iconLoadingPrincipal || null,
       userTypedValue: tabData.userTypedValue || "",
       userTypedClear: tabData.userTypedClear || 0
     });

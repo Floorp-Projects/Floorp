@@ -462,15 +462,6 @@ add_task(function* test_keyed_histogram() {
 
   let threw = false;
   try {
-    Telemetry.newKeyedHistogram("test::invalid # histogram", "never", Telemetry.HISTOGRAM_BOOLEAN);
-  } catch (e) {
-    // This should throw as we reject names with the # separator
-    threw = true;
-  }
-  Assert.ok(threw, "newKeyedHistogram should have thrown");
-
-  threw = false;
-  try {
     Telemetry.getKeyedHistogramById("test::unknown histogram", "never", Telemetry.HISTOGRAM_BOOLEAN);
   } catch (e) {
     // This should throw as it is an unknown ID
@@ -480,7 +471,7 @@ add_task(function* test_keyed_histogram() {
 });
 
 add_task(function* test_keyed_boolean_histogram() {
-  const KEYED_ID = "test::keyed::boolean";
+  const KEYED_ID = "TELEMETRY_TEST_KEYED_BOOLEAN";
   let KEYS = numberRange(0, 2).map(i => "key" + (i + 1));
   KEYS.push("漢語");
   let histogramBase = {
@@ -495,7 +486,7 @@ add_task(function* test_keyed_boolean_histogram() {
   let testKeys = [];
   let testSnapShot = {};
 
-  let h = Telemetry.newKeyedHistogram(KEYED_ID, "never", Telemetry.HISTOGRAM_BOOLEAN);
+  let h = Telemetry.getKeyedHistogramById(KEYED_ID);
   for (let i=0; i<2; ++i) {
     let key = KEYS[i];
     h.add(key, true);
@@ -528,7 +519,7 @@ add_task(function* test_keyed_boolean_histogram() {
 });
 
 add_task(function* test_keyed_count_histogram() {
-  const KEYED_ID = "test::keyed::count";
+  const KEYED_ID = "TELEMETRY_TEST_KEYED_COUNT";
   const KEYS = numberRange(0, 5).map(i => "key" + (i + 1));
   let histogramBase = {
     "min": 1,
@@ -542,7 +533,7 @@ add_task(function* test_keyed_count_histogram() {
   let testKeys = [];
   let testSnapShot = {};
 
-  let h = Telemetry.newKeyedHistogram(KEYED_ID, "never", Telemetry.HISTOGRAM_COUNT);
+  let h = Telemetry.getKeyedHistogramById(KEYED_ID);
   for (let i=0; i<4; ++i) {
     let key = KEYS[i];
     let value = i*2 + 1;
@@ -583,8 +574,8 @@ add_task(function* test_keyed_count_histogram() {
 });
 
 add_task(function* test_keyed_flag_histogram() {
-  const KEYED_ID = "test::keyed::flag";
-  let h = Telemetry.newKeyedHistogram(KEYED_ID, "never", Telemetry.HISTOGRAM_FLAG);
+  const KEYED_ID = "TELEMETRY_TEST_KEYED_FLAG";
+  let h = Telemetry.getKeyedHistogramById(KEYED_ID);
 
   const KEY = "default";
   h.add(KEY, true);
@@ -633,12 +624,6 @@ add_task(function* test_keyed_histogram_recording() {
   h.add(TEST_KEY, 1);
   Assert.equal(h.snapshot(TEST_KEY).sum, 0,
                "The keyed histograms should not record any data.");
-
-  // Runtime created histograms should not be recorded.
-  h = Telemetry.newKeyedHistogram("test::runtime_keyed_boolean", "never", Telemetry.HISTOGRAM_BOOLEAN);
-  h.add(TEST_KEY, 1);
-  Assert.equal(h.snapshot(TEST_KEY).sum, 0,
-               "The keyed histogram should not record any data.");
 
   // Check that extended histograms are recorded when required.
   Telemetry.canRecordExtended = true;

@@ -984,7 +984,13 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
     moduleLoaders = nullptr;
   }
 
-  nsCycleCollector_shutdown();
+  bool shutdownCollect;
+#ifdef NS_FREE_PERMANENT_DATA
+  shutdownCollect = true;
+#else
+  shutdownCollect = !!PR_GetEnv("MOZ_CC_RUN_DURING_SHUTDOWN");
+#endif
+  nsCycleCollector_shutdown(shutdownCollect);
 
   PROFILER_MARKER("Shutdown xpcom");
   // If we are doing any shutdown checks, poison writes.

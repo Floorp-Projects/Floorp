@@ -132,10 +132,10 @@ private:
 
   void Decode();
   void OnMetadataRead(MetadataHolder* aMetadata);
-  void OnMetadataNotRead(ReadMetadataFailureReason aReason);
+  void OnMetadataNotRead(const MediaResult& aError);
   void RequestSample();
   void SampleDecoded(MediaData* aData);
-  void SampleNotDecoded(MediaDecoderReader::NotDecodedReason aReason);
+  void SampleNotDecoded(const MediaResult& aError);
   void FinishDecode();
   void AllocateBuffer();
   void CallbackTheResult();
@@ -310,7 +310,7 @@ MediaDecodeTask::OnMetadataRead(MetadataHolder* aMetadata)
 }
 
 void
-MediaDecodeTask::OnMetadataNotRead(ReadMetadataFailureReason aReason)
+MediaDecodeTask::OnMetadataNotRead(const MediaResult& aReason)
 {
   mDecoderReader->Shutdown();
   ReportFailureOnMainThread(WebAudioDecodeJob::InvalidContent);
@@ -337,15 +337,14 @@ MediaDecodeTask::SampleDecoded(MediaData* aData)
 }
 
 void
-MediaDecodeTask::SampleNotDecoded(MediaDecoderReader::NotDecodedReason aReason)
+MediaDecodeTask::SampleNotDecoded(const MediaResult& aError)
 {
   MOZ_ASSERT(!NS_IsMainThread());
-  if (aReason == MediaDecoderReader::DECODE_ERROR) {
+  if (aError == NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
+    FinishDecode();
+  } else {
     mDecoderReader->Shutdown();
     ReportFailureOnMainThread(WebAudioDecodeJob::InvalidContent);
-  } else {
-    MOZ_ASSERT(aReason == MediaDecoderReader::END_OF_STREAM);
-    FinishDecode();
   }
 }
 
