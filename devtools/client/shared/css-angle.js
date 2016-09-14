@@ -10,7 +10,7 @@ const SPECIALVALUES = new Set([
   "unset"
 ]);
 
-const {getCSSLexer} = require("devtools/shared/css-lexer");
+const {getCSSLexer} = require("devtools/shared/css/lexer");
 
 /**
  * This module is used to convert between various angle units.
