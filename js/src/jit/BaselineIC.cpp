@@ -7590,7 +7590,11 @@ DoIteratorNewFallback(JSContext* cx, BaselineFrame* frame, ICIteratorNew_Fallbac
 
     uint8_t flags = GET_UINT8(pc);
     res.set(value);
-    return ValueToIterator(cx, flags, res);
+    RootedObject iterobj(cx, ValueToIterator(cx, flags, res));
+    if (!iterobj)
+        return false;
+    res.setObject(*iterobj);
+    return true;
 }
 
 typedef bool (*DoIteratorNewFallbackFn)(JSContext*, BaselineFrame*, ICIteratorNew_Fallback*,

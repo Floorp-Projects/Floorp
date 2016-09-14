@@ -11966,7 +11966,7 @@ class MRound
 
 class MIteratorStart
   : public MUnaryInstruction,
-    public SingleObjectPolicy::Data
+    public BoxExceptPolicy<0, MIRType::Object>::Data
 {
     uint8_t flags_;
 

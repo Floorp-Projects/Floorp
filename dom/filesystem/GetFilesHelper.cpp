@@ -7,6 +7,7 @@
 #include "GetFilesHelper.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
+#include "nsProxyRelease.h"
 
 namespace mozilla {
 namespace dom {
@@ -608,6 +609,11 @@ GetFilesHelperParent::GetFilesHelperParent(const nsID& aUUID,
   , mContentParent(aContentParent)
   , mUUID(aUUID)
 {}
+
+GetFilesHelperParent::~GetFilesHelperParent()
+{
+  NS_ReleaseOnMainThread(mContentParent.forget());
+}
 
 /* static */ already_AddRefed<GetFilesHelperParent>
 GetFilesHelperParent::Create(const nsID& aUUID, const nsAString& aDirectoryPath,

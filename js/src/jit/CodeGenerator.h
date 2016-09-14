@@ -325,8 +325,9 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitClampIToUint8(LClampIToUint8* lir);
     void visitClampDToUint8(LClampDToUint8* lir);
     void visitClampVToUint8(LClampVToUint8* lir);
-    void visitCallIteratorStart(LCallIteratorStart* lir);
-    void visitIteratorStart(LIteratorStart* lir);
+    void visitCallIteratorStartV(LCallIteratorStartV* lir);
+    void visitCallIteratorStartO(LCallIteratorStartO* lir);
+    void visitIteratorStartO(LIteratorStartO* lir);
     void visitIteratorMore(LIteratorMore* lir);
     void visitIsNoIterAndBranch(LIsNoIterAndBranch* lir);
     void visitIteratorEnd(LIteratorEnd* lir);
