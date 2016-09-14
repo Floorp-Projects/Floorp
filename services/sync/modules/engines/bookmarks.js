@@ -431,11 +431,7 @@ BookmarksEngine.prototype = {
   },
 
   pullAllChanges() {
-    let changeset = new BookmarksChangeset();
-    for (let id in this._store.getAllIDs()) {
-      changeset.set(id, { modified: 0, deleted: false });
-    }
-    return changeset;
+    return new BookmarksChangeset(this._store.getAllIDs());
   },
 
   pullNewChanges() {
@@ -467,9 +463,7 @@ BookmarksEngine.prototype = {
           VALUES ${new Array(chunkLength).fill("(?)").join(", ")}
         ),
         syncedItems(id) AS (
-          SELECT b.id
-          FROM moz_bookmarks b
-          WHERE b.id IN (${getChangeRootIds().join(", ")})
+          VALUES ${getChangeRootIds().map(id => `(${id})`).join(", ")}
           UNION ALL
           SELECT b.id
           FROM moz_bookmarks b
@@ -727,13 +721,6 @@ BookmarksStore.prototype = {
     ));
   },
 
-  _getNode: function BStore__getNode(folder) {
-    let query = PlacesUtils.history.getNewQuery();
-    query.setFolders([folder], 1);
-    return PlacesUtils.history.executeQuery(
-      query, PlacesUtils.history.getNewQueryOptions()).root;
-  },
-
   _getTags: function BStore__getTags(uri) {
     try {
       if (typeof(uri) == "string")
@@ -916,51 +903,30 @@ BookmarksStore.prototype = {
     return index;
   },
 
-  _getChildren: function BStore_getChildren(guid, items) {
-    let node = guid; // the recursion case
-    if (typeof(node) == "string") { // callers will give us the guid as the first arg
-      let nodeID = this.idForGUID(guid, true);
-      if (!nodeID) {
-        this._log.debug("No node for GUID " + guid + "; returning no children.");
-        return items;
-      }
-      node = this._getNode(nodeID);
-    }
-
-    if (node.type == node.RESULT_TYPE_FOLDER) {
-      node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
-      node.containerOpen = true;
-      try {
-        // Remember all the children GUIDs and recursively get more
-        for (let i = 0; i < node.childCount; i++) {
-          let child = node.getChild(i);
-          items[this.GUIDForId(child.itemId)] = true;
-          this._getChildren(child, items);
-        }
-      }
-      finally {
-        node.containerOpen = false;
-      }
-    }
-
-    return items;
-  },
-
   getAllIDs: function BStore_getAllIDs() {
-    let items = {"menu": true,
-                 "toolbar": true,
-                 "unfiled": true,
-                };
-    // We also want "mobile" but only if a local mobile folder already exists
-    // (otherwise we'll later end up creating it, which we want to avoid until
-    // we actually need it.)
-    if (BookmarkSpecialIds.findMobileRoot(false)) {
-      items["mobile"] = true;
+    let items = {};
+
+    let query = `
+      WITH RECURSIVE
+      changeRootContents(id) AS (
+        VALUES ${getChangeRootIds().map(id => `(${id})`).join(", ")}
+        UNION ALL
+        SELECT b.id
+        FROM moz_bookmarks b
+        JOIN changeRootContents c ON b.parent = c.id
+      )
+      SELECT id, guid
+      FROM changeRootContents
+      JOIN moz_bookmarks USING (id)
+    `;
+
+    let statement = this._getStmt(query);
+    let results = Async.querySpinningly(statement, ["id", "guid"]);
+    for (let { id, guid } of results) {
+      let syncID = BookmarkSpecialIds.specialGUIDForId(id) || guid;
+      items[syncID] = { modified: 0, deleted: false };
     }
-    for (let guid of BookmarkSpecialIds.guids) {
-      if (guid != "places" && guid != "tags")
-        this._getChildren(guid, items);
-    }
+
     return items;
   },
 
