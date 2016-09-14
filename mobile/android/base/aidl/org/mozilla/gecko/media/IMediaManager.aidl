@@ -7,7 +7,7 @@ package org.mozilla.gecko.media;
 // Non-default types used in interface.
 import org.mozilla.gecko.media.ICodec;
 
-interface ICodecManager {
+interface IMediaManager {
     /** Creates a remote ICodec object. */
     ICodec createCodec();
 }
