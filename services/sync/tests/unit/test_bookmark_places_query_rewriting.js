@@ -33,15 +33,18 @@ function run_test() {
   _("Folder name: " + tagRecord.folderName);
   store.applyIncoming(tagRecord);
 
-  let tags = store._getNode(PlacesUtils.tagsFolderId);
-  tags.containerOpen = true;
+  let tags = PlacesUtils.getFolderContents(PlacesUtils.tagsFolderId).root;
   let tagID;
-  for (let i = 0; i < tags.childCount; ++i) {
-    let child = tags.getChild(i);
-    if (child.title == "bar")
-      tagID = child.itemId;
+  try {
+    for (let i = 0; i < tags.childCount; ++i) {
+      let child = tags.getChild(i);
+      if (child.title == "bar") {
+        tagID = child.itemId;
+      }
+    }
+  } finally {
+    tags.containerOpen = false;
   }
-  tags.containerOpen = false;
 
   _("Tag ID: " + tagID);
   let insertedRecord = store.createRecord("abcdefabcdef", "bookmarks");
