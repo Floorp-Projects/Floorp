@@ -31,8 +31,10 @@ is(hasListeners(), false, "Must not have listeners before tests start");
 
 function dumbListener(event) {}
 function dumbListener2(event) {}
+function dumbListener3(event) {}
 
 window.addEventListener("deviceorientation", dumbListener, false);
+window.addEventListener("random_event_name", function() {}, false);
 window.addEventListener("deviceorientation", dumbListener2, false);
 
 is(hasListeners(), true, "Listeners should have been added");
@@ -46,10 +48,22 @@ window.setTimeout(function() {
     window.removeEventListener("deviceorientation", dumbListener2, false);
     window.setTimeout(function() {
       is(hasListeners(), false, "Listeners should have been removed");
-      SimpleTest.finish();
+      testEventHandler();
     }, 0);
   }, 0);
 }, 0);
+
+function testEventHandler() {
+  window.ondeviceorientation = function() {}
+  window.setTimeout(function() {
+    is(hasListeners(), true, "Handler should have been added");
+    window.ondeviceorientation = null;
+    window.setTimeout(function() {
+      is(hasListeners(), false, "Handler should have been removed");
+      SimpleTest.finish();
+    }, 0);
+  }, 0)
+}
 
 SimpleTest.waitForExplicitFinish();
 
