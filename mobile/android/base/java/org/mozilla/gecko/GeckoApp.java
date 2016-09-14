@@ -137,7 +137,6 @@ public abstract class GeckoApp
     private static final String LOGTAG = "GeckoApp";
     private static final long ONE_DAY_MS = TimeUnit.MILLISECONDS.convert(1, TimeUnit.DAYS);
 
-    public static final String ACTION_ALERT_CALLBACK       = "org.mozilla.gecko.ACTION_ALERT_CALLBACK";
     public static final String ACTION_HOMESCREEN_SHORTCUT  = "org.mozilla.gecko.BOOKMARK";
     public static final String ACTION_DEBUG                = "org.mozilla.gecko.DEBUG";
     public static final String ACTION_LAUNCH_SETTINGS      = "org.mozilla.gecko.SETTINGS";
@@ -150,7 +149,6 @@ public abstract class GeckoApp
     public static final String EXTRA_STATE_BUNDLE          = "stateBundle";
 
     public static final String PREFS_ALLOW_STATE_BUNDLE    = "allowStateBundle";
-    public static final String PREFS_OOM_EXCEPTION         = "OOMException";
     public static final String PREFS_VERSION_CODE          = "versionCode";
     public static final String PREFS_WAS_STOPPED           = "wasStopped";
     public static final String PREFS_CRASHED_COUNT         = "crashedCount";
@@ -1374,7 +1372,7 @@ public abstract class GeckoApp
                 }
 
                 SharedPreferences.Editor editor = prefs.edit();
-                editor.putBoolean(GeckoApp.PREFS_OOM_EXCEPTION, false);
+                editor.putBoolean(GeckoAppShell.PREFS_OOM_EXCEPTION, false);
 
                 // Put a flag to check if we got a normal `onSaveInstanceState`
                 // on exit, or if we were suddenly killed (crash or native OOM).
@@ -1668,7 +1666,7 @@ public abstract class GeckoApp
             }
         }
 
-        if (ACTION_ALERT_CALLBACK.equals(action)) {
+        if (GeckoAppShell.ACTION_ALERT_CALLBACK.equals(action)) {
             processAlertCallback(intent);
         }
     }
@@ -1965,7 +1963,7 @@ public abstract class GeckoApp
             if (alertCookie == null)
                 alertCookie = "";
         }
-        handleNotification(ACTION_ALERT_CALLBACK, alertName, alertCookie);
+        handleNotification(GeckoAppShell.ACTION_ALERT_CALLBACK, alertName, alertCookie);
     }
 
     @Override
@@ -2010,7 +2008,7 @@ public abstract class GeckoApp
             mLayerView.loadUri(uri, GeckoView.LOAD_SWITCH_TAB);
         } else if (Intent.ACTION_SEARCH.equals(action)) {
             mLayerView.loadUri(uri, GeckoView.LOAD_NEW_TAB);
-        } else if (ACTION_ALERT_CALLBACK.equals(action)) {
+        } else if (GeckoAppShell.ACTION_ALERT_CALLBACK.equals(action)) {
             processAlertCallback(intent);
         } else if (NotificationHelper.HELPER_BROADCAST_ACTION.equals(action)) {
             NotificationHelper.getInstance(getApplicationContext()).handleNotificationIntent(intent);
@@ -2034,7 +2032,8 @@ public abstract class GeckoApp
      */
     protected String getURIFromIntent(SafeIntent intent) {
         final String action = intent.getAction();
-        if (ACTION_ALERT_CALLBACK.equals(action) || NotificationHelper.HELPER_BROADCAST_ACTION.equals(action)) {
+        if (GeckoAppShell.ACTION_ALERT_CALLBACK.equals(action) ||
+                NotificationHelper.HELPER_BROADCAST_ACTION.equals(action)) {
             return null;
         }
 
