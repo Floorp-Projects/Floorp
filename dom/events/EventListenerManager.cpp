@@ -652,7 +652,6 @@ EventListenerManager::RemoveEventListenerInternal(
   Listener* listener;
 
   uint32_t count = mListeners.Length();
-  uint32_t typeCount = 0;
   bool deviceType = IsDeviceType(aEventMessage);
 
   RefPtr<EventListenerManager> kungFuDeathGrip(this);
@@ -661,23 +660,18 @@ EventListenerManager::RemoveEventListenerInternal(
     listener = &mListeners.ElementAt(i);
     if (EVENT_TYPE_EQUALS(listener, aEventMessage, aUserType, aTypeString,
                           aAllEvents)) {
-      ++typeCount;
       if (listener->mListener == aListenerHolder &&
           listener->mFlags.EqualsForRemoval(aFlags)) {
         mListeners.RemoveElementAt(i);
-        --count;
         NotifyEventListenerRemoved(aUserType);
-        if (!deviceType) {
-          return;
+        if (!aAllEvents && deviceType) {
+          DisableDevice(aEventMessage);
         }
-        --typeCount;
+        return;
       }
     }
   }
 
-  if (!aAllEvents && deviceType && typeCount == 0) {
-    DisableDevice(aEventMessage);
-  }
 }
 
 bool
@@ -927,6 +921,9 @@ EventListenerManager::RemoveEventHandler(nsIAtom* aName,
   if (listener) {
     mListeners.RemoveElementAt(uint32_t(listener - &mListeners.ElementAt(0)));
     NotifyEventListenerRemoved(aName);
+    if (IsDeviceType(eventMessage)) {
+      DisableDevice(eventMessage);
+    }
   }
 }
 
