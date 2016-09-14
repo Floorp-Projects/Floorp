@@ -330,7 +330,26 @@ js::InitWasmClass(JSContext* cx, HandleObject global)
 // Common functions
 
 static bool
-GetResizableLimits(JSContext* cx, HandleObject obj, const char* kind, ResizableLimits* limits)
+ToNonWrappingUint32(JSContext* cx, HandleValue v, uint32_t max, const char* kind, const char* noun,
+                    uint32_t* u32)
+{
+    double dbl;
+    if (!ToInteger(cx, v, &dbl))
+        return false;
+
+    if (dbl < 0 || dbl > max) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_UINT32, kind, noun);
+        return false;
+    }
+
+    *u32 = uint32_t(dbl);
+    MOZ_ASSERT(double(*u32) == dbl);
+    return true;
+}
+
+static bool
+GetResizableLimits(JSContext* cx, HandleObject obj, uint32_t max, const char* kind,
+                   ResizableLimits* limits)
 {
     JSAtom* initialAtom = Atomize(cx, "initial", strlen("initial"));
     if (!initialAtom)
@@ -341,16 +360,8 @@ GetResizableLimits(JSContext* cx, HandleObject obj, const char* kind, ResizableL
     if (!GetProperty(cx, obj, obj, initialId, &initialVal))
         return false;
 
-    double initialDbl;
-    if (!ToInteger(cx, initialVal, &initialDbl))
+    if (!ToNonWrappingUint32(cx, initialVal, max, kind, "initial size", &limits->initial))
         return false;
-
-    if (initialDbl < 0 || initialDbl > UINT32_MAX) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_SIZE, kind, "initial");
-        return false;
-    }
-
-    limits->initial = uint32_t(initialDbl);
 
     JSAtom* maximumAtom = Atomize(cx, "maximum", strlen("maximum"));
     if (!maximumAtom)
@@ -363,16 +374,15 @@ GetResizableLimits(JSContext* cx, HandleObject obj, const char* kind, ResizableL
         if (!GetProperty(cx, obj, obj, maximumId, &maxVal))
             return false;
 
-        double maxDbl;
-        if (!ToInteger(cx, maxVal, &maxDbl))
+        limits->maximum.emplace();
+        if (!ToNonWrappingUint32(cx, maxVal, max, kind, "maximum size", limits->maximum.ptr()))
             return false;
 
-        if (maxDbl < initialDbl || maxDbl > UINT32_MAX) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_SIZE, kind, "maximum");
+        if (limits->initial > *limits->maximum) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_UINT32,
+                                 kind, "maximum size");
             return false;
         }
-
-        limits->maximum = Some(uint32_t(maxDbl));
     }
 
     return true;
@@ -827,24 +837,12 @@ WasmMemoryObject::construct(JSContext* cx, unsigned argc, Value* vp)
 
     RootedObject obj(cx, &args[0].toObject());
     ResizableLimits limits;
-    if (!GetResizableLimits(cx, obj, "Memory", &limits))
+    if (!GetResizableLimits(cx, obj, UINT32_MAX / PageSize, "Memory", &limits))
         return false;
-
-    if (limits.initial > UINT32_MAX / PageSize) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_SIZE, "Memory", "initial");
-        return false;
-    }
 
     limits.initial *= PageSize;
-
-    if (limits.maximum) {
-        if (limits.maximum.value() > UINT32_MAX / PageSize) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_SIZE, "Memory", "maximum");
-            return false;
-        }
-
-        limits.maximum = Some(limits.maximum.value() * PageSize);
-    }
+    if (limits.maximum)
+        limits.maximum = Some(*limits.maximum * PageSize);
 
     RootedArrayBufferObject buffer(cx,
         ArrayBufferObject::createForWasm(cx, limits.initial, limits.maximum));
@@ -891,16 +889,11 @@ WasmMemoryObject::growImpl(JSContext* cx, const CallArgs& args)
 {
     RootedWasmMemoryObject memory(cx, &args.thisv().toObject().as<WasmMemoryObject>());
 
-    double deltaDbl;
-    if (!ToInteger(cx, args.get(0), &deltaDbl))
+    uint32_t delta;
+    if (!ToNonWrappingUint32(cx, args.get(0), UINT32_MAX, "Memory", "grow delta", &delta))
         return false;
 
-    if (deltaDbl < 0 || deltaDbl > UINT32_MAX) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_GROW, "memory");
-        return false;
-    }
-
-    uint32_t ret = grow(memory, uint32_t(deltaDbl), cx);
+    uint32_t ret = grow(memory, delta, cx);
 
     if (ret == uint32_t(-1)) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_GROW, "memory");
@@ -1152,7 +1145,7 @@ WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp)
     }
 
     ResizableLimits limits;
-    if (!GetResizableLimits(cx, obj, "Table", &limits))
+    if (!GetResizableLimits(cx, obj, UINT32_MAX, "Table", &limits))
         return false;
 
     RootedWasmTableObject table(cx, WasmTableObject::create(cx, limits));
@@ -1195,17 +1188,9 @@ WasmTableObject::getImpl(JSContext* cx, const CallArgs& args)
     RootedWasmTableObject tableObj(cx, &args.thisv().toObject().as<WasmTableObject>());
     const Table& table = tableObj->table();
 
-    double indexDbl;
-    if (!ToInteger(cx, args.get(0), &indexDbl))
+    uint32_t index;
+    if (!ToNonWrappingUint32(cx, args.get(0), table.length() - 1, "Table", "get index", &index))
         return false;
-
-    if (indexDbl < 0 || indexDbl >= table.length()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
-        return false;
-    }
-
-    uint32_t index = uint32_t(indexDbl);
-    MOZ_ASSERT(double(index) == indexDbl);
 
     ExternalTableElem& elem = table.externalArray()[index];
     if (!elem.code) {
@@ -1242,17 +1227,9 @@ WasmTableObject::setImpl(JSContext* cx, const CallArgs& args)
     if (!args.requireAtLeast(cx, "set", 2))
         return false;
 
-    double indexDbl;
-    if (!ToInteger(cx, args[0], &indexDbl))
+    uint32_t index;
+    if (!ToNonWrappingUint32(cx, args.get(0), table.length() - 1, "Table", "set index", &index))
         return false;
-
-    if (indexDbl < 0 || indexDbl >= table.length()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
-        return false;
-    }
-
-    uint32_t index = uint32_t(indexDbl);
-    MOZ_ASSERT(double(index) == indexDbl);
 
     RootedFunction value(cx);
     if (!IsExportedFunction(args[1], &value) && !args[1].isNull()) {
@@ -1295,16 +1272,11 @@ WasmTableObject::growImpl(JSContext* cx, const CallArgs& args)
 {
     RootedWasmTableObject table(cx, &args.thisv().toObject().as<WasmTableObject>());
 
-    double deltaDbl;
-    if (!ToInteger(cx, args.get(0), &deltaDbl))
+    uint32_t delta;
+    if (!ToNonWrappingUint32(cx, args.get(0), UINT32_MAX, "Table", "grow delta", &delta))
         return false;
 
-    if (deltaDbl < 0 || deltaDbl > UINT32_MAX) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_GROW, "table");
-        return false;
-    }
-
-    uint32_t ret = table->table().grow(uint32_t(deltaDbl), cx);
+    uint32_t ret = table->table().grow(delta, cx);
 
     if (ret == uint32_t(-1)) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_GROW, "table");
