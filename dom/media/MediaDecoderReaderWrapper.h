@@ -21,8 +21,8 @@ class StartTimeRendezvous;
 
 typedef MozPromise<bool, bool, /* isExclusive = */ false> HaveStartTimePromise;
 
-typedef Variant<MediaData*, MediaDecoderReader::NotDecodedReason> AudioCallbackData;
-typedef Variant<Tuple<MediaData*, TimeStamp>, MediaDecoderReader::NotDecodedReason> VideoCallbackData;
+typedef Variant<MediaData*, MediaResult> AudioCallbackData;
+typedef Variant<Tuple<MediaData*, TimeStamp>, MediaResult> VideoCallbackData;
 typedef Variant<MediaData::Type, WaitForDataRejectValue> WaitCallbackData;
 
 /**

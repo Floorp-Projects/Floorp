@@ -52,7 +52,7 @@ add_task(function* () {
   EventUtils.synthesizeMouse(searchField, 2, 2,
     {type: "contextmenu", button: 2}, win);
   yield onContextMenuPopup;
-  yield waitForClipboard(() => cmdCopy.click(), TEST_INPUT);
+  yield waitForClipboardPromise(() => cmdCopy.click(), TEST_INPUT);
   searchContextMenu.hidePopup();
   yield onContextMenuHidden;
 

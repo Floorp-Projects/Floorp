@@ -204,6 +204,7 @@ class TelemetryRecord {
       took: this.took,
       failureReason: this.failureReason,
       status: this.status,
+      deviceID: this.deviceID,
     };
     let engines = [];
     for (let engine of this.engines) {
@@ -228,8 +229,16 @@ class TelemetryRecord {
 
     try {
       this.uid = Weave.Service.identity.hashedUID();
+      let deviceID = Weave.Service.identity.deviceID();
+      if (deviceID) {
+        // Combine the raw device id with the metrics uid to create a stable
+        // unique identifier that can't be mapped back to the user's FxA
+        // identity without knowing the metrics HMAC key.
+        this.deviceID = Utils.sha256(deviceID + this.uid);
+      }
     } catch (e) {
       this.uid = "0".repeat(32);
+      this.deviceID = undefined;
     }
 
     // Check for engine statuses. -- We do this now, and not in engine.finished

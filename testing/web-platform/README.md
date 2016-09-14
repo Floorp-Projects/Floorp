@@ -40,7 +40,8 @@ FAQ
 
   It is important to note that in order for the tests to run the
   manifest file must be updated; this should not be done by hand, but
-  by running `mach web-platform-tests --manifest-update`.
+  by running `mach wpt-manifest-update` (or `mach web-platform-tests
+  --manifest-update`, if you also wish to run some tests).
 
   `mach web-platform-tests-create <path>` is a helper script designed
   to help create new web-platform-tests. It opens a locally configured
