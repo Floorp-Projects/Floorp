@@ -1500,49 +1500,6 @@ class Marionette(object):
         """
         self._send_message("get", {"url": url})
 
-    def timeouts(self, timeout_type, ms):
-        """An interface for managing timeout behaviour of a Marionette
-        instance.
-
-        Setting timeouts specifies the type and amount of time the
-        Marionette instance should wait during requests.
-
-        There are three types of timeouts that can be set: implicit,
-        script and page load.
-
-        * An implicit  timeout specifies the amount of time a Marionette
-        instance should wait when searching for elements. Here, marionette
-        polls a page until an element is found or the timeout expires,
-        whichever occurs first. When searching for multiple elements,
-        the driver should poll the page until at least one element is
-        found or the timeout expires, at which point it should return
-        an empty list.
-
-        * A script timeout specifies the amount of time the Marionette
-        instance should wait after calling executeAsyncScript for the
-        callback to have executed before returning a timeout response.
-
-        * A page load timeout specifies the amount of time the Marionette
-        instance should wait for a page load operation to complete. If
-        this limit is exceeded, the Marionette instance will return a
-        "timeout" response status.
-
-        :param timeout_type: A string value specifying the timeout
-            type. This must be one of three types: 'implicit', 'script'
-            or 'page load'
-        :param ms: A number value specifying the timeout length in
-            milliseconds (ms)
-        """
-        timeout_types = (self.TIMEOUT_PAGE,
-                         self.TIMEOUT_SCRIPT,
-                         self.TIMEOUT_SEARCH,
-                         )
-        if timeout_type not in timeout_types:
-            raise ValueError("Unknown timeout type: {0} (should be one "
-                             "of {1})".format(timeout_type, timeout_types))
-        body = {"type": timeout_type, "ms": ms}
-        self._send_message("timeouts", body)
-
     def go_back(self):
         """Causes the browser to perform a back navigation."""
         self._send_message("goBack")
