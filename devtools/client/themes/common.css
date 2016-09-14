@@ -591,9 +591,9 @@ checkbox:-moz-focusring {
   margin-right: 0;
 }
 
-.devtools-searchbox > .devtools-textinput:-moz-focusring,
-.devtools-searchbox > .devtools-searchinput:-moz-focusring,
-.devtools-searchbox > .devtools-filterinput:-moz-focusring {
+.devtools-textinput:focus,
+.devtools-searchinput:focus,
+.devtools-filterinput:focus {
   border-color: var(--theme-focus-border-color-textbox);
   box-shadow: var(--theme-focus-box-shadow-textbox);
   transition: all 0.2s ease-in-out;
