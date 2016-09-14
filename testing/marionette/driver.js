@@ -1533,20 +1533,6 @@ GeckoDriver.prototype.switchToFrame = function*(cmd, resp) {
 };
 
 /**
- * Set timeout for searching for elements.
- *
- * @param {number} ms
- *     Search timeout in milliseconds.
- */
-GeckoDriver.prototype.setSearchTimeout = function(cmd, resp) {
-  let ms = parseInt(cmd.parameters.ms);
-  if (isNaN(ms)) {
-    throw new WebDriverError("Not a Number");
-  }
-  this.searchTimeout = ms;
-};
-
-/**
  * Set timeout for page loading, searching, and scripts.
  *
  * @param {string} type
@@ -2703,7 +2689,6 @@ GeckoDriver.prototype.commands = {
   "multiAction": GeckoDriver.prototype.multiAction,
   "executeAsyncScript": GeckoDriver.prototype.executeAsyncScript,
   "executeJSScript": GeckoDriver.prototype.executeJSScript,
-  "setSearchTimeout": GeckoDriver.prototype.setSearchTimeout,
   "findElement": GeckoDriver.prototype.findElement,
   "findElements": GeckoDriver.prototype.findElements,
   "clickElement": GeckoDriver.prototype.clickElement,
