@@ -43,6 +43,52 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/WindowsDllBlocklist.h"
 
+#ifdef MOZ_LINUX_32_SSE2_STARTUP_ERROR
+#include <cpuid.h>
+#include "mozilla/Unused.h"
+
+static bool
+IsSSE2Available()
+{
+  // The rest of the app has been compiled to assume that SSE2 is present
+  // unconditionally, so we can't use the normal copy of SSE.cpp here.
+  // Since SSE.cpp caches the results and we need them only transiently,
+  // instead of #including SSE.cpp here, let's just inline the specific check
+  // that's needed.
+  unsigned int level = 1u;
+  unsigned int eax, ebx, ecx, edx;
+  unsigned int bits = (1u<<26);
+  unsigned int max = __get_cpuid_max(0, nullptr);
+  if (level > max) {
+    return false;
+  }
+  __cpuid_count(level, 0, eax, ebx, ecx, edx);
+  return (edx & bits) == bits;
+}
+
+static const char sSSE2Message[] =
+    "This browser version requires a processor with the SSE2 instruction "
+    "set extension.\nYou may be able to obtain a version that does not "
+    "require SSE2 from your Linux distribution.\n";
+
+__attribute__((constructor))
+static void
+SSE2Check()
+{
+  if (IsSSE2Available()) {
+    return;
+  }
+  // Using write() in order to avoid jemalloc-based buffering. Ignoring return
+  // values, since there isn't much we could do on failure and there is no
+  // point in trying to recover from errors.
+  MOZ_UNUSED(write(STDERR_FILENO,
+                   sSSE2Message,
+                   MOZ_ARRAY_LENGTH(sSSE2Message) - 1));
+  // _exit() instead of exit() to avoid running the usual "at exit" code.
+  _exit(255);
+}
+#endif
+
 #if !defined(MOZ_WIDGET_COCOA) && !defined(MOZ_WIDGET_ANDROID) \
   && !(defined(XP_LINUX) && defined(MOZ_SANDBOX))
 #define MOZ_BROWSER_CAN_BE_CONTENTPROC
