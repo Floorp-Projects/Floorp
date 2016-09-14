@@ -233,43 +233,54 @@ function realCreateHTML(meta) {
   document.body.appendChild(content);
 }
 
-function getMediaElement(label, direction, streamId) {
-  var id = label + '_' + direction + '_' + streamId;
-  return document.getElementById(id);
-}
-
 /**
- * Create the HTML element if it doesn't exist yet and attach
- * it to the content node.
+ * Creates an element of the given type, assigns the given id, sets the controls
+ * and autoplay attributes and adds it to the content node.
  *
- * @param {string} label
- *        Prefix to use for the element
- * @param {direction} "local" or "remote"
- * @param {stream} A MediaStream id.
- * @param {audioOnly} Use <audio> element instead of <video>
- * @return {HTMLMediaElement} The created HTML media element
+ * @param {string} type
+ *        Defining if we should create an "audio" or "video" element
+ * @param {string} id
+ *        A string to use as the element id.
  */
-function createMediaElement(label, direction, streamId, audioOnly) {
-  var id = label + '_' + direction + '_' + streamId;
-  var element = document.getElementById(id);
-
-  // Sanity check that we haven't created the element already
-  if (element) {
-    return element;
-  }
-
-  if (!audioOnly) {
-    // Even if this is just audio now, we might add video later.
-    element = document.createElement('video');
-  } else {
-    element = document.createElement('audio');
-  }
+function createMediaElement(type, id) {
+  const element = document.createElement(type);
   element.setAttribute('id', id);
   element.setAttribute('height', 100);
   element.setAttribute('width', 150);
   element.setAttribute('controls', 'controls');
   element.setAttribute('autoplay', 'autoplay');
   document.getElementById('content').appendChild(element);
+
+  return element;
+}
+
+/**
+ * Returns an existing element for the given track with the given idPrefix,
+ * as it was added by createMediaElementForTrack().
+ *
+ * @param {MediaStreamTrack} track
+ *        Track used as the element's source.
+ * @param {string} idPrefix
+ *        A string to use as the element id. The track id will also be appended.
+ */
+function getMediaElementForTrack(track, idPrefix) {
+  return document.getElementById(idPrefix + '_' + track.id);
+}
+
+/**
+ * Create a media element with a track as source and attach it to the content
+ * node.
+ *
+ * @param {MediaStreamTrack} track
+ *        Track for use as source.
+ * @param {string} idPrefix
+ *        A string to use as the element id. The track id will also be appended.
+ * @return {HTMLMediaElement} The created HTML media element
+ */
+function createMediaElementForTrack(track, idPrefix) {
+  const id = idPrefix + '_' + track.id;
+  const element = createMediaElement(track.kind, id);
+  element.srcObject = new MediaStream([track]);
 
   return element;
 }
