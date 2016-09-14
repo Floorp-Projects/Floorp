@@ -8739,12 +8739,24 @@ CodeGenerator::visitArrayJoin(LArrayJoin* lir)
     callVM(ArrayJoinInfo, lir);
 }
 
+typedef JSObject* (*ValueToIteratorFn)(JSContext*, uint32_t, HandleValue);
+static const VMFunction ValueToIteratorInfo =
+    FunctionInfo<ValueToIteratorFn>(ValueToIterator, "ValueToIterator");
+
+void
+CodeGenerator::visitCallIteratorStartV(LCallIteratorStartV* lir)
+{
+    pushArg(ToValue(lir, LCallIteratorStartV::Value));
+    pushArg(Imm32(lir->mir()->flags()));
+    callVM(ValueToIteratorInfo, lir);
+}
+
 typedef JSObject* (*GetIteratorObjectFn)(JSContext*, HandleObject, uint32_t);
 static const VMFunction GetIteratorObjectInfo =
     FunctionInfo<GetIteratorObjectFn>(GetIteratorObject, "GetIteratorObject");
 
 void
-CodeGenerator::visitCallIteratorStart(LCallIteratorStart* lir)
+CodeGenerator::visitCallIteratorStartO(LCallIteratorStartO* lir)
 {
     pushArg(Imm32(lir->mir()->flags()));
     pushArg(ToRegister(lir->object()));
@@ -8767,7 +8779,7 @@ CodeGenerator::branchIfNotEmptyObjectElements(Register obj, Label* target)
 }
 
 void
-CodeGenerator::visitIteratorStart(LIteratorStart* lir)
+CodeGenerator::visitIteratorStartO(LIteratorStartO* lir)
 {
     const Register obj = ToRegister(lir->object());
     const Register output = ToRegister(lir->output());
