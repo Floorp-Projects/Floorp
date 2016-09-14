@@ -55,6 +55,6 @@ add_task(function* () {
   let img = document.querySelector(imgClass);
   ok(img, "warning message is rendered");
 
-  yield closeAboutDebugging(tab, win);
+  yield closeAboutDebugging(tab);
   win.close();
 });

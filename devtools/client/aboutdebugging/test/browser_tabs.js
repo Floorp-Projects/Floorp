@@ -21,7 +21,7 @@ add_task(function* () {
 
   // Open a new tab in background and wait for its addition in the UI
   let onNewTab = waitForMutation(tabsElement, { childList: true });
-  let newTab = yield addTab(TAB_URL, null, true);
+  let newTab = yield addTab(TAB_URL, { background: true });
   yield onNewTab;
 
   // Check that the new tab appears in the UI, but with an empty name
