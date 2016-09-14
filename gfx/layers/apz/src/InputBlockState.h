@@ -55,7 +55,8 @@ public:
   {}
 
   virtual bool SetConfirmedTargetApzc(const RefPtr<AsyncPanZoomController>& aTargetApzc,
-                                      TargetConfirmationState aState);
+                                      TargetConfirmationState aState,
+                                      InputData* aFirstInput);
   const RefPtr<AsyncPanZoomController>& GetTargetApzc() const;
   const RefPtr<const OverscrollHandoffChain>& GetOverscrollHandoffChain() const;
   uint64_t GetBlockId() const;
@@ -233,7 +234,8 @@ public:
   bool MustStayActive() override;
   const char* Type() override;
   bool SetConfirmedTargetApzc(const RefPtr<AsyncPanZoomController>& aTargetApzc,
-                              TargetConfirmationState aState) override;
+                              TargetConfirmationState aState,
+                              InputData* aFirstInput) override;
 
   void AddEvent(const ScrollWheelInput& aEvent);
 
@@ -355,7 +357,8 @@ public:
   bool MustStayActive() override;
   const char* Type() override;
   bool SetConfirmedTargetApzc(const RefPtr<AsyncPanZoomController>& aTargetApzc,
-                              TargetConfirmationState aState) override;
+                              TargetConfirmationState aState,
+                              InputData* aFirstInput) override;
 
   void AddEvent(const PanGestureInput& aEvent);
 

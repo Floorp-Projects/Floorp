@@ -104,7 +104,8 @@ InputQueue::ReceiveTouchInput(const RefPtr<AsyncPanZoomController>& aTarget,
       // the first finger is moving).
       block->SetDuringFastFling();
       block->SetConfirmedTargetApzc(aTarget,
-          InputBlockState::TargetConfirmationState::eConfirmed);
+          InputBlockState::TargetConfirmationState::eConfirmed,
+          nullptr /* the block was just created so it has no events */);
       if (gfxPrefs::TouchActionEnabled()) {
         block->SetAllowedTouchBehaviors(currentBehaviors);
       }
@@ -546,23 +547,55 @@ InputQueue::ScheduleMainThreadTimeout(const RefPtr<AsyncPanZoomController>& aTar
                            gfxPrefs::APZContentResponseTimeout());
 }
 
+CancelableBlockState*
+InputQueue::FindBlockForId(const uint64_t& aInputBlockId,
+                           InputData** aOutFirstInput)
+{
+  for (size_t i = 0; i < mQueuedInputs.Length(); i++) {
+    if (mQueuedInputs[i]->Block()->GetBlockId() == aInputBlockId) {
+      if (aOutFirstInput) {
+        *aOutFirstInput = mQueuedInputs[i]->Input();
+      }
+      return mQueuedInputs[i]->Block();
+    }
+  }
+
+  CancelableBlockState* block = nullptr;
+  if (mActiveTouchBlock && mActiveTouchBlock->GetBlockId() == aInputBlockId) {
+    block = mActiveTouchBlock.get();
+  } else if (mActiveWheelBlock && mActiveWheelBlock->GetBlockId() == aInputBlockId) {
+    block = mActiveWheelBlock.get();
+  } else if (mActiveDragBlock && mActiveDragBlock->GetBlockId() == aInputBlockId) {
+    block = mActiveDragBlock.get();
+  } else if (mActivePanGestureBlock && mActivePanGestureBlock->GetBlockId() == aInputBlockId) {
+    block = mActivePanGestureBlock.get();
+  }
+  // Since we didn't encounter this block while iterating through mQueuedInputs,
+  // it must have no events associated with it at the moment.
+  MOZ_ASSERT(!block || !block->HasEvents());
+  if (aOutFirstInput) {
+    *aOutFirstInput = nullptr;
+  }
+  return block;
+}
+
 void
 InputQueue::MainThreadTimeout(const uint64_t& aInputBlockId) {
   APZThreadUtils::AssertOnControllerThread();
 
   INPQ_LOG("got a main thread timeout; block=%" PRIu64 "\n", aInputBlockId);
   bool success = false;
-  for (size_t i = 0; i < mInputBlockQueue.Length(); i++) {
-    if (mInputBlockQueue[i]->GetBlockId() == aInputBlockId) {
-      // time out the touch-listener response and also confirm the existing
-      // target apzc in the case where the main thread doesn't get back to us
-      // fast enough.
-      success = mInputBlockQueue[i]->TimeoutContentResponse();
-      success |= mInputBlockQueue[i]->SetConfirmedTargetApzc(
-          mInputBlockQueue[i]->GetTargetApzc(),
-          InputBlockState::TargetConfirmationState::eTimedOut);
-      break;
-    }
+  InputData* firstInput = nullptr;
+  CancelableBlockState* block = FindBlockForId(aInputBlockId, &firstInput);
+  if (block) {
+    // time out the touch-listener response and also confirm the existing
+    // target apzc in the case where the main thread doesn't get back to us
+    // fast enough.
+    success = block->TimeoutContentResponse();
+    success |= block->SetConfirmedTargetApzc(
+        block->GetTargetApzc(),
+        InputBlockState::TargetConfirmationState::eTimedOut,
+        firstInput);
   }
   if (success) {
     ProcessInputBlocks();
@@ -595,14 +628,13 @@ InputQueue::SetConfirmedTargetApzc(uint64_t aInputBlockId, const RefPtr<AsyncPan
   INPQ_LOG("got a target apzc; block=%" PRIu64 " guid=%s\n",
     aInputBlockId, aTargetApzc ? Stringify(aTargetApzc->GetGuid()).c_str() : "");
   bool success = false;
-  for (size_t i = 0; i < mInputBlockQueue.Length(); i++) {
-    CancelableBlockState* block = mInputBlockQueue[i].get();
-    if (block->GetBlockId() == aInputBlockId) {
-      success = block->SetConfirmedTargetApzc(aTargetApzc,
-          InputBlockState::TargetConfirmationState::eConfirmed);
-      block->RecordContentResponseTime();
-      break;
-    }
+  InputData* firstInput = nullptr;
+  CancelableBlockState* block = FindBlockForId(aInputBlockId, &firstInput);
+  if (block) {
+    success = block->SetConfirmedTargetApzc(aTargetApzc,
+        InputBlockState::TargetConfirmationState::eConfirmed,
+        firstInput);
+    block->RecordContentResponseTime();
   }
   if (success) {
     ProcessInputBlocks();
@@ -618,15 +650,14 @@ InputQueue::ConfirmDragBlock(uint64_t aInputBlockId, const RefPtr<AsyncPanZoomCo
   INPQ_LOG("got a target apzc; block=%" PRIu64 " guid=%s\n",
     aInputBlockId, aTargetApzc ? Stringify(aTargetApzc->GetGuid()).c_str() : "");
   bool success = false;
-  for (size_t i = 0; i < mInputBlockQueue.Length(); i++) {
-    DragBlockState* block = mInputBlockQueue[i]->AsDragBlock();
-    if (block && block->GetBlockId() == aInputBlockId) {
-      block->SetDragMetrics(aDragMetrics);
-      success = block->SetConfirmedTargetApzc(aTargetApzc,
-          InputBlockState::TargetConfirmationState::eConfirmed);
-      block->RecordContentResponseTime();
-      break;
-    }
+  InputData* firstInput = nullptr;
+  CancelableBlockState* block = FindBlockForId(aInputBlockId, &firstInput);
+  if (block && block->AsDragBlock()) {
+    block->AsDragBlock()->SetDragMetrics(aDragMetrics);
+    success = block->SetConfirmedTargetApzc(aTargetApzc,
+        InputBlockState::TargetConfirmationState::eConfirmed,
+        firstInput);
+    block->RecordContentResponseTime();
   }
   if (success) {
     ProcessInputBlocks();

@@ -172,6 +172,17 @@ private:
    */
   void SweepDepletedBlocks();
 
+  /**
+   * Helper function that searches mQueuedInputs for the first block matching
+   * the given id, and returns it. If |aOutFirstInput| is non-null, it is
+   * populated with a pointer to the first input in mQueuedInputs that
+   * corresponds to the block, or null if no such input was found. Note that
+   * even if there are no inputs in mQueuedInputs, this function can return
+   * non-null if the block id provided matches one of the depleted-but-still-
+   * active blocks (mActiveTouchBlock, mActiveWheelBlock, etc.).
+   */
+  CancelableBlockState* FindBlockForId(const uint64_t& aInputBlockId,
+                                       InputData** aOutFirstInput);
   void ScheduleMainThreadTimeout(const RefPtr<AsyncPanZoomController>& aTarget,
                                  CancelableBlockState* aBlock);
   void MainThreadTimeout(const uint64_t& aInputBlockId);
