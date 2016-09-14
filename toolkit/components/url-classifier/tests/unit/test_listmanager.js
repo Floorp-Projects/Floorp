@@ -31,9 +31,15 @@ const TEST_TABLE_DATA_LIST = [
   }
 ];
 
-// This table has a different update URL (for v4).
+// These tables have a different update URL (for v4).
 const TEST_TABLE_DATA_V4 = {
   tableName: "test-phish-proto",
+  providerName: "google4",
+  updateUrl: "http://localhost:5555/safebrowsing/update?",
+  gethashUrl: "http://localhost:5555/safebrowsing/gethash-v4",
+};
+const TEST_TABLE_DATA_V4_DISABLED = {
+  tableName: "test-unwanted-proto",
   providerName: "google4",
   updateUrl: "http://localhost:5555/safebrowsing/update?",
   gethashUrl: "http://localhost:5555/safebrowsing/gethash-v4",
@@ -79,6 +85,12 @@ gListManager.registerTable(TEST_TABLE_DATA_V4.tableName,
                            TEST_TABLE_DATA_V4.updateUrl,
                            TEST_TABLE_DATA_V4.gethashUrl);
 
+// To test Bug 1302044.
+gListManager.registerTable(TEST_TABLE_DATA_V4_DISABLED.tableName,
+                           TEST_TABLE_DATA_V4_DISABLED.providerName,
+                           TEST_TABLE_DATA_V4_DISABLED.updateUrl,
+                           TEST_TABLE_DATA_V4_DISABLED.gethashUrl);
+
 const SERVER_INVOLVED_TEST_CASE_LIST = [
   // - Do table0 update.
   // - Server would respond "a:5:32:32\n[DATA]".
@@ -122,7 +134,12 @@ const SERVER_INVOLVED_TEST_CASE_LIST = [
     TEST_TABLE_DATA_LIST.forEach(function(t) {
       gListManager.enableUpdate(t.tableName);
     });
+
+    // We register two v4 tables but only enable one of them
+    // to verify that the disabled tables are not updated.
+    // See Bug 1302044.
     gListManager.enableUpdate(TEST_TABLE_DATA_V4.tableName);
+    gListManager.disableUpdate(TEST_TABLE_DATA_V4_DISABLED.tableName);
 
     // Expected results for v2.
     gExpectedUpdateRequest = TEST_TABLE_DATA_LIST[0].tableName + ";a:5:s:2-12\n" +

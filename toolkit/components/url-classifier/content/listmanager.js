@@ -388,7 +388,12 @@ PROT_ListManager.prototype.makeUpdateRequest_ = function(updateUrl, tableData) {
   }
 
   if (useProtobuf) {
-    let tableArray = streamerMap.tableList.split(',');
+    let tableArray = [];
+    Object.keys(streamerMap.tableNames).forEach(aTableName => {
+      if (streamerMap.tableNames[aTableName]) {
+        tableArray.push(aTableName);
+      }
+    });
 
     // The state is a byte stream which server told us from the
     // last table update. The state would be used to do the partial

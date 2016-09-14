@@ -60,38 +60,43 @@
     "alert_emails": ["benjamin@smedbergs.us"]
   },
   "APPLICATION_REPUTATION_SHOULD_BLOCK": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
     "kind": "boolean",
-    "description": "Application reputation verdict (shouldBlock=false is OK)"
+    "description": "Overall (local or remote) application reputation verdict (shouldBlock=false is OK)."
   },
   "APPLICATION_REPUTATION_LOCAL": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 3,
     "description": "Application reputation local results (0=ALLOW, 1=BLOCK, 2=NONE)"
   },
   "APPLICATION_REPUTATION_SERVER": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 3,
-    "description": "Application reputation remote status (0=OK, 1=FAIL, 2=INVALID)"
+    "description": "Status of the application reputation remote lookup (0=OK, 1=failed, 2=invalid protobuf response)"
   },
   "APPLICATION_REPUTATION_SERVER_VERDICT": {
-    "expires_in_version": "52",
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "56",
     "releaseChannelCollection": "opt-out",
     "bug_numbers": [1272788],
     "kind": "enumerated",
     "n_values": 8,
-    "description": "Application reputation remote response (0=SAFE, 1=DANGEROUS, 2=UNCOMMON, 3=POTENTIALLY_UNWANTED, 4=DANGEROUS_HOST)"
+    "description": "Application reputation remote verdict (0=SAFE, 1=DANGEROUS, 2=UNCOMMON, 3=POTENTIALLY_UNWANTED, 4=DANGEROUS_HOST, 5=UNKNOWN)"
   },
   "APPLICATION_REPUTATION_COUNT": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Application reputation query count (both local and remote)"
   },
   "APPLICATION_REPUTATION_REMOTE_LOOKUP_TIMEOUT": {
-    "alert_emails": ["gcp@mozilla.com", "francois@mozilla.com"],
-    "expires_in_version": "55",
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "56",
     "kind": "boolean",
     "bug_numbers": [1172689],
     "description": "Recorded when application reputation remote lookup is performed, `true` is recorded if the lookup times out."
@@ -1715,6 +1720,30 @@
     "n_values": 8,
     "releaseChannelCollection": "opt-out",
     "description": "Recorded once for each HTTP 401 response. The value records the type of authentication and the TLS-enabled status. (0=basic/clear, 1=basic/tls, 2=digest/clear, 3=digest/tls, 4=ntlm/clear, 5=ntlm/tls, 6=negotiate/clear, 7=negotiate/tls)"
+  },
+  "TLS_EARLY_DATA_NEGOTIATED": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 3,
+    "description": "TLS early data was available: 0 - not available, 1 - avaialable but not used, 2 - available and used.",
+    "alert_emails": ["necko@mozilla.com"],
+    "bug_numbers": [1296288]
+  },
+  "TLS_EARLY_DATA_ACCEPTED": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "TLS early data was used and it was accepted or rejected by the remote host.",
+    "alert_emails": ["necko@mozilla.com"],
+    "bug_numbers": [1296288]
+  },
+  "TLS_EARLY_DATA_BYTES_WRITTEN": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 100,
+    "description": "Amount of bytes sent using TLS early data.",
+    "alert_emails": ["necko@mozilla.com"],
+    "bug_numbers": [1296288]
   },
   "SSL_HANDSHAKE_VERSION": {
     "alert_emails": ["seceng-telemetry@mozilla.com"],
@@ -3597,6 +3626,7 @@
     "description": "Time spent checking for and notifying listeners that the user is idle (ms)"
   },
   "URLCLASSIFIER_LOOKUP_TIME": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 500,
@@ -3604,6 +3634,7 @@
     "description": "Time spent per dbservice lookup (ms)"
   },
   "URLCLASSIFIER_CL_CHECK_TIME": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 500,
@@ -3611,6 +3642,7 @@
     "description": "Time spent per classifier lookup (ms)"
   },
   "URLCLASSIFIER_CL_UPDATE_TIME": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "low": 20,
@@ -3619,6 +3651,7 @@
     "description": "Time spent per classifier update (ms)"
   },
   "URLCLASSIFIER_PS_FILELOAD_TIME": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000,
@@ -3626,13 +3659,15 @@
     "description": "Time spent loading PrefixSet from file (ms)"
   },
   "URLCLASSIFIER_PS_FALLOCATE_TIME": {
-    "expires_in_version": "default",
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000,
     "n_buckets": 10,
     "description": "Time spent fallocating PrefixSet (ms)"
   },
   "URLCLASSIFIER_PS_CONSTRUCT_TIME": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 5000,
@@ -3640,6 +3675,7 @@
     "description": "Time spent constructing PrefixSet from DB (ms)"
   },
   "URLCLASSIFIER_LC_PREFIXES": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
     "kind": "linear",
     "high": 1500000,
@@ -3647,19 +3683,15 @@
     "description": "Size of the prefix cache in entries"
   },
   "URLCLASSIFIER_LC_COMPLETIONS": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 200,
     "n_buckets": 10,
     "description": "Size of the completion cache in entries"
   },
-  "URLCLASSIFIER_PS_FAILURE": {
-    "expires_in_version": "default",
-    "kind": "boolean",
-    "description": "Did UrlClassifier fail to construct the PrefixSet?"
-  },
   "URLCLASSIFIER_UPDATE_REMOTE_STATUS": {
-    "alert_emails": ["gcp@mozilla.com", "francois@mozilla.com"],
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 16,
@@ -3667,7 +3699,7 @@
     "description": "Server HTTP status code from SafeBrowsing database updates. (0=1xx, 1=200, 2=2xx, 3=204, 4=3xx, 5=400, 6=4xx, 7=403, 8=404, 9=408, 10=413, 11=5xx, 12=502|504|511, 13=503, 14=505, 15=Other)"
   },
   "URLCLASSIFIER_COMPLETE_REMOTE_STATUS": {
-    "alert_emails": ["gcp@mozilla.com", "francois@mozilla.com"],
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 16,
@@ -3675,8 +3707,8 @@
     "description": "Server HTTP status code from remote SafeBrowsing gethash lookups. (0=1xx, 1=200, 2=2xx, 3=204, 4=3xx, 5=400, 6=4xx, 7=403, 8=404, 9=408, 10=413, 11=5xx, 12=502|504|511, 13=503, 14=505, 15=Other)"
   },
   "URLCLASSIFIER_COMPLETE_TIMEOUT": {
-    "alert_emails": ["gcp@mozilla.com", "francois@mozilla.com"],
-    "expires_in_version": "52",
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "56",
     "kind": "boolean",
     "bug_numbers": [1172688],
     "description": "This metric is recorded every time a gethash lookup is performed, `true` is recorded if the lookup times out."
@@ -5511,6 +5543,14 @@
     "expires_in_version": "never",
     "kind": "count",
     "keyed": true,
+    "description": "a testing histogram; not meant to be touched"
+  },
+    "TELEMETRY_TEST_KEYED_BOOLEAN": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "keyed": true,
+    "bug_numbers": [1299144],
     "description": "a testing histogram; not meant to be touched"
   },
   "TELEMETRY_TEST_RELEASE_OPTOUT": {

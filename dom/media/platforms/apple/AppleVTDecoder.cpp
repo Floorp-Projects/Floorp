@@ -71,7 +71,7 @@ AppleVTDecoder::Init()
     return InitPromise::CreateAndResolve(TrackType::kVideoTrack, __func__);
   }
 
-  return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
+  return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
 }
 
 void
@@ -310,8 +310,8 @@ AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
     CVReturn rv = CVPixelBufferLockBaseAddress(aImage, kCVPixelBufferLock_ReadOnly);
     if (rv != kCVReturnSuccess) {
       NS_ERROR("error locking pixel data");
-      mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
-      return NS_ERROR_FAILURE;
+      mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
+      return NS_ERROR_OUT_OF_MEMORY;
     }
     // Y plane.
     buffer.mPlanes[0].mData =
@@ -376,8 +376,8 @@ AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
 
   if (!data) {
     NS_ERROR("Couldn't create VideoData for frame");
-    mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
-    return NS_ERROR_FAILURE;
+    mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   // Frames come out in DTS order but we need to output them
@@ -420,7 +420,7 @@ TimingInfoFromSample(MediaRawData* aSample)
   return timestamp;
 }
 
-nsresult
+MediaResult
 AppleVTDecoder::DoDecode(MediaRawData* aSample)
 {
   AssertOnTaskQueueThread();
@@ -446,13 +446,15 @@ AppleVTDecoder::DoDecode(MediaRawData* aSample)
                                           block.receive());
   if (rv != noErr) {
     NS_ERROR("Couldn't create CMBlockBuffer");
-    return NS_ERROR_FAILURE;
+    mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
+    return MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
   }
   CMSampleTimingInfo timestamp = TimingInfoFromSample(aSample);
   rv = CMSampleBufferCreate(kCFAllocatorDefault, block, true, 0, 0, mFormat, 1, 1, &timestamp, 0, NULL, sample.receive());
   if (rv != noErr) {
     NS_ERROR("Couldn't create CMSampleBuffer");
-    return NS_ERROR_FAILURE;
+    mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
+    return MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
   }
 
   VTDecodeFrameFlags decodeFlags =
@@ -465,8 +467,8 @@ AppleVTDecoder::DoDecode(MediaRawData* aSample)
   if (rv != noErr && !(infoFlags & kVTDecodeInfo_FrameDropped)) {
     LOG("AppleVTDecoder: Error %d VTDecompressionSessionDecodeFrame", rv);
     NS_WARNING("Couldn't pass frame to decoder");
-    mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
-    return NS_ERROR_FAILURE;
+    mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__));
+    return NS_ERROR_DOM_MEDIA_DECODE_ERR;
   }
 
   return NS_OK;

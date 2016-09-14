@@ -1674,6 +1674,7 @@ static const JSFunctionSpec dateTimeFormat_static_methods[] = {
 
 static const JSFunctionSpec dateTimeFormat_methods[] = {
     JS_SELF_HOSTED_FN("resolvedOptions", "Intl_DateTimeFormat_resolvedOptions", 0, 0),
+    JS_SELF_HOSTED_FN("formatToParts", "Intl_DateTimeFormat_formatToParts", 0, 0),
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str, dateTimeFormat_toSource, 0, 0),
 #endif
@@ -1809,23 +1810,6 @@ CreateDateTimeFormatPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObj
                         nullptr, JSPROP_GETTER | JSPROP_SHARED))
     {
         return nullptr;
-    }
-
-    // If the still-experimental DateTimeFormat.prototype.formatToParts method
-    // is enabled, also add it.
-    if (cx->compartment()->creationOptions().experimentalDateTimeFormatFormatToPartsEnabled()) {
-        RootedValue ftp(cx);
-        HandlePropertyName name = cx->names().formatToParts;
-        if (!GlobalObject::getSelfHostedFunction(cx, cx->global(),
-                    cx->names().DateTimeFormatFormatToParts,
-                    name,
-                    0, &ftp))
-        {
-            return nullptr;
-        }
-
-        if (!DefineProperty(cx, proto, cx->names().formatToParts, ftp, nullptr, nullptr, 0))
-            return nullptr;
     }
 
     RootedValue options(cx);

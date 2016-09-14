@@ -88,7 +88,7 @@ MediaKeys::Terminated()
 
   // Notify the element about that CDM has terminated.
   if (mElement) {
-    mElement->DecodeError();
+    mElement->DecodeError(NS_ERROR_DOM_MEDIA_CDM_ERR);
   }
 
   Shutdown();

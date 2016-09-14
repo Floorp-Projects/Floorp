@@ -31,7 +31,7 @@ public:
   }
 
 private:
-  bool DoDecode(MediaRawData* aSample);
+  MediaResult DoDecode(MediaRawData* aSample);
 
   const AudioInfo& mInfo;
   MediaDataDecoderCallback* mCallback;

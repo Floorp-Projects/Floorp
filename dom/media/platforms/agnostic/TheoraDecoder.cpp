@@ -78,22 +78,22 @@ TheoraDecoder::Init()
   if (!XiphExtradataToHeaders(headers, headerLens,
       mInfo.mCodecSpecificConfig->Elements(),
       mInfo.mCodecSpecificConfig->Length())) {
-      return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
+      return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
   }
   for (size_t i = 0; i < headers.Length(); i++) {
     if (NS_FAILED(DoDecodeHeader(headers[i], headerLens[i]))) {
-      return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
+      return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
     }
   }
   if (mPacketCount != 3) {
-    return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
+    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
   }
 
   mTheoraDecoderContext = th_decode_alloc(&mTheoraInfo, mTheoraSetupInfo);
   if (mTheoraDecoderContext) {
     return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
   } else {
-    return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
+    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
   }
 
 }
@@ -123,7 +123,7 @@ TheoraDecoder::DoDecodeHeader(const unsigned char* aData, size_t aLength)
   return r > 0 ? NS_OK : NS_ERROR_FAILURE;
 }
 
-int
+MediaResult
 TheoraDecoder::DoDecode(MediaRawData* aSample)
 {
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
@@ -181,13 +181,13 @@ TheoraDecoder::DoDecode(MediaRawData* aSample)
       LOG("Image allocation error source %ldx%ld display %ldx%ld picture %ldx%ld",
           mTheoraInfo.frame_width, mTheoraInfo.frame_height, mInfo.mDisplay.width, mInfo.mDisplay.height,
           mInfo.mImage.width, mInfo.mImage.height);
-      return -1;
+      return MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
     }
     mCallback->Output(v);
-    return 0;
+    return NS_OK;
   } else {
     LOG("Theora Decode error: %d", ret);
-    return -1;
+    return NS_ERROR_DOM_MEDIA_DECODE_ERR;
   }
 }
 
@@ -198,8 +198,9 @@ TheoraDecoder::ProcessDecode(MediaRawData* aSample)
   if (mIsFlushing) {
     return;
   }
-  if (DoDecode(aSample) == -1) {
-    mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
+  MediaResult rv = DoDecode(aSample);
+  if (NS_FAILED(rv)) {
+    mCallback->Error(rv);
   } else {
     mCallback->InputExhausted();
   }

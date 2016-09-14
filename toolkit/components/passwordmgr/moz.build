@@ -69,7 +69,6 @@ if CONFIG['OS_TARGET'] == 'WINNT':
 
 if CONFIG['MOZ_BUILD_APP'] == 'browser':
     EXTRA_JS_MODULES += [
-        'LoginDoorhangers.jsm',
         'LoginManagerContextMenu.jsm',
     ]
 

@@ -76,22 +76,22 @@ public:
         p->Resolve(data, __func__);
       },
       [p] () {
-        p->Reject(MediaDecoderReader::CANCELED, __func__);
+        p->Reject(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
       });
 
     return p.forget();
   }
 
   template<MediaData::Type SampleType>
-  void FirstSampleRejected(MediaDecoderReader::NotDecodedReason aReason)
+  void FirstSampleRejected(const MediaResult& aError)
   {
     MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-    if (aReason == MediaDecoderReader::DECODE_ERROR) {
-      mHaveStartTimePromise.RejectIfExists(false, __func__);
-    } else if (aReason == MediaDecoderReader::END_OF_STREAM) {
+    if (aError == NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
       LOG("StartTimeRendezvous=%p SampleType(%d) Has no samples.",
            this, SampleType);
       MaybeSetChannelStartTime<SampleType>(INT64_MAX);
+    } else if (aError != NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA) {
+      mHaveStartTimePromise.RejectIfExists(false, __func__);
     }
   }
 
@@ -200,9 +200,9 @@ MediaDecoderReaderWrapper::RequestAudioData()
       aAudioSample->AdjustForStartTime(self->StartTime().ToMicroseconds());
       self->mAudioCallback.Notify(AsVariant(aAudioSample));
     },
-    [self] (MediaDecoderReader::NotDecodedReason aReason) {
+    [self] (const MediaResult& aError) {
       self->mAudioDataRequest.Complete();
-      self->mAudioCallback.Notify(AsVariant(aReason));
+      self->mAudioCallback.Notify(AsVariant(aError));
     }));
 }
 
@@ -240,9 +240,9 @@ MediaDecoderReaderWrapper::RequestVideoData(bool aSkipToNextKeyframe,
       aVideoSample->AdjustForStartTime(self->StartTime().ToMicroseconds());
       self->mVideoCallback.Notify(AsVariant(MakeTuple(aVideoSample, videoDecodeStartTime)));
     },
-    [self] (MediaDecoderReader::NotDecodedReason aReason) {
+    [self] (const MediaResult& aError) {
       self->mVideoDataRequest.Complete();
-      self->mVideoCallback.Notify(AsVariant(aReason));
+      self->mVideoCallback.Notify(AsVariant(aError));
     }));
 }
 

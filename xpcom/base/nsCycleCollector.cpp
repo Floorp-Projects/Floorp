@@ -1330,7 +1330,7 @@ public:
                SliceBudget& aBudget,
                nsICycleCollectorListener* aManualListener,
                bool aPreferShorterSlices = false);
-  void Shutdown();
+  void Shutdown(bool aDoCollect);
 
   bool IsIdle() const { return mIncrementalPhase == IdlePhase; }
 
@@ -3435,14 +3435,14 @@ nsCycleCollector::RegisterJSRuntime(CycleCollectedJSRuntime* aJSRuntime)
   MOZ_RELEASE_ASSERT(!mJSRuntime, "Multiple registrations of JS runtime in cycle collector");
   mJSRuntime = aJSRuntime;
 
+  if (!NS_IsMainThread()) {
+    return;
+  }
+
   // We can't register as a reporter in nsCycleCollector() because that runs
   // before the memory reporter manager is initialized.  So we do it here
   // instead.
-  static bool registered = false;
-  if (!registered) {
-    RegisterWeakMemoryReporter(this);
-    registered = true;
-  }
+  RegisterWeakMemoryReporter(this);
 }
 
 void
@@ -3876,17 +3876,14 @@ nsCycleCollector::SuspectedCount()
 }
 
 void
-nsCycleCollector::Shutdown()
+nsCycleCollector::Shutdown(bool aDoCollect)
 {
   CheckThreadSafety();
 
   // Always delete snow white objects.
   FreeSnowWhite(true);
 
-#ifndef NS_FREE_PERMANENT_DATA
-  if (PR_GetEnv("MOZ_CC_RUN_DURING_SHUTDOWN"))
-#endif
-  {
+  if (aDoCollect) {
     ShutdownCollect();
   }
 }
@@ -4196,7 +4193,7 @@ nsCycleCollector_finishAnyCurrentCollection()
 }
 
 void
-nsCycleCollector_shutdown()
+nsCycleCollector_shutdown(bool aDoCollect)
 {
   CollectorData* data = sCollectorData.get();
 
@@ -4205,7 +4202,7 @@ nsCycleCollector_shutdown()
     PROFILER_LABEL("nsCycleCollector", "shutdown",
                    js::ProfileEntry::Category::CC);
 
-    data->mCollector->Shutdown();
+    data->mCollector->Shutdown(aDoCollect);
     data->mCollector = nullptr;
     if (data->mRuntime) {
       // Run any remaining tasks that may have been enqueued via

@@ -65,7 +65,7 @@ add_task(function* () {
   is(mouseDownHandled, 1, "The mousedown event was handled once before navigation");
 
   info("Navigating to a new page");
-  let loaded = once(gBrowser.selectedBrowser, "load", true);
+  let loaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   content.location = TEST_URL_2;
   yield loaded;
   doc = gBrowser.selectedBrowser.contentWindow.document;

@@ -337,6 +337,8 @@ add_test(function test_authority_host()
 {
   Assert.throws(() => { stringToURL("http:"); }, "TYPE_AUTHORITY should have host");
   Assert.throws(() => { stringToURL("http:///"); }, "TYPE_AUTHORITY should have host");
+  Assert.throws(() => { stringToURL("http://u:p@/"); }, "User or password without host is not allowed");
+  Assert.throws(() => { stringToURL("http:@/"); }, "Must have a host");
 
   run_next_test();
 });

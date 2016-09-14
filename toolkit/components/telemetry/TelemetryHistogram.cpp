@@ -231,12 +231,6 @@ internal_IsHistogramEnumId(mozilla::Telemetry::ID aID)
   return aID < mozilla::Telemetry::HistogramCount;
 }
 
-bool
-internal_IsValidHistogramName(const nsACString& name)
-{
-  return !FindInReadable(NS_LITERAL_CSTRING(KEYED_HISTOGRAM_NAME_SEPARATOR), name);
-}
-
 // Note: this is completely unrelated to mozilla::IsEmpty.
 bool
 internal_IsEmpty(const Histogram *h)
@@ -2010,42 +2004,6 @@ TelemetryHistogram::GetHistogramName(mozilla::Telemetry::ID id)
   StaticMutexAutoLock locker(gTelemetryHistogramMutex);
   const HistogramInfo& h = gHistograms[id];
   return h.id();
-}
-
-nsresult
-TelemetryHistogram::NewKeyedHistogram(const nsACString &name,
-                                      const nsACString &expiration,
-                                      uint32_t histogramType,
-                                      uint32_t min, uint32_t max,
-                                      uint32_t bucketCount, JSContext *cx,
-                                      uint8_t optArgCount,
-                                      JS::MutableHandle<JS::Value> ret)
-{
-  KeyedHistogram* keyed = nullptr;
-  {
-    StaticMutexAutoLock locker(gTelemetryHistogramMutex);
-    if (!internal_IsValidHistogramName(name)) {
-      return NS_ERROR_INVALID_ARG;
-    }
-
-    nsresult rv
-      = internal_CheckHistogramArguments(histogramType, min, max,
-                                         bucketCount, optArgCount == 3);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    keyed = new KeyedHistogram(name, expiration, histogramType,
-                               min, max, bucketCount,
-                               nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN);
-    if (MOZ_UNLIKELY(!gKeyedHistograms.Put(name, keyed, mozilla::fallible))) {
-      delete keyed;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  // Runs without protection from |gTelemetryHistogramMutex|
-  return internal_WrapAndReturnKeyedHistogram(keyed, cx, ret);
 }
 
 nsresult

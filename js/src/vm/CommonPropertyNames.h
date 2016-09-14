@@ -115,7 +115,6 @@
     macro(forceInterpreter, forceInterpreter, "forceInterpreter") \
     macro(forEach, forEach, "forEach") \
     macro(format, format, "format") \
-    macro(formatToParts, formatToParts, "formatToParts") \
     macro(frame, frame, "frame") \
     macro(from, from, "from") \
     macro(fulfilled, fulfilled, "fulfilled") \
