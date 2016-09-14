@@ -811,14 +811,21 @@ void DisplayOzone::terminate()
 
     SafeDelete(mFunctionsGL);
 
-    mEGL->terminate();
-    SafeDelete(mEGL);
+    if (mEGL)
+    {
+        mEGL->terminate();
+        SafeDelete(mEGL);
+    }
 
     drmModeFreeCrtc(mCRTC);
 
-    int fd = gbm_device_get_fd(mGBM);
-    gbm_device_destroy(mGBM);
-    close(fd);
+    if (mGBM)
+    {
+        int fd = gbm_device_get_fd(mGBM);
+        gbm_device_destroy(mGBM);
+        mGBM = nullptr;
+        close(fd);
+    }
 }
 
 SurfaceImpl *DisplayOzone::createWindowSurface(const egl::SurfaceState &state,
@@ -891,11 +898,6 @@ egl::ConfigSet DisplayOzone::generateConfigs()
 
     configs.add(config);
     return configs;
-}
-
-bool DisplayOzone::isDeviceLost() const
-{
-    return false;
 }
 
 bool DisplayOzone::testDeviceLost()

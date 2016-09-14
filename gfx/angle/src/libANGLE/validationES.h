@@ -13,6 +13,7 @@
 
 #include <GLES2/gl2.h>
 #include <GLES3/gl3.h>
+#include <GLES3/gl31.h>
 
 namespace egl
 {
@@ -23,6 +24,7 @@ class Image;
 namespace gl
 {
 class Context;
+struct Format;
 class Program;
 class Shader;
 class ValidationContext;
@@ -143,7 +145,7 @@ bool ValidateCopyTexImageParametersBase(ValidationContext *context,
                                         GLsizei width,
                                         GLsizei height,
                                         GLint border,
-                                        GLenum *textureInternalFormatOut);
+                                        Format *textureFormatOut);
 
 bool ValidateDrawArrays(ValidationContext *context,
                         GLenum mode,

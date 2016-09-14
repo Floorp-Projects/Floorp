@@ -56,7 +56,8 @@ ShaderImpl *ContextGL::createShader(const gl::ShaderState &data)
 
 ProgramImpl *ContextGL::createProgram(const gl::ProgramState &data)
 {
-    return new ProgramGL(data, getFunctions(), getWorkaroundsGL(), getStateManager());
+    return new ProgramGL(data, getFunctions(), getWorkaroundsGL(), getStateManager(),
+                         getExtensions().pathRendering);
 }
 
 FramebufferImpl *ContextGL::createFramebuffer(const gl::FramebufferState &data)
@@ -101,10 +102,9 @@ FenceSyncImpl *ContextGL::createFenceSync()
     return new FenceSyncGL(getFunctions());
 }
 
-TransformFeedbackImpl *ContextGL::createTransformFeedback()
+TransformFeedbackImpl *ContextGL::createTransformFeedback(const gl::TransformFeedbackState &state)
 {
-    return new TransformFeedbackGL(getFunctions(), getStateManager(),
-                                   getNativeCaps().maxTransformFeedbackSeparateComponents);
+    return new TransformFeedbackGL(state, getFunctions(), getStateManager());
 }
 
 SamplerImpl *ContextGL::createSampler()
@@ -222,24 +222,67 @@ void ContextGL::stencilThenCoverStrokePath(const gl::Path *path,
     mRenderer->stencilThenCoverStrokePath(mState, path, reference, mask, coverMode);
 }
 
-void ContextGL::notifyDeviceLost()
+void ContextGL::coverFillPathInstanced(const std::vector<gl::Path *> &paths,
+                                       GLenum coverMode,
+                                       GLenum transformType,
+                                       const GLfloat *transformValues)
 {
-    mRenderer->notifyDeviceLost();
+    mRenderer->coverFillPathInstanced(mState, paths, coverMode, transformType, transformValues);
 }
 
-bool ContextGL::isDeviceLost() const
+void ContextGL::coverStrokePathInstanced(const std::vector<gl::Path *> &paths,
+                                         GLenum coverMode,
+                                         GLenum transformType,
+                                         const GLfloat *transformValues)
 {
-    return mRenderer->isDeviceLost();
+    mRenderer->coverStrokePathInstanced(mState, paths, coverMode, transformType, transformValues);
 }
 
-bool ContextGL::testDeviceLost()
+void ContextGL::stencilFillPathInstanced(const std::vector<gl::Path *> &paths,
+                                         GLenum fillMode,
+                                         GLuint mask,
+                                         GLenum transformType,
+                                         const GLfloat *transformValues)
 {
-    return mRenderer->testDeviceLost();
+    mRenderer->stencilFillPathInstanced(mState, paths, fillMode, mask, transformType,
+                                        transformValues);
 }
 
-bool ContextGL::testDeviceResettable()
+void ContextGL::stencilStrokePathInstanced(const std::vector<gl::Path *> &paths,
+                                           GLint reference,
+                                           GLuint mask,
+                                           GLenum transformType,
+                                           const GLfloat *transformValues)
 {
-    return mRenderer->testDeviceResettable();
+    mRenderer->stencilStrokePathInstanced(mState, paths, reference, mask, transformType,
+                                          transformValues);
+}
+
+void ContextGL::stencilThenCoverFillPathInstanced(const std::vector<gl::Path *> &paths,
+                                                  GLenum coverMode,
+                                                  GLenum fillMode,
+                                                  GLuint mask,
+                                                  GLenum transformType,
+                                                  const GLfloat *transformValues)
+{
+    mRenderer->stencilThenCoverFillPathInstanced(mState, paths, coverMode, fillMode, mask,
+                                                 transformType, transformValues);
+}
+
+void ContextGL::stencilThenCoverStrokePathInstanced(const std::vector<gl::Path *> &paths,
+                                                    GLenum coverMode,
+                                                    GLint reference,
+                                                    GLuint mask,
+                                                    GLenum transformType,
+                                                    const GLfloat *transformValues)
+{
+    mRenderer->stencilThenCoverStrokePathInstanced(mState, paths, coverMode, reference, mask,
+                                                   transformType, transformValues);
+}
+
+GLenum ContextGL::getResetStatus()
+{
+    return mRenderer->getResetStatus();
 }
 
 std::string ContextGL::getVendorString() const

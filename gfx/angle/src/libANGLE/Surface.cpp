@@ -17,6 +17,7 @@
 #include "libANGLE/Config.h"
 #include "libANGLE/Framebuffer.h"
 #include "libANGLE/Texture.h"
+#include "libANGLE/formatutils.h"
 #include "libANGLE/renderer/EGLImplFactory.h"
 
 namespace egl
@@ -44,7 +45,9 @@ Surface::Surface(EGLint surfaceType, const egl::Config *config, const AttributeM
       mRenderBuffer(EGL_BACK_BUFFER),
       mSwapBehavior(EGL_NONE),
       mOrientation(0),
-      mTexture()
+      mTexture(),
+      mBackFormat(config->renderTargetFormat),
+      mDSFormat(config->depthStencilFormat)
 {
     mPostSubBufferRequested = (attributes.get(EGL_POST_SUB_BUFFER_SUPPORTED_NV, EGL_FALSE) == EGL_TRUE);
     mFlexibleSurfaceCompatibilityRequested =
@@ -229,10 +232,10 @@ gl::Extents Surface::getAttachmentSize(const gl::FramebufferAttachment::Target &
     return gl::Extents(getWidth(), getHeight(), 1);
 }
 
-GLenum Surface::getAttachmentInternalFormat(const gl::FramebufferAttachment::Target &target) const
+const gl::Format &Surface::getAttachmentFormat(
+    const gl::FramebufferAttachment::Target &target) const
 {
-    const egl::Config *config = getConfig();
-    return (target.binding() == GL_BACK ? config->renderTargetFormat : config->depthStencilFormat);
+    return (target.binding() == GL_BACK ? mBackFormat : mDSFormat);
 }
 
 GLsizei Surface::getAttachmentSamples(const gl::FramebufferAttachment::Target &target) const

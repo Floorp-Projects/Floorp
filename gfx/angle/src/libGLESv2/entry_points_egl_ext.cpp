@@ -98,7 +98,7 @@ EGLBoolean EGLAPIENTRY PostSubBufferNV(EGLDisplay dpy, EGLSurface surface, EGLin
         return EGL_FALSE;
     }
 
-    if (display->isDeviceLost())
+    if (display->testDeviceLost())
     {
         SetGlobalError(Error(EGL_CONTEXT_LOST));
         return EGL_FALSE;
@@ -433,7 +433,13 @@ EGLBoolean EGLAPIENTRY QueryDisplayAttribEXT(EGLDisplay dpy, EGLint attribute, E
           dpy, attribute, value);
 
     Display *display = static_cast<Display*>(dpy);
-    Error error(EGL_SUCCESS);
+
+    Error error = ValidateDisplay(display);
+    if (error.isError())
+    {
+        SetGlobalError(error);
+        return EGL_FALSE;
+    }
 
     if (!display->getExtensions().deviceQuery)
     {

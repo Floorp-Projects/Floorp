@@ -182,6 +182,37 @@ void ShInitBuiltInResources(ShBuiltInResources* resources)
     resources->MaxExpressionComplexity = 256;
     resources->MaxCallStackDepth       = 256;
     resources->MaxFunctionParameters   = 1024;
+
+    // ES 3.1 Revision 4, 7.2 Built-in Constants
+    resources->MaxImageUnits            = 4;
+    resources->MaxVertexImageUniforms   = 0;
+    resources->MaxFragmentImageUniforms = 0;
+    resources->MaxComputeImageUniforms  = 4;
+    resources->MaxCombinedImageUniforms = 4;
+
+    resources->MaxCombinedShaderOutputResources = 4;
+
+    resources->MaxComputeWorkGroupCount[0] = 65535;
+    resources->MaxComputeWorkGroupCount[1] = 65535;
+    resources->MaxComputeWorkGroupCount[2] = 65535;
+    resources->MaxComputeWorkGroupSize[0]  = 128;
+    resources->MaxComputeWorkGroupSize[1]  = 128;
+    resources->MaxComputeWorkGroupSize[2]  = 64;
+    resources->MaxComputeUniformComponents = 512;
+    resources->MaxComputeTextureImageUnits = 16;
+
+    resources->MaxComputeAtomicCounters       = 8;
+    resources->MaxComputeAtomicCounterBuffers = 1;
+
+    resources->MaxVertexAtomicCounters   = 0;
+    resources->MaxFragmentAtomicCounters = 0;
+    resources->MaxCombinedAtomicCounters = 8;
+    resources->MaxAtomicCounterBindings  = 1;
+
+    resources->MaxVertexAtomicCounterBuffers   = 0;
+    resources->MaxFragmentAtomicCounterBuffers = 0;
+    resources->MaxCombinedAtomicCounterBuffers = 1;
+    resources->MaxAtomicCounterBufferSize      = 32;
 }
 
 //
@@ -327,18 +358,20 @@ const std::vector<sh::InterfaceBlock> *ShGetInterfaceBlocks(const ShHandle handl
     return GetShaderVariables<sh::InterfaceBlock>(handle);
 }
 
-bool ShCheckVariablesWithinPackingLimits(
-    int maxVectors, ShVariableInfo *varInfoArray, size_t varInfoArraySize)
+sh::WorkGroupSize ShGetComputeShaderLocalGroupSize(const ShHandle handle)
 {
-    if (varInfoArraySize == 0)
-        return true;
-    ASSERT(varInfoArray);
-    std::vector<sh::ShaderVariable> variables;
-    for (size_t ii = 0; ii < varInfoArraySize; ++ii)
-    {
-        sh::ShaderVariable var(varInfoArray[ii].type, varInfoArray[ii].size);
-        variables.push_back(var);
-    }
+    ASSERT(handle);
+
+    TShHandleBase *base = static_cast<TShHandleBase *>(handle);
+    TCompiler *compiler = base->getAsCompiler();
+    ASSERT(compiler);
+
+    return compiler->getComputeShaderLocalSize();
+}
+
+bool ShCheckVariablesWithinPackingLimits(int maxVectors,
+                                         const std::vector<sh::ShaderVariable> &variables)
+{
     VariablePacker packer;
     return packer.CheckVariablesWithinPackingLimits(maxVectors, variables);
 }

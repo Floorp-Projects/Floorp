@@ -83,7 +83,7 @@ class FramebufferFormatsTest : public ANGLETest
             return;
         }
 
-        int clientVersion = getClientVersion();
+        int clientVersion = getClientMajorVersion();
         if (clientVersion < minESVersion)
         {
             return;
@@ -189,7 +189,7 @@ TEST_P(FramebufferFormatsTest, RGB565)
 
 TEST_P(FramebufferFormatsTest, RGB8)
 {
-    if (getClientVersion() < 3 && !extensionEnabled("GL_OES_rgb8_rgba8"))
+    if (getClientMajorVersion() < 3 && !extensionEnabled("GL_OES_rgb8_rgba8"))
     {
         std::cout << "Test skipped due to missing ES3 or GL_OES_rgb8_rgba8." << std::endl;
         return;
@@ -211,7 +211,7 @@ TEST_P(FramebufferFormatsTest, BGRA8)
 
 TEST_P(FramebufferFormatsTest, RGBA8)
 {
-    if (getClientVersion() < 3 && !extensionEnabled("GL_OES_rgb8_rgba8"))
+    if (getClientMajorVersion() < 3 && !extensionEnabled("GL_OES_rgb8_rgba8"))
     {
         std::cout << "Test skipped due to missing ES3 or GL_OES_rgb8_rgba8." << std::endl;
         return;
@@ -232,7 +232,7 @@ TEST_P(FramebufferFormatsTest, RenderbufferMultisample_DEPTH24)
 
 TEST_P(FramebufferFormatsTest, RenderbufferMultisample_DEPTH32F)
 {
-    if (getClientVersion() < 3)
+    if (getClientMajorVersion() < 3)
     {
         std::cout << "Test skipped due to missing ES3." << std::endl;
         return;
@@ -248,7 +248,7 @@ TEST_P(FramebufferFormatsTest, RenderbufferMultisample_DEPTH24_STENCIL8)
 
 TEST_P(FramebufferFormatsTest, RenderbufferMultisample_DEPTH32F_STENCIL8)
 {
-    if (getClientVersion() < 3)
+    if (getClientMajorVersion() < 3)
     {
         std::cout << "Test skipped due to missing ES3." << std::endl;
         return;
@@ -316,7 +316,7 @@ TEST_P(FramebufferFormatsTest, IncompleteCubeMap)
 // Test that a renderbuffer with zero height but nonzero width is handled without crashes/asserts.
 TEST_P(FramebufferFormatsTest, ZeroHeightRenderbuffer)
 {
-    if (getClientVersion() < 3)
+    if (getClientMajorVersion() < 3)
     {
         std::cout << "Test skipped due to missing ES3" << std::endl;
         return;

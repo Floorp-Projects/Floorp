@@ -307,7 +307,7 @@ typedef IndexedPointsTest<GLuint, GL_UNSIGNED_INT> IndexedPointsTestUInt;
 
 TEST_P(IndexedPointsTestUInt, UnsignedIntOffset0)
 {
-    if (getClientVersion() < 3 && !extensionEnabled("GL_OES_element_index_uint"))
+    if (getClientMajorVersion() < 3 && !extensionEnabled("GL_OES_element_index_uint"))
     {
         return;
     }
@@ -317,7 +317,7 @@ TEST_P(IndexedPointsTestUInt, UnsignedIntOffset0)
 
 TEST_P(IndexedPointsTestUInt, UnsignedIntOffset1)
 {
-    if (getClientVersion() < 3 && !extensionEnabled("GL_OES_element_index_uint"))
+    if (getClientMajorVersion() < 3 && !extensionEnabled("GL_OES_element_index_uint"))
     {
         return;
     }
@@ -327,7 +327,7 @@ TEST_P(IndexedPointsTestUInt, UnsignedIntOffset1)
 
 TEST_P(IndexedPointsTestUInt, UnsignedIntOffset2)
 {
-    if (getClientVersion() < 3 && !extensionEnabled("GL_OES_element_index_uint"))
+    if (getClientMajorVersion() < 3 && !extensionEnabled("GL_OES_element_index_uint"))
     {
         return;
     }
@@ -337,7 +337,7 @@ TEST_P(IndexedPointsTestUInt, UnsignedIntOffset2)
 
 TEST_P(IndexedPointsTestUInt, UnsignedIntOffset3)
 {
-    if (getClientVersion() < 3 && !extensionEnabled("GL_OES_element_index_uint"))
+    if (getClientMajorVersion() < 3 && !extensionEnabled("GL_OES_element_index_uint"))
     {
         return;
     }
@@ -347,7 +347,7 @@ TEST_P(IndexedPointsTestUInt, UnsignedIntOffset3)
 
 TEST_P(IndexedPointsTestUInt, VertexWithColorUnsignedIntOffset0)
 {
-    if (getClientVersion() < 3 && !extensionEnabled("GL_OES_element_index_uint"))
+    if (getClientMajorVersion() < 3 && !extensionEnabled("GL_OES_element_index_uint"))
     {
         return;
     }
@@ -357,7 +357,7 @@ TEST_P(IndexedPointsTestUInt, VertexWithColorUnsignedIntOffset0)
 
 TEST_P(IndexedPointsTestUInt, VertexWithColorUnsignedIntOffset1)
 {
-    if (getClientVersion() < 3 && !extensionEnabled("GL_OES_element_index_uint"))
+    if (getClientMajorVersion() < 3 && !extensionEnabled("GL_OES_element_index_uint"))
     {
         return;
     }
@@ -367,7 +367,7 @@ TEST_P(IndexedPointsTestUInt, VertexWithColorUnsignedIntOffset1)
 
 TEST_P(IndexedPointsTestUInt, VertexWithColorUnsignedIntOffset2)
 {
-    if (getClientVersion() < 3 && !extensionEnabled("GL_OES_element_index_uint"))
+    if (getClientMajorVersion() < 3 && !extensionEnabled("GL_OES_element_index_uint"))
     {
         return;
     }
@@ -377,7 +377,7 @@ TEST_P(IndexedPointsTestUInt, VertexWithColorUnsignedIntOffset2)
 
 TEST_P(IndexedPointsTestUInt, VertexWithColorUnsignedIntOffset3)
 {
-    if (getClientVersion() < 3 && !extensionEnabled("GL_OES_element_index_uint"))
+    if (getClientMajorVersion() < 3 && !extensionEnabled("GL_OES_element_index_uint"))
     {
         return;
     }

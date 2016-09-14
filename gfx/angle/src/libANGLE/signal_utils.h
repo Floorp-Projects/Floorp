@@ -46,7 +46,7 @@ class BroadcastChannel final : NonCopyable
     void addReceiver(ChannelBinding *receiver);
     void removeReceiver(ChannelBinding *receiver);
 
-    std::set<ChannelBinding *> mReceivers;
+    std::vector<ChannelBinding *> mReceivers;
 };
 
 // The dependent class keeps bindings to the host's BroadcastChannel.

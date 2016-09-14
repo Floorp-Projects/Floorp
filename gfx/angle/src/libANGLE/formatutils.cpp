@@ -16,6 +16,8 @@ using namespace angle;
 namespace gl
 {
 
+namespace
+{
 // ES2 requires that format is equal to internal format at all glTex*Image2D entry points and the implementation
 // can decide the true, sized, internal format. The ES2FormatMap determines the internal format for all valid
 // format and type combinations.
@@ -23,23 +25,8 @@ namespace gl
 typedef std::pair<FormatType, GLenum> FormatPair;
 typedef std::map<FormatType, GLenum> FormatMap;
 
-FormatType::FormatType() : format(GL_NONE), type(GL_NONE)
-{
-}
-
-FormatType::FormatType(GLenum format_, GLenum type_) : format(format_), type(type_)
-{
-}
-
-bool FormatType::operator<(const FormatType &other) const
-{
-    if (format != other.format)
-        return format < other.format;
-    return type < other.type;
-}
-
 // A helper function to insert data into the format map with fewer characters.
-static inline void InsertFormatMapping(FormatMap *map, GLenum format, GLenum type, GLenum internalFormat)
+void InsertFormatMapping(FormatMap *map, GLenum format, GLenum type, GLenum internalFormat)
 {
     map->insert(FormatPair(FormatType(format, type), internalFormat));
 }
@@ -48,6 +35,7 @@ FormatMap BuildFormatMap()
 {
     FormatMap map;
 
+    // clang-format off
     //                       | Format               | Type                             | Internal format          |
     InsertFormatMapping(&map, GL_RGBA,               GL_UNSIGNED_BYTE,                  GL_RGBA8);
     InsertFormatMapping(&map, GL_RGBA,               GL_BYTE,                           GL_RGBA8_SNORM);
@@ -142,7 +130,58 @@ FormatMap BuildFormatMap()
     InsertFormatMapping(&map, GL_DEPTH_STENCIL,      GL_UNSIGNED_INT_24_8,              GL_DEPTH24_STENCIL8);
     InsertFormatMapping(&map, GL_DEPTH_STENCIL,      GL_FLOAT_32_UNSIGNED_INT_24_8_REV, GL_DEPTH32F_STENCIL8);
 
+    // From GL_EXT_texture_norm16
+    InsertFormatMapping(&map, GL_RED,                GL_UNSIGNED_SHORT,                 GL_R16_EXT);
+    InsertFormatMapping(&map, GL_RED,                GL_SHORT,                          GL_R16_SNORM_EXT);
+    InsertFormatMapping(&map, GL_RG,                 GL_UNSIGNED_SHORT,                 GL_RG16_EXT);
+    InsertFormatMapping(&map, GL_RG,                 GL_SHORT,                          GL_RG16_SNORM_EXT);
+    InsertFormatMapping(&map, GL_RGB,                GL_UNSIGNED_SHORT,                 GL_RGB16_EXT);
+    InsertFormatMapping(&map, GL_RGB,                GL_SHORT,                          GL_RGB16_SNORM_EXT);
+    InsertFormatMapping(&map, GL_RGBA,               GL_UNSIGNED_SHORT,                 GL_RGBA16_EXT);
+    InsertFormatMapping(&map, GL_RGBA,               GL_SHORT,                          GL_RGBA16_SNORM_EXT);
+    // clang-format on
+
     return map;
+}
+
+GLenum GetSizedFormatInternal(GLenum format, GLenum type)
+{
+    static const FormatMap formatMap = BuildFormatMap();
+    auto iter                        = formatMap.find(FormatType(format, type));
+    if (iter != formatMap.end())
+    {
+        return iter->second;
+    }
+
+    // TODO(jmadill): Fix this hack.
+    if (format == GL_BGRA_EXT && type == GL_UNSIGNED_SHORT_5_6_5)
+        return GL_BGR565_ANGLEX;
+
+    if (format == GL_NONE)
+        return GL_NONE;
+
+    UNREACHABLE();
+    return GL_NONE;
+}
+
+typedef std::pair<GLenum, InternalFormat> InternalFormatInfoPair;
+typedef std::map<GLenum, InternalFormat> InternalFormatInfoMap;
+
+}  // anonymous namespace
+
+FormatType::FormatType() : format(GL_NONE), type(GL_NONE)
+{
+}
+
+FormatType::FormatType(GLenum format_, GLenum type_) : format(format_), type(type_)
+{
+}
+
+bool FormatType::operator<(const FormatType &other) const
+{
+    if (format != other.format)
+        return format < other.format;
+    return type < other.type;
 }
 
 Type::Type()
@@ -283,7 +322,8 @@ static bool FloatRenderableSupportRG(GLuint clientVersion, const Extensions &ext
 }
 
 InternalFormat::InternalFormat()
-    : redBits(0),
+    : internalFormat(GL_NONE),
+      redBits(0),
       greenBits(0),
       blueBits(0),
       luminanceBits(0),
@@ -306,25 +346,106 @@ InternalFormat::InternalFormat()
 {
 }
 
-static InternalFormat UnsizedFormat(GLenum format, InternalFormat::SupportCheckFunction textureSupport,
-                                    InternalFormat::SupportCheckFunction renderSupport,
-                                    InternalFormat::SupportCheckFunction filterSupport)
+bool InternalFormat::isLUMA() const
+{
+    return ((redBits + greenBits + blueBits + depthBits + stencilBits) == 0 &&
+            (luminanceBits + alphaBits) > 0);
+}
+
+Format::Format(GLenum internalFormat) : Format(GetInternalFormatInfo(internalFormat))
+{
+}
+
+Format::Format(const InternalFormat &internalFormat)
+    : info(&internalFormat), format(info->format), type(info->type), sized(true)
+{
+    ASSERT((info->pixelBytes > 0 && format != GL_NONE && type != GL_NONE) ||
+           internalFormat.format == GL_NONE);
+}
+
+Format::Format(GLenum internalFormat, GLenum format, GLenum type)
+    : info(nullptr), format(format), type(type), sized(false)
+{
+    const auto &plainInfo = GetInternalFormatInfo(internalFormat);
+    sized                 = plainInfo.pixelBytes > 0;
+    info = (sized ? &plainInfo : &GetInternalFormatInfo(GetSizedFormatInternal(format, type)));
+    ASSERT(format == GL_NONE || info->pixelBytes > 0);
+}
+
+Format::Format(const Format &other) = default;
+Format &Format::operator=(const Format &other) = default;
+
+GLenum Format::asSized() const
+{
+    return sized ? info->internalFormat : GetSizedFormatInternal(format, type);
+}
+
+bool Format::valid() const
+{
+    return info->format != GL_NONE;
+}
+
+// static
+bool Format::SameSized(const Format &a, const Format &b)
+{
+    return (a.info == b.info);
+}
+
+// static
+Format Format::Invalid()
+{
+    static Format invalid(GL_NONE, GL_NONE, GL_NONE);
+    return invalid;
+}
+
+bool InternalFormat::operator==(const InternalFormat &other) const
+{
+    // We assume there are no duplicates.
+    ASSERT((this == &other) == (internalFormat == other.internalFormat));
+    return internalFormat == other.internalFormat;
+}
+
+bool InternalFormat::operator!=(const InternalFormat &other) const
+{
+    // We assume there are no duplicates.
+    ASSERT((this != &other) == (internalFormat != other.internalFormat));
+    return internalFormat != other.internalFormat;
+}
+
+static void AddUnsizedFormat(InternalFormatInfoMap *map,
+                             GLenum internalFormat,
+                             GLenum format,
+                             InternalFormat::SupportCheckFunction textureSupport,
+                             InternalFormat::SupportCheckFunction renderSupport,
+                             InternalFormat::SupportCheckFunction filterSupport)
 {
     InternalFormat formatInfo;
+    formatInfo.internalFormat = internalFormat;
     formatInfo.format = format;
     formatInfo.textureSupport = textureSupport;
     formatInfo.renderSupport = renderSupport;
     formatInfo.filterSupport = filterSupport;
-    return formatInfo;
+    ASSERT(map->count(internalFormat) == 0);
+    (*map)[internalFormat] = formatInfo;
 }
 
-static InternalFormat RGBAFormat(GLuint red, GLuint green, GLuint blue, GLuint alpha, GLuint shared,
-                                 GLenum format, GLenum type, GLenum componentType, bool srgb,
-                                 InternalFormat::SupportCheckFunction textureSupport,
-                                 InternalFormat::SupportCheckFunction renderSupport,
-                                 InternalFormat::SupportCheckFunction filterSupport)
+void AddRGBAFormat(InternalFormatInfoMap *map,
+                   GLenum internalFormat,
+                   GLuint red,
+                   GLuint green,
+                   GLuint blue,
+                   GLuint alpha,
+                   GLuint shared,
+                   GLenum format,
+                   GLenum type,
+                   GLenum componentType,
+                   bool srgb,
+                   InternalFormat::SupportCheckFunction textureSupport,
+                   InternalFormat::SupportCheckFunction renderSupport,
+                   InternalFormat::SupportCheckFunction filterSupport)
 {
     InternalFormat formatInfo;
+    formatInfo.internalFormat = internalFormat;
     formatInfo.redBits = red;
     formatInfo.greenBits = green;
     formatInfo.blueBits = blue;
@@ -339,7 +460,8 @@ static InternalFormat RGBAFormat(GLuint red, GLuint green, GLuint blue, GLuint a
     formatInfo.textureSupport = textureSupport;
     formatInfo.renderSupport = renderSupport;
     formatInfo.filterSupport = filterSupport;
-    return formatInfo;
+    ASSERT(map->count(internalFormat) == 0);
+    (*map)[internalFormat] = formatInfo;
 }
 
 static InternalFormat LUMAFormat(GLuint luminance, GLuint alpha, GLenum format, GLenum type, GLenum componentType,
@@ -348,6 +470,7 @@ static InternalFormat LUMAFormat(GLuint luminance, GLuint alpha, GLenum format, 
                                  InternalFormat::SupportCheckFunction filterSupport)
 {
     InternalFormat formatInfo;
+    formatInfo.internalFormat = GetSizedFormatInternal(format, type);
     formatInfo.luminanceBits = luminance;
     formatInfo.alphaBits = alpha;
     formatInfo.pixelBytes = (luminance + alpha) / 8;
@@ -362,12 +485,20 @@ static InternalFormat LUMAFormat(GLuint luminance, GLuint alpha, GLenum format, 
     return formatInfo;
 }
 
-static InternalFormat DepthStencilFormat(GLuint depthBits, GLuint stencilBits, GLuint unusedBits, GLenum format,
-                                         GLenum type, GLenum componentType, InternalFormat::SupportCheckFunction textureSupport,
-                                         InternalFormat::SupportCheckFunction renderSupport,
-                                         InternalFormat::SupportCheckFunction filterSupport)
+void AddDepthStencilFormat(InternalFormatInfoMap *map,
+                           GLenum internalFormat,
+                           GLuint depthBits,
+                           GLuint stencilBits,
+                           GLuint unusedBits,
+                           GLenum format,
+                           GLenum type,
+                           GLenum componentType,
+                           InternalFormat::SupportCheckFunction textureSupport,
+                           InternalFormat::SupportCheckFunction renderSupport,
+                           InternalFormat::SupportCheckFunction filterSupport)
 {
     InternalFormat formatInfo;
+    formatInfo.internalFormat = internalFormat;
     formatInfo.depthBits = depthBits;
     formatInfo.stencilBits = stencilBits;
     formatInfo.pixelBytes = (depthBits + stencilBits + unusedBits) / 8;
@@ -379,7 +510,8 @@ static InternalFormat DepthStencilFormat(GLuint depthBits, GLuint stencilBits, G
     formatInfo.textureSupport = textureSupport;
     formatInfo.renderSupport = renderSupport;
     formatInfo.filterSupport = filterSupport;
-    return formatInfo;
+    ASSERT(map->count(internalFormat) == 0);
+    (*map)[internalFormat] = formatInfo;
 }
 
 static InternalFormat CompressedFormat(GLuint compressedBlockWidth, GLuint compressedBlockHeight, GLuint compressedBlockSize,
@@ -389,6 +521,7 @@ static InternalFormat CompressedFormat(GLuint compressedBlockWidth, GLuint compr
                                        InternalFormat::SupportCheckFunction filterSupport)
 {
     InternalFormat formatInfo;
+    formatInfo.internalFormat        = format;
     formatInfo.compressedBlockWidth = compressedBlockWidth;
     formatInfo.compressedBlockHeight = compressedBlockHeight;
     formatInfo.pixelBytes = compressedBlockSize / 8;
@@ -404,84 +537,85 @@ static InternalFormat CompressedFormat(GLuint compressedBlockWidth, GLuint compr
     return formatInfo;
 }
 
-typedef std::pair<GLenum, InternalFormat> InternalFormatInfoPair;
-typedef std::map<GLenum, InternalFormat> InternalFormatInfoMap;
-
 static InternalFormatInfoMap BuildInternalFormatInfoMap()
 {
     InternalFormatInfoMap map;
 
-    // clang-format off
     // From ES 3.0.1 spec, table 3.12
-    map.insert(InternalFormatInfoPair(GL_NONE,              InternalFormat()));
+    map.insert(InternalFormatInfoPair(GL_NONE, InternalFormat()));
 
-    //                               | Internal format     |          | R | G | B | A |S | Format         | Type                           | Component type        | SRGB | Texture supported                        | Renderable                               | Filterable    |
-    map.insert(InternalFormatInfoPair(GL_R8,                RGBAFormat( 8,  0,  0,  0, 0, GL_RED,          GL_UNSIGNED_BYTE,                GL_UNSIGNED_NORMALIZED, false, RequireESOrExt<3, &Extensions::textureRG>, RequireESOrExt<3, &Extensions::textureRG>, AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_R8_SNORM,          RGBAFormat( 8,  0,  0,  0, 0, GL_RED,          GL_BYTE,                         GL_SIGNED_NORMALIZED,   false, RequireES<3>,                              NeverSupported,                            AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_RG8,               RGBAFormat( 8,  8,  0,  0, 0, GL_RG,           GL_UNSIGNED_BYTE,                GL_UNSIGNED_NORMALIZED, false, RequireESOrExt<3, &Extensions::textureRG>, RequireESOrExt<3, &Extensions::textureRG>, AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_RG8_SNORM,         RGBAFormat( 8,  8,  0,  0, 0, GL_RG,           GL_BYTE,                         GL_SIGNED_NORMALIZED,   false, RequireES<3>,                              NeverSupported,                            AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_RGB8,              RGBAFormat( 8,  8,  8,  0, 0, GL_RGB,          GL_UNSIGNED_BYTE,                GL_UNSIGNED_NORMALIZED, false, RequireESOrExt<3, &Extensions::rgb8rgba8>, RequireESOrExt<3, &Extensions::rgb8rgba8>, AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_RGB8_SNORM,        RGBAFormat( 8,  8,  8,  0, 0, GL_RGB,          GL_BYTE,                         GL_SIGNED_NORMALIZED,   false, RequireES<3>,                              NeverSupported,                            AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_RGB565,            RGBAFormat( 5,  6,  5,  0, 0, GL_RGB,          GL_UNSIGNED_SHORT_5_6_5,         GL_UNSIGNED_NORMALIZED, false, RequireES<2>,                              RequireES<2>,                              AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_RGBA4,             RGBAFormat( 4,  4,  4,  4, 0, GL_RGBA,         GL_UNSIGNED_SHORT_4_4_4_4,       GL_UNSIGNED_NORMALIZED, false, RequireES<2>,                              RequireES<2>,                              AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_RGB5_A1,           RGBAFormat( 5,  5,  5,  1, 0, GL_RGBA,         GL_UNSIGNED_SHORT_5_5_5_1,       GL_UNSIGNED_NORMALIZED, false, RequireES<2>,                              RequireES<2>,                              AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_RGBA8,             RGBAFormat( 8,  8,  8,  8, 0, GL_RGBA,         GL_UNSIGNED_BYTE,                GL_UNSIGNED_NORMALIZED, false, RequireESOrExt<3, &Extensions::rgb8rgba8>, RequireESOrExt<3, &Extensions::rgb8rgba8>, AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_RGBA8_SNORM,       RGBAFormat( 8,  8,  8,  8, 0, GL_RGBA,         GL_BYTE,                         GL_SIGNED_NORMALIZED,   false, RequireES<3>,                              NeverSupported,                            AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_RGB10_A2,          RGBAFormat(10, 10, 10,  2, 0, GL_RGBA,         GL_UNSIGNED_INT_2_10_10_10_REV,  GL_UNSIGNED_NORMALIZED, false, RequireES<3>,                              RequireES<3>,                              AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_RGB10_A2UI,        RGBAFormat(10, 10, 10,  2, 0, GL_RGBA_INTEGER, GL_UNSIGNED_INT_2_10_10_10_REV,  GL_UNSIGNED_INT,        false, RequireES<3>,                              RequireES<3>,                              NeverSupported)));
-    map.insert(InternalFormatInfoPair(GL_SRGB8,             RGBAFormat( 8,  8,  8,  0, 0, GL_RGB,          GL_UNSIGNED_BYTE,                GL_UNSIGNED_NORMALIZED, true,  RequireESOrExt<3, &Extensions::sRGB>,      NeverSupported,                            AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_SRGB8_ALPHA8,      RGBAFormat( 8,  8,  8,  8, 0, GL_RGBA,         GL_UNSIGNED_BYTE,                GL_UNSIGNED_NORMALIZED, true,  RequireESOrExt<3, &Extensions::sRGB>,      RequireESOrExt<3, &Extensions::sRGB>,      AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_R11F_G11F_B10F,    RGBAFormat(11, 11, 10,  0, 0, GL_RGB,          GL_UNSIGNED_INT_10F_11F_11F_REV, GL_FLOAT,               false, RequireES<3>,                              RequireExt<&Extensions::colorBufferFloat>, AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_RGB9_E5,           RGBAFormat( 9,  9,  9,  0, 5, GL_RGB,          GL_UNSIGNED_INT_5_9_9_9_REV,     GL_FLOAT,               false, RequireES<3>,                              NeverSupported,                            AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_R8I,               RGBAFormat( 8,  0,  0,  0, 0, GL_RED_INTEGER,  GL_BYTE,                         GL_INT,                 false, RequireES<3>,                              RequireES<3>,                              NeverSupported)));
-    map.insert(InternalFormatInfoPair(GL_R8UI,              RGBAFormat( 8,  0,  0,  0, 0, GL_RED_INTEGER,  GL_UNSIGNED_BYTE,                GL_UNSIGNED_INT,        false, RequireES<3>,                              RequireES<3>,                              NeverSupported)));
-    map.insert(InternalFormatInfoPair(GL_R16I,              RGBAFormat(16,  0,  0,  0, 0, GL_RED_INTEGER,  GL_SHORT,                        GL_INT,                 false, RequireES<3>,                              RequireES<3>,                              NeverSupported)));
-    map.insert(InternalFormatInfoPair(GL_R16UI,             RGBAFormat(16,  0,  0,  0, 0, GL_RED_INTEGER,  GL_UNSIGNED_SHORT,               GL_UNSIGNED_INT,        false, RequireES<3>,                              RequireES<3>,                              NeverSupported)));
-    map.insert(InternalFormatInfoPair(GL_R32I,              RGBAFormat(32,  0,  0,  0, 0, GL_RED_INTEGER,  GL_INT,                          GL_INT,                 false, RequireES<3>,                              RequireES<3>,                              NeverSupported)));
-    map.insert(InternalFormatInfoPair(GL_R32UI,             RGBAFormat(32,  0,  0,  0, 0, GL_RED_INTEGER,  GL_UNSIGNED_INT,                 GL_UNSIGNED_INT,        false, RequireES<3>,                              RequireES<3>,                              NeverSupported)));
-    map.insert(InternalFormatInfoPair(GL_RG8I,              RGBAFormat( 8,  8,  0,  0, 0, GL_RG_INTEGER,   GL_BYTE,                         GL_INT,                 false, RequireES<3>,                              RequireES<3>,                              NeverSupported)));
-    map.insert(InternalFormatInfoPair(GL_RG8UI,             RGBAFormat( 8,  8,  0,  0, 0, GL_RG_INTEGER,   GL_UNSIGNED_BYTE,                GL_UNSIGNED_INT,        false, RequireES<3>,                              RequireES<3>,                              NeverSupported)));
-    map.insert(InternalFormatInfoPair(GL_RG16I,             RGBAFormat(16, 16,  0,  0, 0, GL_RG_INTEGER,   GL_SHORT,                        GL_INT,                 false, RequireES<3>,                              RequireES<3>,                              NeverSupported)));
-    map.insert(InternalFormatInfoPair(GL_RG16UI,            RGBAFormat(16, 16,  0,  0, 0, GL_RG_INTEGER,   GL_UNSIGNED_SHORT,               GL_UNSIGNED_INT,        false, RequireES<3>,                              RequireES<3>,                              NeverSupported)));
-    map.insert(InternalFormatInfoPair(GL_RG32I,             RGBAFormat(32, 32,  0,  0, 0, GL_RG_INTEGER,   GL_INT,                          GL_INT,                 false, RequireES<3>,                              RequireES<3>,                              NeverSupported)));
-    map.insert(InternalFormatInfoPair(GL_RG32UI,            RGBAFormat(32, 32,  0,  0, 0, GL_RG_INTEGER,   GL_UNSIGNED_INT,                 GL_UNSIGNED_INT,        false, RequireES<3>,                              RequireES<3>,                              NeverSupported)));
-    map.insert(InternalFormatInfoPair(GL_RGB8I,             RGBAFormat( 8,  8,  8,  0, 0, GL_RGB_INTEGER,  GL_BYTE,                         GL_INT,                 false, RequireES<3>,                              NeverSupported,                            NeverSupported)));
-    map.insert(InternalFormatInfoPair(GL_RGB8UI,            RGBAFormat( 8,  8,  8,  0, 0, GL_RGB_INTEGER,  GL_UNSIGNED_BYTE,                GL_UNSIGNED_INT,        false, RequireES<3>,                              NeverSupported,                            NeverSupported)));
-    map.insert(InternalFormatInfoPair(GL_RGB16I,            RGBAFormat(16, 16, 16,  0, 0, GL_RGB_INTEGER,  GL_SHORT,                        GL_INT,                 false, RequireES<3>,                              NeverSupported,                            NeverSupported)));
-    map.insert(InternalFormatInfoPair(GL_RGB16UI,           RGBAFormat(16, 16, 16,  0, 0, GL_RGB_INTEGER,  GL_UNSIGNED_SHORT,               GL_UNSIGNED_INT,        false, RequireES<3>,                              NeverSupported,                            NeverSupported)));
-    map.insert(InternalFormatInfoPair(GL_RGB32I,            RGBAFormat(32, 32, 32,  0, 0, GL_RGB_INTEGER,  GL_INT,                          GL_INT,                 false, RequireES<3>,                              NeverSupported,                            NeverSupported)));
-    map.insert(InternalFormatInfoPair(GL_RGB32UI,           RGBAFormat(32, 32, 32,  0, 0, GL_RGB_INTEGER,  GL_UNSIGNED_INT,                 GL_UNSIGNED_INT,        false, RequireES<3>,                              NeverSupported,                            NeverSupported)));
-    map.insert(InternalFormatInfoPair(GL_RGBA8I,            RGBAFormat( 8,  8,  8,  8, 0, GL_RGBA_INTEGER, GL_BYTE,                         GL_INT,                 false, RequireES<3>,                              RequireES<3>,                              NeverSupported)));
-    map.insert(InternalFormatInfoPair(GL_RGBA8UI,           RGBAFormat( 8,  8,  8,  8, 0, GL_RGBA_INTEGER, GL_UNSIGNED_BYTE,                GL_UNSIGNED_INT,        false, RequireES<3>,                              RequireES<3>,                              NeverSupported)));
-    map.insert(InternalFormatInfoPair(GL_RGBA16I,           RGBAFormat(16, 16, 16, 16, 0, GL_RGBA_INTEGER, GL_SHORT,                        GL_INT,                 false, RequireES<3>,                              RequireES<3>,                              NeverSupported)));
-    map.insert(InternalFormatInfoPair(GL_RGBA16UI,          RGBAFormat(16, 16, 16, 16, 0, GL_RGBA_INTEGER, GL_UNSIGNED_SHORT,               GL_UNSIGNED_INT,        false, RequireES<3>,                              RequireES<3>,                              NeverSupported)));
-    map.insert(InternalFormatInfoPair(GL_RGBA32I,           RGBAFormat(32, 32, 32, 32, 0, GL_RGBA_INTEGER, GL_INT,                          GL_INT,                 false, RequireES<3>,                              RequireES<3>,                              NeverSupported)));
-    map.insert(InternalFormatInfoPair(GL_RGBA32UI,          RGBAFormat(32, 32, 32, 32, 0, GL_RGBA_INTEGER, GL_UNSIGNED_INT,                 GL_UNSIGNED_INT,        false, RequireES<3>,                              RequireES<3>,                              NeverSupported)));
+    // clang-format off
 
-    map.insert(InternalFormatInfoPair(GL_BGRA8_EXT,         RGBAFormat( 8,  8,  8,  8, 0, GL_BGRA_EXT,     GL_UNSIGNED_BYTE,                  GL_UNSIGNED_NORMALIZED, false, RequireExt<&Extensions::textureFormatBGRA8888>, RequireExt<&Extensions::textureFormatBGRA8888>, AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_BGRA4_ANGLEX,      RGBAFormat( 4,  4,  4,  4, 0, GL_BGRA_EXT,     GL_UNSIGNED_SHORT_4_4_4_4_REV_EXT, GL_UNSIGNED_NORMALIZED, false, RequireExt<&Extensions::textureFormatBGRA8888>, RequireExt<&Extensions::textureFormatBGRA8888>, AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_BGR5_A1_ANGLEX,    RGBAFormat( 5,  5,  5,  1, 0, GL_BGRA_EXT,     GL_UNSIGNED_SHORT_1_5_5_5_REV_EXT, GL_UNSIGNED_NORMALIZED, false, RequireExt<&Extensions::textureFormatBGRA8888>, RequireExt<&Extensions::textureFormatBGRA8888>, AlwaysSupported)));
+    //                 | Internal format     | R | G | B | A |S | Format         | Type                           | Component type        | SRGB | Texture supported                        | Renderable                               | Filterable    |
+    AddRGBAFormat(&map, GL_R8,                 8,  0,  0,  0, 0, GL_RED,          GL_UNSIGNED_BYTE,                GL_UNSIGNED_NORMALIZED, false, RequireESOrExt<3, &Extensions::textureRG>, RequireESOrExt<3, &Extensions::textureRG>, AlwaysSupported);
+    AddRGBAFormat(&map, GL_R8_SNORM,           8,  0,  0,  0, 0, GL_RED,          GL_BYTE,                         GL_SIGNED_NORMALIZED,   false, RequireES<3>,                              NeverSupported,                            AlwaysSupported);
+    AddRGBAFormat(&map, GL_RG8,                8,  8,  0,  0, 0, GL_RG,           GL_UNSIGNED_BYTE,                GL_UNSIGNED_NORMALIZED, false, RequireESOrExt<3, &Extensions::textureRG>, RequireESOrExt<3, &Extensions::textureRG>, AlwaysSupported);
+    AddRGBAFormat(&map, GL_RG8_SNORM,          8,  8,  0,  0, 0, GL_RG,           GL_BYTE,                         GL_SIGNED_NORMALIZED,   false, RequireES<3>,                              NeverSupported,                            AlwaysSupported);
+    AddRGBAFormat(&map, GL_RGB8,               8,  8,  8,  0, 0, GL_RGB,          GL_UNSIGNED_BYTE,                GL_UNSIGNED_NORMALIZED, false, RequireESOrExt<3, &Extensions::rgb8rgba8>, RequireESOrExt<3, &Extensions::rgb8rgba8>, AlwaysSupported);
+    AddRGBAFormat(&map, GL_RGB8_SNORM,         8,  8,  8,  0, 0, GL_RGB,          GL_BYTE,                         GL_SIGNED_NORMALIZED,   false, RequireES<3>,                              NeverSupported,                            AlwaysSupported);
+    AddRGBAFormat(&map, GL_RGB565,             5,  6,  5,  0, 0, GL_RGB,          GL_UNSIGNED_SHORT_5_6_5,         GL_UNSIGNED_NORMALIZED, false, RequireES<2>,                              RequireES<2>,                              AlwaysSupported);
+    AddRGBAFormat(&map, GL_RGBA4,              4,  4,  4,  4, 0, GL_RGBA,         GL_UNSIGNED_SHORT_4_4_4_4,       GL_UNSIGNED_NORMALIZED, false, RequireES<2>,                              RequireES<2>,                              AlwaysSupported);
+    AddRGBAFormat(&map, GL_RGB5_A1,            5,  5,  5,  1, 0, GL_RGBA,         GL_UNSIGNED_SHORT_5_5_5_1,       GL_UNSIGNED_NORMALIZED, false, RequireES<2>,                              RequireES<2>,                              AlwaysSupported);
+    AddRGBAFormat(&map, GL_RGBA8,              8,  8,  8,  8, 0, GL_RGBA,         GL_UNSIGNED_BYTE,                GL_UNSIGNED_NORMALIZED, false, RequireESOrExt<3, &Extensions::rgb8rgba8>, RequireESOrExt<3, &Extensions::rgb8rgba8>, AlwaysSupported);
+    AddRGBAFormat(&map, GL_RGBA8_SNORM,        8,  8,  8,  8, 0, GL_RGBA,         GL_BYTE,                         GL_SIGNED_NORMALIZED,   false, RequireES<3>,                              NeverSupported,                            AlwaysSupported);
+    AddRGBAFormat(&map, GL_RGB10_A2,          10, 10, 10,  2, 0, GL_RGBA,         GL_UNSIGNED_INT_2_10_10_10_REV,  GL_UNSIGNED_NORMALIZED, false, RequireES<3>,                              RequireES<3>,                              AlwaysSupported);
+    AddRGBAFormat(&map, GL_RGB10_A2UI,        10, 10, 10,  2, 0, GL_RGBA_INTEGER, GL_UNSIGNED_INT_2_10_10_10_REV,  GL_UNSIGNED_INT,        false, RequireES<3>,                              RequireES<3>,                              NeverSupported);
+    AddRGBAFormat(&map, GL_SRGB8,              8,  8,  8,  0, 0, GL_RGB,          GL_UNSIGNED_BYTE,                GL_UNSIGNED_NORMALIZED, true,  RequireESOrExt<3, &Extensions::sRGB>,      NeverSupported,                            AlwaysSupported);
+    AddRGBAFormat(&map, GL_SRGB8_ALPHA8,       8,  8,  8,  8, 0, GL_RGBA,         GL_UNSIGNED_BYTE,                GL_UNSIGNED_NORMALIZED, true,  RequireESOrExt<3, &Extensions::sRGB>,      RequireESOrExt<3, &Extensions::sRGB>,      AlwaysSupported);
+    AddRGBAFormat(&map, GL_RGB9_E5,            9,  9,  9,  0, 5, GL_RGB,          GL_UNSIGNED_INT_5_9_9_9_REV,     GL_FLOAT,               false, RequireES<3>,                              NeverSupported,                            AlwaysSupported);
+    AddRGBAFormat(&map, GL_R8I,                8,  0,  0,  0, 0, GL_RED_INTEGER,  GL_BYTE,                         GL_INT,                 false, RequireES<3>,                              RequireES<3>,                              NeverSupported);
+    AddRGBAFormat(&map, GL_R8UI,               8,  0,  0,  0, 0, GL_RED_INTEGER,  GL_UNSIGNED_BYTE,                GL_UNSIGNED_INT,        false, RequireES<3>,                              RequireES<3>,                              NeverSupported);
+    AddRGBAFormat(&map, GL_R16I,              16,  0,  0,  0, 0, GL_RED_INTEGER,  GL_SHORT,                        GL_INT,                 false, RequireES<3>,                              RequireES<3>,                              NeverSupported);
+    AddRGBAFormat(&map, GL_R16UI,             16,  0,  0,  0, 0, GL_RED_INTEGER,  GL_UNSIGNED_SHORT,               GL_UNSIGNED_INT,        false, RequireES<3>,                              RequireES<3>,                              NeverSupported);
+    AddRGBAFormat(&map, GL_R32I,              32,  0,  0,  0, 0, GL_RED_INTEGER,  GL_INT,                          GL_INT,                 false, RequireES<3>,                              RequireES<3>,                              NeverSupported);
+    AddRGBAFormat(&map, GL_R32UI,             32,  0,  0,  0, 0, GL_RED_INTEGER,  GL_UNSIGNED_INT,                 GL_UNSIGNED_INT,        false, RequireES<3>,                              RequireES<3>,                              NeverSupported);
+    AddRGBAFormat(&map, GL_RG8I,               8,  8,  0,  0, 0, GL_RG_INTEGER,   GL_BYTE,                         GL_INT,                 false, RequireES<3>,                              RequireES<3>,                              NeverSupported);
+    AddRGBAFormat(&map, GL_RG8UI,              8,  8,  0,  0, 0, GL_RG_INTEGER,   GL_UNSIGNED_BYTE,                GL_UNSIGNED_INT,        false, RequireES<3>,                              RequireES<3>,                              NeverSupported);
+    AddRGBAFormat(&map, GL_RG16I,             16, 16,  0,  0, 0, GL_RG_INTEGER,   GL_SHORT,                        GL_INT,                 false, RequireES<3>,                              RequireES<3>,                              NeverSupported);
+    AddRGBAFormat(&map, GL_RG16UI,            16, 16,  0,  0, 0, GL_RG_INTEGER,   GL_UNSIGNED_SHORT,               GL_UNSIGNED_INT,        false, RequireES<3>,                              RequireES<3>,                              NeverSupported);
+    AddRGBAFormat(&map, GL_RG32I,             32, 32,  0,  0, 0, GL_RG_INTEGER,   GL_INT,                          GL_INT,                 false, RequireES<3>,                              RequireES<3>,                              NeverSupported);
+    AddRGBAFormat(&map, GL_R11F_G11F_B10F,    11, 11, 10,  0, 0, GL_RGB,          GL_UNSIGNED_INT_10F_11F_11F_REV, GL_FLOAT,               false, RequireES<3>,                              RequireExt<&Extensions::colorBufferFloat>, AlwaysSupported);
+    AddRGBAFormat(&map, GL_RG32UI,            32, 32,  0,  0, 0, GL_RG_INTEGER,   GL_UNSIGNED_INT,                 GL_UNSIGNED_INT,        false, RequireES<3>,                              RequireES<3>,                              NeverSupported);
+    AddRGBAFormat(&map, GL_RGB8I,              8,  8,  8,  0, 0, GL_RGB_INTEGER,  GL_BYTE,                         GL_INT,                 false, RequireES<3>,                              NeverSupported,                            NeverSupported);
+    AddRGBAFormat(&map, GL_RGB8UI,             8,  8,  8,  0, 0, GL_RGB_INTEGER,  GL_UNSIGNED_BYTE,                GL_UNSIGNED_INT,        false, RequireES<3>,                              NeverSupported,                            NeverSupported);
+    AddRGBAFormat(&map, GL_RGB16I,            16, 16, 16,  0, 0, GL_RGB_INTEGER,  GL_SHORT,                        GL_INT,                 false, RequireES<3>,                              NeverSupported,                            NeverSupported);
+    AddRGBAFormat(&map, GL_RGB16UI,           16, 16, 16,  0, 0, GL_RGB_INTEGER,  GL_UNSIGNED_SHORT,               GL_UNSIGNED_INT,        false, RequireES<3>,                              NeverSupported,                            NeverSupported);
+    AddRGBAFormat(&map, GL_RGB32I,            32, 32, 32,  0, 0, GL_RGB_INTEGER,  GL_INT,                          GL_INT,                 false, RequireES<3>,                              NeverSupported,                            NeverSupported);
+    AddRGBAFormat(&map, GL_RGB32UI,           32, 32, 32,  0, 0, GL_RGB_INTEGER,  GL_UNSIGNED_INT,                 GL_UNSIGNED_INT,        false, RequireES<3>,                              NeverSupported,                            NeverSupported);
+    AddRGBAFormat(&map, GL_RGBA8I,             8,  8,  8,  8, 0, GL_RGBA_INTEGER, GL_BYTE,                         GL_INT,                 false, RequireES<3>,                              RequireES<3>,                              NeverSupported);
+    AddRGBAFormat(&map, GL_RGBA8UI,            8,  8,  8,  8, 0, GL_RGBA_INTEGER, GL_UNSIGNED_BYTE,                GL_UNSIGNED_INT,        false, RequireES<3>,                              RequireES<3>,                              NeverSupported);
+    AddRGBAFormat(&map, GL_RGBA16I,           16, 16, 16, 16, 0, GL_RGBA_INTEGER, GL_SHORT,                        GL_INT,                 false, RequireES<3>,                              RequireES<3>,                              NeverSupported);
+    AddRGBAFormat(&map, GL_RGBA16UI,          16, 16, 16, 16, 0, GL_RGBA_INTEGER, GL_UNSIGNED_SHORT,               GL_UNSIGNED_INT,        false, RequireES<3>,                              RequireES<3>,                              NeverSupported);
+    AddRGBAFormat(&map, GL_RGBA32I,           32, 32, 32, 32, 0, GL_RGBA_INTEGER, GL_INT,                          GL_INT,                 false, RequireES<3>,                              RequireES<3>,                              NeverSupported);
+    AddRGBAFormat(&map, GL_RGBA32UI,          32, 32, 32, 32, 0, GL_RGBA_INTEGER, GL_UNSIGNED_INT,                 GL_UNSIGNED_INT,        false, RequireES<3>,                              RequireES<3>,                              NeverSupported);
+
+    AddRGBAFormat(&map, GL_BGRA8_EXT,          8,  8,  8,  8, 0, GL_BGRA_EXT,     GL_UNSIGNED_BYTE,                  GL_UNSIGNED_NORMALIZED, false, RequireExt<&Extensions::textureFormatBGRA8888>, RequireExt<&Extensions::textureFormatBGRA8888>, AlwaysSupported);
+    AddRGBAFormat(&map, GL_BGRA4_ANGLEX,       4,  4,  4,  4, 0, GL_BGRA_EXT,     GL_UNSIGNED_SHORT_4_4_4_4_REV_EXT, GL_UNSIGNED_NORMALIZED, false, RequireExt<&Extensions::textureFormatBGRA8888>, RequireExt<&Extensions::textureFormatBGRA8888>, AlwaysSupported);
+    AddRGBAFormat(&map, GL_BGR5_A1_ANGLEX,     5,  5,  5,  1, 0, GL_BGRA_EXT,     GL_UNSIGNED_SHORT_1_5_5_5_REV_EXT, GL_UNSIGNED_NORMALIZED, false, RequireExt<&Extensions::textureFormatBGRA8888>, RequireExt<&Extensions::textureFormatBGRA8888>, AlwaysSupported);
+
+    // Special format which is not really supported, so always false for all supports.
+    AddRGBAFormat(&map, GL_BGR565_ANGLEX,      5,  6,  5,  1, 0, GL_BGRA_EXT,     GL_UNSIGNED_SHORT_5_6_5,           GL_UNSIGNED_NORMALIZED, false, NeverSupported, NeverSupported, NeverSupported);
 
     // Floating point renderability and filtering is provided by OES_texture_float and OES_texture_half_float
-    //                               | Internal format     |          | D |S | Format             | Type                                   | Comp   | SRGB |  Texture supported | Renderable                  | Filterable                                    |
-    //                               |                     |          |   |  |                    |                                        | type   |      |                    |                             |                                               |
-    map.insert(InternalFormatInfoPair(GL_R16F,              RGBAFormat(16,  0,  0,  0, 0, GL_RED,          GL_HALF_FLOAT,                   GL_FLOAT, false, HalfFloatSupportRG, HalfFloatRenderableSupportRG, RequireExt<&Extensions::textureHalfFloatLinear>)));
-    map.insert(InternalFormatInfoPair(GL_RG16F,             RGBAFormat(16, 16,  0,  0, 0, GL_RG,           GL_HALF_FLOAT,                   GL_FLOAT, false, HalfFloatSupportRG, HalfFloatRenderableSupportRG, RequireExt<&Extensions::textureHalfFloatLinear>)));
-    map.insert(InternalFormatInfoPair(GL_RGB16F,            RGBAFormat(16, 16, 16,  0, 0, GL_RGB,          GL_HALF_FLOAT,                   GL_FLOAT, false, HalfFloatSupport,   HalfFloatRenderableSupport,   RequireExt<&Extensions::textureHalfFloatLinear>)));
-    map.insert(InternalFormatInfoPair(GL_RGBA16F,           RGBAFormat(16, 16, 16, 16, 0, GL_RGBA,         GL_HALF_FLOAT,                   GL_FLOAT, false, HalfFloatSupport,   HalfFloatRenderableSupport,   RequireExt<&Extensions::textureHalfFloatLinear>)));
-    map.insert(InternalFormatInfoPair(GL_R32F,              RGBAFormat(32,  0,  0,  0, 0, GL_RED,          GL_FLOAT,                        GL_FLOAT, false, FloatSupportRG,     FloatRenderableSupportRG,     RequireExt<&Extensions::textureFloatLinear>    )));
-    map.insert(InternalFormatInfoPair(GL_RG32F,             RGBAFormat(32, 32,  0,  0, 0, GL_RG,           GL_FLOAT,                        GL_FLOAT, false, FloatSupportRG,     FloatRenderableSupportRG,     RequireExt<&Extensions::textureFloatLinear>    )));
-    map.insert(InternalFormatInfoPair(GL_RGB32F,            RGBAFormat(32, 32, 32,  0, 0, GL_RGB,          GL_FLOAT,                        GL_FLOAT, false, FloatSupport,       FloatRenderableSupport,       RequireExt<&Extensions::textureFloatLinear>    )));
-    map.insert(InternalFormatInfoPair(GL_RGBA32F,           RGBAFormat(32, 32, 32, 32, 0, GL_RGBA,         GL_FLOAT,                        GL_FLOAT, false, FloatSupport,       FloatRenderableSupport,       RequireExt<&Extensions::textureFloatLinear>    )));
+    //                 | Internal format     | D |S | Format             | Type                                   | Comp   | SRGB |  Texture supported | Renderable                  | Filterable                                    |
+    //                 |                     |   |  |                    |                                        | type   |      |                    |                             |                                               |
+    AddRGBAFormat(&map, GL_R16F,              16,  0,  0,  0, 0, GL_RED,          GL_HALF_FLOAT,                   GL_FLOAT, false, HalfFloatSupportRG, HalfFloatRenderableSupportRG, RequireExt<&Extensions::textureHalfFloatLinear>);
+    AddRGBAFormat(&map, GL_RG16F,             16, 16,  0,  0, 0, GL_RG,           GL_HALF_FLOAT,                   GL_FLOAT, false, HalfFloatSupportRG, HalfFloatRenderableSupportRG, RequireExt<&Extensions::textureHalfFloatLinear>);
+    AddRGBAFormat(&map, GL_RGB16F,            16, 16, 16,  0, 0, GL_RGB,          GL_HALF_FLOAT,                   GL_FLOAT, false, HalfFloatSupport,   HalfFloatRenderableSupport,   RequireExt<&Extensions::textureHalfFloatLinear>);
+    AddRGBAFormat(&map, GL_RGBA16F,           16, 16, 16, 16, 0, GL_RGBA,         GL_HALF_FLOAT,                   GL_FLOAT, false, HalfFloatSupport,   HalfFloatRenderableSupport,   RequireExt<&Extensions::textureHalfFloatLinear>);
+    AddRGBAFormat(&map, GL_R32F,              32,  0,  0,  0, 0, GL_RED,          GL_FLOAT,                        GL_FLOAT, false, FloatSupportRG,     FloatRenderableSupportRG,     RequireExt<&Extensions::textureFloatLinear>    );
+    AddRGBAFormat(&map, GL_RG32F,             32, 32,  0,  0, 0, GL_RG,           GL_FLOAT,                        GL_FLOAT, false, FloatSupportRG,     FloatRenderableSupportRG,     RequireExt<&Extensions::textureFloatLinear>    );
+    AddRGBAFormat(&map, GL_RGB32F,            32, 32, 32,  0, 0, GL_RGB,          GL_FLOAT,                        GL_FLOAT, false, FloatSupport,       FloatRenderableSupport,       RequireExt<&Extensions::textureFloatLinear>    );
+    AddRGBAFormat(&map, GL_RGBA32F,           32, 32, 32, 32, 0, GL_RGBA,         GL_FLOAT,                        GL_FLOAT, false, FloatSupport,       FloatRenderableSupport,       RequireExt<&Extensions::textureFloatLinear>    );
 
     // Depth stencil formats
-    //                               | Internal format         |                  | D |S | X | Format            | Type                             | Component type        | Supported                                    | Renderable                                                                         | Filterable                                  |
-    map.insert(InternalFormatInfoPair(GL_DEPTH_COMPONENT16,     DepthStencilFormat(16, 0,  0, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT,                 GL_UNSIGNED_NORMALIZED, RequireES<2>,                                  RequireES<2>,                                                                        RequireESOrExt<3, &Extensions::depthTextures>)));
-    map.insert(InternalFormatInfoPair(GL_DEPTH_COMPONENT24,     DepthStencilFormat(24, 0,  0, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT,                   GL_UNSIGNED_NORMALIZED, RequireES<3>,                                  RequireES<3>,                                                                        RequireESOrExt<3, &Extensions::depthTextures>)));
-    map.insert(InternalFormatInfoPair(GL_DEPTH_COMPONENT32F,    DepthStencilFormat(32, 0,  0, GL_DEPTH_COMPONENT, GL_FLOAT,                          GL_FLOAT,               RequireES<3>,                                  RequireES<3>,                                                                        RequireESOrExt<3, &Extensions::depthTextures>)));
-    map.insert(InternalFormatInfoPair(GL_DEPTH_COMPONENT32_OES, DepthStencilFormat(32, 0,  0, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT,                   GL_UNSIGNED_NORMALIZED, RequireExtOrExt<&Extensions::depthTextures, &Extensions::depth32>, RequireExtOrExt<&Extensions::depthTextures, &Extensions::depth32>, AlwaysSupported                            )));
-    map.insert(InternalFormatInfoPair(GL_DEPTH24_STENCIL8,      DepthStencilFormat(24, 8,  0, GL_DEPTH_STENCIL,   GL_UNSIGNED_INT_24_8,              GL_UNSIGNED_NORMALIZED, RequireESOrExt<3, &Extensions::depthTextures>, RequireESOrExtOrExt<3, &Extensions::depthTextures, &Extensions::packedDepthStencil>, AlwaysSupported                              )));
-    map.insert(InternalFormatInfoPair(GL_DEPTH32F_STENCIL8,     DepthStencilFormat(32, 8, 24, GL_DEPTH_STENCIL,   GL_FLOAT_32_UNSIGNED_INT_24_8_REV, GL_FLOAT,               RequireES<3>,                                  RequireES<3>,                                                                        AlwaysSupported                              )));
+    //                         | Internal format         | D |S | X | Format            | Type                             | Component type        | Supported                                    | Renderable                                                                         | Filterable                                  |
+    AddDepthStencilFormat(&map, GL_DEPTH_COMPONENT16,     16, 0,  0, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT,                 GL_UNSIGNED_NORMALIZED, RequireES<2>,                                  RequireES<2>,                                                                        RequireESOrExt<3, &Extensions::depthTextures>);
+    AddDepthStencilFormat(&map, GL_DEPTH_COMPONENT24,     24, 0,  0, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT,                   GL_UNSIGNED_NORMALIZED, RequireES<3>,                                  RequireES<3>,                                                                        RequireESOrExt<3, &Extensions::depthTextures>);
+    AddDepthStencilFormat(&map, GL_DEPTH_COMPONENT32F,    32, 0,  0, GL_DEPTH_COMPONENT, GL_FLOAT,                          GL_FLOAT,               RequireES<3>,                                  RequireES<3>,                                                                        RequireESOrExt<3, &Extensions::depthTextures>);
+    AddDepthStencilFormat(&map, GL_DEPTH_COMPONENT32_OES, 32, 0,  0, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT,                   GL_UNSIGNED_NORMALIZED, RequireExtOrExt<&Extensions::depthTextures, &Extensions::depth32>, RequireExtOrExt<&Extensions::depthTextures, &Extensions::depth32>, AlwaysSupported                            );
+    AddDepthStencilFormat(&map, GL_DEPTH24_STENCIL8,      24, 8,  0, GL_DEPTH_STENCIL,   GL_UNSIGNED_INT_24_8,              GL_UNSIGNED_NORMALIZED, RequireESOrExt<3, &Extensions::depthTextures>, RequireESOrExtOrExt<3, &Extensions::depthTextures, &Extensions::packedDepthStencil>, AlwaysSupported                              );
+    AddDepthStencilFormat(&map, GL_DEPTH32F_STENCIL8,     32, 8, 24, GL_DEPTH_STENCIL,   GL_FLOAT_32_UNSIGNED_INT_24_8_REV, GL_FLOAT,               RequireES<3>,                                  RequireES<3>,                                                                        AlwaysSupported                              );
     // STENCIL_INDEX8 is special-cased, see around the bottom of the list.
 
     // Luminance alpha formats
@@ -497,23 +631,23 @@ static InternalFormatInfoMap BuildInternalFormatInfoMap()
     map.insert(InternalFormatInfoPair(GL_LUMINANCE_ALPHA16F_EXT, LUMAFormat(16, 16, GL_LUMINANCE_ALPHA, GL_HALF_FLOAT,    GL_FLOAT,               RequireExtAndExt<&Extensions::textureStorage, &Extensions::textureHalfFloat>, NeverSupported, AlwaysSupported)));
 
     // Unsized formats
-    //                               | Internal format   |             | Format            | Supported                                         | Renderable                                        | Filterable    |
-    map.insert(InternalFormatInfoPair(GL_ALPHA,           UnsizedFormat(GL_ALPHA,           RequireES<2>,                                       NeverSupported,                                     AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_LUMINANCE,       UnsizedFormat(GL_LUMINANCE,       RequireES<2>,                                       NeverSupported,                                     AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_LUMINANCE_ALPHA, UnsizedFormat(GL_LUMINANCE_ALPHA, RequireES<2>,                                       NeverSupported,                                     AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_RED,             UnsizedFormat(GL_RED,             RequireESOrExt<3, &Extensions::textureRG>,          NeverSupported,                                     AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_RG,              UnsizedFormat(GL_RG,              RequireESOrExt<3, &Extensions::textureRG>,          NeverSupported,                                     AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_RGB,             UnsizedFormat(GL_RGB,             RequireES<2>,                                       RequireES<2>,                                       AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_RGBA,            UnsizedFormat(GL_RGBA,            RequireES<2>,                                       RequireES<2>,                                       AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_RED_INTEGER,     UnsizedFormat(GL_RED_INTEGER,     RequireES<3>,                                       NeverSupported,                                     NeverSupported )));
-    map.insert(InternalFormatInfoPair(GL_RG_INTEGER,      UnsizedFormat(GL_RG_INTEGER,      RequireES<3>,                                       NeverSupported,                                     NeverSupported )));
-    map.insert(InternalFormatInfoPair(GL_RGB_INTEGER,     UnsizedFormat(GL_RGB_INTEGER,     RequireES<3>,                                       NeverSupported,                                     NeverSupported )));
-    map.insert(InternalFormatInfoPair(GL_RGBA_INTEGER,    UnsizedFormat(GL_RGBA_INTEGER,    RequireES<3>,                                       NeverSupported,                                     NeverSupported )));
-    map.insert(InternalFormatInfoPair(GL_BGRA_EXT,        UnsizedFormat(GL_BGRA_EXT,        RequireExt<&Extensions::textureFormatBGRA8888>,     RequireExt<&Extensions::textureFormatBGRA8888>,     AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_DEPTH_COMPONENT, UnsizedFormat(GL_DEPTH_COMPONENT, RequireES<2>,                                       RequireES<2>,                                       AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_DEPTH_STENCIL,   UnsizedFormat(GL_DEPTH_STENCIL,   RequireESOrExt<3, &Extensions::packedDepthStencil>, RequireESOrExt<3, &Extensions::packedDepthStencil>, AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_SRGB_EXT,        UnsizedFormat(GL_RGB,             RequireESOrExt<3, &Extensions::sRGB>,               NeverSupported,                                     AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_SRGB_ALPHA_EXT,  UnsizedFormat(GL_RGBA,            RequireESOrExt<3, &Extensions::sRGB>,               RequireESOrExt<3, &Extensions::sRGB>,               AlwaysSupported)));
+    //                    | Internal format   | Format            | Supported                                         | Renderable                                        | Filterable    |
+    AddUnsizedFormat(&map, GL_ALPHA,           GL_ALPHA,           RequireES<2>,                                       NeverSupported,                                     AlwaysSupported);
+    AddUnsizedFormat(&map, GL_LUMINANCE,       GL_LUMINANCE,       RequireES<2>,                                       NeverSupported,                                     AlwaysSupported);
+    AddUnsizedFormat(&map, GL_LUMINANCE_ALPHA, GL_LUMINANCE_ALPHA, RequireES<2>,                                       NeverSupported,                                     AlwaysSupported);
+    AddUnsizedFormat(&map, GL_RED,             GL_RED,             RequireESOrExt<3, &Extensions::textureRG>,          NeverSupported,                                     AlwaysSupported);
+    AddUnsizedFormat(&map, GL_RG,              GL_RG,              RequireESOrExt<3, &Extensions::textureRG>,          NeverSupported,                                     AlwaysSupported);
+    AddUnsizedFormat(&map, GL_RGB,             GL_RGB,             RequireES<2>,                                       RequireES<2>,                                       AlwaysSupported);
+    AddUnsizedFormat(&map, GL_RGBA,            GL_RGBA,            RequireES<2>,                                       RequireES<2>,                                       AlwaysSupported);
+    AddUnsizedFormat(&map, GL_RED_INTEGER,     GL_RED_INTEGER,     RequireES<3>,                                       NeverSupported,                                     NeverSupported );
+    AddUnsizedFormat(&map, GL_RG_INTEGER,      GL_RG_INTEGER,      RequireES<3>,                                       NeverSupported,                                     NeverSupported );
+    AddUnsizedFormat(&map, GL_RGB_INTEGER,     GL_RGB_INTEGER,     RequireES<3>,                                       NeverSupported,                                     NeverSupported );
+    AddUnsizedFormat(&map, GL_RGBA_INTEGER,    GL_RGBA_INTEGER,    RequireES<3>,                                       NeverSupported,                                     NeverSupported );
+    AddUnsizedFormat(&map, GL_BGRA_EXT,        GL_BGRA_EXT,        RequireExt<&Extensions::textureFormatBGRA8888>,     RequireExt<&Extensions::textureFormatBGRA8888>,     AlwaysSupported);
+    AddUnsizedFormat(&map, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, RequireES<2>,                                       RequireES<2>,                                       AlwaysSupported);
+    AddUnsizedFormat(&map, GL_DEPTH_STENCIL,   GL_DEPTH_STENCIL,   RequireESOrExt<3, &Extensions::packedDepthStencil>, RequireESOrExt<3, &Extensions::packedDepthStencil>, AlwaysSupported);
+    AddUnsizedFormat(&map, GL_SRGB_EXT,        GL_RGB,             RequireESOrExt<3, &Extensions::sRGB>,               NeverSupported,                                     AlwaysSupported);
+    AddUnsizedFormat(&map, GL_SRGB_ALPHA_EXT,  GL_RGBA,            RequireESOrExt<3, &Extensions::sRGB>,               RequireESOrExt<3, &Extensions::sRGB>,               AlwaysSupported);
 
     // Compressed formats, From ES 3.0.1 spec, table 3.16
     //                               | Internal format                             |                |W |H | BS |CC| Format                                      | Type            | SRGB | Supported   | Renderable    | Filterable    |
@@ -578,22 +712,22 @@ static InternalFormatInfoMap BuildInternalFormatInfoMap()
     // - Multisampled buffer are disallowed for non-normalized integer component types and we want to support it for STENCIL_INDEX8
     // - All other stencil formats (all depth-stencil) are either float or normalized
     // - It affects only validation of internalformat in RenderbufferStorageMultisample.
-    //                               | Internal format  |                  |D |S |X | Format          | Type            | Component type        | Supported   | Renderable  | Filterable   |
-    map.insert(InternalFormatInfoPair(GL_STENCIL_INDEX8, DepthStencilFormat(0, 8, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_BYTE, GL_UNSIGNED_NORMALIZED, RequireES<2>, RequireES<2>, NeverSupported)));
+    //                         | Internal format  |D |S |X | Format    | Type            | Component type        | Supported   | Renderable  | Filterable   |
+    AddDepthStencilFormat(&map, GL_STENCIL_INDEX8, 0, 8, 0, GL_STENCIL, GL_UNSIGNED_BYTE, GL_UNSIGNED_NORMALIZED, RequireES<2>, RequireES<2>, NeverSupported);
 
     // From GL_ANGLE_lossy_etc_decode
     map.insert(InternalFormatInfoPair(GL_ETC1_RGB8_LOSSY_DECODE_ANGLE, CompressedFormat(4, 4, 64, 3, GL_ETC1_RGB8_OES, GL_UNSIGNED_BYTE, false, RequireExt<&Extensions::lossyETCDecode>, NeverSupported, AlwaysSupported)));
 
     // From GL_EXT_texture_norm16
-    //                               | Internal format     |          | R | G | B | A |S | Format         | Type                           | Component type        | SRGB | Texture supported                        | Renderable                               | Filterable    |
-    map.insert(InternalFormatInfoPair(GL_R16_EXT,           RGBAFormat(16,  0,  0,  0, 0, GL_RED,          GL_UNSIGNED_SHORT,               GL_UNSIGNED_NORMALIZED, false, RequireExt<&Extensions::textureNorm16>,    RequireExt<&Extensions::textureNorm16>,    AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_R16_SNORM_EXT,     RGBAFormat(16,  0,  0,  0, 0, GL_RED,          GL_SHORT,                        GL_SIGNED_NORMALIZED,   false, RequireExt<&Extensions::textureNorm16>,    NeverSupported,                            AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_RG16_EXT,          RGBAFormat(16, 16,  0,  0, 0, GL_RG,           GL_UNSIGNED_SHORT,               GL_UNSIGNED_NORMALIZED, false, RequireExt<&Extensions::textureNorm16>,    RequireExt<&Extensions::textureNorm16>,    AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_RG16_SNORM_EXT,    RGBAFormat(16, 16,  0,  0, 0, GL_RG,           GL_SHORT,                        GL_SIGNED_NORMALIZED,   false, RequireExt<&Extensions::textureNorm16>,    NeverSupported,                            AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_RGB16_EXT,         RGBAFormat(16, 16, 16,  0, 0, GL_RGB,          GL_UNSIGNED_SHORT,               GL_UNSIGNED_NORMALIZED, false, RequireExt<&Extensions::textureNorm16>,    NeverSupported,                            AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_RGB16_SNORM_EXT,   RGBAFormat(16, 16, 16,  0, 0, GL_RGB,          GL_SHORT,                        GL_SIGNED_NORMALIZED,   false, RequireExt<&Extensions::textureNorm16>,    NeverSupported,                            AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_RGBA16_EXT,        RGBAFormat(16, 16, 16, 16, 0, GL_RGBA,         GL_UNSIGNED_SHORT,               GL_UNSIGNED_NORMALIZED, false, RequireExt<&Extensions::textureNorm16>,    RequireExt<&Extensions::textureNorm16>,    AlwaysSupported)));
-    map.insert(InternalFormatInfoPair(GL_RGBA16_SNORM_EXT,  RGBAFormat(16, 16, 16, 16, 0, GL_RGBA,         GL_SHORT,                        GL_SIGNED_NORMALIZED,   false, RequireExt<&Extensions::textureNorm16>,    NeverSupported,                            AlwaysSupported)));
+    //                 | Internal format     | R | G | B | A |S | Format         | Type                           | Component type        | SRGB | Texture supported                        | Renderable                               | Filterable    |
+    AddRGBAFormat(&map, GL_R16_EXT,           16,  0,  0,  0, 0, GL_RED,          GL_UNSIGNED_SHORT,               GL_UNSIGNED_NORMALIZED, false, RequireExt<&Extensions::textureNorm16>,    RequireExt<&Extensions::textureNorm16>,    AlwaysSupported);
+    AddRGBAFormat(&map, GL_R16_SNORM_EXT,     16,  0,  0,  0, 0, GL_RED,          GL_SHORT,                        GL_SIGNED_NORMALIZED,   false, RequireExt<&Extensions::textureNorm16>,    NeverSupported,                            AlwaysSupported);
+    AddRGBAFormat(&map, GL_RG16_EXT,          16, 16,  0,  0, 0, GL_RG,           GL_UNSIGNED_SHORT,               GL_UNSIGNED_NORMALIZED, false, RequireExt<&Extensions::textureNorm16>,    RequireExt<&Extensions::textureNorm16>,    AlwaysSupported);
+    AddRGBAFormat(&map, GL_RG16_SNORM_EXT,    16, 16,  0,  0, 0, GL_RG,           GL_SHORT,                        GL_SIGNED_NORMALIZED,   false, RequireExt<&Extensions::textureNorm16>,    NeverSupported,                            AlwaysSupported);
+    AddRGBAFormat(&map, GL_RGB16_EXT,         16, 16, 16,  0, 0, GL_RGB,          GL_UNSIGNED_SHORT,               GL_UNSIGNED_NORMALIZED, false, RequireExt<&Extensions::textureNorm16>,    NeverSupported,                            AlwaysSupported);
+    AddRGBAFormat(&map, GL_RGB16_SNORM_EXT,   16, 16, 16,  0, 0, GL_RGB,          GL_SHORT,                        GL_SIGNED_NORMALIZED,   false, RequireExt<&Extensions::textureNorm16>,    NeverSupported,                            AlwaysSupported);
+    AddRGBAFormat(&map, GL_RGBA16_EXT,        16, 16, 16, 16, 0, GL_RGBA,         GL_UNSIGNED_SHORT,               GL_UNSIGNED_NORMALIZED, false, RequireExt<&Extensions::textureNorm16>,    RequireExt<&Extensions::textureNorm16>,    AlwaysSupported);
+    AddRGBAFormat(&map, GL_RGBA16_SNORM_EXT,  16, 16, 16, 16, 0, GL_RGBA,         GL_SHORT,                        GL_SIGNED_NORMALIZED,   false, RequireExt<&Extensions::textureNorm16>,    NeverSupported,                            AlwaysSupported);
 
     // clang-format on
 
@@ -610,12 +744,15 @@ static FormatSet BuildAllSizedInternalFormatSet()
 {
     FormatSet result;
 
-    const InternalFormatInfoMap &formats = GetInternalFormatMap();
-    for (InternalFormatInfoMap::const_iterator i = formats.begin(); i != formats.end(); i++)
+    for (auto iter : GetInternalFormatMap())
     {
-        if (i->second.pixelBytes > 0)
+        if (iter.second.pixelBytes > 0)
         {
-            result.insert(i->first);
+            // TODO(jmadill): Fix this hack.
+            if (iter.first == GL_BGR565_ANGLEX)
+                continue;
+
+            result.insert(iter.first);
         }
     }
 
@@ -681,7 +818,7 @@ const Type &GetTypeInfo(GLenum type)
 const InternalFormat &GetInternalFormatInfo(GLenum internalFormat)
 {
     const InternalFormatInfoMap &formatMap = GetInternalFormatMap();
-    InternalFormatInfoMap::const_iterator iter = formatMap.find(internalFormat);
+    auto iter                              = formatMap.find(internalFormat);
     if (iter != formatMap.end())
     {
         return iter->second;
@@ -689,6 +826,7 @@ const InternalFormat &GetInternalFormatInfo(GLenum internalFormat)
     else
     {
         static const InternalFormat defaultInternalFormat;
+        UNREACHABLE();
         return defaultInternalFormat;
     }
 }
@@ -705,21 +843,11 @@ gl::ErrorOrResult<GLuint> InternalFormat::computeRowPitch(GLenum formatType,
         return computeCompressedImageSize(formatType, gl::Extents(width, 1, 1));
     }
 
-    CheckedNumeric<GLuint> checkedRowBytes(0);
-    if (rowLength > 0)
-    {
-        CheckedNumeric<GLuint> checkePixelBytes(pixelBytes);
-        checkedRowBytes = checkePixelBytes * rowLength;
-    }
-    else
-    {
-        CheckedNumeric<GLuint> checkedWidth(width);
-        const auto &typeInfo = GetTypeInfo(formatType);
-        CheckedNumeric<GLuint> checkedComponents(typeInfo.specialInterpretation ? 1u
-                                                                                : componentCount);
-        CheckedNumeric<GLuint> checkedTypeBytes(typeInfo.bytes);
-        checkedRowBytes = checkedWidth * checkedComponents * checkedTypeBytes;
-    }
+    const auto &typeInfo = GetTypeInfo(formatType);
+    CheckedNumeric<GLuint> checkedComponents(typeInfo.specialInterpretation ? 1u : componentCount);
+    CheckedNumeric<GLuint> checkedTypeBytes(typeInfo.bytes);
+    CheckedNumeric<GLuint> checkedWidth(rowLength > 0 ? rowLength : width);
+    CheckedNumeric<GLuint> checkedRowBytes = checkedWidth * checkedComponents * checkedTypeBytes;
 
     ASSERT(alignment > 0 && isPow2(alignment));
     CheckedNumeric<GLuint> checkedAlignment(alignment);
@@ -824,15 +952,7 @@ GLenum GetSizedInternalFormat(GLenum internalFormat, GLenum type)
     {
         return internalFormat;
     }
-
-    static const FormatMap formatMap = BuildFormatMap();
-    auto iter                        = formatMap.find(FormatType(internalFormat, type));
-    if (iter != formatMap.end())
-    {
-        return iter->second;
-    }
-
-    return GL_NONE;
+    return GetSizedFormatInternal(internalFormat, type);
 }
 
 const FormatSet &GetAllSizedInternalFormats()

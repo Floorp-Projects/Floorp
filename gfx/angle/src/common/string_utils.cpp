@@ -9,6 +9,9 @@
 
 #include "string_utils.h"
 
+#include <algorithm>
+#include <stdlib.h>
+#include <string.h>
 #include <fstream>
 #include <sstream>
 
@@ -153,6 +156,27 @@ Optional<std::vector<wchar_t>> WidenString(size_t length, const char *cString)
     }
 #endif
     return Optional<std::vector<wchar_t>>(wcstring);
+}
+
+bool BeginsWith(const std::string &str, const char *prefix)
+{
+    return strncmp(str.c_str(), prefix, strlen(prefix)) == 0;
+}
+
+bool BeginsWith(const char *str, const char *prefix)
+{
+    return strncmp(str, prefix, strlen(prefix)) == 0;
+}
+
+bool EndsWith(const std::string &str, const char *suffix)
+{
+    const auto len = strlen(suffix);
+    if (len > str.size())
+        return false;
+
+    const char *end = str.c_str() + str.size() - len;
+
+    return memcmp(end, suffix, len) == 0;
 }
 
 }  // namespace angle
