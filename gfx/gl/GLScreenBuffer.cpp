@@ -951,11 +951,11 @@ ReadBuffer::Create(GLContext* gl,
 
     const bool needsAcquire = !surf->IsProducerAcquired();
     if (needsAcquire) {
-        surf->ProducerAcquire();
+        surf->ProducerReadAcquire();
     }
     const bool isComplete = gl->IsFramebufferComplete(fb);
     if (needsAcquire) {
-        surf->ProducerRelease();
+        surf->ProducerReadRelease();
     }
 
     if (!isComplete)
