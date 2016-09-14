@@ -377,7 +377,6 @@ var BrowserApp = {
     Services.obs.addObserver(this, "ScrollTo:FocusedInput", false);
     Services.obs.addObserver(this, "Sanitize:ClearData", false);
     Services.obs.addObserver(this, "FullScreen:Exit", false);
-    Services.obs.addObserver(this, "Viewport:Flush", false);
     Services.obs.addObserver(this, "Passwords:Init", false);
     Services.obs.addObserver(this, "FormHistory:Init", false);
     Services.obs.addObserver(this, "android-get-pref", false);
@@ -1780,10 +1779,6 @@ var BrowserApp = {
 
       case "FullScreen:Exit":
         browser.contentDocument.exitFullscreen();
-        break;
-
-      case "Viewport:Flush":
-        this.contentDocumentChanged();
         break;
 
       case "Passwords:Init": {
