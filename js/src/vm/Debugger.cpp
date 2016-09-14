@@ -63,6 +63,7 @@ using mozilla::AsVariant;
 /*** Forward declarations, ClassOps and Classes **************************************************/
 
 static void DebuggerFrame_finalize(FreeOp* fop, JSObject* obj);
+static void DebuggerFrame_trace(JSTracer* trc, JSObject* obj);
 static void DebuggerEnv_trace(JSTracer* trc, JSObject* obj);
 static void DebuggerObject_trace(JSTracer* trc, JSObject* obj);
 static void DebuggerScript_trace(JSTracer* trc, JSObject* obj);
@@ -88,7 +89,7 @@ const ClassOps DebuggerFrame::classOps_ = {
     nullptr,    /* call        */
     nullptr,    /* hasInstance */
     nullptr,    /* construct   */
-    nullptr,    /* trace   */
+    DebuggerFrame_trace
 };
 
 const Class DebuggerFrame::class_ = {
@@ -2043,7 +2044,8 @@ Debugger::onSingleStep(JSContext* cx, MutableHandleValue vp)
     // Call onStep for frames that have the handler set.
     for (size_t i = 0; i < frames.length(); i++) {
         HandleDebuggerFrame frame = frames[i];
-        if (frame->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER).isUndefined())
+        OnStepHandler* handler = frame->onStepHandler();
+        if (!handler)
             continue;
 
         Debugger* dbg = Debugger::fromChildJSObject(frame);
@@ -2052,13 +2054,12 @@ Debugger::onSingleStep(JSContext* cx, MutableHandleValue vp)
         Maybe<AutoCompartment> ac;
         ac.emplace(cx, dbg->object);
 
-        RootedValue fval(cx, frame->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER));
-        RootedValue rval(cx);
-        bool ok = js::Call(cx, fval, frame, &rval);
-        JSTrapStatus st = dbg->processHandlerResult(ac, ok, rval, iter.abstractFramePtr(),
-                                                    iter.pc(), vp);
-        if (st != JSTRAP_CONTINUE)
-            return st;
+        JSTrapStatus status = JSTRAP_CONTINUE;
+        bool success = handler->onStep(cx, frame, status, vp);
+        status = dbg->processParsedHandlerResult(ac, iter.abstractFramePtr(), iter.pc(), success,
+                                                 status, vp);
+        if (status != JSTRAP_CONTINUE)
+            return status;
     }
 
     vp.setUndefined();
@@ -7194,6 +7195,41 @@ static const JSFunctionSpec DebuggerSource_methods[] = {
 
 /*** Debugger.Frame ******************************************************************************/
 
+ScriptedOnStepHandler::ScriptedOnStepHandler(JSObject* object)
+  : object_(object)
+{
+    MOZ_ASSERT(object_->isCallable());
+}
+
+JSObject*
+ScriptedOnStepHandler::object() const
+{
+    return object_;
+}
+
+void
+ScriptedOnStepHandler::drop()
+{
+}
+
+void
+ScriptedOnStepHandler::trace(JSTracer* tracer)
+{
+    TraceEdge(tracer, &object_, "OnStepHandlerFunction.object");
+}
+
+bool
+ScriptedOnStepHandler::onStep(JSContext* cx, HandleDebuggerFrame frame, JSTrapStatus& statusp,
+                              MutableHandleValue vp)
+{
+    RootedValue fval(cx, ObjectValue(*object_));
+    RootedValue rval(cx);
+    if (!js::Call(cx, fval, frame, &rval))
+        return false;
+
+    return ParseResumptionValue(cx, rval, statusp, vp);
+};
+
 /* static */ NativeObject*
 DebuggerFrame::initClass(JSContext* cx, HandleObject dbgCtor, HandleObject obj)
 {
@@ -7428,6 +7464,40 @@ DebuggerFrame::getImplementation(HandleDebuggerFrame frame)
     return DebuggerFrameImplementation::Interpreter;
 }
 
+/* static */ bool
+DebuggerFrame::setOnStepHandler(JSContext* cx, HandleDebuggerFrame frame, OnStepHandler* handler)
+{
+    MOZ_ASSERT(frame->isLive());
+
+    AbstractFramePtr referent = DebuggerFrame::getReferent(frame);
+
+    OnStepHandler* prior = frame->onStepHandler();
+    if (prior && handler != prior) {
+        prior->drop();
+    }
+
+    if (handler && !prior) {
+        // Single stepping toggled off->on.
+        AutoCompartment ac(cx, referent.environmentChain());
+        // Ensure observability *before* incrementing the step mode
+        // count. Calling this function after calling incrementStepModeCount
+        // will make it a no-op.
+        Debugger* dbg = frame->owner();
+        if (!dbg->ensureExecutionObservabilityOfScript(cx, referent.script()))
+            return false;
+        if (!referent.script()->incrementStepModeCount(cx))
+            return false;
+    } else if (!handler && prior) {
+        // Single stepping toggled on->off.
+        referent.script()->decrementStepModeCount(cx->runtime()->defaultFreeOp());
+    }
+
+    /* Now that the step mode switch has succeeded, we can install the handler. */
+    frame->setReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER,
+                           handler ? PrivateValue(handler) : UndefinedValue());
+    return true;
+}
+
 /*
  * Evaluate |chars[0..length-1]| in the environment |env|, treating that
  * source as appearing starting at |lineno| in |filename|. Store the return
@@ -7602,6 +7672,13 @@ DebuggerFrame::isLive() const
     return !!getPrivate();
 }
 
+OnStepHandler*
+DebuggerFrame::onStepHandler() const
+{
+    Value value = getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER);
+    return value.isUndefined() ? nullptr : static_cast<OnStepHandler*>(value.toPrivate());
+}
+
 /* static */ bool
 DebuggerFrame::requireLive(JSContext* cx, HandleDebuggerFrame frame)
 {
@@ -7668,6 +7745,17 @@ DebuggerFrame_finalize(FreeOp* fop, JSObject* obj)
 {
     MOZ_ASSERT(fop->maybeOffMainThread());
     DebuggerFrame_freeScriptFrameIterData(fop, obj);
+    OnStepHandler* handler = obj->as<DebuggerFrame>().onStepHandler();
+    if (handler)
+       handler->drop();
+}
+
+static void
+DebuggerFrame_trace(JSTracer* trc, JSObject* obj)
+{
+    OnStepHandler* handler = obj->as<DebuggerFrame>().onStepHandler();
+    if (handler) 
+        handler->trace(trc);
 }
 
 /* static */ DebuggerFrame*
@@ -8079,21 +8167,22 @@ IsValidHook(const Value& v)
     return v.isUndefined() || (v.isObject() && v.toObject().isCallable());
 }
 
-static bool
-DebuggerFrame_getOnStep(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerFrame::onStepGetter(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_FRAME(cx, argc, vp, "get onStep", args, thisobj, frame);
-    (void) frame;  // Silence GCC warning
-    RootedValue handler(cx, thisobj->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER));
-    MOZ_ASSERT(IsValidHook(handler));
-    args.rval().set(handler);
+    THIS_DEBUGGER_FRAME(cx, argc, vp, "get onStep", args, frame);
+
+    OnStepHandler* handler = frame->onStepHandler();
+    RootedValue value(cx, handler ? ObjectValue(*handler->object()) : UndefinedValue());
+    MOZ_ASSERT(IsValidHook(value));
+    args.rval().set(value);
     return true;
 }
 
-static bool
-DebuggerFrame_setOnStep(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerFrame::onStepSetter(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_FRAME(cx, argc, vp, "set onStep", args, thisobj, frame);
+    THIS_DEBUGGER_FRAME(cx, argc, vp, "set onStep", args, frame);
     if (!args.requireAtLeast(cx, "Debugger.Frame.set onStep", 1))
         return false;
     if (!IsValidHook(args[0])) {
@@ -8101,25 +8190,16 @@ DebuggerFrame_setOnStep(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    Value prior = thisobj->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER);
-    if (!args[0].isUndefined() && prior.isUndefined()) {
-        // Single stepping toggled off->on.
-        AutoCompartment ac(cx, frame.environmentChain());
-        // Ensure observability *before* incrementing the step mode
-        // count. Calling this function after calling incrementStepModeCount
-        // will make it a no-op.
-        Debugger* dbg = Debugger::fromChildJSObject(thisobj);
-        if (!dbg->ensureExecutionObservabilityOfScript(cx, frame.script()))
+    ScriptedOnStepHandler* handler = nullptr;
+    if (!args[0].isUndefined()) {
+        handler = cx->new_<ScriptedOnStepHandler>(&args[0].toObject());
+        if (!handler)
             return false;
-        if (!frame.script()->incrementStepModeCount(cx))
-            return false;
-    } else if (args[0].isUndefined() && !prior.isUndefined()) {
-        // Single stepping toggled on->off.
-        frame.script()->decrementStepModeCount(cx->runtime()->defaultFreeOp());
     }
 
-    /* Now that the step mode switch has succeeded, we can install the handler. */
-    thisobj->setReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER, args[0]);
+    if (!DebuggerFrame::setOnStepHandler(cx, frame, handler))
+        return false;
+
     args.rval().setUndefined();
     return true;
 }
@@ -8228,7 +8308,7 @@ const JSPropertySpec DebuggerFrame::properties_[] = {
     JS_PSG("this", DebuggerFrame::thisGetter, 0),
     JS_PSG("type", DebuggerFrame::typeGetter, 0),
     JS_PSG("implementation", DebuggerFrame::implementationGetter, 0),
-    JS_PSGS("onStep", DebuggerFrame_getOnStep, DebuggerFrame_setOnStep, 0),
+    JS_PSGS("onStep", DebuggerFrame::onStepGetter, DebuggerFrame::onStepSetter, 0),
     JS_PSGS("onPop", DebuggerFrame_getOnPop, DebuggerFrame_setOnPop, 0),
     JS_PS_END
 };
