@@ -62,13 +62,13 @@ var checkVideoPaused = video => checkHasFrame(video)
 runTest(() => getUserMedia({video: true, fake: true})
   .then(stream => {
     gUMVideoElement =
-      createMediaElement("gUMVideo", "local", "gUMVideo", false);
+      createMediaElement("video", "gUMVideo");
     gUMVideoElement.srcObject = stream;
     gUMVideoElement.play();
 
     info("Capturing");
     captureStreamElement =
-      createMediaElement("captureStream", "local", "captureStream", false);
+      createMediaElement("video", "captureStream");
     captureStreamElement.srcObject = gUMVideoElement.mozCaptureStream();
     captureStreamElement.play();
 
