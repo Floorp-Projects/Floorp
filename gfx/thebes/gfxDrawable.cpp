@@ -159,7 +159,8 @@ gfxCallbackDrawable::Draw(gfxContext* aContext,
                           gfxFloat aOpacity,
                           const gfxMatrix& aTransform)
 {
-    if ((IsRepeatingExtendMode(aExtendMode) || aOpacity != 1.0) && !mSurfaceDrawable) {
+    if ((IsRepeatingExtendMode(aExtendMode) || aOpacity != 1.0 || aContext->CurrentOp() != CompositionOp::OP_OVER) &&
+        !mSurfaceDrawable) {
         mSurfaceDrawable = MakeSurfaceDrawable(aSamplingFilter);
     }
 

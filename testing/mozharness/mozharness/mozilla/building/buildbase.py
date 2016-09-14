@@ -1362,9 +1362,9 @@ or run without that action (ie: --no-{action})"
         self.activate_virtualenv()
 
         routes_file = os.path.join(dirs['abs_src_dir'],
-                                   'taskcluster',
-                                   'ci',
-                                   'legacy',
+                                   'testing',
+                                   'mozharness',
+                                   'configs',
                                    'routes.json')
         with open(routes_file) as f:
             self.routes_json = json.load(f)

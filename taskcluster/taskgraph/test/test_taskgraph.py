@@ -8,7 +8,7 @@ import unittest
 
 from ..graph import Graph
 from ..task.docker_image import DockerImageTask
-from ..task.legacy import LegacyTask
+from ..task.transform import TransformTask
 from ..taskgraph import TaskGraph
 from mozunit import main
 
@@ -16,19 +16,16 @@ from mozunit import main
 class TestTargetTasks(unittest.TestCase):
 
     def test_from_json(self):
-        legacy_dict = {
-            'attributes': {'kind': 'legacy'},
-            'task': {},
-            'dependencies': {},
-            'label': 'a',
-            'kind_implementation': 'taskgraph.task.legacy:LegacyTask'
-        }
         graph = TaskGraph(tasks={
-            'a': LegacyTask(kind='legacy',
-                            label='a',
-                            attributes={},
-                            task={},
-                            task_dict=legacy_dict),
+            'a': TransformTask(
+                kind='fancy',
+                task={
+                    'label': 'a',
+                    'attributes': {},
+                    'dependencies': {},
+                    'when': {},
+                    'task': {'task': 'def'},
+                }),
             'b': DockerImageTask(kind='docker-image',
                                  label='b',
                                  attributes={},

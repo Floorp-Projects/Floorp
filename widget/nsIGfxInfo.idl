@@ -18,6 +18,11 @@ interface nsIGfxInfo : nsISupports
   readonly attribute DOMString DWriteVersion;
   readonly attribute DOMString cleartypeParameters;
 
+  /*
+   * These are valid across all platforms.
+   */
+  readonly attribute DOMString ContentBackend;
+
   // XXX: Switch to a list of devices, rather than explicitly numbering them.
 
   /**

@@ -427,10 +427,12 @@ ThreadStackHelper::AppendJSEntry(const volatile StackEntry* aEntry,
   // We assume querying the script is safe but we must not manupulate it.
   // Also we must not allocate any memory from heap.
   MOZ_ASSERT(aEntry->isJs());
-  MOZ_ASSERT(aEntry->script());
 
   const char* label;
-  if (IsChromeJSScript(aEntry->script())) {
+  JSScript* script = aEntry->script();
+  if (!script) {
+    label = "(profiling suppressed)";
+  } else if (IsChromeJSScript(aEntry->script())) {
     const char* filename = JS_GetScriptFilename(aEntry->script());
     const unsigned lineno = JS_PCToLineNumber(aEntry->script(), aEntry->pc());
     MOZ_ASSERT(filename);

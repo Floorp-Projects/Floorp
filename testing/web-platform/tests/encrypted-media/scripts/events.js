@@ -21,7 +21,7 @@ function runTest(config) {
                         event.messageType,
                         [ 'license-request', 'individualization-request' ] );
 
-            config.messagehandler( config.keysystem, event.messageType, event.message ).then( function( response ) {
+            config.messagehandler( event.messageType, event.message ).then( function( response ) {
 
                 waitForEventAndRunStep('keystatuseschange', mediaKeySession, test.step_func(processKeyStatusesChange), test);
                 mediaKeySession.update( response ).catch(function(error) {

@@ -31,6 +31,10 @@ overflow-y: auto;
 overflow-x: auto;
 }
 
+#scrollTarget {
+  background: darkblue;
+}
+
 .touchActionNone {
 touch-action: none;
 }

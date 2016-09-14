@@ -679,7 +679,13 @@ this.DownloadIntegration = {
       }
     }
 
+    let aReferrer = null;
+    if (aDownload.source.referrer) {
+      aReferrer: NetUtil.newURI(aDownload.source.referrer);
+    }
+
     gDownloadPlatform.downloadDone(NetUtil.newURI(aDownload.source.url),
+                                   aReferrer,
                                    new FileUtils.File(aDownload.target.path),
                                    aDownload.contentType,
                                    aDownload.source.isPrivate);

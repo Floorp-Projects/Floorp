@@ -36,10 +36,11 @@
 
     <script>
         var contentitem = content['mp4-basic'],
+            handler = new MessageHandler( 'org.w3.clearkey', contentitem ),
             config = {  video:              [   document.getElementById( 'videoelement1' ),
                                                 document.getElementById( 'videoelement2' ) ],
                         keysystem:          'org.w3.clearkey',
-                        messagehandler:     messagehandler.bind( contentitem ),
+                        messagehandler:     handler.messagehandler,
                         audioPath:          contentitem.audio.path,
                         videoPath:          contentitem.video.path,
                         audioType:          contentitem.audio.type,

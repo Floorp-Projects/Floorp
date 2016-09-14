@@ -177,7 +177,8 @@
         {
             case 'loading':
                 this._session.update( toUtf8( { keys: this._keys } ) )
-                .then( this._loaded );
+                .then( this._loaded( true ) )
+                .catch( this._loadfailed );
 
                 break;
 
@@ -324,6 +325,8 @@
                     this._createSession();
 
                     this._state = 'loading';
+                    this._loaded = resolve;
+                    this._loadfailed = reject;
 
                     var initData = { kids: this._kids };
 
@@ -341,7 +344,7 @@
     {
         return new Promise( function( resolve, reject ) {
 
-            switch( this._state )
+            switch( this._state ) {
 
                 case 'active' :
 

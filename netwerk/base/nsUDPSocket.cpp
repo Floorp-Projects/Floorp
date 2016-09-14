@@ -573,6 +573,31 @@ nsUDPSocket::Init(int32_t aPort, bool aLoopbackOnly, nsIPrincipal *aPrincipal,
 }
 
 NS_IMETHODIMP
+nsUDPSocket::Init2(const nsACString& aAddr, int32_t aPort, nsIPrincipal *aPrincipal,
+                   bool aAddressReuse, uint8_t aOptionalArgc)
+{
+  if (NS_WARN_IF(aAddr.IsEmpty())) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  PRNetAddr prAddr;
+  if (PR_StringToNetAddr(aAddr.BeginReading(), &prAddr) != PR_SUCCESS) {
+    return NS_ERROR_FAILURE;
+  }
+
+  NetAddr addr;
+
+  if (aPort < 0)
+    aPort = 0;
+
+  addr.raw.family = AF_INET;
+  addr.inet.port = htons(aPort);
+  addr.inet.ip = prAddr.inet.ip;
+
+  return InitWithAddress(&addr, aPrincipal, aAddressReuse, aOptionalArgc);
+}
+
+NS_IMETHODIMP
 nsUDPSocket::InitWithAddress(const NetAddr *aAddr, nsIPrincipal *aPrincipal,
                              bool aAddressReuse, uint8_t aOptionalArgc)
 {

@@ -470,6 +470,8 @@ FunctionBox::initFromLazyFunction()
     length = fun->nargs() - fun->hasRest();
     if (fun->lazyScript()->isDerivedClassConstructor())
         setDerivedClassConstructor();
+    if (fun->lazyScript()->needsHomeObject())
+        setNeedsHomeObject();
     enclosingScope_ = fun->lazyScript()->enclosingScope();
     initWithEnclosingScope(enclosingScope_);
 }
@@ -2825,14 +2827,7 @@ Parser<ParseHandler>::checkFunctionDefinition(HandleAtom funAtom, Node pn, Funct
         }
     } else {
         // A function expression does not introduce any binding.
-        if (kind == Arrow) {
-            /* Arrow functions cannot yet be parsed lazily. */
-            if (!abortIfSyntaxParser())
-                return false;
-            handler.setOp(pn, JSOP_LAMBDA_ARROW);
-        } else {
-            handler.setOp(pn, JSOP_LAMBDA);
-        }
+        handler.setOp(pn, kind == Arrow ? JSOP_LAMBDA_ARROW : JSOP_LAMBDA);
     }
 
     return true;
@@ -3188,11 +3183,6 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, bool strict
     if (!pn)
         return null();
 
-    // Our tokenStream has no current token, so pn's position is garbage.
-    // Substitute the position of the first token in our source.
-    if (!tokenStream.peekTokenPos(&pn->pn_pos))
-        return null();
-
     Directives directives(strict);
     FunctionBox* funbox = newFunctionBox(pn, fun, directives, generatorKind,
                                          /* tryAnnexB = */ false);
@@ -3205,6 +3195,16 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, bool strict
     if (!funpc.init())
         return null();
 
+    // Our tokenStream has no current token, so pn's position is garbage.
+    // Substitute the position of the first token in our source. If the function
+    // is an arrow, use TokenStream::Operand to keep verifyConsistentModifier
+    // from complaining (we will use TokenStream::Operand in functionArguments).
+    if (!tokenStream.peekTokenPos(&pn->pn_pos,
+                                  fun->isArrow() ? TokenStream::Operand : TokenStream::None))
+    {
+        return null();
+    }
+
     YieldHandling yieldHandling = generatorKind != NotGenerator ? YieldIsKeyword : YieldIsName;
     FunctionSyntaxKind syntaxKind = Statement;
     if (fun->isClassConstructor())
@@ -3215,6 +3215,8 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, bool strict
         syntaxKind = Getter;
     else if (fun->isSetter())
         syntaxKind = Setter;
+    else if (fun->isArrow())
+        syntaxKind = Arrow;
 
     if (!functionFormalParametersAndBody(InAllowed, yieldHandling, pn, syntaxKind)) {
         MOZ_ASSERT(directives == newDirectives);
@@ -7303,8 +7305,6 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
             isBlock = true;
 
         tokenStream.seek(start);
-        if (!abortIfSyntaxParser())
-            return null();
 
         TokenKind ignored;
         if (!tokenStream.peekToken(&ignored, TokenStream::Operand))
