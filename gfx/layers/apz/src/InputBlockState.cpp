@@ -288,46 +288,6 @@ DragBlockState::DispatchEvent(const InputData& aEvent) const
   GetTargetApzc()->HandleDragEvent(mouseInput, mDragMetrics);
 }
 
-void
-DragBlockState::AddEvent(const MouseInput& aEvent)
-{
-  mEvents.AppendElement(aEvent);
-}
-
-bool
-DragBlockState::HasEvents() const
-{
-  return !mEvents.IsEmpty();
-}
-
-void
-DragBlockState::DropEvents(nsTArray<UniquePtr<QueuedInput>>* aQueued)
-{
-  TBS_LOG("%p dropping %" PRIuSIZE " events\n", this, mEvents.Length());
-  MOZ_ASSERT(aQueued->Length() >= mEvents.Length());
-  for (size_t i = 0; i < mEvents.Length(); i++) {
-    MOZ_ASSERT(aQueued->ElementAt(i)->Block() == this);
-    MOZ_ASSERT(aQueued->ElementAt(i)->Input()->mInputType == mEvents[i].mInputType);
-  }
-  aQueued->RemoveElementsAt(0, mEvents.Length());
-  mEvents.Clear();
-}
-
-void
-DragBlockState::HandleEvents(nsTArray<UniquePtr<QueuedInput>>* aQueued)
-{
-  while (HasEvents()) {
-    TBS_LOG("%p returning first of %" PRIuSIZE " events\n", this, mEvents.Length());
-    MouseInput event = mEvents[0];
-    MOZ_ASSERT(aQueued->Length() > 0);
-    MOZ_ASSERT(aQueued->ElementAt(0)->Block() == this);
-    MOZ_ASSERT(aQueued->ElementAt(0)->Input()->mInputType == event.mInputType);
-    aQueued->RemoveElementAt(0);
-    mEvents.RemoveElementAt(0);
-    DispatchEvent(event);
-  }
-}
-
 bool
 DragBlockState::MustStayActive()
 {
@@ -435,46 +395,6 @@ WheelBlockState::Update(ScrollWheelInput& aEvent)
   // timeout and the mouse-move-in-frame timeout.
   mLastEventTime = aEvent.mTimeStamp;
   mLastMouseMove = TimeStamp();
-}
-
-void
-WheelBlockState::AddEvent(const ScrollWheelInput& aEvent)
-{
-  mEvents.AppendElement(aEvent);
-}
-
-bool
-WheelBlockState::HasEvents() const
-{
-  return !mEvents.IsEmpty();
-}
-
-void
-WheelBlockState::DropEvents(nsTArray<UniquePtr<QueuedInput>>* aQueued)
-{
-  TBS_LOG("%p dropping %" PRIuSIZE " events\n", this, mEvents.Length());
-  MOZ_ASSERT(aQueued->Length() >= mEvents.Length());
-  for (size_t i = 0; i < mEvents.Length(); i++) {
-    MOZ_ASSERT(aQueued->ElementAt(i)->Block() == this);
-    MOZ_ASSERT(aQueued->ElementAt(i)->Input()->mInputType == mEvents[i].mInputType);
-  }
-  aQueued->RemoveElementsAt(0, mEvents.Length());
-  mEvents.Clear();
-}
-
-void
-WheelBlockState::HandleEvents(nsTArray<UniquePtr<QueuedInput>>* aQueued)
-{
-  while (HasEvents()) {
-    TBS_LOG("%p returning first of %" PRIuSIZE " events\n", this, mEvents.Length());
-    ScrollWheelInput event = mEvents[0];
-    MOZ_ASSERT(aQueued->Length() > 0);
-    MOZ_ASSERT(aQueued->ElementAt(0)->Block() == this);
-    MOZ_ASSERT(aQueued->ElementAt(0)->Input()->mInputType == event.mInputType);
-    aQueued->RemoveElementAt(0);
-    mEvents.RemoveElementAt(0);
-    DispatchEvent(event);
-  }
 }
 
 bool
@@ -657,46 +577,6 @@ PanGestureBlockState::SetConfirmedTargetApzc(const RefPtr<AsyncPanZoomController
   return true;
 }
 
-void
-PanGestureBlockState::AddEvent(const PanGestureInput& aEvent)
-{
-  mEvents.AppendElement(aEvent);
-}
-
-bool
-PanGestureBlockState::HasEvents() const
-{
-  return !mEvents.IsEmpty();
-}
-
-void
-PanGestureBlockState::DropEvents(nsTArray<UniquePtr<QueuedInput>>* aQueued)
-{
-  TBS_LOG("%p dropping %" PRIuSIZE " events\n", this, mEvents.Length());
-  MOZ_ASSERT(aQueued->Length() >= mEvents.Length());
-  for (size_t i = 0; i < mEvents.Length(); i++) {
-    MOZ_ASSERT(aQueued->ElementAt(i)->Block() == this);
-    MOZ_ASSERT(aQueued->ElementAt(i)->Input()->mInputType == mEvents[i].mInputType);
-  }
-  aQueued->RemoveElementsAt(0, mEvents.Length());
-  mEvents.Clear();
-}
-
-void
-PanGestureBlockState::HandleEvents(nsTArray<UniquePtr<QueuedInput>>* aQueued)
-{
-  while (HasEvents()) {
-    TBS_LOG("%p returning first of %" PRIuSIZE " events\n", this, mEvents.Length());
-    PanGestureInput event = mEvents[0];
-    MOZ_ASSERT(aQueued->Length() > 0);
-    MOZ_ASSERT(aQueued->ElementAt(0)->Block() == this);
-    MOZ_ASSERT(aQueued->ElementAt(0)->Input()->mInputType == event.mInputType);
-    aQueued->RemoveElementAt(0);
-    mEvents.RemoveElementAt(0);
-    DispatchEvent(event);
-  }
-}
-
 bool
 PanGestureBlockState::MustStayActive()
 {
@@ -856,19 +736,6 @@ TouchBlockState::SingleTapOccurred() const
 }
 
 bool
-TouchBlockState::HasEvents() const
-{
-  return !mEvents.IsEmpty();
-}
-
-void
-TouchBlockState::AddEvent(const MultiTouchInput& aEvent)
-{
-  TBS_LOG("%p adding event of type %d\n", this, aEvent.mType);
-  mEvents.AppendElement(aEvent);
-}
-
-bool
 TouchBlockState::MustStayActive()
 {
   return true;
@@ -878,34 +745,6 @@ const char*
 TouchBlockState::Type()
 {
   return "touch";
-}
-
-void
-TouchBlockState::DropEvents(nsTArray<UniquePtr<QueuedInput>>* aQueued)
-{
-  TBS_LOG("%p dropping %" PRIuSIZE " events\n", this, mEvents.Length());
-  MOZ_ASSERT(aQueued->Length() >= mEvents.Length());
-  for (size_t i = 0; i < mEvents.Length(); i++) {
-    MOZ_ASSERT(aQueued->ElementAt(i)->Block() == this);
-    MOZ_ASSERT(aQueued->ElementAt(i)->Input()->mInputType == mEvents[i].mInputType);
-  }
-  aQueued->RemoveElementsAt(0, mEvents.Length());
-  mEvents.Clear();
-}
-
-void
-TouchBlockState::HandleEvents(nsTArray<UniquePtr<QueuedInput>>* aQueued)
-{
-  while (HasEvents()) {
-    TBS_LOG("%p returning first of %" PRIuSIZE " events\n", this, mEvents.Length());
-    MultiTouchInput event = mEvents[0];
-    MOZ_ASSERT(aQueued->Length() > 0);
-    MOZ_ASSERT(aQueued->ElementAt(0)->Block() == this);
-    MOZ_ASSERT(aQueued->ElementAt(0)->Input()->mInputType == event.mInputType);
-    aQueued->RemoveElementAt(0);
-    mEvents.RemoveElementAt(0);
-    DispatchEvent(event);
-  }
 }
 
 void
