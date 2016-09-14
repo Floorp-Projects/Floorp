@@ -11,6 +11,6 @@
 
 @media (-moz-windows-theme: luna-silver) and (max-resolution: 1dppx) {
   #pocket-button {
-    list-style-image: url(chrome://pocket/skin/toolbar-lunaSilver.png)
+    list-style-image: url(Toolbar-lunaSilver.png);
   }
 }
