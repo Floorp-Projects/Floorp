@@ -645,7 +645,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         mView.post(new Runnable() {
             @Override
             public void run() {
-                event.offsetLocation(0, mView.getSurfaceTranslation());
                 mView.dispatchTouchEvent(event);
             }
         });
