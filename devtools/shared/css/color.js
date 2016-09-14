@@ -6,8 +6,8 @@
 
 const Services = require("Services");
 
-const {getCSSLexer} = require("devtools/shared/css-lexer");
-const {cssColors} = require("devtools/shared/css-color-db");
+const {getCSSLexer} = require("devtools/shared/css/lexer");
+const {cssColors} = require("devtools/shared/css/color-db");
 
 const COLOR_UNIT_PREF = "devtools.defaultColorUnit";
 
@@ -23,7 +23,7 @@ const SPECIALVALUES = new Set([
  * This module is used to convert between various color types.
  *
  * Usage:
- *   let {colorUtils} = require("devtools/shared/css-color");
+ *   let {colorUtils} = require("devtools/shared/css/color");
  *   let color = new colorUtils.CssColor("red");
  *
  *   color.authored === "red"

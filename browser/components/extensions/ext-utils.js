@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "styleSheetService",
                                    "nsIStyleSheetService");
 
 XPCOMUtils.defineLazyGetter(this, "colorUtils", () => {
-  return require("devtools/shared/css-color").colorUtils;
+  return require("devtools/shared/css/color").colorUtils;
 });
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
