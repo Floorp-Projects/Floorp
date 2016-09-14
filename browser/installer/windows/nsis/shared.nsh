@@ -803,14 +803,6 @@
 
 ; Removes various directories and files for reasons noted below.
 !macro RemoveDeprecatedFiles
-  ; Some users are ending up with unpacked chrome instead of omni.ja. This
-  ; causes Firefox to break badly after upgrading from Firefox 31, see bug
-  ; 1063052. Removing the chrome.manifest from the install directory causes
-  ; Firefox to use the updated omni.ja so it won't crash.
-  ${If} ${FileExists} "$INSTDIR\chrome.manifest"
-    Delete "$INSTDIR\chrome.manifest"
-  ${EndIf}
-
   ; Remove talkback if it is present (remove after bug 386760 is fixed)
   ${If} ${FileExists} "$INSTDIR\extensions\talkback@mozilla.org"
     RmDir /r /REBOOTOK "$INSTDIR\extensions\talkback@mozilla.org"
