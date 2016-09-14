@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Per JSRuntime object */
+/* Per JSContext object */
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/UniquePtr.h"
@@ -77,7 +77,7 @@ using mozilla::dom::AutoEntryScript;
 
 /***************************************************************************/
 
-const char* const XPCJSRuntime::mStrings[] = {
+const char* const XPCJSContext::mStrings[] = {
     "constructor",          // IDX_CONSTRUCTOR
     "toString",             // IDX_TO_STRING
     "toSource",             // IDX_TO_SOURCE
@@ -501,19 +501,19 @@ EnableUniversalXPConnect(JSContext* cx)
 JSObject*
 UnprivilegedJunkScope()
 {
-    return XPCJSRuntime::Get()->UnprivilegedJunkScope();
+    return XPCJSContext::Get()->UnprivilegedJunkScope();
 }
 
 JSObject*
 PrivilegedJunkScope()
 {
-    return XPCJSRuntime::Get()->PrivilegedJunkScope();
+    return XPCJSContext::Get()->PrivilegedJunkScope();
 }
 
 JSObject*
 CompilationScope()
 {
-    return XPCJSRuntime::Get()->CompilationScope();
+    return XPCJSContext::Get()->CompilationScope();
 }
 
 nsGlobalWindow*
@@ -568,8 +568,8 @@ CurrentWindowOrNull(JSContext* cx)
 static void
 CompartmentDestroyedCallback(JSFreeOp* fop, JSCompartment* compartment)
 {
-    // NB - This callback may be called in JS_DestroyRuntime, which happens
-    // after the XPCJSRuntime has been torn down.
+    // NB - This callback may be called in JS_DestroyContext, which happens
+    // after the XPCJSContext has been torn down.
 
     // Get the current compartment private into an AutoPtr (which will do the
     // cleanup for us), and null out the private (which may already be null).
@@ -589,7 +589,7 @@ CompartmentSizeOfIncludingThisCallback(MallocSizeOf mallocSizeOf, JSCompartment*
  * inner window and whose reflector is gray.  We don't merge system
  * compartments, so we don't use them to trigger merging CCs.
  */
-bool XPCJSRuntime::UsefulToMergeZones() const
+bool XPCJSContext::UsefulToMergeZones() const
 {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -600,7 +600,7 @@ bool XPCJSRuntime::UsefulToMergeZones() const
     return false;
 }
 
-void XPCJSRuntime::TraceNativeBlackRoots(JSTracer* trc)
+void XPCJSContext::TraceNativeBlackRoots(JSTracer* trc)
 {
     // Skip this part if XPConnect is shutting down. We get into
     // bad locking problems with the thread iteration otherwise.
@@ -620,7 +620,7 @@ void XPCJSRuntime::TraceNativeBlackRoots(JSTracer* trc)
                       nsXPConnect::XPConnect()->IsShuttingDown());
 }
 
-void XPCJSRuntime::TraceAdditionalNativeGrayRoots(JSTracer* trc)
+void XPCJSContext::TraceAdditionalNativeGrayRoots(JSTracer* trc)
 {
     XPCWrappedNativeScope::TraceWrappedNativesInAllScopes(trc, this);
 
@@ -632,7 +632,7 @@ void XPCJSRuntime::TraceAdditionalNativeGrayRoots(JSTracer* trc)
 }
 
 void
-XPCJSRuntime::TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback& cb)
+XPCJSContext::TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback& cb)
 {
     XPCWrappedNativeScope::SuspectAllWrappers(this, cb);
 
@@ -653,13 +653,13 @@ XPCJSRuntime::TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback& c
 }
 
 void
-XPCJSRuntime::UnmarkSkippableJSHolders()
+XPCJSContext::UnmarkSkippableJSHolders()
 {
     CycleCollectedJSContext::UnmarkSkippableJSHolders();
 }
 
 void
-XPCJSRuntime::PrepareForForgetSkippable()
+XPCJSContext::PrepareForForgetSkippable()
 {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
@@ -668,7 +668,7 @@ XPCJSRuntime::PrepareForForgetSkippable()
 }
 
 void
-XPCJSRuntime::BeginCycleCollectionCallback()
+XPCJSContext::BeginCycleCollectionCallback()
 {
     nsJSContext::BeginCycleCollectionCallback();
 
@@ -679,7 +679,7 @@ XPCJSRuntime::BeginCycleCollectionCallback()
 }
 
 void
-XPCJSRuntime::EndCycleCollectionCallback(CycleCollectorResults& aResults)
+XPCJSContext::EndCycleCollectionCallback(CycleCollectorResults& aResults)
 {
     nsJSContext::EndCycleCollectionCallback(aResults);
 
@@ -690,7 +690,7 @@ XPCJSRuntime::EndCycleCollectionCallback(CycleCollectorResults& aResults)
 }
 
 void
-XPCJSRuntime::DispatchDeferredDeletion(bool aContinuation, bool aPurge)
+XPCJSContext::DispatchDeferredDeletion(bool aContinuation, bool aPurge)
 {
     mAsyncSnowWhiteFreer->Dispatch(aContinuation, aPurge);
 }
@@ -698,17 +698,17 @@ XPCJSRuntime::DispatchDeferredDeletion(bool aContinuation, bool aPurge)
 void
 xpc_UnmarkSkippableJSHolders()
 {
-    if (nsXPConnect::XPConnect()->GetRuntime()) {
-        nsXPConnect::XPConnect()->GetRuntime()->UnmarkSkippableJSHolders();
+    if (nsXPConnect::XPConnect()->GetContext()) {
+        nsXPConnect::XPConnect()->GetContext()->UnmarkSkippableJSHolders();
     }
 }
 
 /* static */ void
-XPCJSRuntime::GCSliceCallback(JSContext* cx,
+XPCJSContext::GCSliceCallback(JSContext* cx,
                               JS::GCProgress progress,
                               const JS::GCDescription& desc)
 {
-    XPCJSRuntime* self = nsXPConnect::GetRuntimeInstance();
+    XPCJSContext* self = nsXPConnect::GetContextInstance();
     if (!self)
         return;
 
@@ -722,14 +722,14 @@ XPCJSRuntime::GCSliceCallback(JSContext* cx,
 }
 
 /* static */ void
-XPCJSRuntime::DoCycleCollectionCallback(JSContext* cx)
+XPCJSContext::DoCycleCollectionCallback(JSContext* cx)
 {
     // The GC has detected that a CC at this point would collect a tremendous
     // amount of garbage that is being revivified unnecessarily.
     NS_DispatchToCurrentThread(
             NS_NewRunnableFunction([](){nsJSContext::CycleCollectNow(nullptr);}));
 
-    XPCJSRuntime* self = nsXPConnect::GetRuntimeInstance();
+    XPCJSContext* self = nsXPConnect::GetContextInstance();
     if (!self)
         return;
 
@@ -738,7 +738,7 @@ XPCJSRuntime::DoCycleCollectionCallback(JSContext* cx)
 }
 
 void
-XPCJSRuntime::CustomGCCallback(JSGCStatus status)
+XPCJSContext::CustomGCCallback(JSGCStatus status)
 {
     nsTArray<xpcGCCallback> callbacks(extraGCCallbacks);
     for (uint32_t i = 0; i < callbacks.Length(); ++i)
@@ -746,12 +746,12 @@ XPCJSRuntime::CustomGCCallback(JSGCStatus status)
 }
 
 /* static */ void
-XPCJSRuntime::FinalizeCallback(JSFreeOp* fop,
+XPCJSContext::FinalizeCallback(JSFreeOp* fop,
                                JSFinalizeStatus status,
                                bool isZoneGC,
                                void* data)
 {
-    XPCJSRuntime* self = nsXPConnect::GetRuntimeInstance();
+    XPCJSContext* self = nsXPConnect::GetContextInstance();
     if (!self)
         return;
 
@@ -810,7 +810,7 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp* fop,
                 if (AutoMarkingPtr* roots = Get()->mAutoRoots)
                     roots->MarkAfterJSFinalizeAll();
 
-                XPCCallContext* ccxp = XPCJSRuntime::Get()->GetCallContext();
+                XPCCallContext* ccxp = XPCJSContext::Get()->GetCallContext();
                 while (ccxp) {
                     // Deal with the strictness of callcontext that
                     // complains if you ask for a set when
@@ -877,7 +877,7 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp* fop,
             if (!nsXPConnect::XPConnect()->IsShuttingDown()) {
                 // Do the marking...
 
-                XPCCallContext* ccxp = XPCJSRuntime::Get()->GetCallContext();
+                XPCCallContext* ccxp = XPCJSContext::Get()->GetCallContext();
                 while (ccxp) {
                     // Deal with the strictness of callcontext that
                     // complains if you ask for a tearoff when
@@ -925,12 +925,12 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp* fop,
 }
 
 /* static */ void
-XPCJSRuntime::WeakPointerZoneGroupCallback(JSContext* cx, void* data)
+XPCJSContext::WeakPointerZoneGroupCallback(JSContext* cx, void* data)
 {
     // Called before each sweeping slice -- after processing any final marking
     // triggered by barriers -- to clear out any references to things that are
     // about to be finalized and update any pointers to moved GC things.
-    XPCJSRuntime* self = static_cast<XPCJSRuntime*>(data);
+    XPCJSContext* self = static_cast<XPCJSContext*>(data);
 
     self->mWrappedJSMap->UpdateWeakPointersAfterGC(self);
 
@@ -938,20 +938,20 @@ XPCJSRuntime::WeakPointerZoneGroupCallback(JSContext* cx, void* data)
 }
 
 /* static */ void
-XPCJSRuntime::WeakPointerCompartmentCallback(JSContext* cx, JSCompartment* comp, void* data)
+XPCJSContext::WeakPointerCompartmentCallback(JSContext* cx, JSCompartment* comp, void* data)
 {
     // Called immediately after the ZoneGroup weak pointer callback, but only
     // once for each compartment that is being swept.
-    XPCJSRuntime* self = static_cast<XPCJSRuntime*>(data);
+    XPCJSContext* self = static_cast<XPCJSContext*>(data);
     CompartmentPrivate* xpcComp = CompartmentPrivate::Get(comp);
     if (xpcComp)
         xpcComp->UpdateWeakPointersAfterGC(self);
 }
 
 void
-CompartmentPrivate::UpdateWeakPointersAfterGC(XPCJSRuntime* runtime)
+CompartmentPrivate::UpdateWeakPointersAfterGC(XPCJSContext* context)
 {
-    mWrappedJSMap->UpdateWeakPointersAfterGC(runtime);
+    mWrappedJSMap->UpdateWeakPointersAfterGC(context);
 }
 
 static void WatchdogMain(void* arg);
@@ -1104,12 +1104,12 @@ class WatchdogManager : public nsIObserver
   public:
 
     NS_DECL_ISUPPORTS
-    explicit WatchdogManager(XPCJSRuntime* aRuntime) : mRuntime(aRuntime)
-                                                     , mRuntimeState(RUNTIME_INACTIVE)
+    explicit WatchdogManager(XPCJSContext* aContext) : mContext(aContext)
+                                                     , mContextState(CONTEXT_INACTIVE)
     {
-        // All the timestamps start at zero except for runtime state change.
+        // All the timestamps start at zero except for context state change.
         PodArrayZero(mTimestamps);
-        mTimestamps[TimestampRuntimeStateChange] = PR_Now();
+        mTimestamps[TimestampContextStateChange] = PR_Now();
 
         // Enable the watchdog, if appropriate.
         RefreshWatchdog();
@@ -1142,11 +1142,11 @@ class WatchdogManager : public nsIObserver
         return NS_OK;
     }
 
-    // Runtime statistics. These live on the watchdog manager, are written
+    // Context statistics. These live on the watchdog manager, are written
     // from the main thread, and are read from the watchdog thread (holding
     // the lock in each case).
     void
-    RecordRuntimeActivity(bool active)
+    RecordContextActivity(bool active)
     {
         // The watchdog reads this state, so acquire the lock before writing it.
         MOZ_ASSERT(NS_IsMainThread());
@@ -1155,21 +1155,21 @@ class WatchdogManager : public nsIObserver
             lock.emplace(mWatchdog);
 
         // Write state.
-        mTimestamps[TimestampRuntimeStateChange] = PR_Now();
-        mRuntimeState = active ? RUNTIME_ACTIVE : RUNTIME_INACTIVE;
+        mTimestamps[TimestampContextStateChange] = PR_Now();
+        mContextState = active ? CONTEXT_ACTIVE : CONTEXT_INACTIVE;
 
-        // The watchdog may be hibernating, waiting for the runtime to go
+        // The watchdog may be hibernating, waiting for the context to go
         // active. Wake it up if necessary.
         if (active && mWatchdog && mWatchdog->Hibernating())
             mWatchdog->WakeUp();
     }
-    bool IsRuntimeActive() { return mRuntimeState == RUNTIME_ACTIVE; }
-    PRTime TimeSinceLastRuntimeStateChange()
+    bool IsContextActive() { return mContextState == CONTEXT_ACTIVE; }
+    PRTime TimeSinceLastContextStateChange()
     {
-        return PR_Now() - GetTimestamp(TimestampRuntimeStateChange);
+        return PR_Now() - GetTimestamp(TimestampContextStateChange);
     }
 
-    // Note - Because of the runtime activity timestamp, these are read and
+    // Note - Because of the context activity timestamp, these are read and
     // written from both threads.
     void RecordTimestamp(WatchdogTimestampCategory aCategory)
     {
@@ -1188,7 +1188,7 @@ class WatchdogManager : public nsIObserver
         return mTimestamps[aCategory];
     }
 
-    XPCJSRuntime* Runtime() { return mRuntime; }
+    XPCJSContext* Context() { return mContext; }
     Watchdog* GetWatchdog() { return mWatchdog; }
 
     void RefreshWatchdog()
@@ -1227,10 +1227,10 @@ class WatchdogManager : public nsIObserver
     }
 
   private:
-    XPCJSRuntime* mRuntime;
+    XPCJSContext* mContext;
     nsAutoPtr<Watchdog> mWatchdog;
 
-    enum { RUNTIME_ACTIVE, RUNTIME_INACTIVE } mRuntimeState;
+    enum { CONTEXT_ACTIVE, CONTEXT_INACTIVE } mContextState;
     PRTime mTimestamps[TimestampCount];
 };
 
@@ -1261,8 +1261,8 @@ WatchdogMain(void* arg)
     MOZ_ASSERT(!self->ShuttingDown());
     while (!self->ShuttingDown()) {
         // Sleep only 1 second if recently (or currently) active; otherwise, hibernate
-        if (manager->IsRuntimeActive() ||
-            manager->TimeSinceLastRuntimeStateChange() <= PRTime(2*PR_USEC_PER_SEC))
+        if (manager->IsContextActive() ||
+            manager->TimeSinceLastContextStateChange() <= PRTime(2*PR_USEC_PER_SEC))
         {
             self->Sleep(PR_TicksPerSecond());
         } else {
@@ -1289,15 +1289,15 @@ WatchdogMain(void* arg)
         // periods, the script still has the other (timeout/2) seconds to
         // finish.
         PRTime usecs = self->MinScriptRunTimeSeconds() * PR_USEC_PER_SEC / 2;
-        if (manager->IsRuntimeActive() &&
-            manager->TimeSinceLastRuntimeStateChange() >= usecs)
+        if (manager->IsContextActive() &&
+            manager->TimeSinceLastContextStateChange() >= usecs)
         {
             bool debuggerAttached = false;
             nsCOMPtr<nsIDebug2> dbg = do_GetService("@mozilla.org/xpcom/debug;1");
             if (dbg)
                 dbg->GetIsDebuggerAttached(&debuggerAttached);
             if (!debuggerAttached)
-                JS_RequestInterruptCallback(manager->Runtime()->Context());
+                JS_RequestInterruptCallback(manager->Context()->Context());
         }
     }
 
@@ -1306,7 +1306,7 @@ WatchdogMain(void* arg)
 }
 
 PRTime
-XPCJSRuntime::GetWatchdogTimestamp(WatchdogTimestampCategory aCategory)
+XPCJSContext::GetWatchdogTimestamp(WatchdogTimestampCategory aCategory)
 {
     return mWatchdogManager->GetTimestamp(aCategory);
 }
@@ -1314,26 +1314,26 @@ XPCJSRuntime::GetWatchdogTimestamp(WatchdogTimestampCategory aCategory)
 void
 xpc::SimulateActivityCallback(bool aActive)
 {
-    XPCJSRuntime::ActivityCallback(XPCJSRuntime::Get(), aActive);
+    XPCJSContext::ActivityCallback(XPCJSContext::Get(), aActive);
 }
 
 // static
 void
-XPCJSRuntime::ActivityCallback(void* arg, bool active)
+XPCJSContext::ActivityCallback(void* arg, bool active)
 {
     if (!active) {
         ProcessHangMonitor::ClearHang();
     }
 
-    XPCJSRuntime* self = static_cast<XPCJSRuntime*>(arg);
-    self->mWatchdogManager->RecordRuntimeActivity(active);
+    XPCJSContext* self = static_cast<XPCJSContext*>(arg);
+    self->mWatchdogManager->RecordContextActivity(active);
 }
 
 // static
 bool
-XPCJSRuntime::InterruptCallback(JSContext* cx)
+XPCJSContext::InterruptCallback(JSContext* cx)
 {
-    XPCJSRuntime* self = XPCJSRuntime::Get();
+    XPCJSContext* self = XPCJSContext::Get();
 
     // Normally we record mSlowScriptCheckpoint when we start to process an
     // event. However, we can run JS outside of event handlers. This code takes
@@ -1438,7 +1438,7 @@ XPCJSRuntime::InterruptCallback(JSContext* cx)
 }
 
 void
-XPCJSRuntime::CustomOutOfMemoryCallback()
+XPCJSContext::CustomOutOfMemoryCallback()
 {
     if (!Preferences::GetBool("memory.dump_reports_on_oom")) {
         return;
@@ -1457,7 +1457,7 @@ XPCJSRuntime::CustomOutOfMemoryCallback()
 }
 
 void
-XPCJSRuntime::CustomLargeAllocationFailureCallback()
+XPCJSContext::CustomLargeAllocationFailureCallback()
 {
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (os) {
@@ -1466,7 +1466,7 @@ XPCJSRuntime::CustomLargeAllocationFailureCallback()
 }
 
 size_t
-XPCJSRuntime::SizeOfIncludingThis(MallocSizeOf mallocSizeOf)
+XPCJSContext::SizeOfIncludingThis(MallocSizeOf mallocSizeOf)
 {
     size_t n = 0;
     n += mallocSizeOf(this);
@@ -1477,7 +1477,7 @@ XPCJSRuntime::SizeOfIncludingThis(MallocSizeOf mallocSizeOf)
 
     n += CycleCollectedJSContext::SizeOfExcludingThis(mallocSizeOf);
 
-    // There are other XPCJSRuntime members that could be measured; the above
+    // There are other XPCJSContext members that could be measured; the above
     // ones have been seen by DMD to be worth measuring.  More stuff may be
     // added later.
 
@@ -1495,7 +1495,7 @@ CompartmentPrivate::SizeOfIncludingThis(MallocSizeOf mallocSizeOf)
 
 /***************************************************************************/
 
-void XPCJSRuntime::SystemIsBeingShutDown()
+void XPCJSContext::SystemIsBeingShutDown()
 {
     for (auto i = mDetachedWrappedNativeProtoMap->Iter(); !i.Done(); i.Next()) {
         auto entry = static_cast<XPCWrappedNativeProtoMap::Entry*>(i.Get());
@@ -1509,8 +1509,8 @@ void XPCJSRuntime::SystemIsBeingShutDown()
 static void
 ReloadPrefsCallback(const char* pref, void* data)
 {
-    XPCJSRuntime* runtime = reinterpret_cast<XPCJSRuntime*>(data);
-    JSContext* cx = runtime->Context();
+    XPCJSContext* xpccx = reinterpret_cast<XPCJSContext*>(data);
+    JSContext* cx = xpccx->Context();
 
     bool safeMode = false;
     nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
@@ -1585,9 +1585,9 @@ ReloadPrefsCallback(const char* pref, void* data)
                                   useIonEager ? 0 : -1);
 }
 
-XPCJSRuntime::~XPCJSRuntime()
+XPCJSContext::~XPCJSContext()
 {
-    // Elsewhere we abort immediately if XPCJSRuntime initialization fails.
+    // Elsewhere we abort immediately if XPCJSContext initialization fails.
     // Therefore the context must be non-null.
     MOZ_ASSERT(MaybeContext());
 
@@ -1648,7 +1648,7 @@ XPCJSRuntime::~XPCJSRuntime()
     mDetachedWrappedNativeProtoMap = nullptr;
 
 #ifdef MOZ_ENABLE_PROFILER_SPS
-    // Tell the profiler that the runtime is gone
+    // Tell the profiler that the context is gone
     if (PseudoStack* stack = mozilla_get_pseudo_stack())
         stack->sampleContext(nullptr);
 #endif
@@ -1756,13 +1756,13 @@ xpc::GetCurrentCompartmentName(JSContext* cx, nsCString& name)
 void
 xpc::AddGCCallback(xpcGCCallback cb)
 {
-    XPCJSRuntime::Get()->AddGCCallback(cb);
+    XPCJSContext::Get()->AddGCCallback(cb);
 }
 
 void
 xpc::RemoveGCCallback(xpcGCCallback cb)
 {
-    XPCJSRuntime::Get()->RemoveGCCallback(cb);
+    XPCJSContext::Get()->RemoveGCCallback(cb);
 }
 
 static int64_t
@@ -1790,7 +1790,7 @@ JSMainRuntimeCompartmentsSystemDistinguishedAmount()
 static int64_t
 JSMainRuntimeCompartmentsUserDistinguishedAmount()
 {
-    JSContext* cx = nsXPConnect::GetRuntimeInstance()->Context();
+    JSContext* cx = nsXPConnect::GetContextInstance()->Context();
     return JS::UserCompartmentCount(cx);
 }
 
@@ -2645,7 +2645,7 @@ class JSMainRuntimeCompartmentsReporter final : public nsIMemoryReporter
 
         Data d;
         d.anonymizeID = anonymize ? 1 : 0;
-        JS_IterateCompartments(nsXPConnect::GetRuntimeInstance()->Context(),
+        JS_IterateCompartments(nsXPConnect::GetContextInstance()->Context(),
                                &d, CompartmentCallback);
 
         for (size_t i = 0; i < d.paths.length(); i++)
@@ -2718,7 +2718,7 @@ StartsWithExplicit(nsACString& s)
 }
 #endif
 
-class XPCJSRuntimeStats : public JS::RuntimeStats
+class XPCJSContextStats : public JS::RuntimeStats
 {
     WindowPaths* mWindowPaths;
     WindowPaths* mTopWindowPaths;
@@ -2726,7 +2726,7 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
     int mAnonymizeID;
 
   public:
-    XPCJSRuntimeStats(WindowPaths* windowPaths, WindowPaths* topWindowPaths,
+    XPCJSContextStats(WindowPaths* windowPaths, WindowPaths* topWindowPaths,
                       bool getLocations, bool anonymize)
       : JS::RuntimeStats(JSMallocSizeOf),
         mWindowPaths(windowPaths),
@@ -2735,7 +2735,7 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
         mAnonymizeID(anonymize ? 1 : 0)
     {}
 
-    ~XPCJSRuntimeStats() {
+    ~XPCJSContextStats() {
         for (size_t i = 0; i != compartmentStatsVector.length(); ++i)
             delete static_cast<xpc::CompartmentStatsExtras*>(compartmentStatsVector[i].extra);
 
@@ -2853,7 +2853,7 @@ JSReporter::CollectReports(WindowPaths* windowPaths,
                            nsISupports* data,
                            bool anonymize)
 {
-    XPCJSRuntime* xpcrt = nsXPConnect::GetRuntimeInstance();
+    XPCJSContext* xpccx = nsXPConnect::GetContextInstance();
 
     // In the first step we get all the stats and stash them in a local
     // data structure.  In the second step we pass all the stashed stats to
@@ -2867,18 +2867,18 @@ JSReporter::CollectReports(WindowPaths* windowPaths,
         addonManager = do_GetService("@mozilla.org/addons/integration;1");
     }
     bool getLocations = !!addonManager;
-    XPCJSRuntimeStats rtStats(windowPaths, topWindowPaths, getLocations,
+    XPCJSContextStats rtStats(windowPaths, topWindowPaths, getLocations,
                               anonymize);
     OrphanReporter orphanReporter(XPCConvert::GetISupportsFromJSObject);
-    if (!JS::CollectRuntimeStats(xpcrt->Context(), &rtStats, &orphanReporter,
+    if (!JS::CollectRuntimeStats(xpccx->Context(), &rtStats, &orphanReporter,
                                  anonymize))
     {
         return;
     }
 
-    size_t xpcJSRuntimeSize = xpcrt->SizeOfIncludingThis(JSMallocSizeOf);
+    size_t xpcJSRuntimeSize = xpccx->SizeOfIncludingThis(JSMallocSizeOf);
 
-    size_t wrappedJSSize = xpcrt->GetMultiCompartmentWrappedJSMap()->SizeOfWrappedJS(JSMallocSizeOf);
+    size_t wrappedJSSize = xpccx->GetMultiCompartmentWrappedJSMap()->SizeOfWrappedJS(JSMallocSizeOf);
 
     XPCWrappedNativeScope::ScopeSizeInfo sizeInfo(JSMallocSizeOf);
     XPCWrappedNativeScope::AddSizeOfAllScopesIncludingThis(&sizeInfo);
@@ -3056,7 +3056,7 @@ static nsresult
 JSSizeOfTab(JSObject* objArg, size_t* jsObjectsSize, size_t* jsStringsSize,
             size_t* jsPrivateSize, size_t* jsOtherSize)
 {
-    JSContext* cx = nsXPConnect::GetRuntimeInstance()->Context();
+    JSContext* cx = nsXPConnect::GetContextInstance()->Context();
     JS::RootedObject obj(cx, objArg);
 
     TabSizes sizes;
@@ -3277,7 +3277,7 @@ ReadSourceFromFilename(JSContext* cx, const char* filename, char16_t** src, size
 }
 
 // The JS engine calls this object's 'load' member function when it needs
-// the source for a chrome JS function. See the comment in the XPCJSRuntime
+// the source for a chrome JS function. See the comment in the XPCJSContext
 // constructor.
 class XPCJSSourceHook: public js::SourceHook {
     bool load(JSContext* cx, const char* filename, char16_t** src, size_t* length) {
@@ -3305,7 +3305,7 @@ static const JSWrapObjectCallbacks WrapObjectCallbacks = {
     xpc::WrapperFactory::PrepareForWrapping
 };
 
-XPCJSRuntime::XPCJSRuntime()
+XPCJSContext::XPCJSContext()
  : mCallContext(nullptr),
    mAutoRoots(nullptr),
    mResolveName(JSID_VOID),
@@ -3369,7 +3369,7 @@ GetWindowsStackSize()
 #endif
 
 nsresult
-XPCJSRuntime::Initialize()
+XPCJSContext::Initialize()
 {
     nsresult rv = CycleCollectedJSContext::Initialize(nullptr,
                                                       JS::DefaultHeapMaxBytes,
@@ -3539,13 +3539,13 @@ XPCJSRuntime::Initialize()
 }
 
 // static
-XPCJSRuntime*
-XPCJSRuntime::newXPCJSRuntime()
+XPCJSContext*
+XPCJSContext::newXPCJSContext()
 {
-    XPCJSRuntime* self = new XPCJSRuntime();
+    XPCJSContext* self = new XPCJSContext();
     nsresult rv = self->Initialize();
     if (NS_FAILED(rv)) {
-        NS_RUNTIMEABORT("new XPCJSRuntime failed to initialize.");
+        NS_RUNTIMEABORT("new XPCJSContext failed to initialize.");
         delete self;
         return nullptr;
     }
@@ -3563,14 +3563,14 @@ XPCJSRuntime::newXPCJSRuntime()
         return self;
     }
 
-    NS_RUNTIMEABORT("new XPCJSRuntime failed to initialize.");
+    NS_RUNTIMEABORT("new XPCJSContext failed to initialize.");
 
     delete self;
     return nullptr;
 }
 
 bool
-XPCJSRuntime::JSContextInitialized(JSContext* cx)
+XPCJSContext::JSContextInitialized(JSContext* cx)
 {
     JSAutoRequest ar(cx);
 
@@ -3596,7 +3596,7 @@ XPCJSRuntime::JSContextInitialized(JSContext* cx)
 }
 
 bool
-XPCJSRuntime::DescribeCustomObjects(JSObject* obj, const js::Class* clasp,
+XPCJSContext::DescribeCustomObjects(JSObject* obj, const js::Class* clasp,
                                     char (&name)[72]) const
 {
     XPCNativeScriptableInfo* si = nullptr;
@@ -3618,7 +3618,7 @@ XPCJSRuntime::DescribeCustomObjects(JSObject* obj, const js::Class* clasp,
 }
 
 bool
-XPCJSRuntime::NoteCustomGCThingXPCOMChildren(const js::Class* clasp, JSObject* obj,
+XPCJSContext::NoteCustomGCThingXPCOMChildren(const js::Class* clasp, JSObject* obj,
                                              nsCycleCollectionTraversalCallback& cb) const
 {
     if (clasp != &XPC_WN_Tearoff_JSClass) {
@@ -3636,7 +3636,7 @@ XPCJSRuntime::NoteCustomGCThingXPCOMChildren(const js::Class* clasp, JSObject* o
 }
 
 void
-XPCJSRuntime::BeforeProcessTask(bool aMightBlock)
+XPCJSContext::BeforeProcessTask(bool aMightBlock)
 {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -3669,7 +3669,7 @@ XPCJSRuntime::BeforeProcessTask(bool aMightBlock)
 }
 
 void
-XPCJSRuntime::AfterProcessTask(uint32_t aNewRecursionDepth)
+XPCJSContext::AfterProcessTask(uint32_t aNewRecursionDepth)
 {
     // Now that we're back to the event loop, reset the slow script checkpoint.
     mSlowScriptCheckpoint = mozilla::TimeStamp();
@@ -3689,11 +3689,11 @@ XPCJSRuntime::AfterProcessTask(uint32_t aNewRecursionDepth)
 /***************************************************************************/
 
 void
-XPCJSRuntime::DebugDump(int16_t depth)
+XPCJSContext::DebugDump(int16_t depth)
 {
 #ifdef DEBUG
     depth--;
-    XPC_LOG_ALWAYS(("XPCJSRuntime @ %x", this));
+    XPC_LOG_ALWAYS(("XPCJSContext @ %x", this));
         XPC_LOG_INDENT();
         XPC_LOG_ALWAYS(("mJSContext @ %x", Context()));
 
@@ -3768,7 +3768,7 @@ void
 XPCRootSetElem::RemoveFromRootSet()
 {
     nsXPConnect* xpc = nsXPConnect::XPConnect();
-    JS::PokeGC(xpc->GetRuntime()->Context());
+    JS::PokeGC(xpc->GetContext()->Context());
 
     MOZ_ASSERT(mSelfp, "Must be linked");
 
@@ -3783,14 +3783,14 @@ XPCRootSetElem::RemoveFromRootSet()
 }
 
 void
-XPCJSRuntime::AddGCCallback(xpcGCCallback cb)
+XPCJSContext::AddGCCallback(xpcGCCallback cb)
 {
     MOZ_ASSERT(cb, "null callback");
     extraGCCallbacks.AppendElement(cb);
 }
 
 void
-XPCJSRuntime::RemoveGCCallback(xpcGCCallback cb)
+XPCJSContext::RemoveGCCallback(xpcGCCallback cb)
 {
     MOZ_ASSERT(cb, "null callback");
     bool found = extraGCCallbacks.RemoveElement(cb);
@@ -3800,7 +3800,7 @@ XPCJSRuntime::RemoveGCCallback(xpcGCCallback cb)
 }
 
 void
-XPCJSRuntime::InitSingletonScopes()
+XPCJSContext::InitSingletonScopes()
 {
     // This all happens very early, so we don't bother with cx pushing.
     JSContext* cx = Context();
@@ -3836,7 +3836,7 @@ XPCJSRuntime::InitSingletonScopes()
 }
 
 void
-XPCJSRuntime::DeleteSingletonScopes()
+XPCJSContext::DeleteSingletonScopes()
 {
     mUnprivilegedJunkScope = nullptr;
     mPrivilegedJunkScope = nullptr;
