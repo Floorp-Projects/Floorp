@@ -51,5 +51,5 @@ class SigningTask(base.Task):
     def get_dependencies(self, taskgraph):
         return [('build-nightly-fennec', 'build-nightly-fennec')]
 
-    def optimize(self):
+    def optimize(self, params):
         return False, None

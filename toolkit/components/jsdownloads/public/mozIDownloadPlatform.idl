@@ -26,6 +26,8 @@ interface mozIDownloadPlatform : nsISupports
    *
    * @param aSource
    *        Source URI of the download
+   * @param aReferrer
+   *        Referrer URI of the download
    * @param aTarget
    *        Downloaded file
    * @param aContentType
@@ -34,7 +36,7 @@ interface mozIDownloadPlatform : nsISupports
    *        True for private downloads
    * @return none
    */
-  void downloadDone(in nsIURI aSource, in nsIFile aTarget,
+  void downloadDone(in nsIURI aSource, in nsIURI aReferrer, in nsIFile aTarget,
                     in ACString aContentType, in boolean aIsPrivate);
 
   /**

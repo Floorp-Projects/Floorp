@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import re
+import pprint
 import voluptuous
 
 
@@ -69,7 +70,7 @@ def validate_schema(schema, obj, msg_prefix):
         msg = [msg_prefix]
         for error in exc.errors:
             msg.append(str(error))
-        raise Exception('\n'.join(msg))
+        raise Exception('\n'.join(msg) + '\n' + pprint.pformat(obj))
 
 
 def get_keyed_by(item, field, item_name, subfield=None):

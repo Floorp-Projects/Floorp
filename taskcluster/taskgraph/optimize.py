@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 TASK_REFERENCE_PATTERN = re.compile('<([^>]+)>')
 
 
-def optimize_task_graph(target_task_graph, do_not_optimize, existing_tasks=None):
+def optimize_task_graph(target_task_graph, params, do_not_optimize, existing_tasks=None):
     """
     Perform task optimization, without optimizing tasks named in
     do_not_optimize.
@@ -28,6 +28,7 @@ def optimize_task_graph(target_task_graph, do_not_optimize, existing_tasks=None)
     # only the non-optimized tasks, with all task labels resolved to taskIds
     # and with task['dependencies'] populated.
     annotate_task_graph(target_task_graph=target_task_graph,
+                        params=params,
                         do_not_optimize=do_not_optimize,
                         named_links_dict=named_links_dict,
                         label_to_taskid=label_to_taskid,
@@ -59,7 +60,7 @@ def resolve_task_references(label, task_def, taskid_for_edge_name):
     return recurse(task_def)
 
 
-def annotate_task_graph(target_task_graph, do_not_optimize,
+def annotate_task_graph(target_task_graph, params, do_not_optimize,
                         named_links_dict, label_to_taskid, existing_tasks):
     """
     Annotate each task in the graph with .optimized (boolean) and .task_id
@@ -88,16 +89,13 @@ def annotate_task_graph(target_task_graph, do_not_optimize,
         replacement_task_id = None
         if label in do_not_optimize:
             optimized = False
-        # if any dependencies can't be optimized, this task can't, either
-        elif any(not t.optimized for t in dependencies):
-            optimized = False
         # Let's check whether this task has been created before
         elif existing_tasks is not None and label in existing_tasks:
             optimized = True
             replacement_task_id = existing_tasks[label]
         # otherwise, examine the task itself (which may be an expensive operation)
         else:
-            optimized, replacement_task_id = task.optimize()
+            optimized, replacement_task_id = task.optimize(params)
 
         task.optimized = optimized
         task.task_id = replacement_task_id

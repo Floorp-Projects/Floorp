@@ -33,14 +33,8 @@ int jack_init (cubeb ** context, char const * context_name);
 #if defined(USE_ALSA)
 int alsa_init(cubeb ** context, char const * context_name);
 #endif
-#if defined(USE_AUDIOQUEUE)
-int audioqueue_init(cubeb ** context, char const * context_name);
-#endif
 #if defined(USE_AUDIOUNIT)
 int audiounit_init(cubeb ** context, char const * context_name);
-#endif
-#if defined(USE_DIRECTSOUND)
-int directsound_init(cubeb ** context, char const * context_name);
 #endif
 #if defined(USE_WINMM)
 int winmm_init(cubeb ** context, char const * context_name);
@@ -129,17 +123,11 @@ cubeb_init(cubeb ** context, char const * context_name)
 #if defined(USE_AUDIOUNIT)
     audiounit_init,
 #endif
-#if defined(USE_AUDIOQUEUE)
-    audioqueue_init,
-#endif
 #if defined(USE_WASAPI)
     wasapi_init,
 #endif
 #if defined(USE_WINMM)
     winmm_init,
-#endif
-#if defined(USE_DIRECTSOUND)
-    directsound_init,
 #endif
 #if defined(USE_SNDIO)
     sndio_init,
@@ -453,4 +441,11 @@ int cubeb_register_device_collection_changed(cubeb * context,
 
   return context->ops->register_device_collection_changed(context, devtype, callback, user_ptr);
 }
+
+void cubeb_crash()
+{
+  abort();
+  *((volatile int *) NULL) = 0;
+}
+
 

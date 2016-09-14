@@ -34,11 +34,12 @@
         .then( function( contents ) {
 
             // Select a content item with multiple keys
-            var contentitem = contents.filter( function( item ) { return item.keys.length > 1; } )[ 0 ];
+            var contentitem = contents.filter( function( item ) { return item.keys.length > 1; } )[ 0 ],
+                handler = new MessageHandler( 'org.w3.clearkey', contentitem );
 
             var config = {  keysystem:          'org.w3.clearkey',
                             content:            contentitem,
-                            messagehandler:     messagehandler.bind( contentitem ),
+                            messagehandler:     handler.messagehandler,
                             initDataType:       'keyids',
                             initData:           getMultikeyInitDatas(contentitem,'keyids'),
                         };

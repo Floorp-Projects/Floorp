@@ -1,0 +1,221 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+implementation: taskgraph.task.transform:TransformTask
+
+transforms:
+   - taskgraph.transforms.build_attrs:transforms
+   - taskgraph.transforms.job:transforms
+   - taskgraph.transforms.task:transforms
+
+job-defaults:
+    treeherder:
+        platform: linux64/opt
+        kind: build
+        tier: 1
+    index:
+        product: firefox
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        implementation: docker-worker
+        max-run-time: 36000
+        docker-image: {in-tree: desktop-build}
+    run:
+        using: spidermonkey
+    when:
+        files-changed:
+            # any when.files-changed specified below in a job will be
+            # appended to this list
+            - js/public/**
+            - js/src/**
+
+jobs:
+    sm-package/opt:
+        description: "Spidermonkey source package and test"
+        index:
+            job-name:
+                buildbot: sm-plain
+                gecko-v1: sm-package.opt
+                gecko-v2: sm-package-opt
+        treeherder:
+            symbol: SM-tc(pkg)
+        run:
+            using: spidermonkey-package
+            spidermonkey-variant: plain
+        run-on-projects:
+            - integration
+            - release
+        when:
+            files-changed:
+                - build/**
+                - configure.py
+                - dom/bindings/**
+                - intl/icu/**
+                - js/moz.configure
+                - layout/tools/reftest/reftest/**
+                - media/webrtc/trunk/tools/gyp/**
+                - memory/**
+                - mfbt/**
+                - modules/fdlibm/**
+                - modules/zlib/src/**
+                - mozglue/**
+                - moz.configure
+                - nsprpub/**
+                - python/**
+                - taskcluster/moz.build
+                - testing/mozbase/**
+                - test.mozbuild
+                - toolkit/mozapps/installer/package-name.mk
+                - toolkit/mozapps/installer/upload-files.mk
+
+    sm-plain/debug:
+        description: "Spidermonkey Plain"
+        index:
+            job-name:
+                buildbot: sm-plain
+                gecko-v1: sm-plaindebug.debug
+                gecko-v2: sm-plaindebug-debug
+        treeherder:
+            platform: linux64/debug
+            symbol: SM-tc(p)
+        run:
+            spidermonkey-variant: plaindebug
+        run-on-projects:
+            - integration
+            - release
+
+    sm-plain/opt:
+        description: "Spidermonkey Plain"
+        index:
+            job-name: sm-plain-opt
+        treeherder:
+            symbol: SM-tc(p)
+        run:
+            spidermonkey-variant: plain
+        run-on-projects:
+            - integration
+            - release
+
+    sm-arm-sim/debug:
+        description: "Spidermonkey ARM sim"
+        index:
+            job-name:
+                buildbot: sm-plain
+                gecko-v1: sm-arm-sim.debug
+                gecko-v2: sm-arm-sim-debug
+        treeherder:
+            symbol: SM-tc(arm)
+        run:
+            spidermonkey-variant: arm-sim
+        run-on-projects:
+            - integration
+            - release
+
+    sm-arm64-sim/debug:
+        description: "Spidermonkey ARM64 sim"
+        index:
+            job-name:
+                buildbot: sm-plain
+                gecko-v1: sm-arm64-sim.debug
+                gecko-v2: sm-arm64-sim-debug
+        treeherder:
+            symbol: SM-tc(arm64)
+        run:
+            spidermonkey-variant: arm64-sim
+        run-on-projects:
+            - integration
+            - release
+
+    sm-asan/opt:
+        description: "Spidermonkey Address Sanitizer"
+        index:
+            job-name:
+                buildbot: sm-plain
+                gecko-v1: sm-asan.opt
+                gecko-v2: sm-asan-opt
+        treeherder:
+            symbol: SM-tc(asan)
+        run:
+            spidermonkey-variant: asan
+            tooltool-manifest: browser/config/tooltool-manifests/linux64/asan.manifest
+        run-on-projects:
+            - integration
+            - release
+
+    sm-compacting/debug:
+        description: "Spidermonkey Compacting"
+        index:
+            job-name:
+                buildbot: sm-plain
+                gecko-v1: sm-compacting.debug
+                gecko-v2: sm-compacting-debug
+        treeherder:
+            symbol: SM-tc(cgc)
+        run:
+            spidermonkey-variant: compacting
+        run-on-projects:
+            - integration
+            - release
+
+    sm-msan/opt:
+        description: "Spidermonkey Memory Sanitizer"
+        index:
+            job-name:
+                buildbot: sm-plain
+                gecko-v1: sm-msan.opt
+                gecko-v2: sm-msan-opt
+        treeherder:
+            symbol: SM-tc(msan)
+        run:
+            spidermonkey-variant: msan
+            tooltool-manifest: browser/config/tooltool-manifests/linux64/msan.manifest
+        run-on-projects:
+            - integration
+            - release
+
+    sm-tsan/opt:
+        description: "Spidermonkey Thread Sanitizer"
+        index:
+            job-name:
+                buildbot: sm-plain
+                gecko-v1: sm-tsan.opt
+                gecko-v2: sm-tsan-opt
+        treeherder:
+            symbol: SM-tc(tsan)
+            tier: 3
+        run-on-projects: []
+        run:
+            spidermonkey-variant: tsan
+            tooltool-manifest: browser/config/tooltool-manifests/linux64/tsan.manifest
+
+    sm-rootanalysis/debug:
+        description: "Spidermonkey Root Analysis"
+        index:
+            job-name:
+                buildbot: sm-plain
+                gecko-v1: sm-rootanalysis.debug
+                gecko-v2: sm-rootanalysis-debug
+        treeherder:
+            symbol: SM-tc(r)
+        run:
+            spidermonkey-variant: rootanalysis
+        run-on-projects:
+            - integration
+            - release
+
+    sm-nonunified/debug:
+        description: "Spidermonkey Non-Unified Debug"
+        index:
+            job-name:
+                buildbot: sm-plain
+                gecko-v1: sm-nonunified.debug
+                gecko-v2: sm-nonunified-debug
+        treeherder:
+            platform: linux64/debug
+            symbol: SM-tc(nu)
+        run:
+            spidermonkey-variant: nonunified
+        run-on-projects:
+            - integration
+            - release

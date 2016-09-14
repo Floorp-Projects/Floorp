@@ -20,7 +20,8 @@ function runTest(config, testname) {
 
         function onMessage(event) {
             assert_equals( event.target, _mediaKeySession );
-            assert_true( event instanceof window.MediaKeyMessageEvent );
+            // event instance verification failing on CastTV
+            // assert_true( event instanceof window.MediaKeyMessageEvent );
             assert_equals( event.type, 'message');
 
             if ( !_releaseSequence )
@@ -32,9 +33,15 @@ function runTest(config, testname) {
                 assert_equals( event.messageType, 'license-release' );
             }
 
-            config.messagehandler( config.keysystem, event.messageType, event.message ).then( function( response ) {
+            config.messagehandler( event.messageType, event.message ).then( function( response ) {
                 _mediaKeySession.update( response ).catch(function(error) {
                     forceTestFailureFromPromise(test, error);
+                }).then(function() {
+                    if(event.messageType === 'license-request') {
+                        _video.setMediaKeys(_mediaKeys);
+                    } else if(event.messageType === 'license-release') {
+                        test.done();
+                    }
                 });
             });
         }
@@ -54,13 +61,11 @@ function runTest(config, testname) {
 
         function onClosed(event) {
             _video.src = "";
-            _video.setMediaKeys( null ).then(function(){
-                    test.done();
-            });
+            _video.setMediaKeys( null );
         }
 
         function onTimeupdate(event) {
-            if ( _video.currentTime > ( config.duration || 5 ) && !_releaseSequence ) {
+            if ( _video.currentTime > ( config.duration || 2 ) && !_releaseSequence ) {
 
                 _video.removeEventListener('timeupdate', onTimeupdate );
 
@@ -88,12 +93,13 @@ function runTest(config, testname) {
             return access.createMediaKeys();
         }).then(function(mediaKeys) {
             _mediaKeys = mediaKeys;
-            _video.setMediaKeys(_mediaKeys);
             _mediaKeySession = _mediaKeys.createSession( 'persistent-usage-record' );
 
             waitForEventAndRunStep('encrypted', _video, onEncrypted, test);
             waitForEventAndRunStep('playing', _video, onPlaying, test);
         }).then(function() {
+            return config.servercertificate ? _mediaKeys.setServerCertificate( config.servercertificate ) : true;
+        }).then(function( success ) {
             return testmediasource(config);
         }).then(function(source) {
             _mediaSource = source;

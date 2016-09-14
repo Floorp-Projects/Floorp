@@ -1076,7 +1076,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime(pushinfo.pushdate))
 
         routes_json = os.path.join(self.query_abs_dirs()['abs_mozilla_dir'],
-                                   'taskcluster/ci/legacy/routes.json')
+                                   'testing/mozharness/configs/routes.json')
         with open(routes_json) as f:
             contents = json.load(f)
             templates = contents['l10n']
