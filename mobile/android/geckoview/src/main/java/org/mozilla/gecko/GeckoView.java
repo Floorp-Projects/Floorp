@@ -386,13 +386,7 @@ public class GeckoView extends LayerView
         throw new IllegalArgumentException("Must import script from 'resources://android/assets/' location.");
     }
 
-    public void connectToGecko() {
-        GeckoAppShell.notifyObservers("Viewport:Flush", null);
-    }
-
     private void handleReady(final JSONObject message) {
-        connectToGecko();
-
         if (mChromeDelegate != null) {
             mChromeDelegate.onReady(this);
         }
