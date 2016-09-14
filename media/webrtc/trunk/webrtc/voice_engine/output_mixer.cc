@@ -599,6 +599,22 @@ OutputMixer::InsertInbandDtmfTone()
 {
     uint16_t sampleRate(0);
     _dtmfGenerator.GetSampleRate(sampleRate);
+
+    // We're not using a supported sample rate for the DtmfInband generator, so
+    // we won't be able to generate feedback tones.
+    if (!(_audioFrame.sample_rate_hz_ == 8000 ||
+          _audioFrame.sample_rate_hz_ == 16000 ||
+          _audioFrame.sample_rate_hz_ == 32000 ||
+          _audioFrame.sample_rate_hz_ == 44100 ||
+          _audioFrame.sample_rate_hz_ == 48000)) {
+
+        WEBRTC_TRACE(kTraceError, kTraceVoice, VoEId(_instanceId, -1),
+                     "OutputMixer::InsertInbandDtmfTone() Sample rate"
+                     "not supported");
+
+        return -1;
+    }
+
     if (sampleRate != _audioFrame.sample_rate_hz_)
     {
         // Update sample rate of Dtmf tone since the mixing frequency changed.
