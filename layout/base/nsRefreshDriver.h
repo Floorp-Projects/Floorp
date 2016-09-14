@@ -424,6 +424,10 @@ private:
   bool mResizeSuppressed;
 
   int64_t mMostRecentRefreshEpochTime;
+  // Number of seconds that the refresh driver is blocked waiting for a compositor
+  // transaction to be completed before we append a note to the gfx critical log.
+  // The number is doubled every time the threshold is hit.
+  uint64_t mWarningThreshold;
   mozilla::TimeStamp mMostRecentRefresh;
   mozilla::TimeStamp mMostRecentTick;
   mozilla::TimeStamp mTickStart;

@@ -1400,6 +1400,33 @@ GfxInfoBase::GetActiveCrashGuards(JSContext* aCx, JS::MutableHandle<JS::Value> a
   return NS_OK;
 }
 
+NS_IMETHODIMP
+GfxInfoBase::GetContentBackend(nsAString & aContentBackend)
+{
+  BackendType backend = gfxPlatform::GetPlatform()->GetDefaultContentBackend();
+  nsString outStr;
+
+  switch (backend) {
+  case BackendType::DIRECT2D1_1: {
+    outStr.AppendPrintf("Direct2D 1.1");
+    break;
+  }
+  case BackendType::SKIA: {
+    outStr.AppendPrintf("Skia");
+    break;
+  }
+  case BackendType::CAIRO: {
+    outStr.AppendPrintf("Cairo");
+    break;
+  }
+  default:
+    return NS_ERROR_FAILURE;
+  }
+
+  aContentBackend.Assign(outStr);
+  return NS_OK;
+}
+
 GfxInfoCollectorBase::GfxInfoCollectorBase()
 {
   GfxInfoBase::AddCollector(this);

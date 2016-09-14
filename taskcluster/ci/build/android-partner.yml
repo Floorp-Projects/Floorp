@@ -1,0 +1,32 @@
+android-partner-sample1/opt:
+    description: "Android armv7 API 15+ partner sample 1"
+    index:
+        product: mobile
+        job-name: android-api-15-partner-sample1-opt
+    treeherder:
+        platform: android-4-0-armv7-api15-partner1/opt
+        symbol: tc(B)
+        tier: 2
+    run-on-projects:
+        - try
+    worker-type: aws-provisioner-v1/android-api-15
+    worker:
+        implementation: docker-worker
+        max-run-time: 36000
+        env:
+            EXTRA_CHECKOUT_REPOSITORIES: "PARTNER\n"
+            PARTNER_BASE_REPOSITORY: "https://github.com/mozilla/fennec-distribution-sample"
+            PARTNER_DEST_DIR: "/home/worker/workspace/build/partner"
+            PARTNER_HEAD_REPOSITORY: "https://github.com/mozilla/fennec-distribution-sample"
+            PARTNER_HEAD_REV: "master"
+    run:
+        using: mozharness
+        actions: [get-secrets build multi-l10n update]
+        config:
+            - builds/releng_base_android_64_builds.py
+            - disable_signing.py
+            - platform_supports_post_upload_to_latest.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        custom-build-variant-cfg: api-15-partner-sample1
+        tooltool-downloads: internal
+

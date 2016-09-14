@@ -6,12 +6,17 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 from taskgraph import try_option_syntax
-from taskgraph.util.attributes import attrmatch
 
-BUILD_AND_TEST_KINDS = set([
-    'legacy',  # builds
-    'desktop-test',
-    'android-test',
+INTEGRATION_PROJECTS = set([
+    'mozilla-inbound',
+    'autoland',
+])
+
+RELEASE_PROJECTS = set([
+    'mozilla-central',
+    'mozilla-aurora',
+    'mozilla-beta',
+    'mozilla-release',
 ])
 
 _target_task_methods = {}
@@ -55,32 +60,42 @@ def target_tasks_try_option_syntax(full_task_graph, parameters):
     return target_tasks_labels
 
 
-@_target_task('all_builds_and_tests')
-def target_tasks_all_builds_and_tests(full_task_graph, parameters):
-    """Trivially target all build and test tasks.  This is used for
-    branches where we want to build "everyting", but "everything"
-    does not include uninteresting things like docker images"""
+@_target_task('default')
+def target_tasks_default(full_task_graph, parameters):
+    """Target the tasks which have indicated they should be run on this project
+    via the `run_on_projects` attributes."""
     def filter(task):
-        return t.attributes.get('kind') in BUILD_AND_TEST_KINDS
+        run_on_projects = set(t.attributes.get('run_on_projects', []))
+        if 'all' in run_on_projects:
+            return True
+        project = parameters['project']
+        if 'integration' in run_on_projects:
+            if project in INTEGRATION_PROJECTS:
+                return True
+        if 'release' in run_on_projects:
+            if project in RELEASE_PROJECTS:
+                return True
+        return project in run_on_projects
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
 
 @_target_task('ash_tasks')
-def target_tasks_ash_tasks(full_task_graph, parameters):
-    """Special case for builds on ash."""
+def target_tasks_ash(full_task_graph, parameters):
+    """Target tasks that only run on the ash branch."""
     def filter(task):
-        # NOTE: on the ash branch, update taskcluster/ci/desktop-test/tests.yml to
-        # run the M-dt-e10s tasks
-        attrs = t.attributes
-        if attrs.get('kind') not in BUILD_AND_TEST_KINDS:
+        platform = task.attributes.get('build_platform')
+        # only select platforms
+        if platform not in ('linux64', 'linux64-asan', 'linux64-pgo'):
             return False
-        if not attrmatch(attrs, build_platform=set([
-            'linux64',
-            'linux64-asan',
-            'linux64-pgo',
-        ])):
+        # and none of this linux64-asan/debug stuff
+        if platform == 'linux64-asan' and task.attributes['build_type'] == 'debug':
             return False
-        if not attrmatch(attrs, e10s=True):
+        # no non-et10s tests
+        if task.attributes.get('unittest_suite') or task.attributes.get('talos_siute'):
+            if not task.attributes.get('e10s'):
+                return False
+        # don't upload symbols
+        if task.attributes['kind'] == 'upload-symbols':
             return False
         return True
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]

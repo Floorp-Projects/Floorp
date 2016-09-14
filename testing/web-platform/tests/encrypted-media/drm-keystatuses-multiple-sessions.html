@@ -20,7 +20,7 @@
     <script src=/encrypted-media/content/content-metadata.js></script>
 
     <!-- Message handler for Clear Key keysystem -->
-    <script src=/encrypted-media/util/drmtoday-messagehandler.js></script>
+    <script src=/encrypted-media/util/drm-messagehandler.js></script>
 
     <!-- The script for this specific test -->
     <script src=/encrypted-media/scripts/keystatuses-multiple-sessions.js></script>
@@ -39,11 +39,12 @@
         .then( function( contents ) {
 
             // Select a content item with multiple keys and initData
-            var contentitem = contents.filter( function( item ) { return item.keys.length > 1 && item.initDataType && !item.associatedInitData; } )[ 0 ];
+            var contentitem = contents.filter( function( item ) { return item.keys.length > 1 && item.initDataType && !item.associatedInitData; } )[ 0 ],
 
-            var config = {  keysystem:          keysystem,
+                handler = new MessageHandler( keysystem, contentitem ),
+                config = {  keysystem:          keysystem,
                             content:            contentitem,
-                            messagehandler:     messagehandler.bind( contentitem ),
+                            messagehandler:     handler.messagehandler,
                             initDataType:       contentitem.initDataType,
                             initData:           getProprietaryInitDatas(contentitem).initDatas.map( base64DecodeToUnit8Array ),
                         };

@@ -31,7 +31,7 @@ function runTest(config) {
                         event.messageType,
                         [ 'license-request', 'individualization-request' ] );
 
-            config.messagehandler( config.keysystem, event.messageType, event.message ).then( function( response ) {
+            config.messagehandler( event.messageType, event.message ).then( function( response ) {
 
                 _mediaKeySession.update( response ).catch(function(error) {
                     forceTestFailureFromPromise(test, error);
@@ -59,7 +59,7 @@ function runTest(config) {
         {
             return new Promise(function(resolve) {
                 video.addEventListener('timeupdate', function listener(event) {
-                    if ( event.target.currentTime > ( config.duration || 5 ) )
+                    if ( event.target.currentTime > ( config.duration || 2 ) )
                     {
                         video.removeEventListener('timeupdate', listener);
                         resolve(event);

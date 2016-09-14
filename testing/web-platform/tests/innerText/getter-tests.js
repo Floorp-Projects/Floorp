@@ -83,7 +83,6 @@ if (CSS.supports("display", "contents")) {
   testText("<div style='display:contents'>abc", "abc", "display:contents container");
   testText("<div><div style='display:contents'>abc", "abc", "display:contents container");
   testText("<div>123<span style='display:contents'>abc", "123abc", "display:contents rendered");
-  testText("<div>123<span style='display:contents'>abc", "123abc", "display:contents rendered");
   testText("<div style='display:contents'>   ", "", "display:contents not processed via textContent");
   testText("<div><div style='display:contents'>   ", "", "display:contents not processed via textContent");
 }

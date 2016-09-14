@@ -1,0 +1,32 @@
+sphinx/opt:
+    description: Generate the Sphinx documentation
+    treeherder:
+        symbol: tc(Doc)
+        kind: test
+        tier: 1
+        platform: lint/opt
+    worker-type: aws-provisioner-v1/b2gtest
+    worker:
+        implementation: docker-worker
+        docker-image: {in-tree: "lint"}
+        max-run-time: 1800
+        artifacts:
+            - type: file
+              name: public/docs.tar.gz
+              path: /home/worker/checkouts/gecko/docs.tar.gz
+    run:
+        using: run-task
+        command: >
+            cd /home/worker/checkouts/gecko &&
+            ./mach doc --outdir docs-out --no-open &&
+            rm -rf docs-out/html/Mozilla_Source_Tree_Docs/_venv &&
+            mv docs-out/html/Mozilla_Source_Tree_Docs docs &&
+            tar -czf docs.tar.gz docs
+    run-on-projects:
+        - integration
+        - release
+    when:
+        files-changed:
+            - '**/*.py'
+            - '**/*.rst'
+            - 'tools/docs/**'

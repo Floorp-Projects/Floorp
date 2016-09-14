@@ -26,20 +26,12 @@ browser.jar:
   skin/classic/browser/menu-back-XP.png
   skin/classic/browser/menu-forward.png
   skin/classic/browser/menu-forward-XP.png
-  skin/classic/browser/menuPanel.png
-  skin/classic/browser/menuPanel@2x.png
-  skin/classic/browser/menuPanel-aero.png
-  skin/classic/browser/menuPanel-aero@2x.png
   skin/classic/browser/menuPanel-customize.png
   skin/classic/browser/menuPanel-customize@2x.png
   skin/classic/browser/menuPanel-exit.png
   skin/classic/browser/menuPanel-exit@2x.png
   skin/classic/browser/menuPanel-help.png
   skin/classic/browser/menuPanel-help@2x.png
-  skin/classic/browser/menuPanel-small.png
-  skin/classic/browser/menuPanel-small@2x.png
-  skin/classic/browser/menuPanel-small-aero.png
-  skin/classic/browser/menuPanel-small-aero@2x.png
   skin/classic/browser/monitor.png
   skin/classic/browser/monitor_16-10.png
   skin/classic/browser/pageInfo.css
@@ -262,14 +254,6 @@ browser.jar:
 % override chrome://browser/skin/tabbrowser/newtab-inverted.svg       chrome://browser/skin/tabbrowser/newtab-inverted-XPVista7.svg     os=WINNT osversion<=6.1
 % override chrome://browser/skin/tabbrowser/tab-arrow-left.svg        chrome://browser/skin/tabbrowser/tab-arrow-left-XPVista7.svg      os=WINNT osversion<=6.1
 
-% override chrome://browser/skin/menuPanel.png                        chrome://browser/skin/menuPanel-aero.png                          os=WINNT osversion=6
-% override chrome://browser/skin/menuPanel.png                        chrome://browser/skin/menuPanel-aero.png                          os=WINNT osversion=6.1
-% override chrome://browser/skin/menuPanel@2x.png                     chrome://browser/skin/menuPanel-aero@2x.png                       os=WINNT osversion=6
-% override chrome://browser/skin/menuPanel@2x.png                     chrome://browser/skin/menuPanel-aero@2x.png                       os=WINNT osversion=6.1
-% override chrome://browser/skin/menuPanel-small.png                  chrome://browser/skin/menuPanel-small-aero.png                    os=WINNT osversion=6
-% override chrome://browser/skin/menuPanel-small.png                  chrome://browser/skin/menuPanel-small-aero.png                    os=WINNT osversion=6.1
-% override chrome://browser/skin/menuPanel-small@2x.png               chrome://browser/skin/menuPanel-small-aero@2x.png                 os=WINNT osversion=6
-% override chrome://browser/skin/menuPanel-small@2x.png               chrome://browser/skin/menuPanel-small-aero@2x.png                 os=WINNT osversion=6.1
 % override chrome://browser/skin/Toolbar@2x.png                       chrome://browser/skin/Toolbar-aero@2x.png                         os=WINNT osversion=6
 % override chrome://browser/skin/Toolbar@2x.png                       chrome://browser/skin/Toolbar-aero@2x.png                         os=WINNT osversion=6.1
 % override chrome://browser/skin/Toolbar@2x.png                       chrome://browser/skin/Toolbar-win8@2x.png                         os=WINNT osversion=6.2

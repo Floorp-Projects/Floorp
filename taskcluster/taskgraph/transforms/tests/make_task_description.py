@@ -17,6 +17,8 @@ what should run where. this is the wrong place for special-casing platforms,
 for example - use `all_tests.py` instead.
 """
 
+from __future__ import absolute_import, print_function, unicode_literals
+
 from taskgraph.transforms.base import TransformSequence
 
 import logging
@@ -37,8 +39,8 @@ transforms = TransformSequence()
 
 @transforms.add
 def make_task_description(config, tests):
-    """Convert *test* descriptions to *task* descriptions, suitable for input
-    to make_task"""
+    """Convert *test* descriptions to *task* descriptions (input to
+    taskgraph.transforms.task)"""
 
     for test in tests:
         label = '{}-{}-{}'.format(config.kind, test['test-platform'], test['test-name'])
@@ -133,14 +135,7 @@ def docker_worker_setup(config, test, taskdesc):
 
     worker = taskdesc['worker'] = {}
     worker['implementation'] = test['worker-implementation']
-
-    docker_image = test.get('docker-image')
-    assert docker_image, "no docker image defined for a docker-worker/docker-engine task"
-    if isinstance(docker_image, dict):
-        taskdesc['dependencies']['docker-image'] = 'build-docker-image-' + docker_image['in-tree']
-    else:
-        # just a raw docker-image string
-        worker['docker-image'] = test['docker-image']
+    worker['docker-image'] = test['docker-image']
 
     worker['allow-ptrace'] = True  # required for all tests, for crashreporter
     worker['relengapi-proxy'] = False  # but maybe enabled for tooltool below

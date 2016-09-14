@@ -5467,29 +5467,30 @@ GCRuntime::compactPhase(JS::gcreason::Reason reason, SliceBudget& sliceBudget,
 
     gcstats::AutoPhase ap(stats, gcstats::PHASE_COMPACT);
 
-    // TODO: JSScripts can move. If the sampler interrupts the GC in the
-    // middle of relocating an arena, invalid JSScript pointers may be
-    // accessed. Suppress all sampling until a finer-grained solution can be
-    // found. See bug 1295775.
-    AutoSuppressProfilerSampling suppressSampling(rt);
-
+    Arena* relocatedArenas = nullptr;
     while (!zonesToMaybeCompact.isEmpty()) {
+        // TODO: JSScripts can move. If the sampler interrupts the GC in the
+        // middle of relocating an arena, invalid JSScript pointers may be
+        // accessed. Suppress all sampling until a finer-grained solution can be
+        // found. See bug 1295775.
+        AutoSuppressProfilerSampling suppressSampling(rt);
+
         Zone* zone = zonesToMaybeCompact.front();
         MOZ_ASSERT(zone->isGCFinished());
-        Arena* relocatedArenas = nullptr;
         if (relocateArenas(zone, reason, relocatedArenas, sliceBudget)) {
             zone->setGCState(Zone::Compact);
             updatePointersToRelocatedCells(zone, lock);
             zone->setGCState(Zone::Finished);
         }
-        if (ShouldProtectRelocatedArenas(reason))
-            protectAndHoldArenas(relocatedArenas);
-        else
-            releaseRelocatedArenas(relocatedArenas);
         zonesToMaybeCompact.removeFront();
         if (sliceBudget.isOverBudget())
             break;
     }
+
+    if (ShouldProtectRelocatedArenas(reason))
+        protectAndHoldArenas(relocatedArenas);
+    else
+        releaseRelocatedArenas(relocatedArenas);
 
     // Clear caches that can contain cell pointers.
     JSContext* cx = rt->contextFromMainThread();

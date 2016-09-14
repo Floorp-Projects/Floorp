@@ -1,8 +1,14 @@
 // Expect utf8decoder and utf8decoder to be TextEncoder('utf-8') and TextDecoder('utf-8') respectively
-function messagehandler( keysystem, messageType, message )
-{
-    var contentmetadata = this;
 
+function MessageHandler( keysystem, content ) {
+    this._keysystem = keysystem;
+    this._content = content;
+    this.messagehandler = MessageHandler.prototype.messagehandler.bind( this );
+    this.servercertificate = undefined;
+}
+
+MessageHandler.prototype.messagehandler = function messagehandler( messageType, message )
+{
     if ( messageType === 'license-request' )
     {
         var request = fromUtf8( message );
@@ -10,18 +16,18 @@ function messagehandler( keysystem, messageType, message )
         var keys = request.kids.map( function( kid ) {
 
             var key;
-            for( var i=0; i < contentmetadata.keys.length; ++i )
+            for( var i=0; i < this._content.keys.length; ++i )
             {
-                if ( base64urlEncode( contentmetadata.keys[ i ].kid ) === kid )
+                if ( base64urlEncode( this._content.keys[ i ].kid ) === kid )
                 {
-                    key = base64urlEncode( contentmetadata.keys[ i ].key );
+                    key = base64urlEncode( this._content.keys[ i ].key );
                     break;
                 }
             }
 
             return { kty: 'oct', kid: kid, k: key };
 
-        } );
+        }.bind( this ) );
 
         return Promise.resolve( toUtf8( { keys: keys } ) );
     }

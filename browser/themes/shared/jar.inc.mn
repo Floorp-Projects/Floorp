@@ -69,6 +69,8 @@
   skin/classic/browser/identity-mixed-passive-loaded.svg       (../shared/identity-block/identity-mixed-passive-loaded.svg)
   skin/classic/browser/identity-mixed-active-loaded.svg        (../shared/identity-block/identity-mixed-active-loaded.svg)
   skin/classic/browser/info.svg                                (../shared/info.svg)
+  skin/classic/browser/menuPanel.svg                           (../shared/menuPanel.svg)
+  skin/classic/browser/menuPanel-small.svg                     (../shared/menuPanel-small.svg)
   skin/classic/browser/notification-icons.svg                  (../shared/notification-icons.svg)
   skin/classic/browser/tracking-protection-16.svg              (../shared/identity-block/tracking-protection-16.svg)
   skin/classic/browser/tracking-protection-disabled-16.svg     (../shared/identity-block/tracking-protection-disabled-16.svg)

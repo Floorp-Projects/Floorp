@@ -39,10 +39,11 @@ function runTest(config, testname) {
 
             assert_in_array(  event.messageType, [ 'license-request', 'individualization-request' ] );
 
-            config.messagehandler( config.keysystem, event.messageType, event.message ).then( function( response ) {
+            config.messagehandler( event.messageType, event.message ).then( function( response ) {
 
-                _mediaKeySession.update( response )
-                .catch(function(error) {
+                _mediaKeySession.update( response ).then(function() {
+                    _video.setMediaKeys(_mediaKeys);
+                }).catch(function(error) {
                     forceTestFailureFromPromise(test, error);
                 });
             });
@@ -56,7 +57,7 @@ function runTest(config, testname) {
         }
 
         function onTimeupdate(event) {
-            if ( _video.currentTime > ( config.duration || 5 ) ) {
+            if ( _video.currentTime > ( config.duration || 2 ) ) {
 
                 _video.removeEventListener('timeupdate', onTimeupdate );
 
@@ -108,6 +109,8 @@ function runTest(config, testname) {
             waitForEventAndRunStep('encrypted', _video, onEncrypted, test);
             waitForEventAndRunStep('playing', _video, onPlaying, test);
         }).then(function() {
+            return config.servercertificate ? _mediaKeys.setServerCertificate( config.servercertificate ) : true;
+        }).then(function( success ) {
             return testmediasource(config);
         }).then(function(source) {
             _mediaSource = source;

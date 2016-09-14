@@ -313,6 +313,12 @@ const SNAPSHOT_SCHEMA = {
             type: "string",
           },
         },
+        indices: {
+          type: "array",
+          items: {
+            type: "number",
+          },
+        },
         featureLog: {
           type: "object",
         },
@@ -504,7 +510,7 @@ function validateObject_object(obj, schema) {
   // Now check that the object doesn't have any properties not in the schema.
   for (let prop in obj)
     if (!(prop in schema.properties))
-      throw validationErr("Object has property not in schema", obj, schema);
+      throw validationErr("Object has property "+prop+" not in schema", obj, schema);
 }
 
 function validateObject_array(array, schema) {

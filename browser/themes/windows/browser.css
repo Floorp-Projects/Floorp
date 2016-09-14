@@ -46,9 +46,9 @@
   --urlbar-dropmarker-active-2x-region: rect(0, 66px, 28px, 44px);
 
   --panel-separator-color: ThreeDLightShadow;
-  --arrowpanel-dimmed: hsla(210,4%,10%,.07);
-  --arrowpanel-dimmed-further: hsla(210,4%,10%,.12);
-  --arrowpanel-dimmed-even-further: hsla(210,4%,10%,.17);
+  --arrowpanel-dimmed: hsla(0,0%,80%,.3);
+  --arrowpanel-dimmed-further: hsla(0,0%,80%,.45);
+  --arrowpanel-dimmed-even-further: hsla(0,0%,80%,.8);
 
   --urlbar-separator-color: ThreeDLightShadow;
 }
@@ -711,26 +711,6 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 }
 
 %include ../shared/menupanel.inc.css
-
-@media (-moz-windows-default-theme) {
-  :-moz-any(@primaryToolbarButtons@)[cui-areatype="menu-panel"][panel-multiview-anchor=true] > .toolbarbutton-icon,
-  :-moz-any(@primaryToolbarButtons@)[cui-areatype="menu-panel"][panel-multiview-anchor=true] > .toolbarbutton-badge-stack > .toolbarbutton-icon,
-  :-moz-any(@primaryToolbarButtons@)[cui-areatype="menu-panel"][panel-multiview-anchor=true] > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
-    filter: url(chrome://browser/skin/filters.svg#fill);
-    fill: currentColor;
-  }
-}
-
-@media not all and (-moz-windows-default-theme) {
-  :-moz-any(@primaryToolbarButtons@)[cui-areatype="menu-panel"] > .toolbarbutton-icon,
-  :-moz-any(@primaryToolbarButtons@)[cui-areatype="menu-panel"] > .toolbarbutton-badge-stack > .toolbarbutton-icon,
-  :-moz-any(@primaryToolbarButtons@)[cui-areatype="menu-panel"] > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
-  toolbaritem[cui-areatype="menu-panel"] > :-moz-any(@nestedButtons@) > .toolbarbutton-icon {
-    filter: url(chrome://browser/skin/filters.svg#fill);
-    fill: currentColor;
-    opacity: 0.7 !important; /* !important overrides .toolbarbutton-1[disabled=true] rule */
-  }
-}
 
 .findbar-button,
 #nav-bar .toolbarbutton-1,
