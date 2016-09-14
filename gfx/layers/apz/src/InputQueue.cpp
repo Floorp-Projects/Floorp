@@ -458,7 +458,12 @@ InputQueue::StartNewTouchBlock(const RefPtr<AsyncPanZoomController>& aTarget,
   TouchBlockState* newBlock = new TouchBlockState(aTarget, aTargetConfirmed,
       mTouchCounter);
   if (aCopyPropertiesFromCurrent) {
-    newBlock->CopyPropertiesFrom(*CurrentTouchBlock());
+    // We should never enter here without a current touch block, because this
+    // codepath is invoked from the OnLongPress handler in
+    // AsyncPanZoomController, which should bail out if there is no current
+    // touch block.
+    MOZ_ASSERT(GetCurrentTouchBlock());
+    newBlock->CopyPropertiesFrom(*GetCurrentTouchBlock());
   }
 
   SweepDepletedBlocks();
@@ -470,44 +475,42 @@ InputQueue::StartNewTouchBlock(const RefPtr<AsyncPanZoomController>& aTarget,
 }
 
 CancelableBlockState*
-InputQueue::CurrentBlock() const
+InputQueue::GetCurrentBlock() const
 {
   APZThreadUtils::AssertOnControllerThread();
 
-  MOZ_ASSERT(!mInputBlockQueue.IsEmpty());
+  if (mInputBlockQueue.IsEmpty()) {
+    return nullptr;
+  }
   return mInputBlockQueue[0].get();
 }
 
 TouchBlockState*
-InputQueue::CurrentTouchBlock() const
+InputQueue::GetCurrentTouchBlock() const
 {
-  TouchBlockState* block = CurrentBlock()->AsTouchBlock();
-  MOZ_ASSERT(block);
-  return block;
+  CancelableBlockState* block = GetCurrentBlock();
+  return block ? block->AsTouchBlock() : mActiveTouchBlock.get();
 }
 
 WheelBlockState*
-InputQueue::CurrentWheelBlock() const
+InputQueue::GetCurrentWheelBlock() const
 {
-  WheelBlockState* block = CurrentBlock()->AsWheelBlock();
-  MOZ_ASSERT(block);
-  return block;
+  CancelableBlockState* block = GetCurrentBlock();
+  return block ? block->AsWheelBlock() : mActiveWheelBlock.get();
 }
 
 DragBlockState*
-InputQueue::CurrentDragBlock() const
+InputQueue::GetCurrentDragBlock() const
 {
-  DragBlockState* block = CurrentBlock()->AsDragBlock();
-  MOZ_ASSERT(block);
-  return block;
+  CancelableBlockState* block = GetCurrentBlock();
+  return block ? block->AsDragBlock() : mActiveDragBlock.get();
 }
 
 PanGestureBlockState*
-InputQueue::CurrentPanGestureBlock() const
+InputQueue::GetCurrentPanGestureBlock() const
 {
-  PanGestureBlockState* block = CurrentBlock()->AsPanGestureBlock();
-  MOZ_ASSERT(block);
-  return block;
+  CancelableBlockState* block = GetCurrentBlock();
+  return block ? block->AsPanGestureBlock() : mActivePanGestureBlock.get();
 }
 
 WheelBlockState*
@@ -531,12 +534,11 @@ InputQueue::HasReadyTouchBlock() const
 bool
 InputQueue::AllowScrollHandoff() const
 {
-  MOZ_ASSERT(CurrentBlock());
-  if (CurrentBlock()->AsWheelBlock()) {
-    return CurrentBlock()->AsWheelBlock()->AllowScrollHandoff();
+  if (GetCurrentWheelBlock()) {
+    return GetCurrentWheelBlock()->AllowScrollHandoff();
   }
-  if (CurrentBlock()->AsPanGestureBlock()) {
-    return CurrentBlock()->AsPanGestureBlock()->AllowScrollHandoff();
+  if (GetCurrentPanGestureBlock()) {
+    return GetCurrentPanGestureBlock()->AllowScrollHandoff();
   }
   return true;
 }
@@ -680,8 +682,8 @@ InputQueue::ProcessInputBlocks() {
   APZThreadUtils::AssertOnControllerThread();
 
   do {
-    CancelableBlockState* curBlock = CurrentBlock();
-    if (!curBlock->IsReadyForHandling()) {
+    CancelableBlockState* curBlock = GetCurrentBlock();
+    if (!curBlock || !curBlock->IsReadyForHandling()) {
       break;
     }
 
