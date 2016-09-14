@@ -161,7 +161,8 @@ FinderHighlighter.prototype = {
       gWindows.set(window, {
         dynamicRangesSet: new Set(),
         frames: new Map(),
-        modalHighlightRectsMap: new Map()
+        modalHighlightRectsMap: new Map(),
+        previousRangeRectsCount: 0
       });
     }
     return gWindows.get(window);
@@ -411,7 +412,6 @@ FinderHighlighter.prototype = {
       return;
     }
 
-    let outlineNode;
     if (foundRange !== dict.currentFoundRange || data.findAgain) {
       dict.currentFoundRange = foundRange;
 
@@ -434,12 +434,14 @@ FinderHighlighter.prototype = {
       this._updateRangeOutline(dict, textContent, fontStyle);
     }
 
-    outlineNode = dict.modalHighlightOutline;
-    if (dict.animation)
-      dict.animation.finish();
-    dict.animation = outlineNode.setAnimationForElement(kModalOutlineId,
-      Cu.cloneInto(kModalOutlineAnim.keyframes, window), kModalOutlineAnim.duration);
-    dict.animation.onfinish = () => dict.animation = null;
+    let outlineNode = dict.modalHighlightOutline;
+    if (outlineNode) {
+      if (dict.animation)
+        dict.animation.finish();
+      dict.animation = outlineNode.setAnimationForElement(kModalOutlineId,
+        Cu.cloneInto(kModalOutlineAnim.keyframes, window), kModalOutlineAnim.duration);
+      dict.animation.onfinish = () => dict.animation = null;
+    }
 
     if (this._highlightAll && data.searchString)
       this.highlight(true, data.searchString, data.linksOnly);
@@ -750,19 +752,14 @@ FinderHighlighter.prototype = {
 
   /**
    * Read and store the rectangles that encompass the entire region of a range
-   * for use by the drawing function of the highlighter and store them in the
-   * cache.
+   * for use by the drawing function of the highlighter.
    *
-   * @param  {nsIDOMRange} range            Range to fetch the rectangles from
-   * @param  {Boolean}     [checkIfDynamic] Whether we should check if the range
-   *                                        is dynamic as per the rules in
-   *                                        `_isInDynamicContainer()`. Optional,
-   *                                        defaults to `true`
-   * @param  {Object}      [dict]           Dictionary of properties belonging to
-   *                                        the currently active window
+   * @param  {nsIDOMRange} range  Range to fetch the rectangles from
+   * @param  {Object}      [dict] Dictionary of properties belonging to
+   *                              the currently active window
    * @return {Set}         Set of rects that were found for the range
    */
-  _updateRangeRects(range, checkIfDynamic = true, dict = null) {
+  _getRangeRects(range, dict = null) {
     let window = range.startContainer.ownerDocument.defaultView;
     let bounds;
     // If the window is part of a frameset, try to cache the bounds query.
@@ -788,6 +785,26 @@ FinderHighlighter.prototype = {
       if (rect.intersects(topBounds))
         rects.add(rect);
     }
+    return rects;
+  },
+
+  /**
+   * Read and store the rectangles that encompass the entire region of a range
+   * for use by the drawing function of the highlighter and store them in the
+   * cache.
+   *
+   * @param  {nsIDOMRange} range            Range to fetch the rectangles from
+   * @param  {Boolean}     [checkIfDynamic] Whether we should check if the range
+   *                                        is dynamic as per the rules in
+   *                                        `_isInDynamicContainer()`. Optional,
+   *                                        defaults to `true`
+   * @param  {Object}      [dict]           Dictionary of properties belonging to
+   *                                        the currently active window
+   * @return {Set}         Set of rects that were found for the range
+   */
+  _updateRangeRects(range, checkIfDynamic = true, dict = null) {
+    let window = range.startContainer.ownerDocument.defaultView;
+    let rects = this._getRangeRects(range, dict);
 
     // Only fetch the rect at this point, if not passed in as argument.
     dict = dict || this.getForWindow(window.top);
@@ -814,47 +831,113 @@ FinderHighlighter.prototype = {
 
   /**
    * Update the content, position and style of the yellow current found range
-   * outline the floats atop the mask with the dimmed background.
+   * outline that floats atop the mask with the dimmed background.
+   * Rebuild it, if necessary, This will deactivate the animation between
+   * occurrences.
    *
    * @param {Object} dict          Dictionary of properties belonging to the
    *                               currently active window
    * @param {Array}  [textContent] Array of text that's inside the range. Optional,
-   *                               defaults to an empty array
+   *                               defaults to `null`
    * @param {Object} [fontStyle]   Dictionary of CSS styles in camelCase as
    *                               returned by `_getRangeFontStyle()`. Optional
    */
-  _updateRangeOutline(dict, textContent = [], fontStyle = null) {
-    let outlineNode = dict.modalHighlightOutline;
-    let range = this.finder._fastFind.getFoundRange();
-    if (!outlineNode || !range)
-      return;
-    let rect = range.getClientRects()[0];
-    if (!rect)
+  _updateRangeOutline(dict, textContent = null, fontStyle = null) {
+    let range = dict.currentFoundRange;
+    if (!range)
       return;
 
-    if (!fontStyle)
-      fontStyle = this._getRangeFontStyle(range);
+    fontStyle = fontStyle || this._getRangeFontStyle(range);
     // Text color in the outline is determined by kModalStyles.
     delete fontStyle.color;
 
-    if (textContent.length)
-      outlineNode.setTextContentForElement(kModalOutlineId + "-text", textContent.join(" "));
-    // Correct the line-height to align the text in the middle of the box.
-    fontStyle.lineHeight = rect.height + "px";
-    outlineNode.setAttributeForElement(kModalOutlineId + "-text", "style",
-      this._getStyleString(kModalStyles.outlineText) + "; " +
-      this._getHTMLFontStyle(fontStyle));
+    let rects = this._getRangeRects(range);
+    textContent = textContent || this._getRangeContentArray(range);
 
-    let window = range.startContainer.ownerDocument.defaultView;
-    let { left, top } = this._getRootBounds(window);
-    outlineNode.setAttributeForElement(kModalOutlineId, "style",
-      this._getStyleString(kModalStyles.outlineNode, [
-        ["top", top + rect.top + "px"],
-        ["left", left + rect.left + "px"],
+    let outlineAnonNode = dict.modalHighlightOutline;
+    let rectCount = rects.size;
+    // (re-)Building the outline is conditional and happens when one of the
+    // following conditions is met:
+    // 1. No outline nodes were built before, or
+    // 2. When the amount of rectangles to draw is different from before, or
+    // 3. When there's more than one rectangle to draw, because it's impossible
+    //    to animate that consistently with AnonymousContent nodes.
+    let rebuildOutline = (!outlineAnonNode || rectCount !== dict.previousRangeRectsCount ||
+      rectCount != 1);
+    dict.previousRangeRectsCount = rectCount;
+
+    let document = range.startContainer.ownerDocument;
+    // First see if we need to and can remove the previous outline nodes.
+    if (rebuildOutline && outlineAnonNode) {
+      if (kDebug) {
+        outlineAnonNode.remove();
+      } else {
+        try {
+          document.removeAnonymousContent(outlineAnonNode);
+        } catch (ex) {}
+      }
+      dict.modalHighlightOutline = null;
+    }
+
+    // Abort when there's no text to highlight.
+    if (!textContent.length)
+      return;
+
+    let container, outlineBox;
+    if (rebuildOutline) {
+      // The outline needs to be sitting inside a container, otherwise the anonymous
+      // content API won't find it by its ID later...
+      container = document.createElementNS(kNSHTML, "div");
+      // Create the main (yellow) highlight outline box.
+      outlineBox = document.createElementNS(kNSHTML, "div");
+      outlineBox.setAttribute("id", kModalOutlineId);
+    }
+
+    const kModalOutlineTextId = kModalOutlineId + "-text";
+    let i = 0;
+    for (let rect of rects) {
+      // if the current rect is the last rect, then text is set to the rest of
+      // the textContent with single spaces injected between the text. Otherwise
+      // text is set to the current textContent for the matching rect.
+      let text = (i == rectCount - 1) ? textContent.slice(i).join(" ") : textContent[i];
+      ++i;
+      let outlineStyle = this._getStyleString(kModalStyles.outlineNode, [
+        ["top", rect.top + "px"],
+        ["left", rect.left + "px"],
         ["height", rect.height + "px"],
-        ["width", rect.width + "px"]],
-        kDebug ? kModalStyles.outlineNodeDebug : []
-    ));
+        ["width", rect.width + "px"]
+      ], kDebug ? kModalStyles.outlineNodeDebug : []);
+      fontStyle.lineHeight = rect.height + "px";
+      let textStyle = this._getStyleString(kModalStyles.outlineText) + "; " +
+        this._getHTMLFontStyle(fontStyle);
+
+      if (rebuildOutline) {
+        let textBoxParent = (rectCount == 1) ? outlineBox :
+          outlineBox.appendChild(document.createElementNS(kNSHTML, "div"));
+        textBoxParent.setAttribute("style", outlineStyle);
+
+        let textBox = document.createElementNS(kNSHTML, "span");
+        if (rectCount == 1)
+          textBox.setAttribute("id", kModalOutlineTextId);
+        textBox.setAttribute("style", textStyle);
+        textBox.textContent = text;
+        textBoxParent.appendChild(textBox);
+      } else {
+        // Set the appropriate properties on the existing nodes, which will also
+        // activate the transitions.
+        outlineAnonNode.setAttributeForElement(kModalOutlineId, "style", outlineStyle);
+        outlineAnonNode.setAttributeForElement(kModalOutlineTextId, "style", textStyle);
+        outlineAnonNode.setTextContentForElement(kModalOutlineTextId, text);
+      }
+    }
+
+    if (rebuildOutline) {
+      container.appendChild(outlineBox);
+      dict.modalHighlightOutline = kDebug ?
+        mockAnonymousContentNode((document.body ||
+          document.documentElement).appendChild(container.firstChild)) :
+        document.insertAnonymousContent(container);
+    }
   },
 
   /**
@@ -907,25 +990,7 @@ FinderHighlighter.prototype = {
       return;
     }
 
-    // The outline needs to be sitting inside a container, otherwise the anonymous
-    // content API won't find it by its ID later...
-    let container = document.createElementNS(kNSHTML, "div");
-
-    // Create the main (yellow) highlight outline box.
-    let outlineBox = document.createElementNS(kNSHTML, "div");
-    outlineBox.setAttribute("id", kModalOutlineId);
-    outlineBox.setAttribute("style", this._getStyleString(kModalStyles.outlineNode,
-      kDebug ? kModalStyles.outlineNodeDebug : []));
-    let outlineBoxText = document.createElementNS(kNSHTML, "span");
-    let attrValue = kModalOutlineId + "-text";
-    outlineBoxText.setAttribute("id", attrValue);
-    outlineBoxText.setAttribute("style", this._getStyleString(kModalStyles.outlineText));
-    outlineBox.appendChild(outlineBoxText);
-
-    container.appendChild(outlineBox);
-    dict.modalHighlightOutline = kDebug ?
-      mockAnonymousContentNode((document.body || document.documentElement).appendChild(container.firstChild)) :
-      document.insertAnonymousContent(container);
+    this._updateRangeOutline(dict);
 
     // Make sure to at least show the dimmed background.
     this._repaintHighlightAllMask(window, false);
