@@ -5,7 +5,7 @@
 
 #include "CompositorWidgetParent.h"
 
-#include "mozulla/Unused.h"
+#include "mozilla/Unused.h"
 
 namespace mozilla {
 namespace widget {
