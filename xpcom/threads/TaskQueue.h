@@ -29,7 +29,26 @@ typedef MozPromise<bool, bool, false> ShutdownPromise;
 // they're received, and are guaranteed to not be executed concurrently.
 // They may be executed on different threads, and a memory barrier is used
 // to make this threadsafe for objects that aren't already threadsafe.
-class TaskQueue : public AbstractThread {
+//
+// Note, since a TaskQueue can also be converted to an nsIEventTarget using
+// WrapAsEventTarget() its possible to construct a hierarchy of TaskQueues.
+// Consider these three TaskQueues:
+//
+//  TQ1 dispatches to the main thread
+//  TQ2 dispatches to TQ1
+//  TQ3 dispatches to TQ1
+//
+// This ensures there is only ever a single runnable from the entire chain on
+// the main thread.  It also ensures that TQ2 and TQ3 only have a single runnable
+// in TQ1 at any time.
+//
+// This arrangement lets you prioritize work by dispatching runnables directly
+// to TQ1.  You can issue many runnables for important work.  Meanwhile the TQ2
+// and TQ3 work will always execute at most one runnable and then yield.
+class TaskQueue : public AbstractThread
+{
+  class EventTargetWrapper;
+
 public:
   explicit TaskQueue(already_AddRefed<nsIEventTarget> aTarget,
                      bool aSupportsTailDispatch = false);
@@ -75,6 +94,10 @@ public:
   // Returns true if the current thread is currently running a Runnable in
   // the task queue.
   bool IsCurrentThreadIn() override;
+
+  // Create a new nsIEventTarget wrapper object that dispatches to this
+  // TaskQueue.
+  already_AddRefed<nsIEventTarget> WrapAsEventTarget();
 
 protected:
   virtual ~TaskQueue();
