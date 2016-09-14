@@ -2546,6 +2546,8 @@ HTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded,
 {
   MOZ_RELEASE_ASSERT(aGraph);
 
+    MarkAsContentSource(CallerAPI::CAPTURE_STREAM);
+
   nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
   if (!window) {
     return nullptr;
@@ -2925,7 +2927,8 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mFirstFrameLoaded(false),
     mDefaultPlaybackStartPosition(0.0),
     mIsAudioTrackAudible(false),
-    mAudible(IsAudible())
+    mAudible(IsAudible()),
+    mVisibilityState(Visibility::APPROXIMATELY_NONVISIBLE)
 {
   ErrorResult rv;
 
@@ -6044,6 +6047,8 @@ HTMLMediaElement::OnVisibilityChange(Visibility aNewVisibility)
   LOG(LogLevel::Debug, ("OnVisibilityChange(): %s\n",
       VisibilityString(aNewVisibility)));
 
+  mVisibilityState = aNewVisibility;
+
   if (!mDecoder) {
     return;
   }
@@ -6592,6 +6597,67 @@ HTMLMediaElement::NotifyCueDisplayStatesChanged()
   }
 
   mTextTrackManager->DispatchUpdateCueDisplay();
+}
+
+void
+HTMLMediaElement::MarkAsContentSource(CallerAPI aAPI)
+{
+  const bool isVisible = mVisibilityState != Visibility::APPROXIMATELY_NONVISIBLE;
+
+  if (isVisible) {
+    // 0 = ALL_VISIBLE
+    Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE, 0);
+  } else {
+    // 1 = ALL_INVISIBLE
+    Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE, 1);
+  }
+
+  switch (aAPI) {
+    case CallerAPI::DRAW_IMAGE: {
+      if (isVisible) {
+        // 2 = drawImage_VISIBLE
+        Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE, 2);
+      } else {
+        // 3 = drawImage_INVISIBLE
+        Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE, 3);
+      }
+      break;
+    }
+    case CallerAPI::CREATE_PATTERN: {
+      if (isVisible) {
+        // 4 = createPattern_VISIBLE
+        Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE, 4);
+      } else {
+        // 5 = createPattern_INVISIBLE
+        Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE, 5);
+      }
+      break;
+    }
+    case CallerAPI::CREATE_IMAGEBITMAP: {
+      if (isVisible) {
+        // 6 = createImageBitmap_VISIBLE
+        Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE, 6);
+      } else {
+        // 7 = createImageBitmap_INVISIBLE
+        Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE, 7);
+      }
+      break;
+    }
+    case CallerAPI::CAPTURE_STREAM: {
+      if (isVisible) {
+        // 8 = captureStream_VISIBLE
+        Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE, 8);
+      } else {
+        // 9 = captureStream_INVISIBLE
+        Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE, 9);
+      }
+      break;
+    }
+  }
+
+  LOG(LogLevel::Debug,
+      ("%p Log VIDEO_AS_CONTENT_SOURCE: visibility = %u, API: '%d' and 'All'",
+       this, isVisible, aAPI));
 }
 
 } // namespace dom

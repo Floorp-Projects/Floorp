@@ -793,6 +793,8 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLImageElement& aImageEl
 ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLVideoElement& aVideoEl,
                             const Maybe<IntRect>& aCropRect, ErrorResult& aRv)
 {
+  aVideoEl.MarkAsContentSource(mozilla::dom::HTMLVideoElement::CallerAPI::CREATE_IMAGEBITMAP);
+
   // Check network state.
   if (aVideoEl.NetworkState() == HTMLMediaElement::NETWORK_EMPTY) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
