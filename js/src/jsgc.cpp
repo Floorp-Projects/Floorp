@@ -3568,21 +3568,27 @@ FOR_EACH_ALLOCKIND(MAKE_CASE)
 bool
 ArenaLists::checkEmptyArenaList(AllocKind kind)
 {
-    bool empty = true;
+    size_t num_live = 0;
 #ifdef DEBUG
     if (!arenaLists[kind].isEmpty()) {
+        size_t max_cells = 20;
+        char *env = getenv("JS_GC_MAX_LIVE_CELLS");
+        if (env && *env)
+            max_cells = atol(env);
         for (Arena* current = arenaLists[kind].head(); current; current = current->next) {
             for (ArenaCellIterUnderFinalize i(current); !i.done(); i.next()) {
                 Cell* t = i.get<Cell>();
                 MOZ_ASSERT(t->asTenured().isMarked(), "unmarked cells should have been finalized");
-                fprintf(stderr, "ERROR: GC found live Cell %p of kind %s at shutdown\n",
-                        t, AllocKindToAscii(kind));
-                empty = false;
+                if (++num_live <= max_cells) {
+                    fprintf(stderr, "ERROR: GC found live Cell %p of kind %s at shutdown\n",
+                            t, AllocKindToAscii(kind));
+                }
             }
         }
+        fprintf(stderr, "ERROR: GC found %" PRIuSIZE " live Cells at shutdown\n", num_live);
     }
 #endif // DEBUG
-    return empty;
+    return num_live == 0;
 }
 
 void
