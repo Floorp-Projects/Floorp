@@ -8546,21 +8546,20 @@ class LAssertRangeF : public LInstructionHelper<0, 1, 2>
 {
   public:
     LIR_HEADER(AssertRangeF)
-    LAssertRangeF(const LAllocation& input, const LDefinition& temp, const LDefinition& armtemp) {
+    LAssertRangeF(const LAllocation& input, const LDefinition& temp, const LDefinition& temp2) {
         setOperand(0, input);
         setTemp(0, temp);
-        setTemp(1, armtemp);
-    }
-    const LDefinition* armtemp() {
-        return getTemp(1);
+        setTemp(1, temp2);
     }
 
     const LAllocation* input() {
         return getOperand(0);
     }
-
     const LDefinition* temp() {
         return getTemp(0);
+    }
+    const LDefinition* temp2() {
+        return getTemp(1);
     }
 
     MAssertRange* mir() {
