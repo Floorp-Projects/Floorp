@@ -3009,6 +3009,12 @@ ScalarSet(mozilla::Telemetry::ScalarID aId, uint32_t aVal)
 }
 
 void
+ScalarSet(mozilla::Telemetry::ScalarID aId, bool aVal)
+{
+  TelemetryScalar::Set(aId, aVal);
+}
+
+void
 ScalarSet(mozilla::Telemetry::ScalarID aId, const nsAString& aVal)
 {
   TelemetryScalar::Set(aId, aVal);
