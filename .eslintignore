@@ -192,7 +192,6 @@ devtools/server/tests/unit/babel_and_browserify_script_with_source_map.js
 devtools/server/tests/unit/setBreakpoint*
 
 # mobile/android/ exclusions
-mobile/android/chrome/content
 mobile/android/tests/
 
 # Uses `#filter substitution`
@@ -208,6 +207,7 @@ mobile/android/installer/
 mobile/android/locales/
 
 # Non-standard `(catch ex if ...)`
+mobile/android/chrome/content/browser.js
 mobile/android/components/Snippets.js
 
 # Bug 1178739: Ignore this file as a quick fix for "Illegal yield expression"
