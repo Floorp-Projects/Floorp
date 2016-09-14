@@ -823,9 +823,7 @@ Toolbox.prototype = {
       button.className = "toolbox-dock-button devtools-button";
       button.setAttribute("title", L10N.getStr("toolboxDockButtons." +
                                                   position + ".tooltip"));
-      button.addEventListener("click", () => {
-        this.switchHost(position);
-      });
+      button.addEventListener("click", this.switchHost.bind(this, position));
 
       dockBox.appendChild(button);
     }
@@ -1136,9 +1134,7 @@ Toolbox.prototype = {
       radio.setAttribute("icon-invertable", "dark-theme");
     }
 
-    radio.addEventListener("command", () => {
-      this.selectTool(id);
-    });
+    radio.addEventListener("command", this.selectTool.bind(this, id));
 
     // spacer lets us center the image and label, while allowing cropping
     let spacer = this.doc.createElement("spacer");
@@ -2076,13 +2072,23 @@ Toolbox.prototype = {
       this._saveSplitConsoleHeight();
       this.webconsolePanel.removeEventListener("resize",
         this._saveSplitConsoleHeight);
+      this.webconsolePanel = null;
     }
-    this.closeButton.removeEventListener("click", this.destroy, true);
-    this.textboxContextMenuPopup.removeEventListener("popupshowing",
-      this._updateTextboxMenuItems, true);
-    this.tabbar.removeEventListener("focus", this._onTabbarFocus, true);
-    this.tabbar.removeEventListener("click", this._onTabbarFocus, true);
-    this.tabbar.removeEventListener("keypress", this._onTabbarArrowKeypress);
+    if (this.closeButton) {
+      this.closeButton.removeEventListener("click", this.destroy, true);
+      this.closeButton = null;
+    }
+    if (this.textboxContextMenuPopup) {
+      this.textboxContextMenuPopup.removeEventListener("popupshowing",
+        this._updateTextboxMenuItems, true);
+      this.textboxContextMenuPopup = null;
+    }
+    if (this.tabbar) {
+      this.tabbar.removeEventListener("focus", this._onTabbarFocus, true);
+      this.tabbar.removeEventListener("click", this._onTabbarFocus, true);
+      this.tabbar.removeEventListener("keypress", this._onTabbarArrowKeypress);
+      this.tabbar = null;
+    }
 
     let outstanding = [];
     for (let [id, panel] of this._toolPanels) {
