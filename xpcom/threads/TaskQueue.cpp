@@ -191,7 +191,6 @@ bool
 TaskQueue::IsCurrentThreadIn()
 {
   bool in = NS_GetCurrentThread() == mRunningThread;
-  MOZ_ASSERT(in == (GetCurrent() == this));
   return in;
 }
 
