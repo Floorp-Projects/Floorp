@@ -504,12 +504,12 @@ private:
   bool DispatchKeyPressEventsWithoutCharMessage() const;
 
   /**
-   * Remove all following WM_CHAR, WM_SYSCHAR and WM_DEADCHAR messages for the
-   * WM_KEYDOWN or WM_SYSKEYDOWN message.  Additionally, dispatches plugin
-   * events if it's necessary.
-   * Returns true if the widget is destroyed.  Otherwise, false.
+   * MaybeDispatchPluginEventsForRemovedCharMessages() dispatches plugin events
+   * for removed char messages when a windowless plugin has focus.
+   * Returns true if the widget is destroyed or blurred during dispatching a
+   * plugin event.
    */
-  bool DispatchPluginEventsAndDiscardsCharMessages() const;
+  bool MaybeDispatchPluginEventsForRemovedCharMessages() const;
 
   /**
    * DispatchKeyPressEventForFollowingCharMessage() dispatches keypress event
