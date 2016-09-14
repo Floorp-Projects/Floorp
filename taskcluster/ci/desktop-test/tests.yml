@@ -11,7 +11,7 @@ cppunit:
     treeherder-symbol: tc(Cpp)
     e10s: false
     mozharness:
-        script: mozharness/scripts/desktop_unittest.py
+        script: desktop_unittest.py
         no-read-buildbot-config: true
         config:
             by-test-platform:
@@ -31,7 +31,7 @@ crashtest:
     suite: reftest/crashtest
     treeherder-symbol: tc-R(C)
     mozharness:
-        script: mozharness/scripts/desktop_unittest.py
+        script: desktop_unittest.py
         chunked: true
         no-read-buildbot-config: true
         config:
@@ -50,7 +50,7 @@ external-media-tests:
     tier: 2
     max-run-time: 5400
     mozharness:
-        script: mozharness/scripts/firefox_media_tests_buildbot.py
+        script: firefox_media_tests_buildbot.py
         no-read-buildbot-config: true
         config:
             - mozharness/configs/mediatests/buildbot_posix_config.py
@@ -64,7 +64,7 @@ firefox-ui-functional-local:
     tier: 1
     docker-image: {"in-tree": "desktop1604-test"}
     mozharness:
-        script: mozharness/scripts/firefox_ui_tests/functional.py
+        script: firefox_ui_tests/functional.py
         config:
             - mozharness/configs/firefox_ui_tests/taskcluster.py
             - mozharness/configs/remove_executables.py
@@ -79,7 +79,7 @@ firefox-ui-functional-remote:
     tier: 2
     docker-image: {"in-tree": "desktop1604-test"}
     mozharness:
-        script: mozharness/scripts/firefox_ui_tests/functional.py
+        script: firefox_ui_tests/functional.py
         config:
             - mozharness/configs/firefox_ui_tests/taskcluster.py
             - mozharness/configs/remove_executables.py
@@ -93,7 +93,7 @@ gtest:
     e10s: false
     instance-size: xlarge
     mozharness:
-        script: mozharness/scripts/desktop_unittest.py
+        script: desktop_unittest.py
         no-read-buildbot-config: true
         config:
             by-test-platform:
@@ -110,7 +110,7 @@ jittests:
     e10s: false
     chunks: 6
     mozharness:
-        script: mozharness/scripts/desktop_unittest.py
+        script: desktop_unittest.py
         no-read-buildbot-config: true
         config:
             by-test-platform:
@@ -126,7 +126,7 @@ jsreftest:
     treeherder-symbol: tc-R(J)
     chunks: 2
     mozharness:
-        script: mozharness/scripts/desktop_unittest.py
+        script: desktop_unittest.py
         no-read-buildbot-config: true
         config:
             by-test-platform:
@@ -142,7 +142,7 @@ marionette:
     treeherder-symbol: tc(Mn)
     max-run-time: 5400
     mozharness:
-        script: mozharness/scripts/marionette.py
+        script: marionette.py
         no-read-buildbot-config: true
         config:
             - mozharness/configs/marionette/prod_config.py
@@ -156,7 +156,7 @@ mochitest:
     chunks: 10
     max-run-time: 5400
     mozharness:
-        script: mozharness/scripts/desktop_unittest.py
+        script: desktop_unittest.py
         no-read-buildbot-config: true
         chunked: true
         config:
@@ -177,7 +177,7 @@ mochitest-a11y:
     loopback-video: true
     e10s: false
     mozharness:
-        script: mozharness/scripts/desktop_unittest.py
+        script: desktop_unittest.py
         no-read-buildbot-config: true
         chunked: true
         config:
@@ -199,7 +199,7 @@ mochitest-browser-chrome:
             linux64/debug: 5400
             default: 3600
     mozharness:
-        script: mozharness/scripts/desktop_unittest.py
+        script: desktop_unittest.py
         no-read-buildbot-config: true
         config:
             by-test-platform:
@@ -220,7 +220,7 @@ mochitest-chrome:
     chunks: 3
     e10s: false
     mozharness:
-        script: mozharness/scripts/desktop_unittest.py
+        script: desktop_unittest.py
         no-read-buildbot-config: true
         config:
             by-test-platform:
@@ -237,7 +237,7 @@ mochitest-clipboard:
     loopback-video: true
     instance-size: xlarge
     mozharness:
-        script: mozharness/scripts/desktop_unittest.py
+        script: desktop_unittest.py
         no-read-buildbot-config: true
         chunked: true
         config:
@@ -261,7 +261,7 @@ mochitest-devtools-chrome:
             linux64/debug: false
             default: both
     mozharness:
-        script: mozharness/scripts/desktop_unittest.py
+        script: desktop_unittest.py
         no-read-buildbot-config: true
         config:
             by-test-platform:
@@ -284,7 +284,7 @@ mochitest-gpu:
     treeherder-symbol: tc-M(gpu)
     loopback-video: true
     mozharness:
-        script: mozharness/scripts/desktop_unittest.py
+        script: desktop_unittest.py
         no-read-buildbot-config: true
         chunked: true
         config:
@@ -303,7 +303,7 @@ mochitest-jetpack:
     e10s: false
     max-run-time: 5400
     mozharness:
-        script: mozharness/scripts/desktop_unittest.py
+        script: desktop_unittest.py
         no-read-buildbot-config: true
         chunked: true
         config:
@@ -323,7 +323,7 @@ mochitest-media:
     instance-size: large
     docker-image: {"in-tree": "desktop1604-test"}
     mozharness:
-        script: mozharness/scripts/desktop_unittest.py
+        script: desktop_unittest.py
         no-read-buildbot-config: true
         chunked: true
         config:
@@ -341,7 +341,7 @@ mochitest-webgl:
     chunks: 3
     loopback-video: true
     mozharness:
-        script: mozharness/scripts/desktop_unittest.py
+        script: desktop_unittest.py
         no-read-buildbot-config: true
         chunked: true
         config:
@@ -360,7 +360,7 @@ reftest:
     treeherder-symbol: tc-R(R)
     chunks: 8
     mozharness:
-        script: mozharness/scripts/desktop_unittest.py
+        script: desktop_unittest.py
         no-read-buildbot-config: true
         config:
             by-test-platform:
@@ -376,7 +376,7 @@ reftest-no-accel:
     treeherder-symbol: tc-R(Ru)
     chunks: 8
     mozharness:
-        script: mozharness/scripts/desktop_unittest.py
+        script: desktop_unittest.py
         no-read-buildbot-config: true
         config:
             by-test-platform:
@@ -396,7 +396,7 @@ web-platform-tests:
     docker-image: {"in-tree": "desktop1604-test"}
     checkout: true
     mozharness:
-        script: mozharness/scripts/web_platform_tests.py
+        script: web_platform_tests.py
         no-read-buildbot-config: true
         config:
             - mozharness/configs/web_platform_tests/prod_config.py
@@ -413,7 +413,7 @@ web-platform-tests-reftests:
     docker-image: {"in-tree": "desktop1604-test"}
     checkout: true
     mozharness:
-        script: mozharness/scripts/web_platform_tests.py
+        script: web_platform_tests.py
         no-read-buildbot-config: true
         config:
             - mozharness/configs/web_platform_tests/prod_config.py
@@ -432,7 +432,7 @@ xpcshell:
     max-run-time: 5400
     e10s: false
     mozharness:
-        script: mozharness/scripts/desktop_unittest.py
+        script: desktop_unittest.py
         no-read-buildbot-config: true
         config:
             by-test-platform:
