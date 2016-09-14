@@ -4,8 +4,8 @@
 function run_test() {
   installTestEngine();
 
-  // We use a large port that won't be open
-  let url = "http://localhost:999";
+  // using a port > 2^32 causes an error to be reported.
+  let url = "http://localhost:111111111";
 
   Services.prefs.setCharPref("browser.search.geoip.url", url);
   Services.search.init(() => {
