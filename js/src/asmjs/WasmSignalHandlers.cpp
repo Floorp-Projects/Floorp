@@ -1111,11 +1111,6 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
     else
         MOZ_RELEASE_ASSERT(signum == SIGBUS);
 
-    if (signal == Signal::SegFault && info->si_code != SEGV_ACCERR)
-        return false;
-    if (signal == Signal::BusError && info->si_code != BUS_ADRALN)
-        return false;
-
     CONTEXT* context = (CONTEXT*)ctx;
     uint8_t** ppc = ContextToPC(context);
     uint8_t* pc = *ppc;
@@ -1136,10 +1131,24 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
 
     uint8_t* faultingAddress = reinterpret_cast<uint8_t*>(info->si_addr);
 
-    // This check isn't necessary, but, since we can, check anyway to make
-    // sure we aren't covering up a real bug.
-    if (!IsHeapAccessAddress(*instance, faultingAddress))
+    // Although it's not strictly necessary, to make sure we're not covering up
+    // any real bugs, check that the faulting address is indeed in the
+    // instance's memory.
+    if (!faultingAddress) {
+        // On some Linux systems, the kernel apparently sometimes "gives up" and
+        // passes a null faultingAddress with si_code set to SI_KERNEL.
+        // This is observed on some automation machines for some out-of-bounds
+        // atomic accesses on x86/64.
+#ifdef SI_KERNEL
+        if (info->si_code != SI_KERNEL)
+            return false;
+#else
         return false;
+#endif
+    } else {
+        if (!IsHeapAccessAddress(*instance, faultingAddress))
+            return false;
+    }
 
 #ifdef WASM_HUGE_MEMORY
     return HugeMemoryAccess(context, pc, faultingAddress, *instance, ppc);
