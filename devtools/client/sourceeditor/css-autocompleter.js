@@ -5,7 +5,7 @@
 "use strict";
 
 /* eslint-disable complexity */
-const {cssTokenizer, cssTokenizerWithLineColumn} = require("devtools/shared/css-parsing-utils");
+const {cssTokenizer, cssTokenizerWithLineColumn} = require("devtools/shared/css/parsing-utils");
 const {getClientCssProperties} = require("devtools/shared/fronts/css-properties");
 
 /**

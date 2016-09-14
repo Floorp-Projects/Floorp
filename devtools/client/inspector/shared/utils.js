@@ -6,9 +6,9 @@
 
 "use strict";
 
-const {parseDeclarations} = require("devtools/shared/css-parsing-utils");
+const {parseDeclarations} = require("devtools/shared/css/parsing-utils");
 const promise = require("promise");
-const {getCSSLexer} = require("devtools/shared/css-lexer");
+const {getCSSLexer} = require("devtools/shared/css/lexer");
 const {KeyCodes} = require("devtools/client/shared/keycodes");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
