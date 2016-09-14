@@ -141,7 +141,7 @@ echo -e "#!/usr/bin/env bash
 # Some mozharness scripts assume base_work_dir is in
 # the current working directory, see bug 1279237
 cd $WORKSPACE
-cmd=\"python2.7 $WORKSPACE/${MOZHARNESS_SCRIPT} ${config_cmds} ${@} \${@}\"
+cmd=\"python2.7 $WORKSPACE/mozharness/scripts/${MOZHARNESS_SCRIPT} ${config_cmds} ${@} \${@}\"
 echo \"Running: \${cmd}\"
 exec \${cmd}" > ${mozharness_bin}
 chmod +x ${mozharness_bin}

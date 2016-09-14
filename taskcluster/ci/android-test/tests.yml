@@ -16,7 +16,7 @@ cppunit:
     e10s: false
     loopback-video: true
     mozharness:
-        script: mozharness/scripts/android_emulator_unittest.py
+        script: android_emulator_unittest.py
         no-read-buildbot-config: true
         config:
             - mozharness/configs/android/androidarm_4_3.py
@@ -37,7 +37,7 @@ crashtest:
     loopback-video: true
     e10s: false
     mozharness:
-        script: mozharness/scripts/android_emulator_unittest.py
+        script: android_emulator_unittest.py
         no-read-buildbot-config: true
         config:
             - mozharness/configs/android/androidarm_4_3.py
@@ -59,7 +59,7 @@ jsreftest:
     max-run-time: 7200
     e10s: false
     mozharness:
-        script: mozharness/scripts/android_emulator_unittest.py
+        script: android_emulator_unittest.py
         no-read-buildbot-config: true
         config:
             - mozharness/configs/android/androidarm_4_3.py
@@ -79,7 +79,7 @@ marionette:
     tier: 3
     max-run-time: 3600
     mozharness:
-        script: mozharness/scripts/android_emulator_unittest.py
+        script: android_emulator_unittest.py
         no-read-buildbot-config: true
         config:
             - mozharness/configs/android/androidarm_4_3.py
@@ -101,7 +101,7 @@ mochitest:
             android-4.3-arm7-api-15/debug: 10800
             default: 3600
     mozharness:
-        script: mozharness/scripts/android_emulator_unittest.py
+        script: android_emulator_unittest.py
         no-read-buildbot-config: true
         config:
             - mozharness/configs/android/androidarm_4_3.py
@@ -123,7 +123,7 @@ mochitest-chrome:
     e10s: false
     max-run-time: 5400
     mozharness:
-        script: mozharness/scripts/android_emulator_unittest.py
+        script: android_emulator_unittest.py
         no-read-buildbot-config: true
         config:
             - mozharness/configs/android/androidarm_4_3.py
@@ -140,7 +140,7 @@ mochitest-clipboard:
     loopback-video: true
     e10s: false
     mozharness:
-        script: mozharness/scripts/android_emulator_unittest.py
+        script: android_emulator_unittest.py
         no-read-buildbot-config: true
         config:
             - mozharness/configs/android/androidarm_4_3.py
@@ -156,7 +156,7 @@ mochitest-gpu:
     loopback-video: true
     e10s: false
     mozharness:
-        script: mozharness/scripts/android_emulator_unittest.py
+        script: android_emulator_unittest.py
         no-read-buildbot-config: true
         config:
             - mozharness/configs/android/androidarm_4_3.py
@@ -175,7 +175,7 @@ mochitest-media:
     e10s: false
     max-run-time: 5400
     mozharness:
-        script: mozharness/scripts/android_emulator_unittest.py
+        script: android_emulator_unittest.py
         no-read-buildbot-config: true
         config:
             - mozharness/configs/android/androidarm_4_3.py
@@ -194,7 +194,7 @@ mochitest-webgl:
     max-run-time: 7200
     instance-size: xlarge
     mozharness:
-        script: mozharness/scripts/android_emulator_unittest.py
+        script: android_emulator_unittest.py
         no-read-buildbot-config: true
         config:
             - mozharness/configs/android/androidarm_4_3.py
@@ -216,7 +216,7 @@ reftest:
     loopback-video: true
     e10s: false
     mozharness:
-        script: mozharness/scripts/android_emulator_unittest.py
+        script: android_emulator_unittest.py
         no-read-buildbot-config: true
         config:
             - mozharness/configs/android/androidarm_4_3.py
@@ -238,7 +238,7 @@ robocop:
     loopback-video: true
     e10s: false
     mozharness:
-        script: mozharness/scripts/android_emulator_unittest.py
+        script: android_emulator_unittest.py
         no-read-buildbot-config: true
         config:
             - mozharness/configs/android/androidarm_4_3.py
@@ -260,7 +260,7 @@ xpcshell:
     loopback-video: true
     e10s: false
     mozharness:
-        script: mozharness/scripts/android_emulator_unittest.py
+        script: android_emulator_unittest.py
         no-read-buildbot-config: true
         extra-options:
             - --test-suite=xpcshell
