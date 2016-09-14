@@ -4108,22 +4108,23 @@ function updateUserContextUIIndicator()
 
   let userContextId = gBrowser.selectedBrowser.getAttribute("usercontextid");
   if (!userContextId) {
+    hbox.setAttribute("data-identity-color", "");
     hbox.hidden = true;
     return;
   }
 
   let identity = ContextualIdentityService.getIdentityFromId(userContextId);
+  hbox.setAttribute("data-identity-color", identity.color);
   if (!identity) {
     hbox.hidden = true;
     return;
   }
 
   let label = document.getElementById("userContext-label");
-  label.setAttribute('value', ContextualIdentityService.getUserContextLabel(userContextId));
-  label.style.color = identity.color;
+  label.setAttribute("value", ContextualIdentityService.getUserContextLabel(userContextId));
 
   let indicator = document.getElementById("userContext-indicator");
-  indicator.style.listStyleImage = "url(" + identity.icon + ")";
+  indicator.setAttribute("data-identity-icon", identity.icon);
 
   hbox.hidden = false;
 }
