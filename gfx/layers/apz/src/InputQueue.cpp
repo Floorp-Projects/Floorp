@@ -220,6 +220,7 @@ InputQueue::ReceiveMouseInput(const RefPtr<AsyncPanZoomController>& aTarget,
 
     SweepDepletedBlocks();
     mInputBlockQueue.AppendElement(block);
+    mActiveDragBlock = block;
 
     CancelAnimationsForNewBlock(block);
     MaybeRequestContentResponse(aTarget, block);
@@ -270,6 +271,7 @@ InputQueue::ReceiveScrollWheelInput(const RefPtr<AsyncPanZoomController>& aTarge
 
     SweepDepletedBlocks();
     mInputBlockQueue.AppendElement(block);
+    mActiveWheelBlock = block;
 
     CancelAnimationsForNewBlock(block);
     MaybeRequestContentResponse(aTarget, block);
@@ -357,6 +359,7 @@ InputQueue::ReceivePanGestureInput(const RefPtr<AsyncPanZoomController>& aTarget
 
     SweepDepletedBlocks();
     mInputBlockQueue.AppendElement(block);
+    mActivePanGestureBlock = block;
 
     CancelAnimationsForNewBlock(block);
     MaybeRequestContentResponse(aTarget, block);
@@ -448,6 +451,7 @@ InputQueue::SweepDepletedBlocks()
     }
 
     INPQ_LOG("discarding depleted %s block %p\n", block->Type(), block);
+    ClearActiveBlock(block);
     mInputBlockQueue.RemoveElementAt(0);
   }
 }
@@ -467,6 +471,7 @@ InputQueue::StartNewTouchBlock(const RefPtr<AsyncPanZoomController>& aTarget,
 
   // Add the new block to the queue.
   mInputBlockQueue.AppendElement(newBlock);
+  mActiveTouchBlock = newBlock;
   return newBlock;
 }
 
@@ -719,8 +724,24 @@ InputQueue::ProcessInputBlocks() {
     // If we get here, we know there are more touch blocks in the queue after
     // |curBlock|, so we can remove |curBlock| and try to process the next one.
     INPQ_LOG("discarding processed %s block %p\n", curBlock->Type(), curBlock);
+    ClearActiveBlock(curBlock);
     mInputBlockQueue.RemoveElementAt(0);
   } while (!mInputBlockQueue.IsEmpty());
+}
+
+void
+InputQueue::ClearActiveBlock(CancelableBlockState* aBlock)
+{
+  // XXX: This function will be removed in a later patch
+  if (mActiveTouchBlock.get() == aBlock) {
+    mActiveTouchBlock = nullptr;
+  } else if (mActiveWheelBlock.get() == aBlock) {
+    mActiveWheelBlock = nullptr;
+  } else if (mActiveDragBlock.get() == aBlock) {
+    mActiveDragBlock = nullptr;
+  } else if (mActivePanGestureBlock.get() == aBlock) {
+    mActivePanGestureBlock = nullptr;
+  }
 }
 
 void
@@ -738,6 +759,10 @@ InputQueue::Clear()
   APZThreadUtils::AssertOnControllerThread();
 
   mInputBlockQueue.Clear();
+  mActiveTouchBlock = nullptr;
+  mActiveWheelBlock = nullptr;
+  mActiveDragBlock = nullptr;
+  mActivePanGestureBlock = nullptr;
   mLastActiveApzc = nullptr;
 }
 
