@@ -54,6 +54,57 @@ const ADDONS = {
     id: "compatibility@addons.mozilla.org", minVersion: "2.2.0",
   },
 
+  // Test Pilot add-ons for Firefox 49
+  "TestPilot": { // Test Pilot Addon
+    id: "@testpilot-addon", minVersion: "0.8.5",
+  },
+
+  "TabCenter": { // Tab Center
+    id: "tabcentertest1@mozilla.com", minVersion: "1.24",
+  },
+
+  "ActivityStream": { // Activity Stream
+    id: "@activity-streams", minVersion: "1.1.3",
+  },
+
+  "PageShot": { // Page Shot
+    id: "jid1-NeEaf3sAHdKHPA@jetpack", minVersion: "0.0.1",
+  },
+
+  "MinVid": { // Min Vid
+    id: "@min-vid", minVersion: "0.0.1",
+  },
+
+  "TrackingProtection": { // Tracking Protection Web Extension
+    id: "blok@mozilla.org", minVersion: "1.0.0",
+  },
+
+  "NoMore404s": { // No More 404s Web Extension
+    id: "wayback_machine@mozilla.org", minVersion: "1.5.6",
+  },
+
+  "UniversalSearch": { // Universal Search Extension
+    id: "universal-search@mozilla.com", minVersion: "1.0.10",
+  },
+
+  // (ENDS) Test Pilot add-ons for Firefox 49
+
+  "YouTubeHD": {
+    id: "{7b1bf0b6-a1b9-42b0-b75d-252036438bdc}", minVersion: "48.3",
+  },
+
+  "WeatherUnderground": {
+    id: "jid1-w3xH9kJhd3KJUp@jetpack", minVersion: "0.2.1",
+  },
+
+  "DictionaryAnywhere": {
+    id: "jid0-fbHwsGfb6kJyq2hj65KnbGte3yT@jetpack", minVersion: "0.1.9",
+  },
+
+  "GmailNotifier": {
+    id: "jid0-GjwrPchS3Ugt7xydvqVK4DQk8Ls@jetpack", minVersion: "0.6.5",
+  },
+
   // Add-ons used for testing
   "test1": {
     id: "bootstrap1@tests.mozilla.org", minVersion: "1.0",
@@ -100,7 +151,32 @@ const set49PaneOnly = [
   ADDONS.Emoji,
   ADDONS.ASP,
   ADDONS.ACR
-]
+];
+
+// Main Test Pilot add-on + test add-ons for Firefox 50
+const setTestPilotAddons50 = [
+  ADDONS.TestPilot,
+  ADDONS.TabCenter,
+  ADDONS.ActivityStream,
+  ADDONS.MinVid,
+  ADDONS.PageShot,
+  ADDONS.TrackingProtection,
+  ADDONS.NoMore404s,
+  ADDONS.UniversalSearch,
+];
+
+const setDiscoveryPane50 = [
+  ADDONS.YouTubeHD,
+  ADDONS.WeatherUnderground,
+  ADDONS.DictionaryAnywhere,
+  ADDONS.GmailNotifier,
+];
+
+const set50Release = [
+  ...set49Release,
+  ...setTestPilotAddons50,
+  ...setDiscoveryPane50,
+];
 
 // We use these named policies to correlate the telemetry
 // data with them, in order to understand how each set
@@ -120,6 +196,9 @@ const RolloutPolicy = {
 
   // Beta testing on 50
   "50allmpc": { addons: [], webextensions: true, mpc: true },
+
+  "50a": { addons: set50Release, webextensions: true },
+  "50b": { addons: set50Release, webextensions: false },
 
   "xpcshell-test": { addons: [ADDONS.test1, ADDONS.test2], webextensions: false },
 };
