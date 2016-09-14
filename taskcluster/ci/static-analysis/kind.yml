@@ -1,0 +1,63 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+implementation: taskgraph.task.transform:TransformTask
+
+transforms:
+   - taskgraph.transforms.build_attrs:transforms
+   - taskgraph.transforms.job:transforms
+   - taskgraph.transforms.task:transforms
+
+job-defaults:
+    index:
+        product: firefox
+    treeherder:
+        symbol: S
+        kind: build
+        tier: 1
+    worker:
+        implementation: docker-worker
+        docker-image: {in-tree: desktop-build}
+        max-run-time: 36000
+
+jobs:
+    macosx64-st-an/opt:
+        description: "MacOS X x64 Cross-compile Static Analysis"
+        index:
+            job-name: macosx64-st-an-opt
+        treeherder:
+            platform: osx-10-7/opt
+        worker-type: aws-provisioner-v1/opt-macosx64
+        run:
+            using: mozharness
+            actions: [get-secrets build generate-build-stats update]
+            config:
+                - builds/releng_base_mac_64_cross_builds.py
+                - balrog/production.py
+            # Note that, despite the name "cross-opt", this config variant
+            # enables static analysis.
+            custom-build-variant-cfg: cross-opt
+            script: "mozharness/scripts/fx_desktop_build.py"
+            secrets: true
+            tooltool-downloads: internal
+            keep-artifacts: false
+
+    linux64-st-an/opt:
+        description: "Linux64 Opt Static Analysis"
+        index:
+            job-name: linux64-st-an-opt
+        treeherder:
+            platform: linux64/opt
+        worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+        run:
+            using: mozharness
+            actions: [get-secrets build generate-build-stats]
+            config:
+                - builds/releng_sub_linux_configs/64_stat_and_opt.py
+                - balrog/production.py
+            script: "mozharness/scripts/fx_desktop_build.py"
+            secrets: true
+            tooltool-downloads: public
+            need-xvfb: true
+            keep-artifacts: false

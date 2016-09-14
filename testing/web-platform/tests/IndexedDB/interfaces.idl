@@ -98,7 +98,6 @@ interface IDBObjectStore {
     IDBRequest add (any value, optional any key);
     IDBRequest delete (any key);
     IDBRequest get (any key);
-    IDBRequest getKey (any key);
     IDBRequest clear ();
     IDBRequest openCursor (optional any range, optional IDBCursorDirection direction = "next");
     IDBIndex   createIndex (DOMString name, (DOMString or sequence<DOMString>) keyPath, optional IDBIndexParameters optionalParameters);
@@ -128,7 +127,6 @@ interface IDBCursor {
     IDBRequest update (any value);
     void       advance ([EnforceRange] unsigned long count);
     void       continue (optional any key);
-    void       continuePrimaryKey(any key, any primaryKey);
     IDBRequest delete ();
 };
 

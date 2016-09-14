@@ -539,6 +539,10 @@ CycleCollectedJSRuntime::Initialize(JSContext* aParentContext,
   JS_SetSweepZoneCallback(mJSContext, XPCStringConvert::ClearZoneCache);
   JS::SetBuildIdOp(mJSContext, GetBuildId);
   JS::SetWarningReporter(mJSContext, MozCrashWarningReporter);
+#ifdef MOZ_CRASHREPORTER
+    js::AutoEnterOOMUnsafeRegion::setAnnotateOOMAllocationSizeCallback(
+            CrashReporter::AnnotateOOMAllocationSize);
+#endif
 
   static js::DOMCallbacks DOMcallbacks = {
     InstanceClassHasProtoAtDepth

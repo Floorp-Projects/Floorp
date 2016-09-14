@@ -17,37 +17,6 @@ function runTest(config) {
             _mediaKeySessions = [ ],
             _mediaSource;
 
-        function onEncrypted(event) {
-            assert_equals(event.target, _video);
-            assert_true(event instanceof window.MediaEncryptedEvent);
-            assert_equals(event.type, 'encrypted');
-
-            assert_any( assert_equals, _mediaKeySessions.length, [ 0, 1 ] );
-
-            var mediaKeySession = _mediaKeys.createSession( 'temporary' );
-
-            waitForEventAndRunStep('message', mediaKeySession, onMessage, test);
-
-            var initDataType, initData;
-            if ( config.initDataType && config.initData )
-            {
-                initDataType = config.initDataType;
-                initData = config.initData[ _mediaKeySessions.length ];
-            }
-            else
-            {
-                initDataType = event.initDataType;
-                initData = event.initData;
-            }
-
-            _mediaKeySessions.push( mediaKeySession );
-
-            mediaKeySession.generateRequest( initDataType, initData )
-            .catch(function(error) {
-                forceTestFailureFromPromise(test, error);
-            });
-        }
-
         function onMessage(event) {
             assert_any( assert_equals, event.target, _mediaKeySessions );
             assert_true( event instanceof window.MediaKeyMessageEvent );
@@ -57,7 +26,7 @@ function runTest(config) {
                         event.messageType,
                         [ 'license-request', 'individualization-request' ] );
 
-            config.messagehandler( config.keysystem, event.messageType, event.message )
+            config.messagehandler( event.messageType, event.message )
             .then( function( response ) {
 
                 event.target.update( response )
@@ -72,10 +41,11 @@ function runTest(config) {
             // Not using waitForEventAndRunStep() to avoid too many
             // EVENT(onTimeUpdate) logs.
             _video.addEventListener('timeupdate', onTimeupdate, true);
+
         }
 
         function onTimeupdate(event) {
-            if ( _video.currentTime > ( config.duration || 5 ) ) {
+            if ( _video.currentTime > ( config.duration || 2 ) ) {
 
                 consoleWrite("Session 0:");
                 dumpKeyStatuses( _mediaKeySessions[ 0 ].keyStatuses );
@@ -95,8 +65,22 @@ function runTest(config) {
 
             _video.setMediaKeys(_mediaKeys);
 
-            waitForEventAndRunStep('encrypted', _video, onEncrypted, test);
             waitForEventAndRunStep('playing', _video, onPlaying, test);
+
+            config.initData.forEach( function( initData ) {
+
+                var mediaKeySession = _mediaKeys.createSession( 'temporary' );
+
+                waitForEventAndRunStep('message', mediaKeySession, onMessage, test);
+
+                _mediaKeySessions.push( mediaKeySession );
+
+                mediaKeySession.generateRequest( config.initDataType, initData )
+                .catch(function(error) {
+                    forceTestFailureFromPromise(test, error);
+                });
+
+            } );
 
         }).then(function() {
             return testmediasource(config);
