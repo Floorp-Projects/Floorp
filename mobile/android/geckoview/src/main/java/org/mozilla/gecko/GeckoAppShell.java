@@ -1753,7 +1753,6 @@ public class GeckoAppShell
         public void removeAppStateListener(AppStateListener listener);
         public View getCameraView();
         public void notifyWakeLockChanged(String topic, String state);
-        public FormAssistPopup getFormAssistPopup();
         public boolean areTabsShown();
         public AbsoluteLayout getPluginContainer();
         public void notifyCheckUpdateResult(String result);
