@@ -38,5 +38,17 @@ QueuedInput::QueuedInput(const PanGestureInput& aInput, PanGestureBlockState& aB
 {
 }
 
+InputData*
+QueuedInput::Input()
+{
+  return mInput.get();
+}
+
+CancelableBlockState*
+QueuedInput::Block()
+{
+  return mBlock.get();
+}
+
 } // namespace layers
 } // namespace mozilla

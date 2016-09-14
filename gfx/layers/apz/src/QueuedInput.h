@@ -39,6 +39,9 @@ public:
   QueuedInput(const MouseInput& aInput, DragBlockState& aBlock);
   QueuedInput(const PanGestureInput& aInput, PanGestureBlockState& aBlock);
 
+  InputData* Input();
+  CancelableBlockState* Block();
+
 private:
   // A copy of the input event that is provided to the constructor. This must
   // be non-null, and is owned by this QueuedInput instance (hence the

@@ -26,6 +26,7 @@ InputQueue::InputQueue()
 
 InputQueue::~InputQueue() {
   mInputBlockQueue.Clear();
+  mQueuedInputs.Clear();
 }
 
 nsEventStatus
@@ -174,6 +175,7 @@ InputQueue::ReceiveTouchInput(const RefPtr<AsyncPanZoomController>& aTarget,
   }
   if (!MaybeHandleCurrentBlock(block, aEvent)) {
     block->AddEvent(aEvent.AsMultiTouchInput());
+    mQueuedInputs.AppendElement(MakeUnique<QueuedInput>(aEvent.AsMultiTouchInput(), *block));
   }
   return result;
 }
@@ -233,6 +235,7 @@ InputQueue::ReceiveMouseInput(const RefPtr<AsyncPanZoomController>& aTarget,
 
   if (!MaybeHandleCurrentBlock(block, aEvent)) {
     block->AddEvent(aEvent.AsMouseInput());
+    mQueuedInputs.AppendElement(MakeUnique<QueuedInput>(aEvent.AsMouseInput(), *block));
   }
 
   if (DragTracker::EndsDrag(aEvent)) {
@@ -295,6 +298,7 @@ InputQueue::ReceiveScrollWheelInput(const RefPtr<AsyncPanZoomController>& aTarge
   // MaybeHandleCurrentBlock() does.
   if (!MaybeHandleCurrentBlock(block, event)) {
     block->AddEvent(event);
+    mQueuedInputs.AppendElement(MakeUnique<QueuedInput>(event, *block));
   }
 
   return nsEventStatus_eConsumeDoDefault;
@@ -379,6 +383,7 @@ InputQueue::ReceivePanGestureInput(const RefPtr<AsyncPanZoomController>& aTarget
   // MaybeHandleCurrentBlock() does.
   if (!MaybeHandleCurrentBlock(block, event)) {
     block->AddEvent(event.AsPanGestureInput());
+    mQueuedInputs.AppendElement(MakeUnique<QueuedInput>(event.AsPanGestureInput(), *block));
   }
 
   return result;
@@ -702,15 +707,15 @@ InputQueue::ProcessInputBlocks() {
     // target may be null here if the initial target was unconfirmed and then
     // we later got a confirmed null target. in that case drop the events.
     if (!target) {
-      curBlock->DropEvents();
+      curBlock->DropEvents(&mQueuedInputs);
     } else if (curBlock->IsDefaultPrevented()) {
-      curBlock->DropEvents();
+      curBlock->DropEvents(&mQueuedInputs);
       if (curBlock->AsTouchBlock()) {
         target->ResetTouchInputState();
       }
     } else {
       UpdateActiveApzc(curBlock->GetTargetApzc());
-      curBlock->HandleEvents();
+      curBlock->HandleEvents(&mQueuedInputs);
     }
     MOZ_ASSERT(!curBlock->HasEvents());
 
@@ -760,6 +765,7 @@ InputQueue::Clear()
   APZThreadUtils::AssertOnControllerThread();
 
   mInputBlockQueue.Clear();
+  mQueuedInputs.Clear();
   mActiveTouchBlock = nullptr;
   mActiveWheelBlock = nullptr;
   mActiveDragBlock = nullptr;
