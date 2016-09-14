@@ -231,6 +231,9 @@ let gDecoderDoctorHandler = {
         return gNavigatorBundle.getString("decoder.noCodecsLinux.message");
       }
     }
+    if (type == "cannot-initialize-pulseaudio") {
+      return gNavigatorBundle.getString("decoder.noPulseAudio.message");
+    }
     return "";
   },
 
@@ -241,6 +244,9 @@ let gDecoderDoctorHandler = {
           type == "platform-decoder-not-found") {
         return "fix-video-audio-problems-firefox-windows";
       }
+    }
+    if (type == "cannot-initialize-pulseaudio") {
+      return "fix-common-audio-and-video-issues";
     }
     return "";
   },
