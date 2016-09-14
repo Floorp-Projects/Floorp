@@ -318,7 +318,7 @@ ADTSDemuxer::Init()
     ADTSLOG("Init() failure: waiting for data");
 
     return InitPromise::CreateAndReject(
-      DemuxerFailureReason::DEMUXER_ERROR, __func__);
+      NS_ERROR_DOM_MEDIA_METADATA_ERR, __func__);
   }
 
   ADTSLOG("Init() successful");
@@ -515,10 +515,7 @@ ADTSTrackDemuxer::GetSamples(int32_t aNumSamples)
           aNumSamples, mOffset, mNumParsedFrames, mFrameIndex, mTotalFrameLen,
           mSamplesPerFrame, mSamplesPerSecond, mChannels);
 
-  if (!aNumSamples) {
-    return SamplesPromise::CreateAndReject(
-      DemuxerFailureReason::DEMUXER_ERROR, __func__);
-  }
+  MOZ_ASSERT(aNumSamples);
 
   RefPtr<SamplesHolder> frames = new SamplesHolder();
 
@@ -540,7 +537,7 @@ ADTSTrackDemuxer::GetSamples(int32_t aNumSamples)
 
   if (frames->mSamples.IsEmpty()) {
     return SamplesPromise::CreateAndReject(
-      DemuxerFailureReason::END_OF_STREAM, __func__);
+      NS_ERROR_DOM_MEDIA_END_OF_STREAM, __func__);
   }
 
   return SamplesPromise::CreateAndResolve(frames, __func__);
@@ -562,7 +559,7 @@ ADTSTrackDemuxer::SkipToNextRandomAccessPoint(media::TimeUnit aTimeThreshold)
 {
   // Will not be called for audio-only resources.
   return SkipAccessPointPromise::CreateAndReject(
-    SkipFailureHolder(DemuxerFailureReason::DEMUXER_ERROR, 0), __func__);
+    SkipFailureHolder(NS_ERROR_DOM_MEDIA_DEMUXER_ERR, 0), __func__);
 }
 
 int64_t
