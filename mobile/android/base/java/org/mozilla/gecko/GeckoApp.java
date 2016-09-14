@@ -343,11 +343,6 @@ public abstract class GeckoApp
     }
 
     @Override
-    public FormAssistPopup getFormAssistPopup() {
-        return mFormAssistPopup;
-    }
-
-    @Override
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, String data) {
         // When a tab is closed, it is always unselected first.
         // When a tab is unselected, another tab is always selected first.

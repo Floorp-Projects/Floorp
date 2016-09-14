@@ -99,12 +99,6 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
     @Override
     public void notifyWakeLockChanged(String topic, String state) {}
 
-    // Bug 908790: Implement this
-    @Override
-    public FormAssistPopup getFormAssistPopup() {
-        return null;
-    }
-
     @Override
     public boolean areTabsShown() {
         return false;
