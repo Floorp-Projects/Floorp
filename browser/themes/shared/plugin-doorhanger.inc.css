@@ -18,7 +18,7 @@
 }
 
 .center-item-warning-icon {
-  background-image: url("chrome://mozapps/skin/extensions/alerticon-info-negative.png");
+  background-image: url("chrome://mozapps/skin/extensions/alerticon-info-negative.svg");
   background-repeat: no-repeat;
   width: 16px;
   height: 15px;
