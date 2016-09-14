@@ -6,6 +6,8 @@
 
 #include "frontend/NameFunctions.h"
 
+#include "mozilla/Sprintf.h"
+
 #include "jsfun.h"
 #include "jsprf.h"
 
@@ -55,7 +57,7 @@ class NameResolver
     /* Append a number to buf. */
     bool appendNumber(double n) {
         char number[30];
-        int digits = snprintf(number, sizeof(number), "%g", n);
+        int digits = SprintfLiteral(number, "%g", n);
         return buf->append(number, digits);
     }
 

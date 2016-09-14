@@ -10,6 +10,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/SizePrintfMacros.h"
+#include "mozilla/Sprintf.h"
 
 #include "jsapi.h"
 #include "jscntxt.h"
@@ -240,10 +241,10 @@ TypeFailure(JSContext* cx, const char* fmt, ...)
 
     va_list ap;
     va_start(ap, fmt);
-    vsnprintf(errbuf, sizeof(errbuf), fmt, ap);
+    VsprintfLiteral(errbuf, fmt, ap);
     va_end(ap);
 
-    snprintf(msgbuf, sizeof(msgbuf), "[infer failure] %s", errbuf);
+    SprintfLiteral(msgbuf, "[infer failure] %s", errbuf);
 
     /* Dump type state, even if INFERFLAGS is unset. */
     PrintTypes(cx, cx->compartment(), true);

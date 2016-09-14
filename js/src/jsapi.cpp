@@ -12,6 +12,7 @@
 
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/Sprintf.h"
 
 #include <ctype.h>
 #include <stdarg.h>
@@ -120,7 +121,7 @@ JS::CallArgs::requireAtLeast(JSContext* cx, const char* fnname, unsigned require
 {
     if (length() < required) {
         char numArgsStr[40];
-        snprintf(numArgsStr, sizeof(numArgsStr), "%u", required - 1);
+        SprintfLiteral(numArgsStr, "%u", required - 1);
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
                              fnname, numArgsStr, required == 2 ? "" : "s");
         return false;
