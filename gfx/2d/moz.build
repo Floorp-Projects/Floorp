@@ -199,7 +199,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 
 if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
     SOURCES += ['BlurNEON.cpp']
-    SOURCES['BlurNEON.cpp'].flags += ['-mfpu=neon']
+    SOURCES['BlurNEON.cpp'].flags += CONFIG['NEON_FLAGS']
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
