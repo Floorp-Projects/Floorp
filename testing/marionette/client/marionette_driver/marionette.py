@@ -538,9 +538,6 @@ class Marionette(object):
 
     CONTEXT_CHROME = 'chrome'  # non-browser content: windows, dialogs, etc.
     CONTEXT_CONTENT = 'content'  # browser content: iframes, divs, etc.
-    TIMEOUT_SEARCH = 'implicit'
-    TIMEOUT_SCRIPT = 'script'
-    TIMEOUT_PAGE = 'page load'
     DEFAULT_SOCKET_TIMEOUT = 60
     DEFAULT_STARTUP_TIMEOUT = 120
     DEFAULT_SHUTDOWN_TIMEOUT = 65  # Firefox will kill hanging threads after 60s
@@ -726,12 +723,21 @@ class Marionette(object):
         raise errors.lookup(error)(message, stacktrace=stacktrace)
 
     def reset_timeouts(self):
+        """Resets timeouts to their defaults to the `self.timeout`
+        attribute. If unset, only the page load timeout is reset to
+        30 seconds.
+
+        """
+
+        timeout_types = {"search": self.set_search_timeout,
+                         "script": self.set_script_timeout,
+                         "page load": self.set_page_load_timeout}
+
         if self.timeout is not None:
-            self.timeouts(self.TIMEOUT_SEARCH, self.timeout)
-            self.timeouts(self.TIMEOUT_SCRIPT, self.timeout)
-            self.timeouts(self.TIMEOUT_PAGE, self.timeout)
+            for typ, ms in self.timeout:
+                timeout_types[typ](ms)
         else:
-            self.timeouts(self.TIMEOUT_PAGE, 30000)
+            self.set_page_load_timeout(30000)
 
     def check_for_crash(self):
         returncode = None
@@ -1210,9 +1216,10 @@ class Marionette(object):
 
     @property
     def session_capabilities(self):
-        '''
-        A JSON dictionary representing the capabilities of the current session.
-        '''
+        """A JSON dictionary representing the capabilities of the
+        current session.
+
+        """
         return self.session
 
     def set_script_timeout(self, timeout):
@@ -1225,8 +1232,9 @@ class Marionette(object):
         :param timeout: The maximum number of milliseconds an asynchronous
             script can run without causing an ScriptTimeoutException to
             be raised
+
         """
-        self._send_message("setScriptTimeout", {"ms": timeout})
+        self._send_message("timeouts", {"script": timeout})
 
     def set_search_timeout(self, timeout):
         """Sets a timeout for the find methods.
@@ -1240,8 +1248,21 @@ class Marionette(object):
         currently being loaded.
 
         :param timeout: Timeout in milliseconds.
+
         """
-        self._send_message("setSearchTimeout", {"ms": timeout})
+        self._send_message("timeouts", {"implicit": timeout})
+
+    def set_page_load_timeout(self, timeout):
+        """Sets a timeout for loading pages.
+
+        A page load timeout specifies the amount of time the Marionette
+        instance should wait for a page load operation to complete. A
+        ``TimeoutException`` is returned if this limit is exceeded.
+
+        :param timeout: Timeout in milliseconds.
+
+        """
+        self._send_message("timeouts", {"page load": timeout})
 
     @property
     def current_window_handle(self):
