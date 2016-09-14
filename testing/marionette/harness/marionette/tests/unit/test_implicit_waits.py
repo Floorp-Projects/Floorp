@@ -12,7 +12,7 @@ class TestImplicitWaits(MarionetteTestCase):
         test_html = self.marionette.absolute_url("test_dynamic.html")
         self.marionette.navigate(test_html)
         add = self.marionette.find_element(By.ID, "adder")
-        self.marionette.set_search_timeout("30000")
+        self.marionette.set_search_timeout(30000)
         add.click()
         # All is well if this doesnt throw
         self.marionette.find_element(By.ID, "box0")
@@ -20,7 +20,7 @@ class TestImplicitWaits(MarionetteTestCase):
     def testShouldStillFailToFindAnElementWhenImplicitWaitsAreEnabled(self):
         test_html = self.marionette.absolute_url("test_dynamic.html")
         self.marionette.navigate(test_html)
-        self.marionette.set_search_timeout("3000")
+        self.marionette.set_search_timeout(3000)
         try:
             self.marionette.find_element(By.ID, "box0")
             self.fail("Should have thrown a a NoSuchElementException")
