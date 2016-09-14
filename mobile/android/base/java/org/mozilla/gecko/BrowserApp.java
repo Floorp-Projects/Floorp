@@ -727,7 +727,7 @@ public class BrowserApp extends GeckoApp
 
         // Init suggested sites engine in BrowserDB.
         final SuggestedSites suggestedSites = new SuggestedSites(appContext, distribution);
-        final BrowserDB db = profile.getDB();
+        final BrowserDB db = BrowserDB.from(profile);
         db.setSuggestedSites(suggestedSites);
 
         JavaAddonManager.getInstance().init(appContext);
@@ -1506,7 +1506,7 @@ public class BrowserApp extends GeckoApp
     }
 
     private void handleClearHistory(final boolean clearSearchHistory) {
-        final BrowserDB db = getProfile().getDB();
+        final BrowserDB db = BrowserDB.from(getProfile());
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
@@ -1791,7 +1791,7 @@ public class BrowserApp extends GeckoApp
                 break;
 
             case "Telemetry:Gather":
-                final BrowserDB db = getProfile().getDB();
+                final BrowserDB db = BrowserDB.from(getProfile());
                 final ContentResolver cr = getContentResolver();
                 Telemetry.addToHistogram("PLACES_PAGES_COUNT", db.getCount(cr, "history"));
                 Telemetry.addToHistogram("FENNEC_BOOKMARKS_COUNT", db.getCount(cr, "bookmarks"));
@@ -2504,7 +2504,7 @@ public class BrowserApp extends GeckoApp
 
         // Otherwise, check for a bookmark keyword.
         final SharedPreferences sharedPrefs = GeckoSharedPrefs.forProfile(this);
-        final BrowserDB db = getProfile().getDB();
+        final BrowserDB db = BrowserDB.from(getProfile());
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
@@ -2579,7 +2579,7 @@ public class BrowserApp extends GeckoApp
             return;
         }
 
-        final BrowserDB db = profile.getDB();
+        final BrowserDB db = BrowserDB.from(profile);
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {

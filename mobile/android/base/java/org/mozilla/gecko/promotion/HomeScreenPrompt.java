@@ -24,6 +24,7 @@ import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.UrlAnnotations;
 import org.mozilla.gecko.icons.IconCallback;
 import org.mozilla.gecko.icons.IconResponse;
@@ -175,7 +176,7 @@ public class HomeScreenPrompt extends Locales.LocaleAwareActivity implements Ico
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                final UrlAnnotations urlAnnotations = GeckoProfile.get(HomeScreenPrompt.this).getDB().getUrlAnnotations();
+                final UrlAnnotations urlAnnotations = BrowserDB.from(HomeScreenPrompt.this).getUrlAnnotations();
                 urlAnnotations.insertHomeScreenShortcut(getContentResolver(), url, false);
             }
         });

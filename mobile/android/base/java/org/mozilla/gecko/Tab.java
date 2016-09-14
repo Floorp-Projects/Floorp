@@ -124,7 +124,7 @@ public class Tab {
 
     public Tab(Context context, int id, String url, boolean external, int parentId, String title) {
         mAppContext = context.getApplicationContext();
-        mDB = GeckoProfile.get(context).getDB();
+        mDB = BrowserDB.from(context);
         mId = id;
         mUrl = url;
         mBaseDomain = "";

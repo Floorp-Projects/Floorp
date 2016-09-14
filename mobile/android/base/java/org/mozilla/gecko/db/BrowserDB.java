@@ -26,7 +26,7 @@ import android.support.v4.content.CursorLoader;
 /**
  * Interface for interactions with all databases. If you want an instance
  * that implements this, you should go through GeckoProfile. E.g.,
- * <code>GeckoProfile.get(context).getDB()</code>.
+ * <code>BrowserDB.from(context)</code>.
  */
 public abstract class BrowserDB {
     public static enum FilterFlags {
