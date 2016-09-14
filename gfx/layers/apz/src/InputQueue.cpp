@@ -608,13 +608,10 @@ InputQueue::ContentReceivedInputBlock(uint64_t aInputBlockId, bool aPreventDefau
 
   INPQ_LOG("got a content response; block=%" PRIu64 "\n", aInputBlockId);
   bool success = false;
-  for (size_t i = 0; i < mInputBlockQueue.Length(); i++) {
-    CancelableBlockState* block = mInputBlockQueue[i].get();
-    if (block->GetBlockId() == aInputBlockId) {
-      success = block->SetContentResponse(aPreventDefault);
-      block->RecordContentResponseTime();
-      break;
-    }
+  CancelableBlockState* block = FindBlockForId(aInputBlockId, nullptr);
+  if (block) {
+    success = block->SetContentResponse(aPreventDefault);
+    block->RecordContentResponseTime();
   }
   if (success) {
     ProcessInputBlocks();
@@ -670,17 +667,12 @@ InputQueue::SetAllowedTouchBehavior(uint64_t aInputBlockId, const nsTArray<Touch
 
   INPQ_LOG("got allowed touch behaviours; block=%" PRIu64 "\n", aInputBlockId);
   bool success = false;
-  for (size_t i = 0; i < mInputBlockQueue.Length(); i++) {
-    if (mInputBlockQueue[i]->GetBlockId() == aInputBlockId) {
-      TouchBlockState *block = mInputBlockQueue[i]->AsTouchBlock();
-      if (block) {
-        success = block->SetAllowedTouchBehaviors(aBehaviors);
-        block->RecordContentResponseTime();
-      } else {
-        NS_WARNING("input block is not a touch block");
-      }
-      break;
-    }
+  CancelableBlockState* block = FindBlockForId(aInputBlockId, nullptr);
+  if (block && block->AsTouchBlock()) {
+    success = block->AsTouchBlock()->SetAllowedTouchBehaviors(aBehaviors);
+    block->RecordContentResponseTime();
+  } else if (block) {
+    NS_WARNING("input block is not a touch block");
   }
   if (success) {
     ProcessInputBlocks();
