@@ -19,7 +19,7 @@
 #include "nsIGfxInfo.h"
 #include "nsWindowsHelpers.h"
 #include "GfxDriverInfo.h"
-#include "mozilla/gfx/gfxVars.h"
+#include "gfxWindowsPlatform.h"
 #include "MediaInfo.h"
 #include "MediaPrefs.h"
 #include "prsystem.h"
@@ -49,7 +49,7 @@ WMFDecoderModule::~WMFDecoderModule()
 void
 WMFDecoderModule::Init()
 {
-  sDXVAEnabled = gfx::gfxVars::CanUseHardwareVideoDecoding();
+  sDXVAEnabled = gfxPlatform::GetPlatform()->CanUseHardwareVideoDecoding();
 }
 
 /* static */
