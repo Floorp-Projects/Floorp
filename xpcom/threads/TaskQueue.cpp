@@ -138,7 +138,7 @@ TaskQueue::AwaitIdleLocked()
   // Make sure there are no tasks for this queue waiting in the caller's tail
   // dispatcher.
   MOZ_ASSERT_IF(AbstractThread::GetCurrent(),
-                !AbstractThread::GetCurrent()->TailDispatcher().HasTasksFor(this));
+                !AbstractThread::GetCurrent()->HasTailTasksFor(this));
 
   mQueueMonitor.AssertCurrentThreadOwns();
   MOZ_ASSERT(mIsRunning || mTasks.empty());
@@ -154,7 +154,7 @@ TaskQueue::AwaitShutdownAndIdle()
   // Make sure there are no tasks for this queue waiting in the caller's tail
   // dispatcher.
   MOZ_ASSERT_IF(AbstractThread::GetCurrent(),
-                !AbstractThread::GetCurrent()->TailDispatcher().HasTasksFor(this));
+                !AbstractThread::GetCurrent()->HasTailTasksFor(this));
 
   MonitorAutoLock mon(mQueueMonitor);
   while (!mIsShutdown) {
@@ -169,7 +169,7 @@ TaskQueue::BeginShutdown()
   // Dispatch any tasks for this queue waiting in the caller's tail dispatcher,
   // since this is the last opportunity to do so.
   if (AbstractThread* currentThread = AbstractThread::GetCurrent()) {
-    currentThread->TailDispatcher().DispatchTasksFor(this);
+    currentThread->TailDispatchTasksFor(this);
   }
 
   MonitorAutoLock mon(mQueueMonitor);
