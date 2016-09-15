@@ -7181,12 +7181,13 @@ class CGPerSignatureCall(CGThing):
                 """ % deprecated[0])))
 
         lenientFloatCode = None
-        if idlNode.getExtendedAttribute('LenientFloat') is not None:
-            if setter:
-                lenientFloatCode = "return true;\n"
-            elif idlNode.isMethod():
-                lenientFloatCode = ("args.rval().setUndefined();\n"
-                                    "return true;\n")
+        if (idlNode.getExtendedAttribute('LenientFloat') is not None and
+            (setter or idlNode.isMethod())):
+            cgThings.append(CGGeneric(dedent(
+                """
+                bool foundNonFiniteFloat = false;
+                """)))
+            lenientFloatCode = "foundNonFiniteFloat = true;\n"
 
         argsPre = []
         if idlNode.isStatic():
@@ -7329,6 +7330,25 @@ class CGPerSignatureCall(CGThing):
                                     argDescription % {"index": i + 1},
                                     idlNode, invalidEnumValueFatal=not setter,
                                     lenientFloatCode=lenientFloatCode))
+
+        # Now that argument processing is done, enforce the LenientFloat stuff
+        if lenientFloatCode:
+            if setter:
+                foundNonFiniteFloatBehavior = "return true;\n"
+            else:
+                assert idlNode.isMethod()
+                foundNonFiniteFloatBehavior = dedent(
+                    """
+                    args.rval().setUndefined();
+                    return true;
+                    """)
+            cgThings.append(CGGeneric(fill(
+                """
+                if (foundNonFiniteFloat) {
+                  $*{returnSteps}
+                }
+                """,
+                returnSteps=foundNonFiniteFloatBehavior)))
 
         if needsUnwrap:
             # Something depends on having the unwrapped object, so unwrap it now.
