@@ -41,7 +41,6 @@ public:
   bool RecvNewContentCompositorBridge(Endpoint<PCompositorBridgeParent>&& aEndpoint) override;
   bool RecvNewContentImageBridge(Endpoint<PImageBridgeParent>&& aEndpoint) override;
   bool RecvNewContentVRManager(Endpoint<PVRManagerParent>&& aEndpoint) override;
-  bool RecvNewContentVideoDecoderManager(Endpoint<PVideoDecoderManagerParent>&& aEndpoint) override;
   bool RecvDeallocateLayerTreeId(const uint64_t& aLayersId) override;
   bool RecvGetDeviceStatus(GPUDeviceData* aOutStatus) override;
   bool RecvAddLayerTreeIdMapping(const uint64_t& aLayersId, const ProcessId& aOwnerId) override;
