@@ -3728,20 +3728,20 @@ KeyboardLayout::SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
   OverrideLayout(loadedLayout);
 
   uint8_t argumentKeySpecific = 0;
-  switch (aNativeKeyCode & 0xFF) {
+  switch (aNativeKeyCode) {
     case VK_SHIFT:
       aModifierFlags &= ~(nsIWidget::SHIFT_L | nsIWidget::SHIFT_R);
       argumentKeySpecific = VK_LSHIFT;
       break;
     case VK_LSHIFT:
       aModifierFlags &= ~nsIWidget::SHIFT_L;
-      argumentKeySpecific = aNativeKeyCode & 0xFF;
-      aNativeKeyCode = (aNativeKeyCode & 0xFFFF0000) | VK_SHIFT;
+      argumentKeySpecific = aNativeKeyCode;
+      aNativeKeyCode = VK_SHIFT;
       break;
     case VK_RSHIFT:
       aModifierFlags &= ~nsIWidget::SHIFT_R;
-      argumentKeySpecific = aNativeKeyCode & 0xFF;
-      aNativeKeyCode = (aNativeKeyCode & 0xFFFF0000) | VK_SHIFT;
+      argumentKeySpecific = aNativeKeyCode;
+      aNativeKeyCode = VK_SHIFT;
       break;
     case VK_CONTROL:
       aModifierFlags &= ~(nsIWidget::CTRL_L | nsIWidget::CTRL_R);
@@ -3749,13 +3749,13 @@ KeyboardLayout::SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
       break;
     case VK_LCONTROL:
       aModifierFlags &= ~nsIWidget::CTRL_L;
-      argumentKeySpecific = aNativeKeyCode & 0xFF;
-      aNativeKeyCode = (aNativeKeyCode & 0xFFFF0000) | VK_CONTROL;
+      argumentKeySpecific = aNativeKeyCode;
+      aNativeKeyCode = VK_CONTROL;
       break;
     case VK_RCONTROL:
       aModifierFlags &= ~nsIWidget::CTRL_R;
-      argumentKeySpecific = aNativeKeyCode & 0xFF;
-      aNativeKeyCode = (aNativeKeyCode & 0xFFFF0000) | VK_CONTROL;
+      argumentKeySpecific = aNativeKeyCode;
+      aNativeKeyCode = VK_CONTROL;
       break;
     case VK_MENU:
       aModifierFlags &= ~(nsIWidget::ALT_L | nsIWidget::ALT_R);
@@ -3763,13 +3763,13 @@ KeyboardLayout::SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
       break;
     case VK_LMENU:
       aModifierFlags &= ~nsIWidget::ALT_L;
-      argumentKeySpecific = aNativeKeyCode & 0xFF;
-      aNativeKeyCode = (aNativeKeyCode & 0xFFFF0000) | VK_MENU;
+      argumentKeySpecific = aNativeKeyCode;
+      aNativeKeyCode = VK_MENU;
       break;
     case VK_RMENU:
       aModifierFlags &= ~nsIWidget::ALT_R;
-      argumentKeySpecific = aNativeKeyCode & 0xFF;
-      aNativeKeyCode = (aNativeKeyCode & 0xFFFF0000) | VK_MENU;
+      argumentKeySpecific = aNativeKeyCode;
+      aNativeKeyCode = VK_MENU;
       break;
     case VK_CAPITAL:
       aModifierFlags &= ~nsIWidget::CAPS_LOCK;
@@ -3783,6 +3783,8 @@ KeyboardLayout::SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
 
   AutoTArray<KeyPair,10> keySequence;
   WinUtils::SetupKeyModifiersSequence(&keySequence, aModifierFlags);
+  NS_ASSERTION(aNativeKeyCode >= 0 && aNativeKeyCode < 256,
+               "Native VK key code out of range");
   keySequence.AppendElement(KeyPair(aNativeKeyCode, argumentKeySpecific));
 
   // Simulate the pressing of each modifier key and then the real key
@@ -3791,22 +3793,18 @@ KeyboardLayout::SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
   for (uint32_t i = 0; i < keySequence.Length(); ++i) {
     uint8_t key = keySequence[i].mGeneral;
     uint8_t keySpecific = keySequence[i].mSpecific;
-    uint16_t scanCode = keySequence[i].mScanCode;
     kbdState[key] = 0x81; // key is down and toggled on if appropriate
     if (keySpecific) {
       kbdState[keySpecific] = 0x81;
     }
     ::SetKeyboardState(kbdState);
     ModifierKeyState modKeyState;
-    // If scan code isn't specified explicitly, let's compute it with current
-    // keyboard layout.
-    if (!scanCode) {
-      scanCode =
-        ComputeScanCodeForVirtualKeyCode(keySpecific ? keySpecific : key);
-    }
+    UINT scanCode =
+      ComputeScanCodeForVirtualKeyCode(keySpecific ? keySpecific : key);
     LPARAM lParam = static_cast<LPARAM>(scanCode << 16);
-    // If the scan code is for an extended key, set extended key flag.
-    if ((scanCode & 0xFF00) == 0xE000) {
+    // Add extended key flag to the lParam for right control key and right alt
+    // key.
+    if (keySpecific == VK_RCONTROL || keySpecific == VK_RMENU) {
       lParam |= 0x1000000;
     }
     bool makeSysKeyMsg = IsSysKey(key, modKeyState);
@@ -3858,22 +3856,18 @@ KeyboardLayout::SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
   for (uint32_t i = keySequence.Length(); i > 0; --i) {
     uint8_t key = keySequence[i - 1].mGeneral;
     uint8_t keySpecific = keySequence[i - 1].mSpecific;
-    uint16_t scanCode = keySequence[i - 1].mScanCode;
     kbdState[key] = 0; // key is up and toggled off if appropriate
     if (keySpecific) {
       kbdState[keySpecific] = 0;
     }
     ::SetKeyboardState(kbdState);
     ModifierKeyState modKeyState;
-    // If scan code isn't specified explicitly, let's compute it with current
-    // keyboard layout.
-    if (!scanCode) {
-      scanCode =
-        ComputeScanCodeForVirtualKeyCode(keySpecific ? keySpecific : key);
-    }
+    UINT scanCode =
+      ComputeScanCodeForVirtualKeyCode(keySpecific ? keySpecific : key);
     LPARAM lParam = static_cast<LPARAM>(scanCode << 16);
-    // If the scan code is for an extended key, set extended key flag.
-    if ((scanCode & 0xFF00) == 0xE000) {
+    // Add extended key flag to the lParam for right control key and right alt
+    // key.
+    if (keySpecific == VK_RCONTROL || keySpecific == VK_RMENU) {
       lParam |= 0x1000000;
     }
     // Don't use WM_SYSKEYUP for Alt keyup.
