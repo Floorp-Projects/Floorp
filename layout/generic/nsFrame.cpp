@@ -1515,7 +1515,7 @@ nsIFrame::UpdateVisibilitySynchronously()
   }
 
   if (presShell->AssumeAllFramesVisible()) {
-    presShell->MarkFrameVisible(this, VisibilityCounter::IN_DISPLAYPORT);
+    presShell->MarkFrameVisibleInDisplayPort(this);
     return;
   }
 
@@ -1556,7 +1556,7 @@ nsIFrame::UpdateVisibilitySynchronously()
   }
 
   if (visible) {
-    presShell->MarkFrameVisible(this, VisibilityCounter::IN_DISPLAYPORT);
+    presShell->MarkFrameVisibleInDisplayPort(this);
   } else {
     presShell->MarkFrameNonvisible(this);
   }
@@ -2758,7 +2758,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   // within the displayport.
   if (aBuilder->IsPaintingToWindow() && child->TrackingVisibility()) {
     nsIPresShell* shell = child->PresContext()->PresShell();
-    shell->MarkFrameVisible(child, VisibilityCounter::IN_DISPLAYPORT);
+    shell->MarkFrameVisibleInDisplayPort(child);
   }
 
   // Child is composited if it's transformed, partially transparent, or has
