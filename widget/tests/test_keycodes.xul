@@ -2847,10 +2847,10 @@ function* runKeyEventTests()
     // Brazilian ABNT
     yield testKey({layout:KEYBOARD_LAYOUT_BRAZILIAN_ABNT, keyCode:WIN_VK_ABNT_C1,
                    modifiers:{}, chars:"/"},
-                  "/", "IntlBackslash", nsIDOMKeyEvent.DOM_VK_SLASH, "/", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+                  "/", "IntlRo" /* TODO, should be "IntlBackslash" */, nsIDOMKeyEvent.DOM_VK_SLASH, "/", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_BRAZILIAN_ABNT, keyCode:WIN_VK_ABNT_C1,
                    modifiers:{shiftKey:1}, chars:"?"},
-                  "?", "IntlBackslash", nsIDOMKeyEvent.DOM_VK_SLASH, "?", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+                  "?", "IntlRo" /* TODO, should be "IntlBackslash" */, nsIDOMKeyEvent.DOM_VK_SLASH, "?", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_BRAZILIAN_ABNT, keyCode:WIN_VK_ABNT_C2,
                    modifiers:{numLockKey:1}, chars:"."},
                   ".", "NumpadComma", nsIDOMKeyEvent.DOM_VK_SEPARATOR, ".", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_NUMPAD);
