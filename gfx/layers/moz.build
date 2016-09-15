@@ -25,6 +25,7 @@ EXPORTS += [
     'D3D9SurfaceImage.h',
     'FrameMetrics.h',
     'GLImages.h',
+    'GPUVideoImage.h',
     'GrallocImages.h',
     'ImageContainer.h',
     'ImageLayers.h',
