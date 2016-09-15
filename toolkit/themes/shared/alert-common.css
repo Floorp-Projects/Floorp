@@ -26,6 +26,12 @@
   animation-name: alert-closing-animation;
 }
 
+#alertBox[animate]:not([clicked]):not([closing]):hover {
+  /* !important is necessary because CSS animations have highest
+     importance in the cascade with exception to !important rules. */
+  opacity: 1 !important;
+}
+
 @keyframes alert-animation {
   from {
     opacity: 0;
