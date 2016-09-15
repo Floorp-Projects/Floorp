@@ -38,6 +38,7 @@ public:
     }
     return "H264Converter decoder (pending)";
   }
+  void SetSeekThreshold(const media::TimeUnit& aTime) override;
 
   nsresult GetLastError() const { return mLastError; }
 

@@ -143,18 +143,11 @@ var gMainPane = {
       let buttonIndex = confirmRestartPrompt(e10sCheckbox.checked, 0,
                                              true, false);
       if (buttonIndex == CONFIRM_RESTART_PROMPT_RESTART_NOW) {
-        const Cc = Components.classes, Ci = Components.interfaces;
-        let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"]
-                           .createInstance(Ci.nsISupportsPRBool);
-        Services.obs.notifyObservers(cancelQuit, "quit-application-requested",
-                                     "restart");
-        if (!cancelQuit.data) {
-          for (let prefToChange of prefsToChange) {
-            prefToChange.value = e10sCheckbox.checked;
-          }
-
-          Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit |  Ci.nsIAppStartup.eRestart);
+        for (let prefToChange of prefsToChange) {
+          prefToChange.value = e10sCheckbox.checked;
         }
+
+        Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit |  Ci.nsIAppStartup.eRestart);
       }
 
       // Revert the checkbox in case we didn't quit

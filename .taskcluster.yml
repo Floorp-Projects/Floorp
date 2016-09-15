@@ -104,7 +104,7 @@ tasks:
               --pushlog-id='{{pushlog_id}}'
               --pushdate='{{pushdate}}'
               --project='{{project}}'
-              --message='{{comment}}'
+              --message={{#shellquote}}{{{comment}}}{{/shellquote}}
               --owner='{{owner}}'
               --level='{{level}}'
               --base-repository='https://hg.mozilla.org/mozilla-central'

@@ -599,6 +599,13 @@ class RemoteArgumentsParser(ReftestArgumentsParser):
                           dest="remoteAppPath",
                           help="Path to remote executable relative to device root using only forward slashes.  Either this or app must be specified, but not both.")
 
+        self.add_argument("--adbpath",
+                          action="store",
+                          type=str,
+                          dest="adb_path",
+                          default="adb",
+                          help="path to adb")
+
         self.add_argument("--deviceIP",
                           action="store",
                           type=str,

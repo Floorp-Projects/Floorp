@@ -242,5 +242,17 @@ function confirmRestartPrompt(aRestartToEnable, aDefaultButtonIndex,
   let buttonIndex = prompts.confirmEx(window, title, msg, buttonFlags,
                                       button0Text, button1Text, button2Text,
                                       null, {});
+
+  // If we have the second confirmation dialog for restart, see if the user
+  // cancels out at that point.
+  if (buttonIndex == CONFIRM_RESTART_PROMPT_RESTART_NOW) {
+    let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"]
+                       .createInstance(Ci.nsISupportsPRBool);
+    Services.obs.notifyObservers(cancelQuit, "quit-application-requested",
+                                  "restart");
+    if (cancelQuit.data) {
+      buttonIndex = CONFIRM_RESTART_PROMPT_CANCEL;
+    }
+  }
   return buttonIndex;
 }

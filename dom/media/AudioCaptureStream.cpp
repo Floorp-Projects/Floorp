@@ -102,12 +102,13 @@ AudioCaptureStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
     AudioSegment output;
     for (uint32_t i = 0; i < inputCount; i++) {
       MediaStream* s = mInputs[i]->GetSource();
-      StreamTracks::TrackIter tracks(s->GetStreamTracks(), MediaSegment::AUDIO);
-      while (!tracks.IsEnded()) {
-        AudioSegment* inputSegment = tracks->Get<AudioSegment>();
+      for (StreamTracks::TrackIter track(s->GetStreamTracks(),
+                                         MediaSegment::AUDIO);
+           !track.IsEnded(); track.Next()) {
+        AudioSegment* inputSegment = track->Get<AudioSegment>();
         StreamTime inputStart = s->GraphTimeToStreamTimeWithBlocking(aFrom);
         StreamTime inputEnd = s->GraphTimeToStreamTimeWithBlocking(aTo);
-        if (tracks->IsEnded() && inputSegment->GetDuration() <= inputEnd) {
+        if (track->IsEnded() && inputSegment->GetDuration() <= inputEnd) {
           // If the input track has ended and we have consumed all its data it
           // can be ignored.
           continue;
@@ -119,7 +120,6 @@ AudioCaptureStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
           toMix.AppendNullData((aTo - aFrom) - (inputEnd - inputStart));
         }
         toMix.Mix(mMixer, MONO, Graph()->GraphRate());
-        tracks.Next();
       }
     }
     // This calls MixerCallback below
