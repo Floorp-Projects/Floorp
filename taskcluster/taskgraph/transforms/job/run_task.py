@@ -10,6 +10,9 @@ from __future__ import absolute_import, print_function, unicode_literals
 import copy
 
 from taskgraph.transforms.job import run_job_using
+from taskgraph.transforms.job.common import (
+    docker_worker_support_vcs_checkout,
+)
 from voluptuous import Schema, Required, Any
 
 run_task_schema = Schema({
@@ -32,20 +35,11 @@ run_task_schema = Schema({
 @run_job_using("docker-worker", "run-task", schema=run_task_schema)
 def docker_worker_run_task(config, job, taskdesc):
     run = job['run']
-    checkout = run['checkout']
 
     worker = taskdesc['worker'] = copy.deepcopy(job['worker'])
 
-    if checkout:
-        worker['caches'] = [{
-            'type': 'persistent',
-            'name': 'level-{}-hg-shared'.format(config.params['level']),
-            'mount-point': "/home/worker/hg-shared",
-        }, {
-            'type': 'persistent',
-            'name': 'level-{}-checkouts'.format(config.params['level']),
-            'mount-point': "/home/worker/checkouts",
-        }]
+    if run['checkout']:
+        docker_worker_support_vcs_checkout(config, job, taskdesc)
 
     if run.get('cache-dotcache') and int(config.params['level']) > 1:
         worker['caches'].append({
@@ -54,23 +48,11 @@ def docker_worker_run_task(config, job, taskdesc):
             'mount-point': '/home/worker/.cache',
         })
 
-    env = worker['env'] = {}
-    env.update({
-        'GECKO_BASE_REPOSITORY': config.params['base_repository'],
-        'GECKO_HEAD_REPOSITORY': config.params['head_repository'],
-        'GECKO_HEAD_REV': config.params['head_rev'],
-    })
-
-    # give the task access to the hgfingerprint secret
-    if checkout:
-        taskdesc['scopes'].append('secrets:get:project/taskcluster/gecko/hgfingerprint')
-        worker['taskcluster-proxy'] = True
-
     run_command = run['command']
     if isinstance(run_command, basestring):
         run_command = ['bash', '-cx', run_command]
     command = ['/home/worker/bin/run-task']
-    if checkout:
+    if run['checkout']:
         command.append('--vcs-checkout=/home/worker/checkouts/gecko')
     command.append('--')
     command.extend(run_command)

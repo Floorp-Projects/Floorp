@@ -472,6 +472,7 @@ nsNativeAppSupportUnix::Start(bool *aRetVal)
                      MIN_GTK_MINOR_VERSION);
     gtk_dialog_run(GTK_DIALOG(versionErrDialog));
     gtk_widget_destroy(versionErrDialog);
+    MozExpectedExit();
     exit(0);
   }
 #endif
