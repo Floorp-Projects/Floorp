@@ -17,12 +17,12 @@ cppunit:
             by-test-platform:
                 # Coming soon:
                 # win.*:
-                #    - mozharness/configs/unittests/win_unittest.py
-                #    - mozharness/configs/remove_executables.py
+                #    - unittests/win_unittest.py
+                #    - remove_executables.py
                 # ...
                 default:
-                    - mozharness/configs/unittests/linux_unittest.py
-                    - mozharness/configs/remove_executables.py
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
         extra-options:
             - --cppunittest-suite=cppunittest
 
@@ -37,8 +37,8 @@ crashtest:
         config:
             by-test-platform:
                 default:
-                    - mozharness/configs/unittests/linux_unittest.py
-                    - mozharness/configs/remove_executables.py
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
         extra-options:
             - --reftest-suite=crashtest
 
@@ -53,8 +53,8 @@ external-media-tests:
         script: firefox_media_tests_buildbot.py
         no-read-buildbot-config: true
         config:
-            - mozharness/configs/mediatests/buildbot_posix_config.py
-            - mozharness/configs/remove_executables.py
+            - mediatests/buildbot_posix_config.py
+            - remove_executables.py
 
 firefox-ui-functional-local:
     description: "Firefox-ui-tests functional run"
@@ -66,8 +66,8 @@ firefox-ui-functional-local:
     mozharness:
         script: firefox_ui_tests/functional.py
         config:
-            - mozharness/configs/firefox_ui_tests/taskcluster.py
-            - mozharness/configs/remove_executables.py
+            - firefox_ui_tests/taskcluster.py
+            - remove_executables.py
         extra-options:
             - "--tag local"
 
@@ -81,8 +81,8 @@ firefox-ui-functional-remote:
     mozharness:
         script: firefox_ui_tests/functional.py
         config:
-            - mozharness/configs/firefox_ui_tests/taskcluster.py
-            - mozharness/configs/remove_executables.py
+            - firefox_ui_tests/taskcluster.py
+            - remove_executables.py
         extra-options:
             - "--tag remote"
 
@@ -98,8 +98,8 @@ gtest:
         config:
             by-test-platform:
                 default:
-                    - mozharness/configs/unittests/linux_unittest.py
-                    - mozharness/configs/remove_executables.py
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
         extra-options:
             - --gtest-suite=gtest
 
@@ -115,8 +115,8 @@ jittests:
         config:
             by-test-platform:
                 default:
-                    - mozharness/configs/unittests/linux_unittest.py
-                    - mozharness/configs/remove_executables.py
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
         extra-options:
             - --jittest-suite=jittest-chunked
 
@@ -131,8 +131,8 @@ jsreftest:
         config:
             by-test-platform:
                 default:
-                    - mozharness/configs/unittests/linux_unittest.py
-                    - mozharness/configs/remove_executables.py
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
         extra-options:
             - --reftest-suite=jsreftest
 
@@ -145,8 +145,8 @@ marionette:
         script: marionette.py
         no-read-buildbot-config: true
         config:
-            - mozharness/configs/marionette/prod_config.py
-            - mozharness/configs/remove_executables.py
+            - marionette/prod_config.py
+            - remove_executables.py
 
 mochitest:
     description: "Mochitest plain run"
@@ -162,8 +162,8 @@ mochitest:
         config:
             by-test-platform:
                 default:
-                    - mozharness/configs/unittests/linux_unittest.py
-                    - mozharness/configs/remove_executables.py
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
         extra-options:
             - --mochitest-suite=plain-chunked
     # Bug 1281241: migrating to m3.large instances
@@ -183,8 +183,8 @@ mochitest-a11y:
         config:
             by-test-platform:
                 default:
-                    - mozharness/configs/unittests/linux_unittest.py
-                    - mozharness/configs/remove_executables.py
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
         extra-options:
             - --mochitest-suite=a11y
 
@@ -204,8 +204,8 @@ mochitest-browser-chrome:
         config:
             by-test-platform:
                 default:
-                    - mozharness/configs/unittests/linux_unittest.py
-                    - mozharness/configs/remove_executables.py
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
         extra-options:
             - --mochitest-suite=browser-chrome-chunked
     # Bug 1281241: migrating to m3.large instances
@@ -225,8 +225,8 @@ mochitest-chrome:
         config:
             by-test-platform:
                 default:
-                    - mozharness/configs/unittests/linux_unittest.py
-                    - mozharness/configs/remove_executables.py
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
         extra-options:
             - --mochitest-suite=chrome
 
@@ -243,8 +243,8 @@ mochitest-clipboard:
         config:
             by-test-platform:
                 default:
-                    - mozharness/configs/unittests/linux_unittest.py
-                    - mozharness/configs/remove_executables.py
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
         extra-options:
             - --mochitest-suite=plain-clipboard,chrome-clipboard,browser-chrome-clipboard,jetpack-package-clipboard
 
@@ -266,8 +266,8 @@ mochitest-devtools-chrome:
         config:
             by-test-platform:
                 default:
-                    - mozharness/configs/unittests/linux_unittest.py
-                    - mozharness/configs/remove_executables.py
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
         extra-options:
             - --mochitest-suite=mochitest-devtools-chrome-chunked
     instance-size:
@@ -290,8 +290,8 @@ mochitest-gpu:
         config:
             by-test-platform:
                 default:
-                    - mozharness/configs/unittests/linux_unittest.py
-                    - mozharness/configs/remove_executables.py
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
         extra-options:
             - --mochitest-suite=plain-gpu,chrome-gpu,browser-chrome-gpu
 
@@ -309,8 +309,8 @@ mochitest-jetpack:
         config:
             by-test-platform:
                 default:
-                    - mozharness/configs/unittests/linux_unittest.py
-                    - mozharness/configs/remove_executables.py
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
         extra-options:
             - --mochitest-suite=jetpack-package
 
@@ -329,8 +329,8 @@ mochitest-media:
         config:
             by-test-platform:
                 default:
-                    - mozharness/configs/unittests/linux_unittest.py
-                    - mozharness/configs/remove_executables.py
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
         extra-options:
             - --mochitest-suite=mochitest-media
 
@@ -347,8 +347,8 @@ mochitest-webgl:
         config:
             by-test-platform:
                 default:
-                    - mozharness/configs/unittests/linux_unittest.py
-                    - mozharness/configs/remove_executables.py
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
         extra-options:
             - --mochitest-suite=mochitest-gl
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
@@ -365,8 +365,8 @@ reftest:
         config:
             by-test-platform:
                 default:
-                    - mozharness/configs/unittests/linux_unittest.py
-                    - mozharness/configs/remove_executables.py
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
         extra-options:
             - --reftest-suite=reftest
 
@@ -381,8 +381,8 @@ reftest-no-accel:
         config:
             by-test-platform:
                 default:
-                    - mozharness/configs/unittests/linux_unittest.py
-                    - mozharness/configs/remove_executables.py
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
         extra-options:
             - --reftest-suite=reftest-no-accel
 
@@ -399,8 +399,8 @@ web-platform-tests:
         script: web_platform_tests.py
         no-read-buildbot-config: true
         config:
-            - mozharness/configs/web_platform_tests/prod_config.py
-            - mozharness/configs/remove_executables.py
+            - web_platform_tests/prod_config.py
+            - remove_executables.py
         extra-options:
             - --test-type=testharness
 
@@ -416,8 +416,8 @@ web-platform-tests-reftests:
         script: web_platform_tests.py
         no-read-buildbot-config: true
         config:
-            - mozharness/configs/web_platform_tests/prod_config.py
-            - mozharness/configs/remove_executables.py
+            - web_platform_tests/prod_config.py
+            - remove_executables.py
         extra-options:
             - --test-type=reftest
 
@@ -437,8 +437,8 @@ xpcshell:
         config:
             by-test-platform:
                 default:
-                    - mozharness/configs/unittests/linux_unittest.py
-                    - mozharness/configs/remove_executables.py
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
         extra-options:
             - --xpcshell-suite=xpcshell
     # Bug 1281241: migrating to m3.large instances

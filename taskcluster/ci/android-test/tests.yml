@@ -19,9 +19,9 @@ cppunit:
         script: android_emulator_unittest.py
         no-read-buildbot-config: true
         config:
-            - mozharness/configs/android/androidarm_4_3.py
-            - mozharness/configs/remove_executables.py
-            - mozharness/configs/android/androidarm_4_3-tc.py
+            - android/androidarm_4_3.py
+            - remove_executables.py
+            - android/androidarm_4_3-tc.py
         extra-options:
             - --test-suite=cppunittest
 
@@ -40,9 +40,9 @@ crashtest:
         script: android_emulator_unittest.py
         no-read-buildbot-config: true
         config:
-            - mozharness/configs/android/androidarm_4_3.py
-            - mozharness/configs/remove_executables.py
-            - mozharness/configs/android/androidarm_4_3-tc.py
+            - android/androidarm_4_3.py
+            - remove_executables.py
+            - android/androidarm_4_3-tc.py
         extra-options:
             - --test-suite=crashtest
 
@@ -62,9 +62,9 @@ jsreftest:
         script: android_emulator_unittest.py
         no-read-buildbot-config: true
         config:
-            - mozharness/configs/android/androidarm_4_3.py
-            - mozharness/configs/remove_executables.py
-            - mozharness/configs/android/androidarm_4_3-tc.py
+            - android/androidarm_4_3.py
+            - remove_executables.py
+            - android/androidarm_4_3-tc.py
         extra-options:
             - --test-suite=jsreftest
 
@@ -82,9 +82,9 @@ marionette:
         script: android_emulator_unittest.py
         no-read-buildbot-config: true
         config:
-            - mozharness/configs/android/androidarm_4_3.py
-            - mozharness/configs/remove_executables.py
-            - mozharness/configs/android/androidarm_4_3-tc.py
+            - android/androidarm_4_3.py
+            - remove_executables.py
+            - android/androidarm_4_3-tc.py
         extra-options:
             - --test-suite=marionette
 
@@ -104,9 +104,9 @@ mochitest:
         script: android_emulator_unittest.py
         no-read-buildbot-config: true
         config:
-            - mozharness/configs/android/androidarm_4_3.py
-            - mozharness/configs/remove_executables.py
-            - mozharness/configs/android/androidarm_4_3-tc.py
+            - android/androidarm_4_3.py
+            - remove_executables.py
+            - android/androidarm_4_3-tc.py
         extra-options:
             - --test-suite=mochitest
 
@@ -126,9 +126,9 @@ mochitest-chrome:
         script: android_emulator_unittest.py
         no-read-buildbot-config: true
         config:
-            - mozharness/configs/android/androidarm_4_3.py
-            - mozharness/configs/remove_executables.py
-            - mozharness/configs/android/androidarm_4_3-tc.py
+            - android/androidarm_4_3.py
+            - remove_executables.py
+            - android/androidarm_4_3-tc.py
         extra-options:
             - --test-suite=mochitest-chrome
 
@@ -143,9 +143,9 @@ mochitest-clipboard:
         script: android_emulator_unittest.py
         no-read-buildbot-config: true
         config:
-            - mozharness/configs/android/androidarm_4_3.py
-            - mozharness/configs/remove_executables.py
-            - mozharness/configs/android/androidarm_4_3-tc.py
+            - android/androidarm_4_3.py
+            - remove_executables.py
+            - android/androidarm_4_3-tc.py
         extra-options:
             - --test-suite=mochitest-plain-clipboard
 
@@ -159,9 +159,9 @@ mochitest-gpu:
         script: android_emulator_unittest.py
         no-read-buildbot-config: true
         config:
-            - mozharness/configs/android/androidarm_4_3.py
-            - mozharness/configs/remove_executables.py
-            - mozharness/configs/android/androidarm_4_3-tc.py
+            - android/androidarm_4_3.py
+            - remove_executables.py
+            - android/androidarm_4_3-tc.py
         extra-options:
             - --test-suite=mochitest-plain-gpu
 
@@ -178,9 +178,9 @@ mochitest-media:
         script: android_emulator_unittest.py
         no-read-buildbot-config: true
         config:
-            - mozharness/configs/android/androidarm_4_3.py
-            - mozharness/configs/remove_executables.py
-            - mozharness/configs/android/androidarm_4_3-tc.py
+            - android/androidarm_4_3.py
+            - remove_executables.py
+            - android/androidarm_4_3-tc.py
         extra-options:
             - --test-suite=mochitest-media
 
@@ -197,9 +197,9 @@ mochitest-webgl:
         script: android_emulator_unittest.py
         no-read-buildbot-config: true
         config:
-            - mozharness/configs/android/androidarm_4_3.py
-            - mozharness/configs/remove_executables.py
-            - mozharness/configs/android/androidarm_4_3-tc.py
+            - android/androidarm_4_3.py
+            - remove_executables.py
+            - android/androidarm_4_3-tc.py
         extra-options:
             - --test-suite=mochitest-gl
 
@@ -219,9 +219,9 @@ reftest:
         script: android_emulator_unittest.py
         no-read-buildbot-config: true
         config:
-            - mozharness/configs/android/androidarm_4_3.py
-            - mozharness/configs/remove_executables.py
-            - mozharness/configs/android/androidarm_4_3-tc.py
+            - android/androidarm_4_3.py
+            - remove_executables.py
+            - android/androidarm_4_3-tc.py
         extra-options:
             - --test-suite=reftest
 
@@ -241,9 +241,9 @@ robocop:
         script: android_emulator_unittest.py
         no-read-buildbot-config: true
         config:
-            - mozharness/configs/android/androidarm_4_3.py
-            - mozharness/configs/remove_executables.py
-            - mozharness/configs/android/androidarm_4_3-tc.py
+            - android/androidarm_4_3.py
+            - remove_executables.py
+            - android/androidarm_4_3-tc.py
         extra-options:
             - --test-suite=robocop
 
@@ -267,8 +267,8 @@ xpcshell:
         config:
             by-test-platform:
                 default:
-                    - mozharness/configs/android/androidarm_4_3.py
-                    - mozharness/configs/remove_executables.py
-                    - mozharness/configs/android/androidarm_4_3-tc.py
+                    - android/androidarm_4_3.py
+                    - remove_executables.py
+                    - android/androidarm_4_3-tc.py
                 android-4.2-x86/opt:
-                    - mozharness/configs/android/androidx86-tc.py
+                    - android/androidx86-tc.py
