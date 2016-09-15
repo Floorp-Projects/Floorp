@@ -1519,6 +1519,10 @@ RecordedFontData::PlayEvent(Translator *aTranslator) const
   RefPtr<NativeFontResource> fontResource =
     Factory::CreateNativeFontResource(mData, mFontDetails.size,
                                       aTranslator->GetDesiredFontType());
+  if (!fontResource) {
+    return false;
+  }
+
   aTranslator->AddNativeFontResource(mFontDetails.fontDataKey, fontResource);
   return true;
 }
