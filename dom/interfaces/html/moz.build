@@ -51,7 +51,6 @@ XPIDL_SOURCES += [
     'nsIDOMHTMLTableCellElement.idl',
     'nsIDOMHTMLTextAreaElement.idl',
     'nsIDOMHTMLUListElement.idl',
-    'nsIDOMMediaError.idl',
     'nsIDOMMozBrowserFrame.idl',
     'nsIDOMTimeRanges.idl',
     'nsIDOMValidityState.idl',
