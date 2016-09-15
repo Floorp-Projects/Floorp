@@ -117,6 +117,35 @@ button {
   margin-left: 8px;
 }
 
+.target-status {
+  box-sizing: border-box;
+  display: inline-block;
+
+  min-width: 50px;
+  margin-right: 5px;
+  padding: 2px;
+
+  border-width: 1px;
+  border-style: solid;
+
+  font-size: 0.6em;
+  text-align: center;
+}
+
+.target-status-stopped {
+  border-color: grey;
+  background-color: lightgrey;
+}
+
+.target-status-running {
+  border-color: limegreen;
+  background-color: palegreen;
+}
+
+.target-name {
+  display: inline-block;
+}
+
 .addons-controls {
   display: flex;
   flex-direction: row;

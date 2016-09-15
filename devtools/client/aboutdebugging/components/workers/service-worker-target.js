@@ -102,10 +102,15 @@ module.exports = createClass({
     return !!this.props.target.workerActor;
   },
 
+  getServiceWorkerStatus() {
+    return this.isRunning() ? "running" : "stopped";
+  },
+
   render() {
     let { target, debugDisabled } = this.props;
     let { pushSubscription } = this.state;
     let isRunning = this.isRunning();
+    let status = this.getServiceWorkerStatus();
 
     return dom.div({ className: "target-container" },
       dom.img({
@@ -113,6 +118,8 @@ module.exports = createClass({
         role: "presentation",
         src: target.icon
       }),
+      dom.span({ className: `target-status target-status-${status}` },
+        Strings.GetStringFromName(status)),
       dom.div({ className: "target" },
         dom.div({ className: "target-name", title: target.name }, target.name),
         dom.ul({ className: "target-details" },
