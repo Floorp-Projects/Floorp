@@ -369,6 +369,10 @@ ImageEncoder::ExtractDataInternal(const nsAString& aType,
   // get image bytes
   nsresult rv;
   if (aImageBuffer) {
+    if (BufferSizeFromDimensions(aSize.width, aSize.height, 4) == 0) {
+      return NS_ERROR_INVALID_ARG;
+    }
+
     rv = ImageEncoder::GetInputStream(
       aSize.width,
       aSize.height,
@@ -417,6 +421,10 @@ ImageEncoder::ExtractDataInternal(const nsAString& aType,
                                   imgIEncoder::INPUT_FORMAT_HOSTARGB,
                                   aOptions);
     } else {
+      if (BufferSizeFromDimensions(aSize.width, aSize.height, 4) == 0) {
+        return NS_ERROR_INVALID_ARG;
+      }
+
       RefPtr<gfx::DataSourceSurface> dataSurface;
       RefPtr<layers::Image> image(aImage);
       dataSurface = GetBRGADataSourceSurfaceSync(image.forget());
@@ -439,11 +447,9 @@ ImageEncoder::ExtractDataInternal(const nsAString& aType,
       imgStream = do_QueryInterface(aEncoder);
     }
   } else {
-    CheckedInt32 requiredBytes = CheckedInt32(aSize.width) * CheckedInt32(aSize.height) * 4;
-    if (MOZ_UNLIKELY(!requiredBytes.isValid())) {
+    if (BufferSizeFromDimensions(aSize.width, aSize.height, 4) == 0) {
       return NS_ERROR_INVALID_ARG;
     }
-
 
     // no context, so we have to encode an empty image
     // note that if we didn't have a current context, the spec says we're
