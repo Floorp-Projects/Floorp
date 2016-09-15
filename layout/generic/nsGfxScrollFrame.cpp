@@ -4918,11 +4918,9 @@ void ScrollFrameHelper::PostOverflowEvent()
   rpc->AddWillPaintObserver(mAsyncScrollPortEvent.get());
 }
 
-bool
-ScrollFrameHelper::IsPhysicalLTR() const
+nsIFrame*
+ScrollFrameHelper::GetFrameForDir() const
 {
-  //TODO make bidi code set these from preferences
-
   nsIFrame *frame = mOuter;
   // XXX This is a bit on the slow side.
   if (mIsRoot) {
@@ -4946,8 +4944,7 @@ ScrollFrameHelper::IsPhysicalLTR() const
     }
   }
 
-  WritingMode wm = frame->GetWritingMode();
-  return wm.IsVertical() ? wm.IsVerticalLR() : wm.IsBidiLTR();
+  return frame;
 }
 
 bool
@@ -5822,7 +5819,7 @@ ScrollFrameHelper::GetScrolledFrameDir() const
     }
   }
 
-  return IsPhysicalLTR() ? NS_STYLE_DIRECTION_LTR : NS_STYLE_DIRECTION_RTL;
+  return IsBidiLTR() ? NS_STYLE_DIRECTION_LTR : NS_STYLE_DIRECTION_RTL;
 }
 
 nsRect
