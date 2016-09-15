@@ -25,12 +25,7 @@ public:
   static void StartupThreads();
   static void ShutdownThreads();
 
-  bool OnManagerThread();
-
 protected:
-  PVideoDecoderParent* AllocPVideoDecoderParent() override;
-  bool DeallocPVideoDecoderParent(PVideoDecoderParent* actor) override;
-
   bool RecvDeallocateSurfaceDescriptorGPUVideo(const SurfaceDescriptorGPUVideo& aSD) override;
 
   void ActorDestroy(mozilla::ipc::IProtocolManager<mozilla::ipc::IProtocol>::ActorDestroyReason) override {}
