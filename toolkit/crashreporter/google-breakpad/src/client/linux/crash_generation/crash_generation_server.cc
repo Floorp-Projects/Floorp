@@ -123,6 +123,9 @@ CrashGenerationServer::Stop()
   void* dummy;
   pthread_join(thread_, &dummy);
 
+  close(control_pipe_in_);
+  close(control_pipe_out_);
+
   started_ = false;
 }
 

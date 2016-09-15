@@ -29,6 +29,7 @@ if CONFIG['MOZ_CRASHREPORTER']:
     HOST_CXXFLAGS += [
         '-O2',
         '-g',
+        '-stdlib=libc++',
     ]
     HostLibrary('host_breakpad_mac_common_s')
 

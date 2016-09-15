@@ -31,6 +31,8 @@
 
 // dwarf_cu_to_module.cc: Unit tests for google_breakpad::DwarfCUToModule.
 
+#include <stdint.h>
+
 #include <string>
 #include <utility>
 #include <vector>
@@ -65,7 +67,7 @@ using ::testing::ValuesIn;
 class MockLineToModuleHandler: public DwarfCUToModule::LineToModuleHandler {
  public:
   MOCK_METHOD1(StartCompilationUnit, void(const string& compilation_dir));
-  MOCK_METHOD4(ReadProgram, void(const char* program, uint64 length,
+  MOCK_METHOD4(ReadProgram, void(const uint8_t *program, uint64 length,
                                  Module *module, vector<Module::Line> *lines));
 };
 
@@ -111,7 +113,7 @@ class CUFixtureBase {
    public:
     explicit AppendLinesFunctor(
         const vector<Module::Line> *lines) : lines_(lines) { }
-    void operator()(const char *program, uint64 length,
+    void operator()(const uint8_t *program, uint64 length,
                     Module *module, vector<Module::Line> *lines) {
       lines->insert(lines->end(), lines_->begin(), lines_->end());
     }
@@ -285,7 +287,7 @@ class CUFixtureBase {
   // Mock line program reader.
   MockLineToModuleHandler line_reader_;
   AppendLinesFunctor appender_;
-  static const char dummy_line_program_[];
+  static const uint8_t dummy_line_program_[];
   static const size_t dummy_line_size_;
 
   MockWarningReporter reporter_;
@@ -302,7 +304,7 @@ class CUFixtureBase {
   bool functions_filled_;
 };
 
-const char CUFixtureBase::dummy_line_program_[] = "lots of fun data";
+const uint8_t CUFixtureBase::dummy_line_program_[] = "lots of fun data";
 const size_t CUFixtureBase::dummy_line_size_ =
     sizeof(CUFixtureBase::dummy_line_program_);
 
@@ -375,7 +377,7 @@ void CUFixtureBase::ProcessStrangeAttributes(
   handler->ProcessAttributeReference((DwarfAttribute) 0xf7f7480f,
                                      (DwarfForm) 0x829e038a,
                                      0x50fddef44734fdecULL);
-  static const char buffer[10] = "frobynode";
+  static const uint8_t buffer[10] = "frobynode";
   handler->ProcessAttributeBuffer((DwarfAttribute) 0xa55ffb51,
                                   (DwarfForm) 0x2f43b041,
                                   buffer, sizeof(buffer));

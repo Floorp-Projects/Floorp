@@ -66,6 +66,7 @@ using namespace google_breakpad;
 
 namespace {
 
+typedef wasteful_vector<uint8_t> id_vector;
 typedef testing::Test LinuxPtraceDumperTest;
 
 /* Fixture for running tests in a child process. */
@@ -105,11 +106,17 @@ class LinuxPtraceDumperChildTest : public testing::Test {
    * This is achieved by defining a TestBody macro further below.
    */
   virtual void RealTestBody() = 0;
+
+  id_vector make_vector() {
+    return id_vector(&allocator, kDefaultBuildIdSize);
+  }
+
  private:
   static const int kFatalFailure = 1;
   static const int kNonFatalFailure = 2;
 
   pid_t child_pid_;
+  PageAllocator allocator;
 };
 
 }  // namespace
@@ -310,14 +317,15 @@ TEST_F(LinuxPtraceDumperChildTest, LinuxGateMappingID) {
 
   // Need to suspend the child so ptrace actually works.
   ASSERT_TRUE(dumper.ThreadsSuspend());
-  uint8_t identifier[sizeof(MDGUID)];
+  id_vector identifier(make_vector());
   ASSERT_TRUE(dumper.ElfFileIdentifierForMapping(*mappings[index],
                                                  true,
                                                  index,
                                                  identifier));
-  uint8_t empty_identifier[sizeof(MDGUID)];
-  memset(empty_identifier, 0, sizeof(empty_identifier));
-  EXPECT_NE(0, memcmp(empty_identifier, identifier, sizeof(identifier)));
+
+  id_vector empty_identifier(make_vector());
+  empty_identifier.resize(kDefaultBuildIdSize, 0);
+  EXPECT_NE(empty_identifier, identifier);
   EXPECT_TRUE(dumper.ThreadsResume());
 }
 #endif
@@ -343,19 +351,18 @@ TEST_F(LinuxPtraceDumperChildTest, FileIDsMatch) {
   }
   ASSERT_TRUE(found_exe);
 
-  uint8_t identifier1[sizeof(MDGUID)];
-  uint8_t identifier2[sizeof(MDGUID)];
+  id_vector identifier1(make_vector());
+  id_vector identifier2(make_vector());
   EXPECT_TRUE(dumper.ElfFileIdentifierForMapping(*mappings[i], true, i,
                                                  identifier1));
   FileID fileid(exe_name);
   EXPECT_TRUE(fileid.ElfFileIdentifier(identifier2));
-  char identifier_string1[37];
-  char identifier_string2[37];
-  FileID::ConvertIdentifierToString(identifier1, identifier_string1,
-                                    37);
-  FileID::ConvertIdentifierToString(identifier2, identifier_string2,
-                                    37);
-  EXPECT_STREQ(identifier_string1, identifier_string2);
+
+  string identifier_string1 =
+      FileID::ConvertIdentifierToUUIDString(identifier1);
+  string identifier_string2 =
+      FileID::ConvertIdentifierToUUIDString(identifier2);
+  EXPECT_EQ(identifier_string1, identifier_string2);
 }
 
 /* Get back to normal behavior of TEST*() macros wrt TestBody. */

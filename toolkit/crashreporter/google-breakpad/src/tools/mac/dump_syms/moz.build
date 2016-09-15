@@ -11,6 +11,8 @@ HOST_SOURCES += [
 HOST_CXXFLAGS += [
     '-O2',
     '-g',
+    '-pthread',
+    '-stdlib=libc++',
 ]
 
 # Order matters here, but HOST_USE_LIBS must be sorted.
