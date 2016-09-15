@@ -284,6 +284,9 @@ protected:
     // the composition in such case.  However, we should notify IME of the
     // selection change after the composition is committed.
     bool mPendingResettingIMContext;
+    // mRetrieveSurroundingSignalReceived is true after "retrieve_surrounding"
+    // signal is received until selection is changed in Gecko.
+    bool mRetrieveSurroundingSignalReceived;
 
     // sLastFocusedContext is a pointer to the last focused instance of this
     // class.  When a instance is destroyed and sLastFocusedContext refers it,
