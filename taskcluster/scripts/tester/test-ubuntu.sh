@@ -20,6 +20,7 @@ fi
 
 # Inputs, with defaults
 
+: MOZHARNESS_PATH               ${MOZHARNESS_PATH}
 : MOZHARNESS_URL                ${MOZHARNESS_URL}
 : MOZHARNESS_SCRIPT             ${MOZHARNESS_SCRIPT}
 : MOZHARNESS_CONFIG             ${MOZHARNESS_CONFIG}
@@ -48,7 +49,10 @@ maybe_start_pulse() {
 }
 
 # test required parameters are supplied
-if [[ -z ${MOZHARNESS_URL} ]]; then fail "MOZHARNESS_URL is not set"; fi
+if [ -z "${MOZHARNESS_PATH}" -a -z "${MOZHARNESS_URL}" ]; then
+    fail "MOZHARNESS_PATH or MOZHARNESS_URL must be defined";
+fi
+
 if [[ -z ${MOZHARNESS_SCRIPT} ]]; then fail "MOZHARNESS_SCRIPT is not set"; fi
 if [[ -z ${MOZHARNESS_CONFIG} ]]; then fail "MOZHARNESS_CONFIG is not set"; fi
 
@@ -65,16 +69,20 @@ cleanup() {
 }
 trap cleanup EXIT INT
 
-# Unzip the mozharness ZIP file created by the build task
-if ! curl --fail -o mozharness.zip --retry 10 -L $MOZHARNESS_URL; then
-    fail "failed to download mozharness zip"
-fi
-rm -rf mozharness
-unzip -q mozharness.zip
-rm mozharness.zip
+# Download mozharness if we're told to.
+if [ ${MOZHARNESS_URL} ]; then
+    if ! curl --fail -o mozharness.zip --retry 10 -L $MOZHARNESS_URL; then
+        fail "failed to download mozharness zip"
+    fi
+    rm -rf mozharness
+    unzip -q mozharness.zip
+    rm mozharness.zip
 
-if ! [ -d mozharness ]; then
-    fail "mozharness zip did not contain mozharness/"
+    if ! [ -d mozharness ]; then
+        fail "mozharness zip did not contain mozharness/"
+    fi
+
+    MOZHARNESS_PATH=`pwd`/mozharness
 fi
 
 # pulseaudio daemon must be started before xvfb on Ubuntu 12.04.
@@ -130,7 +138,7 @@ export MOZ_SOURCE_CHANGESET="${GECKO_HEAD_REV}"
 # support multiple, space delimited, config files
 config_cmds=""
 for cfg in $MOZHARNESS_CONFIG; do
-  config_cmds="${config_cmds} --config-file $WORKSPACE/mozharness/configs/${cfg}"
+  config_cmds="${config_cmds} --config-file ${MOZHARNESS_PATH}/configs/${cfg}"
 done
 
 mozharness_bin="/home/worker/bin/run-mozharness"
@@ -141,7 +149,7 @@ echo -e "#!/usr/bin/env bash
 # Some mozharness scripts assume base_work_dir is in
 # the current working directory, see bug 1279237
 cd $WORKSPACE
-cmd=\"python2.7 $WORKSPACE/mozharness/scripts/${MOZHARNESS_SCRIPT} ${config_cmds} ${@} \${@}\"
+cmd=\"python2.7 ${MOZHARNESS_PATH}/scripts/${MOZHARNESS_SCRIPT} ${config_cmds} ${@} \${@}\"
 echo \"Running: \${cmd}\"
 exec \${cmd}" > ${mozharness_bin}
 chmod +x ${mozharness_bin}
