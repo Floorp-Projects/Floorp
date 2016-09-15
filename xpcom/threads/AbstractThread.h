@@ -66,16 +66,6 @@ public:
   // threads which support it.
   virtual TaskDispatcher& TailDispatcher() = 0;
 
-  // Returns true if we have tail tasks scheduled, or if this isn't known.
-  // Returns false if we definitely don't have any tail tasks.
-  virtual bool MightHaveTailTasks() { return true; }
-
-  // Helper functions for methods on the tail TasklDispatcher. These check
-  // HasTailTasks to avoid allocating a TailDispatcher if it isn't
-  // needed.
-  void TailDispatchTasksFor(AbstractThread* aThread);
-  bool HasTailTasksFor(AbstractThread* aThread);
-
   // Returns true if this supports the tail dispatcher.
   bool SupportsTailDispatch() const { return mSupportsTailDispatch; }
 
