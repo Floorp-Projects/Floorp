@@ -3841,11 +3841,16 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason, AutoLockForExclusiveAcces
      * Relazify functions after discarding JIT code (we can't relazify
      * functions with JIT code) and before the actual mark phase, so that
      * the current GC can collect the JSScripts we're unlinking here.
+     * We do this only when we're performing a shrinking GC, as too much
+     * relazification can cause performance issues when we have to reparse
+     * the same functions over and over.
      */
-    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
+    if (invocationKind == GC_SHRINK) {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_RELAZIFY_FUNCTIONS);
-        RelazifyFunctions(zone, AllocKind::FUNCTION);
-        RelazifyFunctions(zone, AllocKind::FUNCTION_EXTENDED);
+        for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
+            RelazifyFunctions(zone, AllocKind::FUNCTION);
+            RelazifyFunctions(zone, AllocKind::FUNCTION_EXTENDED);
+        }
     }
 
     startNumber = number;
