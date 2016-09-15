@@ -44,6 +44,47 @@
 #include "third_party/lss/linux_syscall_support.h"
 #endif
 
+#if defined(__ANDROID__)
+#include <errno.h>
+
+namespace {
+
+bool g_need_ftruncate_workaround = false;
+bool g_checked_need_ftruncate_workaround = false;
+
+void CheckNeedsFTruncateWorkAround(int file) {
+  if (g_checked_need_ftruncate_workaround) {
+    return;
+  }
+  g_checked_need_ftruncate_workaround = true;
+
+  // Attempt an idempotent truncate that chops off nothing and see if we
+  // run into any sort of errors.
+  off_t offset = sys_lseek(file, 0, SEEK_END);
+  if (offset == -1) {
+    // lseek failed. Don't apply work around. It's unlikely that we can write
+    // to a minidump with either method.
+    return;
+  }
+
+  int result = ftruncate(file, offset);
+  if (result == -1 && errno == EACCES) {
+    // It very likely that we are running into the kernel bug in M devices.
+    // We are going to deploy the workaround for writing minidump files
+    // without uses of ftruncate(). This workaround should be fine even
+    // for kernels without the bug.
+    // See http://crbug.com/542840 for more details.
+    g_need_ftruncate_workaround = true;
+  }
+}
+
+bool NeedsFTruncateWorkAround() {
+  return g_need_ftruncate_workaround;
+}
+
+}  // namespace
+#endif  // defined(__ANDROID__)
+
 namespace google_breakpad {
 
 const MDRVA MinidumpFileWriter::kInvalidMDRVA = static_cast<MDRVA>(-1);
@@ -75,15 +116,24 @@ void MinidumpFileWriter::SetFile(const int file) {
   assert(file_ == -1);
   file_ = file;
   close_file_when_destroyed_ = false;
+#if defined(__ANDROID__)
+  CheckNeedsFTruncateWorkAround(file);
+#endif
 }
 
 bool MinidumpFileWriter::Close() {
   bool result = true;
 
   if (file_ != -1) {
-    if (-1 == ftruncate(file_, position_)) {
+#if defined(__ANDROID__)
+    if (!NeedsFTruncateWorkAround() && ftruncate(file_, position_)) {
        return false;
     }
+#else
+    if (ftruncate(file_, position_)) {
+       return false;
+    }
+#endif
 #if defined(__linux__) && __linux__
     result = (sys_close(file_) == 0);
 #else
@@ -220,6 +270,20 @@ bool MinidumpFileWriter::WriteMemory(const void *src, size_t size,
 MDRVA MinidumpFileWriter::Allocate(size_t size) {
   assert(size);
   assert(file_ != -1);
+#if defined(__ANDROID__)
+  if (NeedsFTruncateWorkAround()) {
+    // If ftruncate() is not available. We simply increase the size beyond the
+    // current file size. sys_write() will expand the file when data is written
+    // to it. Because we did not over allocate to fit memory pages, we also
+    // do not need to ftruncate() the file once we are done.
+    size_ += size;
+
+    // We don't need to seek since the file is unchanged.
+    MDRVA current_position = position_;
+    position_ += static_cast<MDRVA>(size);
+    return current_position;
+  }
+#endif
   size_t aligned_size = (size + 7) & ~7;  // 64-bit alignment
 
   if (position_ + aligned_size > size_) {
@@ -256,14 +320,16 @@ bool MinidumpFileWriter::Copy(MDRVA position, const void *src, ssize_t size) {
 #if defined(__linux__) && __linux__
   if (sys_lseek(file_, position, SEEK_SET) == static_cast<off_t>(position)) {
     if (sys_write(file_, src, size) == size) {
-#else
-  if (lseek(file_, position, SEEK_SET) == static_cast<off_t>(position)) {
-    if (write(file_, src, size) == size) {
-#endif
       return true;
     }
   }
-
+#else
+  if (lseek(file_, position, SEEK_SET) == static_cast<off_t>(position)) {
+    if (write(file_, src, size) == size) {
+      return true;
+    }
+  }
+#endif
   return false;
 }
 

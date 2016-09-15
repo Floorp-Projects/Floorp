@@ -9,6 +9,7 @@ HOST_SOURCES += [
     'bytereader.cc',
     'dwarf2diehandler.cc',
     'dwarf2reader.cc',
+    'elf_reader.cc',
     'functioninfo.cc',
 ]
 HOST_CXXFLAGS += [
@@ -25,5 +26,10 @@ HOST_CXXFLAGS += [
     '-frtti',
     '-funsigned-char',
 ]
+
+if CONFIG['OS_ARCH'] == 'Darwin':
+    HOST_CXXFLAGS += [
+        '-stdlib=libc++',
+    ]
 
 include('/toolkit/crashreporter/crashreporter.mozbuild')
