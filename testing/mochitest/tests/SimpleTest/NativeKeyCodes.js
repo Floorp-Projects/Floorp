@@ -10,13 +10,6 @@
 // be computed with active keyboard layout automatically.
 // FYI: Don't define scan code here for printable keys, numeric keys and
 //      IME keys because they depend on active keyboard layout.
-// XXX: Although, ABNT C1 key depends on keyboard layout in strictly speaking.
-//      However, computing its scan code from the virtual keycode,
-//      WIN_VK_ABNT_C1, doesn't work fine (computed as 0x0073, "IntlRo").
-//      Therefore, we should specify it here explicitly (it should be 0x0056,
-//      "IntlBackslash").  Fortunately, the key always generates 0x0056 with
-//      any keyboard layouts as far as I've tested.  So, this must be safe to
-//      test new regressions.
 
 const WIN_VK_LBUTTON                    = 0x00000001;
 const WIN_VK_RBUTTON                    = 0x00000002;
@@ -184,7 +177,7 @@ const WIN_VK_OEM_MINUS                  = 0x000000BD;
 const WIN_VK_OEM_PERIOD                 = 0x000000BE;
 const WIN_VK_OEM_2                      = 0x000000BF;
 const WIN_VK_OEM_3                      = 0x000000C0;
-const WIN_VK_ABNT_C1                    = 0x005600C1;
+const WIN_VK_ABNT_C1                    = 0x000000C1;
 const WIN_VK_ABNT_C2                    = 0x000000C2;
 const WIN_VK_OEM_4                      = 0x000000DB;
 const WIN_VK_OEM_5                      = 0x000000DC;
