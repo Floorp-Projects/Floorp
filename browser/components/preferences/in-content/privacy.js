@@ -439,18 +439,11 @@ var gPrivacyPane = {
       let buttonIndex = confirmRestartPrompt(autoStart.checked, 1,
                                              true, false);
       if (buttonIndex == CONFIRM_RESTART_PROMPT_RESTART_NOW) {
-        const Cc = Components.classes, Ci = Components.interfaces;
-        let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"]
-                           .createInstance(Ci.nsISupportsPRBool);
-        Services.obs.notifyObservers(cancelQuit, "quit-application-requested",
-                                     "restart");
-        if (!cancelQuit.data) {
-          pref.value = autoStart.hasAttribute('checked');
-          let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"]
-                             .getService(Ci.nsIAppStartup);
-          appStartup.quit(Ci.nsIAppStartup.eAttemptQuit |  Ci.nsIAppStartup.eRestart);
-          return;
-        }
+        pref.value = autoStart.hasAttribute('checked');
+        let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"]
+                           .getService(Ci.nsIAppStartup);
+        appStartup.quit(Ci.nsIAppStartup.eAttemptQuit |  Ci.nsIAppStartup.eRestart);
+        return;
       }
 
       this._shouldPromptForRestart = false;

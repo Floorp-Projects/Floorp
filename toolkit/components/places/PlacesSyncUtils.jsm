@@ -86,11 +86,6 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
         if (!children.length) {
           return;
         }
-        for (let child of children) {
-          // Note the current index for notifying observers. This can
-          // be removed once we switch to `reorder`.
-          child.oldIndex = child.index;
-        }
 
         // Reorder the list, ignoring missing children.
         let delta = 0;
@@ -279,24 +274,6 @@ function updateChildIndex(children, child, newIndex) {
     sibling.index += sign;
   }
   child.index = newIndex;
-}
-
-/**
- * Sends a bookmarks notification through the given observers.
- *
- * @param observers
- *        array of nsINavBookmarkObserver objects.
- * @param notification
- *        the notification name.
- * @param args
- *        array of arguments to pass to the notification.
- */
-function notify(observers, notification, args) {
-  for (let observer of observers) {
-    try {
-      observer[notification](...args);
-    } catch (ex) {}
-  }
 }
 
 // A helper for whenever we want to know if a GUID doesn't exist in the places

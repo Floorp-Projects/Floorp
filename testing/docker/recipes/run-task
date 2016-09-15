@@ -23,6 +23,7 @@ import json
 import os
 import pwd
 import re
+import stat
 import subprocess
 import sys
 import urllib2
@@ -187,20 +188,33 @@ def main(args):
     # Find all groups to which this user is a member.
     gids = [g.gr_gid for g in grp.getgrall() if args.group in g.gr_mem]
 
+    wanted_dir_mode = stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR
+    def set_dir_permissions(path, uid, gid):
+        st = os.lstat(path)
+
+        if st.st_uid != uid or st.st_gid != gid:
+            os.chown(path, uid, gid)
+
+        # Also make sure dirs are writable in case we need to delete
+        # them.
+        if st.st_mode & wanted_dir_mode != wanted_dir_mode:
+            os.chmod(path, st.st_mode | wanted_dir_mode)
+
     # Change ownership of requested paths.
     # FUTURE: parse argument values for user/group if we don't want to
     # use --user/--group.
     for path in args.chown or []:
         print_line(b'chown', b'changing ownership of %s to %s:%s\n' % (
                    path, user.pw_name, group.gr_name))
-        os.chown(path, uid, gid)
+        set_dir_permissions(path, uid, gid)
 
     for path in args.chown_recursive or []:
         print_line(b'chown', b'recursively changing ownership of %s to %s:%s\n' %
                    (path, user.pw_name, group.gr_name))
         for root, dirs, files in os.walk(path):
             for d in dirs:
-                os.chown(os.path.join(root, d), uid, gid)
+                set_dir_permissions(os.path.join(root, d), uid, gid)
+
             for f in files:
                 os.chown(os.path.join(root, f), uid, gid)
 

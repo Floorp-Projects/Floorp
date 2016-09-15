@@ -52,6 +52,7 @@ class ClientDownloadRequest_MachOHeaders;
 class ClientDownloadRequest_MachOHeaders_LoadCommand;
 class ClientDownloadRequest_ImageHeaders;
 class ClientDownloadRequest_ArchivedBinary;
+class ClientDownloadRequest_URLChainEntry;
 class ClientDownloadResponse;
 class ClientDownloadResponse_MoreInfo;
 class ClientDownloadReport;
@@ -101,6 +102,19 @@ bool ChromeUserPopulation_UserPopulation_IsValid(int value);
 const ChromeUserPopulation_UserPopulation ChromeUserPopulation_UserPopulation_UserPopulation_MIN = ChromeUserPopulation_UserPopulation_UNKNOWN_USER_POPULATION;
 const ChromeUserPopulation_UserPopulation ChromeUserPopulation_UserPopulation_UserPopulation_MAX = ChromeUserPopulation_UserPopulation_EXTENDED_REPORTING;
 const int ChromeUserPopulation_UserPopulation_UserPopulation_ARRAYSIZE = ChromeUserPopulation_UserPopulation_UserPopulation_MAX + 1;
+
+enum ClientDownloadRequest_URLChainEntry_URLType {
+  ClientDownloadRequest_URLChainEntry_URLType_DOWNLOAD_URL = 1,
+  ClientDownloadRequest_URLChainEntry_URLType_DOWNLOAD_REFERRER = 2,
+  ClientDownloadRequest_URLChainEntry_URLType_LANDING_PAGE = 3,
+  ClientDownloadRequest_URLChainEntry_URLType_LANDING_REFERRER = 4,
+  ClientDownloadRequest_URLChainEntry_URLType_CLIENT_REDIRECT = 5,
+  ClientDownloadRequest_URLChainEntry_URLType_SERVER_REDIRECT = 6
+};
+bool ClientDownloadRequest_URLChainEntry_URLType_IsValid(int value);
+const ClientDownloadRequest_URLChainEntry_URLType ClientDownloadRequest_URLChainEntry_URLType_URLType_MIN = ClientDownloadRequest_URLChainEntry_URLType_DOWNLOAD_URL;
+const ClientDownloadRequest_URLChainEntry_URLType ClientDownloadRequest_URLChainEntry_URLType_URLType_MAX = ClientDownloadRequest_URLChainEntry_URLType_SERVER_REDIRECT;
+const int ClientDownloadRequest_URLChainEntry_URLType_URLType_ARRAYSIZE = ClientDownloadRequest_URLChainEntry_URLType_URLType_MAX + 1;
 
 enum ClientDownloadRequest_ResourceType {
   ClientDownloadRequest_ResourceType_DOWNLOAD_URL = 0,
@@ -2676,6 +2690,204 @@ class ClientDownloadRequest_ArchivedBinary : public ::google::protobuf::MessageL
 };
 // -------------------------------------------------------------------
 
+class ClientDownloadRequest_URLChainEntry : public ::google::protobuf::MessageLite {
+ public:
+  ClientDownloadRequest_URLChainEntry();
+  virtual ~ClientDownloadRequest_URLChainEntry();
+
+  ClientDownloadRequest_URLChainEntry(const ClientDownloadRequest_URLChainEntry& from);
+
+  inline ClientDownloadRequest_URLChainEntry& operator=(const ClientDownloadRequest_URLChainEntry& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::std::string& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::std::string* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ClientDownloadRequest_URLChainEntry& default_instance();
+
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  // Returns the internal default instance pointer. This function can
+  // return NULL thus should not be used by the user. This is intended
+  // for Protobuf internal code. Please use default_instance() declared
+  // above instead.
+  static inline const ClientDownloadRequest_URLChainEntry* internal_default_instance() {
+    return default_instance_;
+  }
+  #endif
+
+  void Swap(ClientDownloadRequest_URLChainEntry* other);
+
+  // implements Message ----------------------------------------------
+
+  ClientDownloadRequest_URLChainEntry* New() const;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
+  void CopyFrom(const ClientDownloadRequest_URLChainEntry& from);
+  void MergeFrom(const ClientDownloadRequest_URLChainEntry& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  void DiscardUnknownFields();
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+  ::std::string GetTypeName() const;
+
+  // nested types ----------------------------------------------------
+
+  typedef ClientDownloadRequest_URLChainEntry_URLType URLType;
+  static const URLType DOWNLOAD_URL = ClientDownloadRequest_URLChainEntry_URLType_DOWNLOAD_URL;
+  static const URLType DOWNLOAD_REFERRER = ClientDownloadRequest_URLChainEntry_URLType_DOWNLOAD_REFERRER;
+  static const URLType LANDING_PAGE = ClientDownloadRequest_URLChainEntry_URLType_LANDING_PAGE;
+  static const URLType LANDING_REFERRER = ClientDownloadRequest_URLChainEntry_URLType_LANDING_REFERRER;
+  static const URLType CLIENT_REDIRECT = ClientDownloadRequest_URLChainEntry_URLType_CLIENT_REDIRECT;
+  static const URLType SERVER_REDIRECT = ClientDownloadRequest_URLChainEntry_URLType_SERVER_REDIRECT;
+  static inline bool URLType_IsValid(int value) {
+    return ClientDownloadRequest_URLChainEntry_URLType_IsValid(value);
+  }
+  static const URLType URLType_MIN =
+    ClientDownloadRequest_URLChainEntry_URLType_URLType_MIN;
+  static const URLType URLType_MAX =
+    ClientDownloadRequest_URLChainEntry_URLType_URLType_MAX;
+  static const int URLType_ARRAYSIZE =
+    ClientDownloadRequest_URLChainEntry_URLType_URLType_ARRAYSIZE;
+
+  // accessors -------------------------------------------------------
+
+  // optional string url = 1;
+  inline bool has_url() const;
+  inline void clear_url();
+  static const int kUrlFieldNumber = 1;
+  inline const ::std::string& url() const;
+  inline void set_url(const ::std::string& value);
+  inline void set_url(const char* value);
+  inline void set_url(const char* value, size_t size);
+  inline ::std::string* mutable_url();
+  inline ::std::string* release_url();
+  inline void set_allocated_url(::std::string* url);
+
+  // optional .safe_browsing.ClientDownloadRequest.URLChainEntry.URLType type = 2;
+  inline bool has_type() const;
+  inline void clear_type();
+  static const int kTypeFieldNumber = 2;
+  inline ::safe_browsing::ClientDownloadRequest_URLChainEntry_URLType type() const;
+  inline void set_type(::safe_browsing::ClientDownloadRequest_URLChainEntry_URLType value);
+
+  // optional string ip_address = 3;
+  inline bool has_ip_address() const;
+  inline void clear_ip_address();
+  static const int kIpAddressFieldNumber = 3;
+  inline const ::std::string& ip_address() const;
+  inline void set_ip_address(const ::std::string& value);
+  inline void set_ip_address(const char* value);
+  inline void set_ip_address(const char* value, size_t size);
+  inline ::std::string* mutable_ip_address();
+  inline ::std::string* release_ip_address();
+  inline void set_allocated_ip_address(::std::string* ip_address);
+
+  // optional string referrer = 4;
+  inline bool has_referrer() const;
+  inline void clear_referrer();
+  static const int kReferrerFieldNumber = 4;
+  inline const ::std::string& referrer() const;
+  inline void set_referrer(const ::std::string& value);
+  inline void set_referrer(const char* value);
+  inline void set_referrer(const char* value, size_t size);
+  inline ::std::string* mutable_referrer();
+  inline ::std::string* release_referrer();
+  inline void set_allocated_referrer(::std::string* referrer);
+
+  // optional string main_frame_referrer = 5;
+  inline bool has_main_frame_referrer() const;
+  inline void clear_main_frame_referrer();
+  static const int kMainFrameReferrerFieldNumber = 5;
+  inline const ::std::string& main_frame_referrer() const;
+  inline void set_main_frame_referrer(const ::std::string& value);
+  inline void set_main_frame_referrer(const char* value);
+  inline void set_main_frame_referrer(const char* value, size_t size);
+  inline ::std::string* mutable_main_frame_referrer();
+  inline ::std::string* release_main_frame_referrer();
+  inline void set_allocated_main_frame_referrer(::std::string* main_frame_referrer);
+
+  // optional bool is_retargeting = 6;
+  inline bool has_is_retargeting() const;
+  inline void clear_is_retargeting();
+  static const int kIsRetargetingFieldNumber = 6;
+  inline bool is_retargeting() const;
+  inline void set_is_retargeting(bool value);
+
+  // optional bool is_user_initiated = 7;
+  inline bool has_is_user_initiated() const;
+  inline void clear_is_user_initiated();
+  static const int kIsUserInitiatedFieldNumber = 7;
+  inline bool is_user_initiated() const;
+  inline void set_is_user_initiated(bool value);
+
+  // optional double timestamp_in_millisec = 8;
+  inline bool has_timestamp_in_millisec() const;
+  inline void clear_timestamp_in_millisec();
+  static const int kTimestampInMillisecFieldNumber = 8;
+  inline double timestamp_in_millisec() const;
+  inline void set_timestamp_in_millisec(double value);
+
+  // @@protoc_insertion_point(class_scope:safe_browsing.ClientDownloadRequest.URLChainEntry)
+ private:
+  inline void set_has_url();
+  inline void clear_has_url();
+  inline void set_has_type();
+  inline void clear_has_type();
+  inline void set_has_ip_address();
+  inline void clear_has_ip_address();
+  inline void set_has_referrer();
+  inline void clear_has_referrer();
+  inline void set_has_main_frame_referrer();
+  inline void clear_has_main_frame_referrer();
+  inline void set_has_is_retargeting();
+  inline void clear_has_is_retargeting();
+  inline void set_has_is_user_initiated();
+  inline void clear_has_is_user_initiated();
+  inline void set_has_timestamp_in_millisec();
+  inline void clear_has_timestamp_in_millisec();
+
+  ::std::string _unknown_fields_;
+
+  ::google::protobuf::uint32 _has_bits_[1];
+  mutable int _cached_size_;
+  ::std::string* url_;
+  ::std::string* ip_address_;
+  ::std::string* referrer_;
+  ::std::string* main_frame_referrer_;
+  int type_;
+  bool is_retargeting_;
+  bool is_user_initiated_;
+  double timestamp_in_millisec_;
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  friend void  protobuf_AddDesc_chromium_2fchrome_2fcommon_2fsafe_5fbrowsing_2fcsd_2eproto_impl();
+  #else
+  friend void  protobuf_AddDesc_chromium_2fchrome_2fcommon_2fsafe_5fbrowsing_2fcsd_2eproto();
+  #endif
+  friend void protobuf_AssignDesc_chromium_2fchrome_2fcommon_2fsafe_5fbrowsing_2fcsd_2eproto();
+  friend void protobuf_ShutdownFile_chromium_2fchrome_2fcommon_2fsafe_5fbrowsing_2fcsd_2eproto();
+
+  void InitAsDefaultInstance();
+  static ClientDownloadRequest_URLChainEntry* default_instance_;
+};
+// -------------------------------------------------------------------
+
 class ClientDownloadRequest : public ::google::protobuf::MessageLite {
  public:
   ClientDownloadRequest();
@@ -2744,6 +2956,7 @@ class ClientDownloadRequest : public ::google::protobuf::MessageLite {
   typedef ClientDownloadRequest_MachOHeaders MachOHeaders;
   typedef ClientDownloadRequest_ImageHeaders ImageHeaders;
   typedef ClientDownloadRequest_ArchivedBinary ArchivedBinary;
+  typedef ClientDownloadRequest_URLChainEntry URLChainEntry;
 
   typedef ClientDownloadRequest_ResourceType ResourceType;
   static const ResourceType DOWNLOAD_URL = ClientDownloadRequest_ResourceType_DOWNLOAD_URL;
@@ -2924,10 +3137,10 @@ class ClientDownloadRequest : public ::google::protobuf::MessageLite {
   inline bool skipped_certificate_whitelist() const;
   inline void set_skipped_certificate_whitelist(bool value);
 
-  // repeated string alternate_extensions = 32;
+  // repeated string alternate_extensions = 35;
   inline int alternate_extensions_size() const;
   inline void clear_alternate_extensions();
-  static const int kAlternateExtensionsFieldNumber = 32;
+  static const int kAlternateExtensionsFieldNumber = 35;
   inline const ::std::string& alternate_extensions(int index) const;
   inline ::std::string* mutable_alternate_extensions(int index);
   inline void set_alternate_extensions(int index, const ::std::string& value);
@@ -2939,6 +3152,18 @@ class ClientDownloadRequest : public ::google::protobuf::MessageLite {
   inline void add_alternate_extensions(const char* value, size_t size);
   inline const ::google::protobuf::RepeatedPtrField< ::std::string>& alternate_extensions() const;
   inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_alternate_extensions();
+
+  // repeated .safe_browsing.ClientDownloadRequest.URLChainEntry url_chain = 36;
+  inline int url_chain_size() const;
+  inline void clear_url_chain();
+  static const int kUrlChainFieldNumber = 36;
+  inline const ::safe_browsing::ClientDownloadRequest_URLChainEntry& url_chain(int index) const;
+  inline ::safe_browsing::ClientDownloadRequest_URLChainEntry* mutable_url_chain(int index);
+  inline ::safe_browsing::ClientDownloadRequest_URLChainEntry* add_url_chain();
+  inline const ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientDownloadRequest_URLChainEntry >&
+      url_chain() const;
+  inline ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientDownloadRequest_URLChainEntry >*
+      mutable_url_chain();
 
   // @@protoc_insertion_point(class_scope:safe_browsing.ClientDownloadRequest)
  private:
@@ -2989,6 +3214,7 @@ class ClientDownloadRequest : public ::google::protobuf::MessageLite {
   bool skipped_certificate_whitelist_;
   ::safe_browsing::ChromeUserPopulation* population_;
   ::google::protobuf::RepeatedPtrField< ::std::string> alternate_extensions_;
+  ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientDownloadRequest_URLChainEntry > url_chain_;
   #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
   friend void  protobuf_AddDesc_chromium_2fchrome_2fcommon_2fsafe_5fbrowsing_2fcsd_2eproto_impl();
   #else
@@ -3193,7 +3419,7 @@ class ClientDownloadResponse : public ::google::protobuf::MessageLite {
 
   // accessors -------------------------------------------------------
 
-  // required .safe_browsing.ClientDownloadResponse.Verdict verdict = 1;
+  // optional .safe_browsing.ClientDownloadResponse.Verdict verdict = 1 [default = SAFE];
   inline bool has_verdict() const;
   inline void clear_verdict();
   static const int kVerdictFieldNumber = 1;
@@ -12057,6 +12283,411 @@ inline void ClientDownloadRequest_ArchivedBinary::set_allocated_image_headers(::
 
 // -------------------------------------------------------------------
 
+// ClientDownloadRequest_URLChainEntry
+
+// optional string url = 1;
+inline bool ClientDownloadRequest_URLChainEntry::has_url() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void ClientDownloadRequest_URLChainEntry::set_has_url() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void ClientDownloadRequest_URLChainEntry::clear_has_url() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void ClientDownloadRequest_URLChainEntry::clear_url() {
+  if (url_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    url_->clear();
+  }
+  clear_has_url();
+}
+inline const ::std::string& ClientDownloadRequest_URLChainEntry::url() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.URLChainEntry.url)
+  return *url_;
+}
+inline void ClientDownloadRequest_URLChainEntry::set_url(const ::std::string& value) {
+  set_has_url();
+  if (url_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    url_ = new ::std::string;
+  }
+  url_->assign(value);
+  // @@protoc_insertion_point(field_set:safe_browsing.ClientDownloadRequest.URLChainEntry.url)
+}
+inline void ClientDownloadRequest_URLChainEntry::set_url(const char* value) {
+  set_has_url();
+  if (url_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    url_ = new ::std::string;
+  }
+  url_->assign(value);
+  // @@protoc_insertion_point(field_set_char:safe_browsing.ClientDownloadRequest.URLChainEntry.url)
+}
+inline void ClientDownloadRequest_URLChainEntry::set_url(const char* value, size_t size) {
+  set_has_url();
+  if (url_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    url_ = new ::std::string;
+  }
+  url_->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ClientDownloadRequest.URLChainEntry.url)
+}
+inline ::std::string* ClientDownloadRequest_URLChainEntry::mutable_url() {
+  set_has_url();
+  if (url_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    url_ = new ::std::string;
+  }
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientDownloadRequest.URLChainEntry.url)
+  return url_;
+}
+inline ::std::string* ClientDownloadRequest_URLChainEntry::release_url() {
+  clear_has_url();
+  if (url_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    return NULL;
+  } else {
+    ::std::string* temp = url_;
+    url_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+    return temp;
+  }
+}
+inline void ClientDownloadRequest_URLChainEntry::set_allocated_url(::std::string* url) {
+  if (url_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    delete url_;
+  }
+  if (url) {
+    set_has_url();
+    url_ = url;
+  } else {
+    clear_has_url();
+    url_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  }
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientDownloadRequest.URLChainEntry.url)
+}
+
+// optional .safe_browsing.ClientDownloadRequest.URLChainEntry.URLType type = 2;
+inline bool ClientDownloadRequest_URLChainEntry::has_type() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void ClientDownloadRequest_URLChainEntry::set_has_type() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void ClientDownloadRequest_URLChainEntry::clear_has_type() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void ClientDownloadRequest_URLChainEntry::clear_type() {
+  type_ = 1;
+  clear_has_type();
+}
+inline ::safe_browsing::ClientDownloadRequest_URLChainEntry_URLType ClientDownloadRequest_URLChainEntry::type() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.URLChainEntry.type)
+  return static_cast< ::safe_browsing::ClientDownloadRequest_URLChainEntry_URLType >(type_);
+}
+inline void ClientDownloadRequest_URLChainEntry::set_type(::safe_browsing::ClientDownloadRequest_URLChainEntry_URLType value) {
+  assert(::safe_browsing::ClientDownloadRequest_URLChainEntry_URLType_IsValid(value));
+  set_has_type();
+  type_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ClientDownloadRequest.URLChainEntry.type)
+}
+
+// optional string ip_address = 3;
+inline bool ClientDownloadRequest_URLChainEntry::has_ip_address() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void ClientDownloadRequest_URLChainEntry::set_has_ip_address() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void ClientDownloadRequest_URLChainEntry::clear_has_ip_address() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void ClientDownloadRequest_URLChainEntry::clear_ip_address() {
+  if (ip_address_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    ip_address_->clear();
+  }
+  clear_has_ip_address();
+}
+inline const ::std::string& ClientDownloadRequest_URLChainEntry::ip_address() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.URLChainEntry.ip_address)
+  return *ip_address_;
+}
+inline void ClientDownloadRequest_URLChainEntry::set_ip_address(const ::std::string& value) {
+  set_has_ip_address();
+  if (ip_address_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    ip_address_ = new ::std::string;
+  }
+  ip_address_->assign(value);
+  // @@protoc_insertion_point(field_set:safe_browsing.ClientDownloadRequest.URLChainEntry.ip_address)
+}
+inline void ClientDownloadRequest_URLChainEntry::set_ip_address(const char* value) {
+  set_has_ip_address();
+  if (ip_address_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    ip_address_ = new ::std::string;
+  }
+  ip_address_->assign(value);
+  // @@protoc_insertion_point(field_set_char:safe_browsing.ClientDownloadRequest.URLChainEntry.ip_address)
+}
+inline void ClientDownloadRequest_URLChainEntry::set_ip_address(const char* value, size_t size) {
+  set_has_ip_address();
+  if (ip_address_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    ip_address_ = new ::std::string;
+  }
+  ip_address_->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ClientDownloadRequest.URLChainEntry.ip_address)
+}
+inline ::std::string* ClientDownloadRequest_URLChainEntry::mutable_ip_address() {
+  set_has_ip_address();
+  if (ip_address_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    ip_address_ = new ::std::string;
+  }
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientDownloadRequest.URLChainEntry.ip_address)
+  return ip_address_;
+}
+inline ::std::string* ClientDownloadRequest_URLChainEntry::release_ip_address() {
+  clear_has_ip_address();
+  if (ip_address_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    return NULL;
+  } else {
+    ::std::string* temp = ip_address_;
+    ip_address_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+    return temp;
+  }
+}
+inline void ClientDownloadRequest_URLChainEntry::set_allocated_ip_address(::std::string* ip_address) {
+  if (ip_address_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    delete ip_address_;
+  }
+  if (ip_address) {
+    set_has_ip_address();
+    ip_address_ = ip_address;
+  } else {
+    clear_has_ip_address();
+    ip_address_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  }
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientDownloadRequest.URLChainEntry.ip_address)
+}
+
+// optional string referrer = 4;
+inline bool ClientDownloadRequest_URLChainEntry::has_referrer() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void ClientDownloadRequest_URLChainEntry::set_has_referrer() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void ClientDownloadRequest_URLChainEntry::clear_has_referrer() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void ClientDownloadRequest_URLChainEntry::clear_referrer() {
+  if (referrer_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    referrer_->clear();
+  }
+  clear_has_referrer();
+}
+inline const ::std::string& ClientDownloadRequest_URLChainEntry::referrer() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.URLChainEntry.referrer)
+  return *referrer_;
+}
+inline void ClientDownloadRequest_URLChainEntry::set_referrer(const ::std::string& value) {
+  set_has_referrer();
+  if (referrer_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    referrer_ = new ::std::string;
+  }
+  referrer_->assign(value);
+  // @@protoc_insertion_point(field_set:safe_browsing.ClientDownloadRequest.URLChainEntry.referrer)
+}
+inline void ClientDownloadRequest_URLChainEntry::set_referrer(const char* value) {
+  set_has_referrer();
+  if (referrer_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    referrer_ = new ::std::string;
+  }
+  referrer_->assign(value);
+  // @@protoc_insertion_point(field_set_char:safe_browsing.ClientDownloadRequest.URLChainEntry.referrer)
+}
+inline void ClientDownloadRequest_URLChainEntry::set_referrer(const char* value, size_t size) {
+  set_has_referrer();
+  if (referrer_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    referrer_ = new ::std::string;
+  }
+  referrer_->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ClientDownloadRequest.URLChainEntry.referrer)
+}
+inline ::std::string* ClientDownloadRequest_URLChainEntry::mutable_referrer() {
+  set_has_referrer();
+  if (referrer_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    referrer_ = new ::std::string;
+  }
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientDownloadRequest.URLChainEntry.referrer)
+  return referrer_;
+}
+inline ::std::string* ClientDownloadRequest_URLChainEntry::release_referrer() {
+  clear_has_referrer();
+  if (referrer_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    return NULL;
+  } else {
+    ::std::string* temp = referrer_;
+    referrer_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+    return temp;
+  }
+}
+inline void ClientDownloadRequest_URLChainEntry::set_allocated_referrer(::std::string* referrer) {
+  if (referrer_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    delete referrer_;
+  }
+  if (referrer) {
+    set_has_referrer();
+    referrer_ = referrer;
+  } else {
+    clear_has_referrer();
+    referrer_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  }
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientDownloadRequest.URLChainEntry.referrer)
+}
+
+// optional string main_frame_referrer = 5;
+inline bool ClientDownloadRequest_URLChainEntry::has_main_frame_referrer() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void ClientDownloadRequest_URLChainEntry::set_has_main_frame_referrer() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void ClientDownloadRequest_URLChainEntry::clear_has_main_frame_referrer() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void ClientDownloadRequest_URLChainEntry::clear_main_frame_referrer() {
+  if (main_frame_referrer_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    main_frame_referrer_->clear();
+  }
+  clear_has_main_frame_referrer();
+}
+inline const ::std::string& ClientDownloadRequest_URLChainEntry::main_frame_referrer() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.URLChainEntry.main_frame_referrer)
+  return *main_frame_referrer_;
+}
+inline void ClientDownloadRequest_URLChainEntry::set_main_frame_referrer(const ::std::string& value) {
+  set_has_main_frame_referrer();
+  if (main_frame_referrer_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    main_frame_referrer_ = new ::std::string;
+  }
+  main_frame_referrer_->assign(value);
+  // @@protoc_insertion_point(field_set:safe_browsing.ClientDownloadRequest.URLChainEntry.main_frame_referrer)
+}
+inline void ClientDownloadRequest_URLChainEntry::set_main_frame_referrer(const char* value) {
+  set_has_main_frame_referrer();
+  if (main_frame_referrer_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    main_frame_referrer_ = new ::std::string;
+  }
+  main_frame_referrer_->assign(value);
+  // @@protoc_insertion_point(field_set_char:safe_browsing.ClientDownloadRequest.URLChainEntry.main_frame_referrer)
+}
+inline void ClientDownloadRequest_URLChainEntry::set_main_frame_referrer(const char* value, size_t size) {
+  set_has_main_frame_referrer();
+  if (main_frame_referrer_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    main_frame_referrer_ = new ::std::string;
+  }
+  main_frame_referrer_->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ClientDownloadRequest.URLChainEntry.main_frame_referrer)
+}
+inline ::std::string* ClientDownloadRequest_URLChainEntry::mutable_main_frame_referrer() {
+  set_has_main_frame_referrer();
+  if (main_frame_referrer_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    main_frame_referrer_ = new ::std::string;
+  }
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientDownloadRequest.URLChainEntry.main_frame_referrer)
+  return main_frame_referrer_;
+}
+inline ::std::string* ClientDownloadRequest_URLChainEntry::release_main_frame_referrer() {
+  clear_has_main_frame_referrer();
+  if (main_frame_referrer_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    return NULL;
+  } else {
+    ::std::string* temp = main_frame_referrer_;
+    main_frame_referrer_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+    return temp;
+  }
+}
+inline void ClientDownloadRequest_URLChainEntry::set_allocated_main_frame_referrer(::std::string* main_frame_referrer) {
+  if (main_frame_referrer_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    delete main_frame_referrer_;
+  }
+  if (main_frame_referrer) {
+    set_has_main_frame_referrer();
+    main_frame_referrer_ = main_frame_referrer;
+  } else {
+    clear_has_main_frame_referrer();
+    main_frame_referrer_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  }
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientDownloadRequest.URLChainEntry.main_frame_referrer)
+}
+
+// optional bool is_retargeting = 6;
+inline bool ClientDownloadRequest_URLChainEntry::has_is_retargeting() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void ClientDownloadRequest_URLChainEntry::set_has_is_retargeting() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void ClientDownloadRequest_URLChainEntry::clear_has_is_retargeting() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void ClientDownloadRequest_URLChainEntry::clear_is_retargeting() {
+  is_retargeting_ = false;
+  clear_has_is_retargeting();
+}
+inline bool ClientDownloadRequest_URLChainEntry::is_retargeting() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.URLChainEntry.is_retargeting)
+  return is_retargeting_;
+}
+inline void ClientDownloadRequest_URLChainEntry::set_is_retargeting(bool value) {
+  set_has_is_retargeting();
+  is_retargeting_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ClientDownloadRequest.URLChainEntry.is_retargeting)
+}
+
+// optional bool is_user_initiated = 7;
+inline bool ClientDownloadRequest_URLChainEntry::has_is_user_initiated() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void ClientDownloadRequest_URLChainEntry::set_has_is_user_initiated() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void ClientDownloadRequest_URLChainEntry::clear_has_is_user_initiated() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void ClientDownloadRequest_URLChainEntry::clear_is_user_initiated() {
+  is_user_initiated_ = false;
+  clear_has_is_user_initiated();
+}
+inline bool ClientDownloadRequest_URLChainEntry::is_user_initiated() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.URLChainEntry.is_user_initiated)
+  return is_user_initiated_;
+}
+inline void ClientDownloadRequest_URLChainEntry::set_is_user_initiated(bool value) {
+  set_has_is_user_initiated();
+  is_user_initiated_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ClientDownloadRequest.URLChainEntry.is_user_initiated)
+}
+
+// optional double timestamp_in_millisec = 8;
+inline bool ClientDownloadRequest_URLChainEntry::has_timestamp_in_millisec() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+inline void ClientDownloadRequest_URLChainEntry::set_has_timestamp_in_millisec() {
+  _has_bits_[0] |= 0x00000080u;
+}
+inline void ClientDownloadRequest_URLChainEntry::clear_has_timestamp_in_millisec() {
+  _has_bits_[0] &= ~0x00000080u;
+}
+inline void ClientDownloadRequest_URLChainEntry::clear_timestamp_in_millisec() {
+  timestamp_in_millisec_ = 0;
+  clear_has_timestamp_in_millisec();
+}
+inline double ClientDownloadRequest_URLChainEntry::timestamp_in_millisec() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.URLChainEntry.timestamp_in_millisec)
+  return timestamp_in_millisec_;
+}
+inline void ClientDownloadRequest_URLChainEntry::set_timestamp_in_millisec(double value) {
+  set_has_timestamp_in_millisec();
+  timestamp_in_millisec_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ClientDownloadRequest.URLChainEntry.timestamp_in_millisec)
+}
+
+// -------------------------------------------------------------------
+
 // ClientDownloadRequest
 
 // required string url = 1;
@@ -12672,7 +13303,7 @@ inline void ClientDownloadRequest::set_skipped_certificate_whitelist(bool value)
   // @@protoc_insertion_point(field_set:safe_browsing.ClientDownloadRequest.skipped_certificate_whitelist)
 }
 
-// repeated string alternate_extensions = 32;
+// repeated string alternate_extensions = 35;
 inline int ClientDownloadRequest::alternate_extensions_size() const {
   return alternate_extensions_.size();
 }
@@ -12724,6 +13355,36 @@ inline ::google::protobuf::RepeatedPtrField< ::std::string>*
 ClientDownloadRequest::mutable_alternate_extensions() {
   // @@protoc_insertion_point(field_mutable_list:safe_browsing.ClientDownloadRequest.alternate_extensions)
   return &alternate_extensions_;
+}
+
+// repeated .safe_browsing.ClientDownloadRequest.URLChainEntry url_chain = 36;
+inline int ClientDownloadRequest::url_chain_size() const {
+  return url_chain_.size();
+}
+inline void ClientDownloadRequest::clear_url_chain() {
+  url_chain_.Clear();
+}
+inline const ::safe_browsing::ClientDownloadRequest_URLChainEntry& ClientDownloadRequest::url_chain(int index) const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.url_chain)
+  return url_chain_.Get(index);
+}
+inline ::safe_browsing::ClientDownloadRequest_URLChainEntry* ClientDownloadRequest::mutable_url_chain(int index) {
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientDownloadRequest.url_chain)
+  return url_chain_.Mutable(index);
+}
+inline ::safe_browsing::ClientDownloadRequest_URLChainEntry* ClientDownloadRequest::add_url_chain() {
+  // @@protoc_insertion_point(field_add:safe_browsing.ClientDownloadRequest.url_chain)
+  return url_chain_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientDownloadRequest_URLChainEntry >&
+ClientDownloadRequest::url_chain() const {
+  // @@protoc_insertion_point(field_list:safe_browsing.ClientDownloadRequest.url_chain)
+  return url_chain_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientDownloadRequest_URLChainEntry >*
+ClientDownloadRequest::mutable_url_chain() {
+  // @@protoc_insertion_point(field_mutable_list:safe_browsing.ClientDownloadRequest.url_chain)
+  return &url_chain_;
 }
 
 // -------------------------------------------------------------------
@@ -12886,7 +13547,7 @@ inline void ClientDownloadResponse_MoreInfo::set_allocated_url(::std::string* ur
 
 // ClientDownloadResponse
 
-// required .safe_browsing.ClientDownloadResponse.Verdict verdict = 1;
+// optional .safe_browsing.ClientDownloadResponse.Verdict verdict = 1 [default = SAFE];
 inline bool ClientDownloadResponse::has_verdict() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }

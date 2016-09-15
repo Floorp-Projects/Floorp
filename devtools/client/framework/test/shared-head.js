@@ -107,13 +107,22 @@ registerCleanupFunction(function* cleanup() {
 /**
  * Add a new test tab in the browser and load the given url.
  * @param {String} url The url to be loaded in the new tab
+ * @param {Object} options Object with various optional fields:
+ *   - {Boolean} background If true, open the tab in background
+ *   - {ChromeWindow} window Firefox top level window we should use to open the tab
  * @return a promise that resolves to the tab object when the url is loaded
  */
-var addTab = Task.async(function* (url) {
+var addTab = Task.async(function* (url, options = { background: false, window: window }) {
   info("Adding a new tab with URL: " + url);
 
-  let tab = gBrowser.selectedTab = gBrowser.addTab(url);
-  yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  let { background } = options;
+  let { gBrowser } = options.window ? options.window : window;
+
+  let tab = gBrowser.addTab(url);
+  if (!background) {
+    gBrowser.selectedTab = tab;
+  }
+  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   info("Tab added and finished loading");
 
@@ -128,6 +137,7 @@ var addTab = Task.async(function* (url) {
 var removeTab = Task.async(function* (tab) {
   info("Removing tab.");
 
+  let { gBrowser } = tab.ownerDocument.defaultView;
   let onClose = once(gBrowser.tabContainer, "TabClose");
   gBrowser.removeTab(tab);
   yield onClose;

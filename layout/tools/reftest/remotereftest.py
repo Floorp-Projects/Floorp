@@ -320,29 +320,36 @@ class RemoteReftest(RefTest):
             except:
                 print "Warning: cleaning up pidfile '%s' was unsuccessful from the test harness" % self.pidFile
 
-def runTests(options, parser):
-    if (options.dm_trans == 'sut' and options.deviceIP == None):
+
+def run_test_harness(parser, options):
+    if options.dm_trans == 'sut' and options.deviceIP == None:
         print "Error: If --dm_trans = sut, you must provide a device IP to connect to via the --deviceIP option"
         return 1
 
+    dm_args = {
+        'deviceRoot': options.remoteTestRoot,
+        'host': options.deviceIP,
+        'port': options.devicePort,
+    }
+
+    dm_cls = mozdevice.DroidSUT
+    if options.dm_trans == 'adb':
+        dm_args['adbPath'] = options.adb_path
+        if not dm_args['host']:
+            dm_args['deviceSerial'] = options.deviceSerial
+        dm_cls = mozdevice.DroidADB
+
     try:
-        if (options.dm_trans == "adb"):
-            if (options.deviceIP):
-                dm = mozdevice.DroidADB(options.deviceIP, options.devicePort, deviceRoot=options.remoteTestRoot)
-            elif (options.deviceSerial):
-                dm = mozdevice.DroidADB(None, None, deviceSerial=options.deviceSerial, deviceRoot=options.remoteTestRoot)
-            else:
-                dm = mozdevice.DroidADB(None, None, deviceRoot=options.remoteTestRoot)
-        else:
-            dm = mozdevice.DroidSUT(options.deviceIP, options.devicePort, deviceRoot=options.remoteTestRoot)
+        dm = dm_cls(**dm_args)
     except mozdevice.DMError:
+        traceback.print_exc()
         print "Automation Error: exception while initializing devicemanager.  Most likely the device is not in a testable state."
         return 1
 
     automation = RemoteAutomation(None)
     automation.setDeviceManager(dm)
 
-    if (options.remoteProductName != None):
+    if options.remoteProductName:
         automation.setProduct(options.remoteProductName)
 
     # Set up the defaults and ensure options are set
@@ -398,20 +405,8 @@ def runTests(options, parser):
 
     return retVal
 
-def run(**kwargs):
-    # Mach gives us kwargs; this is a way to turn them back into an
-    # options object
-    parser = reftestcommandline.RemoteArgumentsParser()
-    parser.set_defaults(**kwargs)
-    options = parser.parse_args(kwargs["tests"])
-    retVal = runTests(options, parser)
-    return retVal
-
-def main():
-    parser = reftestcommandline.RemoteArgumentsParser()
-    options = parser.parse_args()
-    retVal = runTests(options, parser)
-    return retVal
 
 if __name__ == "__main__":
-    sys.exit(main())
+    parser = reftestcommandline.RemoteArgumentsParser()
+    options = parser.parse_args()
+    sys.exit(run_test_harness(parser, options))

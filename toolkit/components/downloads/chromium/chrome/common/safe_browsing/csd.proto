@@ -380,7 +380,46 @@ message ClientDownloadRequest {
   // PPAPI_SAVE_REQUEST type messages may have more than one suggested filetype.
   // Each element in this collection indicates an alternate extension including
   // the leading extension separator.
-  repeated string alternate_extensions = 32;
+  repeated string alternate_extensions = 35;
+
+  message URLChainEntry {
+    enum URLType {
+      DOWNLOAD_URL = 1;
+      DOWNLOAD_REFERRER = 2;
+      LANDING_PAGE = 3;
+      LANDING_REFERRER = 4;
+      CLIENT_REDIRECT = 5;
+      SERVER_REDIRECT = 6;
+    }
+
+    // [required] The url of this Entry.
+    optional string url = 1;
+
+    // Type of URLs, such as download url, download referrer, etc.
+    optional URLType type = 2;
+
+    // IP address corresponding to url.
+    optional string ip_address = 3;
+
+    // Referrer url of this entry.
+    optional string referrer = 4;
+
+    // Main frame URL of referrer.
+    optional string main_frame_referrer = 5;
+
+    // If this URL loads in a different tab/frame from previous one.
+    optional bool is_retargeting = 6;
+
+    // If there is a user gesture attached to this transition.
+    optional bool is_user_initiated = 7;
+
+    optional double timestamp_in_millisec = 8;
+  }  // End of URLChainEntry
+
+  // URLs transitions from landing referrer to download in reverse chronological
+  // order, i.e. download url comes first in this list, and landing referrer
+  // comes last.
+  repeated URLChainEntry url_chain = 36;
 }
 
 message ClientDownloadResponse {
@@ -400,7 +439,7 @@ message ClientDownloadResponse {
     // Chrome should show the default warning if configured for this file type.
     UNKNOWN = 5;
   }
-  required Verdict verdict = 1;
+  optional Verdict verdict = 1 [default = SAFE];
 
   message MoreInfo {
     // A human-readable string describing the nature of the warning.

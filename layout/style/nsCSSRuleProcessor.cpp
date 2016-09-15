@@ -1463,12 +1463,8 @@ static inline bool
 edgeChildMatches(Element* aElement, TreeMatchContext& aTreeMatchContext,
                  bool checkFirst, bool checkLast)
 {
-  nsIContent *parent = aElement->GetParent();
-  if (!parent) {
-    return false;
-  }
-
-  if (aTreeMatchContext.mForStyling)
+  nsIContent* parent = aElement->GetParent();
+  if (parent && aTreeMatchContext.mForStyling)
     parent->SetFlags(NODE_HAS_EDGE_CHILD_SELECTOR);
 
   return (!checkFirst ||
@@ -1485,12 +1481,8 @@ nthChildGenericMatches(Element* aElement,
                        nsPseudoClassList* pseudoClass,
                        bool isOfType, bool isFromEnd)
 {
-  nsIContent *parent = aElement->GetParent();
-  if (!parent) {
-    return false;
-  }
-
-  if (aTreeMatchContext.mForStyling) {
+  nsIContent* parent = aElement->GetParent();
+  if (parent && aTreeMatchContext.mForStyling) {
     if (isFromEnd)
       parent->SetFlags(NODE_HAS_SLOW_SELECTOR);
     else
@@ -1527,11 +1519,7 @@ edgeOfTypeMatches(Element* aElement, TreeMatchContext& aTreeMatchContext,
                   bool checkFirst, bool checkLast)
 {
   nsIContent *parent = aElement->GetParent();
-  if (!parent) {
-    return false;
-  }
-
-  if (aTreeMatchContext.mForStyling) {
+  if (parent && aTreeMatchContext.mForStyling) {
     if (checkLast)
       parent->SetFlags(NODE_HAS_SLOW_SELECTOR);
     else
@@ -1943,7 +1931,7 @@ static bool SelectorMatches(Element* aElement,
           if (parent) {
             if (aTreeMatchContext.mForStyling)
               parent->SetFlags(NODE_HAS_EDGE_CHILD_SELECTOR);
-            
+
             uint32_t index = parent->GetChildCount();
             do {
               lastNode = parent->GetChildAt(--index);

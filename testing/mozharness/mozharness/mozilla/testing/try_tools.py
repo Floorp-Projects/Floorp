@@ -78,6 +78,8 @@ class TryToolsMixin(TransferMixin):
         msg = None
         if "try_message" in self.config and self.config["try_message"]:
             msg = self.config["try_message"]
+        elif 'TRY_COMMIT_MSG' in os.environ:
+            msg = os.environ['TRY_COMMIT_MSG']
         elif self._is_try():
             if self.buildbot_config['sourcestamp']['changes']:
                 msg = self.buildbot_config['sourcestamp']['changes'][-1]['comments']
@@ -154,7 +156,8 @@ class TryToolsMixin(TransferMixin):
         repo_path = None
         if self.buildbot_config and 'properties' in self.buildbot_config:
             repo_path = self.buildbot_config['properties'].get('branch')
-        return self.config.get('branch', repo_path) == 'try'
+        return (self.config.get('branch', repo_path) == 'try' or
+                'TRY_COMMIT_MSG' in os.environ)
 
     @PostScriptAction('download-and-extract')
     def set_extra_try_arguments(self, action, success=None):

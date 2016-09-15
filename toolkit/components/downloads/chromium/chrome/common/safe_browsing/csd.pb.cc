@@ -36,6 +36,7 @@ void protobuf_ShutdownFile_chromium_2fchrome_2fcommon_2fsafe_5fbrowsing_2fcsd_2e
   delete ClientDownloadRequest_MachOHeaders_LoadCommand::default_instance_;
   delete ClientDownloadRequest_ImageHeaders::default_instance_;
   delete ClientDownloadRequest_ArchivedBinary::default_instance_;
+  delete ClientDownloadRequest_URLChainEntry::default_instance_;
   delete ClientDownloadResponse::default_instance_;
   delete ClientDownloadResponse_MoreInfo::default_instance_;
   delete ClientDownloadReport::default_instance_;
@@ -109,6 +110,7 @@ void protobuf_AddDesc_chromium_2fchrome_2fcommon_2fsafe_5fbrowsing_2fcsd_2eproto
   ClientDownloadRequest_MachOHeaders_LoadCommand::default_instance_ = new ClientDownloadRequest_MachOHeaders_LoadCommand();
   ClientDownloadRequest_ImageHeaders::default_instance_ = new ClientDownloadRequest_ImageHeaders();
   ClientDownloadRequest_ArchivedBinary::default_instance_ = new ClientDownloadRequest_ArchivedBinary();
+  ClientDownloadRequest_URLChainEntry::default_instance_ = new ClientDownloadRequest_URLChainEntry();
   ClientDownloadResponse::default_instance_ = new ClientDownloadResponse();
   ClientDownloadResponse_MoreInfo::default_instance_ = new ClientDownloadResponse_MoreInfo();
   ClientDownloadReport::default_instance_ = new ClientDownloadReport();
@@ -168,6 +170,7 @@ void protobuf_AddDesc_chromium_2fchrome_2fcommon_2fsafe_5fbrowsing_2fcsd_2eproto
   ClientDownloadRequest_MachOHeaders_LoadCommand::default_instance_->InitAsDefaultInstance();
   ClientDownloadRequest_ImageHeaders::default_instance_->InitAsDefaultInstance();
   ClientDownloadRequest_ArchivedBinary::default_instance_->InitAsDefaultInstance();
+  ClientDownloadRequest_URLChainEntry::default_instance_->InitAsDefaultInstance();
   ClientDownloadResponse::default_instance_->InitAsDefaultInstance();
   ClientDownloadResponse_MoreInfo::default_instance_->InitAsDefaultInstance();
   ClientDownloadReport::default_instance_->InitAsDefaultInstance();
@@ -5778,6 +5781,499 @@ void ClientDownloadRequest_ArchivedBinary::Swap(ClientDownloadRequest_ArchivedBi
 
 // -------------------------------------------------------------------
 
+bool ClientDownloadRequest_URLChainEntry_URLType_IsValid(int value) {
+  switch(value) {
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+    case 6:
+      return true;
+    default:
+      return false;
+  }
+}
+
+#ifndef _MSC_VER
+const ClientDownloadRequest_URLChainEntry_URLType ClientDownloadRequest_URLChainEntry::DOWNLOAD_URL;
+const ClientDownloadRequest_URLChainEntry_URLType ClientDownloadRequest_URLChainEntry::DOWNLOAD_REFERRER;
+const ClientDownloadRequest_URLChainEntry_URLType ClientDownloadRequest_URLChainEntry::LANDING_PAGE;
+const ClientDownloadRequest_URLChainEntry_URLType ClientDownloadRequest_URLChainEntry::LANDING_REFERRER;
+const ClientDownloadRequest_URLChainEntry_URLType ClientDownloadRequest_URLChainEntry::CLIENT_REDIRECT;
+const ClientDownloadRequest_URLChainEntry_URLType ClientDownloadRequest_URLChainEntry::SERVER_REDIRECT;
+const ClientDownloadRequest_URLChainEntry_URLType ClientDownloadRequest_URLChainEntry::URLType_MIN;
+const ClientDownloadRequest_URLChainEntry_URLType ClientDownloadRequest_URLChainEntry::URLType_MAX;
+const int ClientDownloadRequest_URLChainEntry::URLType_ARRAYSIZE;
+#endif  // _MSC_VER
+#ifndef _MSC_VER
+const int ClientDownloadRequest_URLChainEntry::kUrlFieldNumber;
+const int ClientDownloadRequest_URLChainEntry::kTypeFieldNumber;
+const int ClientDownloadRequest_URLChainEntry::kIpAddressFieldNumber;
+const int ClientDownloadRequest_URLChainEntry::kReferrerFieldNumber;
+const int ClientDownloadRequest_URLChainEntry::kMainFrameReferrerFieldNumber;
+const int ClientDownloadRequest_URLChainEntry::kIsRetargetingFieldNumber;
+const int ClientDownloadRequest_URLChainEntry::kIsUserInitiatedFieldNumber;
+const int ClientDownloadRequest_URLChainEntry::kTimestampInMillisecFieldNumber;
+#endif  // !_MSC_VER
+
+ClientDownloadRequest_URLChainEntry::ClientDownloadRequest_URLChainEntry()
+  : ::google::protobuf::MessageLite() {
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:safe_browsing.ClientDownloadRequest.URLChainEntry)
+}
+
+void ClientDownloadRequest_URLChainEntry::InitAsDefaultInstance() {
+}
+
+ClientDownloadRequest_URLChainEntry::ClientDownloadRequest_URLChainEntry(const ClientDownloadRequest_URLChainEntry& from)
+  : ::google::protobuf::MessageLite() {
+  SharedCtor();
+  MergeFrom(from);
+  // @@protoc_insertion_point(copy_constructor:safe_browsing.ClientDownloadRequest.URLChainEntry)
+}
+
+void ClientDownloadRequest_URLChainEntry::SharedCtor() {
+  ::google::protobuf::internal::GetEmptyString();
+  _cached_size_ = 0;
+  url_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  type_ = 1;
+  ip_address_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  referrer_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  main_frame_referrer_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  is_retargeting_ = false;
+  is_user_initiated_ = false;
+  timestamp_in_millisec_ = 0;
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+ClientDownloadRequest_URLChainEntry::~ClientDownloadRequest_URLChainEntry() {
+  // @@protoc_insertion_point(destructor:safe_browsing.ClientDownloadRequest.URLChainEntry)
+  SharedDtor();
+}
+
+void ClientDownloadRequest_URLChainEntry::SharedDtor() {
+  if (url_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    delete url_;
+  }
+  if (ip_address_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    delete ip_address_;
+  }
+  if (referrer_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    delete referrer_;
+  }
+  if (main_frame_referrer_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    delete main_frame_referrer_;
+  }
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  if (this != &default_instance()) {
+  #else
+  if (this != default_instance_) {
+  #endif
+  }
+}
+
+void ClientDownloadRequest_URLChainEntry::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ClientDownloadRequest_URLChainEntry& ClientDownloadRequest_URLChainEntry::default_instance() {
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  protobuf_AddDesc_chromium_2fchrome_2fcommon_2fsafe_5fbrowsing_2fcsd_2eproto();
+#else
+  if (default_instance_ == NULL) protobuf_AddDesc_chromium_2fchrome_2fcommon_2fsafe_5fbrowsing_2fcsd_2eproto();
+#endif
+  return *default_instance_;
+}
+
+ClientDownloadRequest_URLChainEntry* ClientDownloadRequest_URLChainEntry::default_instance_ = NULL;
+
+ClientDownloadRequest_URLChainEntry* ClientDownloadRequest_URLChainEntry::New() const {
+  return new ClientDownloadRequest_URLChainEntry;
+}
+
+void ClientDownloadRequest_URLChainEntry::Clear() {
+#define OFFSET_OF_FIELD_(f) (reinterpret_cast<char*>(      \
+  &reinterpret_cast<ClientDownloadRequest_URLChainEntry*>(16)->f) - \
+   reinterpret_cast<char*>(16))
+
+#define ZR_(first, last) do {                              \
+    size_t f = OFFSET_OF_FIELD_(first);                    \
+    size_t n = OFFSET_OF_FIELD_(last) - f + sizeof(last);  \
+    ::memset(&first, 0, n);                                \
+  } while (0)
+
+  if (_has_bits_[0 / 32] & 255) {
+    ZR_(is_retargeting_, timestamp_in_millisec_);
+    if (has_url()) {
+      if (url_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+        url_->clear();
+      }
+    }
+    type_ = 1;
+    if (has_ip_address()) {
+      if (ip_address_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+        ip_address_->clear();
+      }
+    }
+    if (has_referrer()) {
+      if (referrer_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+        referrer_->clear();
+      }
+    }
+    if (has_main_frame_referrer()) {
+      if (main_frame_referrer_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+        main_frame_referrer_->clear();
+      }
+    }
+  }
+
+#undef OFFSET_OF_FIELD_
+#undef ZR_
+
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+  mutable_unknown_fields()->clear();
+}
+
+bool ClientDownloadRequest_URLChainEntry::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  ::google::protobuf::io::StringOutputStream unknown_fields_string(
+      mutable_unknown_fields());
+  ::google::protobuf::io::CodedOutputStream unknown_fields_stream(
+      &unknown_fields_string);
+  // @@protoc_insertion_point(parse_start:safe_browsing.ClientDownloadRequest.URLChainEntry)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoff(127);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // optional string url = 1;
+      case 1: {
+        if (tag == 10) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_url()));
+        } else {
+          goto handle_unusual;
+        }
+        if (input->ExpectTag(16)) goto parse_type;
+        break;
+      }
+
+      // optional .safe_browsing.ClientDownloadRequest.URLChainEntry.URLType type = 2;
+      case 2: {
+        if (tag == 16) {
+         parse_type:
+          int value;
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
+                 input, &value)));
+          if (::safe_browsing::ClientDownloadRequest_URLChainEntry_URLType_IsValid(value)) {
+            set_type(static_cast< ::safe_browsing::ClientDownloadRequest_URLChainEntry_URLType >(value));
+          } else {
+            unknown_fields_stream.WriteVarint32(tag);
+            unknown_fields_stream.WriteVarint32(value);
+          }
+        } else {
+          goto handle_unusual;
+        }
+        if (input->ExpectTag(26)) goto parse_ip_address;
+        break;
+      }
+
+      // optional string ip_address = 3;
+      case 3: {
+        if (tag == 26) {
+         parse_ip_address:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_ip_address()));
+        } else {
+          goto handle_unusual;
+        }
+        if (input->ExpectTag(34)) goto parse_referrer;
+        break;
+      }
+
+      // optional string referrer = 4;
+      case 4: {
+        if (tag == 34) {
+         parse_referrer:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_referrer()));
+        } else {
+          goto handle_unusual;
+        }
+        if (input->ExpectTag(42)) goto parse_main_frame_referrer;
+        break;
+      }
+
+      // optional string main_frame_referrer = 5;
+      case 5: {
+        if (tag == 42) {
+         parse_main_frame_referrer:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_main_frame_referrer()));
+        } else {
+          goto handle_unusual;
+        }
+        if (input->ExpectTag(48)) goto parse_is_retargeting;
+        break;
+      }
+
+      // optional bool is_retargeting = 6;
+      case 6: {
+        if (tag == 48) {
+         parse_is_retargeting:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &is_retargeting_)));
+          set_has_is_retargeting();
+        } else {
+          goto handle_unusual;
+        }
+        if (input->ExpectTag(56)) goto parse_is_user_initiated;
+        break;
+      }
+
+      // optional bool is_user_initiated = 7;
+      case 7: {
+        if (tag == 56) {
+         parse_is_user_initiated:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &is_user_initiated_)));
+          set_has_is_user_initiated();
+        } else {
+          goto handle_unusual;
+        }
+        if (input->ExpectTag(65)) goto parse_timestamp_in_millisec;
+        break;
+      }
+
+      // optional double timestamp_in_millisec = 8;
+      case 8: {
+        if (tag == 65) {
+         parse_timestamp_in_millisec:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
+                 input, &timestamp_in_millisec_)));
+          set_has_timestamp_in_millisec();
+        } else {
+          goto handle_unusual;
+        }
+        if (input->ExpectAtEnd()) goto success;
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0 ||
+            ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(
+            input, tag, &unknown_fields_stream));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:safe_browsing.ClientDownloadRequest.URLChainEntry)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:safe_browsing.ClientDownloadRequest.URLChainEntry)
+  return false;
+#undef DO_
+}
+
+void ClientDownloadRequest_URLChainEntry::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:safe_browsing.ClientDownloadRequest.URLChainEntry)
+  // optional string url = 1;
+  if (has_url()) {
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      1, this->url(), output);
+  }
+
+  // optional .safe_browsing.ClientDownloadRequest.URLChainEntry.URLType type = 2;
+  if (has_type()) {
+    ::google::protobuf::internal::WireFormatLite::WriteEnum(
+      2, this->type(), output);
+  }
+
+  // optional string ip_address = 3;
+  if (has_ip_address()) {
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      3, this->ip_address(), output);
+  }
+
+  // optional string referrer = 4;
+  if (has_referrer()) {
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      4, this->referrer(), output);
+  }
+
+  // optional string main_frame_referrer = 5;
+  if (has_main_frame_referrer()) {
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      5, this->main_frame_referrer(), output);
+  }
+
+  // optional bool is_retargeting = 6;
+  if (has_is_retargeting()) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(6, this->is_retargeting(), output);
+  }
+
+  // optional bool is_user_initiated = 7;
+  if (has_is_user_initiated()) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(7, this->is_user_initiated(), output);
+  }
+
+  // optional double timestamp_in_millisec = 8;
+  if (has_timestamp_in_millisec()) {
+    ::google::protobuf::internal::WireFormatLite::WriteDouble(8, this->timestamp_in_millisec(), output);
+  }
+
+  output->WriteRaw(unknown_fields().data(),
+                   unknown_fields().size());
+  // @@protoc_insertion_point(serialize_end:safe_browsing.ClientDownloadRequest.URLChainEntry)
+}
+
+int ClientDownloadRequest_URLChainEntry::ByteSize() const {
+  int total_size = 0;
+
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    // optional string url = 1;
+    if (has_url()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->url());
+    }
+
+    // optional .safe_browsing.ClientDownloadRequest.URLChainEntry.URLType type = 2;
+    if (has_type()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::EnumSize(this->type());
+    }
+
+    // optional string ip_address = 3;
+    if (has_ip_address()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->ip_address());
+    }
+
+    // optional string referrer = 4;
+    if (has_referrer()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->referrer());
+    }
+
+    // optional string main_frame_referrer = 5;
+    if (has_main_frame_referrer()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->main_frame_referrer());
+    }
+
+    // optional bool is_retargeting = 6;
+    if (has_is_retargeting()) {
+      total_size += 1 + 1;
+    }
+
+    // optional bool is_user_initiated = 7;
+    if (has_is_user_initiated()) {
+      total_size += 1 + 1;
+    }
+
+    // optional double timestamp_in_millisec = 8;
+    if (has_timestamp_in_millisec()) {
+      total_size += 1 + 8;
+    }
+
+  }
+  total_size += unknown_fields().size();
+
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = total_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void ClientDownloadRequest_URLChainEntry::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const ClientDownloadRequest_URLChainEntry*>(&from));
+}
+
+void ClientDownloadRequest_URLChainEntry::MergeFrom(const ClientDownloadRequest_URLChainEntry& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (from.has_url()) {
+      set_url(from.url());
+    }
+    if (from.has_type()) {
+      set_type(from.type());
+    }
+    if (from.has_ip_address()) {
+      set_ip_address(from.ip_address());
+    }
+    if (from.has_referrer()) {
+      set_referrer(from.referrer());
+    }
+    if (from.has_main_frame_referrer()) {
+      set_main_frame_referrer(from.main_frame_referrer());
+    }
+    if (from.has_is_retargeting()) {
+      set_is_retargeting(from.is_retargeting());
+    }
+    if (from.has_is_user_initiated()) {
+      set_is_user_initiated(from.is_user_initiated());
+    }
+    if (from.has_timestamp_in_millisec()) {
+      set_timestamp_in_millisec(from.timestamp_in_millisec());
+    }
+  }
+  mutable_unknown_fields()->append(from.unknown_fields());
+}
+
+void ClientDownloadRequest_URLChainEntry::CopyFrom(const ClientDownloadRequest_URLChainEntry& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool ClientDownloadRequest_URLChainEntry::IsInitialized() const {
+
+  return true;
+}
+
+void ClientDownloadRequest_URLChainEntry::Swap(ClientDownloadRequest_URLChainEntry* other) {
+  if (other != this) {
+    std::swap(url_, other->url_);
+    std::swap(type_, other->type_);
+    std::swap(ip_address_, other->ip_address_);
+    std::swap(referrer_, other->referrer_);
+    std::swap(main_frame_referrer_, other->main_frame_referrer_);
+    std::swap(is_retargeting_, other->is_retargeting_);
+    std::swap(is_user_initiated_, other->is_user_initiated_);
+    std::swap(timestamp_in_millisec_, other->timestamp_in_millisec_);
+    std::swap(_has_bits_[0], other->_has_bits_[0]);
+    _unknown_fields_.swap(other->_unknown_fields_);
+    std::swap(_cached_size_, other->_cached_size_);
+  }
+}
+
+::std::string ClientDownloadRequest_URLChainEntry::GetTypeName() const {
+  return "safe_browsing.ClientDownloadRequest.URLChainEntry";
+}
+
+
+// -------------------------------------------------------------------
+
 #ifndef _MSC_VER
 const int ClientDownloadRequest::kUrlFieldNumber;
 const int ClientDownloadRequest::kDigestsFieldNumber;
@@ -5795,6 +6291,7 @@ const int ClientDownloadRequest::kArchiveValidFieldNumber;
 const int ClientDownloadRequest::kSkippedUrlWhitelistFieldNumber;
 const int ClientDownloadRequest::kSkippedCertificateWhitelistFieldNumber;
 const int ClientDownloadRequest::kAlternateExtensionsFieldNumber;
+const int ClientDownloadRequest::kUrlChainFieldNumber;
 #endif  // !_MSC_VER
 
 ClientDownloadRequest::ClientDownloadRequest()
@@ -5955,6 +6452,7 @@ void ClientDownloadRequest::Clear() {
   resources_.Clear();
   archived_binary_.Clear();
   alternate_extensions_.Clear();
+  url_chain_.Clear();
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   mutable_unknown_fields()->clear();
 }
@@ -6183,20 +6681,34 @@ bool ClientDownloadRequest::MergePartialFromCodedStream(
         } else {
           goto handle_unusual;
         }
-        if (input->ExpectTag(258)) goto parse_alternate_extensions;
+        if (input->ExpectTag(282)) goto parse_alternate_extensions;
         break;
       }
 
-      // repeated string alternate_extensions = 32;
-      case 32: {
-        if (tag == 258) {
+      // repeated string alternate_extensions = 35;
+      case 35: {
+        if (tag == 282) {
          parse_alternate_extensions:
           DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->add_alternate_extensions()));
         } else {
           goto handle_unusual;
         }
-        if (input->ExpectTag(258)) goto parse_alternate_extensions;
+        if (input->ExpectTag(282)) goto parse_alternate_extensions;
+        if (input->ExpectTag(290)) goto parse_url_chain;
+        break;
+      }
+
+      // repeated .safe_browsing.ClientDownloadRequest.URLChainEntry url_chain = 36;
+      case 36: {
+        if (tag == 290) {
+         parse_url_chain:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+                input, add_url_chain()));
+        } else {
+          goto handle_unusual;
+        }
+        if (input->ExpectTag(290)) goto parse_url_chain;
         if (input->ExpectAtEnd()) goto success;
         break;
       }
@@ -6311,10 +6823,16 @@ void ClientDownloadRequest::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteBool(31, this->skipped_certificate_whitelist(), output);
   }
 
-  // repeated string alternate_extensions = 32;
+  // repeated string alternate_extensions = 35;
   for (int i = 0; i < this->alternate_extensions_size(); i++) {
     ::google::protobuf::internal::WireFormatLite::WriteString(
-      32, this->alternate_extensions(i), output);
+      35, this->alternate_extensions(i), output);
+  }
+
+  // repeated .safe_browsing.ClientDownloadRequest.URLChainEntry url_chain = 36;
+  for (int i = 0; i < this->url_chain_size(); i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      36, this->url_chain(i), output);
   }
 
   output->WriteRaw(unknown_fields().data(),
@@ -6427,11 +6945,19 @@ int ClientDownloadRequest::ByteSize() const {
         this->archived_binary(i));
   }
 
-  // repeated string alternate_extensions = 32;
+  // repeated string alternate_extensions = 35;
   total_size += 2 * this->alternate_extensions_size();
   for (int i = 0; i < this->alternate_extensions_size(); i++) {
     total_size += ::google::protobuf::internal::WireFormatLite::StringSize(
       this->alternate_extensions(i));
+  }
+
+  // repeated .safe_browsing.ClientDownloadRequest.URLChainEntry url_chain = 36;
+  total_size += 2 * this->url_chain_size();
+  for (int i = 0; i < this->url_chain_size(); i++) {
+    total_size +=
+      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+        this->url_chain(i));
   }
 
   total_size += unknown_fields().size();
@@ -6452,6 +6978,7 @@ void ClientDownloadRequest::MergeFrom(const ClientDownloadRequest& from) {
   resources_.MergeFrom(from.resources_);
   archived_binary_.MergeFrom(from.archived_binary_);
   alternate_extensions_.MergeFrom(from.alternate_extensions_);
+  url_chain_.MergeFrom(from.url_chain_);
   if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
     if (from.has_url()) {
       set_url(from.url());
@@ -6536,6 +7063,7 @@ void ClientDownloadRequest::Swap(ClientDownloadRequest* other) {
     std::swap(skipped_url_whitelist_, other->skipped_url_whitelist_);
     std::swap(skipped_certificate_whitelist_, other->skipped_certificate_whitelist_);
     alternate_extensions_.Swap(&other->alternate_extensions_);
+    url_chain_.Swap(&other->url_chain_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.swap(other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);
@@ -6919,7 +7447,7 @@ bool ClientDownloadResponse::MergePartialFromCodedStream(
     tag = p.first;
     if (!p.second) goto handle_unusual;
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // required .safe_browsing.ClientDownloadResponse.Verdict verdict = 1;
+      // optional .safe_browsing.ClientDownloadResponse.Verdict verdict = 1 [default = SAFE];
       case 1: {
         if (tag == 8) {
           int value;
@@ -6990,7 +7518,7 @@ failure:
 void ClientDownloadResponse::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
   // @@protoc_insertion_point(serialize_start:safe_browsing.ClientDownloadResponse)
-  // required .safe_browsing.ClientDownloadResponse.Verdict verdict = 1;
+  // optional .safe_browsing.ClientDownloadResponse.Verdict verdict = 1 [default = SAFE];
   if (has_verdict()) {
     ::google::protobuf::internal::WireFormatLite::WriteEnum(
       1, this->verdict(), output);
@@ -7017,7 +7545,7 @@ int ClientDownloadResponse::ByteSize() const {
   int total_size = 0;
 
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    // required .safe_browsing.ClientDownloadResponse.Verdict verdict = 1;
+    // optional .safe_browsing.ClientDownloadResponse.Verdict verdict = 1 [default = SAFE];
     if (has_verdict()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::EnumSize(this->verdict());
@@ -7074,7 +7602,6 @@ void ClientDownloadResponse::CopyFrom(const ClientDownloadResponse& from) {
 }
 
 bool ClientDownloadResponse::IsInitialized() const {
-  if ((_has_bits_[0] & 0x00000001) != 0x00000001) return false;
 
   return true;
 }
@@ -7659,9 +8186,6 @@ bool ClientDownloadReport::IsInitialized() const {
 
   if (has_download_request()) {
     if (!this->download_request().IsInitialized()) return false;
-  }
-  if (has_download_response()) {
-    if (!this->download_response().IsInitialized()) return false;
   }
   return true;
 }

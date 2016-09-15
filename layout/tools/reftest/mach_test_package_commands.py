@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 
 import os
+from argparse import Namespace
 from functools import partial
 
 from mach.decorators import (
@@ -12,28 +13,69 @@ from mach.decorators import (
     Command,
 )
 
+here = os.path.abspath(os.path.dirname(__file__))
+
 
 def run_reftest(context, **kwargs):
-    kwargs['app'] = kwargs['app'] or context.firefox_bin
-    kwargs['e10s'] = context.mozharness_config.get('e10s', kwargs['e10s'])
-    kwargs['certPath'] = context.certs_dir
-    kwargs['utilityPath'] = context.bin_dir
-    kwargs['extraProfileFiles'].append(os.path.join(context.bin_dir, 'plugins'))
+    import mozinfo
 
-    if not kwargs['tests']:
-        kwargs['tests'] = [os.path.join('layout', 'reftests', 'reftest.list')]
+    args = Namespace(**kwargs)
+    args.e10s = context.mozharness_config.get('e10s', args.e10s)
+
+    if not args.tests:
+        args.tests = [os.path.join('layout', 'reftests', 'reftest.list')]
 
     test_root = os.path.join(context.package_root, 'reftest', 'tests')
     normalize = partial(context.normalize_test_path, test_root)
-    kwargs['tests'] = map(normalize, kwargs['tests'])
+    args.tests = map(normalize, args.tests)
 
-    from runreftest import run as run_test_harness
-    return run_test_harness(**kwargs)
+    if mozinfo.info['buildapp'] == 'mobile/android':
+        return run_reftest_android(context, args)
+    return run_reftest_desktop(context, args)
+
+
+def run_reftest_desktop(context, args):
+    from runreftest import run_test_harness
+
+    args.app = args.app or context.firefox_bin
+    args.extraProfileFiles.append(os.path.join(context.bin_dir, 'plugins'))
+    args.utilityPath = context.bin_dir
+
+    return run_test_harness(parser, args)
+
+
+def run_reftest_android(context, args):
+    from remotereftest import run_test_harness
+
+    args.app = args.app or 'org.mozilla.fennec'
+    args.utilityPath = context.hostutils
+    args.xrePath = context.hostutils
+    args.httpdPath = context.module_dir
+    args.dm_trans = 'adb'
+    args.ignoreWindowSize = True
+    args.printDeviceInfo = False
+
+    config = context.mozharness_config
+    if config:
+        args.remoteWebServer = config['remote_webserver']
+        args.httpPort = config['emulator']['http_port']
+        args.sslPort = config['emulator']['ssl_port']
+        args.adb_path = config['exes']['adb'] % {'abs_work_dir': context.mozharness_workdir}
+
+    return run_test_harness(parser, args)
 
 
 def setup_argument_parser():
-    from reftestcommandline import DesktopArgumentsParser
-    return DesktopArgumentsParser()
+    import mozinfo
+    import reftestcommandline
+
+    global parser
+    mozinfo.find_and_update_from_json(os.path.dirname(here))
+    if mozinfo.info.get('buildapp') == 'mobile/android':
+        parser = reftestcommandline.RemoteArgumentsParser()
+    else:
+        parser = reftestcommandline.DesktopArgumentsParser()
+    return parser
 
 
 @CommandProvider

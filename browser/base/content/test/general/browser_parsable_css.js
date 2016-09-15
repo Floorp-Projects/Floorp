@@ -33,6 +33,38 @@ let whitelist = [
    isFromDevTools: true},
 ];
 
+// Platform can be "linux", "macosx" or "win". If omitted, the exception applies to all platforms.
+let allowedImageReferences = [
+  // Bug 1302759
+  {file: "chrome://browser/skin/customizableui/customize-titleBar-toggle.png",
+   from: "chrome://browser/skin/browser.css",
+   platforms: ["linux"],
+   isFromDevTools: false},
+  {file: "chrome://browser/skin/customizableui/customize-titleBar-toggle@2x.png",
+   from: "chrome://browser/skin/browser.css",
+   platforms: ["linux"],
+   isFromDevTools: false},
+
+  // Bug 1302691
+  {file: "chrome://devtools/skin/images/dock-bottom-minimize@2x.png",
+   from: "chrome://devtools/skin/toolbox.css",
+   isFromDevTools: true},
+  {file: "chrome://devtools/skin/images/dock-bottom-maximize@2x.png",
+   from: "chrome://devtools/skin/toolbox.css",
+   isFromDevTools: true},
+
+  // Bug 1302708
+  {file: "chrome/devtools/modules/devtools/client/themes/images/filter.svg",
+   from: "chrome/devtools/modules/devtools/client/themes/common.css",
+   isFromDevTools: true},
+
+  // Bug 1302890
+  {file: "chrome://global/skin/icons/warning-32.png",
+   from: "chrome://devtools/skin/tooltips.css",
+   platforms: ["linux", "win"],
+   isFromDevTools: true},
+];
+
 var moduleLocation = gTestPath.replace(/\/[^\/]*$/i, "/parsingTestHelpers.jsm");
 var {generateURIsFromDirTree} = Cu.import(moduleLocation, {});
 
@@ -163,6 +195,65 @@ function messageIsCSSError(msg) {
   return false;
 }
 
+let imageURIsToReferencesMap = new Map();
+
+function processCSSRules(sheet) {
+  for (let rule of sheet.cssRules) {
+    if (rule instanceof CSSMediaRule) {
+      processCSSRules(rule);
+      continue;
+    }
+    if (!(rule instanceof CSSStyleRule))
+      continue;
+
+    // Extract urls from the css text.
+    // Note: CSSStyleRule.cssText always has double quotes around URLs even
+    //       when the original CSS file didn't.
+    let urls = rule.cssText.match(/url\("[^"]*"\)/g);
+    if (!urls)
+      continue;
+
+    for (let url of urls) {
+      // Remove the url(" prefix and the ") suffix.
+      url = url.replace(/url\("(.*)"\)/, "$1");
+      if (url.startsWith("data:"))
+        continue;
+
+      // Make the url absolute and remove the ref.
+      let baseURI = Services.io.newURI(rule.parentStyleSheet.href, null, null);
+      url = Services.io.newURI(url, null, baseURI).specIgnoringRef;
+
+      // Store the image url along with the css file referencing it.
+      let baseUrl = baseURI.spec.split("?always-parse-css")[0];
+      if (!imageURIsToReferencesMap.has(url)) {
+        imageURIsToReferencesMap.set(url, new Set([baseUrl]));
+      } else {
+        imageURIsToReferencesMap.get(url).add(baseUrl);
+      }
+    }
+  }
+}
+
+function chromeFileExists(aURI)
+{
+  let available = 0;
+  try {
+    let channel = NetUtil.newChannel({uri: aURI, loadUsingSystemPrincipal: true});
+    let stream = channel.open();
+    let sstream = Cc["@mozilla.org/scriptableinputstream;1"]
+                    .createInstance(Ci.nsIScriptableInputStream);
+    sstream.init(stream);
+    available = sstream.available();
+    sstream.close();
+  } catch (e) {
+    if (e.result != Components.results.NS_ERROR_FILE_NOT_FOUND) {
+      dump("Checking " + aURI + ": " + e + "\n");
+      Cu.reportError(e);
+    }
+  }
+  return available > 0;
+}
+
 add_task(function* checkAllTheCSS() {
   let appDir = Services.dirsvc.get("XCurProcD", Ci.nsIFile);
   // This asynchronously produces a list of URLs (sadly, mostly sync on our
@@ -209,6 +300,7 @@ add_task(function* checkAllTheCSS() {
     linkEl.setAttribute("rel", "stylesheet");
     let promiseForThisSpec = Promise.defer();
     let onLoad = (e) => {
+      processCSSRules(linkEl.sheet);
       promiseForThisSpec.resolve();
       linkEl.removeEventListener("load", onLoad);
       linkEl.removeEventListener("error", onError);
@@ -231,6 +323,26 @@ add_task(function* checkAllTheCSS() {
   // Wait for all the files to have actually loaded:
   yield Promise.all(allPromises);
 
+  // Check if all the files referenced from CSS actually exist.
+  for (let [image, references] of imageURIsToReferencesMap) {
+    if (!chromeFileExists(image)) {
+      for (let ref of references) {
+        let ignored = false;
+        for (let item of allowedImageReferences) {
+          if (image.endsWith(item.file) && ref.endsWith(item.from) &&
+              isDevtools == item.isFromDevTools &&
+              (!item.platforms || item.platforms.includes(AppConstants.platform))) {
+            item.used = true;
+            ignored = true;
+            break;
+          }
+        }
+        if (!ignored)
+          ok(false, "missing " + image + " referenced from " + ref);
+      }
+    }
+  }
+
   let messages = Services.console.getMessageArray();
   // Count errors (the test output will list actual issues for us, as well
   // as the ok(false) in messageIsCSSError.
@@ -246,6 +358,16 @@ add_task(function* checkAllTheCSS() {
     }
   }
 
+  // Confirm that all file whitelist rules have been used.
+  for (let item of allowedImageReferences) {
+    if (!item.used && isDevtools == item.isFromDevTools &&
+        (!item.platforms || item.platforms.includes(AppConstants.platform))) {
+      ok(false, "Unused file whitelist item. " +
+                " file: " + item.file +
+                " from: " + item.from);
+    }
+  }
+
   // Clean up to avoid leaks:
   iframe.remove();
   doc.head.innerHTML = '';
@@ -253,4 +375,5 @@ add_task(function* checkAllTheCSS() {
   iframe = null;
   windowless.close();
   windowless = null;
+  imageURIsToReferencesMap = null;
 });
