@@ -29,6 +29,15 @@ interface nsIPresentationSessionTransportBuilder : nsISupports
 };
 
 /**
+ * The constructor for creating a transport builder.
+ */
+[scriptable, uuid(706482b2-1b51-4bed-a21d-785a9cfcfac7)]
+interface nsIPresentationTransportBuilderConstructor : nsISupports
+{
+  nsIPresentationSessionTransportBuilder createTransportBuilder(in uint8_t type);
+};
+
+/**
  * Builder for TCP session transport
  */
 [scriptable, uuid(cde36d6e-f471-4262-a70d-f932a26b21d9)]
