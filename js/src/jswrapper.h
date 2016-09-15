@@ -328,7 +328,6 @@ class JS_FRIEND_API(SecurityWrapper) : public Base
     typedef SecurityWrapper<Base> Restrictive;
 };
 
-typedef SecurityWrapper<Wrapper> SameCompartmentSecurityWrapper;
 typedef SecurityWrapper<CrossCompartmentWrapper> CrossCompartmentSecurityWrapper;
 
 extern JSObject*
