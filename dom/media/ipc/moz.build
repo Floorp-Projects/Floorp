@@ -12,11 +12,13 @@ IPDL_SOURCES += [
 
 EXPORTS.mozilla.dom += [
     'MediaIPCUtils.h',
+    'RemoteVideoDecoder.h',
     'VideoDecoderManagerChild.h',
     'VideoDecoderManagerParent.h',
 ]
 
 SOURCES += [
+    'RemoteVideoDecoder.cpp',
     'VideoDecoderChild.cpp',
     'VideoDecoderManagerChild.cpp',
     'VideoDecoderManagerParent.cpp',

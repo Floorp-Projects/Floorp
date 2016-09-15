@@ -17,6 +17,7 @@ using namespace layers;
 using namespace gfx;
 
 StaticRefPtr<nsIThread> sVideoDecoderChildThread;
+StaticRefPtr<AbstractThread> sVideoDecoderChildAbstractThread;
 static StaticRefPtr<VideoDecoderManagerChild> sDecoderManager;
 
 /* static */ void
@@ -41,6 +42,9 @@ VideoDecoderManagerChild::Initialize()
     nsresult rv = NS_NewNamedThread("VideoChild", getter_AddRefs(childThread));
     NS_ENSURE_SUCCESS_VOID(rv);
     sVideoDecoderChildThread = childThread;
+
+    sVideoDecoderChildAbstractThread =
+      AbstractThread::CreateXPCOMThreadWrapper(childThread, false);
   }
 
   Endpoint<PVideoDecoderManagerChild> endpoint;
@@ -77,6 +81,7 @@ VideoDecoderManagerChild::Shutdown()
 
     sDecoderManager = nullptr;
 
+    sVideoDecoderChildAbstractThread = nullptr;
     sVideoDecoderChildThread->Shutdown();
     sVideoDecoderChildThread = nullptr;
   }
@@ -92,6 +97,12 @@ VideoDecoderManagerChild::GetSingleton()
 VideoDecoderManagerChild::GetManagerThread()
 {
   return sVideoDecoderChildThread;
+}
+
+/* static */ AbstractThread*
+VideoDecoderManagerChild::GetManagerAbstractThread()
+{
+  return sVideoDecoderChildAbstractThread;
 }
 
 PVideoDecoderChild*
