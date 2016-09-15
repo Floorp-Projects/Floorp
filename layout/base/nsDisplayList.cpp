@@ -2388,6 +2388,37 @@ nsDisplaySolidColor::WriteDebugInfo(std::stringstream& aStream)
           << (int)NS_GET_A(mColor) << ")";
 }
 
+nsRect
+nsDisplaySolidColorRegion::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
+{
+  *aSnap = true;
+  return mRegion.GetBounds();
+}
+
+void
+nsDisplaySolidColorRegion::Paint(nsDisplayListBuilder* aBuilder,
+                                 nsRenderingContext* aCtx)
+{
+  int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+  DrawTarget* drawTarget = aCtx->GetDrawTarget();
+  ColorPattern color(mColor);
+  for (auto iter = mRegion.RectIter(); !iter.Done(); iter.Next()) {
+    Rect rect =
+      NSRectToSnappedRect(iter.Get(), appUnitsPerDevPixel, *drawTarget);
+    drawTarget->FillRect(rect, color);
+  }
+}
+
+void
+nsDisplaySolidColorRegion::WriteDebugInfo(std::stringstream& aStream)
+{
+  aStream << " (rgba "
+          << int(mColor.r * 255) << ","
+          << int(mColor.g * 255) << ","
+          << int(mColor.b * 255) << ","
+          << mColor.a << ")";
+}
+
 static void
 RegisterThemeGeometry(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                       nsITheme::ThemeGeometryType aType)
@@ -2514,6 +2545,40 @@ SetBackgroundClipRegion(DisplayListClipState::AutoSaveRestore& aClipState,
   }
 }
 
+/**
+ * This is used for the find bar highlighter overlay. It's only accessible
+ * through the AnonymousContent API, so it's not exposed to general web pages.
+ */
+static bool
+SpecialCutoutRegionCase(nsDisplayListBuilder* aBuilder,
+                        nsIFrame* aFrame,
+                        const nsRect& aBackgroundRect,
+                        nsDisplayList* aList,
+                        nscolor aColor)
+{
+  nsIContent* content = aFrame->GetContent();
+  if (!content) {
+    return false;
+  }
+
+  void* cutoutRegion = content->GetProperty(nsGkAtoms::cutoutregion);
+  if (!cutoutRegion) {
+    return false;
+  }
+
+  if (NS_GET_A(aColor) == 0) {
+    return true;
+  }
+
+  nsRegion region;
+  region.Sub(aBackgroundRect, *static_cast<nsRegion*>(cutoutRegion));
+  region.MoveBy(aBuilder->ToReferenceFrame(aFrame));
+  aList->AppendNewToTop(
+    new (aBuilder) nsDisplaySolidColorRegion(aBuilder, aFrame, region, aColor));
+
+  return true;
+}
+
 
 /*static*/ bool
 nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuilder,
@@ -2543,6 +2608,10 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
     color =
       nsCSSRendering::DetermineBackgroundColor(presContext, bgSC, aFrame,
                                                drawBackgroundImage, drawBackgroundColor);
+  }
+
+  if (SpecialCutoutRegionCase(aBuilder, aFrame, aBackgroundRect, aList, color)) {
+    return false;
   }
 
   const nsStyleBorder* borderStyle = aFrame->StyleBorder();
