@@ -5,6 +5,7 @@
 
 #include "TextureDIB.h"
 #include "gfx2DGlue.h"
+#include "mozilla/gfx/DataSurfaceHelpers.h" // For BufferSizeFromDimensions
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 
@@ -433,7 +434,7 @@ DIBTextureHost::UpdatedInternal(const nsIntRegion* aRegion)
 
   RefPtr<DataSourceSurface> surf = Factory::CreateWrappingDataSourceSurface(imgSurf->Data(), imgSurf->Stride(), mSize, mFormat);
 
-  if (!mTextureSource->Update(surf, const_cast<nsIntRegion*>(aRegion))) {
+  if (!surf || !mTextureSource->Update(surf, const_cast<nsIntRegion*>(aRegion))) {
     mTextureSource = nullptr;
   }
 
@@ -473,14 +474,20 @@ TextureHostFileMapping::UpdatedInternal(const nsIntRegion* aRegion)
     mTextureSource = mCompositor->CreateDataTextureSource(mFlags);
   }
 
-  uint8_t* data = (uint8_t*)::MapViewOfFile(mFileMapping, FILE_MAP_READ, 0, 0, mSize.width * mSize.height * BytesPerPixel(mFormat));
+  uint8_t* data = nullptr;
+  int32_t totalBytes = BufferSizeFromDimensions(mSize.width, mSize.height, BytesPerPixel(mFormat));
+  if (totalBytes > 0) {
+    data = (uint8_t*)::MapViewOfFile(mFileMapping, FILE_MAP_READ, 0, 0, totalBytes);
+  }
 
   if (data) {
     RefPtr<DataSourceSurface> surf = Factory::CreateWrappingDataSourceSurface(data, mSize.width * BytesPerPixel(mFormat), mSize, mFormat);
-
-    surf->AddUserData(&kFileMappingKey, data, UnmapFileData);
-
-    if (!mTextureSource->Update(surf, const_cast<nsIntRegion*>(aRegion))) {
+    if (surf) {
+        surf->AddUserData(&kFileMappingKey, data, UnmapFileData);
+        if (!mTextureSource->Update(surf, const_cast<nsIntRegion*>(aRegion))) {
+          mTextureSource = nullptr;
+        }
+    } else {
       mTextureSource = nullptr;
     }
   } else {

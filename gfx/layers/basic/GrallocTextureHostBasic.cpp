@@ -140,9 +140,13 @@ GrallocTextureHostBasic::Lock()
              mCropSize,
              mFormat);
   }
-  mTextureSource = mCompositor->CreateDataTextureSource(mFlags);
-  mTextureSource->Update(surf, nullptr);
-  return true;
+  if (surf) {
+    mTextureSource = mCompositor->CreateDataTextureSource(mFlags);
+    mTextureSource->Update(surf, nullptr);
+    return true;
+  }
+  mMappedBuffer = nullptr;
+  return false;
 }
 
 bool
