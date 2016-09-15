@@ -44,6 +44,9 @@ const serviceWorkerRegistrationSpec = generateActorSpec({
   events: {
     "push-subscription-modified": {
       type: "push-subscription-modified"
+    },
+    "registration-changed": {
+      type: "registration-changed"
     }
   },
 

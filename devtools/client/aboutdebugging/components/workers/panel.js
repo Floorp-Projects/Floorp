@@ -42,6 +42,8 @@ module.exports = createClass({
     client.addListener("workerListChanged", this.update);
     client.addListener("serviceWorkerRegistrationListChanged", this.update);
     client.addListener("processListChanged", this.update);
+    client.addListener("registration-changed", this.update);
+
     this.update();
   },
 
@@ -50,6 +52,7 @@ module.exports = createClass({
     client.removeListener("processListChanged", this.update);
     client.removeListener("serviceWorkerRegistrationListChanged", this.update);
     client.removeListener("workerListChanged", this.update);
+    client.removeListener("registration-changed", this.update);
   },
 
   update() {
@@ -57,12 +60,22 @@ module.exports = createClass({
 
     getWorkerForms(this.props.client).then(forms => {
       forms.registrations.forEach(form => {
+        // - In e10s: only active registrations are available, but if the worker is in
+        // activating state it won't be available as the activeWorker. Registrations with
+        // no worker are actually registrations with a hidden activating worker.
+        // - In non-e10s: registrations always have at least one worker, if it is an
+        // active worker, the registration is active.
+        let hasWorker = form.activeWorker || form.waitingWorker || form.installingWorker;
+        let isE10s = Services.appinfo.browserTabsRemoteAutostart;
+        let active = form.activeWorker || (isE10s && !hasWorker);
+
         workers.service.push({
           icon: WorkerIcon,
           name: form.url,
           url: form.url,
           scope: form.scope,
-          registrationActor: form.actor
+          registrationActor: form.actor,
+          active
         });
       });
 
@@ -75,16 +88,28 @@ module.exports = createClass({
         };
         switch (form.type) {
           case Ci.nsIWorkerDebugger.TYPE_SERVICE:
-            for (let registration of workers.service) {
-              if (registration.scope === form.scope) {
-                // XXX: Race, sometimes a ServiceWorkerRegistrationInfo doesn't
-                // have a scriptSpec, but its associated WorkerDebugger does.
-                if (!registration.url) {
-                  registration.name = registration.url = form.url;
-                }
-                registration.workerActor = form.actor;
-                break;
+            let registration = this.getRegistrationForWorker(form, workers.service);
+            if (registration) {
+              // XXX: Race, sometimes a ServiceWorkerRegistrationInfo doesn't
+              // have a scriptSpec, but its associated WorkerDebugger does.
+              if (!registration.url) {
+                registration.name = registration.url = form.url;
               }
+              registration.workerActor = form.actor;
+            } else {
+              // If a service worker registration could not be found, this means we are in
+              // e10s, and registrations are not forwarded to other processes until they
+              // reach the activated state. Add a temporary registration to display it in
+              // aboutdebugging.
+              workers.service.push({
+                icon: WorkerIcon,
+                name: form.url,
+                url: form.url,
+                scope: form.scope,
+                registrationActor: null,
+                workerActor: form.actor,
+                active: false
+              });
             }
             break;
           case Ci.nsIWorkerDebugger.TYPE_SHARED:
@@ -101,6 +126,15 @@ module.exports = createClass({
 
       this.setState({ workers });
     });
+  },
+
+  getRegistrationForWorker(form, registrations) {
+    for (let registration of registrations) {
+      if (registration.scope === form.scope) {
+        return registration;
+      }
+    }
+    return null;
   },
 
   render() {

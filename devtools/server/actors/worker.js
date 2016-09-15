@@ -356,7 +356,32 @@ protocol.ActorClassWithSpec(serviceWorkerRegistrationSpec, {
     this._conn = conn;
     this._registration = registration;
     this._pushSubscriptionActor = null;
+    this._registration.addListener(this);
     Services.obs.addObserver(this, PushService.subscriptionModifiedTopic, false);
+  },
+
+  get installingWorkerForm() {
+    return this._getWorkerForm(this._registration.installingWorker);
+  },
+
+  get activeWorkerForm() {
+    return this._getWorkerForm(this._registration.activeWorker);
+  },
+
+  get waitingWorkerForm() {
+    return this._getWorkerForm(this._registration.waitingWorker);
+  },
+
+  _getWorkerForm: function (worker) {
+    if (!worker) {
+      return null;
+    }
+
+    return { url: worker.scriptSpec, state: worker.state };
+  },
+
+  onChange: function () {
+    events.emit(this, "registration-changed");
   },
 
   form(detail) {
@@ -367,13 +392,17 @@ protocol.ActorClassWithSpec(serviceWorkerRegistrationSpec, {
     return {
       actor: this.actorID,
       scope: registration.scope,
-      url: registration.scriptSpec
+      url: registration.scriptSpec,
+      installingWorker: this.installingWorkerForm,
+      activeWorker: this.activeWorkerForm,
+      waitingWorker: this.waitingWorkerForm,
     };
   },
 
   destroy() {
     protocol.Actor.prototype.destroy.call(this);
     Services.obs.removeObserver(this, PushService.subscriptionModifiedTopic, false);
+    this._registration.removeListener(this);
     this._registration = null;
     if (this._pushSubscriptionActor) {
       this._pushSubscriptionActor.destroy();
