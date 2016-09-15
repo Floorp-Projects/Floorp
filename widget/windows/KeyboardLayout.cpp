@@ -1190,6 +1190,7 @@ VirtualKey::FillKbdState(PBYTE aKbdState,
  *****************************************************************************/
 
 uint8_t NativeKey::sDispatchedKeyOfAppCommand = 0;
+NativeKey* NativeKey::sLatestInstance = nullptr;
 
 LazyLogModule sNativeKeyLogger("NativeKeyWidgets");
 
@@ -1198,7 +1199,8 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
                      const ModifierKeyState& aModKeyState,
                      HKL aOverrideKeyboardLayout,
                      nsTArray<FakeCharMsg>* aFakeCharMsgs)
-  : mWidget(aWidget)
+  : mLastInstance(sLatestInstance)
+  , mWidget(aWidget)
   , mDispatcher(aWidget->GetTextEventDispatcher())
   , mMsg(aMessage)
   , mFocusedWndBeforeDispatch(::GetFocus())
@@ -1218,12 +1220,13 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
 {
   MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
     ("%p NativeKey::NativeKey(aWidget=0x%p { GetWindowHandle()=0x%p }, "
-     "aMessage=%s, aModKeyState=%s)",
+     "aMessage=%s, aModKeyState=%s), sLatestInstance=0x%p",
      this, aWidget, aWidget->GetWindowHandle(), ToString(aMessage).get(),
-     ToString(aModKeyState).get()));
+     ToString(aModKeyState).get(), sLatestInstance));
 
   MOZ_ASSERT(aWidget);
   MOZ_ASSERT(mDispatcher);
+  sLatestInstance = this;
   KeyboardLayout* keyboardLayout = KeyboardLayout::GetInstance();
   mKeyboardLayout = keyboardLayout->GetLayout();
   if (aOverrideKeyboardLayout && mKeyboardLayout != aOverrideKeyboardLayout) {
@@ -1515,6 +1518,7 @@ NativeKey::~NativeKey()
     KeyboardLayout* keyboardLayout = KeyboardLayout::GetInstance();
     keyboardLayout->RestoreLayout();
   }
+  sLatestInstance = mLastInstance;
 }
 
 void
