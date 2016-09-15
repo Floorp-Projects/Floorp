@@ -79,6 +79,9 @@ void AudioInputCubeb::UpdateDeviceList()
   // so white-list it.
   mDefaultDevice = -1;
   for (uint32_t i = 0; i < devices->count; i++) {
+    LOG(("Cubeb device %u: type 0x%x, state 0x%x, name %s, id %p",
+         i, devices->device[i]->type, devices->device[i]->state,
+         devices->device[i]->friendly_name, devices->device[i]->device_id));
     if (devices->device[i]->type == CUBEB_DEVICE_TYPE_INPUT && // paranoia
         (devices->device[i]->state == CUBEB_DEVICE_STATE_ENABLED ||
          (devices->device[i]->state == CUBEB_DEVICE_STATE_DISABLED &&
@@ -101,6 +104,7 @@ void AudioInputCubeb::UpdateDeviceList()
       }
     }
   }
+  LOG(("Cubeb default input device %d", mDefaultDevice));
   StaticMutexAutoLock lock(sMutex);
   // swap state
   if (mDevices) {

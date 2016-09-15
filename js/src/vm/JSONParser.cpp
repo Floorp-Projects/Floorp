@@ -8,6 +8,7 @@
 
 #include "mozilla/Range.h"
 #include "mozilla/RangedPtr.h"
+#include "mozilla/Sprintf.h"
 
 #include <ctype.h>
 
@@ -90,9 +91,9 @@ JSONParser<CharT>::error(const char* msg)
 
         const size_t MaxWidth = sizeof("4294967295");
         char columnNumber[MaxWidth];
-        snprintf(columnNumber, sizeof columnNumber, "%" PRIu32, column);
+        SprintfLiteral(columnNumber, "%" PRIu32, column);
         char lineNumber[MaxWidth];
-        snprintf(lineNumber, sizeof lineNumber, "%" PRIu32, line);
+        SprintfLiteral(lineNumber, "%" PRIu32, line);
 
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_JSON_BAD_PARSE,
                              msg, lineNumber, columnNumber);

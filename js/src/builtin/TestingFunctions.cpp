@@ -479,10 +479,15 @@ RelazifyFunctions(JSContext* cx, unsigned argc, Value* vp)
     // not active. To aid fuzzing, this testing function allows us to relazify
     // even if the compartment is active.
 
+    CallArgs args = CallArgsFromVp(argc, vp);
     SetAllowRelazification(cx, true);
-    bool res = GC(cx, argc, vp);
+
+    JS::PrepareForFullGC(cx);
+    JS::GCForReason(cx, GC_SHRINK, JS::gcreason::API);
+
     SetAllowRelazification(cx, false);
-    return res;
+    args.rval().setUndefined();
+    return true;
 }
 
 static bool
@@ -2139,6 +2144,10 @@ class CloneBufferObject : public NativeObject {
 
         size_t size = obj->data()->Size();
         UniqueChars buffer(static_cast<char*>(js_malloc(size)));
+        if (!buffer) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
         auto iter = obj->data()->Iter();
         obj->data()->ReadBytes(iter, buffer.get(), size);
         JSString* str = JS_NewStringCopyN(cx, buffer.get(), size);

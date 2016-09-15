@@ -94,10 +94,10 @@ function touch(filename) {
 }
 
 // Remove a file in the downloads directory.
-function remove(filename) {
+function remove(filename, recursive = false) {
   let file = downloadDir.clone();
   file.append(filename);
-  file.remove(false);
+  file.remove(recursive);
 }
 
 add_task(function* test_downloads() {
@@ -121,7 +121,8 @@ add_task(function* test_downloads() {
       return waitForDownloads();
     }).then(() => {
       let localPath = downloadDir.clone();
-      localPath.append(localFile);
+      let parts = Array.isArray(localFile) ? localFile : [localFile];
+      parts.map(p => localPath.append(p));
       equal(localPath.fileSize, expectedSize, "Downloaded file has expected size");
       localPath.remove(false);
     });
@@ -139,6 +140,35 @@ add_task(function* test_downloads() {
     url: FILE_URL,
     filename: "newpath.txt",
   }, "newpath.txt", FILE_LEN, "source and filename");
+
+  // Call download() with a filename with subdirs.
+  yield testDownload({
+    url: FILE_URL,
+    filename: "sub/dir/file",
+  }, ["sub", "dir", "file"], FILE_LEN, "source and filename with subdirs");
+
+  // Call download() with a filename with existing subdirs.
+  yield testDownload({
+    url: FILE_URL,
+    filename: "sub/dir/file2",
+  }, ["sub", "dir", "file2"], FILE_LEN, "source and filename with existing subdirs");
+
+  // Only run Windows path separator test on Windows.
+  if (WINDOWS) {
+    // Call download() with a filename with Windows path separator.
+    yield testDownload({
+      url: FILE_URL,
+      filename: "sub\\dir\\file3",
+    }, ["sub", "dir", "file3"], FILE_LEN, "filename with Windows path separator");
+  }
+  remove("sub", true);
+
+  // Call download(), filename with subdir, skipping parts.
+  yield testDownload({
+    url: FILE_URL,
+    filename: "skip//part",
+  }, ["skip", "part"], FILE_LEN, "source, filename, with subdir, skipping parts");
+  remove("skip", true);
 
   // Check conflictAction of "uniquify".
   touch(FILE_NAME);

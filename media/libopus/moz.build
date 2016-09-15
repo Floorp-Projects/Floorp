@@ -105,8 +105,8 @@ if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_AS']:
     # opcodes; actual arch detection is done at runtime.
     ASFLAGS += [
         '-march=armv7-a',
-        '-mfpu=neon',
     ]
+    ASFLAGS += CONFIG['NEON_FLAGS']
 
 # Suppress warnings in third-party code.
 if CONFIG['GNU_CC']:

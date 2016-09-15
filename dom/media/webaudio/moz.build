@@ -117,7 +117,7 @@ UNIFIED_SOURCES += [
 
 if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
     SOURCES += ['AudioNodeEngineNEON.cpp']
-    SOURCES['AudioNodeEngineNEON.cpp'].flags += ['-mfpu=neon']
+    SOURCES['AudioNodeEngineNEON.cpp'].flags += CONFIG['NEON_FLAGS']
     LOCAL_INCLUDES += [
         '/media/openmax_dl/dl/api/'
     ]

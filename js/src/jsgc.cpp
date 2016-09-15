@@ -3568,21 +3568,27 @@ FOR_EACH_ALLOCKIND(MAKE_CASE)
 bool
 ArenaLists::checkEmptyArenaList(AllocKind kind)
 {
-    bool empty = true;
+    size_t num_live = 0;
 #ifdef DEBUG
     if (!arenaLists[kind].isEmpty()) {
+        size_t max_cells = 20;
+        char *env = getenv("JS_GC_MAX_LIVE_CELLS");
+        if (env && *env)
+            max_cells = atol(env);
         for (Arena* current = arenaLists[kind].head(); current; current = current->next) {
             for (ArenaCellIterUnderFinalize i(current); !i.done(); i.next()) {
                 Cell* t = i.get<Cell>();
                 MOZ_ASSERT(t->asTenured().isMarked(), "unmarked cells should have been finalized");
-                fprintf(stderr, "ERROR: GC found live Cell %p of kind %s at shutdown\n",
-                        t, AllocKindToAscii(kind));
-                empty = false;
+                if (++num_live <= max_cells) {
+                    fprintf(stderr, "ERROR: GC found live Cell %p of kind %s at shutdown\n",
+                            t, AllocKindToAscii(kind));
+                }
             }
         }
+        fprintf(stderr, "ERROR: GC found %" PRIuSIZE " live Cells at shutdown\n", num_live);
     }
 #endif // DEBUG
-    return empty;
+    return num_live == 0;
 }
 
 void
@@ -3841,11 +3847,16 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason, AutoLockForExclusiveAcces
      * Relazify functions after discarding JIT code (we can't relazify
      * functions with JIT code) and before the actual mark phase, so that
      * the current GC can collect the JSScripts we're unlinking here.
+     * We do this only when we're performing a shrinking GC, as too much
+     * relazification can cause performance issues when we have to reparse
+     * the same functions over and over.
      */
-    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
+    if (invocationKind == GC_SHRINK) {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_RELAZIFY_FUNCTIONS);
-        RelazifyFunctions(zone, AllocKind::FUNCTION);
-        RelazifyFunctions(zone, AllocKind::FUNCTION_EXTENDED);
+        for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
+            RelazifyFunctions(zone, AllocKind::FUNCTION);
+            RelazifyFunctions(zone, AllocKind::FUNCTION_EXTENDED);
+        }
     }
 
     startNumber = number;

@@ -105,15 +105,17 @@ public class testUnifiedTelemetryClientId extends JavascriptBridgeTest {
         final String clientIdFromJava = getClientIdFromJava();
         resetJSCache();
         final String clientIdFromJS = getClientIdFromJS();
-        fAssertEquals("Client ID from Java equals ID from JS", clientIdFromJava, clientIdFromJS);
-
+        // allow for the case where gecko updates the client ID after the first get
         final String clientIdFromJavaAgain = getClientIdFromJava();
+        fAssertTrue("Client ID from Java equals ID from JS",
+            clientIdFromJava.equals(clientIdFromJS) ||
+            clientIdFromJavaAgain.equals(clientIdFromJS));
+
         final String clientIdFromJSCache = getClientIdFromJS();
         resetJSCache();
         final String clientIdFromJSFileAgain = getClientIdFromJS();
-        fAssertEquals("Same client ID retrieved from Java", clientIdFromJava, clientIdFromJavaAgain);
-        fAssertEquals("Same client ID retrieved from JS cache", clientIdFromJava, clientIdFromJSCache);
-        fAssertEquals("Same client ID retrieved from JS file", clientIdFromJava, clientIdFromJSFileAgain);
+        fAssertEquals("Same client ID retrieved from JS cache", clientIdFromJavaAgain, clientIdFromJSCache);
+        fAssertEquals("Same client ID retrieved from JS file", clientIdFromJavaAgain, clientIdFromJSFileAgain);
     }
 
     /**

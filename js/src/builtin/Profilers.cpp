@@ -8,6 +8,8 @@
 
 #include "builtin/Profilers.h"
 
+#include "mozilla/Sprintf.h"
+
 #include <stdarg.h>
 
 #ifdef MOZ_CALLGRIND
@@ -46,10 +48,8 @@ UnsafeError(const char* format, ...)
 {
     va_list args;
     va_start(args, format);
-    (void) vsnprintf(gLastError, sizeof(gLastError), format, args);
+    (void) VsprintfLiteral(gLastError, format, args);
     va_end(args);
-
-    gLastError[sizeof(gLastError) - 1] = '\0';
 }
 #endif
 
@@ -508,7 +508,7 @@ bool js_StartPerf()
         /* perf record --pid $mainPID --output=$outfile $MOZ_PROFILE_PERF_FLAGS */
 
         char mainPidStr[16];
-        snprintf(mainPidStr, sizeof(mainPidStr), "%d", mainPid);
+        SprintfLiteral(mainPidStr, "%d", mainPid);
         const char* defaultArgs[] = {"perf", "record", "--pid", mainPidStr, "--output", outfile};
 
         Vector<const char*, 0, SystemAllocPolicy> args;

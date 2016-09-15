@@ -73,23 +73,21 @@
 /* Close button */
 
 .notificationbox .messageCloseButton {
-  /* Use odd value for the width so, the icon can be nicely h-centered.
-    This also means that the button is not perfect circle (its using
-    10x border radius), but it's less visible visual discrepency
-    than wrong centering of the icon */
-  width: 19px;
+  width: 20px;
   height: 20px;
   margin: 4px;
   margin-inline-end: 8px;
   background-image: url("chrome://devtools/skin/images/close.svg");
-  background-position: 3px center;
+  background-position: 3.45px 2.5px;
   background-color: transparent;
   background-repeat: no-repeat;
-  border-radius: 10px;
+  border-radius: 11px;
+  filter: invert(0);
 }
 
 .notificationbox .messageCloseButton:hover {
-  background-color: rgba(170, 170, 170, .2); /* --toolbar-tab-hover */
+  background-color: gray;
+  filter: invert(1);
 }
 
 .notificationbox .messageCloseButton:active {

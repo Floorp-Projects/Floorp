@@ -1426,15 +1426,19 @@ OpenRunnable::MainThreadRunInternal()
   MOZ_ASSERT(!mProxy->mInOpen);
   mProxy->mInOpen = true;
 
-  rv = mProxy->mXHR->Open(mMethod, NS_ConvertUTF16toUTF8(mURL),
-                          Optional<bool>(true), mUser, mPassword);
+  ErrorResult rv2;
+  mProxy->mXHR->Open(mMethod, mURL, true,
+                     mUser.WasPassed() ? mUser.Value() : NullString(),
+                     mPassword.WasPassed() ? mPassword.Value() : NullString(),
+                     rv2);
 
   MOZ_ASSERT(mProxy->mInOpen);
   mProxy->mInOpen = false;
 
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (rv2.Failed()) {
+    return rv2.StealNSResult();
+  }
 
-  ErrorResult rv2;
   mProxy->mXHR->SetResponseType(mResponseType, rv2);
   if (rv2.Failed()) {
     return rv2.StealNSResult();
