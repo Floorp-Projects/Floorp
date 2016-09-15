@@ -84,17 +84,11 @@ const wchar_t kClassNameTransition[] = L"MozillaTransitionWindowClass";
  **************************************************************/
 
 // Used for synthesizing events
-struct KeyPair
-{
+struct KeyPair {
   uint8_t mGeneral;
   uint8_t mSpecific;
-  uint16_t mScanCode;
   KeyPair(uint32_t aGeneral, uint32_t aSpecific)
-    : mGeneral(aGeneral & 0xFF)
-    , mSpecific(aSpecific & 0xFF)
-    , mScanCode((aGeneral & 0xFFFF0000) >> 16)
-  {
-  }
+    : mGeneral(uint8_t(aGeneral)), mSpecific(uint8_t(aSpecific)) {}
 };
 
 #if (WINVER < 0x0600)
