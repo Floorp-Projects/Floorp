@@ -10,6 +10,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/SizePrintfMacros.h"
+#include "mozilla/Sprintf.h"
 
 #include <algorithm>
 
@@ -332,7 +333,7 @@ JitcodeGlobalEntry::createScriptString(JSContext* cx, JSScript* script, size_t* 
     size_t linenoLength = 0;
     char linenoStr[15];
     if (hasName || (script->functionNonDelazifying() || script->isForEval())) {
-        linenoLength = snprintf(linenoStr, sizeof(linenoStr), "%" PRIuSIZE, script->lineno());
+        linenoLength = SprintfLiteral(linenoStr, "%" PRIuSIZE, script->lineno());
         hasLineno = true;
     }
 

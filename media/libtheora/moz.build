@@ -102,8 +102,8 @@ if CONFIG['GNU_AS']:
         # opcodes; actual arch detection is done at runtime.
         ASFLAGS += [
             '-march=armv7-a',
-            '-mfpu=neon',
         ]
+        ASFLAGS += CONFIG['NEON_FLAGS']
 
         if CONFIG['CLANG_CXX']:
             ASFLAGS += [

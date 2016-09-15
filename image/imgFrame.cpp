@@ -271,7 +271,8 @@ imgFrame::InitWithDrawable(gfxDrawable* aDrawable,
                            const nsIntSize& aSize,
                            const SurfaceFormat aFormat,
                            SamplingFilter aSamplingFilter,
-                           uint32_t aImageFlags)
+                           uint32_t aImageFlags,
+                           gfx::BackendType aBackend)
 {
   // Assert for properties that should be verified by decoders,
   // warn for properties related to bad content.
@@ -336,8 +337,13 @@ imgFrame::InitWithDrawable(gfxDrawable* aDrawable,
     // the documentation for this method.
     MOZ_ASSERT(!mOptSurface, "Called imgFrame::InitWithDrawable() twice?");
 
-    target = gfxPlatform::GetPlatform()->
-      CreateOffscreenContentDrawTarget(mFrameRect.Size(), mFormat);
+    if (gfxPlatform::GetPlatform()->SupportsAzureContentForType(aBackend)) {
+      target = gfxPlatform::GetPlatform()->
+        CreateDrawTargetForBackend(aBackend, mFrameRect.Size(), mFormat);
+    } else {
+      target = gfxPlatform::GetPlatform()->
+        CreateOffscreenContentDrawTarget(mFrameRect.Size(), mFormat);
+    }
   }
 
   if (!target || !target->IsValid()) {
@@ -394,12 +400,15 @@ imgFrame::CanOptimizeOpaqueImage()
 }
 
 nsresult
-imgFrame::Optimize()
+imgFrame::Optimize(DrawTarget* aTarget)
 {
   MOZ_ASSERT(NS_IsMainThread());
   mMonitor.AssertCurrentThreadOwns();
-  MOZ_ASSERT(mLockCount == 1,
-             "Should only optimize when holding the lock exclusively");
+  
+  if (mLockCount > 0 || !mOptimizable) {
+    // Don't optimize right now.
+    return NS_OK;
+  }
 
   // Check whether image optimization is disabled -- not thread safe!
   static bool gDisableOptimize = false;
@@ -422,7 +431,7 @@ imgFrame::Optimize()
     mImageSurface = CreateLockedSurface(mVBuf, mFrameRect.Size(), mFormat);
   }
 
-  if (!mOptimizable || gDisableOptimize) {
+  if (gDisableOptimize) {
     return NS_OK;
   }
 
@@ -454,6 +463,7 @@ imgFrame::Optimize()
   // allow the operating system to free the memory if it needs to.
   mVBufPtr = nullptr;
   mImageSurface = nullptr;
+  mOptimizable = false;
 
   return NS_OK;
 }
@@ -547,6 +557,10 @@ bool imgFrame::Draw(gfxContext* aContext, const ImageRegion& aRegion,
   }
 
   MonitorAutoLock lock(mMonitor);
+
+  // Possibly convert this image into a GPU texture, this may also cause our
+  // mImageSurface to be released and the OS to release the underlying memory.
+  Optimize(aContext->GetDrawTarget());
 
   bool doPartialDecode = !AreAllPixelsWritten();
 
@@ -749,21 +763,6 @@ imgFrame::AssertImageDataLocked() const
 #endif
 }
 
-class UnlockImageDataRunnable : public Runnable
-{
-public:
-  explicit UnlockImageDataRunnable(imgFrame* aTarget)
-    : mTarget(aTarget)
-  {
-    MOZ_ASSERT(mTarget);
-  }
-
-  NS_IMETHOD Run() override { return mTarget->UnlockImageData(); }
-
-private:
-  RefPtr<imgFrame> mTarget;
-};
-
 nsresult
 imgFrame::UnlockImageData()
 {
@@ -776,22 +775,6 @@ imgFrame::UnlockImageData()
 
   MOZ_ASSERT(mLockCount > 1 || mFinished || mAborted,
              "Should have Finish()'d or aborted before unlocking");
-
-  // If we're about to become unlocked, we don't need to hold on to our data
-  // surface anymore. (But we don't need to do anything for paletted images,
-  // which don't have surfaces.)
-  if (mLockCount == 1 && !mPalettedImageData) {
-    // We can't safely optimize off-main-thread, so create a runnable to do it.
-    if (!NS_IsMainThread()) {
-      nsCOMPtr<nsIRunnable> runnable = new UnlockImageDataRunnable(this);
-      NS_DispatchToMainThread(runnable);
-      return NS_OK;
-    }
-
-    // Convert our data surface to a GPU surface if possible and release
-    // whatever memory we can.
-    Optimize();
-  }
 
   mLockCount--;
 

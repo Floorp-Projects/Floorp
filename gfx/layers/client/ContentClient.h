@@ -126,7 +126,7 @@ class ContentClientBasic final : public ContentClient
                                , protected RotatedContentBuffer
 {
 public:
-  ContentClientBasic();
+  explicit ContentClientBasic(gfx::BackendType aBackend);
 
   typedef RotatedContentBuffer::PaintState PaintState;
   typedef RotatedContentBuffer::ContentType ContentType;
@@ -165,6 +165,9 @@ public:
   {
     MOZ_CRASH("GFX: Should not be called on non-remote ContentClient");
   }
+
+private:
+  gfx::BackendType mBackend;
 };
 
 /**

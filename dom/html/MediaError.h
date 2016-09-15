@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_MediaError_h
 #define mozilla_dom_MediaError_h
 
-#include "nsIDOMMediaError.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "nsWrapperCache.h"
 #include "nsISupports.h"
@@ -16,7 +15,7 @@
 namespace mozilla {
 namespace dom {
 
-class MediaError final : public nsIDOMMediaError,
+class MediaError final : public nsISupports,
                          public nsWrapperCache
 {
   ~MediaError() {}
@@ -29,9 +28,6 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MediaError)
 
-  // nsIDOMMediaError
-  NS_DECL_NSIDOMMEDIAERROR
-
   HTMLMediaElement* GetParentObject() const
   {
     return mParent;
@@ -43,6 +39,8 @@ public:
   {
     return mCode;
   }
+
+  void GetMessage(nsAString& aResult) const;
 
 private:
   RefPtr<HTMLMediaElement> mParent;

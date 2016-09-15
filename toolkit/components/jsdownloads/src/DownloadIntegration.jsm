@@ -544,7 +544,7 @@ this.DownloadIntegration = {
     let deferred = Promise.defer();
     let aReferrer = null;
     if (aDownload.source.referrer) {
-      aReferrer: NetUtil.newURI(aDownload.source.referrer);
+      aReferrer = NetUtil.newURI(aDownload.source.referrer);
     }
     gApplicationReputationService.queryReputation({
       sourceURI: NetUtil.newURI(aDownload.source.url),
@@ -681,7 +681,7 @@ this.DownloadIntegration = {
 
     let aReferrer = null;
     if (aDownload.source.referrer) {
-      aReferrer: NetUtil.newURI(aDownload.source.referrer);
+      aReferrer = NetUtil.newURI(aDownload.source.referrer);
     }
 
     gDownloadPlatform.downloadDone(NetUtil.newURI(aDownload.source.url),

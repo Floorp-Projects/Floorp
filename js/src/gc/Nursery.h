@@ -305,9 +305,12 @@ class Nursery
     /* Promotion rate for the previous minor collection. */
     double previousPromotionRate_;
 
-    /* Report minor collections taking more than this many us, if enabled. */
+    /* Report minor collections taking at least this many us, if enabled. */
     int64_t profileThreshold_;
     bool enableProfiling_;
+
+    /* Report ObjectGroups with at lest this many instances tenured. */
+    int64_t reportTenurings_;
 
     /* Profiling data. */
 
