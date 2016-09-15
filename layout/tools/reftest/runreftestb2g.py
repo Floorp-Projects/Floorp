@@ -325,7 +325,10 @@ class B2GRemoteReftest(RefTest):
         return status
 
 
-def run_remote_reftests(parser, options):
+def run_test_harness(parser, options):
+    if options.mulet:
+        return run_mulet_reftests(parser, options)
+
     auto = B2GRemoteAutomation(None, "fennec")
 
     # create our Marionette instance
@@ -420,23 +423,7 @@ def run_remote_reftests(parser, options):
     return retVal
 
 
-def run(**kwargs):
-    # Mach gives us kwargs; this is a way to turn them back into an
-    # options object
-    parser = reftestcommandline.B2GArgumentParser()
-    parser.set_defaults(**kwargs)
-    options = parser.parse_args(kwargs["tests"])
-    return run_remote_reftests(parser, options)
-
-
-def main(args=sys.argv[1:]):
-    parser = reftestcommandline.B2GArgumentParser()
-    options = parser.parse_args(args)
-
-    if options.mulet:
-        return run_mulet_reftests(parser, options)
-    return run_remote_reftests(parser, options)
-
-
 if __name__ == "__main__":
-    sys.exit(main())
+    parser = reftestcommandline.B2GArgumentParser()
+    options = parser.parse_args()
+    sys.exit(run_test_harness(parser, options))

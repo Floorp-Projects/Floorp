@@ -88,6 +88,10 @@ LoginManagerPromptFactory.prototype = {
     var prompter = prompt.prompter;
     var [hostname, httpRealm] = prompter._getAuthTarget(prompt.channel, prompt.authInfo);
     var hasLogins = (prompter._pwmgr.countLogins(hostname, null, httpRealm) > 0);
+    if (!hasLogins && LoginHelper.schemeUpgrades && hostname.startsWith("https://")) {
+      let httpHostname = hostname.replace(/^https:\/\//, "http://");
+      hasLogins = (prompter._pwmgr.countLogins(httpHostname, null, httpRealm) > 0);
+    }
     if (hasLogins && prompter._pwmgr.uiBusy) {
       this.log("_doAsyncPrompt:run bypassed, master password UI busy");
       return;
@@ -511,6 +515,7 @@ LoginManagerPrompter.prototype = {
     var epicfail = false;
     var canAutologin = false;
     var notifyObj;
+    var foundLogins;
 
     try {
       this.log("===== promptAuth called =====");
@@ -523,9 +528,18 @@ LoginManagerPrompter.prototype = {
       var [hostname, httpRealm] = this._getAuthTarget(aChannel, aAuthInfo);
 
       // Looks for existing logins to prefill the prompt with.
-      var foundLogins = this._pwmgr.findLogins({},
-                                               hostname, null, httpRealm);
-      this.log("found " + foundLogins.length + " matching logins.");
+      foundLogins = LoginHelper.searchLoginsWithObject({
+        hostname,
+        httpRealm,
+        schemeUpgrades: LoginHelper.schemeUpgrades,
+      });
+      this.log("found", foundLogins.length, "matching logins.");
+      let resolveBy = [
+        "scheme",
+        "timePasswordChanged",
+      ];
+      foundLogins = LoginHelper.dedupeLogins(foundLogins, ["username"], resolveBy, hostname);
+      this.log(foundLogins.length, "matching logins remain after deduping");
 
       // XXX Can't select from multiple accounts yet. (bug 227632)
       if (foundLogins.length > 0) {

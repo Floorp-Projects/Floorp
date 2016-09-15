@@ -174,6 +174,9 @@ def docker_worker_setup(config, test, taskdesc):
     if 'actions' in mozharness:
         env['MOZHARNESS_ACTIONS'] = ' '.join(mozharness['actions'])
 
+    if config.params['project'] == 'try':
+        env['TRY_COMMIT_MSG'] = config.params['message']
+
     # handle some of the mozharness-specific options
 
     if mozharness['tooltool-downloads']:
