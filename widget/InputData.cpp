@@ -16,6 +16,10 @@ namespace mozilla {
 
 using namespace dom;
 
+InputData::~InputData()
+{
+}
+
 InputData::InputData(InputType aInputType)
   : mInputType(aInputType)
   , mTime(0)

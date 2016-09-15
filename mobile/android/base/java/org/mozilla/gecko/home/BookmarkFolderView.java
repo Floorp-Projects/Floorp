@@ -107,7 +107,7 @@ public class BookmarkFolderView extends LinearLayout {
                 return null;
             }
 
-            final BrowserDB db = GeckoProfile.get(textView.getContext()).getDB();
+            final BrowserDB db = BrowserDB.from(textView.getContext());
             return db.getBookmarkCountForFolder(textView.getContext().getContentResolver(), mFolderID);
         }
 

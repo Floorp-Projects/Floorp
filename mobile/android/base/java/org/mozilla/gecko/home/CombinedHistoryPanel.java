@@ -296,7 +296,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
 
         @Override
         public Cursor loadCursor() {
-            return mProfile.getDB().getTabsAccessor().getRemoteTabsCursor(getContext());
+            return BrowserDB.from(mProfile).getTabsAccessor().getRemoteTabsCursor(getContext());
         }
     }
 
@@ -307,7 +307,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
 
         public HistoryCursorLoader(Context context) {
             super(context);
-            mDB = GeckoProfile.get(context).getDB();
+            mDB = BrowserDB.from(context);
         }
 
         @Override
@@ -323,7 +323,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
             if (mDB == null) {
-                mDB = GeckoProfile.get(getActivity()).getDB();
+                mDB = BrowserDB.from(getActivity());
             }
 
             switch (id) {

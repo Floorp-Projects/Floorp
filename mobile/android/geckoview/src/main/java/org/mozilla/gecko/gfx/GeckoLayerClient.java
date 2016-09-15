@@ -9,9 +9,6 @@ import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.gfx.LayerView.DrawListener;
-import org.mozilla.gecko.Tab;
-import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.ZoomConstraints;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.AppConstants;
@@ -127,10 +124,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
         mViewportMetrics = new ImmutableViewportMetrics(displayMetrics)
                            .setViewportSize(view.getWidth(), view.getHeight());
-        Tab tab = Tabs.getInstance().getSelectedTab();
-        if (tab != null) {
-            mViewportMetrics = mViewportMetrics.setIsRTL(tab.getIsRTL());
-        }
 
         mFrameMetrics = mViewportMetrics;
 
@@ -329,13 +322,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         return mContentDocumentIsDisplayed;
     }
 
-    void setIsRTL(boolean aIsRTL) {
-        synchronized (getLock()) {
-            ImmutableViewportMetrics newMetrics = getViewportMetrics().setIsRTL(aIsRTL);
-            setViewportMetrics(newMetrics, false);
-        }
-    }
-
     /** The compositor invokes this function just before compositing a frame where the document
       * is different from the document composited on the last frame. In these cases, the viewport
       * information we have in Java is no longer valid and needs to be replaced with the new
@@ -348,16 +334,13 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         synchronized (getLock()) {
             ImmutableViewportMetrics currentMetrics = getViewportMetrics();
 
-            Tab tab = Tabs.getInstance().getSelectedTab();
-
             RectF cssPageRect = new RectF(cssPageLeft, cssPageTop, cssPageRight, cssPageBottom);
             RectF pageRect = RectUtils.scaleAndRound(cssPageRect, zoom);
 
             final ImmutableViewportMetrics newMetrics = currentMetrics
                 .setViewportOrigin(offsetX, offsetY)
                 .setZoomFactor(zoom)
-                .setPageRect(pageRect, cssPageRect)
-                .setIsRTL(tab != null ? tab.getIsRTL() : false);
+                .setPageRect(pageRect, cssPageRect);
             // Since we have switched to displaying a different document, we need to update any
             // viewport-related state we have lying around. This includes mGeckoViewport and
             // mViewportMetrics. Usually this information is updated via handleViewportMessage
@@ -645,7 +628,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         mView.post(new Runnable() {
             @Override
             public void run() {
-                event.offsetLocation(0, mView.getSurfaceTranslation());
                 mView.dispatchTouchEvent(event);
             }
         });

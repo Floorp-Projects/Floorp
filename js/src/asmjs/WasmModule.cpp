@@ -543,6 +543,31 @@ Module::instantiateFunctions(JSContext* cx, Handle<FunctionVector> funcImports) 
     return true;
 }
 
+static bool
+CheckResizableLimits(JSContext* cx, uint32_t declaredMin, Maybe<uint32_t> declaredMax,
+                     uint32_t actualLength, Maybe<uint32_t> actualMax,
+                     bool isAsmJS, const char* kind)
+{
+    if (isAsmJS) {
+        MOZ_ASSERT(actualLength >= declaredMin);
+        MOZ_ASSERT(!declaredMax);
+        MOZ_ASSERT(actualLength == actualMax.value());
+        return true;
+    }
+
+    if (actualLength < declaredMin || actualLength > declaredMax.valueOr(UINT32_MAX)) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMP_SIZE, kind);
+        return false;
+    }
+
+    if ((actualMax && (!declaredMax || *actualMax > *declaredMax)) || (!actualMax && declaredMax)) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMP_MAX, kind);
+        return false;
+    }
+
+    return true;
+}
+
 // asm.js module instantiation supplies its own buffer, but for wasm, create and
 // initialize the buffer if one is requested. Either way, the buffer is wrapped
 // in a WebAssembly.Memory object which is what the Instance stores.
@@ -563,21 +588,10 @@ Module::instantiateMemory(JSContext* cx, MutableHandleWasmMemoryObject memory) c
         MOZ_ASSERT_IF(metadata_->isAsmJS(), buffer.isPreparedForAsmJS());
         MOZ_ASSERT_IF(!metadata_->isAsmJS(), buffer.as<ArrayBufferObject>().isWasm());
 
-        uint32_t actualLength = buffer.byteLength();
-        if (actualLength < declaredMin || actualLength > declaredMax.valueOr(UINT32_MAX)) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMP_SIZE, "Memory");
+        if (!CheckResizableLimits(cx, declaredMin, declaredMax,
+                                  buffer.byteLength(), buffer.wasmMaxSize(),
+                                  metadata_->isAsmJS(), "Memory")) {
             return false;
-        }
-
-        if (metadata_->isAsmJS()) {
-            MOZ_ASSERT(IsValidAsmJSHeapLength(actualLength));
-            MOZ_ASSERT(actualLength == buffer.wasmMaxSize().value());
-        } else {
-            Maybe<uint32_t> actualMax = buffer.as<ArrayBufferObject>().wasmMaxSize();
-            if (declaredMax.isSome() != actualMax.isSome() || declaredMax < actualMax) {
-                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMP_SIZE, "Memory");
-                return false;
-            }
         }
     } else {
         MOZ_ASSERT(!metadata_->isAsmJS());
@@ -608,12 +622,13 @@ Module::instantiateTable(JSContext* cx, MutableHandleWasmTableObject tableObj,
         MOZ_ASSERT(!metadata_->isAsmJS());
 
         MOZ_ASSERT(metadata_->tables.length() == 1);
-        const TableDesc& tableDesc = metadata_->tables[0];
-        MOZ_ASSERT(tableDesc.external);
+        const TableDesc& td = metadata_->tables[0];
+        MOZ_ASSERT(td.external);
 
         Table& table = tableObj->table();
-        if (table.length() < tableDesc.initial || table.length() > tableDesc.maximum) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMP_SIZE, "Table");
+        if (!CheckResizableLimits(cx, td.limits.initial, td.limits.maximum,
+                                  table.length(), table.maximum(),
+                                  metadata_->isAsmJS(), "Table")) {
             return false;
         }
 
@@ -622,19 +637,19 @@ Module::instantiateTable(JSContext* cx, MutableHandleWasmTableObject tableObj,
             return false;
         }
     } else {
-        for (const TableDesc& tableDesc : metadata_->tables) {
+        for (const TableDesc& td : metadata_->tables) {
             SharedTable table;
-            if (tableDesc.external) {
+            if (td.external) {
                 MOZ_ASSERT(!tableObj);
-                MOZ_ASSERT(tableDesc.kind == TableKind::AnyFunction);
+                MOZ_ASSERT(td.kind == TableKind::AnyFunction);
 
-                tableObj.set(WasmTableObject::create(cx, tableDesc.initial));
+                tableObj.set(WasmTableObject::create(cx, td.limits));
                 if (!tableObj)
                     return false;
 
                 table = &tableObj->table();
             } else {
-                table = Table::create(cx, tableDesc, /* HandleWasmTableObject = */ nullptr);
+                table = Table::create(cx, td, /* HandleWasmTableObject = */ nullptr);
                 if (!table)
                     return false;
             }

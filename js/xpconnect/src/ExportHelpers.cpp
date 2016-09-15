@@ -365,7 +365,7 @@ NewFunctionForwarder(JSContext* cx, HandleId idArg, HandleObject callable,
 {
     RootedId id(cx, idArg);
     if (id == JSID_VOIDHANDLE)
-        id = GetRTIdByIndex(cx, XPCJSRuntime::IDX_EMPTYSTRING);
+        id = GetJSIDByIndex(cx, XPCJSContext::IDX_EMPTYSTRING);
 
     // We have no way of knowing whether the underlying function wants to be a
     // constructor or not, so we just mark all forwarders as constructors, and

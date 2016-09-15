@@ -597,10 +597,11 @@ TEST_F(APZCGestureDetectorTester, TapFollowedByMultipleTouches) {
 }
 
 TEST_F(APZCGestureDetectorTester, LongPressInterruptedByWheel) {
-  // Since the wheel block interrupted the long-press, we don't expect
-  // any long-press notifications. However, this also shouldn't crash, which
-  // is what it used to do.
-  EXPECT_CALL(*mcc, HandleTap(TapType::eLongTap, _, _, _, _)).Times(0);
+  // Since we try to allow concurrent input blocks of different types to
+  // co-exist, the wheel block shouldn't interrupt the long-press detection.
+  // But more importantly, this shouldn't crash, which is what it did at one
+  // point in time.
+  EXPECT_CALL(*mcc, HandleTap(TapType::eLongTap, _, _, _, _)).Times(1);
 
   uint64_t touchBlockId = 0;
   uint64_t wheelBlockId = 0;

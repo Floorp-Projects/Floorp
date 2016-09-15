@@ -142,7 +142,7 @@ public class EditBookmarkDialog {
      */
     public void show(final String url) {
         final ContentResolver cr = mContext.getContentResolver();
-        final BrowserDB db = GeckoProfile.get(mContext).getDB();
+        final BrowserDB db = BrowserDB.from(mContext);
         (new UIAsyncTask.WithoutParams<Bookmark>(ThreadUtils.getBackgroundHandler()) {
             @Override
             public Bookmark doInBackground() {
@@ -201,7 +201,7 @@ public class EditBookmarkDialog {
         locationText.setText(url);
         keywordText.setText(keyword);
 
-        final BrowserDB db = GeckoProfile.get(mContext).getDB();
+        final BrowserDB db = BrowserDB.from(mContext);
         editPrompt.setPositiveButton(R.string.button_ok, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int whichButton) {
