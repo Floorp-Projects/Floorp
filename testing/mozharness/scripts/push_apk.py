@@ -58,19 +58,10 @@ class PushAPK(BaseScript, GooglePlayMixin, VirtualenvMixin):
             "dest": "apk_file_x86",
             "help": "The path to the x86 APK file",
         }],
-        [["--apk-armv7-v9"], {
-            "dest": "apk_file_armv7_v9",
-            "help": "The path to the ARM v7 API v9 APK file",
-        }],
         [["--apk-armv7-v15"], {
             "dest": "apk_file_armv7_v15",
             "help": "The path to the ARM v7 API v15 APK file",
         }],
-        [["--apk-armv6"], {
-            "dest": "apk_file_armv6",
-            "help": "The path to the ARM v6 APK file",
-        }],
-
 
     ]
 
@@ -128,14 +119,8 @@ class PushAPK(BaseScript, GooglePlayMixin, VirtualenvMixin):
         if not os.path.isfile(self.config['apk_file_x86']):
             self.fatal("Could not find " + self.config['apk_file_x86'])
 
-        if self.config.get('apk_file_armv7_v9') and not os.path.isfile(self.config['apk_file_armv7_v9']):
-            self.fatal("Could not find " + self.config['apk_file_armv7_v9'])
-
         if not os.path.isfile(self.config['apk_file_armv7_v15']):
             self.fatal("Could not find " + self.config['apk_file_armv7_v15'])
-
-        if self.config.get('apk_file_armv6') and not os.path.isfile(self.config['apk_file_armv6']):
-            self.fatal("Could not find " + self.config['apk_file_armv6'])
 
         if not os.path.isfile(self.config['google_play_credentials_file']):
             self.fatal("Could not find " + self.config['google_play_credentials_file'])
@@ -216,10 +201,6 @@ class PushAPK(BaseScript, GooglePlayMixin, VirtualenvMixin):
         self.check_argument()
         service = self.connect_to_play()
         apks = [self.config['apk_file_armv7_v15'], self.config['apk_file_x86']]
-        if self.config.get('apk_file_armv6'):
-            apks.append(self.config['apk_file_armv6'])
-        if self.config.get('apk_file_armv7_v9'):
-            apks.append(self.config['apk_file_armv7_v9'])
         self.upload_apks(service, apks)
 
     def test(self):
