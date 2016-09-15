@@ -1038,10 +1038,8 @@ XMLHttpRequestMainThread::CloseRequestWithError(const ProgressEventType aType)
     if (!mFlagSyncLooping) {
       if (mUpload && !mUploadComplete) {
         mUploadComplete = true;
-        DispatchProgressEvent(mUpload, ProgressEventType::progress, 0, 0);
         DispatchProgressEvent(mUpload, aType, 0, 0);
       }
-      DispatchProgressEvent(this, ProgressEventType::progress, 0, 0);
       DispatchProgressEvent(this, aType, 0, 0);
     }
   }
@@ -2184,10 +2182,9 @@ XMLHttpRequestMainThread::ChangeStateToDone()
   // Per spec, fire readystatechange=4/done before final error events.
   ChangeState(State::done, true);
 
-  // Per spec, if we failed in the upload phase, fire a final progress, error,
-  // and loadend event for the upload after readystatechange=4/done.
+  // Per spec, if we failed in the upload phase, fire a final error
+  // and loadend events for the upload after readystatechange=4/done.
   if (!mFlagSynchronous && mUpload && !mUploadComplete) {
-    DispatchProgressEvent(mUpload, ProgressEventType::progress, 0, 0);
     DispatchProgressEvent(mUpload, ProgressEventType::error, 0, 0);
   }
 
