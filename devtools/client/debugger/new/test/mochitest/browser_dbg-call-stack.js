@@ -17,7 +17,7 @@ function isFrameSelected(dbg, index, title) {
 
 add_task(function* () {
   const dbg = yield initDebugger(
-    "doc-script-switching-01.html",
+    "doc-script-switching.html",
     "script-switching-01.js"
   );
 

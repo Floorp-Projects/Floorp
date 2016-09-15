@@ -95,28 +95,54 @@ function waitForState(dbg, predicate) {
   });
 }
 
-function waitForMs(time) {
-  return new Promise(resolve => setTimeout(resolve, time));
+function waitForSources(dbg, ...sources) {
+  if(sources.length === 0) {
+    return Promise.resolve();
+  }
+
+  info("Waiting on sources: " + sources.join(", "));
+  const {selectors: {getSources}, store} = dbg;
+  return Promise.all(sources.map(url => {
+    function sourceExists(state) {
+      return getSources(state).some(s => s.get("url").includes(url));
+    }
+
+    if(!sourceExists(store.getState())) {
+      return waitForState(dbg, sourceExists);
+    }
+  }));
 }
 
 function assertPausedLocation(dbg, source, line) {
   const { selectors: { getSelectedSource, getPause }, getState } = dbg;
+  source = findSource(dbg, source);
 
-  // support passing in a partial url and fetching the source
-  if (typeof source == "string") {
-    source = findSource(dbg, source);
-  }
-
-  // check the selected source
+  // Check the selected source
   is(getSelectedSource(getState()).get("url"), source.url);
 
-  // check the pause location
+  // Check the pause location
   const location = getPause(getState()).getIn(["frame", "location"]);
   is(location.get("sourceId"), source.id);
   is(location.get("line"), line);
 
-  // check the debug line
+  // Check the debug line
   ok(dbg.win.cm.lineInfo(line - 1).wrapClass.includes("debug-line"),
+     "Line is highlighted as paused");
+}
+
+function assertHighlightLocation(dbg, source, line) {
+  const { selectors: { getSelectedSource, getPause }, getState } = dbg;
+  source = findSource(dbg, source);
+
+  // Check the selected source
+  is(getSelectedSource(getState()).get("url"), source.url);
+
+  // Check the highlight line
+  const lineEl = findElement(dbg, "highlightLine");
+  ok(lineEl, "Line is highlighted");
+  ok(isVisibleWithin(findElement(dbg, "codeMirror"), lineEl),
+     "Highlighted line is visible");
+  ok(dbg.win.cm.lineInfo(line - 1).wrapClass.includes("highlight-line"),
      "Line is highlighted");
 }
 
@@ -125,11 +151,11 @@ function isPaused(dbg) {
   return !!getPause(getState());
 }
 
-const waitForPaused = Task.async(function* (dbg) {
-  // We want to make sure that we get both a real paused event and
-  // that the state is fully populated. The client may do some more
-  // work (call other client methods) before populating the state.
-  return Promise.all([
+function waitForPaused(dbg) {
+  return Task.spawn(function* () {
+    // We want to make sure that we get both a real paused event and
+    // that the state is fully populated. The client may do some more
+    // work (call other client methods) before populating the state.
     yield waitForThreadEvents(dbg, "paused"),
     yield waitForState(dbg, state => {
       const pause = dbg.selectors.getPause(state);
@@ -142,42 +168,32 @@ const waitForPaused = Task.async(function* (dbg) {
       const sourceId = pause.getIn(["frame", "location", "sourceId"]);
       const sourceText = dbg.selectors.getSourceText(dbg.getState(), sourceId);
       return sourceText && !sourceText.get("loading");
-    })
-  ]);
-});
+    });
+  });
+};
 
-const initDebugger = Task.async(function* (url, ...sources) {
-  const toolbox = yield openNewTabAndToolbox(EXAMPLE_URL + url, "jsdebugger");
-  const win = toolbox.getPanel("jsdebugger").panelWin;
-  const store = win.Debugger.store;
-  const { getSources } = win.Debugger.selectors;
+function initDebugger(url, ...sources) {
+  return Task.spawn(function* () {
+    const toolbox = yield openNewTabAndToolbox(EXAMPLE_URL + url, "jsdebugger");
+    const win = toolbox.getPanel("jsdebugger").panelWin;
+    const store = win.Debugger.store;
+    const { getSources } = win.Debugger.selectors;
 
-  const dbg = {
-    actions: win.Debugger.actions,
-    selectors: win.Debugger.selectors,
-    getState: store.getState,
-    store: store,
-    client: win.Debugger.client,
-    toolbox: toolbox,
-    win: win
-  };
+    const dbg = {
+      actions: win.Debugger.actions,
+      selectors: win.Debugger.selectors,
+      getState: store.getState,
+      store: store,
+      client: win.Debugger.client,
+      toolbox: toolbox,
+      win: win
+    };
 
-  if(sources.length) {
-    // TODO: Extract this out to a utility function
-    info("Waiting on sources: " + sources.join(", "));
-    yield Promise.all(sources.map(url => {
-      function sourceExists(state) {
-        return getSources(state).some(s => s.get("url").includes(url));
-      }
+    yield waitForSources(dbg, ...sources);
 
-      if(!sourceExists(store.getState())) {
-        return waitForState(dbg, sourceExists);
-      }
-    }));
-  }
-
-  return dbg;
-});
+    return dbg;
+  });
+};
 
 window.resumeTest = undefined;
 function pauseTest() {
@@ -188,6 +204,13 @@ function pauseTest() {
 // Actions
 
 function findSource(dbg, url) {
+  if(typeof url !== "string") {
+    // Support passing in a source object itelf all APIs that use this
+    // function support both styles
+    const source = url;
+    return source;
+  }
+
   const sources = dbg.selectors.getSources(dbg.getState());
   const source = sources.find(s => s.get("url").includes(url));
 
@@ -198,12 +221,15 @@ function findSource(dbg, url) {
   return source.toJS();
 }
 
-function selectSource(dbg, url) {
+function selectSource(dbg, url, line) {
   info("Selecting source: " + url);
   const source = findSource(dbg, url);
-  dbg.actions.selectSource(source.id);
+  const hasText = !!dbg.selectors.getSourceText(dbg.getState(), source.id);
+  dbg.actions.selectSource(source.id, { line });
 
-  return waitForDispatch(dbg, "LOAD_SOURCE_TEXT");
+  if(!hasText) {
+    return waitForDispatch(dbg, "LOAD_SOURCE_TEXT");
+  }
 }
 
 function stepOver(dbg) {
@@ -234,8 +260,19 @@ function reload(dbg) {
   return dbg.client.reload();
 }
 
-function addBreakpoint(dbg, sourceId, line, col) {
+function navigate(dbg, url, ...sources) {
+  dbg.client.navigate(url);
+  return waitForSources(dbg, ...sources)
+}
+
+function addBreakpoint(dbg, source, line, col) {
+  source = findSource(dbg, source);
+  const sourceId = source.id;
   return dbg.actions.addBreakpoint({ sourceId, line, col });
+}
+
+function removeBreakpoint(dbg, sourceId, line, col) {
+  return dbg.actions.removeBreakpoint({ sourceId, line, col });
 }
 
 function togglePauseOnExceptions(dbg,
@@ -256,11 +293,30 @@ function togglePauseOnExceptions(dbg,
 // Helpers
 // invoke a global function in the debugged tab
 function invokeInTab(fnc) {
+  info(`Invoking function ${fnc} in tab`);
   return ContentTask.spawn(gBrowser.selectedBrowser, fnc, function* (fnc) {
     content.wrappedJSObject[fnc](); // eslint-disable-line mozilla/no-cpows-in-tests, max-len
   });
 }
 
+const isLinux = Services.appinfo.OS === "Linux";
+const keyMappings = {
+  pauseKey: { code: "VK_F8" },
+  resumeKey: { code: "VK_F8" },
+  stepOverKey: { code: "VK_F10" },
+  stepInKey: { code: "VK_F11", modifiers: { ctrlKey: isLinux } },
+  stepOutKey: { code: "VK_F11", modifiers: { ctrlKey: isLinux, shiftKey: true } }
+};
+
+function pressKey(dbg, keyName) {
+  let keyEvent = keyMappings[keyName];
+  const { code, modifiers } = keyEvent;
+  return EventUtils.synthesizeKey(
+    code,
+    modifiers || {},
+    dbg.win
+  );
+}
 
 function isVisibleWithin(outerEl, innerEl) {
   const innerRect = innerEl.getBoundingClientRect();
@@ -275,12 +331,13 @@ const selectors = {
   gutter: i => `.CodeMirror-code *:nth-child(${i}) .CodeMirror-linenumber`,
   pauseOnExceptions: ".pause-exceptions",
   breakpoint: ".CodeMirror-code > .new-breakpoint",
+  highlightLine: ".CodeMirror-code > .highlight-line",
   codeMirror: ".CodeMirror",
   resume: ".resume.active",
   stepOver: ".stepOver.active",
   stepOut: ".stepOut.active",
   stepIn: ".stepIn.active"
-}
+};
 
 function getSelector(elementName, ...args) {
   let selector = selectors[elementName];
@@ -298,6 +355,11 @@ function getSelector(elementName, ...args) {
 function findElement(dbg, elementName, ...args) {
   const selector = getSelector(elementName, ...args);
   return dbg.win.document.querySelector(selector);
+}
+
+function findAllElements(dbg, elementName, ...args) {
+  const selector = getSelector(elementName, ...args);
+  return dbg.win.document.querySelectorAll(selector);
 }
 
 // click an element in the debugger
