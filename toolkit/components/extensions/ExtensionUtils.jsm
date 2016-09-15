@@ -1763,11 +1763,7 @@ class ChildAPIManager {
 
   shouldInject(namespace, name, restrictions) {
     // Do not generate content script APIs, unless explicitly allowed.
-    if (this.context.envType === "content_child" &&
-        (!restrictions || !restrictions.includes("content"))) {
-      return false;
-    }
-    return true;
+    return this.context.envType !== "content_child" || restrictions.includes("content");
   }
 
   getImplementation(namespace, name) {
