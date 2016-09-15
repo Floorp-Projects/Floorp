@@ -1290,6 +1290,8 @@ nsStandardURL::GetHost(nsACString &result)
 NS_IMETHODIMP
 nsStandardURL::GetPort(int32_t *result)
 {
+    // should never be more than 16 bit
+    MOZ_ASSERT(mPort <= std::numeric_limits<uint16_t>::max());
     *result = mPort;
     return NS_OK;
 }
@@ -1967,8 +1969,9 @@ nsStandardURL::SetPort(int32_t port)
     if ((port == mPort) || (mPort == -1 && port == mDefaultPort))
         return NS_OK;
 
-    // ports must be >= 0
-    if (port < -1) // -1 == use default
+    // ports must be >= 0 and 16 bit
+    // -1 == use default
+    if (port < -1 || port > std::numeric_limits<uint16_t>::max())
         return NS_ERROR_MALFORMED_URI;
 
     if (mURLType == URLTYPE_NO_AUTHORITY) {
@@ -3123,7 +3126,8 @@ nsStandardURL::Init(uint32_t urlType,
 {
     ENSURE_MUTABLE();
 
-    if (spec.Length() > (uint32_t) net_GetURLMaxLength()) {
+    if (spec.Length() > (uint32_t) net_GetURLMaxLength() ||
+        defaultPort > std::numeric_limits<uint16_t>::max()) {
         return NS_ERROR_MALFORMED_URI;
     }
 
@@ -3173,6 +3177,11 @@ nsStandardURL::SetDefaultPort(int32_t aNewDefaultPort)
     ENSURE_MUTABLE();
 
     InvalidateCache();
+
+    // should never be more than 16 bit
+    if (aNewDefaultPort >= std::numeric_limits<uint16_t>::max()) {
+        return NS_ERROR_MALFORMED_URI;
+    }
 
     // If we're already using the new default-port as a custom port, then clear
     // it off of our mSpec & set mPort to -1, to indicate that we'll be using

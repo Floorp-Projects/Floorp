@@ -97,6 +97,13 @@ WriteConsoleLog();
 void
 OverrideDefaultLocaleIfNeeded();
 
+/**
+ * Allow exit() calls to complete. This should be done from a proper Gecko
+ * shutdown path. Otherwise we aim to catch improper shutdowns.
+ */
+void
+MozExpectedExit();
+
 #ifdef XP_WIN
 void
 UseParentConsole();
