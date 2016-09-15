@@ -9,7 +9,7 @@
 #include "js/Class.h"
 #include "js/Proxy.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"
-#include "mozilla/CycleCollectedJSRuntime.h"
+#include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "nsCycleCollectionTraversalCallback.h"
 #include "nsCycleCollector.h"
@@ -31,7 +31,7 @@ nsWrapperCache::HoldJSObjects(void* aScriptObjectHolder,
 {
   cyclecollector::HoldJSObjectsImpl(aScriptObjectHolder, aTracer);
   if (mWrapper && !JS::ObjectIsTenured(mWrapper)) {
-    CycleCollectedJSRuntime::Get()->NurseryWrapperPreserved(mWrapper);
+    CycleCollectedJSContext::Get()->NurseryWrapperPreserved(mWrapper);
   }
 }
 
@@ -42,7 +42,7 @@ nsWrapperCache::SetWrapperJSObject(JSObject* aWrapper)
   UnsetWrapperFlags(kWrapperFlagsMask & ~WRAPPER_IS_NOT_DOM_BINDING);
 
   if (aWrapper && !JS::ObjectIsTenured(aWrapper)) {
-    CycleCollectedJSRuntime::Get()->NurseryWrapperAdded(this);
+    CycleCollectedJSContext::Get()->NurseryWrapperAdded(this);
   }
 }
 

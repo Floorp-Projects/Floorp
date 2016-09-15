@@ -5,7 +5,6 @@
 #ifndef Mappable_h
 #define Mappable_h
 
-#include <pthread.h>
 #include "Zip.h"
 #include "SeekableZStream.h"
 #include "mozilla/RefPtr.h"

@@ -36,6 +36,7 @@
 # include "vtune/VTuneWrapper.h"
 #endif
 
+#include "jit/MacroAssembler-inl.h"
 #include "vm/ArrayBufferObject-inl.h"
 
 using namespace js;

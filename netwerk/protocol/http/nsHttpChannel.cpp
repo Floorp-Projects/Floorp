@@ -5737,6 +5737,7 @@ nsHttpChannel::BeginConnect()
 
     RefPtr<AltSvcMapping> mapping;
     if (!mConnectionInfo && mAllowAltSvc && // per channel
+        !(mLoadFlags & LOAD_FRESH_CONNECTION) &&
         (scheme.Equals(NS_LITERAL_CSTRING("http")) ||
          scheme.Equals(NS_LITERAL_CSTRING("https"))) &&
         (!proxyInfo || proxyInfo->IsDirect()) &&

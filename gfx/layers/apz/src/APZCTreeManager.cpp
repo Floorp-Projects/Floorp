@@ -1059,7 +1059,7 @@ void
 APZCTreeManager::UpdateWheelTransaction(LayoutDeviceIntPoint aRefPoint,
                                         EventMessage aEventMessage)
 {
-  WheelBlockState* txn = mInputQueue->GetCurrentWheelTransaction();
+  WheelBlockState* txn = mInputQueue->GetActiveWheelTransaction();
   if (!txn) {
     return;
   }

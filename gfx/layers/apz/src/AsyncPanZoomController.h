@@ -861,11 +861,11 @@ private:
   void CancelAnimationAndGestureState();
 
   RefPtr<InputQueue> mInputQueue;
-  CancelableBlockState* CurrentInputBlock() const;
-  TouchBlockState* CurrentTouchBlock() const;
+  CancelableBlockState* GetCurrentInputBlock() const;
+  TouchBlockState* GetCurrentTouchBlock() const;
   bool HasReadyTouchBlock() const;
 
-  PanGestureBlockState* CurrentPanGestureBlock() const;
+  PanGestureBlockState* GetCurrentPanGestureBlock() const;
 
 private:
   /* ===================================================================

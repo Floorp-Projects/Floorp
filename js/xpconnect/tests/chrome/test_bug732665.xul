@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=732665
 
   //
   // Important! If this test starts failing after a tricky platform-y change,
-  // the stack quota numbers in XPCJSRuntime probably need twiddling. We want
+  // the stack quota numbers in XPCJSContext probably need twiddling. We want
   // to maintain the invariants in this test (at least to some approximation)
   // for security reasons.
   //
@@ -71,7 +71,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=732665
   // If this assertion fails, the current work-around so far is to measure
   // again the worst frame size, by using the JS Shell to run
   // test_bug732665_meta.js . This script will output numbers to update
-  // XPCJSRuntime.cpp comment, as well as the kTrustedScriptBuffer constant.
+  // XPCJSContext.cpp comment, as well as the kTrustedScriptBuffer constant.
   contentSb.nnslChrome = chromeSb.nearNativeStackLimit;
   var nestedLimit = Cu.evalInSandbox("nearNativeStackLimit(1, function() { nestedLimit = nnslChrome(0);}); nestedLimit;", contentSb);
   ok(nestedLimit >= 11, "Chrome should be invokable from content script with an exhausted stack: " + nestedLimit);

@@ -5197,16 +5197,16 @@ nsContentUtils::AddScriptRunner(nsIRunnable* aRunnable) {
 void
 nsContentUtils::RunInStableState(already_AddRefed<nsIRunnable> aRunnable)
 {
-  MOZ_ASSERT(CycleCollectedJSRuntime::Get(), "Must be on a script thread!");
-  CycleCollectedJSRuntime::Get()->RunInStableState(Move(aRunnable));
+  MOZ_ASSERT(CycleCollectedJSContext::Get(), "Must be on a script thread!");
+  CycleCollectedJSContext::Get()->RunInStableState(Move(aRunnable));
 }
 
 /* static */
 void
 nsContentUtils::RunInMetastableState(already_AddRefed<nsIRunnable> aRunnable)
 {
-  MOZ_ASSERT(CycleCollectedJSRuntime::Get(), "Must be on a script thread!");
-  CycleCollectedJSRuntime::Get()->RunInMetastableState(Move(aRunnable));
+  MOZ_ASSERT(CycleCollectedJSContext::Get(), "Must be on a script thread!");
+  CycleCollectedJSContext::Get()->RunInMetastableState(Move(aRunnable));
 }
 
 void

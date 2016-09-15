@@ -73,7 +73,7 @@ GrallocImage::SetData(const Data& aData)
     return false;
   }
 
-  ClientIPCAllocator* allocator = ImageBridgeChild::GetSingleton();
+  RefPtr<ClientIPCAllocator> allocator = ImageBridgeChild::GetSingleton();
   GrallocTextureData* texData = GrallocTextureData::Create(mData.mYSize, HAL_PIXEL_FORMAT_YV12,
                                                            gfx::BackendType::NONE,
                                                            GraphicBuffer::USAGE_SW_READ_OFTEN |
