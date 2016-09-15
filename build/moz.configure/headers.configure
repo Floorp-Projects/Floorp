@@ -8,6 +8,9 @@
 check_header('stdint.h')
 have_inttypes = check_header('inttypes.h')
 
+# Assume we have ansi C header files available.
+set_define('STDC_HEADERS', True)
+
 set_config('HAVE_INTTYPES_H', have_inttypes)
 
 building_linux = depends(target)(lambda target: target.kernel == 'Linux')

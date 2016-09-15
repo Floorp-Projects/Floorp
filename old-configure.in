@@ -1222,7 +1222,6 @@ case "$target" in
         dnl allow AVX2 code from VS2012
         HAVE_X86_AVX2=1
     fi
-    AC_DEFINE(STDC_HEADERS)
     AC_DEFINE(WIN32_LEAN_AND_MEAN)
     dnl See http://support.microsoft.com/kb/143208 to use STL
     AC_DEFINE(NOMINMAX)
@@ -1345,7 +1344,6 @@ fi # COMPILE_ENVIRONMENT
 if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl Checks for typedefs, structures, and compiler characteristics.
 dnl ========================================================
-AC_HEADER_STDC
 AC_C_CONST
 AC_TYPE_MODE_T
 AC_TYPE_OFF_T

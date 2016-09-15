@@ -856,7 +856,6 @@ case "$target" in
         RCFLAGS="-nologo"
     fi
     AC_DEFINE(HAVE__MSIZE)
-    AC_DEFINE(STDC_HEADERS)
     AC_DEFINE(WIN32_LEAN_AND_MEAN)
     BIN_SUFFIX='.exe'
     MOZ_USER_DIR="Mozilla"
@@ -979,7 +978,6 @@ fi
 if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl Checks for typedefs, structures, and compiler characteristics.
 dnl ========================================================
-AC_HEADER_STDC
 AC_C_CONST
 AC_TYPE_MODE_T
 AC_TYPE_OFF_T
