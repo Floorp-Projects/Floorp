@@ -776,6 +776,10 @@ irintl(long double x)
 #define trunc fdlibm::trunc
 #define truncf fdlibm::truncf
 #define floorf fdlibm::floorf
+#define nearbyint fdlibm::nearbyint
+#define nearbyintf fdlibm::nearbyintf
+#define rint fdlibm::rint
+#define rintf fdlibm::rintf
 
 /* fdlibm kernel function */
 int	__kernel_rem_pio2(double*,double*,int,int,int);
