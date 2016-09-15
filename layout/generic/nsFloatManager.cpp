@@ -6,12 +6,14 @@
 /* class that manages rules for positioning floats */
 
 #include "nsFloatManager.h"
-#include "nsIPresShell.h"
-#include "nsMemory.h"
+
+#include <algorithm>
+
 #include "mozilla/ReflowInput.h"
 #include "nsBlockDebugFlags.h"
 #include "nsError.h"
-#include <algorithm>
+#include "nsIPresShell.h"
+#include "nsMemory.h"
 
 using namespace mozilla;
 
@@ -468,7 +470,7 @@ nsFloatManager::List(FILE* out) const
 
   for (uint32_t i = 0; i < mFloats.Length(); ++i) {
     const FloatInfo &fi = mFloats[i];
-    fprintf_stderr(out, "Float %u: frame=%p rect={%d,%d,%d,%d} ymost={l:%d, r:%d}\n",
+    fprintf_stderr(out, "Float %u: frame=%p rect={%d,%d,%d,%d} BEnd={l:%d, r:%d}\n",
                    i, static_cast<void*>(fi.mFrame),
                    fi.LineLeft(), fi.BStart(), fi.ISize(), fi.BSize(),
                    fi.mLeftBEnd, fi.mRightBEnd);
@@ -555,7 +557,7 @@ nsFloatManager::FloatInfo::~FloatInfo()
 
 nsAutoFloatManager::~nsAutoFloatManager()
 {
-  // Restore the old float manager in the reflow state if necessary.
+  // Restore the old float manager in the reflow input if necessary.
   if (mNew) {
 #ifdef NOISY_FLOATMANAGER
     printf("restoring old float manager %p\n", mOld);
@@ -565,8 +567,8 @@ nsAutoFloatManager::~nsAutoFloatManager()
 
 #ifdef NOISY_FLOATMANAGER
     if (mOld) {
-      static_cast<nsFrame *>(mReflowInput.frame)->ListTag(stdout);
-      printf(": space-manager %p after reflow\n", mOld);
+      mReflowInput.mFrame->ListTag(stdout);
+      printf(": float manager %p after reflow\n", mOld);
       mOld->List(stdout);
     }
 #endif
@@ -579,7 +581,7 @@ nsresult
 nsAutoFloatManager::CreateFloatManager(nsPresContext *aPresContext)
 {
   // Create a new float manager and install it in the reflow
-  // state. `Remember' the old float manager so we can restore it
+  // input. `Remember' the old float manager so we can restore it
   // later.
   mNew = new nsFloatManager(aPresContext->PresShell(),
                             mReflowInput.GetWritingMode());
@@ -591,7 +593,7 @@ nsAutoFloatManager::CreateFloatManager(nsPresContext *aPresContext)
          mNew, mReflowInput.mFloatManager);
 #endif
 
-  // Set the float manager in the existing reflow state
+  // Set the float manager in the existing reflow input.
   mOld = mReflowInput.mFloatManager;
   mReflowInput.mFloatManager = mNew;
   return NS_OK;
