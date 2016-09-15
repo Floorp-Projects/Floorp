@@ -190,7 +190,7 @@ public:
    */
   nsPoint GetLogicalScrollPosition() const {
     nsPoint pt;
-    pt.x = IsLTR() ?
+    pt.x = IsPhysicalLTR() ?
       mScrollPort.x - mScrolledFrame->GetPosition().x :
       mScrollPort.XMost() - mScrolledFrame->GetRect().XMost();
     pt.y = mScrollPort.y - mScrolledFrame->GetPosition().y;
@@ -329,7 +329,7 @@ public:
   nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState);
   nscoord GetNondisappearingScrollbarWidth(nsBoxLayoutState* aState,
                                            mozilla::WritingMode aVerticalWM);
-  bool IsLTR() const;
+  bool IsPhysicalLTR() const;
   bool IsScrollbarOnRight() const;
   bool IsScrollingActive(nsDisplayListBuilder* aBuilder) const;
   bool IsMaybeScrollingActive() const;
@@ -1452,7 +1452,7 @@ protected:
      * For RTL frames, restore the original scrolled position of the right
      * edge, then subtract the current width to find the physical position.
      */
-    if (!mHelper.IsLTR()) {
+    if (!mHelper.IsPhysicalLTR()) {
       aRect.x = mHelper.mScrollPort.XMost() - aScrollPosition.x - aRect.width;
     }
     mHelper.mScrolledFrame->SetXULBounds(aState, aRect, aRemoveOverflowAreas);
