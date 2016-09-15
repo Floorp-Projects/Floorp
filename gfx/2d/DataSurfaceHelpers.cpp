@@ -265,7 +265,7 @@ BufferSizeFromStrideAndHeight(int32_t aStride,
                               int32_t aHeight,
                               int32_t aExtraBytes)
 {
-  if (MOZ_UNLIKELY(aHeight <= 0)) {
+  if (MOZ_UNLIKELY(aHeight <= 0) || MOZ_UNLIKELY(aStride <= 0)) {
     return 0;
   }
 
@@ -279,7 +279,29 @@ BufferSizeFromStrideAndHeight(int32_t aStride,
   CheckedInt32 requiredBytes =
     CheckedInt32(aStride) * CheckedInt32(aHeight) + CheckedInt32(aExtraBytes);
   if (MOZ_UNLIKELY(!requiredBytes.isValid())) {
-    gfxWarning() << "Buffer size too big; returning zero";
+    gfxWarning() << "Buffer size too big; returning zero " << aStride << ", " << aHeight << ", " << aExtraBytes;
+    return 0;
+  }
+  return requiredBytes.value();
+}
+
+size_t
+BufferSizeFromDimensions(int32_t aWidth,
+                         int32_t aHeight,
+                         int32_t aDepth,
+                         int32_t aExtraBytes)
+{
+  if (MOZ_UNLIKELY(aHeight <= 0) ||
+      MOZ_UNLIKELY(aWidth <= 0) ||
+      MOZ_UNLIKELY(aDepth <= 0)) {
+    return 0;
+  }
+
+  // Similar to BufferSizeFromStrideAndHeight, but with an extra parameter.
+
+  CheckedInt32 requiredBytes = CheckedInt32(aWidth) * CheckedInt32(aHeight) * CheckedInt32(aDepth) + CheckedInt32(aExtraBytes);
+  if (MOZ_UNLIKELY(!requiredBytes.isValid())) {
+    gfxWarning() << "Buffer size too big; returning zero " << aWidth << ", " << aHeight << ", " << aDepth << ", " << aExtraBytes;
     return 0;
   }
   return requiredBytes.value();
