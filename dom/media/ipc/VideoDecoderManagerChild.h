@@ -18,7 +18,6 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoDecoderManagerChild)
 
   static VideoDecoderManagerChild* GetSingleton();
-  static nsIThread* GetManagerThread();
 
   // Can be called from any thread, dispatches the request to the IPDL thread internally.
   void DeallocateSurfaceDescriptorGPUVideo(const SurfaceDescriptorGPUVideo& aSD);
@@ -28,10 +27,6 @@ public:
   // Main thread only
   static void Initialize();
   static void Shutdown();
-
-protected:
-  PVideoDecoderChild* AllocPVideoDecoderChild() override;
-  bool DeallocPVideoDecoderChild(PVideoDecoderChild* actor) override;
 
 private:
   VideoDecoderManagerChild()
