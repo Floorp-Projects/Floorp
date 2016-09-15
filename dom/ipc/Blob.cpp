@@ -2170,7 +2170,7 @@ RemoteBlobImpl::CommonInit(BlobChild* aActor)
     // instance the main-thread), we still need to keep alive that Worker.
     if (mWorkerPrivate) {
       mWorkerHolder = new RemoteBlobImpl::WorkerHolder(this);
-      if (NS_WARN_IF(!mWorkerHolder->HoldWorker(mWorkerPrivate, Closing))) {
+      if (NS_WARN_IF(!mWorkerHolder->HoldWorker(mWorkerPrivate))) {
         // We don't care too much if the worker is already going away because no
         // sync-event-loop can be created at this point.
         mWorkerPrivate = nullptr;
