@@ -11,9 +11,47 @@
   --eyedropper-image: url(images/firebug/command-eyedropper.svg);
 }
 
+/* Make sure to hide scroll bars for the parent window */
+window {
+  overflow: hidden;
+}
+
+/* The main Inspector panel container. */
+.inspector-responsive-container {
+  height: 100vh;
+}
+
+/* The main panel layout. This area consists of a toolbar, markup view
+  and breadcrumbs bar. */
+.devtools-main-content {
+  /* Subtract 1 pixel from the panel height. It's puzzling why this
+    is needed, but if not presented the entire Inspector panel
+    content jumps 1 pixel up when the Toolbox is opened. */
+  height: calc(100% - 1px);
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+}
+
+/* Inspector Panel Splitter */
+
+#inspector-splitter-box {
+  height: 100vh;
+  width: 100%;
+}
+
+/* Minimum width for the Inspector main (uncontrolled) area. */
+#inspector-splitter-box .uncontrolled {
+  min-width: 275px;
+}
+
+#inspector-splitter-box .controlled.pane-collapsed {
+  visibility: collapse;
+}
+
 /* Use flex layout for the Inspector toolbar. For now, it's done
    specifically for the Inspector toolbar since general rule applied
-   on .devtools-toolbar breaks breadcrubs and also toolbars in other
+   on .devtools-toolbar breaks breadcrumbs and also toolbars in other
    panels (e.g. webconsole, debugger), these are not ready for HTML
    layout yet. */
 #inspector-toolbar.devtools-toolbar {
@@ -124,8 +162,9 @@
   is fixed and the all-tabs-menu is available again. */
 #inspector-sidebar-container {
   overflow: hidden;
-  min-width: 300px;
+  min-width: 50px;
   position: relative;
+  height: 100%;
 }
 
 #inspector-sidebar {
@@ -149,3 +188,16 @@
   text-align: center;
   margin: 5px;
 }
+
+/* Markup Box */
+
+#markup-box {
+  width: 100%;
+  flex: 1 1 auto;
+}
+
+#markup-box > iframe {
+  height: 100%;
+  width: 100%;
+}
+
