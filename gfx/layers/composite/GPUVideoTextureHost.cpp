@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GPUVideoTextureHost.h"
-#include "mozilla/dom/VideoDecoderManagerParent.h"
 #include "ImageContainer.h"
 
 namespace mozilla {
@@ -15,7 +14,6 @@ GPUVideoTextureHost::GPUVideoTextureHost(TextureFlags aFlags,
   : TextureHost(aFlags)
 {
   MOZ_COUNT_CTOR(GPUVideoTextureHost);
-  mImage = dom::VideoDecoderManagerParent::LookupImage(aDescriptor);
 }
 
 GPUVideoTextureHost::~GPUVideoTextureHost()
