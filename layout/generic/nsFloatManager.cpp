@@ -581,7 +581,7 @@ nsAutoFloatManager::~nsAutoFloatManager()
   }
 }
 
-nsresult
+void
 nsAutoFloatManager::CreateFloatManager(nsPresContext *aPresContext)
 {
   // Create a new float manager and install it in the reflow
@@ -589,8 +589,6 @@ nsAutoFloatManager::CreateFloatManager(nsPresContext *aPresContext)
   // later.
   mNew = new nsFloatManager(aPresContext->PresShell(),
                             mReflowInput.GetWritingMode());
-  if (! mNew)
-    return NS_ERROR_OUT_OF_MEMORY;
 
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyFloatManager) {
@@ -602,5 +600,4 @@ nsAutoFloatManager::CreateFloatManager(nsPresContext *aPresContext)
   // Set the float manager in the existing reflow input.
   mOld = mReflowInput.mFloatManager;
   mReflowInput.mFloatManager = mNew;
-  return NS_OK;
 }
