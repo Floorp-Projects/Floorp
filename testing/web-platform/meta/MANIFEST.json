@@ -37374,6 +37374,12 @@
             "url": "/IndexedDB/idbcursor-continuePrimaryKey-exception-order.htm"
           }
         ],
+        "editing/other/delete.html": [
+          {
+            "path": "editing/other/delete.html",
+            "url": "/editing/other/delete.html"
+          }
+        ],
         "editing/other/restoration.html": [
           {
             "path": "editing/other/restoration.html",
@@ -37438,6 +37444,30 @@
           {
             "path": "html/semantics/scripting-1/the-script-element/script-onload-insertion-point.html",
             "url": "/html/semantics/scripting-1/the-script-element/script-onload-insertion-point.html"
+          }
+        ],
+        "html/semantics/scripting-1/the-script-element/script-onerror-insertion-point-1.html": [
+          {
+            "path": "html/semantics/scripting-1/the-script-element/script-onerror-insertion-point-1.html",
+            "url": "/html/semantics/scripting-1/the-script-element/script-onerror-insertion-point-1.html"
+          }
+        ],
+        "html/semantics/scripting-1/the-script-element/script-onerror-insertion-point-2.html": [
+          {
+            "path": "html/semantics/scripting-1/the-script-element/script-onerror-insertion-point-2.html",
+            "url": "/html/semantics/scripting-1/the-script-element/script-onerror-insertion-point-2.html"
+          }
+        ],
+        "html/semantics/scripting-1/the-script-element/script-onload-insertion-point.html": [
+          {
+            "path": "html/semantics/scripting-1/the-script-element/script-onload-insertion-point.html",
+            "url": "/html/semantics/scripting-1/the-script-element/script-onload-insertion-point.html"
+          }
+        ],
+        "selectors/child-indexed-pseudo-class.html": [
+          {
+            "path": "selectors/child-indexed-pseudo-class.html",
+            "url": "/selectors/child-indexed-pseudo-class.html"
           }
         ],
         "svg/linking/scripted/href-animate-element.html": [
