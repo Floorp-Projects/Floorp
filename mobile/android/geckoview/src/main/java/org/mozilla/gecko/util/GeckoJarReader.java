@@ -66,9 +66,6 @@ public final class GeckoJarReader {
                     Log.e(LOGTAG, "Error closing stream", ex);
                 }
             }
-            if (zip != null) {
-                zip.close();
-            }
         }
 
         return bitmap;
@@ -96,9 +93,6 @@ public final class GeckoJarReader {
                 } catch (IOException ex) {
                     Log.e(LOGTAG, "Error closing reader", ex);
                 }
-            }
-            if (zip != null) {
-                zip.close();
             }
         }
 

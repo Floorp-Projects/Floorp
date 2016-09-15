@@ -93,6 +93,22 @@ BufferSizeFromStrideAndHeight(int32_t aStride,
                               int32_t aExtraBytes = 0);
 
 /**
+ * Multiplies aWidth, aHeight, aDepth and makes sure the result is limited to
+ * something sane. To keep things consistent, this should always be used
+ * wherever we allocate a buffer based on surface dimensions.
+ *
+ * @param aExtra Optional argument to specify an additional number of trailing
+ *   bytes (useful for creating intermediate surfaces for filters, for
+ *   example).
+ *
+ * @return The result of the multiplication if it is acceptable, or else zero.
+ */
+size_t
+BufferSizeFromDimensions(int32_t aWidth,
+                         int32_t aHeight,
+                         int32_t aDepth,
+                         int32_t aExtraBytes = 0);
+/**
  * Copy aSrcRect from aSrc to aDest starting at aDestPoint.
  * @returns false if the copy is not successful or the aSrc's size is empty.
  */

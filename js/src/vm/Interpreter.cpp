@@ -15,6 +15,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/Sprintf.h"
 
 #include <string.h>
 
@@ -4120,7 +4121,7 @@ END_CASE(JSOP_IS_CONSTRUCTING)
 DEFAULT()
 {
     char numBuf[12];
-    snprintf(numBuf, sizeof numBuf, "%d", *REGS.pc);
+    SprintfLiteral(numBuf, "%d", *REGS.pc);
     JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                          JSMSG_BAD_BYTECODE, numBuf);
     goto error;

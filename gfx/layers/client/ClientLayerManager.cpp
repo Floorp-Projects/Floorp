@@ -272,6 +272,16 @@ ClientLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback,
   PROFILER_LABEL("ClientLayerManager", "EndTransactionInternal",
     js::ProfileEntry::Category::GRAPHICS);
 
+  if (!mForwarder || !mForwarder->IPCOpen()) {
+    gfxCriticalError() << "LayerManager::EndTransaction while IPC is dead.";
+    // Pointless to try to render since the content cannot be sent to the
+    // compositor. We should not get here in the first place but I suspect
+    // This is happening during shutdown, tab-switch or some other scenario
+    // where we already started tearing the resources down but something
+    // triggered painting anyway.
+    return false;
+  }
+
 #ifdef MOZ_LAYERS_HAVE_LOG
   MOZ_LAYERS_LOG(("  ----- (beginning paint)"));
   Log();

@@ -32,6 +32,8 @@
 
 // dwarf2diehander_unittest.cc: Unit tests for google_breakpad::DIEDispatcher.
 
+#include <stdint.h>
+
 #include <string>
 #include <utility>
 
@@ -67,7 +69,7 @@ class MockDIEHandler: public DIEHandler {
   MOCK_METHOD3(ProcessAttributeReference,
                void(DwarfAttribute, DwarfForm, uint64));
   MOCK_METHOD4(ProcessAttributeBuffer,
-               void(DwarfAttribute, DwarfForm, const char *, uint64));
+               void(DwarfAttribute, DwarfForm, const uint8_t *, uint64));
   MOCK_METHOD3(ProcessAttributeString,
                void(DwarfAttribute, DwarfForm, const string &));
   MOCK_METHOD3(ProcessAttributeSignature,
@@ -86,7 +88,7 @@ class MockRootDIEHandler: public RootDIEHandler {
   MOCK_METHOD3(ProcessAttributeReference,
                void(DwarfAttribute, DwarfForm, uint64));
   MOCK_METHOD4(ProcessAttributeBuffer,
-               void(DwarfAttribute, DwarfForm, const char *, uint64));
+               void(DwarfAttribute, DwarfForm, const uint8_t *, uint64));
   MOCK_METHOD3(ProcessAttributeString,
                void(DwarfAttribute, DwarfForm, const string &));
   MOCK_METHOD3(ProcessAttributeSignature,
@@ -185,8 +187,9 @@ TEST(Dwarf2DIEHandler, PassAttributeValues) {
   MockRootDIEHandler mock_root_handler;
   DIEDispatcher die_dispatcher(&mock_root_handler);
 
-  const char buffer[10] = { 0x24, 0x24, 0x35, 0x9a, 0xca,
-                            0xcf, 0xa8, 0x84, 0xa7, 0x18 };
+  const uint8_t buffer[10] = {
+    0x24, 0x24, 0x35, 0x9a, 0xca, 0xcf, 0xa8, 0x84, 0xa7, 0x18
+  };
   string str = "\xc8\x26\x2e\x0d\xa4\x9c\x37\xd6\xfb\x1d";
 
   // Set expectations.

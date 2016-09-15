@@ -2432,6 +2432,5 @@ template class PermissiveXrayDOM;
 template class SecurityXrayDOM;
 template class PermissiveXrayJS;
 template class PermissiveXrayOpaque;
-template class SCSecurityXrayXPCWN;
 
 } // namespace xpc

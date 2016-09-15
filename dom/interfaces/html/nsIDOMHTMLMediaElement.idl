@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIDOMHTMLElement.idl"
-#include "nsIDOMMediaError.idl"
 #include "nsIDOMTimeRanges.idl"
 
 /**
@@ -31,9 +30,6 @@ native Visibility(mozilla::Visibility);
 [uuid(c041d76c-15ce-47ad-b61d-e8755a6db638)]
 interface nsIDOMHTMLMediaElement : nsISupports
 {
-  // error state
-  readonly attribute nsIDOMMediaError error;
-
   // network state
            attribute DOMString src;
   readonly attribute DOMString currentSrc;

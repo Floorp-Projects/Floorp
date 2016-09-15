@@ -15,6 +15,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Vector.h"
 
@@ -1974,7 +1975,7 @@ FormatIntroducedFilename(ExclusiveContext* cx, const char* filename, unsigned li
     // and wants us to use a special free function.)
     char linenoBuf[15];
     size_t filenameLen = strlen(filename);
-    size_t linenoLen = snprintf(linenoBuf, sizeof(linenoBuf), "%u", lineno);
+    size_t linenoLen = SprintfLiteral(linenoBuf, "%u", lineno);
     size_t introducerLen = strlen(introducer);
     size_t len = filenameLen                    +
                  6 /* == strlen(" line ") */    +

@@ -536,11 +536,11 @@ elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC']:
             'skia/src/opts/SkBlitRow_opts_arm_neon.cpp',
             'skia/src/opts/SkOpts_neon.cpp',
         ]
-        SOURCES['skia/src/opts/SkBitmapProcState_arm_neon.cpp'].flags += ['-mfpu=neon']
-        SOURCES['skia/src/opts/SkBitmapProcState_matrixProcs_neon.cpp'].flags += ['-mfpu=neon']
-        SOURCES['skia/src/opts/SkBlitMask_opts_arm_neon.cpp'].flags += ['-mfpu=neon']
-        SOURCES['skia/src/opts/SkBlitRow_opts_arm_neon.cpp'].flags += ['-mfpu=neon']
-        SOURCES['skia/src/opts/SkOpts_neon.cpp'].flags += ['-mfpu=neon']
+        SOURCES['skia/src/opts/SkBitmapProcState_arm_neon.cpp'].flags += CONFIG['NEON_FLAGS']
+        SOURCES['skia/src/opts/SkBitmapProcState_matrixProcs_neon.cpp'].flags += CONFIG['NEON_FLAGS']
+        SOURCES['skia/src/opts/SkBlitMask_opts_arm_neon.cpp'].flags += CONFIG['NEON_FLAGS']
+        SOURCES['skia/src/opts/SkBlitRow_opts_arm_neon.cpp'].flags += CONFIG['NEON_FLAGS']
+        SOURCES['skia/src/opts/SkOpts_neon.cpp'].flags += CONFIG['NEON_FLAGS']
 else:
     UNIFIED_SOURCES += [
         'skia/src/opts/SkBitmapProcState_opts_none.cpp',
