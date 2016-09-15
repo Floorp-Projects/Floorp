@@ -35,6 +35,10 @@ public:
   virtual void CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBuilder, BackendType aBackendType, const Matrix *aTransformHint);
   virtual bool GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton);
 
+#ifdef USE_CAIRO_SCALED_FONT
+  cairo_font_face_t* GetCairoFontFace();
+#endif
+
 private:
   friend class DrawTargetCG;
   friend class DrawTargetSkia;
