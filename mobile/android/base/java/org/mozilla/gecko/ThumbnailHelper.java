@@ -15,8 +15,7 @@ import android.util.Log;
 import android.util.TypedValue;
 
 import java.nio.ByteBuffer;
-import java.util.LinkedList;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.ArrayList;
 
 /**
  * Helper class to generate thumbnails for tabs.
@@ -28,6 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * be used for all thumbnails.
  */
 public final class ThumbnailHelper {
+    private static final boolean DEBUG = false;
     private static final String LOGTAG = "GeckoThumbnailHelper";
 
     public static final float TABS_PANEL_THUMBNAIL_ASPECT_RATIO = 0.8333333f;
@@ -60,8 +60,8 @@ public final class ThumbnailHelper {
 
     // instance stuff
 
-    private final LinkedList<Tab> mPendingThumbnails;    // synchronized access only
-    private AtomicInteger mPendingWidth;
+    private final ArrayList<Tab> mPendingThumbnails;    // synchronized access only
+    private volatile int mPendingWidth;
     private int mWidth;
     private int mHeight;
     private ByteBuffer mBuffer;
@@ -69,13 +69,36 @@ public final class ThumbnailHelper {
     private ThumbnailHelper() {
         final Resources res = GeckoAppShell.getContext().getResources();
 
-
-        mPendingThumbnails = new LinkedList<Tab>();
+        mPendingThumbnails = new ArrayList<>();
         try {
-            mPendingWidth = new AtomicInteger((int) res.getDimension(R.dimen.tab_thumbnail_width));
-        } catch (Resources.NotFoundException nfe) { mPendingWidth = new AtomicInteger(0); }
+            mPendingWidth = (int) res.getDimension(R.dimen.tab_thumbnail_width);
+        } catch (Resources.NotFoundException nfe) {
+        }
         mWidth = -1;
         mHeight = -1;
+    }
+
+    public void getAndProcessThumbnailFor(final int tabId, final BitmapUtils.BitmapLoader loader) {
+        final Tab tab = Tabs.getInstance().getTab(tabId);
+        if (tab != null) {
+            getAndProcessThumbnailFor(tab, loader);
+        }
+    }
+
+    public void getAndProcessThumbnailFor(final Tab tab, final BitmapUtils.BitmapLoader loader) {
+        BitmapUtils.runOnBitmapFoundOnUiThread(loader, tab.getThumbnail());
+
+        Tabs.registerOnTabsChangedListener(new Tabs.OnTabsChangedListener() {
+                @Override
+                public void onTabChanged(final Tab t, final Tabs.TabEvents msg, final String data) {
+                    if (tab != t || msg != Tabs.TabEvents.THUMBNAIL) {
+                        return;
+                    }
+                    Tabs.unregisterOnTabsChangedListener(this);
+                    BitmapUtils.runOnBitmapFoundOnUiThread(loader, t.getThumbnail());
+                }
+            });
+        getAndProcessThumbnailFor(tab);
     }
 
     public void getAndProcessThumbnailFor(Tab tab) {
@@ -100,28 +123,32 @@ public final class ThumbnailHelper {
                 // for that to be done.
                 return;
             }
+
+            requestThumbnailLocked(tab);
         }
-        requestThumbnailFor(tab);
     }
 
     public void setThumbnailWidth(int width) {
         // Check inverted for safety: Bug 803299 Comment 34.
         if (GeckoAppShell.getScreenDepth() == 24) {
-            mPendingWidth.set(width);
+            mPendingWidth = width;
         } else {
             // Bug 776906: on 16-bit screens we need to ensure an even width.
-            mPendingWidth.set((width & 1) == 0 ? width : width + 1);
+            mPendingWidth = (width + 1) & (~1);
         }
     }
 
-    private void updateThumbnailSize() {
+    private void updateThumbnailSizeLocked() {
         // Apply any pending width updates.
-        mWidth = mPendingWidth.get();
+        mWidth = mPendingWidth;
         mHeight = Math.round(mWidth * THUMBNAIL_ASPECT_RATIO);
 
         int pixelSize = (GeckoAppShell.getScreenDepth() == 24) ? 4 : 2;
         int capacity = mWidth * mHeight * pixelSize;
-        Log.d(LOGTAG, "Using new thumbnail size: " + capacity + " (width " + mWidth + " - height " + mHeight + ")");
+        if (DEBUG) {
+            Log.d(LOGTAG, "Using new thumbnail size: " + capacity +
+                          " (width " + mWidth + " - height " + mHeight + ")");
+        }
         if (mBuffer == null || mBuffer.capacity() != capacity) {
             if (mBuffer != null) {
                 mBuffer = DirectBufferAllocator.free(mBuffer);
@@ -137,8 +164,8 @@ public final class ThumbnailHelper {
         }
     }
 
-    private void requestThumbnailFor(Tab tab) {
-        updateThumbnailSize();
+    private void requestThumbnailLocked(Tab tab) {
+        updateThumbnailSizeLocked();
 
         if (mBuffer == null) {
             // Buffer allocation may have failed. In this case we can't send the
@@ -147,49 +174,50 @@ public final class ThumbnailHelper {
             // the queue (no point trying more thumbnailing right now since we're likely
             // low on memory). We will try again normally on the next call to
             // getAndProcessThumbnailFor which will hopefully be when we have more free memory.
-            synchronized (mPendingThumbnails) {
-                mPendingThumbnails.clear();
-            }
+            mPendingThumbnails.clear();
             return;
         }
 
-        Log.d(LOGTAG, "Sending thumbnail event: " + mWidth + ", " + mHeight);
-        requestThumbnail(mBuffer, tab.getId(), mWidth, mHeight);
+        if (DEBUG) {
+            Log.d(LOGTAG, "Sending thumbnail event: " + mWidth + ", " + mHeight);
+        }
+        requestThumbnailLocked(mBuffer, tab, tab.getId(), mWidth, mHeight);
     }
 
-    @WrapForJNI(dispatchTo = "proxy")
-    private static native void requestThumbnail(ByteBuffer data, int tabId, int width, int height);
+    @WrapForJNI(stubName = "RequestThumbnail", dispatchTo = "proxy")
+    private static native void requestThumbnailLocked(ByteBuffer data, Tab tab, int tabId,
+                                                      int width, int height);
 
     /* This method is invoked by JNI once the thumbnail data is ready. */
-    @WrapForJNI(stubName = "SendThumbnail", calledFrom = "gecko")
-    public static void notifyThumbnail(ByteBuffer data, int tabId, boolean success, boolean shouldStore) {
-        Tab tab = Tabs.getInstance().getTab(tabId);
-        ThumbnailHelper helper = ThumbnailHelper.getInstance();
-        if (success && tab != null) {
-            helper.handleThumbnailData(tab, data, shouldStore ? CachePolicy.STORE : CachePolicy.NO_STORE);
+    @WrapForJNI(calledFrom = "gecko")
+    private static void notifyThumbnail(final ByteBuffer data, final Tab tab,
+                                        final boolean success, final boolean shouldStore) {
+        final ThumbnailHelper helper = ThumbnailHelper.getInstance();
+        if (success) {
+            helper.handleThumbnailData(
+                    tab, data, shouldStore ? CachePolicy.STORE : CachePolicy.NO_STORE);
         }
-        helper.processNextThumbnail(tab);
+        helper.processNextThumbnail();
     }
 
-    private void processNextThumbnail(Tab tab) {
-        Tab nextTab = null;
+    private void processNextThumbnail() {
         synchronized (mPendingThumbnails) {
-            if (tab != null && tab != mPendingThumbnails.peek()) {
-                Log.e(LOGTAG, "handleThumbnailData called with unexpected tab's data!");
-                // This should never happen, but recover gracefully by processing the
-                // unexpected tab that we found in the queue
-            } else {
-                mPendingThumbnails.remove();
+            if (mPendingThumbnails.isEmpty()) {
+                return;
             }
-            nextTab = mPendingThumbnails.peek();
-        }
-        if (nextTab != null) {
-            requestThumbnailFor(nextTab);
+
+            mPendingThumbnails.remove(0);
+
+            if (!mPendingThumbnails.isEmpty()) {
+                requestThumbnailLocked(mPendingThumbnails.get(0));
+            }
         }
     }
 
     private void handleThumbnailData(Tab tab, ByteBuffer data, CachePolicy cachePolicy) {
-        Log.d(LOGTAG, "handleThumbnailData: " + data.capacity());
+        if (DEBUG) {
+            Log.d(LOGTAG, "handleThumbnailData: " + data.capacity());
+        }
         if (data != mBuffer) {
             // This should never happen, but log it and recover gracefully
             Log.e(LOGTAG, "handleThumbnailData called with an unexpected ByteBuffer!");

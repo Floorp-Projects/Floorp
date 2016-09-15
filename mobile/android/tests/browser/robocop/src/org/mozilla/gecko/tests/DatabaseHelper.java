@@ -165,6 +165,6 @@ class DatabaseHelper {
     }
 
     protected BrowserDB getProfileDB() {
-        return GeckoProfile.get(mActivity).getDB();
+        return BrowserDB.from(mActivity);
     }
 }

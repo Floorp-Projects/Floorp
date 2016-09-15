@@ -331,7 +331,7 @@ WorkerThread::Observer::OnProcessNextEvent(nsIThreadInternal* /* aThread */,
   // PrimaryWorkerRunnable::Run() and don't want to process the event in
   // mWorkerPrivate yet.
   if (aMayWait) {
-    MOZ_ASSERT(CycleCollectedJSRuntime::Get()->RecursionDepth() == 2);
+    MOZ_ASSERT(CycleCollectedJSContext::Get()->RecursionDepth() == 2);
     MOZ_ASSERT(!BackgroundChild::GetForCurrentThread());
     return NS_OK;
   }

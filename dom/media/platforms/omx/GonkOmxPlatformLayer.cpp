@@ -155,13 +155,15 @@ public:
     : ITextureClientRecycleAllocator()
     , mMonitor("GonkTextureClientRecycleHandler")
   {
+    RefPtr<layers::ImageBridgeChild> bridge = layers::ImageBridgeChild::GetSingleton();
+
     // Allocate Gralloc texture memory.
     layers::GrallocTextureData* textureData =
       layers::GrallocTextureData::Create(gfx::IntSize(aDef.nFrameWidth, aDef.nFrameHeight),
                                          aDef.eColorFormat,
                                          gfx::BackendType::NONE,
                                          GraphicBuffer::USAGE_HW_TEXTURE | GraphicBuffer::USAGE_SW_READ_OFTEN,
-                                         layers::ImageBridgeChild::GetSingleton());
+                                         bridge);
 
     mGraphBuffer = textureData->GetGraphicBuffer();
     MOZ_ASSERT(mGraphBuffer.get());
@@ -169,7 +171,7 @@ public:
     mTextureClient =
       layers::TextureClient::CreateWithData(textureData,
                                             layers::TextureFlags::DEALLOCATE_CLIENT | layers::TextureFlags::RECYCLE,
-                                            layers::ImageBridgeChild::GetSingleton());
+                                            bridge);
     MOZ_ASSERT(mTextureClient);
 
     mPromise.SetMonitor(&mMonitor);

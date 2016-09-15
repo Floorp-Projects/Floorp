@@ -61,7 +61,7 @@ The instrumentation of CPOW lives in `js/ipc/src`. It maintains a CPOW clock tha
 
 ## XPConnect-level
 
-The instrumentation of XPConnect lives in `js/xpconnect/src/XPCJSRuntime.cpp`.
+The instrumentation of XPConnect lives in `js/xpconnect/src/XPCJSContext.cpp`.
 
 ### When we enter a nested event loop
 

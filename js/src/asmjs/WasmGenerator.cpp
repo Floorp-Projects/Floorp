@@ -157,7 +157,7 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, const CompileArgs& args,
         }
 
         for (TableDesc& table : shared_->tables) {
-            if (!allocateGlobalBytes(sizeof(void*), sizeof(void*), &table.globalDataOffset))
+            if (!allocateGlobalBytes(sizeof(TableTls), sizeof(void*), &table.globalDataOffset))
                 return false;
         }
 
@@ -1016,12 +1016,10 @@ ModuleGenerator::initSigTableLength(uint32_t sigIndex, uint32_t length)
     shared_->asmJSSigToTableIndex[sigIndex] = numTables_;
 
     TableDesc& table = shared_->tables[numTables_++];
-    MOZ_ASSERT(table.globalDataOffset == 0);
-    MOZ_ASSERT(table.initial == 0);
     table.kind = TableKind::TypedFunction;
-    table.initial = length;
-    table.maximum = UINT32_MAX;
-    return allocateGlobalBytes(sizeof(void*), sizeof(void*), &table.globalDataOffset);
+    table.limits.initial = length;
+    table.limits.maximum = Some(length);
+    return allocateGlobalBytes(sizeof(TableTls), sizeof(void*), &table.globalDataOffset);
 }
 
 bool
@@ -1031,7 +1029,7 @@ ModuleGenerator::initSigTableElems(uint32_t sigIndex, Uint32Vector&& elemFuncDef
     MOZ_ASSERT(finishedFuncDefs_);
 
     uint32_t tableIndex = shared_->asmJSSigToTableIndex[sigIndex];
-    MOZ_ASSERT(shared_->tables[tableIndex].initial == elemFuncDefIndices.length());
+    MOZ_ASSERT(shared_->tables[tableIndex].limits.initial == elemFuncDefIndices.length());
 
     Uint32Vector codeRangeIndices;
     if (!codeRangeIndices.resize(elemFuncDefIndices.length()))

@@ -7,7 +7,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/CycleCollectedJSRuntime.h"
+#include "mozilla/CycleCollectedJSContext.h"
 
 #include "jsapi.h"
 #include "xpcpublic.h"
@@ -289,14 +289,14 @@ namespace danger {
 JSContext*
 GetJSContext()
 {
-  return CycleCollectedJSRuntime::Get()->Context();
+  return CycleCollectedJSContext::Get()->Context();
 }
 } // namespace danger
 
 JS::RootingContext*
 RootingCx()
 {
-  return CycleCollectedJSRuntime::Get()->RootingCx();
+  return CycleCollectedJSContext::Get()->RootingCx();
 }
 
 AutoJSAPI::AutoJSAPI()

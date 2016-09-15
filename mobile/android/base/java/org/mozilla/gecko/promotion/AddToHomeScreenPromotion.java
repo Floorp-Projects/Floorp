@@ -209,13 +209,13 @@ public class AddToHomeScreenPromotion extends TabsTrayVisibilityAwareDelegate im
     }
 
     protected boolean hasAcceptedOrDeclinedHomeScreenShortcut(Context context, String url) {
-        final UrlAnnotations urlAnnotations = GeckoProfile.get(context).getDB().getUrlAnnotations();
+        final UrlAnnotations urlAnnotations = BrowserDB.from(context).getUrlAnnotations();
         return urlAnnotations.hasAcceptedOrDeclinedHomeScreenShortcut(context.getContentResolver(), url);
     }
 
     protected URLHistory getHistoryForURL(Context context, String url) {
         final GeckoProfile profile = GeckoProfile.get(context);
-        final BrowserDB browserDB = profile.getDB();
+        final BrowserDB browserDB = BrowserDB.from(profile);
 
         Cursor cursor = null;
         try {

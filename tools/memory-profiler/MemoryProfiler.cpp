@@ -107,7 +107,7 @@ MemoryProfiler::StartProfiler()
   InitOnce();
   AutoUseUncensoredAllocator ua;
   AutoMPLock lock(sLock);
-  JSContext* context = XPCJSRuntime::Get()->Context();
+  JSContext* context = XPCJSContext::Get()->Context();
   ProfilerForJSContext profiler;
   if (!sJSContextProfilerMap->Get(context, &profiler) ||
       !profiler.mEnabled) {
@@ -137,7 +137,7 @@ MemoryProfiler::StopProfiler()
   InitOnce();
   AutoUseUncensoredAllocator ua;
   AutoMPLock lock(sLock);
-  JSContext* context = XPCJSRuntime::Get()->Context();
+  JSContext* context = XPCJSContext::Get()->Context();
   ProfilerForJSContext profiler;
   if (sJSContextProfilerMap->Get(context, &profiler) &&
       profiler.mEnabled) {
@@ -159,7 +159,7 @@ MemoryProfiler::ResetProfiler()
   InitOnce();
   AutoUseUncensoredAllocator ua;
   AutoMPLock lock(sLock);
-  JSContext* context = XPCJSRuntime::Get()->Context();
+  JSContext* context = XPCJSContext::Get()->Context();
   ProfilerForJSContext profiler;
   if (!sJSContextProfilerMap->Get(context, &profiler) ||
       !profiler.mEnabled) {
@@ -249,7 +249,7 @@ MemoryProfiler::GetResults(JSContext* cx, JS::MutableHandle<JS::Value> aResult)
   InitOnce();
   AutoUseUncensoredAllocator ua;
   AutoMPLock lock(sLock);
-  JSContext* context = XPCJSRuntime::Get()->Context();
+  JSContext* context = XPCJSContext::Get()->Context();
   // Getting results when the profiler is running is not allowed.
   if (sProfileContextCount > 0) {
     return NS_OK;

@@ -29,7 +29,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIDOMClassInfo.h"
 #include "xpcpublic.h"
-#include "mozilla/CycleCollectedJSRuntime.h"
+#include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/IntentionalCrash.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"

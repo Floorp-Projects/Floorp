@@ -14,6 +14,7 @@ import java.util.Random;
 
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.UrlAnnotations.SyncStatus;
+import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.URLMetadata;
 import org.mozilla.gecko.db.URLMetadataTable;
 
@@ -1491,7 +1492,7 @@ public class testBrowserProvider extends ContentProviderTest {
             final String value = "42a";
             final long timeBeforeCreation = System.currentTimeMillis();
 
-            getTestProfile().getDB().getUrlAnnotations().insertAnnotation(mResolver, url, key, value);
+            BrowserDB.from(getTestProfile()).getUrlAnnotations().insertAnnotation(mResolver, url, key, value);
 
             final Cursor c = getUrlAnnotationByUrl(url);
             try {
@@ -1559,7 +1560,7 @@ public class testBrowserProvider extends ContentProviderTest {
             data.put(URLMetadataTable.TILE_COLOR_COLUMN, tileColor);
             data.put(URLMetadataTable.TOUCH_ICON_COLUMN, touchIcon);
 
-            getTestProfile().getDB().getURLMetadata().save(mResolver, data);
+            BrowserDB.from(getTestProfile()).getURLMetadata().save(mResolver, data);
 
             final Cursor c = getUrlMetadataByUrl(url2);
             try {
@@ -1577,7 +1578,7 @@ public class testBrowserProvider extends ContentProviderTest {
             // column being cached, the subsequent query should still retrieve all requested columns.
             // (In this case the URL may be cached but without all data, we need to make sure that
             // this state is correctly handled.)
-            URLMetadata metadata = getTestProfile().getDB().getURLMetadata();
+            URLMetadata metadata = BrowserDB.from(getTestProfile()).getURLMetadata();
 
             Map<String, Map<String, Object>> results;
             Map<String, Object> urlData;
