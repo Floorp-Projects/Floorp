@@ -480,7 +480,7 @@ FinderHighlighter.prototype = {
     this.hide(window);
     let dict = this.getForWindow(window);
     this.clear(window);
-    dict.currentFoundRange = null;
+    dict.currentFoundRange = dict.lastIteratorParams = null;
 
     if (!dict.modalHighlightOutline)
       return;
