@@ -130,7 +130,7 @@ export MOZ_SOURCE_CHANGESET="${GECKO_HEAD_REV}"
 # support multiple, space delimited, config files
 config_cmds=""
 for cfg in $MOZHARNESS_CONFIG; do
-  config_cmds="${config_cmds} --config-file $WORKSPACE/${cfg}"
+  config_cmds="${config_cmds} --config-file $WORKSPACE/mozharness/configs/${cfg}"
 done
 
 mozharness_bin="/home/worker/bin/run-mozharness"
