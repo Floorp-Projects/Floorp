@@ -50,7 +50,7 @@ public:
                         const gfx::IntRect& aRect);
   ~D3D11ShareHandleImage() override {}
 
-  bool AllocateTexture(D3D11RecycleAllocator* aAllocator, ID3D11Device* aDevice);
+  bool AllocateTexture(D3D11RecycleAllocator* aAllocator);
 
   gfx::IntSize GetSize() override;
   virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
@@ -63,7 +63,6 @@ private:
   gfx::IntSize mSize;
   gfx::IntRect mPictureRect;
   RefPtr<TextureClient> mTextureClient;
-  RefPtr<ID3D11Texture2D> mTexture;
 };
 
 } // namepace layers
