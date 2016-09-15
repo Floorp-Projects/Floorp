@@ -169,6 +169,8 @@ fuzzy-if(gtkWidget||B2G,255,6) fuzzy-if(cocoaWidget,65,69) == 1193519-sideways-l
 
 == 1243125-1-floats-overflowing.html 1243125-1-floats-overflowing-ref.html
 
+skip-if(Android) HTTP(..) == 1248248-1-orientation-break-glyphrun.html 1248248-1-orientation-break-glyphrun-ref.html # Android bug 1250229
+
 == 1302734-bidi-plaintext-1a.html 1302734-bidi-plaintext-1-ref.html
 == 1302734-bidi-plaintext-1b.html 1302734-bidi-plaintext-1-ref.html
 == 1302734-bidi-plaintext-2a.html 1302734-bidi-plaintext-2-ref.html
@@ -176,7 +178,14 @@ fuzzy-if(gtkWidget||B2G,255,6) fuzzy-if(cocoaWidget,65,69) == 1193519-sideways-l
 == 1302734-bidi-plaintext-2c.html 1302734-bidi-plaintext-2-ref.html
 == 1302734-bidi-plaintext-2d.html 1302734-bidi-plaintext-2-ref.html
 
-skip-if(Android) HTTP(..) == 1248248-1-orientation-break-glyphrun.html 1248248-1-orientation-break-glyphrun-ref.html # Android bug 1250229
+== 1302389-scrolled-rect-1a.html 1302389-scrolled-rect-1-ref.html
+fuzzy-if(Android,54,852) == 1302389-scrolled-rect-1b.html 1302389-scrolled-rect-1-ref.html
+fails == 1302389-scrolled-rect-1c.html 1302389-scrolled-rect-1-ref.html
+fails == 1302389-scrolled-rect-1d.html 1302389-scrolled-rect-1-ref.html
+fails == 1302389-scrolled-rect-2a.html 1302389-scrolled-rect-2-ref.html
+fails == 1302389-scrolled-rect-2b.html 1302389-scrolled-rect-2-ref.html
+== 1302389-scrolled-rect-2c.html 1302389-scrolled-rect-2-ref.html
+fuzzy-if(Android,54,852) == 1302389-scrolled-rect-2d.html 1302389-scrolled-rect-2-ref.html
 
 # Suite of tests from Gérard Talbot in bug 1079151
 # Frequent Windows 7 load failed: timed out waiting for test to complete (waiting for onload scripts to complete), bug 1167155 and friends
