@@ -184,7 +184,7 @@ private:
   void AddDependencyOnSource(SourceSurfaceD2D1* aSource);
 
   // Must be called with all clips popped and an identity matrix set.
-  already_AddRefed<ID2D1Image> GetImageForLayerContent(bool aShouldPreserveContent = true);
+  already_AddRefed<ID2D1Image> GetImageForLayerContent();
 
   ID2D1Image* CurrentTarget()
   {
