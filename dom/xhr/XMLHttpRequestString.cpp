@@ -47,11 +47,11 @@ public:
     mData.Append(aString);
   }
 
-  void
+  MOZ_MUST_USE bool
   GetAsString(nsAString& aString)
   {
     MutexAutoLock lock(mMutex);
-    aString = mData;
+    return aString.Assign(mData, mozilla::fallible);
   }
 
   size_t
@@ -60,12 +60,12 @@ public:
     return mData.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
   }
 
-  void
+  MOZ_MUST_USE bool
   GetAsString(nsAString& aString, uint32_t aLength)
   {
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(aLength <= mData.Length());
-    aString.Assign(mData.BeginReading(), aLength);
+    return aString.Assign(mData.BeginReading(), aLength, mozilla::fallible);
   }
 
   void
@@ -120,7 +120,7 @@ XMLHttpRequestString::Append(const nsAString& aString)
   mBuffer->Append(aString);
 }
 
-void
+bool
 XMLHttpRequestString::GetAsString(nsAString& aString) const
 {
   return mBuffer->GetAsString(aString);
@@ -186,13 +186,12 @@ XMLHttpRequestStringSnapshot::Set(XMLHttpRequestStringBuffer* aBuffer,
   mVoid = false;
 }
 
-void
+bool
 XMLHttpRequestStringSnapshot::GetAsString(nsAString& aString) const
 {
   if (mBuffer) {
     MOZ_ASSERT(!mVoid);
-    mBuffer->GetAsString(aString, mLength);
-    return;
+    return mBuffer->GetAsString(aString, mLength);
   }
 
   aString.Truncate();
@@ -200,6 +199,8 @@ XMLHttpRequestStringSnapshot::GetAsString(nsAString& aString) const
   if (mVoid) {
     aString.SetIsVoid(true);
   }
+
+  return true;
 }
 
 // ---------------------------------------------------------------------------
