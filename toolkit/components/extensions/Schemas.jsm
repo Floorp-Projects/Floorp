@@ -470,11 +470,11 @@ class Entry {
     this.preprocessor = schema.preprocess || null;
 
     /**
-     * @property {Array<string>} [restrictions]
-     * A list of restrictions to consider before generating the API.
+     * @property {Array<string>} restrictions A list of restrictions to
+     * consider before generating the API.
      * These are not parsed by the schema, but passed to `shouldInject`.
      */
-    this.restrictions = schema.restrictions || null;
+    this.restrictions = schema.restrictions || [];
   }
 
   /**
@@ -1425,7 +1425,8 @@ class SubModuleProperty extends Entry {
     for (let fun of functions) {
       let subpath = path.concat(name);
       let namespace = subpath.join(".");
-      if (context.shouldInject(namespace, fun.name, fun.restrictions || ns.defaultRestrictions)) {
+      let restrictions = fun.restrictions.length ? fun.restrictions : ns.defaultRestrictions;
+      if (context.shouldInject(namespace, fun.name, restrictions)) {
         let apiImpl = context.getImplementation(namespace, fun.name);
         fun.inject(apiImpl, subpath, fun.name, obj, context);
       }
@@ -1655,8 +1656,8 @@ this.Schemas = {
     if (!ns) {
       ns = new Map();
       ns.permissions = null;
-      ns.restrictions = null;
-      ns.defeaultRestrictions = null;
+      ns.restrictions = [];
+      ns.defeaultRestrictions = [];
       this.namespaces.set(namespaceName, ns);
     }
     ns.set(symbol, value);
@@ -1850,8 +1851,8 @@ this.Schemas = {
 
       let ns = this.namespaces.get(name);
       ns.permissions = namespace.permissions || null;
-      ns.restrictions = namespace.restrictions || null;
-      ns.defaultRestrictions = namespace.defaultRestrictions || null;
+      ns.restrictions = namespace.restrictions || [];
+      ns.defaultRestrictions = namespace.defaultRestrictions || [];
     }
   },
 
@@ -1925,7 +1926,8 @@ this.Schemas = {
 
       let obj = Cu.createObjectIn(dest, {defineAs: namespace});
       for (let [name, entry] of ns) {
-        if (context.shouldInject(namespace, name, entry.restrictions || ns.defaultRestrictions)) {
+        let restrictions = entry.restrictions.length ? entry.restrictions : ns.defaultRestrictions;
+        if (context.shouldInject(namespace, name, restrictions)) {
           let apiImpl = context.getImplementation(namespace, name);
           entry.inject(apiImpl, [namespace], name, obj, context);
         }
