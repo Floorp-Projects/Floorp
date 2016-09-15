@@ -10,7 +10,7 @@
 #include <algorithm>
 
 #include "mozilla/ReflowInput.h"
-#include "nsBlockDebugFlags.h"
+#include "nsBlockFrame.h"
 #include "nsError.h"
 #include "nsIPresShell.h"
 #include "nsMemory.h"
@@ -559,17 +559,21 @@ nsAutoFloatManager::~nsAutoFloatManager()
 {
   // Restore the old float manager in the reflow input if necessary.
   if (mNew) {
-#ifdef NOISY_FLOATMANAGER
-    printf("restoring old float manager %p\n", mOld);
+#ifdef DEBUG
+    if (nsBlockFrame::gNoisyFloatManager) {
+      printf("restoring old float manager %p\n", mOld);
+    }
 #endif
 
     mReflowInput.mFloatManager = mOld;
 
-#ifdef NOISY_FLOATMANAGER
-    if (mOld) {
-      mReflowInput.mFrame->ListTag(stdout);
-      printf(": float manager %p after reflow\n", mOld);
-      mOld->List(stdout);
+#ifdef DEBUG
+    if (nsBlockFrame::gNoisyFloatManager) {
+      if (mOld) {
+        mReflowInput.mFrame->ListTag(stdout);
+        printf(": float manager %p after reflow\n", mOld);
+        mOld->List(stdout);
+      }
     }
 #endif
 
@@ -588,9 +592,11 @@ nsAutoFloatManager::CreateFloatManager(nsPresContext *aPresContext)
   if (! mNew)
     return NS_ERROR_OUT_OF_MEMORY;
 
-#ifdef NOISY_FLOATMANAGER
-  printf("constructed new float manager %p (replacing %p)\n",
-         mNew, mReflowInput.mFloatManager);
+#ifdef DEBUG
+  if (nsBlockFrame::gNoisyFloatManager) {
+    printf("constructed new float manager %p (replacing %p)\n",
+           mNew, mReflowInput.mFloatManager);
+  }
 #endif
 
   // Set the float manager in the existing reflow input.
