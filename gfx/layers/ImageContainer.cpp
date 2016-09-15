@@ -21,7 +21,6 @@
 #include "mozilla/layers/SharedPlanarYCbCrImage.h"
 #include "mozilla/layers/SharedRGBImage.h"
 #include "mozilla/layers/TextureClientRecycleAllocator.h"
-#include "mozilla/gfx/gfxVars.h"
 #include "nsISupportsUtils.h"           // for NS_IF_ADDREF
 #include "YCbCrUtils.h"                 // for YCbCr conversions
 #ifdef MOZ_WIDGET_GONK
@@ -504,7 +503,7 @@ gfxImageFormat
 PlanarYCbCrImage::GetOffscreenFormat()
 {
   return mOffscreenFormat == SurfaceFormat::UNKNOWN ?
-    gfxVars::OffscreenFormat() :
+    gfxPlatform::GetPlatform()->GetOffscreenFormat() :
     mOffscreenFormat;
 }
 
