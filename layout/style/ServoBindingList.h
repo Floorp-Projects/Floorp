@@ -55,6 +55,9 @@ SERVO_BINDING_FUNC(Servo_DeclarationBlock_AddRef, void,
                    ServoDeclarationBlockBorrowed declarations)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_Release, void,
                    ServoDeclarationBlockBorrowed declarations)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_Equals, bool,
+                   ServoDeclarationBlockBorrowed a,
+                   ServoDeclarationBlockBorrowed b)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_GetCache, nsHTMLCSSStyleSheet*,
                    ServoDeclarationBlockBorrowed declarations)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetImmutable, void,
