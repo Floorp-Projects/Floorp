@@ -21,6 +21,7 @@ import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.annotation.ReflectionTarget;
+import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.fxa.FxAccountPushHandler;
 import org.mozilla.gecko.gcm.GcmTokenClient;
 import org.mozilla.gecko.push.autopush.AutopushClientException;
@@ -404,7 +405,7 @@ public class PushService implements BundleEventListener {
                     return;
                 }
                 // We're on a background thread, so we can be synchronous.
-                final long millis = geckoProfile.getDB().getPrePathLastVisitedTimeMilliseconds(
+                final long millis = BrowserDB.from(geckoProfile).getPrePathLastVisitedTimeMilliseconds(
                         context.getContentResolver(), prePath);
                 callback.sendSuccess(millis);
                 return;

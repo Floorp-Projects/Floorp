@@ -253,7 +253,7 @@ class MemoryMonitor extends BroadcastReceiver {
                 profile = GeckoProfile.get(mContext, GeckoProfile.DEFAULT_PROFILE);
             }
 
-            mDB = profile.getDB();
+            mDB = BrowserDB.from(profile);
         }
 
         @Override

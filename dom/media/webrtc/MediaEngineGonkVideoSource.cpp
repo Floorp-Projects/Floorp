@@ -413,8 +413,8 @@ MediaEngineGonkVideoSource::AllocImpl() {
     // to explicitly remove this--destroying the CameraControl object
     // in DeallocImpl() will do that for us.
     mCameraControl->AddListener(this);
-    mTextureClientAllocator =
-      new layers::TextureClientRecycleAllocator(layers::ImageBridgeChild::GetSingleton());
+    RefPtr<layers::ImageBridgeChild> bridge = layers::ImageBridgeChild::GetSingleton();
+    mTextureClientAllocator = new layers::TextureClientRecycleAllocator(bridge);
     mTextureClientAllocator->SetMaxPoolSize(WEBRTC_GONK_VIDEO_SOURCE_POOL_BUFFERS);
   }
   mCallbackMonitor.Notify();

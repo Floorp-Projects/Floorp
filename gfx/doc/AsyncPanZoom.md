@@ -163,13 +163,13 @@ Web browsers in general solve this problem by inserting a delay of up to 300ms b
 If web content takes longer than 300ms, or if it completes handling of the event without calling preventDefault, then the browser immediately starts processing the events.
 
 The way the APZ implementation deals with this is that upon receiving a touch event, it immediately returns an untransformed version that can be dispatched to content.
-It also schedules a 300ms timeout during which content is allowed to prevent scrolling.
+It also schedules a 400ms timeout (600ms on Android) during which content is allowed to prevent scrolling.
 There is an API that allows the main-thread event dispatching code to notify the APZ as to whether or not the default action should be prevented.
 If the APZ content response timeout expires, or if the main-thread event dispatching code notifies the APZ of the preventDefault status, then the APZ continues with the processing of the events (which may involve discarding the events).
 
-The touch-action CSS property from the pointer-events spec is intended to allow eliminating this 300ms delay in many cases (although for backwards compatibility it will still be needed for a while).
+The touch-action CSS property from the pointer-events spec is intended to allow eliminating this 400ms delay in many cases (although for backwards compatibility it will still be needed for a while).
 Note that even with touch-action implemented, there may be cases where the APZ code does not know the touch-action behaviour of the point the user touched.
-In such cases, the APZ code will still wait up to 300ms for the main thread to provide it with the touch-action behaviour information.
+In such cases, the APZ code will still wait up to 400ms for the main thread to provide it with the touch-action behaviour information.
 
 ## Technical details
 
@@ -185,8 +185,8 @@ Input events arrive from the hardware/widget code into the APZ via APZCTreeManag
 The thread that invokes this is called the input thread, and may or may not be the same as the Gecko main thread.
 </li>
 <li value="2">
-Conceptually the first thing that the APZCTreeManager does is to group these events into "input blocks".
-An input block is a contiguous set of events that get handled together.
+Conceptually the first thing that the APZCTreeManager does is to associate these events with "input blocks".
+An input block is a set of events that share certain properties, and generally are intended to represent a single gesture.
 For example with touch events, all events following a touchstart up to but not including the next touchstart are in the same block.
 All of the events in a given block will go to the same APZC instance and will either all be processed or all be dropped.
 </li>
@@ -203,7 +203,7 @@ Otherwise, the input block is tagged with the hit APZC as a tentative target and
    These may trigger behaviours like scrolling or tap gestures.
   </li>
   <li value="ii">
-   If the input events landed inside the dispatch-to-content event region for the layer, the events are left in the queue and a 300ms timeout is initiated.
+   If the input events landed inside the dispatch-to-content event region for the layer, the events are left in the queue and a 400ms timeout is initiated.
    If the timeout expires before step 9 is completed, the APZ assumes the input block was not cancelled and the tentative target is correct, and processes them as part of step 10.
   </li>
  </ol>
@@ -223,9 +223,9 @@ It also activates inactive scrollframes that were hit by the input events.
 <li value="8">
 The call stack unwinds back to the widget code, which sends two notifications to the APZ code on the input thread.
 The first notification is via APZCTreeManager::ContentReceivedInputBlock, and informs the APZ whether the input block was cancelled.
-The second notification is via APZCTreeManager::SetTargetAPZC, and informs the APZ the results of the Gecko hit-test during event dispatch.
+The second notification is via APZCTreeManager::SetTargetAPZC, and informs the APZ of the results of the Gecko hit-test during event dispatch.
 Note that Gecko may report that the input event did not hit any scrollable frame at all.
-These notifications happen only once per input block.
+The SetTargetAPZC notification happens only once per input block, while the ContentReceivedInputBlock notification may happen once per block, or multiple times per block, depending on the input type.
 </li>
 <li value="9">
  <ol>
@@ -233,10 +233,10 @@ These notifications happen only once per input block.
    If the events were processed as part of step 4(i), the notifications from step 8 are ignored and step 10 is skipped.
   </li>
   <li value="ii">
-   If events were queued as part of step 4(ii), and steps 5-8 take less than 300ms, the arrival of both notifications from step 8 will mark the input block ready for processing.
+   If events were queued as part of step 4(ii), and steps 5-8 take less than 400ms, the arrival of both notifications from step 8 will mark the input block ready for processing.
   </li>
   <li value="iii">
-   If events were queued as part of step 4(ii), but steps 5-8 take longer than 300ms, the notifications from step 8 will be ignored and step 10 will already have happened.
+   If events were queued as part of step 4(ii), but steps 5-8 take longer than 400ms, the notifications from step 8 will be ignored and step 10 will already have happened.
   </li>
  </ol>
 </li>
@@ -250,7 +250,8 @@ Processing the events may trigger behaviours like scrolling or tap gestures.
 If the CSS touch-action property is enabled, the above steps are modified as follows:
 <ul>
 <li>
- In step 4, the APZC also requires the allowed touch-action behaviours for the input event. This is not available yet, so the events are always queued.
+ In step 4, the APZC also requires the allowed touch-action behaviours for the input event.
+ This might have been determined as part of the hit-test in APZCTreeManager; if not, the events are queued.
 </li>
 <li>
  In step 6, the widget code determines the content element at the point under the input element, and notifies the APZ code of the allowed touch-action behaviours.
@@ -266,7 +267,7 @@ If the CSS touch-action property is enabled, the above steps are modified as fol
 The bulk of the input processing in the APZ code happens on what we call "the input thread".
 In practice the input thread could be the Gecko main thread, the compositor thread, or some other thread.
 There are obvious downsides to using the Gecko main thread - that is, "asynchronous" panning and zooming is not really asynchronous as input events can only be processed while Gecko is idle.
-However, this is the current state of things on B2G.
+In an e10s environment, using the Gecko main thread of the chrome process is acceptable, because the code running in that process is more controllable and well-behaved than arbitrary web content.
 Using the compositor thread as the input thread could work on some platforms, but may be inefficient on others.
 For example, on Android (Fennec) we receive input events from the system on a dedicated UI thread.
 We would have to redispatch the input events to the compositor thread if we wanted to the input thread to be the same as the compositor thread.
@@ -289,7 +290,7 @@ The input block therefore has a tentative target of P when it goes into step 4(i
 When gecko processes the input event, it must detect the inactive scrollframe and activate it, as part of step 7.
 Finally, the widget code sends the SetTargetAPZC notification in step 8 to notify the APZ that the input block should really apply to this new layer.
 The issue here is that the layer transaction containing the new layer must reach the compositor and APZ before the SetTargetAPZC notification.
-If this does not occur within the 300ms timeout, the APZ code will be unable to update the tentative target, and will continue to use P for that input block.
+If this does not occur within the 400ms timeout, the APZ code will be unable to update the tentative target, and will continue to use P for that input block.
 Input blocks that start after the layer transaction will get correctly routed to the new layer as there will now be a layer and APZC instance for the active scrollframe.
 
 This model implies that when the user initially attempts to scroll an inactive scrollframe, it may end up scrolling an ancestor scrollframe.

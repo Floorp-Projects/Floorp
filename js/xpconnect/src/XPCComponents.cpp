@@ -2569,7 +2569,7 @@ nsXPCComponents_Utils::GetWeakReference(HandleValue object, JSContext* cx,
 NS_IMETHODIMP
 nsXPCComponents_Utils::ForceGC()
 {
-    JSContext* cx = nsXPConnect::GetRuntimeInstance()->Context();
+    JSContext* cx = nsXPConnect::GetContextInstance()->Context();
     PrepareForFullGC(cx);
     GCForReason(cx, GC_NORMAL, gcreason::COMPONENT_UTILS);
     return NS_OK;
@@ -3187,8 +3187,8 @@ NS_IMETHODIMP
 nsXPCComponents_Utils::GetWatchdogTimestamp(const nsAString& aCategory, PRTime* aOut)
 {
     WatchdogTimestampCategory category;
-    if (aCategory.EqualsLiteral("RuntimeStateChange"))
-        category = TimestampRuntimeStateChange;
+    if (aCategory.EqualsLiteral("ContextStateChange"))
+        category = TimestampContextStateChange;
     else if (aCategory.EqualsLiteral("WatchdogWakeup"))
         category = TimestampWatchdogWakeup;
     else if (aCategory.EqualsLiteral("WatchdogHibernateStart"))
@@ -3197,7 +3197,7 @@ nsXPCComponents_Utils::GetWatchdogTimestamp(const nsAString& aCategory, PRTime* 
         category = TimestampWatchdogHibernateStop;
     else
         return NS_ERROR_INVALID_ARG;
-    *aOut = XPCJSRuntime::Get()->GetWatchdogTimestamp(category);
+    *aOut = XPCJSContext::Get()->GetWatchdogTimestamp(category);
     return NS_OK;
 }
 
@@ -3458,7 +3458,7 @@ nsXPCComponents::GetManager(nsIComponentManager * *aManager)
 NS_IMETHODIMP
 nsXPCComponents::GetReturnCode(JSContext* aCx, MutableHandleValue aOut)
 {
-    nsresult res = XPCJSRuntime::Get()->GetPendingResult();
+    nsresult res = XPCJSContext::Get()->GetPendingResult();
     aOut.setNumber(static_cast<uint32_t>(res));
     return NS_OK;
 }
@@ -3469,7 +3469,7 @@ nsXPCComponents::SetReturnCode(JSContext* aCx, HandleValue aCode)
     nsresult rv;
     if (!ToUint32(aCx, aCode, (uint32_t*)&rv))
         return NS_ERROR_FAILURE;
-    XPCJSRuntime::Get()->SetPendingResult(rv);
+    XPCJSContext::Get()->SetPendingResult(rv);
     return NS_OK;
 }
 

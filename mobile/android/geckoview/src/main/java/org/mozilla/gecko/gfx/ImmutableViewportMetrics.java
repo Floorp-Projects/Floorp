@@ -35,7 +35,6 @@ public class ImmutableViewportMetrics {
     public final int viewportRectHeight;
 
     public final float zoomFactor;
-    public final boolean isRTL;
 
     public ImmutableViewportMetrics(DisplayMetrics metrics) {
         viewportRectLeft   = pageRectLeft   = cssPageRectLeft   = 0;
@@ -45,31 +44,17 @@ public class ImmutableViewportMetrics {
         pageRectRight  = cssPageRectRight  = metrics.widthPixels;
         pageRectBottom = cssPageRectBottom = metrics.heightPixels;
         zoomFactor = 1.0f;
-        isRTL = false;
     }
 
     /** This constructor is used by native code in AndroidJavaWrappers.cpp, be
      * careful when modifying the signature.
      */
     @WrapForJNI(calledFrom = "gecko")
-    public ImmutableViewportMetrics(float aPageRectLeft, float aPageRectTop,
-        float aPageRectRight, float aPageRectBottom, float aCssPageRectLeft,
-        float aCssPageRectTop, float aCssPageRectRight, float aCssPageRectBottom,
-        float aViewportRectLeft, float aViewportRectTop, int aViewportRectWidth,
-        int aViewportRectHeight, float aZoomFactor)
-    {
-        this(aPageRectLeft, aPageRectTop,
-             aPageRectRight, aPageRectBottom, aCssPageRectLeft,
-             aCssPageRectTop, aCssPageRectRight, aCssPageRectBottom,
-             aViewportRectLeft, aViewportRectTop, aViewportRectWidth,
-             aViewportRectHeight, aZoomFactor, false);
-    }
-
     private ImmutableViewportMetrics(float aPageRectLeft, float aPageRectTop,
         float aPageRectRight, float aPageRectBottom, float aCssPageRectLeft,
         float aCssPageRectTop, float aCssPageRectRight, float aCssPageRectBottom,
         float aViewportRectLeft, float aViewportRectTop, int aViewportRectWidth,
-        int aViewportRectHeight, float aZoomFactor, boolean aIsRTL)
+        int aViewportRectHeight, float aZoomFactor)
     {
         pageRectLeft = aPageRectLeft;
         pageRectTop = aPageRectTop;
@@ -84,7 +69,6 @@ public class ImmutableViewportMetrics {
         viewportRectWidth = aViewportRectWidth;
         viewportRectHeight = aViewportRectHeight;
         zoomFactor = aZoomFactor;
-        isRTL = aIsRTL;
     }
 
     public float getWidth() {
@@ -164,8 +148,7 @@ public class ImmutableViewportMetrics {
             FloatUtils.interpolate(viewportRectTop, to.viewportRectTop, t),
             (int)FloatUtils.interpolate(viewportRectWidth, to.viewportRectWidth, t),
             (int)FloatUtils.interpolate(viewportRectHeight, to.viewportRectHeight, t),
-            FloatUtils.interpolate(zoomFactor, to.zoomFactor, t),
-            t >= 0.5 ? to.isRTL : isRTL);
+            FloatUtils.interpolate(zoomFactor, to.zoomFactor, t));
     }
 
     public ImmutableViewportMetrics setViewportSize(int width, int height) {
@@ -177,7 +160,7 @@ public class ImmutableViewportMetrics {
             pageRectLeft, pageRectTop, pageRectRight, pageRectBottom,
             cssPageRectLeft, cssPageRectTop, cssPageRectRight, cssPageRectBottom,
             viewportRectLeft, viewportRectTop, width, height,
-            zoomFactor, isRTL);
+            zoomFactor);
     }
 
     public ImmutableViewportMetrics setViewportOrigin(float newOriginX, float newOriginY) {
@@ -185,7 +168,7 @@ public class ImmutableViewportMetrics {
             pageRectLeft, pageRectTop, pageRectRight, pageRectBottom,
             cssPageRectLeft, cssPageRectTop, cssPageRectRight, cssPageRectBottom,
             newOriginX, newOriginY, viewportRectWidth, viewportRectHeight,
-            zoomFactor, isRTL);
+            zoomFactor);
     }
 
     public ImmutableViewportMetrics setZoomFactor(float newZoomFactor) {
@@ -193,7 +176,7 @@ public class ImmutableViewportMetrics {
             pageRectLeft, pageRectTop, pageRectRight, pageRectBottom,
             cssPageRectLeft, cssPageRectTop, cssPageRectRight, cssPageRectBottom,
             viewportRectLeft, viewportRectTop, viewportRectWidth, viewportRectHeight,
-            newZoomFactor, isRTL);
+            newZoomFactor);
     }
 
     public ImmutableViewportMetrics offsetViewportBy(float dx, float dy) {
@@ -201,11 +184,6 @@ public class ImmutableViewportMetrics {
     }
 
     public ImmutableViewportMetrics offsetViewportByAndClamp(float dx, float dy) {
-        if (isRTL) {
-            return setViewportOrigin(
-                Math.min(pageRectRight - getWidth(), Math.max(viewportRectLeft + dx, pageRectLeft)),
-                Math.max(pageRectTop, Math.min(viewportRectTop + dy, pageRectBottom - getHeight())));
-        }
         return setViewportOrigin(
             Math.max(pageRectLeft, Math.min(viewportRectLeft + dx, pageRectRight - getWidth())),
             Math.max(pageRectTop, Math.min(viewportRectTop + dy, pageRectBottom - getHeight())));
@@ -216,7 +194,7 @@ public class ImmutableViewportMetrics {
             pageRect.left, pageRect.top, pageRect.right, pageRect.bottom,
             cssPageRect.left, cssPageRect.top, cssPageRect.right, cssPageRect.bottom,
             viewportRectLeft, viewportRectTop, viewportRectWidth, viewportRectHeight,
-            zoomFactor, isRTL);
+            zoomFactor);
     }
 
     public ImmutableViewportMetrics setPageRectFrom(ImmutableViewportMetrics aMetrics) {
@@ -228,18 +206,6 @@ public class ImmutableViewportMetrics {
         }
         RectF css = aMetrics.getCssPageRect();
         return setPageRect(RectUtils.scale(css, zoomFactor), css);
-    }
-
-    public ImmutableViewportMetrics setIsRTL(boolean aIsRTL) {
-        if (isRTL == aIsRTL) {
-            return this;
-        }
-
-        return new ImmutableViewportMetrics(
-            pageRectLeft, pageRectTop, pageRectRight, pageRectBottom,
-            cssPageRectLeft, cssPageRectTop, cssPageRectRight, cssPageRectBottom,
-            viewportRectLeft, viewportRectTop, viewportRectWidth, viewportRectHeight,
-            zoomFactor, aIsRTL);
     }
 
     /* This will set the zoom factor and re-scale page-size and viewport offset
@@ -263,7 +229,7 @@ public class ImmutableViewportMetrics {
             newPageRectLeft, newPageRectTop, newPageRectRight, newPageRectBottom,
             cssPageRectLeft, cssPageRectTop, cssPageRectRight, cssPageRectBottom,
             origin.x, origin.y, viewportRectWidth, viewportRectHeight,
-            newZoomFactor, isRTL);
+            newZoomFactor);
     }
 
     /** Clamps the viewport to remain within the page rect. */
@@ -287,7 +253,7 @@ public class ImmutableViewportMetrics {
             pageRectLeft, pageRectTop, pageRectRight, pageRectBottom,
             cssPageRectLeft, cssPageRectTop, cssPageRectRight, cssPageRectBottom,
             newViewport.left, newViewport.top, viewportRectWidth, viewportRectHeight,
-            zoomFactor, isRTL);
+            zoomFactor);
     }
 
     public boolean fuzzyEquals(ImmutableViewportMetrics other) {
@@ -311,6 +277,6 @@ public class ImmutableViewportMetrics {
                 + viewportRectWidth + "x" + viewportRectHeight + ") p=(" + pageRectLeft + ","
                 + pageRectTop + "," + pageRectRight + "," + pageRectBottom + ") c=("
                 + cssPageRectLeft + "," + cssPageRectTop + "," + cssPageRectRight + ","
-                + cssPageRectBottom + ") z=" + zoomFactor + ", rtl=" + isRTL;
+                + cssPageRectBottom + ") z=" + zoomFactor;
     }
 }

@@ -9685,6 +9685,15 @@ CSSParserImpl::ParseGridLine(nsCSSValue& aValue)
   Maybe<int32_t> integer;
   nsCSSValue ident;
 
+#ifdef MOZ_VALGRIND
+  // Make the contained value be defined even though we really want a
+  // Nothing here.  This works around an otherwise difficult to avoid
+  // Memcheck false positive when this is compiled by gcc-5.3 -O2.
+  // See bug 1301856.
+  integer.emplace(0);
+  integer.reset();
+#endif
+
   if (!GetToken(true)) {
     return false;
   }

@@ -145,7 +145,7 @@ function makeChan(origin) {
 var origin;
 var xaltsvc;
 var retryCounter = 0;
-var loadWithoutAltSvc = false;
+var loadWithoutClearingMappings = false;
 var nextTest;
 var expectPass = true;
 var waitFor = 0;
@@ -180,6 +180,7 @@ Listener.prototype = {
     if (waitFor != 0) {
       do_check_eq(routed, "");
       do_test_pending();
+      loadWithoutClearingMappings = true;
       do_timeout(waitFor, doTest);
       waitFor = 0;
       xaltsvc = "NA";
@@ -192,6 +193,7 @@ Listener.prototype = {
     } else {
       dump ("poll later for alt svc mapping\n");
       do_test_pending();
+      loadWithoutClearingMappings = true;
       do_timeout(500, doTest);
     }
 
@@ -217,8 +219,13 @@ function doTest()
   if (xaltsvc != "NA") {
     chan.setRequestHeader("x-altsvc", xaltsvc, false);
   }
-  chan.loadFlags = Ci.nsIRequest.LOAD_FRESH_CONNECTION |
-	           Ci.nsIChannel.LOAD_INITIAL_DOCUMENT_URI;
+  if (loadWithoutClearingMappings) {
+    chan.loadFlags = Ci.nsIChannel.LOAD_INITIAL_DOCUMENT_URI;
+  } else {
+    chan.loadFlags = Ci.nsIRequest.LOAD_FRESH_CONNECTION |
+                     Ci.nsIChannel.LOAD_INITIAL_DOCUMENT_URI;
+  }
+  loadWithoutClearingMappings = false;
   chan.asyncOpen2(listener);
 }
 

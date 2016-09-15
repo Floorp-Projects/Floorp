@@ -377,7 +377,6 @@ var BrowserApp = {
     Services.obs.addObserver(this, "ScrollTo:FocusedInput", false);
     Services.obs.addObserver(this, "Sanitize:ClearData", false);
     Services.obs.addObserver(this, "FullScreen:Exit", false);
-    Services.obs.addObserver(this, "Viewport:Flush", false);
     Services.obs.addObserver(this, "Passwords:Init", false);
     Services.obs.addObserver(this, "FormHistory:Init", false);
     Services.obs.addObserver(this, "android-get-pref", false);
@@ -1780,10 +1779,6 @@ var BrowserApp = {
 
       case "FullScreen:Exit":
         browser.contentDocument.exitFullscreen();
-        break;
-
-      case "Viewport:Flush":
-        this.contentDocumentChanged();
         break;
 
       case "Passwords:Init": {
@@ -5004,14 +4999,11 @@ var FormAssistant = {
   // Whether we're in the middle of an autocomplete
   _doingAutocomplete: false,
 
-  _isBlocklisted: false,
-
   // Keep track of whether or not an invalid form has been submitted
   _invalidSubmit: false,
 
   init: function() {
     Services.obs.addObserver(this, "FormAssist:AutoComplete", false);
-    Services.obs.addObserver(this, "FormAssist:Blocklisted", false);
     Services.obs.addObserver(this, "FormAssist:Hidden", false);
     Services.obs.addObserver(this, "FormAssist:Remove", false);
     Services.obs.addObserver(this, "invalidformsubmit", false);
@@ -5075,10 +5067,6 @@ var FormAssistant = {
 
         this._doingAutocomplete = false;
 
-        break;
-
-      case "FormAssist:Blocklisted":
-        this._isBlocklisted = (aData == "true");
         break;
 
       case "FormAssist:Hidden":
@@ -5284,12 +5272,7 @@ var FormAssistant = {
       return;
     }
 
-    // Don't display the form auto-complete popup after the user starts typing
-    // to avoid confusing somes IME. See bug 758820 and bug 632744.
-    if (this._isBlocklisted && aElement.value.length > 0) {
-      aCallback(false);
-      return;
-    }
+    let isEmpty = (aElement.value.length === 0);
 
     let resultsAvailable = autoCompleteSuggestions => {
       // On desktop, we show datalist suggestions below autocomplete suggestions,
@@ -5306,7 +5289,8 @@ var FormAssistant = {
       Messaging.sendRequest({
         type:  "FormAssist:AutoComplete",
         suggestions: suggestions,
-        rect: ElementTouchHelper.getBoundingContentRect(aElement)
+        rect: ElementTouchHelper.getBoundingContentRect(aElement),
+        isEmpty: isEmpty,
       });
 
       // Keep track of input element so we can fill it in if the user

@@ -2146,8 +2146,8 @@ class BaseCompiler
             MOZ_ASSERT(sig.id.kind() == SigIdDesc::Kind::None);
             const TableDesc& table = mg_.tables[mg_.asmJSSigToTableIndex[sigIndex]];
 
-            MOZ_ASSERT(IsPowerOfTwo(table.initial));
-            masm.andPtr(Imm32((table.initial - 1)), WasmTableCallIndexReg);
+            MOZ_ASSERT(IsPowerOfTwo(table.limits.initial));
+            masm.andPtr(Imm32((table.limits.initial - 1)), WasmTableCallIndexReg);
 
             callee = CalleeDesc::asmJSTable(table);
         } else {

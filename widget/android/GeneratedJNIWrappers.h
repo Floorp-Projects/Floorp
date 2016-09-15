@@ -4018,18 +4018,18 @@ public:
 
     explicit ThumbnailHelper(const Context& ctx) : ObjectBase<ThumbnailHelper>(ctx) {}
 
-    struct SendThumbnail_t {
+    struct NotifyThumbnail_t {
         typedef ThumbnailHelper Owner;
         typedef void ReturnType;
         typedef void SetterType;
         typedef mozilla::jni::Args<
                 mozilla::jni::ByteBuffer::Param,
-                int32_t,
+                mozilla::jni::Object::Param,
                 bool,
                 bool> Args;
         static constexpr char name[] = "notifyThumbnail";
         static constexpr char signature[] =
-                "(Ljava/nio/ByteBuffer;IZZ)V";
+                "(Ljava/nio/ByteBuffer;Lorg/mozilla/gecko/Tab;ZZ)V";
         static const bool isStatic = true;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -4039,7 +4039,7 @@ public:
                 mozilla::jni::DispatchTarget::CURRENT;
     };
 
-    static auto SendThumbnail(mozilla::jni::ByteBuffer::Param, int32_t, bool, bool) -> void;
+    static auto NotifyThumbnail(mozilla::jni::ByteBuffer::Param, mozilla::jni::Object::Param, bool, bool) -> void;
 
     struct RequestThumbnail_t {
         typedef ThumbnailHelper Owner;
@@ -4047,12 +4047,13 @@ public:
         typedef void SetterType;
         typedef mozilla::jni::Args<
                 mozilla::jni::ByteBuffer::Param,
+                mozilla::jni::Object::Param,
                 int32_t,
                 int32_t,
                 int32_t> Args;
-        static constexpr char name[] = "requestThumbnail";
+        static constexpr char name[] = "requestThumbnailLocked";
         static constexpr char signature[] =
-                "(Ljava/nio/ByteBuffer;III)V";
+                "(Ljava/nio/ByteBuffer;Lorg/mozilla/gecko/Tab;III)V";
         static const bool isStatic = true;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;

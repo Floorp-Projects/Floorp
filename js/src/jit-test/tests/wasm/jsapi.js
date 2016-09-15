@@ -117,11 +117,11 @@ assertEq(Memory.name, "Memory");
 assertErrorMessage(() => Memory(), TypeError, /constructor without new is forbidden/);
 assertErrorMessage(() => new Memory(1), TypeError, "first argument must be a memory descriptor");
 assertErrorMessage(() => new Memory({initial:{valueOf() { throw new Error("here")}}}), Error, "here");
-assertErrorMessage(() => new Memory({initial:-1}), TypeError, /bad Memory initial size/);
-assertErrorMessage(() => new Memory({initial:Math.pow(2,32)}), TypeError, /bad Memory initial size/);
-assertErrorMessage(() => new Memory({initial:1, maximum: Math.pow(2,32)/Math.pow(2,14) }), TypeError, /bad Memory maximum size/);
-assertErrorMessage(() => new Memory({initial:2, maximum: 1 }), TypeError, /bad Memory maximum size/);
-assertErrorMessage(() => new Memory({maximum: -1 }), TypeError, /bad Memory maximum size/);
+assertErrorMessage(() => new Memory({initial:-1}), RangeError, /bad Memory initial size/);
+assertErrorMessage(() => new Memory({initial:Math.pow(2,32)}), RangeError, /bad Memory initial size/);
+assertErrorMessage(() => new Memory({initial:1, maximum: Math.pow(2,32)/Math.pow(2,14) }), RangeError, /bad Memory maximum size/);
+assertErrorMessage(() => new Memory({initial:2, maximum:1 }), RangeError, /bad Memory maximum size/);
+assertErrorMessage(() => new Memory({maximum: -1 }), RangeError, /bad Memory maximum size/);
 assertEq(new Memory({initial:1}) instanceof Memory, true);
 assertEq(new Memory({initial:1.5}).buffer.byteLength, WasmPage);
 
@@ -159,18 +159,18 @@ assertEq(bufferGetter.call(mem1) instanceof ArrayBuffer, true);
 assertEq(bufferGetter.call(mem1).byteLength, WasmPage);
 
 // 'WebAssembly.Memory.prototype.grow' data property
-const growDesc = Object.getOwnPropertyDescriptor(memoryProto, 'grow');
-assertEq(typeof growDesc.value, "function");
-assertEq(growDesc.enumerable, false);
-assertEq(growDesc.configurable, true);
+const memGrowDesc = Object.getOwnPropertyDescriptor(memoryProto, 'grow');
+assertEq(typeof memGrowDesc.value, "function");
+assertEq(memGrowDesc.enumerable, false);
+assertEq(memGrowDesc.configurable, true);
 
 // 'WebAssembly.Memory.prototype.grow' method
-const grow = growDesc.value;
-assertEq(grow.length, 1);
-assertErrorMessage(() => grow.call(), TypeError, /called on incompatible undefined/);
-assertErrorMessage(() => grow.call({}), TypeError, /called on incompatible Object/);
-assertErrorMessage(() => grow.call(mem1, -1), Error, /failed to grow memory/);
-assertErrorMessage(() => grow.call(mem1, Math.pow(2,32)), Error, /failed to grow memory/);
+const memGrow = memGrowDesc.value;
+assertEq(memGrow.length, 1);
+assertErrorMessage(() => memGrow.call(), TypeError, /called on incompatible undefined/);
+assertErrorMessage(() => memGrow.call({}), TypeError, /called on incompatible Object/);
+assertErrorMessage(() => memGrow.call(mem1, -1), RangeError, /bad Memory grow delta/);
+assertErrorMessage(() => memGrow.call(mem1, Math.pow(2,32)), RangeError, /bad Memory grow delta/);
 var mem = new Memory({initial:1, maximum:2});
 var buf = mem.buffer;
 assertEq(buf.byteLength, WasmPage);
@@ -205,10 +205,14 @@ assertErrorMessage(() => new Table({initial:1, element:1}), TypeError, /must be 
 assertErrorMessage(() => new Table({initial:1, element:"any"}), TypeError, /must be "anyfunc"/);
 assertErrorMessage(() => new Table({initial:1, element:{valueOf() { return "anyfunc" }}}), TypeError, /must be "anyfunc"/);
 assertErrorMessage(() => new Table({initial:{valueOf() { throw new Error("here")}}, element:"anyfunc"}), Error, "here");
-assertErrorMessage(() => new Table({initial:-1, element:"anyfunc"}), TypeError, /bad Table initial size/);
-assertErrorMessage(() => new Table({initial:Math.pow(2,32), element:"anyfunc"}), TypeError, /bad Table initial size/);
+assertErrorMessage(() => new Table({initial:-1, element:"anyfunc"}), RangeError, /bad Table initial size/);
+assertErrorMessage(() => new Table({initial:Math.pow(2,32), element:"anyfunc"}), RangeError, /bad Table initial size/);
+assertErrorMessage(() => new Table({initial:2, maximum:1, element:"anyfunc"}), RangeError, /bad Table maximum size/);
+assertErrorMessage(() => new Table({initial:2, maximum:Math.pow(2,32), element:"anyfunc"}), RangeError, /bad Table maximum size/);
 assertEq(new Table({initial:1, element:"anyfunc"}) instanceof Table, true);
 assertEq(new Table({initial:1.5, element:"anyfunc"}) instanceof Table, true);
+assertEq(new Table({initial:1, maximum:1.5, element:"anyfunc"}) instanceof Table, true);
+assertEq(new Table({initial:1, maximum:Math.pow(2,32)-1, element:"anyfunc"}) instanceof Table, true);
 
 // 'WebAssembly.Table.prototype' data property
 const tableProtoDesc = Object.getOwnPropertyDescriptor(Table, 'prototype');
@@ -258,10 +262,10 @@ assertErrorMessage(() => get.call({}), TypeError, /called on incompatible Object
 assertEq(get.call(tbl1, 0), null);
 assertEq(get.call(tbl1, 1), null);
 assertEq(get.call(tbl1, 1.5), null);
-assertErrorMessage(() => get.call(tbl1, 2), RangeError, /out-of-range index/);
-assertErrorMessage(() => get.call(tbl1, 2.5), RangeError, /out-of-range index/);
-assertErrorMessage(() => get.call(tbl1, -1), RangeError, /out-of-range index/);
-assertErrorMessage(() => get.call(tbl1, Math.pow(2,33)), RangeError, /out-of-range index/);
+assertErrorMessage(() => get.call(tbl1, 2), RangeError, /bad Table get index/);
+assertErrorMessage(() => get.call(tbl1, 2.5), RangeError, /bad Table get index/);
+assertErrorMessage(() => get.call(tbl1, -1), RangeError, /bad Table get index/);
+assertErrorMessage(() => get.call(tbl1, Math.pow(2,33)), RangeError, /bad Table get index/);
 assertErrorMessage(() => get.call(tbl1, {valueOf() { throw new Error("hi") }}), Error, "hi");
 
 // 'WebAssembly.Table.prototype.set' data property
@@ -276,9 +280,9 @@ assertEq(set.length, 2);
 assertErrorMessage(() => set.call(), TypeError, /called on incompatible undefined/);
 assertErrorMessage(() => set.call({}), TypeError, /called on incompatible Object/);
 assertErrorMessage(() => set.call(tbl1, 0), TypeError, /requires more than 1 argument/);
-assertErrorMessage(() => set.call(tbl1, 2, null), RangeError, /out-of-range index/);
-assertErrorMessage(() => set.call(tbl1, -1, null), RangeError, /out-of-range index/);
-assertErrorMessage(() => set.call(tbl1, Math.pow(2,33), null), RangeError, /out-of-range index/);
+assertErrorMessage(() => set.call(tbl1, 2, null), RangeError, /bad Table set index/);
+assertErrorMessage(() => set.call(tbl1, -1, null), RangeError, /bad Table set index/);
+assertErrorMessage(() => set.call(tbl1, Math.pow(2,33), null), RangeError, /bad Table set index/);
 assertErrorMessage(() => set.call(tbl1, 0, undefined), TypeError, /can only assign WebAssembly exported functions to Table/);
 assertErrorMessage(() => set.call(tbl1, 0, {}), TypeError, /can only assign WebAssembly exported functions to Table/);
 assertErrorMessage(() => set.call(tbl1, 0, function() {}), TypeError, /can only assign WebAssembly exported functions to Table/);
@@ -286,6 +290,27 @@ assertErrorMessage(() => set.call(tbl1, 0, Math.sin), TypeError, /can only assig
 assertErrorMessage(() => set.call(tbl1, {valueOf() { throw Error("hai") }}, null), Error, "hai");
 assertEq(set.call(tbl1, 0, null), undefined);
 assertEq(set.call(tbl1, 1, null), undefined);
+
+// 'WebAssembly.Table.prototype.grow' data property
+const tblGrowDesc = Object.getOwnPropertyDescriptor(tableProto, 'grow');
+assertEq(typeof tblGrowDesc.value, "function");
+assertEq(tblGrowDesc.enumerable, false);
+assertEq(tblGrowDesc.configurable, true);
+
+// 'WebAssembly.Table.prototype.grow' method
+const tblGrow = tblGrowDesc.value;
+assertEq(tblGrow.length, 1);
+assertErrorMessage(() => tblGrow.call(), TypeError, /called on incompatible undefined/);
+assertErrorMessage(() => tblGrow.call({}), TypeError, /called on incompatible Object/);
+assertErrorMessage(() => tblGrow.call(tbl1, -1), RangeError, /bad Table grow delta/);
+assertErrorMessage(() => tblGrow.call(tbl1, Math.pow(2,32)), RangeError, /bad Table grow delta/);
+var tbl = new Table({element:"anyfunc", initial:1, maximum:2});
+assertEq(tbl.length, 1);
+assertEq(tbl.grow(0), 1);
+assertEq(tbl.length, 1);
+assertEq(tbl.grow(1), 1);
+assertEq(tbl.length, 2);
+assertErrorMessage(() => tbl.grow(1), Error, /failed to grow table/);
 
 // 'WebAssembly.compile' data property
 const compileDesc = Object.getOwnPropertyDescriptor(WebAssembly, 'compile');

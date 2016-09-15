@@ -76,6 +76,7 @@ private:
     return aPAR.Hash();
   }
 
+  // NOTE: When adding new member-vars, remember to update Hash() & operator==.
   CSSIntSize                    mViewportSize;
   Maybe<SVGPreserveAspectRatio> mPreserveAspectRatio;
   gfxFloat                      mGlobalOpacity;

@@ -26,17 +26,9 @@ import android.support.v4.content.CursorLoader;
 /**
  * Interface for interactions with all databases. If you want an instance
  * that implements this, you should go through GeckoProfile. E.g.,
- * <code>GeckoProfile.get(context).getDB()</code>.
- *
- * GeckoProfile itself will construct an appropriate subclass using
- * a factory that the containing application can set with
- * {@link GeckoProfile#setBrowserDBFactory(BrowserDB.Factory)}.
+ * <code>BrowserDB.from(context)</code>.
  */
-public interface BrowserDB {
-    public interface Factory {
-        public BrowserDB get(String profileName, File profileDir);
-    }
-
+public abstract class BrowserDB {
     public static enum FilterFlags {
         EXCLUDE_PINNED_SITES
     }
@@ -44,7 +36,7 @@ public interface BrowserDB {
     public abstract Searches getSearches();
     public abstract TabsAccessor getTabsAccessor();
     public abstract URLMetadata getURLMetadata();
-    @RobocopTarget UrlAnnotations getUrlAnnotations();
+    @RobocopTarget public abstract UrlAnnotations getUrlAnnotations();
 
     /**
      * Add default bookmarks to the database.
@@ -182,5 +174,22 @@ public interface BrowserDB {
      * @param context The context to load the cursor.
      * @param limit Maximum number of results to return.
      */
-    CursorLoader getHighlights(Context context, int limit);
+    public abstract CursorLoader getHighlights(Context context, int limit);
+
+    public static BrowserDB from(final Context context) {
+        return from(GeckoProfile.get(context));
+    }
+
+    public static BrowserDB from(final GeckoProfile profile) {
+        synchronized (profile.getLock()) {
+            BrowserDB db = (BrowserDB) profile.getData();
+            if (db != null) {
+                return db;
+            }
+
+            db = new LocalBrowserDB(profile.getName());
+            profile.setData(db);
+            return db;
+        }
+    }
 }

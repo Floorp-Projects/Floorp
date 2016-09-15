@@ -122,10 +122,11 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
     private void handleAutoCompleteMessage(JSONObject message) throws JSONException  {
         final JSONArray suggestions = message.getJSONArray("suggestions");
         final JSONObject rect = message.getJSONObject("rect");
+        final boolean isEmpty = message.getBoolean("isEmpty");
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
-                showAutoCompleteSuggestions(suggestions, rect);
+                showAutoCompleteSuggestions(suggestions, rect, isEmpty);
             }
         });
     }
@@ -150,7 +151,15 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
         });
     }
 
-    private void showAutoCompleteSuggestions(JSONArray suggestions, JSONObject rect) {
+    private void showAutoCompleteSuggestions(JSONArray suggestions, JSONObject rect, boolean isEmpty) {
+        final String inputMethod = InputMethods.getCurrentInputMethod(mContext);
+        if (!isEmpty && sInputMethodBlocklist.contains(inputMethod)) {
+            // Don't display the form auto-complete popup after the user starts typing
+            // to avoid confusing somes IME. See bug 758820 and bug 632744.
+            hide();
+            return;
+        }
+
         if (mAutoCompleteList == null) {
             LayoutInflater inflater = LayoutInflater.from(mContext);
             mAutoCompleteList = (ListView) inflater.inflate(R.layout.autocomplete_list, null);
@@ -376,11 +385,6 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
             setVisibility(GONE);
             broadcastGeckoEvent("FormAssist:Hidden", null);
         }
-    }
-
-    void onInputMethodChanged(String newInputMethod) {
-        boolean blocklisted = sInputMethodBlocklist.contains(newInputMethod);
-        broadcastGeckoEvent("FormAssist:Blocklisted", String.valueOf(blocklisted));
     }
 
     void onTranslationChanged() {

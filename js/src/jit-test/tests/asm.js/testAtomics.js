@@ -308,9 +308,13 @@ function test_int32(heap) {
     assertErrorMessage(() => i32m.xchg_i(oob), RangeError, /out-of-range index/);
 
     // Edge cases
-    assertErrorMessage(() => i32m.load_i(i32a.length*4), RangeError, /out-of-range index/);
-    assertErrorMessage(() => i32m.store_i(i32a.length*4), RangeError, /out-of-range index/);
-    assertErrorMessage(() => i32m.add_i(i32a.length*4), RangeError, /out-of-range index/);
+    const INT32_MAX = Math.pow(2, 31);
+    const UINT32_MAX = Math.pow(2, 32);
+    for (var i of [i32a.length*4, INT32_MAX - 4, INT32_MAX, UINT32_MAX - 4]) {
+        assertErrorMessage(() => i32m.load_i(i), RangeError, /out-of-range index/);
+        assertErrorMessage(() => i32m.store_i(i), RangeError, /out-of-range index/);
+        assertErrorMessage(() => i32m.add_i(i), RangeError, /out-of-range index/);
+    }
 
     i32a[i32a.length-1] = 88;
     assertEq(i32m.load_i((i32a.length-1)*4), 88);
@@ -588,9 +592,13 @@ function test_uint32(heap) {
     assertErrorMessage(() => i32m.xchg_i(oob), RangeError, /out-of-range index/);
 
     // Edge cases
-    assertErrorMessage(() => i32m.load_i(i32a.length*4), RangeError, /out-of-range index/);
-    assertErrorMessage(() => i32m.store_i(i32a.length*4), RangeError, /out-of-range index/);
-    assertErrorMessage(() => i32m.add_i(i32a.length*4), RangeError, /out-of-range index/);
+    const INT32_MAX = Math.pow(2, 31);
+    const UINT32_MAX = Math.pow(2, 32);
+    for (var i of [i32a.length*4, INT32_MAX - 4, INT32_MAX, UINT32_MAX - 4]) {
+        assertErrorMessage(() => i32m.load_i(i), RangeError, /out-of-range index/);
+        assertErrorMessage(() => i32m.store_i(i), RangeError, /out-of-range index/);
+        assertErrorMessage(() => i32m.add_i(i), RangeError, /out-of-range index/);
+    }
 
     i32a[i32a.length-1] = 88;
     assertEq(i32m.load_i((i32a.length-1)*4), 88);
@@ -876,9 +884,13 @@ function test_int16(heap) {
     assertErrorMessage(() => i16m.xchg_i(oob), RangeError, /out-of-range index/);
 
     // Edge cases
-    assertErrorMessage(() => i16m.load_i(i16a.length*2), RangeError, /out-of-range index/);
-    assertErrorMessage(() => i16m.store_i(i16a.length*2), RangeError, /out-of-range index/);
-    assertErrorMessage(() => i16m.add_i(i16a.length*2), RangeError, /out-of-range index/);
+    const INT32_MAX = Math.pow(2, 31);
+    const UINT32_MAX = Math.pow(2, 32);
+    for (var i of [i16a.length*2, INT32_MAX - 2, INT32_MAX, UINT32_MAX - 2]) {
+        assertErrorMessage(() => i16m.load_i(i), RangeError, /out-of-range index/);
+        assertErrorMessage(() => i16m.store_i(i), RangeError, /out-of-range index/);
+        assertErrorMessage(() => i16m.add_i(i), RangeError, /out-of-range index/);
+    }
 
     i16a[i16a.length-1] = 88;
     assertEq(i16m.load_i((i16a.length-1)*2), 88);
@@ -1164,9 +1176,13 @@ function test_uint16(heap) {
     assertErrorMessage(() => i16m.xchg_i(oob), RangeError, /out-of-range index/);
 
     // Edge cases
-    assertErrorMessage(() => i16m.load_i(i16a.length*2), RangeError, /out-of-range index/);
-    assertErrorMessage(() => i16m.store_i(i16a.length*2), RangeError, /out-of-range index/);
-    assertErrorMessage(() => i16m.add_i(i16a.length*2), RangeError, /out-of-range index/);
+    const INT32_MAX = Math.pow(2, 31);
+    const UINT32_MAX = Math.pow(2, 32);
+    for (var i of [i16a.length*2, INT32_MAX - 2, INT32_MAX, UINT32_MAX - 2]) {
+        assertErrorMessage(() => i16m.load_i(i), RangeError, /out-of-range index/);
+        assertErrorMessage(() => i16m.store_i(i), RangeError, /out-of-range index/);
+        assertErrorMessage(() => i16m.add_i(i), RangeError, /out-of-range index/);
+    }
 
     i16a[i16a.length-1] = 88;
     assertEq(i16m.load_i((i16a.length-1)*2), 88);
@@ -1445,9 +1461,13 @@ function test_int8(heap) {
     assertErrorMessage(() => i8m.xchg_i(oob), RangeError, /out-of-range index/);
 
     // Edge cases
-    assertErrorMessage(() => i8m.load_i(i8a.length), RangeError, /out-of-range index/);
-    assertErrorMessage(() => i8m.store_i(i8a.length), RangeError, /out-of-range index/);
-    assertErrorMessage(() => i8m.add_i(i8a.length), RangeError, /out-of-range index/);
+    const INT32_MAX = Math.pow(2, 31);
+    const UINT32_MAX = Math.pow(2, 32);
+    for (var i of [i8a.length, INT32_MAX - 1, INT32_MAX, UINT32_MAX - 1]) {
+        assertErrorMessage(() => i8m.load_i(i), RangeError, /out-of-range index/);
+        assertErrorMessage(() => i8m.store_i(i), RangeError, /out-of-range index/);
+        assertErrorMessage(() => i8m.add_i(i), RangeError, /out-of-range index/);
+    }
 
     i8a[i8a.length-1] = 88;
     assertEq(i8m.load_i(i8a.length-1), 88);
@@ -1736,9 +1756,13 @@ function test_uint8(heap) {
     assertErrorMessage(() => i8m.xchg_i(oob), RangeError, /out-of-range index/);
 
     // Edge cases
-    assertErrorMessage(() => i8m.load_i(i8a.length), RangeError, /out-of-range index/);
-    assertErrorMessage(() => i8m.store_i(i8a.length), RangeError, /out-of-range index/);
-    assertErrorMessage(() => i8m.add_i(i8a.length), RangeError, /out-of-range index/);
+    const INT32_MAX = Math.pow(2, 31);
+    const UINT32_MAX = Math.pow(2, 32);
+    for (var i of [i8a.length, INT32_MAX - 1, INT32_MAX, UINT32_MAX - 1]) {
+        assertErrorMessage(() => i8m.load_i(i), RangeError, /out-of-range index/);
+        assertErrorMessage(() => i8m.store_i(i), RangeError, /out-of-range index/);
+        assertErrorMessage(() => i8m.add_i(i), RangeError, /out-of-range index/);
+    }
 
     i8a[i8a.length-1] = 88;
     assertEq(i8m.load_i(i8a.length-1), 88);
