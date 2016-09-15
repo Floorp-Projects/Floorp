@@ -288,6 +288,10 @@ class MOZ_STACK_CLASS CallArgs : public detail::CallArgsBase<detail::IncludeUsed
         args.argv_ = argv;
         args.argc_ = argc;
         args.constructing_ = constructing;
+#ifdef DEBUG
+        for (unsigned i = 0; i < argc; ++i)
+            MOZ_ASSERT_IF(argv[i].isMarkable(), !GCThingIsMarkedGray(GCCellPtr(argv[i])));
+#endif
         return args;
     }
 
