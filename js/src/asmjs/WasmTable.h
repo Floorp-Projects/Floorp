@@ -20,6 +20,7 @@
 #define wasm_table_h
 
 #include "asmjs/WasmCode.h"
+#include "gc/Policy.h"
 
 namespace js {
 namespace wasm {
@@ -30,13 +31,22 @@ namespace wasm {
 
 class Table : public ShareableBase<Table>
 {
+    using InstanceSet = GCHashSet<ReadBarrieredWasmInstanceObject,
+                                  MovableCellHasher<ReadBarrieredWasmInstanceObject>,
+                                  SystemAllocPolicy>;
     typedef UniquePtr<uint8_t[], JS::FreePolicy> UniqueByteArray;
 
     ReadBarrieredWasmTableObject maybeObject_;
+    JS::WeakCache<InstanceSet>   observers_;
     UniqueByteArray              array_;
-    TableKind                    kind_;
+    const TableKind              kind_;
     uint32_t                     length_;
-    bool                         external_;
+    const Maybe<uint32_t>        maximum_;
+    const bool                   external_;
+
+    template <class> friend struct js::MallocProvider;
+    Table(JSContext* cx, const TableDesc& td, HandleWasmTableObject maybeObject,
+          UniqueByteArray array);
 
     void tracePrivate(JSTracer* trc);
     friend class js::WasmTableObject;
@@ -49,6 +59,7 @@ class Table : public ShareableBase<Table>
     bool external() const { return external_; }
     bool isTypedFunction() const { return kind_ == TableKind::TypedFunction; }
     uint32_t length() const { return length_; }
+    Maybe<uint32_t> maximum() const { return maximum_; }
     uint8_t* base() const { return array_.get(); }
 
     // All updates must go through a set() function with the exception of
@@ -59,6 +70,10 @@ class Table : public ShareableBase<Table>
     ExternalTableElem* externalArray() const;
     void set(uint32_t index, void* code, Instance& instance);
     void setNull(uint32_t index);
+
+    uint32_t grow(uint32_t delta, JSContext* cx);
+    bool movingGrowable() const;
+    bool addMovingGrowObserver(JSContext* cx, WasmInstanceObject* instance);
 
     // about:memory reporting:
 

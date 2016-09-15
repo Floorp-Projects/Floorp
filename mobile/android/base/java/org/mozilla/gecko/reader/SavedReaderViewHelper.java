@@ -13,6 +13,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.annotation.RobocopTarget;
+import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.UrlAnnotations;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -145,7 +146,7 @@ public class SavedReaderViewHelper {
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                UrlAnnotations annotations = GeckoProfile.get(mContext).getDB().getUrlAnnotations();
+                UrlAnnotations annotations = BrowserDB.from(mContext).getUrlAnnotations();
                 annotations.insertReaderViewUrl(mContext.getContentResolver(), pageURL);
 
                 commit();
@@ -161,7 +162,7 @@ public class SavedReaderViewHelper {
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                UrlAnnotations annotations = GeckoProfile.get(mContext).getDB().getUrlAnnotations();
+                UrlAnnotations annotations = BrowserDB.from(mContext).getUrlAnnotations();
                 annotations.deleteReaderViewUrl(mContext.getContentResolver(), pageURL);
 
                 commit();

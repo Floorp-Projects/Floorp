@@ -2777,7 +2777,7 @@ MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc, const wasm::Cal
     if (callee.which() == wasm::CalleeDesc::AsmJSTable) {
         // asm.js tables require no signature check, have had their index masked
         // into range and thus need no bounds check and cannot be external.
-        loadWasmGlobalPtr(callee.tableGlobalDataOffset(), scratch);
+        loadWasmGlobalPtr(callee.tableBaseGlobalDataOffset(), scratch);
         loadPtr(BaseIndex(scratch, index, ScalePointer), scratch);
         call(desc, scratch);
         return;
@@ -2799,12 +2799,11 @@ MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc, const wasm::Cal
     }
 
     // WebAssembly throws if the index is out-of-bounds.
-    branch32(Assembler::Condition::AboveOrEqual,
-             index, Imm32(callee.wasmTableLength()),
-             wasm::JumpTarget::OutOfBounds);
+    loadWasmGlobalPtr(callee.tableLengthGlobalDataOffset(), scratch);
+    branch32(Assembler::Condition::AboveOrEqual, index, scratch, wasm::JumpTarget::OutOfBounds);
 
     // Load the base pointer of the table.
-    loadWasmGlobalPtr(callee.tableGlobalDataOffset(), scratch);
+    loadWasmGlobalPtr(callee.tableBaseGlobalDataOffset(), scratch);
 
     // Load the callee from the table.
     if (callee.wasmTableIsExternal()) {

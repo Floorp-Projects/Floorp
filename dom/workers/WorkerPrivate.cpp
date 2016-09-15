@@ -1508,16 +1508,16 @@ StartsWithExplicit(nsACString& s)
 }
 #endif
 
-class WorkerJSRuntimeStats : public JS::RuntimeStats
+class MOZ_STACK_CLASS WorkerJSContextStats final : public JS::RuntimeStats
 {
   const nsACString& mRtPath;
 
 public:
-  explicit WorkerJSRuntimeStats(const nsACString& aRtPath)
+  explicit WorkerJSContextStats(const nsACString& aRtPath)
   : JS::RuntimeStats(JsWorkerMallocSizeOf), mRtPath(aRtPath)
   { }
 
-  ~WorkerJSRuntimeStats()
+  ~WorkerJSContextStats()
   {
     for (size_t i = 0; i != zoneStatsVector.length(); i++) {
       delete static_cast<xpc::ZoneStatsExtras*>(zoneStatsVector[i].extra);
@@ -2027,10 +2027,10 @@ public:
   {
     AssertIsOnMainThread();
 
-    // Assumes that WorkerJSRuntimeStats will hold a reference to |path|, and
+    // Assumes that WorkerJSContextStats will hold a reference to |path|, and
     // not a copy, as TryToMapAddon() may later modify it.
     nsCString path;
-    WorkerJSRuntimeStats rtStats(path);
+    WorkerJSContextStats cxStats(path);
 
     {
       MutexAutoLock lock(mMutex);
@@ -2060,13 +2060,13 @@ public:
 
       TryToMapAddon(path);
 
-      if (!mWorkerPrivate->BlockAndCollectRuntimeStats(&rtStats, aAnonymize)) {
+      if (!mWorkerPrivate->BlockAndCollectRuntimeStats(&cxStats, aAnonymize)) {
         // Returning NS_OK here will effectively report 0 memory.
         return NS_OK;
       }
     }
 
-    xpc::ReportJSRuntimeExplicitTreeStats(rtStats, path, aHandleReport, aData,
+    xpc::ReportJSRuntimeExplicitTreeStats(cxStats, path, aHandleReport, aData,
                                           aAnonymize);
     return NS_OK;
   }
@@ -4598,7 +4598,7 @@ WorkerPrivate::OnProcessNextEvent()
 {
   AssertIsOnWorkerThread();
 
-  uint32_t recursionDepth = CycleCollectedJSRuntime::Get()->RecursionDepth();
+  uint32_t recursionDepth = CycleCollectedJSContext::Get()->RecursionDepth();
   MOZ_ASSERT(recursionDepth);
 
   // Normally we process control runnables in DoRunLoop or RunCurrentSyncLoop.
@@ -4617,7 +4617,7 @@ void
 WorkerPrivate::AfterProcessNextEvent()
 {
   AssertIsOnWorkerThread();
-  MOZ_ASSERT(CycleCollectedJSRuntime::Get()->RecursionDepth());
+  MOZ_ASSERT(CycleCollectedJSContext::Get()->RecursionDepth());
 }
 
 void

@@ -238,7 +238,7 @@ public class SendTab extends ShareMethod {
             return Collections.emptyList();
         }
 
-        final BrowserDB browserDB = GeckoProfile.get(context).getDB();
+        final BrowserDB browserDB = BrowserDB.from(context);
         final TabsAccessor tabsAccessor = browserDB.getTabsAccessor();
         final Cursor remoteTabsCursor = tabsAccessor.getRemoteClientsByRecencyCursor(context);
         try {

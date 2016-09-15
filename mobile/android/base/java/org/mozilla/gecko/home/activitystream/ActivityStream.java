@@ -16,6 +16,7 @@ import android.widget.FrameLayout;
 
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.SimpleCursorLoader;
 import org.mozilla.gecko.home.activitystream.topsites.TopSitesPagerAdapter;
@@ -59,14 +60,12 @@ public class ActivityStream extends FrameLayout {
     private class CursorLoaderCallbacks implements LoaderManager.LoaderCallbacks<Cursor> {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+            final Context context = getContext();
             if (id == LOADER_ID_HIGHLIGHTS) {
-                final Context context = getContext();
-                return GeckoProfile.get(context)
-                        .getDB()
-                        .getHighlights(context, 10);
+                return BrowserDB.from(context).getHighlights(context, 10);
             } else if (id == LOADER_ID_TOPSITES) {
-                return GeckoProfile.get(getContext()).getDB().getActivityStreamTopSites(getContext(),
-                        TopSitesPagerAdapter.TOTAL_ITEMS);
+                return BrowserDB.from(context).getActivityStreamTopSites(
+                        context, TopSitesPagerAdapter.TOTAL_ITEMS);
             } else {
                 throw new IllegalArgumentException("Can't handle loader id " + id);
             }

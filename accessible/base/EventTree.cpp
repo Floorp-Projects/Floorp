@@ -445,9 +445,16 @@ EventTree::Mutated(AccMutationEvent* aEv)
   // discard those subtree mutations as we are no longer interested in them.
   UniquePtr<EventTree>* node = &mFirst;
   while (*node) {
-    if ((*node)->mContainer == aEv->mAccessible) {
-      *node = Move((*node)->mNext);
-      break;
+    Accessible* cntr = (*node)->mContainer;
+    while (cntr != mContainer) {
+      if (cntr == aEv->mAccessible) {
+        *node = Move((*node)->mNext);
+        break;
+      }
+      cntr = cntr->Parent();
+    }
+    if (cntr == aEv->mAccessible) {
+      continue;
     }
     node = &(*node)->mNext;
   }

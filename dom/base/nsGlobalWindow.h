@@ -1709,6 +1709,10 @@ private:
   // IsSecureContext() for the inner window that corresponds to aDocument.
   bool ComputeIsSecureContext(nsIDocument* aDocument);
 
+public:
+
+  void GetConstellation(nsACString& aConstellation);
+
 protected:
   // This member is also used on both inner and outer windows, but
   // for slightly different purposes. On inner windows it means the
@@ -1925,6 +1929,9 @@ protected:
   nsTArray<RefPtr<mozilla::dom::VRDisplay>> mVRDisplays;
 
   nsAutoPtr<mozilla::dom::VREventObserver> mVREventObserver;
+
+  uint64_t mStaticConstellation; // Only used on outer windows
+  nsCString mConstellation; // Only used on inner windows
 
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;

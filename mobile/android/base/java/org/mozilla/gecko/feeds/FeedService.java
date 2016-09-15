@@ -64,7 +64,7 @@ public class FeedService extends IntentService {
     public void onCreate() {
         super.onCreate();
 
-        browserDB = GeckoProfile.get(this).getDB();
+        browserDB = BrowserDB.from(this);
     }
 
     @Override
