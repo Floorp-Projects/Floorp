@@ -296,7 +296,13 @@ class ObjectElements
     }
     void freeze() {
         MOZ_ASSERT(!isFrozen());
+        MOZ_ASSERT(!isCopyOnWrite());
         flags |= FROZEN;
+    }
+    void markNotFrozen() {
+        MOZ_ASSERT(isFrozen());
+        MOZ_ASSERT(!isCopyOnWrite());
+        flags &= ~FROZEN;
     }
 
     // This is enough slots to store an object of this class. See the static
