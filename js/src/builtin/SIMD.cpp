@@ -15,6 +15,7 @@
 
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/IntegerTypeTraits.h"
+#include "mozilla/Sprintf.h"
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
@@ -133,7 +134,7 @@ ErrorWrongTypeArg(JSContext* cx, unsigned argIndex, Handle<TypeDescr*> typeDescr
 {
     MOZ_ASSERT(argIndex < 10);
     char charArgIndex[2];
-    snprintf(charArgIndex, sizeof charArgIndex, "%u", argIndex);
+    SprintfLiteral(charArgIndex, "%u", argIndex);
 
     HeapSlot& typeNameSlot = typeDescr->getReservedSlotRef(JS_DESCR_SLOT_STRING_REPR);
     char* typeNameStr = JS_EncodeString(cx, typeNameSlot.toString());

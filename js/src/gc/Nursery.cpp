@@ -120,6 +120,7 @@ js::Nursery::Nursery(JSRuntime* rt)
   , previousPromotionRate_(0)
   , profileThreshold_(0)
   , enableProfiling_(false)
+  , reportTenurings_(0)
   , minorGcCount_(0)
   , freeMallocedBuffersTask(nullptr)
   , sweepActions_(nullptr)
@@ -159,11 +160,21 @@ js::Nursery::init(uint32_t maxNurseryBytes, AutoLockGC& lock)
     if (env) {
         if (0 == strcmp(env, "help")) {
             fprintf(stderr, "JS_GC_PROFILE_NURSERY=N\n"
-                    "\tReport minor GC's taking more than N microseconds.\n");
+                    "\tReport minor GC's taking at least N microseconds.\n");
             exit(0);
         }
         enableProfiling_ = true;
         profileThreshold_ = atoi(env);
+    }
+
+    env = getenv("JS_GC_REPORT_TENURING");
+    if (env) {
+        if (0 == strcmp(env, "help")) {
+            fprintf(stderr, "JS_GC_REPORT_TENURING=N\n"
+                    "\tAfter a minor GC, report any ObjectGroups with at least N instances tenured.\n");
+            exit(0);
+        }
+        reportTenurings_ = atoi(env);
     }
 
     PodZero(&startTimes_);
@@ -577,8 +588,7 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason)
     uint32_t pretenureCount = 0;
     if (promotionRate > 0.8 || reason == JS::gcreason::FULL_STORE_BUFFER) {
         JSContext* cx = rt->contextFromMainThread();
-        for (size_t i = 0; i < ArrayLength(tenureCounts.entries); i++) {
-            const TenureCount& entry = tenureCounts.entries[i];
+        for (auto& entry : tenureCounts.entries) {
             if (entry.count >= 3000) {
                 ObjectGroup* group = entry.group;
                 if (group->canPreTenure()) {
@@ -623,6 +633,15 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason)
                 promotionRate * 100,
                 numChunks());
         printProfileTimes(profileTimes_);
+
+        if (reportTenurings_) {
+            for (auto& entry : tenureCounts.entries) {
+                if (entry.count >= reportTenurings_) {
+                    fprintf(stderr, "%d x ", entry.count);
+                    entry.group->print();
+                }
+            }
+        }
     }
 }
 

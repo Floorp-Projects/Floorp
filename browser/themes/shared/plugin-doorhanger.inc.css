@@ -52,7 +52,7 @@
 .messageImage[value="plugin-hidden"] {
   list-style-image: url(chrome://browser/skin/notification-icons.svg#plugin);
   filter: url(chrome://browser/skin/filters.svg#fill);
-  fill: currentColor;
+  fill: #808080;
 }
 
 /* Keep any changes to this style in sync with pluginProblem.css */

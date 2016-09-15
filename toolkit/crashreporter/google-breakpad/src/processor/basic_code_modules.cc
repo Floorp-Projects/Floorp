@@ -38,6 +38,8 @@
 
 #include <assert.h>
 
+#include <vector>
+
 #include "google_breakpad/processor/code_module.h"
 #include "processor/linked_ptr.h"
 #include "processor/logging.h"
@@ -45,51 +47,66 @@
 
 namespace google_breakpad {
 
+using std::vector;
+
 BasicCodeModules::BasicCodeModules(const CodeModules *that)
-    : main_address_(0),
-      map_(new RangeMap<uint64_t, linked_ptr<const CodeModule> >()) {
+    : main_address_(0), map_() {
   BPLOG_IF(ERROR, !that) << "BasicCodeModules::BasicCodeModules requires "
                             "|that|";
   assert(that);
+
+  map_.SetEnableShrinkDown(that->IsModuleShrinkEnabled());
 
   const CodeModule *main_module = that->GetMainModule();
   if (main_module)
     main_address_ = main_module->base_address();
 
   unsigned int count = that->module_count();
-  for (unsigned int module_sequence = 0;
-       module_sequence < count;
-       ++module_sequence) {
+  for (unsigned int i = 0; i < count; ++i) {
     // Make a copy of the module and insert it into the map.  Use
     // GetModuleAtIndex because ordering is unimportant when slurping the
     // entire list, and GetModuleAtIndex may be faster than
     // GetModuleAtSequence.
-    linked_ptr<const CodeModule> module(
-        that->GetModuleAtIndex(module_sequence)->Copy());
-    if (!map_->StoreRange(module->base_address(), module->size(), module)) {
-      BPLOG(ERROR) << "Module " << module->code_file() <<
-                      " could not be stored";
+    linked_ptr<const CodeModule> module(that->GetModuleAtIndex(i)->Copy());
+    if (!map_.StoreRange(module->base_address(), module->size(), module)) {
+      BPLOG(ERROR) << "Module " << module->code_file()
+                   << " could not be stored";
     }
   }
+
+  // Report modules with shrunk ranges.
+  for (unsigned int i = 0; i < count; ++i) {
+    linked_ptr<const CodeModule> module(that->GetModuleAtIndex(i)->Copy());
+    uint64_t delta = 0;
+    if (map_.RetrieveRange(module->base_address() + module->size() - 1,
+                           &module, NULL /* base */, &delta, NULL /* size */) &&
+        delta > 0) {
+      BPLOG(INFO) << "The range for module " << module->code_file()
+                  << " was shrunk down by " << HexString(delta) << " bytes.";
+      linked_ptr<CodeModule> shrunk_range_module(module->Copy());
+      shrunk_range_module->SetShrinkDownDelta(delta);
+      shrunk_range_modules_.push_back(shrunk_range_module);
+    }
+  }
+
+  // TODO(ivanpe): Report modules with conflicting ranges.  The list of such
+  // modules should be copied from |that|.
 }
 
-BasicCodeModules::BasicCodeModules()
-  : main_address_(0),
-    map_(new RangeMap<uint64_t, linked_ptr<const CodeModule> >()) {
-}
+BasicCodeModules::BasicCodeModules() : main_address_(0), map_() { }
 
 BasicCodeModules::~BasicCodeModules() {
-  delete map_;
 }
 
 unsigned int BasicCodeModules::module_count() const {
-  return map_->GetCount();
+  return map_.GetCount();
 }
 
 const CodeModule* BasicCodeModules::GetModuleForAddress(
     uint64_t address) const {
   linked_ptr<const CodeModule> module;
-  if (!map_->RetrieveRange(address, &module, NULL, NULL)) {
+  if (!map_.RetrieveRange(address, &module, NULL /* base */, NULL /* delta */,
+                          NULL /* size */)) {
     BPLOG(INFO) << "No module at " << HexString(address);
     return NULL;
   }
@@ -104,7 +121,8 @@ const CodeModule* BasicCodeModules::GetMainModule() const {
 const CodeModule* BasicCodeModules::GetModuleAtSequence(
     unsigned int sequence) const {
   linked_ptr<const CodeModule> module;
-  if (!map_->RetrieveRangeAtIndex(sequence, &module, NULL, NULL)) {
+  if (!map_.RetrieveRangeAtIndex(sequence, &module, NULL /* base */,
+                                 NULL /* delta */, NULL /* size */)) {
     BPLOG(ERROR) << "RetrieveRangeAtIndex failed for sequence " << sequence;
     return NULL;
   }
@@ -123,6 +141,15 @@ const CodeModule* BasicCodeModules::GetModuleAtIndex(
 
 const CodeModules* BasicCodeModules::Copy() const {
   return new BasicCodeModules(this);
+}
+
+vector<linked_ptr<const CodeModule> >
+BasicCodeModules::GetShrunkRangeModules() const {
+  return shrunk_range_modules_;
+}
+
+bool BasicCodeModules::IsModuleShrinkEnabled() const {
+  return map_.IsShrinkDownEnabled();
 }
 
 }  // namespace google_breakpad

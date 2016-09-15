@@ -1,10 +1,6 @@
 #ifndef LIBDISASM_H
 #define LIBDISASM_H
 
-#ifdef WIN32
-#include <windows.h>
-#endif
-
 #include <stdint.h>
 
 /* 'NEW" types

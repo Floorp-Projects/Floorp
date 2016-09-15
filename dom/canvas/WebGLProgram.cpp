@@ -175,6 +175,10 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
         GLenum elemType = 0; // `type`
         gl->fGetActiveAttrib(prog->mGLName, i, mappedName.Length()+1, &lengthWithoutNull,
                              &elemCount, &elemType, mappedName.BeginWriting());
+        GLenum error = gl->fGetError();
+        if (error != LOCAL_GL_NO_ERROR) {
+            gfxCriticalNote << "Failed to do glGetActiveAttrib: " << error;
+        }
 
         mappedName.SetLength(lengthWithoutNull);
 
