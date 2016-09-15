@@ -8,6 +8,7 @@
 #include "nsIVariant.h"
 #include "nsIInputStream.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/Directory.h"
 #include "mozilla/dom/HTMLFormElement.h"
 
 #include "MultipartBlobImpl.h"
