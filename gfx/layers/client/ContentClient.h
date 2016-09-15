@@ -126,7 +126,7 @@ class ContentClientBasic final : public ContentClient
                                , protected RotatedContentBuffer
 {
 public:
-  ContentClientBasic(gfx::BackendType aBackend);
+  explicit ContentClientBasic(gfx::BackendType aBackend);
 
   typedef RotatedContentBuffer::PaintState PaintState;
   typedef RotatedContentBuffer::ContentType ContentType;
