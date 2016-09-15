@@ -5,7 +5,7 @@
 
 #include "nsISupports.idl"
 
-interface nsISupportsArray;
+interface nsIArray;
 interface nsIDOMNode;
 
 [scriptable, uuid(fdf23301-4a94-11d3-9ce4-9960496c41bc)]
@@ -76,6 +76,6 @@ interface nsIEditorMailSupport : nsISupports
   /**
    * Get a list of IMG and OBJECT tags in the current document.
    */
-  nsISupportsArray getEmbeddedObjects();
+  nsIArray getEmbeddedObjects();
 };
 
