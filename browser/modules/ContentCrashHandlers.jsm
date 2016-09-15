@@ -376,9 +376,9 @@ this.UnsubmittedCrashHandler = {
    * bar to prompt the user to submit them.
    *
    * @returns Promise
-   *          Resolves after it tries to append a notification on
-   *          the most recent browser window. If a notification
-   *          cannot be shown, will resolve anyways.
+   *          Resolves with the <xul:notification> after it tries to
+   *          show a notification on the most recent browser window.
+   *          If a notification cannot be shown, will resolve with null.
    */
   checkForUnsubmittedCrashReports: Task.async(function*() {
     let dateLimit = new Date();
@@ -389,16 +389,17 @@ this.UnsubmittedCrashHandler = {
       reportIDs = yield CrashSubmit.pendingIDsAsync(dateLimit);
     } catch (e) {
       Cu.reportError(e);
-      return;
+      return null;
     }
 
     if (reportIDs.length) {
       if (CrashNotificationBar.autoSubmit) {
         CrashNotificationBar.submitReports(reportIDs);
       } else {
-        this.showPendingSubmissionsNotification(reportIDs);
+        return this.showPendingSubmissionsNotification(reportIDs);
       }
     }
+    return null;
   }),
 
   /**
@@ -407,11 +408,12 @@ this.UnsubmittedCrashHandler = {
    *
    * @param reportIDs (Array<string>)
    *        The Array of report IDs to offer the user to send.
+   * @returns The <xul:notification> if one is shown. null otherwise.
    */
   showPendingSubmissionsNotification(reportIDs) {
     let count = reportIDs.length;
     if (!count) {
-      return;
+      return null;
     }
 
     let messageTemplate =
@@ -419,7 +421,7 @@ this.UnsubmittedCrashHandler = {
 
     let message = PluralForm.get(count, messageTemplate).replace("#1", count);
 
-    CrashNotificationBar.show({
+    return CrashNotificationBar.show({
       notificationID: "pending-crash-reports",
       message,
       reportIDs,
@@ -450,6 +452,7 @@ this.CrashNotificationBar = {
    *
    *        reportIDs (Array<string>)
    *          The array of report IDs to offer to the user.
+   * @returns The <xul:notification> if one is shown. null otherwise.
    */
   show({ notificationID, message, reportIDs }) {
     let chromeWin = RecentWindow.getMostRecentBrowserWindow();
@@ -457,13 +460,13 @@ this.CrashNotificationBar = {
       // Can't show a notification in this case. We'll hopefully
       // get another opportunity to have the user submit their
       // crash reports later.
-      return;
+      return null;
     }
 
     let nb =  chromeWin.document.getElementById("global-notificationbox");
     let notification = nb.getNotificationWithValue(notificationID);
     if (notification) {
-      return;
+      return null;
     }
 
     let buttons = [{
@@ -499,10 +502,10 @@ this.CrashNotificationBar = {
       }
     };
 
-    nb.appendNotification(message, notificationID,
-                          "chrome://browser/skin/tab-crashed.svg",
-                          nb.PRIORITY_INFO_HIGH, buttons,
-                          eventCallback);
+    return nb.appendNotification(message, notificationID,
+                                 "chrome://browser/skin/tab-crashed.svg",
+                                 nb.PRIORITY_INFO_HIGH, buttons,
+                                 eventCallback);
   },
 
   get autoSubmit() {

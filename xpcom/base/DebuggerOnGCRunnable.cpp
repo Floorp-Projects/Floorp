@@ -7,7 +7,7 @@
 #include "mozilla/DebuggerOnGCRunnable.h"
 
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/CycleCollectedJSRuntime.h"
+#include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/Move.h"
 #include "js/Debug.h"
 

@@ -278,15 +278,36 @@ pub unsafe extern fn mp4parse_get_track_count(parser: *const mp4parse_parser, co
     MP4PARSE_OK
 }
 
-fn media_time_to_ms(time: MediaScaledTime, scale: MediaTimeScale) -> u64 {
-    assert!(scale.0 != 0);
-    time.0 * 1000000 / scale.0
+/// Calculate numerator * scale / denominator, if possible.
+///
+/// Applying the associativity of integer arithmetic, we divide first
+/// and add the remainder after multiplying each term separately
+/// to preserve precision while leaving more headroom. That is,
+/// (n * s) / d is split into floor(n / d) * s + (n % d) * s / d.
+///
+/// Return None on overflow or if the denominator is zero.
+fn rational_scale(numerator: u64, denominator: u64, scale: u64) -> Option<u64> {
+    if denominator == 0 {
+        return None;
+    }
+    let integer = numerator / denominator;
+    let remainder = numerator % denominator;
+    match integer.checked_mul(scale) {
+        Some(integer) => remainder.checked_mul(scale)
+            .and_then(|remainder| (remainder/denominator).checked_add(integer)),
+        None => None,
+    }
 }
 
-fn track_time_to_ms(time: TrackScaledTime, scale: TrackTimeScale) -> u64 {
+fn media_time_to_us(time: MediaScaledTime, scale: MediaTimeScale) -> Option<u64> {
+    let microseconds_per_second = 1000000;
+    rational_scale(time.0, scale.0, microseconds_per_second)
+}
+
+fn track_time_to_us(time: TrackScaledTime, scale: TrackTimeScale) -> Option<u64> {
     assert!(time.1 == scale.1);
-    assert!(scale.0 != 0);
-    time.0 * 1000000 / scale.0
+    let microseconds_per_second = 1000000;
+    rational_scale(time.0, scale.0, microseconds_per_second)
 }
 
 /// Fill the supplied `mp4parse_track_info` with metadata for `track`.
@@ -333,13 +354,24 @@ pub unsafe extern fn mp4parse_get_track_info(parser: *mut mp4parse_parser, track
             Some(track_duration)) = (track.timescale,
                                      context.timescale,
                                      track.duration) {
-        info.media_time = track.media_time.map_or(0, |media_time| {
-            track_time_to_ms(media_time, track_timescale) as i64
-        }) - track.empty_duration.map_or(0, |empty_duration| {
-            media_time_to_ms(empty_duration, context_timescale) as i64
-        });
+        let media_time =
+            match track.media_time.map_or(Some(0), |media_time| {
+                    track_time_to_us(media_time, track_timescale) }) {
+                Some(time) => time as i64,
+                None => return MP4PARSE_ERROR_INVALID,
+            };
+        let empty_duration =
+            match track.empty_duration.map_or(Some(0), |empty_duration| {
+                    media_time_to_us(empty_duration, context_timescale) }) {
+                Some(time) => time as i64,
+                None => return MP4PARSE_ERROR_INVALID,
+            };
+        info.media_time = media_time - empty_duration;
 
-        info.duration = track_time_to_ms(track_duration, track_timescale);
+        match track_time_to_us(track_duration, track_timescale) {
+            Some(duration) => info.duration = duration,
+            None => return MP4PARSE_ERROR_INVALID,
+        }
     } else {
         return MP4PARSE_ERROR_INVALID
     }
@@ -746,4 +778,30 @@ fn arg_validation_with_data() {
 
         mp4parse_free(parser);
     }
+}
+
+#[test]
+fn rational_scale_overflow() {
+    assert_eq!(rational_scale(17, 3, 1000), Some(5666));
+    let large = 0x4000_0000_0000_0000;
+    assert_eq!(rational_scale(large, 2, 2), Some(large));
+    assert_eq!(rational_scale(large, 4, 4), Some(large));
+    assert_eq!(rational_scale(large, 2, 8), None);
+    assert_eq!(rational_scale(large, 8, 4), Some(large/2));
+    assert_eq!(rational_scale(large + 1, 4, 4), Some(large+1));
+    assert_eq!(rational_scale(large, 40, 1000), None);
+}
+
+#[test]
+fn media_time_overflow() {
+  let scale = MediaTimeScale(90000);
+  let duration = MediaScaledTime(9007199254710000);
+  assert_eq!(media_time_to_us(duration, scale), Some(100079991719000000));
+}
+
+#[test]
+fn track_time_overflow() {
+  let scale = TrackTimeScale(44100, 0);
+  let duration = TrackScaledTime(4413527634807900, 0);
+  assert_eq!(track_time_to_us(duration, scale), Some(100079991719000000));
 }

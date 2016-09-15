@@ -122,7 +122,7 @@ public class GeckoApplication extends Application
             GeckoThread.onPause();
             mPausedGecko = true;
 
-            final BrowserDB db = GeckoProfile.get(this).getDB();
+            final BrowserDB db = BrowserDB.from(this);
             ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
                 public void run() {
@@ -168,24 +168,6 @@ public class GeckoApplication extends Application
         NotificationHelper.getInstance(context).init();
 
         MulticastDNSManager.getInstance(context).init();
-
-        // Make sure that all browser-ish applications default to the real LocalBrowserDB.
-        // GeckoView consumers use their own Application class, so this doesn't affect them.
-        //
-        // We need to do this before any access to the profile; it controls
-        // which database class is used.
-        //
-        // As such, this needs to occur before the GeckoView in GeckoApp is inflated -- i.e., in the
-        // GeckoApp constructor or earlier -- because GeckoView implicitly accesses the profile. This is earlier!
-        GeckoProfile.setBrowserDBFactory(new BrowserDB.Factory() {
-            @Override
-            public BrowserDB get(String profileName, File profileDir) {
-                // Note that we don't use the profile directory -- we
-                // send operations to the ContentProvider, which does
-                // its own thing.
-                return new LocalBrowserDB(profileName);
-            }
-        });
 
         GeckoService.register();
 

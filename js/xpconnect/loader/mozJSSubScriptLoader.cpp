@@ -776,7 +776,7 @@ NotifyPrecompilationCompleteRunnable::Run(void)
     AutoSendObserverNotification notifier(mPrecompiler);
 
     if (mToken) {
-        JSContext* cx = XPCJSRuntime::Get()->Context();
+        JSContext* cx = XPCJSContext::Get()->Context();
         NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
         JS::CancelOffThreadScript(cx, mToken);
     }

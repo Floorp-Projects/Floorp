@@ -21,7 +21,7 @@
 #include "nsCOMPtr.h"
 #include "nsQueryObject.h"
 #include "pratom.h"
-#include "mozilla/CycleCollectedJSRuntime.h"
+#include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/Logging.h"
 #include "nsIObserverService.h"
 #include "mozilla/HangMonitor.h"
@@ -1260,7 +1260,7 @@ nsThread::PopEventQueue(nsIEventTarget* aInnermostTarget)
 }
 
 void
-nsThread::SetScriptObserver(mozilla::CycleCollectedJSRuntime* aScriptObserver)
+nsThread::SetScriptObserver(mozilla::CycleCollectedJSContext* aScriptObserver)
 {
   if (!aScriptObserver) {
     mScriptObserver = nullptr;

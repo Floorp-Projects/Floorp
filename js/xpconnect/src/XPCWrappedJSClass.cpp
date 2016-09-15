@@ -82,22 +82,22 @@ bool xpc_IsReportableErrorCode(nsresult code)
     }
 }
 
-// A little stack-based RAII class to help management of the XPCJSRuntime
+// A little stack-based RAII class to help management of the XPCJSContext
 // PendingResult.
 class MOZ_STACK_CLASS AutoSavePendingResult {
 public:
-    explicit AutoSavePendingResult(XPCJSRuntime* xpcrt) :
-        mXPCRuntime(xpcrt)
+    explicit AutoSavePendingResult(XPCJSContext* xpccx) :
+        mXPCContext(xpccx)
     {
         // Save any existing pending result and reset to NS_OK for this invocation.
-        mSavedResult = xpcrt->GetPendingResult();
-        xpcrt->SetPendingResult(NS_OK);
+        mSavedResult = xpccx->GetPendingResult();
+        xpccx->SetPendingResult(NS_OK);
     }
     ~AutoSavePendingResult() {
-        mXPCRuntime->SetPendingResult(mSavedResult);
+        mXPCContext->SetPendingResult(mSavedResult);
     }
 private:
-    XPCJSRuntime* mXPCRuntime;
+    XPCJSContext* mXPCContext;
     nsresult mSavedResult;
 };
 
@@ -105,8 +105,8 @@ private:
 already_AddRefed<nsXPCWrappedJSClass>
 nsXPCWrappedJSClass::GetNewOrUsed(JSContext* cx, REFNSIID aIID, bool allowNonScriptable)
 {
-    XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
-    IID2WrappedJSClassMap* map = rt->GetWrappedJSClassMap();
+    XPCJSContext* xpccx = nsXPConnect::GetContextInstance();
+    IID2WrappedJSClassMap* map = xpccx->GetWrappedJSClassMap();
     RefPtr<nsXPCWrappedJSClass> clasp = map->Find(aIID);
 
     if (!clasp) {
@@ -129,13 +129,13 @@ nsXPCWrappedJSClass::GetNewOrUsed(JSContext* cx, REFNSIID aIID, bool allowNonScr
 
 nsXPCWrappedJSClass::nsXPCWrappedJSClass(JSContext* cx, REFNSIID aIID,
                                          nsIInterfaceInfo* aInfo)
-    : mRuntime(nsXPConnect::GetRuntimeInstance()),
+    : mContext(nsXPConnect::GetContextInstance()),
       mInfo(aInfo),
       mName(nullptr),
       mIID(aIID),
       mDescriptors(nullptr)
 {
-    mRuntime->GetWrappedJSClassMap()->Add(this);
+    mContext->GetWrappedJSClassMap()->Add(this);
 
     uint16_t methodCount;
     if (NS_SUCCEEDED(mInfo->GetMethodCount(&methodCount))) {
@@ -168,8 +168,8 @@ nsXPCWrappedJSClass::~nsXPCWrappedJSClass()
 {
     if (mDescriptors && mDescriptors != &zero_methods_descriptor)
         delete [] mDescriptors;
-    if (mRuntime)
-        mRuntime->GetWrappedJSClassMap()->Remove(this);
+    if (mContext)
+        mContext->GetWrappedJSClassMap()->Remove(this);
 
     if (mName)
         free(mName);
@@ -209,7 +209,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
         return nullptr;
 
     // check upfront for the existence of the function property
-    HandleId funid = mRuntime->GetStringID(XPCJSRuntime::IDX_QUERY_INTERFACE);
+    HandleId funid = mContext->GetStringID(XPCJSContext::IDX_QUERY_INTERFACE);
     if (!JS_GetPropertyById(cx, jsobj, funid, &fun) || fun.isPrimitive())
         return nullptr;
 
@@ -778,11 +778,11 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
     nsCOMPtr<nsIException> xpc_exception = aSyntheticException;
     /* this one would be set by our error reporter */
 
-    XPCJSRuntime* xpcrt = XPCJSRuntime::Get();
+    XPCJSContext* xpccx = XPCJSContext::Get();
 
     // Get this right away in case we do something below to cause JS code
     // to run.
-    nsresult pending_result = xpcrt->GetPendingResult();
+    nsresult pending_result = xpccx->GetPendingResult();
 
     RootedValue js_exception(cx);
     bool is_js_exception = JS_GetPendingException(cx, &js_exception);
@@ -796,7 +796,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
 
         /* cleanup and set failed even if we can't build an exception */
         if (!xpc_exception) {
-            xpcrt->SetPendingException(nullptr); // XXX necessary?
+            xpccx->SetPendingException(nullptr); // XXX necessary?
         }
     }
 
@@ -915,7 +915,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
             // Whether or not it passes the 'reportable' test, it might
             // still be an error and we have to do the right thing here...
             if (NS_FAILED(e_result)) {
-                xpcrt->SetPendingException(xpc_exception);
+                xpccx->SetPendingException(xpc_exception);
                 return e_result;
             }
         }
@@ -985,8 +985,8 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
     AutoValueVector args(cx);
     AutoScriptEvaluate scriptEval(cx);
 
-    XPCJSRuntime* xpcrt = XPCJSRuntime::Get();
-    AutoSavePendingResult apr(xpcrt);
+    XPCJSContext* xpccx = XPCJSContext::Get();
+    AutoSavePendingResult apr(xpccx);
 
     // XXX ASSUMES that retval is last arg. The xpidl compiler ensures this.
     uint8_t paramCount = info->num_args;
@@ -996,7 +996,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
     if (!scriptEval.StartEvaluating(obj))
         goto pre_call_clean_up;
 
-    xpcrt->SetPendingException(nullptr);
+    xpccx->SetPendingException(nullptr);
 
     // We use js_Invoke so that the gcthings we use as args will be rooted by
     // the engine as we do conversions and prepare to do the function call.
@@ -1042,7 +1042,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
                         nsIXPCFunctionThisTranslator* translator;
 
                         IID2ThisTranslatorMap* map =
-                            mRuntime->GetThisTranslatorMap();
+                            mContext->GetThisTranslatorMap();
 
                         translator = map->Find(mIID);
 
@@ -1173,7 +1173,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
 
             if (param.IsIn()) {
                 if (!JS_SetPropertyById(cx, out_obj,
-                                        mRuntime->GetStringID(XPCJSRuntime::IDX_VALUE),
+                                        mContext->GetStringID(XPCJSContext::IDX_VALUE),
                                         val)) {
                     goto pre_call_clean_up;
                 }
@@ -1235,7 +1235,7 @@ pre_call_clean_up:
         return CheckForException(ccx, aes, name, GetInterfaceName(),
                                  syntheticException);
 
-    XPCJSRuntime::Get()->SetPendingException(nullptr); // XXX necessary?
+    XPCJSContext::Get()->SetPendingException(nullptr); // XXX necessary?
 
     // convert out args and result
     // NOTE: this is the total number of native params, not just the args
@@ -1273,7 +1273,7 @@ pre_call_clean_up:
         else {
             RootedObject obj(cx, &argv[i].toObject());
             if (!JS_GetPropertyById(cx, obj,
-                                    mRuntime->GetStringID(XPCJSRuntime::IDX_VALUE),
+                                    mContext->GetStringID(XPCJSContext::IDX_VALUE),
                                     &val))
                 break;
         }
@@ -1320,7 +1320,7 @@ pre_call_clean_up:
             else {
                 RootedObject obj(cx, &argv[i].toObject());
                 if (!JS_GetPropertyById(cx, obj,
-                                        mRuntime->GetStringID(XPCJSRuntime::IDX_VALUE),
+                                        mContext->GetStringID(XPCJSContext::IDX_VALUE),
                                         &val))
                     break;
             }
@@ -1373,7 +1373,7 @@ pre_call_clean_up:
         CleanupOutparams(cx, methodIndex, info, nativeParams, /* inOutOnly = */ false, i);
     } else {
         // set to whatever the JS code might have set as the result
-        retval = xpcrt->GetPendingResult();
+        retval = xpccx->GetPendingResult();
     }
 
     return retval;
@@ -1436,7 +1436,7 @@ nsXPCWrappedJSClass::DebugDump(int16_t depth)
             XPC_LOG_ALWAYS(("ConstantCount = %d", i));
             XPC_LOG_OUTDENT();
         }
-        XPC_LOG_ALWAYS(("mRuntime @ %x", mRuntime));
+        XPC_LOG_ALWAYS(("mContext @ %x", mContext));
         XPC_LOG_ALWAYS(("mDescriptors @ %x count = %d", mDescriptors, methodCount));
         if (depth && mDescriptors && methodCount) {
             depth--;

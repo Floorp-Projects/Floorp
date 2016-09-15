@@ -606,7 +606,7 @@ nsAuthURLParser::ParseServerInfo(const char *serverinfo, int32_t serverinfoLen,
 
                 nsresult err;
                 *port = buf.ToInteger(&err);
-                if (NS_FAILED(err) || *port < 0)
+                if (NS_FAILED(err) || *port < 0 || *port > std::numeric_limits<uint16_t>::max())
                     return NS_ERROR_MALFORMED_URI;
             }
         }

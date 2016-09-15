@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.util.Log;
 
 import org.mozilla.gecko.GeckoApp;
+import org.mozilla.gecko.GeckoAppShell;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -51,7 +52,7 @@ public class SessionInformation {
      * wallStartTime is returned.
      */
     public static SessionInformation fromSharedPrefs(SharedPreferences prefs) {
-        boolean wasOOM = prefs.getBoolean(GeckoApp.PREFS_OOM_EXCEPTION, false);
+        boolean wasOOM = prefs.getBoolean(GeckoAppShell.PREFS_OOM_EXCEPTION, false);
         boolean wasStopped = prefs.getBoolean(GeckoApp.PREFS_WAS_STOPPED, true);
         long wallStartTime = prefs.getLong(PREFS_SESSION_START, 0L);
         long realStartTime = 0L;

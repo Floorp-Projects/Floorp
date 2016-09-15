@@ -12,12 +12,13 @@
 #include "mozilla/ChaosMode.h"
 #include "mozilla/IOInterposer.h"
 #include "mozilla/Likely.h"
+#include "mozilla/MemoryChecking.h"
 #include "mozilla/Poison.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/MemoryChecking.h"
 
 #include "nsAppRunner.h"
 #include "mozilla/AppData.h"
@@ -376,6 +377,25 @@ strimatch(const char* lowerstr, const char* mixedstr)
   if (*mixedstr) return false; // lowerstr is shorter
 
   return true;
+}
+
+static bool gIsExpectedExit = false;
+
+void MozExpectedExit() {
+  gIsExpectedExit = true;
+}
+
+/**
+ * Runs atexit() to catch unexpected exit from 3rd party libraries like the
+ * Intel graphics driver calling exit in an error condition. When they
+ * call exit() to report an error we won't shutdown correctly and wont catch
+ * the issue with our crash reporter.
+ */
+static void UnexpectedExit() {
+  if (!gIsExpectedExit) {
+    gIsExpectedExit = true; // Don't risk re-entrency issues when crashing.
+    MOZ_CRASH("Exit called by third party code.");
+  }
 }
 
 /**
@@ -3017,6 +3037,11 @@ XREMain::XRE_mainInit(bool* aExitFlag)
   if (!aExitFlag)
     return 1;
   *aExitFlag = false;
+
+  atexit(UnexpectedExit);
+  auto expectedShutdown = mozilla::MakeScopeExit([&] {
+    MozExpectedExit();
+  });
 
   StartupTimeline::Record(StartupTimeline::MAIN);
 

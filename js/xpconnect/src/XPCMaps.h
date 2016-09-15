@@ -83,7 +83,7 @@ public:
             r.front().value()->DebugDump(depth);
     }
 
-    void UpdateWeakPointersAfterGC(XPCJSRuntime* runtime);
+    void UpdateWeakPointersAfterGC(XPCJSContext* context);
 
     void ShutdownMarker();
 
@@ -314,7 +314,7 @@ public:
 
     // ClassInfo2NativeSetMap holds pointers to *some* XPCNativeSets.
     // So we don't want to count those XPCNativeSets, because they are better
-    // counted elsewhere (i.e. in XPCJSRuntime::mNativeSetMap, which holds
+    // counted elsewhere (i.e. in XPCJSContext::mNativeSetMap, which holds
     // pointers to *all* XPCNativeSets).  Hence the "Shallow".
     size_t ShallowSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 

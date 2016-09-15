@@ -300,7 +300,7 @@ XPCWrappedNative::GetNewOrUsed(xpcObjectHelper& helper,
 
     nsresult rv;
 
-    MOZ_ASSERT(!Scope->GetRuntime()->GCIsRunning(),
+    MOZ_ASSERT(!Scope->GetContext()->GCIsRunning(),
                "XPCWrappedNative::GetNewOrUsed called during GC");
 
     nsISupports* identity = helper.GetCanonical();
@@ -608,8 +608,8 @@ XPCWrappedNative::Destroy()
     }
 
     if (mIdentity) {
-        XPCJSRuntime* rt = GetRuntime();
-        if (rt && rt->GetDoingFinalization()) {
+        XPCJSContext* cx = GetContext();
+        if (cx && cx->GetDoingFinalization()) {
             DeferredFinalize(mIdentity.forget().take());
         } else {
             mIdentity = nullptr;
@@ -634,7 +634,7 @@ XPCWrappedNative::SetProto(XPCWrappedNativeProto* p)
     MOZ_ASSERT(HasProto());
 
     // Write barrier for incremental GC.
-    JSContext* cx = GetRuntime()->Context();
+    JSContext* cx = GetContext()->Context();
     GetProto()->WriteBarrierPre(cx);
 
     mMaybeProto = p;
@@ -903,7 +903,7 @@ XPCWrappedNative::FlatJSObjectFinalized()
 
         // We also need to release any native pointers held...
         RefPtr<nsISupports> native = to->TakeNative();
-        if (native && GetRuntime()) {
+        if (native && GetContext()) {
             DeferredFinalize(native.forget().take());
         }
 
@@ -1321,7 +1321,7 @@ public:
         , mMethodInfo(nullptr)
         , mCallee(ccx.GetTearOff()->GetNative())
         , mVTableIndex(ccx.GetMethodIndex())
-        , mIdxValueId(ccx.GetRuntime()->GetStringID(XPCJSRuntime::IDX_VALUE))
+        , mIdxValueId(ccx.GetContext()->GetStringID(XPCJSContext::IDX_VALUE))
         , mJSContextIndex(UINT8_MAX)
         , mOptArgcIndex(UINT8_MAX)
         , mArgv(ccx.GetArgv())
@@ -1356,7 +1356,7 @@ CallMethodHelper::Call()
 {
     mCallContext.SetRetVal(JS::UndefinedValue());
 
-    XPCJSRuntime::Get()->SetPendingException(nullptr);
+    XPCJSContext::Get()->SetPendingException(nullptr);
 
     if (mVTableIndex == 0) {
         return QueryInterfaceFastPath();
@@ -2010,11 +2010,11 @@ CallMethodHelper::CleanupParam(nsXPTCMiniVariant& param, nsXPTType& type)
             break;
         case nsXPTType::T_ASTRING:
         case nsXPTType::T_DOMSTRING:
-            nsXPConnect::GetRuntimeInstance()->mScratchStrings.Destroy((nsString*)param.val.p);
+            nsXPConnect::GetContextInstance()->mScratchStrings.Destroy((nsString*)param.val.p);
             break;
         case nsXPTType::T_UTF8STRING:
         case nsXPTType::T_CSTRING:
-            nsXPConnect::GetRuntimeInstance()->mScratchCStrings.Destroy((nsCString*)param.val.p);
+            nsXPConnect::GetContextInstance()->mScratchCStrings.Destroy((nsCString*)param.val.p);
             break;
         default:
             MOZ_ASSERT(!type.IsArithmetic(), "Cleanup requested on unexpected type.");
@@ -2040,9 +2040,9 @@ CallMethodHelper::AllocateStringClass(nsXPTCVariant* dp,
     // ASTRING and DOMSTRING are very similar, and both use nsString.
     // UTF8_STRING and CSTRING are also quite similar, and both use nsCString.
     if (type_tag == nsXPTType::T_ASTRING || type_tag == nsXPTType::T_DOMSTRING)
-        dp->val.p = nsXPConnect::GetRuntimeInstance()->mScratchStrings.Create();
+        dp->val.p = nsXPConnect::GetContextInstance()->mScratchStrings.Create();
     else
-        dp->val.p = nsXPConnect::GetRuntimeInstance()->mScratchCStrings.Create();
+        dp->val.p = nsXPConnect::GetContextInstance()->mScratchCStrings.Create();
 
     // Check for OOM, in either case.
     if (!dp->val.p) {
@@ -2317,7 +2317,7 @@ XPCJSObjectHolder::XPCJSObjectHolder(JSObject* obj)
     : mJSObj(obj)
 {
     MOZ_ASSERT(obj);
-    XPCJSRuntime::Get()->AddObjectHolderRoot(this);
+    XPCJSContext::Get()->AddObjectHolderRoot(this);
 }
 
 XPCJSObjectHolder::~XPCJSObjectHolder()

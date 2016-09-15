@@ -57,6 +57,38 @@ def docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc):
     })
 
 
+def docker_worker_support_vcs_checkout(config, job, taskdesc):
+    """Update a job/task with parameters to enable a VCS checkout.
+
+    The configuration is intended for tasks using "run-task" and its
+    VCS checkout behavior.
+    """
+    level = config.params['level']
+
+    taskdesc['worker'].setdefault('caches', []).extend([
+        {
+            'type': 'persistent',
+            'name': 'level-%s-hg-shared' % level,
+            'mount-point': '/home/worker/hg-shared',
+        }, {
+            'type': 'persistent',
+            'name': 'level-%s-checkouts' % level,
+            'mount-point': '/home/worker/checkouts',
+        }
+    ])
+
+    taskdesc['worker'].setdefault('env', {}).update({
+        'GECKO_BASE_REPOSITORY': config.params['base_repository'],
+        'GECKO_HEAD_REPOSITORY': config.params['head_repository'],
+        'GECKO_HEAD_REV': config.params['head_rev'],
+    })
+
+    # Give task access to hgfingerprint secret so it can pin the certificate
+    # for hg.mozilla.org.
+    taskdesc['scopes'].append('secrets:get:project/taskcluster/gecko/hgfingerprint')
+    taskdesc['worker']['taskcluster-proxy'] = True
+
+
 def docker_worker_setup_secrets(config, job, taskdesc):
     """Set up access to secrets via taskcluster-proxy.  The value of
     run['secrets'] should be a boolean or a list of secret names that

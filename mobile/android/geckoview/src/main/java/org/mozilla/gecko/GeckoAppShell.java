@@ -153,7 +153,7 @@ public class GeckoAppShell
                 if (exc instanceof OutOfMemoryError) {
                     SharedPreferences prefs = getSharedPreferences();
                     SharedPreferences.Editor editor = prefs.edit();
-                    editor.putBoolean(GeckoApp.PREFS_OOM_EXCEPTION, true);
+                    editor.putBoolean(PREFS_OOM_EXCEPTION, true);
 
                     // Synchronously write to disk so we know it's done before we
                     // shutdown
@@ -235,6 +235,9 @@ public class GeckoAppShell
     static public final int LINK_TYPE_2G = 5;
     static public final int LINK_TYPE_3G = 6;
     static public final int LINK_TYPE_4G = 7;
+
+    public static final String PREFS_OOM_EXCEPTION = "OOMException";
+    public static final String ACTION_ALERT_CALLBACK = "org.mozilla.gecko.ALERT_CALLBACK";
 
     /* The Android-side API: API methods that Android calls */
 
@@ -964,7 +967,7 @@ public class GeckoAppShell
             notifyAlertListener(alertName, "alertshow");
 
             // The intent to launch when the user clicks the expanded notification
-            final Intent notificationIntent = new Intent(GeckoApp.ACTION_ALERT_CALLBACK);
+            final Intent notificationIntent = new Intent(ACTION_ALERT_CALLBACK);
             notificationIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
                                             AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
             notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -999,7 +1002,7 @@ public class GeckoAppShell
     public static void handleNotification(String action, String alertName, String alertCookie) {
         final int notificationID = alertName.hashCode();
 
-        if (GeckoApp.ACTION_ALERT_CALLBACK.equals(action)) {
+        if (ACTION_ALERT_CALLBACK.equals(action)) {
             notifyAlertListener(alertName, "alertclickcallback");
 
             if (notificationClient.isOngoing(notificationID)) {
@@ -1750,7 +1753,6 @@ public class GeckoAppShell
         public void removeAppStateListener(AppStateListener listener);
         public View getCameraView();
         public void notifyWakeLockChanged(String topic, String state);
-        public FormAssistPopup getFormAssistPopup();
         public boolean areTabsShown();
         public AbsoluteLayout getPluginContainer();
         public void notifyCheckUpdateResult(String result);

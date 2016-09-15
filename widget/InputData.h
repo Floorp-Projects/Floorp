@@ -94,6 +94,7 @@ public:
   INPUTDATA_AS_CHILD_TYPE(TapGestureInput, TAPGESTURE_INPUT)
   INPUTDATA_AS_CHILD_TYPE(ScrollWheelInput, SCROLLWHEEL_INPUT)
 
+  virtual ~InputData();
   explicit InputData(InputType aInputType);
 
 protected:

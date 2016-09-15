@@ -92,6 +92,10 @@ case $cmd in
     # copy build and config directory.
     cp -pPR ${TOPSRCDIR}/build ${TOPSRCDIR}/config ${tgtpath}
 
+    # copy cargo config
+    ${MKDIR} -p ${tgtpath}/.cargo
+    cp -pPR ${TOPSRCDIR}/.cargo/config.in ${tgtpath}/.cargo
+
     # put in js itself
     cp -pPR ${TOPSRCDIR}/mfbt ${tgtpath}
     cp -p ${SRCDIR}/../moz.configure ${tgtpath}/js

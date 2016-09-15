@@ -684,14 +684,6 @@ class GeckoInputConnection
             Log.d(LOGTAG, "IME: CurrentInputMethod=" + mCurrentInputMethod);
         }
 
-        // If the user has changed IMEs, then notify input method observers.
-        if (!mCurrentInputMethod.equals(prevInputMethod) && GeckoAppShell.getGeckoInterface() != null) {
-            FormAssistPopup popup = GeckoAppShell.getGeckoInterface().getFormAssistPopup();
-            if (popup != null) {
-                popup.onInputMethodChanged(mCurrentInputMethod);
-            }
-        }
-
         if (mIMEState == IME_STATE_PLUGIN) {
             // Since we are using a temporary string as the editable, the selection is at 0
             outAttrs.initialSelStart = 0;

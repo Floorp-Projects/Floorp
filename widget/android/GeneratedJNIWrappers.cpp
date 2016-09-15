@@ -1224,12 +1224,12 @@ constexpr char Telemetry::StopUISession_t::signature[];
 const char ThumbnailHelper::name[] =
         "org/mozilla/gecko/ThumbnailHelper";
 
-constexpr char ThumbnailHelper::SendThumbnail_t::name[];
-constexpr char ThumbnailHelper::SendThumbnail_t::signature[];
+constexpr char ThumbnailHelper::NotifyThumbnail_t::name[];
+constexpr char ThumbnailHelper::NotifyThumbnail_t::signature[];
 
-auto ThumbnailHelper::SendThumbnail(mozilla::jni::ByteBuffer::Param a0, int32_t a1, bool a2, bool a3) -> void
+auto ThumbnailHelper::NotifyThumbnail(mozilla::jni::ByteBuffer::Param a0, mozilla::jni::Object::Param a1, bool a2, bool a3) -> void
 {
-    return mozilla::jni::Method<SendThumbnail_t>::Call(ThumbnailHelper::Context(), nullptr, a0, a1, a2, a3);
+    return mozilla::jni::Method<NotifyThumbnail_t>::Call(ThumbnailHelper::Context(), nullptr, a0, a1, a2, a3);
 }
 
 constexpr char ThumbnailHelper::RequestThumbnail_t::name[];

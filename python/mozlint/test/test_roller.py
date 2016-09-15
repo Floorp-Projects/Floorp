@@ -4,77 +4,67 @@
 
 import os
 import sys
-from unittest import TestCase
 
-from mozunit import main
+import pytest
 
-from mozlint import LintRoller, ResultContainer
+from mozlint import ResultContainer
 from mozlint.errors import LintersNotConfigured, LintException
 
 
 here = os.path.abspath(os.path.dirname(__file__))
 
 
-class TestLintRoller(TestCase):
+linters = ('string.lint', 'regex.lint', 'external.lint')
 
-    def __init__(self, *args, **kwargs):
-        TestCase.__init__(self, *args, **kwargs)
 
-        self.filedir = os.path.join(here, 'files')
-        self.files = [os.path.join(self.filedir, f) for f in os.listdir(self.filedir)]
-        self.lintdir = os.path.join(here, 'linters')
+def test_roll_no_linters_configured(lint, files):
+    with pytest.raises(LintersNotConfigured):
+        lint.roll(files)
 
-        names = ('string.lint', 'regex.lint', 'external.lint')
-        self.linters = [os.path.join(self.lintdir, n) for n in names]
 
-    def setUp(self):
-        TestCase.setUp(self)
-        self.lint = LintRoller(root=here)
+def test_roll_successful(lint, linters, files):
+    lint.read(linters)
 
-    def test_roll_no_linters_configured(self):
-        with self.assertRaises(LintersNotConfigured):
-            self.lint.roll(self.files)
+    result = lint.roll(files)
+    assert len(result) == 1
 
-    def test_roll_successful(self):
-        self.lint.read(self.linters)
+    path = result.keys()[0]
+    assert os.path.basename(path) == 'foobar.js'
 
-        result = self.lint.roll(self.files)
-        self.assertEqual(len(result), 1)
+    errors = result[path]
+    assert isinstance(errors, list)
+    assert len(errors) == 6
 
-        path = result.keys()[0]
-        self.assertEqual(os.path.basename(path), 'foobar.js')
+    container = errors[0]
+    assert isinstance(container, ResultContainer)
+    assert container.rule == 'no-foobar'
 
-        errors = result[path]
-        self.assertIsInstance(errors, list)
-        self.assertEqual(len(errors), 6)
 
-        container = errors[0]
-        self.assertIsInstance(container, ResultContainer)
-        self.assertEqual(container.rule, 'no-foobar')
+def test_roll_catch_exception(lint, lintdir, files):
+    lint.read(os.path.join(lintdir, 'raises.lint'))
 
-    def test_roll_catch_exception(self):
-        self.lint.read(os.path.join(self.lintdir, 'raises.lint'))
+    # suppress printed traceback from test output
+    old_stderr = sys.stderr
+    sys.stderr = open(os.devnull, 'w')
+    with pytest.raises(LintException):
+        lint.roll(files)
+    sys.stderr = old_stderr
 
-        # suppress printed traceback from test output
-        old_stderr = sys.stderr
-        sys.stderr = open(os.devnull, 'w')
-        with self.assertRaises(LintException):
-            self.lint.roll(self.files)
-        sys.stderr = old_stderr
 
-    def test_roll_with_excluded_path(self):
-        self.lint.lintargs.update({'exclude': ['**/foobar.js']})
+def test_roll_with_excluded_path(lint, linters, files):
+    lint.lintargs.update({'exclude': ['**/foobar.js']})
 
-        self.lint.read(self.linters)
-        result = self.lint.roll(self.files)
+    lint.read(linters)
+    result = lint.roll(files)
 
-        self.assertEqual(len(result), 0)
+    assert len(result) == 0
 
-    def test_roll_with_invalid_extension(self):
-        self.lint.read(os.path.join(self.lintdir, 'external.lint'))
-        result = self.lint.roll(os.path.join(self.filedir, 'foobar.py'))
-        self.assertEqual(len(result), 0)
+
+def test_roll_with_invalid_extension(lint, lintdir, filedir):
+    lint.read(os.path.join(lintdir, 'external.lint'))
+    result = lint.roll(os.path.join(filedir, 'foobar.py'))
+    assert len(result) == 0
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(pytest.main(['--verbose', __file__]))

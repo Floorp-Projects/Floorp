@@ -221,7 +221,7 @@ public class BookmarksPanel extends HomeFragment {
             super(context);
             mFolderInfo = folderInfo;
             mRefreshType = refreshType;
-            mDB = GeckoProfile.get(context).getDB();
+            mDB = BrowserDB.from(context);
         }
 
         @Override

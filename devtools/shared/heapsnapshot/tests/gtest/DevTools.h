@@ -15,7 +15,7 @@
 #include "gmock/gmock.h"
 #include "mozilla/devtools/HeapSnapshot.h"
 #include "mozilla/dom/ChromeUtils.h"
-#include "mozilla/CycleCollectedJSRuntime.h"
+#include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/Move.h"
 #include "js/Principals.h"
 #include "js/UbiNode.h"
@@ -60,7 +60,7 @@ struct DevTools : public ::testing::Test {
   }
 
   JSContext* getContext() {
-    return CycleCollectedJSRuntime::Get()->Context();
+    return CycleCollectedJSContext::Get()->Context();
   }
 
   static void reportError(JSContext* cx, const char* message, JSErrorReport* report) {

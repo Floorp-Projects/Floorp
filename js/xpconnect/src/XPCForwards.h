@@ -12,7 +12,7 @@
 // forward declarations of interally used classes...
 
 class nsXPConnect;
-class XPCJSRuntime;
+class XPCJSContext;
 class XPCContext;
 class XPCCallContext;
 

@@ -17,7 +17,7 @@
 #include "js/TracingAPI.h"
 #include "js/HeapAPI.h"
 
-#include "mozilla/CycleCollectedJSRuntime.h"
+#include "mozilla/CycleCollectedJSContext.h"
 
 using namespace JS;
 using namespace mozilla;
@@ -127,9 +127,9 @@ CreateGlobalAndRunTest(JSContext* cx)
 }
 
 TEST(GCPostBarriers, nsTArray) {
-  CycleCollectedJSRuntime* ccrt = CycleCollectedJSRuntime::Get();
-  ASSERT_TRUE(ccrt != nullptr);
-  JSContext* cx = ccrt->Context();
+  CycleCollectedJSContext* ccjscx = CycleCollectedJSContext::Get();
+  ASSERT_TRUE(ccjscx != nullptr);
+  JSContext* cx = ccjscx->Context();
   ASSERT_TRUE(cx != nullptr);
 
   JS_BeginRequest(cx);

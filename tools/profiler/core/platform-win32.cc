@@ -85,8 +85,8 @@ class SamplerThread : public Thread {
  public:
   SamplerThread(double interval, Sampler* sampler)
       : Thread("SamplerThread")
-      , interval_(interval)
       , sampler_(sampler)
+      , interval_(interval)
   {
     interval_ = floor(interval + 0.5);
     if (interval_ <= 0) {

@@ -210,6 +210,8 @@ class WasmTableObject : public NativeObject
     static bool get(JSContext* cx, unsigned argc, Value* vp);
     static bool setImpl(JSContext* cx, const CallArgs& args);
     static bool set(JSContext* cx, unsigned argc, Value* vp);
+    static bool growImpl(JSContext* cx, const CallArgs& args);
+    static bool grow(JSContext* cx, unsigned argc, Value* vp);
 
   public:
     static const unsigned RESERVED_SLOTS = 1;
@@ -221,7 +223,7 @@ class WasmTableObject : public NativeObject
     // Note that, after creation, a WasmTableObject's table() is not initialized
     // and must be initialized before use.
 
-    static WasmTableObject* create(JSContext* cx, uint32_t length);
+    static WasmTableObject* create(JSContext* cx, wasm::ResizableLimits limits);
     wasm::Table& table() const;
 };
 

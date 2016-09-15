@@ -119,6 +119,9 @@ test_description_schema = Schema({
         {'by-test-platform': {basestring: int}},
     ),
 
+    # Whether to perform a gecko checkout.
+    Required('checkout', default=False): bool,
+
     # What to run
     Required('mozharness'): Any({
         # the mozharness script used to run this task

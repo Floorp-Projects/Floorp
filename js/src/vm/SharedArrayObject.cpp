@@ -80,7 +80,6 @@ MarkValidRegion(void* addr, size_t len)
 static uint64_t
 SharedArrayMappedSize(uint32_t allocSize)
 {
-    MOZ_RELEASE_ASSERT(jit::JitOptions.wasmTestMode);
     MOZ_RELEASE_ASSERT(sizeof(SharedArrayRawBuffer) < gc::SystemPageSize());
 #ifdef WASM_HUGE_MEMORY
     return wasm::HugeMappedSize + gc::SystemPageSize();

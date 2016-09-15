@@ -20,6 +20,9 @@ for example - use `all_tests.py` instead.
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.transforms.job.common import (
+    docker_worker_support_vcs_checkout,
+)
 
 import logging
 
@@ -157,8 +160,6 @@ def docker_worker_setup(config, test, taskdesc):
     }]
 
     env = worker['env'] = {
-        'GECKO_HEAD_REPOSITORY': config.params['head_repository'],
-        'GECKO_HEAD_REV': config.params['head_rev'],
         'MOZHARNESS_CONFIG': ' '.join(mozharness['config']),
         'MOZHARNESS_SCRIPT': mozharness['script'],
         'MOZHARNESS_URL': {'task-reference': mozharness_url},
@@ -192,9 +193,16 @@ def docker_worker_setup(config, test, taskdesc):
         '/home/worker/bin/run-task',
         # The workspace cache/volume is default owned by root:root.
         '--chown', '/home/worker/workspace',
+    ]
+
+    if test['checkout']:
+        docker_worker_support_vcs_checkout(config, test, taskdesc)
+        command.extend(['--vcs-checkout', '/home/worker/checkouts/gecko'])
+
+    command.extend([
         '--',
         '/home/worker/bin/test-linux.sh',
-    ]
+    ])
 
     if mozharness.get('no-read-buildbot-config'):
         command.append("--no-read-buildbot-config")
