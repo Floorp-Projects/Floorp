@@ -157,26 +157,10 @@ class PushAPK(BaseScript, GooglePlayMixin, VirtualenvMixin):
 
                 versions.append(apk_response['versionCode'])
 
-                locales = self.translationMgmt.get_list_locales(package_code)
-                locales.append(u'en-US')
-                nb_locales = 0
-                for locale in locales:
-                    translation = self.translationMgmt.get_translation(package_code, locale)
-                    whatsnew = translation.get("whatsnew")
-                    if locale == "en-GB":
-                        self.log("Ignoring en-GB as locale")
-                        continue
-                    locale = self.translationMgmt.locale_mapping(locale)
-                    self.log('Locale "%s" what\'s new has been updated to "%s"'
-                             % (locale, whatsnew))
-
-                    listing_response = service.edits().apklistings().update(
-                        editId=edit_id, packageName=self.config['package_name'], language=locale,
-                        apkVersionCode=apk_response['versionCode'],
-                        body={'recentChanges': whatsnew}).execute()
-
-                    self.log('Listing for language %s was updated.'
-                           % listing_response['language'])
+                if 'aurora' in self.config['package_name']:
+                    self.warning('Aurora is not supported by store_l10n. Skipping what\'s new.')
+                else:
+                    self._push_whats_new(package_code, service, edit_id, apk_response)
 
             except client.AccessTokenRefreshError:
                 self.log('The credentials have been revoked or expired,'
@@ -195,6 +179,27 @@ class PushAPK(BaseScript, GooglePlayMixin, VirtualenvMixin):
         commit_request = service.edits().commit(
             editId=edit_id, packageName=self.config['package_name']).execute()
         self.log('Edit "%s" has been committed' % (commit_request['id']))
+
+    def _push_whats_new(self, package_code, service, edit_id, apk_response):
+        locales = self.translationMgmt.get_list_locales(package_code)
+        locales.append(u'en-US')
+
+        for locale in locales:
+            translation = self.translationMgmt.get_translation(package_code, locale)
+            whatsnew = translation.get("whatsnew")
+            if locale == "en-GB":
+                self.log("Ignoring en-GB as locale")
+                continue
+            locale = self.translationMgmt.locale_mapping(locale)
+            self.log('Locale "%s" what\'s new has been updated to "%s"'
+                     % (locale, whatsnew))
+
+            listing_response = service.edits().apklistings().update(
+                editId=edit_id, packageName=self.config['package_name'], language=locale,
+                apkVersionCode=apk_response['versionCode'],
+                body={'recentChanges': whatsnew}).execute()
+
+            self.log('Listing for language %s was updated.' % listing_response['language'])
 
     def push_apk(self):
         """ Upload the APK files """
