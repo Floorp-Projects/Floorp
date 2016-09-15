@@ -1115,8 +1115,7 @@ nsIFrame::GetWritingMode(nsIFrame* aSubFrame) const
 {
   WritingMode writingMode = GetWritingMode();
 
-  if (!writingMode.IsVertical() &&
-      (StyleTextReset()->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_PLAINTEXT)) {
+  if (StyleTextReset()->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_PLAINTEXT) {
     nsBidiLevel frameLevel = nsBidiPresUtils::GetFrameBaseLevel(aSubFrame);
     writingMode.SetDirectionFromBidiLevel(frameLevel);
   }
