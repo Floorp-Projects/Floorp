@@ -1414,7 +1414,7 @@ ScrollFrameHelper::ThumbMoved(nsScrollbarFrame* aScrollbar,
   nsPoint current = GetScrollPosition();
   nsPoint dest = current;
   if (isHorizontal) {
-    dest.x = IsLTR() ? aNewPos : aNewPos - GetScrollRange().width;
+    dest.x = IsPhysicalLTR() ? aNewPos : aNewPos - GetScrollRange().width;
   } else {
     dest.y = aNewPos;
   }
@@ -4216,10 +4216,11 @@ ScrollFrameHelper::ScrollToRestoredPosition()
     // and scroll many times.
     if (mRestorePos != mLastPos /* GetLogicalScrollPosition() */) {
       nsPoint scrollToPos = mRestorePos;
-      if (!IsLTR())
+      if (!IsPhysicalLTR()) {
         // convert from logical to physical scroll position
         scrollToPos.x = mScrollPort.x -
           (mScrollPort.XMost() - scrollToPos.x - mScrolledFrame->GetRect().width);
+      }
       nsWeakFrame weakFrame(mOuter);
       ScrollToWithOrigin(scrollToPos, nsIScrollableFrame::INSTANT,
                          nsGkAtoms::restore, nullptr);
@@ -4917,11 +4918,9 @@ void ScrollFrameHelper::PostOverflowEvent()
   rpc->AddWillPaintObserver(mAsyncScrollPortEvent.get());
 }
 
-bool
-ScrollFrameHelper::IsLTR() const
+nsIFrame*
+ScrollFrameHelper::GetFrameForDir() const
 {
-  //TODO make bidi code set these from preferences
-
   nsIFrame *frame = mOuter;
   // XXX This is a bit on the slow side.
   if (mIsRoot) {
@@ -4945,8 +4944,7 @@ ScrollFrameHelper::IsLTR() const
     }
   }
 
-  WritingMode wm = frame->GetWritingMode();
-  return wm.IsVertical() ? wm.IsVerticalLR() : wm.IsBidiLTR();
+  return frame;
 }
 
 bool
@@ -4957,15 +4955,16 @@ ScrollFrameHelper::IsScrollbarOnRight() const
   // The position of the scrollbar in top-level windows depends on the pref
   // layout.scrollbar.side. For non-top-level elements, it depends only on the
   // directionaliy of the element (equivalent to a value of "1" for the pref).
-  if (!mIsRoot)
-    return IsLTR();
+  if (!mIsRoot) {
+    return IsPhysicalLTR();
+  }
   switch (presContext->GetCachedIntPref(kPresContext_ScrollbarSide)) {
     default:
     case 0: // UI directionality
       return presContext->GetCachedIntPref(kPresContext_BidiDirection)
              == IBMBIDI_TEXTDIRECTION_LTR;
     case 1: // Document / content directionality
-      return IsLTR();
+      return IsPhysicalLTR();
     case 2: // Always right
       return true;
     case 3: // Always left
@@ -5820,7 +5819,7 @@ ScrollFrameHelper::GetScrolledFrameDir() const
     }
   }
 
-  return IsLTR() ? NS_STYLE_DIRECTION_LTR : NS_STYLE_DIRECTION_RTL;
+  return IsBidiLTR() ? NS_STYLE_DIRECTION_LTR : NS_STYLE_DIRECTION_RTL;
 }
 
 nsRect

@@ -2883,6 +2883,7 @@ nsCycleCollector::ForgetSkippable(bool aRemoveChildlessNodes,
 MOZ_NEVER_INLINE void
 nsCycleCollector::MarkRoots(SliceBudget& aBudget)
 {
+  JS::AutoAssertOnGC nogc;
   TimeLog timeLog;
   AutoRestore<bool> ar(mScanInProgress);
   MOZ_ASSERT(!mScanInProgress);
@@ -3203,6 +3204,7 @@ nsCycleCollector::ScanBlackNodes()
 void
 nsCycleCollector::ScanRoots(bool aFullySynchGraphBuild)
 {
+  JS::AutoAssertOnGC nogc;
   AutoRestore<bool> ar(mScanInProgress);
   MOZ_ASSERT(!mScanInProgress);
   mScanInProgress = true;
@@ -3290,30 +3292,33 @@ nsCycleCollector::CollectWhite()
   uint32_t numWhiteGCed = 0;
   uint32_t numWhiteJSZones = 0;
 
-  bool hasJSContext = !!mJSContext;
-  nsCycleCollectionParticipant* zoneParticipant =
-    hasJSContext ? mJSContext->ZoneParticipant() : nullptr;
+  {
+    JS::AutoAssertOnGC nogc;
+    bool hasJSContext = !!mJSContext;
+    nsCycleCollectionParticipant* zoneParticipant =
+      hasJSContext ? mJSContext->ZoneParticipant() : nullptr;
 
-  NodePool::Enumerator etor(mGraph.mNodes);
-  while (!etor.IsDone()) {
-    PtrInfo* pinfo = etor.GetNext();
-    if (pinfo->mColor == white && pinfo->mParticipant) {
-      if (pinfo->IsGrayJS()) {
-        MOZ_ASSERT(mJSContext);
-        ++numWhiteGCed;
-        JS::Zone* zone;
-        if (MOZ_UNLIKELY(pinfo->mParticipant == zoneParticipant)) {
-          ++numWhiteJSZones;
-          zone = static_cast<JS::Zone*>(pinfo->mPointer);
+    NodePool::Enumerator etor(mGraph.mNodes);
+    while (!etor.IsDone()) {
+      PtrInfo* pinfo = etor.GetNext();
+      if (pinfo->mColor == white && pinfo->mParticipant) {
+        if (pinfo->IsGrayJS()) {
+          MOZ_ASSERT(mJSContext);
+          ++numWhiteGCed;
+          JS::Zone* zone;
+          if (MOZ_UNLIKELY(pinfo->mParticipant == zoneParticipant)) {
+            ++numWhiteJSZones;
+            zone = static_cast<JS::Zone*>(pinfo->mPointer);
+          } else {
+            JS::GCCellPtr ptr(pinfo->mPointer, JS::GCThingTraceKind(pinfo->mPointer));
+            zone = JS::GetTenuredGCThingZone(ptr);
+          }
+          mJSContext->AddZoneWaitingForGC(zone);
         } else {
-          JS::GCCellPtr ptr(pinfo->mPointer, JS::GCThingTraceKind(pinfo->mPointer));
-          zone = JS::GetTenuredGCThingZone(ptr);
+          whiteNodes.InfallibleAppend(pinfo);
+          pinfo->mParticipant->Root(pinfo->mPointer);
+          ++numWhiteNodes;
         }
-        mJSContext->AddZoneWaitingForGC(zone);
-      } else {
-        whiteNodes.InfallibleAppend(pinfo);
-        pinfo->mParticipant->Root(pinfo->mPointer);
-        ++numWhiteNodes;
       }
     }
   }
@@ -3345,6 +3350,7 @@ nsCycleCollector::CollectWhite()
   }
   timeLog.Checkpoint("CollectWhite::Unlink");
 
+  JS::AutoAssertOnGC nogc;
   for (auto iter = whiteNodes.Iter(); !iter.Done(); iter.Next()) {
     PtrInfo* pinfo = iter.Get();
     MOZ_ASSERT(pinfo->mParticipant,
@@ -3848,6 +3854,7 @@ nsCycleCollector::BeginCollection(ccType aCCType,
   bool mergeZones = ShouldMergeZones(aCCType);
   mResults.mMergedZones = mergeZones;
 
+  JS::AutoAssertOnGC nogc;
   MOZ_ASSERT(!mBuilder, "Forgot to clear mBuilder");
   mBuilder = new CCGraphBuilder(mGraph, mResults, mJSContext, mLogger,
                                 mergeZones);

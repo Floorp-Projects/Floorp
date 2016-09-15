@@ -68,8 +68,8 @@ static void Start(Options *options) {
                                            encoding:NSUTF8StringEncoding];
 
   NSLog(@"Send: %@", error ? [error description] : @"No Error");
-  NSLog(@"Response: %d", [[ul response] statusCode]);
-  NSLog(@"Result: %d bytes\n%@", [data length], result);
+  NSLog(@"Response: %ld", (long)[[ul response] statusCode]);
+  NSLog(@"Result: %lu bytes\n%@", (unsigned long)[data length], result);
 
   [result release];
   [ul release];

@@ -86,7 +86,14 @@ class CodeModule {
   // ownership of.  The new CodeModule may be of a different concrete class
   // than the CodeModule being copied, but will behave identically to the
   // copied CodeModule as far as the CodeModule interface is concerned.
-  virtual const CodeModule* Copy() const = 0;
+  virtual CodeModule* Copy() const = 0;
+
+  // Getter and setter for shrink_down_delta.  This is used when the address
+  // range for a module is shrunk down due to address range conflicts with
+  // other modules.  The base_address and size fields are not updated and they
+  // should always reflect the original values (reported in the minidump).
+  virtual uint64_t shrink_down_delta() const = 0;
+  virtual void SetShrinkDownDelta(uint64_t shrink_down_delta) = 0;
 };
 
 }  // namespace google_breakpad

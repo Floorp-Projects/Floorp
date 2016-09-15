@@ -137,7 +137,7 @@ if use_arm_simd_gcc:
 if use_arm_neon_gcc:
     DEFINES['USE_ARM_NEON'] = True
     SOURCES += ['pixman-arm-neon.c']
-    SOURCES['pixman-arm-neon.c'].flags += ['-mfpu=neon']
+    SOURCES['pixman-arm-neon.c'].flags += CONFIG['NEON_FLAGS']
 
 # Suppress warnings in third-party code.
 if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:

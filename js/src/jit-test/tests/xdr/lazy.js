@@ -111,7 +111,7 @@ test = "function f() { }; f();"
      + "assertEq(isLazyFunction(f), false);"
      + "var expect = isRelazifiableFunction(f);";
 checkAfter = function (ctx) {
-  gc(ctx.global.f); // relazify f, if possible.
+  gc(ctx.global.f, "shrinking"); // relazify f, if possible.
   evaluate("assertEq(isLazyFunction(f), expect);", ctx);
 };
 evalWithCache(test, {
@@ -128,7 +128,7 @@ test = "function f() { return isRelazifiableFunction(f) }; var expect = f();"
      + "assertEq(isLazyFunction(f), false);"
      + "expect";
 checkAfter = function (ctx) {
-  gc(ctx.global.f); // relazify f, if possible.
+  gc(ctx.global.f, "shrinking"); // relazify f, if possible.
   evaluate("assertEq(isLazyFunction(f), expect);", ctx);
 };
 evalWithCache(test, {

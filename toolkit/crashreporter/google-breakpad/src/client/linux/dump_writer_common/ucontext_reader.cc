@@ -219,7 +219,13 @@ uintptr_t UContextReader::GetInstructionPointer(const struct ucontext* uc) {
 }
 
 void UContextReader::FillCPUContext(RawContextCPU *out, const ucontext *uc) {
+#if _MIPS_SIM == _ABI64
+  out->context_flags = MD_CONTEXT_MIPS64_FULL;
+#elif _MIPS_SIM == _ABIO32
   out->context_flags = MD_CONTEXT_MIPS_FULL;
+#else
+#error "This mips ABI is currently not supported (n32)"
+#endif
 
   for (int i = 0; i < MD_CONTEXT_MIPS_GPR_COUNT; ++i)
     out->iregs[i] = uc->uc_mcontext.gregs[i];

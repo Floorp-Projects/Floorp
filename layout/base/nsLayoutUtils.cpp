@@ -2120,14 +2120,23 @@ nsLayoutUtils::GetScrolledRect(nsIFrame* aScrolledFrame,
                                const nsSize& aScrollPortSize,
                                uint8_t aDirection)
 {
+  WritingMode wm = aScrolledFrame->GetWritingMode();
+  // Potentially override the frame's direction to use the direction found
+  // by ScrollFrameHelper::GetScrolledFrameDir()
+  wm.SetDirectionFromBidiLevel(aDirection == NS_STYLE_DIRECTION_RTL ? 1 : 0);
+
   nscoord x1 = aScrolledFrameOverflowArea.x,
           x2 = aScrolledFrameOverflowArea.XMost(),
           y1 = aScrolledFrameOverflowArea.y,
           y2 = aScrolledFrameOverflowArea.YMost();
-  if (y1 < 0) {
-    y1 = 0;
-  }
-  if (aDirection != NS_STYLE_DIRECTION_RTL) {
+
+  bool horizontal = !wm.IsVertical();
+
+  // Clamp the horizontal start-edge (x1 or x2, depending whether the logical
+  // axis that corresponds to horizontal progresses from L-R or R-L).
+  // In horizontal writing mode, we need to check IsInlineReversed() to see
+  // which side to clamp; in vertical mode, it depends on the block direction.
+  if ((horizontal && !wm.IsInlineReversed()) || wm.IsVerticalLR()) {
     if (x1 < 0) {
       x1 = 0;
     }
@@ -2135,15 +2144,34 @@ nsLayoutUtils::GetScrolledRect(nsIFrame* aScrolledFrame,
     if (x2 > aScrollPortSize.width) {
       x2 = aScrollPortSize.width;
     }
-    // When the scrolled frame chooses a size larger than its available width (because
-    // its padding alone is larger than the available width), we need to keep the
-    // start-edge of the scroll frame anchored to the start-edge of the scrollport.
+    // When the scrolled frame chooses a size larger than its available width
+    // (because its padding alone is larger than the available width), we need
+    // to keep the start-edge of the scroll frame anchored to the start-edge of
+    // the scrollport.
     // When the scrolled frame is RTL, this means moving it in our left-based
     // coordinate system, so we need to compensate for its extra width here by
     // effectively repositioning the frame.
-    nscoord extraWidth = std::max(0, aScrolledFrame->GetSize().width - aScrollPortSize.width);
+    nscoord extraWidth =
+      std::max(0, aScrolledFrame->GetSize().width - aScrollPortSize.width);
     x2 += extraWidth;
   }
+
+  // Similarly, clamp the vertical start-edge.
+  // In horizontal writing mode, the block direction is always top-to-bottom;
+  // in vertical writing mode, we need to check IsInlineReversed().
+  if (horizontal || !wm.IsInlineReversed()) {
+    if (y1 < 0) {
+      y1 = 0;
+    }
+  } else {
+    if (y2 > aScrollPortSize.height) {
+      y2 = aScrollPortSize.height;
+    }
+    nscoord extraHeight =
+      std::max(0, aScrolledFrame->GetSize().height - aScrollPortSize.height);
+    y2 += extraHeight;
+  }
+
   return nsRect(x1, y1, x2 - x1, y2 - y1);
 }
 
