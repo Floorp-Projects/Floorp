@@ -1504,7 +1504,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           this.mInput = aInput;
           this.selectedIndex = this._isFirstResultHeuristic ? 0 : -1;
           this.view = aInput.controller.QueryInterface(Components.interfaces.nsITreeView);
-          this.invalidate();
+          this._invalidate();
 
           var rect = window.document.documentElement.getBoundingClientRect();
           var width = rect.right - rect.left;
@@ -1774,15 +1774,16 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
             // Check if we should perform a delayed handleEnter.
             if (this.input.handleEnterInstance) {
-              try {
+              let instance = this.input.handleEnterInstance;
+              this.input.handleEnterInstance = null;
+              // Don't handle this immediately or we could cause a recursive
+              // loop where the controller sets popupOpen and re-enters here.
+              setTimeout(() => {
                 // Safety check: handle only if the search string didn't change.
-                let instance = this.input.handleEnterInstance;
                 if (this.input.mController.searchString == instance.searchString) {
                   this.input.mController.handleEnter(false, instance.event);
                 }
-              } finally {
-                this.input.handleEnterInstance = null;
-              }
+              }, 0);
             }
           ]]>
         </body>
