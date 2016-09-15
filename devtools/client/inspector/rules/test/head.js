@@ -814,3 +814,13 @@ function waitForStyleModification(inspector) {
     inspector.on("markupmutation", checkForStyleModification);
   });
 }
+
+/**
+ * Make sure window is properly focused before sending a key event.
+ * @param {Window} win
+ * @param {Event} key
+ */
+function focusAndSendKey(win, key) {
+  win.document.documentElement.focus();
+  EventUtils.sendKey(key, win);
+}
