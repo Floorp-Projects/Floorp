@@ -163,6 +163,7 @@
   background-size: 1px auto;
   background-repeat: no-repeat;
   background-position: right center;
+  color: GrayText;
 }
 
 .searchbar-engine-one-off-item:-moz-locale-dir(rtl) {
@@ -189,6 +190,7 @@
 .searchbar-engine-one-off-item[selected] {
   background-color: Highlight;
   background-image: none;
+  color: HighlightText;
 }
 
 .searchbar-engine-one-off-item > .button-box > .button-text {
@@ -286,10 +288,8 @@
   background-color: var(--arrowpanel-dimmed-further);
 }
 
-.search-setting-button-compact {
-  list-style-image: url("chrome://browser/skin/gear.svg#gear");
-}
-
-.search-setting-button-compact[selected] {
-  list-style-image: url("chrome://browser/skin/gear.svg#gear-inverted");
+.search-setting-button-compact > .button-box > .button-icon {
+  list-style-image: url("chrome://browser/skin/gear.svg");
+  filter: url(chrome://browser/skin/filters.svg#fill);
+  fill: currentColor;
 }
