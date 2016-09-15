@@ -25,10 +25,25 @@ D3D11ShareHandleImage::D3D11ShareHandleImage(const gfx::IntSize& aSize,
 }
 
 bool
-D3D11ShareHandleImage::AllocateTexture(D3D11RecycleAllocator* aAllocator)
+D3D11ShareHandleImage::AllocateTexture(D3D11RecycleAllocator* aAllocator, ID3D11Device* aDevice)
 {
-  mTextureClient = aAllocator->CreateOrRecycleClient(gfx::SurfaceFormat::B8G8R8A8, mSize);
-  return !!mTextureClient;
+  if (aAllocator) {
+    mTextureClient = aAllocator->CreateOrRecycleClient(gfx::SurfaceFormat::B8G8R8A8, mSize);
+    if (mTextureClient) {
+      mTexture = static_cast<D3D11TextureData*>(mTextureClient->GetInternalData())->GetD3D11Texture();
+      return true;
+    }
+    return false;
+  } else {
+    MOZ_ASSERT(aDevice);
+    CD3D11_TEXTURE2D_DESC newDesc(DXGI_FORMAT_B8G8R8A8_UNORM,
+                                  mSize.width, mSize.height, 1, 1,
+                                  D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
+    newDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
+
+    HRESULT hr = aDevice->CreateTexture2D(&newDesc, nullptr, getter_AddRefs(mTexture));
+    return SUCCEEDED(hr);
+  }
 }
 
 gfx::IntSize
@@ -115,7 +130,7 @@ D3D11ShareHandleImage::GetAsSourceSurface()
 
 ID3D11Texture2D*
 D3D11ShareHandleImage::GetTexture() const {
-  return static_cast<D3D11TextureData*>(mTextureClient->GetInternalData())->GetD3D11Texture();
+  return mTexture;
 }
 
 already_AddRefed<TextureClient>
