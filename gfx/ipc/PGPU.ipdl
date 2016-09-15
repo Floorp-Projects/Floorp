@@ -8,6 +8,7 @@ include protocol PCompositorBridge;
 include protocol PImageBridge;
 include protocol PVRManager;
 include protocol PVsyncBridge;
+include protocol PVideoDecoderManager;
 
 using base::ProcessId from "base/process.h";
 using mozilla::TimeDuration from "mozilla/TimeStamp.h";
@@ -56,6 +57,7 @@ parent:
   async NewContentCompositorBridge(Endpoint<PCompositorBridgeParent> endpoint);
   async NewContentImageBridge(Endpoint<PImageBridgeParent> endpoint);
   async NewContentVRManager(Endpoint<PVRManagerParent> endpoint);
+  async NewContentVideoDecoderManager(Endpoint<PVideoDecoderManagerParent> endpoint);
 
   async DeallocateLayerTreeId(uint64_t layersId);
 

@@ -17,6 +17,7 @@
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
+#include "mozilla/dom/VideoDecoderManagerParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "nsDebugImpl.h"
@@ -255,6 +256,12 @@ bool
 GPUParent::RecvNewContentVRManager(Endpoint<PVRManagerParent>&& aEndpoint)
 {
   return VRManagerParent::CreateForContent(Move(aEndpoint));
+}
+
+bool
+GPUParent::RecvNewContentVideoDecoderManager(Endpoint<PVideoDecoderManagerParent>&& aEndpoint)
+{
+  return dom::VideoDecoderManagerParent::CreateForContent(Move(aEndpoint));
 }
 
 bool

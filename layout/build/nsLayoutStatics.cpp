@@ -67,6 +67,7 @@
 #include "FrameLayerBuilder.h"
 #include "AnimationCommon.h"
 #include "LayerAnimationInfo.h"
+#include "mozilla/dom/VideoDecoderManagerChild.h"
 
 #include "AudioChannelService.h"
 #include "mozilla/dom/PromiseDebugging.h"
@@ -307,6 +308,8 @@ nsLayoutStatics::Initialize()
 
   MediaDecoder::InitStatics();
 
+  VideoDecoderManagerChild::Initialize();
+
   PromiseDebugging::Init();
 
   mozilla::dom::devicestorage::DeviceStorageStatics::Initialize();
@@ -389,6 +392,8 @@ nsLayoutStatics::Shutdown()
   nsXBLService::Shutdown();
   nsAutoCopyListener::Shutdown();
   FrameLayerBuilder::Shutdown();
+
+  VideoDecoderManagerChild::Shutdown();
 
 #ifdef MOZ_ANDROID_OMX
   AndroidMediaPluginHost::Shutdown();
