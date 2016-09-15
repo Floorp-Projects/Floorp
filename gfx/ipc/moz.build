@@ -46,7 +46,6 @@ UNIFIED_SOURCES += [
     'CompositorWidgetVsyncObserver.cpp',
     'D3DMessageUtils.cpp',
     'GPUChild.cpp',
-    'GPUParent.cpp',
     'GPUProcessHost.cpp',
     'GPUProcessImpl.cpp',
     'GPUProcessManager.cpp',
@@ -56,6 +55,10 @@ UNIFIED_SOURCES += [
     'VsyncBridgeChild.cpp',
     'VsyncBridgeParent.cpp',
     'VsyncIOThreadHolder.cpp',
+]
+
+SOURCES += [
+    'GPUParent.cpp',
 ]
 
 IPDL_SOURCES = [
