@@ -10,6 +10,9 @@
 // There are animations in the test page and since, by default, the <body> node
 // is selected, animations will be displayed in the timeline, so the timeline
 // play/resume button will be displayed
+
+requestLongerTimeout(2);
+
 add_task(function* () {
   requestLongerTimeout(2);
 
