@@ -43,3 +43,14 @@ jobs:
             files-changed:
                 - 'build/unix/build-gcc/**'
                 - 'taskcluster/scripts/misc/build-gcc-linux.sh'
+
+    linux64-binutils/opt:
+        treeherder:
+            symbol: Cc(binutils)
+        run:
+            using: toolchain-script
+            script: build-binutils-linux.sh
+        when:
+            files-changed:
+                - 'build/unix/build-binutils/**'
+                - 'taskcluster/scripts/misc/build-binutils-linux.sh'
