@@ -566,6 +566,70 @@ diff --git a/modules/fdlibm/src/s_log1p.cpp b/modules/fdlibm/src/s_log1p.cpp
  two54   =  1.80143985094819840000e+16,  /* 43500000 00000000 */
  Lp1 = 6.666666666666735130e-01,  /* 3FE55555 55555593 */
  Lp2 = 3.999999999940941908e-01,  /* 3FD99999 9997FA04 */
+diff --git a/modules/fdlibm/src/s_nearbyint.cpp b/modules/fdlibm/src/s_nearbyint.cpp
+--- a/modules/fdlibm/src/s_nearbyint.cpp
++++ b/modules/fdlibm/src/s_nearbyint.cpp
+@@ -23,17 +23,17 @@
+  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+  * SUCH DAMAGE.
+  */
+ 
+ #include <sys/cdefs.h>
+ __FBSDID("$FreeBSD$");
+ 
+ #include <fenv.h>
+-#include <math.h>
++#include "math_private.h"
+ 
+ /*
+  * We save and restore the floating-point environment to avoid raising
+  * an inexact exception.  We can get away with using fesetenv()
+  * instead of feclearexcept()/feupdateenv() to restore the environment
+  * because the only exception defined for rint() is overflow, and
+  * rounding can't overflow as long as emax >= p.
+  *
+diff --git a/modules/fdlibm/src/s_rint.cpp b/modules/fdlibm/src/s_rint.cpp
+--- a/modules/fdlibm/src/s_rint.cpp
++++ b/modules/fdlibm/src/s_rint.cpp
+@@ -20,17 +20,16 @@
+  * Method:
+  *	Using floating addition.
+  * Exception:
+  *	Inexact flag raised if x not equal to rint(x).
+  */
+ 
+ #include <float.h>
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static const double
+ TWO52[2]={
+   4.50359962737049600000e+15, /* 0x43300000, 0x00000000 */
+  -4.50359962737049600000e+15, /* 0xC3300000, 0x00000000 */
+ };
+ 
+diff --git a/modules/fdlibm/src/s_rintf.cpp b/modules/fdlibm/src/s_rintf.cpp
+--- a/modules/fdlibm/src/s_rintf.cpp
++++ b/modules/fdlibm/src/s_rintf.cpp
+@@ -14,17 +14,16 @@
+  */
+ 
+ #include <sys/cdefs.h>
+ __FBSDID("$FreeBSD$");
+ 
+ #include <float.h>
+ #include <stdint.h>
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static const float
+ TWO23[2]={
+   8.3886080000e+06, /* 0x4b000000 */
+  -8.3886080000e+06, /* 0xcb000000 */
+ };
+ 
 diff --git a/modules/fdlibm/src/s_scalbn.cpp b/modules/fdlibm/src/s_scalbn.cpp
 --- a/modules/fdlibm/src/s_scalbn.cpp
 +++ b/modules/fdlibm/src/s_scalbn.cpp

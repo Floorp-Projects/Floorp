@@ -20,14 +20,14 @@ diff --git a/modules/fdlibm/src/fdlibm.h b/modules/fdlibm/src/fdlibm.h
  double	cosh(double);
  double	sinh(double);
  double	tanh(double);
-@@ -49,9 +51,11 @@ double	log2(double);
+@@ -53,9 +55,11 @@ double	scalbn(double, int);
  
- double	copysign(double, double);
- double	scalbn(double, int);
- 
- float	floorf(float);
- float	truncf(float);
  float	ceilf(float);
+ float	floorf(float);
+ 
+ float	nearbyintf(float);
+ float	rintf(float);
+ float	truncf(float);
  
 +} /* namespace fdlibm */
 +
