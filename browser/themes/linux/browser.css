@@ -578,10 +578,6 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   list-style-image: url("moz-icon://stock/gtk-about?size=menu");
 }
 
-#javascriptConsole {
-  list-style-image: url("chrome://global/skin/console/console.png");
-}
-
 /* Primary toolbar buttons */
 
 :-moz-any(toolbar, .widget-overflow-list) .toolbarbutton-1 > .toolbarbutton-icon,
