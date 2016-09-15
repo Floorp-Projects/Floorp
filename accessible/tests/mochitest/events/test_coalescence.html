@@ -487,6 +487,41 @@
       };
     }
 
+    /**
+     * Insert text nodes under direct and grand children, and then hide
+     * their container by means of aria-owns.
+     *
+     * Markup:
+     * <div id="t7_moveplace" aria-owns="t7_c"></div>
+     * <div id="t7_c">
+     *   <div id="t7_c_directchild">ha</div>
+     *   <div><div id="t7_c_grandchild">ha</div></div>
+     * </div>
+     */
+    function test7()
+    {
+      this.eventSeq = [
+        new todo_invokerChecker(EVENT_HIDE, getNode('t7_c')),
+        new invokerChecker(EVENT_SHOW, getNode('t7_c')),
+        new invokerChecker(EVENT_REORDER, getNode('t7')),
+        new unexpectedInvokerChecker(EVENT_REORDER, getNode('t7_c_directchild')),
+        new unexpectedInvokerChecker(EVENT_REORDER, getNode('t7_c_grandchild')),
+        new unexpectedInvokerChecker(EVENT_SHOW, () => getNode('t7_c_directchild').firstChild),
+        new unexpectedInvokerChecker(EVENT_SHOW, () => getNode('t7_c_grandchild').firstChild)
+      ];
+
+      this.invoke = function test7_invoke()
+      {
+        getNode('t7_c_directchild').textContent = 'ha';
+        getNode('t7_c_grandchild').textContent = 'ha';
+        getNode('t7_moveplace').setAttribute('aria-owns', 't7_c');
+      };
+
+      this.getID = function test7_getID() {
+        return "Show child accessibles and then hide their container";
+      };
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     // Do tests.
 
@@ -519,6 +554,7 @@
       gQueue.push(new test4());
       gQueue.push(new test5());
       gQueue.push(new test6());
+      gQueue.push(new test7());
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -611,6 +647,14 @@
   </div>
 
   <div id="t6">
+  </div>
+
+  <div id="t7">
+    <div id="t7_moveplace"></div>
+    <div id="t7_c">
+      <div><div id="t7_c_grandchild"></div></div>
+      <div id="t7_c_directchild"></div>
+    </div>
   </div>
 </body>
 </html>

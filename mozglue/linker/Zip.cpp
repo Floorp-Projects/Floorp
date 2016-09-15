@@ -183,15 +183,20 @@ Zip::GetFirstEntry() const
 
 ZipCollection ZipCollection::Singleton;
 
+static pthread_mutex_t sZipCollectionMutex = PTHREAD_MUTEX_INITIALIZER;
+
 already_AddRefed<Zip>
 ZipCollection::GetZip(const char *path)
 {
-  /* Search the list of Zips we already have for a match */
-  for (std::vector<Zip *>::iterator it = Singleton.zips.begin();
-       it < Singleton.zips.end(); ++it) {
-    if ((*it)->GetName() && (strcmp((*it)->GetName(), path) == 0)) {
-      RefPtr<Zip> zip = *it;
-      return zip.forget();
+  {
+    AutoLock lock(&sZipCollectionMutex);
+    /* Search the list of Zips we already have for a match */
+    for (std::vector<Zip *>::iterator it = Singleton.zips.begin();
+         it < Singleton.zips.end(); ++it) {
+      if ((*it)->GetName() && (strcmp((*it)->GetName(), path) == 0)) {
+        RefPtr<Zip> zip = *it;
+        return zip.forget();
+      }
     }
   }
   return Zip::Create(path);
@@ -200,12 +205,15 @@ ZipCollection::GetZip(const char *path)
 void
 ZipCollection::Register(Zip *zip)
 {
+  AutoLock lock(&sZipCollectionMutex);
+  DEBUG_LOG("ZipCollection::Register(\"%s\")", zip->GetName());
   Singleton.zips.push_back(zip);
 }
 
 void
 ZipCollection::Forget(Zip *zip)
 {
+  AutoLock lock(&sZipCollectionMutex);
   DEBUG_LOG("ZipCollection::Forget(\"%s\")", zip->GetName());
   std::vector<Zip *>::iterator it = std::find(Singleton.zips.begin(),
                                               Singleton.zips.end(), zip);

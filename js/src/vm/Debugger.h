@@ -559,20 +559,16 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     JSTrapStatus processHandlerResult(mozilla::Maybe<AutoCompartment>& ac, bool OK, const Value& rv,
                                       AbstractFramePtr frame, jsbytecode* pc, MutableHandleValue vp);
 
-    /*
-     * When we run the onEnterFrame hook, the |this| slot hasn't been fully
-     * initialized, because the initialzation happens in the function's
-     * prologue. To combat this, we pass the this for the primitive return
-     * check directly. When bug 1249193 is fixed, this overload should be
-     * removed.
-     */
-    JSTrapStatus processHandlerResult(mozilla::Maybe<AutoCompartment>& ac, bool OK, const Value& rv,
-                                      const Value& thisVForCheck, AbstractFramePtr frame,
-                                      MutableHandleValue vp);
-
-    JSTrapStatus processHandlerResultHelper(mozilla::Maybe<AutoCompartment>& ac, bool ok, const Value& rv,
-                                            const mozilla::Maybe<HandleValue>& thisVForCheck, AbstractFramePtr frame,
+    JSTrapStatus processParsedHandlerResult(mozilla::Maybe<AutoCompartment>& ac,
+                                            AbstractFramePtr frame, jsbytecode* pc,
+                                            bool success, JSTrapStatus status,
                                             MutableHandleValue vp);
+
+    JSTrapStatus processParsedHandlerResultHelper(mozilla::Maybe<AutoCompartment>& ac,
+                                                  AbstractFramePtr frame,
+                                                  const mozilla::Maybe<HandleValue>& maybeThisv,
+                                                  bool success, JSTrapStatus status,
+                                                  MutableHandleValue vp);
 
     bool processResumptionValue(mozilla::Maybe<AutoCompartment>& ac, AbstractFramePtr frame,
                                 const mozilla::Maybe<HandleValue>& maybeThis, HandleValue rval,
@@ -717,7 +713,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
 
     JSTrapStatus fireDebuggerStatement(JSContext* cx, MutableHandleValue vp);
     JSTrapStatus fireExceptionUnwind(JSContext* cx, MutableHandleValue vp);
-    JSTrapStatus fireEnterFrame(JSContext* cx, AbstractFramePtr frame, MutableHandleValue vp);
+    JSTrapStatus fireEnterFrame(JSContext* cx, MutableHandleValue vp);
     JSTrapStatus fireNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global, MutableHandleValue vp);
     JSTrapStatus firePromiseHook(JSContext* cx, Hook hook, HandleObject promise, MutableHandleValue vp);
 

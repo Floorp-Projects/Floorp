@@ -46,9 +46,9 @@ class Instance
     TlsData                              tlsData_;
 
     // Internal helpers:
-    void** addressOfTableBase(size_t tableIndex) const;
     const void** addressOfSigId(const SigIdDesc& sigId) const;
     FuncImportTls& funcImportTls(const FuncImport& fi);
+    TableTls& tableTls(const TableDesc& td) const;
 
     // Import call slow paths which are called directly from wasm code.
     friend void* AddressOf(SymbolicAddress, ExclusiveContext*);
@@ -64,14 +64,6 @@ class Instance
     // Only WasmInstanceObject can call the private trace function.
     friend class js::WasmInstanceObject;
     void tracePrivate(JSTracer* trc);
-
-    // Only WasmMemoryObject can call the private onMovingGrow notification.
-    friend class js::WasmMemoryObject;
-    void onMovingGrow(uint8_t* prevMemoryBase);
-
-    // Called by WasmTableObject to barrier table writes.
-    friend class Table;
-    WasmInstanceObject* objectUnbarriered() const;
 
   public:
     Instance(JSContext* cx,
@@ -102,9 +94,11 @@ class Instance
 
     // This method returns a pointer to the GC object that owns this Instance.
     // Instances may be reached via weak edges (e.g., Compartment::instances_)
-    // so this perform a read-barrier on the returned object.
+    // so this perform a read-barrier on the returned object unless the barrier
+    // is explicitly waived.
 
     WasmInstanceObject* object() const;
+    WasmInstanceObject* objectUnbarriered() const;
 
     // Execute the given export given the JS call arguments, storing the return
     // value in args.rval.
@@ -123,6 +117,11 @@ class Instance
     // 'addr' would trigger a fault and be safely handled by signal handlers.
 
     bool memoryAccessWouldFault(uint8_t* addr, unsigned numBytes);
+
+    // Called by Wasm(Memory|Table)Object when a moving resize occurs:
+
+    void onMovingGrowMemory(uint8_t* prevMemoryBase);
+    void onMovingGrowTable();
 
     // See Code::ensureProfilingState comment.
 

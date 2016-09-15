@@ -19,8 +19,6 @@ import org.json.JSONObject;
 import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
 import org.mozilla.gecko.GeckoProfileDirectories.NoSuchProfileException;
 import org.mozilla.gecko.annotation.RobocopTarget;
-import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.db.StubBrowserDB;
 import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.INIParser;
 import org.mozilla.gecko.util.INISection;
@@ -66,7 +64,9 @@ public final class GeckoProfile {
     public static final String DEFAULT_PROFILE = "default";
     // Profile is using a custom directory outside of the Mozilla directory.
     public static final String CUSTOM_PROFILE = "";
+
     public static final String GUEST_PROFILE_DIR = "guest";
+    public static final String GUEST_MODE_PREF = "guestMode";
 
     // Session store
     private static final String SESSION_FILE = "sessionstore.js";
@@ -85,7 +85,7 @@ public final class GeckoProfile {
     private final File mMozillaDir;
     private final Context mApplicationContext;
 
-    private final BrowserDB mDB;
+    private Object mData;
 
     /**
      * Access to this member should be synchronized to avoid
@@ -97,14 +97,26 @@ public final class GeckoProfile {
 
     private Boolean mInGuestMode;
 
+    public static boolean shouldUseGuestMode(final Context context) {
+        return GeckoSharedPrefs.forApp(context).getBoolean(GUEST_MODE_PREF, false);
+    }
+
+    public static void enterGuestMode(final Context context) {
+        GeckoSharedPrefs.forApp(context).edit().putBoolean(GUEST_MODE_PREF, true).commit();
+    }
+
+    public static void leaveGuestMode(final Context context) {
+        GeckoSharedPrefs.forApp(context).edit().putBoolean(GUEST_MODE_PREF, false).commit();
+    }
+
     public static GeckoProfile initFromArgs(final Context context, final String args) {
-        if (GuestSession.shouldUse(context)) {
+        if (shouldUseGuestMode(context)) {
             final GeckoProfile guestProfile = getGuestProfile(context);
             if (guestProfile != null) {
                 return guestProfile;
             }
             // Failed to create guest profile; leave guest mode.
-            GuestSession.leave(context);
+            leaveGuestMode(context);
         }
 
         // We never want to use the guest mode profile concurrently with a normal profile
@@ -157,7 +169,7 @@ public final class GeckoProfile {
     }
 
     public static GeckoProfile get(Context context) {
-        return get(context, null, null, null);
+        return get(context, null, (File) null);
     }
 
     public static GeckoProfile get(Context context, String profileName) {
@@ -181,31 +193,10 @@ public final class GeckoProfile {
         return get(context, profileName, dir);
     }
 
-    // Extension hook.
-    private static volatile BrowserDB.Factory sDBFactory;
-    public static void setBrowserDBFactory(BrowserDB.Factory factory) {
-        sDBFactory = factory;
-    }
-
-    @RobocopTarget
-    public static GeckoProfile get(Context context, String profileName, File profileDir) {
-        if (sDBFactory == null) {
-            // We do this so that GeckoView consumers don't need to know anything about BrowserDB.
-            // It's a bit of a broken abstraction, but very tightly coupled, so we work around it
-            // for now. We can't just have GeckoView set this, because then it would collide in
-            // Fennec's use of GeckoView.
-            // We should never see this in Fennec itself, because GeckoApplication sets the factory
-            // in onCreate.
-            Log.d(LOGTAG, "Defaulting to StubBrowserDB.");
-            sDBFactory = StubBrowserDB.getFactory();
-        }
-        return GeckoProfile.get(context, profileName, profileDir, sDBFactory);
-    }
-
     // Note that the profile cache respects only the profile name!
     // If the directory changes, the returned GeckoProfile instance will be mutated.
-    // If the factory differs, it will be *ignored*.
-    public static GeckoProfile get(Context context, String profileName, File profileDir, BrowserDB.Factory dbFactory) {
+    @RobocopTarget
+    public static GeckoProfile get(Context context, String profileName, File profileDir) {
         if (context == null) {
             throw new IllegalArgumentException("context must be non-null");
         }
@@ -250,7 +241,7 @@ public final class GeckoProfile {
 
         if (profile == null) {
             try {
-                newProfile = new GeckoProfile(context, profileName, profileDir, dbFactory);
+                newProfile = new GeckoProfile(context, profileName, profileDir);
             } catch (NoMozillaDirectoryException e) {
                 // We're unable to do anything sane here.
                 throw new RuntimeException(e);
@@ -330,7 +321,7 @@ public final class GeckoProfile {
         }
     }
 
-    private GeckoProfile(Context context, String profileName, File profileDir, BrowserDB.Factory dbFactory) throws NoMozillaDirectoryException {
+    private GeckoProfile(Context context, String profileName, File profileDir) throws NoMozillaDirectoryException {
         if (profileName == null) {
             throw new IllegalArgumentException("Unable to create GeckoProfile for empty profile name.");
         } else if (CUSTOM_PROFILE.equals(profileName) && profileDir == null) {
@@ -345,14 +336,34 @@ public final class GeckoProfile {
         if (profileDir != null && !profileDir.isDirectory()) {
             throw new IllegalArgumentException("Profile directory must exist if specified.");
         }
-
-        // N.B., mProfileDir can be null at this point.
-        mDB = dbFactory.get(profileName, mProfileDir);
     }
 
-    @RobocopTarget
-    public BrowserDB getDB() {
-        return mDB;
+    /**
+     * Return the custom data object associated with this profile, which was set by the
+     * previous {@link #setData(Object)} call. This association is valid for the duration
+     * of the process lifetime. The caller must ensure proper synchronization, typically
+     * by synchronizing on the object returned by {@link #getLock()}.
+     *
+     * The data object is usually a database object that stores per-profile data such as
+     * page history. However, it can be any other object that needs to maintain
+     * profile-specific state.
+     *
+     * @return Associated data object
+     */
+    public Object getData() {
+        return mData;
+    }
+
+    /**
+     * Associate this profile with a custom data object, which can be retrieved by
+     * subsequent {@link #getData()} calls. The caller must ensure proper
+     * synchronization, typically by synchronizing on the object returned by {@link
+     * #getLock()}.
+     *
+     * @param data Custom data object
+     */
+    public void setData(final Object data) {
+        mData = data;
     }
 
     private void setDir(File dir) {
@@ -941,11 +952,6 @@ public final class GeckoProfile {
         if (!isDefaultSet) {
             // only set as default if this is the first profile we're creating
             profileSection.setProperty("Default", 1);
-
-            // We have no intention of stopping this session. The FIRSTRUN session
-            // ends when the browsing session/activity has ended. All events
-            // during firstrun will be tagged as FIRSTRUN.
-            Telemetry.startUISession(TelemetryContract.Session.FIRSTRUN);
         }
 
         parser.addSection(profileSection);

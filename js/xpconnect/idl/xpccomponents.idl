@@ -612,7 +612,7 @@ interface nsIXPCComponents_Utils : nsISupports
       * watchdog-related event occured.
       *
       * Valid categories:
-      *   "RuntimeStateChange"      - Runtime switching between active and inactive states
+      *   "ContextStateChange"      - Context switching between active and inactive states
       *   "WatchdogWakeup"          - Watchdog waking up from sleeping
       *   "WatchdogHibernateStart"  - Watchdog begins hibernating
       *   "WatchdogHibernateStop"   - Watchdog stops hibernating

@@ -633,14 +633,8 @@ DecodeName(Decoder& d)
     return name;
 }
 
-struct Resizable
-{
-    uint32_t initial;
-    Maybe<uint32_t> maximum;
-};
-
 static bool
-DecodeResizable(Decoder& d, Resizable* resizable)
+DecodeResizable(Decoder& d, ResizableLimits* limits)
 {
     uint32_t flags;
     if (!d.readVarU32(&flags))
@@ -652,7 +646,7 @@ DecodeResizable(Decoder& d, Resizable* resizable)
     if (!(flags & uint32_t(ResizableFlags::Default)))
         return Fail(d, "currently, every memory/table must be declared default");
 
-    if (!d.readVarU32(&resizable->initial))
+    if (!d.readVarU32(&limits->initial))
         return Fail(d, "expected initial length");
 
     if (flags & uint32_t(ResizableFlags::HasMaximum)) {
@@ -660,10 +654,10 @@ DecodeResizable(Decoder& d, Resizable* resizable)
         if (!d.readVarU32(&maximum))
             return Fail(d, "expected maximum length");
 
-        if (resizable->initial > maximum)
+        if (limits->initial > maximum)
             return Fail(d, "maximum length less than initial length");
 
-        resizable->maximum.emplace(maximum);
+        limits->maximum.emplace(maximum);
     }
 
     return true;
@@ -675,21 +669,21 @@ DecodeResizableMemory(Decoder& d, ModuleGeneratorData* init)
     if (UsesMemory(init->memoryUsage))
         return Fail(d, "already have default memory");
 
-    Resizable resizable;
-    if (!DecodeResizable(d, &resizable))
+    ResizableLimits limits;
+    if (!DecodeResizable(d, &limits))
         return false;
 
     init->memoryUsage = MemoryUsage::Unshared;
 
-    CheckedInt<uint32_t> initialBytes = resizable.initial;
+    CheckedInt<uint32_t> initialBytes = limits.initial;
     initialBytes *= PageSize;
     if (!initialBytes.isValid() || initialBytes.value() > uint32_t(INT32_MAX))
         return Fail(d, "initial memory size too big");
 
     init->minMemoryLength = initialBytes.value();
 
-    if (resizable.maximum) {
-        CheckedInt<uint32_t> maximumBytes = *resizable.maximum;
+    if (limits.maximum) {
+        CheckedInt<uint32_t> maximumBytes = *limits.maximum;
         maximumBytes *= PageSize;
         if (!maximumBytes.isValid())
             return Fail(d, "maximum memory size too big");
@@ -710,18 +704,14 @@ DecodeResizableTable(Decoder& d, ModuleGeneratorData* init)
     if (elementType != uint32_t(TypeConstructor::AnyFunc))
         return Fail(d, "expected 'anyfunc' element type");
 
-    Resizable resizable;
-    if (!DecodeResizable(d, &resizable))
+    ResizableLimits limits;
+    if (!DecodeResizable(d, &limits))
         return false;
 
     if (!init->tables.empty())
         return Fail(d, "already have default table");
 
-    TableDesc table;
-    table.kind = TableKind::AnyFunction;
-    table.initial = resizable.initial;
-    table.maximum = resizable.maximum ? *resizable.maximum : UINT32_MAX;
-    return init->tables.append(table);
+    return init->tables.emplaceBack(TableKind::AnyFunction, limits);
 }
 
 static bool
@@ -874,20 +864,19 @@ DecodeTableSection(Decoder& d, bool newFormat, ModuleGeneratorData* init, Uint32
         if (!DecodeResizableTable(d, init))
             return false;
     } else {
-        TableDesc table;
-        table.kind = TableKind::AnyFunction;
-        table.maximum = UINT32_MAX;
-
-        if (!d.readVarU32(&table.initial))
+        ResizableLimits limits;
+        if (!d.readVarU32(&limits.initial))
             return Fail(d, "expected number of table elems");
 
-        if (table.initial > MaxTableElems)
+        if (limits.initial > MaxTableElems)
             return Fail(d, "too many table elements");
 
-        if (!oldElems->resize(table.initial))
+        limits.maximum = Some(limits.initial);
+
+        if (!oldElems->resize(limits.initial))
             return false;
 
-        for (uint32_t i = 0; i < table.initial; i++) {
+        for (uint32_t i = 0; i < limits.initial; i++) {
             uint32_t funcDefIndex;
             if (!d.readVarU32(&funcDefIndex))
                 return Fail(d, "expected table element");
@@ -899,7 +888,7 @@ DecodeTableSection(Decoder& d, bool newFormat, ModuleGeneratorData* init, Uint32
         }
 
         MOZ_ASSERT(init->tables.empty());
-        if (!init->tables.append(table))
+        if (!init->tables.emplaceBack(TableKind::AnyFunction, limits))
             return false;
     }
 
@@ -1364,7 +1353,7 @@ DecodeElemSection(Decoder& d, bool newFormat, Uint32Vector&& oldElems, ModuleGen
         if (!d.readVarU32(&numElems))
             return Fail(d, "expected segment size");
 
-        uint32_t tableLength = mg.tables()[tableIndex].initial;
+        uint32_t tableLength = mg.tables()[tableIndex].limits.initial;
         if (offset.isVal()) {
             uint32_t off = offset.val().i32();
             if (off > tableLength || tableLength - off < numElems)

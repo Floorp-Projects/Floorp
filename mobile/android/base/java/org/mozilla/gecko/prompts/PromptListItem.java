@@ -3,6 +3,7 @@ package org.mozilla.gecko.prompts;
 import org.mozilla.gecko.IntentHelper;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.ThumbnailHelper;
 import org.mozilla.gecko.widget.GeckoActionProvider;
 
 import org.json.JSONArray;
@@ -57,12 +58,19 @@ public class PromptListItem {
 
         final String iconStr = aObject.optString("icon");
         if (iconStr != null) {
-            BitmapUtils.getDrawable(context, iconStr, new BitmapUtils.BitmapLoader() {
+            final BitmapUtils.BitmapLoader loader = new BitmapUtils.BitmapLoader() {
                     @Override
                     public void onBitmapFound(Drawable d) {
                         mIcon = d;
                     }
-                });
+                };
+
+            if (iconStr.startsWith("thumbnail:")) {
+                final int id = Integer.parseInt(iconStr.substring(10), 10);
+                ThumbnailHelper.getInstance().getAndProcessThumbnailFor(id, loader);
+            } else {
+                BitmapUtils.getDrawable(context, iconStr, loader);
+            }
         }
     }
 

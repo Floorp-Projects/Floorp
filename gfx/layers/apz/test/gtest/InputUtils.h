@@ -262,4 +262,35 @@ SmoothWheel(const RefPtr<InputReceiver>& aTarget, const ScreenIntPoint& aPoint,
   return aTarget->ReceiveInputEvent(input, nullptr, aOutInputBlockId);
 }
 
+template<class InputReceiver>
+nsEventStatus
+MouseDown(const RefPtr<InputReceiver>& aTarget, const ScreenIntPoint& aPoint,
+          TimeStamp aTime, uint64_t* aOutInputBlockId = nullptr)
+{
+  MouseInput input(MouseInput::MOUSE_DOWN, MouseInput::ButtonType::LEFT_BUTTON,
+        0, 0, aPoint, MillisecondsSinceStartup(aTime), aTime, 0);
+  return aTarget->ReceiveInputEvent(input, nullptr, aOutInputBlockId);
+}
+
+template<class InputReceiver>
+nsEventStatus
+MouseMove(const RefPtr<InputReceiver>& aTarget, const ScreenIntPoint& aPoint,
+          TimeStamp aTime, uint64_t* aOutInputBlockId = nullptr)
+{
+  MouseInput input(MouseInput::MOUSE_MOVE, MouseInput::ButtonType::LEFT_BUTTON,
+        0, 0, aPoint, MillisecondsSinceStartup(aTime), aTime, 0);
+  return aTarget->ReceiveInputEvent(input, nullptr, aOutInputBlockId);
+}
+
+template<class InputReceiver>
+nsEventStatus
+MouseUp(const RefPtr<InputReceiver>& aTarget, const ScreenIntPoint& aPoint,
+        TimeStamp aTime, uint64_t* aOutInputBlockId = nullptr)
+{
+  MouseInput input(MouseInput::MOUSE_UP, MouseInput::ButtonType::LEFT_BUTTON,
+        0, 0, aPoint, MillisecondsSinceStartup(aTime), aTime, 0);
+  return aTarget->ReceiveInputEvent(input, nullptr, aOutInputBlockId);
+}
+
+
 #endif // mozilla_layers_InputUtils_h

@@ -72,8 +72,6 @@ public class Tab {
     private int mFaviconLoadId;
     private String mContentType;
     private boolean mHasTouchListeners;
-    private ZoomConstraints mZoomConstraints;
-    private boolean mIsRTL;
     private final ArrayList<View> mPluginViews;
     private int mState;
     private Bitmap mThumbnailBitmap;
@@ -126,7 +124,7 @@ public class Tab {
 
     public Tab(Context context, int id, String url, boolean external, int parentId, String title) {
         mAppContext = context.getApplicationContext();
-        mDB = GeckoProfile.get(context).getDB();
+        mDB = BrowserDB.from(context);
         mId = id;
         mUrl = url;
         mBaseDomain = "";
@@ -137,7 +135,6 @@ public class Tab {
         mSiteIdentity = new SiteIdentity();
         mHistoryIndex = -1;
         mContentType = "";
-        mZoomConstraints = new ZoomConstraints(false);
         mPluginViews = new ArrayList<View>();
         mState = shouldShowProgress(url) ? STATE_LOADING : STATE_SUCCESS;
         mLoadProgress = LOAD_PROGRESS_INIT;
@@ -412,22 +409,6 @@ public class Tab {
         return mState;
     }
 
-    public void setZoomConstraints(ZoomConstraints constraints) {
-        mZoomConstraints = constraints;
-    }
-
-    public ZoomConstraints getZoomConstraints() {
-        return mZoomConstraints;
-    }
-
-    public void setIsRTL(boolean aIsRTL) {
-        mIsRTL = aIsRTL;
-    }
-
-    public boolean getIsRTL() {
-        return mIsRTL;
-    }
-
     public void setHasTouchListeners(boolean aValue) {
         mHasTouchListeners = aValue;
     }
@@ -649,7 +630,6 @@ public class Tab {
         setHasOpenSearch(false);
         mSiteIdentity.reset();
         setSiteLogins(null);
-        setZoomConstraints(new ZoomConstraints(true));
         setHasTouchListeners(false);
         setErrorType(ErrorType.NONE);
         setLoadProgressIfLoading(LOAD_PROGRESS_LOCATION_CHANGE);

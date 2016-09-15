@@ -160,7 +160,7 @@ public class GeckoThread extends Thread {
 
         if (profile == null) {
             // We haven't initialized; any profile is okay as long as we follow the guest mode setting.
-            return GuestSession.shouldUse(context) ==
+            return GeckoProfile.shouldUseGuestMode(context) ==
                     GeckoProfile.isGuestProfile(context, profileName, profileDir);
         }
 
@@ -403,13 +403,6 @@ public class GeckoThread extends Thread {
         return resourcePath;
     }
 
-    private static String getTypeFromAction(String action) {
-        if (GeckoApp.ACTION_HOMESCREEN_SHORTCUT.equals(action)) {
-            return "-bookmark";
-        }
-        return null;
-    }
-
     private String addCustomProfileArg(String args) {
         String profileArg = "";
 
@@ -438,11 +431,6 @@ public class GeckoThread extends Thread {
         final String userArgs = addCustomProfileArg(mArgs);
         if (userArgs != null) {
             args.append(' ').append(userArgs);
-        }
-
-        final String type = getTypeFromAction(mAction);
-        if (type != null) {
-            args.append(" ").append(type);
         }
 
         // In un-official builds, we want to load Javascript resources fresh

@@ -376,7 +376,7 @@ public class TopSitesPanel extends HomeFragment {
         TopSitesGridContextMenuInfo info = (TopSitesGridContextMenuInfo) menuInfo;
 
         final int itemId = item.getItemId();
-        final BrowserDB db = GeckoProfile.get(getActivity()).getDB();
+        final BrowserDB db = BrowserDB.from(getActivity());
 
         if (itemId == R.id.top_sites_pin) {
             final String url = info.url;
@@ -465,7 +465,7 @@ public class TopSitesPanel extends HomeFragment {
         public void onSiteSelected(final String url, final String title) {
             final int position = mPosition;
             final Context context = getActivity().getApplicationContext();
-            final BrowserDB db = GeckoProfile.get(getActivity()).getDB();
+            final BrowserDB db = BrowserDB.from(getActivity());
             ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
                 public void run() {
@@ -499,7 +499,7 @@ public class TopSitesPanel extends HomeFragment {
         public TopSitesLoader(Context context) {
             super(context);
             mMaxGridEntries = context.getResources().getInteger(R.integer.number_of_top_sites);
-            mDB = GeckoProfile.get(context).getDB();
+            mDB = BrowserDB.from(context);
         }
 
         @Override
@@ -564,7 +564,7 @@ public class TopSitesPanel extends HomeFragment {
 
         public TopSitesGridAdapter(Context context, Cursor cursor) {
             super(context, cursor, 0);
-            mDB = GeckoProfile.get(context).getDB();
+            mDB = BrowserDB.from(context);
         }
 
         @Override
@@ -711,7 +711,7 @@ public class TopSitesPanel extends HomeFragment {
                 // Only try to fetch thumbnails for non-empty URLs that
                 // don't have an associated suggested image URL.
                 final GeckoProfile profile = GeckoProfile.get(getActivity());
-                if (TextUtils.isEmpty(url) || profile.getDB().hasSuggestedImageUrl(url)) {
+                if (TextUtils.isEmpty(url) || BrowserDB.from(profile).hasSuggestedImageUrl(url)) {
                     continue;
                 }
 
@@ -798,7 +798,7 @@ public class TopSitesPanel extends HomeFragment {
         public ThumbnailsLoader(Context context, ArrayList<String> urls) {
             super(context);
             mUrls = urls;
-            mDB = GeckoProfile.get(context).getDB();
+            mDB = BrowserDB.from(context);
         }
 
         @Override

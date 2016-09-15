@@ -1335,14 +1335,14 @@ Animation::GetRenderedDocument() const
 void
 Animation::DoFinishNotification(SyncNotifyFlag aSyncNotifyFlag)
 {
-  CycleCollectedJSRuntime* runtime = CycleCollectedJSRuntime::Get();
+  CycleCollectedJSContext* context = CycleCollectedJSContext::Get();
 
   if (aSyncNotifyFlag == SyncNotifyFlag::Sync) {
     DoFinishNotificationImmediately();
   } else if (!mFinishNotificationTask.IsPending()) {
     RefPtr<nsRunnableMethod<Animation>> runnable =
       NewRunnableMethod(this, &Animation::DoFinishNotificationImmediately);
-    runtime->DispatchToMicroTask(do_AddRef(runnable));
+    context->DispatchToMicroTask(do_AddRef(runnable));
     mFinishNotificationTask = runnable.forget();
   }
 }

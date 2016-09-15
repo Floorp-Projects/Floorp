@@ -56,7 +56,7 @@
 #include "mozilla/dom/DOMExceptionBinding.h"
 #include "mozilla/dom/ErrorEvent.h"
 #include "nsAXPCNativeCallContext.h"
-#include "mozilla/CycleCollectedJSRuntime.h"
+#include "mozilla/CycleCollectedJSContext.h"
 
 #include "nsJSPrincipals.h"
 
@@ -75,7 +75,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/asmjscache/AsmJSCache.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
-#include "mozilla/CycleCollectedJSRuntime.h"
+#include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/ContentEvents.h"
 
 #include "nsCycleCollectionNoteRootCallback.h"
@@ -1208,7 +1208,7 @@ nsJSContext::GarbageCollectNow(JS::gcreason::Reason aReason,
     sNeedsFullGC = false;
     JS::PrepareForFullGC(sContext);
   } else {
-    CycleCollectedJSRuntime::Get()->PrepareWaitingZonesForGC();
+    CycleCollectedJSContext::Get()->PrepareWaitingZonesForGC();
   }
 
   if (aIncremental == IncrementalGC) {
