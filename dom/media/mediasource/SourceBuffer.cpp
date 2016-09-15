@@ -23,12 +23,6 @@
 #include <time.h>
 #include "TimeUnits.h"
 
-// GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
-// GetTickCount() and conflicts with MediaDecoder::GetCurrentTime implementation.
-#ifdef GetCurrentTime
-#undef GetCurrentTime
-#endif
-
 struct JSContext;
 class JSObject;
 
