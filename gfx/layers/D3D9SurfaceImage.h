@@ -64,6 +64,8 @@ public:
 
   already_AddRefed<IDirect3DSurface9> GetD3D9Surface();
 
+  HANDLE GetShareHandle() const;
+
   virtual bool IsValid() override { return mValid; }
 
   void Invalidate() { mValid = false; }
@@ -72,6 +74,9 @@ private:
 
   gfx::IntSize mSize;
   RefPtr<TextureClient> mTextureClient;
+  RefPtr<IDirect3DTexture9> mTexture;
+  HANDLE mShareHandle;
+  D3DSURFACE_DESC mDesc;
   bool mValid;
 };
 
