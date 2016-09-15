@@ -5,8 +5,32 @@
 add_task(function* testExecuteScript() {
   let {MessageChannel} = Cu.import("resource://gre/modules/MessageChannel.jsm", {});
 
-  let messageManagersSize = MessageChannel.messageManagers.size;
-  let responseManagersSize = MessageChannel.responseManagers.size;
+  function countMM(messageManagerMap) {
+    let count = 0;
+    // List of permanent message managers in the main process. We should not
+    // count them in the test because MessageChannel unsubscribes when the
+    // message manager closes, which never happens to these, of course.
+    let globalMMs = [
+      Services.mm,
+      Services.ppmm,
+      Services.ppmm.getChildAt(0),
+    ];
+    for (let mm of messageManagerMap.keys()) {
+      // Sanity check: mm is a message manager.
+      try {
+        mm.QueryInterface(Ci.nsIMessageSender);
+      } catch (e) {
+        mm.QueryInterface(Ci.nsIMessageBroadcaster);
+      }
+      if (!globalMMs.includes(mm)) {
+        ++count;
+      }
+    }
+    return count;
+  }
+
+  let messageManagersSize = countMM(MessageChannel.messageManagers);
+  let responseManagersSize = countMM(MessageChannel.responseManagers);
 
   const BASE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/";
   const URL = BASE + "file_iframe_document.html";
@@ -203,7 +227,7 @@ add_task(function* testExecuteScript() {
 
   // Make sure that we're not holding on to references to closed message
   // managers.
-  is(MessageChannel.messageManagers.size, messageManagersSize, "Message manager count");
-  is(MessageChannel.responseManagers.size, responseManagersSize, "Response manager count");
+  is(countMM(MessageChannel.messageManagers), messageManagersSize, "Message manager count");
+  is(countMM(MessageChannel.responseManagers), responseManagersSize, "Response manager count");
   is(MessageChannel.pendingResponses.size, 0, "Pending response count");
 });
