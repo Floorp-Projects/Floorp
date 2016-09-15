@@ -58,7 +58,7 @@
             "preprocess": "localize"
           },
 
-          "creator": {
+          "author": {
             "type": "string",
             "optional": true,
             "preprocess": "localize"
@@ -180,7 +180,25 @@
             "type": "array",
             "items": { "type": "string" },
             "optional": true
+          },
+
+          "developer": {
+            "type": "object",
+            "optional": true,
+            "properties": {
+              "name": {
+                "type": "string",
+                "optional": true,
+                "preprocess": "localize"
+              },
+              "url": {
+                "type": "string",
+                "optional": true,
+                "preprocess": "localize"
+              }
+            }
           }
+
         },
 
         "additionalProperties": { "$ref": "UnrecognizedProperty" }
