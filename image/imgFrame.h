@@ -230,12 +230,16 @@ public:
    * that the underlying surface may not be stored in a volatile buffer on all
    * platforms, and raw access to the surface (using RawAccessRef()) may be much
    * more expensive than in the InitForDecoder() case.
+   *
+   * aBackend specifies the DrawTarget backend type this imgFrame is supposed
+   *          to be drawn to.
    */
   nsresult InitWithDrawable(gfxDrawable* aDrawable,
                             const nsIntSize& aSize,
                             const SurfaceFormat aFormat,
                             SamplingFilter aSamplingFilter,
-                            uint32_t aImageFlags);
+                            uint32_t aImageFlags,
+                            gfx::BackendType aBackend);
 
   DrawableFrameRef DrawableRef();
   RawAccessFrameRef RawAccessRef();
@@ -348,7 +352,7 @@ private: // methods
   nsresult LockImageData();
   nsresult UnlockImageData();
   bool     CanOptimizeOpaqueImage();
-  nsresult Optimize();
+  nsresult Optimize(gfx::DrawTarget* aTarget);
 
   void AssertImageDataLocked() const;
 
