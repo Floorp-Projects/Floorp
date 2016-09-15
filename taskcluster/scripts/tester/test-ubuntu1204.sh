@@ -4,14 +4,6 @@ set -x -e
 
 echo "running as" $(id)
 
-# Detect release version.
-. /etc/lsb-release
-if [ "${DISTRIB_RELEASE}" == "12.04" ]; then
-    UBUNTU_1204=1
-elif [ "${DISTRIB_RELEASE}" == "16.04" ]; then
-    UBUNTU_1601=1
-fi
-
 . /home/worker/scripts/xvfb.sh
 
 ####
@@ -38,13 +30,6 @@ fail() {
     echo # make sure error message is on a new line
     echo "[test-linux.sh:error]" "${@}"
     exit 1
-}
-
-maybe_start_pulse() {
-    if $NEED_PULSEAUDIO; then
-        pulseaudio --fail --daemonize --start
-        pactl load-module module-null-sink
-    fi
 }
 
 # test required parameters are supplied
@@ -77,9 +62,11 @@ if ! [ -d mozharness ]; then
     fail "mozharness zip did not contain mozharness/"
 fi
 
-# pulseaudio daemon must be started before xvfb on Ubuntu 12.04.
-if ${UBUNTU_1204}; then
-    maybe_start_pulse
+# start up the pulseaudio daemon.  Note that it's important this occur
+# before the Xvfb startup for ubuntu 12.04, not for 16.04
+if $NEED_PULSEAUDIO; then
+    pulseaudio --fail --daemonize --start
+    pactl load-module module-null-sink
 fi
 
 # run XVfb in the background, if necessary
@@ -109,16 +96,6 @@ if $NEED_WINDOW_MANAGER; then
     gsettings set org.gnome.desktop.screensaver lock-delay 3600
     # Disable the screen saver
     xset s off s reset
-
-    if ${UBUNTU_1604}; then
-        # start compiz for our window manager
-        compiz 2>&1 &
-        #TODO: how to determine if compiz starts correctly?
-    fi
-fi
-
-if ${UBUNTU_1604}; then
-    maybe_start_pulse
 fi
 
 # For telemetry purposes, the build process wants information about the
