@@ -1,4 +1,4 @@
-// Generated from: 02b44328ac19e43705f51209237b20fb264f93f4 Merge pull request #711 from devtools-html/cleanup
+// Generated from: 30002d3cfc4341840af847af9eb2c31cab18abb5 Move some of editor-select.js test into editor-highlight.js to make tests more focused (and avoid timeouts on linux debug) (#746)
 
 var Debugger =
 /******/ (function(modules) { // webpackBootstrap
@@ -21282,8 +21282,8 @@ var Debugger =
 	
 	var State = makeRecord({
 	  sources: I.Map(),
-	  selectedSource: undefined,
-	  pendingSelectedSourceURL: undefined,
+	  selectedLocation: undefined,
+	  pendingSelectedLocation: undefined,
 	  sourcesText: I.Map(),
 	  sourceMaps: I.Map(),
 	  tabs: I.List([])
@@ -21312,19 +21312,22 @@ var Debugger =
 	      break;
 	
 	    case "SELECT_SOURCE":
-	      return state.merge({
-	        selectedSource: action.source,
-	        pendingSelectedSourceURL: null,
-	        tabs: updateTabList(state, fromJS(action.source), action.options)
+	      return state.set("selectedLocation", {
+	        sourceId: action.source.id,
+	        line: action.line
+	      }).set("pendingSelectedLocation", null).merge({
+	        tabs: updateTabList(state, fromJS(action.source), action.tabIndex)
 	      });
 	
 	    case "SELECT_SOURCE_URL":
-	      return state.merge({ pendingSelectedSourceURL: action.url });
+	      return state.set("pendingSelectedLocation", {
+	        url: action.url,
+	        line: action.line
+	      });
 	
 	    case "CLOSE_TAB":
-	      return state.merge({
-	        selectedSource: getNewSelectedSource(state, action.id),
-	        tabs: removeSourceFromTabList(state, action.id)
+	      return state.merge({ tabs: removeSourceFromTabList(state, action.id) }).set("selectedLocation", {
+	        sourceId: getNewSelectedSourceId(state, action.id)
 	      });
 	
 	    case "LOAD_SOURCE_TEXT":
@@ -21359,9 +21362,9 @@ var Debugger =
 	      return _updateText(state, action, [action.originalSource]);
 	
 	    case "NAVIGATE":
-	      var source = state.selectedSource;
-	      var sourceUrl = source && source.get("url");
-	      return State().set("pendingSelectedSourceURL", sourceUrl);
+	      var source = getSelectedSource({ sources: state });
+	      var _url = source && source.get("url");
+	      return State().set("pendingSelectedLocation", { url: _url });
 	  }
 	
 	  return state;
@@ -21402,16 +21405,16 @@ var Debugger =
 	/*
 	 * Adds the new source to the tab list if it is not already there
 	 */
-	function updateTabList(state, source, options) {
+	function updateTabList(state, source, tabIndex) {
 	  var tabs = state.get("tabs");
-	  var selectedSource = state.get("selectedSource");
+	  var selectedSource = getSelectedSource({ sources: state });
 	  var selectedSourceIndex = tabs.indexOf(selectedSource);
 	  var sourceIndex = tabs.indexOf(source);
 	  var includesSource = !!tabs.find(t => t.get("id") == source.get("id"));
 	
 	  if (includesSource) {
-	    if (options.position != undefined) {
-	      return tabs.delete(sourceIndex).insert(options.position, source);
+	    if (tabIndex != undefined) {
+	      return tabs.delete(sourceIndex).insert(tabIndex, source);
 	    }
 	
 	    return tabs;
@@ -21423,13 +21426,13 @@ var Debugger =
 	/**
 	 * Gets the next tab to select when a tab closes.
 	 */
-	function getNewSelectedSource(state, id) {
+	function getNewSelectedSourceId(state, id) {
 	  var tabs = state.get("tabs");
-	  var selectedSource = state.get("selectedSource");
+	  var selectedSource = getSelectedSource({ sources: state });
 	
 	  // if we're not closing the selected tab return the selected tab
 	  if (selectedSource.get("id") != id) {
-	    return selectedSource;
+	    return selectedSource.get("id");
 	  }
 	
 	  var tabIndex = tabs.findIndex(tab => tab.get("id") == id);
@@ -21441,11 +21444,11 @@ var Debugger =
 	
 	  // if we're closing the last tab, select the penultimate tab
 	  if (tabIndex + 1 == numTabs) {
-	    return tabs.get(tabIndex - 1);
+	    return tabs.get(tabIndex - 1).get("id");
 	  }
 	
 	  // return the next tab
-	  return tabs.get(tabIndex + 1);
+	  return tabs.get(tabIndex + 1).get("id");
 	}
 	
 	// Selectors
@@ -21484,11 +21487,15 @@ var Debugger =
 	}
 	
 	function getSelectedSource(state) {
-	  return state.sources.selectedSource;
+	  return state.sources.selectedLocation && getSource(state, state.sources.selectedLocation.sourceId);
 	}
 	
-	function getPendingSelectedSourceURL(state) {
-	  return state.sources.pendingSelectedSourceURL;
+	function getSelectedLocation(state) {
+	  return state.sources.selectedLocation;
+	}
+	
+	function getPendingSelectedLocation(state) {
+	  return state.sources.pendingSelectedLocation;
 	}
 	
 	function getSourceMap(state, sourceId) {
@@ -21514,7 +21521,8 @@ var Debugger =
 	  getSourceText,
 	  getSourceTabs,
 	  getSelectedSource,
-	  getPendingSelectedSourceURL,
+	  getSelectedLocation,
+	  getPendingSelectedLocation,
 	  getSourceMap,
 	  getPrettySource
 	};
@@ -26884,11 +26892,10 @@ var Debugger =
 	
 	  switch (action.type) {
 	    case constants.PAUSED:
-	      if (action.status == "done") {
-	        var _action$value = action.value;
-	        var selectedFrameId = _action$value.selectedFrameId;
-	        var frames = _action$value.frames;
-	        var pauseInfo = _action$value.pauseInfo;
+	      {
+	        var selectedFrameId = action.selectedFrameId;
+	        var frames = action.frames;
+	        var pauseInfo = action.pauseInfo;
 	
 	        pauseInfo.isInterrupted = pauseInfo.why.type === "interrupted";
 	
@@ -26900,7 +26907,6 @@ var Debugger =
 	        });
 	      }
 	
-	      break;
 	    case constants.RESUME:
 	      return state.merge({
 	        pause: null,
@@ -27071,7 +27077,8 @@ var Debugger =
 	  getSourceText: sources.getSourceText,
 	  getSourceTabs: sources.getSourceTabs,
 	  getSelectedSource: sources.getSelectedSource,
-	  getPendingSelectedSourceURL: sources.getPendingSelectedSourceURL,
+	  getSelectedLocation: sources.getSelectedLocation,
+	  getPendingSelectedLocation: sources.getPendingSelectedLocation,
 	  getSourceMap: sources.getSourceMap,
 	  getPrettySource: sources.getPrettySource,
 	
@@ -28766,7 +28773,7 @@ var Debugger =
 	  },
 	
 	  onKeyDown(e) {
-	    if (e.key === "Escape") {
+	    if (this.state.searchOn && e.key === "Escape") {
 	      this.setState({ searchOn: false });
 	      e.preventDefault();
 	    }
@@ -30166,7 +30173,7 @@ var Debugger =
 	var getSource = _require9.getSource;
 	var getSourceByURL = _require9.getSourceByURL;
 	var getSourceText = _require9.getSourceText;
-	var getPendingSelectedSourceURL = _require9.getPendingSelectedSourceURL;
+	var getPendingSelectedLocation = _require9.getPendingSelectedLocation;
 	var getSourceMap = _require9.getSourceMap;
 	var getSourceMapURL = _require9.getSourceMapURL;
 	var getFrames = _require9.getFrames;
@@ -30196,9 +30203,9 @@ var Debugger =
 	
 	    // If a request has been made to show this source, go ahead and
 	    // select it.
-	    var pendingURL = getPendingSelectedSourceURL(getState());
-	    if (pendingURL === source.url) {
-	      dispatch(selectSource(source.id));
+	    var pendingLocation = getPendingSelectedLocation(getState());
+	    if (pendingLocation && pendingLocation.url === source.url) {
+	      dispatch(selectSource(source.id, { line: pendingLocation.line }));
 	    }
 	  };
 	}
@@ -30246,17 +30253,21 @@ var Debugger =
 	 * @static
 	 */
 	function selectSourceURL(url) {
+	  var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+	
 	  return _ref7 => {
 	    var dispatch = _ref7.dispatch;
 	    var getState = _ref7.getState;
 	
 	    var source = getSourceByURL(getState(), url);
 	    if (source) {
-	      dispatch(selectSource(source.get("id")));
+	      dispatch(selectSource(source.get("id"), options));
 	    } else {
 	      dispatch({
 	        type: constants.SELECT_SOURCE_URL,
-	        url: url
+	        url: url,
+	        tabIndex: options.tabIndex,
+	        line: options.line
 	      });
 	    }
 	  };
@@ -30288,7 +30299,8 @@ var Debugger =
 	    dispatch({
 	      type: constants.SELECT_SOURCE,
 	      source: source,
-	      options
+	      tabIndex: options.tabIndex,
+	      line: options.line
 	    });
 	  };
 	}
@@ -30767,31 +30779,31 @@ var Debugger =
 	 * @static
 	 */
 	function paused(pauseInfo) {
-	  return _ref2 => {
-	    var dispatch = _ref2.dispatch;
-	    var getState = _ref2.getState;
-	    var client = _ref2.client;
-	    var frame = pauseInfo.frame;
-	    var frames = pauseInfo.frames;
-	    var why = pauseInfo.why;
+	  return (() => {
+	    var _ref2 = _asyncToGenerator(function* (_ref3) {
+	      var dispatch = _ref3.dispatch;
+	      var getState = _ref3.getState;
+	      var client = _ref3.client;
+	      var frame = pauseInfo.frame;
+	      var frames = pauseInfo.frames;
+	      var why = pauseInfo.why;
 	
+	      frames = yield updateFrameLocations(getState(), frames);
 	
-	    dispatch(evaluateExpressions());
-	
-	    return dispatch({
-	      type: constants.PAUSED,
-	      [PROMISE]: _asyncToGenerator(function* () {
-	        frames = yield updateFrameLocations(getState(), frames);
-	
-	        dispatch(selectSource(frame.location.sourceId));
-	        return {
-	          pauseInfo: { why, frame },
-	          frames: frames,
-	          selectedFrameId: frame.id
-	        };
-	      })()
+	      dispatch(evaluateExpressions());
+	      dispatch({
+	        type: constants.PAUSED,
+	        pauseInfo: { why, frame },
+	        frames: frames,
+	        selectedFrameId: frame.id
+	      });
+	      dispatch(selectSource(frame.location.sourceId, { line: frame.location.line }));
 	    });
-	  };
+	
+	    return function (_x) {
+	      return _ref2.apply(this, arguments);
+	    };
+	  })();
 	}
 	
 	/**
@@ -32783,7 +32795,7 @@ var Debugger =
 	
 	var getSourceText = _require4.getSourceText;
 	var getBreakpointsForSource = _require4.getBreakpointsForSource;
-	var getSelectedSource = _require4.getSelectedSource;
+	var getSelectedLocation = _require4.getSelectedLocation;
 	var getSelectedFrame = _require4.getSelectedFrame;
 	
 	var _require5 = __webpack_require__(194);
@@ -32798,8 +32810,8 @@ var Debugger =
 	
 	__webpack_require__(264);
 	
-	function isSourceForFrame(source, frame) {
-	  return source && frame && frame.location.sourceId === source.get("id");
+	function isTextForSource(sourceText) {
+	  return !sourceText.get("loading") && !sourceText.get("error");
 	}
 	
 	/**
@@ -32818,7 +32830,7 @@ var Debugger =
 	var Editor = React.createClass({
 	  propTypes: {
 	    breakpoints: ImPropTypes.map.isRequired,
-	    selectedSource: ImPropTypes.map,
+	    selectedLocation: PropTypes.object,
 	    sourceText: PropTypes.object,
 	    addBreakpoint: PropTypes.func,
 	    removeBreakpoint: PropTypes.func,
@@ -32838,11 +32850,11 @@ var Debugger =
 	
 	    if (bp) {
 	      this.props.removeBreakpoint({
-	        sourceId: this.props.selectedSource.get("id"),
+	        sourceId: this.props.selectedLocation.sourceId,
 	        line: line + 1
 	      });
 	    } else {
-	      this.props.addBreakpoint({ sourceId: this.props.selectedSource.get("id"),
+	      this.props.addBreakpoint({ sourceId: this.props.selectedLocation.sourceId,
 	        line: line + 1 },
 	      // Pass in a function to get line text because the breakpoint
 	      // may slide and it needs to compute the value at the new
@@ -32851,42 +32863,49 @@ var Debugger =
 	    }
 	  },
 	
-	  clearDebugLine(line) {
-	    this.editor.codeMirror.removeLineClass(line - 1, "line", "debug-line");
+	  updateDebugLine(prevProps, nextProps) {
+	    if (prevProps.selectedFrame) {
+	      var line = prevProps.selectedFrame.location.line;
+	      this.editor.codeMirror.removeLineClass(line - 1, "line", "debug-line");
+	    }
+	    if (nextProps.selectedFrame) {
+	      var _line = nextProps.selectedFrame.location.line;
+	      this.editor.codeMirror.addLineClass(_line - 1, "line", "debug-line");
+	    }
 	  },
 	
-	  setDebugLine(line) {
-	    this.editor.codeMirror.addLineClass(line - 1, "line", "debug-line");
+	  highlightLine() {
+	    if (!this.pendingJumpLine) {
+	      return;
+	    }
+	
+	    // If the location has changed and a specific line is requested,
+	    // move to that line and flash it.
+	    var codeMirror = this.editor.codeMirror;
+	
+	    // Make sure to clean up after ourselves. Not only does this
+	    // cancel any existing animation, but it avoids it from
+	    // happening ever again (in case CodeMirror re-applies the
+	    // class, etc).
+	    if (this.lastJumpLine) {
+	      codeMirror.removeLineClass(this.lastJumpLine - 1, "line", "highlight-line");
+	    }
+	
+	    var line = this.pendingJumpLine;
 	    this.editor.alignLine(line);
-	  },
 	
-	  setSourceText(newSourceText, oldSourceText) {
-	    if (newSourceText.get("loading")) {
-	      this.setText("Loading...");
-	      return;
+	    // We only want to do the flashing animation if it's not a debug
+	    // line, which has it's own styling.
+	    if (!this.props.selectedFrame || this.props.selectedFrame.location.line !== line) {
+	      this.editor.codeMirror.addLineClass(line - 1, "line", "highlight-line");
 	    }
 	
-	    if (newSourceText.get("error")) {
-	      this.setText("Error");
-	      console.error(newSourceText.get("error"));
-	      return;
-	    }
-	
-	    this.setText(newSourceText.get("text"));
-	    this.setMode(newSourceText);
-	
-	    resizeBreakpointGutter(this.editor.codeMirror);
+	    this.lastJumpLine = line;
+	    this.pendingJumpLine = null;
 	  },
 	
-	  // Only reset the editor text if the source has changed.
-	  // * Resetting the text will remove the breakpoints.
-	  // * Comparing the source text is probably inneficient.
 	  setText(text) {
 	    if (!text || !this.editor) {
-	      return;
-	    }
-	
-	    if (text == this.editor.getText()) {
 	      return;
 	    }
 	
@@ -32940,24 +32959,52 @@ var Debugger =
 	  },
 	
 	  componentWillReceiveProps(nextProps) {
-	    // Clear the currently highlighted line
-	    if (isSourceForFrame(this.props.selectedSource, this.props.selectedFrame)) {
-	      this.clearDebugLine(this.props.selectedFrame.location.line);
+	    // This lifecycle method is responsible for updating the editor
+	    // text.
+	    var sourceText = nextProps.sourceText;
+	
+	    if (!sourceText) {
+	      this.setText("");
+	      this.editor.setMode({ name: "text" });
+	    } else if (!isTextForSource(sourceText)) {
+	      // There are only 2 possible states: errored or loading. Do
+	      // nothing except put a message in the editor.
+	      this.setText(sourceText.get("error") || "Loading...");
+	      this.editor.setMode({ name: "text" });
+	    } else if (this.props.sourceText !== sourceText) {
+	      // Only update it if the `sourceText` object has actually changed.
+	      // It is immutable so it will always change when updated.
+	      this.setText(sourceText.get("text"));
+	      this.setMode(sourceText);
+	      resizeBreakpointGutter(this.editor.codeMirror);
+	    }
+	  },
+	
+	  componentDidUpdate(prevProps) {
+	    // This is in `componentDidUpdate` so helper functions can expect
+	    // `this.props` to be the current props. This lifecycle method is
+	    // responsible for updating the editor annotations.
+	    var selectedLocation = this.props.selectedLocation;
+	
+	    // If the location is different and a new line is requested,
+	    // update the pending jump line. Note that if jumping to a line in
+	    // a source where the text hasn't been loaded yet, we will set the
+	    // line here but not jump until rendering the actual source.
+	
+	    if (prevProps.selectedLocation !== selectedLocation) {
+	      if (selectedLocation && selectedLocation.line != undefined) {
+	        this.pendingJumpLine = selectedLocation.line;
+	      } else {
+	        this.pendingJumpLine = null;
+	      }
 	    }
 	
-	    // Set the source text. The source text may not have been loaded
-	    // yet. On startup, the source text may not exist yet.
-	    if (nextProps.sourceText) {
-	      this.setSourceText(nextProps.sourceText, this.props.sourceText);
-	    }
-	
-	    if (this.props.selectedSource && !nextProps.selectedSource) {
-	      this.editor.setText("");
-	    }
-	
-	    // Highlight the paused line if necessary
-	    if (isSourceForFrame(nextProps.selectedSource, nextProps.selectedFrame)) {
-	      this.setDebugLine(nextProps.selectedFrame.location.line);
+	    // Only update and jump around in real source texts. This will
+	    // keep the jump state around until the real source text is
+	    // loaded.
+	    if (this.props.sourceText && isTextForSource(this.props.sourceText)) {
+	      this.updateDebugLine(prevProps, this.props);
+	      this.highlightLine();
 	    }
 	  },
 	
@@ -32979,13 +33026,13 @@ var Debugger =
 	});
 	
 	module.exports = connect((state, props) => {
-	  var selectedSource = getSelectedSource(state);
-	  var selectedId = selectedSource && selectedSource.get("id");
+	  var selectedLocation = getSelectedLocation(state);
+	  var sourceId = selectedLocation && selectedLocation.sourceId;
 	
 	  return {
-	    selectedSource,
-	    sourceText: getSourceText(state, selectedId),
-	    breakpoints: getBreakpointsForSource(state, selectedId),
+	    selectedLocation,
+	    sourceText: getSourceText(state, sourceId),
+	    breakpoints: getBreakpointsForSource(state, sourceId),
 	    selectedFrame: getSelectedFrame(state)
 	  };
 	}, dispatch => bindActionCreators(actions, dispatch))(Editor);
@@ -33231,6 +33278,13 @@ var Debugger =
 	var Svg = __webpack_require__(234);
 	var ImPropTypes = __webpack_require__(227);
 	
+	var _require5 = __webpack_require__(212);
+	
+	var Services = _require5.Services;
+	
+	var shiftKey = Services.appinfo.OS === "Darwin" ? "\u21E7" : "Shift+";
+	var ctrlKey = Services.appinfo.OS === "Linux" ? "Ctrl+" : "";
+	
 	var actions = __webpack_require__(213);
 	var Breakpoints = React.createFactory(__webpack_require__(271));
 	var Expressions = React.createFactory(__webpack_require__(274));
@@ -33306,8 +33360,8 @@ var Debugger =
 	    this.keyShortcutsEnabled = true;
 	    keyShortcuts.on("F8", this.resume);
 	    keyShortcuts.on("F10", this.stepOver);
-	    keyShortcuts.on("F11", this.stepIn);
-	    keyShortcuts.on("F12", this.stepOut);
+	    keyShortcuts.on(`${ ctrlKey }F11`, this.stepIn);
+	    keyShortcuts.on(`${ ctrlKey }Shift+F11`, this.stepOut);
 	  },
 	
 	  componentWillUnmount() {
@@ -33315,8 +33369,8 @@ var Debugger =
 	
 	    keyShortcuts.off("F8", this.resume);
 	    keyShortcuts.off("F10", this.stepOver);
-	    keyShortcuts.off("F11", this.stepIn);
-	    keyShortcuts.off("F12", this.stepOut);
+	    keyShortcuts.off(`${ ctrlKey }F11`, this.stepIn);
+	    keyShortcuts.off(`${ ctrlKey }Shift+F11`, this.stepOut);
 	  },
 	
 	  componentDidUpdate() {
@@ -33325,7 +33379,7 @@ var Debugger =
 	
 	  renderStepButtons() {
 	    var className = this.props.pause ? "active" : "disabled";
-	    return [debugBtn(this.stepOver, "stepOver", className, "Step Over (F10)"), debugBtn(this.stepIn, "stepIn", className, "Step In (F11)"), debugBtn(this.stepOut, "stepOut", className, "Step Out \u21E7 (F12)")];
+	    return [debugBtn(this.stepOver, "stepOver", className, "Step Over (F10)"), debugBtn(this.stepIn, "stepIn", className, `Step In (${ ctrlKey }F11)`), debugBtn(this.stepOut, "stepOut", className, `Step Out (${ ctrlKey }${ shiftKey }F11)`)];
 	  },
 	
 	  renderPauseButton() {
@@ -37722,7 +37776,7 @@ var Debugger =
 	      key: source.get("id"),
 	      onClick: () => {
 	        var tabIndex = getLastVisibleTabIndex(sourceTabs, sourceTabEls);
-	        selectSource(source.get("id"), { position: tabIndex });
+	        selectSource(source.get("id"), { tabIndex });
 	        this.toggleSourcesDropdown();
 	      }
 	    }, filename);
@@ -37905,7 +37959,7 @@ var Debugger =
 	  },
 	
 	  render() {
-	    if (!this.props.selectedSource) {
+	    if (!this.props.selectedSource || !isEnabled("prettyPrint") && !isEnabled("blackBox")) {
 	      return null;
 	    }
 	
@@ -37946,6 +38000,8 @@ var Debugger =
 	__webpack_require__(362);
 	var Svg = __webpack_require__(234);
 	
+	var INITIAL_SELECTED_INDEX = 0;
+	
 	var Autocomplete = React.createClass({
 	  propTypes: {
 	    selectItem: PropTypes.func,
@@ -37957,7 +38013,7 @@ var Debugger =
 	  getInitialState() {
 	    return {
 	      inputValue: "",
-	      selectedIndex: -1
+	      selectedIndex: INITIAL_SELECTED_INDEX
 	    };
 	  },
 	
@@ -38000,7 +38056,7 @@ var Debugger =
 	      ref: "searchInput",
 	      onChange: e => this.setState({
 	        inputValue: e.target.value,
-	        selectedIndex: -1
+	        selectedIndex: INITIAL_SELECTED_INDEX
 	      }),
 	      onFocus: e => this.setState({ focused: true }),
 	      onBlur: e => this.setState({ focused: false }),
