@@ -85,6 +85,7 @@
 
 #include "mozilla/dom/AudioTrack.h"
 #include "mozilla/dom/AudioTrackList.h"
+#include "mozilla/dom/MediaErrorBinding.h"
 #include "mozilla/dom/VideoTrack.h"
 #include "mozilla/dom/VideoTrackList.h"
 #include "mozilla/dom/TextTrack.h"
@@ -161,6 +162,12 @@ static const double MAX_PLAYBACKRATE = 5.0;
 static const double THRESHOLD_HIGH_PLAYBACKRATE_AUDIO = 4.0;
 // Threshold under which audio is muted
 static const double THRESHOLD_LOW_PLAYBACKRATE_AUDIO = 0.5;
+
+// Media error values.  These need to match the ones in MediaError.webidl.
+static const unsigned short MEDIA_ERR_ABORTED = 1;
+static const unsigned short MEDIA_ERR_NETWORK = 2;
+static const unsigned short MEDIA_ERR_DECODE = 3;
+static const unsigned short MEDIA_ERR_SRC_NOT_SUPPORTED = 4;
 
 // Under certain conditions there may be no-one holding references to
 // a media element from script, DOM parent, etc, but the element may still
@@ -871,13 +878,6 @@ NS_IMETHODIMP HTMLMediaElement::GetMozAutoplayEnabled(bool *aAutoplayEnabled)
   return NS_OK;
 }
 
-NS_IMETHODIMP HTMLMediaElement::GetError(nsIDOMMediaError * *aError)
-{
-  NS_IF_ADDREF(*aError = mError);
-
-  return NS_OK;
-}
-
 bool
 HTMLMediaElement::Ended()
 {
@@ -1045,7 +1045,7 @@ void HTMLMediaElement::NoSupportedMediaSourceError()
   NS_ASSERTION(mNetworkState == NETWORK_LOADING,
                "Not loading during source selection?");
 
-  mError = new MediaError(this, nsIDOMMediaError::MEDIA_ERR_SRC_NOT_SUPPORTED);
+  mError = new MediaError(this, MEDIA_ERR_SRC_NOT_SUPPORTED);
   ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_NO_SOURCE);
   DispatchAsyncEvent(NS_LITERAL_STRING("error"));
   ChangeDelayLoadStatus(false);
@@ -4416,7 +4416,7 @@ void HTMLMediaElement::NetworkError()
   if (mDecoder) {
     ShutdownDecoder();
   }
-  Error(nsIDOMMediaError::MEDIA_ERR_NETWORK);
+  Error(MEDIA_ERR_NETWORK);
 }
 
 void HTMLMediaElement::DecodeError(const MediaResult& aError)
@@ -4443,7 +4443,7 @@ void HTMLMediaElement::DecodeError(const MediaResult& aError)
       NS_WARNING("Should know the source we were loading from!");
     }
   } else {
-    Error(nsIDOMMediaError::MEDIA_ERR_DECODE, aError);
+    Error(MEDIA_ERR_DECODE, aError);
   }
 }
 
@@ -4454,16 +4454,16 @@ bool HTMLMediaElement::HasError() const
 
 void HTMLMediaElement::LoadAborted()
 {
-  Error(nsIDOMMediaError::MEDIA_ERR_ABORTED);
+  Error(MEDIA_ERR_ABORTED);
 }
 
 void HTMLMediaElement::Error(uint16_t aErrorCode,
                              const MediaResult& aErrorDetails)
 {
-  NS_ASSERTION(aErrorCode == nsIDOMMediaError::MEDIA_ERR_DECODE ||
-               aErrorCode == nsIDOMMediaError::MEDIA_ERR_NETWORK ||
-               aErrorCode == nsIDOMMediaError::MEDIA_ERR_ABORTED,
-               "Only use nsIDOMMediaError codes!");
+  NS_ASSERTION(aErrorCode == MEDIA_ERR_DECODE ||
+               aErrorCode == MEDIA_ERR_NETWORK ||
+               aErrorCode == MEDIA_ERR_ABORTED,
+               "Only use MediaError codes!");
 
   // Since we have multiple paths calling into DecodeError, e.g.
   // MediaKeys::Terminated and EMEH264Decoder::Error. We should take the 1st
@@ -6488,10 +6488,9 @@ HTMLMediaElement::HaveFailedWithSourceNotSupportedError() const
     return false;
   }
 
-  uint16_t errorCode;
-  mError->GetCode(&errorCode);
+  uint16_t errorCode = mError->Code();
   return (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_NO_SOURCE &&
-          errorCode == nsIDOMMediaError::MEDIA_ERR_SRC_NOT_SUPPORTED);
+          errorCode == MEDIA_ERR_SRC_NOT_SUPPORTED);
 }
 
 void

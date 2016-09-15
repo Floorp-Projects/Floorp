@@ -10,6 +10,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/SizePrintfMacros.h"
+#include "mozilla/Sprintf.h"
 
 #include "jslibmath.h"
 #include "jstypes.h"
@@ -47,7 +48,7 @@ FallbackICSpew(JSContext* cx, ICFallbackStub* stub, const char* fmt, ...)
         char fmtbuf[100];
         va_list args;
         va_start(args, fmt);
-        vsnprintf(fmtbuf, 100, fmt, args);
+        (void) VsprintfLiteral(fmtbuf, fmt, args);
         va_end(args);
 
         JitSpew(JitSpew_BaselineICFallback,
@@ -72,7 +73,7 @@ TypeFallbackICSpew(JSContext* cx, ICTypeMonitor_Fallback* stub, const char* fmt,
         char fmtbuf[100];
         va_list args;
         va_start(args, fmt);
-        vsnprintf(fmtbuf, 100, fmt, args);
+        (void) VsprintfLiteral(fmtbuf, fmt, args);
         va_end(args);
 
         JitSpew(JitSpew_BaselineICFallback,

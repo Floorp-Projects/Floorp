@@ -202,6 +202,7 @@ fi
 AC_SUBST(MOZ_THUMB2)
 
 if test "$CPU_ARCH" = "arm"; then
+  NEON_FLAGS="-mfpu=neon"
   AC_MSG_CHECKING(for ARM SIMD support in compiler)
   # We try to link so that this also fails when
   # building with LTO.
@@ -248,5 +249,6 @@ AC_SUBST(HAVE_ARM_SIMD)
 AC_SUBST(HAVE_ARM_NEON)
 AC_SUBST(BUILD_ARM_NEON)
 AC_SUBST(ARM_ARCH)
+AC_SUBST_LIST(NEON_FLAGS)
 
 ])

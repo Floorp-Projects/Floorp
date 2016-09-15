@@ -7,6 +7,7 @@
 #include "js/CharacterEncoding.h"
 
 #include "mozilla/Range.h"
+#include "mozilla/Sprintf.h"
 
 #include <algorithm>
 #include <type_traits>
@@ -229,7 +230,7 @@ static void
 ReportInvalidCharacter(JSContext* cx, uint32_t offset)
 {
     char buffer[10];
-    snprintf(buffer, 10, "%u", offset);
+    SprintfLiteral(buffer, "%u", offset);
     JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, GetErrorMessage, nullptr,
                                  JSMSG_MALFORMED_UTF8_CHAR, buffer);
 }
@@ -244,7 +245,7 @@ static void
 ReportTooBigCharacter(JSContext* cx, uint32_t v)
 {
     char buffer[10];
-    snprintf(buffer, 10, "0x%x", v + 0x10000);
+    SprintfLiteral(buffer, "0x%x", v + 0x10000);
     JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, GetErrorMessage, nullptr,
                                  JSMSG_UTF8_CHAR_TOO_LARGE, buffer);
 }

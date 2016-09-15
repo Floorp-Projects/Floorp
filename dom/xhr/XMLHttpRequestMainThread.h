@@ -255,9 +255,9 @@ public:
   nsresult
   Open(const nsACString& aMethod,
        const nsACString& aUrl,
-       const Optional<bool>& aAsync,
-       const Optional<nsAString>& aUsername,
-       const Optional<nsAString>& aPassword);
+       bool aAsync,
+       const nsAString& aUsername,
+       const nsAString& aPassword);
 
   virtual void
   SetRequestHeader(const nsACString& aName, const nsACString& aValue,

@@ -30,9 +30,10 @@ public:
   typedef RotatedContentBuffer::PaintState PaintState;
   typedef RotatedContentBuffer::ContentType ContentType;
 
-  explicit BasicPaintedLayer(BasicLayerManager* aLayerManager) :
+  explicit BasicPaintedLayer(BasicLayerManager* aLayerManager, gfx::BackendType aBackend) :
     PaintedLayer(aLayerManager, static_cast<BasicImplData*>(this)),
     mContentClient(nullptr)
+    , mBackend(aBackend)
   {
     MOZ_COUNT_CTOR(BasicPaintedLayer);
   }
@@ -123,6 +124,7 @@ protected:
   }
 
   RefPtr<ContentClientBasic> mContentClient;
+  gfx::BackendType mBackend;
 };
 
 } // namespace layers

@@ -12,6 +12,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/Sprintf.h"
 
 #include <string.h>
 
@@ -703,12 +704,11 @@ ErrorReport::ReportAddonExceptionToTelementry(JSContext* cx)
         filename = "FILE_NOT_FOUND";
     }
     char histogramKey[64];
-    snprintf(histogramKey, sizeof(histogramKey),
-            "%s %s %s %u",
-            addonIdChars.get(),
-            funname,
-            filename,
-            (reportp ? reportp->lineno : 0) );
+    SprintfLiteral(histogramKey, "%s %s %s %u",
+                   addonIdChars.get(),
+                   funname,
+                   filename,
+                   (reportp ? reportp->lineno : 0) );
     cx->runtime()->addTelemetry(JS_TELEMETRY_ADDON_EXCEPTIONS, 1, histogramKey);
 }
 

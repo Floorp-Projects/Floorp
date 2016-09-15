@@ -520,4 +520,16 @@ XRE_API(void,
         XRE_GlibInit, ())
 #endif
 
+
+#ifdef LIBFUZZER
+#include "LibFuzzerRegistry.h"
+
+XRE_API(void,
+        XRE_LibFuzzerSetMain, (int, char**, LibFuzzerMain))
+
+XRE_API(void,
+        XRE_LibFuzzerGetFuncs, (const char*, LibFuzzerInitFunc*,
+                                LibFuzzerTestingFunc*))
+#endif // LIBFUZZER
+
 #endif // _nsXULAppAPI_h__

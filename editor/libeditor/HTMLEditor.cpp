@@ -43,6 +43,7 @@
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
 #include "nsISupportsArray.h"
+#include "nsIMutableArray.h"
 #include "nsContentUtils.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIPresShell.h"
@@ -3065,13 +3066,13 @@ HTMLEditor::GetURLForStyleSheet(StyleSheetHandle aStyleSheet,
 }
 
 NS_IMETHODIMP
-HTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
+HTMLEditor::GetEmbeddedObjects(nsIArray** aNodeList)
 {
   NS_ENSURE_TRUE(aNodeList, NS_ERROR_NULL_POINTER);
 
-  nsresult rv = NS_NewISupportsArray(aNodeList);
+  nsresult rv;
+  nsCOMPtr<nsIMutableArray> nodes = do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(*aNodeList, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsIContentIterator> iter =
       do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &rv);
@@ -3096,12 +3097,13 @@ HTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
           (element->IsHTMLElement(nsGkAtoms::body) &&
            element->HasAttr(kNameSpaceID_None, nsGkAtoms::background))) {
         nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(node);
-        (*aNodeList)->AppendElement(domNode);
-      }
-    }
-    iter->Next();
-  }
+        nodes->AppendElement(domNode, false);
+       }
+     }
+     iter->Next();
+   }
 
+  nodes.forget(aNodeList);
   return rv;
 }
 
