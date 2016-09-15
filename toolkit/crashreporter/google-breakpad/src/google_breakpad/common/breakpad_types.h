@@ -40,6 +40,12 @@
 #ifndef GOOGLE_BREAKPAD_COMMON_BREAKPAD_TYPES_H__
 #define GOOGLE_BREAKPAD_COMMON_BREAKPAD_TYPES_H__
 
+#if (defined(_INTTYPES_H) || defined(_INTTYPES_H_)) && \
+    !defined(__STDC_FORMAT_MACROS)
+#error "inttypes.h has already been included before this header file, but "
+#error "without __STDC_FORMAT_MACROS defined."
+#endif
+
 #ifndef __STDC_FORMAT_MACROS
 #define __STDC_FORMAT_MACROS
 #endif  /* __STDC_FORMAT_MACROS */
