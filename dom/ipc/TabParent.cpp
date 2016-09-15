@@ -398,6 +398,17 @@ TabParent::SetOwnerElement(Element* aElement)
     Unused << SendSetUseGlobalHistory(useGlobalHistory);
   }
 
+#if defined(XP_WIN) && defined(ACCESSIBILITY)
+  if (!mIsDestroyed) {
+    uintptr_t newWindowHandle = 0;
+    if (nsCOMPtr<nsIWidget> widget = GetWidget()) {
+      newWindowHandle =
+        reinterpret_cast<uintptr_t>(widget->GetNativeData(NS_NATIVE_WINDOW));
+    }
+    Unused << SendUpdateNativeWindowHandle(newWindowHandle);
+  }
+#endif
+
   AddWindowListeners();
   TryCacheDPIAndScale();
 }
