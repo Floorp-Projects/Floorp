@@ -394,6 +394,7 @@ web-platform-tests:
     max-run-time: 7200
     instance-size: xlarge
     docker-image: {"in-tree": "desktop1604-test"}
+    checkout: true
     mozharness:
         script: mozharness/scripts/web_platform_tests.py
         no-read-buildbot-config: true
@@ -410,6 +411,7 @@ web-platform-tests-reftests:
     max-run-time: 5400
     instance-size: xlarge
     docker-image: {"in-tree": "desktop1604-test"}
+    checkout: true
     mozharness:
         script: mozharness/scripts/web_platform_tests.py
         no-read-buildbot-config: true

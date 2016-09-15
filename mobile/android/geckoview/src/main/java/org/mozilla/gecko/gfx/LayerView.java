@@ -9,6 +9,7 @@ import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 
 import org.mozilla.gecko.AndroidGamepadManager;
+import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.AppConstants;
@@ -18,10 +19,7 @@ import org.mozilla.gecko.GeckoAccessibility;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.mozglue.JNIObject;
-import org.mozilla.gecko.Tab;
-import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.ZoomConstraints;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -41,13 +39,12 @@ import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.InputDevice;
-import android.widget.LinearLayout;
-import android.widget.ScrollView;
+import android.widget.FrameLayout;
 
 /**
  * A view rendered by the layer compositor.
  */
-public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener {
+public class LayerView extends FrameLayout {
     private static final String LOGTAG = "GeckoLayerView";
 
     private GeckoLayerClient mLayerClient;
@@ -60,11 +57,8 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
 
     private SurfaceView mSurfaceView;
     private TextureView mTextureView;
-    private View mFillerView;
 
     private Listener mListener;
-
-    private float mSurfaceTranslation;
 
     /* This should only be modified on the Java UI thread. */
     private final Overscroll mOverscroll;
@@ -172,7 +166,6 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         } else {
             mOverscroll = null;
         }
-        Tabs.registerOnTabsChangedListener(this);
     }
 
     public LayerView(Context context) {
@@ -226,7 +219,6 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         if (mRenderer != null) {
             mRenderer.destroy();
         }
-        Tabs.unregisterOnTabsChangedListener(this);
     }
 
     @Override
@@ -244,7 +236,6 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
             requestFocus();
         }
-        event.offsetLocation(0, -mSurfaceTranslation);
 
         if (mToolbarAnimator != null && mToolbarAnimator.onInterceptTouchEvent(event)) {
             if (mPanZoomController != null) {
@@ -272,8 +263,6 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
             return false;
         }
 
-        event.offsetLocation(0, -mSurfaceTranslation);
-
         if (!mLayerClient.isGeckoReady()) {
             // If gecko isn't loaded yet, don't try sending events to the
             // native code because it's just going to crash
@@ -287,8 +276,6 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
 
     @Override
     public boolean onGenericMotionEvent(MotionEvent event) {
-        event.offsetLocation(0, -mSurfaceTranslation);
-
         if (AndroidGamepadManager.handleMotionEvent(event)) {
             return true;
         }
@@ -340,25 +327,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
 
             mSurfaceView = new LayerSurfaceView(getContext(), this);
             mSurfaceView.setBackgroundColor(Color.WHITE);
-
-            // The "filler" view sits behind the URL bar and should never be
-            // visible. It exists solely to make this LayerView actually
-            // scrollable so that we can shift the surface around on the screen.
-            // Once we drop support for pre-Honeycomb Android versions this
-            // should not be needed; we can just turn LayerView back into a
-            // FrameLayout that holds mSurfaceView and nothing else.
-            mFillerView = new View(getContext()) {
-                @Override protected void onMeasure(int aWidthSpec, int aHeightSpec) {
-                    setMeasuredDimension(0, Math.round(mToolbarAnimator.getMaxTranslation()));
-                }
-            };
-            mFillerView.setBackgroundColor(Color.RED);
-
-            LinearLayout container = new LinearLayout(getContext());
-            container.setOrientation(LinearLayout.VERTICAL);
-            container.addView(mFillerView);
-            container.addView(mSurfaceView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-            addView(container, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            addView(mSurfaceView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
             SurfaceHolder holder = mSurfaceView.getHolder();
             holder.addCallback(new SurfaceListener());
@@ -398,10 +367,6 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         if (mSurfaceView != null) {
             mSurfaceView.setBackgroundColor(newColor);
         }
-    }
-
-    public void setIsRTL(boolean aIsRTL) {
-        mLayerClient.setIsRTL(aIsRTL);
     }
 
     public void requestRender() {
@@ -624,43 +589,15 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         }
     }
 
-    @Override
-    protected void onMeasure(int aWidthSpec, int aHeightSpec) {
-        super.onMeasure(aWidthSpec, aHeightSpec);
-        if (mSurfaceView != null) {
-            // Because of the crazy setup where this LayerView is a ScrollView
-            // and the SurfaceView is inside a LinearLayout, the SurfaceView
-            // doesn't get the right information to size itself the way we want.
-            // We always want it to be the same size as this LayerView, so we
-            // use a hack to make sure it sizes itself that way.
-            ((LayerSurfaceView)mSurfaceView).overrideSize(getMeasuredWidth(), getMeasuredHeight());
-        }
-    }
-
     /* A subclass of SurfaceView to listen to layout changes, as
      * View.OnLayoutChangeListener requires API level 11.
      */
     private class LayerSurfaceView extends SurfaceView {
         private LayerView mParent;
-        private int mForcedWidth;
-        private int mForcedHeight;
 
         public LayerSurfaceView(Context aContext, LayerView aParent) {
             super(aContext);
             mParent = aParent;
-        }
-
-        void overrideSize(int aWidth, int aHeight) {
-            if (mForcedWidth != aWidth || mForcedHeight != aHeight) {
-                mForcedWidth = aWidth;
-                mForcedHeight = aHeight;
-                requestLayout();
-            }
-        }
-
-        @Override
-        protected void onMeasure(int aWidthSpec, int aHeightSpec) {
-            setMeasuredDimension(mForcedWidth, mForcedHeight);
         }
 
         @Override
@@ -746,29 +683,14 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
 
     public void setMaxTranslation(float aMaxTranslation) {
         mToolbarAnimator.setMaxTranslation(aMaxTranslation);
-        if (mFillerView != null) {
-            mFillerView.requestLayout();
-        }
     }
 
     public void setSurfaceTranslation(float translation) {
-        // Once we drop support for pre-Honeycomb Android versions, we can
-        // revert bug 1197811 and just use ViewHelper here.
-        if (mSurfaceTranslation != translation) {
-            mSurfaceTranslation = translation;
-            scrollTo(0, Math.round(mToolbarAnimator.getMaxTranslation() - translation));
-        }
+        ViewHelper.setTranslationY(this, translation);
     }
 
     public float getSurfaceTranslation() {
-        return mSurfaceTranslation;
-    }
-
-    @Override
-    public void onTabChanged(Tab tab, Tabs.TabEvents msg, String data) {
-        if (msg == Tabs.TabEvents.VIEWPORT_CHANGE && Tabs.getInstance().isSelectedTab(tab) && mLayerClient != null) {
-            setIsRTL(tab.getIsRTL());
-        }
+        return ViewHelper.getTranslationY(this);
     }
 
     // Public hooks for dynamic toolbar translation

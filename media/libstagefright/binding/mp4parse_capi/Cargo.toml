@@ -1,6 +1,6 @@
 [package]
 name = "mp4parse_capi"
-version = "0.5.0"
+version = "0.5.1"
 authors = [
   "Ralph Giles <giles@mozilla.com>",
   "Matthew Gregan <kinetik@flim.org>",
@@ -18,7 +18,7 @@ exclude = [
 ]
 
 [dependencies]
-"mp4parse" = {version = "0.5.0", path = "../mp4parse"}
+"mp4parse" = {version = "0.5.1", path = "../mp4parse"}
 
 [features]
 fuzz = ["mp4parse/fuzz"]

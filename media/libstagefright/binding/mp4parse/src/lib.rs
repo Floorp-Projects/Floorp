@@ -291,19 +291,21 @@ impl Default for TrackType {
     fn default() -> Self { TrackType::Unknown }
 }
 
-/// The media's global (mvhd) timescale.
+/// The media's global (mvhd) timescale in units per second.
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct MediaTimeScale(pub u64);
 
-/// A time scaled by the media's global (mvhd) timescale.
+/// A time to be scaled by the media's global (mvhd) timescale.
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct MediaScaledTime(pub u64);
 
 /// The track's local (mdhd) timescale.
+/// Members are timescale units per second and the track id.
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct TrackTimeScale(pub u64, pub usize);
 
-/// A time scaled by the track's local (mdhd) timescale.
+/// A time to be scaled by the track's local (mdhd) timescale.
+/// Members are time in scale units and the track id.
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct TrackScaledTime(pub u64, pub usize);
 
