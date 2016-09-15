@@ -52,6 +52,17 @@ static LazyLogModule gMediaStreamLog("MediaStream");
 
 const TrackID TRACK_VIDEO_PRIMARY = 1;
 
+static bool
+ContainsLiveTracks(nsTArray<RefPtr<DOMMediaStream::TrackPort>>& aTracks)
+{
+  for (auto& port : aTracks) {
+    if (port->GetTrack()->ReadyState() == MediaStreamTrackState::Live) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 DOMMediaStream::TrackPort::TrackPort(MediaInputPort* aInputPort,
                                      MediaStreamTrack* aTrack,
@@ -271,6 +282,16 @@ public:
     aGraph->DispatchToMainThreadAfterStreamStateUpdate(runnable.forget());
   }
 
+
+  void NotifyEvent(MediaStreamGraph* aGraph,
+                   MediaStreamGraphEvent event) override
+  {
+    if (event == MediaStreamGraphEvent::EVENT_FINISHED) {
+      aGraph->DispatchToMainThreadAfterStreamStateUpdate(
+        NewRunnableMethod(this, &PlaybackStreamListener::DoNotifyFinished));
+    }
+  }
+
 private:
   // These fields may only be accessed on the main thread
   DOMMediaStream* mStream;
@@ -375,7 +396,7 @@ DOMMediaStream::DOMMediaStream(nsPIDOMWindowInner* aWindow,
     mTracksPendingRemoval(0), mTrackSourceGetter(aTrackSourceGetter),
     mPlaybackTrackListener(MakeAndAddRef<PlaybackTrackListener>(this)),
     mTracksCreated(false), mNotifiedOfMediaStreamGraphShutdown(false),
-    mActive(false)
+    mActive(false), mSetInactiveOnFinish(false)
 {
   nsresult rv;
   nsCOMPtr<nsIUUIDGenerator> uuidgen =
@@ -806,9 +827,15 @@ DOMMediaStream::RemoveDirectListener(DirectMediaStreamListener* aListener)
 }
 
 bool
-DOMMediaStream::IsFinished()
+DOMMediaStream::IsFinished() const
 {
   return !mPlaybackStream || mPlaybackStream->IsFinished();
+}
+
+void
+DOMMediaStream::SetInactiveOnFinish()
+{
+  mSetInactiveOnFinish = true;
 }
 
 void
@@ -1199,6 +1226,23 @@ DOMMediaStream::NotifyTracksCreated()
 }
 
 void
+DOMMediaStream::NotifyFinished()
+{
+  if (!mSetInactiveOnFinish) {
+    return;
+  }
+
+  if (!mActive) {
+    // This can happen if the stream never became active.
+    return;
+  }
+
+  MOZ_ASSERT(!ContainsLiveTracks(mTracks));
+  mActive = false;
+  NotifyInactive();
+}
+
+void
 DOMMediaStream::NotifyActive()
 {
   LOG(LogLevel::Info, ("DOMMediaStream %p NotifyActive(). ", this));
@@ -1291,15 +1335,7 @@ DOMMediaStream::NotifyTrackAdded(const RefPtr<MediaStreamTrack>& aTrack)
   }
 
   // Check if we became active.
-  bool active = false;
-  for (auto port : mTracks) {
-    if (!port->GetTrack()->Ended()) {
-      active = true;
-      break;
-    }
-  }
-
-  if (active) {
+  if (ContainsLiveTracks(mTracks)) {
     mActive = true;
     NotifyActive();
   }
@@ -1327,16 +1363,14 @@ DOMMediaStream::NotifyTrackRemoved(const RefPtr<MediaStreamTrack>& aTrack)
     return;
   }
 
-  // Check if we became inactive.
-  bool active = false;
-  for (auto port : mTracks) {
-    if (!port->GetTrack()->Ended()) {
-      active = true;
-      break;
-    }
+  if (mSetInactiveOnFinish) {
+    // For compatibility with mozCaptureStream we in some cases do not go
+    // inactive until the playback stream finishes.
+    return;
   }
 
-  if (!active) {
+  // Check if we became inactive.
+  if (!ContainsLiveTracks(mTracks)) {
     mActive = false;
     NotifyInactive();
   }

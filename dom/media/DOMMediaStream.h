@@ -459,7 +459,16 @@ public:
   virtual DOMLocalMediaStream* AsDOMLocalMediaStream() { return nullptr; }
   virtual DOMHwMediaStream* AsDOMHwMediaStream() { return nullptr; }
 
-  bool IsFinished();
+  /**
+   * Legacy method that returns true when the playback stream has finished.
+   */
+  bool IsFinished() const;
+
+  /**
+   * Becomes inactive only when the playback stream has finished.
+   */
+  void SetInactiveOnFinish();
+
   /**
    * Returns a principal indicating who may access this stream. The stream contents
    * can only be accessed by principals subsuming this principal.
@@ -613,6 +622,9 @@ protected:
   // created.
   void NotifyTracksCreated();
 
+  // Called when our playback stream has finished in the MediaStreamGraph.
+  void NotifyFinished();
+
   // Dispatches NotifyActive() to all registered track listeners.
   void NotifyActive();
 
@@ -727,6 +739,11 @@ protected:
 
   // True if this stream has live tracks.
   bool mActive;
+
+  // True if this stream only sets mActive to false when its playback stream
+  // finishes. This is a hack to maintain legacy functionality for playing a
+  // HTMLMediaElement::MozCaptureStream(). See bug 1302379.
+  bool mSetInactiveOnFinish;
 
 private:
   void NotifyPrincipalChanged();
