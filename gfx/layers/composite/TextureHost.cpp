@@ -19,6 +19,7 @@
 #include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/TextureClient.h"
+#include "mozilla/layers/GPUVideoTextureHost.h"
 #include "nsAString.h"
 #include "mozilla/RefPtr.h"                   // for nsRefPtr
 #include "nsPrintfCString.h"            // for nsPrintfCString
@@ -227,6 +228,7 @@ TextureHost::Create(const SurfaceDescriptor& aDesc,
     case SurfaceDescriptor::TSurfaceDescriptorBuffer:
     case SurfaceDescriptor::TSurfaceDescriptorDIB:
     case SurfaceDescriptor::TSurfaceDescriptorFileMapping:
+    case SurfaceDescriptor::TSurfaceDescriptorGPUVideo:
       return CreateBackendIndependentTextureHost(aDesc, aDeallocator, aFlags);
 
     case SurfaceDescriptor::TEGLImageDescriptor:
@@ -294,6 +296,10 @@ CreateBackendIndependentTextureHost(const SurfaceDescriptor& aDesc,
           gfxCriticalError() << "Failed texture host for backend " << (int)data.type();
           MOZ_CRASH("GFX: No texture host for backend");
       }
+      break;
+    }
+    case SurfaceDescriptor::TSurfaceDescriptorGPUVideo: {
+      result = new GPUVideoTextureHost(aFlags, aDesc.get_SurfaceDescriptorGPUVideo());
       break;
     }
 #ifdef XP_WIN
