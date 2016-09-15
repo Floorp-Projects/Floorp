@@ -33,7 +33,7 @@ public final class ReadingListHelper implements NativeEventListener {
 
     public ReadingListHelper(Context context, GeckoProfile profile) {
         this.context = context;
-        this.db = profile.getDB();
+        this.db = BrowserDB.from(profile);
 
         EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener) this,
             "Reader:FaviconRequest", "Reader:AddedToCache");

@@ -10,7 +10,7 @@
 #include "js/TypeDecls.h"
 #include "jsapi.h"
 #include "jsprf.h"
-#include "mozilla/CycleCollectedJSRuntime.h"
+#include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -145,12 +145,12 @@ Throw(JSContext* aCx, nsresult aRv, const nsACString& aMessage)
     return false;
   }
 
-  CycleCollectedJSRuntime* runtime = CycleCollectedJSRuntime::Get();
-  nsCOMPtr<nsIException> existingException = runtime->GetPendingException();
+  CycleCollectedJSContext* context = CycleCollectedJSContext::Get();
+  nsCOMPtr<nsIException> existingException = context->GetPendingException();
   // Make sure to clear the pending exception now.  Either we're going to reuse
   // it (and we already grabbed it), or we plan to throw something else and this
   // pending exception is no longer relevant.
-  runtime->SetPendingException(nullptr);
+  context->SetPendingException(nullptr);
 
   // Ignore the pending exception if we have a non-default message passed in.
   if (aMessage.IsEmpty() && existingException) {

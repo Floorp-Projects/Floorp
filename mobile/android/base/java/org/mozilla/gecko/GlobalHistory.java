@@ -53,7 +53,7 @@ class GlobalHistory {
 
         public NotifierRunnable(final Context context) {
             mContentResolver = context.getContentResolver();
-            mDB = GeckoProfile.get(context).getDB();
+            mDB = BrowserDB.from(context);
         }
 
         @Override

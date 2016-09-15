@@ -217,13 +217,13 @@ public:
     }
 
     static void
-    RequestThumbnail(jni::ByteBuffer::Param aData, int32_t aTabId,
-                     int32_t aWidth, int32_t aHeight)
+    RequestThumbnail(jni::ByteBuffer::Param aData, jni::Object::Param aTab,
+                     int32_t aTabId, int32_t aWidth, int32_t aHeight)
     {
         nsCOMPtr<mozIDOMWindowProxy> window = GetWindowForTab(aTabId);
         if (!window || !aData) {
-            java::ThumbnailHelper::SendThumbnail(
-                    aData, aTabId, /* success */ false, /* store */ false);
+            java::ThumbnailHelper::NotifyThumbnail(
+                    aData, aTab, /* success */ false, /* store */ false);
             return;
         }
 
@@ -240,8 +240,8 @@ public:
                 NS_FAILED(rect->GetWidth(&pageWidth)) ||
                 NS_FAILED(rect->GetHeight(&pageHeight)) ||
                 int32_t(pageWidth) == 0 || int32_t(pageHeight) == 0) {
-            java::ThumbnailHelper::SendThumbnail(
-                    aData, aTabId, /* success */ false, /* store */ false);
+            java::ThumbnailHelper::NotifyThumbnail(
+                    aData, aTab, /* success */ false, /* store */ false);
             return;
         }
 
@@ -259,7 +259,7 @@ public:
         const bool success = !!docShell;
         const bool store = success ? ShouldStoreThumbnail(docShell) : false;
 
-        java::ThumbnailHelper::SendThumbnail(aData, aTabId, success, store);
+        java::ThumbnailHelper::NotifyThumbnail(aData, aTab, success, store);
     }
 
     static void

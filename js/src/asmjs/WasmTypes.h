@@ -945,6 +945,14 @@ enum ModuleKind
     AsmJS
 };
 
+// Represents the resizable limits of memories and tables.
+
+struct ResizableLimits
+{
+    uint32_t initial;
+    Maybe<uint32_t> maximum;
+};
+
 // TableDesc describes a table as well as the offset of the table's base pointer
 // in global memory. Currently, wasm only has "any function" and asm.js only
 // "typed function".
@@ -960,131 +968,18 @@ struct TableDesc
     TableKind kind;
     bool external;
     uint32_t globalDataOffset;
-    uint32_t initial;
-    uint32_t maximum;
+    ResizableLimits limits;
 
-    TableDesc() { PodZero(this); }
+    TableDesc() = default;
+    TableDesc(TableKind kind, ResizableLimits limits)
+     : kind(kind),
+       external(false),
+       globalDataOffset(UINT32_MAX),
+       limits(limits)
+    {}
 };
 
-WASM_DECLARE_POD_VECTOR(TableDesc, TableDescVector)
-
-// CalleeDesc describes how to compile one of the variety of asm.js/wasm calls.
-// This is hoisted into WasmTypes.h for sharing between Ion and Baseline.
-
-class CalleeDesc
-{
-  public:
-    enum Which {
-        // Calls a function defined in the same module by its index.
-        Definition,
-
-        // Calls the import identified by the offset of its FuncImportTls in
-        // thread-local data.
-        Import,
-
-        // Calls a WebAssembly table (heterogeneous, index must be bounds
-        // checked, callee instance depends on TableDesc).
-        WasmTable,
-
-        // Calls an asm.js table (homogeneous, masked index, same-instance).
-        AsmJSTable,
-
-        // Call a C++ function identified by SymbolicAddress.
-        Builtin,
-
-        // Like Builtin, but automatically passes Instance* as first argument.
-        BuiltinInstanceMethod
-    };
-
-  private:
-    Which which_;
-    union U {
-        U() {}
-        uint32_t funcDefIndex_;
-        struct {
-            uint32_t globalDataOffset_;
-        } import;
-        struct {
-            TableDesc desc_;
-            SigIdDesc sigId_;
-        } table;
-        SymbolicAddress builtin_;
-    } u;
-
-  public:
-    CalleeDesc() {}
-    static CalleeDesc definition(uint32_t funcDefIndex) {
-        CalleeDesc c;
-        c.which_ = Definition;
-        c.u.funcDefIndex_ = funcDefIndex;
-        return c;
-    }
-    static CalleeDesc import(uint32_t globalDataOffset) {
-        CalleeDesc c;
-        c.which_ = Import;
-        c.u.import.globalDataOffset_ = globalDataOffset;
-        return c;
-    }
-    static CalleeDesc wasmTable(const TableDesc& desc, SigIdDesc sigId) {
-        CalleeDesc c;
-        c.which_ = WasmTable;
-        c.u.table.desc_ = desc;
-        c.u.table.sigId_ = sigId;
-        return c;
-    }
-    static CalleeDesc asmJSTable(const TableDesc& desc) {
-        CalleeDesc c;
-        c.which_ = AsmJSTable;
-        c.u.table.desc_ = desc;
-        return c;
-    }
-    static CalleeDesc builtin(SymbolicAddress callee) {
-        CalleeDesc c;
-        c.which_ = Builtin;
-        c.u.builtin_ = callee;
-        return c;
-    }
-    static CalleeDesc builtinInstanceMethod(SymbolicAddress callee) {
-        CalleeDesc c;
-        c.which_ = BuiltinInstanceMethod;
-        c.u.builtin_ = callee;
-        return c;
-    }
-    Which which() const {
-        return which_;
-    }
-    uint32_t funcDefIndex() const {
-        MOZ_ASSERT(which_ == Definition);
-        return u.funcDefIndex_;
-    }
-    uint32_t importGlobalDataOffset() const {
-        MOZ_ASSERT(which_ == Import);
-        return u.import.globalDataOffset_;
-    }
-    bool isTable() const {
-        return which_ == WasmTable || which_ == AsmJSTable;
-    }
-    uint32_t tableGlobalDataOffset() const {
-        MOZ_ASSERT(isTable());
-        return u.table.desc_.globalDataOffset;
-    }
-    uint32_t wasmTableLength() const {
-        MOZ_ASSERT(which_ == WasmTable);
-        return u.table.desc_.initial;
-    }
-    bool wasmTableIsExternal() const {
-        MOZ_ASSERT(which_ == WasmTable);
-        return u.table.desc_.external;
-    }
-    SigIdDesc wasmTableSigId() const {
-        MOZ_ASSERT(which_ == WasmTable);
-        return u.table.sigId_;
-    }
-    SymbolicAddress builtin() const {
-        MOZ_ASSERT(which_ == Builtin || which_ == BuiltinInstanceMethod);
-        return u.builtin_;
-    }
-};
+typedef Vector<TableDesc, 0, SystemAllocPolicy> TableDescVector;
 
 // ExportArg holds the unboxed operands to the wasm entry trampoline which can
 // be called through an ExportFuncPtr.
@@ -1155,9 +1050,23 @@ struct FuncImportTls
     static_assert(sizeof(GCPtrObject) == sizeof(void*), "for JIT access");
 };
 
-// When a table can be shared between instances (it is "external"), the internal
-// representation is an array of ExternalTableElem instead of just an array of
-// code pointers.
+// TableTls describes the region of wasm global memory allocated in the
+// instance's thread-local storage which is accessed directly from JIT code
+// to bounds-check and index the table.
+
+struct TableTls
+{
+    // Length of the table in number of elements (not bytes).
+    uint32_t length;
+
+    // Pointer to the array of elements (of type either ExternalTableElem or
+    // void*).
+    void* base;
+};
+
+// When a table can contain functions from other instances (it is "external"),
+// the internal representation is an array of ExternalTableElem instead of just
+// an array of code pointers.
 
 struct ExternalTableElem
 {
@@ -1171,6 +1080,126 @@ struct ExternalTableElem
     // The pointer to the callee's instance's TlsData. This must be loaded into
     // WasmTlsReg before calling 'code'.
     TlsData* tls;
+};
+
+// CalleeDesc describes how to compile one of the variety of asm.js/wasm calls.
+// This is hoisted into WasmTypes.h for sharing between Ion and Baseline.
+
+class CalleeDesc
+{
+  public:
+    enum Which {
+        // Calls a function defined in the same module by its index.
+        Definition,
+
+        // Calls the import identified by the offset of its FuncImportTls in
+        // thread-local data.
+        Import,
+
+        // Calls a WebAssembly table (heterogeneous, index must be bounds
+        // checked, callee instance depends on TableDesc).
+        WasmTable,
+
+        // Calls an asm.js table (homogeneous, masked index, same-instance).
+        AsmJSTable,
+
+        // Call a C++ function identified by SymbolicAddress.
+        Builtin,
+
+        // Like Builtin, but automatically passes Instance* as first argument.
+        BuiltinInstanceMethod
+    };
+
+  private:
+    Which which_;
+    union U {
+        U() {}
+        uint32_t funcDefIndex_;
+        struct {
+            uint32_t globalDataOffset_;
+        } import;
+        struct {
+            uint32_t globalDataOffset_;
+            bool external_;
+            SigIdDesc sigId_;
+        } table;
+        SymbolicAddress builtin_;
+    } u;
+
+  public:
+    CalleeDesc() {}
+    static CalleeDesc definition(uint32_t funcDefIndex) {
+        CalleeDesc c;
+        c.which_ = Definition;
+        c.u.funcDefIndex_ = funcDefIndex;
+        return c;
+    }
+    static CalleeDesc import(uint32_t globalDataOffset) {
+        CalleeDesc c;
+        c.which_ = Import;
+        c.u.import.globalDataOffset_ = globalDataOffset;
+        return c;
+    }
+    static CalleeDesc wasmTable(const TableDesc& desc, SigIdDesc sigId) {
+        CalleeDesc c;
+        c.which_ = WasmTable;
+        c.u.table.globalDataOffset_ = desc.globalDataOffset;
+        c.u.table.external_ = desc.external;
+        c.u.table.sigId_ = sigId;
+        return c;
+    }
+    static CalleeDesc asmJSTable(const TableDesc& desc) {
+        CalleeDesc c;
+        c.which_ = AsmJSTable;
+        c.u.table.globalDataOffset_ = desc.globalDataOffset;
+        return c;
+    }
+    static CalleeDesc builtin(SymbolicAddress callee) {
+        CalleeDesc c;
+        c.which_ = Builtin;
+        c.u.builtin_ = callee;
+        return c;
+    }
+    static CalleeDesc builtinInstanceMethod(SymbolicAddress callee) {
+        CalleeDesc c;
+        c.which_ = BuiltinInstanceMethod;
+        c.u.builtin_ = callee;
+        return c;
+    }
+    Which which() const {
+        return which_;
+    }
+    uint32_t funcDefIndex() const {
+        MOZ_ASSERT(which_ == Definition);
+        return u.funcDefIndex_;
+    }
+    uint32_t importGlobalDataOffset() const {
+        MOZ_ASSERT(which_ == Import);
+        return u.import.globalDataOffset_;
+    }
+    bool isTable() const {
+        return which_ == WasmTable || which_ == AsmJSTable;
+    }
+    uint32_t tableLengthGlobalDataOffset() const {
+        MOZ_ASSERT(isTable());
+        return u.table.globalDataOffset_ + offsetof(TableTls, length);
+    }
+    uint32_t tableBaseGlobalDataOffset() const {
+        MOZ_ASSERT(isTable());
+        return u.table.globalDataOffset_ + offsetof(TableTls, base);
+    }
+    bool wasmTableIsExternal() const {
+        MOZ_ASSERT(which_ == WasmTable);
+        return u.table.external_;
+    }
+    SigIdDesc wasmTableSigId() const {
+        MOZ_ASSERT(which_ == WasmTable);
+        return u.table.sigId_;
+    }
+    SymbolicAddress builtin() const {
+        MOZ_ASSERT(which_ == Builtin || which_ == BuiltinInstanceMethod);
+        return u.builtin_;
+    }
 };
 
 // Because ARM has a fixed-width instruction encoding, ARM can only express a

@@ -398,7 +398,7 @@ public abstract class HomeFragment extends Fragment {
             mUrl = url;
             mType = type;
             mPosition = position;
-            mDB = GeckoProfile.get(context).getDB();
+            mDB = BrowserDB.from(context);
         }
 
         @Override

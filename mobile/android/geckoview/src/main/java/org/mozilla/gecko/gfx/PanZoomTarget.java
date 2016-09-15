@@ -5,8 +5,6 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.ZoomConstraints;
-
 import android.graphics.Matrix;
 import android.graphics.PointF;
 

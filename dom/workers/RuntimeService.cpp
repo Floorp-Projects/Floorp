@@ -28,7 +28,7 @@
 #include "jsfriendapi.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Atomics.h"
-#include "mozilla/CycleCollectedJSRuntime.h"
+#include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/asmjscache/AsmJSCache.h"
@@ -892,11 +892,11 @@ FinishAsyncTaskCallback(JS::AsyncTask* aTask)
   return true;
 }
 
-class WorkerJSRuntime;
+class WorkerJSContext;
 
 class WorkerThreadContextPrivate : private PerThreadAtomCache
 {
-  friend class WorkerJSRuntime;
+  friend class WorkerJSContext;
 
   WorkerPrivate* mWorkerPrivate;
 
@@ -1043,18 +1043,18 @@ static const JSWrapObjectCallbacks WrapObjectCallbacks = {
   nullptr,
 };
 
-class WorkerJSRuntime : public mozilla::CycleCollectedJSRuntime
+class MOZ_STACK_CLASS WorkerJSContext final : public mozilla::CycleCollectedJSContext
 {
 public:
   // The heap size passed here doesn't matter, we will change it later in the
   // call to JS_SetGCParameter inside InitJSContextForWorker.
-  explicit WorkerJSRuntime(WorkerPrivate* aWorkerPrivate)
+  explicit WorkerJSContext(WorkerPrivate* aWorkerPrivate)
     : mWorkerPrivate(aWorkerPrivate)
   {
     MOZ_ASSERT(aWorkerPrivate);
   }
 
-  ~WorkerJSRuntime()
+  ~WorkerJSContext()
   {
     JSContext* cx = MaybeContext();
     if (!cx) {
@@ -1078,7 +1078,7 @@ public:
   nsresult Initialize(JSContext* aParentContext)
   {
     nsresult rv =
-      CycleCollectedJSRuntime::Initialize(aParentContext,
+      CycleCollectedJSContext::Initialize(aParentContext,
                                           WORKER_DEFAULT_RUNTIME_HEAPSIZE,
                                           WORKER_DEFAULT_NURSERY_SIZE);
      if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1142,10 +1142,10 @@ public:
     // Only perform the Promise microtask checkpoint on the outermost event
     // loop.  Don't run it, for example, during sync XHR or importScripts.
     if (aRecursionDepth == 2) {
-      CycleCollectedJSRuntime::AfterProcessTask(aRecursionDepth);
+      CycleCollectedJSContext::AfterProcessTask(aRecursionDepth);
     } else if (aRecursionDepth > 2) {
       AutoDisableMicroTaskCheckpoint disableMicroTaskCheckpoint;
-      CycleCollectedJSRuntime::AfterProcessTask(aRecursionDepth);
+      CycleCollectedJSContext::AfterProcessTask(aRecursionDepth);
     }
   }
 
@@ -1450,19 +1450,19 @@ GetCurrentThreadWorkerPrivate()
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  CycleCollectedJSRuntime* ccrt = CycleCollectedJSRuntime::Get();
-  if (!ccrt) {
+  CycleCollectedJSContext* ccjscx = CycleCollectedJSContext::Get();
+  if (!ccjscx) {
     return nullptr;
   }
 
-  JSContext* cx = ccrt->Context();
+  JSContext* cx = ccjscx->Context();
   MOZ_ASSERT(cx);
 
   void* cxPrivate = JS_GetContextPrivate(cx);
   if (!cxPrivate) {
-    // This can happen if the nsCycleCollector_shutdown() in ~WorkerJSRuntime()
+    // This can happen if the nsCycleCollector_shutdown() in ~WorkerJSContext()
     // triggers any calls to GetCurrentThreadWorkerPrivate().  At this stage
-    // CycleCollectedJSRuntime::Get() will still return a runtime, but
+    // CycleCollectedJSContext::Get() will still return a context, but
     // the context private has already been cleared.
     return nullptr;
   }
@@ -1883,7 +1883,7 @@ RuntimeService::ScheduleWorker(WorkerPrivate* aWorkerPrivate)
     NS_WARNING("Could not set the thread's priority!");
   }
 
-  JSContext* cx = CycleCollectedJSRuntime::Get()->Context();
+  JSContext* cx = CycleCollectedJSContext::Get()->Context();
   nsCOMPtr<nsIRunnable> runnable =
     new WorkerThreadPrimaryRunnable(aWorkerPrivate, thread,
                                     JS_GetParentContext(cx));
@@ -2832,17 +2832,17 @@ WorkerThreadPrimaryRunnable::Run()
   {
     nsCycleCollector_startup();
 
-    WorkerJSRuntime runtime(mWorkerPrivate);
-    nsresult rv = runtime.Initialize(mParentContext);
+    WorkerJSContext context(mWorkerPrivate);
+    nsresult rv = context.Initialize(mParentContext);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    JSContext* cx = runtime.Context();
+    JSContext* cx = context.Context();
 
     if (!InitJSContextForWorker(mWorkerPrivate, cx)) {
       // XXX need to fire an error at parent.
-      NS_ERROR("Failed to create runtime and context!");
+      NS_ERROR("Failed to create context!");
       return NS_ERROR_FAILURE;
     }
 
@@ -2889,7 +2889,7 @@ WorkerThreadPrimaryRunnable::Run()
     // cleanup.
     mWorkerPrivate->ClearMainEventQueue(WorkerPrivate::WorkerRan);
 
-    // Now WorkerJSRuntime goes out of scope and its destructor will shut
+    // Now WorkerJSContext goes out of scope and its destructor will shut
     // down the cycle collector. This breaks any remaining cycles and collects
     // any remaining C++ objects.
   }
