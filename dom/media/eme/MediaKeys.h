@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_mediakeys_h__
 #define mozilla_dom_mediakeys_h__
 
-#include "nsIDOMMediaError.h"
 #include "nsWrapperCache.h"
 #include "nsISupports.h"
 #include "mozilla/Attributes.h"
