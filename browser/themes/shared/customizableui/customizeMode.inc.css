@@ -158,8 +158,9 @@
   padding-inline-end: 0;
 }
 
-#customization-titlebar-visibility-button[checked],
-#customization-devedition-theme-button[checked] {
+.customizationmode-button:hover:active:not([disabled]),
+.customizationmode-button[open],
+.customizationmode-button[checked] {
   background-color: rgb(218, 218, 218);
   border-color: rgb(168, 168, 168);
   text-shadow: 0 1px rgb(236, 236, 236);
