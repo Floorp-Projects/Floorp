@@ -424,9 +424,6 @@ FinderHighlighter.prototype = {
         dict.brightText = this._isColorBright(fontStyle.color);
       }
 
-      if (data.findAgain)
-        dict.updateAllRanges = true;
-
       if (!dict.visible)
         this.show(window);
       else
@@ -965,10 +962,10 @@ FinderHighlighter.prototype = {
       const rectStyle = this._getStyleString(kModalStyles.maskRect,
         dict.brightText ? kModalStyles.maskRectBrightText : []);
       for (let [range, rects] of dict.modalHighlightRectsMap) {
-        if (dict.updateAllRanges)
-          rects = this._updateRangeRects(range);
         if (this._checkOverlap(dict.currentFoundRange, range))
           continue;
+        if (dict.updateAllRanges)
+          rects = this._updateRangeRects(range);
         for (let rect of rects) {
           maskContent.push(`<div xmlns="${kNSHTML}" style="${rectStyle}; top: ${rect.y}px;
             left: ${rect.x}px; height: ${rect.height}px; width: ${rect.width}px;"></div>`);
