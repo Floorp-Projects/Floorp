@@ -81,7 +81,7 @@ function promiseTestHighlighterOutput(browser, word, expectedResult, extraTest =
         try {
           content.document.insertAnonymousContent = stubbed.insert;
           content.document.removeAnonymousContent = stubbed.remove;
-        } catch(ex) {}
+        } catch (ex) {}
         stubbed = {};
         clearTimeout(timeout);
 
