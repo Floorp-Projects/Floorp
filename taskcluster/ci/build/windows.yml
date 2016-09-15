@@ -14,7 +14,7 @@ win32/debug:
         max-run-time: 7200
     run:
         using: mozharness
-        script: fx_desktop_build.py
+        script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/taskcluster_firefox_win32_debug.py
 
@@ -34,7 +34,7 @@ win32/opt:
         max-run-time: 7200
     run:
         using: mozharness
-        script: fx_desktop_build.py
+        script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/taskcluster_firefox_win32_opt.py
 
@@ -54,7 +54,7 @@ win64/debug:
         max-run-time: 7200
     run:
         using: mozharness
-        script: fx_desktop_build.py
+        script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/taskcluster_firefox_win64_debug.py
 
@@ -74,7 +74,7 @@ win64/opt:
         max-run-time: 7200
     run:
         using: mozharness
-        script: fx_desktop_build.py
+        script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/taskcluster_firefox_win64_opt.py
 
