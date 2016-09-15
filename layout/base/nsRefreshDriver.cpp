@@ -2063,7 +2063,7 @@ nsRefreshDriver::IsWaitingForPaint(mozilla::TimeStamp aTime)
   }
 
   if (aTime > (mMostRecentTick + TimeDuration::FromMilliseconds(mWarningThreshold * 1000))) {
-    gfxCriticalNote << "Refresh driver waiting for the compositor for"
+    gfxCriticalNote << "Refresh driver waiting for the compositor for "
                     << (aTime - mMostRecentTick).ToSeconds()
                     << " seconds.";
     mWarningThreshold *= 2;
