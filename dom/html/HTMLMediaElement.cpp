@@ -1040,12 +1040,11 @@ void HTMLMediaElement::AbortExistingLoads()
   mPendingEvents.Clear();
 }
 
-void HTMLMediaElement::NoSupportedMediaSourceError()
+void HTMLMediaElement::NoSupportedMediaSourceError(const nsACString& aErrorDetails)
 {
   NS_ASSERTION(mNetworkState == NETWORK_LOADING,
                "Not loading during source selection?");
-
-  mError = new MediaError(this, MEDIA_ERR_SRC_NOT_SUPPORTED);
+  mError = new MediaError(this, MEDIA_ERR_SRC_NOT_SUPPORTED, aErrorDetails);
   ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_NO_SOURCE);
   DispatchAsyncEvent(NS_LITERAL_STRING("error"));
   ChangeDelayLoadStatus(false);
@@ -4447,9 +4446,9 @@ void HTMLMediaElement::DecodeError(const MediaResult& aError)
       NS_WARNING("Should know the source we were loading from!");
     }
   } else if (mReadyState == nsIDOMHTMLMediaElement::HAVE_NOTHING) {
-    NoSupportedMediaSourceError();
+    NoSupportedMediaSourceError(aError.Description());
   } else {
-    Error(MEDIA_ERR_DECODE, aError);
+    Error(MEDIA_ERR_DECODE, aError.Description());
   }
 }
 
@@ -4464,7 +4463,7 @@ void HTMLMediaElement::LoadAborted()
 }
 
 void HTMLMediaElement::Error(uint16_t aErrorCode,
-                             const MediaResult& aErrorDetails)
+                             const nsACString& aErrorDetails)
 {
   NS_ASSERTION(aErrorCode == MEDIA_ERR_DECODE ||
                aErrorCode == MEDIA_ERR_NETWORK ||
@@ -4477,11 +4476,7 @@ void HTMLMediaElement::Error(uint16_t aErrorCode,
   if (mError) {
     return;
   }
-  nsCString message;
-  if (NS_FAILED(aErrorDetails)) {
-    message = aErrorDetails.Description();
-  }
-  mError = new MediaError(this, aErrorCode, message);
+  mError = new MediaError(this, aErrorCode, aErrorDetails);
 
   DispatchAsyncEvent(NS_LITERAL_STRING("error"));
   if (mReadyState == nsIDOMHTMLMediaElement::HAVE_NOTHING) {
