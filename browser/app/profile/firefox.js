@@ -377,12 +377,6 @@ pref("browser.search.context.loadInBackground", false);
 // comma seperated list of of engines to hide in the search panel.
 pref("browser.search.hiddenOneOffs", "");
 
-#ifdef XP_WIN
-pref("browser.search.redirectWindowsSearch", true);
-#else
-pref("browser.search.redirectWindowsSearch", false);
-#endif
-
 pref("browser.search.reset.enabled", true);
 
 pref("browser.usedOnWindows10", false);
