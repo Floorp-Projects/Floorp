@@ -259,6 +259,7 @@ public:
   static bool IsControlChar(char16_t aChar);
 
 private:
+  NativeKey* mLastInstance;
   RefPtr<nsWindowBase> mWidget;
   RefPtr<TextEventDispatcher> mDispatcher;
   HKL mKeyboardLayout;
@@ -543,6 +544,16 @@ private:
   {
     return mFocusedWndBeforeDispatch != ::GetFocus();
   }
+
+  // Calls of PeekMessage() from NativeKey might cause nested message handling
+  // due to (perhaps) odd API hook.  NativeKey should do nothing if given
+  // message is tried to be retrieved by another instance.
+
+  /**
+   * sLatestInstacne is a pointer to the newest instance of NativeKey which is
+   * handling a key or char message(s).
+   */
+  static NativeKey* sLatestInstance;
 };
 
 class KeyboardLayout
