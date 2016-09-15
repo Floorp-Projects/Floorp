@@ -299,6 +299,52 @@ private:
     }
 };
 
+struct RGBAColorData
+{
+  // 1.0 means 100% for all components, but the value may fall outside
+  // the range of [0.0, 1.0], so it is necessary to clamp them when
+  // converting to nscolor.
+  float mR;
+  float mG;
+  float mB;
+  float mA;
+
+  RGBAColorData() = default;
+  MOZ_IMPLICIT RGBAColorData(nscolor aColor)
+    : mR(NS_GET_R(aColor) * (1.0f / 255.0f))
+    , mG(NS_GET_G(aColor) * (1.0f / 255.0f))
+    , mB(NS_GET_B(aColor) * (1.0f / 255.0f))
+    , mA(NS_GET_A(aColor) * (1.0f / 255.0f))
+  {}
+  RGBAColorData(float aR, float aG, float aB, float aA)
+    : mR(aR), mG(aG), mB(aB), mA(aA) {}
+
+  bool operator==(const RGBAColorData& aOther) const
+  {
+    return mR == aOther.mR && mG == aOther.mG &&
+           mB == aOther.mB && mA == aOther.mA;
+  }
+  bool operator!=(const RGBAColorData& aOther) const
+  {
+    return !(*this == aOther);
+  }
+
+  nscolor ToColor() const
+  {
+    return NS_RGBA(ClampColor(mR * 255.0f),
+                   ClampColor(mG * 255.0f),
+                   ClampColor(mB * 255.0f),
+                   ClampColor(mA * 255.0f));
+  }
+
+  RGBAColorData WithAlpha(float aAlpha) const
+  {
+    RGBAColorData result = *this;
+    result.mA = aAlpha;
+    return result;
+  }
+};
+
 } // namespace css
 } // namespace mozilla
 
@@ -771,6 +817,7 @@ public:
                           float aComponent2,
                           float aComponent3,
                           float aAlpha, nsCSSUnit aUnit);
+  void SetRGBAColorValue(const mozilla::css::RGBAColorData& aValue);
   void SetArrayValue(nsCSSValue::Array* aArray, nsCSSUnit aUnit);
   void SetURLValue(mozilla::css::URLValue* aURI);
   void SetImageValue(mozilla::css::ImageValue* aImage);

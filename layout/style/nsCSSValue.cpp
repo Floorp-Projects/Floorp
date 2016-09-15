@@ -478,6 +478,13 @@ void nsCSSValue::SetFloatColorValue(float aComponent1,
   mValue.mFloatColor->AddRef();
 }
 
+void
+nsCSSValue::SetRGBAColorValue(const RGBAColorData& aValue)
+{
+  SetFloatColorValue(aValue.mR, aValue.mG, aValue.mB,
+                     aValue.mA, eCSSUnit_PercentageRGBAColor);
+}
+
 void nsCSSValue::SetArrayValue(nsCSSValue::Array* aValue, nsCSSUnit aUnit)
 {
   Reset();
