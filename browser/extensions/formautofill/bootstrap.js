@@ -4,6 +4,8 @@
 
 "use strict";
 
+/* exported startup, shutdown, install, uninstall */
+
 function startup() {}
 function shutdown() {}
 function install() {}
