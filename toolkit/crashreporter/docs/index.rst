@@ -32,11 +32,6 @@ Crash Reporter Client
    to handle dump files. This application optionally submits crashes to
    Mozilla (or the configured server).
 
-Minidump Analyzer
-   The minidump analyzer is a standalone executable that is launched by the
-   crash reporter client or by the browser itself to extract stack traces from
-   the dump files generated during a crash.
-
 How Main-Process Crash Handling Works
 =====================================
 
@@ -88,11 +83,8 @@ argument.
 
 The *crash reporter client* performs a number of roles. There's a lot going
 on, so you may want to look at ``main()`` in ``crashreporter.cpp``. First,
-stack traces are extracted from the dump via the *minidump analyzer* tool.
-The resulting traces are appended to the main crash event file. Then, the
-*crash reporter client* verifies that the dump data is sane. If it isn't
-(e.g. required metadata is missing), the dump data is ignored. If dump data
-looks sane, the dump data
+it verifies the dump data is sane. If it isn't (e.g. required metadata is
+missing), the dump data is ignored. If dump data looks sane, the dump data
 is moved into the *pending* directory for the configured data directory
 (defined via the ``MOZ_CRASHREPORTER_DATA_DIRECTORY`` environment variable
 or from the UI). Once this is done, the main crash reporter UI is displayed

@@ -37,9 +37,6 @@ std::string WideToUTF8(const std::wstring& wide, bool* success = 0);
 
 #endif
 
-#define UI_CRASH_REPORTER_FILENAME "crashreporter"
-#define UI_MINIDUMP_ANALYZER_FILENAME "minidump-analyzer"
-
 typedef std::map<std::string, std::string> StringTable;
 
 #define ST_CRASHREPORTERTITLE        "CrashReporterTitle"
@@ -148,8 +145,6 @@ std::ofstream* UIOpenWrite(const std::string& filename,
                            bool append=false,
                            bool binary=false);
 void UIPruneSavedDumps(const std::string& directory);
-void UIRunMinidumpAnalyzer(const std::string& exename,
-                           const std::string& filename);
 
 #ifdef _MSC_VER
 # pragma warning( pop )
