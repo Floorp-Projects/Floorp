@@ -97,9 +97,9 @@ NUM_ARGUMENTS = {
 
 
 def main():
-    process_pointers = defaultdict(IdMapping)
     pids = IdMapping()
-    tids = IdMapping()
+    processes = defaultdict(lambda: { 'pointers': IdMapping(),
+                                      'tids': IdMapping() })
     for line in sys.stdin:
         line = line.strip()
 
@@ -108,9 +108,11 @@ def main():
 
             # Replace pid with an id.
             pid = pids[int(pid)]
-            tid = tids[int(tid)]
 
-            pointers = process_pointers[pid]
+            process = processes[pid]
+            tid = process['tids'][int(tid)]
+
+            pointers = process['pointers']
 
             if func not in NUM_ARGUMENTS:
                 raise Ignored('Unknown function')
