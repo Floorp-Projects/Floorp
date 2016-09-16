@@ -41,5 +41,7 @@
     <box>&browserToolboxErrorMessage;</box>
     <textbox multiline="true" id="error-message" flex="1"></textbox>
   </vbox>
-  <iframe id="toolbox-iframe" flex="1"></iframe>
+
+  <tooltip id="aHTMLTooltip" page="true"/>
+  <iframe id="toolbox-iframe" flex="1" tooltip="aHTMLTooltip"></iframe>
 </window>
