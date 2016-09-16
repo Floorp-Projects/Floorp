@@ -980,6 +980,36 @@ MakePropertyValuePair(nsCSSPropertyID aProperty, const nsAString& aStringValue,
                       nsCSSParser& aParser, nsIDocument* aDocument)
 {
   MOZ_ASSERT(aDocument);
+  PropertyValuePair result;
+
+  result.mProperty = aProperty;
+
+  if (aDocument->GetStyleBackendType() == StyleBackendType::Servo) {
+    nsCString name = nsCSSProps::GetStringValue(aProperty);
+
+    NS_ConvertUTF16toUTF8 value(aStringValue);
+    RefPtr<ThreadSafeURIHolder> base =
+      new ThreadSafeURIHolder(aDocument->GetDocumentURI());
+    RefPtr<ThreadSafeURIHolder> referrer =
+      new ThreadSafeURIHolder(aDocument->GetDocumentURI());
+    RefPtr<ThreadSafePrincipalHolder> principal =
+      new ThreadSafePrincipalHolder(aDocument->NodePrincipal());
+
+    nsCString baseString;
+    aDocument->GetDocumentURI()->GetSpec(baseString);
+
+    RefPtr<ServoDeclarationBlock> servoDeclarationBlock =
+      Servo_ParseProperty(
+        reinterpret_cast<const uint8_t*>(name.get()), name.Length(),
+        reinterpret_cast<const uint8_t*>(value.get()), value.Length(),
+        reinterpret_cast<const uint8_t*>(baseString.get()), baseString.Length(),
+        base, referrer, principal).Consume();
+
+    if (servoDeclarationBlock) {
+      result.mServoDeclarationBlock = servoDeclarationBlock.forget();
+      return result;
+    }
+  }
 
   nsCSSValue value;
   if (!nsCSSProps::IsShorthand(aProperty)) {
@@ -1012,9 +1042,18 @@ MakePropertyValuePair(nsCSSPropertyID aProperty, const nsAString& aStringValue,
                "The shorthand property of a token stream should be initialized"
                " to unknown");
     value.SetTokenStreamValue(tokenStream);
+  } else {
+    // If we succeeded in parsing with Gecko, but not Servo the animation is
+    // not going to work since, for the purposes of animation, we're going to
+    // ignore |mValue| when the backend is Servo.
+    NS_WARNING_ASSERTION(aDocument->GetStyleBackendType() !=
+                           StyleBackendType::Servo,
+                         "Gecko succeeded in parsing where Servo failed");
   }
 
-  return { aProperty, value };
+  result.mValue = value;
+
+  return result;
 }
 
 /**
