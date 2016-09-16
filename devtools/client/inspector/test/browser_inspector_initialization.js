@@ -29,12 +29,12 @@ add_task(function* () {
   let tab = yield addTab(TEST_URI);
   let testActor = yield getTestActorWithoutToolbox(tab);
 
-  yield testToolboxInitialization(tab);
+  yield testToolboxInitialization(testActor, tab);
   yield testContextMenuInitialization(testActor);
   yield testContextMenuInspectorAlreadyOpen(testActor);
 });
 
-function* testToolboxInitialization(tab) {
+function* testToolboxInitialization(testActor, tab) {
   let target = TargetFactory.forTab(tab);
 
   info("Opening inspector with gDevTools.");
@@ -50,8 +50,7 @@ function* testToolboxInitialization(tab) {
   yield testMarkupView("p", inspector);
   yield testBreadcrumbs("p", inspector);
 
-  let span = getNode("span");
-  span.scrollIntoView();
+  yield testActor.scrollIntoView("span");
 
   yield selectNode("span", inspector);
   yield testMarkupView("span", inspector);
