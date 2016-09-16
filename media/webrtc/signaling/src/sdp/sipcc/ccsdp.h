@@ -33,7 +33,7 @@ typedef enum rtp_ptype_
     RTP_H261         = 31,
     RTP_H264_P0      = 97,
     RTP_H264_P1      = 126,
-    RTP_AVT          = 101,
+    RTP_TELEPHONE_EVENT = 101,
     RTP_L16          = 102,
     RTP_H263         = 103,
     RTP_ILBC         = 116, /* used only to make an offer */

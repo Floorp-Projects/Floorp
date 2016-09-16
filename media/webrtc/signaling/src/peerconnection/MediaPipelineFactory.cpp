@@ -77,6 +77,7 @@ JsepCodecDescToCodecConfig(const JsepCodecDescription& aCodec,
                                   desc.mBitrate,
                                   desc.mFECEnabled);
   (*aConfig)->mMaxPlaybackRate = desc.mMaxPlaybackRate;
+  (*aConfig)->mDtmfEnabled = desc.mDtmfEnabled;
 
   return NS_OK;
 }
