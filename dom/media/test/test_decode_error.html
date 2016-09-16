@@ -26,7 +26,11 @@ function startTest(test, token) {
     is(event.type, "error", "Expected event of type 'error'");
     ok(el.error, "Element 'error' attr expected to have a value");
     ok(el.error instanceof MediaError, "Element 'error' attr expected to be MediaError");
-    is(el.error.code, MediaError.MEDIA_ERR_DECODE, "Expected a decode error");
+    if (v.readyState == v.HAVE_NOTHING) {
+      is(el.error.code, MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED, "Expected media not supported error");
+    } else {
+      is(el.error.code, MediaError.MEDIA_ERR_DECODE, "Expected a decode error");
+    }
     ok(typeof el.error.message === 'string' || el.error.essage instanceof String, "Element 'message' attr expected to be a string");
     ok(el.error.message.length > 0, "Element 'message' attr has content");
     el._sawError = true;
