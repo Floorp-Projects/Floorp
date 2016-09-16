@@ -298,6 +298,9 @@ private:
   void BeginNonIPCRedirect(nsIURI* responseURI,
                            const nsHttpResponseHead* responseHead);
 
+  // Override the default security info pointer during a non-IPC redirection.
+  void OverrideSecurityInfoForNonIPCRedirect(nsISupports* securityInfo);
+
   friend class AssociateApplicationCacheEvent;
   friend class StartRequestEvent;
   friend class StopRequestEvent;
