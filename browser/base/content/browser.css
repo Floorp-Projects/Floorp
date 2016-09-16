@@ -128,8 +128,8 @@ tabbrowser {
   max-width: 210px;
   min-width: 100px;
   width: 0;
-  transition: min-width 200ms ease-out,
-              max-width 230ms ease-out;
+  transition: min-width 100ms ease-out,
+              max-width 100ms ease-out;
 }
 
 .tabbrowser-tab:not([pinned]):not([fadein]) {

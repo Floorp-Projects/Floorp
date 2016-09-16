@@ -46,10 +46,8 @@ const kModalStyles = {
     ["margin", "-2px 0 0 -2px !important"],
     ["padding", "2px !important"],
     ["pointer-events", "none"],
-    ["transition-property", "opacity, transform, top, left"],
-    ["transition-duration", "50ms"],
-    ["transition-timing-function", "linear"],
     ["white-space", "nowrap"],
+    ["will-change", "transform"],
     ["z-index", 2]
   ],
   outlineNodeDebug: [ ["z-index", 2147483647] ],
@@ -60,7 +58,6 @@ const kModalStyles = {
   ],
   maskNode: [
     ["background", "#000"],
-    ["mix-blend-mode", "multiply"],
     ["opacity", ".35"],
     ["pointer-events", "none"],
     ["position", "absolute"],
@@ -116,6 +113,9 @@ function mockAnonymousContentNode(domNode) {
       try {
         domNode.parentNode.removeChild(domNode);
       } catch (ex) {}
+    },
+    setAnimationForElement(id, keyframes, duration) {
+      return (domNode.querySelector("#" + id) || domNode).animate(keyframes, duration);
     }
   };
 }
@@ -869,7 +869,8 @@ FinderHighlighter.prototype = {
       rectCount != 1);
     dict.previousRangeRectsCount = rectCount;
 
-    let document = range.startContainer.ownerDocument;
+    let window = range.startContainer.ownerDocument.defaultView.top;
+    let document = window.document;
     // First see if we need to and can remove the previous outline nodes.
     if (rebuildOutline && outlineAnonNode) {
       if (kDebug) {
@@ -1153,8 +1154,7 @@ FinderHighlighter.prototype = {
     let target = this.iterator._getDocShell(window).chromeEventHandler;
     target.addEventListener("MozAfterPaint", dict.highlightListeners[0]);
     target.addEventListener("resize", dict.highlightListeners[1]);
-    target.addEventListener("DOMMouseScroll", dict.highlightListeners[2]);
-    target.addEventListener("mousewheel", dict.highlightListeners[2]);
+    target.addEventListener("scroll", dict.highlightListeners[2]);
     target.addEventListener("click", dict.highlightListeners[3]);
   },
 
@@ -1172,8 +1172,7 @@ FinderHighlighter.prototype = {
     let target = this.iterator._getDocShell(window).chromeEventHandler;
     target.removeEventListener("MozAfterPaint", dict.highlightListeners[0]);
     target.removeEventListener("resize", dict.highlightListeners[1]);
-    target.removeEventListener("DOMMouseScroll", dict.highlightListeners[2]);
-    target.removeEventListener("mousewheel", dict.highlightListeners[2]);
+    target.removeEventListener("scroll", dict.highlightListeners[2]);
     target.removeEventListener("click", dict.highlightListeners[3]);
 
     dict.highlightListeners = null;

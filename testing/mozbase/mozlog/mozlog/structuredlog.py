@@ -11,7 +11,7 @@ import sys
 import time
 import traceback
 
-from logtypes import Unicode, TestId, Status, SubStatus, Dict, List, Int, Any
+from logtypes import Unicode, TestId, Status, SubStatus, Dict, List, Int, Any, Tuple
 from logtypes import log_action, convertor_registry
 
 """Structured Logging for recording test results.
@@ -92,6 +92,8 @@ def set_default_logger(default_logger):
 
 log_levels = dict((k.upper(), v) for v, k in
                   enumerate(["critical", "error", "warning", "info", "debug"]))
+
+lint_levels = ["ERROR", "WARNING"]
 
 def log_actions():
     """Returns the set of actions implemented by mozlog."""
@@ -438,11 +440,44 @@ def _log_func(level_name):
     log.__name__ = str(level_name).lower()
     return log
 
+def _lint_func(level_name):
+    @log_action(Unicode("path"),
+                Unicode("message", default=""),
+                Int("lineno", default=0),
+                Int("column", default=None, optional=True),
+                Unicode("hint", default=None, optional=True),
+                Unicode("source", default=None, optional=True),
+                Unicode("rule", default=None, optional=True),
+                Tuple("lineoffset", (Int, Int), default=None, optional=True),
+                Unicode("linter", default=None, optional=True))
+    def lint(self, data):
+        data["level"] = level_name
+        self._log_data("lint", data)
+    lint.__doc__ = """Log an error resulting from a failed lint check
 
-# Create all the methods on StructuredLog for debug levels
+        :param linter: name of the linter that flagged this error
+        :param path: path to the file containing the error
+        :param message: text describing the error
+        :param lineno: line number that contains the error
+        :param column: column containing the error
+        :param hint: suggestion for fixing the error (optional)
+        :param source: source code context of the error (optional)
+        :param rule: name of the rule that was violated (optional)
+        :param lineoffset: denotes an error spans multiple lines, of the form
+                           (<lineno offset>, <num lines>) (optional)
+        """
+    lint.__name__ = str("lint_%s" % level_name)
+    return lint
+
+
+# Create all the methods on StructuredLog for log/lint levels
 for level_name in log_levels:
     setattr(StructuredLogger, level_name.lower(), _log_func(level_name))
 
+for level_name in lint_levels:
+    level_name = level_name.lower()
+    name = "lint_%s" % level_name
+    setattr(StructuredLogger, name, _lint_func(level_name))
 
 class StructuredLogFileLike(object):
     """Wrapper for file-like objects to redirect writes to logger

@@ -7,6 +7,7 @@ import re
 
 from firefox_ui_harness.testcases import FirefoxTestCase
 from marionette_driver import Wait
+from marionette_driver.errors import TimeoutException
 
 
 class TestSafeBrowsingInitialDownload(FirefoxTestCase):
@@ -15,26 +16,26 @@ class TestSafeBrowsingInitialDownload(FirefoxTestCase):
         'platforms': ['linux', 'windows_nt', 'darwin'],
         'files': [
             # Phishing
-            r'goog-badbinurl-shavar.pset',
-            r'goog-badbinurl-shavar.sbstore',
-            r'goog-malware-shavar.pset',
-            r'goog-malware-shavar.sbstore',
-            r'goog(pub)?-phish-shavar.pset',
-            r'goog(pub)?-phish-shavar.sbstore',
-            r'goog-unwanted-shavar.pset',
-            r'goog-unwanted-shavar.sbstore',
+            r'^goog-badbinurl-shavar.pset$',
+            r'^goog-badbinurl-shavar.sbstore$',
+            r'^goog-malware-shavar.pset$',
+            r'^goog-malware-shavar.sbstore$',
+            r'^goog(pub)?-phish-shavar.pset$',
+            r'^goog(pub)?-phish-shavar.sbstore$',
+            r'^goog-unwanted-shavar.pset$',
+            r'^goog-unwanted-shavar.sbstore$',
 
             # Tracking Protections
-            r'base-track-digest256.pset',
-            r'base-track-digest256.sbstore',
-            r'mozstd-trackwhite-digest256.pset',
-            r'mozstd-trackwhite-digest256.sbstore'
+            r'^base-track-digest256.pset$',
+            r'^base-track-digest256.sbstore$',
+            r'^mozstd-trackwhite-digest256.pset$',
+            r'^mozstd-trackwhite-digest256.sbstore$',
         ],
     }, {
         'platforms': ['windows_nt'],
         'files': [
-            r'goog-downloadwhite-digest256.pset',
-            r'goog-downloadwhite-digest256.sbstore'
+            r'^goog-downloadwhite-digest256.pset$',
+            r'^goog-downloadwhite-digest256.sbstore$',
         ]
     },
     ]
@@ -71,7 +72,14 @@ class TestSafeBrowsingInitialDownload(FirefoxTestCase):
         for data in self.test_data:
             if self.platform not in data['platforms']:
                 continue
+
             for item in data['files']:
-                wait.until(
-                    lambda _: [f for f in os.listdir(self.sb_files_path) if re.search(item, f)],
-                    message='Safe Browsing File: {} not found!'.format(item))
+                try:
+                    wait.until(
+                        lambda _: [f for f in os.listdir(self.sb_files_path)
+                                   if re.search(item, f)],
+                        message='Safe Browsing File: {} not found!'.format(item))
+                except TimeoutException:
+                    self.logger.info('Downloaded safebrowsing files: {}'.format(
+                        os.listdir(self.sb_files_path)))
+                    raise
