@@ -2743,8 +2743,8 @@ TEST_F(JsepSessionTest, ValidateOfferedCodecParams)
   ASSERT_EQ(SdpDirectionAttribute::kSendrecv, video_attrs.GetDirection());
 
   ASSERT_EQ(6U, video_section.GetFormats().size());
-  ASSERT_EQ("121", video_section.GetFormats()[0]);
-  ASSERT_EQ("120", video_section.GetFormats()[1]);
+  ASSERT_EQ("120", video_section.GetFormats()[0]);
+  ASSERT_EQ("121", video_section.GetFormats()[1]);
   ASSERT_EQ("126", video_section.GetFormats()[2]);
   ASSERT_EQ("97", video_section.GetFormats()[3]);
   ASSERT_EQ("122", video_section.GetFormats()[4]);
@@ -2839,8 +2839,8 @@ TEST_F(JsepSessionTest, ValidateOfferedCodecParams)
   auto& parsed_red_params =
       *static_cast<const SdpFmtpAttributeList::RedParameters*>(red_params);
   ASSERT_EQ(5U, parsed_red_params.encodings.size());
-  ASSERT_EQ(121, parsed_red_params.encodings[0]);
-  ASSERT_EQ(120, parsed_red_params.encodings[1]);
+  ASSERT_EQ(120, parsed_red_params.encodings[0]);
+  ASSERT_EQ(121, parsed_red_params.encodings[1]);
   ASSERT_EQ(126, parsed_red_params.encodings[2]);
   ASSERT_EQ(97, parsed_red_params.encodings[3]);
   ASSERT_EQ(123, parsed_red_params.encodings[4]);
@@ -2904,24 +2904,26 @@ TEST_F(JsepSessionTest, ValidateAnsweredCodecParams)
   // TODO(bug 1099351): Once fixed, this stuff will need to be updated.
   ASSERT_EQ(1U, video_section.GetFormats().size());
   // ASSERT_EQ(3U, video_section.GetFormats().size());
-  ASSERT_EQ("121", video_section.GetFormats()[0]);
-  // ASSERT_EQ("126", video_section.GetFormats()[1]);
-  // ASSERT_EQ("97", video_section.GetFormats()[2]);
+  ASSERT_EQ("120", video_section.GetFormats()[0]);
+  // ASSERT_EQ("121", video_section.GetFormats()[1]);
+  // ASSERT_EQ("126", video_section.GetFormats()[2]);
+  // ASSERT_EQ("97", video_section.GetFormats()[3]);
 
   // Validate rtpmap
   ASSERT_TRUE(video_attrs.HasAttribute(SdpAttribute::kRtpmapAttribute));
   auto& rtpmaps = video_attrs.GetRtpmap();
-  ASSERT_TRUE(rtpmaps.HasEntry("121"));
+  ASSERT_TRUE(rtpmaps.HasEntry("120"));
+  //ASSERT_TRUE(rtpmaps.HasEntry("121"));
   // ASSERT_TRUE(rtpmaps.HasEntry("126"));
   // ASSERT_TRUE(rtpmaps.HasEntry("97"));
 
-  //auto& vp8_entry = rtpmaps.GetEntry("120");
-  auto& vp9_entry = rtpmaps.GetEntry("121");
+  auto& vp8_entry = rtpmaps.GetEntry("120");
+  //auto& vp9_entry = rtpmaps.GetEntry("121");
   // auto& h264_1_entry = rtpmaps.GetEntry("126");
   // auto& h264_0_entry = rtpmaps.GetEntry("97");
 
-  //ASSERT_EQ("VP8", vp8_entry.name);
-  ASSERT_EQ("VP9", vp9_entry.name);
+  ASSERT_EQ("VP8", vp8_entry.name);
+  //ASSERT_EQ("VP9", vp9_entry.name);
   // ASSERT_EQ("H264", h264_1_entry.name);
   // ASSERT_EQ("H264", h264_0_entry.name);
 
@@ -2932,17 +2934,17 @@ TEST_F(JsepSessionTest, ValidateAnsweredCodecParams)
   ASSERT_EQ(1U, fmtps.size());
   // ASSERT_EQ(3U, fmtps.size());
 
-  // VP9
-  ASSERT_EQ("121", fmtps[0].format);
+  // VP8
+  ASSERT_EQ("120", fmtps[0].format);
   ASSERT_TRUE(!!fmtps[0].parameters);
-  ASSERT_EQ(SdpRtpmapAttributeList::kVP9, fmtps[0].parameters->codec_type);
+  ASSERT_EQ(SdpRtpmapAttributeList::kVP8, fmtps[0].parameters->codec_type);
 
-  auto& parsed_vp9_params =
+  auto& parsed_vp8_params =
       *static_cast<const SdpFmtpAttributeList::VP8Parameters*>(
           fmtps[0].parameters.get());
 
-  ASSERT_EQ((uint32_t)12288, parsed_vp9_params.max_fs);
-  ASSERT_EQ((uint32_t)60, parsed_vp9_params.max_fr);
+  ASSERT_EQ((uint32_t)12288, parsed_vp8_params.max_fs);
+  ASSERT_EQ((uint32_t)60, parsed_vp8_params.max_fr);
 
 
   SetLocalAnswer(answer);
