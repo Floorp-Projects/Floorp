@@ -90,19 +90,6 @@ DOMProxyHandler::GetAndClearExpandoObject(JSObject* obj)
     if (v.isUndefined()) {
       return nullptr;
     }
-    // We have to expose v to active JS here.  The reason for that is that we
-    // might be in the middle of a GC right now.  If our proxy hasn't been
-    // traced yet, when it _does_ get traced it won't trace the expando, since
-    // we're breaking that link.  But the Rooted we're presumably being placed
-    // into is also not going to trace us, because Rooted marking is done at
-    // the very beginning of the GC.  In that situation, we need to manually
-    // mark the expando as live here.  JS::ExposeValueToActiveJS will do just
-    // that for us.
-    //
-    // We don't need to do this in the non-expandoAndGeneration case, because
-    // in that case our value is stored in a slot and slots will already mark
-    // the old thing live when the value in the slot changes.
-    JS::ExposeValueToActiveJS(v);
     expandoAndGeneration->expando = UndefinedValue();
   }
 
