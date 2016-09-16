@@ -1000,7 +1000,8 @@ IMContextWrapper::OnSelectionChange(nsWindow* aCaller,
     }
 
     bool occurredBeforeComposition =
-      IsComposing() && !selectionChangeData.mOccurredDuringComposition;
+      IsComposing() && !selectionChangeData.mOccurredDuringComposition &&
+      !selectionChangeData.mCausedByComposition;
     if (occurredBeforeComposition) {
         mPendingResettingIMContext = true;
     }
