@@ -176,7 +176,7 @@ public:
       nsPIDOMWindowInner* window = mStream->GetParentObject();
       nsIDocument* doc = window ? window->GetExtantDoc() : nullptr;
       nsIPrincipal* principal = doc ? doc->NodePrincipal() : nullptr;
-      source = new BasicUnstoppableTrackSource(principal);
+      source = new BasicTrackSource(principal);
     }
 
     RefPtr<MediaStreamTrack> newTrack =
@@ -859,8 +859,8 @@ DOMMediaStream::InitAudioCaptureStream(nsIPrincipal* aPrincipal, MediaStreamGrap
 {
   const TrackID AUDIO_TRACK = 1;
 
-  RefPtr<BasicUnstoppableTrackSource> audioCaptureSource =
-    new BasicUnstoppableTrackSource(aPrincipal, MediaSourceEnum::AudioCapture);
+  RefPtr<BasicTrackSource> audioCaptureSource =
+    new BasicTrackSource(aPrincipal, MediaSourceEnum::AudioCapture);
 
   AudioCaptureStream* audioCaptureStream =
     static_cast<AudioCaptureStream*>(aGraph->CreateAudioCaptureStream(AUDIO_TRACK));

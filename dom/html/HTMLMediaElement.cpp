@@ -2263,17 +2263,6 @@ public:
     return mCapturedTrackSource->GetCORSMode();
   }
 
-  already_AddRefed<PledgeVoid>
-  ApplyConstraints(nsPIDOMWindowInner* aWindow,
-                   const dom::MediaTrackConstraints& aConstraints) override
-  {
-    RefPtr<PledgeVoid> p = new PledgeVoid();
-    p->Reject(new dom::MediaStreamError(aWindow,
-                                        NS_LITERAL_STRING("OverconstrainedError"),
-                                        NS_LITERAL_STRING("")));
-    return p.forget();
-  }
-
   void Stop() override
   {
     if (mElement && mElement->mSrcStream) {
@@ -2348,17 +2337,6 @@ public:
   CORSMode GetCORSMode() const override
   {
     return mElement->GetCORSMode();
-  }
-
-  already_AddRefed<PledgeVoid>
-  ApplyConstraints(nsPIDOMWindowInner* aWindow,
-                   const dom::MediaTrackConstraints& aConstraints) override
-  {
-    RefPtr<PledgeVoid> p = new PledgeVoid();
-    p->Reject(new dom::MediaStreamError(aWindow,
-                                        NS_LITERAL_STRING("OverconstrainedError"),
-                                        NS_LITERAL_STRING("")));
-    return p.forget();
   }
 
   void Stop() override

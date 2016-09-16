@@ -134,7 +134,7 @@ GetMediaManagerLog()
 }
 #define LOG(msg) MOZ_LOG(GetMediaManagerLog(), mozilla::LogLevel::Debug, msg)
 
-using dom::BasicUnstoppableTrackSource;
+using dom::BasicTrackSource;
 using dom::ConstrainDOMStringParameters;
 using dom::File;
 using dom::GetUserMediaRequest;
@@ -1022,7 +1022,7 @@ public:
                  "Only fake tracks should appear dynamically");
     NS_ASSERTION(kVideoTrack != aInputTrackID,
                  "Only fake tracks should appear dynamically");
-    return do_AddRef(new BasicUnstoppableTrackSource(mPrincipal));
+    return do_AddRef(new BasicTrackSource(mPrincipal));
   }
 
 protected:
