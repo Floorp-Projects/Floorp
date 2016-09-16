@@ -2,7 +2,7 @@ if (!this.SharedArrayBuffer || !isAsmJSCompilationAvailable())
     quit(0);
 
 load(libdir + "asm.js");
-setJitCompilerOption('wasm.test-mode', 1);
+setJitCompilerOption('asmjs.atomics.enable', 1);
 
 // The way this is constructed, either the first module does not
 // verify as asm.js (if the >>>0 is left off, which was legal prior to
