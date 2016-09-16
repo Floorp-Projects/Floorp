@@ -24179,6 +24179,10 @@ NormalJSContext::Init()
     return false;
   }
 
+  // Let everyone know that we might be able to call JS. This alerts the
+  // profiler about certain possible deadlocks.
+  NS_GetCurrentThread()->SetCanInvokeJS(true);
+
   // Not setting this will cause JS_CHECK_RECURSION to report false positives.
   JS_SetNativeStackQuota(mContext, 128 * sizeof(size_t) * 1024);
 

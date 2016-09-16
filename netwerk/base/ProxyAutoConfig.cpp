@@ -757,6 +757,8 @@ ProxyAutoConfig::SetupJS()
   if (mPACScript.IsEmpty())
     return NS_ERROR_FAILURE;
 
+  NS_GetCurrentThread()->SetCanInvokeJS(true);
+
   mJSContext = JSContextWrapper::Create();
   if (!mJSContext)
     return NS_ERROR_FAILURE;

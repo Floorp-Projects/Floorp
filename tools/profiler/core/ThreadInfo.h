@@ -35,7 +35,11 @@ class ThreadInfo {
    * May be null for the main thread if the profiler was started during startup
    */
   nsIThread* GetThread() const { return mThread.get(); }
+
 #endif
+
+  bool CanInvokeJS() const;
+
  private:
   char* mName;
   int mThreadId;
