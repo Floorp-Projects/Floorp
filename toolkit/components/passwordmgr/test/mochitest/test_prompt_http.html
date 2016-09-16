@@ -81,7 +81,7 @@ runInParent(() => {
 
 add_task(function* test_iframe() {
   state = {
-    msg         : "http://mochi.test:8888 is requesting your username and password.\n\nThe site says: “mochitest”",
+    msg         : "http://mochi.test:8888 is requesting your username and password. The site says: “mochitest”",
     title       : "Authentication Required",
     textValue   : "mochiuser1",
     passValue   : "mochipass1",
@@ -110,7 +110,7 @@ add_task(function* test_iframe() {
                       iframe.contentDocument);
 
   state = {
-    msg         : "http://mochi.test:8888 is requesting your username and password.\n\nThe site says: “mochitest2”",
+    msg         : "http://mochi.test:8888 is requesting your username and password. The site says: “mochitest2”",
     title       : "Authentication Required",
     textValue   : "mochiuser2",
     passValue   : "mochipass2",
@@ -151,7 +151,7 @@ add_task(function* test_iframe() {
   // expected password (to trigger an auth prompt, and change-password
   // popup notification).
   state = {
-    msg         : "http://mochi.test:8888 is requesting your username and password.\n\nThe site says: “mochitest”",
+    msg         : "http://mochi.test:8888 is requesting your username and password. The site says: “mochitest”",
     title       : "Authentication Required",
     textValue   : "mochiuser1",
     passValue   : "mochipass1",
@@ -183,7 +183,7 @@ add_task(function* test_iframe() {
   // to (but have an existing saved login for, so that we'll trigger
   // a change-password popup notification.
   state = {
-    msg         : "http://mochi.test:8888 is requesting your username and password.\n\nThe site says: “mochitest3”",
+    msg         : "http://mochi.test:8888 is requesting your username and password. The site says: “mochitest3”",
     title       : "Authentication Required",
     textValue   : "mochiuser3",
     passValue   : "mochipass3-old",
@@ -229,7 +229,7 @@ add_task(function* test_iframe() {
   });
 
   state = {
-    msg         : "http://mochi.test:8888 is requesting your username and password.\n\nThe site says: “mochitest3”",
+    msg         : "http://mochi.test:8888 is requesting your username and password. The site says: “mochitest3”",
     title       : "Authentication Required",
     textValue   : "",
     passValue   : "",
@@ -263,7 +263,7 @@ add_task(function* test_iframe() {
 
 add_task(function* test_schemeUpgrade() {
   let state = {
-    msg         : "https://example.com is requesting your username and password.\n\n" +
+    msg         : "https://example.com is requesting your username and password. " +
                   "WARNING: Your password will not be sent to the website you are currently visiting!",
     title       : "Authentication Required",
     textValue   : "httpUser",
@@ -296,7 +296,7 @@ add_task(function* test_schemeUpgrade() {
 
 add_task(function* test_schemeDowngrade() {
   let state = {
-    msg         : "http://example.com is requesting your username and password.\n\n" +
+    msg         : "http://example.com is requesting your username and password. " +
                   "WARNING: Your password will not be sent to the website you are currently visiting!",
     title       : "Authentication Required",
     textValue   : "", // empty because we shouldn't downgrade
@@ -327,7 +327,7 @@ add_task(function* test_schemeDowngrade() {
 
 add_task(function* test_schemeUpgrade_dedupe() {
   let state = {
-    msg         : "https://example.org is requesting your username and password.\n\n" +
+    msg         : "https://example.org is requesting your username and password. " +
                   "WARNING: Your password will not be sent to the website you are currently visiting!",
     title       : "Authentication Required",
     textValue   : "dedupeUser",
