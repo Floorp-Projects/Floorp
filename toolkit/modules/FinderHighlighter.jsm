@@ -869,7 +869,8 @@ FinderHighlighter.prototype = {
       rectCount != 1);
     dict.previousRangeRectsCount = rectCount;
 
-    let document = range.startContainer.ownerDocument;
+    let window = range.startContainer.ownerDocument.defaultView.top;
+    let document = window.document;
     // First see if we need to and can remove the previous outline nodes.
     if (rebuildOutline && outlineAnonNode) {
       if (kDebug) {
