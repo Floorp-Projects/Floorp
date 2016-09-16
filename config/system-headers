@@ -1000,6 +1000,7 @@ sys/elf.h
 sys/endian.h
 sys/epoll.h
 sys/errno.h
+sys/eventfd.h
 sys/fault.h
 sys/fcntl.h
 sys/file.h
