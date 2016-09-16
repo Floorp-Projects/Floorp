@@ -31,11 +31,13 @@ function check() {
 
   // Debug info for Bug 608634
   ok(true, "iframe src=" + document.body.getElementsByTagName("iframe")[0].src);
-  is(v.readyState, v.HAVE_NOTHING, "Ready state");
+  is(v.readyState, 0, "Ready state");
 
+  is(v.networkState, 0, "Network state");
   isnot(v.error, null, "Error object");
-  is(v.networkState, v.NETWORK_NO_SOURCE, "Network state");
-  is(v.error.code, MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED, "Expected media not supported error");
+  if (v.error)
+    is(v.error.code, MediaError.MEDIA_ERR_DECODE, "Error code");
+
   SimpleTest.finish();
 }
 
