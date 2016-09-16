@@ -439,7 +439,7 @@ PeerConnectionTest.prototype.updateChainSteps = function() {
   if (this.testOptions.h264) {
     this.chain.insertAfterEach(
       'PC_LOCAL_CREATE_OFFER',
-      [PC_LOCAL_REMOVE_ALL_BUT_H264_FROM_OFFER]);
+      [PC_LOCAL_REMOVE_VP8_FROM_OFFER]);
   }
   if (!this.testOptions.bundle) {
     this.chain.insertAfterEach(
