@@ -1544,25 +1544,3 @@ void UIPruneSavedDumps(const std::string& directory)
     dumpfiles.pop_back();
   }
 }
-
-void UIRunMinidumpAnalyzer(const string& exename, const string& filename)
-{
-  wstring cmdLine;
-
-  cmdLine += L"\"" + UTF8ToWide(exename) + L"\" ";
-  cmdLine += L"\"" + UTF8ToWide(filename) + L"\" ";
-
-  STARTUPINFO si = {};
-  PROCESS_INFORMATION pi = {};
-
-  si.cb = sizeof(si);
-  si.dwFlags = STARTF_USESHOWWINDOW;
-  si.wShowWindow = SW_SHOWNORMAL;
-
-  if (CreateProcess(nullptr, (LPWSTR)cmdLine.c_str(), nullptr, nullptr, FALSE,
-                    0, nullptr, nullptr, &si, &pi)) {
-    WaitForSingleObject(pi.hProcess, INFINITE);
-    CloseHandle(pi.hProcess);
-    CloseHandle(pi.hThread);
-  }
-}

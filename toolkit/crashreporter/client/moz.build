@@ -67,8 +67,6 @@ if CONFIG['OS_ARCH'] == 'Linux' or CONFIG['OS_ARCH'] == 'SunOS':
         '/toolkit/themes/windows/global/throbber/Throbber-small.gif',
     ]
 
-DEFINES['BIN_SUFFIX'] = '"%s"' % CONFIG['BIN_SUFFIX']
-
 RCINCLUDE = 'crashreporter.rc'
 
 # Don't use the STL wrappers in the crashreporter clients; they don't
