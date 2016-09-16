@@ -591,6 +591,9 @@ AudioCallbackDriver::Init()
   cubeb* cubebContext = CubebUtils::GetCubebContext();
   if (!cubebContext) {
     NS_WARNING("Could not get cubeb context.");
+    if (!mFromFallback) {
+      CubebUtils::ReportCubebStreamInitFailure(true);
+    }
     return;
   }
 

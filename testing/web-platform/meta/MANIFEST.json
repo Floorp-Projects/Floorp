@@ -37367,6 +37367,12 @@
         ]
       },
       "testharness": {
+        "2dcontext/path-objects/2d.path.lineTo.nonfinite.details.html": [
+          {
+            "path": "2dcontext/path-objects/2d.path.lineTo.nonfinite.details.html",
+            "url": "/2dcontext/path-objects/2d.path.lineTo.nonfinite.details.html"
+          }
+        ],
         "IndexedDB/idbcursor-continuePrimaryKey-exception-order.htm": [
           {
             "path": "IndexedDB/idbcursor-continuePrimaryKey-exception-order.htm",

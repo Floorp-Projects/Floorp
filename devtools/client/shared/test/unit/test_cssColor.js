@@ -10,7 +10,7 @@ var Ci = Components.interfaces;
 var Cc = Components.classes;
 
 var {require, loader} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-const {colorUtils} = require("devtools/shared/css-color");
+const {colorUtils} = require("devtools/shared/css/color");
 
 loader.lazyGetter(this, "DOMUtils", function () {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);

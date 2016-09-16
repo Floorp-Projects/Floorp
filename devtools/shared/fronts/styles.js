@@ -17,7 +17,7 @@ const {
 const promise = require("promise");
 const { Task } = require("devtools/shared/task");
 const { Class } = require("sdk/core/heritage");
-const { RuleRewriter } = require("devtools/shared/css-parsing-utils");
+const { RuleRewriter } = require("devtools/shared/css/parsing-utils");
 
 /**
  * PageStyleFront, the front object for the PageStyleActor

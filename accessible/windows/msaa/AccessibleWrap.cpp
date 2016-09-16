@@ -837,6 +837,16 @@ AccessibleWrap::accSelect(
     return CO_E_OBJNOTCONNECTED;
 
   if (flagsSelect & SELFLAG_TAKEFOCUS) {
+    if (XRE_IsContentProcess()) {
+      // In this case we might have been invoked while the IPC MessageChannel is
+      // waiting on a sync reply. We cannot dispatch additional IPC while that
+      // is happening, so we dispatch TakeFocus from the main thread to
+      // guarantee that we are outside any IPC.
+      nsCOMPtr<nsIRunnable> runnable =
+        mozilla::NewRunnableMethod(xpAccessible, &Accessible::TakeFocus);
+      NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL);
+      return S_OK;
+    }
     xpAccessible->TakeFocus();
     return S_OK;
   }
