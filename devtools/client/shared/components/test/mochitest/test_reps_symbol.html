@@ -1,0 +1,75 @@
+
+<!DOCTYPE HTML>
+<html>
+<!--
+Test Symbol rep
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Rep test - String</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+"use strict";
+/* import-globals-from head.js */
+
+window.onload = Task.async(function* () {
+  let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
+  let { SymbolRep } = browserRequire("devtools/client/shared/components/reps/symbol");
+
+  let gripStubs = new Map();
+  gripStubs.set("testSymbolFoo", {
+    type: "symbol",
+    name: "foo"
+  });
+  gripStubs.set("testSymbolWithoutIdentifier", {
+    type: "symbol"
+  });
+
+  try {
+    // Test that correct rep is chosen
+    const renderedRep = shallowRenderComponent(
+      Rep,
+      { object: gripStubs.get("testSymbolFoo")}
+    );
+
+    is(renderedRep.type, SymbolRep.rep,
+      `Rep correctly selects ${SymbolRep.rep.displayName}`);
+
+    // Test rendering
+    yield testSymbol();
+    yield testSymbolWithoutIdentifier();
+  } catch (e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+
+  function testSymbol() {
+    const renderedComponent = renderComponent(
+      SymbolRep.rep,
+      { object: gripStubs.get("testSymbolFoo") }
+    );
+
+    is(renderedComponent.textContent, "Symbol(foo)",
+      "Symbol rep has expected text content");
+  }
+
+  function testSymbolWithoutIdentifier() {
+    const renderedComponent = renderComponent(
+      SymbolRep.rep,
+      { object: gripStubs.get("testSymbolWithoutIdentifier") }
+    );
+
+    is(renderedComponent.textContent, "Symbol()",
+      "Symbol rep without identifier has expected text content");
+  }
+});
+</script>
+</pre>
+</body>
+</html>
