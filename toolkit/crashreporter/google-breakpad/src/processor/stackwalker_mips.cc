@@ -53,25 +53,14 @@ StackwalkerMIPS::StackwalkerMIPS(const SystemInfo* system_info,
                                  MemoryRegion* memory,
                                  const CodeModules* modules,
                                  StackFrameSymbolizer* resolver_helper)
-: Stackwalker(system_info, memory, modules, resolver_helper),
-  context_(context) {
-  if (context_->context_flags & MD_CONTEXT_MIPS64 ) {
-    if ((memory_ && memory_->GetBase() + memory_->GetSize() - 1)
-        > 0xffffffffffffffff) {
-      BPLOG(ERROR) << "Memory out of range for stackwalking mips64: "
-          << HexString(memory_->GetBase())
-          << "+"
-          << HexString(memory_->GetSize());
-      memory_ = NULL;
-    }
-  } else {
-    if ((memory_ && memory_->GetBase() + memory_->GetSize() - 1) > 0xffffffff) {
-      BPLOG(ERROR) << "Memory out of range for stackwalking mips32: "
-          << HexString(memory_->GetBase())
-          << "+"
-          << HexString(memory_->GetSize());
-      memory_ = NULL;
-    }
+    : Stackwalker(system_info, memory, modules, resolver_helper),
+      context_(context) {
+  if (memory_ && memory_->GetBase() + memory_->GetSize() - 1 > 0xffffffff) {
+    BPLOG(ERROR) << "Memory out of range for stackwalking: "
+                 << HexString(memory_->GetBase())
+                 << "+"
+                 << HexString(memory_->GetSize());
+    memory_ = NULL;
   }
 }
 
@@ -107,143 +96,73 @@ StackFrameMIPS* StackwalkerMIPS::GetCallerByCFIFrameInfo(
     CFIFrameInfo* cfi_frame_info) {
   StackFrameMIPS* last_frame = static_cast<StackFrameMIPS*>(frames.back());
 
-  if (context_->context_flags & MD_CONTEXT_MIPS) {
-    uint32_t sp = 0, pc = 0;
+  uint32_t sp = 0, pc = 0;
 
-    // Populate a dictionary with the valid register values in last_frame.
-    CFIFrameInfo::RegisterValueMap<uint32_t> callee_registers;
-    // Use the STACK CFI data to recover the caller's register values.
-    CFIFrameInfo::RegisterValueMap<uint32_t> caller_registers;
+  // Populate a dictionary with the valid register values in last_frame.
+  CFIFrameInfo::RegisterValueMap<uint32_t> callee_registers;
+  // Use the STACK CFI data to recover the caller's register values.
+  CFIFrameInfo::RegisterValueMap<uint32_t> caller_registers;
 
-    for (int i = 0; kRegisterNames[i]; ++i) {
-      caller_registers[kRegisterNames[i]] = last_frame->context.iregs[i];
-      callee_registers[kRegisterNames[i]] = last_frame->context.iregs[i];
-    }
-
-    if (!cfi_frame_info->FindCallerRegs(callee_registers, *memory_,
-        &caller_registers))  {
-      return NULL;
-    }
-
-    CFIFrameInfo::RegisterValueMap<uint32_t>::const_iterator entry =
-        caller_registers.find(".cfa");
-
-    if (entry != caller_registers.end()) {
-      sp = entry->second;
-      caller_registers["$sp"] = entry->second;
-    }
-
-    entry = caller_registers.find(".ra");
-    if (entry != caller_registers.end()) {
-      caller_registers["$ra"] = entry->second;
-      pc = entry->second - 2 * sizeof(pc);
-    }
-    caller_registers["$pc"] = pc;
-    // Construct a new stack frame given the values the CFI recovered.
-    scoped_ptr<StackFrameMIPS> frame(new StackFrameMIPS());
-
-    for (int i = 0; kRegisterNames[i]; ++i) {
-      CFIFrameInfo::RegisterValueMap<uint32_t>::const_iterator caller_entry =
-          caller_registers.find(kRegisterNames[i]);
-
-      if (caller_entry != caller_registers.end()) {
-        // The value of this register is recovered; fill the context with the
-        // value from caller_registers.
-        frame->context.iregs[i] = caller_entry->second;
-        frame->context_validity |= StackFrameMIPS::RegisterValidFlag(i);
-      } else if (((i >= INDEX_MIPS_REG_S0 && i <= INDEX_MIPS_REG_S7) ||
-          (i > INDEX_MIPS_REG_GP && i < INDEX_MIPS_REG_RA)) &&
-          (last_frame->context_validity &
-              StackFrameMIPS::RegisterValidFlag(i))) {
-        // If the STACK CFI data doesn't mention some callee-save register, and
-        // it is valid in the callee, assume the callee has not yet changed it.
-        // Calee-save registers according to the MIPS o32 ABI specification are:
-        // $s0 to $s7
-        // $sp, $s8
-        frame->context.iregs[i] = last_frame->context.iregs[i];
-        frame->context_validity |= StackFrameMIPS::RegisterValidFlag(i);
-      }
-    }
-
-    frame->context.epc = caller_registers["$pc"];
-    frame->instruction = caller_registers["$pc"];
-    frame->context_validity |= StackFrameMIPS::CONTEXT_VALID_PC;
-
-    frame->context.iregs[MD_CONTEXT_MIPS_REG_RA] = caller_registers["$ra"];
-    frame->context_validity |= StackFrameMIPS::CONTEXT_VALID_RA;
-
-    frame->trust = StackFrame::FRAME_TRUST_CFI;
-
-    return frame.release();
-  } else {
-    uint64_t sp = 0, pc = 0;
-
-    // Populate a dictionary with the valid register values in last_frame.
-    CFIFrameInfo::RegisterValueMap<uint64_t> callee_registers;
-    // Use the STACK CFI data to recover the caller's register values.
-    CFIFrameInfo::RegisterValueMap<uint64_t> caller_registers;
-
-    for (int i = 0; kRegisterNames[i]; ++i) {
-      caller_registers[kRegisterNames[i]] = last_frame->context.iregs[i];
-      callee_registers[kRegisterNames[i]] = last_frame->context.iregs[i];
-    }
-
-    if (!cfi_frame_info->FindCallerRegs(callee_registers, *memory_,
-        &caller_registers))  {
-      return NULL;
-    }
-
-    CFIFrameInfo::RegisterValueMap<uint64_t>::const_iterator entry =
-        caller_registers.find(".cfa");
-
-    if (entry != caller_registers.end()) {
-      sp = entry->second;
-      caller_registers["$sp"] = entry->second;
-    }
-
-    entry = caller_registers.find(".ra");
-    if (entry != caller_registers.end()) {
-      caller_registers["$ra"] = entry->second;
-      pc = entry->second - 2 * sizeof(pc);
-    }
-    caller_registers["$pc"] = pc;
-    // Construct a new stack frame given the values the CFI recovered.
-    scoped_ptr<StackFrameMIPS> frame(new StackFrameMIPS());
-
-    for (int i = 0; kRegisterNames[i]; ++i) {
-      CFIFrameInfo::RegisterValueMap<uint64_t>::const_iterator caller_entry =
-          caller_registers.find(kRegisterNames[i]);
-
-      if (caller_entry != caller_registers.end()) {
-        // The value of this register is recovered; fill the context with the
-        // value from caller_registers.
-        frame->context.iregs[i] = caller_entry->second;
-        frame->context_validity |= StackFrameMIPS::RegisterValidFlag(i);
-      } else if (((i >= INDEX_MIPS_REG_S0 && i <= INDEX_MIPS_REG_S7) ||
-          (i >= INDEX_MIPS_REG_GP && i < INDEX_MIPS_REG_RA)) &&
-          (last_frame->context_validity &
-              StackFrameMIPS::RegisterValidFlag(i))) {
-        // If the STACK CFI data doesn't mention some callee-save register, and
-        // it is valid in the callee, assume the callee has not yet changed it.
-        // Calee-save registers according to the MIPS o32 ABI specification are:
-        // $s0 to $s7
-        // $sp, $s8
-        frame->context.iregs[i] = last_frame->context.iregs[i];
-        frame->context_validity |= StackFrameMIPS::RegisterValidFlag(i);
-      }
-    }
-
-    frame->context.epc = caller_registers["$pc"];
-    frame->instruction = caller_registers["$pc"];
-    frame->context_validity |= StackFrameMIPS::CONTEXT_VALID_PC;
-
-    frame->context.iregs[MD_CONTEXT_MIPS_REG_RA] = caller_registers["$ra"];
-    frame->context_validity |= StackFrameMIPS::CONTEXT_VALID_RA;
-
-    frame->trust = StackFrame::FRAME_TRUST_CFI;
-
-    return frame.release();
+  for (int i = 0; kRegisterNames[i]; ++i) {
+    caller_registers[kRegisterNames[i]] = last_frame->context.iregs[i];
+    callee_registers[kRegisterNames[i]] = last_frame->context.iregs[i];
   }
+
+  if (!cfi_frame_info->FindCallerRegs(callee_registers, *memory_,
+                                      &caller_registers))  {
+    return NULL;
+  }
+
+  CFIFrameInfo::RegisterValueMap<uint32_t>::const_iterator entry =
+      caller_registers.find(".cfa");
+
+  if (entry != caller_registers.end()) {
+    sp = entry->second;
+    caller_registers["$sp"] = entry->second;
+  }
+
+  entry = caller_registers.find(".ra");
+  if (entry != caller_registers.end()) {
+    caller_registers["$ra"] = entry->second;
+    pc = entry->second - 2 * sizeof(pc);
+  }
+  caller_registers["$pc"] = pc;
+  // Construct a new stack frame given the values the CFI recovered.
+  scoped_ptr<StackFrameMIPS> frame(new StackFrameMIPS());
+
+  for (int i = 0; kRegisterNames[i]; ++i) {
+    CFIFrameInfo::RegisterValueMap<uint32_t>::const_iterator caller_entry =
+        caller_registers.find(kRegisterNames[i]);
+
+    if (caller_entry != caller_registers.end()) {
+      // The value of this register is recovered; fill the context with the
+      // value from caller_registers.
+      frame->context.iregs[i] = caller_entry->second;
+      frame->context_validity |= StackFrameMIPS::RegisterValidFlag(i);
+    } else if (((i >= INDEX_MIPS_REG_S0 && i <= INDEX_MIPS_REG_S7) ||
+                (i > INDEX_MIPS_REG_GP && i < INDEX_MIPS_REG_RA)) &&
+               (last_frame->context_validity &
+                StackFrameMIPS::RegisterValidFlag(i))) {
+      // If the STACK CFI data doesn't mention some callee-save register, and
+      // it is valid in the callee, assume the callee has not yet changed it.
+      // Calee-save registers according to the MIPS o32 ABI specification are:
+      // $s0 to $s7
+      // $sp, $s8
+      frame->context.iregs[i] = last_frame->context.iregs[i];
+      frame->context_validity |= StackFrameMIPS::RegisterValidFlag(i);
+    }
+  }
+
+  frame->context.epc = caller_registers["$pc"];
+  frame->instruction = caller_registers["$pc"];
+  frame->context_validity |= StackFrameMIPS::CONTEXT_VALID_PC;
+  
+  frame->context.iregs[MD_CONTEXT_MIPS_REG_RA] = caller_registers["$ra"];
+  frame->context_validity |= StackFrameMIPS::CONTEXT_VALID_RA;
+
+  frame->trust = StackFrame::FRAME_TRUST_CFI;
+
+  return frame.release();
 }
 
 StackFrame* StackwalkerMIPS::GetCallerFrame(const CallStack* stack,
@@ -285,7 +204,7 @@ StackFrame* StackwalkerMIPS::GetCallerFrame(const CallStack* stack,
       last_frame->context.iregs[MD_CONTEXT_MIPS_REG_SP]) {
     return NULL;
   }
-
+  
   return new_frame.release();
 }
 
@@ -296,20 +215,19 @@ StackFrameMIPS* StackwalkerMIPS::GetCallerByStackScan(
 
   StackFrameMIPS* last_frame = static_cast<StackFrameMIPS*>(frames.back());
 
-  if (context_->context_flags & MD_CONTEXT_MIPS) {
-    uint32_t last_sp = last_frame->context.iregs[MD_CONTEXT_MIPS_REG_SP];
-    uint32_t caller_pc, caller_sp, caller_fp;
+  uint32_t last_sp = last_frame->context.iregs[MD_CONTEXT_MIPS_REG_SP];
+  uint32_t caller_pc, caller_sp, caller_fp;
 
-    // Return address cannot be obtained directly.
-    // Force stackwalking.
+  // Return address cannot be obtained directly.
+  // Force stackwalking.
 
-    // We cannot use frame pointer to get the return address.
-    // We'll scan the stack for a
-    // return address. This can happen if last_frame is executing code
-    // for a module for which we don't have symbols.
-    int count = kMaxFrameStackSize / sizeof(caller_pc);
+  // We cannot use frame pointer to get the return address.
+  // We'll scan the stack for a
+  // return address. This can happen if last_frame is executing code
+  // for a module for which we don't have symbols.
+  int count = kMaxFrameStackSize / sizeof(caller_pc);
 
-    if (frames.size() > 1) {
+  if (frames.size() > 1) {
       // In case of mips32 ABI stack frame of a nonleaf function
       // must have minimum stack frame assigned for 4 arguments (4 words).
       // Move stack pointer for 4 words to avoid reporting non-existing frames
@@ -317,131 +235,65 @@ StackFrameMIPS* StackwalkerMIPS::GetCallerByStackScan(
       // There is no way of knowing if topmost frame belongs to a leaf or
       // a nonleaf function.
       last_sp +=  kMinArgsOnStack * sizeof(caller_pc);
-      // Adjust 'count' so that return address is scanned only in limits
+      // Adjust 'count' so that return address is scanned only in limits 
       // of one stack frame.
       count -= kMinArgsOnStack;
-    }
-
-    do {
-      // Scanning for return address from stack pointer of the last frame.
-      if (!ScanForReturnAddress(last_sp, &caller_sp, &caller_pc, count)) {
-        // If we can't find an instruction pointer even with stack scanning,
-        // give up.
-        BPLOG(ERROR) << " ScanForReturnAddress failed ";
-        return NULL;
-      }
-      // Get $fp stored in the stack frame.
-      if (!memory_->GetMemoryAtAddress(caller_sp - sizeof(caller_pc),
-          &caller_fp)) {
-        BPLOG(INFO) << " GetMemoryAtAddress for fp failed " ;
-        return NULL;
-      }
-
-      count = count - (caller_sp - last_sp) / sizeof(caller_pc);
-      // Now scan the next address in the stack.
-      last_sp = caller_sp + sizeof(caller_pc);
-    } while ((caller_fp - caller_sp >= kMaxFrameStackSize) && count > 0);
-
-    if (!count) {
-      BPLOG(INFO) << " No frame found " ;
-      return NULL;
-    }
-
-    // ScanForReturnAddress found a reasonable return address. Advance
-    // $sp to the location above the one where the return address was
-    // found.
-    caller_sp += sizeof(caller_pc);
-    // caller_pc is actually containing $ra value;
-    // $pc is two instructions before $ra,
-    // so the caller_pc needs to be decremented accordingly.
-    caller_pc -= 2 * sizeof(caller_pc);
-
-    // Create a new stack frame (ownership will be transferred to the caller)
-    // and fill it in.
-    StackFrameMIPS* frame = new StackFrameMIPS();
-    frame->trust = StackFrame::FRAME_TRUST_SCAN;
-    frame->context = last_frame->context;
-    frame->context.epc = caller_pc;
-    frame->context_validity |= StackFrameMIPS::CONTEXT_VALID_PC;
-    frame->instruction = caller_pc;
-
-    frame->context.iregs[MD_CONTEXT_MIPS_REG_SP] = caller_sp;
-    frame->context_validity |= StackFrameMIPS::CONTEXT_VALID_SP;
-    frame->context.iregs[MD_CONTEXT_MIPS_REG_FP] = caller_fp;
-    frame->context_validity |= StackFrameMIPS::CONTEXT_VALID_FP;
-
-    frame->context.iregs[MD_CONTEXT_MIPS_REG_RA] =
-        caller_pc + 2 * sizeof(caller_pc);
-    frame->context_validity |= StackFrameMIPS::CONTEXT_VALID_RA;
-
-    return frame;
-  } else {
-    uint64_t last_sp = last_frame->context.iregs[MD_CONTEXT_MIPS_REG_SP];
-    uint64_t caller_pc, caller_sp, caller_fp;
-
-    // Return address cannot be obtained directly.
-    // Force stackwalking.
-
-    // We cannot use frame pointer to get the return address.
-    // We'll scan the stack for a
-    // return address. This can happen if last_frame is executing code
-    // for a module for which we don't have symbols.
-    int count = kMaxFrameStackSize / sizeof(caller_pc);
-
-    do {
-      // Scanning for return address from stack pointer of the last frame.
-      if (!ScanForReturnAddress(last_sp, &caller_sp, &caller_pc, count)) {
-        // If we can't find an instruction pointer even with stack scanning,
-        // give up.
-        BPLOG(ERROR) << " ScanForReturnAddress failed ";
-        return NULL;
-      }
-      // Get $fp stored in the stack frame.
-      if (!memory_->GetMemoryAtAddress(caller_sp - sizeof(caller_pc),
-          &caller_fp)) {
-        BPLOG(INFO) << " GetMemoryAtAddress for fp failed " ;
-        return NULL;
-      }
-
-      count = count - (caller_sp - last_sp) / sizeof(caller_pc);
-      // Now scan the next address in the stack.
-      last_sp = caller_sp + sizeof(caller_pc);
-    } while ((caller_fp - caller_sp >= kMaxFrameStackSize) && count > 0);
-
-    if (!count) {
-      BPLOG(INFO) << " No frame found " ;
-      return NULL;
-    }
-
-    // ScanForReturnAddress found a reasonable return address. Advance
-    // $sp to the location above the one where the return address was
-    // found.
-    caller_sp += sizeof(caller_pc);
-    // caller_pc is actually containing $ra value;
-    // $pc is two instructions before $ra,
-    // so the caller_pc needs to be decremented accordingly.
-    caller_pc -= 2 * sizeof(caller_pc);
-
-    // Create a new stack frame (ownership will be transferred to the caller)
-    // and fill it in.
-    StackFrameMIPS* frame = new StackFrameMIPS();
-    frame->trust = StackFrame::FRAME_TRUST_SCAN;
-    frame->context = last_frame->context;
-    frame->context.epc = caller_pc;
-    frame->context_validity |= StackFrameMIPS::CONTEXT_VALID_PC;
-    frame->instruction = caller_pc;
-
-    frame->context.iregs[MD_CONTEXT_MIPS_REG_SP] = caller_sp;
-    frame->context_validity |= StackFrameMIPS::CONTEXT_VALID_SP;
-    frame->context.iregs[MD_CONTEXT_MIPS_REG_FP] = caller_fp;
-    frame->context_validity |= StackFrameMIPS::CONTEXT_VALID_FP;
-
-    frame->context.iregs[MD_CONTEXT_MIPS_REG_RA] =
-        caller_pc + 2 * sizeof(caller_pc);
-    frame->context_validity |= StackFrameMIPS::CONTEXT_VALID_RA;
-
-    return frame;
   }
+
+  do {
+    // Scanning for return address from stack pointer of the last frame.
+    if (!ScanForReturnAddress(last_sp, &caller_sp, &caller_pc, count)) {
+      // If we can't find an instruction pointer even with stack scanning,
+      // give up.
+      BPLOG(ERROR) << " ScanForReturnAddress failed ";
+      return NULL;
+    }
+    // Get $fp stored in the stack frame.
+    if (!memory_->GetMemoryAtAddress(caller_sp - sizeof(caller_pc),
+                                     &caller_fp)) {
+      BPLOG(INFO) << " GetMemoryAtAddress for fp failed " ;
+      return NULL;
+    }
+
+    count = count - (caller_sp - last_sp) / sizeof(caller_pc);
+    // Now scan the next address in the stack.
+    last_sp = caller_sp + sizeof(caller_pc);
+  } while ((caller_fp - caller_sp >= kMaxFrameStackSize) && count > 0);
+
+  if (!count) {
+    BPLOG(INFO) << " No frame found " ;
+    return NULL;
+  }
+
+  // ScanForReturnAddress found a reasonable return address. Advance
+  // $sp to the location above the one where the return address was
+  // found. 
+  caller_sp += sizeof(caller_pc);
+  // caller_pc is actually containing $ra value;
+  // $pc is two instructions before $ra,
+  // so the caller_pc needs to be decremented accordingly.
+  caller_pc -= 2 * sizeof(caller_pc);
+
+
+  // Create a new stack frame (ownership will be transferred to the caller)
+  // and fill it in.
+  StackFrameMIPS* frame = new StackFrameMIPS();
+  frame->trust = StackFrame::FRAME_TRUST_SCAN;
+  frame->context = last_frame->context;
+  frame->context.epc = caller_pc;
+  frame->context_validity |= StackFrameMIPS::CONTEXT_VALID_PC;
+  frame->instruction = caller_pc;
+
+  frame->context.iregs[MD_CONTEXT_MIPS_REG_SP] = caller_sp;
+  frame->context_validity |= StackFrameMIPS::CONTEXT_VALID_SP;
+  frame->context.iregs[MD_CONTEXT_MIPS_REG_FP] = caller_fp;
+  frame->context_validity |= StackFrameMIPS::CONTEXT_VALID_FP;
+
+  frame->context.iregs[MD_CONTEXT_MIPS_REG_RA] =
+      caller_pc + 2 * sizeof(caller_pc);
+  frame->context_validity |= StackFrameMIPS::CONTEXT_VALID_RA;
+
+  return frame;
 }
 
 }  // namespace google_breakpad

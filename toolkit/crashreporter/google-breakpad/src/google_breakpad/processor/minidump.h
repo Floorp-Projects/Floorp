@@ -151,8 +151,6 @@ class MinidumpStream : public MinidumpObject {
   // that implements MinidumpStream can compare expected_size to a
   // known size as an integrity check.
   virtual bool Read(uint32_t expected_size) = 0;
-
-  DISALLOW_COPY_AND_ASSIGN(MinidumpStream);
 };
 
 
@@ -193,8 +191,6 @@ class MinidumpContext : public DumpContext {
   // for access to data about the minidump file itself, such as whether
   // it should be byte-swapped.
   Minidump* minidump_;
-
-  DISALLOW_COPY_AND_ASSIGN(MinidumpContext);
 };
 
 
@@ -362,8 +358,6 @@ class MinidumpThreadList : public MinidumpStream {
   // The list of threads.
   MinidumpThreads* threads_;
   uint32_t        thread_count_;
-
-  DISALLOW_COPY_AND_ASSIGN(MinidumpThreadList);
 };
 
 
@@ -398,14 +392,7 @@ class MinidumpModule : public MinidumpObject,
   virtual string debug_file() const;
   virtual string debug_identifier() const;
   virtual string version() const;
-  virtual CodeModule* Copy() const;
-
-  // Getter and setter for shrink_down_delta.  This is used when the address
-  // range for a module is shrunk down due to address range conflicts with
-  // other modules.  The base_address and size fields are not updated and they
-  // should always reflect the original values (reported in the minidump).
-  virtual uint64_t shrink_down_delta() const;
-  virtual void SetShrinkDownDelta(uint64_t shrink_down_delta);
+  virtual const CodeModule* Copy() const;
 
   // The CodeView record, which contains information to locate the module's
   // debugging information (pdb).  This is returned as uint8_t* because
@@ -514,13 +501,6 @@ class MinidumpModuleList : public MinidumpStream,
   virtual const MinidumpModule* GetModuleAtIndex(unsigned int index) const;
   virtual const CodeModules* Copy() const;
 
-  // Returns a vector of all modules which address ranges needed to be shrunk
-  // down due to address range conflicts with other modules.
-  virtual vector<linked_ptr<const CodeModule> > GetShrunkRangeModules() const;
-
-  // Returns true, if module address range shrink is enabled.
-  virtual bool IsModuleShrinkEnabled() const;
-
   // Print a human-readable representation of the object to stdout.
   void Print();
 
@@ -545,8 +525,6 @@ class MinidumpModuleList : public MinidumpStream,
 
   MinidumpModules *modules_;
   uint32_t module_count_;
-
-  DISALLOW_COPY_AND_ASSIGN(MinidumpModuleList);
 };
 
 
@@ -609,8 +587,6 @@ class MinidumpMemoryList : public MinidumpStream {
   // The list of regions.
   MemoryRegions *regions_;
   uint32_t region_count_;
-
-  DISALLOW_COPY_AND_ASSIGN(MinidumpMemoryList);
 };
 
 
@@ -650,8 +626,6 @@ class MinidumpException : public MinidumpStream {
 
   MDRawExceptionStream exception_;
   MinidumpContext*     context_;
-
-  DISALLOW_COPY_AND_ASSIGN(MinidumpException);
 };
 
 // MinidumpAssertion wraps MDRawAssertionInfo, which contains information
@@ -692,8 +666,6 @@ class MinidumpAssertion : public MinidumpStream {
   string expression_;
   string function_;
   string file_;
-
-  DISALLOW_COPY_AND_ASSIGN(MinidumpAssertion);
 };
 
 
@@ -747,8 +719,6 @@ class MinidumpSystemInfo : public MinidumpStream {
 
   // A string identifying the CPU vendor, if known.
   const string* cpu_vendor_;
-
-  DISALLOW_COPY_AND_ASSIGN(MinidumpSystemInfo);
 };
 
 
@@ -782,8 +752,6 @@ class MinidumpMiscInfo : public MinidumpStream {
   string daylight_name_;
   string build_string_;
   string dbg_bld_str_;
-
-  DISALLOW_COPY_AND_ASSIGN(MinidumpMiscInfo);
 };
 
 
@@ -816,8 +784,6 @@ class MinidumpBreakpadInfo : public MinidumpStream {
   bool Read(uint32_t expected_size_);
 
   MDRawBreakpadInfo breakpad_info_;
-
-  DISALLOW_COPY_AND_ASSIGN(MinidumpBreakpadInfo);
 };
 
 // MinidumpMemoryInfo wraps MDRawMemoryInfo, which provides information
@@ -888,8 +854,6 @@ class MinidumpMemoryInfoList : public MinidumpStream {
 
   MinidumpMemoryInfos* infos_;
   uint32_t info_count_;
-
-  DISALLOW_COPY_AND_ASSIGN(MinidumpMemoryInfoList);
 };
 
 // MinidumpLinuxMaps wraps information about a single mapped memory region
@@ -1097,9 +1061,6 @@ class Minidump {
   // Print a human-readable representation of the object to stdout.
   void Print();
 
-  // Is the OS Android.
-  bool IsAndroid();
-
  private:
   // MinidumpStreamInfo is used in the MinidumpStreamMap.  It lets
   // the Minidump object locate interesting streams quickly, and
@@ -1160,8 +1121,6 @@ class Minidump {
   // construction or after a failed Read(); true following a successful
   // Read().
   bool                      valid_;
-
-  DISALLOW_COPY_AND_ASSIGN(Minidump);
 };
 
 
