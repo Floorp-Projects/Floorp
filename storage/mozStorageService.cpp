@@ -748,11 +748,43 @@ Service::OpenAsyncDatabase(nsIVariant *aDatabaseStore,
   NS_ENSURE_ARG(aDatabaseStore);
   NS_ENSURE_ARG(aCallback);
 
-  nsCOMPtr<nsIFile> storageFile;
-  int flags = SQLITE_OPEN_READWRITE;
+  nsresult rv;
+  bool shared = false;
+  bool readOnly = false;
+  bool ignoreLockingMode = false;
+  int32_t growthIncrement = -1;
 
+#define FAIL_IF_SET_BUT_INVALID(rv)\
+  if (NS_FAILED(rv) && rv != NS_ERROR_NOT_AVAILABLE) { \
+    return NS_ERROR_INVALID_ARG; \
+  }
+
+  // Deal with options first:
+  if (aOptions) {
+    rv = aOptions->GetPropertyAsBool(NS_LITERAL_STRING("readOnly"), &readOnly);
+    FAIL_IF_SET_BUT_INVALID(rv);
+
+    rv = aOptions->GetPropertyAsBool(NS_LITERAL_STRING("ignoreLockingMode"),
+                                     &ignoreLockingMode);
+    FAIL_IF_SET_BUT_INVALID(rv);
+    // Specifying ignoreLockingMode will force use of the readOnly flag:
+    if (ignoreLockingMode) {
+      readOnly = true;
+    }
+
+    rv = aOptions->GetPropertyAsBool(NS_LITERAL_STRING("shared"), &shared);
+    FAIL_IF_SET_BUT_INVALID(rv);
+
+    // NB: we re-set to -1 if we don't have a storage file later on.
+    rv = aOptions->GetPropertyAsInt32(NS_LITERAL_STRING("growthIncrement"),
+                                      &growthIncrement);
+    FAIL_IF_SET_BUT_INVALID(rv);
+  }
+  int flags = readOnly ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE;
+
+  nsCOMPtr<nsIFile> storageFile;
   nsCOMPtr<nsISupports> dbStore;
-  nsresult rv = aDatabaseStore->GetAsISupports(getter_AddRefs(dbStore));
+  rv = aDatabaseStore->GetAsISupports(getter_AddRefs(dbStore));
   if (NS_SUCCEEDED(rv)) {
     // Generally, aDatabaseStore holds the database nsIFile.
     storageFile = do_QueryInterface(dbStore, &rv);
@@ -763,17 +795,12 @@ Service::OpenAsyncDatabase(nsIVariant *aDatabaseStore,
     rv = storageFile->Clone(getter_AddRefs(storageFile));
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-    // Ensure that SQLITE_OPEN_CREATE is passed in for compatibility reasons.
-    flags |= SQLITE_OPEN_CREATE;
-
-    // Extract and apply the shared-cache option.
-    bool shared = false;
-    if (aOptions) {
-      rv = aOptions->GetPropertyAsBool(NS_LITERAL_STRING("shared"), &shared);
-      if (NS_FAILED(rv) && rv != NS_ERROR_NOT_AVAILABLE) {
-        return NS_ERROR_INVALID_ARG;
-      }
+    if (!readOnly) {
+      // Ensure that SQLITE_OPEN_CREATE is passed in for compatibility reasons.
+      flags |= SQLITE_OPEN_CREATE;
     }
+
+    // Apply the shared-cache option.
     flags |= shared ? SQLITE_OPEN_SHAREDCACHE : SQLITE_OPEN_PRIVATECACHE;
   } else {
     // Sometimes, however, it's a special database name.
@@ -787,17 +814,13 @@ Service::OpenAsyncDatabase(nsIVariant *aDatabaseStore,
     // connection to use a memory DB.
   }
 
-  int32_t growthIncrement = -1;
-  if (aOptions && storageFile) {
-    rv = aOptions->GetPropertyAsInt32(NS_LITERAL_STRING("growthIncrement"),
-                                      &growthIncrement);
-    if (NS_FAILED(rv) && rv != NS_ERROR_NOT_AVAILABLE) {
-      return NS_ERROR_INVALID_ARG;
-    }
+  if (!storageFile && growthIncrement >= 0) {
+    return NS_ERROR_INVALID_ARG;
   }
 
   // Create connection on this thread, but initialize it on its helper thread.
-  RefPtr<Connection> msc = new Connection(this, flags, true);
+  RefPtr<Connection> msc = new Connection(this, flags, true,
+                                          ignoreLockingMode);
   nsCOMPtr<nsIEventTarget> target = msc->getAsyncExecutionTarget();
   MOZ_ASSERT(target, "Cannot initialize a connection that has been closed already");
 

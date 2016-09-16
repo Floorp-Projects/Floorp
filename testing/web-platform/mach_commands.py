@@ -237,24 +237,13 @@ testing/web-platform/tests for tests that may be shared
 
 
 class WPTManifestUpdater(MozbuildObject):
-    def run_update(self):
-        import imp
+    def run_update(self, check_clean=False, **kwargs):
+        import manifestupdate
         from wptrunner import wptlogging
-        from wptrunner.wptcommandline import get_test_paths, set_from_config
-        from wptrunner.testloader import ManifestLoader
 
+        logger = wptlogging.setup(kwargs, {"mach": sys.stdout})
         wpt_dir = os.path.abspath(os.path.join(self.topsrcdir, 'testing', 'web-platform'))
-
-        localpaths = imp.load_source("localpaths",
-                                     os.path.join(wpt_dir, "tests", "tools", "localpaths.py"))
-        kwargs = {"config": os.path.join(wpt_dir, "wptrunner.ini"),
-                  "tests_root": None,
-                  "metadata_root": None}
-
-        wptlogging.setup({}, {"mach": sys.stdout})
-        set_from_config(kwargs)
-        test_paths = get_test_paths(kwargs["config"])
-        ManifestLoader(test_paths, force_manifest_update=True).load()
+        manifestupdate.update(logger, wpt_dir, check_clean)
 
 
 def create_parser_wpt():
@@ -292,8 +281,16 @@ def create_parser_create():
     return p
 
 
+def create_parser_manifest_update():
+    import manifestupdate
+    return manifestupdate.create_parser()
+
+
 @CommandProvider
 class MachCommands(MachCommandBase):
+    def setup(self):
+        self._activate_virtualenv()
+
     @Command("web-platform-tests",
              category="testing",
              conditions=[conditions.is_firefox],
@@ -336,9 +333,6 @@ class MachCommands(MachCommandBase):
     def update_wpt(self, **params):
         return self.update_web_platform_tests(**params)
 
-    def setup(self):
-        self._activate_virtualenv()
-
     @Command("web-platform-tests-reduce",
              category="testing",
              conditions=[conditions.is_firefox],
@@ -372,8 +366,9 @@ class MachCommands(MachCommandBase):
         return self.create_web_platform_test(**params)
 
     @Command("wpt-manifest-update",
-             category="testing")
-    def wpt_manifest_update(self, **parms):
+             category="testing",
+             parser=create_parser_manifest_update)
+    def wpt_manifest_update(self, **params):
         self.setup()
         wpt_manifest_updater = self._spawn(WPTManifestUpdater)
-        wpt_manifest_updater.run_update()
+        return wpt_manifest_updater.run_update(**params)
