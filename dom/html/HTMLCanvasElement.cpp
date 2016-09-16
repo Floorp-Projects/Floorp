@@ -982,14 +982,7 @@ HTMLCanvasElement::InvalidateCanvasContent(const gfx::Rect* damageRect)
   if (damageRect) {
     nsIntSize size = GetWidthHeight();
     if (size.width != 0 && size.height != 0) {
-
-      gfx::Rect realRect(*damageRect);
-      realRect.RoundOut();
-
-      // then make it a nsIntRect
-      nsIntRect invalRect(realRect.X(), realRect.Y(),
-                          realRect.Width(), realRect.Height());
-
+      gfx::IntRect invalRect = gfx::IntRect::Truncate(*damageRect);
       layer = frame->InvalidateLayer(nsDisplayItem::TYPE_CANVAS, &invalRect);
     }
   } else {
