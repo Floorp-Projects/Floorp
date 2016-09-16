@@ -7,9 +7,6 @@
 const Cu = Components.utils;
 
 Cu.import("resource://services-sync/record.js");
-Cu.import("resource://services-sync/util.js");
-Cu.import("resource://services-sync/bookmark_utils.js");
-Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-sync/main.js");
 
 this.EXPORTED_SYMBOLS = ["CollectionValidator", "CollectionProblemData"];

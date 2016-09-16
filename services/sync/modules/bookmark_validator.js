@@ -7,9 +7,8 @@
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://services-sync/util.js");
-Cu.import("resource://services-sync/bookmark_utils.js");
 
 this.EXPORTED_SYMBOLS = ["BookmarkValidator", "BookmarkProblemData"];
 
@@ -197,16 +196,16 @@ class BookmarkValidator {
     let records = [];
     let recordsByGuid = new Map();
     function traverse(treeNode) {
-      let guid = BookmarkSpecialIds.specialGUIDForId(treeNode.id) || treeNode.guid;
+      let guid = PlacesSyncUtils.bookmarks.guidToSyncId(treeNode.guid);
       let itemType = 'item';
-      treeNode.ignored = PlacesUtils.annotations.itemHasAnnotation(treeNode.id, BookmarkAnnos.EXCLUDEBACKUP_ANNO);
+      treeNode.ignored = PlacesUtils.annotations.itemHasAnnotation(treeNode.id, PlacesUtils.EXCLUDE_FROM_BACKUP_ANNO);
       treeNode.id = guid;
       switch (treeNode.type) {
         case PlacesUtils.TYPE_X_MOZ_PLACE:
           let query = null;
           if (treeNode.annos && treeNode.uri.startsWith("place:")) {
             query = treeNode.annos.find(({name}) =>
-              name === BookmarkAnnos.SMART_BOOKMARKS_ANNO);
+              name === PlacesSyncUtils.bookmarks.SMART_BOOKMARKS_ANNO);
           }
           if (query && query.value) {
             itemType = 'query';
@@ -333,32 +332,12 @@ class BookmarkValidator {
           problemData.duplicateChildren.push(record.id)
         }
 
-        // This whole next part is a huge hack.
         // The children array stores special guids as their local guid values,
         // e.g. 'menu________' instead of 'menu', but all other parts of the
         // serverside bookmark info stores it as the special value ('menu').
-        //
-        // Since doing a sql query for every entry would be extremely slow, and
-        // wouldn't even be necessarially accurate (since these values are only
-        // the local values for whichever client created the records) We just
-        // strip off the trailing _ and see if that results in a special id.
-        //
-        // To make things worse, this doesn't even work for root________, which has
-        // the special id 'places'.
         record.childGUIDs = record.children;
         record.children = record.children.map(childID => {
-          let match = childID.match(/_+$/);
-          if (!match) {
-            return childID;
-          }
-          let possibleSpecialID = childID.slice(0, match.index);
-          if (possibleSpecialID === 'root') {
-            possibleSpecialID = 'places';
-          }
-          if (BookmarkSpecialIds.isSpecialGUID(possibleSpecialID)) {
-            return possibleSpecialID;
-          }
-          return childID;
+          return PlacesSyncUtils.bookmarks.guidToSyncId(childID);
         });
       }
     }
