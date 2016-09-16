@@ -129,7 +129,7 @@ ssl_ECPubKey2NamedGroup(const SECKEYPublicKey *pubKey)
         !(policyFlags & NSS_USE_ALG_IN_SSL_KX)) {
         return NULL;
     }
-    for (i = 0; i < SSL_NAMED_GROUP_COUNT; ++i) {
+    for (i = 0; i < ssl_named_group_count; ++i) {
         if (ssl_named_groups[i].oidTag == oidData->offset) {
             return &ssl_named_groups[i];
         }
@@ -424,23 +424,17 @@ tls13_ImportECDHKeyShare(sslSocket *ss, SECKEYPublicKey *peerKey,
 }
 
 const namedGroupDef *
-ssl_GetECGroupWithStrength(sslSocket *ss, unsigned int requiredECCbits)
+ssl_GetECGroupWithStrength(PRUint32 curvemsk, unsigned int requiredECCbits)
 {
     int i;
 
-    for (i = 0; i < SSL_NAMED_GROUP_COUNT; ++i) {
-        const namedGroupDef *group;
-        if (ss) {
-            group = ss->namedGroupPreferences[i];
-        } else {
-            group = &ssl_named_groups[i];
-        }
-        if (!group || group->type != group_type_ec ||
-            group->bits < requiredECCbits) {
+    for (i = 0; i < ssl_named_group_count; i++) {
+        if (ssl_named_groups[i].type != group_type_ec ||
+            ssl_named_groups[i].bits < requiredECCbits) {
             continue;
         }
-        if (!ss || ssl_NamedGroupEnabled(ss, group)) {
-            return group;
+        if ((curvemsk & (1U << i))) {
+            return &ssl_named_groups[i];
         }
     }
     PORT_SetError(SSL_ERROR_NO_CYPHER_OVERLAP);
@@ -492,7 +486,7 @@ ssl_GetECGroupForServerSocket(sslSocket *ss)
         requiredECCbits = certKeySize;
     }
 
-    return ssl_GetECGroupWithStrength(ss, requiredECCbits);
+    return ssl_GetECGroupWithStrength(ss->namedGroups, requiredECCbits);
 }
 
 /* function to clear out the lists */
@@ -514,7 +508,7 @@ static PRStatus
 ssl_ECRegister(void)
 {
     SECStatus rv;
-    PORT_Assert(PR_ARRAY_SIZE(gECDHEKeyPairs) == SSL_NAMED_GROUP_COUNT);
+    PORT_Assert(PR_ARRAY_SIZE(gECDHEKeyPairs) == ssl_named_group_count);
     rv = NSS_RegisterShutdown(ssl_ShutdownECDHECurves, gECDHEKeyPairs);
     if (rv != SECSuccess) {
         gECDHEInitError = PORT_GetError();
@@ -630,7 +624,6 @@ ssl3_HandleECDHServerKeyExchange(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     SSL3Hashes hashes;
     SECItem signature = { siBuffer, NULL, 0 };
     SSLHashType hashAlg;
-    SignatureScheme sigScheme;
 
     SECItem ec_params = { siBuffer, NULL, 0 };
     SECItem ec_point = { siBuffer, NULL, 0 };
@@ -679,6 +672,7 @@ ssl3_HandleECDHServerKeyExchange(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 
     PORT_Assert(ss->ssl3.prSpec->version <= SSL_LIBRARY_VERSION_TLS_1_2);
     if (ss->ssl3.prSpec->version == SSL_LIBRARY_VERSION_TLS_1_2) {
+        SignatureScheme sigScheme;
         rv = ssl_ConsumeSignatureScheme(ss, &b, &length, &sigScheme);
         if (rv != SECSuccess) {
             goto loser; /* malformed or unsupported. */
@@ -692,7 +686,6 @@ ssl3_HandleECDHServerKeyExchange(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     } else {
         /* Use ssl_hash_none to represent the MD5+SHA1 combo. */
         hashAlg = ssl_hash_none;
-        sigScheme = ssl_sig_none;
     }
 
     rv = ssl3_ConsumeHandshakeVariable(ss, &signature, 2, &b, &length);
@@ -727,7 +720,8 @@ ssl3_HandleECDHServerKeyExchange(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
             ssl_MapLowLevelError(SSL_ERROR_SERVER_KEY_EXCHANGE_FAILURE);
         goto alert_loser;
     }
-    rv = ssl3_VerifySignedHashes(ss, sigScheme, &hashes, &signature);
+    rv = ssl3_VerifySignedHashes(&hashes, ss->sec.peerCert, &signature,
+                                 isTLS, ss->pkcs11PinArg);
     if (rv != SECSuccess) {
         errCode =
             ssl_MapLowLevelError(SSL_ERROR_SERVER_KEY_EXCHANGE_FAILURE);
@@ -786,7 +780,7 @@ ssl3_SendECDHServerKeyExchange(sslSocket *ss)
 {
     SECStatus rv = SECFailure;
     int length;
-    PRBool isTLS12;
+    PRBool isTLS, isTLS12;
     SECItem signed_hash = { siBuffer, NULL, 0 };
     SSLHashType hashAlg = ssl_hash_none;
     SSL3Hashes hashes;
@@ -849,10 +843,11 @@ ssl3_SendECDHServerKeyExchange(sslSocket *ss)
         goto loser;
     }
 
+    isTLS = (PRBool)(ss->ssl3.pwSpec->version > SSL_LIBRARY_VERSION_3_0);
     isTLS12 = (PRBool)(ss->ssl3.pwSpec->version >= SSL_LIBRARY_VERSION_TLS_1_2);
 
-    rv = ssl3_SignHashes(ss, &hashes,
-                         ss->sec.serverCert->serverKeyPair->privKey, &signed_hash);
+    rv = ssl3_SignHashes(&hashes, ss->sec.serverCert->serverKeyPair->privKey,
+                         &signed_hash, isTLS);
     if (rv != SECSuccess) {
         goto loser; /* ssl3_SignHashes has set err. */
     }
@@ -1020,11 +1015,11 @@ ssl_DisableNonSuiteBGroups(sslSocket *ss)
         return;
     }
 
-    for (i = 0; i < SSL_NAMED_GROUP_COUNT; ++i) {
-        if (ss->namedGroupPreferences[i] &&
-            ss->namedGroupPreferences[i]->type == group_type_ec &&
-            !ss->namedGroupPreferences[i]->suiteb) {
-            ss->namedGroupPreferences[i] = NULL;
+    for (i = 0; i < ssl_named_group_count; ++i) {
+        PORT_Assert(ssl_named_groups[i].index == i);
+        if (ssl_named_groups[i].type == group_type_ec &&
+            !ssl_named_groups[i].suiteb) {
+            ss->namedGroups &= ~(1U << ssl_named_groups[i].index);
         }
     }
 }
@@ -1054,26 +1049,24 @@ ssl_SendSupportedGroupsXtn(sslSocket *ss, PRBool append, PRUint32 maxBytes)
         return 0;
     }
 
-    PORT_Assert(sizeof(enabledGroups) > SSL_NAMED_GROUP_COUNT * 2);
-    for (i = 0; i < SSL_NAMED_GROUP_COUNT; ++i) {
-        const namedGroupDef *group = ss->namedGroupPreferences[i];
-        if (!group) {
+    PORT_Assert(sizeof(enabledGroups) > ssl_named_group_count * 2);
+    for (i = 0; i < ssl_named_group_count; ++i) {
+        if (ssl_named_groups[i].type == group_type_ec && !ec) {
             continue;
         }
-        if (group->type == group_type_ec && !ec) {
+        if (ssl_named_groups[i].type == group_type_ff && !ff) {
             continue;
         }
-        if (group->type == group_type_ff && !ff) {
-            continue;
-        }
-        if (!ssl_NamedGroupEnabled(ss, group)) {
+        if (!ssl_NamedGroupEnabled(ss, &ssl_named_groups[i])) {
             continue;
         }
 
         if (append) {
-            (void)ssl_EncodeUintX(group->name, 2, &enabledGroups[enabledGroupsLen]);
+            enabledGroups[enabledGroupsLen++] = ssl_named_groups[i].name >> 8;
+            enabledGroups[enabledGroupsLen++] = ssl_named_groups[i].name & 0xff;
+        } else {
+            enabledGroupsLen += 2;
         }
-        enabledGroupsLen += 2;
     }
 
     extension_length =
@@ -1175,9 +1168,7 @@ static SECStatus
 ssl_UpdateSupportedGroups(sslSocket *ss, SECItem *data)
 {
     PRInt32 list_len;
-    unsigned int i;
-    const namedGroupDef *enabled[SSL_NAMED_GROUP_COUNT] = { 0 };
-    PORT_Assert(SSL_NAMED_GROUP_COUNT == PR_ARRAY_SIZE(enabled));
+    PRUint32 peerGroups = 0;
 
     if (!data->data || data->len < 4) {
         (void)ssl3_DecodeError(ss);
@@ -1191,13 +1182,7 @@ ssl_UpdateSupportedGroups(sslSocket *ss, SECItem *data)
         return SECFailure;
     }
 
-    /* disable all groups and remember the enabled groups */
-    for (i = 0; i < SSL_NAMED_GROUP_COUNT; ++i) {
-        enabled[i] = ss->namedGroupPreferences[i];
-        ss->namedGroupPreferences[i] = NULL;
-    }
-
-    /* Read groups from data and enable if in |enabled| */
+    /* build bit vector of peer's supported groups */
     while (data->len) {
         const namedGroupDef *group;
         PRInt32 curve_name =
@@ -1207,12 +1192,7 @@ ssl_UpdateSupportedGroups(sslSocket *ss, SECItem *data)
         }
         group = ssl_LookupNamedGroup(curve_name);
         if (group) {
-            for (i = 0; i < SSL_NAMED_GROUP_COUNT; ++i) {
-                if (enabled[i] && group == enabled[i]) {
-                    ss->namedGroupPreferences[i] = enabled[i];
-                    break;
-                }
-            }
+            peerGroups |= (1U << group->index);
         }
 
         /* "Codepoints in the NamedCurve registry with a high byte of 0x01 (that
@@ -1223,19 +1203,21 @@ ssl_UpdateSupportedGroups(sslSocket *ss, SECItem *data)
             ss->ssl3.hs.peerSupportsFfdheGroups = PR_TRUE;
         }
     }
-
     /* Note: if ss->opt.requireDHENamedGroups is set, we disable DHE cipher
      * suites, but we do that in ssl3_config_match(). */
     if (!ss->opt.requireDHENamedGroups && !ss->ssl3.hs.peerSupportsFfdheGroups) {
         /* If we don't require that DHE use named groups, and no FFDHE was
          * included, we pretend that they support all the FFDHE groups we do. */
-        for (i = 0; i < SSL_NAMED_GROUP_COUNT; ++i) {
-            if (enabled[i] && enabled[i]->type == group_type_ff) {
-                ss->namedGroupPreferences[i] = enabled[i];
+        unsigned int i;
+        for (i = 0; i < ssl_named_group_count; ++i) {
+            if (ssl_named_groups[i].type == group_type_ff) {
+                peerGroups |= (1U << ssl_named_groups[i].index);
             }
         }
     }
 
+    /* What curves do we support in common? */
+    ss->namedGroups &= peerGroups;
     return SECSuccess;
 }
 

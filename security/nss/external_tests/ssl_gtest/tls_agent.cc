@@ -92,13 +92,6 @@ TlsAgent::~TlsAgent() {
   }
 }
 
-void TlsAgent::SetState(State state) {
-  if (state_ == state) return;
-
-  LOG("Changing state from " << state_ << " to " << state);
-  state_ = state;
-}
-
 bool TlsAgent::ConfigServerCert(const std::string& name, bool updateKeyBits,
                                 const SSLExtraServerCertData* serverCertData) {
   ScopedCERTCertificate cert(PK11_FindCertFromNickname(name.c_str(), nullptr));
@@ -128,10 +121,18 @@ bool TlsAgent::ConfigServerCert(const std::string& name, bool updateKeyBits,
 // (NIST P-256, P-384, and P-521) are enabled. Disable all other curves.
 void TlsAgent::DisableLameGroups() {
 #ifdef NSS_ECC_MORE_THAN_SUITE_B
-  static const SSLNamedGroup groups[] = {
-      ssl_grp_ec_secp256r1, ssl_grp_ec_secp384r1, ssl_grp_ec_secp521r1,
-      ssl_grp_ffdhe_2048,   ssl_grp_ffdhe_3072,   ssl_grp_ffdhe_4096};
-  ConfigNamedGroups(groups, PR_ARRAY_SIZE(groups));
+  static const SSLNamedGroup lame_groups[] = {
+      ssl_grp_ec_sect163k1, ssl_grp_ec_sect163r1, ssl_grp_ec_sect163r2,
+      ssl_grp_ec_sect193r1, ssl_grp_ec_sect193r2, ssl_grp_ec_sect233k1,
+      ssl_grp_ec_sect233r1, ssl_grp_ec_sect239k1, ssl_grp_ec_sect283k1,
+      ssl_grp_ec_sect283r1, ssl_grp_ec_sect409k1, ssl_grp_ec_sect409r1,
+      ssl_grp_ec_sect571k1, ssl_grp_ec_sect571r1, ssl_grp_ec_secp160k1,
+      ssl_grp_ec_secp160r1, ssl_grp_ec_secp160r2, ssl_grp_ec_secp192k1,
+      ssl_grp_ec_secp192r1, ssl_grp_ec_secp224k1, ssl_grp_ec_secp224r1,
+      ssl_grp_ec_secp256k1};
+  for (size_t i = 0; i < PR_ARRAY_SIZE(lame_groups); ++i) {
+    ConfigNamedGroup(lame_groups[i], false);
+  }
 #endif
 }
 
@@ -289,9 +290,9 @@ void TlsAgent::EnableSingleCipher(uint16_t cipher) {
   EXPECT_EQ(SECSuccess, rv);
 }
 
-void TlsAgent::ConfigNamedGroups(const SSLNamedGroup* groups, size_t num) {
+void TlsAgent::ConfigNamedGroup(SSLNamedGroup group, bool en) {
   EXPECT_TRUE(EnsureTlsSetup());
-  SECStatus rv = SSL_NamedGroupConfig(ssl_fd_, groups, num);
+  SECStatus rv = SSL_NamedGroupPrefSet(ssl_fd_, group, en ? PR_TRUE : PR_FALSE);
   EXPECT_EQ(SECSuccess, rv);
 }
 
@@ -801,7 +802,6 @@ void TlsAgentTestBase::EnsureInit() {
 void TlsAgentTestBase::ProcessMessage(const DataBuffer& buffer,
                                       TlsAgent::State expected_state,
                                       int32_t error_code) {
-  std::cerr << "Process message: " << buffer << std::endl;
   EnsureInit();
   agent_->adapter()->PacketReceived(buffer);
   agent_->Handshake();
@@ -830,22 +830,19 @@ void TlsAgentTestBase::MakeRecord(Mode mode, uint8_t type, uint16_t version,
 
 void TlsAgentTestBase::MakeRecord(uint8_t type, uint16_t version,
                                   const uint8_t* buf, size_t len,
-                                  DataBuffer* out, uint64_t seq_num) const {
+                                  DataBuffer* out, uint64_t seq_num) {
   MakeRecord(mode_, type, version, buf, len, out, seq_num);
 }
 
 void TlsAgentTestBase::MakeHandshakeMessage(uint8_t hs_type,
                                             const uint8_t* data, size_t hs_len,
-                                            DataBuffer* out,
-                                            uint64_t seq_num) const {
+                                            DataBuffer* out, uint64_t seq_num) {
   return MakeHandshakeMessageFragment(hs_type, data, hs_len, out, seq_num, 0,
                                       0);
 }
-
 void TlsAgentTestBase::MakeHandshakeMessageFragment(
     uint8_t hs_type, const uint8_t* data, size_t hs_len, DataBuffer* out,
-    uint64_t seq_num, uint32_t fragment_offset,
-    uint32_t fragment_length) const {
+    uint64_t seq_num, uint32_t fragment_offset, uint32_t fragment_length) {
   size_t index = 0;
   if (!fragment_length) fragment_length = hs_len;
   index = out->Write(index, hs_type, 1);  // Handshake record type.

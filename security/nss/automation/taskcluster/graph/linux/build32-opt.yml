@@ -1,0 +1,124 @@
+---
+- task:
+    metadata:
+      name: "Linux 32 (opt)"
+      description: "Linux 32 (opt)"
+
+    payload:
+      env:
+        BUILD_OPT: 1
+
+    extra:
+      treeherder:
+        build:
+          platform: linux32
+        machine:
+          platform: linux32
+        collection:
+          opt: true
+
+  tests:
+    - chains
+    - cipher
+    - crmf
+    - db
+    - ec
+    - fips
+    - gtests
+    - lowhash
+    - merge
+    - sdr
+    - smime
+    - ssl
+    - tools
+
+- task:
+    metadata:
+      name: "Linux 32 (opt, clang-3.8)"
+      description: "Linux 32 (opt, clang-3.8)"
+
+    payload:
+      env:
+        GCC_VERSION: clang
+        GXX_VERSION: clang++
+        BUILD_OPT: 1
+
+    extra:
+      treeherder:
+        build:
+          platform: linux32
+        machine:
+          platform: linux32
+        collection:
+          opt: true
+        groupSymbol: Builds
+        groupName: Various builds
+        symbol: clang-3.8
+
+- task:
+    metadata:
+      name: "Linux 32 (opt, gcc-4.8)"
+      description: "Linux 32 (opt, gcc-4.8)"
+
+    payload:
+      env:
+        GCC_VERSION: gcc-4.8
+        GXX_VERSION: g++-4.8
+        BUILD_OPT: 1
+
+    extra:
+      treeherder:
+        build:
+          platform: linux32
+        machine:
+          platform: linux32
+        collection:
+          opt: true
+        groupSymbol: Builds
+        groupName: Various builds
+        symbol: gcc-4.8
+
+- task:
+    metadata:
+      name: "Linux 32 (opt, gcc-6.1)"
+      description: "Linux 32 (opt, gcc-6.1)"
+
+    payload:
+      env:
+        GCC_VERSION: gcc-6
+        GXX_VERSION: g++-6
+        BUILD_OPT: 1
+
+    extra:
+      treeherder:
+        build:
+          platform: linux32
+        machine:
+          platform: linux32
+        collection:
+          opt: true
+        groupSymbol: Builds
+        groupName: Various builds
+        symbol: gcc-6.1
+
+- task:
+    metadata:
+      name: "Linux 32 (opt, NSS_NO_PKCS11_BYPASS=1)"
+      description: "Linux 32 (opt, NSS_NO_PKCS11_BYPASS=1)"
+
+    payload:
+      env:
+        NSS_NO_PKCS11_BYPASS: 1
+        BUILD_OPT: 1
+
+    extra:
+      treeherder:
+        build:
+          platform: linux32
+        machine:
+          platform: linux32
+        collection:
+          opt: true
+        groupSymbol: Builds
+        groupName: Various builds
+        symbol: noPkcs11Bypass

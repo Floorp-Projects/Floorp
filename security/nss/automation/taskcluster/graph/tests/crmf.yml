@@ -1,0 +1,14 @@
+---
+- task:
+    metadata:
+      name: CRMF tests
+      description: CRMF tests
+
+    payload:
+      env:
+        ASAN_OPTIONS: detect_leaks=0
+        NSS_TESTS: crmf
+
+    extra:
+      treeherder:
+        symbol: CRMF

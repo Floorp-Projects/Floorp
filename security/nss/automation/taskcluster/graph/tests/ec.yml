@@ -1,0 +1,13 @@
+---
+- task:
+    metadata:
+      name: EC tests
+      description: EC tests
+
+    payload:
+      env:
+        NSS_TESTS: ec
+
+    extra:
+      treeherder:
+        symbol: EC

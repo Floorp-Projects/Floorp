@@ -2131,9 +2131,6 @@ ssl3_ProcessSessionTicketCommon(sslSocket *ss, SECItem *data)
             }
         }
         if (parsed_session_ticket->srvName.data != NULL) {
-            if (sid->u.ssl3.srvName.data) {
-                SECITEM_FreeItem(&sid->u.ssl3.srvName, PR_FALSE);
-            }
             sid->u.ssl3.srvName = parsed_session_ticket->srvName;
         }
         if (parsed_session_ticket->alpnSelection.data != NULL) {
@@ -3303,15 +3300,14 @@ tls13_HandleKeyShareEntry(sslSocket *ss, SECItem *data)
         goto loser;
     }
     groupDef = ssl_LookupNamedGroup(group);
-    rv = ssl3_ConsumeHandshakeVariable(ss, &share, 2, &data->data,
-                                       &data->len);
-    if (rv != SECSuccess) {
-        goto loser;
-    }
-    /* If the group is disabled, continue. */
     if (!groupDef) {
         return SECSuccess;
     }
+
+    rv = ssl3_ConsumeHandshakeVariable(ss, &share, 2, &data->data,
+                                       &data->len);
+    if (rv != SECSuccess)
+        goto loser;
 
     ks = PORT_ZNew(TLS13KeyShareEntry);
     if (!ks)
@@ -3728,7 +3724,7 @@ tls13_ClientSendEarlyDataXtn(sslSocket *ss,
             return -1;
     }
 
-    ss->ssl3.hs.zeroRttState = ssl_0rtt_sent;
+    ss->ssl3.hs.doing0Rtt = PR_TRUE;
     ss->xtnData.advertised[ss->xtnData.numAdvertised++] =
         ssl_tls13_early_data_xtn;
 
@@ -3762,18 +3758,11 @@ tls13_ServerHandleEarlyDataXtn(sslSocket *ss, PRUint16 ex_type,
         return SECFailure;
     }
 
-    if (IS_DTLS(ss)) {
-        /* Save the null spec, which we should be currently reading.  We will
-         * use this when 0-RTT sending is over. */
-        ssl_GetSpecReadLock(ss);
-        ss->ssl3.hs.nullSpec = ss->ssl3.crSpec;
-        tls13_CipherSpecAddRef(ss->ssl3.hs.nullSpec);
-        PORT_Assert(ss->ssl3.hs.nullSpec->cipher_def->cipher == cipher_null);
-        ssl_ReleaseSpecReadLock(ss);
-    }
-
-    ss->ssl3.hs.zeroRttState = ssl_0rtt_sent;
-
+    /* Keep track of negotiated extensions.
+     * IMPORTANT: Record the presence of the extension only. This is
+     * only one of several things that the 0-RTT processing code uses
+     * in determining whether to accept 0-RTT.
+     */
     ss->xtnData.negotiated[ss->xtnData.numNegotiated++] = ex_type;
 
     return SECSuccess;
@@ -3788,7 +3777,6 @@ tls13_ServerSendEarlyDataXtn(sslSocket *ss,
     SSL_TRC(3, ("%d: TLS13[%d]: send early_data extension",
                 SSL_GETPID(), ss->fd));
 
-    PORT_Assert(ss->ssl3.hs.zeroRttState == ssl_0rtt_accepted);
     if (maxBytes < 4) {
         PORT_Assert(0);
         return 0;
@@ -3830,7 +3818,6 @@ tls13_ClientHandleEarlyDataXtn(sslSocket *ss, PRUint16 ex_type,
 
     /* Keep track of negotiated extensions. */
     ss->xtnData.negotiated[ss->xtnData.numNegotiated++] = ex_type;
-    ss->ssl3.hs.zeroRttState = ssl_0rtt_accepted;
 
     return SECSuccess;
 }

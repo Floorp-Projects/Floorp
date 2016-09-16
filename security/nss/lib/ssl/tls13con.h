@@ -50,7 +50,7 @@ SECStatus tls13_HandleServerHelloPart2(sslSocket *ss);
 SECStatus tls13_HandlePostHelloHandshakeMessage(sslSocket *ss, SSL3Opaque *b,
                                                 PRUint32 length,
                                                 SSL3Hashes *hashesPtr);
-SECStatus tls13_HandleClientKeyShare(sslSocket *ss, PRBool *retry);
+SECStatus tls13_HandleClientKeyShare(sslSocket *ss);
 SECStatus tls13_SendServerHelloSequence(sslSocket *ss);
 SECStatus tls13_HandleServerKeyShare(sslSocket *ss);
 void tls13_DestroyKeyShareEntry(TLS13KeyShareEntry *entry);

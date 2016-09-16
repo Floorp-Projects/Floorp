@@ -542,8 +542,8 @@ TEST_P(TlsExtensionTest13, ModifyDraftVersionAndFail) {
   EXPECT_EQ(SSL_ERROR_UNSUPPORTED_VERSION, server_->error_code());
 }
 
-// This test only works in stream mode because the MAC error causes a timeout on
-// the server with datagram.
+// This test only works with TLS because the MAC error causes a
+// timeout on the server.
 TEST_F(TlsExtensionTest13Stream, DropServerKeyShare) {
   EnsureTlsSetup();
   server_->SetPacketFilter(new TlsExtensionDropper(ssl_tls13_key_share_xtn));
