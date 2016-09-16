@@ -1287,7 +1287,7 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
     break;
   case FontType::GDI:
   {
-    if (!shouldLCDRenderText) {
+    if (!shouldLCDRenderText && aaEnabled) {
       // If we have non LCD GDI text, render the fonts as cleartype and convert them
       // to grayscale. This seems to be what Chrome and IE are doing on Windows 7.
       // This also applies if cleartype is disabled system wide.
