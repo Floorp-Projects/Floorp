@@ -173,9 +173,7 @@ class SymbolTable : public Section {
                  uint64_t size, unsigned info, uint16_t shndx);
 
  private:
-#ifndef NDEBUG
   size_t addr_size_;
-#endif
   StringTable& table_;
 };
 

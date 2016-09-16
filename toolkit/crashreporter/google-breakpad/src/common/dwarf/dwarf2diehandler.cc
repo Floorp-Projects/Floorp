@@ -32,7 +32,6 @@
 // See dwarf2diehandler.h for details.
 
 #include <assert.h>
-#include <stdint.h>
 
 #include <string>
 
@@ -168,7 +167,7 @@ void DIEDispatcher::ProcessAttributeReference(uint64 offset,
 void DIEDispatcher::ProcessAttributeBuffer(uint64 offset,
                                            enum DwarfAttribute attr,
                                            enum DwarfForm form,
-                                           const uint8_t *data,
+                                           const char* data,
                                            uint64 len) {
   HandlerStack &current = die_handlers_.top();
   // This had better be an attribute of the DIE we were meant to handle.
