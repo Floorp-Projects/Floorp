@@ -3211,6 +3211,11 @@ StyleAnimationValue::UncomputeValue(nsCSSPropertyID aProperty,
       aSpecifiedValue = *val;
       break;
     }
+    case eUnit_ComplexColor: {
+      aSpecifiedValue.SetComplexColorValue(
+        do_AddRef(aComputedValue.mValue.mComplexColor));
+      break;
+    }
     case eUnit_CSSValuePair: {
       // Rule node processing expects pair values to be collapsed to a
       // single value if both halves would be equal, for most but not
@@ -4517,6 +4522,11 @@ StyleAnimationValue::operator=(const StyleAnimationValue& aOther)
       mValue.mString = aOther.mValue.mString;
       mValue.mString->AddRef();
       break;
+    case eUnit_ComplexColor:
+      MOZ_ASSERT(aOther.mValue.mComplexColor);
+      mValue.mComplexColor = aOther.mValue.mComplexColor;
+      mValue.mComplexColor->AddRef();
+      break;
   }
 
   return *this;
@@ -4592,6 +4602,27 @@ StyleAnimationValue::SetCurrentColorValue()
 {
   FreeValue();
   mUnit = eUnit_CurrentColor;
+}
+
+void
+StyleAnimationValue::SetComplexColorValue(const StyleComplexColor& aColor)
+{
+  if (aColor.IsCurrentColor()) {
+    SetCurrentColorValue();
+  } else if (aColor.IsNumericColor()) {
+    SetColorValue(aColor.mColor);
+  } else {
+    SetComplexColorValue(do_AddRef(new ComplexColorValue(aColor)));
+  }
+}
+
+void
+StyleAnimationValue::SetComplexColorValue(
+  already_AddRefed<ComplexColorValue> aValue)
+{
+  FreeValue();
+  mUnit = eUnit_ComplexColor;
+  mValue.mComplexColor = aValue.take();
 }
 
 void
@@ -4712,6 +4743,8 @@ StyleAnimationValue::FreeValue()
   } else if (IsStringUnit(mUnit)) {
     MOZ_ASSERT(mValue.mString, "expecting non-null string");
     mValue.mString->Release();
+  } else if (mUnit == eUnit_ComplexColor) {
+    mValue.mComplexColor->Release();
   }
 }
 
@@ -4768,6 +4801,8 @@ StyleAnimationValue::operator==(const StyleAnimationValue& aOther) const
     case eUnit_UnparsedString:
       return (NS_strcmp(GetStringBufferValue(),
                         aOther.GetStringBufferValue()) == 0);
+    case eUnit_ComplexColor:
+      return *mValue.mComplexColor == *aOther.mValue.mComplexColor;
   }
 
   NS_NOTREACHED("incomplete case");

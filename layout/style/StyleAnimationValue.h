@@ -320,6 +320,7 @@ public:
     eUnit_Color, // nsCSSValue* (never null), always with an nscolor or
                  // an nsCSSValueFloatColor
     eUnit_CurrentColor,
+    eUnit_ComplexColor, // ComplexColorValue* (never null)
     eUnit_Calc, // nsCSSValue* (never null), always with a single
                 // calc() expression that's either length or length+percent
     eUnit_ObjectPosition, // nsCSSValue* (never null), always with a
@@ -354,6 +355,7 @@ private:
     nsCSSValueSharedList* mCSSValueSharedList;
     nsCSSValuePairList* mCSSValuePairList;
     nsStringBuffer* mString;
+    css::ComplexColorValue* mComplexColor;
   } mValue;
 
 public:
@@ -431,6 +433,14 @@ public:
   /// @return the scale for this value, calculated with reference to @aForFrame.
   gfxSize GetScaleValue(const nsIFrame* aForFrame) const;
 
+  const css::ComplexColorData& GetComplexColorData() const {
+    MOZ_ASSERT(mUnit == eUnit_ComplexColor, "unit mismatch");
+    return *mValue.mComplexColor;
+  }
+  StyleComplexColor GetStyleComplexColorValue() const {
+    return GetComplexColorData().ToComplexColor();
+  }
+
   UniquePtr<nsCSSValueList> TakeCSSValueListValue() {
     nsCSSValueList* list = GetCSSValueListValue();
     mValue.mCSSValueList = nullptr;
@@ -487,6 +497,8 @@ public:
   void SetFloatValue(float aFloat);
   void SetColorValue(nscolor aColor);
   void SetCurrentColorValue();
+  void SetComplexColorValue(const StyleComplexColor& aColor);
+  void SetComplexColorValue(already_AddRefed<css::ComplexColorValue> aValue);
   void SetUnparsedStringValue(const nsString& aString);
   void SetCSSValueArrayValue(nsCSSValue::Array* aValue, Unit aUnit);
 
