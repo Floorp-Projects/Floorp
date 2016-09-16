@@ -11,9 +11,9 @@ registerCleanupFunction(function() {
   }
 });
 
-function promiseNotificationForTab(aBrowser, value, expected, tab=aBrowser.selectedTab) {
+function promiseNotification(aBrowser, value, expected, input) {
   let deferred = Promise.defer();
-  let notificationBox = aBrowser.getNotificationBox(tab.linkedBrowser);
+  let notificationBox = aBrowser.getNotificationBox(aBrowser.selectedBrowser);
   if (expected) {
     info("Waiting for " + value + " notification");
     let checkForNotification = function() {
@@ -31,7 +31,8 @@ function promiseNotificationForTab(aBrowser, value, expected, tab=aBrowser.selec
     notificationObserver.observe(notificationBox, {childList: true});
   } else {
     setTimeout(() => {
-      is(notificationBox.getNotificationWithValue(value), null, "We are expecting to not get a notification");
+      is(notificationBox.getNotificationWithValue(value), null,
+         `We are expecting to not get a notification for ${input}`);
       deferred.resolve();
     }, 1000);
   }
@@ -55,7 +56,7 @@ function* runURLBarSearchTest({valueToOpen, expectSearch, expectNotification, aW
 
   yield Promise.all([
     docLoadPromise,
-    promiseNotificationForTab(aWindow.gBrowser, "keyword-uri-fixup", expectNotification)
+    promiseNotification(aWindow.gBrowser, "keyword-uri-fixup", expectNotification, valueToOpen)
   ]);
 }
 
@@ -75,6 +76,17 @@ add_task(function* test_navigate_decimal_ip() {
   yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   yield* runURLBarSearchTest({
     valueToOpen: "1234",
+    expectSearch: true,
+    expectNotification: false,
+  });
+  gBrowser.removeTab(tab);
+});
+
+add_task(function* test_navigate_decimal_ip_with_path() {
+  let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
+  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  yield* runURLBarSearchTest({
+    valueToOpen: "1234/12",
     expectSearch: true,
     expectNotification: false,
   });
