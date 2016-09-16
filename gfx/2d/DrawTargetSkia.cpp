@@ -1300,6 +1300,11 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
   {
     ScaledFontDWrite* dwriteFont = static_cast<ScaledFontDWrite*>(aFont);
     paint.mPaint.setEmbeddedBitmapText(dwriteFont->UseEmbeddedBitmaps());
+
+    if (dwriteFont->ForceGDIMode()) {
+      paint.mPaint.setEmbeddedBitmapText(true);
+      useSubpixelText = false;
+    }
     break;
   }
 #endif
