@@ -3,6 +3,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Tests that these toolbox split console APIs work:
 //  * toolbox.useKeyWithSplitConsole()
 //  * toolbox.isSplitConsoleFocused
@@ -11,7 +13,6 @@ let gToolbox = null;
 let panelWin = null;
 
 const URL = "data:text/html;charset=utf8,test split console key delegation";
-const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 // Force the old debugger UI since it's directly used (see Bug 1301705)
 Services.prefs.setBoolPref("devtools.debugger.new-debugger-frontend", false);
@@ -45,18 +46,15 @@ function* testIsSplitConsoleFocused() {
 function* testUseKeyWithSplitConsole() {
   let commandCalled = false;
 
-  let keyElm = panelWin.document.createElementNS(XULNS, "key");
-  keyElm.setAttribute("keycode", "VK_F3");
-  keyElm.addEventListener("command", () => {commandCalled = true;}, false);
-  panelWin.document.getElementsByTagName("keyset")[0].appendChild(keyElm);
-
   info("useKeyWithSplitConsole on debugger while debugger is focused");
-  gToolbox.useKeyWithSplitConsole(keyElm, "jsdebugger");
+  gToolbox.useKeyWithSplitConsole("F3", () => {
+    commandCalled = true;
+  }, "jsdebugger");
 
   info("synthesizeKey with the console focused");
   let consoleInput = gToolbox.getPanel("webconsole").hud.jsterm.inputNode;
   consoleInput.focus();
-  synthesizeKeyElement(keyElm);
+  synthesizeKeyShortcut("F3", panelWin);
 
   ok(commandCalled, "Shortcut key should trigger the command");
 }
@@ -65,18 +63,15 @@ function* testUseKeyWithSplitConsole() {
 function* testUseKeyWithSplitConsoleWrongTool() {
   let commandCalled = false;
 
-  let keyElm = panelWin.document.createElementNS(XULNS, "key");
-  keyElm.setAttribute("keycode", "VK_F4");
-  keyElm.addEventListener("command", () => {commandCalled = true;}, false);
-  panelWin.document.getElementsByTagName("keyset")[0].appendChild(keyElm);
-
   info("useKeyWithSplitConsole on inspector while debugger is focused");
-  gToolbox.useKeyWithSplitConsole(keyElm, "inspector");
+  gToolbox.useKeyWithSplitConsole("F4", () => {
+    commandCalled = true;
+  }, "inspector");
 
   info("synthesizeKey with the console focused");
   let consoleInput = gToolbox.getPanel("webconsole").hud.jsterm.inputNode;
   consoleInput.focus();
-  synthesizeKeyElement(keyElm);
+  synthesizeKeyShortcut("F4", panelWin);
 
   ok(!commandCalled, "Shortcut key shouldn't trigger the command");
 }
