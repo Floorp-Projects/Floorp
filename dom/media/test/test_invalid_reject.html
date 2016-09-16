@@ -32,13 +32,8 @@ function startTest(test, token) {
 
   // Seeing a decoder error is a success.
   v.addEventListener("error", function onerror(e) {
-    if (v.readyState == v.HAVE_NOTHING) {
-      is(v.error.code, v.error.MEDIA_ERR_SRC_NOT_SUPPORTED,
-         "decoder should reject " + test.name);
-    } else {
-      is(v.error.code, v.error.MEDIA_ERR_DECODE,
-         "decoder should reject " + test.name);
-    }
+    is(v.error.code, v.error.MEDIA_ERR_DECODE,
+      "decoder should reject " + test.name);
     v.removeEventListener('error', onerror, false);
     manager.finished(token);
   });

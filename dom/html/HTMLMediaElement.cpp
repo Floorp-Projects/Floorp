@@ -1040,11 +1040,12 @@ void HTMLMediaElement::AbortExistingLoads()
   mPendingEvents.Clear();
 }
 
-void HTMLMediaElement::NoSupportedMediaSourceError(const nsACString& aErrorDetails)
+void HTMLMediaElement::NoSupportedMediaSourceError()
 {
   NS_ASSERTION(mNetworkState == NETWORK_LOADING,
                "Not loading during source selection?");
-  mError = new MediaError(this, MEDIA_ERR_SRC_NOT_SUPPORTED, aErrorDetails);
+
+  mError = new MediaError(this, MEDIA_ERR_SRC_NOT_SUPPORTED);
   ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_NO_SOURCE);
   DispatchAsyncEvent(NS_LITERAL_STRING("error"));
   ChangeDelayLoadStatus(false);
@@ -4415,11 +4416,7 @@ void HTMLMediaElement::NetworkError()
   if (mDecoder) {
     ShutdownDecoder();
   }
-  if (mReadyState == nsIDOMHTMLMediaElement::HAVE_NOTHING) {
-    NoSupportedMediaSourceError();
-  } else {
-    Error(MEDIA_ERR_NETWORK);
-  }
+  Error(MEDIA_ERR_NETWORK);
 }
 
 void HTMLMediaElement::DecodeError(const MediaResult& aError)
@@ -4445,10 +4442,8 @@ void HTMLMediaElement::DecodeError(const MediaResult& aError)
     } else {
       NS_WARNING("Should know the source we were loading from!");
     }
-  } else if (mReadyState == nsIDOMHTMLMediaElement::HAVE_NOTHING) {
-    NoSupportedMediaSourceError(aError.Description());
   } else {
-    Error(MEDIA_ERR_DECODE, aError.Description());
+    Error(MEDIA_ERR_DECODE, aError);
   }
 }
 
@@ -4463,14 +4458,12 @@ void HTMLMediaElement::LoadAborted()
 }
 
 void HTMLMediaElement::Error(uint16_t aErrorCode,
-                             const nsACString& aErrorDetails)
+                             const MediaResult& aErrorDetails)
 {
   NS_ASSERTION(aErrorCode == MEDIA_ERR_DECODE ||
                aErrorCode == MEDIA_ERR_NETWORK ||
                aErrorCode == MEDIA_ERR_ABORTED,
                "Only use MediaError codes!");
-  NS_ASSERTION(mReadyState > HAVE_NOTHING,
-               "Shouldn't be called when readyState is HAVE_NOTHING");
 
   // Since we have multiple paths calling into DecodeError, e.g.
   // MediaKeys::Terminated and EMEH264Decoder::Error. We should take the 1st
@@ -4478,10 +4471,19 @@ void HTMLMediaElement::Error(uint16_t aErrorCode,
   if (mError) {
     return;
   }
-  mError = new MediaError(this, aErrorCode, aErrorDetails);
+  nsCString message;
+  if (NS_FAILED(aErrorDetails)) {
+    message = aErrorDetails.Description();
+  }
+  mError = new MediaError(this, aErrorCode, message);
 
   DispatchAsyncEvent(NS_LITERAL_STRING("error"));
-  ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_IDLE);
+  if (mReadyState == nsIDOMHTMLMediaElement::HAVE_NOTHING) {
+    ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_EMPTY);
+    DispatchAsyncEvent(NS_LITERAL_STRING("emptied"));
+  } else {
+    ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_IDLE);
+  }
   ChangeDelayLoadStatus(false);
   UpdateAudioChannelPlayingState();
 }
