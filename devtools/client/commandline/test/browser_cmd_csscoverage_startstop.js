@@ -37,17 +37,18 @@ function* navigate(usage, options) {
 
   ok(usage.isRunning(), "csscoverage is running");
 
-  let load1Promise = helpers.listenOnce(options.browser, "load", true);
+  // Load page 1.
+  options.browser.loadURI(PAGE_1);
+  // And wait until page 1 and page 2 (an iframe inside page 1) are both loaded.
+  yield Promise.all([
+    BrowserTestUtils.browserLoaded(options.browser, false, PAGE_1),
+    BrowserTestUtils.browserLoaded(options.browser, true, PAGE_2)
+  ]);
+  is(options.browser.currentURI.spec, PAGE_1, "page 1 loaded");
 
-  yield helpers.navigate(PAGE_1, options);
-
-  // Wait for the test pages to auto-cycle
-  yield load1Promise;
-  is(options.window.location.href, PAGE_1, "page 1 loaded");
-
-  // Page 2 is a frame in page 1. JS in the page navigates to page 3.
-  yield helpers.listenOnce(options.browser, "load", true);
-  is(options.window.location.href, PAGE_3, "page 3 loaded");
+  // page 2 has JS that navigates to page 3 after a timeout.
+  yield BrowserTestUtils.browserLoaded(options.browser, false, PAGE_3);
+  is(options.browser.currentURI.spec, PAGE_3, "page 3 loaded");
 
   let toolboxReady = gDevTools.once("toolbox-ready");
 
