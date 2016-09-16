@@ -6,4 +6,3 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1287426 bug1287426part5.patch
 https://hg.mozilla.org/mozilla-central/rev/7df8d6639971
 https://bugzilla.mozilla.org/show_bug.cgi?id=1287426 bug1287426part6.patch
 https://bugzilla.mozilla.org/show_bug.cgi?id=1287426 bug1287426part7.patch
-https://bugzilla.mozilla.org/show_bug.cgi?id=1287426 bug1287426part8.patch

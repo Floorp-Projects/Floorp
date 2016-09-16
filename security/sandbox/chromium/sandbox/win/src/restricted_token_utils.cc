@@ -53,19 +53,6 @@ DWORD CreateRestrictedToken(TokenLevel security_level,
       sid_exceptions.push_back(WinInteractiveSid);
       sid_exceptions.push_back(WinAuthenticatedUserSid);
       privilege_exceptions.push_back(SE_CHANGE_NOTIFY_NAME);
-      // We need to make USER_NON_ADMIN into a restricted token to work around a
-      // conflict with a call to CoInitializeSecurity (see bug 1287426).
-      // To do this we add the same restricted SIDs as USER_INTERACTIVE, because
-      // USER_NON_ADMIN should have at least the same permissions. We also add
-      // in any that are in the deny only exception list above, which should
-      // give the new USER_NON_ADMIN token the same permissions as the old.
-      restricted_token.AddRestrictingSid(WinBuiltinUsersSid);
-      restricted_token.AddRestrictingSid(WinWorldSid);
-      restricted_token.AddRestrictingSid(WinInteractiveSid);
-      restricted_token.AddRestrictingSid(WinAuthenticatedUserSid);
-      restricted_token.AddRestrictingSid(WinRestrictedCodeSid);
-      restricted_token.AddRestrictingSidCurrentUser();
-      restricted_token.AddRestrictingSidLogonSession();
       break;
     }
     case USER_INTERACTIVE: {
