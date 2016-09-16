@@ -188,7 +188,6 @@ StackWalkInitCriticalAddress()
 #include <stdio.h>
 #include <malloc.h>
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/StackWalk_windows.h"
 
 #include <imagehlp.h>
 // We need a way to know if we are building for WXP (or later), as if we are, we
@@ -440,49 +439,6 @@ WalkStackMain64(struct WalkStackData* aData)
     }
 #endif
   }
-}
-
-// The JIT needs to allocate executable memory. Because of the inanity of
-// the win64 APIs, this requires locks that stalk walkers also need. Provide
-// another lock to allow synchronization around these resources.
-#ifdef _M_AMD64
-
-struct CriticalSectionAutoInitializer {
-    CRITICAL_SECTION lock;
-
-    CriticalSectionAutoInitializer() {
-      InitializeCriticalSection(&lock);
-    }
-};
-
-static CriticalSectionAutoInitializer gWorkaroundLock;
-
-#endif // _M_AMD64
-
-MFBT_API void
-AcquireStackWalkWorkaroundLock()
-{
-#ifdef _M_AMD64
-  EnterCriticalSection(&gWorkaroundLock.lock);
-#endif
-}
-
-MFBT_API bool
-TryAcquireStackWalkWorkaroundLock()
-{
-#ifdef _M_AMD64
-  return TryEnterCriticalSection(&gWorkaroundLock.lock);
-#else
-  return true;
-#endif
-}
-
-MFBT_API void
-ReleaseStackWalkWorkaroundLock()
-{
-#ifdef _M_AMD64
-  LeaveCriticalSection(&gWorkaroundLock.lock);
-#endif
 }
 
 static unsigned int WINAPI
