@@ -174,8 +174,8 @@ public:
 
   void Stop() override
   {
-    // XXX Fix in later patch.
-    NS_ERROR("Can't stop a remote source!");
+    // XXX (Bug 1314270): Implement rejection logic if necessary when we have
+    //                    clarity in the spec.
   }
 
   void SetPrincipal(nsIPrincipal* aPrincipal)
@@ -228,12 +228,6 @@ class RemoteSourceStreamInfo : public SourceStreamInfo {
   void StartReceiving();
 
  private:
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  // MediaStreamTrackSources associated with this remote stream.
-  // We use them for updating their principal if that's needed.
-  std::vector<RefPtr<RemoteTrackSource>> mTrackSources;
-#endif
-
   // True iff SetPullEnabled(true) has been called on the DOMMediaStream. This
   // happens when offer/answer concludes.
   bool mReceiving;
