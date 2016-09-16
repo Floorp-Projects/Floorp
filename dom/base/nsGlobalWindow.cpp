@@ -203,7 +203,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
-#include "nsLocation.h"
+#include "mozilla/dom/Location.h"
 #include "nsHTMLDocument.h"
 #include "nsWrapperCacheInlines.h"
 #include "mozilla/DOMEventTargetHelper.h"
@@ -9754,14 +9754,14 @@ nsGlobalWindow::GetPrivateRoot()
   return top;
 }
 
-nsLocation*
+Location*
 nsGlobalWindow::GetLocation(ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsInnerWindow());
 
   nsIDocShell *docShell = GetDocShell();
   if (!mLocation && docShell) {
-    mLocation = new nsLocation(AsInner(), docShell);
+    mLocation = new Location(AsInner(), docShell);
   }
   return mLocation;
 }
