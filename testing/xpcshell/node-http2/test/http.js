@@ -2,21 +2,32 @@ var expect = require('chai').expect;
 var util = require('./util');
 var fs = require('fs');
 var path = require('path');
+var url = require('url');
+var net = require('net');
 
 var http2 = require('../lib/http');
 var https = require('https');
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-
-var options = {
+var serverOptions = {
   key: fs.readFileSync(path.join(__dirname, '../example/localhost.key')),
   cert: fs.readFileSync(path.join(__dirname, '../example/localhost.crt')),
+  rejectUnauthorized: true,
   log: util.serverLog
 };
 
-http2.globalAgent = new http2.Agent({ log: util.clientLog });
+var agentOptions = {
+  key: serverOptions.key,
+  ca: serverOptions.cert,
+  rejectUnauthorized: true,
+  log: util.clientLog
+};
+
+var globalAgent = new http2.Agent(agentOptions);
 
 describe('http.js', function() {
+  beforeEach(function() {
+    http2.globalAgent = globalAgent;
+  });
   describe('Server', function() {
     describe('new Server(options)', function() {
       it('should throw if called without \'plain\' or TLS options', function() {
@@ -28,9 +39,39 @@ describe('http.js', function() {
         }).to.throw(Error);
       });
     });
+    describe('method `listen()`', function () {
+      it('should emit `listening` event', function (done) {
+        var server = http2.createServer(serverOptions);
+
+        server.on('listening', function () {
+          server.close();
+
+          done();
+        })
+
+        server.listen(0);
+      });
+      it('should emit `error` on failure', function (done) {
+        var server = http2.createServer(serverOptions);
+
+        // This TCP server is used to explicitly take a port to make
+        // server.listen() fails.
+        var net = require('net').createServer();
+
+        server.on('error', function () {
+          net.close()
+
+          done();
+        });
+
+        net.listen(0, function () {
+          server.listen(this.address().port);
+        });
+      });
+    });
     describe('property `timeout`', function() {
       it('should be a proxy for the backing HTTPS server\'s `timeout` property', function() {
-        var server = new http2.Server(options);
+        var server = new http2.Server(serverOptions);
         var backingServer = server._server;
         var newTimeout = 10;
         server.timeout = newTimeout;
@@ -40,7 +81,7 @@ describe('http.js', function() {
     });
     describe('method `setTimeout(timeout, [callback])`', function() {
       it('should be a proxy for the backing HTTPS server\'s `setTimeout` method', function() {
-        var server = new http2.Server(options);
+        var server = new http2.Server(serverOptions);
         var backingServer = server._server;
         var newTimeout = 10;
         var newCallback = util.noop;
@@ -64,6 +105,31 @@ describe('http.js', function() {
       });
     });
     describe('method `request(options, [callback])`', function() {
+      it('should use a new agent for request-specific TLS settings', function(done) {
+        var path = '/x';
+        var message = 'Hello world';
+
+        var server = http2.createServer(serverOptions, function(request, response) {
+          expect(request.url).to.equal(path);
+          response.end(message);
+        });
+
+        server.listen(1234, function() {
+          var options = url.parse('https://localhost:1234' + path);
+          options.key = agentOptions.key;
+          options.ca = agentOptions.ca;
+          options.rejectUnauthorized = true;
+
+          http2.globalAgent = new http2.Agent({ log: util.clientLog });
+          http2.get(options, function(response) {
+            response.on('data', function(data) {
+              expect(data.toString()).to.equal(message);
+              server.close();
+              done();
+            });
+          });
+        });
+      });
       it('should throw when trying to use with \'http\' scheme', function() {
         expect(function() {
           var agent = new http2.Agent({ log: util.clientLog });
@@ -126,6 +192,31 @@ describe('http.js', function() {
       response.writeHead(200);
       response.writeHead(404);
     });
+    it('field finished should be Boolean', function(){
+      var stream = { _log: util.log, headers: function () {}, once: util.noop };
+      var response = new http2.OutgoingResponse(stream);
+      expect(response.finished).to.be.a('Boolean');
+    });
+    it('field finished should initially be false and then go to true when response completes',function(done){
+      var res;
+      var server = http2.createServer(serverOptions, function(request, response) {
+        res = response;
+        expect(res.finished).to.be.false;
+        response.end('HiThere');
+      });
+      server.listen(1236, function() {
+        http2.get('https://localhost:1236/finished-test', function(response) {
+          response.on('data', function(data){
+            var sink = data; //
+          });
+          response.on('end',function(){
+            expect(res.finished).to.be.true;
+            server.close();
+            done();
+          });
+        });
+      });
+    });
   });
   describe('test scenario', function() {
     describe('simple request', function() {
@@ -133,7 +224,7 @@ describe('http.js', function() {
         var path = '/x';
         var message = 'Hello world';
 
-        var server = http2.createServer(options, function(request, response) {
+        var server = http2.createServer(serverOptions, function(request, response) {
           expect(request.url).to.equal(path);
           response.end(message);
         });
@@ -153,12 +244,12 @@ describe('http.js', function() {
       it('should work as expected', function(originalDone) {
         var path = '/x';
         var message = 'Hello world';
-        done = util.callNTimes(2, function() {
+        var done = util.callNTimes(2, function() {
           server.close();
           originalDone();
         });
 
-        var server = http2.createServer(options, function(request, response) {
+        var server = http2.createServer(serverOptions, function(request, response) {
           expect(request.url).to.equal(path);
           response.end(message);
         });
@@ -184,7 +275,7 @@ describe('http.js', function() {
         var path = '/x';
         var message = 'Hello world';
 
-        var server = http2.createServer(options, function(request, response) {
+        var server = http2.createServer(serverOptions, function(request, response) {
           expect(request.url).to.equal(path);
           response.end(message);
         });
@@ -214,7 +305,7 @@ describe('http.js', function() {
         var path = '/x';
         var message = 'Hello world';
 
-        var server = http2.createServer(options, function(request, response) {
+        var server = http2.createServer(serverOptions, function(request, response) {
           expect(request.url).to.equal(path);
           request.once('data', function(data) {
             expect(data.toString()).to.equal(message);
@@ -244,7 +335,7 @@ describe('http.js', function() {
         var headerName = 'name';
         var headerValue = 'value';
 
-        var server = http2.createServer(options, function(request, response) {
+        var server = http2.createServer(serverOptions, function(request, response) {
           // Request URL and headers
           expect(request.url).to.equal(path);
           expect(request.headers[headerName]).to.equal(headerValue);
@@ -257,6 +348,9 @@ describe('http.js', function() {
           response.setHeader('nonexistent', 'x');
           response.removeHeader('nonexistent');
           expect(response.getHeader('nonexistent')).to.equal(undefined);
+
+          // A set-cookie header which should always be an array
+          response.setHeader('set-cookie', 'foo');
 
           // Don't send date
           response.sendDate = false;
@@ -284,6 +378,8 @@ describe('http.js', function() {
           request.on('response', function(response) {
             expect(response.headers[headerName]).to.equal(headerValue);
             expect(response.headers['nonexistent']).to.equal(undefined);
+            expect(response.headers['set-cookie']).to.an.instanceof(Array)
+            expect(response.headers['set-cookie']).to.deep.equal(['foo'])
             expect(response.headers['date']).to.equal(undefined);
             response.on('data', function(data) {
               expect(data.toString()).to.equal(message);
@@ -352,7 +448,7 @@ describe('http.js', function() {
         var path = '/x';
         var message = 'Hello world';
 
-        var server = https.createServer(options, function(request, response) {
+        var server = https.createServer(serverOptions, function(request, response) {
           expect(request.url).to.equal(path);
           response.end(message);
         });
@@ -371,12 +467,12 @@ describe('http.js', function() {
       it('should fall back to HTTPS/1 successfully', function(originalDone) {
         var path = '/x';
         var message = 'Hello world';
-        done = util.callNTimes(2, function() {
+        var done = util.callNTimes(2, function() {
           server.close();
           originalDone();
         });
 
-        var server = https.createServer(options, function(request, response) {
+        var server = https.createServer(serverOptions, function(request, response) {
           expect(request.url).to.equal(path);
           response.end(message);
         });
@@ -402,13 +498,15 @@ describe('http.js', function() {
         var path = '/x';
         var message = 'Hello world';
 
-        var server = http2.createServer(options, function(request, response) {
+        var server = http2.createServer(serverOptions, function(request, response) {
           expect(request.url).to.equal(path);
           response.end(message);
         });
 
         server.listen(1236, function() {
-          https.get('https://localhost:1236' + path, function(response) {
+          var options = url.parse('https://localhost:1236' + path);
+          options.agent = new https.Agent(agentOptions);
+          https.get(options, function(response) {
             response.on('data', function(data) {
               expect(data.toString()).to.equal(message);
               done();
@@ -422,7 +520,7 @@ describe('http.js', function() {
         var path = '/x';
         var message = 'Hello world';
 
-        var server = http2.createServer(options, function(request, response) {
+        var server = http2.createServer(serverOptions, function(request, response) {
           expect(request.url).to.equal(path);
           response.end(message);
         });
@@ -451,7 +549,7 @@ describe('http.js', function() {
         var path = '/x';
         var message = 'Hello world';
 
-        var server = http2.createServer(options, function(request, response) {
+        var server = http2.createServer(serverOptions, function(request, response) {
           expect(request.url).to.equal(path);
           response.end(message);
         });
@@ -474,6 +572,104 @@ describe('http.js', function() {
         });
       });
     });
+    describe('https server node module specification conformance', function() {
+      it('should provide API for remote HTTP 1.1 client address', function(done) {
+        var remoteAddress = null;
+        var remotePort = null;
+
+        var server = http2.createServer(serverOptions, function(request, response) {
+          // HTTPS 1.1 client with Node 0.10 server
+          if (!request.remoteAddress) {
+            if (request.socket.socket) {
+              remoteAddress = request.socket.socket.remoteAddress;
+              remotePort = request.socket.socket.remotePort;
+            } else {
+              remoteAddress = request.socket.remoteAddress;
+              remotePort = request.socket.remotePort;
+            }
+          } else {
+            // HTTPS 1.1/2.0 client with Node 0.12 server
+            remoteAddress = request.remoteAddress;
+            remotePort = request.remotePort;
+          }
+          response.write('Pong');
+          response.end();
+        });
+
+        server.listen(1259, 'localhost', function() {
+          var request = https.request({
+            host: 'localhost',
+            port: 1259,
+            path: '/',
+            ca: serverOptions.cert
+          });
+          request.write('Ping');
+          request.end();
+          request.on('response', function(response) {
+            response.on('data', function(data) {
+              var localAddress = response.socket.address();
+              expect(remoteAddress).to.equal(localAddress.address);
+              expect(remotePort).to.equal(localAddress.port);
+              server.close();
+              done();
+            });
+          });
+        });
+      });
+      it('should provide API for remote HTTP 2.0 client address', function(done) {
+        var remoteAddress = null;
+        var remotePort = null;
+        var localAddress = null;
+
+        var server = http2.createServer(serverOptions, function(request, response) {
+          remoteAddress = request.remoteAddress;
+          remotePort = request.remotePort;
+          response.write('Pong');
+          response.end();
+        });
+
+        server.listen(1258, 'localhost', function() {
+          var request = http2.request({
+            host: 'localhost',
+            port: 1258,
+            path: '/'
+          });
+          request.write('Ping');
+          globalAgent.on('false:localhost:1258', function(endpoint) {
+            localAddress = endpoint.socket.address();
+          });
+          request.end();
+          request.on('response', function(response) {
+            response.on('data', function(data) {
+              expect(remoteAddress).to.equal(localAddress.address);
+              expect(remotePort).to.equal(localAddress.port);
+              server.close();
+              done();
+            });
+          });
+        });
+      });
+      it('should expose net.Socket as .socket and .connection', function(done) {
+        var server = http2.createServer(serverOptions, function(request, response) {
+          expect(request.socket).to.equal(request.connection);
+          expect(request.socket).to.be.instanceof(net.Socket);
+          response.write('Pong');
+          response.end();
+          done();
+        });
+
+        server.listen(1248, 'localhost', function() {
+          var request = https.request({
+            host: 'localhost',
+            port: 1248,
+            path: '/',
+            ca: serverOptions.cert
+          });
+          request.write('Ping');
+          request.end();
+        });
+      });
+    });
     describe('request and response with trailers', function() {
       it('should work as expected', function(done) {
         var path = '/x';
@@ -481,7 +677,7 @@ describe('http.js', function() {
         var requestTrailers = { 'content-md5': 'x' };
         var responseTrailers = { 'content-md5': 'y' };
 
-        var server = http2.createServer(options, function(request, response) {
+        var server = http2.createServer(serverOptions, function(request, response) {
           expect(request.url).to.equal(path);
           request.on('data', util.noop);
           request.once('end', function() {
@@ -506,6 +702,52 @@ describe('http.js', function() {
         });
       });
     });
+    describe('Handle socket error', function () {
+      it('HTTPS on Connection Refused error', function (done) {
+        var path = '/x';
+        var request = http2.request('https://127.0.0.1:6666' + path);
+
+        request.on('error', function (err) {
+          expect(err.errno).to.equal('ECONNREFUSED');
+          done();
+        });
+
+        request.on('response', function (response) {
+          server._server._handle.destroy();
+
+          response.on('data', util.noop);
+
+          response.once('end', function () {
+            done(new Error('Request should have failed'));
+          });
+        });
+
+        request.end();
+
+      });
+      it('HTTP on Connection Refused error', function (done) {
+        var path = '/x';
+
+        var request = http2.raw.request('http://127.0.0.1:6666' + path);
+
+        request.on('error', function (err) {
+          expect(err.errno).to.equal('ECONNREFUSED');
+          done();
+        });
+
+        request.on('response', function (response) {
+          server._server._handle.destroy();
+
+          response.on('data', util.noop);
+
+          response.once('end', function () {
+            done(new Error('Request should have failed'));
+          });
+        });
+
+        request.end();
+      });
+    });
     describe('server push', function() {
       it('should work as expected', function(done) {
         var path = '/x';
@@ -513,7 +755,7 @@ describe('http.js', function() {
         var pushedPath = '/y';
         var pushedMessage = 'Hello world 2';
 
-        var server = http2.createServer(options, function(request, response) {
+        var server = http2.createServer(serverOptions, function(request, response) {
           expect(request.url).to.equal(path);
           var push1 = response.push('/y');
           push1.end(pushedMessage);

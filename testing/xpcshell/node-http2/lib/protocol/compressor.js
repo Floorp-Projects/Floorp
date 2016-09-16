@@ -11,9 +11,9 @@
 // provide a layer between the [framer](framer.html) and the
 // [connection handling component](connection.html).
 //
-// [node-transform]: http://nodejs.org/api/stream.html#stream_class_stream_transform
-// [node-objectmode]: http://nodejs.org/api/stream.html#stream_new_stream_readable_options
-// [http2-compression]: http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-07
+// [node-transform]: https://nodejs.org/api/stream.html#stream_class_stream_transform
+// [node-objectmode]: https://nodejs.org/api/stream.html#stream_new_stream_readable_options
+// [http2-compression]: https://tools.ietf.org/html/rfc7541
 
 exports.HeaderTable = HeaderTable;
 exports.HuffmanTable = HuffmanTable;
@@ -35,8 +35,8 @@ var util = require('util');
 // The [Header Table] is a component used to associate headers to index values. It is basically an
 // ordered list of `[name, value]` pairs, so it's implemented as a subclass of `Array`.
 // In this implementation, the Header Table and the [Static Table] are handled as a single table.
-// [Header Table]: http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-07#section-3.1.2
-// [Static Table]: http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-07#appendix-B
+// [Header Table]: https://tools.ietf.org/html/rfc7541#section-2.3.2
+// [Static Table]: https://tools.ietf.org/html/rfc7541#section-2.3.1
 function HeaderTable(log, limit) {
   var self = HeaderTable.staticTable.map(entryFromPair);
   self._log = log;
@@ -70,7 +70,7 @@ function size(entry) {
 }
 
 // The `add(index, entry)` can be used to [manage the header table][tablemgmt]:
-// [tablemgmt]: http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-07#section-3.3
+// [tablemgmt]: https://tools.ietf.org/html/rfc7541#section-4
 //
 // * it pushes the new `entry` at the beggining of the table
 // * before doing such a modification, it has to be ensured that the header table size will stay
@@ -115,9 +115,8 @@ HeaderTable.prototype.setSizeLimit = function setSizeLimit(limit) {
   this._enforceLimit(this._limit);
 };
 
-// [The Static Table](http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-07#appendix-B)
+// [The Static Table](https://tools.ietf.org/html/rfc7541#section-2.3.1)
 // ------------------
-// [statictable]:http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-07#appendix-B
 
 // The table is generated with feeding the table from the spec to the following sed command:
 //
@@ -208,14 +207,14 @@ function HeaderSetDecompressor(log, table) {
 
 // `_transform` is the implementation of the [corresponding virtual function][_transform] of the
 // TransformStream class. It collects the data chunks for later processing.
-// [_transform]: http://nodejs.org/api/stream.html#stream_transform_transform_chunk_encoding_callback
+// [_transform]: https://nodejs.org/api/stream.html#stream_transform_transform_chunk_encoding_callback
 HeaderSetDecompressor.prototype._transform = function _transform(chunk, encoding, callback) {
   this._chunks.push(chunk);
   callback();
 };
 
 // `execute(rep)` executes the given [header representation][representation].
-// [representation]: http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-07#section-3.1.4
+// [representation]: https://tools.ietf.org/html/rfc7541#section-6
 
 // The *JavaScript object representation* of a header representation:
 //
@@ -242,7 +241,7 @@ HeaderSetDecompressor.prototype._execute = function _execute(rep) {
   var entry, pair;
 
   if (rep.contextUpdate) {
-    this.setTableSizeLimit(rep.newMaxSize);
+    this._table.setSizeLimit(rep.newMaxSize);
   }
 
   // * An _indexed representation_ entails the following actions:
@@ -281,7 +280,7 @@ HeaderSetDecompressor.prototype._execute = function _execute(rep) {
 // `_flush` is the implementation of the [corresponding virtual function][_flush] of the
 // TransformStream class. The whole decompressing process is done in `_flush`. It gets called when
 // the input stream is over.
-// [_flush]: http://nodejs.org/api/stream.html#stream_transform_flush_callback
+// [_flush]: https://nodejs.org/api/stream.html#stream_transform_flush_callback
 HeaderSetDecompressor.prototype._flush = function _flush(callback) {
   var buffer = concat(this._chunks);
 
@@ -327,7 +326,7 @@ HeaderSetCompressor.prototype.send = function send(rep) {
 
 // `_transform` is the implementation of the [corresponding virtual function][_transform] of the
 // TransformStream class. It processes the input headers one by one:
-// [_transform]: http://nodejs.org/api/stream.html#stream_transform_transform_chunk_encoding_callback
+// [_transform]: https://nodejs.org/api/stream.html#stream_transform_transform_chunk_encoding_callback
 HeaderSetCompressor.prototype._transform = function _transform(pair, encoding, callback) {
   var name = pair[0].toLowerCase();
   var value = pair[1];
@@ -373,12 +372,12 @@ HeaderSetCompressor.prototype._transform = function _transform(pair, encoding, c
 
 // `_flush` is the implementation of the [corresponding virtual function][_flush] of the
 // TransformStream class. It gets called when there's no more header to compress. The final step:
-// [_flush]: http://nodejs.org/api/stream.html#stream_transform_flush_callback
+// [_flush]: https://nodejs.org/api/stream.html#stream_transform_flush_callback
 HeaderSetCompressor.prototype._flush = function _flush(callback) {
   callback();
 };
 
-// [Detailed Format](http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-07#section-4)
+// [Detailed Format](https://tools.ietf.org/html/rfc7541#section-5)
 // -----------------
 
 // ### Integer representation ###
@@ -1091,11 +1090,20 @@ function Compressor(log, type) {
 
   assert((type === 'REQUEST') || (type === 'RESPONSE'));
   this._table = new HeaderTable(this._log);
+
+  this.tableSizeChangePending = false;
+  this.lowestTableSizePending = 0;
+  this.tableSizeSetting = DEFAULT_HEADER_TABLE_LIMIT;
 }
 
 // Changing the header table size
 Compressor.prototype.setTableSizeLimit = function setTableSizeLimit(size) {
   this._table.setSizeLimit(size);
+  if (!this.tableSizeChangePending || size < this.lowestTableSizePending) {
+    this.lowestTableSizePending = size;
+  }
+  this.tableSizeSetting = size;
+  this.tableSizeChangePending = true;
 };
 
 // `compress` takes a header set, and compresses it using a new `HeaderSetCompressor` stream
@@ -1103,6 +1111,16 @@ Compressor.prototype.setTableSizeLimit = function setTableSizeLimit(size) {
 // but the API becomes simpler.
 Compressor.prototype.compress = function compress(headers) {
   var compressor = new HeaderSetCompressor(this._log, this._table);
+
+  if (this.tableSizeChangePending) {
+    if (this.lowestTableSizePending < this.tableSizeSetting) {
+      compressor.send({contextUpdate: true, newMaxSize: this.lowestTableSizePending,
+                       name: "", value: "", index: 0});
+    }
+    compressor.send({contextUpdate: true, newMaxSize: this.tableSizeSetting,
+                     name: "", value: "", index: 0});
+    this.tableSizeChangePending = false;
+  }
   var colonHeaders = [];
   var nonColonHeaders = [];
 
