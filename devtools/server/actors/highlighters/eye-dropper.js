@@ -12,7 +12,7 @@ const {Ci, Cc} = require("chrome");
 const {CanvasFrameAnonymousContentHelper, createNode} = require("./utils/markup");
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
-const {rgbToHsl, rgbToColorName} = require("devtools/shared/css-color").colorUtils;
+const {rgbToHsl, rgbToColorName} = require("devtools/shared/css/color").colorUtils;
 const {getCurrentZoom, getFrameOffsets} = require("devtools/shared/layout/utils");
 
 loader.lazyGetter(this, "clipboardHelper",

@@ -1002,17 +1002,17 @@ BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat)
     MOZ_ASSERT(!aFloat->GetNextInFlow());
   }
 
-#ifdef NOISY_FLOATMANAGER
-  nscoord tI, tB;
-  mFloatManager->GetTranslation(tI, tB);
-  nsIFrame::ListTag(stdout, mBlock);
-  printf(": FlowAndPlaceFloat: AddFloat: tIB=%d,%d (%d,%d) {%d,%d,%d,%d}\n",
-         tI, tB, mFloatManagerI, mFloatManagerB,
-         region.IStart(wm), region.BStart(wm),
-         region.ISize(wm), region.BSize(wm));
-#endif
-
 #ifdef DEBUG
+  if (nsBlockFrame::gNoisyFloatManager) {
+    nscoord tI, tB;
+    mFloatManager->GetTranslation(tI, tB);
+    nsIFrame::ListTag(stdout, mBlock);
+    printf(": FlowAndPlaceFloat: AddFloat: tIB=%d,%d (%d,%d) {%d,%d,%d,%d}\n",
+           tI, tB, mFloatManagerI, mFloatManagerB,
+           region.IStart(wm), region.BStart(wm),
+           region.ISize(wm), region.BSize(wm));
+  }
+
   if (nsBlockFrame::gNoisyReflow) {
     nsRect r = aFloat->GetRect();
     nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);

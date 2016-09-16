@@ -370,7 +370,7 @@ private:
 /**
  * A helper class to manage maintenance of the float manager during
  * nsBlockFrame::Reflow. It automatically restores the old float
- * manager in the reflow state when the object goes out of scope.
+ * manager in the reflow input when the object goes out of scope.
  */
 class nsAutoFloatManager {
   using ReflowInput = mozilla::ReflowInput;
@@ -386,9 +386,9 @@ public:
   /**
    * Create a new float manager for the specified frame. This will
    * `remember' the old float manager, and install the new float
-   * manager in the reflow state.
+   * manager in the reflow input.
    */
-  nsresult
+  void
   CreateFloatManager(nsPresContext *aPresContext);
 
 protected:

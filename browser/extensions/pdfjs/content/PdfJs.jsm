@@ -92,6 +92,7 @@ function initializeDefaultPreferences() {
   "disableTextLayer": false,
   "useOnlyCssZoom": false,
   "externalLinkTarget": 0,
+  "enhanceTextSelection": false,
   "renderInteractiveForms": false
 }
 

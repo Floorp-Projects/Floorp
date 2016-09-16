@@ -28,8 +28,8 @@ factory((root.pdfjsDistBuildPdf = {}));
   // Use strict in our context only - users might not want it
   'use strict';
 
-var pdfjsVersion = '1.5.437';
-var pdfjsBuild = 'ca61ccc';
+var pdfjsVersion = '1.5.464';
+var pdfjsBuild = '834a7ff';
 
   var pdfjsFilePath =
     typeof document !== 'undefined' && document.currentScript ?
@@ -2321,6 +2321,8 @@ var WidgetAnnotationElement = (function WidgetAnnotationElementClosure() {
  */
 var TextWidgetAnnotationElement = (
     function TextWidgetAnnotationElementClosure() {
+  var TEXT_ALIGNMENT = ['left', 'center', 'right'];
+
   function TextWidgetAnnotationElement(parameters) {
     WidgetAnnotationElement.call(this, parameters);
   }
@@ -2336,26 +2338,33 @@ var TextWidgetAnnotationElement = (
     render: function TextWidgetAnnotationElement_render() {
       this.container.className = 'textWidgetAnnotation';
 
+      var element = null;
       if (this.renderInteractiveForms) {
-        var input = document.createElement('input');
-        input.type = 'text';
-        input.value = this.data.fieldValue;
+        element = document.createElement('input');
+        element.type = 'text';
+        element.value = this.data.fieldValue;
 
-        this.container.appendChild(input);
+        if (this.data.maxLen !== null) {
+          element.maxLength = this.data.maxLen;
+        }
       } else {
-        var content = document.createElement('div');
-        content.textContent = this.data.fieldValue;
-        var textAlignment = this.data.textAlignment;
-        content.style.textAlign = ['left', 'center', 'right'][textAlignment];
-        content.style.verticalAlign = 'middle';
-        content.style.display = 'table-cell';
+        element = document.createElement('div');
+        element.textContent = this.data.fieldValue;
+        element.style.verticalAlign = 'middle';
+        element.style.display = 'table-cell';
 
-        var font = (this.data.fontRefName ?
-          this.page.commonObjs.getData(this.data.fontRefName) : null);
-        this._setTextStyle(content, font);
-
-        this.container.appendChild(content);
+        var font = null;
+        if (this.data.fontRefName) {
+          font = this.page.commonObjs.getData(this.data.fontRefName);
+        }
+        this._setTextStyle(element, font);
       }
+
+      if (this.data.textAlignment !== null) {
+        element.style.textAlign = TEXT_ALIGNMENT[this.data.textAlignment];
+      }
+
+      this.container.appendChild(element);
       return this.container;
     },
 
@@ -2889,14 +2898,20 @@ var renderTextLayer = (function renderTextLayerClosure() {
     return !NonWhitespaceRegexp.test(str);
   }
 
+  // Text layers may contain many thousand div's, and using `styleBuf` avoids
+  // creating many intermediate strings when building their 'style' properties.
+  var styleBuf = ['left: ', 0, 'px; top: ', 0, 'px; font-size: ', 0,
+                  'px; font-family: ', '', ';'];
+
   function appendText(task, geom, styles) {
     // Initialize all used properties to keep the caches monomorphic.
     var textDiv = document.createElement('div');
     var textDivProperties = {
+      style: null,
       angle: 0,
       canvasWidth: 0,
       isWhitespace: false,
-      originalTransform: '',
+      originalTransform: null,
       paddingBottom: 0,
       paddingLeft: 0,
       paddingRight: 0,
@@ -2934,10 +2949,12 @@ var renderTextLayer = (function renderTextLayerClosure() {
       left = tx[4] + (fontAscent * Math.sin(angle));
       top = tx[5] - (fontAscent * Math.cos(angle));
     }
-    textDiv.style.left = left + 'px';
-    textDiv.style.top = top + 'px';
-    textDiv.style.fontSize = fontHeight + 'px';
-    textDiv.style.fontFamily = style.fontFamily;
+    styleBuf[1] = left;
+    styleBuf[3] = top;
+    styleBuf[5] = fontHeight;
+    styleBuf[7] = style.fontFamily;
+    textDivProperties.style = styleBuf.join('');
+    textDiv.setAttribute('style', textDivProperties.style);
 
     textDiv.textContent = geom.str;
     // |fontName| is only used by the Font Inspector. This test will succeed
@@ -3345,7 +3362,6 @@ var renderTextLayer = (function renderTextLayerClosure() {
     this._renderTimer = null;
     this._bounds = [];
     this._enhanceTextSelection = !!enhanceTextSelection;
-    this._expanded = false;
   }
   TextLayerRenderTask.prototype = {
     get promise() {
@@ -3383,18 +3399,20 @@ var renderTextLayer = (function renderTextLayerClosure() {
       if (!this._enhanceTextSelection || !this._renderingDone) {
         return;
       }
-      if (!this._expanded) {
+      if (this._bounds !== null) {
         expand(this);
-        this._expanded = true;
-        this._bounds.length = 0;
+        this._bounds = null;
       }
 
       for (var i = 0, ii = this._textDivs.length; i < ii; i++) {
         var div = this._textDivs[i];
         var divProperties = this._textDivProperties.get(div);
 
+        if (divProperties.isWhitespace) {
+          continue;
+        }
         if (expandDivs) {
-          var transform = '';
+          var transform = '', padding = '';
 
           if (divProperties.scale !== 1) {
             transform = 'scaleX(' + divProperties.scale + ')';
@@ -3403,21 +3421,26 @@ var renderTextLayer = (function renderTextLayerClosure() {
             transform = 'rotate(' + divProperties.angle + 'deg) ' + transform;
           }
           if (divProperties.paddingLeft !== 0) {
-            div.style.paddingLeft =
-              (divProperties.paddingLeft / divProperties.scale) + 'px';
+            padding += ' padding-left: ' +
+              (divProperties.paddingLeft / divProperties.scale) + 'px;';
             transform += ' translateX(' +
               (-divProperties.paddingLeft / divProperties.scale) + 'px)';
           }
           if (divProperties.paddingTop !== 0) {
-            div.style.paddingTop = divProperties.paddingTop + 'px';
+            padding += ' padding-top: ' + divProperties.paddingTop + 'px;';
             transform += ' translateY(' + (-divProperties.paddingTop) + 'px)';
           }
           if (divProperties.paddingRight !== 0) {
-            div.style.paddingRight =
-              (divProperties.paddingRight / divProperties.scale) + 'px';
+            padding += ' padding-right: ' +
+              (divProperties.paddingRight / divProperties.scale) + 'px;';
           }
           if (divProperties.paddingBottom !== 0) {
-            div.style.paddingBottom = divProperties.paddingBottom + 'px';
+            padding += ' padding-bottom: ' +
+              divProperties.paddingBottom + 'px;';
+          }
+
+          if (padding !== '') {
+            div.setAttribute('style', divProperties.style + padding);
           }
           if (transform !== '') {
             CustomStyle.setProp('transform', div, transform);
@@ -3425,7 +3448,7 @@ var renderTextLayer = (function renderTextLayerClosure() {
         } else {
           div.style.padding = 0;
           CustomStyle.setProp('transform', div,
-                              divProperties.originalTransform);
+                              divProperties.originalTransform || '');
         }
       }
     },
@@ -4950,9 +4973,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     if (sourceCtx.setLineDash !== undefined) {
       destCtx.setLineDash(sourceCtx.getLineDash());
       destCtx.lineDashOffset =  sourceCtx.lineDashOffset;
-    } else if (sourceCtx.mozDashOffset !== undefined) {
-      destCtx.mozDash = sourceCtx.mozDash;
-      destCtx.mozDashOffset = sourceCtx.mozDashOffset;
     }
   }
 
@@ -5208,9 +5228,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       if (ctx.setLineDash !== undefined) {
         ctx.setLineDash(dashArray);
         ctx.lineDashOffset = dashPhase;
-      } else {
-        ctx.mozDash = dashArray;
-        ctx.mozDashOffset = dashPhase;
       }
     },
     setRenderingIntent: function CanvasGraphics_setRenderingIntent(intent) {
@@ -6653,6 +6670,7 @@ var deprecated = sharedUtil.deprecated;
 var getVerbosityLevel = sharedUtil.getVerbosityLevel;
 var info = sharedUtil.info;
 var isInt = sharedUtil.isInt;
+var isArray = sharedUtil.isArray;
 var isArrayBuffer = sharedUtil.isArrayBuffer;
 var isSameOrigin = sharedUtil.isSameOrigin;
 var loadJpegStream = sharedUtil.loadJpegStream;
@@ -7646,6 +7664,84 @@ var PDFWorker = (function PDFWorkerClosure() {
     return fakeWorkerFilesLoadedCapability.promise;
   }
 
+  function FakeWorkerPort(defer) {
+    this._listeners = [];
+    this._defer = defer;
+    this._deferred = Promise.resolve(undefined);
+  }
+  FakeWorkerPort.prototype = {
+    postMessage: function (obj, transfers) {
+      function cloneValue(value) {
+        // Trying to perform a structured clone close to the spec, including
+        // transfers.
+        if (typeof value !== 'object' || value === null) {
+          return value;
+        }
+        if (cloned.has(value)) { // already cloned the object
+          return cloned.get(value);
+        }
+        var result;
+        var buffer;
+        if ((buffer = value.buffer) && isArrayBuffer(buffer)) {
+          // We found object with ArrayBuffer (typed array).
+          var transferable = transfers && transfers.indexOf(buffer) >= 0;
+          if (value === buffer) {
+            // Special case when we are faking typed arrays in compatibility.js.
+            result = value;
+          } else if (transferable) {
+            result = new value.constructor(buffer, value.byteOffset,
+                                           value.byteLength);
+          } else {
+            result = new value.constructor(value);
+          }
+          cloned.set(value, result);
+          return result;
+        }
+        result = isArray(value) ? [] : {};
+        cloned.set(value, result); // adding to cache now for cyclic references
+        // Cloning all value and object properties, however ignoring properties
+        // defined via getter.
+        for (var i in value) {
+          var desc, p = value;
+          while (!(desc = Object.getOwnPropertyDescriptor(p, i))) {
+            p = Object.getPrototypeOf(p);
+          }
+          if (typeof desc.value === 'undefined' ||
+              typeof desc.value === 'function') {
+            continue;
+          }
+          result[i] = cloneValue(desc.value);
+        }
+        return result;
+      }
+
+      if (!this._defer) {
+        this._listeners.forEach(function (listener) {
+          listener.call(this, {data: obj});
+        }, this);
+        return;
+      }
+
+      var cloned = new WeakMap();
+      var e = {data: cloneValue(obj)};
+      this._deferred.then(function () {
+        this._listeners.forEach(function (listener) {
+          listener.call(this, e);
+        }, this);
+      }.bind(this));
+    },
+    addEventListener: function (name, listener) {
+      this._listeners.push(listener);
+    },
+    removeEventListener: function (name, listener) {
+      var i = this._listeners.indexOf(listener);
+      this._listeners.splice(i, 1);
+    },
+    terminate: function () {
+      this._listeners = [];
+    }
+  };
+
   function createCDNWrapper(url) {
     // We will rely on blob URL's property to specify origin.
     // We want this function to fail in case if createObjectURL or Blob do not
@@ -7805,24 +7901,11 @@ var PDFWorker = (function PDFWorkerClosure() {
           return;
         }
 
-        // If we don't use a worker, just post/sendMessage to the main thread.
-        var port = {
-          _listeners: [],
-          postMessage: function (obj) {
-            var e = {data: obj};
-            this._listeners.forEach(function (listener) {
-              listener.call(this, e);
-            }, this);
-          },
-          addEventListener: function (name, listener) {
-            this._listeners.push(listener);
-          },
-          removeEventListener: function (name, listener) {
-            var i = this._listeners.indexOf(listener);
-            this._listeners.splice(i, 1);
-          },
-          terminate: function () {}
-        };
+        // We cannot turn on proper fake port simulation (this includes
+        // structured cloning) when typed arrays are not supported. Relying
+        // on a chance that messages will be sent in proper order.
+        var isTypedArraysPresent = Uint8Array !== Float32Array;
+        var port = new FakeWorkerPort(isTypedArraysPresent);
         this._port = port;
 
         // All fake workers use the same port, making id unique.
