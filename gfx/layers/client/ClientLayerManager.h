@@ -231,8 +231,7 @@ public:
   void RemoveDidCompositeObserver(DidCompositeObserver* aObserver);
 
   virtual already_AddRefed<PersistentBufferProvider>
-  CreatePersistentBufferProvider(const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat,
-                                 int64_t* aMemoryCounter) override;
+  CreatePersistentBufferProvider(const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat) override;
 
 protected:
   enum TransactionPhase {
