@@ -356,6 +356,25 @@ class MachFormatter(base.BaseFormatter):
 
         return rv
 
+    def lint(self, data):
+        term = self.terminal if self.terminal is not None else NullTerminal()
+        fmt = "{path}  {c1}{lineno}{column}  {c2}{level}{normal}  {message}  {c1}{rule}({linter}){normal}"
+        message = fmt.format(
+            path=data["path"],
+            normal=term.normal,
+            c1=term.grey,
+            c2=term.red if data["level"] == 'error' else term.yellow,
+            lineno=str(data["lineno"]),
+            column=(":" + str(data["column"])) if data.get("column") else "",
+            level=data["level"],
+            message=data["message"],
+            rule='{} '.format(data["rule"]) if data.get("rule") else "",
+            linter=data["linter"].lower() if data.get("linter") else "",
+        )
+
+        return message
+
+
     def _get_subtest_data(self, data):
         test = self._get_test_id(data)
         return self.status_buffer.get(test, {"count": 0, "unexpected": [], "pass": 0})

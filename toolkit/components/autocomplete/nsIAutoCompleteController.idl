@@ -38,7 +38,7 @@ interface nsIAutoCompleteController : nsISupports
    */
   void startSearch(in AString searchString);
 
-  /* 
+  /*
    * Stop all asynchronous searches
    */
   void stopSearch();
@@ -55,8 +55,10 @@ interface nsIAutoCompleteController : nsISupports
    *       it's not in composing mode. DOM compositionend event is not good
    *       timing for calling handleText(). DOM input event immediately after
    *       DOM compositionend event is the best timing to call this.
+   *
+   * @return whether this handler started a new search.
    */
-  void handleText();
+  boolean handleText();
 
   /*
    * Notify the controller that the user wishes to enter the current text. If
@@ -70,7 +72,8 @@ interface nsIAutoCompleteController : nsISupports
    *        The event that triggered the enter, like a key event if the user
    *        pressed the Return key or a click event if the user clicked a popup
    *        item.
-   * @return True if the controller wishes to prevent event propagation and default event
+   * @return Whether the controller wishes to prevent event propagation and
+   *         default event.
    */
   boolean handleEnter(in boolean aIsPopupSelection,
                       [optional] in nsIDOMEvent aEvent);
@@ -78,7 +81,8 @@ interface nsIAutoCompleteController : nsISupports
   /*
    * Notify the controller that the user wishes to revert autocomplete
    *
-   * @return True if the controller wishes to prevent event propagation and default event
+   * @return Whether the controller wishes to prevent event propagation and
+   *         default event.
    */
   boolean handleEscape();
 
@@ -98,7 +102,7 @@ interface nsIAutoCompleteController : nsISupports
    */
   void handleEndComposition();
 
-  /* 
+  /*
    * Handle tab. Just closes up.
    */
   void handleTab();
@@ -107,16 +111,19 @@ interface nsIAutoCompleteController : nsISupports
    * Notify the controller of the following key navigation events:
    *   up, down, left, right, page up, page down
    *
-   * @return True if the controller wishes to prevent event propagation and default event
+   * @return Whether the controller wishes to prevent event propagation and
+   *         default event
    */
   boolean handleKeyNavigation(in unsigned long key);
 
   /*
    * Notify the controller that the user chose to delete the current
    * auto-complete result.
+   *
+   * @return Whether the controller removed a result item.
    */
   boolean handleDelete();
-  
+
   /*
    * Get the value of the result at a given index in the last completed search
    */
