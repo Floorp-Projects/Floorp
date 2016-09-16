@@ -26,6 +26,7 @@ DevToolsModules(
     'reps.css',
     'string.js',
     'stylesheet.js',
+    'symbol.js',
     'text-node.js',
     'undefined.js',
     'window.js',
