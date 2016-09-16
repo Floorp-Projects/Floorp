@@ -445,7 +445,7 @@ ParseKeyIds(ParserContext& aCtx, vector<KeyId>& aOutKeyIds)
     if (!GetNextLabel(aCtx, label) || !DecodeBase64(label, keyId)) {
       return false;
     }
-    if (!keyId.empty()) {
+    if (!keyId.empty() && keyId.size() <= kMaxKeyIdsLength) {
       aOutKeyIds.push_back(keyId);
     }
 
