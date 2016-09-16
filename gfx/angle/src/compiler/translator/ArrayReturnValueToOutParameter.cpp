@@ -103,8 +103,7 @@ bool ArrayReturnValueToOutParameterTraverser::visitAggregate(Visit visit, TInter
                 replacementParams->getSequence()->push_back(CreateReturnValueOutSymbol(node->getType()));
                 replacementParams->setLine(params->getLine());
 
-                queueReplacementWithParent(node, params, replacementParams,
-                                           OriginalNode::IS_DROPPED);
+                mReplacements.push_back(NodeUpdateEntry(node, params, replacementParams, false));
 
                 node->setType(TType(EbtVoid));
 
@@ -123,7 +122,7 @@ bool ArrayReturnValueToOutParameterTraverser::visitAggregate(Visit visit, TInter
                 replacement->setLine(node->getLine());
                 replacement->setType(TType(EbtVoid));
 
-                queueReplacement(node, replacement, OriginalNode::IS_DROPPED);
+                mReplacements.push_back(NodeUpdateEntry(getParentNode(), node, replacement, false));
             }
             else if (node->getOp() == EOpFunctionCall)
             {
@@ -193,7 +192,7 @@ bool ArrayReturnValueToOutParameterTraverser::visitBinary(Visit visit, TIntermBi
         if (rightAgg != nullptr && rightAgg->getOp() == EOpFunctionCall && rightAgg->isUserDefined())
         {
             TIntermAggregate *replacementCall = CreateReplacementCall(rightAgg, node->getLeft());
-            queueReplacement(node, replacementCall, OriginalNode::IS_DROPPED);
+            mReplacements.push_back(NodeUpdateEntry(getParentNode(), node, replacementCall, false));
         }
     }
     return false;

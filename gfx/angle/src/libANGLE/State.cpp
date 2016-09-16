@@ -23,16 +23,6 @@
 #include "libANGLE/VertexArray.h"
 #include "libANGLE/formatutils.h"
 
-namespace
-{
-
-GLenum ActiveQueryType(const GLenum type)
-{
-    return (type == GL_ANY_SAMPLES_PASSED_CONSERVATIVE) ? GL_ANY_SAMPLES_PASSED : type;
-}
-
-}  // anonymous namepace
-
 namespace gl
 {
 
@@ -1036,12 +1026,12 @@ bool State::removeTransformFeedbackBinding(GLuint transformFeedback)
     return false;
 }
 
-bool State::isQueryActive(const GLenum type) const
+bool State::isQueryActive(GLenum type) const
 {
     for (auto &iter : mActiveQueries)
     {
-        const Query *query = iter.second.get();
-        if (query != nullptr && ActiveQueryType(query->getType()) == ActiveQueryType(type))
+        Query *query = iter.second.get();
+        if (query != nullptr && query->getType() == type)
         {
             return true;
         }
@@ -1797,7 +1787,7 @@ void State::getPointerv(GLenum pname, void **params) const
     }
 }
 
-void State::getIntegeri_v(GLenum target, GLuint index, GLint *data)
+bool State::getIndexedIntegerv(GLenum target, GLuint index, GLint *data)
 {
     switch (target)
     {
@@ -1814,12 +1804,13 @@ void State::getIntegeri_v(GLenum target, GLuint index, GLint *data)
         }
         break;
       default:
-          UNREACHABLE();
-          break;
+        return false;
     }
+
+    return true;
 }
 
-void State::getInteger64i_v(GLenum target, GLuint index, GLint64 *data)
+bool State::getIndexedInteger64v(GLenum target, GLuint index, GLint64 *data)
 {
     switch (target)
     {
@@ -1848,14 +1839,10 @@ void State::getInteger64i_v(GLenum target, GLuint index, GLint64 *data)
         }
         break;
       default:
-          UNREACHABLE();
-          break;
+        return false;
     }
-}
 
-void State::getBooleani_v(GLenum target, GLuint index, GLboolean *data)
-{
-    UNREACHABLE();
+    return true;
 }
 
 bool State::hasMappedBuffer(GLenum target) const

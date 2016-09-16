@@ -63,7 +63,6 @@ struct UniformBlock
 
     bool vertexStaticUse;
     bool fragmentStaticUse;
-    bool computeStaticUse;
 
     std::vector<unsigned int> memberUniformIndexes;
 };

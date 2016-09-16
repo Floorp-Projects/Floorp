@@ -12,10 +12,29 @@
 #include "GLSLANG/ShaderLang.h"
 #include "tests/test_utils/compiler_test.h"
 
-class RecordConstantPrecisionTest : public MatchOutputCodeTest
+class RecordConstantPrecisionTest : public testing::Test
 {
   public:
-    RecordConstantPrecisionTest() : MatchOutputCodeTest(GL_FRAGMENT_SHADER, 0, SH_ESSL_OUTPUT) {}
+    RecordConstantPrecisionTest() {}
+
+  protected:
+    void compile(const std::string &shaderString)
+    {
+        std::string infoLog;
+        bool compilationSuccess = compileTestShader(GL_FRAGMENT_SHADER, SH_GLES2_SPEC, SH_ESSL_OUTPUT,
+                                                    shaderString, &mTranslatedCode, &infoLog);
+        if (!compilationSuccess)
+        {
+            FAIL() << "Shader compilation into ESSL failed " << infoLog;
+        }
+    }
+
+    bool foundInCode(const char *stringToFind)
+    {
+        return mTranslatedCode.find(stringToFind) != std::string::npos;
+    }
+  private:
+    std::string mTranslatedCode;
 };
 
 // The constant cannot be folded if its precision is higher than the other operands, since it

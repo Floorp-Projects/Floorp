@@ -196,44 +196,10 @@ expression
         $$ = $1 < $3;
     }
     | expression TOK_OP_RIGHT expression {
-        if ($3 < 0)
-        {
-            if (!context->isIgnoringErrors())
-            {
-                std::ostringstream stream;
-                stream << $1 << " >> " << $3;
-                std::string text = stream.str();
-                context->diagnostics->report(pp::Diagnostics::PP_UNDEFINED_SHIFT,
-                                             context->token->location,
-                                             text.c_str());
-                *(context->valid) = false;
-            }
-            $$ = static_cast<YYSTYPE>(0);
-        }
-        else
-        {
-            $$ = $1 >> $3;
-        }
+        $$ = $1 >> $3;
     }
     | expression TOK_OP_LEFT expression {
-        if ($3 < 0)
-        {
-            if (!context->isIgnoringErrors())
-            {
-                std::ostringstream stream;
-                stream << $1 << " << " << $3;
-                std::string text = stream.str();
-                context->diagnostics->report(pp::Diagnostics::PP_UNDEFINED_SHIFT,
-                                             context->token->location,
-                                             text.c_str());
-                *(context->valid) = false;
-            }
-            $$ = static_cast<YYSTYPE>(0);
-        }
-        else
-        {
-            $$ = $1 << $3;
-        }
+        $$ = $1 << $3;
     }
     | expression '-' expression {
         $$ = $1 - $3;

@@ -15,7 +15,6 @@
 #include "libANGLE/Error.h"
 #include "libANGLE/renderer/EGLImplFactory.h"
 #include "libANGLE/Stream.h"
-#include "libANGLE/Version.h"
 
 #include <set>
 #include <vector>
@@ -55,6 +54,7 @@ class DisplayImpl : public EGLImplFactory
 
     virtual egl::ConfigSet generateConfigs() = 0;
 
+    virtual bool isDeviceLost() const = 0;
     virtual bool testDeviceLost() = 0;
     virtual egl::Error restoreLostDevice() = 0;
 
@@ -68,7 +68,7 @@ class DisplayImpl : public EGLImplFactory
     virtual egl::Error waitNative(EGLint engine,
                                   egl::Surface *drawSurface,
                                   egl::Surface *readSurface) const = 0;
-    virtual gl::Version getMaxSupportedESVersion() const           = 0;
+
     const egl::Caps &getCaps() const;
 
     typedef std::set<egl::Surface*> SurfaceSet;

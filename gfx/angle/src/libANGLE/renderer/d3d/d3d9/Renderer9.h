@@ -69,7 +69,7 @@ class Renderer9 : public RendererD3D
     virtual ~Renderer9();
 
     egl::Error initialize() override;
-    bool resetDevice() override;
+    virtual bool resetDevice();
 
     egl::ConfigSet generateConfigs() override;
     void generateDisplayExtensions(egl::DisplayExtensions *outExtensions) const override;
@@ -101,11 +101,8 @@ class Renderer9 : public RendererD3D
     gl::Error createPixelShader(const DWORD *function, size_t length, IDirect3DPixelShader9 **outShader);
     HRESULT createVertexBuffer(UINT Length, DWORD Usage, IDirect3DVertexBuffer9 **ppVertexBuffer);
     HRESULT createIndexBuffer(UINT Length, DWORD Usage, D3DFORMAT Format, IDirect3DIndexBuffer9 **ppIndexBuffer);
-    gl::Error setSamplerState(gl::SamplerType type,
-                              int index,
-                              gl::Texture *texture,
-                              const gl::SamplerState &sampler) override;
-    gl::Error setTexture(gl::SamplerType type, int index, gl::Texture *texture) override;
+    virtual gl::Error setSamplerState(gl::SamplerType type, int index, gl::Texture *texture, const gl::SamplerState &sampler);
+    virtual gl::Error setTexture(gl::SamplerType type, int index, gl::Texture *texture);
 
     gl::Error setUniformBuffers(const gl::ContextState &data,
                                 const std::vector<GLint> &vertexUniformBuffers,
@@ -148,7 +145,7 @@ class Renderer9 : public RendererD3D
                     const gl::FramebufferAttachment *colorBuffer,
                     const gl::FramebufferAttachment *depthStencilBuffer);
 
-    void markAllStateDirty();
+    virtual void markAllStateDirty();
 
     // lost device
     bool testDeviceLost() override;
@@ -168,7 +165,7 @@ class Renderer9 : public RendererD3D
 
     bool getShareHandleSupport() const;
 
-    int getMajorShaderModel() const override;
+    virtual int getMajorShaderModel() const;
     int getMinorShaderModel() const override;
     std::string getShaderModelSuffix() const override;
 
@@ -201,17 +198,6 @@ class Renderer9 : public RendererD3D
                                TextureStorage *storage,
                                GLint level) override;
 
-    gl::Error copyTexture(const gl::Texture *source,
-                          GLint sourceLevel,
-                          const gl::Rectangle &sourceRect,
-                          GLenum destFormat,
-                          const gl::Offset &destOffset,
-                          TextureStorage *storage,
-                          GLint destLevel,
-                          bool unpackFlipY,
-                          bool unpackPremultiplyAlpha,
-                          bool unpackUnmultiplyAlpha) override;
-
     // RenderTarget creation
     gl::Error createRenderTarget(int width,
                                  int height,
@@ -241,9 +227,8 @@ class Renderer9 : public RendererD3D
     gl::Error generateMipmap(ImageD3D *dest, ImageD3D *source) override;
     gl::Error generateMipmapUsingD3D(TextureStorage *storage,
                                      const gl::TextureState &textureState) override;
-    TextureStorage *createTextureStorage2D(SwapChainD3D *swapChain) override;
-    TextureStorage *createTextureStorageEGLImage(EGLImageD3D *eglImage,
-                                                 RenderTargetD3D *renderTargetD3D) override;
+    virtual TextureStorage *createTextureStorage2D(SwapChainD3D *swapChain);
+    TextureStorage *createTextureStorageEGLImage(EGLImageD3D *eglImage) override;
     TextureStorage *createTextureStorageExternal(
         egl::Stream *stream,
         const egl::Stream::GLTextureDescription &desc) override;
@@ -281,13 +266,14 @@ class Renderer9 : public RendererD3D
         const egl::AttributeMap &attribs) override;
 
     // Buffer-to-texture and Texture-to-buffer copies
-    bool supportsFastCopyBufferToTexture(GLenum internalFormat) const override;
-    gl::Error fastCopyBufferToTexture(const gl::PixelUnpackState &unpack,
-                                      unsigned int offset,
-                                      RenderTargetD3D *destRenderTarget,
-                                      GLenum destinationFormat,
-                                      GLenum sourcePixelsType,
-                                      const gl::Box &destArea) override;
+    virtual bool supportsFastCopyBufferToTexture(GLenum internalFormat) const;
+    virtual gl::Error fastCopyBufferToTexture(const gl::PixelUnpackState &unpack, unsigned int offset, RenderTargetD3D *destRenderTarget,
+                                              GLenum destinationFormat, GLenum sourcePixelsType, const gl::Box &destArea);
+
+    // EXT_debug_marker
+    void insertEventMarker(GLsizei length, const char *marker);
+    void pushGroupMarker(GLsizei length, const char *marker);
+    void popGroupMarker();
 
     // D3D9-renderer specific methods
     gl::Error boxFilter(IDirect3DSurface9 *source, IDirect3DSurface9 *dest);
@@ -329,8 +315,6 @@ class Renderer9 : public RendererD3D
     FramebufferImpl *createDefaultFramebuffer(const gl::FramebufferState &state) override;
 
     DebugAnnotator9 *getAnnotator() { return &mAnnotator; }
-
-    gl::Version getMaxSupportedESVersion() const override;
 
   protected:
     gl::Error clearTextures(gl::SamplerType samplerType, size_t rangeStart, size_t rangeEnd) override;

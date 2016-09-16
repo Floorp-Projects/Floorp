@@ -498,9 +498,12 @@ static const yytype_uint8 yytranslate[] =
 
 #if YYDEBUG
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
-static const yytype_uint16 yyrline[] = {0,   110, 110, 117, 118, 129, 129, 150, 150, 171,
-                                        174, 177, 180, 183, 186, 189, 192, 195, 198, 218,
-                                        238, 241, 244, 264, 284, 287, 290, 293, 296, 299};
+static const yytype_uint16 yyrline[] =
+{
+       0,   110,   110,   117,   118,   129,   129,   150,   150,   171,
+     174,   177,   180,   183,   186,   189,   192,   195,   198,   201,
+     204,   207,   210,   230,   250,   253,   256,   259,   262,   265
+};
 #endif
 
 #if YYDEBUG || YYERROR_VERBOSE || 0
@@ -1492,23 +1495,7 @@ yyreduce:
   case 18:
 
     {
-        if ((yyvsp[0]) < 0)
-        {
-            if (!context->isIgnoringErrors())
-            {
-                std::ostringstream stream;
-                stream << (yyvsp[-2]) << " >> " << (yyvsp[0]);
-                std::string text = stream.str();
-                context->diagnostics->report(pp::Diagnostics::PP_UNDEFINED_SHIFT,
-                                             context->token->location, text.c_str());
-                *(context->valid) = false;
-            }
-            (yyval) = static_cast<YYSTYPE>(0);
-        }
-        else
-        {
-            (yyval) = (yyvsp[-2]) >> (yyvsp[0]);
-        }
+        (yyval) = (yyvsp[-2]) >> (yyvsp[0]);
     }
 
     break;
@@ -1516,23 +1503,7 @@ yyreduce:
   case 19:
 
     {
-        if ((yyvsp[0]) < 0)
-        {
-            if (!context->isIgnoringErrors())
-            {
-                std::ostringstream stream;
-                stream << (yyvsp[-2]) << " << " << (yyvsp[0]);
-                std::string text = stream.str();
-                context->diagnostics->report(pp::Diagnostics::PP_UNDEFINED_SHIFT,
-                                             context->token->location, text.c_str());
-                *(context->valid) = false;
-            }
-            (yyval) = static_cast<YYSTYPE>(0);
-        }
-        else
-        {
-            (yyval) = (yyvsp[-2]) << (yyvsp[0]);
-        }
+        (yyval) = (yyvsp[-2]) << (yyvsp[0]);
     }
 
     break;

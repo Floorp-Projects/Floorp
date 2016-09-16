@@ -9,8 +9,6 @@
 
 #include "libANGLE/signal_utils.h"
 
-#include <algorithm>
-
 #include "common/debug.h"
 
 namespace angle
@@ -27,15 +25,14 @@ BroadcastChannel::~BroadcastChannel()
 
 void BroadcastChannel::addReceiver(ChannelBinding *receiver)
 {
-    ASSERT(std::find(mReceivers.begin(), mReceivers.end(), receiver) == mReceivers.end());
-    mReceivers.push_back(receiver);
+    ASSERT(mReceivers.count(receiver) == 0);
+    mReceivers.insert(receiver);
 }
 
 void BroadcastChannel::removeReceiver(ChannelBinding *receiver)
 {
-    auto iter = std::find(mReceivers.begin(), mReceivers.end(), receiver);
-    ASSERT(iter != mReceivers.end());
-    mReceivers.erase(iter);
+    ASSERT(mReceivers.count(receiver) == 1);
+    mReceivers.erase(receiver);
 }
 
 void BroadcastChannel::signal() const
