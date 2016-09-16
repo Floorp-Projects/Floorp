@@ -40,7 +40,8 @@ private:
 #ifdef MOZ_RUST_MP4PARSE
   UniquePtr<MP4MetadataRust> mRust;
   mutable bool mPreferRust;
-  mutable bool mReportedTelemetry;
+  mutable bool mReportedAudioTrackTelemetry;
+  mutable bool mReportedVideoTrackTelemetry;
   bool ShouldPreferRust() const;
 #endif
 };

@@ -41,7 +41,7 @@ public:
   // This method should be called only when the string is really needed because
   // it can cause the duplication of the strings in case the loading of the XHR
   // is not completed yet.
-  void GetAsString(nsAString& aString) const;
+  MOZ_MUST_USE bool GetAsString(nsAString& aString) const;
 
   size_t SizeOfThis(MallocSizeOf aMallocSizeOf) const;
 
@@ -118,7 +118,7 @@ public:
     return !mLength;
   }
 
-  void GetAsString(nsAString& aString) const;
+  MOZ_MUST_USE bool GetAsString(nsAString& aString) const;
 
 private:
   XMLHttpRequestStringSnapshot(const XMLHttpRequestStringSnapshot&) = delete;
