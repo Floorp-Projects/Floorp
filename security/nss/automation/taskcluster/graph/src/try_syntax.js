@@ -2,8 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var intersect = require("intersect");
-var parse_args = require("minimist");
+import * as queue from "./queue";
+import intersect from "intersect";
+import parse_args from "minimist";
 
 function parseOptions(opts) {
   opts = parse_args(opts.split(/\s+/), {
@@ -13,7 +14,7 @@ function parseOptions(opts) {
   });
 
   // Parse build types (d=debug, o=opt).
-  var builds = intersect(opts.build.split(""), ["d", "o"]);
+  let builds = intersect(opts.build.split(""), ["d", "o"]);
 
   // If the given value is nonsense default to debug and opt builds.
   if (builds.length == 0) {
@@ -21,8 +22,8 @@ function parseOptions(opts) {
   }
 
   // Parse platforms.
-  var allPlatforms = ["linux", "linux64", "linux64-asan", "win64", "arm"];
-  var platforms = intersect(opts.platform.split(/\s*,\s*/), allPlatforms);
+  let allPlatforms = ["linux", "linux64", "linux64-asan", "win64", "arm"];
+  let platforms = intersect(opts.platform.split(/\s*,\s*/), allPlatforms);
 
   // If the given value is nonsense or "none" default to all platforms.
   if (platforms.length == 0 && opts.platform != "none") {
@@ -30,9 +31,9 @@ function parseOptions(opts) {
   }
 
   // Parse unit tests.
-  var allUnitTests = ["crmf", "chains", "cipher", "db", "ec", "fips", "gtest",
+  let allUnitTests = ["crmf", "chains", "cipher", "db", "ec", "fips", "gtest",
                       "lowhash", "merge", "sdr", "smime", "tools", "ssl"];
-  var unittests = intersect(opts.unittests.split(/\s*,\s*/), allUnitTests);
+  let unittests = intersect(opts.unittests.split(/\s*,\s*/), allUnitTests);
 
   // If the given value is "all" run all tests.
   // If it's nonsense then don't run any tests.
@@ -43,8 +44,8 @@ function parseOptions(opts) {
   }
 
   // Parse tools.
-  var allTools = ["clang-format", "scan-build"];
-  var tools = intersect(opts.tools.split(/\s*,\s*/), allTools);
+  let allTools = ["clang-format", "scan-build"];
+  let tools = intersect(opts.tools.split(/\s*,\s*/), allTools);
 
   // If the given value is "all" run all tools.
   // If it's nonsense then don't run any tools.
@@ -63,36 +64,20 @@ function parseOptions(opts) {
   };
 }
 
-function filterTasks(tasks, comment) {
-  // Check for try syntax in changeset comment.
-  var match = comment.match(/^\s*try:\s*(.*)\s*$/);
-  if (!match) {
-    return tasks;
-  }
-
-  var opts = parseOptions(match[1]);
-
-  return tasks.filter(function (task) {
-    var env = task.task.payload.env || {};
-    var th = task.task.extra.treeherder;
-    var machine = th.machine.platform;
-    var coll = th.collection || {};
-    var found;
-
+function filter(opts) {
+  return function (task) {
     // Filter tools. We can immediately return here as those
     // are not affected by platform or build type selectors.
-    if (machine == "nss-tools") {
-      return opts.tools.some(function (tool) {
-        var symbol = th.symbol.toLowerCase();
-        return symbol.startsWith(tool);
+    if (task.platform == "nss-tools") {
+      return opts.tools.some(tool => {
+        return task.symbol.toLowerCase().startsWith(tool);
       });
     }
 
     // Filter unit tests.
-    if (env.NSS_TESTS && env.TC_PARENT_TASK_ID) {
-      found = opts.unittests.some(function (test) {
-        var symbol = (th.groupSymbol || th.symbol).toLowerCase();
-        return symbol.startsWith(test);
+    if (task.tests) {
+      let found = opts.unittests.some(test => {
+        return (task.group || task.symbol).toLowerCase().startsWith(test);
       });
 
       if (!found) {
@@ -101,13 +86,15 @@ function filterTasks(tasks, comment) {
     }
 
     // Filter extra builds.
-    if (th.groupSymbol == "Builds" && !opts.extra) {
+    if (task.group == "Builds" && !opts.extra) {
       return false;
     }
 
+    let coll = name => name == (task.collection || "opt");
+
     // Filter by platform.
-    found = opts.platforms.some(function (platform) {
-      var aliases = {
+    let found = opts.platforms.some(platform => {
+      let aliases = {
         "linux": "linux32",
         "linux64-asan": "linux64",
         "win64": "windows2012-64",
@@ -115,15 +102,15 @@ function filterTasks(tasks, comment) {
       };
 
       // Check the platform name.
-      var keep = machine == (aliases[platform] || platform);
+      let keep = (task.platform == (aliases[platform] || platform));
 
       // Additional checks.
       if (platform == "linux64-asan") {
-        keep &= coll.asan;
+        keep &= coll("asan");
       } else if (platform == "arm") {
-        keep &= (coll["arm-opt"] || coll["arm-debug"]);
+        keep &= coll("arm-opt") || coll("arm-debug");
       } else {
-        keep &= (coll.opt || coll.debug);
+        keep &= coll("opt") || coll("debug");
       }
 
       return keep;
@@ -134,10 +121,20 @@ function filterTasks(tasks, comment) {
     }
 
     // Finally, filter by build type.
-    var isDebug = coll.debug || coll.asan || coll["arm-debug"];
-    return (isDebug && opts.builds.indexOf("d") > -1) ||
-           (!isDebug && opts.builds.indexOf("o") > -1);
-  });
+    let isDebug = coll("debug") || coll("asan") || coll("arm-debug");
+    return (isDebug && opts.builds.includes("d")) ||
+           (!isDebug && opts.builds.includes("o"));
+  }
 }
 
-module.exports.filterTasks = filterTasks;
+export function initFilter() {
+  let comment = process.env.TC_COMMENT || "";
+
+  // Check for try syntax in changeset comment.
+  let match = comment.match(/^\s*try:\s*(.*)\s*$/);
+
+  // Add try syntax filter.
+  if (match) {
+    queue.filter(filter(parseOptions(match[1])));
+  }
+}
