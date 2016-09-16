@@ -11,7 +11,12 @@ const gHttpTestRoot = "http://example.com/browser/dom/base/test/";
  * Enable local telemetry recording for the duration of the tests.
  */
 var gOldContentCanRecord = false;
+var gOldParentCanRecord = false;
 add_task(function* test_initialize() {
+  let Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
+  gOldParentCanRecord = Telemetry.canRecordExtended
+  Telemetry.canRecordExtended = true;
+
   // Because canRecordExtended is a per-process variable, we need to make sure
   // that all of the pages load in the same content process. Limit the number
   // of content processes to at most 1 (or 0 if e10s is off entirely).
@@ -75,6 +80,9 @@ add_task(function* () {
 });
 
 add_task(function* () {
+  let Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
+  Telemetry.canRecordExtended = gOldParentCanRecord;
+
   yield ContentTask.spawn(gBrowser.selectedBrowser, { oldCanRecord: gOldContentCanRecord }, function (arg) {
     Cu.import("resource://gre/modules/PromiseUtils.jsm");
     yield new Promise(resolve => {
