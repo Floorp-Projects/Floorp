@@ -7,7 +7,6 @@ Cu.import("resource://gre/modules/BookmarkJSONUtils.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
-Cu.import("resource://services-sync/bookmark_utils.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
@@ -495,28 +494,28 @@ add_task(function* test_bookmark_tag_but_no_uri() {
 
   yield PlacesSyncUtils.bookmarks.insert({
     kind: PlacesSyncUtils.bookmarks.KINDS.BOOKMARK,
-    guid: Utils.makeGUID(),
-    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    syncId: Utils.makeGUID(),
+    parentSyncId: "toolbar",
     url: "http://example.com",
     tags: ["foo"],
   });
   yield PlacesSyncUtils.bookmarks.insert({
     kind: PlacesSyncUtils.bookmarks.KINDS.BOOKMARK,
-    guid: Utils.makeGUID(),
-    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    syncId: Utils.makeGUID(),
+    parentSyncId: "toolbar",
     url: "http://example.org",
     tags: null,
   });
   yield PlacesSyncUtils.bookmarks.insert({
     kind: PlacesSyncUtils.bookmarks.KINDS.BOOKMARK,
-    guid: Utils.makeGUID(),
+    syncId: Utils.makeGUID(),
     url: "about:fake",
-    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    parentSyncId: "toolbar",
     tags: null,
   });
 
   let record = {
-    parentid:    PlacesUtils.bookmarks.toolbarGuid,
+    parentid:    "toolbar",
     id:          Utils.makeGUID(),
     description: "",
     tags:        ["foo"],

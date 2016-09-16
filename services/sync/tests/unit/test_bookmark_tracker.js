@@ -2,8 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://services-sync/bookmark_utils.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/engines.js");
@@ -348,7 +348,7 @@ add_task(function* test_onItemChanged_changeBookmarkURI() {
 
     _("Set a tracked annotation to make sure we only notify once");
     PlacesUtils.annotations.setItemAnnotation(
-      fx_id, BookmarkAnnos.DESCRIPTION_ANNO, "A test description", 0,
+      fx_id, PlacesSyncUtils.bookmarks.DESCRIPTION_ANNO, "A test description", 0,
       PlacesUtils.annotations.EXPIRE_NEVER);
 
     yield startTracking();
@@ -688,7 +688,7 @@ add_task(function* test_onItemAnnoChanged() {
 
     yield startTracking();
     PlacesUtils.annotations.setItemAnnotation(
-      b, BookmarkAnnos.DESCRIPTION_ANNO, "A test description", 0,
+      b, PlacesSyncUtils.bookmarks.DESCRIPTION_ANNO, "A test description", 0,
       PlacesUtils.annotations.EXPIRE_NEVER);
     // bookmark should be tracked, folder should not.
     yield verifyTrackedItems([bGUID]);
@@ -696,7 +696,7 @@ add_task(function* test_onItemAnnoChanged() {
     yield resetTracker();
 
     PlacesUtils.annotations.removeItemAnnotation(b,
-      BookmarkAnnos.DESCRIPTION_ANNO);
+      PlacesSyncUtils.bookmarks.DESCRIPTION_ANNO);
     yield verifyTrackedItems([bGUID]);
     do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
