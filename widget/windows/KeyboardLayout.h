@@ -699,7 +699,7 @@ public:
          const ModifierKeyState& aModKeyState);
 
   /**
-   * GetUniCharsAndModifiers() returns characters which is inputted by the
+   * GetUniCharsAndModifiers() returns characters which are inputted by
    * aVirtualKey with aModKeyState.  This method isn't stateful.
    * Note that if the combination causes text input, the result's Ctrl and
    * Alt key state are never active.
@@ -712,6 +712,16 @@ public:
       VirtualKey::ModifierKeyStateToShiftState(aModKeyState);
     return GetUniCharsAndModifiers(aVirtualKey, shiftState);
   }
+
+  /**
+   * GetNativeUniCharsAndModifiers() returns characters which are inputted by
+   * aVirtualKey with aModKeyState.  The method isn't stateful.
+   * Note that different from GetUniCharsAndModifiers(), this returns
+   * actual modifier state of Ctrl and Alt.
+   */
+  UniCharsAndModifiers GetNativeUniCharsAndModifiers(
+                         uint8_t aVirtualKey,
+                         const ModifierKeyState& aModKeyState) const;
 
   /**
    * OnLayoutChange() must be called before the first keydown message is
