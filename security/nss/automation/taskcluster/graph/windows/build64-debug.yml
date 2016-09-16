@@ -1,0 +1,55 @@
+---
+- task:
+    metadata:
+      name: "Windows 2012 64 (debug)"
+      description: "Windows 2012 64 (debug)"
+
+    payload:
+      env:
+        USE_64: 1
+
+    extra:
+      treeherder:
+        build:
+          platform: windows2012-64
+        machine:
+          platform: windows2012-64
+        collection:
+          debug: true
+
+  tests:
+    - chains
+    - cipher
+    - crmf
+    - db
+    - ec
+    - fips
+    - gtests
+    - lowhash
+    - merge
+    - sdr
+    - smime
+    - ssl
+    - tools
+
+- task:
+    metadata:
+      name: "Windows 2012 64 (debug, NSS_NO_PKCS11_BYPASS=1)"
+      description: "Windows 2012 64 (debug, NSS_NO_PKCS11_BYPASS=1)"
+
+    payload:
+      env:
+        NSS_NO_PKCS11_BYPASS: 1
+        USE_64: 1
+
+    extra:
+      treeherder:
+        build:
+          platform: windows2012-64
+        machine:
+          platform: windows2012-64
+        collection:
+          debug: true
+        groupSymbol: Builds
+        groupName: Various builds
+        symbol: noPkcs11Bypass

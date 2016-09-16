@@ -141,7 +141,7 @@ class TlsAgent : public PollTarget {
   void EnableCompression();
   void SetDowngradeCheckVersion(uint16_t version);
   void CheckSecretsDestroyed();
-  void ConfigNamedGroups(const SSLNamedGroup* groups, size_t num);
+  void ConfigNamedGroup(SSLNamedGroup group, bool en);
 
   const std::string& name() const { return name_; }
 
@@ -156,7 +156,7 @@ class TlsAgent : public PollTarget {
 
   const char* state_str() const { return state_str(state()); }
 
-  static const char* state_str(State state) { return states[state]; }
+  const char* state_str(State state) const { return states[state]; }
 
   PRFileDesc* ssl_fd() { return ssl_fd_; }
   DummyPrSocket* adapter() { return adapter_; }
@@ -213,7 +213,13 @@ class TlsAgent : public PollTarget {
  private:
   const static char* states[];
 
-  void SetState(State state);
+  void SetState(State state) {
+    if (state_ == state) return;
+
+    LOG("Changing state from " << state_str(state_) << " to "
+                               << state_str(state));
+    state_ = state;
+  }
 
   // Dummy auth certificate hook.
   static SECStatus AuthCertificateHook(void* arg, PRFileDesc* fd,
@@ -334,11 +340,6 @@ class TlsAgent : public PollTarget {
   SniCallbackFunction sni_callback_;
 };
 
-inline std::ostream& operator<<(std::ostream& stream,
-                                const TlsAgent::State& state) {
-  return stream << TlsAgent::state_str(state);
-}
-
 class TlsAgentTestBase : public ::testing::Test {
  public:
   static ::testing::internal::ParamGenerator<std::string> kTlsRolesAll;
@@ -354,17 +355,17 @@ class TlsAgentTestBase : public ::testing::Test {
   void SetUp();
   void TearDown();
 
+  void MakeRecord(uint8_t type, uint16_t version, const uint8_t* buf,
+                  size_t len, DataBuffer* out, uint64_t seq_num = 0);
   static void MakeRecord(Mode mode, uint8_t type, uint16_t version,
                          const uint8_t* buf, size_t len, DataBuffer* out,
                          uint64_t seq_num = 0);
-  void MakeRecord(uint8_t type, uint16_t version, const uint8_t* buf,
-                  size_t len, DataBuffer* out, uint64_t seq_num = 0) const;
   void MakeHandshakeMessage(uint8_t hs_type, const uint8_t* data, size_t hs_len,
-                            DataBuffer* out, uint64_t seq_num = 0) const;
+                            DataBuffer* out, uint64_t seq_num = 0);
   void MakeHandshakeMessageFragment(uint8_t hs_type, const uint8_t* data,
                                     size_t hs_len, DataBuffer* out,
                                     uint64_t seq_num, uint32_t fragment_offset,
-                                    uint32_t fragment_length) const;
+                                    uint32_t fragment_length);
   static void MakeTrivialHandshakeRecord(uint8_t hs_type, size_t hs_len,
                                          DataBuffer* out);
   static inline TlsAgent::Role ToRole(const std::string& str) {

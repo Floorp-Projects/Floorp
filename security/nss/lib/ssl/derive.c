@@ -790,7 +790,9 @@ SSL_CanBypass(CERTCertificate *cert, SECKEYPrivateKey *srvPrivkey,
                 if (requiredECCbits > signatureKeyStrength)
                     requiredECCbits = signatureKeyStrength;
 
-                ecGroup = ssl_GetECGroupWithStrength(NULL, requiredECCbits);
+                ecGroup =
+                    ssl_GetECGroupWithStrength(PR_UINT32_MAX,
+                                               requiredECCbits);
                 rv = ssl_NamedGroup2ECParams(NULL, ecGroup, &ecParams);
                 if (rv == SECFailure) {
                     break;

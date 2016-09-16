@@ -251,6 +251,3 @@ toolkit/webapps/**
 
 # Third party
 toolkit/modules/third_party/**
-
-#NSS
-security/nss/**

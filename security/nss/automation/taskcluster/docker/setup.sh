@@ -44,8 +44,8 @@ apt-get install -y --no-install-recommends ${apt_packages[@]}
 # 32-bit builds
 ln -s /usr/include/x86_64-linux-gnu/zconf.h /usr/include
 
-# Install clang-3.9 into /usr/local/.
-curl http://llvm.org/releases/3.9.0/clang+llvm-3.9.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz | tar xJv -C /usr/local --strip-components=1
+# Install clang-3.8 into /usr/local/.
+curl http://llvm.org/releases/3.8.0/clang+llvm-3.8.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz | tar xJv -C /usr/local --strip-components=1
 
 # Compiler options.
 update-alternatives --install /usr/bin/gcc gcc /usr/local/bin/clang 5

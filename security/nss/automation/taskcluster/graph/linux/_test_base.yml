@@ -1,0 +1,26 @@
+---
+reruns: 2
+
+task:
+  created: !from_now 0
+  deadline: !from_now 24
+  provisionerId: aws-provisioner-v1
+  workerType: hg-worker
+  schedulerId: task-graph-scheduler
+
+  metadata:
+    owner: !env TC_OWNER
+    source: !env TC_SOURCE
+
+  payload:
+    maxRunTime: 3600
+    image: automation/taskcluster/docker
+
+    command:
+      - "/bin/bash"
+      - "-c"
+      - "bin/checkout.sh && nss/automation/taskcluster/scripts/run_tests.sh"
+
+  extra:
+    treeherder:
+      jobKind: test

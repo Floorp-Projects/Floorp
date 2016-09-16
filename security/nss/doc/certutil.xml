@@ -381,15 +381,18 @@ of the attribute codes:
 		<command>T</command> - trusted CA for client authentication (ssl server only)
 	</para>
 	</listitem>
+	<listitem>
+	<para>
+		<command>u</command> - user
+	</para>
+	</listitem>
 	</itemizedlist>
 	<para>
 		The attribute codes for the categories are separated by commas, and the entire set of attributes enclosed by quotation marks. For example:
 	</para>
-<para><command>-t "TC,C,T"</command></para>
+<para><command>-t "TCu,Cu,Tu"</command></para>
 	<para>
-	Use the -L option to see a list of the current certificates and trust attributes in a certificate database. </para>
-	<para>
-	Note that the output of the -L option may include "u" flag, which means that there is a private key associated with the certificate. It is a dynamic flag and you cannot set it with certutil. </para></listitem>
+	Use the -L option to see a list of the current certificates and trust attributes in a certificate database. </para></listitem>
       </varlistentry>
 
       <varlistentry>
@@ -857,7 +860,7 @@ The interative prompts for key usage and whether any extensions are critical and
 	<para>
 		From there, new certificates can reference the self-signed certificate:
 	</para>
-<programlisting>$ certutil -S -s "CN=My Server Cert" -n my-server-cert -c "my-ca-cert" -t ",," -1 -5 -6 -8 -m 730</programlisting>
+<programlisting>$ certutil -S -s "CN=My Server Cert" -n my-server-cert -c "my-ca-cert" -t "u,u,u" -1 -5 -6 -8 -m 730</programlisting>
 
 	<para><command>Generating a Certificate from a Certificate Request</command></para>
 	<para>
@@ -1020,11 +1023,11 @@ certutil: Checking token "NSS Certificate DB" in slot "NSS User Private Key and 
 	<para>
 		For example:
 	</para>
-<programlisting>$ certutil -A -n "CN=My SSL Certificate" -t ",," -d sql:/home/my/sharednssdb -i /home/example-certs/cert.cer</programlisting>
+<programlisting>$ certutil -A -n "CN=My SSL Certificate" -t "u,u,u" -d sql:/home/my/sharednssdb -i /home/example-certs/cert.cer</programlisting>
 	<para>
 		A related command option, <option>-E</option>, is used specifically to add email certificates to the certificate database. The <option>-E</option> command has the same arguments as the <option>-A</option> command. The trust arguments for certificates have the format <emphasis>SSL,S/MIME,Code-signing</emphasis>, so the middle trust settings relate most to email certificates (though the others can be set). For example:
 	</para>
-<programlisting>$ certutil -E -n "CN=John Smith Email Cert" -t ",P," -d sql:/home/my/sharednssdb -i /home/example-certs/email.cer</programlisting>
+<programlisting>$ certutil -E -n "CN=John Smith Email Cert" -t ",Pu," -d sql:/home/my/sharednssdb -i /home/example-certs/email.cer</programlisting>
 
 	<para><command>Deleting Certificates to the Database</command></para>
 	<para>
@@ -1054,7 +1057,7 @@ certutil: Checking token "NSS Certificate DB" in slot "NSS User Private Key and 
 	<para>
 		For example:
 	</para>
-<programlisting>$ certutil -M -n "My CA Certificate" -d sql:/home/my/sharednssdb -t "CT,CT,CT"</programlisting>
+<programlisting>$ certutil -M -n "My CA Certificate" -d sql:/home/my/sharednssdb -t "CTu,CTu,CTu"</programlisting>
 
 	<para><command>Printing the Certificate Chain</command></para>
 	<para>

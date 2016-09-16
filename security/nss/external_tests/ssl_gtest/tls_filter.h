@@ -223,12 +223,10 @@ class TlsExtensionCapture : public TlsExtensionFilter {
  public:
   TlsExtensionCapture(uint16_t ext) : extension_(ext), data_() {}
 
-  const DataBuffer& extension() const { return data_; }
-
- protected:
   virtual PacketFilter::Action FilterExtension(uint16_t extension_type,
                                                const DataBuffer& input,
                                                DataBuffer* output);
+  const DataBuffer& extension() const { return data_; }
 
  private:
   const uint16_t extension_;
@@ -281,21 +279,6 @@ class TlsInspectorClientHelloVersionChanger : public TlsHandshakeFilter {
 
  private:
   TlsAgent* server_;
-};
-
-// This class selectively drops complete writes.  This relies on the fact that
-// writes in libssl are on record boundaries.
-class SelectiveDropFilter : public PacketFilter {
- public:
-  SelectiveDropFilter(uint32_t pattern) : pattern_(pattern), counter_(0) {}
-
- protected:
-  virtual PacketFilter::Action Filter(const DataBuffer& input,
-                                      DataBuffer* output) override;
-
- private:
-  const uint32_t pattern_;
-  uint8_t counter_;
 };
 
 }  // namespace nss_test

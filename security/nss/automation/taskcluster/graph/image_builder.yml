@@ -1,0 +1,49 @@
+---
+reruns: 2
+
+task:
+  created: !from_now 0
+  deadline: !from_now 24
+  provisionerId: aws-provisioner-v1
+  workerType: hg-worker
+  schedulerId: task-graph-scheduler
+
+  metadata:
+    name: Image Builder
+    description: Image Builder
+    owner: !env TC_OWNER
+    source: !env TC_SOURCE
+
+  payload:
+    maxRunTime: 3600
+    image: taskcluster/image_builder:0.1.5
+
+    artifacts:
+      public/image.tar:
+        type: file
+        path: /artifacts/image.tar
+        expires: !from_now 8760
+
+    command:
+      - "/bin/bash"
+      - "-c"
+      - "/home/worker/bin/build_image.sh"
+
+    env:
+      HEAD_REPOSITORY: !env NSS_HEAD_REPOSITORY
+      BASE_REPOSITORY: !env NSS_HEAD_REPOSITORY
+      HEAD_REV: !env NSS_HEAD_REVISION
+      HEAD_REF: !env NSS_HEAD_REVISION
+      PROJECT: !env TC_PROJECT
+
+    features:
+      dind: true
+
+  extra:
+    treeherder:
+      build:
+        platform: nss-decision
+      machine:
+        platform: nss-decision
+      jobKind: build
+      symbol: I

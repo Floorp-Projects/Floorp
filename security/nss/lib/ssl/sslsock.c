@@ -144,7 +144,6 @@ static const PRUint16 srtpCiphers[] = {
 #define FFGROUP(size, oid) \
     ssl_grp_ffdhe_##size, size, group_type_ff, SEC_OID_TLS_FFDHE_##oid
 
-/* update SSL_NAMED_GROUP_COUNT when changing the number of entries */
 const namedGroupDef ssl_named_groups[] = {
     { 0, ECGROUP(secp192r1, 192, SECP192R1), PR_FALSE },
     { 1, ECGROUP(secp160r2, 160, SECP160R2), PR_FALSE },
@@ -180,6 +179,7 @@ const namedGroupDef ssl_named_groups[] = {
 #undef ECGROUP
 #undef FFGROUP
 
+const unsigned int ssl_named_group_count = PR_ARRAY_SIZE(ssl_named_groups);
 /* Check that the supported groups bits will fit into ss->namedGroups. */
 PR_STATIC_ASSERT(PR_ARRAY_SIZE(ssl_named_groups) < (sizeof(PRUint32) * 8));
 
@@ -257,7 +257,6 @@ ssl_DupSocket(sslSocket *os)
 {
     sslSocket *ss;
     SECStatus rv;
-    unsigned int i;
 
     ss = ssl_NewSocket((PRBool)(!os->opt.noLocks), os->protocolVariant);
     if (!ss) {
@@ -316,6 +315,7 @@ ssl_DupSocket(sslSocket *os)
                 goto loser;
             PR_APPEND_LINK(&skp->link, &ss->ephemeralKeyPairs);
         }
+        ss->namedGroups = os->namedGroups;
 
         /*
          * XXX the preceding CERT_ and SECKEY_ functions can fail and return NULL.
@@ -336,9 +336,6 @@ ssl_DupSocket(sslSocket *os)
         ss->pkcs11PinArg = os->pkcs11PinArg;
         ss->nextProtoCallback = os->nextProtoCallback;
         ss->nextProtoArg = os->nextProtoArg;
-        for (i = 0; i < SSL_NAMED_GROUP_COUNT; ++i) {
-            ss->namedGroupPreferences[i] = os->namedGroupPreferences[i];
-        }
 
         /* Create security data */
         rv = ssl_CopySecurityInfo(ss, os);
@@ -801,6 +798,7 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRBool on)
             break;
 
         case SSL_ENABLE_NPN:
+            ss->opt.enableNPN = on;
             break;
 
         case SSL_ENABLE_ALPN:
@@ -1250,6 +1248,7 @@ SSL_OptionSetDefault(PRInt32 which, PRBool on)
             break;
 
         case SSL_ENABLE_NPN:
+            ssl_defaults.enableNPN = on;
             break;
 
         case SSL_ENABLE_ALPN:
@@ -1499,61 +1498,49 @@ NSS_SetFrancePolicy(void)
 }
 
 SECStatus
-SSL_NamedGroupConfig(PRFileDesc *fd, const SSLNamedGroup *groups,
-                     unsigned int numGroups)
+SSL_NamedGroupPrefSet(PRFileDesc *fd, SSLNamedGroup group, PRBool enable)
 {
-    unsigned int i, j;
-    sslSocket *ss = ssl_FindSocket(fd);
+    sslSocket *ss;
+    unsigned int i;
+
+    ss = ssl_FindSocket(fd);
     if (!ss) {
-        PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
         return SECFailure;
     }
 
-    if (!groups) {
-        PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        return SECFailure;
-    }
-    if (numGroups > SSL_NAMED_GROUP_COUNT) {
-        PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        return SECFailure;
-    }
-
-    for (i = 0; i < SSL_NAMED_GROUP_COUNT; ++i) {
-        ss->namedGroupPreferences[i] = NULL;
-    }
-
-    for (i = 0; i < numGroups; ++i) {
-        for (j = 0; j < SSL_NAMED_GROUP_COUNT; ++j) {
-            /* skip duplicate groups */
-            if (ss->namedGroupPreferences[j] &&
-                ss->namedGroupPreferences[j]->name == groups[i]) {
-                break;
+    for (i = 0; i < ssl_named_group_count; ++i) {
+        if (ssl_named_groups[i].name == group) {
+            PRUint32 bit = 1U << ssl_named_groups[i].index;
+            if (enable) {
+                ss->namedGroups |= bit;
+            } else {
+                ss->namedGroups &= ~bit;
             }
-            if (ssl_named_groups[j].name == groups[i]) {
-                ss->namedGroupPreferences[i] = &ssl_named_groups[j];
-                break;
-            }
+            return SECSuccess;
         }
     }
 
-    return SECSuccess;
+    SSL_DBG(("%d: SSL[%d]: unsupported group %d in SSL_NamedGroupPrefSet",
+             SSL_GETPID(), fd, group));
+    PORT_SetError(SEC_ERROR_INVALID_ARGS);
+    return SECFailure;
 }
 
 SECStatus
-SSL_DHEGroupPrefSet(PRFileDesc *fd, const SSLDHEGroupType *groups,
+SSL_DHEGroupPrefSet(PRFileDesc *fd,
+                    const SSLDHEGroupType *groups,
                     PRUint16 num_groups)
 {
     sslSocket *ss;
     const SSLDHEGroupType *list;
     unsigned int count;
-    int i, k;
-    const namedGroupDef *enabled[SSL_NAMED_GROUP_COUNT] = { 0 };
+    unsigned int i;
+    PRUint32 supportedGroups;
     static const SSLDHEGroupType default_dhe_groups[] = {
         ssl_ff_dhe_2048_group
     };
 
-    if ((num_groups && !groups) || (!num_groups && groups) ||
-        num_groups > SSL_NAMED_GROUP_COUNT) {
+    if ((num_groups && !groups) || (!num_groups && groups)) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
     }
@@ -1572,19 +1559,14 @@ SSL_DHEGroupPrefSet(PRFileDesc *fd, const SSLDHEGroupType *groups,
         count = PR_ARRAY_SIZE(default_dhe_groups);
     }
 
-    /* save enabled ec groups and clear ss->namedGroupPreferences */
-    k = 0;
-    for (i = 0; i < SSL_NAMED_GROUP_COUNT; ++i) {
-        if (ss->namedGroupPreferences[i] &&
-            ss->namedGroupPreferences[i]->type != group_type_ff) {
-            enabled[k++] = ss->namedGroupPreferences[i];
+    supportedGroups = ss->namedGroups;
+    for (i = 0; i < ssl_named_group_count; ++i) {
+        if (ssl_named_groups[i].type == group_type_ff) {
+            supportedGroups &= ~(1U << ssl_named_groups[i].index);
         }
-        ss->namedGroupPreferences[i] = NULL;
     }
-
     ss->ssl3.dhePreferredGroup = NULL;
     for (i = 0; i < count; ++i) {
-        PRBool duplicate = PR_FALSE;
         SSLNamedGroup name;
         const namedGroupDef *groupDef;
         switch (list[i]) {
@@ -1612,22 +1594,9 @@ SSL_DHEGroupPrefSet(PRFileDesc *fd, const SSLDHEGroupType *groups,
         if (!ss->ssl3.dhePreferredGroup) {
             ss->ssl3.dhePreferredGroup = groupDef;
         }
-        PORT_Assert(k < SSL_NAMED_GROUP_COUNT);
-        for (i = 0; i < k; ++i) {
-            /* skip duplicates */
-            if (enabled[i] == groupDef) {
-                duplicate = PR_TRUE;
-                break;
-            }
-        }
-        if (!duplicate) {
-            enabled[k++] = groupDef;
-        }
+        supportedGroups |= (1U << groupDef->index);
     }
-    for (i = 0; i < k; ++i) {
-        ss->namedGroupPreferences[i] = enabled[i];
-    }
-
+    ss->namedGroups = supportedGroups;
     return SECSuccess;
 }
 
@@ -1754,9 +1723,6 @@ ssl_GetDHEParams(const namedGroupDef *groupDef)
             return &ff_dhe_6144_params;
         case ssl_grp_ffdhe_8192:
             return &ff_dhe_8192_params;
-        case ssl_grp_ffdhe_custom:
-            PORT_Assert(gWeakDHParams);
-            return gWeakDHParams;
         default:
             PORT_Assert(0);
     }
@@ -1823,26 +1789,23 @@ ssl_ValidateDHENamedGroup(sslSocket *ss,
 {
     unsigned int i;
 
-    for (i = 0; i < SSL_NAMED_GROUP_COUNT; ++i) {
+    for (i = 0; i < ssl_named_group_count; ++i) {
         const ssl3DHParams *params;
-        if (!ss->namedGroupPreferences[i]) {
+        if (ssl_named_groups[i].type != group_type_ff) {
             continue;
         }
-        if (ss->namedGroupPreferences[i]->type != group_type_ff) {
-            continue;
-        }
-        if (!ssl_NamedGroupEnabled(ss, ss->namedGroupPreferences[i])) {
+        if (!ssl_NamedGroupEnabled(ss, &ssl_named_groups[i])) {
             continue;
         }
 
-        params = ssl_GetDHEParams(ss->namedGroupPreferences[i]);
+        params = ssl_GetDHEParams(&ssl_named_groups[i]);
         PORT_Assert(params);
         if (SECITEM_ItemsAreEqual(&params->prime, dh_p)) {
             if (!SECITEM_ItemsAreEqual(&params->base, dh_g)) {
                 return SECFailure;
             }
             if (groupDef)
-                *groupDef = ss->namedGroupPreferences[i];
+                *groupDef = &ssl_named_groups[i];
             if (dhParams)
                 *dhParams = params;
             return SECSuccess;
@@ -1855,7 +1818,9 @@ ssl_ValidateDHENamedGroup(sslSocket *ss,
 /* Ensure DH parameters have been selected.  This just picks the first enabled
  * FFDHE group in ssl_named_groups, or the weak one if it was enabled. */
 SECStatus
-ssl_SelectDHEGroup(sslSocket *ss, const namedGroupDef **groupDef)
+ssl_SelectDHEParams(sslSocket *ss,
+                    const namedGroupDef **groupDef,
+                    const ssl3DHParams **params)
 {
     unsigned int i;
     static const namedGroupDef weak_group_def = {
@@ -1868,24 +1833,28 @@ ssl_SelectDHEGroup(sslSocket *ss, const namedGroupDef **groupDef)
     if (ss->ssl3.dheWeakGroupEnabled &&
         ss->version < SSL_LIBRARY_VERSION_TLS_1_3 &&
         !ss->ssl3.hs.peerSupportsFfdheGroups) {
+        PORT_Assert(gWeakDHParams);
         *groupDef = &weak_group_def;
+        *params = gWeakDHParams;
         return SECSuccess;
     }
     if (ss->ssl3.dhePreferredGroup &&
         ssl_NamedGroupEnabled(ss, ss->ssl3.dhePreferredGroup)) {
         *groupDef = ss->ssl3.dhePreferredGroup;
+        *params = ssl_GetDHEParams(ss->ssl3.dhePreferredGroup);
         return SECSuccess;
     }
-    for (i = 0; i < SSL_NAMED_GROUP_COUNT; ++i) {
-        if (ss->namedGroupPreferences[i] &&
-            ss->namedGroupPreferences[i]->type == group_type_ff &&
-            ssl_NamedGroupEnabled(ss, ss->namedGroupPreferences[i])) {
-            *groupDef = ss->namedGroupPreferences[i];
+    for (i = 0; i < ssl_named_group_count; ++i) {
+        if (ssl_named_groups[i].type == group_type_ff &&
+            ssl_NamedGroupEnabled(ss, &ssl_named_groups[i])) {
+            *groupDef = &ssl_named_groups[i];
+            *params = ssl_GetDHEParams(&ssl_named_groups[i]);
             return SECSuccess;
         }
     }
 
     *groupDef = NULL;
+    *params = NULL;
     PORT_SetError(SSL_ERROR_NO_CYPHER_OVERLAP);
     return SECFailure;
 }
@@ -3601,7 +3570,7 @@ ssl_LookupNamedGroup(SSLNamedGroup group)
 {
     unsigned int i;
 
-    for (i = 0; i < SSL_NAMED_GROUP_COUNT; ++i) {
+    for (i = 0; i < ssl_named_group_count; ++i) {
         if (ssl_named_groups[i].name == group) {
             return &ssl_named_groups[i];
         }
@@ -3614,7 +3583,6 @@ ssl_NamedGroupEnabled(const sslSocket *ss, const namedGroupDef *groupDef)
 {
     PRUint32 policy;
     SECStatus rv;
-    unsigned int i;
 
     PORT_Assert(groupDef);
 
@@ -3622,13 +3590,7 @@ ssl_NamedGroupEnabled(const sslSocket *ss, const namedGroupDef *groupDef)
     if (rv == SECSuccess && !(policy & NSS_USE_ALG_IN_SSL_KX)) {
         return PR_FALSE;
     }
-    for (i = 0; i < SSL_NAMED_GROUP_COUNT; ++i) {
-        if (ss->namedGroupPreferences[i] &&
-            ss->namedGroupPreferences[i] == groupDef) {
-            return PR_TRUE;
-        }
-    }
-    return PR_FALSE;
+    return (ss->namedGroups & (1U << groupDef->index)) != 0;
 }
 
 /* Returns a reference counted object that contains a key pair.
@@ -3759,7 +3721,6 @@ ssl_NewSocket(PRBool makeLocks, SSLProtocolVariant protocolVariant)
 {
     SECStatus rv;
     sslSocket *ss;
-    int i;
 
     ssl_SetDefaultsFromEnvironment();
 
@@ -3804,9 +3765,7 @@ ssl_NewSocket(PRBool makeLocks, SSLProtocolVariant protocolVariant)
 
     ssl_ChooseOps(ss);
     ssl3_InitSocketPolicy(ss);
-    for (i = 0; i < SSL_NAMED_GROUP_COUNT; ++i) {
-        ss->namedGroupPreferences[i] = &ssl_named_groups[i];
-    }
+    ss->namedGroups = PR_UINT32_MAX; /* All groups enabled to start. */
     PR_INIT_CLIST(&ss->ssl3.hs.lastMessageFlight);
     PR_INIT_CLIST(&ss->ssl3.hs.remoteKeyShares);
     PR_INIT_CLIST(&ss->ssl3.hs.cipherSpecs);

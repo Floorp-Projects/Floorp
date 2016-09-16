@@ -2,9 +2,9 @@
 
 set -v -e -x
 
-source $(dirname $0)/tools.sh
-
 if [ $(id -u) = 0 ]; then
+    source $(dirname $0)/tools.sh
+
     # Set compiler.
     switch_compilers
 
@@ -16,7 +16,10 @@ if [ $(id -u) = 0 ]; then
 fi
 
 # Fetch artifact if needed.
-fetch_dist
+if [ ! -d "dist" ]; then
+    curl --retry 3 -Lo dist.tar.bz2 https://queue.taskcluster.net/v1/task/$TC_PARENT_TASK_ID/artifacts/public/dist.tar.bz2
+    tar xvjf dist.tar.bz2
+fi
 
 # Run tests.
 cd nss/tests && ./all.sh

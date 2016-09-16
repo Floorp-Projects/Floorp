@@ -208,7 +208,7 @@ SSL_ConfigServerCert;
 ;+};
 ;+NSS_3.27 {    # NSS 3.27 release
 ;+    global:
-SSL_NamedGroupConfig;
+SSL_NamedGroupPrefSet;
 ;+    local:
 ;+*;
 ;+};
