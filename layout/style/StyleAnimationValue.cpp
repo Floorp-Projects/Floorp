@@ -34,6 +34,7 @@
 #include "gfx2DGlue.h"
 
 using namespace mozilla;
+using namespace mozilla::css;
 using namespace mozilla::gfx;
 
 // HELPER METHODS
@@ -487,31 +488,53 @@ CalcPositionCoordSquareDistance(const nsCSSValue& aPos1,
 // CLASS METHODS
 // -------------
 
+static RGBAColorData
+ExtractColor(const nsCSSValue& aValue)
+{
+  MOZ_ASSERT(aValue.IsNumericColorUnit(), "The unit should be color");
+  // PercentageRGBColor and PercentageRGBAColor component value might be
+  // greater than 1.0 in case when the color value is accumulated, so we
+  // can't use nsCSSValue::GetColorValue() here because that function
+  // clamps its values.
+  if (aValue.GetUnit() == eCSSUnit_PercentageRGBColor ||
+      aValue.GetUnit() == eCSSUnit_PercentageRGBAColor) {
+    nsCSSValueFloatColor* floatColor = aValue.GetFloatColorValue();
+    return {
+      floatColor->Comp1(),
+      floatColor->Comp2(),
+      floatColor->Comp3(),
+      floatColor->Alpha()
+    };
+  }
+  return RGBAColorData(aValue.GetColorValue());
+}
+
+static RGBAColorData
+ExtractColor(const StyleAnimationValue& aValue)
+{
+  MOZ_ASSERT(aValue.GetUnit() == StyleAnimationValue::eUnit_Color);
+  nsCSSValue* value = aValue.GetCSSValueValue();
+  MOZ_ASSERT(value, "CSS value must be valid");
+  return ExtractColor(*value);
+}
+
 double
-StyleAnimationValue::ComputeColorDistance(nscolor aStartColor,
-                                          nscolor aEndColor)
+StyleAnimationValue::ComputeColorDistance(const RGBAColorData& aStartColor,
+                                          const RGBAColorData& aEndColor)
 {
   // http://www.w3.org/TR/smil-animation/#animateColorElement says
   // that we should use Euclidean RGB cube distance.  However, we
   // have to extend that to RGBA.  For now, we'll just use the
   // Euclidean distance in the (part of the) 4-cube of premultiplied
   // colors.
-
-  // Get a color component on a 0-1 scale, which is much easier to
-  // deal with when working with alpha.
-#define GET_COMPONENT(component_, color_) \
-  (NS_GET_##component_(color_) * (1.0 / 255.0))
-
-  double startA = GET_COMPONENT(A, aStartColor);
-  double startR = GET_COMPONENT(R, aStartColor) * startA;
-  double startG = GET_COMPONENT(G, aStartColor) * startA;
-  double startB = GET_COMPONENT(B, aStartColor) * startA;
-  double endA = GET_COMPONENT(A, aEndColor);
-  double endR = GET_COMPONENT(R, aEndColor) * endA;
-  double endG = GET_COMPONENT(G, aEndColor) * endA;
-  double endB = GET_COMPONENT(B, aEndColor) * endA;
-
-#undef GET_COMPONENT
+  double startA = aStartColor.mA;
+  double startR = aStartColor.mR * startA;
+  double startG = aStartColor.mG * startA;
+  double startB = aStartColor.mB * startA;
+  double endA = aEndColor.mA;
+  double endR = aEndColor.mR * endA;
+  double endG = aEndColor.mG * endA;
+  double endB = aEndColor.mB * endA;
 
   double diffA = startA - endA;
   double diffR = startR - endR;
@@ -591,9 +614,8 @@ StyleAnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
       return true;
     }
     case eUnit_Color: {
-      nscolor startColor = aStartValue.GetCSSValueValue()->GetColorValue();
-      nscolor endColor = aEndValue.GetCSSValueValue()->GetColorValue();
-      aDistance = ComputeColorDistance(startColor, endColor);
+      aDistance = ComputeColorDistance(ExtractColor(aStartValue),
+                                       ExtractColor(aEndValue));
       return true;
     }
     case eUnit_Calc: {
@@ -850,8 +872,7 @@ StyleAnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
 #endif
 
         if (color1.GetUnit() != eCSSUnit_Null) {
-          double colorDistance =
-            StyleAnimationValue::ComputeColorDistance(color1.GetColorValue(),
+          double colorDistance = ComputeColorDistance(color1.GetColorValue(),
                                                       color2.GetColorValue());
           squareDistance += colorDistance * colorDistance;
         }
@@ -1146,119 +1167,59 @@ AddCSSValuePercentNumber(const uint32_t aValueRestrictions,
                         eCSSUnit_Number);
 }
 
-// Returns Tuple(Red, Green, Blue, Alpha).
-// Red, Green, and Blue are scaled to the [0, 255] range, and Alpha is scaled
-// to the [0, 1] range (though values are allowed to fall outside of these
-// ranges).
-static Tuple<double, double, double, double>
-GetPremultipliedColorComponents(const nsCSSValue& aValue)
-{
-  // PercentageRGBColor and PercentageRGBAColor component value might be
-  // greater than 1.0 in case when the color value is accumulated, so we
-  // can't use nsCSSValue::GetColorValue() here because that function
-  // clamps its values.
-  if (aValue.GetUnit() == eCSSUnit_PercentageRGBColor ||
-      aValue.GetUnit() == eCSSUnit_PercentageRGBAColor) {
-    nsCSSValueFloatColor* floatColor = aValue.GetFloatColorValue();
-    double alpha = floatColor->Alpha();
-    return MakeTuple(floatColor->Comp1() * 255.0 * alpha,
-                     floatColor->Comp2() * 255.0 * alpha,
-                     floatColor->Comp3() * 255.0 * alpha,
-                     alpha);
-  }
-
-  nscolor color = aValue.GetColorValue();
-  double alpha = NS_GET_A(color) * (1.0 / 255.0);
-  return MakeTuple(NS_GET_R(color) * alpha,
-                   NS_GET_G(color) * alpha,
-                   NS_GET_B(color) * alpha,
-                   alpha);
-}
-
 enum class ColorAdditionType {
   Clamped, // Clamp each color channel after adding.
   Unclamped // Do not clamp color channels after adding.
 };
 
-// |aAdditionType| should be Clamped in case of interpolation or SMIL
-// animation (e.g. 'by' attribute). For now, Unclamped is only for
-// accumulation.
-static void
-AddWeightedColors(double aCoeff1, const nsCSSValue& aValue1,
-                  double aCoeff2, const nsCSSValue& aValue2,
-                  ColorAdditionType aAdditionType,
-                  nsCSSValue& aResult)
+// Unclamped AddWeightedColors.
+static RGBAColorData
+AddWeightedColors(double aCoeff1, const RGBAColorData& aValue1,
+                  double aCoeff2, const RGBAColorData& aValue2)
 {
-  MOZ_ASSERT(aValue1.IsNumericColorUnit() && aValue2.IsNumericColorUnit(),
-             "The unit should be color");
-  // FIXME (spec): The CSS transitions spec doesn't say whether
-  // colors are premultiplied, but things work better when they are,
-  // so use premultiplication.  Spec issue is still open per
-  // http://lists.w3.org/Archives/Public/www-style/2009Jul/0050.html
-
-  // To save some math, scale the alpha down to a 0-1 scale, but
-  // leave the color components on a 0-255 scale.
-
-  double R1, G1, B1, A1;
-  Tie(R1, G1, B1, A1) = GetPremultipliedColorComponents(aValue1);
-  double R2, G2, B2, A2;
-  Tie(R2, G2, B2, A2) = GetPremultipliedColorComponents(aValue2);
-  double Aresf = (A1 * aCoeff1 + A2 * aCoeff2);
-  if (Aresf <= 0.0) {
-    aResult.SetColorValue(NS_RGBA(0, 0, 0, 0));
-    return;
+  float factor1 = aValue1.mA * aCoeff1;
+  float factor2 = aValue2.mA * aCoeff2;
+  float resultA = factor1 + factor2;
+  if (resultA <= 0.0) {
+    return {0, 0, 0, 0};
   }
 
-  if (Aresf > 1.0) {
-    Aresf = 1.0;
+  if (resultA > 1.0) {
+    resultA = 1.0;
   }
 
-  double factor = 1.0 / Aresf;
-  double Rres = (R1 * aCoeff1 + R2 * aCoeff2) * factor;
-  double Gres = (G1 * aCoeff1 + G2 * aCoeff2) * factor;
-  double Bres = (B1 * aCoeff1 + B2 * aCoeff2) * factor;
-
-  if (aAdditionType == ColorAdditionType::Clamped) {
-    aResult.SetColorValue(
-      NS_RGBA(ClampColor(Rres), ClampColor(Gres), ClampColor(Bres),
-              NSToIntRound(Aresf * 255.0)));
-    return;
-  }
-
-  Rres = Rres * (1.0 / 255.0);
-  Gres = Gres * (1.0 / 255.0);
-  Bres = Bres * (1.0 / 255.0);
-
-  aResult.SetFloatColorValue(Rres, Gres, Bres, Aresf,
-                             eCSSUnit_PercentageRGBAColor);
+  float resultFactor = 1.0f / resultA;
+  return RGBAColorData(
+    (aValue1.mR * factor1 + aValue2.mR * factor2) * resultFactor,
+    (aValue1.mG * factor1 + aValue2.mG * factor2) * resultFactor,
+    (aValue1.mB * factor1 + aValue2.mB * factor2) * resultFactor,
+    resultA);
 }
 
-// Multiplies |aValue| color by |aDilutionRation| with premultiplication.
-// The result is stored in |aResult|.
-// (The logic here should pretty closely match AddWeightedColors()' logic.)
-static void
-DiluteColor(const nsCSSValue& aValue, double aDilutionRatio,
-            nsCSSValue& aResult)
+// Multiplies |aValue| color by |aDilutionRation|.
+static nscolor
+DiluteColor(const RGBAColorData& aValue, double aDilutionRatio)
 {
-  MOZ_ASSERT(aValue.IsNumericColorUnit(), "The unit should be color");
   MOZ_ASSERT(aDilutionRatio >= 0.0 && aDilutionRatio <= 1.0,
              "Dilution ratio should be in [0, 1]");
+  float resultA = aValue.mA * aDilutionRatio;
+  return resultA <= 0.0 ? NS_RGBA(0, 0, 0, 0)
+                        : aValue.WithAlpha(resultA).ToColor();
+}
 
-  // Premultiplication
-  double R, G, B, A;
-  Tie(R, G, B, A) = GetPremultipliedColorComponents(aValue);
-  double Aresf = A * aDilutionRatio;
-  if (Aresf <= 0.0) {
-    aResult.SetColorValue(NS_RGBA(0, 0, 0, 0));
-    return;
-  }
-
-  double factor = 1.0 / Aresf;
-  aResult.SetColorValue(
-    NS_RGBA(ClampColor(R * aDilutionRatio * factor),
-            ClampColor(G * aDilutionRatio * factor),
-            ClampColor(B * aDilutionRatio * factor),
-            NSToIntRound(Aresf * 255.0)));
+// Clamped AddWeightedColors.
+static nscolor
+AddWeightedColorsAndClamp(double aCoeff1, const RGBAColorData& aValue1,
+                          double aCoeff2, const RGBAColorData& aValue2)
+{
+  // We are using AddWeighted() with a zero aCoeff2 for colors to
+  // pretend AddWeighted() against transparent color, i.e. rgba(0, 0, 0, 0).
+  // But unpremultiplication in AddWeightedColors() does not work well
+  // for such cases, so we use another function named DiluteColor() which
+  // has a similar logic to AddWeightedColors().
+  return aCoeff2 == 0.0
+    ? DiluteColor(aValue1, aCoeff1)
+    : AddWeightedColors(aCoeff1, aValue1, aCoeff2, aValue2).ToColor();
 }
 
 void
@@ -1298,12 +1259,13 @@ AddWeightedShadowItems(double aCoeff1, const nsCSSValue &aValue1,
                      (i == 2) ? CSS_PROPERTY_VALUE_NONNEGATIVE : 0);
   }
 
-  const nsCSSValue& color1 = array1->Item(4);
-  const nsCSSValue& color2 = array2->Item(4);
+  const nsCSSValue& colorValue1 = array1->Item(4);
+  const nsCSSValue& colorValue2 = array2->Item(4);
   const nsCSSValue& inset1 = array1->Item(5);
   const nsCSSValue& inset2 = array2->Item(5);
-  if ((color1.GetUnit() != color2.GetUnit() &&
-       (!color1.IsNumericColorUnit() || !color2.IsNumericColorUnit())) ||
+  if ((colorValue1.GetUnit() != colorValue2.GetUnit() &&
+       (!colorValue1.IsNumericColorUnit() ||
+        !colorValue2.IsNumericColorUnit())) ||
       inset1.GetUnit() != inset2.GetUnit()) {
     // We don't know how to animate between color and no-color, or
     // between inset and not-inset.
@@ -1312,13 +1274,15 @@ AddWeightedShadowItems(double aCoeff1, const nsCSSValue &aValue1,
     return nullptr;
   }
 
-  if (color1.GetUnit() != eCSSUnit_Null) {
-    if (aCoeff2 == 0.0 && aCoeff1 != 1.0) {
-      DiluteColor(color1, aCoeff1, resultArray->Item(4));
+  if (colorValue1.GetUnit() != eCSSUnit_Null) {
+    RGBAColorData color1 = ExtractColor(colorValue1);
+    RGBAColorData color2 = ExtractColor(colorValue2);
+    if (aColorAdditionType == ColorAdditionType::Clamped) {
+      resultArray->Item(4).SetColorValue(
+        AddWeightedColorsAndClamp(aCoeff1, color1, aCoeff2, color2));
     } else {
-      AddWeightedColors(aCoeff1, color1, aCoeff2, color2,
-                        aColorAdditionType,
-                        resultArray->Item(4));
+      resultArray->Item(4).SetRGBAColorValue(
+        AddWeightedColors(aCoeff1, color1, aCoeff2, color2));
     }
   }
 
@@ -2551,23 +2515,11 @@ StyleAnimationValue::AddWeighted(nsCSSPropertyID aProperty,
       return true;
     }
     case eUnit_Color: {
-      const nsCSSValue* value1 = aValue1.GetCSSValueValue();
-      const nsCSSValue* value2 = aValue2.GetCSSValueValue();
-      MOZ_ASSERT(value1 && value2, "Both of CSS value should be valid");
+      RGBAColorData color1 = ExtractColor(aValue1);
+      RGBAColorData color2 = ExtractColor(aValue2);
       auto resultColor = MakeUnique<nsCSSValue>();
-
-      // We are using AddWeighted() with a zero aCoeff2 for colors to
-      // pretend AddWeighted() against transparent color, i.e. rgba(0, 0, 0, 0).
-      // But unpremultiplication in AddWeightedColors() does not work well
-      // for such cases, so we use another function named DiluteColor() which
-      // has a similar logic to AddWeightedColors().
-      if (aCoeff2 == 0.0) {
-        DiluteColor(*value1, aCoeff1, *resultColor);
-      } else {
-        AddWeightedColors(aCoeff1, *value1, aCoeff2, *value2,
-                          ColorAdditionType::Clamped,
-                          *resultColor);
-      }
+      resultColor->SetColorValue(
+        AddWeightedColorsAndClamp(aCoeff1, color1, aCoeff2, color2));
       aResultValue.SetAndAdoptCSSValueValue(resultColor.release(), eUnit_Color);
       return true;
     }
@@ -2925,14 +2877,11 @@ StyleAnimationValue::Accumulate(nsCSSPropertyID aProperty,
       return true;
     }
     case eUnit_Color: {
+      RGBAColorData color1 = ExtractColor(aDest);
+      RGBAColorData color2 = ExtractColor(aValueToAccumulate);
       auto resultColor = MakeUnique<nsCSSValue>();
-      AddWeightedColors(1.0,
-                        *aDest.GetCSSValueValue(),
-                        aCount,
-                        *aValueToAccumulate.GetCSSValueValue(),
-                        ColorAdditionType::Unclamped,
-                        *resultColor);
-
+      resultColor->SetRGBAColorValue(
+        AddWeightedColors(1.0, color1, aCount, color2));
       aDest.SetAndAdoptCSSValueValue(resultColor.release(), eUnit_Color);
       return true;
     }
