@@ -322,7 +322,6 @@ AudioStream::Init(uint32_t aNumChannels, uint32_t aRate,
                   const dom::AudioChannel aAudioChannel)
 {
   auto startTime = TimeStamp::Now();
-  auto isFirst = CubebUtils::GetFirstStream();
 
   LOG("%s channels: %d, rate: %d", __FUNCTION__, aNumChannels, aRate);
   mChannels = aNumChannels;
@@ -348,23 +347,26 @@ AudioStream::Init(uint32_t aNumChannels, uint32_t aRate,
   params.format = ToCubebFormat<AUDIO_OUTPUT_FORMAT>::value;
   mAudioClock.Init(aRate);
 
-  return OpenCubeb(params, startTime, isFirst);
-}
-
-nsresult
-AudioStream::OpenCubeb(cubeb_stream_params& aParams,
-                       TimeStamp aStartTime, bool aIsFirst)
-{
   cubeb* cubebContext = CubebUtils::GetCubebContext();
   if (!cubebContext) {
     NS_WARNING("Can't get cubeb context!");
+    CubebUtils::ReportCubebStreamInitFailure(true);
     return NS_ERROR_FAILURE;
   }
+
+  return OpenCubeb(cubebContext, params, startTime, CubebUtils::GetFirstStream());
+}
+
+nsresult
+AudioStream::OpenCubeb(cubeb* aContext, cubeb_stream_params& aParams,
+                       TimeStamp aStartTime, bool aIsFirst)
+{
+  MOZ_ASSERT(aContext);
 
   cubeb_stream* stream = nullptr;
   /* Convert from milliseconds to frames. */
   uint32_t latency_frames = CubebUtils::GetCubebLatency() * aParams.rate / 1000;
-  if (cubeb_stream_init(cubebContext, &stream, "AudioStream",
+  if (cubeb_stream_init(aContext, &stream, "AudioStream",
                         nullptr, nullptr, nullptr, &aParams,
                         latency_frames,
                         DataCallback_S, StateCallback_S, this) == CUBEB_OK) {

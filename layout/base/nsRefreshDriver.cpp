@@ -82,6 +82,16 @@ static mozilla::LazyLogModule sRefreshDriverLog("nsRefreshDriver");
 // after 10 minutes, stop firing off inactive timers
 #define DEFAULT_INACTIVE_TIMER_DISABLE_SECONDS 600
 
+// The number of seconds spent skipping frames because we are waiting for the compositor
+// before logging.
+#ifdef MOZ_VALGRIND
+#define REFRESH_WAIT_WARNING 10
+#elif defined(DEBUG) || defined(MOZ_ASAN)
+#define REFRESH_WAIT_WARNING 5
+#else
+#define REFRESH_WAIT_WARNING 1
+#endif
+
 namespace {
   // `true` if we are currently in jank-critical mode.
   //
@@ -1010,7 +1020,7 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
     mWaitingForTransaction(false),
     mSkippedPaints(false),
     mResizeSuppressed(false),
-    mWarningThreshold(1)
+    mWarningThreshold(REFRESH_WAIT_WARNING)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mPresContext,
@@ -1061,7 +1071,7 @@ nsRefreshDriver::AdvanceTimeAndRefresh(int64_t aMilliseconds)
       // Disable any refresh driver throttling when entering test mode
       mWaitingForTransaction = false;
       mSkippedPaints = false;
-      mWarningThreshold = 1;
+      mWarningThreshold = REFRESH_WAIT_WARNING;
     }
   }
 
@@ -2062,14 +2072,14 @@ nsRefreshDriver::IsWaitingForPaint(mozilla::TimeStamp aTime)
     return false;
   }
 
-  if (aTime > (mMostRecentTick + TimeDuration::FromMilliseconds(mWarningThreshold * 1000))) {
-    gfxCriticalNote << "Refresh driver waiting for the compositor for "
-                    << (aTime - mMostRecentTick).ToSeconds()
-                    << " seconds.";
-    mWarningThreshold *= 2;
-  }
-
   if (mWaitingForTransaction) {
+    if (mSkippedPaints && aTime > (mMostRecentTick + TimeDuration::FromMilliseconds(mWarningThreshold * 1000))) {
+      gfxCriticalNote << "Refresh driver waiting for the compositor for "
+                      << (aTime - mMostRecentTick).ToSeconds()
+                      << " seconds.";
+      mWarningThreshold *= 2;
+    }
+
     mSkippedPaints = true;
     return true;
   }

@@ -2425,9 +2425,10 @@ XMLHttpRequestWorker::GetResponseText(nsAString& aResponseText, ErrorResult& aRv
     return;
   }
 
-  nsAutoString foo;
-  mStateData.mResponseText.GetAsString(foo);
-  aResponseText.Assign(foo.BeginReading(), foo.Length());
+  if (!mStateData.mResponseText.GetAsString(aResponseText)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
 }
 
 void

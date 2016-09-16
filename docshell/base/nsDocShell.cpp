@@ -794,6 +794,7 @@ nsDocShell::nsDocShell()
   , mDeviceSizeIsPageSize(false)
   , mWindowDraggingAllowed(false)
   , mInFrameSwap(false)
+  , mInheritPrivateBrowsingId(true)
   , mCanExecuteScripts(false)
   , mFiredUnloadEvent(false)
   , mEODForCurrentDocument(false)
@@ -2488,6 +2489,20 @@ nsDocShell::SetAllowContentRetargetingOnChildren(
 }
 
 NS_IMETHODIMP
+nsDocShell::GetInheritPrivateBrowsingId(bool* aInheritPrivateBrowsingId)
+{
+  *aInheritPrivateBrowsingId = mPrivateBrowsingId;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetInheritPrivateBrowsingId(bool aInheritPrivateBrowsingId)
+{
+  mInheritPrivateBrowsingId = aInheritPrivateBrowsingId;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocShell::GetFullscreenAllowed(bool* aFullscreenAllowed)
 {
   NS_ENSURE_ARG_POINTER(aFullscreenAllowed);
@@ -3319,6 +3334,9 @@ nsresult
 nsDocShell::SetDocLoaderParent(nsDocLoader* aParent)
 {
   bool wasFrame = IsFrame();
+#ifdef DEBUG
+  bool wasPrivate = UsePrivateBrowsing();
+#endif
 
   nsresult rv = nsDocLoader::SetDocLoaderParent(aParent);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -3373,8 +3391,10 @@ nsDocShell::SetDocLoaderParent(nsDocLoader* aParent)
       value = false;
     }
     SetAllowDNSPrefetch(mAllowDNSPrefetch && value);
-    value = parentAsDocShell->GetAffectPrivateSessionLifetime();
-    SetAffectPrivateSessionLifetime(value);
+    if (mInheritPrivateBrowsingId) {
+      value = parentAsDocShell->GetAffectPrivateSessionLifetime();
+      SetAffectPrivateSessionLifetime(value);
+    }
     uint32_t flags;
     if (NS_SUCCEEDED(parentAsDocShell->GetDefaultLoadFlags(&flags))) {
       SetDefaultLoadFlags(flags);
@@ -3386,7 +3406,7 @@ nsDocShell::SetDocLoaderParent(nsDocLoader* aParent)
   }
 
   nsCOMPtr<nsILoadContext> parentAsLoadContext(do_QueryInterface(parent));
-  if (parentAsLoadContext &&
+  if (parentAsLoadContext && mInheritPrivateBrowsingId &&
       NS_SUCCEEDED(parentAsLoadContext->GetUsePrivateBrowsing(&value))) {
     SetPrivateBrowsing(value);
   }
@@ -3398,6 +3418,9 @@ nsDocShell::SetDocLoaderParent(nsDocLoader* aParent)
 
   // Our parent has changed. Recompute scriptability.
   RecomputeCanExecuteScripts();
+
+  NS_ASSERTION(mInheritPrivateBrowsingId || wasPrivate == UsePrivateBrowsing(),
+               "Private browsing state changed while inheritance was disabled");
 
   return NS_OK;
 }
