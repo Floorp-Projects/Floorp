@@ -9,7 +9,7 @@
 
 "use strict";
 
-const jsLexer = require("devtools/shared/css-lexer");
+const jsLexer = require("devtools/shared/css/lexer");
 const domutils = Components.classes["@mozilla.org/inspector/dom-utils;1"]
                            .getService(Components.interfaces.inIDOMUtils);
 
