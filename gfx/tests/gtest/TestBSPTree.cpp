@@ -11,19 +11,23 @@
 #include <deque>
 
 using mozilla::layers::BSPTree;
+using mozilla::layers::LayerPolygon;
 using mozilla::gfx::Point3D;
 using mozilla::gfx::Polygon3D;
 
-namespace
-{
+namespace {
 
 // Compares two points while allowing some numerical inaccuracy.
-static bool FuzzyCompare(const Point3D& lhs, const Point3D& rhs)
+static bool FuzzyEquals(const Point3D& lhs, const Point3D& rhs)
 {
   const float epsilon = 0.001f;
   const Point3D d = lhs - rhs;
 
-  return (abs(d.x) > epsilon || abs(d.y) > epsilon || abs(d.z) > epsilon);
+  // The absolute difference between the points should be less than
+  // epsilon for every component.
+  return std::abs(d.x) < epsilon &&
+         std::abs(d.y) < epsilon &&
+         std::abs(d.z) < epsilon;
 }
 
 // Compares the points of two polygons and ensures
@@ -44,7 +48,7 @@ static bool operator==(const Polygon3D& lhs, const Polygon3D& rhs)
   // This assumes that the polygons do not contain duplicate vertices.
   int start = -1;
   for (size_t i = 0; i < pointCount; ++i) {
-    if (FuzzyCompare(left[0], right[i])) {
+    if (FuzzyEquals(left[0], right[i])) {
       start = i;
       break;
     }
@@ -59,7 +63,7 @@ static bool operator==(const Polygon3D& lhs, const Polygon3D& rhs)
   for (size_t i = 0; i < pointCount; ++i) {
     size_t j = (start + i) % pointCount;
 
-    if (!FuzzyCompare(left[i], right[j])) {
+    if (!FuzzyEquals(left[i], right[j])) {
       return false;
     }
   }
@@ -70,16 +74,88 @@ static bool operator==(const Polygon3D& lhs, const Polygon3D& rhs)
 static void RunTest(std::deque<Polygon3D> aPolygons,
                     std::deque<Polygon3D> aExpected)
 {
-  const BSPTree tree(aPolygons);
-  const nsTArray<Polygon3D> order = tree.GetDrawOrder();
+  std::deque<LayerPolygon> layers;
+  for (Polygon3D& polygon : aPolygons) {
+    layers.push_back(LayerPolygon(std::move(polygon), nullptr));
+  }
 
-  EXPECT_EQ(order.Length(), aExpected.size());
+  const BSPTree tree(layers);
+  const nsTArray<LayerPolygon> order = tree.GetDrawOrder();
+
+  EXPECT_EQ(aExpected.size(), order.Length());
 
   for (size_t i = 0; i < order.Length(); ++i) {
-    EXPECT_TRUE(order[i] == aExpected[i]);
+    EXPECT_TRUE(aExpected[i] == *order[i].geometry);
   }
 }
 
+} // namespace
+
+TEST(BSPTree, TestSanity)
+{
+  EXPECT_TRUE(FuzzyEquals(Point3D(0.0f, 0.0f, 0.0f),
+                          Point3D(0.0f, 0.0f, 0.0f)));
+
+  EXPECT_TRUE(FuzzyEquals(Point3D(0.0f, 0.0f, 0.0f),
+                          Point3D(0.00001f, 0.00001f, 0.00001f)));
+
+  EXPECT_TRUE(FuzzyEquals(Point3D(0.00001f, 0.00001f, 0.00001f),
+                          Point3D(0.0f, 0.0f, 0.0f)));
+
+  EXPECT_FALSE(FuzzyEquals(Point3D(0.0f, 0.0f, 0.0f),
+                           Point3D(0.01f, 0.01f, 0.01f)));
+
+  EXPECT_FALSE(FuzzyEquals(Point3D(0.01f, 0.01f, 0.01f),
+                           Point3D(0.0f, 0.0f, 0.0f)));
+
+  Polygon3D p1 {
+    Point3D(0.0f, 0.0f, 1.0f),
+    Point3D(1.0f, 0.0f, 1.0f),
+    Point3D(1.0f, 1.0f, 1.0f),
+    Point3D(0.0f, 1.0f, 1.0f)
+  };
+
+  // Same points as above shifted forward by one position.
+  Polygon3D shifted {
+    Point3D(0.0f, 1.0f, 1.0f),
+    Point3D(0.0f, 0.0f, 1.0f),
+    Point3D(1.0f, 0.0f, 1.0f),
+    Point3D(1.0f, 1.0f, 1.0f)
+  };
+
+  Polygon3D p2 {
+    Point3D(0.00001f, 0.00001f, 1.00001f),
+    Point3D(1.00001f, 0.00001f, 1.00001f),
+    Point3D(1.00001f, 1.00001f, 1.00001f),
+    Point3D(0.00001f, 1.00001f, 1.00001f)
+  };
+
+  Polygon3D p3 {
+    Point3D(0.01f, 0.01f, 1.01f),
+    Point3D(1.01f, 0.01f, 1.01f),
+    Point3D(1.01f, 1.01f, 1.01f),
+    Point3D(0.01f, 1.01f, 1.01f)
+  };
+
+  // Trivial equals
+  EXPECT_TRUE(p1 == p1);
+  EXPECT_TRUE(p2 == p2);
+  EXPECT_TRUE(p3 == p3);
+  EXPECT_TRUE(shifted == shifted);
+
+  // Polygons with the same point order
+  EXPECT_TRUE(p1 == p2);
+  EXPECT_TRUE(p1 == shifted);
+
+  // Polygons containing different points
+  EXPECT_FALSE(p1 == p3);
+  EXPECT_FALSE(p2 == p3);
+  EXPECT_FALSE(shifted == p3);
+
+  ::RunTest({p1}, {p1});
+  ::RunTest({p2}, {p2});
+  ::RunTest({p1}, {p2});
+  ::RunTest({p1}, {shifted});
 }
 
 TEST(BSPTree, SameNode)
@@ -118,8 +194,8 @@ TEST(BSPTree, OneChild)
     Point3D(0.0f, 1.0f, 1.0f)
   };
 
-  ::RunTest(std::deque<Polygon3D> {p1, p2}, {p1, p2});
-  ::RunTest(std::deque<Polygon3D> {p2, p1}, {p1, p2});
+  ::RunTest({p1, p2}, {p1, p2});
+  ::RunTest({p2, p1}, {p1, p2});
 }
 
 TEST(BSPTree, SplitSimple1)
@@ -274,114 +350,6 @@ TEST(BSPTree, NoSplit2) {
   ::RunTest(polygons, expected);
 }
 
-TEST(BSPTree, SplitComplex1) {
-  const std::deque<Polygon3D> polygons {
-    Polygon3D {
-      Point3D(0.00000f, -5.00000f, -15.00000f),
-      Point3D(0.00000f, 5.00000f, -15.00000f),
-      Point3D(0.00000f, 5.00000f, -10.00000f),
-      Point3D(0.00000f, -5.00000f, -10.00000f)
-    },
-    Polygon3D {
-      Point3D(-5.00000f, -5.00000f, 0.00000f),
-      Point3D(-5.00000f, 5.00000f, 0.00000f),
-      Point3D(5.00000f, 5.00000f, 0.00000f),
-      Point3D(5.00000f, -5.00000f, 0.00000f)
-    }
-  };
-
-  const std::deque<Polygon3D> expected {
-    Polygon3D {
-      Point3D(0.00000f, 5.00000f, 0.00000f),
-      Point3D(5.00000f, 5.00000f, 0.00000f),
-      Point3D(5.00000f, -5.00000f, 0.00000f),
-      Point3D(0.00000f, -5.00000f, 0.00000f)
-    },
-    Polygon3D {
-      Point3D(0.00000f, -5.00000f, -15.00000f),
-      Point3D(0.00000f, 5.00000f, -15.00000f),
-      Point3D(0.00000f, 5.00000f, -10.00000f),
-      Point3D(0.00000f, -5.00000f, -10.00000f)
-    },
-    Polygon3D {
-      Point3D(0.00000f, -5.00000f, 0.00000f),
-      Point3D(-5.00000f, -5.00000f, 0.00000f),
-      Point3D(-5.00000f, 5.00000f, 0.00000f),
-      Point3D(0.00000f, 5.00000f, 0.00000f)
-    }
-  };
-  ::RunTest(polygons, expected);
-}
-
-TEST(BSPTree, SplitComplex2) {
-  const std::deque<Polygon3D> polygons {
-    Polygon3D {
-      Point3D(-5.00000f, -5.00000f, 0.00000f),
-      Point3D(-5.00000f, 5.00000f, 0.00000f),
-      Point3D(5.00000f, 5.00000f, 0.00000f),
-      Point3D(5.00000f, -5.00000f, 0.00000f)
-    },
-    Polygon3D {
-      Point3D(0.00000f, -5.00000f, -5.00000f),
-      Point3D(0.00000f, 5.00000f, -5.00000f),
-      Point3D(0.00000f, 5.00000f, 5.00000f),
-      Point3D(0.00000f, -5.00000f, 5.00000f)
-    },
-    Polygon3D {
-      Point3D(-5.00000f, 0.00000f, -5.00000f),
-      Point3D(-5.00000f, 0.00000f, 5.00000f),
-      Point3D(5.00000f, 0.00000f, 5.00000f),
-      Point3D(5.00000f, 0.00000f, -5.00000f)
-    }
-  };
-
-  const std::deque<Polygon3D> expected {
-    Polygon3D {
-      Point3D(0.00000f, 0.00000f, 0.00000f),
-      Point3D(5.00000f, 0.00000f, 0.00000f),
-      Point3D(5.00000f, 0.00000f, -5.00000f),
-      Point3D(0.00000f, 0.00000f, -5.00000f)
-    },
-    Polygon3D {
-      Point3D(0.00000f, -5.00000f, 0.00000f),
-      Point3D(0.00000f, -5.00000f, -5.00000f),
-      Point3D(0.00000f, 5.00000f, -5.00000f),
-      Point3D(0.00000f, 5.00000f, 0.00000f)
-    },
-    Polygon3D {
-      Point3D(0.00000f, 0.00000f, -5.00000f),
-      Point3D(-5.00000f, 0.00000f, -5.00000f),
-      Point3D(-5.00000f, 0.00000f, 0.00000f),
-      Point3D(0.00000f, 0.00000f, 0.00000f)
-    },
-    Polygon3D {
-      Point3D(-5.00000f, -5.00000f, 0.00000f),
-      Point3D(-5.00000f, 5.00000f, 0.00000f),
-      Point3D(5.00000f, 5.00000f, 0.00000f),
-      Point3D(5.00000f, -5.00000f, 0.00000f)
-    },
-    Polygon3D {
-      Point3D(0.00000f, 0.00000f, 5.00000f),
-      Point3D(5.00000f, 0.00000f, 5.00000f),
-      Point3D(5.00000f, 0.00000f, 0.00000f),
-      Point3D(0.00000f, 0.00000f, 0.00000f)
-    },
-    Polygon3D {
-      Point3D(0.00000f, 5.00000f, 0.00000f),
-      Point3D(0.00000f, 5.00000f, 5.00000f),
-      Point3D(0.00000f, -5.00000f, 5.00000f),
-      Point3D(0.00000f, -5.00000f, 0.00000f)
-    },
-    Polygon3D {
-      Point3D(0.00000f, 0.00000f, 0.00000f),
-      Point3D(-5.00000f, 0.00000f, 0.00000f),
-      Point3D(-5.00000f, 0.00000f, 5.00000f),
-      Point3D(0.00000f, 0.00000f, 5.00000f)
-    }
-  };
-  ::RunTest(polygons, expected);
-}
-
 TEST(BSPTree, TwoPlaneIntersectRotate0degrees) {
   const std::deque<Polygon3D> polygons {
     Polygon3D {
@@ -400,22 +368,16 @@ TEST(BSPTree, TwoPlaneIntersectRotate0degrees) {
 
   const std::deque<Polygon3D> expected {
     Polygon3D {
-      Point3D(0.00010f, 0.00000f, -2.00000f),
+      Point3D(2.00000f, 0.00000f, 2.00000f),
+      Point3D(2.00000f, -0.00000f, -2.00000f),
       Point3D(-2.00000f, 0.00000f, -2.00000f),
-      Point3D(-2.00000f, 0.00010f, 2.00000f),
-      Point3D(0.00000f, 0.00005f, 2.00000f)
+      Point3D(-2.00000f, 0.00010f, 2.00000f)
     },
     Polygon3D {
       Point3D(-0.00000f, 2.00000f, 2.00000f),
       Point3D(-0.00000f, -2.00000f, 2.00000f),
       Point3D(0.00010f, -2.00000f, -2.00000f),
       Point3D(0.00010f, 2.00000f, -2.00000f)
-    },
-    Polygon3D {
-      Point3D(0.00000f, 0.00005f, 2.00000f),
-      Point3D(2.00000f, 0.00000f, 2.00000f),
-      Point3D(2.00000f, -0.00000f, -2.00000f),
-      Point3D(0.00010f, 0.00000f, -2.00000f)
     }
   };
   ::RunTest(polygons, expected);
@@ -439,22 +401,16 @@ TEST(BSPTree, TwoPlaneIntersectRotate20degrees) {
 
   const std::deque<Polygon3D> expected {
     Polygon3D {
-      Point3D(0.00010f, 0.68410f, -1.87930f),
+      Point3D(2.00000f, -0.68400f, 1.87940f),
+      Point3D(2.00000f, 0.68410f, -1.87930f),
       Point3D(-2.00000f, 0.68410f, -1.87930f),
-      Point3D(-2.00000f, -0.68400f, 1.87940f),
-      Point3D(0.00000f, -0.68400f, 1.87940f)
+      Point3D(-2.00000f, -0.68400f, 1.87940f)
     },
     Polygon3D {
       Point3D(-0.00000f, 1.19540f, 2.56350f),
       Point3D(-0.00000f, -2.56340f, 1.19540f),
       Point3D(0.00010f, -1.19530f, -2.56340f),
       Point3D(0.00010f, 2.56350f, -1.19530f)
-    },
-    Polygon3D {
-      Point3D(0.00000f, -0.68400f, 1.87940f),
-      Point3D(2.00000f, -0.68400f, 1.87940f),
-      Point3D(2.00000f, 0.68410f, -1.87930f),
-      Point3D(0.00010f, 0.68410f, -1.87930f)
     }
   };
   ::RunTest(polygons, expected);
@@ -478,22 +434,16 @@ TEST(BSPTree, TwoPlaneIntersectRotate40degrees) {
 
   const std::deque<Polygon3D> expected {
     Polygon3D {
-      Point3D(0.00010f, 1.73210f, -0.99990f),
+      Point3D(2.00000f, -1.73200f, 1.00000f),
+      Point3D(2.00000f, 1.73210f, -0.99990f),
       Point3D(-2.00000f, 1.73210f, -0.99990f),
-      Point3D(-2.00000f, -1.73200f, 1.00000f),
-      Point3D(0.00000f, -1.73200f, 1.00000f)
+      Point3D(-2.00000f, -1.73200f, 1.00000f)
     },
     Polygon3D {
       Point3D(-0.00000f, -0.73200f, 2.73210f),
       Point3D(-0.00000f, -2.73200f, -0.73200f),
       Point3D(0.00010f, 0.73210f, -2.73200f),
       Point3D(0.00010f, 2.73210f, 0.73210f)
-    },
-    Polygon3D {
-      Point3D(0.00000f, -1.73200f, 1.00000f),
-      Point3D(2.00000f, -1.73200f, 1.00000f),
-      Point3D(2.00000f, 1.73210f, -0.99990f),
-      Point3D(0.00010f, 1.73210f, -0.99990f)
     }
   };
   ::RunTest(polygons, expected);
@@ -517,10 +467,10 @@ TEST(BSPTree, TwoPlaneIntersectRotate60degrees) {
 
   const std::deque<Polygon3D> expected {
     Polygon3D {
-      Point3D(0.00000f, -1.73200f, -1.00000f),
+      Point3D(-2.00000f, 1.26793f, 0.73210f),
+      Point3D(-2.00000f, -1.73200f, -1.00000f),
       Point3D(2.00000f, -1.73200f, -1.00000f),
-      Point3D(2.00000f, 1.73210f, 1.00010f),
-      Point3D(0.00010f, 1.73210f, 1.00010f)
+      Point3D(2.00000f, 1.26793f, 0.73210f)
     },
     Polygon3D {
       Point3D(-0.00000f, -2.73200f, 0.73210f),
@@ -529,10 +479,10 @@ TEST(BSPTree, TwoPlaneIntersectRotate60degrees) {
       Point3D(0.00010f, 0.73210f, 2.73210f)
     },
     Polygon3D {
-      Point3D(0.00010f, 1.73210f, 1.00010f),
+      Point3D(2.00000f, 1.26793f, 0.73210f),
+      Point3D(2.00000f, 1.73210f, 1.00010f),
       Point3D(-2.00000f, 1.73210f, 1.00010f),
-      Point3D(-2.00000f, -1.73200f, -1.00000f),
-      Point3D(0.00000f, -1.73200f, -1.00000f)
+      Point3D(-2.00000f, 1.26793f, 0.73210f)
     }
   };
   ::RunTest(polygons, expected);
@@ -556,22 +506,16 @@ TEST(BSPTree, TwoPlaneIntersectRotate80degrees) {
 
   const std::deque<Polygon3D> expected {
     Polygon3D {
-      Point3D(0.00000f, 0.68410f, -1.87930f),
-      Point3D(2.00000f, 0.68410f, -1.87930f),
-      Point3D(2.00000f, -0.68400f, 1.87940f),
-      Point3D(0.00010f, -0.68400f, 1.87940f)
-    },
-    Polygon3D {
       Point3D(-0.00000f, -1.19530f, -2.56340f),
       Point3D(-0.00000f, 2.56350f, -1.19530f),
       Point3D(0.00010f, 1.19540f, 2.56350f),
       Point3D(0.00010f, -2.56340f, 1.19540f)
     },
     Polygon3D {
-      Point3D(0.00010f, -0.68400f, 1.87940f),
+      Point3D(2.00000f, 0.68410f, -1.87930f),
+      Point3D(2.00000f, -0.68400f, 1.87940f),
       Point3D(-2.00000f, -0.68400f, 1.87940f),
-      Point3D(-2.00000f, 0.68410f, -1.87930f),
-      Point3D(0.00000f, 0.68410f, -1.87930f)
+      Point3D(-2.00000f, 0.68410f, -1.87930f)
     }
   };
   ::RunTest(polygons, expected);
@@ -595,10 +539,10 @@ TEST(BSPTree, TwoPlaneIntersectRotate100degrees) {
 
   const std::deque<Polygon3D> expected {
     Polygon3D {
-      Point3D(0.00010f, -1.73200f, -1.00000f),
+      Point3D(2.00000f, -1.26783f, -0.73200f),
+      Point3D(2.00000f, -1.73200f, -1.00000f),
       Point3D(-2.00000f, -1.73200f, -1.00000f),
-      Point3D(-2.00000f, 1.73210f, 1.00010f),
-      Point3D(0.00000f, 1.73210f, 1.00010f)
+      Point3D(-2.00000f, -1.26783f, -0.73200f)
     },
     Polygon3D {
       Point3D(-0.00000f, 2.73210f, -0.73200f),
@@ -607,10 +551,10 @@ TEST(BSPTree, TwoPlaneIntersectRotate100degrees) {
       Point3D(0.00010f, -0.73200f, -2.73200f)
     },
     Polygon3D {
-      Point3D(0.00000f, 1.73210f, 1.00010f),
+      Point3D(-2.00000f, -1.26783f, -0.73200f),
+      Point3D(-2.00000f, 1.73210f, 1.00010f),
       Point3D(2.00000f, 1.73210f, 1.00010f),
-      Point3D(2.00000f, -1.73200f, -1.00000f),
-      Point3D(0.00010f, -1.73200f, -1.00000f)
+      Point3D(2.00000f, -1.26783f, -0.73200f)
     }
   };
   ::RunTest(polygons, expected);
@@ -634,22 +578,16 @@ TEST(BSPTree, TwoPlaneIntersectRotate120degrees) {
 
   const std::deque<Polygon3D> expected {
     Polygon3D {
-      Point3D(0.00010f, 1.73210f, -0.99990f),
+      Point3D(2.00000f, -1.73200f, 1.00000f),
+      Point3D(2.00000f, 1.73210f, -0.99990f),
       Point3D(-2.00000f, 1.73210f, -0.99990f),
-      Point3D(-2.00000f, -1.73200f, 1.00000f),
-      Point3D(0.00000f, -1.73200f, 1.00000f)
+      Point3D(-2.00000f, -1.73200f, 1.00000f)
     },
     Polygon3D {
       Point3D(-0.00000f, -0.73200f, 2.73210f),
       Point3D(-0.00000f, -2.73200f, -0.73200f),
       Point3D(0.00010f, 0.73210f, -2.73200f),
       Point3D(0.00010f, 2.73210f, 0.73210f)
-    },
-    Polygon3D {
-      Point3D(0.00000f, -1.73200f, 1.00000f),
-      Point3D(2.00000f, -1.73200f, 1.00000f),
-      Point3D(2.00000f, 1.73210f, -0.99990f),
-      Point3D(0.00010f, 1.73210f, -0.99990f)
     }
   };
   ::RunTest(polygons, expected);
@@ -673,22 +611,16 @@ TEST(BSPTree, TwoPlaneIntersectRotate140degrees) {
 
   const std::deque<Polygon3D> expected {
     Polygon3D {
-      Point3D(0.00000f, 0.68410f, -1.87930f),
-      Point3D(2.00000f, 0.68410f, -1.87930f),
-      Point3D(2.00000f, -0.68400f, 1.87940f),
-      Point3D(0.00010f, -0.68400f, 1.87940f)
-    },
-    Polygon3D {
       Point3D(-0.00000f, -1.19530f, -2.56340f),
       Point3D(-0.00000f, 2.56350f, -1.19530f),
       Point3D(0.00010f, 1.19540f, 2.56350f),
       Point3D(0.00010f, -2.56340f, 1.19540f)
     },
     Polygon3D {
-      Point3D(0.00010f, -0.68400f, 1.87940f),
+      Point3D(2.00000f, 0.68410f, -1.87930f),
+      Point3D(2.00000f, -0.68400f, 1.87940f),
       Point3D(-2.00000f, -0.68400f, 1.87940f),
-      Point3D(-2.00000f, 0.68410f, -1.87930f),
-      Point3D(0.00000f, 0.68410f, -1.87930f)
+      Point3D(-2.00000f, 0.68410f, -1.87930f)
     }
   };
   ::RunTest(polygons, expected);
@@ -712,22 +644,16 @@ TEST(BSPTree, TwoPlaneIntersectRotate160degrees) {
 
   const std::deque<Polygon3D> expected {
     Polygon3D {
-      Point3D(0.00010f, 0.00010f, -2.00000f),
+      Point3D(2.00000f, -0.00000f, 2.00000f),
+      Point3D(2.00000f, 0.00010f, -2.00000f),
       Point3D(-2.00000f, 0.00010f, -2.00000f),
-      Point3D(-2.00000f, -0.00000f, 2.00000f),
-      Point3D(0.00000f, 0.00000f, 2.00000f)
+      Point3D(-2.00000f, -0.00000f, 2.00000f)
     },
     Polygon3D {
       Point3D(-0.00000f, 2.00000f, 2.00000f),
       Point3D(-0.00000f, -2.00000f, 2.00000f),
       Point3D(0.00010f, -2.00000f, -2.00000f),
       Point3D(0.00010f, 2.00000f, -2.00000f)
-    },
-    Polygon3D {
-      Point3D(0.00000f, 0.00000f, 2.00000f),
-      Point3D(2.00000f, -0.00000f, 2.00000f),
-      Point3D(2.00000f, 0.00010f, -2.00000f),
-      Point3D(0.00010f, 0.00010f, -2.00000f)
     }
   };
   ::RunTest(polygons, expected);
@@ -751,22 +677,16 @@ TEST(BSPTree, TwoPlaneIntersectRotate180degrees) {
 
   const std::deque<Polygon3D> expected {
     Polygon3D {
-      Point3D(0.00000f, 0.00010f, -2.00000f),
-      Point3D(2.00000f, 0.00010f, -2.00000f),
-      Point3D(2.00000f, -0.00000f, 2.00000f),
-      Point3D(0.00010f, 0.00000f, 2.00000f)
-    },
-    Polygon3D {
       Point3D(-0.00000f, -2.00000f, -2.00000f),
       Point3D(-0.00000f, 2.00000f, -2.00000f),
       Point3D(0.00010f, 2.00000f, 2.00000f),
       Point3D(0.00010f, -2.00000f, 2.00000f)
     },
     Polygon3D {
-      Point3D(0.00010f, 0.00000f, 2.00000f),
+      Point3D(2.00000f, 0.00010f, -2.00000f),
+      Point3D(2.00000f, -0.00000f, 2.00000f),
       Point3D(-2.00000f, -0.00000f, 2.00000f),
-      Point3D(-2.00000f, 0.00010f, -2.00000f),
-      Point3D(0.00000f, 0.00010f, -2.00000f)
+      Point3D(-2.00000f, 0.00010f, -2.00000f)
     }
   };
   ::RunTest(polygons, expected);
@@ -790,22 +710,16 @@ TEST(BSPTree, TwoPlaneIntersectRotate200degrees) {
 
   const std::deque<Polygon3D> expected {
     Polygon3D {
-      Point3D(0.00010f, 0.68410f, -1.87930f),
+      Point3D(2.00000f, -0.68400f, 1.87940f),
+      Point3D(2.00000f, 0.68410f, -1.87930f),
       Point3D(-2.00000f, 0.68410f, -1.87930f),
-      Point3D(-2.00000f, -0.68400f, 1.87940f),
-      Point3D(0.00000f, -0.68400f, 1.87940f)
+      Point3D(-2.00000f, -0.68400f, 1.87940f)
     },
     Polygon3D {
       Point3D(-0.00000f, 1.19540f, 2.56350f),
       Point3D(-0.00000f, -2.56340f, 1.19540f),
       Point3D(0.00010f, -1.19530f, -2.56340f),
       Point3D(0.00010f, 2.56350f, -1.19530f)
-    },
-    Polygon3D {
-      Point3D(0.00000f, -0.68400f, 1.87940f),
-      Point3D(2.00000f, -0.68400f, 1.87940f),
-      Point3D(2.00000f, 0.68410f, -1.87930f),
-      Point3D(0.00010f, 0.68410f, -1.87930f)
     }
   };
   ::RunTest(polygons, expected);
@@ -829,22 +743,16 @@ TEST(BSPTree, TwoPlaneIntersectRotate220degrees) {
 
   const std::deque<Polygon3D> expected {
     Polygon3D {
-      Point3D(0.00000f, 1.73210f, -0.99990f),
-      Point3D(2.00000f, 1.73210f, -0.99990f),
-      Point3D(2.00000f, -1.73200f, 1.00000f),
-      Point3D(0.00010f, -1.73200f, 1.00000f)
-    },
-    Polygon3D {
       Point3D(-0.00000f, 0.73210f, -2.73200f),
       Point3D(-0.00000f, 2.73210f, 0.73210f),
       Point3D(0.00010f, -0.73200f, 2.73210f),
       Point3D(0.00010f, -2.73200f, -0.73200f)
     },
     Polygon3D {
-      Point3D(0.00010f, -1.73200f, 1.00000f),
+      Point3D(2.00000f, 1.73210f, -0.99990f),
+      Point3D(2.00000f, -1.73200f, 1.00000f),
       Point3D(-2.00000f, -1.73200f, 1.00000f),
-      Point3D(-2.00000f, 1.73210f, -0.99990f),
-      Point3D(0.00000f, 1.73210f, -0.99990f)
+      Point3D(-2.00000f, 1.73210f, -0.99990f)
     }
   };
   ::RunTest(polygons, expected);
@@ -868,10 +776,10 @@ TEST(BSPTree, TwoPlaneIntersectRotate240degrees) {
 
   const std::deque<Polygon3D> expected {
     Polygon3D {
-      Point3D(0.00000f, -1.73200f, -1.00000f),
+      Point3D(-2.00000f, 1.26793f, 0.73210f),
+      Point3D(-2.00000f, -1.73200f, -1.00000f),
       Point3D(2.00000f, -1.73200f, -1.00000f),
-      Point3D(2.00000f, 1.73210f, 1.00010f),
-      Point3D(0.00010f, 1.73210f, 1.00010f)
+      Point3D(2.00000f, 1.26793f, 0.73210f)
     },
     Polygon3D {
       Point3D(-0.00000f, -2.73200f, 0.73210f),
@@ -880,10 +788,10 @@ TEST(BSPTree, TwoPlaneIntersectRotate240degrees) {
       Point3D(0.00010f, 0.73210f, 2.73210f)
     },
     Polygon3D {
-      Point3D(0.00010f, 1.73210f, 1.00010f),
+      Point3D(2.00000f, 1.26793f, 0.73210f),
+      Point3D(2.00000f, 1.73210f, 1.00010f),
       Point3D(-2.00000f, 1.73210f, 1.00010f),
-      Point3D(-2.00000f, -1.73200f, -1.00000f),
-      Point3D(0.00000f, -1.73200f, -1.00000f)
+      Point3D(-2.00000f, 1.26793f, 0.73210f)
     }
   };
   ::RunTest(polygons, expected);
@@ -907,22 +815,16 @@ TEST(BSPTree, TwoPlaneIntersectRotate260degrees) {
 
   const std::deque<Polygon3D> expected {
     Polygon3D {
-      Point3D(0.00010f, 0.68410f, -1.87930f),
+      Point3D(2.00000f, -0.68400f, 1.87940f),
+      Point3D(2.00000f, 0.68410f, -1.87930f),
       Point3D(-2.00000f, 0.68410f, -1.87930f),
-      Point3D(-2.00000f, -0.68400f, 1.87940f),
-      Point3D(0.00000f, -0.68400f, 1.87940f)
+      Point3D(-2.00000f, -0.68400f, 1.87940f)
     },
     Polygon3D {
       Point3D(-0.00000f, 1.19540f, 2.56350f),
       Point3D(-0.00000f, -2.56340f, 1.19540f),
       Point3D(0.00010f, -1.19530f, -2.56340f),
       Point3D(0.00010f, 2.56350f, -1.19530f)
-    },
-    Polygon3D {
-      Point3D(0.00000f, -0.68400f, 1.87940f),
-      Point3D(2.00000f, -0.68400f, 1.87940f),
-      Point3D(2.00000f, 0.68410f, -1.87930f),
-      Point3D(0.00010f, 0.68410f, -1.87930f)
     }
   };
   ::RunTest(polygons, expected);
@@ -946,10 +848,10 @@ TEST(BSPTree, TwoPlaneIntersectRotate280degrees) {
 
   const std::deque<Polygon3D> expected {
     Polygon3D {
-      Point3D(0.00010f, -1.73200f, -1.00000f),
+      Point3D(2.00000f, -1.26783f, -0.73200f),
+      Point3D(2.00000f, -1.73200f, -1.00000f),
       Point3D(-2.00000f, -1.73200f, -1.00000f),
-      Point3D(-2.00000f, 1.73210f, 1.00010f),
-      Point3D(0.00000f, 1.73210f, 1.00010f)
+      Point3D(-2.00000f, -1.26783f, -0.73200f)
     },
     Polygon3D {
       Point3D(-0.00000f, 2.73210f, -0.73200f),
@@ -958,10 +860,10 @@ TEST(BSPTree, TwoPlaneIntersectRotate280degrees) {
       Point3D(0.00010f, -0.73200f, -2.73200f)
     },
     Polygon3D {
-      Point3D(0.00000f, 1.73210f, 1.00010f),
+      Point3D(-2.00000f, -1.26783f, -0.73200f),
+      Point3D(-2.00000f, 1.73210f, 1.00010f),
       Point3D(2.00000f, 1.73210f, 1.00010f),
-      Point3D(2.00000f, -1.73200f, -1.00000f),
-      Point3D(0.00010f, -1.73200f, -1.00000f)
+      Point3D(2.00000f, -1.26783f, -0.73200f)
     }
   };
   ::RunTest(polygons, expected);
@@ -985,22 +887,16 @@ TEST(BSPTree, TwoPlaneIntersectRotate300degrees) {
 
   const std::deque<Polygon3D> expected {
     Polygon3D {
-      Point3D(0.00000f, 1.73210f, -0.99990f),
-      Point3D(2.00000f, 1.73210f, -0.99990f),
-      Point3D(2.00000f, -1.73200f, 1.00000f),
-      Point3D(0.00010f, -1.73200f, 1.00000f)
-    },
-    Polygon3D {
       Point3D(-0.00000f, 0.73210f, -2.73200f),
       Point3D(-0.00000f, 2.73210f, 0.73210f),
       Point3D(0.00010f, -0.73200f, 2.73210f),
       Point3D(0.00010f, -2.73200f, -0.73200f)
     },
     Polygon3D {
-      Point3D(0.00010f, -1.73200f, 1.00000f),
+      Point3D(2.00000f, 1.73210f, -0.99990f),
+      Point3D(2.00000f, -1.73200f, 1.00000f),
       Point3D(-2.00000f, -1.73200f, 1.00000f),
-      Point3D(-2.00000f, 1.73210f, -0.99990f),
-      Point3D(0.00000f, 1.73210f, -0.99990f)
+      Point3D(-2.00000f, 1.73210f, -0.99990f)
     }
   };
   ::RunTest(polygons, expected);
@@ -1024,22 +920,16 @@ TEST(BSPTree, TwoPlaneIntersectRotate320degrees) {
 
   const std::deque<Polygon3D> expected {
     Polygon3D {
-      Point3D(0.00000f, 0.68410f, -1.87930f),
-      Point3D(2.00000f, 0.68410f, -1.87930f),
-      Point3D(2.00000f, -0.68400f, 1.87940f),
-      Point3D(0.00010f, -0.68400f, 1.87940f)
-    },
-    Polygon3D {
       Point3D(-0.00000f, -1.19530f, -2.56340f),
       Point3D(-0.00000f, 2.56350f, -1.19530f),
       Point3D(0.00010f, 1.19540f, 2.56350f),
       Point3D(0.00010f, -2.56340f, 1.19540f)
     },
     Polygon3D {
-      Point3D(0.00010f, -0.68400f, 1.87940f),
+      Point3D(2.00000f, 0.68410f, -1.87930f),
+      Point3D(2.00000f, -0.68400f, 1.87940f),
       Point3D(-2.00000f, -0.68400f, 1.87940f),
-      Point3D(-2.00000f, 0.68410f, -1.87930f),
-      Point3D(0.00000f, 0.68410f, -1.87930f)
+      Point3D(-2.00000f, 0.68410f, -1.87930f)
     }
   };
   ::RunTest(polygons, expected);
@@ -1063,22 +953,16 @@ TEST(BSPTree, TwoPlaneIntersectRotate340degrees) {
 
   const std::deque<Polygon3D> expected {
     Polygon3D {
-      Point3D(0.00000f, 0.00010f, -2.00000f),
-      Point3D(2.00000f, 0.00010f, -2.00000f),
-      Point3D(2.00000f, -0.00000f, 2.00000f),
-      Point3D(0.00010f, 0.00000f, 2.00000f)
-    },
-    Polygon3D {
       Point3D(-0.00000f, -2.00000f, -2.00000f),
       Point3D(-0.00000f, 2.00000f, -2.00000f),
       Point3D(0.00010f, 2.00000f, 2.00000f),
       Point3D(0.00010f, -2.00000f, 2.00000f)
     },
     Polygon3D {
-      Point3D(0.00010f, 0.00000f, 2.00000f),
+      Point3D(2.00000f, 0.00010f, -2.00000f),
+      Point3D(2.00000f, -0.00000f, 2.00000f),
       Point3D(-2.00000f, -0.00000f, 2.00000f),
-      Point3D(-2.00000f, 0.00010f, -2.00000f),
-      Point3D(0.00000f, 0.00010f, -2.00000f)
+      Point3D(-2.00000f, 0.00010f, -2.00000f)
     }
   };
   ::RunTest(polygons, expected);
@@ -1102,22 +986,16 @@ TEST(BSPTree, TwoPlaneIntersectRotate360degrees) {
 
   const std::deque<Polygon3D> expected {
     Polygon3D {
-      Point3D(0.00000f, 0.00010f, -2.00000f),
-      Point3D(2.00000f, 0.00010f, -2.00000f),
-      Point3D(2.00000f, -0.00000f, 2.00000f),
-      Point3D(0.00010f, 0.00000f, 2.00000f)
-    },
-    Polygon3D {
       Point3D(-0.00000f, -2.00000f, -2.00000f),
       Point3D(-0.00000f, 2.00000f, -2.00000f),
       Point3D(0.00010f, 2.00000f, 2.00000f),
       Point3D(0.00010f, -2.00000f, 2.00000f)
     },
     Polygon3D {
-      Point3D(0.00010f, 0.00000f, 2.00000f),
+      Point3D(2.00000f, 0.00010f, -2.00000f),
+      Point3D(2.00000f, -0.00000f, 2.00000f),
       Point3D(-2.00000f, -0.00000f, 2.00000f),
-      Point3D(-2.00000f, 0.00010f, -2.00000f),
-      Point3D(0.00000f, 0.00010f, -2.00000f)
+      Point3D(-2.00000f, 0.00010f, -2.00000f)
     }
   };
   ::RunTest(polygons, expected);
