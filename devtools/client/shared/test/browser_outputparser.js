@@ -21,7 +21,7 @@ function* performTest() {
   yield initCssProperties(toolbox);
   let cssProperties = getCssProperties(toolbox);
 
-  let parser = new OutputParser(doc, cssProperties.supportsType);
+  let parser = new OutputParser(doc, cssProperties);
   testParseCssProperty(doc, parser);
   testParseCssVar(doc, parser);
   testParseURL(doc, parser);
@@ -288,4 +288,3 @@ function testParseAngle(doc, parser) {
   swatchCount = frag.querySelectorAll(".test-angleswatch").length;
   is(swatchCount, 1, "angle swatch was created");
 }
-
