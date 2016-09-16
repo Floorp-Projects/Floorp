@@ -23,6 +23,7 @@ BROWSER_CHROME_MANIFESTS += [
     'content/test/referrer/browser.ini',
     'content/test/social/browser.ini',
     'content/test/tabPrompts/browser.ini',
+    'content/test/tabs/browser.ini',
     'content/test/urlbar/browser.ini',
     'content/test/webrtc/browser.ini',
 ]
