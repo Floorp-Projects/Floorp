@@ -119,7 +119,7 @@ add_task(function* runTestAuth()
 
   state = {
     msg         : "http://mochi.test:8888 is requesting your username " +
-                  "and password.\n\nThe site says: “mochitest”",
+                  "and password. The site says: “mochitest”",
     title       : "Authentication Required",
     textValue   : "",
     passValue   : "",
@@ -155,7 +155,7 @@ add_task(function* runTestAuth()
   // Force parent to not look for tab-modal prompts, as they're not used for auth prompts.
   isTabModal =false;
   state = {
-    msg         : "http://example.com is requesting your username and password.\n\n" +
+    msg         : "http://example.com is requesting your username and password. " +
                   "WARNING: Your password will not be sent to the website you are currently visiting!",
     title       : "Authentication Required",
     textValue   : "",

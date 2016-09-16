@@ -95,7 +95,7 @@ function doTestEncoded() {
   parsed = JSON.parse(target.hash.substring(1));
   is(parsed.b.key, 'value', 'JSON not parsed correctly');
 
-  // Tests nsLocation::GetHash
+  // Tests Location::GetHash
 
   window.history.pushState(1, document.title, '#q=♥â¥#hello');
   is(location.hash,'#q=♥â¥#hello', 'Unexpected location hash');

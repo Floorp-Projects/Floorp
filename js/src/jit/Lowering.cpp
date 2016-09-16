@@ -3772,11 +3772,10 @@ LIRGenerator::visitAssertRange(MAssertRange* ins)
         lir = new(alloc()) LAssertRangeD(useRegister(input), tempDouble());
         break;
 
-      case MIRType::Float32: {
-        LDefinition armtemp = hasMultiAlias() ? tempDouble() : LDefinition::BogusTemp();
-        lir = new(alloc()) LAssertRangeF(useRegister(input), tempDouble(), armtemp);
+      case MIRType::Float32:
+        lir = new(alloc()) LAssertRangeF(useRegister(input), tempDouble(), tempDouble());
         break;
-      }
+
       case MIRType::Value:
         lir = new(alloc()) LAssertRangeV(useBox(input), tempToUnbox(), tempDouble(), tempDouble());
         break;

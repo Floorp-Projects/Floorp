@@ -273,15 +273,15 @@ var PromptUtilsTemp = {
 
         let text;
         if (isProxy) {
-            text = PromptUtils.getLocalizedString("EnterLoginForProxy2", [realm, displayHost]);
+            text = PromptUtils.getLocalizedString("EnterLoginForProxy3", [realm, displayHost]);
         } else if (isPassOnly) {
             text = PromptUtils.getLocalizedString("EnterPasswordFor", [username, displayHost]);
         } else if (isCrossOrig) {
-            text = PromptUtils.getLocalizedString("EnterUserPasswordForCrossOrigin", [displayHost]);
+            text = PromptUtils.getLocalizedString("EnterUserPasswordForCrossOrigin2", [displayHost]);
         } else if (!realm) {
             text = PromptUtils.getLocalizedString("EnterUserPasswordFor2", [displayHost]);
         } else {
-            text = PromptUtils.getLocalizedString("EnterLoginForRealm2", [realm, displayHost]);
+            text = PromptUtils.getLocalizedString("EnterLoginForRealm3", [realm, displayHost]);
         }
 
         return text;

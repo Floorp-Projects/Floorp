@@ -136,27 +136,6 @@ struct CompositableTransaction
     mSwapRequired = true;
   }
 
-  void FallbackDestroyActors()
-  {
-    for (auto& actor : mDestroyedActors) {
-      switch (actor.type()) {
-      case OpDestroy::TPTextureChild: {
-        DebugOnly<bool> ok = TextureClient::DestroyFallback(actor.get_PTextureChild());
-        MOZ_ASSERT(ok);
-        break;
-      }
-      case OpDestroy::TPCompositableChild: {
-        DebugOnly<bool> ok = actor.get_PCompositableChild()->SendDestroySync();
-        MOZ_ASSERT(ok);
-        break;
-      }
-      default:
-        MOZ_CRASH("GFX: IBC Fallback destroy actors");
-      }
-    }
-    mDestroyedActors.Clear();
-  }
-
   OpVector mOperations;
   OpDestroyVector mDestroyedActors;
   bool mSwapRequired;
@@ -395,13 +374,6 @@ static StaticMutex sImageBridgeSingletonLock;
 static StaticRefPtr<ImageBridgeChild> sImageBridgeChildSingleton;
 static Thread *sImageBridgeChildThread = nullptr;
 
-void
-ImageBridgeChild::FallbackDestroyActors() {
-  if (mTxn && !mTxn->mDestroyedActors.IsEmpty()) {
-    mTxn->FallbackDestroyActors();
-  }
-}
-
 // Helper that creates a monitor and a "done" flag, then enters the monitor.
 // This can go away when we switch ImageBridge to an XPCOM thread.
 class MOZ_STACK_CLASS SynchronousTask
@@ -478,7 +450,6 @@ ImageBridgeChild::ShutdownStep1(SynchronousTask* aTask)
       client->Destroy();
     }
   }
-  FallbackDestroyActors();
 
   SendWillClose();
   MarkShutDown();
@@ -856,7 +827,6 @@ ImageBridgeChild::EndTransaction()
   if (mTxn->mSwapRequired) {
     if (!SendUpdate(cset, mTxn->mDestroyedActors, GetFwdTransactionId(), &replies)) {
       NS_WARNING("could not send async texture transaction");
-      mTxn->FallbackDestroyActors();
       return;
     }
   } else {
@@ -864,7 +834,6 @@ ImageBridgeChild::EndTransaction()
     // assumes that aReplies is empty (DEBUG assertion)
     if (!SendUpdateNoSwap(cset, mTxn->mDestroyedActors, GetFwdTransactionId())) {
       NS_WARNING("could not send async texture transaction (no swap)");
-      mTxn->FallbackDestroyActors();
       return;
     }
   }

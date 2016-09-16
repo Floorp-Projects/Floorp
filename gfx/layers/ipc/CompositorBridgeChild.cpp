@@ -22,6 +22,7 @@
 #include "mozilla/layers/TextureClientPool.h"// for TextureClientPool
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUProcessManager.h"
+#include "mozilla/gfx/Logging.h"
 #include "mozilla/mozalloc.h"           // for operator new, etc
 #include "nsAutoPtr.h"
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT
@@ -1068,7 +1069,9 @@ CompositorBridgeChild::DeallocPAPZCTreeManagerChild(PAPZCTreeManagerChild* aActo
 void
 CompositorBridgeChild::ProcessingError(Result aCode, const char* aReason)
 {
-  MOZ_RELEASE_ASSERT(aCode == MsgDropped, "Processing error in CompositorBridgeChild");
+  if (aCode != MsgDropped) {
+    gfxDevCrash(gfx::LogReason::ProcessingError) << "Processing error in CompositorBridgeChild: " << int(aCode);
+  }
 }
 
 } // namespace layers
