@@ -154,7 +154,7 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
                             notifyItemRemoved(RECENT_TABS_SMARTFOLDER_INDEX);
                         }
 
-                        if (countReliable) {
+                        if (countReliable && panelStateChangeListener != null) {
                             panelStateChangeListener.setCachedRecentTabsCount(recentTabsCount);
                         }
                     }

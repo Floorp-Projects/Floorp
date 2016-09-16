@@ -17,7 +17,7 @@ def path(filedir):
     return _path
 
 
-@pytest.fixture(params=['string.lint', 'regex.lint', 'external.lint'])
+@pytest.fixture(params=['string.lint', 'regex.lint', 'external.lint', 'structured.lint'])
 def linter(lintdir, request):
     return os.path.join(lintdir, request.param)
 

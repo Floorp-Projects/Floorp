@@ -311,19 +311,59 @@ function GetHistoryResource(aProfileFolder) {
   if (!historyFile.exists())
     return null;
 
+  function getRows(dbOptions) {
+    const RETRYLIMIT = 10;
+    const RETRYINTERVAL = 100;
+    return Task.spawn(function* innerGetRows() {
+      let rows = null;
+      for (let retryCount = RETRYLIMIT; retryCount && !rows; retryCount--) {
+        // Attempt to get the rows. If this succeeds, we will bail out of the loop,
+        // close the database in a failsafe way, and pass the rows back.
+        // If fetching the rows throws, we will wait RETRYINTERVAL ms
+        // and try again. This will repeat a maximum of RETRYLIMIT times.
+        let db;
+        let didOpen = false;
+        let exceptionSeen;
+        try {
+          db = yield Sqlite.openConnection(dbOptions);
+          didOpen = true;
+          rows = yield db.execute(`SELECT url, title, last_visit_time, typed_count
+                                   FROM urls WHERE hidden = 0`);
+        } catch (ex) {
+          if (!exceptionSeen) {
+            Cu.reportError(ex);
+          }
+          exceptionSeen = ex;
+        } finally {
+          try {
+            if (didOpen) {
+              yield db.close();
+            }
+          } catch (ex) {}
+        }
+        if (exceptionSeen) {
+          yield new Promise(resolve => setTimeout(resolve, RETRYINTERVAL));
+        }
+      }
+      if (!rows) {
+        throw new Error("Couldn't get rows from the Chrome history database.");
+      }
+      return rows;
+    });
+  }
+
   return {
     type: MigrationUtils.resourceTypes.HISTORY,
 
     migrate(aCallback) {
       Task.spawn(function* () {
-        let db = yield Sqlite.openConnection({
+        let dbOptions = {
+          readOnly: true,
+          ignoreLockingMode: true,
           path: historyFile.path
-        });
+        };
 
-        let rows = yield db.execute(`SELECT url, title, last_visit_time, typed_count
-                                     FROM urls WHERE hidden = 0`);
-        yield db.close();
-
+        let rows = yield getRows(dbOptions);
         let places = [];
         for (let row of rows) {
           try {

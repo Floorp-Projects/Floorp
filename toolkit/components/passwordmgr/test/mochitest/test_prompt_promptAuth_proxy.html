@@ -142,7 +142,7 @@ add_task(function* setup() {
 add_task(function* test_noAutologin() {
   // test proxy login (default = no autologin), make sure it prompts.
   state = {
-    msg         : "The proxy moz-proxy://127.0.0.1:8888 is requesting a username and password.\n\nThe site says: “Proxy Realm”",
+    msg         : "The proxy moz-proxy://127.0.0.1:8888 is requesting a username and password. The site says: “Proxy Realm”",
     title       : "Authentication Required",
     textValue   : "proxuser",
     passValue   : "proxpass",
@@ -200,7 +200,7 @@ add_task(function* test_autologin() {
 add_task(function* test_autologin_incorrect() {
   // test proxy login (with autologin), ensure it prompts after a failed auth.
   state = {
-    msg         : "The proxy moz-proxy://127.0.0.1:8888 is requesting a username and password.\n\nThe site says: “Proxy Realm”",
+    msg         : "The proxy moz-proxy://127.0.0.1:8888 is requesting a username and password. The site says: “Proxy Realm”",
     title       : "Authentication Required",
     textValue   : "proxuser",
     passValue   : "proxpass",

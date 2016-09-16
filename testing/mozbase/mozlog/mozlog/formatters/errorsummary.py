@@ -53,3 +53,15 @@ class ErrorSummaryFormatter(BaseFormatter):
                 "stackwalk_stdout": item.get("stackwalk_stdout"),
                 "stackwalk_stderr": item.get("stackwalk_stderr")}
         return self._output("crash", data)
+
+    def lint(self, item):
+        data = {
+            "level": item["level"],
+            "path": item["path"],
+            "message": item["message"],
+            "lineno": item["lineno"],
+            "column": item.get("column"),
+            "rule": item.get("rule"),
+            "linter": item.get("linter")
+        }
+        self._output("lint", data)

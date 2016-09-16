@@ -29,17 +29,28 @@ There are three types of linters, though more may be added in the future.
 1. string - fails if substring is found
 2. regex - fails if regex matches
 3. external - fails if a python function returns a non-empty result list
+4. structured_log - fails if a mozlog logger emits any lint_error or lint_warning log messages
 
 As seen from the example above, string and regex linters are very easy to create, but they
 should be avoided if possible. It is much better to use a context aware linter for the language you
 are trying to lint. For example, use eslint to lint JavaScript files, use flake8 to lint python
 files, etc.
 
-Which brings us to the third and most interesting type of linter, external.  External linters call
-an arbitrary python function which is responsible for not only running the linter, but ensuring the
-results are structured properly. For example, an external type could shell out to a 3rd party
-linter, collect the output and format it into a list of :class:`ResultContainer` objects.
+Which brings us to the third and most interesting type of linter,
+external.  External linters call an arbitrary python function which is
+responsible for not only running the linter, but ensuring the results
+are structured properly. For example, an external type could shell out
+to a 3rd party linter, collect the output and format it into a list of
+:class:`ResultContainer` objects. The signature for this python
+function is ``lint(files, **kwargs)``, where ``files`` is a list of
+files to lint.
 
+Structured log linters are much like external linters, but suitable
+for cases where the linter code is using mozlog and emits
+``lint_error`` or ``lint_warning`` logging messages when the lint
+fails. This is recommended for writing novel gecko-specific lints. In
+this case the signature for lint functions is ``lint(files, logger,
+**kwargs)``.
 
 LINTER Definition
 -----------------
@@ -64,6 +75,10 @@ following additional keys may be specified:
 * rule - An id string for the lint rule (optional)
 * level - The severity of the infraction, either 'error' or 'warning' (optional)
 
+For structured_log lints the following additional keys apply:
+
+* logger - A StructuredLog object to use for logging. If not supplied
+  one will be created (optional)
 
 Example
 -------
