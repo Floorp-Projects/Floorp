@@ -42,5 +42,6 @@
          command="toolbox-cmd-close"/>
   </keyset>
 
-  <iframe id="toolbox-iframe" flex="1" forceOwnRefreshDriver=""></iframe>
+  <tooltip id="aHTMLTooltip" page="true"/>
+  <iframe id="toolbox-iframe" flex="1" forceOwnRefreshDriver="" tooltip="aHTMLTooltip"></iframe>
 </window>
