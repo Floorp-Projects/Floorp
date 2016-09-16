@@ -82,10 +82,9 @@ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PersistentBufferProviderBasic, override)
 
   static already_AddRefed<PersistentBufferProviderBasic>
-  Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat, gfx::BackendType aBackend,
-         int64_t* aMemoryCounter);
+  Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat, gfx::BackendType aBackend);
 
-  explicit PersistentBufferProviderBasic(gfx::DrawTarget* aTarget, int64_t* aMemoryCounter = nullptr);
+  explicit PersistentBufferProviderBasic(gfx::DrawTarget* aTarget);
 
   virtual LayersBackend GetType() override { return LayersBackend::LAYERS_BASIC; }
 
@@ -103,7 +102,6 @@ private:
 
   RefPtr<gfx::DrawTarget> mDrawTarget;
   RefPtr<gfx::SourceSurface> mSnapshot;
-  int64_t* mMemoryCounter;
 };
 
 
@@ -119,8 +117,7 @@ public:
 
   static already_AddRefed<PersistentBufferProviderShared>
   Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-         CompositableForwarder* aFwd,
-         int64_t* aMemoryCounter);
+         CompositableForwarder* aFwd);
 
   virtual LayersBackend GetType() override { return LayersBackend::LAYERS_CLIENT; }
 
@@ -144,13 +141,9 @@ public:
 protected:
   PersistentBufferProviderShared(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                                  CompositableForwarder* aFwd,
-                                 RefPtr<TextureClient>& aTexture,
-                                 int64_t* aMemoryCounter);
+                                 RefPtr<TextureClient>& aTexture);
 
   ~PersistentBufferProviderShared();
-
-  void OnAllocation();
-  void OnDeallocation();
 
   TextureClient* GetTexture(Maybe<uint32_t> aIndex);
   bool CheckIndex(uint32_t aIndex) { return aIndex < mTextures.length(); }
@@ -168,7 +161,6 @@ protected:
 
   RefPtr<gfx::DrawTarget> mDrawTarget;
   RefPtr<gfx::SourceSurface > mSnapshot;
-  int64_t* mMemoryCounter;
 };
 
 struct AutoReturnSnapshot

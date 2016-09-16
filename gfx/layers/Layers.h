@@ -485,8 +485,7 @@ public:
    */
   virtual already_AddRefed<PersistentBufferProvider>
     CreatePersistentBufferProvider(const mozilla::gfx::IntSize &aSize,
-                                   mozilla::gfx::SurfaceFormat aFormat,
-                                   int64_t* aMemoryCounter);
+                                   mozilla::gfx::SurfaceFormat aFormat);
 
   virtual bool CanUseCanvasLayerForSize(const gfx::IntSize &aSize) { return true; }
 
