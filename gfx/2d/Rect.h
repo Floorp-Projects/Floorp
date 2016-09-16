@@ -21,6 +21,8 @@ template <typename> struct IsPixel;
 
 namespace gfx {
 
+template<class units, class F> struct RectTyped;
+
 template<class units>
 struct IntMarginTyped:
     public BaseMargin<int32_t, IntMarginTyped<units> >,
@@ -86,12 +88,56 @@ struct IntRectTyped :
 
     typedef BaseRect<int32_t, IntRectTyped<units>, IntPointTyped<units>, IntSizeTyped<units>, IntMarginTyped<units> > Super;
     typedef IntRectTyped<units> Self;
+    typedef IntParam<int32_t> ToInt;
 
     IntRectTyped() : Super() {}
     IntRectTyped(const IntPointTyped<units>& aPos, const IntSizeTyped<units>& aSize) :
         Super(aPos, aSize) {}
-    IntRectTyped(int32_t _x, int32_t _y, int32_t _width, int32_t _height) :
-        Super(_x, _y, _width, _height) {}
+
+    IntRectTyped(ToInt aX, ToInt aY, ToInt aWidth, ToInt aHeight) :
+        Super(aX.value, aY.value, aWidth.value, aHeight.value) {}
+
+    static IntRectTyped<units> RoundIn(float aX, float aY, float aW, float aH) {
+      return IntRectTyped<units>::RoundIn(RectTyped<units, float>(aX, aY, aW, aH));
+    }
+
+    static IntRectTyped<units> RoundOut(float aX, float aY, float aW, float aH) {
+      return IntRectTyped<units>::RoundOut(RectTyped<units, float>(aX, aY, aW, aH));
+    }
+
+    static IntRectTyped<units> Round(float aX, float aY, float aW, float aH) {
+      return IntRectTyped<units>::Round(RectTyped<units, float>(aX, aY, aW, aH));
+    }
+
+    static IntRectTyped<units> Truncate(float aX, float aY, float aW, float aH) {
+      return IntRectTyped<units>(IntPointTyped<units>::Truncate(aX, aY),
+                                 IntSizeTyped<units>::Truncate(aW, aH));
+    }
+
+    static IntRectTyped<units> RoundIn(const RectTyped<units, float>& aRect) {
+      auto tmp(aRect);
+      tmp.RoundIn();
+      return IntRectTyped(int32_t(tmp.x), int32_t(tmp.y),
+                          int32_t(tmp.width), int32_t(tmp.height));
+    }
+
+    static IntRectTyped<units> RoundOut(const RectTyped<units, float>& aRect) {
+      auto tmp(aRect);
+      tmp.RoundOut();
+      return IntRectTyped(int32_t(tmp.x), int32_t(tmp.y),
+                          int32_t(tmp.width), int32_t(tmp.height));
+    }
+
+    static IntRectTyped<units> Round(const RectTyped<units, float>& aRect) {
+      auto tmp(aRect);
+      tmp.Round();
+      return IntRectTyped(int32_t(tmp.x), int32_t(tmp.y),
+                          int32_t(tmp.width), int32_t(tmp.height));
+    }
+
+    static IntRectTyped<units> Truncate(const RectTyped<units, float>& aRect) {
+      return IntRectTyped::Truncate(aRect.x, aRect.y, aRect.width, aRect.height);
+    }
 
     // Rounding isn't meaningful on an integer rectangle.
     void Round() {}
@@ -248,31 +294,18 @@ IntRectTyped<units> RoundedToInt(const RectTyped<units>& aRect)
 template<class units>
 IntRectTyped<units> RoundedIn(const RectTyped<units>& aRect)
 {
-  RectTyped<units> copy(aRect);
-  copy.RoundIn();
-  return IntRectTyped<units>(int32_t(copy.x),
-                             int32_t(copy.y),
-                             int32_t(copy.width),
-                             int32_t(copy.height));
+  return IntRectTyped<units>::RoundIn(aRect);
 }
 
 template<class units>
 IntRectTyped<units> RoundedOut(const RectTyped<units>& aRect)
 {
-  RectTyped<units> copy(aRect);
-  copy.RoundOut();
-  return IntRectTyped<units>(int32_t(copy.x),
-                             int32_t(copy.y),
-                             int32_t(copy.width),
-                             int32_t(copy.height));
+  return IntRectTyped<units>::RoundOut(aRect);
 }
 
 template<class units>
 IntRectTyped<units> TruncatedToInt(const RectTyped<units>& aRect) {
-  return IntRectTyped<units>(int32_t(aRect.x),
-                             int32_t(aRect.y),
-                             int32_t(aRect.width),
-                             int32_t(aRect.height));
+  return IntRectTyped<units>::Truncate(aRect);
 }
 
 template<class units>
