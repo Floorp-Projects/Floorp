@@ -25,6 +25,7 @@ Cu.import("resource://services-sync/main.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/bookmark_validator.js");
 Cu.import("resource://services-sync/engines/passwords.js");
+Cu.import("resource://services-sync/engines/forms.js");
 // TPS modules
 Cu.import("resource://tps/logger.jsm");
 
@@ -114,6 +115,7 @@ var TPS = {
   _requestedQuit: false,
   shouldValidateBookmarks: false,
   shouldValidatePasswords: false,
+  shouldValidateForms: false,
 
   _init: function TPS__init() {
     // Check if Firefox Accounts is enabled
@@ -358,6 +360,7 @@ var TPS = {
   },
 
   HandleForms: function (data, action) {
+    this.shouldValidateForms = true;
     for (let datum of data) {
       Logger.logInfo("executing action " + action.toUpperCase() +
                      " on form entry " + JSON.stringify(datum));
@@ -689,6 +692,38 @@ var TPS = {
     Logger.logInfo("Password validation finished");
   },
 
+  ValidateForms() {
+    let serverRecordDumpStr;
+    let clientRecordDumpStr;
+    try {
+      Logger.logInfo("About to perform form validation");
+      let engine = Weave.Service.engineManager.get("forms");
+      let validator = new FormValidator();
+      let serverRecords = validator.getServerItems(engine);
+      let clientRecords = Async.promiseSpinningly(validator.getClientItems());
+      clientRecordDumpStr = JSON.stringify(clientRecords);
+      serverRecordDumpStr = JSON.stringify(serverRecords);
+      let { problemData } = validator.compareClientWithServer(clientRecords, serverRecords);
+      for (let { name, count } of problemData.getSummary()) {
+        if (count) {
+          Logger.logInfo(`Validation problem: "${name}": ${JSON.stringify(problemData[name])}`);
+        }
+        Logger.AssertEqual(count, 0, `Form validation error of type ${name}`);
+      }
+    } catch (e) {
+      // Dump the client records if possible
+      if (clientRecordDumpStr) {
+        Logger.logInfo("Client forms records:\n" + clientRecordDumpStr + "\n");
+      }
+      // Dump the server records if gotten them already.
+      if (serverRecordDumpStr) {
+        Logger.logInfo("Server forms records:\n" + serverRecordDumpStr + "\n");
+      }
+      this.DumpError("Form validation failed", e);
+    }
+    Logger.logInfo("Form validation finished");
+  },
+
   RunNextTestAction: function() {
     try {
       if (this._currentAction >=
@@ -699,6 +734,9 @@ var TPS = {
         }
         if (this.shouldValidatePasswords) {
           this.ValidatePasswords();
+        }
+        if (this.shouldValidateForms) {
+          this.ValidateForms();
         }
         // we're all done
         Logger.logInfo("test phase " + this._currentPhase + ": " +

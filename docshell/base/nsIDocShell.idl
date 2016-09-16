@@ -301,6 +301,15 @@ interface nsIDocShell : nsIDocShellTreeItem
   [infallible] attribute boolean allowContentRetargetingOnChildren;
 
   /**
+   * True if this docShell should inherit the private browsing ID from
+   * its parent when reparented.
+   *
+   * NOTE: This should *not* be set false in new code, or for docShells
+   * inserted anywhere other than as children of panels.
+   */
+  [infallible] attribute boolean inheritPrivateBrowsingId;
+
+  /**
    * Get an enumerator over this docShell and its children.
    *
    * @param aItemType  - Only include docShells of this type, or if typeAll,
