@@ -27,6 +27,12 @@ struct ShowEventData
   AccessibleData[] NewTree;
 };
 
+struct MsaaMapping
+{
+  uint64_t ID;
+  uint32_t MsaaID;
+};
+
 struct Attribute
 {
   nsCString Name;
@@ -45,7 +51,7 @@ parent:
    * event.
    */
   async Event(uint64_t aID, uint32_t type);
-  async ShowEvent(ShowEventData data, bool aFromuser);
+  sync ShowEventInfo(ShowEventData data) returns (MsaaMapping[] aNewMsaaIds);
   async HideEvent(uint64_t aRootID, bool aFromUser);
   async StateChangeEvent(uint64_t aID, uint64_t aState, bool aEnabled);
   async CaretMoveEvent(uint64_t aID, int32_t aOffset);
@@ -63,7 +69,7 @@ parent:
   // For now we'll add the command to send the proxy here. This might move to
   // PDocAccessible constructor in PBrowser.
   sync COMProxy(IAccessibleHolder aDocCOMProxy)
-    returns(IAccessibleHolder aParentCOMProxy);
+    returns(IAccessibleHolder aParentCOMProxy, uint32_t aMsaaID);
 
 child:
   async __delete__();
