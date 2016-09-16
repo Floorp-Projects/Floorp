@@ -150,7 +150,7 @@ Tracker.prototype = {
 
     // Default to the current time in seconds if no time is provided.
     if (when == null) {
-      when = Date.now() / 1000;
+      when = this._now();
     }
 
     // Add/update the entry if we have a newer time.
@@ -181,6 +181,10 @@ Tracker.prototype = {
     this._log.trace("Clearing changed ID list");
     this.changedIDs = {};
     this.saveChangedIDs();
+  },
+
+  _now() {
+    return Date.now() / 1000;
   },
 
   _isTracking: false,
@@ -1275,6 +1279,18 @@ SyncEngine.prototype = {
       this._delete.ids.push(id);
   },
 
+  _switchItemToDupe(localDupeGUID, incomingItem) {
+    // The local, duplicate ID is always deleted on the server.
+    this._deleteId(localDupeGUID);
+
+    // We unconditionally change the item's ID in case the engine knows of
+    // an item but doesn't expose it through itemExists. If the API
+    // contract were stronger, this could be changed.
+    this._log.debug("Switching local ID to incoming: " + localDupeGUID + " -> " +
+                    incomingItem.id);
+    this._store.changeItemID(localDupeGUID, incomingItem.id);
+  },
+
   /**
    * Reconcile incoming record with local state.
    *
@@ -1348,39 +1364,31 @@ SyncEngine.prototype = {
     // refresh the metadata collected above. See bug 710448 for the history
     // of this logic.
     if (!existsLocally) {
-      let dupeID = this._findDupe(item);
-      if (dupeID) {
-        this._log.trace("Local item " + dupeID + " is a duplicate for " +
+      let localDupeGUID = this._findDupe(item);
+      if (localDupeGUID) {
+        this._log.trace("Local item " + localDupeGUID + " is a duplicate for " +
                         "incoming item " + item.id);
-
-        // The local, duplicate ID is always deleted on the server.
-        this._deleteId(dupeID);
 
         // The current API contract does not mandate that the ID returned by
         // _findDupe() actually exists. Therefore, we have to perform this
         // check.
-        existsLocally = this._store.itemExists(dupeID);
-
-        // We unconditionally change the item's ID in case the engine knows of
-        // an item but doesn't expose it through itemExists. If the API
-        // contract were stronger, this could be changed.
-        this._log.debug("Switching local ID to incoming: " + dupeID + " -> " +
-                        item.id);
-        this._store.changeItemID(dupeID, item.id);
+        existsLocally = this._store.itemExists(localDupeGUID);
 
         // If the local item was modified, we carry its metadata forward so
         // appropriate reconciling can be performed.
-        if (this._modified.has(dupeID)) {
+        if (this._modified.has(localDupeGUID)) {
           locallyModified = true;
-          localAge = Date.now() / 1000 -
-            this._modified.getModifiedTimestamp(dupeID);
+          localAge = this._tracker._now() - this._modified.getModifiedTimestamp(localDupeGUID);
           remoteIsNewer = remoteAge < localAge;
 
-          this._modified.swap(dupeID, item.id);
+          this._modified.swap(localDupeGUID, item.id);
         } else {
           locallyModified = false;
           localAge = null;
         }
+
+        // Tell the engine to do whatever it needs to switch the items.
+        this._switchItemToDupe(localDupeGUID, item);
 
         this._log.debug("Local item after duplication: age=" + localAge +
                         "; modified=" + locallyModified + "; exists=" +

@@ -82,14 +82,16 @@ wptlint-gecko/opt:
         max-run-time: 1800
     run:
         using: mach
-        mach: lint -l wpt -f treeherder
+        mach: lint -l wpt -l wpt_manifest -f treeherder
     run-on-projects:
         - integration
         - release
     when:
         files-changed:
             - 'testing/web-platform/tests/**'
+            - 'testing/web-platform/mozilla/tests/**'
+            - 'testing/web-platform/meta/MANIFEST.json'
+            - 'testing/web-platform/mozilla/meta/MANIFEST.json'
             - 'python/mozlint/**'
             - 'tools/lint/**'
             - 'testing/docker/lint/**'
-

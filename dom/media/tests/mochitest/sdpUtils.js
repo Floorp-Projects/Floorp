@@ -24,16 +24,14 @@ checkSdpCLineNotDefault: function(sdpStr, label) {
   ok(!sdpStr.includes("c=IN IP4 0.0.0.0"), label + ": SDP contains non-zero IP c line");
 },
 
-// Also remove mode 0 if it's offered
 // Note, we don't bother removing the fmtp lines, which makes a good test
-// for some SDP parsing issues.
-removeVP8: function(sdp) {
-  var updated_sdp = sdp.replace("a=rtpmap:120 VP8/90000\r\n","");
-  updated_sdp = updated_sdp.replace("RTP/SAVPF 120 126 97\r\n","RTP/SAVPF 126 97\r\n");
-  updated_sdp = updated_sdp.replace("RTP/SAVPF 120 126\r\n","RTP/SAVPF 126\r\n");
-  updated_sdp = updated_sdp.replace("a=rtcp-fb:120 nack\r\n","");
-  updated_sdp = updated_sdp.replace("a=rtcp-fb:120 nack pli\r\n","");
-  updated_sdp = updated_sdp.replace("a=rtcp-fb:120 ccm fir\r\n","");
+// for some SDP parsing issues.  It would be good to have a "removeAllButCodec(sdp, codec)" too.
+removeCodec: function(sdp, codec) {
+    var updated_sdp = sdp.replace(new RegExp("a=rtpmap:" + codec + ".*\\/90000\\r\\n",""),"");
+    updated_sdp = updated_sdp.replace(new RegExp("(RTP\\/SAVPF.*)( " + codec + ")(.*\\r\\n)",""),"$1$3");
+    updated_sdp = updated_sdp.replace(new RegExp("a=rtcp-fb:" + codec + " nack\\r\\n",""),"");
+    updated_sdp = updated_sdp.replace(new RegExp("a=rtcp-fb:" + codec + " nack pli\\r\\n",""),"");
+    updated_sdp = updated_sdp.replace(new RegExp("a=rtcp-fb:" + codec + " ccm fir\\r\\n",""),"");
   return updated_sdp;
 },
 
@@ -125,7 +123,8 @@ verifySdp: function(desc, expectedType, offerConstraintsList, offerOptions,
     if (testOptions.h264) {
       ok(desc.sdp.includes("a=rtpmap:126 H264/90000"), "H.264 codec is present in SDP");
     } else {
-      ok(desc.sdp.includes("a=rtpmap:120 VP8/90000"), "VP8 codec is present in SDP");
+	ok(desc.sdp.includes("a=rtpmap:120 VP8/90000") ||
+	   desc.sdp.includes("a=rtpmap:121 VP9/90000"), "VP8 or VP9 codec is present in SDP");
     }
     is(testOptions.rtcpmux, desc.sdp.includes("a=rtcp-mux"), "RTCP Mux is offered in SDP");
   }

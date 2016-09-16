@@ -205,7 +205,7 @@ pref("dom.keyboardevent.dispatch_during_composition", false);
 // Whether the UndoManager API is enabled
 pref("dom.undo_manager.enabled", false);
 
-// Whether URL,nsLocation,Link::GetHash should be percent encoded
+// Whether URL,Location,Link::GetHash should be percent encoded
 // in setter and percent decoded in getter (old behaviour = true)
 pref("dom.url.encode_decode_hash", true);
 // Whether ::GetHash should do percent decoding (old behaviour = true)
@@ -452,6 +452,7 @@ pref("media.navigator.video.h264.level", 31); // 0x42E01f - level 3.1
 pref("media.navigator.video.h264.max_br", 0);
 pref("media.navigator.video.h264.max_mbps", 0);
 pref("media.peerconnection.video.h264_enabled", false);
+pref("media.peerconnection.video.vp9_enabled", true);
 pref("media.getusermedia.aec", 1);
 pref("media.getusermedia.browser.enabled", true);
 #endif
@@ -1099,7 +1100,7 @@ pref("print.print_edge_right", 0);
 pref("print.print_edge_bottom", 0);
 
 // Print via the parent process. This is only used when e10s is enabled.
-#if defined(XP_WIN)
+#if defined(XP_WIN) || defined(XP_MACOSX)
 pref("print.print_via_parent", true);
 #else
 pref("print.print_via_parent", false);

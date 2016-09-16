@@ -1050,6 +1050,10 @@ extends="chrome://global/content/bindings/popup.xml#popup">
       <method name="onSearchBegin">
         <body><![CDATA[
           this.richlistbox.mouseSelectedIndex = -1;
+
+          if (typeof this._onSearchBegin == "function") {
+            this._onSearchBegin();
+          }
         ]]></body>
       </method>
 
