@@ -629,6 +629,9 @@ class ScriptMixin(PlatformMixin):
                 'application/zip': {
                     'function': self.unzip,
                 },
+                'application/x-zip-compressed': {
+                    'function': self.unzip,
+                },
             }
 
             filename = url.split('/')[-1]
