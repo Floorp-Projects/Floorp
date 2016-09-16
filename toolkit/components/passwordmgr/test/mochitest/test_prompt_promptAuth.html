@@ -125,7 +125,7 @@ let prompter2 = new PrompterProxy(prompterParent);
 
 add_task(function* test_accept() {
   state = {
-    msg         : "http://example.com is requesting your username and password.\n\nThe site says: “some realm”",
+    msg         : "http://example.com is requesting your username and password. The site says: “some realm”",
     title       : "Authentication Required",
     textValue   : "inuser",
     passValue   : "inpass",
@@ -162,7 +162,7 @@ add_task(function* test_accept() {
 
 add_task(function* test_cancel() {
   state = {
-    msg         : "http://example.com is requesting your username and password.\n\nThe site says: “some realm”",
+    msg         : "http://example.com is requesting your username and password. The site says: “some realm”",
     title       : "Authentication Required",
     textValue   : "outuser",
     passValue   : "outpass",
@@ -189,7 +189,7 @@ add_task(function* test_cancel() {
 add_task(function* test_pwonly() {
   // test filling in password-only login
   state = {
-    msg         : "http://example.com is requesting your username and password.\n\nThe site says: “http://example.com”",
+    msg         : "http://example.com is requesting your username and password. The site says: “http://example.com”",
     title       : "Authentication Required",
     textValue   : "",
     passValue   : "examplepass",
@@ -223,7 +223,7 @@ add_task(function* test_multipleExisting() {
   // test filling in existing login (undetermined from multiple selection)
   // user2name/user2pass would also be valid to fill here.
   state = {
-    msg         : "http://example2.com is requesting your username and password.\n\nThe site says: “http://example2.com”",
+    msg         : "http://example2.com is requesting your username and password. The site says: “http://example2.com”",
     title       : "Authentication Required",
     textValue   : "user1name",
     passValue   : "user1pass",
@@ -257,7 +257,7 @@ add_task(function* test_multipleExisting2() {
   // test filling in existing login (undetermined --> user1)
   // user2name/user2pass would also be valid to fill here.
   state = {
-    msg         : "http://example2.com is requesting your username and password.\n\nThe site says: “http://example2.com”",
+    msg         : "http://example2.com is requesting your username and password. The site says: “http://example2.com”",
     title       : "Authentication Required",
     textValue   : "user1name",
     passValue   : "user1pass",
@@ -294,7 +294,7 @@ add_task(function* test_multipleExisting3() {
   // test filling in existing login (undetermined --> user2)
   // user2name/user2pass would also be valid to fill here.
   state = {
-    msg         : "http://example2.com is requesting your username and password.\n\nThe site says: “http://example2.com”",
+    msg         : "http://example2.com is requesting your username and password. The site says: “http://example2.com”",
     title       : "Authentication Required",
     textValue   : "user1name",
     passValue   : "user1pass",
@@ -331,7 +331,7 @@ add_task(function* test_changingMultiple() {
   // test changing a password (undetermined --> user2 w/ newpass)
   // user2name/user2pass would also be valid to fill here.
   state = {
-    msg         : "http://example2.com is requesting your username and password.\n\nThe site says: “http://example2.com”",
+    msg         : "http://example2.com is requesting your username and password. The site says: “http://example2.com”",
     title       : "Authentication Required",
     textValue   : "user1name",
     passValue   : "user1pass",
@@ -368,7 +368,7 @@ add_task(function* test_changingMultiple2() {
   // test changing a password (undetermined --> user2 w/ origpass)
   // user2name/user2pass would also be valid to fill here.
   state = {
-    msg         : "http://example2.com is requesting your username and password.\n\nThe site says: “http://example2.com”",
+    msg         : "http://example2.com is requesting your username and password. The site says: “http://example2.com”",
     title       : "Authentication Required",
     textValue   : "user1name",
     passValue   : "user1pass",

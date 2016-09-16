@@ -64,6 +64,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'uikit'):
     ]
     UNIFIED_SOURCES += [
         'DrawTargetCG.cpp',
+        'NativeFontResourceMac.cpp',
         'PathCG.cpp',
         'ScaledFontMac.cpp',
         'SourceSurfaceCG.cpp',

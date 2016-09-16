@@ -4392,8 +4392,8 @@ nsFlexContainerFrame::ReflowFlexItem(nsPresContext* aPresContext,
 /* virtual */ nscoord
 nsFlexContainerFrame::GetMinISize(nsRenderingContext* aRenderingContext)
 {
-  nscoord minWidth = 0;
-  DISPLAY_MIN_WIDTH(this, minWidth);
+  nscoord minISize = 0;
+  DISPLAY_MIN_WIDTH(this, minISize);
 
   RenumberList();
 
@@ -4401,28 +4401,29 @@ nsFlexContainerFrame::GetMinISize(nsRenderingContext* aRenderingContext)
   const FlexboxAxisTracker axisTracker(this, GetWritingMode());
 
   for (nsIFrame* childFrame : mFrames) {
-    nscoord childMinWidth =
+    nscoord childMinISize =
       nsLayoutUtils::IntrinsicForContainer(aRenderingContext, childFrame,
                                            nsLayoutUtils::MIN_ISIZE);
-    // For a horizontal single-line flex container, the intrinsic min width is
-    // the sum of its items' min widths.
-    // For a vertical flex container, or for a multi-line horizontal flex
-    // container, the intrinsic min width is the max of its items' min widths.
-    if (axisTracker.IsMainAxisHorizontal() &&
+    // For a horizontal single-line flex container, the intrinsic min
+    // isize is the sum of its items' min isizes.
+    // For a column-oriented flex container, or for a multi-line row-
+    // oriented flex container, the intrinsic min isize is the max of
+    // its items' min isizes.
+    if (axisTracker.IsRowOriented() &&
         NS_STYLE_FLEX_WRAP_NOWRAP == stylePos->mFlexWrap) {
-      minWidth += childMinWidth;
+      minISize += childMinISize;
     } else {
-      minWidth = std::max(minWidth, childMinWidth);
+      minISize = std::max(minISize, childMinISize);
     }
   }
-  return minWidth;
+  return minISize;
 }
 
 /* virtual */ nscoord
 nsFlexContainerFrame::GetPrefISize(nsRenderingContext* aRenderingContext)
 {
-  nscoord prefWidth = 0;
-  DISPLAY_PREF_WIDTH(this, prefWidth);
+  nscoord prefISize = 0;
+  DISPLAY_PREF_WIDTH(this, prefISize);
 
   RenumberList();
 
@@ -4434,14 +4435,14 @@ nsFlexContainerFrame::GetPrefISize(nsRenderingContext* aRenderingContext)
   const FlexboxAxisTracker axisTracker(this, GetWritingMode());
 
   for (nsIFrame* childFrame : mFrames) {
-    nscoord childPrefWidth =
+    nscoord childPrefISize =
       nsLayoutUtils::IntrinsicForContainer(aRenderingContext, childFrame,
                                            nsLayoutUtils::PREF_ISIZE);
-    if (axisTracker.IsMainAxisHorizontal()) {
-      prefWidth += childPrefWidth;
+    if (axisTracker.IsRowOriented()) {
+      prefISize += childPrefISize;
     } else {
-      prefWidth = std::max(prefWidth, childPrefWidth);
+      prefISize = std::max(prefISize, childPrefISize);
     }
   }
-  return prefWidth;
+  return prefISize;
 }

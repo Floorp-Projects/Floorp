@@ -664,11 +664,11 @@ void VP9EncoderImpl::PopulateCodecSpecific(CodecSpecificInfo* codec_specific,
                             svc_internal_.svc_params.scaling_factor_num[i] /
                             svc_internal_.svc_params.scaling_factor_den[i];
     }
-    if (!vp9_info->flexible_mode) {
-      vp9_info->gof.CopyGofInfoVP9(gof_);
-    }
   }
 #endif
+  if (!vp9_info->flexible_mode) {
+    vp9_info->gof.CopyGofInfoVP9(gof_);
+  }
 }
 
 int VP9EncoderImpl::GetEncodedLayerFrame(const vpx_codec_cx_pkt* pkt) {

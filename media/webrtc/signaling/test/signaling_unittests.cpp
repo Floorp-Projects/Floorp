@@ -4165,9 +4165,11 @@ TEST_P(SignalingTest, ValidateMultipleVideoCodecsInOffer)
   std::string offer = a1_->offer();
 
 #ifdef H264_P0_SUPPORTED
-  ASSERT_NE(offer.find("UDP/TLS/RTP/SAVPF 120 126 97"), std::string::npos);
+  ASSERT_NE(offer.find("UDP/TLS/RTP/SAVPF 120 126 97") ||
+            offer.find("UDP/TLS/RTP/SAVPF 120 121 126 97"), std::string::npos);
 #else
-  ASSERT_NE(offer.find("UDP/TLS/RTP/SAVPF 120 126"), std::string::npos);
+  ASSERT_NE(offer.find("UDP/TLS/RTP/SAVPF 120 126") ||
+            offer.find("UDP/TLS/RTP/SAVPF 120 121 126"), std::string::npos);
 #endif
   ASSERT_NE(offer.find("a=rtpmap:120 VP8/90000"), std::string::npos);
   ASSERT_NE(offer.find("a=rtpmap:126 H264/90000"), std::string::npos);
@@ -4200,8 +4202,15 @@ TEST_P(SignalingTest, RemoveVP8FromOfferWithP1First)
   // Remove VP8 from offer
   std::string offer = a1_->offer();
   match = offer.find("UDP/TLS/RTP/SAVPF 120");
+  if (match != std::string::npos) {
+    offer.replace(match, strlen("UDP/TLS/RTP/SAVPF 120"), "UDP/TLS/RTP/SAVPF");
+  }
+  match = offer.find("UDP/TLS/RTP/SAVPF 121");
+  if (match != std::string::npos) {
+    offer.replace(match, strlen("UDP/TLS/RTP/SAVPF 121"), "UDP/TLS/RTP/SAVPF");
+  }
+  match = offer.find("UDP/TLS/RTP/SAVPF 126");
   ASSERT_NE(std::string::npos, match);
-  offer.replace(match, strlen("UDP/TLS/RTP/SAVPF 120"), "UDP/TLS/RTP/SAVPF");
 
   match = offer.find("profile-level-id");
   ASSERT_NE(std::string::npos, match);
