@@ -179,6 +179,7 @@ IMContextWrapper::IMContextWrapper(nsWindow* aOwnerWindow)
     , mLayoutChanged(false)
     , mSetCursorPositionOnKeyEvent(true)
     , mPendingResettingIMContext(false)
+    , mRetrieveSurroundingSignalReceived(false)
 {
     static bool sFirstInstance = true;
     if (sFirstInstance) {
@@ -930,6 +931,9 @@ IMContextWrapper::OnSelectionChange(nsWindow* aCaller,
                                     const IMENotification& aIMENotification)
 {
     mSelection.Assign(aIMENotification);
+    bool retrievedSurroundingSignalReceived =
+      mRetrieveSurroundingSignalReceived;
+    mRetrieveSurroundingSignalReceived = false;
 
     if (MOZ_UNLIKELY(IsDestroyed())) {
         return;
@@ -943,7 +947,8 @@ IMContextWrapper::OnSelectionChange(nsWindow* aCaller,
          "mSelectionChangeData={ mOffset=%u, Length()=%u, mReversed=%s, "
          "mWritingMode=%s, mCausedByComposition=%s, "
          "mCausedBySelectionEvent=%s, mOccurredDuringComposition=%s "
-         "} }), mCompositionState=%s, mIsDeletingSurrounding=%s",
+         "} }), mCompositionState=%s, mIsDeletingSurrounding=%s, "
+         "mRetrieveSurroundingSignalReceived=%s",
          this, aCaller, selectionChangeData.mOffset,
          selectionChangeData.Length(),
          ToChar(selectionChangeData.mReversed),
@@ -951,7 +956,8 @@ IMContextWrapper::OnSelectionChange(nsWindow* aCaller,
          ToChar(selectionChangeData.mCausedByComposition),
          ToChar(selectionChangeData.mCausedBySelectionEvent),
          ToChar(selectionChangeData.mOccurredDuringComposition),
-         GetCompositionStateName(), ToChar(mIsDeletingSurrounding)));
+         GetCompositionStateName(), ToChar(mIsDeletingSurrounding),
+         ToChar(retrievedSurroundingSignalReceived)));
 
     if (aCaller != mLastFocusedWindow) {
         MOZ_LOG(gGtkIMLog, LogLevel::Error,
@@ -1011,7 +1017,18 @@ IMContextWrapper::OnSelectionChange(nsWindow* aCaller,
     if (!selectionChangeData.mCausedByComposition &&
         !selectionChangeData.mCausedBySelectionEvent &&
         !occurredBeforeComposition) {
-        ResetIME();
+        // Hack for ibus-pinyin.  ibus-pinyin will synthesize a set of
+        // composition which commits with empty string after calling
+        // gtk_im_context_reset().  Therefore, selecting text causes
+        // unexpectedly removing it.  For preventing it but not breaking the
+        // other IMEs which use surrounding text, we should call it only when
+        // surrounding text has been retrieved after last selection range was
+        // set.  If it's not retrieved, that means that current IME doesn't
+        // have any content cache, so, it must not need the notification of
+        // selection change.
+        if (IsComposing() || retrievedSurroundingSignalReceived) {
+            ResetIME();
+        }
     }
 }
 
@@ -1164,6 +1181,7 @@ IMContextWrapper::OnRetrieveSurroundingNative(GtkIMContext* aContext)
     AppendUTF16toUTF8(nsDependentSubstring(uniStr, cursorPos), utf8Str);
     gtk_im_context_set_surrounding(aContext, utf8Str.get(), utf8Str.Length(),
                                    cursorPosInUTF8);
+    mRetrieveSurroundingSignalReceived = true;
     return TRUE;
 }
 

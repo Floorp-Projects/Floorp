@@ -219,11 +219,17 @@ let gDecoderDoctorHandler = {
       if (AppConstants.isPlatformAndVersionAtMost("win", "5.9")) {
         return gNavigatorBundle.getString("decoder.noCodecsXP.message");
       }
+      if (!AppConstants.isPlatformAndVersionAtLeast("win", "6.1")) {
+        return gNavigatorBundle.getString("decoder.noCodecsVista.message");
+      }
       return gNavigatorBundle.getString("decoder.noCodecs.message");
     }
     if (type == "platform-decoder-not-found") {
-      if (AppConstants.isPlatformAndVersionAtLeast("win", "6")) {
+      if (AppConstants.isPlatformAndVersionAtLeast("win", "6.1")) {
         return gNavigatorBundle.getString("decoder.noHWAcceleration.message");
+      }
+      if (AppConstants.isPlatformAndVersionAtLeast("win", "6")) {
+        return gNavigatorBundle.getString("decoder.noHWAccelerationVista.message");
       }
       if (AppConstants.platform == "linux") {
         return gNavigatorBundle.getString("decoder.noCodecsLinux.message");

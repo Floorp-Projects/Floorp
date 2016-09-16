@@ -355,12 +355,27 @@ add_task(function* test_open_async() {
   yield standardAsyncTest(openAsyncDatabase("memory"),
     "in-memory database", true);
   yield standardAsyncTest(openAsyncDatabase("memory",
-    {shared: false, growthIncrement: 54}),
+    {shared: false}),
     "in-memory database and options", true);
 
-  do_print("Testing async opening with bogus options 1");
+  do_print("Testing async opening with bogus options 0");
   let raised = false;
   let adb = null;
+
+  try {
+    adb = yield openAsyncDatabase("memory", {shared: false, growthIncrement: 54});
+  } catch (ex) {
+    raised = true;
+  } finally {
+    if (adb) {
+      yield asyncClose(adb);
+    }
+  }
+  do_check_true(raised);
+
+  do_print("Testing async opening with bogus options 1");
+  raised = false;
+  adb = null;
   try {
     adb = yield openAsyncDatabase(getTestDB(), {shared: "forty-two"});
   } catch (ex) {
