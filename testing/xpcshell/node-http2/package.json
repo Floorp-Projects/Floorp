@@ -1,10 +1,10 @@
 {
   "name": "http2",
-  "version": "3.2.0",
+  "version": "3.3.6",
   "description": "An HTTP/2 client and server implementation",
   "main": "lib/index.js",
   "engines" : {
-    "node" : ">=0.10.19"
+    "node" : ">=0.12.0"
   },
   "devDependencies": {
     "istanbul": "*",
@@ -15,7 +15,7 @@
   },
   "scripts": {
     "test": "istanbul test _mocha -- --reporter spec --slow 500 --timeout 15000",
-    "doc": "docco lib/* --output doc --layout parallel --css doc/docco.css"
+    "doc": "docco lib/* --output doc --layout parallel --template root.jst --css doc/docco.css && docco lib/protocol/* --output doc/protocol --layout parallel --template protocol.jst --css doc/docco.css"
   },
   "repository": {
     "type": "git",

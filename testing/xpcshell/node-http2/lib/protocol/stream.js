@@ -3,8 +3,8 @@ var assert = require('assert');
 // The Stream class
 // ================
 
-// Stream is a [Duplex stream](http://nodejs.org/api/stream.html#stream_class_stream_duplex)
-// subclass that implements the [HTTP/2 Stream](http://http2.github.io/http2-spec/#rfc.section.3.4)
+// Stream is a [Duplex stream](https://nodejs.org/api/stream.html#stream_class_stream_duplex)
+// subclass that implements the [HTTP/2 Stream](https://tools.ietf.org/html/rfc7540#section-5)
 // concept. It has two 'sides': one that is used by the user to send/receive data (the `stream`
 // object itself) and one that is used by a Connection to read/write frames to/from the other peer
 // (`stream.upstream`).
@@ -40,7 +40,7 @@ exports.Stream = Stream;
 //   that are to be sent/arrived to/from the peer and are related to this stream.
 //
 // Headers are always in the [regular node.js header format][1].
-// [1]: http://nodejs.org/api/http.html#http_message_headers
+// [1]: https://nodejs.org/api/http.html#http_message_headers
 
 // Constructor
 // -----------
@@ -182,7 +182,7 @@ Stream.prototype.altsvc = function altsvc(host, port, protocolID, maxAge, origin
 // [Flow](flow.html). The [Connection](connection.html) object instantiating the stream will read
 // and write frames to/from it. The stream itself is a regular [Duplex stream][1], and is used by
 // the user to write or read the body of the request.
-// [1]: http://nodejs.org/api/stream.html#stream_class_stream_duplex
+// [1]: https://nodejs.org/api/stream.html#stream_class_stream_duplex
 
 //     upstream side                  stream                  user side
 //
@@ -352,7 +352,7 @@ Stream.prototype._finishing = function _finishing() {
   }
 };
 
-// [Stream States](http://tools.ietf.org/html/draft-ietf-httpbis-http2-16#section-5.1)
+// [Stream States](https://tools.ietf.org/html/rfc7540#section-5.1)
 // ----------------
 //
 //                           +--------+
@@ -567,8 +567,9 @@ Stream.prototype._transition = function transition(sending, frame) {
     //   can be used to close any of those streams.
     case 'CLOSED':
       if (PRIORITY || (sending && RST_STREAM) ||
+          (receiving && WINDOW_UPDATE) ||
           (receiving && this._closedByUs &&
-           (this._closedWithRst || WINDOW_UPDATE || RST_STREAM || ALTSVC))) {
+           (this._closedWithRst || RST_STREAM || ALTSVC))) {
         /* No state change */
       } else {
         streamError = 'STREAM_CLOSED';
@@ -624,7 +625,7 @@ Stream.prototype._transition = function transition(sending, frame) {
     // * When sending something invalid, throwing an exception, since it is probably a bug.
     if (sending) {
       this._log.error(info, 'Sending illegal frame.');
-      throw new Error('Sending illegal frame (' + frame.type + ') in ' + this.state + ' state.');
+      return this.emit('error', new Error('Sending illegal frame (' + frame.type + ') in ' + this.state + ' state.'));
     }
 
     // * In case of a serious problem, emitting and error and letting someone else handle it
