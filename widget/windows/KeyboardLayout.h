@@ -668,6 +668,17 @@ private:
                          uint8_t aVirtualKey,
                          VirtualKey::ShiftState aShiftState) const;
 
+  /**
+   * GetCompositeChar() returns a composite character with dead character
+   * caused by aVirtualKeyOfDeadKey and aShiftStateOfDeadKey and a base
+   * character (aBaseChar).
+   * If the combination of the dead character and the base character doesn't
+   * cause a composite character, this returns 0.
+   */
+  char16_t GetCompositeChar(uint8_t aVirtualKeyOfDeadKey,
+                            VirtualKey::ShiftState aShiftStateOfDeadKey,
+                            char16_t aBaseChar) const;
+
 public:
   static KeyboardLayout* GetInstance();
   static void Shutdown();
