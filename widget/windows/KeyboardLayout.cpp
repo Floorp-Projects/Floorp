@@ -966,18 +966,21 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
         // Therefore, we never get VK_RCONTRL and VK_RMENU for the result of
         // MapVirtualKeyEx() on WinXP or WinServer2003.
         //
-        // If VK_CONTROL or VK_MENU key message is caused by an extended key,
-        // we should assume that the right key of them is pressed.
+        // If VK_SHIFT, VK_CONTROL or VK_MENU key message is caused by well
+        // known scan code, we should decide it as Right key.  Otherwise,
+        // decide it as Left key.
         switch (mOriginalVirtualKeyCode) {
           case VK_CONTROL:
-            mVirtualKeyCode = VK_RCONTROL;
+            mVirtualKeyCode =
+              mIsExtended && mScanCode == 0x1D ? VK_RCONTROL : VK_LCONTROL;
             break;
           case VK_MENU:
-            mVirtualKeyCode = VK_RMENU;
+            mVirtualKeyCode =
+              mIsExtended && mScanCode == 0x38 ? VK_RMENU : VK_LMENU;
             break;
           case VK_SHIFT:
-            // Neither left shift nor right shift is not an extended key,
-            // let's use VK_LSHIFT for invalid scan code.
+            // Neither left shift nor right shift is an extended key,
+            // let's use VK_LSHIFT for unknown mapping.
             mVirtualKeyCode = VK_LSHIFT;
             break;
           default:
@@ -1009,8 +1012,8 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
           break;
         case VK_SHIFT:
           if (mVirtualKeyCode != VK_LSHIFT && mVirtualKeyCode != VK_RSHIFT) {
-            // Neither left shift nor right shift is not an extended key,
-            // let's use VK_LSHIFT for invalid scan code.
+            // Neither left shift nor right shift is an extended key,
+            // let's use VK_LSHIFT for unknown mapping.
             mVirtualKeyCode = VK_LSHIFT;
           }
           break;
@@ -1283,12 +1286,7 @@ NativeKey::IsIMEDoingKakuteiUndo() const
 UINT
 NativeKey::GetScanCodeWithExtendedFlag() const
 {
-  // MapVirtualKeyEx() has been improved for supporting extended keys since
-  // Vista.  When we call it for mapping a scancode of an extended key and
-  // a virtual keycode, we need to add 0xE000 to the scancode.
-  // On Win XP and Win Server 2003, this doesn't support. On them, we have
-  // no way to get virtual keycodes from scancode of extended keys.
-  if (!mIsExtended || !IsVistaOrLater()) {
+  if (!mIsExtended) {
     return mScanCode;
   }
   return (0xE000 | mScanCode);
@@ -1382,6 +1380,12 @@ NativeKey::ComputeVirtualKeyCodeFromScanCode() const
 uint8_t
 NativeKey::ComputeVirtualKeyCodeFromScanCodeEx() const
 {
+  // MapVirtualKeyEx() has been improved for supporting extended keys since
+  // Vista.  When we call it for mapping a scancode of an extended key and
+  // a virtual keycode, we need to add 0xE000 to the scancode.
+  // On the other hand, neither WinXP nor WinServer2003 doesn't support 0xE000.
+  // Therefore, we have no way to get virtual keycode from scan code of
+  // extended keys.
   if (NS_WARN_IF(!CanComputeVirtualKeyCodeFromScanCode())) {
     return 0;
   }
