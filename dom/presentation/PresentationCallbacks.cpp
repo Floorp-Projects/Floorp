@@ -10,10 +10,11 @@
 #include "nsIPresentationService.h"
 #include "nsIWebProgress.h"
 #include "nsServiceManagerUtils.h"
+#include "nsThreadUtils.h"
 #include "PresentationCallbacks.h"
 #include "PresentationRequest.h"
 #include "PresentationConnection.h"
-#include "nsThreadUtils.h"
+#include "PresentationTransportBuilderConstructor.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -201,7 +202,11 @@ PresentationResponderLoadingCallback::NotifyReceiverReady(bool aIsLoading)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  return service->NotifyReceiverReady(mSessionId, windowId, aIsLoading);
+  nsCOMPtr<nsIPresentationTransportBuilderConstructor> constructor =
+    PresentationTransportBuilderConstructor::Create();
+  return service->NotifyReceiverReady(mSessionId,
+                                      windowId,aIsLoading,
+                                      constructor);
 }
 
 // nsIWebProgressListener
