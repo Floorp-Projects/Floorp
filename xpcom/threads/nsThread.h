@@ -222,9 +222,6 @@ protected:
   // Set to true when events posted to this thread will never run.
   bool mEventsAreDoomed;
   MainThreadFlag mIsMainThread;
-
-  // Set to true if this thread creates a JSRuntime.
-  bool mCanInvokeJS;
 };
 
 #if defined(XP_UNIX) && !defined(ANDROID) && !defined(DEBUG) && HAVE_UALARM \
