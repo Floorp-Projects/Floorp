@@ -379,6 +379,7 @@ description#identity-popup-content-verifier,
 
 .identity-popup-permission-icon.in-use {
   fill: rgb(224, 41, 29);
+  opacity: 1;
   animation: 1.5s ease in-use-blink infinite;
 }
 
