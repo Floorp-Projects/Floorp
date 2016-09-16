@@ -6,8 +6,8 @@
 const { FrontClassWithSpec, Front } = require("devtools/shared/protocol");
 const { cssPropertiesSpec } = require("devtools/shared/specs/css-properties");
 const { Task } = require("devtools/shared/task");
-const { CSS_PROPERTIES_DB } = require("devtools/shared/css-properties-db");
-const { cssColors } = require("devtools/shared/css-color-db");
+const { CSS_PROPERTIES_DB } = require("devtools/shared/css/properties-db");
+const { cssColors } = require("devtools/shared/css/color-db");
 
 /**
  * Build up a regular expression that matches a CSS variable token. This is an
@@ -91,7 +91,7 @@ CssProperties.prototype = {
 
   /**
    * Checks if the property supports the given CSS type.
-   * CSS types should come from devtools/shared/css-properties-db.js' CSS_TYPES.
+   * CSS types should come from devtools/shared/css/properties-db.js' CSS_TYPES.
    *
    * @param {String} property The property to be checked.
    * @param {Number} type One of the type values from CSS_TYPES.

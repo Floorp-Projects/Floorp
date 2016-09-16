@@ -15,7 +15,7 @@
 "use strict";
 
 const promise = require("promise");
-const {getCSSLexer} = require("devtools/shared/css-lexer");
+const {getCSSLexer} = require("devtools/shared/css/lexer");
 const {Task} = require("devtools/shared/task");
 
 const SELECTOR_ATTRIBUTE = exports.SELECTOR_ATTRIBUTE = 1;

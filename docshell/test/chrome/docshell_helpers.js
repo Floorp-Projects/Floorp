@@ -362,9 +362,7 @@ function finish() {
   ww.registerNotification(function(subject, topic, data) {
     if (topic == "domwindowclosed") {
       ww.unregisterNotification(arguments.callee);
-      SimpleTest.waitForFocus(function() {
-        SimpleTest.finish();
-      }, opener);
+      SimpleTest.waitForFocus(SimpleTest.finish, opener);
     }
   });
 

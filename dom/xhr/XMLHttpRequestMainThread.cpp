@@ -581,7 +581,10 @@ XMLHttpRequestMainThread::GetResponseText(nsAString& aResponseText,
     return;
   }
 
-  snapshot.GetAsString(aResponseText);
+  if (!snapshot.GetAsString(aResponseText)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
 }
 
 void
@@ -645,7 +648,9 @@ XMLHttpRequestMainThread::CreateResponseParsedJSON(JSContext* aCx)
   }
 
   nsAutoString string;
-  mResponseText.GetAsString(string);
+  if (!mResponseText.GetAsString(string)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   // The Unicode converter has already zapped the BOM if there was one
   JS::Rooted<JS::Value> value(aCx);

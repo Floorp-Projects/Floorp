@@ -10,7 +10,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
                                   "resource://gre/modules/Timer.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "colorUtils", () => {
-  return require("devtools/shared/css-color").colorUtils;
+  return require("devtools/shared/css/color").colorUtils;
 });
 
 Cu.import("resource://devtools/shared/event-emitter.js");
