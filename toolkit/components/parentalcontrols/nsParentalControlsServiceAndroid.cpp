@@ -6,7 +6,7 @@
 #include "nsParentalControlsService.h"
 #include "nsString.h"
 #include "nsIFile.h"
-#include "GeneratedJNIWrappers.h"
+#include "FennecJNIWrappers.h"
 
 namespace java = mozilla::java;
 
