@@ -563,7 +563,7 @@ TestRunner.testFinished = function(tests) {
                                             {runtime: runtime}
         );
 
-        if (TestRunner.slowestTestTime < runtime && TestRunner._timeoutFactor == 1) {
+        if (TestRunner.slowestTestTime < runtime && TestRunner._timeoutFactor >= 1) {
           TestRunner.slowestTestTime = runtime;
           TestRunner.slowestTestURL = TestRunner.currentTestURL;
         }
