@@ -3659,17 +3659,17 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
   if (IsDeadKey(virtualKey, aModKeyState)) {
     if ((isKeyDown && mActiveDeadKey < 0) ||
         (!isKeyDown && mActiveDeadKey == virtualKey)) {
-      //  First dead key event doesn't generate characters.
-      if (isKeyDown) {
-        // Dead-key state activated at keydown.
-        mActiveDeadKey = virtualKey;
-        mDeadKeyShiftState =
-          VirtualKey::ModifierKeyStateToShiftState(aModKeyState);
-      }
+      ActivateDeadKeyState(aNativeKey, aModKeyState);
+#ifdef DEBUG
       UniCharsAndModifiers deadChars =
         GetNativeUniCharsAndModifiers(virtualKey, aModKeyState);
-      NS_ASSERTION(deadChars.mLength == 1,
-                   "dead key must generate only one character");
+      MOZ_ASSERT(deadChars.mLength == 1,
+                 "dead key must generate only one character");
+#endif
+      // First dead key event doesn't generate characters.  Dead key should
+      // cause only keydown event and keyup event whose KeyboardEvent.key
+      // values are "Dead".
+      aNativeKey.mCommittedCharsAndModifiers.Clear();
       aNativeKey.mKeyNameIndex = KEY_NAME_INDEX_Dead;
       return;
     }
@@ -4075,6 +4075,21 @@ KeyboardLayout::EnsureDeadKeyActive(bool aIsActive,
   } while ((ret < 0) != aIsActive);
 
   return (ret < 0);
+}
+
+void
+KeyboardLayout::ActivateDeadKeyState(const NativeKey& aNativeKey,
+                                     const ModifierKeyState& aModKeyState)
+{
+  // Dead-key state should be activated at keydown.
+  if (!aNativeKey.IsKeyDownMessage()) {
+    return;
+  }
+
+  MOZ_RELEASE_ASSERT(IsPrintableCharKey(aNativeKey.mOriginalVirtualKeyCode));
+
+  mActiveDeadKey = aNativeKey.mOriginalVirtualKeyCode;
+  mDeadKeyShiftState = VirtualKey::ModifierKeyStateToShiftState(aModKeyState);
 }
 
 void
