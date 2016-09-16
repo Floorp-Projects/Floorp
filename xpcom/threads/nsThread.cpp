@@ -596,6 +596,7 @@ nsThread::nsThread(MainThreadFlag aMainThread, uint32_t aStackSize)
   , mShutdownRequired(false)
   , mEventsAreDoomed(false)
   , mIsMainThread(aMainThread)
+  , mCanInvokeJS(false)
 {
 }
 
@@ -797,6 +798,20 @@ NS_IMETHODIMP
 nsThread::GetPRThread(PRThread** aResult)
 {
   *aResult = mThread;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsThread::GetCanInvokeJS(bool* aResult)
+{
+  *aResult = mCanInvokeJS;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsThread::SetCanInvokeJS(bool aCanInvokeJS)
+{
+  mCanInvokeJS = aCanInvokeJS;
   return NS_OK;
 }
 
