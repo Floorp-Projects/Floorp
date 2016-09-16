@@ -6,14 +6,9 @@
 
 @template
 def FirefoxBranding():
-    if CONFIG['MOZ_BRANDING_DIRECTORY'] == 'browser/branding/official':
-        JS_PREFERENCE_PP_FILES += [
-            'pref/firefox-branding.js',
-        ]
-    else:
-        JS_PREFERENCE_FILES += [
-            'pref/firefox-branding.js',
-        ]
+    JS_PREFERENCE_FILES += [
+        'pref/firefox-branding.js',
+    ]
 
     if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         FINAL_TARGET_FILES['..'] += [
