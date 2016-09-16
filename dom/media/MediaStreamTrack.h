@@ -194,26 +194,24 @@ protected:
 };
 
 /**
- * Basic implementation of MediaStreamTrackSource that ignores Stop().
+ * Basic implementation of MediaStreamTrackSource that doesn't forward Stop().
  */
-class BasicUnstoppableTrackSource : public MediaStreamTrackSource
+class BasicTrackSource : public MediaStreamTrackSource
 {
 public:
-  explicit BasicUnstoppableTrackSource(nsIPrincipal* aPrincipal,
-                                       const MediaSourceEnum aMediaSource =
-                                         MediaSourceEnum::Other)
+  explicit BasicTrackSource(nsIPrincipal* aPrincipal,
+                            const MediaSourceEnum aMediaSource =
+                            MediaSourceEnum::Other)
     : MediaStreamTrackSource(aPrincipal, nsString())
     , mMediaSource(aMediaSource)
   {}
 
   MediaSourceEnum GetMediaSource() const override { return mMediaSource; }
 
-  void GetSettings(dom::MediaTrackSettings& aResult) override {}
-
   void Stop() override {}
 
 protected:
-  ~BasicUnstoppableTrackSource() {}
+  ~BasicTrackSource() {}
 
   const MediaSourceEnum mMediaSource;
 };
