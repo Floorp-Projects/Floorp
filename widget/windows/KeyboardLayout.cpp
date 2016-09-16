@@ -3757,12 +3757,8 @@ KeyboardLayout::MaybeInitNativeKeyWithCompositeChar(
     return false;
   }
 
-  int32_t activeDeadKeyIndex = GetKeyIndex(mActiveDeadKey);
-  if (NS_WARN_IF(activeDeadKeyIndex < 0)) {
-    return false;
-  }
-
-  if (NS_WARN_IF(!IsPrintableCharKey(aNativeKey.mOriginalVirtualKeyCode))) {
+  if (NS_WARN_IF(!IsPrintableCharKey(mActiveDeadKey)) ||
+      NS_WARN_IF(!IsPrintableCharKey(aNativeKey.mOriginalVirtualKeyCode))) {
     return false;
   }
 
@@ -3773,8 +3769,7 @@ KeyboardLayout::MaybeInitNativeKeyWithCompositeChar(
   }
 
   char16_t compositeChar =
-    mVirtualKeys[activeDeadKeyIndex].GetCompositeChar(mDeadKeyShiftState,
-                                                      baseChars.mChars[0]);
+    GetCompositeChar(mActiveDeadKey, mDeadKeyShiftState, baseChars.mChars[0]);
   if (!compositeChar) {
     return false;
   }
@@ -3814,6 +3809,18 @@ KeyboardLayout::GetNativeUniCharsAndModifiers(
   VirtualKey::ShiftState shiftState =
     VirtualKey::ModifierKeyStateToShiftState(aModKeyState);
   return mVirtualKeys[key].GetNativeUniChars(shiftState);
+}
+
+char16_t
+KeyboardLayout::GetCompositeChar(uint8_t aVirtualKeyOfDeadKey,
+                                 VirtualKey::ShiftState aShiftStateOfDeadKey,
+                                 char16_t aBaseChar) const
+{
+  int32_t key = GetKeyIndex(aVirtualKeyOfDeadKey);
+  if (key < 0) {
+    return 0;
+  }
+  return mVirtualKeys[key].GetCompositeChar(aShiftStateOfDeadKey, aBaseChar);
 }
 
 void
