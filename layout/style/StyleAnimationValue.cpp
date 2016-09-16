@@ -3420,17 +3420,6 @@ StyleDataAtOffset(const void* aStyleStruct, ptrdiff_t aOffset)
 }
 
 static void
-SetCurrentOrActualColor(bool aIsForeground, nscolor aActualColor,
-                        StyleAnimationValue& aComputedValue)
-{
-  if (aIsForeground) {
-    aComputedValue.SetCurrentColorValue();
-  } else {
-    aComputedValue.SetColorValue(aActualColor);
-  }
-}
-
-static void
 ExtractBorderColor(nsStyleContext* aStyleContext, const void* aStyleBorder,
                    mozilla::css::Side aSide,
                    StyleAnimationValue& aComputedValue)
@@ -3924,30 +3913,6 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
             static_cast<const nsStyleTextReset*>(styleStruct)->
               GetDecorationStyle();
           aComputedValue.SetIntValue(decorationStyle, eUnit_Enumerated);
-          break;
-        }
-
-        case eCSSProperty_text_emphasis_color: {
-          auto styleText = static_cast<const nsStyleText*>(styleStruct);
-          SetCurrentOrActualColor(styleText->mTextEmphasisColorForeground,
-                                  styleText->mTextEmphasisColor,
-                                  aComputedValue);
-          break;
-        }
-
-        case eCSSProperty__webkit_text_fill_color: {
-          auto styleText = static_cast<const nsStyleText*>(styleStruct);
-          SetCurrentOrActualColor(styleText->mWebkitTextFillColorForeground,
-                                  styleText->mWebkitTextFillColor,
-                                  aComputedValue);
-          break;
-        }
-
-        case eCSSProperty__webkit_text_stroke_color: {
-          auto styleText = static_cast<const nsStyleText*>(styleStruct);
-          SetCurrentOrActualColor(styleText->mWebkitTextStrokeColorForeground,
-                                  styleText->mWebkitTextStrokeColor,
-                                  aComputedValue);
           break;
         }
 
