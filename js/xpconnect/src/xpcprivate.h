@@ -593,6 +593,7 @@ public:
 private:
     XPCJSContext();
 
+    MOZ_IS_CLASS_INIT
     nsresult Initialize();
 
     void ReleaseIncrementally(nsTArray<nsISupports*>& array);
