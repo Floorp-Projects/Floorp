@@ -2,12 +2,12 @@
 .\"     Title: CERTUTIL
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date:  8 September 2016
+.\"      Date:  7 September 2016
 .\"    Manual: NSS Security Tools
 .\"    Source: nss-tools
 .\"  Language: English
 .\"
-.TH "CERTUTIL" "1" "8 September 2016" "nss-tools" "NSS Security Tools"
+.TH "CERTUTIL" "1" "7 September 2016" "nss-tools" "NSS Security Tools"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -452,13 +452,23 @@ for each trust setting\&. In each category position, use none, any, or all of th
 \- trusted CA for client authentication (ssl server only)
 .RE
 .sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBu\fR
+\- user
+.RE
+.sp
 The attribute codes for the categories are separated by commas, and the entire set of attributes enclosed by quotation marks\&. For example:
 .sp
-\fB\-t "TC,C,T"\fR
+\fB\-t "TCu,Cu,Tu"\fR
 .sp
 Use the \-L option to see a list of the current certificates and trust attributes in a certificate database\&.
-.sp
-Note that the output of the \-L option may include "u" flag, which means that there is a private key associated with the certificate\&. It is a dynamic flag and you cannot set it with certutil\&.
 .RE
 .PP
 \-u certusage
@@ -1312,7 +1322,7 @@ From there, new certificates can reference the self\-signed certificate:
 .RS 4
 .\}
 .nf
-$ certutil \-S \-s "CN=My Server Cert" \-n my\-server\-cert \-c "my\-ca\-cert" \-t ",," \-1 \-5 \-6 \-8 \-m 730
+$ certutil \-S \-s "CN=My Server Cert" \-n my\-server\-cert \-c "my\-ca\-cert" \-t "u,u,u" \-1 \-5 \-6 \-8 \-m 730
 .fi
 .if n \{\
 .RE
@@ -1588,7 +1598,7 @@ For example:
 .RS 4
 .\}
 .nf
-$ certutil \-A \-n "CN=My SSL Certificate" \-t ",," \-d sql:/home/my/sharednssdb \-i /home/example\-certs/cert\&.cer
+$ certutil \-A \-n "CN=My SSL Certificate" \-t "u,u,u" \-d sql:/home/my/sharednssdb \-i /home/example\-certs/cert\&.cer
 .fi
 .if n \{\
 .RE
@@ -1606,7 +1616,7 @@ command\&. The trust arguments for certificates have the format
 .RS 4
 .\}
 .nf
-$ certutil \-E \-n "CN=John Smith Email Cert" \-t ",P," \-d sql:/home/my/sharednssdb \-i /home/example\-certs/email\&.cer
+$ certutil \-E \-n "CN=John Smith Email Cert" \-t ",Pu," \-d sql:/home/my/sharednssdb \-i /home/example\-certs/email\&.cer
 .fi
 .if n \{\
 .RE
@@ -1688,7 +1698,7 @@ For example:
 .RS 4
 .\}
 .nf
-$ certutil \-M \-n "My CA Certificate" \-d sql:/home/my/sharednssdb \-t "CT,CT,CT"
+$ certutil \-M \-n "My CA Certificate" \-d sql:/home/my/sharednssdb \-t "CTu,CTu,CTu"
 .fi
 .if n \{\
 .RE

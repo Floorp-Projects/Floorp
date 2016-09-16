@@ -946,11 +946,7 @@ dtls_FinishedTimerCb(sslSocket *ss)
 void
 dtls_RehandshakeCleanup(sslSocket *ss)
 {
-    /* Skip this if we are handling a second ClientHello. */
-    if (ss->ssl3.hs.helloRetry) {
-        return;
-    }
-    PORT_Assert((ss->version < SSL_LIBRARY_VERSION_TLS_1_3));
+    PORT_Assert(ss->version < SSL_LIBRARY_VERSION_TLS_1_3);
     dtls_CancelTimer(ss);
     ssl3_DestroyCipherSpec(ss->ssl3.pwSpec, PR_FALSE);
     ss->ssl3.hs.sendMessageSeq = 0;
@@ -1043,7 +1039,7 @@ dtls_HandleHelloVerifyRequest(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     ssl_GetXmitBufLock(ss); /*******************************/
 
     /* Now re-send the client hello */
-    rv = ssl3_SendClientHello(ss, client_hello_retransmit);
+    rv = ssl3_SendClientHello(ss, PR_TRUE);
 
     ssl_ReleaseXmitBufLock(ss); /*******************************/
 
@@ -1193,16 +1189,14 @@ DTLS_GetHandshakeTimeout(PRFileDesc *socket, PRIntervalTime *timeout)
  * and sets |*seqNum| to the packet sequence number.
  */
 PRBool
-dtls_IsRelevant(sslSocket *ss, const SSL3Ciphertext *cText,
-                PRBool *sameEpoch, PRUint64 *seqNum)
+dtls_IsRelevant(sslSocket *ss, const ssl3CipherSpec *crSpec,
+                const SSL3Ciphertext *cText, sslSequenceNumber *seqNum)
 {
-    const ssl3CipherSpec *crSpec = ss->ssl3.crSpec;
     DTLSEpoch epoch;
     sslSequenceNumber dtls_seq_num;
 
     epoch = cText->seq_num >> 48;
-    *sameEpoch = crSpec->epoch == epoch;
-    if (!*sameEpoch) {
+    if (crSpec->epoch != epoch) {
         SSL_DBG(("%d: SSL3[%d]: dtls_IsRelevant, received packet "
                  "from irrelevant epoch %d",
                  SSL_GETPID(), ss->fd, epoch));
@@ -1235,16 +1229,10 @@ dtls_IsRelevant(sslSocket *ss, const SSL3Ciphertext *cText,
  * dropped because it has the same epoch that the client currently expects.
  */
 SECStatus
-dtls_MaybeRetransmitHandshake(sslSocket *ss, const SSL3Ciphertext *cText,
-                              PRBool sameEpoch)
+dtls_MaybeRetransmitHandshake(sslSocket *ss, const SSL3Ciphertext *cText)
 {
     SECStatus rv = SECSuccess;
     DTLSEpoch messageEpoch = cText->seq_num >> 48;
-
-    /* Drop messages from other epochs if we are ignoring things. */
-    if (!sameEpoch && ss->ssl3.hs.zeroRttIgnore != ssl_0rtt_ignore_none) {
-        return SECSuccess;
-    }
 
     if (!ss->sec.isServer && ss->version >= SSL_LIBRARY_VERSION_TLS_1_3 &&
         messageEpoch == 0 && cText->type == content_handshake) {

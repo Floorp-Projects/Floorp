@@ -77,8 +77,14 @@ tasks:
             bin/checkout.sh &&
             nss/automation/taskcluster/scripts/extend_task_graph.sh
 
-        features:
-          taskclusterProxy: true
+        artifacts:
+          public:
+            type: "directory"
+            path: "/home/worker/artifacts"
+            expires: "{{#from_now}}7 days{{/from_now}}"
+
+        graphs:
+          - /home/worker/artifacts/graph.json
 
       extra:
         treeherder:

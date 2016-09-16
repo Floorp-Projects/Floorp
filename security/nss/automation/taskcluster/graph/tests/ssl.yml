@@ -1,0 +1,65 @@
+---
+- task:
+    metadata:
+      name: "SSL tests (standard)"
+      description: "SSL tests (standard)"
+
+    payload:
+      maxRunTime: 14400
+      env:
+        NSS_CYCLES: standard
+        NSS_TESTS: ssl
+
+    extra:
+      treeherder:
+        symbol: standard
+        groupSymbol: SSL
+        groupName: SSL tests
+
+- task:
+    metadata:
+      name: "SSL tests (pkix)"
+      description: "SSL tests (pkix)"
+
+    payload:
+      env:
+        NSS_CYCLES: pkix
+        NSS_TESTS: ssl
+
+    extra:
+      treeherder:
+        symbol: pkix
+        groupSymbol: SSL
+        groupName: SSL tests
+
+- task:
+    metadata:
+      name: "SSL tests (sharedb)"
+      description: "SSL tests (sharedb)"
+
+    payload:
+      env:
+        NSS_CYCLES: sharedb
+        NSS_TESTS: ssl
+
+    extra:
+      treeherder:
+        symbol: sharedb
+        groupSymbol: SSL
+        groupName: SSL tests
+
+- task:
+    metadata:
+      name: "SSL tests (upgradedb)"
+      description: "SSL tests (upgradedb)"
+
+    payload:
+      env:
+        NSS_CYCLES: upgradedb
+        NSS_TESTS: ssl
+
+    extra:
+      treeherder:
+        symbol: upgradedb
+        groupSymbol: SSL
+        groupName: SSL tests

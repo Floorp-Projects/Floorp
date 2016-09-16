@@ -1,0 +1,38 @@
+---
+- task:
+    metadata:
+      name: "Linux 64 (ASan, debug)"
+      description: "Linux 64 (ASan, debug)"
+
+    payload:
+      env:
+        GCC_VERSION: clang
+        GXX_VERSION: clang++
+        NSS_DISABLE_ARENA_FREE_LIST: 1
+        NSS_DISABLE_UNLOAD: 1
+        USE_ASAN: 1
+        USE_64: 1
+
+    extra:
+      treeherder:
+        build:
+          platform: linux64
+        machine:
+          platform: linux64
+        collection:
+          asan: true
+
+  tests:
+    - chains
+    - cipher
+    - crmf
+    - db
+    - ec
+    - fips
+    - gtests
+    - lowhash
+    - merge
+    - sdr
+    - smime
+    - ssl
+    - tools

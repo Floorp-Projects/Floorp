@@ -267,7 +267,7 @@ static void
 error(long va_alist, ...)
 #else
 static void
-error(PRErrorCode errcode, ...)
+error(Pk11Install_Error errcode, ...)
 #endif
 {
 

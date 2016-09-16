@@ -4,11 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ssl.h"
 #include <functional>
 #include <memory>
 #include <set>
 #include "secerr.h"
-#include "ssl.h"
 #include "sslerr.h"
 #include "sslproto.h"
 
@@ -24,6 +24,52 @@ TEST_P(TlsConnectGeneric, ConnectDhe) {
   EnableOnlyDheCiphers();
   Connect();
   CheckKeys(ssl_kea_dh, ssl_auth_rsa_sign);
+}
+
+// Track groups and make sure that there are no duplicates.
+class CheckDuplicateGroup {
+ public:
+  void AddAndCheckGroup(uint16_t group) {
+    EXPECT_EQ(groups_.end(), groups_.find(group))
+        << "Group " << group << " should not be duplicated";
+    groups_.insert(group);
+  }
+
+ private:
+  std::set<uint16_t> groups_;
+};
+
+// Check the group of each of the supported groups
+static void CheckGroups(const DataBuffer& groups,
+                        std::function<void(uint16_t)> check_group) {
+  CheckDuplicateGroup group_set;
+  uint32_t tmp;
+  EXPECT_TRUE(groups.Read(0, 2, &tmp));
+  EXPECT_EQ(groups.len() - 2, static_cast<size_t>(tmp));
+  for (size_t i = 2; i < groups.len(); i += 2) {
+    EXPECT_TRUE(groups.Read(i, 2, &tmp));
+    uint16_t group = static_cast<uint16_t>(tmp);
+    group_set.AddAndCheckGroup(group);
+    check_group(group);
+  }
+}
+
+// Check the group of each of the shares
+static void CheckShares(const DataBuffer& shares,
+                        std::function<void(uint16_t)> check_group) {
+  CheckDuplicateGroup group_set;
+  uint32_t tmp;
+  EXPECT_TRUE(shares.Read(0, 2, &tmp));
+  EXPECT_EQ(shares.len() - 2, static_cast<size_t>(tmp));
+  size_t i;
+  for (i = 2; i < shares.len(); i += 4 + tmp) {
+    ASSERT_TRUE(shares.Read(i, 2, &tmp));
+    uint16_t group = static_cast<uint16_t>(tmp);
+    group_set.AddAndCheckGroup(group);
+    check_group(group);
+    ASSERT_TRUE(shares.Read(i + 2, 2, &tmp));
+  }
+  EXPECT_EQ(shares.len(), i);
 }
 
 TEST_P(TlsConnectTls13, SharesForBothEcdheAndDhe) {
@@ -44,7 +90,7 @@ TEST_P(TlsConnectTls13, SharesForBothEcdheAndDhe) {
   CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
 
   bool ec, dh;
-  auto track_group_type = [&ec, &dh](SSLNamedGroup group) {
+  auto track_group_type = [&ec, &dh](uint16_t group) {
     if ((group & 0xff00U) == 0x100U) {
       dh = true;
     } else {
@@ -72,7 +118,7 @@ TEST_P(TlsConnectTls13, NoDheOnEcdheConnections) {
   Connect();
 
   CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
-  auto is_ecc = [](SSLNamedGroup group) { EXPECT_NE(0x100U, group & 0xff00U); };
+  auto is_ecc = [](uint16_t group) { EXPECT_NE(0x100U, group & 0xff00U); };
   CheckGroups(groups_capture->extension(), is_ecc);
   CheckShares(shares_capture->extension(), is_ecc);
 }
@@ -91,7 +137,7 @@ TEST_P(TlsConnectGeneric, ConnectFfdheClient) {
   Connect();
 
   CheckKeys(ssl_kea_dh, ssl_auth_rsa_sign);
-  auto is_ffdhe = [](SSLNamedGroup group) {
+  auto is_ffdhe = [](uint16_t group) {
     // The group has to be in this range.
     EXPECT_LE(ssl_grp_ffdhe_2048, group);
     EXPECT_GE(ssl_grp_ffdhe_8192, group);
@@ -461,8 +507,7 @@ TEST_P(TlsConnectGenericPre13, WeakDHGroup) {
 
 TEST_P(TlsConnectGeneric, Ffdhe3072) {
   EnableOnlyDheCiphers();
-  SSLNamedGroup groups[] = {ssl_grp_ffdhe_3072};
-  client_->ConfigNamedGroups(groups, PR_ARRAY_SIZE(groups));
+  client_->ConfigNamedGroup(ssl_grp_ffdhe_2048, false);
 
   Connect();
 }
@@ -478,22 +523,6 @@ TEST_P(TlsConnectGenericPre13, PreferredFfdhe) {
   CheckKeys(ssl_kea_dh, ssl_auth_rsa_sign, 3072);
 }
 
-TEST_P(TlsConnectGenericPre13, MismatchDHE) {
-  EnableOnlyDheCiphers();
-  EXPECT_EQ(SECSuccess, SSL_OptionSet(client_->ssl_fd(),
-                                      SSL_REQUIRE_DH_NAMED_GROUPS, PR_TRUE));
-  static const SSLDHEGroupType serverGroups[] = {ssl_ff_dhe_3072_group};
-  EXPECT_EQ(SECSuccess, SSL_DHEGroupPrefSet(server_->ssl_fd(), serverGroups,
-                                            PR_ARRAY_SIZE(serverGroups)));
-  static const SSLDHEGroupType clientGroups[] = {ssl_ff_dhe_2048_group};
-  EXPECT_EQ(SECSuccess, SSL_DHEGroupPrefSet(client_->ssl_fd(), clientGroups,
-                                            PR_ARRAY_SIZE(clientGroups)));
-
-  ConnectExpectFail();
-  server_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
-  client_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
-}
-
 TEST_P(TlsConnectTls13, ResumeFfdhe) {
   EnableOnlyDheCiphers();
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
@@ -505,10 +534,10 @@ TEST_P(TlsConnectTls13, ResumeFfdhe) {
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   EnableOnlyDheCiphers();
   TlsExtensionCapture* clientCapture =
-      new TlsExtensionCapture(ssl_tls13_pre_shared_key_xtn);
+      new TlsExtensionCapture(kTlsExtensionPreSharedKey);
   client_->SetPacketFilter(clientCapture);
   TlsExtensionCapture* serverCapture =
-      new TlsExtensionCapture(ssl_tls13_pre_shared_key_xtn);
+      new TlsExtensionCapture(kTlsExtensionPreSharedKey);
   server_->SetPacketFilter(serverCapture);
   ExpectResumption(RESUME_TICKET);
   Connect();

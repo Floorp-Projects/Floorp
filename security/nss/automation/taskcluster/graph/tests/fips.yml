@@ -1,0 +1,14 @@
+---
+- task:
+    metadata:
+      name: FIPS tests
+      description: FIPS tests
+
+    payload:
+      env:
+        ASAN_OPTIONS: detect_leaks=0
+        NSS_TESTS: fips
+
+    extra:
+      treeherder:
+        symbol: FIPS
