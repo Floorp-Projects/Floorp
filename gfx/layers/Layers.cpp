@@ -202,15 +202,18 @@ LayerManager::CreateDrawTarget(const IntSize &aSize,
 
 already_AddRefed<PersistentBufferProvider>
 LayerManager::CreatePersistentBufferProvider(const mozilla::gfx::IntSize &aSize,
-                                             mozilla::gfx::SurfaceFormat aFormat)
+                                             mozilla::gfx::SurfaceFormat aFormat,
+                                             int64_t* aMemoryCounter)
 {
   RefPtr<PersistentBufferProviderBasic> bufferProvider =
     PersistentBufferProviderBasic::Create(aSize, aFormat,
-      gfxPlatform::GetPlatform()->GetPreferredCanvasBackend());
+      gfxPlatform::GetPlatform()->GetPreferredCanvasBackend(),
+      aMemoryCounter
+    );
 
   if (!bufferProvider) {
     bufferProvider = PersistentBufferProviderBasic::Create(aSize, aFormat,
-      gfxPlatform::GetPlatform()->GetFallbackCanvasBackend());
+      gfxPlatform::GetPlatform()->GetFallbackCanvasBackend(), aMemoryCounter);
   }
 
   return bufferProvider.forget();

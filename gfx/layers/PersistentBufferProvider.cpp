@@ -16,14 +16,23 @@ using namespace gfx;
 
 namespace layers {
 
-PersistentBufferProviderBasic::PersistentBufferProviderBasic(DrawTarget* aDt)
+PersistentBufferProviderBasic::PersistentBufferProviderBasic(DrawTarget* aDt, int64_t* aMemoryCounter)
 : mDrawTarget(aDt)
+, mMemoryCounter(aMemoryCounter)
 {
+  if (mMemoryCounter) {
+    IntSize size = mDrawTarget->GetSize();
+    *mMemoryCounter += size.width * size.height * gfx::BytesPerPixel(mDrawTarget->GetFormat());
+  }
   MOZ_COUNT_CTOR(PersistentBufferProviderBasic);
 }
 
 PersistentBufferProviderBasic::~PersistentBufferProviderBasic()
 {
+  if (mMemoryCounter) {
+    IntSize size = mDrawTarget->GetSize();
+    *mMemoryCounter -= size.width * size.height * gfx::BytesPerPixel(mDrawTarget->GetFormat());
+  }
   MOZ_COUNT_DTOR(PersistentBufferProviderBasic);
 }
 
@@ -67,7 +76,7 @@ PersistentBufferProviderBasic::ReturnSnapshot(already_AddRefed<gfx::SourceSurfac
 //static
 already_AddRefed<PersistentBufferProviderBasic>
 PersistentBufferProviderBasic::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                                      gfx::BackendType aBackend)
+                                      gfx::BackendType aBackend, int64_t* aMemoryCounter)
 {
   RefPtr<DrawTarget> dt = gfxPlatform::GetPlatform()->CreateDrawTargetForBackend(aBackend, aSize, aFormat);
 
@@ -76,7 +85,7 @@ PersistentBufferProviderBasic::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFo
   }
 
   RefPtr<PersistentBufferProviderBasic> provider =
-    new PersistentBufferProviderBasic(dt);
+    new PersistentBufferProviderBasic(dt, aMemoryCounter);
 
   return provider.forget();
 }
@@ -86,7 +95,8 @@ PersistentBufferProviderBasic::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFo
 already_AddRefed<PersistentBufferProviderShared>
 PersistentBufferProviderShared::Create(gfx::IntSize aSize,
                                        gfx::SurfaceFormat aFormat,
-                                       CompositableForwarder* aFwd)
+                                       CompositableForwarder* aFwd,
+                                       int64_t* aMemoryCounter)
 {
   if (!aFwd || !aFwd->IPCOpen()) {
     return nullptr;
@@ -104,23 +114,27 @@ PersistentBufferProviderShared::Create(gfx::IntSize aSize,
   }
 
   RefPtr<PersistentBufferProviderShared> provider =
-    new PersistentBufferProviderShared(aSize, aFormat, aFwd, texture);
+    new PersistentBufferProviderShared(aSize, aFormat, aFwd, texture, aMemoryCounter);
+
   return provider.forget();
 }
 
 PersistentBufferProviderShared::PersistentBufferProviderShared(gfx::IntSize aSize,
                                                                gfx::SurfaceFormat aFormat,
                                                                CompositableForwarder* aFwd,
-                                                               RefPtr<TextureClient>& aTexture)
+                                                               RefPtr<TextureClient>& aTexture,
+                                                               int64_t* aMemoryCounter)
 
 : mSize(aSize)
 , mFormat(aFormat)
 , mFwd(aFwd)
 , mFront(Nothing())
+, mMemoryCounter(aMemoryCounter)
 {
   if (mTextures.append(aTexture)) {
     mBack = Some<uint32_t>(0);
   }
+  OnAllocation();
   MOZ_COUNT_CTOR(PersistentBufferProviderShared);
 }
 
@@ -293,6 +307,7 @@ PersistentBufferProviderShared::BorrowDrawTarget(const gfx::IntRect& aPersistedR
 
     MOZ_ASSERT(newTexture);
     if (newTexture) {
+      OnAllocation();
       if (mTextures.append(newTexture)) {
         tex = newTexture;
         mBack = Some<uint32_t>(mTextures.length() - 1);
@@ -405,12 +420,17 @@ PersistentBufferProviderShared::NotifyInactive()
   RefPtr<TextureClient> front = GetTexture(mFront);
   RefPtr<TextureClient> back = GetTexture(mBack);
 
+  for (unsigned i = 0; i < mTextures.length(); ++i) {
+    OnDeallocation();
+  }
+
   // Clear all textures (except the front and back ones that we just kept).
   mTextures.clear();
 
   if (back) {
     if (mTextures.append(back)) {
       mBack = Some<uint32_t>(0);
+      OnAllocation();
     }
     if (front == back) {
       mFront = mBack;
@@ -420,6 +440,7 @@ PersistentBufferProviderShared::NotifyInactive()
   if (front && front != back) {
     if (mTextures.append(front)) {
       mFront = Some<uint32_t>(mTextures.length() - 1);
+      OnAllocation();
     }
   }
 }
@@ -436,9 +457,28 @@ PersistentBufferProviderShared::Destroy()
       MOZ_ASSERT(false);
       texture->Unlock();
     }
+    if (texture) {
+      OnDeallocation();
+    }
   }
 
   mTextures.clear();
+}
+
+void
+PersistentBufferProviderShared::OnAllocation()
+{
+  if (mMemoryCounter) {
+    *mMemoryCounter += mSize.width * mSize.height * gfx::BytesPerPixel(mFormat);
+  }
+}
+
+void
+PersistentBufferProviderShared::OnDeallocation()
+{
+  if (mMemoryCounter) {
+    *mMemoryCounter -= mSize.width * mSize.height * gfx::BytesPerPixel(mFormat);
+  }
 }
 
 } // namespace layers
