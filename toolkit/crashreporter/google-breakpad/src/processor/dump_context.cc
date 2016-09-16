@@ -34,14 +34,17 @@
 #include "google_breakpad/processor/dump_context.h"
 
 #include <assert.h>
+#include <stdio.h>
 
 #ifdef _WIN32
 #include <io.h>
+#if defined(_MSC_VER) && _MSC_VER < 1900
+#define snprintf _snprintf
+#endif
 #else  // _WIN32
 #include <unistd.h>
 #endif  // _WIN32
 
-#include "common/stdio_wrapper.h"
 #include "processor/logging.h"
 
 namespace google_breakpad {
@@ -131,8 +134,7 @@ const MDRawContextARM64* DumpContext::GetContextARM64() const {
 }
 
 const MDRawContextMIPS* DumpContext::GetContextMIPS() const {
-  if ((GetContextCPU() != MD_CONTEXT_MIPS) &&
-      (GetContextCPU() != MD_CONTEXT_MIPS64)) {
+  if (GetContextCPU() != MD_CONTEXT_MIPS) {
     BPLOG(ERROR) << "DumpContext cannot get MIPS context";
     return NULL;
   }
@@ -173,7 +175,6 @@ bool DumpContext::GetInstructionPointer(uint64_t* ip) const {
     *ip = GetContextX86()->eip;
     break;
   case MD_CONTEXT_MIPS:
-  case MD_CONTEXT_MIPS64:
     *ip = GetContextMIPS()->epc;
     break;
   default:
@@ -217,7 +218,6 @@ bool DumpContext::GetStackPointer(uint64_t* sp) const {
     *sp = GetContextX86()->esp;
     break;
   case MD_CONTEXT_MIPS:
-  case MD_CONTEXT_MIPS64:
     *sp = GetContextMIPS()->iregs[MD_CONTEXT_MIPS_REG_SP];
     break;
   default:
@@ -295,7 +295,6 @@ void DumpContext::FreeContext() {
       break;
 
     case MD_CONTEXT_MIPS:
-    case MD_CONTEXT_MIPS64:
       delete context_.ctx_mips;
       break;
 
@@ -602,8 +601,7 @@ void DumpContext::Print() {
       break;
     }
 
-    case MD_CONTEXT_MIPS:
-    case MD_CONTEXT_MIPS64: {
+    case MD_CONTEXT_MIPS: {
       const MDRawContextMIPS* context_mips = GetContextMIPS();
       printf("MDRawContextMIPS\n");
       printf("  context_flags        = 0x%x\n",

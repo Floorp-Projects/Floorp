@@ -35,6 +35,6 @@
 // the call fails, IGNORE_RET() can be used to mark the return code as ignored.
 // This avoids spurious compiler warnings.
 
-#define IGNORE_RET(x) do { if (x) {} } while (0)
+#define IGNORE_RET(x) do { if (x); } while (0)
 
 #endif  // COMMON_LINUX_IGNORE_RET_H_

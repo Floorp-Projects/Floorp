@@ -180,7 +180,7 @@ class TestValidMap : public ::testing::Test {
 
   void TearDown() {
     for (int i = 0;i < kNumberTestCases; ++i)
-      ::operator delete(map_data[i]);
+      delete map_data[i];
   }
 
 

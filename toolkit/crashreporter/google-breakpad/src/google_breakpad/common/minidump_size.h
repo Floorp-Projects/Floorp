@@ -76,12 +76,6 @@ class minidump_size<MDCVInfoPDB70> {
 };
 
 template<>
-class minidump_size<MDCVInfoELF> {
- public:
-  static size_t size() { return MDCVInfoELF_minsize; }
-};
-
-template<>
 class minidump_size<MDImageDebugMisc> {
  public:
   static size_t size() { return MDImageDebugMisc_minsize; }
