@@ -192,7 +192,7 @@ describe('stream.js', function() {
         stream.headers({});
         stream.end();
         stream.upstream.write({ type: 'HEADERS', headers:{}, flags: { END_STREAM: true }, count_change: util.noop });
-        example_frames.slice(1).forEach(function(invalid_frame) {
+        example_frames.slice(2).forEach(function(invalid_frame) {
           invalid_frame.count_change = util.noop;
           expect(stream._transition.bind(stream, false, invalid_frame)).to.throw('Uncaught, unspecified "error" event.');
         });

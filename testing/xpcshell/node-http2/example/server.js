@@ -24,14 +24,26 @@ function onRequest(request, response) {
 
   // Reading file from disk if it exists and is safe.
   else if ((filename.indexOf(__dirname) === 0) && fs.existsSync(filename) && fs.statSync(filename).isFile()) {
-    response.writeHead('200');
+    response.writeHead(200);
+    var fileStream = fs.createReadStream(filename);
+    fileStream.pipe(response);
+    fileStream.on('finish',response.end);
+  }
 
-    fs.createReadStream(filename).pipe(response);
+  // Example for testing large (boundary-sized) frames.
+  else if (request.url === "/largeframe") {
+    response.writeHead(200);
+    var body = 'a';
+    for (var i = 0; i < 14; i++) {
+      body += body;
+    }
+    body = body + 'a';
+    response.end(body);
   }
 
   // Otherwise responding with 404.
   else {
-    response.writeHead('404');
+    response.writeHead(404);
     response.end();
   }
 }

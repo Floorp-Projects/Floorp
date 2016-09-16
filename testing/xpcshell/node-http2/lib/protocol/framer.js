@@ -1,7 +1,7 @@
 // The framer consists of two [Transform Stream][1] subclasses that operate in [object mode][2]:
 // the Serializer and the Deserializer
-// [1]: http://nodejs.org/api/stream.html#stream_class_stream_transform
-// [2]: http://nodejs.org/api/stream.html#stream_new_stream_readable_options
+// [1]: https://nodejs.org/api/stream.html#stream_class_stream_transform
+// [2]: https://nodejs.org/api/stream.html#stream_new_stream_readable_options
 var assert = require('assert');
 
 var Transform = require('stream').Transform;
@@ -146,10 +146,10 @@ Deserializer.prototype._transform = function _transform(chunk, encoding, done) {
   done();
 };
 
-// [Frame Header](http://tools.ietf.org/html/draft-ietf-httpbis-http2-16#section-4.1)
+// [Frame Header](https://tools.ietf.org/html/rfc7540#section-4.1)
 // --------------------------------------------------------------
 //
-// HTTP/2.0 frames share a common base format consisting of a 9-byte header followed by 0 to 2^24 - 1
+// HTTP/2 frames share a common base format consisting of a 9-byte header followed by 0 to 2^24 - 1
 // bytes of data.
 //
 // Additional size limits can be set by specific application uses. HTTP limits the frame size to
@@ -235,6 +235,10 @@ Serializer.commonHeader = function writeCommonHeader(frame, buffers) {
 };
 
 Deserializer.commonHeader = function readCommonHeader(buffer, frame) {
+  if (buffer.length < 9) {
+    return 'FRAME_SIZE_ERROR';
+  }
+
   var totallyWastedByte = buffer.readUInt8(0);
   var length = buffer.readUInt16BE(1);
   // We do this just for sanity checking later on, to make sure no one sent us a
@@ -269,7 +273,7 @@ Deserializer.commonHeader = function readCommonHeader(buffer, frame) {
 // * `typeSpecificAttributes`: a register of frame specific frame object attributes (used by
 //   logging code and also serves as documentation for frame objects)
 
-// [DATA Frames](http://tools.ietf.org/html/draft-ietf-httpbis-http2-16#section-6.1)
+// [DATA Frames](https://tools.ietf.org/html/rfc7540#section-6.1)
 // ------------------------------------------------------------
 //
 // DATA frames (type=0x0) convey arbitrary, variable-length sequences of octets associated with a
@@ -297,18 +301,26 @@ Deserializer.DATA = function readData(buffer, frame) {
   var dataOffset = 0;
   var paddingLength = 0;
   if (frame.flags.PADDED) {
+    if (buffer.length < 1) {
+      // We must have at least one byte for padding control, but we don't. Bad peer!
+      return 'FRAME_SIZE_ERROR';
+    }
     paddingLength = (buffer.readUInt8(dataOffset) & 0xff);
     dataOffset = 1;
   }
 
   if (paddingLength) {
+    if (paddingLength >= (buffer.length - 1)) {
+      // We don't have enough room for the padding advertised - bad peer!
+      return 'FRAME_SIZE_ERROR';
+    }
     frame.data = buffer.slice(dataOffset, -1 * paddingLength);
   } else {
     frame.data = buffer.slice(dataOffset);
   }
 };
 
-// [HEADERS](http://tools.ietf.org/html/draft-ietf-httpbis-http2-16#section-6.2)
+// [HEADERS](https://tools.ietf.org/html/rfc7540#section-6.2)
 // --------------------------------------------------------------
 //
 // The HEADERS frame (type=0x1) allows the sender to create a stream.
@@ -365,6 +377,18 @@ Serializer.HEADERS = function writeHeadersPriority(frame, buffers) {
 };
 
 Deserializer.HEADERS = function readHeadersPriority(buffer, frame) {
+  var minFrameLength = 0;
+  if (frame.flags.PADDED) {
+    minFrameLength += 1;
+  }
+  if (frame.flags.PRIORITY) {
+    minFrameLength += 5;
+  }
+  if (buffer.length < minFrameLength) {
+    // Peer didn't send enough data - bad peer!
+    return 'FRAME_SIZE_ERROR';
+  }
+
   var dataOffset = 0;
   var paddingLength = 0;
   if (frame.flags.PADDED) {
@@ -384,13 +408,17 @@ Deserializer.HEADERS = function readHeadersPriority(buffer, frame) {
   }
 
   if (paddingLength) {
+    if ((buffer.length - dataOffset) < paddingLength) {
+      // Not enough data left to satisfy the advertised padding - bad peer!
+      return 'FRAME_SIZE_ERROR';
+    }
     frame.data = buffer.slice(dataOffset, -1 * paddingLength);
   } else {
     frame.data = buffer.slice(dataOffset);
   }
 };
 
-// [PRIORITY](http://tools.ietf.org/html/draft-ietf-httpbis-http2-16#section-6.3)
+// [PRIORITY](https://tools.ietf.org/html/rfc7540#section-6.3)
 // -------------------------------------------------------
 //
 // The PRIORITY frame (type=0x2) specifies the sender-advised priority of a stream.
@@ -427,6 +455,10 @@ Serializer.PRIORITY = function writePriority(frame, buffers) {
 };
 
 Deserializer.PRIORITY = function readPriority(buffer, frame) {
+  if (buffer.length < 5) {
+    // PRIORITY frames are 5 bytes long. Bad peer!
+    return 'FRAME_SIZE_ERROR';
+  }
   var dependencyData = new Buffer(4);
   buffer.copy(dependencyData, 0, 0, 4);
   frame.exclusiveDependency = !!(dependencyData[0] & 0x80);
@@ -435,7 +467,7 @@ Deserializer.PRIORITY = function readPriority(buffer, frame) {
   frame.priorityWeight = buffer.readUInt8(4);
 };
 
-// [RST_STREAM](http://tools.ietf.org/html/draft-ietf-httpbis-http2-16#section-6.4)
+// [RST_STREAM](https://tools.ietf.org/html/rfc7540#section-6.4)
 // -----------------------------------------------------------
 //
 // The RST_STREAM frame (type=0x3) allows for abnormal termination of a stream.
@@ -466,6 +498,10 @@ Serializer.RST_STREAM = function writeRstStream(frame, buffers) {
 };
 
 Deserializer.RST_STREAM = function readRstStream(buffer, frame) {
+  if (buffer.length < 4) {
+    // RST_STREAM is 4 bytes long. Bad peer!
+    return 'FRAME_SIZE_ERROR';
+  }
   frame.error = errorCodes[buffer.readUInt32BE(0)];
   if (!frame.error) {
     // Unknown error codes are considered equivalent to INTERNAL_ERROR
@@ -473,7 +509,7 @@ Deserializer.RST_STREAM = function readRstStream(buffer, frame) {
   }
 };
 
-// [SETTINGS](http://tools.ietf.org/html/draft-ietf-httpbis-http2-16#section-6.5)
+// [SETTINGS](https://tools.ietf.org/html/rfc7540#section-6.5)
 // -------------------------------------------------------
 //
 // The SETTINGS frame (type=0x4) conveys configuration parameters that affect how endpoints
@@ -580,7 +616,7 @@ definedSettings[4] = { name: 'SETTINGS_INITIAL_WINDOW_SIZE', flag: false };
 //   indicates the maximum size of a frame the receiver will allow.
 definedSettings[5] = { name: 'SETTINGS_MAX_FRAME_SIZE', flag: false };
 
-// [PUSH_PROMISE](http://tools.ietf.org/html/draft-ietf-httpbis-http2-16#section-6.6)
+// [PUSH_PROMISE](https://tools.ietf.org/html/rfc7540#section-6.6)
 // ---------------------------------------------------------------
 //
 // The PUSH_PROMISE frame (type=0x5) is used to notify the peer endpoint in advance of streams the
@@ -626,22 +662,31 @@ Serializer.PUSH_PROMISE = function writePushPromise(frame, buffers) {
 };
 
 Deserializer.PUSH_PROMISE = function readPushPromise(buffer, frame) {
+  if (buffer.length < 4) {
+    return 'FRAME_SIZE_ERROR';
+  }
   var dataOffset = 0;
   var paddingLength = 0;
   if (frame.flags.PADDED) {
+    if (buffer.length < 5) {
+      return 'FRAME_SIZE_ERROR';
+    }
     paddingLength = (buffer.readUInt8(dataOffset) & 0xff);
     dataOffset = 1;
   }
   frame.promised_stream = buffer.readUInt32BE(dataOffset) & 0x7fffffff;
   dataOffset += 4;
   if (paddingLength) {
+    if ((buffer.length - dataOffset) < paddingLength) {
+      return 'FRAME_SIZE_ERROR';
+    }
     frame.data = buffer.slice(dataOffset, -1 * paddingLength);
   } else {
     frame.data = buffer.slice(dataOffset);
   }
 };
 
-// [PING](http://tools.ietf.org/html/draft-ietf-httpbis-http2-16#section-6.7)
+// [PING](https://tools.ietf.org/html/rfc7540#section-6.7)
 // -----------------------------------------------
 //
 // The PING frame (type=0x6) is a mechanism for measuring a minimal round-trip time from the
@@ -671,7 +716,7 @@ Deserializer.PING = function readPing(buffer, frame) {
   frame.data = buffer;
 };
 
-// [GOAWAY](http://tools.ietf.org/html/draft-ietf-httpbis-http2-16#section-6.8)
+// [GOAWAY](https://tools.ietf.org/html/rfc7540#section-6.8)
 // ---------------------------------------------------
 //
 // The GOAWAY frame (type=0x7) informs the remote peer to stop creating streams on this connection.
@@ -714,6 +759,10 @@ Serializer.GOAWAY = function writeGoaway(frame, buffers) {
 };
 
 Deserializer.GOAWAY = function readGoaway(buffer, frame) {
+  if (buffer.length !== 8) {
+    // GOAWAY must have 8 bytes
+    return 'FRAME_SIZE_ERROR';
+  }
   frame.last_stream = buffer.readUInt32BE(0) & 0x7fffffff;
   frame.error = errorCodes[buffer.readUInt32BE(4)];
   if (!frame.error) {
@@ -722,7 +771,7 @@ Deserializer.GOAWAY = function readGoaway(buffer, frame) {
   }
 };
 
-// [WINDOW_UPDATE](http://tools.ietf.org/html/draft-ietf-httpbis-http2-16#section-6.9)
+// [WINDOW_UPDATE](https://tools.ietf.org/html/rfc7540#section-6.9)
 // -----------------------------------------------------------------
 //
 // The WINDOW_UPDATE frame (type=0x8) is used to implement flow control.
@@ -760,7 +809,7 @@ Deserializer.WINDOW_UPDATE = function readWindowUpdate(buffer, frame) {
   }
 };
 
-// [CONTINUATION](http://tools.ietf.org/html/draft-ietf-httpbis-http2-16#section-6.10)
+// [CONTINUATION](https://tools.ietf.org/html/rfc7540#section-6.10)
 // ------------------------------------------------------------
 //
 // The CONTINUATION frame (type=0x9) is used to continue a sequence of header block fragments.
@@ -785,7 +834,7 @@ Deserializer.CONTINUATION = function readContinuation(buffer, frame) {
   frame.data = buffer;
 };
 
-// [ALTSVC](http://tools.ietf.org/html/draft-ietf-httpbis-alt-svc-06#section-4)
+// [ALTSVC](https://tools.ietf.org/html/rfc7838#section-4)
 // ------------------------------------------------------------
 //
 // The ALTSVC frame (type=0xA) advertises the availability of an alternative service to the client.
@@ -810,13 +859,13 @@ frameFlags.ALTSVC = [];
 //    octets, of the Origin field.
 //
 // Origin: An OPTIONAL sequence of characters containing ASCII
-//    serialisation of an origin ([RFC6454](http://tools.ietf.org/html/rfc6454),
+//    serialisation of an origin ([RFC6454](https://tools.ietf.org/html/rfc6454),
 //    Section 6.2) that the alternate service is applicable to.
 //
 // Alt-Svc-Field-Value: A sequence of octets (length determined by
 //    subtracting the length of all preceding fields from the frame
 //    length) containing a value identical to the Alt-Svc field value
-//    defined in (Section 3)[http://tools.ietf.org/html/draft-ietf-httpbis-alt-svc-06#section-3]
+//    defined in (Section 3)[https://tools.ietf.org/html/rfc7838#section-3]
 //    (ABNF production "Alt-Svc").
 
 typeSpecificAttributes.ALTSVC = ['maxAge', 'port', 'protocolID', 'host',
@@ -986,7 +1035,13 @@ function unescape(s) {
 }
 
 Deserializer.ALTSVC = function readAltSvc(buffer, frame) {
+  if (buffer.length < 2) {
+    return 'FRAME_SIZE_ERROR';
+  }
   var originLength = buffer.readUInt16BE(0);
+  if ((buffer.length - 2) < originLength) {
+    return 'FRAME_SIZE_ERROR';
+  }
   frame.origin = buffer.toString('ascii', 2, 2 + originLength);
   var fieldValue = buffer.toString('ascii', 2 + originLength);
   var values = parseHeaderValue(fieldValue, ',', splitHeaderParameters);
@@ -1034,7 +1089,7 @@ Serializer.BLOCKED = function writeBlocked(frame, buffers) {
 Deserializer.BLOCKED = function readBlocked(buffer, frame) {
 };
 
-// [Error Codes](http://tools.ietf.org/html/draft-ietf-httpbis-http2-16#section-7)
+// [Error Codes](https://tools.ietf.org/html/rfc7540#section-7)
 // ------------------------------------------------------------
 
 var errorCodes = [

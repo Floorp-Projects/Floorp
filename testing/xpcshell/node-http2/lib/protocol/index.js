@@ -1,4 +1,4 @@
-// [node-http2-protocol][homepage] is an implementation of the [HTTP/2 (draft 16)][http2]
+// This is an implementation of the [HTTP/2][http2]
 // framing layer for [node.js][node].
 //
 // The main building blocks are [node.js streams][node-stream] that are connected through pipes.
@@ -14,7 +14,7 @@
 //   lifecycle and settings, and responsible for enforcing the connection level limits (flow
 //   control, initiated stream limit)
 //
-// * [Stream](stream.html): implementation of the [HTTP/2 stream concept](http2-stream).
+// * [Stream](stream.html): implementation of the [HTTP/2 stream concept][http2-stream].
 //   Implements the [stream state machine][http2-streamstate] defined by the standard, provides
 //   management methods and events for using the stream (sending/receiving headers, data, etc.),
 //   and enforces stream level constraints (flow control, sending only legal frames).
@@ -27,15 +27,14 @@
 // * [Serializer and Deserializer](framer.html): the lowest layer in the stack that transforms
 //   between the binary and the JavaScript object representation of HTTP/2 frames
 //
-// [homepage]:            https://github.com/molnarg/node-http2
-// [http2]:               http://tools.ietf.org/html/draft-ietf-httpbis-http2-16
-// [http2-connheader]:    http://tools.ietf.org/html/draft-ietf-httpbis-http2-16#section-3.5
-// [http2-stream]:        http://tools.ietf.org/html/draft-ietf-httpbis-http2-16#section-5
-// [http2-streamstate]:   http://tools.ietf.org/html/draft-ietf-httpbis-http2-16#section-5.1
-// [node]:                http://nodejs.org/
-// [node-stream]:         http://nodejs.org/api/stream.html
-// [node-https]:          http://nodejs.org/api/https.html
-// [node-http]:           http://nodejs.org/api/http.html
+// [http2]:               https://tools.ietf.org/html/rfc7540
+// [http2-connheader]:    https://tools.ietf.org/html/rfc7540#section-3.5
+// [http2-stream]:        https://tools.ietf.org/html/rfc7540#section-5
+// [http2-streamstate]:   https://tools.ietf.org/html/rfc7540#section-5.1
+// [node]:                https://nodejs.org/
+// [node-stream]:         https://nodejs.org/api/stream.html
+// [node-https]:          https://nodejs.org/api/https.html
+// [node-http]:           https://nodejs.org/api/http.html
 
 exports.VERSION = 'h2';
 
