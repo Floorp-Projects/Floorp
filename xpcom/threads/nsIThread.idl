@@ -27,6 +27,14 @@ interface nsIThread : nsIEventTarget
   [noscript] readonly attribute PRThread PRThread;
 
   /**
+   * @returns
+   *  Whether or not this thread may call into JS. Used in the profiler
+   *  to avoid some unnecessary locking.
+   */
+  [noscript] attribute boolean CanInvokeJS;
+
+
+  /**
    * Shutdown the thread.  This method prevents further dispatch of events to
    * the thread, and it causes any pending events to run to completion before
    * the thread joins (see PR_JoinThread) with the current thread.  During this
