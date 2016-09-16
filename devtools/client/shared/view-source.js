@@ -62,7 +62,7 @@ exports.viewSourceInDebugger = Task.async(function* (toolbox, sourceURL, sourceL
     yield toolbox.selectTool("jsdebugger");
     // TODO: Properly handle case where source will never exist in the
     // debugger
-    dbg.actions.selectSourceURL(sourceURL);
+    dbg.actions.selectSourceURL(sourceURL, { line: sourceLine });
     return true;
   }
 
