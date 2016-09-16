@@ -317,8 +317,12 @@ public:
 // ------------------------------------------------------------------
 
 inline bool
-IsInvalidValuePair(const PropertyValuePair& aPair)
+IsInvalidValuePair(const PropertyValuePair& aPair, StyleBackendType aBackend)
 {
+  if (aBackend == StyleBackendType::Servo) {
+    return !aPair.mServoDeclarationBlock;
+  }
+
   // There are three types of values we store as token streams:
   //
   // * Shorthand values (where we manually extract the token stream's string
@@ -589,6 +593,8 @@ KeyframeUtils::GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
   MOZ_ASSERT(aStyleContext);
   MOZ_ASSERT(aElement);
 
+  StyleBackendType styleBackend = aElement->OwnerDoc()->GetStyleBackendType();
+
   const size_t len = aKeyframes.Length();
   nsTArray<ComputedKeyframeValues> result(len);
 
@@ -597,7 +603,12 @@ KeyframeUtils::GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
     ComputedKeyframeValues* computedValues = result.AppendElement();
     for (const PropertyValuePair& pair :
            PropertyPriorityIterator(frame.mPropertyValues)) {
-      if (IsInvalidValuePair(pair)) {
+      MOZ_ASSERT(!pair.mServoDeclarationBlock ||
+                 styleBackend == StyleBackendType::Servo,
+                 "Animation values were parsed using Servo backend but target"
+                 " element is not using Servo backend?");
+
+      if (IsInvalidValuePair(pair, styleBackend)) {
         continue;
       }
 
@@ -1344,6 +1355,8 @@ RequiresAdditiveAnimation(const nsTArray<Keyframe>& aKeyframes,
     }
   };
 
+  StyleBackendType styleBackend = aDocument->GetStyleBackendType();
+
   for (size_t i = 0, len = aKeyframes.Length(); i < len; i++) {
     const Keyframe& frame = aKeyframes[i];
 
@@ -1359,17 +1372,25 @@ RequiresAdditiveAnimation(const nsTArray<Keyframe>& aKeyframes,
                          : computedOffset;
 
     for (const PropertyValuePair& pair : frame.mPropertyValues) {
-      if (IsInvalidValuePair(pair)) {
+      if (IsInvalidValuePair(pair, styleBackend)) {
         continue;
       }
 
       if (nsCSSProps::IsShorthand(pair.mProperty)) {
-        nsCSSValueTokenStream* tokenStream = pair.mValue.GetTokenStreamValue();
-        nsCSSParser parser(aDocument->CSSLoader());
-        if (!parser.IsValueValidForProperty(pair.mProperty,
-                                            tokenStream->mTokenStream)) {
-          continue;
+        if (styleBackend == StyleBackendType::Gecko) {
+          nsCSSValueTokenStream* tokenStream =
+            pair.mValue.GetTokenStreamValue();
+          nsCSSParser parser(aDocument->CSSLoader());
+          if (!parser.IsValueValidForProperty(pair.mProperty,
+                                              tokenStream->mTokenStream)) {
+            continue;
+          }
         }
+        // For the Servo backend, invalid shorthand values are represented by
+        // a null mServoDeclarationBlock member which we skip above in
+        // IsInvalidValuePair.
+        MOZ_ASSERT(styleBackend != StyleBackendType::Servo ||
+                   pair.mServoDeclarationBlock);
         CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(
             prop, pair.mProperty, CSSEnabledState::eForAllContent) {
           addToPropertySets(*prop, offsetToUse);
