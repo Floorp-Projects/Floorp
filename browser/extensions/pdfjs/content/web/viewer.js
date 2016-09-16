@@ -952,6 +952,7 @@ exports.PDFRenderingQueue = PDFRenderingQueue;
   "disableTextLayer": false,
   "useOnlyCssZoom": false,
   "externalLinkTarget": 0,
+  "enhanceTextSelection": false,
   "renderInteractiveForms": false
 }
 
@@ -3833,6 +3834,9 @@ var mozL10n = uiUtils.mozL10n;
  * @property {HTMLDivElement} toolbar - Container for the secondary toolbar.
  * @property {HTMLButtonElement} toggleButton - Button to toggle the visibility
  *   of the secondary toolbar.
+ * @property {HTMLDivElement} toolbarButtonContainer - Container where all the
+ *   toolbar buttons are placed. The maximum height of the toolbar is controlled
+ *   dynamically by adjusting the 'max-height' CSS property of this DOM element.
  * @property {HTMLButtonElement} presentationModeButton - Button for entering
  *   presentation mode.
  * @property {HTMLButtonElement} openFileButton - Button to open a file.
@@ -3862,11 +3866,13 @@ var SecondaryToolbar = (function SecondaryToolbarClosure() {
   /**
    * @constructs SecondaryToolbar
    * @param {SecondaryToolbarOptions} options
+   * @param {HTMLDivElement} mainContainer
    * @param {EventBus} eventBus
    */
-  function SecondaryToolbar(options, eventBus) {
+  function SecondaryToolbar(options, mainContainer, eventBus) {
     this.toolbar = options.toolbar;
     this.toggleButton = options.toggleButton;
+    this.toolbarButtonContainer = options.toolbarButtonContainer;
     this.buttons = [
       { element: options.presentationModeButton, eventName: 'presentationmode',
         close: true },
@@ -3886,16 +3892,19 @@ var SecondaryToolbar = (function SecondaryToolbarClosure() {
         eventName: 'documentproperties', close: true }
     ];
 
+    this.mainContainer = mainContainer;
     this.eventBus = eventBus;
 
     this.opened = false;
+    this.containerHeight = null;
     this.previousContainerHeight = null;
-    this.newContainerHeight = null;
-    this.buttonContainer = this.toolbar.firstElementChild;
 
     // Bind the event listeners for click and hand tool actions.
     this._bindClickListeners();
     this._bindHandToolListener(options.toggleHandToolButton);
+
+    // Bind the event listener for adjusting the 'max-height' of the toolbar.
+    this.eventBus.on('resize', this._setMaxHeight.bind(this));
   }
 
   SecondaryToolbar.prototype = {
@@ -3918,7 +3927,7 @@ var SecondaryToolbar = (function SecondaryToolbarClosure() {
 
         element.addEventListener('click', function (eventName, close) {
           if (eventName !== null) {
-            this.eventBus.dispatch(eventName);
+            this.eventBus.dispatch(eventName, { source: this, });
           }
           if (close) {
             this.close();
@@ -3954,6 +3963,8 @@ var SecondaryToolbar = (function SecondaryToolbarClosure() {
         return;
       }
       this.opened = true;
+      this._setMaxHeight();
+
       this.toggleButton.classList.add('toggled');
       this.toolbar.classList.remove('hidden');
     },
@@ -3975,18 +3986,22 @@ var SecondaryToolbar = (function SecondaryToolbarClosure() {
       }
     },
 
-    setMaxHeight: function SecondaryToolbar_setMaxHeight(container) {
-      if (!container || !this.buttonContainer) {
+    /**
+     * @private
+     */
+    _setMaxHeight: function SecondaryToolbar_setMaxHeight() {
+      if (!this.opened) {
+        return; // Only adjust the 'max-height' if the toolbar is visible.
+      }
+      this.containerHeight = this.mainContainer.clientHeight;
+
+      if (this.containerHeight === this.previousContainerHeight) {
         return;
       }
-      this.newContainerHeight = container.clientHeight;
-      if (this.previousContainerHeight === this.newContainerHeight) {
-        return;
-      }
-      var maxHeight = this.newContainerHeight - SCROLLBAR_PADDING;
-      this.buttonContainer.setAttribute('style',
-        'max-height: ' + maxHeight + 'px;');
-      this.previousContainerHeight = this.newContainerHeight;
+      this.toolbarButtonContainer.setAttribute('style',
+        'max-height: ' + (this.containerHeight - SCROLLBAR_PADDING) + 'px;');
+
+      this.previousContainerHeight = this.containerHeight;
     }
   };
 
@@ -7155,7 +7170,6 @@ var SCALE_SELECT_CONTAINER_PADDING = 8;
 var SCALE_SELECT_PADDING = 22;
 var PAGE_NUMBER_LOADING_INDICATOR = 'visiblePageIsLoading';
 var DISABLE_AUTO_FETCH_LOADING_BAR_TIMEOUT = 5000;
-var ENHANCE_TEXT_SELECTION = false;
 
 function configure(PDFJS) {
   PDFJS.imageResourcesPath = './images/';
@@ -7257,7 +7271,7 @@ var PDFViewerApplication = {
       renderingQueue: pdfRenderingQueue,
       linkService: pdfLinkService,
       downloadManager: downloadManager,
-      enhanceTextSelection: ENHANCE_TEXT_SELECTION,
+      enhanceTextSelection: false,
     });
     pdfRenderingQueue.setViewer(this.pdfViewer);
     pdfLinkService.setViewer(this.pdfViewer);
@@ -7316,7 +7330,7 @@ var PDFViewerApplication = {
       new PDFDocumentProperties(appConfig.documentProperties);
 
     this.secondaryToolbar =
-      new SecondaryToolbar(appConfig.secondaryToolbar, eventBus);
+      new SecondaryToolbar(appConfig.secondaryToolbar, container, eventBus);
 
     if (this.supportsFullscreen) {
       this.pdfPresentationMode = new PDFPresentationMode({
@@ -7368,6 +7382,18 @@ var PDFViewerApplication = {
       }),
       Preferences.get('defaultZoomValue').then(function resolved(value) {
         self.preferenceDefaultZoomValue = value;
+      }),
+      Preferences.get('enhanceTextSelection').then(function resolved(value) {
+        // TODO: Move the initialization and fetching of `Preferences` to occur
+        //       before the various viewer components are initialized.
+        //
+        // This was attempted in: https://github.com/mozilla/pdf.js/pull/7586,
+        // but it had to be backed out since it violated implicit assumptions
+        // about some viewer components being synchronously available.
+        //
+        // NOTE: This hack works since the `enhanceTextSelection` option is not
+        //       needed until `PDFViewer.setDocument` has been called.
+        self.pdfViewer.enhanceTextSelection = value;
       }),
       Preferences.get('disableTextLayer').then(function resolved(value) {
         if (PDFJS.disableTextLayer === true) {
@@ -8639,10 +8665,6 @@ function webViewerResize() {
     }
     PDFViewerApplication.pdfViewer.update();
   }
-
-  // Set the 'max-height' CSS property of the secondary toolbar.
-  var mainContainer = PDFViewerApplication.appConfig.mainContainer;
-  PDFViewerApplication.secondaryToolbar.setMaxHeight(mainContainer);
 }
 
 window.addEventListener('hashchange', function webViewerHashchange(evt) {
@@ -8689,10 +8711,6 @@ function webViewerLocalized() {
       container.setAttribute('style', 'min-width: ' + width + 'px; ' +
                                       'max-width: ' + width + 'px;');
     }
-
-    // Set the 'max-height' CSS property of the secondary toolbar.
-    var mainContainer = PDFViewerApplication.appConfig.mainContainer;
-    PDFViewerApplication.secondaryToolbar.setMaxHeight(mainContainer);
   });
 }
 
@@ -9417,6 +9435,8 @@ function getViewerConfiguration() {
     secondaryToolbar: {
       toolbar: document.getElementById('secondaryToolbar'),
       toggleButton: document.getElementById('secondaryToolbarToggle'),
+      toolbarButtonContainer:
+        document.getElementById('secondaryToolbarButtonContainer'),
       presentationModeButton:
         document.getElementById('secondaryPresentationMode'),
       openFileButton: document.getElementById('secondaryOpenFile'),

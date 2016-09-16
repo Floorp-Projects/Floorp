@@ -17,7 +17,7 @@ const { LocalizationHelper } = require("devtools/shared/l10n");
 const STRINGS_URI = "devtools/locale/filterwidget.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);
 
-const {cssTokenizer} = require("devtools/shared/css-parsing-utils");
+const {cssTokenizer} = require("devtools/shared/css/parsing-utils");
 
 const asyncStorage = require("devtools/shared/async-storage");
 

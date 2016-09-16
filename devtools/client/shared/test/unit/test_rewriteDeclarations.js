@@ -5,7 +5,7 @@
 
 var Cu = Components.utils;
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-const {RuleRewriter} = require("devtools/shared/css-parsing-utils");
+const {RuleRewriter} = require("devtools/shared/css/parsing-utils");
 const {isCssPropertyKnown} = require("devtools/server/actors/css-properties");
 
 const TEST_DATA = [
