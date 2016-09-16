@@ -26,7 +26,6 @@
 #include "PresentationAvailability.h"
 #include "PresentationCallbacks.h"
 #include "PresentationLog.h"
-#include "PresentationTransportBuilderConstructor.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -208,16 +207,7 @@ PresentationRequest::StartWithDevice(const nsAString& aDeviceId,
     do_QueryInterface(GetOwner()->GetChromeEventHandler());
   nsCOMPtr<nsIPresentationServiceCallback> callback =
     new PresentationRequesterCallback(this, id, promise);
-  nsCOMPtr<nsIPresentationTransportBuilderConstructor> constructor =
-    PresentationTransportBuilderConstructor::Create();
-  rv = service->StartSession(mUrls,
-                             id,
-                             origin,
-                             aDeviceId,
-                             GetOwner()->WindowID(),
-                             handler,
-                             callback,
-                             constructor);
+  rv = service->StartSession(mUrls, id, origin, aDeviceId, GetOwner()->WindowID(), handler, callback);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     promise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
   }
