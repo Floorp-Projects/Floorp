@@ -263,7 +263,7 @@ add_task(function* test_iframe() {
 
 add_task(function* test_schemeUpgrade() {
   let state = {
-    msg         : "https://example.com is requesting your username and password.\n\n" +
+    msg         : "https://example.com is requesting your username and password. " +
                   "WARNING: Your password will not be sent to the website you are currently visiting!",
     title       : "Authentication Required",
     textValue   : "httpUser",
@@ -296,7 +296,7 @@ add_task(function* test_schemeUpgrade() {
 
 add_task(function* test_schemeDowngrade() {
   let state = {
-    msg         : "http://example.com is requesting your username and password.\n\n" +
+    msg         : "http://example.com is requesting your username and password. " +
                   "WARNING: Your password will not be sent to the website you are currently visiting!",
     title       : "Authentication Required",
     textValue   : "", // empty because we shouldn't downgrade
@@ -327,7 +327,7 @@ add_task(function* test_schemeDowngrade() {
 
 add_task(function* test_schemeUpgrade_dedupe() {
   let state = {
-    msg         : "https://example.org is requesting your username and password.\n\n" +
+    msg         : "https://example.org is requesting your username and password. " +
                   "WARNING: Your password will not be sent to the website you are currently visiting!",
     title       : "Authentication Required",
     textValue   : "dedupeUser",
