@@ -1159,6 +1159,12 @@ CanvasRenderingContext2D::Reset()
     mCanvasElement->InvalidateCanvas();
   }
 
+  // only do this for non-docshell created contexts,
+  // since those are the ones that we created a surface for
+  if (mTarget && IsTargetValid() && !mDocShell) {
+    gCanvasAzureMemoryUsed -= mWidth * mHeight * 4;
+  }
+
   bool forceReset = true;
   ReturnTarget(forceReset);
   mTarget = nullptr;
@@ -1621,6 +1627,8 @@ CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
   mTarget = newTarget.forget();
   mBufferProvider = newProvider.forget();
 
+  RegisterAllocation();
+
   // Skia expects the unused X channel to contains 0 even for opaque operations
   // so we can't skip clearing in that case, even if we are going to cover the
   // entire canvas in the next drawing operation.
@@ -1664,6 +1672,10 @@ CanvasRenderingContext2D::SetErrorState()
 {
   EnsureErrorTarget();
 
+  if (mTarget && mTarget != sErrorTarget) {
+    gCanvasAzureMemoryUsed -= mWidth * mHeight * 4;
+  }
+
   mTarget = sErrorTarget;
   mBufferProvider = nullptr;
 
@@ -1672,12 +1684,21 @@ CanvasRenderingContext2D::SetErrorState()
 }
 
 void
-EnsureCanvasMemoryReporter()
+CanvasRenderingContext2D::RegisterAllocation()
 {
+  // XXX - It would make more sense to track the allocation in
+  // PeristentBufferProvider, rather than here.
   static bool registered = false;
-  if (!registered) {
+  // FIXME: Disable the reporter for now, see bug 1241865
+  if (!registered && false) {
     registered = true;
     RegisterStrongMemoryReporter(new Canvas2dPixelsReporter());
+  }
+
+  gCanvasAzureMemoryUsed += mWidth * mHeight * 4;
+  JSContext* context = nsContentUtils::GetCurrentJSContext();
+  if (context) {
+    JS_updateMallocCounter(context, mWidth * mHeight * 4);
   }
 }
 
@@ -1762,9 +1783,7 @@ CanvasRenderingContext2D::TrySharedTarget(RefPtr<gfx::DrawTarget>& aOutDT,
     return false;
   }
 
-  EnsureCanvasMemoryReporter();
-  aOutProvider = layerManager->CreatePersistentBufferProvider(GetSize(), GetSurfaceFormat(),
-                                                              &gCanvasAzureMemoryUsed);
+  aOutProvider = layerManager->CreatePersistentBufferProvider(GetSize(), GetSurfaceFormat());
 
   if (!aOutProvider) {
     return false;
