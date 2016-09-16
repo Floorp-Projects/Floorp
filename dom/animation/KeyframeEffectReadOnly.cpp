@@ -296,7 +296,10 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
       runningOnCompositorProperties.HasProperty(property.mProperty);
   }
 
-  CalculateCumulativeChangeHint(aStyleContext);
+  // FIXME (bug 1303235): Do this for Servo too
+  if (aStyleContext->PresContext()->StyleSet()->IsGecko()) {
+    CalculateCumulativeChangeHint(aStyleContext);
+  }
 
   MarkCascadeNeedsUpdate();
 
@@ -1272,6 +1275,13 @@ bool
 KeyframeEffectReadOnly::CanIgnoreIfNotVisible() const
 {
   if (!AnimationUtils::IsOffscreenThrottlingEnabled()) {
+    return false;
+  }
+
+  // FIXME (bug 1303235): We don't calculate mCumulativeChangeHint for
+  // the Servo backend yet
+  nsPresContext* presContext = GetPresContext();
+  if (!presContext || presContext->StyleSet()->IsServo()) {
     return false;
   }
 
