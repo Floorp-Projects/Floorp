@@ -50,20 +50,3 @@ ThreadInfo::SetPendingDelete()
   }
 }
 
-bool
-ThreadInfo::CanInvokeJS() const
-{
-#ifdef SPS_STANDALONE
-  return false;
-#else
-  bool result;
-  nsIThread* thread = GetThread();
-  if (!thread) {
-    MOZ_ASSERT(IsMainThread());
-    return true;
-  }
-  nsresult rv = thread->GetCanInvokeJS(&result);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-  return result;
-#endif
-}

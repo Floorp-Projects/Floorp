@@ -512,8 +512,6 @@ CycleCollectedJSContext::Initialize(JSContext* aParentContext,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  NS_GetCurrentThread()->SetCanInvokeJS(true);
-
   if (!JS_AddExtraGCRootsTracer(mJSContext, TraceBlackJS, this)) {
     MOZ_CRASH("JS_AddExtraGCRootsTracer failed");
   }
