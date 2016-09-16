@@ -3577,6 +3577,9 @@ KeyboardLayout::IsDeadKey(uint8_t aVirtualKey,
                           const ModifierKeyState& aModKeyState) const
 {
   int32_t virtualKeyIndex = GetKeyIndex(aVirtualKey);
+
+  // XXX KeyboardLayout class doesn't support unusual keyboard layout which
+  //     maps some function keys as dead keys.
   if (virtualKeyIndex < 0) {
     return false;
   }
@@ -3653,7 +3656,7 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
   uint8_t shiftState =
     VirtualKey::ModifiersToShiftState(aModKeyState.GetModifiers());
 
-  if (mVirtualKeys[virtualKeyIndex].IsDeadKey(shiftState)) {
+  if (IsDeadKey(virtualKey, aModKeyState)) {
     if ((isKeyDown && mActiveDeadKey < 0) ||
         (!isKeyDown && mActiveDeadKey == virtualKey)) {
       //  First dead key event doesn't generate characters.
