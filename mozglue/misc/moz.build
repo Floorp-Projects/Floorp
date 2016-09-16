@@ -7,7 +7,6 @@ EXPORTS.mozilla += [
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     EXPORTS.mozilla += [
-        'StackWalk_windows.h',
         'TimeStamp_windows.h',
     ]
 
