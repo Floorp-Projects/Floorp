@@ -43,10 +43,6 @@ if CONFIG['OS_ARCH'] != 'WINNT':
         'module.cc',
         'string_conversion.cc',
     ]
-    if CONFIG['OS_ARCH'] == 'Darwin':
-        HOST_CXXFLAGS += [
-            '-stdlib=libc++',
-        ]
     HOST_CXXFLAGS += [
         '-O2',
         '-g',

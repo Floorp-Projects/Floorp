@@ -54,16 +54,11 @@ static const char kMicrodumpBegin[] = "-----BEGIN BREAKPAD MICRODUMP-----";
 static const char kMicrodumpEnd[] = "-----END BREAKPAD MICRODUMP-----";
 static const char kOsKey[] = ": O ";
 static const char kCpuKey[] = ": C ";
-static const char kGpuKey[] = ": G ";
 static const char kMmapKey[] = ": M ";
 static const char kStackKey[] = ": S ";
 static const char kStackFirstLineKey[] = ": S 0 ";
 static const char kArmArchitecture[] = "arm";
 static const char kArm64Architecture[] = "arm64";
-static const char kX86Architecture[] = "x86";
-static const char kMipsArchitecture[] = "mips";
-static const char kMips64Architecture[] = "mips64";
-static const char kGpuUnknown[] = "UNKNOWN";
 
 template<typename T>
 T HexStrToL(const string& str) {
@@ -104,15 +99,12 @@ namespace google_breakpad {
 
 void MicrodumpModules::Add(const CodeModule* module) {
   linked_ptr<const CodeModule> module_ptr(module);
-  if (!map_.StoreRange(module->base_address(), module->size(), module_ptr)) {
+  if (!map_->StoreRange(module->base_address(), module->size(), module_ptr)) {
     BPLOG(ERROR) << "Module " << module->code_file() <<
                     " could not be stored";
   }
 }
 
-void MicrodumpModules::SetEnableModuleShrink(bool is_enabled) {
-  map_.SetEnableShrinkDown(is_enabled);
-}
 
 //
 // MicrodumpContext
@@ -127,24 +119,6 @@ void MicrodumpContext::SetContextARM(MDRawContextARM* arm) {
 void MicrodumpContext::SetContextARM64(MDRawContextARM64* arm64) {
   DumpContext::SetContextFlags(MD_CONTEXT_ARM64);
   DumpContext::SetContextARM64(arm64);
-  valid_ = true;
-}
-
-void MicrodumpContext::SetContextX86(MDRawContextX86* x86) {
-  DumpContext::SetContextFlags(MD_CONTEXT_X86);
-  DumpContext::SetContextX86(x86);
-  valid_ = true;
-}
-
-void MicrodumpContext::SetContextMIPS(MDRawContextMIPS* mips32) {
-  DumpContext::SetContextFlags(MD_CONTEXT_MIPS);
-  DumpContext::SetContextMIPS(mips32);
-  valid_ = true;
-}
-
-void MicrodumpContext::SetContextMIPS64(MDRawContextMIPS* mips64) {
-  DumpContext::SetContextFlags(MD_CONTEXT_MIPS64);
-  DumpContext::SetContextMIPS(mips64);
   valid_ = true;
 }
 
@@ -230,11 +204,12 @@ Microdump::Microdump(const string& contents)
       in_microdump = true;
       continue;
     }
-    if (!in_microdump) {
-      continue;
-    }
     if (line.find(kMicrodumpEnd) != string::npos) {
       break;
+    }
+
+    if (!in_microdump) {
+      continue;
     }
 
     size_t pos;
@@ -265,7 +240,6 @@ Microdump::Microdump(const string& contents)
       } else if (os_id == "A") {
         system_info_->os = "Android";
         system_info_->os_short = "android";
-        modules_->SetEnableModuleShrink(true);
       }
 
       // OS line also contains release and version for future use.
@@ -299,9 +273,8 @@ Microdump::Microdump(const string& contents)
       std::vector<uint8_t> cpu_state_raw = ParseHexBuf(cpu_state_str);
       if (strcmp(arch.c_str(), kArmArchitecture) == 0) {
         if (cpu_state_raw.size() != sizeof(MDRawContextARM)) {
-          std::cerr << "Malformed CPU context. Got " << cpu_state_raw.size()
-                    << " bytes instead of " << sizeof(MDRawContextARM)
-                    << std::endl;
+          std::cerr << "Malformed CPU context. Got " << cpu_state_raw.size() <<
+              " bytes instead of " << sizeof(MDRawContextARM) << std::endl;
           continue;
         }
         MDRawContextARM* arm = new MDRawContextARM();
@@ -309,54 +282,15 @@ Microdump::Microdump(const string& contents)
         context_->SetContextARM(arm);
       } else if (strcmp(arch.c_str(), kArm64Architecture) == 0) {
         if (cpu_state_raw.size() != sizeof(MDRawContextARM64)) {
-          std::cerr << "Malformed CPU context. Got " << cpu_state_raw.size()
-                    << " bytes instead of " << sizeof(MDRawContextARM64)
-                    << std::endl;
+          std::cerr << "Malformed CPU context. Got " << cpu_state_raw.size() <<
+              " bytes instead of " << sizeof(MDRawContextARM64) << std::endl;
           continue;
         }
         MDRawContextARM64* arm = new MDRawContextARM64();
         memcpy(arm, &cpu_state_raw[0], cpu_state_raw.size());
         context_->SetContextARM64(arm);
-      } else if (strcmp(arch.c_str(), kX86Architecture) == 0) {
-        if (cpu_state_raw.size() != sizeof(MDRawContextX86)) {
-          std::cerr << "Malformed CPU context. Got " << cpu_state_raw.size()
-                    << " bytes instead of " << sizeof(MDRawContextX86)
-                    << std::endl;
-          continue;
-        }
-        MDRawContextX86* x86 = new MDRawContextX86();
-        memcpy(x86, &cpu_state_raw[0], cpu_state_raw.size());
-        context_->SetContextX86(x86);
-      } else if (strcmp(arch.c_str(), kMipsArchitecture) == 0) {
-        if (cpu_state_raw.size() != sizeof(MDRawContextMIPS)) {
-          std::cerr << "Malformed CPU context. Got " << cpu_state_raw.size()
-                    << " bytes instead of " << sizeof(MDRawContextMIPS)
-                    << std::endl;
-          continue;
-        }
-        MDRawContextMIPS* mips32 = new MDRawContextMIPS();
-        memcpy(mips32, &cpu_state_raw[0], cpu_state_raw.size());
-        context_->SetContextMIPS(mips32);
-      } else if (strcmp(arch.c_str(), kMips64Architecture) == 0) {
-        if (cpu_state_raw.size() != sizeof(MDRawContextMIPS)) {
-          std::cerr << "Malformed CPU context. Got " << cpu_state_raw.size()
-                    << " bytes instead of " << sizeof(MDRawContextMIPS)
-                    << std::endl;
-          continue;
-        }
-        MDRawContextMIPS* mips64 = new MDRawContextMIPS();
-        memcpy(mips64, &cpu_state_raw[0], cpu_state_raw.size());
-        context_->SetContextMIPS64(mips64);
       } else {
         std::cerr << "Unsupported architecture: " << arch << std::endl;
-      }
-    } else if ((pos = line.find(kGpuKey)) != string::npos) {
-      string gpu_str(line, pos + strlen(kGpuKey));
-      if (strcmp(gpu_str.c_str(), kGpuUnknown) != 0) {
-        std::istringstream gpu_tokens(gpu_str);
-        std::getline(gpu_tokens, system_info_->gl_version, '|');
-        std::getline(gpu_tokens, system_info_->gl_vendor, '|');
-        std::getline(gpu_tokens, system_info_->gl_renderer, '|');
       }
     } else if ((pos = line.find(kMmapKey)) != string::npos) {
       string mmap_line(line, pos + strlen(kMmapKey));

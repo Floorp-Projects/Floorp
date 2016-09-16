@@ -64,7 +64,6 @@ static Module::Function *generate_duplicate_function(const string &name) {
 #define MODULE_OS "os-name"
 #define MODULE_ARCH "architecture"
 #define MODULE_ID "id-string"
-#define MODULE_CODE_ID "code-id-string"
 
 TEST(Write, Header) {
   stringstream s;
@@ -72,16 +71,6 @@ TEST(Write, Header) {
   m.Write(s, ALL_SYMBOL_DATA);
   string contents = s.str();
   EXPECT_STREQ("MODULE os-name architecture id-string name with spaces\n",
-               contents.c_str());
-}
-
-TEST(Write, HeaderCodeId) {
-  stringstream s;
-  Module m(MODULE_NAME, MODULE_OS, MODULE_ARCH, MODULE_ID, MODULE_CODE_ID);
-  m.Write(s, ALL_SYMBOL_DATA);
-  string contents = s.str();
-  EXPECT_STREQ("MODULE os-name architecture id-string name with spaces\n"
-               "INFO CODE_ID code-id-string\n",
                contents.c_str());
 }
 
