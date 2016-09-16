@@ -40,10 +40,18 @@ function attachThread(toolbox) {
 
   let target = toolbox.target;
   let { form: { chromeDebugger, actor } } = target;
-  let threadOptions = {
-    useSourceMaps: Services.prefs.getBoolPref("devtools.debugger.source-maps-enabled"),
-    autoBlackBox: Services.prefs.getBoolPref("devtools.debugger.auto-black-box")
-  };
+
+  // Sourcemaps are always turned off when using the new debugger
+  // frontend. This is because it does sourcemapping on the
+  // client-side, so the server should not do it. It also does not support
+  // blackboxing yet.
+  let useSourceMaps = false;
+  let autoBlackBox = false;
+  if(!Services.prefs.getBoolPref("devtools.debugger.new-debugger-frontend")) {
+    useSourceMaps = Services.prefs.getBoolPref("devtools.debugger.source-maps-enabled");
+    autoBlackBox = Services.prefs.getBoolPref("devtools.debugger.auto-black-box");
+  }
+  let threadOptions = { useSourceMaps, autoBlackBox };
 
   let handleResponse = (res, threadClient) => {
     if (res.error) {
