@@ -28,8 +28,8 @@ factory((root.pdfjsDistBuildPdfWorker = {}));
   // Use strict in our context only - users might not want it
   'use strict';
 
-var pdfjsVersion = '1.5.437';
-var pdfjsBuild = 'ca61ccc';
+var pdfjsVersion = '1.5.464';
+var pdfjsBuild = '834a7ff';
 
   var pdfjsFilePath =
     typeof document !== 'undefined' && document.currentScript ?
@@ -11228,10 +11228,11 @@ exports.JpegImage = JpegImage;
 }(this, function (exports, sharedUtil, coreArithmeticDecoder) {
 
 var info = sharedUtil.info;
+var warn = sharedUtil.warn;
+var error = sharedUtil.error;
 var log2 = sharedUtil.log2;
 var readUint16 = sharedUtil.readUint16;
 var readUint32 = sharedUtil.readUint32;
-var warn = sharedUtil.warn;
 var ArithmeticDecoder = coreArithmeticDecoder.ArithmeticDecoder;
 
 var JpxImage = (function JpxImageClosure() {
@@ -11273,7 +11274,7 @@ var JpxImage = (function JpxImageClosure() {
           lbox = length - position + headerSize;
         }
         if (lbox < headerSize) {
-          throw new Error('JPX Error: Invalid box field size');
+          error('JPX Error: Invalid box field size');
         }
         var dataLength = lbox - headerSize;
         var jumpDataLength = true;
@@ -11351,12 +11352,12 @@ var JpxImage = (function JpxImageClosure() {
           return;
         }
       }
-      throw new Error('JPX Error: No size marker found in JPX stream');
+      error('JPX Error: No size marker found in JPX stream');
     },
     parseCodestream: function JpxImage_parseCodestream(data, start, end) {
       var context = {};
+      var doNotRecover = false;
       try {
-        var doNotRecover = false;
         var position = start;
         while (position + 1 < end) {
           var code = readUint16(data, position);
@@ -11419,7 +11420,7 @@ var JpxImage = (function JpxImageClosure() {
                   scalarExpounded = true;
                   break;
                 default:
-                  throw new Error('JPX Error: Invalid SQcd value ' + sqcd);
+                  throw new Error('Invalid SQcd value ' + sqcd);
               }
               qcd.noQuantization = (spqcdSize === 8);
               qcd.scalarExpounded = scalarExpounded;
@@ -11471,7 +11472,7 @@ var JpxImage = (function JpxImageClosure() {
                   scalarExpounded = true;
                   break;
                 default:
-                  throw new Error('JPX Error: Invalid SQcd value ' + sqcd);
+                  throw new Error('Invalid SQcd value ' + sqcd);
               }
               qcc.noQuantization = (spqcdSize === 8);
               qcc.scalarExpounded = scalarExpounded;
@@ -11549,7 +11550,7 @@ var JpxImage = (function JpxImageClosure() {
               }
               if (unsupported.length > 0) {
                 doNotRecover = true;
-                throw new Error('JPX Error: Unsupported COD options (' +
+                throw new Error('Unsupported COD options (' +
                                 unsupported.join(', ') + ')');
               }
               if (context.mainHeader) {
@@ -11597,19 +11598,18 @@ var JpxImage = (function JpxImageClosure() {
               // skipping content
               break;
             case 0xFF53: // Coding style component (COC)
-              throw new Error('JPX Error: Codestream code 0xFF53 (COC) is ' +
+              throw new Error('Codestream code 0xFF53 (COC) is ' +
                               'not implemented');
             default:
-              throw new Error('JPX Error: Unknown codestream code: ' +
-                              code.toString(16));
+              throw new Error('Unknown codestream code: ' + code.toString(16));
           }
           position += length;
         }
       } catch (e) {
         if (doNotRecover || this.failOnCorruptedImage) {
-          throw e;
+          error('JPX Error: ' + e.message);
         } else {
-          warn('Trying to recover from ' + e.message);
+          warn('JPX: Trying to recover from: ' + e.message);
         }
       }
       this.tiles = transformComponents(context);
@@ -11859,7 +11859,7 @@ var JpxImage = (function JpxImageClosure() {
         }
         r = 0;
       }
-      throw new Error('JPX Error: Out of packets');
+      error('JPX Error: Out of packets');
     };
   }
   function ResolutionLayerComponentPositionIterator(context) {
@@ -11899,7 +11899,7 @@ var JpxImage = (function JpxImageClosure() {
         }
         l = 0;
       }
-      throw new Error('JPX Error: Out of packets');
+      error('JPX Error: Out of packets');
     };
   }
   function ResolutionPositionComponentLayerIterator(context) {
@@ -11958,7 +11958,7 @@ var JpxImage = (function JpxImageClosure() {
         }
         p = 0;
       }
-      throw new Error('JPX Error: Out of packets');
+      error('JPX Error: Out of packets');
     };
   }
   function PositionComponentResolutionLayerIterator(context) {
@@ -12005,7 +12005,7 @@ var JpxImage = (function JpxImageClosure() {
         }
         px = 0;
       }
-      throw new Error('JPX Error: Out of packets');
+      error('JPX Error: Out of packets');
     };
   }
   function ComponentPositionResolutionLayerIterator(context) {
@@ -12051,7 +12051,7 @@ var JpxImage = (function JpxImageClosure() {
         }
         py = 0;
       }
-      throw new Error('JPX Error: Out of packets');
+      error('JPX Error: Out of packets');
     };
   }
   function getPrecinctIndexIfExist(
@@ -12231,8 +12231,7 @@ var JpxImage = (function JpxImageClosure() {
           new ComponentPositionResolutionLayerIterator(context);
         break;
       default:
-        throw new Error('JPX Error: Unsupported progression order ' +
-                        progressionOrder);
+        error('JPX Error: Unsupported progression order ' + progressionOrder);
     }
   }
   function parseTilePackets(context, data, offset, dataLength) {
@@ -13169,7 +13168,7 @@ var JpxImage = (function JpxImageClosure() {
                      (decoder.readBit(contexts, UNIFORM_CONTEXT) << 1) |
                       decoder.readBit(contexts, UNIFORM_CONTEXT);
         if (symbol !== 0xA) {
-          throw new Error('JPX Error: Invalid segmentation symbol');
+          error('JPX Error: Invalid segmentation symbol');
         }
       }
     };
@@ -27475,12 +27474,17 @@ var Font = (function FontClosure() {
     }
 
     // Some fonts might use wrong font types for Type1C or CIDFontType0C
-    if (subtype === 'Type1C' && (type !== 'Type1' && type !== 'MMType1')) {
-      // Some TrueType fonts by mistake claim Type1C
-      if (isTrueTypeFile(file)) {
-        subtype = 'TrueType';
-      } else {
-        type = 'Type1';
+    if (subtype === 'Type1C') {
+      if (type !== 'Type1' && type !== 'MMType1') {
+        // Some TrueType fonts by mistake claim Type1C
+        if (isTrueTypeFile(file)) {
+          subtype = 'TrueType';
+        } else {
+          type = 'Type1';
+        }
+      } else if (isOpenTypeFile(file)) {
+        // Sometimes the type/subtype can be a complete lie (see issue7598.pdf).
+        type = subtype = 'OpenType';
       }
     }
     if (subtype === 'CIDFontType0C' && type !== 'CIDFontType0') {
@@ -29158,7 +29162,10 @@ var Font = (function FontClosure() {
             charCodeToGlyphId[charCode] = glyphId;
           }
         });
-        if (dupFirstEntry) {
+        if (dupFirstEntry && (isCidToGidMapEmpty || !charCodeToGlyphId[0])) {
+          // We don't duplicate the first entry in the `charCodeToGlyphId` map
+          // if the font has a `CIDToGIDMap` which has already mapped the first
+          // entry to a non-zero `glyphId` (fixes issue7544.pdf).
           charCodeToGlyphId[0] = numGlyphs - 1;
         }
       } else {
@@ -39817,8 +39824,19 @@ var TextWidgetAnnotation = (function TextWidgetAnnotationClosure() {
   function TextWidgetAnnotation(params) {
     WidgetAnnotation.call(this, params);
 
-    this.data.textAlignment = Util.getInheritableProperty(params.dict, 'Q');
-    this.data.maxLen = Util.getInheritableProperty(params.dict, 'MaxLen');
+    // Determine the alignment of text in the field.
+    var alignment = Util.getInheritableProperty(params.dict, 'Q');
+    if (!isInt(alignment) || alignment < 0 || alignment > 2) {
+      alignment = null;
+    }
+    this.data.textAlignment = alignment;
+
+    // Determine the maximum length of text in the field.
+    var maximumLength = Util.getInheritableProperty(params.dict, 'MaxLen');
+    if (!isInt(maximumLength) || maximumLength < 0) {
+      maximumLength = null;
+    }
+    this.data.maxLen = maximumLength;
   }
 
   Util.inherit(TextWidgetAnnotation, WidgetAnnotation, {
