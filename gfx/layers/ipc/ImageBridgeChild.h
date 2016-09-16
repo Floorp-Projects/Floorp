@@ -383,7 +383,6 @@ protected:
   void ShutdownStep1(SynchronousTask* aTask);
   void ShutdownStep2(SynchronousTask* aTask);
   void MarkShutDown();
-  void FallbackDestroyActors();
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void DeallocPImageBridgeChild() override;
