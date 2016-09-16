@@ -859,8 +859,13 @@ KeyframeEffectReadOnly::GetKeyframes(JSContext*& aCx,
         : propertyValue.mProperty;
 
       nsAutoString stringValue;
-      propertyValue.mValue.AppendToString(
-        propertyForSerializing, stringValue, nsCSSValue::eNormalized);
+      if (propertyValue.mServoDeclarationBlock) {
+        Servo_DeclarationBlock_SerializeOneValue(
+          propertyValue.mServoDeclarationBlock, &stringValue);
+      } else {
+        propertyValue.mValue.AppendToString(
+          propertyForSerializing, stringValue, nsCSSValue::eNormalized);
+      }
 
       JS::Rooted<JS::Value> value(aCx);
       if (!ToJSValue(aCx, stringValue, &value) ||

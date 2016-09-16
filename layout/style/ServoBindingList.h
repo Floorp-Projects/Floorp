@@ -64,6 +64,9 @@ SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetImmutable, void,
                    ServoDeclarationBlockBorrowed declarations)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_ClearCachePointer, void,
                    ServoDeclarationBlockBorrowed declarations)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_SerializeOneValue, void,
+                   ServoDeclarationBlockBorrowed declarations,
+                   nsString* buffer)
 
 // CSS supports()
 SERVO_BINDING_FUNC(Servo_CSSSupports, bool,
