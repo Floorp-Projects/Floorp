@@ -31,6 +31,7 @@ using mozilla::IsRvalueReference;
 using mozilla::IsSame;
 using mozilla::IsSigned;
 using mozilla::IsUnsigned;
+using mozilla::IsDestructible;
 using mozilla::MakeSigned;
 using mozilla::MakeUnsigned;
 using mozilla::RemoveExtent;
@@ -351,6 +352,27 @@ static_assert(!IsSigned<NotIntConstructible>::value,
               "non-arithmetic types are not signed");
 static_assert(!IsUnsigned<NotIntConstructible>::value,
               "non-arithmetic types are not unsigned");
+
+class PublicDestructible
+{
+public:
+  ~PublicDestructible();
+};
+class PrivateDestructible
+{
+private:
+  ~PrivateDestructible();
+};
+class TrivialDestructible
+{
+};
+
+static_assert(IsDestructible<PublicDestructible>::value,
+              "public destructible class is destructible");
+static_assert(!IsDestructible<PrivateDestructible>::value,
+              "private destructible class is not destructible");
+static_assert(IsDestructible<TrivialDestructible>::value,
+              "trivial destructible class is destructible");
 
 namespace CPlusPlus11IsBaseOf {
 
