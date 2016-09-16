@@ -3331,16 +3331,12 @@ StyleAnimationValue::UncomputeValue(nsCSSPropertyID aProperty,
   return true;
 }
 
-inline const void*
+template<typename T>
+inline const T&
 StyleDataAtOffset(const void* aStyleStruct, ptrdiff_t aOffset)
 {
-  return reinterpret_cast<const char*>(aStyleStruct) + aOffset;
-}
-
-inline void*
-StyleDataAtOffset(void* aStyleStruct, ptrdiff_t aOffset)
-{
-  return reinterpret_cast<char*>(aStyleStruct) + aOffset;
+  return *reinterpret_cast<const T*>(
+    reinterpret_cast<const uint8_t*>(aStyleStruct) + aOffset);
 }
 
 static void
@@ -4214,8 +4210,8 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
       };
       return true;
     case eStyleAnimType_Coord: {
-      const nsStyleCoord& coord = *static_cast<const nsStyleCoord*>(
-        StyleDataAtOffset(styleStruct, ssOffset));
+      const nsStyleCoord& coord =
+        StyleDataAtOffset<nsStyleCoord>(styleStruct, ssOffset);
       if (nsCSSProps::PropHasFlags(aProperty, CSS_PROPERTY_NUMBERS_ARE_PIXELS) &&
           coord.GetUnit() == eStyleUnit_Coord) {
         // For SVG properties where number means the same thing as length,
@@ -4238,8 +4234,8 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
        NS_SIDE_LEFT   == eStyleAnimType_Sides_Left  -eStyleAnimType_Sides_Top,
        "box side constants out of sync with animation side constants");
 
-      const nsStyleCoord &coord = static_cast<const nsStyleSides*>(
-        StyleDataAtOffset(styleStruct, ssOffset))->
+      const nsStyleCoord &coord =
+        StyleDataAtOffset<nsStyleSides>(styleStruct, ssOffset).
           Get(mozilla::css::Side(animType - eStyleAnimType_Sides_Top));
       return StyleCoordToValue(coord, aComputedValue);
     }
@@ -4258,13 +4254,13 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
                                  eStyleAnimType_Corner_TopLeft,
        "box corner constants out of sync with animation corner constants");
 
-      const nsStyleCorners *corners = static_cast<const nsStyleCorners*>(
-        StyleDataAtOffset(styleStruct, ssOffset));
+      const nsStyleCorners& corners =
+        StyleDataAtOffset<nsStyleCorners>(styleStruct, ssOffset);
       uint8_t fullCorner = animType - eStyleAnimType_Corner_TopLeft;
       const nsStyleCoord &horiz =
-        corners->Get(NS_FULL_TO_HALF_CORNER(fullCorner, false));
+        corners.Get(NS_FULL_TO_HALF_CORNER(fullCorner, false));
       const nsStyleCoord &vert =
-        corners->Get(NS_FULL_TO_HALF_CORNER(fullCorner, true));
+        corners.Get(NS_FULL_TO_HALF_CORNER(fullCorner, true));
       nsAutoPtr<nsCSSValuePair> pair(new nsCSSValuePair);
       if (!StyleCoordToCSSValue(horiz, pair->mXValue) ||
           !StyleCoordToCSSValue(vert, pair->mYValue)) {
@@ -4275,12 +4271,12 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
       return true;
     }
     case eStyleAnimType_nscoord:
-      aComputedValue.SetCoordValue(*static_cast<const nscoord*>(
-        StyleDataAtOffset(styleStruct, ssOffset)));
+      aComputedValue.SetCoordValue(
+        StyleDataAtOffset<nscoord>(styleStruct, ssOffset));
       return true;
     case eStyleAnimType_float:
-      aComputedValue.SetFloatValue(*static_cast<const float*>(
-        StyleDataAtOffset(styleStruct, ssOffset)));
+      aComputedValue.SetFloatValue(
+        StyleDataAtOffset<float>(styleStruct, ssOffset));
       if (aProperty == eCSSProperty_font_size_adjust &&
           aComputedValue.GetFloatValue() == -1.0f) {
         // In nsStyleFont, we set mFont.sizeAdjust to -1.0 to represent
@@ -4291,12 +4287,12 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
       }
       return true;
     case eStyleAnimType_Color:
-      aComputedValue.SetColorValue(*static_cast<const nscolor*>(
-        StyleDataAtOffset(styleStruct, ssOffset)));
+      aComputedValue.SetColorValue(
+        StyleDataAtOffset<nscolor>(styleStruct, ssOffset));
       return true;
     case eStyleAnimType_PaintServer: {
-      const nsStyleSVGPaint &paint = *static_cast<const nsStyleSVGPaint*>(
-        StyleDataAtOffset(styleStruct, ssOffset));
+      const nsStyleSVGPaint& paint =
+        StyleDataAtOffset<nsStyleSVGPaint>(styleStruct, ssOffset);
       if (paint.mType == eStyleSVGPaintType_Color) {
         aComputedValue.SetColorValue(paint.mPaint.mColor);
         return true;
@@ -4335,9 +4331,8 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
       return true;
     }
     case eStyleAnimType_Shadow: {
-      const nsCSSShadowArray *shadowArray =
-        *static_cast<const RefPtr<nsCSSShadowArray>*>(
-          StyleDataAtOffset(styleStruct, ssOffset));
+      const nsCSSShadowArray* shadowArray =
+        StyleDataAtOffset<RefPtr<nsCSSShadowArray>>(styleStruct, ssOffset);
       if (!shadowArray) {
         aComputedValue.SetAndAdoptCSSValueListValue(nullptr, eUnit_Shadow);
         return true;
