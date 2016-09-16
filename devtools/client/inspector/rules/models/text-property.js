@@ -9,7 +9,7 @@
 /* eslint-disable mozilla/reject-some-requires */
 const {Cc, Ci} = require("chrome");
 /* eslint-enable mozilla/reject-some-requires */
-const {escapeCSSComment} = require("devtools/shared/css-parsing-utils");
+const {escapeCSSComment} = require("devtools/shared/css/parsing-utils");
 const {getCssProperties} = require("devtools/shared/fronts/css-properties");
 /* eslint-disable mozilla/reject-some-requires */
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
