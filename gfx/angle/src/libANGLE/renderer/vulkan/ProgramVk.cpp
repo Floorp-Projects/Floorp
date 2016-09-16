@@ -201,12 +201,4 @@ bool ProgramVk::getUniformBlockMemberInfo(const std::string &memberUniformName,
     return bool();
 }
 
-void ProgramVk::setPathFragmentInputGen(const std::string &inputName,
-                                        GLenum genMode,
-                                        GLint components,
-                                        const GLfloat *coeffs)
-{
-    UNIMPLEMENTED();
-}
-
 }  // namespace rx

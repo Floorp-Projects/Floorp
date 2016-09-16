@@ -31,11 +31,11 @@ namespace rx
 
 RendererD3D::RendererD3D(egl::Display *display)
     : mDisplay(display),
+      mDeviceLost(false),
       mPresentPathFastEnabled(false),
       mCapsInitialized(false),
       mWorkaroundsInitialized(false),
-      mDisjoint(false),
-      mDeviceLost(false)
+      mDisjoint(false)
 {
 }
 
@@ -275,29 +275,14 @@ gl::Texture *RendererD3D::getIncompleteTexture(GLImplFactory *implFactory, GLenu
     return mIncompleteTextures[type].get();
 }
 
-GLenum RendererD3D::getResetStatus()
+bool RendererD3D::isDeviceLost() const
 {
-    if (!mDeviceLost)
-    {
-        if (testDeviceLost())
-        {
-            mDeviceLost = true;
-            notifyDeviceLost();
-            return GL_UNKNOWN_CONTEXT_RESET_EXT;
-        }
-        return GL_NO_ERROR;
-    }
-
-    if (testDeviceResettable())
-    {
-        return GL_NO_ERROR;
-    }
-
-    return GL_UNKNOWN_CONTEXT_RESET_EXT;
+    return mDeviceLost;
 }
 
 void RendererD3D::notifyDeviceLost()
 {
+    mDeviceLost = true;
     mDisplay->notifyDeviceLost();
 }
 

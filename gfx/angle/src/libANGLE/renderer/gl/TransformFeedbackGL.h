@@ -20,9 +20,9 @@ class StateManagerGL;
 class TransformFeedbackGL : public TransformFeedbackImpl
 {
   public:
-    TransformFeedbackGL(const gl::TransformFeedbackState &state,
-                        const FunctionsGL *functions,
-                        StateManagerGL *stateManager);
+    TransformFeedbackGL(const FunctionsGL *functions,
+                        StateManagerGL *stateManager,
+                        size_t maxTransformFeedbackBufferBindings);
     ~TransformFeedbackGL() override;
 
     void begin(GLenum primitiveMode) override;
@@ -46,6 +46,8 @@ class TransformFeedbackGL : public TransformFeedbackImpl
 
     mutable bool mIsActive;
     mutable bool mIsPaused;
+
+    std::vector<OffsetBindingPointer<gl::Buffer>> mCurrentIndexedBuffers;
 };
 
 }

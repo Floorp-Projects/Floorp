@@ -135,7 +135,7 @@ inline unsigned int unorm(float x)
 
 inline bool supportsSSE2()
 {
-#if defined(ANGLE_USE_SSE)
+#if defined(ANGLE_PLATFORM_WINDOWS) && !defined(_M_ARM)
     static bool checked = false;
     static bool supports = false;
 
@@ -144,22 +144,21 @@ inline bool supportsSSE2()
         return supports;
     }
 
-#if defined(ANGLE_PLATFORM_WINDOWS) && !defined(_M_ARM)
+    int info[4];
+    __cpuid(info, 0);
+
+    if (info[0] >= 1)
     {
-        int info[4];
-        __cpuid(info, 0);
+        __cpuid(info, 1);
 
-        if (info[0] >= 1)
-        {
-            __cpuid(info, 1);
-
-            supports = (info[3] >> 26) & 1;
-        }
+        supports = (info[3] >> 26) & 1;
     }
-#endif  // defined(ANGLE_PLATFORM_WINDOWS) && !defined(_M_ARM)
+
     checked = true;
+
     return supports;
-#else  // defined(ANGLE_USE_SSE)
+#else
+    UNIMPLEMENTED();
     return false;
 #endif
 }
@@ -799,8 +798,8 @@ inline uint16_t RotR16(uint16_t x, int8_t r)
     return (x >> r) | (x << (16 - r));
 }
 
-#define ANGLE_ROTL(x, y) ::rx::RotL(x, y)
-#define ANGLE_ROTR16(x, y) ::rx::RotR16(x, y)
+#define ANGLE_ROTL(x,y) RotL(x,y)
+#define ANGLE_ROTR16(x,y) RotR16(x,y)
 
 #endif // namespace rx
 

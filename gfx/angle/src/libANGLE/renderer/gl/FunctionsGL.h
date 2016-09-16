@@ -392,8 +392,10 @@ class FunctionsGL
     PFNGLTEXIMAGE3DMULTISAMPLEPROC texImage3DMultisample;
     PFNGLWAITSYNCPROC waitSync;
 
-    // NV_path_rendering (originally written against 3.2 compatibility profile)
+    // EXT_direct_state_access. Needed by NV_path_rendering.
     PFNGLMATRIXLOADFEXTPROC matrixLoadEXT;
+
+    // NV_path_rendering (originally written against 3.2 compatibility profile)
     PFNGLGENPATHSNVPROC genPathsNV;
     PFNGLDELETEPATHSNVPROC delPathsNV;
     PFNGLPATHCOMMANDSNVPROC pathCommandsNV;
@@ -403,19 +405,13 @@ class FunctionsGL
     PFNGLGETPATHPARAMETERFVNVPROC getPathParameterfNV;
     PFNGLGETPATHPARAMETERIVNVPROC getPathParameteriNV;
     PFNGLPATHSTENCILFUNCNVPROC pathStencilFuncNV;
+
     PFNGLSTENCILFILLPATHNVPROC stencilFillPathNV;
     PFNGLSTENCILSTROKEPATHNVPROC stencilStrokePathNV;
     PFNGLCOVERFILLPATHNVPROC coverFillPathNV;
     PFNGLCOVERSTROKEPATHNVPROC coverStrokePathNV;
     PFNGLSTENCILTHENCOVERFILLPATHNVPROC stencilThenCoverFillPathNV;
     PFNGLSTENCILTHENCOVERSTROKEPATHNVPROC stencilThenCoverStrokePathNV;
-    PFNGLCOVERFILLPATHINSTANCEDNVPROC coverFillPathInstancedNV;
-    PFNGLCOVERSTROKEPATHINSTANCEDNVPROC coverStrokePathInstancedNV;
-    PFNGLSTENCILFILLPATHINSTANCEDNVPROC stencilFillPathInstancedNV;
-    PFNGLSTENCILSTROKEPATHINSTANCEDNVPROC stencilStrokePathInstancedNV;
-    PFNGLSTENCILTHENCOVERFILLPATHINSTANCEDNVPROC stencilThenCoverFillPathInstancedNV;
-    PFNGLSTENCILTHENCOVERSTROKEPATHINSTANCEDNVPROC stencilThenCoverStrokePathInstancedNV;
-    PFNGLPROGRAMPATHFRAGMENTINPUTGENNVPROC programPathFragmentInputGenNV;
 
     // 3.3
     PFNGLBINDFRAGDATALOCATIONINDEXEDPROC bindFragDataLocationIndexed;

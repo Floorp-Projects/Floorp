@@ -68,7 +68,7 @@ class InspectableNativeWindow
     }
 
     // setNewClientSize is used by the WinRT size change handler. It isn't used by the rest of ANGLE.
-    void setNewClientSize(const Size &newWindowSize)
+    void setNewClientSize(const SIZE &newWindowSize)
     {
         // If the client doesn't support swapchain resizing then we should have already unregistered from size change handler
         ASSERT(mSupportsSwapChainResize);
@@ -78,7 +78,8 @@ class InspectableNativeWindow
             // If the swapchain size was specified then we should ignore this call too
             if (!mSwapChainSizeSpecified)
             {
-                mNewClientRect     = clientRect(newWindowSize);
+                // We don't have to check if a swapchain scale was specified here; the default value is 1.0f which will have no effect.
+                mNewClientRect = { 0, 0, static_cast<long>(newWindowSize.cx * mSwapChainScale), static_cast<long>(newWindowSize.cy * mSwapChainScale) };
                 mClientRectChanged = true;
 
                 // If a scale was specified, then now is the time to apply the scale matrix for the new swapchain size and window size
@@ -98,8 +99,7 @@ class InspectableNativeWindow
     }
 
   protected:
-    virtual HRESULT scaleSwapChain(const Size &windowSize, const RECT &clientRect) = 0;
-    RECT clientRect(const Size &size);
+    virtual HRESULT scaleSwapChain(const SIZE &windowSize, const RECT &clientRect) = 0;
 
     bool mSupportsSwapChainResize; // Support for IDXGISwapChain::ResizeBuffers method
     bool mSwapChainSizeSpecified;  // If an EGLRenderSurfaceSizeProperty was specified

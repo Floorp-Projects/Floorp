@@ -115,42 +115,42 @@ void FramebufferAttachment::attach(GLenum type,
 
 GLuint FramebufferAttachment::getRedSize() const
 {
-    return getFormat().info->redBits;
+    return GetInternalFormatInfo(getInternalFormat()).redBits;
 }
 
 GLuint FramebufferAttachment::getGreenSize() const
 {
-    return getFormat().info->greenBits;
+    return GetInternalFormatInfo(getInternalFormat()).greenBits;
 }
 
 GLuint FramebufferAttachment::getBlueSize() const
 {
-    return getFormat().info->blueBits;
+    return GetInternalFormatInfo(getInternalFormat()).blueBits;
 }
 
 GLuint FramebufferAttachment::getAlphaSize() const
 {
-    return getFormat().info->alphaBits;
+    return GetInternalFormatInfo(getInternalFormat()).alphaBits;
 }
 
 GLuint FramebufferAttachment::getDepthSize() const
 {
-    return getFormat().info->depthBits;
+    return GetInternalFormatInfo(getInternalFormat()).depthBits;
 }
 
 GLuint FramebufferAttachment::getStencilSize() const
 {
-    return getFormat().info->stencilBits;
+    return GetInternalFormatInfo(getInternalFormat()).stencilBits;
 }
 
 GLenum FramebufferAttachment::getComponentType() const
 {
-    return getFormat().info->componentType;
+    return GetInternalFormatInfo(getInternalFormat()).componentType;
 }
 
 GLenum FramebufferAttachment::getColorEncoding() const
 {
-    return getFormat().info->colorEncoding;
+    return GetInternalFormatInfo(getInternalFormat()).colorEncoding;
 }
 
 GLuint FramebufferAttachment::id() const

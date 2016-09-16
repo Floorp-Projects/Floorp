@@ -55,10 +55,7 @@ class NullFactory : public GLImplFactory
     FenceSyncImpl *createFenceSync() override { return nullptr; }
 
     // Transform Feedback creation
-    TransformFeedbackImpl *createTransformFeedback(const gl::TransformFeedbackState &state) override
-    {
-        return nullptr;
-    }
+    TransformFeedbackImpl *createTransformFeedback() override { return nullptr; }
 
     // Sampler object creation
     SamplerImpl *createSampler() override { return nullptr; }
@@ -85,8 +82,7 @@ class MockGLFactory : public GLImplFactory
     MOCK_METHOD1(createQuery, QueryImpl *(GLenum type));
     MOCK_METHOD0(createFenceNV, FenceNVImpl *());
     MOCK_METHOD0(createFenceSync, FenceSyncImpl *());
-    MOCK_METHOD1(createTransformFeedback,
-                 TransformFeedbackImpl *(const gl::TransformFeedbackState &));
+    MOCK_METHOD0(createTransformFeedback, TransformFeedbackImpl *());
     MOCK_METHOD0(createSampler, SamplerImpl *());
     MOCK_METHOD1(createPaths, std::vector<PathImpl *>(GLsizei));
 };

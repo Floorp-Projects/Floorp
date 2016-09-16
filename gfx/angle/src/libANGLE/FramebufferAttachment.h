@@ -39,7 +39,6 @@ class FramebufferAttachmentObjectImpl;
 namespace gl
 {
 class FramebufferAttachmentObject;
-struct Format;
 class Renderbuffer;
 class Texture;
 
@@ -118,7 +117,7 @@ class FramebufferAttachment final
     // correspond to a 3D texture depth or the layer count of a 2D array texture. For Surfaces and
     // Renderbuffers, it will always be 1.
     Extents getSize() const;
-    const Format &getFormat() const;
+    GLenum getInternalFormat() const;
     GLsizei getSamples() const;
     GLenum type() const { return mType; }
     bool isAttached() const { return mType != GL_NONE; }
@@ -157,8 +156,7 @@ class FramebufferAttachmentObject
     virtual ~FramebufferAttachmentObject() {}
 
     virtual Extents getAttachmentSize(const FramebufferAttachment::Target &target) const = 0;
-    virtual const Format &getAttachmentFormat(
-        const FramebufferAttachment::Target &target) const                                  = 0;
+    virtual GLenum getAttachmentInternalFormat(const FramebufferAttachment::Target &target) const = 0;
     virtual GLsizei getAttachmentSamples(const FramebufferAttachment::Target &target) const = 0;
 
     virtual void onAttach() = 0;
@@ -181,9 +179,9 @@ inline Extents FramebufferAttachment::getSize() const
     return mResource->getAttachmentSize(mTarget);
 }
 
-inline const Format &FramebufferAttachment::getFormat() const
+inline GLenum FramebufferAttachment::getInternalFormat() const
 {
-    return mResource->getAttachmentFormat(mTarget);
+    return mResource->getAttachmentInternalFormat(mTarget);
 }
 
 inline GLsizei FramebufferAttachment::getSamples() const

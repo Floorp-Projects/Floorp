@@ -169,14 +169,14 @@ bool SwapChainPanelNativeWindow::initialize(EGLNativeWindowType window, IPropert
         }
         else
         {
-            Size swapChainPanelSize;
+            SIZE swapChainPanelSize;
             result = GetSwapChainPanelSize(mSwapChainPanel, mSwapChainPanelDispatcher,
                                            &swapChainPanelSize);
 
             if (SUCCEEDED(result))
             {
                 // Update the client rect to account for any swapchain scale factor
-                mClientRect = clientRect(swapChainPanelSize);
+                mClientRect = { 0, 0, static_cast<long>(swapChainPanelSize.cx * mSwapChainScale), static_cast<long>(swapChainPanelSize.cy * mSwapChainScale) };
             }
         }
     }
@@ -269,7 +269,7 @@ HRESULT SwapChainPanelNativeWindow::createSwapChain(ID3D11Device *device,
 
     ComPtr<IDXGISwapChain1> newSwapChain;
     ComPtr<ISwapChainPanelNative> swapChainPanelNative;
-    Size currentPanelSize = {};
+    SIZE currentPanelSize = {};
 
     HRESULT result = factory->CreateSwapChainForComposition(device, &swapChainDesc, nullptr, newSwapChain.ReleaseAndGetAddressOf());
 
@@ -318,10 +318,10 @@ HRESULT SwapChainPanelNativeWindow::createSwapChain(ID3D11Device *device,
     return result;
 }
 
-HRESULT SwapChainPanelNativeWindow::scaleSwapChain(const Size &windowSize, const RECT &clientRect)
+HRESULT SwapChainPanelNativeWindow::scaleSwapChain(const SIZE &windowSize, const RECT &clientRect)
 {
-    Size renderScale = {windowSize.Width / (float)clientRect.right,
-                        windowSize.Height / (float)clientRect.bottom};
+    Size renderScale = {(float)windowSize.cx / (float)clientRect.right,
+                        (float)windowSize.cy / (float)clientRect.bottom};
     // Setup a scale matrix for the swap chain
     DXGI_MATRIX_3X2_F scaleMatrix = {};
     scaleMatrix._11 = renderScale.Width;
@@ -340,14 +340,24 @@ HRESULT SwapChainPanelNativeWindow::scaleSwapChain(const Size &windowSize, const
 HRESULT GetSwapChainPanelSize(
     const ComPtr<ABI::Windows::UI::Xaml::Controls::ISwapChainPanel> &swapChainPanel,
     const ComPtr<ICoreDispatcher> &dispatcher,
-    Size *windowSize)
+    SIZE *windowSize)
 {
     ComPtr<IUIElement> uiElement;
+    Size renderSize = {0, 0};
     HRESULT result = swapChainPanel.As(&uiElement);
     if (SUCCEEDED(result))
     {
         result = RunOnUIThread(
-            [uiElement, windowSize] { return uiElement->get_RenderSize(windowSize); }, dispatcher);
+            [uiElement, &renderSize]
+            {
+                return uiElement->get_RenderSize(&renderSize);
+            },
+            dispatcher);
+    }
+
+    if (SUCCEEDED(result))
+    {
+        *windowSize = { lround(renderSize.Width), lround(renderSize.Height) };
     }
 
     return result;

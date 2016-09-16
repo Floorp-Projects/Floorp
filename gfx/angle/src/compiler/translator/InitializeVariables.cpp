@@ -6,40 +6,23 @@
 
 #include "compiler/translator/InitializeVariables.h"
 
-#include "angle_gl.h"
 #include "common/debug.h"
-#include "compiler/translator/IntermNode.h"
-#include "compiler/translator/util.h"
 
 namespace
 {
 
-TIntermConstantUnion *constructConstUnionNode(const TType &type)
+TIntermConstantUnion *constructFloatConstUnionNode(const TType &type)
 {
     TType myType = type;
+    unsigned char size = static_cast<unsigned char>(myType.getNominalSize());
+    if (myType.isMatrix())
+        size *= size;
+    TConstantUnion *u = new TConstantUnion[size];
+    for (int ii = 0; ii < size; ++ii)
+        u[ii].setFConst(0.0f);
+
     myType.clearArrayness();
     myType.setQualifier(EvqConst);
-    size_t size          = myType.getObjectSize();
-    TConstantUnion *u = new TConstantUnion[size];
-    for (size_t ii = 0; ii < size; ++ii)
-    {
-        switch (type.getBasicType())
-        {
-            case EbtFloat:
-                u[ii].setFConst(0.0f);
-                break;
-            case EbtInt:
-                u[ii].setIConst(0);
-                break;
-            case EbtUInt:
-                u[ii].setUConst(0u);
-                break;
-            default:
-                UNREACHABLE();
-                return nullptr;
-        }
-    }
-
     TIntermConstantUnion *node = new TIntermConstantUnion(u, myType);
     return node;
 }
@@ -54,33 +37,9 @@ TIntermConstantUnion *constructIndexNode(int index)
     return node;
 }
 
-class VariableInitializer : public TIntermTraverser
-{
-  public:
-    VariableInitializer(const InitVariableList &vars)
-        : TIntermTraverser(true, false, false), mVariables(vars), mCodeInserted(false)
-    {
-    }
+}  // namespace anonymous
 
-  protected:
-    bool visitBinary(Visit, TIntermBinary *node) override { return false; }
-    bool visitUnary(Visit, TIntermUnary *node) override { return false; }
-    bool visitSelection(Visit, TIntermSelection *node) override { return false; }
-    bool visitLoop(Visit, TIntermLoop *node) override { return false; }
-    bool visitBranch(Visit, TIntermBranch *node) override { return false; }
-
-    bool visitAggregate(Visit visit, TIntermAggregate *node) override;
-
-  private:
-    void insertInitCode(TIntermSequence *sequence);
-
-    const InitVariableList &mVariables;
-    bool mCodeInserted;
-};
-
-// VariableInitializer implementation.
-
-bool VariableInitializer::visitAggregate(Visit visit, TIntermAggregate *node)
+bool InitializeVariables::visitAggregate(Visit visit, TIntermAggregate *node)
 {
     bool visitChildren = !mCodeInserted;
     switch (node->getOp())
@@ -118,82 +77,41 @@ bool VariableInitializer::visitAggregate(Visit visit, TIntermAggregate *node)
     return visitChildren;
 }
 
-void VariableInitializer::insertInitCode(TIntermSequence *sequence)
+void InitializeVariables::insertInitCode(TIntermSequence *sequence)
 {
     for (size_t ii = 0; ii < mVariables.size(); ++ii)
     {
-        const sh::ShaderVariable &var = mVariables[ii];
-        TString name = TString(var.name.c_str());
-        if (var.isArray())
+        const InitVariableInfo &varInfo = mVariables[ii];
+
+        if (varInfo.type.isArray())
         {
-            TType type = sh::ConvertShaderVariableTypeToTType(var.type);
-            size_t pos = name.find_last_of('[');
-            if (pos != TString::npos)
-                name = name.substr(0, pos);
-            for (int index = static_cast<int>(var.arraySize) - 1; index >= 0; --index)
+            for (int index = varInfo.type.getArraySize() - 1; index >= 0; --index)
             {
                 TIntermBinary *assign = new TIntermBinary(EOpAssign);
                 sequence->insert(sequence->begin(), assign);
 
                 TIntermBinary *indexDirect = new TIntermBinary(EOpIndexDirect);
-                TIntermSymbol *symbol      = new TIntermSymbol(0, name, type);
+                TIntermSymbol *symbol = new TIntermSymbol(0, varInfo.name, varInfo.type);
                 indexDirect->setLeft(symbol);
                 TIntermConstantUnion *indexNode = constructIndexNode(index);
                 indexDirect->setRight(indexNode);
 
                 assign->setLeft(indexDirect);
 
-                TIntermConstantUnion *zeroConst = constructConstUnionNode(type);
-                assign->setRight(zeroConst);
-            }
-        }
-        else if (var.isStruct())
-        {
-            TFieldList *fields = new TFieldList;
-            TSourceLoc loc;
-            for (auto field : var.fields)
-            {
-                fields->push_back(new TField(nullptr, new TString(field.name.c_str()), loc));
-            }
-            TStructure *structure = new TStructure(new TString(var.structName.c_str()), fields);
-            TType type;
-            type.setStruct(structure);
-            for (int fieldIndex = 0; fieldIndex < static_cast<int>(var.fields.size()); ++fieldIndex)
-            {
-                TIntermBinary *assign = new TIntermBinary(EOpAssign);
-                sequence->insert(sequence->begin(), assign);
-
-                TIntermBinary *indexDirectStruct = new TIntermBinary(EOpIndexDirectStruct);
-                TIntermSymbol *symbol            = new TIntermSymbol(0, name, type);
-                indexDirectStruct->setLeft(symbol);
-                TIntermConstantUnion *indexNode = constructIndexNode(fieldIndex);
-                indexDirectStruct->setRight(indexNode);
-                assign->setLeft(indexDirectStruct);
-
-                const sh::ShaderVariable &field = var.fields[fieldIndex];
-                TType fieldType                 = sh::ConvertShaderVariableTypeToTType(field.type);
-                TIntermConstantUnion *zeroConst = constructConstUnionNode(fieldType);
+                TIntermConstantUnion *zeroConst = constructFloatConstUnionNode(varInfo.type);
                 assign->setRight(zeroConst);
             }
         }
         else
         {
-            TType type            = sh::ConvertShaderVariableTypeToTType(var.type);
             TIntermBinary *assign = new TIntermBinary(EOpAssign);
             sequence->insert(sequence->begin(), assign);
-            TIntermSymbol *symbol = new TIntermSymbol(0, name, type);
+            TIntermSymbol *symbol = new TIntermSymbol(0, varInfo.name, varInfo.type);
             assign->setLeft(symbol);
-            TIntermConstantUnion *zeroConst = constructConstUnionNode(type);
+            TIntermConstantUnion *zeroConst = constructFloatConstUnionNode(varInfo.type);
             assign->setRight(zeroConst);
         }
 
     }
 }
 
-}  // namespace anonymous
-
-void InitializeVariables(TIntermNode *root, const InitVariableList &vars)
-{
-    VariableInitializer initializer(vars);
-    root->traverse(&initializer);
-}

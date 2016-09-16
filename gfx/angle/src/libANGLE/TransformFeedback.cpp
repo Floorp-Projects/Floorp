@@ -16,51 +16,31 @@
 namespace gl
 {
 
-TransformFeedbackState::TransformFeedbackState(size_t maxIndexedBuffers)
-    : mLabel(),
+TransformFeedback::TransformFeedback(rx::GLImplFactory *implFactory, GLuint id, const Caps &caps)
+    : RefCountObject(id),
+      mImplementation(implFactory->createTransformFeedback()),
+      mLabel(),
       mActive(false),
       mPrimitiveMode(GL_NONE),
       mPaused(false),
       mProgram(nullptr),
       mGenericBuffer(),
-      mIndexedBuffers(maxIndexedBuffers)
-{
-}
-
-const BindingPointer<Buffer> &TransformFeedbackState::getGenericBuffer() const
-{
-    return mGenericBuffer;
-}
-
-const OffsetBindingPointer<Buffer> &TransformFeedbackState::getIndexedBuffer(size_t idx) const
-{
-    return mIndexedBuffers[idx];
-}
-
-const std::vector<OffsetBindingPointer<Buffer>> &TransformFeedbackState::getIndexedBuffers() const
-{
-    return mIndexedBuffers;
-}
-
-TransformFeedback::TransformFeedback(rx::GLImplFactory *implFactory, GLuint id, const Caps &caps)
-    : RefCountObject(id),
-      mState(caps.maxTransformFeedbackSeparateAttributes),
-      mImplementation(implFactory->createTransformFeedback(mState))
+      mIndexedBuffers(caps.maxTransformFeedbackSeparateAttributes)
 {
     ASSERT(mImplementation != nullptr);
 }
 
 TransformFeedback::~TransformFeedback()
 {
-    if (mState.mProgram)
+    if (mProgram)
     {
-        mState.mProgram->release();
-        mState.mProgram = nullptr;
+        mProgram->release();
+        mProgram = nullptr;
     }
-    mState.mGenericBuffer.set(nullptr);
-    for (size_t i = 0; i < mState.mIndexedBuffers.size(); i++)
+    mGenericBuffer.set(nullptr);
+    for (size_t i = 0; i < mIndexedBuffers.size(); i++)
     {
-        mState.mIndexedBuffers[i].set(nullptr);
+        mIndexedBuffers[i].set(nullptr);
     }
 
     SafeDelete(mImplementation);
@@ -68,129 +48,129 @@ TransformFeedback::~TransformFeedback()
 
 void TransformFeedback::setLabel(const std::string &label)
 {
-    mState.mLabel = label;
+    mLabel = label;
 }
 
 const std::string &TransformFeedback::getLabel() const
 {
-    return mState.mLabel;
+    return mLabel;
 }
 
 void TransformFeedback::begin(GLenum primitiveMode, Program *program)
 {
-    mState.mActive        = true;
-    mState.mPrimitiveMode = primitiveMode;
-    mState.mPaused        = false;
+    mActive = true;
+    mPrimitiveMode = primitiveMode;
+    mPaused = false;
     mImplementation->begin(primitiveMode);
     bindProgram(program);
 }
 
 void TransformFeedback::end()
 {
-    mState.mActive        = false;
-    mState.mPrimitiveMode = GL_NONE;
-    mState.mPaused        = false;
+    mActive = false;
+    mPrimitiveMode = GL_NONE;
+    mPaused = false;
     mImplementation->end();
-    if (mState.mProgram)
+    if (mProgram)
     {
-        mState.mProgram->release();
-        mState.mProgram = nullptr;
+        mProgram->release();
+        mProgram = nullptr;
     }
 }
 
 void TransformFeedback::pause()
 {
-    mState.mPaused = true;
+    mPaused = true;
     mImplementation->pause();
 }
 
 void TransformFeedback::resume()
 {
-    mState.mPaused = false;
+    mPaused = false;
     mImplementation->resume();
 }
 
 bool TransformFeedback::isActive() const
 {
-    return mState.mActive;
+    return mActive;
 }
 
 bool TransformFeedback::isPaused() const
 {
-    return mState.mPaused;
+    return mPaused;
 }
 
 GLenum TransformFeedback::getPrimitiveMode() const
 {
-    return mState.mPrimitiveMode;
+    return mPrimitiveMode;
 }
 
 void TransformFeedback::bindProgram(Program *program)
 {
-    if (mState.mProgram != program)
+    if (mProgram != program)
     {
-        if (mState.mProgram != nullptr)
+        if (mProgram != nullptr)
         {
-            mState.mProgram->release();
+            mProgram->release();
         }
-        mState.mProgram = program;
-        if (mState.mProgram != nullptr)
+        mProgram = program;
+        if (mProgram != nullptr)
         {
-            mState.mProgram->addRef();
+            mProgram->addRef();
         }
     }
 }
 
 bool TransformFeedback::hasBoundProgram(GLuint program) const
 {
-    return mState.mProgram != nullptr && mState.mProgram->id() == program;
+    return mProgram != nullptr && mProgram->id() == program;
 }
 
 void TransformFeedback::bindGenericBuffer(Buffer *buffer)
 {
-    mState.mGenericBuffer.set(buffer);
-    mImplementation->bindGenericBuffer(mState.mGenericBuffer);
+    mGenericBuffer.set(buffer);
+    mImplementation->bindGenericBuffer(mGenericBuffer);
 }
 
 void TransformFeedback::detachBuffer(GLuint bufferName)
 {
-    for (size_t index = 0; index < mState.mIndexedBuffers.size(); index++)
+    for (size_t index = 0; index < mIndexedBuffers.size(); index++)
     {
-        if (mState.mIndexedBuffers[index].id() == bufferName)
+        if (mIndexedBuffers[index].id() == bufferName)
         {
-            mState.mIndexedBuffers[index].set(nullptr);
-            mImplementation->bindIndexedBuffer(index, mState.mIndexedBuffers[index]);
+            mIndexedBuffers[index].set(nullptr);
+            mImplementation->bindIndexedBuffer(index, mIndexedBuffers[index]);
         }
     }
 
-    if (mState.mGenericBuffer.id() == bufferName)
+    if (mGenericBuffer.id() == bufferName)
     {
-        mState.mGenericBuffer.set(nullptr);
-        mImplementation->bindGenericBuffer(mState.mGenericBuffer);
+        mGenericBuffer.set(nullptr);
+        mImplementation->bindGenericBuffer(mGenericBuffer);
     }
 }
 
 const BindingPointer<Buffer> &TransformFeedback::getGenericBuffer() const
 {
-    return mState.mGenericBuffer;
+    return mGenericBuffer;
 }
 
 void TransformFeedback::bindIndexedBuffer(size_t index, Buffer *buffer, size_t offset, size_t size)
 {
-    ASSERT(index < mState.mIndexedBuffers.size());
-    mState.mIndexedBuffers[index].set(buffer, offset, size);
-    mImplementation->bindIndexedBuffer(index, mState.mIndexedBuffers[index]);
+    ASSERT(index < mIndexedBuffers.size());
+    mIndexedBuffers[index].set(buffer, offset, size);
+    mImplementation->bindIndexedBuffer(index, mIndexedBuffers[index]);
 }
 
 const OffsetBindingPointer<Buffer> &TransformFeedback::getIndexedBuffer(size_t index) const
 {
-    ASSERT(index < mState.mIndexedBuffers.size());
-    return mState.mIndexedBuffers[index];
+    ASSERT(index < mIndexedBuffers.size());
+    return mIndexedBuffers[index];
 }
 
 size_t TransformFeedback::getIndexedBufferCount() const
 {
-    return mState.mIndexedBuffers.size();
+    return mIndexedBuffers.size();
 }
 
 rx::TransformFeedbackImpl *TransformFeedback::getImplementation()

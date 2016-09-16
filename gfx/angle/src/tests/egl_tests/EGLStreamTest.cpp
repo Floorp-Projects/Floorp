@@ -365,7 +365,7 @@ TEST_P(EGLStreamTest, StreamProducerTextureNV12End2End)
     }
 
     bool useESSL3Shaders =
-        getClientMajorVersion() >= 3 && extensionEnabled("GL_OES_EGL_image_external_essl3");
+        getClientVersion() >= 3 && extensionEnabled("GL_OES_EGL_image_external_essl3");
 
     // yuv to rgb conversion shader using Microsoft's given conversion formulas
     std::string yuvVS, yuvPS;

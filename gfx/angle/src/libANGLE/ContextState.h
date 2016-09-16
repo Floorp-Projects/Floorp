@@ -15,35 +15,12 @@
 namespace gl
 {
 class ValidationContext;
-class ContextState;
-
-class GLVersion final : angle::NonCopyable
-{
-  public:
-    GLVersion(GLint clientMajorVersion, GLint clientMinorVersion)
-        : mClientMajorVersion(clientMajorVersion), mClientMinorVersion(clientMinorVersion)
-    {
-    }
-
-    GLint getClientMajorVersion() const { return mClientMajorVersion; }
-    GLint getClientMinorVersion() const { return mClientMinorVersion; }
-
-    bool isES2() const { return mClientMajorVersion == 2; }
-    bool isES3() const { return mClientMajorVersion == 3 && mClientMinorVersion == 0; }
-    bool isES31() const { return mClientMajorVersion == 3 && mClientMinorVersion == 1; }
-    bool isES3OrGreater() const { return mClientMajorVersion >= 3; }
-
-  private:
-    GLint mClientMajorVersion;
-    GLint mClientMinorVersion;
-};
 
 class ContextState final : public angle::NonCopyable
 {
   public:
     ContextState(uintptr_t context,
-                 GLint clientMajorVersion,
-                 GLint clientMinorVersion,
+                 GLint clientVersion,
                  State *state,
                  const Caps &caps,
                  const TextureCapsMap &textureCaps,
@@ -53,9 +30,7 @@ class ContextState final : public angle::NonCopyable
     ~ContextState();
 
     uintptr_t getContext() const { return mContext; }
-    GLint getClientMajorVersion() const { return mGLVersion.getClientMajorVersion(); }
-    GLint getClientMinorVersion() const { return mGLVersion.getClientMinorVersion(); }
-    const GLVersion &getGLVersion() const { return mGLVersion; }
+    GLint getClientVersion() const { return mClientVersion; }
     const State &getState() const { return *mState; }
     const Caps &getCaps() const { return mCaps; }
     const TextureCapsMap &getTextureCaps() const { return mTextureCaps; }
@@ -69,8 +44,8 @@ class ContextState final : public angle::NonCopyable
     friend class Context;
     friend class ValidationContext;
 
-    GLVersion mGLVersion;
     uintptr_t mContext;
+    GLint mClientVersion;
     State *mState;
     const Caps &mCaps;
     const TextureCapsMap &mTextureCaps;
@@ -82,8 +57,7 @@ class ContextState final : public angle::NonCopyable
 class ValidationContext : angle::NonCopyable
 {
   public:
-    ValidationContext(GLint clientMajorVersion,
-                      GLint clientMinorVersion,
+    ValidationContext(GLint clientVersion,
                       State *state,
                       const Caps &caps,
                       const TextureCapsMap &textureCaps,
@@ -96,9 +70,7 @@ class ValidationContext : angle::NonCopyable
     virtual void handleError(const Error &error) = 0;
 
     const ContextState &getContextState() const { return mState; }
-    int getClientMajorVersion() const { return mState.getClientMajorVersion(); }
-    int getClientMinorVersion() const { return mState.getClientMinorVersion(); }
-    const GLVersion &getGLVersion() const { return mState.mGLVersion; }
+    int getClientVersion() const { return mState.getClientVersion(); }
     const State &getGLState() const { return mState.getState(); }
     const Caps &getCaps() const { return mState.getCaps(); }
     const TextureCapsMap &getTextureCaps() const { return mState.getTextureCaps(); }

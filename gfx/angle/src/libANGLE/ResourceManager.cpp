@@ -97,10 +97,13 @@ GLuint ResourceManager::createShader(rx::GLImplFactory *factory,
                                      const gl::Limitations &rendererLimitations,
                                      GLenum type)
 {
-    ASSERT(type == GL_VERTEX_SHADER || type == GL_FRAGMENT_SHADER || type == GL_COMPUTE_SHADER);
     GLuint handle = mProgramShaderHandleAllocator.allocate();
 
-    mShaderMap[handle] = new Shader(this, factory, rendererLimitations, type, handle);
+    if (type == GL_VERTEX_SHADER || type == GL_FRAGMENT_SHADER)
+    {
+        mShaderMap[handle] = new Shader(this, factory, rendererLimitations, type, handle);
+    }
+    else UNREACHABLE();
 
     return handle;
 }

@@ -9,13 +9,9 @@
 
 #include "libANGLE/renderer/renderer_utils.h"
 
-#include "image_util/copyimage.h"
-#include "image_util/imageformats.h"
-
 #include "libANGLE/formatutils.h"
-#include "libANGLE/renderer/Format.h"
-
-#include <string.h>
+#include "libANGLE/renderer/copyimage.h"
+#include "libANGLE/renderer/imageformats.h"
 
 namespace rx
 {
@@ -35,8 +31,6 @@ static inline void InsertFormatWriteFunctionMapping(FormatWriteFunctionMap *map,
 
 static FormatWriteFunctionMap BuildFormatWriteFunctionMap()
 {
-    using namespace angle;  //  For image writing functions
-
     FormatWriteFunctionMap map;
 
     // clang-format off
@@ -171,7 +165,9 @@ PackPixelsParams::PackPixelsParams(const gl::Rectangle &areaIn,
 }
 
 void PackPixels(const PackPixelsParams &params,
-                const angle::Format &sourceFormat,
+                const gl::InternalFormat &sourceFormatInfo,
+                const FastCopyFunctionMap &fastCopyFunctionsMap,
+                ColorReadFunction colorReadFunction,
                 int inputPitchIn,
                 const uint8_t *sourceIn,
                 uint8_t *destWithoutOffset)
@@ -187,24 +183,19 @@ void PackPixels(const PackPixelsParams &params,
         inputPitch = -inputPitch;
     }
 
-    const auto &sourceGLInfo = gl::GetInternalFormatInfo(sourceFormat.glInternalFormat);
-
-    if (sourceGLInfo.format == params.format && sourceGLInfo.type == params.type)
+    if (sourceFormatInfo.format == params.format && sourceFormatInfo.type == params.type)
     {
         // Direct copy possible
         for (int y = 0; y < params.area.height; ++y)
         {
             memcpy(destWithOffset + y * params.outputPitch, source + y * inputPitch,
-                   params.area.width * sourceGLInfo.pixelBytes);
+                   params.area.width * sourceFormatInfo.pixelBytes);
         }
         return;
     }
 
-    ASSERT(sourceGLInfo.pixelBytes > 0);
-
     gl::FormatType formatType(params.format, params.type);
-    ColorCopyFunction fastCopyFunc =
-        GetFastCopyFunction(sourceFormat.fastCopyFunctions, formatType);
+    ColorCopyFunction fastCopyFunc = GetFastCopyFunction(fastCopyFunctionsMap, formatType);
     GLenum sizedDestInternalFormat = gl::GetSizedInternalFormat(formatType.format, formatType.type);
     const auto &destFormatInfo     = gl::GetInternalFormatInfo(sizedDestInternalFormat);
 
@@ -217,7 +208,7 @@ void PackPixels(const PackPixelsParams &params,
             {
                 uint8_t *dest =
                     destWithOffset + y * params.outputPitch + x * destFormatInfo.pixelBytes;
-                const uint8_t *src = source + y * inputPitch + x * sourceGLInfo.pixelBytes;
+                const uint8_t *src = source + y * inputPitch + x * sourceFormatInfo.pixelBytes;
 
                 fastCopyFunc(src, dest);
             }
@@ -233,14 +224,12 @@ void PackPixels(const PackPixelsParams &params,
                       sizeof(temp) >= sizeof(gl::ColorI),
                   "Unexpected size of gl::Color struct.");
 
-    const auto &colorReadFunction = sourceFormat.colorReadFunction;
-
     for (int y = 0; y < params.area.height; ++y)
     {
         for (int x = 0; x < params.area.width; ++x)
         {
             uint8_t *dest      = destWithOffset + y * params.outputPitch + x * destFormatInfo.pixelBytes;
-            const uint8_t *src = source + y * inputPitch + x * sourceGLInfo.pixelBytes;
+            const uint8_t *src = source + y * inputPitch + x * sourceFormatInfo.pixelBytes;
 
             // readFunc and writeFunc will be using the same type of color, CopyTexImage
             // will not allow the copy otherwise.

@@ -22,7 +22,6 @@
 #include "libANGLE/Image.h"
 #include "libANGLE/Stream.h"
 #include "libANGLE/angletypes.h"
-#include "libANGLE/formatutils.h"
 
 namespace egl
 {
@@ -48,13 +47,13 @@ bool IsMipmapFiltered(const SamplerState &samplerState);
 struct ImageDesc final
 {
     ImageDesc();
-    ImageDesc(const Extents &size, const Format &format);
+    ImageDesc(const Extents &size, GLenum internalFormat);
 
     ImageDesc(const ImageDesc &other) = default;
     ImageDesc &operator=(const ImageDesc &other) = default;
 
     Extents size;
-    Format format;
+    GLenum internalFormat;
 };
 
 struct SwizzleState final
@@ -119,7 +118,7 @@ struct TextureState final : public angle::NonCopyable
     void setImageDescChain(GLuint baselevel,
                            GLuint maxLevel,
                            Extents baseSize,
-                           const Format &format);
+                           GLenum sizedInternalFormat);
     void clearImageDesc(GLenum target, size_t level);
     void clearImageDescs();
 
@@ -237,7 +236,7 @@ class Texture final : public egl::ImageSibling,
     size_t getWidth(GLenum target, size_t level) const;
     size_t getHeight(GLenum target, size_t level) const;
     size_t getDepth(GLenum target, size_t level) const;
-    const Format &getFormat(GLenum target, size_t level) const;
+    GLenum getInternalFormat(GLenum target, size_t level) const;
 
     bool isMipmapComplete() const;
 
@@ -283,19 +282,6 @@ class Texture final : public egl::ImageSibling,
                        const Rectangle &sourceArea,
                        const Framebuffer *source);
 
-    Error copyTexture(GLenum internalFormat,
-                      GLenum type,
-                      bool unpackFlipY,
-                      bool unpackPremultiplyAlpha,
-                      bool unpackUnmultiplyAlpha,
-                      const Texture *source);
-    Error copySubTexture(const Offset &destOffset,
-                         const Rectangle &sourceArea,
-                         bool unpackFlipY,
-                         bool unpackPremultiplyAlpha,
-                         bool unpackUnmultiplyAlpha,
-                         const Texture *source);
-
     Error setStorage(GLenum target, GLsizei levels, GLenum internalFormat, const Extents &size);
 
     Error setEGLImageTarget(GLenum target, egl::Image *imageTarget);
@@ -310,7 +296,7 @@ class Texture final : public egl::ImageSibling,
 
     // FramebufferAttachmentObject implementation
     Extents getAttachmentSize(const FramebufferAttachment::Target &target) const override;
-    const Format &getAttachmentFormat(const FramebufferAttachment::Target &target) const override;
+    GLenum getAttachmentInternalFormat(const FramebufferAttachment::Target &target) const override;
     GLsizei getAttachmentSamples(const FramebufferAttachment::Target &target) const override;
 
     void onAttach() override;

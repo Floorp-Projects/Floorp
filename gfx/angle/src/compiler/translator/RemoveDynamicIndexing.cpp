@@ -11,7 +11,6 @@
 
 #include "compiler/translator/InfoSink.h"
 #include "compiler/translator/IntermNode.h"
-#include "compiler/translator/IntermNodePatternMatcher.h"
 #include "compiler/translator/SymbolTable.h"
 
 namespace
@@ -399,24 +398,19 @@ bool RemoveDynamicIndexingTraverser::visitBinary(Visit visit, TIntermBinary *nod
 
             // Init the temp variable holding the index
             TIntermAggregate *initIndex = createTempInitDeclaration(node->getRight());
-            insertStatementInParentBlock(initIndex);
+            TIntermSequence insertions;
+            insertions.push_back(initIndex);
+            insertStatementsInParentBlock(insertions);
             mUsedTreeInsertion = true;
 
             // Replace the index with the temp variable
             TIntermSymbol *tempIndex = createTempSymbol(node->getRight()->getType());
-            queueReplacementWithParent(node, node->getRight(), tempIndex, OriginalNode::IS_DROPPED);
+            NodeUpdateEntry replaceIndex(node, node->getRight(), tempIndex, false);
+            mReplacements.push_back(replaceIndex);
         }
-        else if (IntermNodePatternMatcher::IsDynamicIndexingOfVectorOrMatrix(node))
+        else if (!node->getLeft()->isArray() && node->getLeft()->getBasicType() != EbtStruct)
         {
             bool write = isLValueRequiredHere();
-
-#if defined(ANGLE_ENABLE_ASSERTS)
-            // Make sure that IntermNodePatternMatcher is consistent with the slightly differently
-            // implemented checks in this traverser.
-            IntermNodePatternMatcher matcher(
-                IntermNodePatternMatcher::kDynamicIndexingOfVectorOrMatrixInLValue);
-            ASSERT(matcher.match(node, getParentNode(), isLValueRequiredHere()) == write);
-#endif
 
             TType type = node->getLeft()->getType();
             mIndexedVecAndMatrixTypes.insert(type);
@@ -468,7 +462,9 @@ bool RemoveDynamicIndexingTraverser::visitBinary(Visit visit, TIntermBinary *nod
                     CreateIndexedWriteFunctionCall(node, tempIndex, createTempSymbol(fieldType));
                 insertionsAfter.push_back(indexedWriteCall);
                 insertStatementsInParentBlock(insertionsBefore, insertionsAfter);
-                queueReplacement(node, createTempSymbol(fieldType), OriginalNode::IS_DROPPED);
+                NodeUpdateEntry replaceIndex(getParentNode(), node, createTempSymbol(fieldType),
+                                             false);
+                mReplacements.push_back(replaceIndex);
                 mUsedTreeInsertion = true;
             }
             else
@@ -481,7 +477,8 @@ bool RemoveDynamicIndexingTraverser::visitBinary(Visit visit, TIntermBinary *nod
                 ASSERT(!mRemoveIndexSideEffectsInSubtree);
                 TIntermAggregate *indexingCall = CreateIndexFunctionCall(
                     node, node->getLeft(), EnsureSignedInt(node->getRight()));
-                queueReplacement(node, indexingCall, OriginalNode::IS_DROPPED);
+                NodeUpdateEntry replaceIndex(getParentNode(), node, indexingCall, false);
+                mReplacements.push_back(replaceIndex);
             }
         }
     }

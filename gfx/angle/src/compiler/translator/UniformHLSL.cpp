@@ -128,7 +128,7 @@ unsigned int UniformHLSL::assignSamplerInStructUniformRegister(const TType &type
     ASSERT(IsSampler(type.getBasicType()));
     unsigned int registerIndex = mSamplerRegister;
     mUniformRegisterMap[std::string(name.c_str())] = registerIndex;
-    unsigned int registerCount                     = type.isArray() ? type.getArraySize() : 1u;
+    unsigned int registerCount = type.isArray() ? type.getArraySize() : 1;
     mSamplerRegister += registerCount;
     if (outRegisterCount)
     {
@@ -175,9 +175,9 @@ void UniformHLSL::outputHLSLSamplerUniformGroup(
         {
             out << "static const uint " << DecorateIfNeeded(uniform->getName()) << ArrayString(type)
                 << " = {";
-            for (unsigned int i = 0u; i < type.getArraySize(); ++i)
+            for (int i = 0; i < type.getArraySize(); ++i)
             {
-                if (i > 0u)
+                if (i > 0)
                     out << ", ";
                 out << (samplerArrayIndex + i);
             }
@@ -281,7 +281,7 @@ void UniformHLSL::uniformsHeader(TInfoSinkBase &out,
             {
                 TVector<TIntermSymbol *> samplerSymbols;
                 TMap<TIntermSymbol *, TString> symbolsToAPINames;
-                unsigned int arrayOfStructsSize = type.isArray() ? type.getArraySize() : 0u;
+                int arrayOfStructsSize = type.isArray() ? type.getArraySize() : 0;
                 type.createSamplerSymbols("angle_" + name.getString(), name.getString(),
                                           arrayOfStructsSize, &samplerSymbols, &symbolsToAPINames);
                 for (TIntermSymbol *sampler : samplerSymbols)

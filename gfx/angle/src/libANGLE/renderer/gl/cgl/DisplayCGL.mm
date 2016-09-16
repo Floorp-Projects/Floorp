@@ -214,6 +214,12 @@ egl::ConfigSet DisplayCGL::generateConfigs()
     return configs;
 }
 
+bool DisplayCGL::isDeviceLost() const
+{
+    // TODO(cwallez) investigate implementing this
+    return false;
+}
+
 bool DisplayCGL::testDeviceLost()
 {
     // TODO(cwallez) investigate implementing this

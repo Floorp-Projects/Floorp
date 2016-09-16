@@ -377,14 +377,16 @@ D3DVarying::D3DVarying(const std::string &semanticNameIn,
 
 // ProgramD3DMetadata Implementation
 
-ProgramD3DMetadata::ProgramD3DMetadata(RendererD3D *renderer,
+ProgramD3DMetadata::ProgramD3DMetadata(int rendererMajorShaderModel,
+                                       const std::string &shaderModelSuffix,
+                                       bool usesInstancedPointSpriteEmulation,
+                                       bool usesViewScale,
                                        const ShaderD3D *vertexShader,
                                        const ShaderD3D *fragmentShader)
-    : mRendererMajorShaderModel(renderer->getMajorShaderModel()),
-      mShaderModelSuffix(renderer->getShaderModelSuffix()),
-      mUsesInstancedPointSpriteEmulation(
-          renderer->getWorkarounds().useInstancedPointSpriteEmulation),
-      mUsesViewScale(renderer->presentPathFastEnabled()),
+    : mRendererMajorShaderModel(rendererMajorShaderModel),
+      mShaderModelSuffix(shaderModelSuffix),
+      mUsesInstancedPointSpriteEmulation(usesInstancedPointSpriteEmulation),
+      mUsesViewScale(usesViewScale),
       mVertexShader(vertexShader),
       mFragmentShader(fragmentShader)
 {
@@ -397,7 +399,7 @@ int ProgramD3DMetadata::getRendererMajorShaderModel() const
 
 bool ProgramD3DMetadata::usesBroadcast(const gl::ContextState &data) const
 {
-    return (mFragmentShader->usesFragColor() && data.getClientMajorVersion() < 3);
+    return (mFragmentShader->usesFragColor() && data.getClientVersion() < 3);
 }
 
 bool ProgramD3DMetadata::usesFragDepth() const
@@ -422,8 +424,7 @@ bool ProgramD3DMetadata::usesPointSize() const
 
 bool ProgramD3DMetadata::usesInsertedPointCoordValue() const
 {
-    return (!usesPointSize() || !mUsesInstancedPointSpriteEmulation) && usesPointCoord() &&
-           mRendererMajorShaderModel >= 4;
+    return !usesPointSize() && usesPointCoord() && mRendererMajorShaderModel >= 4;
 }
 
 bool ProgramD3DMetadata::usesViewScale() const
@@ -433,12 +434,13 @@ bool ProgramD3DMetadata::usesViewScale() const
 
 bool ProgramD3DMetadata::addsPointCoordToVertexShader() const
 {
-    // PointSprite emulation requiress that gl_PointCoord is present in the vertex shader
+    // Instanced PointSprite emulation requires that gl_PointCoord is present in the vertex shader
     // VS_OUTPUT structure to ensure compatibility with the generated PS_INPUT of the pixel shader.
-    // Even with a geometry shader, the app can render triangles or lines and reference
-    // gl_PointCoord in the fragment shader, requiring us to provide a dummy value. For
-    // simplicity, we always add this to the vertex shader when the fragment shader
-    // references gl_PointCoord, even if we could skip it in the geometry shader.
+    // GeometryShader PointSprite emulation does not require this additional entry because the
+    // GS_OUTPUT of the Geometry shader contains the pointCoord value and already matches the
+    // PS_INPUT of the generated pixel shader. The Geometry Shader point sprite implementation needs
+    // gl_PointSize to be in VS_OUTPUT and GS_INPUT. Instanced point sprites doesn't need
+    // gl_PointSize in VS_OUTPUT.
     return (mUsesInstancedPointSpriteEmulation && usesPointCoord()) ||
            usesInsertedPointCoordValue();
 }
@@ -1378,7 +1380,10 @@ LinkResult ProgramD3D::link(const gl::ContextState &data, gl::InfoLog &infoLog)
         return LinkResult(false, gl::Error(GL_NO_ERROR));
     }
 
-    ProgramD3DMetadata metadata(mRenderer, vertexShaderD3D, fragmentShaderD3D);
+    ProgramD3DMetadata metadata(mRenderer->getMajorShaderModel(), mRenderer->getShaderModelSuffix(),
+                                usesInstancedPointSpriteEmulation(),
+                                mRenderer->presentPathFastEnabled(), vertexShaderD3D,
+                                fragmentShaderD3D);
 
     varyingPacking.enableBuiltins(SHADER_VERTEX, metadata);
     varyingPacking.enableBuiltins(SHADER_PIXEL, metadata);
@@ -2304,13 +2309,4 @@ bool ProgramD3D::getUniformBlockMemberInfo(const std::string &memberUniformName,
     *memberInfoOut = infoIter->second;
     return true;
 }
-
-void ProgramD3D::setPathFragmentInputGen(const std::string &inputName,
-                                         GLenum genMode,
-                                         GLint components,
-                                         const GLfloat *coeffs)
-{
-    UNREACHABLE();
-}
-
 }  // namespace rx

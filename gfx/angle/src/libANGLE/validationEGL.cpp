@@ -17,7 +17,6 @@
 #include "libANGLE/Stream.h"
 #include "libANGLE/Surface.h"
 #include "libANGLE/Texture.h"
-#include "libANGLE/formatutils.h"
 
 #include <EGL/eglext.h>
 
@@ -59,7 +58,7 @@ bool TextureHasNonZeroMipLevelsSpecified(const gl::Context *context, const gl::T
             for (GLenum face = gl::FirstCubeMapTextureTarget; face <= gl::LastCubeMapTextureTarget;
                  face++)
             {
-                if (texture->getFormat(face, level).valid())
+                if (texture->getInternalFormat(face, level) != GL_NONE)
                 {
                     return true;
                 }
@@ -67,7 +66,7 @@ bool TextureHasNonZeroMipLevelsSpecified(const gl::Context *context, const gl::T
         }
         else
         {
-            if (texture->getFormat(texture->getTarget(), level).valid())
+            if (texture->getInternalFormat(texture->getTarget(), level) != GL_NONE)
             {
                 return true;
             }
@@ -82,7 +81,7 @@ bool CubeTextureHasUnspecifiedLevel0Face(const gl::Texture *texture)
     ASSERT(texture->getTarget() == GL_TEXTURE_CUBE_MAP);
     for (GLenum face = gl::FirstCubeMapTextureTarget; face <= gl::LastCubeMapTextureTarget; face++)
     {
-        if (!texture->getFormat(face, 0).valid())
+        if (texture->getInternalFormat(face, 0) == GL_NONE)
         {
             return true;
         }
@@ -172,11 +171,6 @@ Error ValidateDisplay(const Display *display)
     if (!display->isInitialized())
     {
         return Error(EGL_NOT_INITIALIZED, "display is not initialized.");
-    }
-
-    if (display->isDeviceLost())
-    {
-        return Error(EGL_CONTEXT_LOST, "display had a context loss");
     }
 
     return Error(EGL_SUCCESS);
@@ -332,33 +326,14 @@ Error ValidateCreateContext(Display *display, Config *configuration, gl::Context
         }
     }
 
-    switch (clientMajorVersion)
+    if ((clientMajorVersion != 2 && clientMajorVersion != 3) || clientMinorVersion != 0)
     {
-        case 2:
-            if (clientMinorVersion != 0)
-            {
-                return Error(EGL_BAD_CONFIG);
-            }
-            break;
-        case 3:
-            if (clientMinorVersion != 0 && clientMinorVersion != 1)
-            {
-                return Error(EGL_BAD_CONFIG);
-            }
-            if (!(configuration->conformant & EGL_OPENGL_ES3_BIT_KHR))
-            {
-                return Error(EGL_BAD_CONFIG);
-            }
-            if (display->getMaxSupportedESVersion() <
-                gl::Version(static_cast<GLuint>(clientMajorVersion),
-                            static_cast<GLuint>(clientMinorVersion)))
-            {
-                return Error(EGL_BAD_CONFIG, "Requested GLES version is not supported.");
-            }
-            break;
-        default:
-            return Error(EGL_BAD_CONFIG);
-            break;
+        return Error(EGL_BAD_CONFIG);
+    }
+
+    if (clientMajorVersion == 3 && !(configuration->conformant & EGL_OPENGL_ES3_BIT_KHR))
+    {
+        return Error(EGL_BAD_CONFIG);
     }
 
     // Note: EGL_CONTEXT_OPENGL_FORWARD_COMPATIBLE_BIT_KHR does not apply to ES
@@ -393,8 +368,7 @@ Error ValidateCreateContext(Display *display, Config *configuration, gl::Context
             return Error(EGL_BAD_MATCH);
         }
 
-        if (shareContext->getClientMajorVersion() != clientMajorVersion ||
-            shareContext->getClientMinorVersion() != clientMinorVersion)
+        if (shareContext->getClientVersion() != clientMajorVersion)
         {
             return Error(EGL_BAD_CONTEXT);
         }
@@ -1465,8 +1439,6 @@ Error ValidateCreateStreamProducerD3DTextureNV12ANGLE(const Display *display,
                                                       const Stream *stream,
                                                       const AttributeMap &attribs)
 {
-    ANGLE_TRY(ValidateDisplay(display));
-
     const DisplayExtensions &displayExtensions = display->getExtensions();
     if (!displayExtensions.streamProducerD3DTextureNV12)
     {
