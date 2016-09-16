@@ -151,6 +151,7 @@ ALL_JARS = \
   gecko-mozglue.jar \
   gecko-thirdparty.jar \
   gecko-util.jar \
+  gecko-view.jar \
   services.jar \
   sync-thirdparty.jar \
   ../javaaddons/javaaddons-1.0.jar \
