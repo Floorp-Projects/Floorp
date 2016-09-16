@@ -154,7 +154,8 @@ MP4Metadata::MP4Metadata(Stream* aSource)
 #ifdef MOZ_RUST_MP4PARSE
  , mRust(MakeUnique<MP4MetadataRust>(aSource))
  , mPreferRust(false)
- , mReportedTelemetry(false)
+ , mReportedAudioTrackTelemetry(false)
+ , mReportedVideoTrackTelemetry(false)
 #endif
 {
 }
@@ -204,18 +205,16 @@ MP4Metadata::GetNumberTracks(mozilla::TrackInfo::TrackType aType) const
   MOZ_LOG(sLog, LogLevel::Info, ("%s tracks found: stagefright=%u rust=%u",
                                  TrackTypeToString(aType), numTracks, numTracksRust));
 
-  if (!mReportedTelemetry) {
-    bool numTracksMatch = numTracks == numTracksRust;
+  bool numTracksMatch = numTracks == numTracksRust;
 
-    if (aType == mozilla::TrackInfo::kAudioTrack) {
-      Telemetry::Accumulate(Telemetry::MEDIA_RUST_MP4PARSE_TRACK_MATCH_AUDIO,
+  if (aType == mozilla::TrackInfo::kAudioTrack && !mReportedAudioTrackTelemetry) {
+    Telemetry::Accumulate(Telemetry::MEDIA_RUST_MP4PARSE_TRACK_MATCH_AUDIO,
+                          numTracksMatch);
+    mReportedAudioTrackTelemetry = true;
+  } else if (aType == mozilla::TrackInfo::kVideoTrack && !mReportedVideoTrackTelemetry) {
+    Telemetry::Accumulate(Telemetry::MEDIA_RUST_MP4PARSE_TRACK_MATCH_VIDEO,
                             numTracksMatch);
-    } else if (aType == mozilla::TrackInfo::kVideoTrack) {
-      Telemetry::Accumulate(Telemetry::MEDIA_RUST_MP4PARSE_TRACK_MATCH_VIDEO,
-                            numTracksMatch);
-    }
-
-    mReportedTelemetry = true;
+    mReportedVideoTrackTelemetry = true;
   }
 
   if (mPreferRust || ShouldPreferRust()) {
