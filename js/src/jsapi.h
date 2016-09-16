@@ -5636,6 +5636,7 @@ JS_SetOffthreadIonCompilationEnabled(JSContext* cx, bool enabled);
     Register(BASELINE_ENABLE, "baseline.enable")                           \
     Register(OFFTHREAD_COMPILATION_ENABLE, "offthread-compilation.enable") \
     Register(JUMP_THRESHOLD, "jump-threshold")                             \
+    Register(ASMJS_ATOMICS_ENABLE, "asmjs.atomics.enable")                 \
     Register(WASM_TEST_MODE, "wasm.test-mode")                             \
     Register(WASM_FOLD_OFFSETS, "wasm.fold-offsets")
 

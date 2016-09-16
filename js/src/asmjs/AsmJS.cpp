@@ -1988,7 +1988,7 @@ class MOZ_STACK_CLASS ModuleValidator
     bool addAtomicsBuiltinFunction(PropertyName* var, AsmJSAtomicsBuiltinFunction func,
                                    PropertyName* field)
     {
-        if (!JitOptions.wasmTestMode)
+        if (!JitOptions.asmJSAtomicsEnable)
             return failCurrentOffset("asm.js Atomics only enabled in wasm test mode");
 
         atomicsPresent_ = true;
