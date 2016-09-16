@@ -7,8 +7,6 @@
 #include "ThreadInfo.h"
 #include "ThreadProfile.h"
 
-#include "mozilla/DebugOnly.h""
-
 ThreadInfo::ThreadInfo(const char* aName, int aThreadId,
                        bool aIsMainThread, PseudoStack* aPseudoStack,
                        void* aStackTop)
@@ -52,20 +50,3 @@ ThreadInfo::SetPendingDelete()
   }
 }
 
-bool
-ThreadInfo::CanInvokeJS() const
-{
-#ifdef SPS_STANDALONE
-  return false;
-#else
-  nsIThread* thread = GetThread();
-  if (!thread) {
-    MOZ_ASSERT(IsMainThread());
-    return true;
-  }
-  bool result;
-  mozilla::DebugOnly<nsresult> rv = thread->GetCanInvokeJS(&result);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-  return result;
-#endif
-}
