@@ -4,63 +4,32 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-SOURCES += [
-    '../third_party/libdisasm/ia32_invariant.c',
-    'disassembler_x86.cc',
-    'exploitability_win.cc',
-]
-
 UNIFIED_SOURCES += [
-    '../third_party/libdisasm/ia32_implicit.c',
-    '../third_party/libdisasm/ia32_insn.c',
-    '../third_party/libdisasm/ia32_modrm.c',
-    '../third_party/libdisasm/ia32_opcode_tables.c',
-    '../third_party/libdisasm/ia32_operand.c',
-    '../third_party/libdisasm/ia32_reg.c',
-    '../third_party/libdisasm/ia32_settings.c',
-    '../third_party/libdisasm/x86_disasm.c',
-    '../third_party/libdisasm/x86_imm.c',
-    '../third_party/libdisasm/x86_insn.c',
-    '../third_party/libdisasm/x86_misc.c',
-    '../third_party/libdisasm/x86_operand_list.c',
     'basic_code_modules.cc',
     'basic_source_line_resolver.cc',
     'call_stack.cc',
     'cfi_frame_info.cc',
-    'dump_context.cc',
-    'dump_object.cc',
-    'exploitability.cc',
-    'exploitability_linux.cc',
-    'logging.cc',
     'minidump.cc',
-    'minidump_processor.cc',
-    'pathname_stripper.cc',
-    'proc_maps_linux.cc',
-    'process_state.cc',
     'source_line_resolver_base.cc',
     'stack_frame_symbolizer.cc',
-    'stackwalk_common.cc',
     'stackwalker.cc',
     'stackwalker_amd64.cc',
     'stackwalker_arm.cc',
-    'stackwalker_arm64.cc',
-    'stackwalker_mips.cc',
     'stackwalker_ppc.cc',
-    'stackwalker_ppc64.cc',
     'stackwalker_sparc.cc',
     'stackwalker_x86.cc',
-    'symbolic_constants_win.cc',
     'tokenize.cc',
 ]
 
-DEFINES['BPLOG_MINIMUM_SEVERITY'] = 'SEVERITY_ERROR'
-
-Library('breakpad_processor')
-
-# Don't use the STL wrappers in the crashreporter clients
-DISABLE_STL_WRAPPING = True
-
 # We allow warnings for third-party code that can be updated from upstream.
 ALLOW_COMPILER_WARNINGS = True
+
+FINAL_LIBRARY = 'xul'
+
+DEFINES['BP_LOGGING_INCLUDE'] = '"BreakpadLogging.h"'
+
+LOCAL_INCLUDES += [
+    '../../../breakpad-logging',
+]
 
 include('/toolkit/crashreporter/crashreporter.mozbuild')
