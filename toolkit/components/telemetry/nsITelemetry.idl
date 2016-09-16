@@ -393,6 +393,49 @@ interface nsITelemetry : nsISupports
   jsval snapshotScalars(in uint32_t aDataset, [optional] in boolean aClear);
 
   /**
+   * Adds the value to the given keyed scalar.
+   *
+   * @param aName The scalar name.
+   * @param aKey The key name.
+   * @param aValue The numeric value to add to the scalar. Only unsigned integers supported.
+   */
+  [implicit_jscontext]
+  void keyedScalarAdd(in ACString aName, in AString aKey, in jsval aValue);
+
+  /**
+   * Sets the keyed scalar to the given value.
+   *
+   * @param aName The scalar name.
+   * @param aKey The key name.
+   * @param aValue The value to set the scalar to. If the type of aValue doesn't match the
+   *        type of the scalar, the function will fail.
+   */
+  [implicit_jscontext]
+  void keyedScalarSet(in ACString aName, in AString aKey, in jsval aValue);
+
+  /**
+   * Sets the keyed scalar to the maximum of the current and the passed value.
+   *
+   * @param aName The scalar name.
+   * @param aKey The key name.
+   * @param aValue The numeric value to set the scalar to. Only unsigned integers supported.
+   */
+  [implicit_jscontext]
+  void keyedScalarSetMaximum(in ACString aName, in AString aKey, in jsval aValue);
+
+  /**
+   * Serializes the keyed scalars from the given dataset to a JSON-style object and
+   * resets them.
+   * The returned structure looks like:
+   *   { "group1.probe": { "key_1": 2, "key_2": 1, ... }, ... }
+   *
+   * @param aDataset DATASET_RELEASE_CHANNEL_OPTOUT or DATASET_RELEASE_CHANNEL_OPTIN.
+   * @param [aClear=false] Whether to clear out the scalars after snapshotting.
+   */
+  [implicit_jscontext, optional_argc]
+  jsval snapshotKeyedScalars(in uint32_t aDataset, [optional] in boolean aClear);
+
+  /**
    * Resets all the stored scalars. This is intended to be only used in tests.
    */
   void clearScalars();
