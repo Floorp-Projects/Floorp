@@ -41,7 +41,6 @@ AM_INIT_AUTOMAKE(subdir-objects tar-ustar 1.11.1)
 AM_CONFIG_HEADER(src/config.h)
 AM_MAINTAINER_MODE
 
-AM_PROG_AR
 AM_PROG_AS
 AC_PROG_CC
 AM_PROG_CC_C_O
@@ -76,9 +75,6 @@ m4_include(m4/ax_pthread.m4)
 AX_PTHREAD
 AC_CHECK_HEADERS([a.out.h])
 
-m4_include(m4/ax_cxx_compile_stdcxx.m4)
-AX_CXX_COMPILE_STDCXX(11, noext, mandatory)
-
 # Only build Linux client libs when compiling for Linux
 case $host in
   *-*-linux* | *-android* )
@@ -94,14 +90,6 @@ case $host in
     ;;
 esac
 AM_CONDITIONAL(ANDROID_HOST, test x$ANDROID_HOST = xtrue)
-
-# Some tools (like mac ones) only support x86 currently.
-case $host_cpu in
-  i?86|x86_64)
-    X86_HOST=true
-    ;;
-esac
-AM_CONDITIONAL(X86_HOST, test x$X86_HOST = xtrue)
 
 AC_ARG_ENABLE(processor,
               AS_HELP_STRING([--disable-processor],
@@ -141,39 +129,6 @@ AM_CONDITIONAL(DISABLE_TOOLS, test x$disable_tools = xtrue)
 
 if test x$LINUX_HOST = xfalse -a x$disable_processor = xtrue -a x$disable_tools = xtrue; then
    AC_MSG_ERROR([--disable-processor and --disable-tools were specified, and not building for Linux. Nothing to build!])
-fi
-
-AC_ARG_ENABLE(system-test-libs,
-              AS_HELP_STRING([--enable-system-test-libs],
-                             [Use gtest/gmock/etc... from the system instead ]
-                             [of the local copies (default is local)]),
-              [case "${enableval}" in
-                 yes)
-                   system_test_libs=true
-                   ;;
-                 no)
-                   system_test_libs=false
-                   ;;
-                 *)
-                   AC_MSG_ERROR(bad value ${enableval} for --enable-system-test-libs)
-                   ;;
-               esac],
-              [system_test_libs=false])
-AM_CONDITIONAL(SYSTEM_TEST_LIBS, test x$system_test_libs = xtrue)
-
-AC_ARG_VAR([GMOCK_CONFIG], [Path to gmock-config script])
-AC_ARG_VAR([GMOCK_CFLAGS], [Compiler flags for gmock])
-AC_ARG_VAR([GMOCK_LIBS], [Linker flags for gmock])
-AC_ARG_VAR([GTEST_CONFIG], [Path to gtest-config script])
-AC_ARG_VAR([GTEST_CFLAGS], [Compiler flags for gtest])
-AC_ARG_VAR([GTEST_LIBS], [Linker flags for gtest])
-if test x$system_test_libs = xtrue; then
-  AC_CHECK_TOOL([GMOCK_CONFIG], [gmock-config])
-  AC_CHECK_TOOL([GTEST_CONFIG], [gtest-config])
-  GMOCK_CFLAGS=`$GMOCK_CONFIG --cppflags --cxxflags`
-  GMOCK_LIBS=`$GMOCK_CONFIG --ldflags --libs`
-  GTEST_CFLAGS=`$GTEST_CONFIG --cppflags --cxxflags`
-  GTEST_LIBS=`$GTEST_CONFIG --ldflags --libs`
 fi
 
 AC_ARG_ENABLE(selftest,
