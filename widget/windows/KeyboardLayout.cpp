@@ -3639,11 +3639,13 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
   }
 
   uint8_t virtualKey = aNativeKey.mOriginalVirtualKeyCode;
-  int32_t virtualKeyIndex = GetKeyIndex(virtualKey);
 
-  if (virtualKeyIndex < 0) {
-    // Does not produce any printable characters, but still preserves the
-    // dead-key state.
+  // If the key is not a usual printable key, KeyboardLayout class assume that
+  // it's not cause dead char nor printable char.  Therefore, there are nothing
+  // to do here fore such keys (e.g., function keys).
+  // However, this should keep dead key state even if non-printable key is
+  // pressed during a dead key sequence.
+  if (!IsPrintableCharKey(virtualKey)) {
     return;
   }
 
@@ -3665,7 +3667,7 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
           VirtualKey::ModifierKeyStateToShiftState(aModKeyState);
       }
       UniCharsAndModifiers deadChars =
-        mVirtualKeys[virtualKeyIndex].GetNativeUniChars(aModKeyState);
+        GetNativeUniCharsAndModifiers(virtualKey, aModKeyState);
       NS_ASSERTION(deadChars.mLength == 1,
                    "dead key must generate only one character");
       aNativeKey.mKeyNameIndex = KEY_NAME_INDEX_Dead;
@@ -3798,6 +3800,20 @@ KeyboardLayout::GetUniCharsAndModifiers(
     return result;
   }
   return mVirtualKeys[key].GetUniChars(aShiftState);
+}
+
+UniCharsAndModifiers
+KeyboardLayout::GetNativeUniCharsAndModifiers(
+                  uint8_t aVirtualKey,
+                  const ModifierKeyState& aModKeyState) const
+{
+  int32_t key = GetKeyIndex(aVirtualKey);
+  if (key < 0) {
+    return UniCharsAndModifiers();
+  }
+  VirtualKey::ShiftState shiftState =
+    VirtualKey::ModifierKeyStateToShiftState(aModKeyState);
+  return mVirtualKeys[key].GetNativeUniChars(shiftState);
 }
 
 void
