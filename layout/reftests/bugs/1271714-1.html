@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+
+<title>Bug 1271714: Hit testing should be able to find the .fixed element</title>
+
+<style type="text/css">
+
+.positionedClip {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.relative {
+  position: relative;
+  z-index: 1;
+}
+
+.fixed {
+  position: fixed;
+  border: 1px solid black;
+  height: 50px;
+  width: 200px;
+}
+
+</style>
+
+<div class="positionedClip">
+  <div class="relative">
+    <div class="fixed"></div>
+  </div>
+</div>
+
+<script>
+
+document.elementFromPoint(100, 30).style.backgroundColor = "yellow";
+
+</script>
