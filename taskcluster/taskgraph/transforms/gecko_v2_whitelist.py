@@ -20,6 +20,7 @@ JOB_NAME_WHITELIST = set([
     'android-api-15-gradle-dependencies-opt',
     'android-api-15-gradle-opt',
     'android-api-15-opt',
+    'android-api-15-nightly-opt',
     'android-api-15-partner-sample1-opt',
     'android-l10n-opt',
     'android-x86-opt',
