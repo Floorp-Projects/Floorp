@@ -115,11 +115,14 @@ const SPECIAL_VALUES = new Set(["none", "unset", "initial", "inherit"]);
  *        The widget container.
  * @param {String} value
  *        CSS filter value
+ * @param {Function} cssIsValid
+ *        Test whether css name / value is valid.
  */
-function CSSFilterEditorWidget(el, value = "") {
+function CSSFilterEditorWidget(el, value = "", cssIsValid) {
   this.doc = el.ownerDocument;
   this.win = this.doc.defaultView;
   this.el = el;
+  this._cssIsValid = cssIsValid;
 
   this._addButtonClick = this._addButtonClick.bind(this);
   this._removeButtonClick = this._removeButtonClick.bind(this);
@@ -768,7 +771,7 @@ CSSFilterEditorWidget.prototype = {
       // If the specified value is invalid, replace it with the
       // default.
       if (name !== "url") {
-        if (!DOMUtils.cssPropertyIsValid("filter", name + "(" + value + ")")) {
+        if (!this._cssIsValid("filter", name + "(" + value + ")")) {
           value = null;
         }
       }

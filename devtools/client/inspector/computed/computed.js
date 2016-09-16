@@ -138,7 +138,7 @@ function CssComputedView(inspector, document, pageStyle) {
   this.propertyViews = [];
 
   let cssProperties = getCssProperties(inspector.toolbox);
-  this._outputParser = new OutputParser(document, cssProperties.supportsType);
+  this._outputParser = new OutputParser(document, cssProperties);
 
   // Create bound methods.
   this.focusWindow = this.focusWindow.bind(this);

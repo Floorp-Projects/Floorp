@@ -94,6 +94,11 @@ window.onload = function() {
       "A property with color values includes papayawhip.");
     ok(bgColorValues.includes("rgb"),
       "A property with color values includes non-colors.");
+
+    ok(cssProperties.isValidOnClient("margin", "0px", window.document),
+      "Margin and 0px are valid CSS values");
+    ok(!cssProperties.isValidOnClient("margin", "foo", window.document),
+      "Margin and foo are not valid CSS values");
   });
 
   addAsyncTest(function* setup() {
