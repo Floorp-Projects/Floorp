@@ -48,9 +48,6 @@ public:
 
   nsCString Description() const
   {
-    if (NS_SUCCEEDED(mCode)) {
-      return nsCString();
-    }
     return nsPrintfCString("0x%08x: %s", mCode, mMessage.get());
   }
 
