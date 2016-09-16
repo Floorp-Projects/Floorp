@@ -9,7 +9,7 @@ if (!this.SharedArrayBuffer || !this.Atomics)
 load(libdir + "asm.js");
 load(libdir + "asserts.js");
 
-setJitCompilerOption('wasm.test-mode', 1);
+setJitCompilerOption('asmjs.atomics.enable', 1);
 
 var loadModule_int32_code =
     USE_ASM + `
