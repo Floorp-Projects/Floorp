@@ -107,12 +107,14 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPRESENTATIONDEVICEREQUEST
 
-  PresentationDeviceRequest(const nsTArray<nsString>& aUrls,
-                            const nsAString& aId,
-                            const nsAString& aOrigin,
-                            uint64_t aWindowId,
-                            nsIDOMEventTarget* aEventTarget,
-                            nsIPresentationServiceCallback* aCallback);
+  PresentationDeviceRequest(
+              const nsTArray<nsString>& aUrls,
+              const nsAString& aId,
+              const nsAString& aOrigin,
+              uint64_t aWindowId,
+              nsIDOMEventTarget* aEventTarget,
+              nsIPresentationServiceCallback* aCallback,
+              nsIPresentationTransportBuilderConstructor* aBuilderConstructor);
 
 private:
   virtual ~PresentationDeviceRequest() = default;
@@ -125,6 +127,7 @@ private:
   uint64_t mWindowId;
   nsWeakPtr mChromeEventHandler;
   nsCOMPtr<nsIPresentationServiceCallback> mCallback;
+  nsCOMPtr<nsIPresentationTransportBuilderConstructor> mBuilderConstructor;
 };
 
 LazyLogModule gPresentationLog("Presentation");
@@ -135,23 +138,26 @@ LazyLogModule gPresentationLog("Presentation");
 NS_IMPL_ISUPPORTS(PresentationDeviceRequest, nsIPresentationDeviceRequest)
 
 PresentationDeviceRequest::PresentationDeviceRequest(
-                                      const nsTArray<nsString>& aUrls,
-                                      const nsAString& aId,
-                                      const nsAString& aOrigin,
-                                      uint64_t aWindowId,
-                                      nsIDOMEventTarget* aEventTarget,
-                                      nsIPresentationServiceCallback* aCallback)
+               const nsTArray<nsString>& aUrls,
+               const nsAString& aId,
+               const nsAString& aOrigin,
+               uint64_t aWindowId,
+               nsIDOMEventTarget* aEventTarget,
+               nsIPresentationServiceCallback* aCallback,
+               nsIPresentationTransportBuilderConstructor* aBuilderConstructor)
   : mRequestUrls(aUrls)
   , mId(aId)
   , mOrigin(aOrigin)
   , mWindowId(aWindowId)
   , mChromeEventHandler(do_GetWeakReference(aEventTarget))
   , mCallback(aCallback)
+  , mBuilderConstructor(aBuilderConstructor)
 {
   MOZ_ASSERT(!mRequestUrls.IsEmpty());
   MOZ_ASSERT(!mId.IsEmpty());
   MOZ_ASSERT(!mOrigin.IsEmpty());
   MOZ_ASSERT(mCallback);
+  MOZ_ASSERT(mBuilderConstructor);
 }
 
 NS_IMETHODIMP
@@ -241,6 +247,7 @@ PresentationDeviceRequest::CreateSessionInfo(
     return info->ReplyError(NS_ERROR_DOM_OPERATION_ERR);
   }
 
+  info->SetTransportBuilderConstructor(mBuilderConstructor);
   return NS_OK;
 }
 
@@ -642,13 +649,15 @@ PresentationService::IsAppInstalled(nsIURI* aUri)
 }
 
 NS_IMETHODIMP
-PresentationService::StartSession(const nsTArray<nsString>& aUrls,
-                                  const nsAString& aSessionId,
-                                  const nsAString& aOrigin,
-                                  const nsAString& aDeviceId,
-                                  uint64_t aWindowId,
-                                  nsIDOMEventTarget* aEventTarget,
-                                  nsIPresentationServiceCallback* aCallback)
+PresentationService::StartSession(
+               const nsTArray<nsString>& aUrls,
+               const nsAString& aSessionId,
+               const nsAString& aOrigin,
+               const nsAString& aDeviceId,
+               uint64_t aWindowId,
+               nsIDOMEventTarget* aEventTarget,
+               nsIPresentationServiceCallback* aCallback,
+               nsIPresentationTransportBuilderConstructor* aBuilderConstructor)
 {
   PRES_DEBUG("%s:id[%s]\n", __func__, NS_ConvertUTF16toUTF8(aSessionId).get());
 
@@ -663,7 +672,8 @@ PresentationService::StartSession(const nsTArray<nsString>& aUrls,
                                   aOrigin,
                                   aWindowId,
                                   aEventTarget,
-                                  aCallback);
+                                  aCallback,
+                                  aBuilderConstructor);
 
   if (aDeviceId.IsVoid()) {
     // Pop up a prompt and ask user to select a device.
@@ -945,28 +955,6 @@ PresentationService::UnregisterSessionListener(const nsAString& aSessionId,
   return NS_OK;
 }
 
-nsresult
-PresentationService::RegisterTransportBuilder(const nsAString& aSessionId,
-                                              uint8_t aRole,
-                                              nsIPresentationSessionTransportBuilder* aBuilder)
-{
-  PRES_DEBUG("%s:id[%s], role[%d]\n", __func__,
-             NS_ConvertUTF16toUTF8(aSessionId).get(), aRole);
-
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aBuilder);
-  MOZ_ASSERT(aRole == nsIPresentationService::ROLE_CONTROLLER ||
-             aRole == nsIPresentationService::ROLE_RECEIVER);
-
-  RefPtr<PresentationSessionInfo> info = GetSessionInfo(aSessionId, aRole);
-  if (NS_WARN_IF(!info)) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  info->SetBuilder(aBuilder);
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 PresentationService::RegisterRespondingListener(
   uint64_t aWindowId,
@@ -1009,9 +997,11 @@ PresentationService::UnregisterRespondingListener(uint64_t aWindowId)
 }
 
 NS_IMETHODIMP
-PresentationService::NotifyReceiverReady(const nsAString& aSessionId,
-                                         uint64_t aWindowId,
-                                         bool aIsLoading)
+PresentationService::NotifyReceiverReady(
+               const nsAString& aSessionId,
+               uint64_t aWindowId,
+               bool aIsLoading,
+               nsIPresentationTransportBuilderConstructor* aBuilderConstructor)
 {
   PRES_DEBUG("%s:id[%s], windowId[%lld], loading[%d]\n", __func__,
              NS_ConvertUTF16toUTF8(aSessionId).get(), aWindowId, aIsLoading);
@@ -1039,6 +1029,7 @@ PresentationService::NotifyReceiverReady(const nsAString& aSessionId,
     }
   }
 
+  info->SetTransportBuilderConstructor(aBuilderConstructor);
   return static_cast<PresentationPresentingInfo*>(info.get())->NotifyResponderReady();
 }
 

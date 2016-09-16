@@ -54,13 +54,15 @@ PresentationIPCService::~PresentationIPCService()
 }
 
 NS_IMETHODIMP
-PresentationIPCService::StartSession(const nsTArray<nsString>& aUrls,
-                                     const nsAString& aSessionId,
-                                     const nsAString& aOrigin,
-                                     const nsAString& aDeviceId,
-                                     uint64_t aWindowId,
-                                     nsIDOMEventTarget* aEventTarget,
-                                     nsIPresentationServiceCallback* aCallback)
+PresentationIPCService::StartSession(
+               const nsTArray<nsString>& aUrls,
+               const nsAString& aSessionId,
+               const nsAString& aOrigin,
+               const nsAString& aDeviceId,
+               uint64_t aWindowId,
+               nsIDOMEventTarget* aEventTarget,
+               nsIPresentationServiceCallback* aCallback,
+               nsIPresentationTransportBuilderConstructor* aBuilderConstructor)
 {
   if (aWindowId != 0) {
     AddRespondingSessionId(aWindowId,
@@ -378,9 +380,11 @@ PresentationIPCService::NotifyAvailableChange(bool aAvailable)
 }
 
 NS_IMETHODIMP
-PresentationIPCService::NotifyReceiverReady(const nsAString& aSessionId,
-                                            uint64_t aWindowId,
-                                            bool aIsLoading)
+PresentationIPCService::NotifyReceiverReady(
+               const nsAString& aSessionId,
+               uint64_t aWindowId,
+               bool aIsLoading,
+               nsIPresentationTransportBuilderConstructor* aBuilderConstructor)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
