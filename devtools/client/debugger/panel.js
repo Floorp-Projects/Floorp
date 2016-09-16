@@ -57,7 +57,13 @@ DebuggerPanel.prototype = {
         let keysToClone = ["resumeKey", "stepOverKey", "stepInKey", "stepOutKey"];
         for (let key of keysToClone) {
           let elm = this.panelWin.document.getElementById(key);
-          this._toolbox.useKeyWithSplitConsole(elm, "jsdebugger");
+          let keycode = elm.getAttribute("keycode");
+          let modifiers = elm.getAttribute("modifiers");
+          let command = elm.getAttribute("command");
+          let handler = this._view.Toolbar.getCommandHandler(command);
+
+          let keyShortcut = this.translateToKeyShortcut(keycode, modifiers);
+          this._toolbox.useKeyWithSplitConsole(keyShortcut, handler, "jsdebugger");
         }
         this.isReady = true;
         this.emit("ready");
@@ -66,6 +72,40 @@ DebuggerPanel.prototype = {
       .then(null, function onError(aReason) {
         DevToolsUtils.reportException("DebuggerPanel.prototype.open", aReason);
       });
+  },
+
+  /**
+   * Translate a VK_ keycode, with modifiers, to a key shortcut that can be used with
+   * shared/key-shortcut.
+   *
+   * @param {String} keycode
+   *        The VK_* keycode to translate
+   * @param {String} modifiers
+   *        The list (blank-space separated) of modifiers applying to this keycode.
+   * @return {String} a key shortcut ready to be used with shared/key-shortcut.js
+   */
+  translateToKeyShortcut: function (keycode, modifiers) {
+    // Remove the VK_ prefix.
+    keycode = keycode.replace("VK_", "");
+
+    // Translate modifiers
+    if (modifiers.includes("shift")) {
+      keycode = "Shift+" + keycode;
+    }
+    if (modifiers.includes("alt")) {
+      keycode = "Alt+" + keycode;
+    }
+    if (modifiers.includes("control")) {
+      keycode = "Ctrl+" + keycode;
+    }
+    if (modifiers.includes("meta")) {
+      keycode = "Cmd+" + keycode;
+    }
+    if (modifiers.includes("accel")) {
+      keycode = "CmdOrCtrl+" + keycode;
+    }
+
+    return keycode;
   },
 
   // DevToolPanel API
