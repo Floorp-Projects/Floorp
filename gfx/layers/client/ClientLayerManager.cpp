@@ -840,8 +840,7 @@ ClientLayerManager::DependsOnStaleDevice() const
 
 already_AddRefed<PersistentBufferProvider>
 ClientLayerManager::CreatePersistentBufferProvider(const gfx::IntSize& aSize,
-                                                   gfx::SurfaceFormat aFormat,
-                                                   int64_t* aMemoryCounter)
+                                                   gfx::SurfaceFormat aFormat)
 {
   // Don't use a shared buffer provider if compositing is considered "not cheap"
   // because the canvas will most likely be flattened into a thebes layer instead
@@ -850,13 +849,13 @@ ClientLayerManager::CreatePersistentBufferProvider(const gfx::IntSize& aSize,
   if (IsCompositingCheap() &&
       gfxPrefs::PersistentBufferProviderSharedEnabled()) {
     RefPtr<PersistentBufferProvider> provider
-      = PersistentBufferProviderShared::Create(aSize, aFormat, AsShadowForwarder(), aMemoryCounter);
+      = PersistentBufferProviderShared::Create(aSize, aFormat, AsShadowForwarder());
     if (provider) {
       return provider.forget();
     }
   }
 
-  return LayerManager::CreatePersistentBufferProvider(aSize, aFormat, aMemoryCounter);
+  return LayerManager::CreatePersistentBufferProvider(aSize, aFormat);
 }
 
 
