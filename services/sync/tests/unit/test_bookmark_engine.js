@@ -144,50 +144,6 @@ add_task(function* bad_record_allIDs() {
   yield new Promise(r => server.stop(r));
 });
 
-add_task(function* test_ID_caching() {
-  let server = new SyncServer();
-  server.start();
-  let syncTesting = new SyncTestingInfrastructure(server.server);
-
-  _("Ensure that Places IDs are not cached.");
-  let engine = new BookmarksEngine(Service);
-  let store = engine._store;
-  _("All IDs: " + JSON.stringify(store.getAllIDs()));
-
-  let mobileID = store.idForGUID("mobile");
-  _("Change the GUID for that item, and drop the mobile anno.");
-  let mobileRoot = BookmarkSpecialIds.specialIdForGUID("mobile", false);
-  let mobileGUID = yield PlacesUtils.promiseItemGuid(mobileRoot);
-  yield PlacesSyncUtils.bookmarks.changeGuid(mobileGUID, "abcdefghijkl");
-  PlacesUtils.annotations.removeItemAnnotation(mobileID, "mobile/bookmarksRoot");
-
-  let err;
-  let newMobileID;
-
-  // With noCreate, we don't find an entry.
-  try {
-    newMobileID = store.idForGUID("mobile", true);
-    _("New mobile ID: " + newMobileID);
-  } catch (ex) {
-    err = ex;
-    _("Error: " + Log.exceptionStr(err));
-  }
-
-  do_check_true(!err);
-
-  // With !noCreate, lookup works, and it's different.
-  newMobileID = store.idForGUID("mobile", false);
-  _("New mobile ID: " + newMobileID);
-  do_check_true(!!newMobileID);
-  do_check_neq(newMobileID, mobileID);
-
-  // And it's repeatable, even with creation enabled.
-  do_check_eq(newMobileID, store.idForGUID("mobile", false));
-
-  do_check_eq(store.GUIDForId(mobileID), "abcdefghijkl");
-  yield new Promise(r => server.stop(r));
-});
-
 function serverForFoo(engine) {
   return serverForUsers({"foo": "password"}, {
     meta: {global: {engines: {bookmarks: {version: engine.version,

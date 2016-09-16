@@ -23,6 +23,11 @@ Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/PlacesBackups.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "BookmarkValidator",
                                   "resource://services-sync/bookmark_validator.js");
+XPCOMUtils.defineLazyGetter(this, "PlacesBundle", () => {
+  let bundleService = Cc["@mozilla.org/intl/stringbundle;1"]
+                        .getService(Ci.nsIStringBundleService);
+  return bundleService.createBundle("chrome://places/locale/places.properties");
+});
 
 const ANNOS_TO_TRACK = [BookmarkAnnos.DESCRIPTION_ANNO, BookmarkAnnos.SIDEBAR_ANNO,
                         PlacesUtils.LMANNO_FEEDURI, PlacesUtils.LMANNO_SITEURI];
@@ -583,7 +588,7 @@ BookmarksStore.prototype = {
   __proto__: Store.prototype,
 
   itemExists: function BStore_itemExists(id) {
-    return this.idForGUID(id, true) > 0;
+    return this.idForGUID(id) > 0;
   },
 
   applyIncoming: function BStore_applyIncoming(record) {
@@ -924,14 +929,12 @@ BookmarksStore.prototype = {
       PlacesUtils.promiseItemGuid(id));
   },
 
-  // noCreate is provided as an optional argument to prevent the creation of
-  // non-existent special records, such as "mobile".
-  idForGUID: function idForGUID(guid, noCreate) {
+  idForGUID: function idForGUID(guid) {
     // guid might be a String object rather than a string.
     guid = guid.toString();
 
     if (BookmarkSpecialIds.isSpecialGUID(guid))
-      return BookmarkSpecialIds.specialIdForGUID(guid, !noCreate);
+      return BookmarkSpecialIds.specialIdForGUID(guid);
 
     return Async.promiseSpinningly(PlacesUtils.promiseItemId(guid).catch(
       ex => -1));
@@ -987,29 +990,13 @@ BookmarksStore.prototype = {
   },
 
   wipe: function BStore_wipe() {
-    let cb = Async.makeSpinningCallback();
-    Task.spawn(function* () {
+    Async.promiseSpinningly(Task.spawn(function* () {
       // Save a backup before clearing out all bookmarks.
       yield PlacesBackups.create(null, true);
-      // Instead of exposing a "clear folder" method, we should instead have
-      // `PlacesSyncUtils` clear all roots. `eraseEverything` comes close,
-      // but doesn't clear the mobile root. The fix is to move mobile root
-      // and query handling into Places.
-      for (let syncID of BookmarkSpecialIds.guids) {
-        if (syncID == "places") {
-          continue;
-        }
-        if (syncID == "mobile" && !BookmarkSpecialIds.findMobileRoot(false)) {
-          // `syncIDToPlacesGUID` will create the mobile root as a side effect,
-          // which we don't want it to do if we're clearing bookmarks.
-          continue;
-        }
-        let guid = BookmarkSpecialIds.syncIDToPlacesGUID(syncID);
-        yield PlacesSyncUtils.bookmarks.clear(guid);
-      }
-      cb();
-    });
-    cb.wait();
+      yield PlacesUtils.bookmarks.eraseEverything({
+        source: SOURCE_SYNC,
+      });
+    }));
   }
 };
 
@@ -1204,7 +1191,7 @@ BookmarksTracker.prototype = {
 
     let mobile = find(BookmarkAnnos.MOBILE_ANNO);
     let queryURI = Utils.makeURI("place:folder=" + BookmarkSpecialIds.mobile);
-    let title = Str.sync.get("mobile.label");
+    let title = PlacesBundle.GetStringFromName("MobileBookmarksFolderTitle");
 
     // Don't add OR remove the mobile bookmarks if there's nothing.
     if (PlacesUtils.bookmarks.getIdForItemAt(BookmarkSpecialIds.mobile, 0) == -1) {
@@ -1220,8 +1207,17 @@ BookmarksTracker.prototype = {
                                   PlacesUtils.annotations.EXPIRE_NEVER, SOURCE_SYNC);
     }
     // Make sure the existing title is correct
-    else if (PlacesUtils.bookmarks.getItemTitle(mobile[0]) != title) {
-      PlacesUtils.bookmarks.setItemTitle(mobile[0], title, SOURCE_SYNC);
+    else {
+      let queryTitle = PlacesUtils.bookmarks.getItemTitle(mobile[0]);
+      if (queryTitle != title) {
+        PlacesUtils.bookmarks.setItemTitle(mobile[0], title, SOURCE_SYNC);
+      }
+      let rootTitle =
+        PlacesUtils.bookmarks.getItemTitle(BookmarkSpecialIds.mobile);
+      if (rootTitle != title) {
+        PlacesUtils.bookmarks.setItemTitle(BookmarkSpecialIds.mobile, title,
+                                           SOURCE_SYNC);
+      }
     }
   },
 
@@ -1284,16 +1280,12 @@ BookmarksTracker.prototype = {
 // Items in other roots, including tags and organizer queries, will be
 // ignored.
 function getChangeRootIds() {
-  let rootIds = [
+  return [
     PlacesUtils.bookmarksMenuFolderId,
     PlacesUtils.toolbarFolderId,
     PlacesUtils.unfiledBookmarksFolderId,
+    PlacesUtils.mobileFolderId,
   ];
-  let mobileRootId = BookmarkSpecialIds.findMobileRoot(false);
-  if (mobileRootId) {
-    rootIds.push(mobileRootId);
-  }
-  return rootIds;
 }
 
 class BookmarksChangeset extends Changeset {

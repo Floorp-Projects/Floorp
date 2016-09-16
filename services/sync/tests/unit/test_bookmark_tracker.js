@@ -1272,19 +1272,16 @@ add_task(function* test_async_onItemDeleted_eraseEverything() {
   try {
     yield stopTracking();
 
-    let mobileRoot = BookmarkSpecialIds.findMobileRoot(true);
-    let mobileGUID = yield PlacesUtils.promiseItemGuid(mobileRoot);
-
     let fxBmk = yield PlacesUtils.bookmarks.insert({
       type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-      parentGuid: mobileGUID,
+      parentGuid: PlacesUtils.bookmarks.mobileGuid,
       url: "http://getfirefox.com",
       title: "Get Firefox!",
     });
     _(`Firefox GUID: ${fxBmk.guid}`);
     let tbBmk = yield PlacesUtils.bookmarks.insert({
       type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-      parentGuid: mobileGUID,
+      parentGuid: PlacesUtils.bookmarks.mobileGuid,
       url: "http://getthunderbird.com",
       title: "Get Thunderbird!",
     });
@@ -1340,8 +1337,9 @@ add_task(function* test_async_onItemDeleted_eraseEverything() {
     // (bzBmk.guid, bugsGrandChildBmk.guid, bugsChildFolder.guid), even
     // though we should.
     yield verifyTrackedItems(["menu", mozBmk.guid, mdnBmk.guid, "toolbar",
-                              bugsFolder.guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 6);
+                              bugsFolder.guid, "mobile", fxBmk.guid,
+                              tbBmk.guid]);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 10);
   } finally {
     _("Clean up.");
     yield cleanup();
@@ -1352,10 +1350,8 @@ add_task(function* test_onItemDeleted_removeFolderChildren() {
   _("Removing a folder's children should track the folder and its children");
 
   try {
-    let mobileRoot = BookmarkSpecialIds.findMobileRoot(true);
-    let mobileGUID = engine._store.GUIDForId(mobileRoot);
     let fx_id = PlacesUtils.bookmarks.insertBookmark(
-      mobileRoot,
+      PlacesUtils.mobileFolderId,
       Utils.makeURI("http://getfirefox.com"),
       PlacesUtils.bookmarks.DEFAULT_INDEX,
       "Get Firefox!");
@@ -1363,7 +1359,7 @@ add_task(function* test_onItemDeleted_removeFolderChildren() {
     _(`Firefox GUID: ${fx_guid}`);
 
     let tb_id = PlacesUtils.bookmarks.insertBookmark(
-      mobileRoot,
+      PlacesUtils.mobileFolderId,
       Utils.makeURI("http://getthunderbird.com"),
       PlacesUtils.bookmarks.DEFAULT_INDEX,
       "Get Thunderbird!");
@@ -1381,8 +1377,8 @@ add_task(function* test_onItemDeleted_removeFolderChildren() {
 
     yield startTracking();
 
-    _(`Mobile root ID: ${mobileRoot}`);
-    PlacesUtils.bookmarks.removeFolderChildren(mobileRoot);
+    _(`Mobile root ID: ${PlacesUtils.mobileFolderId}`);
+    PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.mobileFolderId);
 
     yield verifyTrackedItems(["mobile", fx_guid, tb_guid]);
     do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 4);
