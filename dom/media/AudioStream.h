@@ -245,7 +245,7 @@ protected:
   int64_t GetPositionInFramesUnlocked();
 
 private:
-  nsresult OpenCubeb(cubeb_stream_params& aParams,
+  nsresult OpenCubeb(cubeb* aContext, cubeb_stream_params& aParams,
                      TimeStamp aStartTime, bool aIsFirst);
 
   static long DataCallback_S(cubeb_stream*, void* aThis,
