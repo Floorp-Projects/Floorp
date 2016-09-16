@@ -47,9 +47,7 @@ class LinuxCoreDumper : public LinuxDumper {
   // its proc files at |procfs_path|. If |procfs_path| is a copy of
   // /proc/<pid>, it should contain the following files:
   //     auxv, cmdline, environ, exe, maps, status
-  // See LinuxDumper for the purpose of |root_prefix|.
-  LinuxCoreDumper(pid_t pid, const char* core_path, const char* procfs_path,
-                  const char* root_prefix = "");
+  LinuxCoreDumper(pid_t pid, const char* core_path, const char* procfs_path);
 
   // Implements LinuxDumper::BuildProcPath().
   // Builds a proc path for a certain pid for a node (/proc/<pid>/<node>).

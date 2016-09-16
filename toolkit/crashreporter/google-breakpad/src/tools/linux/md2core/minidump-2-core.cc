@@ -35,6 +35,7 @@
 
 #include <elf.h>
 #include <errno.h>
+#include <inttypes.h>
 #include <link.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,8 +50,6 @@
 #include "common/linux/memory_mapped_file.h"
 #include "common/minidump_type_helper.h"
 #include "common/scoped_ptr.h"
-#include "common/using_std_string.h"
-#include "google_breakpad/common/breakpad_types.h"
 #include "google_breakpad/common/minidump_format.h"
 #include "third_party/lss/linux_syscall_support.h"
 #include "tools/linux/md2core/minidump_memory_range.h"
@@ -98,7 +97,7 @@ typedef MDTypeHelper<sizeof(ElfW(Addr))>::MDRawLinkMap MDRawLinkMap;
 
 static const MDRVA kInvalidMDRVA = static_cast<MDRVA>(-1);
 static bool verbose;
-static string g_custom_so_basedir;
+static std::string g_custom_so_basedir;
 
 static int usage(const char* argv0) {
   fprintf(stderr, "Usage: %s [-v] <minidump file>\n", argv0);
@@ -204,8 +203,8 @@ struct CrashedProcess {
 
     uint32_t permissions;
     uint64_t start_address, end_address, offset;
-    string filename;
-    string data;
+    std::string filename;
+    std::string data;
   };
   std::map<uint64_t, Mapping> mappings;
 
@@ -239,9 +238,9 @@ struct CrashedProcess {
 
   prpsinfo prps;
 
-  std::map<uintptr_t, string> signatures;
+  std::map<uintptr_t, std::string> signatures;
 
-  string dynamic_data;
+  std::string dynamic_data;
   MDRawDebug debug;
   std::vector<MDRawLinkMap> link_map;
 };
@@ -495,21 +494,11 @@ ParseSystemInfo(CrashedProcess* crashinfo, const MinidumpMemoryRange& range,
     _exit(1);
   }
 #elif defined(__mips__)
-# if _MIPS_SIM == _ABIO32
   if (sysinfo->processor_architecture != MD_CPU_ARCHITECTURE_MIPS) {
     fprintf(stderr,
-            "This version of minidump-2-core only supports mips o32 (32bit).\n");
+            "This version of minidump-2-core only supports mips (32bit).\n");
     _exit(1);
   }
-# elif _MIPS_SIM == _ABI64
-  if (sysinfo->processor_architecture != MD_CPU_ARCHITECTURE_MIPS64) {
-    fprintf(stderr,
-            "This version of minidump-2-core only supports mips n64 (64bit).\n");
-    _exit(1);
-  }
-# else
-#  error "This mips ABI is currently not supported (n32)"
-# endif
 #else
 #error "This code has not been ported to your platform yet"
 #endif
@@ -536,8 +525,6 @@ ParseSystemInfo(CrashedProcess* crashinfo, const MinidumpMemoryRange& range,
             ? "ARM"
             : sysinfo->processor_architecture == MD_CPU_ARCHITECTURE_MIPS
             ? "MIPS"
-            : sysinfo->processor_architecture == MD_CPU_ARCHITECTURE_MIPS64
-            ? "MIPS64"
             : "???",
             sysinfo->number_of_processors,
             sysinfo->processor_level,
@@ -598,8 +585,8 @@ ParseMaps(CrashedProcess* crashinfo, const MinidumpMemoryRange& range) {
        ptr < range.data() + range.length();) {
     const uint8_t* eol = (uint8_t*)memchr(ptr, '\n',
                                        range.data() + range.length() - ptr);
-    string line((const char*)ptr,
-                eol ? eol - ptr : range.data() + range.length() - ptr);
+    std::string line((const char*)ptr,
+                     eol ? eol - ptr : range.data() + range.length() - ptr);
     ptr = eol ? eol + 1 : range.data() + range.length();
     unsigned long long start, stop, offset;
     char* permissions = NULL;
@@ -876,17 +863,17 @@ ParseModuleStream(CrashedProcess* crashinfo, const MinidumpMemoryRange& range,
             record->signature.data4[2], record->signature.data4[3],
             record->signature.data4[4], record->signature.data4[5],
             record->signature.data4[6], record->signature.data4[7]);
-    string filename =
+    std::string filename =
         full_file.GetAsciiMDString(rawmodule->module_name_rva);
     size_t slash = filename.find_last_of('/');
-    string basename = slash == string::npos ?
-        filename : filename.substr(slash + 1);
+    std::string basename = slash == std::string::npos ?
+      filename : filename.substr(slash + 1);
     if (strcmp(guid, "00000000-0000-0000-0000-000000000000")) {
-      string prefix;
+      std::string prefix;
       if (!g_custom_so_basedir.empty())
         prefix = g_custom_so_basedir;
       else
-        prefix = string("/var/lib/breakpad/") + guid + "-" + basename;
+        prefix = std::string("/var/lib/breakpad/") + guid + "-" + basename;
 
       crashinfo->signatures[rawmodule->base_of_image] = prefix + basename;
     }
@@ -905,7 +892,7 @@ ParseModuleStream(CrashedProcess* crashinfo, const MinidumpMemoryRange& range,
 }
 
 static void
-AddDataToMapping(CrashedProcess* crashinfo, const string& data,
+AddDataToMapping(CrashedProcess* crashinfo, const std::string& data,
                  uintptr_t addr) {
   for (std::map<uint64_t, CrashedProcess::Mapping>::iterator
          iter = crashinfo->mappings.begin();
@@ -961,7 +948,7 @@ AugmentMappings(CrashedProcess* crashinfo,
   for (unsigned i = 0; i < crashinfo->threads.size(); ++i) {
     const CrashedProcess::Thread& thread = crashinfo->threads[i];
     AddDataToMapping(crashinfo,
-                     string((char *)thread.stack, thread.stack_length),
+                     std::string((char *)thread.stack, thread.stack_length),
                      thread.stack_addr);
   }
 
@@ -969,7 +956,7 @@ AugmentMappings(CrashedProcess* crashinfo,
   // the beginning of the address space, as this area should always be
   // available.
   static const uintptr_t start_addr = 4096;
-  string data;
+  std::string data;
   struct r_debug debug = { 0 };
   debug.r_version = crashinfo->debug.version;
   debug.r_brk = (ElfW(Addr))crashinfo->debug.brk;
@@ -989,11 +976,11 @@ AugmentMappings(CrashedProcess* crashinfo,
     link_map.l_ld = (ElfW(Dyn)*)iter->ld;
     link_map.l_prev = prev;
     prev = (struct link_map*)(start_addr + data.size());
-    string filename = full_file.GetAsciiMDString(iter->name);
+    std::string filename = full_file.GetAsciiMDString(iter->name);
 
     // Look up signature for this filename. If available, change filename
     // to point to GUID, instead.
-    std::map<uintptr_t, string>::const_iterator guid =
+    std::map<uintptr_t, std::string>::const_iterator guid =
       crashinfo->signatures.find((uintptr_t)iter->addr);
     if (guid != crashinfo->signatures.end()) {
       filename = guid->second;
