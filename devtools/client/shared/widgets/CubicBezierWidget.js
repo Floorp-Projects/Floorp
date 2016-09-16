@@ -31,7 +31,7 @@ const {
   PRESETS,
   DEFAULT_PRESET_CATEGORY
 } = require("devtools/client/shared/widgets/CubicBezierPresets");
-const {getCSSLexer} = require("devtools/shared/css-lexer");
+const {getCSSLexer} = require("devtools/shared/css/lexer");
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 /**

@@ -157,29 +157,50 @@ struct TestFileData
 {
   const char* mFilename;
   uint32_t mNumberVideoTracks;
+  int64_t mVideoDuration; // For first video track, -1 if N/A.
   int32_t mWidth;
   int32_t mHeight;
   uint32_t mNumberAudioTracks;
+  int64_t mAudioDuration; // For first audio track, -1 if N/A.
   bool mHasCrypto;
   uint64_t mMoofReachedOffset; // or 0 for the end.
   bool mValidMoof;
   bool mHeader;
 };
 static const TestFileData testFiles[] = {
-  // filename               #V   w    h  #A  crypt  off   moof  headr
-  { "test_case_1156505.mp4", 0,   0,   0, 0, false, 152, false, false },
-  { "test_case_1181213.mp4", 0,   0,   0, 0, false,   0, false, false },
-  { "test_case_1181215.mp4", 0,   0,   0, 0, false,   0, false, false },
-  { "test_case_1181220.mp4", 0,   0,   0, 0, false,   0, false, false },
-  { "test_case_1181223.mp4", 0,   0,   0, 0, false,   0, false, false },
-  { "test_case_1181719.mp4", 0,   0,   0, 0, false,   0, false, false },
-  { "test_case_1185230.mp4", 1, 320, 240, 1, false,   0, false, false },
-  { "test_case_1187067.mp4", 1, 160,  90, 0, false,   0, false, false },
-  { "test_case_1200326.mp4", 0,   0,   0, 0, false,   0, false, false },
-  { "test_case_1204580.mp4", 1, 320, 180, 0, false,   0, false, false },
-  { "test_case_1216748.mp4", 0,   0,   0, 0, false, 152, false, false },
-  { "test_case_1296473.mp4", 0,   0,   0, 0, false,   0, false, false },
-  { "test_case_1296532.mp4", 1, 560, 320, 1, true,    0, true,  true  }
+  // filename                      #V dur   w    h  #A dur  crypt  off   moof  headr
+  { "test_case_1156505.mp4",        0, -1,   0,   0, 0, -1, false, 152, false, false },
+  { "test_case_1181213.mp4",        0, -1,   0,   0, 0, -1, false,   0, false, false },
+  { "test_case_1181215.mp4",        0, -1,   0,   0, 0, -1, false,   0, false, false },
+  { "test_case_1181220.mp4",        0, -1,   0,   0, 0, -1, false,   0, false, false },
+  { "test_case_1181223.mp4",        0, -1,   0,   0, 0, -1, false,   0, false, false },
+  { "test_case_1181719.mp4",        0, -1,   0,   0, 0, -1, false,   0, false, false },
+  { "test_case_1185230.mp4",        1, 416666,
+                                           320, 240, 1,  5, false,   0, false, false },
+  { "test_case_1187067.mp4",        1, 80000,
+                                           160,  90, 0, -1, false,   0, false, false },
+  { "test_case_1200326.mp4",        0, -1,   0,   0, 0, -1, false,   0, false, false },
+  { "test_case_1204580.mp4",        1, 502500,
+                                           320, 180, 0, -1, false,   0, false, false },
+  { "test_case_1216748.mp4",        0, -1,   0,   0, 0, -1, false, 152, false, false },
+  { "test_case_1296473.mp4",        0, -1,   0,   0, 0, -1, false,   0, false, false },
+  { "test_case_1296532.mp4",        1, 5589333,
+                                           560, 320, 1, 5589333,
+                                                            true,    0, true,  true  },
+  { "test_case_1301065.mp4",        0, -1,   0,   0, 1, 100079991719000000,
+                                                            false,   0, false, false },
+  { "test_case_1301065-u32max.mp4", 0, -1,   0,   0, 1, 97391548639,
+                                                            false,   0, false, false },
+  { "test_case_1301065-max-ez.mp4", 0, -1,   0,   0, 1, 209146758205306,
+                                                            false,   0, false, false },
+  { "test_case_1301065-harder.mp4", 0, -1,   0,   0, 1, 209146758205328,
+                                                            false,   0, false, false },
+  { "test_case_1301065-max-ok.mp4", 0, -1,   0,   0, 1, 9223372036854775804,
+                                                            false,   0, false, false },
+  { "test_case_1301065-overfl.mp4", 0, -1,   0,   0, 0, -1, false,   0, false, false },
+  { "test_case_1301065-i64max.mp4", 0, -1,   0,   0, 0, -1, false,   0, false, false },
+  { "test_case_1301065-i64min.mp4", 0, -1,   0,   0, 0, -1, false,   0, false, false },
+  { "test_case_1301065-u64max.mp4", 0, -1,   0,   0, 0, -1, false,   0, false, false },
 };
 
 TEST(stagefright_MPEG4Metadata, test_case_mp4)
@@ -211,6 +232,7 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4)
       ASSERT_TRUE(!!videoInfo);
       EXPECT_TRUE(videoInfo->IsValid());
       EXPECT_TRUE(videoInfo->IsVideo());
+      EXPECT_EQ(testFiles[test].mVideoDuration, videoInfo->mDuration);
       EXPECT_EQ(testFiles[test].mWidth, videoInfo->mDisplay.width);
       EXPECT_EQ(testFiles[test].mHeight, videoInfo->mDisplay.height);
       FallibleTArray<mp4_demuxer::Index::Indice> indices;
@@ -229,6 +251,7 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4)
       ASSERT_TRUE(!!audioInfo);
       EXPECT_TRUE(audioInfo->IsValid());
       EXPECT_TRUE(audioInfo->IsAudio());
+      EXPECT_EQ(testFiles[test].mAudioDuration, audioInfo->mDuration);
       FallibleTArray<mp4_demuxer::Index::Indice> indices;
       EXPECT_TRUE(metadata.ReadTrackIndex(indices, audioInfo->mTrackId));
       for (const mp4_demuxer::Index::Indice& indice : indices) {

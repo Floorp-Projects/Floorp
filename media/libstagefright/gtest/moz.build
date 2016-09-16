@@ -25,6 +25,15 @@ TEST_HARNESS_FILES.gtest += [
     'test_case_1216748.mp4',
     'test_case_1296473.mp4',
     'test_case_1296532.mp4',
+    'test_case_1301065-harder.mp4',
+    'test_case_1301065-i64max.mp4',
+    'test_case_1301065-i64min.mp4',
+    'test_case_1301065-max-ez.mp4',
+    'test_case_1301065-max-ok.mp4',
+    'test_case_1301065-overfl.mp4',
+    'test_case_1301065-u32max.mp4',
+    'test_case_1301065-u64max.mp4',
+    'test_case_1301065.mp4',
 ]
 
 if CONFIG['MOZ_RUST']:
