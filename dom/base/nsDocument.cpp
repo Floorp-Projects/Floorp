@@ -243,7 +243,7 @@
 #include "nsIMutableArray.h"
 #include "mozilla/dom/DOMStringList.h"
 #include "nsWindowMemoryReporter.h"
-#include "nsLocation.h"
+#include "mozilla/dom/Location.h"
 #include "mozilla/dom/FontFaceSet.h"
 #include "mozilla/dom/BoxObject.h"
 #include "gfxPrefs.h"
@@ -6518,7 +6518,7 @@ nsDocument::GetLocation(nsIDOMLocation **_retval)
   return NS_OK;
 }
 
-already_AddRefed<nsLocation>
+already_AddRefed<Location>
 nsIDocument::GetLocation() const
 {
   nsCOMPtr<nsPIDOMWindowInner> w = do_QueryInterface(mScriptGlobalObject);
@@ -6529,7 +6529,7 @@ nsIDocument::GetLocation() const
 
   nsGlobalWindow* window = nsGlobalWindow::Cast(w);
   ErrorResult dummy;
-  RefPtr<nsLocation> loc = window->GetLocation(dummy);
+  RefPtr<Location> loc = window->GetLocation(dummy);
   dummy.SuppressException();
   return loc.forget();
 }

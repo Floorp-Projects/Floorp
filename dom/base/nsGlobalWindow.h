@@ -88,7 +88,6 @@ class nsIScriptTimeoutHandler;
 class nsIWebBrowserChrome;
 
 class nsDOMWindowList;
-class nsLocation;
 class nsScreen;
 class nsHistory;
 class nsGlobalWindowObserver;
@@ -111,6 +110,7 @@ class External;
 class Function;
 class Gamepad;
 enum class ImageBitmapFormat : uint32_t;
+class Location;
 class MediaQueryList;
 class MozSelfSupport;
 class Navigator;
@@ -880,7 +880,7 @@ public:
   void GetName(nsAString& aName, mozilla::ErrorResult& aError);
   void SetNameOuter(const nsAString& aName, mozilla::ErrorResult& aError);
   void SetName(const nsAString& aName, mozilla::ErrorResult& aError);
-  nsLocation* GetLocation(mozilla::ErrorResult& aError);
+  mozilla::dom::Location* GetLocation(mozilla::ErrorResult& aError);
   nsIDOMLocation* GetLocation() override;
   nsHistory* GetHistory(mozilla::ErrorResult& aError);
   mozilla::dom::CustomElementsRegistry* CustomElements() override;
@@ -1850,7 +1850,7 @@ protected:
   nsTimeout*                    mTimeoutInsertionPoint;
   uint32_t                      mTimeoutPublicIdCounter;
   uint32_t                      mTimeoutFiringDepth;
-  RefPtr<nsLocation>          mLocation;
+  RefPtr<mozilla::dom::Location> mLocation;
   RefPtr<nsHistory>           mHistory;
   RefPtr<mozilla::dom::CustomElementsRegistry> mCustomElements;
 
