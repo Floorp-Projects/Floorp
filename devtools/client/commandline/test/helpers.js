@@ -107,7 +107,6 @@ var { helpers, assert } = (function () {
  * - tab: The new XUL tab element, as returned by gBrowser.addTab()
  * - target: The debug target as defined by the devtools framework
  * - browser: The XUL browser element for the given tab
- * - window: Content window for the created tab. a.k.a 'content' in mochitest
  * - isFirefox: Always true. Allows test sharing with GCLI
  *
  * Normally addTab will create an options object containing the values as
@@ -133,18 +132,12 @@ var { helpers, assert } = (function () {
     options.target = TargetFactory.forTab(options.tab);
 
     var loaded = helpers.listenOnce(options.browser, "load", true).then(function (ev) {
-      options.document = options.browser.contentDocument;
-      options.window = options.document.defaultView;
-
       var reply = callback.call(null, options);
 
       return Promise.resolve(reply).then(null, function (error) {
         ok(false, error);
       }).then(function () {
         tabbrowser.removeTab(options.tab);
-
-        delete options.window;
-        delete options.document;
 
         delete options.target;
         delete options.browser;
@@ -168,8 +161,6 @@ var { helpers, assert } = (function () {
  * - tab
  * - browser
  * - target
- * - document
- * - window
  * @return A promise which resolves to the options object when the 'load' event
  * happens on the new tab
  */
@@ -196,9 +187,6 @@ var { helpers, assert } = (function () {
  */
   helpers.closeTab = function (options) {
     options.chromeWindow.gBrowser.removeTab(options.tab);
-
-    delete options.window;
-    delete options.document;
 
     delete options.target;
     delete options.browser;
@@ -234,7 +222,7 @@ var { helpers, assert } = (function () {
 /**
  * Navigate the current tab to a URL
  */
-  helpers.navigate = function (url, options) {
+  helpers.navigate = Task.async(function* (url, options) {
     options = options || {};
     options.chromeWindow = options.chromeWindow || window;
     options.tab = options.tab || options.chromeWindow.gBrowser.selectedTab;
@@ -242,16 +230,12 @@ var { helpers, assert } = (function () {
     var tabbrowser = options.chromeWindow.gBrowser;
     options.browser = tabbrowser.getBrowserForTab(options.tab);
 
-    var promise = helpers.listenOnce(options.browser, "load", true).then(function () {
-      options.document = options.browser.contentDocument;
-      options.window = options.document.defaultView;
-      return options;
-    });
+    let onLoaded = BrowserTestUtils.browserLoaded(options.browser);
+    options.browser.loadURI(url);
+    yield onLoaded;
 
-    options.browser.contentWindow.location = url;
-
-    return promise;
-  };
+    return options;
+  });
 
 /**
  * Undo the effects of |helpers.openToolbar|
