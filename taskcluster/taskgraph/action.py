@@ -9,6 +9,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import json
 import logging
 import requests
+import yaml
 
 from .create import create_tasks
 from .decision import write_artifact
@@ -33,6 +34,7 @@ def taskgraph_action(options):
     decision_task_id = parameters['decision_id']
     # read in the full graph for reference
     full_task_json = get_artifact(decision_task_id, "public/full-task-graph.json")
+    decision_params = get_artifact(decision_task_id, "public/parameters.yml")
     all_tasks, full_task_graph = TaskGraph.from_json(full_task_json, options['root'])
 
     target_tasks = set(parameters['task_labels'].split(','))
@@ -46,6 +48,7 @@ def taskgraph_action(options):
     # We don't want to optimize target tasks since they have been requested by user
     # Hence we put `target_tasks under` `do_not_optimize`
     optimized_graph, label_to_taskid = optimize_task_graph(target_task_graph=target_task_graph,
+                                                           params=decision_params,
                                                            do_not_optimize=target_tasks,
                                                            existing_tasks=existing_tasks)
 
@@ -72,5 +75,8 @@ def get_action_parameters(options):
 def get_artifact(task_id, path):
     url = TASKCLUSTER_QUEUE_URL + task_id + "/artifacts/" + path
     resp = requests.get(url=url)
-    artifact = json.loads(resp.text)
+    if path.endswith('.json'):
+        artifact = json.loads(resp.text)
+    elif path.endswith('.yml'):
+        artifact = yaml.load(resp.text)
     return artifact

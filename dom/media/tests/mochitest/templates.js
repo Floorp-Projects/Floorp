@@ -507,9 +507,10 @@ var commandsPeerConnectionOfferAnswer = [
   }
 ];
 
-function PC_LOCAL_REMOVE_VP8_FROM_OFFER(test) {
+function PC_LOCAL_REMOVE_ALL_BUT_H264_FROM_OFFER(test) {
   isnot(test.originalOffer.sdp.search("H264/90000"), -1, "H.264 should be present in the SDP offer");
-  test.originalOffer.sdp = sdputils.removeVP8(test.originalOffer.sdp);
+    test.originalOffer.sdp = sdputils.removeCodec(sdputils.removeCodec(sdputils.removeCodec(
+	test.originalOffer.sdp, 120), 121, 97));
   info("Updated H264 only offer: " + JSON.stringify(test.originalOffer));
 };
 
