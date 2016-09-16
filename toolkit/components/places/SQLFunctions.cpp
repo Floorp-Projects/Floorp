@@ -842,7 +842,15 @@ namespace places {
 
     int64_t lastInsertedId = aArgs->AsInt64(1);
 
-    nsNavHistory::StoreLastInsertedId(table, lastInsertedId);
+    MOZ_ASSERT(table.EqualsLiteral("moz_places") ||
+               table.EqualsLiteral("moz_historyvisits") ||
+               table.EqualsLiteral("moz_bookmarks"));
+
+    if (table.EqualsLiteral("moz_bookmarks")) {
+      nsNavBookmarks::StoreLastInsertedId(table, lastInsertedId);
+    } else {
+      nsNavHistory::StoreLastInsertedId(table, lastInsertedId);
+    }
 
     RefPtr<nsVariant> result = new nsVariant();
     rv = result->SetAsInt64(lastInsertedId);

@@ -148,6 +148,17 @@ NS_IMPL_ISUPPORTS(nsNavBookmarks
 )
 
 
+Atomic<int64_t> nsNavBookmarks::sLastInsertedItemId(0);
+
+
+void // static
+nsNavBookmarks::StoreLastInsertedId(const nsACString& aTable,
+                                    const int64_t aLastInsertedId) {
+  MOZ_ASSERT(aTable.EqualsLiteral("moz_bookmarks"));
+  sLastInsertedItemId = aLastInsertedId;
+}
+
+
 nsresult
 nsNavBookmarks::Init()
 {
@@ -346,7 +357,7 @@ nsNavBookmarks::InsertBookmarkInDB(int64_t aPlaceId,
        "dateAdded, lastModified, guid) "
     "VALUES (:item_id, :page_id, :item_type, :parent, :item_index, "
             ":item_title, :date_added, :last_modified, "
-            "IFNULL(:item_guid, GENERATE_GUID()))"
+            ":item_guid)"
   );
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scoper(stmt);
@@ -395,34 +406,22 @@ nsNavBookmarks::InsertBookmarkInDB(int64_t aPlaceId,
   if (_guid.Length() == 12) {
     MOZ_ASSERT(IsValidGUID(_guid));
     rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("item_guid"), _guid);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   else {
-    rv = stmt->BindNullByName(NS_LITERAL_CSTRING("item_guid"));
+    nsAutoCString guid;
+    rv = GenerateGUID(guid);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("item_guid"), guid);
+    NS_ENSURE_SUCCESS(rv, rv);
+    _guid.Assign(guid);
   }
-  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = stmt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (*_itemId == -1) {
-    // Get the newly inserted item id and GUID.
-    nsCOMPtr<mozIStorageStatement> lastInsertIdStmt = mDB->GetStatement(
-      "SELECT id, guid "
-      "FROM moz_bookmarks "
-      "ORDER BY ROWID DESC "
-      "LIMIT 1"
-    );
-    NS_ENSURE_STATE(lastInsertIdStmt);
-    mozStorageStatementScoper lastInsertIdScoper(lastInsertIdStmt);
-
-    bool hasResult;
-    rv = lastInsertIdStmt->ExecuteStep(&hasResult);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(hasResult, NS_ERROR_UNEXPECTED);
-    rv = lastInsertIdStmt->GetInt64(0, _itemId);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = lastInsertIdStmt->GetUTF8String(1, _guid);
-    NS_ENSURE_SUCCESS(rv, rv);
+    *_itemId = sLastInsertedItemId;
   }
 
   if (aParentId > 0) {
