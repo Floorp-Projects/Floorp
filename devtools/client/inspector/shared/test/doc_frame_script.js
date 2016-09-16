@@ -16,10 +16,8 @@
 //
 // Some listeners do not send a response message back.
 
-var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
+var {utils: Cu} = Components;
 var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-var {isContentStylesheet} = require("devtools/shared/inspector/css-logic");
 var defer = require("devtools/shared/defer");
 
 /**
@@ -47,32 +45,6 @@ addMessageListener("Test:GetRulePropertyValue", function (msg) {
   }
 
   sendAsyncMessage("Test:GetRulePropertyValue", value);
-});
-
-/**
- * Get information about all the stylesheets that contain rules that apply to
- * a given node. The information contains the sheet href and whether or not the
- * sheet is a content sheet or not
- * @param {Object} objects Expects a 'target' CPOW object
- * @return {Array} A list of stylesheet info objects
- */
-addMessageListener("Test:GetStyleSheetsInfoForNode", function (msg) {
-  let target = msg.objects.target;
-  let sheets = [];
-
-  let domUtils = Cc["@mozilla.org/inspector/dom-utils;1"]
-    .getService(Ci.inIDOMUtils);
-  let domRules = domUtils.getCSSStyleRules(target);
-
-  for (let i = 0, n = domRules.Count(); i < n; i++) {
-    let sheet = domRules.GetElementAt(i).parentStyleSheet;
-    sheets.push({
-      href: sheet.href,
-      isContentSheet: isContentStylesheet(sheet)
-    });
-  }
-
-  sendAsyncMessage("Test:GetStyleSheetsInfoForNode", sheets);
 });
 
 /**

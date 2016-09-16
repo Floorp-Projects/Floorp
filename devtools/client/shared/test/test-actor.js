@@ -10,6 +10,7 @@ var { Cc, Ci, Cu, Cr } = require("chrome");
 const {getRect, getElementFromPoint, getAdjustedQuads} = require("devtools/shared/layout/utils");
 const defer = require("devtools/shared/defer");
 const {Task} = require("devtools/shared/task");
+const {isContentStylesheet} = require("devtools/shared/inspector/css-logic");
 var DOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
             .getService(Ci.mozIJSSubScriptLoader);
@@ -367,6 +368,20 @@ var TestActor = exports.TestActor = protocol.ActorClass({
   }),
 
   /**
+   * Scroll an element into view.
+   * @param {String} selector The selector for the node to scroll into view.
+   */
+  scrollIntoView: protocol.method(function (selector) {
+    let node = this._querySelector(selector);
+    node.scrollIntoView();
+  }, {
+    request: {
+      args: Arg(0, "string")
+    },
+    response: {}
+  }),
+
+  /**
    * Check that an element currently has a pseudo-class lock.
    * @param {String} selector The node selector to get the pseudo-class from
    * @param {String} pseudo The pseudoclass to check for
@@ -687,6 +702,39 @@ var TestActor = exports.TestActor = protocol.ActorClass({
     }
 
     return info;
+  }, {
+    request: {
+      selector: Arg(0, "string")
+    },
+    response: {
+      value: RetVal("json")
+    }
+  }),
+
+  /**
+   * Get information about the stylesheets which have CSS rules that apply to a given DOM
+   * element, identified by a selector.
+   * @param {String} selector The CSS selector to get the node (can be an array
+   * of selectors to get elements in an iframe).
+   * @return {Array} A list of stylesheet objects, each having the following properties:
+   * - {String} href.
+   * - {Boolean} isContentSheet.
+   */
+  getStyleSheetsInfoForNode: protocol.method(function (selector) {
+    let node = this._querySelector(selector);
+    let domRules = DOMUtils.getCSSStyleRules(node);
+
+    let sheets = [];
+
+    for (let i = 0, n = domRules.Count(); i < n; i++) {
+      let sheet = domRules.GetElementAt(i).parentStyleSheet;
+      sheets.push({
+        href: sheet.href,
+        isContentSheet: isContentStylesheet(sheet)
+      });
+    }
+
+    return sheets;
   }, {
     request: {
       selector: Arg(0, "string")
