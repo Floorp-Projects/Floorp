@@ -70,6 +70,15 @@ GetCommonUnit(nsCSSPropertyID aProperty,
       // We can use calc() as the common unit.
       return StyleAnimationValue::eUnit_Calc;
     }
+    if ((aFirstUnit == StyleAnimationValue::eUnit_Color ||
+         aFirstUnit == StyleAnimationValue::eUnit_CurrentColor ||
+         aFirstUnit == StyleAnimationValue::eUnit_ComplexColor) &&
+        (aSecondUnit == StyleAnimationValue::eUnit_Color ||
+         aSecondUnit == StyleAnimationValue::eUnit_CurrentColor ||
+         aSecondUnit == StyleAnimationValue::eUnit_ComplexColor)) {
+      // We can use complex color as the common unit.
+      return StyleAnimationValue::eUnit_ComplexColor;
+    }
     return StyleAnimationValue::eUnit_Null;
   }
   return aFirstUnit;
@@ -518,6 +527,22 @@ ExtractColor(const StyleAnimationValue& aValue)
   return ExtractColor(*value);
 }
 
+static ComplexColorData
+ExtractComplexColor(const StyleAnimationValue& aValue)
+{
+  switch (aValue.GetUnit()) {
+    case StyleAnimationValue::eUnit_Color:
+      return ComplexColorData(ExtractColor(aValue), 0.0f);
+    case StyleAnimationValue::eUnit_CurrentColor:
+      return ComplexColorData({0, 0, 0, 0}, 1.0f);
+    case StyleAnimationValue::eUnit_ComplexColor:
+      return ComplexColorData(aValue.GetComplexColorData());
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown unit");
+      return ComplexColorData({0, 0, 0, 0}, 0.0f);
+  }
+}
+
 double
 StyleAnimationValue::ComputeColorDistance(const RGBAColorData& aStartColor,
                                           const RGBAColorData& aEndColor)
@@ -559,7 +584,6 @@ StyleAnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
     case eUnit_Normal:
     case eUnit_UnparsedString:
     case eUnit_URL:
-    case eUnit_CurrentColor:
     case eUnit_DiscreteCSSValue:
       return false;
 
@@ -616,6 +640,31 @@ StyleAnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
     case eUnit_Color: {
       aDistance = ComputeColorDistance(ExtractColor(aStartValue),
                                        ExtractColor(aEndValue));
+      return true;
+    }
+    case eUnit_CurrentColor: {
+      aDistance = 0;
+      return true;
+    }
+    case eUnit_ComplexColor: {
+      ComplexColorData color1 = ExtractComplexColor(aStartValue);
+      ComplexColorData color2 = ExtractComplexColor(aEndValue);
+      // Common case is interpolating between a color and a currentcolor
+      if (color1.IsNumericColor() && color2.IsCurrentColor()) {
+        double dist = ComputeColorDistance(color1.mColor, NS_RGBA(0, 0, 0, 0));
+        aDistance = sqrt(dist * dist + 1);
+        return true;
+      }
+      if (color1.IsCurrentColor() && color2.IsNumericColor()) {
+        double dist = ComputeColorDistance(NS_RGBA(0, 0, 0, 0), color2.mColor);
+        aDistance = sqrt(dist * dist + 1);
+        return true;
+      }
+      // If we ever reach here, we may want to use the code in
+      // bug 1299741 comment 79 to compute it.
+      MOZ_ASSERT_UNREACHABLE("We shouldn't get here as we only call "
+                             "ComputeDistance on pre-interpolation values");
+      aDistance = 0.0;
       return true;
     }
     case eUnit_Calc: {
@@ -2438,7 +2487,6 @@ StyleAnimationValue::AddWeighted(nsCSSPropertyID aProperty,
     case eUnit_Normal:
     case eUnit_UnparsedString:
     case eUnit_URL:
-    case eUnit_CurrentColor:
     case eUnit_DiscreteCSSValue:
       return false;
 
@@ -2521,6 +2569,38 @@ StyleAnimationValue::AddWeighted(nsCSSPropertyID aProperty,
       resultColor->SetColorValue(
         AddWeightedColorsAndClamp(aCoeff1, color1, aCoeff2, color2));
       aResultValue.SetAndAdoptCSSValueValue(resultColor.release(), eUnit_Color);
+      return true;
+    }
+    case eUnit_CurrentColor: {
+      aResultValue.SetCurrentColorValue();
+      return true;
+    }
+    case eUnit_ComplexColor: {
+      ComplexColorData color1 = ExtractComplexColor(aValue1);
+      ComplexColorData color2 = ExtractComplexColor(aValue2);
+      RefPtr<ComplexColorValue> result = new ComplexColorValue;
+      // Common case is interpolating between a color and a currentcolor.
+      if (color1.IsNumericColor() && color2.IsCurrentColor()) {
+        result->mColor = color1.mColor;
+        result->mForegroundRatio = aCoeff2;
+      } else if (color1.IsCurrentColor() && color2.IsNumericColor()) {
+        result->mColor = color2.mColor;
+        result->mForegroundRatio = aCoeff1;
+      } else {
+        float ratio1 = 1.0f - color1.mForegroundRatio;
+        float ratio2 = 1.0f - color2.mForegroundRatio;
+        float alpha1 = color1.mColor.mA * ratio1;
+        float alpha2 = color2.mColor.mA * ratio2;
+        RGBAColorData resultColor =
+          AddWeightedColors(aCoeff1, color1.mColor.WithAlpha(alpha1),
+                            aCoeff2, color2.mColor.WithAlpha(alpha2));
+        float resultRatio = color1.mForegroundRatio * aCoeff1 +
+                            color2.mForegroundRatio * aCoeff2;
+        float resultAlpha = resultColor.mA / (1.0f - resultRatio);
+        result->mColor = resultColor.WithAlpha(resultAlpha);
+        result->mForegroundRatio = resultRatio;
+      }
+      aResultValue.SetComplexColorValue(result.forget());
       return true;
     }
     case eUnit_Calc: {
@@ -4290,6 +4370,11 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
       aComputedValue.SetColorValue(
         StyleDataAtOffset<nscolor>(styleStruct, ssOffset));
       return true;
+    case eStyleAnimType_ComplexColor: {
+      aComputedValue.SetComplexColorValue(
+        StyleDataAtOffset<StyleComplexColor>(styleStruct, ssOffset));
+      return true;
+    }
     case eStyleAnimType_PaintServer: {
       const nsStyleSVGPaint& paint =
         StyleDataAtOffset<nsStyleSVGPaint>(styleStruct, ssOffset);
