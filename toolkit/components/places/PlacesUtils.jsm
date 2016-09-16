@@ -256,9 +256,14 @@ const BOOKMARK_VALIDATORS = Object.freeze({
 });
 
 // Sync bookmark records can contain additional properties.
-const SYNC_BOOKMARK_VALIDATORS = Object.freeze(Object.assign({
-  // Sync uses kinds instead of types, which distinguish between livemarks
-  // and smart bookmarks.
+const SYNC_BOOKMARK_VALIDATORS = Object.freeze({
+  // Sync uses Places GUIDs for all records except roots.
+  syncId: simpleValidateFunc(v => typeof v == "string" && (
+                                  (PlacesSyncUtils.bookmarks.ROOTS.includes(v) ||
+                                   PlacesUtils.isValidGuid(v)))),
+  parentSyncId: v => SYNC_BOOKMARK_VALIDATORS.syncId(v),
+  // Sync uses kinds instead of types, which distinguish between livemarks,
+  // queries, and smart bookmarks.
   kind: simpleValidateFunc(v => typeof v == "string" &&
                                 Object.values(PlacesSyncUtils.bookmarks.KINDS).includes(v)),
   query: simpleValidateFunc(v => v === null || (typeof v == "string" && v)),
@@ -284,7 +289,9 @@ const SYNC_BOOKMARK_VALIDATORS = Object.freeze(Object.assign({
   loadInSidebar: simpleValidateFunc(v => v === true || v === false),
   feed: BOOKMARK_VALIDATORS.url,
   site: v => v === null ? v : BOOKMARK_VALIDATORS.url(v),
-}, BOOKMARK_VALIDATORS));
+  title: BOOKMARK_VALIDATORS.title,
+  url: BOOKMARK_VALIDATORS.url,
+});
 
 this.PlacesUtils = {
   // Place entries that are containers, e.g. bookmark folders or queries.
