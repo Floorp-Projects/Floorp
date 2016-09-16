@@ -4,36 +4,37 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsLocation_h__
-#define nsLocation_h__
+#ifndef mozilla_dom_Location_h
+#define mozilla_dom_Location_h
 
-#include "nsIDOMLocation.h"
-#include "nsString.h"
-#include "nsIWeakReferenceUtils.h"
-#include "nsWrapperCache.h"
-#include "nsCycleCollectionParticipant.h"
 #include "js/TypeDecls.h"
 #include "mozilla/ErrorResult.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsIDOMLocation.h"
+#include "nsIWeakReferenceUtils.h"
 #include "nsPIDOMWindow.h"
+#include "nsString.h"
+#include "nsWrapperCache.h"
 
-class nsIURI;
 class nsIDocShell;
 class nsIDocShellLoadInfo;
+class nsIURI;
+
+namespace mozilla {
+namespace dom {
 
 //*****************************************************************************
-// nsLocation: Script "location" object
+// Location: Script "location" object
 //*****************************************************************************
 
-class nsLocation final : public nsIDOMLocation
-                       , public nsWrapperCache
+class Location final : public nsIDOMLocation
+                     , public nsWrapperCache
 {
-  typedef mozilla::ErrorResult ErrorResult;
-
 public:
-  nsLocation(nsPIDOMWindowInner* aWindow, nsIDocShell *aDocShell);
+  Location(nsPIDOMWindowInner* aWindow, nsIDocShell *aDocShell);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsLocation,
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Location,
                                                          nsIDOMLocation)
 
   void SetDocShell(nsIDocShell *aDocShell);
@@ -164,10 +165,12 @@ public:
   {
     return mInnerWindow;
   }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
 protected:
-  virtual ~nsLocation();
+  virtual ~Location();
 
   nsresult SetSearchInternal(const nsAString& aSearch);
 
@@ -193,4 +196,7 @@ protected:
   nsWeakPtr mDocShell;
 };
 
-#endif // nsLocation_h__
+} // dom namespace
+} // mozilla namespace
+
+#endif // mozilla_dom_Location_h
