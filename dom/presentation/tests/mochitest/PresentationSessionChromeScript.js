@@ -220,7 +220,6 @@ const mockedDevicePrompt = {
 
 const mockedSessionTransport = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationSessionTransport,
-                                         Ci.nsIPresentationSessionTransportBuilder,
                                          Ci.nsIPresentationTCPSessionTransportBuilder,
                                          Ci.nsIPresentationDataChannelSessionTransportBuilder,
                                          Ci.nsIPresentationControlChannelListener,

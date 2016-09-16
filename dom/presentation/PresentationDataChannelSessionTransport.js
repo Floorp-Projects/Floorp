@@ -48,8 +48,7 @@ function PresentationTransportBuilder() {
 PresentationTransportBuilder.prototype = {
   classID: PRESENTATIONTRANSPORTBUILDER_CID,
   contractID: PRESENTATIONTRANSPORTBUILDER_CONTRACTID,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationSessionTransportBuilder,
-                                         Ci.nsIPresentationDataChannelSessionTransportBuilder,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDataChannelSessionTransportBuilder,
                                          Ci.nsITimerCallback]),
 
   buildDataChannelTransport: function(aRole, aWindow, aListener) {
