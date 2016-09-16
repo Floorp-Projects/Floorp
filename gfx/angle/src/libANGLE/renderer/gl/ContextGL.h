@@ -58,8 +58,7 @@ class ContextGL : public ContextImpl
     FenceSyncImpl *createFenceSync() override;
 
     // Transform Feedback creation
-    TransformFeedbackImpl *createTransformFeedback(
-        const gl::TransformFeedbackState &state) override;
+    TransformFeedbackImpl *createTransformFeedback() override;
 
     // Sampler object creation
     SamplerImpl *createSampler() override;
@@ -110,39 +109,12 @@ class ContextGL : public ContextImpl
                                     GLint reference,
                                     GLuint mask,
                                     GLenum coverMode) override;
-    void coverFillPathInstanced(const std::vector<gl::Path *> &paths,
-                                GLenum coverMode,
-                                GLenum transformType,
-                                const GLfloat *transformValues) override;
-    void coverStrokePathInstanced(const std::vector<gl::Path *> &paths,
-                                  GLenum coverMode,
-                                  GLenum transformType,
-                                  const GLfloat *transformValues) override;
-    void stencilFillPathInstanced(const std::vector<gl::Path *> &paths,
-                                  GLenum fillMode,
-                                  GLuint mask,
-                                  GLenum transformType,
-                                  const GLfloat *transformValues) override;
-    void stencilStrokePathInstanced(const std::vector<gl::Path *> &paths,
-                                    GLint reference,
-                                    GLuint mask,
-                                    GLenum transformType,
-                                    const GLfloat *transformValues) override;
-    void stencilThenCoverFillPathInstanced(const std::vector<gl::Path *> &paths,
-                                           GLenum coverMode,
-                                           GLenum fillMode,
-                                           GLuint mask,
-                                           GLenum transformType,
-                                           const GLfloat *transformValues) override;
-    void stencilThenCoverStrokePathInstanced(const std::vector<gl::Path *> &paths,
-                                             GLenum coverMode,
-                                             GLint reference,
-                                             GLuint mask,
-                                             GLenum transformType,
-                                             const GLfloat *transformValues) override;
 
-    // Device loss
-    GLenum getResetStatus() override;
+    // TODO(jmadill): Investigate proper impl methods for this.
+    void notifyDeviceLost() override;
+    bool isDeviceLost() const override;
+    bool testDeviceLost() override;
+    bool testDeviceResettable() override;
 
     // Vendor and description strings.
     std::string getVendorString() const override;

@@ -8,7 +8,6 @@
 #include "compiler/translator/Compiler.h"
 #include "compiler/translator/CallDAG.h"
 #include "compiler/translator/DeferGlobalInitializers.h"
-#include "compiler/translator/EmulateGLFragColorBroadcast.h"
 #include "compiler/translator/ForLoopUnroll.h"
 #include "compiler/translator/Initialize.h"
 #include "compiler/translator/InitializeParseContext.h"
@@ -35,8 +34,9 @@
 
 bool IsWebGLBasedSpec(ShShaderSpec spec)
 {
-    return (spec == SH_WEBGL_SPEC || spec == SH_CSS_SHADERS_SPEC || spec == SH_WEBGL2_SPEC ||
-            spec == SH_WEBGL3_SPEC);
+    return (spec == SH_WEBGL_SPEC ||
+            spec == SH_CSS_SHADERS_SPEC ||
+            spec == SH_WEBGL2_SPEC);
 }
 
 bool IsGLSL130OrNewer(ShShaderOutput output)
@@ -116,9 +116,6 @@ int MapSpecToShaderVersion(ShShaderSpec spec)
       case SH_GLES3_SPEC:
       case SH_WEBGL2_SPEC:
         return 300;
-      case SH_GLES3_1_SPEC:
-      case SH_WEBGL3_SPEC:
-          return 310;
       default:
         UNREACHABLE();
         return 0;
@@ -140,8 +137,7 @@ TShHandleBase::~TShHandleBase()
 }
 
 TCompiler::TCompiler(sh::GLenum type, ShShaderSpec spec, ShShaderOutput output)
-    : variablesCollected(false),
-      shaderType(type),
+    : shaderType(type),
       shaderSpec(spec),
       outputType(output),
       maxUniformVectors(0),
@@ -152,10 +148,8 @@ TCompiler::TCompiler(sh::GLenum type, ShShaderSpec spec, ShShaderOutput output)
       clampingStrategy(SH_CLAMP_WITH_CLAMP_INTRINSIC),
       builtInFunctionEmulator(),
       mSourcePath(NULL),
-      mComputeShaderLocalSizeDeclared(false),
       mTemporaryIndex(0)
 {
-    mComputeShaderLocalSize.fill(1);
 }
 
 TCompiler::~TCompiler()
@@ -252,10 +246,10 @@ TIntermNode *TCompiler::compileTreeImpl(const char *const shaderStrings[],
     if (success)
     {
         mPragma = parseContext.pragma();
-        symbolTable.setGlobalInvariant(mPragma.stdgl.invariantAll);
-
-        mComputeShaderLocalSizeDeclared = parseContext.isComputeShaderLocalSizeDeclared();
-        mComputeShaderLocalSize         = parseContext.getComputeShaderLocalSize();
+        if (mPragma.stdgl.invariantAll)
+        {
+            symbolTable.setGlobalInvariant();
+        }
 
         root = parseContext.getTreeRoot();
         root = intermediate.postProcess(root);
@@ -369,10 +363,9 @@ TIntermNode *TCompiler::compileTreeImpl(const char *const shaderStrings[],
                     infoSink.info << "too many uniforms";
                 }
             }
-            if (success && (compileOptions & SH_INIT_OUTPUT_VARIABLES))
-            {
-                initializeOutputVariables(root);
-            }
+            if (success && shaderType == GL_VERTEX_SHADER &&
+                (compileOptions & SH_INIT_VARYINGS_WITHOUT_STATIC_USE))
+                initializeVaryingsWithoutStaticUse(root);
         }
 
         if (success && (compileOptions & SH_SCALARIZE_VEC_AND_MAT_CONSTRUCTOR_ARGS))
@@ -388,13 +381,6 @@ TIntermNode *TCompiler::compileTreeImpl(const char *const shaderStrings[],
             root->traverse(&gen);
         }
 
-        if (success && shaderType == GL_FRAGMENT_SHADER && shaderVersion == 100 &&
-            compileResources.EXT_draw_buffers && compileResources.MaxDrawBuffers > 1 &&
-            IsExtensionEnabled(extensionBehavior, "GL_EXT_draw_buffers"))
-        {
-            EmulateGLFragColorBroadcast(root, compileResources.MaxDrawBuffers, &outputVariables);
-        }
-
         if (success)
         {
             DeferGlobalInitializers(root);
@@ -408,19 +394,11 @@ TIntermNode *TCompiler::compileTreeImpl(const char *const shaderStrings[],
     return NULL;
 }
 
-bool TCompiler::compile(const char *const shaderStrings[], size_t numStrings, int compileOptionsIn)
+bool TCompiler::compile(const char* const shaderStrings[],
+    size_t numStrings, int compileOptions)
 {
     if (numStrings == 0)
         return true;
-
-    int compileOptions = compileOptionsIn;
-
-    // Apply key workarounds.
-    if (shouldFlattenPragmaStdglInvariantAll())
-    {
-        // This should be harmless to do in all cases, but for the moment, do it only conditionally.
-        compileOptions |= SH_FLATTEN_PRAGMA_STDGL_INVARIANT_ALL;
-    }
 
     TScopedPoolAllocator scopedAlloc(&allocator);
     TIntermNode *root = compileTreeImpl(shaderStrings, numStrings, compileOptions);
@@ -449,7 +427,6 @@ bool TCompiler::InitBuiltInSymbolTable(const ShBuiltInResources &resources)
     symbolTable.push();   // COMMON_BUILTINS
     symbolTable.push();   // ESSL1_BUILTINS
     symbolTable.push();   // ESSL3_BUILTINS
-    symbolTable.push();   // ESSL3_1_BUILTINS
 
     TPublicType integer;
     integer.type = EbtInt;
@@ -472,10 +449,6 @@ bool TCompiler::InitBuiltInSymbolTable(const ShBuiltInResources &resources)
         symbolTable.setDefaultPrecision(integer, EbpHigh);
         symbolTable.setDefaultPrecision(floatingPoint, EbpHigh);
         break;
-      case GL_COMPUTE_SHADER:
-          symbolTable.setDefaultPrecision(integer, EbpHigh);
-          symbolTable.setDefaultPrecision(floatingPoint, EbpHigh);
-          break;
       default:
         assert(false && "Language not supported");
     }
@@ -542,31 +515,7 @@ void TCompiler::setResourceString()
               << ":MaxProgramTexelOffset:" << compileResources.MaxProgramTexelOffset
               << ":MaxDualSourceDrawBuffers:" << compileResources.MaxDualSourceDrawBuffers
               << ":NV_draw_buffers:" << compileResources.NV_draw_buffers
-              << ":WEBGL_debug_shader_precision:" << compileResources.WEBGL_debug_shader_precision
-              << ":MaxImageUnits:" << compileResources.MaxImageUnits
-              << ":MaxVertexImageUniforms:" << compileResources.MaxVertexImageUniforms
-              << ":MaxFragmentImageUniforms:" << compileResources.MaxFragmentImageUniforms
-              << ":MaxComputeImageUniforms:" << compileResources.MaxComputeImageUniforms
-              << ":MaxCombinedImageUniforms:" << compileResources.MaxCombinedImageUniforms
-              << ":MaxCombinedShaderOutputResources:" << compileResources.MaxCombinedShaderOutputResources
-              << ":MaxComputeWorkGroupCountX:" << compileResources.MaxComputeWorkGroupCount[0]
-              << ":MaxComputeWorkGroupCountY:" << compileResources.MaxComputeWorkGroupCount[1]
-              << ":MaxComputeWorkGroupCountZ:" << compileResources.MaxComputeWorkGroupCount[2]
-              << ":MaxComputeWorkGroupSizeX:" << compileResources.MaxComputeWorkGroupSize[0]
-              << ":MaxComputeWorkGroupSizeY:" << compileResources.MaxComputeWorkGroupSize[1]
-              << ":MaxComputeWorkGroupSizeZ:" << compileResources.MaxComputeWorkGroupSize[2]
-              << ":MaxComputeUniformComponents:" << compileResources.MaxComputeUniformComponents
-              << ":MaxComputeTextureImageUnits:" << compileResources.MaxComputeTextureImageUnits
-              << ":MaxComputeAtomicCounters:" << compileResources.MaxComputeAtomicCounters
-              << ":MaxComputeAtomicCounterBuffers:" << compileResources.MaxComputeAtomicCounterBuffers
-              << ":MaxVertexAtomicCounters:" << compileResources.MaxVertexAtomicCounters
-              << ":MaxFragmentAtomicCounters:" << compileResources.MaxFragmentAtomicCounters
-              << ":MaxCombinedAtomicCounters:" << compileResources.MaxCombinedAtomicCounters
-              << ":MaxAtomicCounterBindings:" << compileResources.MaxAtomicCounterBindings
-              << ":MaxVertexAtomicCounterBuffers:" << compileResources.MaxVertexAtomicCounterBuffers
-              << ":MaxFragmentAtomicCounterBuffers:" << compileResources.MaxFragmentAtomicCounterBuffers
-              << ":MaxCombinedAtomicCounterBuffers:" << compileResources.MaxCombinedAtomicCounterBuffers
-              << ":MaxAtomicCounterBufferSize:" << compileResources.MaxAtomicCounterBufferSize;
+              << ":WEBGL_debug_shader_precision:" << compileResources.WEBGL_debug_shader_precision;
     // clang-format on
 
     builtInResourcesString = strstream.str();
@@ -585,7 +534,6 @@ void TCompiler::clearResults()
     expandedUniforms.clear();
     varyings.clear();
     interfaceBlocks.clear();
-    variablesCollected = false;
 
     builtInFunctionEmulator.Cleanup();
 
@@ -842,16 +790,17 @@ bool TCompiler::enforceVertexShaderTimingRestrictions(TIntermNode* root)
 
 void TCompiler::collectVariables(TIntermNode* root)
 {
-    if (!variablesCollected)
-    {
-        sh::CollectVariables collect(&attributes, &outputVariables, &uniforms, &varyings,
-                                     &interfaceBlocks, hashFunction, symbolTable, extensionBehavior);
-        root->traverse(&collect);
+    sh::CollectVariables collect(&attributes,
+                                 &outputVariables,
+                                 &uniforms,
+                                 &varyings,
+                                 &interfaceBlocks,
+                                 hashFunction,
+                                 symbolTable);
+    root->traverse(&collect);
 
-        // This is for enforcePackingRestriction().
-        sh::ExpandUniforms(uniforms, &expandedUniforms);
-        variablesCollected = true;
-    }
+    // This is for enforcePackingRestriction().
+    sh::ExpandUniforms(uniforms, &expandedUniforms);
 }
 
 bool TCompiler::enforcePackingRestrictions()
@@ -862,32 +811,37 @@ bool TCompiler::enforcePackingRestrictions()
 
 void TCompiler::initializeGLPosition(TIntermNode* root)
 {
-    InitVariableList list;
-    sh::ShaderVariable var(GL_FLOAT_VEC4, 0);
-    var.name = "gl_Position";
-    list.push_back(var);
-    InitializeVariables(root, list);
+    InitializeVariables::InitVariableInfoList variables;
+    InitializeVariables::InitVariableInfo var(
+        "gl_Position", TType(EbtFloat, EbpUndefined, EvqPosition, 4));
+    variables.push_back(var);
+    InitializeVariables initializer(variables);
+    root->traverse(&initializer);
 }
 
-void TCompiler::initializeOutputVariables(TIntermNode *root)
+void TCompiler::initializeVaryingsWithoutStaticUse(TIntermNode* root)
 {
-    InitVariableList list;
-    if (shaderType == GL_VERTEX_SHADER)
+    InitializeVariables::InitVariableInfoList variables;
+    for (size_t ii = 0; ii < varyings.size(); ++ii)
     {
-        for (auto var : varyings)
+        const sh::Varying& varying = varyings[ii];
+        if (varying.staticUse)
+            continue;
+        unsigned char primarySize = static_cast<unsigned char>(gl::VariableColumnCount(varying.type));
+        unsigned char secondarySize = static_cast<unsigned char>(gl::VariableRowCount(varying.type));
+        TType type(EbtFloat, EbpUndefined, EvqVaryingOut, primarySize, secondarySize, varying.isArray());
+        TString name = varying.name.c_str();
+        if (varying.isArray())
         {
-            list.push_back(var);
+            type.setArraySize(varying.arraySize);
+            name = name.substr(0, name.find_first_of('['));
         }
+
+        InitializeVariables::InitVariableInfo var(name, type);
+        variables.push_back(var);
     }
-    else
-    {
-        ASSERT(shaderType == GL_FRAGMENT_SHADER);
-        for (auto var : outputVariables)
-        {
-            list.push_back(var);
-        }
-    }
-    InitializeVariables(root, list);
+    InitializeVariables initializer(variables);
+    root->traverse(&initializer);
 }
 
 const TExtensionBehavior& TCompiler::getExtensionBehavior() const
@@ -920,26 +874,9 @@ const BuiltInFunctionEmulator& TCompiler::getBuiltInFunctionEmulator() const
     return builtInFunctionEmulator;
 }
 
-void TCompiler::writePragma(int compileOptions)
+void TCompiler::writePragma()
 {
-    if (!(compileOptions & SH_FLATTEN_PRAGMA_STDGL_INVARIANT_ALL))
-    {
-        TInfoSinkBase &sink = infoSink.obj;
-        if (mPragma.stdgl.invariantAll)
-            sink << "#pragma STDGL invariant(all)\n";
-    }
-}
-
-bool TCompiler::isVaryingDefined(const char *varyingName)
-{
-    ASSERT(variablesCollected);
-    for (size_t ii = 0; ii < varyings.size(); ++ii)
-    {
-        if (varyings[ii].name == varyingName)
-        {
-            return true;
-        }
-    }
-
-    return false;
+    TInfoSinkBase &sink = infoSink.obj;
+    if (mPragma.stdgl.invariantAll)
+        sink << "#pragma STDGL invariant(all)\n";
 }

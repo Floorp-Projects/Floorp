@@ -74,7 +74,7 @@ ANGLEPlatform::ANGLEPlatform()
     m_nativeDisplayFactoryRegistry.registerFactory(d3d1193Factory);
 #endif // (DE_OS == DE_OS_WIN32)
 
-#if defined(ANGLE_USE_OZONE) || (DE_OS == DE_OS_ANDROID)
+#ifdef ANGLE_USE_OZONE
     std::vector<eglw::EGLAttrib> glesAttribs;
     glesAttribs.push_back(EGL_PLATFORM_ANGLE_TYPE_ANGLE);
     glesAttribs.push_back(EGL_PLATFORM_ANGLE_TYPE_OPENGLES_ANGLE);

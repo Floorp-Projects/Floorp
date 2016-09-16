@@ -106,10 +106,27 @@ gl::Error ContextVk::drawRangeElements(GLenum mode,
     return gl::Error(GL_INVALID_OPERATION);
 }
 
-GLenum ContextVk::getResetStatus()
+void ContextVk::notifyDeviceLost()
 {
     UNIMPLEMENTED();
-    return GL_NO_ERROR;
+}
+
+bool ContextVk::isDeviceLost() const
+{
+    UNIMPLEMENTED();
+    return bool();
+}
+
+bool ContextVk::testDeviceLost()
+{
+    UNIMPLEMENTED();
+    return bool();
+}
+
+bool ContextVk::testDeviceResettable()
+{
+    UNIMPLEMENTED();
+    return bool();
 }
 
 std::string ContextVk::getVendorString() const
@@ -236,9 +253,9 @@ FenceSyncImpl *ContextVk::createFenceSync()
     return new FenceSyncVk();
 }
 
-TransformFeedbackImpl *ContextVk::createTransformFeedback(const gl::TransformFeedbackState &state)
+TransformFeedbackImpl *ContextVk::createTransformFeedback()
 {
-    return new TransformFeedbackVk(state);
+    return new TransformFeedbackVk();
 }
 
 SamplerImpl *ContextVk::createSampler()

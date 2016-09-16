@@ -53,7 +53,6 @@ ES3FormatCombinationSet BuildES3FormatSet()
 
     // Format combinations from ES 3.0.1 spec, table 3.2
 
-    // clang-format off
     //                        | Internal format      | Format            | Type                            |
     //                        |                      |                   |                                 |
     InsertES3FormatCombo(&set, GL_RGBA8,              GL_RGBA,            GL_UNSIGNED_BYTE                 );
@@ -165,8 +164,6 @@ ES3FormatCombinationSet BuildES3FormatSet()
     InsertES3FormatCombo(&set, GL_ALPHA,              GL_ALPHA,           GL_FLOAT                         );
 
     // From GL_OES_texture_half_float
-    InsertES3FormatCombo(&set, GL_RGBA,               GL_RGBA,            GL_HALF_FLOAT_OES                );
-    InsertES3FormatCombo(&set, GL_RGB,                GL_RGB,             GL_HALF_FLOAT_OES                );
     InsertES3FormatCombo(&set, GL_LUMINANCE_ALPHA,    GL_LUMINANCE_ALPHA, GL_HALF_FLOAT                    );
     InsertES3FormatCombo(&set, GL_LUMINANCE_ALPHA,    GL_LUMINANCE_ALPHA, GL_HALF_FLOAT_OES                );
     InsertES3FormatCombo(&set, GL_LUMINANCE,          GL_LUMINANCE,       GL_HALF_FLOAT                    );
@@ -200,10 +197,8 @@ ES3FormatCombinationSet BuildES3FormatSet()
     InsertES3FormatCombo(&set, GL_BGR5_A1_ANGLEX,         GL_BGRA_EXT,        GL_UNSIGNED_SHORT_1_5_5_5_REV_EXT);
     InsertES3FormatCombo(&set, GL_BGR5_A1_ANGLEX,         GL_BGRA_EXT,        GL_UNSIGNED_BYTE                 );
 
-    // From GL_ANGLE_depth_texture and OES_depth_texture
+    // From GL_ANGLE_depth_texture
     InsertES3FormatCombo(&set, GL_DEPTH_COMPONENT32_OES,  GL_DEPTH_COMPONENT, GL_UNSIGNED_INT_24_8_OES         );
-    InsertES3FormatCombo(&set, GL_DEPTH_COMPONENT,        GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT                );
-    InsertES3FormatCombo(&set, GL_DEPTH_COMPONENT,        GL_DEPTH_COMPONENT, GL_UNSIGNED_INT                  );
 
     // From GL_EXT_texture_norm16
     InsertES3FormatCombo(&set, GL_R16_EXT, GL_RED, GL_UNSIGNED_SHORT);
@@ -214,7 +209,6 @@ ES3FormatCombinationSet BuildES3FormatSet()
     InsertES3FormatCombo(&set, GL_RG16_SNORM_EXT, GL_RG, GL_SHORT);
     InsertES3FormatCombo(&set, GL_RGB16_SNORM_EXT, GL_RGB, GL_SHORT);
     InsertES3FormatCombo(&set, GL_RGBA16_SNORM_EXT, GL_RGBA, GL_SHORT);
-    // clang-format on
 
     return set;
 }
@@ -226,7 +220,7 @@ static bool ValidateTexImageFormatCombination(gl::Context *context, GLenum inter
     // error instead of a GL_INVALID_ENUM error. As this validation function is only called in
     // the validation codepaths for glTexImage2D/3D, we record a GL_INVALID_VALUE error.
     const gl::InternalFormat &formatInfo = gl::GetInternalFormatInfo(internalFormat);
-    if (!formatInfo.textureSupport(context->getClientMajorVersion(), context->getExtensions()))
+    if (!formatInfo.textureSupport(context->getClientVersion(), context->getExtensions()))
     {
         context->handleError(Error(GL_INVALID_VALUE));
         return false;
@@ -242,8 +236,7 @@ static bool ValidateTexImageFormatCombination(gl::Context *context, GLenum inter
         if (i->format == format || i->type == type)
         {
             const gl::InternalFormat &info = gl::GetInternalFormatInfo(i->internalFormat);
-            bool supported =
-                info.textureSupport(context->getClientMajorVersion(), context->getExtensions());
+            bool supported = info.textureSupport(context->getClientVersion(), context->getExtensions());
             if (supported && i->type == type)
             {
                 typeSupported = true;
@@ -393,8 +386,7 @@ bool ValidateES3TexImageParametersBase(Context *context,
     }
 
     // Validate texture formats
-    GLenum actualInternalFormat =
-        isSubImage ? texture->getFormat(target, level).asSized() : internalformat;
+    GLenum actualInternalFormat = isSubImage ? texture->getInternalFormat(target, level) : internalformat;
     const gl::InternalFormat &actualFormatInfo = gl::GetInternalFormatInfo(actualInternalFormat);
     if (isCompressed)
     {
@@ -411,8 +403,7 @@ bool ValidateES3TexImageParametersBase(Context *context,
             return false;
         }
 
-        if (!actualFormatInfo.textureSupport(context->getClientMajorVersion(),
-                                             context->getExtensions()))
+        if (!actualFormatInfo.textureSupport(context->getClientVersion(), context->getExtensions()))
         {
             context->handleError(Error(GL_INVALID_ENUM));
             return false;
@@ -756,7 +747,6 @@ static CopyConversionSet BuildValidES3CopyTexImageCombinations()
     set.insert(CopyConversion(GL_RG, GL_BGRA_EXT));
     set.insert(CopyConversion(GL_RGB, GL_BGRA_EXT));
     set.insert(CopyConversion(GL_RGBA, GL_BGRA_EXT));
-    set.insert(CopyConversion(GL_BGRA_EXT, GL_BGRA_EXT));
 
     set.insert(CopyConversion(GL_RED_INTEGER, GL_RED_INTEGER));
     set.insert(CopyConversion(GL_RED_INTEGER, GL_RG_INTEGER));
@@ -777,42 +767,36 @@ static bool EqualOrFirstZero(GLuint first, GLuint second)
     return first == 0 || first == second;
 }
 
-static bool IsValidES3CopyTexImageCombination(const Format &textureFormat,
-                                              const Format &framebufferFormat,
-                                              GLuint readBufferHandle)
+static bool IsValidES3CopyTexImageCombination(GLenum textureInternalFormat, GLenum frameBufferInternalFormat, GLuint readBufferHandle)
 {
-    const auto &textureFormatInfo     = *textureFormat.info;
-    const auto &framebufferFormatInfo = *framebufferFormat.info;
+    const InternalFormat &textureInternalFormatInfo = GetInternalFormatInfo(textureInternalFormat);
+    const InternalFormat &framebufferInternalFormatInfo = GetInternalFormatInfo(frameBufferInternalFormat);
 
     static const CopyConversionSet conversionSet = BuildValidES3CopyTexImageCombinations();
-    if (conversionSet.find(CopyConversion(textureFormatInfo.format,
-                                          framebufferFormatInfo.format)) != conversionSet.end())
+    if (conversionSet.find(CopyConversion(textureInternalFormatInfo.format, framebufferInternalFormatInfo.format)) != conversionSet.end())
     {
         // Section 3.8.5 of the GLES 3.0.3 spec states that source and destination formats
         // must both be signed, unsigned, or fixed point and both source and destinations
         // must be either both SRGB or both not SRGB. EXT_color_buffer_float adds allowed
         // conversion between fixed and floating point.
 
-        if ((textureFormatInfo.colorEncoding == GL_SRGB) !=
-            (framebufferFormatInfo.colorEncoding == GL_SRGB))
+        if ((textureInternalFormatInfo.colorEncoding == GL_SRGB) != (framebufferInternalFormatInfo.colorEncoding == GL_SRGB))
         {
             return false;
         }
 
-        if (((textureFormatInfo.componentType == GL_INT) !=
-             (framebufferFormatInfo.componentType == GL_INT)) ||
-            ((textureFormatInfo.componentType == GL_UNSIGNED_INT) !=
-             (framebufferFormatInfo.componentType == GL_UNSIGNED_INT)))
+        if (((textureInternalFormatInfo.componentType == GL_INT)          != (framebufferInternalFormatInfo.componentType == GL_INT         )) ||
+            ((textureInternalFormatInfo.componentType == GL_UNSIGNED_INT) != (framebufferInternalFormatInfo.componentType == GL_UNSIGNED_INT)))
         {
             return false;
         }
 
-        if ((textureFormatInfo.componentType == GL_UNSIGNED_NORMALIZED ||
-             textureFormatInfo.componentType == GL_SIGNED_NORMALIZED ||
-             textureFormatInfo.componentType == GL_FLOAT) &&
-            !(framebufferFormatInfo.componentType == GL_UNSIGNED_NORMALIZED ||
-              framebufferFormatInfo.componentType == GL_SIGNED_NORMALIZED ||
-              framebufferFormatInfo.componentType == GL_FLOAT))
+        if ((textureInternalFormatInfo.componentType == GL_UNSIGNED_NORMALIZED ||
+             textureInternalFormatInfo.componentType == GL_SIGNED_NORMALIZED ||
+             textureInternalFormatInfo.componentType == GL_FLOAT) &&
+            !(framebufferInternalFormatInfo.componentType == GL_UNSIGNED_NORMALIZED ||
+              framebufferInternalFormatInfo.componentType == GL_SIGNED_NORMALIZED ||
+              framebufferInternalFormatInfo.componentType == GL_FLOAT))
         {
             return false;
         }
@@ -834,16 +818,15 @@ static bool IsValidES3CopyTexImageCombination(const Format &textureFormat,
         if (readBufferHandle != 0)
         {
             // Not the default framebuffer, therefore the read buffer must be a user-created texture or renderbuffer
-            if (framebufferFormat.sized)
+            if (framebufferInternalFormatInfo.pixelBytes > 0)
             {
-                sourceEffectiveFormat = &framebufferFormatInfo;
+                sourceEffectiveFormat = &framebufferInternalFormatInfo;
             }
             else
             {
                 // Renderbuffers cannot be created with an unsized internal format, so this must be an unsized-format
                 // texture. We can use the same table we use when creating textures to get its effective sized format.
-                GLenum sizedInternalFormat = GetSizedInternalFormat(framebufferFormatInfo.format,
-                                                                    framebufferFormatInfo.type);
+                GLenum sizedInternalFormat = GetSizedInternalFormat(framebufferInternalFormatInfo.format, framebufferInternalFormatInfo.type);
                 sourceEffectiveFormat = &GetInternalFormatInfo(sizedInternalFormat);
             }
         }
@@ -851,11 +834,10 @@ static bool IsValidES3CopyTexImageCombination(const Format &textureFormat,
         {
             // The effective internal format must be derived from the source framebuffer's channel sizes.
             // This is done in GetEffectiveInternalFormat for linear buffers (table 3.17)
-            if (framebufferFormatInfo.colorEncoding == GL_LINEAR)
+            if (framebufferInternalFormatInfo.colorEncoding == GL_LINEAR)
             {
                 GLenum effectiveFormat;
-                if (GetEffectiveInternalFormat(framebufferFormatInfo, textureFormatInfo,
-                                               &effectiveFormat))
+                if (GetEffectiveInternalFormat(framebufferInternalFormatInfo, textureInternalFormatInfo, &effectiveFormat))
                 {
                     sourceEffectiveFormat = &GetInternalFormatInfo(effectiveFormat);
                 }
@@ -864,15 +846,14 @@ static bool IsValidES3CopyTexImageCombination(const Format &textureFormat,
                     return false;
                 }
             }
-            else if (framebufferFormatInfo.colorEncoding == GL_SRGB)
+            else if (framebufferInternalFormatInfo.colorEncoding == GL_SRGB)
             {
                 // SRGB buffers can only be copied to sized format destinations according to table 3.18
-                if (textureFormat.sized &&
-                    (framebufferFormatInfo.redBits >= 1 && framebufferFormatInfo.redBits <= 8) &&
-                    (framebufferFormatInfo.greenBits >= 1 &&
-                     framebufferFormatInfo.greenBits <= 8) &&
-                    (framebufferFormatInfo.blueBits >= 1 && framebufferFormatInfo.blueBits <= 8) &&
-                    (framebufferFormatInfo.alphaBits >= 1 && framebufferFormatInfo.alphaBits <= 8))
+                if ((textureInternalFormatInfo.pixelBytes > 0) &&
+                    (framebufferInternalFormatInfo.redBits   >= 1 && framebufferInternalFormatInfo.redBits   <= 8) &&
+                    (framebufferInternalFormatInfo.greenBits >= 1 && framebufferInternalFormatInfo.greenBits <= 8) &&
+                    (framebufferInternalFormatInfo.blueBits  >= 1 && framebufferInternalFormatInfo.blueBits  <= 8) &&
+                    (framebufferInternalFormatInfo.alphaBits >= 1 && framebufferInternalFormatInfo.alphaBits <= 8))
                 {
                     sourceEffectiveFormat = &GetInternalFormatInfo(GL_SRGB8_ALPHA8);
                 }
@@ -888,19 +869,24 @@ static bool IsValidES3CopyTexImageCombination(const Format &textureFormat,
             }
         }
 
-        if (textureFormat.sized)
+        if (textureInternalFormatInfo.pixelBytes > 0)
         {
             // Section 3.8.5 of the GLES 3.0.3 spec, pg 139, requires that, if the destination
             // format is sized, component sizes of the source and destination formats must exactly
             // match if the destination format exists.
-            if (!EqualOrFirstZero(textureFormatInfo.redBits, sourceEffectiveFormat->redBits) ||
-                !EqualOrFirstZero(textureFormatInfo.greenBits, sourceEffectiveFormat->greenBits) ||
-                !EqualOrFirstZero(textureFormatInfo.blueBits, sourceEffectiveFormat->blueBits) ||
-                !EqualOrFirstZero(textureFormatInfo.alphaBits, sourceEffectiveFormat->alphaBits))
+            if (!EqualOrFirstZero(textureInternalFormatInfo.redBits,
+                                  sourceEffectiveFormat->redBits) ||
+                !EqualOrFirstZero(textureInternalFormatInfo.greenBits,
+                                  sourceEffectiveFormat->greenBits) ||
+                !EqualOrFirstZero(textureInternalFormatInfo.blueBits,
+                                  sourceEffectiveFormat->blueBits) ||
+                !EqualOrFirstZero(textureInternalFormatInfo.alphaBits,
+                                  sourceEffectiveFormat->alphaBits))
             {
                 return false;
             }
         }
+
 
         return true; // A conversion function exists, and no rule in the specification has precluded conversion
                      // between these formats.
@@ -923,14 +909,13 @@ bool ValidateES3CopyTexImageParametersBase(ValidationContext *context,
                                            GLsizei height,
                                            GLint border)
 {
-    Format textureFormat = Format::Invalid();
+    GLenum textureInternalFormat;
     if (!ValidateCopyTexImageParametersBase(context, target, level, internalformat, isSubImage,
-                                            xoffset, yoffset, zoffset, x, y, width, height, border,
-                                            &textureFormat))
+                                            xoffset, yoffset, zoffset, x, y, width, height,
+                                            border, &textureInternalFormat))
     {
         return false;
     }
-    ASSERT(textureFormat.valid() || !isSubImage);
 
     const auto &state            = context->getGLState();
     gl::Framebuffer *framebuffer = state.getReadFramebuffer();
@@ -948,11 +933,12 @@ bool ValidateES3CopyTexImageParametersBase(ValidationContext *context,
         return false;
     }
 
-    const FramebufferAttachment *source = framebuffer->getReadColorbuffer();
+    const gl::FramebufferAttachment *source = framebuffer->getReadColorbuffer();
+    GLenum colorbufferInternalFormat = source->getInternalFormat();
 
     if (isSubImage)
     {
-        if (!IsValidES3CopyTexImageCombination(textureFormat, source->getFormat(),
+        if (!IsValidES3CopyTexImageCombination(textureInternalFormat, colorbufferInternalFormat,
                                                readFramebufferID))
         {
             context->handleError(Error(GL_INVALID_OPERATION));
@@ -961,10 +947,8 @@ bool ValidateES3CopyTexImageParametersBase(ValidationContext *context,
     }
     else
     {
-        // Use format/type from the source FBO. (Might not be perfect for all cases?)
-        const auto framebufferFormat = source->getFormat();
-        Format copyFormat(internalformat, framebufferFormat.format, framebufferFormat.type);
-        if (!IsValidES3CopyTexImageCombination(copyFormat, framebufferFormat, readFramebufferID))
+        if (!gl::IsValidES3CopyTexImageCombination(internalformat, colorbufferInternalFormat,
+                                                   readFramebufferID))
         {
             context->handleError(Error(GL_INVALID_OPERATION));
             return false;
@@ -1125,7 +1109,7 @@ bool ValidateES3TexStorageParametersBase(Context *context,
     }
 
     const gl::InternalFormat &formatInfo = gl::GetInternalFormatInfo(internalformat);
-    if (!formatInfo.textureSupport(context->getClientMajorVersion(), context->getExtensions()))
+    if (!formatInfo.textureSupport(context->getClientVersion(), context->getExtensions()))
     {
         context->handleError(Error(GL_INVALID_ENUM));
         return false;
@@ -1178,7 +1162,7 @@ bool ValidateES3TexStorage3DParameters(Context *context,
 
 bool ValidateBeginQuery(gl::Context *context, GLenum target, GLuint id)
 {
-    if (context->getClientMajorVersion() < 3)
+    if (context->getClientVersion() < 3)
     {
         context->handleError(Error(GL_INVALID_OPERATION, "GLES version < 3.0"));
         return false;
@@ -1189,7 +1173,7 @@ bool ValidateBeginQuery(gl::Context *context, GLenum target, GLuint id)
 
 bool ValidateEndQuery(gl::Context *context, GLenum target)
 {
-    if (context->getClientMajorVersion() < 3)
+    if (context->getClientVersion() < 3)
     {
         context->handleError(Error(GL_INVALID_OPERATION, "GLES version < 3.0"));
         return false;
@@ -1200,7 +1184,7 @@ bool ValidateEndQuery(gl::Context *context, GLenum target)
 
 bool ValidateGetQueryiv(Context *context, GLenum target, GLenum pname, GLint *params)
 {
-    if (context->getClientMajorVersion() < 3)
+    if (context->getClientVersion() < 3)
     {
         context->handleError(Error(GL_INVALID_OPERATION, "GLES version < 3.0"));
         return false;
@@ -1211,7 +1195,7 @@ bool ValidateGetQueryiv(Context *context, GLenum target, GLenum pname, GLint *pa
 
 bool ValidateGetQueryObjectuiv(Context *context, GLuint id, GLenum pname, GLuint *params)
 {
-    if (context->getClientMajorVersion() < 3)
+    if (context->getClientVersion() < 3)
     {
         context->handleError(Error(GL_INVALID_OPERATION, "GLES version < 3.0"));
         return false;
@@ -1223,7 +1207,7 @@ bool ValidateGetQueryObjectuiv(Context *context, GLuint id, GLenum pname, GLuint
 bool ValidateFramebufferTextureLayer(Context *context, GLenum target, GLenum attachment,
                                      GLuint texture, GLint level, GLint layer)
 {
-    if (context->getClientMajorVersion() < 3)
+    if (context->getClientVersion() < 3)
     {
         context->handleError(Error(GL_INVALID_OPERATION));
         return false;
@@ -1285,8 +1269,8 @@ bool ValidateFramebufferTextureLayer(Context *context, GLenum target, GLenum att
             return false;
         }
 
-        const auto &format = tex->getFormat(tex->getTarget(), level);
-        if (format.info->compressed)
+        const gl::InternalFormat &internalFormatInfo = gl::GetInternalFormatInfo(tex->getInternalFormat(tex->getTarget(), level));
+        if (internalFormatInfo.compressed)
         {
             context->handleError(Error(GL_INVALID_OPERATION));
             return false;
@@ -1422,7 +1406,7 @@ bool ValidateES3RenderbufferStorageParameters(gl::Context *context, GLenum targe
 bool ValidateInvalidateFramebuffer(Context *context, GLenum target, GLsizei numAttachments,
                                    const GLenum *attachments)
 {
-    if (context->getClientMajorVersion() < 3)
+    if (context->getClientVersion() < 3)
     {
         context->handleError(
             Error(GL_INVALID_OPERATION, "Operation only supported on ES 3.0 and above"));
@@ -1450,7 +1434,7 @@ bool ValidateInvalidateFramebuffer(Context *context, GLenum target, GLsizei numA
 
 bool ValidateClearBuffer(ValidationContext *context)
 {
-    if (context->getClientMajorVersion() < 3)
+    if (context->getClientVersion() < 3)
     {
         context->handleError(Error(GL_INVALID_OPERATION));
         return false;
@@ -1475,7 +1459,7 @@ bool ValidateDrawRangeElements(Context *context,
                                const GLvoid *indices,
                                IndexRange *indexRange)
 {
-    if (context->getClientMajorVersion() < 3)
+    if (context->getClientVersion() < 3)
     {
         context->handleError(Error(GL_INVALID_OPERATION, "Context does not support GLES3."));
         return false;
@@ -1504,7 +1488,7 @@ bool ValidateDrawRangeElements(Context *context,
 
 bool ValidateGetUniformuiv(Context *context, GLuint program, GLint location, GLuint* params)
 {
-    if (context->getClientMajorVersion() < 3)
+    if (context->getClientVersion() < 3)
     {
         context->handleError(Error(GL_INVALID_OPERATION));
         return false;
@@ -1515,7 +1499,7 @@ bool ValidateGetUniformuiv(Context *context, GLuint program, GLint location, GLu
 
 bool ValidateReadBuffer(Context *context, GLenum src)
 {
-    if (context->getClientMajorVersion() < 3)
+    if (context->getClientVersion() < 3)
     {
         context->handleError(Error(GL_INVALID_OPERATION));
         return false;
@@ -1575,7 +1559,7 @@ bool ValidateCompressedTexImage3D(Context *context,
                                   GLsizei imageSize,
                                   const GLvoid *data)
 {
-    if (context->getClientMajorVersion() < 3)
+    if (context->getClientVersion() < 3)
     {
         context->handleError(Error(GL_INVALID_OPERATION));
         return false;
@@ -1634,7 +1618,7 @@ bool ValidateCompressedTexImage3D(Context *context,
 
 bool ValidateBindVertexArray(Context *context, GLuint array)
 {
-    if (context->getClientMajorVersion() < 3)
+    if (context->getClientVersion() < 3)
     {
         context->handleError(Error(GL_INVALID_OPERATION));
         return false;
@@ -1645,7 +1629,7 @@ bool ValidateBindVertexArray(Context *context, GLuint array)
 
 bool ValidateIsVertexArray(Context *context)
 {
-    if (context->getClientMajorVersion() < 3)
+    if (context->getClientVersion() < 3)
     {
         context->handleError(Error(GL_INVALID_OPERATION));
         return false;
@@ -1660,7 +1644,7 @@ bool ValidateProgramBinary(Context *context,
                            const void *binary,
                            GLint length)
 {
-    if (context->getClientMajorVersion() < 3)
+    if (context->getClientVersion() < 3)
     {
         context->handleError(Error(GL_INVALID_OPERATION));
         return false;
@@ -1676,7 +1660,7 @@ bool ValidateGetProgramBinary(Context *context,
                               GLenum *binaryFormat,
                               void *binary)
 {
-    if (context->getClientMajorVersion() < 3)
+    if (context->getClientVersion() < 3)
     {
         context->handleError(Error(GL_INVALID_OPERATION));
         return false;
@@ -1687,7 +1671,7 @@ bool ValidateGetProgramBinary(Context *context,
 
 bool ValidateProgramParameteri(Context *context, GLuint program, GLenum pname, GLint value)
 {
-    if (context->getClientMajorVersion() < 3)
+    if (context->getClientVersion() < 3)
     {
         context->handleError(Error(GL_INVALID_OPERATION, "Context does not support GLES3."));
         return false;
@@ -1729,7 +1713,7 @@ bool ValidateBlitFramebuffer(Context *context,
                              GLbitfield mask,
                              GLenum filter)
 {
-    if (context->getClientMajorVersion() < 3)
+    if (context->getClientVersion() < 3)
     {
         context->handleError(Error(GL_INVALID_OPERATION));
         return false;
@@ -1853,7 +1837,7 @@ bool ValidateClearBufferfi(ValidationContext *context,
 
 bool ValidateDrawBuffers(ValidationContext *context, GLsizei n, const GLenum *bufs)
 {
-    if (context->getClientMajorVersion() < 3)
+    if (context->getClientVersion() < 3)
     {
         context->handleError(Error(GL_INVALID_OPERATION, "Context does not support GLES3."));
         return false;
@@ -1873,7 +1857,7 @@ bool ValidateCopyTexSubImage3D(Context *context,
                                GLsizei width,
                                GLsizei height)
 {
-    if (context->getClientMajorVersion() < 3)
+    if (context->getClientVersion() < 3)
     {
         context->handleError(Error(GL_INVALID_OPERATION));
         return false;
@@ -1895,7 +1879,7 @@ bool ValidateTexImage3D(Context *context,
                         GLenum type,
                         const GLvoid *pixels)
 {
-    if (context->getClientMajorVersion() < 3)
+    if (context->getClientVersion() < 3)
     {
         context->handleError(Error(GL_INVALID_OPERATION));
         return false;
@@ -1919,7 +1903,7 @@ bool ValidateTexSubImage3D(Context *context,
                            GLenum type,
                            const GLvoid *pixels)
 {
-    if (context->getClientMajorVersion() < 3)
+    if (context->getClientVersion() < 3)
     {
         context->handleError(Error(GL_INVALID_OPERATION));
         return false;
@@ -1943,7 +1927,7 @@ bool ValidateCompressedTexSubImage3D(Context *context,
                                      GLsizei imageSize,
                                      const GLvoid *data)
 {
-    if (context->getClientMajorVersion() < 3)
+    if (context->getClientVersion() < 3)
     {
         context->handleError(Error(GL_INVALID_OPERATION));
         return false;
@@ -2030,7 +2014,7 @@ bool ValidateDeleteVertexArrays(Context *context, GLint n, const GLuint *)
 
 bool ValidateGenOrDeleteES3(Context *context, GLint n)
 {
-    if (context->getClientMajorVersion() < 3)
+    if (context->getClientVersion() < 3)
     {
         context->handleError(Error(GL_INVALID_OPERATION, "Context does not support GLES3."));
         return false;
@@ -2040,7 +2024,7 @@ bool ValidateGenOrDeleteES3(Context *context, GLint n)
 
 bool ValidateGenOrDeleteCountES3(Context *context, GLint count)
 {
-    if (context->getClientMajorVersion() < 3)
+    if (context->getClientVersion() < 3)
     {
         context->handleError(Error(GL_INVALID_OPERATION, "Context does not support GLES3."));
         return false;
@@ -2055,7 +2039,7 @@ bool ValidateGenOrDeleteCountES3(Context *context, GLint count)
 
 bool ValidateBeginTransformFeedback(Context *context, GLenum primitiveMode)
 {
-    if (context->getClientMajorVersion() < 3)
+    if (context->getClientVersion() < 3)
     {
         context->handleError(Error(GL_INVALID_OPERATION, "Context does not support GLES3."));
         return false;
@@ -2085,7 +2069,7 @@ bool ValidateBeginTransformFeedback(Context *context, GLenum primitiveMode)
 
 bool ValidateSamplerParameteri(Context *context, GLuint sampler, GLenum pname, GLint param)
 {
-    if (context->getClientMajorVersion() < 3)
+    if (context->getClientVersion() < 3)
     {
         context->handleError(Error(GL_INVALID_OPERATION, "Context does not support GLES3."));
         return false;
@@ -2118,7 +2102,7 @@ bool ValidateSamplerParameterf(Context *context, GLuint sampler, GLenum pname, G
 
 bool ValidateGetBufferPointerv(Context *context, GLenum target, GLenum pname, GLvoid **params)
 {
-    if (context->getClientMajorVersion() < 3)
+    if (context->getClientVersion() < 3)
     {
         context->handleError(Error(GL_INVALID_OPERATION, "Context does not support GLES3."));
         return false;
@@ -2129,7 +2113,7 @@ bool ValidateGetBufferPointerv(Context *context, GLenum target, GLenum pname, GL
 
 bool ValidateUnmapBuffer(Context *context, GLenum target)
 {
-    if (context->getClientMajorVersion() < 3)
+    if (context->getClientVersion() < 3)
     {
         context->handleError(Error(GL_INVALID_OPERATION));
         return false;
@@ -2144,7 +2128,7 @@ bool ValidateMapBufferRange(Context *context,
                             GLsizeiptr length,
                             GLbitfield access)
 {
-    if (context->getClientMajorVersion() < 3)
+    if (context->getClientVersion() < 3)
     {
         context->handleError(Error(GL_INVALID_OPERATION, "Context does not support GLES3."));
         return false;
@@ -2158,87 +2142,13 @@ bool ValidateFlushMappedBufferRange(Context *context,
                                     GLintptr offset,
                                     GLsizeiptr length)
 {
-    if (context->getClientMajorVersion() < 3)
+    if (context->getClientVersion() < 3)
     {
         context->handleError(Error(GL_INVALID_OPERATION, "Context does not support GLES3."));
         return false;
     }
 
     return ValidateFlushMappedBufferRangeBase(context, target, offset, length);
-}
-
-bool ValidateIndexedStateQuery(ValidationContext *context, GLenum pname, GLuint index)
-{
-    GLenum nativeType;
-    unsigned int numParams;
-    if (!context->getIndexedQueryParameterInfo(pname, &nativeType, &numParams))
-    {
-        context->handleError(Error(GL_INVALID_ENUM));
-        return false;
-    }
-
-    const Caps &caps = context->getCaps();
-    switch (pname)
-    {
-        case GL_TRANSFORM_FEEDBACK_BUFFER_START:
-        case GL_TRANSFORM_FEEDBACK_BUFFER_SIZE:
-        case GL_TRANSFORM_FEEDBACK_BUFFER_BINDING:
-            if (index >= caps.maxTransformFeedbackSeparateAttributes)
-            {
-                context->handleError(Error(GL_INVALID_VALUE));
-                return false;
-            }
-            break;
-
-        case GL_UNIFORM_BUFFER_START:
-        case GL_UNIFORM_BUFFER_SIZE:
-        case GL_UNIFORM_BUFFER_BINDING:
-            if (index >= caps.maxUniformBufferBindings)
-            {
-                context->handleError(Error(GL_INVALID_VALUE));
-                return false;
-            }
-            break;
-        case GL_MAX_COMPUTE_WORK_GROUP_SIZE:
-        case GL_MAX_COMPUTE_WORK_GROUP_COUNT:
-            if (index >= 3u)
-            {
-                context->handleError(Error(GL_INVALID_VALUE));
-                return false;
-            }
-            break;
-        default:
-            context->handleError(Error(GL_INVALID_ENUM));
-            return false;
-    }
-
-    // pname is valid, but there are no parameters to return
-    if (numParams == 0)
-    {
-        return false;
-    }
-
-    return true;
-}
-
-bool ValidateGetIntegeri_v(ValidationContext *context, GLenum target, GLuint index, GLint *data)
-{
-    if (!context->getGLVersion().isES3OrGreater())
-    {
-        context->handleError(Error(GL_INVALID_OPERATION, "Context does not support GLES3.0"));
-        return false;
-    }
-    return ValidateIndexedStateQuery(context, target, index);
-}
-
-bool ValidateGetInteger64i_v(ValidationContext *context, GLenum target, GLuint index, GLint64 *data)
-{
-    if (!context->getGLVersion().isES3OrGreater())
-    {
-        context->handleError(Error(GL_INVALID_OPERATION, "Context does not support GLES3.0"));
-        return false;
-    }
-    return ValidateIndexedStateQuery(context, target, index);
 }
 
 }  // namespace gl

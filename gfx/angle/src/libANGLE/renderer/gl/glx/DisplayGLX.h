@@ -62,6 +62,7 @@ class DisplayGLX : public DisplayGL
 
     egl::ConfigSet generateConfigs() override;
 
+    bool isDeviceLost() const override;
     bool testDeviceLost() override;
     egl::Error restoreLostDevice() override;
 
@@ -125,7 +126,6 @@ class DisplayGLX : public DisplayGL
     bool mHasMultisample;
     bool mHasARBCreateContext;
     bool mHasARBCreateContextProfile;
-    bool mHasARBCreateContextRobustness;
     bool mHasEXTCreateContextES2Profile;
 
     enum class SwapControl

@@ -79,10 +79,10 @@ class TextureStorage11 : public TextureStorage
 
     gl::Error getSRVLevels(GLint baseLevel, GLint maxLevel, ID3D11ShaderResourceView **outSRV);
 
-    const d3d11::Format &getFormatSet() const;
+    d3d11::ANGLEFormat getANGLEFormat() const;
 
   protected:
-    TextureStorage11(Renderer11 *renderer, UINT bindFlags, UINT miscFlags, GLenum internalFormat);
+    TextureStorage11(Renderer11 *renderer, UINT bindFlags, UINT miscFlags);
     int getLevelWidth(int mipLevel) const;
     int getLevelHeight(int mipLevel) const;
     int getLevelDepth(int mipLevel) const;
@@ -107,7 +107,9 @@ class TextureStorage11 : public TextureStorage
     int mTopLevel;
     unsigned int mMipLevels;
 
-    const d3d11::Format &mFormatInfo;
+    GLenum mInternalFormat;
+    const d3d11::ANGLEFormatSet *mTextureFormatSet;
+    const d3d11::ANGLEFormatSet *mSwizzleFormatSet;
     unsigned int mTextureWidth;
     unsigned int mTextureHeight;
     unsigned int mTextureDepth;
@@ -223,7 +225,6 @@ class TextureStorage11_External : public TextureStorage11
 
     ID3D11Texture2D *mTexture;
     int mSubresourceIndex;
-    bool mHasKeyedMutex;
 
     Image11 *mAssociatedImage;
 };
@@ -231,9 +232,7 @@ class TextureStorage11_External : public TextureStorage11
 class TextureStorage11_EGLImage final : public TextureStorage11
 {
   public:
-    TextureStorage11_EGLImage(Renderer11 *renderer,
-                              EGLImageD3D *eglImage,
-                              RenderTarget11 *renderTarget11);
+    TextureStorage11_EGLImage(Renderer11 *renderer, EGLImageD3D *eglImage);
     ~TextureStorage11_EGLImage() override;
 
     gl::Error getResource(ID3D11Resource **outResource) override;

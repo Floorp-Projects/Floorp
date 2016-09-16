@@ -23,7 +23,7 @@ class Renderer11;
 class RenderTarget11 : public RenderTargetD3D
 {
   public:
-    RenderTarget11(const d3d11::Format &formatSet);
+    RenderTarget11(d3d11::ANGLEFormat angleFormat);
     virtual ~RenderTarget11();
 
     virtual ID3D11Resource *getTexture() const = 0;
@@ -37,11 +37,11 @@ class RenderTarget11 : public RenderTargetD3D
     void signalDirty() override;
     angle::BroadcastChannel *getBroadcastChannel() { return &mBroadcastChannel; }
 
-    const d3d11::Format &getFormatSet() const { return mFormatSet; }
+    d3d11::ANGLEFormat getANGLEFormat() const { return mANGLEFormat; }
 
   protected:
     angle::BroadcastChannel mBroadcastChannel;
-    const d3d11::Format &mFormatSet;
+    d3d11::ANGLEFormat mANGLEFormat;
 };
 
 class TextureRenderTarget11 : public RenderTarget11
@@ -53,7 +53,7 @@ class TextureRenderTarget11 : public RenderTarget11
                           ID3D11ShaderResourceView *srv,
                           ID3D11ShaderResourceView *blitSRV,
                           GLenum internalFormat,
-                          const d3d11::Format &formatSet,
+                          d3d11::ANGLEFormat angleFormat,
                           GLsizei width,
                           GLsizei height,
                           GLsizei depth,
@@ -62,7 +62,7 @@ class TextureRenderTarget11 : public RenderTarget11
                           ID3D11Resource *resource,
                           ID3D11ShaderResourceView *srv,
                           GLenum internalFormat,
-                          const d3d11::Format &formatSet,
+                          d3d11::ANGLEFormat angleFormat,
                           GLsizei width,
                           GLsizei height,
                           GLsizei depth,
@@ -122,7 +122,12 @@ class SurfaceRenderTarget11 : public RenderTarget11
     unsigned int getSubresourceIndex() const override;
 
   private:
+    // The internal versions of the functions are needed so that they can be safely called
+    // from the constructor.
+    GLenum getInternalFormatInternal() const;
+
     SwapChain11 *mSwapChain;
+    Renderer11 *mRenderer;
     bool mDepth;
 };
 

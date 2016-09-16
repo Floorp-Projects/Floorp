@@ -224,7 +224,7 @@ const std::map<std::string, unsigned int> &OutputHLSL::getUniformRegisterMap() c
 int OutputHLSL::vectorSize(const TType &type) const
 {
     int elementSize = type.isMatrix() ? type.getCols() : 1;
-    unsigned int arraySize = type.isArray() ? type.getArraySize() : 1u;
+    int arraySize = type.isArray() ? type.getArraySize() : 1;
 
     return elementSize * arraySize;
 }
@@ -605,9 +605,7 @@ void OutputHLSL::header(TInfoSinkBase &out, const BuiltInFunctionEmulator *built
         }
     }
 
-    bool getDimensionsIgnoresBaseLevel =
-        (mCompileOptions & SH_HLSL_GET_DIMENSIONS_IGNORES_BASE_LEVEL) != 0;
-    mTextureFunctionHLSL->textureFunctionHeader(out, mOutputType, getDimensionsIgnoresBaseLevel);
+    mTextureFunctionHLSL->textureFunctionHeader(out, mOutputType);
 
     if (mUsesFragCoord)
     {
@@ -1679,12 +1677,6 @@ bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
                 out << DisambiguateFunctionName(node->getSequence());
                 out << (lod0 ? "Lod0(" : "(");
             }
-            else if (node->getNameObj().isInternal())
-            {
-                // This path is used for internal functions that don't have their definitions in the
-                // AST, such as precision emulation functions.
-                out << DecorateFunctionIfNeeded(node->getNameObj()) << "(";
-            }
             else
             {
                 TString name           = TFunction::unmangleName(node->getNameObj().getString());
@@ -1713,7 +1705,7 @@ bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
                     TVector<TIntermSymbol *> samplerSymbols;
                     TString structName = samplerNamePrefixFromStruct(typedArg);
                     argType.createSamplerSymbols("angle_" + structName, "",
-                                                 argType.isArray() ? argType.getArraySize() : 0u,
+                                                 argType.isArray() ? argType.getArraySize() : 0,
                                                  &samplerSymbols, nullptr);
                     for (const TIntermSymbol *sampler : samplerSymbols)
                     {
@@ -2504,7 +2496,7 @@ TString OutputHLSL::argumentString(const TIntermSymbol *symbol)
     {
         ASSERT(qualifier != EvqOut && qualifier != EvqInOut);
         TVector<TIntermSymbol *> samplerSymbols;
-        type.createSamplerSymbols("angle" + nameStr, "", 0u, &samplerSymbols, nullptr);
+        type.createSamplerSymbols("angle" + nameStr, "", 0, &samplerSymbols, nullptr);
         for (const TIntermSymbol *sampler : samplerSymbols)
         {
             if (mOutputType == SH_HLSL_4_1_OUTPUT)
@@ -2872,14 +2864,14 @@ TString OutputHLSL::addArrayConstructIntoFunction(const TType& type)
 
     fnOut << "void " << function.functionName << "(out "
           << typeName << " a[" << type.getArraySize() << "]";
-    for (unsigned int i = 0u; i < type.getArraySize(); ++i)
+    for (int i = 0; i < type.getArraySize(); ++i)
     {
         fnOut << ", " << typeName << " b" << i;
     }
     fnOut << ")\n"
              "{\n";
 
-    for (unsigned int i = 0u; i < type.getArraySize(); ++i)
+    for (int i = 0; i < type.getArraySize(); ++i)
     {
         fnOut << "    a[" << i << "] = b" << i << ";\n";
     }

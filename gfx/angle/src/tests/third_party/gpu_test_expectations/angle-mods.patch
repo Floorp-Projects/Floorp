@@ -1,7 +1,37 @@
-diff -rupN gpu_test_expectations_reverted/angle_config.h gpu_test_expectations/angle_config.h
---- gpu_test_expectations_reverted/angle_config.h	1969-12-31 19:00:00.000000000 -0500
-+++ gpu_test_expectations/angle_config.h	2016-08-22 16:13:08.739352282 -0400
-@@ -0,0 +1,66 @@
+diff --git a/src/tests/third_party/gpu_test_expectations/HowToMakeChanges.md b/src/tests/third_party/gpu_test_expectations/HowToMakeChanges.md
+new file mode 100644
+index 0000000..7817d0a
+--- /dev/null
++++ b/src/tests/third_party/gpu_test_expectations/HowToMakeChanges.md
+@@ -0,0 +1,22 @@
++Because the ```gpu_test_expectations``` directory is based on parts of Chromium's ```gpu/config``
++directory, we want to keep a patch of the changes added to make it compile with ANGLE. This
++will allow us to merge Chromium changes easily in our ```gpu_test_expectations```.
++
++In order to make a change to this directory, do the following:
++
++ * copy the directory somewhere like in ```gpu_test_expectations_reverted```
++ * in ```gpu_test_expectations_reverted``` run ```patch -p 1 -R < angle-mods.patch```
++ * do your changes in ```gpu_test_expectations```
++ * delete angle-mods.patch in both directories
++ * run ```diff -rupN gpu_test_expectations_reverted gpu_test_expectations > angle-mods.patch```
++ * copy ```angle-mods.patch``` in ```gpu_test_expectations```
++
++How to update from Chromium:
++
++ * ```git apply -R angle-mods.patch```, ```git add . -u```, ```git commit```
++ * Copy over Chromium files, ```git add . -u```, ```git commit```
++ * ```git revert HEAD~```
++ * ```rm angle-mods.patch```
++ * ```git diff HEAD~ (`)ls(`) > angle-mods.patch```,```git add angle-mods.patch```, ```git commit --amend```
++ * ```git rebase -i``` to squash the three patches into one.
++
+diff --git a/src/tests/third_party/gpu_test_expectations/angle_config.h b/src/tests/third_party/gpu_test_expectations/angle_config.h
+new file mode 100644
+index 0000000..3d7b20c
+--- /dev/null
++++ b/src/tests/third_party/gpu_test_expectations/angle_config.h
+@@ -0,0 +1,62 @@
 +//
 +// Copyright 2015 The ANGLE Project Authors. All rights reserved.
 +// Use of this source code is governed by a BSD-style license that can be
@@ -53,11 +83,8 @@ diff -rupN gpu_test_expectations_reverted/angle_config.h gpu_test_expectations/a
 +}
 +
 +// TODO(jmadill): other platforms
-+// clang-format off
 +#if defined(_WIN32) || defined(_WIN64)
 +#    define OS_WIN
-+#elif defined(ANDROID)
-+#    define OS_ANDROID
 +#elif defined(__linux__)
 +#    define OS_LINUX
 +#elif defined(__APPLE__)
@@ -65,12 +92,12 @@ diff -rupN gpu_test_expectations_reverted/angle_config.h gpu_test_expectations/a
 +#else
 +#    error "Unsupported platform"
 +#endif
-+// clang-format on
 +
 +#endif
-diff -rupN gpu_test_expectations_reverted/gpu_info.cc gpu_test_expectations/gpu_info.cc
---- gpu_test_expectations_reverted/gpu_info.cc	2016-08-12 21:23:54.884132405 -0400
-+++ gpu_test_expectations/gpu_info.cc	2015-11-30 21:54:30.239267635 -0500
+diff --git a/src/tests/third_party/gpu_test_expectations/gpu_info.cc b/src/tests/third_party/gpu_test_expectations/gpu_info.cc
+index 23d5216..4f279a4 100644
+--- a/src/tests/third_party/gpu_test_expectations/gpu_info.cc
++++ b/src/tests/third_party/gpu_test_expectations/gpu_info.cc
 @@ -2,7 +2,7 @@
  // Use of this source code is governed by a BSD-style license that can be
  // found in the LICENSE file.
@@ -80,7 +107,7 @@ diff -rupN gpu_test_expectations_reverted/gpu_info.cc gpu_test_expectations/gpu_
  
  namespace {
  
-@@ -17,31 +17,6 @@ void EnumerateGPUDevice(const gpu::GPUIn
+@@ -17,31 +17,6 @@ void EnumerateGPUDevice(const gpu::GPUInfo::GPUDevice& device,
    enumerator->EndGPUDevice();
  }
  
@@ -134,7 +161,7 @@ diff -rupN gpu_test_expectations_reverted/gpu_info.cc gpu_test_expectations/gpu_
      GPUDevice gpu;
      std::vector<GPUDevice> secondary_gpus;
      uint64 adapter_luid;
-@@ -110,14 +80,6 @@ void GPUInfo::EnumerateFields(Enumerator
+@@ -110,14 +80,6 @@ void GPUInfo::EnumerateFields(Enumerator* enumerator) const {
      bool in_process_gpu;
      CollectInfoResult basic_info_state;
      CollectInfoResult context_info_state;
@@ -149,7 +176,7 @@ diff -rupN gpu_test_expectations_reverted/gpu_info.cc gpu_test_expectations/gpu_
      bool jpeg_decode_accelerator_supported;
    };
  
-@@ -136,15 +98,9 @@ void GPUInfo::EnumerateFields(Enumerator
+@@ -136,15 +98,9 @@ void GPUInfo::EnumerateFields(Enumerator* enumerator) const {
      EnumerateGPUDevice(secondary_gpu, enumerator);
  
    enumerator->BeginAuxAttributes();
@@ -165,7 +192,7 @@ diff -rupN gpu_test_expectations_reverted/gpu_info.cc gpu_test_expectations/gpu_
    enumerator->AddInt64("adapterLuid", adapter_luid);
    enumerator->AddString("driverVendor", driver_vendor);
    enumerator->AddString("driverVersion", driver_version);
-@@ -171,14 +127,7 @@ void GPUInfo::EnumerateFields(Enumerator
+@@ -171,14 +127,7 @@ void GPUInfo::EnumerateFields(Enumerator* enumerator) const {
    enumerator->AddBool("inProcessGpu", in_process_gpu);
    enumerator->AddInt("basicInfoState", basic_info_state);
    enumerator->AddInt("contextInfoState", context_info_state);
@@ -180,9 +207,10 @@ diff -rupN gpu_test_expectations_reverted/gpu_info.cc gpu_test_expectations/gpu_
    enumerator->AddBool("jpegDecodeAcceleratorSupported",
        jpeg_decode_accelerator_supported);
    enumerator->EndAuxAttributes();
-diff -rupN gpu_test_expectations_reverted/gpu_info.h gpu_test_expectations/gpu_info.h
---- gpu_test_expectations_reverted/gpu_info.h	2016-08-12 21:23:54.884132405 -0400
-+++ gpu_test_expectations/gpu_info.h	2015-11-30 21:54:30.239267635 -0500
+diff --git a/src/tests/third_party/gpu_test_expectations/gpu_info.h b/src/tests/third_party/gpu_test_expectations/gpu_info.h
+index d6f61fd..0a7f9aa 100644
+--- a/src/tests/third_party/gpu_test_expectations/gpu_info.h
++++ b/src/tests/third_party/gpu_test_expectations/gpu_info.h
 @@ -11,13 +11,7 @@
  #include <string>
  #include <vector>
@@ -252,11 +280,11 @@ diff -rupN gpu_test_expectations_reverted/gpu_info.h gpu_test_expectations/gpu_i
    CollectInfoResult context_info_state;
 -#if defined(OS_WIN)
 -  CollectInfoResult dx_diagnostics_info_state;
- 
+-
 -  // The information returned by the DirectX Diagnostics Tool.
 -  DxDiagNode dx_diagnostics;
 -#endif
--
+ 
 -  VideoDecodeAcceleratorSupportedProfiles
 -      video_decode_accelerator_supported_profiles;
 -  VideoEncodeAcceleratorSupportedProfiles
@@ -273,10 +301,11 @@ diff -rupN gpu_test_expectations_reverted/gpu_info.h gpu_test_expectations/gpu_i
  
      // Markers indicating that a GPUDevice is being described.
      virtual void BeginGPUDevice() = 0;
-diff -rupN gpu_test_expectations_reverted/gpu_test_config.cc gpu_test_expectations/gpu_test_config.cc
---- gpu_test_expectations_reverted/gpu_test_config.cc	2016-08-12 21:23:54.884132405 -0400
-+++ gpu_test_expectations/gpu_test_config.cc	2016-08-22 16:09:09.972124940 -0400
-@@ -2,20 +2,205 @@
+diff --git a/src/tests/third_party/gpu_test_expectations/gpu_test_config.cc b/src/tests/third_party/gpu_test_expectations/gpu_test_config.cc
+index a7cc4b4..f8571d4 100644
+--- a/src/tests/third_party/gpu_test_expectations/gpu_test_config.cc
++++ b/src/tests/third_party/gpu_test_expectations/gpu_test_config.cc
+@@ -2,18 +2,193 @@
  // Use of this source code is governed by a BSD-style license that can be
  // found in the LICENSE file.
  
@@ -302,8 +331,8 @@ diff -rupN gpu_test_expectations_reverted/gpu_test_config.cc gpu_test_expectatio
 -#elif defined(OS_WIN)
 -#include "base/win/windows_version.h"
 +#include "gpu_test_config_mac.h"
- #endif
- 
++#endif
++
 +using namespace gpu;
 +
 +#if defined(OS_WIN)
@@ -476,22 +505,10 @@ diff -rupN gpu_test_expectations_reverted/gpu_test_config.cc gpu_test_expectatio
 +  return kCollectInfoNonFatalFailure;
 +}
 +
-+#endif
-+
-+#if defined(OS_ANDROID)
-+CollectInfoResult CollectGpuID(uint32 *vendor_id, uint32 *device_id)
-+{
-+    DCHECK(vendor_id && device_id);
-+    *vendor_id = 0;
-+    *device_id = 0;
-+    return kCollectInfoNonFatalFailure;
-+}
-+#endif  // defined(OS_ANDROID)
-+
- namespace gpu {
+ #endif
  
- namespace {
-@@ -295,21 +480,5 @@ bool GPUTestBotConfig::CurrentConfigMatc
+ namespace gpu {
+@@ -295,21 +470,5 @@ bool GPUTestBotConfig::CurrentConfigMatches(
    return false;
  }
  
@@ -513,9 +530,10 @@ diff -rupN gpu_test_expectations_reverted/gpu_test_config.cc gpu_test_expectatio
 -
  }  // namespace gpu
  
-diff -rupN gpu_test_expectations_reverted/gpu_test_config.h gpu_test_expectations/gpu_test_config.h
---- gpu_test_expectations_reverted/gpu_test_config.h	2016-08-12 21:23:54.884132405 -0400
-+++ gpu_test_expectations/gpu_test_config.h	2015-11-30 21:54:30.239267635 -0500
+diff --git a/src/tests/third_party/gpu_test_expectations/gpu_test_config.h b/src/tests/third_party/gpu_test_expectations/gpu_test_config.h
+index b5431e6..4cbc2c0 100644
+--- a/src/tests/third_party/gpu_test_expectations/gpu_test_config.h
++++ b/src/tests/third_party/gpu_test_expectations/gpu_test_config.h
 @@ -8,9 +8,7 @@
  #include <string>
  #include <vector>
@@ -527,7 +545,7 @@ diff -rupN gpu_test_expectations_reverted/gpu_test_config.h gpu_test_expectation
  
  namespace gpu {
  
-@@ -134,9 +132,6 @@ class GPU_EXPORT GPUTestBotConfig : publ
+@@ -134,9 +132,6 @@ class GPU_EXPORT GPUTestBotConfig : public GPUTestConfig {
    // Check if this bot's config matches |config_data| or any of the |configs|.
    static bool CurrentConfigMatches(const std::string& config_data);
    static bool CurrentConfigMatches(const std::vector<std::string>& configs);
@@ -537,9 +555,11 @@ diff -rupN gpu_test_expectations_reverted/gpu_test_config.h gpu_test_expectation
  };
  
  }  // namespace gpu
-diff -rupN gpu_test_expectations_reverted/gpu_test_config_mac.h gpu_test_expectations/gpu_test_config_mac.h
---- gpu_test_expectations_reverted/gpu_test_config_mac.h	1969-12-31 19:00:00.000000000 -0500
-+++ gpu_test_expectations/gpu_test_config_mac.h	2015-11-30 21:54:30.239267635 -0500
+diff --git a/src/tests/third_party/gpu_test_expectations/gpu_test_config_mac.h b/src/tests/third_party/gpu_test_expectations/gpu_test_config_mac.h
+new file mode 100644
+index 0000000..da22bd6
+--- /dev/null
++++ b/src/tests/third_party/gpu_test_expectations/gpu_test_config_mac.h
 @@ -0,0 +1,28 @@
 +//
 +// Copyright 2015 The ANGLE Project Authors. All rights reserved.
@@ -569,9 +589,11 @@ diff -rupN gpu_test_expectations_reverted/gpu_test_config_mac.h gpu_test_expecta
 +gpu::GPUInfo::GPUDevice GetActiveGPU();
 +
 +#endif // GPU_TEST_EXPECTATIONS_GPU_TEST_CONFIG_MAC_H_
-diff -rupN gpu_test_expectations_reverted/gpu_test_config_mac.mm gpu_test_expectations/gpu_test_config_mac.mm
---- gpu_test_expectations_reverted/gpu_test_config_mac.mm	1969-12-31 19:00:00.000000000 -0500
-+++ gpu_test_expectations/gpu_test_config_mac.mm	2015-11-30 21:54:30.239267635 -0500
+diff --git a/src/tests/third_party/gpu_test_expectations/gpu_test_config_mac.mm b/src/tests/third_party/gpu_test_expectations/gpu_test_config_mac.mm
+new file mode 100644
+index 0000000..8cbd498
+--- /dev/null
++++ b/src/tests/third_party/gpu_test_expectations/gpu_test_config_mac.mm
 @@ -0,0 +1,67 @@
 +// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 +// Use of this source code is governed by a BSD-style license that can be
@@ -640,9 +662,10 @@ diff -rupN gpu_test_expectations_reverted/gpu_test_config_mac.mm gpu_test_expect
 +  return gpu;
 +}
 +
-diff -rupN gpu_test_expectations_reverted/gpu_test_expectations_parser.cc gpu_test_expectations/gpu_test_expectations_parser.cc
---- gpu_test_expectations_reverted/gpu_test_expectations_parser.cc	2016-08-12 21:23:54.884132405 -0400
-+++ gpu_test_expectations/gpu_test_expectations_parser.cc	2015-11-30 21:54:30.239267635 -0500
+diff --git a/src/tests/third_party/gpu_test_expectations/gpu_test_expectations_parser.cc b/src/tests/third_party/gpu_test_expectations/gpu_test_expectations_parser.cc
+index 6dac74e..23c4d8c 100644
+--- a/src/tests/third_party/gpu_test_expectations/gpu_test_expectations_parser.cc
++++ b/src/tests/third_party/gpu_test_expectations/gpu_test_expectations_parser.cc
 @@ -2,14 +2,43 @@
  // Use of this source code is governed by a BSD-style license that can be
  // found in the LICENSE file.
@@ -706,7 +729,7 @@ diff -rupN gpu_test_expectations_reverted/gpu_test_expectations_parser.cc gpu_te
      return kConfigGPUDeviceID;
  
    for (int32 i = 0; i < kNumberOfExactMatchTokens; ++i) {
-@@ -176,10 +205,10 @@ bool NamesMatching(const std::string& re
+@@ -176,10 +205,10 @@ bool NamesMatching(const std::string& ref, const std::string& test_name) {
  
  GPUTestExpectationsParser::GPUTestExpectationsParser() {
    // Some sanity check.
@@ -721,7 +744,7 @@ diff -rupN gpu_test_expectations_reverted/gpu_test_expectations_parser.cc gpu_te
  }
  
  GPUTestExpectationsParser::~GPUTestExpectationsParser() {
-@@ -204,8 +233,8 @@ bool GPUTestExpectationsParser::LoadTest
+@@ -204,8 +233,8 @@ bool GPUTestExpectationsParser::LoadTestExpectations(const std::string& data) {
    return rt;
  }
  
@@ -732,7 +755,7 @@ diff -rupN gpu_test_expectations_reverted/gpu_test_expectations_parser.cc gpu_te
    entries_.clear();
    error_messages_.clear();
  
-@@ -399,7 +428,7 @@ bool GPUTestExpectationsParser::ParseLin
+@@ -399,7 +428,7 @@ bool GPUTestExpectationsParser::ParseLine(
            stage++;
          break;
        default:
@@ -741,7 +764,7 @@ diff -rupN gpu_test_expectations_reverted/gpu_test_expectations_parser.cc gpu_te
          break;
      }
    }
-@@ -488,7 +517,7 @@ bool GPUTestExpectationsParser::UpdateTe
+@@ -488,7 +517,7 @@ bool GPUTestExpectationsParser::UpdateTestConfig(
        config->set_api(config->api() | kTokenData[token].flag);
        break;
      default:
@@ -750,9 +773,10 @@ diff -rupN gpu_test_expectations_reverted/gpu_test_expectations_parser.cc gpu_te
        break;
    }
    return true;
-diff -rupN gpu_test_expectations_reverted/gpu_test_expectations_parser.h gpu_test_expectations/gpu_test_expectations_parser.h
---- gpu_test_expectations_reverted/gpu_test_expectations_parser.h	2016-08-12 21:23:54.884132405 -0400
-+++ gpu_test_expectations/gpu_test_expectations_parser.h	2015-11-30 21:54:30.239267635 -0500
+diff --git a/src/tests/third_party/gpu_test_expectations/gpu_test_expectations_parser.h b/src/tests/third_party/gpu_test_expectations/gpu_test_expectations_parser.h
+index a69f7e9..a112700 100644
+--- a/src/tests/third_party/gpu_test_expectations/gpu_test_expectations_parser.h
++++ b/src/tests/third_party/gpu_test_expectations/gpu_test_expectations_parser.h
 @@ -8,10 +8,8 @@
  #include <string>
  #include <vector>
@@ -766,7 +790,7 @@ diff -rupN gpu_test_expectations_reverted/gpu_test_expectations_parser.h gpu_tes
  
  namespace gpu {
  
-@@ -32,7 +30,7 @@ class GPU_EXPORT GPUTestExpectationsPars
+@@ -32,7 +30,7 @@ class GPU_EXPORT GPUTestExpectationsParser {
    // save all the entries. Otherwise, generate error messages.
    // Return true if parsing succeeds.
    bool LoadTestExpectations(const std::string& data);
@@ -775,29 +799,3 @@ diff -rupN gpu_test_expectations_reverted/gpu_test_expectations_parser.h gpu_tes
  
    // Query error messages from the last LoadTestExpectations() call.
    const std::vector<std::string>& GetErrorMessages() const;
-diff -rupN gpu_test_expectations_reverted/HowToMakeChanges.md gpu_test_expectations/HowToMakeChanges.md
---- gpu_test_expectations_reverted/HowToMakeChanges.md	1969-12-31 19:00:00.000000000 -0500
-+++ gpu_test_expectations/HowToMakeChanges.md	2016-08-22 15:52:38.098728514 -0400
-@@ -0,0 +1,22 @@
-+Because the ```gpu_test_expectations``` directory is based on parts of Chromium's ```gpu/config``
-+directory, we want to keep a patch of the changes added to make it compile with ANGLE. This
-+will allow us to merge Chromium changes easily in our ```gpu_test_expectations```.
-+
-+In order to make a change to this directory, do the following:
-+
-+ * copy the directory somewhere like in ```gpu_test_expectations_reverted```
-+ * in ```gpu_test_expectations_reverted``` run ```patch -p 1 -R < angle-mods.patch```
-+ * do your changes in ```gpu_test_expectations```
-+ * delete angle-mods.patch in both directories
-+ * run ```diff -rupN gpu_test_expectations_reverted gpu_test_expectations > angle-mods.patch```
-+ * copy ```angle-mods.patch``` in ```gpu_test_expectations```
-+
-+How to update from Chromium:
-+
-+ * ```git apply -R angle-mods.patch```, ```git add . -u```, ```git commit```
-+ * Copy over Chromium files, ```git add . -u```, ```git commit```
-+ * ```git revert HEAD~```
-+ * ```rm angle-mods.patch```
-+ * ```git diff HEAD~ (`)ls(`) > angle-mods.patch```,```git add angle-mods.patch```, ```git commit --amend```
-+ * ```git rebase -i``` to squash the three patches into one.
-+

@@ -40,25 +40,9 @@ const char *GetShaderTypeString(GLenum type)
 namespace rx
 {
 
-ShaderD3D::ShaderD3D(const gl::ShaderState &data, const WorkaroundsD3D &workarounds)
-    : ShaderImpl(data), mAdditionalOptions(0)
+ShaderD3D::ShaderD3D(const gl::ShaderState &data) : ShaderImpl(data)
 {
     uncompile();
-
-    if (workarounds.expandIntegerPowExpressions)
-    {
-        mAdditionalOptions |= SH_EXPAND_SELECT_HLSL_INTEGER_POW_EXPRESSIONS;
-    }
-
-    if (workarounds.getDimensionsIgnoresBaseLevel)
-    {
-        mAdditionalOptions |= SH_HLSL_GET_DIMENSIONS_IGNORES_BASE_LEVEL;
-    }
-
-    if (workarounds.preAddTexelFetchOffsets)
-    {
-        mAdditionalOptions |= SH_REWRITE_TEXELFETCHOFFSET_TO_TEXELFETCH;
-    }
 }
 
 ShaderD3D::~ShaderD3D()
@@ -150,8 +134,6 @@ int ShaderD3D::prepareSourceAndReturnOptions(std::stringstream *shaderSourceStre
         additionalOptions |= SH_LINE_DIRECTIVES | SH_SOURCE_PATH;
     }
 #endif
-
-    additionalOptions |= mAdditionalOptions;
 
     *shaderSourceStream << source;
     return additionalOptions;

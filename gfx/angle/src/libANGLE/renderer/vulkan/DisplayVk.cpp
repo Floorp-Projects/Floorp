@@ -48,6 +48,12 @@ egl::ConfigSet DisplayVk::generateConfigs()
     return egl::ConfigSet();
 }
 
+bool DisplayVk::isDeviceLost() const
+{
+    UNIMPLEMENTED();
+    return bool();
+}
+
 bool DisplayVk::testDeviceLost()
 {
     UNIMPLEMENTED();
@@ -146,12 +152,6 @@ StreamProducerImpl *DisplayVk::createStreamProducerD3DTextureNV12(
 {
     UNIMPLEMENTED();
     return static_cast<StreamProducerImpl *>(0);
-}
-
-gl::Version DisplayVk::getMaxSupportedESVersion() const
-{
-    UNIMPLEMENTED();
-    return gl::Version(0, 0);
 }
 
 void DisplayVk::generateExtensions(egl::DisplayExtensions *outExtensions) const

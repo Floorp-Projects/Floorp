@@ -17,15 +17,16 @@
 namespace rx
 {
 
-TransformFeedbackGL::TransformFeedbackGL(const gl::TransformFeedbackState &state,
-                                         const FunctionsGL *functions,
-                                         StateManagerGL *stateManager)
-    : TransformFeedbackImpl(state),
+TransformFeedbackGL::TransformFeedbackGL(const FunctionsGL *functions,
+                                         StateManagerGL *stateManager,
+                                         size_t maxTransformFeedbackBufferBindings)
+    : TransformFeedbackImpl(),
       mFunctions(functions),
       mStateManager(stateManager),
       mTransformFeedbackID(0),
       mIsActive(false),
-      mIsPaused(false)
+      mIsPaused(false),
+      mCurrentIndexedBuffers(maxTransformFeedbackBufferBindings)
 {
     mFunctions->genTransformFeedbacks(1, &mTransformFeedbackID);
 }
@@ -34,6 +35,11 @@ TransformFeedbackGL::~TransformFeedbackGL()
 {
     mStateManager->deleteTransformFeedback(mTransformFeedbackID);
     mTransformFeedbackID = 0;
+
+    for (auto &bufferBinding : mCurrentIndexedBuffers)
+    {
+        bufferBinding.set(nullptr);
+    }
 }
 
 void TransformFeedbackGL::begin(GLenum primitiveMode)
@@ -64,25 +70,30 @@ void TransformFeedbackGL::bindIndexedBuffer(size_t index, const OffsetBindingPoi
 {
     // Directly bind buffer (not through the StateManager methods) because the buffer bindings are
     // tracked per transform feedback object
-    mStateManager->bindTransformFeedback(GL_TRANSFORM_FEEDBACK, mTransformFeedbackID);
-    if (binding.get() != nullptr)
+    if (binding != mCurrentIndexedBuffers[index])
     {
-        const BufferGL *bufferGL = GetImplAs<BufferGL>(binding.get());
-        if (binding.getSize() != 0)
+        mStateManager->bindTransformFeedback(GL_TRANSFORM_FEEDBACK, mTransformFeedbackID);
+        if (binding.get() != nullptr)
         {
-            mFunctions->bindBufferRange(GL_TRANSFORM_FEEDBACK_BUFFER, static_cast<GLuint>(index),
-                                        bufferGL->getBufferID(), binding.getOffset(),
-                                        binding.getSize());
+            const BufferGL *bufferGL = GetImplAs<BufferGL>(binding.get());
+            if (binding.getSize() != 0)
+            {
+                mFunctions->bindBufferRange(GL_TRANSFORM_FEEDBACK_BUFFER,
+                                            static_cast<GLuint>(index), bufferGL->getBufferID(),
+                                            binding.getOffset(), binding.getSize());
+            }
+            else
+            {
+                mFunctions->bindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, static_cast<GLuint>(index),
+                                           bufferGL->getBufferID());
+            }
         }
         else
         {
-            mFunctions->bindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, static_cast<GLuint>(index),
-                                       bufferGL->getBufferID());
+            mFunctions->bindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, static_cast<GLuint>(index), 0);
         }
-    }
-    else
-    {
-        mFunctions->bindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, static_cast<GLuint>(index), 0);
+
+        mCurrentIndexedBuffers[index] = binding;
     }
 }
 

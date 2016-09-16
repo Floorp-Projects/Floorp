@@ -19,10 +19,6 @@ namespace rx
 class MockTransformFeedbackImpl : public TransformFeedbackImpl
 {
   public:
-    MockTransformFeedbackImpl(const gl::TransformFeedbackState &state)
-        : TransformFeedbackImpl(state)
-    {
-    }
     ~MockTransformFeedbackImpl() { destructor(); }
 
     MOCK_METHOD1(begin, void(GLenum primitiveMode));
