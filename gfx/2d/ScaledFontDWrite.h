@@ -24,15 +24,18 @@ public:
     , mFontFamily(nullptr)
     , mFontFace(aFont)
     , mUseEmbeddedBitmap(false)
+    , mForceGDIMode(false)
   {}
 
   ScaledFontDWrite(IDWriteFont* aFont, IDWriteFontFamily* aFontFamily,
-                   IDWriteFontFace *aFontFace, Float aSize, bool aUseEmbeddedBitmap)
+                   IDWriteFontFace *aFontFace, Float aSize, bool aUseEmbeddedBitmap,
+                   bool aForceGDIMode)
     : ScaledFontBase(aSize)
     , mFont(aFont)
     , mFontFamily(aFontFamily)
     , mFontFace(aFontFace)
     , mUseEmbeddedBitmap(aUseEmbeddedBitmap)
+    , mForceGDIMode(aForceGDIMode)
   {}
 
   virtual FontType GetType() const { return FontType::DWRITE; }
@@ -49,6 +52,7 @@ public:
   virtual AntialiasMode GetDefaultAAMode() override;
 
   bool UseEmbeddedBitmaps() { return mUseEmbeddedBitmap; }
+  bool ForceGDIMode() { return mForceGDIMode; }
 
 #ifdef USE_SKIA
   virtual SkTypeface* GetSkTypeface();
@@ -61,6 +65,7 @@ public:
   RefPtr<IDWriteFontFamily> mFontFamily;
   RefPtr<IDWriteFontFace> mFontFace;
   bool mUseEmbeddedBitmap;
+  bool mForceGDIMode;
 
 protected:
 #ifdef USE_CAIRO_SCALED_FONT

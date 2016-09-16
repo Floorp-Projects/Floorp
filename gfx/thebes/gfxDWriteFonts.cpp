@@ -709,7 +709,8 @@ gfxDWriteFont::GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
     mAzureScaledFont =
             Factory::CreateScaledFontForDWriteFont(mFont, mFontFamily,
                                                    mFontFace, GetAdjustedSize(),
-                                                   useEmbeddedBitmap);
+                                                   useEmbeddedBitmap,
+                                                   GetForceGDIClassic());
   } else {
     mAzureScaledFont = Factory::CreateScaledFontForNativeFont(nativeFont,
                                                             GetAdjustedSize());
