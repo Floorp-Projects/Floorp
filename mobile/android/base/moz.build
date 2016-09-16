@@ -198,12 +198,16 @@ if CONFIG['MOZ_WEBRTC']:
         'constants.jar',
         'gecko-R.jar',
         'gecko-browser.jar',
-        'gecko-util.jar',
         'gecko-mozglue.jar',
+        'gecko-util.jar',
+        'gecko-view.jar',
     ]
     wrjar.javac_flags += ['-Xlint:all,-deprecation,-cast']
 
-geckoview_java_files = [
+gvjar = add_java_jar('gecko-view')
+
+gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
+                  for x in [
     'AlarmReceiver.java',
     'AndroidGamepadManager.java',
     'ANRReporter.java',
@@ -283,11 +287,32 @@ geckoview_java_files = [
     'sqlite/SQLiteBridgeException.java',
     'TouchEventInterceptor.java',
     'widget/SwipeDismissListViewTouchListener.java',
+]]
+
+gvjar.sources += [thirdparty_source_dir + f for f in [
+    'com/googlecode/eyesfree/braille/selfbraille/ISelfBrailleService.java',
+    'com/googlecode/eyesfree/braille/selfbraille/SelfBrailleClient.java',
+    'com/googlecode/eyesfree/braille/selfbraille/WriteData.java',
+]]
+
+gvjar.extra_jars += [
+    CONFIG['ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB'],
+    CONFIG['ANDROID_SUPPORT_V4_AAR_LIB'],
+    CONFIG['ANDROID_SUPPORT_V4_AAR_INTERNAL_LIB'],
+    'constants.jar',
+    'gecko-R.jar',
+    'gecko-mozglue.jar',
+    'gecko-util.jar',
 ]
 
+gvjar.javac_flags += [
+    '-Xlint:all,-deprecation,-fallthrough',
+    '-J-Xmx512m',
+    '-J-Xms128m'
+]
+
+
 gbjar = add_java_jar('gecko-browser')
-gbjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
-                  for x in geckoview_java_files]
 
 gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'AboutPages.java',
@@ -742,11 +767,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'widget/themed/ThemedTextView.java',
     'widget/themed/ThemedView.java',
 ]]
-gbjar.sources += [ thirdparty_source_dir + f for f in [
-    'com/googlecode/eyesfree/braille/selfbraille/ISelfBrailleService.java',
-    'com/googlecode/eyesfree/braille/selfbraille/SelfBrailleClient.java',
-    'com/googlecode/eyesfree/braille/selfbraille/WriteData.java',
-] ]
 android_package_dir = CONFIG['ANDROID_PACKAGE_NAME'].replace('.', '/')
 gbjar.generated_sources = [] # Keep it this way.
 gbjar.extra_jars += [
@@ -794,6 +814,7 @@ gbjar.extra_jars += [
     'gecko-mozglue.jar',
     'gecko-thirdparty.jar',
     'gecko-util.jar',
+    'gecko-view.jar',
     'sync-thirdparty.jar',
     'services.jar',
 ]
@@ -1069,7 +1090,8 @@ if CONFIG['MOZ_ANDROID_SEARCH_ACTIVITY']:
         'gecko-browser.jar',
         'gecko-mozglue.jar',
         'gecko-thirdparty.jar',
-        'gecko-util.jar'
+        'gecko-util.jar',
+        'gecko-view.jar',
     ]
 
 FINAL_TARGET_PP_FILES += ['package-name.txt.in']
