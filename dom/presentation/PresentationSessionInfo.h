@@ -79,6 +79,11 @@ public:
     mDevice = aDevice;
   }
 
+  void SetBuilder(nsIPresentationSessionTransportBuilder* aBuilder)
+  {
+    mBuilder = aBuilder;
+  }
+
   already_AddRefed<nsIPresentationDevice> GetDevice() const
   {
     nsCOMPtr<nsIPresentationDevice> device = mDevice;
@@ -107,12 +112,6 @@ public:
   nsresult ReplyError(nsresult aReason);
 
   virtual bool IsAccessible(base::ProcessId aProcessId);
-
-  void SetTransportBuilderConstructor(
-    nsIPresentationTransportBuilderConstructor* aBuilderConstructor)
-  {
-    mBuilderConstructor = aBuilderConstructor;
-  }
 
 protected:
   virtual ~PresentationSessionInfo()
@@ -150,11 +149,6 @@ protected:
 
   void ContinueTermination();
 
-  void ResetBuilder()
-  {
-    mBuilder = nullptr;
-  }
-
   // Should be nsIPresentationChannelDescription::TYPE_TCP/TYPE_DATACHANNEL
   uint8_t mTransportType = 0;
 
@@ -175,7 +169,6 @@ protected:
   nsCOMPtr<nsIPresentationSessionTransport> mTransport;
   nsCOMPtr<nsIPresentationControlChannel> mControlChannel;
   nsCOMPtr<nsIPresentationSessionTransportBuilder> mBuilder;
-  nsCOMPtr<nsIPresentationTransportBuilderConstructor> mBuilderConstructor;
 };
 
 // Session info with controlling browsing context (sender side) behaviors.

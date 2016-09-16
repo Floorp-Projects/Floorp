@@ -9,7 +9,6 @@ interface nsIInputStream;
 interface nsIPresentationAvailabilityListener;
 interface nsIPresentationRespondingListener;
 interface nsIPresentationSessionListener;
-interface nsIPresentationTransportBuilderConstructor;
 
 %{C++
 #define PRESENTATION_SERVICE_CID \
@@ -73,7 +72,6 @@ interface nsIPresentationService : nsISupports
    *                  NotifySuccess() is called with |id| if a session is
    *                  established successfully with the selected device.
    *                  Otherwise, NotifyError() is called with a error message.
-   * @param constructor: The constructor for creating a transport builder.
    */
   [noscript] void startSession(in URLArrayRef urls,
                                in DOMString sessionId,
@@ -81,8 +79,7 @@ interface nsIPresentationService : nsISupports
                                in DOMString deviceId,
                                in unsigned long long windowId,
                                in nsIDOMEventTarget eventTarget,
-                               in nsIPresentationServiceCallback callback,
-                               in nsIPresentationTransportBuilderConstructor constructor);
+                               in nsIPresentationServiceCallback callback);
 
   /*
    * Send the message to the session.
@@ -184,12 +181,10 @@ interface nsIPresentationService : nsISupports
    * @param windowId  The inner window ID associated with the presentation
    *                  session.
    * @param isLoading true if receiver page is loading successfully.
-   * @param constructor: The constructor for creating a transport builder.
    */
   void notifyReceiverReady(in DOMString sessionId,
                            in unsigned long long windowId,
-                           in boolean isLoading,
-                           in nsIPresentationTransportBuilderConstructor constructor);
+                           in boolean isLoading);
 
   /*
    * Notify the transport is closed

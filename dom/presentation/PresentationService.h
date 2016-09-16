@@ -56,6 +56,10 @@ public:
                            const uint8_t aRole,
                            base::ProcessId aProcessId);
 
+  nsresult RegisterTransportBuilder(const nsAString& aSessionId,
+                                    uint8_t aRole,
+                                    nsIPresentationSessionTransportBuilder* aBuilder);
+
 private:
   friend class PresentationDeviceRequest;
 
