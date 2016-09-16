@@ -57,7 +57,6 @@ class BasicCodeModule : public CodeModule {
   explicit BasicCodeModule(const CodeModule *that)
       : base_address_(that->base_address()),
         size_(that->size()),
-        shrink_down_delta_(that->shrink_down_delta()),
         code_file_(that->code_file()),
         code_identifier_(that->code_identifier()),
         debug_file_(that->debug_file()),
@@ -65,19 +64,18 @@ class BasicCodeModule : public CodeModule {
         version_(that->version()) {}
 
   BasicCodeModule(uint64_t base_address, uint64_t size,
-                  const string &code_file,
-                  const string &code_identifier,
-                  const string &debug_file,
-                  const string &debug_identifier,
-                  const string &version)
-      : base_address_(base_address),
-        size_(size),
-        shrink_down_delta_(0),
-        code_file_(code_file),
-        code_identifier_(code_identifier),
-        debug_file_(debug_file),
-        debug_identifier_(debug_identifier),
-        version_(version)
+		  const string &code_file,
+		  const string &code_identifier,
+		  const string &debug_file,
+		  const string &debug_identifier,
+		  const string &version)
+    : base_address_(base_address),
+      size_(size),
+      code_file_(code_file),
+      code_identifier_(code_identifier),
+      debug_file_(debug_file),
+      debug_identifier_(debug_identifier),
+      version_(version)
     {}
   virtual ~BasicCodeModule() {}
 
@@ -85,21 +83,16 @@ class BasicCodeModule : public CodeModule {
   // members.
   virtual uint64_t base_address() const { return base_address_; }
   virtual uint64_t size() const { return size_; }
-  virtual uint64_t shrink_down_delta() const { return shrink_down_delta_; }
-  virtual void SetShrinkDownDelta(uint64_t shrink_down_delta) {
-    shrink_down_delta_ = shrink_down_delta;
-  }
   virtual string code_file() const { return code_file_; }
   virtual string code_identifier() const { return code_identifier_; }
   virtual string debug_file() const { return debug_file_; }
   virtual string debug_identifier() const { return debug_identifier_; }
   virtual string version() const { return version_; }
-  virtual CodeModule* Copy() const { return new BasicCodeModule(this); }
+  virtual const CodeModule* Copy() const { return new BasicCodeModule(this); }
 
  private:
   uint64_t base_address_;
   uint64_t size_;
-  uint64_t shrink_down_delta_;
   string code_file_;
   string code_identifier_;
   string debug_file_;

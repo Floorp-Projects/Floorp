@@ -138,12 +138,8 @@ void DumpFile(const char *filename) {
   }
   printf("filename: %s\n", filename);
   size_t object_files_size;
-  const SuperFatArch* super_fat_object_files =
-      fat_reader.object_files(&object_files_size);
-  struct fat_arch *object_files;
-  if (!super_fat_object_files->ConvertToFatArch(object_files)) {
-    exit(1);
-  }
+  const struct fat_arch *object_files 
+    = fat_reader.object_files(&object_files_size);
   printf("  object file count: %ld\n", object_files_size);
   for (size_t i = 0; i < object_files_size; i++) {
     const struct fat_arch &file = object_files[i];

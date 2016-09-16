@@ -26,13 +26,11 @@ lss_rev=`python -c "import sys; execfile(sys.argv[1]); print deps['src/src/third
 # remove some extraneous bits
 rm -rf \
   ${crashreporter_dir}/google-breakpad/docs/ \
-  ${crashreporter_dir}/google-breakpad/scripts/ \
   ${crashreporter_dir}/google-breakpad/src/third_party/protobuf \
   ${crashreporter_dir}/google-breakpad/src/testing/ \
   ${crashreporter_dir}/google-breakpad/src/tools/gyp/ \
   ${crashreporter_dir}/google-breakpad/src/processor/testdata/ \
-  ${crashreporter_dir}/google-breakpad/src/tools/windows/dump_syms/testdata/ \
-  ${crashreporter_dir}/.travis.yml
+  ${crashreporter_dir}/google-breakpad/src/tools/windows/dump_syms/testdata/
 
 # restore our Makefile.ins
 hg -R ${repo} st -n | grep "Makefile\.in$" | xargs hg revert --no-backup
