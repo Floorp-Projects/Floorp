@@ -4,12 +4,10 @@
 
 #include "crashreporter.h"
 
-#include <algorithm>
-
 #include <dirent.h>
-#include <errno.h>
 #include <sys/stat.h>
-#include <unistd.h>
+#include <errno.h>
+#include <algorithm>
 
 using namespace CrashReporter;
 using std::string;
@@ -67,19 +65,5 @@ void UIPruneSavedDumps(const std::string& directory)
     UIDeleteFile(path.c_str());
 
     dumpfiles.pop_back();
-  }
-}
-
-void UIRunMinidumpAnalyzer(const string& exename, const string& filename)
-{
-  // Run the minidump analyzer and wait for it to finish
-  pid_t pid = fork();
-
-  if (pid == -1) {
-    return; // Nothing to do upon failure
-  } else if (pid == 0) {
-    execl(exename.c_str(), exename.c_str(), filename.c_str(), nullptr);
-  } else {
-    waitpid(pid, nullptr, 0);
   }
 }
