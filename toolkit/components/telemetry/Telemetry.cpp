@@ -2342,6 +2342,35 @@ TelemetryImpl::SnapshotScalars(unsigned int aDataset, bool aClearScalars, JSCont
 }
 
 NS_IMETHODIMP
+TelemetryImpl::KeyedScalarAdd(const nsACString& aName, const nsAString& aKey,
+                              JS::HandleValue aVal, JSContext* aCx)
+{
+  return TelemetryScalar::Add(aName, aKey, aVal, aCx);
+}
+
+NS_IMETHODIMP
+TelemetryImpl::KeyedScalarSet(const nsACString& aName, const nsAString& aKey,
+                              JS::HandleValue aVal, JSContext* aCx)
+{
+  return TelemetryScalar::Set(aName, aKey, aVal, aCx);
+}
+
+NS_IMETHODIMP
+TelemetryImpl::KeyedScalarSetMaximum(const nsACString& aName, const nsAString& aKey,
+                              JS::HandleValue aVal, JSContext* aCx)
+{
+  return TelemetryScalar::SetMaximum(aName, aKey, aVal, aCx);
+}
+
+NS_IMETHODIMP
+TelemetryImpl::SnapshotKeyedScalars(unsigned int aDataset, bool aClearScalars, JSContext* aCx,
+                                    uint8_t optional_argc, JS::MutableHandleValue aResult)
+{
+  return TelemetryScalar::CreateKeyedSnapshots(aDataset, aClearScalars, aCx, optional_argc,
+                                               aResult);
+}
+
+NS_IMETHODIMP
 TelemetryImpl::ClearScalars()
 {
   TelemetryScalar::ClearScalars();
@@ -2967,52 +2996,52 @@ void DestroyStatisticsRecorder()
 
 // Scalar API C++ Endpoints
 
-/**
- * Adds the value to the given scalar.
- *
- * @param aId The scalar enum id.
- * @param aValue The unsigned value to add to the scalar.
- */
 void
 ScalarAdd(mozilla::Telemetry::ScalarID aId, uint32_t aVal)
 {
   TelemetryScalar::Add(aId, aVal);
 }
 
-/**
- * Sets the scalar to the given value.
- *
- * @param aId The scalar enum id.
- * @param aValue The numeric, unsigned value to set the scalar to.
- */
 void
 ScalarSet(mozilla::Telemetry::ScalarID aId, uint32_t aVal)
 {
   TelemetryScalar::Set(aId, aVal);
 }
 
-/**
- * Sets the scalar to the given value.
- *
- * @param aId The scalar enum id.
- * @param aValue The string value to set the scalar to.
- */
 void
 ScalarSet(mozilla::Telemetry::ScalarID aId, const nsAString& aVal)
 {
   TelemetryScalar::Set(aId, aVal);
 }
 
-/**
- * Sets the scalar to the maximum of the current and the passed value.
- *
- * @param aId The scalar enum id.
- * @param aValue The unsigned value to set the scalar to.
- */
 void
 ScalarSetMaximum(mozilla::Telemetry::ScalarID aId, uint32_t aVal)
 {
   TelemetryScalar::SetMaximum(aId, aVal);
+}
+
+void
+ScalarAdd(mozilla::Telemetry::ScalarID aId, const nsAString& aKey, uint32_t aVal)
+{
+  TelemetryScalar::Add(aId, aKey, aVal);
+}
+
+void
+ScalarSet(mozilla::Telemetry::ScalarID aId, const nsAString& aKey, uint32_t aVal)
+{
+  TelemetryScalar::Set(aId, aKey, aVal);
+}
+
+void
+ScalarSet(mozilla::Telemetry::ScalarID aId, const nsAString& aKey, bool aVal)
+{
+  TelemetryScalar::Set(aId, aKey, aVal);
+}
+
+void
+ScalarSetMaximum(mozilla::Telemetry::ScalarID aId, const nsAString& aKey, uint32_t aVal)
+{
+  TelemetryScalar::SetMaximum(aId, aKey, aVal);
 }
 
 } // namespace Telemetry
