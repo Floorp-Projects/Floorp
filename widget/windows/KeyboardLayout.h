@@ -661,6 +661,13 @@ private:
   void InitNativeKey(NativeKey& aNativeKey,
                      const ModifierKeyState& aModKeyState);
 
+  /**
+   * See the comment of GetUniCharsAndModifiers() below.
+   */
+  UniCharsAndModifiers GetUniCharsAndModifiers(
+                         uint8_t aVirtualKey,
+                         VirtualKey::ShiftState aShiftState) const;
+
 public:
   static KeyboardLayout* GetInstance();
   static void Shutdown();
@@ -694,10 +701,17 @@ public:
   /**
    * GetUniCharsAndModifiers() returns characters which is inputted by the
    * aVirtualKey with aModKeyState.  This method isn't stateful.
+   * Note that if the combination causes text input, the result's Ctrl and
+   * Alt key state are never active.
    */
   UniCharsAndModifiers GetUniCharsAndModifiers(
                          uint8_t aVirtualKey,
-                         const ModifierKeyState& aModKeyState) const;
+                         const ModifierKeyState& aModKeyState) const
+  {
+    VirtualKey::ShiftState shiftState =
+      VirtualKey::ModifierKeyStateToShiftState(aModKeyState);
+    return GetUniCharsAndModifiers(aVirtualKey, shiftState);
+  }
 
   /**
    * OnLayoutChange() must be called before the first keydown message is

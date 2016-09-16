@@ -3679,17 +3679,17 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
     // set only a character for current key for keyup event.
     if (mActiveDeadKey < 0) {
       aNativeKey.mCommittedCharsAndModifiers =
-        mVirtualKeys[virtualKeyIndex].GetUniChars(aModKeyState);
+        GetUniCharsAndModifiers(virtualKey, aModKeyState);
       return;
     }
 
-    int32_t activeDeadKeyIndex = GetKeyIndex(mActiveDeadKey);
-    if (activeDeadKeyIndex < 0 || activeDeadKeyIndex >= NS_NUM_OF_KEYS) {
+    if (NS_WARN_IF(!IsPrintableCharKey(mActiveDeadKey))) {
 #if defined(DEBUG) || defined(MOZ_CRASHREPORTER)
       nsPrintfCString warning("The virtual key index (%d) of mActiveDeadKey "
                               "(0x%02X) is not a printable key (virtualKey="
                               "0x%02X)",
-                              activeDeadKeyIndex, mActiveDeadKey, virtualKey);
+                              GetKeyIndex(mActiveDeadKey), mActiveDeadKey,
+                              virtualKey);
       NS_WARNING(warning.get());
 #ifdef MOZ_CRASHREPORTER
       CrashReporter::AppendAppNotesToCrashReport(
@@ -3708,9 +3708,9 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
     // Otherwise, dead key followed by another dead key causes inputting both
     // character.
     UniCharsAndModifiers prevDeadChars =
-      mVirtualKeys[activeDeadKeyIndex].GetUniChars(mDeadKeyShiftState);
+      GetUniCharsAndModifiers(mActiveDeadKey, mDeadKeyShiftState);
     UniCharsAndModifiers newChars =
-      mVirtualKeys[virtualKeyIndex].GetUniChars(aModKeyState);
+      GetUniCharsAndModifiers(virtualKey, aModKeyState);
     // But keypress events should be fired for each committed character.
     aNativeKey.mCommittedCharsAndModifiers = prevDeadChars + newChars;
     if (isKeyDown) {
@@ -3724,22 +3724,21 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
   }
 
   UniCharsAndModifiers baseChars =
-    mVirtualKeys[virtualKeyIndex].GetUniChars(aModKeyState);
+    GetUniCharsAndModifiers(virtualKey, aModKeyState);
   if (mActiveDeadKey < 0) {
     // No dead-keys are active. Just return the produced characters.
     aNativeKey.mCommittedCharsAndModifiers = baseChars;
     return;
   }
 
-  int32_t activeDeadKeyIndex = GetKeyIndex(mActiveDeadKey);
-  if (NS_WARN_IF(activeDeadKeyIndex < 0)) {
+  if (NS_WARN_IF(!IsPrintableCharKey(mActiveDeadKey))) {
     return;
   }
 
   // There is no valid dead-key and base character combination.
   // Return dead-key character followed by base character.
   UniCharsAndModifiers deadChars =
-    mVirtualKeys[activeDeadKeyIndex].GetUniChars(mDeadKeyShiftState);
+    GetUniCharsAndModifiers(mActiveDeadKey, mDeadKeyShiftState);
   // But keypress events should be fired for each committed character.
   aNativeKey.mCommittedCharsAndModifiers = deadChars + baseChars;
   if (isKeyDown) {
@@ -3761,13 +3760,12 @@ KeyboardLayout::MaybeInitNativeKeyWithCompositeChar(
     return false;
   }
 
-  int32_t virtualKeyIndex = GetKeyIndex(aNativeKey.mOriginalVirtualKeyCode);
-  if (NS_WARN_IF(virtualKeyIndex < 0)) {
+  if (NS_WARN_IF(!IsPrintableCharKey(aNativeKey.mOriginalVirtualKeyCode))) {
     return false;
   }
 
   UniCharsAndModifiers baseChars =
-    mVirtualKeys[virtualKeyIndex].GetUniChars(aModKeyState);
+    GetUniCharsAndModifiers(aNativeKey.mOriginalVirtualKeyCode, aModKeyState);
   if (baseChars.IsEmpty() || !baseChars.mChars[0]) {
     return false;
   }
@@ -3792,15 +3790,14 @@ KeyboardLayout::MaybeInitNativeKeyWithCompositeChar(
 UniCharsAndModifiers
 KeyboardLayout::GetUniCharsAndModifiers(
                   uint8_t aVirtualKey,
-                  const ModifierKeyState& aModKeyState) const
+                  VirtualKey::ShiftState aShiftState) const
 {
   UniCharsAndModifiers result;
   int32_t key = GetKeyIndex(aVirtualKey);
   if (key < 0) {
     return result;
   }
-  return mVirtualKeys[key].
-    GetUniChars(VirtualKey::ModifiersToShiftState(aModKeyState.GetModifiers()));
+  return mVirtualKeys[key].GetUniChars(aShiftState);
 }
 
 void
