@@ -48,7 +48,6 @@
 #include "google_breakpad/processor/memory_region.h"
 #include "google_breakpad/processor/symbol_supplier.h"
 #include "google_breakpad/processor/system_info.h"
-#include "processor/linked_ptr.h"
 
 class MockMemoryRegion: public google_breakpad::MemoryRegion {
  public:
@@ -115,11 +114,9 @@ class MockCodeModule: public google_breakpad::CodeModule {
   string debug_file()       const { return code_file_; }
   string debug_identifier() const { return code_file_; }
   string version()          const { return version_; }
-  google_breakpad::CodeModule *Copy() const {
+  const google_breakpad::CodeModule *Copy() const {
     abort(); // Tests won't use this.
   }
-  virtual uint64_t shrink_down_delta() const { return 0; }
-  virtual void SetShrinkDownDelta(uint64_t shrink_down_delta) {}
 
  private:
   uint64_t base_address_;
@@ -129,11 +126,11 @@ class MockCodeModule: public google_breakpad::CodeModule {
 };
 
 class MockCodeModules: public google_breakpad::CodeModules {
- public:
+ public:  
   typedef google_breakpad::CodeModule CodeModule;
   typedef google_breakpad::CodeModules CodeModules;
 
-  void Add(const MockCodeModule *module) {
+  void Add(const MockCodeModule *module) { 
     modules_.push_back(module);
   }
 
@@ -160,19 +157,9 @@ class MockCodeModules: public google_breakpad::CodeModules {
     return modules_.at(index);
   }
 
-  CodeModules *Copy() const { abort(); }  // Tests won't use this
+  const CodeModules *Copy() const { abort(); } // Tests won't use this.
 
-  virtual std::vector<google_breakpad::linked_ptr<const CodeModule> >
-  GetShrunkRangeModules() const {
-    return std::vector<google_breakpad::linked_ptr<const CodeModule> >();
-  }
-
-  // Returns true, if module address range shrink is enabled.
-  bool IsModuleShrinkEnabled() const {
-    return false;
-  }
-
- private:
+ private:  
   typedef std::vector<const MockCodeModule *> ModuleVector;
   ModuleVector modules_;
 };

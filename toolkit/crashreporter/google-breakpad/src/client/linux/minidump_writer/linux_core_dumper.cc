@@ -49,9 +49,8 @@ namespace google_breakpad {
 
 LinuxCoreDumper::LinuxCoreDumper(pid_t pid,
                                  const char* core_path,
-                                 const char* procfs_path,
-                                 const char* root_prefix)
-    : LinuxDumper(pid, root_prefix),
+                                 const char* procfs_path)
+    : LinuxDumper(pid),
       core_path_(core_path),
       procfs_path_(procfs_path),
       thread_infos_(&allocator_, 8) {

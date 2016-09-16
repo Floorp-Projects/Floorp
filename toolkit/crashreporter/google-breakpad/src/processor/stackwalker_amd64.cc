@@ -147,29 +147,6 @@ StackFrameAMD64* StackwalkerAMD64::GetCallerByCFIFrameInfo(
   return frame.release();
 }
 
-bool StackwalkerAMD64::IsEndOfStack(uint64_t caller_rip, uint64_t caller_rsp,
-                                    uint64_t callee_rsp) {
-  // Treat an instruction address of 0 as end-of-stack.
-  if (caller_rip == 0) {
-    return true;
-  }
-
-  // If the new stack pointer is at a lower address than the old, then
-  // that's clearly incorrect. Treat this as end-of-stack to enforce
-  // progress and avoid infinite loops.
-  if (caller_rsp < callee_rsp) {
-    return true;
-  }
-
-  return false;
-}
-
-// Returns true if `ptr` is not in x86-64 canonical form.
-// https://en.wikipedia.org/wiki/X86-64#Virtual_address_space_details
-static bool is_non_canonical(uint64_t ptr) {
-  return ptr > 0x7FFFFFFFFFFF && ptr < 0xFFFF800000000000;
-}
-
 StackFrameAMD64* StackwalkerAMD64::GetCallerByFramePointerRecovery(
     const vector<StackFrame*>& frames) {
   StackFrameAMD64* last_frame = static_cast<StackFrameAMD64*>(frames.back());
@@ -192,28 +169,14 @@ StackFrameAMD64* StackwalkerAMD64::GetCallerByFramePointerRecovery(
   // %caller_rip = *(%callee_rbp + 8)
   // %caller_rbp = *(%callee_rbp)
 
-  // If rbp is not 8-byte aligned it can't be a frame pointer.
-  if (last_rbp % 8 != 0) {
-    return NULL;
-  }
-
   uint64_t caller_rip, caller_rbp;
   if (memory_->GetMemoryAtAddress(last_rbp + 8, &caller_rip) &&
       memory_->GetMemoryAtAddress(last_rbp, &caller_rbp)) {
     uint64_t caller_rsp = last_rbp + 16;
 
-    // If the recovered rip is not a canonical address it can't be
-    // the return address, so rbp must not have been a frame pointer.
-    if (is_non_canonical(caller_rip)) {
-      return NULL;
-    }
-
     // Simple sanity check that the stack is growing downwards as expected.
-    if (IsEndOfStack(caller_rip, caller_rsp, last_rsp) ||
-        caller_rbp < last_rbp) {
-      // Reached end-of-stack or stack is not growing downwards.
+    if (caller_rbp < last_rbp || caller_rsp < last_rsp)
       return NULL;
-    }
 
     StackFrameAMD64* frame = new StackFrameAMD64();
     frame->trust = StackFrame::FRAME_TRUST_FP;
@@ -321,11 +284,15 @@ StackFrame* StackwalkerAMD64::GetCallerFrame(const CallStack* stack,
     new_frame->context.rbp = static_cast<uint32_t>(new_frame->context.rbp);
   }
 
-  if (IsEndOfStack(new_frame->context.rip, new_frame->context.rsp,
-                   last_frame->context.rsp)) {
-    // Reached end-of-stack.
+  // Treat an instruction address of 0 as end-of-stack.
+  if (new_frame->context.rip == 0)
     return NULL;
-  }
+
+  // If the new stack pointer is at a lower address than the old, then
+  // that's clearly incorrect. Treat this as end-of-stack to enforce
+  // progress and avoid infinite loops.
+  if (new_frame->context.rsp <= last_frame->context.rsp)
+    return NULL;
 
   // new_frame->context.rip is the return address, which is the instruction
   // after the CALL that caused us to arrive at the callee. Set
