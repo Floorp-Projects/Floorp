@@ -24,6 +24,9 @@ CGPathRef CGFontGetGlyphPath(CGFontRef fontRef, CGAffineTransform *textTransform
 };
 #endif
 
+#ifdef USE_CAIRO_SCALED_FONT
+#include "cairo-quartz.h"
+#endif
 
 namespace mozilla {
 namespace gfx {
@@ -283,6 +286,15 @@ ScaledFontMac::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton)
     return true;
 
 }
+
+#ifdef USE_CAIRO_SCALED_FONT
+cairo_font_face_t*
+ScaledFontMac::GetCairoFontFace()
+{
+  MOZ_ASSERT(mFont);
+  return cairo_quartz_font_face_create_for_cgfont(mFont);
+}
+#endif
 
 } // namespace gfx
 } // namespace mozilla

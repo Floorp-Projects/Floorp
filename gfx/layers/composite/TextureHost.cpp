@@ -85,6 +85,11 @@ public:
 
   uint64_t GetSerial() const { return mSerial; }
 
+  virtual bool RecvDestroySync() override {
+    DestroyIfNeeded();
+    return true;
+  }
+
   HostIPCAllocator* mSurfaceAllocator;
   RefPtr<TextureHost> mTextureHost;
   // mSerial is unique in TextureClient's process.

@@ -4891,9 +4891,6 @@ CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
 
     if (!res.mSourceSurface) {
       res = nsLayoutUtils::SurfaceFromElement(element, sfeFlags, mTarget);
-      if (res.mSourceSurface) {
-        gfxUtils::WriteAsPNG(res.mSourceSurface, "/Volumes/firefoxos/Dev/mozilla-git/temp.png");
-      }
     }
 
     if (!res.mSourceSurface && !res.mDrawInfo.mImgContainer) {
