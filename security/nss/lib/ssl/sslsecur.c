@@ -930,7 +930,11 @@ ssl_SecureSend(sslSocket *ss, const unsigned char *buf, int len, int flags)
         if (ss->opt.enableFalseStart ||
             (ss->opt.enable0RttData && !ss->sec.isServer)) {
             ssl_GetSSL3HandshakeLock(ss);
-            falseStart = ss->ssl3.hs.canFalseStart || ss->ssl3.hs.doing0Rtt;
+            /* The client can sometimes send before the handshake is fully
+             * complete. In TLS 1.2: false start; in TLS 1.3: 0-RTT. */
+            falseStart = ss->ssl3.hs.canFalseStart ||
+                         ss->ssl3.hs.zeroRttState == ssl_0rtt_sent ||
+                         ss->ssl3.hs.zeroRttState == ssl_0rtt_accepted;
             ssl_ReleaseSSL3HandshakeLock(ss);
         }
         if (!falseStart && ss->handshake) {
@@ -960,8 +964,10 @@ ssl_SecureSend(sslSocket *ss, const unsigned char *buf, int len, int flags)
     if (!ss->firstHsDone) {
 #ifdef DEBUG
         ssl_GetSSL3HandshakeLock(ss);
-        PORT_Assert(ss->ssl3.hs.canFalseStart ||
-                    (ss->ssl3.hs.doing0Rtt && !ss->sec.isServer));
+        PORT_Assert(!ss->sec.isServer &&
+                    (ss->ssl3.hs.canFalseStart ||
+                     ss->ssl3.hs.zeroRttState == ssl_0rtt_sent ||
+                     ss->ssl3.hs.zeroRttState == ssl_0rtt_accepted));
         ssl_ReleaseSSL3HandshakeLock(ss);
 #endif
         SSL_TRC(3, ("%d: SSL[%d]: SecureSend: sending data due to false start",
