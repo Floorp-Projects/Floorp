@@ -487,3 +487,12 @@ ER3(SSL_ERROR_MISSING_SUPPORTED_GROUPS, (SSL_ERROR_BASE + 152),
 
 ER3(SSL_ERROR_TOO_MANY_RECORDS, (SSL_ERROR_BASE + 153),
     "SSL sent or received too many records with the same symmetric key.")
+
+ER3(SSL_ERROR_RX_UNEXPECTED_HELLO_RETRY_REQUEST, (SSL_ERROR_BASE + 154),
+    "SSL received an unexpected Hello Retry Request handshake message.")
+
+ER3(SSL_ERROR_RX_MALFORMED_HELLO_RETRY_REQUEST, (SSL_ERROR_BASE + 155),
+    "SSL received a malformed Hello Retry Request handshake message.")
+
+ER3(SSL_ERROR_BAD_2ND_CLIENT_HELLO, (SSL_ERROR_BASE + 156),
+    "SSL received a second Client Hello message without a usable key share.")
