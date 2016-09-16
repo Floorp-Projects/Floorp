@@ -406,17 +406,17 @@ Toolbox.prototype = {
       this.textboxContextMenuPopup.addEventListener("popupshowing",
         this._updateTextboxMenuItems, true);
 
-      let shortcuts = new KeyShortcuts({
+      this.shortcuts = new KeyShortcuts({
         window: this.doc.defaultView
       });
       this._buildDockButtons();
-      this._buildOptions(shortcuts);
+      this._buildOptions();
       this._buildTabs();
       this._applyCacheSettings();
       this._applyServiceWorkersTestingSettings();
       this._addKeysToWindow();
-      this._addReloadKeys(shortcuts);
-      this._addHostListeners(shortcuts);
+      this._addReloadKeys();
+      this._addHostListeners();
       this._registerOverlays();
       if (!this._hostOptions || this._hostOptions.zoom === true) {
         ZoomKeys.register(this.win);
@@ -530,7 +530,7 @@ Toolbox.prototype = {
     }
   },
 
-  _buildOptions: function (shortcuts) {
+  _buildOptions: function () {
     let selectOptions = (name, event) => {
       // Flip back to the last used panel if we are already
       // on the options panel.
@@ -543,8 +543,8 @@ Toolbox.prototype = {
       // Prevent the opening of bookmarks window on toolbox.options.key
       event.preventDefault();
     };
-    shortcuts.on(L10N.getStr("toolbox.options.key"), selectOptions);
-    shortcuts.on(L10N.getStr("toolbox.help.key"), selectOptions);
+    this.shortcuts.on(L10N.getStr("toolbox.options.key"), selectOptions);
+    this.shortcuts.on(L10N.getStr("toolbox.help.key"), selectOptions);
   },
 
   _splitConsoleOnKeypress: function (e) {
@@ -562,26 +562,24 @@ Toolbox.prototype = {
    * Add a shortcut key that should work when a split console
    * has focus to the toolbox.
    *
-   * @param {element} keyElement
-   *        They <key> XUL element describing the shortcut key
-   * @param {string} whichTool
-   *        The tool the key belongs to. The corresponding command
-   *        will only trigger if this tool is active.
+   * @param {String} key
+   *        The electron key shortcut.
+   * @param {Function} handler
+   *        The callback that should be called when the provided key shortcut is pressed.
+   * @param {String} whichTool
+   *        The tool the key belongs to. The corresponding handler will only be triggered
+   *        if this tool is active.
    */
-  useKeyWithSplitConsole: function (keyElement, whichTool) {
-    let cloned = keyElement.cloneNode();
-    cloned.setAttribute("oncommand", "void(0)");
-    cloned.removeAttribute("command");
-    cloned.addEventListener("command", (e) => {
-      // Only forward the command if the tool is active
+  useKeyWithSplitConsole: function (key, handler, whichTool) {
+    this.shortcuts.on(key, (name, event) => {
       if (this.currentToolId === whichTool && this.isSplitConsoleFocused()) {
-        keyElement.doCommand();
+        handler();
+        event.preventDefault();
       }
-    }, true);
-    this.doc.getElementById("toolbox-keyset").appendChild(cloned);
+    });
   },
 
-  _addReloadKeys: function (shortcuts) {
+  _addReloadKeys: function () {
     [
       ["reload", false],
       ["reload2", false],
@@ -589,7 +587,7 @@ Toolbox.prototype = {
       ["forceReload2", true]
     ].forEach(([id, force]) => {
       let key = L10N.getStr("toolbox." + id + ".key");
-      shortcuts.on(key, (name, event) => {
+      this.shortcuts.on(key, (name, event) => {
         this.reloadTarget(force);
 
         // Prevent Firefox shortcuts from reloading the page
@@ -598,23 +596,23 @@ Toolbox.prototype = {
     });
   },
 
-  _addHostListeners: function (shortcuts) {
-    shortcuts.on(L10N.getStr("toolbox.nextTool.key"),
+  _addHostListeners: function () {
+    this.shortcuts.on(L10N.getStr("toolbox.nextTool.key"),
                  (name, event) => {
                    this.selectNextTool();
                    event.preventDefault();
                  });
-    shortcuts.on(L10N.getStr("toolbox.previousTool.key"),
+    this.shortcuts.on(L10N.getStr("toolbox.previousTool.key"),
                  (name, event) => {
                    this.selectPreviousTool();
                    event.preventDefault();
                  });
-    shortcuts.on(L10N.getStr("toolbox.minimize.key"),
+    this.shortcuts.on(L10N.getStr("toolbox.minimize.key"),
                  (name, event) => {
                    this._toggleMinimizeMode();
                    event.preventDefault();
                  });
-    shortcuts.on(L10N.getStr("toolbox.toggleHost.key"),
+    this.shortcuts.on(L10N.getStr("toolbox.toggleHost.key"),
                  (name, event) => {
                    this.switchToPreviousHost();
                    event.preventDefault();
