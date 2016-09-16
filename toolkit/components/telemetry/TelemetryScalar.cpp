@@ -70,6 +70,8 @@ using mozilla::Telemetry::Common::IsInDataset;
 
 namespace {
 
+const uint32_t kMaximumNumberOfKeys = 100;
+const uint32_t kMaximumKeyStringLength = 70;
 const uint32_t kMaximumStringValueLength = 50;
 const uint32_t kScalarCount =
   static_cast<uint32_t>(mozilla::Telemetry::ScalarID::ScalarCount);
@@ -81,6 +83,9 @@ enum class ScalarResult : uint8_t {
   OperationNotSupported,
   InvalidType,
   InvalidValue,
+  // Keyed Scalar Errors
+  KeyTooLong,
+  TooManyKeys,
   // String Scalar Errors
   StringTooLong,
   // Unsigned Scalar Errors
@@ -111,7 +116,10 @@ MapToNsResult(ScalarResult aSr)
       return NS_OK;
     case ScalarResult::InvalidType:
     case ScalarResult::InvalidValue:
+    case ScalarResult::KeyTooLong:
       return NS_ERROR_ILLEGAL_VALUE;
+    case ScalarResult::TooManyKeys:
+      return NS_ERROR_FAILURE;
     case ScalarResult::UnsignedNegativeValue:
     case ScalarResult::UnsignedTruncatedValue:
       // We shouldn't throw if trying to set a negative number or are truncated,
@@ -471,8 +479,236 @@ ScalarBoolean::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   return aMallocSizeOf(this);
 }
 
+/**
+ * Allocate a scalar class given the scalar info.
+ *
+ * @param aInfo The informations for the scalar coming from the definition file.
+ * @return nullptr if the scalar type is unknown, otherwise a valid pointer to the
+ *         scalar type.
+ */
+ScalarBase*
+internal_ScalarAllocate(uint32_t aScalarKind)
+{
+  ScalarBase* scalar = nullptr;
+  switch (aScalarKind) {
+  case nsITelemetry::SCALAR_COUNT:
+    scalar = new ScalarUnsigned();
+    break;
+  case nsITelemetry::SCALAR_STRING:
+    scalar = new ScalarString();
+    break;
+  case nsITelemetry::SCALAR_BOOLEAN:
+    scalar = new ScalarBoolean();
+    break;
+  default:
+    MOZ_ASSERT(false, "Invalid scalar type");
+  }
+  return scalar;
+}
+
+/**
+ * The implementation for the keyed scalar type.
+ */
+class KeyedScalar
+{
+public:
+  typedef mozilla::Pair<nsCString, nsCOMPtr<nsIVariant>> KeyValuePair;
+
+  explicit KeyedScalar(uint32_t aScalarKind) : mScalarKind(aScalarKind) {};
+  ~KeyedScalar() {};
+
+  // Set, Add and SetMaximum functions as described in the Telemetry IDL.
+  // These methods implicitly instantiate a Scalar[*] for each key.
+  ScalarResult SetValue(const nsAString& aKey, nsIVariant* aValue);
+  ScalarResult AddValue(const nsAString& aKey, nsIVariant* aValue);
+  ScalarResult SetMaximum(const nsAString& aKey, nsIVariant* aValue);
+
+  // Convenience methods used by the C++ API.
+  void SetValue(const nsAString& aKey, uint32_t aValue);
+  void SetValue(const nsAString& aKey, bool aValue);
+  void AddValue(const nsAString& aKey, uint32_t aValue);
+  void SetMaximum(const nsAString& aKey, uint32_t aValue);
+
+  // GetValue is used to get the key-value pairs stored in the keyed scalar
+  // when persisting it to JS.
+  nsresult GetValue(nsTArray<KeyValuePair>& aValues) const;
+
+  // To measure the memory stats.
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
+
+private:
+  typedef nsClassHashtable<nsCStringHashKey, ScalarBase> ScalarKeysMapType;
+
+  ScalarKeysMapType mScalarKeys;
+  const uint32_t mScalarKind;
+
+  ScalarResult GetScalarForKey(const nsAString& aKey, ScalarBase** aRet);
+};
+
+ScalarResult
+KeyedScalar::SetValue(const nsAString& aKey, nsIVariant* aValue)
+{
+  ScalarBase* scalar = nullptr;
+  ScalarResult sr = GetScalarForKey(aKey, &scalar);
+  if (sr != ScalarResult::Ok) {
+    return sr;
+  }
+
+  return scalar->SetValue(aValue);
+}
+
+ScalarResult
+KeyedScalar::AddValue(const nsAString& aKey, nsIVariant* aValue)
+{
+  ScalarBase* scalar = nullptr;
+  ScalarResult sr = GetScalarForKey(aKey, &scalar);
+  if (sr != ScalarResult::Ok) {
+    return sr;
+  }
+
+  return scalar->AddValue(aValue);
+}
+
+ScalarResult
+KeyedScalar::SetMaximum(const nsAString& aKey, nsIVariant* aValue)
+{
+  ScalarBase* scalar = nullptr;
+  ScalarResult sr = GetScalarForKey(aKey, &scalar);
+  if (sr != ScalarResult::Ok) {
+    return sr;
+  }
+
+  return scalar->SetMaximum(aValue);
+}
+
+void
+KeyedScalar::SetValue(const nsAString& aKey, uint32_t aValue)
+{
+  ScalarBase* scalar = nullptr;
+  ScalarResult sr = GetScalarForKey(aKey, &scalar);
+  if (sr != ScalarResult::Ok) {
+    MOZ_ASSERT(false, "Key too long or too many keys are recorded in the scalar.");
+    return;
+  }
+
+  return scalar->SetValue(aValue);
+}
+
+void
+KeyedScalar::SetValue(const nsAString& aKey, bool aValue)
+{
+  ScalarBase* scalar = nullptr;
+  ScalarResult sr = GetScalarForKey(aKey, &scalar);
+  if (sr != ScalarResult::Ok) {
+    MOZ_ASSERT(false, "Key too long or too many keys are recorded in the scalar.");
+    return;
+  }
+
+  return scalar->SetValue(aValue);
+}
+
+void
+KeyedScalar::AddValue(const nsAString& aKey, uint32_t aValue)
+{
+  ScalarBase* scalar = nullptr;
+  ScalarResult sr = GetScalarForKey(aKey, &scalar);
+  if (sr != ScalarResult::Ok) {
+    MOZ_ASSERT(false, "Key too long or too many keys are recorded in the scalar.");
+    return;
+  }
+
+  return scalar->AddValue(aValue);
+}
+
+void
+KeyedScalar::SetMaximum(const nsAString& aKey, uint32_t aValue)
+{
+  ScalarBase* scalar = nullptr;
+  ScalarResult sr = GetScalarForKey(aKey, &scalar);
+  if (sr != ScalarResult::Ok) {
+    MOZ_ASSERT(false, "Key too long or too many keys are recorded in the scalar.");
+    return;
+  }
+
+  return scalar->SetMaximum(aValue);
+}
+
+/**
+ * Get a key-value array with the values for the Keyed Scalar.
+ * @param aValue The array that will hold the key-value pairs.
+ * @return {nsresult} NS_OK or an error value as reported by the
+ *         the specific scalar objects implementations (e.g.
+ *         ScalarUnsigned).
+ */
+nsresult
+KeyedScalar::GetValue(nsTArray<KeyValuePair>& aValues) const
+{
+  for (auto iter = mScalarKeys.ConstIter(); !iter.Done(); iter.Next()) {
+    ScalarBase* scalar = static_cast<ScalarBase*>(iter.Data());
+
+    // Get the scalar value.
+    nsCOMPtr<nsIVariant> scalarValue;
+    nsresult rv = scalar->GetValue(scalarValue);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    // Append it to value list.
+    aValues.AppendElement(mozilla::MakePair(nsCString(iter.Key()), scalarValue));
+  }
+
+  return NS_OK;
+}
+
+/**
+ * Get the scalar for the referenced key.
+ * If there's no such key, instantiate a new Scalar object with the
+ * same type of the Keyed scalar and create the key.
+ */
+ScalarResult
+KeyedScalar::GetScalarForKey(const nsAString& aKey, ScalarBase** aRet)
+{
+  if (aKey.Length() >= kMaximumKeyStringLength) {
+    return ScalarResult::KeyTooLong;
+  }
+
+  if (mScalarKeys.Count() >= kMaximumNumberOfKeys) {
+    return ScalarResult::TooManyKeys;
+  }
+
+  NS_ConvertUTF16toUTF8 utf8Key(aKey);
+
+  ScalarBase* scalar = nullptr;
+  if (mScalarKeys.Get(utf8Key, &scalar)) {
+    *aRet = scalar;
+    return ScalarResult::Ok;
+  }
+
+  scalar = internal_ScalarAllocate(mScalarKind);
+  if (!scalar) {
+    return ScalarResult::InvalidType;
+  }
+
+  mScalarKeys.Put(utf8Key, scalar);
+
+  *aRet = scalar;
+  return ScalarResult::Ok;
+}
+
+size_t
+KeyedScalar::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
+{
+  size_t n = aMallocSizeOf(this);
+  for (auto iter = mScalarKeys.Iter(); !iter.Done(); iter.Next()) {
+    ScalarBase* scalar = static_cast<ScalarBase*>(iter.Data());
+    n += scalar->SizeOfIncludingThis(aMallocSizeOf);
+  }
+  return n;
+}
+
 typedef nsUint32HashKey ScalarIDHashKey;
 typedef nsClassHashtable<ScalarIDHashKey, ScalarBase> ScalarStorageMapType;
+typedef nsClassHashtable<ScalarIDHashKey, KeyedScalar> KeyedScalarStorageMapType;
 
 } // namespace
 
@@ -495,6 +731,9 @@ ScalarMapType gScalarNameIDMap(kScalarCount);
 // the scalar instance and takes care of deallocating them when they
 // get removed from the map.
 ScalarStorageMapType gScalarStorageMap;
+// The ID -> Keyed Scalar Object map. As for plain scalars, this is
+// nsClassHashtable. See above.
+KeyedScalarStorageMapType gKeyedScalarStorageMap;
 
 } // namespace
 
@@ -551,12 +790,20 @@ internal_LogToBrowserConsole(uint32_t aLogLevel, const nsAString& aMsg)
 bool
 internal_ShouldLogError(ScalarResult aSr)
 {
-  if (aSr == ScalarResult::StringTooLong ||
-      aSr == ScalarResult::UnsignedNegativeValue ||
-      aSr == ScalarResult::UnsignedTruncatedValue) {
+  switch (aSr) {
+    case ScalarResult::StringTooLong: MOZ_FALLTHROUGH;
+    case ScalarResult::KeyTooLong: MOZ_FALLTHROUGH;
+    case ScalarResult::TooManyKeys: MOZ_FALLTHROUGH;
+    case ScalarResult::UnsignedNegativeValue: MOZ_FALLTHROUGH;
+    case ScalarResult::UnsignedTruncatedValue:
+      // Intentional fall-through.
       return true;
+
+    default:
+      return false;
   }
 
+  // It should never reach this point.
   return false;
 }
 
@@ -576,6 +823,12 @@ internal_LogScalarError(const nsACString& aScalarName, ScalarResult aSr)
   switch (aSr) {
     case ScalarResult::StringTooLong:
       errorMessage.Append(NS_LITERAL_STRING(" - Truncating scalar value to 50 characters."));
+      break;
+    case ScalarResult::KeyTooLong:
+      errorMessage.Append(NS_LITERAL_STRING(" - The key length must be limited to 70 characters."));
+      break;
+    case ScalarResult::TooManyKeys:
+      errorMessage.Append(NS_LITERAL_STRING(" - Keyed scalars cannot have more than 100 keys."));
       break;
     case ScalarResult::UnsignedNegativeValue:
       errorMessage.Append(NS_LITERAL_STRING(" - Trying to set an unsigned scalar to a negative number."));
@@ -618,6 +871,18 @@ internal_InfoForScalarID(mozilla::Telemetry::ScalarID aId)
   return gScalars[static_cast<uint32_t>(aId)];
 }
 
+/**
+ * Check if the given scalar is a keyed scalar.
+ *
+ * @param aId The scalar enum.
+ * @return true if aId refers to a keyed scalar, false otherwise.
+ */
+bool
+internal_IsKeyedScalar(mozilla::Telemetry::ScalarID aId)
+{
+  return internal_InfoForScalarID(aId).keyed;
+}
+
 bool
 internal_CanRecordForScalarID(mozilla::Telemetry::ScalarID aId)
 {
@@ -638,33 +903,6 @@ internal_CanRecordForScalarID(mozilla::Telemetry::ScalarID aId)
   }
 
   return true;
-}
-
-/**
- * Allocate a scalar class given the scalar info.
- *
- * @param aInfo The informations for the scalar coming from the definition file.
- * @return nullptr if the scalar type is unknown, otherwise a valid pointer to the
- *         scalar type.
- */
-ScalarBase*
-internal_ScalarAllocate(const ScalarInfo& aInfo)
-{
-  ScalarBase* scalar = nullptr;
-  switch (aInfo.kind) {
-  case nsITelemetry::SCALAR_COUNT:
-    scalar = new ScalarUnsigned();
-    break;
-  case nsITelemetry::SCALAR_STRING:
-    scalar = new ScalarString();
-    break;
-  case nsITelemetry::SCALAR_BOOLEAN:
-    scalar = new ScalarBoolean();
-    break;
-  default:
-    MOZ_ASSERT(false, "Invalid scalar type");
-  }
-  return scalar;
 }
 
 /**
@@ -708,6 +946,7 @@ nsresult
 internal_GetScalarByEnum(mozilla::Telemetry::ScalarID aId, ScalarBase** aRet)
 {
   if (!IsValidEnumId(aId)) {
+    MOZ_ASSERT(false, "Requested a scalar with an invalid id.");
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -725,7 +964,7 @@ internal_GetScalarByEnum(mozilla::Telemetry::ScalarID aId, ScalarBase** aRet)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  scalar = internal_ScalarAllocate(info);
+  scalar = internal_ScalarAllocate(info.kind);
   if (!scalar) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -750,6 +989,102 @@ internal_GetRecordableScalar(mozilla::Telemetry::ScalarID aId)
   ScalarBase* scalar = nullptr;
   nsresult rv = internal_GetScalarByEnum(aId, &scalar);
   if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  if (internal_IsKeyedScalar(aId)) {
+    return nullptr;
+  }
+
+  // Are we allowed to record this scalar?
+  if (!internal_CanRecordForScalarID(aId)) {
+    return nullptr;
+  }
+
+  return scalar;
+}
+
+} // namespace
+
+
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+//
+// PRIVATE: thread-unsafe helpers for the keyed scalars
+
+namespace {
+
+/**
+ * Get a keyed scalar object by its enum id. This implicitly allocates the keyed
+ * scalar object in the storage if it wasn't previously allocated.
+ *
+ * @param aId The scalar id.
+ * @param aRes The output variable that stores scalar object.
+ * @return
+ *   NS_ERROR_INVALID_ARG if the scalar id is unknown or a this is a keyed string
+ *                        scalar.
+ *   NS_ERROR_NOT_AVAILABLE if the scalar is expired.
+ *   NS_OK if the scalar was found. If that's the case, aResult contains a
+ *   valid pointer to a scalar type.
+ */
+nsresult
+internal_GetKeyedScalarByEnum(mozilla::Telemetry::ScalarID aId, KeyedScalar** aRet)
+{
+  if (!IsValidEnumId(aId)) {
+    MOZ_ASSERT(false, "Requested a keyed scalar with an invalid id.");
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  const uint32_t id = static_cast<uint32_t>(aId);
+
+  KeyedScalar* scalar = nullptr;
+  if (gKeyedScalarStorageMap.Get(id, &scalar)) {
+    *aRet = scalar;
+    return NS_OK;
+  }
+
+  const ScalarInfo &info = gScalars[id];
+
+  if (IsExpiredVersion(info.expiration())) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // We don't currently support keyed string scalars. Disable them.
+  if (info.kind == nsITelemetry::SCALAR_STRING) {
+    MOZ_ASSERT(false, "Keyed string scalars are not currently supported.");
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  scalar = new KeyedScalar(info.kind);
+  if (!scalar) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  gKeyedScalarStorageMap.Put(id, scalar);
+
+  *aRet = scalar;
+  return NS_OK;
+}
+
+/**
+ * Get a keyed scalar object by its enum id, if we're allowed to record it.
+ *
+ * @param aId The scalar id.
+ * @return The KeyedScalar instance or nullptr if we're not allowed to record
+ *         the scalar.
+ */
+KeyedScalar*
+internal_GetRecordableKeyedScalar(mozilla::Telemetry::ScalarID aId)
+{
+  // Get the scalar by the enum (it also internally checks for aId validity).
+  KeyedScalar* scalar = nullptr;
+  nsresult rv = internal_GetKeyedScalarByEnum(aId, &scalar);
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  if (!internal_IsKeyedScalar(aId)) {
     return nullptr;
   }
 
@@ -812,6 +1147,7 @@ TelemetryScalar::DeInitializeGlobalState()
   gCanRecordExtended = false;
   gScalarNameIDMap.Clear();
   gScalarStorageMap.Clear();
+  gKeyedScalarStorageMap.Clear();
   gInitDone = false;
 }
 
@@ -834,7 +1170,7 @@ TelemetryScalar::SetCanRecordExtended(bool b) {
  * @param aName The scalar name.
  * @param aVal The numeric value to add to the scalar.
  * @param aCx The JS context.
- * @return NS_OK if the value was added or if we're not allow to record to this
+ * @return NS_OK if the value was added or if we're not allowed to record to this
  *  dataset. Otherwise, return an error.
  */
 nsresult
@@ -856,6 +1192,11 @@ TelemetryScalar::Add(const nsACString& aName, JS::HandleValue aVal, JSContext* a
     rv = internal_GetEnumByScalarName(aName, &id);
     if (NS_FAILED(rv)) {
       return rv;
+    }
+
+    // We're trying to set a plain scalar, so make sure this is one.
+    if (internal_IsKeyedScalar(id)) {
+      return NS_ERROR_ILLEGAL_VALUE;
     }
 
     // Are we allowed to record this scalar?
@@ -888,6 +1229,70 @@ TelemetryScalar::Add(const nsACString& aName, JS::HandleValue aVal, JSContext* a
 /**
  * Adds the value to the given scalar.
  *
+ * @param aName The scalar name.
+ * @param aKey The key name.
+ * @param aVal The numeric value to add to the scalar.
+ * @param aCx The JS context.
+ * @return NS_OK if the value was added or if we're not allow to record to this
+ *  dataset. Otherwise, return an error.
+ */
+nsresult
+TelemetryScalar::Add(const nsACString& aName, const nsAString& aKey, JS::HandleValue aVal,
+                     JSContext* aCx)
+{
+  // Unpack the aVal to nsIVariant. This uses the JS context.
+  nsCOMPtr<nsIVariant> unpackedVal;
+  nsresult rv =
+    nsContentUtils::XPConnect()->JSToVariant(aCx, aVal,  getter_AddRefs(unpackedVal));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  ScalarResult sr;
+  {
+    StaticMutexAutoLock locker(gTelemetryScalarsMutex);
+
+    mozilla::Telemetry::ScalarID id;
+    rv = internal_GetEnumByScalarName(aName, &id);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    // Make sure this is a keyed scalar.
+    if (!internal_IsKeyedScalar(id)) {
+      return NS_ERROR_ILLEGAL_VALUE;
+    }
+
+    // Are we allowed to record this scalar?
+    if (!internal_CanRecordForScalarID(id)) {
+      return NS_OK;
+    }
+
+    // Finally get the scalar.
+    KeyedScalar* scalar = nullptr;
+    rv = internal_GetKeyedScalarByEnum(id, &scalar);
+    if (NS_FAILED(rv)) {
+      // Don't throw on expired scalars.
+      if (rv == NS_ERROR_NOT_AVAILABLE) {
+        return NS_OK;
+      }
+      return rv;
+    }
+
+    sr = scalar->AddValue(aKey, unpackedVal);
+  }
+
+  // Warn the user about the error if we need to.
+  if (internal_ShouldLogError(sr)) {
+    internal_LogScalarError(aName, sr);
+  }
+
+  return MapToNsResult(sr);
+}
+
+/**
+ * Adds the value to the given scalar.
+ *
  * @param aId The scalar enum id.
  * @param aVal The numeric value to add to the scalar.
  */
@@ -902,6 +1307,27 @@ TelemetryScalar::Add(mozilla::Telemetry::ScalarID aId, uint32_t aValue)
   }
 
   scalar->AddValue(aValue);
+}
+
+/**
+ * Adds the value to the given keyed scalar.
+ *
+ * @param aId The scalar enum id.
+ * @param aKey The key name.
+ * @param aVal The numeric value to add to the scalar.
+ */
+void
+TelemetryScalar::Add(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
+                     uint32_t aValue)
+{
+  StaticMutexAutoLock locker(gTelemetryScalarsMutex);
+
+  KeyedScalar* scalar = internal_GetRecordableKeyedScalar(aId);
+  if (!scalar) {
+    return;
+  }
+
+  scalar->AddValue(aKey, aValue);
 }
 
 /**
@@ -934,6 +1360,11 @@ TelemetryScalar::Set(const nsACString& aName, JS::HandleValue aVal, JSContext* a
       return rv;
     }
 
+    // We're trying to set a plain scalar, so make sure this is one.
+    if (internal_IsKeyedScalar(id)) {
+      return NS_ERROR_ILLEGAL_VALUE;
+    }
+
     // Are we allowed to record this scalar?
     if (!internal_CanRecordForScalarID(id)) {
       return NS_OK;
@@ -951,6 +1382,70 @@ TelemetryScalar::Set(const nsACString& aName, JS::HandleValue aVal, JSContext* a
     }
 
     sr = scalar->SetValue(unpackedVal);
+  }
+
+  // Warn the user about the error if we need to.
+  if (internal_ShouldLogError(sr)) {
+    internal_LogScalarError(aName, sr);
+  }
+
+  return MapToNsResult(sr);
+}
+
+/**
+ * Sets the keyed scalar to the given value.
+ *
+ * @param aName The scalar name.
+ * @param aKey The key name.
+ * @param aVal The value to set the scalar to.
+ * @param aCx The JS context.
+ * @return NS_OK if the value was added or if we're not allow to record to this
+ *  dataset. Otherwise, return an error.
+ */
+nsresult
+TelemetryScalar::Set(const nsACString& aName, const nsAString& aKey, JS::HandleValue aVal,
+                     JSContext* aCx)
+{
+  // Unpack the aVal to nsIVariant. This uses the JS context.
+  nsCOMPtr<nsIVariant> unpackedVal;
+  nsresult rv =
+    nsContentUtils::XPConnect()->JSToVariant(aCx, aVal,  getter_AddRefs(unpackedVal));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  ScalarResult sr;
+  {
+    StaticMutexAutoLock locker(gTelemetryScalarsMutex);
+
+    mozilla::Telemetry::ScalarID id;
+    rv = internal_GetEnumByScalarName(aName, &id);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    // We're trying to set a keyed scalar. Report an error if this isn't one.
+    if (!internal_IsKeyedScalar(id)) {
+      return NS_ERROR_ILLEGAL_VALUE;
+    }
+
+    // Are we allowed to record this scalar?
+    if (!internal_CanRecordForScalarID(id)) {
+      return NS_OK;
+    }
+
+    // Finally get the scalar.
+    KeyedScalar* scalar = nullptr;
+    rv = internal_GetKeyedScalarByEnum(id, &scalar);
+    if (NS_FAILED(rv)) {
+      // Don't throw on expired scalars.
+      if (rv == NS_ERROR_NOT_AVAILABLE) {
+        return NS_OK;
+      }
+      return rv;
+    }
+
+    sr = scalar->SetValue(aKey, unpackedVal);
   }
 
   // Warn the user about the error if we need to.
@@ -1019,6 +1514,48 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, bool aValue)
 }
 
 /**
+ * Sets the keyed scalar to the given numeric value.
+ *
+ * @param aId The scalar enum id.
+ * @param aKey The scalar key.
+ * @param aValue The numeric, unsigned value to set the scalar to.
+ */
+void
+TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
+                     uint32_t aValue)
+{
+  StaticMutexAutoLock locker(gTelemetryScalarsMutex);
+
+  KeyedScalar* scalar = internal_GetRecordableKeyedScalar(aId);
+  if (!scalar) {
+    return;
+  }
+
+  scalar->SetValue(aKey, aValue);
+}
+
+/**
+ * Sets the scalar to the given boolean value.
+ *
+ * @param aId The scalar enum id.
+ * @param aKey The scalar key.
+ * @param aValue The boolean value to set the scalar to.
+ */
+void
+TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
+                     bool aValue)
+{
+  StaticMutexAutoLock locker(gTelemetryScalarsMutex);
+
+  KeyedScalar* scalar = internal_GetRecordableKeyedScalar(aId);
+  if (!scalar) {
+    return;
+  }
+
+  scalar->SetValue(aKey, aValue);
+}
+
+/**
  * Sets the scalar to the maximum of the current and the passed value.
  *
  * @param aName The scalar name.
@@ -1046,6 +1583,11 @@ TelemetryScalar::SetMaximum(const nsACString& aName, JS::HandleValue aVal, JSCon
     rv = internal_GetEnumByScalarName(aName, &id);
     if (NS_FAILED(rv)) {
       return rv;
+    }
+
+    // Make sure this is not a keyed scalar.
+    if (internal_IsKeyedScalar(id)) {
+      return NS_ERROR_ILLEGAL_VALUE;
     }
 
     // Are we allowed to record this scalar?
@@ -1078,6 +1620,70 @@ TelemetryScalar::SetMaximum(const nsACString& aName, JS::HandleValue aVal, JSCon
 /**
  * Sets the scalar to the maximum of the current and the passed value.
  *
+ * @param aName The scalar name.
+ * @param aKey The key name.
+ * @param aVal The numeric value to set the scalar to.
+ * @param aCx The JS context.
+ * @return NS_OK if the value was added or if we're not allow to record to this
+ *  dataset. Otherwise, return an error.
+ */
+nsresult
+TelemetryScalar::SetMaximum(const nsACString& aName, const nsAString& aKey, JS::HandleValue aVal,
+                            JSContext* aCx)
+{
+  // Unpack the aVal to nsIVariant. This uses the JS context.
+  nsCOMPtr<nsIVariant> unpackedVal;
+  nsresult rv =
+    nsContentUtils::XPConnect()->JSToVariant(aCx, aVal,  getter_AddRefs(unpackedVal));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  ScalarResult sr;
+  {
+    StaticMutexAutoLock locker(gTelemetryScalarsMutex);
+
+    mozilla::Telemetry::ScalarID id;
+    rv = internal_GetEnumByScalarName(aName, &id);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    // Make sure this is a keyed scalar.
+    if (!internal_IsKeyedScalar(id)) {
+      return NS_ERROR_ILLEGAL_VALUE;
+    }
+
+    // Are we allowed to record this scalar?
+    if (!internal_CanRecordForScalarID(id)) {
+      return NS_OK;
+    }
+
+    // Finally get the scalar.
+    KeyedScalar* scalar = nullptr;
+    rv = internal_GetKeyedScalarByEnum(id, &scalar);
+    if (NS_FAILED(rv)) {
+      // Don't throw on expired scalars.
+      if (rv == NS_ERROR_NOT_AVAILABLE) {
+        return NS_OK;
+      }
+      return rv;
+    }
+
+    sr = scalar->SetMaximum(aKey, unpackedVal);
+  }
+
+  // Warn the user about the error if we need to.
+  if (internal_ShouldLogError(sr)) {
+    internal_LogScalarError(aName, sr);
+  }
+
+  return MapToNsResult(sr);
+}
+
+/**
+ * Sets the scalar to the maximum of the current and the passed value.
+ *
  * @param aId The scalar enum id.
  * @param aValue The numeric value to set the scalar to.
  */
@@ -1092,6 +1698,27 @@ TelemetryScalar::SetMaximum(mozilla::Telemetry::ScalarID aId, uint32_t aValue)
   }
 
   scalar->SetValue(aValue);
+}
+
+/**
+ * Sets the keyed scalar to the maximum of the current and the passed value.
+ *
+ * @param aId The scalar enum id.
+ * @param aKey The key name.
+ * @param aValue The numeric value to set the scalar to.
+ */
+void
+TelemetryScalar::SetMaximum(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
+                            uint32_t aValue)
+{
+  StaticMutexAutoLock locker(gTelemetryScalarsMutex);
+
+  KeyedScalar* scalar = internal_GetRecordableKeyedScalar(aId);
+  if (!scalar) {
+    return;
+  }
+
+  scalar->SetValue(aKey, aValue);
 }
 
 /**
@@ -1170,6 +1797,99 @@ TelemetryScalar::CreateSnapshots(unsigned int aDataset, bool aClearScalars, JSCo
 }
 
 /**
+ * Serializes the scalars from the given dataset to a json-style object and resets them.
+ * The returned structure looks like:
+ *   { "group1.probe": { "key_1": 2, "key_2": 1, ... }, ... }
+ *
+ * @param aDataset DATASET_RELEASE_CHANNEL_OPTOUT or DATASET_RELEASE_CHANNEL_OPTIN.
+ * @param aClear Whether to clear out the keyed scalars after snapshotting.
+ */
+nsresult
+TelemetryScalar::CreateKeyedSnapshots(unsigned int aDataset, bool aClearScalars, JSContext* aCx,
+                                      uint8_t optional_argc, JS::MutableHandle<JS::Value> aResult)
+{
+  // If no arguments were passed in, apply the default value.
+  if (!optional_argc) {
+    aClearScalars = false;
+  }
+
+  JS::Rooted<JSObject*> root_obj(aCx, JS_NewPlainObject(aCx));
+  if (!root_obj) {
+    return NS_ERROR_FAILURE;
+  }
+  aResult.setObject(*root_obj);
+
+  // Only lock the mutex while accessing our data, without locking any JS related code.
+  typedef mozilla::Pair<const char*, nsTArray<KeyedScalar::KeyValuePair>> DataPair;
+  nsTArray<DataPair> scalarsToReflect;
+  {
+    StaticMutexAutoLock locker(gTelemetryScalarsMutex);
+    // Iterate the scalars in gKeyedScalarStorageMap. The storage may contain empty or yet
+    // to be initialized scalars.
+    for (auto iter = gKeyedScalarStorageMap.Iter(); !iter.Done(); iter.Next()) {
+      KeyedScalar* scalar = static_cast<KeyedScalar*>(iter.Data());
+
+      // Get the informations for this scalar.
+      const ScalarInfo& info = gScalars[iter.Key()];
+
+      // Serialize the scalar if it's in the desired dataset.
+      if (IsInDataset(info.dataset, aDataset)) {
+        // Get the keys for this scalar.
+        nsTArray<KeyedScalar::KeyValuePair> scalarKeyedData;
+        nsresult rv = scalar->GetValue(scalarKeyedData);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+        // Append it to our list.
+        scalarsToReflect.AppendElement(mozilla::MakePair(info.name(), scalarKeyedData));
+      }
+    }
+
+    if (aClearScalars) {
+      // The map already takes care of freeing the allocated memory.
+      gKeyedScalarStorageMap.Clear();
+    }
+  }
+
+  // Reflect it to JS.
+  for (nsTArray<DataPair>::size_type i = 0; i < scalarsToReflect.Length(); i++) {
+    const DataPair& keyedScalarData = scalarsToReflect[i];
+
+    // Go through each keyed scalar and create a keyed scalar object.
+    // This object will hold the values for all the keyed scalar keys.
+    JS::RootedObject keyedScalarObj(aCx, JS_NewPlainObject(aCx));
+
+    // Define a property for each scalar key, then add it to the keyed scalar
+    // object.
+    const nsTArray<KeyedScalar::KeyValuePair>& keyProps = keyedScalarData.second();
+    for (uint32_t i = 0; i < keyProps.Length(); i++) {
+      const KeyedScalar::KeyValuePair& keyData = keyProps[i];
+
+      // Convert the value for the key to a JSValue.
+      JS::Rooted<JS::Value> keyJsValue(aCx);
+      nsresult rv =
+        nsContentUtils::XPConnect()->VariantToJS(aCx, keyedScalarObj, keyData.second(), &keyJsValue);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      // Add the key to the scalar representation.
+      const NS_ConvertUTF8toUTF16 key(keyData.first());
+      if (!JS_DefineUCProperty(aCx, keyedScalarObj, key.Data(), key.Length(), keyJsValue, JSPROP_ENUMERATE)) {
+        return NS_ERROR_FAILURE;
+      }
+    }
+
+    // Add the scalar to the root object.
+    if (!JS_DefineProperty(aCx, root_obj, keyedScalarData.first(), keyedScalarObj, JSPROP_ENUMERATE)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  return NS_OK;
+}
+
+/**
  * Resets all the stored scalars. This is intended to be only used in tests.
  */
 void
@@ -1177,6 +1897,7 @@ TelemetryScalar::ClearScalars()
 {
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
   gScalarStorageMap.Clear();
+  gKeyedScalarStorageMap.Clear();
 }
 
 size_t
@@ -1191,8 +1912,14 @@ TelemetryScalar::GetScalarSizesOfIncludingThis(mozilla::MallocSizeOf aMallocSize
 {
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
   size_t n = 0;
+  // For the plain scalars...
   for (auto iter = gScalarStorageMap.Iter(); !iter.Done(); iter.Next()) {
     ScalarBase* scalar = static_cast<ScalarBase*>(iter.Data());
+    n += scalar->SizeOfIncludingThis(aMallocSizeOf);
+  }
+  // ...and for the keyed scalars.
+  for (auto iter = gKeyedScalarStorageMap.Iter(); !iter.Done(); iter.Next()) {
+    KeyedScalar* scalar = static_cast<KeyedScalar*>(iter.Data());
     n += scalar->SizeOfIncludingThis(aMallocSizeOf);
   }
   return n;

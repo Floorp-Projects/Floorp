@@ -964,8 +964,16 @@ var Impl = {
     return ret;
   },
 
-  getScalars: function (subsession, clearSubsession) {
-    this._log.trace("getScalars - subsession: " + subsession + ", clearSubsession: " + clearSubsession);
+  /**
+   * Get a snapshot of the scalars and clear them.
+   * @param {subsession} If true, then we collect the data for a subsession.
+   * @param {clearSubsession} If true, we  need to clear the subsession.
+   * @param {keyed} Take a snapshot of keyed or non keyed scalars.
+   * @return {Object} The scalar data as a Javascript object.
+   */
+  getScalars: function (subsession, clearSubsession, keyed) {
+    this._log.trace("getScalars - subsession: " + subsession + ", clearSubsession: " +
+                    clearSubsession + ", keyed: " + keyed);
 
     if (!subsession) {
       // We only support scalars for subsessions.
@@ -973,7 +981,8 @@ var Impl = {
       return {};
     }
 
-    let scalarsSnapshot =
+    let scalarsSnapshot = keyed ?
+      Telemetry.snapshotKeyedScalars(this.getDatasetType(), clearSubsession) :
       Telemetry.snapshotScalars(this.getDatasetType(), clearSubsession);
 
     // Don't return the test scalars.
@@ -1283,6 +1292,7 @@ var Impl = {
     payloadObj.processes = {
       parent: {
         scalars: protect(() => this.getScalars(isSubsession, clearSubsession)),
+        keyedScalars: protect(() => this.getScalars(isSubsession, clearSubsession, true)),
       }
     };
 
