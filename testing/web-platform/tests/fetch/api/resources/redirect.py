@@ -37,7 +37,7 @@ def main(request, response):
         if scheme == "" or scheme == "http" or scheme == "https":
             url += "&" if '?' in url else "?"
             #keep url parameters in location
-            url += urlencode(request.GET.items())
+            url += urlencode({key: request.GET.first(key) for key in request.GET.keys()})
             #make sure location changes during redirection loop
             url += "&count=" + str(stashed_data['count'])
         headers.append(("Location", url))
