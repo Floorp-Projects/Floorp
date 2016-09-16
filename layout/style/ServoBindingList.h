@@ -59,6 +59,10 @@ SERVO_BINDING_FUNC(Servo_ParseProperty,
                    ThreadSafeURIHolder* base,
                    ThreadSafeURIHolder* referrer,
                    ThreadSafePrincipalHolder* principal)
+SERVO_BINDING_FUNC(Servo_RestyleWithAddedDeclaration,
+                   ServoComputedValuesStrong,
+                   ServoDeclarationBlockBorrowed declarations,
+                   ServoComputedValuesBorrowed previous_style)
 
 // Style attribute
 SERVO_BINDING_FUNC(Servo_ParseStyleAttribute, ServoDeclarationBlockStrong,

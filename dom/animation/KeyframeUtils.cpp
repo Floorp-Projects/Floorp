@@ -616,25 +616,33 @@ KeyframeUtils::GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
       // a KeyframeValueEntry for each value.
       nsTArray<PropertyStyleAnimationValuePair> values;
 
-      // For shorthands, we store the string as a token stream so we need to
-      // extract that first.
-      if (nsCSSProps::IsShorthand(pair.mProperty)) {
-        nsCSSValueTokenStream* tokenStream = pair.mValue.GetTokenStreamValue();
+      if (styleBackend == StyleBackendType::Servo) {
         if (!StyleAnimationValue::ComputeValues(pair.mProperty,
-              CSSEnabledState::eForAllContent, aElement, aStyleContext,
-              tokenStream->mTokenStream, /* aUseSVGMode */ false, values) ||
-            IsComputeValuesFailureKey(pair)) {
+              CSSEnabledState::eForAllContent, aStyleContext,
+              *pair.mServoDeclarationBlock, values)) {
           continue;
         }
       } else {
-        if (!StyleAnimationValue::ComputeValues(pair.mProperty,
-              CSSEnabledState::eForAllContent, aElement, aStyleContext,
-              pair.mValue, /* aUseSVGMode */ false, values)) {
-          continue;
+        // For shorthands, we store the string as a token stream so we need to
+        // extract that first.
+        if (nsCSSProps::IsShorthand(pair.mProperty)) {
+          nsCSSValueTokenStream* tokenStream = pair.mValue.GetTokenStreamValue();
+          if (!StyleAnimationValue::ComputeValues(pair.mProperty,
+                CSSEnabledState::eForAllContent, aElement, aStyleContext,
+                tokenStream->mTokenStream, /* aUseSVGMode */ false, values) ||
+              IsComputeValuesFailureKey(pair)) {
+            continue;
+          }
+        } else {
+          if (!StyleAnimationValue::ComputeValues(pair.mProperty,
+                CSSEnabledState::eForAllContent, aElement, aStyleContext,
+                pair.mValue, /* aUseSVGMode */ false, values)) {
+            continue;
+          }
+          MOZ_ASSERT(values.Length() == 1,
+                    "Longhand properties should produce a single"
+                    " StyleAnimationValue");
         }
-        MOZ_ASSERT(values.Length() == 1,
-                   "Longhand properties should produce a single"
-                   " StyleAnimationValue");
       }
 
       for (auto& value : values) {
