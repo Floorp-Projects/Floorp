@@ -81,6 +81,16 @@ NTSTATUS WINAPI TargetNtSetInformationThread(
       break;
     if (ThreadImpersonationToken != thread_info_class)
       break;
+    if (!thread_information)
+      break;
+    HANDLE token;
+    if (sizeof(token) > thread_information_bytes)
+      break;
+
+    NTSTATUS ret = CopyData(&token, thread_information, sizeof(token));
+    if (!NT_SUCCESS(ret) || NULL != token)
+      break;
+
     // This is a revert to self.
     return STATUS_SUCCESS;
   } while (false);
