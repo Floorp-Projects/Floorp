@@ -3,7 +3,7 @@
 <RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
      xmlns:em="http://www.mozilla.org/2004/em-rdf#">
 
-  <Description about="urn:mozilla:extension:addon1@tests.mozilla.org">
+  <Description about="urn:mozilla:extension:updatemulti@tests.mozilla.org">
     <em:updates>
       <Seq>
         <li>
@@ -14,7 +14,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>1</em:minVersion>
                 <em:maxVersion>1</em:maxVersion>
-                <em:updateLink>http://localhost:4444/addons/test_updateid2.xpi</em:updateLink>
+                <em:updateLink>http://localhost:4444/addons/test_update_multi2.xpi</em:updateLink>
               </Description>
             </em:targetApplication>
           </Description>
