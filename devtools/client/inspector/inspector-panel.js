@@ -35,14 +35,6 @@ const {LocalizationHelper} = require("devtools/shared/l10n");
 const INSPECTOR_L10N = new LocalizationHelper("devtools/locale/inspector.properties");
 const TOOLBOX_L10N = new LocalizationHelper("devtools/locale/toolbox.properties");
 
-// Sidebar dimensions
-const INITIAL_SIDEBAR_SIZE = 350;
-const MIN_SIDEBAR_SIZE = 50;
-
-// If the toolbox width is smaller than given amount of pixels,
-// the sidebar automatically switches from 'landscape' to 'portrait' mode.
-const PORTRAIT_MODE_WIDTH = 700;
-
 /**
  * Represents an open instance of the Inspector for a tab.
  * The inspector controls the breadcrumbs, the markup view, and the sidebar
@@ -102,9 +94,6 @@ function InspectorPanel(iframeWindow, toolbox) {
   this.onDetached = this.onDetached.bind(this);
   this.onPaneToggleButtonClicked = this.onPaneToggleButtonClicked.bind(this);
   this._onMarkupFrameLoad = this._onMarkupFrameLoad.bind(this);
-  this.onPanelWindowResize = this.onPanelWindowResize.bind(this);
-  this.onSidebarShown = this.onSidebarShown.bind(this);
-  this.onSidebarHidden = this.onSidebarHidden.bind(this);
 
   this._target.on("will-navigate", this._onBeforeNavigate);
   this._detectingActorFeatures = this._detectActorFeatures();
@@ -411,98 +400,6 @@ InspectorPanel.prototype = {
     return this._toolbox.browserRequire;
   },
 
-  get InspectorTabPanel() {
-    if (!this._InspectorTabPanel) {
-      this._InspectorTabPanel =
-        this.React.createFactory(this.browserRequire(
-        "devtools/client/inspector/components/inspector-tab-panel"));
-    }
-    return this._InspectorTabPanel;
-  },
-
-  /**
-   * Build Splitter located between the main and side area of
-   * the Inspector panel.
-   */
-  setupSplitter: function () {
-    let SplitBox = this.React.createFactory(this.browserRequire(
-      "devtools/client/shared/components/splitter/split-box"));
-
-    this.panelWin.addEventListener("resize", this.onPanelWindowResize, true);
-
-    let splitter = SplitBox({
-      className: "inspector-sidebar-splitter",
-      initialWidth: INITIAL_SIDEBAR_SIZE,
-      initialHeight: INITIAL_SIDEBAR_SIZE,
-      minSize: MIN_SIDEBAR_SIZE,
-      splitterSize: 1,
-      endPanelControl: true,
-      startPanel: this.InspectorTabPanel({
-        id: "inspector-main-content"
-      }),
-      endPanel: this.InspectorTabPanel({
-        id: "inspector-sidebar-container"
-      })
-    });
-
-    this._splitter = this.ReactDOM.render(splitter,
-      this.panelDoc.getElementById("inspector-splitter-box"));
-
-    // Persist splitter state in preferences.
-    this.sidebar.on("show", this.onSidebarShown);
-    this.sidebar.on("hide", this.onSidebarHidden);
-    this.sidebar.on("destroy", this.onSidebarHidden);
-  },
-
-  /**
-   * Splitter clean up.
-   */
-  teardownSplitter: function () {
-    this.panelWin.removeEventListener("resize", this.onPanelWindowResize, true);
-
-    this.sidebar.off("show", this.onSidebarShown);
-    this.sidebar.off("hide", this.onSidebarHidden);
-    this.sidebar.off("destroy", this.onSidebarHidden);
-  },
-
-  /**
-   * If Toolbox width is less than 600 px, the splitter changes its mode
-   * to `horizontal` to support portrait view.
-   */
-  onPanelWindowResize: function () {
-    let box = this.panelDoc.getElementById("inspector-splitter-box");
-    this._splitter.setState({
-      vert: (box.clientWidth > PORTRAIT_MODE_WIDTH)
-    });
-  },
-
-  onSidebarShown: function () {
-    let width;
-    let height;
-
-    // Initialize splitter size from preferences.
-    try {
-      width = Services.prefs.getIntPref("devtools.toolsidebar-width.inspector");
-      height = Services.prefs.getIntPref("devtools.toolsidebar-height.inspector");
-    } catch (e) {
-      // Set width and height of the splitter. Only one
-      // value is really useful at a time depending on the current
-      // orientation (vertical/horizontal).
-      // Having both is supported by the splitter component.
-      width = INITIAL_SIDEBAR_SIZE;
-      height = INITIAL_SIDEBAR_SIZE;
-    }
-
-    this._splitter.setState({width, height});
-  },
-
-  onSidebarHidden: function () {
-    // Store the current splitter size to preferences.
-    let state = this._splitter.state;
-    Services.prefs.setIntPref("devtools.toolsidebar-width.inspector", state.width);
-    Services.prefs.setIntPref("devtools.toolsidebar-height.inspector", state.height);
-  },
-
   /**
    * Build the sidebar.
    */
@@ -558,11 +455,54 @@ InspectorPanel.prototype = {
       this.sidebar.toggleTab(true, "fontinspector");
     }
 
-    // Setup the splitter before the sidebar is displayed so,
-    // we don't miss any events.
-    this.setupSplitter();
+    this.setupSidebarSize();
 
     this.sidebar.show(defaultTab);
+  },
+
+  /**
+   * Sidebar size is currently driven by vbox.inspector-sidebar-container
+   * element, which is located at the left/bottom side of the side bar splitter.
+   * Its size is changed by the splitter and stored into preferences.
+   * As soon as bug 1260552 is fixed and new HTML based splitter in place
+   * the size can be driven by div.inspector-sidebar element. This element
+   * represents the ToolSidebar and so, the entire logic related to size
+   * persistence can be done inside the ToolSidebar.
+   */
+  setupSidebarSize: function () {
+    let sidePaneContainer = this.panelDoc.querySelector(
+      "#inspector-sidebar-container");
+
+    this.sidebar.on("show", () => {
+      try {
+        sidePaneContainer.width = Services.prefs.getIntPref(
+          "devtools.toolsidebar-width.inspector");
+        sidePaneContainer.height = Services.prefs.getIntPref(
+          "devtools.toolsidebar-height.inspector");
+      } catch (e) {
+        // The default width is the min-width set in CSS
+        // for #inspector-sidebar-container
+        // Set width and height of the sidebar container. Only one
+        // value is really useful at a time depending on the current
+        // toolbox orientation and having both doesn't break anything.
+        sidePaneContainer.width = 450;
+        sidePaneContainer.height = 450;
+      }
+    });
+
+    this.sidebar.on("hide", () => {
+      Services.prefs.setIntPref("devtools.toolsidebar-width.inspector",
+        sidePaneContainer.width);
+      Services.prefs.setIntPref("devtools.toolsidebar-height.inspector",
+        sidePaneContainer.height);
+    });
+
+    this.sidebar.on("destroy", () => {
+      Services.prefs.setIntPref("devtools.toolsidebar-width.inspector",
+        sidePaneContainer.width);
+      Services.prefs.setIntPref("devtools.toolsidebar-height.inspector",
+        sidePaneContainer.height);
+    });
   },
 
   setupToolbar: function () {
@@ -858,9 +798,6 @@ InspectorPanel.prototype = {
 
     this.sidebar.off("select", this._setDefaultSidebar);
     let sidebarDestroyer = this.sidebar.destroy();
-
-    this.teardownSplitter();
-
     this.sidebar = null;
 
     this.teardownToolbar();
@@ -1314,8 +1251,7 @@ InspectorPanel.prototype = {
    * state and tooltip.
    */
   onPaneToggleButtonClicked: function (e) {
-    let sidePaneContainer = this.panelDoc.querySelector(
-      "#inspector-splitter-box .controlled");
+    let sidePaneContainer = this.panelDoc.querySelector("#inspector-sidebar-container");
     let isVisible = !this._sidebarToggle.state.collapsed;
 
     // Make sure the sidebar has width and height attributes before collapsing
