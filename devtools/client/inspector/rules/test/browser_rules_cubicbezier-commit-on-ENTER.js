@@ -53,7 +53,7 @@ function* testPressingEnterCommitsChanges(swatch, ruleView) {
   // Pressing RETURN ends up doing 2 rule-view updates, one for the preview and
   // one for the commit when the tooltip closes.
   let onRuleViewChanged = waitForNEvents(ruleView, "ruleview-changed", 2);
-  focusAndSendKey(widget.parent.ownerDocument.defaultView, "RETURN");
+  EventUtils.sendKey("RETURN", widget.parent.ownerDocument.defaultView);
   yield onRuleViewChanged;
 
   let style = yield getComputedStyleProperty("body", null,
