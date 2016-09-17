@@ -36,8 +36,7 @@ enum DirectionSetting {
   "lr"
 };
 
-[Constructor(double startTime, double endTime, DOMString text),
- Pref="media.webvtt.enabled"]
+[Constructor(double startTime, double endTime, DOMString text)]
 interface VTTCue : TextTrackCue {
   [Pref="media.webvtt.regions.enabled"]
   attribute VTTRegion? region;

@@ -28,12 +28,6 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TextTrackRegion)
 
-  static bool RegionsEnabled(JSContext* cx, JSObject* obj)
-  {
-    return Preferences::GetBool("media.webvtt.enabled") &&
-           Preferences::GetBool("media.webvtt.regions.enabled");
-  }
-
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   nsISupports* GetParentObject() const

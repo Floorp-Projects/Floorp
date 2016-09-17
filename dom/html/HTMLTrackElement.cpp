@@ -50,10 +50,6 @@ nsGenericHTMLElement*
 NS_NewHTMLTrackElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                        mozilla::dom::FromParser aFromParser)
 {
-  if (!mozilla::dom::HTMLTrackElement::IsWebVTTEnabled()) {
-    return new mozilla::dom::HTMLUnknownElement(aNodeInfo);
-  }
-
   return new mozilla::dom::HTMLTrackElement(aNodeInfo);
 }
 
@@ -175,13 +171,6 @@ JSObject*
 HTMLTrackElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return HTMLTrackElementBinding::Wrap(aCx, this, aGivenProto);
-}
-
-bool
-HTMLTrackElement::IsWebVTTEnabled()
-{
-  // Our callee does not use its arguments.
-  return HTMLTrackElementBinding::ConstructorEnabled(nullptr, nullptr);
 }
 
 TextTrack*

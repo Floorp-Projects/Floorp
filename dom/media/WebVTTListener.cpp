@@ -53,11 +53,6 @@ WebVTTListener::GetInterface(const nsIID &aIID,
 nsresult
 WebVTTListener::LoadResource()
 {
-  if (!HTMLTrackElement::IsWebVTTEnabled()) {
-    NS_WARNING("WebVTT support disabled."
-               " See media.webvtt.enabled in about:config. ");
-    return NS_ERROR_FAILURE;
-  }
   nsresult rv;
   mParserWrapper = do_CreateInstance(NS_WEBVTTPARSERWRAPPER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);

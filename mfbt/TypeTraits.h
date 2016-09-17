@@ -572,6 +572,27 @@ struct IsUnsignedHelper<T, false, false, NoCV> : FalseType {};
 template<typename T>
 struct IsUnsigned : detail::IsUnsignedHelper<T> {};
 
+namespace detail {
+
+struct DoIsDestructibleImpl
+{
+  template<typename T, typename = decltype(DeclVal<T&>().~T())>
+  static TrueType test(int);
+  template<typename T>
+  static FalseType test(...);
+};
+
+template<typename T>
+struct IsDestructibleImpl : public DoIsDestructibleImpl
+{
+  typedef decltype(test<T>(0)) Type;
+};
+
+} // namespace detail
+
+template<typename T>
+struct IsDestructible : public detail::IsDestructibleImpl<T>::Type {};
+
 /* 20.9.5 Type property queries [meta.unary.prop.query] */
 
 /* 20.9.6 Relationships between types [meta.rel] */
