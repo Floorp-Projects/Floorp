@@ -7,9 +7,65 @@
 #include "GetFilesHelper.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
+#include "nsProxyRelease.h"
 
 namespace mozilla {
 namespace dom {
+
+namespace {
+
+// This class is used in the DTOR of GetFilesHelper to release resources in the
+// correct thread.
+class ReleaseRunnable final : public Runnable
+{
+public:
+  static void
+  MaybeReleaseOnMainThread(nsTArray<RefPtr<Promise>>& aPromises,
+                           nsTArray<RefPtr<GetFilesCallback>>& aCallbacks,
+                           Sequence<RefPtr<File>>& aFiles,
+                           already_AddRefed<nsIGlobalObject> aGlobal)
+  {
+    if (NS_IsMainThread()) {
+      return;
+    }
+
+    RefPtr<ReleaseRunnable> runnable =
+      new ReleaseRunnable(aPromises, aCallbacks, aFiles, Move(aGlobal));
+    NS_DispatchToMainThread(runnable);
+  }
+
+  NS_IMETHOD
+  Run() override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    mPromises.Clear();
+    mCallbacks.Clear();
+    mFiles.Clear();
+    mGlobal = nullptr;
+
+    return NS_OK;
+  }
+
+private:
+  ReleaseRunnable(nsTArray<RefPtr<Promise>>& aPromises,
+                  nsTArray<RefPtr<GetFilesCallback>>& aCallbacks,
+                  Sequence<RefPtr<File>>& aFiles,
+                  already_AddRefed<nsIGlobalObject> aGlobal)
+  {
+    mPromises.SwapElements(aPromises);
+    mCallbacks.SwapElements(aCallbacks);
+    mFiles.SwapElements(aFiles);
+    mGlobal = aGlobal;
+  }
+
+  nsTArray<RefPtr<Promise>> mPromises;
+  nsTArray<RefPtr<GetFilesCallback>> mCallbacks;
+  Sequence<RefPtr<File>> mFiles;
+  nsCOMPtr<nsIGlobalObject> mGlobal;
+};
+
+} // anonymous
 
 ///////////////////////////////////////////////////////////////////////////////
 // GetFilesHelper Base class
@@ -79,6 +135,12 @@ GetFilesHelper::GetFilesHelper(nsIGlobalObject* aGlobal, bool aRecursiveFlag)
   , mMutex("GetFilesHelper::mMutex")
   , mCanceled(false)
 {
+}
+
+GetFilesHelper::~GetFilesHelper()
+{
+  ReleaseRunnable::MaybeReleaseOnMainThread(mPromises, mCallbacks, mFiles,
+                                            mGlobal.forget());
 }
 
 void
@@ -556,6 +618,11 @@ GetFilesHelperParent::GetFilesHelperParent(const nsID& aUUID,
   , mContentParent(aContentParent)
   , mUUID(aUUID)
 {}
+
+GetFilesHelperParent::~GetFilesHelperParent()
+{
+  NS_ReleaseOnMainThread(mContentParent.forget());
+}
 
 /* static */ already_AddRefed<GetFilesHelperParent>
 GetFilesHelperParent::Create(const nsID& aUUID, const nsAString& aDirectoryPath,
