@@ -546,8 +546,7 @@ pref("media.getusermedia.screensharing.allow_on_old_platforms", false);
 
 pref("media.getusermedia.audiocapture.enabled", false);
 
-// TextTrack support
-pref("media.webvtt.enabled", true);
+// TextTrack WebVTT Region extension support.
 pref("media.webvtt.regions.enabled", false);
 
 // AudioTrack and VideoTrack support
@@ -2555,9 +2554,6 @@ pref("layout.css.background-blend-mode.enabled", true);
 
 // Is support for background-clip:text enabled?
 pref("layout.css.background-clip-text.enabled", true);
-
-// Is support for CSS vertical text enabled?
-pref("layout.css.vertical-text.enabled", true);
 
 // Is support for CSS text-combine-upright (tate-chu-yoko) enabled?
 pref("layout.css.text-combine-upright.enabled", true);

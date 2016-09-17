@@ -1118,7 +1118,13 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           if (this._shrinkTimeout) {
             clearTimeout(this._shrinkTimeout);
           }
-          this._adjustHeightTimeout = setTimeout(() => this.adjustHeight(), 0);
+
+          if (this.mPopupOpen) {
+            delete this._adjustHeightOnPopupShown;
+            this._adjustHeightTimeout = setTimeout(() => this.adjustHeight(), 0);
+          } else {
+            this._adjustHeightOnPopupShown = true;
+          }
 
           this._currentIndex = 0;
           if (this._appendResultTimeout) {
@@ -1306,10 +1312,13 @@ extends="chrome://global/content/bindings/popup.xml#popup">
               this.richlistbox.appendChild(item);
             }
 
-            let changed = item.adjustSiteIconStart(this._siteIconStart);
-            if (changed) {
-              item.handleOverUnderflow();
-            }
+            // The binding may have not been applied yet.
+            setTimeout(() => {
+              let changed = item.adjustSiteIconStart(this._siteIconStart);
+              if (changed) {
+                item.handleOverUnderflow();
+              }
+            }, 0);
 
             this._currentIndex++;
           }
@@ -1377,6 +1386,16 @@ extends="chrome://global/content/bindings/popup.xml#popup">
                 onset="return val;"/>
 
     </implementation>
+    <handlers>
+      <handler event="popupshown">
+        <![CDATA[
+          if (this._adjustHeightOnPopupShown) {
+            delete this._adjustHeightOnPopupShown;
+            this.adjustHeight();
+          }
+      ]]>
+      </handler>
+    </handlers>
   </binding>
 
   <binding id="autocomplete-richlistitem" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
