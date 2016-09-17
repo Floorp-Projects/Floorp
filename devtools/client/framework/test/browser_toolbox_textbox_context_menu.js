@@ -9,14 +9,6 @@ add_task(function* () {
   let toolbox = yield openNewTabAndToolbox(URL, "inspector");
   let textboxContextMenu = toolbox.textboxContextMenuPopup;
 
-  emptyClipboard();
-
-  // Make sure the focus is predictable.
-  let inspector = toolbox.getPanel("inspector");
-  let onFocus = once(inspector.searchBox, "focus");
-  inspector.searchBox.focus();
-  yield onFocus;
-
   ok(textboxContextMenu, "The textbox context menu is loaded in the toolbox");
 
   let cmdUndo = textboxContextMenu.querySelector("[command=cmd_undo]");
@@ -34,13 +26,10 @@ add_task(function* () {
 
   is(cmdUndo.getAttribute("disabled"), "true", "cmdUndo is disabled");
   is(cmdDelete.getAttribute("disabled"), "true", "cmdDelete is disabled");
-  is(cmdSelectAll.getAttribute("disabled"), "true", "cmdSelectAll is disabled");
+  is(cmdSelectAll.getAttribute("disabled"), "", "cmdSelectAll is enabled");
   is(cmdCut.getAttribute("disabled"), "true", "cmdCut is disabled");
   is(cmdCopy.getAttribute("disabled"), "true", "cmdCopy is disabled");
-  if (isWindows()) {
-    // emptyClipboard only works on Windows (666254), assert paste only for this OS.
-    is(cmdPaste.getAttribute("disabled"), "true", "cmdPaste is disabled");
-  }
+  is(cmdPaste.getAttribute("disabled"), "true", "cmdPaste is disabled");
 
   yield cleanup(toolbox);
 });

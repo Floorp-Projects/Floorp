@@ -6,7 +6,6 @@
 
 DIRS += [
     'reps',
-    'splitter',
     'tabs',
     'tree'
 ]
