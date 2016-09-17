@@ -10,7 +10,7 @@ add_task(function* () {
   let {inspector} = yield openInspectorForURL("about:blank");
 
   let button = inspector.panelDoc.querySelector(".sidebar-toggle");
-  let panel = inspector.panelDoc.querySelector("#inspector-splitter-box .controlled");
+  let panel = inspector.panelDoc.querySelector("#inspector-sidebar-container");
 
   ok(!button.classList.contains("pane-collapsed"), "The button is in expanded state");
 
