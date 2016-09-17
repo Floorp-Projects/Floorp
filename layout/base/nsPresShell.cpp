@@ -761,7 +761,6 @@ PresShell::PresShell()
   mSelectionFlags = nsISelectionDisplay::DISPLAY_TEXT | nsISelectionDisplay::DISPLAY_IMAGES;
   mIsThemeSupportDisabled = false;
   mIsActive = true;
-  mIsHidden = false;
   // FIXME/bug 735029: find a better solution to this problem
   mIsFirstPaint = true;
   mPresShellId = sNextPresShellId++;
@@ -10892,15 +10891,11 @@ SetPluginIsActive(nsISupports* aSupports, void* aClosure)
 }
 
 nsresult
-PresShell::SetIsActive(bool aIsActive, bool aIsHidden)
+PresShell::SetIsActive(bool aIsActive)
 {
   NS_PRECONDITION(mDocument, "should only be called with a document");
 
   mIsActive = aIsActive;
-
-  // Keep track of whether we've called TabChild::MakeHidden() or not.
-  // This can still be true even if aIsHidden is false.
-  mIsHidden |= aIsHidden;
 
   nsPresContext* presContext = GetPresContext();
   if (presContext &&
@@ -10922,45 +10917,6 @@ PresShell::SetIsActive(bool aIsActive, bool aIsHidden)
     }
   }
 #endif
-
-  // We have this odd special case here because remote content behaves
-  // differently from same-process content when "hidden".  In
-  // desktop-type "browser UIs", hidden "tabs" have documents that are
-  // part of the chrome tree.  When the tabs are hidden, their content
-  // is no longer part of the visible document tree, and the layers
-  // for the content are naturally released.
-  //
-  // Remote content is its own top-level tree in its subprocess.  When
-  // it's "hidden", there's no transaction in which the document
-  // thinks it's not visible, so layers can be retained forever.  This
-  // is problematic when those layers uselessly hold on to precious
-  // resources like directly texturable memory.
-  //
-  // PresShell::SetIsActive() is the first C++ entry point at which we
-  // (i) know that our parent process wants our content to be hidden;
-  // and (ii) has easy access to the TabChild.  So we use this
-  // notification to signal the TabChild to drop its layer tree and
-  // stop trying to repaint.
-  if (mIsHidden) {
-    if (TabChild* tab = TabChild::GetFrom(this)) {
-      if (aIsActive) {
-        tab->MakeVisible();
-        // The only time we should set this to false is when
-        // TabChild::MakeVisible() is called.
-        mIsHidden = false;
-
-        if (!mIsZombie) {
-          if (nsIFrame* root = mFrameConstructor->GetRootFrame()) {
-            FrameLayerBuilder::InvalidateAllLayersForFrame(
-              nsLayoutUtils::GetDisplayRootFrame(root));
-            root->SchedulePaint();
-          }
-        }
-      } else {
-        tab->MakeHidden();
-      }
-    }
-  }
   return rv;
 }
 

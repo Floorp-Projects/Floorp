@@ -38,6 +38,9 @@ static AntialiasMode
 GetSystemDefaultAAMode()
 {
   AntialiasMode defaultMode = AntialiasMode::SUBPIXEL;
+  if (gfxPrefs::DisableAllTextAA()) {
+    return AntialiasMode::NONE;
+  }
 
   switch (GetSystemTextQuality()) {
   case CLEARTYPE_QUALITY:

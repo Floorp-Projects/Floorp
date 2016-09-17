@@ -209,9 +209,7 @@ BasicLayerManager::PopGroupForLayer(PushedGroup &group)
 static IntRect
 ToInsideIntRect(const gfxRect& aRect)
 {
-  gfxRect r = aRect;
-  r.RoundIn();
-  return IntRect(r.X(), r.Y(), r.Width(), r.Height());
+  return IntRect::RoundIn(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
 }
 
 // A context helper for BasicLayerManager::PaintLayer() that holds all the

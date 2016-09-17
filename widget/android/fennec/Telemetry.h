@@ -6,7 +6,7 @@
 #ifndef mozilla_widget_Telemetry_h__
 #define mozilla_widget_Telemetry_h__
 
-#include "GeneratedJNINatives.h"
+#include "FennecJNINatives.h"
 #include "nsAppShell.h"
 #include "nsIAndroidBridge.h"
 

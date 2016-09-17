@@ -646,12 +646,6 @@ interface nsIDocShell : nsIDocShellTreeItem
   attribute boolean isActive;
 
   /**
-   * Sets whether a docshell is active, as above, but ensuring it does
-   * not discard its layers
-   */
-  void setIsActiveAndForeground(in boolean aIsActive);
-
-  /**
    * Puts the docshell in prerendering mode. noscript because we want only
    * native code to be able to put a docshell in prerendering.
    */

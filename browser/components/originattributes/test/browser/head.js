@@ -270,8 +270,11 @@ this.IsolationTestTools = {
    *    the isolation is no or off and two results. This function should return
    *    a boolean to tell that whether isolation is working. If this function
    *    is not given, the framework will take case checking by itself.
+   * @param aBeforeFunc
+   *    An optional function which is called before any tabs are created so
+   *    that the test case can set up/reset local state.
    */
-  runTests(aURL, aGetResultFuncs, aCompareResultFunc) {
+  runTests(aURL, aGetResultFuncs, aCompareResultFunc, aBeforeFunc) {
     let pageURL;
     let firstFrameSetting;
     let secondFrameSetting;
@@ -297,6 +300,11 @@ this.IsolationTestTools = {
       let tabSettingA = 0;
 
       for (let tabSettingB of [0, 1]) {
+        // Give the test a chance to set up before each case is run.
+        if (aBeforeFunc) {
+          yield aBeforeFunc();
+        }
+
         // Create Tabs.
         let tabInfoA = yield IsolationTestTools._addTab(aMode,
                                                         pageURL,

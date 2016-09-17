@@ -21,17 +21,17 @@ class ReleaseRunnable final : public Runnable
 public:
   static void
   MaybeReleaseOnMainThread(nsTArray<RefPtr<Promise>>& aPromises,
-                           nsTArray<RefPtr<GetFilesCallback>>& aCallbacks)
+                           nsTArray<RefPtr<GetFilesCallback>>& aCallbacks,
+                           Sequence<RefPtr<File>>& aFiles,
+                           already_AddRefed<nsIGlobalObject> aGlobal)
   {
     if (NS_IsMainThread()) {
       return;
     }
 
-    if (!aPromises.IsEmpty() || !aCallbacks.IsEmpty()) {
-      RefPtr<ReleaseRunnable> runnable =
-        new ReleaseRunnable(aPromises, aCallbacks);
-      NS_DispatchToMainThread(runnable);
-    }
+    RefPtr<ReleaseRunnable> runnable =
+      new ReleaseRunnable(aPromises, aCallbacks, aFiles, Move(aGlobal));
+    NS_DispatchToMainThread(runnable);
   }
 
   NS_IMETHOD
@@ -41,20 +41,28 @@ public:
 
     mPromises.Clear();
     mCallbacks.Clear();
+    mFiles.Clear();
+    mGlobal = nullptr;
 
     return NS_OK;
   }
 
 private:
   ReleaseRunnable(nsTArray<RefPtr<Promise>>& aPromises,
-                  nsTArray<RefPtr<GetFilesCallback>>& aCallbacks)
+                  nsTArray<RefPtr<GetFilesCallback>>& aCallbacks,
+                  Sequence<RefPtr<File>>& aFiles,
+                  already_AddRefed<nsIGlobalObject> aGlobal)
   {
     mPromises.SwapElements(aPromises);
     mCallbacks.SwapElements(aCallbacks);
+    mFiles.SwapElements(aFiles);
+    mGlobal = aGlobal;
   }
 
   nsTArray<RefPtr<Promise>> mPromises;
   nsTArray<RefPtr<GetFilesCallback>> mCallbacks;
+  Sequence<RefPtr<File>> mFiles;
+  nsCOMPtr<nsIGlobalObject> mGlobal;
 };
 
 } // anonymous
@@ -131,7 +139,8 @@ GetFilesHelper::GetFilesHelper(nsIGlobalObject* aGlobal, bool aRecursiveFlag)
 
 GetFilesHelper::~GetFilesHelper()
 {
-  ReleaseRunnable::MaybeReleaseOnMainThread(mPromises, mCallbacks);
+  ReleaseRunnable::MaybeReleaseOnMainThread(mPromises, mCallbacks, mFiles,
+                                            mGlobal.forget());
 }
 
 void

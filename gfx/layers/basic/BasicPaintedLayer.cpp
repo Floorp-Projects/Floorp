@@ -36,10 +36,9 @@ static nsIntRegion
 IntersectWithClip(const nsIntRegion& aRegion, gfxContext* aContext)
 {
   gfxRect clip = aContext->GetClipExtents();
-  clip.RoundOut();
-  IntRect r(clip.X(), clip.Y(), clip.Width(), clip.Height());
   nsIntRegion result;
-  result.And(aRegion, r);
+  result.And(aRegion, IntRect::RoundOut(clip.X(), clip.Y(),
+                                        clip.Width(), clip.Height()));
   return result;
 }
 

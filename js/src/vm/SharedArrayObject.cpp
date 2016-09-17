@@ -116,7 +116,7 @@ SharedArrayRawBuffer::New(JSContext* cx, uint32_t length)
     if (allocSize <= length)
         return nullptr;
 
-    bool preparedForAsmJS = jit::JitOptions.wasmTestMode && IsValidAsmJSHeapLength(length);
+    bool preparedForAsmJS = jit::JitOptions.asmJSAtomicsEnable && IsValidAsmJSHeapLength(length);
 
     void* p = nullptr;
     if (preparedForAsmJS) {

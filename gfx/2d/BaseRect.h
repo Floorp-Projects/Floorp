@@ -560,10 +560,10 @@ struct BaseRect {
   static Sub MaxIntRect()
   {
     return Sub(
-      -std::numeric_limits<int32_t>::max() * 0.5,
-      -std::numeric_limits<int32_t>::max() * 0.5,
-      std::numeric_limits<int32_t>::max(),
-      std::numeric_limits<int32_t>::max()
+      static_cast<T>(-std::numeric_limits<int32_t>::max() * 0.5),
+      static_cast<T>(-std::numeric_limits<int32_t>::max() * 0.5),
+      static_cast<T>(std::numeric_limits<int32_t>::max()),
+      static_cast<T>(std::numeric_limits<int32_t>::max())
     );
   };
 

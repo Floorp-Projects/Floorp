@@ -887,11 +887,8 @@ FinderHighlighter.prototype = {
     if (!textContent.length)
       return;
 
-    let container, outlineBox;
+    let outlineBox;
     if (rebuildOutline) {
-      // The outline needs to be sitting inside a container, otherwise the anonymous
-      // content API won't find it by its ID later...
-      container = document.createElementNS(kNSHTML, "div");
       // Create the main (yellow) highlight outline box.
       outlineBox = document.createElementNS(kNSHTML, "div");
       outlineBox.setAttribute("id", kModalOutlineId);
@@ -936,11 +933,10 @@ FinderHighlighter.prototype = {
     }
 
     if (rebuildOutline) {
-      container.appendChild(outlineBox);
       dict.modalHighlightOutline = kDebug ?
         mockAnonymousContentNode((document.body ||
-          document.documentElement).appendChild(container.firstChild)) :
-        document.insertAnonymousContent(container);
+          document.documentElement).appendChild(outlineBox)) :
+        document.insertAnonymousContent(outlineBox);
     }
   },
 

@@ -772,6 +772,15 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
   return true;
 }
 
+void
+ShadowLayerForwarder::SetLayerObserverEpoch(uint64_t aLayerObserverEpoch)
+{
+  if (!HasShadowManager() || !mShadowManager->IPCOpen()) {
+    return;
+  }
+  Unused << mShadowManager->SendSetLayerObserverEpoch(aLayerObserverEpoch);
+}
+
 bool
 ShadowLayerForwarder::AllocUnsafeShmem(size_t aSize,
                                        ipc::SharedMemory::SharedMemoryType aShmType,

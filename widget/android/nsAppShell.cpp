@@ -63,10 +63,10 @@
 #include "GeckoBatteryManager.h"
 #include "GeckoNetworkManager.h"
 #include "GeckoScreenOrientation.h"
-#include "MemoryMonitor.h"
 #include "PrefsHelper.h"
-#include "Telemetry.h"
-#include "ThumbnailHelper.h"
+#include "fennec/MemoryMonitor.h"
+#include "fennec/Telemetry.h"
+#include "fennec/ThumbnailHelper.h"
 
 #ifdef DEBUG_ANDROID_EVENTS
 #define EVLOG(args...)  ALOG(args)

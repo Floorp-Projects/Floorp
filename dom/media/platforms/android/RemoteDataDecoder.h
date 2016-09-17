@@ -7,7 +7,7 @@
 
 #include "AndroidDecoderModule.h"
 
-#include "GeneratedJNIWrappers.h"
+#include "FennecJNIWrappers.h"
 
 #include "SurfaceTexture.h"
 #include "TimeUnits.h"

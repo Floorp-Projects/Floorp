@@ -709,9 +709,11 @@ Factory::CreateScaledFontForDWriteFont(IDWriteFont* aFont,
                                        IDWriteFontFamily* aFontFamily,
                                        IDWriteFontFace* aFontFace,
                                        float aSize,
-                                       bool aUseEmbeddedBitmap)
+                                       bool aUseEmbeddedBitmap,
+                                       bool aForceGDIMode)
 {
-  return MakeAndAddRef<ScaledFontDWrite>(aFont, aFontFamily, aFontFace, aSize, aUseEmbeddedBitmap);
+  return MakeAndAddRef<ScaledFontDWrite>(aFont, aFontFamily, aFontFace,
+                                         aSize, aUseEmbeddedBitmap, aForceGDIMode);
 }
 
 #endif // XP_WIN

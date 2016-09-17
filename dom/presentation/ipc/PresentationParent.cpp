@@ -9,13 +9,78 @@
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/Unused.h"
 #include "nsIPresentationDeviceManager.h"
+#include "nsIPresentationSessionTransport.h"
+#include "nsIPresentationSessionTransportBuilder.h"
 #include "nsServiceManagerUtils.h"
 #include "PresentationBuilderParent.h"
 #include "PresentationParent.h"
 #include "PresentationService.h"
 #include "PresentationSessionInfo.h"
 
-using namespace mozilla::dom;
+namespace mozilla {
+namespace dom {
+
+namespace {
+
+class PresentationTransportBuilderConstructorIPC final :
+  public nsIPresentationTransportBuilderConstructor
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPRESENTATIONTRANSPORTBUILDERCONSTRUCTOR
+
+  explicit PresentationTransportBuilderConstructorIPC(PresentationParent* aParent)
+    : mParent(aParent)
+  {
+  }
+
+private:
+  virtual ~PresentationTransportBuilderConstructorIPC() = default;
+
+  RefPtr<PresentationParent> mParent;
+};
+
+NS_IMPL_ISUPPORTS(PresentationTransportBuilderConstructorIPC,
+                  nsIPresentationTransportBuilderConstructor)
+
+NS_IMETHODIMP
+PresentationTransportBuilderConstructorIPC::CreateTransportBuilder(
+                              uint8_t aType,
+                              nsIPresentationSessionTransportBuilder** aRetval)
+{
+  if (NS_WARN_IF(!aRetval)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  *aRetval = nullptr;
+
+  if (NS_WARN_IF(aType != nsIPresentationChannelDescription::TYPE_TCP &&
+                 aType != nsIPresentationChannelDescription::TYPE_DATACHANNEL)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (XRE_IsContentProcess()) {
+    MOZ_ASSERT(false,
+               "CreateTransportBuilder can only be invoked in parent process.");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIPresentationSessionTransportBuilder> builder;
+  if (aType == nsIPresentationChannelDescription::TYPE_TCP) {
+    builder = do_CreateInstance(PRESENTATION_TCP_SESSION_TRANSPORT_CONTRACTID);
+  } else {
+    builder = new PresentationBuilderParent(mParent);
+  }
+
+  if (NS_WARN_IF(!builder)) {
+    return NS_ERROR_DOM_OPERATION_ERR;
+  }
+
+  builder.forget(aRetval);
+  return NS_OK;
+}
+
+} // anonymous namespace
 
 /*
  * Implementation of PresentationParent
@@ -217,19 +282,6 @@ PresentationParent::RecvUnregisterRespondingHandler(const uint64_t& aWindowId)
   return true;
 }
 
-bool
-PresentationParent::RegisterTransportBuilder(const nsString& aSessionId,
-                                             const uint8_t& aRole)
-{
-  MOZ_ASSERT(mService);
-
-  nsCOMPtr<nsIPresentationSessionTransportBuilder> builder =
-    new PresentationBuilderParent(this);
-  Unused << NS_WARN_IF(NS_FAILED(static_cast<PresentationService*>(mService.get())->
-                         RegisterTransportBuilder(aSessionId, aRole, builder)));
-  return true;
-}
-
 NS_IMETHODIMP
 PresentationParent::NotifyAvailableChange(bool aAvailable)
 {
@@ -290,10 +342,12 @@ PresentationParent::RecvNotifyReceiverReady(const nsString& aSessionId,
 {
   MOZ_ASSERT(mService);
 
-  RegisterTransportBuilder(aSessionId, nsIPresentationService::ROLE_RECEIVER);
+  nsCOMPtr<nsIPresentationTransportBuilderConstructor> constructor =
+    new PresentationTransportBuilderConstructorIPC(this);
   Unused << NS_WARN_IF(NS_FAILED(mService->NotifyReceiverReady(aSessionId,
                                                                aWindowId,
-                                                               aIsLoading)));
+                                                               aIsLoading,
+                                                               constructor)));
   return true;
 }
 
@@ -338,7 +392,7 @@ nsresult
 PresentationRequestParent::DoRequest(const StartSessionRequest& aRequest)
 {
   MOZ_ASSERT(mService);
-  mNeedRegisterBuilder = true;
+
   mSessionId = aRequest.sessionId();
 
   nsCOMPtr<nsIDOMEventTarget> eventTarget;
@@ -348,10 +402,13 @@ PresentationRequestParent::DoRequest(const StartSessionRequest& aRequest)
   if (tp) {
     eventTarget = do_QueryInterface(tp->GetOwnerElement());
   }
-  
+
+  RefPtr<PresentationParent> parent = static_cast<PresentationParent*>(Manager());
+  nsCOMPtr<nsIPresentationTransportBuilderConstructor> constructor =
+    new PresentationTransportBuilderConstructorIPC(parent);
   return mService->StartSession(aRequest.urls(), aRequest.sessionId(),
                                 aRequest.origin(), aRequest.deviceId(),
-                                aRequest.windowId(), eventTarget, this);
+                                aRequest.windowId(), eventTarget, this, constructor);
 }
 
 nsresult
@@ -430,7 +487,6 @@ PresentationRequestParent::DoRequest(const ReconnectSessionRequest& aRequest)
     return SendResponse(NS_ERROR_DOM_NOT_FOUND_ERR);
   }
 
-  mNeedRegisterBuilder = true;
   mSessionId = aRequest.sessionId();
   return mService->ReconnectSession(aRequest.urls(),
                                     aRequest.sessionId(),
@@ -460,13 +516,6 @@ PresentationRequestParent::DoRequest(const BuildTransportRequest& aRequest)
 NS_IMETHODIMP
 PresentationRequestParent::NotifySuccess(const nsAString& aUrl)
 {
-  if (mNeedRegisterBuilder) {
-    RefPtr<PresentationParent> parent = static_cast<PresentationParent*>(Manager());
-    Unused << NS_WARN_IF(!parent->RegisterTransportBuilder(
-                                      mSessionId,
-                                      nsIPresentationService::ROLE_CONTROLLER));
-  }
-
   Unused << SendNotifyRequestUrlSelected(nsString(aUrl));
   return SendResponse(NS_OK);
 }
@@ -486,3 +535,6 @@ PresentationRequestParent::SendResponse(nsresult aResult)
 
   return NS_OK;
 }
+
+} // namespace dom
+} // namespace mozilla

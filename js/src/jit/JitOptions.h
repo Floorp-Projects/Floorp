@@ -69,6 +69,7 @@ struct DefaultJitOptions
     bool forceInlineCaches;
     bool limitScriptSize;
     bool osr;
+    bool asmJSAtomicsEnable;
     bool wasmTestMode;
     bool wasmFoldOffsets;
     bool ionInterruptWithoutSignals;

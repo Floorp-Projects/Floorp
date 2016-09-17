@@ -7,7 +7,7 @@
 #define ThumbnailHelper_h
 
 #include "AndroidBridge.h"
-#include "GeneratedJNINatives.h"
+#include "FennecJNINatives.h"
 #include "gfxPlatform.h"
 #include "mozIDOMWindow.h"
 #include "nsAppShell.h"

@@ -2543,9 +2543,7 @@ SetAntialiasingFlags(Layer* aLayer, DrawTarget* aTarget)
 IntRect
 ToOutsideIntRect(const gfxRect &aRect)
 {
-  gfxRect r = aRect;
-  r.RoundOut();
-  return IntRect(r.X(), r.Y(), r.Width(), r.Height());
+  return IntRect::RoundOut(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
 } // namespace layers
