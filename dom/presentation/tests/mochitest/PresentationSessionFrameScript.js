@@ -134,7 +134,7 @@ function loadPrivilegedScriptTest() {
       this._callback.QueryInterface(Ci.nsIPresentationSessionTransportCallback).notifyTransportReady();
     },
     simulateIncomingMessage: function(message) {
-      this._callback.QueryInterface(Ci.nsIPresentationSessionTransportCallback).notifyData(message);
+      this._callback.QueryInterface(Ci.nsIPresentationSessionTransportCallback).notifyData(message, false);
     },
     onOffer: function(aOffer) {
       this._listener.sendAnswer(mockedChannelDescription);

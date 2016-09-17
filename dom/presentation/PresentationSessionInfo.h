@@ -99,6 +99,10 @@ public:
 
   nsresult Send(const nsAString& aData);
 
+  nsresult SendBinaryMsg(const nsACString& aData);
+
+  nsresult SendBlob(nsIDOMBlob* aBlob);
+
   nsresult Close(nsresult aReason,
                  uint32_t aState);
 
