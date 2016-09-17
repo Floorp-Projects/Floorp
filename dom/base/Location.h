@@ -91,10 +91,6 @@ public:
     THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
     aError = SetProtocol(aProtocol);
   }
-  void GetUsername(nsAString& aUsername, ErrorResult& aError);
-  void SetUsername(const nsAString& aUsername, ErrorResult& aError);
-  void GetPassword(nsAString& aPassword, ErrorResult& aError);
-  void SetPassword(const nsAString& aPassword, ErrorResult& aError);
   void GetHost(nsAString& aHost, ErrorResult& aError)
   {
     THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
