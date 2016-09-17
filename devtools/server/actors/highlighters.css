@@ -29,7 +29,7 @@
 
 :-moz-native-anonymous .highlighter-container {
   --highlighter-guide-color: #08c;
-  --highlighter-content-color: #f0f7ff;
+  --highlighter-content-color: #87ceeb;
   --highlighter-bubble-text-color: hsl(216, 33%, 97%);
   --highlighter-bubble-background-color: hsl(214, 13%, 24%);
   --highlighter-bubble-border-color: rgba(255, 255, 255, 0.2);
@@ -72,15 +72,15 @@
 }
 
 :-moz-native-anonymous .box-model-padding {
-  fill: #7fe3cc;
+  fill: #6a5acd;
 }
 
 :-moz-native-anonymous .box-model-border {
-  fill: #b3c8e2;
+  fill: #444444;
 }
 
 :-moz-native-anonymous .box-model-margin {
-  fill: #9ebce1;
+  fill: #edff64;
 }
 
 :-moz-native-anonymous .box-model-content,

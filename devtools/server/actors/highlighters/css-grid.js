@@ -36,6 +36,17 @@ const GRID_LINES_PROPERTIES = {
   }
 };
 
+// px
+const GRID_GAP_PATTERN_WIDTH = 14;
+const GRID_GAP_PATTERN_HEIGHT = 14;
+const GRID_GAP_PATTERN_LINE_DASH = [5, 3];
+const GRID_GAP_PATTERN_STROKE_STYLE = "#9370DB";
+
+/**
+ * Cached used by `CssGridHighlighter.getGridGapPattern`.
+ */
+const gCachedGridPattern = new Map();
+
 /**
  * The CssGridHighlighter is the class that overlays a visual grid on top of
  * display:grid elements.
@@ -194,6 +205,7 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
   destroy() {
     AutoRefreshHighlighter.prototype.destroy.call(this);
     this.markup.destroy();
+    gCachedGridPattern.clear();
   },
 
   getElement(id) {
@@ -206,6 +218,44 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
 
   get canvas() {
     return this.getElement("canvas");
+  },
+
+  /**
+   * Gets the grid gap pattern used to render the gap regions.
+   *
+   * @param  {String} dimensionType
+   *         The grid dimension type which is either the constant COLUMNS or ROWS.
+   * @return {CanvasPattern} grid gap pattern.
+   */
+  getGridGapPattern(dimensionType) {
+    if (gCachedGridPattern.has(dimensionType)) {
+      return gCachedGridPattern.get(dimensionType);
+    }
+
+    // Create the diagonal lines pattern for the rendering the grid gaps.
+    let canvas = createNode(this.win, { nodeType: "canvas" });
+    canvas.width = GRID_GAP_PATTERN_WIDTH;
+    canvas.height = GRID_GAP_PATTERN_HEIGHT;
+
+    let ctx = canvas.getContext("2d");
+    ctx.setLineDash(GRID_GAP_PATTERN_LINE_DASH);
+    ctx.beginPath();
+    ctx.translate(.5, .5);
+
+    if (dimensionType === COLUMNS) {
+      ctx.moveTo(0, 0);
+      ctx.lineTo(GRID_GAP_PATTERN_WIDTH, GRID_GAP_PATTERN_HEIGHT);
+    } else {
+      ctx.moveTo(GRID_GAP_PATTERN_WIDTH, 0);
+      ctx.lineTo(0, GRID_GAP_PATTERN_HEIGHT);
+    }
+
+    ctx.strokeStyle = GRID_GAP_PATTERN_STROKE_STYLE;
+    ctx.stroke();
+
+    let pattern = ctx.createPattern(canvas, "repeat");
+    gCachedGridPattern.set(dimensionType, pattern);
+    return pattern;
   },
 
   _show() {
@@ -467,8 +517,9 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
 
       // Render a second line to illustrate the gutter for non-zero breadth.
       if (line.breadth > 0) {
-        linePos = linePos + line.breadth;
-        this.renderLine(linePos, lineStartPos, lineEndPos, dimensionType,
+        this.renderGridGap(linePos, lineStartPos, lineEndPos, line.breadth,
+                           dimensionType);
+        this.renderLine(linePos + line.breadth, lineStartPos, lineEndPos, dimensionType,
                         gridDimension.tracks[i].type);
       }
     }
@@ -522,12 +573,44 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
    *         The grid dimension type which is either the constant COLUMNS or ROWS.
    */
   renderGridLineNumber(lineNumber, linePos, startPos, dimensionType) {
+    this.ctx.save();
+
     if (dimensionType === COLUMNS) {
       this.ctx.fillText(lineNumber, linePos, startPos);
     } else {
       let textWidth = this.ctx.measureText(lineNumber).width;
       this.ctx.fillText(lineNumber, startPos - textWidth, linePos);
     }
+
+    this.ctx.restore();
+  },
+
+  /**
+   * Render the grid gap area on the css grid highlighter canvas.
+   *
+   * @param  {Number} linePos
+   *         The line position along the x-axis for a column grid line and
+   *         y-axis for a row grid line.
+   * @param  {Number} startPos
+   *         The start position of the cross side of the grid line.
+   * @param  {Number} endPos
+   *         The end position of the cross side of the grid line.
+   * @param  {Number} breadth
+   *         The grid line breadth value.
+   * @param  {String} dimensionType
+   *         The grid dimension type which is either the constant COLUMNS or ROWS.
+   */
+  renderGridGap(linePos, startPos, endPos, breadth, dimensionType) {
+    this.ctx.save();
+    this.ctx.fillStyle = this.getGridGapPattern(dimensionType);
+
+    if (dimensionType === COLUMNS) {
+      this.ctx.fillRect(linePos, startPos, breadth, endPos - startPos);
+    } else {
+      this.ctx.fillRect(startPos, linePos, endPos - startPos, breadth);
+    }
+
+    this.ctx.restore();
   },
 
   /**
