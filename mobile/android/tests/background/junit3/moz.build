@@ -22,6 +22,7 @@ jar.extra_jars += [
     TOPOBJDIR + '/mobile/android/base/gecko-mozglue.jar',
     TOPOBJDIR + '/mobile/android/base/gecko-thirdparty.jar',
     TOPOBJDIR + '/mobile/android/base/gecko-util.jar',
+    TOPOBJDIR + '/mobile/android/base/gecko-view.jar',
     TOPOBJDIR + '/mobile/android/base/services.jar',
     TOPOBJDIR + '/mobile/android/base/sync-thirdparty.jar',
 ]

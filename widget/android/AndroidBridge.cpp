@@ -54,6 +54,8 @@
 #include "nsISupportsPrimitives.h"
 #include "MediaPrefs.h"
 
+#include "FennecJNIWrappers.h"
+
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::jni;

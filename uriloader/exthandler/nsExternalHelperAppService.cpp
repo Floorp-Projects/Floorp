@@ -100,7 +100,7 @@
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
-#include "GeneratedJNIWrappers.h"
+#include "FennecJNIWrappers.h"
 #endif
 
 #include "mozilla/Preferences.h"

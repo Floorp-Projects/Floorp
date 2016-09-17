@@ -40,6 +40,9 @@ GARBAGE += \
   GeneratedJNINatives.h \
   GeneratedJNIWrappers.cpp \
   GeneratedJNIWrappers.h \
+  FennecJNINatives.h \
+  FennecJNIWrappers.cpp \
+  FennecJNIWrappers.h \
   $(NULL)
 
 GARBAGE_DIRS += classes db jars res sync services generated
@@ -142,35 +145,46 @@ uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
 java_bundled_libs := $(call uniq,$(java_bundled_libs))
 java_bundled_libs := $(subst $(NULL) ,:,$(strip $(java_bundled_libs)))
 
-# All the jars we're compiling from source. (not to be confused with
-# java_bundled_libs, which holds the jars which we're including as binaries).
-ALL_JARS = \
+GECKOVIEW_JARS = \
   constants.jar \
   gecko-R.jar \
-  gecko-browser.jar \
   gecko-mozglue.jar \
-  gecko-thirdparty.jar \
   gecko-util.jar \
+  gecko-view.jar \
+  $(NULL)
+
+geckoview_jars_classpath := $(subst $(NULL) ,:,$(strip $(GECKOVIEW_JARS)))
+
+FENNEC_JARS = \
+  gecko-browser.jar \
+  gecko-thirdparty.jar \
   services.jar \
   sync-thirdparty.jar \
   ../javaaddons/javaaddons-1.0.jar \
   $(NULL)
 
 ifdef MOZ_WEBRTC
-ALL_JARS += webrtc.jar
+FENNEC_JARS += webrtc.jar
 endif
 
 ifdef MOZ_ANDROID_SEARCH_ACTIVITY
-ALL_JARS += search-activity.jar
+FENNEC_JARS += search-activity.jar
 endif
 
 ifdef MOZ_ANDROID_MLS_STUMBLER
-ALL_JARS += ../stumbler/stumbler.jar
+FENNEC_JARS += ../stumbler/stumbler.jar
 endif
 
 ifdef MOZ_INSTALL_TRACKING
-ALL_JARS += gecko-thirdparty-adjust_sdk.jar
+FENNEC_JARS += gecko-thirdparty-adjust_sdk.jar
 endif
+
+# All the jars we're compiling from source. (not to be confused with
+# java_bundled_libs, which holds the jars which we're including as binaries).
+ALL_JARS = \
+  $(GECKOVIEW_JARS) \
+  $(FENNEC_JARS) \
+  $(NULL)
 
 # The list of jars in Java classpath notation (colon-separated).
 all_jars_classpath := $(subst $(NULL) ,:,$(strip $(ALL_JARS)))
@@ -295,19 +309,17 @@ ANNOTATION_PROCESSOR_JAR_FILES := $(DEPTH)/build/annotationProcessors/annotation
 
 # This annotation processing step also generates
 # GeneratedJNIWrappers.h and GeneratedJNINatives.h
-GeneratedJNIWrappers.cpp: $(ANNOTATION_PROCESSOR_JAR_FILES)
-GeneratedJNIWrappers.cpp: $(ALL_JARS)
-	# (bug 1278008) I added all_jars_classpath here but I'm not certain
-	# this is optimal. The annotation processor throws NoClassDefFoundError
-	# because it is missing the adjust SDK on its classpath so ideally,
-	# we'd just add that. However, another NoClassDefFoundError is thrown
-	# for HttpClient and I could not fix that.
-	#
-	# I don't want to spend too much time on this & it seems harmless to
-	# add the sources we're actively compiling to classpath of the
-	# annotation processor, which includes adjust & whatever lib we're
-	# missing for HttpClient, so I opted for this solution.
-	$(JAVA) -classpath $(all_jars_classpath):constants.jar:$(JAVA_BOOTCLASSPATH):$(JAVA_CLASSPATH):$(ANNOTATION_PROCESSOR_JAR_FILES) org.mozilla.gecko.annotationProcessors.AnnotationProcessor $(ALL_JARS)
+GeneratedJNIWrappers.cpp: $(ANNOTATION_PROCESSOR_JAR_FILES) $(GECKOVIEW_JARS)
+	$(JAVA) -classpath $(geckoview_jars_classpath):$(JAVA_BOOTCLASSPATH):$(JAVA_CLASSPATH):$(ANNOTATION_PROCESSOR_JAR_FILES) \
+		org.mozilla.gecko.annotationProcessors.AnnotationProcessor \
+		Generated $(GECKOVIEW_JARS)
+
+# This annotation processing step also generates
+# FennecJNIWrappers.h and FennecJNINatives.h
+FennecJNIWrappers.cpp: $(ANNOTATION_PROCESSOR_JAR_FILES) $(FENNEC_JARS)
+	$(JAVA) -classpath $(all_jars_classpath):$(JAVA_BOOTCLASSPATH):$(JAVA_CLASSPATH):$(ANNOTATION_PROCESSOR_JAR_FILES) \
+		org.mozilla.gecko.annotationProcessors.AnnotationProcessor \
+		Fennec $(FENNEC_JARS)
 
 # Certain source files need to be preprocessed.  This special rule
 # generates these files into generated/org/mozilla/gecko for
@@ -478,8 +490,16 @@ endif
 include $(topsrcdir)/config/android-common.mk
 
 update-generated-wrappers:
-	@cp $(CURDIR)/GeneratedJNIWrappers.cpp $(CURDIR)/GeneratedJNIWrappers.h $(CURDIR)/GeneratedJNINatives.h $(topsrcdir)/widget/android
+	@cp $(CURDIR)/GeneratedJNIWrappers.cpp \
+	    $(CURDIR)/GeneratedJNIWrappers.h \
+	    $(CURDIR)/GeneratedJNINatives.h $(topsrcdir)/widget/android
 	@echo Updated generated JNI code
+
+update-fennec-wrappers:
+	@cp $(CURDIR)/FennecJNIWrappers.cpp \
+	    $(CURDIR)/FennecJNIWrappers.h \
+	    $(CURDIR)/FennecJNINatives.h $(topsrcdir)/widget/android/fennec
+	@echo Updated Fennec JNI code
 
 .PHONY: update-generated-wrappers
 
@@ -513,7 +533,9 @@ endif
 .PHONY: gradle-targets gradle-omnijar
 
 # GeneratedJNIWrappers.cpp target also generates
-# GeneratedJNIWrappers.h and GeneratedJNINatives.h
+#   GeneratedJNIWrappers.h and GeneratedJNINatives.h
+# FennecJNIWrappers.cpp target also generates
+#   FennecJNIWrappers.h and FennecJNINatives.h
 ifndef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
 libs:: GeneratedJNIWrappers.cpp
 	@(diff GeneratedJNIWrappers.cpp $(topsrcdir)/widget/android/GeneratedJNIWrappers.cpp >/dev/null && \
@@ -524,6 +546,20 @@ libs:: GeneratedJNIWrappers.cpp
 	  echo '* To update generated code in the tree, please run  *' && \
 	  echo && \
 	  echo '  make -C $(CURDIR) update-generated-wrappers' && \
+	  echo && \
+	  echo '* Repeat the build, and check in any changes.       *' && \
+	  echo '*****************************************************' && \
+	  exit 1)
+
+libs:: FennecJNIWrappers.cpp
+	@(diff FennecJNIWrappers.cpp $(topsrcdir)/widget/android/fennec/FennecJNIWrappers.cpp >/dev/null && \
+	  diff FennecJNIWrappers.h $(topsrcdir)/widget/android/fennec/FennecJNIWrappers.h >/dev/null && \
+	  diff FennecJNINatives.h $(topsrcdir)/widget/android/fennec/FennecJNINatives.h >/dev/null) || \
+	 (echo '*****************************************************' && \
+	  echo '***     Error: The Fennec JNI code has changed    ***' && \
+	  echo '* To update generated code in the tree, please run  *' && \
+	  echo && \
+	  echo '  make -C $(CURDIR) update-fennec-wrappers' && \
 	  echo && \
 	  echo '* Repeat the build, and check in any changes.       *' && \
 	  echo '*****************************************************' && \

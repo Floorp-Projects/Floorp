@@ -503,8 +503,6 @@ protected:
                                      uint32_t aRedirectFlags,
                                      uint32_t aStateFlags) override;
 
-  nsresult SetIsActiveInternal(bool aIsActive, bool aIsHidden);
-
   /**
    * Helper function that determines if channel is an HTTP POST.
    *

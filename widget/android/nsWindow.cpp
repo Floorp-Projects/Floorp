@@ -74,6 +74,7 @@ using mozilla::Unused;
 #include "AndroidBridge.h"
 #include "AndroidBridgeUtilities.h"
 #include "android_npapi.h"
+#include "FennecJNINatives.h"
 #include "GeneratedJNINatives.h"
 #include "KeyEvent.h"
 #include "MotionEvent.h"

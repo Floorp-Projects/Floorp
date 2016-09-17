@@ -491,11 +491,12 @@ CreateBlurMask(const IntSize& aMinSize,
 }
 
 static already_AddRefed<SourceSurface>
-CreateBoxShadow(DrawTarget& aDestDT, SourceSurface* aBlurMask, const Color& aShadowColor)
+CreateBoxShadow(SourceSurface* aBlurMask, const Color& aShadowColor)
 {
   IntSize blurredSize = aBlurMask->GetSize();
+  gfxPlatform* platform = gfxPlatform::GetPlatform();
   RefPtr<DrawTarget> boxShadowDT =
-    aDestDT.CreateSimilarDrawTarget(blurredSize, SurfaceFormat::B8G8R8A8);
+    platform->CreateOffscreenContentDrawTarget(blurredSize, SurfaceFormat::B8G8R8A8);
 
   if (!boxShadowDT) {
     return nullptr;
@@ -552,7 +553,7 @@ GetBlur(gfxContext* aDestinationCtx,
     return nullptr;
   }
 
-  RefPtr<SourceSurface> boxShadow = CreateBoxShadow(destDT, blurMask, aShadowColor);
+  RefPtr<SourceSurface> boxShadow = CreateBoxShadow(blurMask, aShadowColor);
   if (!boxShadow) {
     return nullptr;
   }
@@ -912,7 +913,7 @@ gfxAlphaBoxBlur::GetInsetBlur(const mozilla::gfx::Rect aOuterRect,
   }
 
   // Fill in with the color we actually wanted
-  RefPtr<SourceSurface> minInsetBlur = CreateBoxShadow(*aDestDrawTarget, minMask, aShadowColor);
+  RefPtr<SourceSurface> minInsetBlur = CreateBoxShadow(minMask, aShadowColor);
   if (!minInsetBlur) {
     return nullptr;
   }

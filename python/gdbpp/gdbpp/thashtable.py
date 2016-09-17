@@ -96,16 +96,27 @@ class thashtable_printer(object):
 
     def children(self):
         table = self.value['mTable']
-        # Number of entries
+
+        # mEntryCount is the number of occupied slots/entries in the table.
+        # We can use this to avoid doing wasted memory reads.
         entryCount = table['mEntryCount']
+        if entryCount == 0:
+            return
+
+        # The table capacity is tracked "cleverly" in terms of how many bits
+        # the hash needs to be shifted.  CapacityFromHashShift calculates the
+        # actual entry capacity via ((uint32_t)1 << (kHashBits - mHashShift));
+        capacity = 1 << (table['kHashBits'] - table['mHashShift'])
+
         # Pierce generation-tracking EntryStore class to get at buffer.  The
         # class instance always exists, but this char* may be null.
         store = table['mEntryStore']['mEntryStore']
 
         key_field_name = self.key_field_name
 
+        seenCount = 0
         pEntry = store.cast(self.entry_type.pointer())
-        for i in range(0, int(entryCount)):
+        for i in range(0, int(capacity)):
             entry = (pEntry + i).dereference()
             # An mKeyHash of 0 means empty, 1 means deleted sentinel, so skip
             # if that's the case.
@@ -115,6 +126,11 @@ class thashtable_printer(object):
             yield ('%d' % i, entry[key_field_name])
             if self.is_table:
                 yield ('%d' % i, entry['mData'])
+
+            # Stop iterating if we know there are no more occupied slots.
+            seenCount += 1
+            if seenCount >= entryCount:
+                break
 
     def to_string(self):
         # The most specific template type is the most interesting.

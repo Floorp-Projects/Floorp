@@ -27,7 +27,7 @@ bool
 TestEndpointBridgeMainParent::RecvBridged(Endpoint<PTestEndpointBridgeMainSubParent>&& endpoint)
 {
   TestEndpointBridgeMainSubParent* a = new TestEndpointBridgeMainSubParent();
-  if (!endpoint.Bind(a, nullptr)) {
+  if (!endpoint.Bind(a)) {
     fail("Bind failed");
   }
   return true;
@@ -190,7 +190,7 @@ TestEndpointBridgeSubChild::RecvBridged(Endpoint<PTestEndpointBridgeMainSubChild
 {
   TestEndpointBridgeMainSubChild* a = new TestEndpointBridgeMainSubChild();
 
-  if (!endpoint.Bind(a, nullptr)) {
+  if (!endpoint.Bind(a)) {
     fail("failed to Bind");
   }
 

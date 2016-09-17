@@ -139,14 +139,6 @@ interface nsIFrameLoader : nsISupports
   void requestNotifyAfterRemotePaint();
 
   /**
-   * Request an event when the layer tree from the remote tab becomes
-   * available or unavailable. When this happens, a mozLayerTreeReady
-   * or mozLayerTreeCleared event is fired.
-   */
-  void requestNotifyLayerTreeReady();
-  void requestNotifyLayerTreeCleared();
-
-  /**
    * Print the current document.
    *
    * @param aOuterWindowID the ID of the outer window to print

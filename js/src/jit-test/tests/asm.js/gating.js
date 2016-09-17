@@ -18,7 +18,7 @@ load(libdir + "asm.js");
 if (!isAsmJSCompilationAvailable())
     quit(0);
 
-setJitCompilerOption('wasm.test-mode', 1);
+setJitCompilerOption('asmjs.atomics.enable', 1);
 
 if (!this.Atomics) {
     this.Atomics = { load: function (x, y) { return 0 },

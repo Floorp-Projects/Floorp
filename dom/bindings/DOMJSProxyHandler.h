@@ -132,10 +132,35 @@ public:
   virtual bool setCustom(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
                          JS::Handle<JS::Value> v, bool *done) const;
 
+  /*
+   * Get the expando object for the given DOM proxy.
+   */
   static JSObject* GetExpandoObject(JSObject* obj);
 
-  /* GetAndClearExpandoObject does not DROP or clear the preserving wrapper flag. */
+  /*
+   * Clear the "external references" to this object.  If you are not
+   * nsWrapperCAche::ReleaseWrapper, you do NOT want to be calling this method.
+   *
+   * XXXbz if we nixed the DOM expando hash and just had a finalizer that
+   * cleared out the value in the ExpandoAndGeneration in the shadowing case,
+   * could we just get rid of this function altogether?
+   */
+  static void ClearExternalRefsForWrapperRelease(JSObject* obj);
+
+  /*
+   * Clear the expando object for the given DOM proxy and return it.  This
+   * function will ensure that the returned object is exposed to active JS if
+   * the given object is exposed.
+   *
+   * GetAndClearExpandoObject does not DROP or clear the preserving wrapper
+   * flag.
+   */
   static JSObject* GetAndClearExpandoObject(JSObject* obj);
+
+  /*
+   * Ensure that the given proxy (obj) has an expando object, and return it.
+   * Returns null on failure.
+   */
   static JSObject* EnsureExpandoObject(JSContext* cx,
                                        JS::Handle<JSObject*> obj);
 

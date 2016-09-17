@@ -45,12 +45,11 @@ gfxSurfaceDrawable::DrawWithSamplingRect(DrawTarget* aDrawTarget,
 
   // When drawing with CLAMP we can expand the sampling rect to the nearest pixel
   // without changing the result.
-  gfxRect samplingRect = aSamplingRect;
-  samplingRect.RoundOut();
-  IntRect intRect(samplingRect.x, samplingRect.y, samplingRect.width, samplingRect.height);
+  IntRect intRect = IntRect::RoundOut(aSamplingRect.x, aSamplingRect.y,
+                                      aSamplingRect.width, aSamplingRect.height);
 
   IntSize size = mSourceSurface->GetSize();
-  if (!IntRect(0, 0, size.width, size.height).Contains(intRect)) {
+  if (!IntRect(IntPoint(), size).Contains(intRect)) {
     return false;
   }
 

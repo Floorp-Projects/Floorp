@@ -64,6 +64,10 @@ public:
                                                      const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
                                                      ErrorResult& aError);
 
+  void SetCutoutRectsForElement(const nsAString& aElementId,
+                                const Sequence<OwningNonNull<DOMRect>>& aRects,
+                                ErrorResult& aError);
+
 private:
   ~AnonymousContent();
   nsCOMPtr<Element> mContentNode;

@@ -1066,7 +1066,7 @@
         <xul:button anonid="search-settings-compact"
                     oncommand="showSettings();"
                     class="searchbar-engine-one-off-item search-setting-button-compact"
-                    aria-label="&changeSearchSettings.button;"
+                    tooltiptext="&changeSearchSettings.tooltip;"
                     xbl:inherits="compact"/>
       </xul:description>
       <xul:vbox anonid="add-engines"/>
