@@ -37,44 +37,56 @@
 #layout-main {
   position: relative;
   box-sizing: border-box;
-  color: #1A1C22;
+  /* The regions are semi-transparent, so the white background is partly
+     visible */
+  background-color: white;
+  color: var(--theme-selection-color);
   /* Make sure there is some space between the window's edges and the regions */
   margin: 0 14px 4px 14px;
   width: calc(100% - 2 * 14px);
 }
 
+.layout-margin,
+.layout-size {
+  color: var(--theme-highlight-blue);
+}
+
 /* Regions are 3 nested elements with wide borders and outlines */
+
+#layout-content {
+  height: 18px;
+}
 
 #layout-margins,
 #layout-borders,
 #layout-padding {
+  border-color: hsla(210,100%,85%,0.2);
+  border-width: 18px;
   border-style: solid;
-  border-width: 2px;
-  border-radius: 2px;
-  padding: 16px;
+  outline: dotted 1px hsl(210,100%,85%);
+}
+
+#layout-margins {
+  /* This opacity applies to all of the regions, since they are nested */
+  opacity: .8;
 }
 
 /* Regions colors */
 
 #layout-margins {
-  background-color: #9ebce1;
-  border-color: #2f5b8e;
+  border-color: #edff64;
 }
 
 #layout-borders {
-  background-color: #b3c8e2;
-  border-color: #3b72b3;
+  border-color: #444444;
 }
 
 #layout-padding {
-  background-color: #7fe3cc;
-  border-color: #00c79a;
+  border-color: #6a5acd;
 }
 
 #layout-content {
-  background-color: #f0f7ff;
-  border: 2px solid #eaf4ff;
-  height: 18px;
+  background-color: #87ceeb;
 }
 
 .theme-firebug #layout-main,
@@ -91,7 +103,6 @@
 .theme-firebug #layout-main {
   color: var(--theme-body-color);
   font-size: var(--theme-toolbar-font-size);
-  background-color: var(--theme-body-color);
 }
 
 .theme-firebug #layout-header {
@@ -117,32 +128,32 @@
 
 .layout-top,
 .layout-bottom {
-  width: 100%;
+  width: calc(100% - 2px);
   text-align: center;
 }
 
 .layout-padding.layout-top {
-  top: 38px;
+  top: 37px;
 }
 
 .layout-padding.layout-bottom {
-  bottom: 39px;
+  bottom: 38px;
 }
 
 .layout-border.layout-top {
-  top: 20px;
+  top: 19px;
 }
 
 .layout-border.layout-bottom {
-  bottom: 21px;
+  bottom: 20px;
 }
 
 .layout-margin.layout-top {
-  top: 2px;
+  top: 1px;
 }
 
 .layout-margin.layout-bottom {
-  bottom: 3px;
+  bottom: 2px;
 }
 
 .layout-size,
@@ -152,12 +163,12 @@
 .layout-border.layout-right,
 .layout-padding.layout-left,
 .layout-padding.layout-right {
-  top: 23px;
+  top: 22px;
   line-height: 80px;
 }
 
 .layout-size {
-  width: 100%;
+  width: calc(100% - 2px);
 }
 
 .layout-margin.layout-right,
@@ -166,23 +177,23 @@
 .layout-border.layout-right,
 .layout-padding.layout-right,
 .layout-padding.layout-left {
-  width: 20px;
+  width: 21px;
 }
 
 .layout-padding.layout-left {
-  left: 36px;
+  left: 35px;
 }
 
 .layout-padding.layout-right {
-  right: 36px;
+  right: 35px;
 }
 
 .layout-border.layout-left {
-  left: 18px;
+  left: 16px;
 }
 
 .layout-border.layout-right {
-  right: 18px;
+  right: 17px;
 }
 
 .layout-margin.layout-right {
@@ -195,21 +206,22 @@
 
 .layout-rotate.layout-left:not(.layout-editing) {
   transform: rotate(-90deg);
-  left: -2px;
 }
 
 .layout-rotate.layout-right:not(.layout-editing) {
   transform: rotate(90deg);
-  right: -2px;
 }
 
 /* Legend: displayed inside regions */
 
 .layout-legend {
-  color: #1A1C22;
   position: absolute;
-  margin: 3px 6px;
+  margin: 2px 6px;
   z-index: 1;
+}
+
+.layout-legend[data-box="margin"] {
+  color: var(--theme-highlight-blue);
 }
 
 /* Editable fields */
