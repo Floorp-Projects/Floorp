@@ -137,7 +137,7 @@ public final class CodecProxy {
             return false;
         }
         Sample sample = (info.flags == MediaCodec.BUFFER_FLAG_END_OF_STREAM) ?
-                        Sample.EOS : new Sample(ByteBuffer.wrap(bytes), info);
+                        Sample.EOS : new Sample(ByteBuffer.wrap(bytes), info, null);
         try {
             mRemote.queueInput(sample);
         } catch (DeadObjectException e) {
