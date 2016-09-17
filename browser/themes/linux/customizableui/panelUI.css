@@ -5,7 +5,7 @@
 %include ../../shared/customizableui/panelUI.inc.css
 
 .panel-subviews {
-  background-color: var(--panel-arrowcontent-background);
+  background-color: var(--arrowpanel-background);
 }
 
 #BMB_bookmarksPopup > menuitem[type="checkbox"] {
@@ -14,9 +14,9 @@
 
 #BMB_bookmarksPopup menupopup {
   -moz-appearance: none;
-  background: var(--panel-arrowcontent-background);
-  color: var(--panel-arrowcontent-color);
-  border: 1px solid var(--panel-arrowcontent-border-color);
+  background: var(--arrowpanel-background);
+  color: var(--arrowpanel-color);
+  border: 1px solid var(--arrowpanel-border-color);
   margin-top: -6px;
   padding-top: 1px;
 }
