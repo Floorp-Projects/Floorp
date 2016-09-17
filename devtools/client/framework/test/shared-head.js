@@ -559,12 +559,3 @@ function stopRecordingTelemetryLogs(Telemetry) {
   delete Telemetry.prototype._oldlogKeyed;
   delete Telemetry.prototype.telemetryInfo;
 }
-
-/**
- * Clean the OS clipboard content.
- */
-function emptyClipboard() {
-  let clipboard = Cc["@mozilla.org/widget/clipboard;1"]
-    .getService(SpecialPowers.Ci.nsIClipboard);
-  clipboard.emptyClipboard(1);
-}

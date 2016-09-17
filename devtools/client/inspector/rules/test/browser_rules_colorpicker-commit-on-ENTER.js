@@ -47,7 +47,7 @@ function* testPressingEnterCommitsChanges(swatch, ruleView) {
   let onModified = ruleView.once("ruleview-changed");
   let spectrum = cPicker.spectrum;
   let onHidden = cPicker.tooltip.once("hidden");
-  focusAndSendKey(spectrum.element.ownerDocument.defaultView, "RETURN");
+  EventUtils.sendKey("RETURN", spectrum.element.ownerDocument.defaultView);
   yield onHidden;
   yield onModified;
 

@@ -19,8 +19,6 @@ add_task(function* () {
   ok(searchContextMenu,
     "The search filter context menu is loaded in the inspector");
 
-  emptyClipboard();
-
   let cmdUndo = searchContextMenu.querySelector("[command=cmd_undo]");
   let cmdDelete = searchContextMenu.querySelector("[command=cmd_delete]");
   let cmdSelectAll = searchContextMenu.querySelector("[command=cmd_selectAll]");
@@ -29,7 +27,6 @@ add_task(function* () {
   let cmdPaste = searchContextMenu.querySelector("[command=cmd_paste]");
 
   info("Opening context menu");
-  searchBox.focus();
   let onContextMenuPopup = once(searchContextMenu, "popupshowing");
   EventUtils.synthesizeMouse(searchBox, 2, 2,
     {type: "contextmenu", button: 2}, win);
@@ -37,7 +34,7 @@ add_task(function* () {
 
   is(cmdUndo.getAttribute("disabled"), "true", "cmdUndo is disabled");
   is(cmdDelete.getAttribute("disabled"), "true", "cmdDelete is disabled");
-  is(cmdSelectAll.getAttribute("disabled"), "true", "cmdSelectAll is disabled");
+  is(cmdSelectAll.getAttribute("disabled"), "", "cmdSelectAll is enabled");
   is(cmdCut.getAttribute("disabled"), "true", "cmdCut is disabled");
   is(cmdCopy.getAttribute("disabled"), "true", "cmdCopy is disabled");
   is(cmdPaste.getAttribute("disabled"), "true", "cmdPaste is disabled");
@@ -50,7 +47,6 @@ add_task(function* () {
   info("Copy text in search field using the context menu");
   searchBox.value = TEST_INPUT;
   searchBox.select();
-  searchBox.focus();
   EventUtils.synthesizeMouse(searchBox, 2, 2,
     {type: "contextmenu", button: 2}, win);
   yield onContextMenuPopup;
