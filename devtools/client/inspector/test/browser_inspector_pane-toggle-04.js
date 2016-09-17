@@ -20,7 +20,7 @@ add_task(function* () {
 
   let { inspector, toolbox } = yield openInspectorForURL("about:blank");
   let button = inspector.panelDoc.querySelector(".sidebar-toggle");
-  let panel = inspector.panelDoc.querySelector("#inspector-splitter-box .controlled");
+  let panel = inspector.panelDoc.querySelector("#inspector-sidebar-container");
 
   info("Changing toolbox host to a window.");
   yield toolbox.switchHost(Toolbox.HostType.WINDOW);
