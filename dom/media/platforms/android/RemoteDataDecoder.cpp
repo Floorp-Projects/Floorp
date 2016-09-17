@@ -5,7 +5,7 @@
 #include "AndroidDecoderModule.h"
 #include "AndroidBridge.h"
 #include "AndroidSurfaceTexture.h"
-#include "GeneratedJNINatives.h"
+#include "FennecJNINatives.h"
 #include "GLImages.h"
 
 #include "MediaData.h"

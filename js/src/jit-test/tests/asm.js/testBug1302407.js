@@ -1,6 +1,6 @@
 if (!this['SharedArrayBuffer'])
     quit();
 
-setJitCompilerOption('wasm.test-mode', 1);
+setJitCompilerOption('asmjs.atomics.enable', 1);
 new SharedArrayBuffer(65536);
-setJitCompilerOption('wasm.test-mode', 0)
+setJitCompilerOption('asmjs.atomics.enable', 0)

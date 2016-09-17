@@ -3,7 +3,7 @@ if (!this.SharedArrayBuffer)
 
 load(libdir + "asm.js");
 load(libdir + "asserts.js");
-setJitCompilerOption('wasm.test-mode', 1);
+setJitCompilerOption('asmjs.atomics.enable', 1);
 
 var m = asmCompile("stdlib", "ffi", "heap", `
     "use asm";

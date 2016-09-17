@@ -1021,8 +1021,6 @@ nsFrameLoader::SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
     return rv;
   }
 
-  mRemoteBrowser->SwapLayerTreeObservers(aOther->mRemoteBrowser);
-
   nsCOMPtr<nsIBrowserDOMWindow> otherBrowserDOMWindow =
     aOther->mRemoteBrowser->GetBrowserDOMWindow();
   nsCOMPtr<nsIBrowserDOMWindow> browserDOMWindow =
@@ -3249,46 +3247,6 @@ nsFrameLoader::RequestNotifyAfterRemotePaint()
   if (mRemoteBrowser) {
     Unused << mRemoteBrowser->SendRequestNotifyAfterRemotePaint();
   }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameLoader::RequestNotifyLayerTreeReady()
-{
-  if (mRemoteBrowser) {
-    return mRemoteBrowser->RequestNotifyLayerTreeReady() ? NS_OK : NS_ERROR_NOT_AVAILABLE;
-  }
-
-  if (!mOwnerContent) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  RefPtr<AsyncEventDispatcher> event =
-    new AsyncEventDispatcher(mOwnerContent,
-                             NS_LITERAL_STRING("MozLayerTreeReady"),
-                             true, false);
-  event->PostDOMEvent();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameLoader::RequestNotifyLayerTreeCleared()
-{
-  if (mRemoteBrowser) {
-    return mRemoteBrowser->RequestNotifyLayerTreeCleared() ? NS_OK : NS_ERROR_NOT_AVAILABLE;
-  }
-
-  if (!mOwnerContent) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  RefPtr<AsyncEventDispatcher> event =
-    new AsyncEventDispatcher(mOwnerContent,
-                             NS_LITERAL_STRING("MozLayerTreeCleared"),
-                             true, false);
-  event->PostDOMEvent();
 
   return NS_OK;
 }

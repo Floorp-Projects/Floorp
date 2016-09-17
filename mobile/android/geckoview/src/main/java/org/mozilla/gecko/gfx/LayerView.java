@@ -9,7 +9,6 @@ import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 
 import org.mozilla.gecko.AndroidGamepadManager;
-import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.AppConstants;
@@ -686,11 +685,11 @@ public class LayerView extends FrameLayout {
     }
 
     public void setSurfaceTranslation(float translation) {
-        ViewHelper.setTranslationY(this, translation);
+        setTranslationY(translation);
     }
 
     public float getSurfaceTranslation() {
-        return ViewHelper.getTranslationY(this);
+        return getTranslationY();
     }
 
     // Public hooks for dynamic toolbar translation

@@ -1113,9 +1113,7 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
     drawRect.Scale(mResolution);
 
     // Mark the newly updated area as invalid in the front buffer
-    aTile.mInvalidFront.Or(aTile.mInvalidFront,
-      IntRect(NS_lroundf(drawRect.x), NS_lroundf(drawRect.y),
-                drawRect.width, drawRect.height));
+    aTile.mInvalidFront.Or(aTile.mInvalidFront, IntRect::RoundOut(drawRect));
 
     if (mode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
       dt->FillRect(drawRect, ColorPattern(Color(0.0, 0.0, 0.0, 1.0)));

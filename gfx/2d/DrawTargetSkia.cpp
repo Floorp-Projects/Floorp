@@ -510,12 +510,12 @@ DrawTargetSkia::DrawSurface(SourceSurface *aSurface,
     return;
   }
 
+  MarkChanged();
+
   SkBitmap bitmap = GetBitmapForSurface(aSurface);
   if (bitmap.empty()) {
     return;
   }
-
-  MarkChanged();
 
   SkRect destRect = RectToSkRect(aDest);
   SkRect sourceRect = RectToSkRect(aSource);
@@ -563,12 +563,12 @@ DrawTargetSkia::DrawSurfaceWithShadow(SourceSurface *aSurface,
     return;
   }
 
+  MarkChanged();
+
   SkBitmap bitmap = GetBitmapForSurface(aSurface);
   if (bitmap.empty()) {
     return;
   }
-
-  MarkChanged();
 
   mCanvas->save();
   mCanvas->resetMatrix();
@@ -1287,7 +1287,7 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
     break;
   case FontType::GDI:
   {
-    if (!shouldLCDRenderText) {
+    if (!shouldLCDRenderText && aaEnabled) {
       // If we have non LCD GDI text, render the fonts as cleartype and convert them
       // to grayscale. This seems to be what Chrome and IE are doing on Windows 7.
       // This also applies if cleartype is disabled system wide.
@@ -1300,6 +1300,11 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
   {
     ScaledFontDWrite* dwriteFont = static_cast<ScaledFontDWrite*>(aFont);
     paint.mPaint.setEmbeddedBitmapText(dwriteFont->UseEmbeddedBitmaps());
+
+    if (dwriteFont->ForceGDIMode()) {
+      paint.mPaint.setEmbeddedBitmapText(true);
+      useSubpixelText = false;
+    }
     break;
   }
 #endif
@@ -1439,12 +1444,12 @@ DrawTargetSkia::Draw3DTransformedSurface(SourceSurface* aSurface, const Matrix4x
     return false;
   }
 
+  MarkChanged();
+
   SkBitmap bitmap = GetBitmapForSurface(aSurface);
   if (bitmap.empty()) {
     return true;
   }
-
-  MarkChanged();
 
   mCanvas->save();
 
@@ -1632,12 +1637,12 @@ DrawTargetSkia::CopySurface(SourceSurface *aSurface,
                             const IntRect& aSourceRect,
                             const IntPoint &aDestination)
 {
+  MarkChanged();
+
   SkBitmap bitmap = GetBitmapForSurface(aSurface);
   if (bitmap.empty()) {
     return;
   }
-
-  MarkChanged();
 
   mCanvas->save();
   mCanvas->setMatrix(SkMatrix::MakeTrans(SkIntToScalar(aDestination.x), SkIntToScalar(aDestination.y)));

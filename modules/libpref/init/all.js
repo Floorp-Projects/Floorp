@@ -780,6 +780,8 @@ pref("gfx.content.azure.backends", "skia");
 #endif
 #endif
 
+pref("gfx.text.disable-aa", false);
+
 pref("gfx.work-around-driver-bugs", true);
 pref("gfx.prefer-mesa-llvmpipe", false);
 

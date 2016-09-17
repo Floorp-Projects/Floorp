@@ -6,7 +6,7 @@
 #ifndef MemoryMonitor_h
 #define MemoryMonitor_h
 
-#include "GeneratedJNINatives.h"
+#include "FennecJNINatives.h"
 #include "nsMemoryPressure.h"
 
 namespace mozilla {

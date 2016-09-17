@@ -6,6 +6,9 @@
 
 MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
+if CONFIG['ENABLE_TESTS']:
+    DIRS += ['gtest']
+
 XPIDL_SOURCES += [
     'nsIProfileMigrator.idl',
     'nsIProfileUnlocker.idl',

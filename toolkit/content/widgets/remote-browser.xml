@@ -259,13 +259,13 @@
         </setter>
       </property>
 
-      <method name="setDocShellIsActiveAndForeground">
-        <parameter name="isActive"/>
+      <method name="preserveLayers">
+        <parameter name="preserve"/>
         <body><![CDATA[
-          // See the explanation for what this does in nsITabParent.ipdl
-
           let {frameLoader} = this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner);
-          frameLoader.tabParent.setDocShellIsActiveAndForeground(isActive);
+          if (frameLoader.tabParent) {
+            frameLoader.tabParent.preserveLayers(preserve);
+          }
         ]]></body>
       </method>
 

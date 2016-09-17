@@ -55,7 +55,7 @@ nsWrapperCache::ReleaseWrapper(void* aScriptObjectHolder)
     // from both here.
     JSObject* obj = GetWrapperPreserveColor();
     if (IsDOMBinding() && obj && js::IsProxy(obj)) {
-      DOMProxyHandler::GetAndClearExpandoObject(obj);
+      DOMProxyHandler::ClearExternalRefsForWrapperRelease(obj);
     }
     SetPreservingWrapper(false);
     cyclecollector::DropJSObjectsImpl(aScriptObjectHolder);
