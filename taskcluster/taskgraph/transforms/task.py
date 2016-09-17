@@ -542,10 +542,10 @@ def check_v2_routes():
 
     # we use different variables than mozharness
     for mh, tg in [
-        ('{index}', 'index'),
-        ('{build_product}', '{product}'),
-        ('{build_name}-{build_type}', '{job-name-gecko-v2}'),
-        ('{year}.{month}.{day}.{pushdate}', '{pushdate_long}')]:
+            ('{index}', 'index'),
+            ('{build_product}', '{product}'),
+            ('{build_name}-{build_type}', '{job-name-gecko-v2}'),
+            ('{year}.{month}.{day}.{pushdate}', '{pushdate_long}')]:
         routes = [r.replace(mh, tg) for r in routes]
 
     if sorted(routes) != sorted(V2_ROUTE_TEMPLATES):
