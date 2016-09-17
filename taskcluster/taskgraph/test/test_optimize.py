@@ -48,7 +48,7 @@ class TestResolveTaskReferences(unittest.TestCase):
         "resolve_task_references raises a KeyError on reference to an invalid task"
         self.assertRaisesRegexp(
             KeyError,
-            "task 'subject' has no dependency with label 'no-such'",
+            "task 'subject' has no dependency named 'no-such'",
             lambda: resolve_task_references('subject', {'task-reference': '<no-such>'}, {})
         )
 
