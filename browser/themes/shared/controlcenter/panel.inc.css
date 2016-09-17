@@ -82,7 +82,7 @@
 }
 
 #identity-popup-multiView > .panel-viewcontainer > .panel-viewstack > .panel-subviews {
-  background: var(--arrowpanel-background);
+  background: var(--panel-arrowcontent-background);
   padding: 0;
 }
 

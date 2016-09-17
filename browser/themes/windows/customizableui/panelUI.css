@@ -5,7 +5,7 @@
 %include ../../shared/customizableui/panelUI.inc.css
 
 .panel-subviews {
-  background-color: var(--arrowpanel-background);
+  background-color: var(--panel-arrowcontent-background);
 }
 
 #PanelUI-contents #zoom-out-btn {
@@ -30,8 +30,8 @@
 #BMB_bookmarksPopup menupopup[placespopup=true] > hbox {
   /* emulating chrome://browser/content/places/menu.xml#places-popup-arrow but without the arrow */
   box-shadow: 0 0 4px rgba(0,0,0,0.2);
-  background: var(--arrowpanel-background);
-  border: 1px solid var(--arrowpanel-border-color);
+  background: var(--panel-arrowcontent-background);
+  border: 1px solid var(--panel-arrowcontent-border-color);
   border-radius: 3.5px;
   margin-top: -4px;
 }
