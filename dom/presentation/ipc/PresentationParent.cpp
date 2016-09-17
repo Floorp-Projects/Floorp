@@ -315,10 +315,13 @@ PresentationParent::NotifyReplaced()
 
 NS_IMETHODIMP
 PresentationParent::NotifyMessage(const nsAString& aSessionId,
-                                  const nsACString& aData)
+                                  const nsACString& aData,
+                                  bool aIsBinary)
 {
   if (NS_WARN_IF(mActorDestroyed ||
-                 !SendNotifyMessage(nsString(aSessionId), nsCString(aData)))) {
+                 !SendNotifyMessage(nsString(aSessionId),
+                                    nsCString(aData),
+                                    aIsBinary))) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;

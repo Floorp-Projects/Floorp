@@ -285,6 +285,34 @@ PresentationSessionInfo::Send(const nsAString& aData)
 }
 
 nsresult
+PresentationSessionInfo::SendBinaryMsg(const nsACString& aData)
+{
+  if (NS_WARN_IF(!IsSessionReady())) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  if (NS_WARN_IF(!mTransport)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return mTransport->SendBinaryMsg(aData);
+}
+
+nsresult
+PresentationSessionInfo::SendBlob(nsIDOMBlob* aBlob)
+{
+  if (NS_WARN_IF(!IsSessionReady())) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  if (NS_WARN_IF(!mTransport)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return mTransport->SendBlob(aBlob);
+}
+
+nsresult
 PresentationSessionInfo::Close(nsresult aReason,
                                uint32_t aState)
 {
@@ -475,7 +503,7 @@ PresentationSessionInfo::NotifyTransportClosed(nsresult aReason)
 }
 
 NS_IMETHODIMP
-PresentationSessionInfo::NotifyData(const nsACString& aData)
+PresentationSessionInfo::NotifyData(const nsACString& aData, bool aIsBinary)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -487,7 +515,7 @@ PresentationSessionInfo::NotifyData(const nsACString& aData)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  return mListener->NotifyMessage(mSessionId, aData);
+  return mListener->NotifyMessage(mSessionId, aData, aIsBinary);
 }
 
 // nsIPresentationSessionTransportBuilderListener

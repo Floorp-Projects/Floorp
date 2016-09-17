@@ -52,7 +52,8 @@ public:
 
   virtual bool
   RecvNotifyMessage(const nsString& aSessionId,
-                    const nsCString& aData) override;
+                    const nsCString& aData,
+                    const bool& aIsBinary) override;
 
   virtual bool
   RecvNotifySessionConnect(const uint64_t& aWindowId,

@@ -4,6 +4,7 @@
 
 #include "nsISupports.idl"
 
+interface nsIDOMBlob;
 interface nsIDOMEventTarget;
 interface nsIInputStream;
 interface nsIPresentationAvailabilityListener;
@@ -94,6 +95,28 @@ interface nsIPresentationService : nsISupports
   void sendSessionMessage(in DOMString sessionId,
 							            in uint8_t role,
                           in DOMString data);
+
+  /*
+   * Send the binary message to the session.
+   *
+   * @param sessionId: An ID to identify presentation session.
+   * @param role: Identify the function called by controller or receiver.
+   * @param data: the message being sent out.
+   */
+  void sendSessionBinaryMsg(in DOMString sessionId,
+                            in uint8_t role,
+                            in ACString data);
+
+  /*
+   * Send the blob to the session.
+   *
+   * @param sessionId: An ID to identify presentation session.
+   * @param role: Identify the function called by controller or receiver.
+   * @param blob: The input blob to be sent.
+   */
+  void sendSessionBlob(in DOMString sessionId,
+                       in uint8_t role,
+                       in nsIDOMBlob blob);
 
   /*
    * Close the session.
