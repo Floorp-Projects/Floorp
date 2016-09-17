@@ -99,7 +99,7 @@ public:
 protected:
   GetFilesHelper(nsIGlobalObject* aGlobal, bool aRecursiveFlag);
 
-  virtual ~GetFilesHelper() {}
+  virtual ~GetFilesHelper();
 
   void
   SetDirectoryPath(const nsAString& aDirectoryPath)
@@ -197,6 +197,8 @@ public:
 private:
   GetFilesHelperParent(const nsID& aUUID, ContentParent* aContentParent,
                        bool aRecursiveFlag);
+
+  ~GetFilesHelperParent();
 
   RefPtr<ContentParent> mContentParent;
   nsID mUUID;
