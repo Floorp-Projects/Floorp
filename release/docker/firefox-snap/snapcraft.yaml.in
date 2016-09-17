@@ -1,0 +1,37 @@
+name: firefox
+version: @VERSION@-@BUILD_NUMBER@
+summary: Mozilla Firefox web browser
+description:  Firefox is a powerful, extensible web browser with support for modern web application technologies.
+confinement: strict
+
+apps:
+  firefox:
+    command: desktop-launch firefox
+    plugs:
+      - unity7
+      - network
+      - home
+      - x11
+      - opengl
+      - pulseaudio
+      - gsettings
+      - camera
+      - browser-sandbox
+
+plugs:
+  browser-sandbox:
+    interface: browser-support
+    allow-sandbox: true
+
+parts:
+  firefox:
+    plugin: dump
+    source: source
+    stage-packages:
+      - libxt6
+      - libdbus-glib-1-2
+      - libasound2
+      - libpulse0
+      - libgl1-mesa-dri
+      - libgl1-mesa-glx
+    after: [desktop-gtk3]
