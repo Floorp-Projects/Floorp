@@ -35,10 +35,10 @@ toolbar[type="menubar"]:not([autohide="true"]):not(:-moz-lwtheme):-moz-system-me
 
 /* ::::: Variables ::::: */
 :root {
-  --arrowpanel-padding: 10px;
-  --arrowpanel-background: -moz-field;
-  --arrowpanel-color: -moz-fieldText;
-  --arrowpanel-border-color: ThreeDShadow;
+  --panel-arrowcontent-padding: 10px;
+  --panel-arrowcontent-background: -moz-field;
+  --panel-arrowcontent-color: -moz-fieldText;
+  --panel-arrowcontent-border-color: ThreeDShadow;
 }
 
 /* ::::: root elements ::::: */

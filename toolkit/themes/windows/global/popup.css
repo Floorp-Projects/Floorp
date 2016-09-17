@@ -48,11 +48,11 @@ panel[type="arrow"][side="right"] {
 }
 
 .panel-arrowcontent {
-  padding: var(--arrowpanel-padding);
-  color: var(--arrowpanel-color);
-  background: var(--arrowpanel-background);
+  padding: var(--panel-arrowcontent-padding);
+  color: var(--panel-arrowcontent-color);
+  background: var(--panel-arrowcontent-background);
   background-clip: padding-box;
-  border: 1px solid var(--arrowpanel-border-color);
+  border: 1px solid var(--panel-arrowcontent-border-color);
   box-shadow: 0 0 4px hsla(0,0%,0%,.2);
   margin: 4px;
 }
@@ -107,7 +107,7 @@ panel[type="arrow"][side="right"] {
 %ifdef XP_WIN
 @media (-moz-windows-default-theme) {
   .panel-arrowcontent {
-    --arrowpanel-border-color: hsla(210,4%,10%,.2);
+    --panel-arrowcontent-border-color: hsla(210,4%,10%,.2);
     box-shadow: 0 0 4px hsla(210,4%,10%,.2);
   }
 
