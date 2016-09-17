@@ -300,20 +300,13 @@ MediaEngineWebRTCMicrophoneSource::UpdateSingleSource(
         }
       }
       if (!AllocChannel()) {
-        if (sChannelsOpen == 0) {
-          DeInitEngine();
-        }
         LOG(("Audio device is not initalized"));
         return NS_ERROR_FAILURE;
       }
       if (mAudioInput->SetRecordingDevice(mCapIndex)) {
         FreeChannel();
-        if (sChannelsOpen == 0) {
-          DeInitEngine();
-        }
         return NS_ERROR_FAILURE;
       }
-      sChannelsOpen++;
       mState = kAllocated;
       LOG(("Audio device %d allocated", mCapIndex));
       break;
@@ -401,12 +394,7 @@ MediaEngineWebRTCMicrophoneSource::Deallocate(AllocationHandle* aHandle)
     }
 
     FreeChannel();
-    mState = kReleased;
     LOG(("Audio device %d deallocated", mCapIndex));
-    MOZ_ASSERT(sChannelsOpen > 0);
-    if (--sChannelsOpen == 0) {
-      DeInitEngine();
-    }
   } else {
     LOG(("Audio device %d deallocated but still in use", mCapIndex));
   }
@@ -682,71 +670,17 @@ MediaEngineWebRTCMicrophoneSource::InitEngine()
   mVoEBase->Init();
 
   mVoERender = webrtc::VoEExternalMedia::GetInterface(mVoiceEngine);
-  if (!mVoERender) {
-    return false;
+  if (mVoERender) {
+    mVoENetwork = webrtc::VoENetwork::GetInterface(mVoiceEngine);
+    if (mVoENetwork) {
+      mVoEProcessing = webrtc::VoEAudioProcessing::GetInterface(mVoiceEngine);
+      if (mVoEProcessing) {
+        mNullTransport = new NullTransport();
+        return true;
+      }
+    }
   }
-  mVoENetwork = webrtc::VoENetwork::GetInterface(mVoiceEngine);
-  if (!mVoENetwork) {
-    return false;
-  }
-
-  mVoEProcessing = webrtc::VoEAudioProcessing::GetInterface(mVoiceEngine);
-  if (!mVoEProcessing) {
-    return false;
-  }
-  mNullTransport = new NullTransport();
-  return true;
-}
-
-bool
-MediaEngineWebRTCMicrophoneSource::AllocChannel()
-{
-  MOZ_ASSERT(mVoEBase);
-
-  mChannel = mVoEBase->CreateChannel();
-  if (mChannel < 0) {
-    return false;
-  }
-  if (mVoENetwork->RegisterExternalTransport(mChannel, *mNullTransport)) {
-    return false;
-  }
-
-  mSampleFrequency = MediaEngine::DEFAULT_SAMPLE_RATE;
-  LOG(("%s: sampling rate %u", __FUNCTION__, mSampleFrequency));
-
-  // Check for availability.
-  if (mAudioInput->SetRecordingDevice(mCapIndex)) {
-    return false;
-  }
-
-#ifndef MOZ_B2G
-  // Because of the permission mechanism of B2G, we need to skip the status
-  // check here.
-  bool avail = false;
-  mAudioInput->GetRecordingDeviceStatus(avail);
-  if (!avail) {
-    return false;
-  }
-#endif // MOZ_B2G
-
-  // Set "codec" to PCM, 32kHz on 1 channel
-  ScopedCustomReleasePtr<webrtc::VoECodec> ptrVoECodec(webrtc::VoECodec::GetInterface(mVoiceEngine));
-  if (!ptrVoECodec) {
-    return false;
-  }
-
-  webrtc::CodecInst codec;
-  strcpy(codec.plname, ENCODING);
-  codec.channels = CHANNELS;
-  MOZ_ASSERT(mSampleFrequency == 16000 || mSampleFrequency == 32000);
-  codec.rate = SAMPLE_RATE(mSampleFrequency);
-  codec.plfreq = mSampleFrequency;
-  codec.pacsize = SAMPLE_LENGTH(mSampleFrequency);
-  codec.pltype = 0; // Default payload type
-
-  if (!ptrVoECodec->SetSendCodec(mChannel, codec)) {
-    return true;
-  }
+  DeInitEngine();
   return false;
 }
 
@@ -771,13 +705,73 @@ void
 MediaEngineWebRTCMicrophoneSource::FreeChannel()
 {
   if (mChannel != -1) {
+    MOZ_ASSERT(mVoENetwork && mVoEBase);
     if (mVoENetwork) {
       mVoENetwork->DeRegisterExternalTransport(mChannel);
     }
-    mVoEBase->DeleteChannel(mChannel);
+    if (mVoEBase) {
+      mVoEBase->DeleteChannel(mChannel);
+    }
     mChannel = -1;
   }
   mState = kReleased;
+
+  MOZ_ASSERT(sChannelsOpen > 0);
+  if (--sChannelsOpen == 0) {
+    DeInitEngine();
+  }
+}
+
+bool
+MediaEngineWebRTCMicrophoneSource::AllocChannel()
+{
+  MOZ_ASSERT(mVoEBase);
+
+  mChannel = mVoEBase->CreateChannel();
+  if (mChannel >= 0) {
+    if (!mVoENetwork->RegisterExternalTransport(mChannel, *mNullTransport)) {
+      mSampleFrequency = MediaEngine::DEFAULT_SAMPLE_RATE;
+      LOG(("%s: sampling rate %u", __FUNCTION__, mSampleFrequency));
+
+      // Check for availability.
+      if (!mAudioInput->SetRecordingDevice(mCapIndex)) {
+#ifndef MOZ_B2G
+        // Because of the permission mechanism of B2G, we need to skip the status
+        // check here.
+        bool avail = false;
+        mAudioInput->GetRecordingDeviceStatus(avail);
+        if (!avail) {
+          if (sChannelsOpen == 0) {
+            DeInitEngine();
+          }
+          return false;
+        }
+#endif // MOZ_B2G
+
+        // Set "codec" to PCM, 32kHz on 1 channel
+        ScopedCustomReleasePtr<webrtc::VoECodec> ptrVoECodec(webrtc::VoECodec::GetInterface(mVoiceEngine));
+        if (ptrVoECodec) {
+          webrtc::CodecInst codec;
+          strcpy(codec.plname, ENCODING);
+          codec.channels = CHANNELS;
+          MOZ_ASSERT(mSampleFrequency == 16000 || mSampleFrequency == 32000);
+          codec.rate = SAMPLE_RATE(mSampleFrequency);
+          codec.plfreq = mSampleFrequency;
+          codec.pacsize = SAMPLE_LENGTH(mSampleFrequency);
+          codec.pltype = 0; // Default payload type
+
+          if (!ptrVoECodec->SetSendCodec(mChannel, codec)) {
+            sChannelsOpen++;
+            return true;
+          }
+        }
+      }
+    }
+  }
+  if (sChannelsOpen == 0) {
+    DeInitEngine();
+  }
+  return false;
 }
 
 void
@@ -815,8 +809,6 @@ MediaEngineWebRTCMicrophoneSource::Shutdown()
   }
 
   FreeChannel();
-  DeInitEngine();
-
   mAudioInput = nullptr;
 }
 
