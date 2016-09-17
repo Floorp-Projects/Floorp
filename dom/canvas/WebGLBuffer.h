@@ -62,6 +62,7 @@ public:
 
     virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) override;
 
+    bool ValidateCanBindToTarget(const char* funcName, GLenum target);
     void BufferData(GLenum target, size_t size, const void* data, GLenum usage);
 
     const GLenum mGLName;
@@ -76,6 +77,7 @@ protected:
     size_t mByteLength;
     UniquePtr<WebGLElementArrayCache> mCache;
     size_t mNumActiveTFOs;
+    bool mBoundForTF;
 };
 
 } // namespace mozilla
