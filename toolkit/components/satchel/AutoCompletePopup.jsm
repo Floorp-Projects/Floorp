@@ -99,10 +99,20 @@ this.AutoCompletePopup = {
   },
 
   handleEvent: function(evt) {
-    if (evt.type === "popuphidden") {
-      this.openedPopup = null;
-      this.weakBrowser = null;
-      evt.target.removeEventListener("popuphidden", this);
+    switch (evt.type) {
+      case "popupshowing": {
+        this.sendMessageToBrowser("FormAutoComplete:PopupOpened");
+        break;
+      }
+
+      case "popuphidden": {
+        this.sendMessageToBrowser("FormAutoComplete:PopupClosed");
+        this.openedPopup = null;
+        this.weakBrowser = null;
+        evt.target.removeEventListener("popuphidden", this);
+        evt.target.removeEventListener("popupshowing", this);
+        break;
+      }
     }
   },
 
@@ -144,10 +154,11 @@ this.AutoCompletePopup = {
       this.openedPopup.mInput = null;
       this.openedPopup.showCommentColumn = false;
       this.openedPopup.showImageColumn = false;
+      this.openedPopup.addEventListener("popuphidden", this);
+      this.openedPopup.addEventListener("popupshowing", this);
       this.openedPopup.openPopupAtScreenRect("after_start", rect.left, rect.top,
                                              rect.width, rect.height, false,
                                              false);
-      this.openedPopup.addEventListener("popuphidden", this);
     } else {
       this.closePopup();
     }
@@ -171,7 +182,10 @@ this.AutoCompletePopup = {
 
   closePopup() {
     if (this.openedPopup) {
-      this.openedPopup.closePopup();
+      // Note that hidePopup() closes the popup immediately,
+      // so popuphiding or popuphidden events will be fired
+      // and handled during this call.
+      this.openedPopup.hidePopup();
     }
     AutoCompleteTreeView.clearResults();
   },
@@ -246,15 +260,29 @@ this.AutoCompletePopup = {
    * Despite its name, handleEnter is what is called when the
    * user clicks on one of the items in the popup.
    */
-  handleEnter: function(aIsPopupSelection) {
+  handleEnter(aIsPopupSelection) {
+    if (this.openedPopup) {
+      this.sendMessageToBrowser("FormAutoComplete:HandleEnter", {
+        selectedIndex: this.openedPopup.selectedIndex,
+        isPopupSelection: aIsPopupSelection,
+      });
+    }
+  },
+
+  /**
+   * If a browser exists that AutoCompletePopup knows about,
+   * sends it a message. Otherwise, this is a no-op.
+   *
+   * @param {string} msgName
+   *        The name of the message to send.
+   * @param {object} data
+   *        The optional data to send with the message.
+   */
+  sendMessageToBrowser(msgName, data) {
     let browser = this.weakBrowser ? this.weakBrowser.get()
                                    : null;
-    if (browser && this.openedPopup) {
-      browser.messageManager.sendAsyncMessage(
-        "FormAutoComplete:HandleEnter",
-        { selectedIndex: this.openedPopup.selectedIndex,
-          isPopupSelection: aIsPopupSelection }
-      );
+    if (browser) {
+      browser.messageManager.sendAsyncMessage(msgName, data);
     }
   },
 
