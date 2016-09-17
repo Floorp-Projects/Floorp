@@ -20,6 +20,12 @@ enum PresentationConnectionState
   "terminated"
 };
 
+enum PresentationConnectionBinaryType
+{
+  "blob",
+  "arraybuffer"
+};
+
 [Pref="dom.presentation.enabled"]
 interface PresentationConnection : EventTarget {
   /*
@@ -41,6 +47,7 @@ interface PresentationConnection : EventTarget {
   attribute EventHandler onconnect;
   attribute EventHandler onclose;
   attribute EventHandler onterminate;
+  attribute PresentationConnectionBinaryType binaryType;
 
   /*
    * After a communication channel has been established between the controlling
@@ -48,12 +55,18 @@ interface PresentationConnection : EventTarget {
    * event handler "onmessage" will be invoked at the remote side.
    *
    * This function only works when the state is "connected".
-   *
-   * TODO bug 1228474 Implement PresentationSessionTransport with DataChannel to
-   * support other binary types.
    */
   [Throws]
   void send(DOMString data);
+
+  [Throws]
+  void send(Blob data);
+
+  [Throws]
+  void send(ArrayBuffer data);
+
+  [Throws]
+  void send(ArrayBufferView data);
 
   /*
    * It is triggered when receiving messages.

@@ -36,6 +36,26 @@ PresentationContentSessionInfo::Send(const nsAString& aData)
 }
 
 nsresult
+PresentationContentSessionInfo::SendBinaryMsg(const nsACString& aData)
+{
+  if (NS_WARN_IF(!mTransport)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return mTransport->SendBinaryMsg(aData);
+}
+
+nsresult
+PresentationContentSessionInfo::SendBlob(nsIDOMBlob* aBlob)
+{
+  if (NS_WARN_IF(!mTransport)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return mTransport->SendBlob(aBlob);
+}
+
+nsresult
 PresentationContentSessionInfo::Close(nsresult aReason)
 {
   if (!mTransport) {
@@ -71,7 +91,8 @@ PresentationContentSessionInfo::NotifyTransportClosed(nsresult aReason)
 }
 
 NS_IMETHODIMP
-PresentationContentSessionInfo::NotifyData(const nsACString& aData)
+PresentationContentSessionInfo::NotifyData(const nsACString& aData,
+                                           bool aIsBinary)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -81,7 +102,7 @@ PresentationContentSessionInfo::NotifyData(const nsACString& aData)
     return NS_ERROR_NOT_AVAILABLE;
   }
   return static_cast<PresentationIPCService*>(service.get())->
-           NotifyMessage(mSessionId, aData);
+           NotifyMessage(mSessionId, aData, aIsBinary);
 }
 
 } // namespace dom
