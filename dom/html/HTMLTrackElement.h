@@ -106,9 +106,6 @@ public:
                               bool aCompileEventHandlers) override;
   virtual void UnbindFromTree(bool aDeep, bool aNullParent) override;
 
-  // Check enabling preference.
-  static bool IsWebVTTEnabled();
-
   void DispatchTrackRunnable(const nsString& aEventName);
   void DispatchTrustedEvent(const nsAString& aName);
 

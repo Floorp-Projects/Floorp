@@ -69,15 +69,18 @@ add_task(function* test_disabled_ac() {
   let originalEngine = Services.search.currentEngine;
   Services.search.currentEngine = engine;
 
-  registerCleanupFunction(function* () {
+  function* cleanup() {
     Preferences.set("browser.urlbar.suggest.history", suggestHistory);
     Preferences.set("browser.urlbar.suggest.bookmark", suggestBookmarks);
     Preferences.set("browser.urlbar.suggest.openpage", suggestOpenPages);
 
     Services.search.currentEngine = originalEngine;
     let engine = Services.search.getEngineByName("MozSearch");
-    Services.search.removeEngine(engine);
-  });
+    if (engine) {
+      Services.search.removeEngine(engine);
+    }
+  }
+  registerCleanupFunction(cleanup);
 
   gURLBar.focus();
   gURLBar.value = "e";
@@ -87,4 +90,33 @@ add_task(function* test_disabled_ac() {
   info("wait for the page to load");
   yield BrowserTestUtils.browserLoaded(gBrowser.selectedTab.linkedBrowser,
                                        false, "http://example.com/?q=ex");
+  yield cleanup();
+});
+
+add_task(function* test_delay() {
+  const TIMEOUT = 10000;
+  // Set a large delay.
+  let delay = Preferences.get("browser.urlbar.delay");
+  Preferences.set("browser.urlbar.delay", TIMEOUT);
+
+  registerCleanupFunction(function* () {
+    Preferences.set("browser.urlbar.delay", delay);
+  });
+
+  // This is needed to clear the current value, otherwise autocomplete may think
+  // the user removed text from the end.
+  let start = Date.now();
+  yield promiseAutocompleteResultPopup("");
+  Assert.ok((Date.now() - start) < TIMEOUT);
+
+  start = Date.now();
+  gURLBar.closePopup();
+  gURLBar.focus();
+  gURLBar.value = "e";
+  EventUtils.synthesizeKey("x", {});
+  EventUtils.synthesizeKey("VK_RETURN", {});
+  info("wait for the page to load");
+  yield BrowserTestUtils.browserLoaded(gBrowser.selectedTab.linkedBrowser,
+                                       false, "http://example.com/");
+  Assert.ok((Date.now() - start) < TIMEOUT);
 });

@@ -45,7 +45,7 @@ def resolve_task_references(label, task_def, taskid_for_edge_name):
             # handle escaping '<'
             if key == '<':
                 return key
-            raise KeyError("task '{}' has no dependency with label '{}'".format(label, key))
+            raise KeyError("task '{}' has no dependency named '{}'".format(label, key))
 
     def recurse(val):
         if isinstance(val, list):
