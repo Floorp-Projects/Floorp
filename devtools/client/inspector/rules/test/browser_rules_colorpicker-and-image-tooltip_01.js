@@ -48,7 +48,7 @@ function* testImageTooltipAfterColorChange(swatch, url, ruleView) {
   let spectrum = picker.spectrum;
   let onHidden = picker.tooltip.once("hidden");
   let onModifications = ruleView.once("ruleview-changed");
-  focusAndSendKey(spectrum.element.ownerDocument.defaultView, "RETURN");
+  EventUtils.sendKey("RETURN", spectrum.element.ownerDocument.defaultView);
   yield onHidden;
   yield onModifications;
 
