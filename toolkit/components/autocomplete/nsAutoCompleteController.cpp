@@ -1396,15 +1396,23 @@ nsAutoCompleteController::EnterMatch(bool aIsPopupSelection,
     if (selectedIndex >= 0) {
       nsAutoString inputValue;
       input->GetTextValue(inputValue);
-      bool defaultCompleted = mDefaultIndexCompleted &&
-                              inputValue.Equals(mPlaceholderCompletionString,
-                                                nsCaseInsensitiveStringComparator());
-      if (aIsPopupSelection || (!completeSelection && !defaultCompleted)) {
+      if (aIsPopupSelection || !completeSelection) {
         // We need to fill-in the value if:
-        //  * completeselectedindex is false and we didn't defaultComplete
+        //  * completeselectedindex is false
         //  * A row in the popup was confirmed
+        //
+        // TODO: This is not totally correct, cause it will also confirm
+        // a result selected with a simple mouseover, that could also have
+        // happened accidentally, maybe touching a touchpad.
+        // The reason is that autocomplete.xml sets selectedIndex on mousemove
+        // making impossible, in the !completeSelection case, to distinguish if
+        // the user wanted to confirm autoFill or the popup entry.
+        // The solution may be to change autocomplete.xml to set selectedIndex
+        // only on popupClick, but that requires changing the selection behavior.
         GetResultValueAt(selectedIndex, true, value);
-      } else if (defaultCompleted) {
+      } else if (mDefaultIndexCompleted &&
+                 inputValue.Equals(mPlaceholderCompletionString,
+                                   nsCaseInsensitiveStringComparator())) {
         // We also need to fill-in the value if the default index completion was
         // confirmed, though we cannot use the selectedIndex cause the selection
         // may have been changed by the mouse in the meanwhile.
