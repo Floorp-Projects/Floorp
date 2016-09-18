@@ -179,15 +179,17 @@ public: // construction, destruction
 
   static IDispatch* NativeAccessible(Accessible* aAccessible);
 
+#ifdef _WIN64
   uint32_t GetExistingID() const { return mID; }
   static const uint32_t kNoID = 0;
-  // This is only valid to call in content
-  void SetID(uint32_t aID);
+#endif
 
 protected:
   virtual ~AccessibleWrap();
 
+#ifdef _WIN64
   uint32_t mID;
+#endif
 
   /**
    * Return the wrapper for the document's proxy.
