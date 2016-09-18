@@ -680,8 +680,9 @@ SetupContextMatrix(nsIFrame* aFrame, const PaintFramesParams& aParams,
       aFrame->PresContext()->RoundAppUnitsToNearestDevPixels(aOffsetToBoundingBox.y));
   }
 
-  // After applying only "aOffsetToBoundingBox", aCtx would have its origin at
-  // the top left corner of frame's bounding box (over all continuations).
+  // After applying only "aOffsetToBoundingBox", aParams.ctx would have its
+  // origin at the top left corner of frame's bounding box (over all
+  // continuations).
   // However, SVG painting needs the origin to be located at the origin of the
   // SVG frame's "user space", i.e. the space in which, for example, the
   // frame's BBox lives.
@@ -946,7 +947,7 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
   RefPtr<gfxContext> oldCtx = basic->GetTarget();
   basic->SetTarget(target);
   aParams.layerManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer,
-                                        aParams.builder);
+                                       aParams.builder);
   basic->SetTarget(oldCtx);
 
   if (shouldApplyClipPath || shouldApplyBasicShape) {
