@@ -5,21 +5,37 @@
 
 package org.mozilla.gecko.customtabs;
 
+import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
+import android.support.v7.widget.Toolbar;
+import android.view.MenuItem;
+import android.view.Window;
+import android.view.WindowManager;
 
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.util.ColorUtil;
 import org.mozilla.gecko.util.GeckoRequest;
 import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.ThreadUtils;
 
+import static android.support.customtabs.CustomTabsIntent.EXTRA_TOOLBAR_COLOR;
+
 public class CustomTabsActivity extends GeckoApp {
+    private static final int NO_COLOR = -1;
+    private Toolbar toolbar;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        updateActionBarWithToolbar(toolbar);
+        updateToolbarColor();
     }
 
     @Override
@@ -30,5 +46,35 @@ public class CustomTabsActivity extends GeckoApp {
     @Override
     protected void onDone() {
         finish();
+    }
+
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void updateActionBarWithToolbar(final Toolbar toolbar) {
+        setSupportActionBar(toolbar);
+        final ActionBar ab = getSupportActionBar();
+        if (ab != null) {
+            ab.setDisplayHomeAsUpEnabled(true);
+        }
+    }
+
+    private void updateToolbarColor() {
+        final int color = getIntent().getIntExtra(EXTRA_TOOLBAR_COLOR, NO_COLOR);
+        if (color == NO_COLOR) {
+            return;
+        }
+        toolbar.setBackgroundColor(color);
+        final Window window = getWindow();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.setStatusBarColor(ColorUtil.darken(color, 0.25));
+        }
     }
 }

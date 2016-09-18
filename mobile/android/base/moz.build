@@ -735,6 +735,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'updater/PostUpdateHandler.java',
     'updater/UpdateService.java',
     'updater/UpdateServiceHelper.java',
+    'util/ColorUtil.java',
     'util/DrawableUtil.java',
     'util/ResourceDrawableUtils.java',
     'util/TouchTargetUtil.java',
