@@ -16,13 +16,8 @@ namespace mozilla {
 namespace a11y {
 
 bool
-#if defined(XP_WIN)
-DocAccessibleParent::RecvShowEventInfo(const ShowEventData& aData,
-                                       nsTArray<MsaaMapping>* aNewMsaaIds)
-#else
 DocAccessibleParent::RecvShowEvent(const ShowEventData& aData,
                                    const bool& aFromUser)
-#endif // defined(XP_WIN)
 {
   if (mShutdown)
     return true;
@@ -49,13 +44,7 @@ DocAccessibleParent::RecvShowEvent(const ShowEventData& aData,
     return true;
   }
 
-#if defined(XP_WIN)
-  aNewMsaaIds->SetCapacity(aData.NewTree().Length());
-  uint32_t consumed = AddSubtree(parent, aData.NewTree(), 0, newChildIdx,
-                                 aNewMsaaIds);
-#else
   uint32_t consumed = AddSubtree(parent, aData.NewTree(), 0, newChildIdx);
-#endif
   MOZ_ASSERT(consumed == aData.NewTree().Length());
 
   // XXX This shouldn't happen, but if we failed to add children then the below
@@ -73,9 +62,6 @@ DocAccessibleParent::RecvShowEvent(const ShowEventData& aData,
 
   MOZ_DIAGNOSTIC_ASSERT(CheckDocTree());
 
-  // NB: On Windows we dispatch the native event via a subsequent call to
-  // RecvEvent().
-#if !defined(XP_WIN)
   ProxyAccessible* target = parent->ChildAt(newChildIdx);
   ProxyShowHideEvent(target, parent, true, aFromUser);
 
@@ -90,7 +76,6 @@ DocAccessibleParent::RecvShowEvent(const ShowEventData& aData,
   RefPtr<xpcAccEvent> event = new xpcAccEvent(type, xpcAcc, doc, node,
                                               aFromUser);
   nsCoreUtils::DispatchAccEvent(Move(event));
-#endif
 
   return true;
 }
@@ -98,11 +83,7 @@ DocAccessibleParent::RecvShowEvent(const ShowEventData& aData,
 uint32_t
 DocAccessibleParent::AddSubtree(ProxyAccessible* aParent,
                                 const nsTArray<a11y::AccessibleData>& aNewTree,
-                                uint32_t aIdx, uint32_t aIdxInParent
-#if defined(XP_WIN)
-                                , nsTArray<MsaaMapping>* aNewMsaaIds
-#endif
-                                )
+                                uint32_t aIdx, uint32_t aIdxInParent)
 {
   if (aNewTree.Length() <= aIdx) {
     NS_ERROR("bad index in serialized tree!");
@@ -143,22 +124,10 @@ DocAccessibleParent::AddSubtree(ProxyAccessible* aParent,
   mAccessibles.PutEntry(newChild.ID())->mProxy = newProxy;
   ProxyCreated(newProxy, newChild.Interfaces());
 
-#if defined(XP_WIN)
-  Accessible* idForAcc = WrapperFor(newProxy);
-  MOZ_ASSERT(idForAcc);
-  uint32_t newMsaaId = AccessibleWrap::GetChildIDFor(idForAcc);
-  MOZ_ASSERT(newMsaaId);
-  aNewMsaaIds->AppendElement(MsaaMapping(newChild.ID(), newMsaaId));
-#endif // defined(XP_WIN)
-
   uint32_t accessibles = 1;
   uint32_t kids = newChild.ChildrenCount();
   for (uint32_t i = 0; i < kids; i++) {
-    uint32_t consumed = AddSubtree(newProxy, aNewTree, aIdx + accessibles, i
-#if defined(XP_WIN)
-                                   , aNewMsaaIds
-#endif
-                                  );
+    uint32_t consumed = AddSubtree(newProxy, aNewTree, aIdx + accessibles, i);
     if (!consumed)
       return 0;
 
@@ -507,8 +476,7 @@ DocAccessibleParent::GetXPCAccessible(ProxyAccessible* aProxy)
  */
 bool
 DocAccessibleParent::RecvCOMProxy(const IAccessibleHolder& aCOMProxy,
-                                  IAccessibleHolder* aParentCOMProxy,
-                                  uint32_t* aMsaaID)
+                                  IAccessibleHolder* aParentCOMProxy)
 {
   RefPtr<IAccessible> ptr(aCOMProxy.Get());
   SetCOMInterface(ptr);
@@ -520,8 +488,6 @@ DocAccessibleParent::RecvCOMProxy(const IAccessibleHolder& aCOMProxy,
   }
 
   aParentCOMProxy->Set(IAccessibleHolder::COMPtrType(rawNative));
-  Accessible* wrapper = WrapperFor(this);
-  *aMsaaID = AccessibleWrap::GetChildIDFor(wrapper);
   return true;
 }
 #endif // defined(XP_WIN)
