@@ -30,7 +30,6 @@ StaticMutex sMutex;
 enum class CubebState {
   Uninitialized = 0,
   Initialized,
-  Error,
   Shutdown
 } sCubebState = CubebState::Uninitialized;
 cubeb* sCubebContext;
@@ -129,19 +128,32 @@ cubeb* GetCubebContext()
   return GetCubebContextUnlocked();
 }
 
-void InitPreferredSampleRate()
+bool InitPreferredSampleRate()
 {
   StaticMutexAutoLock lock(sMutex);
-  if (sPreferredSampleRate == 0) {
-    cubeb* context = GetCubebContextUnlocked();
-    if (context) {
-      if (cubeb_get_preferred_sample_rate(context,
-                                          &sPreferredSampleRate) != CUBEB_OK) {
-        // Query failed, use a sensible default.
-        sPreferredSampleRate = 44100;
-      }
-    }
+  if (sPreferredSampleRate != 0) {
+    return true;
   }
+  cubeb* context = GetCubebContextUnlocked();
+  if (!context) {
+    return false;
+  }
+  if (cubeb_get_preferred_sample_rate(context,
+                                      &sPreferredSampleRate) != CUBEB_OK) {
+
+    return false;
+  }
+  MOZ_ASSERT(sPreferredSampleRate);
+  return true;
+}
+
+uint32_t PreferredSampleRate()
+{
+  if (!InitPreferredSampleRate()) {
+    return 44100;
+  }
+  MOZ_ASSERT(sPreferredSampleRate);
+  return sPreferredSampleRate;
 }
 
 void InitBrandName()
@@ -188,7 +200,7 @@ cubeb* GetCubebContextUnlocked()
 
   int rv = cubeb_init(&sCubebContext, sBrandName);
   NS_WARNING_ASSERTION(rv == CUBEB_OK, "Could not get a cubeb context.");
-  sCubebState = (rv == CUBEB_OK) ? CubebState::Initialized : CubebState::Error;
+  sCubebState = (rv == CUBEB_OK) ? CubebState::Initialized : CubebState::Uninitialized;
 
   return sCubebContext;
 }
@@ -275,13 +287,6 @@ uint32_t MaxNumberOfChannels()
   }
 
   return 0;
-}
-
-uint32_t PreferredSampleRate()
-{
-  MOZ_ASSERT(sPreferredSampleRate,
-             "sPreferredSampleRate has not been initialized!");
-  return sPreferredSampleRate;
 }
 
 #if defined(__ANDROID__) && defined(MOZ_B2G)
