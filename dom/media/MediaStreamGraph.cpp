@@ -3408,8 +3408,6 @@ MediaStreamGraph::GetInstance(MediaStreamGraph::GraphDriverType aGraphDriverRequ
       MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
     }
 
-    CubebUtils::InitPreferredSampleRate();
-
     graph = new MediaStreamGraphImpl(aGraphDriverRequested,
                                      CubebUtils::PreferredSampleRate(),
                                      aChannel);

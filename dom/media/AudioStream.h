@@ -221,7 +221,6 @@ public:
 
   static uint32_t GetPreferredRate()
   {
-    CubebUtils::InitPreferredSampleRate();
     return CubebUtils::PreferredSampleRate();
   }
 
