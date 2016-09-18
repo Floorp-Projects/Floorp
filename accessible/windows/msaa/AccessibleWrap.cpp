@@ -9,7 +9,6 @@
 
 #include "Compatibility.h"
 #include "DocAccessible-inl.h"
-#include "mozilla/dom/TabChild.h"
 #include "mozilla/a11y/DocAccessibleChild.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "EnumVariant.h"
@@ -1302,22 +1301,6 @@ AccessibleWrap::GetHWNDFor(Accessible* aAccessible)
 {
   if (!aAccessible) {
     return nullptr;
-  }
-
-  if (XRE_IsContentProcess()) {
-    DocAccessible* doc = aAccessible->Document();
-    if (!doc) {
-      return nullptr;
-    }
-
-    DocAccessibleChild* ipcDoc = doc->IPCDoc();
-    if (!ipcDoc) {
-      return nullptr;
-    }
-
-    auto tab = static_cast<dom::TabChild*>(ipcDoc->Manager());
-    MOZ_ASSERT(tab);
-    return reinterpret_cast<HWND>(tab->GetNativeWindowHandle());
   }
 
   // Accessibles in child processes are said to have the HWND of the window
