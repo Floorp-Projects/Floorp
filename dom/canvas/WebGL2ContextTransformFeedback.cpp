@@ -76,8 +76,11 @@ WebGL2Context::BindTransformFeedback(GLenum target, WebGLTransformFeedback* tf)
     if (target != LOCAL_GL_TRANSFORM_FEEDBACK)
         return ErrorInvalidEnum("%s: `target` must be TRANSFORM_FEEDBACK.", funcName);
 
-    if (!ValidateObjectAllowNull(funcName, tf))
+    if (!ValidateObjectAllowDeletedOrNull(funcName, tf))
         return;
+
+    if (tf && tf->IsDeleted())
+        return ErrorInvalidOperation("%s: TFO already deleted.", funcName);
 
     if (mBoundTransformFeedback->mIsActive &&
         !mBoundTransformFeedback->mIsPaused)
