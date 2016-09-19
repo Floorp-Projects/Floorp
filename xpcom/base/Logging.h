@@ -86,6 +86,29 @@ public:
   static void Init();
 
   /**
+   * Sets the log file to the given filename.
+   */
+  static void SetLogFile(const char* aFilename);
+
+  /**
+   * @param aBuffer - pointer to a buffer
+   * @param aLength - the length of the buffer
+   *
+   * @return the actual length of the filepath.
+   */
+  static uint32_t GetLogFile(char *aBuffer, size_t aLength);
+
+  /**
+   * @param aAddTimestamp If we should log a time stamp with every message.
+   */
+  static void SetAddTimestamp(bool aAddTimestamp);
+
+  /**
+   * @param aIsSync If we should flush the file after every logged message.
+   */
+  static void SetIsSync(bool aIsSync);
+
+  /**
    * Indicates whether or not the given log level is enabled.
    */
   bool ShouldLog(LogLevel aLevel) const { return mLevel >= aLevel; }
