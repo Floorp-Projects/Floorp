@@ -81,12 +81,12 @@ TEST(PerProviderDirectory, LookupCache)
 
     // For V2 tables (NOT ending with '-proto'), root directory should be
     // used as the private store.
-    VerifyPrivateStorePath<LookupCache>("goog-phish-shavar", "google", rootDir, false);
+    VerifyPrivateStorePath<LookupCacheV2>("goog-phish-shavar", "google", rootDir, false);
 
     // For V4 tables, if provider is found, use per-provider subdirectory;
     // If not found, use root directory.
-    VerifyPrivateStorePath<LookupCache>("goog-noprovider-proto", "", rootDir, false);
-    VerifyPrivateStorePath<LookupCache>("goog-phish-proto", "google4", rootDir, true);
+    VerifyPrivateStorePath<LookupCacheV4>("goog-noprovider-proto", "", rootDir, false);
+    VerifyPrivateStorePath<LookupCacheV4>("goog-phish-proto", "google4", rootDir, true);
   });
 }
 
