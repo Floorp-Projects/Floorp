@@ -4,7 +4,15 @@
   "private": true,
   "author": "Tim Taubert <ttaubert@mozilla.com>",
   "description": "Decision Task for NSS",
+  "scripts": {
+    "compile": "babel-compile -p taskcluster src:lib",
+    "install": "npm run compile"
+  },
   "dependencies": {
+    "babel-cli": "^6.14.0",
+    "babel-compile": "^2.0.0",
+    "babel-preset-taskcluster": "^3.0.0",
+    "babel-runtime": "^6.11.6",
     "flatmap": "0.0.3",
     "intersect": "^1.0.1",
     "js-yaml": "^3.6.1",

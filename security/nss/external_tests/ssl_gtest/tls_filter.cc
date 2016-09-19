@@ -464,4 +464,12 @@ PacketFilter::Action TlsInspectorClientHelloVersionChanger::FilterHandshake(
   return KEEP;
 }
 
+PacketFilter::Action SelectiveDropFilter::Filter(const DataBuffer& input,
+                                                 DataBuffer* output) {
+  if (counter_ >= 32) {
+    return KEEP;
+  }
+  return ((1 << counter_++) & pattern_) ? DROP : KEEP;
+}
+
 }  // namespace nss_test

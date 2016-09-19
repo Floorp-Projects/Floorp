@@ -1292,6 +1292,11 @@ pref("image.animation_mode",                "normal");
 // Same-origin policy for file URIs, "false" is traditional
 pref("security.fileuri.strict_origin_policy", true);
 
+// If this pref is true, prefs in the logging.config branch will be cleared on
+// startup. This is done so that setting a log-file and log-modules at runtime
+// doesn't persist across restarts leading to huge logfile and low disk space.
+pref("logging.config.clear_on_startup", true);
+
 // If there is ever a security firedrill that requires
 // us to block certian ports global, this is the pref
 // to use.  Is is a comma delimited list of port numbers

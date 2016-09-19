@@ -549,10 +549,10 @@ private:
   nsresult EvaluateScript(nsScriptLoadRequest* aRequest);
 
   already_AddRefed<nsIScriptGlobalObject> GetScriptGlobalObject();
-  void FillCompileOptionsForRequest(const mozilla::dom::AutoJSAPI &jsapi,
-                                    nsScriptLoadRequest *aRequest,
-                                    JS::Handle<JSObject *> aScopeChain,
-                                    JS::CompileOptions *aOptions);
+  nsresult FillCompileOptionsForRequest(const mozilla::dom::AutoJSAPI& jsapi,
+                                        nsScriptLoadRequest* aRequest,
+                                        JS::Handle<JSObject*> aScopeChain,
+                                        JS::CompileOptions* aOptions);
 
   uint32_t NumberOfProcessors();
   nsresult PrepareLoadedRequest(nsScriptLoadRequest* aRequest,

@@ -804,11 +804,13 @@ nsScriptLoader::CreateModuleScript(nsModuleLoadRequest* aRequest)
       JS::Rooted<JSObject*> global(cx, globalObject->GetGlobalJSObject());
 
       JS::CompileOptions options(cx);
-      FillCompileOptionsForRequest(aes, aRequest, global, &options);
+      rv = FillCompileOptionsForRequest(aes, aRequest, global, &options);
 
-      nsAutoString inlineData;
-      SourceBufferHolder srcBuf = GetScriptSource(aRequest, inlineData);
-      rv = nsJSUtils::CompileModule(cx, srcBuf, global, options, &module);
+      if (NS_SUCCEEDED(rv)) {
+        nsAutoString inlineData;
+        SourceBufferHolder srcBuf = GetScriptSource(aRequest, inlineData);
+        rv = nsJSUtils::CompileModule(cx, srcBuf, global, options, &module);
+      }
     }
     MOZ_ASSERT(NS_SUCCEEDED(rv) == (module != nullptr));
     if (module) {
@@ -1844,7 +1846,11 @@ nsScriptLoader::AttemptAsyncScriptCompile(nsScriptLoadRequest* aRequest)
   JSContext* cx = jsapi.cx();
   JS::Rooted<JSObject*> global(cx, globalObject->GetGlobalJSObject());
   JS::CompileOptions options(cx);
-  FillCompileOptionsForRequest(jsapi, aRequest, global, &options);
+
+  nsresult rv = FillCompileOptionsForRequest(jsapi, aRequest, global, &options);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   if (!JS::CanCompileOffThread(cx, options, aRequest->mScriptTextLength)) {
     return NS_ERROR_FAILURE;
@@ -2063,15 +2069,20 @@ nsScriptLoader::GetScriptGlobalObject()
   return globalObject.forget();
 }
 
-void
-nsScriptLoader::FillCompileOptionsForRequest(const AutoJSAPI &jsapi,
-                                             nsScriptLoadRequest *aRequest,
-                                             JS::Handle<JSObject *> aScopeChain,
-                                             JS::CompileOptions *aOptions)
+nsresult
+nsScriptLoader::FillCompileOptionsForRequest(const AutoJSAPI&jsapi,
+                                             nsScriptLoadRequest* aRequest,
+                                             JS::Handle<JSObject*> aScopeChain,
+                                             JS::CompileOptions* aOptions)
 {
   // It's very important to use aRequest->mURI, not the final URI of the channel
   // aRequest ended up getting script data from, as the script filename.
-  nsContentUtils::GetWrapperSafeScriptFilename(mDocument, aRequest->mURI, aRequest->mURL);
+  nsresult rv;
+  nsContentUtils::GetWrapperSafeScriptFilename(mDocument, aRequest->mURI,
+                                               aRequest->mURL, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   bool isScriptElement = !aRequest->IsModuleRequest() ||
                          aRequest->AsModuleRequest()->IsTopLevel();
@@ -2101,6 +2112,8 @@ nsScriptLoader::FillCompileOptionsForRequest(const AutoJSAPI &jsapi,
     MOZ_ASSERT(elementVal.isObject());
     aOptions->setElement(&elementVal.toObject());
   }
+
+  return NS_OK;
 }
 
 nsresult
@@ -2181,12 +2194,14 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest)
       }
     } else {
       JS::CompileOptions options(aes.cx());
-      FillCompileOptionsForRequest(aes, aRequest, global, &options);
+      rv = FillCompileOptionsForRequest(aes, aRequest, global, &options);
 
-      nsAutoString inlineData;
-      SourceBufferHolder srcBuf = GetScriptSource(aRequest, inlineData);
-      rv = nsJSUtils::EvaluateString(aes.cx(), srcBuf, global, options,
-                                     aRequest->OffThreadTokenPtr());
+      if (NS_SUCCEEDED(rv)) {
+        nsAutoString inlineData;
+        SourceBufferHolder srcBuf = GetScriptSource(aRequest, inlineData);
+        rv = nsJSUtils::EvaluateString(aes.cx(), srcBuf, global, options,
+                                       aRequest->OffThreadTokenPtr());
+      }
     }
   }
 

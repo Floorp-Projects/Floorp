@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ssl.h"
 #include "secerr.h"
+#include "ssl.h"
 #include "sslerr.h"
 #include "sslproto.h"
 
@@ -68,12 +68,14 @@ TEST_P(TlsConnectGeneric, ClientAuthBigRsa) {
 }
 
 // Offset is the position in the captured buffer where the signature sits.
-static void CheckSigAlgs(TlsInspectorRecordHandshakeMessage* capture,
-                         size_t offset, TlsAgent* peer,
-                         SSLHashType expected_hash, size_t expected_size) {
+static void CheckSigScheme(TlsInspectorRecordHandshakeMessage* capture,
+                           size_t offset, TlsAgent* peer,
+                           uint16_t expected_scheme, size_t expected_size) {
   EXPECT_LT(offset + 2U, capture->buffer().len());
-  EXPECT_EQ(expected_hash, capture->buffer().data()[offset]);
-  EXPECT_EQ(ssl_sign_rsa, capture->buffer().data()[offset + 1]);
+
+  uint32_t scheme = 0;
+  capture->buffer().Read(offset, 2, &scheme);
+  EXPECT_EQ(expected_scheme, static_cast<uint16_t>(scheme));
 
   ScopedCERTCertificate remote_cert(SSL_PeerCertificate(peer->ssl_fd()));
   ScopedSECKEYPublicKey remote_key(CERT_ExtractPublicKey(remote_cert.get()));
@@ -97,7 +99,8 @@ TEST_P(TlsConnectTls12, ServerAuthCheckSigAlg) {
   EXPECT_TRUE(buffer.Read(1, 2, &tmp)) << "read NamedCurve";
   EXPECT_EQ(ssl_grp_ec_secp256r1, tmp);
   EXPECT_TRUE(buffer.Read(3, 1, &tmp)) << " read ECPoint";
-  CheckSigAlgs(capture_ske, 4 + tmp, client_, ssl_hash_sha256, 1024);
+  CheckSigScheme(capture_ske, 4 + tmp, client_, kTlsSigSchemeRsaPssSha256,
+                 1024);
 }
 
 TEST_P(TlsConnectTls12, ClientAuthCheckSigAlg) {
@@ -110,7 +113,8 @@ TEST_P(TlsConnectTls12, ClientAuthCheckSigAlg) {
   Connect();
   CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
 
-  CheckSigAlgs(capture_cert_verify, 0, server_, ssl_hash_sha1, 1024);
+  CheckSigScheme(capture_cert_verify, 0, server_, kTlsSigSchemeRsaPkcs1Sha1,
+                 1024);
 }
 
 TEST_P(TlsConnectTls12, ClientAuthBigRsaCheckSigAlg) {
@@ -122,7 +126,8 @@ TEST_P(TlsConnectTls12, ClientAuthBigRsaCheckSigAlg) {
   server_->RequestClientAuth(true);
   Connect();
   CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
-  CheckSigAlgs(capture_cert_verify, 0, server_, ssl_hash_sha256, 2048);
+  CheckSigScheme(capture_cert_verify, 0, server_, kTlsSigSchemeRsaPssSha256,
+                 2048);
 }
 
 static const SSLSignatureAndHashAlg SignatureEcdsaSha384[] = {
