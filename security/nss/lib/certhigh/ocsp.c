@@ -2195,6 +2195,10 @@ SetRequestExts(void *object, CERTCertExtension **exts)
     request->tbsRequest->requestExtensions = exts;
 }
 
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wvarargs"
+#endif
 SECStatus
 CERT_AddOCSPAcceptableResponses(CERTOCSPRequest *request,
                                 SECOidTag responseType0, ...)
@@ -2261,6 +2265,9 @@ loser:
         (void)CERT_FinishExtensions(extHandle);
     return rv;
 }
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 
 /*
  * FUNCTION: CERT_DestroyOCSPRequest

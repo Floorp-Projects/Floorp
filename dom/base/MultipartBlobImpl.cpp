@@ -335,7 +335,7 @@ MultipartBlobImpl::InitializeChromeFile(Blob& aBlob,
     return;
   }
 
-  MOZ_ASSERT(nsContentUtils::IsCallerChrome());
+  MOZ_ASSERT(nsContentUtils::ThreadsafeIsCallerChrome());
 
   mName = aBag.mName;
   mContentType = aBag.mType;
