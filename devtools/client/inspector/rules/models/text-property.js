@@ -52,10 +52,11 @@ function TextProperty(rule, name, value, priority, enabled = true,
   this.priority = priority;
   this.enabled = !!enabled;
   this.invisible = invisible;
-  this.updateComputed();
 
   const toolbox = this.rule.elementStyle.ruleView.inspector.toolbox;
   this.cssProperties = getCssProperties(toolbox);
+
+  this.updateComputed();
 }
 
 TextProperty.prototype = {
@@ -87,23 +88,18 @@ TextProperty.prototype = {
 
     this.computed = [];
 
-    try {
-      // Manually get all the properties that are set when setting a value on
-      // this.name and check the computed style on dummyElement for each one.
-      // If we just read dummyStyle, it would skip properties when value === "".
-      let subProps = domUtils.getSubpropertiesForCSSProperty(this.name);
+    // Manually get all the properties that are set when setting a value on
+    // this.name and check the computed style on dummyElement for each one.
+    // If we just read dummyStyle, it would skip properties when value === "".
+    let subProps = this.cssProperties.getSubproperties(this.name);
 
-      for (let prop of subProps) {
-        this.computed.push({
-          textProp: this,
-          name: prop,
-          value: dummyStyle.getPropertyValue(prop),
-          priority: dummyStyle.getPropertyPriority(prop),
-        });
-      }
-    } catch (e) {
-      // This is a partial property name, probably from cutting and pasting
-      // text. At this point don't check for computed properties.
+    for (let prop of subProps) {
+      this.computed.push({
+        textProp: this,
+        name: prop,
+        value: dummyStyle.getPropertyValue(prop),
+        priority: dummyStyle.getPropertyPriority(prop),
+      });
     }
   },
 
