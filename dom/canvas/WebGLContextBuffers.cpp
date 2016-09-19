@@ -511,8 +511,10 @@ WebGLContext::DeleteBuffer(WebGLBuffer* buffer)
         fnClearIfBuffer(mBoundUniformBuffer);
         fnClearIfBuffer(mBoundTransformFeedback->mGenericBufferBinding);
 
-        for (auto& binding : mBoundTransformFeedback->mIndexedBindings) {
-            fnClearIfBuffer(binding.mBufferBinding);
+        if (!mBoundTransformFeedback->mIsActive) {
+            for (auto& binding : mBoundTransformFeedback->mIndexedBindings) {
+                fnClearIfBuffer(binding.mBufferBinding);
+            }
         }
 
         for (auto& binding : mIndexedUniformBufferBindings) {
