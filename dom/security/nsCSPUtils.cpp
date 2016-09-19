@@ -144,6 +144,18 @@ CSP_LogMessage(const nsAString& aMessage,
   cspMsg.Append(NS_LITERAL_STRING("Content Security Policy: "));
   cspMsg.Append(aMessage);
 
+  // Currently 'aSourceLine' is not logged to the console, because similar
+  // information is already included within the source link of the message.
+  // For inline violations however, the line and column number are 0 and
+  // information contained within 'aSourceLine' can be really useful for devs.
+  // E.g. 'aSourceLine' might be: 'onclick attribute on DIV element'.
+  // In such cases we append 'aSourceLine' directly to the error message.
+  if (!aSourceLine.IsEmpty()) {
+    cspMsg.Append(NS_LITERAL_STRING(" Source: "));
+    cspMsg.Append(aSourceLine);
+    cspMsg.Append(NS_LITERAL_STRING("."));
+  }
+
   nsresult rv;
   if (aInnerWindowID > 0) {
     nsCString catStr;
