@@ -205,7 +205,7 @@ ssl_BeginClientHandshake(sslSocket *ss)
 
     ssl_GetSSL3HandshakeLock(ss);
     ssl_GetXmitBufLock(ss);
-    rv = ssl3_SendClientHello(ss, PR_FALSE);
+    rv = ssl3_SendClientHello(ss, client_hello_initial);
     ssl_ReleaseXmitBufLock(ss);
     ssl_ReleaseSSL3HandshakeLock(ss);
 

@@ -129,7 +129,7 @@ CSP_LogMessage(const nsAString& aMessage,
                uint32_t aColumnNumber,
                uint32_t aFlags,
                const char *aCategory,
-               uint32_t aInnerWindowID)
+               uint64_t aInnerWindowID)
 {
   nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
 
@@ -143,6 +143,18 @@ CSP_LogMessage(const nsAString& aMessage,
   nsString cspMsg;
   cspMsg.Append(NS_LITERAL_STRING("Content Security Policy: "));
   cspMsg.Append(aMessage);
+
+  // Currently 'aSourceLine' is not logged to the console, because similar
+  // information is already included within the source link of the message.
+  // For inline violations however, the line and column number are 0 and
+  // information contained within 'aSourceLine' can be really useful for devs.
+  // E.g. 'aSourceLine' might be: 'onclick attribute on DIV element'.
+  // In such cases we append 'aSourceLine' directly to the error message.
+  if (!aSourceLine.IsEmpty()) {
+    cspMsg.Append(NS_LITERAL_STRING(" Source: "));
+    cspMsg.Append(aSourceLine);
+    cspMsg.Append(NS_LITERAL_STRING("."));
+  }
 
   nsresult rv;
   if (aInnerWindowID > 0) {
@@ -178,7 +190,7 @@ CSP_LogLocalizedStr(const char16_t* aName,
                     uint32_t aColumnNumber,
                     uint32_t aFlags,
                     const char* aCategory,
-                    uint32_t aInnerWindowID)
+                    uint64_t aInnerWindowID)
 {
   nsXPIDLString logMsg;
   CSP_GetLocalizedStr(aName, aParams, aLength, getter_Copies(logMsg));

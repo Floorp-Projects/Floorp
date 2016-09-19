@@ -740,10 +740,10 @@ D3D9TextureData::UpdateFromSurface(gfx::SourceSurface* aSurface)
 DXGID3D9TextureData::DXGID3D9TextureData(gfx::SurfaceFormat aFormat,
                                          IDirect3DTexture9* aTexture, HANDLE aHandle,
                                          IDirect3DDevice9* aDevice)
-: mFormat(aFormat)
+: mDevice(aDevice)
 , mTexture(aTexture)
+, mFormat(aFormat)
 , mHandle(aHandle)
-, mDevice(aDevice)
 {
   MOZ_COUNT_CTOR(DXGID3D9TextureData);
 }
