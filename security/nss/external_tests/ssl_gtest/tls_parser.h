@@ -26,6 +26,7 @@ const uint8_t kTlsApplicationDataType = 23;
 
 const uint8_t kTlsHandshakeClientHello = 1;
 const uint8_t kTlsHandshakeServerHello = 2;
+const uint8_t kTlsHandshakeHelloRetryRequest = 6;
 const uint8_t kTlsHandshakeEncryptedExtensions = 8;
 const uint8_t kTlsHandshakeCertificate = 11;
 const uint8_t kTlsHandshakeServerKeyExchange = 12;
@@ -46,7 +47,8 @@ const uint8_t kTlsAlertMissingExtension = 109;
 const uint8_t kTlsAlertUnsupportedExtension = 110;
 const uint8_t kTlsAlertNoApplicationProtocol = 120;
 
-const uint8_t kTlsExtensionPreSharedKey = 41;
+const uint16_t kTlsSigSchemeRsaPkcs1Sha1 = 0x0201;
+const uint16_t kTlsSigSchemeRsaPssSha256 = 0x0700;
 
 const uint8_t kTlsFakeChangeCipherSpec[] = {
     kTlsChangeCipherSpecType,  // Type
