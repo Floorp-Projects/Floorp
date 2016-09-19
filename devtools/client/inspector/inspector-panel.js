@@ -38,7 +38,7 @@ const TOOLBOX_L10N = new LocalizationHelper("devtools/locale/toolbox.properties"
 /**
  * Represents an open instance of the Inspector for a tab.
  * The inspector controls the breadcrumbs, the markup view, and the sidebar
- * (computed view, rule view, font view and layout view).
+ * (computed view, rule view, font view and animation inspector).
  *
  * Events:
  * - ready
@@ -52,8 +52,8 @@ const TOOLBOX_L10N = new LocalizationHelper("devtools/locale/toolbox.properties"
  *      Fired when the markup-view frame has loaded
  * - breadcrumbs-updated
  *      Fired when the breadcrumb widget updates to a new node
- * - layoutview-updated
- *      Fired when the layoutview (box model) updates to a new node
+ * - boxmodel-view-updated
+ *      Fired when the box model updates to a new node
  * - markupmutation
  *      Fired after markup mutations have been processed by the markup-view
  * - computed-view-refreshed
