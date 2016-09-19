@@ -1263,11 +1263,19 @@
         </body>
       </method>
 
-      <field name="DeferredTask" readonly="true">
-        let targetObj = {};
-        Components.utils.import("resource://gre/modules/DeferredTask.jsm", targetObj);
-        targetObj.DeferredTask;
-      </field>
+      <property name="DeferredTask" readonly="true">
+        <getter><![CDATA[
+          let module = {};
+          Components.utils.import("resource://gre/modules/DeferredTask.jsm", module);
+          Object.defineProperty(this, "DeferredTask", {
+            configurable: true,
+            enumerable: true,
+            writable: true,
+            value: module.DeferredTask
+          });
+          return module.DeferredTask;
+        ]]></getter>
+      </property>
       <method name="_deferredValueUpdate">
         <parameter name="aElement"/>
         <body>
