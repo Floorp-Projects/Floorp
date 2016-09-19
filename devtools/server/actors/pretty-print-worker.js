@@ -28,7 +28,7 @@
  */
 
 importScripts("resource://devtools/shared/worker/helper.js");
-importScripts("resource://devtools/acorn/acorn.js");
+importScripts("resource://devtools/shared/acorn/acorn.js");
 importScripts("resource://devtools/shared/sourcemap/source-map.js");
 importScripts("resource://devtools/shared/pretty-fast/pretty-fast.js");
 

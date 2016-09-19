@@ -152,6 +152,7 @@
       //       remote browser element.
       if (!gBrowser.hasAttribute("remote"))
         yield testFindAgainNotFound();
+      yield testToggleEntireWord();
     }
 
     function* testFindbarSelection() {
@@ -235,9 +236,9 @@
     function promiseFindResult() {
       return new Promise(resolve => {
         let listener = {
-          onFindResult: function() {
+          onFindResult: function(result) {
             gFindBar.browser.finder.removeResultListener(listener);
-            resolve();
+            resolve(result);
           }
         };
         gFindBar.browser.finder.addResultListener(listener);
@@ -649,6 +650,24 @@
       gFindBar.onFindAgainCommand();
       yield promise;
       ok(gFindBar.hidden, "Successful Find Again leaves the find bar closed.");
+    }
+
+    function* testToggleEntireWord() {
+      yield openFindbar();
+      let promise = promiseFindResult();
+      yield enterStringIntoFindField("Tex", false);
+      let result = yield promise;
+      is(result.result, Ci.nsITypeAheadFind.FIND_FOUND, "Text should be found");
+
+      yield new Promise(resolve => setTimeout(resolve, ITERATOR_TIMEOUT));
+      promise = promiseFindResult();
+      let check = gFindBar.getElement("find-entire-word");
+      check.click();
+      result = yield promise;
+      is(result.result, Ci.nsITypeAheadFind.FIND_NOTFOUND, "Text should NOT be found");
+
+      check.click();
+      gFindBar.close(true);
     }
   ]]></script>
 

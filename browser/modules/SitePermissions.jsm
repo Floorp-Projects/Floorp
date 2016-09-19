@@ -24,6 +24,8 @@ this.SitePermissions = {
    *
    * To receive a more detailed, albeit less performant listing see
    * SitePermissions.getPermissionDetailsByURI().
+   *
+   * install addon permission is excluded, check bug 1303108
    */
   getAllByURI: function (aURI) {
     let result = [];
@@ -37,6 +39,10 @@ this.SitePermissions = {
 
       // filter out unknown permissions
       if (gPermissionObject[permission.type]) {
+        // XXX Bug 1303108 - Control Center should only show non-default permissions
+        if (permission.type == "install") {
+          continue;
+        }
         result.push({
           id: permission.type,
           state: permission.capability,
