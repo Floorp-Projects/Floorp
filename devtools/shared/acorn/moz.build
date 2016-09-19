@@ -6,8 +6,8 @@
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
-FINAL_TARGET_FILES.chrome.devtools.modules.devtools.acorn += [
+DevToolsModules(
     'acorn.js',
     'acorn_loose.js',
     'walk.js',
-]
+)
