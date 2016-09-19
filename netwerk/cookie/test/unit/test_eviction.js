@@ -33,9 +33,31 @@ function run_test() {
     }
     add_task(function*() {
         yield test_localdomain();
+        cm.removeAll();
+    });
+
+    add_task(function*() {
+        yield test_path_prefix();
     });
 
     run_next_test();
+}
+
+// Verify that cookies that share a path prefix with the URI path are still considered
+// candidates for eviction, since the paths do not actually match.
+function* test_path_prefix() {
+    Services.prefs.setIntPref("network.cookie.maxPerHost", 2);
+
+    const BASE_URI = Services.io.newURI("http://example.org/", null, null);
+    const BASE_BAR = Services.io.newURI("http://example.org/bar/", null, null);
+    const BASE_BARBAR = Services.io.newURI("http://example.org/barbar/", null, null);
+
+    yield setCookie("session_first", null, null, null, BASE_URI);
+    yield setCookie("session_second", null, "/bar", null, BASE_BAR);
+    verifyCookies(['session_first', 'session_second'], BASE_URI);
+
+    yield setCookie("session_third", null, "/barbar", null, BASE_BARBAR);
+    verifyCookies(['session_first', 'session_third'], BASE_URI);
 }
 
 // Verify that subdomains of localhost are treated as separate hosts and aren't considered
@@ -77,11 +99,11 @@ function* test_domain_or_path_matches_not_both(base_host,
     Services.prefs.setIntPref("network.cookie.maxPerHost", 2);
 
     const BASE_URI = Services.io.newURI("http://" + base_host, null, null);
-    const PUB_FOO_PATH = Services.io.newURI("http://" + subdomain_host + "/foo", null, null);
-    const WWW_BAR_PATH = Services.io.newURI("http://" + other_subdomain_host + "/bar", null, null);
-    const OTHER_BAR_PATH = Services.io.newURI("http://" + another_subdomain_host + "/bar", null, null);
-    const PUB_BAR_PATH = Services.io.newURI("http://" + subdomain_host + "/bar", null, null);
-    const WWW_FOO_PATH = Services.io.newURI("http://" + other_subdomain_host + "/foo", null, null);
+    const PUB_FOO_PATH = Services.io.newURI("http://" + subdomain_host + "/foo/", null, null);
+    const WWW_BAR_PATH = Services.io.newURI("http://" + other_subdomain_host + "/bar/", null, null);
+    const OTHER_BAR_PATH = Services.io.newURI("http://" + another_subdomain_host + "/bar/", null, null);
+    const PUB_BAR_PATH = Services.io.newURI("http://" + subdomain_host + "/bar/", null, null);
+    const WWW_FOO_PATH = Services.io.newURI("http://" + other_subdomain_host + "/foo/", null, null);
 
     yield setCookie("session_pub_with_foo_path", subdomain_host, "/foo", null, PUB_FOO_PATH);
     yield setCookie("session_www_with_bar_path", other_subdomain_host, "/bar", null, WWW_BAR_PATH);
@@ -103,8 +125,8 @@ function* test_basic_eviction(base_host, subdomain_host, other_subdomain_host) {
     const BASE_URI = Services.io.newURI("http://" + base_host, null, null);
     const SUBDOMAIN_URI = Services.io.newURI("http://" + subdomain_host, null, null);
     const OTHER_SUBDOMAIN_URI = Services.io.newURI("http://" + other_subdomain_host, null, null);
-    const FOO_PATH = Services.io.newURI("http://" + base_host + "/foo", null, null);
-    const BAR_PATH = Services.io.newURI("http://" + base_host + "/bar", null, null);
+    const FOO_PATH = Services.io.newURI("http://" + base_host + "/foo/", null, null);
+    const BAR_PATH = Services.io.newURI("http://" + base_host + "/bar/", null, null);
     const ALL_SUBDOMAINS = '.' + base_host;
     const OTHER_SUBDOMAIN = other_subdomain_host;
 
@@ -163,36 +185,38 @@ function* test_basic_eviction(base_host, subdomain_host, other_subdomain_host) {
                    'session_non_path_non_domain_3'], BASE_URI);
 
     // Evict oldest session cookie; all such cookies match example.org/bar (session_bar_path_2)
-    yield setCookie("non_session_non_path_non_domain_3", null, null, 100000, BAR_PATH);
+    // note: this new cookie doesn't have an explicit path, but empty paths inherit the
+    // request's path
+    yield setCookie("non_session_bar_path_non_domain", null, null, 100000, BAR_PATH);
     verifyCookies(['non_session_non_path_non_domain',
                    'non_session_non_path_subdomain',
                    'non_session_non_path_non_domain_2',
                    'session_non_path_non_domain_3',
-                   'non_session_non_path_non_domain_3'], BASE_URI);
+                   'non_session_bar_path_non_domain'], BASE_URI);
 
     // Evict oldest session cookie, even though it matches pub.example.org (session_non_path_non_domain_3)
     yield setCookie("non_session_non_path_pub_domain", null, null, 100000, OTHER_SUBDOMAIN_URI);
     verifyCookies(['non_session_non_path_non_domain',
                    'non_session_non_path_subdomain',
                    'non_session_non_path_non_domain_2',
-                   'non_session_non_path_non_domain_3',
+                   'non_session_bar_path_non_domain',
                    'non_session_non_path_pub_domain'], BASE_URI);
 
     // All session cookies have been evicted.
     // Evict oldest non-session non-domain-matching cookie (non_session_non_path_pub_domain)
-    yield setCookie("non_session_bar_path_non_domain", null, '/bar', 100000, BAR_PATH);
+    yield setCookie("non_session_bar_path_non_domain_2", null, '/bar', 100000, BAR_PATH);
     verifyCookies(['non_session_non_path_non_domain',
                    'non_session_non_path_subdomain',
                    'non_session_non_path_non_domain_2',
-                   'non_session_non_path_non_domain_3',
-                   'non_session_bar_path_non_domain'], BASE_URI);
+                   'non_session_bar_path_non_domain',
+                   'non_session_bar_path_non_domain_2'], BASE_URI);
 
     // Evict oldest non-session non-path-matching cookie (non_session_bar_path_non_domain)
     yield setCookie("non_session_non_path_non_domain_4", null, null, 100000, BASE_URI);
     verifyCookies(['non_session_non_path_non_domain',
                    'non_session_non_path_subdomain',
                    'non_session_non_path_non_domain_2',
-                   'non_session_non_path_non_domain_3',
+                   'non_session_bar_path_non_domain_2',
                    'non_session_non_path_non_domain_4'], BASE_URI);
 
     // At this point all remaining cookies are non-session cookies, have a path of /,
