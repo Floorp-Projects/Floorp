@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+<head>
+  <title>Test downloads.download() saveAs option</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/contents/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(function* test_downloads_saveAs() {
+
+  function background() {
+    const url = URL.createObjectURL(new Blob(['file content']));
+    browser.test.onMessage.addListener(() =>
+      browser.downloads.download({url, saveAs: true})
+        .then(id => browser.downloads.onChanged.addListener(delta => {
+          if (delta.state.current === "complete") {
+            browser.test.sendMessage("done", {ok: true, id});
+          }
+        })).catch(({message}) => {
+          browser.test.sendMessage("done", {ok: false, message});
+        }));
+    browser.test.sendMessage("ready");
+  }
+
+  const {MockFilePicker} = SpecialPowers;
+  const manifest = {background, manifest: {permissions: ["downloads"]}};
+  const extension = ExtensionTestUtils.loadExtension(manifest);
+
+  MockFilePicker.init(window);
+  MockFilePicker.useAnyFile();
+  const [file] = MockFilePicker.returnFiles;
+
+  yield extension.startup();
+  yield extension.awaitMessage("ready");
+
+  extension.sendMessage("download");
+  let result = yield extension.awaitMessage("done");
+
+  ok(result.ok, "downloads.download() works with saveAs");
+  is(file.fileSize, 12, "downloaded file is the correct size");
+  file.remove(false);
+
+  // Test the user canceling the save dialog.
+  MockFilePicker.returnValue = MockFilePicker.returnCancel;
+
+  extension.sendMessage("download");
+  result = yield extension.awaitMessage("done");
+
+  ok(!result.ok, "download rejected if the user cancels the dialog");
+  is(result.message, "Download canceled by the user", "with the correct message");
+  ok(!file.exists(), "file was not downloaded");
+
+  yield extension.unload();
+  MockFilePicker.cleanup();
+});
+
+</script>
+
+</body>
+</html>
