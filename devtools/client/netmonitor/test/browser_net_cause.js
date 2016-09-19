@@ -78,6 +78,9 @@ const EXPECTED_REQUESTS = [
 ];
 
 add_task(function* () {
+  // Async stacks aren't on by default in all builds
+  yield SpecialPowers.pushPrefEnv({ set: [["javascript.options.asyncstack", true]] });
+
   // the initNetMonitor function clears the network request list after the
   // page is loaded. That's why we first load a bogus page from SIMPLE_URL,
   // and only then load the real thing from CAUSE_URL - we want to catch
