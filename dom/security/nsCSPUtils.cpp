@@ -129,7 +129,7 @@ CSP_LogMessage(const nsAString& aMessage,
                uint32_t aColumnNumber,
                uint32_t aFlags,
                const char *aCategory,
-               uint32_t aInnerWindowID)
+               uint64_t aInnerWindowID)
 {
   nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
 
@@ -190,7 +190,7 @@ CSP_LogLocalizedStr(const char16_t* aName,
                     uint32_t aColumnNumber,
                     uint32_t aFlags,
                     const char* aCategory,
-                    uint32_t aInnerWindowID)
+                    uint64_t aInnerWindowID)
 {
   nsXPIDLString logMsg;
   CSP_GetLocalizedStr(aName, aParams, aLength, getter_Copies(logMsg));
