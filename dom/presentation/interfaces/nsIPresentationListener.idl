@@ -32,7 +32,8 @@ interface nsIPresentationSessionListener : nsISupports
    * Called when receive messages.
    */
   void notifyMessage(in DOMString sessionId,
-                     in ACString data);
+                     in ACString data,
+                     in boolean isBinary);
 
   /*
    * Called when this listener is replaced by another one.

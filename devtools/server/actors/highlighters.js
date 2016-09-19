@@ -72,7 +72,7 @@ exports.register = register;
  * The InspectorActor will always return the same instance of
  * HighlighterActor if asked several times and this instance is used in the
  * toolbox to highlighter elements's box-model from the markup-view,
- * layout-view, console, debugger, ... as well as select elements with the
+ * box model view, console, debugger, ... as well as select elements with the
  * pointer (pick).
  *
  * Other types of highlighter actors exist and can be accessed via the

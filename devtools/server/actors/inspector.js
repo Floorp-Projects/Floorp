@@ -2653,7 +2653,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
    * The same instance will always be returned by this method when called
    * several times.
    * The highlighter actor returned here is used to highlighter elements's
-   * box-models from the markup-view, layout-view, console, debugger, ... as
+   * box-models from the markup-view, box model, console, debugger, ... as
    * well as select elements with the pointer (pick).
    *
    * @param {Boolean} autohide Optionally autohide the highlighter after an

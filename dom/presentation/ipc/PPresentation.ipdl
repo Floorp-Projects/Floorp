@@ -79,7 +79,7 @@ child:
   async NotifySessionStateChange(nsString aSessionId,
                                  uint16_t aState,
                                  nsresult aReason);
-  async NotifyMessage(nsString aSessionId, nsCString aData);
+  async NotifyMessage(nsString aSessionId, nsCString aData, bool aIsBinary);
   async NotifySessionConnect(uint64_t aWindowId, nsString aSessionId);
 
   async PPresentationBuilder(nsString aSessionId, uint8_t aRole);
