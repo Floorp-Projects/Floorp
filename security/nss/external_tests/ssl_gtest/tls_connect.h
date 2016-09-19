@@ -73,6 +73,10 @@ class TlsConnectTestBase : public ::testing::Test {
   void ConnectWithCipherSuite(uint16_t cipher_suite);
   void CheckKeys(SSLKEAType kea_type, SSLAuthType auth_type,
                  size_t kea_size = 0) const;
+  void CheckGroups(const DataBuffer& groups,
+                   std::function<void(SSLNamedGroup)> check_group);
+  void CheckShares(const DataBuffer& shares,
+                   std::function<void(SSLNamedGroup)> check_group);
 
   void SetExpectedVersion(uint16_t version);
   // Expect resumption of a particular type.
@@ -122,6 +126,19 @@ class TlsConnectTestBase : public ::testing::Test {
 
   bool expect_extended_master_secret_;
   bool expect_early_data_accepted_;
+
+  // Track groups and make sure that there are no duplicates.
+  class DuplicateGroupChecker {
+   public:
+    void AddAndCheckGroup(SSLNamedGroup group) {
+      EXPECT_EQ(groups_.end(), groups_.find(group))
+          << "Group " << group << " should not be duplicated";
+      groups_.insert(group);
+    }
+
+   private:
+    std::set<SSLNamedGroup> groups_;
+  };
 };
 
 // A non-parametrized TLS test base.
