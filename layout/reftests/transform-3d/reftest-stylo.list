@@ -77,11 +77,11 @@ fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated,16,6) 
 == animate-cube-degrees-zoom.html animate-cube-degrees-zoom.html
 == animate-cube-degrees-ref.html animate-cube-degrees-ref.html
 fails fuzzy-if(B2G||Android||OSX==1010,143,100) fuzzy-if(winWidget||OSX<1010,141,100) fuzzy-if(gtkWidget,128,100) == preserves3d-nested.html preserves3d-nested.html
-fuzzy-if(cocoaWidget,128,9) == animate-preserve3d-parent.html animate-preserve3d-parent.html
+skip == animate-preserve3d-parent.html animate-preserve3d-parent.html
 # intermittently fuzzy on Mac
-fuzzy-if(cocoaWidget,128,9) == animate-preserve3d-child.html animate-preserve3d-child.html
+skip == animate-preserve3d-child.html animate-preserve3d-child.html
 # intermittently fuzzy on Mac
-== animate-backface-hidden.html animate-backface-hidden.html
+skip == animate-backface-hidden.html animate-backface-hidden.html
 == 1245450-1.html 1245450-1.html
 == opacity-preserve3d-1.html opacity-preserve3d-1.html
 == opacity-preserve3d-2.html opacity-preserve3d-2.html

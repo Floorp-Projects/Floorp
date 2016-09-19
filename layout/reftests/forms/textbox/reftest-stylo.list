@@ -8,7 +8,7 @@ skip-if(cocoaWidget||((B2G&&browserIsRemote)||Mulet)||Android) == accesskey-2.xu
 # bug 974780
 # Initial mulet triage: parity with B2G/B2G Desktop
 # accesskey-3 fails because of defects in XUL bidi support
-fails-if(!cocoaWidget) skip-if(cocoaWidget||((B2G&&browserIsRemote)||Mulet)||Android) == accesskey-3.xul accesskey-3.xul
+skip == accesskey-3.xul accesskey-3.xul
 # bug 974780
 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(cocoaWidget||((B2G&&browserIsRemote)||Mulet)||Android) == accesskey-3.xul accesskey-3.xul

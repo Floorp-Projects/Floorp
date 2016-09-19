@@ -13,7 +13,7 @@ fuzzy-if(winWidget,1,1) == multicolor-image-2.html multicolor-image-2.html
 == transparent-image-1.html transparent-image-1.html
 == repeat-image-1.html repeat-image-1.html
 == 470250-1.html 470250-1.html
-fails == 470250-2.html 470250-2.html
+random == 470250-2.html 470250-2.html
 == different-h-v-1.html different-h-v-1.html
 == different-h-v-2.html different-h-v-2.html
 == different-h-v-1.html different-h-v-1.html

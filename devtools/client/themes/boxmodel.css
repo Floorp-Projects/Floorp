@@ -2,13 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/ */
 
-#layout-wrapper {
+#boxmodel-wrapper {
   border-bottom-style: solid;
   border-bottom-width: 1px;
   border-color: var(--theme-splitter-color);
 }
 
-#layout-container {
+#boxmodel-container {
   /* The view will grow bigger as the window gets resized, until 400px */
   max-width: 400px;
   margin: 0px auto;
@@ -17,8 +17,8 @@
 
 /* Header */
 
-#layout-header,
-#layout-info {
+#boxmodel-header,
+#boxmodel-info {
   display: flex;
   align-items: center;
   padding: 4px 17px;
@@ -34,7 +34,7 @@
 
 /* Main: contains the box-model regions */
 
-#layout-main {
+#boxmodel-main {
   position: relative;
   box-sizing: border-box;
   /* The regions are semi-transparent, so the white background is partly
@@ -46,192 +46,192 @@
   width: calc(100% - 2 * 14px);
 }
 
-.layout-margin,
-.layout-size {
+.boxmodel-margin,
+.boxmodel-size {
   color: var(--theme-highlight-blue);
 }
 
 /* Regions are 3 nested elements with wide borders and outlines */
 
-#layout-content {
+#boxmodel-content {
   height: 18px;
 }
 
-#layout-margins,
-#layout-borders,
-#layout-padding {
+#boxmodel-margins,
+#boxmodel-borders,
+#boxmodel-padding {
   border-color: hsla(210,100%,85%,0.2);
   border-width: 18px;
   border-style: solid;
   outline: dotted 1px hsl(210,100%,85%);
 }
 
-#layout-margins {
+#boxmodel-margins {
   /* This opacity applies to all of the regions, since they are nested */
   opacity: .8;
 }
 
 /* Regions colors */
 
-#layout-margins {
+#boxmodel-margins {
   border-color: #edff64;
 }
 
-#layout-borders {
+#boxmodel-borders {
   border-color: #444444;
 }
 
-#layout-padding {
+#boxmodel-padding {
   border-color: #6a5acd;
 }
 
-#layout-content {
+#boxmodel-content {
   background-color: #87ceeb;
 }
 
-.theme-firebug #layout-main,
-.theme-firebug #layout-borders,
-.theme-firebug #layout-content {
+.theme-firebug #boxmodel-main,
+.theme-firebug #boxmodel-borders,
+.theme-firebug #boxmodel-content {
   border-style: solid;
 }
 
-.theme-firebug #layout-main,
-.theme-firebug #layout-header {
+.theme-firebug #boxmodel-main,
+.theme-firebug #boxmodel-header {
   font-family: var(--proportional-font-family);
 }
 
-.theme-firebug #layout-main {
+.theme-firebug #boxmodel-main {
   color: var(--theme-body-color);
   font-size: var(--theme-toolbar-font-size);
 }
 
-.theme-firebug #layout-header {
+.theme-firebug #boxmodel-header {
   font-size: var(--theme-toolbar-font-size);
 }
 
 /* Editable region sizes are contained in absolutely positioned <p> */
 
-#layout-main > p {
+#boxmodel-main > p {
   position: absolute;
   pointer-events: none;
   margin: 0;
   text-align: center;
 }
 
-#layout-main > p > span,
-#layout-main > p > input {
+#boxmodel-main > p > span,
+#boxmodel-main > p > input {
   vertical-align: middle;
   pointer-events: auto;
 }
 
 /* Coordinates for the region sizes */
 
-.layout-top,
-.layout-bottom {
+.boxmodel-top,
+.boxmodel-bottom {
   width: calc(100% - 2px);
   text-align: center;
 }
 
-.layout-padding.layout-top {
+.boxmodel-padding.boxmodel-top {
   top: 37px;
 }
 
-.layout-padding.layout-bottom {
+.boxmodel-padding.boxmodel-bottom {
   bottom: 38px;
 }
 
-.layout-border.layout-top {
+.boxmodel-border.boxmodel-top {
   top: 19px;
 }
 
-.layout-border.layout-bottom {
+.boxmodel-border.boxmodel-bottom {
   bottom: 20px;
 }
 
-.layout-margin.layout-top {
+.boxmodel-margin.boxmodel-top {
   top: 1px;
 }
 
-.layout-margin.layout-bottom {
+.boxmodel-margin.boxmodel-bottom {
   bottom: 2px;
 }
 
-.layout-size,
-.layout-margin.layout-left,
-.layout-margin.layout-right,
-.layout-border.layout-left,
-.layout-border.layout-right,
-.layout-padding.layout-left,
-.layout-padding.layout-right {
+.boxmodel-size,
+.boxmodel-margin.boxmodel-left,
+.boxmodel-margin.boxmodel-right,
+.boxmodel-border.boxmodel-left,
+.boxmodel-border.boxmodel-right,
+.boxmodel-padding.boxmodel-left,
+.boxmodel-padding.boxmodel-right {
   top: 22px;
   line-height: 80px;
 }
 
-.layout-size {
+.boxmodel-size {
   width: calc(100% - 2px);
 }
 
-.layout-margin.layout-right,
-.layout-margin.layout-left,
-.layout-border.layout-left,
-.layout-border.layout-right,
-.layout-padding.layout-right,
-.layout-padding.layout-left {
+.boxmodel-margin.boxmodel-right,
+.boxmodel-margin.boxmodel-left,
+.boxmodel-border.boxmodel-left,
+.boxmodel-border.boxmodel-right,
+.boxmodel-padding.boxmodel-right,
+.boxmodel-padding.boxmodel-left {
   width: 21px;
 }
 
-.layout-padding.layout-left {
+.boxmodel-padding.boxmodel-left {
   left: 35px;
 }
 
-.layout-padding.layout-right {
+.boxmodel-padding.boxmodel-right {
   right: 35px;
 }
 
-.layout-border.layout-left {
+.boxmodel-border.boxmodel-left {
   left: 16px;
 }
 
-.layout-border.layout-right {
+.boxmodel-border.boxmodel-right {
   right: 17px;
 }
 
-.layout-margin.layout-right {
+.boxmodel-margin.boxmodel-right {
   right: 0;
 }
 
-.layout-margin.layout-left {
+.boxmodel-margin.boxmodel-left {
   left: 0;
 }
 
-.layout-rotate.layout-left:not(.layout-editing) {
+.boxmodel-rotate.boxmodel-left:not(.boxmodel-editing) {
   transform: rotate(-90deg);
 }
 
-.layout-rotate.layout-right:not(.layout-editing) {
+.boxmodel-rotate.boxmodel-right:not(.boxmodel-editing) {
   transform: rotate(90deg);
 }
 
 /* Legend: displayed inside regions */
 
-.layout-legend {
+.boxmodel-legend {
   position: absolute;
   margin: 2px 6px;
   z-index: 1;
 }
 
-.layout-legend[data-box="margin"] {
+.boxmodel-legend[data-box="margin"] {
   color: var(--theme-highlight-blue);
 }
 
 /* Editable fields */
 
-.layout-editable {
+.boxmodel-editable {
   border: 1px dashed transparent;
   -moz-user-select: text;
 }
 
-.layout-editable:hover {
+.boxmodel-editable:hover {
   border-bottom-color: hsl(0, 0%, 50%);
 }
 
@@ -242,17 +242,17 @@
 
 /* Make sure the content size doesn't appear as editable like the other sizes */
 
-.layout-size > span {
+.boxmodel-size > span {
   cursor: default;
 }
 
-/* Layout info: contains the position and size of the element */
+/* Box Model Info: contains the position and size of the element */
 
-#layout-element-size {
+#boxmodel-element-size {
   flex: 1;
 }
 
-#layout-position-group {
+#boxmodel-position-group {
   display: flex;
   align-items: center;
 }

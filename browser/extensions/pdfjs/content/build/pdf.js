@@ -28,8 +28,8 @@ factory((root.pdfjsDistBuildPdf = {}));
   // Use strict in our context only - users might not want it
   'use strict';
 
-var pdfjsVersion = '1.5.464';
-var pdfjsBuild = '834a7ff';
+var pdfjsVersion = '1.5.476';
+var pdfjsBuild = 'c0e82db';
 
   var pdfjsFilePath =
     typeof document !== 'undefined' && document.currentScript ?
@@ -112,6 +112,28 @@ var AnnotationFlag = {
   LOCKED: 0x80,
   TOGGLENOVIEW: 0x100,
   LOCKEDCONTENTS: 0x200
+};
+
+var AnnotationFieldFlag = {
+  READONLY: 1,
+  REQUIRED: 2,
+  NOEXPORT: 3,
+  MULTILINE: 13,
+  PASSWORD: 14,
+  NOTOGGLETOOFF: 15,
+  RADIO: 16,
+  PUSHBUTTON: 17,
+  COMBO: 18,
+  EDIT: 19,
+  SORT: 20,
+  FILESELECT: 21,
+  MULTISELECT: 22,
+  DONOTSPELLCHECK: 23,
+  DONOTSCROLL: 24,
+  COMB: 25,
+  RICHTEXT: 26,
+  RADIOSINUNISON: 26,
+  COMMITONSELCHANGE: 27,
 };
 
 var AnnotationBorderStyleType = {
@@ -1405,6 +1427,7 @@ exports.OPS = OPS;
 exports.VERBOSITY_LEVELS = VERBOSITY_LEVELS;
 exports.UNSUPPORTED_FEATURES = UNSUPPORTED_FEATURES;
 exports.AnnotationBorderStyleType = AnnotationBorderStyleType;
+exports.AnnotationFieldFlag = AnnotationFieldFlag;
 exports.AnnotationFlag = AnnotationFlag;
 exports.AnnotationType = AnnotationType;
 exports.FontType = FontType;
@@ -2295,7 +2318,9 @@ var TextAnnotationElement = (function TextAnnotationElementClosure() {
  */
 var WidgetAnnotationElement = (function WidgetAnnotationElementClosure() {
   function WidgetAnnotationElement(parameters) {
-    AnnotationElement.call(this, parameters, true);
+    var isRenderable = parameters.renderInteractiveForms ||
+      (!parameters.data.hasAppearance && !!parameters.data.fieldValue);
+    AnnotationElement.call(this, parameters, isRenderable);
   }
 
   Util.inherit(WidgetAnnotationElement, AnnotationElement, {
@@ -2340,9 +2365,15 @@ var TextWidgetAnnotationElement = (
 
       var element = null;
       if (this.renderInteractiveForms) {
-        element = document.createElement('input');
-        element.type = 'text';
+        if (this.data.multiLine) {
+          element = document.createElement('textarea');
+        } else {
+          element = document.createElement('input');
+          element.type = 'text';
+        }
+
         element.value = this.data.fieldValue;
+        element.disabled = this.data.readOnly;
 
         if (this.data.maxLen !== null) {
           element.maxLength = this.data.maxLen;
@@ -7270,6 +7301,9 @@ var PDFDocumentProxy = (function PDFDocumentProxyClosure() {
  *                                calling of PDFPage.getViewport method.
  * @property {string} intent - Rendering intent, can be 'display' or 'print'
  *                    (default value is 'display').
+ * @property {boolean} renderInteractiveForms - (optional) Whether or not
+ *                     interactive form elements are rendered in the display
+ *                     layer. If so, we do not render them on canvas as well.
  * @property {Array}  transform - (optional) Additional transform, applied
  *                    just before viewport transform.
  * @property {Object} imageLayer - (optional) An object that has beginLayout,
@@ -7378,6 +7412,8 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
       this.pendingCleanup = false;
 
       var renderingIntent = (params.intent === 'print' ? 'print' : 'display');
+      var renderInteractiveForms = (params.renderInteractiveForms === true ?
+                                    true : /* Default */ false);
 
       if (!this.intentStates[renderingIntent]) {
         this.intentStates[renderingIntent] = Object.create(null);
@@ -7398,7 +7434,8 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
         this.stats.time('Page Request');
         this.transport.messageHandler.send('RenderPageRequest', {
           pageIndex: this.pageNumber - 1,
-          intent: renderingIntent
+          intent: renderingIntent,
+          renderInteractiveForms: renderInteractiveForms,
         });
       }
 
@@ -8931,13 +8968,6 @@ exports._UnsupportedManager = _UnsupportedManager;
     */
   PDFJS.isEvalSupported = (PDFJS.isEvalSupported === undefined ?
                            true : PDFJS.isEvalSupported);
-
-  /**
-   * Renders interactive form elements.
-   * @var {boolean}
-   */
-  PDFJS.renderInteractiveForms = (PDFJS.renderInteractiveForms === undefined ?
-                                  false : PDFJS.renderInteractiveForms);
 
 
   PDFJS.getDocument = displayAPI.getDocument;

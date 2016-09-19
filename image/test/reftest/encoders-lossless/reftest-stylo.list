@@ -20,12 +20,12 @@
 
 # PNG
 skip HTTP == size-1x1.png size-1x1.png
-fails HTTP == size-2x2.png size-2x2.png
+HTTP == size-2x2.png size-2x2.png
 skip HTTP == size-3x3.png size-3x3.png
 skip HTTP == size-4x4.png size-4x4.png
 skip HTTP == size-5x5.png size-5x5.png
 skip HTTP == size-6x6.png size-6x6.png
-fails HTTP == size-7x7.png size-7x7.png
+HTTP == size-7x7.png size-7x7.png
 fails skip HTTP == size-8x8.png size-8x8.png
 skip HTTP == size-9x9.png size-9x9.png
 skip HTTP == size-15x15.png size-15x15.png
@@ -37,12 +37,12 @@ skip HTTP == size-33x33.png size-33x33.png
 
 # BMP using default parse options
 skip HTTP == size-1x1.png size-1x1.png
-fails HTTP == size-2x2.png size-2x2.png
+HTTP == size-2x2.png size-2x2.png
 skip HTTP == size-3x3.png size-3x3.png
 skip HTTP == size-4x4.png size-4x4.png
 skip HTTP == size-5x5.png size-5x5.png
 skip HTTP == size-6x6.png size-6x6.png
-fails HTTP == size-7x7.png size-7x7.png
+HTTP == size-7x7.png size-7x7.png
 fails skip HTTP == size-8x8.png size-8x8.png
 skip HTTP == size-9x9.png size-9x9.png
 skip HTTP == size-15x15.png size-15x15.png
@@ -54,12 +54,12 @@ skip HTTP == size-33x33.png size-33x33.png
 
 # BMP using image/bmp mime type and 32bpp parse options
 skip HTTP == size-1x1.png size-1x1.png
-fails HTTP == size-2x2.png size-2x2.png
+HTTP == size-2x2.png size-2x2.png
 skip HTTP == size-3x3.png size-3x3.png
 skip HTTP == size-4x4.png size-4x4.png
 skip HTTP == size-5x5.png size-5x5.png
 skip HTTP == size-6x6.png size-6x6.png
-fails HTTP == size-7x7.png size-7x7.png
+HTTP == size-7x7.png size-7x7.png
 fails skip HTTP == size-8x8.png size-8x8.png
 skip HTTP == size-9x9.png size-9x9.png
 skip HTTP == size-15x15.png size-15x15.png
@@ -71,12 +71,12 @@ skip HTTP == size-33x33.png size-33x33.png
 
 # BMP using image/bmp mime type and 24bpp parse options
 skip HTTP == size-1x1.png size-1x1.png
-fails HTTP == size-2x2.png size-2x2.png
+HTTP == size-2x2.png size-2x2.png
 skip HTTP == size-3x3.png size-3x3.png
 skip HTTP == size-4x4.png size-4x4.png
 skip HTTP == size-5x5.png size-5x5.png
 skip HTTP == size-6x6.png size-6x6.png
-fails HTTP == size-7x7.png size-7x7.png
+HTTP == size-7x7.png size-7x7.png
 fails skip HTTP == size-8x8.png size-8x8.png
 skip HTTP == size-9x9.png size-9x9.png
 skip HTTP == size-15x15.png size-15x15.png
@@ -88,12 +88,12 @@ skip HTTP == size-33x33.png size-33x33.png
 
 # ICO using default parse options
 skip HTTP == size-1x1.png size-1x1.png
-fails HTTP == size-2x2.png size-2x2.png
+HTTP == size-2x2.png size-2x2.png
 skip HTTP == size-3x3.png size-3x3.png
 skip HTTP == size-4x4.png size-4x4.png
 skip HTTP == size-5x5.png size-5x5.png
 skip HTTP == size-6x6.png size-6x6.png
-fails HTTP == size-7x7.png size-7x7.png
+HTTP == size-7x7.png size-7x7.png
 fails skip HTTP == size-8x8.png size-8x8.png
 skip HTTP == size-9x9.png size-9x9.png
 skip HTTP == size-15x15.png size-15x15.png
@@ -106,12 +106,12 @@ skip HTTP == size-33x33.png size-33x33.png
 
 # ICO using image/vnd.microsoft.icon mime type and 32bpp parse options with bmp 
 skip HTTP == size-1x1.png size-1x1.png
-fails HTTP == size-2x2.png size-2x2.png
+HTTP == size-2x2.png size-2x2.png
 skip HTTP == size-3x3.png size-3x3.png
 skip HTTP == size-4x4.png size-4x4.png
 skip HTTP == size-5x5.png size-5x5.png
 skip HTTP == size-6x6.png size-6x6.png
-fails HTTP == size-7x7.png size-7x7.png
+HTTP == size-7x7.png size-7x7.png
 fails skip HTTP == size-8x8.png size-8x8.png
 skip HTTP == size-9x9.png size-9x9.png
 skip HTTP == size-15x15.png size-15x15.png
@@ -124,12 +124,12 @@ skip HTTP == size-33x33.png size-33x33.png
 
 # ICO using image/vnd.microsoft.icon mime type and 24bpp parse options with bmp 
 skip HTTP == size-1x1.png size-1x1.png
-fails HTTP == size-2x2.png size-2x2.png
+HTTP == size-2x2.png size-2x2.png
 skip HTTP == size-3x3.png size-3x3.png
 skip HTTP == size-4x4.png size-4x4.png
 skip HTTP == size-5x5.png size-5x5.png
 skip HTTP == size-6x6.png size-6x6.png
-fails HTTP == size-7x7.png size-7x7.png
+HTTP == size-7x7.png size-7x7.png
 fails skip HTTP == size-8x8.png size-8x8.png
 skip HTTP == size-9x9.png size-9x9.png
 skip HTTP == size-15x15.png size-15x15.png
@@ -142,12 +142,12 @@ skip HTTP == size-33x33.png size-33x33.png
 
 # ICO using image/vnd.microsoft.icon mime type png
 skip HTTP == size-1x1.png size-1x1.png
-fails HTTP == size-2x2.png size-2x2.png
+HTTP == size-2x2.png size-2x2.png
 skip HTTP == size-3x3.png size-3x3.png
 skip HTTP == size-4x4.png size-4x4.png
 skip HTTP == size-5x5.png size-5x5.png
 skip HTTP == size-6x6.png size-6x6.png
-fails HTTP == size-7x7.png size-7x7.png
+HTTP == size-7x7.png size-7x7.png
 fails skip HTTP == size-8x8.png size-8x8.png
 skip HTTP == size-9x9.png size-9x9.png
 skip HTTP == size-15x15.png size-15x15.png

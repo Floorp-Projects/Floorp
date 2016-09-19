@@ -46,5 +46,5 @@ skip-if(B2G||Mulet) == mq_print_minwidth_updown.xhtml mq_print_minwidth_updown.x
 # bug 773482
 # Initial mulet triage: parity with B2G/B2G Desktop
 
-fails == scoped-mq-update.html scoped-mq-update.html
+skip == scoped-mq-update.html scoped-mq-update.html
 == system-metrics-1.html system-metrics-1.html

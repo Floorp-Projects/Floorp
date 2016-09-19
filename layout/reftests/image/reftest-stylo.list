@@ -20,12 +20,12 @@ random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == sync-image-switch-1d.htm
 # bug 855050 for WinXP
 
 # Tests for "object-fit" & "object-position"
-test-pref(layout.css.object-fit-and-position.enabled,true) == image-object-fit-dyn-1.html image-object-fit-dyn-1.html
-fails test-pref(layout.css.object-fit-and-position.enabled,true) == image-object-fit-with-background-1.html image-object-fit-with-background-1.html
-test-pref(layout.css.object-fit-and-position.enabled,true) == image-object-fit-with-background-2.html image-object-fit-with-background-2.html
-fails test-pref(layout.css.object-fit-and-position.enabled,true) == image-object-position-dyn-1.html image-object-position-dyn-1.html
-test-pref(layout.css.object-fit-and-position.enabled,true) == image-object-position-with-background-1.html image-object-position-with-background-1.html
-test-pref(layout.css.object-fit-and-position.enabled,true) fuzzy-if(winWidget,117,374) == image-object-position-with-background-2.html image-object-position-with-background-2.html
+skip == image-object-fit-dyn-1.html image-object-fit-dyn-1.html
+skip == image-object-fit-with-background-1.html image-object-fit-with-background-1.html
+skip == image-object-fit-with-background-2.html image-object-fit-with-background-2.html
+skip == image-object-position-dyn-1.html image-object-position-dyn-1.html
+skip == image-object-position-with-background-1.html image-object-position-with-background-1.html
+skip == image-object-position-with-background-2.html image-object-position-with-background-2.html
 # Bug 1128229
 
 # Tests for image-orientation used with 'from-image' (note that all
@@ -111,16 +111,16 @@ fuzzy(1,1) == image-orientation-explicit.html?345 image-orientation-explicit.htm
 == image-orientation-dynamic.html image-orientation-dynamic.html
 
 # <img srcset> tests
-fails pref(dom.image.srcset.enabled,true) == image-srcset-basic-selection-0.1x.html image-srcset-basic-selection-0.1x.html
-pref(dom.image.srcset.enabled,true) == image-srcset-basic-selection-2x.html image-srcset-basic-selection-2x.html
-fails pref(dom.image.srcset.enabled,true) == image-srcset-basic-selection-0.5x.html image-srcset-basic-selection-0.5x.html
-pref(dom.image.srcset.enabled,true) == image-srcset-basic-selection-0.6x.html image-srcset-basic-selection-0.6x.html
-pref(dom.image.srcset.enabled,true) == image-srcset-basic-selection-1.5x.html image-srcset-basic-selection-1.5x.html
-fails pref(dom.image.srcset.enabled,true) == image-srcset-basic-selection-1x.html image-srcset-basic-selection-1x.html
-pref(dom.image.srcset.enabled,true) == image-srcset-basic-selection-width-0.5x.html image-srcset-basic-selection-width-0.5x.html
-fails pref(dom.image.srcset.enabled,true) == image-srcset-basic-selection-width-10x.html image-srcset-basic-selection-width-10x.html
-fails pref(dom.image.srcset.enabled,true) == image-srcset-basic-selection-width-2x.html image-srcset-basic-selection-width-2x.html
-pref(dom.image.srcset.enabled,true) == image-srcset-basic-selection-width-1x.html image-srcset-basic-selection-width-1x.html
+skip == image-srcset-basic-selection-0.1x.html image-srcset-basic-selection-0.1x.html
+skip == image-srcset-basic-selection-2x.html image-srcset-basic-selection-2x.html
+skip == image-srcset-basic-selection-0.5x.html image-srcset-basic-selection-0.5x.html
+skip == image-srcset-basic-selection-0.6x.html image-srcset-basic-selection-0.6x.html
+skip == image-srcset-basic-selection-1.5x.html image-srcset-basic-selection-1.5x.html
+skip == image-srcset-basic-selection-1x.html image-srcset-basic-selection-1x.html
+skip == image-srcset-basic-selection-width-0.5x.html image-srcset-basic-selection-width-0.5x.html
+skip == image-srcset-basic-selection-width-10x.html image-srcset-basic-selection-width-10x.html
+skip == image-srcset-basic-selection-width-2x.html image-srcset-basic-selection-width-2x.html
+skip == image-srcset-basic-selection-width-1x.html image-srcset-basic-selection-width-1x.html
 pref(dom.image.srcset.enabled,true) == image-srcset-default-2x.html image-srcset-default-2x.html
 pref(dom.image.srcset.enabled,true) == image-srcset-default-1x.html image-srcset-default-1x.html
 pref(dom.image.srcset.enabled,true) == image-srcset-default-src-2x.html image-srcset-default-src-2x.html

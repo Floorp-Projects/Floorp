@@ -16,7 +16,7 @@ const TEST_URI = "<style>" +
 
 add_task(function* () {
   yield addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  let {inspector, view, testActor} = yield openLayoutView();
+  let {inspector, view, testActor} = yield openBoxModelView();
 
   yield testEditing(inspector, view, testActor);
   yield testEditingAndCanceling(inspector, view, testActor);
@@ -32,7 +32,7 @@ function* testEditing(inspector, view, testActor) {
 
   yield selectNode("#div1", inspector);
 
-  let span = view.doc.querySelector(".layout-padding.layout-bottom > span");
+  let span = view.doc.querySelector(".boxmodel-padding.boxmodel-bottom > span");
   is(span.textContent, 5, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
@@ -63,7 +63,7 @@ function* testEditingAndCanceling(inspector, view, testActor) {
 
   yield selectNode("#div1", inspector);
 
-  let span = view.doc.querySelector(".layout-padding.layout-left > span");
+  let span = view.doc.querySelector(".boxmodel-padding.boxmodel-left > span");
   is(span.textContent, 5, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
@@ -91,7 +91,7 @@ function* testDeleting(inspector, view, testActor) {
 
   yield selectNode("#div1", inspector);
 
-  let span = view.doc.querySelector(".layout-padding.layout-left > span");
+  let span = view.doc.querySelector(".boxmodel-padding.boxmodel-left > span");
   is(span.textContent, 5, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
@@ -122,7 +122,7 @@ function* testDeletingAndCanceling(inspector, view, testActor) {
 
   yield selectNode("#div1", inspector);
 
-  let span = view.doc.querySelector(".layout-padding.layout-left > span");
+  let span = view.doc.querySelector(".boxmodel-padding.boxmodel-left > span");
   is(span.textContent, 5, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);

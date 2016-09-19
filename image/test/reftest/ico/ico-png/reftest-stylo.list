@@ -3,12 +3,12 @@
 
 # Images of various sizes
 skip == ico-size-1x1-png.ico ico-size-1x1-png.ico
-fails == ico-size-2x2-png.ico ico-size-2x2-png.ico
+== ico-size-2x2-png.ico ico-size-2x2-png.ico
 skip == ico-size-3x3-png.ico ico-size-3x3-png.ico
 skip == ico-size-4x4-png.ico ico-size-4x4-png.ico
 skip == ico-size-5x5-png.ico ico-size-5x5-png.ico
 skip == ico-size-6x6-png.ico ico-size-6x6-png.ico
-fails == ico-size-7x7-png.ico ico-size-7x7-png.ico
+== ico-size-7x7-png.ico ico-size-7x7-png.ico
 fails skip == ico-size-8x8-png.ico ico-size-8x8-png.ico
 skip == ico-size-9x9-png.ico ico-size-9x9-png.ico
 skip == ico-size-15x15-png.ico ico-size-15x15-png.ico

@@ -9,10 +9,10 @@ asserts-if(gtkWidget,0-6) == backgr_border-table-quirks.html backgr_border-table
 == backgr_border-table-row.html backgr_border-table-row.html
 == backgr_border-table.html backgr_border-table.html
 == backgr_fixed-bg.html backgr_fixed-bg.html
-fails == backgr_index.html backgr_index.html
+skip == backgr_index.html backgr_index.html
 == backgr_layers-hide.html backgr_layers-hide.html
 == backgr_layers-opacity.html backgr_layers-opacity.html
-== backgr_layers-show.html backgr_layers-show.html
+random == backgr_layers-show.html backgr_layers-show.html
 == backgr_position-table-cell.html backgr_position-table-cell.html
 == backgr_position-table-column-group.html backgr_position-table-column-group.html
 == backgr_position-table-column.html backgr_position-table-column.html
@@ -97,4 +97,4 @@ fails skip-if(B2G||Mulet) fuzzy-if(skiaContent,1,95000) == border-separate-opaci
 == empty-cells-default-1.html empty-cells-default-1.html
 == empty-cells-default-2.html empty-cells-default-2.html
 fuzzy-if(OSX,1,113) fuzzy-if(winWidget,1,12) fuzzy-if(Android,1,39) fuzzy-if(winWidget&&!layersGPUAccelerated,82,116) fuzzy-if(skiaContent,77,5400) == table-row-opacity-dynamic-1.html table-row-opacity-dynamic-1.html
-fails == table-row-opacity-dynamic-2.html table-row-opacity-dynamic-2.html
+random == table-row-opacity-dynamic-2.html table-row-opacity-dynamic-2.html

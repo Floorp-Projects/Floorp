@@ -25,7 +25,7 @@
 
 == flexbox-align-self-horiz-001-block.xhtml flexbox-align-self-horiz-001-block.xhtml
 == flexbox-align-self-horiz-001-table.xhtml flexbox-align-self-horiz-001-table.xhtml
-fails == flexbox-align-self-horiz-002.xhtml flexbox-align-self-horiz-002.xhtml
+random == flexbox-align-self-horiz-002.xhtml flexbox-align-self-horiz-002.xhtml
 == flexbox-align-self-horiz-003.xhtml flexbox-align-self-horiz-003.xhtml
 == flexbox-align-self-horiz-004.xhtml flexbox-align-self-horiz-004.xhtml
 == flexbox-align-self-horiz-005.xhtml flexbox-align-self-horiz-005.xhtml
@@ -134,8 +134,8 @@ fuzzy-if(Android,158,32) == flexbox-align-self-vert-rtl-001.xhtml flexbox-align-
 == flexbox-mbp-horiz-001-reverse.xhtml flexbox-mbp-horiz-001-reverse.xhtml
 == flexbox-mbp-horiz-001-rtl.xhtml flexbox-mbp-horiz-001-rtl.xhtml
 == flexbox-mbp-horiz-001-rtl-reverse.xhtml flexbox-mbp-horiz-001-rtl-reverse.xhtml
-fails == flexbox-mbp-horiz-002a.xhtml flexbox-mbp-horiz-002a.xhtml
-fails == flexbox-mbp-horiz-002b.xhtml flexbox-mbp-horiz-002b.xhtml
+random == flexbox-mbp-horiz-002a.xhtml flexbox-mbp-horiz-002a.xhtml
+random == flexbox-mbp-horiz-002b.xhtml flexbox-mbp-horiz-002b.xhtml
 == flexbox-mbp-horiz-003.xhtml flexbox-mbp-horiz-003.xhtml
 == flexbox-mbp-horiz-003-reverse.xhtml flexbox-mbp-horiz-003-reverse.xhtml
 == flexbox-mbp-horiz-004.xhtml flexbox-mbp-horiz-004.xhtml
@@ -143,7 +143,7 @@ fails == flexbox-mbp-horiz-002b.xhtml flexbox-mbp-horiz-002b.xhtml
 # Tests for min-height:auto / min-width:auto on flex items
 == flexbox-min-height-auto-001.html flexbox-min-height-auto-001.html
 == flexbox-min-height-auto-002a.html flexbox-min-height-auto-002a.html
-fails == flexbox-min-height-auto-002b.html flexbox-min-height-auto-002b.html
+== flexbox-min-height-auto-002b.html flexbox-min-height-auto-002b.html
 # bug 1055354
 == flexbox-min-height-auto-002c.html flexbox-min-height-auto-002c.html
 == flexbox-min-height-auto-003.html flexbox-min-height-auto-003.html

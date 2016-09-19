@@ -13,7 +13,7 @@
 default-preferences pref(dom.meta-viewport.enabled,true)
 
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) test-pref(font.size.inflation.maxRatio,200) == maxRatio-1.html maxRatio-1.html
-fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == text-1.html text-1.html
+skip == text-1.html text-1.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == text-2.html text-2.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == text-3.html text-3.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == text-4.html text-4.html
@@ -76,7 +76,7 @@ fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == consecutive-inline.html consecutive-inline.html
 
 # The tests below use nonzero values of the lineThreshold preference.
-fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == text-1.html text-1.html
+skip == text-1.html text-1.html
 skip test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) HTTP(..) == list-1.html list-1.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-1a.html threshold-1a.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-1b.html threshold-1b.html
@@ -94,21 +94,21 @@ fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.
 fuzzy-if(gtkWidget,1,10) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-textarea-contents-under-1.html threshold-textarea-contents-under-1.html
 skip-if(B2G||Mulet) fuzzy-if(gtkWidget,1,10) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-textarea-contents-under-2.html threshold-textarea-contents-under-2.html
 # Initial mulet triage: parity with B2G/B2G Desktop
-fails fuzzy-if(gtkWidget,1,10) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-textarea-contents-at-1.html threshold-textarea-contents-at-1.html
-fails skip-if(B2G||Mulet) fuzzy-if(gtkWidget,1,10) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-textarea-contents-at-2.html threshold-textarea-contents-at-2.html
+skip == threshold-textarea-contents-at-1.html threshold-textarea-contents-at-1.html
+skip == threshold-textarea-contents-at-2.html threshold-textarea-contents-at-2.html
 # Initial mulet triage: parity with B2G/B2G Desktop
 fuzzy-if(gtkWidget,1,10) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-input-text-contents-under-1.html threshold-input-text-contents-under-1.html
 fuzzy-if(gtkWidget,1,10) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-input-text-contents-under-2.html threshold-input-text-contents-under-2.html
-fails fuzzy-if(gtkWidget,1,10) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-input-text-contents-at-1.html threshold-input-text-contents-at-1.html
-fails fuzzy-if(gtkWidget,1,10) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-input-text-contents-at-2.html threshold-input-text-contents-at-2.html
-test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-select-listbox-contents-under-1.html threshold-select-listbox-contents-under-1.html
-test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-select-listbox-contents-under-2.html threshold-select-listbox-contents-under-2.html
-fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-select-listbox-contents-at-1.html threshold-select-listbox-contents-at-1.html
-fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-select-listbox-contents-at-2.html threshold-select-listbox-contents-at-2.html
-fuzzy-if(gtkWidget,1,8) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-select-combobox-contents-under-1.html threshold-select-combobox-contents-under-1.html
-fuzzy-if(gtkWidget,1,8) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-select-combobox-contents-under-2.html threshold-select-combobox-contents-under-2.html
-fails fuzzy-if(gtkWidget,1,8) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-select-combobox-contents-at-1.html threshold-select-combobox-contents-at-1.html
-fails fuzzy-if(gtkWidget,1,8) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-select-combobox-contents-at-2.html threshold-select-combobox-contents-at-2.html
+skip == threshold-input-text-contents-at-1.html threshold-input-text-contents-at-1.html
+skip == threshold-input-text-contents-at-2.html threshold-input-text-contents-at-2.html
+skip == threshold-select-listbox-contents-under-1.html threshold-select-listbox-contents-under-1.html
+skip == threshold-select-listbox-contents-under-2.html threshold-select-listbox-contents-under-2.html
+skip == threshold-select-listbox-contents-at-1.html threshold-select-listbox-contents-at-1.html
+skip == threshold-select-listbox-contents-at-2.html threshold-select-listbox-contents-at-2.html
+skip == threshold-select-combobox-contents-under-1.html threshold-select-combobox-contents-under-1.html
+skip == threshold-select-combobox-contents-under-2.html threshold-select-combobox-contents-under-2.html
+skip == threshold-select-combobox-contents-at-1.html threshold-select-combobox-contents-at-1.html
+skip == threshold-select-combobox-contents-at-2.html threshold-select-combobox-contents-at-2.html
 
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == relevant-width-1.html relevant-width-1.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == relevant-width-overflow-1.html relevant-width-overflow-1.html

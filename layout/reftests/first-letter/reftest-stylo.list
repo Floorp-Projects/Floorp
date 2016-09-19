@@ -63,14 +63,14 @@ HTTP(..) == 329069-5.html 329069-5.html
 == 429968-2c.html 429968-2c.html
 == 441418-1.html 441418-1.html
 == 469227-1.html 469227-1.html
-fails == 484400-1.html 484400-1.html
+== 484400-1.html 484400-1.html
 skip == 594303-1.html 594303-1.html
 skip fails-if(winWidget||cocoaWidget) == 617869-1.html 617869-1.html
 == 723509-1.html 723509-1.html
 == 922550-1.html 922550-1.html
 == 958249.html 958249.html
 == font-text-styles.html font-text-styles.html
-fails-if(gtkWidget&&!Mulet) random-if(winWidget&&!d2d) == font-text-styles-floater.html font-text-styles-floater.html
+skip == font-text-styles-floater.html font-text-styles-floater.html
 # bug 992846
 # Initial mulet triage: parity with B2G/B2G Desktop
 == inline-height-empty.html inline-height-empty.html
