@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test HTTP auth prompts by loading authenticate.sjs with no window</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <script type="text/javascript" src="prompt_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content" style="display: none">
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+// Force parent to not look for tab-modal prompts, as they're not used for auth prompts.
+isTabModal = false;
+
+let chromeScript = runInParent(SimpleTest.getTestFileURL("pwmgr_common.js"));
+
+runInParent(() => {
+  const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+  Cu.import("resource://gre/modules/Services.jsm");
+
+  let login = Cc["@mozilla.org/login-manager/loginInfo;1"].
+              createInstance(Ci.nsILoginInfo);
+  login.init("http://mochi.test:8888", null, "mochitest",
+             "mochiuser1", "mochipass1", "", "");
+  Services.logins.addLogin(login);
+});
+
+add_task(function* test_sandbox_xhr() {
+  let state = {
+    msg         : "http://mochi.test:8888 is requesting your username and password. The site says: “mochitest”",
+    title       : "Authentication Required",
+    textValue   : "mochiuser1",
+    passValue   : "mochipass1",
+    iconClass   : "authentication-icon question-icon",
+    titleHidden : true,
+    textHidden  : false,
+    passHidden  : false,
+    checkHidden : true,
+    checkMsg    : "",
+    checked     : false,
+    focused     : "textField",
+    defButton   : "button0",
+  };
+  let action = {
+    buttonClick : "ok",
+  };
+  let promptDone = handlePrompt(state, action);
+
+  let url = new URL("authenticate.sjs?user=mochiuser1&pass=mochipass1", window.location.href);
+  let sandboxConstructor = SpecialPowers.Cu.Sandbox;
+  let sandbox = new sandboxConstructor(this, {wantXrays: true});
+  function sandboxedRequest(url) {
+    let req = SpecialPowers.Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
+                           .createInstance(SpecialPowers.Ci.nsIXMLHttpRequest);
+    req.open("GET", url, true);
+    req.send(null);
+  }
+
+  let loginModifiedPromise = promiseStorageChanged(["modifyLogin"]);
+  sandbox.sandboxedRequest = sandboxedRequest(url);
+  info("send the XHR request in the sandbox");
+  SpecialPowers.Cu.evalInSandbox("sandboxedRequest;", sandbox);
+
+  yield promptDone;
+  info("prompt shown, waiting for metadata updates");
+  // Ensure the timeLastUsed and timesUsed metadata are updated.
+  yield loginModifiedPromise;
+});
+</script>
+</pre>
+</body>
+</html>
