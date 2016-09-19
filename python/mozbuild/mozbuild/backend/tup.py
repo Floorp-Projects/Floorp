@@ -15,6 +15,7 @@ from mozbuild.shellutil import quote as shell_quote
 from .common import CommonBackend
 from ..frontend.data import (
     ContextDerived,
+    GeneratedFile,
 )
 from ..util import (
     FileAvoidWrite,
@@ -33,6 +34,7 @@ class BackendTupfile(object):
         self.environment = environment
         self.name = mozpath.join(objdir, 'Tupfile')
         self.rules_included = False
+        self.shell_exported = False
 
         self.fh = FileAvoidWrite(self.name, capture_diff=True)
         self.fh.write('# THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT EDIT.\n')
@@ -57,6 +59,14 @@ class BackendTupfile(object):
             'outputs': ' '.join(outputs),
             'extra_outputs': ' | ' + ' '.join(extra_outputs) if extra_outputs else '',
         })
+
+    def export_shell(self):
+        if not self.shell_exported:
+            # These are used by mach/mixin/process.py to determine the current
+            # shell.
+            for var in ('SHELL', 'MOZILLABUILD', 'COMSPEC'):
+                self.write('export %s\n' % var)
+            self.shell_exported = True
 
     def close(self):
         return self.fh.close()
@@ -85,6 +95,17 @@ class TupOnly(CommonBackend, PartialBackend):
                                    self.environment.topsrcdir, self.environment.topobjdir)
         return self._backend_files[objdir]
 
+    def _get_backend_file_for(self, obj):
+        return self._get_backend_file(obj.relativedir)
+
+    def _py_action(self, action):
+        cmd = [
+            '$(PYTHON)',
+            '-m',
+            'mozbuild.action.%s' % action,
+        ]
+        return cmd
+
     def consume_object(self, obj):
         """Write out build files necessary to build with tup."""
 
@@ -97,6 +118,39 @@ class TupOnly(CommonBackend, PartialBackend):
         # the RecursiveMake backend also handle these objects.
         if consumed:
             return False
+
+        backend_file = self._get_backend_file_for(obj)
+
+        if isinstance(obj, GeneratedFile):
+            # TODO: These are directories that don't work in the tup backend
+            # yet, because things they depend on aren't built yet.
+            skip_directories = (
+                'build', # FinalTargetPreprocessedFiles
+                'layout/style/test', # HostSimplePrograms
+                'toolkit/library', # libxul.so
+            )
+            if obj.script and obj.method and obj.relobjdir not in skip_directories:
+                backend_file.export_shell()
+                cmd = self._py_action('file_generate')
+                cmd.extend([
+                    obj.script,
+                    obj.method,
+                    obj.outputs[0],
+                    '%s.pp' % obj.outputs[0], # deps file required
+                ])
+                full_inputs = [f.full_path for f in obj.inputs]
+                cmd.extend(full_inputs)
+
+                outputs = []
+                outputs.extend(obj.outputs)
+                outputs.append('%s.pp' % obj.outputs[0])
+
+                backend_file.rule(
+                    display='python {script}:{method} -> [%o]'.format(script=obj.script, method=obj.method),
+                    cmd=cmd,
+                    inputs=full_inputs,
+                    outputs=outputs,
+                )
 
         return True
 
