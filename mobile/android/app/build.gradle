@@ -90,6 +90,7 @@ android {
 
             java {
                 srcDir "${topsrcdir}/mobile/android/geckoview/src/main/java"
+                srcDir "${topsrcdir}/mobile/android/geckoview/src/thirdparty/java"
                 srcDir "${topsrcdir}/mobile/android/base/java"
                 srcDir "${topsrcdir}/mobile/android/search/java"
                 srcDir "${topsrcdir}/mobile/android/javaaddons/java"
