@@ -1319,7 +1319,10 @@ nsHtml5StreamParser::FlushTreeOpsAndDisarmTimer()
     mTokenizer->FlushViewSource();
   }
   mTreeBuilder->Flush();
-  if (NS_FAILED(NS_DispatchToMainThread(mExecutorFlusher))) {
+  nsCOMPtr<nsIRunnable> runnable(mExecutorFlusher);
+  if (NS_FAILED(mExecutor->GetDocument()->Dispatch("FlushTreeOpsAndDisarmTimer",
+                                                   dom::TaskCategory::Other,
+                                                   runnable.forget()))) {
     NS_WARNING("failed to dispatch executor flush event");
   }
 }

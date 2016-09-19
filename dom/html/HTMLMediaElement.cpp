@@ -5653,7 +5653,9 @@ nsresult HTMLMediaElement::DispatchAsyncEvent(const nsAString& aName)
   }
 
   nsCOMPtr<nsIRunnable> event = new nsAsyncEventRunner(aName, this);
-  NS_DispatchToMainThread(event);
+  OwnerDoc()->Dispatch("HTMLMediaElement::DispatchAsyncEvent",
+                       TaskCategory::Other,
+                       event.forget());
 
   if ((aName.EqualsLiteral("play") || aName.EqualsLiteral("playing"))) {
     mPlayTime.Start();
