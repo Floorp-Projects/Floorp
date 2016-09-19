@@ -3366,6 +3366,12 @@ XPCJSContext::Initialize()
                                                               : 120 * 1024;  //win32
     // The following two configurations are linux-only. Given the numbers above,
     // we use 50k and 100k trusted buffers on 32-bit and 64-bit respectively.
+#elif defined(ANDROID)
+    // Android appears to have 1MB stacks. Allow the use of 3/4 of that size
+    // (768KB on 32-bit), since otherwise we can crash with a stack overflow
+    // when nearing the 1MB limit.
+    const size_t kStackQuota = kDefaultStackQuota + kDefaultStackQuota / 2;
+    const size_t kTrustedScriptBuffer = sizeof(size_t) * 12800;
 #elif defined(DEBUG)
     // Bug 803182: account for the 4x difference in the size of js::Interpret
     // between optimized and debug builds.
