@@ -112,10 +112,13 @@ PresentationChild::RecvNotifySessionStateChange(const nsString& aSessionId,
 
 bool
 PresentationChild::RecvNotifyMessage(const nsString& aSessionId,
-                                     const nsCString& aData)
+                                     const nsCString& aData,
+                                     const bool& aIsBinary)
 {
   if (mService) {
-    Unused << NS_WARN_IF(NS_FAILED(mService->NotifyMessage(aSessionId, aData)));
+    Unused << NS_WARN_IF(NS_FAILED(mService->NotifyMessage(aSessionId,
+                                                           aData,
+                                                           aIsBinary)));
   }
   return true;
 }

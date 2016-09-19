@@ -777,6 +777,44 @@ PresentationService::SendSessionMessage(const nsAString& aSessionId,
 }
 
 NS_IMETHODIMP
+PresentationService::SendSessionBinaryMsg(const nsAString& aSessionId,
+                                          uint8_t aRole,
+                                          const nsACString &aData)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!aData.IsEmpty());
+  MOZ_ASSERT(!aSessionId.IsEmpty());
+  MOZ_ASSERT(aRole == nsIPresentationService::ROLE_CONTROLLER ||
+             aRole == nsIPresentationService::ROLE_RECEIVER);
+
+  RefPtr<PresentationSessionInfo> info = GetSessionInfo(aSessionId, aRole);
+  if (NS_WARN_IF(!info)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return info->SendBinaryMsg(aData);
+}
+
+NS_IMETHODIMP
+PresentationService::SendSessionBlob(const nsAString& aSessionId,
+                                     uint8_t aRole,
+                                     nsIDOMBlob* aBlob)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!aSessionId.IsEmpty());
+  MOZ_ASSERT(aRole == nsIPresentationService::ROLE_CONTROLLER ||
+             aRole == nsIPresentationService::ROLE_RECEIVER);
+  MOZ_ASSERT(aBlob);
+
+  RefPtr<PresentationSessionInfo> info = GetSessionInfo(aSessionId, aRole);
+  if (NS_WARN_IF(!info)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return info->SendBlob(aBlob);
+}
+
+NS_IMETHODIMP
 PresentationService::CloseSession(const nsAString& aSessionId,
                                   uint8_t aRole,
                                   uint8_t aClosedReason)

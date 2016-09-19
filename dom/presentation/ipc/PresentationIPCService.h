@@ -37,7 +37,8 @@ public:
                                     nsresult aReason);
 
   nsresult NotifyMessage(const nsAString& aSessionId,
-                         const nsACString& aData);
+                         const nsACString& aData,
+                         const bool& aIsBinary);
 
   nsresult NotifySessionConnect(uint64_t aWindowId,
                                 const nsAString& aSessionId);
