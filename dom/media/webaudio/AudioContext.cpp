@@ -90,7 +90,6 @@ static float GetSampleRateForAudioContext(bool aIsOffline, float aSampleRate)
   if (aIsOffline) {
     return aSampleRate;
   } else {
-    CubebUtils::InitPreferredSampleRate();
     return static_cast<float>(CubebUtils::PreferredSampleRate());
   }
 }

@@ -8,6 +8,7 @@
 #define mozilla_dom_PresentationConnection_h
 
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/dom/TypedArray.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/PresentationConnectionBinding.h"
 #include "mozilla/dom/PresentationConnectionClosedEventBinding.h"
@@ -18,6 +19,7 @@
 namespace mozilla {
 namespace dom {
 
+class Blob;
 class PresentationConnectionList;
 
 class PresentationConnection final : public DOMEventTargetHelper
@@ -52,7 +54,20 @@ public:
 
   PresentationConnectionState State() const;
 
+  PresentationConnectionBinaryType BinaryType() const;
+
+  void SetBinaryType(PresentationConnectionBinaryType aType);
+
   void Send(const nsAString& aData,
+            ErrorResult& aRv);
+
+  void Send(Blob& aData,
+            ErrorResult& aRv);
+
+  void Send(const ArrayBuffer& aData,
+            ErrorResult& aRv);
+
+  void Send(const ArrayBufferView& aData,
             ErrorResult& aRv);
 
   void Close(ErrorResult& aRv);
@@ -83,7 +98,8 @@ private:
   nsresult ProcessStateChanged(nsresult aReason);
 
   nsresult DispatchConnectionClosedEvent(PresentationConnectionClosedReason aReason,
-                                         const nsAString& aMessage);
+                                         const nsAString& aMessage,
+                                         bool aDispatchNow = false);
 
   nsresult DispatchMessageEvent(JS::Handle<JS::Value> aData);
 
@@ -93,12 +109,17 @@ private:
 
   nsresult RemoveFromLoadGroup();
 
+  void AsyncCloseConnectionWithErrorMsg(const nsAString& aMessage);
+
+  nsresult DoReceiveMessage(const nsACString& aData, bool aIsBinary);
+
   nsString mId;
   nsString mUrl;
   uint8_t mRole;
   PresentationConnectionState mState;
   RefPtr<PresentationConnectionList> mOwningConnectionList;
-  nsWeakPtr mWeakLoadGroup;;
+  nsWeakPtr mWeakLoadGroup;
+  PresentationConnectionBinaryType mBinaryType;
 };
 
 } // namespace dom

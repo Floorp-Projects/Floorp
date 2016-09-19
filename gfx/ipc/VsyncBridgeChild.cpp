@@ -135,7 +135,7 @@ VsyncBridgeChild::DeallocPVsyncBridgeChild()
 void
 VsyncBridgeChild::ProcessingError(Result aCode, const char* aReason)
 {
-  MOZ_RELEASE_ASSERT(aCode != MsgDropped, "Processing error in VsyncBridgeChild");
+  MOZ_RELEASE_ASSERT(aCode == MsgDropped, "Processing error in VsyncBridgeChild");
 }
 
 } // namespace gfx

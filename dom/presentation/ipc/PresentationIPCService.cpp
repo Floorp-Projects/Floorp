@@ -102,6 +102,46 @@ PresentationIPCService::SendSessionMessage(const nsAString& aSessionId,
 }
 
 NS_IMETHODIMP
+PresentationIPCService::SendSessionBinaryMsg(const nsAString& aSessionId,
+                                             uint8_t aRole,
+                                             const nsACString &aData)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!aData.IsEmpty());
+  MOZ_ASSERT(!aSessionId.IsEmpty());
+  MOZ_ASSERT(aRole == nsIPresentationService::ROLE_CONTROLLER ||
+             aRole == nsIPresentationService::ROLE_RECEIVER);
+
+  RefPtr<PresentationContentSessionInfo> info;
+  // data channel session transport is maintained by content process
+  if (mSessionInfos.Get(aSessionId, getter_AddRefs(info))) {
+    return info->SendBinaryMsg(aData);
+  }
+
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+PresentationIPCService::SendSessionBlob(const nsAString& aSessionId,
+                                        uint8_t aRole,
+                                        nsIDOMBlob* aBlob)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!aSessionId.IsEmpty());
+  MOZ_ASSERT(aRole == nsIPresentationService::ROLE_CONTROLLER ||
+             aRole == nsIPresentationService::ROLE_RECEIVER);
+  MOZ_ASSERT(aBlob);
+
+  RefPtr<PresentationContentSessionInfo> info;
+  // data channel session transport is maintained by content process
+  if (mSessionInfos.Get(aSessionId, getter_AddRefs(info))) {
+    return info->SendBlob(aBlob);
+  }
+
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
 PresentationIPCService::CloseSession(const nsAString& aSessionId,
                                      uint8_t aRole,
                                      uint8_t aClosedReason)
@@ -332,14 +372,15 @@ PresentationIPCService::NotifySessionStateChange(const nsAString& aSessionId,
 // Only used for OOP RTCDataChannel session transport case.
 nsresult
 PresentationIPCService::NotifyMessage(const nsAString& aSessionId,
-                                      const nsACString& aData)
+                                      const nsACString& aData,
+                                      const bool& aIsBinary)
 {
   nsCOMPtr<nsIPresentationSessionListener> listener;
   if (NS_WARN_IF(!mSessionListeners.Get(aSessionId, getter_AddRefs(listener)))) {
     return NS_OK;
   }
 
-  return listener->NotifyMessage(aSessionId, aData);
+  return listener->NotifyMessage(aSessionId, aData, aIsBinary);
 }
 
 // Only used for OOP RTCDataChannel session transport case.
