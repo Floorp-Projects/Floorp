@@ -16,11 +16,12 @@ const TEST_URI =
   <div id="div1"></div>`;
 
 add_task(function* () {
-  // Make sure the toolbox is tall enough to have empty space below the layout-container.
+  // Make sure the toolbox is tall enough to have empty space below the
+  // boxmodel-container.
   yield pushPref("devtools.toolbox.footer.height", 500);
 
   yield addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openLayoutView();
+  let {inspector, view} = yield openBoxModelView();
 
   yield selectNode("#div1", inspector);
   yield testClickingOutsideEditor(view);
@@ -29,7 +30,7 @@ add_task(function* () {
 
 function* testClickingOutsideEditor(view) {
   info("Test that clicking outside the editor blurs it");
-  let span = view.doc.querySelector(".layout-margin.layout-top > span");
+  let span = view.doc.querySelector(".boxmodel-margin.boxmodel-top > span");
   is(span.textContent, 10, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
@@ -49,18 +50,18 @@ function* testClickingOutsideEditor(view) {
 
 function* testClickingBelowContainer(view) {
   info("Test that clicking below the box-model container blurs it");
-  let span = view.doc.querySelector(".layout-margin.layout-top > span");
+  let span = view.doc.querySelector(".boxmodel-margin.boxmodel-top > span");
   is(span.textContent, 10, "Should have the right value in the box model.");
 
-  info("Test that clicking below the layout-container blurs the opened editor");
+  info("Test that clicking below the boxmodel-container blurs the opened editor");
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
   let editor = view.doc.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
 
   let onBlur = once(editor, "blur");
-  let container = view.doc.querySelector("#layout-container");
+  let container = view.doc.querySelector("#boxmodel-container");
   // Using getBoxQuads here because getBoundingClientRect (and therefore synthesizeMouse)
-  // use an erroneous height of ~50px for the layout container.
+  // use an erroneous height of ~50px for the boxmodel-container.
   let bounds = container.getBoxQuads({relativeTo: view.doc})[0].bounds;
   EventUtils.synthesizeMouseAtPoint(
     bounds.left + 10,
