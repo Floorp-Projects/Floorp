@@ -59,11 +59,11 @@ GENERATED_FILES += [
 
 xpc_acc_events_h = GENERATED_FILES['xpcAccEvents.h']
 xpc_acc_events_h.script = 'AccEventGen.py:gen_header_file'
-xpc_acc_events_h.inputs += ['AccEvents.conf']
+xpc_acc_events_h.inputs += ['AccEvents.conf', '!/xpcom/idl-parser/xpidl/xpidllex.py', '!/xpcom/idl-parser/xpidl/xpidlyacc.py']
 
 xpc_acc_events_cpp = GENERATED_FILES['xpcAccEvents.cpp']
 xpc_acc_events_cpp.script = 'AccEventGen.py:gen_cpp_file'
-xpc_acc_events_cpp.inputs += ['AccEvents.conf']
+xpc_acc_events_cpp.inputs += ['AccEvents.conf', '!/xpcom/idl-parser/xpidl/xpidllex.py', '!/xpcom/idl-parser/xpidl/xpidlyacc.py']
 
 FINAL_LIBRARY = 'xul'
 
