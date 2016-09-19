@@ -264,6 +264,83 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
     let insertInfo = validateNewBookmark(info);
     return insertSyncBookmark(insertInfo);
   }),
+
+  /**
+   * Fetches a Sync bookmark object for an item in the tree. The object contains
+   * the following properties, depending on the item's kind:
+   *
+   *  - kind (all): A string representing the item's kind.
+   *  - syncId (all): The item's sync ID.
+   *  - parentSyncId (all): The sync ID of the item's parent.
+   *  - parentTitle (all): The title of the item's parent, used for de-duping.
+   *    Omitted for the Places root and parents with empty titles.
+   *  - title ("bookmark", "folder", "livemark", "query"): The item's title.
+   *    Omitted if empty.
+   *  - url ("bookmark", "query"): The item's URL.
+   *  - tags ("bookmark", "query"): An array containing the item's tags.
+   *  - keyword ("bookmark"): The bookmark's keyword, if one exists.
+   *  - description ("bookmark", "folder", "livemark"): The item's description.
+   *    Omitted if one isn't set.
+   *  - loadInSidebar ("bookmark", "query"): Whether to load the bookmark in
+   *    the sidebar. Always `false` for queries.
+   *  - feed ("livemark"): A `URL` object pointing to the livemark's feed URL.
+   *  - site ("livemark"): A `URL` object pointing to the livemark's site URL,
+   *    or `null` if one isn't set.
+   *  - childSyncIds ("folder"): An array containing the sync IDs of the item's
+   *    children, used to determine child order.
+   *  - folder ("query"): The tag folder name, if this is a tag query.
+   *  - query ("query"): The smart bookmark query name, if this is a smart
+   *    bookmark.
+   *  - index ("separator"): The separator's position within its parent.
+   */
+  fetch: Task.async(function* (syncId) {
+    let guid = BookmarkSyncUtils.syncIdToGuid(syncId);
+    let bookmarkItem = yield PlacesUtils.bookmarks.fetch(guid);
+    if (!bookmarkItem) {
+      return null;
+    }
+
+    // Convert the Places bookmark object to a Sync bookmark and add
+    // kind-specific properties.
+    let kind = yield getKindForItem(bookmarkItem);
+    let item;
+    switch (kind) {
+      case BookmarkSyncUtils.KINDS.BOOKMARK:
+      case BookmarkSyncUtils.KINDS.MICROSUMMARY:
+        item = yield fetchBookmarkItem(bookmarkItem);
+        break;
+
+      case BookmarkSyncUtils.KINDS.QUERY:
+        item = yield fetchQueryItem(bookmarkItem);
+        break;
+
+      case BookmarkSyncUtils.KINDS.FOLDER:
+        item = yield fetchFolderItem(bookmarkItem);
+        break;
+
+      case BookmarkSyncUtils.KINDS.LIVEMARK:
+        item = yield fetchLivemarkItem(bookmarkItem);
+        break;
+
+      case BookmarkSyncUtils.KINDS.SEPARATOR:
+        item = yield placesBookmarkToSyncBookmark(bookmarkItem);
+        item.index = bookmarkItem.index;
+        break;
+
+      default:
+        throw new Error(`Unknown bookmark kind: ${kind}`);
+    }
+
+    // Sync uses the parent title for de-duping.
+    if (bookmarkItem.parentGuid) {
+      let parent = yield PlacesUtils.bookmarks.fetch(bookmarkItem.parentGuid);
+      if ("title" in parent) {
+        item.parentTitle = parent.title;
+      }
+    }
+
+    return item;
+  }),
 });
 
 XPCOMUtils.defineLazyGetter(this, "BookmarkSyncLog", () => {
@@ -972,3 +1049,129 @@ function syncBookmarkToPlacesBookmark(info) {
 
   return bookmarkInfo;
 }
+
+// Creates and returns a Sync bookmark object containing the bookmark's
+// tags, keyword, description, and whether it loads in the sidebar.
+var fetchBookmarkItem = Task.async(function* (bookmarkItem) {
+  let itemId = yield PlacesUtils.promiseItemId(bookmarkItem.guid);
+  let item = yield placesBookmarkToSyncBookmark(bookmarkItem);
+
+  item.tags = PlacesUtils.tagging.getTagsForURI(
+    PlacesUtils.toURI(bookmarkItem.url), {});
+
+  let keywordEntry = yield PlacesUtils.keywords.fetch({
+    url: bookmarkItem.url,
+  });
+  if (keywordEntry) {
+    item.keyword = keywordEntry.keyword;
+  }
+
+  let description = getItemDescription(itemId);
+  if (description) {
+    item.description = description;
+  }
+
+  item.loadInSidebar = PlacesUtils.annotations.itemHasAnnotation(itemId,
+    BookmarkSyncUtils.SIDEBAR_ANNO);
+
+  return item;
+});
+
+// Creates and returns a Sync bookmark object containing the folder's
+// description and children.
+var fetchFolderItem = Task.async(function* (bookmarkItem) {
+  let itemId = yield PlacesUtils.promiseItemId(bookmarkItem.guid);
+  let item = yield placesBookmarkToSyncBookmark(bookmarkItem);
+
+  let description = getItemDescription(itemId);
+  if (description) {
+    item.description = description;
+  }
+
+  let db = yield PlacesUtils.promiseDBConnection();
+  let children = yield fetchAllChildren(db, bookmarkItem.guid);
+  item.childSyncIds = children.map(child =>
+    BookmarkSyncUtils.guidToSyncId(child.guid)
+  );
+
+  return item;
+});
+
+// Creates and returns a Sync bookmark object containing the livemark's
+// description, children (none), feed URI, and site URI.
+var fetchLivemarkItem = Task.async(function* (bookmarkItem) {
+  let itemId = yield PlacesUtils.promiseItemId(bookmarkItem.guid);
+  let item = yield placesBookmarkToSyncBookmark(bookmarkItem);
+
+  let description = getItemDescription(itemId);
+  if (description) {
+    item.description = description;
+  }
+
+  let feedAnno = PlacesUtils.annotations.getItemAnnotation(itemId,
+    PlacesUtils.LMANNO_FEEDURI);
+  item.feed = new URL(feedAnno);
+
+  let siteAnno = null;
+  try {
+    siteAnno = PlacesUtils.annotations.getItemAnnotation(itemId,
+      PlacesUtils.LMANNO_SITEURI);
+  } catch (ex) {}
+  if (siteAnno != null) {
+    item.site = new URL(siteAnno);
+  }
+
+  return item;
+});
+
+// Creates and returns a Sync bookmark object containing the query's tag
+// folder name and smart bookmark query ID.
+var fetchQueryItem = Task.async(function* (bookmarkItem) {
+  let itemId = yield PlacesUtils.promiseItemId(bookmarkItem.guid);
+  let item = yield placesBookmarkToSyncBookmark(bookmarkItem);
+
+  let description = getItemDescription(itemId);
+  if (description) {
+    item.description = description;
+  }
+
+  let folder = null;
+  let params = new URLSearchParams(bookmarkItem.url.pathname);
+  let tagFolderId = +params.get("folder");
+  if (tagFolderId) {
+    try {
+      let tagFolderGuid = yield PlacesUtils.promiseItemGuid(tagFolderId);
+      let tagFolder = yield PlacesUtils.bookmarks.fetch(tagFolderGuid);
+      folder = tagFolder.title;
+    } catch (ex) {
+      BookmarkSyncLog.warn("fetchQueryItem: Query " + bookmarkItem.url.href +
+                           " points to nonexistent folder " + tagFolderId, ex);
+    }
+  }
+  if (folder != null) {
+    item.folder = folder;
+  }
+
+  let query = null;
+  try {
+    // Throws if the bookmark doesn't have the smart bookmark anno.
+    query = PlacesUtils.annotations.getItemAnnotation(itemId,
+      BookmarkSyncUtils.SMART_BOOKMARKS_ANNO);
+  } catch (ex) {}
+  if (query != null) {
+    item.query = query;
+  }
+
+  return item;
+});
+
+// Returns an item's description, or `null` if one isn't set.
+function getItemDescription(id) {
+  try {
+    return PlacesUtils.annotations.getItemAnnotation(id,
+      BookmarkSyncUtils.DESCRIPTION_ANNO);
+  } catch (ex) {}
+  return null;
+}
+
+
