@@ -177,7 +177,7 @@ class TupOnly(CommonBackend, PartialBackend):
             fh.write('PYTHON_PATH = $(PYTHON) $(topsrcdir)/config/pythonpath.py\n')
             fh.write('PLY_INCLUDE = -I$(topsrcdir)/other-licenses/ply\n')
             fh.write('IDL_PARSER_DIR = $(topsrcdir)/xpcom/idl-parser\n')
-            fh.write('IDL_PARSER_CACHE_DIR = $(MOZ_OBJ_ROOT)/xpcom/idl-parser\n')
+            fh.write('IDL_PARSER_CACHE_DIR = $(MOZ_OBJ_ROOT)/xpcom/idl-parser/xpidl\n')
 
         # Run 'tup init' if necessary.
         if not os.path.exists(mozpath.join(self.environment.topsrcdir, ".tup")):
@@ -185,26 +185,8 @@ class TupOnly(CommonBackend, PartialBackend):
             self._cmd.run_process(cwd=self.environment.topsrcdir, log_name='tup', args=[tup, 'init'])
 
     def _handle_idl_manager(self, manager):
-
-        # TODO: This should come from GENERATED_FILES, and can be removed once
-        # those are implemented.
-        backend_file = self._get_backend_file('xpcom/idl-parser')
-        backend_file.rule(
-            display='python header.py -> [%o]',
-            cmd=[
-                '$(PYTHON_PATH)',
-                '$(PLY_INCLUDE)',
-                '$(topsrcdir)/xpcom/idl-parser/xpidl/header.py',
-            ],
-            outputs=['xpidlyacc.py', 'xpidllex.py'],
-        )
-
         backend_file = self._get_backend_file('xpcom/xpidl')
-
-        # These are used by mach/mixin/process.py to determine the current
-        # shell.
-        for var in ('SHELL', 'MOZILLABUILD', 'COMSPEC'):
-            backend_file.write('export %s\n' % var)
+        backend_file.export_shell()
 
         for module, data in sorted(manager.modules.iteritems()):
             dest, idls = data
@@ -214,7 +196,7 @@ class TupOnly(CommonBackend, PartialBackend):
                 '-I$(IDL_PARSER_DIR)',
                 '-I$(IDL_PARSER_CACHE_DIR)',
                 '$(topsrcdir)/python/mozbuild/mozbuild/action/xpidl-process.py',
-                '--cache-dir', '$(MOZ_OBJ_ROOT)/xpcom/idl-parser',
+                '--cache-dir', '$(IDL_PARSER_CACHE_DIR)',
                 '$(DIST)/idl',
                 '$(DIST)/include',
                 '$(MOZ_OBJ_ROOT)/%s/components' % dest,
@@ -226,8 +208,8 @@ class TupOnly(CommonBackend, PartialBackend):
             outputs.extend(['$(MOZ_OBJ_ROOT)/dist/include/%s.h' % f for f in sorted(idls)])
             backend_file.rule(
                 inputs=[
-                    '$(MOZ_OBJ_ROOT)/xpcom/idl-parser/xpidllex.py',
-                    '$(MOZ_OBJ_ROOT)/xpcom/idl-parser/xpidlyacc.py',
+                    '$(MOZ_OBJ_ROOT)/xpcom/idl-parser/xpidl/xpidllex.py',
+                    '$(MOZ_OBJ_ROOT)/xpcom/idl-parser/xpidl/xpidlyacc.py',
                 ],
                 display='XPIDL %s' % module,
                 cmd=cmd,
