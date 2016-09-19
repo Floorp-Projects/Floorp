@@ -77,15 +77,12 @@ var ContentClick = {
 
     // Todo(903022): code for where == save
 
-    let params = {
-      charset: browser.characterSet,
-      referrerURI: browser.documentURI,
-      referrerPolicy: json.referrerPolicy,
-      noReferrer: json.noReferrer,
-      allowMixedContent: json.allowMixedContent,
-      isContentWindowPrivate: json.isContentWindowPrivate,
-      originPrincipal: json.originPrincipal,
-    };
+    let params = { charset: browser.characterSet,
+                   referrerURI: browser.documentURI,
+                   referrerPolicy: json.referrerPolicy,
+                   noReferrer: json.noReferrer,
+                   allowMixedContent: json.allowMixedContent,
+                   isContentWindowPrivate: json.isContentWindowPrivate};
 
     // The new tab/window must use the same userContextId.
     if (json.originAttributes.userContextId) {

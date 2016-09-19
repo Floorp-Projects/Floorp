@@ -503,7 +503,6 @@ var ClickEventHandler = {
           json.allowMixedContent = true;
         } catch (e) {}
       }
-      json.originPrincipal = ownerDoc.nodePrincipal;
 
       sendAsyncMessage("Content:Click", json);
       return;

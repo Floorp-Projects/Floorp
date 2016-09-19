@@ -561,15 +561,6 @@
           ]]>
         </body>
       </method>
-
-      <method name="createAboutBlankContentViewer">
-        <parameter name="aPrincipal"/>
-        <body>
-          <![CDATA[
-            this.messageManager.sendAsyncMessage("Browser:CreateAboutBlank", aPrincipal);
-          ]]>
-        </body>
-      </method>
     </implementation>
     <handlers>
       <handler event="dragstart">

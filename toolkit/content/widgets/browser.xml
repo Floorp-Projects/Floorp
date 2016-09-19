@@ -1038,15 +1038,6 @@
         </body>
       </method>
 
-      <method name="createAboutBlankContentViewer">
-        <parameter name="aPrincipal"/>
-        <body>
-          <![CDATA[
-            this.docShell.createAboutBlankContentViewer(aPrincipal);
-          ]]>
-        </body>
-      </method>
-
       <field name="_AUTOSCROLL_SNAP">10</field>
       <field name="_scrolling">false</field>
       <field name="_startX">null</field>

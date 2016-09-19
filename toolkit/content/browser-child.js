@@ -565,13 +565,6 @@ addMessageListener("Browser:Thumbnail:GetOriginalURL", function (aMessage) {
   });
 });
 
-/**
- * Remote createAboutBlankContentViewer request handler.
- */
-addMessageListener("Browser:CreateAboutBlank", function(aMessage) {
-  docShell.createAboutBlankContentViewer(aMessage.data);
-});
-
 // The AddonsChild needs to be rooted so that it stays alive as long as
 // the tab.
 var AddonsChild = RemoteAddonsChild.init(this);
