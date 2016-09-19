@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ssl.h"
 #include "secerr.h"
+#include "ssl.h"
 
 extern "C" {
 // This is not something that should make you happy.
@@ -19,25 +19,6 @@ extern "C" {
 #include "tls_parser.h"
 
 namespace nss_test {
-
-// This class selectively drops complete writes.  This relies on the fact that
-// writes in libssl are on record boundaries.
-class SelectiveDropFilter : public PacketFilter, public PollTarget {
- public:
-  SelectiveDropFilter(uint32_t pattern) : pattern_(pattern), counter_(0) {}
-
- protected:
-  virtual Action Filter(const DataBuffer& input, DataBuffer* output) override {
-    if (counter_ >= 32) {
-      return KEEP;
-    }
-    return ((1 << counter_++) & pattern_) ? DROP : KEEP;
-  }
-
- private:
-  const uint32_t pattern_;
-  uint8_t counter_;
-};
 
 TEST_P(TlsConnectDatagram, DropClientFirstFlightOnce) {
   client_->SetPacketFilter(new SelectiveDropFilter(0x1));

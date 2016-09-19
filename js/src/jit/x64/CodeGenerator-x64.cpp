@@ -44,6 +44,16 @@ CodeGeneratorX64::ToTempValue(LInstruction* ins, size_t pos)
     return ValueOperand(ToRegister(ins->getTemp(pos)));
 }
 
+Operand
+CodeGeneratorX64::ToOperand64(const LInt64Allocation& a64)
+{
+    const LAllocation& a = a64.value();
+    MOZ_ASSERT(!a.isFloatReg());
+    if (a.isGeneralReg())
+        return Operand(a.toGeneralReg()->reg());
+    return Operand(masm.getStackPointer(), ToStackOffset(a));
+}
+
 FrameSizeClass
 FrameSizeClass::FromDepth(uint32_t frameDepth)
 {
@@ -246,17 +256,14 @@ CodeGeneratorX64::visitCompareI64AndBranch(LCompareI64AndBranch* lir)
     MOZ_ASSERT(mir->compareType() == MCompare::Compare_Int64 ||
                mir->compareType() == MCompare::Compare_UInt64);
 
-    const LInt64Allocation lhs = lir->getInt64Operand(LCompareI64::Lhs);
-    const LInt64Allocation rhs = lir->getInt64Operand(LCompareI64::Rhs);
+    LInt64Allocation lhs = lir->getInt64Operand(LCompareI64::Lhs);
+    LInt64Allocation rhs = lir->getInt64Operand(LCompareI64::Rhs);
     Register lhsReg = ToRegister64(lhs).reg;
 
-    if (IsConstant(rhs)) {
-        ImmWord imm = ImmWord(ToInt64(rhs));
-        masm.cmpPtr(lhsReg, imm);
-    } else {
-        Register rhsReg = ToRegister64(rhs).reg;
-        masm.cmpPtr(lhsReg, Operand(rhsReg));
-    }
+    if (IsConstant(rhs))
+        masm.cmpPtr(lhsReg, ImmWord(ToInt64(rhs)));
+    else
+        masm.cmpPtr(lhsReg, ToOperand64(rhs));
 
     bool isSigned = mir->compareType() == MCompare::Compare_Int64;
     emitBranch(JSOpToCondition(lir->jsop(), isSigned), lir->ifTrue(), lir->ifFalse());
