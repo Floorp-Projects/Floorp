@@ -27,7 +27,7 @@ function PresentationDataChannelDescription(aDataChannelSDP) {
 PresentationDataChannelDescription.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationChannelDescription]),
   get type() {
-    return nsIPresentationChannelDescription.TYPE_DATACHANNEL;
+    return Ci.nsIPresentationChannelDescription.TYPE_DATACHANNEL;
   },
   get tcpAddress() {
     return null;
@@ -94,6 +94,8 @@ PresentationTransportBuilder.prototype = {
       case Ci.nsIPresentationService.ROLE_RECEIVER:
         this._peerConnection.ondatachannel = aEvent => {
           this._dataChannel = aEvent.channel;
+          // Ensure the binaryType of dataChannel is blob.
+          this._dataChannel.binaryType = "blob";
           this._setDataChannel();
         }
         break;
@@ -134,7 +136,7 @@ PresentationTransportBuilder.prototype = {
       // Handoff the ownership of _peerConnection and _dataChannel to
       // _sessionTransport
       this._sessionTransport = new PresentationTransport();
-      this._sessionTransport.init(this._peerConnection, this._dataChannel);
+      this._sessionTransport.init(this._peerConnection, this._dataChannel, this._window);
       this._peerConnection = this._dataChannel = null;
 
       this._listener.onSessionTransport(this._sessionTransport);
@@ -243,11 +245,12 @@ PresentationTransport.prototype = {
   contractID: PRESENTATIONTRANSPORT_CONTRACTID,
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationSessionTransport]),
 
-  init: function(aPeerConnection, aDataChannel) {
+  init: function(aPeerConnection, aDataChannel, aWindow) {
     log("initWithDataChannel");
     this._enableDataNotification = false;
     this._dataChannel = aDataChannel;
     this._peerConnection = aPeerConnection;
+    this._window = aWindow;
 
     this._dataChannel.onopen = () => {
       log("data channel reopen. Should never touch here");
@@ -269,7 +272,7 @@ PresentationTransport.prototype = {
         this._messageQueue.push(aEvent.data);
         return;
       }
-      this._callback.notifyData(aEvent.data);
+      this._doNotifyData(aEvent.data);
     };
 
     this._dataChannel.onerror = aError => {
@@ -299,6 +302,23 @@ PresentationTransport.prototype = {
     this._dataChannel.send(aData);
   },
 
+  sendBinaryMsg: function(aData) {
+    log("sendBinaryMsg");
+
+    let array = new Uint8Array(aData.length);
+    for (let i = 0; i < aData.length; i++) {
+      array[i] = aData.charCodeAt(i);
+    }
+
+    this._dataChannel.send(array);
+  },
+
+  sendBlob: function(aBlob) {
+    log("sendBlob");
+
+    this._dataChannel.send(aBlob);
+  },
+
   enableDataNotification: function() {
     log("enableDataNotification");
     if (this._enableDataNotification) {
@@ -311,7 +331,7 @@ PresentationTransport.prototype = {
 
     this._enableDataNotification = true;
 
-    this._messageQueue.forEach(aData => this._callback.notifyData(aData));
+    this._messageQueue.forEach(aData => this._doNotifyData(aData));
     this._messageQueue = [];
   },
 
@@ -330,6 +350,23 @@ PresentationTransport.prototype = {
     }
     this._callback = null;
     this._messageQueue = [];
+    this._window = null;
+  },
+
+  _doNotifyData: function(aData) {
+    if (!this._callback) {
+      throw NS_ERROR_NOT_AVAILABLE;
+    }
+
+    if (aData instanceof this._window.Blob) {
+      let reader = new this._window.FileReader();
+      reader.addEventListener("load", (aEvent) => {
+        this._callback.notifyData(aEvent.target.result, true);
+      });
+      reader.readAsBinaryString(aData);
+    } else {
+      this._callback.notifyData(aData, false);
+    }
   },
 };
 
