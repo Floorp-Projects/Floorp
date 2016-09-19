@@ -261,10 +261,13 @@ module.exports = {
               }
 
               addSyntheticLine(indent(3) + `get ${item.attributes.name}() {`, item.textLine);
-              // TODO This will probably break some style rules when. We need
-              // to inject this next to the first non-whitespace character
-              addSyntheticLine(indent(4) + `return`, item.textLine);
-              addNodeLines(item, 4);
+              addSyntheticLine(indent(4) + `return (`, item.textLine);
+
+              // Remove trailing semicolons, as we are adding our own
+              item.textContent = item.textContent.replace(/;(?=\s*$)/, "");
+              addNodeLines(item, 5);
+
+              addSyntheticLine(indent(4) + `);`, item.textLine);
               addSyntheticLine(indent(3) + `},`, item.textEndLine);
               break;
             }
