@@ -2070,10 +2070,63 @@ PMCGetWindowInfoHook(HWND hWnd, PWINDOWINFO pwi)
   return result;
 }
 
+SHORT WINAPI PMCGetKeyState(int aVirtKey);
+
+// Runnable that performs GetKeyState on the main thread so that it can be
+// synchronously run on the PluginModuleParent via IPC.
+// The task alerts the given semaphore when it is finished.
+class GetKeyStateTask : public Runnable
+{
+    SHORT* mKeyState;
+    int mVirtKey;
+    HANDLE mSemaphore;
+
+public:
+    explicit GetKeyStateTask(int aVirtKey, HANDLE aSemaphore, SHORT* aKeyState) :
+        mVirtKey(aVirtKey), mSemaphore(aSemaphore), mKeyState(aKeyState)
+    {}
+
+    NS_IMETHOD Run() override
+    {
+        PLUGIN_LOG_DEBUG_METHOD;
+        AssertPluginThread();
+        *mKeyState = PMCGetKeyState(mVirtKey);
+        if (!ReleaseSemaphore(mSemaphore, 1, nullptr)) {
+            return NS_ERROR_FAILURE;
+        }
+        return NS_OK;
+    }
+};
+
 // static
 SHORT WINAPI
 PMCGetKeyState(int aVirtKey)
 {
+    if (!IsPluginThread()) {
+        // synchronously request the key state from the main thread
+
+        // Start a semaphore at 0.  We Release the semaphore (bringing its count to 1)
+        // when the synchronous call is done.
+        HANDLE semaphore = CreateSemaphore(NULL, 0, 1, NULL);
+        if (semaphore == nullptr) {
+            MOZ_ASSERT(semaphore != nullptr);
+            return 0;
+        }
+
+        SHORT keyState;
+        RefPtr<GetKeyStateTask> task = new GetKeyStateTask(aVirtKey, semaphore, &keyState);
+        ProcessChild::message_loop()->PostTask(task.forget());
+        DWORD err = WaitForSingleObject(semaphore, INFINITE);
+        if (err != WAIT_FAILED) {
+            CloseHandle(semaphore);
+            return keyState;
+        }
+        PLUGIN_LOG_DEBUG(("Error while waiting for GetKeyState semaphore: %d",
+                          GetLastError()));
+        MOZ_ASSERT(err != WAIT_FAILED);
+        CloseHandle(semaphore);
+        return 0;
+    }
     PluginModuleChild* chromeInstance = PluginModuleChild::GetChrome();
     if (chromeInstance) {
         int16_t ret = 0;
