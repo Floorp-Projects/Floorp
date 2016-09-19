@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ssl.h"
 #include <functional>
 #include <memory>
 #include "secerr.h"
+#include "ssl.h"
 #include "sslerr.h"
 #include "sslproto.h"
 
@@ -328,7 +328,8 @@ TEST_F(TlsConnectTest, TestTls13ResumptionTwice) {
 
   Reset();
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
-  TlsExtensionCapture* c1 = new TlsExtensionCapture(kTlsExtensionPreSharedKey);
+  TlsExtensionCapture* c1 =
+      new TlsExtensionCapture(ssl_tls13_pre_shared_key_xtn);
   client_->SetPacketFilter(c1);
   client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
                            SSL_LIBRARY_VERSION_TLS_1_3);
@@ -348,7 +349,8 @@ TEST_F(TlsConnectTest, TestTls13ResumptionTwice) {
   Reset();
   ClearStats();
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
-  TlsExtensionCapture* c2 = new TlsExtensionCapture(kTlsExtensionPreSharedKey);
+  TlsExtensionCapture* c2 =
+      new TlsExtensionCapture(ssl_tls13_pre_shared_key_xtn);
   client_->SetPacketFilter(c2);
   client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
                            SSL_LIBRARY_VERSION_TLS_1_3);
@@ -388,7 +390,7 @@ TEST_F(TlsConnectTest, DisableClientPSKAndFailToResume) {
   Reset();
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   TlsExtensionCapture* capture =
-      new TlsExtensionCapture(kTlsExtensionPreSharedKey);
+      new TlsExtensionCapture(ssl_tls13_pre_shared_key_xtn);
   client_->SetPacketFilter(capture);
   client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
                            SSL_LIBRARY_VERSION_TLS_1_3);
@@ -417,10 +419,10 @@ TEST_F(TlsConnectTest, DisableServerPSKAndFailToResume) {
   Reset();
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   TlsExtensionCapture* clientCapture =
-      new TlsExtensionCapture(kTlsExtensionPreSharedKey);
+      new TlsExtensionCapture(ssl_tls13_pre_shared_key_xtn);
   client_->SetPacketFilter(clientCapture);
   TlsExtensionCapture* serverCapture =
-      new TlsExtensionCapture(kTlsExtensionPreSharedKey);
+      new TlsExtensionCapture(ssl_tls13_pre_shared_key_xtn);
   server_->SetPacketFilter(serverCapture);
   client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
                            SSL_LIBRARY_VERSION_TLS_1_3);
