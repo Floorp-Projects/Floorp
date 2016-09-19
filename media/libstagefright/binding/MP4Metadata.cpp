@@ -18,6 +18,7 @@
 #include "mp4_demuxer/MoofParser.h"
 #include "mp4_demuxer/MP4Metadata.h"
 #include "mp4_demuxer/Stream.h"
+#include "MediaPrefs.h"
 
 #include <limits>
 #include <stdint.h>
@@ -158,6 +159,9 @@ MP4Metadata::MP4Metadata(Stream* aSource)
  , mPreferRust(false)
  , mReportedAudioTrackTelemetry(false)
  , mReportedVideoTrackTelemetry(false)
+#ifndef RELEASE_BUILD
+ , mRustTestMode(MediaPrefs::RustTestMode())
+#endif
 #endif
 {
 }
@@ -269,14 +273,51 @@ MP4Metadata::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
       mStagefright->GetTrackInfo(aType, aTrackNumber);
 
 #ifdef MOZ_RUST_MP4PARSE
-  if (!mRust || !mPreferRust) {
+  if (!mRust) {
     return info;
   }
 
   mozilla::UniquePtr<mozilla::TrackInfo> infoRust =
       mRust->GetTrackInfo(aType, aTrackNumber);
-  MOZ_ASSERT(infoRust);
 
+#ifndef RELEASE_BUILD
+  if (mRustTestMode && info) {
+    MOZ_ASSERT(infoRust);
+    MOZ_ASSERT(infoRust->mId == info->mId);
+    MOZ_ASSERT(infoRust->mKind == info->mKind);
+    MOZ_ASSERT(infoRust->mLabel == info->mLabel);
+    MOZ_ASSERT(infoRust->mLanguage == info->mLanguage);
+    MOZ_ASSERT(infoRust->mEnabled == info->mEnabled);
+    MOZ_ASSERT(infoRust->mTrackId == info->mTrackId);
+    MOZ_ASSERT(infoRust->mMimeType == info->mMimeType);
+    MOZ_ASSERT(infoRust->mDuration == info->mDuration);
+    MOZ_ASSERT(infoRust->mMediaTime == info->mMediaTime);
+    switch (aType) {
+    case mozilla::TrackInfo::kAudioTrack: {
+      AudioInfo *audioRust = infoRust->GetAsAudioInfo(), *audio = info->GetAsAudioInfo();
+      MOZ_ASSERT(audioRust->mRate == audio->mRate);
+      MOZ_ASSERT(audioRust->mChannels == audio->mChannels);
+      MOZ_ASSERT(audioRust->mBitDepth == audio->mBitDepth);
+      //MOZ_ASSERT(audioRust->mProfile == audio->mProfile);
+      //MOZ_ASSERT(audioRust->mExtendedProfile == audio->mExtendedProfile);
+      break;
+    }
+    case mozilla::TrackInfo::kVideoTrack: {
+      VideoInfo *videoRust = infoRust->GetAsVideoInfo(), *video = info->GetAsVideoInfo();
+      MOZ_ASSERT(videoRust->mDisplay == video->mDisplay);
+      MOZ_ASSERT(videoRust->mImage == video->mImage);
+      break;
+    }
+    default:
+      break;
+    }
+  }
+#endif
+
+  if (!mPreferRust) {
+    return info;
+  }
+  MOZ_ASSERT(infoRust);
   return infoRust;
 #endif
 
