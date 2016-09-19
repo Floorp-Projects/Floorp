@@ -10,14 +10,14 @@ const TEST_URI = "<p>hello</p>";
 
 add_task(function* () {
   yield addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openLayoutView();
+  let {inspector, view} = yield openBoxModelView();
 
   info("When a property is edited, it should sync in the rule view");
 
   yield selectNode("p", inspector);
 
-  info("Modify padding-bottom in layout view");
-  let span = view.doc.querySelector(".layout-padding.layout-bottom > span");
+  info("Modify padding-bottom in box model view");
+  let span = view.doc.querySelector(".boxmodel-padding.boxmodel-bottom > span");
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
   let editor = view.doc.querySelector(".styleinspector-propertyeditor");
 

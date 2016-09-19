@@ -9,7 +9,7 @@
      xmlns:em="http://www.mozilla.org/2004/em-rdf#">
 
   <Description about="urn:mozilla:install-manifest">
-    <em:id>webcompat@mozilla.org</em:id>
+    <em:id>formautofill@mozilla.org</em:id>
     <em:version>1.0</em:version>
     <em:type>2</em:type>
     <em:bootstrap>true</em:bootstrap>
@@ -26,7 +26,7 @@
     </em:targetApplication>
 
     <!-- Front End MetaData -->
-    <em:name>Web Compat</em:name>
-    <em:description>Urgent post-release fixes for web compatibility.</em:description>
+    <em:name>Form Autofill</em:name>
+    <em:description>Autofill forms with saved profiles</em:description>
   </Description>
 </RDF>
