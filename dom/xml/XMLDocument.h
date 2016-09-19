@@ -32,6 +32,9 @@ public:
   virtual void SetSuppressParserErrorElement(bool aSuppress) override;
   virtual bool SuppressParserErrorElement() override;
 
+  virtual void SetSuppressParserErrorConsoleMessages(bool aSuppress) override;
+  virtual bool SuppressParserErrorConsoleMessages() override;
+
   virtual nsresult StartDocumentLoad(const char* aCommand, nsIChannel* channel,
                                      nsILoadGroup* aLoadGroup,
                                      nsISupports* aContainer,
@@ -92,6 +95,9 @@ protected:
   // If true, do not output <parsererror> elements. Per spec, XMLHttpRequest
   // shouldn't output them, whereas DOMParser/others should (see bug 918703).
   bool mSuppressParserErrorElement;
+
+  // If true, do not log parsing errors to the web console (see bug 884693).
+  bool mSuppressParserErrorConsoleMessages;
 };
 
 } // namespace dom

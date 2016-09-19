@@ -36,6 +36,7 @@ TEST_DIRS += [
 
 TEST_HARNESS_FILES.testing.mochitest.tests.dom.base.test.chrome += [
     'chrome/bug421622-referer.sjs',
+    'chrome/bug884693.sjs',
     'chrome/nochrome_bug765993.html',
     'chrome/nochrome_bug765993.js',
     'chrome/nochrome_bug765993.js^headers^',
