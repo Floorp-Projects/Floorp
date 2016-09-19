@@ -59,7 +59,7 @@ fails fuzzy-if(skiaContent,1,12000) == float-in-rtl-4d.html float-in-rtl-4d.html
 # XXX The default-preferences setting here can be removed after the
 #     pref has been made true by default for all channels (bug 1138384).
 
-default-preferences pref(layout.css.vertical-text.enabled,true)
+
 
 == float-in-rtl-vlr-1a.html float-in-rtl-vlr-1a.html
 == float-in-rtl-vlr-1b.html float-in-rtl-vlr-1b.html

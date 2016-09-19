@@ -37,7 +37,7 @@ fails-if(B2G||Mulet||Android) == moz-range-progress-1.html moz-range-progress-1.
 # Tests for block and inline orientation in combination with writing-mode
 # XXX Remove default-preferences setting here after bug 1138384 makes
 #     it the default for all channels
-default-preferences pref(layout.css.vertical-text.enabled,true)
+
 == range-orient-horizontal.html range-orient-horizontal.html
 == range-orient-horizontal.html range-orient-horizontal.html
 == range-orient-block.html range-orient-block.html

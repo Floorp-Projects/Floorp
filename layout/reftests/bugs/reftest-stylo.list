@@ -1073,7 +1073,7 @@ fails skip == 403656-4.html 403656-4.html
 #== 403657-1.html 403657-1.html
 # Fails depending on the fonts...
 == 403733-1.html 403733-1.html
-== 403962-1.xhtml 403962-1.xhtml
+skip == 403962-1.xhtml 403962-1.xhtml
 == 404030-1.html 404030-1.html
 == 404030-1-notref.html 404030-1-notref.html
 == 404030-1-notref2.html 404030-1-notref2.html
