@@ -988,6 +988,9 @@
   ERROR(NS_ERROR_DOM_MEDIA_MEDIASINK_ERR,       FAILURE(11)),
   ERROR(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,         FAILURE(12)),
   ERROR(NS_ERROR_DOM_MEDIA_CDM_ERR,             FAILURE(13)),
+
+  /* Internal platform-related errors */
+  ERROR(NS_ERROR_DOM_MEDIA_CUBEB_INITIALIZATION_ERR,  FAILURE(101)),
 #undef MODULE
 
   /* ======================================================================= */
