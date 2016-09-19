@@ -75,6 +75,8 @@ function generateCssProperties() {
       values.unshift("COLOR");
     }
 
+    let subproperties = DOMUtils.getSubpropertiesForCSSProperty(name);
+
     // In order to maintain any backwards compatible changes when debugging older
     // clients, take the definition from the static CSS properties database, and fill it
     // in with the most recent property definition from the server.
@@ -82,7 +84,8 @@ function generateCssProperties() {
     const serverDefinition = {
       isInherited: DOMUtils.isInheritedProperty(name),
       values,
-      supports
+      supports,
+      subproperties,
     };
     properties[name] = Object.assign(clientDefinition, serverDefinition);
   });
