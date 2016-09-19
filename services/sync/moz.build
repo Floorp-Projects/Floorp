@@ -46,7 +46,7 @@ EXTRA_PP_JS_MODULES['services-sync'] += [
 ]
 
 # Definitions used by constants.js
-DEFINES['weave_version'] = '1.53.0'
+DEFINES['weave_version'] = '1.54.0'
 DEFINES['weave_id'] = '{340c2bbc-ce74-4362-90b5-7c26312808ef}'
 
 EXTRA_JS_MODULES['services-sync'].engines += [
