@@ -115,6 +115,9 @@ private:
   nsresult UpdateHashStore(nsTArray<TableUpdate*>* aUpdates,
                            const nsACString& aTable);
 
+  nsresult UpdateTableV4(nsTArray<TableUpdate*>* aUpdates,
+                         const nsACString& aTable);
+
   nsresult UpdateCache(TableUpdate* aUpdates);
 
   LookupCache *GetLookupCache(const nsACString& aTable);

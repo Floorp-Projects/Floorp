@@ -153,6 +153,7 @@ public:
 public:
   explicit TableUpdateV4(const nsACString& aTable)
     : TableUpdate(aTable)
+    , mFullUpdate(false)
   {
   }
 
@@ -161,18 +162,21 @@ public:
     return mPrefixesMap.IsEmpty() && mRemovalIndiceArray.IsEmpty();
   }
 
+  bool IsFullUpdate() const { return mFullUpdate; }
   PrefixesStringMap& Prefixes() { return mPrefixesMap; }
   RemovalIndiceArray& RemovalIndices() { return mRemovalIndiceArray; }
 
   // For downcasting.
   static const int TAG = 4;
 
+  void SetFullUpdate(bool aIsFullUpdate) { mFullUpdate = aIsFullUpdate; }
   void NewPrefixes(int32_t aSize, std::string& aPrefixes);
   void NewRemovalIndices(const uint32_t* aIndices, size_t aNumOfIndices);
 
 private:
   virtual int Tag() const override { return TAG; }
 
+  bool mFullUpdate;
   PrefixesStringMap mPrefixesMap;
   RemovalIndiceArray mRemovalIndiceArray;
 };

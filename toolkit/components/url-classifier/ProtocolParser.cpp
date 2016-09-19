@@ -873,6 +873,8 @@ ProtocolParserProtobuf::ProcessOneResponse(const ListUpdateResponse& aResponse)
   PARSER_LOG(("* listName: %s\n", listName.get()));
   PARSER_LOG(("* newState: %s\n", aResponse.new_client_state().c_str()));
   PARSER_LOG(("* isFullUpdate: %s\n", (isFullUpdate ? "yes" : "no")));
+
+  tuV4->SetFullUpdate(isFullUpdate);
   ProcessAdditionOrRemoval(*tuV4, aResponse.additions(), true /*aIsAddition*/);
   ProcessAdditionOrRemoval(*tuV4, aResponse.removals(), false);
   PARSER_LOG(("\n\n"));
