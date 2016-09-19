@@ -767,7 +767,6 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
 #endif
         break;
     case eIntID_MacGraphiteTheme:
-    case eIntID_MacLionTheme:
         aResult = 0;
         res = NS_ERROR_NOT_IMPLEMENTED;
         break;

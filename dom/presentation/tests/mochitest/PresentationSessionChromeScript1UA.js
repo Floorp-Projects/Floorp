@@ -77,6 +77,18 @@ const mockControlChannelOfSender = {
   reconnect: function(presentationId, url) {
     sendAsyncMessage('start-reconnect', url);
   },
+  sendIceCandidate: function(candidate) {
+    mockControlChannelOfReceiver.notifyIceCandidate(candidate);
+  },
+  notifyIceCandidate: function(candidate) {
+    if (!this._listener) {
+      return;
+    }
+
+    this._listener
+        .QueryInterface(Ci.nsIPresentationControlChannelListener)
+        .onIceCandidate(candidate);
+  },
 };
 
 // control channel of receiver
@@ -130,7 +142,19 @@ const mockControlChannelOfReceiver = {
     sendAsyncMessage('control-channel-receiver-closed', reason);
   },
   terminate: function(presentaionId) {
-  }
+  },
+  sendIceCandidate: function(candidate) {
+    mockControlChannelOfReceiver.notifyIceCandidate(candidate);
+  },
+  notifyIceCandidate: function(candidate) {
+    if (!this._listener) {
+      return;
+    }
+
+    this._listener
+        .QueryInterface(Ci.nsIPresentationControlChannelListener)
+        .onIceCandidate(candidate);
+  },
 };
 
 const mockDevice = {

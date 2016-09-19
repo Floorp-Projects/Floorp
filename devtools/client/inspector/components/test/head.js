@@ -20,7 +20,7 @@ registerCleanupFunction(() => {
  * Simple DOM node accesor function that takes either a node or a string css
  * selector as argument and returns the corresponding node
  * FIXME: Delete this function and use inspector/test/head.js' getNode instead,
- * and fix all layout-view tests to use nodeFronts instead of CPOWs.
+ * and fix all box model view tests to use nodeFronts instead of CPOWs.
  * @param {String|DOMNode} nodeOrSelector
  * @return {DOMNode}
  */
@@ -49,14 +49,14 @@ function selectAndHighlightNode(nodeOrSelector, inspector) {
 }
 
 /**
- * Open the toolbox, with the inspector tool visible, and the layout-view
- * sidebar tab selected.
- * @return a promise that resolves when the inspector is ready and the layout
+ * Open the toolbox, with the inspector tool visible, and the computed view
+ * sidebar tab selected to display the box model view.
+ * @return a promise that resolves when the inspector is ready and the box model
  * view is visible and ready
  */
-function openLayoutView() {
+function openBoxModelView() {
   return openInspectorSidebarTab("computedview").then(data => {
-    // The actual highligher show/hide methods are mocked in layoutview tests.
+    // The actual highligher show/hide methods are mocked in box model tests.
     // The highlighter is tested in devtools/inspector/test.
     function mockHighlighter({highlighter}) {
       highlighter.showBoxModel = function () {
@@ -71,18 +71,18 @@ function openLayoutView() {
     return {
       toolbox: data.toolbox,
       inspector: data.inspector,
-      view: data.inspector.computedview.layoutView,
+      view: data.inspector.computedview.boxModelView,
       testActor: data.testActor
     };
   });
 }
 
 /**
- * Wait for the layoutview-updated event.
+ * Wait for the boxmodel-view-updated event.
  * @return a promise
  */
 function waitForUpdate(inspector) {
-  return inspector.once("layoutview-updated");
+  return inspector.once("boxmodel-view-updated");
 }
 
 function getStyle(testActor, selector, propertyName) {

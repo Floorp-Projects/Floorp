@@ -182,14 +182,10 @@ APZCTreeManagerParent::RecvSetTargetAPZC(
       return false;
     }
   }
-
-  void (IAPZCTreeManager::*setTargetApzcFunc)(uint64_t, const nsTArray<ScrollableLayerGuid>&)
-      = &IAPZCTreeManager::SetTargetAPZC;
-
   APZThreadUtils::RunOnControllerThread(NewRunnableMethod
                                         <uint64_t,
                                          StoreCopyPassByRRef<nsTArray<ScrollableLayerGuid>>>
-                                        (mTreeManager, setTargetApzcFunc, aInputBlockId, aTargets));
+                                        (mTreeManager, &IAPZCTreeManager::SetTargetAPZC, aInputBlockId, aTargets));
 
   return true;
 }

@@ -15,6 +15,10 @@ var request;
 var connection;
 var receiverIframe;
 var presentationId;
+const DATA_ARRAY = [0, 255, 254, 0, 1, 2, 3, 0, 255, 255, 254, 0];
+const DATA_ARRAY_BUFFER = new ArrayBuffer(DATA_ARRAY.length);
+const TYPED_DATA_ARRAY = new Uint8Array(DATA_ARRAY_BUFFER);
+TYPED_DATA_ARRAY.set(DATA_ARRAY);
 
 function postMessageToIframe(aType) {
   receiverIframe.src = receiverUrl + "#" +
@@ -159,6 +163,46 @@ function testIncomingMessage() {
   });
 }
 
+function testSendBlobMessage() {
+  return new Promise(function(aResolve, aReject) {
+    info('Sender: --- testSendBlobMessage ---');
+    connection.addEventListener('message', function messageHandler(evt) {
+      connection.removeEventListener('message', messageHandler);
+      let msg = evt.data;
+      is(msg, "testIncomingBlobMessage", "Sender: Sender should receive message from Receiver");
+      let blob = new Blob(["Hello World"], {type : 'text/plain'});
+      connection.send(blob);
+      aResolve();
+    });
+  });
+}
+
+function testSendArrayBuffer() {
+  return new Promise(function(aResolve, aReject) {
+    info('Sender: --- testSendArrayBuffer ---');
+    connection.addEventListener('message', function messageHandler(evt) {
+      connection.removeEventListener('message', messageHandler);
+      let msg = evt.data;
+      is(msg, "testIncomingArrayBuffer", "Sender: Sender should receive message from Receiver");
+      connection.send(DATA_ARRAY_BUFFER);
+      aResolve();
+    });
+  });
+}
+
+function testSendArrayBufferView() {
+  return new Promise(function(aResolve, aReject) {
+    info('Sender: --- testSendArrayBufferView ---');
+    connection.addEventListener('message', function messageHandler(evt) {
+      connection.removeEventListener('message', messageHandler);
+      let msg = evt.data;
+      is(msg, "testIncomingArrayBufferView", "Sender: Sender should receive message from Receiver");
+      connection.send(TYPED_DATA_ARRAY);
+      aResolve();
+    });
+  });
+}
+
 function testCloseConnection() {
   info('Sender: --- testCloseConnection ---');
   // Test terminate immediate after close.
@@ -269,8 +313,11 @@ function runTests() {
          .then(testStartConnection)
          .then(testSendMessage)
          .then(testIncomingMessage)
+         .then(testSendBlobMessage)
          .then(testCloseConnection)
          .then(testReconnect)
+         .then(testSendArrayBuffer)
+         .then(testSendArrayBufferView)
          .then(testCloseConnection)
          .then(testTerminateAfterClose)
          .then(teardown);
@@ -284,11 +331,12 @@ SpecialPowers.pushPermissions([
 ], () => {
   SpecialPowers.pushPrefEnv({ 'set': [["dom.presentation.enabled", true],
                                       /* Mocked TCP session transport builder in the test */
-                                      ["dom.presentation.session_transport.data_channel.enable", false],
+                                      ["dom.presentation.session_transport.data_channel.enable", true],
                                       ["dom.presentation.controller.enabled", true],
                                       ["dom.presentation.receiver.enabled", true],
                                       ["dom.presentation.test.enabled", true],
                                       ["dom.presentation.test.stage", 0],
-                                      ["dom.mozBrowserFramesEnabled", true]]},
+                                      ["dom.mozBrowserFramesEnabled", true],
+                                      ["media.navigator.permission.disabled", true]]},
                             runTests);
 });

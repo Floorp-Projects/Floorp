@@ -4,6 +4,7 @@
 
 #include "nsISupports.idl"
 
+interface nsIDOMBlob;
 interface nsIInputStream;
 interface nsINetAddr;
 
@@ -20,7 +21,7 @@ interface nsIPresentationSessionTransportCallback : nsISupports
 {
   void notifyTransportReady();
   void notifyTransportClosed(in nsresult reason);
-  void notifyData(in ACString data);
+  void notifyData(in ACString data, in boolean isBinary);
 };
 
 /*
@@ -47,6 +48,18 @@ interface nsIPresentationSessionTransport : nsISupports
    * @param data The message to send.
    */
   void send(in DOMString data);
+
+  /*
+   * Send the binary message to the remote endpoint.
+   * @param data: the message being sent out.
+   */
+  void sendBinaryMsg(in ACString data);
+
+  /*
+   * Send the blob to the remote endpoint.
+   * @param blob: The input blob to be sent.
+   */
+  void sendBlob(in nsIDOMBlob blob);
 
   /*
    * Close this session transport.

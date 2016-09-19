@@ -4,124 +4,124 @@
 
 "use strict";
 
-// Test that the layout-view displays the right values and that it updates when
+// Test that the box model displays the right values and that it updates when
 // the node's style is changed
 
 // Expected values:
 var res1 = [
   {
-    selector: "#layout-element-size",
+    selector: "#boxmodel-element-size",
     value: "160" + "\u00D7" + "160.117"
   },
   {
-    selector: ".layout-size > span",
+    selector: ".boxmodel-size > span",
     value: "100" + "\u00D7" + "100.117"
   },
   {
-    selector: ".layout-margin.layout-top > span",
+    selector: ".boxmodel-margin.boxmodel-top > span",
     value: 30
   },
   {
-    selector: ".layout-margin.layout-left > span",
+    selector: ".boxmodel-margin.boxmodel-left > span",
     value: "auto"
   },
   {
-    selector: ".layout-margin.layout-bottom > span",
+    selector: ".boxmodel-margin.boxmodel-bottom > span",
     value: 30
   },
   {
-    selector: ".layout-margin.layout-right > span",
+    selector: ".boxmodel-margin.boxmodel-right > span",
     value: "auto"
   },
   {
-    selector: ".layout-padding.layout-top > span",
+    selector: ".boxmodel-padding.boxmodel-top > span",
     value: 20
   },
   {
-    selector: ".layout-padding.layout-left > span",
+    selector: ".boxmodel-padding.boxmodel-left > span",
     value: 20
   },
   {
-    selector: ".layout-padding.layout-bottom > span",
+    selector: ".boxmodel-padding.boxmodel-bottom > span",
     value: 20
   },
   {
-    selector: ".layout-padding.layout-right > span",
+    selector: ".boxmodel-padding.boxmodel-right > span",
     value: 20
   },
   {
-    selector: ".layout-border.layout-top > span",
+    selector: ".boxmodel-border.boxmodel-top > span",
     value: 10
   },
   {
-    selector: ".layout-border.layout-left > span",
+    selector: ".boxmodel-border.boxmodel-left > span",
     value: 10
   },
   {
-    selector: ".layout-border.layout-bottom > span",
+    selector: ".boxmodel-border.boxmodel-bottom > span",
     value: 10
   },
   {
-    selector: ".layout-border.layout-right > span",
+    selector: ".boxmodel-border.boxmodel-right > span",
     value: 10
   },
 ];
 
 var res2 = [
   {
-    selector: "#layout-element-size",
+    selector: "#boxmodel-element-size",
     value: "190" + "\u00D7" + "210"
   },
   {
-    selector: ".layout-size > span",
+    selector: ".boxmodel-size > span",
     value: "100" + "\u00D7" + "150"
   },
   {
-    selector: ".layout-margin.layout-top > span",
+    selector: ".boxmodel-margin.boxmodel-top > span",
     value: 30
   },
   {
-    selector: ".layout-margin.layout-left > span",
+    selector: ".boxmodel-margin.boxmodel-left > span",
     value: "auto"
   },
   {
-    selector: ".layout-margin.layout-bottom > span",
+    selector: ".boxmodel-margin.boxmodel-bottom > span",
     value: 30
   },
   {
-    selector: ".layout-margin.layout-right > span",
+    selector: ".boxmodel-margin.boxmodel-right > span",
     value: "auto"
   },
   {
-    selector: ".layout-padding.layout-top > span",
+    selector: ".boxmodel-padding.boxmodel-top > span",
     value: 20
   },
   {
-    selector: ".layout-padding.layout-left > span",
+    selector: ".boxmodel-padding.boxmodel-left > span",
     value: 20
   },
   {
-    selector: ".layout-padding.layout-bottom > span",
+    selector: ".boxmodel-padding.boxmodel-bottom > span",
     value: 20
   },
   {
-    selector: ".layout-padding.layout-right > span",
+    selector: ".boxmodel-padding.boxmodel-right > span",
     value: 50
   },
   {
-    selector: ".layout-border.layout-top > span",
+    selector: ".boxmodel-border.boxmodel-top > span",
     value: 10
   },
   {
-    selector: ".layout-border.layout-left > span",
+    selector: ".boxmodel-border.boxmodel-left > span",
     value: 10
   },
   {
-    selector: ".layout-border.layout-bottom > span",
+    selector: ".boxmodel-border.boxmodel-bottom > span",
     value: 10
   },
   {
-    selector: ".layout-border.layout-right > span",
+    selector: ".boxmodel-border.boxmodel-right > span",
     value: 10
   },
 ];
@@ -133,7 +133,7 @@ add_task(function* () {
   let html = "<style>" + style + "</style><div></div>";
 
   yield addTab("data:text/html," + encodeURIComponent(html));
-  let {inspector, view, testActor} = yield openLayoutView();
+  let {inspector, view, testActor} = yield openBoxModelView();
   yield selectNode("div", inspector);
 
   yield testInitialValues(inspector, view);

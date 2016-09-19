@@ -23,7 +23,7 @@ const LONG_TEXT_ROTATE_LIMIT = 3;
 /**
  * An instance of EditingSession tracks changes that have been made during the
  * modification of box model values. All of these changes can be reverted by
- * calling revert. The main parameter is the LayoutView that created it.
+ * calling revert. The main parameter is the BoxModelView that created it.
  *
  * @param inspector The inspector panel.
  * @param doc       A DOM document that can be used to test style rules.
@@ -183,27 +183,27 @@ EditingSession.prototype = {
 };
 
 /**
- * The layout-view panel
+ * The box model view
  * @param {InspectorPanel} inspector
  *        An instance of the inspector-panel currently loaded in the toolbox
  * @param {Document} document
- *        The document that will contain the layout view.
+ *        The document that will contain the box model view.
  */
-function LayoutView(inspector, document) {
+function BoxModelView(inspector, document) {
   this.inspector = inspector;
   this.doc = document;
-  this.wrapper = this.doc.getElementById("layout-wrapper");
-  this.container = this.doc.getElementById("layout-container");
-  this.expander = this.doc.getElementById("layout-expander");
-  this.sizeLabel = this.doc.querySelector(".layout-size > span");
-  this.sizeHeadingLabel = this.doc.getElementById("layout-element-size");
+  this.wrapper = this.doc.getElementById("boxmodel-wrapper");
+  this.container = this.doc.getElementById("boxmodel-container");
+  this.expander = this.doc.getElementById("boxmodel-expander");
+  this.sizeLabel = this.doc.querySelector(".boxmodel-size > span");
+  this.sizeHeadingLabel = this.doc.getElementById("boxmodel-element-size");
   this._geometryEditorHighlighter = null;
   this._cssProperties = getCssProperties(inspector.toolbox);
 
   this.init();
 }
 
-LayoutView.prototype = {
+BoxModelView.prototype = {
   init: function () {
     this.update = this.update.bind(this);
 
@@ -218,7 +218,7 @@ LayoutView.prototype = {
 
     this.onToggleExpander = this.onToggleExpander.bind(this);
     this.expander.addEventListener("click", this.onToggleExpander);
-    let header = this.doc.getElementById("layout-header");
+    let header = this.doc.getElementById("boxmodel-header");
     header.addEventListener("dblclick", this.onToggleExpander);
 
     this.onFilterComputedView = this.onFilterComputedView.bind(this);
@@ -233,72 +233,72 @@ LayoutView.prototype = {
     this.initBoxModelHighlighter();
 
     // Store for the different dimensions of the node.
-    // 'selector' refers to the element that holds the value in view.xhtml;
+    // 'selector' refers to the element that holds the value;
     // 'property' is what we are measuring;
     // 'value' is the computed dimension, computed in update().
     this.map = {
       position: {
-        selector: "#layout-element-position",
+        selector: "#boxmodel-element-position",
         property: "position",
         value: undefined
       },
       marginTop: {
-        selector: ".layout-margin.layout-top > span",
+        selector: ".boxmodel-margin.boxmodel-top > span",
         property: "margin-top",
         value: undefined
       },
       marginBottom: {
-        selector: ".layout-margin.layout-bottom > span",
+        selector: ".boxmodel-margin.boxmodel-bottom > span",
         property: "margin-bottom",
         value: undefined
       },
       marginLeft: {
-        selector: ".layout-margin.layout-left > span",
+        selector: ".boxmodel-margin.boxmodel-left > span",
         property: "margin-left",
         value: undefined
       },
       marginRight: {
-        selector: ".layout-margin.layout-right > span",
+        selector: ".boxmodel-margin.boxmodel-right > span",
         property: "margin-right",
         value: undefined
       },
       paddingTop: {
-        selector: ".layout-padding.layout-top > span",
+        selector: ".boxmodel-padding.boxmodel-top > span",
         property: "padding-top",
         value: undefined
       },
       paddingBottom: {
-        selector: ".layout-padding.layout-bottom > span",
+        selector: ".boxmodel-padding.boxmodel-bottom > span",
         property: "padding-bottom",
         value: undefined
       },
       paddingLeft: {
-        selector: ".layout-padding.layout-left > span",
+        selector: ".boxmodel-padding.boxmodel-left > span",
         property: "padding-left",
         value: undefined
       },
       paddingRight: {
-        selector: ".layout-padding.layout-right > span",
+        selector: ".boxmodel-padding.boxmodel-right > span",
         property: "padding-right",
         value: undefined
       },
       borderTop: {
-        selector: ".layout-border.layout-top > span",
+        selector: ".boxmodel-border.boxmodel-top > span",
         property: "border-top-width",
         value: undefined
       },
       borderBottom: {
-        selector: ".layout-border.layout-bottom > span",
+        selector: ".boxmodel-border.boxmodel-bottom > span",
         property: "border-bottom-width",
         value: undefined
       },
       borderLeft: {
-        selector: ".layout-border.layout-left > span",
+        selector: ".boxmodel-border.boxmodel-left > span",
         property: "border-left-width",
         value: undefined
       },
       borderRight: {
-        selector: ".layout-border.layout-right > span",
+        selector: ".boxmodel-border.boxmodel-right > span",
         property: "border-right-width",
         value: undefined
       }
@@ -326,7 +326,7 @@ LayoutView.prototype = {
   },
 
   initBoxModelHighlighter: function () {
-    let highlightElts = this.doc.querySelectorAll("#layout-container *[title]");
+    let highlightElts = this.doc.querySelectorAll("#boxmodel-container *[title]");
     this.onHighlightMouseOver = this.onHighlightMouseOver.bind(this);
     this.onHighlightMouseOut = this.onHighlightMouseOut.bind(this);
 
@@ -367,7 +367,7 @@ LayoutView.prototype = {
   },
 
   /**
-   * Called when the user clicks on one of the editable values in the layoutview
+   * Called when the user clicks on one of the editable values in the box model view
    */
   initEditor: function (element, event, dimension) {
     let { property } = dimension;
@@ -382,7 +382,7 @@ LayoutView.prototype = {
         name: dimension.property
       },
       start: self => {
-        self.elt.parentNode.classList.add("layout-editing");
+        self.elt.parentNode.classList.add("boxmodel-editing");
       },
 
       change: value => {
@@ -406,7 +406,7 @@ LayoutView.prototype = {
       },
 
       done: (value, commit) => {
-        editor.elt.parentNode.classList.remove("layout-editing");
+        editor.elt.parentNode.classList.remove("boxmodel-editing");
         if (!commit) {
           session.revert().then(() => {
             session.destroy();
@@ -418,7 +418,7 @@ LayoutView.prototype = {
   },
 
   /**
-   * Is the layoutview visible in the sidebar.
+   * Is the BoxModelView visible in the sidebar.
    * @return {Boolean}
    */
   isViewVisible: function () {
@@ -427,7 +427,7 @@ LayoutView.prototype = {
   },
 
   /**
-   * Is the layoutview visible in the sidebar and is the current node valid to
+   * Is the BoxModelView visible in the sidebar and is the current node valid to
    * be displayed in the view.
    * @return {Boolean}
    */
@@ -441,7 +441,7 @@ LayoutView.prototype = {
    * Destroy the nodes. Remove listeners.
    */
   destroy: function () {
-    let highlightElts = this.doc.querySelectorAll("#layout-container *[title]");
+    let highlightElts = this.doc.querySelectorAll("#boxmodel-container *[title]");
 
     for (let element of highlightElts) {
       element.removeEventListener("mouseover", this.onHighlightMouseOver, true);
@@ -449,7 +449,7 @@ LayoutView.prototype = {
     }
 
     this.expander.removeEventListener("click", this.onToggleExpander);
-    let header = this.doc.getElementById("layout-header");
+    let header = this.doc.getElementById("boxmodel-header");
     header.removeEventListener("dblclick", this.onToggleExpander);
 
     let nodeGeometry = this.doc.getElementById("layout-geometry-editor");
@@ -458,7 +458,7 @@ LayoutView.prototype = {
     this.inspector.off("picker-started", this.onPickerStarted);
 
     // Inspector Panel will destroy `markup` object on "will-navigate" event,
-    // therefore we have to check if it's still available in case LayoutView
+    // therefore we have to check if it's still available in case BoxModelView
     // is destroyed immediately after.
     if (this.inspector.markup) {
       this.inspector.markup.off("leave", this.onMarkupViewLeave);
@@ -571,7 +571,7 @@ LayoutView.prototype = {
    * Event handler that responds to the computed view being filtered
    * @param {String} reason
    * @param {Boolean} hidden
-   *        Whether or not to hide the layout wrapper
+   *        Whether or not to hide the box model wrapper
    */
   onFilterComputedView: function (reason, hidden) {
     this.wrapper.hidden = hidden;
@@ -579,7 +579,7 @@ LayoutView.prototype = {
 
   /**
    * Stop tracking reflows and hide all values when no node is selected or the
-   * layout-view is hidden, otherwise track reflows and show values.
+   * box model view is hidden, otherwise track reflows and show values.
    * @param {Boolean} isActive
    */
   setActive: function (isActive) {
@@ -604,7 +604,7 @@ LayoutView.prototype = {
     let lastRequest = Task.spawn((function* () {
       if (!this.isViewVisibleAndNodeValid()) {
         this.wrapper.hidden = true;
-        this.inspector.emit("layoutview-updated");
+        this.inspector.emit("boxmodel-view-updated");
         return null;
       }
 
@@ -689,7 +689,7 @@ LayoutView.prototype = {
 
       this.wrapper.hidden = false;
 
-      this.inspector.emit("layoutview-updated");
+      this.inspector.emit("boxmodel-view-updated");
       return null;
     }).bind(this)).catch(console.error);
 
@@ -831,12 +831,12 @@ LayoutView.prototype = {
   manageOverflowingText: function (span) {
     let classList = span.parentNode.classList;
 
-    if (classList.contains("layout-left") ||
-        classList.contains("layout-right")) {
+    if (classList.contains("boxmodel-left") ||
+        classList.contains("boxmodel-right")) {
       let force = span.textContent.length > LONG_TEXT_ROTATE_LIMIT;
-      classList.toggle("layout-rotate", force);
+      classList.toggle("boxmodel-rotate", force);
     }
   }
 };
 
-exports.LayoutView = LayoutView;
+exports.BoxModelView = BoxModelView;
