@@ -44,11 +44,12 @@ jit::EliminateBoundsChecks(MIRGenerator* mir, MIRGraph& graph)
                 MWasmBoundsCheck* bc = def->toWasmBoundsCheck();
                 MDefinition* addr = def->getOperand(0);
 
-                LastSeenMap::AddPtr checkPtr = lastSeen.lookupForAdd(addr->id());
-                if (checkPtr && checkPtr->value()->block()->dominates(block)) {
-                    bc->setRedundant(true);
+                LastSeenMap::AddPtr ptr = lastSeen.lookupForAdd(addr->id());
+                if (ptr) {
+                    if (ptr->value()->block()->dominates(block))
+                        bc->setRedundant(true);
                 } else {
-                    if (!lastSeen.add(checkPtr, addr->id(), def))
+                    if (!lastSeen.add(ptr, addr->id(), def))
                         return false;
                 }
                 break;
