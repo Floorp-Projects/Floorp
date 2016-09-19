@@ -44,11 +44,11 @@ skip-if(Android||B2G||Mulet) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,12352)
 HTTP(..) == combobox-zoom.html combobox-zoom.html
 
 # The vertical-text pref setting can be removed after bug 1138384 lands
-pref(layout.css.vertical-text.enabled,true) == vertical-decorations-1.html vertical-decorations-1.html
-pref(layout.css.vertical-text.enabled,true) == vertical-decorations-2.html vertical-decorations-2.html
-pref(layout.css.vertical-text.enabled,true) == vertical-decorations-1.html vertical-decorations-1.html
-pref(layout.css.vertical-text.enabled,true) == vertical-decorations-2.html vertical-decorations-2.html
-pref(layout.css.vertical-text.enabled,true) == vertical-decorations-3.html vertical-decorations-3.html
-pref(layout.css.vertical-text.enabled,true) == vertical-decorations-4.html vertical-decorations-4.html
-pref(layout.css.vertical-text.enabled,true) == vertical-decorations-3.html vertical-decorations-3.html
-pref(layout.css.vertical-text.enabled,true) == vertical-decorations-4.html vertical-decorations-4.html
+== vertical-decorations-1.html vertical-decorations-1.html
+== vertical-decorations-2.html vertical-decorations-2.html
+== vertical-decorations-1.html vertical-decorations-1.html
+== vertical-decorations-2.html vertical-decorations-2.html
+== vertical-decorations-3.html vertical-decorations-3.html
+== vertical-decorations-4.html vertical-decorations-4.html
+== vertical-decorations-3.html vertical-decorations-3.html
+== vertical-decorations-4.html vertical-decorations-4.html
