@@ -739,8 +739,8 @@ NO_EXPAND_LIBS = True
 DIST_INSTALL = True
 
 # Prepare self-hosted JS code for embedding
-GENERATED_FILES += ['selfhosted.out.h']
-selfhosted = GENERATED_FILES['selfhosted.out.h']
+GENERATED_FILES += [('selfhosted.out.h', 'selfhosted.js')]
+selfhosted = GENERATED_FILES[('selfhosted.out.h', 'selfhosted.js')]
 selfhosted.script = 'builtin/embedjs.py:generate_selfhosted'
 selfhosted.inputs = [
     'js.msg',
