@@ -118,7 +118,7 @@ HTTP(..) == 1127488-align-right-vertical-lr-ltr.html 1127488-align-right-vertica
 == 1133945-1-vertical-align.html 1133945-1-vertical-align.html
 == 1134744-radio-checkbox-baseline-1.html 1134744-radio-checkbox-baseline-1.html
 == 1134849-orthogonal-inline.html 1134849-orthogonal-inline.html
-fails fails-if(B2G||Mulet) == 1135361-ruby-justify-1.html 1135361-ruby-justify-1.html
+random == 1135361-ruby-justify-1.html 1135361-ruby-justify-1.html
 # bug 1136067
 # Initial mulet triage: parity with B2G/B2G Desktop
 fails skip-if(Mulet) fuzzy-if(winWidget,255,163) fuzzy-if(skiaContent,159,111) == 1136557-1-nested-spans.html 1136557-1-nested-spans.html
@@ -158,10 +158,10 @@ test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLin
 == 1172774-percent-margin-2.html 1172774-percent-margin-2.html
 == 1172774-percent-margin-3.html 1172774-percent-margin-3.html
 == 1172774-percent-margin-4.html 1172774-percent-margin-4.html
-== 1172774-percent-padding-1.html 1172774-percent-padding-1.html
-fails == 1172774-percent-padding-2.html 1172774-percent-padding-2.html
-fails == 1172774-percent-padding-3.html 1172774-percent-padding-3.html
-fails == 1172774-percent-padding-4.html 1172774-percent-padding-4.html
+random == 1172774-percent-padding-1.html 1172774-percent-padding-1.html
+== 1172774-percent-padding-2.html 1172774-percent-padding-2.html
+random == 1172774-percent-padding-3.html 1172774-percent-padding-3.html
+== 1172774-percent-padding-4.html 1172774-percent-padding-4.html
 == 1174450-intrinsic-sizing.html 1174450-intrinsic-sizing.html
 == 1175789-underline-overline-1.html 1175789-underline-overline-1.html
 == 1188061-1-nsChangeHint_ClearAncestorIntrinsics.html 1188061-1-nsChangeHint_ClearAncestorIntrinsics.html
@@ -187,7 +187,8 @@ skip-if(Android) HTTP(..) == 1248248-1-orientation-break-glyphrun.html 1248248-1
 
 # Suite of tests from Gérard Talbot in bug 1079151
 # Frequent Windows 7 load failed: timed out waiting for test to complete (waiting for onload scripts to complete), bug 1167155 and friends
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) include abspos/reftest-stylo.list
+# All tests are intermittent/fuzzy on stylo
+# include abspos/reftest-stylo.list
 
 # Tests for tables with vertical writing modes
 include tables/reftest-stylo.list

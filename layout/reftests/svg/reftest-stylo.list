@@ -51,16 +51,16 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/
 == conditions-04.svg conditions-04.svg
 random-if(Mulet) == conditions-05.svg conditions-05.svg
 # bug 1178062
-== conditions-06.svg conditions-06.svg
+skip == conditions-06.svg conditions-06.svg
 == conditions-07.svg conditions-07.svg
 fuzzy-if(skiaContent,1,320) == conditions-08.svg conditions-08.svg
 == conditions-09.svg conditions-09.svg
 == currentColor-01.svg currentColor-01.svg
 == currentColor-02.svg currentColor-02.svg
 == currentColor-03.svg currentColor-03.svg
-fails == data-uri-with-filter-01.xhtml data-uri-with-filter-01.xhtml
-== data-uri-with-gradient-01.xhtml data-uri-with-gradient-01.xhtml
-fails == data-uri-with-pattern-01.xhtml data-uri-with-pattern-01.xhtml
+random == data-uri-with-filter-01.xhtml data-uri-with-filter-01.xhtml
+random == data-uri-with-gradient-01.xhtml data-uri-with-gradient-01.xhtml
+random == data-uri-with-pattern-01.xhtml data-uri-with-pattern-01.xhtml
 == dynamic-attr-removal-1.svg dynamic-attr-removal-1.svg
 == dynamic-attr-removal-2.svg dynamic-attr-removal-2.svg
 == dynamic-attr-change-1.svg dynamic-attr-change-1.svg
@@ -151,7 +151,7 @@ random == dynamic-use-nested-01b.svg dynamic-use-nested-01b.svg
 == dynamic-viewBox-change-01.svg dynamic-viewBox-change-01.svg
 == dynamic-viewBox-change-02.svg dynamic-viewBox-change-02.svg
 == dynamic-viewBox-change-03.svg dynamic-viewBox-change-03.svg
-fails == fragmentIdentifier-01.xhtml fragmentIdentifier-01.xhtml
+random == fragmentIdentifier-01.xhtml fragmentIdentifier-01.xhtml
 == linked-filter-01.svg linked-filter-01.svg
 == linked-pattern-01.svg linked-pattern-01.svg
 == use-01.svg use-01.svg

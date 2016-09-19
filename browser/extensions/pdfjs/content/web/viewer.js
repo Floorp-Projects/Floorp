@@ -5054,6 +5054,8 @@ var TEXT_LAYER_RENDER_DELAY = 200; // ms
  * @property {IPDFAnnotationLayerFactory} annotationLayerFactory
  * @property {boolean} enhanceTextSelection - Turns on the text selection
  *   enhancement. The default is `false`.
+ * @property {boolean} renderInteractiveForms - Turns on rendering of
+ *   interactive form elements. The default is `false`.
  */
 
 /**
@@ -5074,6 +5076,7 @@ var PDFPageView = (function PDFPageViewClosure() {
     var textLayerFactory = options.textLayerFactory;
     var annotationLayerFactory = options.annotationLayerFactory;
     var enhanceTextSelection = options.enhanceTextSelection || false;
+    var renderInteractiveForms = options.renderInteractiveForms || false;
 
     this.id = id;
     this.renderingId = 'page' + id;
@@ -5084,6 +5087,7 @@ var PDFPageView = (function PDFPageViewClosure() {
     this.pdfPageRotate = defaultViewport.rotation;
     this.hasRestrictedScaling = false;
     this.enhanceTextSelection = enhanceTextSelection;
+    this.renderInteractiveForms = renderInteractiveForms;
 
     this.eventBus = options.eventBus || domEvents.getGlobalEventBus();
     this.renderingQueue = renderingQueue;
@@ -5498,6 +5502,7 @@ var PDFPageView = (function PDFPageViewClosure() {
         canvasContext: ctx,
         transform: transform,
         viewport: this.viewport,
+        renderInteractiveForms: this.renderInteractiveForms,
         // intent: 'default', // === 'display'
       };
       var renderTask = this.renderTask = this.pdfPage.render(renderContext);
@@ -5523,7 +5528,8 @@ var PDFPageView = (function PDFPageViewClosure() {
       if (this.annotationLayerFactory) {
         if (!this.annotationLayer) {
           this.annotationLayer = this.annotationLayerFactory.
-            createAnnotationLayerBuilder(div, this.pdfPage);
+            createAnnotationLayerBuilder(div, this.pdfPage,
+                                         this.renderInteractiveForms);
         }
         this.annotationLayer.render(this.viewport, 'display');
       }
@@ -6164,6 +6170,7 @@ var SimpleLinkService = pdfLinkService.SimpleLinkService;
  * @typedef {Object} AnnotationLayerBuilderOptions
  * @property {HTMLDivElement} pageDiv
  * @property {PDFPage} pdfPage
+ * @property {boolean} renderInteractiveForms
  * @property {IPDFLinkService} linkService
  * @property {DownloadManager} downloadManager
  */
@@ -6179,6 +6186,7 @@ var AnnotationLayerBuilder = (function AnnotationLayerBuilderClosure() {
   function AnnotationLayerBuilder(options) {
     this.pageDiv = options.pageDiv;
     this.pdfPage = options.pdfPage;
+    this.renderInteractiveForms = options.renderInteractiveForms;
     this.linkService = options.linkService;
     this.downloadManager = options.downloadManager;
 
@@ -6205,9 +6213,9 @@ var AnnotationLayerBuilder = (function AnnotationLayerBuilderClosure() {
           div: self.div,
           annotations: annotations,
           page: self.pdfPage,
+          renderInteractiveForms: self.renderInteractiveForms,
           linkService: self.linkService,
           downloadManager: self.downloadManager,
-          renderInteractiveForms: pdfjsLib.PDFJS.renderInteractiveForms,
         };
 
         if (self.div) {
@@ -6254,12 +6262,15 @@ DefaultAnnotationLayerFactory.prototype = {
   /**
    * @param {HTMLDivElement} pageDiv
    * @param {PDFPage} pdfPage
+   * @param {boolean} renderInteractiveForms
    * @returns {AnnotationLayerBuilder}
    */
-  createAnnotationLayerBuilder: function (pageDiv, pdfPage) {
+  createAnnotationLayerBuilder: function (pageDiv, pdfPage,
+                                          renderInteractiveForms) {
     return new AnnotationLayerBuilder({
       pageDiv: pageDiv,
       pdfPage: pdfPage,
+      renderInteractiveForms: renderInteractiveForms,
       linkService: new SimpleLinkService(),
     });
   }
@@ -6321,6 +6332,8 @@ var DEFAULT_CACHE_SIZE = 10;
  *   around the pages. The default is false.
  * @property {boolean} enhanceTextSelection - (optional) Enables the improved
  *   text selection behaviour. The default is `false`.
+ * @property {boolean} renderInteractiveForms - (optional) Enables rendering of
+ *   interactive form elements. The default is `false`.
  */
 
 /**
@@ -6373,6 +6386,7 @@ var PDFViewer = (function pdfViewer() {
     this.downloadManager = options.downloadManager || null;
     this.removePageBorders = options.removePageBorders || false;
     this.enhanceTextSelection = options.enhanceTextSelection || false;
+    this.renderInteractiveForms = options.renderInteractiveForms || false;
 
     this.defaultRenderingQueue = !options.renderingQueue;
     if (this.defaultRenderingQueue) {
@@ -6600,6 +6614,7 @@ var PDFViewer = (function pdfViewer() {
             textLayerFactory: textLayerFactory,
             annotationLayerFactory: this,
             enhanceTextSelection: this.enhanceTextSelection,
+            renderInteractiveForms: this.renderInteractiveForms,
           });
           bindOnAfterAndBeforeDraw(pageView);
           this._pages.push(pageView);
@@ -7086,12 +7101,15 @@ var PDFViewer = (function pdfViewer() {
     /**
      * @param {HTMLDivElement} pageDiv
      * @param {PDFPage} pdfPage
+     * @param {boolean} renderInteractiveForms
      * @returns {AnnotationLayerBuilder}
      */
-    createAnnotationLayerBuilder: function (pageDiv, pdfPage) {
+    createAnnotationLayerBuilder: function (pageDiv, pdfPage,
+                                            renderInteractiveForms) {
       return new AnnotationLayerBuilder({
         pageDiv: pageDiv,
         pdfPage: pdfPage,
+        renderInteractiveForms: renderInteractiveForms,
         linkService: this.linkService,
         downloadManager: this.downloadManager
       });
@@ -7272,6 +7290,7 @@ var PDFViewerApplication = {
       linkService: pdfLinkService,
       downloadManager: downloadManager,
       enhanceTextSelection: false,
+      renderInteractiveForms: false,
     });
     pdfRenderingQueue.setViewer(this.pdfViewer);
     pdfLinkService.setViewer(this.pdfViewer);
@@ -7432,7 +7451,10 @@ var PDFViewerApplication = {
         PDFJS.externalLinkTarget = value;
       }),
       Preferences.get('renderInteractiveForms').then(function resolved(value) {
-        PDFJS.renderInteractiveForms = value;
+        // TODO: Like the `enhanceTextSelection` preference, move the
+        //       initialization and fetching of `Preferences` to occur
+        //       before the various viewer components are initialized.
+        self.pdfViewer.renderInteractiveForms = value;
       }),
       // TODO move more preferences and other async stuff here
     ]).catch(function (reason) { });

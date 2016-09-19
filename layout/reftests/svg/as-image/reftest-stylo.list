@@ -29,7 +29,7 @@ skip-if(B2G||Mulet) == background-simple-1.html background-simple-1.html
 == background-scale-with-viewbox-1.html background-scale-with-viewbox-1.html
 
 # Tests with -moz-image-rect()
-fails skip-if(B2G||Mulet) == background-image-rect-1svg.html background-image-rect-1svg.html
+random == background-image-rect-1svg.html background-image-rect-1svg.html
 # bug 773482
 # Initial mulet triage: parity with B2G/B2G Desktop
 == background-image-rect-1png.html background-image-rect-1png.html
@@ -168,7 +168,7 @@ fuzzy-if(B2G,68,4) == list-simple-1.html list-simple-1.html
 skip skip-if(B2G||Mulet) == svg-image-script-1.svg svg-image-script-1.svg
 # bug 773482
 # Initial mulet triage: parity with B2G/B2G Desktop
-== svg-image-script-2.svg svg-image-script-2.svg
+skip == svg-image-script-2.svg svg-image-script-2.svg
 
 # tests for external resources vs. data URIs in SVG as an image
 == svg-image-datauri-1.html svg-image-datauri-1.html

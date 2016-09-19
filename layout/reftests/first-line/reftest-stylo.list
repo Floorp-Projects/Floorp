@@ -38,8 +38,8 @@ load stress-10.html
 == stress-11.xhtml stress-11.xhtml
 
 skip == border-not-apply.html border-not-apply.html
-== 287088-1.html 287088-1.html
-== 287088-2.html 287088-2.html
+skip == 287088-1.html 287088-1.html
+skip == 287088-2.html 287088-2.html
 == 403177-1.html 403177-1.html
 == 469227-2.html 469227-2.html
 == 469227-3.html 469227-3.html

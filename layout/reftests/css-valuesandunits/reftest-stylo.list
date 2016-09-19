@@ -13,7 +13,7 @@ skip == unit-vh-vw.html unit-vh-vw.html
 == unit-vh-vw-zoom.html unit-vh-vw-zoom.html
 == unit-vh-vw-overflow-auto.html unit-vh-vw-overflow-auto.html
 == unit-vh-vw-overflow-scroll.html unit-vh-vw-overflow-scroll.html
-== unit-vh-vw-overflow-scroll-x.html unit-vh-vw-overflow-scroll-x.html
+skip == unit-vh-vw-overflow-scroll-x.html unit-vh-vw-overflow-scroll-x.html
 == unit-vh-vw-overflow-scroll-y.html unit-vh-vw-overflow-scroll-y.html
-skip-if(B2G||Mulet) skip-if(Android) == unit-vh-vw-overflow-auto.html unit-vh-vw-overflow-auto.html
+skip == unit-vh-vw-overflow-auto.html unit-vh-vw-overflow-auto.html
 # Initial mulet triage: parity with B2G/B2G Desktop
