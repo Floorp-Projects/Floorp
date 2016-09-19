@@ -7,8 +7,8 @@
 == textarea-readonly.html textarea-readonly.html
 == textarea-dyn-readonly.html textarea-dyn-readonly.html
 == textarea-dyn-not-readonly.html textarea-dyn-not-readonly.html
-fails == textarea-maxlength-valid.html textarea-maxlength-valid.html
-fails == textarea-maxlength-invalid.html textarea-maxlength-invalid.html
+skip == textarea-maxlength-valid.html textarea-maxlength-valid.html
+skip == textarea-maxlength-invalid.html textarea-maxlength-invalid.html
 == textarea-required-valid.html textarea-required-valid.html
 == textarea-required-invalid.html textarea-required-invalid.html
 == textarea-disabled-fieldset-1.html textarea-disabled-fieldset-1.html

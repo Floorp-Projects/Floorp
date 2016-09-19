@@ -9,9 +9,9 @@
 == textarea-dyn-readonly.html textarea-dyn-readonly.html
 == textarea-dyn-not-readonly.html textarea-dyn-not-readonly.html
 == textarea-dyn-not-readonly-changed.html textarea-dyn-not-readonly-changed.html
-fails == textarea-maxlength-valid.html textarea-maxlength-valid.html
-fails == textarea-maxlength-valid-changed.html textarea-maxlength-valid-changed.html
-fails == textarea-maxlength-invalid.html textarea-maxlength-invalid.html
+skip == textarea-maxlength-valid.html textarea-maxlength-valid.html
+skip == textarea-maxlength-valid-changed.html textarea-maxlength-valid-changed.html
+skip == textarea-maxlength-invalid.html textarea-maxlength-invalid.html
 == textarea-required-valid.html textarea-required-valid.html
 == textarea-required-valid-changed.html textarea-required-valid-changed.html
 == textarea-required-invalid.html textarea-required-invalid.html

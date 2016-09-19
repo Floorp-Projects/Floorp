@@ -937,7 +937,7 @@ skip == block-xhtml-root-3.xhtml block-xhtml-root-3.xhtml
 == block-em-length-1.html block-em-length-1.html
 == block-em-length-1-dyn.html block-em-length-1-dyn.html
 # Other tests.
-fails == dynamic-add-text-1.html dynamic-add-text-1.html
+== dynamic-add-text-1.html dynamic-add-text-1.html
 # Bug 467321
 == scrollable-vertical-margin.html scrollable-vertical-margin.html
 == scrollable-horizontal-margin.html scrollable-horizontal-margin.html

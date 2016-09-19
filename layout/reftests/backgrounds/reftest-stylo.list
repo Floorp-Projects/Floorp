@@ -156,7 +156,7 @@ random-if(OSX==1010) == background-size-monster-rem.html background-size-monster
 random-if(B2G||Mulet) == fixed-bg-with-transform-outside-viewport-1.html fixed-bg-with-transform-outside-viewport-1.html
 # Initial mulet triage: parity with B2G/B2G Desktop
 fuzzy(2,83) == fixed-bg-border-radius.html fixed-bg-border-radius.html
-== fixed-bg-inside-transform.html fixed-bg-inside-transform.html
+random == fixed-bg-inside-transform.html fixed-bg-inside-transform.html
 
 HTTP == root-background-1.html root-background-1.html
 HTTP == root-background-1.html root-background-1.html

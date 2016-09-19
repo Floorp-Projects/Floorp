@@ -55,7 +55,7 @@ skip-if((B2G&&browserIsRemote)||Mulet) == table-cell-8.html table-cell-8.html
 == continuation-positioned-inline-1.html continuation-positioned-inline-1.html
 == continuation-positioned-inline-2.html continuation-positioned-inline-2.html
 == scrollframe-1.html scrollframe-1.html
-fails fuzzy-if(gtkWidget,1,1) skip-if(B2G||Mulet) fuzzy-if(Android,9,185) fuzzy-if(asyncPan&&!layersGPUAccelerated,121,107) == scrollframe-2.html scrollframe-2-ref.html #bug #bug
+fails == scrollframe-2.html scrollframe-2-ref.html #bug #bug
 # Initial mulet triage: parity with B2G/B2G Desktop
 fuzzy-if(gtkWidget,1,8) == select-1.html select-1.html
 fails fuzzy-if(gtkWidget,1,8) == select-1-dynamic.html select-1-dynamic.html

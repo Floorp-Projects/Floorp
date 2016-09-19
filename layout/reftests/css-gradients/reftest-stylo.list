@@ -120,7 +120,7 @@ fails fuzzy-if(skiaContent,18,600) == twostops-1g.html twostops-1g.html
 
 # from http://www.xanthir.com/:4bhipd by way of http://a-ja.net/newgrad.html
 fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL||skiaContent&&layersGPUAccelerated,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,4646) == aja-linear-1a.html aja-linear-1a.html
-fails-if(!d2d&&!(OSX==1010)) == aja-linear-1b.html aja-linear-1b.html
+== aja-linear-1b.html aja-linear-1b.html
 # bug 526694
 fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL||skiaContent,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,4646) == aja-linear-1c.html aja-linear-1c.html
 skip fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL||skiaContent,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,4646) == aja-linear-1d.html aja-linear-1d.html
