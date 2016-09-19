@@ -2,11 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 'use strict';
 
-function isDOMLoaded(browser) {
-  return ContentTask.spawn(browser, null, function*() {
-    Assert.equal(content.document.readyState, "complete",
-      "Browser should be loaded.");
-  });
+// Check if the browser has loaded by checking ready state of the DOM.
+function isDOMLoaded(aBrowser) {
+  return aBrowser.contentWindowAsCPOW.document.readyState === 'complete';
 }
 
 // It checks if calling BrowserTestUtils.browserLoaded() yields
@@ -15,7 +13,7 @@ add_task(function*() {
   let tab = gBrowser.addTab('http://example.com');
   let browser = tab.linkedBrowser;
   yield BrowserTestUtils.browserLoaded(browser);
-  yield isDOMLoaded(browser);
+  Assert.ok(isDOMLoaded(browser), 'browser', 'Expect browser to have loaded.');
   gBrowser.removeTab(tab);
 });
 
@@ -36,9 +34,7 @@ add_task(function*() {
     for (b of browsers) BrowserTestUtils.browserLoaded(b)
   ));
   let expected = 'Expected all promised browsers to have loaded.';
-  for (const browser of browsers) {
-    yield isDOMLoaded(browser);
-  }
+  Assert.ok(browsers.every(isDOMLoaded), expected);
   //cleanup
   browsers
     .map(browser => gBrowser.getTabForBrowser(browser))
