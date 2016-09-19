@@ -332,6 +332,7 @@ public:
 
   static void GlobalInit(); // for use by the factory
   static void Shutdown(); // for use by the factory
+  static void ShutdownMemoryReporter();
 
   nsresult ClearChromeImageCache();
   nsresult ClearImageCache();
