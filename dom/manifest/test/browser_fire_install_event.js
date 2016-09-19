@@ -21,16 +21,18 @@ function enableOnInstallPref() {
 // This cause file_reg_install_event.html to be dynamically change.
 function* theTest(aBrowser) {
   aBrowser.allowEvents = true;
-  // Resolves when we get a custom event with the correct name
-  const responsePromise = new Promise((resolve) => {
-    aBrowser.contentDocument.addEventListener("dom.manifest.oninstall", resolve);
+  let waitForInstall = ContentTask.spawn(aBrowser, null, function*() {
+    yield ContentTaskUtils.waitForEvent(content.window, "install");
   });
-  const mm = aBrowser.messageManager;
-  const msgKey = "DOM:Manifest:FireInstallEvent";
-  const { data: { success } } = yield PromiseMessage.send(mm, msgKey);
+  const { data: { success } } = yield PromiseMessage
+    .send(aBrowser.messageManager, "DOM:Manifest:FireInstallEvent");
   ok(success, "message sent and received successfully.");
-  const { detail: { result } } = yield responsePromise;
-  ok(result, "the page sent us an acknowledgment as a custom event");
+  try {
+    yield waitForInstall;
+    ok(true, "Install event fired");
+  } catch (err) {
+    ok(false, "Install event didn't fire: " + err.message);
+  }
 }
 
 // Open a tab and run the test
