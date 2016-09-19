@@ -2080,27 +2080,19 @@ ReportClassStats(const ClassInfo& classInfo, const nsACString& path,
     if (classInfo.objectsMallocHeapElementsNormal > 0) {
         REPORT_BYTES(path + NS_LITERAL_CSTRING("objects/malloc-heap/elements/normal"),
             KIND_HEAP, classInfo.objectsMallocHeapElementsNormal,
-            "Normal (non-asm.js) indexed elements.");
+            "Normal (non-wasm) indexed elements.");
     }
 
-    // asm.js arrays are heap-allocated on some platforms and
-    // non-heap-allocated on others.  We never put them under sundries,
-    // because (a) in practice they're almost always larger than the sundries
-    // threshold, and (b) we'd need a third category of sundries ("non-heap"),
-    // which would be a pain.
-    size_t mallocHeapElementsAsmJS = classInfo.objectsMallocHeapElementsAsmJS;
-    size_t nonHeapElementsAsmJS    = classInfo.objectsNonHeapElementsAsmJS;
-    MOZ_ASSERT(mallocHeapElementsAsmJS == 0 || nonHeapElementsAsmJS == 0);
-    if (mallocHeapElementsAsmJS > 0) {
+    if (classInfo.objectsMallocHeapElementsAsmJS > 0) {
         REPORT_BYTES(path + NS_LITERAL_CSTRING("objects/malloc-heap/elements/asm.js"),
-            KIND_HEAP, mallocHeapElementsAsmJS,
-            "asm.js array buffer elements on the malloc heap.");
+            KIND_HEAP, classInfo.objectsMallocHeapElementsAsmJS,
+            "asm.js array buffer elements allocated in the malloc heap.");
     }
-    if (nonHeapElementsAsmJS > 0) {
-        REPORT_BYTES(path + NS_LITERAL_CSTRING("objects/non-heap/elements/asm.js"),
-            KIND_NONHEAP, nonHeapElementsAsmJS,
-            "asm.js array buffer elements outside both the malloc heap and "
-            "the GC heap.");
+
+    if (classInfo.objectsMallocHeapMisc > 0) {
+        REPORT_BYTES(path + NS_LITERAL_CSTRING("objects/malloc-heap/misc"),
+            KIND_HEAP, classInfo.objectsMallocHeapMisc,
+            "Miscellaneous object data.");
     }
 
     if (classInfo.objectsNonHeapElementsNormal > 0) {
@@ -2117,16 +2109,31 @@ ReportClassStats(const ClassInfo& classInfo, const nsACString& path,
             "by the buffer's refcount.");
     }
 
-    if (classInfo.objectsNonHeapCodeAsmJS > 0) {
-        REPORT_BYTES(path + NS_LITERAL_CSTRING("objects/non-heap/code/asm.js"),
-            KIND_NONHEAP, classInfo.objectsNonHeapCodeAsmJS,
-            "AOT-compiled asm.js code.");
+    // WebAssembly memories are always non-heap-allocated (mmap). We never put
+    // these under sundries, because (a) in practice they're almost always
+    // larger than the sundries threshold, and (b) we'd need a third category of
+    // sundries ("non-heap"), which would be a pain.
+    if (classInfo.objectsNonHeapElementsWasm > 0) {
+        REPORT_BYTES(path + NS_LITERAL_CSTRING("objects/non-heap/elements/wasm"),
+            KIND_NONHEAP, classInfo.objectsNonHeapElementsWasm,
+            "wasm/asm.js array buffer elements allocated outside both the "
+            "malloc heap and the GC heap.");
     }
 
-    if (classInfo.objectsMallocHeapMisc > 0) {
-        REPORT_BYTES(path + NS_LITERAL_CSTRING("objects/malloc-heap/misc"),
-            KIND_HEAP, classInfo.objectsMallocHeapMisc,
-            "Miscellaneous object data.");
+    if (classInfo.objectsNonHeapCodeWasm > 0) {
+        REPORT_BYTES(path + NS_LITERAL_CSTRING("objects/non-heap/code/wasm"),
+            KIND_NONHEAP, classInfo.objectsNonHeapCodeWasm,
+            "AOT-compiled wasm/asm.js code.");
+    }
+
+    // Although wasm guard pages aren't committed in memory they can be very
+    // large and contribute greatly to vsize and so are worth reporting.
+    if (classInfo.wasmGuardPages > 0) {
+        REPORT_BYTES(NS_LITERAL_CSTRING("wasm-guard-pages"),
+            KIND_OTHER, classInfo.wasmGuardPages,
+            "Guard pages mapped after the end of wasm memories, reserved for "
+            "optimization tricks, but not committed and thus never contributing"
+            " to RSS, only vsize.");
     }
 }
 
