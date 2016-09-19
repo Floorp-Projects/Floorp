@@ -1128,7 +1128,6 @@ var gBrowserInit = {
       //                 [4]: allowThirdPartyFixup (bool)
       //                 [5]: referrerPolicy (int)
       //                 [6]: userContextId (int)
-      //                 [7]: originPrincipal (nsIPrincipal)
       else if (window.arguments.length >= 3) {
         let referrerURI = window.arguments[2];
         if (typeof(referrerURI) == "string") {
@@ -1143,10 +1142,7 @@ var gBrowserInit = {
         let userContextId = (window.arguments[6] != undefined ?
             window.arguments[6] : Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID);
         loadURI(uriToLoad, referrerURI, window.arguments[3] || null,
-                window.arguments[4] || false, referrerPolicy, userContextId,
-                // pass the origin principal (if any) and force its use to create
-                // an initial about:blank viewer if present:
-                window.arguments[7], !!window.arguments[7]);
+                window.arguments[4] || false, referrerPolicy, userContextId);
         window.focus();
       }
       // Note: loadOneOrMoreURIs *must not* be called if window.arguments.length >= 3.
@@ -2037,17 +2033,14 @@ function BrowserTryToCloseWindow()
 }
 
 function loadURI(uri, referrer, postData, allowThirdPartyFixup, referrerPolicy,
-                 userContextId, originPrincipal, forceAboutBlankViewerInCurrent) {
+                 userContextId) {
   try {
     openLinkIn(uri, "current",
                { referrerURI: referrer,
                  referrerPolicy: referrerPolicy,
                  postData: postData,
                  allowThirdPartyFixup: allowThirdPartyFixup,
-                 userContextId: userContextId,
-                 originPrincipal,
-                 forceAboutBlankViewerInCurrent,
-               });
+                 userContextId: userContextId });
   } catch (e) {}
 }
 
@@ -5577,14 +5570,11 @@ function handleLinkClick(event, href, linkNode) {
   }
 
   urlSecurityCheck(href, doc.nodePrincipal);
-  let params = {
-    charset: doc.characterSet,
-    allowMixedContent: persistAllowMixedContentInChildTab,
-    referrerURI: referrerURI,
-    referrerPolicy: referrerPolicy,
-    noReferrer: BrowserUtils.linkHasNoReferrer(linkNode),
-    originPrincipal: doc.nodePrincipal,
-  };
+  let params = { charset: doc.characterSet,
+                 allowMixedContent: persistAllowMixedContentInChildTab,
+                 referrerURI: referrerURI,
+                 referrerPolicy: referrerPolicy,
+                 noReferrer: BrowserUtils.linkHasNoReferrer(linkNode) };
 
   // The new tab/window must use the same userContextId
   if (doc.nodePrincipal.originAttributes.userContextId) {
