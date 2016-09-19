@@ -14,6 +14,7 @@ import sys
 import tempfile
 import unittest
 
+from buildconfig import substs
 from StringIO import StringIO
 from mozlog import structured
 from mozbuild.base import MozbuildObject
@@ -27,7 +28,6 @@ mozinfo.find_and_update_from_json()
 objdir = build_obj.topobjdir.encode("utf-8")
 
 if mozinfo.isMac:
-  from buildconfig import substs
   xpcshellBin = os.path.join(objdir, "dist", substs['MOZ_MACBUNDLE_NAME'], "Contents", "MacOS", "xpcshell")
 else:
   xpcshellBin = os.path.join(objdir, "dist", "bin", "xpcshell")
@@ -858,7 +858,9 @@ add_test({
 
         self.assertTestResult(False)
         self.assertInLog(TEST_FAIL_STRING)
-        self.assertInLog("test_simple_uncaught_rejection.js:3:3")
+        if not substs.get('RELEASE_BUILD'):
+          # async stacks are currently not enabled in release builds.
+          self.assertInLog("test_simple_uncaught_rejection.js:3:3")
         self.assertInLog("Test rejection.")
         self.assertEquals(1, self.x.testCount)
         self.assertEquals(0, self.x.passCount)
