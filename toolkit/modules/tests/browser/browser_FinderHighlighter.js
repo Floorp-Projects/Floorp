@@ -390,3 +390,32 @@ add_task(function* testHideOnLocationChange() {
 
   yield BrowserTestUtils.removeTab(tab);
 });
+
+add_task(function* testHideOnClear() {
+  let url = kFixtureBaseURL + "file_FinderSample.html";
+  yield BrowserTestUtils.withNewTab(url, function* (browser) {
+    let findbar = gBrowser.getFindBar();
+    yield promiseOpenFindbar(findbar);
+
+    let word = "Roland";
+    let expectedResult = {
+      rectCount: 1,
+      insertCalls: [2, 4],
+      removeCalls: [1, 2]
+    };
+    let promise = promiseTestHighlighterOutput(browser, word, expectedResult);
+    yield promiseEnterStringIntoFindField(findbar, word);
+    yield promise;
+
+    yield new Promise(resolve => setTimeout(resolve, kIteratorTimeout));
+    promise = promiseTestHighlighterOutput(browser, "", {
+      rectCount: 0,
+      insertCalls: [0, 0],
+      removeCalls: [1, 2]
+    });
+    findbar.clear();
+    yield promise;
+
+    findbar.close(true);
+  });
+});

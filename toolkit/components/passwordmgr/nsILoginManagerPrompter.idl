@@ -15,10 +15,14 @@ interface nsILoginManagerPrompter : nsISupports {
    * Initialize the prompter. Must be called before using other interfaces.
    *
    * @param aWindow
-   *        The in which the user is doing some login-related action that's
+   *        The window in which the user is doing some login-related action that's
    *        resulting in a need to prompt them for something. The prompt
    *        will be associated with this window (or, if a notification bar
    *        is being used, topmost opener in some cases).
+   *
+   *        aWindow can be null if there is no associated window, e.g. in a JSM
+   *        or Sandbox. In this case there will be no checkbox to save the login
+   *        since the window is needed to know if this is a private context.
    *
    *        If this window is a content window, the corresponding window and browser
    *        elements will be calculated. If this window is a chrome window, the

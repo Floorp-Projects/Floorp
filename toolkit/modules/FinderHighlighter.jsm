@@ -406,8 +406,7 @@ FinderHighlighter.prototype = {
       return;
     }
 
-    // Place the match placeholder on top of the current found range.
-    if (data.result == Ci.nsITypeAheadFind.FIND_NOTFOUND || !foundRange) {
+    if (data.result == Ci.nsITypeAheadFind.FIND_NOTFOUND || !data.searchString || !foundRange) {
       this.hide();
       return;
     }
@@ -446,7 +445,7 @@ FinderHighlighter.prototype = {
       dict.animation.onfinish = () => dict.animation = null;
     }
 
-    if (this._highlightAll && data.searchString)
+    if (this._highlightAll)
       this.highlight(true, data.searchString, data.linksOnly);
   },
 

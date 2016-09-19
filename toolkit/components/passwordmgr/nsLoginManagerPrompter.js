@@ -269,6 +269,7 @@ LoginManagerPrompter.prototype = {
     // will indeed pass down a window to us, and for those who don't,
     // we can just assume that we don't want to save the entered login
     // information.
+    this.log("We have no chromeWindow so assume we're in a private context");
     return true;
   },
 
@@ -692,8 +693,12 @@ LoginManagerPrompter.prototype = {
   /* ---------- nsILoginManagerPrompter prompts ---------- */
 
 
-  init : function (aWindow, aFactory) {
-    if (aWindow instanceof Ci.nsIDOMChromeWindow) {
+  init : function (aWindow = null, aFactory = null) {
+    if (!aWindow) {
+      // There may be no applicable window e.g. in a Sandbox or JSM.
+      this._chromeWindow = null;
+      this._browser = null;
+    } else if (aWindow instanceof Ci.nsIDOMChromeWindow) {
       this._chromeWindow = aWindow;
       // needs to be set explicitly using setBrowser
       this._browser = null;
