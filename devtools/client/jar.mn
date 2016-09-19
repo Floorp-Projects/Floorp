@@ -14,7 +14,6 @@ devtools.jar:
     content/projecteditor/chrome/content/projecteditor-test.xul (projecteditor/chrome/content/projecteditor-test.xul)
     content/projecteditor/chrome/content/projecteditor-loader.js (projecteditor/chrome/content/projecteditor-loader.js)
     content/netmonitor/netmonitor.xul (netmonitor/netmonitor.xul)
-    content/netmonitor/netmonitor.css (netmonitor/netmonitor.css)
     content/netmonitor/netmonitor-controller.js (netmonitor/netmonitor-controller.js)
     content/netmonitor/netmonitor-view.js (netmonitor/netmonitor-view.js)
     content/webconsole/webconsole.xul (webconsole/webconsole.xul)
