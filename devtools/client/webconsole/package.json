@@ -10,6 +10,7 @@
     "jsdom": "^9.4.1",
     "jsdom-global": "^2.0.0",
     "mocha": "^2.5.3",
+    "redux-mock-store": "^1.1.4",
     "require-hacker": "^2.1.4",
     "sinon": "^1.17.5"
   },
