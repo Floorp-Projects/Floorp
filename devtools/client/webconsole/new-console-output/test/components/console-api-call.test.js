@@ -24,8 +24,7 @@ describe("ConsoleAPICall component:", () => {
       const message = stubPreparedMessages.get("console.log('foobar', 'test')");
       const wrapper = render(ConsoleApiCall({ message, onViewSourceInDebugger }));
 
-      // @TODO should output: foobar test
-      expect(wrapper.find(".message-body").text()).toBe("\"foobar\"\"test\"");
+      expect(wrapper.find(".message-body").text()).toBe("foobar test");
       expect(wrapper.find(".objectBox-string").length).toBe(2);
       expect(wrapper.find("div.message.cm-s-mozilla span span.message-flex-body span.message-body.devtools-monospace").length).toBe(1);
     });

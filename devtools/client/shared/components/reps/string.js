@@ -21,6 +21,16 @@ define(function (require, exports, module) {
   const StringRep = React.createClass({
     displayName: "StringRep",
 
+    propTypes: {
+      useQuotes: React.PropTypes.bool,
+    },
+
+    getDefaultProps: function () {
+      return {
+        useQuotes: true,
+      };
+    },
+
     render: function () {
       let text = this.props.object;
       let member = this.props.member;
@@ -35,8 +45,8 @@ define(function (require, exports, module) {
       let croppedString = this.props.cropLimit ?
         cropMultipleLines(text, this.props.cropLimit) : cropMultipleLines(text);
 
-      let formattedString = this.props.omitQuotes ?
-        croppedString : "\"" + croppedString + "\"";
+      let formattedString = this.props.useQuotes ?
+        "\"" + croppedString + "\"" : croppedString;
 
       return (
         span({className: "objectBox objectBox-string"}, formattedString
