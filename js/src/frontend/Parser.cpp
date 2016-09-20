@@ -287,13 +287,19 @@ EvalSharedContext::EvalSharedContext(ExclusiveContext* cx, JSObject* enclosingEn
     // this binding with respect to enclosingScope is incorrect if the
     // Debugger.Frame is a function frame. Recompute the this binding if we
     // are such an eval.
-    if (enclosingEnv && enclosingEnv->is<DebugEnvironmentProxy>()) {
-        JSObject* env = &enclosingEnv->as<DebugEnvironmentProxy>().environment();
+    if (enclosingEnv && enclosingScope->kind() == ScopeKind::NonSyntactic) {
+        // For Debugger.Frame.eval with bindings, the environment chain may
+        // have more than the DebugEnvironmentProxy.
+        JSObject* env = enclosingEnv;
         while (env) {
+            if (env->is<DebugEnvironmentProxy>())
+                env = &env->as<DebugEnvironmentProxy>().environment();
+
             if (env->is<CallObject>()) {
                 computeThisBinding(env->as<CallObject>().callee().nonLazyScript()->bodyScope());
                 break;
             }
+
             env = env->enclosingEnvironment();
         }
     }
