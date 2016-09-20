@@ -1714,7 +1714,7 @@ ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
   nsContentUtils::StorageAccess access =
     nsContentUtils::StorageAllowedForPrincipal(info.mPrincipal);
   info.mStorageAllowed = access > nsContentUtils::StorageAccess::ePrivateBrowsing;
-  info.mPrivateBrowsing = false;
+  info.mOriginAttributes = mInfo->GetOriginAttributes();
 
   nsCOMPtr<nsIContentSecurityPolicy> csp;
   rv = info.mPrincipal->GetCsp(getter_AddRefs(csp));

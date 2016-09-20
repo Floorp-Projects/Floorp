@@ -31,6 +31,7 @@ private:
   const nsCString mScriptSpec;
   const nsString mCacheName;
   ServiceWorkerState mState;
+  PrincipalOriginAttributes mOriginAttributes;
 
   // This id is shared with WorkerPrivate to match requests issued by service
   // workers to their corresponding serviceWorkerInfo.
@@ -102,6 +103,12 @@ public:
   State() const
   {
     return mState;
+  }
+
+  const PrincipalOriginAttributes&
+  GetOriginAttributes() const
+  {
+    return mOriginAttributes;
   }
 
   const nsString&

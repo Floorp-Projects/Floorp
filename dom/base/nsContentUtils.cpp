@@ -3098,6 +3098,48 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
 }
 
 // static
+mozilla::PrincipalOriginAttributes
+nsContentUtils::GetOriginAttributes(nsIDocument* aDocument)
+{
+  if (!aDocument) {
+    return mozilla::PrincipalOriginAttributes();
+  }
+
+  nsCOMPtr<nsILoadGroup> loadGroup = aDocument->GetDocumentLoadGroup();
+  if (loadGroup) {
+    return GetOriginAttributes(loadGroup);
+  }
+
+  mozilla::PrincipalOriginAttributes attrs;
+  mozilla::NeckoOriginAttributes nattrs;
+  nsCOMPtr<nsIChannel> channel = aDocument->GetChannel();
+  if (channel && NS_GetOriginAttributes(channel, nattrs)) {
+    attrs.InheritFromNecko(nattrs);
+  }
+  return attrs;
+}
+
+// static
+mozilla::PrincipalOriginAttributes
+nsContentUtils::GetOriginAttributes(nsILoadGroup* aLoadGroup)
+{
+  if (!aLoadGroup) {
+    return mozilla::PrincipalOriginAttributes();
+  }
+  mozilla::PrincipalOriginAttributes attrs;
+  mozilla::DocShellOriginAttributes dsattrs;
+  nsCOMPtr<nsIInterfaceRequestor> callbacks;
+  aLoadGroup->GetNotificationCallbacks(getter_AddRefs(callbacks));
+  if (callbacks) {
+    nsCOMPtr<nsILoadContext> loadContext = do_GetInterface(callbacks);
+    if (loadContext && loadContext->GetOriginAttributes(dsattrs)) {
+      attrs.InheritFromDocShellToDoc(dsattrs, nullptr);
+    }
+  }
+  return attrs;
+}
+
+// static
 bool
 nsContentUtils::IsInPrivateBrowsing(nsIDocument* aDoc)
 {
