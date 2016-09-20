@@ -32,8 +32,8 @@
 }
 .pkt_ext_cf:after {
     content: " ";
-    display:table;
-    clear:both;
+    display: table;
+    clear: both;
 }
 @keyframes pkt_ext_hide {
     0% {
@@ -60,7 +60,7 @@
     margin: 0 auto 1.5em;
     max-width: 260px;
 }
-.pkt_ext_containersignup a { 
+.pkt_ext_containersignup a {
     color: #4c8fd0;
 }
 .pkt_ext_containersignup a:hover {
@@ -140,6 +140,17 @@
     font-size: 12px;
     max-width: 320px;
     margin-top: 15px;
+}
+.pkt_ext_containersignup .tryitnowspace {
+    margin-top: 22px;
+}
+.pkt_ext_signupdetail p.pkt_ext_tos {
+    color: #777;
+    font-size: 10px;
+    line-height: 1.5;
+    margin-top: 17px;
+    padding-top: 0;
+    max-width: 190px;
 }
 
 /*=Core detail - storyboard
@@ -259,6 +270,7 @@
     opacity: 0.9;
 }
 .pkt_ext_containersignup .signup-btn-firefox,
+.pkt_ext_containersignup .signup-btn-tryitnow,
 .pkt_ext_containersignup .signup-btn-email,
 .pkt_ext_containersignup .signupinterim-btn-login,
 .pkt_ext_containersignup .signupinterim-btn-signup,
@@ -272,10 +284,14 @@
     position: relative;
     z-index: 10;
 }
+.pkt_ext_containersignup .signup-btn-tryitnow,
 .pkt_ext_containersignup .signup-btn-firefox {
     min-width: 14.5em;
     position: relative;
     padding: 0;
+}
+.pkt_ext_containersignup .signup-btn-tryitnow{
+    margin-top: 25px;
 }
 .pkt_ext_containersignup .signup-btn-firefox .logo {
     background: url(../img/signup_firefoxlogo@1x.png) center center no-repeat;
@@ -295,6 +311,7 @@
 .pkt_ext_containersignup .forgotreset-btn-change {
     margin-bottom: 2em;
 }
+.pkt_ext_containersignup .signup-btn-tryitnow .text,
 .pkt_ext_containersignup .signup-btn-firefox .text {
     display: inline-block;
     padding: 0.8em 1.625em;
@@ -302,6 +319,7 @@
     text-shadow: none;
     white-space: nowrap;
 }
+.pkt_ext_containersignup .signup-btn-tryitnow .text,
 .pkt_ext_containersignup .signup-btn-firefox .text {
     color: #fff;
 }
@@ -322,12 +340,14 @@
     width: 200px;
 }
 .pkt_ext_signup_overflow .signup-btn-firefox,
+.pkt_ext_containersignup .signup-btn-tryitnow,
 .pkt_ext_signup_overflow .signup-btn-email {
     font-size: 14px;
     min-width: 12.6em;
     padding-left: 0.75em;
     padding-right: 0.75em;
 }
+.pkt_ext_signup_overflow .signup-btn-tryitnow .text,
 .pkt_ext_signup_overflow .signup-btn-firefox .text {
     padding-left: 0;
     padding-right: 0;
@@ -346,17 +366,22 @@
     margin-bottom: 0.5em;
 }
 .pkt_ext_signup_de .signup-btn-firefox .text,
+.pkt_ext_signup_de .signup-btn-tryitnow .text,
 .pkt_ext_signup_de .signup-btn-email,
 .pkt_ext_signup_es .pkt_ext_signupdetail_hero .signup-btn-firefox .text,
 .pkt_ext_signup_es .pkt_ext_signupdetail_hero .signup-btn-email,
 .pkt_ext_signup_ja .signup-btn-firefox .text,
+.pkt_ext_signup_ja .signup-btn-tryitnow .text,
 .pkt_ext_signup_ja .signup-btn-email,
 .pkt_ext_signup_ru .signup-btn-firefox .text,
+.pkt_ext_signup_ru .signup-btn-tryitnow .text,
 .pkt_ext_signup_ru .signup-btn-email {
     font-size: 15px;
 }
 .pkt_ext_signup_ja .signup-btn-firefox .text,
-.pkt_ext_signup_ru .signup-btn-firefox .text {
+.pkt_ext_signup_ja .signup-btn-tryitnow .text,
+.pkt_ext_signup_ru .signup-btn-firefox .text,
+.pkt_ext_signup_ru .signup-btn-tryitnow .text {
     left: 15px;
 }
 .pkt_ext_signup_de .signup-btn-firefox .logo,
