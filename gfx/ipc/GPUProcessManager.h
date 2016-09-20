@@ -82,12 +82,11 @@ public:
     bool aUseExternalSurfaceSize,
     const gfx::IntSize& aSurfaceSize);
 
-  bool CreateContentCompositorBridge(base::ProcessId aOtherProcess,
-                                     ipc::Endpoint<PCompositorBridgeChild>* aOutEndpoint);
-  bool CreateContentImageBridge(base::ProcessId aOtherProcess,
-                                ipc::Endpoint<PImageBridgeChild>* aOutEndpoint);
-  bool CreateContentVRManager(base::ProcessId aOtherProcess,
-                              ipc::Endpoint<PVRManagerChild>* aOutEndpoint);
+  bool CreateContentBridges(
+    base::ProcessId aOtherProcess,
+    ipc::Endpoint<PCompositorBridgeChild>* aOutCompositor,
+    ipc::Endpoint<PImageBridgeChild>* aOutImageBridge,
+    ipc::Endpoint<PVRManagerChild>* aOutVRBridge);
 
   // This returns a reference to the APZCTreeManager to which
   // pan/zoom-related events can be sent.
@@ -126,6 +125,13 @@ public:
 private:
   // Called from our xpcom-shutdown observer.
   void OnXPCOMShutdown();
+
+  bool CreateContentCompositorBridge(base::ProcessId aOtherProcess,
+                                     ipc::Endpoint<PCompositorBridgeChild>* aOutEndpoint);
+  bool CreateContentImageBridge(base::ProcessId aOtherProcess,
+                                ipc::Endpoint<PImageBridgeChild>* aOutEndpoint);
+  bool CreateContentVRManager(base::ProcessId aOtherProcess,
+                              ipc::Endpoint<PVRManagerChild>* aOutEndpoint);
 
 private:
   GPUProcessManager();

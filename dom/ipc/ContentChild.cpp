@@ -1170,21 +1170,20 @@ ContentChild::AllocPGMPServiceChild(mozilla::ipc::Transport* aTransport,
 }
 
 bool
-ContentChild::RecvInitCompositor(Endpoint<PCompositorBridgeChild>&& aEndpoint)
+ContentChild::RecvInitRendering(Endpoint<PCompositorBridgeChild>&& aCompositor,
+                                Endpoint<PImageBridgeChild>&& aImageBridge,
+                                Endpoint<PVRManagerChild>&& aVRBridge)
 {
-  return CompositorBridgeChild::InitForContent(Move(aEndpoint));
-}
-
-bool
-ContentChild::RecvInitImageBridge(Endpoint<PImageBridgeChild>&& aEndpoint)
-{
-  return ImageBridgeChild::InitForContent(Move(aEndpoint));
-}
-
-bool
-ContentChild::RecvInitVRManager(Endpoint<PVRManagerChild>&& aEndpoint)
-{
-  return gfx::VRManagerChild::InitForContent(Move(aEndpoint));
+  if (!CompositorBridgeChild::InitForContent(Move(aCompositor))) {
+    return false;
+  }
+  if (!ImageBridgeChild::InitForContent(Move(aImageBridge))) {
+    return false;
+  }
+  if (!gfx::VRManagerChild::InitForContent(Move(aVRBridge))) {
+    return false;
+  }
+  return true;
 }
 
 PSharedBufferManagerChild*
