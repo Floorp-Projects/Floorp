@@ -458,6 +458,11 @@ var insertSyncBookmark = Task.async(function* (insertInfo) {
 
 // Inserts a synced livemark.
 var insertSyncLivemark = Task.async(function* (insertInfo) {
+  if (!insertInfo.feed) {
+    BookmarkSyncLog.debug(`insertSyncLivemark: ${
+      insertInfo.syncId} missing feed URL`);
+    return null;
+  }
   let livemarkInfo = syncBookmarkToPlacesBookmark(insertInfo);
   let parentId = yield PlacesUtils.promiseItemId(livemarkInfo.parentGuid);
   let parentIsLivemark = PlacesUtils.annotations.itemHasAnnotation(parentId,
@@ -806,8 +811,7 @@ function validateNewBookmark(info) {
     , loadInSidebar: { validIf: b => [ BookmarkSyncUtils.KINDS.BOOKMARK
                                      , BookmarkSyncUtils.KINDS.MICROSUMMARY
                                      , BookmarkSyncUtils.KINDS.QUERY ].includes(b.kind) }
-    , feed: { requiredIf: b => b.kind == BookmarkSyncUtils.KINDS.LIVEMARK
-            , validIf: b => b.kind == BookmarkSyncUtils.KINDS.LIVEMARK }
+    , feed: { validIf: b => b.kind == BookmarkSyncUtils.KINDS.LIVEMARK }
     , site: { validIf: b => b.kind == BookmarkSyncUtils.KINDS.LIVEMARK }
     });
 

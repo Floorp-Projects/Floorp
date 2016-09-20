@@ -89,6 +89,16 @@ PlacesItem.prototype = {
 
   __proto__: CryptoWrapper.prototype,
   _logName: "Sync.Record.PlacesItem",
+
+  // Converts the record to a Sync bookmark object that can be passed to
+  // `PlacesSyncUtils.bookmarks.{insert, update}`.
+  toSyncBookmark() {
+    return {
+      kind: this.type,
+      syncId: this.id,
+      parentSyncId: this.parentid,
+    };
+  },
 };
 
 Utils.deferGetSet(PlacesItem,
@@ -101,6 +111,17 @@ this.Bookmark = function Bookmark(collection, id, type) {
 Bookmark.prototype = {
   __proto__: PlacesItem.prototype,
   _logName: "Sync.Record.Bookmark",
+
+  toSyncBookmark() {
+    let info = PlacesItem.prototype.toSyncBookmark.call(this);
+    info.title = this.title;
+    info.url = this.bmkUri;
+    info.description = this.description;
+    info.loadInSidebar = this.loadInSidebar;
+    info.tags = this.tags;
+    info.keyword = this.keyword;
+    return info;
+  },
 };
 
 Utils.deferGetSet(Bookmark,
@@ -114,6 +135,13 @@ this.BookmarkQuery = function BookmarkQuery(collection, id) {
 BookmarkQuery.prototype = {
   __proto__: Bookmark.prototype,
   _logName: "Sync.Record.BookmarkQuery",
+
+  toSyncBookmark() {
+    let info = Bookmark.prototype.toSyncBookmark.call(this);
+    info.folder = this.folderName;
+    info.query = this.queryId;
+    return info;
+  },
 };
 
 Utils.deferGetSet(BookmarkQuery,
@@ -126,6 +154,13 @@ this.BookmarkFolder = function BookmarkFolder(collection, id, type) {
 BookmarkFolder.prototype = {
   __proto__: PlacesItem.prototype,
   _logName: "Sync.Record.Folder",
+
+  toSyncBookmark() {
+    let info = PlacesItem.prototype.toSyncBookmark.call(this);
+    info.description = this.description;
+    info.title = this.title;
+    return info;
+  },
 };
 
 Utils.deferGetSet(BookmarkFolder, "cleartext", ["description", "title",
@@ -137,6 +172,13 @@ this.Livemark = function Livemark(collection, id) {
 Livemark.prototype = {
   __proto__: BookmarkFolder.prototype,
   _logName: "Sync.Record.Livemark",
+
+  toSyncBookmark() {
+    let info = BookmarkFolder.prototype.toSyncBookmark.call(this);
+    info.feed = this.feedUri;
+    info.site = this.siteUri;
+    return info;
+  },
 };
 
 Utils.deferGetSet(Livemark, "cleartext", ["siteUri", "feedUri"]);
@@ -626,79 +668,14 @@ BookmarksStore.prototype = {
   },
 
   create: function BStore_create(record) {
-    switch (record.type) {
-    case "bookmark":
-    case "query":
-    case "microsummary": {
-      let info = {
-        kind: record.type,
-        url: record.bmkUri,
-        parentSyncId: record.parentid,
-        title: record.title,
-        syncId: record.id,
-        tags: record.tags,
-        keyword: record.keyword,
-        loadInSidebar: record.loadInSidebar,
-        query: record.queryId,
-        folder: record.folderName,
-        description: record.description,
-      };
-
-      let bmk = Async.promiseSpinningly(PlacesSyncUtils.bookmarks.insert(info));
-      this._log.debug("created bookmark " + bmk.syncId + " under " + bmk.parentSyncId
-                      + " as " + bmk.title + " " + bmk.url.href);
-
-    } break;
-    case "folder": {
-      let info = {
-        kind: PlacesSyncUtils.bookmarks.KINDS.FOLDER,
-        parentSyncId: record.parentid,
-        syncId: record.id,
-        title: record.title,
-        description: record.description,
-      };
-
-      let folder = Async.promiseSpinningly(PlacesSyncUtils.bookmarks.insert(info));
-      this._log.debug("created folder " + folder.syncId + " under " + folder.parentSyncId
-                      + " as " + folder.title);
-
-      // record.children will be dealt with in _orderChildren.
-    } break;
-    case "livemark":
-      if (!record.feedUri) {
-        this._log.debug("No feed URI: skipping livemark record " + record.id);
-        return;
-      }
-      let info = {
-        kind: PlacesSyncUtils.bookmarks.KINDS.LIVEMARK,
-        title: record.title,
-        parentSyncId: record.parentid,
-        feed: record.feedUri,
-        site: record.siteUri,
-        syncId: record.id,
-      };
-      let livemark = Async.promiseSpinningly(PlacesSyncUtils.bookmarks.insert(info));
-      if (livemark) {
-        this._log.debug("Created livemark " + livemark.syncId + " under " +
-                        livemark.parentSyncId + " as " + livemark.title +
-                        ", " + livemark.site.href + ", " +
-                        livemark.feed.href);
-      }
-      break;
-    case "separator": {
-      let separator = Async.promiseSpinningly(PlacesSyncUtils.bookmarks.insert({
-        kind: PlacesSyncUtils.bookmarks.KINDS.SEPARATOR,
-        parentSyncId: record.parentid,
-        syncId: record.id,
-      }));
-      this._log.debug("created separator " + separator.syncId + " under " + separator.parentSyncId);
-    } break;
-    case "item":
-      this._log.debug(" -> got a generic places item.. do nothing?");
-      return;
-    default:
-      this._log.error("_create: Unknown item type: " + record.type);
-      return;
+    let info = record.toSyncBookmark();
+    // This can throw if we're inserting an invalid or incomplete bookmark.
+    // That's fine; the exception will be caught by `applyIncomingBatch`
+    // without aborting further processing.
+    let item = Async.promiseSpinningly(PlacesSyncUtils.bookmarks.insert(info));
+    if (item) {
+      this._log.debug(`Created ${item.kind} ${item.syncId} under ${
+        item.parentSyncId}`, item);
     }
   },
 
@@ -715,23 +692,12 @@ BookmarksStore.prototype = {
   },
 
   update: function BStore_update(record) {
-    let info = {
-      parentSyncId: record.parentid,
-      syncId: record.id,
-      kind: record.type,
-      title: record.title,
-      url: record.bmkUri,
-      tags: record.tags,
-      keyword: record.keyword,
-      description: record.description,
-      loadInSidebar: record.loadInSidebar,
-      query: record.queryId,
-      site: record.siteUri,
-      feed: record.feedUri,
-    };
-
-    let bmk = Async.promiseSpinningly(PlacesSyncUtils.bookmarks.update(info));
-    this._log.debug("updated bookmark " + bmk.syncId + " under " + bmk.parentSyncId);
+    let info = record.toSyncBookmark();
+    let item = Async.promiseSpinningly(PlacesSyncUtils.bookmarks.update(info));
+    if (item) {
+      this._log.debug(`Updated ${item.kind} ${item.syncId} under ${
+        item.parentSyncId}`, item);
+    }
   },
 
   _orderChildren: function _orderChildren() {
