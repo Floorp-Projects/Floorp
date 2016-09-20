@@ -14,6 +14,44 @@ namespace mozilla {
 namespace java {
 
 template<class Impl>
+class ANRReporter::Natives : public mozilla::jni::NativeImpl<ANRReporter, Impl>
+{
+public:
+    static const JNINativeMethod methods[3];
+};
+
+template<class Impl>
+const JNINativeMethod ANRReporter::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<ANRReporter::GetNativeStack_t>(
+            mozilla::jni::NativeStub<ANRReporter::GetNativeStack_t, Impl>
+            ::template Wrap<&Impl::GetNativeStack>),
+
+    mozilla::jni::MakeNativeMethod<ANRReporter::ReleaseNativeStack_t>(
+            mozilla::jni::NativeStub<ANRReporter::ReleaseNativeStack_t, Impl>
+            ::template Wrap<&Impl::ReleaseNativeStack>),
+
+    mozilla::jni::MakeNativeMethod<ANRReporter::RequestNativeStack_t>(
+            mozilla::jni::NativeStub<ANRReporter::RequestNativeStack_t, Impl>
+            ::template Wrap<&Impl::RequestNativeStack>)
+};
+
+template<class Impl>
+class GeckoJavaSampler::Natives : public mozilla::jni::NativeImpl<GeckoJavaSampler, Impl>
+{
+public:
+    static const JNINativeMethod methods[1];
+};
+
+template<class Impl>
+const JNINativeMethod GeckoJavaSampler::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<GeckoJavaSampler::GetProfilerTime_t>(
+            mozilla::jni::NativeStub<GeckoJavaSampler::GetProfilerTime_t, Impl>
+            ::template Wrap<&Impl::GetProfilerTime>)
+};
+
+template<class Impl>
 class MemoryMonitor::Natives : public mozilla::jni::NativeImpl<MemoryMonitor, Impl>
 {
 public:
