@@ -359,6 +359,8 @@ function FakeRecord(constructor, r) {
   for (let x in r) {
     this[x] = r[x];
   }
+  // Borrow the constructor's conversion functions.
+  this.toSyncBookmark = constructor.prototype.toSyncBookmark;
 }
 
 // Bug 632287.
@@ -514,17 +516,14 @@ add_task(function* test_bookmark_tag_but_no_uri() {
     tags: null,
   });
 
-  let record = {
+  let record = new FakeRecord(BookmarkFolder, {
     parentid:    "toolbar",
     id:          Utils.makeGUID(),
     description: "",
     tags:        ["foo"],
     title:       "Taggy tag",
     type:        "folder"
-  };
-
-  // Because update() walks the cleartext.
-  record.cleartext = record;
+  });
 
   store.create(record);
   record.tags = ["bar"];
