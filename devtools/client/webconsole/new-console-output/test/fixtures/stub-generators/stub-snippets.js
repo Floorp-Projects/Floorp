@@ -48,6 +48,33 @@ const evaluationResultCommands = [
 
 let evaluationResult = new Map(evaluationResultCommands.map(cmd => [cmd, cmd]));
 
+// Network Event
+
+let networkEvent = new Map();
+
+networkEvent.set("GET request", {
+  keys: ["GET request"],
+  code: `
+let i = document.createElement("img");
+i.src = "inexistent.html";
+`});
+
+networkEvent.set("XHR GET request", {
+  keys: ["XHR GET request"],
+  code: `
+const xhr = new XMLHttpRequest();
+xhr.open("GET", "inexistent.html");
+xhr.send();
+`});
+
+networkEvent.set("XHR POST request", {
+  keys: ["XHR POST request"],
+  code: `
+const xhr = new XMLHttpRequest();
+xhr.open("POST", "inexistent.html");
+xhr.send();
+`});
+
 // Page Error
 
 let pageError = new Map();
@@ -66,5 +93,6 @@ pageError.set("Reference Error", `
 module.exports = {
   consoleApi,
   evaluationResult,
+  networkEvent,
   pageError,
 };

@@ -711,3 +711,7 @@ a.learn-more-link.webconsole-learn-more-link {
 .webconsole-filterbar-primary .devtools-plaininput {
   flex: 1 1 100%;
 }
+
+.message.network .method {
+  margin-inline-end: 5px;
+}

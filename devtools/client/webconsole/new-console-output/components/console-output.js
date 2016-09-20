@@ -20,8 +20,11 @@ const ConsoleOutput = createClass({
   propTypes: {
     jsterm: PropTypes.object.isRequired,
     messages: PropTypes.object.isRequired,
+    messagesUi: PropTypes.object.isRequired,
     sourceMapService: PropTypes.object,
     onViewSourceInDebugger: PropTypes.func.isRequired,
+    openNetworkPanel: PropTypes.func.isRequired,
+    openLink: PropTypes.func.isRequired,
   },
 
   displayName: "ConsoleOutput",
@@ -46,10 +49,12 @@ const ConsoleOutput = createClass({
       messages,
       messagesUi,
       sourceMapService,
-      onViewSourceInDebugger
+      onViewSourceInDebugger,
+      openNetworkPanel,
+      openLink,
     } = this.props;
 
-    let messageNodes = messages.map(function (message) {
+    let messageNodes = messages.map((message) => {
       return (
         MessageContainer({
           dispatch,
@@ -57,7 +62,9 @@ const ConsoleOutput = createClass({
           key: message.id,
           sourceMapService,
           onViewSourceInDebugger,
-          open: messagesUi.includes(message.id)
+          openNetworkPanel,
+          openLink,
+          open: messagesUi.includes(message.id),
         })
       );
     });
@@ -77,7 +84,7 @@ function isScrolledToBottom(outputNode, scrollNode) {
 function mapStateToProps(state) {
   return {
     messages: getAllMessages(state),
-    messagesUi: getAllMessagesUiById(state)
+    messagesUi: getAllMessagesUiById(state),
   };
 }
 
