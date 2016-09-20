@@ -18,19 +18,22 @@
 <?xml-stylesheet href="resource://devtools/client/inspector/components/inspector-tab-panel.css" type="text/css"?>
 <?xml-stylesheet href="resource://devtools/client/shared/components/splitter/split-box.css" type="text/css"?>
 
-<!DOCTYPE window [
+<!DOCTYPE html [
   <!ENTITY % inspectorDTD SYSTEM "chrome://devtools/locale/inspector.dtd"> %inspectorDTD;
   <!ENTITY % styleinspectorDTD SYSTEM "chrome://devtools/locale/styleinspector.dtd"> %styleinspectorDTD;
   <!ENTITY % fontinspectorDTD SYSTEM "chrome://devtools/locale/font-inspector.dtd"> %fontinspectorDTD;
   <!ENTITY % layoutviewDTD SYSTEM "chrome://devtools/locale/layoutview.dtd"> %layoutviewDTD;
 ]>
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns:html="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:html="http://www.w3.org/1999/xhtml">
 
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
   <script type="application/javascript;version=1.8"
-          src="chrome://devtools/content/shared/theme-switching.js"/>
-
+          src="chrome://devtools/content/shared/theme-switching.js"></script>
+</head>
+<body class="theme-body devtools-monospace" role="application">
   <html:div class="inspector-responsive-container theme-body inspector">
 
     <!-- Main Panel Content -->
@@ -226,4 +229,5 @@
     </html:div>
 
   </html:div>
-</window>
+</body>
+</html>

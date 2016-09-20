@@ -191,6 +191,10 @@ window {
 
 /* Markup Box */
 
+iframe {
+  border: 0;
+}
+
 #markup-box {
   width: 100%;
   flex: 1 1 auto;
