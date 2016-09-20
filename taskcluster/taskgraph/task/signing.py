@@ -19,34 +19,37 @@ INDEX_URL = 'https://index.taskcluster.net/v1/task/{}'
 
 class SigningTask(base.Task):
 
-    def __init__(self, kind, name, task, attributes):
-        self.unsigned_artifact_label = task['unsigned-task']['label']
-        super(SigningTask, self).__init__(kind, name, task=task['task'],
-                                          attributes=attributes)
+    def __init__(self, *args, **kwargs):
+        super(SigningTask, self).__init__(*args, **kwargs)
 
     @classmethod
     def load_tasks(cls, kind, path, config, params, loaded_tasks):
-        root = os.path.abspath(path)
+        root = os.path.abspath(os.path.join(path, config['signing_path']))
+
+        # get each nightly-fennec and add its name to this task
+        fennec_tasks = [t for t in loaded_tasks if t.attributes.get('kind') == 'nightly-fennec']
 
         tasks = []
-        for filename in config.get('jobs-from', []):
+        for fennec_task in fennec_tasks:
             templates = Templates(root)
-            jobs = templates.load(filename, {})
+            task = templates.load('signing.yml', {})
 
-            for name, job in jobs.iteritems():
-                for artifact in job['unsigned-task']['artifacts']:
-                    url = ARTIFACT_URL.format('<{}>'.format('unsigned-artifact'), artifact)
-                    job['task']['payload']['unsignedArtifacts'].append({
-                        'task-reference': url
-                    })
-                attributes = job.setdefault('attributes', {})
-                attributes.update({'kind': 'signing'})
-                tasks.append(cls(kind, name, job, attributes=attributes))
+            artifacts = ['public/build/target.apk',
+                         'public/build/en-US/target.apk']
+            for artifact in artifacts:
+                url = ARTIFACT_URL.format('<build-nightly-fennec>', artifact)
+                task['task']['payload']['unsignedArtifacts'].append({
+                    'task-reference': url
+                })
+
+            attributes = {'kind': 'signing'}
+            tasks.append(cls(kind, 'signing-nightly-fennec', task=task['task'],
+                             attributes=attributes))
 
         return tasks
 
     def get_dependencies(self, taskgraph):
-        return [(self.unsigned_artifact_label, 'unsigned-artifact')]
+        return [('build-nightly-fennec', 'build-nightly-fennec')]
 
     def optimize(self, params):
         return False, None

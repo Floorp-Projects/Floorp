@@ -1,0 +1,18 @@
+task:
+  provisionerId: "scriptworker-prov-v1"
+  workerType: "signing-linux-v1"
+  scopes:
+    - "project:releng:signing:cert:dep-signing"
+    - "project:releng:signing:format:jar"
+  created:
+    relative-datestamp: "0 seconds"
+  deadline:
+    relative-datestamp: "24 hours"
+  payload:
+    unsignedArtifacts: []
+    maxRunTime: 600
+  metadata:
+    name: "Signing Scriptworker Task"
+    description: "Testing the signing scriptworker"
+    owner: "amiyaguchi@mozilla.com"
+    source: "https://tools.taskcluster.net/task-creator/"

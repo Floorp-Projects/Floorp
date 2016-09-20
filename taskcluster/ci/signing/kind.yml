@@ -3,9 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 implementation: 'taskgraph.task.signing:SigningTask'
-
-jobs-from:
-  - android-signing.yml
-
+signing_path: '.'
 kind-dependencies:
-  - build
+  - nightly-fennec
