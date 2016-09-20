@@ -36,6 +36,12 @@ const MessageContainer = createClass({
     open: PropTypes.bool.isRequired,
   },
 
+  getDefaultProps: function () {
+    return {
+      open: false
+    };
+  },
+
   shouldComponentUpdate(nextProps, nextState) {
     return this.props.message.repeat !== nextProps.message.repeat
       || this.props.open !== nextProps.open;

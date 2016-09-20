@@ -30,6 +30,10 @@ ConsoleApiCall.propTypes = {
   open: PropTypes.bool.isRequired,
 };
 
+ConsoleApiCall.defaultProps = {
+  open: false
+};
+
 function ConsoleApiCall(props) {
   const { dispatch, message, sourceMapService, onViewSourceInDebugger, open } = props;
   const { source, level, stacktrace, type, frame, parameters } = message;
