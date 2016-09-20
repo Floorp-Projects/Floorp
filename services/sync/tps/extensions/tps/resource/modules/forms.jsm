@@ -13,74 +13,45 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://tps/logger.jsm");
 
-var formService = Cc["@mozilla.org/satchel/form-history;1"]
-                  .getService(Ci.nsIFormHistory2);
+Cu.import("resource://gre/modules/FormHistory.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
 
 /**
  * FormDB
  *
- * Helper object containing methods to interact with the moz_formhistory
- * SQLite table.
+ * Helper object containing methods to interact with the FormHistory module.
  */
 var FormDB = {
-  /**
-   * makeGUID
-   *
-   * Generates a brand-new globally unique identifier (GUID).  Borrowed
-   * from Weave's utils.js.
-   *
-   * @return the new guid
-   */
-  makeGUID: function makeGUID() {
-    // 70 characters that are not-escaped URL-friendly
-    const code =
-      "!()*-.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~";
-
-    let guid = "";
-    let num = 0;
-    let val;
-
-    // Generate ten 70-value characters for a 70^10 (~61.29-bit) GUID
-    for (let i = 0; i < 10; i++) {
-      // Refresh the number source after using it a few times
-      if (i == 0 || i == 5)
-        num = Math.random();
-
-      // Figure out which code to use for the next GUID character
-      num *= 70;
-      val = Math.floor(num);
-      guid += code[val];
-      num -= val;
-    }
-
-    return guid;
+  _update(data) {
+    return new Promise((resolve, reject) => {
+      let handlers = {
+        handleError(error) {
+          Logger.logError("Error occurred updating form history: " + Log.exceptionStr(error));
+          reject(error);
+        },
+        handleCompletion(reason) {
+          resolve();
+        }
+      }
+      FormHistory.update(data, handlers);
+    });
   },
 
   /**
    * insertValue
    *
-   * Inserts the specified value for the specified fieldname into the
-   * moz_formhistory table.
+   * Adds the specified value for the specified fieldname into form history.
    *
    * @param fieldname The form fieldname to insert
    * @param value The form value to insert
    * @param us The time, in microseconds, to use for the lastUsed
    *        and firstUsed columns
-   * @return nothing
+   * @return Promise<undefined>
    */
-  insertValue: function (fieldname, value, us) {
-    let query = this.createStatement(
-      "INSERT INTO moz_formhistory " +
-      "(fieldname, value, timesUsed, firstUsed, lastUsed, guid) VALUES " +
-      "(:fieldname, :value, :timesUsed, :firstUsed, :lastUsed, :guid)");
-    query.params.fieldname = fieldname;
-    query.params.value = value;
-    query.params.timesUsed = 1;
-    query.params.firstUsed = us;
-    query.params.lastUsed = us;
-    query.params.guid = this.makeGUID();
-    query.execute();
-    query.reset();
+  insertValue(fieldname, value, us) {
+    let data = { op: "add", fieldname, value, timesUsed: 1,
+                 firstUsed: us, lastUsed: us }
+    return this._update(data);
   },
 
   /**
@@ -90,15 +61,10 @@ var FormDB = {
    *
    * @param id The id of the row to update
    * @param newvalue The new value to set
-   * @return nothing
+   * @return Promise<undefined>
    */
-  updateValue: function (id, newvalue) {
-    let query = this.createStatement(
-      "UPDATE moz_formhistory SET value = :value WHERE id = :id");
-    query.params.id = id;
-    query.params.value = newvalue;
-    query.execute();
-    query.reset();
+  updateValue(id, newvalue) {
+    return this._update({ op: "update", guid: id, value: newvalue });
   },
 
   /**
@@ -109,52 +75,44 @@ var FormDB = {
    *
    * @param fieldname The fieldname of the row to query
    * @param value The value of the row to query
-   * @return null if no row is found with the specified fieldname and value,
-   *         or an object containing the row's id, lastUsed, and firstUsed
-   *         values
+   * @return Promise<null if no row is found with the specified fieldname and value,
+   *         or an object containing the row's guid, lastUsed, and firstUsed
+   *         values>
    */
-  getDataForValue: function (fieldname, value) {
-    let query = this.createStatement(
-      "SELECT id, lastUsed, firstUsed FROM moz_formhistory WHERE " +
-      "fieldname = :fieldname AND value = :value");
-    query.params.fieldname = fieldname;
-    query.params.value = value;
-    if (!query.executeStep())
-      return null;
-
-    return {
-      id: query.row.id,
-      lastUsed: query.row.lastUsed,
-      firstUsed: query.row.firstUsed
-    };
+  getDataForValue(fieldname, value) {
+    return new Promise((resolve, reject) => {
+      let result = null;
+      let handlers = {
+        handleResult(oneResult) {
+          if (result != null) {
+            reject("more than 1 result for this query");
+            return;
+          }
+          result = oneResult;
+        },
+        handleError(error) {
+          Logger.logError("Error occurred updating form history: " + Log.exceptionStr(error));
+          reject(error);
+        },
+        handleCompletion(reason) {
+          resolve(result);
+        }
+      }
+      FormHistory.search(["guid", "lastUsed", "firstUsed"], { fieldname }, handlers);
+    });
   },
 
   /**
-   * createStatement
+   * remove
    *
-   * Creates a statement from a SQL string.  This function is borrowed
-   * from Weave's forms.js.
+   * Removes the specified GUID from the database.
    *
-   * @param query The SQL query string
-   * @return the mozIStorageStatement created from the specified SQL
+   * @param guid The guid of the item to delete
+   * @return Promise<>
    */
-  createStatement: function createStatement(query) {
-    try {
-      // Just return the statement right away if it's okay
-      return formService.DBConnection.createStatement(query);
-    }
-    catch(ex) {
-      // Assume guid column must not exist yet, so add it with an index
-      formService.DBConnection.executeSimpleSQL(
-        "ALTER TABLE moz_formhistory ADD COLUMN guid TEXT");
-      formService.DBConnection.executeSimpleSQL(
-        "CREATE INDEX IF NOT EXISTS moz_formhistory_guid_index " +
-        "ON moz_formhistory (guid)");
-    }
-
-    // Try creating the query now that the column exists
-    return formService.DBConnection.createStatement(query);
-  }
+   remove(guid) {
+    return this._update({ op: "remove", guid });
+  },
 };
 
 /**
@@ -204,18 +162,18 @@ FormData.prototype = {
     Logger.AssertTrue(this.fieldname != null && this.value != null,
       "Must specify both fieldname and value");
 
-    let formdata = FormDB.getDataForValue(this.fieldname, this.value);
-    if (!formdata) {
-      // this item doesn't exist yet in the db, so we need to insert it
-      FormDB.insertValue(this.fieldname, this.value,
-                         this.hours_to_us(this.date));
-    }
-    else {
-      /* Right now, we ignore this case.  If bug 552531 is ever fixed,
-         we might need to add code here to update the firstUsed or
-         lastUsed fields, as appropriate.
-       */
-    }
+    return FormDB.getDataForValue(this.fieldname, this.value).then(formdata => {
+      if (!formdata) {
+        // this item doesn't exist yet in the db, so we need to insert it
+        return FormDB.insertValue(this.fieldname, this.value,
+                                  this.hours_to_us(this.date));
+      } else {
+        /* Right now, we ignore this case.  If bug 552531 is ever fixed,
+           we might need to add code here to update the firstUsed or
+           lastUsed fields, as appropriate.
+         */
+      }
+    });
   },
 
   /**
@@ -227,21 +185,22 @@ FormData.prototype = {
    * @return true if this entry exists in the database, otherwise false
    */
   Find: function() {
-    let formdata = FormDB.getDataForValue(this.fieldname, this.value);
-    let status = formdata != null;
-    if (status) {
-      /*
-      //form history dates currently not synced!  bug 552531
-      let us = this.hours_to_us(this.date);
-      status = Logger.AssertTrue(
-        us >= formdata.firstUsed && us <= formdata.lastUsed,
-        "No match for with that date value");
+    return FormDB.getDataForValue(this.fieldname, this.value).then(formdata => {
+      let status = formdata != null;
+      if (status) {
+        /*
+        //form history dates currently not synced!  bug 552531
+        let us = this.hours_to_us(this.date);
+        status = Logger.AssertTrue(
+          us >= formdata.firstUsed && us <= formdata.lastUsed,
+          "No match for with that date value");
 
-      if (status)
-      */
-        this.id = formdata.id;
-    }
-    return status;
+        if (status)
+        */
+          this.id = formdata.guid;
+      }
+      return status;
+    });
   },
 
   /**
@@ -255,7 +214,6 @@ FormData.prototype = {
   Remove: function() {
     /* Right now Weave doesn't handle this correctly, see bug 568363.
      */
-    formService.removeEntry(this.fieldname, this.value);
-    return true;
+    return FormDB.remove(this.id);
   },
 };
