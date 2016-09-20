@@ -2,27 +2,22 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const { stubPreparedMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
+// Test utils.
+const expect = require("expect");
+const { render } = require("enzyme");
 
+// Components under test.
 const { PageError } = require("devtools/client/webconsole/new-console-output/components/message-types/page-error");
 
-const expect = require("expect");
-
-const {
-  renderComponent
-} = require("devtools/client/webconsole/new-console-output/test/helpers");
+// Test fakes.
+const { stubPreparedMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
 
 describe("PageError component:", () => {
   it("renders a page error", () => {
     const message = stubPreparedMessages.get("ReferenceError: asdf is not defined");
-    const rendered = renderComponent(PageError, {message});
+    const wrapper = render(PageError({ message }));
 
-    const messageBody = getMessageBody(rendered);
-    expect(messageBody.textContent).toBe("ReferenceError: asdf is not defined");
+    expect(wrapper.find(".message-body").text())
+      .toBe("ReferenceError: asdf is not defined");
   });
 });
-
-function getMessageBody(rendered) {
-  const queryPath = "div.message span.message-body-wrapper span.message-body";
-  return rendered.querySelector(queryPath);
-}
