@@ -1243,7 +1243,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               nsHtml5HtmlAttributes* formAttrs = new nsHtml5HtmlAttributes(0);
               int32_t actionIndex = attributes->getIndex(nsHtml5AttributeName::ATTR_ACTION);
               if (actionIndex > -1) {
-                formAttrs->addAttribute(nsHtml5AttributeName::ATTR_ACTION, attributes->getValueNoBoundsCheck(actionIndex));
+                formAttrs->addAttribute(nsHtml5AttributeName::ATTR_ACTION, attributes->getValueNoBoundsCheck(actionIndex), attributes->getLineNoBoundsCheck(actionIndex));
               }
               appendToCurrentNodeAndPushFormElementMayFoster(formAttrs);
               appendVoidElementToCurrentMayFoster(nsHtml5ElementName::ELT_HR, nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES);
@@ -1256,13 +1256,13 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                 appendIsindexPrompt(stack[currentPtr]->node);
               }
               nsHtml5HtmlAttributes* inputAttributes = new nsHtml5HtmlAttributes(0);
-              inputAttributes->addAttribute(nsHtml5AttributeName::ATTR_NAME, nsHtml5Portability::newStringFromLiteral("isindex"));
+              inputAttributes->addAttribute(nsHtml5AttributeName::ATTR_NAME, nsHtml5Portability::newStringFromLiteral("isindex"), tokenizer->getLineNumber());
               for (int32_t i = 0; i < attributes->getLength(); i++) {
                 nsHtml5AttributeName* attributeQName = attributes->getAttributeNameNoBoundsCheck(i);
                 if (nsHtml5AttributeName::ATTR_NAME == attributeQName || nsHtml5AttributeName::ATTR_PROMPT == attributeQName) {
                   attributes->releaseValue(i);
                 } else if (nsHtml5AttributeName::ATTR_ACTION != attributeQName) {
-                  inputAttributes->addAttribute(attributeQName, attributes->getValueNoBoundsCheck(i));
+                  inputAttributes->addAttribute(attributeQName, attributes->getValueNoBoundsCheck(i), attributes->getLineNoBoundsCheck(i));
                 }
               }
               attributes->clearWithoutReleasingContents();
