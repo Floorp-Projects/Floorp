@@ -58,7 +58,10 @@ class MachCommands(MachCommandBase):
             print("build and try this again.")
             sys.exit(1)
 
-        cmd = shellutil.split(cpp)
+        if type(cpp) is list:
+            cmd = cpp
+        else:
+            cmd = shellutil.split(cpp)
         cmd += shellutil.split(self.substs['ACDEFINES'])
         cmd.append(headerPath)
 
@@ -82,14 +85,24 @@ class MachCommands(MachCommandBase):
         # Get the paths
         script_path = resolve_path(self.topsrcdir,
             'devtools/shared/css/generated/generate-properties-db.js')
+        gre_path = resolve_path(self.topobjdir, 'dist/bin')
         browser_path = resolve_path(self.topobjdir, 'dist/bin/browser')
         xpcshell_path = build.get_binary_path(what='xpcshell')
         print(browser_path)
 
+        sub_env = dict(os.environ)
+        if sys.platform.startswith('linux'):
+            sub_env["LD_LIBRARY_PATH"] = gre_path
+
         # Run the xcpshell script, and set the appdir flag to the browser path so that
         # we have the proper dependencies for requiring the loader.
-        contents = subprocess.check_output([xpcshell_path, '-a', browser_path,
-                                            script_path])
+        contents = subprocess.check_output([xpcshell_path, '-g', gre_path,
+                                            '-a', browser_path, script_path],
+                                           env = sub_env)
+        # Extract just the first line of output, since a debug-build
+        # xpcshell might emit extra output that we don't want.
+        contents = contents.split('\n')[0]
+
         return json.loads(contents)
 
     def output_template(self, substitutions):
