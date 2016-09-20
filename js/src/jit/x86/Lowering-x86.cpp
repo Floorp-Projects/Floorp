@@ -209,7 +209,8 @@ LIRGeneratorX86::lowerForALUInt64(LInstructionHelper<INT64_PIECES, 2 * INT64_PIE
                                   MDefinition* mir, MDefinition* lhs, MDefinition* rhs)
 {
     ins->setInt64Operand(0, useInt64RegisterAtStart(lhs));
-    ins->setInt64Operand(INT64_PIECES, useInt64OrConstant(rhs));
+    ins->setInt64Operand(INT64_PIECES,
+                         lhs != rhs ? useInt64OrConstant(rhs) : useInt64OrConstantAtStart(rhs));
     defineInt64ReuseInput(ins, mir, 0);
 }
 
