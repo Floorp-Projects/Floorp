@@ -23,6 +23,12 @@ describe("PageError component:", () => {
     // The stacktrace should be closed by default.
     const frameLinks = wrapper.find(`.stack-trace`);
     expect(frameLinks.length).toBe(0);
+
+    // There should be the location
+    const locationLink = wrapper.find(`.message-location`);
+    expect(locationLink.length).toBe(1);
+    // @TODO Will likely change. See https://github.com/devtools-html/gecko-dev/issues/285
+    expect(locationLink.text()).toBe("http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generato");
   });
 
   it("has a stacktrace which can be openned", () => {
