@@ -25,6 +25,8 @@ android {
             manifest.srcFile 'AndroidManifest.xml'
             java {
                 srcDir '.'
+                srcDir "${topsrcdir}/mobile/android/geckoview/src/thirdparty/java"
+
                 if (!mozconfig.substs.MOZ_INSTALL_TRACKING) {
                     exclude 'com/adjust/**'
                 }
