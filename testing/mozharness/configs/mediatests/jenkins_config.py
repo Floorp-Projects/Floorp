@@ -13,10 +13,6 @@ external_tools_path = os.path.join(
 )
 
 config = {
-    'env': {
-        'PIP_TRUSTED_HOST': 'pypi.pub.build.mozilla.org',
-    },
-
     # PIP
     'find_links': ['http://pypi.pub.build.mozilla.org/pub'],
     'pip_index': False,
