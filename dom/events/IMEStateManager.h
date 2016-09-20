@@ -267,7 +267,7 @@ protected:
   static nsIContent* GetRootContent(nsPresContext* aPresContext);
 
   static StaticRefPtr<nsIContent> sContent;
-  static nsPresContext* sPresContext;
+  static StaticRefPtr<nsPresContext> sPresContext;
   static nsIWidget* sFocusedIMEWidget;
   // sActiveInputContextWidget is the last widget whose SetInputContext() is
   // called.
