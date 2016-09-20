@@ -313,7 +313,7 @@ ifdef MOZ_CRASHREPORTER
 	  $(foreach dir,$(SYM_STORE_SOURCE_DIRS),-s $(dir))               \
 	  $(DUMP_SYMS_BIN)                                                \
 	  $(DIST)/crashreporter-symbols                                   \
-	  $(MAKE_SYM_STORE_PATH) | grep -iv test >                        \
+	  $(MAKE_SYM_STORE_PATH) >                                        \
 	  $(DIST)/crashreporter-symbols/$(SYMBOL_INDEX_NAME)
 	echo packing symbols
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
