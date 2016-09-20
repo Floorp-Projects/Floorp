@@ -120,6 +120,26 @@ stubPreparedMessages.set("console.log(null)", new ConsoleMessage({
 	}
 }));
 
+stubPreparedMessages.set("console.log('鼬')", new ConsoleMessage({
+	"id": "1",
+	"allowRepeating": true,
+	"source": "console-api",
+	"type": "log",
+	"level": "log",
+	"messageText": null,
+	"parameters": [
+		"鼬"
+	],
+	"repeat": 1,
+	"repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"console-api\",\"type\":\"log\",\"level\":\"log\",\"messageText\":null,\"parameters\":[\"鼬\"],\"repeatId\":null,\"stacktrace\":null,\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js\",\"line\":1,\"column\":27}}",
+	"stacktrace": null,
+	"frame": {
+		"source": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js",
+		"line": 1,
+		"column": 27
+	}
+}));
+
 stubPreparedMessages.set("console.clear()", new ConsoleMessage({
 	"id": "1",
 	"allowRepeating": true,
@@ -446,8 +466,39 @@ stubPackets.set("console.log(null)", {
 	}
 });
 
-stubPackets.set("console.clear()", {
+stubPackets.set("console.log('鼬')", {
 	"from": "server1.conn5.child1/consoleActor2",
+	"type": "consoleAPICall",
+	"message": {
+		"arguments": [
+			"鼬"
+		],
+		"columnNumber": 27,
+		"counter": null,
+		"filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js",
+		"functionName": "triggerPacket",
+		"groupName": "",
+		"level": "log",
+		"lineNumber": 1,
+		"originAttributes": {
+			"addonId": "",
+			"appId": 0,
+			"inIsolatedMozBrowser": false,
+			"privateBrowsingId": 0,
+			"signedPkg": "",
+			"userContextId": 0
+		},
+		"private": false,
+		"styles": [],
+		"timeStamp": 1473786764817,
+		"timer": null,
+		"workerType": "none",
+		"category": "webdev"
+	}
+});
+
+stubPackets.set("console.clear()", {
+	"from": "server1.conn6.child1/consoleActor2",
 	"type": "consoleAPICall",
 	"message": {
 		"arguments": [],

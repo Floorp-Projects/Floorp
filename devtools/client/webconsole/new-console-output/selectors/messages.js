@@ -42,14 +42,29 @@ function search(messages, text = "") {
   }
 
   return messages.filter(function (message) {
-    // @TODO: message.parameters can be a grip, see how we can handle that
-    if (!Array.isArray(message.parameters)) {
+    // Evaluation Results and Console Commands are never filtered.
+    if ([ MESSAGE_TYPE.RESULT, MESSAGE_TYPE.COMMAND ].includes(message.type)) {
       return true;
     }
-    return message
-      .parameters.join("")
-      .toLocaleLowerCase()
-      .includes(text.toLocaleLowerCase());
+
+    return (
+      // @TODO currently we return true for any object grip. We should find a way to
+      // search object grips.
+      message.parameters !== null && !Array.isArray(message.parameters)
+      // Look for a match in location.
+      // @TODO Change this to Object.values once it's supported in Node's version of V8
+      || Object.keys(message.frame)
+        .map(key => message.frame[key])
+        .join(":")
+        .includes(text)
+      // Look for a match in messageText.
+      || (message.messageText !== null
+            && message.messageText.toLocaleLowerCase().includes(text.toLocaleLowerCase()))
+      // Look for a match in parameters. Currently only checks value grips.
+      || (message.parameters !== null
+          && message.parameters.join("").toLocaleLowerCase()
+              .includes(text.toLocaleLowerCase()))
+    );
   });
 }
 
