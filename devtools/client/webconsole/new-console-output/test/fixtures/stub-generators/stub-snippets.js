@@ -11,6 +11,7 @@ const consoleApiCommands = [
   "console.warn('danger, will robinson!')",
   "console.log(NaN)",
   "console.log(null)",
+  "console.log('\u9f2c')",
   "console.clear()",
   "console.count('bar')",
   "console.assert(false, {message: 'foobar'})"
