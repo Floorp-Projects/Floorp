@@ -63,6 +63,8 @@ public final class HtmlAttributes implements Attributes {
 
     private @Auto String[] values; // XXX perhaps make this @NoLength?
 
+    // CPPONLY: private @Auto int[] lines; // XXX perhaps make this @NoLength?
+
     // [NOCPP[
 
     private String idValue;
@@ -80,10 +82,12 @@ public final class HtmlAttributes implements Attributes {
         this.length = 0;
         /*
          * The length of 5 covers covers 98.3% of elements
-         * according to Hixie
+         * according to Hixie, but lets round to the next power of two for
+         * jemalloc.
          */
-        this.names = new AttributeName[5];
-        this.values = new String[5];
+        this.names = new AttributeName[8];
+        this.values = new String[8];
+        // CPPONLY: this.lines = new int[8];
 
         // [NOCPP[
 
@@ -198,6 +202,16 @@ public final class HtmlAttributes implements Attributes {
         // CPPONLY: assert index < length && index >= 0: "Index out of bounds";
         return names[index];
     }
+
+    // CPPONLY: /**
+    // CPPONLY: * Obtains a line number without bounds check.
+    // CPPONLY: * @param index a valid attribute index
+    // CPPONLY: * @return the line number at index or -1 if unknown
+    // CPPONLY: */
+    // CPPONLY: public int getLineNoBoundsCheck(int index) {
+    // CPPONLY: assert index < length && index >= 0: "Index out of bounds";
+    // CPPONLY: return lines[index];
+    // CPPONLY: }
 
     // [NOCPP[
     
@@ -393,7 +407,8 @@ public final class HtmlAttributes implements Attributes {
     void addAttribute(AttributeName name, String value
             // [NOCPP[
             , XmlViolationPolicy xmlnsPolicy
-    // ]NOCPP]        
+            // ]NOCPP]
+            // CPPONLY: , int line
     ) throws SAXException {
         // [NOCPP[
         if (name == AttributeName.ID) {
@@ -436,9 +451,13 @@ public final class HtmlAttributes implements Attributes {
             String[] newValues = new String[newLen];
             System.arraycopy(values, 0, newValues, 0, values.length);
             values = newValues;
+            // CPPONLY: int[] newLines = new int[newLen];
+            // CPPONLY: System.arraycopy(lines, 0, newLines, 0, lines.length);
+            // CPPONLY: lines = newLines;
         }
         names[length] = name;
         values[length] = value;
+        // CPPONLY: lines[length] = line;
         length++;
     }
 
@@ -520,6 +539,7 @@ public final class HtmlAttributes implements Attributes {
                     // [NOCPP[
                     , XmlViolationPolicy.ALLOW
                     // ]NOCPP]
+                    // CPPONLY: , lines[i]
             );
         }
         // [NOCPP[

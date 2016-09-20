@@ -199,6 +199,7 @@ nsHtml5Tokenizer::endTagExpectationToArray()
 void 
 nsHtml5Tokenizer::setLineNumber(int32_t line)
 {
+  this->attributeLine = line;
   this->line = line;
 }
 
@@ -335,7 +336,7 @@ nsHtml5Tokenizer::addAttributeWithoutValue()
 {
 
   if (attributeName) {
-    attributes->addAttribute(attributeName, nsHtml5Portability::newEmptyString());
+    attributes->addAttribute(attributeName, nsHtml5Portability::newEmptyString(), attributeLine);
     attributeName = nullptr;
   }
 }
@@ -348,7 +349,7 @@ nsHtml5Tokenizer::addAttributeWithValue()
     if (mViewSource) {
       mViewSource->MaybeLinkifyAttributeValue(attributeName, val);
     }
-    attributes->addAttribute(attributeName, val);
+    attributes->addAttribute(attributeName, val, attributeLine);
     attributeName = nullptr;
   }
 }
@@ -620,6 +621,7 @@ nsHtml5Tokenizer::stateLoop(int32_t state, char16_t c, int32_t pos, char16_t* bu
               if (c >= 'A' && c <= 'Z') {
                 c += 0x20;
               }
+              attributeLine = line;
               clearStrBufAndAppend(c);
               state = P::transition(mViewSource, NS_HTML5TOKENIZER_ATTRIBUTE_NAME, reconsume, pos);
               NS_HTML5_BREAK(beforeattributenameloop);
@@ -712,11 +714,13 @@ nsHtml5Tokenizer::stateLoop(int32_t state, char16_t c, int32_t pos, char16_t* bu
               continue;
             }
             case '\"': {
+              attributeLine = line;
               clearStrBuf();
               state = P::transition(mViewSource, NS_HTML5TOKENIZER_ATTRIBUTE_VALUE_DOUBLE_QUOTED, reconsume, pos);
               NS_HTML5_BREAK(beforeattributevalueloop);
             }
             case '&': {
+              attributeLine = line;
               clearStrBuf();
               reconsume = true;
               state = P::transition(mViewSource, NS_HTML5TOKENIZER_ATTRIBUTE_VALUE_UNQUOTED, reconsume, pos);
@@ -724,6 +728,7 @@ nsHtml5Tokenizer::stateLoop(int32_t state, char16_t c, int32_t pos, char16_t* bu
               NS_HTML5_CONTINUE(stateloop);
             }
             case '\'': {
+              attributeLine = line;
               clearStrBuf();
               state = P::transition(mViewSource, NS_HTML5TOKENIZER_ATTRIBUTE_VALUE_SINGLE_QUOTED, reconsume, pos);
               NS_HTML5_CONTINUE(stateloop);
@@ -750,6 +755,7 @@ nsHtml5Tokenizer::stateLoop(int32_t state, char16_t c, int32_t pos, char16_t* bu
               }
             }
             default: {
+              attributeLine = line;
               clearStrBufAndAppend(c);
               state = P::transition(mViewSource, NS_HTML5TOKENIZER_ATTRIBUTE_VALUE_UNQUOTED, reconsume, pos);
 
@@ -4043,6 +4049,7 @@ nsHtml5Tokenizer::initializeWithoutStarting()
   confident = false;
   strBuf = nullptr;
   line = 1;
+  attributeLine = 1;
   resetToDataState();
 }
 
