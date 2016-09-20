@@ -135,14 +135,17 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin):
             self.fatal("Could not create blobber upload directory")
             # Exit
 
-        cmd += ["--log-raw=-",
-                "--log-raw=%s" % os.path.join(dirs["abs_blob_upload_dir"],
-                                              "wpt_raw.log"),
-                "--log-errorsummary=%s" % os.path.join(dirs["abs_blob_upload_dir"],
-                                                       "wpt_errorsummary.log"),
-                "--binary=%s" % self.binary_path,
-                "--symbols-path=%s" % self.query_symbols_url(),
-                "--stackwalk-binary=%s" % self.query_minidump_stackwalk()]
+        blob_upload_dir = dirs['abs_blob_upload_dir']
+
+        cmd.extend([
+            '--log-raw=-',
+            '--log-raw=%s' % os.path.join(blob_upload_dir, 'wpt_raw.log'),
+            '--log-errorsummary=%s' % os.path.join(blob_upload_dir,
+                                                   'wpt_errorsummary.log'),
+            '--binary=%s' % self.binary_path,
+            '--symbols-path=%s' % self.query_symbols_url(),
+            '--stackwalk-binary=%s' % self.query_minidump_stackwalk(),
+        ])
 
         for test_type in c.get("test_type", []):
             cmd.append("--test-type=%s" % test_type)
