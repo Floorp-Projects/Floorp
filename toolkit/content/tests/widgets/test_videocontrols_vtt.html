@@ -1,0 +1,109 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Video controls test - VTT</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content">
+  <video id="video" controls preload="auto"></video>
+</div>
+
+<pre id="test">
+<script clas="testbody" type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  const domUtils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"].
+    getService(SpecialPowers.Ci.inIDOMUtils);
+  const video = document.getElementById("video");
+  const ccBtn = getElementByAttribute("class", "closedCaptionButton");
+  const testCases = [];
+
+  testCases.push(() => new Promise(resolve => {
+    is(ccBtn.getAttribute("hidden"), "true", "CC button should hide");
+
+    resolve();
+  }));
+
+  testCases.push(() => new Promise(resolve => {
+    video.addTextTrack("descriptions", "English", "en");
+    video.addTextTrack("chapters", "English", "en");
+    video.addTextTrack("metadata", "English", "en");
+
+    SimpleTest.executeSoon(() => {
+      is(ccBtn.getAttribute("hidden"), "true", "CC button should hide if no supported tracks provided");
+
+      resolve();
+    });
+  }));
+
+  testCases.push(() => new Promise(resolve => {
+    const sub = video.addTextTrack("subtitles", "English", "en");
+    sub.mode = "disabled";
+
+    SimpleTest.executeSoon(() => {
+      is(ccBtn.getAttribute("hidden"), "", "CC button should show");
+      is(ccBtn.getAttribute("enabled"), "", "CC button should be disabled");
+
+      resolve();
+    });
+  }));
+
+  testCases.push(() => new Promise(resolve => {
+    const subtitle = video.addTextTrack("subtitles", "English", "en");
+    subtitle.mode = "showing";
+
+    SimpleTest.executeSoon(() => {
+      is(ccBtn.getAttribute("enabled"), "true", "CC button should be enabled");
+      subtitle.mode = "disabled";
+
+      resolve();
+    });
+  }));
+
+  testCases.push(() => new Promise(resolve => {
+    const caption = video.addTextTrack("captions", "English", "en");
+    caption.mode = "showing";
+
+    SimpleTest.executeSoon(() => {
+      is(ccBtn.getAttribute("enabled"), "true", "CC button should be enabled");
+      caption.mode = "disabled";
+
+      resolve();
+    });
+  }));
+
+
+  function executeTestCases(tasks) {
+    return tasks.reduce((promise, task) => promise.then(task), Promise.resolve());
+  }
+
+  function getElementByAttribute(aName, aValue) {
+    const videoControl = domUtils.getChildrenForNode(video, true)[1];
+
+    return SpecialPowers.wrap(document)
+      .getAnonymousElementByAttribute(videoControl, aName, aValue);
+  }
+
+  function loadedmetadata() {
+    executeTestCases(testCases).then(SimpleTest.finish);
+  }
+
+  function startMediaLoad() {
+    video.src = "seek_with_sound.ogg";
+    video.addEventListener("loadedmetadata", loadedmetadata, false);
+  }
+
+  function loadevent() {
+    SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, startMediaLoad);
+  }
+
+  window.addEventListener("load", loadevent, false);
+</script>
+</pre>
+</body>
+</html>
