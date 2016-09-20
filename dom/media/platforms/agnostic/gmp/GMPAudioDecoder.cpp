@@ -123,8 +123,10 @@ void
 AudioCallbackAdapter::Error(GMPErr aErr)
 {
   MOZ_ASSERT(IsOnGMPThread());
-  mCallback->Error(
-    MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, RESULT_DETAIL("GMPErr:%x", aErr)));
+  mCallback->Error(MediaResult(aErr == GMPDecodeErr
+                               ? NS_ERROR_DOM_MEDIA_DECODE_ERR
+                               : NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                               RESULT_DETAIL("GMPErr:%x", aErr)));
 }
 
 void
