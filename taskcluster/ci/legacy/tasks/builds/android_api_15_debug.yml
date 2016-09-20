@@ -54,7 +54,7 @@ task:
       groupSymbol: tc
       groupName: Submitted by taskcluster
       symbol: B
-      tier: 1
+      tier: 2
       collection:
         debug: true
     # Rather then enforcing particular conventions we require that all build
