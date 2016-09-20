@@ -4477,7 +4477,15 @@ void HTMLMediaElement::Error(uint16_t aErrorCode,
   mError = new MediaError(this, aErrorCode, aErrorDetails);
 
   DispatchAsyncEvent(NS_LITERAL_STRING("error"));
-  ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_IDLE);
+  if (mReadyState == HAVE_NOTHING && aErrorCode == MEDIA_ERR_ABORTED) {
+    // https://html.spec.whatwg.org/multipage/embedded-content.html#media-data-processing-steps-list
+    // "If the media data fetching process is aborted by the user"
+    DispatchAsyncEvent(NS_LITERAL_STRING("abort"));
+    ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_EMPTY);
+    DispatchAsyncEvent(NS_LITERAL_STRING("emptied"));
+  } else {
+    ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_IDLE);
+  }
   ChangeDelayLoadStatus(false);
   UpdateAudioChannelPlayingState();
 }
