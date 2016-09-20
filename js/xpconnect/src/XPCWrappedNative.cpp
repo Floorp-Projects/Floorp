@@ -431,15 +431,15 @@ XPCWrappedNative::GetNewOrUsed(xpcObjectHelper& helper,
         if (!iface)
             iface = XPCNativeInterface::GetISupports();
 
-        AutoMarkingNativeSetPtr set(cx);
         XPCNativeSetKey key(iface);
-        set = XPCNativeSet::GetNewOrUsed(&key);
+        RefPtr<XPCNativeSet> set =
+            XPCNativeSet::GetNewOrUsed(&key);
 
         if (!set)
             return NS_ERROR_FAILURE;
 
-        wrapper =
-            new XPCWrappedNative(helper.forgetCanonical(), Scope, set);
+        wrapper = new XPCWrappedNative(helper.forgetCanonical(), Scope,
+                                       set.forget());
     }
 
     MOZ_ASSERT(!xpc::WrapperFactory::IsXrayWrapper(parent),
@@ -566,7 +566,7 @@ XPCWrappedNative::XPCWrappedNative(already_AddRefed<nsISupports>&& aIdentity,
 // This ctor is used if this object will NOT have a proto.
 XPCWrappedNative::XPCWrappedNative(already_AddRefed<nsISupports>&& aIdentity,
                                    XPCWrappedNativeScope* aScope,
-                                   XPCNativeSet* aSet)
+                                   already_AddRefed<XPCNativeSet>&& aSet)
 
     : mMaybeScope(TagScope(aScope)),
       mSet(aSet),
@@ -578,7 +578,7 @@ XPCWrappedNative::XPCWrappedNative(already_AddRefed<nsISupports>&& aIdentity,
     mFlatJSObject.setFlags(FLAT_JS_OBJECT_VALID);
 
     MOZ_ASSERT(aScope, "bad ctor param");
-    MOZ_ASSERT(aSet, "bad ctor param");
+    MOZ_ASSERT(mSet, "bad ctor param");
 }
 
 XPCWrappedNative::~XPCWrappedNative()
@@ -1014,16 +1014,14 @@ private:
 bool
 XPCWrappedNative::ExtendSet(XPCNativeInterface* aInterface)
 {
-    AutoJSContext cx;
-
     if (!mSet->HasInterface(aInterface)) {
-        AutoMarkingNativeSetPtr newSet(cx);
         XPCNativeSetKey key(mSet, aInterface);
-        newSet = XPCNativeSet::GetNewOrUsed(&key);
+        RefPtr<XPCNativeSet> newSet =
+            XPCNativeSet::GetNewOrUsed(&key);
         if (!newSet)
             return false;
 
-        mSet = newSet;
+        mSet = newSet.forget();
     }
     return true;
 }
@@ -2164,7 +2162,7 @@ NS_IMETHODIMP XPCWrappedNative::DebugDump(int16_t depth)
         if (depth && mSet)
             mSet->DebugDump(depth);
         else
-            XPC_LOG_ALWAYS(("mSet @ %x", mSet));
+            XPC_LOG_ALWAYS(("mSet @ %x", mSet.get()));
 
         XPC_LOG_ALWAYS(("mFlatJSObject of %x", mFlatJSObject.getPtr()));
         XPC_LOG_ALWAYS(("mIdentity of %x", mIdentity.get()));

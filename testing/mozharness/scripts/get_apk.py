@@ -17,7 +17,6 @@ from mozharness.base.script import ScriptMixin
 class GetAPK(BaseScript, VirtualenvMixin):
     all_actions = [
         'create-virtualenv',
-        "test",
         'download-apk'
     ]
 
@@ -36,6 +35,18 @@ class GetAPK(BaseScript, VirtualenvMixin):
             "dest": "version",
             "help": "Specify version number to download (e.g. 23.0b7)",
             "default": "None"
+        }],
+        [["--latest-nightly"], {
+            "dest": "latest_nightly",
+            "help": "Download the latest nightly version",
+            "action": "store_true",
+            "default": False
+        }],
+        [["--latest-aurora"], {
+            "dest": "latest_aurora",
+            "help": "Download the latest aurora version",
+            "action": "store_true",
+            "default": False
         }],
         [["--arch"], {
             "dest": "arch",
@@ -57,7 +68,7 @@ class GetAPK(BaseScript, VirtualenvMixin):
 
     arch_values = ["arm", "x86"]
     multi_api_archs = ["arm"]
-    multi_apis = ["api-15"] # v11 has been dropped in fx 46 (1155801)
+    multi_apis = ["api-15"]  # v11 has been dropped in fx 46 (1155801)
     # v9 has been dropped in fx 48 (1220184)
 
     download_dir = "apk-download"
@@ -65,6 +76,9 @@ class GetAPK(BaseScript, VirtualenvMixin):
     apk_ext = ".apk"
     checksums_ext = ".checksums"
     android_prefix = "android-"
+
+    base_url = "https://ftp.mozilla.org/pub/mobile"
+    json_version_url = "https://product-details.mozilla.org/1.0/firefox_versions.json"
 
     # Cleanup half downloaded files on Ctrl+C
     def signal_handler(self, signal, frame):
@@ -112,7 +126,8 @@ class GetAPK(BaseScript, VirtualenvMixin):
         if self.config["version"] == "None":
             if self.config["clean"]:
                 sys.exit(0)
-            self.fatal("Version is required")
+        if self.config["version"] != "None" and (self.config["latest_nightly"] or self.config["latest_aurora"]):
+            self.fatal("Cannot set a version and --latest-nightly or --latest-aurora")
 
         if self.config["arch"] not in self.arch_values and not self.config["arch"] == "all":
             error = self.config["arch"] + " is not a valid arch.  " \
@@ -121,6 +136,9 @@ class GetAPK(BaseScript, VirtualenvMixin):
                 error += arch + os.linesep
             error += "Or don't use the --arch option to download all the archs"
             self.fatal(error)
+
+        if self.config["latest_nightly"] and self.config["latest_aurora"]:
+            self.fatal("Conflicting options. Cannot use --latest-nightly with --latest-aurora")
 
     # Checksum check the APK
     def check_apk(self, apk_file, checksum_file):
@@ -139,9 +157,12 @@ class GetAPK(BaseScript, VirtualenvMixin):
 
     # Helper functions
     def generate_url(self, version, build, locale, api_suffix, arch_file):
-        return "https://ftp.mozilla.org/pub/mozilla.org/mobile/candidates/" + version + "-candidates/build" + build + \
-               "/" + self.android_prefix + api_suffix + "/" + locale + "/fennec-" + version + "." + locale + \
-               "." + self.android_prefix + arch_file
+        if self.config["latest_nightly"] or self.config["latest_aurora"]:
+            code = "central" if self.config["latest_nightly"] else "aurora"
+            return ("%s/nightly/latest-mozilla-%s-android-%s/fennec-%s.%s.android-%s") % (self.base_url, code, api_suffix, version, locale, arch_file)
+
+        return ("%s/candidates/%s-candidates/build%s/%s%s/%s/fennec-%s.%s.%s%s") % (self.base_url, version, build, self.android_prefix, api_suffix, locale, version, locale, self.android_prefix, arch_file)
+
 
     def get_api_suffix(self, arch):
         if arch in self.multi_api_archs:
@@ -178,13 +199,22 @@ class GetAPK(BaseScript, VirtualenvMixin):
             filename_apk = os.path.join(self.download_dir, filename + self.apk_ext)
             filename_checksums = os.path.join(self.download_dir, filename + self.checksums_ext)
 
+            # Download the APK
             retry_config = {'attempts': 1, 'cleanup': self.download_error}
             ScriptMixin.download_file(self, apk_url, filename_apk, retry_config=retry_config)
 
+            # Download the checksum of the APK
             retry_config = {'attempts': 1, 'cleanup': self.download_error}
             ScriptMixin.download_file(self, checksum_url, filename_checksums, retry_config=retry_config)
 
             self.check_apk(filename_apk, filename_checksums)
+
+    def get_version_name(self):
+        if self.config["latest_nightly"] or self.config["latest_aurora"]:
+            json = self.load_json_url(self.json_version_url)
+            version_code = json['FIREFOX_NIGHTLY'] if self.config["latest_nightly"] else json['FIREFOX_AURORA']
+            return version_code
+        return self.config["version"]
 
     # Download all the archs if none is given
     def download_all(self, version, build, locale):
@@ -194,7 +224,7 @@ class GetAPK(BaseScript, VirtualenvMixin):
     # Download apk initial action
     def download_apk(self):
         self.check_argument()
-        version = self.config["version"]
+        version = self.get_version_name()
         arch = self.config["arch"]
         build = str(self.config["build"])
         locale = self.config["locale"]
@@ -225,8 +255,9 @@ class GetAPK(BaseScript, VirtualenvMixin):
         url = self.generate_url("43.0", "2", "multi", "x86", "i386")
         correcturl = "https://ftp.mozilla.org/pub/mozilla.org/mobile/candidates/43.0-candidates/build2/"\
                      + self.android_prefix + "x86/multi/fennec-43.0.multi." + self.android_prefix + "i386"
+
         if not url == correcturl:
-            self.fatal("get_url test failed!")
+            self.fatal(("get_url test failed! %s != %s") % (url, correcturl))
 
         if not self.get_api_suffix(self.multi_api_archs[0]) == self.multi_apis:
             self.fatal("get_api_suffix test failed!")
