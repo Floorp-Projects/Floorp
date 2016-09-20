@@ -194,8 +194,8 @@ AppleATDecoder::SubmitSample(MediaRawData* aSample)
   if (!mConverter) {
     rv = SetupDecoder(aSample);
     if (rv != NS_OK && rv != NS_ERROR_NOT_INITIALIZED) {
-      mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                                        __func__));
+      mCallback->Error(
+        MediaResult(rv, RESULT_DETAIL("Unable to create decoder")));
       return;
     }
   }
@@ -207,7 +207,8 @@ AppleATDecoder::SubmitSample(MediaRawData* aSample)
       rv = DecodeSample(mQueuedSamples[i]);
       if (NS_FAILED(rv)) {
         mQueuedSamples.Clear();
-        mCallback->Error(MediaResult(rv, __func__));
+        mCallback->Error(MediaResult(
+          rv, RESULT_DETAIL("Unable to decode sample %lld", aSample->mTime)));
         return;
       }
     }
