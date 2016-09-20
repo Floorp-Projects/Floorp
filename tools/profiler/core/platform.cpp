@@ -36,11 +36,11 @@
 #endif
 
 #if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
-  #include "GeneratedJNIWrappers.h"
+  #include "FennecJNIWrappers.h"
 #endif
 
 #if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
-#include "GeneratedJNINatives.h"
+#include "FennecJNINatives.h"
 #endif
 
 #ifndef SPS_STANDALONE
