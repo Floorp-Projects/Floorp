@@ -14,6 +14,10 @@ class L10n {
     }
     return str;
   }
+
+  getFormatStr(str) {
+    return this.getStr(str);
+  }
 }
 
 module.exports = L10n;

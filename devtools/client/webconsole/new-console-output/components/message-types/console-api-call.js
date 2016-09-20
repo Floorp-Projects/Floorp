@@ -18,7 +18,7 @@ const GripMessageBody = createFactory(require("devtools/client/webconsole/new-co
 const MessageRepeat = createFactory(require("devtools/client/webconsole/new-console-output/components/message-repeat").MessageRepeat);
 const MessageIcon = createFactory(require("devtools/client/webconsole/new-console-output/components/message-icon").MessageIcon);
 const CollapseButton = createFactory(require("devtools/client/webconsole/new-console-output/components/collapse-button").CollapseButton);
-const {l10n} = require("devtools/client/webconsole/new-console-output/utils/messages");
+const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
 const actions = require("devtools/client/webconsole/new-console-output/actions/messages");
 
 ConsoleApiCall.displayName = "ConsoleApiCall";
@@ -32,19 +32,22 @@ ConsoleApiCall.propTypes = {
 
 function ConsoleApiCall(props) {
   const { dispatch, message, sourceMapService, onViewSourceInDebugger, open } = props;
-  const {source, level, stacktrace, type, frame } = message;
+  const { source, level, stacktrace, type, frame, parameters } = message;
 
   let messageBody;
   if (type === "trace") {
-    messageBody = dom.span({className: "cm-variable"}, "console.trace()");
-  } else if (message.parameters) {
-    messageBody = message.parameters.map((grip, key) => GripMessageBody({grip, key}));
+    messageBody = dom.span({ className: "cm-variable" }, "console.trace()");
+  } else if (type === "assert") {
+    let reps = parameters.map((grip, key) => GripMessageBody({ grip, key }));
+    messageBody = dom.span({ className: "cm-variable" }, "Assertion failed: ", reps);
+  } else if (parameters) {
+    messageBody = parameters.map((grip, key) => GripMessageBody({ grip, key }));
   } else {
     messageBody = message.messageText;
   }
 
-  const icon = MessageIcon({level});
-  const repeat = MessageRepeat({repeat: message.repeat});
+  const icon = MessageIcon({ level });
+  const repeat = MessageRepeat({ repeat: message.repeat });
   const shouldRenderFrame = frame && frame.source !== "debugger eval code";
   const location = dom.span({ className: "message-location devtools-monospace" },
     shouldRenderFrame ? FrameView({
@@ -58,7 +61,7 @@ function ConsoleApiCall(props) {
   let collapse = "";
   let attachment = "";
   if (stacktrace) {
-    attachment = dom.div({className: "stacktrace devtools-monospace"},
+    attachment = dom.div({ className: "stacktrace devtools-monospace" },
       StackTrace({
         stacktrace: stacktrace,
         onViewSourceInDebugger: onViewSourceInDebugger
@@ -92,16 +95,14 @@ function ConsoleApiCall(props) {
     classes.push("open");
   }
 
-  return dom.div({
-    className: classes.join(" ")
-  },
+  return dom.div({ className: classes.join(" ") },
     // @TODO add timestamp
     // @TODO add indent if necessary
     icon,
     collapse,
-    dom.span({className: "message-body-wrapper"},
-      dom.span({className: "message-flex-body"},
-        dom.span({className: "message-body devtools-monospace"},
+    dom.span({ className: "message-body-wrapper" },
+      dom.span({ className: "message-flex-body" },
+        dom.span({ className: "message-body devtools-monospace" },
           messageBody
         ),
         repeat,
