@@ -2224,29 +2224,21 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
     if (useOffMainThreadCompositing) {
       GPUProcessManager* gpm = GPUProcessManager::Get();
 
-      {
-        Endpoint<PCompositorBridgeChild> endpoint;
-        DebugOnly<bool> opened =
-          gpm->CreateContentCompositorBridge(OtherPid(), &endpoint);
-        MOZ_ASSERT(opened);
-        Unused << SendInitCompositor(Move(endpoint));
-      }
+      Endpoint<PCompositorBridgeChild> compositor;
+      Endpoint<PImageBridgeChild> imageBridge;
+      Endpoint<PVRManagerChild> vrBridge;
 
-      {
-        Endpoint<PImageBridgeChild> endpoint;
-        DebugOnly<bool> opened =
-          gpm->CreateContentImageBridge(OtherPid(), &endpoint);
-        MOZ_ASSERT(opened);
-        Unused << SendInitImageBridge(Move(endpoint));
-      }
+      DebugOnly<bool> opened = gpm->CreateContentBridges(
+        OtherPid(),
+        &compositor,
+        &imageBridge,
+        &vrBridge);
+      MOZ_ASSERT(opened);
 
-      {
-        Endpoint<PVRManagerChild> endpoint;
-        DebugOnly<bool> opened =
-          gpm->CreateContentVRManager(OtherPid(), &endpoint);
-        MOZ_ASSERT(opened);
-        Unused << SendInitVRManager(Move(endpoint));
-      }
+      Unused << SendInitRendering(
+        Move(compositor),
+        Move(imageBridge),
+        Move(vrBridge));
     }
 #ifdef MOZ_WIDGET_GONK
     DebugOnly<bool> opened = PSharedBufferManager::Open(this);

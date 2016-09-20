@@ -414,6 +414,21 @@ GPUProcessManager::CreateRemoteSession(nsBaseWidget* aWidget,
 }
 
 bool
+GPUProcessManager::CreateContentBridges(base::ProcessId aOtherProcess,
+                                        ipc::Endpoint<PCompositorBridgeChild>* aOutCompositor,
+                                        ipc::Endpoint<PImageBridgeChild>* aOutImageBridge,
+                                        ipc::Endpoint<PVRManagerChild>* aOutVRBridge)
+{
+  if (!CreateContentCompositorBridge(aOtherProcess, aOutCompositor) ||
+      !CreateContentImageBridge(aOtherProcess, aOutImageBridge) ||
+      !CreateContentVRManager(aOtherProcess, aOutVRBridge))
+  {
+    return false;
+  }
+  return true;
+}
+
+bool
 GPUProcessManager::CreateContentCompositorBridge(base::ProcessId aOtherProcess,
                                                  ipc::Endpoint<PCompositorBridgeChild>* aOutEndpoint)
 {

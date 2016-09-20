@@ -464,9 +464,10 @@ both:
 
 child:
     // Give the content process its endpoints to the compositor.
-    async InitCompositor(Endpoint<PCompositorBridgeChild> compositor);
-    async InitImageBridge(Endpoint<PImageBridgeChild> bridge);
-    async InitVRManager(Endpoint<PVRManagerChild> endpoint);
+    async InitRendering(
+      Endpoint<PCompositorBridgeChild> compositor,
+      Endpoint<PImageBridgeChild> imageBridge,
+      Endpoint<PVRManagerChild> vr);
 
     /**
      * Enable system-level sandboxing features, if available.  Can
