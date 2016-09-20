@@ -1786,6 +1786,21 @@ class BaseScript(ScriptMixin, LogMixin, object):
         self.new_log_obj(default_log_level=default_log_level)
         self.script_obj = self
 
+        # Indicate we're a source checkout if VCS directory is present at the
+        # appropriate place. This code will break if this file is ever moved
+        # to another directory.
+        self.topsrcdir = None
+
+        srcreldir = 'testing/mozharness/mozharness/base'
+        here = os.path.normpath(os.path.dirname(__file__))
+        if here.replace('\\', '/').endswith(srcreldir):
+            topsrcdir = os.path.normpath(os.path.join(here, '..', '..',
+                                                      '..', '..'))
+            hg_dir = os.path.join(topsrcdir, '.hg')
+            git_dir = os.path.join(topsrcdir, '.git')
+            if os.path.isdir(hg_dir) or os.path.isdir(git_dir):
+                self.topsrcdir = topsrcdir
+
         # Set self.config to read-only.
         #
         # We can create intermediate config info programmatically from
