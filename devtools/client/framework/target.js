@@ -619,6 +619,9 @@ TabTarget.prototype = {
     this._form = null;
     this._remote = null;
     this._root = null;
+    this._title = null;
+    this._url = null;
+    this.threadActor = null;
   },
 
   toString: function () {

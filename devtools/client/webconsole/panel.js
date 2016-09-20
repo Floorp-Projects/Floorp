@@ -107,7 +107,11 @@ WebConsolePanel.prototype = {
     }
 
     this._destroyer = this.hud.destroy();
-    this._destroyer.then(() => this.emit("destroyed"));
+    this._destroyer.then(() => {
+      this._frameWindow = null;
+      this._toolbox = null;
+      this.emit("destroyed");
+    });
 
     return this._destroyer;
   },

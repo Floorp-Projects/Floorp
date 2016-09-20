@@ -446,18 +446,6 @@ XPCNativeSet::MatchesSetUpToInterface(const XPCNativeSet* other,
     return false;
 }
 
-inline void XPCNativeSet::Mark()
-{
-    mMarked = 1;
-}
-
-#ifdef DEBUG
-inline void XPCNativeSet::ASSERT_NotMarked()
-{
-    MOZ_ASSERT(!IsMarked(), "bad");
-}
-#endif
-
 /***************************************************************************/
 
 inline

@@ -2,7 +2,7 @@
 # This directory contains tests for position:absolute and vertical writing modes.
 # They require the vertical-text pref to be true, otherwise lots of them will fail.
 # (See bug 1079151 for the origin of these testcases by Gérard Talbot.)
-default-preferences pref(layout.css.vertical-text.enabled,true)
+
 
 # All of these are fuzzy-if on skia content on OS X due to subpixel text positioning.
 fails fuzzy-if(cocoaWidget,15,5) fuzzy-if(d2d,102,164) fuzzy-if(skiaContent,255,248) == s71-abs-pos-non-replaced-vlr-003.xht s71-abs-pos-non-replaced-vlr-003.xht

@@ -2348,6 +2348,13 @@ TelemetryImpl::ClearScalars()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+TelemetryImpl::FlushBatchedChildTelemetry()
+{
+  TelemetryHistogram::IPCTimerFired(nullptr, nullptr);
+  return NS_OK;
+}
+
 size_t
 TelemetryImpl::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 {
@@ -2791,6 +2798,18 @@ AccumulateTimeDelta(ID aHistogram, TimeStamp start, TimeStamp end)
 {
   Accumulate(aHistogram,
              static_cast<uint32_t>((end - start).ToMilliseconds()));
+}
+
+void
+AccumulateChild(const nsTArray<Accumulation>& aAccumulations)
+{
+  TelemetryHistogram::AccumulateChild(aAccumulations);
+}
+
+void
+AccumulateChildKeyed(const nsTArray<KeyedAccumulation>& aAccumulations)
+{
+  TelemetryHistogram::AccumulateChildKeyed(aAccumulations);
 }
 
 void

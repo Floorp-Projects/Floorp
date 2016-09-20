@@ -17,7 +17,7 @@ int32_t XPCWrappedNativeProto::gDEBUG_LiveProtoCount = 0;
 
 XPCWrappedNativeProto::XPCWrappedNativeProto(XPCWrappedNativeScope* Scope,
                                              nsIClassInfo* ClassInfo,
-                                             XPCNativeSet* Set)
+                                             already_AddRefed<XPCNativeSet>&& Set)
     : mScope(Scope),
       mJSProtoObject(nullptr),
       mClassInfo(ClassInfo),
@@ -166,12 +166,11 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCWrappedNativeScope* scope,
     if (proto)
         return proto;
 
-    AutoMarkingNativeSetPtr set(cx);
-    set = XPCNativeSet::GetNewOrUsed(classInfo);
+    RefPtr<XPCNativeSet> set = XPCNativeSet::GetNewOrUsed(classInfo);
     if (!set)
         return nullptr;
 
-    proto = new XPCWrappedNativeProto(scope, classInfo, set);
+    proto = new XPCWrappedNativeProto(scope, classInfo, set.forget());
 
     if (!proto || !proto->Init(scriptableCreateInfo, callPostCreatePrototype)) {
         delete proto.get();
@@ -193,7 +192,7 @@ XPCWrappedNativeProto::DebugDump(int16_t depth)
         XPC_LOG_ALWAYS(("gDEBUG_LiveProtoCount is %d", gDEBUG_LiveProtoCount));
         XPC_LOG_ALWAYS(("mScope @ %x", mScope));
         XPC_LOG_ALWAYS(("mJSProtoObject @ %x", mJSProtoObject.get()));
-        XPC_LOG_ALWAYS(("mSet @ %x", mSet));
+        XPC_LOG_ALWAYS(("mSet @ %x", mSet.get()));
         XPC_LOG_ALWAYS(("mScriptableInfo @ %x", mScriptableInfo));
         if (depth && mScriptableInfo) {
             XPC_LOG_INDENT();

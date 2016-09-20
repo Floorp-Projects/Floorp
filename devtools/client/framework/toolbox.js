@@ -823,9 +823,7 @@ Toolbox.prototype = {
       button.className = "toolbox-dock-button devtools-button";
       button.setAttribute("title", L10N.getStr("toolboxDockButtons." +
                                                   position + ".tooltip"));
-      button.addEventListener("click", () => {
-        this.switchHost(position);
-      });
+      button.addEventListener("click", this.switchHost.bind(this, position));
 
       dockBox.appendChild(button);
     }
@@ -1136,9 +1134,7 @@ Toolbox.prototype = {
       radio.setAttribute("icon-invertable", "dark-theme");
     }
 
-    radio.addEventListener("command", () => {
-      this.selectTool(id);
-    });
+    radio.addEventListener("command", this.selectTool.bind(this, id));
 
     // spacer lets us center the image and label, while allowing cropping
     let spacer = this.doc.createElement("spacer");
@@ -2052,6 +2048,8 @@ Toolbox.prototype = {
     if (this._destroyer) {
       return this._destroyer;
     }
+    let deferred = defer();
+    this._destroyer = deferred.promise;
 
     this.emit("destroy");
 
@@ -2076,13 +2074,23 @@ Toolbox.prototype = {
       this._saveSplitConsoleHeight();
       this.webconsolePanel.removeEventListener("resize",
         this._saveSplitConsoleHeight);
+      this.webconsolePanel = null;
     }
-    this.closeButton.removeEventListener("click", this.destroy, true);
-    this.textboxContextMenuPopup.removeEventListener("popupshowing",
-      this._updateTextboxMenuItems, true);
-    this.tabbar.removeEventListener("focus", this._onTabbarFocus, true);
-    this.tabbar.removeEventListener("click", this._onTabbarFocus, true);
-    this.tabbar.removeEventListener("keypress", this._onTabbarArrowKeypress);
+    if (this.closeButton) {
+      this.closeButton.removeEventListener("click", this.destroy, true);
+      this.closeButton = null;
+    }
+    if (this.textboxContextMenuPopup) {
+      this.textboxContextMenuPopup.removeEventListener("popupshowing",
+        this._updateTextboxMenuItems, true);
+      this.textboxContextMenuPopup = null;
+    }
+    if (this.tabbar) {
+      this.tabbar.removeEventListener("focus", this._onTabbarFocus, true);
+      this.tabbar.removeEventListener("click", this._onTabbarFocus, true);
+      this.tabbar.removeEventListener("keypress", this._onTabbarArrowKeypress);
+      this.tabbar = null;
+    }
 
     let outstanding = [];
     for (let [id, panel] of this._toolPanels) {
@@ -2137,7 +2145,7 @@ Toolbox.prototype = {
     // Finish all outstanding tasks (which means finish destroying panels and
     // then destroying the host, successfully or not) before destroying the
     // target.
-    this._destroyer = settleAll(outstanding)
+    deferred.resolve(settleAll(outstanding)
         .catch(console.error)
         .then(() => this.destroyHost())
         .catch(console.error)
@@ -2171,7 +2179,7 @@ Toolbox.prototype = {
               .getInterface(Ci.nsIDOMWindowUtils)
               .garbageCollect();
           }
-        }).then(null, console.error);
+        }).then(null, console.error));
 
     let leakCheckObserver = ({wrappedJSObject: barrier}) => {
       // Make the leak detector wait until this toolbox is properly destroyed.

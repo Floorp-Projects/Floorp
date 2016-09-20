@@ -50,9 +50,12 @@ results = []
 
 
 def process_line(line):
+    # Escape slashes otherwise JSON conversion will not work
+    line = line.replace('\\', '\\\\')
     try:
         res = json.loads(line)
     except ValueError:
+        print('Non JSON output from linter, will not be processed: {}'.format(line))
         return
 
     if 'code' in res:

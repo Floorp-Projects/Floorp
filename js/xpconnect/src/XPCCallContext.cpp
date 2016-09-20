@@ -199,6 +199,7 @@ XPCCallContext::SystemIsBeingShutDown()
     NS_WARNING("Shutting Down XPConnect even through there is a live XPCCallContext");
     mXPCJSContext = nullptr;
     mState = SYSTEM_SHUTDOWN;
+    mSet = nullptr;
     mInterface = nullptr;
 
     if (mPrevCallContext)

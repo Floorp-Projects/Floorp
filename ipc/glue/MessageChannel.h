@@ -783,6 +783,10 @@ class MessageChannel : HasResultCodes
     // a channel error occurs?
     bool mAbortOnError;
 
+    // True if the listener has already been notified of a channel close or
+    // error.
+    bool mNotifiedChannelDone;
+
     // See SetChannelFlags
     ChannelFlags mFlags;
 

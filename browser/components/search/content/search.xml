@@ -1290,8 +1290,8 @@
             case "popuphidden":
               Services.tm.mainThread.dispatch(() => {
                 this.selectedButton = null;
+                this._contextEngine = null;
               }, Ci.nsIThread.DISPATCH_NORMAL);
-              this._contextEngine = null;
               break;
           }
         ]]></body>

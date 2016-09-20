@@ -1,7 +1,7 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 # This directory contains tests for vertical text and logical layout coordinates.
 # They require the vertical-text pref to be true, otherwise lots of them will fail.
-default-preferences pref(layout.css.vertical-text.enabled,true)
+
 
 HTTP(..) == 1079154-1-vertical-rl-columns.html 1079154-1-vertical-rl-columns.html
 == 1082844.html 1082844.html

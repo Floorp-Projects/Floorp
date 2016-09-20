@@ -37,7 +37,7 @@ skip-if(B2G) include pngsuite-zlib/reftest-stylo.list
 #skip-if(Android) include bmp/reftest-stylo.list
 
 # ICO tests
-skip-if(Android) include ico/reftest-stylo.list
+#skip-if(Android) include ico/reftest-stylo.list
 
 # JPEG tests
 # include jpeg/reftest-stylo.list

@@ -223,7 +223,23 @@ public:
 
   // Event handlers for various events.
   // Return true if the event is handled by this state object.
-  virtual bool HandleDormant(bool aDormant) { return false; }
+  virtual bool HandleDormant(bool aDormant)
+  {
+    if (!aDormant) {
+      return true;
+    }
+    mMaster->mQueuedSeek.mTarget =
+      SeekTarget(mMaster->mCurrentPosition,
+                 SeekTarget::Accurate,
+                 MediaDecoderEventVisibility::Suppressed);
+    // SeekJob asserts |mTarget.IsValid() == !mPromise.IsEmpty()| so we
+    // need to create the promise even it is not used at all.
+    RefPtr<MediaDecoder::SeekPromise> unused =
+      mMaster->mQueuedSeek.mPromise.Ensure(__func__);
+    SetState(DECODER_STATE_DORMANT);
+    return true;
+  }
+
   virtual bool HandleCDMProxyReady() { return false; }
 
 protected:
@@ -408,6 +424,15 @@ public:
   {
     return DECODER_STATE_DORMANT;
   }
+
+  bool HandleDormant(bool aDormant) override
+  {
+    if (!aDormant) {
+      // Exit dormant state.
+      SetState(DECODER_STATE_DECODING_METADATA);
+    }
+    return true;
+  }
 };
 
 class MediaDecoderStateMachine::DecodingFirstFrameState
@@ -458,6 +483,26 @@ public:
   State GetState() const override
   {
     return DECODER_STATE_SEEKING;
+  }
+
+  bool HandleDormant(bool aDormant) override
+  {
+    if (!aDormant) {
+      return true;
+    }
+    MOZ_ASSERT(!mMaster->mQueuedSeek.Exists());
+    MOZ_ASSERT(mMaster->mCurrentSeek.Exists());
+    // Because both audio and video decoders are going to be reset in this
+    // method later, we treat a VideoOnly seek task as a normal Accurate
+    // seek task so that while it is resumed, both audio and video playback
+    // are handled.
+    if (mMaster->mCurrentSeek.mTarget.IsVideoOnly()) {
+      mMaster->mCurrentSeek.mTarget.SetType(SeekTarget::Accurate);
+      mMaster->mCurrentSeek.mTarget.SetVideoOnly(false);
+    }
+    mMaster->mQueuedSeek = Move(mMaster->mCurrentSeek);
+    SetState(DECODER_STATE_DORMANT);
+    return true;
   }
 };
 
@@ -529,6 +574,11 @@ public:
   State GetState() const override
   {
     return DECODER_STATE_SHUTDOWN;
+  }
+
+  bool HandleDormant(bool aDormant) override
+  {
+    return true;
   }
 };
 
@@ -1317,20 +1367,33 @@ MediaDecoderStateMachine::MaybeStartBuffering()
   MOZ_ASSERT(mSentFirstFrameLoadedEvent);
   MOZ_ASSERT(mState == DECODER_STATE_DECODING);
 
-  if (mPlayState == MediaDecoder::PLAY_STATE_PLAYING &&
-      mResource->IsExpectingMoreData()) {
-    bool shouldBuffer;
-    if (mReader->UseBufferingHeuristics()) {
-      shouldBuffer = HasLowDecodedData(EXHAUSTED_DATA_MARGIN_USECS) &&
-                     (JustExitedQuickBuffering() || HasLowUndecodedData());
-    } else {
-      MOZ_ASSERT(mReader->IsWaitForDataSupported());
-      shouldBuffer = (OutOfDecodedAudio() && mReader->IsWaitingAudioData()) ||
-                     (OutOfDecodedVideo() && mReader->IsWaitingVideoData());
-    }
-    if (shouldBuffer) {
-      SetState(DECODER_STATE_BUFFERING);
-    }
+  // Don't enter buffering when MediaDecoder is not playing.
+  if (mPlayState != MediaDecoder::PLAY_STATE_PLAYING) {
+    return;
+  }
+
+  // Don't enter buffering while prerolling so that the decoder has a chance to
+  // enqueue some decoded data before we give up and start buffering.
+  if (!IsPlaying()) {
+    return;
+  }
+
+  // No more data to download. No need to enter buffering.
+  if (!mResource->IsExpectingMoreData()) {
+    return;
+  }
+
+  bool shouldBuffer;
+  if (mReader->UseBufferingHeuristics()) {
+    shouldBuffer = HasLowDecodedData(EXHAUSTED_DATA_MARGIN_USECS) &&
+                   (JustExitedQuickBuffering() || HasLowUndecodedData());
+  } else {
+    MOZ_ASSERT(mReader->IsWaitForDataSupported());
+    shouldBuffer = (OutOfDecodedAudio() && mReader->IsWaitingAudioData()) ||
+                   (OutOfDecodedVideo() && mReader->IsWaitingVideoData());
+  }
+  if (shouldBuffer) {
+    SetState(DECODER_STATE_BUFFERING);
   }
 }
 
@@ -1488,51 +1551,7 @@ void
 MediaDecoderStateMachine::SetDormant(bool aDormant)
 {
   MOZ_ASSERT(OnTaskQueue());
-
-  if (IsShutdown()) {
-    return;
-  }
-
-  if (mStateObj->HandleDormant(aDormant)) {
-    return;
-  }
-
-  bool wasDormant = mState == DECODER_STATE_DORMANT;
-  if (wasDormant == aDormant) {
-    return;
-  }
-
-  DECODER_LOG("SetDormant=%d", aDormant);
-
-  // Enter dormant state.
-  if (aDormant) {
-    if (mState == DECODER_STATE_SEEKING) {
-      MOZ_ASSERT(!mQueuedSeek.Exists());
-      MOZ_ASSERT(mCurrentSeek.Exists());
-      // Because both audio and video decoders are going to be reset in this
-      // method later, we treat a VideoOnly seek task as a normal Accurate
-      // seek task so that while it is resumed, both audio and video playback
-      // are handled.
-      if (mCurrentSeek.mTarget.IsVideoOnly()) {
-        mCurrentSeek.mTarget.SetType(SeekTarget::Accurate);
-        mCurrentSeek.mTarget.SetVideoOnly(false);
-      }
-      mQueuedSeek = Move(mCurrentSeek);
-    } else {
-      mQueuedSeek.mTarget = SeekTarget(mCurrentPosition,
-                                       SeekTarget::Accurate,
-                                       MediaDecoderEventVisibility::Suppressed);
-      // SeekJob asserts |mTarget.IsValid() == !mPromise.IsEmpty()| so we
-      // need to create the promise even it is not used at all.
-      RefPtr<MediaDecoder::SeekPromise> unused = mQueuedSeek.mPromise.Ensure(__func__);
-    }
-
-    SetState(DECODER_STATE_DORMANT);
-    return;
-  }
-
-  // Exit dormant state.
-  SetState(DECODER_STATE_DECODING_METADATA);
+  mStateObj->HandleDormant(aDormant);
 }
 
 RefPtr<ShutdownPromise>

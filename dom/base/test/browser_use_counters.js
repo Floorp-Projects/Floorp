@@ -3,6 +3,7 @@
 requestLongerTimeout(2);
 
 var {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
+Cu.import("resource://gre/modules/Services.jsm");
 
 const gHttpTestRoot = "http://example.com/browser/dom/base/test/";
 
@@ -10,7 +11,12 @@ const gHttpTestRoot = "http://example.com/browser/dom/base/test/";
  * Enable local telemetry recording for the duration of the tests.
  */
 var gOldContentCanRecord = false;
+var gOldParentCanRecord = false;
 add_task(function* test_initialize() {
+  let Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
+  gOldParentCanRecord = Telemetry.canRecordExtended
+  Telemetry.canRecordExtended = true;
+
   // Because canRecordExtended is a per-process variable, we need to make sure
   // that all of the pages load in the same content process. Limit the number
   // of content processes to at most 1 (or 0 if e10s is off entirely).
@@ -74,6 +80,9 @@ add_task(function* () {
 });
 
 add_task(function* () {
+  let Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
+  Telemetry.canRecordExtended = gOldParentCanRecord;
+
   yield ContentTask.spawn(gBrowser.selectedBrowser, { oldCanRecord: gOldContentCanRecord }, function (arg) {
     Cu.import("resource://gre/modules/PromiseUtils.jsm");
     yield new Promise(resolve => {
@@ -104,22 +113,18 @@ function waitForPageLoad(browser) {
   });
 }
 
-function grabHistogramsFromContent(browser, use_counter_middlefix) {
-  return ContentTask.spawn(browser, { middlefix: use_counter_middlefix }, function* (arg) {
-    let telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
-    function snapshot_histogram(name) {
-      return telemetry.getHistogramById(name).snapshot();
-    }
-
-    let histogram_page_name = "USE_COUNTER2_" + arg.middlefix + "_PAGE";
-    let histogram_document_name = "USE_COUNTER2_" + arg.middlefix + "_DOCUMENT";
-    let histogram_page = snapshot_histogram(histogram_page_name);
-    let histogram_document = snapshot_histogram(histogram_document_name);
-    let histogram_docs = snapshot_histogram("CONTENT_DOCUMENTS_DESTROYED");
-    let histogram_toplevel_docs = snapshot_histogram("TOP_LEVEL_CONTENT_DOCUMENTS_DESTROYED");
-    return [histogram_page.sum, histogram_document.sum,
-            histogram_docs.sum, histogram_toplevel_docs.sum];
-  });
+function grabHistogramsFromContent(use_counter_middlefix, page_before = null) {
+  let telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
+  let suffix = Services.appinfo.browserTabsRemoteAutostart ? "#content" : "";
+  let gather = () => [
+    telemetry.getHistogramById("USE_COUNTER2_" + use_counter_middlefix + "_PAGE" + suffix).snapshot().sum,
+    telemetry.getHistogramById("USE_COUNTER2_" + use_counter_middlefix + "_DOCUMENT" + suffix).snapshot().sum,
+    telemetry.getHistogramById("CONTENT_DOCUMENTS_DESTROYED" + suffix).snapshot().sum,
+    telemetry.getHistogramById("TOP_LEVEL_CONTENT_DOCUMENTS_DESTROYED" + suffix).snapshot().sum,
+  ];
+  return BrowserTestUtils.waitForCondition(() => {
+    return page_before != telemetry.getHistogramById("USE_COUNTER2_" + use_counter_middlefix + "_PAGE" + suffix).snapshot().sum;
+  }).then(gather, gather);
 }
 
 var check_use_counter_iframe = Task.async(function* (file, use_counter_middlefix, check_documents=true) {
@@ -133,7 +138,7 @@ var check_use_counter_iframe = Task.async(function* (file, use_counter_middlefix
   // interested in.
   let [histogram_page_before, histogram_document_before,
        histogram_docs_before, histogram_toplevel_docs_before] =
-      yield grabHistogramsFromContent(gBrowser.selectedBrowser, use_counter_middlefix);
+      yield grabHistogramsFromContent(use_counter_middlefix);
 
   gBrowser.selectedBrowser.loadURI(gHttpTestRoot + "file_use_counter_outer.html");
   yield waitForPageLoad(gBrowser.selectedBrowser);
@@ -151,7 +156,7 @@ var check_use_counter_iframe = Task.async(function* (file, use_counter_middlefix
       event.target.removeEventListener("load", listener, true);
 
       // We flush the main document first, then the iframe's document to
-      // ensure any propagation that might happen from child->parent should
+      // ensure any propagation that might happen from content->parent should
       // have already happened when counters are reported to telemetry.
       wu.forceUseCounterFlush(content.document);
       wu.forceUseCounterFlush(iframe.contentDocument);
@@ -174,7 +179,7 @@ var check_use_counter_iframe = Task.async(function* (file, use_counter_middlefix
   // Grab histograms again and compare.
   let [histogram_page_after, histogram_document_after,
        histogram_docs_after, histogram_toplevel_docs_after] =
-      yield grabHistogramsFromContent(gBrowser.selectedBrowser, use_counter_middlefix);
+      yield grabHistogramsFromContent(use_counter_middlefix, histogram_page_before);
 
   is(histogram_page_after, histogram_page_before + 1,
      "page counts for " + use_counter_middlefix + " after are correct");
@@ -197,7 +202,7 @@ var check_use_counter_img = Task.async(function* (file, use_counter_middlefix) {
   // interested in.
   let [histogram_page_before, histogram_document_before,
        histogram_docs_before, histogram_toplevel_docs_before] =
-      yield grabHistogramsFromContent(gBrowser.selectedBrowser, use_counter_middlefix);
+      yield grabHistogramsFromContent(use_counter_middlefix);
 
   gBrowser.selectedBrowser.loadURI(gHttpTestRoot + "file_use_counter_outer.html");
   yield waitForPageLoad(gBrowser.selectedBrowser);
@@ -239,7 +244,7 @@ var check_use_counter_img = Task.async(function* (file, use_counter_middlefix) {
   // Grab histograms again and compare.
   let [histogram_page_after, histogram_document_after,
        histogram_docs_after, histogram_toplevel_docs_after] =
-      yield grabHistogramsFromContent(gBrowser.selectedBrowser, use_counter_middlefix);
+      yield grabHistogramsFromContent(use_counter_middlefix, histogram_page_before);
   is(histogram_page_after, histogram_page_before + 1,
      "page counts for " + use_counter_middlefix + " after are correct");
   is(histogram_document_after, histogram_document_before + 1,
@@ -263,7 +268,7 @@ var check_use_counter_direct = Task.async(function* (file, use_counter_middlefix
   // interested in.
   let [histogram_page_before, histogram_document_before,
        histogram_docs_before, histogram_toplevel_docs_before] =
-      yield grabHistogramsFromContent(gBrowser.selectedBrowser, use_counter_middlefix);
+      yield grabHistogramsFromContent(use_counter_middlefix);
 
   gBrowser.selectedBrowser.loadURI(gHttpTestRoot + file);
   yield ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
@@ -292,7 +297,7 @@ var check_use_counter_direct = Task.async(function* (file, use_counter_middlefix
   // Grab histograms again and compare.
   let [histogram_page_after, histogram_document_after,
        histogram_docs_after, histogram_toplevel_docs_after] =
-      yield grabHistogramsFromContent(gBrowser.selectedBrowser, use_counter_middlefix);
+      yield grabHistogramsFromContent(use_counter_middlefix, histogram_page_before);
   (xfail ? todo_is : is)(histogram_page_after, histogram_page_before + 1,
                          "page counts for " + use_counter_middlefix + " after are correct");
   (xfail ? todo_is : is)(histogram_document_after, histogram_document_before + 1,
