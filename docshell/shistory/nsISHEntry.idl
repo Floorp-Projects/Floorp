@@ -192,6 +192,7 @@ interface nsISHEntry : nsISupports
                            in nsILayoutHistoryState layoutHistoryState,
                            in nsISupports cacheKey, in ACString contentType,
                            in nsIPrincipal triggeringPrincipal,
+                           in nsIPrincipal principalToInherit,
                            in unsigned long long docshellID,
                            in boolean dynamicCreation);
 
@@ -211,6 +212,12 @@ interface nsISHEntry : nsISupports
      * came from.
      */
     attribute nsIPrincipal triggeringPrincipal;
+
+    /**
+     * Get the principal, if any, that is used when the inherit flag
+     * is set.
+     */
+    attribute nsIPrincipal principalToInherit;
 
     /**
      * Get/set data associated with this history state via a pushState() call,
