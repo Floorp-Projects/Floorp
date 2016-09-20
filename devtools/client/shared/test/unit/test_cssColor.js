@@ -62,4 +62,15 @@ function run_test() {
     compareWithDomutils("mumble" + test.input, false);
     compareWithDomutils(test.input + "trailingstuff", false);
   }
+
+  // Regression test for bug 1303826.
+  let black = new colorUtils.CssColor("#000");
+  black.colorUnit = "name";
+  equal(black.toString(), "black", "test non-upper-case color cycling");
+
+  let upper = new colorUtils.CssColor("BLACK");
+  upper.colorUnit = "hex";
+  equal(upper.toString(), "#000", "test upper-case color cycling");
+  upper.colorUnit = "name";
+  equal(upper.toString(), "BLACK", "test upper-case color preservation");
 }
