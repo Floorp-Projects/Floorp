@@ -100,7 +100,6 @@ task_description_schema = Schema({
             {
                 # the name as it appears in buildbot routes
                 Optional('buildbot'): basestring,
-                Optional('gecko-v1'): basestring,
                 Required('gecko-v2'): basestring,
             }
         ),
@@ -276,11 +275,6 @@ BUILDBOT_ROUTE_TEMPLATES = [
     "index.buildbot.revisions.{head_rev}.{project}.{job-name-buildbot}",
 ]
 
-V1_ROUTE_TEMPLATES = [
-    "index.gecko.v1.{project}.latest.linux.{job-name-gecko-v1}",
-    "index.gecko.v1.{project}.revision.linux.{head_rev}.{job-name-gecko-v1}",
-]
-
 V2_ROUTE_TEMPLATES = [
     "index.gecko.v2.{project}.latest.{product}.{job-name-gecko-v2}",
     "index.gecko.v2.{project}.pushdate.{pushdate_long}.{product}.{job-name-gecko-v2}",
@@ -428,7 +422,6 @@ def add_index_routes(config, tasks):
             base_name, type_name = job_name.rsplit('-', 1)
             job_name = {
                 'buildbot': base_name,
-                'gecko-v1': '{}.{}'.format(base_name, type_name),
                 'gecko-v2': '{}-{}'.format(base_name, type_name),
             }
 
@@ -445,9 +438,6 @@ def add_index_routes(config, tasks):
 
         if 'buildbot' in job_name:
             for tpl in BUILDBOT_ROUTE_TEMPLATES:
-                routes.append(tpl.format(**subs))
-        if 'gecko-v1' in job_name:
-            for tpl in V1_ROUTE_TEMPLATES:
                 routes.append(tpl.format(**subs))
         if 'gecko-v2' in job_name:
             for tpl in V2_ROUTE_TEMPLATES:

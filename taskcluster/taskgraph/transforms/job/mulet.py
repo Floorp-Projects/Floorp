@@ -96,10 +96,6 @@ def docker_worker_mulet_simulator(config, job, taskdesc):
     docker_worker_add_public_artifacts(config, job, taskdesc)
     docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc)
 
-    taskdesc.setdefault('routes', []).extend([
-        'index.gecko.v1.{project}.latest.simulator.opt'.format(**config.params),
-    ])
-
     shell_command = run['shell-command'].format(**config.params)
 
     worker['command'] = [
