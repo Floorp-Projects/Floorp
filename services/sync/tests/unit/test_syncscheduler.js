@@ -842,9 +842,9 @@ add_identity_test(this, function* test_sync_X_Weave_Backoff() {
   Service.sync();
 
   do_check_true(Status.backoffInterval >= BACKOFF * 1000);
-  // Allowing 1 second worth of of leeway between when Status.minimumNextSync
+  // Allowing 3 seconds worth of of leeway between when Status.minimumNextSync
   // was set and when this line gets executed.
-  let minimumExpectedDelay = (BACKOFF - 1) * 1000;
+  let minimumExpectedDelay = (BACKOFF - 3) * 1000;
   do_check_true(Status.minimumNextSync >= Date.now() + minimumExpectedDelay);
 
   // Verify that the next sync is actually going to wait that long.
@@ -901,9 +901,9 @@ add_identity_test(this, function* test_sync_503_Retry_After() {
 
   do_check_true(Status.enforceBackoff);
   do_check_true(Status.backoffInterval >= BACKOFF * 1000);
-  // Allowing 1 second worth of of leeway between when Status.minimumNextSync
+  // Allowing 3 seconds worth of of leeway between when Status.minimumNextSync
   // was set and when this line gets executed.
-  let minimumExpectedDelay = (BACKOFF - 1) * 1000;
+  let minimumExpectedDelay = (BACKOFF - 3) * 1000;
   do_check_true(Status.minimumNextSync >= Date.now() + minimumExpectedDelay);
 
   // Verify that the next sync is actually going to wait that long.
