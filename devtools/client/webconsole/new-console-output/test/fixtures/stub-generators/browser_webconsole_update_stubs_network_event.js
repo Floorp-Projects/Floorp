@@ -6,9 +6,9 @@
 "use strict";
 
 Cu.import("resource://gre/modules/osfile.jsm");
-const { consoleApi: snippets } = require("devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/stub-snippets.js");
-
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html";
+const TARGET = "networkEvent";
+const { [TARGET]: snippets } = require("devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/stub-snippets.js");
+const TEST_URI = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-network-event.html";
 
 let stubs = {
   preparedMessages: [],
@@ -26,9 +26,9 @@ add_task(function* () {
 
     let received = new Promise(resolve => {
       let i = 0;
-      toolbox.target.client.addListener("consoleAPICall", (type, res) => {
+      toolbox.target.client.addListener(TARGET, (type, res) => {
         stubs.packets.push(formatPacket(keys[i], res));
-        stubs.preparedMessages.push(formatStub(keys[i], res));
+        stubs.preparedMessages.push(formatNetworkStub(keys[i], res));
         if(++i === keys.length ){
           resolve();
         }
@@ -41,7 +41,7 @@ add_task(function* () {
 
     yield received;
   }
-  let filePath = OS.Path.join(`${BASE_PATH}/stubs`, "consoleApi.js");
+  let filePath = OS.Path.join(`${BASE_PATH}/stubs/${TARGET}.js`);
   OS.File.writeAtomic(filePath, formatFile(stubs));
   OS.File.writeAtomic(TEMP_FILE_PATH, "");
 });
