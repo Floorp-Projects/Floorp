@@ -93,8 +93,9 @@ public:
       Input(aDecrypted.mSample);
     } else if (aDecrypted.mStatus != Ok) {
       if (mCallback) {
-        mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                                          __func__));
+        mCallback->Error(MediaResult(
+          NS_ERROR_DOM_MEDIA_FATAL_ERR,
+          RESULT_DETAIL("decrypted.mStatus=%u", uint32_t(aDecrypted.mStatus))));
       }
     } else {
       MOZ_ASSERT(!mIsShutdown);
