@@ -33,8 +33,10 @@ add_task(function* () {
       });
     });
 
-    yield ContentTask.spawn(gBrowser.selectedBrowser, code, function(code) {
-      content.wrappedJSObject.location.reload();
+    yield ContentTask.spawn(gBrowser.selectedBrowser, key, function(key) {
+      var script = content.document.createElement("script");
+      script.src = "test-tempfile.js?key=" + encodeURIComponent(key);
+      content.document.body.appendChild(script);
     });
 
     yield received;

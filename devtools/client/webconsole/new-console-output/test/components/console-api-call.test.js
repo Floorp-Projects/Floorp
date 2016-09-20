@@ -83,20 +83,21 @@ describe("ConsoleAPICall component:", () => {
     it("renders", () => {
       const message = stubPreparedMessages.get("console.trace()");
       const wrapper = render(ConsoleApiCall({ message, onViewSourceInDebugger, open: true }));
+      const filepath = `${tempfilePath}?key=console.trace()`;
 
       expect(wrapper.find(".message-body").text()).toBe("console.trace()");
 
-      const frameLinks = wrapper.find(`.stack-trace span.frame-link[data-url='${tempfilePath}']`);
+      const frameLinks = wrapper.find(`.stack-trace span.frame-link[data-url='${filepath}']`);
       expect(frameLinks.length).toBe(3);
 
       expect(frameLinks.eq(0).find(".frame-link-function-display-name").text()).toBe("testStacktraceFiltering");
-      expect(frameLinks.eq(0).find(".frame-link-filename").text()).toBe(tempfilePath);
+      expect(frameLinks.eq(0).find(".frame-link-filename").text()).toBe(filepath);
 
       expect(frameLinks.eq(1).find(".frame-link-function-display-name").text()).toBe("foo");
-      expect(frameLinks.eq(1).find(".frame-link-filename").text()).toBe(tempfilePath);
+      expect(frameLinks.eq(1).find(".frame-link-filename").text()).toBe(filepath);
 
       expect(frameLinks.eq(2).find(".frame-link-function-display-name").text()).toBe("triggerPacket");
-      expect(frameLinks.eq(2).find(".frame-link-filename").text()).toBe(tempfilePath);
+      expect(frameLinks.eq(2).find(".frame-link-filename").text()).toBe(filepath);
     });
   });
 });
