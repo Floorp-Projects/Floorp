@@ -276,7 +276,7 @@ do {								\
 /*
  * Attempt to get strict C99 semantics for assignment with non-C99 compilers.
  */
-#if FLT_EVAL_METHOD == 0 || __GNUC__ == 0
+#if !defined(_MSC_VER) && (FLT_EVAL_METHOD == 0 || __GNUC__ == 0)
 #define	STRICT_ASSIGN(type, lval, rval)	((lval) = (rval))
 #else
 #define	STRICT_ASSIGN(type, lval, rval) do {	\
