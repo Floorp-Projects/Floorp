@@ -141,10 +141,6 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
           }
         }
         break;
-      case "domwindowopened":
-        let win = subject.QueryInterface(Ci.nsIDOMEventTarget);
-        win.addEventListener("DOMContentLoaded", this, { once: true });
-        break;
     }
   },
 
@@ -406,33 +402,18 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
   },
 
   /**
-   * Starts setting up devtools on a given browser window. This method is
-   * called on DOMContentLoaded, so earlier than registerBrowserWindow which
-   * is called after delayed-startup notification. This method should only do
-   * what has to be done early. Otherwise devtools should be initialized lazily
-   * to prevent overloading Firefox startup.
-   *
-   * @param {ChromeWindow} window
-   *        The window to which devtools should be hooked to.
-   */
-  _onBrowserWindowLoaded: function (win) {
-    if (!win.gBrowser) {
-      return;
-    }
-    BrowserMenus.addMenus(win.document);
-  },
-
-  /**
    * Add this DevTools's presence to a browser window's document
    *
-   * @param {ChromeWindow} win
-   *        The window to which devtools should be hooked to.
+   * @param {XULDocument} doc
+   *        The document to which devtools should be hooked to.
    */
   _registerBrowserWindow: function (win) {
     if (gDevToolsBrowser._trackedBrowserWindows.has(win)) {
       return;
     }
     gDevToolsBrowser._trackedBrowserWindows.add(win);
+
+    BrowserMenus.addMenus(win.document);
 
     // Register the Developer widget in the Hamburger menu or navbar
     // only once menus are registered as it depends on it.
@@ -698,9 +679,6 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
       case "TabSelect":
         gDevToolsBrowser._updateMenuCheckbox();
         break;
-      case "DOMContentLoaded":
-        gDevToolsBrowser._onBrowserWindowLoaded(event.target.defaultView);
-        break;
       case "unload":
         // top-level browser window unload
         gDevToolsBrowser._forgetBrowserWindow(event.target.defaultView);
@@ -730,7 +708,6 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    */
   destroy: function () {
     Services.prefs.removeObserver("devtools.", gDevToolsBrowser);
-    Services.ww.unregisterNotification(gDevToolsBrowser);
     Services.obs.removeObserver(gDevToolsBrowser, "browser-delayed-startup-finished");
     Services.obs.removeObserver(gDevToolsBrowser.destroy, "quit-application");
 
@@ -763,7 +740,6 @@ gDevTools.on("toolbox-ready", gDevToolsBrowser._updateMenuCheckbox);
 gDevTools.on("toolbox-destroyed", gDevToolsBrowser._updateMenuCheckbox);
 
 Services.obs.addObserver(gDevToolsBrowser.destroy, "quit-application", false);
-Services.ww.registerNotification(gDevToolsBrowser);
 Services.obs.addObserver(gDevToolsBrowser, "browser-delayed-startup-finished", false);
 
 // Fake end of browser window load event for all already opened windows
@@ -772,7 +748,6 @@ let enumerator = Services.wm.getEnumerator(gDevTools.chromeWindowType);
 while (enumerator.hasMoreElements()) {
   let win = enumerator.getNext();
   if (win.gBrowserInit && win.gBrowserInit.delayedStartupFinished) {
-    gDevToolsBrowser._onBrowserWindowLoaded(win);
     gDevToolsBrowser._registerBrowserWindow(win);
   }
 }
