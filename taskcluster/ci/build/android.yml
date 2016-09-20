@@ -4,7 +4,6 @@ android-api-15/debug:
         product: mobile
         job-name:
             buildbot: android-api-15-debug
-            gecko-v1: android-api-15.debug
             gecko-v2: android-api-15-debug
     treeherder:
         platform: android-4-0-armv7-api15/debug

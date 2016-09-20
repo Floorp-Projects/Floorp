@@ -56,7 +56,6 @@ linux64/debug:
         product: firefox
         job-name:
             buildbot: linux64-debug
-            gecko-v1: linux64.debug
             gecko-v2: linux64-debug
     treeherder:
         platform: linux64/debug

@@ -25,7 +25,6 @@ jobs:
         index:
             product: firefox
             job-name:
-                gecko-v1: shell-haz.debug
                 gecko-v2: shell-haz-debug
         treeherder:
             platform: linux64/debug
@@ -47,7 +46,6 @@ jobs:
         index:
             product: firefox
             job-name:
-                gecko-v1: browser-haz.debug
                 gecko-v2: browser-haz-debug
         treeherder:
             platform: linux64/debug
@@ -67,7 +65,6 @@ jobs:
             product: b2g
             job-name:
                 buildbot: linux64-haz-mulet
-                gecko-v1: mulet-haz.debug
                 gecko-v2: mulet-haz-debug
         treeherder:
             platform: mulet-linux64/opt
