@@ -1186,6 +1186,23 @@ ContentChild::RecvInitRendering(Endpoint<PCompositorBridgeChild>&& aCompositor,
   return true;
 }
 
+bool
+ContentChild::RecvReinitRendering(Endpoint<PCompositorBridgeChild>&& aCompositor,
+                                  Endpoint<PImageBridgeChild>&& aImageBridge,
+                                  Endpoint<PVRManagerChild>&& aVRBridge)
+{
+  if (!CompositorBridgeChild::ReinitForContent(Move(aCompositor))) {
+    return false;
+  }
+  if (!ImageBridgeChild::ReinitForContent(Move(aImageBridge))) {
+    return false;
+  }
+  if (!gfx::VRManagerChild::ReinitForContent(Move(aVRBridge))) {
+    return false;
+  }
+  return true;
+}
+
 PSharedBufferManagerChild*
 ContentChild::AllocPSharedBufferManagerChild(mozilla::ipc::Transport* aTransport,
                                               base::ProcessId aOtherProcess)

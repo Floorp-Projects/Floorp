@@ -167,6 +167,12 @@ public:
     Endpoint<PImageBridgeChild>&& aImageBridge,
     Endpoint<PVRManagerChild>&& aVRBridge) override;
 
+  bool
+  RecvReinitRendering(
+    Endpoint<PCompositorBridgeChild>&& aCompositor,
+    Endpoint<PImageBridgeChild>&& aImageBridge,
+    Endpoint<PVRManagerChild>&& aVRBridge) override;
+
   PSharedBufferManagerChild*
   AllocPSharedBufferManagerChild(mozilla::ipc::Transport* aTransport,
                                   base::ProcessId aOtherProcess) override;

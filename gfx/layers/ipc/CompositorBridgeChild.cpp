@@ -196,6 +196,22 @@ CompositorBridgeChild::InitForContent(Endpoint<PCompositorBridgeChild>&& aEndpoi
   return true;
 }
 
+/* static */ bool
+CompositorBridgeChild::ReinitForContent(Endpoint<PCompositorBridgeChild>&& aEndpoint)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (RefPtr<CompositorBridgeChild> old = sCompositorBridge.forget()) {
+    // Note that at this point, ActorDestroy may not have been called yet,
+    // meaning mCanSend is still true. In this case we will try to send a
+    // synchronous WillClose message to the parent, and will certainly get
+    // a false result and a MsgDropped processing error. This is okay.
+    old->Destroy();
+  }
+
+  return InitForContent(Move(aEndpoint));
+}
+
 CompositorBridgeParent*
 CompositorBridgeChild::InitSameProcess(widget::CompositorWidget* aWidget,
                                        const uint64_t& aLayerTreeId,
