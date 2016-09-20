@@ -76,6 +76,8 @@ public:
   already_AddRefed<SVGAnimatedLength> Width();
   already_AddRefed<SVGAnimatedLength> Height();
 
+  nsIURI* GetSourceDocURI();
+
 protected:
   class SourceReference : public nsReferencedElement {
   public:
