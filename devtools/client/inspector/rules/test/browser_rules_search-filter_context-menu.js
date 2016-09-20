@@ -43,8 +43,12 @@ add_task(function* () {
   is(cmdUndo.getAttribute("disabled"), "true", "cmdUndo is disabled");
   is(cmdDelete.getAttribute("disabled"), "true", "cmdDelete is disabled");
   is(cmdSelectAll.getAttribute("disabled"), "true", "cmdSelectAll is disabled");
-  is(cmdCut.getAttribute("disabled"), "true", "cmdCut is disabled");
-  is(cmdCopy.getAttribute("disabled"), "true", "cmdCopy is disabled");
+
+  // Cut/Copy items are enabled in context menu even if there
+  // is no selection. See also Bug 1303033
+  is(cmdCut.getAttribute("disabled"), "", "cmdCut is enabled");
+  is(cmdCopy.getAttribute("disabled"), "", "cmdCopy is enabled");
+
   if (isWindows()) {
     // emptyClipboard only works on Windows (666254), assert paste only for this OS.
     is(cmdPaste.getAttribute("disabled"), "true", "cmdPaste is disabled");
