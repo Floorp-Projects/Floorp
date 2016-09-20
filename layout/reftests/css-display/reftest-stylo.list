@@ -9,7 +9,7 @@ random pref(layout.css.display-contents.enabled,true) == display-contents-acid-d
 pref(layout.css.display-contents.enabled,true) == display-contents-generated-content.html display-contents-generated-content.html
 pref(layout.css.display-contents.enabled,true) == display-contents-generated-content-2.html display-contents-generated-content-2.html
 pref(layout.css.display-contents.enabled,true) == display-contents-style-inheritance-1.html display-contents-style-inheritance-1.html
-pref(layout.css.display-contents.enabled,true) == display-contents-style-inheritance-1-stylechange.html display-contents-style-inheritance-1-stylechange.html
+skip pref(layout.css.display-contents.enabled,true) == display-contents-style-inheritance-1-stylechange.html display-contents-style-inheritance-1-stylechange.html
 skip pref(layout.css.display-contents.enabled,true) fuzzy-if(winWidget,12,100) == display-contents-style-inheritance-1-dom-mutations.html display-contents-style-inheritance-1-dom-mutations.html
 pref(layout.css.display-contents.enabled,true) == display-contents-tables.xhtml display-contents-tables.xhtml
 pref(layout.css.display-contents.enabled,true) == display-contents-tables-2.xhtml display-contents-tables-2.xhtml

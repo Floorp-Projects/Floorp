@@ -78,14 +78,16 @@ add_task(function* themeInOptionsPanel() {
 });
 
 add_task(function* themeUnregistration() {
+  let panelWin = toolbox.getCurrentPanel().panelWin;
   let onUnRegisteredTheme = once(gDevTools, "theme-unregistered");
+  let onThemeSwitchComplete = once(panelWin, "theme-switch-complete");
   gDevTools.unregisterTheme("test-theme");
   yield onUnRegisteredTheme;
+  yield onThemeSwitchComplete;
 
   ok(!gDevTools.getThemeDefinitionMap().has("test-theme"),
     "theme removed from map");
 
-  let panelWin = toolbox.getCurrentPanel().panelWin;
   let doc = panelWin.frameElement.contentDocument;
   let themeBox = doc.getElementById("devtools-theme-box");
 

@@ -1096,7 +1096,7 @@ double nsWindow::GetDefaultScaleInternal()
   if (mDefaultScale <= 0.0) {
     mDefaultScale = WinUtils::LogToPhysFactor(mWnd);
   }
-  return WinUtils::LogToPhysFactor(mWnd);
+  return mDefaultScale;
 }
 
 int32_t nsWindow::LogToPhys(double aValue)
@@ -2785,8 +2785,8 @@ NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor,
     return NS_ERROR_NOT_AVAILABLE;
 
   HCURSOR cursor;
-  // No scaling
-  IntSize size(0, 0);
+  double scale = GetDefaultScale().scale;
+  IntSize size = RoundedToInt(Size(width * scale, height * scale));
   rv = nsWindowGfx::CreateIcon(aCursor, true, aHotspotX, aHotspotY, size, &cursor);
   NS_ENSURE_SUCCESS(rv, rv);
 

@@ -195,12 +195,12 @@ random == flexbox-mbp-horiz-002b.xhtml flexbox-mbp-horiz-002b.xhtml
 == flexbox-with-pseudo-elements-003.html flexbox-with-pseudo-elements-003.html
 
 # Tests for combined influence of 'writing-mode' & 'direction' on flex axes
-test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-001.html flexbox-writing-mode-001.html
-test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-002.html flexbox-writing-mode-002.html
-test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-003.html flexbox-writing-mode-003.html
-test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-004.html flexbox-writing-mode-004.html
-test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-005.html flexbox-writing-mode-005.html
-test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-006.html flexbox-writing-mode-006.html
-test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-007.html flexbox-writing-mode-007.html
-test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-008.html flexbox-writing-mode-008.html
-test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-009.html flexbox-writing-mode-009.html
+== flexbox-writing-mode-001.html flexbox-writing-mode-001.html
+== flexbox-writing-mode-002.html flexbox-writing-mode-002.html
+== flexbox-writing-mode-003.html flexbox-writing-mode-003.html
+== flexbox-writing-mode-004.html flexbox-writing-mode-004.html
+== flexbox-writing-mode-005.html flexbox-writing-mode-005.html
+== flexbox-writing-mode-006.html flexbox-writing-mode-006.html
+== flexbox-writing-mode-007.html flexbox-writing-mode-007.html
+== flexbox-writing-mode-008.html flexbox-writing-mode-008.html
+== flexbox-writing-mode-009.html flexbox-writing-mode-009.html

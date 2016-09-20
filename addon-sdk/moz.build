@@ -32,6 +32,7 @@ addons = [
     'e10s-remote',
     'e10s-tabs',
     'e10s',
+    'embedded-webextension',
     'l10n-properties',
     'l10n',
     'layout-change',
@@ -181,6 +182,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != "gonk":
 EXTRA_JS_MODULES.commonjs += [
     'source/lib/index.js',
     'source/lib/test.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk += [
+    'source/lib/sdk/webextension.js',
 ]
 
 EXTRA_JS_MODULES.commonjs.dev += [
