@@ -33,7 +33,7 @@ PageError.defaultProps = {
 
 function PageError(props) {
   const { dispatch, message, open, sourceMapService, onViewSourceInDebugger } = props;
-  const { source, level, stacktrace, frame } = message;
+  const { source, type, level, stacktrace, frame } = message;
 
   const repeat = MessageRepeat({repeat: message.repeat});
   const icon = MessageIcon({level});
@@ -72,15 +72,9 @@ function PageError(props) {
   }
 
   const classes = ["message"];
-
-  if (source) {
-    classes.push(source);
-  }
-
-  if (level) {
-    classes.push(level);
-  }
-
+  classes.push(source);
+  classes.push(type);
+  classes.push(level);
   if (open === true) {
     classes.push("open");
   }

@@ -26,19 +26,15 @@ ConsoleCommand.propTypes = {
  */
 function ConsoleCommand(props) {
   const { message } = props;
-  const {source, level} = message;
+  const {source, type, level} = message;
 
   const icon = MessageIcon({level});
 
   const classes = ["message"];
 
-  if (source) {
-    classes.push(source);
-  }
-
-  if (level) {
-    classes.push(level);
-  }
+  classes.push(source);
+  classes.push(type);
+  classes.push(level);
 
   return dom.div({
     className: classes.join(" "),

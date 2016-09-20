@@ -87,13 +87,9 @@ function ConsoleApiCall(props) {
 
   const classes = ["message", "cm-s-mozilla"];
 
-  if (source) {
-    classes.push(source);
-  }
-
-  if (level) {
-    classes.push(level);
-  }
+  classes.push(source);
+  classes.push(type);
+  classes.push(level);
 
   if (open === true) {
     classes.push("open");

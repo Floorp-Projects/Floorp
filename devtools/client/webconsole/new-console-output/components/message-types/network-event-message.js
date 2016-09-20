@@ -29,19 +29,15 @@ NetworkEventMessage.propTypes = {
 
 function NetworkEventMessage(props) {
   const { dispatch, message, openNetworkPanel, open } = props;
-  const { actor, source, level, request, response, isXHR, totalTime } = message;
+  const { actor, source, type, level, request, response, isXHR, totalTime } = message;
   let { method, url } = request;
   let { httpVersion, status, statusText } = response;
 
   let classes = ["message", "cm-s-mozilla"];
 
-  if (source) {
-    classes.push(source);
-  }
-
-  if (level) {
-    classes.push(level);
-  }
+  classes.push(source);
+  classes.push(type);
+  classes.push(level);
 
   if (open) {
     classes.push("open");
