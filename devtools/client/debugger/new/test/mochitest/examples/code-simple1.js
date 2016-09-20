@@ -5,3 +5,27 @@ function main() {
   const result = func();
   return result;
 }
+
+function doEval() {
+  eval("(" + function() {
+    debugger;
+
+    window.evaledFunc = function() {
+      var foo = 1;
+      var bar = 2;
+      return foo + bar;
+    };
+  }.toString() + ")()");
+}
+
+function doNamedEval() {
+  eval("(" + function() {
+    debugger;
+
+    window.evaledFunc = function() {
+      var foo = 1;
+      var bar = 2;
+      return foo + bar;
+    };
+  }.toString() + ")();\n //# sourceURL=evaled.js");
+}
