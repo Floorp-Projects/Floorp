@@ -4505,17 +4505,19 @@
     "description": "Firefox: Time in ms spent updating UI in response to a tab switch"
   },
   "FX_TAB_SWITCH_TOTAL_MS": {
-    "expires_in_version": "default",
+    "expires_in_version": "56",
     "kind": "exponential",
     "high": 1000,
     "n_buckets": 20,
+    "releaseChannelCollection": "opt-out",
     "description": "Firefox: Time in ms till a tab switch is complete including the first paint"
   },
   "FX_TAB_SWITCH_TOTAL_E10S_MS": {
-    "expires_in_version": "default",
+    "expires_in_version": "56",
     "kind": "exponential",
     "high": 1000,
     "n_buckets": 20,
+    "releaseChannelCollection": "opt-out",
     "description": "Firefox: Time in ms between tab selection and tab content paint."
   },
   "FX_TAB_SWITCH_SPINNER_VISIBLE_MS": {
