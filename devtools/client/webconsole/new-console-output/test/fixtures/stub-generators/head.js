@@ -20,6 +20,8 @@ registerCleanupFunction(() => {
 const { prepareMessage } = require("devtools/client/webconsole/new-console-output/utils/messages");
 
 const BASE_PATH = "../../../../devtools/client/webconsole/new-console-output/test/fixtures";
+const TEMP_FILE_PATH = OS.Path.join(`${BASE_PATH}/stub-generators`, "test-tempfile.js");
+
 
 function formatPacket(key, packet) {
   return `

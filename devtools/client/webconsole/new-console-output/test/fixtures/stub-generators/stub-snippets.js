@@ -49,11 +49,18 @@ let evaluationResult = new Map(evaluationResultCommands.map(cmd => [cmd, cmd]));
 
 // Page Error
 
-const pageErrorCommands = [
-  "asdf()",
-];
+let pageError = new Map();
 
-let pageError = new Map(pageErrorCommands.map(cmd => [cmd, cmd]));
+pageError.set("Reference Error", `
+  function bar() {
+    asdf()
+  }
+  function foo() {
+    bar()
+  }
+
+  foo()
+`);
 
 module.exports = {
   consoleApi,
