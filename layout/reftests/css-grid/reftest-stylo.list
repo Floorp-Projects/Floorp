@@ -40,10 +40,10 @@ skip-if(Android) == grid-placement-definite-implicit-001.html grid-placement-def
 == grid-placement-definite-implicit-002.html grid-placement-definite-implicit-002.html
 skip-if(Android) fuzzy-if(winWidget,1,32) == grid-placement-auto-implicit-001.html grid-placement-auto-implicit-001.html
 == grid-placement-abspos-implicit-001.html grid-placement-abspos-implicit-001.html
-pref(layout.css.vertical-text.enabled,true) == rtl-grid-placement-definite-001.html rtl-grid-placement-definite-001.html
-pref(layout.css.vertical-text.enabled,true) == rtl-grid-placement-auto-row-sparse-001.html rtl-grid-placement-auto-row-sparse-001.html
-pref(layout.css.vertical-text.enabled,true) == vlr-grid-placement-auto-row-sparse-001.html vlr-grid-placement-auto-row-sparse-001.html
-pref(layout.css.vertical-text.enabled,true) == vrl-grid-placement-auto-row-sparse-001.html vrl-grid-placement-auto-row-sparse-001.html
+== rtl-grid-placement-definite-001.html rtl-grid-placement-definite-001.html
+== rtl-grid-placement-auto-row-sparse-001.html rtl-grid-placement-auto-row-sparse-001.html
+== vlr-grid-placement-auto-row-sparse-001.html vlr-grid-placement-auto-row-sparse-001.html
+== vrl-grid-placement-auto-row-sparse-001.html vrl-grid-placement-auto-row-sparse-001.html
 == grid-relpos-items-001.html grid-relpos-items-001.html
 == grid-item-sizing-percent-001.html grid-item-sizing-percent-001.html
 == grid-item-sizing-px-001.html grid-item-sizing-px-001.html
