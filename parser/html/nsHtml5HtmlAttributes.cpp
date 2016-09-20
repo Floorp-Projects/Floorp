@@ -60,8 +60,9 @@ nsHtml5HtmlAttributes* nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES = nullptr;
 nsHtml5HtmlAttributes::nsHtml5HtmlAttributes(int32_t mode)
   : mode(mode),
     length(0),
-    names(jArray<nsHtml5AttributeName*,int32_t>::newJArray(5)),
-    values(jArray<nsString*,int32_t>::newJArray(5))
+    names(jArray<nsHtml5AttributeName*,int32_t>::newJArray(8)),
+    values(jArray<nsString*,int32_t>::newJArray(8)),
+    lines(jArray<int32_t,int32_t>::newJArray(8))
 {
   MOZ_COUNT_CTOR(nsHtml5HtmlAttributes);
 }
@@ -136,8 +137,15 @@ nsHtml5HtmlAttributes::getAttributeNameNoBoundsCheck(int32_t index)
   return names[index];
 }
 
+int32_t 
+nsHtml5HtmlAttributes::getLineNoBoundsCheck(int32_t index)
+{
+  MOZ_ASSERT(index < length && index >= 0, "Index out of bounds");
+  return lines[index];
+}
+
 void 
-nsHtml5HtmlAttributes::addAttribute(nsHtml5AttributeName* name, nsString* value)
+nsHtml5HtmlAttributes::addAttribute(nsHtml5AttributeName* name, nsString* value, int32_t line)
 {
   if (names.length == length) {
     int32_t newLen = length << 1;
@@ -147,9 +155,13 @@ nsHtml5HtmlAttributes::addAttribute(nsHtml5AttributeName* name, nsString* value)
     jArray<nsString*,int32_t> newValues = jArray<nsString*,int32_t>::newJArray(newLen);
     nsHtml5ArrayCopy::arraycopy(values, newValues, values.length);
     values = newValues;
+    jArray<int32_t,int32_t> newLines = jArray<int32_t,int32_t>::newJArray(newLen);
+    nsHtml5ArrayCopy::arraycopy(lines, newLines, lines.length);
+    lines = newLines;
   }
   names[length] = name;
   values[length] = value;
+  lines[length] = line;
   length++;
 }
 
@@ -211,7 +223,7 @@ nsHtml5HtmlAttributes::cloneAttributes(nsHtml5AtomTable* interner)
   MOZ_ASSERT((!length) || !mode || mode == 3);
   nsHtml5HtmlAttributes* clone = new nsHtml5HtmlAttributes(0);
   for (int32_t i = 0; i < length; i++) {
-    clone->addAttribute(names[i]->cloneAttributeName(interner), nsHtml5Portability::newStringFromString(values[i]));
+    clone->addAttribute(names[i]->cloneAttributeName(interner), nsHtml5Portability::newStringFromString(values[i]), lines[i]);
   }
   return clone;
 }

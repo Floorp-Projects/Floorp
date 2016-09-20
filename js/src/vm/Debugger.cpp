@@ -4356,7 +4356,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
                 return;
         }
         if (hasSource && !(source.is<ScriptSourceObject*>() &&
-                           source.as<ScriptSourceObject*>() == script->sourceObject()))
+                           source.as<ScriptSourceObject*>()->source() == script->scriptSource()))
         {
             return;
         }
