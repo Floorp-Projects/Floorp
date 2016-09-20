@@ -4,10 +4,13 @@
 
 // Test utils.
 const expect = require("expect");
-const { renderComponent } = require("devtools/client/webconsole/new-console-output/test/helpers");
+const { render } = require("enzyme");
+
+// React
+const { createFactory } = require("devtools/client/shared/vendor/react");
 
 // Components under test.
-const { ConsoleApiCall } = require("devtools/client/webconsole/new-console-output/components/message-types/console-api-call");
+const ConsoleApiCall = createFactory(require("devtools/client/webconsole/new-console-output/components/message-types/console-api-call").ConsoleApiCall);
 
 // Test fakes.
 const { stubPreparedMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
@@ -17,64 +20,51 @@ describe("ConsoleAPICall component:", () => {
   describe("console.log", () => {
     it("renders string grips", () => {
       const message = stubPreparedMessages.get("console.log('foobar', 'test')");
-      const rendered = renderComponent(ConsoleApiCall, {message, onViewSourceInDebugger});
+      const wrapper = render(ConsoleApiCall({ message, onViewSourceInDebugger }));
 
-      const messageBody = getMessageBody(rendered);
       // @TODO should output: foobar test
-      expect(messageBody.textContent).toBe("\"foobar\"\"test\"");
-
-      const consoleStringNodes = messageBody.querySelectorAll(".objectBox-string");
-      expect(consoleStringNodes.length).toBe(2);
+      expect(wrapper.find(".message-body").text()).toBe("\"foobar\"\"test\"");
+      expect(wrapper.find(".objectBox-string").length).toBe(2);
+      expect(wrapper.find("div.message.cm-s-mozilla span span.message-flex-body span.message-body.devtools-monospace").length).toBe(1);
     });
+
     it("renders repeat node", () => {
       const message =
         stubPreparedMessages.get("console.log('foobar', 'test')")
         .set("repeat", 107);
-      const rendered = renderComponent(ConsoleApiCall, {message, onViewSourceInDebugger});
+      const wrapper = render(ConsoleApiCall({ message, onViewSourceInDebugger }));
 
-      const repeatNode = getRepeatNode(rendered);
-      expect(repeatNode[0].textContent).toBe("107");
+      expect(wrapper.find(".message-repeats").text()).toBe("107");
+
+      expect(wrapper.find("span > span.message-flex-body > span.message-body.devtools-monospace + span.message-repeats").length).toBe(1);
     });
   });
 
   describe("console.count", () => {
     it("renders", () => {
       const message = stubPreparedMessages.get("console.count('bar')");
-      const rendered = renderComponent(ConsoleApiCall, {message, onViewSourceInDebugger});
+      const wrapper = render(ConsoleApiCall({ message, onViewSourceInDebugger }));
 
-      const messageBody = getMessageBody(rendered);
-      expect(messageBody.textContent).toBe(message.messageText);
+      expect(wrapper.find(".message-body").text()).toBe("bar: 1");
     });
   });
 
   describe("console.time", () => {
     it("does not show anything", () => {
       const message = stubPreparedMessages.get("console.time('bar')");
-      const rendered = renderComponent(ConsoleApiCall, {message, onViewSourceInDebugger});
+      const wrapper = render(ConsoleApiCall({ message, onViewSourceInDebugger }));
 
-      const messageBody = getMessageBody(rendered);
-      expect(messageBody.textContent).toBe("");
+      expect(wrapper.find(".message-body").text()).toBe("");
     });
   });
 
   describe("console.timeEnd", () => {
     it("renders as expected", () => {
       const message = stubPreparedMessages.get("console.timeEnd('bar')");
-      const rendered = renderComponent(ConsoleApiCall, {message, onViewSourceInDebugger});
+      const wrapper = render(ConsoleApiCall({ message, onViewSourceInDebugger }));
 
-      const messageBody = getMessageBody(rendered);
-      expect(messageBody.textContent).toBe(message.messageText);
-      expect(messageBody.textContent).toMatch(/^bar: \d+(\.\d+)?ms$/);
+      expect(wrapper.find(".message-body").text()).toBe(message.messageText);
+      expect(wrapper.find(".message-body").text()).toMatch(/^bar: \d+(\.\d+)?ms$/);
     });
   });
 });
-
-function getMessageBody(rendered) {
-  const queryPath = "div.message.cm-s-mozilla span span.message-flex-body span.message-body.devtools-monospace";
-  return rendered.querySelector(queryPath);
-}
-
-function getRepeatNode(rendered) {
-  const repeatPath = "span > span.message-flex-body > span.message-body.devtools-monospace + span.message-repeats";
-  return rendered.querySelectorAll(repeatPath);
-}
