@@ -191,6 +191,23 @@ toolbar[brighttext] #downloads-indicator-counter {
   box-shadow: none !important;
 }
 
+:root[devtoolstheme="dark"] #identity-icon:-moz-lwtheme {
+  --identity-icon-normal: url(chrome://browser/skin/identity-icon.svg#normal-white);
+  --identity-icon-hover: url(chrome://browser/skin/identity-icon.svg#hover-white);
+  --identity-icon-notice: url(chrome://browser/skin/identity-icon.svg#notice-white);
+  --identity-icon-notice-hover: url(chrome://browser/skin/identity-icon.svg#notice-hover-white);
+}
+
+:root[devtoolstheme="dark"] #tracking-protection-icon:-moz-lwtheme {
+  --tracking-protection-icon-enabled: url(chrome://browser/skin/tracking-protection-16.svg#enabled-white);
+  --tracking-protection-icon-disabled: url(chrome://browser/skin/tracking-protection-16.svg#disabled-white);
+}
+
+:root[devtoolstheme="dark"] #connection-icon:-moz-lwtheme {
+  --connection-icon-mixed-passive-loaded: url(chrome://browser/skin/connection-mixed-passive-loaded.svg#icon-white);
+  --connection-icon-mixed-active-loaded: url(chrome://browser/skin/connection-mixed-active-loaded.svg#icon-white);
+}
+
 #urlbar {
   border-inline-start: none !important;
   opacity: 1 !important;
