@@ -1328,14 +1328,10 @@ CssPropertyInfo.prototype = {
    */
   _refilterSelectors: function () {
     let passId = ++this._cssLogic._passId;
-    let ruleCount = 0;
 
     let iterator = function (selectorInfo) {
       let cssRule = selectorInfo.selector.cssRule;
       if (cssRule._passId != passId) {
-        if (cssRule.sheetAllowed) {
-          ruleCount++;
-        }
         cssRule._passId = passId;
       }
     };

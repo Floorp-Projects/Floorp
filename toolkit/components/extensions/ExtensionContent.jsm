@@ -85,7 +85,7 @@ var apiManager = new class extends SchemaAPIManager {
       super.registerSchemaAPI(namespace, envType, getAPI);
     }
   }
-};
+}();
 
 // Represents a content script.
 function Script(extension, options, deferred = PromiseUtils.defer()) {
