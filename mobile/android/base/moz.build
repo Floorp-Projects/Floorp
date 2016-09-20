@@ -11,21 +11,24 @@ CONFIGURE_SUBST_FILES += ['adjust_sdk_app_token']
 include('android-services.mozbuild')
 
 geckoview_source_dir = TOPSRCDIR + '/mobile/android/geckoview/src/main/'
+geckoview_thirdparty_source_dir = TOPSRCDIR + '/mobile/android/geckoview/src/thirdparty/'
 thirdparty_source_dir = TOPSRCDIR + '/mobile/android/thirdparty/'
 
 constants_jar = add_java_jar('constants')
-constants_jar.sources = ['java/org/mozilla/gecko/' + x for x in [
-    'adjust/AdjustHelperInterface.java',
-    'adjust/AttributionHelperListener.java',
+constants_jar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x for x in [
     'annotation/JNITarget.java',
     'annotation/ReflectionTarget.java',
     'annotation/RobocopTarget.java',
     'annotation/WebRTCJNITarget.java',
     'annotation/WrapForJNI.java',
+    'SysInfo.java',
+]]
+constants_jar.sources += ['java/org/mozilla/gecko/' + x for x in [
+    'adjust/AdjustHelperInterface.java',
+    'adjust/AttributionHelperListener.java',
     'db/BrowserContract.java',
     'LocaleManager.java',
     'Locales.java',
-    'SysInfo.java',
 ]]
 constants_jar.generated_sources = [
     'preprocessed/org/mozilla/gecko/AdjustConstants.java',
@@ -289,10 +292,10 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
     'widget/SwipeDismissListViewTouchListener.java',
 ]]
 
-gvjar.sources += [thirdparty_source_dir + f for f in [
-    'com/googlecode/eyesfree/braille/selfbraille/ISelfBrailleService.java',
-    'com/googlecode/eyesfree/braille/selfbraille/SelfBrailleClient.java',
-    'com/googlecode/eyesfree/braille/selfbraille/WriteData.java',
+gvjar.sources += [geckoview_thirdparty_source_dir + f for f in [
+    'java/com/googlecode/eyesfree/braille/selfbraille/ISelfBrailleService.java',
+    'java/com/googlecode/eyesfree/braille/selfbraille/SelfBrailleClient.java',
+    'java/com/googlecode/eyesfree/braille/selfbraille/WriteData.java',
 ]]
 
 gvjar.extra_jars += [

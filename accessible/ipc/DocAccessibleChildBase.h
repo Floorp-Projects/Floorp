@@ -60,6 +60,10 @@ public:
 protected:
   static uint32_t InterfacesFor(Accessible* aAcc);
   static void SerializeTree(Accessible* aRoot, nsTArray<AccessibleData>& aTree);
+#if defined(XP_WIN)
+  static void SetMsaaIds(Accessible* aRoot, uint32_t& aMsaaIdIndex,
+                         const nsTArray<MsaaMapping>& aNewMsaaIds);
+#endif
 
   DocAccessible*  mDoc;
 };

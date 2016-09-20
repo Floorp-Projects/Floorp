@@ -590,6 +590,8 @@ public:
   virtual bool RecvPrint(const uint64_t& aOuterWindowID,
                          const PrintData& aPrintData) override;
 
+  virtual bool RecvUpdateNativeWindowHandle(const uintptr_t& aNewHandle) override;
+
   /**
    * Native widget remoting protocol for use with windowed plugins with e10s.
    */
@@ -650,6 +652,10 @@ public:
 
   // Request that the docshell be marked as active.
   void ForcePaint(uint64_t aLayerObserverEpoch);
+
+#if defined(XP_WIN) && defined(ACCESSIBILITY)
+  uintptr_t GetNativeWindowHandle() const { return mNativeWindowHandle; }
+#endif
 
 protected:
   virtual ~TabChild();
@@ -788,6 +794,11 @@ private:
 
   // The most recently seen layer observer epoch in RecvSetDocShellIsActive.
   uint64_t mLayerObserverEpoch;
+
+#if defined(XP_WIN) && defined(ACCESSIBILITY)
+  // The handle associated with the native window that contains this tab
+  uintptr_t mNativeWindowHandle;
+#endif // defined(XP_WIN)
 
   DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };
