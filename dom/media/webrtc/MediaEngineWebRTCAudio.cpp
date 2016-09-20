@@ -820,7 +820,10 @@ MediaEngineWebRTCMicrophoneSource::Shutdown()
   }
 
   FreeChannel();
-  DeInitEngine();
+  MOZ_ASSERT(sChannelsOpen > 0);
+  if (--sChannelsOpen == 0) {
+    DeInitEngine();
+  }
 
   mAudioInput = nullptr;
 }
