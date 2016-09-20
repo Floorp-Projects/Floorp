@@ -36,7 +36,7 @@ JOB_NAME_WHITELIST = set([
     'linux64-jsdcov-opt',
     'linux64-l10n-opt',
     'linux64-opt',
-    'linux64-pgo-opt',
+    'linux64-pgo',
     'linux64-st-an-opt',
     'linux64-valgrind-opt',
     'linux-debug',
