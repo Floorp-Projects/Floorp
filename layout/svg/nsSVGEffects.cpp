@@ -903,16 +903,40 @@ ResolveFragmentOrURL(nsIFrame* aFrame, const FragmentOrURL* aFragmentOrURL)
     return result.forget();
   }
 
+  // For a local-reference URL, resolve that fragment against the current
+  // document that relative URLs are resolved against.
   nsIContent* content = aFrame->GetContent();
-  nsCOMPtr<nsIURI> baseURI = content->GetBaseURI();
+  nsCOMPtr<nsIURI> baseURI = content->OwnerDoc()->GetDocumentURI();
 
   if (content->IsInAnonymousSubtree()) {
-    // content is in a shadow tree.
-    // Depending on where this url comes from, choose either the baseURI of the
-    // original document of content or the root document of the shadow tree
-    // to resolve URI.
-    if (!aFragmentOrURL->EqualsExceptRef(baseURI))
-      baseURI = content->OwnerDoc()->GetBaseURI();
+    nsIContent* bindingParent = content->GetBindingParent();
+    nsCOMPtr<nsIURI> originalURI;
+
+    // content is in a shadow tree.  If this URL was specified in the subtree
+    // referenced by the <use>(or -moz-binding) element, and that subtree came
+    // from a separate resource document, then we want the fragment-only URL
+    // to resolve to an element from the resource document.  Otherwise, the
+    // URL was specified somewhere in the document with the <use> element, and
+    // we want the fragment-only URL to resolve to an element in that document.
+    if (bindingParent) {
+      if (content->IsAnonymousContentInSVGUseSubtree()) {
+        SVGUseElement* useElement = static_cast<SVGUseElement*>(bindingParent);
+        originalURI = useElement->GetSourceDocURI();
+      } else {
+        nsXBLBinding* binding = bindingParent->GetXBLBinding();
+        if (binding) {
+          originalURI = binding->GetSourceDocURI();
+        } else {
+          MOZ_ASSERT(content->IsInNativeAnonymousSubtree(),
+                     "an non-native anonymous tree which is not from "
+                     "an XBL binding?");
+        }
+      }
+
+      if (originalURI && aFragmentOrURL->EqualsExceptRef(originalURI)) {
+        baseURI = originalURI;
+      }
+    }
   }
 
   return aFragmentOrURL->Resolve(baseURI);
