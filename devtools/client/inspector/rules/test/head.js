@@ -634,7 +634,9 @@ var togglePropStatus = Task.async(function* (view, textProp) {
  */
 var focusNewRuleViewProperty = Task.async(function* (ruleEditor) {
   info("Clicking on a close ruleEditor brace to start editing a new property");
-  ruleEditor.closeBrace.scrollIntoView();
+
+  // Use bottom alignment to avoid scrolling out of the parent element area.
+  ruleEditor.closeBrace.scrollIntoView(false);
   let editor = yield focusEditableField(ruleEditor.ruleView,
     ruleEditor.closeBrace);
 
