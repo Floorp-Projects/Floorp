@@ -493,6 +493,13 @@ public class Tokenizer implements Locator {
 
     private int line;
 
+    /*
+     * The line number of the current attribute. First set to the line of the
+     * attribute name and if there is a value, set to the line the value
+     * started on.
+     */
+    // CPPONLY: private int attributeLine;
+
     private Interner interner;
 
     // CPPONLY: private boolean viewingXmlSource;
@@ -747,6 +754,7 @@ public class Tokenizer implements Locator {
      * For C++ use only.
      */
     public void setLineNumber(int line) {
+        // CPPONLY: this.attributeLine = line; // XXX is this needed?
         this.line = line;
     }
 
@@ -1175,6 +1183,7 @@ public class Tokenizer implements Locator {
                         // [NOCPP[
                         , xmlnsPolicy
                 // ]NOCPP]
+                // CPPONLY: , attributeLine
                 );
                 // [NOCPP[
             }
@@ -1207,6 +1216,7 @@ public class Tokenizer implements Locator {
             // [NOCPP[
                     , xmlnsPolicy
             // ]NOCPP]
+            // CPPONLY: , attributeLine
             );
             attributeName = null; // attributeName has been adopted by the
             // |attributes| object
@@ -1753,6 +1763,7 @@ public class Tokenizer implements Locator {
                                      */
                                     c += 0x20;
                                 }
+                                // CPPONLY: attributeLine = line;
                                 /*
                                  * Set that attribute's name to the current
                                  * input character,
@@ -1902,6 +1913,7 @@ public class Tokenizer implements Locator {
                                  * U+0022 QUOTATION MARK (") Switch to the
                                  * attribute value (double-quoted) state.
                                  */
+                                // CPPONLY: attributeLine = line;
                                 clearStrBuf();
                                 state = transition(state, Tokenizer.ATTRIBUTE_VALUE_DOUBLE_QUOTED, reconsume, pos);
                                 break beforeattributevalueloop;
@@ -1912,6 +1924,7 @@ public class Tokenizer implements Locator {
                                  * value (unquoted) state and reconsume this
                                  * input character.
                                  */
+                                // CPPONLY: attributeLine = line;
                                 clearStrBuf();
                                 reconsume = true;
                                 state = transition(state, Tokenizer.ATTRIBUTE_VALUE_UNQUOTED, reconsume, pos);
@@ -1922,6 +1935,7 @@ public class Tokenizer implements Locator {
                                  * U+0027 APOSTROPHE (') Switch to the attribute
                                  * value (single-quoted) state.
                                  */
+                                // CPPONLY: attributeLine = line;
                                 clearStrBuf();
                                 state = transition(state, Tokenizer.ATTRIBUTE_VALUE_SINGLE_QUOTED, reconsume, pos);
                                 continue stateloop;
@@ -1965,6 +1979,7 @@ public class Tokenizer implements Locator {
                                  * Anything else Append the current input
                                  * character to the current attribute's value.
                                  */
+                                // CPPONLY: attributeLine = line;
                                 clearStrBufAndAppend(c);
                                 /*
                                  * Switch to the attribute value (unquoted)
@@ -6737,6 +6752,7 @@ public class Tokenizer implements Locator {
         confident = false;
         strBuf = null;
         line = 1;
+        // CPPONLY: attributeLine = 1;
         // [NOCPP[
         html4 = false;
         metaBoundaryPassed = false;
