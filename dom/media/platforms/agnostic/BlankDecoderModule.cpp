@@ -82,7 +82,7 @@ private:
   void OutputFrame(MediaData* aData)
   {
     if (!aData) {
-      mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__));
+      mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
       return;
     }
 
