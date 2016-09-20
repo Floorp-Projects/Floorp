@@ -49,17 +49,20 @@ jobs:
         when:
             files-changed:
                 - build/**
+                - config/**
                 - configure.py
                 - dom/bindings/**
                 - intl/icu/**
                 - js/moz.configure
                 - layout/tools/reftest/reftest/**
+                - Makefile.in
                 - media/webrtc/trunk/tools/gyp/**
                 - memory/**
                 - mfbt/**
                 - modules/fdlibm/**
                 - modules/zlib/src/**
                 - mozglue/**
+                - moz.build
                 - moz.configure
                 - nsprpub/**
                 - python/**
