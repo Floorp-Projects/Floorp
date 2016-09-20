@@ -42,10 +42,14 @@ DisplayListClipState::SetScrollClipForContainingBlockDescendants(
 {
   if (aBuilder->IsPaintingToWindow() &&
       mClipContentDescendants &&
-      aScrollClip != mScrollClipContainingBlockDescendants &&
-      !DisplayItemScrollClip::IsAncestor(mClipContentDescendantsScrollClip, aScrollClip)) {
-    if (mClipContentDescendantsScrollClip && mClipContentDescendantsScrollClip->mScrollableFrame) {
-      mClipContentDescendantsScrollClip->mScrollableFrame->SetScrollsClipOnUnscrolledOutOfFlow();
+      aScrollClip != mScrollClipContainingBlockDescendants) {
+    // Disable paint skipping for all scroll frames on the way to aScrollClip.
+    for (const DisplayItemScrollClip* sc = mClipContentDescendantsScrollClip;
+         sc && !DisplayItemScrollClip::IsAncestor(sc, aScrollClip);
+         sc = sc->mParent) {
+      if (sc->mScrollableFrame) {
+        sc->mScrollableFrame->SetScrollsClipOnUnscrolledOutOfFlow();
+      }
     }
     mClipContentDescendantsScrollClip = nullptr;
   }
