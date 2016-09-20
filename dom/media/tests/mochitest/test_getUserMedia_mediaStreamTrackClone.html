@@ -94,44 +94,6 @@
       var audioTrack5kClone = audioTrack5kOriginal.clone();
 
       return Promise.resolve().then(() => {
-        info("Analysing audio output of 1k original and 5k clone.");
-        var stream = new MediaStream();
-        stream.addTrack(audioTrack1kOriginal);
-        stream.addTrack(audioTrack5kClone);
-
-        var analyser = new AudioStreamAnalyser(ac, stream);
-        return analyser.waitForAnalysisSuccess(array =>
-                 array[analyser.binIndexForFrequency(50)] < 50 &&
-                 array[analyser.binIndexForFrequency(1000)] > 200 &&
-                 array[analyser.binIndexForFrequency(3000)] < 50 &&
-                 array[analyser.binIndexForFrequency(5000)] > 200 &&
-                 array[analyser.binIndexForFrequency(10000)] < 50)
-          .then(() => {
-            info("Waiting for original tracks to stop");
-            stream.getTracks().forEach(t => t.stop());
-            return analyser.waitForAnalysisSuccess(array =>
-                     array[analyser.binIndexForFrequency(50)] < 50 &&
-                     // WebAudioDestination streams do not handle stop()
-                     // XXX Should they? Plan to resolve that in bug 1208384.
-                     // array[analyser.binIndexForFrequency(1000)] < 50 &&
-                     array[analyser.binIndexForFrequency(3000)] < 50 &&
-                     // array[analyser.binIndexForFrequency(5000)] < 50 &&
-                     array[analyser.binIndexForFrequency(10000)] < 50);
-          }).then(() => analyser.disconnect());
-      }).then(() => {
-        info("Analysing audio output of clones of clones (1kx2 + 5kx5)");
-        var stream = new MediaStream([audioTrack1kClone.clone(),
-                                      audioTrack5kClone.clone().clone().clone().clone()]);
-
-        var analyser = new AudioStreamAnalyser(ac, stream);
-        return analyser.waitForAnalysisSuccess(array =>
-                 array[analyser.binIndexForFrequency(50)] < 50 &&
-                 array[analyser.binIndexForFrequency(1000)] > 200 &&
-                 array[analyser.binIndexForFrequency(3000)] < 50 &&
-                 array[analyser.binIndexForFrequency(5000)] > 200 &&
-                 array[analyser.binIndexForFrequency(10000)] < 50)
-          .then(() => analyser.disconnect());
-      }).then(() => {
         info("Analysing audio output enabled and disabled tracks that don't affect each other");
         audioTrack1kOriginal.enabled = true;
         audioTrack5kOriginal.enabled = false;
@@ -164,6 +126,42 @@
                        audioTrack5kOriginal,
                        audioTrack1kClone,
                        audioTrack5kClone].forEach(t => t.enabled = true));
+      }).then(() => {
+        info("Analysing audio output of 1k original and 5k clone.");
+        var stream = new MediaStream();
+        stream.addTrack(audioTrack1kOriginal);
+        stream.addTrack(audioTrack5kClone);
+
+        var analyser = new AudioStreamAnalyser(ac, stream);
+        return analyser.waitForAnalysisSuccess(array =>
+                 array[analyser.binIndexForFrequency(50)] < 50 &&
+                 array[analyser.binIndexForFrequency(1000)] > 200 &&
+                 array[analyser.binIndexForFrequency(3000)] < 50 &&
+                 array[analyser.binIndexForFrequency(5000)] > 200 &&
+                 array[analyser.binIndexForFrequency(10000)] < 50)
+          .then(() => {
+            info("Waiting for tracks to stop");
+            stream.getTracks().forEach(t => t.stop());
+            return analyser.waitForAnalysisSuccess(array =>
+                     array[analyser.binIndexForFrequency(50)] < 50 &&
+                     array[analyser.binIndexForFrequency(1000)] < 50 &&
+                     array[analyser.binIndexForFrequency(3000)] < 50 &&
+                     array[analyser.binIndexForFrequency(5000)] < 50 &&
+                     array[analyser.binIndexForFrequency(10000)] < 50);
+          }).then(() => analyser.disconnect());
+      }).then(() => {
+        info("Analysing audio output of clones of clones (1kx2 + 5kx4)");
+        var stream = new MediaStream([audioTrack1kClone.clone(),
+                                      audioTrack5kOriginal.clone().clone().clone().clone()]);
+
+        var analyser = new AudioStreamAnalyser(ac, stream);
+        return analyser.waitForAnalysisSuccess(array =>
+                 array[analyser.binIndexForFrequency(50)] < 50 &&
+                 array[analyser.binIndexForFrequency(1000)] > 200 &&
+                 array[analyser.binIndexForFrequency(3000)] < 50 &&
+                 array[analyser.binIndexForFrequency(5000)] > 200 &&
+                 array[analyser.binIndexForFrequency(10000)] < 50)
+          .then(() => analyser.disconnect());
       });
     }));
 </script>
