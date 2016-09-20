@@ -100,6 +100,8 @@ using mozilla::DataStorageType from "ipc/DataStorageIPCUtils.h";
 using mozilla::DocShellOriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
 using struct mozilla::dom::FlyWebPublishOptions from "mozilla/dom/FlyWebPublishOptionsIPCSerializer.h";
+using mozilla::Telemetry::Accumulation from "mozilla/TelemetryComms.h";
+using mozilla::Telemetry::KeyedAccumulation from "mozilla/TelemetryComms.h";
 
 union ChromeRegistryItem
 {
@@ -1215,6 +1217,12 @@ parent:
                                                 Principal principal);
 
      async UnstoreAndBroadcastBlobURLUnregistration(nsCString url);
+
+    /**
+     * Messages for communicating child Telemetry to the parent process
+     */
+    async AccumulateChildHistogram(Accumulation[] accumulations);
+    async AccumulateChildKeyedHistogram(KeyedAccumulation[] accumulations);
 
 both:
      async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,

@@ -396,4 +396,10 @@ interface nsITelemetry : nsISupports
    * Resets all the stored scalars. This is intended to be only used in tests.
    */
   void clearScalars();
+
+  /**
+   * Immediately sends any Telemetry batched on this process to the parent
+   * process. This is intended only to be used on process shutdown.
+   */
+  void flushBatchedChildTelemetry();
 };
