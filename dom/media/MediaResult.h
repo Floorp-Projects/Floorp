@@ -59,5 +59,7 @@ private:
   nsCString mMessage;
 };
 
+#define RESULT_DETAIL(arg, ...) nsPrintfCString("%s: " arg, __func__, ##__VA_ARGS__)
+
 } // namespace mozilla
 #endif // MediaResult_h_
