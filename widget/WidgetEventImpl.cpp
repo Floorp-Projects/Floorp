@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "gfxPrefs.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/InternalMutationEvent.h"
@@ -412,35 +413,15 @@ WidgetInputEvent::AccelModifier()
  * mozilla::WidgetWheelEvent (MouseEvents.h)
  ******************************************************************************/
 
-bool WidgetWheelEvent::sInitialized = false;
-bool WidgetWheelEvent::sIsSystemScrollSpeedOverrideEnabled = false;
-int32_t WidgetWheelEvent::sOverrideFactorX = 0;
-int32_t WidgetWheelEvent::sOverrideFactorY = 0;
-
-/* static */ void
-WidgetWheelEvent::Initialize()
-{
-  if (sInitialized) {
-    return;
-  }
-
-  Preferences::AddBoolVarCache(&sIsSystemScrollSpeedOverrideEnabled,
-    "mousewheel.system_scroll_override_on_root_content.enabled", false);
-  Preferences::AddIntVarCache(&sOverrideFactorX,
-    "mousewheel.system_scroll_override_on_root_content.horizontal.factor", 0);
-  Preferences::AddIntVarCache(&sOverrideFactorY,
-    "mousewheel.system_scroll_override_on_root_content.vertical.factor", 0);
-  sInitialized = true;
-}
-
 /* static */ double
 WidgetWheelEvent::ComputeOverriddenDelta(double aDelta, bool aIsForVertical)
 {
-  Initialize();
-  if (!sIsSystemScrollSpeedOverrideEnabled) {
+  if (!gfxPrefs::MouseWheelHasRootScrollDeltaOverride()) {
     return aDelta;
   }
-  int32_t intFactor = aIsForVertical ? sOverrideFactorY : sOverrideFactorX;
+  int32_t intFactor = aIsForVertical
+                      ? gfxPrefs::MouseWheelRootScrollVerticalFactor()
+                      : gfxPrefs::MouseWheelRootScrollHorizontalFactor();
   // Making the scroll speed slower doesn't make sense. So, ignore odd factor
   // which is less than 1.0.
   if (intFactor <= 100) {
