@@ -327,6 +327,23 @@ this.PlacesUtils = {
   },
 
   /**
+   * Makes a moz-action URI for the given action and set of parameters.
+   *
+   * @param   type
+   *          The action type.
+   * @param   params
+   *          A JS object of action params.
+   * @returns A moz-action URI as a string.
+   */
+  mozActionURI(type, params) {
+    let encodedParams = {};
+    for (let key in params) {
+      encodedParams[key] = encodeURIComponent(params[key]);
+    }
+    return "moz-action:" + type + "," + JSON.stringify(encodedParams);
+  },
+
+  /**
    * Determines whether or not a ResultNode is a Bookmark folder.
    * @param   aNode
    *          A result node
