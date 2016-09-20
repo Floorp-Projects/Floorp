@@ -2346,6 +2346,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                             // [NOCPP[
                                             , XmlViolationPolicy.ALLOW
                                     // ]NOCPP]
+                                            // CPPONLY: , attributes.getLineNoBoundsCheck(actionIndex)
                                     );
                                 }
                                 appendToCurrentNodeAndPushFormElementMayFoster(formAttrs);
@@ -2371,6 +2372,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                         // [NOCPP[
                                         , XmlViolationPolicy.ALLOW
                                 // ]NOCPP]
+                                // CPPONLY: , tokenizer.getLineNumber()
                                 );
                                 for (int i = 0; i < attributes.getLength(); i++) {
                                     AttributeName attributeQName = attributes.getAttributeNameNoBoundsCheck(i);
@@ -2384,7 +2386,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                                 // [NOCPP[
                                                 , XmlViolationPolicy.ALLOW
                                         // ]NOCPP]
-
+                                        // CPPONLY: , attributes.getLineNoBoundsCheck(i)
                                         );
                                     }
                                 }
