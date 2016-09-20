@@ -230,9 +230,11 @@ class DelayedRunnable : public Runnable,
                         public nsITimerCallback
 {
 public:
-  DelayedRunnable(already_AddRefed<nsIRunnable> aRunnable,
+  DelayedRunnable(already_AddRefed<nsIThread> aTargetThread,
+                  already_AddRefed<nsIRunnable> aRunnable,
                   uint32_t aDelay)
-    : mWrappedRunnable(aRunnable),
+    : mTargetThread(aTargetThread),
+      mWrappedRunnable(aRunnable),
       mDelayedFrom(TimeStamp::NowLoRes()),
       mDelay(aDelay)
   { }
@@ -246,6 +248,9 @@ public:
     NS_ENSURE_SUCCESS(rv, rv);
 
     MOZ_ASSERT(mTimer);
+    rv = mTimer->SetTarget(mTargetThread);
+
+    NS_ENSURE_SUCCESS(rv, rv);
     return mTimer->InitWithCallback(this, mDelay, nsITimer::TYPE_ONE_SHOT);
   }
 
@@ -283,6 +288,7 @@ public:
 private:
   ~DelayedRunnable() {}
 
+  nsCOMPtr<nsIThread> mTargetThread;
   nsCOMPtr<nsIRunnable> mWrappedRunnable;
   nsCOMPtr<nsITimer> mTimer;
   TimeStamp mDelayedFrom;
@@ -776,7 +782,9 @@ nsThread::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aDelayM
 {
   NS_ENSURE_TRUE(!!aDelayMs, NS_ERROR_UNEXPECTED);
 
-  RefPtr<DelayedRunnable> r = new DelayedRunnable(Move(aEvent), aDelayMs);
+  RefPtr<DelayedRunnable> r = new DelayedRunnable(Move(do_AddRef(this)),
+                                                  Move(aEvent),
+                                                  aDelayMs);
   nsresult rv = r->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
