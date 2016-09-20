@@ -22,9 +22,13 @@ stubPreparedMessages.set("ReferenceError: asdf is not defined", new ConsoleMessa
 	"messageText": "ReferenceError: asdf is not defined",
 	"parameters": null,
 	"repeat": 1,
-	"repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"type\":\"log\",\"level\":\"error\",\"messageText\":\"ReferenceError: asdf is not defined\",\"parameters\":null,\"repeatId\":null,\"stacktrace\":null,\"frame\":null}",
+	"repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"type\":\"log\",\"level\":\"error\",\"messageText\":\"ReferenceError: asdf is not defined\",\"parameters\":null,\"repeatId\":null,\"stacktrace\":null,\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js\",\"line\":3,\"column\":5}}",
 	"stacktrace": null,
-	"frame": null
+	"frame": {
+		"source": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js",
+		"line": 3,
+		"column": 5
+	}
 }));
 
 
@@ -35,12 +39,12 @@ stubPackets.set("ReferenceError: asdf is not defined", {
 		"errorMessage": "ReferenceError: asdf is not defined",
 		"errorMessageName": "JSMSG_NOT_DEFINED",
 		"exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
-		"sourceName": "data:text/html;charset=utf-8,stub%20generation",
+		"sourceName": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js",
 		"lineText": "",
-		"lineNumber": 1,
-		"columnNumber": 1,
+		"lineNumber": 3,
+		"columnNumber": 5,
 		"category": "content javascript",
-		"timeStamp": 1471886066466,
+		"timeStamp": 1473429607183,
 		"warning": false,
 		"error": false,
 		"exception": true,
@@ -49,21 +53,21 @@ stubPackets.set("ReferenceError: asdf is not defined", {
 		"private": false,
 		"stacktrace": [
 			{
-				"filename": "data:text/html;charset=utf-8,stub%20generation",
-				"lineNumber": 1,
-				"columnNumber": 1,
-				"functionName": null
+				"filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js",
+				"lineNumber": 3,
+				"columnNumber": 5,
+				"functionName": "bar"
 			},
 			{
-				"filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js line 52 > eval",
+				"filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js",
 				"lineNumber": 6,
-				"columnNumber": 7,
-				"functionName": null
+				"columnNumber": 5,
+				"functionName": "foo"
 			},
 			{
-				"filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js",
-				"lineNumber": 53,
-				"columnNumber": 20,
+				"filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js",
+				"lineNumber": 9,
+				"columnNumber": 3,
 				"functionName": null
 			}
 		]

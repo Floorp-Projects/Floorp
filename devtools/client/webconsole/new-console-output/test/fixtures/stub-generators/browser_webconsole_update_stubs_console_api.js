@@ -16,9 +16,8 @@ let stubs = {
 };
 
 add_task(function* () {
-  let tempFilePath = OS.Path.join(`${BASE_PATH}/stub-generators`, "test-tempfile.js");
   for (var [key, {keys, code}] of snippets) {
-    OS.File.writeAtomic(tempFilePath, `function triggerPacket() {${code}}`);
+    OS.File.writeAtomic(TEMP_FILE_PATH, `function triggerPacket() {${code}}`);
     let toolbox = yield openNewTabAndToolbox(TEST_URI, "webconsole");
     let hud = toolbox.getCurrentPanel().hud;
     let {ui} = hud;
@@ -45,5 +44,5 @@ add_task(function* () {
   }
   let filePath = OS.Path.join(`${BASE_PATH}/stubs`, "consoleApi.js");
   OS.File.writeAtomic(filePath, formatFile(stubs));
-  OS.File.writeAtomic(tempFilePath, "");
+  OS.File.writeAtomic(TEMP_FILE_PATH, "");
 });
