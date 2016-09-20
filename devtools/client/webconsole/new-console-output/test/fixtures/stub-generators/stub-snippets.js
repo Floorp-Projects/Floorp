@@ -23,11 +23,11 @@ let consoleApi = new Map(consoleApiCommands.map(
 consoleApi.set("console.trace()", {
   keys: ["console.trace()"],
   code: `
-function bar() {
+function testStacktraceFiltering() {
   console.trace()
 }
 function foo() {
-  bar()
+  testStacktraceFiltering()
 }
 
 foo()
