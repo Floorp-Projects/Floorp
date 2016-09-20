@@ -28,7 +28,7 @@ describe("PageError component:", () => {
     const locationLink = wrapper.find(`.message-location`);
     expect(locationLink.length).toBe(1);
     // @TODO Will likely change. See https://github.com/devtools-html/gecko-dev/issues/285
-    expect(locationLink.text()).toBe("http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generato");
+    expect(locationLink.text()).toBe("test-tempfile.js:3:5");
   });
 
   it("has a stacktrace which can be openned", () => {
