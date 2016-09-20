@@ -13,6 +13,7 @@
 #include "mozilla/dom/MediaKeySession.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/UnionTypes.h"
+#include "mozilla/Telemetry.h"
 #include "GMPCDMProxy.h"
 #include "mozilla/EMEUtils.h"
 #include "nsContentUtils.h"
@@ -400,6 +401,26 @@ MediaKeys::Init(ErrorResult& aRv)
   return promise.forget();
 }
 
+enum CDMCreatedType {
+  eClearKey = 0,
+  ePrimetime = 1,
+  eWidevine = 2,
+  eUnknown = 3
+};
+
+static CDMCreatedType
+ToCDMCreatedTelemetryEnum(const nsString& aKeySystem)
+{
+  if (!CompareUTF8toUTF16(kEMEKeySystemWidevine, aKeySystem)) {
+    return CDMCreatedType::eWidevine;
+  } else if (!CompareUTF8toUTF16(kEMEKeySystemClearkey, aKeySystem)) {
+    return CDMCreatedType::eClearKey;
+  } else if (!CompareUTF8toUTF16(kEMEKeySystemPrimetime, aKeySystem)) {
+    return CDMCreatedType::ePrimetime;
+  }
+  return CDMCreatedType::eUnknown;
+}
+
 void
 MediaKeys::OnCDMCreated(PromiseId aId, const nsACString& aNodeId, const uint32_t aPluginId)
 {
@@ -418,6 +439,8 @@ MediaKeys::OnCDMCreated(PromiseId aId, const nsACString& aNodeId, const uint32_t
   MediaKeySystemAccess::NotifyObservers(mParent,
                                         mKeySystem,
                                         MediaKeySystemStatus::Cdm_created);
+
+  Telemetry::Accumulate(Telemetry::VIDEO_CDM_CREATED, ToCDMCreatedTelemetryEnum(mKeySystem));
 }
 
 already_AddRefed<MediaKeySession>
