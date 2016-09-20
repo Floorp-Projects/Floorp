@@ -16,6 +16,8 @@ const ConsoleApiCall = createFactory(require("devtools/client/webconsole/new-con
 const { stubPreparedMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
 const onViewSourceInDebugger = () => {};
 
+const tempfilePath = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js";
+
 describe("ConsoleAPICall component:", () => {
   describe("console.log", () => {
     it("renders string grips", () => {
@@ -65,6 +67,27 @@ describe("ConsoleAPICall component:", () => {
 
       expect(wrapper.find(".message-body").text()).toBe(message.messageText);
       expect(wrapper.find(".message-body").text()).toMatch(/^bar: \d+(\.\d+)?ms$/);
+    });
+  });
+
+  describe("console.trace", () => {
+    it("renders", () => {
+      const message = stubPreparedMessages.get("console.trace()");
+      const wrapper = render(ConsoleApiCall({ message, onViewSourceInDebugger }));
+
+      expect(wrapper.find(".message-body").text()).toBe("console.trace()");
+
+      const frameLinks = wrapper.find(`.stack-trace span.frame-link[data-url='${tempfilePath}']`);
+      expect(frameLinks.length).toBe(3);
+
+      expect(frameLinks.eq(0).find(".frame-link-function-display-name").text()).toBe("bar");
+      expect(frameLinks.eq(0).find(".frame-link-filename").text()).toBe(tempfilePath);
+
+      expect(frameLinks.eq(1).find(".frame-link-function-display-name").text()).toBe("foo");
+      expect(frameLinks.eq(1).find(".frame-link-filename").text()).toBe(tempfilePath);
+
+      expect(frameLinks.eq(2).find(".frame-link-function-display-name").text()).toBe("triggerPacket");
+      expect(frameLinks.eq(2).find(".frame-link-filename").text()).toBe(tempfilePath);
     });
   });
 });
