@@ -107,7 +107,7 @@ Tracker.prototype = {
     Utils.jsonLoad("changes/" + this.file, this, function(json) {
       if (json && (typeof(json) == "object")) {
         this.changedIDs = json;
-      } else {
+      } else if (json !== null) {
         this._log.warn("Changed IDs file " + this.file + " contains non-object value.");
         json = null;
       }
