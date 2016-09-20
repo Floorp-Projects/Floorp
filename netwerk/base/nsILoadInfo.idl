@@ -247,6 +247,19 @@ interface nsILoadInfo : nsISupports
   nsIPrincipal binaryTriggeringPrincipal();
 
   /**
+   * The principalToInherit is the principal that is used when the inherit flag
+   * is set. For loads that are not TYPE_DOCUMENT or TYPE_SUBDOCUMENT that
+   * principal is always identical to the triggeringPrincipal.
+   */
+  attribute nsIPrincipal principalToInherit;
+
+  /**
+   * A C++-friendly version of principalToInherit.
+   */
+  [noscript, notxpcom, nostdcall, binaryname(PrincipalToInherit)]
+  nsIPrincipal binaryPrincipalToInherit();
+
+  /**
    * This is the ownerDocument of the LoadingNode. Unless the LoadingNode
    * is a Document, in which case the LoadingDocument is the same as the
    * LoadingNode.
