@@ -32,7 +32,7 @@ include default-style/reftest-stylo.list
 # Tests for block and inline orientation in combination with writing-mode
 # XXX Remove default-preferences setting here after bug 1138384 makes
 #     it the default for all channels
-default-preferences pref(layout.css.vertical-text.enabled,true)
+
 == meter-orient-vertical.html meter-orient-vertical.html
 == meter-orient-horizontal.html meter-orient-horizontal.html
 == meter-orient-block.html meter-orient-block.html

@@ -257,6 +257,9 @@ function startup(data, reasonCode) {
     let module = cuddlefish.Module('sdk/loader/cuddlefish', cuddlefishURI);
     let require = cuddlefish.Require(loader, module);
 
+    // Init the 'sdk/webextension' module from the bootstrap addon parameter.
+    require("sdk/webextension").initFromBootstrapAddonParam(data);
+
     require('sdk/addon/runner').startup(reason, {
       loader: loader,
       main: main,
