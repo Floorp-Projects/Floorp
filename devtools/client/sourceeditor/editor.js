@@ -468,7 +468,11 @@ Editor.prototype = {
       return L10N.getStr(name);
     });
 
-    cm.getInputField().controllers.insertControllerAt(0, controller(this));
+    try {
+      cm.getInputField().controllers.insertControllerAt(0, controller(this));
+    } catch (e) {
+      console.warn("controller command is only supported in XUL");
+    }
 
     editors.set(this, cm);
 
