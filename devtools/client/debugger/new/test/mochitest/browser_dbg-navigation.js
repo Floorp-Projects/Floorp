@@ -11,15 +11,13 @@ function countSources(dbg) {
  * navigating while paused will reset the pause state and sources
  */
 add_task(function* () {
-  const dbg = yield initDebugger(
-    "doc-script-switching.html",
-    "script-switching-01.js"
-  );
+  const dbg = yield initDebugger("doc-script-switching.html");
+  const { selectors: { getSelectedSource, getPause }, getState } = dbg;
 
   invokeInTab("firstCall");
   yield waitForPaused(dbg);
 
-  yield navigate(dbg, "doc-scripts.html", "simple1.js", "long.js");
+  yield navigate(dbg, "doc-scripts.html", "simple1.js");
   yield addBreakpoint(dbg, "simple1.js", 4);
   invokeInTab("main");
   yield waitForPaused(dbg);
@@ -29,6 +27,7 @@ add_task(function* () {
   yield navigate(dbg, "about:blank");
   yield waitForDispatch(dbg, "NAVIGATE");
   is(countSources(dbg), 0, "0 sources are loaded.");
+  ok(!getPause(getState()), "No pause state exists");
 
   yield navigate(dbg,
     "doc-scripts.html",
@@ -39,4 +38,10 @@ add_task(function* () {
   );
 
   is(countSources(dbg), 4, "4 sources are loaded.");
+
+  // Test that the current select source persists across reloads
+  yield selectSource(dbg, "long.js");
+  yield reload(dbg, "long.js");
+  ok(getSelectedSource(getState()).get("url").includes("long.js"),
+     "Selected source is long.js");
 });

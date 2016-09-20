@@ -1,4 +1,4 @@
-// Generated from: 30002d3cfc4341840af847af9eb2c31cab18abb5 Move some of editor-select.js test into editor-highlight.js to make tests more focused (and avoid timeouts on linux debug) (#746)
+// Generated from: 7c393c99dd82e9b181dab64ff474ee6ca9dc1c3f Revert "Add search input"
 
 var Debugger =
 /******/ (function(modules) { // webpackBootstrap
@@ -98,12 +98,12 @@ var Debugger =
 	var startDebugging = _require5.startDebugging;
 	
 	var firefox = __webpack_require__(98);
-	var configureStore = __webpack_require__(179);
-	var reducers = __webpack_require__(187);
-	var selectors = __webpack_require__(198);
+	var configureStore = __webpack_require__(180);
+	var reducers = __webpack_require__(188);
+	var selectors = __webpack_require__(199);
 	
-	var Tabs = __webpack_require__(205);
-	var App = __webpack_require__(211);
+	var Tabs = __webpack_require__(206);
+	var App = __webpack_require__(212);
 	
 	var createStore = configureStore({
 	  log: getValue("logging.actions"),
@@ -113,7 +113,7 @@ var Debugger =
 	});
 	
 	var store = createStore(combineReducers(reducers));
-	var actions = bindActionCreators(__webpack_require__(213), store.dispatch);
+	var actions = bindActionCreators(__webpack_require__(214), store.dispatch);
 	
 	if (isDevelopment()) {
 	  AppConstants.DEBUG_JS_MODULES = true;
@@ -169,7 +169,7 @@ var Debugger =
 	  });
 	} else if (isFirefoxPanel()) {
 	  (function () {
-	    var sourceMap = __webpack_require__(215);
+	    var sourceMap = __webpack_require__(216);
 	
 	    module.exports = {
 	      bootstrap: _ref => {
@@ -178,8 +178,8 @@ var Debugger =
 	
 	        firefox.setThreadClient(threadClient);
 	        firefox.setTabTarget(tabTarget);
-	        firefox.initPage(actions);
 	        renderRoot(App);
+	        return firefox.initPage(actions);
 	      },
 	      destroy: () => {
 	        unmountRoot();
@@ -10174,7 +10174,7 @@ var Debugger =
 	var Task = _require.Task;
 	
 	var firefox = __webpack_require__(98);
-	var chrome = __webpack_require__(172);
+	var chrome = __webpack_require__(173);
 	
 	var _require2 = __webpack_require__(45);
 	
@@ -10326,6 +10326,10 @@ var Debugger =
 	var setupEvents = _require7.setupEvents;
 	var clientEvents = _require7.clientEvents;
 	
+	var _require8 = __webpack_require__(172);
+	
+	var createSource = _require8.createSource;
+	
 	
 	var debuggerClient = null;
 	var threadClient = null;
@@ -10418,16 +10422,24 @@ var Debugger =
 	    threadClient.addListener(eventName, clientEvents[eventName]);
 	  });
 	
-	  threadClient.reconfigure({
-	    "useSourceMaps": false,
-	    "autoBlackBox": false
-	  });
+	  // In Firefox, we need to initially request all of the sources. This
+	  // usually fires off individual `newSource` notifications as the
+	  // debugger finds them, but there may be existing sources already in
+	  // the debugger (if it's paused already, or if loading the page from
+	  // bfcache) so explicity fire `newSource` events for all returned
+	  // sources.
+	  return threadClient.getSources().then(_ref => {
+	    var sources = _ref.sources;
 	
-	  // In Firefox, we need to initially request all of the sources which
-	  // makes the server iterate over them and fire individual
-	  // `newSource` notifications. We don't need to do anything with the
-	  // response since `newSource` notifications are fired.
-	  threadClient.getSources();
+	    actions.newSources(sources.map(createSource));
+	
+	    // If the threadClient is already paused, make sure to show a
+	    // paused state.
+	    var pausedPacket = threadClient.getLastPausePacket();
+	    if (pausedPacket) {
+	      clientEvents.paused(null, pausedPacket);
+	    }
+	  });
 	}
 	
 	module.exports = {
@@ -19873,22 +19885,53 @@ var Debugger =
 	
 	function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
 	
+	var _require = __webpack_require__(172);
+	
+	var createFrame = _require.createFrame;
+	var createSource = _require.createSource;
+	
+	
+	var CALL_STACK_PAGE_SIZE = 1000;
+	
+	var threadClient = void 0;
+	var actions = void 0;
+	
+	function setupEvents(dependencies) {
+	  threadClient = dependencies.threadClient;
+	  actions = dependencies.actions;
+	}
+	
+	function resumed(_, packet) {
+	  actions.resumed(packet);
+	}
+	
+	function newSource(_, _ref2) {
+	  var source = _ref2.source;
+	
+	  actions.newSource(createSource(source));
+	}
+	
+	var clientEvents = {
+	  paused,
+	  resumed,
+	  newSource
+	};
+	
+	module.exports = {
+	  setupEvents,
+	  clientEvents
+	};
+
+/***/ },
+/* 172 */
+/***/ function(module, exports, __webpack_require__) {
+
 	var _require = __webpack_require__(114);
 	
 	var Source = _require.Source;
 	var Frame = _require.Frame;
 	var Location = _require.Location;
 	
-	
-	var CALL_STACK_PAGE_SIZE = 1000;
-	var threadClient = void 0;
-	var actions = void 0;
-	var evalIndex = 1;
-	
-	function setupEvents(dependencies) {
-	  threadClient = dependencies.threadClient;
-	  actions = dependencies.actions;
-	}
 	
 	function createFrame(frame) {
 	  var title = void 0;
@@ -19912,43 +19955,29 @@ var Debugger =
 	  });
 	}
 	
-	function resumed(_, packet) {
-	  actions.resumed(packet);
-	}
-	
-	function newSource(_, packet) {
-	  var source = packet.source;
-	
+	var evalIndex = 1;
+	function createSource(source) {
 	  if (!source.url) {
 	    source.url = `SOURCE${ evalIndex++ }`;
 	  }
 	
-	  actions.newSource(Source({
+	  return Source({
 	    id: source.actor,
 	    url: source.url,
 	    isPrettyPrinted: false,
 	    sourceMapURL: source.sourceMapURL
-	  }));
+	  });
 	}
 	
-	var clientEvents = {
-	  paused,
-	  resumed,
-	  newSource
-	};
-	
-	module.exports = {
-	  setupEvents,
-	  clientEvents
-	};
+	module.exports = { createFrame, createSource };
 
 /***/ },
-/* 172 */
+/* 173 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* eslint-disable */
 	
-	var _require = __webpack_require__(173);
+	var _require = __webpack_require__(174);
 	
 	var connect = _require.connect;
 	
@@ -19963,16 +19992,16 @@ var Debugger =
 	var isEnabled = _require3.isEnabled;
 	var getValue = _require3.getValue;
 	
-	var _require4 = __webpack_require__(174);
+	var _require4 = __webpack_require__(175);
 	
 	var networkRequest = _require4.networkRequest;
 	
-	var _require5 = __webpack_require__(177);
+	var _require5 = __webpack_require__(178);
 	
 	var setupCommands = _require5.setupCommands;
 	var clientCommands = _require5.clientCommands;
 	
-	var _require6 = __webpack_require__(178);
+	var _require6 = __webpack_require__(179);
 	
 	var setupEvents = _require6.setupEvents;
 	var clientEvents = _require6.clientEvents;
@@ -20062,16 +20091,16 @@ var Debugger =
 	};
 
 /***/ },
-/* 173 */
+/* 174 */
 /***/ function(module, exports) {
 
 	module.exports = {};
 
 /***/ },
-/* 174 */
+/* 175 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _require = __webpack_require__(175);
+	var _require = __webpack_require__(176);
 	
 	var log = _require.log;
 	
@@ -20093,7 +20122,7 @@ var Debugger =
 	};
 
 /***/ },
-/* 175 */
+/* 176 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
@@ -20136,7 +20165,7 @@ var Debugger =
 	 * License, v. 2.0. If a copy of the MPL was not distributed with this
 	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 	
-	var co = __webpack_require__(176);
+	var co = __webpack_require__(177);
 	
 	var _require = __webpack_require__(46);
 	
@@ -20338,7 +20367,7 @@ var Debugger =
 	};
 
 /***/ },
-/* 176 */
+/* 177 */
 /***/ function(module, exports) {
 
 	
@@ -20581,7 +20610,7 @@ var Debugger =
 
 
 /***/ },
-/* 177 */
+/* 178 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var _require = __webpack_require__(114);
@@ -20705,7 +20734,7 @@ var Debugger =
 	};
 
 /***/ },
-/* 178 */
+/* 179 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var paused = (() => {
@@ -20815,7 +20844,7 @@ var Debugger =
 	};
 
 /***/ },
-/* 179 */
+/* 180 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -20828,23 +20857,23 @@ var Debugger =
 	var createStore = _require.createStore;
 	var applyMiddleware = _require.applyMiddleware;
 	
-	var _require2 = __webpack_require__(180);
+	var _require2 = __webpack_require__(181);
 	
 	var waitUntilService = _require2.waitUntilService;
 	
-	var _require3 = __webpack_require__(181);
+	var _require3 = __webpack_require__(182);
 	
 	var log = _require3.log;
 	
-	var _require4 = __webpack_require__(182);
+	var _require4 = __webpack_require__(183);
 	
 	var history = _require4.history;
 	
-	var _require5 = __webpack_require__(183);
+	var _require5 = __webpack_require__(184);
 	
 	var promise = _require5.promise;
 	
-	var _require6 = __webpack_require__(186);
+	var _require6 = __webpack_require__(187);
 	
 	var thunk = _require6.thunk;
 	
@@ -20892,7 +20921,7 @@ var Debugger =
 	module.exports = configureStore;
 
 /***/ },
-/* 180 */
+/* 181 */
 /***/ function(module, exports) {
 
 	/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -20962,7 +20991,7 @@ var Debugger =
 
 
 /***/ },
-/* 181 */
+/* 182 */
 /***/ function(module, exports) {
 
 	/**
@@ -20984,7 +21013,7 @@ var Debugger =
 	exports.log = log;
 
 /***/ },
-/* 182 */
+/* 183 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -21018,22 +21047,22 @@ var Debugger =
 	};
 
 /***/ },
-/* 183 */
+/* 184 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* This Source Code Form is subject to the terms of the Mozilla Public
 	 * License, v. 2.0. If a copy of the MPL was not distributed with this
 	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 	
-	var uuidgen = __webpack_require__(184).uuid;
+	var uuidgen = __webpack_require__(185).uuid;
 	var defer = __webpack_require__(112);
 	
-	var _require = __webpack_require__(175);
+	var _require = __webpack_require__(176);
 	
 	var entries = _require.entries;
 	var toObject = _require.toObject;
 	
-	var _require2 = __webpack_require__(185);
+	var _require2 = __webpack_require__(186);
 	
 	var executeSoon = _require2.executeSoon;
 	
@@ -21085,7 +21114,7 @@ var Debugger =
 	exports.promise = promiseMiddleware;
 
 /***/ },
-/* 184 */
+/* 185 */
 /***/ function(module, exports) {
 
 	
@@ -21098,7 +21127,7 @@ var Debugger =
 
 
 /***/ },
-/* 185 */
+/* 186 */
 /***/ function(module, exports) {
 
 	function reportException(who, exception) {
@@ -21125,7 +21154,7 @@ var Debugger =
 	};
 
 /***/ },
-/* 186 */
+/* 187 */
 /***/ function(module, exports) {
 
 	
@@ -21151,19 +21180,19 @@ var Debugger =
 	exports.thunk = thunk;
 
 /***/ },
-/* 187 */
+/* 188 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* This Source Code Form is subject to the terms of the Mozilla Public
 	 * License, v. 2.0. If a copy of the MPL was not distributed with this
 	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 	
-	var eventListeners = __webpack_require__(188);
-	var sources = __webpack_require__(190);
-	var breakpoints = __webpack_require__(194);
-	var asyncRequests = __webpack_require__(195);
-	var tabs = __webpack_require__(196);
-	var pause = __webpack_require__(197);
+	var eventListeners = __webpack_require__(189);
+	var sources = __webpack_require__(191);
+	var breakpoints = __webpack_require__(195);
+	var asyncRequests = __webpack_require__(196);
+	var tabs = __webpack_require__(197);
+	var pause = __webpack_require__(198);
 	
 	module.exports = {
 	  eventListeners,
@@ -21175,14 +21204,14 @@ var Debugger =
 	};
 
 /***/ },
-/* 188 */
+/* 189 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* This Source Code Form is subject to the terms of the Mozilla Public
 	 * License, v. 2.0. If a copy of the MPL was not distributed with this
 	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 	
-	var constants = __webpack_require__(189);
+	var constants = __webpack_require__(190);
 	
 	var initialState = {
 	  activeEventNames: [],
@@ -21219,7 +21248,7 @@ var Debugger =
 	module.exports = update;
 
 /***/ },
-/* 189 */
+/* 190 */
 /***/ function(module, exports) {
 
 	/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -21267,7 +21296,7 @@ var Debugger =
 	exports.DELETE_EXPRESSION = "DELETE_EXPRESSION";
 
 /***/ },
-/* 190 */
+/* 191 */
 /***/ function(module, exports, __webpack_require__) {
 
 	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
@@ -21276,9 +21305,9 @@ var Debugger =
 	 * License, v. 2.0. If a copy of the MPL was not distributed with this
 	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 	
-	var fromJS = __webpack_require__(191);
-	var I = __webpack_require__(192);
-	var makeRecord = __webpack_require__(193);
+	var fromJS = __webpack_require__(192);
+	var I = __webpack_require__(193);
+	var makeRecord = __webpack_require__(194);
 	
 	var State = makeRecord({
 	  sources: I.Map(),
@@ -21299,11 +21328,6 @@ var Debugger =
 	        var _source = action.source;
 	        return state.mergeIn(["sources", action.source.id], _source);
 	      }
-	
-	    case "ADD_SOURCES":
-	      return state.mergeIn(["sources"], I.Map(action.sources.map(source => {
-	        return [source.id, fromJS(source)];
-	      })));
 	
 	    case "LOAD_SOURCE_MAP":
 	      if (action.status == "done") {
@@ -21528,12 +21552,12 @@ var Debugger =
 	};
 
 /***/ },
-/* 191 */
+/* 192 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 	
-	var Immutable = __webpack_require__(192);
+	var Immutable = __webpack_require__(193);
 	
 	// When our app state is fully types, we should be able to get rid of
 	// this function. This is only temporarily necessary to support
@@ -21572,7 +21596,7 @@ var Debugger =
 	module.exports = fromJS;
 
 /***/ },
-/* 192 */
+/* 193 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -26558,7 +26582,7 @@ var Debugger =
 
 
 /***/ },
-/* 193 */
+/* 194 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -26568,7 +26592,7 @@ var Debugger =
 	// because all the fields are actually typed, unlike the builtin one.
 	// This depends on a performance fix that will go out in 0.29 though;
 	
-	var I = __webpack_require__(192);
+	var I = __webpack_require__(193);
 	
 	/**
 	 * Make an immutable record type
@@ -26583,7 +26607,7 @@ var Debugger =
 	module.exports = makeRecord;
 
 /***/ },
-/* 194 */
+/* 195 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -26591,14 +26615,14 @@ var Debugger =
 	 * License, v. 2.0. If a copy of the MPL was not distributed with this
 	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 	
-	var fromJS = __webpack_require__(191);
+	var fromJS = __webpack_require__(192);
 	
-	var _require = __webpack_require__(175);
+	var _require = __webpack_require__(176);
 	
 	var updateObj = _require.updateObj;
 	
-	var I = __webpack_require__(192);
-	var makeRecord = __webpack_require__(193);
+	var I = __webpack_require__(193);
+	var makeRecord = __webpack_require__(194);
 	
 	var State = makeRecord({
 	  breakpoints: I.Map(),
@@ -26772,7 +26796,7 @@ var Debugger =
 	};
 
 /***/ },
-/* 195 */
+/* 196 */
 /***/ function(module, exports, __webpack_require__) {
 
 	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
@@ -26781,7 +26805,7 @@ var Debugger =
 	 * License, v. 2.0. If a copy of the MPL was not distributed with this
 	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 	
-	var constants = __webpack_require__(189);
+	var constants = __webpack_require__(190);
 	var initialState = [];
 	
 	function update() {
@@ -26809,16 +26833,16 @@ var Debugger =
 	module.exports = update;
 
 /***/ },
-/* 196 */
+/* 197 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* This Source Code Form is subject to the terms of the Mozilla Public
 	 * License, v. 2.0. If a copy of the MPL was not distributed with this
 	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 	
-	var constants = __webpack_require__(189);
-	var Immutable = __webpack_require__(192);
-	var fromJS = __webpack_require__(191);
+	var constants = __webpack_require__(190);
+	var Immutable = __webpack_require__(193);
+	var fromJS = __webpack_require__(192);
 	
 	var initialState = fromJS({
 	  tabs: {},
@@ -26864,15 +26888,15 @@ var Debugger =
 	module.exports = update;
 
 /***/ },
-/* 197 */
+/* 198 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* This Source Code Form is subject to the terms of the Mozilla Public
 	 * License, v. 2.0. If a copy of the MPL was not distributed with this
 	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 	
-	var constants = __webpack_require__(189);
-	var fromJS = __webpack_require__(191);
+	var constants = __webpack_require__(190);
+	var fromJS = __webpack_require__(192);
 	
 	var initialState = fromJS({
 	  pause: null,
@@ -27030,16 +27054,16 @@ var Debugger =
 	};
 
 /***/ },
-/* 198 */
+/* 199 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 	
-	var URL = __webpack_require__(199);
-	var path = __webpack_require__(204);
-	var sources = __webpack_require__(190);
-	var pause = __webpack_require__(197);
-	var breakpoints = __webpack_require__(194);
+	var URL = __webpack_require__(200);
+	var path = __webpack_require__(205);
+	var sources = __webpack_require__(191);
+	var pause = __webpack_require__(198);
+	var breakpoints = __webpack_require__(195);
 	
 	function getTabs(state) {
 	  return state.tabs.get("tabs");
@@ -27104,7 +27128,7 @@ var Debugger =
 	};
 
 /***/ },
-/* 199 */
+/* 200 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -27128,7 +27152,7 @@ var Debugger =
 	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 	// USE OR OTHER DEALINGS IN THE SOFTWARE.
 	
-	var punycode = __webpack_require__(200);
+	var punycode = __webpack_require__(201);
 	
 	exports.parse = urlParse;
 	exports.resolve = urlResolve;
@@ -27200,7 +27224,7 @@ var Debugger =
 	      'gopher:': true,
 	      'file:': true
 	    },
-	    querystring = __webpack_require__(201);
+	    querystring = __webpack_require__(202);
 	
 	function urlParse(url, parseQueryString, slashesDenoteHost) {
 	  if (url && isObject(url) && url instanceof Url) return url;
@@ -27817,7 +27841,7 @@ var Debugger =
 
 
 /***/ },
-/* 200 */
+/* 201 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/*! https://mths.be/punycode v1.3.2 by @mathias */
@@ -28352,17 +28376,17 @@ var Debugger =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(101)(module), (function() { return this; }())))
 
 /***/ },
-/* 201 */
+/* 202 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
-	exports.decode = exports.parse = __webpack_require__(202);
-	exports.encode = exports.stringify = __webpack_require__(203);
+	exports.decode = exports.parse = __webpack_require__(203);
+	exports.encode = exports.stringify = __webpack_require__(204);
 
 
 /***/ },
-/* 202 */
+/* 203 */
 /***/ function(module, exports) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -28448,7 +28472,7 @@ var Debugger =
 
 
 /***/ },
-/* 203 */
+/* 204 */
 /***/ function(module, exports) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -28518,7 +28542,7 @@ var Debugger =
 
 
 /***/ },
-/* 204 */
+/* 205 */
 /***/ function(module, exports) {
 
 	function basename(path) {
@@ -28543,7 +28567,7 @@ var Debugger =
 	};
 
 /***/ },
-/* 205 */
+/* 206 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
@@ -28552,14 +28576,14 @@ var Debugger =
 	
 	var connect = _require.connect;
 	
-	var classnames = __webpack_require__(206);
+	var classnames = __webpack_require__(207);
 	
-	var _require2 = __webpack_require__(198);
+	var _require2 = __webpack_require__(199);
 	
 	var getTabs = _require2.getTabs;
 	
 	
-	__webpack_require__(207);
+	__webpack_require__(208);
 	var dom = React.DOM;
 	
 	var githubUrl = "https://github.com/devtools-html/debugger.html/blob/master";
@@ -28597,7 +28621,7 @@ var Debugger =
 	module.exports = connect(state => ({ tabs: getTabs(state) }))(Tabs);
 
 /***/ },
-/* 206 */
+/* 207 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -28651,16 +28675,16 @@ var Debugger =
 
 
 /***/ },
-/* 207 */
+/* 208 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 208 */,
 /* 209 */,
 /* 210 */,
-/* 211 */
+/* 211 */,
+/* 212 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
@@ -28676,19 +28700,19 @@ var Debugger =
 	
 	var bindActionCreators = _require2.bindActionCreators;
 	
-	var _require3 = __webpack_require__(212);
+	var _require3 = __webpack_require__(213);
 	
 	var Services = _require3.Services;
 	
-	var classnames = __webpack_require__(206);
-	var actions = __webpack_require__(213);
+	var classnames = __webpack_require__(207);
+	var actions = __webpack_require__(214);
 	
 	var _require4 = __webpack_require__(46);
 	
 	var isFirefoxPanel = _require4.isFirefoxPanel;
 	
 	
-	__webpack_require__(224);
+	__webpack_require__(225);
 	
 	// Using this static variable allows webpack to know at compile-time
 	// to avoid this require and not include it at all in the output.
@@ -28696,29 +28720,29 @@ var Debugger =
 	  require("../lib/themes/light-theme.css");
 	}
 	
-	var Sources = createFactory(__webpack_require__(226));
-	var Editor = createFactory(__webpack_require__(261));
-	var SplitBox = createFactory(__webpack_require__(266));
-	var RightSidebar = createFactory(__webpack_require__(270));
-	var SourceTabs = createFactory(__webpack_require__(347));
-	var SourceFooter = createFactory(__webpack_require__(352));
-	var Svg = __webpack_require__(234);
-	var Autocomplete = createFactory(__webpack_require__(355));
+	var Sources = createFactory(__webpack_require__(227));
+	var Editor = createFactory(__webpack_require__(262));
+	var SplitBox = createFactory(__webpack_require__(267));
+	var RightSidebar = createFactory(__webpack_require__(271));
+	var SourceTabs = createFactory(__webpack_require__(348));
+	var SourceFooter = createFactory(__webpack_require__(353));
+	var Svg = __webpack_require__(235);
+	var Autocomplete = createFactory(__webpack_require__(356));
 	
-	var _require5 = __webpack_require__(198);
+	var _require5 = __webpack_require__(199);
 	
 	var getSources = _require5.getSources;
 	var getSelectedSource = _require5.getSelectedSource;
 	
-	var _require6 = __webpack_require__(175);
+	var _require6 = __webpack_require__(176);
 	
 	var endTruncateStr = _require6.endTruncateStr;
 	
-	var _require7 = __webpack_require__(364);
+	var _require7 = __webpack_require__(365);
 	
 	var KeyShortcuts = _require7.KeyShortcuts;
 	
-	var _require8 = __webpack_require__(229);
+	var _require8 = __webpack_require__(230);
 	
 	var isHiddenSource = _require8.isHiddenSource;
 	var getURL = _require8.getURL;
@@ -28820,7 +28844,7 @@ var Debugger =
 	  selectedSource: getSelectedSource(state) }), dispatch => bindActionCreators(actions, dispatch))(App);
 
 /***/ },
-/* 212 */
+/* 213 */
 /***/ function(module, exports) {
 
 	/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -29435,22 +29459,22 @@ var Debugger =
 
 
 /***/ },
-/* 213 */
+/* 214 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 	
-	var breakpoints = __webpack_require__(214);
-	var eventListeners = __webpack_require__(217);
-	var sources = __webpack_require__(218);
-	var tabs = __webpack_require__(221);
-	var pause = __webpack_require__(222);
-	var navigation = __webpack_require__(223);
+	var breakpoints = __webpack_require__(215);
+	var eventListeners = __webpack_require__(218);
+	var sources = __webpack_require__(219);
+	var tabs = __webpack_require__(222);
+	var pause = __webpack_require__(223);
+	var navigation = __webpack_require__(224);
 	
 	module.exports = Object.assign(navigation, breakpoints, eventListeners, sources, tabs, pause);
 
 /***/ },
-/* 214 */
+/* 215 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
@@ -29466,18 +29490,18 @@ var Debugger =
 	 * @module actions/breakpoints
 	 */
 	
-	var constants = __webpack_require__(189);
+	var constants = __webpack_require__(190);
 	
-	var _require = __webpack_require__(183);
+	var _require = __webpack_require__(184);
 	
 	var PROMISE = _require.PROMISE;
 	
-	var _require2 = __webpack_require__(198);
+	var _require2 = __webpack_require__(199);
 	
 	var getBreakpoint = _require2.getBreakpoint;
 	var getBreakpoints = _require2.getBreakpoints;
 	
-	var _require3 = __webpack_require__(215);
+	var _require3 = __webpack_require__(216);
 	
 	var getOriginalLocation = _require3.getOriginalLocation;
 	var getGeneratedLocation = _require3.getGeneratedLocation;
@@ -29697,7 +29721,7 @@ var Debugger =
 	};
 
 /***/ },
-/* 215 */
+/* 216 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var getOriginalSources = (() => {
@@ -29795,16 +29819,16 @@ var Debugger =
 	
 	function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
 	
-	var _require = __webpack_require__(175);
+	var _require = __webpack_require__(176);
 	
 	var workerTask = _require.workerTask;
 	
-	var _require2 = __webpack_require__(216);
+	var _require2 = __webpack_require__(217);
 	
 	var makeOriginalSource = _require2.makeOriginalSource;
 	var getGeneratedSourceId = _require2.getGeneratedSourceId;
 	
-	var _require3 = __webpack_require__(198);
+	var _require3 = __webpack_require__(199);
 	
 	var getSource = _require3.getSource;
 	var getSourceByURL = _require3.getSourceByURL;
@@ -29899,7 +29923,7 @@ var Debugger =
 	};
 
 /***/ },
-/* 216 */
+/* 217 */
 /***/ function(module, exports) {
 
 	
@@ -29928,7 +29952,7 @@ var Debugger =
 	};
 
 /***/ },
-/* 217 */
+/* 218 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -29942,13 +29966,13 @@ var Debugger =
 	 * @module actions/event-listeners
 	 */
 	
-	var constants = __webpack_require__(189);
+	var constants = __webpack_require__(190);
 	
-	var _require = __webpack_require__(175);
+	var _require = __webpack_require__(176);
 	
 	var asPaused = _require.asPaused;
 	
-	var _require2 = __webpack_require__(185);
+	var _require2 = __webpack_require__(186);
 	
 	var reportException = _require2.reportException;
 	
@@ -30072,7 +30096,7 @@ var Debugger =
 	module.exports = { updateEventBreakpoints, fetchEventListeners };
 
 /***/ },
-/* 218 */
+/* 219 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
@@ -30128,7 +30152,7 @@ var Debugger =
 	
 	var defer = __webpack_require__(112);
 	
-	var _require = __webpack_require__(183);
+	var _require = __webpack_require__(184);
 	
 	var PROMISE = _require.PROMISE;
 	
@@ -30136,31 +30160,31 @@ var Debugger =
 	
 	var Task = _require2.Task;
 	
-	var _require3 = __webpack_require__(219);
+	var _require3 = __webpack_require__(220);
 	
 	var isJavaScript = _require3.isJavaScript;
 	
-	var _require4 = __webpack_require__(174);
+	var _require4 = __webpack_require__(175);
 	
 	var networkRequest = _require4.networkRequest;
 	
-	var _require5 = __webpack_require__(175);
+	var _require5 = __webpack_require__(176);
 	
 	var workerTask = _require5.workerTask;
 	
-	var _require6 = __webpack_require__(220);
+	var _require6 = __webpack_require__(221);
 	
 	var updateFrameLocations = _require6.updateFrameLocations;
 	
 	
-	var constants = __webpack_require__(189);
+	var constants = __webpack_require__(190);
 	var invariant = __webpack_require__(24);
 	
 	var _require7 = __webpack_require__(46);
 	
 	var isEnabled = _require7.isEnabled;
 	
-	var _require8 = __webpack_require__(215);
+	var _require8 = __webpack_require__(216);
 	
 	var createOriginalSources = _require8.createOriginalSources;
 	var getOriginalSourceTexts = _require8.getOriginalSourceTexts;
@@ -30168,7 +30192,7 @@ var Debugger =
 	var makeOriginalSource = _require8.makeOriginalSource;
 	var getGeneratedSource = _require8.getGeneratedSource;
 	
-	var _require9 = __webpack_require__(198);
+	var _require9 = __webpack_require__(199);
 	
 	var getSource = _require9.getSource;
 	var getSourceByURL = _require9.getSourceByURL;
@@ -30183,13 +30207,6 @@ var Debugger =
 	  return isEnabled("sourceMaps") && generatedSource.sourceMapURL;
 	}
 	
-	function _addSource(source) {
-	  return {
-	    type: constants.ADD_SOURCE,
-	    source
-	  };
-	}
-	
 	function newSource(source) {
 	  return _ref4 => {
 	    var dispatch = _ref4.dispatch;
@@ -30199,7 +30216,10 @@ var Debugger =
 	      dispatch(loadSourceMap(source));
 	    }
 	
-	    dispatch(_addSource(source));
+	    dispatch({
+	      type: constants.ADD_SOURCE,
+	      source
+	    });
 	
 	    // If a request has been made to show this source, go ahead and
 	    // select it.
@@ -30210,14 +30230,23 @@ var Debugger =
 	  };
 	}
 	
+	function newSources(sources) {
+	  return _ref5 => {
+	    var dispatch = _ref5.dispatch;
+	    var getState = _ref5.getState;
+	
+	    sources.filter(source => !getSource(getState(), source.id)).forEach(source => dispatch(newSource(source)));
+	  };
+	}
+	
 	/**
 	 * @memberof actions/sources
 	 * @static
 	 */
 	function loadSourceMap(generatedSource) {
-	  return _ref5 => {
-	    var dispatch = _ref5.dispatch;
-	    var getState = _ref5.getState;
+	  return _ref6 => {
+	    var dispatch = _ref6.dispatch;
+	    var getState = _ref6.getState;
 	
 	    var sourceMap = getSourceMap(getState(), generatedSource.id);
 	    if (sourceMap) {
@@ -30255,9 +30284,9 @@ var Debugger =
 	function selectSourceURL(url) {
 	  var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 	
-	  return _ref7 => {
-	    var dispatch = _ref7.dispatch;
-	    var getState = _ref7.getState;
+	  return _ref8 => {
+	    var dispatch = _ref8.dispatch;
+	    var getState = _ref8.getState;
 	
 	    var source = getSourceByURL(getState(), url);
 	    if (source) {
@@ -30280,10 +30309,10 @@ var Debugger =
 	function selectSource(id) {
 	  var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 	
-	  return _ref8 => {
-	    var dispatch = _ref8.dispatch;
-	    var getState = _ref8.getState;
-	    var client = _ref8.client;
+	  return _ref9 => {
+	    var dispatch = _ref9.dispatch;
+	    var getState = _ref9.getState;
+	    var client = _ref9.client;
 	
 	    if (!client) {
 	      // No connection, do nothing. This happens when the debugger is
@@ -30330,9 +30359,9 @@ var Debugger =
 	 *          [aSource, error].
 	 */
 	function blackbox(source, shouldBlackBox) {
-	  return _ref9 => {
-	    var dispatch = _ref9.dispatch;
-	    var client = _ref9.client;
+	  return _ref10 => {
+	    var dispatch = _ref10.dispatch;
+	    var client = _ref10.client;
 	
 	    dispatch({
 	      type: constants.BLACKBOX,
@@ -30360,10 +30389,10 @@ var Debugger =
 	 *          [aSource, error].
 	 */
 	function togglePrettyPrint(id) {
-	  return _ref10 => {
-	    var dispatch = _ref10.dispatch;
-	    var getState = _ref10.getState;
-	    var client = _ref10.client;
+	  return _ref11 => {
+	    var dispatch = _ref11.dispatch;
+	    var getState = _ref11.getState;
+	    var client = _ref11.client;
 	
 	    var source = getSource(getState(), id).toJS();
 	    var sourceText = getSourceText(getState(), id).toJS();
@@ -30378,7 +30407,10 @@ var Debugger =
 	
 	    var url = source.url + ":formatted";
 	    var originalSource = makeOriginalSource({ url, source });
-	    dispatch(_addSource(originalSource));
+	    dispatch({
+	      type: constants.ADD_SOURCE,
+	      source: originalSource
+	    });
 	
 	    return dispatch({
 	      type: constants.TOGGLE_PRETTY_PRINT,
@@ -30412,10 +30444,10 @@ var Debugger =
 	 * @static
 	 */
 	function loadSourceText(source) {
-	  return _ref12 => {
-	    var dispatch = _ref12.dispatch;
-	    var getState = _ref12.getState;
-	    var client = _ref12.client;
+	  return _ref13 => {
+	    var dispatch = _ref13.dispatch;
+	    var getState = _ref13.getState;
+	    var client = _ref13.client;
 	
 	    // Fetch the source text only once.
 	    var textInfo = getSourceText(getState(), source.id);
@@ -30472,9 +30504,9 @@ var Debugger =
 	 *         A promise that is resolved after source texts have been fetched.
 	 */
 	function getTextForSources(actors) {
-	  return _ref14 => {
-	    var dispatch = _ref14.dispatch;
-	    var getState = _ref14.getState;
+	  return _ref15 => {
+	    var dispatch = _ref15.dispatch;
+	    var getState = _ref15.getState;
 	
 	    var deferred = defer();
 	    var pending = new Set(actors);
@@ -30489,9 +30521,9 @@ var Debugger =
 	
 	    var _loop = function (actor) {
 	      var source = getSource(getState(), actor);
-	      dispatch(loadSourceText(source)).then(_ref23 => {
-	        var text = _ref23.text;
-	        var contentType = _ref23.contentType;
+	      dispatch(loadSourceText(source)).then(_ref24 => {
+	        var text = _ref24.text;
+	        var contentType = _ref24.contentType;
 	
 	        onFetch([source, text, contentType]);
 	      }, err => {
@@ -30512,12 +30544,12 @@ var Debugger =
 	    }
 	
 	    /* Called if fetching a source finishes successfully. */
-	    function onFetch(_ref15) {
-	      var _ref16 = _slicedToArray(_ref15, 3);
+	    function onFetch(_ref16) {
+	      var _ref17 = _slicedToArray(_ref16, 3);
 	
-	      var aSource = _ref16[0];
-	      var aText = _ref16[1];
-	      var aContentType = _ref16[2];
+	      var aSource = _ref17[0];
+	      var aText = _ref17[1];
+	      var aContentType = _ref17[2];
 	
 	      // If fetching the source has previously timed out, discard it this time.
 	      if (!pending.has(aSource.actor)) {
@@ -30529,11 +30561,11 @@ var Debugger =
 	    }
 	
 	    /* Called if fetching a source failed because of an error. */
-	    function onError(_ref17) {
-	      var _ref18 = _slicedToArray(_ref17, 2);
+	    function onError(_ref18) {
+	      var _ref19 = _slicedToArray(_ref18, 2);
 	
-	      var aSource = _ref18[0];
-	      var aError = _ref18[1];
+	      var aSource = _ref19[0];
+	      var aError = _ref19[1];
 	
 	      pending.delete(aSource.actor);
 	      maybeFinish();
@@ -30545,14 +30577,14 @@ var Debugger =
 	    function maybeFinish() {
 	      if (pending.size == 0) {
 	        // Sort the fetched sources alphabetically by their url.
-	        deferred.resolve(fetched.sort((_ref19, _ref20) => {
-	          var _ref22 = _slicedToArray(_ref19, 1);
+	        deferred.resolve(fetched.sort((_ref20, _ref21) => {
+	          var _ref23 = _slicedToArray(_ref20, 1);
 	
-	          var aFirst = _ref22[0];
+	          var aFirst = _ref23[0];
 	
-	          var _ref21 = _slicedToArray(_ref20, 1);
+	          var _ref22 = _slicedToArray(_ref21, 1);
 	
-	          var aSecond = _ref21[0];
+	          var aSecond = _ref22[0];
 	          return aFirst > aSecond;
 	        }));
 	      }
@@ -30564,6 +30596,7 @@ var Debugger =
 	
 	module.exports = {
 	  newSource,
+	  newSources,
 	  selectSource,
 	  selectSourceURL,
 	  closeTab,
@@ -30574,7 +30607,7 @@ var Debugger =
 	};
 
 /***/ },
-/* 219 */
+/* 220 */
 /***/ function(module, exports) {
 
 	
@@ -30617,7 +30650,7 @@ var Debugger =
 	};
 
 /***/ },
-/* 220 */
+/* 221 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var updateFrameLocation = (() => {
@@ -30653,11 +30686,11 @@ var Debugger =
 	var Location = _require.Location;
 	var Frame = _require.Frame;
 	
-	var _require2 = __webpack_require__(215);
+	var _require2 = __webpack_require__(216);
 	
 	var getOriginalLocation = _require2.getOriginalLocation;
 	
-	var _require3 = __webpack_require__(175);
+	var _require3 = __webpack_require__(176);
 	
 	var asyncMap = _require3.asyncMap;
 	
@@ -30667,7 +30700,7 @@ var Debugger =
 	};
 
 /***/ },
-/* 221 */
+/* 222 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -30680,7 +30713,7 @@ var Debugger =
 	 * @module actions/tabs
 	 */
 	
-	var constants = __webpack_require__(189);
+	var constants = __webpack_require__(190);
 	
 	/**
 	 * @typedef {Object} TabAction
@@ -30724,26 +30757,26 @@ var Debugger =
 	};
 
 /***/ },
-/* 222 */
+/* 223 */
 /***/ function(module, exports, __webpack_require__) {
 
 	function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
 	
-	var constants = __webpack_require__(189);
+	var constants = __webpack_require__(190);
 	
-	var _require = __webpack_require__(218);
+	var _require = __webpack_require__(219);
 	
 	var selectSource = _require.selectSource;
 	
-	var _require2 = __webpack_require__(183);
+	var _require2 = __webpack_require__(184);
 	
 	var PROMISE = _require2.PROMISE;
 	
-	var _require3 = __webpack_require__(198);
+	var _require3 = __webpack_require__(199);
 	
 	var getExpressions = _require3.getExpressions;
 	
-	var _require4 = __webpack_require__(220);
+	var _require4 = __webpack_require__(221);
 	
 	var updateFrameLocations = _require4.updateFrameLocations;
 	
@@ -31052,12 +31085,12 @@ var Debugger =
 	};
 
 /***/ },
-/* 223 */
+/* 224 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var constants = __webpack_require__(189);
+	var constants = __webpack_require__(190);
 	
-	var _require = __webpack_require__(215);
+	var _require = __webpack_require__(216);
 	
 	var clearData = _require.clearData;
 	
@@ -31101,21 +31134,21 @@ var Debugger =
 	};
 
 /***/ },
-/* 224 */
+/* 225 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 225 */,
-/* 226 */
+/* 226 */,
+/* 227 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
 	var dom = React.DOM;
 	var PropTypes = React.PropTypes;
 	
-	var ImPropTypes = __webpack_require__(227);
+	var ImPropTypes = __webpack_require__(228);
 	
 	var _require = __webpack_require__(2);
 	
@@ -31125,16 +31158,16 @@ var Debugger =
 	
 	var connect = _require2.connect;
 	
-	var SourcesTree = React.createFactory(__webpack_require__(228));
-	var actions = __webpack_require__(213);
+	var SourcesTree = React.createFactory(__webpack_require__(229));
+	var actions = __webpack_require__(214);
 	
-	var _require3 = __webpack_require__(198);
+	var _require3 = __webpack_require__(199);
 	
 	var getSelectedSource = _require3.getSelectedSource;
 	var getSources = _require3.getSources;
 	
 	
-	__webpack_require__(259);
+	__webpack_require__(260);
 	
 	var Sources = React.createClass({
 	  propTypes: {
@@ -31158,7 +31191,7 @@ var Debugger =
 	  sources: getSources(state) }), dispatch => bindActionCreators(actions, dispatch))(Sources);
 
 /***/ },
-/* 227 */
+/* 228 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -31169,7 +31202,7 @@ var Debugger =
 	 */
 	"use strict";
 	
-	var Immutable = __webpack_require__(192);
+	var Immutable = __webpack_require__(193);
 	
 	var ANONYMOUS = "<<anonymous>>";
 	
@@ -31362,21 +31395,21 @@ var Debugger =
 	module.exports = ImmutablePropTypes;
 
 /***/ },
-/* 228 */
+/* 229 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
 	var dom = React.DOM;
 	var PropTypes = React.PropTypes;
 	
-	var classnames = __webpack_require__(206);
-	var ImPropTypes = __webpack_require__(227);
+	var classnames = __webpack_require__(207);
+	var ImPropTypes = __webpack_require__(228);
 	
-	var _require = __webpack_require__(192);
+	var _require = __webpack_require__(193);
 	
 	var Set = _require.Set;
 	
-	var _require2 = __webpack_require__(229);
+	var _require2 = __webpack_require__(230);
 	
 	var nodeHasChildren = _require2.nodeHasChildren;
 	var createParentMap = _require2.createParentMap;
@@ -31384,10 +31417,10 @@ var Debugger =
 	var collapseTree = _require2.collapseTree;
 	var createTree = _require2.createTree;
 	
-	var ManagedTree = React.createFactory(__webpack_require__(230));
-	var Svg = __webpack_require__(234);
+	var ManagedTree = React.createFactory(__webpack_require__(231));
+	var Svg = __webpack_require__(235);
 	
-	var _require3 = __webpack_require__(175);
+	var _require3 = __webpack_require__(176);
 	
 	var throttle = _require3.throttle;
 	
@@ -31531,16 +31564,16 @@ var Debugger =
 	module.exports = SourcesTree;
 
 /***/ },
-/* 229 */
+/* 230 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var URL = __webpack_require__(199);
+	var URL = __webpack_require__(200);
 	
-	var _require = __webpack_require__(185);
+	var _require = __webpack_require__(186);
 	
 	var assert = _require.assert;
 	
-	var _require2 = __webpack_require__(219);
+	var _require2 = __webpack_require__(220);
 	
 	var isPretty = _require2.isPretty;
 	
@@ -31730,12 +31763,12 @@ var Debugger =
 	};
 
 /***/ },
-/* 230 */
+/* 231 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
-	var Tree = React.createFactory(__webpack_require__(231));
-	__webpack_require__(232);
+	var Tree = React.createFactory(__webpack_require__(232));
+	__webpack_require__(233);
 	
 	var ManagedTree = React.createClass({
 	  propTypes: Tree.propTypes,
@@ -31810,7 +31843,7 @@ var Debugger =
 	module.exports = ManagedTree;
 
 /***/ },
-/* 231 */
+/* 232 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -32410,52 +32443,52 @@ var Debugger =
 
 
 /***/ },
-/* 232 */
+/* 233 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 233 */,
-/* 234 */
+/* 234 */,
+/* 235 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
 	 * This file maps the SVG React Components in the public/images directory.
 	 */
-	var Svg = __webpack_require__(235);
+	var Svg = __webpack_require__(236);
 	module.exports = Svg;
 
 /***/ },
-/* 235 */
+/* 236 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
-	var InlineSVG = __webpack_require__(236);
+	var InlineSVG = __webpack_require__(237);
 	
 	var svg = {
-	  "angle-brackets": __webpack_require__(237),
-	  "arrow": __webpack_require__(238),
-	  "blackBox": __webpack_require__(239),
-	  "breakpoint": __webpack_require__(240),
-	  "close": __webpack_require__(241),
-	  "disableBreakpoints": __webpack_require__(242),
-	  "domain": __webpack_require__(243),
-	  "file": __webpack_require__(244),
-	  "folder": __webpack_require__(245),
-	  "globe": __webpack_require__(246),
-	  "magnifying-glass": __webpack_require__(247),
-	  "pause": __webpack_require__(248),
-	  "pause-circle": __webpack_require__(249),
-	  "pause-exceptions": __webpack_require__(250),
-	  "prettyPrint": __webpack_require__(251),
-	  "resume": __webpack_require__(252),
-	  "settings": __webpack_require__(253),
-	  "stepIn": __webpack_require__(254),
-	  "stepOut": __webpack_require__(255),
-	  "stepOver": __webpack_require__(256),
-	  "subSettings": __webpack_require__(257),
-	  "worker": __webpack_require__(258)
+	  "angle-brackets": __webpack_require__(238),
+	  "arrow": __webpack_require__(239),
+	  "blackBox": __webpack_require__(240),
+	  "breakpoint": __webpack_require__(241),
+	  "close": __webpack_require__(242),
+	  "disableBreakpoints": __webpack_require__(243),
+	  "domain": __webpack_require__(244),
+	  "file": __webpack_require__(245),
+	  "folder": __webpack_require__(246),
+	  "globe": __webpack_require__(247),
+	  "magnifying-glass": __webpack_require__(248),
+	  "pause": __webpack_require__(249),
+	  "pause-circle": __webpack_require__(250),
+	  "pause-exceptions": __webpack_require__(251),
+	  "prettyPrint": __webpack_require__(252),
+	  "resume": __webpack_require__(253),
+	  "settings": __webpack_require__(254),
+	  "stepIn": __webpack_require__(255),
+	  "stepOut": __webpack_require__(256),
+	  "stepOver": __webpack_require__(257),
+	  "subSettings": __webpack_require__(258),
+	  "worker": __webpack_require__(259)
 	};
 	
 	module.exports = function (name, props) {
@@ -32475,7 +32508,7 @@ var Debugger =
 	};
 
 /***/ },
-/* 236 */
+/* 237 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -32631,151 +32664,151 @@ var Debugger =
 	module.exports = exports['default'];
 
 /***/ },
-/* 237 */
+/* 238 */
 /***/ function(module, exports) {
 
 	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"-1 73 16 11\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"><g id=\"Shape-Copy-3-+-Shape-Copy-4\" stroke=\"none\" stroke-width=\"1\" fill=\"none\" fill-rule=\"evenodd\" transform=\"translate(0.000000, 74.000000)\"><path d=\"M0.749321284,4.16081709 L4.43130681,0.242526751 C4.66815444,-0.00952143591 5.06030999,-0.0211407611 5.30721074,0.216574262 C5.55411149,0.454289284 5.56226116,0.851320812 5.32541353,1.103369 L1.95384971,4.69131519 L5.48809879,8.09407556 C5.73499955,8.33179058 5.74314922,8.72882211 5.50630159,8.9808703 C5.26945396,9.23291849 4.87729841,9.24453781 4.63039766,9.00682279 L0.827097345,5.34502101 C0.749816996,5.31670099 0.677016974,5.27216098 0.613753508,5.21125118 C0.427367989,5.03179997 0.377040713,4.7615583 0.465458792,4.53143559 C0.492371834,4.43667624 0.541703274,4.34676528 0.613628034,4.27022448 C0.654709457,4.22650651 0.70046335,4.19002189 0.749321284,4.16081709 Z\" id=\"Shape-Copy-3\" stroke=\"#FFFFFF\" stroke-width=\"0.05\" fill=\"#DDE1E4\"></path><path d=\"M13.7119065,5.44453032 L9.77062746,9.09174784 C9.51677479,9.3266604 9.12476399,9.31089603 8.89504684,9.05653714 C8.66532968,8.80217826 8.68489539,8.40554539 8.93874806,8.17063283 L12.5546008,4.82456128 L9.26827469,1.18571135 C9.03855754,0.931352463 9.05812324,0.534719593 9.31197591,0.299807038 C9.56582858,0.0648944831 9.95783938,0.0806588502 10.1875565,0.335017737 L13.72891,4.25625178 C13.8013755,4.28980469 13.8684335,4.3382578 13.9254821,4.40142604 C14.0883019,4.58171146 14.1258883,4.83347168 14.0435812,5.04846202 C14.0126705,5.15680232 13.9526426,5.2583679 13.8641331,5.34027361 C13.8174417,5.38348136 13.7660763,5.41820853 13.7119065,5.44453032 Z\" id=\"Shape-Copy-4\" stroke=\"#FFFFFF\" stroke-width=\"0.05\" fill=\"#DDE1E4\"></path></g></svg>"
 
 /***/ },
-/* 238 */
+/* 239 */
 /***/ function(module, exports) {
 
 	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\"0 0 16 16\"><path d=\"M8 13.4c-.5 0-.9-.2-1.2-.6L.4 5.2C0 4.7-.1 4.3.2 3.7S1 3 1.6 3h12.8c.6 0 1.2.1 1.4.7.3.6.2 1.1-.2 1.6l-6.4 7.6c-.3.4-.7.5-1.2.5z\"></path></svg>"
 
 /***/ },
-/* 239 */
+/* 240 */
 /***/ function(module, exports) {
 
 	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"##4A464C\"><g fill-rule=\"evenodd\"><circle cx=\"8\" cy=\"8.5\" r=\"1.5\"></circle><path d=\"M15.498 8.28l-.001-.03v-.002-.004l-.002-.018-.004-.031c0-.002 0-.002 0 0l-.004-.035.006.082c-.037-.296-.133-.501-.28-.661-.4-.522-.915-1.042-1.562-1.604-1.36-1.182-2.74-1.975-4.178-2.309a6.544 6.544 0 0 0-2.755-.042c-.78.153-1.565.462-2.369.91C3.252 5.147 2.207 6 1.252 7.035c-.216.233-.36.398-.499.577-.338.437-.338 1 0 1.437.428.552.941 1.072 1.59 1.635 1.359 1.181 2.739 1.975 4.177 2.308.907.21 1.829.223 2.756.043.78-.153 1.564-.462 2.369-.91 1.097-.612 2.141-1.464 3.097-2.499.217-.235.36-.398.498-.578.12-.128.216-.334.248-.554 0 .01 0 .01-.008.04l.013-.079-.001.011.003-.031.001-.017v.005l.001-.02v.008l.002-.03.001-.05-.001-.044v-.004-.004zm-.954.045v.007l.001.004V8.33v.012l-.001.01v-.005-.005l.002-.015-.001.008c-.002.014-.002.014 0 0l-.007.084c.003-.057-.004-.041-.014-.031-.143.182-.27.327-.468.543-.89.963-1.856 1.752-2.86 2.311-.724.404-1.419.677-2.095.81a5.63 5.63 0 0 1-2.374-.036c-1.273-.295-2.523-1.014-3.774-2.101-.604-.525-1.075-1.001-1.457-1.496-.054-.07-.054-.107 0-.177.117-.152.244-.298.442-.512.89-.963 1.856-1.752 2.86-2.311.724-.404 1.419-.678 2.095-.81a5.631 5.631 0 0 1 2.374.036c1.272.295 2.523 1.014 3.774 2.101.603.524 1.074 1 1.457 1.496.035.041.043.057.046.076 0 .01 0 .01.008.043l-.009-.047.003.02-.002-.013v-.008.016c0-.004 0-.004 0 0v-.004z\"></path></g></svg>"
 
 /***/ },
-/* 240 */
-/***/ function(module, exports) {
-
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\"0 0 33 12\"><path id=\"base-path\" d=\"M27.1,0H1C0.4,0,0,0.4,0,1v10c0,0.6,0.4,1,1,1h26.1 c0.6,0,1.2-0.3,1.5-0.7L33,6l-4.4-5.3C28.2,0.3,27.7,0,27.1,0z\"></path></svg>"
-
-/***/ },
 /* 241 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 6 6\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"><path d=\"M1.35191454,5.27895256 L5.31214367,1.35518468 C5.50830675,1.16082764 5.50977084,0.844248536 5.3154138,0.648085456 C5.12105677,0.451922377 4.80447766,0.450458288 4.60831458,0.644815324 L0.648085456,4.56858321 C0.451922377,4.76294025 0.450458288,5.07951935 0.644815324,5.27568243 C0.83917236,5.47184551 1.15575146,5.4733096 1.35191454,5.27895256 L1.35191454,5.27895256 Z\" id=\"Line\" stroke=\"none\" fill=\"#696969\" fill-rule=\"evenodd\"></path><path d=\"M5.31214367,4.56858321 L1.35191454,0.644815324 C1.15575146,0.450458288 0.83917236,0.451922377 0.644815324,0.648085456 C0.450458288,0.844248536 0.451922377,1.16082764 0.648085456,1.35518468 L4.60831458,5.27895256 C4.80447766,5.4733096 5.12105677,5.47184551 5.3154138,5.27568243 C5.50977084,5.07951935 5.50830675,4.76294025 5.31214367,4.56858321 L5.31214367,4.56858321 Z\" id=\"Line-Copy-2\" stroke=\"none\" fill=\"#696969\" fill-rule=\"evenodd\"></path></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\"0 0 33 12\"><path id=\"base-path\" d=\"M27.1,0H1C0.4,0,0,0.4,0,1v10c0,0.6,0.4,1,1,1h26.1 c0.6,0,1.2-0.3,1.5-0.7L33,6l-4.4-5.3C28.2,0.3,27.7,0,27.1,0z\"></path></svg>"
 
 /***/ },
 /* 242 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"##4A464C\"><g fill-rule=\"evenodd\"><path d=\"M3.233 11.25l-.417 1H1.712C.763 12.25 0 11.574 0 10.747V6.503C0 5.675.755 5 1.712 5h4.127l-.417 1H1.597C1.257 6 1 6.225 1 6.503v4.244c0 .277.267.503.597.503h1.636zM7.405 11.27L7 12.306c.865.01 2.212-.024 2.315-.04.112-.016.112-.016.185-.035.075-.02.156-.046.251-.082.152-.056.349-.138.592-.244.415-.182.962-.435 1.612-.744l.138-.066a179.35 179.35 0 0 0 2.255-1.094c1.191-.546 1.191-2.074-.025-2.632l-.737-.34a3547.554 3547.554 0 0 0-3.854-1.78c-.029.11-.065.222-.11.336l-.232.596c.894.408 4.56 2.107 4.56 2.107.458.21.458.596 0 .806L9.197 11.27H7.405zM4.462 14.692l5-12a.5.5 0 1 0-.924-.384l-5 12a.5.5 0 1 0 .924.384z\"></path></g></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 6 6\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"><path d=\"M1.35191454,5.27895256 L5.31214367,1.35518468 C5.50830675,1.16082764 5.50977084,0.844248536 5.3154138,0.648085456 C5.12105677,0.451922377 4.80447766,0.450458288 4.60831458,0.644815324 L0.648085456,4.56858321 C0.451922377,4.76294025 0.450458288,5.07951935 0.644815324,5.27568243 C0.83917236,5.47184551 1.15575146,5.4733096 1.35191454,5.27895256 L1.35191454,5.27895256 Z\" id=\"Line\" stroke=\"none\" fill=\"#696969\" fill-rule=\"evenodd\"></path><path d=\"M5.31214367,4.56858321 L1.35191454,0.644815324 C1.15575146,0.450458288 0.83917236,0.451922377 0.644815324,0.648085456 C0.450458288,0.844248536 0.451922377,1.16082764 0.648085456,1.35518468 L4.60831458,5.27895256 C4.80447766,5.4733096 5.12105677,5.47184551 5.3154138,5.27568243 C5.50977084,5.07951935 5.50830675,4.76294025 5.31214367,4.56858321 L5.31214367,4.56858321 Z\" id=\"Line-Copy-2\" stroke=\"none\" fill=\"#696969\" fill-rule=\"evenodd\"></path></svg>"
 
 /***/ },
 /* 243 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#DDE1E4\"><path d=\"M9.05 4.634l-2.144.003-.116.116v1.445l.92.965.492.034.116-.116v-.617L9.13 5.7l.035-.95M12.482 10.38l-1.505-1.462H9.362l-.564.516-.034 1.108.72.768 1.323.034-.117-.116v1.2l.972 1.02.315.034.116-.116v-1.154l.422-.374.034-.927-.117.117h.26l.408-.36V10.5l-.125-.124-.575-.033\"></path><path d=\"M8.47 15.073c-3.088 0-5.6-2.513-5.6-5.602V9.4v-.003c0-.018 0-.018.002-.034l.182-.088.724.587.49.033.497.543-.034.9.317.383h.47l.114.096-.032 1.9.524.553h.105l.025-.338 1.004-.95.054-.474.53-.462v-.888l-.588-.038-1.118-1.155H4.48l-.154-.09V9.01l.155-.1h1.164v-.273l.12-.115.7.033.494-.443.034-.746-.624-.655h-.724v.28l-.11.07H4.64l-.114-.09.025-.64.48-.43v-.244h-.382c-.102 0-.152-.128-.08-.2 1.04-1.01 2.428-1.59 3.903-1.59 1.374 0 2.672.5 3.688 1.39.08.068.03.198-.075.198l-1.144-.034-.81.803.52.523v.16l-.382.388h-.158l-.176-.177v-.16l.076-.074-.252-.252-.37.362.53.53c.072.072.005.194-.096.194l-.752-.005v.844h.783L9.885 8l.16-.143h.16l.62.61v.267l.58.027.003.002V8.76l.18-.03 1.234 1.24.753-.708h.382l.116.108c0 .02.003.016.003.036v.065c0 3.09-2.515 5.603-5.605 5.603M8.47 3C4.904 3 2 5.903 2 9.47c0 3.57 2.903 6.472 6.47 6.472 3.57 0 6.472-2.903 6.472-6.47C14.942 5.9 12.04 3 8.472 3\"></path></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"##4A464C\"><g fill-rule=\"evenodd\"><path d=\"M3.233 11.25l-.417 1H1.712C.763 12.25 0 11.574 0 10.747V6.503C0 5.675.755 5 1.712 5h4.127l-.417 1H1.597C1.257 6 1 6.225 1 6.503v4.244c0 .277.267.503.597.503h1.636zM7.405 11.27L7 12.306c.865.01 2.212-.024 2.315-.04.112-.016.112-.016.185-.035.075-.02.156-.046.251-.082.152-.056.349-.138.592-.244.415-.182.962-.435 1.612-.744l.138-.066a179.35 179.35 0 0 0 2.255-1.094c1.191-.546 1.191-2.074-.025-2.632l-.737-.34a3547.554 3547.554 0 0 0-3.854-1.78c-.029.11-.065.222-.11.336l-.232.596c.894.408 4.56 2.107 4.56 2.107.458.21.458.596 0 .806L9.197 11.27H7.405zM4.462 14.692l5-12a.5.5 0 1 0-.924-.384l-5 12a.5.5 0 1 0 .924.384z\"></path></g></svg>"
 
 /***/ },
 /* 244 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#DDE1E4\"><path d=\"M4 2v12h9V4.775L9.888 2H4zm0-1h5.888c.246 0 .483.09.666.254l3.112 2.774c.212.19.334.462.334.747V14c0 .552-.448 1-1 1H4c-.552 0-1-.448-1-1V2c0-.552.448-1 1-1z\"></path><path d=\"M9 1.5v4c0 .325.306.564.62.485l4-1c.27-.067.432-.338.365-.606-.067-.27-.338-.432-.606-.365l-4 1L10 5.5v-4c0-.276-.224-.5-.5-.5s-.5.224-.5.5z\"></path></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#DDE1E4\"><path d=\"M9.05 4.634l-2.144.003-.116.116v1.445l.92.965.492.034.116-.116v-.617L9.13 5.7l.035-.95M12.482 10.38l-1.505-1.462H9.362l-.564.516-.034 1.108.72.768 1.323.034-.117-.116v1.2l.972 1.02.315.034.116-.116v-1.154l.422-.374.034-.927-.117.117h.26l.408-.36V10.5l-.125-.124-.575-.033\"></path><path d=\"M8.47 15.073c-3.088 0-5.6-2.513-5.6-5.602V9.4v-.003c0-.018 0-.018.002-.034l.182-.088.724.587.49.033.497.543-.034.9.317.383h.47l.114.096-.032 1.9.524.553h.105l.025-.338 1.004-.95.054-.474.53-.462v-.888l-.588-.038-1.118-1.155H4.48l-.154-.09V9.01l.155-.1h1.164v-.273l.12-.115.7.033.494-.443.034-.746-.624-.655h-.724v.28l-.11.07H4.64l-.114-.09.025-.64.48-.43v-.244h-.382c-.102 0-.152-.128-.08-.2 1.04-1.01 2.428-1.59 3.903-1.59 1.374 0 2.672.5 3.688 1.39.08.068.03.198-.075.198l-1.144-.034-.81.803.52.523v.16l-.382.388h-.158l-.176-.177v-.16l.076-.074-.252-.252-.37.362.53.53c.072.072.005.194-.096.194l-.752-.005v.844h.783L9.885 8l.16-.143h.16l.62.61v.267l.58.027.003.002V8.76l.18-.03 1.234 1.24.753-.708h.382l.116.108c0 .02.003.016.003.036v.065c0 3.09-2.515 5.603-5.605 5.603M8.47 3C4.904 3 2 5.903 2 9.47c0 3.57 2.903 6.472 6.47 6.472 3.57 0 6.472-2.903 6.472-6.47C14.942 5.9 12.04 3 8.472 3\"></path></svg>"
 
 /***/ },
 /* 245 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#DDE1E5\"><path d=\"M2 5.193v7.652c0 .003-.002 0 .007 0H14v-7.69c0-.003.002 0-.007 0h-7.53v-2.15c0-.002-.004-.005-.01-.005H2.01C2 3 2 3 2 3.005V5.193zm-1 0V3.005C1 2.45 1.444 2 2.01 2h4.442c.558 0 1.01.45 1.01 1.005v1.15h6.53c.557 0 1.008.44 1.008 1v7.69c0 .553-.45 1-1.007 1H2.007c-.556 0-1.007-.44-1.007-1V5.193zM6.08 4.15H2v1h4.46v-1h-.38z\" fill-rule=\"evenodd\"></path></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#DDE1E4\"><path d=\"M4 2v12h9V4.775L9.888 2H4zm0-1h5.888c.246 0 .483.09.666.254l3.112 2.774c.212.19.334.462.334.747V14c0 .552-.448 1-1 1H4c-.552 0-1-.448-1-1V2c0-.552.448-1 1-1z\"></path><path d=\"M9 1.5v4c0 .325.306.564.62.485l4-1c.27-.067.432-.338.365-.606-.067-.27-.338-.432-.606-.365l-4 1L10 5.5v-4c0-.276-.224-.5-.5-.5s-.5.224-.5.5z\"></path></svg>"
 
 /***/ },
 /* 246 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"14 6 13 12\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"><g id=\"world\" stroke=\"none\" stroke-width=\"1\" fill=\"none\" fill-rule=\"evenodd\" transform=\"translate(14.000000, 6.000000)\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M6.35076107,0.354 C3.25095418,0.354 0.729,2.87582735 0.729,5.9758879 C0.729,9.07544113 3.25082735,11.5972685 6.35076107,11.5972685 C9.45044113,11.5972685 11.9723953,9.07544113 11.9723953,5.97576107 C11.9723953,2.87582735 9.45044113,0.354 6.35076107,0.354 L6.35076107,0.354 Z M6.35076107,10.8289121 C3.67445071,10.8289121 1.49722956,8.65181776 1.49722956,5.97576107 C1.49722956,5.9443064 1.49900522,5.91335907 1.49976622,5.88215806 L2.20090094,6.4213266 L2.56313696,6.4213266 L2.97268183,6.8306178 L2.97268183,7.68217686 L3.32324919,8.03287105 L3.73926255,8.03287105 L3.73926255,9.79940584 L4.27386509,10.3361645 L4.4591686,10.3361645 L4.4591686,10.000183 L5.37655417,9.08343163 L5.37655417,8.73400577 L5.85585737,8.25203907 L5.85585737,7.37206934 L5.32518666,7.37206934 L4.28439226,6.33140176 L2.82225748,6.33140176 L2.82225748,5.56938704 L3.96286973,5.56938704 L3.96286973,5.23949352 L4.65068695,5.23949352 L5.11477015,4.77667865 L5.11477015,4.03001076 L4.49087694,3.40662489 L3.75359472,3.40662489 L3.75359472,3.78725175 L2.96228149,3.78725175 L2.96228149,3.28385021 L3.42217919,2.82319151 L3.42217919,2.49786399 L2.97001833,2.49786399 C3.84466106,1.64744643 5.03714814,1.12222956 6.35063424,1.12222956 C7.57292716,1.12222956 8.69020207,1.57730759 9.54442463,2.32587797 L8.46164839,2.32587797 L7.680355,3.10666403 L8.21508437,3.64088607 L7.87238068,3.98257509 L7.7165025,3.82669692 L7.85297518,3.68946324 L7.78930484,3.62566607 L7.78943167,3.62566607 L7.56011699,3.39559038 L7.55986332,3.39571722 L7.49758815,3.33318838 L7.01904595,3.78585658 L7.55910232,4.32654712 L6.8069806,4.32198112 L6.8069806,5.25864535 L7.66716433,5.25864535 L7.6723645,4.72112565 L7.81289584,4.57996014 L8.31819988,5.08653251 L8.31819988,5.41921636 L9.00703176,5.41921636 L9.03366676,5.39321553 L9.03430093,5.39194719 L10.195587,6.55259911 L10.8637451,5.88520206 L11.2018828,5.88520206 C11.2023901,5.9153884 11.2041658,5.94532107 11.2041658,5.97563424 C11.2040389,8.65181776 9.0269446,10.8289121 6.35076107,10.8289121 L6.35076107,10.8289121 Z\" id=\"Shape\" stroke=\"#DDE1E5\" stroke-width=\"0.25\" fill=\"#DDE1E5\"></path><polygon id=\"Shape\" stroke=\"#DDE1E5\" stroke-width=\"0.25\" fill=\"#DDE1E5\" points=\"6.50676608 1.61523076 4.52892694 1.61789426 4.52892694 2.95192735 5.34560683 3.76733891 5.72496536 3.76733891 5.72496536 3.1967157 6.50676608 2.41592965\"></polygon><polygon id=\"Shape\" stroke=\"#DDE1E5\" stroke-width=\"0.25\" fill=\"#DDE1E5\" points=\"9.59959714 6.88718547 8.28623788 5.57268471 8.28623788 5.57002121 6.79607294 5.57002121 6.35101474 6.01469891 6.35101474 6.96201714 6.98429362 7.59466185 8.12909136 7.59466185 8.12909136 8.70343893 8.99434843 9.56882283 9.20971144 9.56882283 9.20971144 8.50329592 9.63029081 8.08271655 9.63029081 7.3026915 9.87025949 7.3026915 10.1711082 7.00082814 10.0558167 6.88718547\"></polygon></g></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#DDE1E5\"><path d=\"M2 5.193v7.652c0 .003-.002 0 .007 0H14v-7.69c0-.003.002 0-.007 0h-7.53v-2.15c0-.002-.004-.005-.01-.005H2.01C2 3 2 3 2 3.005V5.193zm-1 0V3.005C1 2.45 1.444 2 2.01 2h4.442c.558 0 1.01.45 1.01 1.005v1.15h6.53c.557 0 1.008.44 1.008 1v7.69c0 .553-.45 1-1.007 1H2.007c-.556 0-1.007-.44-1.007-1V5.193zM6.08 4.15H2v1h4.46v-1h-.38z\" fill-rule=\"evenodd\"></path></svg>"
 
 /***/ },
 /* 247 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"488 384 14 14\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"><path d=\"M495.5,391.5 L500.200877,396.200877\" id=\"Line\" stroke=\"#4A90E2\" stroke-width=\"1.25\" stroke-linecap=\"round\" stroke-linejoin=\"round\" fill=\"none\"></path><ellipse id=\"Oval-6\" stroke=\"#4A90E2\" stroke-width=\"1.25\" fill=\"#FFFFFF\" fill-rule=\"evenodd\" cx=\"493.5\" cy=\"389.5\" rx=\"4.5\" ry=\"4.5\"></ellipse></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"14 6 13 12\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"><g id=\"world\" stroke=\"none\" stroke-width=\"1\" fill=\"none\" fill-rule=\"evenodd\" transform=\"translate(14.000000, 6.000000)\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M6.35076107,0.354 C3.25095418,0.354 0.729,2.87582735 0.729,5.9758879 C0.729,9.07544113 3.25082735,11.5972685 6.35076107,11.5972685 C9.45044113,11.5972685 11.9723953,9.07544113 11.9723953,5.97576107 C11.9723953,2.87582735 9.45044113,0.354 6.35076107,0.354 L6.35076107,0.354 Z M6.35076107,10.8289121 C3.67445071,10.8289121 1.49722956,8.65181776 1.49722956,5.97576107 C1.49722956,5.9443064 1.49900522,5.91335907 1.49976622,5.88215806 L2.20090094,6.4213266 L2.56313696,6.4213266 L2.97268183,6.8306178 L2.97268183,7.68217686 L3.32324919,8.03287105 L3.73926255,8.03287105 L3.73926255,9.79940584 L4.27386509,10.3361645 L4.4591686,10.3361645 L4.4591686,10.000183 L5.37655417,9.08343163 L5.37655417,8.73400577 L5.85585737,8.25203907 L5.85585737,7.37206934 L5.32518666,7.37206934 L4.28439226,6.33140176 L2.82225748,6.33140176 L2.82225748,5.56938704 L3.96286973,5.56938704 L3.96286973,5.23949352 L4.65068695,5.23949352 L5.11477015,4.77667865 L5.11477015,4.03001076 L4.49087694,3.40662489 L3.75359472,3.40662489 L3.75359472,3.78725175 L2.96228149,3.78725175 L2.96228149,3.28385021 L3.42217919,2.82319151 L3.42217919,2.49786399 L2.97001833,2.49786399 C3.84466106,1.64744643 5.03714814,1.12222956 6.35063424,1.12222956 C7.57292716,1.12222956 8.69020207,1.57730759 9.54442463,2.32587797 L8.46164839,2.32587797 L7.680355,3.10666403 L8.21508437,3.64088607 L7.87238068,3.98257509 L7.7165025,3.82669692 L7.85297518,3.68946324 L7.78930484,3.62566607 L7.78943167,3.62566607 L7.56011699,3.39559038 L7.55986332,3.39571722 L7.49758815,3.33318838 L7.01904595,3.78585658 L7.55910232,4.32654712 L6.8069806,4.32198112 L6.8069806,5.25864535 L7.66716433,5.25864535 L7.6723645,4.72112565 L7.81289584,4.57996014 L8.31819988,5.08653251 L8.31819988,5.41921636 L9.00703176,5.41921636 L9.03366676,5.39321553 L9.03430093,5.39194719 L10.195587,6.55259911 L10.8637451,5.88520206 L11.2018828,5.88520206 C11.2023901,5.9153884 11.2041658,5.94532107 11.2041658,5.97563424 C11.2040389,8.65181776 9.0269446,10.8289121 6.35076107,10.8289121 L6.35076107,10.8289121 Z\" id=\"Shape\" stroke=\"#DDE1E5\" stroke-width=\"0.25\" fill=\"#DDE1E5\"></path><polygon id=\"Shape\" stroke=\"#DDE1E5\" stroke-width=\"0.25\" fill=\"#DDE1E5\" points=\"6.50676608 1.61523076 4.52892694 1.61789426 4.52892694 2.95192735 5.34560683 3.76733891 5.72496536 3.76733891 5.72496536 3.1967157 6.50676608 2.41592965\"></polygon><polygon id=\"Shape\" stroke=\"#DDE1E5\" stroke-width=\"0.25\" fill=\"#DDE1E5\" points=\"9.59959714 6.88718547 8.28623788 5.57268471 8.28623788 5.57002121 6.79607294 5.57002121 6.35101474 6.01469891 6.35101474 6.96201714 6.98429362 7.59466185 8.12909136 7.59466185 8.12909136 8.70343893 8.99434843 9.56882283 9.20971144 9.56882283 9.20971144 8.50329592 9.63029081 8.08271655 9.63029081 7.3026915 9.87025949 7.3026915 10.1711082 7.00082814 10.0558167 6.88718547\"></polygon></g></svg>"
 
 /***/ },
 /* 248 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#4A464C\"><g fill-rule=\"evenodd\"><path d=\"M6.5 12.003l.052-9a.5.5 0 1 0-1-.006l-.052 9a.5.5 0 1 0 1 .006zM13 11.997l-.05-9a.488.488 0 0 0-.477-.497.488.488 0 0 0-.473.503l.05 9a.488.488 0 0 0 .477.497.488.488 0 0 0 .473-.503z\"></path></g></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"488 384 14 14\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"><path d=\"M495.5,391.5 L500.200877,396.200877\" id=\"Line\" stroke=\"#4A90E2\" stroke-width=\"1.25\" stroke-linecap=\"round\" stroke-linejoin=\"round\" fill=\"none\"></path><ellipse id=\"Oval-6\" stroke=\"#4A90E2\" stroke-width=\"1.25\" fill=\"#FFFFFF\" fill-rule=\"evenodd\" cx=\"493.5\" cy=\"389.5\" rx=\"4.5\" ry=\"4.5\"></ellipse></svg>"
 
 /***/ },
 /* 249 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"975 569 11 11\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"><g id=\"Pause-circle\" stroke=\"none\" stroke-width=\"1\" fill=\"none\" fill-rule=\"evenodd\" transform=\"translate(976.000000, 570.000000)\"><path d=\"M4.5,0.538639227 C2.3152037,0.538639227 0.538639227,2.31614868 0.538639227,4.5 C0.538639227,6.6847963 2.3152037,8.46136077 4.5,8.46136077 C6.6847963,8.46136077 8.46136077,6.6847963 8.46136077,4.5 C8.46136077,2.31614868 6.6847963,0.538639227 4.5,0.538639227 M4.5,9 C2.01847963,9 0,6.98152037 0,4.5 C0,2.01847963 2.01847963,0 4.5,0 C6.98152037,0 9,2.01847963 9,4.5 C9,6.98152037 6.98152037,9 4.5,9\" id=\"Fill-1-Copy\" stroke=\"#4990E2\" stroke-width=\"0.5\" fill=\"#4990E2\"></path><path d=\"M3,3 L3,6.5\" id=\"Line\" stroke=\"#4990E2\" stroke-width=\"1.15\" stroke-linecap=\"round\"></path><path d=\"M6,3 L6,6.5\" id=\"Line\" stroke=\"#4990E2\" stroke-width=\"1.15\" stroke-linecap=\"round\"></path></g></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#4A464C\"><g fill-rule=\"evenodd\"><path d=\"M6.5 12.003l.052-9a.5.5 0 1 0-1-.006l-.052 9a.5.5 0 1 0 1 .006zM13 11.997l-.05-9a.488.488 0 0 0-.477-.497.488.488 0 0 0-.473.503l.05 9a.488.488 0 0 0 .477.497.488.488 0 0 0 .473-.503z\"></path></g></svg>"
 
 /***/ },
 /* 250 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M10.483 13.995H5.517l-3.512-3.512V5.516l3.512-3.512h4.966l3.512 3.512v4.967l-3.512 3.512zm4.37-9.042l-3.807-3.805A.503.503 0 0 0 10.691 1H5.309a.503.503 0 0 0-.356.148L1.147 4.953A.502.502 0 0 0 1 5.308v5.383c0 .134.053.262.147.356l3.806 3.806a.503.503 0 0 0 .356.147h5.382a.503.503 0 0 0 .355-.147l3.806-3.806A.502.502 0 0 0 15 10.69V5.308a.502.502 0 0 0-.147-.355z\"></path><path d=\"M10 10.5a.5.5 0 1 0 1 0v-5a.5.5 0 1 0-1 0v5zM5 10.5a.5.5 0 1 0 1 0v-5a.5.5 0 0 0-1 0v5z\"></path></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"975 569 11 11\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"><g id=\"Pause-circle\" stroke=\"none\" stroke-width=\"1\" fill=\"none\" fill-rule=\"evenodd\" transform=\"translate(976.000000, 570.000000)\"><path d=\"M4.5,0.538639227 C2.3152037,0.538639227 0.538639227,2.31614868 0.538639227,4.5 C0.538639227,6.6847963 2.3152037,8.46136077 4.5,8.46136077 C6.6847963,8.46136077 8.46136077,6.6847963 8.46136077,4.5 C8.46136077,2.31614868 6.6847963,0.538639227 4.5,0.538639227 M4.5,9 C2.01847963,9 0,6.98152037 0,4.5 C0,2.01847963 2.01847963,0 4.5,0 C6.98152037,0 9,2.01847963 9,4.5 C9,6.98152037 6.98152037,9 4.5,9\" id=\"Fill-1-Copy\" stroke=\"#4990E2\" stroke-width=\"0.5\" fill=\"#4990E2\"></path><path d=\"M3,3 L3,6.5\" id=\"Line\" stroke=\"#4990E2\" stroke-width=\"1.15\" stroke-linecap=\"round\"></path><path d=\"M6,3 L6,6.5\" id=\"Line\" stroke=\"#4990E2\" stroke-width=\"1.15\" stroke-linecap=\"round\"></path></g></svg>"
 
 /***/ },
 /* 251 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"##4A464C\"><path d=\"M4.525 13.21h-.472c-.574 0-.987-.154-1.24-.463-.253-.31-.38-.882-.38-1.719v-.573c0-.746-.097-1.265-.292-1.557-.196-.293-.51-.44-.945-.44v-.974c.435 0 .75-.146.945-.44.195-.292.293-.811.293-1.556v-.58c0-.833.126-1.404.379-1.712.253-.31.666-.464 1.24-.464h.472v.783h-.179c-.37 0-.628.08-.774.24-.145.159-.218.54-.218 1.141v.383c0 .824-.096 1.432-.287 1.823-.191.39-.516.679-.974.866.458.191.783.482.974.873.191.39.287.998.287 1.823v.382c0 .602.073.982.218 1.142.146.16.404.239.774.239h.18v.783zm9.502-4.752c-.43 0-.744.147-.942.44-.197.292-.296.811-.296 1.557v.573c0 .837-.125 1.41-.376 1.719-.251.309-.664.463-1.237.463h-.478v-.783h.185c.37 0 .628-.08.774-.24.145-.159.218-.539.218-1.14v-.383c0-.825.096-1.433.287-1.823.191-.39.516-.682.974-.873-.458-.187-.783-.476-.974-.866-.191-.391-.287-.999-.287-1.823v-.383c0-.602-.073-.982-.218-1.142-.146-.159-.404-.239-.774-.239h-.185v-.783h.478c.573 0 .986.155 1.237.464.25.308.376.88.376 1.712v.58c0 .673.088 1.174.263 1.503.176.329.5.493.975.493v.974z\" fill-rule=\"evenodd\"></path></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M10.483 13.995H5.517l-3.512-3.512V5.516l3.512-3.512h4.966l3.512 3.512v4.967l-3.512 3.512zm4.37-9.042l-3.807-3.805A.503.503 0 0 0 10.691 1H5.309a.503.503 0 0 0-.356.148L1.147 4.953A.502.502 0 0 0 1 5.308v5.383c0 .134.053.262.147.356l3.806 3.806a.503.503 0 0 0 .356.147h5.382a.503.503 0 0 0 .355-.147l3.806-3.806A.502.502 0 0 0 15 10.69V5.308a.502.502 0 0 0-.147-.355z\"></path><path d=\"M10 10.5a.5.5 0 1 0 1 0v-5a.5.5 0 1 0-1 0v5zM5 10.5a.5.5 0 1 0 1 0v-5a.5.5 0 0 0-1 0v5z\"></path></svg>"
 
 /***/ },
 /* 252 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#696969\"><path d=\"M6.925 12.5l7.4-5-7.4-5v10zM6 12.5v-10c0-.785.8-1.264 1.415-.848l7.4 5c.58.392.58 1.304 0 1.696l-7.4 5C6.8 13.764 6 13.285 6 12.5z\" fill-rule=\"evenodd\"></path></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"##4A464C\"><path d=\"M4.525 13.21h-.472c-.574 0-.987-.154-1.24-.463-.253-.31-.38-.882-.38-1.719v-.573c0-.746-.097-1.265-.292-1.557-.196-.293-.51-.44-.945-.44v-.974c.435 0 .75-.146.945-.44.195-.292.293-.811.293-1.556v-.58c0-.833.126-1.404.379-1.712.253-.31.666-.464 1.24-.464h.472v.783h-.179c-.37 0-.628.08-.774.24-.145.159-.218.54-.218 1.141v.383c0 .824-.096 1.432-.287 1.823-.191.39-.516.679-.974.866.458.191.783.482.974.873.191.39.287.998.287 1.823v.382c0 .602.073.982.218 1.142.146.16.404.239.774.239h.18v.783zm9.502-4.752c-.43 0-.744.147-.942.44-.197.292-.296.811-.296 1.557v.573c0 .837-.125 1.41-.376 1.719-.251.309-.664.463-1.237.463h-.478v-.783h.185c.37 0 .628-.08.774-.24.145-.159.218-.539.218-1.14v-.383c0-.825.096-1.433.287-1.823.191-.39.516-.682.974-.873-.458-.187-.783-.476-.974-.866-.191-.391-.287-.999-.287-1.823v-.383c0-.602-.073-.982-.218-1.142-.146-.159-.404-.239-.774-.239h-.185v-.783h.478c.573 0 .986.155 1.237.464.25.308.376.88.376 1.712v.58c0 .673.088 1.174.263 1.503.176.329.5.493.975.493v.974z\" fill-rule=\"evenodd\"></path></svg>"
 
 /***/ },
 /* 253 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\"0 0 33 12\"><path id=\"base-path\" d=\"M27.1,0H1C0.4,0,0,0.4,0,1v10c0,0.6,0.4,1,1,1h26.1 c0.6,0,1.2-0.3,1.5-0.7L33,6l-4.4-5.3C28.2,0.3,27.7,0,27.1,0z\"></path></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#696969\"><path d=\"M6.925 12.5l7.4-5-7.4-5v10zM6 12.5v-10c0-.785.8-1.264 1.415-.848l7.4 5c.58.392.58 1.304 0 1.696l-7.4 5C6.8 13.764 6 13.285 6 12.5z\" fill-rule=\"evenodd\"></path></svg>"
 
 /***/ },
 /* 254 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#4A464C\"><g fill-rule=\"evenodd\"><path d=\"M1.5 14.042h4.095a.5.5 0 0 0 0-1H1.5a.5.5 0 1 0 0 1zM7.983 2a.5.5 0 0 1 .517.5v7.483l3.136-3.326a.5.5 0 1 1 .728.686l-4 4.243a.499.499 0 0 1-.73-.004L3.635 7.343a.5.5 0 0 1 .728-.686L7.5 9.983V3H1.536C1.24 3 1 2.776 1 2.5s.24-.5.536-.5h6.447zM10.5 14.042h4.095a.5.5 0 0 0 0-1H10.5a.5.5 0 1 0 0 1z\"></path></g></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\"0 0 33 12\"><path id=\"base-path\" d=\"M27.1,0H1C0.4,0,0,0.4,0,1v10c0,0.6,0.4,1,1,1h26.1 c0.6,0,1.2-0.3,1.5-0.7L33,6l-4.4-5.3C28.2,0.3,27.7,0,27.1,0z\"></path></svg>"
 
 /***/ },
 /* 255 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"##4A464C\"><g fill-rule=\"evenodd\"><path d=\"M5 13.5H1a.5.5 0 1 0 0 1h4a.5.5 0 1 0 0-1zM12 13.5H8a.5.5 0 1 0 0 1h4a.5.5 0 1 0 0-1zM6.11 5.012A.427.427 0 0 1 6.21 5h7.083L9.646 1.354a.5.5 0 1 1 .708-.708l4.5 4.5a.498.498 0 0 1 0 .708l-4.5 4.5a.5.5 0 0 1-.708-.708L13.293 6H6.5v5.5a.5.5 0 1 1-1 0v-6a.5.5 0 0 1 .61-.488z\"></path></g></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#4A464C\"><g fill-rule=\"evenodd\"><path d=\"M1.5 14.042h4.095a.5.5 0 0 0 0-1H1.5a.5.5 0 1 0 0 1zM7.983 2a.5.5 0 0 1 .517.5v7.483l3.136-3.326a.5.5 0 1 1 .728.686l-4 4.243a.499.499 0 0 1-.73-.004L3.635 7.343a.5.5 0 0 1 .728-.686L7.5 9.983V3H1.536C1.24 3 1 2.776 1 2.5s.24-.5.536-.5h6.447zM10.5 14.042h4.095a.5.5 0 0 0 0-1H10.5a.5.5 0 1 0 0 1z\"></path></g></svg>"
 
 /***/ },
 /* 256 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#4A464C\"><g fill-rule=\"evenodd\"><path d=\"M13.297 6.912C12.595 4.39 10.167 2.5 7.398 2.5A5.898 5.898 0 0 0 1.5 8.398a.5.5 0 0 0 1 0A4.898 4.898 0 0 1 7.398 3.5c2.75 0 5.102 2.236 5.102 4.898v.004L8.669 7.029a.5.5 0 0 0-.338.942l4.462 1.598a.5.5 0 0 0 .651-.34.506.506 0 0 0 .02-.043l2-5a.5.5 0 1 0-.928-.372l-1.24 3.098z\"></path><circle cx=\"7\" cy=\"12\" r=\"1\"></circle></g></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"##4A464C\"><g fill-rule=\"evenodd\"><path d=\"M5 13.5H1a.5.5 0 1 0 0 1h4a.5.5 0 1 0 0-1zM12 13.5H8a.5.5 0 1 0 0 1h4a.5.5 0 1 0 0-1zM6.11 5.012A.427.427 0 0 1 6.21 5h7.083L9.646 1.354a.5.5 0 1 1 .708-.708l4.5 4.5a.498.498 0 0 1 0 .708l-4.5 4.5a.5.5 0 0 1-.708-.708L13.293 6H6.5v5.5a.5.5 0 1 1-1 0v-6a.5.5 0 0 1 .61-.488z\"></path></g></svg>"
 
 /***/ },
 /* 257 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#696969\"><path d=\"M12.219 7c.345 0 .635.117.869.352.234.234.351.524.351.869 0 .351-.118.652-.356.903-.238.25-.526.376-.864.376-.332 0-.615-.125-.85-.376a1.276 1.276 0 0 1-.351-.903A1.185 1.185 0 0 1 12.218 7zM8.234 7c.345 0 .635.117.87.352.234.234.351.524.351.869 0 .351-.119.652-.356.903-.238.25-.526.376-.865.376-.332 0-.613-.125-.844-.376a1.286 1.286 0 0 1-.347-.903c0-.352.114-.643.342-.874.228-.231.51-.347.85-.347zM4.201 7c.339 0 .627.117.864.352.238.234.357.524.357.869 0 .351-.119.652-.357.903-.237.25-.525.376-.864.376-.338 0-.623-.125-.854-.376A1.286 1.286 0 0 1 3 8.221 1.185 1.185 0 0 1 4.201 7z\" fill-rule=\"evenodd\"></path></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#4A464C\"><g fill-rule=\"evenodd\"><path d=\"M13.297 6.912C12.595 4.39 10.167 2.5 7.398 2.5A5.898 5.898 0 0 0 1.5 8.398a.5.5 0 0 0 1 0A4.898 4.898 0 0 1 7.398 3.5c2.75 0 5.102 2.236 5.102 4.898v.004L8.669 7.029a.5.5 0 0 0-.338.942l4.462 1.598a.5.5 0 0 0 .651-.34.506.506 0 0 0 .02-.043l2-5a.5.5 0 1 0-.928-.372l-1.24 3.098z\"></path><circle cx=\"7\" cy=\"12\" r=\"1\"></circle></g></svg>"
 
 /***/ },
 /* 258 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#DDE1E4\"><path fill-rule=\"evenodd\" d=\"M8.5 8.793L5.854 6.146l-.04-.035L7.5 4.426c.2-.2.3-.4.3-.6 0-.2-.1-.4-.2-.6l-1-1c-.4-.3-.9-.3-1.2 0l-4.1 4.1c-.2.2-.3.4-.3.6 0 .2.1.4.2.6l1 1c.3.3.9.3 1.2 0l1.71-1.71.036.04L7.793 9.5l-3.647 3.646c-.195.196-.195.512 0 .708.196.195.512.195.708 0L8.5 10.207l3.646 3.647c.196.195.512.195.708 0 .195-.196.195-.512 0-.708L9.207 9.5l2.565-2.565L13.3 8.5c.1.1 2.3 1.1 2.7.7.4-.4-.3-2.7-.5-2.9l-1.1-1.1c.1-.1.2-.4.2-.6 0-.2-.1-.4-.2-.6l-.4-.4c-.3-.3-.8-.3-1.1 0l-1.5-1.4c-.2-.2-.3-.2-.5-.2s-.3.1-.5.2L9.2 3.4c-.2.1-.2.2-.2.4s.1.4.2.5l1.874 1.92L8.5 8.792z\"></path></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#696969\"><path d=\"M12.219 7c.345 0 .635.117.869.352.234.234.351.524.351.869 0 .351-.118.652-.356.903-.238.25-.526.376-.864.376-.332 0-.615-.125-.85-.376a1.276 1.276 0 0 1-.351-.903A1.185 1.185 0 0 1 12.218 7zM8.234 7c.345 0 .635.117.87.352.234.234.351.524.351.869 0 .351-.119.652-.356.903-.238.25-.526.376-.865.376-.332 0-.613-.125-.844-.376a1.286 1.286 0 0 1-.347-.903c0-.352.114-.643.342-.874.228-.231.51-.347.85-.347zM4.201 7c.339 0 .627.117.864.352.238.234.357.524.357.869 0 .351-.119.652-.357.903-.237.25-.525.376-.864.376-.338 0-.623-.125-.854-.376A1.286 1.286 0 0 1 3 8.221 1.185 1.185 0 0 1 4.201 7z\" fill-rule=\"evenodd\"></path></svg>"
 
 /***/ },
 /* 259 */
 /***/ function(module, exports) {
 
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#DDE1E4\"><path fill-rule=\"evenodd\" d=\"M8.5 8.793L5.854 6.146l-.04-.035L7.5 4.426c.2-.2.3-.4.3-.6 0-.2-.1-.4-.2-.6l-1-1c-.4-.3-.9-.3-1.2 0l-4.1 4.1c-.2.2-.3.4-.3.6 0 .2.1.4.2.6l1 1c.3.3.9.3 1.2 0l1.71-1.71.036.04L7.793 9.5l-3.647 3.646c-.195.196-.195.512 0 .708.196.195.512.195.708 0L8.5 10.207l3.646 3.647c.196.195.512.195.708 0 .195-.196.195-.512 0-.708L9.207 9.5l2.565-2.565L13.3 8.5c.1.1 2.3 1.1 2.7.7.4-.4-.3-2.7-.5-2.9l-1.1-1.1c.1-.1.2-.4.2-.6 0-.2-.1-.4-.2-.6l-.4-.4c-.3-.3-.8-.3-1.1 0l-1.5-1.4c-.2-.2-.3-.2-.5-.2s-.3.1-.5.2L9.2 3.4c-.2.1-.2.2-.2.4s.1.4.2.5l1.874 1.92L8.5 8.792z\"></path></svg>"
+
+/***/ },
+/* 260 */
+/***/ function(module, exports) {
+
 	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 260 */,
-/* 261 */
+/* 261 */,
+/* 262 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
 	var ReactDOM = __webpack_require__(25);
-	var ImPropTypes = __webpack_require__(227);
+	var ImPropTypes = __webpack_require__(228);
 	
 	var _require = __webpack_require__(2);
 	
@@ -32785,30 +32818,30 @@ var Debugger =
 	
 	var connect = _require2.connect;
 	
-	var SourceEditor = __webpack_require__(262);
+	var SourceEditor = __webpack_require__(263);
 	
 	var _require3 = __webpack_require__(45);
 	
 	var debugGlobal = _require3.debugGlobal;
 	
-	var _require4 = __webpack_require__(198);
+	var _require4 = __webpack_require__(199);
 	
 	var getSourceText = _require4.getSourceText;
 	var getBreakpointsForSource = _require4.getBreakpointsForSource;
 	var getSelectedLocation = _require4.getSelectedLocation;
 	var getSelectedFrame = _require4.getSelectedFrame;
 	
-	var _require5 = __webpack_require__(194);
+	var _require5 = __webpack_require__(195);
 	
 	var makeLocationId = _require5.makeLocationId;
 	
-	var actions = __webpack_require__(213);
-	var Breakpoint = React.createFactory(__webpack_require__(263));
+	var actions = __webpack_require__(214);
+	var Breakpoint = React.createFactory(__webpack_require__(264));
 	var dom = React.DOM;
 	var PropTypes = React.PropTypes;
 	
 	
-	__webpack_require__(264);
+	__webpack_require__(265);
 	
 	function isTextForSource(sourceText) {
 	  return !sourceText.get("loading") && !sourceText.get("error");
@@ -33038,19 +33071,19 @@ var Debugger =
 	}, dispatch => bindActionCreators(actions, dispatch))(Editor);
 
 /***/ },
-/* 262 */
+/* 263 */
 /***/ function(module, exports) {
 
 	module.exports = devtoolsRequire('devtools/client/sourceeditor/editor');
 
 /***/ },
-/* 263 */
+/* 264 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
 	var PropTypes = React.PropTypes;
 	
-	var classnames = __webpack_require__(206);
+	var classnames = __webpack_require__(207);
 	
 	function makeMarker(isDisabled) {
 	  var marker = document.createElement("div");
@@ -33120,14 +33153,14 @@ var Debugger =
 	module.exports = Breakpoint;
 
 /***/ },
-/* 264 */
+/* 265 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 265 */,
-/* 266 */
+/* 266 */,
+/* 267 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -33136,8 +33169,8 @@ var Debugger =
 	
 	var React = __webpack_require__(17);
 	var ReactDOM = __webpack_require__(25);
-	var Draggable = React.createFactory(__webpack_require__(267));
-	__webpack_require__(268);
+	var Draggable = React.createFactory(__webpack_require__(268));
+	__webpack_require__(269);
 	
 	var dom = React.DOM;
 	var PropTypes = React.PropTypes;
@@ -33176,8 +33209,8 @@ var Debugger =
 	
 	    return dom.div({ className: "split-box",
 	      style: this.props.style }, dom.div({ className: rightFlex ? "uncontrolled" : "controlled",
-	      style: { width: rightFlex ? null : width } }, left), Draggable({ className: "splitter",
-	      onMove: x => this.onMove(x) }), dom.div({ className: rightFlex ? "controlled" : "uncontrolled",
+	      style: { width: rightFlex ? null : width } }, left), dom.div({ className: "splitter" }, Draggable({ className: "splitter-handle",
+	      onMove: x => this.onMove(x) })), dom.div({ className: rightFlex ? "controlled" : "uncontrolled",
 	      style: { width: rightFlex ? width : null } }, right));
 	  }
 	});
@@ -33185,7 +33218,7 @@ var Debugger =
 	module.exports = SplitBox;
 
 /***/ },
-/* 267 */
+/* 268 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
@@ -33239,14 +33272,14 @@ var Debugger =
 	module.exports = Draggable;
 
 /***/ },
-/* 268 */
+/* 269 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 269 */,
-/* 270 */
+/* 270 */,
+/* 271 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
@@ -33261,7 +33294,7 @@ var Debugger =
 	
 	var bindActionCreators = _require2.bindActionCreators;
 	
-	var _require3 = __webpack_require__(198);
+	var _require3 = __webpack_require__(199);
 	
 	var getPause = _require3.getPause;
 	var getIsWaitingOnBreak = _require3.getIsWaitingOnBreak;
@@ -33275,23 +33308,23 @@ var Debugger =
 	
 	var isEnabled = _require4.isEnabled;
 	
-	var Svg = __webpack_require__(234);
-	var ImPropTypes = __webpack_require__(227);
+	var Svg = __webpack_require__(235);
+	var ImPropTypes = __webpack_require__(228);
 	
-	var _require5 = __webpack_require__(212);
+	var _require5 = __webpack_require__(213);
 	
 	var Services = _require5.Services;
 	
 	var shiftKey = Services.appinfo.OS === "Darwin" ? "\u21E7" : "Shift+";
 	var ctrlKey = Services.appinfo.OS === "Linux" ? "Ctrl+" : "";
 	
-	var actions = __webpack_require__(213);
-	var Breakpoints = React.createFactory(__webpack_require__(271));
-	var Expressions = React.createFactory(__webpack_require__(274));
-	var Scopes = React.createFactory(__webpack_require__(307));
-	var Frames = React.createFactory(__webpack_require__(339));
-	var Accordion = React.createFactory(__webpack_require__(342));
-	__webpack_require__(345);
+	var actions = __webpack_require__(214);
+	var Breakpoints = React.createFactory(__webpack_require__(272));
+	var Expressions = React.createFactory(__webpack_require__(275));
+	var Scopes = React.createFactory(__webpack_require__(308));
+	var Frames = React.createFactory(__webpack_require__(340));
+	var Accordion = React.createFactory(__webpack_require__(343));
+	__webpack_require__(346);
 	
 	function debugBtn(onClick, type, className, tooltip) {
 	  className = `${ type } ${ className }`;
@@ -33479,7 +33512,7 @@ var Debugger =
 	}, dispatch => bindActionCreators(actions, dispatch))(RightSidebar);
 
 /***/ },
-/* 271 */
+/* 272 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
@@ -33492,36 +33525,36 @@ var Debugger =
 	
 	var bindActionCreators = _require2.bindActionCreators;
 	
-	var ImPropTypes = __webpack_require__(227);
-	var classnames = __webpack_require__(206);
-	var actions = __webpack_require__(213);
+	var ImPropTypes = __webpack_require__(228);
+	var classnames = __webpack_require__(207);
+	var actions = __webpack_require__(214);
 	
-	var _require3 = __webpack_require__(198);
+	var _require3 = __webpack_require__(199);
 	
 	var getSource = _require3.getSource;
 	var getPause = _require3.getPause;
 	var getBreakpoints = _require3.getBreakpoints;
 	
-	var _require4 = __webpack_require__(194);
+	var _require4 = __webpack_require__(195);
 	
 	var makeLocationId = _require4.makeLocationId;
 	
-	var _require5 = __webpack_require__(175);
+	var _require5 = __webpack_require__(176);
 	
 	var truncateStr = _require5.truncateStr;
 	var dom = React.DOM;
 	var PropTypes = React.PropTypes;
 	
-	var _require6 = __webpack_require__(175);
+	var _require6 = __webpack_require__(176);
 	
 	var endTruncateStr = _require6.endTruncateStr;
 	
-	var _require7 = __webpack_require__(204);
+	var _require7 = __webpack_require__(205);
 	
 	var basename = _require7.basename;
 	
 	
-	__webpack_require__(272);
+	__webpack_require__(273);
 	
 	function isCurrentlyPausedAtBreakpoint(state, breakpoint) {
 	  var pause = getPause(state);
@@ -33619,14 +33652,14 @@ var Debugger =
 	}), dispatch => bindActionCreators(actions, dispatch))(Breakpoints);
 
 /***/ },
-/* 272 */
+/* 273 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 273 */,
-/* 274 */
+/* 274 */,
+/* 275 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
@@ -33639,23 +33672,23 @@ var Debugger =
 	
 	var bindActionCreators = _require2.bindActionCreators;
 	
-	var ImPropTypes = __webpack_require__(227);
+	var ImPropTypes = __webpack_require__(228);
 	// const classnames = require("classnames");
-	var Svg = __webpack_require__(234);
-	var actions = __webpack_require__(213);
+	var Svg = __webpack_require__(235);
+	var actions = __webpack_require__(214);
 	
-	var _require3 = __webpack_require__(198);
+	var _require3 = __webpack_require__(199);
 	
 	var getExpressions = _require3.getExpressions;
 	var getPause = _require3.getPause;
 	
-	var Rep = React.createFactory(__webpack_require__(275));
+	var Rep = React.createFactory(__webpack_require__(276));
 	// const { truncateStr } = require("../utils/utils");
 	var dom = React.DOM;
 	var PropTypes = React.PropTypes;
 	
 	
-	__webpack_require__(305);
+	__webpack_require__(306);
 	
 	var Expressions = React.createClass({
 	  propTypes: {
@@ -33758,14 +33791,14 @@ var Debugger =
 	  expressions: getExpressions(state) }), dispatch => bindActionCreators(actions, dispatch))(Expressions);
 
 /***/ },
-/* 275 */
+/* 276 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
-	var Rep = React.createFactory(__webpack_require__(276).Rep);
-	var Grip = __webpack_require__(302).Grip;
+	var Rep = React.createFactory(__webpack_require__(277).Rep);
+	var Grip = __webpack_require__(303).Grip;
 	
-	__webpack_require__(303);
+	__webpack_require__(304);
 	
 	function renderRep(_ref) {
 	  var object = _ref.object;
@@ -33777,7 +33810,7 @@ var Debugger =
 	module.exports = renderRep;
 
 /***/ },
-/* 276 */
+/* 277 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -33793,31 +33826,31 @@ var Debugger =
 	  // Dependencies
 	  const React = __webpack_require__(17);
 	
-	  const { isGrip } = __webpack_require__(277);
+	  const { isGrip } = __webpack_require__(278);
 	
 	  // Load all existing rep templates
-	  const { Undefined } = __webpack_require__(278);
-	  const { Null } = __webpack_require__(280);
-	  const { StringRep } = __webpack_require__(281);
-	  const { Number } = __webpack_require__(282);
-	  const { ArrayRep } = __webpack_require__(283);
-	  const { Obj } = __webpack_require__(285);
+	  const { Undefined } = __webpack_require__(279);
+	  const { Null } = __webpack_require__(281);
+	  const { StringRep } = __webpack_require__(282);
+	  const { Number } = __webpack_require__(283);
+	  const { ArrayRep } = __webpack_require__(284);
+	  const { Obj } = __webpack_require__(286);
 	
 	  // DOM types (grips)
-	  const { Attribute } = __webpack_require__(287);
-	  const { DateTime } = __webpack_require__(289);
-	  const { Document } = __webpack_require__(290);
-	  const { Event } = __webpack_require__(292);
-	  const { Func } = __webpack_require__(293);
-	  const { NamedNodeMap } = __webpack_require__(294);
-	  const { RegExp } = __webpack_require__(295);
-	  const { StyleSheet } = __webpack_require__(296);
-	  const { TextNode } = __webpack_require__(297);
-	  const { Window } = __webpack_require__(298);
-	  const { ObjectWithText } = __webpack_require__(299);
-	  const { ObjectWithURL } = __webpack_require__(300);
-	  const { GripArray } = __webpack_require__(301);
-	  const { Grip } = __webpack_require__(302);
+	  const { Attribute } = __webpack_require__(288);
+	  const { DateTime } = __webpack_require__(290);
+	  const { Document } = __webpack_require__(291);
+	  const { Event } = __webpack_require__(293);
+	  const { Func } = __webpack_require__(294);
+	  const { NamedNodeMap } = __webpack_require__(295);
+	  const { RegExp } = __webpack_require__(296);
+	  const { StyleSheet } = __webpack_require__(297);
+	  const { TextNode } = __webpack_require__(298);
+	  const { Window } = __webpack_require__(299);
+	  const { ObjectWithText } = __webpack_require__(300);
+	  const { ObjectWithURL } = __webpack_require__(301);
+	  const { GripArray } = __webpack_require__(302);
+	  const { Grip } = __webpack_require__(303);
 	
 	  // List of all registered template.
 	  // XXX there should be a way for extensions to register a new
@@ -33911,7 +33944,7 @@ var Debugger =
 
 
 /***/ },
-/* 277 */
+/* 278 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -33998,7 +34031,7 @@ var Debugger =
 
 
 /***/ },
-/* 278 */
+/* 279 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -34013,8 +34046,8 @@ var Debugger =
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	  // Dependencies
 	  const React = __webpack_require__(17);
-	  const { createFactories } = __webpack_require__(277);
-	  const { ObjectBox } = createFactories(__webpack_require__(279));
+	  const { createFactories } = __webpack_require__(278);
+	  const { ObjectBox } = createFactories(__webpack_require__(280));
 	
 	  /**
 	   * Renders undefined value
@@ -34049,7 +34082,7 @@ var Debugger =
 
 
 /***/ },
-/* 279 */
+/* 280 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -34090,7 +34123,7 @@ var Debugger =
 
 
 /***/ },
-/* 280 */
+/* 281 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -34105,8 +34138,8 @@ var Debugger =
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	  // Dependencies
 	  const React = __webpack_require__(17);
-	  const { createFactories } = __webpack_require__(277);
-	  const { ObjectBox } = createFactories(__webpack_require__(279));
+	  const { createFactories } = __webpack_require__(278);
+	  const { ObjectBox } = createFactories(__webpack_require__(280));
 	
 	  /**
 	   * Renders null value
@@ -34141,7 +34174,7 @@ var Debugger =
 
 
 /***/ },
-/* 281 */
+/* 282 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -34156,8 +34189,8 @@ var Debugger =
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	  // Dependencies
 	  const React = __webpack_require__(17);
-	  const { createFactories, cropMultipleLines } = __webpack_require__(277);
-	  const { ObjectBox } = createFactories(__webpack_require__(279));
+	  const { createFactories, cropMultipleLines } = __webpack_require__(278);
+	  const { ObjectBox } = createFactories(__webpack_require__(280));
 	
 	  /**
 	   * Renders a string. String value is enclosed within quotes.
@@ -34198,7 +34231,7 @@ var Debugger =
 
 
 /***/ },
-/* 282 */
+/* 283 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -34213,8 +34246,8 @@ var Debugger =
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	  // Dependencies
 	  const React = __webpack_require__(17);
-	  const { createFactories } = __webpack_require__(277);
-	  const { ObjectBox } = createFactories(__webpack_require__(279));
+	  const { createFactories } = __webpack_require__(278);
+	  const { ObjectBox } = createFactories(__webpack_require__(280));
 	
 	  /**
 	   * Renders a number
@@ -34250,7 +34283,7 @@ var Debugger =
 
 
 /***/ },
-/* 283 */
+/* 284 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -34265,9 +34298,9 @@ var Debugger =
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	  // Dependencies
 	  const React = __webpack_require__(17);
-	  const { createFactories } = __webpack_require__(277);
-	  const { ObjectBox } = createFactories(__webpack_require__(279));
-	  const { Caption } = createFactories(__webpack_require__(284));
+	  const { createFactories } = __webpack_require__(278);
+	  const { ObjectBox } = createFactories(__webpack_require__(280));
+	  const { Caption } = createFactories(__webpack_require__(285));
 	
 	  // Shortcuts
 	  const DOM = React.DOM;
@@ -34423,7 +34456,7 @@ var Debugger =
 	    displayName: "ItemRep",
 	
 	    render: function () {
-	      const { Rep } = createFactories(__webpack_require__(276));
+	      const { Rep } = createFactories(__webpack_require__(277));
 	
 	      let object = this.props.object;
 	      let delim = this.props.delim;
@@ -34465,7 +34498,7 @@ var Debugger =
 
 
 /***/ },
-/* 284 */
+/* 285 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -34502,7 +34535,7 @@ var Debugger =
 
 
 /***/ },
-/* 285 */
+/* 286 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -34516,10 +34549,10 @@ var Debugger =
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	  // Dependencies
 	  const React = __webpack_require__(17);
-	  const { createFactories } = __webpack_require__(277);
-	  const { ObjectBox } = createFactories(__webpack_require__(279));
-	  const { Caption } = createFactories(__webpack_require__(284));
-	  const { PropRep } = createFactories(__webpack_require__(286));
+	  const { createFactories } = __webpack_require__(278);
+	  const { ObjectBox } = createFactories(__webpack_require__(280));
+	  const { Caption } = createFactories(__webpack_require__(285));
+	  const { PropRep } = createFactories(__webpack_require__(287));
 	  // Shortcuts
 	  const { span } = React.DOM;
 	  /**
@@ -34671,7 +34704,7 @@ var Debugger =
 
 
 /***/ },
-/* 286 */
+/* 287 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -34684,7 +34717,7 @@ var Debugger =
 	// Make this available to both AMD and CJS environments
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	  const React = __webpack_require__(17);
-	  const { createFactories } = __webpack_require__(277);
+	  const { createFactories } = __webpack_require__(278);
 	
 	  const { span } = React.DOM;
 	
@@ -34705,7 +34738,7 @@ var Debugger =
 	    },
 	
 	    render: function () {
-	      let { Rep } = createFactories(__webpack_require__(276));
+	      let { Rep } = createFactories(__webpack_require__(277));
 	
 	      return (
 	        span({},
@@ -34734,7 +34767,7 @@ var Debugger =
 
 
 /***/ },
-/* 287 */
+/* 288 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -34750,9 +34783,9 @@ var Debugger =
 	  const React = __webpack_require__(17);
 	
 	  // Reps
-	  const { createFactories, isGrip } = __webpack_require__(277);
-	  const { ObjectLink } = createFactories(__webpack_require__(288));
-	  const { StringRep } = __webpack_require__(281);
+	  const { createFactories, isGrip } = __webpack_require__(278);
+	  const { ObjectLink } = createFactories(__webpack_require__(289));
+	  const { StringRep } = __webpack_require__(282);
 	
 	  // Shortcuts
 	  const { span } = React.DOM;
@@ -34810,7 +34843,7 @@ var Debugger =
 
 
 /***/ },
-/* 288 */
+/* 289 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -34852,7 +34885,7 @@ var Debugger =
 
 
 /***/ },
-/* 289 */
+/* 290 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -34868,8 +34901,8 @@ var Debugger =
 	  const React = __webpack_require__(17);
 	
 	  // Reps
-	  const { createFactories, isGrip } = __webpack_require__(277);
-	  const { ObjectLink } = createFactories(__webpack_require__(288));
+	  const { createFactories, isGrip } = __webpack_require__(278);
+	  const { ObjectLink } = createFactories(__webpack_require__(289));
 	
 	  // Shortcuts
 	  const { span } = React.DOM;
@@ -34919,7 +34952,7 @@ var Debugger =
 
 
 /***/ },
-/* 290 */
+/* 291 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -34935,9 +34968,9 @@ var Debugger =
 	  const React = __webpack_require__(17);
 	
 	  // Reps
-	  const { createFactories, isGrip } = __webpack_require__(277);
-	  const { ObjectBox } = createFactories(__webpack_require__(279));
-	  const { getFileName } = __webpack_require__(291);
+	  const { createFactories, isGrip } = __webpack_require__(278);
+	  const { ObjectBox } = createFactories(__webpack_require__(280));
+	  const { getFileName } = __webpack_require__(292);
 	
 	  // Shortcuts
 	  const { span } = React.DOM;
@@ -34997,7 +35030,7 @@ var Debugger =
 
 
 /***/ },
-/* 291 */
+/* 292 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -35084,7 +35117,7 @@ var Debugger =
 
 
 /***/ },
-/* 292 */
+/* 293 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -35100,8 +35133,8 @@ var Debugger =
 	  const React = __webpack_require__(17);
 	
 	  // Reps
-	  const { createFactories, isGrip } = __webpack_require__(277);
-	  const { ObjectLink } = createFactories(__webpack_require__(288));
+	  const { createFactories, isGrip } = __webpack_require__(278);
+	  const { ObjectLink } = createFactories(__webpack_require__(289));
 	
 	  /**
 	   * Renders DOM event objects.
@@ -35159,7 +35192,7 @@ var Debugger =
 
 
 /***/ },
-/* 293 */
+/* 294 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -35175,8 +35208,8 @@ var Debugger =
 	  const React = __webpack_require__(17);
 	
 	  // Reps
-	  const { createFactories, isGrip, cropString } = __webpack_require__(277);
-	  const { ObjectLink } = createFactories(__webpack_require__(288));
+	  const { createFactories, isGrip, cropString } = __webpack_require__(278);
+	  const { ObjectLink } = createFactories(__webpack_require__(289));
 	
 	  /**
 	   * This component represents a template for Function objects.
@@ -35224,7 +35257,7 @@ var Debugger =
 
 
 /***/ },
-/* 294 */
+/* 295 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -35240,9 +35273,9 @@ var Debugger =
 	  const React = __webpack_require__(17);
 	
 	  // Reps
-	  const { createFactories, isGrip } = __webpack_require__(277);
-	  const { ObjectLink } = createFactories(__webpack_require__(288));
-	  const { Caption } = createFactories(__webpack_require__(284));
+	  const { createFactories, isGrip } = __webpack_require__(278);
+	  const { ObjectLink } = createFactories(__webpack_require__(289));
+	  const { Caption } = createFactories(__webpack_require__(285));
 	
 	  // Shortcuts
 	  const { span } = React.DOM;
@@ -35360,7 +35393,7 @@ var Debugger =
 	    },
 	
 	    render: function () {
-	      const { Rep } = createFactories(__webpack_require__(276));
+	      const { Rep } = createFactories(__webpack_require__(277));
 	
 	      return (
 	        span({},
@@ -35403,7 +35436,7 @@ var Debugger =
 
 
 /***/ },
-/* 295 */
+/* 296 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -35419,8 +35452,8 @@ var Debugger =
 	  const React = __webpack_require__(17);
 	
 	  // Reps
-	  const { createFactories, isGrip } = __webpack_require__(277);
-	  const { ObjectLink } = createFactories(__webpack_require__(288));
+	  const { createFactories, isGrip } = __webpack_require__(278);
+	  const { ObjectLink } = createFactories(__webpack_require__(289));
 	
 	  // Shortcuts
 	  const { span } = React.DOM;
@@ -35478,7 +35511,7 @@ var Debugger =
 
 
 /***/ },
-/* 296 */
+/* 297 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -35494,9 +35527,9 @@ var Debugger =
 	  const React = __webpack_require__(17);
 	
 	  // Reps
-	  const { createFactories, isGrip } = __webpack_require__(277);
-	  const { ObjectBox } = createFactories(__webpack_require__(279));
-	  const { getFileName } = __webpack_require__(291);
+	  const { createFactories, isGrip } = __webpack_require__(278);
+	  const { ObjectBox } = createFactories(__webpack_require__(280));
+	  const { getFileName } = __webpack_require__(292);
 	
 	  // Shortcuts
 	  const DOM = React.DOM;
@@ -35551,7 +35584,7 @@ var Debugger =
 
 
 /***/ },
-/* 297 */
+/* 298 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -35567,8 +35600,8 @@ var Debugger =
 	  const React = __webpack_require__(17);
 	
 	  // Reps
-	  const { createFactories, isGrip, cropMultipleLines } = __webpack_require__(277);
-	  const { ObjectLink } = createFactories(__webpack_require__(288));
+	  const { createFactories, isGrip, cropMultipleLines } = __webpack_require__(278);
+	  const { ObjectLink } = createFactories(__webpack_require__(289));
 	
 	  // Shortcuts
 	  const DOM = React.DOM;
@@ -35638,7 +35671,7 @@ var Debugger =
 
 
 /***/ },
-/* 298 */
+/* 299 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -35654,8 +35687,8 @@ var Debugger =
 	  const React = __webpack_require__(17);
 	
 	  // Reps
-	  const { createFactories, isGrip, cropString } = __webpack_require__(277);
-	  const { ObjectBox } = createFactories(__webpack_require__(279));
+	  const { createFactories, isGrip, cropString } = __webpack_require__(278);
+	  const { ObjectBox } = createFactories(__webpack_require__(280));
 	
 	  // Shortcuts
 	  const DOM = React.DOM;
@@ -35706,7 +35739,7 @@ var Debugger =
 
 
 /***/ },
-/* 299 */
+/* 300 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -35722,8 +35755,8 @@ var Debugger =
 	  const React = __webpack_require__(17);
 	
 	  // Reps
-	  const { createFactories, isGrip } = __webpack_require__(277);
-	  const { ObjectLink } = createFactories(__webpack_require__(288));
+	  const { createFactories, isGrip } = __webpack_require__(278);
+	  const { ObjectLink } = createFactories(__webpack_require__(289));
 	
 	  // Shortcuts
 	  const { span } = React.DOM;
@@ -35777,7 +35810,7 @@ var Debugger =
 
 
 /***/ },
-/* 300 */
+/* 301 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -35793,8 +35826,8 @@ var Debugger =
 	  const React = __webpack_require__(17);
 	
 	  // Reps
-	  const { createFactories, isGrip } = __webpack_require__(277);
-	  const { ObjectLink } = createFactories(__webpack_require__(288));
+	  const { createFactories, isGrip } = __webpack_require__(278);
+	  const { ObjectLink } = createFactories(__webpack_require__(289));
 	
 	  // Shortcuts
 	  const { span } = React.DOM;
@@ -35848,7 +35881,7 @@ var Debugger =
 
 
 /***/ },
-/* 301 */
+/* 302 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -35863,9 +35896,9 @@ var Debugger =
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	  // Dependencies
 	  const React = __webpack_require__(17);
-	  const { createFactories, isGrip } = __webpack_require__(277);
-	  const { ObjectBox } = createFactories(__webpack_require__(279));
-	  const { Caption } = createFactories(__webpack_require__(284));
+	  const { createFactories, isGrip } = __webpack_require__(278);
+	  const { ObjectBox } = createFactories(__webpack_require__(280));
+	  const { Caption } = createFactories(__webpack_require__(285));
 	
 	  // Shortcuts
 	  const { a, span } = React.DOM;
@@ -35997,7 +36030,7 @@ var Debugger =
 	    },
 	
 	    render: function () {
-	      let { Rep } = createFactories(__webpack_require__(276));
+	      let { Rep } = createFactories(__webpack_require__(277));
 	
 	      return (
 	        span({},
@@ -36042,7 +36075,7 @@ var Debugger =
 
 
 /***/ },
-/* 302 */
+/* 303 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
@@ -36057,10 +36090,10 @@ var Debugger =
 	  // ReactJS
 	  const React = __webpack_require__(17);
 	  // Dependencies
-	  const { createFactories, isGrip } = __webpack_require__(277);
-	  const { ObjectBox } = createFactories(__webpack_require__(279));
-	  const { Caption } = createFactories(__webpack_require__(284));
-	  const { PropRep } = createFactories(__webpack_require__(286));
+	  const { createFactories, isGrip } = __webpack_require__(278);
+	  const { ObjectBox } = createFactories(__webpack_require__(280));
+	  const { Caption } = createFactories(__webpack_require__(285));
+	  const { PropRep } = createFactories(__webpack_require__(287));
 	  // Shortcuts
 	  const { span } = React.DOM;
 	
@@ -36229,21 +36262,21 @@ var Debugger =
 
 
 /***/ },
-/* 303 */
+/* 304 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 304 */,
-/* 305 */
+/* 305 */,
+/* 306 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 306 */,
-/* 307 */
+/* 307 */,
+/* 308 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
@@ -36256,22 +36289,22 @@ var Debugger =
 	
 	var connect = _require2.connect;
 	
-	var ImPropTypes = __webpack_require__(227);
-	var actions = __webpack_require__(213);
+	var ImPropTypes = __webpack_require__(228);
+	var actions = __webpack_require__(214);
 	
-	var _require3 = __webpack_require__(198);
+	var _require3 = __webpack_require__(199);
 	
 	var getSelectedFrame = _require3.getSelectedFrame;
 	var getLoadedObjects = _require3.getLoadedObjects;
 	var getPause = _require3.getPause;
 	
-	var ObjectInspector = React.createFactory(__webpack_require__(308));
+	var ObjectInspector = React.createFactory(__webpack_require__(309));
 	var dom = React.DOM;
 	var PropTypes = React.PropTypes;
 	
-	var toPairs = __webpack_require__(312);
+	var toPairs = __webpack_require__(313);
 	
-	__webpack_require__(337);
+	__webpack_require__(338);
 	
 	function info(text) {
 	  return dom.div({ className: "pane-info" }, text);
@@ -36451,14 +36484,14 @@ var Debugger =
 	}), dispatch => bindActionCreators(actions, dispatch))(Scopes);
 
 /***/ },
-/* 308 */
+/* 309 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
-	var classnames = __webpack_require__(206);
-	var ManagedTree = React.createFactory(__webpack_require__(230));
-	var Arrow = React.createFactory(__webpack_require__(309));
-	var Rep = __webpack_require__(275);
+	var classnames = __webpack_require__(207);
+	var ManagedTree = React.createFactory(__webpack_require__(231));
+	var Arrow = React.createFactory(__webpack_require__(310));
+	var Rep = __webpack_require__(276);
 	var dom = React.DOM;
 	var PropTypes = React.PropTypes;
 	
@@ -36640,39 +36673,39 @@ var Debugger =
 	module.exports = ObjectInspector;
 
 /***/ },
-/* 309 */
+/* 310 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
-	var InlineSVG = __webpack_require__(236);
+	var InlineSVG = __webpack_require__(237);
 	var dom = React.DOM;
 	
-	__webpack_require__(310);
+	__webpack_require__(311);
 	
 	// This is inline because it's much faster. We need to revisit how we
 	// load SVGs, at least for components that render them several times.
 	var Arrow = props => {
 	  var className = "arrow " + (props.className || "");
 	  return dom.span(Object.assign({}, props, { className }), React.createElement(InlineSVG, {
-	    src: __webpack_require__(238)
+	    src: __webpack_require__(239)
 	  }));
 	};
 	
 	module.exports = Arrow;
 
 /***/ },
-/* 310 */
+/* 311 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 311 */,
-/* 312 */
+/* 312 */,
+/* 313 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var createToPairs = __webpack_require__(313),
-	    keys = __webpack_require__(323);
+	var createToPairs = __webpack_require__(314),
+	    keys = __webpack_require__(324);
 	
 	/**
 	 * Creates an array of own enumerable string keyed-value pairs for `object`
@@ -36704,13 +36737,13 @@ var Debugger =
 
 
 /***/ },
-/* 313 */
+/* 314 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseToPairs = __webpack_require__(314),
-	    getTag = __webpack_require__(316),
-	    mapToArray = __webpack_require__(321),
-	    setToPairs = __webpack_require__(322);
+	var baseToPairs = __webpack_require__(315),
+	    getTag = __webpack_require__(317),
+	    mapToArray = __webpack_require__(322),
+	    setToPairs = __webpack_require__(323);
 	
 	/** `Object#toString` result references. */
 	var mapTag = '[object Map]',
@@ -36740,10 +36773,10 @@ var Debugger =
 
 
 /***/ },
-/* 314 */
+/* 315 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var arrayMap = __webpack_require__(315);
+	var arrayMap = __webpack_require__(316);
 	
 	/**
 	 * The base implementation of `_.toPairs` and `_.toPairsIn` which creates an array
@@ -36764,7 +36797,7 @@ var Debugger =
 
 
 /***/ },
-/* 315 */
+/* 316 */
 /***/ function(module, exports) {
 
 	/**
@@ -36791,14 +36824,14 @@ var Debugger =
 
 
 /***/ },
-/* 316 */
+/* 317 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var DataView = __webpack_require__(317),
+	var DataView = __webpack_require__(318),
 	    Map = __webpack_require__(82),
-	    Promise = __webpack_require__(318),
-	    Set = __webpack_require__(319),
-	    WeakMap = __webpack_require__(320),
+	    Promise = __webpack_require__(319),
+	    Set = __webpack_require__(320),
+	    WeakMap = __webpack_require__(321),
 	    toSource = __webpack_require__(68);
 	
 	/** `Object#toString` result references. */
@@ -36867,7 +36900,7 @@ var Debugger =
 
 
 /***/ },
-/* 317 */
+/* 318 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var getNative = __webpack_require__(60),
@@ -36880,7 +36913,7 @@ var Debugger =
 
 
 /***/ },
-/* 318 */
+/* 319 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var getNative = __webpack_require__(60),
@@ -36893,7 +36926,7 @@ var Debugger =
 
 
 /***/ },
-/* 319 */
+/* 320 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var getNative = __webpack_require__(60),
@@ -36906,7 +36939,7 @@ var Debugger =
 
 
 /***/ },
-/* 320 */
+/* 321 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var getNative = __webpack_require__(60),
@@ -36919,7 +36952,7 @@ var Debugger =
 
 
 /***/ },
-/* 321 */
+/* 322 */
 /***/ function(module, exports) {
 
 	/**
@@ -36943,7 +36976,7 @@ var Debugger =
 
 
 /***/ },
-/* 322 */
+/* 323 */
 /***/ function(module, exports) {
 
 	/**
@@ -36967,15 +37000,15 @@ var Debugger =
 
 
 /***/ },
-/* 323 */
+/* 324 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseHas = __webpack_require__(324),
-	    baseKeys = __webpack_require__(325),
-	    indexKeys = __webpack_require__(326),
-	    isArrayLike = __webpack_require__(330),
-	    isIndex = __webpack_require__(335),
-	    isPrototype = __webpack_require__(336);
+	var baseHas = __webpack_require__(325),
+	    baseKeys = __webpack_require__(326),
+	    indexKeys = __webpack_require__(327),
+	    isArrayLike = __webpack_require__(331),
+	    isIndex = __webpack_require__(336),
+	    isPrototype = __webpack_require__(337);
 	
 	/**
 	 * Creates an array of the own enumerable property names of `object`.
@@ -37029,7 +37062,7 @@ var Debugger =
 
 
 /***/ },
-/* 324 */
+/* 325 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var getPrototype = __webpack_require__(5);
@@ -37061,7 +37094,7 @@ var Debugger =
 
 
 /***/ },
-/* 325 */
+/* 326 */
 /***/ function(module, exports) {
 
 	/* Built-in method references for those with the same name as other `lodash` methods. */
@@ -37083,14 +37116,14 @@ var Debugger =
 
 
 /***/ },
-/* 326 */
+/* 327 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseTimes = __webpack_require__(327),
-	    isArguments = __webpack_require__(328),
+	var baseTimes = __webpack_require__(328),
+	    isArguments = __webpack_require__(329),
 	    isArray = __webpack_require__(52),
-	    isLength = __webpack_require__(333),
-	    isString = __webpack_require__(334);
+	    isLength = __webpack_require__(334),
+	    isString = __webpack_require__(335);
 	
 	/**
 	 * Creates an array of index keys for `object` values of arrays,
@@ -37113,7 +37146,7 @@ var Debugger =
 
 
 /***/ },
-/* 327 */
+/* 328 */
 /***/ function(module, exports) {
 
 	/**
@@ -37139,10 +37172,10 @@ var Debugger =
 
 
 /***/ },
-/* 328 */
+/* 329 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isArrayLikeObject = __webpack_require__(329);
+	var isArrayLikeObject = __webpack_require__(330);
 	
 	/** `Object#toString` result references. */
 	var argsTag = '[object Arguments]';
@@ -37191,10 +37224,10 @@ var Debugger =
 
 
 /***/ },
-/* 329 */
+/* 330 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isArrayLike = __webpack_require__(330),
+	var isArrayLike = __webpack_require__(331),
 	    isObjectLike = __webpack_require__(7);
 	
 	/**
@@ -37230,12 +37263,12 @@ var Debugger =
 
 
 /***/ },
-/* 330 */
+/* 331 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var getLength = __webpack_require__(331),
+	var getLength = __webpack_require__(332),
 	    isFunction = __webpack_require__(62),
-	    isLength = __webpack_require__(333);
+	    isLength = __webpack_require__(334);
 	
 	/**
 	 * Checks if `value` is array-like. A value is considered array-like if it's
@@ -37270,10 +37303,10 @@ var Debugger =
 
 
 /***/ },
-/* 331 */
+/* 332 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseProperty = __webpack_require__(332);
+	var baseProperty = __webpack_require__(333);
 	
 	/**
 	 * Gets the "length" property value of `object`.
@@ -37292,7 +37325,7 @@ var Debugger =
 
 
 /***/ },
-/* 332 */
+/* 333 */
 /***/ function(module, exports) {
 
 	/**
@@ -37312,7 +37345,7 @@ var Debugger =
 
 
 /***/ },
-/* 333 */
+/* 334 */
 /***/ function(module, exports) {
 
 	/** Used as references for various `Number` constants. */
@@ -37354,7 +37387,7 @@ var Debugger =
 
 
 /***/ },
-/* 334 */
+/* 335 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var isArray = __webpack_require__(52),
@@ -37400,7 +37433,7 @@ var Debugger =
 
 
 /***/ },
-/* 335 */
+/* 336 */
 /***/ function(module, exports) {
 
 	/** Used as references for various `Number` constants. */
@@ -37428,7 +37461,7 @@ var Debugger =
 
 
 /***/ },
-/* 336 */
+/* 337 */
 /***/ function(module, exports) {
 
 	/** Used for built-in method references. */
@@ -37452,14 +37485,14 @@ var Debugger =
 
 
 /***/ },
-/* 337 */
+/* 338 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 338 */,
-/* 339 */
+/* 339 */,
+/* 340 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
@@ -37474,17 +37507,17 @@ var Debugger =
 	
 	var connect = _require2.connect;
 	
-	var actions = __webpack_require__(213);
+	var actions = __webpack_require__(214);
 	
-	var _require3 = __webpack_require__(175);
+	var _require3 = __webpack_require__(176);
 	
 	var endTruncateStr = _require3.endTruncateStr;
 	
-	var _require4 = __webpack_require__(204);
+	var _require4 = __webpack_require__(205);
 	
 	var basename = _require4.basename;
 	
-	var _require5 = __webpack_require__(198);
+	var _require5 = __webpack_require__(199);
 	
 	var getFrames = _require5.getFrames;
 	var getSelectedFrame = _require5.getSelectedFrame;
@@ -37492,7 +37525,7 @@ var Debugger =
 	
 	
 	if (typeof window == "object") {
-	  __webpack_require__(340);
+	  __webpack_require__(341);
 	}
 	
 	function renderFrameTitle(frame) {
@@ -37533,14 +37566,14 @@ var Debugger =
 	}), dispatch => bindActionCreators(actions, dispatch))(Frames);
 
 /***/ },
-/* 340 */
+/* 341 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 341 */,
-/* 342 */
+/* 342 */,
+/* 343 */
 /***/ function(module, exports, __webpack_require__) {
 
 	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
@@ -37550,9 +37583,9 @@ var Debugger =
 	var PropTypes = React.PropTypes;
 	var div = dom.div;
 	
-	var Svg = __webpack_require__(234);
+	var Svg = __webpack_require__(235);
 	
-	__webpack_require__(343);
+	__webpack_require__(344);
 	
 	var Accordion = React.createClass({
 	  propTypes: {
@@ -37602,21 +37635,21 @@ var Debugger =
 	module.exports = Accordion;
 
 /***/ },
-/* 343 */
+/* 344 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 344 */,
-/* 345 */
+/* 345 */,
+/* 346 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 346 */,
-/* 347 */
+/* 347 */,
+/* 348 */
 /***/ function(module, exports, __webpack_require__) {
 
 	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
@@ -37625,7 +37658,7 @@ var Debugger =
 	var dom = React.DOM;
 	var PropTypes = React.PropTypes;
 	
-	var ImPropTypes = __webpack_require__(227);
+	var ImPropTypes = __webpack_require__(228);
 	
 	var _require = __webpack_require__(15);
 	
@@ -37635,27 +37668,27 @@ var Debugger =
 	
 	var bindActionCreators = _require2.bindActionCreators;
 	
-	var Svg = __webpack_require__(234);
+	var Svg = __webpack_require__(235);
 	
-	var _require3 = __webpack_require__(198);
+	var _require3 = __webpack_require__(199);
 	
 	var getSelectedSource = _require3.getSelectedSource;
 	var getSourceTabs = _require3.getSourceTabs;
 	
-	var _require4 = __webpack_require__(175);
+	var _require4 = __webpack_require__(176);
 	
 	var endTruncateStr = _require4.endTruncateStr;
 	
-	var classnames = __webpack_require__(206);
-	var actions = __webpack_require__(213);
+	var classnames = __webpack_require__(207);
+	var actions = __webpack_require__(214);
 	
 	var _require5 = __webpack_require__(46);
 	
 	var isEnabled = _require5.isEnabled;
 	
 	
-	__webpack_require__(348);
-	__webpack_require__(350);
+	__webpack_require__(349);
+	__webpack_require__(351);
 	
 	/**
 	 * TODO: this is a placeholder function
@@ -37837,21 +37870,21 @@ var Debugger =
 	}), dispatch => bindActionCreators(actions, dispatch))(SourceTabs);
 
 /***/ },
-/* 348 */
+/* 349 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 349 */,
-/* 350 */
+/* 350 */,
+/* 351 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 351 */,
-/* 352 */
+/* 352 */,
+/* 353 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
@@ -37866,34 +37899,34 @@ var Debugger =
 	
 	var bindActionCreators = _require2.bindActionCreators;
 	
-	var actions = __webpack_require__(213);
+	var actions = __webpack_require__(214);
 	
 	var _require3 = __webpack_require__(46);
 	
 	var isEnabled = _require3.isEnabled;
 	
-	var _require4 = __webpack_require__(198);
+	var _require4 = __webpack_require__(199);
 	
 	var getSelectedSource = _require4.getSelectedSource;
 	var getSourceText = _require4.getSourceText;
 	var getPrettySource = _require4.getPrettySource;
 	
-	var Svg = __webpack_require__(234);
-	var ImPropTypes = __webpack_require__(227);
-	var classnames = __webpack_require__(206);
+	var Svg = __webpack_require__(235);
+	var ImPropTypes = __webpack_require__(228);
+	var classnames = __webpack_require__(207);
 	
-	var _require5 = __webpack_require__(215);
+	var _require5 = __webpack_require__(216);
 	
 	var isMapped = _require5.isMapped;
 	var getGeneratedSourceId = _require5.getGeneratedSourceId;
 	var isOriginal = _require5.isOriginal;
 	
-	var _require6 = __webpack_require__(219);
+	var _require6 = __webpack_require__(220);
 	
 	var isPretty = _require6.isPretty;
 	
 	
-	__webpack_require__(353);
+	__webpack_require__(354);
 	
 	function debugBtn(onClick, type) {
 	  var className = arguments.length <= 2 || arguments[2] === undefined ? "active" : arguments[2];
@@ -37978,27 +38011,27 @@ var Debugger =
 	}, dispatch => bindActionCreators(actions, dispatch))(SourceFooter);
 
 /***/ },
-/* 353 */
+/* 354 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 354 */,
-/* 355 */
+/* 355 */,
+/* 356 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(17);
 	var dom = React.DOM;
 	var PropTypes = React.PropTypes;
 	
-	var _require = __webpack_require__(356);
+	var _require = __webpack_require__(357);
 	
 	var filter = _require.filter;
 	
-	var classnames = __webpack_require__(206);
-	__webpack_require__(362);
-	var Svg = __webpack_require__(234);
+	var classnames = __webpack_require__(207);
+	__webpack_require__(363);
+	var Svg = __webpack_require__(235);
 	
 	var INITIAL_SELECTED_INDEX = 0;
 	
@@ -38109,21 +38142,21 @@ var Debugger =
 	module.exports = Autocomplete;
 
 /***/ },
-/* 356 */
+/* 357 */
 /***/ function(module, exports, __webpack_require__) {
 
 	(function() {
 	  var PathSeparator, filter, legacy_scorer, matcher, prepQueryCache, scorer;
 	
-	  scorer = __webpack_require__(357);
+	  scorer = __webpack_require__(358);
 	
-	  legacy_scorer = __webpack_require__(359);
+	  legacy_scorer = __webpack_require__(360);
 	
-	  filter = __webpack_require__(360);
+	  filter = __webpack_require__(361);
 	
-	  matcher = __webpack_require__(361);
+	  matcher = __webpack_require__(362);
 	
-	  PathSeparator = __webpack_require__(358).sep;
+	  PathSeparator = __webpack_require__(359).sep;
 	
 	  prepQueryCache = null;
 	
@@ -38198,13 +38231,13 @@ var Debugger =
 
 
 /***/ },
-/* 357 */
+/* 358 */
 /***/ function(module, exports, __webpack_require__) {
 
 	(function() {
 	  var AcronymResult, PathSeparator, Query, basenameScore, coreChars, countDir, doScore, emptyAcronymResult, file_coeff, isMatch, isSeparator, isWordEnd, isWordStart, miss_coeff, opt_char_re, pos_bonus, scoreAcronyms, scoreCharacter, scoreConsecutives, scoreExact, scoreExactMatch, scorePattern, scorePosition, scoreSize, tau_depth, tau_size, truncatedUpperCase, wm;
 	
-	  PathSeparator = __webpack_require__(358).sep;
+	  PathSeparator = __webpack_require__(359).sep;
 	
 	  wm = 150;
 	
@@ -38591,7 +38624,7 @@ var Debugger =
 
 
 /***/ },
-/* 358 */
+/* 359 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -38822,13 +38855,13 @@ var Debugger =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(35)))
 
 /***/ },
-/* 359 */
+/* 360 */
 /***/ function(module, exports, __webpack_require__) {
 
 	(function() {
 	  var PathSeparator, queryIsLastPathSegment;
 	
-	  PathSeparator = __webpack_require__(358).sep;
+	  PathSeparator = __webpack_require__(359).sep;
 	
 	  exports.basenameScore = function(string, query, score) {
 	    var base, depth, index, lastCharacter, segmentCount, slashCount;
@@ -38956,15 +38989,15 @@ var Debugger =
 
 
 /***/ },
-/* 360 */
+/* 361 */
 /***/ function(module, exports, __webpack_require__) {
 
 	(function() {
 	  var PathSeparator, legacy_scorer, pluckCandidates, scorer, sortCandidates;
 	
-	  scorer = __webpack_require__(357);
+	  scorer = __webpack_require__(358);
 	
-	  legacy_scorer = __webpack_require__(359);
+	  legacy_scorer = __webpack_require__(360);
 	
 	  pluckCandidates = function(a) {
 	    return a.candidate;
@@ -38974,7 +39007,7 @@ var Debugger =
 	    return b.score - a.score;
 	  };
 	
-	  PathSeparator = __webpack_require__(358).sep;
+	  PathSeparator = __webpack_require__(359).sep;
 	
 	  module.exports = function(candidates, query, _arg) {
 	    var allowErrors, bAllowErrors, bKey, candidate, coreQuery, key, legacy, maxInners, maxResults, prepQuery, queryHasSlashes, score, scoredCandidates, spotLeft, string, _i, _j, _len, _len1, _ref;
@@ -39035,15 +39068,15 @@ var Debugger =
 
 
 /***/ },
-/* 361 */
+/* 362 */
 /***/ function(module, exports, __webpack_require__) {
 
 	(function() {
 	  var PathSeparator, scorer;
 	
-	  PathSeparator = __webpack_require__(358).sep;
+	  PathSeparator = __webpack_require__(359).sep;
 	
-	  scorer = __webpack_require__(357);
+	  scorer = __webpack_require__(358);
 	
 	  exports.basenameMatch = function(subject, subject_lw, prepQuery) {
 	    var basePos, depth, end;
@@ -39188,14 +39221,14 @@ var Debugger =
 
 
 /***/ },
-/* 362 */
+/* 363 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 363 */,
-/* 364 */
+/* 364 */,
+/* 365 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -39204,7 +39237,7 @@ var Debugger =
 	
 	"use strict";
 	
-	const { Services } = __webpack_require__(212);
+	const { Services } = __webpack_require__(213);
 	const EventEmitter = __webpack_require__(111);
 	const isOSX = Services.appinfo.OS === "Darwin";
 	

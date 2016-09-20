@@ -427,15 +427,22 @@ ul.sources-list {
 
 .split-box .splitter {
   background-color: var(--theme-splitter-color);
-  border-bottom-width: 0;
-  border-color: white;
-  border-left-width: 0;
-  border-right-width: 0;
-  border-style: solid;
-  border-top-width: 0;
-  box-sizing: content-box;
-  cursor: ew-resize;
   flex: 0 0 1px;
+  position: relative;
+}
+
+/* The actual handle that users drag is a transparent element that's slightly wider than
+   the splitter element itself, so it's easier to grab it. */
+.split-box .splitter .splitter-handle {
+  cursor: ew-resize;
+  position: absolute;
+  top: 0;
+  left: -4px;
+  width: 8px;
+  height: 100%;
+
+  /* Stack above the code-mirror editor so it's actually possible to grab the handle. */
+  z-index: 5;
 }
 
 .breakpoints-list .breakpoint {
@@ -937,6 +944,13 @@ ul.sources-list {
   margin: 0;
   padding: 0;
 }
+.source-footer {
+  border-top: 1px solid var(--theme-splitter-color);
+  left: 0;
+  opacity: 1;
+  width: 100%;
+}
+
 .source-footer .prettyPrint.pretty {
   stroke: var(--theme-highlight-blue);
 }
