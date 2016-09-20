@@ -29,7 +29,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(DOMEventTargetHelper)
     char name[512];
     nsAutoString uri;
     if (tmp->mOwnerWindow && tmp->mOwnerWindow->GetExtantDoc()) {
-      tmp->mOwnerWindow->GetExtantDoc()->GetDocumentURI(uri);
+      Unused << tmp->mOwnerWindow->GetExtantDoc()->GetDocumentURI(uri);
     }
 
     nsXPCOMCycleCollectionParticipant* participant = nullptr;

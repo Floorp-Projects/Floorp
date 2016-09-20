@@ -2466,8 +2466,8 @@ public:
                 mozilla::ErrorResult& rv);
   virtual mozilla::dom::DOMImplementation*
     GetImplementation(mozilla::ErrorResult& rv) = 0;
-  void GetURL(nsString& retval) const;
-  void GetDocumentURI(nsString& retval) const;
+  MOZ_MUST_USE nsresult GetURL(nsString& retval) const;
+  MOZ_MUST_USE nsresult GetDocumentURI(nsString& retval) const;
   // Return the URI for the document.
   // The returned value may differ if the document is loaded via XHR, and
   // when accessed from chrome privileged script and

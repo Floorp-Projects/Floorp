@@ -27,9 +27,12 @@ static nsCString
 GetDocumentURI(nsIDocument* aDocument)
 {
   nsCString result;
-  nsString url;
-  aDocument->GetDocumentURI(url);
-  result.Append(NS_ConvertUTF16toUTF8(url).get());
+  nsAutoString url;
+  nsresult rv = aDocument->GetDocumentURI(url);
+  if (NS_SUCCEEDED(rv)) {
+    result.Append(NS_ConvertUTF16toUTF8(url).get());
+  }
+
   return result;
 }
 
