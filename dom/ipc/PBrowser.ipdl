@@ -583,6 +583,13 @@ parent:
     async AudioChannelActivityNotification(uint32_t aAudioChannel,
                                            bool aActive);
 
+    // After a compositor reset, it is necessary to reconnect each layers ID to
+    // the compositor of the widget that will render those layers. Note that
+    // this is sync so we can ensure that messages to the window compositor
+    // arrive before the TabChild attempts to use its cross-process compositor
+    // bridge.
+    sync EnsureLayersConnected();
+
 child:
     /**
      * Notify the remote browser that it has been Show()n on this
