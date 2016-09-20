@@ -26,6 +26,7 @@ from mozharness.base.log import INFO, ERROR
 from mozharness.base.script import PreScriptAction
 from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.blob_upload import BlobUploadMixin, blobupload_config_options
+from mozharness.mozilla.buildbot import TBPL_EXCEPTION
 from mozharness.mozilla.mozbase import MozbaseMixin
 from mozharness.mozilla.testing.codecoverage import (
     CodeCoverageMixin,
@@ -480,6 +481,31 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
     # preflight_install is in TestingMixin.
     # install is in TestingMixin.
     # upload_blobber_files is in BlobUploadMixin
+
+    @PreScriptAction('download-and-extract')
+    def _pre_download_and_extract(self, action):
+        """Abort if --artifact try syntax is used with compiled-code tests"""
+        if not self.try_message_has_flag('artifact'):
+            return
+        self.info('Artifact build requested in try syntax.')
+        rejected = []
+        compiled_code_suites = [
+            "cppunit",
+            "gtest",
+            "jittest",
+        ]
+        for category in SUITE_CATEGORIES:
+            suites = self._query_specified_suites(category) or []
+            for suite in suites:
+                if any([suite.startswith(c) for c in compiled_code_suites]):
+                    rejected.append(suite)
+                    break
+        if rejected:
+            self.buildbot_status(TBPL_EXCEPTION)
+            self.fatal("There are specified suites that are incompatible with "
+                      "--artifact try syntax flag: {}".format(', '.join(rejected)),
+                       exit_code=self.return_code)
+
 
     def download_and_extract(self):
         """
