@@ -572,6 +572,22 @@ void AnnotateTexturesSize(size_t size)
   gTexturesSize = size;
 }
 
+static size_t gNumOfPendingIPC = 0;
+static uint32_t gTopPendingIPCCount = 0;
+static const char* gTopPendingIPCName = nullptr;
+static uint32_t gTopPendingIPCType = 0;
+
+void AnnotatePendingIPC(size_t aNumOfPendingIPC,
+                        uint32_t aTopPendingIPCCount,
+                        const char* aTopPendingIPCName,
+                        uint32_t aTopPendingIPCType)
+{
+  gNumOfPendingIPC = aNumOfPendingIPC;
+  gTopPendingIPCCount = aTopPendingIPCCount;
+  gTopPendingIPCName = aTopPendingIPCName;
+  gTopPendingIPCType = aTopPendingIPCType;
+}
+
 #ifndef XP_WIN
 // Like Windows CopyFile for *nix
 bool copy_file(const char* from, const char* to)
@@ -873,6 +889,19 @@ bool MinidumpCallback(
     XP_STOA(gTexturesSize, texturesSizeBuffer, 10);
   }
 
+  char numOfPendingIPCBuffer[32] = "";
+  char topPendingIPCCountBuffer[32] = "";
+  char topPendingIPCTypeBuffer[11] = "0x";
+  if (gNumOfPendingIPC) {
+    XP_STOA(gNumOfPendingIPC, numOfPendingIPCBuffer, 10);
+    if (gTopPendingIPCCount) {
+      XP_STOA(gTopPendingIPCCount, topPendingIPCCountBuffer, 10);
+    }
+    if (gTopPendingIPCType) {
+      XP_STOA(gTopPendingIPCType, &topPendingIPCTypeBuffer[2], 16);
+    }
+  }
+
   // calculate time since last crash (if possible), and store
   // the time of this crash.
   time_t crashTime;
@@ -1019,6 +1048,23 @@ bool MinidumpCallback(
     if (texturesSizeBuffer[0]) {
       WriteAnnotation(apiData, "TextureUsage", texturesSizeBuffer);
       WriteAnnotation(eventFile, "TextureUsage", texturesSizeBuffer);
+    }
+
+    if (numOfPendingIPCBuffer[0]) {
+      WriteAnnotation(apiData, "NumberOfPendingIPC", numOfPendingIPCBuffer);
+      WriteAnnotation(eventFile, "NumberOfPendingIPC", numOfPendingIPCBuffer);
+      if (topPendingIPCCountBuffer[0]) {
+        WriteAnnotation(apiData, "TopPendingIPCCount", topPendingIPCCountBuffer);
+        WriteAnnotation(eventFile, "TopPendingIPCCount", topPendingIPCCountBuffer);
+      }
+      if (gTopPendingIPCName) {
+        WriteAnnotation(apiData, "TopPendingIPCName", gTopPendingIPCName);
+        WriteAnnotation(eventFile, "TopPendingIPCName", gTopPendingIPCName);
+      }
+      if (topPendingIPCTypeBuffer[2]) {
+        WriteAnnotation(apiData, "TopPendingIPCType", topPendingIPCTypeBuffer);
+        WriteAnnotation(eventFile, "TopPendingIPCType", topPendingIPCTypeBuffer);
+      }
     }
 
     if (memoryReportPath) {
