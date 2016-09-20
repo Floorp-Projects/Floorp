@@ -32,7 +32,7 @@ define(function (require, exports, module) {
         return DOM.span({className: "objectBox"},
           this.props.objectLink({
             object: grip
-          }, title + " ")
+          }, title)
         );
       }
       return title;
