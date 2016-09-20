@@ -362,6 +362,7 @@ stubPackets.set("console.log('foobar', 'test')", {
 		"originAttributes": {
 			"addonId": "",
 			"appId": 0,
+			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
 			"signedPkg": "",
@@ -369,7 +370,7 @@ stubPackets.set("console.log('foobar', 'test')", {
 		},
 		"private": false,
 		"styles": [],
-		"timeStamp": 1473963371646,
+		"timeStamp": 1474329261562,
 		"timer": null,
 		"workerType": "none",
 		"category": "webdev"
@@ -395,6 +396,7 @@ stubPackets.set("console.log(undefined)", {
 		"originAttributes": {
 			"addonId": "",
 			"appId": 0,
+			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
 			"signedPkg": "",
@@ -402,7 +404,7 @@ stubPackets.set("console.log(undefined)", {
 		},
 		"private": false,
 		"styles": [],
-		"timeStamp": 1473963372796,
+		"timeStamp": 1474329262588,
 		"timer": null,
 		"workerType": "none",
 		"category": "webdev"
@@ -426,6 +428,7 @@ stubPackets.set("console.warn('danger, will robinson!')", {
 		"originAttributes": {
 			"addonId": "",
 			"appId": 0,
+			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
 			"signedPkg": "",
@@ -433,7 +436,7 @@ stubPackets.set("console.warn('danger, will robinson!')", {
 		},
 		"private": false,
 		"styles": [],
-		"timeStamp": 1473963373921,
+		"timeStamp": 1474329263650,
 		"timer": null,
 		"workerType": "none",
 		"category": "webdev"
@@ -459,6 +462,7 @@ stubPackets.set("console.log(NaN)", {
 		"originAttributes": {
 			"addonId": "",
 			"appId": 0,
+			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
 			"signedPkg": "",
@@ -466,7 +470,7 @@ stubPackets.set("console.log(NaN)", {
 		},
 		"private": false,
 		"styles": [],
-		"timeStamp": 1473963375058,
+		"timeStamp": 1474329264822,
 		"timer": null,
 		"workerType": "none",
 		"category": "webdev"
@@ -492,6 +496,7 @@ stubPackets.set("console.log(null)", {
 		"originAttributes": {
 			"addonId": "",
 			"appId": 0,
+			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
 			"signedPkg": "",
@@ -499,7 +504,7 @@ stubPackets.set("console.log(null)", {
 		},
 		"private": false,
 		"styles": [],
-		"timeStamp": 1473963376386,
+		"timeStamp": 1474329265855,
 		"timer": null,
 		"workerType": "none",
 		"category": "webdev"
@@ -523,6 +528,7 @@ stubPackets.set("console.log('鼬')", {
 		"originAttributes": {
 			"addonId": "",
 			"appId": 0,
+			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
 			"signedPkg": "",
@@ -530,7 +536,7 @@ stubPackets.set("console.log('鼬')", {
 		},
 		"private": false,
 		"styles": [],
-		"timeStamp": 1473963377604,
+		"timeStamp": 1474329266922,
 		"timer": null,
 		"workerType": "none",
 		"category": "webdev"
@@ -552,13 +558,14 @@ stubPackets.set("console.clear()", {
 		"originAttributes": {
 			"addonId": "",
 			"appId": 0,
+			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
 			"signedPkg": "",
 			"userContextId": 0
 		},
 		"private": false,
-		"timeStamp": 1473963378876,
+		"timeStamp": 1474329267971,
 		"timer": null,
 		"workerType": "none",
 		"styles": [],
@@ -586,13 +593,14 @@ stubPackets.set("console.count('bar')", {
 		"originAttributes": {
 			"addonId": "",
 			"appId": 0,
+			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
 			"signedPkg": "",
 			"userContextId": 0
 		},
 		"private": false,
-		"timeStamp": 1473963380028,
+		"timeStamp": 1474329269084,
 		"timer": null,
 		"workerType": "none",
 		"styles": [],
@@ -638,6 +646,7 @@ stubPackets.set("console.assert(false, {message: 'foobar'})", {
 		"originAttributes": {
 			"addonId": "",
 			"appId": 0,
+			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
 			"signedPkg": "",
@@ -645,7 +654,7 @@ stubPackets.set("console.assert(false, {message: 'foobar'})", {
 		},
 		"private": false,
 		"styles": [],
-		"timeStamp": 1473963381225,
+		"timeStamp": 1474329270125,
 		"timer": null,
 		"stacktrace": [
 			{
@@ -678,6 +687,7 @@ stubPackets.set("console.log('hello \nfrom \rthe \"string world!')", {
 		"originAttributes": {
 			"addonId": "",
 			"appId": 0,
+			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
 			"signedPkg": "",
@@ -685,7 +695,7 @@ stubPackets.set("console.log('hello \nfrom \rthe \"string world!')", {
 		},
 		"private": false,
 		"styles": [],
-		"timeStamp": 1473963382425,
+		"timeStamp": 1474329271256,
 		"timer": null,
 		"workerType": "none",
 		"category": "webdev"
@@ -709,6 +719,7 @@ stubPackets.set("console.log('úṇĩçödê țĕșť')", {
 		"originAttributes": {
 			"addonId": "",
 			"appId": 0,
+			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
 			"signedPkg": "",
@@ -716,7 +727,7 @@ stubPackets.set("console.log('úṇĩçödê țĕșť')", {
 		},
 		"private": false,
 		"styles": [],
-		"timeStamp": 1473963383581,
+		"timeStamp": 1474329272298,
 		"timer": null,
 		"workerType": "none",
 		"category": "webdev"
@@ -738,13 +749,14 @@ stubPackets.set("console.trace()", {
 		"originAttributes": {
 			"addonId": "",
 			"appId": 0,
+			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
 			"signedPkg": "",
 			"userContextId": 0
 		},
 		"private": false,
-		"timeStamp": 1473963384829,
+		"timeStamp": 1474329273375,
 		"timer": null,
 		"stacktrace": [
 			{
@@ -792,16 +804,17 @@ stubPackets.set("console.time('bar')", {
 		"originAttributes": {
 			"addonId": "",
 			"appId": 0,
+			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
 			"signedPkg": "",
 			"userContextId": 0
 		},
 		"private": false,
-		"timeStamp": 1473963386059,
+		"timeStamp": 1474329274410,
 		"timer": {
 			"name": "bar",
-			"started": 745.99
+			"started": 618.57
 		},
 		"workerType": "none",
 		"styles": [],
@@ -826,15 +839,16 @@ stubPackets.set("console.timeEnd('bar')", {
 		"originAttributes": {
 			"addonId": "",
 			"appId": 0,
+			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
 			"signedPkg": "",
 			"userContextId": 0
 		},
 		"private": false,
-		"timeStamp": 1473963386060,
+		"timeStamp": 1474329274411,
 		"timer": {
-			"duration": 1.6299999999999955,
+			"duration": 1.3249999999999318,
 			"name": "bar"
 		},
 		"workerType": "none",
