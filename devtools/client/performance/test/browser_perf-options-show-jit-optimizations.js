@@ -9,13 +9,13 @@ requestLongerTimeout(2);
  * Tests that the JIT Optimizations view renders optimization data
  * if on, and displays selected frames on focus.
  */
-
+ const { setSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
 Services.prefs.setBoolPref(INVERT_PREF, false);
 
 function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, $, $$, window, PerformanceController } = panel.panelWin;
-  let { OverviewView, DetailsView, OptimizationsListView, JsCallTreeView, RecordingsView } = panel.panelWin;
+  let { OverviewView, DetailsView, OptimizationsListView, JsCallTreeView } = panel.panelWin;
 
   let profilerData = { threads: [gThread] };
 
@@ -58,14 +58,14 @@ function* spawnTest() {
 
   let select = once(PerformanceController, EVENTS.RECORDING_SELECTED);
   rendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
-  RecordingsView.selectedIndex = 0;
+  setSelectedRecording(panel, 0);
   yield Promise.all([select, rendered]);
 
   isHidden = $("#jit-optimizations-view").classList.contains("hidden");
   ok(isHidden, "opts view is hidden when switching recordings");
 
   rendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
-  RecordingsView.selectedIndex = 1;
+  setSelectedRecording(panel, 1);
   yield rendered;
 
   rendered = once(JsCallTreeView, "focus");

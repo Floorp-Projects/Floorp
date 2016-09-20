@@ -11,6 +11,7 @@ const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
 const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
+const { setSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
 
 add_task(function* () {
   let { panel } = yield initPerformanceInNewTab({
@@ -23,7 +24,6 @@ add_task(function* () {
     $,
     PerformanceController,
     PerformanceView,
-    RecordingsView
   } = panel.panelWin;
 
   let MAIN_CONTAINER = $("#performance-view");
@@ -42,7 +42,7 @@ add_task(function* () {
   is(DETAILS_CONTAINER.selectedPanel, RECORDING, "Showing recording panel.");
 
   let selected = once(PerformanceController, EVENTS.RECORDING_SELECTED);
-  RecordingsView.selectedIndex = 0;
+  setSelectedRecording(panel, 0);
   yield selected;
 
   is(PerformanceView.getState(), "recorded",
@@ -51,7 +51,7 @@ add_task(function* () {
   is(DETAILS_CONTAINER.selectedPanel, DETAILS, "Showing recorded panel.");
 
   selected = once(PerformanceController, EVENTS.RECORDING_SELECTED);
-  RecordingsView.selectedIndex = 1;
+  setSelectedRecording(panel, 1);
   yield selected;
 
   is(PerformanceView.getState(), "recording",
