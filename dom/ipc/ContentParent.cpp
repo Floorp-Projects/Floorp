@@ -1824,6 +1824,11 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
   Preferences::RemoveObserver(this, "");
   gfxVars::RemoveReceiver(this);
 
+  if (GPUProcessManager* gpu = GPUProcessManager::Get()) {
+    // Note: the manager could have shutdown already.
+    gpu->RemoveListener(this);
+  }
+
   RecvRemoveGeolocationListener();
 
   mConsoleService = nullptr;
@@ -2239,6 +2244,8 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
         Move(compositor),
         Move(imageBridge),
         Move(vrBridge));
+
+      gpm->AddListener(this);
     }
 #ifdef MOZ_WIDGET_GONK
     DebugOnly<bool> opened = PSharedBufferManager::Open(this);
@@ -2375,6 +2382,28 @@ ContentParent::RecvGetGfxVars(InfallibleTArray<GfxVarUpdate>* aVars)
   // updates.
   gfxVars::AddReceiver(this);
   return true;
+}
+
+void
+ContentParent::OnCompositorUnexpectedShutdown()
+{
+  GPUProcessManager* gpm = GPUProcessManager::Get();
+
+  Endpoint<PCompositorBridgeChild> compositor;
+  Endpoint<PImageBridgeChild> imageBridge;
+  Endpoint<PVRManagerChild> vrBridge;
+
+  DebugOnly<bool> opened = gpm->CreateContentBridges(
+    OtherPid(),
+    &compositor,
+    &imageBridge,
+    &vrBridge);
+  MOZ_ASSERT(opened);
+
+  Unused << SendReinitRendering(
+    Move(compositor),
+    Move(imageBridge),
+    Move(vrBridge));
 }
 
 void

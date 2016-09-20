@@ -44,6 +44,7 @@ class GeckoChildProcessHost;
 namespace gfx {
 
 class GPUChild;
+class GPUProcessListener;
 class PVRManagerChild;
 class VsyncBridgeChild;
 class VsyncIOThreadHolder;
@@ -121,6 +122,9 @@ public:
   // terminated. This may be called from any thread.
   void NotifyRemoteActorDestroyed(const uint64_t& aProcessToken);
 
+  void AddListener(GPUProcessListener* aListener);
+  void RemoveListener(GPUProcessListener* aListener);
+
   // Returns access to the PGPU protocol if a GPU process is present.
   GPUChild* GetGPUChild() {
     return mGPUChild;
@@ -189,6 +193,7 @@ private:
   uint64_t mNextLayerTreeId;
 
   nsTArray<RefPtr<RemoteCompositorSession>> mRemoteSessions;
+  nsTArray<GPUProcessListener*> mListeners;
 
   // Fields that are associated with the current GPU process.
   GPUProcessHost* mProcess;
