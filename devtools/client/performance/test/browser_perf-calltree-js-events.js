@@ -34,11 +34,18 @@ add_task(function* () {
   JsCallTreeView._populateCallTree(threadNode);
   JsCallTreeView.emit(EVENTS.UI_JS_CALL_TREE_RENDERED);
 
+  let firstTreeItem = $("#js-calltree-view .call-tree-item");
+
+  // DE-XUL: There are focus issues with XUL. Focus first, then synthesize the clicks
+  // so that keyboard events work correctly.
+  firstTreeItem.focus();
+
   let count = 0;
   let onFocus = () => count++;
   JsCallTreeView.on("focus", onFocus);
 
-  click($("#js-calltree-view .call-tree-item"));
+  click(firstTreeItem);
+
   key("VK_DOWN");
   key("VK_DOWN");
   key("VK_DOWN");

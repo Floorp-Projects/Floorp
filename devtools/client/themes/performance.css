@@ -144,31 +144,79 @@
   line-height: 0;
 }
 
-#recordings-list {
-  max-width: 300px;
+.theme-sidebar {
+  position: relative;
 }
 
-.recording-item {
-  padding: 4px;
+/**
+ * DE-XUL: This is probably only needed for the html:div inside of a vbox.
+ */
+#recordings-list > div {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
-.recording-item-title {
+.recording-list {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  margin: 0;
+  padding: 0;
+  background-color: var(--theme-sidebar-background);
+  border-inline-end: 1px solid var(--theme-splitter-color);
+}
+
+.recording-list-item {
+  display: flex;
+  flex-direction: column;
+  color: var(--theme-body-color);
+  border-bottom: 1px solid rgba(128,128,128,0.15);
+  padding: 8px;
+  cursor: default;
+}
+
+.recording-list-item.selected {
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
+}
+
+.recording-list-empty {
+  padding: 8px;
+}
+
+.recording-list-item-label {
   font-size: 110%;
 }
 
-.recording-item-footer {
+.recording-list-item-footer {
   padding-top: 4px;
   font-size: 90%;
+  display: flex;
+  justify-content: space-between;
 }
 
-.recording-item-save {
+.recording-list-item-save {
+  background: none;
+  border: none;
   text-decoration: underline;
   cursor: pointer;
+  font-size: 90%;
+  padding:0;
 }
 
-.recording-item-duration,
-.recording-item-save {
+.recording-list-item-duration,
+.recording-list-item-save {
   color: var(--theme-body-color-alt);
+}
+
+.recording-list-item.selected .recording-list-item-duration,
+.recording-list-item.selected .recording-list-item-save {
+  color: var(--theme-body-color-alt);
+  color: var(--theme-selection-color);
 }
 
 #recordings-list .selected label {
