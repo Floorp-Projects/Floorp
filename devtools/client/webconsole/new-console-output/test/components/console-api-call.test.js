@@ -51,6 +51,15 @@ describe("ConsoleAPICall component:", () => {
     });
   });
 
+  describe("console.assert", () => {
+    it("renders", () => {
+      const message = stubPreparedMessages.get("console.assert(false, {message: 'foobar'})");
+      const wrapper = render(ConsoleApiCall({ message, onViewSourceInDebugger }));
+
+      expect(wrapper.find(".message-body").text()).toBe("Assertion failed: Object { message: \"foobar\" }");
+    });
+  });
+
   describe("console.time", () => {
     it("does not show anything", () => {
       const message = stubPreparedMessages.get("console.time('bar')");

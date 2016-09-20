@@ -13,6 +13,7 @@ const consoleApiCommands = [
   "console.log(null)",
   "console.clear()",
   "console.count('bar')",
+  "console.assert(false, {message: 'foobar'})"
 ];
 
 let consoleApi = new Map(consoleApiCommands.map(
