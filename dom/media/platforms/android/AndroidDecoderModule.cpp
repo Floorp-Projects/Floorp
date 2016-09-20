@@ -29,6 +29,33 @@ using namespace mozilla::gl;
 using namespace mozilla::java::sdk;
 using media::TimeUnit;
 
+namespace {
+  template<class T>
+  mozilla::jni::ByteArray::LocalRef
+  CreateAndInitJByteArray(const T& data, jsize length)
+  {
+    JNIEnv* const jenv = mozilla::jni::GetEnvForThread();
+    jbyteArray result = jenv->NewByteArray(length);
+    MOZ_CATCH_JNI_EXCEPTION(jenv);
+    jenv->SetByteArrayRegion(result, 0, length, reinterpret_cast<const jbyte*>(const_cast<T>(data)));
+    MOZ_CATCH_JNI_EXCEPTION(jenv);
+    return mozilla::jni::ByteArray::LocalRef::Adopt(jenv, result);
+  }
+
+  template<class T>
+  mozilla::jni::IntArray::LocalRef
+  CreateAndInitJIntArray(const T& data, jsize length)
+  {
+    JNIEnv* const jenv = mozilla::jni::GetEnvForThread();
+    jintArray result = jenv->NewIntArray(length);
+    MOZ_CATCH_JNI_EXCEPTION(jenv);
+    jenv->SetIntArrayRegion(result, 0, length, reinterpret_cast<const jint*>(const_cast<T>(data)));
+    MOZ_CATCH_JNI_EXCEPTION(jenv);
+    return mozilla::jni::IntArray::LocalRef::Adopt(jenv, result);
+  }
+}
+
+
 namespace mozilla {
 
 mozilla::LazyLogModule sAndroidDecoderModuleLog("AndroidDecoderModule");
@@ -55,6 +82,63 @@ GetFeatureStatus(int32_t aFeature)
   }
   return status == nsIGfxInfo::FEATURE_STATUS_OK;
 };
+
+CryptoInfo::LocalRef
+GetCryptoInfoFromSample(const MediaRawData* aSample)
+{
+  auto& cryptoObj = aSample->mCrypto;
+
+  if (!cryptoObj.mValid) {
+    return nullptr;
+  }
+
+  CryptoInfo::LocalRef cryptoInfo;
+  nsresult rv = CryptoInfo::New(&cryptoInfo);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  uint32_t numSubSamples =
+    std::min<uint32_t>(cryptoObj.mPlainSizes.Length(), cryptoObj.mEncryptedSizes.Length());
+
+  uint32_t totalSubSamplesSize = 0;
+  for (auto& size : cryptoObj.mEncryptedSizes) {
+    totalSubSamplesSize += size;
+  }
+
+  // mPlainSizes is uint16_t, need to transform to uint32_t first.
+  nsTArray<uint32_t> plainSizes;
+  for (auto& size : cryptoObj.mPlainSizes) {
+    totalSubSamplesSize += size;
+    plainSizes.AppendElement(size);
+  }
+
+  uint32_t codecSpecificDataSize = aSample->Size() - totalSubSamplesSize;
+  // Size of codec specific data("CSD") for Android MediaCodec usage should be
+  // included in the 1st plain size.
+  plainSizes[0] += codecSpecificDataSize;
+
+  static const int kExpectedIVLength = 16;
+  auto tempIV(cryptoObj.mIV);
+  auto tempIVLength = tempIV.Length();
+  MOZ_ASSERT(tempIVLength <= kExpectedIVLength);
+  for (size_t i = tempIVLength; i < kExpectedIVLength; i++) {
+    // Padding with 0
+    tempIV.AppendElement(0);
+  }
+
+  auto numBytesOfPlainData = CreateAndInitJIntArray(&plainSizes[0], plainSizes.Length());
+  auto numBytesOfEncryptedData = CreateAndInitJIntArray(&cryptoObj.mEncryptedSizes[0],
+                                                        cryptoObj.mEncryptedSizes.Length());
+  auto iv = CreateAndInitJByteArray(&tempIV[0], tempIV.Length());
+  auto keyId = CreateAndInitJByteArray(&cryptoObj.mKeyId[0], cryptoObj.mKeyId.Length());
+  cryptoInfo->Set(numSubSamples,
+                  numBytesOfPlainData,
+                  numBytesOfEncryptedData,
+                  keyId,
+                  iv,
+                  MediaCodec::CRYPTO_MODE_AES_CTR);
+
+  return cryptoInfo;
+}
 
 bool
 AndroidDecoderModule::SupportsMimeType(const nsACString& aMimeType,
