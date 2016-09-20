@@ -3,7 +3,7 @@
 "use strict";
 
 const { thunk } = require("devtools/client/shared/redux/middleware/thunk");
-const configureStore = require("redux-mock-store");
+const configureStore = require("redux-mock-store").default;
 const { getRepeatId } = require("devtools/client/webconsole/new-console-output/utils/messages");
 const { stubPackets, stubPreparedMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
 const { setupActions } = require("devtools/client/webconsole/new-console-output/test/helpers");
