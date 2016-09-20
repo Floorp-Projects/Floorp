@@ -135,6 +135,8 @@ CacheStorageService::~CacheStorageService()
 
 void CacheStorageService::Shutdown()
 {
+  mozilla::MutexAutoLock lock(mLock);
+
   if (mShutdown)
     return;
 
@@ -146,25 +148,29 @@ void CacheStorageService::Shutdown()
     NewRunnableMethod(this, &CacheStorageService::ShutdownBackground);
   Dispatch(event);
 
-  {
-    mozilla::MutexAutoLock lock(mLock);
 #ifdef NS_FREE_PERMANENT_DATA
-    sGlobalEntryTables->Clear();
-    delete sGlobalEntryTables;
+  sGlobalEntryTables->Clear();
+  delete sGlobalEntryTables;
 #endif
-    sGlobalEntryTables = nullptr;
-  }
+  sGlobalEntryTables = nullptr;
 
   LOG(("CacheStorageService::Shutdown - done"));
 }
 
 void CacheStorageService::ShutdownBackground()
 {
+  LOG(("CacheStorageService::ShutdownBackground - start"));
+
   MOZ_ASSERT(IsOnManagementThread());
 
-  // Cancel purge timer to avoid leaking.
-  if (mPurgeTimer) {
-    mPurgeTimer->Cancel();
+  {
+    mozilla::MutexAutoLock lock(mLock);
+
+    // Cancel purge timer to avoid leaking.
+    if (mPurgeTimer) {
+      LOG(("  freeing the timer"));
+      mPurgeTimer->Cancel();
+    }
   }
 
 #ifdef NS_FREE_PERMANENT_DATA
@@ -173,6 +179,8 @@ void CacheStorageService::ShutdownBackground()
   Pool(true).mFrecencyArray.Clear();
   Pool(true).mExpirationArray.Clear();
 #endif
+
+  LOG(("CacheStorageService::ShutdownBackground - done"));
 }
 
 // Internal management methods
@@ -1258,19 +1266,35 @@ CacheStorageService::MemoryPool::OnMemoryConsumptionChange(uint32_t aSavedMemory
 void
 CacheStorageService::SchedulePurgeOverMemoryLimit()
 {
+  LOG(("CacheStorageService::SchedulePurgeOverMemoryLimit"));
+
   mozilla::MutexAutoLock lock(mLock);
 
-  if (mPurgeTimer)
+  if (mShutdown) {
+    LOG(("  past shutdown"));
     return;
+  }
+
+  if (mPurgeTimer) {
+    LOG(("  timer already up"));
+    return;
+  }
 
   mPurgeTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-  if (mPurgeTimer)
-    mPurgeTimer->InitWithCallback(this, 1000, nsITimer::TYPE_ONE_SHOT);
+  if (mPurgeTimer) {
+    nsresult rv;
+    rv = mPurgeTimer->InitWithCallback(this, 1000, nsITimer::TYPE_ONE_SHOT);
+    LOG(("  timer init rv=0x%08x", rv));
+  }
 }
 
 NS_IMETHODIMP
 CacheStorageService::Notify(nsITimer* aTimer)
 {
+  LOG(("CacheStorageService::Notify"));
+
+  mozilla::MutexAutoLock lock(mLock);
+
   if (aTimer == mPurgeTimer) {
     mPurgeTimer = nullptr;
 
