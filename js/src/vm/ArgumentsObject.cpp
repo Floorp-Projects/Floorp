@@ -383,7 +383,9 @@ ArgumentsObject::finishForIon(JSContext* cx, jit::JitFrameLayout* frame,
     ArgumentsData* data =
         reinterpret_cast<ArgumentsData*>(AllocateObjectBuffer<uint8_t>(cx, obj, numBytes));
     if (!data) {
-        // Make the object safe for GC.
+        // Make the object safe for GC. Don't report OOM, the slow path will
+        // retry the allocation.
+        cx->recoverFromOutOfMemory();
         obj->initFixedSlot(DATA_SLOT, PrivateValue(nullptr));
         return nullptr;
     }

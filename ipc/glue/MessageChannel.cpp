@@ -488,6 +488,7 @@ MessageChannel::MessageChannel(MessageListener *aListener)
     mSawInterruptOutMsg(false),
     mIsWaitingForIncoming(false),
     mAbortOnError(false),
+    mNotifiedChannelDone(false),
     mFlags(REQUIRE_DEFAULT),
     mPeerPidSet(false),
     mPeerPid(-1)
@@ -2081,6 +2082,13 @@ MessageChannel::NotifyMaybeChannelError()
     // Oops, error!  Let the listener know about it.
     mChannelState = ChannelError;
 
+    // IPDL assumes these notifications do not fire twice, so we do not let
+    // that happen.
+    if (mNotifiedChannelDone) {
+      return;
+    }
+    mNotifiedChannelDone = true;
+
     // After this, the channel may be deleted.  Based on the premise that
     // mListener owns this channel, any calls back to this class that may
     // work with mListener should still work on living objects.
@@ -2237,6 +2245,13 @@ MessageChannel::NotifyChannelClosed()
         NS_RUNTIMEABORT("channel should have been closed!");
 
     Clear();
+
+    // IPDL assumes these notifications do not fire twice, so we do not let
+    // that happen.
+    if (mNotifiedChannelDone) {
+      return;
+    }
+    mNotifiedChannelDone = true;
 
     // OK, the IO thread just closed the channel normally.  Let the
     // listener know about it. After this point the channel may be
