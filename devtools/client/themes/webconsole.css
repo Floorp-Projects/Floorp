@@ -396,7 +396,8 @@ a {
   background-position: -48px -36px;
 }
 
-.message[category=output] > .icon::before {
+.message[category=output] > .icon::before,
+.message.result > .icon::before {
   background-position: -60px -36px;
 }
 
