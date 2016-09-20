@@ -310,8 +310,10 @@ AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
     CVReturn rv = CVPixelBufferLockBaseAddress(aImage, kCVPixelBufferLock_ReadOnly);
     if (rv != kCVReturnSuccess) {
       NS_ERROR("error locking pixel data");
-      mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
-      return NS_ERROR_OUT_OF_MEMORY;
+      mCallback->Error(
+        MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                    RESULT_DETAIL("CVPixelBufferLockBaseAddress:%x", rv)));
+      return NS_ERROR_DOM_MEDIA_DECODE_ERR;
     }
     // Y plane.
     buffer.mPlanes[0].mData =
@@ -446,14 +448,17 @@ AppleVTDecoder::DoDecode(MediaRawData* aSample)
                                           block.receive());
   if (rv != noErr) {
     NS_ERROR("Couldn't create CMBlockBuffer");
-    mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
+    mCallback->Error(
+      MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                  RESULT_DETAIL("CMBlockBufferCreateWithMemoryBlock:%x", rv)));
     return MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
   }
   CMSampleTimingInfo timestamp = TimingInfoFromSample(aSample);
   rv = CMSampleBufferCreate(kCFAllocatorDefault, block, true, 0, 0, mFormat, 1, 1, &timestamp, 0, NULL, sample.receive());
   if (rv != noErr) {
     NS_ERROR("Couldn't create CMSampleBuffer");
-    mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
+    mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                                 RESULT_DETAIL("CMSampleBufferCreate:%x", rv)));
     return MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
   }
 
@@ -467,7 +472,9 @@ AppleVTDecoder::DoDecode(MediaRawData* aSample)
   if (rv != noErr && !(infoFlags & kVTDecodeInfo_FrameDropped)) {
     LOG("AppleVTDecoder: Error %d VTDecompressionSessionDecodeFrame", rv);
     NS_WARNING("Couldn't pass frame to decoder");
-    mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__));
+    mCallback->Error(
+      MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                  RESULT_DETAIL("VTDecompressionSessionDecodeFrame:%x", rv)));
     return NS_ERROR_DOM_MEDIA_DECODE_ERR;
   }
 
