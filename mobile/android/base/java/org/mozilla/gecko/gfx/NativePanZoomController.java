@@ -165,11 +165,17 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if (event.getToolType(0) == MotionEvent.TOOL_TYPE_MOUSE) {
-            return handleMouseEvent(event);
-        } else {
-            return handleMotionEvent(event);
-        }
+// NOTE: This commented out block of code allows Fennec to generate
+//       mouse event instead of converting them to touch events.
+//       This gives Fennec similar behaviour to desktop when using
+//       a mouse.
+//
+//        if (event.getToolType(0) == MotionEvent.TOOL_TYPE_MOUSE) {
+//            return handleMouseEvent(event);
+//        } else {
+//            return handleMotionEvent(event);
+//        }
+        return handleMotionEvent(event);
     }
 
     @Override
