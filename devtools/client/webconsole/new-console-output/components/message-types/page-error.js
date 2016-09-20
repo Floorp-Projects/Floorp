@@ -47,7 +47,6 @@ function PageError(props) {
     }) : null
   );
 
-
   let collapse = "";
   let attachment = "";
   if (stacktrace) {
@@ -96,7 +95,8 @@ function PageError(props) {
         dom.span({ className: "message-body devtools-monospace" },
           message.messageText
         ),
-        repeat
+        repeat,
+        location
       ),
       attachment
     )
