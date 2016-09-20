@@ -127,6 +127,7 @@ function transformPacket(packet) {
         type: MESSAGE_TYPE.LOG,
         level,
         messageText: pageError.errorMessage,
+        stacktrace: pageError.stacktrace ? pageError.stacktrace : null,
         frame,
       });
     }
