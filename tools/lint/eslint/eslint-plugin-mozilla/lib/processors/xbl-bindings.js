@@ -123,9 +123,9 @@ let scriptLines = [];
 // and column offset.
 let lineMap = [];
 
-function addSyntheticLine(line, linePos) {
+function addSyntheticLine(line, linePos, addDisableLine) {
   lineMap[scriptLines.length] = { line: linePos, offset: null };
-  scriptLines.push(line);
+  scriptLines.push(line + (addDisableLine ? "" : " // eslint-disable-line"));
 }
 
 /**
@@ -217,11 +217,11 @@ module.exports = {
     }
 
     for (let comment of document.comments) {
-      addSyntheticLine(`/*`, 0);
+      addSyntheticLine(`/*`, 0, true);
       for (let line of comment.split("\n")) {
-        addSyntheticLine(`${line.trim()}`, 0);
+        addSyntheticLine(`${line.trim()}`, 0, true);
       }
-      addSyntheticLine(`*/`, 0);
+      addSyntheticLine(`*/`, 0, true);
     }
 
     addSyntheticLine(`this.bindings = {`, bindings.textLine);
