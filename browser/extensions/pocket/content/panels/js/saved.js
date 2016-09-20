@@ -595,8 +595,14 @@ $(function()
         thePKT_SAVED.init();
     }
 
+    var pocketHost = thePKT_SAVED.overlay.pockethost;
     // send an async message to get string data
-    thePKT_SAVED.sendMessage("initL10N", {}, function(resp) {
+    thePKT_SAVED.sendMessage("initL10N", {
+            tos: [
+                'https://'+ pocketHost +'/tos?s=ffi&t=tos&tv=panel_tryit',
+                'https://'+ pocketHost +'/privacy?s=ffi&t=privacypolicy&tv=panel_tryit'
+            ]
+        }, function(resp) {
         window.pocketStrings = resp.strings;
         window.thePKT_SAVED.create();
     });
