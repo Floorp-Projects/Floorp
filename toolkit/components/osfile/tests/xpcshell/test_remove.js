@@ -35,3 +35,22 @@ add_task(function* test_ignoreAbsent() {
   }
   Assert.ok(!exception, "OS.File.remove should not throw when not requested.");
 });
+
+add_task(function* test_ignoreAbsent_directory_missing() {
+  let absent_file_name = OS.Path.join("absent_parent", "test.tmp");
+
+  // Removing absent files should throw if "ignoreAbsent" is true.
+  yield Assert.rejects(OS.File.remove(absent_file_name, {ignoreAbsent: false}),
+                       "OS.File.remove throws if there is no such file.");
+
+  // Removing files from absent directories should not throw if "ignoreAbsent"
+  // is true or not defined.
+  let exception = null;
+  try {
+    yield OS.File.remove(absent_file_name, {ignoreAbsent: true});
+    yield OS.File.remove(absent_file_name);
+  } catch (ex) {
+    exception = ex;
+  }
+  Assert.ok(!exception, "OS.File.remove should not throw when not requested.");
+});
