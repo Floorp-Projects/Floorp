@@ -574,6 +574,15 @@ TabParent::Attach(nsFrameLoader* aFrameLoader)
 }
 
 bool
+TabParent::RecvEnsureLayersConnected()
+{
+  if (RenderFrameParent* frame = GetRenderFrame()) {
+    frame->EnsureLayersConnected();
+  }
+  return true;
+}
+
+bool
 TabParent::Recv__delete__()
 {
   if (XRE_IsParentProcess()) {
