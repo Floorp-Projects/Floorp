@@ -158,6 +158,55 @@ stubPreparedMessages.set("console.count('bar')", new ConsoleMessage({
 	}
 }));
 
+stubPreparedMessages.set("console.assert(false, {message: 'foobar'})", new ConsoleMessage({
+	"id": "1",
+	"allowRepeating": true,
+	"source": "console-api",
+	"type": "assert",
+	"level": "error",
+	"messageText": null,
+	"parameters": [
+		{
+			"type": "object",
+			"actor": "server1.conn7.child1/obj29",
+			"class": "Object",
+			"extensible": true,
+			"frozen": false,
+			"sealed": false,
+			"ownPropertyLength": 1,
+			"preview": {
+				"kind": "Object",
+				"ownProperties": {
+					"message": {
+						"configurable": true,
+						"enumerable": true,
+						"writable": true,
+						"value": "foobar"
+					}
+				},
+				"ownPropertiesLength": 1,
+				"safeGetterValues": {}
+			}
+		}
+	],
+	"repeat": 1,
+	"repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"console-api\",\"type\":\"assert\",\"level\":\"error\",\"messageText\":null,\"parameters\":[{\"type\":\"object\",\"actor\":\"server1.conn7.child1/obj29\",\"class\":\"Object\",\"extensible\":true,\"frozen\":false,\"sealed\":false,\"ownPropertyLength\":1,\"preview\":{\"kind\":\"Object\",\"ownProperties\":{\"message\":{\"configurable\":true,\"enumerable\":true,\"writable\":true,\"value\":\"foobar\"}},\"ownPropertiesLength\":1,\"safeGetterValues\":{}}}],\"repeatId\":null,\"stacktrace\":[{\"columnNumber\":27,\"filename\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js\",\"functionName\":\"triggerPacket\",\"language\":2,\"lineNumber\":1}],\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js\",\"line\":1,\"column\":27}}",
+	"stacktrace": [
+		{
+			"columnNumber": 27,
+			"filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js",
+			"functionName": "triggerPacket",
+			"language": 2,
+			"lineNumber": 1
+		}
+	],
+	"frame": {
+		"source": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js",
+		"line": 1,
+		"column": 27
+	}
+}));
+
 stubPreparedMessages.set("console.trace()", new ConsoleMessage({
 	"id": "1",
 	"allowRepeating": true,
@@ -222,10 +271,10 @@ stubPreparedMessages.set("console.timeEnd('bar')", new ConsoleMessage({
 	"source": "console-api",
 	"type": "timeEnd",
 	"level": "log",
-	"messageText": "bar: 2.01ms",
+	"messageText": "bar: 2.96ms",
 	"parameters": null,
 	"repeat": 1,
-	"repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"console-api\",\"type\":\"timeEnd\",\"level\":\"log\",\"messageText\":\"bar: 2.01ms\",\"parameters\":null,\"repeatId\":null,\"stacktrace\":null,\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js\",\"line\":3,\"column\":1}}",
+	"repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"console-api\",\"type\":\"timeEnd\",\"level\":\"log\",\"messageText\":\"bar: 2.96ms\",\"parameters\":null,\"repeatId\":null,\"stacktrace\":null,\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js\",\"line\":3,\"column\":1}}",
 	"stacktrace": null,
 	"frame": {
 		"source": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js",
@@ -260,7 +309,7 @@ stubPackets.set("console.log('foobar', 'test')", {
 		},
 		"private": false,
 		"styles": [],
-		"timeStamp": 1471885545204,
+		"timeStamp": 1472787300416,
 		"timer": null,
 		"workerType": "none",
 		"category": "webdev"
@@ -293,7 +342,7 @@ stubPackets.set("console.log(undefined)", {
 		},
 		"private": false,
 		"styles": [],
-		"timeStamp": 1471885546075,
+		"timeStamp": 1472787301216,
 		"timer": null,
 		"workerType": "none",
 		"category": "webdev"
@@ -324,7 +373,7 @@ stubPackets.set("console.warn('danger, will robinson!')", {
 		},
 		"private": false,
 		"styles": [],
-		"timeStamp": 1471885546795,
+		"timeStamp": 1472787301959,
 		"timer": null,
 		"workerType": "none",
 		"category": "webdev"
@@ -357,7 +406,7 @@ stubPackets.set("console.log(NaN)", {
 		},
 		"private": false,
 		"styles": [],
-		"timeStamp": 1471885547605,
+		"timeStamp": 1472787302818,
 		"timer": null,
 		"workerType": "none",
 		"category": "webdev"
@@ -390,7 +439,7 @@ stubPackets.set("console.log(null)", {
 		},
 		"private": false,
 		"styles": [],
-		"timeStamp": 1471885548414,
+		"timeStamp": 1472787303791,
 		"timer": null,
 		"workerType": "none",
 		"category": "webdev"
@@ -418,7 +467,7 @@ stubPackets.set("console.clear()", {
 			"userContextId": 0
 		},
 		"private": false,
-		"timeStamp": 1471885549077,
+		"timeStamp": 1472787304607,
 		"timer": null,
 		"workerType": "none",
 		"styles": [],
@@ -452,7 +501,7 @@ stubPackets.set("console.count('bar')", {
 			"userContextId": 0
 		},
 		"private": false,
-		"timeStamp": 1471885549791,
+		"timeStamp": 1472787305395,
 		"timer": null,
 		"workerType": "none",
 		"styles": [],
@@ -460,8 +509,69 @@ stubPackets.set("console.count('bar')", {
 	}
 });
 
-stubPackets.set("console.trace()", {
+stubPackets.set("console.assert(false, {message: 'foobar'})", {
 	"from": "server1.conn7.child1/consoleActor2",
+	"type": "consoleAPICall",
+	"message": {
+		"arguments": [
+			{
+				"type": "object",
+				"actor": "server1.conn7.child1/obj29",
+				"class": "Object",
+				"extensible": true,
+				"frozen": false,
+				"sealed": false,
+				"ownPropertyLength": 1,
+				"preview": {
+					"kind": "Object",
+					"ownProperties": {
+						"message": {
+							"configurable": true,
+							"enumerable": true,
+							"writable": true,
+							"value": "foobar"
+						}
+					},
+					"ownPropertiesLength": 1,
+					"safeGetterValues": {}
+				}
+			}
+		],
+		"columnNumber": 27,
+		"counter": null,
+		"filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js",
+		"functionName": "triggerPacket",
+		"groupName": "",
+		"level": "assert",
+		"lineNumber": 1,
+		"originAttributes": {
+			"addonId": "",
+			"appId": 0,
+			"inIsolatedMozBrowser": false,
+			"privateBrowsingId": 0,
+			"signedPkg": "",
+			"userContextId": 0
+		},
+		"private": false,
+		"styles": [],
+		"timeStamp": 1472787306558,
+		"timer": null,
+		"stacktrace": [
+			{
+				"columnNumber": 27,
+				"filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js",
+				"functionName": "triggerPacket",
+				"language": 2,
+				"lineNumber": 1
+			}
+		],
+		"workerType": "none",
+		"category": "webdev"
+	}
+});
+
+stubPackets.set("console.trace()", {
+	"from": "server1.conn8.child1/consoleActor2",
 	"type": "consoleAPICall",
 	"message": {
 		"arguments": [],
@@ -481,7 +591,7 @@ stubPackets.set("console.trace()", {
 			"userContextId": 0
 		},
 		"private": false,
-		"timeStamp": 1471885551114,
+		"timeStamp": 1472787307887,
 		"timer": null,
 		"stacktrace": [
 			{
@@ -513,7 +623,7 @@ stubPackets.set("console.trace()", {
 });
 
 stubPackets.set("console.time('bar')", {
-	"from": "server1.conn8.child1/consoleActor2",
+	"from": "server1.conn9.child1/consoleActor2",
 	"type": "consoleAPICall",
 	"message": {
 		"arguments": [
@@ -535,10 +645,10 @@ stubPackets.set("console.time('bar')", {
 			"userContextId": 0
 		},
 		"private": false,
-		"timeStamp": 1471885552201,
+		"timeStamp": 1472787308764,
 		"timer": {
 			"name": "bar",
-			"started": 970.09
+			"started": 726.395
 		},
 		"workerType": "none",
 		"styles": [],
@@ -547,7 +657,7 @@ stubPackets.set("console.time('bar')", {
 });
 
 stubPackets.set("console.timeEnd('bar')", {
-	"from": "server1.conn8.child1/consoleActor2",
+	"from": "server1.conn9.child1/consoleActor2",
 	"type": "consoleAPICall",
 	"message": {
 		"arguments": [
@@ -569,9 +679,9 @@ stubPackets.set("console.timeEnd('bar')", {
 			"userContextId": 0
 		},
 		"private": false,
-		"timeStamp": 1471885552203,
+		"timeStamp": 1472787308767,
 		"timer": {
-			"duration": 2.0149999999999864,
+			"duration": 2.9600000000000364,
 			"name": "bar"
 		},
 		"workerType": "none",
