@@ -38,5 +38,5 @@
 }
 
 #PanelUI-pocketView[mainview=true] > .panel-subview-body > #pocket-panel-iframe {
-  border-radius: var(--panel-arrowcontent-border-radius);
+  border-radius: var(--arrowpanel-border-radius);
 }

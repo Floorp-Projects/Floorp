@@ -41,12 +41,12 @@ panel[type="arrow"][side="right"] {
 
 .panel-arrowcontent {
   -moz-appearance: none;
-  background: var(--panel-arrowcontent-background);
-  border-radius: var(--panel-arrowcontent-border-radius);
-  box-shadow: 0 0 0 1px var(--panel-arrowcontent-border-color);
-  color: var(--panel-arrowcontent-color);
+  background: var(--arrowpanel-background);
+  border-radius: var(--arrowpanel-border-radius);
+  box-shadow: 0 0 0 1px var(--arrowpanel-border-color);
+  color: var(--arrowpanel-color);
   border: none;
-  padding: var(--panel-arrowcontent-padding);
+  padding: var(--arrowpanel-padding);
   margin: 1px;
 }
 
