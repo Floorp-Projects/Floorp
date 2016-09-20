@@ -543,7 +543,7 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mDPI(0)
   , mDefaultScale(0)
   , mIsTransparent(false)
-  , mIPCOpen(true)
+  , mIPCOpen(false)
   , mParentIsActive(false)
   , mDidSetRealShowInfo(false)
   , mDidLoadURLInit(false)
@@ -827,6 +827,8 @@ TabChild::Init()
         }
       });
   mAPZEventState = new APZEventState(mPuppetWidget, Move(callback));
+
+  mIPCOpen = true;
 
   return NS_OK;
 }
@@ -2692,8 +2694,8 @@ TabChild::RecvSetDocShellIsActive(const bool& aIsActive,
       // updated its epoch). ForcePaintNoOp does that.
       if (IPCOpen()) {
         Unused << SendForcePaintNoOp(aLayerObserverEpoch);
+        return true;
       }
-      return true;
     }
 
     docShell->SetIsActive(aIsActive);
@@ -3389,6 +3391,12 @@ TabChild::GetOuterRect()
 void
 TabChild::ForcePaint(uint64_t aLayerObserverEpoch)
 {
+  if (!IPCOpen()) {
+    // Don't bother doing anything now. Better to wait until we receive the
+    // message on the PContent channel.
+    return;
+  }
+
   nsAutoScriptBlocker scriptBlocker;
   RecvSetDocShellIsActive(true, false, aLayerObserverEpoch);
 }
