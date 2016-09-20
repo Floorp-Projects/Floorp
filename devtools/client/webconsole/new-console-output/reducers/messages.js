@@ -25,10 +25,6 @@ function messages(state = new MessageState(), action) {
         return state;
       }
 
-      if (newMessage.type === constants.MESSAGE_TYPE.CLEAR) {
-        return state.set("messagesById", Immutable.List([newMessage]));
-      }
-
       if (newMessage.allowRepeating && messagesById.size > 0) {
         let lastMessage = messagesById.last();
         if (lastMessage.repeatId === newMessage.repeatId) {
@@ -47,7 +43,10 @@ function messages(state = new MessageState(), action) {
         }
       });
     case constants.MESSAGES_CLEAR:
-      return state.set("messagesById", Immutable.List());
+      return state.withMutations(function (record) {
+        record.set("messagesById", Immutable.List());
+        record.set("messagesUiById", Immutable.List());
+      });
     case constants.MESSAGE_OPEN:
       return state.set("messagesUiById", messagesUiById.push(action.id));
     case constants.MESSAGE_CLOSE:
