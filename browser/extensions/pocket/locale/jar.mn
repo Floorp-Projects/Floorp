@@ -6,23 +6,14 @@
 # These are used for the big if statement, as the preprocessor can't handle
 # dashes.
 #define bn_BD bn-BD
-#define en_GB en-GB
 #define en_US en-US
-#define en_ZA en-ZA
-#define es_AR es-AR
 #define es_CL es-CL
 #define es_ES es-ES
 #define es_MX es-MX
 #define fy_NL fy-NL
-#define ga_IE ga-IE
-#define hi_IN hi-IN
-#define hy_AM hy-AM
-#define ja_JP_mac ja-JP-mac
-#define nb_NO nb-NO
-#define ne_NP ne-NP
 #define nn_NO nn-NO
-#define pa_IN pa-IN
 #define pt_BR pt-BR
+#define pt_PT pt-PT
 #define sv_SE sv-SE
 #define zh_CN zh-CN
 #define zh_TW zh-TW
@@ -32,7 +23,7 @@
   # For locales we support, include the file from the locale's directory in the
   # source tree.
   # For other locales (and en-US) fallback to the en-US directory.
-#if AB_CD == ar || AB_CD == ast || AB_CD == bg || AB_CD == bn_BD || AB_CD == br || AB_CD == bs || AB_CD == ca || AB_CD == cs || AB_CD == cy || AB_CD == da || AB_CD == de || AB_CD == en_GB || AB_CD == en_US || AB_CD == en_ZA || AB_CD == eo || AB_CD == es_AR || AB_CD == es_CL || AB_CD == es_ES || AB_CD == es_MX || AB_CD == et || AB_CD == eu || AB_CD == fa || AB_CD == fi || AB_CD == fr || AB_CD == fy_NL || AB_CD == ga_IE || AB_CD == gd || AB_CD == hi_IN || AB_CD == hr || AB_CD == hu || AB_CD == hy_AM || AB_CD == id || AB_CD == is || AB_CD == it || AB_CD == ja || AB_CD == ja_JP_mac || AB_CD == ka || AB_CD == kk || AB_CD == km || AB_CD == kn || AB_CD == ko || AB_CD == lt || AB_CD == lv || AB_CD == mr || AB_CD == my || AB_CD == nb_NO || AB_CD == ne_NP || AB_CD == nl || AB_CD == nn_NO || AB_CD == pa_IN || AB_CD == pt_BR || AB_CD == rm || AB_CD == ro || AB_CD == ru || AB_CD == sk || AB_CD == sl || AB_CD == son || AB_CD == sq || AB_CD == sr || AB_CD == sv_SE || AB_CD == te || AB_CD == th || AB_CD == tr || AB_CD == uk || AB_CD == xh || AB_CD == zh_CN || AB_CD == zh_TW
+#if AB_CD == ast || AB_CD == az || AB_CD == bg || AB_CD == bn_BD || AB_CD == cs || AB_CD == da || AB_CD == de || AB_CD == dsb || AB_CD == en_US || AB_CD == es_CL || AB_CD == es_ES || AB_CD == es_MX || AB_CD == et || AB_CD == fi || AB_CD == fr || AB_CD == fy_NL || AB_CD == hr || AB_CD == hsb || AB_CD == hu || AB_CD == it || AB_CD == ja || AB_CD == kab || AB_CD == lv || AB_CD == nl || AB_CD == nn_NO || AB_CD == or || AB_CD == pt_BR || AB_CD == pt_PT || AB_CD == rm || AB_CD == ro || AB_CD == ru || AB_CD == sk || AB_CD == sl || AB_CD == sq || AB_CD == sr || AB_CD == sv_SE || AB_CD == te || AB_CD == th || AB_CD == tr || AB_CD == uk || AB_CD == zh_CN || AB_CD == zh_TW
   locale/@AB_CD@/                (@AB_CD@/*)
 #else
   locale/@AB_CD@/                (en-US/*)

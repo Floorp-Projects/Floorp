@@ -100,6 +100,14 @@ let gWhitelist = [{
     file: "netErrorApp.dtd",
     key: "securityOverride.warningContent",
     type: "single-quote"
+  }, {
+    file: "pocket.properties",
+    key: "tos",
+    type: "double-quote"
+  }, {
+    file: "pocket.properties",
+    key: "tos",
+    type: "apostrophe"
   }
 ];
 
