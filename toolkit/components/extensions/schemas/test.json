@@ -5,8 +5,8 @@
 [
   {
     "namespace": "test",
-    "restrictions": ["content"],
-    "defaultRestrictions": ["content"],
+    "allowedContexts": ["content"],
+    "defaultContexts": ["content"],
     "description": "none",
     "functions": [
       {
