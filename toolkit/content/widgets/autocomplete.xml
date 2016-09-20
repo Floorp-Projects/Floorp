@@ -44,7 +44,6 @@
       <field name="mController">null</field>
       <field name="mSearchNames">null</field>
       <field name="mIgnoreInput">false</field>
-      <field name="mEnterEvent">null</field>
 
       <field name="_searchBeginHandler">null</field>
       <field name="_searchCompleteHandler">null</field>
@@ -232,11 +231,12 @@
       </method>
 
       <method name="onTextEntered">
+        <parameter name="event"/>
         <body><![CDATA[
           let rv = false;
-          if (this._textEnteredHandler)
-            rv = this._textEnteredHandler(this.mEnterEvent);
-          this.mEnterEvent = null;
+          if (this._textEnteredHandler) {
+            rv = this._textEnteredHandler(event);
+          }
           return rv;
         ]]></body>
       </method>
@@ -494,14 +494,13 @@
                 if (aEvent.metaKey)
                   aEvent.preventDefault();
               }
-              this.mEnterEvent = aEvent;
               if (this.mController.selection) {
                 this._selectionDetails = {
                   index: this.mController.selection.currentIndex,
                   kind: "key"
                 };
               }
-              cancel = this.handleEnter();
+              cancel = this.handleEnter(aEvent);
               break;
             case KeyEvent.DOM_VK_DELETE:
               if (AppConstants.platform == "macosx" && !aEvent.shiftKey) {
@@ -536,8 +535,9 @@
       </method>
 
       <method name="handleEnter">
+        <parameter name="event"/>
         <body><![CDATA[
-          return this.mController.handleEnter(false);
+          return this.mController.handleEnter(false, event || null);
         ]]></body>
       </method>
 
@@ -946,7 +946,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
         <parameter name="aEvent"/>
         <body><![CDATA[
           var controller = this.view.QueryInterface(Components.interfaces.nsIAutoCompleteController);
-          controller.handleEnter(true);
+          controller.handleEnter(true, aEvent);
         ]]></body>
       </method>
     </implementation>
@@ -1048,6 +1048,10 @@ extends="chrome://global/content/bindings/popup.xml#popup">
       <method name="onSearchBegin">
         <body><![CDATA[
           this.richlistbox.mouseSelectedIndex = -1;
+
+          if (typeof this._onSearchBegin == "function") {
+            this._onSearchBegin();
+          }
         ]]></body>
       </method>
 
@@ -1112,7 +1116,13 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           if (this._shrinkTimeout) {
             clearTimeout(this._shrinkTimeout);
           }
-          this._adjustHeightTimeout = setTimeout(() => this.adjustHeight(), 0);
+
+          if (this.mPopupOpen) {
+            delete this._adjustHeightOnPopupShown;
+            this._adjustHeightTimeout = setTimeout(() => this.adjustHeight(), 0);
+          } else {
+            this._adjustHeightOnPopupShown = true;
+          }
 
           this._currentIndex = 0;
           if (this._appendResultTimeout) {
@@ -1254,11 +1264,11 @@ extends="chrome://global/content/bindings/popup.xml#popup">
                   (item.getAttribute("url") == url ||
                    this.richlistbox.mouseSelectedIndex === this._currentIndex)) {
                 item.collapsed = false;
-                // Call adjustSiteIconStart only after setting collapsed=false.
-                // The calculations it does may be wrong otherwise.
+                // Call adjustSiteIconStart only after setting collapsed=
+                // false.  The calculations it does may be wrong otherwise.
                 item.adjustSiteIconStart(this._siteIconStart);
-                // The popup may have changed size between now and the last time
-                // the item was shown, so always handle over/underflow.
+                // The popup may have changed size between now and the last
+                // time the item was shown, so always handle over/underflow.
                 item.handleOverUnderflow();
                 this._currentIndex++;
                 continue;
@@ -1276,7 +1286,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             item.setAttribute("image", iconURI);
             item.setAttribute("url", url);
             item.setAttribute("title", controller.getCommentAt(this._currentIndex));
-            item.setAttribute("type", controller.getStyleAt(this._currentIndex));
+            item.setAttribute("originaltype", controller.getStyleAt(this._currentIndex));
             item.setAttribute("text", trimmedSearchString);
 
             if (this._currentIndex < existingItemsCount) {
@@ -1291,10 +1301,13 @@ extends="chrome://global/content/bindings/popup.xml#popup">
               this.richlistbox.appendChild(item);
             }
 
-            let changed = item.adjustSiteIconStart(this._siteIconStart);
-            if (changed) {
-              item.handleOverUnderflow();
-            }
+            // The binding may have not been applied yet.
+            setTimeout(() => {
+              let changed = item.adjustSiteIconStart(this._siteIconStart);
+              if (changed) {
+                item.handleOverUnderflow();
+              }
+            }, 0);
 
             this._currentIndex++;
           }
@@ -1362,6 +1375,16 @@ extends="chrome://global/content/bindings/popup.xml#popup">
                 onset="return val;"/>
 
     </implementation>
+    <handlers>
+      <handler event="popupshown">
+        <![CDATA[
+          if (this._adjustHeightOnPopupShown) {
+            delete this._adjustHeightOnPopupShown;
+            this.adjustHeight();
+          }
+      ]]>
+      </handler>
+    </handlers>
   </binding>
 
   <binding id="autocomplete-richlistitem" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
@@ -1851,7 +1874,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           let originalUrl = this.getAttribute("url");
           let emphasiseUrl = true;
 
-          let type = this.getAttribute("type");
+          let type = this.getAttribute("originaltype");
           let types = new Set(type.split(/\s+/));
           let initialTypes = new Set(types);
           // Remove types that should ultimately not be in the `type` string.
