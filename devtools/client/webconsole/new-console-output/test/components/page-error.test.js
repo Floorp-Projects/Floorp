@@ -13,11 +13,24 @@ const { PageError } = require("devtools/client/webconsole/new-console-output/com
 const { stubPreparedMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
 
 describe("PageError component:", () => {
-  it("renders a page error", () => {
+  it("renders", () => {
     const message = stubPreparedMessages.get("ReferenceError: asdf is not defined");
     const wrapper = render(PageError({ message }));
 
     expect(wrapper.find(".message-body").text())
       .toBe("ReferenceError: asdf is not defined");
+
+    // The stacktrace should be closed by default.
+    const frameLinks = wrapper.find(`.stack-trace`);
+    expect(frameLinks.length).toBe(0);
+  });
+
+  it("has a stacktrace which can be openned", () => {
+    const message = stubPreparedMessages.get("ReferenceError: asdf is not defined");
+    const wrapper = render(PageError({ message, open: true }));
+
+    // There should be three stacktrace items.
+    const frameLinks = wrapper.find(`.stack-trace span.frame-link`);
+    expect(frameLinks.length).toBe(3);
   });
 });

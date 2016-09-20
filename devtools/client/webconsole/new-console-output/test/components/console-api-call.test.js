@@ -82,7 +82,7 @@ describe("ConsoleAPICall component:", () => {
   describe("console.trace", () => {
     it("renders", () => {
       const message = stubPreparedMessages.get("console.trace()");
-      const wrapper = render(ConsoleApiCall({ message, onViewSourceInDebugger }));
+      const wrapper = render(ConsoleApiCall({ message, onViewSourceInDebugger, open: true }));
 
       expect(wrapper.find(".message-body").text()).toBe("console.trace()");
 

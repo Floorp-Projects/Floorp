@@ -13,18 +13,27 @@ const {
   PropTypes
 } = require("devtools/client/shared/vendor/react");
 const FrameView = createFactory(require("devtools/client/shared/components/frame"));
+const StackTrace = createFactory(require("devtools/client/shared/components/stack-trace"));
+const CollapseButton = createFactory(require("devtools/client/webconsole/new-console-output/components/collapse-button").CollapseButton);
 const MessageRepeat = createFactory(require("devtools/client/webconsole/new-console-output/components/message-repeat").MessageRepeat);
 const MessageIcon = createFactory(require("devtools/client/webconsole/new-console-output/components/message-icon").MessageIcon);
+
+const actions = require("devtools/client/webconsole/new-console-output/actions/messages");
 
 PageError.displayName = "PageError";
 
 PageError.propTypes = {
   message: PropTypes.object.isRequired,
+  open: PropTypes.bool,
+};
+
+PageError.defaultProps = {
+  open: false
 };
 
 function PageError(props) {
-  const { message, sourceMapService, onViewSourceInDebugger } = props;
-  const { source, level, frame } = message;
+  const { dispatch, message, open, sourceMapService, onViewSourceInDebugger } = props;
+  const { source, level, stacktrace, frame } = message;
 
   const repeat = MessageRepeat({repeat: message.repeat});
   const icon = MessageIcon({level});
@@ -38,6 +47,31 @@ function PageError(props) {
     }) : null
   );
 
+
+  let collapse = "";
+  let attachment = "";
+  if (stacktrace) {
+    if (open) {
+      attachment = dom.div({ className: "stacktrace devtools-monospace" },
+        StackTrace({
+          stacktrace: stacktrace,
+          onViewSourceInDebugger: onViewSourceInDebugger
+        })
+      );
+    }
+
+    collapse = CollapseButton({
+      open,
+      onClick: function () {
+        if (open) {
+          dispatch(actions.messageClose(message.id));
+        } else {
+          dispatch(actions.messageOpen(message.id));
+        }
+      },
+    });
+  }
+
   const classes = ["message"];
 
   if (source) {
@@ -48,17 +82,23 @@ function PageError(props) {
     classes.push(level);
   }
 
+  if (open === true) {
+    classes.push("open");
+  }
+
   return dom.div({
     className: classes.join(" ")
   },
     icon,
+    collapse,
     dom.span({ className: "message-body-wrapper" },
       dom.span({ className: "message-flex-body" },
         dom.span({ className: "message-body devtools-monospace" },
           message.messageText
         ),
         repeat
-      )
+      ),
+      attachment
     )
   );
 }

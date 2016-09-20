@@ -22,8 +22,27 @@ stubPreparedMessages.set("ReferenceError: asdf is not defined", new ConsoleMessa
 	"messageText": "ReferenceError: asdf is not defined",
 	"parameters": null,
 	"repeat": 1,
-	"repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"type\":\"log\",\"level\":\"error\",\"messageText\":\"ReferenceError: asdf is not defined\",\"parameters\":null,\"repeatId\":null,\"stacktrace\":null,\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js\",\"line\":3,\"column\":5}}",
-	"stacktrace": null,
+	"repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"type\":\"log\",\"level\":\"error\",\"messageText\":\"ReferenceError: asdf is not defined\",\"parameters\":null,\"repeatId\":null,\"stacktrace\":[{\"filename\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js\",\"lineNumber\":3,\"columnNumber\":5,\"functionName\":\"bar\"},{\"filename\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js\",\"lineNumber\":6,\"columnNumber\":5,\"functionName\":\"foo\"},{\"filename\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js\",\"lineNumber\":9,\"columnNumber\":3,\"functionName\":null}],\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js\",\"line\":3,\"column\":5}}",
+	"stacktrace": [
+		{
+			"filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js",
+			"lineNumber": 3,
+			"columnNumber": 5,
+			"functionName": "bar"
+		},
+		{
+			"filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js",
+			"lineNumber": 6,
+			"columnNumber": 5,
+			"functionName": "foo"
+		},
+		{
+			"filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js",
+			"lineNumber": 9,
+			"columnNumber": 3,
+			"functionName": null
+		}
+	],
 	"frame": {
 		"source": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js",
 		"line": 3,
@@ -44,7 +63,7 @@ stubPackets.set("ReferenceError: asdf is not defined", {
 		"lineNumber": 3,
 		"columnNumber": 5,
 		"category": "content javascript",
-		"timeStamp": 1473429607183,
+		"timeStamp": 1473431421453,
 		"warning": false,
 		"error": false,
 		"exception": true,
