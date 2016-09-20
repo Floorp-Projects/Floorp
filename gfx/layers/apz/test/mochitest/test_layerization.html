@@ -151,11 +151,26 @@ function* test(testDriver) {
   // Note that the displayport expiration might actually happen before the wheel
   // input is processed in the compositor (see bug 1246480 comment 3), and so
   // we make sure not to wait for a scroll event here, since it may never fire.
-  yield scrollWheelOver(document.getElementById('outer3').contentDocument.getElementById('inner3'), false, testDriver);
+  // However, if we do get a scroll event while waiting for the expiry, we need
+  // to restart the expiry timer because the displayport expiry got reset. There's
+  // no good way that I can think of to deterministically avoid doing this.
+  let inner3 = document.getElementById('outer3').contentDocument.getElementById('inner3');
+  yield scrollWheelOver(inner3, false, testDriver);
   yield waitForAllPaints(function() {
     flushApzRepaints(testDriver);
   });
-  yield setTimeout(testDriver, DISPLAYPORT_EXPIRY);
+  var timerId = setTimeout(testDriver, DISPLAYPORT_EXPIRY);
+  var timeoutResetter = function() {
+    ok(true, "Got a scroll event; resetting timer...");
+    clearTimeout(timerId);
+    setTimeout(testDriver, DISPLAYPORT_EXPIRY);
+    // by not updating timerId we ensure that this listener resets the timeout
+    // at most once.
+  };
+  inner3.addEventListener('scroll', timeoutResetter, false);
+  yield; // wait for the setTimeout to elapse
+  inner3.removeEventListener('scroll', timeoutResetter, false);
+
   yield waitForAllPaints(asyncWrapper(testDriver));
   ok(!isLayerized('inner3'), "inner3 becomes unlayerized after expiry");
   yield setTimeout(testDriver, DISPLAYPORT_EXPIRY);
