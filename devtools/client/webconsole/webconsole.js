@@ -3324,7 +3324,10 @@ WebConsoleConnectionProxy.prototype = {
   _onPageError: function (type, packet) {
     if (this.webConsoleFrame && packet.from == this._consoleActor) {
       if (this.webConsoleFrame.NEW_CONSOLE_OUTPUT_ENABLED) {
-        this.dispatchMessageAdd(packet);
+        let category = Utils.categoryForScriptError(packet.pageError);
+        if (category !== CATEGORY_CSS) {
+          this.dispatchMessageAdd(packet);
+        }
         return;
       }
       this.webConsoleFrame.handlePageError(packet.pageError);
