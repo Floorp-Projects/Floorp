@@ -12,6 +12,7 @@ mochikit.jar:
   content/mochitest-e10s-utils.js (mochitest-e10s-utils.js)
   content/shutdown-leaks-collector.js (shutdown-leaks-collector.js)
   content/ShutdownLeaksCollector.jsm (ShutdownLeaksCollector.jsm)
+  content/document-observer-script.js (document-observer-script.js)
   content/harness.xul (harness.xul)
   content/redirect.html (redirect.html)
   content/server.js (server.js)
