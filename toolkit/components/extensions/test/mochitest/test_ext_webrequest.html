@@ -15,6 +15,8 @@
 
 SimpleTest.requestCompleteLog();
 
+const {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm");
+
 const BASE = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest";
 
 const expected_requested = [BASE + "/file_WebRequest_page1.html",
@@ -93,7 +95,7 @@ function compareLists(list1, list2, kind) {
   is(String(list1), String(list2), `${kind} URLs correct`);
 }
 
-function backgroundScript() {
+function backgroundScript(AppConstants) {
   let checkCompleted = true;
   let savedTabId = -1;
 
@@ -439,13 +441,8 @@ function backgroundScript() {
   }
 
   browser.webRequest.onBeforeRequest.addListener(onBeforeRequest, {urls: ["<all_urls>"]}, ["blocking"]);
-  try {
+  if (!AppConstants.RELEASE_BUILD) {
     browser.webRequest.onBeforeRequest.addListener(onUpload, {urls: ["http://*/*"]}, ["blocking", "requestBody"]);
-  } catch (e) {
-    // requestBody is disabled in release builds
-    if (!/\brequestBody\b/.test(e.message)) {
-      throw e;
-    }
   }
   browser.webRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, {urls: ["<all_urls>"]}, ["blocking", "requestHeaders"]);
   browser.webRequest.onSendHeaders.addListener(onSendHeaders, {urls: ["<all_urls>"]}, ["requestHeaders"]);
@@ -478,7 +475,7 @@ function* test_once(skipCompleted) {
         "webRequestBlocking",
       ],
     },
-    background: `const BASE = ${JSON.stringify(BASE)}; (${backgroundScript.toString()})()`,
+    background: `const BASE = ${JSON.stringify(BASE)}; (${backgroundScript})(${JSON.stringify(AppConstants)})`,
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
