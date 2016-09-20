@@ -51,7 +51,7 @@ def get_tlsv1_post():
 
 # Virtualenv {{{1
 virtualenv_config_options = [
-    [["--venv-path", "--virtualenv-path"], {
+    [["--virtualenv-path"], {
         "action": "store",
         "dest": "virtualenv_path",
         "default": "venv",
