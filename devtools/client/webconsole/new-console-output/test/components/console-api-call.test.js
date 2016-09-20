@@ -89,7 +89,7 @@ describe("ConsoleAPICall component:", () => {
       const frameLinks = wrapper.find(`.stack-trace span.frame-link[data-url='${tempfilePath}']`);
       expect(frameLinks.length).toBe(3);
 
-      expect(frameLinks.eq(0).find(".frame-link-function-display-name").text()).toBe("bar");
+      expect(frameLinks.eq(0).find(".frame-link-function-display-name").text()).toBe("testStacktraceFiltering");
       expect(frameLinks.eq(0).find(".frame-link-filename").text()).toBe(tempfilePath);
 
       expect(frameLinks.eq(1).find(".frame-link-function-display-name").text()).toBe("foo");

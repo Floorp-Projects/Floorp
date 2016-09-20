@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
 const { getAllFilters } = require("devtools/client/webconsole/new-console-output/selectors/filters");
 const { getLogLimit } = require("devtools/client/webconsole/new-console-output/selectors/prefs");
 const {
@@ -52,11 +53,21 @@ function search(messages, text = "") {
       // search object grips.
       message.parameters !== null && !Array.isArray(message.parameters)
       // Look for a match in location.
-      // @TODO Change this to Object.values once it's supported in Node's version of V8
-      || Object.keys(message.frame)
-        .map(key => message.frame[key])
-        .join(":")
-        .includes(text)
+      || isTextInFrame(text, message.frame)
+      // Look for a match in stacktrace.
+      || (
+        Array.isArray(message.stacktrace) &&
+        message.stacktrace.some(frame => isTextInFrame(text,
+          // isTextInFrame expect the properties of the frame object to be in the same
+          // order they are rendered in the Frame component.
+          {
+            functionName: frame.functionName ||
+              l10n.getStr("stacktrace.anonymousFunction"),
+            filename: frame.filename,
+            lineNumber: frame.lineNumber,
+            columnNumber: frame.columnNumber
+          }))
+      )
       // Look for a match in messageText.
       || (message.messageText !== null
             && message.messageText.toLocaleLowerCase().includes(text.toLocaleLowerCase()))
@@ -66,6 +77,15 @@ function search(messages, text = "") {
               .includes(text.toLocaleLowerCase()))
     );
   });
+}
+
+function isTextInFrame(text, frame) {
+  // @TODO Change this to Object.values once it's supported in Node's version of V8
+  return Object.keys(frame)
+    .map(key => frame[key])
+    .join(":")
+    .toLocaleLowerCase()
+    .includes(text.toLocaleLowerCase());
 }
 
 function prune(messages, logLimit) {

@@ -17,6 +17,9 @@ const { stubPackets } = require("devtools/client/webconsole/new-console-output/t
 describe("Filtering", () => {
   let store;
   let numMessages;
+  // Number of messages in prepareBaseStore which are not filtered out, i.e. Evaluation
+  // Results and console commands .
+  const numUnfilterableMessages = 2;
 
   beforeEach(() => {
     store = prepareBaseStore();
@@ -62,16 +65,14 @@ describe("Filtering", () => {
       store.dispatch(actions.filterTextSet("danger"));
 
       let messages = getAllMessages(store.getState());
-      // This does not filter out Evaluation Results or console commands
-      expect(messages.size).toEqual(3);
+      expect(messages.size - numUnfilterableMessages).toEqual(1);
     });
 
     it("matches unicode values", () => {
       store.dispatch(actions.filterTextSet("鼬"));
 
       let messages = getAllMessages(store.getState());
-      // This does not filter out Evaluation Results or console commands
-      expect(messages.size).toEqual(3);
+      expect(messages.size - numUnfilterableMessages).toEqual(1);
     });
 
     it("matches locations", () => {
@@ -85,8 +86,34 @@ describe("Filtering", () => {
       store.dispatch(actions.filterTextSet("search-location-test.js"));
 
       let messages = getAllMessages(store.getState());
-      // This does not filter out Evaluation Results or console commands
-      expect(messages.size).toEqual(3);
+      expect(messages.size - numUnfilterableMessages).toEqual(1);
+    });
+
+    it("matches stacktrace functionName", () => {
+      let traceMessage = stubPackets.get("console.trace()");
+      store.dispatch(messageAdd(traceMessage));
+
+      store.dispatch(actions.filterTextSet("testStacktraceFiltering"));
+
+      let messages = getAllMessages(store.getState());
+      expect(messages.size - numUnfilterableMessages).toEqual(1);
+    });
+
+    it("matches stacktrace location", () => {
+      let traceMessage = stubPackets.get("console.trace()");
+      traceMessage.message =
+        Object.assign({}, traceMessage.message, {
+          filename: "search-location-test.js",
+          lineNumber: 85,
+          columnNumber: 13
+        });
+
+      store.dispatch(messageAdd(traceMessage));
+
+      store.dispatch(actions.filterTextSet("search-location-test.js:85:13"));
+
+      let messages = getAllMessages(store.getState());
+      expect(messages.size - numUnfilterableMessages).toEqual(1);
     });
 
     it("restores all messages once text is cleared", () => {
