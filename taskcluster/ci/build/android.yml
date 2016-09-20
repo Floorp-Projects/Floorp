@@ -72,34 +72,6 @@ android-api-15/opt:
         custom-build-variant-cfg: api-15
         tooltool-downloads: internal
 
-android-api-15-nightly/opt:
-    description: "Android 4.0 API15+ Nightly"
-    attributes:
-        nightly: true
-    index:
-        product: mobile
-        job-name: android-api-15-nightly-opt
-    treeherder:
-        platform: android-4-0-armv7-api15/opt
-        symbol: tc(N)
-        tier: 2
-    worker-type: aws-provisioner-v1/android-api-15
-    worker:
-        implementation: docker-worker
-        max-run-time: 7200
-    run:
-        using: mozharness
-        actions: [get-secrets build multi-l10n update]
-        config:
-            - builds/releng_base_android_64_builds.py
-            - disable_signing.py
-            - platform_supports_post_upload_to_latest.py
-            - taskcluster_nightly.py
-        script: "mozharness/scripts/fx_desktop_build.py"
-        custom-build-variant-cfg: api-15
-        tooltool-downloads: internal
-    run-on-projects: []
-
 android-api-15-gradle/opt:
     description: "Android 4.0 API15+ (Gradle) Opt"
     index:

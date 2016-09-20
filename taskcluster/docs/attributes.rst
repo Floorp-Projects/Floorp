@@ -116,9 +116,3 @@ image_name
 ==========
 
 For the ``docker_image`` kind, this attribute contains the docker image name.
-
-nightly
-=======
-
-Signals whether the task is part of a nightly graph. Useful when filtering
-out nightly tasks from full task set at target stage.
