@@ -377,6 +377,17 @@ WidgetEvent::IsAllowedToDispatchDOMEvent() const
 {
   switch (mClass) {
     case eMouseEventClass:
+      // When content PreventDefault on ePointerDown, we will stop dispatching
+      // the subsequent mouse events (eMouseDown, eMouseUp, eMouseMove). But we
+      // still need the mouse events to be handled in EventStateManager to
+      // generate other events (e.g. eMouseClick). So we only stop dispatching
+      // them to DOM.
+      if (DefaultPreventedByContent() &&
+          (mMessage == eMouseMove || mMessage == eMouseDown ||
+           mMessage == eMouseUp)) {
+        return false;
+      }
+      MOZ_FALLTHROUGH;
     case ePointerEventClass:
       // We want synthesized mouse moves to cause mouseover and mouseout
       // DOM events (EventStateManager::PreHandleEvent), but not mousemove
