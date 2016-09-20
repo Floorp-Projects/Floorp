@@ -1,3 +1,5 @@
+const ONEOFF_URLBAR_PREF = "browser.urlbar.oneOffSearches";
+
 function repeat(limit, func) {
   for (let i = 0; i < limit; i++) {
     func(i);
@@ -26,8 +28,10 @@ function is_selected_one_off(index) {
 add_task(function*() {
   let maxResults = Services.prefs.getIntPref("browser.urlbar.maxRichResults");
 
+  Services.prefs.setBoolPref(ONEOFF_URLBAR_PREF, true);
   registerCleanupFunction(function* () {
     yield PlacesTestUtils.clearHistory();
+    Services.prefs.clearUserPref(ONEOFF_URLBAR_PREF);
   });
 
   let visits = [];
