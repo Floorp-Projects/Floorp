@@ -98,24 +98,26 @@ OptionsPanel.prototype = {
   }),
 
   _addListeners: function () {
-    gDevTools.on("pref-changed", this._prefChanged);
+    Services.prefs.addObserver("devtools.cache.disabled", this._prefChanged, false);
+    Services.prefs.addObserver("devtools.theme", this._prefChanged, false);
     gDevTools.on("theme-registered", this._themeRegistered);
     gDevTools.on("theme-unregistered", this._themeUnregistered);
   },
 
   _removeListeners: function () {
-    gDevTools.off("pref-changed", this._prefChanged);
+    Services.prefs.removeObserver("devtools.cache.disabled", this._prefChanged);
+    Services.prefs.removeObserver("devtools.theme", this._prefChanged);
     gDevTools.off("theme-registered", this._themeRegistered);
     gDevTools.off("theme-unregistered", this._themeUnregistered);
   },
 
-  _prefChanged: function (event, data) {
-    if (data.pref === "devtools.cache.disabled") {
+  _prefChanged: function (subject, topic, prefName) {
+    if (prefName === "devtools.cache.disabled") {
       let cacheDisabled = data.newValue;
       let cbx = this.panelDoc.getElementById("devtools-disable-cache");
 
       cbx.checked = cacheDisabled;
-    } else if (data.pref === "devtools.theme") {
+    } else if (prefName === "devtools.theme") {
       this.updateCurrentTheme();
     }
   },
@@ -254,6 +256,7 @@ OptionsPanel.prototype = {
 
   setupThemeList: function () {
     let themeBox = this.panelDoc.getElementById("devtools-theme-box");
+    themeBox.innerHTML = "";
 
     let createThemeOption = theme => {
       let inputLabel = this.panelDoc.createElement("label");
@@ -350,11 +353,11 @@ OptionsPanel.prototype = {
     let themeRadioInput = themeBox.querySelector(`[value=${currentTheme}]`);
 
     if (themeRadioInput) {
-      themeRadioInput.click();
+      themeRadioInput.checked = true;
     } else {
       // If the current theme does not exist anymore, switch to light theme
       let lightThemeInputRadio = themeBox.querySelector("[value=light]");
-      lightThemeInputRadio.click();
+      lightThemeInputRadio.checked = true;
     }
   },
 
