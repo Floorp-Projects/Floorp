@@ -22,7 +22,6 @@ const { prepareMessage } = require("devtools/client/webconsole/new-console-outpu
 const BASE_PATH = "../../../../devtools/client/webconsole/new-console-output/test/fixtures";
 const TEMP_FILE_PATH = OS.Path.join(`${BASE_PATH}/stub-generators`, "test-tempfile.js");
 
-
 function formatPacket(key, packet) {
   return `
 stubPackets.set("${key}", ${JSON.stringify(packet, null, "\t")});
