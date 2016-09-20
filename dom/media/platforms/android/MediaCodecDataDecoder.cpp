@@ -394,8 +394,15 @@ MediaCodecDataDecoder::QueueSample(const MediaRawData* aSample)
 
   PodCopy(static_cast<uint8_t*>(directBuffer), aSample->Data(), aSample->Size());
 
-  res = mDecoder->QueueInputBuffer(inputIndex, 0, aSample->Size(),
-                                   aSample->mTime, 0);
+  CryptoInfo::LocalRef cryptoInfo = GetCryptoInfoFromSample(aSample);
+  if (cryptoInfo) {
+    res = mDecoder->QueueSecureInputBuffer(inputIndex, 0, cryptoInfo,
+                                           aSample->mTime, 0);
+  } else {
+    res = mDecoder->QueueInputBuffer(inputIndex, 0, aSample->Size(),
+                                     aSample->mTime, 0);
+  }
+
   if (NS_FAILED(res)) {
     return res;
   }
