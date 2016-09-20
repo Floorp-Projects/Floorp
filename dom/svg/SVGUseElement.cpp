@@ -347,6 +347,16 @@ SVGUseElement::CreateAnonymousContent()
   return mClone;
 }
 
+nsIURI*
+SVGUseElement::GetSourceDocURI()
+{
+  nsIContent* targetContent = mSource.get();
+  if (!targetContent)
+    return nullptr;
+
+  return targetContent->OwnerDoc()->GetDocumentURI();
+}
+
 void
 SVGUseElement::DestroyAnonymousContent()
 {

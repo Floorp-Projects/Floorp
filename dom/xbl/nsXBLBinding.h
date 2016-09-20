@@ -156,6 +156,8 @@ public:
   // by this binding.
   nsAnonymousContentList* GetAnonymousNodeList();
 
+ nsIURI* GetSourceDocURI();
+
 // MEMBER VARIABLES
 protected:
 

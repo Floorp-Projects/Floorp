@@ -431,6 +431,18 @@ nsXBLBinding::GenerateAnonymousContent()
   }
 }
 
+nsIURI*
+nsXBLBinding::GetSourceDocURI()
+{
+  nsIContent* targetContent =
+    mPrototypeBinding->GetImmediateChild(nsGkAtoms::content);
+  if (!targetContent) {
+    return nullptr;
+  }
+
+  return targetContent->OwnerDoc()->GetDocumentURI();
+}
+
 XBLChildrenElement*
 nsXBLBinding::FindInsertionPointFor(nsIContent* aChild)
 {
