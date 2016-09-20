@@ -164,6 +164,13 @@ function Tester(aTests, structuredLogger, aCallback) {
   this.Promise = Components.utils.import("resource://gre/modules/Promise.jsm", null).Promise;
   this.Assert = Components.utils.import("resource://testing-common/Assert.jsm", null).Assert;
 
+  Services.ppmm.loadProcessScript("chrome://mochikit/content/document-observer-script.js", true);
+  Services.ppmm.addMessageListener("browser-test:documentCreated", (msg) => {
+    if (this.currentTest) {
+      this.onDocumentCreated(msg.data);
+    }
+  });
+
   this.SimpleTestOriginal = {};
   SIMPLETEST_OVERRIDES.forEach(m => {
     this.SimpleTestOriginal[m] = this.SimpleTest[m];
@@ -248,8 +255,6 @@ Tester.prototype = {
 
     this.structuredLogger.info("*** Start BrowserChrome Test Results ***");
     Services.console.registerListener(this);
-    Services.obs.addObserver(this, "chrome-document-global-created", false);
-    Services.obs.addObserver(this, "content-document-global-created", false);
     this._globalProperties = Object.keys(window);
     this._globalPropertyWhitelist = [
       "navigator", "constructor", "top",
@@ -366,12 +371,10 @@ Tester.prototype = {
       --this.repeat;
       this.currentTestIndex = -1;
       this.nextTest();
-    }
-    else{
+    } else {
       TabDestroyObserver.destroy();
       Services.console.unregisterListener(this);
-      Services.obs.removeObserver(this, "chrome-document-global-created");
-      Services.obs.removeObserver(this, "content-document-global-created");
+      Services.ppmm.broadcastAsyncMessage("browser-test:removeObservers", {});
       this.Promise.Debugging.clearUncaughtErrorObservers();
       this._treatUncaughtRejectionsAsFailures = false;
 
@@ -413,23 +416,16 @@ Tester.prototype = {
   observe: function Tester_observe(aSubject, aTopic, aData) {
     if (!aTopic) {
       this.onConsoleMessage(aSubject);
-    } else if (this.currentTest) {
-      this.onDocumentCreated(aSubject);
     }
   },
 
-  onDocumentCreated: function Tester_onDocumentCreated(aWindow) {
-    let utils = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils);
-    let outerID = utils.outerWindowID;
-    let innerID = utils.currentInnerWindowID;
-
+  onDocumentCreated: function Tester_onDocumentCreated({ location, outerID, innerID }) {
     if (!(outerID in this.openedWindows)) {
       this.openedWindows[outerID] = this.currentTest;
     }
     this.openedWindows[innerID] = this.currentTest;
 
-    let url = aWindow.location.href || "about:blank";
+    let url = location || "about:blank";
     this.openedURLs[outerID] = this.openedURLs[innerID] = url;
   },
 
@@ -676,9 +672,7 @@ Tester.prototype = {
           // and thus get rid of more false leaks like already terminated workers.
           Services.obs.notifyObservers(null, "memory-pressure", "heap-minimize");
 
-          let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
-                       .getService(Ci.nsIMessageBroadcaster);
-          ppmm.broadcastAsyncMessage("browser-test:collect-request");
+          Services.ppmm.broadcastAsyncMessage("browser-test:collect-request");
 
           checkForLeakedGlobalWindows(aResults => {
             if (aResults.length == 0) {
