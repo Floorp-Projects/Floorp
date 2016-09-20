@@ -19,6 +19,7 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const { createFactories } = require("devtools/client/shared/components/reps/rep-utils");
 const { Rep } = createFactories(require("devtools/client/shared/components/reps/rep"));
+const StringRep = createFactories(require("devtools/client/shared/components/reps/string").StringRep).rep;
 const VariablesViewLink = createFactory(require("devtools/client/webconsole/new-console-output/components/variables-view-link").VariablesViewLink);
 const { Grip } = require("devtools/client/shared/components/reps/grip");
 
@@ -33,11 +34,21 @@ GripMessageBody.propTypes = {
 };
 
 function GripMessageBody(props) {
-  return Rep({
-    object: props.grip,
-    objectLink: VariablesViewLink,
-    defaultRep: Grip
-  });
+  const { grip } = props;
+
+  return (
+    // @TODO once there is a longString rep, also turn off quotes for those.
+    typeof grip === "string"
+      ? StringRep({
+        object: grip,
+        useQuotes: false
+      })
+      : Rep({
+        object: grip,
+        objectLink: VariablesViewLink,
+        defaultRep: Grip
+      })
+  );
 }
 
 module.exports.GripMessageBody = GripMessageBody;

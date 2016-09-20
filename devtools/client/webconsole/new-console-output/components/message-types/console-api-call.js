@@ -41,10 +41,10 @@ function ConsoleApiCall(props) {
   if (type === "trace") {
     messageBody = dom.span({ className: "cm-variable" }, "console.trace()");
   } else if (type === "assert") {
-    let reps = parameters.map((grip, key) => GripMessageBody({ grip, key }));
+    let reps = formatReps(parameters);
     messageBody = dom.span({ className: "cm-variable" }, "Assertion failed: ", reps);
   } else if (parameters) {
-    messageBody = parameters.map((grip, key) => GripMessageBody({ grip, key }));
+    messageBody = formatReps(parameters);
   } else {
     messageBody = message.messageText;
   }
@@ -114,6 +114,20 @@ function ConsoleApiCall(props) {
       ),
       attachment
     )
+  );
+}
+
+function formatReps(parameters) {
+  return (
+    parameters
+      // Get all the grips.
+      .map((grip, key) => GripMessageBody({ grip, key }))
+      // Interleave spaces.
+      .reduce((arr, v, i) => {
+        return i + 1 < parameters.length
+          ? arr.concat(v, dom.span({}, " "))
+          : arr.concat(v);
+      }, [])
   );
 }
 
