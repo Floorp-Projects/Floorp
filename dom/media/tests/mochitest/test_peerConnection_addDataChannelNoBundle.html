@@ -20,10 +20,10 @@
                      commandsCreateDataChannel.concat(
                        [
                          function PC_LOCAL_EXPECT_ICE_CHECKING(test) {
-                           test.pcLocal.iceCheckingRestartExpected = true;
+                           test.pcLocal.expectIceChecking();
                          },
                          function PC_REMOTE_EXPECT_ICE_CHECKING(test) {
-                           test.pcRemote.iceCheckingRestartExpected = true;
+                           test.pcRemote.expectIceChecking();
                          },
                        ]
                       ),
