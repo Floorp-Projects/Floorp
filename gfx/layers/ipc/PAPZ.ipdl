@@ -57,12 +57,8 @@ child:
 
   async RequestContentRepaint(FrameMetrics frame);
 
-  // The aCallTakeFocusForClickFromTap argument is used for eSingleTap types,
-  // to request that the child take focus before dispatching the mouse events
-  // for the tap (otherwise the resulting focus behaviour is incorrect).
   async HandleTap(TapType aType, LayoutDevicePoint point, Modifiers aModifiers,
-                  ScrollableLayerGuid aGuid, uint64_t aInputBlockId,
-                  bool aCallTakeFocusForClickFromTap);
+                  ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
 
   async UpdateOverscrollVelocity(float aX, float aY, bool aIsRootContent);
 

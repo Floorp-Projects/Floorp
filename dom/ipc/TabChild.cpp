@@ -1729,8 +1729,7 @@ TabChild::HandleDoubleTap(const CSSPoint& aPoint, const Modifiers& aModifiers,
 void
 TabChild::HandleTap(GeckoContentController::TapType aType,
                     const LayoutDevicePoint& aPoint, const Modifiers& aModifiers,
-                    const ScrollableLayerGuid& aGuid, const uint64_t& aInputBlockId,
-                    bool aCallTakeFocusForClickFromTap)
+                    const ScrollableLayerGuid& aGuid, const uint64_t& aInputBlockId)
 {
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
   if (!presShell) {
@@ -1744,7 +1743,7 @@ TabChild::HandleTap(GeckoContentController::TapType aType,
 
   switch (aType) {
   case GeckoContentController::TapType::eSingleTap:
-    if (aCallTakeFocusForClickFromTap && mRemoteFrame) {
+    if (mRemoteFrame) {
       mRemoteFrame->SendTakeFocusForClickFromTap();
     }
     if (mGlobal && mTabChildGlobal) {

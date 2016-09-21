@@ -141,7 +141,7 @@ ContentProcessController::HandleTap(
 {
   if (mBrowser) {
     mBrowser->HandleTap(aType, aPoint - mBrowser->GetChromeDisplacement(), aModifiers, aGuid,
-        aInputBlockId, (aType == TapType::eSingleTap));
+        aInputBlockId);
   }
 }
 
