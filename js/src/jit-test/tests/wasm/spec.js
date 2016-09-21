@@ -14,6 +14,9 @@ load(libdir + "wasm.js");
 // *            anything else is considered a relative path to the wast file to
 //              load and run. The path is relative to to the runner script,
 //              i.e. this file..
+//
+//  If there are no arguments, the wast interpreter will run sanity checks
+//  (testing that NaN payload comparisons works, e.g.).
 
 if (typeof assert === 'undefined') {
     var assert = function(c, msg) {
@@ -209,6 +212,54 @@ function handleNonStandard(exprName, e)
     return false;
 }
 
+function testNaNEqualityFunction() {
+    // Test NaN equality functions.
+    let u8 = new Uint8Array(16);
+    let i32 = new Int32Array(u8.buffer);
+    let f64 = new Float64Array(u8.buffer);
+    let f32 = new Float32Array(u8.buffer);
+
+    // F64 NaN
+    let someNaN = wasmEvalText('(module (func (result f64) (f64.const -nan:0x12345678)) (export "" 0))')();
+    i32[0] = someNaN.nan_low;
+    i32[1] = someNaN.nan_high;
+    assert(Number.isNaN(f64[0]), "we've stored a f64 NaN");
+
+    assertEq(u8[0], 0x78);
+    assertEq(u8[1], 0x56);
+    assertEq(u8[2], 0x34);
+    assertEq(u8[3], 0x12);
+
+    assertEqNaN(someNaN, someNaN);
+
+    // F32 NaN
+    someNaN = wasmEvalText('(module (func (result f32) (f32.const -nan:0x123456)) (export "" 0))')();
+    i32[0] = someNaN.nan_low;
+    assert(Number.isNaN(f32[0]), "we've stored a f32 NaN");
+
+    assertEq(u8[0], 0x56);
+    assertEq(u8[1], 0x34);
+    assertEq(u8[2] & 0x7f, 0x12);
+
+    assertEqNaN(someNaN, someNaN);
+
+    // Compare a NaN value against another one.
+    let pNaN = wasmEvalText('(module (func (result f64) (f64.const nan)) (export "" 0))')();
+    let nNaN = wasmEvalText('(module (func (result f64) (f64.const -nan)) (export "" 0))')();
+
+    i32[0] = pNaN.nan_low;
+    i32[1] = pNaN.nan_high;
+    i32[2] = nNaN.nan_low;
+    i32[3] = nNaN.nan_high;
+
+    assertEq(f64[0], f64[1]);
+    assertErrorMessage(() => assertEqNaN(pNaN, nNaN), Error, /Assertion failed/);
+    assertEqNaN(pNaN, pNaN);
+    assertEqNaN(nNaN, nNaN);
+}
+
+var constantCache = new Map;
+
 // Recursively execute the expression.
 function exec(e) {
     var exprName = e.list[0].str;
@@ -225,8 +276,7 @@ function exec(e) {
         var fn = null;
 
         if (module === null) {
-            debug('We should have a module here before trying to invoke things!');
-            quit();
+            throw new Error('We should have a module here before trying to invoke things!');
         }
 
         if (typeof module[name] === "function") {
@@ -240,7 +290,15 @@ function exec(e) {
     if (exprName.indexOf(".const") > 0) {
         // Eval the expression using a wasm module.
         var type = exprName.substring(0, exprName.indexOf(".const"));
-        return wasmEvalText('(module (func (result ' + type + ') ' + e + ') (export "" 0))')()
+        var key = e.toString();
+
+        if (constantCache.has(key)) {
+            return constantCache.get(key);
+        }
+
+        var val = wasmEvalText(`(module (func (result ${type}) ${e}) (export "" 0))`)();
+        constantCache.set(key, val);
+        return val;
     }
 
     if (exprName === "assert_return") {
@@ -250,11 +308,13 @@ function exec(e) {
             let rhs = exec(e.list[2]);
             if (typeof lhs === 'number') {
                 assertEq(lhs, rhs);
+            } else if (typeof lhs.nan_low === 'number') {
+                assertEqNaN(lhs, rhs);
             } else {
                 // Int64 are emulated with objects with shape:
                 // {low: Number, high: Number}
-                assert(typeof lhs.low === 'number', 'assert_return expects int64 or number');
-                assert(typeof lhs.high === 'number', 'assert_return expects int64 or number');
+                assert(typeof lhs.low === 'number', 'assert_return expects NaN, int64 or number');
+                assert(typeof lhs.high === 'number', 'assert_return expects NaN, int64 or number');
                 assertEq(lhs.low, rhs.low);
                 assertEq(lhs.high, rhs.high);
             }
@@ -263,7 +323,21 @@ function exec(e) {
     }
 
     if (exprName === "assert_return_nan") {
-        assertEq(exec(e.list[1]), NaN);
+        let res = exec(e.list[1]);
+        if (typeof res === 'number') {
+            assertEq(res, NaN);
+        } else {
+            assert(typeof res.nan_low === 'number',
+                   "assert_return_nan expects either a NaN number or a NaN custom object");
+
+            let f64 = new Float64Array(1);
+            let f32 = new Float32Array(f64.buffer);
+            let i32 = new Int32Array(f64.buffer);
+
+            i32[0] = res.nan_low;
+            i32[1] = res.nan_high;
+            assert(Number.isNaN(f64[0]) || Number.isNaN(f32[0]), "assert_return_nan test failed.");
+        }
         return;
     }
 
@@ -301,7 +375,7 @@ function exec(e) {
         return;
     }
 
-    if(!handleNonStandard(exprName, e)) {
+    if (!handleNonStandard(exprName, e)) {
         assert(false, "NYI: " + e);
     }
 }
@@ -340,6 +414,10 @@ for (let arg of args) {
         targets.push(arg);
         break;
     }
+}
+
+if (!args.length) {
+    testNaNEqualityFunction();
 }
 
 top_loop:
