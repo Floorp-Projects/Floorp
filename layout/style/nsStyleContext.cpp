@@ -252,8 +252,10 @@ nsStyleContext::AssertStructsNotUsedElsewhere(
          (mCachedInheritedData.mStyleStructs[eStyleStruct_##name_] == data)) { \
       printf_stderr("style struct %p found on style context %p\n", data, this);\
       nsString url;                                                            \
-      PresContext()->Document()->GetURL(url);                                  \
-      printf_stderr("  in %s\n", NS_ConvertUTF16toUTF8(url).get());            \
+      nsresult rv = PresContext()->Document()->GetURL(url);                    \
+      if (NS_SUCCEEDED(rv)) {                                                  \
+        printf_stderr("  in %s\n", NS_ConvertUTF16toUTF8(url).get());          \
+      }                                                                        \
       MOZ_ASSERT(false, "destroying " #name_ " style struct still present "    \
                         "in style context tree");                              \
     }
@@ -277,8 +279,10 @@ nsStyleContext::AssertStructsNotUsedElsewhere(
           printf_stderr("style struct %p found on style context %p\n", data,   \
                         this);                                                 \
           nsString url;                                                        \
-          PresContext()->Document()->GetURL(url);                              \
-          printf_stderr("  in %s\n", NS_ConvertUTF16toUTF8(url).get());        \
+          nsresult rv = PresContext()->Document()->GetURL(url);                \
+          if (NS_SUCCEEDED(rv)) {                                              \
+            printf_stderr("  in %s\n", NS_ConvertUTF16toUTF8(url).get());      \
+          }                                                                    \
           MOZ_ASSERT(false, "destroying " #name_ " style struct still present "\
                             "in style context tree");                          \
         }

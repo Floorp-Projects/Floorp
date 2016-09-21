@@ -1,8 +1,8 @@
 [
 {
-"size": 1519104, 
+"size": 1516544, 
 "visibility": "public", 
-"digest": "b4873dde781ef7adba614a683eb0048e53058d432c258e05112c24598b9ae564cbf031e3d9c792b74024e850241d5a6e56825f6438e332b2c84a14dea39b9717", 
+"digest": "cf84f9592059f1e0756370f44e0ad289b71569c235d2ec8c5958695cc57352d3b99b584fd119e73fc9593d1c4cca414985e71f567f777162471b6040ebc59d13", 
 "algorithm": "sha512", 
 "filename": "win32-minidump_stackwalk.exe"
 }

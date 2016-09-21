@@ -823,13 +823,10 @@ CreateBlobImpl(const nsTArray<BlobData>& aBlobDatas,
     return blobImpl.forget();
   }
 
-  FallibleTArray<RefPtr<BlobImpl>> fallibleBlobImpls;
-  if (NS_WARN_IF(!fallibleBlobImpls.SetLength(aBlobDatas.Length(), fallible))) {
+  nsTArray<RefPtr<BlobImpl>> blobImpls;
+  if (NS_WARN_IF(!blobImpls.SetLength(aBlobDatas.Length(), fallible))) {
     return nullptr;
   }
-
-  nsTArray<RefPtr<BlobImpl>> blobImpls;
-  fallibleBlobImpls.SwapElements(blobImpls);
 
   const bool hasRecursed = aMetadata.mHasRecursed;
   aMetadata.mHasRecursed = true;
@@ -853,10 +850,10 @@ CreateBlobImpl(const nsTArray<BlobData>& aBlobDatas,
   ErrorResult rv;
   RefPtr<BlobImpl> blobImpl;
   if (!hasRecursed && aMetadata.IsFile()) {
-    blobImpl = MultipartBlobImpl::Create(blobImpls, aMetadata.mName,
+    blobImpl = MultipartBlobImpl::Create(Move(blobImpls), aMetadata.mName,
                                          aMetadata.mContentType, rv);
   } else {
-    blobImpl = MultipartBlobImpl::Create(blobImpls, aMetadata.mContentType, rv);
+    blobImpl = MultipartBlobImpl::Create(Move(blobImpls), aMetadata.mContentType, rv);
   }
 
   if (NS_WARN_IF(rv.Failed())) {

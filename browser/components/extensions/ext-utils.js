@@ -138,7 +138,7 @@ class BasePopup {
       this.viewNode.style.maxHeight = "";
 
       if (this.panel) {
-        this.panel.style.removeProperty("--panel-arrowcontent-background");
+        this.panel.style.removeProperty("--arrowpanel-background");
         this.panel.style.removeProperty("--panel-arrow-image-vertical");
       }
 
@@ -385,7 +385,7 @@ class BasePopup {
         }
       }
 
-      this.panel.style.setProperty("--panel-arrowcontent-background", panelBackground);
+      this.panel.style.setProperty("--arrowpanel-background", panelBackground);
       this.panel.style.setProperty("--panel-arrow-image-vertical", panelArrow);
 
 

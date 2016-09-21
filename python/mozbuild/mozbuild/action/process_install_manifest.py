@@ -17,7 +17,10 @@ from mozpack.files import (
     BaseFile,
     FileFinder,
 )
-from mozpack.manifests import InstallManifest
+from mozpack.manifests import (
+    InstallManifest,
+    InstallManifestNoSymlinks,
+)
 from mozbuild.util import DefinesAction
 
 
@@ -30,6 +33,7 @@ def process_manifest(destdir, paths, track=None,
         remove_unaccounted=True,
         remove_all_directory_symlinks=True,
         remove_empty_directories=True,
+        no_symlinks=False,
         defines={}):
 
     if track:
@@ -53,9 +57,10 @@ def process_manifest(destdir, paths, track=None,
             remove_empty_directories=False
             remove_all_directory_symlinks=False
 
-    manifest = InstallManifest()
+    manifest_cls = InstallManifestNoSymlinks if no_symlinks else InstallManifest
+    manifest = manifest_cls()
     for path in paths:
-        manifest |= InstallManifest(path=path)
+        manifest |= manifest_cls(path=path)
 
     copier = FileCopier()
     manifest.populate_registry(copier, defines_override=defines)
@@ -82,6 +87,8 @@ def main(argv):
         help='Do not remove all directory symlinks from destination.')
     parser.add_argument('--no-remove-empty-directories', action='store_true',
         help='Do not remove empty directories from destination.')
+    parser.add_argument('--no-symlinks', action='store_true',
+        help='Do not install symbolic links. Always copy files')
     parser.add_argument('--track', metavar="PATH",
         help='Use installed files tracking information from the given path.')
     parser.add_argument('-D', action=DefinesAction,
@@ -96,6 +103,7 @@ def main(argv):
         track=args.track, remove_unaccounted=not args.no_remove,
         remove_all_directory_symlinks=not args.no_remove_all_directory_symlinks,
         remove_empty_directories=not args.no_remove_empty_directories,
+        no_symlinks=args.no_symlinks,
         defines=args.defines)
 
     elapsed = time.time() - start

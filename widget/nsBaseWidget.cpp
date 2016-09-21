@@ -1370,6 +1370,12 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   }
 }
 
+void nsBaseWidget::NotifyRemoteCompositorSessionLost(CompositorSession* aSession)
+{
+  MOZ_ASSERT(aSession == mCompositorSession);
+  DestroyLayerManager();
+}
+
 bool nsBaseWidget::ShouldUseOffMainThreadCompositing()
 {
   return gfxPlatform::UsesOffMainThreadCompositing();

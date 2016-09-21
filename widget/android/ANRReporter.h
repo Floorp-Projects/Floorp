@@ -6,7 +6,7 @@
 #ifndef ANRReporter_h__
 #define ANRReporter_h__
 
-#include "GeneratedJNINatives.h"
+#include "FennecJNINatives.h"
 
 namespace mozilla {
 

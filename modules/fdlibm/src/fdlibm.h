@@ -48,13 +48,17 @@ double	expm1(double);
 double	hypot(double, double);
 double	log1p(double);
 double	log2(double);
-
+double	rint(double);
 double	copysign(double, double);
+double	nearbyint(double);
 double	scalbn(double, int);
 
-float	floorf(float);
-float	truncf(float);
 float	ceilf(float);
+float	floorf(float);
+
+float	nearbyintf(float);
+float	rintf(float);
+float	truncf(float);
 
 } /* namespace fdlibm */
 

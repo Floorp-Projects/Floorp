@@ -3,9 +3,21 @@ name = "gkrust-gtest"
 version = "0.1.0"
 dependencies = [
  "mp4parse-gtest 0.1.0",
+ "nsstring-gtest 0.1.0",
 ]
 
 [[package]]
 name = "mp4parse-gtest"
 version = "0.1.0"
+
+[[package]]
+name = "nsstring"
+version = "0.1.0"
+
+[[package]]
+name = "nsstring-gtest"
+version = "0.1.0"
+dependencies = [
+ "nsstring 0.1.0",
+]
 

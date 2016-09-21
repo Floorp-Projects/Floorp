@@ -5,6 +5,7 @@
 import sys
 import hashlib
 from mozpack.packager.unpack import UnpackFinder
+from mozpack.files import DeflatedFile
 from collections import OrderedDict
 
 '''
@@ -18,21 +19,31 @@ def find_dupes(source):
     for p, f in UnpackFinder(source):
         content = f.open().read()
         m = hashlib.md5(content).digest()
-        if not m in md5s:
-            md5s[m] = (len(content), [])
-        md5s[m][1].append(p)
+        if m not in md5s:
+            if isinstance(f, DeflatedFile):
+                compressed = f.file.compressed_size
+            else:
+                compressed = len(content)
+            md5s[m] = (len(content), compressed, [])
+        md5s[m][2].append(p)
     total = 0
+    total_compressed = 0
     num_dupes = 0
-    for m, (size, paths) in md5s.iteritems():
+    for m, (size, compressed, paths) in sorted(md5s.iteritems(),
+                                               key=lambda x: x[1][1]):
         if len(paths) > 1:
-            print 'Duplicates %d bytes%s:' % (size,
+            print 'Duplicates %d bytes%s%s:' % (size,
+                  ' (%d compressed)' % compressed if compressed != size else '',
                   ' (%d times)' % (len(paths) - 1) if len(paths) > 2 else '')
             print ''.join('  %s\n' % p for p in paths)
             total += (len(paths) - 1) * size
+            total_compressed += (len(paths) - 1) * compressed
             num_dupes += 1
     if num_dupes:
-        print "WARNING: Found %d duplicated files taking %d bytes" % \
-              (num_dupes, total) + " (uncompressed)"
+        print "WARNING: Found %d duplicated files taking %d bytes (%s)" % \
+              (num_dupes, total,
+               '%d compressed' % total_compressed if total_compressed != total
+                                                  else 'uncompressed')
 
 
 def main():

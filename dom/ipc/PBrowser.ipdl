@@ -186,6 +186,14 @@ parent:
     async SizeShellTo(uint32_t aFlag, int32_t aWidth, int32_t aHeight,
                       int32_t aShellItemWidth, int32_t aShellItemHeight);
 
+    /**
+     * Called by the child to inform the parent that links are dropped into
+     * content area.
+     *
+     * aLinks A flat array of url, name, and type for each link
+     */
+    async DropLinks(nsString[] aLinks);
+
     async Event(RemoteDOMEvent aEvent);
 
     sync SyncMessage(nsString aMessage, ClonedMessageData aData,
@@ -574,6 +582,13 @@ parent:
 
     async AudioChannelActivityNotification(uint32_t aAudioChannel,
                                            bool aActive);
+
+    // After a compositor reset, it is necessary to reconnect each layers ID to
+    // the compositor of the widget that will render those layers. Note that
+    // this is sync so we can ensure that messages to the window compositor
+    // arrive before the TabChild attempts to use its cross-process compositor
+    // bridge.
+    sync EnsureLayersConnected();
 
 child:
     /**

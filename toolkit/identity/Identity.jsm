@@ -223,7 +223,8 @@ IDService.prototype = {
     // When that is available, we can remove this custom parser
     var parsedEmail = this.parseEmail(aIdentity);
     if (parsedEmail === null) {
-      return aCallback("Could not parse email: " + aIdentity);
+      aCallback("Could not parse email: " + aIdentity);
+      return;
     }
     log("_discoverIdentityProvider: identity:", aIdentity, "domain:", parsedEmail.domain);
 
