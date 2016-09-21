@@ -194,8 +194,7 @@ class MochiRemote(MochitestDesktop):
         # Runtime (webapp).
         if options.flavor == 'chrome':
             # append overlay to chrome.manifest
-            chrome = ("overlay chrome://browser/content/browser.xul "
-                      "chrome://mochikit/content/browser-test-overlay.xul")
+            chrome = "overlay chrome://browser/content/browser.xul chrome://mochikit/content/browser-test-overlay.xul"
             path = os.path.join(options.profilePath, 'extensions', 'staged',
                                 'mochikit@mozilla.org', 'chrome.manifest')
             with open(path, "a") as f:

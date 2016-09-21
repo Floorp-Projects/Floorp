@@ -9,6 +9,7 @@ from collections import defaultdict
 from itertools import chain
 import logging
 import os
+import shutil
 import sys
 import warnings
 
@@ -349,8 +350,7 @@ def verify_host_bin():
     # validate MOZ_HOST_BIN environment variables for Android tests
     MOZ_HOST_BIN = os.environ.get('MOZ_HOST_BIN')
     if not MOZ_HOST_BIN:
-        print('environment variable MOZ_HOST_BIN must be set to a directory containing host '
-              'xpcshell')
+        print('environment variable MOZ_HOST_BIN must be set to a directory containing host xpcshell')
         return 1
     elif not os.path.isdir(MOZ_HOST_BIN):
         print('$MOZ_HOST_BIN does not specify a directory')

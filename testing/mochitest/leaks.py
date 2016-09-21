@@ -54,21 +54,17 @@ class ShutdownLeaks(object):
         for test in self._parseLeakingTests():
             for url, count in self._zipLeakedWindows(test["leakedWindows"]):
                 self.logger.warning(
-                    "TEST-UNEXPECTED-FAIL | %s | leaked %d window(s) until shutdown "
-                    "[url = %s]") % (test["fileName"], count, url)
+                    "TEST-UNEXPECTED-FAIL | %s | leaked %d window(s) until shutdown [url = %s]" % (test["fileName"], count, url))
 
             if test["leakedWindowsString"]:
                 self.logger.info("TEST-INFO | %s | windows(s) leaked: %s" %
                                  (test["fileName"], test["leakedWindowsString"]))
 
             if test["leakedDocShells"]:
-                self.logger.warning("TEST-UNEXPECTED-FAIL | %s | leaked %d docShell(s) until "
-                                    "shutdown" %
-                                    (test["fileName"], len(test["leakedDocShells"])))
-                self.logger.info("TEST-INFO | %s | docShell(s) leaked: %s" %
-                                 (test["fileName"], ', '.join(["[pid = %s] [id = %s]" %
-                                                               x for x in test["leakedDocShells"]]
-                                                              )))
+                self.logger.warning("TEST-UNEXPECTED-FAIL | %s | leaked %d docShell(s) until shutdown" % (
+                    test["fileName"], len(test["leakedDocShells"])))
+                self.logger.info("TEST-INFO | %s | docShell(s) leaked: %s" % (test["fileName"],
+                                                                              ', '.join(["[pid = %s] [id = %s]" % x for x in test["leakedDocShells"]])))
 
     def _logWindow(self, line):
         created = line[:2] == "++"
@@ -233,14 +229,12 @@ class LSANLeaks(object):
 
     def process(self):
         if self.fatalError:
-            self.logger.warning("TEST-UNEXPECTED-FAIL | LeakSanitizer | LeakSanitizer "
-                                "has encountered a fatal error.")
+            self.logger.warning(
+                "TEST-UNEXPECTED-FAIL | LeakSanitizer | LeakSanitizer has encountered a fatal error.")
 
         if self.foundFrames:
-            self.logger.info("TEST-INFO | LeakSanitizer | To show the "
-                             "addresses of leaked objects add report_objects=1 to LSAN_OPTIONS")
-            self.logger.info("TEST-INFO | LeakSanitizer | This can be done "
-                             "in testing/mozbase/mozrunner/mozrunner/utils.py")
+            self.logger.info("TEST-INFO | LeakSanitizer | To show the addresses of leaked objects add report_objects=1 to LSAN_OPTIONS")
+            self.logger.info("TEST-INFO | LeakSanitizer | This can be done in testing/mozbase/mozrunner/mozrunner/utils.py")
 
         for f in self.foundFrames:
             self.logger.warning(
