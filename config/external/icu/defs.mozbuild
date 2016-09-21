@@ -47,6 +47,3 @@ if CONFIG['CLANG_CL']:
         '-Wno-macro-redefined',
         '-Wno-microsoft-include',
     ]
-
-if CONFIG['OS_TARGET'] == 'Android' and CONFIG['MOZ_ANDROID_CXX_STL'] == 'mozstlport':
-    LOCAL_INCLUDES += ['/build/gabi++/include']
