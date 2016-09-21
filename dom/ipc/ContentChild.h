@@ -36,7 +36,6 @@ class RemoteSpellcheckEngineChild;
 
 namespace ipc {
 class OptionalURIParams;
-class PFileDescriptorSetChild;
 class URIParams;
 }// namespace ipc
 
@@ -54,6 +53,7 @@ class ContentChild final : public PContentChild
                          , public nsIContentChild
 {
   typedef mozilla::dom::ClonedMessageData ClonedMessageData;
+  typedef mozilla::ipc::FileDescriptor FileDescriptor;
   typedef mozilla::ipc::OptionalURIParams OptionalURIParams;
   typedef mozilla::ipc::PFileDescriptorSetChild PFileDescriptorSetChild;
   typedef mozilla::ipc::URIParams URIParams;
@@ -292,6 +292,9 @@ public:
   virtual PPrintingChild* AllocPPrintingChild() override;
 
   virtual bool DeallocPPrintingChild(PPrintingChild*) override;
+
+  virtual PSendStreamChild*
+  SendPSendStreamConstructor(PSendStreamChild*) override;
 
   virtual PSendStreamChild* AllocPSendStreamChild() override;
   virtual bool DeallocPSendStreamChild(PSendStreamChild*) override;
@@ -583,6 +586,9 @@ public:
   virtual PBlobChild*
   SendPBlobConstructor(PBlobChild* actor,
                        const BlobConstructorParams& params) override;
+
+  virtual PFileDescriptorSetChild*
+  SendPFileDescriptorSetConstructor(const FileDescriptor&) override;
 
   virtual PFileDescriptorSetChild*
   AllocPFileDescriptorSetChild(const FileDescriptor&) override;

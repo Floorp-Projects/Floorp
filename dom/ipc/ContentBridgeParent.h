@@ -125,6 +125,16 @@ protected:
 
   virtual bool DeallocPBlobParent(PBlobParent*) override;
 
+  virtual PSendStreamParent* AllocPSendStreamParent() override;
+
+  virtual bool DeallocPSendStreamParent(PSendStreamParent* aActor) override;
+
+  virtual PFileDescriptorSetParent*
+  AllocPFileDescriptorSetParent(const mozilla::ipc::FileDescriptor&) override;
+
+  virtual bool
+  DeallocPFileDescriptorSetParent(PFileDescriptorSetParent*) override;
+
   DISALLOW_EVIL_CONSTRUCTORS(ContentBridgeParent);
 
 protected: // members

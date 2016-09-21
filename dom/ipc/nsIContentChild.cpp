@@ -13,7 +13,9 @@
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/ipc/BlobChild.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
+#include "mozilla/ipc/FileDescriptorSetChild.h"
 #include "mozilla/ipc/InputStreamUtils.h"
+#include "mozilla/ipc/SendStream.h"
 
 #include "nsPrintfCString.h"
 #include "xpcpublic.h"
@@ -107,6 +109,32 @@ nsIContentChild::GetOrCreateActorForBlobImpl(BlobImpl* aImpl)
   NS_ENSURE_TRUE(actor, nullptr);
 
   return actor;
+}
+
+PSendStreamChild*
+nsIContentChild::AllocPSendStreamChild()
+{
+  MOZ_CRASH("PSendStreamChild actors should be manually constructed!");
+}
+
+bool
+nsIContentChild::DeallocPSendStreamChild(PSendStreamChild* aActor)
+{
+  delete aActor;
+  return true;
+}
+
+PFileDescriptorSetChild*
+nsIContentChild::AllocPFileDescriptorSetChild(const FileDescriptor& aFD)
+{
+  return new FileDescriptorSetChild(aFD);
+}
+
+bool
+nsIContentChild::DeallocPFileDescriptorSetChild(PFileDescriptorSetChild* aActor)
+{
+  delete static_cast<FileDescriptorSetChild*>(aActor);
+  return true;
 }
 
 bool
