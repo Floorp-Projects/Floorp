@@ -14,10 +14,8 @@ from marionette.marionette_test import SkipTest
 from firefox_puppeteer.testcases import BaseFirefoxTestCase
 from external_media_tests.utils import (timestamp_now, verbose_until)
 from external_media_tests.media_utils.video_puppeteer import (
-    playback_done,
-    playback_started,
     VideoException,
-    VideoPuppeteer as VP
+    VideoPuppeteer
 )
 
 
@@ -54,12 +52,12 @@ class MediaTestCase(BaseFirefoxTestCase, MarionetteTestCase):
         self.marionette.log('Screenshot saved in {}'
                             .format(os.path.abspath(path)))
 
-    def log_video_debug_lines(self):
+    def log_video_debug_lines(self, video):
         """
         Log the debugging information that Firefox provides for video elements.
         """
         with self.marionette.using_context(Marionette.CONTEXT_CHROME):
-            debug_lines = self.marionette.execute_script(VP._debug_script)
+            debug_lines = video.get_debug_lines()
             if debug_lines:
                 self.marionette.log('\n'.join(debug_lines))
 
@@ -76,7 +74,7 @@ class MediaTestCase(BaseFirefoxTestCase, MarionetteTestCase):
                 verbose_until(Wait(video, interval=video.interval,
                                    timeout=video.expected_duration * 1.3 +
                                    video.stall_wait_time),
-                              video, playback_done)
+                              video, VideoPuppeteer.playback_done)
             except VideoException as e:
                 raise self.failureException(e)
 
@@ -91,7 +89,7 @@ class MediaTestCase(BaseFirefoxTestCase, MarionetteTestCase):
             self.logger.info(video.test_url)
             try:
                 verbose_until(Wait(video, timeout=video.timeout),
-                              video, playback_started)
+                              video, VideoPuppeteer.playback_started)
             except TimeoutException as e:
                 raise self.failureException(e)
 
@@ -135,7 +133,7 @@ class NetworkBandwidthTestCase(MediaTestCase):
         """
         with self.marionette.using_context(Marionette.CONTEXT_CONTENT):
             for url in self.video_urls:
-                video = VP(self.marionette, url, stall_wait_time=60,
+                video = VideoPuppeteer(self.marionette, url, stall_wait_time=60,
                            set_duration=60, timeout=timeout)
                 self.run_playback(video)
 
@@ -160,7 +158,7 @@ class VideoPlaybackTestsMixin(object):
         with self.marionette.using_context(Marionette.CONTEXT_CONTENT):
             for url in self.video_urls:
                 try:
-                    video = VP(self.marionette, url, timeout=60)
+                    video = VideoPuppeteer(self.marionette, url, timeout=60)
                     # Second playback_started check in case video._start_time
                     # is not 0
                     self.check_playback_starts(video)
@@ -174,7 +172,7 @@ class VideoPlaybackTestsMixin(object):
         """
         with self.marionette.using_context(Marionette.CONTEXT_CONTENT):
             for url in self.video_urls:
-                video = VP(self.marionette, url,
+                video = VideoPuppeteer(self.marionette, url,
                            stall_wait_time=10,
                            set_duration=60)
                 self.run_playback(video)
