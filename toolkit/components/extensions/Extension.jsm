@@ -95,6 +95,8 @@ var {
   flushJarCache,
 } = ExtensionUtils;
 
+XPCOMUtils.defineLazyGetter(this, "console", ExtensionUtils.getConsole);
+
 const LOGGER_ID_BASE = "addons.webextension.";
 const UUID_MAP_PREF = "extensions.webextensions.uuids";
 const LEAVE_STORAGE_PREF = "extensions.webextensions.keepStorageOnUninstall";
