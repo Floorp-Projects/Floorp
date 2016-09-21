@@ -21,7 +21,8 @@ this.EXPORTED_SYMBOLS = ["BookmarkValidator", "BookmarkProblemData"];
  * - parentChildMismatches (array of {parent: parentid, child: childid}):
  *   instances where the child's parentid and the parent's children array
  *   do not match
- * - cycles (array of array of ids). List of cycles found in the "tree".
+ * - cycles (array of array of ids). List of cycles found in the server-side tree.
+ * - clientCycles (array of array of ids). List of cycles found in the client-side tree.
  * - orphans (array of {id: string, parent: string}): List of nodes with
  *   either no parentid, or where the parent could not be found.
  * - missingChildren (array of {parent: id, child: id}):
@@ -61,6 +62,7 @@ class BookmarkProblemData {
     this.duplicates = [];
     this.parentChildMismatches = [];
     this.cycles = [];
+    this.clientCycles = [];
     this.orphans = [];
     this.missingChildren = [];
     this.deletedChildren = [];
@@ -102,6 +104,7 @@ class BookmarkProblemData {
       { name: "duplicates", count: this.duplicates.length },
       { name: "parentChildMismatches", count: this.parentChildMismatches.length },
       { name: "cycles", count: this.cycles.length },
+      { name: "clientCycles", count: this.clientCycles.length },
       { name: "orphans", count: this.orphans.length },
       { name: "missingChildren", count: this.missingChildren.length },
       { name: "deletedChildren", count: this.deletedChildren.length },
@@ -117,10 +120,60 @@ class BookmarkProblemData {
 
 class BookmarkValidator {
 
+  _followQueries(recordMap) {
+    for (let [guid, entry] of recordMap) {
+      if (entry.type !== "query" && (!entry.bmkUri || !entry.bmkUri.startsWith("place:"))) {
+        continue;
+      }
+      // Might be worth trying to parse the place: query instead so that this
+      // works "automatically" with things like aboutsync.
+      let queryNodeParent = PlacesUtils.getFolderContents(entry, false, true);
+      if (!queryNodeParent || !queryNodeParent.root.hasChildren) {
+        continue;
+      }
+      queryNodeParent = queryNodeParent.root;
+      let queryNode = null;
+      let numSiblings = 0;
+      let containerWasOpen = queryNodeParent.containerOpen;
+      queryNodeParent.containerOpen = true;
+      try {
+        try {
+          numSiblings = queryNodeParent.childCount;
+        } catch (e) {
+          // This throws when we can't actually get the children. This is the
+          // case for history containers, tag queries, ...
+          continue;
+        }
+        for (let i = 0; i < numSiblings && !queryNode; ++i) {
+          let child = queryNodeParent.getChild(i);
+          if (child && child.bookmarkGuid && child.bookmarkGuid === guid) {
+            queryNode = child;
+          }
+        }
+      } finally {
+        queryNodeParent.containerOpen = containerWasOpen;
+      }
+      if (!queryNode) {
+        continue;
+      }
+
+      let concreteId = PlacesUtils.getConcreteItemGuid(queryNode);
+      if (!concreteId) {
+        continue;
+      }
+      let concreteItem = recordMap.get(concreteId);
+      if (!concreteItem) {
+        continue;
+      }
+      entry.concrete = concreteItem;
+    }
+  }
+
   createClientRecordsFromTree(clientTree) {
     // Iterate over the treeNode, converting it to something more similar to what
     // the server stores.
     let records = [];
+    let recordsByGuid = new Map();
     function traverse(treeNode) {
       let guid = BookmarkSpecialIds.specialGUIDForId(treeNode.id) || treeNode.guid;
       let itemType = 'item';
@@ -168,6 +221,8 @@ class BookmarkValidator {
       treeNode.pos = treeNode.index;
       treeNode.bmkUri = treeNode.uri;
       records.push(treeNode);
+      // We want to use the "real" guid here.
+      recordsByGuid.set(treeNode.guid, treeNode);
       if (treeNode.type === 'folder') {
         treeNode.childGUIDs = [];
         if (!treeNode.children) {
@@ -184,6 +239,7 @@ class BookmarkValidator {
     }
     traverse(clientTree);
     clientTree.id = 'places';
+    this._followQueries(recordsByGuid);
     return records;
   }
 
@@ -473,15 +529,19 @@ class BookmarkValidator {
         cycles.push(cyclePath);
         return;
       } else if (seenEver.has(node)) {
-        // This is a problem, but we catch it earlier (multipleParents)
+        // If we're checking the server, this is a problem, but it should already be reported.
+        // On the client, this could happen due to including `node.concrete` in the child list.
         return;
       }
       seenEver.add(node);
-
-      if (node.children) {
+      let children = node.children || [];
+      if (node.concrete) {
+        children.push(node.concrete);
+      }
+      if (children) {
         pathLookup.add(node);
         currentPath.push(node);
-        for (let child of node.children) {
+        for (let child of children) {
           traverse(child);
         }
         currentPath.pop();
@@ -516,6 +576,8 @@ class BookmarkValidator {
     // Mainly do this to remove deleted items and normalize child guids.
     serverRecords = inspectionInfo.records;
     let problemData = inspectionInfo.problemData;
+
+    problemData.clientCycles = this._detectCycles(clientRecords);
 
     let matches = [];
 

@@ -15,7 +15,10 @@ const {
   MESSAGE_TYPE,
   MESSAGE_LEVEL,
 } = require("../constants");
-const { ConsoleMessage } = require("../types");
+const {
+  ConsoleMessage,
+  NetworkEventMessage,
+} = require("../types");
 
 function prepareMessage(packet, idGenerator) {
   // This packet is already in the expected packet structure. Simply return.
@@ -127,7 +130,19 @@ function transformPacket(packet) {
         type: MESSAGE_TYPE.LOG,
         level,
         messageText: pageError.errorMessage,
+        stacktrace: pageError.stacktrace ? pageError.stacktrace : null,
         frame,
+      });
+    }
+
+    case "networkEvent": {
+      let { networkEvent } = packet;
+
+      return new NetworkEventMessage({
+        actor: networkEvent.actor,
+        isXHR: networkEvent.isXHR,
+        request: networkEvent.request,
+        response: networkEvent.response,
       });
     }
 
@@ -165,6 +180,9 @@ function convertCachedPacket(packet) {
   } else if ("_navPayload" in packet) {
     convertPacket.type = "navigationMessage";
     convertPacket.message = packet;
+  } else if (packet._type === "NetworkEvent") {
+    convertPacket.networkEvent = packet;
+    convertPacket.type = "networkEvent";
   } else {
     throw new Error("Unexpected packet type");
   }

@@ -1312,7 +1312,7 @@
         <body>
         <![CDATA[
           if (!this.docShell || !this.docShell.contentViewer) {
-            return true;
+            return {permitUnload: true, timedOut: false};
           }
           return {permitUnload: this.docShell.contentViewer.permitUnload(), timedOut: false};
         ]]>

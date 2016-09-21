@@ -250,10 +250,7 @@
 
               <!-- Waterfall -->
               <hbox id="waterfall-view" flex="1">
-                <vbox flex="1">
-                  <hbox id="waterfall-header" />
-                  <vbox id="waterfall-breakdown" flex="1" />
-                </vbox>
+                <html:div xmlns="http://www.w3.org/1999/xhtml" id="waterfall-tree" />
                 <splitter class="devtools-side-splitter"/>
                 <vbox id="waterfall-details"
                       class="theme-sidebar"/>

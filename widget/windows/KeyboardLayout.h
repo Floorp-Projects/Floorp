@@ -263,6 +263,18 @@ private:
   RefPtr<TextEventDispatcher> mDispatcher;
   HKL mKeyboardLayout;
   MSG mMsg;
+  // mFollowingCharMsgs stores WM_CHAR, WM_SYSCHAR, WM_DEADCHAR or
+  // WM_SYSDEADCHAR message which follows WM_KEYDOWN.
+  // Note that the stored messaged are already removed from the queue.
+  nsTArray<MSG> mFollowingCharMsgs;
+  // mRemovedOddCharMsgs stores WM_CHAR messages which are caused by ATOK or
+  // WXG (they are Japanese IME) when the user tries to do "Kakutei-undo"
+  // (it means "undo the last commit").
+  nsTArray<MSG> mRemovedOddCharMsgs;
+  // If dispatching eKeyDown or eKeyPress event causes focus change,
+  // the instance shouldn't handle remaning char messages.  For checking it,
+  // this should store first focused window.
+  HWND mFocusedWndBeforeDispatch;
 
   uint32_t mDOMKeyCode;
   KeyNameIndex mKeyNameIndex;
@@ -313,10 +325,6 @@ private:
   // mIsOverridingKeyboardLayout is true if the instance temporarily overriding
   // keyboard layout with specified by the constructor.
   bool    mIsOverridingKeyboardLayout;
-  // mIsFollowedByNonControlCharMessage may be true when mMsg is a keydown
-  // message.  When the keydown message is followed by a char message, this
-  // is true.
-  bool    mIsFollowedByNonControlCharMessage;
 
   nsTArray<FakeCharMsg>* mFakeCharMsgs;
 
@@ -371,6 +379,12 @@ private:
 
   // The result is one of nsIDOMKeyEvent::DOM_KEY_LOCATION_*.
   uint32_t GetKeyLocation() const;
+
+  /**
+   * RemoveFollowingOddCharMessages() removes odd WM_CHAR messages from the
+   * queue when IsIMEDoingKakuteiUndo() returns true.
+   */
+  void RemoveFollowingOddCharMessages();
 
   /**
    * "Kakutei-Undo" of ATOK or WXG (both of them are Japanese IME) causes
@@ -439,11 +453,8 @@ private:
    *
    * WARNING: Even if this returns true, aCharMsg may be WM_NULL or its
    *          hwnd may be different window.
-   *
-   * @param aRemove     true if the found message should be removed from the
-   *                    queue.  Otherwise, false.
    */
-  bool GetFollowingCharMessage(MSG& aCharMsg, bool aRemove = true) const;
+  bool GetFollowingCharMessage(MSG& aCharMsg) const;
 
   /**
    * Whether the key event can compute virtual keycode from the scancode value.
@@ -493,12 +504,12 @@ private:
   bool DispatchKeyPressEventsWithoutCharMessage() const;
 
   /**
-   * Remove all following WM_CHAR, WM_SYSCHAR and WM_DEADCHAR messages for the
-   * WM_KEYDOWN or WM_SYSKEYDOWN message.  Additionally, dispatches plugin
-   * events if it's necessary.
-   * Returns true if the widget is destroyed.  Otherwise, false.
+   * MaybeDispatchPluginEventsForRemovedCharMessages() dispatches plugin events
+   * for removed char messages when a windowless plugin has focus.
+   * Returns true if the widget is destroyed or blurred during dispatching a
+   * plugin event.
    */
-  bool DispatchPluginEventsAndDiscardsCharMessages() const;
+  bool MaybeDispatchPluginEventsForRemovedCharMessages() const;
 
   /**
    * DispatchKeyPressEventForFollowingCharMessage() dispatches keypress event
@@ -522,6 +533,15 @@ private:
    * state.
    */
   void ComputeInputtingStringWithKeyboardLayout();
+
+  /**
+   * IsFocusedWindowChanged() returns true if focused window is changed
+   * after the instance is created.
+   */
+  bool IsFocusedWindowChanged() const
+  {
+    return mFocusedWndBeforeDispatch != ::GetFocus();
+  }
 };
 
 class KeyboardLayout

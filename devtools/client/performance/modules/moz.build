@@ -18,4 +18,5 @@ DevToolsModules(
     'marker-formatters.js',
     'markers.js',
     'utils.js',
+    'waterfall-ticks.js',
 )

@@ -340,7 +340,6 @@
       },
       {
         "name": "onTabReplaced",
-        "unsupported": true,
         "type": "function",
         "description": "Fired when the contents of the tab is replaced by a different (usually previously pre-rendered) tab.",
         "parameters": [

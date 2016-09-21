@@ -16,7 +16,7 @@ const FilterBar = React.createFactory(require("devtools/client/webconsole/new-co
 
 const store = configureStore();
 
-function NewConsoleOutputWrapper(parentNode, jsterm, toolbox) {
+function NewConsoleOutputWrapper(parentNode, jsterm, toolbox, owner) {
   const sourceMapService = toolbox ? toolbox._sourceMapService : null;
   let childComponent = ConsoleOutput({
     jsterm,
@@ -25,7 +25,15 @@ function NewConsoleOutputWrapper(parentNode, jsterm, toolbox) {
       toolbox,
       frame.url,
       frame.line
-    )
+    ),
+    openNetworkPanel: (requestId) => {
+      return toolbox.selectTool("netmonitor").then(panel => {
+        return panel.panelWin.NetMonitorController.inspectRequest(requestId);
+      });
+    },
+    openLink: (url) => {
+      owner.openLink(url);
+    },
   });
   let filterBar = FilterBar({});
   let provider = React.createElement(
@@ -45,7 +53,7 @@ NewConsoleOutputWrapper.prototype = {
   },
   dispatchMessagesClear: () => {
     store.dispatch(actions.messagesClear());
-  }
+  },
 };
 
 // Exports from this module
