@@ -921,7 +921,8 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     // On x86_shared, temp may be Invalid only if the chip has the POPCNT instruction.
     // On ARM, temp may never be Invalid.
-    inline void popcnt32(Register src, Register dest, Register temp) DEFINED_ON(arm, x86_shared);
+    inline void popcnt32(Register src, Register dest, Register temp)
+        DEFINED_ON(arm, x86_shared, mips_shared);
 
     // temp may be invalid only if the chip has the POPCNT instruction.
     inline void popcnt64(Register64 src, Register64 dest, Register temp) DEFINED_ON(x86, x64, arm);
