@@ -38,7 +38,10 @@ startTest({
       .then(() => waitTil(v, v.duration / 2))
       .then(() => testVideoResumesWhenShown(v))
       .then(() => waitUntilEnded(v))
-      .then(() => { manager.finished(token); });
+      .then(() => {
+        removeNodeAndSource(v);
+        manager.finished(token);
+      });
   }
 });
 </script>
