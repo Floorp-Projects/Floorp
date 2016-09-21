@@ -1494,8 +1494,7 @@ MediaDecoderStateMachine::MaybeStartBuffering()
 
   bool shouldBuffer;
   if (mReader->UseBufferingHeuristics()) {
-    shouldBuffer = HasLowDecodedData(EXHAUSTED_DATA_MARGIN_USECS) &&
-                   HasLowBufferedData();
+    shouldBuffer = HasLowDecodedData() && HasLowBufferedData();
   } else {
     MOZ_ASSERT(mReader->IsWaitForDataSupported());
     shouldBuffer = (OutOfDecodedAudio() && mReader->IsWaitingAudioData()) ||
@@ -2318,7 +2317,8 @@ MediaDecoderStateMachine::StartMediaSink()
   }
 }
 
-bool MediaDecoderStateMachine::HasLowDecodedData(int64_t aAudioUsecs)
+bool
+MediaDecoderStateMachine::HasLowDecodedData()
 {
   MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(mReader->UseBufferingHeuristics());
@@ -2326,9 +2326,10 @@ bool MediaDecoderStateMachine::HasLowDecodedData(int64_t aAudioUsecs)
   // provided we've not decoded to the end of the audio stream, or
   // if we're low on video frames, provided
   // we've not decoded to the end of the video stream.
-  return ((IsAudioDecoding() && GetDecodedAudioDuration() < aAudioUsecs) ||
+  return (IsAudioDecoding() &&
+          GetDecodedAudioDuration() < EXHAUSTED_DATA_MARGIN_USECS) ||
          (IsVideoDecoding() &&
-          static_cast<uint32_t>(VideoQueue().GetSize()) < LOW_VIDEO_FRAMES));
+          static_cast<uint32_t>(VideoQueue().GetSize()) < LOW_VIDEO_FRAMES);
 }
 
 bool MediaDecoderStateMachine::OutOfDecodedAudio()
