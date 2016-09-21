@@ -14,8 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1000870
     <script type="text/javascript">
       SimpleTest.waitForExplicitFinish();
       function startTest() {
-        var iframe = document.getElementById("testFrame");
-        iframe.src = "pointerevent_pointerleave_touch-manual.html";
+        runTestInNewWindow("pointerevent_pointerleave_touch-manual.html");
       }
       function executeTest(int_win) {
         sendTouchEvent(int_win, "target0", "touchstart");
@@ -24,6 +23,5 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1000870
     </script>
   </head>
   <body>
-    <iframe id="testFrame" height="800" width="1000"></iframe>
   </body>
 </html>
