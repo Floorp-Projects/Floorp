@@ -34,9 +34,10 @@ startTest({
     waitUntilPlaying(v)
       .then(() => { start = performance.now(); })
       .then(() => testVideoSuspendsWhenHidden(v))
-      .then(() => testDelay(v, start, 100, 1000))
-      .then(() => waitTil(v, v.duration / 2))
-      .then(() => testVideoResumesWhenShown(v))
+      .then(() => {
+        testDelay(v, start, 100, 1000);
+        return testVideoResumesWhenShown(v);
+      })
       .then(() => waitUntilEnded(v))
       .then(() => {
         removeNodeAndSource(v);
