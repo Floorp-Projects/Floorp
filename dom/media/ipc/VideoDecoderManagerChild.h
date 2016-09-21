@@ -19,6 +19,7 @@ public:
 
   static VideoDecoderManagerChild* GetSingleton();
   static nsIThread* GetManagerThread();
+  static AbstractThread* GetManagerAbstractThread();
 
   // Can be called from any thread, dispatches the request to the IPDL thread internally.
   void DeallocateSurfaceDescriptorGPUVideo(const SurfaceDescriptorGPUVideo& aSD);
