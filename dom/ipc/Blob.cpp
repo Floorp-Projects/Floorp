@@ -823,13 +823,10 @@ CreateBlobImpl(const nsTArray<BlobData>& aBlobDatas,
     return blobImpl.forget();
   }
 
-  FallibleTArray<RefPtr<BlobImpl>> fallibleBlobImpls;
-  if (NS_WARN_IF(!fallibleBlobImpls.SetLength(aBlobDatas.Length(), fallible))) {
+  nsTArray<RefPtr<BlobImpl>> blobImpls;
+  if (NS_WARN_IF(!blobImpls.SetLength(aBlobDatas.Length(), fallible))) {
     return nullptr;
   }
-
-  nsTArray<RefPtr<BlobImpl>> blobImpls;
-  fallibleBlobImpls.SwapElements(blobImpls);
 
   const bool hasRecursed = aMetadata.mHasRecursed;
   aMetadata.mHasRecursed = true;
