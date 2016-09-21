@@ -1742,7 +1742,7 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   // So for now, we just mark nodes as dirty when they're inserted into a
   // document or shadow tree.
   if (IsStyledByServo() && IsInComposedDoc()) {
-    MOZ_ASSERT(!ServoData().get());
+    MOZ_ASSERT(!HasServoData());
     SetIsDirtyForServo();
   }
 
@@ -1857,10 +1857,10 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
   // Computed styled data isn't useful for detached nodes, and we'll need to
   // recomputed it anyway if we ever insert the nodes back into a document.
   if (IsStyledByServo()) {
-    ServoData().reset();
+    ClearServoData();
   } else {
 #ifdef MOZ_STYLO
-    MOZ_ASSERT(!ServoData());
+    MOZ_ASSERT(!HasServoData());
 #endif
   }
 

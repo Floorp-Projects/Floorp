@@ -569,19 +569,6 @@ SERVO_IMPL_ELEMENT_ATTR_MATCHING_FUNCTIONS(Gecko_Snapshot, ServoElementSnapshot*
 
 #undef SERVO_IMPL_ELEMENT_ATTR_MATCHING_FUNCTIONS
 
-ServoNodeDataBorrowedOrNull
-Gecko_GetNodeData(RawGeckoNodeBorrowed aNode)
-{
-  return aNode->ServoData().get();
-}
-
-void
-Gecko_SetNodeData(RawGeckoNodeBorrowed aNode, ServoNodeDataOwned aData)
-{
-  MOZ_ASSERT(!aNode->ServoData());
-  aNode->ServoData().reset(aData);
-}
-
 nsIAtom*
 Gecko_Atomize(const char* aString, uint32_t aLength)
 {
