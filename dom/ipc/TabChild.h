@@ -634,8 +634,7 @@ public:
                  const LayoutDevicePoint& aPoint,
                  const Modifiers& aModifiers,
                  const mozilla::layers::ScrollableLayerGuid& aGuid,
-                 const uint64_t& aInputBlockId,
-                 bool aCallTakeFocusForClickFromTap);
+                 const uint64_t& aInputBlockId);
   void SetAllowedTouchBehavior(uint64_t aInputBlockId,
                                const nsTArray<TouchBehaviorFlags>& aFlags) const;
 
