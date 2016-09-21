@@ -97,13 +97,7 @@ enum class ImageFormat {
   /**
    * A wrapper around a drawable TextureClient.
    */
-  TEXTURE_WRAPPER,
-
-  /**
-   * An opaque handle that refers to an Image stored in the GPU
-   * process.
-   */
-  GPU_VIDEO
+  TEXTURE_WRAPPER
 };
 
 enum class StereoMode {

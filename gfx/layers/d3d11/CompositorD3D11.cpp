@@ -27,9 +27,6 @@
 #include "mozilla/Telemetry.h"
 #include "BlendShaderConstants.h"
 
-#include "D3D11ShareHandleImage.h"
-#include "D3D9SurfaceImage.h"
-
 #include <dxgi1_2.h>
 
 namespace mozilla {
@@ -448,63 +445,6 @@ CompositorD3D11::CreateDataTextureSource(TextureFlags aFlags)
   RefPtr<DataTextureSource> result = new DataTextureSourceD3D11(gfx::SurfaceFormat::UNKNOWN,
                                                                 this, aFlags);
   return result.forget();
-}
-
-already_AddRefed<TextureSource>
-CompositorD3D11::CreateTextureSourceForImage(Image* aImage)
-{
-  if (aImage->GetFormat() == ImageFormat::D3D11_SHARE_HANDLE_TEXTURE) {
-    D3D11ShareHandleImage* image = static_cast<D3D11ShareHandleImage*>(aImage);
-
-    RefPtr<ID3D11Texture2D> tex = image->GetTexture();
-    RefPtr<ID3D11Device> device;
-    tex->GetDevice(getter_AddRefs(device));
-
-    HRESULT hr;
-    if (device != GetDevice()) {
-      RefPtr<IDXGIResource> resource;
-      tex->QueryInterface((IDXGIResource**)getter_AddRefs(resource));
-      if (!resource) {
-        return nullptr;
-      }
-      HANDLE sharedHandle;
-      hr = resource->GetSharedHandle(&sharedHandle);
-      if (FAILED(hr)) {
-        return nullptr;
-      }
-
-      tex = nullptr;
-      hr = GetDevice()->OpenSharedResource(sharedHandle,
-                                           __uuidof(ID3D11Texture2D),
-                                           (void**)(ID3D11Texture2D**)getter_AddRefs(tex));
-      if (FAILED(hr)) {
-        return nullptr;
-      }
-    }
-    RefPtr<TextureSource> source = new DataTextureSourceD3D11(SurfaceFormat::B8G8R8X8,
-                                                              this,
-                                                              tex);
-    return source.forget();
-  } else if (aImage->GetFormat() == ImageFormat::D3D9_RGB32_TEXTURE) {
-    D3D9SurfaceImage* image = static_cast<D3D9SurfaceImage*>(aImage);
-
-    HANDLE handle = image->GetShareHandle();
-
-    RefPtr<ID3D11Texture2D> texture;
-    HRESULT hr = GetDevice()->OpenSharedResource(handle,
-                                                 __uuidof(ID3D11Texture2D),
-                                                 (void**)(ID3D11Texture2D**)getter_AddRefs(texture));
-    if (FAILED(hr)) {
-      NS_WARNING("Failed to open shared texture");
-      return nullptr;
-    }
-
-    RefPtr<TextureSource> source = new DataTextureSourceD3D11(SurfaceFormat::B8G8R8X8,
-                                                              this,
-                                                              texture);
-    return source.forget();
-  }
-  return Compositor::CreateTextureSourceForImage(aImage);
 }
 
 TextureFactoryIdentifier
