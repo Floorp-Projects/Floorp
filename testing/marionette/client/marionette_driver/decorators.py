@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from errors import MarionetteException
 from functools import wraps
 import socket
 import sys
@@ -18,49 +17,30 @@ def _find_marionette_in_args(*args, **kwargs):
     return m
 
 
-def do_process_check(func, always=False):
-    """Decorator which checks the process after the function has run.
-
-    There is a check for crashes which always gets executed. And in the case of
-    connection issues the process will be force closed.
-
-    :param always: If False, only checks for crashes if an exception
-                   was raised. If True, always checks for crashes.
-    """
+def do_process_check(func):
+    """Decorator which checks the process status after the function has run."""
     @wraps(func)
     def _(*args, **kwargs):
         m = _find_marionette_in_args(*args, **kwargs)
 
-        def check_for_crash():
-            try:
-                return m.check_for_crash()
-            except Exception:
-                # don't want to lose the original exception
-                traceback.print_exc()
-
-                return False
-
         try:
             return func(*args, **kwargs)
-        except (MarionetteException, IOError) as e:
+        except IOError as e:
             exc, val, tb = sys.exc_info()
             crashed = False
 
-            # In case of no Marionette failures ensure to check for possible crashes.
-            # Do it before checking for port disconnects, to avoid reporting of unrelated
-            # crashes due to a forced shutdown of the application.
-            if not isinstance(e, MarionetteException) or type(e) is MarionetteException:
-                if not always:
-                    crashed = check_for_crash()
+            try:
+                crashed = m.check_for_crash()
+            except Exception:
+                # don't want to lose the original exception
+                traceback.print_exc()
 
             # In case of socket failures force a shutdown of the application
             if type(e) in (socket.error, socket.timeout) or crashed:
                 m.handle_socket_failure(crashed)
 
             raise exc, val, tb
-        finally:
-            if always:
-                check_for_crash()
+
     return _
 
 
