@@ -389,6 +389,9 @@ BacktrackingAllocator::init()
 
         LBlock* block = graph.getBlock(i);
         for (LInstructionIterator ins = block->begin(); ins != block->end(); ins++) {
+            if (mir->shouldCancel("Create data structures (inner loop 1)"))
+                return false;
+
             for (size_t j = 0; j < ins->numDefs(); j++) {
                 LDefinition* def = ins->getDef(j);
                 if (def->isBogusTemp())
@@ -833,7 +836,7 @@ BacktrackingAllocator::go()
             return false;
 
         QueueItem item = allocationQueue.removeHighest();
-        if (!processBundle(item.bundle))
+        if (!processBundle(mir, item.bundle))
             return false;
     }
     JitSpew(JitSpew_RegAlloc, "Main allocation loop complete");
@@ -1229,7 +1232,7 @@ BacktrackingAllocator::tryAllocateNonFixed(LiveBundle* bundle,
 }
 
 bool
-BacktrackingAllocator::processBundle(LiveBundle* bundle)
+BacktrackingAllocator::processBundle(MIRGenerator* mir, LiveBundle* bundle)
 {
     if (JitSpewEnabled(JitSpew_RegAlloc)) {
         JitSpew(JitSpew_RegAlloc, "Allocating %s [priority %lu] [weight %lu]",
@@ -1264,6 +1267,9 @@ BacktrackingAllocator::processBundle(LiveBundle* bundle)
     bool fixed;
     LiveBundleVector conflicting;
     for (size_t attempt = 0;; attempt++) {
+        if (mir->shouldCancel("Backtracking Allocation (processBundle loop)"))
+            return false;
+
         if (canAllocate) {
             bool success = false;
             fixed = false;
@@ -1732,11 +1738,14 @@ BacktrackingAllocator::resolveControlFlow()
     for (size_t i = 1; i < graph.numVirtualRegisters(); i++) {
         VirtualRegister& reg = vregs[i];
 
-        if (mir->shouldCancel("Backtracking Resolve Control Flow (vreg loop)"))
+        if (mir->shouldCancel("Backtracking Resolve Control Flow (vreg outer loop)"))
             return false;
 
         for (LiveRange::RegisterLinkIterator iter = reg.rangesBegin(); iter; ) {
             LiveRange* range = LiveRange::get(*iter);
+
+            if (mir->shouldCancel("Backtracking Resolve Control Flow (vreg inner loop)"))
+                return false;
 
             // Remove ranges which will never be used.
             if (deadRange(range)) {
