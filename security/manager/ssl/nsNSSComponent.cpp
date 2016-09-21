@@ -1516,18 +1516,12 @@ void nsNSSComponent::setValidationOptions(bool isInitialSetting,
   switch (sha1Mode) {
     case CertVerifier::SHA1Mode::Allowed:
     case CertVerifier::SHA1Mode::Forbidden:
-    case CertVerifier::SHA1Mode::UsedToBeBefore2016ButNowIsForbidden:
+    case CertVerifier::SHA1Mode::Before2016:
     case CertVerifier::SHA1Mode::ImportedRoot:
-    case CertVerifier::SHA1Mode::ImportedRootOrBefore2016:
       break;
     default:
       sha1Mode = CertVerifier::SHA1Mode::Allowed;
       break;
-  }
-
-  // Convert a previously-available setting to a safe one.
-  if (sha1Mode == CertVerifier::SHA1Mode::UsedToBeBefore2016ButNowIsForbidden) {
-    sha1Mode = CertVerifier::SHA1Mode::Forbidden;
   }
 
   BRNameMatchingPolicy::Mode nameMatchingMode =
