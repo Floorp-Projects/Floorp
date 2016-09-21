@@ -44,6 +44,7 @@
 #include "mozilla/plugins/PluginSurfaceParent.h"
 #include "mozilla/widget/AudioSession.h"
 #include "PluginHangUIParent.h"
+#include "PluginUtilsWin.h"
 #endif
 
 #ifdef MOZ_ENABLE_PROFILER_SPS
@@ -774,6 +775,12 @@ PluginModuleChromeParent::~PluginModuleChromeParent()
 
 #ifdef MOZ_ENABLE_PROFILER_SPS
     ShutdownPluginProfiling();
+#endif
+
+#ifdef XP_WIN
+    // If we registered for audio notifications, stop.
+    mozilla::plugins::PluginUtilsWin::RegisterForAudioDeviceChanges(this,
+                                                                    false);
 #endif
 
     if (!mShutdown) {
@@ -1904,6 +1911,26 @@ PluginModuleParent::NPP_SetValue(NPP instance, NPNVariable variable,
                                  void *value)
 {
     RESOLVE_AND_CALL(instance, NPP_SetValue(variable, value));
+}
+
+bool
+PluginModuleChromeParent::AnswerNPN_SetValue_NPPVpluginRequiresAudioDeviceChanges(
+    const bool& shouldRegister, NPError* result)
+{
+#ifdef XP_WIN
+    *result = NPERR_NO_ERROR;
+    nsresult err =
+      mozilla::plugins::PluginUtilsWin::RegisterForAudioDeviceChanges(this,
+                                                               shouldRegister);
+    if (err != NS_OK) {
+      *result = NPERR_GENERIC_ERROR;
+    }
+    return true;
+#else
+    NS_RUNTIMEABORT("NPPVpluginRequiresAudioDeviceChanges is not valid on this platform.");
+    *result = NPERR_GENERIC_ERROR;
+    return true;
+#endif
 }
 
 bool
@@ -3133,6 +3160,17 @@ PluginModuleParent::EnsureTextureAllocator()
         mTextureAllocator = new TextureClientRecycleAllocator(ImageBridgeChild::GetSingleton().get());
     }
     return mTextureAllocator;
+}
+
+
+bool
+PluginModuleParent::AnswerNPN_SetValue_NPPVpluginRequiresAudioDeviceChanges(
+                                        const bool& shouldRegister,
+                                        NPError* result) {
+    NS_RUNTIMEABORT("SetValue_NPPVpluginRequiresAudioDeviceChanges is only valid "
+      "with PluginModuleChromeParent");
+    *result = NPERR_GENERIC_ERROR;
+    return true;
 }
 
 #ifdef MOZ_CRASHREPORTER_INJECTOR

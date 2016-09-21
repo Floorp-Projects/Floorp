@@ -7,10 +7,11 @@ description = "Rust code for libxul"
 
 [dependencies]
 mp4parse_capi = { path = "../../../media/libstagefright/binding/mp4parse_capi" }
+nsstring = { path = "../../../xpcom/rust/nsstring" }
 
 [lib]
 path = "lib.rs"
-crate-type = ["staticlib"]
+crate-type = ["rlib"]
 test = false
 doctest = false
 bench = false

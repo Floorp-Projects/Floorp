@@ -1,0 +1,334 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: intrinsic grid container size with repeat(auto-fill/auto-fit) under min-content constraint</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1280798">
+  <style type="text/css">
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+
+.grid {
+  display: grid;
+  border: 1px solid;
+}
+
+.inline-grid {
+  display: inline-grid;
+  grid: min-content 40px / min-content 40px; 
+  border: 3px dotted silver;
+  align-items: start;
+  justify-items: start;
+}
+
+.cfill { grid: auto auto / repeat(3, 100px); }
+.rfill { grid: repeat(3, 50px) / auto auto; grid-auto-flow:column; }
+fit .cfill { grid: auto auto / repeat(2, 100px); }
+fit .rfill { grid: repeat(2, 50px) / auto auto; grid-auto-flow:column; }
+.r3 { grid: repeat(3, 50px) / auto auto; grid-auto-flow:column; }
+
+span:nth-of-type(1) { background: magenta; }
+span:nth-of-type(2) { background: cyan; }
+span:nth-of-type(3) { background: yellow; }
+span:nth-of-type(4) { background: lime; }
+
+x {
+  display: inline-block;
+  width: 20px;
+  height: 30px;
+}
+
+y {
+  grid-row: 2;
+  align-self: stretch;
+  justify-self: stretch;
+  min-width: 10px;
+  min-height: 10px;
+  background: grey;
+}
+.fill {
+  min-width: -moz-available;
+  min-width: -webkit-fill;
+  min-width: fill;
+}
+.rfill.fill {
+  min-height: -moz-available;
+  min-height: -webkit-fill;
+  min-height: fill;
+}
+    </style>
+</head>
+<body>
+
+<div class="inline-grid">
+<div class="grid cfill" style="min-width:250px">
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+</div>
+<y></y>
+</div>
+
+<div class="inline-grid">
+<div class="grid cfill" style="max-width:250px; grid-template-columns: 100px 100px">
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+</div>
+<y></y>
+</div>
+
+<div class="inline-grid">
+<div class="grid cfill" style="min-width:350px; max-width:250px">
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+</div>
+<y></y>
+</div>
+
+<div class="inline-grid">
+<div class="grid cfill" style="grid-template-columns:100px">
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+</div>
+<y></y>
+</div>
+
+<div class="inline-grid">
+<div class="grid cfill" style="grid-template-columns:100px">
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+</div>
+<y></y>
+</div>
+
+<div class="inline-grid">
+<div class="grid cfill" style="grid-template-columns:100px">
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+</div>
+<y></y>
+</div>
+
+<div class="inline-grid">
+<div class="grid cfill" style="grid-template-columns:100px">
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+</div>
+<y></y>
+</div>
+
+<div class="inline-grid">
+<div class="grid rfill" style="min-height:120px">
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+</div>
+<y></y>
+</div>
+
+<div class="inline-grid">
+<div class="grid rfill" style="max-height:160px;">
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+</div>
+<y></y>
+</div>
+
+<div class="inline-grid">
+<div class="grid rfill" style="min-height:120px; max-height:100px; grid-template-rows: 50px 50px">
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+</div>
+<y></y>
+</div>
+
+<div class="inline-grid">
+<div class="grid rfill" style="min-height:160px; max-height:100px;">
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+</div>
+<y></y>
+</div>
+
+<div class="inline-grid">
+<div class="grid rfill" style="grid-template-rows:50px">
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+</div>
+<y></y>
+</div>
+
+<div class="inline-grid">
+<div class="grid rfill" style="grid-template-rows:50px">
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+</div>
+<y></y>
+</div>
+
+<div class="inline-grid">
+<div class="grid rfill" style="grid-template-rows:50px">
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+</div>
+<y></y>
+</div>
+
+<div class="inline-grid">
+<div class="grid rfill" style="grid-template-rows:50px">
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+</div>
+<y></y>
+</div>
+
+<div class="inline-grid">
+<div class="grid r3" style="min-height:120px">
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+</div>
+<y></y>
+</div>
+
+<fit>
+
+<div class="inline-grid">
+<div class="grid cfill" style="min-width:250px;">
+  <span><x></x></span>
+  <span><x></x></span>
+</div>
+<y></y>
+</div>
+
+<div class="inline-grid">
+<div class="grid cfill" style="max-width:250px;  grid-template-columns: 100px">
+  <span><x></x></span>
+</div>
+<y></y>
+</div>
+
+<div class="inline-grid">
+<div class="grid cfill" style="min-width:350px; max-width:250px">
+  <span><x></x></span>
+  <span><x></x></span>
+</div>
+<y></y>
+</div>
+
+<div class="inline-grid">
+<div class="grid cfill" style="grid-template-columns:none">
+</div>
+<y></y>
+</div>
+
+<div class="inline-grid">
+<div class="grid cfill" style="grid-template-columns:none">
+</div>
+<y></y>
+</div>
+
+<div class="inline-grid">
+<div class="grid cfill" style="grid-template-columns:none">
+</div>
+<y></y>
+</div>
+
+<div class="inline-grid">
+<div class="grid cfill fill" style="grid-template-columns:none">
+</div>
+<y></y>
+</div>
+
+<div class="inline-grid">
+<div class="grid rfill" style="min-height:120px">
+  <span><x></x></span>
+  <span><x></x></span>
+</div>
+<y></y>
+</div>
+
+<div class="inline-grid">
+<div class="grid rfill" style="max-height:160px;">
+  <span><x></x></span>
+  <span><x></x></span>
+</div>
+<y></y>
+</div>
+
+<div class="inline-grid">
+<div class="grid rfill" style="min-height:120px; max-height:100px;  grid-template-rows: 50px">
+  <span><x></x></span>
+</div>
+<y></y>
+</div>
+
+<div class="inline-grid">
+<div class="grid rfill" style="min-height:160px; max-height:100px;">
+  <span><x></x></span>
+  <span><x></x></span>
+</div>
+<y></y>
+</div>
+
+<div class="inline-grid">
+<div class="grid rfill" style="grid-template-rows:none">
+</div>
+<y></y>
+</div>
+
+<div class="inline-grid">
+<div class="grid rfill" style="grid-template-rows:none">
+</div>
+<y></y>
+</div>
+
+<div class="inline-grid">
+<div class="grid rfill" style="grid-template-rows:none">
+</div>
+<y></y>
+</div>
+
+<div class="inline-grid">
+<div class="grid rfill fill" style="grid-template-rows:none">
+</div>
+<y></y>
+</div>
+
+</fit>
+
+</body>
+</html>

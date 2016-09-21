@@ -102,6 +102,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     UNIFIED_SOURCES += [
         'D3D11SurfaceHolder.cpp',
+        'PluginUtilsWin.cpp'
     ]
 
 IPDL_SOURCES += [

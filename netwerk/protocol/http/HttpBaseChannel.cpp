@@ -2022,34 +2022,18 @@ HttpBaseChannel::GetResponseVersion(uint32_t *major, uint32_t *minor)
   return NS_OK;
 }
 
-namespace {
-
-class CookieNotifierRunnable : public Runnable
+void
+HttpBaseChannel::NotifySetCookie(char const *aCookie)
 {
-public:
-  CookieNotifierRunnable(HttpBaseChannel* aChannel, char const * aCookie)
-    : mChannel(aChannel)
-  {
-    CopyASCIItoUTF16(aCookie, mCookie);
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (obs) {
+    nsAutoString cookie;
+    CopyASCIItoUTF16(aCookie, cookie);
+    obs->NotifyObservers(static_cast<nsIChannel*>(this),
+                         "http-on-response-set-cookie",
+                         cookie.get());
   }
-
-  NS_IMETHOD Run() override
-  {
-    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-    if (obs) {
-      obs->NotifyObservers(static_cast<nsIChannel*>(mChannel.get()),
-                           "http-on-response-set-cookie",
-                           mCookie.get());
-    }
-    return NS_OK;
-  }
-
-private:
-  RefPtr<HttpBaseChannel> mChannel;
-  nsString mCookie;
-};
-
-} // namespace
+}
 
 NS_IMETHODIMP
 HttpBaseChannel::SetCookie(const char *aCookieHeader)
@@ -2070,9 +2054,7 @@ HttpBaseChannel::SetCookie(const char *aCookieHeader)
     cs->SetCookieStringFromHttp(mURI, nullptr, nullptr, aCookieHeader,
                                 date.get(), this);
   if (NS_SUCCEEDED(rv)) {
-    RefPtr<CookieNotifierRunnable> r =
-      new CookieNotifierRunnable(this, aCookieHeader);
-    NS_DispatchToMainThread(r);
+    NotifySetCookie(aCookieHeader);
   }
   return rv;
 }

@@ -27,7 +27,13 @@ native NeckoOriginAttributes(mozilla::NeckoOriginAttributes);
 typedef unsigned long nsSecurityFlags;
 
 /**
- * An nsILoadOwner represents per-load information about who started the load.
+ * The LoadInfo object contains information about a network load, why it
+ * was started, and how we plan on using the resulting response.
+ * If a network request is redirected, the new channel will receive a new
+ * LoadInfo object. The new object will contain mostly the same
+ * information as the pre-redirect one, but updated as appropriate.
+ * For detailed information about what parts of LoadInfo are updated on
+ * redirect, see documentation on individual properties.
  */
 [scriptable, builtinclass, uuid(ddc65bf9-2f60-41ab-b22a-4f1ae9efcd36)]
 interface nsILoadInfo : nsISupports
@@ -184,14 +190,24 @@ interface nsILoadInfo : nsISupports
   const unsigned long SEC_LOAD_ERROR_PAGE = (1<<14);
 
   /**
-   * The loadingPrincipal is the principal that is responsible for the load.
-   * It is *NOT* the principal tied to the resource/URI that this
-   * channel is loading, it's the principal of the resource's
-   * caller or requester. For example, if this channel is loading
-   * an image from http://b.com that is embedded in a document
-   * who's origin is http://a.com, the loadingPrincipal is http://a.com.
+   * This is the principal of the network request's caller/requester where
+   * the resulting resource will be used. I.e. it is the principal which
+   * will get access to the result of the request. (Where "get access to"
+   * might simply mean "embed" depending on the type of resource that is
+   * loaded).
    *
-   * The loadingPrincipal will never be null.
+   * For example for an image, it is the principal of the document where
+   * the image is rendered. For a stylesheet it is the principal of the
+   * document where the stylesheet will be applied.
+   *
+   * So if document at http://a.com/page.html loads an image from
+   * http://b.com/pic.jpg, then loadingPrincipal will be
+   * http://a.com/page.html.
+   *
+   * For <iframe> and <frame> loads, the LoadingPrincipal is the
+   * principal of the parent document. For top-level loads, the
+   * LoadingPrincipal is null. For all loads except top-level loads
+   * the LoadingPrincipal is never null.
    */
   readonly attribute nsIPrincipal loadingPrincipal;
 
@@ -202,16 +218,25 @@ interface nsILoadInfo : nsISupports
   nsIPrincipal binaryLoadingPrincipal();
 
   /**
-   * The triggeringPrincipal is the principal that triggerd the load.
-   * Most likely the triggeringPrincipal and the loadingPrincipal are the same,
-   * in which case triggeringPrincipal returns the loadingPrincipal.
-   * In some cases the loadingPrincipal and the triggeringPrincipal are different
-   * however, e.g. a stylesheet may import a subresource. In that case the
-   * stylesheet principal is the triggeringPrincipal and the document that loads
-   * the stylesheet provides a loadingContext and hence the loadingPrincipal.
+   * This is the principal which caused the network load to start. I.e.
+   * this is the principal which provided the URL to be loaded. This is
+   * often the same as the LoadingPrincipal, but there are a few cases
+   * where that's not true.
    *
-   * If triggeringPrincipal and loadingPrincipal are the same, then
-   * triggeringPrincipal returns loadingPrincipal.
+   * For example for loads into an <iframe>, the LoadingPrincipal is always
+   * the principal of the parent document. However the TriggeringPrincipal
+   * is the principal of the document which provided the URL that the
+   * <iframe> is navigating to. This could be the previous document inside
+   * the <iframe> which set document.location. Or a document elsewhere in
+   * the frame tree which contained a <a target="..."> which targetted the
+   * <iframe>.
+   *
+   * If a stylesheet links to a sub-resource, like an @imported stylesheet,
+   * or a background image, then the TriggeringPrincipal is the principal
+   * of the stylesheet, while the LoadingPrincipal is the principal of the
+   * document being styled.
+   *
+   * The TriggeringPrincipal is never null.
    */
   readonly attribute nsIPrincipal triggeringPrincipal;
 
@@ -222,31 +247,48 @@ interface nsILoadInfo : nsISupports
   nsIPrincipal binaryTriggeringPrincipal();
 
   /**
-   * The loadingDocument of the channel.
+   * The principalToInherit is the principal that is used when the inherit flag
+   * is set. For loads that are not TYPE_DOCUMENT or TYPE_SUBDOCUMENT that
+   * principal is always identical to the triggeringPrincipal.
+   */
+  attribute nsIPrincipal principalToInherit;
+
+  /**
+   * A C++-friendly version of principalToInherit.
+   */
+  [noscript, notxpcom, nostdcall, binaryname(PrincipalToInherit)]
+  nsIPrincipal binaryPrincipalToInherit();
+
+  /**
+   * This is the ownerDocument of the LoadingNode. Unless the LoadingNode
+   * is a Document, in which case the LoadingDocument is the same as the
+   * LoadingNode.
    *
-   * The loadingDocument of a channel is the document that requested the
-   * load of the resource. It is *not* the resource itself, it's the
-   * resource's caller or requester in which the load is happening.
-   *
-   * <script> example: Assume a document who's origin is http://a.com embeds
-   * a script from http://b.com. The loadingDocument for the channel
-   * associated with the http://b.com script load is the document with origin
-   * http://a.com
-   *
-   * <iframe> example: Assume a document with origin http://a.com embeds
-   * <iframe src="http://b.com">. The loadingDocument for the channel associated
-   * with the http://b.com network request is the document who's origin is
-   * http://a.com. Now assume the iframe to http://b.com then further embeds
-   * <script src="http://c.com">. The loadingDocument for the channel associated
-   * with the http://c.com network request is the iframe with origin http://b.com.
-   *
-   * Warning: The loadingDocument can be null!
+   * For top-level loads, and for loads originating from workers, the
+   * LoadingDocument is null. When the LoadingDocument is not null, the
+   * LoadingPrincipal is set to the principal of the LoadingDocument.
    */
   readonly attribute nsIDOMDocument loadingDocument;
 
   /**
    * A C++-friendly version of loadingDocument (loadingNode).
-   * This is the node most proximally responsible for the load.
+   * This is the Node where the resulting resource will be used. I.e. it is
+   * the Node which will get access to the result of the request. (Where
+   * "get access to" might simply mean "embed" depending on the type of
+   * resource that is loaded).
+   *
+   * For example for an <img>/<video> it is the image/video element. For
+   * document loads inside <iframe> and <frame>s, the LoadingNode is the
+   * <iframe>/<frame> element. For an XMLHttpRequest, it is the Document
+   * which contained the JS which initiated the XHR. For a stylesheet, it
+   * is the Document that contains <link rel=stylesheet>.
+   *
+   * For loads triggered by the HTML pre-parser, the LoadingNode is the
+   * Document which is currently being parsed.
+   *
+   * For top-level loads, and for loads originating from workers, the
+   * LoadingNode is null. If the LoadingNode is non-null, then the
+   * LoadingPrincipal is the principal of the LoadingNode.
    */
   [noscript, notxpcom, nostdcall, binaryname(LoadingNode)]
   nsINode binaryLoadingNode();

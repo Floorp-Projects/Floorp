@@ -5,9 +5,27 @@
 #include "nsISupports.idl"
 
 interface nsIDOMDragEvent;
-interface nsIURI;
 
-[scriptable, uuid(6B58A5A7-76D0-4E93-AB2E-4DE108683FF8)]
+[scriptable, uuid(69E14F91-2E09-4CA6-A511-A715C99A2804)]
+interface nsIDroppedLinkItem : nsISupports
+{
+  /**
+   * Returns the URL of the link.
+   */
+  readonly attribute DOMString url;
+
+  /**
+   * Returns the link name.
+   */
+  readonly attribute DOMString name;
+
+  /**
+   * Returns the MIME-Type.
+   */
+  readonly attribute DOMString type;
+};
+
+[scriptable, uuid(21B5C25A-28A9-47BD-8431-FA9116305DED)]
 interface nsIDroppedLinkHandler : nsISupports
 {
   /**
@@ -40,4 +58,23 @@ interface nsIDroppedLinkHandler : nsISupports
    */
   AString dropLink(in nsIDOMDragEvent aEvent, out AString aName,
                    [optional] in boolean aDisallowInherit);
+
+  /**
+   * Given a drop event aEvent, determines links being dragged and returns
+   * them. If links are returned the caller can, for instance, load them. If
+   * the count of links is 0, there is no valid link to be dropped.
+   *
+   * A NS_ERROR_DOM_SECURITY_ERR error will be thrown and the event cancelled if
+   * the receiving target should not load the uri for security reasons. This
+   * will occur if any of the following conditions are true:
+   *  - the source of the drag initiated a link for dragging that
+   *    it itself cannot access. This prevents a source document from tricking
+   *    the user into a dragging a chrome url, for example.
+   *  - aDisallowInherit is true, and the URI being dropped would inherit the
+   *    current document's security context (URI_INHERITS_SECURITY_CONTEXT).
+   */
+  void dropLinks(in nsIDOMDragEvent aEvent,
+                 [optional] in boolean aDisallowInherit,
+                 [optional] out unsigned long aCount,
+                 [retval, array, size_is(aCount)] out nsIDroppedLinkItem aLinks);
 };

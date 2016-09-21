@@ -224,63 +224,17 @@ this.NetUtil = {
      *            non-default charset or base URI.  Call NetUtil.newURI first if
      *            you need to construct an URI using those options.
      *          loadingNode:
-     *            The loadingDocument of the channel.
-     *            The element or document where the result of this request will
-     *            be used.  This is the document/element that will get access to
-     *            the result of this request.  For example for an image load,
-     *            it's the document in which the image will be loaded.  And for
-     *            a CSS stylesheet it's the document whose rendering will be
-     *            affected by the stylesheet.
-     *            If possible, pass in the element which is performing the load.
-     *            But if the load is coming from a JS API (such as
-     *            XMLHttpRequest) or if the load might be coalesced across
-     *            multiple elements (such as for <img>) then pass in the
-     *            Document node instead.
-     *            For loads that are not related to any document, such as loads
-     *            coming from addons or internal browser features, omit this
-     *            property and specify a loadingPrincipal or
-     *            loadUsingSystemPrincipal instead.
      *          loadingPrincipal:
-     *            The loadingPrincipal of the channel.
-     *            The principal of the document where the result of this request
-     *            will be used.
-     *            This defaults to the principal of aLoadingNode, so when
-     *            aLoadingNode is passed this can be left as null. However for
-     *            loads where aLoadingNode is null this argument must be passed.
-     *            For example for loads from a WebWorker, pass the principal of
-     *            that worker.  For loads from an addon or from internal browser
-     *            features, pass the system principal.
-     *            This principal should almost always be the system principal if
-     *            loadingNode is omitted, in which case you can use the
-     *            useSystemPrincipal property.  The only exception to this is
-     *            for loads from WebWorkers since they don't have any nodes to
-     *            be passed as loadingNode.
-     *            Please note, loadingPrincipal is *not* the principal of the
-     *            resource being loaded, but rather the principal of the context
-     *            where the resource will be used.
+     *          triggeringPrincipal:
+     *          securityFlags:
+     *          contentPolicyType:
+     *            These will be used as values for the nsILoadInfo object on the
+     *            created channel. For details, see nsILoadInfo in nsILoadInfo.idl
      *          loadUsingSystemPrincipal:
      *            Set this to true to use the system principal as
      *            loadingPrincipal.  This must be omitted if loadingPrincipal or
      *            loadingNode are present.
      *            This should be used with care as it skips security checks.
-     *          triggeringPrincipal:
-     *            The triggeringPrincipal of the load.
-     *            The triggeringPrincipal is the principal of the resource that
-     *            caused this particular URL to be loaded.
-     *            Most likely the triggeringPrincipal and the loadingPrincipal
-     *            are identical, in which case the triggeringPrincipal can be
-     *            left out.  In some cases the loadingPrincipal and the
-     *            triggeringPrincipal are different however, e.g. a stylesheet
-     *            may import a subresource.  In that case the principal of the
-     *            stylesheet which contains the import command is the
-     *            triggeringPrincipal, and the principal of the document whose
-     *            rendering is affected is the loadingPrincipal.
-     *          securityFlags:
-     *            The securityFlags of the channel.
-     *            Any of the securityflags defined in nsILoadInfo.idl.
-     *          contentPolicyType:
-     *            The contentPolicyType of the channel.
-     *            Any of the content types defined in nsIContentPolicy.idl.
      *        }
      * @param aOriginCharset [deprecated]
      *        The character set for the URI.  Only used if aWhatToLoad is a

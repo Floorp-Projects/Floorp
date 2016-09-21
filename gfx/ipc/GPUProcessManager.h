@@ -29,6 +29,7 @@ class ClientLayerManager;
 class CompositorUpdateObserver;
 class PCompositorBridgeChild;
 class PImageBridgeChild;
+class RemoteCompositorSession;
 } // namespace layers
 namespace widget {
 class CompositorWidget;
@@ -43,21 +44,25 @@ class GeckoChildProcessHost;
 namespace gfx {
 
 class GPUChild;
+class GPUProcessListener;
+class PVRManagerChild;
 class VsyncBridgeChild;
 class VsyncIOThreadHolder;
-class PVRManagerChild;
 
 // The GPUProcessManager is a singleton responsible for creating GPU-bound
 // objects that may live in another process. Currently, it provides access
 // to the compositor via CompositorBridgeParent.
 class GPUProcessManager final : public GPUProcessHost::Listener
 {
+  friend class layers::RemoteCompositorSession;
+
   typedef layers::ClientLayerManager ClientLayerManager;
   typedef layers::CompositorSession CompositorSession;
   typedef layers::IAPZCTreeManager IAPZCTreeManager;
   typedef layers::CompositorUpdateObserver CompositorUpdateObserver;
   typedef layers::PCompositorBridgeChild PCompositorBridgeChild;
   typedef layers::PImageBridgeChild PImageBridgeChild;
+  typedef layers::RemoteCompositorSession RemoteCompositorSession;
 
 public:
   static void Initialize();
@@ -82,12 +87,11 @@ public:
     bool aUseExternalSurfaceSize,
     const gfx::IntSize& aSurfaceSize);
 
-  bool CreateContentCompositorBridge(base::ProcessId aOtherProcess,
-                                     ipc::Endpoint<PCompositorBridgeChild>* aOutEndpoint);
-  bool CreateContentImageBridge(base::ProcessId aOtherProcess,
-                                ipc::Endpoint<PImageBridgeChild>* aOutEndpoint);
-  bool CreateContentVRManager(base::ProcessId aOtherProcess,
-                              ipc::Endpoint<PVRManagerChild>* aOutEndpoint);
+  bool CreateContentBridges(
+    base::ProcessId aOtherProcess,
+    ipc::Endpoint<PCompositorBridgeChild>* aOutCompositor,
+    ipc::Endpoint<PImageBridgeChild>* aOutImageBridge,
+    ipc::Endpoint<PVRManagerChild>* aOutVRBridge);
 
   // This returns a reference to the APZCTreeManager to which
   // pan/zoom-related events can be sent.
@@ -118,6 +122,9 @@ public:
   // terminated. This may be called from any thread.
   void NotifyRemoteActorDestroyed(const uint64_t& aProcessToken);
 
+  void AddListener(GPUProcessListener* aListener);
+  void RemoveListener(GPUProcessListener* aListener);
+
   // Returns access to the PGPU protocol if a GPU process is present.
   GPUChild* GetGPUChild() {
     return mGPUChild;
@@ -126,6 +133,18 @@ public:
 private:
   // Called from our xpcom-shutdown observer.
   void OnXPCOMShutdown();
+
+  bool CreateContentCompositorBridge(base::ProcessId aOtherProcess,
+                                     ipc::Endpoint<PCompositorBridgeChild>* aOutEndpoint);
+  bool CreateContentImageBridge(base::ProcessId aOtherProcess,
+                                ipc::Endpoint<PImageBridgeChild>* aOutEndpoint);
+  bool CreateContentVRManager(base::ProcessId aOtherProcess,
+                              ipc::Endpoint<PVRManagerChild>* aOutEndpoint);
+
+  // Called from RemoteCompositorSession. We track remote sessions so we can
+  // notify their owning widgets that the session must be restarted.
+  void RegisterSession(RemoteCompositorSession* aSession);
+  void UnregisterSession(RemoteCompositorSession* aSession);
 
 private:
   GPUProcessManager();
@@ -172,6 +191,9 @@ private:
   ipc::TaskFactory<GPUProcessManager> mTaskFactory;
   RefPtr<VsyncIOThreadHolder> mVsyncIOThread;
   uint64_t mNextLayerTreeId;
+
+  nsTArray<RefPtr<RemoteCompositorSession>> mRemoteSessions;
+  nsTArray<GPUProcessListener*> mListeners;
 
   // Fields that are associated with the current GPU process.
   GPUProcessHost* mProcess;

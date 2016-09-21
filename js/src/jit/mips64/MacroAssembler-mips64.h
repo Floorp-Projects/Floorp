@@ -92,8 +92,10 @@ class MacroAssemblerMIPS64 : public MacroAssemblerMIPSShared
     void ma_daddu(Register rd, Register rs, Imm32 imm);
     void ma_daddu(Register rd, Register rs);
     void ma_daddu(Register rd, Imm32 imm);
-    void ma_addTestOverflow(Register rd, Register rs, Register rt, Label* overflow);
-    void ma_addTestOverflow(Register rd, Register rs, Imm32 imm, Label* overflow);
+    template <typename L>
+    void ma_addTestOverflow(Register rd, Register rs, Register rt, L overflow);
+    template <typename L>
+    void ma_addTestOverflow(Register rd, Register rs, Imm32 imm, L overflow);
 
     // subtract
     void ma_dsubu(Register rd, Register rs, Imm32 imm);

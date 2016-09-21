@@ -14,6 +14,7 @@ using NPNVariable from "npapi.h";
 using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
 using class mac_plugin_interposing::NSCursorInfo from "mozilla/plugins/PluginMessageUtils.h";
 using struct nsID from "nsID.h";
+using struct mozilla::plugins::NPAudioDeviceChangeDetailsIPC from "mozilla/plugins/PluginMessageUtils.h";
 
 namespace mozilla {
 namespace plugins {
@@ -106,6 +107,8 @@ child:
 
   async SettingChanged(PluginSettings settings);
 
+  async NPP_SetValue_NPNVaudioDeviceChangeDetails(NPAudioDeviceChangeDetailsIPC changeDetails);
+
 parent:
   async NP_InitializeResult(NPError aError);
 
@@ -159,6 +162,9 @@ parent:
 
   intr GetKeyState(int32_t aVirtKey)
     returns (int16_t aState);
+
+  intr NPN_SetValue_NPPVpluginRequiresAudioDeviceChanges(bool shouldRegister)
+    returns (NPError result);
 };
 
 } // namespace plugins

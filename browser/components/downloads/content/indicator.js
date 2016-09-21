@@ -520,15 +520,18 @@ const DownloadsIndicatorView = {
     if (dt.mozGetDataAt("application/x-moz-file", 0))
       return;
 
-    let name = {};
-    let url = browserDragAndDrop.drop(aEvent, name);
-    if (url) {
-      if (url.startsWith("about:")) {
-        return;
-      }
-
-      let sourceDoc = dt.mozSourceNode ? dt.mozSourceNode.ownerDocument : document;
-      saveURL(url, name.value, null, true, true, null, sourceDoc);
+    let links = browserDragAndDrop.dropLinks(aEvent);
+    if (!links.length)
+      return;
+    let sourceDoc = dt.mozSourceNode ? dt.mozSourceNode.ownerDocument : document;
+    let handled = false;
+    for (let link of links) {
+      if (link.url.startsWith("about:"))
+        continue;
+      saveURL(link.url, link.name, null, true, true, null, sourceDoc);
+      handled = true;
+    }
+    if (handled) {
       aEvent.preventDefault();
     }
   },

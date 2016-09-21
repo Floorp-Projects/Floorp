@@ -10863,7 +10863,7 @@ IonBuilder::jsop_checkobjcoercible()
 uint32_t
 IonBuilder::getDefiniteSlot(TemporaryTypeSet* types, PropertyName* name, uint32_t* pnfixed)
 {
-    if (!types || types->unknownObject()) {
+    if (!types || types->unknownObject() || !types->objectOrSentinel()) {
         trackOptimizationOutcome(TrackedOutcome::NoTypeInfo);
         return UINT32_MAX;
     }
@@ -10917,7 +10917,7 @@ IonBuilder::getDefiniteSlot(TemporaryTypeSet* types, PropertyName* name, uint32_
 uint32_t
 IonBuilder::getUnboxedOffset(TemporaryTypeSet* types, PropertyName* name, JSValueType* punboxedType)
 {
-    if (!types || types->unknownObject()) {
+    if (!types || types->unknownObject() || !types->objectOrSentinel()) {
         trackOptimizationOutcome(TrackedOutcome::NoTypeInfo);
         return UINT32_MAX;
     }
@@ -11870,7 +11870,7 @@ IonBuilder::convertUnboxedObjects(MDefinition* obj)
     // not guarantee the object will not have such a group afterwards, if the
     // object's possible groups are not precisely known.
     TemporaryTypeSet* types = obj->resultTypeSet();
-    if (!types || types->unknownObject())
+    if (!types || types->unknownObject() || !types->objectOrSentinel())
         return obj;
 
     BaselineInspector::ObjectGroupVector list(alloc());

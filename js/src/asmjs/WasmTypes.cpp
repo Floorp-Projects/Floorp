@@ -343,9 +343,9 @@ wasm::AddressOf(SymbolicAddress imm, ExclusiveContext* cx)
       case SymbolicAddress::TruncF:
         return FuncCast<float (float)>(fdlibm::truncf, Args_Float32_Float32);
       case SymbolicAddress::NearbyIntD:
-        return FuncCast<double (double)>(nearbyint, Args_Double_Double);
+        return FuncCast<double (double)>(fdlibm::nearbyint, Args_Double_Double);
       case SymbolicAddress::NearbyIntF:
-        return FuncCast<float (float)>(nearbyintf, Args_Float32_Float32);
+        return FuncCast<float (float)>(fdlibm::nearbyintf, Args_Float32_Float32);
       case SymbolicAddress::ExpD:
         return FuncCast<double (double)>(fdlibm::exp, Args_Double_Double);
       case SymbolicAddress::LogD:

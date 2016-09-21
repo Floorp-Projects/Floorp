@@ -464,6 +464,7 @@ class RustLibrary(StaticLibrary):
     __slots__ = (
         'cargo_file',
         'crate_type',
+        'deps_path',
     )
 
     def __init__(self, context, basename, cargo_file, crate_type, **args):
@@ -474,23 +475,18 @@ class RustLibrary(StaticLibrary):
         # package names defined in Cargo.toml with underscores in actual
         # filenames. But we need to keep the basename consistent because
         # many other things in the build system depend on that.
-        assert self.crate_type == 'staticlib'
-        self.lib_name = '%s%s%s' % (
-            context.config.lib_prefix,
-            basename.replace('-', '_'),
-            context.config.lib_suffix
-        )
+        assert self.crate_type == 'rlib'
+        self.lib_name = 'lib%s.rlib' % basename.replace('-', '_')
         # cargo creates several directories and places its build artifacts
         # in those directories.  The directory structure depends not only
         # on the target, but also what sort of build we are doing.
         rust_build_kind = 'release'
         if context.config.substs.get('MOZ_DEBUG'):
             rust_build_kind = 'debug'
-        self.import_name = '%s/%s/%s' % (
-            context.config.substs['RUST_TARGET'],
-            rust_build_kind,
-            self.lib_name,
-        )
+        build_dir = mozpath.join(context.config.substs['RUST_TARGET'],
+                                 rust_build_kind)
+        self.import_name = mozpath.join(build_dir, self.lib_name)
+        self.deps_path = mozpath.join(build_dir, 'deps')
 
 
 class SharedLibrary(Library):
