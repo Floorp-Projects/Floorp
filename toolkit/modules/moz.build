@@ -50,6 +50,7 @@ EXTRA_JS_MODULES += [
     'InlineSpellChecker.jsm',
     'InlineSpellCheckerContent.jsm',
     'Integration.jsm',
+    'JSONFile.jsm',
     'LoadContextInfo.jsm',
     'Locale.jsm',
     'Log.jsm',
