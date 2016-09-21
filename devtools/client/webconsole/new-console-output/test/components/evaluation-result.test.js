@@ -21,5 +21,17 @@ describe("EvaluationResult component:", () => {
     const wrapper = render(EvaluationResult({ message }));
 
     expect(wrapper.find(".message-body").text()).toBe("Date 1970-01-01T00:00:00.000Z");
+
+    expect(wrapper.find(".message.log").length).toBe(1);
+  });
+
+  it("renders an error", () => {
+    const message = stubPreparedMessages.get("asdf()");
+    const wrapper = render(EvaluationResult({ message }));
+
+    expect(wrapper.find(".message-body").text())
+      .toBe("ReferenceError: asdf is not defined");
+
+    expect(wrapper.find(".message.error").length).toBe(1);
   });
 });
