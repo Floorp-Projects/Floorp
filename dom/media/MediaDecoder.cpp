@@ -744,6 +744,9 @@ MediaDecoder::SetStateMachineParameters()
   if (mMinimizePreroll) {
     mDecoderStateMachine->DispatchMinimizePrerollUntilPlaybackStarts();
   }
+  if (mPlaybackRate != 1 && mPlaybackRate != 0) {
+    mDecoderStateMachine->DispatchSetPlaybackRate(mPlaybackRate);
+  }
   mTimedMetadataListener = mDecoderStateMachine->TimedMetadataEvent().Connect(
     AbstractThread::MainThread(), this, &MediaDecoder::OnMetadataUpdate);
   mMetadataLoadedListener = mDecoderStateMachine->MetadataLoadedEvent().Connect(
@@ -1510,7 +1513,10 @@ MediaDecoder::SetPlaybackRate(double aPlaybackRate)
   if (mPlaybackRate == 0.0) {
     mPausedForPlaybackRateNull = true;
     Pause();
-  } else if (mPausedForPlaybackRateNull) {
+    return;
+  }
+
+  if (mPausedForPlaybackRateNull) {
     // Play() uses mPausedForPlaybackRateNull value, so must reset it first
     mPausedForPlaybackRateNull = false;
     // If the playbackRate is no longer null, restart the playback, iff the
@@ -1518,6 +1524,10 @@ MediaDecoder::SetPlaybackRate(double aPlaybackRate)
     if (!mOwner->GetPaused()) {
       Play();
     }
+  }
+
+  if (mDecoderStateMachine) {
+    mDecoderStateMachine->DispatchSetPlaybackRate(aPlaybackRate);
   }
 }
 
