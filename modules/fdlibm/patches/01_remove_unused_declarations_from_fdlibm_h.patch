@@ -1,7 +1,7 @@
 diff --git a/modules/fdlibm/src/fdlibm.h b/modules/fdlibm/src/fdlibm.h
 --- a/modules/fdlibm/src/fdlibm.h
 +++ b/modules/fdlibm/src/fdlibm.h
-@@ -12,496 +12,46 @@
+@@ -12,496 +12,50 @@
  /*
   * from: @(#)fdlibm.h 5.1 93/09/24
   * $FreeBSD$
@@ -279,9 +279,9 @@ diff --git a/modules/fdlibm/src/fdlibm.h b/modules/fdlibm/src/fdlibm.h
 -double	nextafter(double, double);
 -double	remainder(double, double);
 -double	remquo(double, double, int *);
--double	rint(double);
+ double	rint(double);
 -#endif /* __BSD_VISIBLE || __ISO_C_VISIBLE >= 1999 || __XSI_VISIBLE */
- 
+-
 -#if __BSD_VISIBLE || __XSI_VISIBLE
 -double	j0(double);
 -double	j1(double);
@@ -289,9 +289,7 @@ diff --git a/modules/fdlibm/src/fdlibm.h b/modules/fdlibm/src/fdlibm.h
 -double	y0(double);
 -double	y1(double);
 -double	yn(int, double);
-+double	copysign(double, double);
-+double	scalbn(double, int);
- 
+-
 -#if __XSI_VISIBLE <= 500 || __BSD_VISIBLE
 -double	gamma(double);
 -#endif
@@ -306,10 +304,11 @@ diff --git a/modules/fdlibm/src/fdlibm.h b/modules/fdlibm/src/fdlibm.h
 -double	fdim(double, double);
 -double	fmax(double, double) __pure2;
 -double	fmin(double, double) __pure2;
--double	nearbyint(double);
++double	copysign(double, double);
+ double	nearbyint(double);
 -double	round(double);
 -double	scalbln(double, long);
--double	scalbn(double, int);
+ double	scalbn(double, int);
 -double	tgamma(double);
 -double	trunc(double);
 -#endif
@@ -363,15 +362,13 @@ diff --git a/modules/fdlibm/src/fdlibm.h b/modules/fdlibm/src/fdlibm.h
 -
 -float	powf(float, float);
 -float	sqrtf(float);
--
-+float	floorf(float);
-+float	truncf(float);
+ 
  float	ceilf(float);
 -float	fabsf(float) __pure2;
--float	floorf(float);
+ float	floorf(float);
 -float	fmodf(float, float);
 -float	roundf(float);
--
+ 
 -float	erff(float);
 -float	erfcf(float);
 -float	hypotf(float, float);
@@ -389,15 +386,15 @@ diff --git a/modules/fdlibm/src/fdlibm.h b/modules/fdlibm/src/fdlibm.h
 -long	lrintf(float);
 -long	lroundf(float);
 -float	nanf(const char *) __pure2;
--float	nearbyintf(float);
+ float	nearbyintf(float);
 -float	nextafterf(float, float);
 -float	remainderf(float, float);
 -float	remquof(float, float, int *);
--float	rintf(float);
+ float	rintf(float);
 -float	scalblnf(float, long);
 -float	scalbnf(float, int);
--float	truncf(float);
--
+ float	truncf(float);
+ 
 -float	fdimf(float, float);
 -float	fmaf(float, float, float);
 -float	fmaxf(float, float) __pure2;
@@ -461,7 +458,7 @@ diff --git a/modules/fdlibm/src/fdlibm.h b/modules/fdlibm/src/fdlibm.h
 -long double	fmaxl(long double, long double) __pure2;
 -long double	fminl(long double, long double) __pure2;
 -long double	fmodl(long double, long double);
--long double	frexpl(long double value, int *); /* fundamentally !__pure2 */
+-long double	frexpl(long double, int *); /* fundamentally !__pure2 */
 -long double	hypotl(long double, long double);
 -int		ilogbl(long double) __pure2;
 -long double	ldexpl(long double, int);
@@ -503,5 +500,5 @@ diff --git a/modules/fdlibm/src/fdlibm.h b/modules/fdlibm/src/fdlibm.h
 -#endif
 -
 -__END_DECLS
- 
+-
  #endif /* !_MATH_H_ */

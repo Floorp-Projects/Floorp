@@ -161,6 +161,7 @@ function convertGetFrameResult(tabId, data) {
 extensions.registerSchemaAPI("webNavigation", "addon_parent", context => {
   return {
     webNavigation: {
+      onTabReplaced: ignoreEvent(context, "webNavigation.onTabReplaced"),
       onBeforeNavigate: new WebNavigationEventManager(context, "onBeforeNavigate").api(),
       onCommitted: new WebNavigationEventManager(context, "onCommitted").api(),
       onDOMContentLoaded: new WebNavigationEventManager(context, "onDOMContentLoaded").api(),

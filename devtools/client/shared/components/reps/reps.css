@@ -47,6 +47,7 @@
 }
 
 .objectBox-string,
+.objectBox-symbol,
 .objectBox-text,
 .objectLink-textNode,
 .objectBox-table {
@@ -61,7 +62,8 @@
   color: var(--number-color);
 }
 
-.objectBox-string {
+.objectBox-string,
+.objectBox-symbol {
   color: var(--string-color);
 }
 

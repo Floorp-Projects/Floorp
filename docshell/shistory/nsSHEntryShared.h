@@ -71,6 +71,7 @@ private:
   uint64_t mDocShellID;
   nsCOMArray<nsIDocShellTreeItem> mChildShells;
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
+  nsCOMPtr<nsIPrincipal> mPrincipalToInherit;
   nsCString mContentType;
   bool mIsFrameNavigation;
   bool mSaveLayoutState;

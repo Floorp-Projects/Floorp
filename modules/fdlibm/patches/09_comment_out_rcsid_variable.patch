@@ -670,6 +670,78 @@ diff --git a/modules/fdlibm/src/s_log1p.cpp b/modules/fdlibm/src/s_log1p.cpp
   *			1+x = 2^k * (1+f),
   *	   where  sqrt(2)/2 < 1+f < sqrt(2) .
   *
+diff --git a/modules/fdlibm/src/s_nearbyint.cpp b/modules/fdlibm/src/s_nearbyint.cpp
+--- a/modules/fdlibm/src/s_nearbyint.cpp
++++ b/modules/fdlibm/src/s_nearbyint.cpp
+@@ -19,18 +19,18 @@
+  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+  * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+  * SUCH DAMAGE.
+  */
+ 
+-#include <sys/cdefs.h>
+-__FBSDID("$FreeBSD$");
++//#include <sys/cdefs.h>
++//__FBSDID("$FreeBSD$");
+ 
+ #include <fenv.h>
+ #include "math_private.h"
+ 
+ /*
+  * We save and restore the floating-point environment to avoid raising
+  * an inexact exception.  We can get away with using fesetenv()
+  * instead of feclearexcept()/feupdateenv() to restore the environment
+diff --git a/modules/fdlibm/src/s_rint.cpp b/modules/fdlibm/src/s_rint.cpp
+--- a/modules/fdlibm/src/s_rint.cpp
++++ b/modules/fdlibm/src/s_rint.cpp
+@@ -5,18 +5,18 @@
+  *
+  * Developed at SunPro, a Sun Microsystems, Inc. business.
+  * Permission to use, copy, modify, and distribute this
+  * software is freely granted, provided that this notice
+  * is preserved.
+  * ====================================================
+  */
+ 
+-#include <sys/cdefs.h>
+-__FBSDID("$FreeBSD$");
++//#include <sys/cdefs.h>
++//__FBSDID("$FreeBSD$");
+ 
+ /*
+  * rint(x)
+  * Return x rounded to integral value according to the prevailing
+  * rounding mode.
+  * Method:
+  *	Using floating addition.
+  * Exception:
+diff --git a/modules/fdlibm/src/s_rintf.cpp b/modules/fdlibm/src/s_rintf.cpp
+--- a/modules/fdlibm/src/s_rintf.cpp
++++ b/modules/fdlibm/src/s_rintf.cpp
+@@ -8,18 +8,18 @@
+  *
+  * Developed at SunPro, a Sun Microsystems, Inc. business.
+  * Permission to use, copy, modify, and distribute this
+  * software is freely granted, provided that this notice
+  * is preserved.
+  * ====================================================
+  */
+ 
+-#include <sys/cdefs.h>
+-__FBSDID("$FreeBSD$");
++//#include <sys/cdefs.h>
++//__FBSDID("$FreeBSD$");
+ 
+ #include <float.h>
+ #include <stdint.h>
+ 
+ #include "math_private.h"
+ 
+ static const float
+ TWO23[2]={
 diff --git a/modules/fdlibm/src/s_scalbn.cpp b/modules/fdlibm/src/s_scalbn.cpp
 --- a/modules/fdlibm/src/s_scalbn.cpp
 +++ b/modules/fdlibm/src/s_scalbn.cpp

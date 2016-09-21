@@ -123,7 +123,8 @@ WMFMediaDataDecoder::ProcessDecode(MediaRawData* aSample)
   HRESULT hr = mMFTManager->Input(aSample);
   if (FAILED(hr)) {
     NS_WARNING("MFTManager rejected sample");
-    mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__));
+    mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                                 RESULT_DETAIL("MFTManager::Input:%x", hr)));
     if (!mRecordedError) {
       SendTelemetry(hr);
       mRecordedError = true;
@@ -150,7 +151,8 @@ WMFMediaDataDecoder::ProcessOutput()
     mCallback->InputExhausted();
   } else if (FAILED(hr)) {
     NS_WARNING("WMFMediaDataDecoder failed to output data");
-    mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__));
+    mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                                 RESULT_DETAIL("MFTManager::Output:%x", hr)));
     if (!mRecordedError) {
       SendTelemetry(hr);
       mRecordedError = true;

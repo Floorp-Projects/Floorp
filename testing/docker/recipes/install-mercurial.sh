@@ -57,7 +57,6 @@ else
 fi
 
 mkdir -p /usr/local/mercurial
-cd /usr/local/mercurial
 tooltool_fetch <<'EOF'
 [
 {
@@ -68,6 +67,7 @@ tooltool_fetch <<'EOF'
 }
 ]
 EOF
+mv robustcheckout.py /usr/local/mercurial/robustcheckout.py
 chmod 644 /usr/local/mercurial/robustcheckout.py
 
 mkdir -p /etc/mercurial

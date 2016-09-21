@@ -7,7 +7,6 @@
 #define mozilla_net_CookieServiceParent_h
 
 #include "mozilla/net/PCookieServiceParent.h"
-#include "SerializedLoadContext.h"
 
 class nsCookieService;
 namespace mozilla { class NeckoOriginAttributes; }
@@ -22,18 +21,12 @@ public:
   virtual ~CookieServiceParent();
 
 protected:
-  MOZ_MUST_USE bool
-  GetOriginAttributesFromParams(const IPC::SerializedLoadContext &aLoadContext,
-                                NeckoOriginAttributes& aAttrs,
-                                bool& aIsPrivate);
-
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual bool RecvGetCookieString(const URIParams& aHost,
                                    const bool& aIsForeign,
                                    const bool& aFromHttp,
-                                   const IPC::SerializedLoadContext&
-                                         loadContext,
+                                   const NeckoOriginAttributes& aAttrs,
                                    nsCString* aResult) override;
 
   virtual bool RecvSetCookieString(const URIParams& aHost,
@@ -41,8 +34,7 @@ protected:
                                    const nsCString& aCookieString,
                                    const nsCString& aServerTime,
                                    const bool& aFromHttp,
-                                   const IPC::SerializedLoadContext&
-                                         loadContext) override;
+                                   const NeckoOriginAttributes& aAttrs) override;
 
   virtual mozilla::ipc::IProtocol*
   CloneProtocol(Channel* aChannel,

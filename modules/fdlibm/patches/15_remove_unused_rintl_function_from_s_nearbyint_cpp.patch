@@ -1,0 +1,13 @@
+diff --git a/modules/fdlibm/src/s_nearbyint.cpp b/modules/fdlibm/src/s_nearbyint.cpp
+--- a/modules/fdlibm/src/s_nearbyint.cpp
++++ b/modules/fdlibm/src/s_nearbyint.cpp
+@@ -51,9 +51,8 @@ fn(type x)			\
+ 	fegetenv(&env);		\
+ 	ret = rint(x);		\
+ 	fesetenv(&env);		\
+ 	return (ret);		\
+ }
+ 
+ DECL(double, nearbyint, rint)
+ DECL(float, nearbyintf, rintf)
+-DECL(long double, nearbyintl, rintl)

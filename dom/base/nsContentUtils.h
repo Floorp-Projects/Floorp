@@ -786,6 +786,18 @@ public:
                                uint32_t *aArgCount, const char*** aArgNames);
 
   /**
+   * Returns origin attributes of the document.
+   **/
+  static mozilla::PrincipalOriginAttributes
+  GetOriginAttributes(nsIDocument* aDoc);
+
+  /**
+   * Returns origin attributes of the load group.
+   **/
+  static mozilla::PrincipalOriginAttributes
+  GetOriginAttributes(nsILoadGroup* aLoadGroup);
+
+  /**
    * Returns true if this document is in a Private Browsing window.
    */
   static bool IsInPrivateBrowsing(nsIDocument* aDoc);

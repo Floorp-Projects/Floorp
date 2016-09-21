@@ -3,6 +3,7 @@ name = "gkrust"
 version = "0.1.0"
 dependencies = [
  "mp4parse_capi 0.5.1",
+ "nsstring 0.1.0",
 ]
 
 [[package]]
@@ -23,6 +24,10 @@ version = "0.5.1"
 dependencies = [
  "mp4parse 0.5.1",
 ]
+
+[[package]]
+name = "nsstring"
+version = "0.1.0"
 
 [metadata]
 "checksum byteorder 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)" = "0fc10e8cc6b2580fda3f36eb6dc5316657f812a3df879a44a66fc9f0fdbc4855"

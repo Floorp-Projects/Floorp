@@ -1013,7 +1013,8 @@ nsGIFDecoder2::ReadLZWData(const char* aData, size_t aLength)
   const uint8_t* data = reinterpret_cast<const uint8_t*>(aData);
   size_t length = aLength;
 
-  while (length > 0 && mGIFStruct.pixels_remaining > 0) {
+  while (mGIFStruct.pixels_remaining > 0 &&
+         (length > 0 || mGIFStruct.bits >= mGIFStruct.codesize)) {
     size_t bytesRead = 0;
 
     auto result = mGIFStruct.images_decoded == 0

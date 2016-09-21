@@ -48,6 +48,7 @@ public:
   static void InitSameProcess();
   static void InitWithGPUProcess(Endpoint<PVRManagerChild>&& aEndpoint);
   static bool InitForContent(Endpoint<PVRManagerChild>&& aEndpoint);
+  static bool ReinitForContent(Endpoint<PVRManagerChild>&& aEndpoint);
   static void ShutDown();
 
   static bool IsCreated();

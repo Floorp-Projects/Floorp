@@ -602,13 +602,8 @@ bool XPCJSContext::UsefulToMergeZones() const
 
 void XPCJSContext::TraceNativeBlackRoots(JSTracer* trc)
 {
-    // Skip this part if XPConnect is shutting down. We get into
-    // bad locking problems with the thread iteration otherwise.
-    if (!nsXPConnect::XPConnect()->IsShuttingDown()) {
-        // Trace those AutoMarkingPtr lists!
-        if (AutoMarkingPtr* roots = Get()->mAutoRoots)
-            roots->TraceJSAll(trc);
-    }
+    if (AutoMarkingPtr* roots = Get()->mAutoRoots)
+        roots->TraceJSAll(trc);
 
     // XPCJSObjectHolders don't participate in cycle collection, so always
     // trace them here.
@@ -784,14 +779,8 @@ XPCJSContext::FinalizeCallback(JSFreeOp* fop,
             MOZ_ASSERT(!self->mGCIsRunning, "bad state");
             self->mGCIsRunning = true;
 
-            // Skip this part if XPConnect is shutting down. We get into
-            // bad locking problems with the thread iteration otherwise.
-            if (!nsXPConnect::XPConnect()->IsShuttingDown()) {
-
-                // Mark those AutoMarkingPtr lists!
-                if (AutoMarkingPtr* roots = Get()->mAutoRoots)
-                    roots->MarkAfterJSFinalizeAll();
-            }
+            if (AutoMarkingPtr* roots = Get()->mAutoRoots)
+                roots->MarkAfterJSFinalizeAll();
 
             // Now we are going to recycle any unused WrappedNativeTearoffs.
             // We do this by iterating all the live callcontexts
@@ -805,29 +794,22 @@ XPCJSContext::FinalizeCallback(JSFreeOp* fop,
             //
             // XXX We may decide to not do this on *every* gc cycle.
 
-            // Skip this part if XPConnect is shutting down. We get into
-            // bad locking problems with the thread iteration otherwise.
-            if (!nsXPConnect::XPConnect()->IsShuttingDown()) {
-                // Do the marking...
-
-                XPCCallContext* ccxp = XPCJSContext::Get()->GetCallContext();
-                while (ccxp) {
-                    // Deal with the strictness of callcontext that
-                    // complains if you ask for a tearoff when
-                    // it is in a state where the tearoff could not
-                    // possibly be valid.
-                    if (ccxp->CanGetTearOff()) {
-                        XPCWrappedNativeTearOff* to =
-                            ccxp->GetTearOff();
-                        if (to)
-                            to->Mark();
-                    }
-                    ccxp = ccxp->GetPrevCallContext();
+            XPCCallContext* ccxp = XPCJSContext::Get()->GetCallContext();
+            while (ccxp) {
+                // Deal with the strictness of callcontext that
+                // complains if you ask for a tearoff when
+                // it is in a state where the tearoff could not
+                // possibly be valid.
+                if (ccxp->CanGetTearOff()) {
+                    XPCWrappedNativeTearOff* to =
+                        ccxp->GetTearOff();
+                    if (to)
+                        to->Mark();
                 }
-
-                // Do the sweeping...
-                XPCWrappedNativeScope::SweepAllWrappedNativeTearOffs();
+                ccxp = ccxp->GetPrevCallContext();
             }
+
+            XPCWrappedNativeScope::SweepAllWrappedNativeTearOffs();
 
             // Now we need to kill the 'Dying' XPCWrappedNativeProtos.
             // We transfered these native objects to this table when their

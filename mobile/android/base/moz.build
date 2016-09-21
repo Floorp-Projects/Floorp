@@ -213,7 +213,6 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
                   for x in [
     'AlarmReceiver.java',
     'AndroidGamepadManager.java',
-    'ANRReporter.java',
     'BaseGeckoInterface.java',
     'ContextGetter.java',
     'CrashHandler.java',
@@ -226,7 +225,6 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
     'GeckoEditableListener.java',
     'GeckoHalDefines.java',
     'GeckoInputConnection.java',
-    'GeckoJavaSampler.java',
     'GeckoNetworkManager.java',
     'GeckoProfile.java',
     'GeckoProfileDirectories.java',
@@ -289,7 +287,6 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
     'sqlite/SQLiteBridge.java',
     'sqlite/SQLiteBridgeException.java',
     'TouchEventInterceptor.java',
-    'widget/SwipeDismissListViewTouchListener.java',
 ]]
 
 gvjar.sources += [geckoview_thirdparty_source_dir + f for f in [
@@ -330,6 +327,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'animation/PropertyAnimator.java',
     'animation/Rotate3DAnimation.java',
     'animation/ViewHelper.java',
+    'ANRReporter.java',
     'BootReceiver.java',
     'BrowserApp.java',
     'BrowserLocaleManager.java',
@@ -433,6 +431,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'GeckoActivityStatus.java',
     'GeckoApp.java',
     'GeckoApplication.java',
+    'GeckoJavaSampler.java',
     'GeckoMessageReceiver.java',
     'GeckoProfilesProvider.java',
     'GeckoUpdateReceiver.java',
@@ -558,11 +557,11 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'media/AsyncCodecFactory.java',
     'media/AudioFocusAgent.java',
     'media/Codec.java',
-    'media/CodecManager.java',
     'media/CodecProxy.java',
     'media/FormatParam.java',
     'media/JellyBeanAsyncCodec.java',
     'media/MediaControlService.java',
+    'media/MediaManager.java',
     'media/RemoteManager.java',
     'media/Sample.java',
     'media/VideoPlayer.java',
@@ -751,6 +750,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'widget/SiteLogins.java',
     'widget/SquaredImageView.java',
     'widget/SquaredRelativeLayout.java',
+    'widget/SwipeDismissListViewTouchListener.java',
     'widget/TabThumbnailWrapper.java',
     'widget/ThumbnailView.java',
     'widget/TwoWayView.java',
@@ -1109,5 +1109,5 @@ OBJDIR_PP_FILES.mobile.android.base += [
 gbjar.sources += ['generated/org/mozilla/gecko/' + x for x in [
     'media/ICodec.java',
     'media/ICodecCallbacks.java',
-    'media/ICodecManager.java',
+    'media/IMediaManager.java',
 ]]

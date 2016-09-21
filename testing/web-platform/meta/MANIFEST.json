@@ -37428,6 +37428,12 @@
             "url": "/html/semantics/embedded-content/the-iframe-element/iframe_sandbox_popups_nonescaping-3.html"
           }
         ],
+        "html/semantics/forms/the-textarea-element/cloning-steps.html": [
+          {
+            "path": "html/semantics/forms/the-textarea-element/cloning-steps.html",
+            "url": "/html/semantics/forms/the-textarea-element/cloning-steps.html"
+          }
+        ],
         "html/semantics/scripting-1/the-script-element/script-onerror-insertion-point-1.html": [
           {
             "path": "html/semantics/scripting-1/the-script-element/script-onerror-insertion-point-1.html",

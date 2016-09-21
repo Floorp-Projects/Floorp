@@ -198,6 +198,11 @@ protected:
     static BrowserStreamParent* StreamCast(NPP instance, NPStream* s,
                                            PluginAsyncSurrogate** aSurrogate = nullptr);
 
+    virtual bool
+    AnswerNPN_SetValue_NPPVpluginRequiresAudioDeviceChanges(
+                                        const bool& shouldRegister,
+                                        NPError* result) override;
+
 protected:
     void SetChildTimeout(const int32_t aChildTimeout);
     static void TimeoutChanged(const char* aPref, void* aModule);
@@ -568,6 +573,11 @@ private:
     virtual bool RecvNotifyContentModuleDestroyed() override;
 
     static void CachedSettingChanged(const char* aPref, void* aModule);
+
+    virtual bool
+    AnswerNPN_SetValue_NPPVpluginRequiresAudioDeviceChanges(
+                                        const bool& shouldRegister,
+                                        NPError* result) override;
 
     PluginProcessParent* mSubprocess;
     uint32_t mPluginId;

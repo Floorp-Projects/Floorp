@@ -7071,22 +7071,25 @@ NS_IMETHODIMP
 nsDocument::GetDocumentURI(nsAString& aDocumentURI)
 {
   nsString temp;
-  nsIDocument::GetDocumentURI(temp);
+  nsresult rv = nsIDocument::GetDocumentURI(temp);
   aDocumentURI = temp;
-  return NS_OK;
+  return rv;
 }
 
-void
+nsresult
 nsIDocument::GetDocumentURI(nsString& aDocumentURI) const
 {
   if (mDocumentURI) {
     nsAutoCString uri;
-    // XXX: should handle GetSpec() failure properly. See bug 1301249.
-    Unused << mDocumentURI->GetSpec(uri);
+    nsresult rv = mDocumentURI->GetSpec(uri);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     CopyUTF8toUTF16(uri, aDocumentURI);
   } else {
     aDocumentURI.Truncate();
   }
+
+  return NS_OK;
 }
 
 // Alias of above
@@ -7096,7 +7099,7 @@ nsDocument::GetURL(nsAString& aURL)
   return GetDocumentURI(aURL);
 }
 
-void
+nsresult
 nsIDocument::GetURL(nsString& aURL) const
 {
   return GetDocumentURI(aURL);
@@ -7106,7 +7109,8 @@ void
 nsIDocument::GetDocumentURIFromJS(nsString& aDocumentURI, ErrorResult& aRv) const
 {
   if (!mChromeXHRDocURI || !nsContentUtils::IsCallerChrome()) {
-    return GetDocumentURI(aDocumentURI);
+    aRv = GetDocumentURI(aDocumentURI);
+    return;
   }
 
   nsAutoCString uri;

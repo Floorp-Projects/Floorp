@@ -452,7 +452,9 @@ ImageBridgeChild::ShutdownStep1(SynchronousTask* aTask)
     }
   }
 
-  SendWillClose();
+  if (mCanSend) {
+    SendWillClose();
+  }
   MarkShutDown();
 
   // From now on, no message can be sent through the image bridge from the
@@ -858,9 +860,11 @@ ImageBridgeChild::InitForContent(Endpoint<PImageBridgeChild>&& aEndpoint)
 
   gfxPlatform::GetPlatform();
 
-  sImageBridgeChildThread = new ImageBridgeThread();
-  if (!sImageBridgeChildThread->Start()) {
-    return false;
+  if (!sImageBridgeChildThread) {
+    sImageBridgeChildThread = new ImageBridgeThread();
+    if (!sImageBridgeChildThread->Start()) {
+      return false;
+    }
   }
 
   RefPtr<ImageBridgeChild> child = new ImageBridgeChild();
@@ -878,6 +882,20 @@ ImageBridgeChild::InitForContent(Endpoint<PImageBridgeChild>&& aEndpoint)
   }
 
   return true;
+}
+
+bool
+ImageBridgeChild::ReinitForContent(Endpoint<PImageBridgeChild>&& aEndpoint)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Note that at this point, ActorDestroy may not have been called yet,
+  // meaning mCanSend is still true. In this case we will try to send a
+  // synchronous WillClose message to the parent, and will certainly get a
+  // false result and a MsgDropped processing error. This is okay.
+  ShutdownSingleton();
+
+  return InitForContent(Move(aEndpoint));
 }
 
 void
@@ -908,7 +926,19 @@ ImageBridgeChild::BindSameProcess(RefPtr<ImageBridgeParent> aParent)
   SendImageBridgeThreadId();
 }
 
-void ImageBridgeChild::ShutDown()
+/* static */ void
+ImageBridgeChild::ShutDown()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  ShutdownSingleton();
+
+  delete sImageBridgeChildThread;
+  sImageBridgeChildThread = nullptr;
+}
+
+/* static */ void
+ImageBridgeChild::ShutdownSingleton()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -918,9 +948,6 @@ void ImageBridgeChild::ShutDown()
     StaticMutexAutoLock lock(sImageBridgeSingletonLock);
     sImageBridgeChildSingleton = nullptr;
   }
-
-  delete sImageBridgeChildThread;
-  sImageBridgeChildThread = nullptr;
 }
 
 void

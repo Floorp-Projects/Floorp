@@ -44,6 +44,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                         aLoadingContext->NodePrincipal() : aLoadingPrincipal)
   , mTriggeringPrincipal(aTriggeringPrincipal ?
                            aTriggeringPrincipal : mLoadingPrincipal.get())
+  , mPrincipalToInherit(mTriggeringPrincipal)
   , mLoadingContext(do_GetWeakReference(aLoadingContext))
   , mSecurityFlags(aSecurityFlags)
   , mInternalContentPolicyType(aContentPolicyType)
@@ -64,6 +65,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
 {
   MOZ_ASSERT(mLoadingPrincipal);
   MOZ_ASSERT(mTriggeringPrincipal);
+  MOZ_ASSERT(mPrincipalToInherit);
 
 #ifdef DEBUG
   // TYPE_DOCUMENT loads initiated by javascript tests will go through
@@ -214,6 +216,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
                    nsSecurityFlags aSecurityFlags)
   : mLoadingPrincipal(nullptr)
   , mTriggeringPrincipal(aTriggeringPrincipal)
+  , mPrincipalToInherit(mTriggeringPrincipal)
   , mSecurityFlags(aSecurityFlags)
   , mInternalContentPolicyType(nsIContentPolicy::TYPE_DOCUMENT)
   , mTainting(LoadTainting::Basic)
@@ -235,6 +238,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   // Grab the information we can out of the window.
   MOZ_ASSERT(aOuterWindow);
   MOZ_ASSERT(mTriggeringPrincipal);
+  MOZ_ASSERT(mPrincipalToInherit);
 
   // if the load is sandboxed, we can not also inherit the principal
   if (mSecurityFlags & nsILoadInfo::SEC_SANDBOXED) {
@@ -270,6 +274,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
 LoadInfo::LoadInfo(const LoadInfo& rhs)
   : mLoadingPrincipal(rhs.mLoadingPrincipal)
   , mTriggeringPrincipal(rhs.mTriggeringPrincipal)
+  , mPrincipalToInherit(rhs.mPrincipalToInherit)
   , mLoadingContext(rhs.mLoadingContext)
   , mSecurityFlags(rhs.mSecurityFlags)
   , mInternalContentPolicyType(rhs.mInternalContentPolicyType)
@@ -297,6 +302,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
 
 LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    nsIPrincipal* aTriggeringPrincipal,
+                   nsIPrincipal* aPrincipalToInherit,
                    nsSecurityFlags aSecurityFlags,
                    nsContentPolicyType aContentPolicyType,
                    LoadTainting aTainting,
@@ -319,6 +325,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    bool aIsPreflight)
   : mLoadingPrincipal(aLoadingPrincipal)
   , mTriggeringPrincipal(aTriggeringPrincipal)
+  , mPrincipalToInherit(aPrincipalToInherit)
   , mSecurityFlags(aSecurityFlags)
   , mInternalContentPolicyType(aContentPolicyType)
   , mTainting(aTainting)
@@ -341,6 +348,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   // Only top level TYPE_DOCUMENT loads can have a null loadingPrincipal
   MOZ_ASSERT(mLoadingPrincipal || aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT);
   MOZ_ASSERT(mTriggeringPrincipal);
+  MOZ_ASSERT(mPrincipalToInherit);
 
   mRedirectChainIncludingInternalRedirects.SwapElements(
     aRedirectChainIncludingInternalRedirects);
@@ -423,6 +431,27 @@ nsIPrincipal*
 LoadInfo::TriggeringPrincipal()
 {
   return mTriggeringPrincipal;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetPrincipalToInherit(nsIPrincipal** aPrincipalToInherit)
+{
+  NS_ADDREF(*aPrincipalToInherit = mPrincipalToInherit);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetPrincipalToInherit(nsIPrincipal* aPrincipalToInherit)
+{
+  MOZ_ASSERT(aPrincipalToInherit, "must be a valid principal to inherit");
+  mPrincipalToInherit = aPrincipalToInherit;
+  return NS_OK;
+}
+
+nsIPrincipal*
+LoadInfo::PrincipalToInherit()
+{
+  return mPrincipalToInherit;
 }
 
 NS_IMETHODIMP

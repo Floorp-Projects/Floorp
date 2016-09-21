@@ -50,6 +50,16 @@ check_for_forced_update() {
     return 0;
   fi
 
+  if [ "$forced_file_chk" = "chrome.manifest" ]; then
+    ## "true" *giggle*
+    return 0;
+  fi
+
+  if [ "$forced_file_chk" = "Contents/Resources/chrome.manifest" ]; then
+    ## "true" *giggle*
+    return 0;
+  fi
+
   if [ "${forced_file_chk##*.}" = "chk" ]; then
     ## "true" *giggle*
     return 0;
