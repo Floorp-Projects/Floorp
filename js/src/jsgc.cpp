@@ -5906,10 +5906,6 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
 
         incrementalState = State::Finalize;
 
-        /* Yield before compacting since it is not incremental. */
-        if (isCompacting && isIncremental)
-            break;
-
         MOZ_FALLTHROUGH;
 
       case State::Finalize:
@@ -5939,6 +5935,10 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
 
         MOZ_ASSERT(!startedCompacting);
         incrementalState = State::Compact;
+
+        // Always yield before compacting since it is not incremental.
+        if (isCompacting && isIncremental)
+            break;
 
         MOZ_FALLTHROUGH;
 
