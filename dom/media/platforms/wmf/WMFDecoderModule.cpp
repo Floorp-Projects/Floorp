@@ -19,7 +19,7 @@
 #include "nsIGfxInfo.h"
 #include "nsWindowsHelpers.h"
 #include "GfxDriverInfo.h"
-#include "mozilla/gfx/gfxVars.h"
+#include "gfxWindowsPlatform.h"
 #include "MediaInfo.h"
 #include "MediaPrefs.h"
 #include "prsystem.h"
@@ -49,7 +49,7 @@ WMFDecoderModule::~WMFDecoderModule()
 void
 WMFDecoderModule::Init()
 {
-  sDXVAEnabled = gfx::gfxVars::CanUseHardwareVideoDecoding();
+  sDXVAEnabled = gfxPlatform::GetPlatform()->CanUseHardwareVideoDecoding();
 }
 
 /* static */
@@ -61,10 +61,7 @@ WMFDecoderModule::GetNumDecoderThreads()
   // If we have more than 4 cores, let the decoder decide how many threads.
   // On an 8 core machine, WMF chooses 4 decoder threads
   const int WMF_DECODER_DEFAULT = -1;
-  int32_t prefThreadCount = WMF_DECODER_DEFAULT;
-  if (XRE_GetProcessType() != GeckoProcessType_GPU) {
-    prefThreadCount = MediaPrefs::PDMWMFThreadCount();
-  }
+  int32_t prefThreadCount = MediaPrefs::PDMWMFThreadCount();
   if (prefThreadCount != WMF_DECODER_DEFAULT) {
     return std::max(prefThreadCount, 1);
   } else if (numCores > 4) {

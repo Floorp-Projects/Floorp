@@ -94,34 +94,12 @@ public:
     return mTailDispatcher.ref();
   }
 
-  virtual bool MightHaveTailTasks() override
-  {
-    return mTailDispatcher.isSome();
-  }
-
   virtual nsIThread* AsXPCOMThread() override { return mTarget; }
 
 private:
   RefPtr<nsIThread> mTarget;
   Maybe<AutoTaskDispatcher> mTailDispatcher;
 };
-
-void
-AbstractThread::TailDispatchTasksFor(AbstractThread* aThread)
-{
-  if (MightHaveTailTasks()) {
-    TailDispatcher().DispatchTasksFor(aThread);
-  }
-}
-
-bool
-AbstractThread::HasTailTasksFor(AbstractThread* aThread)
-{
-  if (!MightHaveTailTasks()) {
-    return false;
-  }
-  return TailDispatcher().HasTasksFor(aThread);
-}
 
 bool
 AbstractThread::RequiresTailDispatch(AbstractThread* aThread) const
