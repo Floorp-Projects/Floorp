@@ -4,12 +4,11 @@
 
 package org.mozilla.gecko.tabs;
 
-import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.widget.TabThumbnailWrapper;
+import org.mozilla.gecko.widget.TouchDelegateWithReset;
 import org.mozilla.gecko.widget.themed.ThemedRelativeLayout;
 
 import android.content.Context;
@@ -17,7 +16,6 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.TypedValue;
-import android.view.TouchDelegate;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.widget.Checkable;
@@ -116,7 +114,7 @@ public class TabsLayoutItemView extends LinearLayout
                 hitRect.left = getWidth() - targetHitArea;
                 hitRect.bottom = targetHitArea;
 
-                setTouchDelegate(new TouchDelegate(hitRect, mCloseButton));
+                setTouchDelegate(new TouchDelegateWithReset(hitRect, mCloseButton));
 
                 return true;
             }

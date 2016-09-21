@@ -758,6 +758,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'widget/SwipeDismissListViewTouchListener.java',
     'widget/TabThumbnailWrapper.java',
     'widget/ThumbnailView.java',
+    'widget/TouchDelegateWithReset.java',
     'widget/TwoWayView.java',
     'ZoomedView.java',
 ]]
