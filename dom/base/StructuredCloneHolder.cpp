@@ -601,10 +601,10 @@ EnsureBlobForBackgroundManager(BlobImpl* aBlobImpl,
       nsString name;
       blobImpl->GetName(name);
 
-      blobImpl = MultipartBlobImpl::Create(newSubBlobImpls, name,
+      blobImpl = MultipartBlobImpl::Create(Move(newSubBlobImpls), name,
                                            contentType, aRv);
     } else {
-      blobImpl = MultipartBlobImpl::Create(newSubBlobImpls, contentType, aRv);
+      blobImpl = MultipartBlobImpl::Create(Move(newSubBlobImpls), contentType, aRv);
     }
 
     if (NS_WARN_IF(aRv.Failed())) {

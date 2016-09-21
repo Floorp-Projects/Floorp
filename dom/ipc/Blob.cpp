@@ -850,10 +850,10 @@ CreateBlobImpl(const nsTArray<BlobData>& aBlobDatas,
   ErrorResult rv;
   RefPtr<BlobImpl> blobImpl;
   if (!hasRecursed && aMetadata.IsFile()) {
-    blobImpl = MultipartBlobImpl::Create(blobImpls, aMetadata.mName,
+    blobImpl = MultipartBlobImpl::Create(Move(blobImpls), aMetadata.mName,
                                          aMetadata.mContentType, rv);
   } else {
-    blobImpl = MultipartBlobImpl::Create(blobImpls, aMetadata.mContentType, rv);
+    blobImpl = MultipartBlobImpl::Create(Move(blobImpls), aMetadata.mContentType, rv);
   }
 
   if (NS_WARN_IF(rv.Failed())) {

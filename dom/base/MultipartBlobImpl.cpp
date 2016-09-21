@@ -25,13 +25,13 @@ using namespace mozilla::dom;
 NS_IMPL_ISUPPORTS_INHERITED0(MultipartBlobImpl, BlobImpl)
 
 /* static */ already_AddRefed<MultipartBlobImpl>
-MultipartBlobImpl::Create(const nsTArray<RefPtr<BlobImpl>>& aBlobImpls,
+MultipartBlobImpl::Create(nsTArray<RefPtr<BlobImpl>>&& aBlobImpls,
                           const nsAString& aName,
                           const nsAString& aContentType,
                           ErrorResult& aRv)
 {
   RefPtr<MultipartBlobImpl> blobImpl =
-    new MultipartBlobImpl(aBlobImpls, aName, aContentType);
+    new MultipartBlobImpl(Move(aBlobImpls), aName, aContentType);
   blobImpl->SetLengthAndModifiedDate(aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -41,12 +41,12 @@ MultipartBlobImpl::Create(const nsTArray<RefPtr<BlobImpl>>& aBlobImpls,
 }
 
 /* static */ already_AddRefed<MultipartBlobImpl>
-MultipartBlobImpl::Create(const nsTArray<RefPtr<BlobImpl>>& aBlobImpls,
+MultipartBlobImpl::Create(nsTArray<RefPtr<BlobImpl>>&& aBlobImpls,
                           const nsAString& aContentType,
                           ErrorResult& aRv)
 {
   RefPtr<MultipartBlobImpl> blobImpl =
-    new MultipartBlobImpl(aBlobImpls, aContentType);
+    new MultipartBlobImpl(Move(aBlobImpls), aContentType);
   blobImpl->SetLengthAndModifiedDate(aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -155,7 +155,7 @@ MultipartBlobImpl::CreateSlice(uint64_t aStart, uint64_t aLength,
   }
 
   // we can create our blob now
-  RefPtr<BlobImpl> impl = Create(blobImpls, aContentType, aRv);
+  RefPtr<BlobImpl> impl = Create(Move(blobImpls), aContentType, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
