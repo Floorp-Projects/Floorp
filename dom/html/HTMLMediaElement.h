@@ -635,6 +635,9 @@ public:
   mozilla::dom::EventHandlerNonNull* GetOnencrypted();
   void SetOnencrypted(mozilla::dom::EventHandlerNonNull* listener);
 
+  mozilla::dom::EventHandlerNonNull* GetOnwaitingforkey();
+  void SetOnwaitingforkey(mozilla::dom::EventHandlerNonNull* aCallback);
+
   void DispatchEncrypted(const nsTArray<uint8_t>& aInitData,
                          const nsAString& aInitDataType) override;
 
