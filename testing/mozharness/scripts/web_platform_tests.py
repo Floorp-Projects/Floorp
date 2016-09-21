@@ -56,6 +56,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin):
             all_actions=[
                 'clobber',
                 'read-buildbot-config',
+                'ensure-firefox-checkout',
                 'download-and-extract',
                 'create-virtualenv',
                 'pull',
