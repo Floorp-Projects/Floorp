@@ -12,5 +12,5 @@ var { Task } = require("devtools/shared/task");
 
 var { require: browserRequire } = BrowserLoader({
   baseURI: "resource://devtools/client/webconsole/",
-  window: this
+  window
 });

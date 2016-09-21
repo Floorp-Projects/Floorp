@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-/* globals document, PerformanceView, ToolbarView, RecordingsView, DetailsView */
+/* globals window, document, PerformanceView, ToolbarView, RecordingsView, DetailsView */
 
 /* exported Cc, Ci, Cu, Cr, loader */
 var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
@@ -11,7 +11,7 @@ var BrowserLoaderModule = {};
 Cu.import("resource://devtools/client/shared/browser-loader.js", BrowserLoaderModule);
 var { loader, require } = BrowserLoaderModule.BrowserLoader({
   baseURI: "resource://devtools/client/performance/",
-  window: this
+  window
 });
 var { Task } = require("devtools/shared/task");
 /* exported Heritage, ViewHelpers, WidgetMethods, setNamedTimeout, clearNamedTimeout */
