@@ -42,12 +42,6 @@ interface nsIAutoCompleteSimpleResult : nsIAutoCompleteResult
   void setSearchResult(in unsigned short aSearchResult);
 
   /**
-   * A writer for the readonly attribute 'typeAheadResult', typically set
-   * because a result is only intended for type-ahead completion.
-   */
-  void setTypeAheadResult(in boolean aHidden);
-
-  /**
    * Inserts a match consisting of the given value, comment, image, style and
    * the value to use for defaultIndex completion at a given position.
    * @param aIndex

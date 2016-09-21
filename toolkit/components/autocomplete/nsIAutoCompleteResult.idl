@@ -50,13 +50,6 @@ interface nsIAutoCompleteResult : nsISupports
   readonly attribute unsigned long matchCount;
 
   /**
-   * If true, the results will not be displayed in the popup. However,
-   * if a default index is specified, the default item will still be
-   * completed in the input.
-   */
-  readonly attribute boolean typeAheadResult;
-
-  /**
    * Get the value of the result at the given index
    */
   AString getValueAt(in long index);
