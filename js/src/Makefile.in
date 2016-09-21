@@ -50,7 +50,9 @@ check-vanilla-allocations-aggressive:
 	$(PYTHON) $(topsrcdir)/config/check_vanilla_allocations.py --aggressive $(REAL_LIBRARY)
 
 ifeq ($(OS_ARCH),Linux)
+ifeq (,$(filter -flto,$(CFLAGS) $(CXXFLAGS) $(LDFLAGS)))
 check:: check-vanilla-allocations
+endif
 endif
 
 # Help ensure that the number of OOM errors in SpiderMonkey doesn't increase.
