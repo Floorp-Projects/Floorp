@@ -364,34 +364,6 @@ ARCHIVE_FILES = {
             'pattern': 'talos/**',
         },
     ],
-    'web-platform': [
-        {
-            'source': buildconfig.topsrcdir,
-            'base': 'testing',
-            'pattern': 'web-platform/meta/**',
-        },
-        {
-            'source': buildconfig.topsrcdir,
-            'base': 'testing',
-            'pattern': 'web-platform/mozilla/**',
-        },
-        {
-            'source': buildconfig.topsrcdir,
-            'base': 'testing',
-            'pattern': 'web-platform/tests/**',
-        },
-        {
-            'source': buildconfig.topobjdir,
-            'base': '_tests',
-            'pattern': 'web-platform/**',
-        },
-        {
-            'source': buildconfig.topobjdir,
-            'base': '',
-            'pattern': 'mozinfo.json',
-            'dest': 'web-platform',
-        },
-    ],
     'xpcshell': [
         {
             'source': buildconfig.topobjdir,
