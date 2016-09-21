@@ -88,12 +88,17 @@ fn app<'a, 'b>() -> App<'a, 'b> {
              .value_name("HOST")
              .help("Host ip to use for WebDriver server (default: 127.0.0.1)")
              .takes_value(true))
+        .arg(Arg::with_name("webdriver_port_alias")
+             .long("--webdriver-port")
+             .takes_value(true)
+             .hidden(true))
         .arg(Arg::with_name("webdriver_port")
              .short("p")
              .long("port")
              .value_name("PORT")
              .help("Port to use for WebDriver server (default: 4444)")
-             .takes_value(true))
+             .takes_value(true)
+             .conflicts_with("webdriver_port_alias"))
         .arg(Arg::with_name("binary")
              .short("b")
              .long("binary")
@@ -141,7 +146,9 @@ You can obtain a copy of the license at https://mozilla.org/MPL/2.0/.");
     }
 
     let host = matches.value_of("webdriver_host").unwrap_or("127.0.0.1");
-    let port = match u16::from_str(matches.value_of("webdriver_port").unwrap_or("4444")) {
+    let port = match u16::from_str(matches.value_of("webdriver_port")
+        .or(matches.value_of("webdriver_port_alias"))
+        .unwrap_or("4444")) {
         Ok(x) => x,
         Err(_) => return Err((ExitCode::Usage, "invalid WebDriver port".to_owned())),
     };
