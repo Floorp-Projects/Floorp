@@ -17,6 +17,9 @@
 #include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
+#include "mozilla/ipc/FileDescriptorSetParent.h"
+#include "mozilla/ipc/PFileDescriptorSetParent.h"
+#include "mozilla/ipc/SendStreamAlloc.h"
 #include "mozilla/Unused.h"
 
 #include "nsFrameMessageManager.h"
@@ -264,6 +267,32 @@ nsIContentParent::RecvRpcMessage(const nsString& aMsg,
     ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()), nullptr,
                         aMsg, true, &data, &cpows, aPrincipal, aRetvals);
   }
+  return true;
+}
+
+PFileDescriptorSetParent*
+nsIContentParent::AllocPFileDescriptorSetParent(const FileDescriptor& aFD)
+{
+  return new FileDescriptorSetParent(aFD);
+}
+
+bool
+nsIContentParent::DeallocPFileDescriptorSetParent(PFileDescriptorSetParent* aActor)
+{
+  delete static_cast<FileDescriptorSetParent*>(aActor);
+  return true;
+}
+
+PSendStreamParent*
+nsIContentParent::AllocPSendStreamParent()
+{
+  return mozilla::ipc::AllocPSendStreamParent();
+}
+
+bool
+nsIContentParent::DeallocPSendStreamParent(PSendStreamParent* aActor)
+{
+  delete aActor;
   return true;
 }
 
