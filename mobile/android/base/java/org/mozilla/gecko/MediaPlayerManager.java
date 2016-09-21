@@ -64,7 +64,8 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
     }
 
     protected MediaRouter mediaRouter = null;
-    protected final Map<String, GeckoMediaPlayer> displays = new HashMap<String, GeckoMediaPlayer>();
+    protected final Map<String, GeckoMediaPlayer> players = new HashMap<String, GeckoMediaPlayer>();
+    protected final Map<String, GeckoPresentationDisplay> displays = new HashMap<String, GeckoPresentationDisplay>(); // used for Presentation API
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -100,9 +101,9 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
     public void handleMessage(String event, final NativeJSObject message, final EventCallback callback) {
         debug(event);
 
-        final GeckoMediaPlayer display = displays.get(message.getString("id"));
-        if (display == null) {
-            Log.e(LOGTAG, "Couldn't find a display for this id: " + message.getString("id") + " for message: " + event);
+        final GeckoMediaPlayer player = players.get(message.getString("id"));
+        if (player == null) {
+            Log.e(LOGTAG, "Couldn't find a player for this id: " + message.getString("id") + " for message: " + event);
             if (callback != null) {
                 callback.sendError(null);
             }
@@ -110,24 +111,24 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
         }
 
         if ("MediaPlayer:Play".equals(event)) {
-            display.play(callback);
+            player.play(callback);
         } else if ("MediaPlayer:Start".equals(event)) {
-            display.start(callback);
+            player.start(callback);
         } else if ("MediaPlayer:Stop".equals(event)) {
-            display.stop(callback);
+            player.stop(callback);
         } else if ("MediaPlayer:Pause".equals(event)) {
-            display.pause(callback);
+            player.pause(callback);
         } else if ("MediaPlayer:End".equals(event)) {
-            display.end(callback);
+            player.end(callback);
         } else if ("MediaPlayer:Mirror".equals(event)) {
-            display.mirror(callback);
+            player.mirror(callback);
         } else if ("MediaPlayer:Message".equals(event) && message.has("data")) {
-            display.message(message.getString("data"), callback);
+            player.message(message.getString("data"), callback);
         } else if ("MediaPlayer:Load".equals(event)) {
             final String url = message.optString("source", "");
             final String type = message.optString("type", "video/mp4");
             final String title = message.optString("title", "");
-            display.load(title, url, type, callback);
+            player.load(title, url, type, callback);
         }
     }
 
@@ -136,9 +137,15 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
             @Override
             public void onRouteRemoved(MediaRouter router, RouteInfo route) {
                 debug("onRouteRemoved: route=" + route);
-                displays.remove(route.getId());
+
+                // Remove from media player list.
+                players.remove(route.getId());
                 GeckoAppShell.notifyObservers("MediaPlayer:Removed", route.getId());
                 updatePresentation();
+
+                // Remove from presentation display list.
+                displays.remove(route.getId());
+                GeckoAppShell.notifyObservers("AndroidCastDevice:Removed", route.getId());
             }
 
             @SuppressWarnings("unused")
@@ -164,21 +171,44 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
             @Override
             public void onRouteAdded(MediaRouter router, MediaRouter.RouteInfo route) {
                 debug("onRouteAdded: route=" + route);
-                final GeckoMediaPlayer display = getMediaPlayerForRoute(route);
-                saveAndNotifyOfDisplay("MediaPlayer:Added", route, display);
+                final GeckoMediaPlayer player = getMediaPlayerForRoute(route);
+                saveAndNotifyOfPlayer("MediaPlayer:Added", route, player);
                 updatePresentation();
+
+                final GeckoPresentationDisplay display = getPresentationDisplayForRoute(route);
+                saveAndNotifyOfDisplay("AndroidCastDevice:Added", route, display);
             }
 
             @Override
             public void onRouteChanged(MediaRouter router, MediaRouter.RouteInfo route) {
                 debug("onRouteChanged: route=" + route);
-                final GeckoMediaPlayer display = displays.get(route.getId());
-                saveAndNotifyOfDisplay("MediaPlayer:Changed", route, display);
+                final GeckoMediaPlayer player = players.get(route.getId());
+                saveAndNotifyOfPlayer("MediaPlayer:Changed", route, player);
                 updatePresentation();
+
+                final GeckoPresentationDisplay display = displays.get(route.getId());
+                saveAndNotifyOfDisplay("AndroidCastDevice:Changed", route, display);
+            }
+
+            private void saveAndNotifyOfPlayer(final String eventName,
+                                               MediaRouter.RouteInfo route,
+                                               final GeckoMediaPlayer player) {
+                if (player == null) {
+                    return;
+                }
+
+                final JSONObject json = player.toJSON();
+                if (json == null) {
+                    return;
+                }
+
+                players.put(route.getId(), player);
+                GeckoAppShell.notifyObservers(eventName, json.toString());
             }
 
             private void saveAndNotifyOfDisplay(final String eventName,
-                    MediaRouter.RouteInfo route, final GeckoMediaPlayer display) {
+                                                MediaRouter.RouteInfo route,
+                                                final GeckoPresentationDisplay display) {
                 if (display == null) {
                     return;
                 }
@@ -196,12 +226,23 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
     private GeckoMediaPlayer getMediaPlayerForRoute(MediaRouter.RouteInfo route) {
         try {
             if (route.supportsControlCategory(MediaControlIntent.CATEGORY_REMOTE_PLAYBACK)) {
-                return new ChromeCast(getActivity(), route);
+                return new ChromeCastPlayer(getActivity(), route);
             }
         } catch (Exception ex) {
             debug("Error handling presentation", ex);
         }
 
+        return null;
+    }
+
+    private GeckoPresentationDisplay getPresentationDisplayForRoute(MediaRouter.RouteInfo route) {
+        try {
+            if (route.supportsControlCategory(CastMediaControlIntent.categoryForCast(ChromeCastDisplay.REMOTE_DISPLAY_APP_ID))) {
+                return new ChromeCastDisplay(getActivity(), route);
+            }
+        } catch (Exception ex) {
+            debug("Error handling presentation", ex);
+        }
         return null;
     }
 
@@ -225,7 +266,8 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
         final MediaRouteSelector selectorBuilder = new MediaRouteSelector.Builder()
             .addControlCategory(MediaControlIntent.CATEGORY_LIVE_VIDEO)
             .addControlCategory(MediaControlIntent.CATEGORY_REMOTE_PLAYBACK)
-            .addControlCategory(CastMediaControlIntent.categoryForCast(ChromeCast.MIRROR_RECEIVER_APP_ID))
+            .addControlCategory(CastMediaControlIntent.categoryForCast(ChromeCastPlayer.MIRROR_RECEIVER_APP_ID))
+            .addControlCategory(CastMediaControlIntent.categoryForCast(ChromeCastDisplay.REMOTE_DISPLAY_APP_ID))
             .build();
         mediaRouter.addCallback(selectorBuilder, callback, MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY);
     }

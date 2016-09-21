@@ -34,7 +34,7 @@ import android.support.v7.media.MediaRouter.RouteInfo;
 import android.util.Log;
 
 /* Implementation of GeckoMediaPlayer for talking to ChromeCast devices */
-class ChromeCast implements GeckoMediaPlayer {
+class ChromeCastPlayer implements GeckoMediaPlayer {
     private static final boolean SHOW_DEBUG = false;
 
     static final String MIRROR_RECEIVER_APP_ID = "08FF1091";
@@ -168,7 +168,7 @@ class ChromeCast implements GeckoMediaPlayer {
         }
     }
 
-    public ChromeCast(Context context, RouteInfo route) {
+    public ChromeCastPlayer(Context context, RouteInfo route) {
         int status =  GooglePlayServicesUtil.isGooglePlayServicesAvailable(context);
         if (status != ConnectionResult.SUCCESS) {
             throw new IllegalStateException("Play services are required for Chromecast support (got status code " + status + ")");
@@ -493,7 +493,7 @@ class ChromeCast implements GeckoMediaPlayer {
         apiClient.connect();
     }
 
-    private static final String LOGTAG = "GeckoChromeCast";
+    private static final String LOGTAG = "GeckoChromeCastPlayer";
     private void debug(String msg, Exception e) {
         if (SHOW_DEBUG) {
             Log.e(LOGTAG, msg, e);

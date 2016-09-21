@@ -839,8 +839,10 @@ moz_native_devices_jars = [
     CONFIG['ANDROID_PLAY_SERVICES_CAST_AAR_LIB'],
 ]
 moz_native_devices_sources = ['java/org/mozilla/gecko/' + x for x in [
-    'ChromeCast.java',
+    'ChromeCastDisplay.java',
+    'ChromeCastPlayer.java',
     'GeckoMediaPlayer.java',
+    'GeckoPresentationDisplay.java',
     'MediaPlayerManager.java',
     'PresentationMediaPlayerManager.java',
 ]]
