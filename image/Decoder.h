@@ -32,12 +32,10 @@ struct DecoderFinalStatus final
 {
   DecoderFinalStatus(bool aWasMetadataDecode,
                      bool aFinished,
-                     bool aWasAborted,
                      bool aHadError,
                      bool aShouldReportError)
     : mWasMetadataDecode(aWasMetadataDecode)
     , mFinished(aFinished)
-    , mWasAborted(aWasAborted)
     , mHadError(aHadError)
     , mShouldReportError(aShouldReportError)
   { }
@@ -47,11 +45,6 @@ struct DecoderFinalStatus final
 
   /// True if this decoder finished, whether successfully or due to failure.
   const bool mFinished : 1;
-
-  /// True if this decoder was asynchronously aborted. This normally happens
-  /// when a decoder fails to insert a surface into the surface cache, indicating
-  /// that another decoding beat it to the punch.
-  const bool mWasAborted : 1;
 
   /// True if this decoder encountered an error.
   const bool mHadError : 1;
@@ -286,17 +279,6 @@ public:
 
   /// Are we in the middle of a frame right now? Used for assertions only.
   bool InFrame() const { return mInFrame; }
-
-  /**
-   * Returns true if this decoder was aborted.
-   *
-   * This may happen due to a low-memory condition, or because another decoder
-   * was racing with this one to decode the same frames with the same flags and
-   * this decoder lost the race. Either way, this is not a permanent situation
-   * and does not constitute an error, so we don't report any errors when this
-   * happens.
-   */
-  bool WasAborted() const { return mDecodeAborted; }
 
   enum DecodeStyle {
       PROGRESSIVE, // produce intermediate frames representing the partial
@@ -571,7 +553,6 @@ private:
   bool mReachedTerminalState : 1;
   bool mDecodeDone : 1;
   bool mError : 1;
-  bool mDecodeAborted : 1;
   bool mShouldReportError : 1;
 };
 
