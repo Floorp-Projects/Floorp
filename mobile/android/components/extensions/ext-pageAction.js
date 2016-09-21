@@ -32,7 +32,7 @@ function PageAction(options, extension) {
 
   this.options = {
     title: options.default_title || extension.name,
-    id: `{${extension.uuid}}`,
+    id: extension.id,
     clickCallback: () => {
       if (this.popupUrl) {
         let win = Services.wm.getMostRecentWindow("navigator:browser");
