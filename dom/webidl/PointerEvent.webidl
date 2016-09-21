@@ -26,8 +26,8 @@ interface PointerEvent : MouseEvent
 dictionary PointerEventInit : MouseEventInit
 {
   long pointerId = 0;
-  long width = 0;
-  long height = 0;
+  long width = 1;
+  long height = 1;
   float pressure = 0;
   long tiltX = 0;
   long tiltY = 0;
