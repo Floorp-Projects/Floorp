@@ -47,6 +47,11 @@ FFmpegLibWrapper::Link()
     Unlink();
     return false;
   }
+  if (micro < 100 && version < (54u << 16 | 35u << 8 | 1u)) {
+    // Block all LibAV's libavcodec < 54.35.1.
+    Unlink();
+    return false;
+  }
 
   enum {
     AV_FUNC_AVUTIL_MASK = 1 << 8,
