@@ -1368,7 +1368,8 @@ class ScriptMixin(PlatformMixin):
                 returncode = int(p.proc.returncode)
             else:
                 p = subprocess.Popen(command, shell=shell, stdout=subprocess.PIPE,
-                                     cwd=cwd, stderr=subprocess.STDOUT, env=env)
+                                     cwd=cwd, stderr=subprocess.STDOUT, env=env,
+                                     bufsize=0)
                 loop = True
                 while loop:
                     if p.poll() is not None:
