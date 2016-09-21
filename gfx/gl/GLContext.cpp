@@ -822,6 +822,7 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
         "Adreno (TM) 330",
         "Adreno (TM) 420",
         "Mali-400 MP",
+        "Mali-450 MP",
         "PowerVR SGX 530",
         "PowerVR SGX 540",
         "NVIDIA Tegra",
@@ -1801,7 +1802,8 @@ GLContext::InitExtensions()
         }
 
         if (Vendor() == GLVendor::ARM &&
-            Renderer() == GLRenderer::Mali400MP)
+            (Renderer() == GLRenderer::Mali400MP ||
+             Renderer() == GLRenderer::Mali450MP))
         {
             // Bug 1264505
             MarkExtensionUnsupported(OES_EGL_image_external);
