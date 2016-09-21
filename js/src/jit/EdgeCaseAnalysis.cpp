@@ -24,9 +24,10 @@ EdgeCaseAnalysis::analyzeLate()
     uint32_t nextId = 0;
 
     for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
-        if (mir->shouldCancel("Analyze Late (first loop)"))
-            return false;
         for (MDefinitionIterator iter(*block); iter; iter++) {
+            if (mir->shouldCancel("Analyze Late (first loop)"))
+                return false;
+
             iter->setId(nextId++);
             iter->analyzeEdgeCasesForward();
         }
@@ -34,10 +35,12 @@ EdgeCaseAnalysis::analyzeLate()
     }
 
     for (PostorderIterator block(graph.poBegin()); block != graph.poEnd(); block++) {
-        if (mir->shouldCancel("Analyze Late (second loop)"))
-            return false;
-        for (MInstructionReverseIterator riter(block->rbegin()); riter != block->rend(); riter++)
+        for (MInstructionReverseIterator riter(block->rbegin()); riter != block->rend(); riter++) {
+            if (mir->shouldCancel("Analyze Late (second loop)"))
+                return false;
+
             riter->analyzeEdgeCasesBackward();
+        }
     }
 
     return true;
