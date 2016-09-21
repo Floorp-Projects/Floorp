@@ -157,8 +157,7 @@ class MessageLogger(object):
         self.errors = []
 
     def valid_message(self, obj):
-        """True if the given object is a valid structured message
-        (only does a superficial validation)"""
+        """True if the given object is a valid structured message (only does a superficial validation)"""
         return isinstance(obj, dict) and 'action' in obj and obj[
             'action'] in MessageLogger.VALID_ACTIONS
 
@@ -180,8 +179,7 @@ class MessageLogger(object):
                 message['message'] = unicode(message['message'])
 
     def parse_line(self, line):
-        """Takes a given line of input (structured or not) and
-        returns a list of structured messages"""
+        """Takes a given line of input (structured or not) and returns a list of structured messages"""
         line = line.rstrip().decode("UTF-8", "replace")
 
         messages = []
@@ -415,9 +413,7 @@ class MochitestServer(object):
                 self._httpdPath,
                 "httpd.js"),
             "-e",
-            "const _PROFILE_PATH = '%(profile)s'; const _SERVER_PORT = '%(port)s'; "
-            "const _SERVER_ADDR = '%(server)s'; const _TEST_PREFIX = %(testPrefix)s; "
-            "const _DISPLAY_RESULTS = %(displayResults)s;" % {
+            """const _PROFILE_PATH = '%(profile)s'; const _SERVER_PORT = '%(port)s'; const _SERVER_ADDR = '%(server)s'; const _TEST_PREFIX = %(testPrefix)s; const _DISPLAY_RESULTS = %(displayResults)s;""" % {
                 "profile": self._profileDir.replace(
                     '\\',
                     '\\\\'),
@@ -558,6 +554,7 @@ class MochitestBase(object):
             MochitestBase.log = self.log
 
         self.message_logger = MessageLogger(logger=self.log)
+
 
     def update_mozinfo(self):
         """walk up directories to find mozinfo.json update the info"""
@@ -818,7 +815,7 @@ class MochitestBase(object):
                       % self.websocketProcessBridge.pid)
 
         # ensure the server is up, wait for at most ten seconds
-        for i in range(1, 100):
+        for i in range(1,100):
             if self.websocketProcessBridge.proc.poll() is not None:
                 self.log.error("runtests.py | websocket/process bridge failed "
                                "to launch. Are all the dependencies installed?")
@@ -954,8 +951,7 @@ class MochitestBase(object):
 
         # Write userChrome.css.
         chrome = """
-/* set default namespace to XUL */
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
 toolbar,
 toolbarpalette {
   background-color: rgb(235, 235, 235) !important;
@@ -1139,8 +1135,7 @@ toolbar#nav-bar {
             manifestFileAbs = os.path.abspath(options.manifestFile)
             assert manifestFileAbs.startswith(SCRIPT_DIR)
             manifest = TestManifest([options.manifestFile], strict=False)
-        elif (options.manifestFile and
-                os.path.isfile(os.path.join(SCRIPT_DIR, options.manifestFile))):
+        elif options.manifestFile and os.path.isfile(os.path.join(SCRIPT_DIR, options.manifestFile)):
             manifestFileAbs = os.path.abspath(
                 os.path.join(
                     SCRIPT_DIR,
@@ -1283,7 +1278,8 @@ toolbar#nav-bar {
             script = self.start_script
 
         with self.marionette.using_context('chrome'):
-            return self.marionette.execute_script(script, script_args=self.start_script_args)
+            return self.marionette.execute_script(script,
+                script_args=self.start_script_args)
 
 
 class SSLTunnel:
@@ -1694,14 +1690,14 @@ class MochitestDesktop(MochitestBase):
         # https://bugzilla.mozilla.org/show_bug.cgi?id=913152
 
         # proxy
-        # use SSL port for legacy compatibility; see
-        # - https://bugzilla.mozilla.org/show_bug.cgi?id=688667#c66
-        # - https://bugzilla.mozilla.org/show_bug.cgi?id=899221
-        # - https://github.com/mozilla/mozbase/commit/43f9510e3d58bfed32790c82a57edac5f928474d
-        #             'ws': str(self.webSocketPort)
         proxy = {'remote': options.webServer,
                  'http': options.httpPort,
                  'https': options.sslPort,
+                 # use SSL port for legacy compatibility; see
+                 # - https://bugzilla.mozilla.org/show_bug.cgi?id=688667#c66
+                 # - https://bugzilla.mozilla.org/show_bug.cgi?id=899221
+                 # - https://github.com/mozilla/mozbase/commit/43f9510e3d58bfed32790c82a57edac5f928474d
+                 #             'ws': str(self.webSocketPort)
                  'ws': options.sslPort
                  }
 
@@ -1860,8 +1856,9 @@ class MochitestDesktop(MochitestBase):
                 processPID)
             if isPidAlive(processPID):
                 foundZombie = True
-                self.log.info("TEST-UNEXPECTED-FAIL | zombiecheck | child process "
-                              "%d still alive after shutdown" % processPID)
+                self.log.info(
+                    "TEST-UNEXPECTED-FAIL | zombiecheck | child process %d still alive after shutdown" %
+                    processPID)
                 self.killAndGetStack(
                     processPID,
                     utilityPath,
@@ -1890,8 +1887,7 @@ class MochitestDesktop(MochitestBase):
                marionette_args=None):
         """
         Run the app, log the duration it took to execute, return the status code.
-        Kills the app if it runs for longer than |maxTime| seconds, or outputs nothing
-        for |timeout| seconds.
+        Kills the app if it runs for longer than |maxTime| seconds, or outputs nothing for |timeout| seconds.
         """
 
         # configure the message logger buffering
@@ -1917,8 +1913,7 @@ class MochitestDesktop(MochitestBase):
 
             valgrindSuppFiles_final = []
             if valgrindSuppFiles is not None:
-                valgrindSuppFiles_final = ["--suppressions=" +
-                                           path for path in valgrindSuppFiles.split(",")]
+                valgrindSuppFiles_final = ["--suppressions=" + path for path in valgrindSuppFiles.split(",")]
 
             debug_args = ([valgrindPath]
                           + mozdebug.get_default_valgrind_args()
@@ -2167,9 +2162,8 @@ class MochitestDesktop(MochitestBase):
                 # To inform that we are in the process of bisection, and to
                 # look for bleedthrough
                 if options.bisectChunk != "default" and not bisection_log:
-                    self.log.info("TEST-UNEXPECTED-FAIL | Bisection | Please ignore repeats "
-                                  "and look for 'Bleedthrough' (if any) at the end of "
-                                  "the failure list")
+                    self.log.info(
+                        "TEST-UNEXPECTED-FAIL | Bisection | Please ignore repeats and look for 'Bleedthrough' (if any) at the end of the failure list")
                     bisection_log = 1
 
             result = self.doTests(options, testsToRun)
@@ -2230,8 +2224,8 @@ class MochitestDesktop(MochitestBase):
             tests_in_dir = [t for t in testsToRun if os.path.dirname(t) == d]
 
             # If we are using --run-by-dir, we should not use the profile path (if) provided
-            # by the user, since we need to create a new directory for each run. We would face
-            # problems if we use the directory provided by the user.
+            # by the user, since we need to create a new directory for each run. We would face problems
+            # if we use the directory provided by the user.
             result = self.runMochitests(options, tests_in_dir)
 
             # Dump the logging buffer
@@ -2338,8 +2332,7 @@ class MochitestDesktop(MochitestBase):
             return 1
 
         if self.mozLogs:
-            self.browserEnv["MOZ_LOG_FILE"] = "{}/moz-pid=%PID-uid={}.log".format(
-                self.browserEnv["MOZ_UPLOAD_DIR"], str(uuid.uuid4()))
+            self.browserEnv["MOZ_LOG_FILE"] = "{}/moz-pid=%PID-uid={}.log".format(self.browserEnv["MOZ_UPLOAD_DIR"], str(uuid.uuid4()))
 
         try:
             self.startServers(options, debuggerInfo)
@@ -2455,12 +2448,12 @@ class MochitestDesktop(MochitestBase):
         """handle process output timeout"""
         # TODO: bug 913975 : _processOutput should call self.processOutputLine
         # one more time one timeout (I think)
-        error_message = ("TEST-UNEXPECTED-TIMEOUT | %s | application timed out after "
-                         "%d seconds with no output") % (self.lastTestSeen, int(timeout))
+        error_message = "TEST-UNEXPECTED-TIMEOUT | %s | application timed out after %d seconds with no output" % (
+            self.lastTestSeen, int(timeout))
         self.message_logger.dump_buffered()
         self.message_logger.buffering = False
         self.log.info(error_message)
-        self.log.error("Force-terminating active process(es).")
+        self.log.error("Force-terminating active process(es).");
 
         browser_pid = browser_pid or proc.pid
         child_pids = self.extract_child_pids(processLog, browser_pid)
@@ -2517,10 +2510,10 @@ class MochitestDesktop(MochitestBase):
             self.lsanLeaks = lsanLeaks
             self.bisectChunk = bisectChunk
 
-            # With metro browser runs this script launches the metro test harness which launches
-            # the browser. The metro test harness hands back the real browser process id via log
-            # output which we need to pick up on and parse out. This variable tracks the real
-            # browser process id if we find it.
+            # With metro browser runs this script launches the metro test harness which launches the browser.
+            # The metro test harness hands back the real browser process id via log output which we need to
+            # pick up on and parse out. This variable tracks the real browser
+            # process id if we find it.
             self.browserProcessId = None
 
             self.stackFixerFunction = self.stackFixer()
