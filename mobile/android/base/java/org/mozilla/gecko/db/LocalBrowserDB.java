@@ -27,6 +27,7 @@ import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.db.BrowserContract.ActivityStreamBlocklist;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.ExpirePriority;
@@ -118,6 +119,7 @@ public class LocalBrowserDB extends BrowserDB {
     private final Uri mTopSitesUriWithProfile;
     private final Uri mHighlightsUriWithProfile;
     private final Uri mSearchHistoryUri;
+    private final Uri mActivityStreamBlockedUriWithProfile;
 
     private LocalSearches searches;
     private LocalTabsAccessor tabsAccessor;
@@ -145,6 +147,7 @@ public class LocalBrowserDB extends BrowserDB {
         mTopSitesUriWithProfile = DBUtils.appendProfile(profile, TopSites.CONTENT_URI);
         mHighlightsUriWithProfile = DBUtils.appendProfile(profile, Highlights.CONTENT_URI);
         mThumbnailsUriWithProfile = DBUtils.appendProfile(profile, Thumbnails.CONTENT_URI);
+        mActivityStreamBlockedUriWithProfile = DBUtils.appendProfile(profile, ActivityStreamBlocklist.CONTENT_URI);
 
         mSearchHistoryUri = BrowserContract.SearchHistory.CONTENT_URI;
 
@@ -1843,4 +1846,12 @@ public class LocalBrowserDB extends BrowserDB {
 
         return new CursorLoader(context, uri, null, null, null, null);
     }
+
+    @Override
+    public void blockActivityStreamSite(ContentResolver cr, String url) {
+        final ContentValues values = new ContentValues();
+        values.put(ActivityStreamBlocklist.URL, url);
+        cr.insert(mActivityStreamBlockedUriWithProfile, values);
+    }
+
 }

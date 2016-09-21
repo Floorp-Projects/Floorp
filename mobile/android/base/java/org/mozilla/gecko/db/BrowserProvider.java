@@ -133,6 +133,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
     static final int HIGHLIGHTS = 1300;
 
+    static final int ACTIVITY_STREAM_BLOCKLIST = 1400;
+
     static final String DEFAULT_BOOKMARKS_SORT_ORDER = Bookmarks.TYPE
             + " ASC, " + Bookmarks.POSITION + " ASC, " + Bookmarks._ID
             + " ASC";
@@ -297,6 +299,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "topsites", TOPSITES);
 
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "highlights", HIGHLIGHTS);
+
+        URI_MATCHER.addURI(BrowserContract.AUTHORITY, ActivityStreamBlocklist.TABLE_NAME, ACTIVITY_STREAM_BLOCKLIST);
     }
 
     private static class ShrinkMemoryReceiver extends BroadcastReceiver {
@@ -646,6 +650,12 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             case URL_ANNOTATIONS: {
                 trace("Insert on URL_ANNOTATIONS: " + uri);
                 id = insertUrlAnnotation(uri, values);
+                break;
+            }
+
+            case ACTIVITY_STREAM_BLOCKLIST: {
+                trace("Insert on ACTIVITY_STREAM_BLOCKLIST: " + uri);
+                id = insertActivityStreamBlocklistSite(uri, values);
                 break;
             }
 
@@ -1876,6 +1886,17 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         final SQLiteDatabase db = getWritableDatabase(uri);
         beginWrite(db);
         return db.insertOrThrow(TABLE_THUMBNAILS, null, values);
+    }
+
+    private long insertActivityStreamBlocklistSite(final Uri uri, final ContentValues values) {
+        final String url = values.getAsString(ActivityStreamBlocklist.URL);
+        trace("Inserting url into highlights blocklist, URL: " + url);
+
+        final SQLiteDatabase db = getWritableDatabase(uri);
+        values.put(ActivityStreamBlocklist.CREATED, System.currentTimeMillis());
+
+        beginWrite(db);
+        return db.insertOrThrow(TABLE_ACTIVITY_STREAM_BLOCKLIST, null, values);
     }
 
     private long insertUrlAnnotation(final Uri uri, final ContentValues values) {
