@@ -340,6 +340,7 @@ private:
   }
 
   void InitWithAppCommand();
+  void InitWithKeyChar();
 
   /**
    * Returns true if the key event is caused by auto repeat.
