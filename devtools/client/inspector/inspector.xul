@@ -16,6 +16,7 @@
 <?xml-stylesheet href="resource://devtools/client/shared/components/tabs/tabbar.css" type="text/css"?>
 <?xml-stylesheet href="resource://devtools/client/inspector/components/side-panel.css" type="text/css"?>
 <?xml-stylesheet href="resource://devtools/client/inspector/components/inspector-tab-panel.css" type="text/css"?>
+<?xml-stylesheet href="resource://devtools/client/shared/components/splitter/split-box.css" type="text/css"?>
 
 <!DOCTYPE window [
   <!ENTITY % inspectorDTD SYSTEM "chrome://devtools/locale/inspector.dtd"> %inspectorDTD;
@@ -30,8 +31,10 @@
   <script type="application/javascript;version=1.8"
           src="chrome://devtools/content/shared/theme-switching.js"/>
 
-  <box flex="1" class="devtools-responsive-container theme-body">
-    <vbox flex="1" class="devtools-main-content">
+  <html:div class="inspector-responsive-container theme-body inspector">
+
+    <!-- Main Panel Content -->
+    <html:div id="inspector-main-content" class="devtools-main-content">
       <html:div id="inspector-toolbar"
         class="devtools-toolbar"
         nowindowdrag="true">
@@ -49,27 +52,31 @@
         <html:button id="inspector-eyedropper-toggle"
                      title="&inspectorEyeDropper.label;"
                      class="devtools-button command-button-invertable" />
-        <div xmlns="http://www.w3.org/1999/xhtml"
-          id="inspector-sidebar-toggle-box" />
+        <html:div id="inspector-sidebar-toggle-box" />
       </html:div>
-      <vbox flex="1" id="markup-box">
-      </vbox>
+      <html:div id="markup-box" />
       <html:div id="inspector-breadcrumbs-toolbar" class="devtools-toolbar">
         <html:div id="inspector-breadcrumbs" class="breadcrumbs-widget-container"
                   role="group" aria-label="&inspectorBreadcrumbsGroup;" tabindex="0" />
       </html:div>
-    </vbox>
-    <splitter class="devtools-side-splitter"/>
-    <vbox id="inspector-sidebar-container">
-      <!-- Specify the XHTML namespace explicitly
-        otherwise the layout is broken. -->
-      <div xmlns="http://www.w3.org/1999/xhtml"
-           id="inspector-sidebar"
-           hidden="true" />
-    </vbox>
+    </html:div>
+
+    <!-- Splitter -->
+    <html:div
+      xmlns="http://www.w3.org/1999/xhtml"
+      id="inspector-splitter-box">
+    </html:div>
+
+    <!-- Sidebar Container -->
+    <html:div id="inspector-sidebar-container">
+      <html:div
+        xmlns="http://www.w3.org/1999/xhtml"
+        id="inspector-sidebar"
+        hidden="true" />
+    </html:div>
 
     <!-- Sidebar panel definitions -->
-    <html:div xmlns="http://www.w3.org/1999/xhtml" id="tabpanels" style="visibility:collapse">
+    <html:div id="tabpanels" style="visibility:collapse">
       <html:div id="sidebar-panel-ruleview" class="devtools-monospace theme-sidebar inspector-tabpanel">
         <html:div id="ruleview-toolbar-container" class="devtools-toolbar">
           <html:div id="ruleview-toolbar">
@@ -218,5 +225,5 @@
       </html:div>
     </html:div>
 
-  </box>
+  </html:div>
 </window>
