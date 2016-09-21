@@ -49,13 +49,11 @@ using std::hex;
 
 
 Module::Module(const string &name, const string &os,
-               const string &architecture, const string &id,
-               const string &code_id /* = "" */) :
+               const string &architecture, const string &id) :
     name_(name),
     os_(os),
     architecture_(architecture),
     id_(id),
-    code_id_(code_id),
     load_address_(0) { }
 
 Module::~Module() {
@@ -259,10 +257,6 @@ bool Module::Write(std::ostream &stream, SymbolData symbol_data) {
          << id_ << " " << name_ << endl;
   if (!stream.good())
     return ReportError();
-
-  if (!code_id_.empty()) {
-    stream << "INFO CODE_ID " << code_id_ << endl;
-  }
 
   if (symbol_data != ONLY_CFI) {
     AssignSourceIds();
