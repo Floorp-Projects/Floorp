@@ -374,13 +374,22 @@ SapiService::Speak(const nsAString& aText, const nsAString& aUri,
   xml.AppendLiteral("\">");
   uint32_t textOffset = xml.Length();
 
-  const char16_t* escapedText =
-    nsEscapeHTML2(aText.BeginReading(), aText.Length());
-  if (!escapedText) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  for (size_t i = 0; i < aText.Length(); i++) {
+    switch (aText[i]) {
+      case '&':
+        xml.AppendLiteral("&amp;");
+        break;
+      case '<':
+        xml.AppendLiteral("&lt;");
+        break;
+      case '>':
+        xml.AppendLiteral("&gt;");
+        break;
+      default:
+        xml.Append(aText[i]);
+        break;
+    }
   }
-  xml.Append(escapedText);
-  free((void*)escapedText);
 
   xml.AppendLiteral("</pitch>");
 
