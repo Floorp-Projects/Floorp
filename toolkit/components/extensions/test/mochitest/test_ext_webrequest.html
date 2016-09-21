@@ -151,6 +151,7 @@ function backgroundScript() {
   }
 
   let frameIDs = new Map();
+  let skippedRequests = new Set();
 
   let recorded = {requested: [],
                   beforeSendHeaders: [],
@@ -181,6 +182,7 @@ function backgroundScript() {
       },
       modified: {
         "Server": "WebRequest",
+        "Content-Type": "text/html; charset=utf-8",
       },
       deleted: [
         "Connection",
@@ -201,6 +203,7 @@ function backgroundScript() {
     if (headers.find(h => h.name === processedMark)) {
       // This may happen because of redirections or cache
       browser.test.log(`${phase}Headers in ${details.requestId} already processed`);
+      skippedRequests.add(details.requestId);
       return null;
     }
     headers.push({name: processedMark, value: "1"});
@@ -251,8 +254,14 @@ function backgroundScript() {
     }
 
     let modifiedAny = false;
+    browser.test.log(`HEADERS ${JSON.stringify(headers)}`);
     for (let header of headers.filter(h => h.name in modified)) {
       let {name, value} = header;
+      if (name.toLowerCase() === "content-type" && skippedRequests.has(details.requestId)) {
+        // Changes to Content-Type headers are not persisted in the cache.
+        continue;
+      }
+
       browser.test.assertTrue(value === modified[name], `header "${name}: ${value}" matches modified value ("${modified[name]}")`);
       modifiedAny = true;
     }
