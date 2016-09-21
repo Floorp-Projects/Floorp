@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include protocol PVideoDecoder;
 include LayersSurfaces;
 include "mozilla/dom/MediaIPCUtils.h";
 
@@ -11,7 +12,9 @@ namespace dom {
 
 async protocol PVideoDecoderManager
 {
+  manages PVideoDecoder;
 parent:
+  async PVideoDecoder();
 
   async DeallocateSurfaceDescriptorGPUVideo(SurfaceDescriptorGPUVideo sd);
 };
