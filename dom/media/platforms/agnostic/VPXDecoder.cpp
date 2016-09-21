@@ -116,7 +116,9 @@ VPXDecoder::DoDecode(MediaRawData* aSample)
 
   if (vpx_codec_err_t r = vpx_codec_decode(&mVPX, aSample->Data(), aSample->Size(), nullptr, 0)) {
     LOG("VPX Decode error: %s", vpx_codec_err_to_string(r));
-    return NS_ERROR_DOM_MEDIA_DECODE_ERR;
+    return MediaResult(
+      NS_ERROR_DOM_MEDIA_DECODE_ERR,
+      RESULT_DETAIL("VPX error: %s", vpx_codec_err_to_string(r)));
   }
 
   vpx_codec_iter_t  iter = nullptr;
@@ -157,7 +159,8 @@ VPXDecoder::DoDecode(MediaRawData* aSample)
       b.mPlanes[2].mWidth = img->d_w;
     } else {
       LOG("VPX Unknown image format");
-      return NS_ERROR_DOM_MEDIA_DECODE_ERR;
+      return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                         RESULT_DETAIL("VPX Unknown image format"));
     }
 
     RefPtr<VideoData> v =

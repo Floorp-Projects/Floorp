@@ -187,7 +187,8 @@ TheoraDecoder::DoDecode(MediaRawData* aSample)
     return NS_OK;
   } else {
     LOG("Theora Decode error: %d", ret);
-    return NS_ERROR_DOM_MEDIA_DECODE_ERR;
+    return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                       RESULT_DETAIL("Theora decode error:%d", ret));
   }
 }
 
