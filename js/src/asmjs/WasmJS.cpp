@@ -161,6 +161,13 @@ GetImports(JSContext* cx,
                 break;
               }
               case ValType::F32: {
+                if (JitOptions.wasmTestMode && v.isObject()) {
+                    uint32_t bits;
+                    if (!ReadCustomFloat32NaNObject(cx, v, &bits))
+                        return false;
+                    val = Val(RawF32::fromBits(bits));
+                    break;
+                }
                 double d;
                 if (!ToNumber(cx, v, &d))
                     return false;
@@ -168,6 +175,13 @@ GetImports(JSContext* cx,
                 break;
               }
               case ValType::F64: {
+                if (JitOptions.wasmTestMode && v.isObject()) {
+                    uint64_t bits;
+                    if (!ReadCustomDoubleNaNObject(cx, v, &bits))
+                        return false;
+                    val = Val(RawF64::fromBits(bits));
+                    break;
+                }
                 double d;
                 if (!ToNumber(cx, v, &d))
                     return false;
