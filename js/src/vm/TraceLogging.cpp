@@ -254,10 +254,8 @@ TraceLoggerThread::enable(JSContext* cx)
 bool
 TraceLoggerThread::disable(bool force, const char* error)
 {
-    if (failed) {
-        MOZ_ASSERT(enabled_ == 0);
+    if (failed)
         return false;
-    }
 
     if (enabled_ == 0)
         return true;
@@ -537,10 +535,7 @@ TraceLoggerThread::stopEvent(uint32_t id)
 #ifdef DEBUG
     if (enabled_ > 0 && !graphStack.empty()) {
         uint32_t prev = graphStack.popCopy();
-        if (id == TraceLogger_Error || prev == TraceLogger_Error) {
-            // When encountering an Error id the stack will most likely not be correct anymore.
-            // Ignore this.
-        } else if (id == TraceLogger_Engine) {
+        if (id == TraceLogger_Engine) {
             MOZ_ASSERT(prev == TraceLogger_IonMonkey || prev == TraceLogger_Baseline ||
                        prev == TraceLogger_Interpreter);
         } else if (id == TraceLogger_Scripts) {
@@ -575,11 +570,6 @@ TraceLoggerThread::log(uint32_t id)
 {
     if (enabled_ == 0)
         return;
-
-#ifdef DEBUG
-    if (id == TraceLogger_Disable)
-        graphStack.clear();
-#endif
 
     MOZ_ASSERT(traceLoggerState);
 
