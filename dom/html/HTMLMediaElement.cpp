@@ -1515,20 +1515,6 @@ nsresult HTMLMediaElement::LoadResource()
   // Set the media element's CORS mode only when loading a resource
   mCORSMode = AttrValueToCORSMode(GetParsedAttr(nsGkAtoms::crossorigin));
 
-#ifdef MOZ_EME
-  bool isBlob = false;
-  if (mMediaKeys &&
-      Preferences::GetBool("media.eme.mse-only", true) &&
-      // We only want mediaSource URLs, but they are BlobURL, so we have to
-      // check the schema and if they are not MediaStream or real Blob.
-      (NS_FAILED(mLoadingSrc->SchemeIs(BLOBURI_SCHEME, &isBlob)) ||
-       !isBlob ||
-       IsMediaStreamURI(mLoadingSrc) ||
-       IsBlobURI(mLoadingSrc))) {
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-  }
-#endif
-
   HTMLMediaElement* other = LookupMediaElementURITable(mLoadingSrc);
   if (other && other->mDecoder) {
     // Clone it.
@@ -3943,6 +3929,7 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
     mDecoder->SetFragmentEndTime(mFragmentEnd);
   }
   if (mIsEncrypted) {
+    // We only support playback of encrypted content via MSE by default.
     if (!mMediaSource && Preferences::GetBool("media.eme.mse-only", true)) {
       DecodeError();
       return;
@@ -5696,16 +5683,6 @@ HTMLMediaElement::SetMediaKeys(mozilla::dom::MediaKeys* aMediaKeys,
     NS_LITERAL_CSTRING("HTMLMediaElement.setMediaKeys"));
   if (aRv.Failed()) {
     return nullptr;
-  }
-
-  // We only support EME for MSE content by default.
-  if (mDecoder &&
-      !mMediaSource &&
-      Preferences::GetBool("media.eme.mse-only", true)) {
-    ShutdownDecoder();
-    promise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-                         NS_LITERAL_CSTRING("EME not supported on non-MSE streams"));
-    return promise.forget();
   }
 
   // 1. If mediaKeys and the mediaKeys attribute are the same object,
