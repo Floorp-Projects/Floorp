@@ -505,8 +505,8 @@ Instance::memoryLength() const
 }
 
 template<typename T>
-static JSObject*
-CreateCustomNaNObject(JSContext* cx, T* addr)
+JSObject*
+js::wasm::CreateCustomNaNObject(JSContext* cx, T* addr)
 {
     MOZ_ASSERT(IsNaN(*addr));
 
@@ -528,8 +528,11 @@ CreateCustomNaNObject(JSContext* cx, T* addr)
     return obj;
 }
 
-static bool
-ReadCustomFloat32NaNObject(JSContext* cx, HandleValue v, uint32_t* ret)
+template JSObject* js::wasm::CreateCustomNaNObject(JSContext* cx, float* addr);
+template JSObject* js::wasm::CreateCustomNaNObject(JSContext* cx, double* addr);
+
+bool
+js::wasm::ReadCustomFloat32NaNObject(JSContext* cx, HandleValue v, uint32_t* ret)
 {
     RootedObject obj(cx, &v.toObject());
     RootedValue val(cx);
@@ -544,8 +547,8 @@ ReadCustomFloat32NaNObject(JSContext* cx, HandleValue v, uint32_t* ret)
     return true;
 }
 
-static bool
-ReadCustomDoubleNaNObject(JSContext* cx, HandleValue v, uint64_t* ret)
+bool
+js::wasm::ReadCustomDoubleNaNObject(JSContext* cx, HandleValue v, uint64_t* ret)
 {
     RootedObject obj(cx, &v.toObject());
     RootedValue val(cx);
