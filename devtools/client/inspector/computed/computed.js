@@ -961,6 +961,9 @@ PropertyView.prototype = {
     // Reset its tabindex attribute otherwise, if an ellipsis is applied
     // it will be reachable via TABing
     this.nameNode.setAttribute("tabindex", "");
+    // Avoid english text (css properties) from being altered
+    // by RTL mode
+    this.nameNode.setAttribute("dir", "ltr");
     this.nameNode.textContent = this.nameNode.title = this.name;
     // Make it hand over the focus to the container
     this.onFocus = () => this.element.focus();
