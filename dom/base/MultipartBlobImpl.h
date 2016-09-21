@@ -10,6 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/Move.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/FileBinding.h"
@@ -26,14 +27,14 @@ public:
 
   // Create as a file
   static already_AddRefed<MultipartBlobImpl>
-  Create(const nsTArray<RefPtr<BlobImpl>>& aBlobImpls,
+  Create(nsTArray<RefPtr<BlobImpl>>&& aBlobImpls,
          const nsAString& aName,
          const nsAString& aContentType,
          ErrorResult& aRv);
 
   // Create as a blob
   static already_AddRefed<MultipartBlobImpl>
-  Create(const nsTArray<RefPtr<BlobImpl>>& aBlobImpls,
+  Create(nsTArray<RefPtr<BlobImpl>>&& aBlobImpls,
          const nsAString& aContentType,
          ErrorResult& aRv);
 
@@ -106,19 +107,19 @@ public:
   virtual bool MayBeClonedToOtherThreads() const override;
 
 protected:
-  MultipartBlobImpl(const nsTArray<RefPtr<BlobImpl>>& aBlobImpls,
+  MultipartBlobImpl(nsTArray<RefPtr<BlobImpl>>&& aBlobImpls,
                     const nsAString& aName,
                     const nsAString& aContentType)
     : BlobImplBase(aName, aContentType, UINT64_MAX),
-      mBlobImpls(aBlobImpls),
+      mBlobImpls(Move(aBlobImpls)),
       mIsFromNsIFile(false)
   {
   }
 
-  MultipartBlobImpl(const nsTArray<RefPtr<BlobImpl>>& aBlobImpls,
+  MultipartBlobImpl(nsTArray<RefPtr<BlobImpl>>&& aBlobImpls,
                     const nsAString& aContentType)
     : BlobImplBase(aContentType, UINT64_MAX),
-      mBlobImpls(aBlobImpls),
+      mBlobImpls(Move(aBlobImpls)),
       mIsFromNsIFile(false)
   {
   }
