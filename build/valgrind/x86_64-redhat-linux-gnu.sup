@@ -185,3 +185,26 @@
    fun:glxtest
    ...
 }
+
+#########################################
+#  Uninitialised value false positives  #
+#########################################
+
+# This concerns a false positive pertaining to Memcheck's overly-
+# conservative instrumentation of CPUID.  See bug 1288618 comments
+# 119 through 127.
+{
+   Bug 1288618 comments 119 through 127
+   Memcheck:Cond
+   fun:_ZN6SkOptsL4initEv
+   fun:sk_once_no_arg_adaptor
+}
+
+{
+   Bug 1288618 comments 119 through 127 part 2
+   Memcheck:Cond
+   fun:__get_cpuid
+   fun:cpuid
+   fun:_ZN6SkOptsL4initEv
+   fun:sk_once_no_arg_adaptor
+}
