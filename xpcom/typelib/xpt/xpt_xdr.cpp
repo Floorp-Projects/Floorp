@@ -6,7 +6,6 @@
 /* Implementation of XDR primitives. */
 
 #include "xpt_xdr.h"
-#include "nspr.h"
 #include "nscore.h"
 #include <string.h>             /* strchr */
 #include "mozilla/EndianUtils.h"
