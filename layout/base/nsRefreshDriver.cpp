@@ -1737,7 +1737,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
             mStyleCause = nullptr;
           }
 
-          NS_ADDREF(shell);
+          nsCOMPtr<nsIPresShell> shellKungFuDeathGrip(shell);
           mStyleFlushObservers.RemoveElement(shell);
           RestyleManagerHandle restyleManager =
             shell->GetPresContext()->RestyleManager();
@@ -1750,8 +1750,6 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
           if (presContext) {
             presContext->NotifyFontFaceSetOnRefresh();
           }
-          NS_RELEASE(shell);
-
           mNeedToRecomputeVisibility = true;
         }
 
@@ -1779,7 +1777,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
           mReflowCause = nullptr;
         }
 
-        NS_ADDREF(shell);
+        nsCOMPtr<nsIPresShell> shellKungFuDeathGrip(shell);
         mLayoutFlushObservers.RemoveElement(shell);
         shell->mReflowScheduled = false;
         shell->mSuppressInterruptibleReflows = false;
@@ -1793,8 +1791,6 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
         if (presContext) {
           presContext->NotifyFontFaceSetOnRefresh();
         }
-        NS_RELEASE(shell);
-
         mNeedToRecomputeVisibility = true;
       }
 
