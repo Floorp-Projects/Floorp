@@ -27,6 +27,9 @@ class Principal;
 
 namespace mozilla {
 namespace ipc {
+class FileDescriptor;
+class PFileDescriptorSetChild;
+class PSendStreamChild;
 class Shmem;
 } // namespace ipc
 
@@ -69,6 +72,12 @@ public:
                           const bool& aIsForApp,
                           const bool& aIsForBrowser) = 0;
 
+  virtual mozilla::ipc::PFileDescriptorSetChild*
+  SendPFileDescriptorSetConstructor(const mozilla::ipc::FileDescriptor&) = 0;
+
+  virtual mozilla::ipc::PSendStreamChild*
+  SendPSendStreamConstructor(mozilla::ipc::PSendStreamChild*) = 0;
+
 protected:
   virtual jsipc::PJavaScriptChild* AllocPJavaScriptChild();
   virtual bool DeallocPJavaScriptChild(jsipc::PJavaScriptChild*);
@@ -84,6 +93,16 @@ protected:
   virtual PBlobChild* AllocPBlobChild(const BlobConstructorParams& aParams);
 
   virtual bool DeallocPBlobChild(PBlobChild* aActor);
+
+  virtual mozilla::ipc::PSendStreamChild* AllocPSendStreamChild();
+
+  virtual bool DeallocPSendStreamChild(mozilla::ipc::PSendStreamChild* aActor);
+
+  virtual mozilla::ipc::PFileDescriptorSetChild*
+  AllocPFileDescriptorSetChild(const mozilla::ipc::FileDescriptor& aFD);
+
+  virtual bool
+  DeallocPFileDescriptorSetChild(mozilla::ipc::PFileDescriptorSetChild* aActor);
 
   virtual bool RecvAsyncMessage(const nsString& aMsg,
                                 InfallibleTArray<jsipc::CpowEntry>&& aCpows,
