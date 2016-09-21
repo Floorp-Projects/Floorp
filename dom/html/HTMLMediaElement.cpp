@@ -6210,6 +6210,18 @@ HTMLMediaElement::SetOnencrypted(EventHandlerNonNull* handler)
   }
 }
 
+EventHandlerNonNull*
+HTMLMediaElement::GetOnwaitingforkey()
+{
+  return EventTarget::GetEventHandler(nsGkAtoms::onwaitingforkey, EmptyString());
+}
+
+void
+HTMLMediaElement::SetOnwaitingforkey(EventHandlerNonNull* aCallback)
+{
+  EventTarget::SetEventHandler(nsGkAtoms::onwaitingforkey, EmptyString(), aCallback);
+}
+
 void
 HTMLMediaElement::DispatchEncrypted(const nsTArray<uint8_t>& aInitData,
                                     const nsAString& aInitDataType)
