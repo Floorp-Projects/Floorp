@@ -369,7 +369,8 @@ FlyWebPublishedServerChild::OnFetchResponse(InternalRequest* aRequest,
 
   IPCInternalResponse ipcResp;
   UniquePtr<mozilla::ipc::AutoIPCStream> autoStream;
-  aResponse->ToIPC(&ipcResp, Manager(), autoStream);
+  nsIContentChild* cc = static_cast<ContentChild*>(Manager());
+  aResponse->ToIPC(&ipcResp, cc, autoStream);
   Unused << SendFetchResponse(ipcResp, id);
   if (autoStream) {
     autoStream->TakeOptionalValue();
@@ -435,7 +436,8 @@ FlyWebPublishedServerChild::OnWebSocketResponse(InternalRequest* aRequest,
 
   IPCInternalResponse ipcResp;
   UniquePtr<mozilla::ipc::AutoIPCStream> autoStream;
-  aResponse->ToIPC(&ipcResp, Manager(), autoStream);
+  nsIContentChild* cc = static_cast<ContentChild*>(Manager());
+  aResponse->ToIPC(&ipcResp, cc, autoStream);
 
   Unused << SendWebSocketResponse(ipcResp, id);
   if (autoStream) {

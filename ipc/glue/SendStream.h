@@ -17,7 +17,7 @@ class nsIAsyncInputStream;
 namespace mozilla {
 
 namespace dom {
-class PContentChild;
+class nsIContentChild;
 } // dom namespace
 
 namespace ipc {
@@ -56,7 +56,7 @@ public:
   // main thread.  This can return nullptr if the provided stream is
   // blocking.
   static SendStreamChild*
-  Create(nsIAsyncInputStream* aInputStream, dom::PContentChild* aManager);
+  Create(nsIAsyncInputStream* aInputStream, dom::nsIContentChild* aManager);
 
   // Create a SendStreamChild using a PBackground IPC manager on the
   // main thread or a Worker thread.  This can return nullptr if the provided
