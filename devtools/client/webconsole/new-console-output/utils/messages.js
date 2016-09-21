@@ -83,11 +83,11 @@ function transformPacket(packet) {
           break;
       }
 
-      const frame = {
-        source: message.filename || null,
-        line: message.lineNumber || null,
-        column: message.columnNumber || null
-      };
+      const frame = message.filename ? {
+        source: message.filename,
+        line: message.lineNumber,
+        column: message.columnNumber,
+      } : null;
 
       return new ConsoleMessage({
         source: MESSAGE_SOURCE.CONSOLE_API,
@@ -119,11 +119,11 @@ function transformPacket(packet) {
         level = MESSAGE_LEVEL.INFO;
       }
 
-      const frame = {
+      const frame = pageError.sourceName ? {
         source: pageError.sourceName,
         line: pageError.lineNumber,
         column: pageError.columnNumber
-      };
+      } : null;
 
       return new ConsoleMessage({
         source: MESSAGE_SOURCE.JAVASCRIPT,
