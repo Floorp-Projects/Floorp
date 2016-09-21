@@ -1514,16 +1514,19 @@ OptimizeMIR(MIRGenerator* mir)
     else
         logger = TraceLoggerForCurrentThread();
 
+    if (mir->shouldCancel("Start"))
+        return false;
+
     if (!mir->compilingAsmJS()) {
-        if (!MakeMRegExpHoistable(graph))
+        if (!MakeMRegExpHoistable(mir, graph))
+            return false;
+
+        if (mir->shouldCancel("Make MRegExp Hoistable"))
             return false;
     }
 
     gs.spewPass("BuildSSA");
     AssertBasicGraphCoherency(graph);
-
-    if (mir->shouldCancel("Start"))
-        return false;
 
     if (!JitOptions.disablePgo && !mir->compilingAsmJS()) {
         AutoTraceLog log(logger, TraceLogger_PruneUnusedBranches);
