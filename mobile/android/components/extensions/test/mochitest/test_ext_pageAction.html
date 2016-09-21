@@ -41,15 +41,10 @@ function background() {
     browser.test.sendMessage("page-action-clicked");
   });
 
-  let extensionInfo = {
-    // Extract the assigned uuid from the background page url.
-    uuid: `{${window.location.hostname}}`,
-  };
-
-  browser.test.sendMessage("ready", extensionInfo);
+  browser.test.sendMessage("ready");
 }
 
-add_task(function* test_pageAction() {
+add_task(function* test_contentscript() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
@@ -60,11 +55,6 @@ add_task(function* test_pageAction() {
           "18": "extension.png",
         },
       },
-      "applications": {
-         "gecko": {
-             "id": "foo@bar.com",
-         }
-      },
     },
     files: {
       "extension.png": IMAGE_ARRAYBUFFER,
@@ -72,26 +62,26 @@ add_task(function* test_pageAction() {
   });
 
   yield extension.startup();
-  let {uuid} = yield extension.awaitMessage("ready");
+  yield extension.awaitMessage("ready");
 
   extension.sendMessage("pageAction-show");
   yield extension.awaitMessage("page-action-shown");
-  ok(isPageActionShown(uuid), "The PageAction should be shown");
+  ok(isPageActionShown(extension.id), "The PageAction should be shown");
 
   extension.sendMessage("pageAction-hide");
   yield extension.awaitMessage("page-action-hidden");
-  ok(!isPageActionShown(uuid), "The PageAction should be hidden");
+  ok(!isPageActionShown(extension.id), "The PageAction should be hidden");
 
   extension.sendMessage("pageAction-show");
   yield extension.awaitMessage("page-action-shown");
-  ok(isPageActionShown(uuid), "The PageAction should be shown");
+  ok(isPageActionShown(extension.id), "The PageAction should be shown");
 
-  clickPageAction(uuid);
+  clickPageAction(extension.id);
   yield extension.awaitMessage("page-action-clicked");
-  ok(isPageActionShown(uuid), "The PageAction should still be shown after being clicked");
+  ok(isPageActionShown(extension.id), "The PageAction should still be shown after being clicked");
 
   yield extension.unload();
-  ok(!isPageActionShown(uuid), "The PageAction should be removed after unload");
+  ok(!isPageActionShown(extension.id), "The PageAction should be removed after unload");
 });
 </script>
 
