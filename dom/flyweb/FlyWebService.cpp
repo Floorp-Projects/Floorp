@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/FlyWebService.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/dom/Promise.h"
@@ -907,6 +908,7 @@ FlyWebService::GetOrCreate()
 {
   if (!gFlyWebService) {
     gFlyWebService = new FlyWebService();
+    ClearOnShutdown(&gFlyWebService);
     ErrorResult rv = gFlyWebService->Init();
     if (rv.Failed()) {
       gFlyWebService = nullptr;
