@@ -46,7 +46,7 @@ function* testColorChangeIsntRevertedWhenOtherTooltipIsShown(ruleView) {
 
   let onModifications = waitForNEvents(ruleView, "ruleview-changed", 2);
   let onHidden = picker.tooltip.once("hidden");
-  EventUtils.sendKey("RETURN", spectrum.element.ownerDocument.defaultView);
+  focusAndSendKey(spectrum.element.ownerDocument.defaultView, "RETURN");
   yield onHidden;
   yield onModifications;
 
