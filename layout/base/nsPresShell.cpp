@@ -1512,10 +1512,12 @@ PresShell::GetSelection(RawSelectionType aRawSelectionType,
   if (!aSelection || !mSelection)
     return NS_ERROR_NULL_POINTER;
 
-  *aSelection = mSelection->GetSelection(ToSelectionType(aRawSelectionType));
+  *aSelection =
+    mSelection->GetSelection(ToSelectionType(aRawSelectionType));
 
-  if (!(*aSelection))
+  if (!(*aSelection)) {
     return NS_ERROR_INVALID_ARG;
+  }
 
   NS_ADDREF(*aSelection);
 
