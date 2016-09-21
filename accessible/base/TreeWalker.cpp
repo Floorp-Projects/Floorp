@@ -81,6 +81,10 @@ TreeWalker::Seek(nsIContent* aChildNode)
 
   Reset();
 
+  if (mAnchorNode == aChildNode) {
+    return true;
+  }
+
   nsIContent* childNode = nullptr;
   nsINode* parentNode = aChildNode;
   do {
