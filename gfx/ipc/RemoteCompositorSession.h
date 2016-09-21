@@ -25,6 +25,7 @@ public:
 
   CompositorBridgeParent* GetInProcessBridge() const override;
   void SetContentController(GeckoContentController* aController) override;
+  GeckoContentController* GetContentController();
   RefPtr<IAPZCTreeManager> GetAPZCTreeManager() const override;
   void Shutdown() override;
 
@@ -33,6 +34,7 @@ public:
 private:
   nsBaseWidget* mWidget;
   RefPtr<APZCTreeManagerChild> mAPZ;
+  RefPtr<GeckoContentController> mContentController;
 };
 
 } // namespace layers
