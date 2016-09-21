@@ -241,7 +241,7 @@ add_task(function* open_webchannel_reload() {
     is(NewTabWebChannel.numBrowsers, 1, "One target expected");
     is(target.browser, browser, "Same browser");
 
-    browser.contentWindow.location.reload();
+    browser.reload();
   });
 
   Cu.forceGC();
