@@ -200,13 +200,11 @@ FrameAnimator::AdvanceFrame(AnimationState& aState, TimeStamp aTime)
   MOZ_ASSERT(nextFrameIndex < aState.KnownFrameCount());
   RawAccessFrameRef nextFrame = GetRawFrame(nextFrameIndex);
 
-  // If we're done decoding, we know we've got everything we're going to get.
-  // If we aren't, we only display fully-downloaded frames; everything else
-  // gets delayed.
-  bool canDisplay = aState.mDoneDecoding ||
-                    (nextFrame && nextFrame->IsFinished());
-
-  if (!canDisplay) {
+  // We should always check to see if we have the next frame even if we have
+  // previously finished decoding. If we needed to redecode (e.g. due to a draw
+  // failure) we would have discarded all the old frames and may not yet have
+  // the new ones.
+  if (!nextFrame || !nextFrame->IsFinished()) {
     // Uh oh, the frame we want to show is currently being decoded (partial)
     // Wait until the next refresh driver tick and try again
     return ret;
