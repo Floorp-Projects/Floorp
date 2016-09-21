@@ -52,23 +52,35 @@
 /* MAIN IDENTITY ICON */
 
 #identity-icon {
+  --identity-icon-normal: url(chrome://browser/skin/identity-icon.svg#normal);
+  --identity-icon-hover: url(chrome://browser/skin/identity-icon.svg#hover);
+  --identity-icon-notice: url(chrome://browser/skin/identity-icon.svg#notice);
+  --identity-icon-notice-hover: url(chrome://browser/skin/identity-icon.svg#notice-hover);
+
   width: 16px;
   height: 16px;
-  list-style-image: url(chrome://browser/skin/identity-icon.svg#normal);
+  list-style-image: var(--identity-icon-normal);
+}
+
+#identity-icon:-moz-lwtheme {
+  --identity-icon-normal: url(chrome://browser/skin/identity-icon.svg#normal-black);
+  --identity-icon-hover: url(chrome://browser/skin/identity-icon.svg#hover-black);
+  --identity-icon-notice: url(chrome://browser/skin/identity-icon.svg#notice-black);
+  --identity-icon-notice-hover: url(chrome://browser/skin/identity-icon.svg#notice-hover-black);
 }
 
 #identity-box:hover > #identity-icon:not(.no-hover),
 #identity-box[open=true] > #identity-icon {
-  list-style-image: url(chrome://browser/skin/identity-icon.svg#hover);
+  list-style-image: var(--identity-icon-hover);
 }
 
 #identity-box.grantedPermissions > #identity-icon {
-  list-style-image: url(chrome://browser/skin/identity-icon.svg#notice);
+  list-style-image: var(--identity-icon-notice);
 }
 
 #identity-box.grantedPermissions:hover > #identity-icon:not(.no-hover),
 #identity-box.grantedPermissions[open=true] > #identity-icon {
-  list-style-image: url(chrome://browser/skin/identity-icon.svg#notice-hover);
+  list-style-image: var(--identity-icon-notice-hover);
 }
 
 #urlbar[pageproxystate="valid"] > #identity-box.chromeUI > #identity-icon {
@@ -132,15 +144,23 @@
 /* TRACKING PROTECTION ICON */
 
 #tracking-protection-icon {
+  --tracking-protection-icon-enabled: url(chrome://browser/skin/tracking-protection-16.svg#enabled);
+  --tracking-protection-icon-disabled: url(chrome://browser/skin/tracking-protection-16.svg#disabled);
+
   width: 16px;
   height: 16px;
   margin-inline-start: 2px;
   margin-inline-end: 0;
-  list-style-image: url(chrome://browser/skin/tracking-protection-16.svg);
+  list-style-image: var(--tracking-protection-icon-enabled);
+}
+
+#tracking-protection-icon:-moz-lwtheme {
+  --tracking-protection-icon-enabled: url(chrome://browser/skin/tracking-protection-16.svg#enabled-black);
+  --tracking-protection-icon-disabled: url(chrome://browser/skin/tracking-protection-16.svg#disabled-black);
 }
 
 #tracking-protection-icon[state="loaded-tracking-content"] {
-  list-style-image: url(chrome://browser/skin/tracking-protection-disabled-16.svg);
+  list-style-image: var(--tracking-protection-icon-disabled);
 }
 
 #tracking-protection-icon[animate] {
@@ -166,29 +186,37 @@
   height: 16px;
   margin-inline-start: 2px;
   visibility: collapse;
+
+  --connection-icon-mixed-passive-loaded: url(chrome://browser/skin/connection-mixed-passive-loaded.svg#icon);
+  --connection-icon-mixed-active-loaded: url(chrome://browser/skin/connection-mixed-active-loaded.svg#icon);
+}
+
+#connection-icon:-moz-lwtheme {
+  --connection-icon-mixed-passive-loaded: url(chrome://browser/skin/connection-mixed-passive-loaded.svg#icon-black);
+  --connection-icon-mixed-active-loaded: url(chrome://browser/skin/connection-mixed-active-loaded.svg#icon-black);
 }
 
 #urlbar[pageproxystate="valid"] > #identity-box.verifiedDomain > #connection-icon,
 #urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity > #connection-icon,
 #urlbar[pageproxystate="valid"] > #identity-box.mixedActiveBlocked > #connection-icon {
-  list-style-image: url(chrome://browser/skin/identity-secure.svg);
+  list-style-image: url(chrome://browser/skin/connection-secure.svg);
   visibility: visible;
 }
 
 #urlbar[pageproxystate="valid"] > #identity-box.certUserOverridden > #connection-icon {
-  list-style-image: url(chrome://browser/skin/identity-mixed-passive-loaded.svg);
+  list-style-image: var(--connection-icon-mixed-passive-loaded);
   visibility: visible;
 }
 
 #urlbar[pageproxystate="valid"] > #identity-box.insecureLoginForms > #connection-icon,
 #urlbar[pageproxystate="valid"] > #identity-box.mixedActiveContent > #connection-icon {
-  list-style-image: url(chrome://browser/skin/identity-mixed-active-loaded.svg);
+  list-style-image: var(--connection-icon-mixed-active-loaded);
   visibility: visible;
 }
 
 #urlbar[pageproxystate="valid"] > #identity-box.weakCipher > #connection-icon,
 #urlbar[pageproxystate="valid"] > #identity-box.mixedDisplayContent > #connection-icon,
 #urlbar[pageproxystate="valid"] > #identity-box.mixedDisplayContentLoadedActiveBlocked > #connection-icon {
-  list-style-image: url(chrome://browser/skin/identity-mixed-passive-loaded.svg);
+  list-style-image: var(--connection-icon-mixed-passive-loaded);
   visibility: visible;
 }

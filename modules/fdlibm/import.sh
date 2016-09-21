@@ -106,3 +106,7 @@ download_source s_scalbn.c s_scalbn.cpp
 # These are not not used in Math.* functions, but used internally.
 download_source e_pow.c e_pow.cpp
 download_source e_sqrt.c e_sqrt.cpp
+
+download_source s_nearbyint.c s_nearbyint.cpp
+download_source s_rint.c s_rint.cpp
+download_source s_rintf.c s_rintf.cpp

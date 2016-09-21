@@ -23,4 +23,3 @@ interface nsIRemoteBrowser : nsISupports
                              in unsigned long disabledLength,
                              [array, size_is(disabledLength)] in string disabledCommands);
 };
-

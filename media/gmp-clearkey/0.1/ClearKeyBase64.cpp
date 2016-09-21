@@ -59,18 +59,25 @@ Decode6Bit(string& aStr)
 }
 
 bool
-DecodeBase64KeyOrId(const string& aEncoded, vector<uint8_t>& aOutDecoded)
+DecodeBase64(const string& aEncoded, vector<uint8_t>& aOutDecoded)
 {
+  if (aEncoded.empty()) {
+    aOutDecoded.clear();
+    return true;
+  }
+  if (aEncoded.size() == 1) {
+    // Invalid Base64 encoding.
+    return false;
+  }
   string encoded = aEncoded;
-  if (!Decode6Bit(encoded) ||
-    encoded.size() != 22) { // Can't decode to 16 byte CENC key or keyId.
+  if (!Decode6Bit(encoded)) {
     return false;
   }
 
   // The number of bytes we haven't yet filled in the current byte, mod 8.
   int shift = 0;
 
-  aOutDecoded.resize(16);
+  aOutDecoded.resize((encoded.size() * 3) / 4);
   vector<uint8_t>::iterator out = aOutDecoded.begin();
   for (size_t i = 0; i < encoded.length(); i++) {
     if (!shift) {

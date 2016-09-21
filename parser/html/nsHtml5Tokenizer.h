@@ -135,6 +135,7 @@ class nsHtml5Tokenizer
     bool confident;
   private:
     int32_t line;
+    int32_t attributeLine;
     nsHtml5AtomTable* interner;
     bool viewingXmlSource;
   public:

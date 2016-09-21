@@ -116,6 +116,7 @@ nsSHEntryShared::Duplicate(nsSHEntryShared* aEntry)
   newEntry->mDocShellID = aEntry->mDocShellID;
   newEntry->mChildShells.AppendObjects(aEntry->mChildShells);
   newEntry->mTriggeringPrincipal = aEntry->mTriggeringPrincipal;
+  newEntry->mPrincipalToInherit = aEntry->mPrincipalToInherit;
   newEntry->mContentType.Assign(aEntry->mContentType);
   newEntry->mIsFrameNavigation = aEntry->mIsFrameNavigation;
   newEntry->mSaveLayoutState = aEntry->mSaveLayoutState;

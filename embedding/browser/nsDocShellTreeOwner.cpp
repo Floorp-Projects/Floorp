@@ -1062,11 +1062,34 @@ nsDocShellTreeOwner::HandleEvent(nsIDOMEvent* aEvent)
     } else if (eventType.EqualsLiteral("drop")) {
       nsIWebNavigation* webnav = static_cast<nsIWebNavigation*>(mWebBrowser);
 
-      nsAutoString link, name;
+      uint32_t linksCount;
+      nsIDroppedLinkItem** links;
       if (webnav &&
-          NS_SUCCEEDED(handler->DropLink(dragEvent, name, true, link))) {
-        if (!link.IsEmpty()) {
-          webnav->LoadURI(link.get(), 0, nullptr, nullptr, nullptr);
+          NS_SUCCEEDED(handler->DropLinks(dragEvent, true, &linksCount, &links))) {
+        if (linksCount >= 1) {
+          nsCOMPtr<nsIWebBrowserChrome> webBrowserChrome = GetWebBrowserChrome();
+          if (webBrowserChrome) {
+            nsCOMPtr<nsITabChild> tabChild = do_QueryInterface(webBrowserChrome);
+            if (tabChild) {
+              nsresult rv = tabChild->RemoteDropLinks(linksCount, links);
+              for (uint32_t i = 0; i < linksCount; i++) {
+                NS_RELEASE(links[i]);
+              }
+              free(links);
+              return rv;
+            }
+          }
+          nsAutoString url;
+          if (NS_SUCCEEDED(links[0]->GetUrl(url))) {
+            if (!url.IsEmpty()) {
+              webnav->LoadURI(url.get(), 0, nullptr, nullptr, nullptr);
+            }
+          }
+
+          for (uint32_t i = 0; i < linksCount; i++) {
+            NS_RELEASE(links[i]);
+          }
+          free(links);
         }
       } else {
         aEvent->StopPropagation();

@@ -14,4 +14,14 @@ interface nsIBrowser : nsISupports
    * for any new tab parents.
    */
   readonly attribute nsIDOMElement relatedBrowser;
+
+  /*
+   * Called by the child to inform the parent that links are dropped into
+   * content area.
+   *
+   * @param linksCount length of links
+   * @param links a flat array of url, name, and type for each link
+   */
+  void dropLinks(in unsigned long linksCount,
+                 [array, size_is(linksCount)] in wstring links);
 };

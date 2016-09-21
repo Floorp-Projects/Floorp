@@ -4,17 +4,18 @@
 # source for all of the operating systems that we run Firefox tests on:
 # Linux x86, Linux x86-64, Windows x86, OS X x86-64.
 #
-# It expects to be run in the luser/breakpad-builder:0.5 Docker image and
+# It expects to be run in the luser/breakpad-builder:0.7 Docker image and
 # needs access to the relengapiproxy to download internal tooltool files.
 
 set -v -e -x
 
-: BREAKPAD_REPO        ${BREAKPAD_REPO:=https://google-breakpad.googlecode.com/svn/trunk/}
-: BREAKPAD_REV         ${BREAKPAD_REV:=HEAD}
-: STACKWALK_HTTP_REPO  ${STACKWALK_HTTP_REPO:=https://hg.mozilla.org/users/tmielczarek_mozilla.com/stackwalk-http}
-: STACKWALK_HTTP_REV   ${STACKWALK_HTTP_REV:=default}
+# This is a pain to support properly with gclient.
+#: BREAKPAD_REPO        ${BREAKPAD_REPO:=https://google-breakpad.googlecode.com/svn/trunk/}
+: BREAKPAD_REV         "${BREAKPAD_REV:=master}"
+: STACKWALK_HTTP_REPO  "${STACKWALK_HTTP_REPO:=https://hg.mozilla.org/users/tmielczarek_mozilla.com/stackwalk-http}"
+: STACKWALK_HTTP_REV   "${STACKWALK_HTTP_REV:=default}"
 
-ncpu=`grep -c ^processor /proc/cpuinfo`
+ncpu=$(getconf _NPROCESSORS_ONLN)
 
 function build()
 {
@@ -28,16 +29,18 @@ function build()
     if test "$platform" = "win32"; then
         ext=.exe
     fi
-    rm -rf $objdir
-    mkdir $objdir
+    rm -rf "$objdir"
+    mkdir "$objdir"
     # First, build Breakpad
-    cd $objdir
-    CFLAGS="-O2 $CFLAGS" CXXFLAGS="-O2 $CXXFLAGS" /tmp/google-breakpad/configure --disable-tools $configure_args
+    cd "$objdir"
+    # shellcheck disable=SC2086
+    CFLAGS="-O2 $CFLAGS" CXXFLAGS="-O2 $CXXFLAGS" /tmp/breakpad/src/configure --disable-tools $configure_args
+    # shellcheck disable=SC2086
     make -j$ncpu $make_args src/libbreakpad.a src/third_party/libdisasm/libdisasm.a src/processor/stackwalk_common.o
     # Second, build stackwalk-http
-    make -f /tmp/stackwalk-http/Makefile BREAKPAD_SRCDIR=/tmp/google-breakpad BREAKPAD_OBJDIR=`pwd` OS=$platform -j$ncpu
-    ${strip_prefix}strip stackwalk${ext}
-    cp stackwalk${ext} /tmp/stackwalker/${platform}-minidump_stackwalk${ext}
+    make -f /tmp/stackwalk-http/Makefile BREAKPAD_SRCDIR=/tmp/breakpad/src "BREAKPAD_OBJDIR=$(pwd)" "OS=$platform" "-j$ncpu"
+    "${strip_prefix}strip" "stackwalk${ext}"
+    cp "stackwalk${ext}" "/tmp/stackwalker/${platform}-minidump_stackwalk${ext}"
 }
 
 function linux64()
@@ -59,21 +62,22 @@ function linux32()
 function macosx64()
 {
     cd /tmp
-    python tooltool.py -v --manifest=macosx-sdk.manifest --url=http://relengapi/tooltool/ fetch
-    tar xjf MacOSX10.6.sdk.tar.bz2
-    export MACOSX_SDK=/tmp/MacOSX10.6.sdk
+    if ! test -d MacOSX10.7.sdk; then
+      python tooltool.py -v --manifest=macosx-sdk.manifest --url=http://relengapi/tooltool/ fetch
+    fi
+    export MACOSX_SDK=/tmp/MacOSX10.7.sdk
     export CCTOOLS=/tmp/cctools
-    local FLAGS="-target x86_64-apple-darwin10 -mlinker-version=136 -B /tmp/cctools/bin -isysroot ${MACOSX_SDK} -mmacosx-version-min=10.6"
+    local FLAGS="-stdlib=libc++ -target x86_64-apple-darwin10 -mlinker-version=136 -B /tmp/cctools/bin -isysroot ${MACOSX_SDK} -mmacosx-version-min=10.7"
     export CC="clang $FLAGS"
     export CXX="clang++ $FLAGS -std=c++11"
-    local old_path=$PATH
-    export PATH=$PATH:/tmp/cctools/bin/
+    local old_path="$PATH"
+    export PATH="/tmp/clang/bin:/tmp/cctools/bin/:$PATH"
     export LD_LIBRARY_PATH=/usr/lib/llvm-3.6/lib/
 
     build macosx64 "/tmp/cctools/bin/x86_64-apple-darwin10-" "--host=x86_64-apple-darwin10" "AR=/tmp/cctools/bin/x86_64-apple-darwin10-ar"
 
     unset CC CXX LD_LIBRARY_PATH MACOSX_SDK CCTOOLS
-    export PATH=$old_path
+    export PATH="$old_path"
 }
 
 function win32()
@@ -87,14 +91,34 @@ function win32()
 }
 
 cd /tmp
-mkdir -p stackwalker
-if ! test -d google-breakpad; then
-    svn checkout -r $BREAKPAD_REV $BREAKPAD_REPO google-breakpad
+if ! test -d depot_tools; then
+  git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+else
+  (cd depot_tools; git pull origin master)
 fi
-(cd google-breakpad; svn info)
+export PATH=$(pwd)/depot_tools:"$PATH"
+if ! test -d breakpad; then
+    mkdir breakpad
+    pushd breakpad
+    fetch breakpad
+    popd
+else
+    pushd breakpad/src
+    git pull origin master
+    popd
+fi
+pushd breakpad/src
+git checkout "${BREAKPAD_REV}"
+gclient sync
+popd
+
+(cd breakpad/src; git rev-parse master)
 if ! test -d stackwalk-http; then
-  hg clone -u $STACKWALK_HTTP_REV $STACKWALK_HTTP_REPO
+  hg clone -u "$STACKWALK_HTTP_REV" "$STACKWALK_HTTP_REPO"
+else
+  (cd stackwalk-http && hg pull "$STACKWALK_HTTP_REPO" && hg up "$STACKWALK_HTTP_REV")
 fi
+mkdir -p stackwalker
 linux64
 linux32
 macosx64

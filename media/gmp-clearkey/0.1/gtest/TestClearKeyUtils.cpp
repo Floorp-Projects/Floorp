@@ -13,16 +13,15 @@
 #include "../ClearKeyCencParser.cpp"
 #include "../ArrayUtils.h"
 
-
 using namespace std;
 
 struct B64Test {
-  const char* b64;
-  uint8_t raw[16];
+  string b64;
+  vector<uint8_t> raw;
   bool shouldPass;
 };
 
-B64Test tests[] = {
+const B64Test tests[] = {
   {
     "AAAAADk4AU4AAAAAAAAAAA",
     { 0x0, 0x0, 0x0, 0x0, 0x39, 0x38, 0x1, 0x4e, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 },
@@ -41,7 +40,7 @@ B64Test tests[] = {
   {
     "flczM35XMzN-VzMzflczMw",
     { 0x7e, 0x57, 0x33, 0x33, 0x7e, 0x57, 0x33, 0x33, 0x7e, 0x57, 0x33, 0x33, 0x7e, 0x57, 0x33, 0x33 },
-    true
+    true,
   },
   {
     "flcdBH5XHQR-Vx0EflcdBA",
@@ -53,23 +52,43 @@ B64Test tests[] = {
     { 0x7e, 0x57, 0x44, 0x44, 0x7e, 0x57, 0x44, 0x44, 0x7e, 0x57, 0x44, 0x44, 0x7e, 0x57, 0x44, 0x44 },
     true
   },
-  // Failure tests
-  { "", { 0 }, false }, // empty
-  { "fuzzbiz", { 0 }, false }, // Too short
-  { "fuzzbizfuzzbizfuzzbizfuzzbizfuzzbizfuzzbizfuzzbizfuzzbiz", { 0 }, false }, // too long
+  {
+    "fuzzbiz=",
+    { 0x7e, 0xec, 0xf3, 0x6e, 0x2c },
+    true
+  },
+  {
+    "fuzzbizfuzzbizfuzzbizfuzzbizfuzzbizfuzzbizfuzzbizfuzzbiz",
+    {
+      0x7e, 0xec, 0xf3, 0x6e, 0x2c, 0xdf, 0xbb, 0x3c, 0xdb, 0x8b,
+      0x37, 0xee, 0xcf, 0x36, 0xe2, 0xcd, 0xfb, 0xb3, 0xcd, 0xb8,
+      0xb3, 0x7e, 0xec, 0xf3, 0x6e, 0x2c, 0xdf, 0xbb, 0x3c, 0xdb,
+      0x8b, 0x37, 0xee, 0xcf, 0x36, 0xe2, 0xcd, 0xfb, 0xb3, 0xcd,
+      0xb8, 0xb3
+    },
+    true
+  },
+  { "", { }, true },
+  { "00", { 0xd3 }, true },
+  { "000", { 0xd3, 0x4d }, true },
 
+  { "invalid", { 0x8a, 0x7b, 0xda, 0x96, 0x27 }, true },
+  { "invalic", { 0x8a, 0x7b, 0xda, 0x96, 0x27 }, true },
+
+  // Failure tests
+  { "A", { }, false }, // 1 character is too few.
+  { "_", { }, false }, // 1 character is too few.
 };
 
-TEST(ClearKey, DecodeBase64KeyOrId) {
-  for (size_t i = 0; i < MOZ_ARRAY_LENGTH(tests); i++) {
+TEST(ClearKey, DecodeBase64) {
+  for (const B64Test& test : tests) {
     vector<uint8_t> v;
-    const B64Test& test = tests[i];
-    bool rv = DecodeBase64KeyOrId(string(test.b64), v);
-    EXPECT_EQ(rv, test.shouldPass);
+    bool rv = DecodeBase64(string(test.b64), v);
+    EXPECT_EQ(test.shouldPass, rv);
     if (test.shouldPass) {
-      EXPECT_EQ(v.size(), 16u);
-      for (size_t k = 0; k < 16; k++) {
-        EXPECT_EQ(v[k], test.raw[k]);
+      EXPECT_EQ(test.raw.size(), v.size());
+      for (size_t k = 0; k < test.raw.size(); k++) {
+        EXPECT_EQ(test.raw[k], v[k]);
       }
     }
   }
@@ -186,7 +205,7 @@ const uint8_t g2xGoogleWPTCencInitData[] = {
   0x00, 0x00, 0x00, 0x01,                          // key count
   0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,  // key
   0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
-  0x00, 0x00, 0x00, 0x00                           // datasize  
+  0x00, 0x00, 0x00, 0x00                           // datasize
 };
 
 TEST(ClearKey, ParseCencInitData) {

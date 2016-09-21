@@ -192,6 +192,14 @@ public:
                                           LayersBackend aBackendHint = mozilla::layers::LayersBackend::LAYERS_NONE,
                                           LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT) override;
 
+  // A remote compositor session tied to this window has been lost and IPC
+  // messages will no longer work. The widget must clean up any lingering
+  // resources and possibly schedule another paint.
+  //
+  // A reference to the session object is held until this function has
+  // returned.
+  void NotifyRemoteCompositorSessionLost(mozilla::layers::CompositorSession* aSession);
+
   mozilla::CompositorVsyncDispatcher* GetCompositorVsyncDispatcher();
   void            CreateCompositorVsyncDispatcher();
   virtual void            CreateCompositor();

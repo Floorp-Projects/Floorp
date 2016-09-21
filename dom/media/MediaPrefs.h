@@ -154,6 +154,10 @@ private:
   DECL_MEDIA_PREF("media.ogg.flac.enabled",                   FlacInOgg, bool, false);
   DECL_MEDIA_PREF("media.flac.enabled",                       FlacEnabled, bool, true);
 
+#if defined(MOZ_RUST_MP4PARSE) && !defined(RELEASE_BUILD)
+  DECL_MEDIA_PREF("media.rust.test_mode",                     RustTestMode, bool, false);
+#endif
+
 public:
   // Manage the singleton:
   static MediaPrefs& GetSingleton();

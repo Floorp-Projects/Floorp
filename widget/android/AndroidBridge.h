@@ -144,10 +144,6 @@ public:
         return sBridge;
     }
 
-    /* These are all implemented in Java */
-    bool GetThreadNameJavaProfiling(uint32_t aThreadId, nsCString & aResult);
-    bool GetFrameNameJavaProfiling(uint32_t aThreadId, uint32_t aSampleId, uint32_t aFrameId, nsCString & aResult);
-
     void ContentDocumentChanged();
     bool IsContentDocumentDisplayed();
 

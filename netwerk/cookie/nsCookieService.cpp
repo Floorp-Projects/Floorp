@@ -684,7 +684,7 @@ nsCookieService::AppClearDataObserverInit()
   nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
   nsCOMPtr<nsIObserver> obs = new AppClearDataObserver();
   observerService->AddObserver(obs, TOPIC_CLEAR_ORIGIN_DATA,
-                               /* holdsWeak= */ false);
+                               /* ownsWeak= */ false);
 }
 
 /******************************************************************************
@@ -3039,6 +3039,47 @@ public:
   }
 };
 
+static bool
+DomainMatches(nsCookie* aCookie, const nsACString& aHost) {
+  // first, check for an exact host or domain cookie match, e.g. "google.com"
+  // or ".google.com"; second a subdomain match, e.g.
+  // host = "mail.google.com", cookie domain = ".google.com".
+  return aCookie->RawHost() == aHost ||
+      (aCookie->IsDomain() && StringEndsWith(aHost, aCookie->Host()));
+}
+
+static bool
+PathMatches(nsCookie* aCookie, const nsACString& aPath) {
+  // calculate cookie path length, excluding trailing '/'
+  uint32_t cookiePathLen = aCookie->Path().Length();
+  if (cookiePathLen > 0 && aCookie->Path().Last() == '/')
+    --cookiePathLen;
+
+  // if the given path is shorter than the cookie path, it doesn't match
+  // if the given path doesn't start with the cookie path, it doesn't match.
+  if (!StringBeginsWith(aPath, Substring(aCookie->Path(), 0, cookiePathLen)))
+    return false;
+
+  // if the given path is longer than the cookie path, and the first char after
+  // the cookie path is not a path delimiter, it doesn't match.
+  if (aPath.Length() > cookiePathLen &&
+      !ispathdelimiter(aPath.CharAt(cookiePathLen))) {
+    /*
+     * |ispathdelimiter| tests four cases: '/', '?', '#', and ';'.
+     * '/' is the "standard" case; the '?' test allows a site at host/abc?def
+     * to receive a cookie that has a path attribute of abc.  this seems
+     * strange but at least one major site (citibank, bug 156725) depends
+     * on it.  The test for # and ; are put in to proactively avoid problems
+     * with other sites - these are the only other chars allowed in the path.
+     */
+    return false;
+  }
+
+  // either the paths match exactly, or the cookie path is a prefix of
+  // the given path.
+  return true;
+}
+
 void
 nsCookieService::GetCookieStringInternal(nsIURI *aHostURI,
                                          bool aIsForeign,
@@ -3119,11 +3160,7 @@ nsCookieService::GetCookieStringInternal(nsIURI *aHostURI,
     cookie = cookies[i];
 
     // check the host, since the base domain lookup is conservative.
-    // first, check for an exact host or domain cookie match, e.g. "google.com"
-    // or ".google.com"; second a subdomain match, e.g.
-    // host = "mail.google.com", cookie domain = ".google.com".
-    if (cookie->RawHost() != hostFromURI &&
-        !(cookie->IsDomain() && StringEndsWith(hostFromURI, cookie->Host())))
+    if (!DomainMatches(cookie, hostFromURI))
       continue;
 
     // if the cookie is secure and the host scheme isn't, we can't send it
@@ -3135,27 +3172,9 @@ nsCookieService::GetCookieStringInternal(nsIURI *aHostURI,
     if (cookie->IsHttpOnly() && !aHttpBound)
       continue;
 
-    // calculate cookie path length, excluding trailing '/'
-    uint32_t cookiePathLen = cookie->Path().Length();
-    if (cookiePathLen > 0 && cookie->Path().Last() == '/')
-      --cookiePathLen;
-
-    // if the nsIURI path is shorter than the cookie path, don't send it back
-    if (!StringBeginsWith(pathFromURI, Substring(cookie->Path(), 0, cookiePathLen)))
+    // if the nsIURI path doesn't match the cookie path, don't send it back
+    if (!PathMatches(cookie, pathFromURI))
       continue;
-
-    if (pathFromURI.Length() > cookiePathLen &&
-        !ispathdelimiter(pathFromURI.CharAt(cookiePathLen))) {
-      /*
-       * |ispathdelimiter| tests four cases: '/', '?', '#', and ';'.
-       * '/' is the "standard" case; the '?' test allows a site at host/abc?def
-       * to receive a cookie that has a path attribute of abc.  this seems
-       * strange but at least one major site (citibank, bug 156725) depends
-       * on it.  The test for # and ; are put in to proactively avoid problems
-       * with other sites - these are the only other chars allowed in the path.
-       */
-      continue;
-    }
 
     // check if the cookie has expired
     if (cookie->Expiry() <= currentTime) {
@@ -4014,26 +4033,34 @@ nsCookieService::CheckDomain(nsCookieAttributes &aCookieAttributes,
   return true;
 }
 
+nsCString
+GetPathFromURI(nsIURI* aHostURI)
+{
+  // strip down everything after the last slash to get the path,
+  // ignoring slashes in the query string part.
+  // if we can QI to nsIURL, that'll take care of the query string portion.
+  // otherwise, it's not an nsIURL and can't have a query string, so just find the last slash.
+  nsAutoCString path;
+  nsCOMPtr<nsIURL> hostURL = do_QueryInterface(aHostURI);
+  if (hostURL) {
+    hostURL->GetDirectory(path);
+  } else {
+    aHostURI->GetPath(path);
+    int32_t slash = path.RFindChar('/');
+    if (slash != kNotFound) {
+      path.Truncate(slash + 1);
+    }
+  }
+  return path;
+}
+
 bool
 nsCookieService::CheckPath(nsCookieAttributes &aCookieAttributes,
                            nsIURI             *aHostURI)
 {
   // if a path is given, check the host has permission
   if (aCookieAttributes.path.IsEmpty() || aCookieAttributes.path.First() != '/') {
-    // strip down everything after the last slash to get the path,
-    // ignoring slashes in the query string part.
-    // if we can QI to nsIURL, that'll take care of the query string portion.
-    // otherwise, it's not an nsIURL and can't have a query string, so just find the last slash.
-    nsCOMPtr<nsIURL> hostURL = do_QueryInterface(aHostURI);
-    if (hostURL) {
-      hostURL->GetDirectory(aCookieAttributes.path);
-    } else {
-      aHostURI->GetPath(aCookieAttributes.path);
-      int32_t slash = aCookieAttributes.path.RFindChar('/');
-      if (slash != kNotFound) {
-        aCookieAttributes.path.Truncate(slash + 1);
-      }
-    }
+    aCookieAttributes.path = GetPathFromURI(aHostURI);
 
 #if 0
   } else {
@@ -4369,7 +4396,7 @@ nsCookieService::FindStaleCookie(nsCookieEntry *aEntry,
   if (aSource) {
     GetBaseDomain(aSource, baseDomain, requireHostMatch);
     aSource->GetAsciiHost(sourceHost);
-    aSource->GetPath(sourcePath);
+    sourcePath = GetPathFromURI(aSource);
   }
 
   const nsCookieEntry::ArrayType &cookies = aEntry->GetCookies();
@@ -4405,19 +4432,12 @@ nsCookieService::FindStaleCookie(nsCookieEntry *aEntry,
     // * non-session cookies
     // * cookies with paths and domains that don't match the cookie triggering this purge
 
-    uint32_t cookiePathLen = cookie->Path().Length();
-    if (cookiePathLen > 0 && cookie->Path().Last() == '/')
-      --cookiePathLen;
-
     // This cookie is a candidate for eviction if we have no information about
     // the source request, or if it is not a path or domain match against the
     // source request.
     bool isPrimaryEvictionCandidate = true;
     if (aSource) {
-      bool pathMatches = StringBeginsWith(sourcePath, Substring(cookie->Path(), 0, cookiePathLen));
-      bool domainMatches = cookie->RawHost() == sourceHost ||
-          (cookie->IsDomain() && StringEndsWith(sourceHost, cookie->Host()));
-      isPrimaryEvictionCandidate = !pathMatches || !domainMatches;
+      isPrimaryEvictionCandidate = !PathMatches(cookie, sourcePath) || !DomainMatches(cookie, sourceHost);
     }
 
     int64_t lastAccessed = cookie->LastAccessed();

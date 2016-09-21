@@ -383,16 +383,25 @@ this.BrowserTestUtils = {
    *        The window we should wait to have "domwindowopened" sent through
    *        the observer service for. If this is not supplied, we'll just
    *        resolve when the first "domwindowopened" notification is seen.
+   * @param {function} checkFn [optional]
+   *        Called with the nsIDOMWindow object as argument, should return true
+   *        if the event is the expected one, or false if it should be ignored
+   *        and observing should continue. If not specified, the first window
+   *        resolves the returned promise.
    * @return {Promise}
    *         A Promise which resolves when a "domwindowopened" notification
    *         has been fired by the window watcher.
    */
-  domWindowOpened(win) {
+  domWindowOpened(win, checkFn) {
     return new Promise(resolve => {
       function observer(subject, topic, data) {
         if (topic == "domwindowopened" && (!win || subject === win)) {
+          let observedWindow = subject.QueryInterface(Ci.nsIDOMWindow);
+          if (checkFn && !checkFn(observedWindow)) {
+            return;
+          }
           Services.ww.unregisterNotification(observer);
-          resolve(subject.QueryInterface(Ci.nsIDOMWindow));
+          resolve(observedWindow);
         }
       }
       Services.ww.registerNotification(observer);

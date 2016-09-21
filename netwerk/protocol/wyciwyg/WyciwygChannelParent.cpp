@@ -59,6 +59,7 @@ bool
 WyciwygChannelParent::RecvInit(const URIParams&          aURI,
                                const ipc::PrincipalInfo& aRequestingPrincipalInfo,
                                const ipc::PrincipalInfo& aTriggeringPrincipalInfo,
+                               const ipc::PrincipalInfo& aPrincipalToInheritInfo,
                                const uint32_t&           aSecurityFlags,
                                const uint32_t&           aContentPolicyType)
 {
@@ -87,6 +88,12 @@ WyciwygChannelParent::RecvInit(const URIParams&          aURI,
     return SendCancelEarly(rv);
   }
 
+  nsCOMPtr<nsIPrincipal> principalToInherit =
+    mozilla::ipc::PrincipalInfoToPrincipal(aPrincipalToInheritInfo, &rv);
+  if (NS_FAILED(rv)) {
+    return SendCancelEarly(rv);
+  }
+
   nsCOMPtr<nsIChannel> chan;
   rv = NS_NewChannelWithTriggeringPrincipal(getter_AddRefs(chan),
                                            uri,
@@ -101,6 +108,12 @@ WyciwygChannelParent::RecvInit(const URIParams&          aURI,
 
   if (NS_FAILED(rv))
     return SendCancelEarly(rv);
+
+  nsCOMPtr<nsILoadInfo> loadInfo = chan->GetLoadInfo();
+  rv = loadInfo->SetPrincipalToInherit(principalToInherit);
+  if (NS_FAILED(rv)) {
+    return SendCancelEarly(rv);
+  }
 
   mChannel = do_QueryInterface(chan, &rv);
   if (NS_FAILED(rv))

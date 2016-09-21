@@ -2074,9 +2074,10 @@ nsRefreshDriver::IsWaitingForPaint(mozilla::TimeStamp aTime)
 
   if (mWaitingForTransaction) {
     if (mSkippedPaints && aTime > (mMostRecentTick + TimeDuration::FromMilliseconds(mWarningThreshold * 1000))) {
-      gfxCriticalNote << "Refresh driver waiting for the compositor for "
-                      << (aTime - mMostRecentTick).ToSeconds()
-                      << " seconds.";
+      // XXX - Bug 1303369 - too many false positives.
+      //gfxCriticalNote << "Refresh driver waiting for the compositor for "
+      //                << (aTime - mMostRecentTick).ToSeconds()
+      //                << " seconds.";
       mWarningThreshold *= 2;
     }
 

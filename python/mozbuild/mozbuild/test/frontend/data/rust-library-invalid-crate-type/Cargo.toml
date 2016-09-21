@@ -7,3 +7,9 @@ authors = [
 
 [lib]
 crate-type = ["dylib"]
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"

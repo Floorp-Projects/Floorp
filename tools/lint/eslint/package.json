@@ -4,12 +4,12 @@
   "repository": {},
   "license": "MPL-2.0",
   "dependencies": {
-    "eslint": "2.9.0",
+    "eslint": "3.5.0",
     "eslint-plugin-html": "1.5.2",
     "eslint-plugin-react": "4.2.3",
-    "escope": "^3.2.0",
-    "espree": "^2.2.4",
-    "estraverse": "^4.1.1",
+    "escope": "^3.6.0",
+    "espree": "^3.2.0",
+    "estraverse": "^4.2.0",
     "sax": "^1.1.4"
   }
 }
