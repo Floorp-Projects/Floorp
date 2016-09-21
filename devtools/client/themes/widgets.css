@@ -214,7 +214,7 @@
 
 #breadcrumb-separator-after,
 #breadcrumb-separator-before:after {
-  background: var(--theme-toolbar-background);
+  background: var(--theme-body-background);
 }
 
 /* This chevron arrow cannot be replicated easily in CSS, so we are using
