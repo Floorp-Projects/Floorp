@@ -297,8 +297,10 @@ class Build(MachCommandBase):
                      help='Do not add extra make dependencies.')
     @CommandArgument('-v', '--verbose', action='store_true',
         help='Verbose output for what commands the build is running.')
+    @CommandArgument('--keep-going', action='store_true',
+                     help='Keep building after an error has occurred')
     def build(self, what=None, disable_extra_make_dependencies=None, jobs=0,
-        directory=None, verbose=False):
+        directory=None, verbose=False, keep_going=False):
         """Build the source tree.
 
         With no arguments, this will perform a full build.
@@ -412,7 +414,7 @@ class Build(MachCommandBase):
                 # comprehensive history lesson.
                 self._run_make(directory=self.topobjdir, target='backend',
                     line_handler=output.on_line, log=False,
-                    print_directory=False)
+                    print_directory=False, keep_going=keep_going)
 
                 # Build target pairs.
                 for make_dir, make_target in target_pairs:
@@ -423,7 +425,8 @@ class Build(MachCommandBase):
                     status = self._run_make(directory=make_dir, target=make_target,
                         line_handler=output.on_line, log=False, print_directory=False,
                         ensure_exit_code=False, num_jobs=jobs, silent=not verbose,
-                        append_env={b'NO_BUILDSTATUS_MESSAGES': b'1'})
+                        append_env={b'NO_BUILDSTATUS_MESSAGES': b'1'},
+                        keep_going=keep_going)
 
                     if status != 0:
                         break
@@ -461,7 +464,7 @@ class Build(MachCommandBase):
                     status = self._run_make(srcdir=True, filename='client.mk',
                         line_handler=output.on_line, log=False, print_directory=False,
                         allow_parallel=False, ensure_exit_code=False, num_jobs=jobs,
-                        silent=not verbose)
+                        silent=not verbose, keep_going=keep_going)
 
                 self.log(logging.WARNING, 'warning_summary',
                     {'count': len(monitor.warnings_database)},
