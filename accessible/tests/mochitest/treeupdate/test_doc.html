@@ -129,17 +129,36 @@
      */
     function replaceIFrameHTMLElm(aID)
     {
-      this.__proto__ = new rootContentReplaced(aID, "New Wave");
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, getDocChildNode, aID),
+        new invokerChecker(EVENT_REORDER, getDocNode, aID)
+      ];
 
       this.invoke = function replaceIFrameHTMLElm_invoke()
       {
         var docNode = getDocNode(aID);
         var newHTMLNode = docNode.createElement("html");
-        var newBodyNode = docNode.createElement("body");
-        var newTextNode = docNode.createTextNode("New Wave");
-        newBodyNode.appendChild(newTextNode);
-        newHTMLNode.appendChild(newBodyNode);
+        newHTMLNode.innerHTML = `<body><p>New Wave</p></body`;
         docNode.replaceChild(newHTMLNode, docNode.documentElement);
+      }
+
+      this.finalCheck = function replaceIFrameHTMLElm_finalCheck()
+      {
+        var tree = {
+          role: ROLE_DOCUMENT,
+          children: [
+            {
+              role: ROLE_PARAGRAPH,
+              children: [
+                {
+                  role: ROLE_TEXT_LEAF,
+                  name: 'New Wave'
+                }
+              ]
+            }
+          ]
+        };
+        testAccessibleTree(getDocNode(aID), tree);
       }
 
       this.getID = function replaceIFrameHTMLElm_getID()
@@ -391,8 +410,8 @@
     ////////////////////////////////////////////////////////////////////////////
     // Test
 
-    //gA11yEventDumpID = "eventdump"; // debug stuff
     //gA11yEventDumpToConsole = true;
+    //enableLogging('tree,verbose');
 
     var gQueue = null;
 
