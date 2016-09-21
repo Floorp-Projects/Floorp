@@ -62,20 +62,6 @@ typedef uint32_t GLenum;
 #define GL_RENDERER     0x1F01
 #define GL_VERSION      0x1F02
 
-// GLX_MESA_query_renderer
-#define GLX_RENDERER_VENDOR_ID_MESA                            0x8183
-#define GLX_RENDERER_DEVICE_ID_MESA                            0x8184
-#define GLX_RENDERER_VERSION_MESA                              0x8185
-#define GLX_RENDERER_ACCELERATED_MESA                          0x8186
-#define GLX_RENDERER_VIDEO_MEMORY_MESA                         0x8187
-#define GLX_RENDERER_UNIFIED_MEMORY_ARCHITECTURE_MESA          0x8188
-#define GLX_RENDERER_PREFERRED_PROFILE_MESA                    0x8189
-#define GLX_RENDERER_OPENGL_CORE_PROFILE_VERSION_MESA          0x818A
-#define GLX_RENDERER_OPENGL_COMPATIBILITY_PROFILE_VERSION_MESA 0x818B
-#define GLX_RENDERER_OPENGL_ES_PROFILE_VERSION_MESA            0x818C
-#define GLX_RENDERER_OPENGL_ES2_PROFILE_VERSION_MESA           0x818D
-#define GLX_RENDERER_ID_MESA                                   0x818E
-
 namespace mozilla {
 namespace widget {
 // the read end of the pipe, which will be used by GfxInfo
@@ -266,14 +252,13 @@ void glxtest()
   void* glXBindTexImageEXT = glXGetProcAddress("glXBindTexImageEXT"); 
 
   ///// Get GL vendor/renderer/versions strings /////
-  enum { bufsize = 2048 };
+  enum { bufsize = 1024 };
   char buf[bufsize];
+  const GLubyte *vendorString = glGetString(GL_VENDOR);
+  const GLubyte *rendererString = glGetString(GL_RENDERER);
+  const GLubyte *versionString = glGetString(GL_VERSION);
 
-  const GLubyte* versionString = glGetString(GL_VERSION);
-  const GLubyte* vendorString = glGetString(GL_VENDOR);
-  const GLubyte* rendererString = glGetString(GL_RENDERER);
-
-  if (!versionString || !vendorString || !rendererString)
+  if (!vendorString || !rendererString || !versionString)
     fatal_error("glGetString returned null");
 
   int length = snprintf(buf, bufsize,
@@ -284,46 +269,6 @@ void glxtest()
                         glXBindTexImageEXT ? "TRUE" : "FALSE");
   if (length >= bufsize)
     fatal_error("GL strings length too large for buffer size");
-
-  // If GLX_MESA_query_renderer is available, populate additional data.
-  typedef Bool (*PFNGLXQUERYCURRENTRENDERERINTEGERMESAPROC) (int attribute, unsigned int* value);
-  PFNGLXQUERYCURRENTRENDERERINTEGERMESAPROC glXQueryCurrentRendererIntegerMESAProc =
-    cast<PFNGLXQUERYCURRENTRENDERERINTEGERMESAPROC>(glXGetProcAddress("glXQueryCurrentRendererIntegerMESA"));
-  if (glXQueryCurrentRendererIntegerMESAProc) {
-    unsigned int vendorId, deviceId, accelerated, videoMemoryMB;
-    glXQueryCurrentRendererIntegerMESAProc(GLX_RENDERER_VENDOR_ID_MESA, &vendorId);
-    glXQueryCurrentRendererIntegerMESAProc(GLX_RENDERER_DEVICE_ID_MESA, &deviceId);
-    glXQueryCurrentRendererIntegerMESAProc(GLX_RENDERER_ACCELERATED_MESA, &accelerated);
-    glXQueryCurrentRendererIntegerMESAProc(GLX_RENDERER_VIDEO_MEMORY_MESA, &videoMemoryMB);
-
-    // Truncate IDs to 4 digits- that's all PCI IDs are.
-    vendorId &= 0xFFFF;
-    deviceId &= 0xFFFF;
-
-    length += snprintf(buf + length, bufsize,
-                       "MESA_VENDOR_ID\n0x%04x\n"
-                       "MESA_DEVICE_ID\n0x%04x\n"
-                       "MESA_ACCELERATED\n%s\n"
-                       "MESA_VRAM\n%dMB\n",
-                       vendorId, deviceId, accelerated ? "TRUE" : "FALSE",
-                       videoMemoryMB);
-
-    if (length >= bufsize)
-      fatal_error("GL strings length too large for buffer size");
-  }
-
-  // From Mesa's GL/internal/dri_interface.h, to be used by DRI clients.
-  typedef const char * (* PFNGLXGETSCREENDRIVERPROC) (Display *dpy, int scrNum);
-  PFNGLXGETSCREENDRIVERPROC glXGetScreenDriverProc =
-    cast<PFNGLXGETSCREENDRIVERPROC>(glXGetProcAddress("glXGetScreenDriver"));
-  if (glXGetScreenDriverProc) {
-    const char* driDriver = glXGetScreenDriverProc(dpy, DefaultScreen(dpy));
-    if (driDriver) {
-      length += snprintf(buf + length, bufsize, "DRI_DRIVER\n%s\n", driDriver);
-      if (length >= bufsize)
-        fatal_error("GL strings length too large for buffer size");
-    }
-  }
 
   ///// Clean up. Indeed, the parent process might fail to kill us (e.g. if it doesn't need to check GL info)
   ///// so we might be staying alive for longer than expected, so it's important to consume as little memory as

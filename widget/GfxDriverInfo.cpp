@@ -306,11 +306,6 @@ const nsAString& GfxDriverInfo::GetDeviceVendor(DeviceVendor id)
     DECLARE_VENDOR_ID(VendorAMD, "0x1022");
     DECLARE_VENDOR_ID(VendorATI, "0x1002");
     DECLARE_VENDOR_ID(VendorMicrosoft, "0x1414");
-    DECLARE_VENDOR_ID(VendorMesaAll, "mesa/all");
-    DECLARE_VENDOR_ID(VendorMesaLLVMPipe, "mesa/llvmpipe");
-    DECLARE_VENDOR_ID(VendorMesaSoftPipe, "mesa/softpipe");
-    DECLARE_VENDOR_ID(VendorMesaSWRast, "mesa/swrast");
-    DECLARE_VENDOR_ID(VendorMesaUnknown, "mesa/unknown");
     // Suppress a warning.
     DECLARE_VENDOR_ID(DeviceVendorMax, "");
   }
