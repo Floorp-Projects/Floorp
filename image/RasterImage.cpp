@@ -1583,7 +1583,7 @@ RasterImage::NotifyDecodeComplete(const DecoderFinalStatus& aStatus,
   MOZ_ASSERT(NS_IsMainThread());
 
   // If the decoder detected an error, log it to the error console.
-  if (aStatus.mShouldReportError && !aStatus.mWasAborted) {
+  if (aStatus.mShouldReportError) {
     ReportDecoderError();
   }
 
@@ -1601,7 +1601,7 @@ RasterImage::NotifyDecodeComplete(const DecoderFinalStatus& aStatus,
   MOZ_ASSERT(mError || mHasSize || !aMetadata.HasSize(),
              "SetMetadata should've gotten a size");
 
-  if (!aStatus.mWasMetadataDecode && aStatus.mFinished && !aStatus.mWasAborted) {
+  if (!aStatus.mWasMetadataDecode && aStatus.mFinished) {
     // Flag that we've been decoded before.
     mHasBeenDecoded = true;
   }
@@ -1633,7 +1633,7 @@ RasterImage::NotifyDecodeComplete(const DecoderFinalStatus& aStatus,
     }
 
     // Detect errors.
-    if (aStatus.mHadError && !aStatus.mWasAborted) {
+    if (aStatus.mHadError) {
       DoError();
     } else if (aStatus.mWasMetadataDecode && !mHasSize) {
       DoError();

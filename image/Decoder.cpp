@@ -63,7 +63,6 @@ Decoder::Decoder(RasterImage* aImage)
   , mReachedTerminalState(false)
   , mDecodeDone(false)
   , mError(false)
-  , mDecodeAborted(false)
   , mShouldReportError(false)
 { }
 
@@ -201,11 +200,9 @@ Decoder::CompleteDecode()
     PostFrameStop();
   }
 
-  // If PostDecodeDone() has not been called, and this decoder wasn't aborted
-  // early because of low-memory conditions or losing a race with another
-  // decoder, we need to send teardown notifications (and report an error to the
-  // console later).
-  if (!IsMetadataDecode() && !mDecodeDone && !WasAborted()) {
+  // If PostDecodeDone() has not been called, we need to send teardown
+  // notifications (and report an error to the console later).
+  if (!mDecodeDone && !IsMetadataDecode()) {
     mShouldReportError = true;
 
     // Even if we encountered an error, we're still usable if we have at least
@@ -223,10 +220,7 @@ Decoder::CompleteDecode()
       PostDecodeDone();
     } else {
       // We're not usable. Record some final progress indicating the error.
-      if (!IsMetadataDecode()) {
-        mProgress |= FLAG_DECODE_COMPLETE;
-      }
-      mProgress |= FLAG_HAS_ERROR;
+      mProgress |= FLAG_DECODE_COMPLETE | FLAG_HAS_ERROR;
     }
   }
 
@@ -271,7 +265,6 @@ Decoder::FinalStatus() const
 {
   return DecoderFinalStatus(IsMetadataDecode(),
                             GetDecodeDone(),
-                            WasAborted(),
                             HasError(),
                             ShouldReportError());
 }
