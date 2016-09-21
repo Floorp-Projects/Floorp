@@ -8,7 +8,6 @@ interface CustomElementsRegistry {
   [Throws]
   void define(DOMString name, Function functionConstructor,
               optional ElementDefinitionOptions options);
-  [Throws]
   any get(DOMString name);
   [Throws]
   Promise<void> whenDefined(DOMString name);
