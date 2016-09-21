@@ -201,20 +201,6 @@ interface nsIScriptSecurityManager : nsISupports
     nsIPrincipal createNullPrincipal(in jsval originAttributes);
 
     /**
-     * Creates an expanded principal whose capabilities are the union of the
-     * given principals. An expanded principal has an asymmetric privilege
-     * relationship with its sub-principals (that is to say, it subsumes the
-     * sub-principals, but the sub-principals do not subsume it), even if
-     * there's only one. This presents a legitimate use-case for making an
-     * expanded principal around a single sub-principal, which we do frequently.
-     *
-     * Expanded principals cannot have origin attributes themselves, but rather
-     * have them through their sub-principals - so we don't accept them here.
-     */
-    nsIPrincipal createExpandedPrincipal([array, size_is(aLength)] in nsIPrincipal aPrincipalArray,
-                                         [optional] in unsigned long aLength);
-
-    /**
      * Returns OK if aSourceURI and target have the same "origin"
      * (scheme, host, and port).
      * ReportError flag suppresses error reports for functions that

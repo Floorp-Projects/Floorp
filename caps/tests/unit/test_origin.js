@@ -80,7 +80,7 @@ function run_test() {
   var ipv6NPPrin = ssm.createCodebasePrincipal(makeURI('https://[2001:db8::ff00:42:8329]'), {});
   do_check_eq(ipv6NPPrin.origin, 'https://[2001:db8::ff00:42:8329]');
   checkOriginAttributes(ipv6NPPrin);
-  var ep = ssm.createExpandedPrincipal([exampleCom, nullPrin, exampleOrg]);
+  var ep = Cu.getObjectPrincipal(Cu.Sandbox([exampleCom, nullPrin, exampleOrg]));
   checkOriginAttributes(ep);
   checkCrossOrigin(exampleCom, exampleOrg);
   checkCrossOrigin(exampleOrg, nullPrin);
@@ -204,7 +204,7 @@ function run_test() {
   }
   checkKind(ssm.createNullPrincipal({}), 'nullPrincipal');
   checkKind(ssm.createCodebasePrincipal(makeURI('http://www.example.com'), {}), 'codebasePrincipal');
-  checkKind(ssm.createExpandedPrincipal([ssm.createCodebasePrincipal(makeURI('http://www.example.com'), {})]), 'expandedPrincipal');
+  checkKind(Cu.getObjectPrincipal(Cu.Sandbox([ssm.createCodebasePrincipal(makeURI('http://www.example.com'), {})])), 'expandedPrincipal');
   checkKind(ssm.getSystemPrincipal(), 'systemPrincipal');
 
   //
