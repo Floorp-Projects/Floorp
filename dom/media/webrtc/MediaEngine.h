@@ -252,9 +252,14 @@ public:
         return a.get() == b.get();
       }
     };
-    MOZ_ASSERT(mRegisteredHandles.Contains(handle, Comparator()));
-    mRegisteredHandles.RemoveElementAt(mRegisteredHandles.IndexOf(handle, 0,
-                                                                  Comparator()));
+
+    auto ix = mRegisteredHandles.IndexOf(handle, 0, Comparator());
+    if (ix == mRegisteredHandles.NoIndex) {
+      MOZ_ASSERT(false);
+      return NS_ERROR_FAILURE;
+    }
+
+    mRegisteredHandles.RemoveElementAt(ix);
     if (mRegisteredHandles.Length() && !mInShutdown) {
       // Whenever constraints are removed, other parties may get closer to ideal.
       auto& first = mRegisteredHandles[0];
