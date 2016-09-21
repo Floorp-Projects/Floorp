@@ -12,7 +12,7 @@
 }
 
 .notification-anchor-icon,
-.blocked-permission-icon {
+#blocked-permissions-container > .blocked-permission-icon {
   width: 16px;
   height: 16px;
   margin-inline-start: 2px;
