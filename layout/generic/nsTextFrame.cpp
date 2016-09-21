@@ -1907,12 +1907,11 @@ static gfxFontGroup*
 GetFontGroupForFrame(nsIFrame* aFrame, float aFontSizeInflation,
                      nsFontMetrics** aOutFontMetrics = nullptr)
 {
-  if (aOutFontMetrics)
-    *aOutFontMetrics = nullptr;
-
   RefPtr<nsFontMetrics> metrics =
     nsLayoutUtils::GetFontMetricsForFrame(aFrame, aFontSizeInflation);
+  gfxFontGroup* fontGroup = metrics->GetThebesFontGroup();
 
+  // Populate outparam before we return:
   if (aOutFontMetrics) {
     *aOutFontMetrics = metrics;
     NS_ADDREF(*aOutFontMetrics);
@@ -1921,7 +1920,7 @@ GetFontGroupForFrame(nsIFrame* aFrame, float aFontSizeInflation,
   // returned font-group might actually be torn down, although because
   // of the way the device context caches font metrics, this seems to
   // not actually happen. But we should fix this.
-  return metrics->GetThebesFontGroup();
+  return fontGroup;
 }
 
 static already_AddRefed<DrawTarget>
