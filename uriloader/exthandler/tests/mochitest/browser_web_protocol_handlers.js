@@ -38,7 +38,7 @@ add_task(function*() {
   handlerSvc.store(protoInfo);
 
   // Middle-click a testprotocol link and check the new tab is correct
-  let link = browser.contentDocument.getElementById("link");
+  let link = "#link";
   const expectedURL = "https://example.com/foobar?uri=testprotocol%3Atest";
 
   let promiseTabOpened =
