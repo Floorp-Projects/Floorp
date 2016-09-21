@@ -30,6 +30,11 @@ class PJavaScriptParent;
 class CpowEntry;
 } // namespace jsipc
 
+namespace ipc {
+class PFileDescriptorSetParent;
+class PSendStreamParent;
+}
+
 namespace dom {
 
 class Blob;
@@ -102,6 +107,16 @@ protected: // IPDL methods
   virtual PBlobParent* AllocPBlobParent(const BlobConstructorParams& aParams);
 
   virtual bool DeallocPBlobParent(PBlobParent* aActor);
+
+  virtual mozilla::ipc::PFileDescriptorSetParent*
+  AllocPFileDescriptorSetParent(const mozilla::ipc::FileDescriptor& aFD);
+
+  virtual bool
+  DeallocPFileDescriptorSetParent(mozilla::ipc::PFileDescriptorSetParent* aActor);
+
+  virtual mozilla::ipc::PSendStreamParent* AllocPSendStreamParent();
+
+  virtual bool DeallocPSendStreamParent(mozilla::ipc::PSendStreamParent* aActor);
 
   virtual bool RecvSyncMessage(const nsString& aMsg,
                                const ClonedMessageData& aData,
