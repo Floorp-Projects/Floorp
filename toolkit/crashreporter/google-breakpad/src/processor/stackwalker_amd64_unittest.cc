@@ -72,8 +72,8 @@ class StackwalkerAMD64Fixture {
     : stack_section(kLittleEndian),
       // Give the two modules reasonable standard locations and names
       // for tests to play with.
-      module1(0x00007400c0000000ULL, 0x10000, "module1", "version1"),
-      module2(0x00007500b0000000ULL, 0x10000, "module2", "version2") {
+      module1(0x40000000c0000000ULL, 0x10000, "module1", "version1"),
+      module2(0x50000000b0000000ULL, 0x10000, "module2", "version2") {
     // Identify the system as a Linux system.
     system_info.os = "Linux";
     system_info.os_short = "linux";
@@ -149,7 +149,7 @@ TEST_F(SanityCheck, NoResolver) {
   // provide any call frame information, so trying to reconstruct the
   // context frame's caller should fail. So there's no need for us to
   // provide stack contents.
-  raw_context.rip = 0x00007400c0000200ULL;
+  raw_context.rip = 0x40000000c0000200ULL;
   raw_context.rbp = 0x8000000080000000ULL;
 
   StackFrameSymbolizer frame_symbolizer(NULL, NULL);
@@ -176,7 +176,7 @@ TEST_F(GetContextFrame, Simple) {
   // provide any call frame information, so trying to reconstruct the
   // context frame's caller should fail. So there's no need for us to
   // provide stack contents.
-  raw_context.rip = 0x00007400c0000200ULL;
+  raw_context.rip = 0x40000000c0000200ULL;
   raw_context.rbp = 0x8000000080000000ULL;
 
   StackFrameSymbolizer frame_symbolizer(&supplier, &resolver);
@@ -200,7 +200,7 @@ TEST_F(GetContextFrame, Simple) {
 // The stackwalker should be able to produce the context frame even
 // without stack memory present.
 TEST_F(GetContextFrame, NoStackMemory) {
-  raw_context.rip = 0x00007400c0000200ULL;
+  raw_context.rip = 0x40000000c0000200ULL;
   raw_context.rbp = 0x8000000080000000ULL;
 
   StackFrameSymbolizer frame_symbolizer(&supplier, &resolver);
@@ -230,23 +230,23 @@ TEST_F(GetCallerFrame, ScanWithoutSymbols) {
   // Force scanning through three frames to ensure that the
   // stack pointer is set properly in scan-recovered frames.
   stack_section.start() = 0x8000000080000000ULL;
-  uint64_t return_address1 = 0x00007500b0000100ULL;
-  uint64_t return_address2 = 0x00007500b0000900ULL;
+  uint64_t return_address1 = 0x50000000b0000100ULL;
+  uint64_t return_address2 = 0x50000000b0000900ULL;
   Label frame1_sp, frame2_sp, frame1_rbp;
   stack_section
     // frame 0
     .Append(16, 0)                      // space
 
-    .D64(0x00007400b0000000ULL)         // junk that's not
-    .D64(0x00007500d0000000ULL)         // a return address
+    .D64(0x40000000b0000000ULL)         // junk that's not
+    .D64(0x50000000d0000000ULL)         // a return address
 
     .D64(return_address1)               // actual return address
     // frame 1
     .Mark(&frame1_sp)
     .Append(16, 0)                      // space
 
-    .D64(0x00007400b0000000ULL)         // more junk
-    .D64(0x00007500d0000000ULL)
+    .D64(0x40000000b0000000ULL)         // more junk
+    .D64(0x50000000d0000000ULL)
 
     .Mark(&frame1_rbp)
     .D64(stack_section.start())         // This is in the right place to be
@@ -260,7 +260,7 @@ TEST_F(GetCallerFrame, ScanWithoutSymbols) {
 
   RegionFromSection();
 
-  raw_context.rip = 0x00007400c0000200ULL;
+  raw_context.rip = 0x40000000c0000200ULL;
   raw_context.rbp = frame1_rbp.Value();
   raw_context.rsp = stack_section.start().Value();
 
@@ -308,18 +308,18 @@ TEST_F(GetCallerFrame, ScanWithFunctionSymbols) {
   // it is only considered a valid return address if it
   // lies within a function's bounds.
   stack_section.start() = 0x8000000080000000ULL;
-  uint64_t return_address = 0x00007500b0000110ULL;
+  uint64_t return_address = 0x50000000b0000110ULL;
   Label frame1_sp, frame1_rbp;
 
   stack_section
     // frame 0
     .Append(16, 0)                      // space
 
-    .D64(0x00007400b0000000ULL)         // junk that's not
-    .D64(0x00007500b0000000ULL)         // a return address
+    .D64(0x40000000b0000000ULL)         // junk that's not
+    .D64(0x50000000b0000000ULL)         // a return address
 
-    .D64(0x00007400c0001000ULL)         // a couple of plausible addresses
-    .D64(0x00007500b000aaaaULL)         // that are not within functions
+    .D64(0x40000000c0001000ULL)         // a couple of plausible addresses
+    .D64(0x50000000b000aaaaULL)         // that are not within functions
 
     .D64(return_address)                // actual return address
     // frame 1
@@ -328,7 +328,7 @@ TEST_F(GetCallerFrame, ScanWithFunctionSymbols) {
     .Mark(&frame1_rbp);
   RegionFromSection();
 
-  raw_context.rip = 0x00007400c0000200ULL;
+  raw_context.rip = 0x40000000c0000200ULL;
   raw_context.rbp = frame1_rbp.Value();
   raw_context.rsp = stack_section.start().Value();
 
@@ -355,7 +355,7 @@ TEST_F(GetCallerFrame, ScanWithFunctionSymbols) {
   EXPECT_EQ(StackFrame::FRAME_TRUST_CONTEXT, frame0->trust);
   ASSERT_EQ(StackFrameAMD64::CONTEXT_VALID_ALL, frame0->context_validity);
   EXPECT_EQ("platypus", frame0->function_name);
-  EXPECT_EQ(0x00007400c0000100ULL, frame0->function_base);
+  EXPECT_EQ(0x40000000c0000100ULL, frame0->function_base);
 
   StackFrameAMD64 *frame1 = static_cast<StackFrameAMD64 *>(frames->at(1));
   EXPECT_EQ(StackFrame::FRAME_TRUST_SCAN, frame1->trust);
@@ -367,240 +367,7 @@ TEST_F(GetCallerFrame, ScanWithFunctionSymbols) {
   EXPECT_EQ(frame1_sp.Value(), frame1->context.rsp);
   EXPECT_EQ(frame1_rbp.Value(), frame1->context.rbp);
   EXPECT_EQ("echidna", frame1->function_name);
-  EXPECT_EQ(0x00007500b0000100ULL, frame1->function_base);
-}
-
-// StackwalkerAMD64::GetCallerByFramePointerRecovery should never return an
-// instruction pointer of 0 because IP of 0 is an end of stack marker and the
-// stack walk may be terminated prematurely.  Instead it should return NULL
-// so that the stack walking code can proceed to stack scanning.
-TEST_F(GetCallerFrame, GetCallerByFramePointerRecovery) {
-  MockCodeModule user32_dll(0x00007ff9cb8a0000ULL, 0x14E000, "user32.dll",
-                            "version1");
-  SetModuleSymbols(&user32_dll,  // user32.dll
-                   "PUBLIC fa60 0 DispatchMessageWorker\n"
-                   "PUBLIC fee0 0 UserCallWinProcCheckWow\n"
-                   "PUBLIC 1cdb0 0 _fnHkINLPMSG\n"
-                   "STACK CFI INIT fa60 340 .cfa: $rsp .ra: .cfa 8 - ^\n"
-                   "STACK CFI fa60 .cfa: $rsp 128 +\n"
-                   "STACK CFI INIT fee0 49f .cfa: $rsp .ra: .cfa 8 - ^\n"
-                   "STACK CFI fee0 .cfa: $rsp 240 +\n"
-                   "STACK CFI INIT 1cdb0 9f .cfa: $rsp .ra: .cfa 8 - ^\n"
-                   "STACK CFI 1cdb0 .cfa: $rsp 80 +\n");
-
-  // Create some modules with some stock debugging information.
-  MockCodeModules local_modules;
-  local_modules.Add(&user32_dll);
-
-  Label frame0_rsp;
-  Label frame0_rbp;
-  Label frame1_rsp;
-  Label frame2_rsp;
-
-  stack_section.start() = 0x00000099abf0f238ULL;
-  stack_section
-    .Mark(&frame0_rsp)
-    .D64(0x00007ff9cb8b00dcULL)
-    .Mark(&frame1_rsp)
-    .D64(0x0000000000000000ULL)
-    .D64(0x0000000000000001ULL)
-    .D64(0x00000099abf0f308ULL)
-    .D64(0x00007ff9cb8bce3aULL)  // Stack residue from execution of
-                                 // user32!_fnHkINLPMSG+0x8a
-    .D64(0x000000000000c2e0ULL)
-    .D64(0x00000099abf0f328ULL)
-    .D64(0x0000000100000001ULL)
-    .D64(0x0000000000000000ULL)
-    .D64(0x0000000000000000ULL)
-    .D64(0x0000000000000000ULL)
-    .D64(0x0000000000000000ULL)
-    .D64(0x0000000000000000ULL)
-    .D64(0x0000000000000000ULL)
-    .D64(0x00007ff9ccad53e4ULL)
-    .D64(0x0000000000000048ULL)
-    .D64(0x0000000000000001ULL)
-    .D64(0x00000099abf0f5e0ULL)
-    .D64(0x00000099b61f7388ULL)
-    .D64(0x0000000000000030ULL)
-    .D64(0xffffff66540f0a1fULL)
-    .D64(0xffffff6649e08c77ULL)
-    .D64(0x00007ff9cb8affb4ULL)  // Return address in
-                                 // user32!UserCallWinProcCheckWow+0xd4
-    .D64(0x0000000000000000ULL)
-    .D64(0x00000099abf0f368ULL)
-    .D64(0x0000000000000000ULL)
-    .D64(0x0000000000000000ULL)
-    .D64(0x0000000000000000ULL)
-    .D64(0x00000099a8150fd8ULL)
-    .D64(0x00000099abf0f3e8ULL)
-    .D64(0x00007ff9cb8afc07ULL)  // Return address in
-                                 // user32!DispatchMessageWorker+0x1a7
-    .Mark(&frame2_rsp)
-    .Append(256, 0)
-    .Mark(&frame0_rbp)           // The following are expected by
-                                 // GetCallerByFramePointerRecovery.
-    .D64(0xfffffffffffffffeULL)  // %caller_rbp = *(%callee_rbp)
-    .D64(0x0000000000000000ULL)  // %caller_rip = *(%callee_rbp + 8)
-    .D64(0x00000099a3e31040ULL)  // %caller_rsp = *(%callee_rbp + 16)
-    .Append(256, 0);
-
-  RegionFromSection();
-  raw_context.rip = 0x00000099a8150fd8ULL;  // IP in context frame is guarbage
-  raw_context.rsp = frame0_rsp.Value();
-  raw_context.rbp = frame0_rbp.Value();
-
-  StackFrameSymbolizer frame_symbolizer(&supplier, &resolver);
-  StackwalkerAMD64 walker(&system_info, &raw_context, &stack_region,
-                          &local_modules, &frame_symbolizer);
-  vector<const CodeModule*> modules_without_symbols;
-  vector<const CodeModule*> modules_with_corrupt_symbols;
-  ASSERT_TRUE(walker.Walk(&call_stack, &modules_without_symbols,
-                          &modules_with_corrupt_symbols));
-  ASSERT_EQ(0U, modules_without_symbols.size());
-  ASSERT_EQ(0U, modules_with_corrupt_symbols.size());
-  frames = call_stack.frames();
-
-  ASSERT_EQ(3U, frames->size());
-
-  {  // To avoid reusing locals by mistake
-    StackFrameAMD64 *frame = static_cast<StackFrameAMD64 *>(frames->at(0));
-    EXPECT_EQ(StackFrame::FRAME_TRUST_CONTEXT, frame->trust);
-    ASSERT_EQ(StackFrameAMD64::CONTEXT_VALID_ALL, frame->context_validity);
-    EXPECT_EQ("", frame->function_name);
-    EXPECT_EQ(0x00000099a8150fd8ULL, frame->instruction);
-    EXPECT_EQ(0x00000099a8150fd8ULL, frame->context.rip);
-    EXPECT_EQ(frame0_rsp.Value(), frame->context.rsp);
-    EXPECT_EQ(frame0_rbp.Value(), frame->context.rbp);
-  }
-
-  {  // To avoid reusing locals by mistake
-    StackFrameAMD64 *frame = static_cast<StackFrameAMD64 *>(frames->at(1));
-    EXPECT_EQ(StackFrame::FRAME_TRUST_SCAN, frame->trust);
-    ASSERT_EQ((StackFrameAMD64::CONTEXT_VALID_RIP |
-               StackFrameAMD64::CONTEXT_VALID_RSP |
-               StackFrameAMD64::CONTEXT_VALID_RBP),
-              frame->context_validity);
-    EXPECT_EQ("UserCallWinProcCheckWow", frame->function_name);
-    EXPECT_EQ(140710838468828ULL, frame->instruction + 1);
-    EXPECT_EQ(140710838468828ULL, frame->context.rip);
-    EXPECT_EQ(frame1_rsp.Value(), frame->context.rsp);
-    EXPECT_EQ(&user32_dll, frame->module);
-  }
-
-  {  // To avoid reusing locals by mistake
-    StackFrameAMD64 *frame = static_cast<StackFrameAMD64 *>(frames->at(2));
-    EXPECT_EQ(StackFrame::FRAME_TRUST_CFI, frame->trust);
-    ASSERT_EQ((StackFrameAMD64::CONTEXT_VALID_RIP |
-               StackFrameAMD64::CONTEXT_VALID_RSP |
-               StackFrameAMD64::CONTEXT_VALID_RBP),
-              frame->context_validity);
-    EXPECT_EQ("DispatchMessageWorker", frame->function_name);
-    EXPECT_EQ(140710838467591ULL, frame->instruction + 1);
-    EXPECT_EQ(140710838467591ULL, frame->context.rip);
-    EXPECT_EQ(frame2_rsp.Value(), frame->context.rsp);
-    EXPECT_EQ(&user32_dll, frame->module);
-  }
-}
-
-// Don't use frame pointer recovery if %rbp is not 8-byte aligned, which
-// indicates that it's not being used as a frame pointer.
-TEST_F(GetCallerFrame, FramePointerNotAligned) {
-  stack_section.start() = 0x8000000080000000ULL;
-  uint64_t return_address1 = 0x00007500b0000100ULL;
-  Label frame0_rbp, not_frame1_rbp, frame1_sp;
-  stack_section
-    // frame 0
-    .Align(8, 0)
-    .Append(2, 0)                       // mis-align the frame pointer
-    .Mark(&frame0_rbp)
-    .D64(not_frame1_rbp)                // not the previous frame pointer
-    .D64(0x00007500b0000a00ULL)         // plausible but wrong return address
-    .Align(8, 0)
-    .D64(return_address1)               // return address
-    // frame 1
-    .Mark(&frame1_sp)
-    .Mark(&not_frame1_rbp)
-    .Append(32, 0);                     // end of stack
-
-
-  RegionFromSection();
-
-  raw_context.rip = 0x00007400c0000200ULL;
-  raw_context.rbp = frame0_rbp.Value();
-  raw_context.rsp = stack_section.start().Value();
-
-  StackFrameSymbolizer frame_symbolizer(&supplier, &resolver);
-  StackwalkerAMD64 walker(&system_info, &raw_context, &stack_region, &modules,
-                          &frame_symbolizer);
-  vector<const CodeModule*> modules_without_symbols;
-  vector<const CodeModule*> modules_with_corrupt_symbols;
-  ASSERT_TRUE(walker.Walk(&call_stack, &modules_without_symbols,
-                          &modules_with_corrupt_symbols));
-  frames = call_stack.frames();
-  ASSERT_EQ(2U, frames->size());
-
-  StackFrameAMD64 *frame0 = static_cast<StackFrameAMD64 *>(frames->at(0));
-  EXPECT_EQ(StackFrame::FRAME_TRUST_CONTEXT, frame0->trust);
-  ASSERT_EQ(StackFrameAMD64::CONTEXT_VALID_ALL, frame0->context_validity);
-  EXPECT_EQ(0, memcmp(&raw_context, &frame0->context, sizeof(raw_context)));
-
-  StackFrameAMD64 *frame1 = static_cast<StackFrameAMD64 *>(frames->at(1));
-  EXPECT_EQ(StackFrame::FRAME_TRUST_SCAN, frame1->trust);
-  ASSERT_EQ((StackFrameAMD64::CONTEXT_VALID_RIP |
-             StackFrameAMD64::CONTEXT_VALID_RSP),
-            frame1->context_validity);
-  EXPECT_EQ(return_address1, frame1->context.rip);
-  EXPECT_EQ(frame1_sp.Value(), frame1->context.rsp);
-}
-
-// Don't use frame pointer recovery if the recovered %rip is not
-// a canonical x86-64 address.
-TEST_F(GetCallerFrame, NonCanonicalInstructionPointerFromFramePointer) {
-  stack_section.start() = 0x8000000080000000ULL;
-  uint64_t return_address1 = 0x00007500b0000100ULL;
-  Label frame0_rbp, frame1_sp, not_frame1_bp;
-  stack_section
-    // frame 0
-    .Align(8, 0)
-    .Mark(&frame0_rbp)
-    .D64(not_frame1_bp)                 // some junk on the stack
-    .D64(0xDADADADADADADADA)            // not the return address
-    .D64(return_address1)               // return address
-    // frame 1
-    .Mark(&frame1_sp)
-    .Append(16, 0)
-    .Mark(&not_frame1_bp)
-    .Append(32, 0);                     // end of stack
-
-
-  RegionFromSection();
-
-  raw_context.rip = 0x00007400c0000200ULL;
-  raw_context.rbp = frame0_rbp.Value();
-  raw_context.rsp = stack_section.start().Value();
-
-  StackFrameSymbolizer frame_symbolizer(&supplier, &resolver);
-  StackwalkerAMD64 walker(&system_info, &raw_context, &stack_region, &modules,
-                          &frame_symbolizer);
-  vector<const CodeModule*> modules_without_symbols;
-  vector<const CodeModule*> modules_with_corrupt_symbols;
-  ASSERT_TRUE(walker.Walk(&call_stack, &modules_without_symbols,
-                          &modules_with_corrupt_symbols));
-  frames = call_stack.frames();
-  ASSERT_EQ(2U, frames->size());
-
-  StackFrameAMD64 *frame0 = static_cast<StackFrameAMD64 *>(frames->at(0));
-  EXPECT_EQ(StackFrame::FRAME_TRUST_CONTEXT, frame0->trust);
-  ASSERT_EQ(StackFrameAMD64::CONTEXT_VALID_ALL, frame0->context_validity);
-  EXPECT_EQ(0, memcmp(&raw_context, &frame0->context, sizeof(raw_context)));
-
-  StackFrameAMD64 *frame1 = static_cast<StackFrameAMD64 *>(frames->at(1));
-  EXPECT_EQ(StackFrame::FRAME_TRUST_SCAN, frame1->trust);
-  ASSERT_EQ((StackFrameAMD64::CONTEXT_VALID_RIP |
-             StackFrameAMD64::CONTEXT_VALID_RSP),
-            frame1->context_validity);
-  EXPECT_EQ(return_address1, frame1->context.rip);
-  EXPECT_EQ(frame1_sp.Value(), frame1->context.rsp);
+  EXPECT_EQ(0x50000000b0000100ULL, frame1->function_base);
 }
 
 // Test that set_max_frames_scanned prevents using stack scanning
@@ -610,23 +377,23 @@ TEST_F(GetCallerFrame, ScanningNotAllowed) {
   // only addresses located within loaded modules are
   // considered valid return addresses.
   stack_section.start() = 0x8000000080000000ULL;
-  uint64_t return_address1 = 0x00007500b0000100ULL;
-  uint64_t return_address2 = 0x00007500b0000900ULL;
+  uint64_t return_address1 = 0x50000000b0000100ULL;
+  uint64_t return_address2 = 0x50000000b0000900ULL;
   Label frame1_sp, frame2_sp, frame1_rbp;
   stack_section
     // frame 0
     .Append(16, 0)                      // space
 
-    .D64(0x00007400b0000000ULL)         // junk that's not
-    .D64(0x00007500d0000000ULL)         // a return address
+    .D64(0x40000000b0000000ULL)         // junk that's not
+    .D64(0x50000000d0000000ULL)         // a return address
 
     .D64(return_address1)               // actual return address
     // frame 1
     .Mark(&frame1_sp)
     .Append(16, 0)                      // space
 
-    .D64(0x00007400b0000000ULL)         // more junk
-    .D64(0x00007500d0000000ULL)
+    .D64(0x40000000b0000000ULL)         // more junk
+    .D64(0x50000000d0000000ULL)
 
     .Mark(&frame1_rbp)
     .D64(stack_section.start())         // This is in the right place to be
@@ -640,7 +407,7 @@ TEST_F(GetCallerFrame, ScanningNotAllowed) {
 
   RegionFromSection();
 
-  raw_context.rip = 0x00007400c0000200ULL;
+  raw_context.rip = 0x40000000c0000200ULL;
   raw_context.rbp = frame1_rbp.Value();
   raw_context.rsp = stack_section.start().Value();
 
@@ -671,18 +438,18 @@ TEST_F(GetCallerFrame, CallerPushedRBP) {
   // %rbp directly below the return address, assume that it is indeed the
   // next frame's %rbp.
   stack_section.start() = 0x8000000080000000ULL;
-  uint64_t return_address = 0x00007500b0000110ULL;
+  uint64_t return_address = 0x50000000b0000110ULL;
   Label frame0_rbp, frame1_sp, frame1_rbp;
 
   stack_section
     // frame 0
     .Append(16, 0)                      // space
 
-    .D64(0x00007400b0000000ULL)         // junk that's not
-    .D64(0x00007500b0000000ULL)         // a return address
+    .D64(0x40000000b0000000ULL)         // junk that's not
+    .D64(0x50000000b0000000ULL)         // a return address
 
-    .D64(0x00007400c0001000ULL)         // a couple of plausible addresses
-    .D64(0x00007500b000aaaaULL)         // that are not within functions
+    .D64(0x40000000c0001000ULL)         // a couple of plausible addresses
+    .D64(0x50000000b000aaaaULL)         // that are not within functions
 
     .Mark(&frame0_rbp)
     .D64(frame1_rbp)                    // caller-pushed %rbp
@@ -693,7 +460,7 @@ TEST_F(GetCallerFrame, CallerPushedRBP) {
     .Mark(&frame1_rbp);                 // end of stack
   RegionFromSection();
 
-  raw_context.rip = 0x00007400c0000200ULL;
+  raw_context.rip = 0x40000000c0000200ULL;
   raw_context.rbp = frame0_rbp.Value();
   raw_context.rsp = stack_section.start().Value();
 
@@ -721,7 +488,7 @@ TEST_F(GetCallerFrame, CallerPushedRBP) {
   ASSERT_EQ(StackFrameAMD64::CONTEXT_VALID_ALL, frame0->context_validity);
   EXPECT_EQ(frame0_rbp.Value(), frame0->context.rbp);
   EXPECT_EQ("sasquatch", frame0->function_name);
-  EXPECT_EQ(0x00007400c0000100ULL, frame0->function_base);
+  EXPECT_EQ(0x40000000c0000100ULL, frame0->function_base);
 
   StackFrameAMD64 *frame1 = static_cast<StackFrameAMD64 *>(frames->at(1));
   EXPECT_EQ(StackFrame::FRAME_TRUST_FP, frame1->trust);
@@ -733,7 +500,7 @@ TEST_F(GetCallerFrame, CallerPushedRBP) {
   EXPECT_EQ(frame1_sp.Value(), frame1->context.rsp);
   EXPECT_EQ(frame1_rbp.Value(), frame1->context.rbp);
   EXPECT_EQ("yeti", frame1->function_name);
-  EXPECT_EQ(0x00007500b0000100ULL, frame1->function_base);
+  EXPECT_EQ(0x50000000b0000100ULL, frame1->function_base);
 }
 
 struct CFIFixture: public StackwalkerAMD64Fixture {
@@ -764,7 +531,7 @@ struct CFIFixture: public StackwalkerAMD64Fixture {
 
     // Provide some distinctive values for the caller's registers.
     expected.rsp = 0x8000000080000000ULL;
-    expected.rip = 0x00007400c0005510ULL;
+    expected.rip = 0x40000000c0005510ULL;
     expected.rbp = 0x68995b1de4700266ULL;
     expected.rbx = 0x5a5beeb38de23be8ULL;
     expected.r12 = 0xed1b02e8cc0fc79cULL;
@@ -801,7 +568,7 @@ struct CFIFixture: public StackwalkerAMD64Fixture {
     EXPECT_EQ(StackFrame::FRAME_TRUST_CONTEXT, frame0->trust);
     ASSERT_EQ(StackFrameAMD64::CONTEXT_VALID_ALL, frame0->context_validity);
     EXPECT_EQ("enchiridion", frame0->function_name);
-    EXPECT_EQ(0x00007400c0004000ULL, frame0->function_base);
+    EXPECT_EQ(0x40000000c0004000ULL, frame0->function_base);
 
     StackFrameAMD64 *frame1 = static_cast<StackFrameAMD64 *>(frames->at(1));
     EXPECT_EQ(StackFrame::FRAME_TRUST_CFI, frame1->trust);
@@ -834,9 +601,9 @@ class CFI: public CFIFixture, public Test { };
 TEST_F(CFI, At4000) {
   Label frame1_rsp = expected.rsp;
   stack_section
-    .D64(0x00007400c0005510ULL) // return address
+    .D64(0x40000000c0005510ULL) // return address
     .Mark(&frame1_rsp);         // This effectively sets stack_section.start().
-  raw_context.rip = 0x00007400c0004000ULL;
+  raw_context.rip = 0x40000000c0004000ULL;
   CheckWalk();
 }
 
@@ -844,9 +611,9 @@ TEST_F(CFI, At4001) {
   Label frame1_rsp = expected.rsp;
   stack_section
     .D64(0x5a5beeb38de23be8ULL) // saved %rbx
-    .D64(0x00007400c0005510ULL) // return address
+    .D64(0x40000000c0005510ULL) // return address
     .Mark(&frame1_rsp);         // This effectively sets stack_section.start().
-  raw_context.rip = 0x00007400c0004001ULL;
+  raw_context.rip = 0x40000000c0004001ULL;
   raw_context.rbx = 0xbe0487d2f9eafe29ULL; // callee's (distinct) %rbx value
   CheckWalk();
 }
@@ -855,9 +622,9 @@ TEST_F(CFI, At4002) {
   Label frame1_rsp = expected.rsp;
   stack_section
     .D64(0x5a5beeb38de23be8ULL) // saved %rbx
-    .D64(0x00007400c0005510ULL) // return address
+    .D64(0x40000000c0005510ULL) // return address
     .Mark(&frame1_rsp);         // This effectively sets stack_section.start().
-  raw_context.rip = 0x00007400c0004002ULL;
+  raw_context.rip = 0x40000000c0004002ULL;
   raw_context.rbx = 0xed1b02e8cc0fc79cULL; // saved %r12
   raw_context.r12 = 0xb0118de918a4bceaULL; // callee's (distinct) %r12 value
   CheckWalk();
@@ -870,9 +637,9 @@ TEST_F(CFI, At4003) {
     .D64(0x1d20ad8acacbe930ULL) // saved %r13
     .D64(0x319e68b49e3ace0fULL) // garbage
     .D64(0x5a5beeb38de23be8ULL) // saved %rbx
-    .D64(0x00007400c0005510ULL) // return address
+    .D64(0x40000000c0005510ULL) // return address
     .Mark(&frame1_rsp);         // This effectively sets stack_section.start().
-  raw_context.rip = 0x00007400c0004003ULL;
+  raw_context.rip = 0x40000000c0004003ULL;
   raw_context.rbx = 0xed1b02e8cc0fc79cULL; // saved %r12
   raw_context.r12 = 0x89d04fa804c87a43ULL; // callee's (distinct) %r12
   raw_context.r13 = 0x5118e02cbdb24b03ULL; // callee's (distinct) %r13
@@ -887,9 +654,9 @@ TEST_F(CFI, At4004) {
     .D64(0x1d20ad8acacbe930ULL) // saved %r13
     .D64(0x319e68b49e3ace0fULL) // garbage
     .D64(0x5a5beeb38de23be8ULL) // saved %rbx
-    .D64(0x00007400c0005510ULL) // return address
+    .D64(0x40000000c0005510ULL) // return address
     .Mark(&frame1_rsp);         // This effectively sets stack_section.start().
-  raw_context.rip = 0x00007400c0004004ULL;
+  raw_context.rip = 0x40000000c0004004ULL;
   raw_context.rbx = 0xed1b02e8cc0fc79cULL; // saved %r12
   raw_context.r12 = 0x89d04fa804c87a43ULL; // callee's (distinct) %r12
   raw_context.r13 = 0x5118e02cbdb24b03ULL; // callee's (distinct) %r13
@@ -905,10 +672,10 @@ TEST_F(CFI, At4005) {
     .D64(0x5a5beeb38de23be8ULL) // saved %rbx
     .D64(0xaa95fa054aedfbaeULL) // garbage
     .Mark(&frame1_rsp);         // This effectively sets stack_section.start().
-  raw_context.rip = 0x00007400c0004005ULL;
+  raw_context.rip = 0x40000000c0004005ULL;
   raw_context.rbx = 0xed1b02e8cc0fc79cULL; // saved %r12
   raw_context.r12 = 0x46b1b8868891b34aULL; // callee's %r12
-  raw_context.r13 = 0x00007400c0005510ULL; // return address
+  raw_context.r13 = 0x40000000c0005510ULL; // return address
   CheckWalk();
 }
 
@@ -923,10 +690,10 @@ TEST_F(CFI, At4006) {
     .D64(0x5a5beeb38de23be8ULL) // saved %rbx
     .D64(0xf015ee516ad89eabULL) // garbage
     .Mark(&frame1_rsp);         // This effectively sets stack_section.start().
-  raw_context.rip = 0x00007400c0004006ULL;
+  raw_context.rip = 0x40000000c0004006ULL;
   raw_context.rbp = frame0_rbp.Value();
   raw_context.rbx = 0xed1b02e8cc0fc79cULL; // saved %r12
   raw_context.r12 = 0x26e007b341acfebdULL; // callee's %r12
-  raw_context.r13 = 0x00007400c0005510ULL; // return address
+  raw_context.r13 = 0x40000000c0005510ULL; // return address
   CheckWalk();
 }

@@ -38,8 +38,6 @@
 //  cpu: the CPU that the module was built for (x86 or ppc)
 //  symbol_file: the contents of the breakpad-format symbol file
 
-#include <fcntl.h>
-#include <sys/stat.h>
 #include <unistd.h>
 
 #include <Foundation/Foundation.h>
@@ -81,6 +79,15 @@ static NSArray *ModuleDataForSymbolFile(NSString *file) {
   [str release];
 
   return parts;
+}
+
+//=============================================================================
+static NSString *CompactIdentifier(NSString *uuid) {
+  NSMutableString *str = [NSMutableString stringWithString:uuid];
+  [str replaceOccurrencesOfString:@"-" withString:@"" options:0
+                            range:NSMakeRange(0, [str length])];
+  
+  return str;
 }
 
 //=============================================================================
@@ -164,25 +171,6 @@ SetupOptions(int argc, const char *argv[], Options *options) {
   if ((argc - optind) != 2) {
     fprintf(stderr, "%s: Missing symbols file and/or upload-URL\n", argv[0]);
     Usage(argc, argv);
-    exit(1);
-  }
-
-  int fd = open(argv[optind], O_RDONLY);
-  if (fd < 0) {
-    fprintf(stderr, "%s: %s: %s\n", argv[0], argv[optind], strerror(errno));
-    exit(1);
-  }
-
-  struct stat statbuf;
-  if (fstat(fd, &statbuf) < 0) {
-    fprintf(stderr, "%s: %s: %s\n", argv[0], argv[optind], strerror(errno));
-    close(fd);
-    exit(1);
-  }
-  close(fd);
-
-  if (!S_ISREG(statbuf.st_mode)) {
-    fprintf(stderr, "%s: %s: not a regular file\n", argv[0], argv[optind]);
     exit(1);
   }
 

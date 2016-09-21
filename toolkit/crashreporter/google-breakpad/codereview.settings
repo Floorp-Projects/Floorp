@@ -1,4 +1,5 @@
-GERRIT_HOST: True
-GERRIT_SQUASH_UPLOADS: True
-CODE_REVIEW_SERVER: chromium-review.googlesource.com
+# This file is used by gcl to get repository specific information.
+CODE_REVIEW_SERVER: codereview.chromium.org
+CC_LIST: google-breakpad-dev@googlegroups.com
+TRY_ON_UPLOAD: False
 VIEW_VC: https://chromium.googlesource.com/breakpad/breakpad/+/

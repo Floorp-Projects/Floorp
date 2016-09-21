@@ -108,11 +108,6 @@ using google_breakpad::ClientInfo;
 #ifdef XP_LINUX
 using google_breakpad::MinidumpDescriptor;
 #endif
-#if defined(MOZ_WIDGET_ANDROID)
-using google_breakpad::auto_wasteful_vector;
-using google_breakpad::FileID;
-using google_breakpad::PageAllocator;
-#endif
 using namespace mozilla;
 using mozilla::dom::CrashReporterChild;
 using mozilla::dom::PCrashReporterChild;
@@ -1713,12 +1708,10 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
 
 #if defined(MOZ_WIDGET_ANDROID)
   for (unsigned int i = 0; i < library_mappings.size(); i++) {
-    PageAllocator allocator;
-    auto_wasteful_vector<uint8_t, sizeof(MDGUID)> guid(&allocator);
-    FileID::ElfFileIdentifierFromMappedFile(
-      (void const *)library_mappings[i].start_address, guid);
+    u_int8_t guid[sizeof(MDGUID)];
+    google_breakpad::FileID::ElfFileIdentifierFromMappedFile((void const *)library_mappings[i].start_address, guid);
     gExceptionHandler->AddMappingInfo(library_mappings[i].name,
-                                      guid.data(),
+                                      guid,
                                       library_mappings[i].start_address,
                                       library_mappings[i].length,
                                       library_mappings[i].file_offset);
@@ -4071,11 +4064,10 @@ void AddLibraryMapping(const char* library_name,
     library_mappings.push_back(info);
   }
   else {
-    PageAllocator allocator;
-    auto_wasteful_vector<uint8_t, sizeof(MDGUID)> guid(&allocator);
-    FileID::ElfFileIdentifierFromMappedFile((void const *)start_address, guid);
+    u_int8_t guid[sizeof(MDGUID)];
+    google_breakpad::FileID::ElfFileIdentifierFromMappedFile((void const *)start_address, guid);
     gExceptionHandler->AddMappingInfo(library_name,
-                                      guid.data(),
+                                      guid,
                                       start_address,
                                       mapping_length,
                                       file_offset);

@@ -27,7 +27,6 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <assert.h>
-#include <stdint.h>
 #include <stdlib.h>
 
 #include "common/dwarf/bytereader-inl.h"
@@ -63,7 +62,7 @@ void ByteReader::SetAddressSize(uint8 size) {
   }
 }
 
-uint64 ByteReader::ReadInitialLength(const uint8_t *start, size_t* len) {
+uint64 ByteReader::ReadInitialLength(const char* start, size_t* len) {
   const uint64 initial_length = ReadFourBytes(start);
   start += 4;
 
@@ -101,7 +100,7 @@ bool ByteReader::UsableEncoding(DwarfPointerEncoding encoding) const {
   }
 }
 
-uint64 ByteReader::ReadEncodedPointer(const uint8_t *buffer,
+uint64 ByteReader::ReadEncodedPointer(const char *buffer,
                                       DwarfPointerEncoding encoding,
                                       size_t *len) const {
   // UsableEncoding doesn't approve of DW_EH_PE_omit, so we shouldn't
@@ -130,7 +129,7 @@ uint64 ByteReader::ReadEncodedPointer(const uint8_t *buffer,
     // Round up to the next boundary.
     uint64 aligned = (offset + AddressSize() - 1) & -AddressSize();
     // Convert back to a pointer.
-    const uint8_t *aligned_buffer = buffer_base_ + (aligned - skew);
+    const char *aligned_buffer = buffer_base_ + (aligned - skew);
     // Finally, store the length and actually fetch the pointer.
     *len = aligned_buffer - buffer + AddressSize();
     return ReadAddress(aligned_buffer);
@@ -241,10 +240,6 @@ uint64 ByteReader::ReadEncodedPointer(const uint8_t *buffer,
     assert(AddressSize() == sizeof(uint64));
 
   return pointer;
-}
-
-Endianness ByteReader::GetEndianness() const {
-  return endian_;
 }
 
 }  // namespace dwarf2reader
