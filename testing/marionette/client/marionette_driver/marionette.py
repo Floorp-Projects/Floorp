@@ -1045,7 +1045,7 @@ class Marionette(object):
         self.delete_session(in_app=True)
 
     @do_process_check
-    def quit(self, in_app=False):
+    def quit(self, in_app=False, callback=None):
         """Terminate the currently running instance.
 
         This command will delete the active marionette session. It also allows
@@ -1055,6 +1055,8 @@ class Marionette(object):
         :param in_app: If True, marionette will cause a quit from within the
                        browser. Otherwise the browser will be quit immediately
                        by killing the process.
+        :param callback: If provided and `in_app` is True, the callback will
+                         be used to trigger the shutdown.
         """
         if not self.instance:
             raise errors.MarionetteException("quit() can only be called "
@@ -1063,7 +1065,10 @@ class Marionette(object):
         self.reset_timeouts()
 
         if in_app:
-            self._request_in_app_shutdown()
+            if callable(callback):
+                callback()
+            else:
+                self._request_in_app_shutdown()
 
             # Give the application some time to shutdown
             self.instance.runner.wait(timeout=self.DEFAULT_SHUTDOWN_TIMEOUT)
@@ -1072,7 +1077,7 @@ class Marionette(object):
             self.instance.close()
 
     @do_process_check
-    def restart(self, clean=False, in_app=False):
+    def restart(self, clean=False, in_app=False, callback=None):
         """
         This will terminate the currently running instance, and spawn a new instance
         with the same profile and then reuse the session id when creating a session again.
@@ -1083,6 +1088,8 @@ class Marionette(object):
         :param in_app: If True, marionette will cause a restart from within the
                        browser. Otherwise the browser will be restarted immediately
                        by killing the process.
+        :param callback: If provided and `in_app` is True, the callback will be
+                         used to trigger the restart.
         """
         if not self.instance:
             raise errors.MarionetteException("restart() can only be called "
@@ -1093,7 +1100,10 @@ class Marionette(object):
             if clean:
                 raise ValueError("An in_app restart cannot be triggered with the clean flag set")
 
-            self._request_in_app_shutdown("eRestart")
+            if callable(callback):
+                callback()
+            else:
+                self._request_in_app_shutdown("eRestart")
 
             try:
                 self.raise_for_port(self.wait_for_port())
