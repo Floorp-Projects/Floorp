@@ -1548,17 +1548,21 @@ ushr(T lhs, unsigned rhs)
 }
 
 template<typename Float>
-static bool
-ParseNaNLiteral(const char16_t* cur, const char16_t* end, Float* result)
+static AstConst*
+ParseNaNLiteral(WasmParseContext& c, WasmToken token, const char16_t* cur, bool isNegated)
 {
+    const char16_t* end = token.end();
+
     MOZ_ALWAYS_TRUE(*cur++ == 'n' && *cur++ == 'a' && *cur++ == 'n');
+
     typedef FloatingPoint<Float> Traits;
     typedef typename Traits::Bits Bits;
 
+    Bits value;
     if (cur != end) {
         MOZ_ALWAYS_TRUE(*cur++ == ':' && *cur++ == '0' && *cur++ == 'x');
         if (cur == end)
-            return false;
+            goto error;
         CheckedInt<Bits> u = 0;
         do {
             uint8_t digit = 0;
@@ -1568,19 +1572,24 @@ ParseNaNLiteral(const char16_t* cur, const char16_t* end, Float* result)
             cur++;
         } while (cur != end);
         if (!u.isValid())
-            return false;
-        Bits value = u.value();
+            goto error;
+        value = u.value();
         if ((value & ~Traits::kSignificandBits) != 0)
-            return false;
+            goto error;
         // NaN payloads must contain at least one set bit.
         if (value == 0)
-            return false;
-        SpecificNaN<Float>(0, value, result);
+            goto error;
     } else {
         // Produce the spec's default NaN.
-        *result = SpecificNaN<Float>(0, (Traits::kSignificandBits + 1) >> 1);
+        value = (Traits::kSignificandBits + 1) >> 1;
     }
-    return true;
+
+    value = (isNegated ? Traits::kSignBit : 0) | Traits::kExponentBits | value;
+    return new (c.lifo) AstConst(Val(Raw<Float>::fromBits(value)));
+
+  error:
+    c.ts.generateError(token, c.error);
+    return nullptr;
 }
 
 template <typename Float>
@@ -1714,30 +1723,21 @@ ParseHexFloatLiteral(const char16_t* cur, const char16_t* end, Float* result)
 }
 
 template <typename Float>
-static bool
-ParseFloatLiteral(WasmParseContext& c, WasmToken token, Float* result)
+static AstConst*
+ParseFloatLiteral(WasmParseContext& c, WasmToken token)
 {
-    *result = 0;
-
+    Float result;
     switch (token.kind()) {
-      case WasmToken::Index:
-        *result = token.index();
-        return true;
-      case WasmToken::UnsignedInteger:
-        *result = token.uint();
-        return true;
-      case WasmToken::SignedInteger:
-        *result = token.sint();
-        return true;
-      case WasmToken::NegativeZero:
-        *result = -0.0;
-        return true;
-      case WasmToken::Float:
-        break;
-      default:
-        c.ts.generateError(token, c.error);
-        return false;
+      case WasmToken::Index:           result = token.index(); break;
+      case WasmToken::UnsignedInteger: result = token.uint(); break;
+      case WasmToken::SignedInteger:   result = token.sint(); break;
+      case WasmToken::NegativeZero:    result = -0.; break;
+      case WasmToken::Float:           break;
+      default:                         c.ts.generateError(token, c.error); return nullptr;
     }
+
+    if (token.kind() != WasmToken::Float)
+        return new (c.lifo) AstConst(Val(Raw<Float>(result)));
 
     const char16_t* begin = token.begin();
     const char16_t* end = token.end();
@@ -1748,49 +1748,47 @@ ParseFloatLiteral(WasmParseContext& c, WasmToken token, Float* result)
         isNegated = *cur++ == '-';
 
     switch (token.floatLiteralKind()) {
-      case WasmToken::Infinity:
-        *result = PositiveInfinity<Float>();
+      case WasmToken::Infinity: {
+        result = PositiveInfinity<Float>();
         break;
-      case WasmToken::NaN:
-        if (!ParseNaNLiteral(cur, end, result)) {
+      }
+      case WasmToken::NaN: {
+        return ParseNaNLiteral<Float>(c, token, cur, isNegated);
+      }
+      case WasmToken::HexNumber: {
+        if (!ParseHexFloatLiteral(cur, end, &result)) {
             c.ts.generateError(token, c.error);
-            return false;
+            return nullptr;
         }
         break;
-      case WasmToken::HexNumber:
-        if (!ParseHexFloatLiteral(cur, end, result)) {
-            c.ts.generateError(token, c.error);
-            return false;
-        }
-        break;
+      }
       case WasmToken::DecNumber: {
         // Call into JS' strtod. Tokenization has already required that the
         // string is well-behaved.
         LifoAlloc::Mark mark = c.lifo.mark();
         char* buffer = c.lifo.newArray<char>(end - cur + 1);
         if (!buffer)
-            return false;
+            return nullptr;
         for (ptrdiff_t i = 0; i < end - cur; ++i)
             buffer[i] = char(cur[i]);
         buffer[end - cur] = '\0';
         char* strtod_end;
         int err;
-        Float d = (Float)js_strtod_harder(c.dtoaState, buffer, &strtod_end, &err);
+        result = (Float)js_strtod_harder(c.dtoaState, buffer, &strtod_end, &err);
         if (err != 0 || strtod_end == buffer) {
             c.lifo.release(mark);
             c.ts.generateError(token, c.error);
-            return false;
+            return nullptr;
         }
         c.lifo.release(mark);
-        *result = d;
         break;
       }
     }
 
     if (isNegated)
-        *result = -*result;
+        result = -result;
 
-    return true;
+    return new (c.lifo) AstConst(Val(Raw<Float>(result)));
 }
 
 static AstConst*
@@ -1831,16 +1829,10 @@ ParseConst(WasmParseContext& c, WasmToken constToken)
         break;
       }
       case ValType::F32: {
-        float result;
-        if (!ParseFloatLiteral(c, val, &result))
-            break;
-        return new(c.lifo) AstConst(Val(result));
+        return ParseFloatLiteral<float>(c, val);
       }
       case ValType::F64: {
-        double result;
-        if (!ParseFloatLiteral(c, val, &result))
-            break;
-        return new(c.lifo) AstConst(Val(result));
+        return ParseFloatLiteral<double>(c, val);
       }
       default:
         break;

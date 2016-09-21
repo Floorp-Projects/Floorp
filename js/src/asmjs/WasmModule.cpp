@@ -714,11 +714,11 @@ GetGlobalExport(JSContext* cx, const GlobalDescVector& globals, uint32_t globalI
         return true;
       }
       case ValType::F32: {
-        jsval.set(DoubleValue(double(val.f32())));
+        jsval.set(DoubleValue(double(val.f32().fp())));
         return true;
       }
       case ValType::F64: {
-        jsval.set(DoubleValue(val.f64()));
+        jsval.set(DoubleValue(val.f64().fp()));
         return true;
       }
       default: {

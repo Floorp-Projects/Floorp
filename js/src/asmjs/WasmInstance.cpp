@@ -529,7 +529,7 @@ CreateCustomNaNObject(JSContext* cx, T* addr)
 }
 
 static bool
-ReadCustomFloat32NaNObject(JSContext* cx, HandleValue v, float* ret)
+ReadCustomFloat32NaNObject(JSContext* cx, HandleValue v, uint32_t* ret)
 {
     RootedObject obj(cx, &v.toObject());
     RootedValue val(cx);
@@ -540,33 +540,30 @@ ReadCustomFloat32NaNObject(JSContext* cx, HandleValue v, float* ret)
     if (!ToInt32(cx, val, &i32))
         return false;
 
-    BitwiseCast(i32, ret);
+    *ret = i32;
     return true;
 }
 
 static bool
-ReadCustomDoubleNaNObject(JSContext* cx, HandleValue v, double* ret)
+ReadCustomDoubleNaNObject(JSContext* cx, HandleValue v, uint64_t* ret)
 {
     RootedObject obj(cx, &v.toObject());
     RootedValue val(cx);
-
-    uint64_t u64;
 
     int32_t i32;
     if (!JS_GetProperty(cx, obj, "nan_high", &val))
         return false;
     if (!ToInt32(cx, val, &i32))
         return false;
-    u64 = uint32_t(i32);
-    u64 <<= 32;
+    *ret = uint32_t(i32);
+    *ret <<= 32;
 
     if (!JS_GetProperty(cx, obj, "nan_low", &val))
         return false;
     if (!ToInt32(cx, val, &i32))
         return false;
-    u64 |= uint32_t(i32);
+    *ret |= uint32_t(i32);
 
-    BitwiseCast(u64, ret);
     return true;
 }
 
@@ -623,7 +620,7 @@ Instance::callExport(JSContext* cx, uint32_t funcDefIndex, CallArgs args)
             break;
           case ValType::F32:
             if (JitOptions.wasmTestMode && v.isObject()) {
-                if (!ReadCustomFloat32NaNObject(cx, v, (float*)&exportArgs[i]))
+                if (!ReadCustomFloat32NaNObject(cx, v, (uint32_t*)&exportArgs[i]))
                     return false;
                 break;
             }
@@ -632,7 +629,7 @@ Instance::callExport(JSContext* cx, uint32_t funcDefIndex, CallArgs args)
             break;
           case ValType::F64:
             if (JitOptions.wasmTestMode && v.isObject()) {
-                if (!ReadCustomDoubleNaNObject(cx, v, (double*)&exportArgs[i]))
+                if (!ReadCustomDoubleNaNObject(cx, v, (uint64_t*)&exportArgs[i]))
                     return false;
                 break;
             }
