@@ -207,6 +207,10 @@ MediaEngineRemoteVideoSource::Stop(mozilla::SourceMediaStream* aSource,
   {
     MonitorAutoLock lock(mMonitor);
 
+    // Drop any cached image so we don't start with a stale image on next
+    // usage
+    mImage = nullptr;
+
     size_t i = mSources.IndexOf(aSource);
     if (i == mSources.NoIndex) {
       // Already stopped - this is allowed
@@ -227,9 +231,6 @@ MediaEngineRemoteVideoSource::Stop(mozilla::SourceMediaStream* aSource,
     }
 
     mState = kStopped;
-    // Drop any cached image so we don't start with a stale image on next
-    // usage
-    mImage = nullptr;
   }
 
   mozilla::camera::GetChildAndCall(
