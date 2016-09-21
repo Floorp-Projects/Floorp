@@ -250,9 +250,6 @@ public:
   virtual void SetSuppressParserErrorElement(bool aSuppress) {}
   virtual bool SuppressParserErrorElement() { return false; }
 
-  virtual void SetSuppressParserErrorConsoleMessages(bool aSuppress) {}
-  virtual bool SuppressParserErrorConsoleMessages() { return false; }
-
   /**
    * Signal that the document title may have changed
    * (see nsDocument::GetTitle).
