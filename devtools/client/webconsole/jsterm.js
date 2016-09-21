@@ -446,9 +446,6 @@ JSTerm.prototype = {
       const { ConsoleCommand } = require("devtools/client/webconsole/new-console-output/types");
       let message = new ConsoleCommand({
         messageText: executeString,
-        // @TODO remove category and severity
-        category: "input",
-        severity: "log",
       });
       this.hud.newConsoleOutput.dispatchMessageAdd(message);
     } else {

@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
 const { getAllFilters } = require("devtools/client/webconsole/new-console-output/selectors/filters");
 const { getLogLimit } = require("devtools/client/webconsole/new-console-output/selectors/prefs");
 const {
@@ -31,7 +32,7 @@ function getAllMessagesUiById(state) {
 
 function filterLevel(messages, filters) {
   return messages.filter((message) => {
-    return filters[message.level] === true
+    return filters.get(message.level) === true
       || [MESSAGE_TYPE.COMMAND, MESSAGE_TYPE.RESULT].includes(message.type);
   });
 }
@@ -42,15 +43,49 @@ function search(messages, text = "") {
   }
 
   return messages.filter(function (message) {
-    // @TODO: message.parameters can be a grip, see how we can handle that
-    if (!Array.isArray(message.parameters)) {
+    // Evaluation Results and Console Commands are never filtered.
+    if ([ MESSAGE_TYPE.RESULT, MESSAGE_TYPE.COMMAND ].includes(message.type)) {
       return true;
     }
-    return message
-      .parameters.join("")
-      .toLocaleLowerCase()
-      .includes(text.toLocaleLowerCase());
+
+    return (
+      // @TODO currently we return true for any object grip. We should find a way to
+      // search object grips.
+      message.parameters !== null && !Array.isArray(message.parameters)
+      // Look for a match in location.
+      || isTextInFrame(text, message.frame)
+      // Look for a match in stacktrace.
+      || (
+        Array.isArray(message.stacktrace) &&
+        message.stacktrace.some(frame => isTextInFrame(text,
+          // isTextInFrame expect the properties of the frame object to be in the same
+          // order they are rendered in the Frame component.
+          {
+            functionName: frame.functionName ||
+              l10n.getStr("stacktrace.anonymousFunction"),
+            filename: frame.filename,
+            lineNumber: frame.lineNumber,
+            columnNumber: frame.columnNumber
+          }))
+      )
+      // Look for a match in messageText.
+      || (message.messageText !== null
+            && message.messageText.toLocaleLowerCase().includes(text.toLocaleLowerCase()))
+      // Look for a match in parameters. Currently only checks value grips.
+      || (message.parameters !== null
+          && message.parameters.join("").toLocaleLowerCase()
+              .includes(text.toLocaleLowerCase()))
+    );
   });
+}
+
+function isTextInFrame(text, frame) {
+  // @TODO Change this to Object.values once it's supported in Node's version of V8
+  return Object.keys(frame)
+    .map(key => frame[key])
+    .join(":")
+    .toLocaleLowerCase()
+    .includes(text.toLocaleLowerCase());
 }
 
 function prune(messages, logLimit) {

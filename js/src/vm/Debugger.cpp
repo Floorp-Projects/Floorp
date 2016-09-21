@@ -7149,31 +7149,6 @@ DebuggerSource_getSourceMapURL(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-DebuggerSource_getCanonicalId(JSContext* cx, unsigned argc, Value* vp)
-{
-    THIS_DEBUGSOURCE_SOURCE(cx, argc, vp, "(get sourceMapURL)", args, obj, sourceObject);
-
-    ScriptSource* ss = sourceObject->source();
-    MOZ_ASSERT(ss);
-
-    static_assert(!mozilla::IsBaseOf<gc::Cell, ScriptSource>::value,
-                  "We rely on ScriptSource* pointers to be stable, and not move in memory. "
-                  "Currently, this holds true because ScriptSource is not managed by the GC. If "
-                  "that changes, it doesn't necessarily mean that it will start moving, but we "
-                  "will need a new assertion here. If we do start moving ScriptSources in memory, "
-                  "then DebuggerSource_getCanonicalId will need to be reworked!");
-    auto id = uintptr_t(ss);
-
-    // IEEE 754 doubles can precisely store integers of up 53 bits. On 32 bit
-    // platforms, pointers trivially fit. On 64 bit platforms, pointers only use
-    // 48 bits so we are still good.
-    MOZ_ASSERT(Value::isNumberRepresentable(id));
-
-    args.rval().set(NumberValue(id));
-    return true;
-}
-
 static const JSPropertySpec DebuggerSource_properties[] = {
     JS_PSG("text", DebuggerSource_getText, 0),
     JS_PSG("url", DebuggerSource_getURL, 0),
@@ -7184,7 +7159,6 @@ static const JSPropertySpec DebuggerSource_properties[] = {
     JS_PSG("introductionType", DebuggerSource_getIntroductionType, 0),
     JS_PSG("elementAttributeName", DebuggerSource_getElementProperty, 0),
     JS_PSGS("sourceMapURL", DebuggerSource_getSourceMapURL, DebuggerSource_setSourceMapURL, 0),
-    JS_PSG("canonicalId", DebuggerSource_getCanonicalId, 0),
     JS_PS_END
 };
 

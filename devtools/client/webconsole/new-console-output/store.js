@@ -5,7 +5,8 @@
 
 const {FilterState} = require("devtools/client/webconsole/new-console-output/reducers/filters");
 const {PrefState} = require("devtools/client/webconsole/new-console-output/reducers/prefs");
-const { combineReducers, createStore } = require("devtools/client/shared/vendor/redux");
+const { applyMiddleware, combineReducers, createStore } = require("devtools/client/shared/vendor/redux");
+const { thunk } = require("devtools/client/shared/redux/middleware/thunk");
 const { reducers } = require("./reducers/index");
 const Services = require("Services");
 
@@ -22,7 +23,11 @@ function configureStore() {
     })
   };
 
-  return createStore(combineReducers(reducers), initialState);
+  return createStore(
+    combineReducers(reducers),
+    initialState,
+    applyMiddleware(thunk)
+  );
 }
 
 // Provide the store factory for test code so that each test is working with

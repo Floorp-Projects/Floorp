@@ -586,7 +586,8 @@ WebConsoleFrame.prototype = {
       this.outputNode.parentNode.appendChild(this.experimentalOutputNode);
       // @TODO Once the toolbox has been converted to React, see if passing
       // in JSTerm is still necessary.
-      this.newConsoleOutput = new this.window.NewConsoleOutput(this.experimentalOutputNode, this.jsterm, toolbox);
+      this.newConsoleOutput = new this.window.NewConsoleOutput(
+        this.experimentalOutputNode, this.jsterm, toolbox, this.owner);
       console.log("Created newConsoleOutput", this.newConsoleOutput);
 
       let filterToolbar = doc.querySelector(".hud-console-filter-toolbar");
@@ -3323,7 +3324,10 @@ WebConsoleConnectionProxy.prototype = {
   _onPageError: function (type, packet) {
     if (this.webConsoleFrame && packet.from == this._consoleActor) {
       if (this.webConsoleFrame.NEW_CONSOLE_OUTPUT_ENABLED) {
-        this.dispatchMessageAdd(packet);
+        let category = Utils.categoryForScriptError(packet.pageError);
+        if (category !== CATEGORY_CSS) {
+          this.dispatchMessageAdd(packet);
+        }
         return;
       }
       this.webConsoleFrame.handlePageError(packet.pageError);
@@ -3378,7 +3382,11 @@ WebConsoleConnectionProxy.prototype = {
    */
   _onNetworkEvent: function (type, networkInfo) {
     if (this.webConsoleFrame) {
-      this.webConsoleFrame.handleNetworkEvent(networkInfo);
+      if (this.webConsoleFrame.NEW_CONSOLE_OUTPUT_ENABLED) {
+        this.dispatchMessageAdd(networkInfo);
+      } else {
+        this.webConsoleFrame.handleNetworkEvent(networkInfo);
+      }
     }
   },
 

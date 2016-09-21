@@ -16,19 +16,26 @@ const {
   MESSAGES_CLEAR,
   MESSAGE_OPEN,
   MESSAGE_CLOSE,
+  MESSAGE_TYPE,
 } = require("../constants");
 
 const defaultIdGenerator = new IdGenerator();
 
 function messageAdd(packet, idGenerator = null) {
-  if (idGenerator == null) {
-    idGenerator = defaultIdGenerator;
-  }
-  let message = prepareMessage(packet, idGenerator);
+  return (dispatch) => {
+    if (idGenerator == null) {
+      idGenerator = defaultIdGenerator;
+    }
+    let message = prepareMessage(packet, idGenerator);
 
-  return {
-    type: MESSAGE_ADD,
-    message
+    if (message.type === MESSAGE_TYPE.CLEAR) {
+      dispatch(messagesClear());
+    }
+
+    dispatch({
+      type: MESSAGE_ADD,
+      message
+    });
   };
 }
 

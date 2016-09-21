@@ -34,7 +34,3 @@ source.element;
 source.displayURL;
 source.introductionOffset;
 source.elementAttributeName;
-
-// canonicalId doesn't make sense since wasm sources aren't backed by
-// ScriptSource.
-assertThrowsInstanceOf(() => source.canonicalId, Error);
