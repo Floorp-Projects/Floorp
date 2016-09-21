@@ -385,6 +385,10 @@ protected:
   // May not be invoked when mReader->UseBufferingHeuristics() is false.
   bool HasLowDecodedData();
 
+  bool HasLowDecodedAudio();
+
+  bool HasLowDecodedVideo();
+
   bool OutOfDecodedAudio();
 
   bool OutOfDecodedVideo()
