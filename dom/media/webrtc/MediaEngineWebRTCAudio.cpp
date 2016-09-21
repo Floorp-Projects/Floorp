@@ -819,8 +819,13 @@ MediaEngineWebRTCMicrophoneSource::Shutdown()
     Deallocate(nullptr); // XXX Extend concurrent constraints code to mics.
   }
 
-  FreeChannel();
-  DeInitEngine();
+  if (mState != kReleased) {
+    FreeChannel();
+    MOZ_ASSERT(sChannelsOpen > 0);
+    if (--sChannelsOpen == 0) {
+      DeInitEngine();
+    }
+  }
 
   mAudioInput = nullptr;
 }
