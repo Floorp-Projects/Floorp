@@ -2,27 +2,41 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const { stubPreparedMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
+// Test utils.
+const expect = require("expect");
+const { render } = require("enzyme");
 
+// Components under test.
 const { PageError } = require("devtools/client/webconsole/new-console-output/components/message-types/page-error");
 
-const expect = require("expect");
-
-const {
-  renderComponent
-} = require("devtools/client/webconsole/new-console-output/test/helpers");
+// Test fakes.
+const { stubPreparedMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
 
 describe("PageError component:", () => {
-  it("renders a page error", () => {
+  it("renders", () => {
     const message = stubPreparedMessages.get("ReferenceError: asdf is not defined");
-    const rendered = renderComponent(PageError, {message});
+    const wrapper = render(PageError({ message }));
 
-    const messageBody = getMessageBody(rendered);
-    expect(messageBody.textContent).toBe("ReferenceError: asdf is not defined");
+    expect(wrapper.find(".message-body").text())
+      .toBe("ReferenceError: asdf is not defined");
+
+    // The stacktrace should be closed by default.
+    const frameLinks = wrapper.find(`.stack-trace`);
+    expect(frameLinks.length).toBe(0);
+
+    // There should be the location
+    const locationLink = wrapper.find(`.message-location`);
+    expect(locationLink.length).toBe(1);
+    // @TODO Will likely change. See https://github.com/devtools-html/gecko-dev/issues/285
+    expect(locationLink.text()).toBe("test-tempfile.js:3:5");
+  });
+
+  it("has a stacktrace which can be openned", () => {
+    const message = stubPreparedMessages.get("ReferenceError: asdf is not defined");
+    const wrapper = render(PageError({ message, open: true }));
+
+    // There should be three stacktrace items.
+    const frameLinks = wrapper.find(`.stack-trace span.frame-link`);
+    expect(frameLinks.length).toBe(3);
   });
 });
-
-function getMessageBody(rendered) {
-  const queryPath = "div.message span.message-body-wrapper span.message-body";
-  return rendered.querySelector(queryPath);
-}

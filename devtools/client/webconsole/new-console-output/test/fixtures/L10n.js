@@ -11,8 +11,14 @@ class L10n {
         return "Error";
       case "consoleCleared":
         return "Console was cleared.";
+      case "webConsoleXhrIndicator":
+        return "XHR";
     }
     return str;
+  }
+
+  getFormatStr(str) {
+    return this.getStr(str);
   }
 }
 
