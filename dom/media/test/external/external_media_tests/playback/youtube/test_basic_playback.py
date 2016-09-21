@@ -9,11 +9,7 @@ from marionette_driver.errors import TimeoutException
 from external_media_tests.utils import verbose_until
 from external_media_harness.testcase import MediaTestCase
 from external_media_tests.media_utils.video_puppeteer import VideoException
-from external_media_tests.media_utils.youtube_puppeteer import (
-    YouTubePuppeteer,
-    wait_for_almost_done,
-    playback_done
-)
+from external_media_tests.media_utils.youtube_puppeteer import YouTubePuppeteer
 
 
 class TestBasicYouTubePlayback(MediaTestCase):
@@ -26,8 +22,7 @@ class TestBasicYouTubePlayback(MediaTestCase):
                         interval=1)
             try:
                 verbose_until(wait, youtube,
-                              lambda y: y._last_seen_video_state.
-                              video_src.startswith('blob'),
+                              YouTubePuppeteer.mse_enabled,
                               "Failed to find 'blob' in video src url.")
             except TimeoutException as e:
                 raise self.failureException(e)
@@ -39,18 +34,17 @@ class TestBasicYouTubePlayback(MediaTestCase):
                 youtube = YouTubePuppeteer(self.marionette, url)
                 self.logger.info('Expected duration: {}'
                                  .format(youtube.expected_duration))
-                youtube.deactivate_autoplay()
 
                 final_piece = 60
                 try:
-                    time_left = wait_for_almost_done(youtube,
-                                                     final_piece=final_piece)
+                    time_left = youtube.wait_for_almost_done(
+                        final_piece=final_piece)
                 except VideoException as e:
                     raise self.failureException(e)
                 duration = abs(youtube.expected_duration) + 1
                 if duration > 1:
                     self.logger.info('Almost done: {} - {} seconds left.'
-                                     .format(youtube.movie_id, time_left))
+                                     .format(url, time_left))
                     if time_left > final_piece:
                         self.marionette.log('time_left greater than '
                                             'final_piece - {}'
@@ -67,7 +61,7 @@ class TestBasicYouTubePlayback(MediaTestCase):
                                        timeout=max(100, time_left) * 1.3,
                                        interval=1),
                                   youtube,
-                                  playback_done)
+                                  YouTubePuppeteer.playback_done)
                 except TimeoutException as e:
                     raise self.failureException(e)
 
