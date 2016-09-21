@@ -63,17 +63,17 @@ class MacroAssemblerX86Shared : public Assembler
         explicit Constant(const Constant<T>&) = delete;
     };
 
-    // Containers use SystemAllocPolicy since asm.js releases memory after each
+    // Containers use SystemAllocPolicy since wasm releases memory after each
     // function is compiled, and these need to live until after all functions
     // are compiled.
-    using Double = Constant<double>;
+    using Double = Constant<uint64_t>;
     Vector<Double, 0, SystemAllocPolicy> doubles_;
-    typedef HashMap<double, size_t, DefaultHasher<double>, SystemAllocPolicy> DoubleMap;
+    typedef HashMap<uint64_t, size_t, DefaultHasher<uint64_t>, SystemAllocPolicy> DoubleMap;
     DoubleMap doubleMap_;
 
-    using Float = Constant<float>;
+    using Float = Constant<uint32_t>;
     Vector<Float, 0, SystemAllocPolicy> floats_;
-    typedef HashMap<float, size_t, DefaultHasher<float>, SystemAllocPolicy> FloatMap;
+    typedef HashMap<uint32_t, size_t, DefaultHasher<uint32_t>, SystemAllocPolicy> FloatMap;
     FloatMap floatMap_;
 
     struct SimdData : public Constant<SimdConstant> {
@@ -90,8 +90,8 @@ class MacroAssemblerX86Shared : public Assembler
     template<class T, class Map>
     T* getConstant(const typename T::Pod& value, Map& map, Vector<T, 0, SystemAllocPolicy>& vec);
 
-    Float* getFloat(float f);
-    Double* getDouble(double d);
+    Float* getFloat(wasm::RawF32 f);
+    Double* getDouble(wasm::RawF64 d);
     SimdData* getSimdData(const SimdConstant& v);
 
   public:
@@ -1210,11 +1210,9 @@ class MacroAssemblerX86Shared : public Assembler
 
     inline void clampIntToUint8(Register reg);
 
-    bool maybeInlineDouble(double d, FloatRegister dest) {
-        uint64_t u = mozilla::BitwiseCast<uint64_t>(d);
-
+    bool maybeInlineDouble(wasm::RawF64 d, FloatRegister dest) {
         // Loading zero with xor is specially optimized in hardware.
-        if (u == 0) {
+        if (d.bits() == 0) {
             zeroDouble(dest);
             return true;
         }
@@ -1230,11 +1228,9 @@ class MacroAssemblerX86Shared : public Assembler
         return false;
     }
 
-    bool maybeInlineFloat(float f, FloatRegister dest) {
-        uint32_t u = mozilla::BitwiseCast<uint32_t>(f);
-
+    bool maybeInlineFloat(wasm::RawF32 f, FloatRegister dest) {
         // See comment above
-        if (u == 0) {
+        if (f.bits() == 0) {
             zeroFloat32(dest);
             return true;
         }

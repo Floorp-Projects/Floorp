@@ -354,8 +354,8 @@ class MacroAssemblerARM : public Assembler
     void ma_vsqrt(FloatRegister src, FloatRegister dest, Condition cc = Always);
     void ma_vsqrt_f32(FloatRegister src, FloatRegister dest, Condition cc = Always);
 
-    void ma_vimm(double value, FloatRegister dest, Condition cc = Always);
-    void ma_vimm_f32(float value, FloatRegister dest, Condition cc = Always);
+    void ma_vimm(wasm::RawF64 value, FloatRegister dest, Condition cc = Always);
+    void ma_vimm_f32(wasm::RawF32 value, FloatRegister dest, Condition cc = Always);
 
     void ma_vcmp(FloatRegister src1, FloatRegister src2, Condition cc = Always);
     void ma_vcmp_f32(FloatRegister src1, FloatRegister src2, Condition cc = Always);
@@ -757,6 +757,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void loadInt32OrDouble(Register base, Register index,
                            FloatRegister dest, int32_t shift = defaultShift);
     void loadConstantDouble(double dp, FloatRegister dest);
+    void loadConstantDouble(wasm::RawF64 dp, FloatRegister dest);
+
     // Treat the value as a boolean, and set condition codes accordingly.
     Condition testInt32Truthy(bool truthy, const ValueOperand& operand);
     Condition testBooleanTruthy(bool truthy, const ValueOperand& operand);
@@ -766,6 +768,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void boolValueToFloat32(const ValueOperand& operand, FloatRegister dest);
     void int32ValueToFloat32(const ValueOperand& operand, FloatRegister dest);
     void loadConstantFloat32(float f, FloatRegister dest);
+    void loadConstantFloat32(wasm::RawF32 f, FloatRegister dest);
 
     void moveValue(const Value& val, Register type, Register data);
 
