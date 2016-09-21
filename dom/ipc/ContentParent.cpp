@@ -1059,6 +1059,13 @@ ContentParent::RecvFindPlugins(const uint32_t& aPluginEpoch,
   return true;
 }
 
+bool
+ContentParent::RecvInitVideoDecoderManager(Endpoint<PVideoDecoderManagerChild>* aEndpoint)
+{
+  GPUProcessManager::Get()->CreateContentVideoDecoderManager(OtherPid(), aEndpoint);
+  return true;
+}
+
 /*static*/ TabParent*
 ContentParent::CreateBrowserOrApp(const TabContext& aContext,
                                   Element* aFrameElement,
