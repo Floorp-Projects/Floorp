@@ -182,13 +182,10 @@
   height: 24px;
 }
 
-#customization-titlebar-visibility-button {
-  list-style-image: url("chrome://browser/skin/customizableui/customize-titleBar-toggle.png");
-  -moz-image-region: rect(0, 24px, 24px, 0);
-}
-
-#customization-lwtheme-button > .box-inherit > .box-inherit > .button-text,
-#customization-titlebar-visibility-button > .button-box > .button-text {
+%ifdef CAN_DRAW_IN_TITLEBAR
+#customization-titlebar-visibility-button > .button-box > .button-text,
+%endif
+#customization-lwtheme-button > .box-inherit > .box-inherit > .button-text {
   /* Sadly, button.css thinks its margins are perfect for everyone. */
   margin-inline-start: 6px !important;
 }
@@ -198,6 +195,12 @@
   height: 20px;
   border-radius: 2px;
   background-size: contain;
+}
+
+%ifdef CAN_DRAW_IN_TITLEBAR
+#customization-titlebar-visibility-button {
+  list-style-image: url("chrome://browser/skin/customizableui/customize-titleBar-toggle.png");
+  -moz-image-region: rect(0, 24px, 24px, 0);
 }
 
 #customization-titlebar-visibility-button > .button-box > .button-icon {
@@ -218,6 +221,7 @@
     -moz-image-region: rect(0, 96px, 48px, 48px);
   }
 }
+%endif /* CAN_DRAW_IN_TITLEBAR */
 
 #main-window[customize-entered] #customization-panel-container {
   background-image: url("chrome://browser/skin/customizableui/customizeMode-separatorHorizontal.png"),
