@@ -259,7 +259,7 @@ SetShadowTransform(Layer* aLayer, LayerToParentLayerMatrix4x4 aTransform)
 
 static void
 TranslateShadowLayer(Layer* aLayer,
-                     const gfxPoint& aTranslation,
+                     const ParentLayerPoint& aTranslation,
                      bool aAdjustClipRect,
                      AsyncCompositionManager::ClipPartsCache* aClipPartsCache)
 {
@@ -272,13 +272,13 @@ TranslateShadowLayer(Layer* aLayer,
   LayerToParentLayerMatrix4x4 layerTransform = aLayer->GetLocalTransformTyped();
 
   // Apply the translation to the layer transform.
-  layerTransform.PostTranslate(aTranslation.x, aTranslation.y, 0);
+  layerTransform.PostTranslate(aTranslation);
 
   SetShadowTransform(aLayer, layerTransform);
   aLayer->AsLayerComposite()->SetShadowTransformSetByAnimation(false);
 
   if (aAdjustClipRect) {
-    auto transform = ParentLayerToParentLayerMatrix4x4::Translation(aTranslation.x, aTranslation.y, 0);
+    auto transform = ParentLayerToParentLayerMatrix4x4::Translation(aTranslation);
     // If we're passed a clip parts cache, only transform the fixed part of
     // the clip.
     if (aClipPartsCache) {
@@ -540,8 +540,7 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoo
         // clip rect, we need to apply the same translation to said clip rect, so
         // that the effective transform on the clip rect takes it back to where it was
         // originally, had there been no async scroll.
-        TranslateShadowLayer(layer, ThebesPoint(translation.ToUnknownPoint()),
-            true, aClipPartsCache);
+        TranslateShadowLayer(layer, translation, true, aClipPartsCache);
 
         // If we didn't consume the entire translation, continue the traversal
         // to allow a descendant fixed or sticky layer to consume the rest.
@@ -852,7 +851,7 @@ MoveScrollbarForLayerMargin(Layer* aRoot, FrameMetrics::ViewID aRootScrollId,
     // scrollbar a bit to expand into the new space but it's not as noticeable
     // and it would add a lot more complexity, so we're going with the "it's not
     // worth it" justification.
-    TranslateShadowLayer(scrollbar, gfxPoint(0, -aFixedLayerMargins.bottom), true, nullptr);
+    TranslateShadowLayer(scrollbar, ParentLayerPoint(0, -aFixedLayerMargins.bottom), true, nullptr);
     if (scrollbar->GetParent()) {
       // The layer that has the HORIZONTAL direction sits inside another
       // ContainerLayer. This ContainerLayer also has a clip rect that causes
