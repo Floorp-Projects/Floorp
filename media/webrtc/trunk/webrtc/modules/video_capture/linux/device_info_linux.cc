@@ -404,77 +404,52 @@ bool DeviceInfoLinux::IsDeviceNameMatches(const char* name,
 
 int32_t DeviceInfoLinux::FillCapabilities(int fd)
 {
+    struct v4l2_fmtdesc fmt;
+    struct v4l2_frmsizeenum frmsize;
+    struct v4l2_frmivalenum frmival;
 
-    // set image format
-    struct v4l2_format video_fmt;
-    memset(&video_fmt, 0, sizeof(struct v4l2_format));
+    fmt.index = 0;
+    fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    while (ioctl(fd, VIDIOC_ENUM_FMT, &fmt) >= 0) {
+        frmsize.pixel_format = fmt.pixelformat;
+        frmsize.index = 0;
+        while (ioctl(fd, VIDIOC_ENUM_FRAMESIZES, &frmsize) >= 0) {
+            if (frmsize.type == V4L2_FRMSIZE_TYPE_DISCRETE) {
+                frmival.index = 0;
+                frmival.pixel_format = fmt.pixelformat;
+                frmival.width = frmsize.discrete.width;
+                frmival.height = frmsize.discrete.height;
+                if (ioctl(fd, VIDIOC_ENUM_FRAMEINTERVALS, &frmival) >= 0) {
+                    if (fmt.pixelformat == V4L2_PIX_FMT_YUYV ||
+                        fmt.pixelformat == V4L2_PIX_FMT_YUV420 ||
+                        fmt.pixelformat == V4L2_PIX_FMT_MJPEG) {
 
-    video_fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    video_fmt.fmt.pix.sizeimage = 0;
+                        VideoCaptureCapability cap;
+                        cap.width = frmsize.discrete.width;
+                        cap.height = frmsize.discrete.height;
+                        cap.expectedCaptureDelay = 120;
 
-    int totalFmts = 3;
-    unsigned int videoFormats[] = {
-        V4L2_PIX_FMT_MJPEG,
-        V4L2_PIX_FMT_YUV420,
-        V4L2_PIX_FMT_YUYV };
+                        if (fmt.pixelformat == V4L2_PIX_FMT_YUYV)
+                        {
+                            cap.rawType = kVideoYUY2;
+                        }
+                        else if (fmt.pixelformat == V4L2_PIX_FMT_YUV420)
+                        {
+                            cap.rawType = kVideoI420;
+                        }
+                        else if (fmt.pixelformat == V4L2_PIX_FMT_MJPEG)
+                        {
+                            cap.rawType = kVideoMJPEG;
+                        }
 
-    int sizes = 13;
-    unsigned int size[][2] = { { 128, 96 }, { 160, 120 }, { 176, 144 },
-                               { 320, 240 }, { 352, 288 }, { 640, 480 },
-                               { 704, 576 }, { 800, 600 }, { 960, 720 },
-                               { 1280, 720 }, { 1024, 768 }, { 1440, 1080 },
-                               { 1920, 1080 } };
-
-    int index = 0;
-    for (int fmts = 0; fmts < totalFmts; fmts++)
-    {
-        for (int i = 0; i < sizes; i++)
-        {
-            video_fmt.fmt.pix.pixelformat = videoFormats[fmts];
-            video_fmt.fmt.pix.width = size[i][0];
-            video_fmt.fmt.pix.height = size[i][1];
-
-            if (ioctl(fd, VIDIOC_TRY_FMT, &video_fmt) >= 0)
-            {
-                if ((video_fmt.fmt.pix.width == size[i][0])
-                    && (video_fmt.fmt.pix.height == size[i][1]))
-                {
-                    VideoCaptureCapability cap;
-                    cap.width = video_fmt.fmt.pix.width;
-                    cap.height = video_fmt.fmt.pix.height;
-                    cap.expectedCaptureDelay = 120;
-                    if (videoFormats[fmts] == V4L2_PIX_FMT_YUYV)
-                    {
-                        cap.rawType = kVideoYUY2;
+                        cap.maxFPS = frmival.discrete.denominator / frmival.discrete.numerator;
+                        _captureCapabilities.push_back(cap);
                     }
-                    else if (videoFormats[fmts] == V4L2_PIX_FMT_YUV420)
-                    {
-                        cap.rawType = kVideoI420;
-                    }
-                    else if (videoFormats[fmts] == V4L2_PIX_FMT_MJPEG)
-                    {
-                        cap.rawType = kVideoMJPEG;
-                    }
-
-                    // get fps of current camera mode
-                    // V4l2 does not have a stable method of knowing so we just guess.
-                    if(cap.width >= 800 && cap.rawType != kVideoMJPEG)
-                    {
-                        cap.maxFPS = 15;
-                    }
-                    else
-                    {
-                        cap.maxFPS = 30;
-                    }
-
-                    _captureCapabilities.push_back(cap);
-                    index++;
-                    WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, _id,
-                               "Camera capability, width:%d height:%d type:%d fps:%d",
-                               cap.width, cap.height, cap.rawType, cap.maxFPS);
                 }
             }
+            frmsize.index++;
         }
+        fmt.index++;
     }
 
     WEBRTC_TRACE(webrtc::kTraceInfo,
