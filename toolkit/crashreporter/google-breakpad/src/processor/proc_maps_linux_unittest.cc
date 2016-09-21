@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include "breakpad_googletest_includes.h"
+#include "common/using_std_string.h"
 #include "google_breakpad/processor/proc_maps_linux.h"
 
 namespace {
@@ -227,7 +228,7 @@ TEST(ProcMapsTest, ParseProcMapsEmptyString) {
 // - File name has whitespaces.
 TEST(ProcMapsTest, ParseProcMapsWeirdCorrectInput) {
   std::vector<google_breakpad::MappedMemoryRegion> regions;
-  const std::string kContents =
+  const string kContents =
     "00400000-0040b000 r-xp 00000000 fc:00 2106562 "
       "               /bin/cat\r\n"
     "7f53b7dad000-7f53b7f62000 r-xp 00000000 fc:00 263011 "

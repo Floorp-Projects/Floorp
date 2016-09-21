@@ -6,7 +6,7 @@ on Android, and later generate valid stack traces from the minidumps
 it generates.
 
 This release supports ARM, x86 and MIPS based Android systems.
-This release requires NDK release r10c or higher.
+This release requires NDK release r11c or higher.
 
 I. Building the client library:
 ===============================
