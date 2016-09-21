@@ -69,12 +69,6 @@ JS_PUBLIC_API(jsid)
 INTERNED_STRING_TO_JSID(JSContext* cx, JSString* str);
 
 static MOZ_ALWAYS_INLINE bool
-JSID_IS_ZERO(jsid id)
-{
-    return JSID_BITS(id) == 0;
-}
-
-static MOZ_ALWAYS_INLINE bool
 JSID_IS_INT(jsid id)
 {
     return !!(JSID_BITS(id) & JSID_TYPE_INT);
