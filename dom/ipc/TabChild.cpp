@@ -1726,17 +1726,19 @@ TabChild::HandleDoubleTap(const CSSPoint& aPoint, const Modifiers& aModifiers,
   }
 }
 
-void
-TabChild::HandleTap(GeckoContentController::TapType aType,
-                    const LayoutDevicePoint& aPoint, const Modifiers& aModifiers,
-                    const ScrollableLayerGuid& aGuid, const uint64_t& aInputBlockId)
+bool
+TabChild::RecvHandleTap(const GeckoContentController::TapType& aType,
+                        const LayoutDevicePoint& aPoint,
+                        const Modifiers& aModifiers,
+                        const ScrollableLayerGuid& aGuid,
+                        const uint64_t& aInputBlockId)
 {
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
   if (!presShell) {
-    return;
+    return true;
   }
   if (!presShell->GetPresContext()) {
-    return;
+    return true;
   }
   CSSToLayoutDeviceScale scale(presShell->GetPresContext()->CSSToDevPixelScale());
   CSSPoint point = APZCCallbackHelper::ApplyCallbackTransform(aPoint / scale, aGuid);
@@ -1770,6 +1772,7 @@ TabChild::HandleTap(GeckoContentController::TapType aType,
     MOZ_ASSERT(false);
     break;
   }
+  return true;
 }
 
 bool
