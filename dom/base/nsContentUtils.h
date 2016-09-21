@@ -1954,6 +1954,10 @@ public:
   static already_AddRefed<mozilla::layers::LayerManager>
   PersistentLayerManagerForDocument(nsIDocument *aDoc);
 
+  /* static */
+  static bool AppendLFInSerialization()
+    { return sAppendLFInSerialization; }
+
   /**
    * Determine whether a content node is focused or not,
    *
@@ -2807,6 +2811,7 @@ private:
   static bool sGettersDecodeURLHash;
   static bool sPrivacyResistFingerprinting;
   static bool sSendPerformanceTimingNotifications;
+  static bool sAppendLFInSerialization;
   static bool sUseActivityCursor;
   static uint32_t sCookiesLifetimePolicy;
   static uint32_t sCookiesBehavior;
