@@ -31,7 +31,7 @@ const {ToolSidebar} = require("devtools/client/inspector/toolsidebar");
 const {ViewHelpers} = require("devtools/client/shared/widgets/view-helpers");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
 
-const {LocalizationHelper} = require("devtools/shared/l10n");
+const {LocalizationHelper, localizeMarkup} = require("devtools/shared/l10n");
 const INSPECTOR_L10N = new LocalizationHelper("devtools/locale/inspector.properties");
 const TOOLBOX_L10N = new LocalizationHelper("devtools/locale/toolbox.properties");
 
@@ -119,6 +119,9 @@ InspectorPanel.prototype = {
    * open is effectively an asynchronous constructor
    */
   open: Task.async(function* () {
+    // Localize all the nodes containing a data-localization attribute.
+    localizeMarkup(this.panelDoc);
+
     this._cssPropertiesLoaded = initCssProperties(this.toolbox);
     yield this._cssPropertiesLoaded;
     yield this.target.makeRemote();
