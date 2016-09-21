@@ -1212,7 +1212,7 @@ ToNativeDebuggerObject(JSContext* cx, MutableHandleObject obj)
     Value owner = ndobj->getReservedSlot(JSSLOT_DEBUGOBJECT_OWNER);
     if (owner.isUndefined()) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                             JSMSG_DEBUG_OBJECT_PROTO);
+                             JSMSG_DEBUG_PROTO, "Debugger.Object", "Debugger.Object");
         return nullptr;
     }
 
@@ -1229,7 +1229,7 @@ Debugger::unwrapDebuggeeObject(JSContext* cx, MutableHandleObject obj)
     Value owner = ndobj->getReservedSlot(JSSLOT_DEBUGOBJECT_OWNER);
     if (&owner.toObject() != object) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                             JSMSG_DEBUG_OBJECT_WRONG_OWNER);
+                             JSMSG_DEBUG_WRONG_OWNER, "Debugger.Object");
         return false;
     }
 
@@ -4145,6 +4145,32 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
                 return false;
             }
 
+            Value owner = debuggerSource.toObject()
+                          .as<NativeObject>()
+                          .getReservedSlot(JSSLOT_DEBUGSOURCE_OWNER);
+
+            /*
+             * The given source must have an owner. Otherwise, it's a
+             * Debugger.Source.prototype, which would match no scripts, and is
+             * probably a mistake.
+             */
+            if (!owner.isObject()) {
+                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                                     JSMSG_DEBUG_PROTO, "Debugger.Source", "Debugger.Source");
+                return false;
+            }
+
+            /*
+             * If it does have an owner, it should match the Debugger we're
+             * calling findScripts on. It would work fine even if it didn't,
+             * but mixing Debugger.Sources is probably a sign of confusion.
+             */
+            if (&owner.toObject() != debugger->object) {
+                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                                     JSMSG_DEBUG_WRONG_OWNER, "Debugger.Source");
+                return false;
+            }
+
             hasSource = true;
             source = GetSourceReferent(&debuggerSource.toObject());
         }
@@ -6784,7 +6810,7 @@ DebuggerSource_check(JSContext* cx, HandleValue thisv, const char* fnname)
 
     if (!GetSourceReferentRawObject(thisobj)) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
-                             "Debugger.Frame", fnname, "prototype object");
+                             "Debugger.Source", fnname, "prototype object");
         return nullptr;
     }
 
