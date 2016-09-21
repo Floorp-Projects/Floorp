@@ -27,6 +27,8 @@ interface MediaKeySession : EventTarget {
 
   attribute EventHandler onkeystatuseschange;
 
+  attribute EventHandler onmessage;
+
   [NewObject]
   Promise<void> generateRequest(DOMString initDataType, BufferSource initData);
 
