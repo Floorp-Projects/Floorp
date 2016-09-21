@@ -483,5 +483,17 @@ MediaKeySession::SetExpiration(double aExpiration)
   mExpiration = aExpiration;
 }
 
+EventHandlerNonNull*
+MediaKeySession::GetOnkeystatuseschange()
+{
+  return GetEventHandler(nsGkAtoms::onkeystatuseschange, EmptyString());
+}
+
+void
+MediaKeySession::SetOnkeystatuseschange(EventHandlerNonNull* aCallback)
+{
+  SetEventHandler(nsGkAtoms::onkeystatuseschange, EmptyString(), aCallback);
+}
+
 } // namespace dom
 } // namespace mozilla
