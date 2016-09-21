@@ -8,6 +8,7 @@
 #define nsINode_h___
 
 #include "mozilla/Likely.h"
+#include "mozilla/ServoTypes.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"               // for member, local
 #include "nsGkAtoms.h"              // for nsGkAtoms::baseURIProperty
@@ -53,21 +54,7 @@ class nsNodeSupportsWeakRefTearoff;
 class nsNodeWeakReference;
 class nsDOMMutationObserver;
 
-// We declare the bare minimum infrastructure here to allow us to have a
-// UniquePtr<ServoNodeData> on nsINode.
-struct ServoNodeData;
-extern "C" void Servo_NodeData_Drop(ServoNodeData*);
-namespace mozilla {
-template<>
-class DefaultDelete<ServoNodeData>
-{
-public:
-  void operator()(ServoNodeData* aPtr) const
-  {
-    Servo_NodeData_Drop(aPtr);
-  }
-};
-} // namespace mozilla
+extern "C" void Servo_Node_ClearNodeData(nsINode*);
 
 namespace mozilla {
 class EventListenerManager;
@@ -2090,9 +2077,17 @@ public:
 #undef TOUCH_EVENT
 #undef EVENT
 
-  mozilla::UniquePtr<ServoNodeData>& ServoData() {
+  bool HasServoData() {
 #ifdef MOZ_STYLO
-    return mServoNodeData;
+    return !!mServoData.Get();
+#else
+    MOZ_CRASH("Accessing servo node data in non-stylo build");
+#endif
+  }
+
+  void ClearServoData() {
+#ifdef MOZ_STYLO
+    Servo_Node_ClearNodeData(this);
 #else
     MOZ_CRASH("Accessing servo node data in non-stylo build");
 #endif
@@ -2137,8 +2132,8 @@ protected:
   nsSlots* mSlots;
 
 #ifdef MOZ_STYLO
-  // Layout data managed by Servo.
-  mozilla::UniquePtr<ServoNodeData> mServoNodeData;
+  // Per-node data managed by Servo.
+  mozilla::ServoCell<ServoNodeData*> mServoData;
 #endif
 };
 
