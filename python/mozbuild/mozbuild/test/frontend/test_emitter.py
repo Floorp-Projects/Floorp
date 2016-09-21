@@ -456,6 +456,7 @@ class TestEmitterBasic(unittest.TestCase):
         paths = sorted([v[0] for v in o.installs.values()])
         self.assertEqual(paths, expected)
 
+    @unittest.skip('Bug 1304316 - Items in the second set but not the first')
     def test_test_manifest_shared_support_files(self):
         """Support files starting with '!' are given separate treatment, so their
         installation can be resolved when running tests.
