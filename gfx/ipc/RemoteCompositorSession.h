@@ -23,11 +23,13 @@ public:
 
   CompositorBridgeParent* GetInProcessBridge() const override;
   void SetContentController(GeckoContentController* aController) override;
+  GeckoContentController* GetContentController();
   RefPtr<IAPZCTreeManager> GetAPZCTreeManager() const override;
   void Shutdown() override;
 
 private:
   RefPtr<APZCTreeManagerChild> mAPZ;
+  RefPtr<GeckoContentController> mContentController;
 };
 
 } // namespace layers

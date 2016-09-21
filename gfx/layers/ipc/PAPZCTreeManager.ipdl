@@ -10,14 +10,17 @@ include protocol PCompositorBridge;
 
 using CSSRect from "Units.h";
 using LayoutDeviceIntPoint from "Units.h";
+using mozilla::LayoutDevicePoint from "Units.h";
 using ScreenPoint from "Units.h";
 using struct mozilla::layers::ScrollableLayerGuid from "FrameMetrics.h";
 using mozilla::layers::MaybeZoomConstraints from "FrameMetrics.h";
 using mozilla::layers::TouchBehaviorFlags from "mozilla/layers/APZUtils.h";
 using mozilla::layers::AsyncDragMetrics from "mozilla/layers/AsyncDragMetrics.h";
+using mozilla::layers::GeckoContentController::TapType from "mozilla/layers/GeckoContentController.h";
 
 using nsEventStatus from "mozilla/EventForwards.h";
 using EventMessage from "mozilla/EventForwards.h";
+using mozilla::Modifiers from "mozilla/EventForwards.h";
 using class mozilla::WidgetInputEvent from "mozilla/BasicEvents.h";
 using class mozilla::WidgetMouseEventBase from "mozilla/MouseEvents.h";
 using mozilla::WidgetMouseEvent::Reason from "mozilla/MouseEvents.h";
@@ -120,6 +123,11 @@ parent:
              ScrollableLayerGuid    aOutTargetGuid);
 
   async __delete__();
+
+child:
+
+  async HandleTap(TapType aType, LayoutDevicePoint point, Modifiers aModifiers,
+                  ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
 };
 
 } // namespace gfx

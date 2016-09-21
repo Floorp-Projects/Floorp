@@ -7,9 +7,25 @@
 #include "mozilla/layers/APZCTreeManagerChild.h"
 
 #include "InputData.h"                  // for InputData
+#include "mozilla/dom/TabParent.h"      // for TabParent
+#include "mozilla/layers/RemoteCompositorSession.h" // for RemoteCompositorSession
 
 namespace mozilla {
 namespace layers {
+
+APZCTreeManagerChild::APZCTreeManagerChild()
+  : mCompositorSession(nullptr)
+{
+}
+
+void
+APZCTreeManagerChild::SetCompositorSession(RemoteCompositorSession* aSession)
+{
+  // Exactly one of mCompositorSession and aSession must be null (i.e. either
+  // we're setting mCompositorSession or we're clearing it).
+  MOZ_ASSERT(!mCompositorSession ^ !aSession);
+  mCompositorSession = aSession;
+}
 
 nsEventStatus
 APZCTreeManagerChild::ReceiveInputEvent(
@@ -201,6 +217,28 @@ void APZCTreeManagerChild::TransformEventRefPoint(
     ScrollableLayerGuid* aOutTargetGuid)
 {
   SendTransformEventRefPoint(*aRefPoint, aRefPoint, aOutTargetGuid);
+}
+
+bool
+APZCTreeManagerChild::RecvHandleTap(const TapType& aType,
+                                    const LayoutDevicePoint& aPoint,
+                                    const Modifiers& aModifiers,
+                                    const ScrollableLayerGuid& aGuid,
+                                    const uint64_t& aInputBlockId)
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+  if (mCompositorSession &&
+      mCompositorSession->RootLayerTreeId() == aGuid.mLayersId &&
+      mCompositorSession->GetContentController()) {
+    mCompositorSession->GetContentController()->HandleTap(aType, aPoint,
+        aModifiers, aGuid, aInputBlockId);
+    return true;
+  }
+  dom::TabParent* tab = dom::TabParent::GetTabParentFromLayersId(aGuid.mLayersId);
+  if (tab) {
+    tab->SendHandleTap(aType, aPoint, aModifiers, aGuid, aInputBlockId);
+  }
+  return true;
 }
 
 void
