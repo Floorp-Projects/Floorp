@@ -43,8 +43,7 @@ APZChild::RecvHandleTap(const TapType& aType,
                         const LayoutDevicePoint& aPoint,
                         const Modifiers& aModifiers,
                         const ScrollableLayerGuid& aGuid,
-                        const uint64_t& aInputBlockId,
-                        const bool& aCallTakeFocusForClickFromTap)
+                        const uint64_t& aInputBlockId)
 {
   mController->HandleTap(aType, aPoint, aModifiers, aGuid,
       aInputBlockId);
