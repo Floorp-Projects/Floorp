@@ -1817,6 +1817,22 @@ DrawTargetSkia::PushClip(const Path *aPath)
 }
 
 void
+DrawTargetSkia::PushDeviceSpaceClipRects(const IntRect* aRects, uint32_t aCount)
+{
+  // Build a region by unioning all the rects together.
+  SkRegion region;
+  for (uint32_t i = 0; i < aCount; i++) {
+    region.op(IntRectToSkIRect(aRects[i]), SkRegion::kUnion_Op);
+  }
+
+  // Clip with the resulting region. clipRegion does not transform
+  // this region by the current transform, unlike the other SkCanvas
+  // clip methods, so it is just passed through in device-space.
+  mCanvas->save();
+  mCanvas->clipRegion(region, SkRegion::kIntersect_Op);
+}
+
+void
 DrawTargetSkia::PushClipRect(const Rect& aRect)
 {
   SkRect rect = RectToSkRect(aRect);
