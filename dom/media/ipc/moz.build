@@ -6,6 +6,7 @@
 
 
 IPDL_SOURCES += [
+    'PVideoDecoder.ipdl',
     'PVideoDecoderManager.ipdl',
 ]
 
@@ -16,8 +17,10 @@ EXPORTS.mozilla.dom += [
 ]
 
 SOURCES += [
+    'VideoDecoderChild.cpp',
     'VideoDecoderManagerChild.cpp',
     'VideoDecoderManagerParent.cpp',
+    'VideoDecoderParent.cpp',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
