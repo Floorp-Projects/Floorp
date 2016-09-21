@@ -170,7 +170,7 @@ add_task(function* test_stringify_inaccessible() {
 
 add_task(function* test_stringify_accessible() {
   // Test that an accessible property from another global is included
-  let principal = ssm.createExpandedPrincipal([PRINCIPAL1, PRINCIPAL2]);
+  let principal = Cu.getObjectPrincipal(Cu.Sandbox([PRINCIPAL1, PRINCIPAL2]));
   let context = new Context(principal);
   let sandbox = context.sandbox;
   let sandbox2 = Cu.Sandbox(PRINCIPAL2);
