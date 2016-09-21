@@ -12,3 +12,5 @@
 <!ENTITY aboutAccounts.noConnection.title "No connection">
 <!ENTITY aboutAccounts.noConnection.description "You must be connected to the Internet to sign in.">
 <!ENTITY aboutAccounts.noConnection.retry "Try again">
+<!ENTITY aboutAccounts.badConfig.title "Bad configuration">
+<!ENTITY aboutAccounts.badConfig.description "Unable to determine your Firefox Account server configuration. Please try again later.">

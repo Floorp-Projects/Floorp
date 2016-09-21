@@ -192,32 +192,26 @@ function MakeFxAccounts(internal = {}) {
   return new FxAccounts(internal);
 }
 
-add_test(function test_non_https_remote_server_uri_with_requireHttps_false() {
+add_task(function* test_non_https_remote_server_uri_with_requireHttps_false() {
   Services.prefs.setBoolPref(
     "identity.fxaccounts.allowHttp",
     true);
   Services.prefs.setCharPref(
     "identity.fxaccounts.remote.signup.uri",
     "http://example.com/browser/browser/base/content/test/general/accounts_testRemoteCommands.html");
-  do_check_eq(fxAccounts.getAccountsSignUpURI(),
+  do_check_eq(yield fxAccounts.promiseAccountsSignUpURI(),
               "http://example.com/browser/browser/base/content/test/general/accounts_testRemoteCommands.html");
 
   Services.prefs.clearUserPref("identity.fxaccounts.remote.signup.uri");
   Services.prefs.clearUserPref("identity.fxaccounts.allowHttp");
-  run_next_test();
 });
 
-add_test(function test_non_https_remote_server_uri() {
+add_task(function* test_non_https_remote_server_uri() {
   Services.prefs.setCharPref(
     "identity.fxaccounts.remote.signup.uri",
     "http://example.com/browser/browser/base/content/test/general/accounts_testRemoteCommands.html");
-  do_check_throws_message(function () {
-    fxAccounts.getAccountsSignUpURI();
-  }, "Firefox Accounts server must use HTTPS");
-
+  rejects(fxAccounts.promiseAccountsSignUpURI(), null, "Firefox Accounts server must use HTTPS");
   Services.prefs.clearUserPref("identity.fxaccounts.remote.signup.uri");
-
-  run_next_test();
 });
 
 add_task(function* test_get_signed_in_user_initially_unset() {
