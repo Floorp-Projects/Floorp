@@ -246,21 +246,23 @@ function promiseTodoObserverNotCalled(aTopic) {
 }
 
 function promiseMessage(aMessage, aAction) {
-  let deferred = Promise.defer();
-
-  content.addEventListener("message", function messageListener(event) {
-    content.removeEventListener("message", messageListener);
-    is(event.data, aMessage, "received " + aMessage);
-    if (event.data == aMessage)
-      deferred.resolve();
-    else
-      deferred.reject();
+  let promise = new Promise((resolve, reject) => {
+    let mm = _mm();
+    mm.addMessageListener("Test:MessageReceived", function listener({data}) {
+      is(data, aMessage, "received " + aMessage);
+      if (data == aMessage)
+        resolve();
+      else
+        reject();
+      mm.removeMessageListener("Test:MessageReceived", listener);
+    });
+    mm.sendAsyncMessage("Test:WaitForMessage");
   });
 
   if (aAction)
     aAction();
 
-  return deferred.promise;
+  return promise;
 }
 
 function promisePopupNotificationShown(aName, aAction) {
