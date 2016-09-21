@@ -71,6 +71,9 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
     static final int DEFAULT_EXPIRY_RETAIN_COUNT = 2000;
     static final int AGGRESSIVE_EXPIRY_RETAIN_COUNT = 500;
 
+    // Factor used to determine the minimum number of records to keep when expiring the activity stream blocklist
+    static final int ACTIVITYSTREAM_BLOCKLIST_EXPIRY_FACTOR = 5;
+
     // Minimum duration to keep when expiring.
     static final long DEFAULT_EXPIRY_PRESERVE_WINDOW = 1000L * 60L * 60L * 24L * 28L;     // Four weeks.
     // Minimum number of thumbnails to keep around.
@@ -384,6 +387,30 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
     }
 
     /**
+     * Remove enough activity stream blocklist items to bring the database count below <code>retain</code>.
+     *
+     * Items will be removed according to their creation date, oldest being removed first.
+     */
+    private void expireActivityStreamBlocklist(final SQLiteDatabase db, final int retain) {
+        Log.d(LOGTAG, "Expiring highlights blocklist.");
+        final long rows = DatabaseUtils.queryNumEntries(db, TABLE_ACTIVITY_STREAM_BLOCKLIST);
+
+        if (retain >= rows) {
+            debug("Not expiring highlights blocklist: only have " + rows + " rows.");
+            return;
+        }
+
+        final long toRemove = rows - retain;
+
+        final String statement = "DELETE FROM " + TABLE_ACTIVITY_STREAM_BLOCKLIST + " WHERE " + ActivityStreamBlocklist._ID + " IN " +
+                " ( SELECT " + ActivityStreamBlocklist._ID + " FROM " + TABLE_ACTIVITY_STREAM_BLOCKLIST + " " +
+                "ORDER BY " + ActivityStreamBlocklist.CREATED + " ASC LIMIT " + toRemove + ")";
+
+        beginWrite(db);
+        db.execSQL(statement);
+    }
+
+    /**
      * Remove enough history items to bring the database count below <code>retain</code>,
      * removing no items with a modified time after <code>keepAfter</code>.
      *
@@ -555,6 +582,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                     retainCount = AGGRESSIVE_EXPIRY_RETAIN_COUNT;
                 }
                 expireHistory(db, retainCount, keepAfter);
+                expireActivityStreamBlocklist(db, retainCount / ACTIVITYSTREAM_BLOCKLIST_EXPIRY_FACTOR);
                 expireThumbnails(db);
                 deleteUnusedImages(uri);
                 break;
