@@ -11,6 +11,7 @@ All notable changes to this program is documented in this file.
   - The `binary`, `args`, and `profile` entries on this dictionary is equivalent to the old `firefox_binary`, `firefox_args`, and `firefox_profile` capabilities, which have now all been removed
   - The `log` capability takes a dictionary such as `{log: "trace"}` to enable trace level verbosity in Gecko
   - The `prefs` capability lets you define Firefox preferences through capabilities
+- Re-introduced the `--webdriver-port` argument as a hidden alias to `--port`
 
 ### Changed
 - `firefox_binary`, `firefox_args`, and `firefox_profile` capabilities removed in favour of the `firefoxOptions` dictionary detailed above and in the README
