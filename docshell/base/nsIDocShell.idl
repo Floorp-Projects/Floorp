@@ -133,6 +133,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    * @param aReferrer            - Referring URI
    * @param aReferrerPolicy      - Referrer policy
    * @param aTriggeringPrincipal - Principal that initiated that load
+   * @param aPrincipalToInherit  - Principal to be inherited for that load
    * @param aFlags               - Any of the load flags defined within above.
    * @param aStopActiveDoc       - Flag indicating whether loading the current
    *                               document should be stopped.
@@ -160,6 +161,7 @@ interface nsIDocShell : nsIDocShellTreeItem
                               in nsIURI aReferrer,
                               in unsigned long aReferrerPolicy,
                               in nsIPrincipal aTriggeringPrincipal,
+                              in nsIPrincipal aPrincipalToInherit,
                               in uint32_t aFlags,
                               in wstring aWindowTarget,
                               in string aTypeHint,

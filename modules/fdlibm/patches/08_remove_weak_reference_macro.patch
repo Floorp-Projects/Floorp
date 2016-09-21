@@ -326,6 +326,22 @@ diff --git a/modules/fdlibm/src/s_log1p.cpp b/modules/fdlibm/src/s_log1p.cpp
 -#if (LDBL_MANT_DIG == 53)
 -__weak_reference(log1p, log1pl);
 -#endif
+diff --git a/modules/fdlibm/src/s_rint.cpp b/modules/fdlibm/src/s_rint.cpp
+--- a/modules/fdlibm/src/s_rint.cpp
++++ b/modules/fdlibm/src/s_rint.cpp
+@@ -80,12 +80,8 @@ rint(double x)
+ 	    if((i1&i)==0) return x;	/* x is integral */
+ 	    i>>=1;
+ 	    if((i1&i)!=0) i1 = (i1&(~i))|((0x40000000)>>(j0-20));
+ 	}
+ 	INSERT_WORDS(x,i0,i1);
+ 	STRICT_ASSIGN(double,w,TWO52[sx]+x);
+ 	return w-TWO52[sx];
+ }
+-
+-#if (LDBL_MANT_DIG == 53)
+-__weak_reference(rint, rintl);
+-#endif
 diff --git a/modules/fdlibm/src/s_scalbn.cpp b/modules/fdlibm/src/s_scalbn.cpp
 --- a/modules/fdlibm/src/s_scalbn.cpp
 +++ b/modules/fdlibm/src/s_scalbn.cpp

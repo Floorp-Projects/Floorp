@@ -315,6 +315,9 @@ enum nsStyleAnimType {
   // nscolor values
   eStyleAnimType_Color,
 
+  // StyleComplexColor values
+  eStyleAnimType_ComplexColor,
+
   // nsStyleSVGPaint values
   eStyleAnimType_PaintServer,
 

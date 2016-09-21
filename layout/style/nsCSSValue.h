@@ -13,6 +13,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/SheetType.h"
+#include "mozilla/StyleComplexColor.h"
 #include "mozilla/UniquePtr.h"
 
 #include "nsIPrincipal.h"
@@ -299,6 +300,102 @@ private:
     }
 };
 
+struct RGBAColorData
+{
+  // 1.0 means 100% for all components, but the value may fall outside
+  // the range of [0.0, 1.0], so it is necessary to clamp them when
+  // converting to nscolor.
+  float mR;
+  float mG;
+  float mB;
+  float mA;
+
+  RGBAColorData() = default;
+  MOZ_IMPLICIT RGBAColorData(nscolor aColor)
+    : mR(NS_GET_R(aColor) * (1.0f / 255.0f))
+    , mG(NS_GET_G(aColor) * (1.0f / 255.0f))
+    , mB(NS_GET_B(aColor) * (1.0f / 255.0f))
+    , mA(NS_GET_A(aColor) * (1.0f / 255.0f))
+  {}
+  RGBAColorData(float aR, float aG, float aB, float aA)
+    : mR(aR), mG(aG), mB(aB), mA(aA) {}
+
+  bool operator==(const RGBAColorData& aOther) const
+  {
+    return mR == aOther.mR && mG == aOther.mG &&
+           mB == aOther.mB && mA == aOther.mA;
+  }
+  bool operator!=(const RGBAColorData& aOther) const
+  {
+    return !(*this == aOther);
+  }
+
+  nscolor ToColor() const
+  {
+    return NS_RGBA(ClampColor(mR * 255.0f),
+                   ClampColor(mG * 255.0f),
+                   ClampColor(mB * 255.0f),
+                   ClampColor(mA * 255.0f));
+  }
+
+  RGBAColorData WithAlpha(float aAlpha) const
+  {
+    RGBAColorData result = *this;
+    result.mA = aAlpha;
+    return result;
+  }
+};
+
+struct ComplexColorData
+{
+  RGBAColorData mColor;
+  float mForegroundRatio;
+
+  ComplexColorData() = default;
+  ComplexColorData(const RGBAColorData& aColor, float aForegroundRatio)
+    : mColor(aColor), mForegroundRatio(aForegroundRatio) {}
+  ComplexColorData(nscolor aColor, float aForegroundRatio)
+    : mColor(aColor), mForegroundRatio(aForegroundRatio) {}
+  explicit ComplexColorData(const StyleComplexColor& aColor)
+    : mColor(aColor.mColor)
+    , mForegroundRatio(aColor.mForegroundRatio * (1.0f / 255.0f)) {}
+
+  bool operator==(const ComplexColorData& aOther) const
+  {
+    return mForegroundRatio == aOther.mForegroundRatio &&
+           (IsCurrentColor() || mColor == aOther.mColor);
+  }
+  bool operator!=(const ComplexColorData& aOther) const
+  {
+    return !(*this == aOther);
+  }
+
+  bool IsCurrentColor() const { return mForegroundRatio >= 1.0f; }
+  bool IsNumericColor() const { return mForegroundRatio <= 0.0f; }
+
+  StyleComplexColor ToComplexColor() const
+  {
+    return StyleComplexColor(
+      mColor.ToColor(), ClampColor(mForegroundRatio * 255.0f));
+  }
+};
+
+struct ComplexColorValue final : public ComplexColorData
+{
+  // Just redirect any parameter to the data struct.
+  template<typename... Args>
+  explicit ComplexColorValue(Args&&... aArgs)
+    : ComplexColorData(Forward<Args>(aArgs)...) {}
+  ComplexColorValue(const ComplexColorValue&) = delete;
+
+  NS_INLINE_DECL_REFCOUNTING(ComplexColorValue)
+
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
+
+private:
+  ~ComplexColorValue() {}
+};
+
 } // namespace css
 } // namespace mozilla
 
@@ -393,6 +490,7 @@ enum nsCSSUnit {
                                        // allowed.
   eCSSUnit_HSLColor            = 89,   // (nsCSSValueFloatColor*)
   eCSSUnit_HSLAColor           = 90,   // (nsCSSValueFloatColor*)
+  eCSSUnit_ComplexColor        = 91,   // (ComplexColorValue*)
 
   eCSSUnit_Percent      = 100,     // (float) 1.0 == 100%) value is percentage of something
   eCSSUnit_Number       = 101,     // (float) value is numeric (usually multiplier, different behavior than percent)
@@ -641,6 +739,11 @@ public:
 
   nscolor GetColorValue() const;
   bool IsNonTransparentColor() const;
+  mozilla::StyleComplexColor GetStyleComplexColorValue() const
+  {
+    MOZ_ASSERT(mUnit == eCSSUnit_ComplexColor);
+    return mValue.mComplexColor->ToComplexColor();
+  }
 
   Array* GetArrayValue() const
   {
@@ -771,6 +874,9 @@ public:
                           float aComponent2,
                           float aComponent3,
                           float aAlpha, nsCSSUnit aUnit);
+  void SetRGBAColorValue(const mozilla::css::RGBAColorData& aValue);
+  void SetComplexColorValue(
+    already_AddRefed<mozilla::css::ComplexColorValue> aValue);
   void SetArrayValue(nsCSSValue::Array* aArray, nsCSSUnit aUnit);
   void SetURLValue(mozilla::css::URLValue* aURI);
   void SetImageValue(mozilla::css::ImageValue* aImage);
@@ -878,6 +984,7 @@ protected:
     nsCSSValuePairList* mPairListDependent;
     nsCSSValueFloatColor* MOZ_OWNING_REF mFloatColor;
     mozilla::css::FontFamilyListRefCnt* MOZ_OWNING_REF mFontFamilyList;
+    mozilla::css::ComplexColorValue* MOZ_OWNING_REF mComplexColor;
   } mValue;
 };
 

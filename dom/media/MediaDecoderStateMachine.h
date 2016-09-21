@@ -401,19 +401,15 @@ protected:
   }
 
 
-  // Returns true if we're running low on data which is not yet decoded.
-  // The decoder monitor must be held.
-  bool HasLowUndecodedData();
+  // Returns true if we're running low on buffered data.
+  bool HasLowBufferedData();
 
-  // Returns true if we have less than aUsecs of undecoded data available.
-  bool HasLowUndecodedData(int64_t aUsecs);
+  // Returns true if we have less than aUsecs of buffered data available.
+  bool HasLowBufferedData(int64_t aUsecs);
 
   // Returns true when there's decoded audio waiting to play.
   // The decoder monitor must be held.
   bool HasFutureAudio();
-
-  // Returns true if we recently exited "quick buffering" mode.
-  bool JustExitedQuickBuffering();
 
   // Recomputes mNextFrameStatus, possibly dispatching notifications to interested
   // parties.
@@ -474,9 +470,6 @@ protected:
 
   // The entry action of DECODER_STATE_DECODING_FIRSTFRAME.
   void DecodeFirstFrame();
-
-  // The entry action of DECODER_STATE_DECODING.
-  void StartDecoding();
 
   // Moves the decoder into the shutdown state, and dispatches an error
   // event to the media element. This begins shutting down the decoder.
@@ -682,9 +675,6 @@ private:
   // Playback rate. 1.0 : normal speed, 0.5 : two times slower.
   double mPlaybackRate;
 
-  // Time at which we started decoding. Synchronised via decoder monitor.
-  TimeStamp mDecodeStartTime;
-
   // The maximum number of second we spend buffering when we are short on
   // unbuffered data.
   uint32_t mBufferingWait;
@@ -712,10 +702,6 @@ private:
   // Note that we don't ever reset this threshold, it only ever grows as
   // we detect that the decode can't keep up with rendering.
   int64_t mAmpleAudioThresholdUsecs;
-
-  // If we're quick buffering, we'll remain in buffering mode while we have less than
-  // QUICK_BUFFERING_LOW_DATA_USECS of decoded data available.
-  int64_t mQuickBufferingLowDataThresholdUsecs;
 
   // At the start of decoding we want to "preroll" the decode until we've
   // got a few frames decoded before we consider whether decode is falling
@@ -818,13 +804,6 @@ private:
   // send suppressed event visibility for those cases. This code can probably be
   // simplified.
   bool mNotifyMetadataBeforeFirstFrame;
-
-  // If this is true while we're in buffering mode, we can exit early,
-  // as it's likely we may be able to playback. This happens when we enter
-  // buffering mode soon after the decode starts, because the decode-ahead
-  // ran fast enough to exhaust all data while the download is starting up.
-  // Synchronised via decoder monitor.
-  bool mQuickBuffering;
 
   // True if we should not decode/preroll unnecessary samples, unless we're
   // played. "Prerolling" in this context refers to when we decode and

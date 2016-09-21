@@ -333,6 +333,22 @@ RenderFrameParent::RecvTakeFocusForClickFromTap()
   return true;
 }
 
+void
+RenderFrameParent::EnsureLayersConnected()
+{
+  RefPtr<LayerManager> lm = GetFrom(mFrameLoader);
+  if (!lm) {
+    return;
+  }
+
+  ClientLayerManager* client = lm->AsClientLayerManager();
+  if (!client) {
+    return;
+  }
+
+  client->GetRemoteRenderer()->SendNotifyChildRecreated(mLayersId);
+}
+
 } // namespace layout
 } // namespace mozilla
 

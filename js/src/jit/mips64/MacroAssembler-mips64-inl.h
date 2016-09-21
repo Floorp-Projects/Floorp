@@ -416,7 +416,10 @@ template <class L>
 void
 MacroAssembler::wasmBoundsCheck(Condition cond, Register index, L label)
 {
-    MOZ_CRASH("NYI");
+    BufferOffset bo = ma_BoundsCheck(ScratchRegister);
+    append(wasm::BoundsCheck(bo.getOffset()));
+
+    ma_b(index, ScratchRegister, label, cond);
 }
 
 void

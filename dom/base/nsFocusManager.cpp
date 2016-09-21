@@ -1097,10 +1097,20 @@ nsFocusManager::NotifyFocusStateChange(nsIContent* aContent,
   if (aWindowShouldShowFocusRing) {
     eventState |= NS_EVENT_STATE_FOCUSRING;
   }
+
   if (aGettingFocus) {
     aContent->AsElement()->AddStates(eventState);
   } else {
     aContent->AsElement()->RemoveStates(eventState);
+  }
+
+  for (Element* element = aContent->AsElement(); element;
+       element = element->GetParentElementCrossingShadowRoot()) {
+    if (aGettingFocus) {
+      element->AddStates(NS_EVENT_STATE_FOCUS_WITHIN);
+    } else {
+      element->RemoveStates(NS_EVENT_STATE_FOCUS_WITHIN);
+    }
   }
 }
 

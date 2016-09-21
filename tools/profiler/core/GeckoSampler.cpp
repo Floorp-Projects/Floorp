@@ -45,7 +45,7 @@
 #endif
 
 #if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
-  #include "AndroidBridge.h"
+  #include "FennecJNIWrappers.h"
 #endif
 
 #ifndef SPS_STANDALONE
@@ -469,10 +469,10 @@ void BuildJavaThreadJSObject(SpliceableJSONWriter& aWriter)
       bool firstRun = true;
       // for each frame
       for (int frameId = 0; true; frameId++) {
-        nsCString result;
-        bool hasFrame = AndroidBridge::Bridge()->GetFrameNameJavaProfiling(0, sampleId, frameId, result);
+        jni::String::LocalRef frameName =
+            java::GeckoJavaSampler::GetFrameName(0, sampleId, frameId);
         // when we run out of frames, we stop looping
-        if (!hasFrame) {
+        if (!frameName) {
           // if we found at least one frame, we have objects to close
           if (!firstRun) {
               aWriter.EndArray();
@@ -494,7 +494,8 @@ void BuildJavaThreadJSObject(SpliceableJSONWriter& aWriter)
         }
         // add a frame to the sample
         aWriter.StartObjectElement();
-          aWriter.StringProperty("location", result.BeginReading());
+          aWriter.StringProperty("location",
+                                 frameName->ToCString().BeginReading());
         aWriter.EndObject();
       }
       // if we found no frames for this sample, we are done

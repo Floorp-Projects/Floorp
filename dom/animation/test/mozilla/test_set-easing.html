@@ -1,35 +1,14 @@
 <!doctype html>
-<head>
 <meta charset=utf-8>
-<title>Test setting easing in sandbox</title>
-<script src="/tests/SimpleTest/SimpleTest.js"></script>
-<script src="/tests/SimpleTest/SpawnTask.js"></script>
-<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
-</head>
-<body>
-
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
 <script>
-"use strict";
-
-add_task(function* set_easing() {
-  const div = document.createElement("div");
-  document.body.appendChild(div);
-  div.animate({ opacity: [0, 1] }, 100000 );
-
-  const contentScript = function() {
-    try {
-      document.getAnimations()[0].effect.timing.easing = "linear";
-      ok(true, 'Setting easing should not throw in sandbox');
-    } catch (e) {
-      ok(false, 'Setting easing should not throw in sandbox');
-    }
-  };
-
-  const sandbox = new SpecialPowers.Cu.Sandbox(window);
-  sandbox.importFunction(document, "document");
-  sandbox.importFunction(SimpleTest.ok, "ok");
-  SpecialPowers.Cu.evalInSandbox(`(${contentScript.toSource()})()`, sandbox);
-});
-
+'use strict';
+setup({explicit_done: true});
+SpecialPowers.pushPrefEnv(
+  { "set": [["dom.animations-api.core.enabled", true]]},
+  function() {
+    window.open("file_set-easing.html");
+  });
 </script>
-</body>

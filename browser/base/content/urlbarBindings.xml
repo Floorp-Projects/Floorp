@@ -664,11 +664,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       <method name="onDrop">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          let url = browserDragAndDrop.drop(aEvent, { })
+          let links = browserDragAndDrop.dropLinks(aEvent);
 
           // The URL bar automatically handles inputs with newline characters,
           // so we can get away with treating text/x-moz-url flavours as text/plain.
-          if (url) {
+          if (links.length > 0 && links[0].url) {
+            let url = links[0].url;
             aEvent.preventDefault();
             this.value = url;
             SetPageProxyState("invalid");

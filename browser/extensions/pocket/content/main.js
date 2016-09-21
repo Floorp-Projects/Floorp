@@ -132,7 +132,7 @@ var pktUI = (function() {
         if (pktApi.getSignupPanelTabTestVariant() == 'tab')
         {
             let site = Services.prefs.getCharPref("extensions.pocket.site");
-            openTabWithUrl('https://' + site + '/firefox_learnmore?src=ff_ext&s=ffi&t=buttonclick', true);
+            openTabWithUrl('https://' + site + '/firefox_learnmore?s=ffi&t=autoredirect&tv=page_learnmore&src=ff_ext', true);
 
             // force the panel closed before it opens
             getPanel().hidePopup();
@@ -146,6 +146,7 @@ var pktUI = (function() {
             var fxasignedin = (typeof userdata == 'object' && userdata !== null) ? '1' : '0';
             var startheight = 490;
             var inOverflowMenu = isInOverflowMenu();
+            var controlvariant = pktApi.getSignupPanelTabTestVariant() == 'control';
 
             if (inOverflowMenu)
             {
@@ -159,6 +160,9 @@ var pktUI = (function() {
                     startheight = 406;
                 }
             }
+            if (!controlvariant) {
+                startheight = 427;
+            }
             var variant;
             if (inOverflowMenu)
             {
@@ -169,7 +173,18 @@ var pktUI = (function() {
                 variant = 'storyboard_lm';
             }
 
-            var panelId = showPanel("about:pocket-signup?pockethost=" + Services.prefs.getCharPref("extensions.pocket.site") + "&fxasignedin=" + fxasignedin + "&variant=" + variant + '&inoverflowmenu=' + inOverflowMenu + "&locale=" + getUILocale(), {
+            var panelId = showPanel("about:pocket-signup?pockethost="
+                + Services.prefs.getCharPref("extensions.pocket.site")
+                + "&fxasignedin="
+                + fxasignedin
+                + "&variant="
+                + variant
+                + '&controlvariant='
+                + controlvariant
+                + '&inoverflowmenu='
+                + inOverflowMenu
+                + "&locale="
+                + getUILocale(), {
                     onShow: function() {
                     },
                     onHide: panelDidHide,
@@ -469,7 +484,11 @@ var pktUI = (function() {
             var e = bundle.getSimpleEnumeration();
             while (e.hasMoreElements()) {
                 var str = e.getNext().QueryInterface(Components.interfaces.nsIPropertyElement);
-                strings[str.key] = str.value;
+                if (str.key in data) {
+                    strings[str.key] = bundle.formatStringFromName(str.key, data[str.key], data[str.key].length);
+                } else {
+                    strings[str.key] = str.value;
+                }
             }
             pktUIMessaging.sendResponseMessageToPanel(panelId, _initL10NMessageId, { strings: strings });
         });

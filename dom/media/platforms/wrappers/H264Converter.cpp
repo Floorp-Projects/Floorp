@@ -55,7 +55,8 @@ H264Converter::Input(MediaRawData* aSample)
   if (!mp4_demuxer::AnnexB::ConvertSampleToAVCC(aSample)) {
     // We need AVCC content to be able to later parse the SPS.
     // This is a no-op if the data is already AVCC.
-    mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__));
+    mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                                 RESULT_DETAIL("ConvertSampleToAVCC")));
     return;
   }
 
@@ -88,7 +89,9 @@ H264Converter::Input(MediaRawData* aSample)
     rv = CheckForSPSChange(aSample);
   }
   if (NS_FAILED(rv)) {
-    mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__));
+    mCallback->Error(
+      MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                  RESULT_DETAIL("Unable to create H264 decoder")));
     return;
   }
 
@@ -99,7 +102,8 @@ H264Converter::Input(MediaRawData* aSample)
 
   if (!mNeedAVCC &&
       !mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample)) {
-    mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__));
+    mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                                 RESULT_DETAIL("ConvertSampleToAnnexB")));
     return;
   }
 
@@ -262,8 +266,9 @@ void
 H264Converter::OnDecoderInitFailed(MediaResult aError)
 {
   mInitPromiseRequest.Complete();
-  mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                                    __func__));
+  mCallback->Error(
+    MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                RESULT_DETAIL("Unable to initialize H264 decoder")));
 }
 
 nsresult

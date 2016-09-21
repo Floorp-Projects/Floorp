@@ -16,27 +16,32 @@
 
 const int32_t txExecutionState::kMaxRecursionDepth = 20000;
 
-void
+nsresult
 txLoadedDocumentsHash::init(txXPathNode* aSourceDocument)
 {
     mSourceDocument = aSourceDocument;
 
     nsAutoString baseURI;
-    txXPathNodeUtils::getBaseURI(*mSourceDocument, baseURI);
+    nsresult rv = txXPathNodeUtils::getBaseURI(*mSourceDocument, baseURI);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+    }
 
     PutEntry(baseURI)->mDocument = mSourceDocument;
+    return NS_OK;
 }
 
 txLoadedDocumentsHash::~txLoadedDocumentsHash()
 {
     if (mSourceDocument) {
         nsAutoString baseURI;
-        txXPathNodeUtils::getBaseURI(*mSourceDocument, baseURI);
-
-        txLoadedDocumentEntry* entry = GetEntry(baseURI);
-        if (entry) {
-            delete entry->mDocument.forget();
-        }
+        nsresult rv = txXPathNodeUtils::getBaseURI(*mSourceDocument, baseURI);
+        if (NS_SUCCEEDED(rv)) {
+	    txLoadedDocumentEntry* entry = GetEntry(baseURI);
+	    if (entry) {
+	        delete entry->mDocument.forget();
+	    }
+       }
     }
 }
 
@@ -116,7 +121,8 @@ txExecutionState::init(const txXPathNode& aNode,
     mOutputHandler->startDocument();
 
     // Set up loaded-documents-hash
-    mLoadedDocuments.init(txXPathNodeUtils::getOwnerDocument(aNode));
+    rv = mLoadedDocuments.init(txXPathNodeUtils::getOwnerDocument(aNode));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // Init members
     rv = mKeyHash.init();

@@ -334,9 +334,13 @@ interface nsIChannel : nsIRequest
     readonly attribute ACString contentDispositionHeader;
 
     /**
-     * The nsILoadInfo for this load.  This is immutable for the
-     * lifetime of the load and should be passed through across
-     * redirects and the like.
+     * The LoadInfo object contains information about a network load, why it
+     * was started, and how we plan on using the resulting response.
+     * If a network request is redirected, the new channel will receive a new
+     * LoadInfo object. The new object will contain mostly the same
+     * information as the pre-redirect one, but updated as appropriate.
+     * For detailed information about what parts of LoadInfo are updated on
+     * redirect, see documentation on individual properties.
      */
     attribute nsILoadInfo loadInfo;
 

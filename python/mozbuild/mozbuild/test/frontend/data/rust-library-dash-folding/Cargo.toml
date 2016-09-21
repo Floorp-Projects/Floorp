@@ -6,4 +6,10 @@ authors = [
 ]
 
 [lib]
-crate-type = ["staticlib"]
+crate-type = ["rlib"]
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"

@@ -52,7 +52,7 @@ amContentHandler.prototype = {
       names: [null],
       icons: [null],
       mimetype: XPI_CONTENT_TYPE,
-      triggeringPrincipal: aRequest.loadInfo.triggeringPrincipal,
+      principalToInherit: aRequest.loadInfo.principalToInherit,
       callbackID: -1
     };
 

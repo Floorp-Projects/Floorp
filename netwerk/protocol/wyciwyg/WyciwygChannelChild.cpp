@@ -92,6 +92,7 @@ WyciwygChannelChild::Init(nsIURI* uri)
   // propagate loadInfo
   mozilla::ipc::PrincipalInfo requestingPrincipalInfo;
   mozilla::ipc::PrincipalInfo triggeringPrincipalInfo;
+  mozilla::ipc::PrincipalInfo principalToInheritInfo;
   uint32_t securityFlags;
   uint32_t policyType;
   if (mLoadInfo) {
@@ -99,6 +100,8 @@ WyciwygChannelChild::Init(nsIURI* uri)
                                            &requestingPrincipalInfo);
     mozilla::ipc::PrincipalToPrincipalInfo(mLoadInfo->TriggeringPrincipal(),
                                            &triggeringPrincipalInfo);
+    mozilla::ipc::PrincipalToPrincipalInfo(mLoadInfo->PrincipalToInherit(),
+                                           &principalToInheritInfo);
     securityFlags = mLoadInfo->GetSecurityFlags();
     policyType = mLoadInfo->InternalContentPolicyType();
   }
@@ -108,6 +111,8 @@ WyciwygChannelChild::Init(nsIURI* uri)
                                            &requestingPrincipalInfo);
     mozilla::ipc::PrincipalToPrincipalInfo(nsContentUtils::GetSystemPrincipal(),
                                            &triggeringPrincipalInfo);
+    mozilla::ipc::PrincipalToPrincipalInfo(nsContentUtils::GetSystemPrincipal(),
+                                           &principalToInheritInfo);
     securityFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
     policyType = nsIContentPolicy::TYPE_OTHER;
   }
@@ -115,6 +120,7 @@ WyciwygChannelChild::Init(nsIURI* uri)
   SendInit(serializedUri,
            requestingPrincipalInfo,
            triggeringPrincipalInfo,
+           principalToInheritInfo,
            securityFlags,
            policyType);
   return NS_OK;

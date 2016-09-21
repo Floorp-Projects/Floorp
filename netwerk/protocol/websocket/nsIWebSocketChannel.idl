@@ -73,46 +73,13 @@ interface nsIWebSocketChannel : nsISupports
     /**
      * Init the WebSocketChannel with LoadInfo arguments.
      * @param aLoadingNode
-     *        The loadingDocument of the channel.
-     *        The element or document where the result of this request will be
-     *        used. This is the document/element that will get access to the
-     *        result of this request. For example for an image load, it's the
-     *        document in which the image will be loaded. And for a CSS
-     *        stylesheet it's the document whose rendering will be affected by
-     *        the stylesheet.
-     *        For loads that are not related to any document, such as loads coming
-     *        from addons or internal browser features, use null here.
      * @param aLoadingPrincipal
-     *        The loadingPrincipal of the channel.
-     *        The principal of the document where the result of this request will
-     *        be used.
-     *        This defaults to the principal of aLoadingNode, so when aLoadingNode
-     *        is passed then aLoadingPrincipal can be left as null. However, for
-     *        loads where aLoadingNode is null this argument must be passed.
-     *        For example for loads from a WebWorker, pass the principal
-     *        of that worker. For loads from an addon or from internal browser
-     *        features, pass the system principal.
-     *        If aLoadingNode is null and the URI being loaded isn't coming from
-     *        a webpage, the principal should almost always be the systemPrincipal.
-     *        One exception to this is for loads from WebWorkers since they don't
-     *        have any nodes to be passed as aLoadingNode.
-     *        Please note, aLoadingPrincipal is *not* the principal of the
-     *        resource being loaded. But rather the principal of the context
-     *        where the resource will be used.
      * @param aTriggeringPrincipal
-     *        The triggeringPrincipal of the load.
-     *        The triggeringPrincipal is the principal of the resource that caused
-     *        this particular URL to be loaded.
-     *        For WebSockets, the loadingPrincipal and the triggeringPrincipal
-     *        are *always* identical.
      * @param aSecurityFlags
-     *        The securityFlags of the channel.
-     *        Any of the securityflags defined in nsILoadInfo.idl
      * @param aContentPolicyType
-     *        The contentPolicyType of the channel.
-     *        Any of the content types defined in nsIContentPolicy.idl
+     *        These will be used as values for the nsILoadInfo object on the
+     *        created channel. For details, see nsILoadInfo in nsILoadInfo.idl
      * @return reference to the new nsIChannel object
-     *
      *
      * Keep in mind that URIs coming from a webpage should *never* use the
      * systemPrincipal as the loadingPrincipal.

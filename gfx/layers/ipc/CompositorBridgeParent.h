@@ -274,6 +274,7 @@ public:
   virtual bool RecvPause() override;
   virtual bool RecvResume() override;
   virtual bool RecvNotifyChildCreated(const uint64_t& child) override;
+  virtual bool RecvNotifyChildRecreated(const uint64_t& child) override;
   virtual bool RecvAdoptChild(const uint64_t& child) override;
   virtual bool RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
                                 const gfx::IntRect& aRect) override;

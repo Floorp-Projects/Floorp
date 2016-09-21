@@ -161,6 +161,10 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
     mValue.mFloatColor = aCopy.mValue.mFloatColor;
     mValue.mFloatColor->AddRef();
   }
+  else if (eCSSUnit_ComplexColor == mUnit) {
+    mValue.mComplexColor = aCopy.mValue.mComplexColor;
+    mValue.mComplexColor->AddRef();
+  }
   else if (UnitHasArrayValue()) {
     mValue.mArray = aCopy.mValue.mArray;
     mValue.mArray->AddRef();
@@ -271,6 +275,9 @@ bool nsCSSValue::operator==(const nsCSSValue& aOther) const
     else if (IsFloatColorUnit()) {
       return *mValue.mFloatColor == *aOther.mValue.mFloatColor;
     }
+    else if (eCSSUnit_ComplexColor == mUnit) {
+      return *mValue.mComplexColor == *aOther.mValue.mComplexColor;
+    }
     else if (UnitHasArrayValue()) {
       return *mValue.mArray == *aOther.mValue.mArray;
     }
@@ -377,6 +384,8 @@ void nsCSSValue::DoReset()
     mValue.mString->Release();
   } else if (IsFloatColorUnit()) {
     mValue.mFloatColor->Release();
+  } else if (eCSSUnit_ComplexColor == mUnit) {
+    mValue.mComplexColor->Release();
   } else if (UnitHasArrayValue()) {
     mValue.mArray->Release();
   } else if (eCSSUnit_URL == mUnit) {
@@ -476,6 +485,21 @@ void nsCSSValue::SetFloatColorValue(float aComponent1,
   mValue.mFloatColor =
     new nsCSSValueFloatColor(aComponent1, aComponent2, aComponent3, aAlpha);
   mValue.mFloatColor->AddRef();
+}
+
+void
+nsCSSValue::SetRGBAColorValue(const RGBAColorData& aValue)
+{
+  SetFloatColorValue(aValue.mR, aValue.mG, aValue.mB,
+                     aValue.mA, eCSSUnit_PercentageRGBAColor);
+}
+
+void
+nsCSSValue::SetComplexColorValue(already_AddRefed<ComplexColorValue> aValue)
+{
+  Reset();
+  mUnit = eCSSUnit_ComplexColor;
+  mValue.mComplexColor = aValue.take();
 }
 
 void nsCSSValue::SetArrayValue(nsCSSValue::Array* aValue, nsCSSUnit aUnit)
@@ -1566,6 +1590,18 @@ nsCSSValue::AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
       mValue.mFloatColor->AppendToString(unit, aResult);
     }
   }
+  else if (eCSSUnit_ComplexColor == unit) {
+    StyleComplexColor color = GetStyleComplexColorValue();
+    nsCSSValue serializable;
+    if (color.IsCurrentColor()) {
+      serializable.SetIntValue(NS_COLOR_CURRENTCOLOR, eCSSUnit_EnumColor);
+    } else if (color.IsNumericColor()) {
+      serializable.SetColorValue(color.mColor);
+    } else {
+      MOZ_ASSERT_UNREACHABLE("Cannot serialize a complex color");
+    }
+    serializable.AppendToString(aProperty, aResult, aSerialization);
+  }
   else if (eCSSUnit_URL == unit || eCSSUnit_Image == unit) {
     aResult.AppendLiteral("url(");
     nsStyleUtil::AppendEscapedCSSString(
@@ -1862,6 +1898,7 @@ nsCSSValue::AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
     case eCSSUnit_PercentageRGBAColor:   break;
     case eCSSUnit_HSLColor:              break;
     case eCSSUnit_HSLAColor:             break;
+    case eCSSUnit_ComplexColor:          break;
     case eCSSUnit_Percent:      aResult.Append(char16_t('%'));    break;
     case eCSSUnit_Number:       break;
     case eCSSUnit_Gradient:     break;
@@ -2047,6 +2084,11 @@ nsCSSValue::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     case eCSSUnit_HSLColor:
     case eCSSUnit_HSLAColor:
       n += mValue.mFloatColor->SizeOfIncludingThis(aMallocSizeOf);
+      break;
+
+    // Complex Color
+    case eCSSUnit_ComplexColor:
+      n += mValue.mComplexColor->SizeOfIncludingThis(aMallocSizeOf);
       break;
 
     // Float: nothing extra to measure.
@@ -2775,6 +2817,17 @@ css::ImageValue::~ImageValue()
 
     iter.Remove();
   }
+}
+
+size_t
+css::ComplexColorValue::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  // Only measure it if it's unshared, to avoid double-counting.
+  size_t n = 0;
+  if (mRefCnt <= 1) {
+    n += aMallocSizeOf(this);
+  }
+  return n;
 }
 
 nsCSSValueGradientStop::nsCSSValueGradientStop()

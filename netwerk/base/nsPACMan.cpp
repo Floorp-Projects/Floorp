@@ -17,6 +17,7 @@
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsISystemProxySettings.h"
 #include "nsContentUtils.h"
+#include "mozilla/Preferences.h"
 
 //-----------------------------------------------------------------------------
 
@@ -207,7 +208,8 @@ public:
       mSetupPAC = false;
 
       mPACMan->mPAC.Init(mSetupPACURI,
-                         mSetupPACData);
+                         mSetupPACData,
+                         mPACMan->mIncludePath);
 
       RefPtr<PACLoadComplete> runnable = new PACLoadComplete(mPACMan);
       NS_DispatchToMainThread(runnable);
@@ -299,6 +301,9 @@ PendingPACQuery::Run()
 static bool sThreadLocalSetup = false;
 static uint32_t sThreadLocalIndex = 0xdeadbeef; // out of range
 
+static const char *kPACIncludePath =
+  "network.proxy.autoconfig_url.include_path";
+
 nsPACMan::nsPACMan()
   : mLoadPending(false)
   , mShutdown(false)
@@ -311,6 +316,7 @@ nsPACMan::nsPACMan()
     PR_NewThreadPrivateIndex(&sThreadLocalIndex, nullptr);
   }
   mPAC.SetThreadLocalIndex(sThreadLocalIndex);
+  mIncludePath = Preferences::GetBool(kPACIncludePath, false);
 }
 
 nsPACMan::~nsPACMan()

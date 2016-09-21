@@ -409,6 +409,28 @@ MacroAssembler::ctz32(Register src, Register dest, bool knownNotZero)
     ma_ctz(dest, src);
 }
 
+void
+MacroAssembler::popcnt32(Register input,  Register output, Register tmp)
+{
+    // Equivalent to GCC output of mozilla::CountPopulation32()
+    ma_move(output, input);
+    ma_sra(tmp, input, Imm32(1));
+    ma_and(tmp, Imm32(0x55555555));
+    ma_subu(output, tmp);
+    ma_sra(tmp, output, Imm32(2));
+    ma_and(output, Imm32(0x33333333));
+    ma_and(tmp, Imm32(0x33333333));
+    ma_addu(output, tmp);
+    ma_srl(tmp, output, Imm32(4));
+    ma_addu(output, tmp);
+    ma_and(output, Imm32(0xF0F0F0F));
+    ma_sll(tmp, output, Imm32(8));
+    ma_addu(output, tmp);
+    ma_sll(tmp, output, Imm32(16));
+    ma_addu(output, tmp);
+    ma_sra(output, output, Imm32(24));
+}
+
 // ===============================================================
 // Branch functions
 
@@ -630,6 +652,9 @@ MacroAssembler::branchAdd32(Condition cond, T src, Register dest, L overflow)
     switch (cond) {
       case Overflow:
         ma_addTestOverflow(dest, dest, src, overflow);
+        break;
+      case CarrySet:
+        ma_addTestCarry(dest, dest, src, overflow);
         break;
       default:
         MOZ_CRASH("NYI");

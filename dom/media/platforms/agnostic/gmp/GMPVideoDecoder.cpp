@@ -95,16 +95,18 @@ void
 VideoCallbackAdapter::Error(GMPErr aErr)
 {
   MOZ_ASSERT(IsOnGMPThread());
-  mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                               nsPrintfCString("%s: %d", __func__, aErr)));
+  mCallback->Error(MediaResult(aErr == GMPDecodeErr
+                               ? NS_ERROR_DOM_MEDIA_DECODE_ERR
+                               : NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                               RESULT_DETAIL("GMPErr:%x", aErr)));
 }
 
 void
 VideoCallbackAdapter::Terminated()
 {
   // Note that this *may* be called from the proxy thread also.
-  NS_WARNING("GMP decoder terminated.");
-  mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__));
+  mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                               RESULT_DETAIL("Video GMP decoder terminated.")));
 }
 
 GMPVideoDecoderParams::GMPVideoDecoderParams(const CreateDecoderParams& aParams)
@@ -184,14 +186,16 @@ GMPVideoDecoder::CreateFrame(MediaRawData* aSample)
   GMPVideoFrame* ftmp = nullptr;
   GMPErr err = mHost->CreateFrame(kGMPEncodedVideoFrame, &ftmp);
   if (GMP_FAILED(err)) {
-    mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
+    mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                                 RESULT_DETAIL("Host::CreateFrame:%x", err)));
     return nullptr;
   }
 
   GMPUniquePtr<GMPVideoEncodedFrame> frame(static_cast<GMPVideoEncodedFrame*>(ftmp));
   err = frame->CreateEmptyFrame(aSample->Size());
   if (GMP_FAILED(err)) {
-    mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
+    mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                                 RESULT_DETAIL("GMPVideoEncodedFrame::CreateEmptyFrame:%x", err)));
     return nullptr;
   }
 
@@ -322,7 +326,7 @@ GMPVideoDecoder::Input(MediaRawData* aSample)
   RefPtr<MediaRawData> sample(aSample);
   if (!mGMP) {
     mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                                      __func__));
+                                 RESULT_DETAIL("mGMP not initialized")));
     return;
   }
 
@@ -330,13 +334,15 @@ GMPVideoDecoder::Input(MediaRawData* aSample)
 
   GMPUniquePtr<GMPVideoEncodedFrame> frame = CreateFrame(sample);
   if (!frame) {
-    mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
+    mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                                 RESULT_DETAIL("CreateFrame returned null")));
     return;
   }
   nsTArray<uint8_t> info; // No codec specific per-frame info to pass.
   nsresult rv = mGMP->Decode(Move(frame), false, info, 0);
   if (NS_FAILED(rv)) {
-    mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__));
+    mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                                 RESULT_DETAIL("mGMP->Decode:%x", rv)));
   }
 }
 

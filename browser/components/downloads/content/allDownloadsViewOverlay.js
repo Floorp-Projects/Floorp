@@ -1406,12 +1406,15 @@ DownloadsPlacesView.prototype = {
       return;
     }
 
-    let name = {};
-    let url = Services.droppedLinkHandler.dropLink(aEvent, name);
-    if (url) {
-      let browserWin = RecentWindow.getMostRecentBrowserWindow();
-      let initiatingDoc = browserWin ? browserWin.document : document;
-      DownloadURL(url, name.value, initiatingDoc);
+    let links = Services.droppedLinkHandler.dropLinks(aEvent);
+    if (!links.length)
+      return;
+    let browserWin = RecentWindow.getMostRecentBrowserWindow();
+    let initiatingDoc = browserWin ? browserWin.document : document;
+    for (let link of links) {
+      if (link.url.startsWith("about:"))
+        continue;
+      DownloadURL(link.url, link.name, initiatingDoc);
     }
   },
 };

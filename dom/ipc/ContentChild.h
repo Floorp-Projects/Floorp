@@ -162,11 +162,16 @@ public:
                         base::ProcessId otherProcess) override;
 
   bool
-  RecvInitCompositor(Endpoint<PCompositorBridgeChild>&& aEndpoint) override;
+  RecvInitRendering(
+    Endpoint<PCompositorBridgeChild>&& aCompositor,
+    Endpoint<PImageBridgeChild>&& aImageBridge,
+    Endpoint<PVRManagerChild>&& aVRBridge) override;
+
   bool
-  RecvInitImageBridge(Endpoint<PImageBridgeChild>&& aEndpoint) override;
-  bool
-  RecvInitVRManager(Endpoint<PVRManagerChild>&& aEndpoint) override;
+  RecvReinitRendering(
+    Endpoint<PCompositorBridgeChild>&& aCompositor,
+    Endpoint<PImageBridgeChild>&& aImageBridge,
+    Endpoint<PVRManagerChild>&& aVRBridge) override;
 
   PSharedBufferManagerChild*
   AllocPSharedBufferManagerChild(mozilla::ipc::Transport* aTransport,

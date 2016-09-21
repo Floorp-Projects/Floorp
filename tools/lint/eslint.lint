@@ -18,6 +18,11 @@ from mozprocess import ProcessHandler
 
 from mozlint import result
 
+ESLINT_ERROR_MESSAGE = """
+An error occurred running eslint. Please check the following error messages:
+
+{}
+""".strip()
 
 ESLINT_NOT_FOUND_MESSAGE = """
 Could not find eslint!  We looked at the --binary option, at the ESLINT
@@ -325,8 +330,14 @@ def lint(paths, binary=None, fix=None, setup=None, **lintargs):
         proc.kill()
         return []
 
+    try:
+        jsonresult = json.loads(proc.output[0] or '[]')
+    except ValueError:
+        print(ESLINT_ERROR_MESSAGE.format("\n".join(proc.output)))
+        return 1
+
     results = []
-    for obj in json.loads(proc.output[0] or '[]'):
+    for obj in jsonresult:
         errors = obj['messages']
 
         for err in errors:

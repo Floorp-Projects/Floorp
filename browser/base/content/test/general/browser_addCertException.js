@@ -36,13 +36,13 @@ function checkControlPanelIcons() {
         .getComputedStyle(document.getElementById("identity-popup-security-content"), "")
         .getPropertyValue("background-image");
   is(connectionIconImage,
-     "url(\"chrome://browser/skin/identity-mixed-passive-loaded.svg\")",
+     "url(\"chrome://browser/skin/connection-mixed-passive-loaded.svg#icon\")",
      "Using expected icon image in the identity block");
   is(securityViewBG,
-     "url(\"chrome://browser/skin/identity-mixed-passive-loaded.svg\")",
+     "url(\"chrome://browser/skin/connection-mixed-passive-loaded.svg#icon\")",
      "Using expected icon image in the Control Center main view");
   is(securityContentBG,
-     "url(\"chrome://browser/skin/identity-mixed-passive-loaded.svg\")",
+     "url(\"chrome://browser/skin/connection-mixed-passive-loaded.svg#icon\")",
      "Using expected icon image in the Control Center subview");
 
   gIdentityHandler._identityPopup.hidden = true;

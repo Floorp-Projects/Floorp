@@ -15,15 +15,28 @@ Test that we only render visible tree items.
 <script type="application/javascript;version=1.8">
 window.onload = Task.async(function* () {
   try {
+    function getSpacerHeights() {
+      return {
+        top: document.querySelector(".tree > div:first-of-type").clientHeight,
+        bottom: document.querySelector(".tree > div:last-of-type").clientHeight,
+      };
+    }
+
+    const ITEM_HEIGHT = 3;
+
     const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     const React = browserRequire("devtools/client/shared/vendor/react");
     const Tree = React.createFactory(browserRequire("devtools/client/shared/components/tree"));
-    const tree = ReactDOM.render(Tree(TEST_TREE_INTERFACE), window.document.body);
+
+    const tree = ReactDOM.render(
+      Tree(Object.assign({}, TEST_TREE_INTERFACE, { itemHeight: ITEM_HEIGHT })),
+      window.document.body);
 
     TEST_TREE.expanded = new Set("ABCDEFGHIJKLMNO".split(""));
+
     yield setState(tree, {
-      height: 3,
-      scroll: 1
+      height: 3 * ITEM_HEIGHT,
+      scroll: 1 * ITEM_HEIGHT
     });
 
     isRenderedTree(document.body.textContent, [
@@ -32,11 +45,15 @@ window.onload = Task.async(function* () {
       "--E:false",
       "---K:false",
       "---L:false",
-    ], "Tree should show the second, third, and fourth items + buffer of 1 item at the end");
+    ], "Tree should show the 2nd, 3rd, and 4th items + buffer of 1 item at each end");
+
+    let spacers = getSpacerHeights();
+    is(spacers.top, 0, "Top spacer has the correct height");
+    is(spacers.bottom, 10 * ITEM_HEIGHT, "Bottom spacer has the correct height");
 
     yield setState(tree, {
-      height: 2,
-      scroll: 3
+      height: 2 * ITEM_HEIGHT,
+      scroll: 3 * ITEM_HEIGHT
     });
 
     isRenderedTree(document.body.textContent, [
@@ -44,7 +61,58 @@ window.onload = Task.async(function* () {
       "---K:false",
       "---L:false",
       "--F:false",
-    ], "Tree should show the third and fourth item + buffer of 1 item at each end");
+    ], "Tree should show the 4th and 5th item + buffer of 1 item at each end");
+
+    spacers = getSpacerHeights();
+    is(spacers.top, 2 * ITEM_HEIGHT, "Top spacer has the correct height");
+    is(spacers.bottom, 9 * ITEM_HEIGHT, "Bottom spacer has the correct height");
+
+    // Set height to 2 items + 1 pixel at each end, scroll so that 4 items are visible
+    // (2 fully, 2 partially with 1 visible pixel)
+    yield setState(tree, {
+      height: 2 * ITEM_HEIGHT + 2,
+      scroll: 3 * ITEM_HEIGHT - 1
+    });
+
+    isRenderedTree(document.body.textContent, [
+      "-B:false",
+      "--E:false",
+      "---K:false",
+      "---L:false",
+      "--F:false",
+      "--G:false",
+    ], "Tree should show the 4 visible items + buffer of 1 item at each end");
+
+    spacers = getSpacerHeights();
+    is(spacers.top, 1 * ITEM_HEIGHT, "Top spacer has the correct height");
+    is(spacers.bottom, 8 * ITEM_HEIGHT, "Bottom spacer has the correct height");
+
+    yield setState(tree, {
+      height: 20 * ITEM_HEIGHT,
+      scroll: 0
+    });
+
+    isRenderedTree(document.body.textContent, [
+      "A:false",
+      "-B:false",
+      "--E:false",
+      "---K:false",
+      "---L:false",
+      "--F:false",
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:false",
+    ], "Tree should show all rows");
+
+    spacers = getSpacerHeights();
+    is(spacers.top, 0, "Top spacer has zero height");
+    is(spacers.bottom, 0, "Bottom spacer has zero height");
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
