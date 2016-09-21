@@ -179,26 +179,24 @@ function* test_once()
   WebRequest.onBeforeRedirect.addListener(onBeforeRedirect);
   WebRequest.onResponseStarted.addListener(onResponseStarted);
 
-  gBrowser.selectedTab = gBrowser.addTab();
-  let browser = gBrowser.selectedBrowser;
-  expected_browser = browser;
+  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" },
+    function* (browser) {
+      expected_browser = browser;
+      BrowserTestUtils.loadURI(browser, URL);
+      yield BrowserTestUtils.browserLoaded(expected_browser);
 
-  yield BrowserTestUtils.browserLoaded(expected_browser);
+      expected_browser = null;
 
-  browser.messageManager.loadFrameScript(`data:,content.location = "${URL}";`, false);
+      yield ContentTask.spawn(browser, null, function() {
+        let win = content.wrappedJSObject;
+        is(win.success, 2, "Good script ran");
+        is(win.failure, undefined, "Failure script didn't run");
 
-  yield BrowserTestUtils.browserLoaded(expected_browser);
-
-  expected_browser = null;
-
-  let win = browser.contentWindow.wrappedJSObject;
-  is(win.success, 2, "Good script ran");
-  is(win.failure, undefined, "Failure script didn't run");
-
-  let style = browser.contentWindow.getComputedStyle(browser.contentDocument.getElementById("test"), null);
-  is(style.getPropertyValue("color"), "rgb(255, 0, 0)", "Good CSS loaded");
-
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+        let style =
+          content.getComputedStyle(content.document.getElementById("test"), null);
+        is(style.getPropertyValue("color"), "rgb(255, 0, 0)", "Good CSS loaded");
+      });
+    });
 
   compareLists(requested, expected_requested, "requested");
   compareLists(sendHeaders, expected_sendHeaders, "sendHeaders");
