@@ -2949,7 +2949,7 @@ JS_GetArrayBufferViewType(JSObject* obj)
 
     if (obj->is<TypedArrayObject>())
         return obj->as<TypedArrayObject>().type();
-    else if (obj->is<DataViewObject>())
+    if (obj->is<DataViewObject>())
         return Scalar::MaxTypedArrayViewType;
     MOZ_CRASH("invalid ArrayBufferView type");
 }
