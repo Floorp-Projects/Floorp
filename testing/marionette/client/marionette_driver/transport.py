@@ -276,7 +276,13 @@ class TcpTransport(object):
     def close(self):
         """Close the socket."""
         if self.sock:
-            self.sock.shutdown(socket.SHUT_RDWR)
+            try:
+                self.sock.shutdown(socket.SHUT_RDWR)
+            except IOError as exc:
+                # Errno 57 is "socket not connected", which we don't care about here.
+                if exc.errno != 57:
+                    raise
+
             self.sock.close()
             self.sock = None
 
