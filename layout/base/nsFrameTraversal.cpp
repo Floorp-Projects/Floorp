@@ -119,12 +119,12 @@ protected:
 
 /************IMPLEMENTATIONS**************/
 
-nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult)
+nsresult
+NS_CreateFrameTraversal(nsIFrameTraversal** aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = nullptr;
 
-  nsCOMPtr<nsIFrameTraversal> t(new nsFrameTraversal());
+  nsCOMPtr<nsIFrameTraversal> t = new nsFrameTraversal();
 
   *aResult = t;
   NS_ADDREF(*aResult);
