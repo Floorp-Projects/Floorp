@@ -714,11 +714,29 @@ GetGlobalExport(JSContext* cx, const GlobalDescVector& globals, uint32_t globalI
         return true;
       }
       case ValType::F32: {
-        jsval.set(DoubleValue(double(val.f32().fp())));
+        float f = val.f32().fp();
+        if (JitOptions.wasmTestMode && IsNaN(f)) {
+            uint32_t bits = val.f32().bits();
+            RootedObject obj(cx, CreateCustomNaNObject(cx, (float*)&bits));
+            if (!obj)
+                return false;
+            jsval.set(ObjectValue(*obj));
+            return true;
+        }
+        jsval.set(DoubleValue(double(f)));
         return true;
       }
       case ValType::F64: {
-        jsval.set(DoubleValue(val.f64().fp()));
+        double d = val.f64().fp();
+        if (JitOptions.wasmTestMode && IsNaN(d)) {
+            uint64_t bits = val.f64().bits();
+            RootedObject obj(cx, CreateCustomNaNObject(cx, (double*)&bits));
+            if (!obj)
+                return false;
+            jsval.set(ObjectValue(*obj));
+            return true;
+        }
+        jsval.set(DoubleValue(d));
         return true;
       }
       default: {

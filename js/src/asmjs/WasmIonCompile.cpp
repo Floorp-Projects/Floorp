@@ -2027,10 +2027,10 @@ EmitGetGlobal(FunctionCompiler& f)
         result = f.constant(int64_t(value.i64()));
         break;
       case ValType::F32:
-        result = f.constant(Float32Value(value.f32().fp()), mirType);
+        result = f.constant(value.f32());
         break;
       case ValType::F64:
-        result = f.constant(DoubleValue(value.f64().fp()), mirType);
+        result = f.constant(value.f64());
         break;
       case ValType::I8x16:
         result = f.constant(SimdConstant::CreateX16(value.i8x16()), mirType);
