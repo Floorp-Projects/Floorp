@@ -446,13 +446,6 @@ js::ExclusiveContext::setCompartment(JSCompartment* comp,
     compartment_ = comp;
     zone_ = comp ? comp->zone() : nullptr;
     arenas_ = zone_ ? &zone_->arenas : nullptr;
-
-#ifdef JS_TRACE_LOGGING
-    if (isJSContext()) {
-        TraceLoggerThread* logger = TraceLoggerForMainThread(runtime_);
-        logger->updateZone(zone_);
-    }
-#endif
 }
 
 inline JSScript*

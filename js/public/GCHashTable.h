@@ -108,7 +108,7 @@ template <typename Key,
           typename MapSweepPolicy = JS::DefaultMapSweepPolicy<Key, Value>>
 class GCRekeyableHashMap : public JS::GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>
 {
-    using Base = JS::GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>;
+    using Base = JS::GCHashMap<Key, Value, HashPolicy, AllocPolicy>;
 
   public:
     explicit GCRekeyableHashMap(AllocPolicy a = AllocPolicy()) : Base(a)  {}
