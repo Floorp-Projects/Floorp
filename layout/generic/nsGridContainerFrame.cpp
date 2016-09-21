@@ -973,7 +973,7 @@ struct nsGridContainerFrame::TrackSizingFunctions
     const uint32_t numTracks = mMinSizingFunctions.Length();
     MOZ_ASSERT(numTracks >= 1, "expected at least the repeat() track");
     nscoord maxFill = aSize != NS_UNCONSTRAINEDSIZE ? aSize : aMaxSize;
-    if (maxFill == NS_UNCONSTRAINEDSIZE && aMinSize == NS_UNCONSTRAINEDSIZE) {
+    if (maxFill == NS_UNCONSTRAINEDSIZE && aMinSize == 0) {
       // "Otherwise, the specified track list repeats only once."
       return 1;
     }
@@ -5686,24 +5686,9 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
 
   nscoord consumedBSize = 0;
   if (!prevInFlow) {
-    // ComputedMinSize is zero rather than NS_UNCONSTRAINEDSIZE when indefinite
-    // (unfortunately) so we have to check the style data and parent reflow state
-    // to determine if it's indefinite.
-    LogicalSize computedMinSize(aReflowInput.ComputedMinSize());
-    const ReflowInput* cbState = aReflowInput.mCBReflowInput;
-    if (!stylePos->MinISize(wm).IsCoordPercentCalcUnit() ||
-        (stylePos->MinISize(wm).HasPercent() && cbState &&
-         cbState->ComputedSize(wm).ISize(wm) == NS_UNCONSTRAINEDSIZE)) {
-      computedMinSize.ISize(wm) = NS_UNCONSTRAINEDSIZE;
-    }
-    if (!stylePos->MinBSize(wm).IsCoordPercentCalcUnit() ||
-        (stylePos->MinBSize(wm).HasPercent() && cbState &&
-         cbState->ComputedSize(wm).BSize(wm) == NS_UNCONSTRAINEDSIZE)) {
-      computedMinSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
-    }
     Grid grid;
-    grid.PlaceGridItems(gridReflowInput, computedMinSize, computedSize,
-                        aReflowInput.ComputedMaxSize());
+    grid.PlaceGridItems(gridReflowInput, aReflowInput.ComputedMinSize(),
+                        computedSize, aReflowInput.ComputedMaxSize());
 
     gridReflowInput.CalculateTrackSizes(grid, computedSize,
                                         nsLayoutUtils::PREF_ISIZE);
@@ -5988,9 +5973,10 @@ nsGridContainerFrame::IntrinsicISize(nsRenderingContext* aRenderingContext,
   // http://dev.w3.org/csswg/css-grid/#intrinsic-sizes
   GridReflowInput state(this, *aRenderingContext);
   InitImplicitNamedAreas(state.mGridStyle); // XXX optimize
+  LogicalSize min(state.mWM, 0, 0);
   LogicalSize indefinite(state.mWM, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
   Grid grid;
-  grid.PlaceGridItems(state, indefinite, indefinite, indefinite);  // XXX optimize
+  grid.PlaceGridItems(state, min, indefinite, indefinite);  // XXX optimize
   if (grid.mGridColEnd == 0) {
     return 0;
   }
