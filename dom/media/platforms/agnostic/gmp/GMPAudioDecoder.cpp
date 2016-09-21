@@ -31,8 +31,10 @@ AudioCallbackAdapter::Decoded(const nsTArray<int16_t>& aPCM, uint64_t aTimeStamp
   MOZ_ASSERT(IsOnGMPThread());
 
   if (aRate == 0 || aChannels == 0) {
-    NS_WARNING("Invalid rate or num channels returned on GMP audio samples");
-    mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__));
+    mCallback->Error(MediaResult(
+      NS_ERROR_DOM_MEDIA_FATAL_ERR,
+      RESULT_DETAIL(
+        "Invalid rate or num channels returned on GMP audio samples")));
     return;
   }
 
@@ -40,7 +42,9 @@ AudioCallbackAdapter::Decoded(const nsTArray<int16_t>& aPCM, uint64_t aTimeStamp
   MOZ_ASSERT((aPCM.Length() % aChannels) == 0);
   AlignedAudioBuffer audioData(aPCM.Length());
   if (!audioData) {
-    mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
+    mCallback->Error(
+      MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                  RESULT_DETAIL("Unable to allocate audio buffer")));
     return;
   }
 
@@ -52,9 +56,8 @@ AudioCallbackAdapter::Decoded(const nsTArray<int16_t>& aPCM, uint64_t aTimeStamp
     mAudioFrameSum = 0;
     auto timestamp = UsecsToFrames(aTimeStamp, aRate);
     if (!timestamp.isValid()) {
-      NS_WARNING("Invalid timestamp");
       mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
-                                        __func__));
+                                   RESULT_DETAIL("Invalid timestamp")));
       return;
     }
     mAudioFrameOffset = timestamp.value();
@@ -63,18 +66,18 @@ AudioCallbackAdapter::Decoded(const nsTArray<int16_t>& aPCM, uint64_t aTimeStamp
 
   auto timestamp = FramesToUsecs(mAudioFrameOffset + mAudioFrameSum, aRate);
   if (!timestamp.isValid()) {
-    NS_WARNING("Invalid timestamp on audio samples");
-      mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
-                                        __func__));
+    mCallback->Error(
+      MediaResult(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
+                  RESULT_DETAIL("Invalid timestamp on audio samples")));
     return;
   }
   mAudioFrameSum += numFrames;
 
   auto duration = FramesToUsecs(numFrames, aRate);
   if (!duration.isValid()) {
-    NS_WARNING("Invalid duration on audio samples");
-      mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
-                                        __func__));
+    mCallback->Error(
+      MediaResult(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
+                  RESULT_DETAIL("Invalid duration on audio samples")));
     return;
   }
 
@@ -120,16 +123,17 @@ void
 AudioCallbackAdapter::Error(GMPErr aErr)
 {
   MOZ_ASSERT(IsOnGMPThread());
-  mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                                    nsPrintfCString("%s: %d", __func__, aErr)));
+  mCallback->Error(MediaResult(aErr == GMPDecodeErr
+                               ? NS_ERROR_DOM_MEDIA_DECODE_ERR
+                               : NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                               RESULT_DETAIL("GMPErr:%x", aErr)));
 }
 
 void
 AudioCallbackAdapter::Terminated()
 {
-  NS_WARNING("AAC GMP decoder terminated.");
   mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                                    __func__));
+                               RESULT_DETAIL("Audio GMP decoder terminated.")));
 }
 
 GMPAudioDecoderParams::GMPAudioDecoderParams(const CreateDecoderParams& aParams)
@@ -252,7 +256,8 @@ GMPAudioDecoder::Input(MediaRawData* aSample)
 
   RefPtr<MediaRawData> sample(aSample);
   if (!mGMP) {
-    mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__));
+    mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                                 RESULT_DETAIL("mGMP not initialized")));
     return;
   }
 
@@ -261,9 +266,7 @@ GMPAudioDecoder::Input(MediaRawData* aSample)
   gmp::GMPAudioSamplesImpl samples(sample, mConfig.mChannels, mConfig.mRate);
   nsresult rv = mGMP->Decode(samples);
   if (NS_FAILED(rv)) {
-    mCallback->Error(
-      MediaResult(rv, nsPrintfCString("%s: decode error (%d)",
-                                           __func__, rv)));
+    mCallback->Error(MediaResult(rv, __func__));
   }
 }
 

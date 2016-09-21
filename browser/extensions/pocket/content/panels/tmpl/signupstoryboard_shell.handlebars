@@ -10,7 +10,11 @@
 		<div class="pkt_ext_introstory_text">
 			<p class="pkt_ext_tagline">{{taglinestory_two}}</p>
 			{{#if showlearnmore}}
-			<p><a class="pkt_ext_learnmore" href="https://{{pockethost}}?s=ffi&t=learnmore&v={{variant}}" target="_blank">{{learnmore}}</a></p>
+				{{#if controlvariant}}
+					<p><a class="pkt_ext_learnmore" href="https://{{pockethost}}/firefox_learnmore?s=ffi&t=learnmore&tv=panel_control&v={{variant}}" target="_blank">{{learnmore}}</a></p>
+				{{else}}
+					<p><a class="pkt_ext_learnmore" href="https://{{pockethost}}/firefox_learnmore?s=ffi&t=learnmore&tv=panel_tryit&v={{variant}}" target="_blank">{{learnmore}}</a></p>
+				{{/if}}
 			{{else}}
 			<p><a class="pkt_ext_learnmore pkt_ext_learnmoreinactive" href="#">{{learnmore}}</a></p>
 			{{/if}}
@@ -19,12 +23,21 @@
 	</div>
 </div>
 <div class="pkt_ext_signupdetail">
-	<h4>{{signuptosave}}</h4>
 	{{#if fxasignedin}}
+	<h4>{{signuptosave}}</h4>
 	<p class="btn-container"><a href="https://{{pockethost}}/ff_signup?s=ffi&t=signupff&v={{variant}}" target="_blank" class="btn signup-btn-firefox"><span class="logo"></span><span class="text">{{signinfirefox}}</span></a></p>
-	{{else}}
-	<p class="btn-container"><a href="https://{{pockethost}}/ff_signup?s=ffi&t=signupff&v={{variant}}" target="_blank" class="btn signup-btn-firefox"><span class="logo"></span><span class="text">{{signupfirefox}}</span></a></p>
-	<p class="btn-container"><a href="https://{{pockethost}}/signup?force=email&src=extension&s=ffi&t=signupemail&v={{variant}}" target="_blank" class="btn btn-secondary signup-btn-email signup-btn-initstate">{{signupemail}}</a></p>
-	{{/if}}
 	<p class="alreadyhave">{{alreadyhaveacct}} <a href="https://{{pockethost}}/login?ep=3&src=extension&s=ffi&t=login&v={{variant}}" target="_blank">{{loginnow}}</a>.</p>
+	{{else}}
+		{{#if controlvariant}}
+			<h4>{{signuptosave}}</h4>
+			<p class="btn-container"><a href="https://{{pockethost}}/ff_signup?s=ffi&tv=panel_control&t=signupff&v={{variant}}" target="_blank" class="btn signup-btn-firefox"><span class="logo"></span><span class="text">{{signupfirefox}}</span></a></p>
+			<p class="btn-container"><a href="https://{{pockethost}}/signup?force=email&tv=panel_control&src=extension&s=ffi&t=signupemail&v={{variant}}" target="_blank" class="btn btn-secondary signup-btn-email signup-btn-initstate">{{signupemail}}</a></p>
+			<p class="alreadyhave">{{alreadyhaveacct}} <a href="https://{{pockethost}}/login?ep=3&tv=panel_control&src=extension&s=ffi&t=login&v={{variant}}" target="_blank">{{loginnow}}</a>.</p>
+		{{else}}
+			<p class="btn-container"><a href="https://{{pockethost}}/firefox_tryitnow?s=ffi&tv=panel_tryit&t=tryitnow" target="_blank" class="btn signup-btn-tryitnow"><span class="text">{{tryitnow}}</span></a></p>
+			<p class="alreadyhave tryitnowspace">{{alreadyhaveacct}} <a href="https://{{pockethost}}/login?ep=3&s=ffi&tv=panel_tryit&src=extension&t=login&v={{variant}}" target="_blank">{{loginnow}}</a>.</p>
+			<p class="pkt_ext_tos">{{{tos}}}</p>
+		{{/if}}
+	{{/if}}
+
 </div>

@@ -39,7 +39,8 @@ RUN chmod +x /builds/tooltool.py
 
 # Move installation to base centos6-build image once Bug 1272629 is fixed
 # Install the screen package here to use with xvfb.
-RUN yum install -y screen
+# Install bison to build binutils.
+RUN yum install -y bison screen
 
 # Set a default command useful for debugging
 CMD ["/bin/bash", "--login"]

@@ -1363,3 +1363,17 @@ AppendUCS4ToUTF16(const uint32_t aSource, nsAString& aDest)
     aDest.Append(L_SURROGATE(aSource));
   }
 }
+
+extern "C" {
+
+void Gecko_AppendUTF16toCString(nsACString* aThis, const nsAString* aOther)
+{
+  AppendUTF16toUTF8(*aOther, *aThis);
+}
+
+void Gecko_AppendUTF8toString(nsAString* aThis, const nsACString* aOther)
+{
+  AppendUTF8toUTF16(*aOther, *aThis);
+}
+
+}

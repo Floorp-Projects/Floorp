@@ -75,6 +75,16 @@ using std::min;
 using namespace mozilla;
 using namespace mozilla::dom;
 
+namespace mozilla {
+
+enum UnsetAction
+{
+  eUnsetInitial,
+  eUnsetInherit
+};
+
+} // namespace mozilla
+
 void*
 nsConditionalResetStyleData::GetConditionalStyleData(nsStyleStructID aSID,
                                nsStyleContext* aStyleContext) const
@@ -1089,6 +1099,41 @@ static bool SetColor(const nsCSSValue& aValue, const nscolor aParentColor,
     aConditions.SetUncacheable();
   }
   return result;
+}
+
+template<UnsetAction UnsetTo>
+static void
+SetComplexColor(const nsCSSValue& aValue,
+                const StyleComplexColor& aParentColor,
+                const StyleComplexColor& aInitialColor,
+                nsPresContext* aPresContext,
+                StyleComplexColor& aResult,
+                RuleNodeCacheConditions& aConditions)
+{
+  nsCSSUnit unit = aValue.GetUnit();
+  if (unit == eCSSUnit_Null) {
+    return;
+  }
+  if (unit == eCSSUnit_Initial ||
+      (UnsetTo == eUnsetInitial && unit == eCSSUnit_Unset)) {
+    aResult = aInitialColor;
+  } else if (unit == eCSSUnit_Inherit ||
+             (UnsetTo == eUnsetInherit && unit == eCSSUnit_Unset)) {
+    aConditions.SetUncacheable();
+    aResult = aParentColor;
+  } else if (unit == eCSSUnit_EnumColor &&
+             aValue.GetIntValue() == NS_COLOR_CURRENTCOLOR) {
+    aResult = StyleComplexColor::CurrentColor();
+  } else if (unit == eCSSUnit_ComplexColor) {
+    aResult = aValue.GetStyleComplexColorValue();
+  } else {
+    if (!SetColor(aValue, aParentColor.mColor, aPresContext,
+                  nullptr, aResult.mColor, aConditions)) {
+      MOZ_ASSERT_UNREACHABLE("Unknown color value");
+      return;
+    }
+    aResult.mForegroundRatio = 0;
+  }
 }
 
 static void SetGradientCoord(const nsCSSValue& aValue, nsPresContext* aPresContext,
@@ -4473,6 +4518,13 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
 {
   COMPUTE_START_INHERITED(Text, text, parentText)
 
+  auto setComplexColor = [&](const nsCSSValue* aValue,
+                             StyleComplexColor nsStyleText::* aField) {
+    SetComplexColor<eUnsetInherit>(*aValue, parentText->*aField,
+                                   StyleComplexColor::CurrentColor(),
+                                   mPresContext, text->*aField, conditions);
+  };
+
   // tab-size: integer, inherit
   SetValue(*aRuleData->ValueForTabSize(),
            text->mTabSize, conditions,
@@ -4716,26 +4768,8 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
            NS_STYLE_TEXT_COMBINE_UPRIGHT_NONE);
 
   // text-emphasis-color: color, string, inherit, initial
-  const nsCSSValue*
-    textEmphasisColorValue = aRuleData->ValueForTextEmphasisColor();
-  if (textEmphasisColorValue->GetUnit() == eCSSUnit_Null) {
-    // We don't want to change anything in this case.
-  } else if (textEmphasisColorValue->GetUnit() == eCSSUnit_Inherit ||
-             textEmphasisColorValue->GetUnit() == eCSSUnit_Unset) {
-    conditions.SetUncacheable();
-    text->mTextEmphasisColorForeground =
-      parentText->mTextEmphasisColorForeground;
-    text->mTextEmphasisColor = parentText->mTextEmphasisColor;
-  } else if ((textEmphasisColorValue->GetUnit() == eCSSUnit_EnumColor &&
-              textEmphasisColorValue->GetIntValue() == NS_COLOR_CURRENTCOLOR) ||
-             textEmphasisColorValue->GetUnit() == eCSSUnit_Initial) {
-    text->mTextEmphasisColorForeground = true;
-    text->mTextEmphasisColor = mPresContext->DefaultColor();
-  } else {
-    text->mTextEmphasisColorForeground = false;
-    SetColor(*textEmphasisColorValue, 0, mPresContext, aContext,
-             text->mTextEmphasisColor, conditions);
-  }
+  setComplexColor(aRuleData->ValueForTextEmphasisColor(),
+                  &nsStyleText::mTextEmphasisColor);
 
   // text-emphasis-position: enum, inherit, initial
   SetValue(*aRuleData->ValueForTextEmphasisPosition(),
@@ -4809,47 +4843,12 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
            NS_STYLE_TEXT_RENDERING_AUTO);
 
   // -webkit-text-fill-color: color, string, inherit, initial
-  const nsCSSValue*
-    webkitTextFillColorValue = aRuleData->ValueForWebkitTextFillColor();
-  if (webkitTextFillColorValue->GetUnit() == eCSSUnit_Null) {
-    // We don't want to change anything in this case.
-  } else if (webkitTextFillColorValue->GetUnit() == eCSSUnit_Inherit ||
-             webkitTextFillColorValue->GetUnit() == eCSSUnit_Unset) {
-    conditions.SetUncacheable();
-    text->mWebkitTextFillColorForeground = parentText->mWebkitTextFillColorForeground;
-    text->mWebkitTextFillColor = parentText->mWebkitTextFillColor;
-  } else if ((webkitTextFillColorValue->GetUnit() == eCSSUnit_EnumColor &&
-              webkitTextFillColorValue->GetIntValue() == NS_COLOR_CURRENTCOLOR) ||
-             webkitTextFillColorValue->GetUnit() == eCSSUnit_Initial) {
-    text->mWebkitTextFillColorForeground = true;
-    text->mWebkitTextFillColor = mPresContext->DefaultColor();
-  } else {
-    text->mWebkitTextFillColorForeground = false;
-    SetColor(*webkitTextFillColorValue, 0, mPresContext, aContext,
-             text->mWebkitTextFillColor, conditions);
-  }
+  setComplexColor(aRuleData->ValueForWebkitTextFillColor(),
+                  &nsStyleText::mWebkitTextFillColor);
 
   // -webkit-text-stroke-color: color, string, inherit, initial
-  const nsCSSValue* webkitTextStrokeColorValue =
-    aRuleData->ValueForWebkitTextStrokeColor();
-  if (webkitTextStrokeColorValue->GetUnit() == eCSSUnit_Null) {
-    // We don't want to change anything in this case.
-  } else if (webkitTextStrokeColorValue->GetUnit() == eCSSUnit_Inherit ||
-             webkitTextStrokeColorValue->GetUnit() == eCSSUnit_Unset) {
-    conditions.SetUncacheable();
-    text->mWebkitTextStrokeColorForeground =
-      parentText->mWebkitTextStrokeColorForeground;
-    text->mWebkitTextStrokeColor = parentText->mWebkitTextStrokeColor;
-  } else if ((webkitTextStrokeColorValue->GetUnit() == eCSSUnit_EnumColor &&
-              webkitTextStrokeColorValue->GetIntValue() == NS_COLOR_CURRENTCOLOR) ||
-             webkitTextStrokeColorValue->GetUnit() == eCSSUnit_Initial) {
-    text->mWebkitTextStrokeColorForeground = true;
-    text->mWebkitTextStrokeColor = mPresContext->DefaultColor();
-  } else {
-    text->mWebkitTextStrokeColorForeground = false;
-    SetColor(*webkitTextStrokeColorValue, 0, mPresContext, aContext,
-             text->mWebkitTextStrokeColor, conditions);
-  }
+  setComplexColor(aRuleData->ValueForWebkitTextStrokeColor(),
+                  &nsStyleText::mWebkitTextStrokeColor);
 
   // -webkit-text-stroke-width: length, inherit, initial, enum
   const nsCSSValue*

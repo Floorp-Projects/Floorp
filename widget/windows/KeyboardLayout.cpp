@@ -849,6 +849,7 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
   : mWidget(aWidget)
   , mDispatcher(aWidget->GetTextEventDispatcher())
   , mMsg(aMessage)
+  , mFocusedWndBeforeDispatch(::GetFocus())
   , mDOMKeyCode(0)
   , mKeyNameIndex(KEY_NAME_INDEX_Unidentified)
   , mCodeNameIndex(CODE_NAME_INDEX_UNKNOWN)
@@ -860,7 +861,6 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
   , mScanCode(0)
   , mIsExtended(false)
   , mIsDeadKey(false)
-  , mIsFollowedByNonControlCharMessage(false)
   , mFakeCharMsgs(aFakeCharMsgs && aFakeCharMsgs->Length() ?
                     aFakeCharMsgs : nullptr)
 {
@@ -886,10 +886,23 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
   mIsExtended = WinUtils::IsExtendedScanCode(mMsg.lParam);
   switch (mMsg.message) {
     case WM_KEYDOWN:
-    case WM_SYSKEYDOWN:
-    case MOZ_WM_KEYDOWN:
+    case WM_SYSKEYDOWN: {
+      // If next message is WM_*CHAR message, let's consume it now.
+      MSG charMsg;
+      while (GetFollowingCharMessage(charMsg)) {
+        // Although, got message shouldn't be WM_NULL in desktop apps,
+        // we should keep checking this.  FYI: This was added for Metrofox.
+        if (charMsg.message == WM_NULL) {
+          continue;
+        }
+        NS_WARN_IF(charMsg.hwnd != mMsg.hwnd);
+        mFollowingCharMsgs.AppendElement(charMsg);
+      }
+      MOZ_FALLTHROUGH;
+    }
     case WM_KEYUP:
     case WM_SYSKEYUP:
+    case MOZ_WM_KEYDOWN:
     case MOZ_WM_KEYUP: {
       // First, resolve the IME converted virtual keycode to its original
       // keycode.
@@ -966,18 +979,21 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
         // Therefore, we never get VK_RCONTRL and VK_RMENU for the result of
         // MapVirtualKeyEx() on WinXP or WinServer2003.
         //
-        // If VK_CONTROL or VK_MENU key message is caused by an extended key,
-        // we should assume that the right key of them is pressed.
+        // If VK_SHIFT, VK_CONTROL or VK_MENU key message is caused by well
+        // known scan code, we should decide it as Right key.  Otherwise,
+        // decide it as Left key.
         switch (mOriginalVirtualKeyCode) {
           case VK_CONTROL:
-            mVirtualKeyCode = VK_RCONTROL;
+            mVirtualKeyCode =
+              mIsExtended && mScanCode == 0x1D ? VK_RCONTROL : VK_LCONTROL;
             break;
           case VK_MENU:
-            mVirtualKeyCode = VK_RMENU;
+            mVirtualKeyCode =
+              mIsExtended && mScanCode == 0x38 ? VK_RMENU : VK_LMENU;
             break;
           case VK_SHIFT:
-            // Neither left shift nor right shift is not an extended key,
-            // let's use VK_LSHIFT for invalid scan code.
+            // Neither left shift nor right shift is an extended key,
+            // let's use VK_LSHIFT for unknown mapping.
             mVirtualKeyCode = VK_LSHIFT;
             break;
           default:
@@ -1009,8 +1025,8 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
           break;
         case VK_SHIFT:
           if (mVirtualKeyCode != VK_LSHIFT && mVirtualKeyCode != VK_RSHIFT) {
-            // Neither left shift nor right shift is not an extended key,
-            // let's use VK_LSHIFT for invalid scan code.
+            // Neither left shift nor right shift is an extended key,
+            // let's use VK_LSHIFT for unknown mapping.
             mVirtualKeyCode = VK_LSHIFT;
           }
           break;
@@ -1047,9 +1063,9 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
     keyboardLayout->ConvertNativeKeyCodeToDOMKeyCode(mOriginalVirtualKeyCode);
   // Be aware, keyboard utilities can change non-printable keys to printable
   // keys.  In such case, we should make the key value as a printable key.
-  mIsFollowedByNonControlCharMessage =
-    IsKeyDownMessage() && IsFollowedByNonControlCharMessage();
-  mKeyNameIndex = mIsFollowedByNonControlCharMessage ?
+  // FYI: IsFollowedByNonControlCharMessage() returns true only when it's
+  //      handling a keydown message.
+  mKeyNameIndex = IsFollowedByNonControlCharMessage() ?
     KEY_NAME_INDEX_USE_STRING :
     keyboardLayout->ConvertNativeKeyCodeToKeyNameIndex(mOriginalVirtualKeyCode);
   mCodeNameIndex =
@@ -1074,8 +1090,8 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
       ComputeInputtingStringWithKeyboardLayout();
     } else {
       // This message might be sent by SendInput() API to input a Unicode
-      // character, in such case, we can only know what char will be inputted
-      // with following WM_CHAR message.
+      // character, in such case, we can only know what chars will be inputted
+      // with following WM_CHAR messages.
       // TODO: We cannot initialize mCommittedCharsAndModifiers for VK_PACKET
       //       if the message is WM_KEYUP because we don't have preceding
       //       WM_CHAR message.  Therefore, we should dispatch eKeyUp event at
@@ -1086,15 +1102,18 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
       //       keypress event's default is prevented.  I guess, we should store
       //       key message information globally and we should wait following
       //       WM_KEYDOWN if following WM_CHAR is a part of a Unicode character.
-      MSG followingCharMsg;
-      if (GetFollowingCharMessage(followingCharMsg, false) &&
-          !IsControlChar(static_cast<char16_t>(followingCharMsg.wParam))) {
-        mCommittedCharsAndModifiers.Clear();
-        mCommittedCharsAndModifiers.Append(
-          static_cast<char16_t>(followingCharMsg.wParam),
-          mModKeyState.GetModifiers());
+      mCommittedCharsAndModifiers.Clear();
+      for (size_t i = 0; i < mFollowingCharMsgs.Length(); ++i) {
+        char16_t ch = static_cast<char16_t>(mFollowingCharMsgs[i].wParam);
+        // Skip control characters.
+        if (IsControlChar(ch)) {
+          continue;
+        }
+        mCommittedCharsAndModifiers.Append(ch, mModKeyState.GetModifiers());
       }
     }
+    // Remove odd char messages if there are.
+    RemoveFollowingOddCharMessages();
   }
 }
 
@@ -1214,36 +1233,20 @@ NativeKey::IsControlChar(char16_t aChar)
 bool
 NativeKey::IsFollowedByDeadCharMessage() const
 {
-  MSG nextMsg;
-  if (mFakeCharMsgs) {
-    nextMsg = mFakeCharMsgs->ElementAt(0).GetCharMsg(mMsg.hwnd);
-  } else if (IsKeyMessageOnPlugin()) {
+  if (mFollowingCharMsgs.IsEmpty()) {
     return false;
-  } else {
-    if (!WinUtils::PeekMessage(&nextMsg, mMsg.hwnd, WM_KEYFIRST, WM_KEYLAST,
-                               PM_NOREMOVE | PM_NOYIELD)) {
-      return false;
-    }
   }
-  return IsDeadCharMessage(nextMsg);
+  return IsDeadCharMessage(mFollowingCharMsgs[0]);
 }
 
 bool
 NativeKey::IsFollowedByNonControlCharMessage() const
 {
-  MSG nextMsg;
-  if (mFakeCharMsgs) {
-    nextMsg = mFakeCharMsgs->ElementAt(0).GetCharMsg(mMsg.hwnd);
-  } else if (IsKeyMessageOnPlugin()) {
+  if (mFollowingCharMsgs.IsEmpty()) {
     return false;
-  } else {
-    if (!WinUtils::PeekMessage(&nextMsg, mMsg.hwnd, WM_KEYFIRST, WM_KEYLAST,
-                               PM_NOREMOVE | PM_NOYIELD)) {
-      return false;
-    }
   }
-  return nextMsg.message == WM_CHAR &&
-         !IsControlChar(static_cast<char16_t>(nextMsg.wParam));
+  return mFollowingCharMsgs[0].message == WM_CHAR &&
+         !IsControlChar(static_cast<char16_t>(mFollowingCharMsgs[0].wParam));
 }
 
 bool
@@ -1280,15 +1283,51 @@ NativeKey::IsIMEDoingKakuteiUndo() const
          compositionMsg.time <= charMsg.time;
 }
 
+void
+NativeKey::RemoveFollowingOddCharMessages()
+{
+  MOZ_ASSERT(IsKeyDownMessage());
+
+  // If the keydown message is synthesized for automated tests, there is
+  // nothing to do here.
+  if (mFakeCharMsgs) {
+    return;
+  }
+
+  // If there are some following char messages before another key message,
+  // there is nothing to do here.
+  if (!mFollowingCharMsgs.IsEmpty()) {
+    return;
+  }
+
+  // If the handling key isn't Backspace, there is nothing to do here.
+  if (mOriginalVirtualKeyCode != VK_BACK) {
+    return;
+  }
+
+  // If we don't see the odd message pattern, there is nothing to do here.
+  if (!IsIMEDoingKakuteiUndo()) {
+    return;
+  }
+
+  // Otherwise, we need to remove odd WM_CHAR messages for ATOK or WXG (both
+  // of them are Japanese IME).
+  MSG msg;
+  while (WinUtils::PeekMessage(&msg, mMsg.hwnd, WM_CHAR, WM_CHAR,
+                               PM_REMOVE | PM_NOYIELD)) {
+    if (msg.message != WM_CHAR) {
+      MOZ_RELEASE_ASSERT(msg.message == WM_NULL,
+                         "Unexpected message was removed");
+      continue;
+    }
+    mRemovedOddCharMsgs.AppendElement(msg);
+  }
+}
+
 UINT
 NativeKey::GetScanCodeWithExtendedFlag() const
 {
-  // MapVirtualKeyEx() has been improved for supporting extended keys since
-  // Vista.  When we call it for mapping a scancode of an extended key and
-  // a virtual keycode, we need to add 0xE000 to the scancode.
-  // On Win XP and Win Server 2003, this doesn't support. On them, we have
-  // no way to get virtual keycodes from scancode of extended keys.
-  if (!mIsExtended || !IsVistaOrLater()) {
+  if (!mIsExtended) {
     return mScanCode;
   }
   return (0xE000 | mScanCode);
@@ -1382,6 +1421,12 @@ NativeKey::ComputeVirtualKeyCodeFromScanCode() const
 uint8_t
 NativeKey::ComputeVirtualKeyCodeFromScanCodeEx() const
 {
+  // MapVirtualKeyEx() has been improved for supporting extended keys since
+  // Vista.  When we call it for mapping a scancode of an extended key and
+  // a virtual keycode, we need to add 0xE000 to the scancode.
+  // On the other hand, neither WinXP nor WinServer2003 doesn't support 0xE000.
+  // Therefore, we have no way to get virtual keycode from scan code of
+  // extended keys.
   if (NS_WARN_IF(!CanComputeVirtualKeyCodeFromScanCode())) {
     return 0;
   }
@@ -1747,7 +1792,7 @@ NativeKey::HandleKeyDownMessage(bool* aEventDispatched) const
       return defaultPrevented;
     }
 
-    if (mWidget->Destroyed()) {
+    if (mWidget->Destroyed() || IsFocusedWindowChanged()) {
       return true;
     }
 
@@ -1802,27 +1847,28 @@ NativeKey::HandleKeyDownMessage(bool* aEventDispatched) const
   }
 
   if (defaultPrevented) {
-    DispatchPluginEventsAndDiscardsCharMessages();
+    MaybeDispatchPluginEventsForRemovedCharMessages();
     return true;
   }
 
   // If we won't be getting a WM_CHAR, WM_SYSCHAR or WM_DEADCHAR, synthesize a
   // keypress for almost all keys
   if (NeedsToHandleWithoutFollowingCharMessages()) {
-    return (DispatchPluginEventsAndDiscardsCharMessages() ||
+    return (MaybeDispatchPluginEventsForRemovedCharMessages() ||
             DispatchKeyPressEventsWithoutCharMessage());
   }
 
-  MSG followingCharMsg;
-  if (GetFollowingCharMessage(followingCharMsg)) {
-    // Even if there was char message, it might be redirected by different
-    // window (perhaps, focus move?).  Then, we shouldn't continue to handle
-    // the message since no input should occur on the window.
-    if (followingCharMsg.message == WM_NULL ||
-        followingCharMsg.hwnd != mMsg.hwnd) {
-      return false;
+  if (!mFollowingCharMsgs.IsEmpty()) {
+    bool consumed = false;
+    for (size_t i = 0; i < mFollowingCharMsgs.Length(); ++i) {
+      consumed =
+        DispatchKeyPressEventForFollowingCharMessage(mFollowingCharMsgs[i]) ||
+        consumed;
+      if (mWidget->Destroyed() || IsFocusedWindowChanged()) {
+        return true;
+      }
     }
-    return DispatchKeyPressEventForFollowingCharMessage(followingCharMsg);
+    return consumed;
   }
 
   // If WM_KEYDOWN of VK_PACKET isn't followed by WM_CHAR, we don't need to
@@ -2038,7 +2084,7 @@ NativeKey::NeedsToHandleWithoutFollowingCharMessages() const
   // If keydown message is followed by WM_CHAR whose wParam isn't a control
   // character, we should dispatch keypress event with the char message
   // even with any modifier state.
-  if (mIsFollowedByNonControlCharMessage) {
+  if (IsFollowedByNonControlCharMessage()) {
     return false;
   }
 
@@ -2130,7 +2176,7 @@ NativeKey::MayBeSameCharMessage(const MSG& aCharMsg1,
 }
 
 bool
-NativeKey::GetFollowingCharMessage(MSG& aCharMsg, bool aRemove) const
+NativeKey::GetFollowingCharMessage(MSG& aCharMsg) const
 {
   MOZ_ASSERT(IsKeyDownMessage());
   MOZ_ASSERT(!IsKeyMessageOnPlugin());
@@ -2144,7 +2190,7 @@ NativeKey::GetFollowingCharMessage(MSG& aCharMsg, bool aRemove) const
         continue;
       }
       MSG charMsg = fakeCharMsg.GetCharMsg(mMsg.hwnd);
-      fakeCharMsg.mConsumed = aRemove;
+      fakeCharMsg.mConsumed = true;
       if (!IsCharMessage(charMsg)) {
         return false;
       }
@@ -2164,11 +2210,6 @@ NativeKey::GetFollowingCharMessage(MSG& aCharMsg, bool aRemove) const
                              PM_NOREMOVE | PM_NOYIELD) ||
       !IsCharMessage(nextKeyMsg)) {
     return false;
-  }
-
-  if (!aRemove) {
-    aCharMsg = nextKeyMsg;
-    return true;
   }
 
   // On Metrofox, PeekMessage() sometimes returns WM_NULL even if we specify
@@ -2346,51 +2387,33 @@ NativeKey::GetFollowingCharMessage(MSG& aCharMsg, bool aRemove) const
 }
 
 bool
-NativeKey::DispatchPluginEventsAndDiscardsCharMessages() const
+NativeKey::MaybeDispatchPluginEventsForRemovedCharMessages() const
 {
   MOZ_ASSERT(IsKeyDownMessage());
   MOZ_ASSERT(!IsKeyMessageOnPlugin());
 
-  // Remove a possible WM_CHAR or WM_SYSCHAR messages from the message queue.
-  // They can be more than one because of:
-  //  * Dead-keys not pairing with base character
-  //  * Some keyboard layouts may map up to 4 characters to the single key
-  bool anyCharMessagesRemoved = false;
-  MSG msg;
-  while (GetFollowingCharMessage(msg)) {
-    if (msg.message == WM_NULL) {
-      continue;
-    }
-    anyCharMessagesRemoved = true;
-    // If the window handle is changed, focused window must be changed.
-    // So, plugin shouldn't handle it anymore.
-    if (msg.hwnd != mMsg.hwnd) {
-      break;
-    }
+  for (size_t i = 0;
+       i < mFollowingCharMsgs.Length() && mWidget->ShouldDispatchPluginEvent();
+       ++i) {
     MOZ_RELEASE_ASSERT(!mWidget->Destroyed(),
       "NativeKey tries to dispatch a plugin event on destroyed widget");
-    mWidget->DispatchPluginEvent(msg);
-    if (mWidget->Destroyed()) {
+    mWidget->DispatchPluginEvent(mFollowingCharMsgs[i]);
+    if (mWidget->Destroyed() || IsFocusedWindowChanged()) {
       return true;
     }
   }
 
-  if (!mFakeCharMsgs && !anyCharMessagesRemoved &&
-      mDOMKeyCode == NS_VK_BACK && IsIMEDoingKakuteiUndo()) {
-    // This is for a hack for ATOK and WXG.  So, PeekMessage() must scceed!
-    while (WinUtils::PeekMessage(&msg, mMsg.hwnd, WM_CHAR, WM_CHAR,
-                                 PM_REMOVE | PM_NOYIELD)) {
-      if (msg.message != WM_CHAR) {
-        MOZ_RELEASE_ASSERT(msg.message == WM_NULL,
-                           "Unexpected message was removed");
-        continue;
-      }
-      MOZ_RELEASE_ASSERT(!mWidget->Destroyed(),
-        "NativeKey tries to dispatch a plugin event on destroyed widget");
-      mWidget->DispatchPluginEvent(msg);
-      return mWidget->Destroyed();
+  // Dispatch odd char messages which are caused by ATOK or WXG (both of them
+  // are Japanese IME) and removed by RemoveFollowingOddCharMessages().
+  for (size_t i = 0;
+       i < mRemovedOddCharMsgs.Length() && mWidget->ShouldDispatchPluginEvent();
+       ++i) {
+    MOZ_RELEASE_ASSERT(!mWidget->Destroyed(),
+      "NativeKey tries to dispatch a plugin event on destroyed widget");
+    mWidget->DispatchPluginEvent(mRemovedOddCharMsgs[i]);
+    if (mWidget->Destroyed() || IsFocusedWindowChanged()) {
+      return true;
     }
-    MOZ_CRASH("NativeKey failed to get WM_CHAR for ATOK or WXG");
   }
 
   return false;
@@ -3728,20 +3751,20 @@ KeyboardLayout::SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
   OverrideLayout(loadedLayout);
 
   uint8_t argumentKeySpecific = 0;
-  switch (aNativeKeyCode) {
+  switch (aNativeKeyCode & 0xFF) {
     case VK_SHIFT:
       aModifierFlags &= ~(nsIWidget::SHIFT_L | nsIWidget::SHIFT_R);
       argumentKeySpecific = VK_LSHIFT;
       break;
     case VK_LSHIFT:
       aModifierFlags &= ~nsIWidget::SHIFT_L;
-      argumentKeySpecific = aNativeKeyCode;
-      aNativeKeyCode = VK_SHIFT;
+      argumentKeySpecific = aNativeKeyCode & 0xFF;
+      aNativeKeyCode = (aNativeKeyCode & 0xFFFF0000) | VK_SHIFT;
       break;
     case VK_RSHIFT:
       aModifierFlags &= ~nsIWidget::SHIFT_R;
-      argumentKeySpecific = aNativeKeyCode;
-      aNativeKeyCode = VK_SHIFT;
+      argumentKeySpecific = aNativeKeyCode & 0xFF;
+      aNativeKeyCode = (aNativeKeyCode & 0xFFFF0000) | VK_SHIFT;
       break;
     case VK_CONTROL:
       aModifierFlags &= ~(nsIWidget::CTRL_L | nsIWidget::CTRL_R);
@@ -3749,13 +3772,13 @@ KeyboardLayout::SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
       break;
     case VK_LCONTROL:
       aModifierFlags &= ~nsIWidget::CTRL_L;
-      argumentKeySpecific = aNativeKeyCode;
-      aNativeKeyCode = VK_CONTROL;
+      argumentKeySpecific = aNativeKeyCode & 0xFF;
+      aNativeKeyCode = (aNativeKeyCode & 0xFFFF0000) | VK_CONTROL;
       break;
     case VK_RCONTROL:
       aModifierFlags &= ~nsIWidget::CTRL_R;
-      argumentKeySpecific = aNativeKeyCode;
-      aNativeKeyCode = VK_CONTROL;
+      argumentKeySpecific = aNativeKeyCode & 0xFF;
+      aNativeKeyCode = (aNativeKeyCode & 0xFFFF0000) | VK_CONTROL;
       break;
     case VK_MENU:
       aModifierFlags &= ~(nsIWidget::ALT_L | nsIWidget::ALT_R);
@@ -3763,13 +3786,13 @@ KeyboardLayout::SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
       break;
     case VK_LMENU:
       aModifierFlags &= ~nsIWidget::ALT_L;
-      argumentKeySpecific = aNativeKeyCode;
-      aNativeKeyCode = VK_MENU;
+      argumentKeySpecific = aNativeKeyCode & 0xFF;
+      aNativeKeyCode = (aNativeKeyCode & 0xFFFF0000) | VK_MENU;
       break;
     case VK_RMENU:
       aModifierFlags &= ~nsIWidget::ALT_R;
-      argumentKeySpecific = aNativeKeyCode;
-      aNativeKeyCode = VK_MENU;
+      argumentKeySpecific = aNativeKeyCode & 0xFF;
+      aNativeKeyCode = (aNativeKeyCode & 0xFFFF0000) | VK_MENU;
       break;
     case VK_CAPITAL:
       aModifierFlags &= ~nsIWidget::CAPS_LOCK;
@@ -3783,8 +3806,6 @@ KeyboardLayout::SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
 
   AutoTArray<KeyPair,10> keySequence;
   WinUtils::SetupKeyModifiersSequence(&keySequence, aModifierFlags);
-  NS_ASSERTION(aNativeKeyCode >= 0 && aNativeKeyCode < 256,
-               "Native VK key code out of range");
   keySequence.AppendElement(KeyPair(aNativeKeyCode, argumentKeySpecific));
 
   // Simulate the pressing of each modifier key and then the real key
@@ -3793,18 +3814,22 @@ KeyboardLayout::SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
   for (uint32_t i = 0; i < keySequence.Length(); ++i) {
     uint8_t key = keySequence[i].mGeneral;
     uint8_t keySpecific = keySequence[i].mSpecific;
+    uint16_t scanCode = keySequence[i].mScanCode;
     kbdState[key] = 0x81; // key is down and toggled on if appropriate
     if (keySpecific) {
       kbdState[keySpecific] = 0x81;
     }
     ::SetKeyboardState(kbdState);
     ModifierKeyState modKeyState;
-    UINT scanCode =
-      ComputeScanCodeForVirtualKeyCode(keySpecific ? keySpecific : key);
+    // If scan code isn't specified explicitly, let's compute it with current
+    // keyboard layout.
+    if (!scanCode) {
+      scanCode =
+        ComputeScanCodeForVirtualKeyCode(keySpecific ? keySpecific : key);
+    }
     LPARAM lParam = static_cast<LPARAM>(scanCode << 16);
-    // Add extended key flag to the lParam for right control key and right alt
-    // key.
-    if (keySpecific == VK_RCONTROL || keySpecific == VK_RMENU) {
+    // If the scan code is for an extended key, set extended key flag.
+    if ((scanCode & 0xFF00) == 0xE000) {
       lParam |= 0x1000000;
     }
     bool makeSysKeyMsg = IsSysKey(key, modKeyState);
@@ -3856,18 +3881,22 @@ KeyboardLayout::SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
   for (uint32_t i = keySequence.Length(); i > 0; --i) {
     uint8_t key = keySequence[i - 1].mGeneral;
     uint8_t keySpecific = keySequence[i - 1].mSpecific;
+    uint16_t scanCode = keySequence[i - 1].mScanCode;
     kbdState[key] = 0; // key is up and toggled off if appropriate
     if (keySpecific) {
       kbdState[keySpecific] = 0;
     }
     ::SetKeyboardState(kbdState);
     ModifierKeyState modKeyState;
-    UINT scanCode =
-      ComputeScanCodeForVirtualKeyCode(keySpecific ? keySpecific : key);
+    // If scan code isn't specified explicitly, let's compute it with current
+    // keyboard layout.
+    if (!scanCode) {
+      scanCode =
+        ComputeScanCodeForVirtualKeyCode(keySpecific ? keySpecific : key);
+    }
     LPARAM lParam = static_cast<LPARAM>(scanCode << 16);
-    // Add extended key flag to the lParam for right control key and right alt
-    // key.
-    if (keySpecific == VK_RCONTROL || keySpecific == VK_RMENU) {
+    // If the scan code is for an extended key, set extended key flag.
+    if ((scanCode & 0xFF00) == 0xE000) {
       lParam |= 0x1000000;
     }
     // Don't use WM_SYSKEYUP for Alt keyup.

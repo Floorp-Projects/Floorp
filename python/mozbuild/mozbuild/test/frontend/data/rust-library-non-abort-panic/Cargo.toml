@@ -1,0 +1,14 @@
+[package]
+name = "random-crate"
+version = "0.1.0"
+authors = [
+  "Nobody <nobody@mozilla.org>",
+]
+
+[lib]
+crate-type = ["rlib"]
+
+[profile.dev]
+panic = "unwind"
+
+[profile.release]

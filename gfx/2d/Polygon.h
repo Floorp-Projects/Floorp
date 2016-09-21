@@ -7,6 +7,7 @@
 #ifndef MOZILLA_GFX_POLYGON_H
 #define MOZILLA_GFX_POLYGON_H
 
+#include "Matrix.h"
 #include "mozilla/InitializerList.h"
 #include "nsTArray.h"
 #include "Point.h"
@@ -14,21 +15,30 @@
 namespace mozilla {
 namespace gfx {
 
-
 // BasePolygon3D stores the points of a convex planar polygon.
 template<class Units>
 class BasePolygon3D {
 public:
-  explicit BasePolygon3D(const std::initializer_list<Point3DTyped<Units>>& aPoints)
-    : mPoints(aPoints)
+  BasePolygon3D() {}
+
+  explicit BasePolygon3D(const std::initializer_list<Point3DTyped<Units>>& aPoints,
+                         Point3DTyped<Units> aNormal =
+                           Point3DTyped<Units>(0.0f, 0.0f, 1.0f))
+    : mNormal(aNormal), mPoints(aPoints)
   {
-    CalculateNormal();
+#ifdef DEBUG
+    EnsurePlanarPolygon();
+#endif
   }
 
-  explicit BasePolygon3D(nsTArray<Point3DTyped<Units>> && aPoints)
-    : mPoints(aPoints)
+  explicit BasePolygon3D(nsTArray<Point3DTyped<Units>>&& aPoints,
+                         Point3DTyped<Units> aNormal =
+                           Point3DTyped<Units>(0.0f, 0.0f, 1.0f))
+    : mNormal(aNormal), mPoints(aPoints)
   {
-    CalculateNormal();
+#ifdef DEBUG
+    EnsurePlanarPolygon();
+#endif
   }
 
   const Point3DTyped<Units>& GetNormal() const
@@ -36,7 +46,7 @@ public:
     return mNormal;
   }
 
-  const nsTArray<Point3D>& GetPoints() const
+  const nsTArray<Point3DTyped<Units>>& GetPoints() const
   {
     return mPoints;
   }
@@ -47,40 +57,65 @@ public:
     return mPoints[aIndex];
   }
 
+  void TransformToLayerSpace(const Matrix4x4Typed<Units, Units>& aInverseTransform)
+  {
+    TransformPoints(aInverseTransform);
+    mNormal = Point3DTyped<Units>(0.0f, 0.0f, 1.0f);
+  }
+
+  void TransformToScreenSpace(const Matrix4x4Typed<Units, Units>& aTransform)
+  {
+    TransformPoints(aTransform);
+
+    // Normal vectors should be transformed using inverse transpose.
+    mNormal = aTransform.Inverse().Transpose().TransformPoint(mNormal);
+  }
+
 private:
-  // Calculates the polygon surface normal.
-  // The resulting normal vector will point towards the viewer when the polygon
-  // has a counter-clockwise winding order from the perspective of the viewer.
-  void CalculateNormal()
+
+#ifdef DEBUG
+  void EnsurePlanarPolygon() const
   {
     MOZ_ASSERT(mPoints.Length() >= 3);
 
     // This normal calculation method works only for planar polygons.
-    mNormal = (mPoints[1] - mPoints[0]).CrossProduct(mPoints[2] - mPoints[0]);
+    // The resulting normal vector will point towards the viewer when the polygon
+    // has a counter-clockwise winding order from the perspective of the viewer.
+    Point3DTyped<Units> normal;
 
-    const float epsilon = 0.001f;
-    if (mNormal.Length() < epsilon) {
-      // The first three points were too close.
-      // Use more points for better accuracy.
-      for (size_t i = 2; i < mPoints.Length() - 1; ++i) {
-        mNormal += (mPoints[i] - mPoints[0]).CrossProduct(mPoints[i + 1] - mPoints[0]);
-      }
+    for (size_t i = 1; i < mPoints.Length() - 1; ++i) {
+      normal +=
+        (mPoints[i] - mPoints[0]).CrossProduct(mPoints[i + 1] - mPoints[0]);
     }
 
-    mNormal.Normalize();
+    // Ensure that at least one component is greater than zero.
+    // This avoids division by zero when normalizing the vector.
+    bool hasNonZeroComponent = std::abs(normal.x) > 0.0f ||
+                               std::abs(normal.y) > 0.0f ||
+                               std::abs(normal.z) > 0.0f;
+    MOZ_ASSERT(hasNonZeroComponent);
 
-    #ifdef DEBUG
+    normal.Normalize();
+
     // Ensure that the polygon is planar.
     // http://mathworld.wolfram.com/Point-PlaneDistance.html
-    for (const gfx::Point3DTyped<Units>& point : mPoints) {
-      float d = mNormal.DotProduct(point - mPoints[0]);
+    const float epsilon = 0.01f;
+    for (const Point3DTyped<Units>& point : mPoints) {
+      float d = normal.DotProduct(point - mPoints[0]);
       MOZ_ASSERT(std::abs(d) < epsilon);
     }
-    #endif
+  }
+#endif
+
+  void TransformPoints(const Matrix4x4Typed<Units, Units>& aTransform)
+  {
+    for (Point3DTyped<Units>& point : mPoints) {
+      point = aTransform.TransformPoint(point);
+    }
   }
 
-  nsTArray<Point3DTyped<Units>> mPoints;
   Point3DTyped<Units> mNormal;
+  nsTArray<Point3DTyped<Units>> mPoints;
 };
 
 typedef BasePolygon3D<UnknownUnits> Polygon3D;

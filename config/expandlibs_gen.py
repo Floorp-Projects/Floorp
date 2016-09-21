@@ -21,6 +21,11 @@ def generate(args):
             else:
                 raise Exception("File not found: %s" % arg)
         elif os.path.splitext(arg)[1] == conf.LIB_SUFFIX:
+            # We want to skip static libraries with the name foo-rs-prelink
+            # as they are individually linked for every final library, and
+            # thus should not be included in the descriptor file
+            if '-rs-prelink' in os.path.basename(arg):
+                continue
             if os.path.exists(arg) or os.path.exists(arg + conf.LIBS_DESC_SUFFIX):
                 desc['LIBS'].append(os.path.abspath(arg))
             else:

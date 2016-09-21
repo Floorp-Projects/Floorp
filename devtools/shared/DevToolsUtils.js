@@ -448,13 +448,31 @@ function mainThreadFetch(aURL, aOptions = { loadFromCache: true,
       let source = NetUtil.readInputStreamToString(stream, available);
       stream.close();
 
+      // We do our own BOM sniffing here because there's no convenient
+      // implementation of the "decode" algorithm
+      // (https://encoding.spec.whatwg.org/#decode) exposed to JS.
+      let bomCharset = null;
+      if (available >= 3 && source.codePointAt(0) == 0xef &&
+          source.codePointAt(1) == 0xbb && source.codePointAt(2) == 0xbf) {
+        bomCharset = "UTF-8";
+        source = source.slice(3);
+      } else if (available >= 2 && source.codePointAt(0) == 0xfe &&
+                 source.codePointAt(1) == 0xff) {
+        bomCharset = "UTF-16BE";
+        source = source.slice(2);
+      } else if (available >= 2 && source.codePointAt(0) == 0xff &&
+                 source.codePointAt(1) == 0xfe) {
+        bomCharset = "UTF-16LE";
+        source = source.slice(2);
+      }
+
       // If the channel or the caller has correct charset information, the
       // content will be decoded correctly. If we have to fall back to UTF-8 and
       // the guess is wrong, the conversion fails and convertToUnicode returns
       // the input unmodified. Essentially we try to decode the data as UTF-8
       // and if that fails, we use the locale specific default encoding. This is
       // the best we can do if the source does not provide charset info.
-      let charset = channel.contentCharset || aOptions.charset || "UTF-8";
+      let charset = bomCharset || channel.contentCharset || aOptions.charset || "UTF-8";
       let unicodeSource = NetworkHelper.convertToUnicode(source, charset);
 
       deferred.resolve({

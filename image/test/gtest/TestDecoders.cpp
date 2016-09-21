@@ -663,3 +663,8 @@ TEST_F(ImageDecoders, AnimatedGIFWithExtraImageSubBlocks)
   EXPECT_TRUE(NS_SUCCEEDED(result.Surface().Seek(1)));
   EXPECT_TRUE(bool(result.Surface()));
 }
+
+TEST_F(ImageDecoders, TruncatedSmallGIFSingleChunk)
+{
+  CheckDecoderSingleChunk(TruncatedSmallGIFTestCase());
+}

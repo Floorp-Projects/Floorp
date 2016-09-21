@@ -940,6 +940,30 @@ force-cargo-build:
 
 $(RUST_LIBRARY_FILE): force-cargo-build
 endif # CARGO_FILE
+
+ifdef RUST_PRELINK
+# Make target for building a prelinked rust library. This merges rust .rlibs
+# together into a single .a file which is used within the FINAL_LIBRARY.
+#
+# RUST_PRELINK_FLAGS, RUST_PRELINK_SRC, and RUST_PRELINK_DEPS are set in
+# recursivemake.py, and together tell rustc how to find the libraries to link
+# together, but we compute the optimization flags below
+
+RUST_PRELINK_FLAGS += -g
+RUST_PRELINK_FLAGS += -C panic=abort
+
+ifdef MOZ_DEBUG
+RUST_PRELINK_FLAGS += -C opt-level=1
+RUST_PRELINK_FLAGS += -C debug-assertions
+else
+RUST_PRELINK_FLAGS += -C opt-level=2
+RUST_PRELINK_FLAGS += -C lto
+endif
+
+$(RUST_PRELINK): $(RUST_PRELINK_DEPS) $(RUST_PRELINK_SRC)
+	$(REPORT_BUILD)
+	$(RUSTC) -o $@ --crate-type staticlib --target $(RUST_TARGET) $(RUST_PRELINK_FLAGS) $(RUST_PRELINK_SRC)
+endif # RUST_PRELINK
 endif # MOZ_RUST
 
 $(SOBJS):

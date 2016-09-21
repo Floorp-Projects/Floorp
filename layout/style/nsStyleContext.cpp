@@ -7,6 +7,7 @@
 
 #include "CSSVariableImageTable.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Maybe.h"
 
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
@@ -251,8 +252,10 @@ nsStyleContext::AssertStructsNotUsedElsewhere(
          (mCachedInheritedData.mStyleStructs[eStyleStruct_##name_] == data)) { \
       printf_stderr("style struct %p found on style context %p\n", data, this);\
       nsString url;                                                            \
-      PresContext()->Document()->GetURL(url);                                  \
-      printf_stderr("  in %s\n", NS_ConvertUTF16toUTF8(url).get());            \
+      nsresult rv = PresContext()->Document()->GetURL(url);                    \
+      if (NS_SUCCEEDED(rv)) {                                                  \
+        printf_stderr("  in %s\n", NS_ConvertUTF16toUTF8(url).get());          \
+      }                                                                        \
       MOZ_ASSERT(false, "destroying " #name_ " style struct still present "    \
                         "in style context tree");                              \
     }
@@ -276,8 +279,10 @@ nsStyleContext::AssertStructsNotUsedElsewhere(
           printf_stderr("style struct %p found on style context %p\n", data,   \
                         this);                                                 \
           nsString url;                                                        \
-          PresContext()->Document()->GetURL(url);                              \
-          printf_stderr("  in %s\n", NS_ConvertUTF16toUTF8(url).get());        \
+          nsresult rv = PresContext()->Document()->GetURL(url);                \
+          if (NS_SUCCEEDED(rv)) {                                              \
+            printf_stderr("  in %s\n", NS_ConvertUTF16toUTF8(url).get());      \
+          }                                                                    \
           MOZ_ASSERT(false, "destroying " #name_ " style struct still present "\
                             "in style context tree");                          \
         }
@@ -1217,14 +1222,8 @@ nsStyleContext::CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
     if (!change && PeekStyleText()) {
       const nsStyleText* thisVisText = thisVis->StyleText();
       const nsStyleText* otherVisText = otherVis->StyleText();
-      if (thisVisText->mTextEmphasisColorForeground !=
-          otherVisText->mTextEmphasisColorForeground ||
-          thisVisText->mTextEmphasisColor != otherVisText->mTextEmphasisColor ||
-          thisVisText->mWebkitTextFillColorForeground !=
-          otherVisText->mWebkitTextFillColorForeground ||
+      if (thisVisText->mTextEmphasisColor != otherVisText->mTextEmphasisColor ||
           thisVisText->mWebkitTextFillColor != otherVisText->mWebkitTextFillColor ||
-          thisVisText->mWebkitTextStrokeColorForeground !=
-          otherVisText->mWebkitTextStrokeColorForeground ||
           thisVisText->mWebkitTextStrokeColor != otherVisText->mWebkitTextStrokeColor) {
         change = true;
       }
@@ -1477,29 +1476,30 @@ ExtractAnimationValue(nsCSSPropertyID aProperty,
              "aProperty must be extractable by StyleAnimationValue");
 }
 
-static nscolor
+static Maybe<nscolor>
 ExtractColor(nsCSSPropertyID aProperty,
              nsStyleContext *aStyleContext)
 {
   StyleAnimationValue val;
   ExtractAnimationValue(aProperty, aStyleContext, val);
-  return val.GetUnit() == StyleAnimationValue::eUnit_CurrentColor
-    ? aStyleContext->StyleColor()->mColor
-    : val.GetCSSValueValue()->GetColorValue();
+  switch (val.GetUnit()) {
+    case StyleAnimationValue::eUnit_Color:
+      return Some(val.GetCSSValueValue()->GetColorValue());
+    case StyleAnimationValue::eUnit_CurrentColor:
+      return Some(aStyleContext->StyleColor()->mColor);
+    case StyleAnimationValue::eUnit_ComplexColor:
+      return Some(aStyleContext->StyleColor()->
+                  CalcComplexColor(val.GetStyleComplexColorValue()));
+    default:
+      return Nothing();
+  }
 }
 
 static nscolor
 ExtractColorLenient(nsCSSPropertyID aProperty,
                     nsStyleContext *aStyleContext)
 {
-  StyleAnimationValue val;
-  ExtractAnimationValue(aProperty, aStyleContext, val);
-  if (val.GetUnit() == StyleAnimationValue::eUnit_Color) {
-    return val.GetCSSValueValue()->GetColorValue();
-  } else if (val.GetUnit() == StyleAnimationValue::eUnit_CurrentColor) {
-    return aStyleContext->StyleColor()->mColor;
-  }
-  return NS_RGBA(0, 0, 0, 0);
+  return ExtractColor(aProperty, aStyleContext).valueOr(NS_RGBA(0, 0, 0, 0));
 }
 
 struct ColorIndexSet {
@@ -1532,7 +1532,7 @@ nsStyleContext::GetVisitedDependentColor(nsCSSPropertyID aProperty)
 
   nscolor colors[2];
   colors[0] = isPaintProperty ? ExtractColorLenient(aProperty, this)
-                              : ExtractColor(aProperty, this);
+                              : ExtractColor(aProperty, this).value();
 
   nsStyleContext *visitedStyle = this->GetStyleIfVisited();
   if (!visitedStyle) {
@@ -1540,7 +1540,7 @@ nsStyleContext::GetVisitedDependentColor(nsCSSPropertyID aProperty)
   }
 
   colors[1] = isPaintProperty ? ExtractColorLenient(aProperty, visitedStyle)
-                              : ExtractColor(aProperty, visitedStyle);
+                              : ExtractColor(aProperty, visitedStyle).value();
 
   return nsStyleContext::CombineVisitedColors(colors,
                                               this->RelevantLinkVisited());

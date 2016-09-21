@@ -676,7 +676,7 @@ FlacTrackDemuxer::Init()
     // Ensure that the next frame returned will be the first.
     mSource.Seek(SEEK_SET, mParser->FirstFrame().Offset());
     mParser->EndFrameSession();
-  } else if (!mParser->Info().IsValid()) {
+  } else if (!mParser->Info().IsValid() || !mParser->FirstFrame().IsValid()) {
     // We must find at least a frame to determine the metadata.
     // We can't play this stream.
     return false;
