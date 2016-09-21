@@ -1287,6 +1287,10 @@ pref("identity.fxaccounts.remote.signin.uri", "https://accounts.firefox.com/sign
 // The remote content URL where FxAccountsWebChannel messages originate.
 pref("identity.fxaccounts.remote.webchannel.uri", "https://accounts.firefox.com/");
 
+// The value of the context query parameter passed in some fxa requests when config
+// discovery is enabled.
+pref("identity.fxaccounts.contextParam", "fx_desktop_v3");
+
 // The URL we take the user to when they opt to "manage" their Firefox Account.
 // Note that this will always need to be in the same TLD as the
 // "identity.fxaccounts.remote.signup.uri" pref.

@@ -10,6 +10,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://services-common/utils.js");
+Cu.import("resource://services-common/rest.js");
 Cu.import("resource://services-crypto/utils.js");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -20,6 +21,9 @@ Cu.import("resource://gre/modules/FxAccountsCommon.js");
 
 XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsClient",
   "resource://gre/modules/FxAccountsClient.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsConfig",
+  "resource://gre/modules/FxAccountsConfig.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "jwcrypto",
   "resource://gre/modules/identity/jwcrypto.jsm");
@@ -38,8 +42,6 @@ var publicProperties = [
   "accountStatus",
   "checkVerificationStatus",
   "getAccountsClient",
-  "getAccountsSignInURI",
-  "getAccountsSignUpURI",
   "getAssertion",
   "getDeviceId",
   "getKeys",
@@ -55,7 +57,10 @@ var publicProperties = [
   "promiseAccountsChangeProfileURI",
   "promiseAccountsForceSigninURI",
   "promiseAccountsManageURI",
+  "promiseAccountsSignUpURI",
+  "promiseAccountsSignInURI",
   "removeCachedOAuthToken",
+  "requiresHttps",
   "resendVerificationEmail",
   "resetCredentials",
   "sessionStatus",
@@ -778,9 +783,14 @@ FxAccountsInternal.prototype = {
         }).catch(err => {
           log.error("Error during destruction of oauth tokens during signout", err);
         }).then(() => {
+          FxAccountsConfig.resetConfigURLs();
           // just for testing - notifications are cheap when no observers.
           this.notifyObservers("testhelper-fxa-signout-complete");
-        });
+        })
+      } else {
+        // We want to do this either way -- but if we're signing out remotely we
+        // need to wait until we destroy the oauth tokens if we want that to succeed.
+        FxAccountsConfig.resetConfigURLs();
       }
     }).then(() => {
       this.notifyObservers(ONLOGOUT_NOTIFICATION);
@@ -1228,7 +1238,7 @@ FxAccountsInternal.prototype = {
     }, timeoutMs);
   },
 
-  _requireHttps: function() {
+  requiresHttps: function() {
     let allowHttp = false;
     try {
       allowHttp = Services.prefs.getBoolPref("identity.fxaccounts.allowHttp");
@@ -1238,29 +1248,20 @@ FxAccountsInternal.prototype = {
     return allowHttp !== true;
   },
 
-  // Return the URI of the remote UI flows.
-  getAccountsSignUpURI: function() {
-    let url = Services.urlFormatter.formatURLPref("identity.fxaccounts.remote.signup.uri");
-    if (this._requireHttps() && !/^https:/.test(url)) { // Comment to un-break emacs js-mode highlighting
-      throw new Error("Firefox Accounts server must use HTTPS");
-    }
-    return url;
+  promiseAccountsSignUpURI() {
+    return FxAccountsConfig.promiseAccountsSignUpURI();
   },
 
-  // Return the URI of the remote UI flows.
-  getAccountsSignInURI: function() {
-    let url = Services.urlFormatter.formatURLPref("identity.fxaccounts.remote.signin.uri");
-    if (this._requireHttps() && !/^https:/.test(url)) { // Comment to un-break emacs js-mode highlighting
-      throw new Error("Firefox Accounts server must use HTTPS");
-    }
-    return url;
+  promiseAccountsSignInURI() {
+    return FxAccountsConfig.promiseAccountsSignInURI();
   },
 
   // Returns a promise that resolves with the URL to use to force a re-signin
   // of the current account.
-  promiseAccountsForceSigninURI: function() {
+  promiseAccountsForceSigninURI: Task.async(function *() {
+    yield FxAccountsConfig.ensureConfigured();
     let url = Services.urlFormatter.formatURLPref("identity.fxaccounts.remote.force_auth.uri");
-    if (this._requireHttps() && !/^https:/.test(url)) { // Comment to un-break emacs js-mode highlighting
+    if (this.requiresHttps() && !/^https:/.test(url)) { // Comment to un-break emacs js-mode highlighting
       throw new Error("Firefox Accounts server must use HTTPS");
     }
     let currentState = this.currentAccountState;
@@ -1273,7 +1274,7 @@ FxAccountsInternal.prototype = {
       newQueryPortion += "email=" + encodeURIComponent(accountData.email);
       return url + newQueryPortion;
     }).then(result => currentState.resolve(result));
-  },
+  }),
 
   // Returns a promise that resolves with the URL to use to change
   // the current account's profile image.
@@ -1287,7 +1288,7 @@ FxAccountsInternal.prototype = {
              "setting=" + encodeURIComponent(settingToEdit);
     }
 
-    if (this._requireHttps() && !/^https:/.test(url)) { // Comment to un-break emacs js-mode highlighting
+    if (this.requiresHttps() && !/^https:/.test(url)) { // Comment to un-break emacs js-mode highlighting
       throw new Error("Firefox Accounts server must use HTTPS");
     }
     let currentState = this.currentAccountState;
@@ -1310,7 +1311,7 @@ FxAccountsInternal.prototype = {
   // user's FxA acct.
   promiseAccountsManageURI: function(entrypoint) {
     let url = Services.urlFormatter.formatURLPref("identity.fxaccounts.settings.uri");
-    if (this._requireHttps() && !/^https:/.test(url)) { // Comment to un-break emacs js-mode highlighting
+    if (this.requiresHttps() && !/^https:/.test(url)) { // Comment to un-break emacs js-mode highlighting
       throw new Error("Firefox Accounts server must use HTTPS");
     }
     let currentState = this.currentAccountState;
