@@ -87,18 +87,7 @@ bool MemoryMappedFile::Map(const char* path, size_t offset) {
     return true;
   }
 
-#if defined(__x86_64__) || defined(__aarch64__) || \
-   (defined(__mips__) && _MIPS_SIM == _ABI64)
   void* data = sys_mmap(NULL, file_len, PROT_READ, MAP_PRIVATE, fd, offset);
-#else
-  if ((offset & 4095) != 0) {
-    // Not page aligned.
-    sys_close(fd);
-    return false;
-  }
-  void* data = sys_mmap2(
-      NULL, file_len, PROT_READ, MAP_PRIVATE, fd, offset >> 12);
-#endif
   sys_close(fd);
   if (data == MAP_FAILED) {
     return false;

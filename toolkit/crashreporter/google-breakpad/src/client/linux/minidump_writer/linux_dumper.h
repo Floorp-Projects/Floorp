@@ -49,6 +49,7 @@
 
 #include "client/linux/dump_writer_common/mapping_info.h"
 #include "client/linux/dump_writer_common/thread_info.h"
+#include "common/linux/file_id.h"
 #include "common/memory.h"
 #include "google_breakpad/common/minidump_format.h"
 
@@ -72,7 +73,9 @@ const char kLinuxGateLibraryName[] = "linux-gate.so";
 
 class LinuxDumper {
  public:
-  explicit LinuxDumper(pid_t pid);
+  // The |root_prefix| is prepended to mapping paths before opening them, which
+  // is useful if the crash originates from a chroot.
+  explicit LinuxDumper(pid_t pid, const char* root_prefix = "");
 
   virtual ~LinuxDumper();
 
@@ -127,7 +130,7 @@ class LinuxDumper {
   bool ElfFileIdentifierForMapping(const MappingInfo& mapping,
                                    bool member,
                                    unsigned int mapping_id,
-                                   uint8_t identifier[sizeof(MDGUID)]);
+                                   wasteful_vector<uint8_t>& identifier);
 
   uintptr_t crash_address() const { return crash_address_; }
   void set_crash_address(uintptr_t crash_address) {
@@ -140,16 +143,21 @@ class LinuxDumper {
   pid_t crash_thread() const { return crash_thread_; }
   void set_crash_thread(pid_t crash_thread) { crash_thread_ = crash_thread; }
 
+  // Concatenates the |root_prefix_| and |mapping| path. Writes into |path| and
+  // returns true unless the string is too long.
+  bool GetMappingAbsolutePath(const MappingInfo& mapping,
+                              char path[PATH_MAX]) const;
+
   // Extracts the effective path and file name of from |mapping|. In most cases
   // the effective name/path are just the mapping's path and basename. In some
   // other cases, however, a library can be mapped from an archive (e.g., when
   // loading .so libs from an apk on Android) and this method is able to
   // reconstruct the original file name.
-  static void GetMappingEffectiveNameAndPath(const MappingInfo& mapping,
-                                             char* file_path,
-                                             size_t file_path_size,
-                                             char* file_name,
-                                             size_t file_name_size);
+  void GetMappingEffectiveNameAndPath(const MappingInfo& mapping,
+                                      char* file_path,
+                                      size_t file_path_size,
+                                      char* file_name,
+                                      size_t file_name_size);
 
  protected:
   bool ReadAuxv();
@@ -171,6 +179,9 @@ class LinuxDumper {
 
    // ID of the crashed process.
   const pid_t pid_;
+
+  // Path of the root directory to which mapping paths are relative.
+  const char* const root_prefix_;
 
   // Virtual address at which the process crashed.
   uintptr_t crash_address_;

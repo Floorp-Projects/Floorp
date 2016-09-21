@@ -26,10 +26,6 @@
 #import "GTMObjC2Runtime.h"
 #import "GTMUnitTestDevLog.h"
 
-#if !GTM_IPHONE_SDK
-#import "GTMGarbageCollection.h"
-#endif  // !GTM_IPHONE_SDK
-
 #if GTM_IPHONE_SDK && !GTM_IPHONE_USE_SENTEST
 #import <stdarg.h>
 
@@ -430,71 +426,3 @@ static int MethodSort(id a, id b, void *context) {
 }
 
 @end
-
-// Leak detection
-#if !GTM_IPHONE_DEVICE && !GTM_SUPPRESS_RUN_LEAKS_HOOK
-// Don't want to get leaks on the iPhone Device as the device doesn't
-// have 'leaks'. The simulator does though.
-
-// COV_NF_START
-// We don't have leak checking on by default, so this won't be hit.
-static void _GTMRunLeaks(void) {
-  // This is an atexit handler. It runs leaks for us to check if we are
-  // leaking anything in our tests.
-  const char* cExclusionsEnv = getenv("GTM_LEAKS_SYMBOLS_TO_IGNORE");
-  NSMutableString *exclusions = [NSMutableString string];
-  if (cExclusionsEnv) {
-    NSString *exclusionsEnv = [NSString stringWithUTF8String:cExclusionsEnv];
-    NSArray *exclusionsArray = [exclusionsEnv componentsSeparatedByString:@","];
-    NSString *exclusion;
-    NSCharacterSet *wcSet = [NSCharacterSet whitespaceCharacterSet];
-    GTM_FOREACH_OBJECT(exclusion, exclusionsArray) {
-      exclusion = [exclusion stringByTrimmingCharactersInSet:wcSet];
-      [exclusions appendFormat:@"-exclude \"%@\" ", exclusion];
-    }
-  }
-  // Clearing out DYLD_ROOT_PATH because iPhone Simulator framework libraries
-  // are different from regular OS X libraries and leaks will fail to run
-  // because of missing symbols. Also capturing the output of leaks and then
-  // pipe rather than a direct pipe, because otherwise if leaks failed,
-  // the system() call will still be successful. Bug:
-  // http://code.google.com/p/google-toolbox-for-mac/issues/detail?id=56
-  NSString *string
-    = [NSString stringWithFormat:
-       @"LeakOut=`DYLD_ROOT_PATH='' /usr/bin/leaks %@%d` &&"
-       @"echo \"$LeakOut\"|/usr/bin/sed -e 's/Leak: /Leaks:0: warning: Leak /'",
-       exclusions, getpid()];
-  int ret = system([string UTF8String]);
-  if (ret) {
-    fprintf(stderr,
-            "%s:%d: Error: Unable to run leaks. 'system' returned: %d\n",
-            __FILE__, __LINE__, ret);
-    fflush(stderr);
-  }
-}
-// COV_NF_END
-
-static __attribute__((constructor)) void _GTMInstallLeaks(void) {
-  BOOL checkLeaks = YES;
-#if !GTM_IPHONE_SDK
-  checkLeaks = GTMIsGarbageCollectionEnabled() ? NO : YES;
-#endif  // !GTM_IPHONE_SDK
-  if (checkLeaks) {
-    checkLeaks = getenv("GTM_ENABLE_LEAKS") ? YES : NO;
-    if (checkLeaks) {
-      // COV_NF_START
-      // We don't have leak checking on by default, so this won't be hit.
-      fprintf(stderr, "Leak Checking Enabled\n");
-      fflush(stderr);
-      int ret = atexit(&_GTMRunLeaks);
-      // To avoid unused variable warning when _GTMDevAssert is stripped.
-      (void)ret;
-      _GTMDevAssert(ret == 0,
-                    @"Unable to install _GTMRunLeaks as an atexit handler (%d)",
-                    errno);
-      // COV_NF_END
-    }
-  }
-}
-
-#endif   // !GTM_IPHONE_DEVICE && !GTM_SUPPRESS_RUN_LEAKS_HOOK
