@@ -510,7 +510,11 @@ KeyframeEffectParamsFromUnion(const OptionsType& aOptions,
                                        result.mPacedProperty,
                                        aInvalidPacedProperty,
                                        aRv);
-    result.mIterationComposite = options.mIterationComposite;
+    // Ignore iterationComposite if the Web Animations API is not enabled,
+    // then the default value 'Replace' will be used.
+    if (AnimationUtils::IsCoreAPIEnabled()) {
+      result.mIterationComposite = options.mIterationComposite;
+    }
   }
   return result;
 }
