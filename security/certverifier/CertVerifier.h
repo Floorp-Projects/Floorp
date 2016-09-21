@@ -27,8 +27,8 @@ enum class KeySizeStatus {
 enum class SHA1ModeResult {
   NeverChecked = 0,
   SucceededWithoutSHA1 = 1,
-  SucceededWithImportedRoot = 2,
-  SucceededWithImportedRootOrSHA1Before2016 = 3,
+  SucceededWithSHA1Before2016 = 2,
+  SucceededWithImportedRoot = 3,
   SucceededWithSHA1 = 4,
   Failed = 5,
 };
@@ -110,12 +110,8 @@ public:
   enum class SHA1Mode {
     Allowed = 0,
     Forbidden = 1,
-    // There used to be a policy that only allowed SHA1 for certificates issued
-    // before 2016. This is no longer available. If a user has selected this
-    // policy in about:config, it now maps to Forbidden.
-    UsedToBeBefore2016ButNowIsForbidden = 2,
+    Before2016 = 2,
     ImportedRoot = 3,
-    ImportedRootOrBefore2016 = 4,
   };
 
   enum OcspDownloadConfig {
@@ -149,8 +145,8 @@ private:
 
   // Returns true if the configured SHA1 mode is more restrictive than the given
   // mode. SHA1Mode::Forbidden is more restrictive than any other mode except
-  // Forbidden. Next is ImportedRoot, then ImportedRootOrBefore2016, then
-  // Allowed. (A mode is never more restrictive than itself.)
+  // Forbidden. Next is Before2016, then ImportedRoot, then Allowed.
+  // (A mode is never more restrictive than itself.)
   bool SHA1ModeMoreRestrictiveThanGivenMode(SHA1Mode mode);
 };
 

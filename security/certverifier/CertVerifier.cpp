@@ -152,9 +152,9 @@ CertVerifier::SHA1ModeMoreRestrictiveThanGivenMode(SHA1Mode mode)
   switch (mSHA1Mode) {
     case SHA1Mode::Forbidden:
       return mode != SHA1Mode::Forbidden;
+    case SHA1Mode::Before2016:
+      return mode != SHA1Mode::Forbidden && mode != SHA1Mode::Before2016;
     case SHA1Mode::ImportedRoot:
-      return mode != SHA1Mode::Forbidden && mode != SHA1Mode::ImportedRoot;
-    case SHA1Mode::ImportedRootOrBefore2016:
       return mode == SHA1Mode::Allowed;
     case SHA1Mode::Allowed:
       return false;
@@ -283,15 +283,15 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
       // results of setting the default policy to a particular configuration.
       SHA1Mode sha1ModeConfigurations[] = {
         SHA1Mode::Forbidden,
+        SHA1Mode::Before2016,
         SHA1Mode::ImportedRoot,
-        SHA1Mode::ImportedRootOrBefore2016,
         SHA1Mode::Allowed,
       };
 
       SHA1ModeResult sha1ModeResults[] = {
         SHA1ModeResult::SucceededWithoutSHA1,
+        SHA1ModeResult::SucceededWithSHA1Before2016,
         SHA1ModeResult::SucceededWithImportedRoot,
-        SHA1ModeResult::SucceededWithImportedRootOrSHA1Before2016,
         SHA1ModeResult::SucceededWithSHA1,
       };
 
@@ -346,6 +346,15 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                           KeyPurposeId::id_kp_serverAuth,
                                           evPolicy, stapledOCSPResponse,
                                           ocspStaplingStatus);
+        // If we succeeded with the SHA1Mode of only allowing imported roots to
+        // issue SHA1 certificates after 2015, if the chain we built doesn't
+        // terminate with an imported root, we must reject it. (This only works
+        // because we try SHA1 configurations in order of decreasing
+        // strictness.)
+        // Note that if there existed a certificate chain with a built-in root
+        // that had SHA1 certificates issued before 2016, it would have already
+        // been accepted. If such a chain had SHA1 certificates issued after
+        // 2015, it will only be accepted in the SHA1Mode::Allowed case.
         if (rv == Success &&
             sha1ModeConfigurations[i] == SHA1Mode::ImportedRoot) {
           bool isBuiltInRoot = false;
@@ -429,6 +438,15 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                             CertPolicyId::anyPolicy,
                                             stapledOCSPResponse,
                                             ocspStaplingStatus);
+          // If we succeeded with the SHA1Mode of only allowing imported roots
+          // to issue SHA1 certificates after 2015, if the chain we built
+          // doesn't terminate with an imported root, we must reject it. (This
+          // only works because we try SHA1 configurations in order of
+          // decreasing strictness.)
+          // Note that if there existed a certificate chain with a built-in root
+          // that had SHA1 certificates issued before 2016, it would have
+          // already been accepted. If such a chain had SHA1 certificates issued
+          // after 2015, it will only be accepted in the SHA1Mode::Allowed case.
           if (rv == Success &&
               sha1ModeConfigurations[j] == SHA1Mode::ImportedRoot) {
             bool isBuiltInRoot = false;
@@ -458,13 +476,10 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
       if (keySizeStatus) {
         *keySizeStatus = KeySizeStatus::AlreadyBad;
       }
-      // The telemetry probe CERT_CHAIN_SHA1_POLICY_STATUS gives us feedback on
-      // the result of setting a specific policy. However, we don't want noise
-      // from users who have manually set the policy to Allowed or Forbidden, so
-      // we only collect for ImportedRoot or ImportedRootOrBefore2016.
-      if (sha1ModeResult &&
-          (mSHA1Mode == SHA1Mode::ImportedRoot ||
-           mSHA1Mode == SHA1Mode::ImportedRootOrBefore2016)) {
+      // Only collect CERT_CHAIN_SHA1_POLICY_STATUS telemetry indicating a
+      // failure when mSHA1Mode is the default.
+      // NB: When we change the default, we have to change this.
+      if (sha1ModeResult && mSHA1Mode == SHA1Mode::ImportedRoot) {
         *sha1ModeResult = SHA1ModeResult::Failed;
       }
 
@@ -477,7 +492,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                        mCertShortLifetimeInDays,
                                        pinningDisabled, MIN_RSA_BITS_WEAK,
                                        ValidityCheckingMode::CheckingOff,
-                                       SHA1Mode::Allowed, mNetscapeStepUpPolicy,
+                                       mSHA1Mode, mNetscapeStepUpPolicy,
                                        builtChain, nullptr, nullptr);
       rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeCA, KeyUsage::keyCertSign,
