@@ -11,6 +11,14 @@
   --eyedropper-image: url(images/firebug/command-eyedropper.svg);
 }
 
+:root.theme-light {
+  --breadcrumbs-border-color: #f3f3f3;
+}
+
+:root.theme-dark {
+  --breadcrumbs-border-color: #454d5d;
+}
+
 /* Make sure to hide scroll bars for the parent window */
 window {
   overflow: hidden;
@@ -117,6 +125,10 @@ window {
   padding: 0px;
   border-bottom-width: 0px;
   border-top-width: 1px;
+  border-top-color: var(--breadcrumbs-border-color);
+  /* Bug 1262668 - Use the same background as the body so the breadcrumbs toolbar doesn't
+     get mistaken as a splitter */
+  background-color: var(--theme-body-background);
   display: block;
   position: relative;
 }
