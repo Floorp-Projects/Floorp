@@ -15418,6 +15418,10 @@
         "url": "/domparsing/innerhtml-01.xhtml"
       },
       {
+        "path": "domparsing/innerhtml-02.html",
+        "url": "/domparsing/innerhtml-02.html"
+      },
+      {
         "path": "domparsing/innerhtml-03.xhtml",
         "url": "/domparsing/innerhtml-03.xhtml"
       },
