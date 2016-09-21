@@ -198,7 +198,6 @@ TEST_PKGS := \
   mochitest \
   reftest \
   talos \
-  web-platform \
   xpcshell \
   $(NULL)
 
