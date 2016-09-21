@@ -855,26 +855,9 @@ CodeGeneratorMIPSShared::visitPopcntI(LPopcntI* ins)
 {
     Register input = ToRegister(ins->input());
     Register output = ToRegister(ins->output());
-
-    // Equivalent to GCC output of mozilla::CountPopulation32()
     Register tmp = ToRegister(ins->temp());
 
-    masm.ma_move(output, input);
-    masm.ma_sra(tmp, input, Imm32(1));
-    masm.ma_and(tmp, Imm32(0x55555555));
-    masm.ma_subu(output, tmp);
-    masm.ma_sra(tmp, output, Imm32(2));
-    masm.ma_and(output, Imm32(0x33333333));
-    masm.ma_and(tmp, Imm32(0x33333333));
-    masm.ma_addu(output, tmp);
-    masm.ma_srl(tmp, output, Imm32(4));
-    masm.ma_addu(output, tmp);
-    masm.ma_and(output, Imm32(0xF0F0F0F));
-    masm.ma_sll(tmp, output, Imm32(8));
-    masm.ma_addu(output, tmp);
-    masm.ma_sll(tmp, output, Imm32(16));
-    masm.ma_addu(output, tmp);
-    masm.ma_sra(output, output, Imm32(24));
+    masm.popcnt32(input, output, tmp);
 }
 
 void
