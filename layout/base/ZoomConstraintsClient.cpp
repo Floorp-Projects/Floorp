@@ -29,6 +29,7 @@ NS_IMPL_ISUPPORTS(ZoomConstraintsClient, nsIDOMEventListener, nsIObserver)
 
 static const nsLiteralString DOM_META_ADDED = NS_LITERAL_STRING("DOMMetaAdded");
 static const nsLiteralString DOM_META_CHANGED = NS_LITERAL_STRING("DOMMetaChanged");
+static const nsLiteralString FULLSCREEN_CHANGED = NS_LITERAL_STRING("mozfullscreenchange");
 static const nsLiteralCString BEFORE_FIRST_PAINT = NS_LITERAL_CSTRING("before-first-paint");
 static const nsLiteralCString NS_PREF_CHANGED = NS_LITERAL_CSTRING("nsPref:changed");
 
@@ -75,6 +76,7 @@ ZoomConstraintsClient::Destroy()
   if (mEventTarget) {
     mEventTarget->RemoveEventListener(DOM_META_ADDED, this, false);
     mEventTarget->RemoveEventListener(DOM_META_CHANGED, this, false);
+    mEventTarget->RemoveEventListener(FULLSCREEN_CHANGED, this, false);
     mEventTarget = nullptr;
   }
 
@@ -114,6 +116,7 @@ ZoomConstraintsClient::Init(nsIPresShell* aPresShell, nsIDocument* aDocument)
   if (mEventTarget) {
     mEventTarget->AddEventListener(DOM_META_ADDED, this, false);
     mEventTarget->AddEventListener(DOM_META_CHANGED, this, false);
+    mEventTarget->AddEventListener(FULLSCREEN_CHANGED, this, false);
   }
 
   nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
@@ -135,6 +138,9 @@ ZoomConstraintsClient::HandleEvent(nsIDOMEvent* event)
     RefreshZoomConstraints();
   } else if (type.Equals(DOM_META_CHANGED)) {
     ZCC_LOG("Got a dom-meta-changed event in %p\n", this);
+    RefreshZoomConstraints();
+  } else if (type.Equals(FULLSCREEN_CHANGED)) {
+    ZCC_LOG("Got a fullscreen-change event in %p\n", this);
     RefreshZoomConstraints();
   }
 
@@ -208,6 +214,12 @@ ZoomConstraintsClient::RefreshZoomConstraints()
 
   mozilla::layers::ZoomConstraints zoomConstraints =
     ComputeZoomConstraintsFromViewportInfo(viewportInfo);
+
+  if (mDocument->Fullscreen()) {
+    ZCC_LOG("%p is in fullscreen, disallowing zooming\n", this);
+    zoomConstraints.mAllowZoom = false;
+    zoomConstraints.mAllowDoubleTapZoom = false;
+  }
 
   if (zoomConstraints.mAllowDoubleTapZoom) {
     // If the CSS viewport is narrower than the screen (i.e. width <= device-width)
