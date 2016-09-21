@@ -12,10 +12,7 @@ function tearDown()
 add_task(function*()
 {
   // Don't cache removed tabs, so "clear console cache on tab close" triggers.
-  Services.prefs.setIntPref("browser.tabs.max_tabs_undo", 0);
-  registerCleanupFunction(function() {
-    Services.prefs.clearUserPref("browser.tabs.max_tabs_undo");
-  });
+  yield SpecialPowers.pushPrefEnv({ set: [[ "browser.tabs.max_tabs_undo", 0 ]] });
 
   registerCleanupFunction(tearDown);
 
@@ -28,12 +25,12 @@ add_task(function*()
   gBrowser.selectedTab = tab;
   var browser = gBrowser.selectedBrowser;
 
-  let observerPromise = ContentTask.spawn(browser, null, function(opt) {
+  let observerPromise = ContentTask.spawn(browser, null, function* (opt) {
     const TEST_URI = "http://example.com/browser/dom/tests/browser/test-console-api.html";
     let ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
           .getService(Ci.nsIConsoleAPIStorage);
 
-    return new Promise(resolve => {
+    let observerPromise = new Promise(resolve => {
       let apiCallCount = 0;
       let ConsoleObserver = {
         QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
@@ -46,9 +43,9 @@ add_task(function*()
                     .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
 
               Services.obs.removeObserver(this, "console-storage-cache-event");
-              Assert.ok(ConsoleAPIStorage.getEvents(windowId).length >= 4, "Some messages found in the storage service");
+              ok(ConsoleAPIStorage.getEvents(windowId).length >= 4, "Some messages found in the storage service");
               ConsoleAPIStorage.clearEvents();
-              Assert.equal(ConsoleAPIStorage.getEvents(windowId).length, 0, "Cleared Storage");
+              is(ConsoleAPIStorage.getEvents(windowId).length, 0, "Cleared Storage");
 
               resolve(windowId);
             }
@@ -61,24 +58,23 @@ add_task(function*()
       // Redirect the browser to the test URI
       content.window.location = TEST_URI;
     });
+
+    yield ContentTaskUtils.waitForEvent(this, "DOMContentLoaded");
+
+    content.console.log("this", "is", "a", "log message");
+    content.console.info("this", "is", "a", "info message");
+    content.console.warn("this", "is", "a", "warn message");
+    content.console.error("this", "is", "a", "error message");
+    return observerPromise;
   });
 
-  let win;
-  browser.addEventListener("DOMContentLoaded", function onLoad(event) {
-    browser.removeEventListener("DOMContentLoaded", onLoad, false);
-    executeSoon(function test_executeSoon() {
-      win = browser.contentWindow;
-      win.console.log("this", "is", "a", "log message");
-      win.console.info("this", "is", "a", "info message");
-      win.console.warn("this", "is", "a", "warn message");
-      win.console.error("this", "is", "a", "error message");
-    });
-  }, false);
-
   let windowId = yield observerPromise;
-  // make sure a closed window's events are in fact removed from
-  // the storage cache
-  win.console.log("adding a new event");
+
+  yield ContentTask.spawn(browser, null, function() {
+    // make sure a closed window's events are in fact removed from
+    // the storage cache
+    content.console.log("adding a new event");
+  });
 
   // Close the window.
   gBrowser.removeTab(tab, {animate: false});
@@ -89,16 +85,14 @@ add_task(function*()
   gBrowser.selectedTab = keepaliveTab;
   browser = gBrowser.selectedBrowser;
 
-  // Ensure the "inner-window-destroyed" event is processed,
-  // so the storage cache is cleared. We do this in the content
-  // process because that is where the event will be processed.
-  yield ContentTask.spawn(browser, null, function() {
-    yield new Promise(resolve => setTimeout(resolve, 0));
+  // Spin the event loop to make sure everything is cleared.
+  yield ContentTask.spawn(browser, null, function () {
+    return Promise.resolve();
   });
 
   yield ContentTask.spawn(browser, windowId, function(windowId) {
     var ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
           .getService(Ci.nsIConsoleAPIStorage);
-    Assert.equal(ConsoleAPIStorage.getEvents(windowId).length, 0, "tab close is clearing the cache");
+    is(ConsoleAPIStorage.getEvents(windowId).length, 0, "tab close is clearing the cache");
   });
 });
