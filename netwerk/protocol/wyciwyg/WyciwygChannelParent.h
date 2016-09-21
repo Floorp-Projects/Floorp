@@ -38,6 +38,7 @@ protected:
   virtual bool RecvInit(const URIParams&          uri,
                         const ipc::PrincipalInfo& aRequestingPrincipalInfo,
                         const ipc::PrincipalInfo& aTriggeringPrincipalInfo,
+                        const ipc::PrincipalInfo& aPrincipalToInheritInfo,
                         const uint32_t&           aSecurityFlags,
                         const uint32_t&           aContentPolicyType) override;
   virtual bool RecvAsyncOpen(const URIParams& original,

@@ -224,6 +224,11 @@ PluginInstanceChild::~PluginInstanceChild()
     if (GetQuirks() & QUIRK_UNITY_FIXUP_MOUSE_CAPTURE) {
         ClearUnityHooks();
     }
+    // In the event that we registered for audio device changes, stop.
+    PluginModuleChild* chromeInstance = PluginModuleChild::GetChrome();
+    if (chromeInstance) {
+      NPError rv = chromeInstance->PluginRequiresAudioDeviceChanges(this, false);
+    }
 #endif
 #if defined(MOZ_WIDGET_COCOA)
     if (mShColorSpace) {
@@ -684,6 +689,23 @@ PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
         return rv;
     }
 
+#ifdef XP_WIN
+    case NPPVpluginRequiresAudioDeviceChanges: {
+      // Many other NPN_SetValue variables are forwarded to our
+      // PluginInstanceParent, which runs on a content process.  We
+      // instead forward this message to the PluginModuleParent, which runs
+      // on the chrome process.  This is because our audio
+      // API calls should run the chrome proc, not content.
+      NPError rv = NPERR_GENERIC_ERROR;
+      PluginModuleChild* chromeInstance = PluginModuleChild::GetChrome();
+      if (chromeInstance) {
+        rv = chromeInstance->PluginRequiresAudioDeviceChanges(this,
+                                              (NPBool)(intptr_t)aValue);
+      }
+      return rv;
+    }
+#endif
+
     default:
         MOZ_LOG(GetPluginLog(), LogLevel::Warning,
                ("In PluginInstanceChild::NPN_SetValue: Unhandled NPPVariable %i (%s)",
@@ -855,6 +877,18 @@ PluginInstanceChild::AnswerNPP_SetValue_NPNVmuteAudioBool(const bool& value,
     *result = mPluginIface->setvalue(GetNPP(), NPNVmuteAudioBool, &v);
     return true;
 }
+
+#if defined(XP_WIN)
+NPError
+PluginInstanceChild::DefaultAudioDeviceChanged(NPAudioDeviceChangeDetails& details)
+{
+    if (!mPluginIface->setvalue) {
+        return NPERR_GENERIC_ERROR;
+    }
+    return mPluginIface->setvalue(GetNPP(), NPNVaudioDeviceChangeDetails, (void*)&details);
+}
+#endif
+
 
 bool
 PluginInstanceChild::AnswerNPP_HandleEvent(const NPRemoteEvent& event,

@@ -245,29 +245,24 @@ GetWorkerPref(const nsACString& aPref,
   return result;
 }
 
-// This function creates a key for a SharedWorker composed by "name|scriptSpec".
-// If the name contains a '|', this will be replaced by '||'.
+// This fn creates a key for a SharedWorker that contains the name, script
+// spec, and the serialized origin attributes:
+// "name|scriptSpec^key1=val1&key2=val2&key3=val3"
 void
-GenerateSharedWorkerKey(const nsACString& aScriptSpec, const nsACString& aName,
-                        bool aPrivateBrowsing, nsCString& aKey)
+GenerateSharedWorkerKey(const nsACString& aScriptSpec,
+                        const nsACString& aName,
+                        const PrincipalOriginAttributes& aAttrs,
+                        nsCString& aKey)
 {
+  nsAutoCString suffix;
+  aAttrs.CreateSuffix(suffix);
+
   aKey.Truncate();
-  aKey.SetCapacity(aScriptSpec.Length() + aName.Length() + 3);
-  aKey.Append(aPrivateBrowsing ? "1|" : "0|");
-
-  nsACString::const_iterator start, end;
-  aName.BeginReading(start);
-  aName.EndReading(end);
-  for (; start != end; ++start) {
-    if (*start == '|') {
-      aKey.AppendASCII("||");
-    } else {
-      aKey.Append(*start);
-    }
-  }
-
+  aKey.SetCapacity(aName.Length() + aScriptSpec.Length() + suffix.Length() + 2);
+  aKey.Append(aName);
   aKey.Append('|');
   aKey.Append(aScriptSpec);
+  aKey.Append(suffix);
 }
 
 void
@@ -1641,7 +1636,7 @@ RuntimeService::RegisterWorker(WorkerPrivate* aWorkerPrivate)
       const nsCString& sharedWorkerName = aWorkerPrivate->WorkerName();
       nsAutoCString key;
       GenerateSharedWorkerKey(sharedWorkerScriptSpec, sharedWorkerName,
-                              aWorkerPrivate->IsInPrivateBrowsing(), key);
+                              aWorkerPrivate->GetOriginAttributes(), key);
       MOZ_ASSERT(!domainInfo->mSharedWorkerInfos.Get(key));
 
       SharedWorkerInfo* sharedWorkerInfo =
@@ -1718,7 +1713,7 @@ RuntimeService::RemoveSharedWorker(WorkerDomainInfo* aDomainInfo,
 #ifdef DEBUG
       nsAutoCString key;
       GenerateSharedWorkerKey(data->mScriptSpec, data->mName,
-                              aWorkerPrivate->IsInPrivateBrowsing(), key);
+                              aWorkerPrivate->GetOriginAttributes(), key);
       MOZ_ASSERT(iter.Key() == key);
 #endif
       iter.Remove();
@@ -2434,9 +2429,10 @@ RuntimeService::CreateSharedWorkerFromLoadInfo(JSContext* aCx,
     nsresult rv = aLoadInfo->mResolvedScriptURI->GetSpec(scriptSpec);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    MOZ_ASSERT(aLoadInfo->mPrincipal);
     nsAutoCString key;
     GenerateSharedWorkerKey(scriptSpec, aName,
-                            aLoadInfo->mPrivateBrowsing, key);
+        BasePrincipal::Cast(aLoadInfo->mPrincipal)->OriginAttributesRef(), key);
 
     if (mDomainMap.Get(aLoadInfo->mDomain, &domainInfo) &&
         domainInfo->mSharedWorkerInfos.Get(key, &sharedWorkerInfo)) {

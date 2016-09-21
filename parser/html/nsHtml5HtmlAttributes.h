@@ -65,6 +65,7 @@ class nsHtml5HtmlAttributes
     int32_t length;
     autoJArray<nsHtml5AttributeName*,int32_t> names;
     autoJArray<nsString*,int32_t> values;
+    autoJArray<int32_t,int32_t> lines;
   public:
     explicit nsHtml5HtmlAttributes(int32_t mode);
     ~nsHtml5HtmlAttributes();
@@ -76,7 +77,8 @@ class nsHtml5HtmlAttributes
     nsIAtom* getPrefixNoBoundsCheck(int32_t index);
     nsString* getValueNoBoundsCheck(int32_t index);
     nsHtml5AttributeName* getAttributeNameNoBoundsCheck(int32_t index);
-    void addAttribute(nsHtml5AttributeName* name, nsString* value);
+    int32_t getLineNoBoundsCheck(int32_t index);
+    void addAttribute(nsHtml5AttributeName* name, nsString* value, int32_t line);
     void clear(int32_t m);
     void releaseValue(int32_t i);
     void clearWithoutReleasingContents();

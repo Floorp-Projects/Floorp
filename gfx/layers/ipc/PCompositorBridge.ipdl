@@ -155,6 +155,12 @@ parent:
   async NotifyChildCreated(uint64_t id);
   async AdoptChild(uint64_t id);
 
+  // Same as NotifyChildCreated, but used when child processes need to
+  // reassociate layers. This must be synchronous to ensure that the
+  // association happens before PLayerTransactions are sent over the
+  // cross-process bridge.
+  sync NotifyChildRecreated(uint64_t id);
+
   // Make a snapshot of the content that would have been drawn to our
   // render target at the time this message is received.  If the size
   // or format of |inSnapshot| doesn't match our render target,

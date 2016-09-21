@@ -39,6 +39,12 @@ fit .r3 { grid-template-columns: [a] repeat(auto-fit, [b] 20px [c]) [d] 30px [e]
 .xw100 { max-width: 100px; }
 .xw50 { max-width: 50px; }
 .xw80 { max-width: 80px; }
+.pw10 { width: 10%; }
+.pxw10 { max-width: 10%; }
+.pmw10 { min-width: 10%; }
+.cw10 { width: calc(50px + 10%); }
+.cxw10 { max-width: calc(50px + 10%); }
+.cmw10 { min-width: calc(50px - 10%); }
 .float { float: left; }
 
 x {
@@ -82,11 +88,54 @@ fill,fit {
 <div class="grid r1 w50"><x></x><x></x><a></a><b></b><x></x></div>
 <div class="grid r1 xw80"><x></x><x></x><a></a><b></b><x></x></div>
 <div class="grid r1 xw50"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 mw80 xw50"><x></x><x></x><a></a><b></b><x></x></div>
 <div class="grid r1 w100 xw80"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 w100 xw80 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 xw80 float"><x></x><x></x><a></a><b></b><x></x></div>
 <div class="grid r1 mw50 float"><x></x><x></x><a></a><b></b><x></x></div>
 <div class="grid r1 mw80 float"><x></x><x></x><a></a><b></b><x></x></div>
 <div class="grid r1 w100 mw50 float"><x></x><x></x><a></a><b></b><x></x></div>
 <div class="grid r1 mw100 w50 float"><x></x><x></x><a></a><b></b><x></x></div>
+
+<br clear="all">
+
+<div class="grid r1 pw10 xw80 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 pxw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 pmw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 pmw10 xw50 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 w100 pmw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 pw10 pxw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+
+<br clear="all">
+
+<div class="grid r1 cw10 xw80 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 cxw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 cmw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 cmw10 xw80 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 w100 cmw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 cw10 cxw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+
+<br clear="all">
+
+<div class="float">
+<div class="grid r1 pw10 xw80 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 pxw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 pmw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 pmw10 xw50 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 w100 pmw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 pw10 pxw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+</div>
+
+<br clear="all">
+
+<div class="float">
+<div class="grid r1 cw10 xw80 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 cxw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 cmw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 cmw10 xw80 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 w100 cmw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 cw10 cxw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+</div>
 
 <br clear="all">
 <br clear="all">
@@ -131,7 +180,10 @@ fill,fit {
 <div class="grid r1 w50"><x></x><x></x><a></a><b></b><x></x></div>
 <div class="grid r1 xw80"><x></x><x></x><a></a><b></b><x></x></div>
 <div class="grid r1 xw50"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 mw80 xw50"><x></x><x></x><a></a><b></b><x></x></div>
 <div class="grid r1 w100 xw80"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 w100 xw80 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 xw80 float"><x></x><x></x><a></a><b></b><x></x></div>
 <div class="grid r1 mw50 float"><x></x><x></x><a></a><b></b><x></x></div>
 <div class="grid r1 mw80 float"><x></x><x></x><a></a><b></b><x></x></div>
 <div class="grid r1 w100 mw50 float"><x></x><x></x><a></a><b></b><x></x></div>

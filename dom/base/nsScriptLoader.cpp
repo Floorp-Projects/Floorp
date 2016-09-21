@@ -2360,39 +2360,6 @@ nsScriptLoader::ReadyToExecuteParserBlockingScripts()
   return true;
 }
 
-// This function was copied from nsParser.cpp. It was simplified a bit.
-static bool
-DetectByteOrderMark(const unsigned char* aBytes, int32_t aLen, nsCString& oCharset)
-{
-  if (aLen < 2)
-    return false;
-
-  switch(aBytes[0]) {
-  case 0xEF:
-    if (aLen >= 3 && 0xBB == aBytes[1] && 0xBF == aBytes[2]) {
-      // EF BB BF
-      // Win2K UTF-8 BOM
-      oCharset.AssignLiteral("UTF-8");
-    }
-    break;
-  case 0xFE:
-    if (0xFF == aBytes[1]) {
-      // FE FF
-      // UTF-16, big-endian
-      oCharset.AssignLiteral("UTF-16BE");
-    }
-    break;
-  case 0xFF:
-    if (0xFE == aBytes[1]) {
-      // FF FE
-      // UTF-16, little-endian
-      oCharset.AssignLiteral("UTF-16LE");
-    }
-    break;
-  }
-  return !oCharset.IsEmpty();
-}
-
 /* static */ nsresult
 nsScriptLoader::ConvertToUTF16(nsIChannel* aChannel, const uint8_t* aData,
                                uint32_t aLength, const nsAString& aHintCharset,
@@ -2415,10 +2382,9 @@ nsScriptLoader::ConvertToUTF16(nsIChannel* aChannel, const uint8_t* aData,
 
   nsCOMPtr<nsIUnicodeDecoder> unicodeDecoder;
 
-  if (DetectByteOrderMark(aData, aLength, charset)) {
-    // charset is now "UTF-8" or "UTF-16". The UTF-16 decoder will re-sniff
-    // the BOM for endianness. Both the UTF-16 and the UTF-8 decoder will
-    // take care of swallowing the BOM.
+  if (nsContentUtils::CheckForBOM(aData, aLength, charset)) {
+    // charset is now one of "UTF-16BE", "UTF-16BE" or "UTF-8".  Those decoder
+    // will take care of swallowing the BOM.
     unicodeDecoder = EncodingUtils::DecoderForEncoding(charset);
   }
 
@@ -2974,7 +2940,7 @@ nsScriptLoadHandler::EnsureDecoder(nsIIncrementalStreamLoader *aLoader,
   }
 
   // Do BOM detection.
-  if (DetectByteOrderMark(aData, aDataLength, charset)) {
+  if (nsContentUtils::CheckForBOM(aData, aDataLength, charset)) {
     mDecoder = EncodingUtils::DecoderForEncoding(charset);
     return true;
   }

@@ -26,6 +26,7 @@ parent:
   async Init(URIParams     uri,
              PrincipalInfo requestingPrincipalInfo,
              PrincipalInfo triggeringPrincipalInfo,
+             PrincipalInfo principalToInheritInfo,
              uint32_t      securityFlags,
              uint32_t      contentPolicyType);
   async AsyncOpen(URIParams             originalURI,

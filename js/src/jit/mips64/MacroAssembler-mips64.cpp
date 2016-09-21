@@ -400,16 +400,25 @@ MacroAssemblerMIPS64::ma_daddu(Register rd, Imm32 imm)
     ma_daddu(rd, rd, imm);
 }
 
+template <typename L>
 void
-MacroAssemblerMIPS64::ma_addTestOverflow(Register rd, Register rs, Register rt, Label* overflow)
+MacroAssemblerMIPS64::ma_addTestOverflow(Register rd, Register rs, Register rt, L overflow)
 {
     as_daddu(SecondScratchReg, rs, rt);
     as_addu(rd, rs, rt);
     ma_b(rd, SecondScratchReg, overflow, Assembler::NotEqual);
 }
 
+template void
+MacroAssemblerMIPS64::ma_addTestOverflow<Label*>(Register rd, Register rs,
+                                                 Register rt, Label* overflow);
+template void
+MacroAssemblerMIPS64::ma_addTestOverflow<wasm::JumpTarget>(Register rd, Register rs, Register rt,
+                                                           wasm::JumpTarget overflow);
+
+template <typename L>
 void
-MacroAssemblerMIPS64::ma_addTestOverflow(Register rd, Register rs, Imm32 imm, Label* overflow)
+MacroAssemblerMIPS64::ma_addTestOverflow(Register rd, Register rs, Imm32 imm, L overflow)
 {
     // Check for signed range because of as_daddiu
     if (Imm16::IsInSignedRange(imm.value) && Imm16::IsInUnsignedRange(imm.value)) {
@@ -421,6 +430,13 @@ MacroAssemblerMIPS64::ma_addTestOverflow(Register rd, Register rs, Imm32 imm, La
         ma_addTestOverflow(rd, rs, ScratchRegister, overflow);
     }
 }
+
+template void
+MacroAssemblerMIPS64::ma_addTestOverflow<Label*>(Register rd, Register rs,
+                                                 Imm32 imm, Label* overflow);
+template void
+MacroAssemblerMIPS64::ma_addTestOverflow<wasm::JumpTarget>(Register rd, Register rs, Imm32 imm,
+                                                           wasm::JumpTarget overflow);
 
 // Subtract.
 void

@@ -224,7 +224,7 @@ amManager.prototype = {
         }
 
         return this.installAddonsFromWebpage(payload.mimetype,
-          aMessage.target, payload.triggeringPrincipal, payload.uris,
+          aMessage.target, payload.principalToInherit, payload.uris,
           payload.hashes, payload.names, payload.icons, callback);
       }
 

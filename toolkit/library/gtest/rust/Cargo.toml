@@ -7,10 +7,11 @@ description = "Testing code for libgkrust"
 
 [dependencies]
 mp4parse-gtest = { path = "../../../../dom/media/gtest" }
+nsstring-gtest = { path = "../../../../xpcom/rust/nsstring/gtest" }
 
 [lib]
 path = "lib.rs"
-crate-type = ["staticlib"]
+crate-type = ["rlib"]
 test = false
 doctest = false
 bench = false

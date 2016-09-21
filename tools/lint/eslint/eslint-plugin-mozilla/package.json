@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-mozilla",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A collection of rules that help enforce JavaScript coding standard in the Mozilla project.",
   "keywords": [
     "eslint",
@@ -16,9 +16,9 @@
   "author": "Mike Ratcliffe",
   "main": "lib/index.js",
   "dependencies": {
-    "escope": "^3.2.0",
-    "espree": "^2.2.4",
-    "estraverse": "^4.1.1",
+    "escope": "^3.6.0",
+    "espree": "^3.2.0",
+    "estraverse": "^4.2.0",
     "sax": "^1.1.4"
   },
   "engines": {

@@ -106,7 +106,7 @@ nsHtml5Highlighter::Start(const nsAutoString& aTitle)
 
   nsHtml5HtmlAttributes* preAttrs = new nsHtml5HtmlAttributes(0);
   nsString* preId = new nsString(NS_LITERAL_STRING("line1"));
-  preAttrs->addAttribute(nsHtml5AttributeName::ATTR_ID, preId);
+  preAttrs->addAttribute(nsHtml5AttributeName::ATTR_ID, preId, -1);
   Push(nsGkAtoms::pre, preAttrs);
 
   StartCharacters();

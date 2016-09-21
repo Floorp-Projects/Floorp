@@ -53,23 +53,25 @@ function test() {
 
       yield helpers.audit(aOptions, [{
         name: "open toolbox",
-        setup: function () {
-          return initDebugger(gBrowser.selectedTab).then(([aTab, aDebuggee, aPanel]) => {
-            // Spin the event loop before causing the debuggee to pause, to allow
-            // this function to return first.
-            executeSoon(() => aDebuggee.firstCall());
+        setup: Task.async(function* () {
+          let [aTab, aDebuggee, aPanel] = yield initDebugger(gBrowser.selectedTab);
 
-            return waitForSourceAndCaretAndScopes(aPanel, ".html", 1).then(() => {
-              gPanel = aPanel;
-              gDebugger = gPanel.panelWin;
-              gThreadClient = gPanel.panelWin.gThreadClient;
-              gLineNumber = "" + aOptions.window.wrappedJSObject.gLineNumber;
-              gSources = gDebugger.DebuggerView.Sources;
+          // Spin the event loop before causing the debuggee to pause, to allow this
+          // function to return first.
+          executeSoon(() => aDebuggee.firstCall());
 
-              expectedActorObj.value = getSourceActor(gSources, TAB_URL);
-            });
+          yield waitForSourceAndCaretAndScopes(aPanel, ".html", 1);
+
+          gPanel = aPanel;
+          gDebugger = gPanel.panelWin;
+          gThreadClient = gPanel.panelWin.gThreadClient;
+          gLineNumber = yield ContentTask.spawn(aOptions.browser, {}, function* () {
+            return "" + content.wrappedJSObject.gLineNumber;
           });
-        },
+          gSources = gDebugger.DebuggerView.Sources;
+
+          expectedActorObj.value = getSourceActor(gSources, TAB_URL);
+        }),
         post: function () {
           ok(gThreadClient, "Debugger client exists.");
           is(gLineNumber, 14, "gLineNumber is correct.");

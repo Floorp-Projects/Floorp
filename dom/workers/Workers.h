@@ -269,8 +269,8 @@ struct WorkerLoadInfo
   bool mXHRParamsAllowed;
   bool mPrincipalIsSystem;
   bool mStorageAllowed;
-  bool mPrivateBrowsing;
   bool mServiceWorkersTestingInWindow;
+  PrincipalOriginAttributes mOriginAttributes;
 
   WorkerLoadInfo();
   ~WorkerLoadInfo();

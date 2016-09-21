@@ -8509,7 +8509,9 @@ nsGlobalWindow::CloseOuter(bool aTrustedCaller)
   // Don't allow scripts from content to close non-app or non-neterror
   // windows that were not opened by script.
   nsAutoString url;
-  mDoc->GetURL(url);
+  nsresult rv = mDoc->GetURL(url);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
   if (!mDocShell->GetIsApp() &&
       !StringBeginsWith(url, NS_LITERAL_STRING("about:neterror")) &&
       !mHadOriginalOpener && !aTrustedCaller) {
@@ -10481,7 +10483,10 @@ nsGlobalWindow::GetSessionStorage(ErrorResult& aError)
   if (!mSessionStorage) {
     nsString documentURI;
     if (mDoc) {
-      mDoc->GetDocumentURI(documentURI);
+      aError = mDoc->GetDocumentURI(documentURI);
+      if (NS_WARN_IF(aError.Failed())) {
+        return nullptr;
+      }
     }
 
     // If the document has the sandboxed origin flag set
@@ -10561,7 +10566,10 @@ nsGlobalWindow::GetLocalStorage(ErrorResult& aError)
 
     nsString documentURI;
     if (mDoc) {
-      mDoc->GetDocumentURI(documentURI);
+      aError = mDoc->GetDocumentURI(documentURI);
+      if (NS_WARN_IF(aError.Failed())) {
+        return nullptr;
+      }
     }
 
     nsCOMPtr<nsIDOMStorage> storage;
