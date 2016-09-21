@@ -221,6 +221,37 @@ MacroAssemblerMIPSShared::ma_addu(Register rd, Imm32 imm)
     ma_addu(rd, rd, imm);
 }
 
+template <typename L>
+void
+MacroAssemblerMIPSShared::ma_addTestCarry(Register rd, Register rs, Register rt, L overflow)
+{
+    as_addu(rd, rs, rt);
+    as_sltu(SecondScratchReg, rd, rs);
+    ma_b(SecondScratchReg, SecondScratchReg, overflow, Assembler::NonZero);
+}
+
+template void
+MacroAssemblerMIPSShared::ma_addTestCarry<Label*>(Register rd, Register rs,
+                                                  Register rt, Label* overflow);
+template void
+MacroAssemblerMIPSShared::ma_addTestCarry<wasm::JumpTarget>(Register rd, Register rs, Register rt,
+                                                            wasm::JumpTarget overflow);
+
+template <typename L>
+void
+MacroAssemblerMIPSShared::ma_addTestCarry(Register rd, Register rs, Imm32 imm, L overflow)
+{
+    ma_li(ScratchRegister, imm);
+    ma_addTestCarry(rd, rs, ScratchRegister, overflow);
+}
+
+template void
+MacroAssemblerMIPSShared::ma_addTestCarry<Label*>(Register rd, Register rs,
+                                                  Imm32 imm, Label* overflow);
+template void
+MacroAssemblerMIPSShared::ma_addTestCarry<wasm::JumpTarget>(Register rd, Register rs, Imm32 imm,
+                                                            wasm::JumpTarget overflow);
+
 // Subtract.
 void
 MacroAssemblerMIPSShared::ma_subu(Register rd, Register rs, Imm32 imm)

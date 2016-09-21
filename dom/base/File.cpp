@@ -261,7 +261,7 @@ Blob::ToFile(const nsAString& aName, ErrorResult& aRv) const
   mImpl->GetType(contentType);
 
   RefPtr<MultipartBlobImpl> impl =
-    MultipartBlobImpl::Create(blobImpls, aName, contentType, aRv);
+    MultipartBlobImpl::Create(Move(blobImpls), aName, contentType, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }

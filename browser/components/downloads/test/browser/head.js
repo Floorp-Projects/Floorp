@@ -20,6 +20,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+                                  "resource://gre/modules/PlacesUtils.jsm");
 const nsIDM = Ci.nsIDownloadManager;
 
 var gTestTargetFile = FileUtils.getFile("TmpD", ["dm-ui-test.file"]);
@@ -190,6 +192,84 @@ function task_openPanel()
   let promise = promisePanelOpened();
   DownloadsPanel.showPanel();
   yield promise;
+}
+
+function setDownloadDir() {
+  let tmpDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
+  tmpDir.append("testsavedir");
+  if (!tmpDir.exists()) {
+    tmpDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+    registerCleanupFunction(function () {
+      try {
+        tmpDir.remove(true);
+      } catch (e) {
+        // On Windows debug build this may fail.
+      }
+    });
+  }
+
+  yield new Promise(resolve => {
+    SpecialPowers.pushPrefEnv({"set": [
+      ["browser.download.folderList", 2],
+      ["browser.download.dir", tmpDir, Ci.nsIFile],
+    ]}, resolve);
+  });
+}
+
+
+let gHttpServer = null;
+function startServer() {
+  gHttpServer = new HttpServer();
+  gHttpServer.start(-1);
+  registerCleanupFunction(function*() {
+     yield new Promise(function(resolve) {
+      gHttpServer.stop(resolve);
+    });
+  });
+
+  gHttpServer.registerPathHandler("/file1.txt", (request, response) => {
+    response.setStatusLine(null, 200, "OK");
+    response.write("file1");
+    response.processAsync();
+    response.finish();
+  });
+  gHttpServer.registerPathHandler("/file2.txt", (request, response) => {
+    response.setStatusLine(null, 200, "OK");
+    response.write("file2");
+    response.processAsync();
+    response.finish();
+  });
+  gHttpServer.registerPathHandler("/file3.txt", (request, response) => {
+    response.setStatusLine(null, 200, "OK");
+    response.write("file3");
+    response.processAsync();
+    response.finish();
+  });
+}
+
+function httpUrl(aFileName) {
+  return "http://localhost:" + gHttpServer.identity.primaryPort + "/" +
+    aFileName;
+}
+
+function task_clearHistory() {
+  return new Promise(function(resolve) {
+    Services.obs.addObserver(function observeCH(aSubject, aTopic, aData) {
+      Services.obs.removeObserver(observeCH, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
+      resolve();
+    }, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
+    PlacesUtils.history.clear();
+  });
+}
+
+function openLibrary(aLeftPaneRoot) {
+  let library = window.openDialog("chrome://browser/content/places/places.xul",
+                                  "", "chrome,toolbar=yes,dialog=no,resizable",
+                                  aLeftPaneRoot);
+
+  return new Promise(resolve => {
+    waitForFocus(resolve, library);
+  });
 }
 
 function promiseAlertDialogOpen(buttonAction) {

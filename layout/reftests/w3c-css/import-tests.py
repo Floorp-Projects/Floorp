@@ -34,6 +34,7 @@ gSubtrees = [
     os.path.join("css-namespaces-3"),
     os.path.join("css-conditional-3"),
     os.path.join("css-values-3"),
+    os.path.join("selectors-4"),
 ]
 
 gPrefixedProperties = [

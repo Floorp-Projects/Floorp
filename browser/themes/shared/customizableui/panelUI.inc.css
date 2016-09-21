@@ -158,7 +158,7 @@
 .panel-subviews {
   padding: 4px;
   background-clip: padding-box;
-  border-left: 1px solid var(--panel-arrowcontent-border-color);
+  border-left: 1px solid var(--arrowpanel-border-color);
   box-shadow: 0 3px 5px hsla(210,4%,10%,.1),
               0 0 7px hsla(210,4%,10%,.1);
   margin-inline-start: var(--panel-ui-exit-subview-gutter-width);

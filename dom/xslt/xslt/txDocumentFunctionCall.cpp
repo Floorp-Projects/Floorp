@@ -104,7 +104,8 @@ DocumentFunctionCall::evaluate(txIEvalContext* aContext,
         baseURISet = true;
 
         if (!nodeSet2->isEmpty()) {
-            txXPathNodeUtils::getBaseURI(nodeSet2->get(0), baseURI);
+            rv = txXPathNodeUtils::getBaseURI(nodeSet2->get(0), baseURI);
+            NS_ENSURE_SUCCESS(rv, rv);
         }
     }
 
@@ -121,7 +122,8 @@ DocumentFunctionCall::evaluate(txIEvalContext* aContext,
             if (!baseURISet) {
                 // if the second argument wasn't specified, use
                 // the baseUri of node itself
-                txXPathNodeUtils::getBaseURI(node, baseURI);
+                rv = txXPathNodeUtils::getBaseURI(node, baseURI);
+                NS_ENSURE_SUCCESS(rv, rv);
             }
             retrieveNode(es, uriStr, baseURI, nodeSet);
         }

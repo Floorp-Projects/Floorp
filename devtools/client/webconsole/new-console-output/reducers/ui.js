@@ -10,7 +10,7 @@ const Immutable = require("devtools/client/shared/vendor/immutable");
 
 const Ui = Immutable.Record({
   filterBarVisible: false,
-  filteredMessageVisible: false
+  filteredMessageVisible: false,
 });
 
 function ui(state = new Ui(), action) {

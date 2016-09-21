@@ -109,6 +109,8 @@ class Assembler : public AssemblerShared
         LessThan,
         LessThanOrEqual,
         Overflow,
+        CarrySet,
+        CarryClear,
         Signed,
         NotSigned,
         Zero,

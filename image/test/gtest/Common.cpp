@@ -664,5 +664,10 @@ ImageTestCase DownscaledTransparentICOWithANDMaskTestCase()
                        TEST_CASE_IS_TRANSPARENT | TEST_CASE_IGNORE_OUTPUT);
 }
 
+ImageTestCase TruncatedSmallGIFTestCase()
+{
+  return ImageTestCase("green-1x1-truncated.gif", "image/gif", IntSize(1, 1));
+}
+
 } // namespace image
 } // namespace mozilla

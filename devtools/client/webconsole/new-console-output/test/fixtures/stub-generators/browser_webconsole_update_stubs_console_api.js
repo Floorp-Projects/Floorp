@@ -16,34 +16,40 @@ let stubs = {
 };
 
 add_task(function* () {
-  let tempFilePath = OS.Path.join(`${BASE_PATH}/stub-generators`, "test-tempfile.js");
   for (var [key, {keys, code}] of snippets) {
-    OS.File.writeAtomic(tempFilePath, `function triggerPacket() {${code}}`);
+    yield OS.File.writeAtomic(TEMP_FILE_PATH, `function triggerPacket() {${code}}`);
+
     let toolbox = yield openNewTabAndToolbox(TEST_URI, "webconsole");
-    let hud = toolbox.getCurrentPanel().hud;
-    let {ui} = hud;
+    let {ui} = toolbox.getCurrentPanel().hud;
 
     ok(ui.jsterm, "jsterm exists");
     ok(ui.newConsoleOutput, "newConsoleOutput exists");
 
     let received = new Promise(resolve => {
       let i = 0;
-      toolbox.target.client.addListener("consoleAPICall", (type, res) => {
+      let listener = (type, res) => {
         stubs.packets.push(formatPacket(keys[i], res));
         stubs.preparedMessages.push(formatStub(keys[i], res));
         if(++i === keys.length ){
+          toolbox.target.client.removeListener("consoleAPICall", listener);
           resolve();
         }
-      });
+      };
+      toolbox.target.client.addListener("consoleAPICall", listener);
     });
 
-    yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
-      content.wrappedJSObject.triggerPacket();
+    yield ContentTask.spawn(gBrowser.selectedBrowser, key, function(key) {
+      var script = content.document.createElement("script");
+      script.src = "test-tempfile.js?key=" + encodeURIComponent(key);
+      script.onload = function() { content.wrappedJSObject.triggerPacket(); }
+      content.document.body.appendChild(script);
     });
 
     yield received;
+
+    yield closeTabAndToolbox();
   }
   let filePath = OS.Path.join(`${BASE_PATH}/stubs`, "consoleApi.js");
   OS.File.writeAtomic(filePath, formatFile(stubs));
-  OS.File.writeAtomic(tempFilePath, "");
+  OS.File.writeAtomic(TEMP_FILE_PATH, "");
 });
