@@ -23,11 +23,11 @@
                                    [{video: true}]);
           // Since this is a NoBundle variant, adding a track will cause us to
           // go back to checking.
-          test.pcLocal.iceCheckingRestartExpected = true;
+          test.pcLocal.expectIceChecking();
           return test.pcLocal.getAllUserMedia([{video: true}]);
         },
         function PC_REMOTE_EXPECT_ICE_CHECKING(test) {
-          test.pcRemote.iceCheckingRestartExpected = true;
+          test.pcRemote.expectIceChecking();
         },
       ]
     );
