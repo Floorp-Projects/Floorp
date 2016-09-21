@@ -692,6 +692,9 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
     NS_RUNTIMEABORT(jsInitFailureReason);
   }
   sInitializedJS = true;
+  
+  // Init AbstractThread.
+  AbstractThread::InitStatics();
 
   rv = nsComponentManagerImpl::gComponentManager->Init();
   if (NS_FAILED(rv)) {
@@ -714,9 +717,6 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
 
   // Init SharedThreadPool (which needs the service manager).
   SharedThreadPool::InitStatics();
-
-  // Init AbstractThread.
-  AbstractThread::InitStatics();
 
   // Force layout to spin up so that nsContentUtils is available for cx stack
   // munging.
@@ -800,6 +800,8 @@ NS_InitMinimalXPCOM()
   if (!nsCycleCollector_init()) {
     return NS_ERROR_UNEXPECTED;
   }
+
+  AbstractThread::InitStatics();
 
   return NS_OK;
 }
