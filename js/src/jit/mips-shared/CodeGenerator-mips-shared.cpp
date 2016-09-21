@@ -1779,7 +1779,6 @@ CodeGeneratorMIPSShared::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
       default: MOZ_CRASH("unexpected array type");
     }
 
-    memoryBarrier(mir->barrierBefore());
     if (ptr->isConstant()) {
         MOZ_ASSERT(!mir->needsBoundsCheck());
         int32_t ptrImm = ptr->toConstant()->toInt32();
@@ -1794,7 +1793,6 @@ CodeGeneratorMIPSShared::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
             masm.ma_load(ToRegister(out), Address(HeapReg, ptrImm),
                          static_cast<LoadStoreSize>(size), isSigned ? SignExtend : ZeroExtend);
         }
-        memoryBarrier(mir->barrierAfter());
         return;
     }
 
@@ -1811,7 +1809,6 @@ CodeGeneratorMIPSShared::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
             masm.ma_load(ToRegister(out), BaseIndex(HeapReg, ptrReg, TimesOne),
                          static_cast<LoadStoreSize>(size), isSigned ? SignExtend : ZeroExtend);
         }
-        memoryBarrier(mir->barrierAfter());
         return;
     }
 
@@ -1840,14 +1837,10 @@ CodeGeneratorMIPSShared::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
             masm.loadDouble(Address(GlobalReg, wasm::NaN64GlobalDataOffset - AsmJSGlobalRegBias),
                             ToFloatRegister(out));
     } else {
-        if (mir->isAtomicAccess())
-            masm.ma_b(wasm::JumpTarget::OutOfBounds);
-        else
-            masm.move32(Imm32(0), ToRegister(out));
+        masm.move32(Imm32(0), ToRegister(out));
     }
     masm.bind(&done);
 
-    memoryBarrier(mir->barrierAfter());
     masm.append(wasm::BoundsCheck(bo.getOffset()));
 }
 
@@ -1873,7 +1866,6 @@ CodeGeneratorMIPSShared::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
       default: MOZ_CRASH("unexpected array type");
     }
 
-    memoryBarrier(mir->barrierBefore());
     if (ptr->isConstant()) {
         MOZ_ASSERT(!mir->needsBoundsCheck());
         int32_t ptrImm = ptr->toConstant()->toInt32();
@@ -1890,7 +1882,6 @@ CodeGeneratorMIPSShared::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
             masm.ma_store(ToRegister(value), Address(HeapReg, ptrImm),
                           static_cast<LoadStoreSize>(size), isSigned ? SignExtend : ZeroExtend);
         }
-        memoryBarrier(mir->barrierAfter());
         return;
     }
 
@@ -1909,13 +1900,12 @@ CodeGeneratorMIPSShared::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
             masm.ma_store(ToRegister(value), BaseIndex(HeapReg, ptrReg, TimesOne),
                           static_cast<LoadStoreSize>(size), isSigned ? SignExtend : ZeroExtend);
         }
-        memoryBarrier(mir->barrierAfter());
         return;
     }
 
     BufferOffset bo = masm.ma_BoundsCheck(ScratchRegister);
 
-    Label done, outOfRange;
+    Label outOfRange;
     masm.ma_b(ptrReg, ScratchRegister, &outOfRange, Assembler::AboveOrEqual, ShortJump);
 
     // Offset is ok, let's store value.
@@ -1928,14 +1918,8 @@ CodeGeneratorMIPSShared::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
         masm.ma_store(ToRegister(value), BaseIndex(HeapReg, ptrReg, TimesOne),
                       static_cast<LoadStoreSize>(size), isSigned ? SignExtend : ZeroExtend);
     }
-    masm.ma_b(&done, ShortJump);
-    masm.bind(&outOfRange);
-    // Offset is out of range.
-    if (mir->isAtomicAccess())
-        masm.ma_b(wasm::JumpTarget::OutOfBounds);
-    masm.bind(&done);
 
-    memoryBarrier(mir->barrierAfter());
+    masm.bind(&outOfRange);
     masm.append(wasm::BoundsCheck(bo.getOffset()));
 }
 
@@ -1955,18 +1939,10 @@ CodeGeneratorMIPSShared::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap
     Register offsetTemp = ToRegister(ins->offsetTemp());
     Register maskTemp = ToRegister(ins->maskTemp());
 
-    uint32_t maybeCmpOffset = 0;
-    if (mir->needsBoundsCheck()) {
-        BufferOffset bo = masm.ma_BoundsCheck(ScratchRegister);
-        maybeCmpOffset = bo.getOffset();
-        masm.ma_b(ptrReg, ScratchRegister, wasm::JumpTarget::OutOfBounds, Assembler::AboveOrEqual);
-    }
     masm.compareExchangeToTypedIntArray(vt == Scalar::Uint32 ? Scalar::Int32 : vt,
                                         srcAddr, oldval, newval, InvalidReg,
                                         valueTemp, offsetTemp, maskTemp,
                                         ToAnyRegister(ins->output()));
-    if (mir->needsBoundsCheck())
-        masm.append(wasm::BoundsCheck(maybeCmpOffset));
 }
 
 void
@@ -1983,17 +1959,9 @@ CodeGeneratorMIPSShared::visitAsmJSAtomicExchangeHeap(LAsmJSAtomicExchangeHeap* 
     Register offsetTemp = ToRegister(ins->offsetTemp());
     Register maskTemp = ToRegister(ins->maskTemp());
 
-    uint32_t maybeCmpOffset = 0;
-    if (mir->needsBoundsCheck()) {
-        BufferOffset bo = masm.ma_BoundsCheck(ScratchRegister);
-        maybeCmpOffset = bo.getOffset();
-        masm.ma_b(ptrReg, ScratchRegister, wasm::JumpTarget::OutOfBounds, Assembler::AboveOrEqual);
-    }
     masm.atomicExchangeToTypedIntArray(vt == Scalar::Uint32 ? Scalar::Int32 : vt,
                                        srcAddr, value, InvalidReg, valueTemp,
                                        offsetTemp, maskTemp, ToAnyRegister(ins->output()));
-    if (mir->needsBoundsCheck())
-        masm.append(wasm::BoundsCheck(maybeCmpOffset));
 }
 
 void
@@ -2014,12 +1982,6 @@ CodeGeneratorMIPSShared::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins)
 
     BaseIndex srcAddr(HeapReg, ptrReg, TimesOne);
 
-    uint32_t maybeCmpOffset = 0;
-    if (mir->needsBoundsCheck()) {
-        BufferOffset bo = masm.ma_BoundsCheck(ScratchRegister);
-        maybeCmpOffset = bo.getOffset();
-        masm.ma_b(ptrReg, ScratchRegister, wasm::JumpTarget::OutOfBounds, Assembler::AboveOrEqual);
-    }
     if (value->isConstant())
         atomicBinopToTypedIntArray(op, vt == Scalar::Uint32 ? Scalar::Int32 : vt,
                                    Imm32(ToInt32(value)), srcAddr, flagTemp, InvalidReg,
@@ -2030,8 +1992,6 @@ CodeGeneratorMIPSShared::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins)
                                    ToRegister(value), srcAddr, flagTemp, InvalidReg,
                                    valueTemp, offsetTemp, maskTemp,
                                    ToAnyRegister(ins->output()));
-    if (mir->needsBoundsCheck())
-        masm.append(wasm::BoundsCheck(maybeCmpOffset));
 }
 
 void
@@ -2052,22 +2012,12 @@ CodeGeneratorMIPSShared::visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHea
 
     BaseIndex srcAddr(HeapReg, ptrReg, TimesOne);
 
-    uint32_t maybeCmpOffset = 0;
-    if (mir->needsBoundsCheck()) {
-        BufferOffset bo = masm.ma_BoundsCheck(ScratchRegister);
-        maybeCmpOffset = bo.getOffset();
-        masm.ma_b(ptrReg, ScratchRegister, wasm::JumpTarget::OutOfBounds, Assembler::AboveOrEqual);
-    }
-
     if (value->isConstant())
         atomicBinopToTypedIntArray(op, vt, Imm32(ToInt32(value)), srcAddr, flagTemp,
                                    valueTemp, offsetTemp, maskTemp);
     else
         atomicBinopToTypedIntArray(op, vt, ToRegister(value), srcAddr, flagTemp,
                                    valueTemp, offsetTemp, maskTemp);
-
-    if (mir->needsBoundsCheck())
-        masm.append(wasm::BoundsCheck(maybeCmpOffset));
 }
 
 void
@@ -2536,6 +2486,16 @@ CodeGeneratorMIPSShared::atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type ar
                                                     Register flagTemp, Register valueTemp,
                                                     Register offsetTemp, Register maskTemp);
 
+
+void
+CodeGeneratorMIPSShared::visitWasmAddOffset(LWasmAddOffset* lir)
+{
+    MWasmAddOffset* mir = lir->mir();
+    Register base = ToRegister(lir->base());
+    Register out = ToRegister(lir->output());
+
+    masm.ma_addTestCarry(out, base, Imm32(mir->offset()), wasm::JumpTarget::OutOfBounds);
+}
 
 template <typename T>
 static inline void
