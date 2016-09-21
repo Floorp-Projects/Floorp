@@ -111,6 +111,16 @@ js::DestroyTraceLoggerThreadState()
     }
 }
 
+TraceLoggerThread::TraceLoggerThread()
+  : enabled_(0),
+    failed(false),
+    graph(),
+    currentZone_(nullptr),
+    nextTextId(TraceLogger_Last),
+    iteration_(0),
+    top(nullptr)
+{ }
+
 bool
 TraceLoggerThread::init()
 {
@@ -128,6 +138,28 @@ TraceLoggerThread::init()
         return false;
 
     return true;
+}
+
+bool
+TraceLoggerThread::WeakScriptMapSweepPolicy::needsSweep(HeapPtr<JSScript*>* key,
+                                                        TraceLoggerEventPayload** value)
+{
+    return JS::GCPolicy<HeapPtr<JSScript*>>::needsSweep(key);
+}
+
+void
+TraceLoggerThread::updateZone(Zone* zone)
+{
+    if (zone != currentZone_) {
+        currentZone_ = zone;
+        scriptMap.reset();
+
+        if (zone) {
+            scriptMap.emplace(zone, ScriptHashMap());
+            if (!scriptMap->get().init())
+                scriptMap.reset();
+        }
+    }
 }
 
 void
@@ -393,7 +425,7 @@ TraceLoggerThread::getOrCreateEventPayload(const char* text)
 
 TraceLoggerEventPayload*
 TraceLoggerThread::getOrCreateEventPayload(TraceLoggerTextId type, const char* filename,
-                                           size_t lineno, size_t colno, const void* ptr)
+                                           size_t lineno, size_t colno, JSScript* script)
 {
     MOZ_ASSERT(type == TraceLogger_Scripts || type == TraceLogger_AnnotateScripts ||
                type == TraceLogger_InlinedScripts);
@@ -407,9 +439,9 @@ TraceLoggerThread::getOrCreateEventPayload(TraceLoggerTextId type, const char* f
     if (!traceLoggerState->isTextIdEnabled(type))
         return getOrCreateEventPayload(type);
 
-    PointerHashMap::AddPtr p;
-    if (ptr) {
-        p = pointerMap.lookupForAdd(ptr);
+    ScriptHashMap::AddPtr p;
+    if (scriptMap.isSome() && script) {
+        p = scriptMap->get().lookupForAdd(script);
         if (p) {
             MOZ_ASSERT(p->value()->textId() < nextTextId); // Sanity check.
             return p->value();
@@ -452,8 +484,8 @@ TraceLoggerThread::getOrCreateEventPayload(TraceLoggerTextId type, const char* f
 
     nextTextId++;
 
-    if (ptr) {
-        if (!pointerMap.add(p, ptr, payload))
+    if (scriptMap.isSome() && script) {
+        if (!scriptMap->get().add(p, script, payload))
             return nullptr;
     }
 
@@ -464,7 +496,7 @@ TraceLoggerEventPayload*
 TraceLoggerThread::getOrCreateEventPayload(TraceLoggerTextId type, JSScript* script)
 {
     return getOrCreateEventPayload(type, script->filename(), script->lineno(), script->column(),
-                                   nullptr);
+                                   script);
 }
 
 TraceLoggerEventPayload*
@@ -607,6 +639,21 @@ TraceLoggerThread::log(uint32_t id)
                 textIdPayloads.remove(p);
 
                 e.removeFront();
+            }
+
+            // Remove the item in the scriptMap for which the payloads
+            // have no uses anymore
+            if (scriptMap.isSome()) {
+                for (ScriptHashMap::Enum e(scriptMap->get()); !e.empty(); e.popFront()) {
+                    if (e.front().value()->uses() != 0)
+                        continue;
+
+                    TextIdHashMap::Ptr p = textIdPayloads.lookup(e.front().value()->textId());
+                    MOZ_ASSERT(p);
+                    textIdPayloads.remove(p);
+
+                    e.removeFront();
+                }
             }
 
             // Free all payloads that have no uses anymore.
