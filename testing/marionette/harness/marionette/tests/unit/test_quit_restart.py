@@ -36,6 +36,21 @@ class TestQuitRestart(MarionetteTestCase):
         # If a preference value is not forced, a restart will cause a reset
         self.assertNotEqual(self.marionette.get_pref("browser.startup.page"), 3)
 
+    def test_force_quit(self):
+        self.marionette.quit()
+
+        self.assertEqual(self.marionette.session, None)
+        with self.assertRaisesRegexp(MarionetteException, "Please start a session"):
+            self.marionette.get_url()
+
+        self.marionette.start_session()
+        self.assertNotEqual(self.marionette.session_id, self.session_id)
+        self.assertNotEqual(self.marionette.get_pref("browser.startup.page"), 3)
+
+    def test_in_app_clean_restart(self):
+        with self.assertRaises(ValueError):
+            self.marionette.restart(in_app=True, clean=True)
+
     def test_in_app_restart(self):
         self.marionette.restart(in_app=True)
         self.assertEqual(self.marionette.session_id, self.session_id)
@@ -49,12 +64,24 @@ class TestQuitRestart(MarionetteTestCase):
         # If a preference value is not forced, a restart will cause a reset
         self.assertNotEqual(self.marionette.get_pref("browser.startup.page"), 3)
 
-    def test_in_app_clean_restart(self):
-        with self.assertRaises(ValueError):
-            self.marionette.restart(in_app=True, clean=True)
+    def test_in_app_restart_with_callback(self):
+        def callback():
+            self.marionette._request_in_app_shutdown(shutdown_flags='eRestart')
+        self.marionette.restart(in_app=True, callback=callback)
 
-    def test_force_quit(self):
-        self.marionette.quit()
+        self.assertEqual(self.marionette.session_id, self.session_id)
+
+        # An in-app restart will keep the same process id only on Linux
+        if self.marionette.session_capabilities['platformName'] == 'linux':
+            self.assertEqual(self.marionette.session["processId"], self.pid)
+        else:
+            self.assertNotEqual(self.marionette.session["processId"], self.pid)
+
+        # If a preference value is not forced, a restart will cause a reset
+        self.assertNotEqual(self.marionette.get_pref("browser.startup.page"), 3)
+
+    def test_in_app_quit(self):
+        self.marionette.quit(in_app=True)
 
         self.assertEqual(self.marionette.session, None)
         with self.assertRaisesRegexp(MarionetteException, "Please start a session"):
@@ -64,9 +91,9 @@ class TestQuitRestart(MarionetteTestCase):
         self.assertNotEqual(self.marionette.session_id, self.session_id)
         self.assertNotEqual(self.marionette.get_pref("browser.startup.page"), 3)
 
-    def test_in_app_quit(self):
-        self.marionette.quit(in_app=True)
-
+    def test_in_app_quit_with_callback(self):
+        self.marionette.quit(in_app=True,
+                             callback=self.marionette._request_in_app_shutdown)
         self.assertEqual(self.marionette.session, None)
         with self.assertRaisesRegexp(MarionetteException, "Please start a session"):
             self.marionette.get_url()
