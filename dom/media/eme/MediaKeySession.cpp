@@ -495,5 +495,17 @@ MediaKeySession::SetOnkeystatuseschange(EventHandlerNonNull* aCallback)
   SetEventHandler(nsGkAtoms::onkeystatuseschange, EmptyString(), aCallback);
 }
 
+EventHandlerNonNull*
+MediaKeySession::GetOnmessage()
+{
+  return GetEventHandler(nsGkAtoms::onmessage, EmptyString());
+}
+
+void
+MediaKeySession::SetOnmessage(EventHandlerNonNull* aCallback)
+{
+  SetEventHandler(nsGkAtoms::onmessage, EmptyString(), aCallback);
+}
+
 } // namespace dom
 } // namespace mozilla
