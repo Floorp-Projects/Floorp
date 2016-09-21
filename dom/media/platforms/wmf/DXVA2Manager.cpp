@@ -428,9 +428,11 @@ D3D9DXVA2Manager::Init(nsACString& aFailureReason)
   mDeviceManager = deviceManager;
   mSyncSurface = syncSurf;
 
-  mTextureClientAllocator = new D3D9RecycleAllocator(layers::ImageBridgeChild::GetSingleton().get(),
-                                                     mDevice);
-  mTextureClientAllocator->SetMaxPoolSize(5);
+  if (layers::ImageBridgeChild::GetSingleton()) {
+    mTextureClientAllocator = new D3D9RecycleAllocator(layers::ImageBridgeChild::GetSingleton().get(),
+                                                       mDevice);
+    mTextureClientAllocator->SetMaxPoolSize(5);
+  }
 
   Telemetry::Accumulate(Telemetry::MEDIA_DECODER_BACKEND_USED,
                         uint32_t(media::MediaDecoderBackend::WMFDXVA2D3D9));
@@ -752,9 +754,11 @@ D3D11DXVA2Manager::Init(nsACString& aFailureReason)
   hr = mDevice->CreateTexture2D(&desc, NULL, getter_AddRefs(mSyncSurface));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  mTextureClientAllocator = new D3D11RecycleAllocator(layers::ImageBridgeChild::GetSingleton().get(),
-                                                      mDevice);
-  mTextureClientAllocator->SetMaxPoolSize(5);
+  if (layers::ImageBridgeChild::GetSingleton()) {
+    mTextureClientAllocator = new D3D11RecycleAllocator(layers::ImageBridgeChild::GetSingleton().get(),
+                                                        mDevice);
+    mTextureClientAllocator->SetMaxPoolSize(5);
+  }
 
   Telemetry::Accumulate(Telemetry::MEDIA_DECODER_BACKEND_USED,
                         uint32_t(media::MediaDecoderBackend::WMFDXVA2D3D11));
@@ -795,7 +799,7 @@ D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
 
   RefPtr<D3D11ShareHandleImage> image =
     new D3D11ShareHandleImage(gfx::IntSize(mWidth, mHeight), aRegion);
-  bool ok = image->AllocateTexture(mTextureClientAllocator);
+  bool ok = image->AllocateTexture(mTextureClientAllocator, mDevice);
   NS_ENSURE_TRUE(ok, E_FAIL);
 
   HRESULT hr = mTransform->Input(aVideoSample);
