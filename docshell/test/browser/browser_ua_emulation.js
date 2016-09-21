@@ -3,13 +3,11 @@
 
 "use strict";
 
-// Test that the docShell UA emulation works
-add_task(function*() {
-  yield openUrl("data:text/html;charset=utf-8,<iframe id='test-iframe'></iframe>");
+const URL = "data:text/html;charset=utf-8,<iframe id='test-iframe'></iframe>";
 
-  let docshell = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIWebNavigation)
-                        .QueryInterface(Ci.nsIDocShell);
+// Test that the docShell UA emulation works
+function* contentTask() {
+  let docshell = docShell;
   is(docshell.customUserAgent, "", "There should initially be no customUserAgent");
 
   docshell.customUserAgent = "foo";
@@ -25,28 +23,14 @@ add_task(function*() {
   is(newFrameWin.navigator.userAgent, "foo", "Newly created frames should use the new UA");
 
   newFrameWin.location.reload();
-  yield waitForEvent(newFrameWin, "load");
+  yield ContentTaskUtils.waitForEvent(newFrameWin, "load");
 
   is(newFrameWin.navigator.userAgent, "foo", "New UA should persist across reloads");
-  gBrowser.removeCurrentTab();
+}
+
+add_task(function* () {
+  yield BrowserTestUtils.withNewTab({ gBrowser, url: URL },
+    function* (browser) {
+      yield ContentTask.spawn(browser, null, contentTask);
+    });
 });
-
-function waitForEvent(target, event) {
-  return new Promise(function(resolve) {
-    target.addEventListener(event, resolve);
-  });
-}
-
-function openUrl(url) {
-  return new Promise(function(resolve, reject) {
-    window.focus();
-
-    let tab = window.gBrowser.selectedTab = window.gBrowser.addTab(url);
-    let linkedBrowser = tab.linkedBrowser;
-
-    linkedBrowser.addEventListener("load", function onload() {
-      linkedBrowser.removeEventListener("load", onload, true);
-      resolve(tab);
-    }, true);
-  });
-}
