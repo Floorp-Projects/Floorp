@@ -894,11 +894,6 @@ private:
   // Volume of playback. 0.0 = muted. 1.0 = full volume.
   Mirror<double> mVolume;
 
-  // TODO: The separation between mPlaybackRate and mLogicalPlaybackRate is a
-  // kludge to preserve existing fragile logic while converting this setup to
-  // state-mirroring. Some hero should clean this up.
-  Mirror<double> mLogicalPlaybackRate;
-
   // Pitch preservation for the playback rate.
   Mirror<bool> mPreservesPitch;
 
