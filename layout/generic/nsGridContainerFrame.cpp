@@ -5973,10 +5973,51 @@ nsGridContainerFrame::IntrinsicISize(nsRenderingContext* aRenderingContext,
   // http://dev.w3.org/csswg/css-grid/#intrinsic-sizes
   GridReflowInput state(this, *aRenderingContext);
   InitImplicitNamedAreas(state.mGridStyle); // XXX optimize
+
+  auto GetDefiniteSizes = [] (const nsStyleCoord& aMinCoord,
+                              const nsStyleCoord& aSizeCoord,
+                              const nsStyleCoord& aMaxCoord,
+                              nscoord* aMin,
+                              nscoord* aSize,
+                              nscoord* aMax) {
+    if (aMinCoord.ConvertsToLength()) {
+      *aMin = aMinCoord.ToLength();
+    }
+    if (aMaxCoord.ConvertsToLength()) {
+      *aMax = std::max(*aMin, aMaxCoord.ToLength());
+    }
+    if (aSizeCoord.ConvertsToLength()) {
+      *aSize = Clamp(aSizeCoord.ToLength(), *aMin, *aMax);
+    }
+  };
+  // The min/sz/max sizes are the input to the "repeat-to-fill" algorithm:
+  // https://drafts.csswg.org/css-grid/#auto-repeat
+  // They're only used for auto-repeat so we skip computing them otherwise.
   LogicalSize min(state.mWM, 0, 0);
-  LogicalSize indefinite(state.mWM, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+  LogicalSize sz(state.mWM, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+  LogicalSize max(state.mWM, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+  if (state.mColFunctions.mHasRepeatAuto) {
+    GetDefiniteSizes(state.mGridStyle->MinISize(state.mWM),
+                     state.mGridStyle->ISize(state.mWM),
+                     state.mGridStyle->MaxISize(state.mWM),
+                     &min.ISize(state.mWM),
+                     &sz.ISize(state.mWM),
+                     &max.ISize(state.mWM));
+  }
+  if (state.mRowFunctions.mHasRepeatAuto &&
+      !(state.mGridStyle->mGridAutoFlow & NS_STYLE_GRID_AUTO_FLOW_ROW)) {
+    // Only 'grid-auto-flow:column' can create new implicit columns, so that's
+    // the only case where our block-size can affect the number of columns.
+    GetDefiniteSizes(state.mGridStyle->MinBSize(state.mWM),
+                     state.mGridStyle->BSize(state.mWM),
+                     state.mGridStyle->MaxBSize(state.mWM),
+                     &min.BSize(state.mWM),
+                     &sz.BSize(state.mWM),
+                     &max.BSize(state.mWM));
+  }
+
   Grid grid;
-  grid.PlaceGridItems(state, min, indefinite, indefinite);  // XXX optimize
+  grid.PlaceGridItems(state, min, sz, max);  // XXX optimize
   if (grid.mGridColEnd == 0) {
     return 0;
   }
