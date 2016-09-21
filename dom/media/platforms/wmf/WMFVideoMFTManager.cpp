@@ -180,14 +180,6 @@ FindDXVABlacklistedDLL(StaticAutoPtr<D3DDLLBlacklistingCache>& aDLLBlacklistingC
     ClearOnShutdown(&aDLLBlacklistingCache);
   }
 
-  if (XRE_GetProcessType() == GeckoProcessType_GPU) {
-    // The blacklist code doesn't support running in
-    // the GPU process yet.
-    aDLLBlacklistingCache->mBlacklistPref.SetLength(0);
-    aDLLBlacklistingCache->mBlacklistedDLL.SetLength(0);
-    return aDLLBlacklistingCache->mBlacklistedDLL;
-  }
-
   nsAdoptingCString blacklist = Preferences::GetCString(aDLLBlacklistPrefName);
   if (blacklist.IsEmpty()) {
     // Empty blacklist -> No blacklisting.
@@ -312,10 +304,8 @@ public:
     NS_ASSERTION(NS_IsMainThread(), "Must be on main thread.");
     nsACString* failureReason = &mFailureReason;
     nsCString secondFailureReason;
-    bool allowD3D11 = (XRE_GetProcessType() == GeckoProcessType_GPU) ||
-                      MediaPrefs::PDMWMFAllowD3D11();
     if (mBackend == LayersBackend::LAYERS_D3D11 &&
-        allowD3D11 && IsWin8OrLater()) {
+        MediaPrefs::PDMWMFAllowD3D11() && IsWin8OrLater()) {
       const nsCString& blacklistedDLL = FindD3D11BlacklistedDLL();
       if (!blacklistedDLL.IsEmpty()) {
         failureReason->AppendPrintf("D3D11 blacklisted with DLL %s",
@@ -441,8 +431,7 @@ WMFVideoMFTManager::InitInternal(bool aForceD3D9)
     attr->GetUINT32(MF_SA_D3D_AWARE, &aware);
     attr->SetUINT32(CODECAPI_AVDecNumWorkerThreads,
       WMFDecoderModule::GetNumDecoderThreads());
-    if ((XRE_GetProcessType() != GeckoProcessType_GPU) &&
-        MediaPrefs::PDMWMFLowLatencyEnabled()) {
+    if (MediaPrefs::PDMWMFLowLatencyEnabled()) {
       hr = attr->SetUINT32(CODECAPI_AVLowLatencyMode, TRUE);
       if (SUCCEEDED(hr)) {
         LOG("Enabling Low Latency Mode");

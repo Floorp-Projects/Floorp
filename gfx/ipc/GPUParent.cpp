@@ -3,9 +3,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifdef XP_WIN
-#include "WMF.h"
-#endif
 #include "GPUParent.h"
 #include "gfxConfig.h"
 #include "gfxPlatform.h"
@@ -17,7 +14,6 @@
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
-#include "mozilla/dom/VideoDecoderManagerParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "nsDebugImpl.h"
@@ -78,9 +74,6 @@ GPUParent::Init(base::ProcessId aParentPid,
   VRManager::ManagerInit();
   LayerTreeOwnerTracker::Initialize();
   mozilla::ipc::SetThisProcessName("GPU Process");
-#ifdef XP_WIN
-  wmf::MFStartup();
-#endif
   return true;
 }
 
@@ -259,12 +252,6 @@ GPUParent::RecvNewContentVRManager(Endpoint<PVRManagerParent>&& aEndpoint)
 }
 
 bool
-GPUParent::RecvNewContentVideoDecoderManager(Endpoint<PVideoDecoderManagerParent>&& aEndpoint)
-{
-  return dom::VideoDecoderManagerParent::CreateForContent(Move(aEndpoint));
-}
-
-bool
 GPUParent::RecvDeallocateLayerTreeId(const uint64_t& aLayersId)
 {
   CompositorBridgeParent::DeallocateLayerTreeId(aLayersId);
@@ -285,10 +272,6 @@ GPUParent::ActorDestroy(ActorDestroyReason aWhy)
     NS_WARNING("Shutting down GPU process early due to a crash!");
     ProcessChild::QuickExit();
   }
-
-#ifdef XP_WIN
-  wmf::MFShutdown();
-#endif
 
 #ifndef NS_FREE_PERMANENT_DATA
   // No point in going through XPCOM shutdown because we don't keep persistent
