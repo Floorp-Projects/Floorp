@@ -106,18 +106,6 @@ enum DeviceVendor {
   VendorAMD,
   VendorATI,
   VendorMicrosoft,
-
-  // Wildcard for all Mesa drivers.
-  VendorMesaAll,
-  // Note that the following list of Mesa drivers is not comprehensive; we pull
-  // the DRI driver at runtime. These drivers are provided for convenience when
-  // populating the local blocklist.
-  VendorMesaLLVMPipe,
-  VendorMesaSoftPipe,
-  VendorMesaSWRast,
-  // A generic ID to be provided when we can't determine the DRI driver on Mesa.
-  VendorMesaUnknown,
-
   DeviceVendorMax
 };
 
@@ -271,7 +259,7 @@ ParseDriverVersion(const nsAString& aVersion, uint64_t *aNumericVersion)
 {
   *aNumericVersion = 0;
 
-#if defined(XP_WIN) || defined(MOZ_X11)
+#if defined(XP_WIN)
   int a, b, c, d;
   char aStr[8], bStr[8], cStr[8], dStr[8];
   /* honestly, why do I even bother */
