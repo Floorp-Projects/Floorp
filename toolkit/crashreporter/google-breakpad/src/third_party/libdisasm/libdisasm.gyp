@@ -27,6 +27,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 {
+  'includes': [
+    '../../build/common.gypi',
+  ],
   'targets': [
     {
       'target_name': 'libdisasm',

@@ -583,7 +583,6 @@
 		4DBE4769134A4F080072546A /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		8B31007011F0CD3C00FCF3E4 /* GTMDefines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GTMDefines.h; path = ../../common/mac/GTMDefines.h; sourceTree = SOURCE_ROOT; };
 		8B3101E911F0CDE300FCF3E4 /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = Library/Frameworks/SenTestingKit.framework; sourceTree = DEVELOPER_DIR; };
-		8B31022211F0CE1000FCF3E4 /* GTMGarbageCollection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GTMGarbageCollection.h; path = ../../common/mac/GTMGarbageCollection.h; sourceTree = SOURCE_ROOT; };
 		8B31027711F0D3AF00FCF3E4 /* BreakpadDebug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = BreakpadDebug.xcconfig; path = ../../common/mac/BreakpadDebug.xcconfig; sourceTree = SOURCE_ROOT; };
 		8B31027811F0D3AF00FCF3E4 /* BreakpadRelease.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = BreakpadRelease.xcconfig; path = ../../common/mac/BreakpadRelease.xcconfig; sourceTree = SOURCE_ROOT; };
 		8B31FFF611F0C90500FCF3E4 /* Breakpad.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Breakpad.xcconfig; path = ../../common/mac/Breakpad.xcconfig; sourceTree = SOURCE_ROOT; };
@@ -955,7 +954,6 @@
 			children = (
 				162F64F0161C577500CD68D5 /* arch_utilities.cc */,
 				162F64F1161C577500CD68D5 /* arch_utilities.h */,
-				8B31022211F0CE1000FCF3E4 /* GTMGarbageCollection.h */,
 				8B31007011F0CD3C00FCF3E4 /* GTMDefines.h */,
 				F9C77E0F0F7DDF650045F7DB /* testing */,
 				F9C44EE70EF0A3C1003AEBAA /* GTMLogger.h */,
