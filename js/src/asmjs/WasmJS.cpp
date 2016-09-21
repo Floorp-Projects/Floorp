@@ -164,14 +164,14 @@ GetImports(JSContext* cx,
                 double d;
                 if (!ToNumber(cx, v, &d))
                     return false;
-                val = Val(float(d));
+                val = Val(RawF32(float(d)));
                 break;
               }
               case ValType::F64: {
                 double d;
                 if (!ToNumber(cx, v, &d))
                     return false;
-                val = Val(d);
+                val = Val(RawF64(d));
                 break;
               }
               default: {
