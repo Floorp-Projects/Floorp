@@ -415,6 +415,9 @@ add_task(function* test_can_ignore() {
   let anonyNodes = document.getAnonymousNodes(notification)[0];
   let closeButton = anonyNodes.querySelector(".close-icon");
   closeButton.click();
+  // We'll not wait for the notification to finish its transition -
+  // we'll just remove it right away.
+  gNotificationBox.removeNotification(notification, true);
   yield waitForIgnoredReports(reportIDs);
 
   notification =
@@ -486,6 +489,10 @@ add_task(function* test_shutdown_while_not_showing() {
   let anonyNodes = document.getAnonymousNodes(notification)[0];
   let closeButton = anonyNodes.querySelector(".close-icon");
   closeButton.click();
+  // We'll not wait for the notification to finish its transition -
+  // we'll just remove it right away.
+  gNotificationBox.removeNotification(notification, true);
+
   yield waitForIgnoredReports(reportIDs);
 
   UnsubmittedCrashHandler.uninit();
@@ -496,7 +503,6 @@ add_task(function* test_shutdown_while_not_showing() {
      "uninitting.");
   UnsubmittedCrashHandler.init();
 
-  gNotificationBox.removeNotification(notification, true);
   clearPendingCrashReports();
 });
 
