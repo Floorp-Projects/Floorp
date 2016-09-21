@@ -148,13 +148,18 @@ function transformPacket(packet) {
 
     case "evaluationResult":
     default: {
-      let { result } = packet;
+      let {
+        exceptionMessage: messageText,
+        result: parameters
+      } = packet;
 
+      const level = messageText ? MESSAGE_LEVEL.ERROR : MESSAGE_LEVEL.LOG;
       return new ConsoleMessage({
         source: MESSAGE_SOURCE.JAVASCRIPT,
         type: MESSAGE_TYPE.RESULT,
-        level: MESSAGE_LEVEL.LOG,
-        parameters: result,
+        level,
+        messageText,
+        parameters,
       });
     }
   }
