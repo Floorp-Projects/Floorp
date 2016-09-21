@@ -1450,7 +1450,7 @@ nsDocShell::LoadURI(nsIURI* aURI,
 
   // Perform the load...
 
-  // We need a triggeringPrincipal (a referring principal).
+  // We need a principalToInherit.
   //
   // If principalIsExplicit is not set there are 4 possibilities:
   // (1) If the system principal or an expanded principal was passed
@@ -1477,15 +1477,15 @@ nsDocShell::LoadURI(nsIURI* aURI,
   //     true, then
   // (4) we dont' pass a principal into the channel, and a principal will be
   //     created later from the channel's internal data.
-  nsCOMPtr<nsIPrincipal> principalToInheritAttributesFrom = triggeringPrincipal;
-  if (triggeringPrincipal && mItemType != typeChrome) {
-    if (nsContentUtils::IsSystemPrincipal(principalToInheritAttributesFrom)) {
+  nsCOMPtr<nsIPrincipal> principalToInherit = triggeringPrincipal;
+  if (principalToInherit && mItemType != typeChrome) {
+    if (nsContentUtils::IsSystemPrincipal(principalToInherit)) {
       if (principalIsExplicit) {
         return NS_ERROR_DOM_SECURITY_ERR;
       }
-      triggeringPrincipal = nullptr;
+      principalToInherit = nullptr;
       inheritPrincipal = true;
-    } else if (nsContentUtils::IsExpandedPrincipal(principalToInheritAttributesFrom)) {
+    } else if (nsContentUtils::IsExpandedPrincipal(principalToInherit)) {
       if (principalIsExplicit) {
         return NS_ERROR_DOM_SECURITY_ERR;
       }
@@ -1494,18 +1494,18 @@ nsDocShell::LoadURI(nsIURI* aURI,
       //
       // We didn't inherit OriginAttributes here as ExpandedPrincipal doesn't
       // have origin attributes.
-      triggeringPrincipal = nsNullPrincipal::CreateWithInheritedAttributes(this);
+      principalToInherit = nsNullPrincipal::CreateWithInheritedAttributes(this);
       inheritPrincipal = false;
     }
   }
-  if (!triggeringPrincipal && !inheritPrincipal && !principalIsExplicit) {
+  if (!principalToInherit && !inheritPrincipal && !principalIsExplicit) {
     // See if there's system or chrome JS code running
     inheritPrincipal = nsContentUtils::LegacyIsCallerChromeOrNativeCode();
   }
 
   if (aLoadFlags & LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL) {
     inheritPrincipal = false;
-    triggeringPrincipal = nsNullPrincipal::CreateWithInheritedAttributes(this);
+    principalToInherit = nsNullPrincipal::CreateWithInheritedAttributes(this);
   }
 
   uint32_t flags = 0;
@@ -1544,6 +1544,7 @@ nsDocShell::LoadURI(nsIURI* aURI,
                       referrer,
                       referrerPolicy,
                       triggeringPrincipal,
+                      principalToInherit,
                       flags,
                       target.get(),
                       nullptr,      // No type hint
@@ -5375,7 +5376,7 @@ nsDocShell::LoadErrorPage(nsIURI* aURI, const char16_t* aURL,
 
   return InternalLoad(errorPageURI, nullptr, false, nullptr,
                       mozilla::net::RP_Default,
-                      nullptr, INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL, nullptr,
+                      nullptr, nullptr, INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL, nullptr,
                       nullptr, NullString(), nullptr, nullptr, LOAD_ERROR_PAGE,
                       nullptr, true, NullString(), this, nullptr, nullptr,
                       nullptr);
@@ -5452,6 +5453,7 @@ nsDocShell::Reload(uint32_t aReloadFlags)
                       loadReplace,
                       mReferrerURI,
                       mReferrerPolicy,
+                      principal,
                       principal,
                       flags,
                       nullptr,         // No window target
@@ -7365,7 +7367,7 @@ nsDocShell::OnStateChange(nsIWebProgress* aProgress, nsIRequest* aRequest,
         // from the channel and store it in session history.
         // Pass false for aCloneChildren, since we're creating
         // a new DOM here.
-        AddToSessionHistory(uri, wcwgChannel, nullptr, false,
+        AddToSessionHistory(uri, wcwgChannel, nullptr, nullptr, false,
                             getter_AddRefs(mLSHE));
         SetCurrentURI(uri, aRequest, true, 0);
         // Save history state of the previous page
@@ -9121,7 +9123,7 @@ nsDocShell::CreateContentViewer(const nsACString& aContentType,
     // Create an shistory entry for the old load.
     if (failedURI) {
       bool errorOnLocationChangeNeeded = OnNewURI(
-        failedURI, failedChannel, nullptr, mLoadType, false, false, false);
+        failedURI, failedChannel, nullptr, nullptr, mLoadType, false, false, false);
 
       if (errorOnLocationChangeNeeded) {
         FireOnLocationChange(this, failedChannel, failedURI,
@@ -9594,7 +9596,8 @@ public:
   InternalLoadEvent(nsDocShell* aDocShell, nsIURI* aURI,
                     nsIURI* aOriginalURI, bool aLoadReplace,
                     nsIURI* aReferrer, uint32_t aReferrerPolicy,
-                    nsIPrincipal* aTriggeringPrincipal, uint32_t aFlags,
+                    nsIPrincipal* aTriggeringPrincipal, 
+                    nsIPrincipal* aPrincipalToInherit, uint32_t aFlags,
                     const char* aTypeHint, nsIInputStream* aPostData,
                     nsIInputStream* aHeadersData, uint32_t aLoadType,
                     nsISHEntry* aSHEntry, bool aFirstParty,
@@ -9608,6 +9611,7 @@ public:
     , mReferrer(aReferrer)
     , mReferrerPolicy(aReferrerPolicy)
     , mTriggeringPrincipal(aTriggeringPrincipal)
+    , mPrincipalToInherit(aPrincipalToInherit)
     , mPostData(aPostData)
     , mHeadersData(aHeadersData)
     , mSHEntry(aSHEntry)
@@ -9630,8 +9634,8 @@ public:
                                    mLoadReplace,
                                    mReferrer,
                                    mReferrerPolicy,
-                                   mTriggeringPrincipal, mFlags,
-                                   nullptr, mTypeHint.get(),
+                                   mTriggeringPrincipal, mPrincipalToInherit,
+                                   mFlags, nullptr, mTypeHint.get(),
                                    NullString(), mPostData, mHeadersData,
                                    mLoadType, mSHEntry, mFirstParty,
                                    mSrcdoc, mSourceDocShell, mBaseURI,
@@ -9651,6 +9655,7 @@ private:
   nsCOMPtr<nsIURI> mReferrer;
   uint32_t mReferrerPolicy;
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
+  nsCOMPtr<nsIPrincipal> mPrincipalToInherit;
   nsCOMPtr<nsIInputStream> mPostData;
   nsCOMPtr<nsIInputStream> mHeadersData;
   nsCOMPtr<nsISHEntry> mSHEntry;
@@ -9718,6 +9723,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
                          nsIURI* aReferrer,
                          uint32_t aReferrerPolicy,
                          nsIPrincipal* aTriggeringPrincipal,
+                         nsIPrincipal* aPrincipalToInherit,
                          uint32_t aFlags,
                          const char16_t* aWindowTarget,
                          const char* aTypeHint,
@@ -9856,7 +9862,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
     return NS_ERROR_CONTENT_BLOCKED;
   }
 
-  nsCOMPtr<nsIPrincipal> triggeringPrincipal = aTriggeringPrincipal;
+  nsCOMPtr<nsIPrincipal> principalToInherit = aPrincipalToInherit;
   //
   // Get a principal from the current document if necessary.  Note that we only
   // do this for URIs that inherit a security context and local file URIs;
@@ -9865,17 +9871,17 @@ nsDocShell::InternalLoad(nsIURI* aURI,
   // done by someone from chrome manually messing with our nsIWebNavigation
   // or by C++ setting document.location) don't get a funky principal.  If
   // callers want something interesting to happen with the about:blank
-  // principal in this case, they should pass aTriggeringPrincipal in.
+  // principal in this case, they should pass aPrincipalToInherit in.
   //
   {
     bool inherits;
     // One more twist: Don't inherit the principal for external loads.
-    if (aLoadType != LOAD_NORMAL_EXTERNAL && !triggeringPrincipal &&
+    if (aLoadType != LOAD_NORMAL_EXTERNAL && !principalToInherit &&
         (aFlags & INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL) &&
         NS_SUCCEEDED(nsContentUtils::URIInheritsSecurityContext(aURI,
                                                                 &inherits)) &&
         inherits) {
-      triggeringPrincipal = GetInheritedPrincipal(true);
+      principalToInherit = GetInheritedPrincipal(true);
     }
   }
 
@@ -9979,7 +9985,8 @@ nsDocShell::InternalLoad(nsIURI* aURI,
                                         aLoadReplace,
                                         aReferrer,
                                         aReferrerPolicy,
-                                        triggeringPrincipal,
+                                        aTriggeringPrincipal,
+                                        principalToInherit,
                                         aFlags,
                                         nullptr,         // No window target
                                         aTypeHint,
@@ -10058,7 +10065,8 @@ nsDocShell::InternalLoad(nsIURI* aURI,
       // Do this asynchronously
       nsCOMPtr<nsIRunnable> ev =
         new InternalLoadEvent(this, aURI, aOriginalURI, aLoadReplace,
-                              aReferrer, aReferrerPolicy, aTriggeringPrincipal,
+                              aReferrer, aReferrerPolicy,
+                              aTriggeringPrincipal, principalToInherit,
                               aFlags, aTypeHint, aPostData, aHeadersData,
                               aLoadType, aSHEntry, aFirstParty, aSrcdoc,
                               aSourceDocShell, aBaseURI);
@@ -10231,9 +10239,10 @@ nsDocShell::InternalLoad(nsIURI* aURI,
        * call OnNewURI() so that, this traversal will be
        * recorded in session and global history.
        */
-      nsCOMPtr<nsIPrincipal> triggeringPrincipal;
+      nsCOMPtr<nsIPrincipal> triggeringPrincipal, principalToInherit;
       if (mOSHE) {
         mOSHE->GetTriggeringPrincipal(getter_AddRefs(triggeringPrincipal));
+        mOSHE->GetPrincipalToInherit(getter_AddRefs(principalToInherit)); 
       }
       // Pass true for aCloneSHChildren, since we're not
       // changing documents here, so all of our subframes are
@@ -10243,7 +10252,8 @@ nsDocShell::InternalLoad(nsIURI* aURI,
       // flag on firing onLocationChange(...).
       // Anyway, aCloneSHChildren param is simply reflecting
       // doShortCircuitedLoad in this scope.
-      OnNewURI(aURI, nullptr, triggeringPrincipal, mLoadType, true, true, true);
+      OnNewURI(aURI, nullptr, triggeringPrincipal, principalToInherit,
+               mLoadType, true, true, true);
 
       nsCOMPtr<nsIInputStream> postData;
       nsCOMPtr<nsISupports> cacheKey;
@@ -10577,7 +10587,8 @@ nsDocShell::InternalLoad(nsIURI* aURI,
   rv = DoURILoad(aURI, aOriginalURI, aLoadReplace, aReferrer,
                  !(aFlags & INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER),
                  aReferrerPolicy,
-                 triggeringPrincipal, aTypeHint, aFileName, aPostData, aHeadersData,
+                 aTriggeringPrincipal, principalToInherit, aTypeHint,
+                 aFileName, aPostData, aHeadersData,
                  aFirstParty, aDocShell, getter_AddRefs(req),
                  (aFlags & INTERNAL_LOAD_FLAGS_FIRST_LOAD) != 0,
                  (aFlags & INTERNAL_LOAD_FLAGS_BYPASS_CLASSIFIER) != 0,
@@ -10657,6 +10668,7 @@ nsDocShell::DoURILoad(nsIURI* aURI,
                       bool aSendReferrer,
                       uint32_t aReferrerPolicy,
                       nsIPrincipal* aTriggeringPrincipal,
+                      nsIPrincipal* aPrincipalToInherit,
                       const char* aTypeHint,
                       const nsAString& aFileName,
                       nsIInputStream* aPostData,
@@ -10777,28 +10789,32 @@ nsDocShell::DoURILoad(nsIURI* aURI,
     }
   }
 
-  bool isSandBoxed = mSandboxFlags & SANDBOXED_ORIGIN;
-  // only inherit if we have a triggeringPrincipal
-  bool inherit = false;
-
   // Getting the right triggeringPrincipal needs to be updated and is only
   // ready for use once bug 1182569 landed.
   // Until then, we cannot rely on the triggeringPrincipal for TYPE_DOCUMENT
   // or TYPE_SUBDOCUMENT loads.  Notice the triggeringPrincipal falls back to
   // systemPrincipal below.
   nsCOMPtr<nsIPrincipal> triggeringPrincipal = aTriggeringPrincipal;
-  if (triggeringPrincipal) {
+  if (!triggeringPrincipal) {
+    if (aReferrerURI) {
+      rv = CreatePrincipalFromReferrer(aReferrerURI,
+                                       getter_AddRefs(triggeringPrincipal));
+      NS_ENSURE_SUCCESS(rv, rv);
+    } else {
+      triggeringPrincipal = nsContentUtils::GetSystemPrincipal();
+    }
+  }
+
+  bool isSandBoxed = mSandboxFlags & SANDBOXED_ORIGIN;
+  // only inherit if we have a aPrincipalToInherit
+  bool inherit = false;
+
+  if (aPrincipalToInherit) {
     inherit = nsContentUtils::ChannelShouldInheritPrincipal(
-      triggeringPrincipal,
+      aPrincipalToInherit,
       aURI,
       true, // aInheritForAboutBlank
       isSrcdoc);
-  } else if (!triggeringPrincipal && aReferrerURI) {
-    rv = CreatePrincipalFromReferrer(aReferrerURI,
-                                     getter_AddRefs(triggeringPrincipal));
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    triggeringPrincipal = nsContentUtils::GetSystemPrincipal();
   }
 
   nsLoadFlags loadFlags = mDefaultLoadFlags;
@@ -10832,6 +10848,10 @@ nsDocShell::DoURILoad(nsIURI* aURI,
                    securityFlags) :
       new LoadInfo(loadingPrincipal, triggeringPrincipal, loadingNode,
                    securityFlags, aContentPolicyType);
+
+  if (aPrincipalToInherit) {
+    loadInfo->SetPrincipalToInherit(aPrincipalToInherit);
+  }
 
   // We have to do this in case our OriginAttributes are different from the
   // OriginAttributes of the parent document. Or in case there isn't a
@@ -11445,11 +11465,14 @@ nsDocShell::SetupReferrerFromChannel(nsIChannel* aChannel)
 bool
 nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
                      nsIPrincipal* aTriggeringPrincipal,
+                     nsIPrincipal* aPrincipalToInherit,
                      uint32_t aLoadType, bool aFireOnLocationChange,
                      bool aAddToGlobalHistory, bool aCloneSHChildren)
 {
   NS_PRECONDITION(aURI, "uri is null");
   NS_PRECONDITION(!aChannel || !aTriggeringPrincipal, "Shouldn't have both set");
+
+  MOZ_ASSERT(!aPrincipalToInherit || (aPrincipalToInherit && aTriggeringPrincipal));
 
 #if defined(DEBUG)
   if (MOZ_LOG_TEST(gDocShellLog, LogLevel::Debug)) {
@@ -11626,7 +11649,8 @@ nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
        * rootDocShell
        */
       (void)AddToSessionHistory(aURI, aChannel, aTriggeringPrincipal,
-                                aCloneSHChildren, getter_AddRefs(mLSHE));
+                                aPrincipalToInherit, aCloneSHChildren,
+                                getter_AddRefs(mLSHE));
     }
   }
 
@@ -11692,7 +11716,7 @@ nsDocShell::OnLoadingSite(nsIChannel* aChannel, bool aFireOnLocationChange,
   NS_ENSURE_TRUE(uri, false);
 
   // Pass false for aCloneSHChildren, since we're loading a new page here.
-  return OnNewURI(uri, aChannel, nullptr, mLoadType, aFireOnLocationChange,
+  return OnNewURI(uri, aChannel, nullptr, nullptr, mLoadType, aFireOnLocationChange,
                   aAddToGlobalHistory, false);
 }
 
@@ -11917,7 +11941,7 @@ nsDocShell::AddState(JS::Handle<JS::Value> aData, const nsAString& aTitle,
 
     // Since we're not changing which page we have loaded, pass
     // true for aCloneChildren.
-    rv = AddToSessionHistory(newURI, nullptr, nullptr, true,
+    rv = AddToSessionHistory(newURI, nullptr, nullptr, nullptr, true,
                              getter_AddRefs(newSHEntry));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -12088,6 +12112,7 @@ nsDocShell::ShouldAddToSessionHistory(nsIURI* aURI)
 nsresult
 nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
                                 nsIPrincipal* aTriggeringPrincipal,
+                                nsIPrincipal* aPrincipalToInherit,
                                 bool aCloneChildren,
                                 nsISHEntry** aNewEntry)
 {
@@ -12158,6 +12183,7 @@ nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
   uint32_t referrerPolicy = mozilla::net::RP_Default;
   nsCOMPtr<nsISupports> cacheKey;
   nsCOMPtr<nsIPrincipal> triggeringPrincipal = aTriggeringPrincipal;
+  nsCOMPtr<nsIPrincipal> principalToInherit = aPrincipalToInherit;
   bool expired = false;
   bool discardLayoutState = false;
   nsCOMPtr<nsICacheInfoChannel> cacheChannel;
@@ -12190,31 +12216,34 @@ nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
 
       discardLayoutState = ShouldDiscardLayoutState(httpChannel);
     }
+
     // XXX Bug 1286838: Replace channel owner with loadInfo triggeringPrincipal
     nsCOMPtr<nsISupports> owner;
     aChannel->GetOwner(getter_AddRefs(owner));
     triggeringPrincipal = do_QueryInterface(owner);
 
-    if (!triggeringPrincipal) {
-      nsCOMPtr<nsILoadInfo> loadInfo;
-      aChannel->GetLoadInfo(getter_AddRefs(loadInfo));
-      if (loadInfo) {
-        // For now keep storing just the principal in the SHEntry.
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
+    if (loadInfo) {
+      if (!triggeringPrincipal) {
+        triggeringPrincipal = loadInfo->TriggeringPrincipal();
+      }
+
+      // For now keep storing just the principal in the SHEntry.
+      if (!principalToInherit) {
         if (loadInfo->GetLoadingSandboxed()) {
           if (loadInfo->LoadingPrincipal()) {
-            triggeringPrincipal = nsNullPrincipal::CreateWithInheritedAttributes(
-              loadInfo->LoadingPrincipal());
+            principalToInherit = nsNullPrincipal::CreateWithInheritedAttributes(
+            loadInfo->LoadingPrincipal());
           } else {
             // get the OriginAttributes
             NeckoOriginAttributes nAttrs;
             loadInfo->GetOriginAttributes(&nAttrs);
             PrincipalOriginAttributes pAttrs;
             pAttrs.InheritFromNecko(nAttrs);
-
-            triggeringPrincipal = nsNullPrincipal::Create(pAttrs);
+            principalToInherit = nsNullPrincipal::Create(pAttrs);
           }
         } else if (loadInfo->GetForceInheritPrincipal()) {
-          triggeringPrincipal = loadInfo->TriggeringPrincipal();
+          principalToInherit = loadInfo->PrincipalToInherit();
         }
       }
     }
@@ -12228,6 +12257,7 @@ nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
                 cacheKey,            // CacheKey
                 mContentTypeHint,    // Content-type
                 triggeringPrincipal, // Channel or provided principal
+                principalToInherit,
                 mHistoryID,
                 mDynamicallyCreated);
 
@@ -12346,6 +12376,7 @@ nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType)
   uint32_t referrerPolicy;
   nsAutoCString contentType;
   nsCOMPtr<nsIPrincipal> triggeringPrincipal;
+  nsCOMPtr<nsIPrincipal> principalToInherit;
 
   NS_ENSURE_TRUE(aEntry, NS_ERROR_FAILURE);
 
@@ -12362,6 +12393,8 @@ nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType)
                     NS_ERROR_FAILURE);
   NS_ENSURE_SUCCESS(aEntry->GetContentType(contentType), NS_ERROR_FAILURE);
   NS_ENSURE_SUCCESS(aEntry->GetTriggeringPrincipal(getter_AddRefs(triggeringPrincipal)),
+                    NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(aEntry->GetPrincipalToInherit(getter_AddRefs(principalToInherit)),
                     NS_ERROR_FAILURE);
 
   // Calling CreateAboutBlankContentViewer can set mOSHE to null, and if
@@ -12439,6 +12472,7 @@ nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType)
                     referrerURI,
                     referrerPolicy,
                     triggeringPrincipal,
+                    principalToInherit,
                     flags,
                     nullptr,            // No window target
                     contentType.get(),  // Type hint
@@ -13942,6 +13976,7 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
                              refererPolicy,             // Referer policy
                              aContent->NodePrincipal(), // Triggering is our node's
                                                         // principal
+                             aContent->NodePrincipal(),
                              flags,
                              target.get(),              // Window target
                              NS_LossyConvertUTF16toASCII(typeHint).get(),

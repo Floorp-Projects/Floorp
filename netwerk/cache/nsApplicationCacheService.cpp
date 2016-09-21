@@ -263,6 +263,6 @@ nsApplicationCacheService::AppClearDataObserverInit()
   nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
   if (observerService) {
     RefPtr<AppCacheClearDataObserver> obs = new AppCacheClearDataObserver();
-    observerService->AddObserver(obs, "clear-origin-data", /*holdsWeak=*/ false);
+    observerService->AddObserver(obs, "clear-origin-data", /*ownsWeak=*/ false);
   }
 }

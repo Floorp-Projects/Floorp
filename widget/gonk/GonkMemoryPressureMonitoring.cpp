@@ -83,7 +83,7 @@ public:
     NS_ENSURE_STATE(os);
 
     // The observer service holds us alive.
-    os->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, /* holdsWeak */ false);
+    os->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, /* ownsWeak */ false);
 
     // Initialize the internal state
     mPageSize = sysconf(_SC_PAGESIZE);

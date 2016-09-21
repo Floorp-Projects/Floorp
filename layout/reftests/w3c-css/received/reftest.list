@@ -100,3 +100,18 @@ skip == css-values-3/vh-support-transform-translate.html css-values-3/all-green.
 == css-values-3/vh-zero-support.html css-values-3/all-green.html
 skip == css-values-3/vh_not_refreshing_on_chrome.html css-values-3/vh_not_refreshing_on_chrome-ref.html
 skip == css-values-3/vh_not_refreshing_on_chrome_iframe.html css-values-3/vh_not_refreshing_on_chrome-ref.html
+needs-focus == selectors-4/focus-within-001.html selectors-4/focus-within-001-ref.html
+needs-focus == selectors-4/focus-within-002.html selectors-4/focus-within-001-ref.html
+needs-focus == selectors-4/focus-within-003.html selectors-4/focus-within-001-ref.html
+needs-focus == selectors-4/focus-within-004.html selectors-4/focus-within-001-ref.html
+needs-focus == selectors-4/focus-within-005.html selectors-4/focus-within-001-ref.html
+needs-focus == selectors-4/focus-within-006.html selectors-4/focus-within-001-ref.html
+fails needs-focus == selectors-4/focus-within-shadow-001.html selectors-4/focus-within-shadow-001-ref.html
+pref(dom.webcomponents.enabled,true) needs-focus == selectors-4/focus-within-shadow-002.html selectors-4/focus-within-shadow-001-ref.html
+pref(dom.webcomponents.enabled,true) needs-focus == selectors-4/focus-within-shadow-003.html selectors-4/focus-within-shadow-001-ref.html
+pref(dom.webcomponents.enabled,true) needs-focus == selectors-4/focus-within-shadow-004.html selectors-4/focus-within-shadow-001-ref.html
+pref(dom.webcomponents.enabled,true) needs-focus == selectors-4/focus-within-shadow-005.html selectors-4/focus-within-shadow-001-ref.html
+== selectors-4/of-type-selectors.xhtml selectors-4/of-type-selectors-ref.xhtml
+== selectors-4/selector-required.html selectors-4/selector-required-ref.html
+== selectors-4/selectors-dir-selector-ltr-001.html selectors-4/selectors-dir-selector-ref.html
+== selectors-4/selectors-dir-selector-rtl-001.html selectors-4/selectors-dir-selector-ref.html

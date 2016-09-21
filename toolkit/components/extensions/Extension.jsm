@@ -167,7 +167,7 @@ var Management = new class extends SchemaAPIManager {
       super.registerSchemaAPI(namespace, "addon_parent", getAPI);
     }
   }
-};
+}();
 
 // An extension page is an execution context for any extension content
 // that runs in the chrome process. It's used for background pages

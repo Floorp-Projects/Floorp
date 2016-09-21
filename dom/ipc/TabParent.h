@@ -170,6 +170,8 @@ public:
                                const int32_t& aShellItemWidth,
                                const int32_t& aShellItemHeight) override;
 
+  virtual bool RecvDropLinks(nsTArray<nsString>&& aLinks) override;
+
   virtual bool RecvEvent(const RemoteDOMEvent& aEvent) override;
 
   virtual bool RecvReplyKeyEvent(const WidgetKeyboardEvent& aEvent) override;
@@ -583,6 +585,8 @@ public:
   bool SetRenderFrame(PRenderFrameParent* aRFParent);
   bool GetRenderFrameInfo(TextureFactoryIdentifier* aTextureFactoryIdentifier,
                           uint64_t* aLayersId);
+
+  bool RecvEnsureLayersConnected() override;
 
 protected:
   bool ReceiveMessage(const nsString& aMessage,

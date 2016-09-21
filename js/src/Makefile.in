@@ -197,7 +197,7 @@ install:: js-config.h
 #
 
 install::
-	$(call py_action,process_install_manifest,--no-remove $(DESTDIR)$(includedir) $(DEPTH)/_build_manifests/install/dist_include)
+	$(call py_action,process_install_manifest,--no-remove --no-symlinks $(DESTDIR)$(includedir) $(DEPTH)/_build_manifests/install/dist_include)
 
 #
 # END SpiderMonkey header installation

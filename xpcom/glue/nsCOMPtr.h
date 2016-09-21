@@ -440,6 +440,15 @@ public:
     NSCAP_LOG_ASSIGNMENT(this, aSmartPtr.mRawPtr);
   }
 
+  nsCOMPtr(nsCOMPtr<T>&& aSmartPtr)
+    : NSCAP_CTOR_BASE(aSmartPtr.mRawPtr)
+  {
+    assert_validity();
+    aSmartPtr.mRawPtr = nullptr;
+    NSCAP_LOG_ASSIGNMENT(this, mRawPtr);
+    NSCAP_ASSERT_NO_QUERY_NEEDED();
+  }
+
   MOZ_IMPLICIT nsCOMPtr(T* aRawPtr)
     : NSCAP_CTOR_BASE(aRawPtr)
   {

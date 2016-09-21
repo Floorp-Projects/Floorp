@@ -17,8 +17,9 @@ BlobSet::GetBlobInternal(nsISupports* aParent,
                          const nsACString& aContentType,
                          ErrorResult& aRv)
 {
+  nsTArray<RefPtr<BlobImpl>> subImpls(GetBlobImpls());
   RefPtr<BlobImpl> blobImpl =
-    MultipartBlobImpl::Create(GetBlobImpls(),
+    MultipartBlobImpl::Create(Move(subImpls),
                               NS_ConvertASCIItoUTF16(aContentType),
                               aRv);
   if (NS_WARN_IF(aRv.Failed())) {

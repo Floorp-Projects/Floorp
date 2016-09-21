@@ -86,6 +86,7 @@ private:
   // Please note that aRedirectChain uses swapElements.
   LoadInfo(nsIPrincipal* aLoadingPrincipal,
            nsIPrincipal* aTriggeringPrincipal,
+           nsIPrincipal* aPrincipalToInherit,
            nsSecurityFlags aSecurityFlags,
            nsContentPolicyType aContentPolicyType,
            LoadTainting aTainting,
@@ -126,6 +127,7 @@ private:
   // if you add a member, please also update the copy constructor
   nsCOMPtr<nsIPrincipal>           mLoadingPrincipal;
   nsCOMPtr<nsIPrincipal>           mTriggeringPrincipal;
+  nsCOMPtr<nsIPrincipal>           mPrincipalToInherit;
   nsWeakPtr                        mLoadingContext;
   nsSecurityFlags                  mSecurityFlags;
   nsContentPolicyType              mInternalContentPolicyType;

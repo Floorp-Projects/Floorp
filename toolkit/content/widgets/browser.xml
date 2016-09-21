@@ -1336,6 +1336,26 @@
           ]]>
         </body>
       </method>
+
+      <method name="dropLinks">
+        <parameter name="aLinksCount"/>
+        <parameter name="aLinks"/>
+        <body><![CDATA[
+          if (!this.droppedLinkHandler) {
+            return false;
+          }
+          let links = [];
+          for (let i = 0; i < aLinksCount; i += 3) {
+            links.push({
+              url: aLinks[i],
+              name: aLinks[i + 1],
+              type: aLinks[i + 2],
+            });
+          }
+          this.droppedLinkHandler(null, links);
+          return true;
+        ]]></body>
+      </method>
     </implementation>
 
     <handlers>
@@ -1440,13 +1460,13 @@
                             getService(Components.interfaces.nsIDroppedLinkHandler);
         try {
           // Pass true to prevent the dropping of javascript:/data: URIs
-          var uri = linkHandler.dropLink(event, name, true);
+          var links = linkHandler.dropLinks(event, true);
         } catch (ex) {
           return;
         }
 
-        if (uri) {
-          this.droppedLinkHandler(event, uri, name.value);
+        if (links.length) {
+          this.droppedLinkHandler(event, links);
         }
       ]]>
       </handler>
