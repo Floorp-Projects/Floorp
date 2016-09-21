@@ -14,6 +14,11 @@ add_task(function* () {
     },
 
     background: function() {
+      // Report onClickData info back.
+      browser.contextMenus.onClicked.addListener(info => {
+        browser.test.sendMessage("contextmenus-click", info);
+      });
+
       browser.contextMenus.create({
         title: "Checkbox",
         type: "checkbox",
@@ -53,21 +58,38 @@ add_task(function* () {
     return extensionMenuRoot.getElementsByAttribute("type", "checkbox");
   }
 
+  function confirmOnClickData(onClickData, id, was, checked) {
+    is(onClickData.wasChecked, was, `checkbox item ${id} was ${was ? "" : "not "}checked before the click`);
+    is(onClickData.checked, checked, `checkbox item ${id} is ${checked ? "" : "not "}checked after the click`);
+  }
+
   let extensionMenuRoot = yield openExtensionContextMenu();
   let items = confirmCheckboxStates(extensionMenuRoot, [false, true, false]);
   yield closeExtensionContextMenu(items[0]);
+
+  let result = yield extension.awaitMessage("contextmenus-click");
+  confirmOnClickData(result, 1, false, true);
 
   extensionMenuRoot = yield openExtensionContextMenu();
   items = confirmCheckboxStates(extensionMenuRoot, [true, true, false]);
   yield closeExtensionContextMenu(items[2]);
 
+  result = yield extension.awaitMessage("contextmenus-click");
+  confirmOnClickData(result, 3, false, true);
+
   extensionMenuRoot = yield openExtensionContextMenu();
   items = confirmCheckboxStates(extensionMenuRoot, [true, true, true]);
   yield closeExtensionContextMenu(items[0]);
 
+  result = yield extension.awaitMessage("contextmenus-click");
+  confirmOnClickData(result, 1, true, false);
+
   extensionMenuRoot = yield openExtensionContextMenu();
   items = confirmCheckboxStates(extensionMenuRoot, [false, true, true]);
   yield closeExtensionContextMenu(items[2]);
+
+  result = yield extension.awaitMessage("contextmenus-click");
+  confirmOnClickData(result, 3, true, false);
 
   yield extension.unload();
   yield BrowserTestUtils.removeTab(tab1);
