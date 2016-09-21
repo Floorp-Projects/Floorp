@@ -61,10 +61,10 @@ class YouTubePuppeteer(VideoPuppeteer):
         for attempt in range(5):
             sleep(1)
             self.process_ad()
-            if (self.ad_inactive and self.duration and not
+            if (self.ad_inactive and self._last_seen_video_state.duration and not
                     self.player_buffering):
                 break
-        self.update_expected_duration()
+        self._update_expected_duration()
 
     def player_play(self):
         """
@@ -388,9 +388,10 @@ class YouTubePuppeteer(VideoPuppeteer):
         if not (self.ad_playing or self.player_measure_progress() == 0):
             return None
         # If the ad is not Flash...
-        if (self.ad_playing and self.video_src.startswith('mediasource') and
-                self.duration):
-            return self.duration
+        if (self.ad_playing and
+                self._last_seen_video_state.video_src.startswith('mediasource') and
+                self._last_seen_video_state.duration):
+            return self._last_seen_video_state.duration
         selector = '.html5-media-player .videoAdUiAttribution'
         wait = Wait(self.marionette, timeout=5)
         try:
@@ -423,7 +424,7 @@ class YouTubePuppeteer(VideoPuppeteer):
         def condition():
             # no ad is playing and current_time stands still
             return (not self.ad_playing and
-                    self.measure_progress() < 0.1 and
+                    self._measure_progress() < 0.1 and
                     self.player_measure_progress() < 0.1 and
                     (self.player_playing or self.player_buffering))
 

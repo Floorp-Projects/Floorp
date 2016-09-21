@@ -11,8 +11,8 @@ from external_media_harness.testcase import MediaTestCase
 from external_media_tests.media_utils.video_puppeteer import VideoException
 from external_media_tests.media_utils.youtube_puppeteer import (
     YouTubePuppeteer,
-    playback_done,
-    wait_for_almost_done
+    wait_for_almost_done,
+    playback_done
 )
 
 
@@ -26,7 +26,8 @@ class TestBasicYouTubePlayback(MediaTestCase):
                         interval=1)
             try:
                 verbose_until(wait, youtube,
-                              lambda y: y.video_src.startswith('blob'),
+                              lambda y: y._last_seen_video_state.
+                              video_src.startswith('blob'),
                               "Failed to find 'blob' in video src url.")
             except TimeoutException as e:
                 raise self.failureException(e)
