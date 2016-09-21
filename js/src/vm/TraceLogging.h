@@ -8,9 +8,11 @@
 #define TraceLogging_h
 
 #include "mozilla/GuardObjects.h"
+#include "mozilla/Maybe.h"
 
 #include "jsalloc.h"
 
+#include "gc/Barrier.h"
 #include "js/HashTable.h"
 #include "js/TypeDecls.h"
 #include "js/Vector.h"
@@ -158,10 +160,19 @@ class TraceLoggerThread
 {
 #ifdef JS_TRACE_LOGGING
   private:
+    struct WeakScriptMapSweepPolicy {
+        static bool needsSweep(HeapPtr<JSScript*>* key, TraceLoggerEventPayload** value);
+    };
     typedef HashMap<const void*,
                     TraceLoggerEventPayload*,
                     PointerHasher<const void*, 3>,
                     SystemAllocPolicy> PointerHashMap;
+    typedef GCHashMap<HeapPtr<JSScript*>,
+                      TraceLoggerEventPayload*,
+                      MovableCellHasher<HeapPtr<JSScript*>>,
+                      SystemAllocPolicy,
+                      WeakScriptMapSweepPolicy> ScriptHashMap;
+    typedef JS::WeakCache<ScriptHashMap> WeakScriptHashMap;
     typedef HashMap<uint32_t,
                     TraceLoggerEventPayload*,
                     DefaultHasher<uint32_t>,
@@ -173,6 +184,8 @@ class TraceLoggerThread
     UniquePtr<TraceLoggerGraph> graph;
 
     PointerHashMap pointerMap;
+    mozilla::Maybe<WeakScriptHashMap> scriptMap;
+    Zone* currentZone_;
     TextIdHashMap textIdPayloads;
     uint32_t nextTextId;
 
@@ -191,16 +204,10 @@ class TraceLoggerThread
   public:
     AutoTraceLog* top;
 
-    TraceLoggerThread()
-      : enabled_(0),
-        failed(false),
-        graph(),
-        nextTextId(TraceLogger_Last),
-        iteration_(0),
-        top(nullptr)
-    { }
+    TraceLoggerThread();
 
     bool init();
+    void updateZone(Zone* zone);
     ~TraceLoggerThread();
 
     bool init(uint32_t loggerId);
@@ -274,7 +281,7 @@ class TraceLoggerThread
                                                      const JS::ReadOnlyCompileOptions& script);
   private:
     TraceLoggerEventPayload* getOrCreateEventPayload(TraceLoggerTextId type, const char* filename,
-                                                     size_t lineno, size_t colno, const void* p);
+                                                     size_t lineno, size_t colno, JSScript* script);
 
   public:
     // Log an event (no start/stop, only the timestamp is recorded).
