@@ -8,5 +8,6 @@ DevToolsModules(
     'console-command.js',
     'default-renderer.js',
     'evaluation-result.js',
+    'network-event-message.js',
     'page-error.js',
 )

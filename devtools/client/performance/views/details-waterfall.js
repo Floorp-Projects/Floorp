@@ -10,6 +10,8 @@ const MARKER_DETAILS_WIDTH = 200;
 // Units are in milliseconds.
 const WATERFALL_RESIZE_EVENTS_DRAIN = 100;
 
+const { TickUtils } = require("devtools/client/performance/modules/waterfall-ticks");
+
 /**
  * Waterfall view containing the timeline markers, controlled by DetailsView.
  */
@@ -17,6 +19,10 @@ var WaterfallView = Heritage.extend(DetailsSubview, {
 
   // Smallest unit of time between two markers. Larger by 10x^3 than Number.EPSILON.
   MARKER_EPSILON: 0.000000000001,
+  // px
+  WATERFALL_MARKER_SIDEBAR_WIDTH: 175,
+  // px
+  WATERFALL_MARKER_SIDEBAR_SAFE_BOUNDS: 20,
 
   observedPrefs: [
     "hidden-markers"
@@ -43,8 +49,7 @@ var WaterfallView = Heritage.extend(DetailsSubview, {
     this._onShowAllocations = this._onShowAllocations.bind(this);
     this._hiddenMarkers = PerformanceController.getPref("hidden-markers");
 
-    this.headerContainer = $("#waterfall-header");
-    this.breakdownContainer = $("#waterfall-breakdown");
+    this.treeContainer = $("#waterfall-tree");
     this.detailsContainer = $("#waterfall-details");
     this.detailsSplitter = $("#waterfall-view > splitter");
 
@@ -75,6 +80,8 @@ var WaterfallView = Heritage.extend(DetailsSubview, {
     this.details.off("view-source", this._onViewSource);
     this.details.off("show-allocations", this._onShowAllocations);
     window.removeEventListener("resize", this._onResize);
+
+    ReactDOM.unmountComponentAtNode(this.treeContainer);
   },
 
   /**
@@ -109,7 +116,6 @@ var WaterfallView = Heritage.extend(DetailsSubview, {
     if (event === "selected") {
       this.details.render({ marker, frames, allocations });
       this.details.hidden = false;
-      this._lastSelected = marker;
     }
     if (event === "unselected") {
       this.details.empty();
@@ -121,7 +127,6 @@ var WaterfallView = Heritage.extend(DetailsSubview, {
    */
   _onResize: function () {
     setNamedTimeout("waterfall-resize", WATERFALL_RESIZE_EVENTS_DRAIN, () => {
-      this._markersRoot.recalculateBounds();
       this.render(OverviewView.getTimeInterval());
     });
   },
@@ -206,41 +211,39 @@ var WaterfallView = Heritage.extend(DetailsSubview, {
   },
 
   /**
+   * Calculates the available width for the waterfall.
+   * This should be invoked every time the container node is resized.
+   */
+  _recalculateBounds: function () {
+    this.waterfallWidth = this.treeContainer.clientWidth
+      - this.WATERFALL_MARKER_SIDEBAR_WIDTH
+      - this.WATERFALL_MARKER_SIDEBAR_SAFE_BOUNDS;
+  },
+
+  /**
    * Renders the waterfall tree.
    */
   _populateWaterfallTree: function (rootMarkerNode, interval) {
-    let root = new MarkerView({
+    this._recalculateBounds();
+
+    let doc = this.treeContainer.ownerDocument;
+    let startTime = interval.startTime | 0;
+    let endTime = interval.endTime | 0;
+    let dataScale = this.waterfallWidth / (endTime - startTime);
+
+    this.canvas = TickUtils.drawWaterfallBackground(doc, dataScale, this.waterfallWidth);
+
+    let treeView = Waterfall({
       marker: rootMarkerNode,
-      // The root node is irrelevant in a waterfall tree.
-      hidden: true,
-      // The waterfall tree should not expand by default.
-      autoExpandDepth: 0
+      startTime,
+      endTime,
+      dataScale,
+      sidebarWidth: this.WATERFALL_MARKER_SIDEBAR_WIDTH,
+      waterfallWidth: this.waterfallWidth,
+      onFocus: node => this._onMarkerSelected("selected", node)
     });
 
-    let header = new WaterfallHeader(root);
-
-    this._markersRoot = root;
-    this._waterfallHeader = header;
-
-    root.filter = this._hiddenMarkers;
-    root.interval = interval;
-    root.on("selected", this._onMarkerSelected);
-    root.on("unselected", this._onMarkerSelected);
-
-    this.breakdownContainer.innerHTML = "";
-    root.attachTo(this.breakdownContainer);
-
-    this.headerContainer.innerHTML = "";
-    header.attachTo(this.headerContainer);
-
-    // If an item was previously selected in this view, attempt to
-    // re-select it by traversing the newly created tree.
-    if (this._lastSelected) {
-      let item = root.find(i => i.marker === this._lastSelected);
-      if (item) {
-        item.focus();
-      }
-    }
+    ReactDOM.render(treeView, this.treeContainer);
   },
 
   toString: () => "[object WaterfallView]"

@@ -15,28 +15,43 @@
 namespace mozilla {
 namespace layers {
 
-gfx::Polygon3D PopFront(std::deque<gfx::Polygon3D>& aPolygons);
+class Layer;
 
-// Represents a node in a BSP tree. The node contains at least one polygon that
-// is used as a splitting plane, and at most two child nodes that represent the
-// splitting planes that further subdivide the space.
+// Represents a layer that might have a non-rectangular geometry.
+struct LayerPolygon {
+  LayerPolygon(gfx::Polygon3D&& aGeometry, Layer *aLayer)
+    : layer(aLayer), geometry(Some(aGeometry)) {}
+
+  explicit LayerPolygon(Layer *aLayer)
+    : layer(aLayer) {}
+
+  Layer *layer;
+  Maybe<gfx::Polygon3D> geometry;
+};
+
+LayerPolygon PopFront(std::deque<LayerPolygon>& aLayers);
+
+// Represents a node in a BSP tree. The node contains at least one layer with
+// associated geometry that is used as a splitting plane, and at most two child
+// nodes that represent the splitting planes that further subdivide the space.
 struct BSPTreeNode {
-  explicit BSPTreeNode(gfx::Polygon3D && aPolygon)
+  explicit BSPTreeNode(LayerPolygon&& layer)
   {
-    polygons.push_back(std::move(aPolygon));
+    layers.push_back(std::move(layer));
   }
 
   const gfx::Polygon3D& First() const
   {
-    return polygons[0];
+    MOZ_ASSERT(layers[0].geometry);
+    return *layers[0].geometry;
   }
 
   UniquePtr<BSPTreeNode> front;
   UniquePtr<BSPTreeNode> back;
-  std::deque<gfx::Polygon3D> polygons;
+  std::deque<LayerPolygon> layers;
 };
 
-// BSPTree class takes a list of polygons as an input and uses binary space
+// BSPTree class takes a list of layers as an input and uses binary space
 // partitioning algorithm to create a tree structure that can be used for
 // depth sorting.
 //
@@ -45,11 +60,13 @@ struct BSPTreeNode {
 // ftp://ftp.sgi.com/other/bspfaq/faq/bspfaq.html
 class BSPTree {
 public:
-  // This constructor takes the ownership of polygons in the given list.
-  explicit BSPTree(std::deque<gfx::Polygon3D>& aPolygons)
-    : mRoot(new BSPTreeNode(PopFront(aPolygons)))
+  // This constructor takes the ownership of layers in the given list.
+  explicit BSPTree(std::deque<LayerPolygon>& aLayers)
   {
-    BuildTree(mRoot, aPolygons);
+    MOZ_ASSERT(!aLayers.empty());
+    mRoot.reset(new BSPTreeNode(PopFront(aLayers)));
+
+    BuildTree(mRoot, aLayers);
   }
 
   // Returns the root node of the BSP tree.
@@ -59,31 +76,22 @@ public:
   }
 
   // Builds and returns the back-to-front draw order for the created BSP tree.
-  nsTArray<gfx::Polygon3D> GetDrawOrder() const
+  nsTArray<LayerPolygon> GetDrawOrder() const
   {
-    nsTArray<gfx::Polygon3D> polygons;
-    BuildDrawOrder(mRoot, polygons);
-    return polygons;
+    nsTArray<LayerPolygon> layers;
+    BuildDrawOrder(mRoot, layers);
+    return layers;
   }
 
 private:
   UniquePtr<BSPTreeNode> mRoot;
 
+  // BuildDrawOrder and BuildTree are called recursively. The depth of the
+  // recursion depends on the amount of polygons and their intersections.
   void BuildDrawOrder(const UniquePtr<BSPTreeNode>& aNode,
-                      nsTArray<gfx::Polygon3D>& aPolygons) const;
-
+                      nsTArray<LayerPolygon>& aLayers) const;
   void BuildTree(UniquePtr<BSPTreeNode>& aRoot,
-                 std::deque<gfx::Polygon3D>& aPolygons);
-
-  nsTArray<float> CalculateDotProduct(const gfx::Polygon3D& aFirst,
-                                      const gfx::Polygon3D& aSecond,
-                                      size_t& aPos, size_t& aNeg) const;
-
-  void SplitPolygon(const gfx::Polygon3D& aSplittingPlane,
-                    const gfx::Polygon3D& aPolygon,
-                    const nsTArray<float>& dots,
-                    nsTArray<gfx::Point3D>& backPoints,
-                    nsTArray<gfx::Point3D>& frontPoints);
+                 std::deque<LayerPolygon>& aLayers);
 };
 
 } // namespace layers

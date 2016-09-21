@@ -2417,12 +2417,12 @@
               // processes the event queue and may lead to another removeTab()
               // call before permitUnload() returns.
               aTab._pendingPermitUnload = true;
-              let {permitUnload} = browser.permitUnload();
+              let {permitUnload, timedOut} = browser.permitUnload();
               delete aTab._pendingPermitUnload;
               // If we were closed during onbeforeunload, we return false now
               // so we don't (try to) close the same tab again. Of course, we
               // also stop if the unload was cancelled by the user:
-              if (aTab.closing || !permitUnload) {
+              if (aTab.closing || (!timedOut && !permitUnload)) {
                 // NB: deliberately keep the _closedDuringPermitUnload set to
                 // true so we keep exiting early in case of multiple calls.
                 return false;

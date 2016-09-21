@@ -2124,8 +2124,8 @@ nsMathMLChar::PaintForeground(nsPresContext* aPresContext,
   RefPtr<gfxContext> thebesContext = aRenderingContext.ThebesContext();
 
   // Set color ...
-  nsCSSPropertyID colorProp = styleContext->GetTextFillColorProp();
-  nscolor fgColor = styleContext->GetVisitedDependentColor(colorProp);
+  nscolor fgColor = styleContext->
+    GetVisitedDependentColor(eCSSProperty__webkit_text_fill_color);
   if (aIsSelected) {
     // get color to use for selection from the look&feel object
     fgColor = LookAndFeel::GetColor(LookAndFeel::eColorID_TextSelectForeground,

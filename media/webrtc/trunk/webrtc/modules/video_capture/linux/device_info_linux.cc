@@ -29,6 +29,8 @@
 #include "webrtc/system_wrappers/interface/ref_count.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 
+#define EVENT_SIZE  ( sizeof (struct inotify_event) )
+#define BUF_LEN     ( 1024 * ( EVENT_SIZE + 16 ) )
 
 namespace webrtc
 {
@@ -47,9 +49,128 @@ VideoCaptureImpl::CreateDeviceInfo(const int32_t id)
     return deviceInfo;
 }
 
+void DeviceInfoLinux::HandleEvent(inotify_event* event)
+{
+    switch (event->mask) {
+        case IN_CREATE:
+            DeviceChange();
+            break;
+        case IN_DELETE:
+            DeviceChange();
+            break;
+        default:
+            char* cur_event_filename = NULL;
+            int cur_event_wd = event->wd;
+            if (event->len) {
+                cur_event_filename = event->name;
+            }
+
+            WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
+                "UNKNOWN EVENT OCCURRED for file \"%s\" on WD #%i\n",
+                cur_event_filename, cur_event_wd);
+            break;
+    }
+}
+
+int DeviceInfoLinux::EventCheck()
+{
+    struct timeval timeout;
+    fd_set rfds;
+
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 100000;
+
+    FD_ZERO(&rfds);
+    FD_SET(_fd, &rfds);
+
+    return select(_fd+1, &rfds, NULL, NULL, &timeout);
+}
+
+int DeviceInfoLinux::HandleEvents()
+{
+    char buffer[BUF_LEN];
+
+    ssize_t r = read(_fd, buffer, BUF_LEN);
+
+    if (r <= 0) {
+        return r;
+    }
+
+    ssize_t buffer_i = 0;
+    inotify_event* pevent;
+    size_t eventSize;
+    int count = 0;
+
+    while (buffer_i < r)
+    {
+        pevent = (inotify_event *) (&buffer[buffer_i]);
+        eventSize = sizeof(inotify_event) + pevent->len;
+        char event[sizeof(inotify_event) + FILENAME_MAX + 1] // null-terminated
+            __attribute__ ((aligned(__alignof__(struct inotify_event))));
+
+        memcpy(event, pevent, eventSize);
+
+        HandleEvent((inotify_event*)(event));
+
+        buffer_i += eventSize;
+        count++;
+    }
+
+    return count;
+}
+
+int DeviceInfoLinux::ProcessInotifyEvents()
+{
+    while (0 == _isShutdown.Value()) {
+        if (EventCheck() > 0) {
+            if (HandleEvents() < 0) {
+                break;
+            }
+        }
+    }
+    return 0;
+}
+
+bool DeviceInfoLinux::InotifyEventThread(void* obj)
+{
+    return static_cast<DeviceInfoLinux*> (obj)->InotifyProcess();
+}
+
+bool DeviceInfoLinux::InotifyProcess()
+{
+    _fd = inotify_init();
+    if (_fd >= 0) {
+        _wd_v4l = inotify_add_watch(_fd, "/dev/v4l/by-path/", IN_CREATE | IN_DELETE);
+        _wd_snd = inotify_add_watch(_fd, "/dev/snd/by-path/", IN_CREATE | IN_DELETE);
+        ProcessInotifyEvents();
+
+        if (_wd_v4l >= 0) {
+          inotify_rm_watch(_fd, _wd_v4l);
+        }
+
+        if (_wd_snd >= 0) {
+          inotify_rm_watch(_fd, _wd_snd);
+        }
+
+        close(_fd);
+        return true;
+    } else {
+        return false;
+    }
+}
+
 DeviceInfoLinux::DeviceInfoLinux(const int32_t id)
     : DeviceInfoImpl(id)
+    , _isShutdown(0)
 {
+    _inotifyEventThread = ThreadWrapper::CreateThread(
+        InotifyEventThread, this, "InotifyEventThread");
+
+    if (_inotifyEventThread)
+    {
+        _inotifyEventThread->Start();
+        _inotifyEventThread->SetPriority(kHighPriority);
+    }
 }
 
 int32_t DeviceInfoLinux::Init()
@@ -59,6 +180,12 @@ int32_t DeviceInfoLinux::Init()
 
 DeviceInfoLinux::~DeviceInfoLinux()
 {
+    ++_isShutdown;
+
+    if (_inotifyEventThread) {
+        _inotifyEventThread->Stop();
+        _inotifyEventThread.reset();
+    }
 }
 
 uint32_t DeviceInfoLinux::NumberOfDevices()
