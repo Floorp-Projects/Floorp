@@ -136,6 +136,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin):
             # Exit
 
         blob_upload_dir = dirs['abs_blob_upload_dir']
+        wpt_dir = dirs['abs_wpttest_dir']
 
         cmd.extend([
             '--log-raw=-',
@@ -145,6 +146,13 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin):
             '--binary=%s' % self.binary_path,
             '--symbols-path=%s' % self.query_symbols_url(),
             '--stackwalk-binary=%s' % self.query_minidump_stackwalk(),
+            '--processes=1',
+            '--prefs-root=%s/prefs' % wpt_dir,
+            '--config=%s/wptrunner.ini' % wpt_dir,
+            '--ca-cert-path=%s/certs/cacert.pem' % wpt_dir,
+            '--host-key-path=%s/certs/web-platform.test.key' % wpt_dir,
+            '--host-cert-path=%s/certs/web-platform.test.pem' % wpt_dir,
+            '--certutil-binary=%s/bin/certutil' % dirs['abs_test_install_dir'],
         ])
 
         for test_type in c.get("test_type", []):
