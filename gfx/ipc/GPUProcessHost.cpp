@@ -13,6 +13,8 @@
 namespace mozilla {
 namespace gfx {
 
+using namespace ipc;
+
 GPUProcessHost::GPUProcessHost(Listener* aListener)
  : GeckoChildProcessHost(GeckoProcessType_GPU),
    mListener(aListener),
