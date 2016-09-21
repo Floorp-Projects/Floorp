@@ -9,15 +9,11 @@
 #define INET6_ADDRSTRLEN 46
 #endif
 
-#include "ScopedNSSTypes.h"
 #include "certt.h"
 #include "nsString.h"
 
 uint32_t
 getCertType(CERTCertificate *cert);
-
-CERTCertNicknames*
-getNSSCertNicknamesFromCertList(const mozilla::UniqueCERTCertList& certList);
 
 nsresult
 GetCertFingerprintByOidTag(CERTCertificate* nsscert,

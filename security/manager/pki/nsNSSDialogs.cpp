@@ -47,7 +47,6 @@ nsNSSDialogs::~nsNSSDialogs()
 NS_IMPL_ISUPPORTS(nsNSSDialogs, nsITokenPasswordDialogs,
                   nsICertificateDialogs,
                   nsIClientAuthDialogs,
-                  nsICertPickDialogs,
                   nsITokenDialogs,
                   nsIGeneratingKeypairInfoDialogs)
 
@@ -257,60 +256,6 @@ nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor* ctx,
 
   return NS_OK;
 }
-
-
-NS_IMETHODIMP
-nsNSSDialogs::PickCertificate(nsIInterfaceRequestor *ctx, 
-                              const char16_t **certNickList, 
-                              const char16_t **certDetailsList, 
-                              uint32_t count, 
-                              int32_t *selectedIndex, 
-                              bool *canceled) 
-{
-  nsresult rv;
-  uint32_t i;
-
-  *canceled = false;
-
-  nsCOMPtr<nsIDialogParamBlock> block =
-           do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID);
-  if (!block) return NS_ERROR_FAILURE;
-
-  block->SetNumberStrings(1+count*2);
-
-  for (i = 0; i < count; i++) {
-    rv = block->SetString(i, certNickList[i]);
-    if (NS_FAILED(rv)) return rv;
-  }
-
-  for (i = 0; i < count; i++) {
-    rv = block->SetString(i+count, certDetailsList[i]);
-    if (NS_FAILED(rv)) return rv;
-  }
-
-  rv = block->SetInt(0, count);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = block->SetInt(1, *selectedIndex);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = nsNSSDialogHelper::openDialog(nullptr,
-                                "chrome://pippki/content/certpicker.xul",
-                                block);
-  if (NS_FAILED(rv)) return rv;
-
-  int32_t status;
-
-  rv = block->GetInt(0, &status);
-  if (NS_FAILED(rv)) return rv;
-
-  *canceled = (status == 0)?true:false;
-  if (!*canceled) {
-    rv = block->GetInt(1, selectedIndex);
-  }
-  return rv;
-}
-
 
 NS_IMETHODIMP 
 nsNSSDialogs::SetPKCS12FilePassword(nsIInterfaceRequestor *ctx, 
