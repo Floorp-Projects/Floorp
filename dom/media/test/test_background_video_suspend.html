@@ -23,7 +23,7 @@ startTest({
     [ "media.suspend-bkgnd-video.enabled", true ],
     // User a short delay to ensure video decode suspend happens before end
     // of video.
-    [ "media.suspend-bkgnd-video.delay-ms", 1000 ]
+    [ "media.suspend-bkgnd-video.delay-ms", 100 ]
   ],
   tests: gDecodeSuspendTests,
   runTest: (test, token) => {
@@ -34,7 +34,7 @@ startTest({
     waitUntilPlaying(v)
       .then(() => { start = performance.now(); })
       .then(() => testVideoSuspendsWhenHidden(v))
-      .then(() => testDelay(v, start, 1000, 10000))
+      .then(() => testDelay(v, start, 100, 1000))
       .then(() => waitTil(v, v.duration / 2))
       .then(() => testVideoResumesWhenShown(v))
       .then(() => waitUntilEnded(v))
