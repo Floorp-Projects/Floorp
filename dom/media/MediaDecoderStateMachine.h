@@ -381,11 +381,9 @@ protected:
   // decode more.
   bool NeedToDecodeVideo();
 
-  // Returns true if we've got less than aAudioUsecs microseconds of decoded
-  // and playable data. The decoder monitor must be held.
-  //
+  // True if we are low in decoded audio/video data.
   // May not be invoked when mReader->UseBufferingHeuristics() is false.
-  bool HasLowDecodedData(int64_t aAudioUsecs);
+  bool HasLowDecodedData();
 
   bool OutOfDecodedAudio();
 
