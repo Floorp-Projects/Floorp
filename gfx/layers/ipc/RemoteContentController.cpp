@@ -137,7 +137,9 @@ RemoteContentController::UpdateOverscrollVelocity(float aX, float aY, bool aIsRo
                                              aX, aY, aIsRootContent));
     return;
   }
-  Unused << SendUpdateOverscrollVelocity(aX, aY, aIsRootContent);
+  if (mCanSend) {
+    Unused << SendUpdateOverscrollVelocity(aX, aY, aIsRootContent);
+  }
 }
 
 void
@@ -150,7 +152,9 @@ RemoteContentController::UpdateOverscrollOffset(float aX, float aY, bool aIsRoot
                                              aX, aY, aIsRootContent));
     return;
   }
-  Unused << SendUpdateOverscrollOffset(aX, aY, aIsRootContent);
+  if (mCanSend) {
+    Unused << SendUpdateOverscrollOffset(aX, aY, aIsRootContent);
+  }
 }
 
 void
@@ -162,7 +166,9 @@ RemoteContentController::SetScrollingRootContent(bool aIsRootContent)
                                              aIsRootContent));
     return;
   }
-  Unused << SendSetScrollingRootContent(aIsRootContent);
+  if (mCanSend) {
+    Unused << SendSetScrollingRootContent(aIsRootContent);
+  }
 }
 
 void
