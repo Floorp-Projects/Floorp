@@ -964,6 +964,33 @@ MakeRejectionPromise(const char* name)
     return promise.forget();
 }
 
+static bool
+CheckForFlyWebAddon(const nsACString& uriString)
+{
+  // Before proceeding, ensure that the FlyWeb system addon exists.
+  nsresult rv;
+  nsCOMPtr<nsIURI> uri;
+  rv = NS_NewURI(getter_AddRefs(uri), uriString);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  JSAddonId *addonId = MapURIToAddonID(uri);
+  if (!addonId) {
+    return false;
+  }
+
+  JSFlatString* flat = JS_ASSERT_STRING_IS_FLAT(JS::StringOfAddonId(addonId));
+  nsAutoString addonIdString;
+  AssignJSFlatString(addonIdString, flat);
+  if (!addonIdString.EqualsLiteral("flyweb@mozilla.org")) {
+    nsCString addonIdCString = NS_ConvertUTF16toUTF8(addonIdString);
+    return false;
+  }
+
+  return true;
+}
+
 already_AddRefed<FlyWebPublishPromise>
 FlyWebService::PublishServer(const nsAString& aName,
                              const FlyWebPublishOptions& aOptions,
@@ -986,25 +1013,10 @@ FlyWebService::PublishServer(const nsAString& aName,
     server = new FlyWebPublishedServerImpl(aWindow, aName, aOptions);
 
     // Before proceeding, ensure that the FlyWeb system addon exists.
-    nsresult rv;
-    nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("chrome://flyweb/skin/icon-64.png"));
-    if (NS_FAILED(rv)) {
-      return MakeRejectionPromise(__func__);
-    }
-
-    JSAddonId *addonId = MapURIToAddonID(uri);
-    if (!addonId) {
+    if (!CheckForFlyWebAddon(NS_LITERAL_CSTRING("chrome://flyweb/skin/icon-64.png")) &&
+        !CheckForFlyWebAddon(NS_LITERAL_CSTRING("chrome://flyweb/content/icon-64.png")))
+    {
       LOG_E("PublishServer: Failed to find FlyWeb system addon.");
-      return MakeRejectionPromise(__func__);
-    }
-
-    JSFlatString* flat = JS_ASSERT_STRING_IS_FLAT(JS::StringOfAddonId(addonId));
-    nsAutoString addonIdString;
-    AssignJSFlatString(addonIdString, flat);
-    if (!addonIdString.EqualsLiteral("flyweb@mozilla.org")) {
-      nsCString addonIdCString = NS_ConvertUTF16toUTF8(addonIdString);
-      LOG_E("PublishServer: FlyWeb resource found on wrong system addon: %s.", addonIdCString.get());
       return MakeRejectionPromise(__func__);
     }
   }
