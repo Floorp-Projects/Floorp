@@ -329,8 +329,7 @@ nsContentDLF::CreateBlankDocument(nsILoadGroup *aLoadGroup,
     blankDoc->SetDocumentCharacterSetSource(kCharsetFromDocTypeDefault);
     blankDoc->SetDocumentCharacterSet(NS_LITERAL_CSTRING("UTF-8"));
     
-    *aDocument = blankDoc;
-    NS_ADDREF(*aDocument);
+    blankDoc.forget(aDocument);
   }
   return rv;
 }
