@@ -27,6 +27,8 @@
 #include "VsyncBridgeChild.h"
 #include "VsyncIOThreadHolder.h"
 #include "VsyncSource.h"
+#include "mozilla/dom/VideoDecoderManagerChild.h"
+#include "mozilla/dom/VideoDecoderManagerParent.h"
 
 namespace mozilla {
 namespace gfx {
@@ -612,6 +614,33 @@ GPUProcessManager::CreateContentVRManager(base::ProcessId aOtherProcess,
       return false;
     }
   }
+
+  *aOutEndpoint = Move(childPipe);
+  return true;
+}
+
+bool
+GPUProcessManager::CreateContentVideoDecoderManager(base::ProcessId aOtherProcess,
+                                                    ipc::Endpoint<dom::PVideoDecoderManagerChild>* aOutEndpoint)
+{
+  if (!mGPUChild) {
+    return false;
+  }
+
+  ipc::Endpoint<dom::PVideoDecoderManagerParent> parentPipe;
+  ipc::Endpoint<dom::PVideoDecoderManagerChild> childPipe;
+
+  nsresult rv = dom::PVideoDecoderManager::CreateEndpoints(
+    mGPUChild->OtherPid(),
+    aOtherProcess,
+    &parentPipe,
+    &childPipe);
+  if (NS_FAILED(rv)) {
+    gfxCriticalNote << "Could not create content video decoder: " << hexa(int(rv));
+    return false;
+  }
+
+  mGPUChild->SendNewContentVideoDecoderManager(Move(parentPipe));
 
   *aOutEndpoint = Move(childPipe);
   return true;

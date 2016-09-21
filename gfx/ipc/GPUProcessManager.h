@@ -37,6 +37,7 @@ class CompositorWidget;
 namespace dom {
 class ContentParent;
 class TabParent;
+class PVideoDecoderManagerChild;
 } // namespace dom
 namespace ipc {
 class GeckoChildProcessHost;
@@ -140,6 +141,8 @@ private:
                                 ipc::Endpoint<PImageBridgeChild>* aOutEndpoint);
   bool CreateContentVRManager(base::ProcessId aOtherProcess,
                               ipc::Endpoint<PVRManagerChild>* aOutEndpoint);
+  bool CreateContentVideoDecoderManager(base::ProcessId aOtherProcess,
+                                        ipc::Endpoint<dom::PVideoDecoderManagerChild>* aOutEndPoint);
 
   // Called from RemoteCompositorSession. We track remote sessions so we can
   // notify their owning widgets that the session must be restarted.
