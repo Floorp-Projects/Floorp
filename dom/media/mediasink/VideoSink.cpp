@@ -355,7 +355,8 @@ VideoSink::RenderVideoFrames(int32_t aMaxFrames,
 
     frame->mSentToCompositor = true;
 
-    if (!frame->mImage || !frame->mImage->IsValid()) {
+    if (!frame->mImage || !frame->mImage->IsValid() ||
+        !frame->mImage->GetSize().width || !frame->mImage->GetSize().height) {
       continue;
     }
 

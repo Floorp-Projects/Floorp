@@ -21,7 +21,7 @@ InjectTouchInputPtr nsWindowBase::sInjectTouchFuncPtr;
 bool
 nsWindowBase::DispatchPluginEvent(const MSG& aMsg)
 {
-  if (!PluginHasFocus()) {
+  if (!ShouldDispatchPluginEvent()) {
     return false;
   }
   WidgetPluginEvent pluginEvent(true, ePluginInputEvent, this);
@@ -34,6 +34,12 @@ nsWindowBase::DispatchPluginEvent(const MSG& aMsg)
   pluginEvent.mPluginEvent.Copy(npEvent);
   pluginEvent.mRetargetToFocusedDocument = true;
   return DispatchWindowEvent(&pluginEvent);
+}
+
+bool
+nsWindowBase::ShouldDispatchPluginEvent()
+{
+  return PluginHasFocus();
 }
 
 // static

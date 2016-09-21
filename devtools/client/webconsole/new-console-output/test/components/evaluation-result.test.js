@@ -20,7 +20,7 @@ describe("EvaluationResult component:", () => {
     const rendered = renderComponent(EvaluationResult, props);
 
     const messageBody = getMessageBody(rendered);
-    expect(messageBody.textContent).toBe("Date1970-01-01T00:00:00.000Z");
+    expect(messageBody.textContent).toBe("Date 1970-01-01T00:00:00.000Z");
   });
 });
 

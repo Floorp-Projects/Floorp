@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Webconsole specific theme variables */
+.theme-light,
 .theme-firebug {
   --error-color: #FF0000;
   --error-background-color: #FFEBEB;
@@ -54,12 +55,14 @@ a {
 }
 
 .theme-firebug .message[severity="error"],
+.theme-light .message.error,
 .theme-firebug .message.error {
   color: var(--error-color);
   background-color: var(--error-background-color);
 }
 
 .theme-firebug .message[severity="warn"],
+.theme-light .message.warn,
 .theme-firebug .message.warn {
   background-color: var(--warning-background-color);
 }
@@ -354,24 +357,17 @@ a {
 
 .message[category=console][severity=error] > .icon::before,
 .message[category=output][severity=error] > .icon::before,
-.message[category=server][severity=error] > .icon::before,
-.message.console-api.error > .icon::before,
-.message.output.error > .icon::before,
-.message.server.error > .icon::before {
+.message[category=server][severity=error] > .icon::before {
   background-position: -12px -36px;
 }
 
 .message[category=console][severity=warn] > .icon::before,
-.message[category=server][severity=warn] > .icon::before,
-.message.console-api.warn > .icon::before,
-.message.server.warn > .icon::before {
+.message[category=server][severity=warn] > .icon::before {
   background-position: -24px -36px;
 }
 
 .message[category=console][severity=info] > .icon::before,
-.message[category=server][severity=info] > .icon::before,
-.message.console-api.info > .icon::before,
-.message.server.info > .icon::before {
+.message[category=server][severity=info] > .icon::before {
   background-position: -36px -36px;
 }
 
@@ -390,18 +386,18 @@ a {
 /* Input and output styles */
 .message[category=input] > .indent,
 .message[category=output] > .indent,
-.message.input > .indent,
-.message.output > .indent {
+.message.command > .indent,
+.message.result > .indent {
   border-inline-end: solid #808080 6px;
 }
 
 .message[category=input] > .icon::before,
-.message.input > .icon::before {
+.message.command > .icon::before {
   background-position: -48px -36px;
 }
 
 .message[category=output] > .icon::before,
-.message.output > .icon::before {
+.message.result > .icon::before {
   background-position: -60px -36px;
 }
 
@@ -710,4 +706,20 @@ a.learn-more-link.webconsole-learn-more-link {
 
 .webconsole-filterbar-primary .devtools-plaininput {
   flex: 1 1 100%;
+}
+
+.message.error > .icon::before {
+  background-position: -12px -36px;
+}
+
+.message.warn > .icon::before {
+  background-position: -24px -36px;
+}
+
+.message.info > .icon::before {
+  background-position: -36px -36px;
+}
+
+.message.network .method {
+  margin-inline-end: 5px;
 }

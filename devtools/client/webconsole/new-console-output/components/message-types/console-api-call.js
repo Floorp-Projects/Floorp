@@ -18,7 +18,6 @@ const GripMessageBody = createFactory(require("devtools/client/webconsole/new-co
 const MessageRepeat = createFactory(require("devtools/client/webconsole/new-console-output/components/message-repeat").MessageRepeat);
 const MessageIcon = createFactory(require("devtools/client/webconsole/new-console-output/components/message-icon").MessageIcon);
 const CollapseButton = createFactory(require("devtools/client/webconsole/new-console-output/components/collapse-button").CollapseButton);
-const {l10n} = require("devtools/client/webconsole/new-console-output/utils/messages");
 const actions = require("devtools/client/webconsole/new-console-output/actions/messages");
 
 ConsoleApiCall.displayName = "ConsoleApiCall";
@@ -27,24 +26,31 @@ ConsoleApiCall.propTypes = {
   message: PropTypes.object.isRequired,
   sourceMapService: PropTypes.object,
   onViewSourceInDebugger: PropTypes.func.isRequired,
-  open: PropTypes.bool.isRequired,
+  open: PropTypes.bool,
+};
+
+ConsoleApiCall.defaultProps = {
+  open: false
 };
 
 function ConsoleApiCall(props) {
   const { dispatch, message, sourceMapService, onViewSourceInDebugger, open } = props;
-  const {source, level, stacktrace, type, frame } = message;
+  const { source, level, stacktrace, type, frame, parameters } = message;
 
   let messageBody;
   if (type === "trace") {
-    messageBody = dom.span({className: "cm-variable"}, "console.trace()");
-  } else if (message.parameters) {
-    messageBody = message.parameters.map((grip, key) => GripMessageBody({grip, key}));
+    messageBody = dom.span({ className: "cm-variable" }, "console.trace()");
+  } else if (type === "assert") {
+    let reps = formatReps(parameters);
+    messageBody = dom.span({ className: "cm-variable" }, "Assertion failed: ", reps);
+  } else if (parameters) {
+    messageBody = formatReps(parameters);
   } else {
     messageBody = message.messageText;
   }
 
-  const icon = MessageIcon({level});
-  const repeat = MessageRepeat({repeat: message.repeat});
+  const icon = MessageIcon({ level });
+  const repeat = MessageRepeat({ repeat: message.repeat });
   const shouldRenderFrame = frame && frame.source !== "debugger eval code";
   const location = dom.span({ className: "message-location devtools-monospace" },
     shouldRenderFrame ? FrameView({
@@ -58,16 +64,17 @@ function ConsoleApiCall(props) {
   let collapse = "";
   let attachment = "";
   if (stacktrace) {
-    attachment = dom.div({className: "stacktrace devtools-monospace"},
-      StackTrace({
-        stacktrace: stacktrace,
-        onViewSourceInDebugger: onViewSourceInDebugger
-      })
-    );
+    if (open) {
+      attachment = dom.div({ className: "stacktrace devtools-monospace" },
+        StackTrace({
+          stacktrace: stacktrace,
+          onViewSourceInDebugger: onViewSourceInDebugger
+        })
+      );
+    }
 
     collapse = CollapseButton({
-      open: open,
-      title: l10n.getStr("messageToggleDetails"),
+      open,
       onClick: function () {
         if (open) {
           dispatch(actions.messageClose(message.id));
@@ -80,28 +87,22 @@ function ConsoleApiCall(props) {
 
   const classes = ["message", "cm-s-mozilla"];
 
-  if (source) {
-    classes.push(source);
-  }
-
-  if (level) {
-    classes.push(level);
-  }
+  classes.push(source);
+  classes.push(type);
+  classes.push(level);
 
   if (open === true) {
     classes.push("open");
   }
 
-  return dom.div({
-    className: classes.join(" ")
-  },
+  return dom.div({ className: classes.join(" ") },
     // @TODO add timestamp
     // @TODO add indent if necessary
     icon,
     collapse,
-    dom.span({className: "message-body-wrapper"},
-      dom.span({className: "message-flex-body"},
-        dom.span({className: "message-body devtools-monospace"},
+    dom.span({ className: "message-body-wrapper" },
+      dom.span({ className: "message-flex-body" },
+        dom.span({ className: "message-body devtools-monospace" },
           messageBody
         ),
         repeat,
@@ -109,6 +110,20 @@ function ConsoleApiCall(props) {
       ),
       attachment
     )
+  );
+}
+
+function formatReps(parameters) {
+  return (
+    parameters
+      // Get all the grips.
+      .map((grip, key) => GripMessageBody({ grip, key }))
+      // Interleave spaces.
+      .reduce((arr, v, i) => {
+        return i + 1 < parameters.length
+          ? arr.concat(v, dom.span({}, " "))
+          : arr.concat(v);
+      }, [])
   );
 }
 

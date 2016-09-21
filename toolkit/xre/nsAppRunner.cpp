@@ -168,6 +168,11 @@
 #ifdef MOZ_ENABLE_XREMOTE
 #include "XRemoteClient.h"
 #include "nsIRemoteService.h"
+#include "nsProfileLock.h"
+#include "SpecialSystemDirectory.h"
+#include <sched.h>
+// Time to wait for the remoting service to start
+#define MOZ_XREMOTE_START_TIMEOUT_SEC 5
 #endif
 
 #if defined(DEBUG) && defined(XP_WIN32)
@@ -1679,17 +1684,13 @@ DumpVersion()
 
 #ifdef MOZ_ENABLE_XREMOTE
 static RemoteResult
-RemoteCommandLine(const char* aDesktopStartupID)
+ParseRemoteCommandLine(nsCString& program,
+                       const char** profile,
+                       const char** username)
 {
-  nsresult rv;
   ArgResult ar;
 
-  const char *profile = 0;
-  nsAutoCString program(gAppData->remotingName);
-  ToLowerCase(program);
-  const char *username = getenv("LOGNAME");
-
-  ar = CheckArg("p", false, &profile, false);
+  ar = CheckArg("p", false, profile, false);
   if (ar == ARG_BAD) {
     // Leave it to the normal command line handling to handle this situation.
     return REMOTE_NOT_FOUND;
@@ -1704,14 +1705,23 @@ RemoteCommandLine(const char* aDesktopStartupID)
     program.Assign(temp);
   }
 
-  ar = CheckArg("u", true, &username);
+  ar = CheckArg("u", true, username);
   if (ar == ARG_BAD) {
     PR_fprintf(PR_STDERR, "Error: argument -u requires a username\n");
     return REMOTE_ARG_BAD;
   }
 
+  return REMOTE_FOUND;
+}
+
+static RemoteResult
+StartRemoteClient(const char* aDesktopStartupID,
+                  nsCString& program,
+                  const char* profile,
+                  const char* username)
+{
   XRemoteClient client;
-  rv = client.Init();
+  nsresult rv = client.Init();
   if (NS_FAILED(rv))
     return REMOTE_NOT_FOUND;
 
@@ -3018,6 +3028,8 @@ public:
   nsCOMPtr<nsIProfileLock> mProfileLock;
 #ifdef MOZ_ENABLE_XREMOTE
   nsCOMPtr<nsIRemoteService> mRemoteService;
+  nsProfileLock mRemoteLock;
+  nsCOMPtr<nsIFile> mRemoteLockDir;
 #endif
 
   UniquePtr<ScopedXPCOMStartup> mScopedXPCOM;
@@ -3755,17 +3767,58 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
   }
 
   if (!newInstance) {
+    nsAutoCString program(gAppData->remotingName);
+    ToLowerCase(program);
+
+    const char* username = getenv("LOGNAME");
+    const char* profile  = nullptr;
+
+    RemoteResult rr = ParseRemoteCommandLine(program, &profile, &username);
+    if (rr == REMOTE_ARG_BAD) {
+      return 1;
+    }
+
+    nsCOMPtr<nsIFile> mutexDir;
+    rv = GetSpecialSystemDirectory(OS_TemporaryDirectory, getter_AddRefs(mutexDir));
+    if (NS_SUCCEEDED(rv)) {
+      nsAutoCString mutexPath =
+        program + NS_LITERAL_CSTRING("_") + nsDependentCString(username);
+      if (profile) {
+        mutexPath.Append(NS_LITERAL_CSTRING("_") + nsDependentCString(profile));
+      }
+      mutexDir->AppendNative(mutexPath);
+
+      rv = mutexDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
+      if (NS_SUCCEEDED(rv) || rv == NS_ERROR_FILE_ALREADY_EXISTS) {
+        mRemoteLockDir = mutexDir;
+      }
+    }
+
+    if (mRemoteLockDir) {
+      const TimeStamp epoch = mozilla::TimeStamp::Now();
+      do {
+        rv = mRemoteLock.Lock(mRemoteLockDir, nullptr);
+        if (NS_SUCCEEDED(rv))
+          break;
+        sched_yield();
+      } while ((TimeStamp::Now() - epoch)
+               < TimeDuration::FromSeconds(MOZ_XREMOTE_START_TIMEOUT_SEC));
+      if (NS_FAILED(rv)) {
+        NS_WARNING("Cannot lock XRemote start mutex");
+      }
+    }
+
     // Try to remote the entire command line. If this fails, start up normally.
     const char* desktopStartupIDPtr =
       mDesktopStartupID.IsEmpty() ? nullptr : mDesktopStartupID.get();
 
-    RemoteResult rr = RemoteCommandLine(desktopStartupIDPtr);
+    rr = StartRemoteClient(desktopStartupIDPtr, program, profile, username);
     if (rr == REMOTE_FOUND) {
       *aExitFlag = true;
       return 0;
-    }
-    else if (rr == REMOTE_ARG_BAD)
+    } else if (rr == REMOTE_ARG_BAD) {
       return 1;
+    }
   }
 #endif
 #if defined(MOZ_WIDGET_GTK)
@@ -4331,6 +4384,10 @@ XREMain::XRE_mainRun()
       mRemoteService = do_GetService("@mozilla.org/toolkit/remote-service;1");
     if (mRemoteService)
       mRemoteService->Startup(mAppData->remotingName, mProfileName.get());
+    if (mRemoteLockDir) {
+      mRemoteLock.Unlock();
+      mRemoteLockDir->Remove(false);
+    }
 #endif /* MOZ_ENABLE_XREMOTE */
 
     mNativeApp->Enable();
