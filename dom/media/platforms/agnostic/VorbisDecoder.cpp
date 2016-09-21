@@ -168,13 +168,16 @@ VorbisDataDecoder::DoDecode(MediaRawData* aSample)
   ogg_packet pkt = InitVorbisPacket(aData, aLength, false, aSample->mEOS,
                                     aSample->mTimecode, mPacketCount++);
 
-  if (vorbis_synthesis(&mVorbisBlock, &pkt) != 0) {
-    return NS_ERROR_DOM_MEDIA_DECODE_ERR;
+  int err = vorbis_synthesis(&mVorbisBlock, &pkt);
+  if (err) {
+    return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                       RESULT_DETAIL("vorbis_synthesis:%d", err));
   }
 
-  if (vorbis_synthesis_blockin(&mVorbisDsp,
-                               &mVorbisBlock) != 0) {
-    return NS_ERROR_DOM_MEDIA_DECODE_ERR;
+  err = vorbis_synthesis_blockin(&mVorbisDsp, &mVorbisBlock);
+  if (err) {
+    return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                       RESULT_DETAIL("vorbis_synthesis_blockin:%d", err));
   }
 
   VorbisPCMValue** pcm = 0;
@@ -198,19 +201,21 @@ VorbisDataDecoder::DoDecode(MediaRawData* aSample)
 
     CheckedInt64 duration = FramesToUsecs(frames, rate);
     if (!duration.isValid()) {
-      NS_WARNING("Int overflow converting WebM audio duration");
-      return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
+      return MediaResult(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
+                         RESULT_DETAIL("Overflow converting audio duration"));
     }
     CheckedInt64 total_duration = FramesToUsecs(mFrames, rate);
     if (!total_duration.isValid()) {
-      NS_WARNING("Int overflow converting WebM audio total_duration");
-      return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
+      return MediaResult(
+        NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
+        RESULT_DETAIL("Overflow converting audio total_duration"));
     }
 
     CheckedInt64 time = total_duration + aTstampUsecs;
     if (!time.isValid()) {
-      NS_WARNING("Int overflow adding total_duration and aTstampUsecs");
-      return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
+      return MediaResult(
+        NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
+        RESULT_DETAIL("Overflow adding total_duration and aTstampUsecs"));
     };
 
     if (!mAudioConverter) {
@@ -218,7 +223,9 @@ VorbisDataDecoder::DoDecode(MediaRawData* aSample)
                      rate);
       AudioConfig out(channels, rate);
       if (!in.IsValid() || !out.IsValid()) {
-       return NS_ERROR_DOM_MEDIA_FATAL_ERR;
+        return MediaResult(
+          NS_ERROR_DOM_MEDIA_FATAL_ERR,
+          RESULT_DETAIL("Invalid channel layout:%u", channels));
       }
       mAudioConverter = MakeUnique<AudioConverter>(in, out);
     }
@@ -235,8 +242,10 @@ VorbisDataDecoder::DoDecode(MediaRawData* aSample)
                                     channels,
                                     rate));
     mFrames += frames;
-    if (vorbis_synthesis_read(&mVorbisDsp, frames) != 0) {
-      return NS_ERROR_DOM_MEDIA_DECODE_ERR;
+    err = vorbis_synthesis_read(&mVorbisDsp, frames);
+    if (err) {
+      return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                         RESULT_DETAIL("vorbis_synthesis_read:%d", err));
     }
 
     frames = vorbis_synthesis_pcmout(&mVorbisDsp, &pcm);

@@ -172,7 +172,9 @@ OpusDataDecoder::DoDecode(MediaRawData* aSample)
     // Discard padding should be used only on the final packet, so
     // decoding after a padding discard is invalid.
     OPUS_DEBUG("Opus error, discard padding on interstitial packet");
-    return NS_ERROR_DOM_MEDIA_FATAL_ERR;
+    return MediaResult(
+      NS_ERROR_DOM_MEDIA_FATAL_ERR,
+      RESULT_DETAIL("Discard padding on interstitial packet"));
   }
 
   if (!mLastFrameTime || mLastFrameTime.ref() != aSample->mTime) {
@@ -187,7 +189,9 @@ OpusDataDecoder::DoDecode(MediaRawData* aSample)
   if (frames_number <= 0) {
     OPUS_DEBUG("Invalid packet header: r=%ld length=%ld",
                frames_number, aSample->Size());
-    return NS_ERROR_DOM_MEDIA_DECODE_ERR;
+    return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                       RESULT_DETAIL("Invalid packet header: r=%d length=%u",
+                                     frames_number, uint32_t(aSample->Size())));
   }
 
   int32_t samples = opus_packet_get_samples_per_frame(aSample->Data(),
@@ -198,7 +202,8 @@ OpusDataDecoder::DoDecode(MediaRawData* aSample)
   int32_t frames = frames_number*samples;
   if (frames < 120 || frames > 5760) {
     OPUS_DEBUG("Invalid packet frames: %ld", frames);
-    return NS_ERROR_DOM_MEDIA_DECODE_ERR;
+    return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                       RESULT_DETAIL("Invalid packet frames:%d", frames));
   }
 
   AlignedAudioBuffer buffer(frames * channels);
@@ -217,7 +222,8 @@ OpusDataDecoder::DoDecode(MediaRawData* aSample)
                                     buffer.get(), frames, false);
 #endif
   if (ret < 0) {
-    return NS_ERROR_DOM_MEDIA_DECODE_ERR;
+    return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                       RESULT_DETAIL("Opus decoding error:%d", ret));
   }
   NS_ASSERTION(ret == frames, "Opus decoded too few audio samples");
   CheckedInt64 startTime = aSample->mTime;
@@ -238,7 +244,8 @@ OpusDataDecoder::DoDecode(MediaRawData* aSample)
   if (aDiscardPadding < 0) {
     // Negative discard padding is invalid.
     OPUS_DEBUG("Opus error, negative discard padding");
-    return NS_ERROR_DOM_MEDIA_FATAL_ERR;
+    return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                       RESULT_DETAIL("Negative discard padding"));
   }
   if (aDiscardPadding > 0) {
     OPUS_DEBUG("OpusDecoder discardpadding %" PRId64 "", aDiscardPadding);
@@ -246,13 +253,15 @@ OpusDataDecoder::DoDecode(MediaRawData* aSample)
       TimeUnitToFrames(media::TimeUnit::FromNanoseconds(aDiscardPadding),
                        mOpusParser->mRate);
     if (!discardFrames.isValid()) {
-      NS_WARNING("Int overflow in DiscardPadding");
-      return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
+      return MediaResult(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
+                         RESULT_DETAIL("Overflow in DiscardPadding"));
     }
     if (discardFrames.value() > frames) {
       // Discarding more than the entire packet is invalid.
       OPUS_DEBUG("Opus error, discard padding larger than packet");
-      return NS_ERROR_DOM_MEDIA_FATAL_ERR;
+      return MediaResult(
+        NS_ERROR_DOM_MEDIA_FATAL_ERR,
+        RESULT_DETAIL("Discard padding larger than packet"));
     }
     OPUS_DEBUG("Opus decoder discarding %d of %d frames",
         int32_t(discardFrames.value()), frames);
@@ -286,15 +295,17 @@ OpusDataDecoder::DoDecode(MediaRawData* aSample)
 
   CheckedInt64 duration = FramesToUsecs(frames, mOpusParser->mRate);
   if (!duration.isValid()) {
-    NS_WARNING("OpusDataDecoder: Int overflow converting WebM audio duration");
-    return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
+    return MediaResult(
+      NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
+      RESULT_DETAIL("Overflow converting WebM audio duration"));
   }
   CheckedInt64 time =
     startTime - FramesToUsecs(mOpusParser->mPreSkip, mOpusParser->mRate) +
     FramesToUsecs(mFrames, mOpusParser->mRate);
   if (!time.isValid()) {
-    NS_WARNING("OpusDataDecoder: Int overflow shifting tstamp by codec delay");
-    return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
+    return MediaResult(
+      NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
+      RESULT_DETAIL("Overflow shifting tstamp by codec delay"));
   };
 
   mCallback->Output(new AudioData(aSample->mOffset,
