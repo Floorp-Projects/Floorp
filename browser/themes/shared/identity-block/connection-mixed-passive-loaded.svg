@@ -4,10 +4,21 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
      width="16" height="16" viewBox="0 0 16 16">
-#include ../icon-colors.inc.svg
   <style>
     svg > g:not(:target) {
       display: none;
+    }
+    .icon-default {
+      fill: -moz-fieldtext;
+      fill-opacity: .5;
+    }
+    #icon-black > .icon-default {
+      fill: black;
+      fill-opacity: .6;
+    }
+    #icon-white > .icon-default {
+      fill: white;
+      fill-opacity: .7;
     }
   </style>
 
@@ -36,17 +47,17 @@
   </defs>
 
   <g id="icon">
-    <rect width="16" height="16" mask="url(#mask-lock)" class="fieldtext"/>
+    <rect width="16" height="16" mask="url(#mask-lock)" class="icon-default"/>
     <use xlink:href="#warning-triangle"/>
   </g>
 
   <g id="icon-black">
-    <rect width="16" height="16" mask="url(#mask-lock)" class="black"/>
+    <rect width="16" height="16" mask="url(#mask-lock)" class="icon-default"/>
     <use xlink:href="#warning-triangle"/>
   </g>
 
   <g id="icon-white">
-    <rect width="16" height="16" mask="url(#mask-lock)" class="white"/>
+    <rect width="16" height="16" mask="url(#mask-lock)" class="icon-default"/>
     <use xlink:href="#warning-triangle"/>
   </g>
 </svg>
