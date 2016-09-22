@@ -120,8 +120,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
     Services.ppmm.addMessageListener("Test:content-ready", function contentReadyListener() {
       Services.ppmm.removeMessageListener("Test:content-ready", contentReadyListener);
       sendAsyncMessage("Test:content-ready-forward");
+      Services.ppmm.removeDelayedProcessScript(pScript);
     })
-    Services.ppmm.loadProcessScript("data:,new " + function () {
+
+    var pScript = "data:,new " + function () {
       var os = Components.classes["@mozilla.org/observer-service;1"]
         .getService(Components.interfaces.nsIObserverService);
       var observer = {
@@ -133,7 +135,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
         }
       };
       os.addObserver(observer, "content-document-global-created", false);
-    }, false);
+    }
+
+    Services.ppmm.loadProcessScript(pScript, true);
 
     var uri = ioService.newURI("mailto:foo@bar.com", null, null);
     webHandler.launchWithURI(uri);
