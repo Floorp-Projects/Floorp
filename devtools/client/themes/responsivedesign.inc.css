@@ -169,8 +169,6 @@
 
 .devtools-responsiveui-close > image {
   filter: invert(1);
-  padding-inline-start: 3px;
-  padding-top: 2px;
 }
 
 .devtools-responsiveui-rotate {
