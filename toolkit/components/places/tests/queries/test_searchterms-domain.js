@@ -42,7 +42,7 @@
 
    // Test bad URI
    {isInQuery: false, isVisit:true, isDetails: true, title: "moz",
-    uri: "http://sffoo.com/justwrong.htm", lastVisit: tomorrow},
+    uri: "http://sffoo.com/justwrong.htm", lastVisit: yesterday},
 
    // Test what we do with escaping in titles
    {isInQuery: false, isVisit:true, isDetails: true, title: "m%0o%0z",
@@ -50,7 +50,7 @@
 
    // Test another invalid title - for updating later
    {isInQuery: false, isVisit:true, isDetails: true, title: "m,oz",
-    uri: "http://foo.com/changeme2.htm", lastVisit: tomorrow}];
+    uri: "http://foo.com/changeme2.htm", lastVisit: yesterday}];
 
 /**
  * This test will test Queries that use relative search terms and domain options

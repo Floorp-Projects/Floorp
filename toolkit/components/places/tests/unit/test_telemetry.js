@@ -94,11 +94,17 @@ add_task(function* test_execute()
   yield PlacesTestUtils.promiseAsyncUpdates();
 
   // Test expiration probes.
-  let now =  getExpirablePRTime();
+  let timeInMicroseconds = getExpirablePRTime(8);
+
+  function newTimeInMicroseconds() {
+    timeInMicroseconds = timeInMicroseconds + 1000;
+    return timeInMicroseconds;
+  }
+
   for (let i = 0; i < 3; i++) {
     yield PlacesTestUtils.addVisits({
       uri: NetUtil.newURI("http://" +  i + ".moz.org/"),
-      visitDate: now++
+      visitDate: newTimeInMicroseconds()
     });
   }
   Services.prefs.setIntPref("places.history.expiration.max_pages", 0);
