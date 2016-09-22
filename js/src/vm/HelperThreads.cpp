@@ -131,6 +131,8 @@ GetSelectorRuntime(CompilationSelector selector)
     {
         JSRuntime* match(JSScript* script)    { return script->runtimeFromMainThread(); }
         JSRuntime* match(JSCompartment* comp) { return comp->runtimeFromMainThread(); }
+        JSRuntime* match(ZonesInState zbs)    { return zbs.runtime; }
+        JSRuntime* match(JSRuntime* runtime)  { return runtime; }
         JSRuntime* match(AllCompilations all) { return nullptr; }
     };
 
@@ -144,6 +146,8 @@ JitDataStructuresExist(CompilationSelector selector)
     {
         bool match(JSScript* script)    { return !!script->compartment()->jitCompartment(); }
         bool match(JSCompartment* comp) { return !!comp->jitCompartment(); }
+        bool match(ZonesInState zbs)    { return !!zbs.runtime->jitRuntime(); }
+        bool match(JSRuntime* runtime)  { return !!runtime->jitRuntime(); }
         bool match(AllCompilations all) { return true; }
     };
 
@@ -159,7 +163,12 @@ CompiledScriptMatches(CompilationSelector selector, JSScript* target)
 
         bool match(JSScript* script)    { return script == target_; }
         bool match(JSCompartment* comp) { return comp == target_->compartment(); }
+        bool match(JSRuntime* runtime)  { return runtime == target_->runtimeFromAnyThread(); }
         bool match(AllCompilations all) { return true; }
+        bool match(ZonesInState zbs)    {
+            return zbs.runtime == target_->runtimeFromAnyThread() &&
+                   zbs.state == target_->zoneFromAnyThread()->gcState();
+        }
     };
 
     return selector.match(ScriptMatches{target});
@@ -232,6 +241,45 @@ js::CancelOffThreadIonCompile(CompilationSelector selector, bool discardLazyLink
         }
     }
 }
+
+#ifdef DEBUG
+bool
+js::HasOffThreadIonCompile(JSCompartment* comp)
+{
+    AutoLockHelperThreadState lock;
+
+    if (!HelperThreadState().threads)
+        return false;
+
+    GlobalHelperThreadState::IonBuilderVector& worklist = HelperThreadState().ionWorklist(lock);
+    for (size_t i = 0; i < worklist.length(); i++) {
+        jit::IonBuilder* builder = worklist[i];
+        if (builder->script()->compartment() == comp)
+            return true;
+    }
+
+    for (auto& helper : *HelperThreadState().threads) {
+        if (helper.ionBuilder() && helper.ionBuilder()->script()->compartment() == comp)
+            return true;
+    }
+
+    GlobalHelperThreadState::IonBuilderVector& finished = HelperThreadState().ionFinishedList(lock);
+    for (size_t i = 0; i < finished.length(); i++) {
+        jit::IonBuilder* builder = finished[i];
+        if (builder->script()->compartment() == comp)
+            return true;
+    }
+
+    jit::IonBuilder* builder = comp->runtimeFromMainThread()->ionLazyLinkList().getFirst();
+    while (builder) {
+        if (builder->script()->compartment() == comp)
+            return true;
+        builder = builder->getNext();
+    }
+
+    return false;
+}
+#endif
 
 static const JSClassOps parseTaskGlobalClassOps = {
     nullptr, nullptr, nullptr, nullptr,
