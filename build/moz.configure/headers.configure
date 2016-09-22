@@ -8,14 +8,16 @@
 check_header('stdint.h')
 have_inttypes = check_header('inttypes.h')
 
-set_config('HAVE_INTTYPES_H', have_inttypes)
+# Assume we have ansi C header files available.
+set_define('STDC_HEADERS', True)
 
-# Checks for headers relevant to non-windows systems.
-non_msvc_compiler = depends(c_compiler)(lambda info: info.type != 'msvc')
+set_config('HAVE_INTTYPES_H', have_inttypes)
 
 building_linux = depends(target)(lambda target: target.kernel == 'Linux')
 
 have_malloc = check_header('malloc.h')
+
+check_header('alloca.h')
 
 add_old_configure_assignment('HAVE_MALLOC_H', have_malloc)
 

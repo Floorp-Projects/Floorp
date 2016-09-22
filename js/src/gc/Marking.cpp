@@ -296,7 +296,7 @@ ShouldMarkCrossCompartment(JSTracer* trc, JSObject* src, Cell* cell)
          */
         if (tenured.isMarked(GRAY)) {
             MOZ_ASSERT(!zone->isCollecting());
-            trc->runtime()->gc.setFoundBlackGrayEdges();
+            trc->runtime()->gc.setFoundBlackGrayEdges(tenured);
         }
         return zone->isGCMarking();
     } else {

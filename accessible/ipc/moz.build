@@ -37,6 +37,7 @@ if CONFIG['ACCESSIBILITY']:
         'DocAccessibleChildBase.h',
         'DocAccessibleParent.h',
         'ProxyAccessibleBase.h',
+        'ProxyAccessibleShared.h',
     ]
 
     UNIFIED_SOURCES += [

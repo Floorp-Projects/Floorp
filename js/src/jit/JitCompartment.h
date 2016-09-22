@@ -148,7 +148,7 @@ class JitRuntime
     void* baselineDebugModeOSRHandlerNoFrameRegPopAddr_;
 
     // Map VMFunction addresses to the JitCode of the wrapper.
-    typedef GCRekeyableHashMap<const VMFunction*, JitCode*> VMWrapperMap;
+    using VMWrapperMap = HashMap<const VMFunction*, JitCode*>;
     VMWrapperMap* functionWrappers_;
 
     // Buffer for OSR from baseline to Ion. To avoid holding on to this for

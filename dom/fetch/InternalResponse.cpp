@@ -85,9 +85,9 @@ InternalResponse::ToIPC<PContentParent>
    PContentParent* aManager,
    UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoStream);
 template void
-InternalResponse::ToIPC<PContentChild>
+InternalResponse::ToIPC<nsIContentChild>
   (IPCInternalResponse* aIPCResponse,
-   PContentChild* aManager,
+   nsIContentChild* aManager,
    UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoStream);
 template void
 InternalResponse::ToIPC<mozilla::ipc::PBackgroundParent>

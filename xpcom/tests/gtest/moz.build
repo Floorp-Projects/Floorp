@@ -16,6 +16,7 @@ UNIFIED_SOURCES += [
     'TestPipes.cpp',
     'TestPLDHash.cpp',
     'TestPriorityQueue.cpp',
+    'TestSlicedInputStream.cpp',
     'TestSnappyStreams.cpp',
     'TestStateWatching.cpp',
     'TestStorageStream.cpp',

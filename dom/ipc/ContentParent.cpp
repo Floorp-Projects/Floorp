@@ -78,11 +78,8 @@
 #include "mozilla/hal_sandbox/PHalParent.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
-#include "mozilla/ipc/FileDescriptorSetParent.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
-#include "mozilla/ipc/PFileDescriptorSetParent.h"
 #include "mozilla/ipc/PSendStreamParent.h"
-#include "mozilla/ipc/SendStreamAlloc.h"
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
@@ -1056,6 +1053,13 @@ ContentParent::RecvFindPlugins(const uint32_t& aPluginEpoch,
                                uint32_t* aNewPluginEpoch)
 {
   *aRv = mozilla::plugins::FindPluginsForContent(aPluginEpoch, aPlugins, aNewPluginEpoch);
+  return true;
+}
+
+bool
+ContentParent::RecvInitVideoDecoderManager(Endpoint<PVideoDecoderManagerChild>* aEndpoint)
+{
+  GPUProcessManager::Get()->CreateContentVideoDecoderManager(OtherPid(), aEndpoint);
   return true;
 }
 
@@ -3381,14 +3385,13 @@ ContentParent::GetPrintingParent()
 PSendStreamParent*
 ContentParent::AllocPSendStreamParent()
 {
-  return mozilla::ipc::AllocPSendStreamParent();
+  return nsIContentParent::AllocPSendStreamParent();
 }
 
 bool
 ContentParent::DeallocPSendStreamParent(PSendStreamParent* aActor)
 {
-  delete aActor;
-  return true;
+  return nsIContentParent::DeallocPSendStreamParent(aActor);
 }
 
 PScreenManagerParent*
@@ -4595,14 +4598,13 @@ ContentParent::RecvKeygenProvideContent(nsString* aAttribute,
 PFileDescriptorSetParent*
 ContentParent::AllocPFileDescriptorSetParent(const FileDescriptor& aFD)
 {
-  return new FileDescriptorSetParent(aFD);
+  return nsIContentParent::AllocPFileDescriptorSetParent(aFD);
 }
 
 bool
 ContentParent::DeallocPFileDescriptorSetParent(PFileDescriptorSetParent* aActor)
 {
-  delete static_cast<FileDescriptorSetParent*>(aActor);
-  return true;
+  return nsIContentParent::DeallocPFileDescriptorSetParent(aActor);
 }
 
 bool

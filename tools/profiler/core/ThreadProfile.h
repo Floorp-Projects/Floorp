@@ -49,6 +49,9 @@ public:
 #ifndef SPS_STANDALONE
   ThreadResponsiveness* GetThreadResponsiveness() { return &mRespInfo; }
 #endif
+
+  bool CanInvokeJS() const { return mThreadInfo->CanInvokeJS(); }
+
   void SetPendingDelete()
   {
     mPseudoStack = nullptr;

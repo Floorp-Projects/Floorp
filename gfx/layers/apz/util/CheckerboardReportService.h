@@ -38,15 +38,15 @@ public:
   static already_AddRefed<CheckerboardEventStorage> GetInstance();
 
   /**
-   * Save a checkerboard event log, optionally dropping older ones that were
-   * less severe or less recent. Zero-severity reports may be ignored entirely.
-   */
-  void ReportCheckerboard(uint32_t aSeverity, const std::string& aLog);
-
-  /**
    * Get the stored checkerboard reports.
    */
   void GetReports(nsTArray<dom::CheckerboardReport>& aOutReports);
+
+  /**
+   * Save a checkerboard event log, optionally dropping older ones that were
+   * less severe or less recent. Zero-severity reports may be ignored entirely.
+   */
+  static void Report(uint32_t aSeverity, const std::string& aLog);
 
 private:
   /* Stuff for refcounted singleton */
@@ -54,6 +54,8 @@ private:
   virtual ~CheckerboardEventStorage() {}
 
   static StaticRefPtr<CheckerboardEventStorage> sInstance;
+
+  void ReportCheckerboard(uint32_t aSeverity, const std::string& aLog);
 
 private:
   /**

@@ -30,12 +30,12 @@ var gSmallTests = [
   { name:"small-shot.mp3", type:"audio/mpeg", duration:0.27 },
   { name:"small-shot-mp3.mp4", type:"audio/mp4; codecs=mp3", duration:0.34 },
   { name:"small-shot.flac", type:"audio/flac", duration:0.197 },
-  { name:"r11025_s16_c1.wav", type:"audio/x-wav", duration:1.0 },
+  { name:"r11025_s16_c1-short.wav", type:"audio/x-wav", duration:0.37 },
   { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.266 },
-  { name:"seek.webm", type:"video/webm", width:320, height:240, duration:3.966 },
-  { name:"vp9.webm", type:"video/webm", width:320, height:240, duration:4 },
-  { name:"detodos.opus", type:"audio/ogg; codecs=opus", duration:2.9135 },
-  { name:"gizmo.mp4", type:"video/mp4", width:560, height:320, duration:5.56 },
+  { name:"seek-short.webm", type:"video/webm", width:320, height:240, duration:0.23 },
+  { name:"vp9-short.webm", type:"video/webm", width:320, height:240, duration:0.20 },
+  { name:"detodos-short.opus", type:"audio/ogg; codecs=opus", duration:0.22 },
+  { name:"gizmo-short.mp4", type:"video/mp4", width:560, height:320, duration:0.27 },
   { name:"flac-s24.flac", type:"audio/flac", duration:4.04 },
   { name:"bogus.duh", type:"bogus/duh" }
 ];
@@ -55,7 +55,7 @@ if (SpecialPowers.Services.appinfo.name != "B2G") {
 // Used by test_bug654550.html, for videoStats preference
 var gVideoTests = [
   { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.266 },
-  { name:"seek.webm", type:"video/webm", width:320, height:240, duration:3.966 },
+  { name:"seek-short.webm", type:"video/webm", width:320, height:240, duration:0.23 },
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
@@ -69,21 +69,21 @@ var gLongerTests = [
 // during resource download.
 var gProgressTests = [
   { name:"r11025_u8_c1.wav", type:"audio/x-wav", duration:1.0, size:11069 },
-  { name:"big.wav", type:"audio/x-wav", duration:9.278982, size:102444 },
-  { name:"seek.ogv", type:"video/ogg", duration:3.966, size:285310 },
+  { name:"big-short.wav", type:"audio/x-wav", duration:1.11, size:12366 },
+  { name:"seek-short.ogv", type:"video/ogg", duration:1.03, size:79921 },
   { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.266, size:28942 },
-  { name:"seek.webm", type:"video/webm", duration:3.966, size:215529 },
-  { name:"gizmo.mp4", type:"video/mp4", duration:5.56, size:383631 },
+  { name:"seek-short.webm", type:"video/webm", duration:0.23, size:19267 },
+  { name:"gizmo-short.mp4", type:"video/mp4", duration:0.27, size:29905 },
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
 // Used by test_played.html
 var gPlayedTests = [
-  { name:"big.wav", type:"audio/x-wav", duration:9.0 },
-  { name:"seek.ogv", type:"video/ogg", duration:3.966 },
-  { name:"seek.webm", type:"video/webm", duration:3.966 },
-  { name:"gizmo.mp4", type:"video/mp4", duration:5.56 },
-  { name:"owl.mp3", type:"audio/mpeg", duration:3.343 },
+  { name:"big-short.wav", type:"audio/x-wav", duration:1.11 },
+  { name:"seek-short.ogv", type:"video/ogg", duration:1.03 },
+  { name:"seek-short.webm", type:"video/webm", duration:0.23 },
+  { name:"gizmo-short.mp4", type:"video/mp4", duration:0.27 },
+  { name:"owl-short.mp3", type:"audio/mpeg", duration:0.52 },
   // Disable vbr.mp3 to see if it reduces the error of AUDCLNT_E_CPUUSAGE_EXCEEDED.
   // See bug 1110922 comment 26.
   //{ name:"vbr.mp3", type:"audio/mpeg", duration:10.0 },
@@ -116,27 +116,29 @@ var gPausedAfterEndedTests = gSmallTests.concat([
 // Test the mozHasAudio property, and APIs that detect different kinds of
 // tracks
 var gTrackTests = [
-  { name:"big.wav", type:"audio/x-wav", duration:9.278982, size:102444, hasAudio:true, hasVideo:false },
+  { name:"big-short.wav", type:"audio/x-wav", duration:1.11, size:12366, hasAudio:true, hasVideo:false },
   { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.266, size:28942, hasAudio:false, hasVideo:true },
   { name:"short-video.ogv", type:"video/ogg", duration:1.081, hasAudio:true, hasVideo:true },
-  { name:"seek.webm", type:"video/webm", duration:3.966, size:215529, hasAudio:false, hasVideo:true },
+  { name:"seek-short.webm", type:"video/webm", duration:0.23, size:19267, hasAudio:false, hasVideo:true },
   { name:"flac-s24.flac", type:"audio/flac", duration:4.04, hasAudio:true, hasVideo:false },
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
 var gClosingConnectionsTest = [
-  { name:"seek.ogv", type:"video/ogg", duration:3.966 }
+  { name:"seek-short.ogv", type:"video/ogg", duration:1.03 },
 ];
 
 // Used by any media recorder test. Need one test file per decoder backend
 // currently supported by the media encoder.
 var gMediaRecorderTests = [
-  { name:"detodos.opus", type:"audio/ogg; codecs=opus", duration:2.9135 }
+  // Duration should be greater than 500ms because we will record 2
+  // time slices (250ms per slice)
+  { name:"detodos-recorder-test.opus", type:"audio/ogg; codecs=opus", duration:0.62 }
 ];
 
 // Used by video media recorder tests
 var gMediaRecorderVideoTests = [
-  { name:"seek.webm", type:"video/webm", width:320, height:240, duration:3.966 },
+  { name:"seek-short.webm", type:"video/webm", width:320, height:240, duration:0.23 },
 ];
 
 // These are files that we want to make sure we can play through.  We can
@@ -145,8 +147,7 @@ var gMediaRecorderVideoTests = [
 // Used by test_playback, which expects no error event and one ended event.
 var gPlayTests = [
   // Test playback of a WebM file with vp9 video
-  //{ name:"vp9.webm", type:"video/webm", duration:4 },
-  { name:"vp9cake.webm", type:"video/webm", duration:7.966 },
+  { name:"vp9cake-short.webm", type:"video/webm", duration:1.00 },
 
   // 8-bit samples
   { name:"r11025_u8_c1.wav", type:"audio/x-wav", duration:1.0 },
@@ -217,7 +218,7 @@ var gPlayTests = [
     type:"video/ogg", duration:0.266 },
 
   // Test playback of a webm file
-  { name:"seek.webm", type:"video/webm", duration:3.966 },
+  { name:"seek-short.webm", type:"video/webm", duration:0.23 },
 
   // Test playback of a WebM file with non-zero start time.
   { name:"split.webm", type:"video/webm", duration:1.967 },
@@ -234,9 +235,9 @@ var gPlayTests = [
   { name:"spacestorm-1000Hz-100ms.ogg", type:"audio/ogg", duration:0.099 },
 
   // Opus data in an ogg container
-  { name:"detodos.opus", type:"audio/ogg; codecs=opus", duration:2.9135 },
+  { name:"detodos-short.opus", type:"audio/ogg; codecs=opus", duration:0.22 },
   // Opus data in a webm container
-  { name:"detodos.webm", type:"audio/webm; codecs=opus", duration:2.9135 },
+  { name:"detodos-short.webm", type:"audio/webm; codecs=opus", duration:0.26 },
   { name:"bug1066943.webm", type:"audio/webm; codecs=opus", duration:1.383 },
 
   // Multichannel Opus in an ogg container
@@ -249,7 +250,7 @@ var gPlayTests = [
   { name:"test-7-6.1.opus", type:"audio/ogg; codecs=opus", duration:11.690 },
   { name:"test-8-7.1.opus", type:"audio/ogg; codecs=opus", duration:13.478 },
 
-  { name:"gizmo.mp4", type:"video/mp4", duration:5.56 },
+  { name:"gizmo-short.mp4", type:"video/mp4", duration:0.27 },
   // Test playback of a MP4 file with a non-zero start time (and audio starting
   // a second later).
   { name:"bipbop-lateaudio.mp4", type:"video/mp4" },
@@ -287,8 +288,8 @@ var gPlayTests = [
 
 var gSeekToNextFrameTests = [
   // Test playback of a WebM file with vp9 video
-  { name:"vp9.webm", type:"video/webm", duration:4 },
-  { name:"vp9cake.webm", type:"video/webm", duration:7.966 },
+  { name:"vp9-short.webm", type:"video/webm", duration:0.20 },
+  { name:"vp9cake-short.webm", type:"video/webm", duration:1.00 },
   // oggz-chop stream
   { name:"bug482461.ogv", type:"video/ogg", duration:4.34 },
   // Theora only oggz-chop stream
@@ -319,13 +320,13 @@ var gSeekToNextFrameTests = [
   { name:"redirect.sjs?domain=mochi.test:8888&file=320x240.ogv",
     type:"video/ogg", duration:0.266 },
   // Test playback of a webm file
-  { name:"seek.webm", type:"video/webm", duration:3.966 },
+  { name:"seek-short.webm", type:"video/webm", duration:0.23 },
   // Test playback of a WebM file with non-zero start time.
   { name:"split.webm", type:"video/webm", duration:1.967 },
   // Test playback of a raw file
   { name:"seek.yuv", type:"video/x-raw-yuv", duration:1.833 },
 
-  { name:"gizmo.mp4", type:"video/mp4", duration:5.56 },
+  { name:"gizmo-short.mp4", type:"video/mp4", duration:0.27 },
 
   // Test playback of a MP4 file with a non-zero start time (and audio starting
   // a second later).
@@ -377,16 +378,16 @@ var gInvalidPlayTests = [
 // - Skeleton v4, wrong message field sequence for vorbis
 // multiple-bos-more-header-fields.ogg
 // - Skeleton v3, w/ Content-Type,Role,Name,Language,Title for both theora/vorbis
-// seek.ogv
+// seek-short.ogv
 // - No skeleton, but theora
-// audio-overhang.ogg
+// audio-gaps-short.ogg
 // - No skeleton, but vorbis
 var gMultitrackInfoOggPlayList = [
-  { name:"sample-fisbone-skeleton4.ogv", type:"video/ogg", duration:5.049 },
-  { name:"sample-fisbone-wrong-header.ogv", type:"video/ogg", duration:5.049 },
+  { name:"sample-fisbone-skeleton4.ogv", type:"video/ogg", duration:1.00 },
+  { name:"sample-fisbone-wrong-header.ogv", type:"video/ogg", duration:1.00 },
   { name:"multiple-bos-more-header-fileds.ogg", type:"video/ogg", duration:0.431 },
-  { name:"seek.ogv", type:"video/ogg", duration:3.996 },
-  { name:"audio-gaps.ogg", type:"audio/ogg", duration:2.208 }
+  { name:"seek-short.ogv", type:"video/ogg", duration:1.03 },
+  { name:"audio-gaps-short.ogg", type:"audio/ogg", duration:0.50 }
 ];
 // Pre-parsed results of gMultitrackInfoOggPlayList.
 var gOggTrackInfoResults = {
@@ -420,13 +421,13 @@ var gOggTrackInfoResults = {
     "video_language":"",
     "video_label":""
   },
-  "seek.ogv" : {
+  "seek-short.ogv" : {
     "video_id":"2",
     "video_kind":"main",
     "video_language":"",
     "video_label":""
   },
-  "audio-gaps.ogg" : {
+  "audio-gaps-short.ogg" : {
     "audio_id":"1",
     "audio_kind":"main",
     "audio_language":"",

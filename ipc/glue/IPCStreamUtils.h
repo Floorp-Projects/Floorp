@@ -13,7 +13,7 @@
 namespace mozilla {
 
 namespace dom {
-class PContentChild;
+class nsIContentChild;
 class PContentParent;
 }
 
@@ -147,7 +147,7 @@ public:
   // manager.  If neither of these succeed, then crash.  This should only be
   // used on the main thread.
   void
-  Serialize(nsIInputStream* aStream, dom::PContentChild* aManager);
+  Serialize(nsIInputStream* aStream, dom::nsIContentChild* aManager);
 
   // Serialize the input stream or create a SendStream actor using the
   // PBackground manager.  If neither of these succeed, then crash.  This can

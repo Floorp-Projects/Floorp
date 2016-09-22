@@ -103,15 +103,14 @@ namespace js {
 template <typename T>
 static T ConvertScalar(double d)
 {
-    if (TypeIsFloatingPoint<T>()) {
+    if (TypeIsFloatingPoint<T>())
         return T(d);
-    } else if (TypeIsUnsigned<T>()) {
+    if (TypeIsUnsigned<T>()) {
         uint32_t n = JS::ToUint32(d);
         return T(n);
-    } else {
-        int32_t n = JS::ToInt32(d);
-        return T(n);
     }
+    int32_t n = JS::ToInt32(d);
+    return T(n);
 }
 
 namespace type {

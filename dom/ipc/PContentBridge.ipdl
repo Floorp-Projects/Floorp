@@ -8,6 +8,8 @@ include protocol PBlob;
 include protocol PBrowser;
 include protocol PContent;
 include protocol PJavaScript;
+include protocol PFileDescriptorSet;
+include protocol PSendStream;
 
 include DOMTypes;
 include JavaScriptTypes;
@@ -36,7 +38,9 @@ prio(normal upto urgent) sync protocol PContentBridge
 
     manages PBlob;
     manages PBrowser;
+    manages PFileDescriptorSet;
     manages PJavaScript;
+    manages PSendStream;
 
 parent:
     sync SyncMessage(nsString aMessage, ClonedMessageData aData,
@@ -44,6 +48,9 @@ parent:
       returns (StructuredCloneData[] retval);
 
     async PJavaScript();
+
+    async PSendStream();
+
 both:
     // Both the parent and the child can construct the PBrowser.
     // See the comment in PContent::PBrowser().
@@ -51,6 +58,8 @@ both:
                    ContentParentId cpId, bool isForApp, bool isForBrowser);
 
     async PBlob(BlobConstructorParams params);
+
+    async PFileDescriptorSet(FileDescriptor fd);
 
     async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
                        Principal aPrincipal, ClonedMessageData aData);

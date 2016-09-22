@@ -45,6 +45,9 @@ public:
                                  const CompositingRenderTarget *aSource,
                                  const gfx::IntPoint &aSourcePoint) override;
 
+  virtual already_AddRefed<TextureSource>
+    CreateTextureSourceForImage(Image* aImage) override;
+
   virtual void SetRenderTarget(CompositingRenderTarget *aSurface) override;
   virtual CompositingRenderTarget* GetCurrentRenderTarget() const override
   {

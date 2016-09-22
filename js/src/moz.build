@@ -594,6 +594,7 @@ if CONFIG['JS_HAS_CTYPES']:
     if not CONFIG['MOZ_SYSTEM_FFI']:
         LOCAL_INCLUDES += [
             '!ctypes/libffi/include',
+            'ctypes/libffi/src/%s' % CONFIG['FFI_TARGET_DIR'],
         ]
 
 if CONFIG['MOZ_VTUNE']:
@@ -636,11 +637,6 @@ else:
 
 FORCE_STATIC_LIB = True
 STATIC_LIBRARY_NAME = 'js_static'
-
-if CONFIG['JS_HAS_CTYPES']:
-    USE_LIBS += [
-        'ffi',
-    ]
 
 if CONFIG['ENABLE_INTL_API']:
     if not CONFIG['MOZ_ICU_DATA_ARCHIVE']:

@@ -710,7 +710,7 @@ class BacktrackingAllocator : protected RegisterAllocator
     MOZ_MUST_USE bool tryAllocateNonFixed(LiveBundle* bundle, Requirement requirement,
                                           Requirement hint, bool* success, bool* pfixed,
                                           LiveBundleVector& conflicting);
-    MOZ_MUST_USE bool processBundle(LiveBundle* bundle);
+    MOZ_MUST_USE bool processBundle(MIRGenerator* mir, LiveBundle* bundle);
     MOZ_MUST_USE bool computeRequirement(LiveBundle* bundle, Requirement *prequirement,
                                          Requirement *phint);
     MOZ_MUST_USE bool tryAllocateRegister(PhysicalRegister& r, LiveBundle* bundle, bool* success,
