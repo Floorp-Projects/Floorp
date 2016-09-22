@@ -3061,6 +3061,13 @@ UnwrapArgImpl(JS::Handle<JSObject*> src,
     return NS_OK;
   }
 
+  // Only allow XPCWrappedJS stuff in system code.  Ideally we would remove this
+  // even there, but that involves converting some things to WebIDL callback
+  // interfaces and making some other things builtinclass...
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_XPC_BAD_CONVERT_JS;
+  }
+
   RefPtr<nsXPCWrappedJS> wrappedJS;
   nsresult rv = nsXPCWrappedJS::GetNewOrUsed(src, iid, getter_AddRefs(wrappedJS));
   if (NS_FAILED(rv) || !wrappedJS) {
