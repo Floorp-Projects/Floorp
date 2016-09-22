@@ -153,7 +153,23 @@ types.addDictType("cachestoreobject", {
 // Cache storage spec
 createStorageSpec({
   typeName: "Cache",
-  storeObjectType: "cachestoreobject"
+  storeObjectType: "cachestoreobject",
+  methods: {
+    removeAll: {
+      request: {
+        host: Arg(0, "string"),
+        name: Arg(1, "string"),
+      },
+      response: {}
+    },
+    removeItem: {
+      request: {
+        host: Arg(0, "string"),
+        name: Arg(1, "string"),
+      },
+      response: {}
+    },
+  }
 });
 
 // Indexed DB store object
