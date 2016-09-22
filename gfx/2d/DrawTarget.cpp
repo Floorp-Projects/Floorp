@@ -5,6 +5,7 @@
 
 #include "2D.h"
 #include "Logging.h"
+#include "PathHelpers.h"
 
 #include "DrawTargetCapture.h"
 
@@ -33,6 +34,22 @@ DrawTarget::DrawCapturedDT(DrawTargetCapture *aCaptureDT,
     return;
   }
   static_cast<DrawTargetCaptureImpl*>(aCaptureDT)->ReplayToDrawTarget(this, aTransform);
+}
+
+void
+DrawTarget::PushDeviceSpaceClipRects(const IntRect* aRects, uint32_t aCount)
+{
+  Matrix oldTransform = GetTransform();
+  SetTransform(Matrix());
+
+  RefPtr<PathBuilder> pathBuilder = CreatePathBuilder();
+  for (uint32_t i = 0; i < aCount; i++) {
+    AppendRectToPath(pathBuilder, Rect(aRects[i]));
+  }
+  RefPtr<Path> path = pathBuilder->Finish();
+  PushClip(path);
+
+  SetTransform(oldTransform);
 }
 
 } // namespace gfx

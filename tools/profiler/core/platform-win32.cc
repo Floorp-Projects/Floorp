@@ -12,7 +12,7 @@
 //  * Neither the name of Google, Inc. nor the names of its contributors
 //    may be used to endorse or promote products derived from this
 //    software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 // LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
@@ -36,6 +36,9 @@
 
 // Memory profile
 #include "nsMemoryReporterManager.h"
+
+#include "mozilla/StackWalk_windows.h"
+
 
 class PlatformData {
  public:
@@ -101,7 +104,7 @@ class SamplerThread : public Thread {
     } else {
       ASSERT(instance_->interval_ == sampler->interval());
     }
-  } 
+  }
 
   static void StopSampler() {
     instance_->Join();
@@ -187,6 +190,29 @@ class SamplerThread : public Thread {
     static const DWORD kSuspendFailed = static_cast<DWORD>(-1);
     if (SuspendThread(profiled_thread) == kSuspendFailed)
       return;
+
+    // Threads that may invoke JS require extra attention. Since, on windows,
+    // the jits also need to modify the same dynamic function table that we need
+    // to get a stack trace, we have to be wary of that to avoid deadlock.
+    //
+    // When embedded in Gecko, for threads that aren't the main thread,
+    // CanInvokeJS consults an unlocked value in the nsIThread, so we must
+    // consult this after suspending the profiled thread to avoid racing
+    // against a value change.
+    if (thread_profile->CanInvokeJS()) {
+      if (!TryAcquireStackWalkWorkaroundLock()) {
+        ResumeThread(profiled_thread);
+        return;
+      }
+
+      // It is safe to immediately drop the lock. We only need to contend with
+      // the case in which the profiled thread held needed system resources.
+      // If the profiled thread had held those resources, the trylock would have
+      // failed. Anyone else who grabs those resources will continue to make
+      // progress, since those threads are not suspended. Because of this,
+      // we cannot deadlock with them, and should let them run as they please.
+      ReleaseStackWalkWorkaroundLock();
+    }
 
     // Using only CONTEXT_CONTROL is faster but on 64-bit it causes crashes in
     // RtlVirtualUnwind (see bug 1120126) so we set all the flags.

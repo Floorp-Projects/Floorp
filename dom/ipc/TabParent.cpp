@@ -1685,6 +1685,21 @@ bool TabParent::SendRealTouchEvent(WidgetTouchEvent& event)
 }
 
 bool
+TabParent::SendHandleTap(TapType aType,
+                         const LayoutDevicePoint& aPoint,
+                         Modifiers aModifiers,
+                         const ScrollableLayerGuid& aGuid,
+                         uint64_t aInputBlockId)
+{
+  if (mIsDestroyed) {
+    return false;
+  }
+  LayoutDeviceIntPoint offset = GetChildProcessOffset();
+  return PBrowserParent::SendHandleTap(aType, aPoint + offset, aModifiers, aGuid,
+      aInputBlockId);
+}
+
+bool
 TabParent::RecvSyncMessage(const nsString& aMessage,
                            const ClonedMessageData& aData,
                            InfallibleTArray<CpowEntry>&& aCpows,

@@ -35,16 +35,6 @@ let whitelist = [
 
 // Platform can be "linux", "macosx" or "win". If omitted, the exception applies to all platforms.
 let allowedImageReferences = [
-  // Bug 1302759
-  {file: "chrome://browser/skin/customizableui/customize-titleBar-toggle.png",
-   from: "chrome://browser/skin/browser.css",
-   platforms: ["linux"],
-   isFromDevTools: false},
-  {file: "chrome://browser/skin/customizableui/customize-titleBar-toggle@2x.png",
-   from: "chrome://browser/skin/browser.css",
-   platforms: ["linux"],
-   isFromDevTools: false},
-
   // Bug 1302691
   {file: "chrome://devtools/skin/images/dock-bottom-minimize@2x.png",
    from: "chrome://devtools/skin/toolbox.css",

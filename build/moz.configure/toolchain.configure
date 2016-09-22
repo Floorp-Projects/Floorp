@@ -783,6 +783,10 @@ host_cxx_compiler = compiler('C++', host, c_compiler=host_c_compiler,
                              other_compiler=cxx_compiler,
                              other_c_compiler=c_compiler)
 
+# Generic compiler-based conditions.
+non_msvc_compiler = depends(c_compiler)(lambda info: info.type != 'msvc')
+building_with_gcc = depends(c_compiler)(lambda info: info.type == 'gcc')
+
 include('compile-checks.configure')
 
 @depends(have_64_bit,

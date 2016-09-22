@@ -898,17 +898,36 @@ WebConsoleActor.prototype =
         result = evalResult.yield;
       } else if ("throw" in evalResult) {
         let error = evalResult.throw;
-        errorGrip = this.createValueGrip(error);
-        // XXXworkers: Calling unsafeDereference() returns an object with no
-        // toString method in workers. See Bug 1215120.
-        let unsafeDereference = error && (typeof error === "object") &&
-                                error.unsafeDereference();
-        errorMessage = unsafeDereference && unsafeDereference.toString
-          ? unsafeDereference.toString()
-          : String(error);
 
-          // It is possible that we won't have permission to unwrap an
-          // object and retrieve its errorMessageName.
+        errorGrip = this.createValueGrip(error);
+
+        errorMessage = String(error);
+        if (typeof error === "object" && error !== null) {
+          try {
+            errorMessage = DevToolsUtils.callPropertyOnObject(error, "toString");
+          } catch (e) {
+            // If the debuggee is not allowed to access the "toString" property
+            // of the error object, calling this property from the debuggee's
+            // compartment will fail. The debugger should show the error object
+            // as it is seen by the debuggee, so this behavior is correct.
+            //
+            // Unfortunately, we have at least one test that assumes calling the
+            // "toString" property of an error object will succeed if the
+            // debugger is allowed to access it, regardless of whether the
+            // debuggee is allowed to access it or not.
+            //
+            // To accomodate these tests, if calling the "toString" property
+            // from the debuggee compartment fails, we rewrap the error object
+            // in the debugger's compartment, and then call the "toString"
+            // property from there.
+            if (typeof error.unsafeDereference === "function") {
+              errorMessage = error.unsafeDereference().toString();
+            }
+          }
+        }
+
+        // It is possible that we won't have permission to unwrap an
+        // object and retrieve its errorMessageName.
         try {
           errorDocURL = ErrorDocs.GetURL(error);
         } catch (ex) {}

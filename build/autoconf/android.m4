@@ -7,7 +7,7 @@ AC_DEFUN([MOZ_ANDROID_NDK],
 
 MOZ_ARG_WITH_STRING(android-cxx-stl,
 [  --with-android-cxx-stl=VALUE
-                          use the specified C++ STL (stlport, libstdc++, libc++)],
+                          use the specified C++ STL (libstdc++, libc++)],
     android_cxx_stl=$withval,
     android_cxx_stl=libc++)
 
@@ -109,11 +109,6 @@ if test "$OS_TARGET" = "Android"; then
             # functions, locale-specific C library functions, multibyte support,
             # etc.
             STLPORT_CPPFLAGS="-I$android_ndk/sources/android/support/include -I$cxx_include -I$cxxabi_include"
-            ;;
-        mozstlport)
-            # We don't need to set STLPORT_LIBS, because the build system will
-            # take care of linking in our home-built stlport where it is needed.
-            STLPORT_CPPFLAGS="-isystem $_topsrcdir/build/stlport/stlport -isystem $_topsrcdir/build/stlport/overrides -isystem $android_ndk/sources/cxx-stl/system/include"
             ;;
         *)
             AC_MSG_ERROR([Bad value for --enable-android-cxx-stl])

@@ -39,19 +39,6 @@ APZChild::RecvRequestContentRepaint(const FrameMetrics& aFrameMetrics)
 }
 
 bool
-APZChild::RecvHandleTap(const TapType& aType,
-                        const LayoutDevicePoint& aPoint,
-                        const Modifiers& aModifiers,
-                        const ScrollableLayerGuid& aGuid,
-                        const uint64_t& aInputBlockId,
-                        const bool& aCallTakeFocusForClickFromTap)
-{
-  mController->HandleTap(aType, aPoint, aModifiers, aGuid,
-      aInputBlockId);
-  return true;
-}
-
-bool
 APZChild::RecvUpdateOverscrollVelocity(const float& aX, const float& aY, const bool& aIsRootContent)
 {
   mController->UpdateOverscrollVelocity(aX, aY, aIsRootContent);

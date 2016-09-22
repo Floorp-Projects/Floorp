@@ -457,6 +457,9 @@ XRE_API(bool,
 XRE_API(bool,
         XRE_IsContentProcess, ())
 
+XRE_API(bool,
+        XRE_IsGPUProcess, ())
+
 typedef void (*MainFunction)(void* aData);
 
 XRE_API(nsresult,

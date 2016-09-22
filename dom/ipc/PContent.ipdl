@@ -56,6 +56,7 @@ include protocol PWebBrowserPersistDocument;
 include protocol PWebrtcGlobal;
 include protocol PPresentation;
 include protocol PVRManager;
+include protocol PVideoDecoderManager;
 include protocol PFlyWebPublishedServer;
 include DOMTypes;
 include JavaScriptTypes;
@@ -787,6 +788,8 @@ parent:
     async PDeviceStorageRequest(DeviceStorageParams params);
 
     sync PCrashReporter(NativeThreadId tid, uint32_t processType);
+
+    sync InitVideoDecoderManager() returns (Endpoint<PVideoDecoderManagerChild> endpoint);
 
     /**
      * Is this token compatible with the provided version?

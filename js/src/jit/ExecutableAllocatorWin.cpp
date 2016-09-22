@@ -25,6 +25,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef MOZ_STACKWALKING
+#include "mozilla/StackWalk_windows.h"
+#endif
+
 #include "mozilla/WindowsVersion.h"
 
 #include "jsfriendapi.h"
@@ -165,14 +169,37 @@ RegisterExecutableMemory(void* p, size_t bytes, size_t pageSize)
     if (!VirtualProtect(p, pageSize, PAGE_EXECUTE_READ, &oldProtect))
         return false;
 
-    return RtlAddFunctionTable(&r->runtimeFunction, 1, reinterpret_cast<DWORD64>(p));
+    // XXX NB: The profiler believes this function is only called from the main
+    // thread. If that ever becomes untrue, SPS must be updated immediately.
+#ifdef MOZ_STACKWALKING
+    AcquireStackWalkWorkaroundLock();
+#endif
+
+    bool success = RtlAddFunctionTable(&r->runtimeFunction, 1, reinterpret_cast<DWORD64>(p));
+
+#ifdef MOZ_STACKWALKING
+    ReleaseStackWalkWorkaroundLock();
+#endif
+
+    return success;
 }
 
 static void
 UnregisterExecutableMemory(void* p, size_t bytes, size_t pageSize)
 {
     ExceptionHandlerRecord* r = reinterpret_cast<ExceptionHandlerRecord*>(p);
+
+    // XXX NB: The profiler believes this function is only called from the main
+    // thread. If that ever becomes untrue, SPS must be updated immediately.
+#ifdef MOZ_STACKWALKING
+    AcquireStackWalkWorkaroundLock();
+#endif
+
     RtlDeleteFunctionTable(&r->runtimeFunction);
+
+#ifdef MOZ_STACKWALKING
+    ReleaseStackWalkWorkaroundLock();
+#endif
 }
 #endif
 

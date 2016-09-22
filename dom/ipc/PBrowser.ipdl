@@ -31,12 +31,14 @@ using CSSRect from "Units.h";
 using CSSSize from "Units.h";
 using mozilla::LayoutDeviceIntRect from "Units.h";
 using mozilla::LayoutDeviceIntPoint from "Units.h";
+using mozilla::LayoutDevicePoint from "Units.h";
 using mozilla::ScreenIntPoint from "Units.h";
 using ScreenIntSize from "Units.h";
 using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
 using struct mozilla::layers::ScrollableLayerGuid from "FrameMetrics.h";
 using struct mozilla::layers::ZoomConstraints from "FrameMetrics.h";
 using mozilla::layers::MaybeZoomConstraints from "FrameMetrics.h";
+using mozilla::layers::GeckoContentController::TapType from "mozilla/layers/GeckoContentController.h";
 using FrameMetrics::ViewID from "FrameMetrics.h";
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 using mozilla::WindowsHandle from "ipc/IPCMessageUtils.h";
@@ -69,6 +71,7 @@ using class mozilla::dom::MessagePort from "mozilla/dom/MessagePort.h";
 using class mozilla::dom::ipc::StructuredCloneData from "mozilla/dom/ipc/StructuredCloneData.h";
 using mozilla::EventMessage from "mozilla/EventForwards.h";
 using nsEventStatus from "mozilla/EventForwards.h";
+using mozilla::Modifiers from "mozilla/EventForwards.h";
 using nsSizeMode from "nsIWidgetListener.h";
 using mozilla::widget::CandidateWindowPosition from "ipc/nsGUIEventIPC.h";
 using class mozilla::NativeEventData from "ipc/nsGUIEventIPC.h";
@@ -674,6 +677,8 @@ child:
                          ScrollableLayerGuid aGuid,
                          uint64_t aInputBlockId,
                          nsEventStatus aApzResponse);
+    async HandleTap(TapType aType, LayoutDevicePoint point, Modifiers aModifiers,
+                    ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
     async RealTouchMoveEvent(WidgetTouchEvent aEvent,
                              ScrollableLayerGuid aGuid,
                              uint64_t aInputBlockId,

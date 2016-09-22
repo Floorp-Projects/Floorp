@@ -1019,6 +1019,16 @@ public:
    */
   virtual void PushClipRect(const Rect &aRect) = 0;
 
+  /**
+   * Push a clip region specifed by the union of axis-aligned rectangular
+   * clips to the DrawTarget. These rectangles are specified in device space.
+   * This must be balanced by a corresponding call to PopClip within a layer.
+   *
+   * @param aRects The rects to clip to
+   * @param aCount The number of rectangles
+   */
+  virtual void PushDeviceSpaceClipRects(const IntRect* aRects, uint32_t aCount);
+
   /** Pop a clip from the DrawTarget. A pop without a corresponding push will
    * be ignored.
    */
