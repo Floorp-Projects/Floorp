@@ -91,7 +91,7 @@ def taskgraph_decision(options):
     write_artifact('label-to-taskid.json', tgg.label_to_taskid)
 
     # actually create the graph
-    create_tasks(tgg.optimized_task_graph, tgg.label_to_taskid)
+    create_tasks(tgg.optimized_task_graph, tgg.label_to_taskid, parameters)
 
 
 def get_decision_parameters(options):
