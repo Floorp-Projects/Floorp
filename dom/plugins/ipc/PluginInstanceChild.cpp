@@ -3581,7 +3581,9 @@ PluginInstanceChild::EnsureCurrentBuffer(void)
 void
 PluginInstanceChild::UpdateWindowAttributes(bool aForceSetWindow)
 {
+#if defined(MOZ_X11) || defined(XP_WIN)
     RefPtr<gfxASurface> curSurface = mHelperSurface ? mHelperSurface : mCurrentSurface;
+#endif // Only used within MOZ_X11 or XP_WIN blocks. Unused variable otherwise
     bool needWindowUpdate = aForceSetWindow;
 #ifdef MOZ_X11
     Visual* visual = nullptr;
