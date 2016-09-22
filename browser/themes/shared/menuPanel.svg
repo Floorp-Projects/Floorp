@@ -2,13 +2,10 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg xmlns="http://www.w3.org/2000/svg" width="1056" height="32" viewBox="0 0 1056 32">
-  <style>
-    path {
-      fill: -moz-fieldText;
-      fill-opacity: .5;
-    }
-  </style>
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="1056" height="32" viewBox="0 0 1056 32"
+     class="fieldtext">
+#include icon-colors.inc.svg
 
   <path id="containers" d="M1050,30h-20a2,2,0,0,1-2-2V4.414a1.03,1.03,0,0,1,.29-0.707L1030,2h20l1.71,1.707a1.03,1.03,0,0,1,.29.707V28A2,2,0,0,1,1050,30Zm0-24h-20V28h20V6Zm-2,10h-16V8h16v8Zm-4-4.5a0.5,0.5,0,0,0-1,0V13h-6V11.5a0.5,0.5,0,0,0-1,0v2a0.5,0.5,0,0,0,.5.5h7a0.5,0.5,0,0,0,.5-0.5v-2Zm4,14.5h-16V18h16v8Zm-4-4.5a0.5,0.5,0,0,0-1,0V23h-6V21.5a0.5,0.5,0,0,0-1,0v2a0.5,0.5,0,0,0,.5.5h7a0.5,0.5,0,0,0,.5-0.5v-2Z"/>
   <path id="tabs" d="M1021.98,28h-28a2,2,0,0,1-2-2V22a2,2,0,0,1,2-2H994c4.591,0,4-3,4.009-8,0.009-4.686.166-8,6.261-8h7.41c6.13,0,6.27,3.314,6.3,8,0.02,5-.59,8,4.02,8h-0.02a2,2,0,0,1,2,2v4A2,2,0,0,1,1021.98,28Z"/>
