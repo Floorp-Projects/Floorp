@@ -526,9 +526,39 @@ TypeSet::clearObjects()
     objectSet = nullptr;
 }
 
+JSCompartment*
+TypeSet::maybeCompartment()
+{
+    if (unknownObject())
+        return nullptr;
+
+    unsigned objectCount = getObjectCount();
+    for (unsigned i = 0; i < objectCount; i++) {
+        ObjectKey* key = getObject(i);
+        if (!key)
+            continue;
+
+        JSCompartment* comp = key->maybeCompartment();
+        if (comp)
+            return comp;
+    }
+
+    return nullptr;
+}
+
+#ifdef DEBUG
+static inline bool
+CompartmentsMatch(JSCompartment* a, JSCompartment* b)
+{
+    return !a || !b || a == b;
+}
+#endif
+
 void
 TypeSet::addType(Type type, LifoAlloc* alloc)
 {
+    MOZ_ASSERT(CompartmentsMatch(maybeCompartment(), type.maybeCompartment()));
+
     if (unknown())
         return;
 
@@ -3250,6 +3280,8 @@ js::FillBytecodeTypeMap(JSScript* script, uint32_t* bytecodeMap)
 void
 js::TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc, TypeSet::Type type)
 {
+    assertSameCompartment(cx, script, type);
+
     AutoEnterAnalysis enter(cx);
 
     StackTypeSet* types = TypeScript::BytecodeTypes(script, pc);

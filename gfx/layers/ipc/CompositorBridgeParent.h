@@ -469,6 +469,18 @@ public:
    */
   static LayerTreeState* GetIndirectShadowTree(uint64_t aId);
 
+  /**
+   * Given the layers id for a content process, get the APZCTreeManagerParent
+   * for the corresponding *root* layers id. That is, the APZCTreeManagerParent,
+   * if one is found, will always be connected to the parent process rather
+   * than a content process. Note that unless the compositor process is
+   * separated this is expected to return null, because if the compositor is
+   * living in the gecko parent process then there is no APZCTreeManagerParent
+   * for the parent process.
+   */
+  static APZCTreeManagerParent* GetApzcTreeManagerParentForRoot(
+        uint64_t aContentLayersId);
+
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
   /**
    * Calculates and requests the main thread update plugin positioning, clip,

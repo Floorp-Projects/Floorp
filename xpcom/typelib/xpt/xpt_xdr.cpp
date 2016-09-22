@@ -6,9 +6,9 @@
 /* Implementation of XDR primitives. */
 
 #include "xpt_xdr.h"
-#include "nspr.h"
 #include "nscore.h"
 #include <string.h>             /* strchr */
+#include "mozilla/EndianUtils.h"
 
 #define CURS_POOL_OFFSET_RAW(cursor)                                          \
   ((cursor)->pool == XPT_HEADER                                               \
@@ -169,11 +169,26 @@ XPT_DoIID(NotNull<XPTCursor*> cursor, nsID *iidp)
     return true;
 }
 
+// MSVC apparently cannot handle functions as template parameters very well,
+// so we need to use a macro approach here.
+
+#define XPT_DOINT(T, func, valuep)                \
+    do {                                          \
+        const size_t sz = sizeof(T);              \
+                                                  \
+        if (!CHECK_COUNT(cursor, sz)) {           \
+            return false;                         \
+        }                                         \
+                                                  \
+        *valuep = func(&CURS_POINT(cursor));      \
+        cursor->offset += sz;                     \
+        return true;                              \
+    } while(0)
+
 XPT_PUBLIC_API(bool)
 XPT_Do64(NotNull<XPTCursor*> cursor, int64_t *u64p)
 {
-    return XPT_Do32(cursor, (uint32_t *)u64p) &&
-        XPT_Do32(cursor, ((uint32_t *)u64p) + 1);
+    XPT_DOINT(int64_t, mozilla::BigEndian::readInt64, u64p);
 }
 
 /*
@@ -185,47 +200,16 @@ XPT_Do64(NotNull<XPTCursor*> cursor, int64_t *u64p)
 XPT_PUBLIC_API(bool)
 XPT_Do32(NotNull<XPTCursor*> cursor, uint32_t *u32p)
 {
-    union {
-        uint8_t b8[4];
-        uint32_t b32;
-    } u;
-
-    if (!CHECK_COUNT(cursor, 4))
-        return false;
-
-    u.b8[0] = CURS_POINT(cursor);
-    cursor->offset++;
-    u.b8[1] = CURS_POINT(cursor);
-    cursor->offset++;
-    u.b8[2] = CURS_POINT(cursor);
-    cursor->offset++;
-    u.b8[3] = CURS_POINT(cursor);
-    *u32p = XPT_SWAB32(u.b32);
-
-    cursor->offset++;
-    return true;
+    XPT_DOINT(uint32_t, mozilla::BigEndian::readUint32, u32p);
 }
 
 XPT_PUBLIC_API(bool)
 XPT_Do16(NotNull<XPTCursor*> cursor, uint16_t *u16p)
 {
-    union {
-        uint8_t b8[2];
-        uint16_t b16;
-    } u;
-
-    if (!CHECK_COUNT(cursor, 2))
-        return false;
-
-    u.b8[0] = CURS_POINT(cursor);
-    cursor->offset++;
-    u.b8[1] = CURS_POINT(cursor);
-    *u16p = XPT_SWAB16(u.b16);
-
-    cursor->offset++;
-
-    return true;
+    XPT_DOINT(uint16_t, mozilla::BigEndian::readUint16, u16p);
 }
+
+#undef XPT_DOINT
 
 XPT_PUBLIC_API(bool)
 XPT_Do8(NotNull<XPTCursor*> cursor, uint8_t *u8p)

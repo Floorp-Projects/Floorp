@@ -27,13 +27,6 @@ public:
 
   bool RecvRequestContentRepaint(const FrameMetrics& frame) override;
 
-  bool RecvHandleTap(const TapType& aType,
-                     const LayoutDevicePoint& aPoint,
-                     const Modifiers& aModifiers,
-                     const ScrollableLayerGuid& aGuid,
-                     const uint64_t& aInputBlockId,
-                     const bool& aCallTakeFocusForClickFromTap) override;
-
   bool RecvUpdateOverscrollVelocity(const float& aX, const float& aY, const bool& aIsRootContent) override;
 
   bool RecvUpdateOverscrollOffset(const float& aX, const float& aY, const bool& aIsRootContent) override;

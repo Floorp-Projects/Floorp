@@ -630,12 +630,11 @@ public:
                                  bool aPreventDefault) const;
   void SetTargetAPZC(uint64_t aInputBlockId,
                     const nsTArray<ScrollableLayerGuid>& aTargets) const;
-  void HandleTap(layers::GeckoContentController::TapType aType,
-                 const LayoutDevicePoint& aPoint,
-                 const Modifiers& aModifiers,
-                 const mozilla::layers::ScrollableLayerGuid& aGuid,
-                 const uint64_t& aInputBlockId,
-                 bool aCallTakeFocusForClickFromTap);
+  bool RecvHandleTap(const layers::GeckoContentController::TapType& aType,
+                     const LayoutDevicePoint& aPoint,
+                     const Modifiers& aModifiers,
+                     const ScrollableLayerGuid& aGuid,
+                     const uint64_t& aInputBlockId) override;
   void SetAllowedTouchBehavior(uint64_t aInputBlockId,
                                const nsTArray<TouchBehaviorFlags>& aFlags) const;
 

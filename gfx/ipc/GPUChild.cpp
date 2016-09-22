@@ -7,6 +7,7 @@
 #include "gfxConfig.h"
 #include "gfxPrefs.h"
 #include "GPUProcessHost.h"
+#include "mozilla/dom/CheckerboardReportService.h"
 #include "mozilla/gfx/gfxVars.h"
 #if defined(XP_WIN)
 # include "mozilla/gfx/DeviceManagerDx.h"
@@ -90,6 +91,13 @@ GPUChild::RecvInitComplete(const GPUDeviceData& aData)
 
   gfxPlatform::GetPlatform()->ImportGPUDeviceData(aData);
   mGPUReady = true;
+  return true;
+}
+
+bool
+GPUChild::RecvReportCheckerboard(const uint32_t& aSeverity, const nsCString& aLog)
+{
+  layers::CheckerboardEventStorage::Report(aSeverity, std::string(aLog.get()));
   return true;
 }
 

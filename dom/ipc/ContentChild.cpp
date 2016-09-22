@@ -1575,16 +1575,21 @@ ContentChild::GetAvailableDictionaries(InfallibleTArray<nsString>& aDictionaries
 }
 
 PFileDescriptorSetChild*
+ContentChild::SendPFileDescriptorSetConstructor(const FileDescriptor& aFD)
+{
+  return PContentChild::SendPFileDescriptorSetConstructor(aFD);
+}
+
+PFileDescriptorSetChild*
 ContentChild::AllocPFileDescriptorSetChild(const FileDescriptor& aFD)
 {
-  return new FileDescriptorSetChild(aFD);
+  return nsIContentChild::AllocPFileDescriptorSetChild(aFD);
 }
 
 bool
 ContentChild::DeallocPFileDescriptorSetChild(PFileDescriptorSetChild* aActor)
 {
-  delete static_cast<FileDescriptorSetChild*>(aActor);
-  return true;
+  return nsIContentChild::DeallocPFileDescriptorSetChild(aActor);
 }
 
 bool
@@ -1883,16 +1888,21 @@ ContentChild::DeallocPPrintingChild(PPrintingChild* printing)
 }
 
 PSendStreamChild*
+ContentChild::SendPSendStreamConstructor(PSendStreamChild* aActor)
+{
+  return PContentChild::SendPSendStreamConstructor(aActor);
+}
+
+PSendStreamChild*
 ContentChild::AllocPSendStreamChild()
 {
-  MOZ_CRASH("PSendStreamChild actors should be manually constructed!");
+  return nsIContentChild::AllocPSendStreamChild();
 }
 
 bool
 ContentChild::DeallocPSendStreamChild(PSendStreamChild* aActor)
 {
-  delete aActor;
-  return true;
+  return nsIContentChild::DeallocPSendStreamChild(aActor);
 }
 
 PScreenManagerChild*

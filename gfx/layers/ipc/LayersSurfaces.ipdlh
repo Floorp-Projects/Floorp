@@ -98,6 +98,10 @@ struct SurfaceDescriptorGralloc {
   bool isOpaque;
 };
 
+struct SurfaceDescriptorGPUVideo {
+  uint64_t handle;
+};
+
 struct RGBDescriptor {
   IntSize size;
   SurfaceFormat format;
@@ -142,6 +146,7 @@ union SurfaceDescriptor {
   SurfaceDescriptorMacIOSurface;
   SurfaceDescriptorGralloc;
   SurfaceDescriptorSharedGLTexture;
+  SurfaceDescriptorGPUVideo;
   null_t;
 };
 

@@ -12,6 +12,7 @@
 #include "MainThreadUtils.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/TabParent.h"
+#include "mozilla/layers/APZCTreeManagerParent.h"  // for APZCTreeManagerParent
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layout/RenderFrameParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
@@ -54,21 +55,33 @@ RemoteContentController::HandleTap(TapType aTapType,
                                    const ScrollableLayerGuid& aGuid,
                                    uint64_t aInputBlockId)
 {
-  if (MessageLoop::current() != mCompositorThread) {
-    // We have to send messages from the compositor thread
-    mCompositorThread->PostTask(NewRunnableMethod<TapType, LayoutDevicePoint, Modifiers,
-                                        ScrollableLayerGuid, uint64_t>(this,
-                                          &RemoteContentController::HandleTap,
-                                          aTapType, aPoint, aModifiers, aGuid,
-                                          aInputBlockId));
-    return;
+  APZThreadUtils::AssertOnControllerThread();
+
+  if (XRE_GetProcessType() == GeckoProcessType_GPU) {
+    MOZ_ASSERT(MessageLoop::current() == mCompositorThread);
+
+    // The raw pointer to APZCTreeManagerParent is ok here because we are on the
+    // compositor thread.
+    APZCTreeManagerParent* apzctmp =
+        CompositorBridgeParent::GetApzcTreeManagerParentForRoot(aGuid.mLayersId);
+    if (apzctmp) {
+      Unused << apzctmp->SendHandleTap(aTapType, aPoint, aModifiers, aGuid, aInputBlockId);
+      return;
+    }
   }
 
-  bool callTakeFocusForClickFromTap = (aTapType == TapType::eSingleTap);
-
-  if (mCanSend) {
-    Unused << SendHandleTap(aTapType, aPoint,
-            aModifiers, aGuid, aInputBlockId, callTakeFocusForClickFromTap);
+  // If we get here we're probably in the parent process, but we might be in
+  // the GPU process in some shutdown phase where the LayerTreeState or
+  // APZCTreeManagerParent structures are torn down. In that case we'll just get
+  // a null TabParent.
+  dom::TabParent* tab = dom::TabParent::GetTabParentFromLayersId(aGuid.mLayersId);
+  if (tab) {
+    // If we got a TabParent we're definitely in the parent process, and the
+    // message is going to a child process. That means we're in an e10s
+    // environment, so we must be on the main thread.
+    MOZ_ASSERT(XRE_IsParentProcess());
+    MOZ_ASSERT(NS_IsMainThread());
+    tab->SendHandleTap(aTapType, aPoint, aModifiers, aGuid, aInputBlockId);
   }
 }
 

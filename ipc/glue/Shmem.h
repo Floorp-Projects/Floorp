@@ -255,7 +255,7 @@ private:
   void AssertInvariants() const;
 #endif
 
-  SharedMemory* MOZ_NON_OWNING_REF mSegment;
+  RefPtr<SharedMemory> mSegment;
   void* mData;
   size_t mSize;
   id_t mId;

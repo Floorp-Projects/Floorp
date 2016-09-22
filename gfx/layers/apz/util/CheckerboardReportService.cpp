@@ -10,7 +10,9 @@
 #include "MainThreadUtils.h" // for NS_IsMainThread
 #include "mozilla/Assertions.h" // for MOZ_ASSERT
 #include "mozilla/ClearOnShutdown.h" // for ClearOnShutdown
+#include "mozilla/Unused.h"
 #include "mozilla/dom/CheckerboardReportServiceBinding.h" // for dom::CheckerboardReports
+#include "mozilla/gfx/GPUParent.h"
 #include "nsContentUtils.h" // for nsContentUtils
 #include "nsXULAppAPI.h"
 
@@ -33,6 +35,29 @@ CheckerboardEventStorage::GetInstance()
   }
   RefPtr<CheckerboardEventStorage> instance = sInstance.get();
   return instance.forget();
+}
+
+void
+CheckerboardEventStorage::Report(uint32_t aSeverity, const std::string& aLog)
+{
+  if (!NS_IsMainThread()) {
+    RefPtr<Runnable> task = NS_NewRunnableFunction([aSeverity, aLog] () -> void {
+      CheckerboardEventStorage::Report(aSeverity, aLog);
+    });
+    NS_DispatchToMainThread(task.forget());
+    return;
+  }
+
+  if (XRE_IsGPUProcess()) {
+    if (gfx::GPUParent* gpu = gfx::GPUParent::GetSingleton()) {
+      nsCString log(aLog.c_str());
+      Unused << gpu->SendReportCheckerboard(aSeverity, log);
+    }
+    return;
+  }
+
+  RefPtr<CheckerboardEventStorage> storage = GetInstance();
+  storage->ReportCheckerboard(aSeverity, aLog);
 }
 
 void

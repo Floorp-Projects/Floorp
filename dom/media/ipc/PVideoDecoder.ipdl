@@ -1,0 +1,75 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include "mozilla/dom/MediaIPCUtils.h";
+
+include protocol PVideoDecoderManager;
+include LayersSurfaces;
+using VideoInfo from "MediaInfo.h";
+using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
+
+namespace mozilla {
+namespace dom {
+
+struct MediaDataIPDL
+{
+  int64_t offset;
+  int64_t time;
+  int64_t timecode;
+  int64_t duration;
+  uint32_t frames;
+  bool keyframe;
+};
+
+struct VideoDataIPDL
+{
+  MediaDataIPDL base;
+  IntSize display;
+  SurfaceDescriptorGPUVideo sd;
+  int32_t frameID;
+};
+
+struct MediaRawDataIPDL
+{
+  MediaDataIPDL base;
+  Shmem buffer;
+};
+
+// This protocol provides a way to use MediaDataDecoder/MediaDataDecoderCallback
+// across processes. The parent side currently is only implemented to work with
+// Window Media Foundation, but can be extended easily to support other backends.
+// The child side runs in the content process, and the parent side runs in the
+// GPU process. We run a separate IPDL thread for both sides.
+async protocol PVideoDecoder
+{
+  manager PVideoDecoderManager;
+parent:
+  async Init(VideoInfo info, LayersBackend backend);
+
+  async Input(MediaRawDataIPDL data);
+
+  async Flush();
+  async Drain();
+  async Shutdown();
+
+  async __delete__();
+
+child:
+
+  async InitComplete();
+  async InitFailed(nsresult reason);
+
+  // Each output includes a SurfaceDescriptorGPUVideo that represents the decoded
+  // frame. This SurfaceDescriptor can be used on the Layers IPDL protocol, but
+  // must be released explicitly using DeallocateSurfaceDescriptorGPUVideo
+  // on the manager protocol.
+  async Output(VideoDataIPDL data);
+  async InputExhausted();
+  async DrainComplete();
+  async Error(nsresult error);
+};
+
+} // namespace dom
+} // namespace mozilla

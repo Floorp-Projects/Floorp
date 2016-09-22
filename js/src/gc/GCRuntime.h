@@ -29,6 +29,7 @@ class VerifyPreTracer;
 namespace gc {
 
 typedef Vector<JS::Zone*, 4, SystemAllocPolicy> ZoneVector;
+using BlackGrayEdgeVector = Vector<TenuredCell*, 0, SystemAllocPolicy>;
 
 class AutoMaybeStartBackgroundAllocation;
 class MarkingValidator;
@@ -792,7 +793,11 @@ class GCRuntime
     }
 
     JS::Zone* getCurrentZoneGroup() { return currentZoneGroup; }
-    void setFoundBlackGrayEdges() { foundBlackGrayEdges = true; }
+    void setFoundBlackGrayEdges(TenuredCell& target) {
+        AutoEnterOOMUnsafeRegion oomUnsafe;
+        if (!foundBlackGrayEdges.append(&target))
+            oomUnsafe.crash("OOM|small: failed to insert into foundBlackGrayEdges");
+    }
 
     uint64_t gcNumber() const { return number; }
 
@@ -1168,7 +1173,7 @@ class GCRuntime
     bool releaseObservedTypes;
 
     /* Whether any black->gray edges were found during marking. */
-    bool foundBlackGrayEdges;
+    BlackGrayEdgeVector foundBlackGrayEdges;
 
     /* Singly linekd list of zones to be swept in the background. */
     ZoneList backgroundSweepZones;

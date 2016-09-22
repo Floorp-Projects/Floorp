@@ -636,3 +636,43 @@ function errorOnFlag(exports, name) {
 errorOnFlag(exports, "testing");
 errorOnFlag(exports, "wantLogging");
 errorOnFlag(exports, "wantVerbose");
+
+// Calls the property with the given `name` on the given `object`, where
+// `name` is a string, and `object` a Debugger.Object instance.
+///
+// This function uses only the Debugger.Object API to call the property. It
+// avoids the use of unsafeDeference. This is useful for example in workers,
+// where unsafeDereference will return an opaque security wrapper to the
+// referent.
+function callPropertyOnObject(object, name) {
+  // Find the property.
+  let descriptor;
+  let proto = object;
+  do {
+    descriptor = proto.getOwnPropertyDescriptor(name);
+    if (descriptor !== undefined) {
+      break;
+    }
+    proto = proto.proto;
+  } while (proto !== null);
+  if (descriptor === undefined) {
+    throw new Error("No such property");
+  }
+  let value = descriptor.value;
+  if (typeof value !== "object" || value === null || !("callable" in value)) {
+    throw new Error("Not a callable object.");
+  }
+
+  // Call the property.
+  let result = value.call(object);
+  if (result === null) {
+    throw new Error("Code was terminated.");
+  }
+  if ("throw" in result) {
+    throw result.throw;
+  }
+  return result.return;
+}
+
+
+exports.callPropertyOnObject = callPropertyOnObject;

@@ -1,12 +1,12 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ifndef MOZ_SYSTEM_FFI
-
-include $(topsrcdir)/config/config.mk
-
-$(STATIC_LIBS):
-	$(MAKE) -C $(DEPTH)/js/src/ctypes/libffi
-
+# libffi's assembly files want to be pre-processed, so we still use the libffi
+# wrapper to combine the preprocessor and assembler stages.
+# Bug 1299959 is on file to find a better way to do this in moz.build.
+ifdef _MSC_VER
+AS = $(topsrcdir)/js/src/ctypes/libffi/msvcc.sh
 endif

@@ -12,7 +12,6 @@
 
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsCOMPtr.h"
-#include "nsRefPtrHashtable.h"
 
 class nsIContent;
 
@@ -23,6 +22,7 @@ class DocAccessible;
 
 const LPCWSTR kClassNameRoot = L"MozillaUIWindowClass";
 const LPCWSTR kClassNameTabContent = L"MozillaContentWindowClass";
+const LPCWSTR kPropNameDocAcc = L"MozDocAccessible";
 
 class nsWinUtils
 {
@@ -49,7 +49,7 @@ public:
   /**
    * Return true if window emulation is started.
    */
-  static bool IsWindowEmulationStarted();
+  static bool IsWindowEmulationStarted() { return sWindowEmulationStarted; }
 
   /**
    * Helper to register window class.
@@ -73,11 +73,11 @@ public:
    */
   static void HideNativeWindow(HWND aWnd);
 
+private:
   /**
-   * Cache for HWNDs of windows created for document accessibles in windows
-   * emulation mode.
+   * Flag that indicates if window emulation is started.
    */
-  static nsRefPtrHashtable<nsPtrHashKey<void>, DocAccessible>* sHWNDCache;
+  static bool sWindowEmulationStarted;
 };
 
 } // namespace a11y

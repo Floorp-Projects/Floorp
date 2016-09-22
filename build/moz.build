@@ -15,11 +15,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 else:
     DIRS += ['unix']
 
-if CONFIG['OS_TARGET'] == 'Android' and CONFIG['MOZ_ANDROID_CXX_STL'] == 'mozstlport':
-    DIRS += ['stlport']
-    if CONFIG['ENABLE_INTL_API']:
-        DIRS += ['gabi++']
-
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     DIRS += ['annotationProcessors']
 

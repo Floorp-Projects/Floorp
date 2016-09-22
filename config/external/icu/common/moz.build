@@ -7,11 +7,6 @@
 Library('icuuc')
 FINAL_LIBRARY = 'icu'
 
-if CONFIG['OS_TARGET'] == 'Android' and CONFIG['MOZ_ANDROID_CXX_STL'] == 'mozstlport':
-    USE_LIBS += [
-        'gabi++'
-    ]
-
 DEFINES['U_COMMON_IMPLEMENTATION'] = True
 # This normally gets defined in the SDK but our WINVER is too low.
 #FIXME: should probably stop including mozilla-config.h

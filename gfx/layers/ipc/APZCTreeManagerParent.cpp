@@ -19,6 +19,10 @@ APZCTreeManagerParent::APZCTreeManagerParent(uint64_t aLayersId, RefPtr<APZCTree
   MOZ_ASSERT(aAPZCTreeManager != nullptr);
 }
 
+APZCTreeManagerParent::~APZCTreeManagerParent()
+{
+}
+
 void
 APZCTreeManagerParent::ChildAdopted(RefPtr<APZCTreeManager> aAPZCTreeManager)
 {

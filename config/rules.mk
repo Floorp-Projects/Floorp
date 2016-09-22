@@ -968,7 +968,7 @@ endif # MOZ_RUST
 
 $(SOBJS):
 	$(REPORT_BUILD)
-	$(AS) -o $@ $(ASFLAGS) $($(notdir $<)_FLAGS) $(LOCAL_INCLUDES) -c $<
+	$(AS) -o $@ $(DEFINES) $(ASFLAGS) $($(notdir $<)_FLAGS) $(LOCAL_INCLUDES) -c $<
 
 $(CPPOBJS):
 	$(REPORT_BUILD_VERBOSE)

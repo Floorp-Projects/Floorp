@@ -33,7 +33,8 @@ using mozilla::DebugOnly;
 typedef Vector<MPhi*, 16, SystemAllocPolicy> MPhiVector;
 
 static bool
-FlagPhiInputsAsHavingRemovedUses(MBasicBlock* block, MBasicBlock* succ, MPhiVector& worklist)
+FlagPhiInputsAsHavingRemovedUses(MIRGenerator* mir, MBasicBlock* block, MBasicBlock* succ,
+                                 MPhiVector& worklist)
 {
     // When removing an edge between 2 blocks, we might remove the ability of
     // later phases to figure out that the uses of a Phi should be considered as
@@ -106,6 +107,9 @@ FlagPhiInputsAsHavingRemovedUses(MBasicBlock* block, MBasicBlock* succ, MPhiVect
     for (; it != end; it++) {
         MPhi* phi = *it;
 
+        if (mir->shouldCancel("FlagPhiInputsAsHavingRemovedUses outer loop"))
+            return false;
+
         // We are looking to mark the Phi inputs which are used across the edge
         // between the |block| and its successor |succ|.
         MDefinition* def = phi->getOperand(predIndex);
@@ -123,6 +127,10 @@ FlagPhiInputsAsHavingRemovedUses(MBasicBlock* block, MBasicBlock* succ, MPhiVect
         bool isUsed = false;
         for (size_t idx = 0; !isUsed && idx < worklist.length(); idx++) {
             phi = worklist[idx];
+
+            if (mir->shouldCancel("FlagPhiInputsAsHavingRemovedUses inner loop 1"))
+                return false;
+
             if (phi->isUseRemoved() || phi->isImplicitlyUsed()) {
                 // The phi is implicitly used.
                 isUsed = true;
@@ -132,6 +140,10 @@ FlagPhiInputsAsHavingRemovedUses(MBasicBlock* block, MBasicBlock* succ, MPhiVect
             MUseIterator usesEnd(phi->usesEnd());
             for (MUseIterator use(phi->usesBegin()); use != usesEnd; use++) {
                 MNode* consumer = (*use)->consumer();
+
+                if (mir->shouldCancel("FlagPhiInputsAsHavingRemovedUses inner loop 2"))
+                    return false;
+
                 if (consumer->isResumePoint()) {
                     MResumePoint* rp = consumer->toResumePoint();
                     if (rp->isObservableOperand(*use)) {
@@ -180,11 +192,14 @@ FlagPhiInputsAsHavingRemovedUses(MBasicBlock* block, MBasicBlock* succ, MPhiVect
 }
 
 static bool
-FlagAllOperandsAsHavingRemovedUses(MBasicBlock* block)
+FlagAllOperandsAsHavingRemovedUses(MIRGenerator* mir, MBasicBlock* block)
 {
     // Flag all instructions operands as having removed uses.
     MInstructionIterator end = block->end();
     for (MInstructionIterator it = block->begin(); it != end; it++) {
+        if (mir->shouldCancel("FlagAllOperandsAsHavingRemovedUses loop 1"))
+            return false;
+
         MInstruction* ins = *it;
         for (size_t i = 0, e = ins->numOperands(); i < e; i++)
             ins->getOperand(i)->setUseRemovedUnchecked();
@@ -194,6 +209,9 @@ FlagAllOperandsAsHavingRemovedUses(MBasicBlock* block)
             // Note: no need to iterate over the caller's of the resume point as
             // this is the same as the entry resume point.
             for (size_t i = 0, e = rp->numOperands(); i < e; i++) {
+                if (mir->shouldCancel("FlagAllOperandsAsHavingRemovedUses inner loop"))
+                    return false;
+
                 if (!rp->isObservableOperand(i))
                     continue;
                 rp->getOperand(i)->setUseRemovedUnchecked();
@@ -204,6 +222,9 @@ FlagAllOperandsAsHavingRemovedUses(MBasicBlock* block)
     // Flag observable operands of the entry resume point as having removed uses.
     MResumePoint* rp = block->entryResumePoint();
     while (rp) {
+        if (mir->shouldCancel("FlagAllOperandsAsHavingRemovedUses loop 2"))
+            return false;
+
         for (size_t i = 0, e = rp->numOperands(); i < e; i++) {
             if (!rp->isObservableOperand(i))
                 continue;
@@ -215,7 +236,10 @@ FlagAllOperandsAsHavingRemovedUses(MBasicBlock* block)
     // Flag Phi inputs of the successors has having removed uses.
     MPhiVector worklist;
     for (size_t i = 0, e = block->numSuccessors(); i < e; i++) {
-        if (!FlagPhiInputsAsHavingRemovedUses(block, block->getSuccessor(i), worklist))
+        if (mir->shouldCancel("FlagAllOperandsAsHavingRemovedUses loop 3"))
+            return false;
+
+        if (!FlagPhiInputsAsHavingRemovedUses(mir, block, block->getSuccessor(i), worklist))
             return false;
     }
 
@@ -264,6 +288,9 @@ jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph)
     // unreachable if all predecessors are flagged as bailing or unreachable.
     bool someUnreachable = false;
     for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
+        if (mir->shouldCancel("Prune unused branches (main loop)"))
+            return false;
+
         JitSpew(JitSpew_Prune, "Investigate Block %d:", block->id());
         JitSpewIndent indent(JitSpew_Prune);
 
@@ -280,6 +307,9 @@ jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph)
         size_t numPred = block->numPredecessors();
         size_t i = 0;
         for (; i < numPred; i++) {
+            if (mir->shouldCancel("Prune unused branches (inner loop 1)"))
+                return false;
+
             MBasicBlock* pred = block->getPredecessor(i);
 
             // The backedge is visited after the loop header, but if the loop
@@ -311,6 +341,9 @@ jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph)
             size_t numSuccessorsOfPreds = 1;
             bool isLoopExit = false;
             while (p--) {
+                if (mir->shouldCancel("Prune unused branches (inner loop 2)"))
+                    return false;
+
                 MBasicBlock* pred = block->getPredecessor(p);
                 if (pred->getHitState() == MBasicBlock::HitState::Count)
                     predCount += pred->getHitCount();
@@ -328,6 +361,9 @@ jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph)
             size_t branchSpan = 0;
             ReversePostorderIterator it(block);
             do {
+                if (mir->shouldCancel("Prune unused branches (inner loop 3)"))
+                    return false;
+
                 // Iterate over dominated blocks, and visit exit blocks as well.
                 numInOutEdges -= it->numPredecessors();
                 if (numInOutEdges < 0)
@@ -452,16 +488,22 @@ jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph)
     // As we are going to remove edges and basic block, we have to mark
     // instructions which would be needed by baseline if we were to bailout.
     for (PostorderIterator it(graph.poBegin()); it != graph.poEnd();) {
+        if (mir->shouldCancel("Prune unused branches (marking loop)"))
+            return false;
+
         MBasicBlock* block = *it++;
         if (!block->isMarked() && !block->unreachable())
             continue;
 
-        FlagAllOperandsAsHavingRemovedUses(block);
+        FlagAllOperandsAsHavingRemovedUses(mir, block);
     }
 
     // Remove the blocks in post-order such that consumers are visited before
     // the predecessors, the only exception being the Phi nodes of loop headers.
     for (PostorderIterator it(graph.poBegin()); it != graph.poEnd();) {
+        if (mir->shouldCancel("Prune unused branches (removal loop)"))
+            return false;
+
         MBasicBlock* block = *it++;
         if (!block->isMarked() && !block->unreachable())
             continue;
@@ -1140,12 +1182,12 @@ jit::EliminatePhis(MIRGenerator* mir, MIRGraph& graph,
     // Add all observable phis to a worklist. We use the "in worklist" bit to
     // mean "this phi is live".
     for (PostorderIterator block = graph.poBegin(); block != graph.poEnd(); block++) {
-        if (mir->shouldCancel("Eliminate Phis (populate loop)"))
-            return false;
-
         MPhiIterator iter = block->phisBegin();
         while (iter != block->phisEnd()) {
             MPhi* phi = *iter++;
+
+            if (mir->shouldCancel("Eliminate Phis (populate loop)"))
+                return false;
 
             // Flag all as unused, only observable phis would be marked as used
             // when processed by the work list.
@@ -1431,6 +1473,9 @@ TypeAnalyzer::specializePhis()
             return false;
 
         for (MPhiIterator phi(block->phisBegin()); phi != block->phisEnd(); phi++) {
+            if (mir->shouldCancel("Specialize Phis (inner loop)"))
+                return false;
+
             bool hasInputsWithEmptyTypes;
             MIRType type = GuessPhiType(*phi, &hasInputsWithEmptyTypes);
             phi->specialize(type);
@@ -1831,10 +1876,10 @@ bool
 TypeAnalyzer::graphContainsFloat32()
 {
     for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); ++block) {
-        if (mir->shouldCancel("Ensure Float32 commutativity - Graph contains Float32"))
-            return false;
-
         for (MDefinitionIterator def(*block); def; def++) {
+            if (mir->shouldCancel("Ensure Float32 commutativity - Graph contains Float32"))
+                return false;
+
             if (def->type() == MIRType::Float32)
                 return true;
         }
@@ -2025,7 +2070,8 @@ SetNotInWorklist(MDefinitionVector& worklist)
 }
 
 static bool
-IsRegExpHoistable(MDefinition* regexp, MDefinitionVector& worklist, bool* hoistable)
+IsRegExpHoistable(MIRGenerator* mir, MDefinition* regexp, MDefinitionVector& worklist,
+                  bool* hoistable)
 {
     MOZ_ASSERT(worklist.length() == 0);
 
@@ -2035,7 +2081,13 @@ IsRegExpHoistable(MDefinition* regexp, MDefinitionVector& worklist, bool* hoista
 
     for (size_t i = 0; i < worklist.length(); i++) {
         MDefinition* def = worklist[i];
+        if (mir->shouldCancel("IsRegExpHoistable outer loop"))
+            return false;
+
         for (MUseIterator use = def->usesBegin(); use != def->usesEnd(); use++) {
+            if (mir->shouldCancel("IsRegExpHoistable inner loop"))
+                return false;
+
             // Ignore resume points. At this point all uses are listed.
             // No DCE or GVN or something has happened.
             if (use->consumer()->isResumePoint())
@@ -2109,14 +2161,20 @@ IsRegExpHoistable(MDefinition* regexp, MDefinitionVector& worklist, bool* hoista
 }
 
 bool
-jit::MakeMRegExpHoistable(MIRGraph& graph)
+jit::MakeMRegExpHoistable(MIRGenerator* mir, MIRGraph& graph)
 {
     MDefinitionVector worklist(graph.alloc());
 
     for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
+        if (mir->shouldCancel("MakeMRegExpHoistable outer loop"))
+            return false;
+
         for (MDefinitionIterator iter(*block); iter; iter++) {
             if (!*iter)
                 MOZ_CRASH("confirm bug 1263794.");
+
+            if (mir->shouldCancel("MakeMRegExpHoistable inner loop"))
+                return false;
 
             if (!iter->isRegExp())
                 continue;
@@ -2124,7 +2182,7 @@ jit::MakeMRegExpHoistable(MIRGraph& graph)
             MRegExp* regexp = iter->toRegExp();
 
             bool hoistable = false;
-            if (!IsRegExpHoistable(regexp, worklist, &hoistable))
+            if (!IsRegExpHoistable(mir, regexp, worklist, &hoistable))
                 return false;
 
             if (!hoistable)
@@ -2220,7 +2278,7 @@ jit::RemoveUnmarkedBlocks(MIRGenerator* mir, MIRGraph& graph, uint32_t numMarked
             if (!block->isMarked())
                 continue;
 
-            FlagAllOperandsAsHavingRemovedUses(block);
+            FlagAllOperandsAsHavingRemovedUses(mir, block);
         }
 
         // Find unmarked blocks and remove them.

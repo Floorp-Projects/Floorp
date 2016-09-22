@@ -193,5 +193,29 @@ ContentBridgeParent::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
+PFileDescriptorSetParent*
+ContentBridgeParent::AllocPFileDescriptorSetParent(const FileDescriptor& aFD)
+{
+  return nsIContentParent::AllocPFileDescriptorSetParent(aFD);
+}
+
+bool
+ContentBridgeParent::DeallocPFileDescriptorSetParent(PFileDescriptorSetParent* aActor)
+{
+  return nsIContentParent::DeallocPFileDescriptorSetParent(aActor);
+}
+
+PSendStreamParent*
+ContentBridgeParent::AllocPSendStreamParent()
+{
+  return nsIContentParent::AllocPSendStreamParent();
+}
+
+bool
+ContentBridgeParent::DeallocPSendStreamParent(PSendStreamParent* aActor)
+{
+  return nsIContentParent::DeallocPSendStreamParent(aActor);
+}
+
 } // namespace dom
 } // namespace mozilla

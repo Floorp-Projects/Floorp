@@ -4,15 +4,98 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Library('ffi')
-
 if CONFIG['MOZ_SYSTEM_FFI']:
     OS_LIBS += CONFIG['MOZ_FFI_LIBS']
 else:
-    if CONFIG['_MSC_VER']:
-        prefix = 'lib'
-    else:
-        prefix = ''
-    USE_LIBS += [
-        'static:/js/src/ctypes/libffi/.libs/%sffi' % prefix,
+    FINAL_LIBRARY = 'js'
+    ALLOW_COMPILER_WARNINGS = True
+    NO_VISIBILITY_FLAGS = True
+
+    CONFIGURE_DEFINE_FILES += [
+        '../../../js/src/ctypes/libffi/fficonfig.h',
+    ]
+    GENERATED_FILES += [
+        '../../../js/src/ctypes/libffi/include/ffi.h',
+    ]
+    ffi_h = GENERATED_FILES['../../../js/src/ctypes/libffi/include/ffi.h']
+    ffi_h.script = 'subst_header.py'
+    ffi_h.inputs = ['../../../js/src/ctypes/libffi/include/ffi.h.in']
+
+    LOCAL_INCLUDES += [
+        '!/js/src/ctypes/libffi',
+        '!/js/src/ctypes/libffi/include',
+        '/js/src/ctypes/libffi/include',
+        '/js/src/ctypes/libffi/src/%s' % CONFIG['FFI_TARGET_DIR'],
+    ]
+
+    DEFINES.update({
+        'TARGET': CONFIG['FFI_TARGET'],
+        CONFIG['FFI_TARGET']: True,
+        'FFI_NO_RAW_API': True,
+        'HAVE_AS_ASCII_PSEUDO_OP': True,
+        'HAVE_AS_STRING_PSEUDO_OP': True,
+        'HAVE_AS_X86_64_UNWIND_SECTION_TYPE': True,
+    })
+
+    if CONFIG['MOZ_DEBUG']:
+        DEFINES['FFI_DEBUG'] = True
+        if not CONFIG['MOZ_NO_DEBUG_RTL']:
+            DEFINES['USE_DEBUG_RTL'] = True
+        SOURCES += [
+            '/js/src/ctypes/libffi/src/debug.c',
+        ]
+
+    if CONFIG['OS_TARGET'] not in ('WINNT', 'Darwin'):
+        DEFINES['HAVE_HIDDEN_VISIBILITY_ATTRIBUTE'] = True
+
+    if CONFIG['INTEL_ARCHITECTURE']:
+        DEFINES['HAVE_AS_X86_PCREL'] = True
+
+    # Don't bother setting EH_FRAME_FLAGS on Windows.
+    # Quoted defines confuse msvcc.sh, and the value isn't used there.
+    if CONFIG['OS_TARGET'] != 'WINNT':
+        if CONFIG['FFI_TARGET'] == 'ARM':
+            DEFINES['EH_FRAME_FLAGS'] = '"aw"'
+        else:
+            DEFINES['EH_FRAME_FLAGS'] = '"a"'
+
+    if CONFIG['CLANG_CL']:
+        ASFLAGS += ['-clang-cl']
+
+    # Common source files.
+    SOURCES += [
+        '/js/src/ctypes/libffi/src/closures.c',
+        '/js/src/ctypes/libffi/src/java_raw_api.c',
+        '/js/src/ctypes/libffi/src/prep_cif.c',
+        '/js/src/ctypes/libffi/src/raw_api.c',
+        '/js/src/ctypes/libffi/src/types.c',
+    ]
+
+    # Per-platform sources and flags.
+    ffi_srcs = ()
+    if CONFIG['FFI_TARGET'] == 'ARM':
+        ffi_srcs = ('sysv.S', 'ffi.c')
+        if CONFIG['CLANG_CXX']:
+            ASFLAGS += ['-no-integrated-as']
+    elif CONFIG['FFI_TARGET'] == 'X86':
+        ffi_srcs = ('ffi.c', 'sysv.S', 'win32.S')
+    elif CONFIG['FFI_TARGET'] == 'X86_64':
+        ffi_srcs = ('ffi64.c', 'unix64.S', 'ffi.c', 'sysv.S')
+    elif CONFIG['FFI_TARGET'] == 'X86_WIN32':
+        ffi_srcs = ('ffi.c', 'win32.S')
+    elif CONFIG['FFI_TARGET'] == 'X86_WIN64':
+        ffi_srcs = ('ffi.c', 'win64.S')
+        ASFLAGS += ['-m64']
+    elif CONFIG['FFI_TARGET'] == 'X86_DARWIN':
+        DEFINES['FFI_MMAP_EXEC_WRIT'] = True
+        if CONFIG['OS_TEST'] != 'x86_64':
+            ffi_srcs = ('ffi.c', 'darwin.S', 'ffi64.c', 'darwin64.S',
+                        'win32.S')
+            DEFINES['SYMBOL_UNDERSCORE'] = True
+        else:
+            ffi_srcs = ('ffi.c', 'darwin.S', 'ffi64.c', 'darwin64.S')
+
+    SOURCES += [
+        '/js/src/ctypes/libffi/src/%s/%s' % (CONFIG['FFI_TARGET_DIR'], s)
+        for s in sorted(ffi_srcs)
     ]
