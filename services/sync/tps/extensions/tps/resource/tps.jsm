@@ -641,15 +641,6 @@ var TPS = {
         // report it every time, see bug 1273234 and 1274394 for more information.
         if (name === "serverUnexpected" && problemData.serverUnexpected.indexOf("mobile") >= 0) {
           --count;
-        } else if (name === "differences") {
-          // Also exclude errors in parentName/wrongParentName (bug 1276969) for
-          // the same reason.
-          let newCount = problemData.differences.filter(diffInfo =>
-            !diffInfo.differences.every(diff =>
-              diff === "parentName")).length
-          count = newCount;
-        } else if (name === "wrongParentName") {
-          continue;
         }
         if (count) {
           // Log this out before we assert. This is useful in the context of TPS logs, since we
