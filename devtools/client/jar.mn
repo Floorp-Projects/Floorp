@@ -30,6 +30,7 @@ devtools.jar:
     content/animationinspector/animation-controller.js (animationinspector/animation-controller.js)
     content/animationinspector/animation-panel.js (animationinspector/animation-panel.js)
     content/animationinspector/animation-inspector.xhtml (animationinspector/animation-inspector.xhtml)
+    content/sourceeditor/codemirror/addon/dialog/dialog.css (sourceeditor/codemirror/addon/dialog/dialog.css)
     content/sourceeditor/codemirror/addon/hint/show-hint.js (sourceeditor/codemirror/addon/hint/show-hint.js)
     content/sourceeditor/codemirror/addon/tern/tern.js (sourceeditor/codemirror/addon/tern/tern.js)
     content/sourceeditor/codemirror/codemirror.bundle.js (sourceeditor/codemirror/codemirror.bundle.js)
