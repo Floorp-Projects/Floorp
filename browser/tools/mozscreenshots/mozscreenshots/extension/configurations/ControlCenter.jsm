@@ -93,11 +93,12 @@ this.ControlCenter = {
 
     allPermissions: {
       applyConfig: Task.async(function* () {
-        // there are 3 possible non-default permission states, so we alternate between them
-        let states = [SitePermissions.ALLOW, SitePermissions.BLOCK, SitePermissions.SESSION];
+        // TODO: (Bug 1330601) Rewrite this to consider temporary (TAB) permission states.
+        // There are 2 possible non-default permission states, so we alternate between them.
+        let states = [SitePermissions.ALLOW, SitePermissions.BLOCK];
         let uri = Services.io.newURI(PERMISSIONS_PAGE)
         SitePermissions.listPermissions().forEach(function(permission, index) {
-          SitePermissions.set(uri, permission, states[index % 3]);
+          SitePermissions.set(uri, permission, states[index % 2]);
         });
 
         yield loadPage(PERMISSIONS_PAGE);

@@ -73,17 +73,17 @@ function initRow(aPartId) {
 
   var checkbox = document.getElementById(aPartId + "Def");
   var command  = document.getElementById("cmd_" + aPartId + "Toggle");
-  var perm = SitePermissions.get(gPermURI, aPartId);
+  var {state} = SitePermissions.get(gPermURI, aPartId);
 
-  if (perm) {
+  if (state != SitePermissions.UNKNOWN) {
     checkbox.checked = false;
     command.removeAttribute("disabled");
   } else {
     checkbox.checked = true;
     command.setAttribute("disabled", "true");
-    perm = SitePermissions.getDefault(aPartId);
+    state = SitePermissions.getDefault(aPartId);
   }
-  setRadioState(aPartId, perm);
+  setRadioState(aPartId, state);
 
   if (aPartId == "indexedDB") {
     initIndexedDBRow();
@@ -135,7 +135,7 @@ function createRow(aPartId) {
   for (let state of SitePermissions.getAvailableStates(aPartId)) {
     let radio = document.createElement("radio");
     radio.setAttribute("id", aPartId + "#" + state);
-    radio.setAttribute("label", SitePermissions.getStateLabel(aPartId, state));
+    radio.setAttribute("label", SitePermissions.getStateLabel(state));
     radio.setAttribute("command", commandId);
     radiogroup.appendChild(radio);
   }
@@ -314,7 +314,7 @@ function setPluginsRadioState() {
     if (permissionEntry.hasAttribute("permString")) {
       let permString = permissionEntry.getAttribute("permString");
       let permission = SitePermissions.get(gPermURI, permString);
-      setRadioState(permString, permission);
+      setRadioState(permString, permission.state);
     }
   }
 }
