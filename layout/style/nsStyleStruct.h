@@ -811,7 +811,7 @@ struct nsStyleImageLayers {
   }
 
   nsChangeHint CalcDifference(const nsStyleImageLayers& aNewLayers,
-                              nsChangeHint aPositionChangeHint) const;
+                              nsStyleImageLayers::LayerType aType) const;
 
   bool HasLayerWithImage() const;
 
