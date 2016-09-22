@@ -89,6 +89,8 @@ class CompileRuntime
 
     const Nursery& gcNursery();
     void setMinorGCShouldCancelIonCompilations();
+
+    bool runtimeMatches(JSRuntime* rt);
 };
 
 class CompileZone
