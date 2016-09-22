@@ -10490,5 +10490,12 @@
     "kind": "enumerated",
     "n_values": 4,
     "description": "Counts the number of asm.js vs WebAssembly modules instanciations, at the time modules are getting instanciated."
+  },
+  "DOCUMENT_WITH_EXPANDED_PRINCIPAL": {
+    "alert_emails": ["dev-platform@lists.mozilla.org"],
+    "bug_numbers": [1301123],
+    "expires_in_version": "58",
+    "kind": "count",
+    "description": "Number of documents encountered using an expanded principal."
   }
 }
