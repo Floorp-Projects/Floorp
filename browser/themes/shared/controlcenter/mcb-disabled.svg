@@ -5,12 +5,7 @@
 <svg xmlns="http://www.w3.org/2000/svg"
      xmlns:xlink="http://www.w3.org/1999/xlink"
      width="24" height="24" viewBox="0 0 24 24">
-  <style>
-    .icon-default {
-      fill: -moz-fieldtext;
-      fill-opacity: .5;
-    }
-  </style>
+#include ../icon-colors.inc.svg
   <defs>
     <rect id="shape-lock-clasp-outer" x="5" y="1" width="14" height="20" rx="7" ry="7" />
     <rect id="shape-lock-clasp-inner" x="8" y="4" width="8" height="14" rx="4" ry="4" />
@@ -32,8 +27,8 @@
     </mask>
   </defs>
 
-  <use xlink:href="#shape-lock-clasp-outer" mask="url(#mask-clasp-cutout)" class="icon-default"/>
-  <use xlink:href="#shape-lock-base" mask="url(#mask-base-cutout)" class="icon-default"/>
+  <use class="fieldtext" xlink:href="#shape-lock-clasp-outer" mask="url(#mask-clasp-cutout)"/>
+  <use class="fieldtext" xlink:href="#shape-lock-base" mask="url(#mask-base-cutout)"/>
 
   <line x1="2.25" y1="22.75" x2="21.5" y2="2.5" stroke="#d92d21" stroke-width="3" />
 </svg>
