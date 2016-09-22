@@ -34,6 +34,9 @@ Phase("phase02", [
 Phase("phase03", [
   [Sync], // Get GUID updates, potentially.
   [Addons.setEnabled, [id], STATE_DISABLED],
+  // We've changed the state, but don't want this profile to sync until phase5,
+  // so if we ran a validation now we'd be expecting to find errors.
+  [Addons.skipValidation]
 ]);
 Phase("phase04", [
   [EnsureTracking],
