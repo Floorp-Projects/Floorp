@@ -501,6 +501,13 @@ var Impl = {
       histogram.add(aType, 1);
       return Promise.reject(new Error("Invalid type string submitted."));
     }
+    // Enforce that the payload is an object.
+    if (aPayload === null || typeof aPayload !== 'object' || Array.isArray(aPayload)) {
+      this._log.error("submitExternalPing - invalid payload type: " + typeof aPayload);
+      let histogram = Telemetry.getHistogramById("TELEMETRY_INVALID_PAYLOAD_SUBMITTED");
+      histogram.add(1);
+      return Promise.reject(new Error("Invalid payload type submitted."));
+    }
 
     let promise = this._submitPingLogic(aType, aPayload, aOptions);
     this._trackPendingPingTask(promise);
