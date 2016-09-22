@@ -56,7 +56,7 @@ function* basicTest(view, name, result) {
   let onHidden = cPicker.tooltip.once("hidden");
   // Validating the color change ends up updating the rule view twice
   let onRuleViewChanged = waitForNEvents(view, "ruleview-changed", 2);
-  EventUtils.sendKey("RETURN", spectrum.element.ownerDocument.defaultView);
+  focusAndSendKey(spectrum.element.ownerDocument.defaultView, "RETURN");
   yield onHidden;
   yield onRuleViewChanged;
 

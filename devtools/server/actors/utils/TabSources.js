@@ -406,7 +406,10 @@ TabSources.prototype = {
    * @return Promise of a SourceMapConsumer
    */
   fetchSourceMap: function (aSource) {
-    if (this._sourceMaps.has(aSource)) {
+    if (!this._useSourceMaps) {
+      return resolve(null);
+    }
+    else if (this._sourceMaps.has(aSource)) {
       return this._sourceMaps.get(aSource);
     }
     else if (!aSource || !aSource.sourceMapURL) {
@@ -457,10 +460,10 @@ TabSources.prototype = {
    *        them from aScriptURL.
    */
   _fetchSourceMap: function (aAbsSourceMapURL, aSourceURL) {
-    if (!this._useSourceMaps) {
-      return resolve(null);
-    }
-    else if (this._sourceMapCache[aAbsSourceMapURL]) {
+    assert(this._useSourceMaps,
+           "Cannot fetch sourcemaps if they are disabled");
+
+    if (this._sourceMapCache[aAbsSourceMapURL]) {
       return this._sourceMapCache[aAbsSourceMapURL];
     }
 

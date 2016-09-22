@@ -94,7 +94,7 @@ function* escapeTooltip(view) {
   let widget = yield bezierTooltip.widget;
   let onHidden = bezierTooltip.tooltip.once("hidden");
   let onModifications = view.once("ruleview-changed");
-  EventUtils.sendKey("ESCAPE", widget.parent.ownerDocument.defaultView);
+  focusAndSendKey(widget.parent.ownerDocument.defaultView, "ESCAPE");
   yield onHidden;
   yield onModifications;
 }

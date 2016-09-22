@@ -38,6 +38,6 @@ add_task(function* () {
 
   is(elementRuleEditor.rule.textProps.length, 1,
     "Should have canceled creating a new text property.");
-  is(view.styleDocument.documentElement, view.styleDocument.activeElement,
+  is(view.styleDocument.activeElement, view.styleDocument.body,
     "Correct element has focus");
 });
