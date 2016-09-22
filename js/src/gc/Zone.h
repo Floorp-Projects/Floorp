@@ -240,6 +240,7 @@ struct Zone : public JS::shadow::Zone,
             return needsIncrementalBarrier();
     }
 
+    GCState gcState() const { return gcState_; }
     bool wasGCStarted() const { return gcState_ != NoGC; }
     bool isGCMarkingBlack() { return gcState_ == Mark; }
     bool isGCMarkingGray() { return gcState_ == MarkGray; }

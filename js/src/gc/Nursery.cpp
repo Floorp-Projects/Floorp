@@ -662,11 +662,11 @@ js::Nursery::doCollection(JSRuntime* rt, JS::gcreason::Reason reason,
     // Mark the store buffer. This must happen first.
     StoreBuffer& sb = rt->gc.storeBuffer;
 
+    // The MIR graph only contains nursery pointers if cancelIonCompilations()
+    // is set on the store buffer, in which case we cancel all compilations.
     maybeStartProfile(ProfileKey::CancelIonCompilations);
-    if (sb.cancelIonCompilations()) {
-        for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next())
-            jit::StopAllOffThreadCompilations(c);
-    }
+    if (sb.cancelIonCompilations())
+        js::CancelOffThreadIonCompile(rt);
     maybeEndProfile(ProfileKey::CancelIonCompilations);
 
     maybeStartProfile(ProfileKey::TraceValues);

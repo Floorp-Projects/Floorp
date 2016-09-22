@@ -25,6 +25,10 @@
 #include "threading/ConditionVariable.h"
 #include "threading/Mutex.h"
 
+namespace JS {
+struct Zone;
+} // namespace JS
+
 namespace js {
 
 class AutoLockHelperThreadState;
@@ -410,9 +414,12 @@ bool
 StartOffThreadIonCompile(JSContext* cx, jit::IonBuilder* builder);
 
 struct AllCompilations {};
+struct ZonesInState { JSRuntime* runtime; JS::Zone::GCState state; };
 
 using CompilationSelector = mozilla::Variant<JSScript*,
                                              JSCompartment*,
+                                             ZonesInState,
+                                             JSRuntime*,
                                              AllCompilations>;
 
 /*
@@ -434,10 +441,27 @@ CancelOffThreadIonCompile(JSCompartment* comp)
 }
 
 inline void
+CancelOffThreadIonCompile(JSRuntime* runtime, JS::Zone::GCState state)
+{
+    CancelOffThreadIonCompile(CompilationSelector(ZonesInState{runtime, state}), true);
+}
+
+inline void
+CancelOffThreadIonCompile(JSRuntime* runtime)
+{
+    CancelOffThreadIonCompile(CompilationSelector(runtime), true);
+}
+
+inline void
 CancelOffThreadIonCompile()
 {
     CancelOffThreadIonCompile(CompilationSelector(AllCompilations()), false);
 }
+
+#ifdef DEBUG
+bool
+HasOffThreadIonCompile(JSCompartment* comp);
+#endif
 
 /* Cancel all scheduled, in progress or finished parses for runtime. */
 void
