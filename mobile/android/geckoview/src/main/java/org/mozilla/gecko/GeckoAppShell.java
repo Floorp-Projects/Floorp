@@ -229,7 +229,6 @@ public class GeckoAppShell
     static public final int LINK_TYPE_4G = 7;
 
     public static final String PREFS_OOM_EXCEPTION = "OOMException";
-    public static final String ACTION_ALERT_CALLBACK = "org.mozilla.gecko.ALERT_CALLBACK";
 
     /* The Android-side API: API methods that Android calls */
 
