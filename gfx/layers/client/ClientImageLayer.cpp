@@ -138,9 +138,6 @@ ClientImageLayer::RenderLayer()
       return;
     }
     TextureFlags flags = TextureFlags::DEFAULT;
-    if (mDisallowBigImage) {
-      flags |= TextureFlags::DISALLOW_BIGIMAGE;
-    }
     mImageClient = ImageClient::CreateImageClient(type,
                                                   ClientManager()->AsShadowForwarder(),
                                                   flags);

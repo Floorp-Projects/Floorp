@@ -57,7 +57,7 @@ SharedPlanarYCbCrImage::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 }
 
 TextureClient*
-SharedPlanarYCbCrImage::GetTextureClient(CompositableClient* aClient)
+SharedPlanarYCbCrImage::GetTextureClient(TextureForwarder* aForwarder)
 {
   return mTextureClient.get();
 }

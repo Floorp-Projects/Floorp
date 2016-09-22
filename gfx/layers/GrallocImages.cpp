@@ -469,7 +469,7 @@ GrallocImage::GetNativeBuffer()
 }
 
 TextureClient*
-GrallocImage::GetTextureClient(CompositableClient* aClient)
+GrallocImage::GetTextureClient(TextureForwarder* aForwarder)
 {
   return mTextureClient;
 }

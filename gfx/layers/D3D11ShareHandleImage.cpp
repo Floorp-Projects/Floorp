@@ -53,7 +53,7 @@ D3D11ShareHandleImage::GetSize()
 }
 
 TextureClient*
-D3D11ShareHandleImage::GetTextureClient(CompositableClient* aClient)
+D3D11ShareHandleImage::GetTextureClient(TextureForwarder* aForwarder)
 {
   return mTextureClient;
 }
