@@ -188,6 +188,12 @@ CompileRuntime::setMinorGCShouldCancelIonCompilations()
     runtime()->gc.storeBuffer.setShouldCancelIonCompilations();
 }
 
+bool
+CompileRuntime::runtimeMatches(JSRuntime* rt)
+{
+    return rt == runtime();
+}
+
 Zone*
 CompileZone::zone()
 {
