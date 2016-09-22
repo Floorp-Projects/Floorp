@@ -259,12 +259,12 @@
            onpopuphidden="SocialShare.onHidden()"
            hidden="true">
       <hbox class="social-share-toolbar">
-        <toolbarbutton id="manage-share-providers" class="toolbarbutton share-provider-button"
+        <toolbarbutton id="manage-share-providers" class="share-provider-button"
                        tooltiptext="&social.addons.label;"
                        oncommand="BrowserOpenAddonsMgr('addons://list/service');
                                   this.parentNode.parentNode.hidePopup();"/>
         <arrowscrollbox id="social-share-provider-buttons" orient="horizontal" flex="1" pack="end">
-          <toolbarbutton id="add-share-provider" class="toolbarbutton share-provider-button" type="radio"
+          <toolbarbutton id="add-share-provider" class="share-provider-button" type="radio"
                          group="share-providers" tooltiptext="&findShareServices.label;"
                          oncommand="SocialShare.showDirectory()"/>
         </arrowscrollbox>
