@@ -95,7 +95,7 @@ this.Utils = {
         return func.call(thisArg);
       }
       catch(ex) {
-        thisArg._log.debug("Exception calling " + (func.name || "anonymous function"), ex);
+        thisArg._log.debug("Exception", ex);
         if (exceptionCallback) {
           return exceptionCallback.call(thisArg, ex);
         }
@@ -358,8 +358,7 @@ this.Utils = {
       json = yield CommonUtils.readJSON(path);
     } catch (e) {
       if (e instanceof OS.File.Error && e.becauseNoSuchFile) {
-        // Ignore non-existent files, but explicitly return null.
-        json = null;
+        // Ignore non-existent files.
       } else {
         if (that._log) {
           that._log.debug("Failed to load json", e);

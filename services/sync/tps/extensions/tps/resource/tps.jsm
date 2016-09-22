@@ -82,7 +82,7 @@ const ACTIONS = [
 const OBSERVER_TOPICS = ["fxaccounts:onlogin",
                          "fxaccounts:onlogout",
                          "private-browsing",
-                         "profile-before-change",
+                         "quit-application-requested",
                          "sessionstore-windows-restored",
                          "weave:engine:start-tracking",
                          "weave:engine:stop-tracking",
@@ -166,7 +166,7 @@ var TPS = {
           Logger.logInfo("private browsing " + data);
           break;
 
-        case "profile-before-change":
+        case "quit-application-requested":
           OBSERVER_TOPICS.forEach(function(topic) {
             Services.obs.removeObserver(this, topic);
           }, this);
@@ -367,18 +367,17 @@ var TPS = {
       let formdata = new FormData(datum, this._usSinceEpoch);
       switch(action) {
         case ACTION_ADD:
-          Async.promiseSpinningly(formdata.Create());
+          formdata.Create();
           break;
         case ACTION_DELETE:
-          Async.promiseSpinningly(formdata.Remove());
+          formdata.Remove();
           break;
         case ACTION_VERIFY:
-          Logger.AssertTrue(Async.promiseSpinningly(formdata.Find()),
-                            "form data not found");
+          Logger.AssertTrue(formdata.Find(), "form data not found");
           break;
         case ACTION_VERIFY_NOT:
-          Logger.AssertTrue(!Async.promiseSpinningly(formdata.Find()),
-                            "form data found, but it shouldn't be present");
+          Logger.AssertTrue(!formdata.Find(),
+            "form data found, but it shouldn't be present");
           break;
         default:
           Logger.AssertTrue(false, "invalid action: " + action);
@@ -592,14 +591,7 @@ var TPS = {
       Logger.logError("Failed to wipe server: " + Log.exceptionStr(ex));
     }
     try {
-      if (Authentication.isLoggedIn) {
-        // signout and wait for Sync to completely reset itself.
-        Logger.logInfo("signing out");
-        let waiter = this.createEventWaiter("weave:service:start-over:finish");
-        Authentication.signOut();
-        waiter();
-        Logger.logInfo("signout complete");
-      }
+      Authentication.signOut();
     } catch (e) {
       Logger.logError("Failed to sign out: " + Log.exceptionStr(e));
     }
@@ -709,8 +701,8 @@ var TPS = {
       let validator = new FormValidator();
       let serverRecords = validator.getServerItems(engine);
       let clientRecords = Async.promiseSpinningly(validator.getClientItems());
-      clientRecordDumpStr = JSON.stringify(clientRecords, undefined, 2);
-      serverRecordDumpStr = JSON.stringify(serverRecords, undefined, 2);
+      clientRecordDumpStr = JSON.stringify(clientRecords);
+      serverRecordDumpStr = JSON.stringify(serverRecords);
       let { problemData } = validator.compareClientWithServer(clientRecords, serverRecords);
       for (let { name, count } of problemData.getSummary()) {
         if (count) {
@@ -984,55 +976,23 @@ var TPS = {
   },
 
   /**
-   * Return an object that when called, will block until the named event
-   * is observed. This is similar to waitForEvent, although is typically safer
-   * if you need to do some other work that may make the event fire.
-   *
-   * eg:
-   *    doSomething(); // causes the event to be fired.
-   *    waitForEvent("something");
-   * is risky as the call to doSomething may trigger the event before the
-   * waitForEvent call is made. Contrast with:
-   *
-   *   let waiter = createEventWaiter("something"); // does *not* block.
-   *   doSomething(); // causes the event to be fired.
-   *   waiter(); // will return as soon as the event fires, even if it fires
-   *             // before this function is called.
-   *
-   * @param aEventName
-   *        String event to wait for.
-   */
-  createEventWaiter(aEventName) {
-    Logger.logInfo("Setting up wait for " + aEventName + "...");
-    let cb = Async.makeSpinningCallback();
-    Svc.Obs.add(aEventName, cb);
-    return function() {
-      try {
-        cb.wait();
-      } finally {
-        Svc.Obs.remove(aEventName, cb);
-        Logger.logInfo(aEventName + " observed!");
-      }
-    }
-  },
-
-
-  /**
    * Synchronously wait for the named event to be observed.
    *
    * When the event is observed, the function will wait an extra tick before
    * returning.
    *
-   * Note that in general, you should probably use createEventWaiter unless you
-   * are 100% sure that the event being waited on can only be sent after this
-   * call adds the listener.
-   *
    * @param aEventName
    *        String event to wait for.
    */
   waitForEvent: function waitForEvent(aEventName) {
-    this.createEventWaiter(aEventName)();
+    Logger.logInfo("Waiting for " + aEventName + "...");
+    let cb = Async.makeSpinningCallback();
+    Svc.Obs.add(aEventName, cb);
+    cb.wait();
+    Svc.Obs.remove(aEventName, cb);
+    Logger.logInfo(aEventName + " observed!");
   },
+
 
   /**
    * Waits for Sync to logged in before returning
