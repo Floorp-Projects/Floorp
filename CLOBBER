@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Merge day clobber
+Clobber for bug 1304815 - Update mac builders to rustc 1.12.0-beta.5
