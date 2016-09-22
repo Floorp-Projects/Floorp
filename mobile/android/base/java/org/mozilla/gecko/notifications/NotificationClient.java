@@ -26,15 +26,16 @@ public abstract class NotificationClient {
     /**
      * Adds a notification.
      *
-     * @see NotificationHandler#add(int, String, String, String, String, PendingIntent, PendingIntent)
+     * @see NotificationHandler#add(String, String, String, String, String, PendingIntent, PendingIntent)
      */
-    public synchronized void add(final int notificationID, final String aImageUrl, final String aHost,
+    public synchronized void add(final String aName, final String aImageUrl, final String aHost,
                                  final String aAlertTitle, final String aAlertText,
                                  final PendingIntent contentIntent, final PendingIntent deleteIntent) {
         mTaskQueue.add(new Runnable() {
             @Override
             public void run() {
-                mHandler.add(notificationID, aImageUrl, aHost, aAlertTitle, aAlertText, contentIntent, deleteIntent);
+                mHandler.add(aName, aImageUrl, aHost, aAlertTitle,
+                             aAlertText, contentIntent, deleteIntent);
             }
         });
         notify();
@@ -47,13 +48,13 @@ public abstract class NotificationClient {
     /**
      * Adds a notification.
      *
-     * @see NotificationHandler#add(int, Notification)
+     * @see NotificationHandler#add(String, Notification)
      */
-    public synchronized void add(final int notificationID, final Notification notification) {
+    public synchronized void add(final String name, final Notification notification) {
         mTaskQueue.add(new Runnable() {
             @Override
             public void run() {
-                mHandler.add(notificationID, notification);
+                mHandler.add(name, notification);
             }
         });
         notify();
@@ -66,13 +67,13 @@ public abstract class NotificationClient {
     /**
      * Removes a notification.
      *
-     * @see NotificationHandler#remove(int)
+     * @see NotificationHandler#remove(String)
      */
-    public synchronized void remove(final int notificationID) {
+    public synchronized void remove(final String name) {
         mTaskQueue.add(new Runnable() {
             @Override
             public void run() {
-                mHandler.remove(notificationID);
+                mHandler.remove(name);
             }
         });
 
@@ -90,9 +91,9 @@ public abstract class NotificationClient {
      *
      * @see NotificationHandler#isOngoing(int)
      */
-    public boolean isOngoing(int notificationID) {
+    public boolean isOngoing(String name) {
         final NotificationHandler handler = mHandler;
-        return handler != null && handler.isOngoing(notificationID);
+        return handler != null && handler.isOngoing(name);
     }
 
     protected void bind() {
