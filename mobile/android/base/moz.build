@@ -770,6 +770,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'widget/FlowLayout.java',
     'widget/GeckoActionProvider.java',
     'widget/GeckoPopupMenu.java',
+    'widget/GridSpacingDecoration.java',
     'widget/HistoryDividerItemDecoration.java',
     'widget/IconTabWidget.java',
     'widget/LoginDoorHanger.java',
