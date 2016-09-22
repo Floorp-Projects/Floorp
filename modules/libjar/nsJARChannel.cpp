@@ -335,7 +335,6 @@ nsJARChannel::LookupFile(bool aAllowAsync)
         return NS_OK;
 
     nsresult rv;
-    nsCOMPtr<nsIURI> uri;
 
     rv = mJarURI->GetJARFile(getter_AddRefs(mJarBaseURI));
     if (NS_FAILED(rv))

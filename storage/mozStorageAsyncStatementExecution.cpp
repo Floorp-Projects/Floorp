@@ -70,10 +70,9 @@ public:
       // Hold a strong reference to the callback while notifying it, so that if
       // it spins the event loop, the callback won't be released and freed out
       // from under us.
-      nsCOMPtr<mozIStorageStatementCallback> callback =
-        do_QueryInterface(mCallback);
+      nsCOMPtr<mozIStorageStatementCallback> callback = mCallback;
 
-      (void)mCallback->HandleResult(mResults);
+      (void)callback->HandleResult(mResults);
     }
 
     return NS_OK;
@@ -106,10 +105,9 @@ public:
       // Hold a strong reference to the callback while notifying it, so that if
       // it spins the event loop, the callback won't be released and freed out
       // from under us.
-      nsCOMPtr<mozIStorageStatementCallback> callback =
-        do_QueryInterface(mCallback);
+      nsCOMPtr<mozIStorageStatementCallback> callback = mCallback;
 
-      (void)mCallback->HandleError(mErrorObj);
+      (void)callback->HandleError(mErrorObj);
     }
 
     return NS_OK;

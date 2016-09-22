@@ -141,8 +141,6 @@ CopyURIs(const InfallibleTArray<URIParams>& aDomains, nsIDomainSet* aSet)
 void
 DomainPolicy::ApplyClone(DomainPolicyClone* aClone)
 {
-    nsCOMPtr<nsIDomainSet> list;
-
     CopyURIs(aClone->blacklist(), mBlacklist);
     CopyURIs(aClone->whitelist(), mWhitelist);
     CopyURIs(aClone->superBlacklist(), mSuperBlacklist);
