@@ -1534,7 +1534,7 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
     [NSCursor setHiddenUntilMouseMoves:YES];
   }
 
-  RefPtr<nsChildView> kungFuDeathGrip(mWidget);
+  RefPtr<nsChildView> widget(mWidget);
 
   KeyEventState* currentKeyEvent = PushKeyEvent(aNativeEvent);
   AutoKeyEventStateCleaner remover(this);
@@ -1553,7 +1553,7 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
         return false;
       }
 
-      WidgetKeyboardEvent imeEvent(true, eKeyDown, mWidget);
+      WidgetKeyboardEvent imeEvent(true, eKeyDown, widget);
       currentKeyEvent->InitKeyEvent(this, imeEvent);
       imeEvent.mPluginTextEventString.Assign(committed);
       nsEventStatus status = nsEventStatus_eIgnore;
@@ -1574,7 +1574,7 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
     return false;
   }
 
-  WidgetKeyboardEvent keydownEvent(true, eKeyDown, mWidget);
+  WidgetKeyboardEvent keydownEvent(true, eKeyDown, widget);
   currentKeyEvent->InitKeyEvent(this, keydownEvent);
 
   nsEventStatus status = nsEventStatus_eIgnore;
@@ -1613,7 +1613,7 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
   // Don't call interpretKeyEvents when a plugin has focus.  If we call it,
   // for example, a character is inputted twice during a composition in e10s
   // mode.
-  if (!mWidget->IsPluginFocused() && (IsIMEEnabled() || IsASCIICapableOnly())) {
+  if (!widget->IsPluginFocused() && (IsIMEEnabled() || IsASCIICapableOnly())) {
     MOZ_LOG(gLog, LogLevel::Info,
       ("%p TextInputHandler::HandleKeyDownEvent, calling interpretKeyEvents",
        this));
@@ -1647,7 +1647,7 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
       return false;
     }
 
-    WidgetKeyboardEvent keypressEvent(true, eKeyPress, mWidget);
+    WidgetKeyboardEvent keypressEvent(true, eKeyPress, widget);
     currentKeyEvent->InitKeyEvent(this, keypressEvent);
 
     // If we called interpretKeyEvents and this isn't normal character input
@@ -1743,6 +1743,7 @@ TextInputHandler::HandleFlagsChanged(NSEvent* aNativeEvent)
   }
 
   RefPtr<nsChildView> kungFuDeathGrip(mWidget);
+  mozilla::Unused << kungFuDeathGrip; // Not referenced within this function
 
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p TextInputHandler::HandleFlagsChanged, aNativeEvent=%p, "
@@ -2195,7 +2196,7 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
     return;
   }
 
-  RefPtr<nsChildView> kungFuDeathGrip(mWidget);
+  RefPtr<nsChildView> widget(mWidget);
 
   // If the replacement range is specified, select the range.  Then, the
   // selection will be replaced by the later keypress event.
@@ -2214,7 +2215,7 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
   }
 
   // Dispatch keypress event with char instead of compositionchange event
-  WidgetKeyboardEvent keypressEvent(true, eKeyPress, mWidget);
+  WidgetKeyboardEvent keypressEvent(true, eKeyPress, widget);
   // XXX Why do we need to dispatch keypress event for not inputting any
   //     string?  If it wants to delete the specified range, should we
   //     dispatch an eContentCommandDelete event instead?  Because this
@@ -2263,7 +2264,7 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
 bool
 TextInputHandler::DoCommandBySelector(const char* aSelector)
 {
-  RefPtr<nsChildView> kungFuDeathGrip(mWidget);
+  RefPtr<nsChildView> widget(mWidget);
 
   KeyEventState* currentKeyEvent = GetCurrentKeyEvent();
 
@@ -2289,7 +2290,7 @@ TextInputHandler::DoCommandBySelector(const char* aSelector)
       return false;
     }
 
-    WidgetKeyboardEvent keypressEvent(true, eKeyPress, mWidget);
+    WidgetKeyboardEvent keypressEvent(true, eKeyPress, widget);
     currentKeyEvent->InitKeyEvent(this, keypressEvent);
 
     nsEventStatus status = nsEventStatus_eIgnore;
