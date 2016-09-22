@@ -37,7 +37,9 @@
 // Memory profile
 #include "nsMemoryReporterManager.h"
 
+#ifdef MOZ_STACKWALKING
 #include "mozilla/StackWalk_windows.h"
+#endif
 
 
 class PlatformData {
@@ -191,6 +193,7 @@ class SamplerThread : public Thread {
     if (SuspendThread(profiled_thread) == kSuspendFailed)
       return;
 
+#ifdef MOZ_STACKWALKING
     // Threads that may invoke JS require extra attention. Since, on windows,
     // the jits also need to modify the same dynamic function table that we need
     // to get a stack trace, we have to be wary of that to avoid deadlock.
@@ -213,6 +216,7 @@ class SamplerThread : public Thread {
       // we cannot deadlock with them, and should let them run as they please.
       ReleaseStackWalkWorkaroundLock();
     }
+#endif
 
     // Using only CONTEXT_CONTROL is faster but on 64-bit it causes crashes in
     // RtlVirtualUnwind (see bug 1120126) so we set all the flags.
