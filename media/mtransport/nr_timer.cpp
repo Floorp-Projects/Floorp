@@ -58,6 +58,7 @@
 #include "nsITimer.h"
 #include "nsNetCID.h"
 #include "runnable_utils.h"
+#include "mozilla/DebugOnly.h"
 
 extern "C" {
 #include "nr_api.h"
@@ -166,9 +167,9 @@ static nsCOMPtr<nsIEventTarget> GetSTSThread() {
 // These timers must only be used from the STS thread.
 // This function is a helper that enforces that.
 static void CheckSTSThread() {
-  nsCOMPtr<nsIEventTarget> sts_thread = GetSTSThread();
+  DebugOnly<nsCOMPtr<nsIEventTarget>> sts_thread = GetSTSThread();
 
-  ASSERT_ON_THREAD(sts_thread);
+  ASSERT_ON_THREAD(sts_thread.value);
 }
 
 static int nr_async_timer_set_zero(NR_async_cb cb, void *arg,

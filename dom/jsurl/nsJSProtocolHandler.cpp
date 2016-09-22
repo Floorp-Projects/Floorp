@@ -216,7 +216,7 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
 
     nsCOMPtr<nsIScriptGlobalObject> innerGlobal = do_QueryInterface(innerWin);
 
-    nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(global, &rv));
+    mozilla::DebugOnly<nsCOMPtr<nsIDOMWindow>> domWindow(do_QueryInterface(global, &rv));
     if (NS_FAILED(rv)) {
         return NS_ERROR_FAILURE;
     }
