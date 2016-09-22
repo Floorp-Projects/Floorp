@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=674770
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
-  SpecialPowers.pushPrefEnv({"set":[["middlemouse.paste", true]]}, startTest);
+  SpecialPowers.pushPrefEnv({"set":[["middlemouse.paste", true], ["dom.ipc.processCount", 1]]}, startTest);
 });
 function startTest() {
   localStorage.removeItem("clicked");
@@ -51,8 +51,8 @@ function startTest() {
 
       localStorage.removeItem("clicked");
       SimpleTest.finish();
-    }, 100);
-  }, 100);
+    }, 500);
+  }, 500);
 }
 
 function hitEventLoop(func, times) {
