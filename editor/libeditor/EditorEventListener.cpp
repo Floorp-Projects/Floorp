@@ -354,6 +354,7 @@ EditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
   NS_ENSURE_TRUE(mEditorBase, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIEditor> kungFuDeathGrip = mEditorBase;
+  Unused << kungFuDeathGrip; // mEditorBase is not referred to in this function
 
   WidgetEvent* internalEvent = aEvent->WidgetEventPtr();
 

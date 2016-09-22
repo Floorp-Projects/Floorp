@@ -3167,7 +3167,6 @@ nsTextServicesDocument::FirstTextNodeInCurrentBlock(nsIContentIterator *iter)
 nsresult
 nsTextServicesDocument::FirstTextNodeInPrevBlock(nsIContentIterator *aIterator)
 {
-  nsCOMPtr<nsIContent> content;
   nsresult result;
 
   NS_ENSURE_TRUE(aIterator, NS_ERROR_NULL_POINTER);
