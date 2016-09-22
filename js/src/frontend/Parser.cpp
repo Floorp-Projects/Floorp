@@ -4162,6 +4162,19 @@ Parser<ParseHandler>::initializerInNameDeclaration(Node decl, Node binding,
             *forHeadKind = PNK_FORHEAD;
         } else {
             MOZ_ASSERT(*forHeadKind == PNK_FORHEAD);
+
+            // In the very rare case of Parser::assignExpr consuming an
+            // ArrowFunction with block body, when full-parsing with the arrow
+            // function being a skipped lazy inner function, we don't have
+            // lookahead for the next token.  Do a one-off peek here to be
+            // consistent with what Parser::matchForInOrOf does in the other
+            // arm of this |if|.
+            //
+            // If you think this all sounds pretty code-smelly, you're almost
+            // certainly correct.
+            TokenKind ignored;
+            if (!tokenStream.peekToken(&ignored))
+                return false;
         }
 
         // Per Parser::forHeadStart, the semicolon in |for (;| is ultimately
