@@ -334,6 +334,26 @@ private:
     // Approximation of the next sample's presentation timestamp.
     media::TimeUnit mNextSampleTime;
 
+    struct EvictionIndex
+    {
+      EvictionIndex() { Reset(); }
+      void Reset()
+      {
+        mEvictable = 0;
+        mLastIndex = 0;
+      }
+      uint32_t mEvictable;
+      uint32_t mLastIndex;
+    };
+    // Size of data that can be safely evicted during the next eviction
+    // cycle.
+    // We consider as evictable all frames up to the last keyframe prior to
+    // mNextGetSampleIndex. If mNextGetSampleIndex isn't set, then we assume
+    // that we can't yet evict data.
+    // Protected by global monitor, except when reading on the task queue as it
+    // is only written there.
+    EvictionIndex mEvictionIndex;
+
     void ResetAppendState()
     {
       mLastDecodeTimestamp.reset();
@@ -363,6 +383,9 @@ private:
   size_t RemoveFrames(const media::TimeIntervals& aIntervals,
                       TrackData& aTrackData,
                       uint32_t aStartIndex);
+  // Recalculate track's evictable amount.
+  void ResetEvictionIndex(TrackData& aTrackData);
+  void UpdateEvictionIndex(TrackData& aTrackData, uint32_t aCurrentIndex);
   // Find index of sample. Return a negative value if not found.
   uint32_t FindSampleIndex(const TrackBuffer& aTrackBuffer,
                            const media::TimeInterval& aInterval);
@@ -436,7 +459,7 @@ private:
   };
   Atomic<EvictionState> mEvictionState;
 
-  // Monitor to protect following objects accessed across multipple threads.
+  // Monitor to protect following objects accessed across multiple threads.
   mutable Monitor mMonitor;
   // Stable audio and video track time ranges.
   media::TimeIntervals mVideoBufferedRanges;
