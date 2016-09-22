@@ -252,7 +252,11 @@ function get_sync_test_telemetry() {
 }
 
 function assert_valid_ping(record) {
-  if (record) {
+  // This is called as the test harness tears down due to shutdown. This
+  // will typically have no recorded syncs, and the validator complains about
+  // it. So ignore such records (but only ignore when *both* shutdown and
+  // no Syncs - either of them not being true might be an actual problem)
+  if (record && (record.why != "shutdown" || record.syncs.length != 0)) {
     if (!SyncPingValidator(record)) {
       deepEqual([], SyncPingValidator.errors, "Sync telemetry ping validation failed");
     }
