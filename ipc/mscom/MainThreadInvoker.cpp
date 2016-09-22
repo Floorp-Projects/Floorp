@@ -14,8 +14,7 @@
 #include "mozilla/HangMonitor.h"
 #include "mozilla/RefPtr.h"
 #include "private/prpriv.h" // For PR_GetThreadID
-
-#include <winternl.h> // For NTSTATUS and NTAPI
+#include "WinUtils.h"
 
 namespace {
 
@@ -42,15 +41,12 @@ private:
   nsCOMPtr<nsIRunnable> mRunnable;
 };
 
-typedef NTSTATUS (NTAPI* NtTestAlertPtr)(VOID);
-
 } // anonymous namespace
 
 namespace mozilla {
 namespace mscom {
 
 HANDLE MainThreadInvoker::sMainThread = nullptr;
-StaticRefPtr<nsIRunnable> MainThreadInvoker::sAlertRunnable;
 
 /* static */ bool
 MainThreadInvoker::InitStatics()
@@ -67,25 +63,11 @@ MainThreadInvoker::InitStatics()
   }
   PRUint32 tid = ::PR_GetThreadID(mainPrThread);
   sMainThread = ::OpenThread(SYNCHRONIZE | THREAD_SET_CONTEXT, FALSE, tid);
-  if (!sMainThread) {
-    return false;
-  }
-  NtTestAlertPtr NtTestAlert =
-    reinterpret_cast<NtTestAlertPtr>(
-        ::GetProcAddress(::GetModuleHandleW(L"ntdll.dll"), "NtTestAlert"));
-  sAlertRunnable = ::NS_NewRunnableFunction([NtTestAlert]() -> void {
-    // We're using NtTestAlert() instead of SleepEx() so that the main thread
-    // never gives up its quantum if there are no APCs pending.
-    NtTestAlert();
-  }).take();
-  if (sAlertRunnable) {
-    ClearOnShutdown(&sAlertRunnable);
-  }
-  return !!sAlertRunnable;
+  return !!sMainThread;
 }
 
 MainThreadInvoker::MainThreadInvoker()
-  : mDoneEvent(::CreateEvent(nullptr, FALSE, FALSE, nullptr))
+  : mDoneEvent(::CreateEventW(nullptr, FALSE, FALSE, nullptr))
 {
   static const bool gotStatics = InitStatics();
   MOZ_ASSERT(gotStatics);
@@ -129,11 +111,11 @@ MainThreadInvoker::Invoke(already_AddRefed<nsIRunnable>&& aRunnable,
     wrappedRunnable->Release();
     return false;
   }
-  // We should enqueue a call to NtTestAlert() so that the main thread will
-  // check for APCs during event processing. If we omit this then the main
-  // thread will not check its APC queue until it is idle. Note that failing to
-  // dispatch this event is non-fatal, but it will delay execution of the APC.
-  Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(sAlertRunnable)));
+  // We should ensure a call to NtTestAlert() is made on the main thread so
+  // that the main thread will check for APCs during event processing. If we
+  // omit this then the main thread will not check its APC queue until it is
+  // idle.
+  widget::WinUtils::SetAPCPending();
   return WaitForCompletion(aTimeout);
 }
 
