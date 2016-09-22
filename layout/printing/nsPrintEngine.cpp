@@ -1872,8 +1872,6 @@ nsPrintEngine::OnStateChange(nsIWebProgress* aWebProgress,
     return NS_OK;
   }
   if (aStateFlags & STATE_START) {
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
-
     ++mLoadCounter;
   } else if (aStateFlags & STATE_STOP) {
     mDidLoadDataForPrinting = true;
