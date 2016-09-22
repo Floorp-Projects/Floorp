@@ -768,15 +768,16 @@ static bool
 SampleAPZAnimations(const LayerMetricsWrapper& aLayer, TimeStamp aSampleTime)
 {
   bool activeAnimations = false;
-  for (LayerMetricsWrapper child = aLayer.GetFirstChild(); child;
-        child = child.GetNextSibling()) {
-    activeAnimations |= SampleAPZAnimations(child, aSampleTime);
-  }
 
-  if (AsyncPanZoomController* apzc = aLayer.GetApzc()) {
-    apzc->ReportCheckerboard(aSampleTime);
-    activeAnimations |= apzc->AdvanceAnimations(aSampleTime);
-  }
+  ForEachNodePostOrder<ForwardIterator>(aLayer,
+      [&activeAnimations, &aSampleTime](LayerMetricsWrapper aLayerMetrics)
+      {
+        if (AsyncPanZoomController* apzc = aLayerMetrics.GetApzc()) {
+          apzc->ReportCheckerboard(aSampleTime);
+          activeAnimations |= apzc->AdvanceAnimations(aSampleTime);
+        }
+      }
+  );
 
   return activeAnimations;
 }
@@ -1327,36 +1328,13 @@ ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
 }
 
 static LayerMetricsWrapper
-FindScrolledLayerRecursive(Layer* aScrollbar, const LayerMetricsWrapper& aSubtreeRoot)
-{
-  if (LayerIsScrollbarTarget(aSubtreeRoot, aScrollbar)) {
-    return aSubtreeRoot;
-  }
-
-  for (LayerMetricsWrapper child = aSubtreeRoot.GetFirstChild();
-       child;
-       child = child.GetNextSibling())
-  {
-    // Do not recurse into RefLayers, since our initial aSubtreeRoot is the
-    // root (or RefLayer root) of a single layer space to search.
-    if (child.AsRefLayer()) {
-      continue;
-    }
-
-    LayerMetricsWrapper target = FindScrolledLayerRecursive(aScrollbar, child);
-    if (target) {
-      return target;
-    }
-  }
-  return LayerMetricsWrapper();
-}
-
-static LayerMetricsWrapper
 FindScrolledLayerForScrollbar(Layer* aScrollbar, bool* aOutIsAncestor)
 {
   // First check if the scrolled layer is an ancestor of the scrollbar layer.
   LayerMetricsWrapper root(aScrollbar->Manager()->GetRoot());
   LayerMetricsWrapper prevAncestor(aScrollbar);
+  LayerMetricsWrapper scrolledLayer;
+
   for (LayerMetricsWrapper ancestor(aScrollbar); ancestor; ancestor = ancestor.GetParent()) {
     // Don't walk into remote layer trees; the scrollbar will always be in
     // the same layer space.
@@ -1373,7 +1351,23 @@ FindScrolledLayerForScrollbar(Layer* aScrollbar, bool* aOutIsAncestor)
   }
 
   // Search the entire layer space of the scrollbar.
-  return FindScrolledLayerRecursive(aScrollbar, root);
+  ForEachNode<ForwardIterator>(
+      root,
+      [&root, &scrolledLayer, &aScrollbar](LayerMetricsWrapper aLayerMetrics)
+      {
+        // Do not recurse into RefLayers, since our initial aSubtreeRoot is the
+        // root (or RefLayer root) of a single layer space to search.
+        if (root != aLayerMetrics && aLayerMetrics.AsRefLayer()) {
+          return TraversalFlag::Skip;
+        }
+        if (LayerIsScrollbarTarget(aLayerMetrics, aScrollbar)) {
+          scrolledLayer = aLayerMetrics;
+          return TraversalFlag::Abort;
+        }
+        return TraversalFlag::Continue;
+      }
+  );
+  return scrolledLayer;
 }
 
 void
