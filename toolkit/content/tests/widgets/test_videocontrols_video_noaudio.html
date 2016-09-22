@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Video controls test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content">
+  <video id="video" controls preload="auto"></video>
+</div>
+
+<pre id="test">
+<script clas="testbody" type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  const domUtils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"].
+    getService(SpecialPowers.Ci.inIDOMUtils);
+  const video = document.getElementById("video");
+  const muteButton = getElementByAttribute("class", "muteButton");
+  const volumeStack = getElementByAttribute("class", "volumeStack");
+  const testCases = [];
+
+  testCases.push(() => new Promise(resolve => {
+    is(muteButton.getAttribute("noAudio"), "true");
+    is(muteButton.getAttribute("disabled"), "true");
+
+    if (volumeStack) {
+      ok(volumeStack.hidden);
+    }
+
+    resolve();
+  }));
+
+  function executeTestCases(tasks) {
+    return tasks.reduce((promise, task) => promise.then(task), Promise.resolve());
+  }
+
+  function getElementByAttribute(aName, aValue) {
+    const videoControl = domUtils.getChildrenForNode(video, true)[1];
+
+    return SpecialPowers.wrap(document)
+      .getAnonymousElementByAttribute(videoControl, aName, aValue);
+  }
+
+  function loadedmetadata() {
+    executeTestCases(testCases).then(SimpleTest.finish);
+  }
+
+  function startMediaLoad() {
+    video.src = "video.ogg";
+    video.addEventListener("loadedmetadata", loadedmetadata, false);
+  }
+
+  function loadevent() {
+    SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, startMediaLoad);
+  }
+
+  window.addEventListener("load", loadevent, false);
+</script>
+</pre>
+</body>
+</html>
