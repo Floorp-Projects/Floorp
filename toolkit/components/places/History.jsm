@@ -479,7 +479,7 @@ function validatePageInfo(pageInfo) {
 
   info.url = normalizeToURLOrGUID(pageInfo.url);
 
-  if (typeof pageInfo.title === "string" && pageInfo.title.length) {
+  if (typeof pageInfo.title === "string") {
     info.title = pageInfo.title;
   } else if (pageInfo.title != null && pageInfo.title != undefined) {
     throw new TypeError(`title property of PageInfo object: ${pageInfo.title} must be a string if provided`);

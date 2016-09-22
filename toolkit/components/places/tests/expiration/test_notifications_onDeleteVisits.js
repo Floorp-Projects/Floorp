@@ -75,11 +75,17 @@ add_task(function* test_notifications_onDeleteVisits() {
     currentTest.receivedNotifications = 0;
 
     // Setup visits.
-    let now = getExpirablePRTime();
+    let timeInMicroseconds = getExpirablePRTime(8);
+
+    function newTimeInMicroseconds() {
+      timeInMicroseconds = timeInMicroseconds + 1000;
+      return timeInMicroseconds;
+    }
+
     for (let j = 0; j < currentTest.visitsPerPage; j++) {
       for (let i = 0; i < currentTest.addPages; i++) {
         let page = "http://" + testIndex + "." + i + ".mozilla.org/";
-        yield PlacesTestUtils.addVisits({ uri: uri(page), visitDate: now++ });
+        yield PlacesTestUtils.addVisits({ uri: uri(page), visitDate: newTimeInMicroseconds() });
       }
     }
 

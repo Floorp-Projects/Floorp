@@ -160,7 +160,7 @@ tests.push({
         parentGuid: PlacesUtils.bookmarks.toolbarGuid,
         index: 0,
         uri: "http://example.com/c1",
-        lastVisit: timeInMicroseconds - 2,
+        lastVisit: timeInMicroseconds - 2000,
         title: "x1",
         isInQuery: true },
 
@@ -170,7 +170,7 @@ tests.push({
         parentGuid: PlacesUtils.bookmarks.toolbarGuid,
         index: 1,
         uri: "http://example.com/a",
-        lastVisit: timeInMicroseconds - 1,
+        lastVisit: timeInMicroseconds - 1000,
         title: "z",
         isInQuery: true },
 
@@ -180,7 +180,7 @@ tests.push({
         parentGuid: PlacesUtils.bookmarks.toolbarGuid,
         index: 2,
         uri: "http://example.com/b",
-        lastVisit: timeInMicroseconds - 3,
+        lastVisit: timeInMicroseconds - 3000,
         title: "y",
         isInQuery: true },
 
@@ -191,7 +191,7 @@ tests.push({
         parentGuid: PlacesUtils.bookmarks.toolbarGuid,
         index: 3,
         uri: "http://example.com/c2",
-        lastVisit: timeInMicroseconds - 2,
+        lastVisit: timeInMicroseconds - 2000,
         title: "x2",
         isInQuery: true },
 
@@ -202,7 +202,7 @@ tests.push({
         parentGuid: PlacesUtils.bookmarks.toolbarGuid,
         index: 4,
         uri: "http://example.com/c2",
-        lastVisit: timeInMicroseconds - 2,
+        lastVisit: timeInMicroseconds - 2000,
         title: "x2",
         isInQuery: true },
     ];
@@ -1189,47 +1189,53 @@ tests.push({
   *setup() {
     do_print("Sorting test 13: SORT BY FRECENCY ");
 
-    var timeInMicroseconds = Date.now() * 1000;
+    let timeInMicroseconds = PlacesUtils.toPRTime(Date.now() - 10000);
+
+    function newTimeInMicroseconds() {
+      timeInMicroseconds = timeInMicroseconds + 1000;
+      return timeInMicroseconds;
+    }
+
     this._unsortedData = [
       { isVisit: true,
         isDetails: true,
         uri: "http://moz.com/",
-        lastVisit: timeInMicroseconds++,
+        lastVisit: newTimeInMicroseconds(),
         title: "I",
         isInQuery: true },
 
       { isVisit: true,
         isDetails: true,
         uri: "http://moz.com/",
-        lastVisit: timeInMicroseconds++,
+        lastVisit: newTimeInMicroseconds(),
         title: "I",
         isInQuery: true },
 
       { isVisit: true,
         isDetails: true,
         uri: "http://moz.com/",
-        lastVisit: timeInMicroseconds++,
+        lastVisit: newTimeInMicroseconds(),
         title: "I",
         isInQuery: true },
 
       { isVisit: true,
         isDetails: true,
         uri: "http://is.com/",
-        lastVisit: timeInMicroseconds++,
+        lastVisit: newTimeInMicroseconds(),
         title: "love",
         isInQuery: true },
 
       { isVisit: true,
         isDetails: true,
         uri: "http://best.com/",
-        lastVisit: timeInMicroseconds++,
+        lastVisit: newTimeInMicroseconds(),
         title: "moz",
         isInQuery: true },
 
       { isVisit: true,
         isDetails: true,
         uri: "http://best.com/",
-        lastVisit: timeInMicroseconds++,
+        lastVisit: newTimeInMicroseconds(),
         title: "moz",
         isInQuery: true },
     ];
