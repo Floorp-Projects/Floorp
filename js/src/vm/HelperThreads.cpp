@@ -124,20 +124,51 @@ FinishOffThreadIonCompile(jit::IonBuilder* builder, const AutoLockHelperThreadSt
         oomUnsafe.crash("FinishOffThreadIonCompile");
 }
 
-static inline bool
-CompiledScriptMatches(JSCompartment* compartment, JSScript* script, JSScript* target)
+static JSRuntime*
+GetSelectorRuntime(CompilationSelector selector)
 {
-    if (script)
-        return target == script;
-    if (compartment)
-        return target->compartment() == compartment;
-    return true;
+    struct Matcher
+    {
+        JSRuntime* match(JSScript* script)    { return script->runtimeFromMainThread(); }
+        JSRuntime* match(JSCompartment* comp) { return comp->runtimeFromMainThread(); }
+        JSRuntime* match(AllCompilations all) { return nullptr; }
+    };
+
+    return selector.match(Matcher());
+}
+
+static bool
+JitDataStructuresExist(CompilationSelector selector)
+{
+    struct Matcher
+    {
+        bool match(JSScript* script)    { return !!script->compartment()->jitCompartment(); }
+        bool match(JSCompartment* comp) { return !!comp->jitCompartment(); }
+        bool match(AllCompilations all) { return true; }
+    };
+
+    return selector.match(Matcher());
+}
+
+static bool
+CompiledScriptMatches(CompilationSelector selector, JSScript* target)
+{
+    struct ScriptMatches
+    {
+        JSScript* target_;
+
+        bool match(JSScript* script)    { return script == target_; }
+        bool match(JSCompartment* comp) { return comp == target_->compartment(); }
+        bool match(AllCompilations all) { return true; }
+    };
+
+    return selector.match(ScriptMatches{target});
 }
 
 void
-js::CancelOffThreadIonCompile(JSCompartment* compartment, JSScript* script, bool discardLazyLinkList)
+js::CancelOffThreadIonCompile(CompilationSelector selector, bool discardLazyLinkList)
 {
-    if (compartment && !compartment->jitCompartment())
+    if (!JitDataStructuresExist(selector))
         return;
 
     AutoLockHelperThreadState lock;
@@ -149,31 +180,40 @@ js::CancelOffThreadIonCompile(JSCompartment* compartment, JSScript* script, bool
     GlobalHelperThreadState::IonBuilderVector& worklist = HelperThreadState().ionWorklist(lock);
     for (size_t i = 0; i < worklist.length(); i++) {
         jit::IonBuilder* builder = worklist[i];
-        if (CompiledScriptMatches(compartment, script, builder->script())) {
+        if (CompiledScriptMatches(selector, builder->script())) {
             FinishOffThreadIonCompile(builder, lock);
             HelperThreadState().remove(worklist, &i);
         }
     }
 
     /* Wait for in progress entries to finish up. */
-    for (auto& helper : *HelperThreadState().threads) {
-        while (helper.ionBuilder() &&
-               CompiledScriptMatches(compartment, script, helper.ionBuilder()->script()))
-        {
-            helper.ionBuilder()->cancel();
-            if (helper.pause) {
-                helper.pause = false;
-                HelperThreadState().notifyAll(GlobalHelperThreadState::PAUSE, lock);
+    bool cancelled;
+    do {
+        cancelled = false;
+        bool unpaused = false;
+        for (auto& helper : *HelperThreadState().threads) {
+            if (helper.ionBuilder() &&
+                CompiledScriptMatches(selector, helper.ionBuilder()->script()))
+            {
+                helper.ionBuilder()->cancel();
+                if (helper.pause) {
+                    helper.pause = false;
+                    unpaused = true;
+                }
+                cancelled = true;
             }
-            HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
         }
-    }
+        if (unpaused)
+            HelperThreadState().notifyAll(GlobalHelperThreadState::PAUSE, lock);
+        if (cancelled)
+            HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
+    } while (cancelled);
 
     /* Cancel code generation for any completed entries. */
     GlobalHelperThreadState::IonBuilderVector& finished = HelperThreadState().ionFinishedList(lock);
     for (size_t i = 0; i < finished.length(); i++) {
         jit::IonBuilder* builder = finished[i];
-        if (CompiledScriptMatches(compartment, script, builder->script())) {
+        if (CompiledScriptMatches(selector, builder->script())) {
             jit::FinishOffThreadBuilder(nullptr, builder, lock);
             HelperThreadState().remove(finished, &i);
         }
@@ -181,12 +221,12 @@ js::CancelOffThreadIonCompile(JSCompartment* compartment, JSScript* script, bool
 
     /* Cancel lazy linking for pending builders (attached to the ionScript). */
     if (discardLazyLinkList) {
-        MOZ_ASSERT(compartment);
-        JSRuntime* runtime = compartment->runtimeFromMainThread();
+        MOZ_ASSERT(!selector.is<AllCompilations>());
+        JSRuntime* runtime = GetSelectorRuntime(selector);
         jit::IonBuilder* builder = runtime->ionLazyLinkList().getFirst();
         while (builder) {
             jit::IonBuilder* next = builder->getNext();
-            if (CompiledScriptMatches(compartment, script, builder->script()))
+            if (CompiledScriptMatches(selector, builder->script()))
                 jit::FinishOffThreadBuilder(runtime, builder, lock);
             builder = next;
         }
@@ -726,7 +766,7 @@ GlobalHelperThreadState::hasActiveThreads(const AutoLockHelperThreadState&)
 void
 GlobalHelperThreadState::waitForAllThreads()
 {
-    CancelOffThreadIonCompile(nullptr, nullptr, /* discardLazyLinkList = */ false);
+    CancelOffThreadIonCompile();
 
     AutoLockHelperThreadState lock;
     while (hasActiveThreads(lock))
