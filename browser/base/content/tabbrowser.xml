@@ -2870,6 +2870,8 @@
               webrtcUI.swapBrowserForNotification(otherBrowser, ourBrowser);
             }
 
+            SitePermissions.copyTemporaryPermissions(otherBrowser, ourBrowser);
+
             // If the other tab is pending (i.e. has not been restored, yet)
             // then do not switch docShells but retrieve the other tab's state
             // and apply it to our tab.

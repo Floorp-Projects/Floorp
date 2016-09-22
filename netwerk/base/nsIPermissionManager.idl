@@ -209,6 +209,23 @@ interface nsIPermissionManager : nsISupports
                                         in string type);
 
   /**
+   * Get the permission object associated with the given URI and action.
+   * @param uri The URI
+   * @param type      A case-sensitive ASCII string identifying the consumer
+   * @param exactHost If true, only the specific host will be matched,
+   *                  @see testExactPermission. If false, subdomains will
+   *                  also be searched, @see testPermission.
+   * @returns The matching permission object, or null if no matching object
+   *          was found. No matching object is equivalent to UNKNOWN_ACTION.
+   * @note Clients in general should prefer the test* methods unless they
+   *       need to know the specific stored details.
+   * @note This method will always return null for the system principal.
+   */
+  nsIPermission getPermissionObjectForURI(in nsIURI uri,
+                                          in string type,
+                                          in boolean exactHost);
+
+  /**
    * Get the permission object associated with the given principal and action.
    * @param principal The principal
    * @param type      A case-sensitive ASCII string identifying the consumer
