@@ -45,7 +45,7 @@ message("pending");
 function closeStream() {
   if (!gStream)
     return;
-  gStream.stop();
+  gStream.getTracks().forEach(t => t.stop());
   gStream = null;
   message("closed");
 }
