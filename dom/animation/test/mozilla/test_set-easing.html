@@ -2,16 +2,15 @@
 <head>
 <meta charset=utf-8>
 <title>Test setting easing in sandbox</title>
-<script src="/tests/SimpleTest/SimpleTest.js"></script>
-<script src="/tests/SimpleTest/SpawnTask.js"></script>
-<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
 </head>
 <body>
-
+<div id="log"></div>
 <script>
 "use strict";
 
-add_task(function* set_easing() {
+test(function(t) {
   const div = document.createElement("div");
   document.body.appendChild(div);
   div.animate({ opacity: [0, 1] }, 100000 );
@@ -19,17 +18,18 @@ add_task(function* set_easing() {
   const contentScript = function() {
     try {
       document.getAnimations()[0].effect.timing.easing = "linear";
-      ok(true, 'Setting easing should not throw in sandbox');
+      assert_true(true, 'Setting easing should not throw in sandbox');
     } catch (e) {
-      ok(false, 'Setting easing should not throw in sandbox');
+      assert_unreached('Setting easing threw ' + e);
     }
   };
 
   const sandbox = new SpecialPowers.Cu.Sandbox(window);
   sandbox.importFunction(document, "document");
-  sandbox.importFunction(SimpleTest.ok, "ok");
+  sandbox.importFunction(assert_true, "assert_true");
+  sandbox.importFunction(assert_unreached, "assert_unreached");
   SpecialPowers.Cu.evalInSandbox(`(${contentScript.toSource()})()`, sandbox);
-});
+}, 'Setting easing should not throw any exceptions in sandbox');
 
 </script>
 </body>
