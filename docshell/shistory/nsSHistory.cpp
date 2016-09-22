@@ -1584,7 +1584,6 @@ nsSHistory::LoadEntry(int32_t aIndex, long aLoadType, uint32_t aHistCmd)
     return NS_OK;  // XXX Maybe I can return some other error code?
   }
 
-  nsCOMPtr<nsIURI> nexturi;
   int32_t pCount = 0;
   int32_t nCount = 0;
   nsCOMPtr<nsISHContainer> prevAsContainer(do_QueryInterface(prevEntry));
@@ -1594,7 +1593,6 @@ nsSHistory::LoadEntry(int32_t aIndex, long aLoadType, uint32_t aHistCmd)
     nextAsContainer->GetChildCount(&nCount);
   }
 
-  nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
   if (mRequestedIndex == mIndex) {
     // Possibly a reload case
     docShell = mRootDocShell;
