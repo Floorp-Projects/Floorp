@@ -741,10 +741,11 @@ public:
         typedef bool SetterType;
         typedef mozilla::jni::Args<
                 mozilla::jni::ByteArray::Param,
+                mozilla::jni::Object::Param,
                 mozilla::jni::Object::Param> Args;
         static constexpr char name[] = "input";
         static constexpr char signature[] =
-                "([BLandroid/media/MediaCodec$BufferInfo;)Z";
+                "([BLandroid/media/MediaCodec$BufferInfo;Landroid/media/MediaCodec$CryptoInfo;)Z";
         static const bool isStatic = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -754,7 +755,7 @@ public:
                 mozilla::jni::DispatchTarget::CURRENT;
     };
 
-    auto Input(mozilla::jni::ByteArray::Param, mozilla::jni::Object::Param) const -> bool;
+    auto Input(mozilla::jni::ByteArray::Param, mozilla::jni::Object::Param, mozilla::jni::Object::Param) const -> bool;
 
     struct Release_t {
         typedef CodecProxy Owner;

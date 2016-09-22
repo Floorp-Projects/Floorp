@@ -14,6 +14,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.media.MediaCodec;
 import android.media.MediaCodec.BufferInfo;
+import android.media.MediaCodec.CryptoInfo;
 import android.media.MediaFormat;
 import android.os.DeadObjectException;
 import android.os.RemoteException;
@@ -131,13 +132,13 @@ public final class CodecProxy {
     }
 
     @WrapForJNI
-    public synchronized boolean input(byte[] bytes, BufferInfo info) {
+    public synchronized boolean input(byte[] bytes, BufferInfo info, CryptoInfo cryptoInfo) {
         if (mRemote == null) {
             Log.e(LOGTAG, "cannot send input to an ended codec");
             return false;
         }
         Sample sample = (info.flags == MediaCodec.BUFFER_FLAG_END_OF_STREAM) ?
-                        Sample.EOS : new Sample(ByteBuffer.wrap(bytes), info, null);
+                        Sample.EOS : new Sample(ByteBuffer.wrap(bytes), info, cryptoInfo);
         try {
             mRemote.queueInput(sample);
         } catch (DeadObjectException e) {
