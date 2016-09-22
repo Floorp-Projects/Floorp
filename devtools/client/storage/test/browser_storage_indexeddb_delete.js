@@ -12,8 +12,7 @@ add_task(function* () {
   yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-empty-objectstores.html");
 
   let contextMenu = gPanelWindow.document.getElementById("storage-tree-popup");
-  let menuDeleteDb = contextMenu.querySelector(
-    "#storage-tree-popup-delete-database");
+  let menuDeleteDb = contextMenu.querySelector("#storage-tree-popup-delete");
 
   info("test state before delete");
   yield checkState([
