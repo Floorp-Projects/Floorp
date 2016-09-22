@@ -424,6 +424,16 @@ InspectorPanel.prototype = {
   },
 
   /**
+   * Check if the inspector should use the landscape mode.
+   *
+   * @return {Boolean} true if the inspector should be in landscape mode.
+   */
+  useLandscapeMode: function () {
+    let { clientWidth } = this.panelDoc.getElementById("inspector-splitter-box");
+    return clientWidth > PORTRAIT_MODE_WIDTH;
+  },
+
+  /**
    * Build Splitter located between the main and side area of
    * the Inspector panel.
    */
@@ -445,7 +455,8 @@ InspectorPanel.prototype = {
       }),
       endPanel: this.InspectorTabPanel({
         id: "inspector-sidebar-container"
-      })
+      }),
+      vert: this.useLandscapeMode(),
     });
 
     this._splitter = this.ReactDOM.render(splitter,
@@ -473,9 +484,8 @@ InspectorPanel.prototype = {
    * to `horizontal` to support portrait view.
    */
   onPanelWindowResize: function () {
-    let box = this.panelDoc.getElementById("inspector-splitter-box");
     this._splitter.setState({
-      vert: (box.clientWidth > PORTRAIT_MODE_WIDTH)
+      vert: this.useLandscapeMode(),
     });
   },
 
