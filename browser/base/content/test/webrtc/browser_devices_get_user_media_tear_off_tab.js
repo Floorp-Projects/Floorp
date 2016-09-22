@@ -52,6 +52,7 @@ var gTests = [
     yield BrowserTestUtils.closeWindow(win);
 
     yield expectObserverCalled("recording-window-ended");
+    yield expectObserverCalled("recording-device-events");
     yield expectNoObserverCalled();
     yield checkNotSharing();
   }
