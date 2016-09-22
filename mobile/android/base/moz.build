@@ -269,6 +269,7 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
     'gfx/ViewTransform.java',
     'InputConnectionListener.java',
     'InputMethods.java',
+    'NotificationListener.java',
     'notifications/AppNotificationClient.java',
     'notifications/NotificationClient.java',
     'notifications/NotificationHandler.java',
