@@ -23,9 +23,13 @@ Probes in privileged JavaScript code can use the following functions to manipula
   Services.telemetry.scalarSet(aName, aValue);
   Services.telemetry.scalarSetMaximum(aName, aValue);
 
+  Services.telemetry.keyedScalarAdd(aName, aKey, aValue);
+  Services.telemetry.keyedScalarSet(aName, aKey, aValue);
+  Services.telemetry.keyedScalarSetMaximum(aName, aKey, aValue);
+
 These functions can throw if, for example, an operation is performed on a scalar type that doesn't support it
-(e.g. calling scalarSetMaximum on a scalar of the string kind). Please look at the code documentation for
-additional informations.
+(e.g. calling scalarSetMaximum on a scalar of the string kind). Please look at the `code documentation <https://dxr.mozilla.org/mozilla-central/search?q=regexp%3ATelemetryScalar%3A%3A(Set%7CAdd)+file%3ATelemetryScalar.cpp&redirect=false>`_ for
+additional information.
 
 C++ API
 -------
@@ -38,6 +42,11 @@ Probes in native code can use the more convenient helper functions declared in `
     void ScalarSet(mozilla::Telemetry::ScalarID aId, const nsAString& aValue);
     void ScalarSet(mozilla::Telemetry::ScalarID aId, bool aValue);
     void ScalarSetMaximum(mozilla::Telemetry::ScalarID aId, uint32_t aValue);
+
+    void ScalarAdd(mozilla::Telemetry::ScalarID aId, const nsAString& aKey, uint32_t aValue);
+    void ScalarSet(mozilla::Telemetry::ScalarID aId, const nsAString& aKey, uint32_t aValue);
+    void ScalarSet(mozilla::Telemetry::ScalarID aId, const nsAString& aKey, bool aValue);
+    void ScalarSetMaximum(mozilla::Telemetry::ScalarID aId, const nsAString& aKey, uint32_t aValue);
 
 The YAML definition file
 ========================
@@ -97,11 +106,18 @@ Optional Fields
 
 - ``cpp_guard``: A string that gets inserted as an ``#ifdef`` directive around the automatically generated C++ declaration. This is typically used for platform-specific scalars, e.g. ``ANDROID``.
 - ``release_channel_collection``: This can be either ``opt-in`` (default) or ``opt-out``. With the former the scalar is submitted by default on pre-release channels; on the release channel only if the user opted into additional data collection. With the latter the scalar is submitted by default on release and pre-release channels, unless the user opted out.
+- ``keyed``: A boolean that determines whether this is a keyed scalar. It defaults to ``False``.
 
 String type restrictions
 ------------------------
 To prevent abuses, the content of a string scalar is limited to 50 characters in length. Trying
 to set a longer string will result in an error and no string being set.
+
+Keyed Scalars
+-------------
+Keyed scalars are collections of one of the available scalar types, indexed by a string key that can contain UTF8 characters and cannot be longer than 70 characters. Keyed scalars can contain up to 100 keys. This scalar type is for example useful when you want to break down certain counts by a name, like how often searches happen with which search engine.
+
+Keyed scalars should only be used if the set of keys are not known beforehand. If the keys are from a known set of strings, other options are preferred if suitable, like categorical histograms or splitting measurements up into separate scalars.
 
 The processor scripts
 =====================

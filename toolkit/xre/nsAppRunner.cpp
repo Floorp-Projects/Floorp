@@ -4737,6 +4737,12 @@ XRE_GetProcessType()
 }
 
 bool
+XRE_IsGPUProcess()
+{
+  return XRE_GetProcessType() == GeckoProcessType_GPU;
+}
+
+bool
 XRE_IsParentProcess()
 {
   return XRE_GetProcessType() == GeckoProcessType_Default;

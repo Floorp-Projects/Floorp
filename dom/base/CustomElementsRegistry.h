@@ -243,7 +243,7 @@ public:
               const ElementDefinitionOptions& aOptions, ErrorResult& aRv);
 
   void Get(JSContext* cx, const nsAString& name,
-           JS::MutableHandle<JS::Value> aRetVal, ErrorResult& aRv);
+           JS::MutableHandle<JS::Value> aRetVal);
 
   already_AddRefed<Promise> WhenDefined(const nsAString& name, ErrorResult& aRv);
 };

@@ -9,19 +9,16 @@ include "mozilla/GfxMessageUtils.h";
 
 include protocol PCompositorBridge;
 
-using mozilla::LayoutDevicePoint from "Units.h";
 using CSSRect from "Units.h";
 using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
 using struct mozilla::layers::ScrollableLayerGuid from "FrameMetrics.h";
 using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
 using mozilla::layers::MaybeZoomConstraints from "FrameMetrics.h";
 using mozilla::layers::TouchBehaviorFlags from "mozilla/layers/APZUtils.h";
-using mozilla::layers::GeckoContentController::TapType from "mozilla/layers/GeckoContentController.h";
 using mozilla::layers::GeckoContentController::APZStateChange from "mozilla/layers/GeckoContentController.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
 using mozilla::dom::ContentParentId from "mozilla/dom/ipc/IdType.h";
 using mozilla::layers::AsyncDragMetrics from "mozilla/layers/AsyncDragMetrics.h";
-using mozilla::Modifiers from "mozilla/EventForwards.h";
 using class nsRegion from "nsRegion.h";
 
 namespace mozilla {
@@ -56,13 +53,6 @@ parent:
 child:
 
   async RequestContentRepaint(FrameMetrics frame);
-
-  // The aCallTakeFocusForClickFromTap argument is used for eSingleTap types,
-  // to request that the child take focus before dispatching the mouse events
-  // for the tap (otherwise the resulting focus behaviour is incorrect).
-  async HandleTap(TapType aType, LayoutDevicePoint point, Modifiers aModifiers,
-                  ScrollableLayerGuid aGuid, uint64_t aInputBlockId,
-                  bool aCallTakeFocusForClickFromTap);
 
   async UpdateOverscrollVelocity(float aX, float aY, bool aIsRootContent);
 

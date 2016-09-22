@@ -104,6 +104,7 @@ public:
                                         const Matrix4x4& aMatrix) override;
   virtual void PushClip(const Path *aPath) override;
   virtual void PushClipRect(const Rect& aRect) override;
+  virtual void PushDeviceSpaceClipRects(const IntRect* aRects, uint32_t aCount) override;
   virtual void PopClip() override;
   virtual void PushLayer(bool aOpaque, Float aOpacity,
                          SourceSurface* aMask,

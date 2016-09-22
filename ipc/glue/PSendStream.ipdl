@@ -4,13 +4,14 @@
 
 include protocol PBackground;
 include protocol PContent;
+include protocol PContentBridge;
 
 namespace mozilla {
 namespace ipc {
 
 protocol PSendStream
 {
-  manager PBackground or PContent;
+  manager PBackground or PContent or PContentBridge;
 
 parent:
   async Buffer(nsCString aBuffer);

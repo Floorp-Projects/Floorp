@@ -6330,7 +6330,14 @@
     "kind": "boolean",
     "description": "Reports whether a decoder for an HTTP Live Streaming media type was created when requested.",
     "bug_numbers": [1262659]
-
+  },
+  "MEDIA_DECODING_PROCESS_CRASH": {
+    "alert_emails": ["bwu@mozilla.com", "jolin@mozilla.com", "jacheng@mozilla.com"],
+    "expires_in_version": "57",
+    "kind": "count",
+    "bug_numbers": [1297556, 1257777],
+    "description": "Records a value each time Fennec remote decoding process crashes unexpected while decoding media content.",
+    "releaseChannelCollection": "opt-out"
   },
   "VIDEO_MFT_OUTPUT_NULL_SAMPLES": {
     "alert_emails": ["cpearce@mozilla.com"],

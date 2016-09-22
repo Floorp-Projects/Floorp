@@ -84,3 +84,9 @@ addMessageListener("Test:WaitForObserverCall", ({data}) => {
     }
   }, topic, false);
 });
+
+addMessageListener("Test:WaitForMessage", () => {
+  content.addEventListener("message", ({data}) => {
+    sendAsyncMessage("Test:MessageReceived", data);
+  }, {once: true});
+});

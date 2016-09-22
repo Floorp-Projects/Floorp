@@ -244,23 +244,49 @@ function checkScalars(processes) {
   // Check that the scalars section is available in the ping payload.
   const parentProcess = processes.parent;
   Assert.ok("scalars" in parentProcess, "The scalars section must be available in the parent process.");
+  Assert.ok("keyedScalars" in parentProcess, "The keyedScalars section must be available in the parent process.");
   Assert.equal(typeof parentProcess.scalars, "object", "The scalars entry must be an object.");
+  Assert.equal(typeof parentProcess.keyedScalars, "object", "The keyedScalars entry must be an object.");
+
+  let checkScalar = function(scalar) {
+    // Check if the value is of a supported type.
+    const valueType = typeof(scalar);
+    switch (valueType) {
+      case "string":
+        Assert.ok(scalar.length <= 50,
+                  "String values can't have more than 50 characters");
+      break;
+      case "number":
+        Assert.ok(scalar >= 0,
+                  "We only support unsigned integer values in scalars.");
+      break;
+      case "boolean":
+        Assert.ok(true,
+                  "Boolean scalar found.");
+      break;
+      default:
+        Assert.ok(false,
+                  name + " contains an unsupported value type (" + valueType + ")");
+    }
+  }
 
   // Check that we have valid scalar entries.
   const scalars = parentProcess.scalars;
   for (let name in scalars) {
     Assert.equal(typeof name, "string", "Scalar names must be strings.");
-    // Check if the value is of a supported type.
-    const valueType = typeof(scalars[name]);
-    if (valueType === "string") {
-      Assert.ok(scalars[name].length <= 50,
-                "String values can't have more than 50 characters");
-    } else if (valueType === "number") {
-      Assert.ok(scalars[name] >= 0,
-                "We only support unsigned integer values in scalars.");
-    } else {
-      Assert.ok(false,
-                name + " contains an unsupported value type (" + valueType + ")");
+    checkScalar(scalar[name]);
+  }
+
+  // Check that we have valid keyed scalar entries.
+  const keyedScalars = parentProcess.keyedScalars;
+  for (let name in keyedScalars) {
+    Assert.equal(typeof name, "string", "Scalar names must be strings.");
+    Assert.ok(Object.keys(keyedScalars[name]).length,
+              "The reported keyed scalars must contain at least 1 key.");
+    for (let key in keyedScalars[name]) {
+      Assert.equal(typeof key, "string", "Keyed scalar keys must be strings.");
+      Assert.ok(key.length <= 70, "Keyed scalar keys can't have more than 70 characters.");
+      checkScalar(scalar[name][key]);
     }
   }
 }

@@ -9,7 +9,7 @@
 #include "nsIIPCSerializableInputStream.h"
 
 #include "mozilla/Assertions.h"
-#include "mozilla/dom/PContentChild.h"
+#include "mozilla/dom/nsIContentChild.h"
 #include "mozilla/dom/PContentParent.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/ipc/FileDescriptorSetChild.h"
@@ -349,7 +349,7 @@ AutoIPCStream::~AutoIPCStream()
 }
 
 void
-AutoIPCStream::Serialize(nsIInputStream* aStream, dom::PContentChild* aManager)
+AutoIPCStream::Serialize(nsIInputStream* aStream, dom::nsIContentChild* aManager)
 {
   MOZ_ASSERT(aStream);
   MOZ_ASSERT(aManager);

@@ -267,6 +267,8 @@ class TypeSet
         void ensureTrackedProperty(JSContext* cx, jsid id);
 
         ObjectGroup* maybeGroup();
+
+        JSCompartment* maybeCompartment();
     } JS_HAZ_GC_POINTER;
 
     // Information about a single concrete type. We pack this into one word,
@@ -351,6 +353,8 @@ class TypeSet
         inline ObjectGroup* groupNoBarrier() const;
 
         inline void trace(JSTracer* trc);
+
+        JSCompartment* maybeCompartment();
 
         bool operator == (Type o) const { return data == o.data; }
         bool operator != (Type o) const { return data != o.data; }
@@ -501,6 +505,8 @@ class TypeSet
     // Create a new TemporaryTypeSet where the type has been set to object.
     TemporaryTypeSet* cloneObjectsOnly(LifoAlloc* alloc);
     TemporaryTypeSet* cloneWithoutObjects(LifoAlloc* alloc);
+
+    JSCompartment* maybeCompartment();
 
     // Trigger a read barrier on all the contents of a type set.
     static void readBarrier(const TypeSet* types);
