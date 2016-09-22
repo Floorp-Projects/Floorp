@@ -345,7 +345,7 @@ ParseTask::~ParseTask()
 void
 ParseTask::trace(JSTracer* trc)
 {
-    if (exclusiveContextGlobal->zoneFromAnyThread()->runtimeFromAnyThread() != trc->runtime())
+    if (!cx->runtimeMatches(trc->runtime()))
         return;
 
     TraceManuallyBarrieredEdge(trc, &exclusiveContextGlobal, "ParseTask::exclusiveContextGlobal");
