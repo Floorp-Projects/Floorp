@@ -2,13 +2,9 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-  <style>
-    #permissions {
-      fill: -moz-fieldtext;
-      fill-opacity: .5;
-    }
-  </style>
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="24" height="24" viewBox="0 0 24 24">
+#include ../icon-colors.inc.svg
 
   <defs>
     <mask id="mask-permissions">
@@ -20,5 +16,5 @@
     </mask>
   </defs>
 
-  <rect id="permissions" width="24" height="24" mask="url(#mask-permissions)"/>
+  <rect class="fieldtext" id="permissions" width="24" height="24" mask="url(#mask-permissions)"/>
 </svg>
