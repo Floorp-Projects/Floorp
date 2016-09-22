@@ -3,45 +3,27 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* This content script should work in any browser or iframe and should not
- * depend on the frame being contained in tabbrowser. */
+/* This content script is intended for use by iframes in the share panel. */
 
-var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+var {interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-// Tie `content` to this frame scripts' global scope explicitly. If we don't, then
-// `content` might be out of eval's scope and GC'ed before this script is done.
-// See bug 1229195 for empirical proof.
-var gContent = content;
-
 // social frames are always treated as app tabs
 docShell.isAppTab = true;
-var gHookedWindowCloseForPanelClose = false;
 
-var gDOMContentLoaded = false;
 addEventListener("DOMContentLoaded", function(event) {
-  if (event.target == content.document) {
-    gDOMContentLoaded = true;
-    sendAsyncMessage("DOMContentLoaded");
+  if (event.target != content.document)
+    return;
+  // Some share panels (e.g. twitter and facebook) check content.opener, and if
+  // it doesn't exist they act like they are in a browser tab.  We want them to
+  // act like they are in a dialog (which is the typical case).
+  if (content && !content.opener) {
+    content.opener = content;
   }
-});
-addEventListener("unload", function(event) {
-  if (event.target == content.document) {
-    gDOMContentLoaded = false;
-    gHookedWindowCloseForPanelClose = false;
-  }
-}, true);
-
-var gDOMTitleChangedByUs = false;
-addEventListener("DOMTitleChanged", function(e) {
-  if (!gDOMTitleChangedByUs) {
-    sendAsyncMessage("Social:DOMTitleChanged", {
-      title: e.target.title
-    });
-  }
-  gDOMTitleChangedByUs = false;
+  hookWindowClose();
+  disableDialogs();
 });
 
 addMessageListener("Social:OpenGraphData", (message) => {
@@ -49,9 +31,38 @@ addMessageListener("Social:OpenGraphData", (message) => {
   content.dispatchEvent(ev);
 });
 
-addMessageListener("Social:ClearFrame", (message) => {
+addMessageListener("Social:ClearFrame", () => {
   docShell.createAboutBlankContentViewer(null);
 });
+
+addEventListener("DOMWindowClose", (evt) => {
+  // preventDefault stops the default window.close() function being called,
+  // which doesn't actually close anything but causes things to get into
+  // a bad state (an internal 'closed' flag is set and debug builds start
+  // asserting as the window is used.).
+  // None of the windows we inject this API into are suitable for this
+  // default close behaviour, so even if we took no action above, we avoid
+  // the default close from doing anything.
+  evt.preventDefault();
+
+  // Tells the SocialShare class to close the panel
+  sendAsyncMessage("Social:DOMWindowClose");
+});
+
+function hookWindowClose() {
+  // Allow scripts to close the "window".  Because we are in a panel and not
+  // in a full dialog, the DOMWindowClose listener above will only receive the
+  // event if we do this.
+  let dwu = content.QueryInterface(Ci.nsIInterfaceRequestor)
+     .getInterface(Ci.nsIDOMWindowUtils);
+  dwu.allowScriptsToClose();
+}
+
+function disableDialogs() {
+  let windowUtils = content.QueryInterface(Ci.nsIInterfaceRequestor).
+                    getInterface(Ci.nsIDOMWindowUtils);
+  windowUtils.disableDialogs();
+}
 
 // Error handling class used to listen for network errors in the social frames
 // and replace them with a social-specific error page
@@ -65,18 +76,7 @@ const SocialErrorListener = {
   urlTemplate: null,
 
   init() {
-    addMessageListener("Loop:MonitorPeerConnectionLifecycle", this);
-    addMessageListener("Loop:GetAllWebrtcStats", this);
-    addMessageListener("Social:CustomEvent", this);
-    addMessageListener("Social:EnsureFocus", this);
-    addMessageListener("Social:EnsureFocusElement", this);
-    addMessageListener("Social:HookWindowCloseForPanelClose", this);
-    addMessageListener("Social:ListenForEvents", this);
-    addMessageListener("Social:SetDocumentTitle", this);
     addMessageListener("Social:SetErrorURL", this);
-    addMessageListener("Social:DisableDialogs", this);
-    addMessageListener("Social:WaitForDocumentVisible", this);
-    addMessageListener("WaitForDOMContentLoaded", this);
     let webProgress = docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                               .getInterface(Components.interfaces.nsIWebProgress);
     webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_STATE_REQUEST |
@@ -84,124 +84,12 @@ const SocialErrorListener = {
   },
 
   receiveMessage(message) {
-    let document = content.document;
-
     switch (message.name) {
-      case "Loop:GetAllWebrtcStats":
-        content.WebrtcGlobalInformation.getAllStats(allStats => {
-          content.WebrtcGlobalInformation.getLogging("", logs => {
-            sendAsyncMessage("Loop:GetAllWebrtcStats", {
-              allStats: allStats,
-              logs: logs
-            });
-          });
-        }, message.data.peerConnectionID);
-        break;
-      case "Loop:MonitorPeerConnectionLifecycle":
-        let ourID = content.QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
-
-        let onPCLifecycleChange = (pc, winID, type) => {
-          if (winID != ourID) {
-            return;
-          }
-
-          sendAsyncMessage("Loop:PeerConnectionLifecycleChange", {
-            iceConnectionState: pc.iceConnectionState,
-            locationHash: content.location.hash,
-            peerConnectionID: pc.id,
-            type: type
-          });
-        };
-
-        let pc_static = new content.RTCPeerConnectionStatic();
-        pc_static.registerPeerConnectionLifecycleCallback(onPCLifecycleChange);
-        break;
-      case "Social:CustomEvent":
-        let ev = new content.CustomEvent(message.data.name, message.data.detail ?
-          { detail: message.data.detail } : null);
-        content.dispatchEvent(ev);
-        break;
-      case "Social:EnsureFocus":
-        Services.focus.focusedWindow = content;
-        sendAsyncMessage("Social:FocusEnsured");
-        break;
-      case "Social:EnsureFocusElement":
-        let fm = Services.focus;
-        fm.moveFocus(document.defaultView, null, fm.MOVEFOCUS_FIRST, fm.FLAG_NOSCROLL);
-        sendAsyncMessage("Social:FocusEnsured");
-        break;
-      case "Social:HookWindowCloseForPanelClose":
-        if (gHookedWindowCloseForPanelClose) {
-          break;
-        }
-        gHookedWindowCloseForPanelClose = true;
-        // We allow window.close() to close the panel, so add an event handler for
-        // this, then cancel the event (so the window itself doesn't die) and
-        // close the panel instead.
-        // However, this is typically affected by the dom.allow_scripts_to_close_windows
-        // preference, but we can avoid that check by setting a flag on the window.
-        let dwu = content.QueryInterface(Ci.nsIInterfaceRequestor)
-           .getInterface(Ci.nsIDOMWindowUtils);
-        dwu.allowScriptsToClose();
-
-        content.addEventListener("DOMWindowClose", function _mozSocialDOMWindowClose(evt) {
-          // preventDefault stops the default window.close() function being called,
-          // which doesn't actually close anything but causes things to get into
-          // a bad state (an internal 'closed' flag is set and debug builds start
-          // asserting as the window is used.).
-          // None of the windows we inject this API into are suitable for this
-          // default close behaviour, so even if we took no action above, we avoid
-          // the default close from doing anything.
-          evt.preventDefault();
-
-          sendAsyncMessage("Social:DOMWindowClose");
-        }, true);
-        break;
-      case "Social:ListenForEvents":
-        for (let eventName of message.data.eventNames) {
-          content.addEventListener(eventName, this);
-        }
-        break;
-      case "Social:SetDocumentTitle":
-        let title = message.data.title;
-        if (title && (title = title.trim())) {
-          gDOMTitleChangedByUs = true;
-          document.title = title;
-        }
-        break;
       case "Social:SetErrorURL":
         // Either a url or null to reset to default template.
         this.urlTemplate = message.data.template;
         break;
-      case "Social:WaitForDocumentVisible":
-        if (!document.hidden) {
-          sendAsyncMessage("Social:DocumentVisible");
-          break;
-        }
-
-        document.addEventListener("visibilitychange", function onVisibilityChanged() {
-          document.removeEventListener("visibilitychange", onVisibilityChanged);
-          sendAsyncMessage("Social:DocumentVisible");
-        });
-        break;
-      case "Social:DisableDialogs":
-        let windowUtils = content.QueryInterface(Ci.nsIInterfaceRequestor).
-                          getInterface(Ci.nsIDOMWindowUtils);
-        windowUtils.disableDialogs();
-        break;
-      case "WaitForDOMContentLoaded":
-        if (gDOMContentLoaded) {
-          sendAsyncMessage("DOMContentLoaded");
-        }
-        break;
     }
-  },
-
-  handleEvent: function(event) {
-    sendAsyncMessage("Social:CustomEvent", {
-      name: event.type
-    });
   },
 
   setErrorPage() {

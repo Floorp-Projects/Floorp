@@ -291,14 +291,7 @@ SocialShare = {
   handleEvent: function(event) {
     switch (event.type) {
       case "load": {
-        let iframe = this.iframe;
-        iframe.parentNode.removeAttribute("loading");
-        // to support standard share endpoints mimick window.open by setting
-        // window.opener, some share endpoints rely on w.opener to know they
-        // should close the window when done.
-        iframe.contentWindow.opener = iframe.contentWindow;
-        this.messageManager.sendAsyncMessage("Social:HookWindowCloseForPanelClose");
-        this.messageManager.sendAsyncMessage("Social:DisableDialogs", {});
+        this.iframe.parentNode.removeAttribute("loading");
         if (this.currentShare)
           SocialShare.messageManager.sendAsyncMessage("Social:OpenGraphData", this.currentShare);
       }
