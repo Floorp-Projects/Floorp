@@ -35,24 +35,40 @@ class ForwardIterator
 {
   public:
     template <typename Node>
+    static Node* FirstChild(Node* n) {
+      return n->GetFirstChild();
+    }
+    template <typename Node>
     static Node* NextSibling(Node* n) {
       return n->GetNextSibling();
     }
     template <typename Node>
-    static Node* FirstChild(Node* n) {
-      return n->GetFirstChild();
+    static Node FirstChild(Node n) {
+      return n.GetFirstChild();
+    }
+    template <typename Node>
+    static Node NextSibling(Node n) {
+      return n.GetNextSibling();
     }
 };
 class ReverseIterator
 {
   public:
     template <typename Node>
+    static Node* FirstChild(Node* n) {
+      return n->GetLastChild();
+    }
+    template <typename Node>
     static Node* NextSibling(Node* n) {
       return n->GetPrevSibling();
     }
     template <typename Node>
-    static Node* FirstChild(Node* n) {
-      return n->GetLastChild();
+    static Node FirstChild(Node n) {
+      return n.GetLastChild();
+    }
+    template <typename Node>
+    static Node NextSibling(Node n) {
+      return n.GetPrevSibling();
     }
 };
 
@@ -65,13 +81,13 @@ class ReverseIterator
  * is not performed.
  *
  * |Iterator| should have static methods named NextSibling() and FirstChild()
- * that accept an argument of type Node*. For convenience, classes
+ * that accept an argument of type Node. For convenience, classes
  * |ForwardIterator| and |ReverseIterator| are provided which implement these
  * methods as GetNextSibling()/GetFirstChild() and GetPrevSibling()/GetLastChild(),
  * respectively.
  */
 template <typename Iterator, typename Node, typename PreAction, typename PostAction>
-static auto ForEachNode(Node* aRoot, const PreAction& aPreAction, const PostAction& aPostAction) ->
+static auto ForEachNode(Node aRoot, const PreAction& aPreAction, const PostAction& aPostAction) ->
 typename EnableIf<IsSame<decltype(aPreAction(aRoot)), TraversalFlag>::value &&
                   IsSame<decltype(aPostAction(aRoot)),TraversalFlag>::value, bool>::Type
 {
@@ -86,7 +102,7 @@ typename EnableIf<IsSame<decltype(aPreAction(aRoot)), TraversalFlag>::value &&
   }
 
   if (result == TraversalFlag::Continue) {
-    for (Node* child = Iterator::FirstChild(aRoot);
+    for (Node child = Iterator::FirstChild(aRoot);
          child;
          child = Iterator::NextSibling(child)) {
       bool abort = ForEachNode<Iterator>(child, aPreAction, aPostAction);
@@ -110,7 +126,7 @@ typename EnableIf<IsSame<decltype(aPreAction(aRoot)), TraversalFlag>::value &&
  * |aPreAction| before traversal of children and |aPostAction| after.
  */
 template <typename Iterator, typename Node, typename PreAction, typename PostAction>
-static auto ForEachNode(Node* aRoot, const PreAction& aPreAction, const PostAction& aPostAction) ->
+static auto ForEachNode(Node aRoot, const PreAction& aPreAction, const PostAction& aPostAction) ->
 typename EnableIf<IsSame<decltype(aPreAction(aRoot)), void>::value &&
                   IsSame<decltype(aPostAction(aRoot)),void>::value, void>::Type
 {
@@ -120,7 +136,7 @@ typename EnableIf<IsSame<decltype(aPreAction(aRoot)), void>::value &&
 
   aPreAction(aRoot);
 
-  for (Node* child = Iterator::FirstChild(aRoot);
+  for (Node child = Iterator::FirstChild(aRoot);
        child;
        child = Iterator::NextSibling(child)) {
     ForEachNode<Iterator>(child, aPreAction, aPostAction);
@@ -133,40 +149,40 @@ typename EnableIf<IsSame<decltype(aPreAction(aRoot)), void>::value &&
  * ForEachNode pre-order traversal, using TraversalFlag.
  */
 template <typename Iterator, typename Node, typename PreAction>
-auto ForEachNode(Node* aRoot, const PreAction& aPreAction) ->
+auto ForEachNode(Node aRoot, const PreAction& aPreAction) ->
 typename EnableIf<IsSame<decltype(aPreAction(aRoot)), TraversalFlag>::value, bool>::Type
 {
-  return ForEachNode<Iterator>(aRoot, aPreAction, [](Node* aNode){ return TraversalFlag::Continue; });
+  return ForEachNode<Iterator>(aRoot, aPreAction, [](Node aNode){ return TraversalFlag::Continue; });
 }
 
 /*
  * ForEachNode pre-order, not using TraversalFlag.
  */
 template <typename Iterator, typename Node, typename PreAction>
-auto ForEachNode(Node* aRoot, const PreAction& aPreAction) ->
+auto ForEachNode(Node aRoot, const PreAction& aPreAction) ->
 typename EnableIf<IsSame<decltype(aPreAction(aRoot)), void>::value, void>::Type
 {
-  ForEachNode<Iterator>(aRoot, aPreAction, [](Node* aNode){});
+  ForEachNode<Iterator>(aRoot, aPreAction, [](Node aNode){});
 }
 
 /*
  * ForEachNode post-order traversal, using TraversalFlag.
  */
 template <typename Iterator, typename Node, typename PostAction>
-auto ForEachNodePostOrder(Node* aRoot, const PostAction& aPostAction) ->
+auto ForEachNodePostOrder(Node aRoot, const PostAction& aPostAction) ->
 typename EnableIf<IsSame<decltype(aPostAction(aRoot)), TraversalFlag>::value, bool>::Type
 {
-  return ForEachNode<Iterator>(aRoot, [](Node* aNode){ return TraversalFlag::Continue; }, aPostAction);
+  return ForEachNode<Iterator>(aRoot, [](Node aNode){ return TraversalFlag::Continue; }, aPostAction);
 }
 
 /*
  * ForEachNode post-order, not using TraversalFlag.
  */
 template <typename Iterator, typename Node, typename PostAction>
-auto ForEachNodePostOrder(Node* aRoot, const PostAction& aPostAction) ->
+auto ForEachNodePostOrder(Node aRoot, const PostAction& aPostAction) ->
 typename EnableIf<IsSame<decltype(aPostAction(aRoot)), void>::value, void>::Type
 {
-  ForEachNode<Iterator>(aRoot, [](Node* aNode){}, aPostAction);
+  ForEachNode<Iterator>(aRoot, [](Node aNode){}, aPostAction);
 }
 
 /*
@@ -174,33 +190,35 @@ typename EnableIf<IsSame<decltype(aPostAction(aRoot)), void>::value, void>::Type
  * first visited node that satisfies |aCondition|, or nullptr if no such node
  * was found.
  *
- * See ForEachNode() for the requirements on |Iterator| and |Node|
+ * |Iterator| and |Node| have all the same requirements seen in ForEachNode()'s
+ * definition, but in addition to those, |Node| must be able to express a null
+ * value, returned from Node()
  */
 template <typename Iterator, typename Node, typename Condition>
-Node* BreadthFirstSearch(Node* aRoot, const Condition& aCondition)
+Node BreadthFirstSearch(Node aRoot, const Condition& aCondition)
 {
   if (!aRoot) {
-    return nullptr;
+    return Node();
   }
 
-  std::queue<Node*> queue;
+  std::queue<Node> queue;
   queue.push(aRoot);
   while (!queue.empty()) {
-    Node* node = queue.front();
+    Node node = queue.front();
     queue.pop();
 
     if (aCondition(node)) {
       return node;
     }
 
-    for (Node* child = Iterator::FirstChild(node);
+    for (Node child = Iterator::FirstChild(node);
          child;
          child = Iterator::NextSibling(child)) {
       queue.push(child);
     }
   }
 
-  return nullptr;
+  return Node();
 }
 
 /*
@@ -208,15 +226,17 @@ Node* BreadthFirstSearch(Node* aRoot, const Condition& aCondition)
  * return the first visited node that satisfies |aCondition|, or nullptr
  * if no such node was found.
  *
- * See ForEachNode() for the requirements on |Iterator| and |Node|
+ * |Iterator| and |Node| have all the same requirements seen in ForEachNode()'s
+ * definition, but in addition to those, |Node| must be able to express a null
+ * value, returned from Node().
  */
 template <typename Iterator, typename Node, typename Condition>
-Node* DepthFirstSearch(Node* aRoot, const Condition& aCondition)
+Node DepthFirstSearch(Node aRoot, const Condition& aCondition)
 {
-  Node* result = nullptr;
+  Node result = Node();
 
   ForEachNode<Iterator>(aRoot,
-      [&aCondition, &result](Node* aNode)
+      [&aCondition, &result](Node aNode)
       {
         if (aCondition(aNode)) {
           result = aNode;
@@ -232,15 +252,17 @@ Node* DepthFirstSearch(Node* aRoot, const Condition& aCondition)
 /*
  * Perform a post-order, depth-first search starting at aRoot.
  *
- * See ForEachNode() for the requirements on |Iterator| and |Node|
+ * |Iterator| and |Node| have all the same requirements seen in ForEachNode()'s
+ * definition, but in addition to those, |Node| must be able to express a null
+ * value, returned from Node().
  */
 template <typename Iterator, typename Node, typename Condition>
-Node* DepthFirstSearchPostOrder(Node* aRoot, const Condition& aCondition)
+Node DepthFirstSearchPostOrder(Node aRoot, const Condition& aCondition)
 {
-  Node* result = nullptr;
+  Node result = Node();
 
   ForEachNodePostOrder<Iterator>(aRoot,
-      [&aCondition, &result](Node* aNode)
+      [&aCondition, &result](Node aNode)
       {
         if (aCondition(aNode)) {
           result = aNode;
