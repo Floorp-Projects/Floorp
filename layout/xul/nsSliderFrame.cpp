@@ -878,7 +878,6 @@ nsSliderFrame::SetCurrentPositionInternal(nsIContent* aScrollbar, int32_t aNewPo
     // See if we have a mediator.
     nsIScrollbarMediator* mediator = scrollbarFrame->GetScrollbarMediator();
     if (mediator) {
-      nsCOMPtr<nsIContent> content = GetContent();
       nscoord oldPos = nsPresContext::CSSPixelsToAppUnits(GetCurrentPosition(scrollbar));
       nscoord newPos = nsPresContext::CSSPixelsToAppUnits(aNewPos);
       mediator->ThumbMoved(scrollbarFrame, oldPos, newPos);
