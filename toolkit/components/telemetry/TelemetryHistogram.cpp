@@ -2215,21 +2215,6 @@ TelemetryHistogram::AccumulateChildKeyed(const nsTArray<KeyedAccumulation>& aAcc
   }
 }
 
-void
-TelemetryHistogram::ClearHistogram(mozilla::Telemetry::ID aId)
-{
-  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
-  if (!internal_CanRecordBase()) {
-    return;
-  }
-
-  Histogram *h;
-  nsresult rv = internal_GetHistogramByEnumId(aId, &h);
-  if (NS_SUCCEEDED(rv) && h) {
-    internal_HistogramClear(*h, false);
-  }
-}
-
 nsresult
 TelemetryHistogram::GetHistogramById(const nsACString &name, JSContext *cx,
                                      JS::MutableHandle<JS::Value> ret)

@@ -47,9 +47,6 @@ void AccumulateCategorical(mozilla::Telemetry::ID aId, const nsCString& aLabel);
 void AccumulateChild(const nsTArray<mozilla::Telemetry::Accumulation>& aAccumulations);
 void AccumulateChildKeyed(const nsTArray<mozilla::Telemetry::KeyedAccumulation>& aAccumulations);
 
-void
-ClearHistogram(mozilla::Telemetry::ID aId);
-
 nsresult
 GetHistogramById(const nsACString &name, JSContext *cx,
                  JS::MutableHandle<JS::Value> ret);
