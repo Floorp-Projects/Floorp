@@ -143,13 +143,9 @@ public class FxAccountStatusActivity extends LocaleAwareAppCompatActivity {
      * See http://stackoverflow.com/questions/14910536/android-dialog-theme-makes-icon-too-light/14910945#14910945.
      */
     final int icon;
-    if (AppConstants.Versions.feature11Plus) {
-      final TypedValue typedValue = new TypedValue();
-      activity.getTheme().resolveAttribute(android.R.attr.alertDialogIcon, typedValue, true);
-      icon = typedValue.resourceId;
-    } else {
-      icon = android.R.drawable.ic_dialog_alert;
-    }
+    final TypedValue typedValue = new TypedValue();
+    activity.getTheme().resolveAttribute(android.R.attr.alertDialogIcon, typedValue, true);
+    icon = typedValue.resourceId;
 
     final AlertDialog dialog = new AlertDialog.Builder(activity)
       .setTitle(R.string.fxaccount_remove_account_dialog_title)

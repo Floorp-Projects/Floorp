@@ -29,9 +29,7 @@ public class MenuPanel extends LinearLayout {
 
     @Override
     public boolean dispatchPopulateAccessibilityEvent (AccessibilityEvent event) {
-        if (Versions.feature14Plus) {
-            onPopulateAccessibilityEvent(event);
-        }
+        onPopulateAccessibilityEvent(event);
 
         return true;
     }

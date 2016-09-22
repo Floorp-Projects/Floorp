@@ -38,11 +38,6 @@ public class PicassoPreferenceIconTarget implements Target {
 
     @Override
     public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-        // Updating icons from Java is not supported prior to API 11.
-        if (!AppConstants.Versions.feature11Plus) {
-            return;
-        }
-
         final Drawable drawable;
         if (cornerRadius > 0) {
             final RoundedBitmapDrawable roundedBitmapDrawable;
@@ -58,19 +53,11 @@ public class PicassoPreferenceIconTarget implements Target {
 
     @Override
     public void onBitmapFailed(Drawable errorDrawable) {
-        // Updating icons from Java is not supported prior to API 11.
-        if (!AppConstants.Versions.feature11Plus) {
-            return;
-        }
         preference.setIcon(errorDrawable);
     }
 
     @Override
     public void onPrepareLoad(Drawable placeHolderDrawable) {
-        // Updating icons from Java is not supported prior to API 11.
-        if (!AppConstants.Versions.feature11Plus) {
-            return;
-        }
         preference.setIcon(placeHolderDrawable);
     }
 }

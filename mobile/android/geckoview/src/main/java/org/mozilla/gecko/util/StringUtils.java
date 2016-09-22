@@ -235,39 +235,7 @@ public class StringUtils {
      * @return a set of decoded names
      */
     public static Set<String> getQueryParameterNames(Uri uri) {
-        if (Versions.feature11Plus) {
-            return uri.getQueryParameterNames();
-        }
-
-        // Logic below copied from Uri.java included with Android 5.0.0.
-        if (uri.isOpaque()) {
-            throw new UnsupportedOperationException("This isn't a hierarchical URI.");
-        }
-
-        String query = uri.getEncodedQuery();
-        if (query == null) {
-            return Collections.emptySet();
-        }
-
-        Set<String> names = new LinkedHashSet<String>();
-        int start = 0;
-        do {
-            int next = query.indexOf('&', start);
-            int end = (next == -1) ? query.length() : next;
-
-            int separator = query.indexOf('=', start);
-            if (separator > end || separator == -1) {
-                separator = end;
-            }
-
-            String name = query.substring(start, separator);
-            names.add(Uri.decode(name));
-
-            // Move start to end of name.
-            start = end + 1;
-        } while (start < query.length());
-
-        return Collections.unmodifiableSet(names);
+        return uri.getQueryParameterNames();
     }
 
     public static String safeSubstring(@NonNull final String str, final int start, final int end) {
