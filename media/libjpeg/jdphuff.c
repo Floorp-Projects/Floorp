@@ -4,7 +4,7 @@
  * This file was part of the Independent JPEG Group's software:
  * Copyright (C) 1995-1997, Thomas G. Lane.
  * libjpeg-turbo Modifications:
- * Copyright (C) 2015, D. R. Commander.
+ * Copyright (C) 2015-2016, D. R. Commander.
  * For conditions of distribution and use, see the accompanying README.ijg
  * file.
  *
@@ -170,12 +170,12 @@ start_pass_phuff_decoder (j_decompress_ptr cinfo)
     if (is_DC_band) {
       if (cinfo->Ah == 0) {     /* DC refinement needs no table */
         tbl = compptr->dc_tbl_no;
-        pdtbl = entropy->derived_tbls + tbl;
+        pdtbl = (d_derived_tbl **)(entropy->derived_tbls) + tbl;
         jpeg_make_d_derived_tbl(cinfo, TRUE, tbl, pdtbl);
       }
     } else {
       tbl = compptr->ac_tbl_no;
-      pdtbl = entropy->derived_tbls + tbl;
+      pdtbl = (d_derived_tbl **)(entropy->derived_tbls) + tbl;
       jpeg_make_d_derived_tbl(cinfo, FALSE, tbl, pdtbl);
       /* remember the single active table */
       entropy->ac_derived_tbl = entropy->derived_tbls[tbl];
