@@ -152,9 +152,7 @@ public class PostSearchFragment extends Fragment {
 
                 i.addCategory(Intent.CATEGORY_BROWSABLE);
                 i.setComponent(null);
-                if (AppConstants.Versions.feature15Plus) {
-                    i.setSelector(null);
-                }
+                i.setSelector(null);
 
                 startActivity(i);
                 return true;
