@@ -4,6 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+@depends(target)
+def force_system_ffi(target):
+    # Pre-emptively move to system ffi for non-tier one platforms.
+    if target.cpu not in ('x86', 'x86_64', 'arm'):
+        return True
+
+imply_option('--with-system-ffi', force_system_ffi, "target")
+
 js_option('--with-system-ffi',
           help='Use system libffi (located with pkgconfig)')
 
@@ -12,5 +20,38 @@ use_system_ffi = depends_if('--with-system-ffi')(lambda _: True)
 system_ffi = pkg_check_modules('MOZ_FFI', 'libffi > 3.0.9',
                                when=use_system_ffi)
 
+building_ffi = depends(system_ffi)(lambda v: not bool(v))
+
 set_config('MOZ_SYSTEM_FFI', system_ffi)
 add_old_configure_assignment('MOZ_SYSTEM_FFI', system_ffi)
+
+# Target selection, based on ffi/configure.ac.
+@depends_when(target, when=building_ffi)
+def ffi_target(target):
+    if target.cpu not in ('x86', 'x86_64', 'arm'):
+        die('Building libffi from the tree is not supported on this platform. '
+            'Use --with-system-ffi instead.')
+
+    if target.os == 'WINNT':
+        target_dir = 'x86'
+        if target.cpu == 'x86_64':
+            target_name = 'X86_WIN64'
+        else:
+            target_name = 'X86_WIN32'
+    elif target.os == 'OSX':
+        target_dir = 'x86'
+        target_name = 'X86_DARWIN'
+    elif target.cpu == 'arm':
+        target_dir = 'arm'
+        target_name = 'ARM'
+    else:
+        target_dir = 'x86'
+        target_name = target.cpu.upper()
+
+    return namespace(
+        name=target_name,
+        dir=target_dir
+    )
+
+set_config('FFI_TARGET', delayed_getattr(ffi_target, 'name'))
+set_config('FFI_TARGET_DIR', delayed_getattr(ffi_target, 'dir'))

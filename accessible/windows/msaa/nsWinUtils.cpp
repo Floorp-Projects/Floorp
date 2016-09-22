@@ -35,7 +35,7 @@ const wchar_t* kPropNameTabContent = L"AccessibleTabWindow";
 static LRESULT CALLBACK WindowProc(HWND hWnd, UINT msg,
                                    WPARAM wParam, LPARAM lParam);
 
-nsRefPtrHashtable<nsPtrHashKey<void>, DocAccessible>* nsWinUtils::sHWNDCache = nullptr;
+bool nsWinUtils::sWindowEmulationStarted = false;
 
 already_AddRefed<nsIDOMCSSStyleDeclaration>
 nsWinUtils::GetComputedStyleDeclaration(nsIContent* aContent)
@@ -70,7 +70,7 @@ nsWinUtils::MaybeStartWindowEmulation()
       Compatibility::IsDolphin() ||
       XRE_IsContentProcess()) {
     RegisterNativeWindow(kClassNameTabContent);
-    sHWNDCache = new nsRefPtrHashtable<nsPtrHashKey<void>, DocAccessible>(2);
+    sWindowEmulationStarted = true;
     return true;
   }
 
@@ -82,14 +82,10 @@ nsWinUtils::ShutdownWindowEmulation()
 {
   // Unregister window call that's used for document accessibles associated
   // with tabs.
-  if (IsWindowEmulationStarted())
+  if (IsWindowEmulationStarted()) {
     ::UnregisterClassW(kClassNameTabContent, GetModuleHandle(nullptr));
-}
-
-bool
-nsWinUtils::IsWindowEmulationStarted()
-{
-  return sHWNDCache != nullptr;
+    sWindowEmulationStarted = false;
+  }
 }
 
 void
@@ -158,7 +154,7 @@ WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
       int32_t objId = static_cast<DWORD>(lParam);
       if (objId == OBJID_CLIENT) {
         DocAccessible* document =
-          nsWinUtils::sHWNDCache->GetWeak(static_cast<void*>(hWnd));
+          reinterpret_cast<DocAccessible*>(::GetPropW(hWnd, kPropNameDocAcc));
         if (document) {
           IAccessible* msaaAccessible = nullptr;
           document->GetNativeInterface((void**)&msaaAccessible); // does an addref

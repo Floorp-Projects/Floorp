@@ -66,12 +66,7 @@ ToolSidebar.prototype = {
   },
 
   get InspectorTabPanel() {
-    if (!this._InspectorTabPanel) {
-      this._InspectorTabPanel =
-        this.React.createFactory(this.browserRequire(
-        "devtools/client/inspector/components/inspector-tab-panel"));
-    }
-    return this._InspectorTabPanel;
+    return this._toolPanel.InspectorTabPanel;
   },
 
   // Rendering
@@ -90,7 +85,14 @@ ToolSidebar.prototype = {
   },
 
   addExistingTab: function (id, title, selected) {
-    this._tabbar.addTab(id, title, selected, this.InspectorTabPanel);
+    let panel = this.InspectorTabPanel({
+      id: id,
+      idPrefix: this.TABPANEL_ID_PREFIX,
+      key: id,
+      title: title,
+    });
+
+    this._tabbar.addTab(id, title, selected, panel);
 
     this.emit("new-tab-registered", id);
   },
@@ -105,6 +107,7 @@ ToolSidebar.prototype = {
   addFrameTab: function (id, title, url, selected) {
     let panel = this.InspectorTabPanel({
       id: id,
+      idPrefix: this.TABPANEL_ID_PREFIX,
       key: id,
       title: title,
       url: url,

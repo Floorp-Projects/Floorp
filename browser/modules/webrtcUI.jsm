@@ -292,7 +292,6 @@ function prompt(aBrowser, aRequest) {
        requestTypes: requestTypes} = aRequest;
   let uri = Services.io.newURI(aRequest.documentURI, null, null);
   let host = getHost(uri);
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
   let chromeDoc = aBrowser.ownerDocument;
   let chromeWin = chromeDoc.defaultView;
   let stringBundle = chromeWin.gNavigatorBundle;
@@ -388,14 +387,12 @@ function prompt(aBrowser, aRequest) {
         if (micPerm == perms.PROMPT_ACTION)
           micPerm = perms.UNKNOWN_ACTION;
 
-        let camPermanentPerm = perms.testExactPermanentPermission(principal, "camera");
         let camPerm = perms.testExactPermission(uri, "camera");
 
-        // Session approval given but never used to allocate a camera, remove
-        // and ask again
-        if (camPerm && !camPermanentPerm) {
-          perms.remove(uri, "camera");
-          camPerm = perms.UNKNOWN_ACTION;
+        let mediaManagerPerm =
+          perms.testExactPermission(uri, "MediaManagerVideo");
+        if (mediaManagerPerm) {
+          perms.remove(uri, "MediaManagerVideo");
         }
 
         if (camPerm == perms.PROMPT_ACTION)
@@ -534,10 +531,12 @@ function prompt(aBrowser, aRequest) {
             allowedDevices.push(videoDeviceIndex);
             // Session permission will be removed after use
             // (it's really one-shot, not for the entire session)
-            perms.add(uri, "camera", perms.ALLOW_ACTION,
-                      aRemember ? perms.EXPIRE_NEVER : perms.EXPIRE_SESSION);
-          } else if (aRemember) {
-            perms.add(uri, "camera", perms.DENY_ACTION);
+            perms.add(uri, "MediaManagerVideo", perms.ALLOW_ACTION,
+                      perms.EXPIRE_SESSION);
+          }
+          if (aRemember) {
+            perms.add(uri, "camera",
+                      allowCamera ? perms.ALLOW_ACTION : perms.DENY_ACTION);
           }
         }
         if (audioDevices.length) {

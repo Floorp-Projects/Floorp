@@ -79,21 +79,6 @@ XPT_SeekTo(NotNull<XPTCursor*> cursor, uint32_t offset);
 extern XPT_PUBLIC_API(void)
 XPT_SetDataOffset(XPTState *state, uint32_t data_offset);
 
-/* all data structures are big-endian */
-
-#if defined IS_BIG_ENDIAN
-#  define XPT_SWAB32(x) x
-#  define XPT_SWAB16(x) x
-#elif defined IS_LITTLE_ENDIAN
-#  define XPT_SWAB32(x) (((x) >> 24) |                                        \
-             (((x) >> 8) & 0xff00) |                                          \
-             (((x) << 8) & 0xff0000) |                                        \
-             ((x) << 24))
-#  define XPT_SWAB16(x) (((x) >> 8) | ((x) << 8))
-#else
-#  error "unknown byte order"
-#endif
-
 #ifdef __cplusplus
 }
 #endif

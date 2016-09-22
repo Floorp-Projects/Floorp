@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=884693
+-->
+<window title="Mozilla Bug 884693"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=884693"
+     target="_blank">Mozilla Bug 884693</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+    const SERVER_URL = "http://mochi.test:8888/tests/dom/base/test/chrome/bug884693.sjs";
+    const INVALID_XML = "InvalidXML";
+
+    var { classes: Cc, interfaces: Ci } = Components;
+
+    let consoleService = Cc["@mozilla.org/consoleservice;1"].
+                         getService(Ci.nsIConsoleService)
+
+    function runTest(status, statusText, body, expectedResponse, expectedMessages)
+    {
+      return new Promise((resolve, reject) => {
+        consoleService.reset();
+
+        let xhr = new XMLHttpRequest();
+
+        xhr.onload = () => {
+          is(xhr.responseText, expectedResponse, "Correct responseText returned");
+
+          let messages = consoleService.getMessageArray() || [];
+          is(messages.length, expectedMessages.length, "Got expected message count");
+          messages = messages.map(m => m.message).join(",");
+          for(let message of expectedMessages) {
+            ok(messages.indexOf(message) >= 0, "Got expected message: " + message);
+          }
+
+          resolve();
+        };
+
+        xhr.onerror = e => {
+          reject(e);
+        };
+
+        xhr.open("GET", `${SERVER_URL}?${status}&${statusText}&${body}`);
+        xhr.send();
+      });
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    runTest(204, "No content", "", "", []).
+      then(() => { return runTest(204, "No content", INVALID_XML, "", []); }).
+      then(() => { return runTest(304, "Not modified", "", "", []); }).
+      then(() => { return runTest(304, "Not modified", INVALID_XML, "", []); }).
+      then(() => { return runTest(200, "OK", "", "", ["no root element found"]); }).
+      then(() => { return runTest(200, "OK", INVALID_XML, INVALID_XML, ["syntax error"]); }).
+      then(SimpleTest.finish);
+
+  ]]></script>
+</window>

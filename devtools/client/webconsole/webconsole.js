@@ -582,6 +582,7 @@ WebConsoleFrame.prototype = {
       // XXX: We should actually stop output from happening on old output
       // panel, but for now let's just hide it.
       this.experimentalOutputNode = this.outputNode.cloneNode();
+      this.experimentalOutputNode.removeAttribute("tabindex");
       this.outputNode.hidden = true;
       this.outputNode.parentNode.appendChild(this.experimentalOutputNode);
       // @TODO Once the toolbox has been converted to React, see if passing

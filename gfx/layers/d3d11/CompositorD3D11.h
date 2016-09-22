@@ -55,6 +55,9 @@ public:
   virtual already_AddRefed<DataTextureSource>
     CreateDataTextureSource(TextureFlags aFlags = TextureFlags::NO_FLAGS) override;
 
+  virtual already_AddRefed<TextureSource>
+    CreateTextureSourceForImage(Image* aImage) override;
+
   virtual bool CanUseCanvasLayerForSize(const gfx::IntSize& aSize) override;
   virtual int32_t GetMaxTextureSize() const final;
 

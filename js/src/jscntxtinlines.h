@@ -136,6 +136,10 @@ class CompartmentChecker
             check(desc.setterObject());
         check(desc.value());
     }
+
+    void check(TypeSet::Type type) {
+        check(type.maybeCompartment());
+    }
 };
 
 /*

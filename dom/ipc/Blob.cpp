@@ -26,6 +26,7 @@
 #include "mozilla/dom/indexedDB/FileSnapshot.h"
 #include "mozilla/dom/IndexedDatabaseManager.h"
 #include "mozilla/ipc/InputStreamUtils.h"
+#include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/PBackgroundParent.h"
 #include "mozilla/ipc/PFileDescriptorSetParent.h"
@@ -711,51 +712,38 @@ CreateBlobImpl(const nsID& aKnownBlobIDData,
 }
 
 already_AddRefed<BlobImpl>
-CreateBlobImpl(const nsTArray<uint8_t>& aMemoryData,
+CreateBlobImpl(const IPCStream& aStream,
                const CreateBlobImplMetadata& aMetadata)
 {
-  static_assert(sizeof(aMemoryData.Length()) <= sizeof(size_t),
-                "String length won't fit in size_t!");
-  static_assert(sizeof(size_t) <= sizeof(uint64_t),
-                "size_t won't fit in uint64_t!");
-
   MOZ_ASSERT(gProcessType == GeckoProcessType_Default);
 
+  nsCOMPtr<nsIInputStream> inputStream = DeserializeIPCStream(aStream);
+  if (!inputStream) {
+    ASSERT_UNLESS_FUZZING();
+    return nullptr;
+  }
+
+  uint64_t available;
+  MOZ_ALWAYS_SUCCEEDS(inputStream->Available(&available));
+
   RefPtr<BlobImpl> blobImpl;
-
-  if (auto length = static_cast<size_t>(aMemoryData.Length())) {
-    static constexpr size_t elementSizeMultiplier =
-      sizeof(aMemoryData[0]) / sizeof(char);
-
-    if (!aMetadata.mHasRecursed &&
-        NS_WARN_IF(aMetadata.mLength != uint64_t(length))) {
-      ASSERT_UNLESS_FUZZING();
-      return nullptr;
-    }
-
-    void* buffer = malloc(length * elementSizeMultiplier);
-    if (NS_WARN_IF(!buffer)) {
-      return nullptr;
-    }
-
-    memcpy(buffer, aMemoryData.Elements(), length * elementSizeMultiplier);
-
-    if (!aMetadata.mHasRecursed && aMetadata.IsFile()) {
+  if (!aMetadata.mHasRecursed && aMetadata.IsFile()) {
+    if (available) {
       blobImpl =
-        new BlobImplMemory(buffer,
-                           uint64_t(length),
+        new BlobImplStream(inputStream,
                            aMetadata.mName,
                            aMetadata.mContentType,
-                           aMetadata.mLastModifiedDate);
+                           aMetadata.mLastModifiedDate,
+                           available);
     } else {
       blobImpl =
-        new BlobImplMemory(buffer, uint64_t(length), aMetadata.mContentType);
+        new EmptyBlobImpl(aMetadata.mName,
+                          aMetadata.mContentType,
+                          aMetadata.mLastModifiedDate);
     }
-  } else if (!aMetadata.mHasRecursed && aMetadata.IsFile()) {
+  } else if (available) {
     blobImpl =
-      new EmptyBlobImpl(aMetadata.mName,
-                        aMetadata.mContentType,
-                        aMetadata.mLastModifiedDate);
+      new BlobImplStream(inputStream, aMetadata.mContentType, available);
   } else {
     blobImpl = new EmptyBlobImpl(aMetadata.mContentType);
   }
@@ -783,8 +771,8 @@ CreateBlobImplFromBlobData(const BlobData& aBlobData,
       break;
     }
 
-    case BlobData::TArrayOfuint8_t: {
-      blobImpl = CreateBlobImpl(aBlobData.get_ArrayOfuint8_t(), aMetadata);
+    case BlobData::TIPCStream: {
+      blobImpl = CreateBlobImpl(aBlobData.get_IPCStream(), aMetadata);
       break;
     }
 
@@ -921,8 +909,10 @@ CreateBlobImpl(const ParentBlobConstructorParams& aParams,
   return blobImpl.forget();
 }
 
+template <class ChildManagerType>
 void
-BlobDataFromBlobImpl(BlobImpl* aBlobImpl, BlobData& aBlobData)
+BlobDataFromBlobImpl(ChildManagerType* aManager, BlobImpl* aBlobImpl,
+                     BlobData& aBlobData)
 {
   MOZ_ASSERT(gProcessType != GeckoProcessType_Default);
   MOZ_ASSERT(aBlobImpl);
@@ -940,7 +930,8 @@ BlobDataFromBlobImpl(BlobImpl* aBlobImpl, BlobData& aBlobData)
     for (uint32_t count = subBlobs->Length(), index = 0;
          index < count;
          index++) {
-      BlobDataFromBlobImpl(subBlobs->ElementAt(index), subBlobDatas[index]);
+      BlobDataFromBlobImpl(aManager, subBlobs->ElementAt(index),
+                           subBlobDatas[index]);
     }
 
     return;
@@ -960,26 +951,9 @@ BlobDataFromBlobImpl(BlobImpl* aBlobImpl, BlobData& aBlobData)
   aBlobImpl->GetInternalStream(getter_AddRefs(inputStream), rv);
   MOZ_ALWAYS_TRUE(!rv.Failed());
 
-  DebugOnly<bool> isNonBlocking;
-  MOZ_ASSERT(NS_SUCCEEDED(inputStream->IsNonBlocking(&isNonBlocking)));
-  MOZ_ASSERT(isNonBlocking);
-
-  uint64_t available;
-  MOZ_ALWAYS_SUCCEEDS(inputStream->Available(&available));
-
-  MOZ_ASSERT(available <= uint64_t(UINT32_MAX));
-
-  aBlobData = nsTArray<uint8_t>();
-
-  nsTArray<uint8_t>& blobData = aBlobData.get_ArrayOfuint8_t();
-
-  blobData.SetLength(size_t(available));
-
-  uint32_t readCount;
-  MOZ_ALWAYS_SUCCEEDS(
-    inputStream->Read(reinterpret_cast<char*>(blobData.Elements()),
-                      uint32_t(available),
-                      &readCount));
+  AutoIPCStream autoStream;
+  autoStream.Serialize(inputStream, aManager);
+  aBlobData = autoStream.TakeValue();
 }
 
 RemoteInputStream::RemoteInputStream(BlobImpl* aBlobImpl,
@@ -3375,8 +3349,10 @@ BlobChild::GetOrCreateFromImpl(ChildManagerType* aManager,
 
     blobParams = SameProcessBlobConstructorParams(addRefedBlobImpl);
   } else {
+    // BlobData is going to be populate here and it _must_ be send via IPC in
+    // order to avoid leaks.
     BlobData blobData;
-    BlobDataFromBlobImpl(aBlobImpl, blobData);
+    BlobDataFromBlobImpl(aManager, aBlobImpl, blobData);
 
     nsString contentType;
     aBlobImpl->GetType(contentType);

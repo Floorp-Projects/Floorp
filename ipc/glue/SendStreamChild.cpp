@@ -7,7 +7,7 @@
 #include "mozilla/ipc/SendStream.h"
 
 #include "mozilla/Unused.h"
-#include "mozilla/dom/PContentChild.h"
+#include "mozilla/dom/nsIContentChild.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/workers/bindings/WorkerHolder.h"
 #include "mozilla/ipc/PBackgroundChild.h"
@@ -20,7 +20,7 @@
 namespace mozilla {
 namespace ipc {
 
-using mozilla::dom::PContentChild;
+using mozilla::dom::nsIContentChild;
 using mozilla::dom::workers::Canceling;
 using mozilla::dom::workers::GetCurrentThreadWorkerPrivate;
 using mozilla::dom::workers::Status;
@@ -359,7 +359,7 @@ IsBlocking(nsIAsyncInputStream* aInputStream)
 // static
 SendStreamChild*
 SendStreamChild::Create(nsIAsyncInputStream* aInputStream,
-                        PContentChild* aManager)
+                        nsIContentChild* aManager)
 {
   MOZ_ASSERT(aInputStream);
   MOZ_ASSERT(aManager);

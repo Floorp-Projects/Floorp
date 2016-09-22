@@ -3200,10 +3200,7 @@ AsyncPanZoomController::ReportCheckerboard(const TimeStamp& aSampleTime)
       // checkerboard events.
       uint32_t severity = mCheckerboardEvent->GetSeverity();
       std::string log = mCheckerboardEvent->GetLog();
-      NS_DispatchToMainThread(NS_NewRunnableFunction([severity, log]() {
-          RefPtr<CheckerboardEventStorage> storage = CheckerboardEventStorage::GetInstance();
-          storage->ReportCheckerboard(severity, log);
-      }));
+      CheckerboardEventStorage::Report(severity, log);
     }
     mCheckerboardEvent = nullptr;
   }

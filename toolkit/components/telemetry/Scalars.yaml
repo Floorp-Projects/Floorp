@@ -71,6 +71,58 @@ telemetry.test:
       - telemetry-client-dev@mozilla.com
     release_channel_collection: opt-out
 
+  keyed_release_optin:
+    bug_numbers:
+      - 1277806
+    description: A testing scalar; not meant to be touched.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    release_channel_collection: opt-in
+
+  keyed_release_optout:
+    bug_numbers:
+      - 1277806
+    description: A testing scalar; not meant to be touched.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    release_channel_collection: opt-out
+
+  keyed_expired:
+    bug_numbers:
+      - 1277806
+    description: This is an expired testing scalar; not meant to be touched.
+    expires: 4.0a1
+    kind: uint
+    keyed: true
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+
+  keyed_unsigned_int:
+    bug_numbers:
+      - 1277806
+    description: A testing keyed uint scalar; not meant to be touched.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+
+  keyed_boolean_kind:
+    bug_numbers:
+      - 1277806
+    description: A testing keyed boolean scalar; not meant to be touched.
+    expires: never
+    kind: boolean
+    keyed: true
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+
 # The following section contains the browser engagement scalars.
 browser.engagement:
   max_concurrent_tab_count:

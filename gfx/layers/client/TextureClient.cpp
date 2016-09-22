@@ -94,12 +94,13 @@ void DeallocateTextureClient(TextureDeallocParams params);
  * TextureClient's data until the compositor side confirmed that it is safe to
  * deallocte or recycle the it.
  */
-class TextureChild final : public ChildActor<PTextureChild>
+class TextureChild final : PTextureChild
 {
   ~TextureChild()
   {
     // We should have deallocated mTextureData in ActorDestroy
     MOZ_ASSERT(!mTextureData);
+    MOZ_ASSERT(mOwnerCalledDestroy);
   }
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TextureChild)
@@ -113,6 +114,7 @@ public:
   , mMainThreadOnly(false)
   , mIPCOpen(false)
   , mOwnsTextureData(false)
+  , mOwnerCalledDestroy(false)
   {}
 
   bool Recv__delete__() override { return true; }
@@ -143,6 +145,19 @@ private:
     mIPCOpen = false;
     Release();
   }
+
+  /// The normal way to destroy the actor.
+  ///
+  /// This will asynchronously send a Destroy message to the parent actor, whom
+  /// will send the delete message.
+  void Destroy(const TextureDeallocParams& aParams);
+
+  /// The ugly and slow way to destroy the actor.
+  ///
+  /// This will block until the Parent actor has handled the Destroy message,
+  /// and then start the asynchronous handshake (and destruction will already
+  /// be done on the parent side, when the async part happens).
+  void DestroySynchronously(const TextureDeallocParams& aParams);
 
   // This lock is used order to prevent several threads to access the
   // TextureClient's data concurrently. In particular, it prevents shutdown
@@ -218,6 +233,7 @@ private:
   bool mMainThreadOnly;
   bool mIPCOpen;
   bool mOwnsTextureData;
+  bool mOwnerCalledDestroy;
 
   friend class TextureClient;
   friend void DeallocateTextureClient(TextureDeallocParams params);
@@ -255,6 +271,57 @@ TextureChild::ActorDestroy(ActorDestroyReason why)
   if (mTextureData) {
     DestroyTextureData(mTextureData, GetAllocator(), mOwnsTextureData, mMainThreadOnly);
     mTextureData = nullptr;
+  }
+}
+
+void
+TextureChild::Destroy(const TextureDeallocParams& aParams)
+{
+  MOZ_ASSERT(!mOwnerCalledDestroy);
+  if (mOwnerCalledDestroy) {
+    return;
+  }
+
+  mOwnerCalledDestroy = true;
+
+  // DestroyTextureData will be called by TextureChild::ActorDestroy
+  mTextureData = aParams.data;
+  mOwnsTextureData = aParams.clientDeallocation;
+
+  if (!mCompositableForwarder ||
+      !mCompositableForwarder->DestroyInTransaction(this, false))
+  {
+    this->SendDestroy();
+  }
+}
+
+void
+TextureChild::DestroySynchronously(const TextureDeallocParams& aParams)
+{
+  MOZ_PERFORMANCE_WARNING("gfx", "TextureClient/Host pair requires synchronous deallocation");
+
+  MOZ_ASSERT(!mOwnerCalledDestroy);
+  if (mOwnerCalledDestroy) {
+    return;
+  }
+
+  mOwnerCalledDestroy = true;
+
+  DestroyTextureData(
+    aParams.data,
+    aParams.allocator,
+    aParams.clientDeallocation,
+    mMainThreadOnly);
+
+  if (!IPCOpen()) {
+    return;
+  }
+
+  if (!mCompositableForwarder ||
+      !mCompositableForwarder->DestroyInTransaction(this, true))
+  {
+    this->SendDestroySync();
+    this->SendDestroy();
   }
 }
 
@@ -339,24 +406,10 @@ DeallocateTextureClient(TextureDeallocParams params)
     return;
   }
 
-  if (!actor->IPCOpen()) {
-    // The actor is already deallocated which probably means there was a shutdown
-    // race causing this function to be called concurrently which is bad!
-    gfxCriticalError() << "Racy texture deallocation";
-    return;
-  }
-
-  if (params.syncDeallocation) {
-    MOZ_PERFORMANCE_WARNING("gfx",
-      "TextureClient/Host pair requires synchronous deallocation");
-    actor->DestroySynchronously(actor->mCompositableForwarder);
-    DestroyTextureData(params.data, params.allocator, params.clientDeallocation,
-                       actor->mMainThreadOnly);
+  if (params.syncDeallocation || !actor->IPCOpen()) {
+    actor->DestroySynchronously(params);
   } else {
-    actor->mTextureData = params.data;
-    actor->mOwnsTextureData = params.clientDeallocation;
-    actor->Destroy(actor->mCompositableForwarder);
-    // DestroyTextureData will be called by TextureChild::ActorDestroy
+    actor->Destroy(params);
   }
 }
 
@@ -408,14 +461,6 @@ void TextureClient::Destroy(bool aForceSync)
 
     DeallocateTextureClient(params);
   }
-}
-
-bool
-TextureClient::DestroyFallback(PTextureChild* aActor)
-{
-  // should not end up here so crash debug builds.
-  MOZ_ASSERT(false);
-  return aActor->SendDestroySync();
 }
 
 void
@@ -717,11 +762,12 @@ TextureClient::AsTextureClient(PTextureChild* actor)
 
   TextureChild* tc = static_cast<TextureChild*>(actor);
 
-  // TODO: This is not entirely race-free because TextureClient's ref count
-  // can reach zero on another thread and AsTextureClient gets called before
-  // Destroy.
   tc->Lock();
 
+  // Since TextureClient may be destroyed asynchronously with respect to its
+  // IPDL actor, we must acquire a reference within a lock. The mDestroyed bit
+  // tells us whether or not the main thread has disconnected the TextureClient
+  // from its actor.
   if (tc->mDestroyed) {
     tc->Unlock();
     return nullptr;

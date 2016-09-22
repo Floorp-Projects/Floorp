@@ -793,11 +793,18 @@ CustomElementsRegistry::Define(const nsAString& aName,
 
 void
 CustomElementsRegistry::Get(JSContext* aCx, const nsAString& aName,
-                            JS::MutableHandle<JS::Value> aRetVal,
-                            ErrorResult& aRv)
+                            JS::MutableHandle<JS::Value> aRetVal)
 {
-  // TODO: This function will be implemented in bug 1275838
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  nsCOMPtr<nsIAtom> nameAtom(NS_Atomize(aName));
+  CustomElementDefinition* data = mCustomDefinitions.Get(nameAtom);
+
+  if (!data) {
+    aRetVal.setUndefined();
+    return;
+  }
+
+  aRetVal.setObject(*data->mConstructor);
+  return;
 }
 
 already_AddRefed<Promise>

@@ -197,13 +197,9 @@
   -  control the stepping commands in the debugger (continue, step over,
   -  step in and step out). -->
 <!ENTITY debuggerUI.stepping.resume1    "VK_F8">
-<!ENTITY debuggerUI.stepping.resume2    "VK_SLASH">
 <!ENTITY debuggerUI.stepping.stepOver1  "VK_F10">
-<!ENTITY debuggerUI.stepping.stepOver2  "VK_QUOTE">
 <!ENTITY debuggerUI.stepping.stepIn1    "VK_F11">
-<!ENTITY debuggerUI.stepping.stepIn2    "VK_SEMICOLON">
 <!ENTITY debuggerUI.stepping.stepOut1   "VK_F11">
-<!ENTITY debuggerUI.stepping.stepOut2   "VK_SEMICOLON">
 
 <!-- LOCALIZATION NOTE (debuggerUI.context.newTab):  This is the label
   -  for the Open in New Tab menu item displayed in the context menu of the

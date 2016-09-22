@@ -2000,6 +2000,15 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
     mRequestObserver->OnStopRequest(request, ctxt, status);
   }
 
+  // suppress parsing failure messages to console for status 204/304 (see bug 884693).
+  if (mResponseXML) {
+    uint32_t responseStatus;
+    if (NS_SUCCEEDED(GetStatus(&responseStatus)) &&
+        (responseStatus == 204 || responseStatus == 304)) {
+      mResponseXML->SetSuppressParserErrorConsoleMessages(true);
+    }
+  }
+
   // make sure to notify the listener if we were aborted
   // XXX in fact, why don't we do the cleanup below in this case??
   // State::unsent is for abort calls.  See OnStartRequest above.
