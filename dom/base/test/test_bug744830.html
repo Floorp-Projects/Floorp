@@ -26,7 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=744830
   t.appendChild(document.createElement("textarea"));
   t.firstChild.appendChild(document.createTextNode("\nhello"));
   // This is the old behavior. Spec requires something else.
-  is(t.innerHTML, "<textarea>\n\nhello</textarea>",
+  is(t.innerHTML, "<textarea>\nhello</textarea>",
      "No extra newlines should be inserted to the textarea!");
 
   t.innerHTML = null;
