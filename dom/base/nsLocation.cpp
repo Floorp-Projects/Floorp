@@ -263,7 +263,6 @@ nsLocation::SetURI(nsIURI* aURI, bool aReplace)
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
   if (docShell) {
     nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
-    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
 
     if(NS_FAILED(CheckURL(aURI, getter_AddRefs(loadInfo))))
       return NS_ERROR_FAILURE;

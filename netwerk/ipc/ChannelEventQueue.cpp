@@ -8,7 +8,7 @@
 #include "nsISupports.h"
 #include "mozilla/net/ChannelEventQueue.h"
 #include "nsThreadUtils.h"
-#include "mozilla/Unused.h"
+#include "mozilla/unused.h"
 
 namespace mozilla {
 namespace net {
