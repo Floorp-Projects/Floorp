@@ -362,7 +362,7 @@ public class GeckoAppShell
 
     @WrapForJNI(calledFrom = "gecko")
     @SuppressLint("MissingPermission") // Permissions are explicitly checked for within this method
-    public static void enableLocation(final boolean enable) {
+    private static void enableLocation(final boolean enable) {
         final Runnable requestLocation = new Runnable() {
             @Override
             public void run() {
@@ -426,12 +426,12 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void enableLocationHighAccuracy(final boolean enable) {
+    private static void enableLocationHighAccuracy(final boolean enable) {
         locationHighAccuracyEnabled = enable;
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static boolean setAlarm(int aSeconds, int aNanoSeconds) {
+    private static boolean setAlarm(int aSeconds, int aNanoSeconds) {
         AlarmManager am = (AlarmManager)
             getApplicationContext().getSystemService(Context.ALARM_SERVICE);
 
@@ -447,7 +447,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void disableAlarm() {
+    private static void disableAlarm() {
         AlarmManager am = (AlarmManager)
             getApplicationContext().getSystemService(Context.ALARM_SERVICE);
 
@@ -600,7 +600,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void enableSensor(int aSensortype) {
+    private static void enableSensor(int aSensortype) {
         GeckoInterface gi = getGeckoInterface();
         if (gi == null) {
             return;
@@ -716,7 +716,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void disableSensor(int aSensortype) {
+    private static void disableSensor(int aSensortype) {
         GeckoInterface gi = getGeckoInterface();
         if (gi == null)
             return;
@@ -780,7 +780,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void moveTaskToBack() {
+    private static void moveTaskToBack() {
         if (getGeckoInterface() != null)
             getGeckoInterface().getActivity().moveTaskToBack(true);
     }
@@ -821,7 +821,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    static String[] getHandlersForMimeType(String aMimeType, String aAction) {
+    private static String[] getHandlersForMimeType(String aMimeType, String aAction) {
         final GeckoInterface geckoInterface = getGeckoInterface();
         if (geckoInterface == null) {
             return new String[] {};
@@ -830,7 +830,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    static String[] getHandlersForURL(String aURL, String aAction) {
+    private static String[] getHandlersForURL(String aURL, String aAction) {
         final GeckoInterface geckoInterface = getGeckoInterface();
         if (geckoInterface == null) {
             return new String[] {};
@@ -839,12 +839,12 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    static boolean getHWEncoderCapability() {
+    private static boolean getHWEncoderCapability() {
       return HardwareCodecCapabilityUtils.getHWEncoderCapability();
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    static boolean getHWDecoderCapability() {
+    private static boolean getHWDecoderCapability() {
       return HardwareCodecCapabilityUtils.getHWDecoderCapability();
     }
 
@@ -864,12 +864,12 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    static String getExtensionFromMimeType(String aMimeType) {
+    public static String getExtensionFromMimeType(String aMimeType) {
         return MimeTypeMap.getSingleton().getExtensionFromMimeType(aMimeType);
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    static String getMimeTypeFromExtensions(String aFileExt) {
+    public static String getMimeTypeFromExtensions(String aFileExt) {
         StringTokenizer st = new StringTokenizer(aFileExt, ".,; ");
         String type = null;
         String subType = null;
@@ -908,12 +908,12 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static boolean openUriExternal(String targetURI,
-                                          String mimeType,
-                                          String packageName,
-                                          String className,
-                                          String action,
-                                          String title) {
+    private static boolean openUriExternal(String targetURI,
+                                           String mimeType,
+                                           String packageName,
+                                           String className,
+                                           String action,
+                                           String title) {
         final GeckoInterface geckoInterface = getGeckoInterface();
         if (geckoInterface == null) {
             return false;
@@ -951,9 +951,9 @@ public class GeckoAppShell
     private static native void notifyAlertListener(String name, String topic);
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void showAlertNotification(String imageUrl, String alertTitle, String alertText,
-                                             String alertCookie, String alertName, String host,
-                                             String persistentData) {
+    private static void showAlertNotification(String imageUrl, String alertTitle, String alertText,
+                                              String alertCookie, String alertName, String host,
+                                              String persistentData) {
         final int notificationID = alertName.hashCode();
         final PendingIntent clickIntent, closeIntent;
 
@@ -992,7 +992,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void closeNotification(String alertName) {
+    private static void closeNotification(String alertName) {
         notifyAlertListener(alertName, "alertfinished");
 
         final int notificationID = alertName.hashCode();
@@ -1024,7 +1024,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static float getDensity() {
+    private static float getDensity() {
         return getApplicationContext().getResources().getDisplayMetrics().density;
     }
 
@@ -1053,7 +1053,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static synchronized void setScreenDepthOverride(int aScreenDepth) {
+    private static synchronized void setScreenDepthOverride(int aScreenDepth) {
         if (sScreenDepth != 0) {
             Log.e(LOGTAG, "Tried to override screen depth after it's already been set");
             return;
@@ -1063,13 +1063,13 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void setFullScreen(boolean fullscreen) {
+    private static void setFullScreen(boolean fullscreen) {
         if (getGeckoInterface() != null)
             getGeckoInterface().setFullScreen(fullscreen);
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void performHapticFeedback(boolean aIsLongPress) {
+    private static void performHapticFeedback(boolean aIsLongPress) {
         // Don't perform haptic feedback if a vibration is currently playing,
         // because the haptic feedback will nuke the vibration.
         if (!sVibrationMaybePlaying || System.nanoTime() >= sVibrationEndTime) {
@@ -1102,14 +1102,14 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void vibrate(long milliseconds) {
+    private static void vibrate(long milliseconds) {
         sVibrationEndTime = System.nanoTime() + milliseconds * 1000000;
         sVibrationMaybePlaying = true;
         vibrator().vibrate(milliseconds);
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void vibrate(long[] pattern, int repeat) {
+    private static void vibrate(long[] pattern, int repeat) {
         // If pattern.length is even, the last element in the pattern is a
         // meaningless delay, so don't include it in vibrationDuration.
         long vibrationDuration = 0;
@@ -1124,14 +1124,14 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void cancelVibrate() {
+    private static void cancelVibrate() {
         sVibrationMaybePlaying = false;
         sVibrationEndTime = 0;
         vibrator().cancel();
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void setKeepScreenOn(final boolean on) {
+    private static void setKeepScreenOn(final boolean on) {
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
@@ -1141,7 +1141,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static boolean isNetworkLinkUp() {
+    private static boolean isNetworkLinkUp() {
         ConnectivityManager cm = (ConnectivityManager)
            getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         try {
@@ -1155,7 +1155,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static boolean isNetworkLinkKnown() {
+    private static boolean isNetworkLinkKnown() {
         ConnectivityManager cm = (ConnectivityManager)
             getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         try {
@@ -1168,7 +1168,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static int getNetworkLinkType() {
+    private static int getNetworkLinkType() {
         ConnectivityManager cm = (ConnectivityManager)
             getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo info = cm.getActiveNetworkInfo();
@@ -1227,7 +1227,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static int[] getSystemColors() {
+    private static int[] getSystemColors() {
         // attrsAppearance[] must correspond to AndroidSystemColors structure in android/AndroidBridge.h
         final int[] attrsAppearance = {
             android.R.attr.textColor,
@@ -1394,7 +1394,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static byte[] getIconForExtension(String aExt, int iconSize) {
+    private static byte[] getIconForExtension(String aExt, int iconSize) {
         try {
             if (iconSize <= 0)
                 iconSize = 16;
@@ -1452,7 +1452,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static boolean getShowPasswordSetting() {
+    private static boolean getShowPasswordSetting() {
         try {
             int showPassword =
                 Settings.System.getInt(getApplicationContext().getContentResolver(),
@@ -1468,13 +1468,13 @@ public class GeckoAppShell
     public static native void onFullScreenPluginHidden(View view);
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void addFullScreenPluginView(View view) {
+    private static void addFullScreenPluginView(View view) {
         if (getGeckoInterface() != null)
              getGeckoInterface().addPluginView(view);
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void removeFullScreenPluginView(View view) {
+    private static void removeFullScreenPluginView(View view) {
         if (getGeckoInterface() != null)
             getGeckoInterface().removePluginView(view);
     }
@@ -1686,7 +1686,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI
-    public static Class<?> loadPluginClass(String className, String libName) {
+    private static Class<?> loadPluginClass(String className, String libName) {
         if (getGeckoInterface() == null)
             return null;
         try {
@@ -1855,7 +1855,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    static int[] initCamera(String aContentType, int aCamera, int aWidth, int aHeight) {
+    private static int[] initCamera(String aContentType, int aCamera, int aWidth, int aHeight) {
         ThreadUtils.postToUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -1942,7 +1942,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    static synchronized void closeCamera() {
+    private static synchronized void closeCamera() {
         ThreadUtils.postToUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -1964,28 +1964,28 @@ public class GeckoAppShell
      * Battery API related methods.
      */
     @WrapForJNI(calledFrom = "gecko")
-    public static void enableBatteryNotifications() {
+    private static void enableBatteryNotifications() {
         GeckoBatteryManager.enableNotifications();
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void handleGeckoMessage(final NativeJSContainer message) {
+    private static void handleGeckoMessage(final NativeJSContainer message) {
         EventDispatcher.getInstance().dispatchEvent(message);
         message.disposeNative();
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void disableBatteryNotifications() {
+    private static void disableBatteryNotifications() {
         GeckoBatteryManager.disableNotifications();
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static double[] getCurrentBatteryInformation() {
+    private static double[] getCurrentBatteryInformation() {
         return GeckoBatteryManager.getCurrentInformation();
     }
 
     @WrapForJNI(stubName = "CheckURIVisited", calledFrom = "gecko")
-    static void checkUriVisited(String uri) {
+    private static void checkUriVisited(String uri) {
         final GeckoInterface geckoInterface = getGeckoInterface();
         if (geckoInterface == null) {
             return;
@@ -1994,7 +1994,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(stubName = "MarkURIVisited", calledFrom = "gecko")
-    static void markUriVisited(final String uri) {
+    private static void markUriVisited(final String uri) {
         final GeckoInterface geckoInterface = getGeckoInterface();
         if (geckoInterface == null) {
             return;
@@ -2003,7 +2003,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(stubName = "SetURITitle", calledFrom = "gecko")
-    static void setUriTitle(final String uri, final String title) {
+    private static void setUriTitle(final String uri, final String title) {
         final GeckoInterface geckoInterface = getGeckoInterface();
         if (geckoInterface == null) {
             return;
@@ -2012,7 +2012,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    static void hideProgressDialog() {
+    private static void hideProgressDialog() {
         // unused stub
     }
 
@@ -2028,12 +2028,12 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void sendMessage(String aNumber, String aMessage, int aRequestId) {
+    private static void sendMessage(String aNumber, String aMessage, int aRequestId) {
         sendMessage(aNumber, aMessage, aRequestId, /* shouldNotify */ true);
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void getMessage(int aMessageId, int aRequestId) {
+    private static void getMessage(int aMessageId, int aRequestId) {
         if (!SmsManager.isEnabled()) {
             return;
         }
@@ -2042,7 +2042,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void deleteMessage(int aMessageId, int aRequestId) {
+    private static void deleteMessage(int aMessageId, int aRequestId) {
         if (!SmsManager.isEnabled()) {
             return;
         }
@@ -2051,7 +2051,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void markMessageRead(int aMessageId, boolean aValue, boolean aSendReadReport, int aRequestId) {
+    private static void markMessageRead(int aMessageId, boolean aValue, boolean aSendReadReport, int aRequestId) {
         if (!SmsManager.isEnabled()) {
             return;
         }
@@ -2060,7 +2060,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void createMessageCursor(long aStartDate, long aEndDate, String[] aNumbers, int aNumbersCount, String aDelivery, boolean aHasRead, boolean aRead, boolean aHasThreadId, long aThreadId, boolean aReverse, int aRequestId) {
+    private static void createMessageCursor(long aStartDate, long aEndDate, String[] aNumbers, int aNumbersCount, String aDelivery, boolean aHasRead, boolean aRead, boolean aHasThreadId, long aThreadId, boolean aReverse, int aRequestId) {
         if (!SmsManager.isEnabled()) {
             return;
         }
@@ -2069,7 +2069,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void getNextMessage(int aRequestId) {
+    private static void getNextMessage(int aRequestId) {
         if (!SmsManager.isEnabled()) {
             return;
         }
@@ -2078,7 +2078,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void createThreadCursor(int aRequestId) {
+    private static void createThreadCursor(int aRequestId) {
         Log.i("GeckoAppShell", "CreateThreadCursorWrapper!");
 
         if (!SmsManager.isEnabled()) {
@@ -2089,7 +2089,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void getNextThread(int aRequestId) {
+    private static void getNextThread(int aRequestId) {
         if (!SmsManager.isEnabled()) {
             return;
         }
@@ -2120,12 +2120,12 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static double[] getCurrentNetworkInformation() {
+    private static double[] getCurrentNetworkInformation() {
         return GeckoNetworkManager.getInstance().getCurrentInformation();
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void enableNetworkNotifications() {
+    private static void enableNetworkNotifications() {
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
@@ -2135,7 +2135,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void disableNetworkNotifications() {
+    private static void disableNetworkNotifications() {
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
@@ -2145,43 +2145,43 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static short getScreenOrientation() {
+    private static short getScreenOrientation() {
         return GeckoScreenOrientation.getInstance().getScreenOrientation().value;
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static int getScreenAngle() {
+    private static int getScreenAngle() {
         return GeckoScreenOrientation.getInstance().getAngle();
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void enableScreenOrientationNotifications() {
+    private static void enableScreenOrientationNotifications() {
         GeckoScreenOrientation.getInstance().enableNotifications();
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void disableScreenOrientationNotifications() {
+    private static void disableScreenOrientationNotifications() {
         GeckoScreenOrientation.getInstance().disableNotifications();
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void lockScreenOrientation(int aOrientation) {
+    private static void lockScreenOrientation(int aOrientation) {
         GeckoScreenOrientation.getInstance().lock(aOrientation);
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void unlockScreenOrientation() {
+    private static void unlockScreenOrientation() {
         GeckoScreenOrientation.getInstance().unlock();
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void notifyWakeLockChanged(String topic, String state) {
+    private static void notifyWakeLockChanged(String topic, String state) {
         if (getGeckoInterface() != null)
             getGeckoInterface().notifyWakeLockChanged(topic, state);
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static boolean unlockProfile() {
+    private static boolean unlockProfile() {
         // Try to kill any zombie Fennec's that might be running
         GeckoAppShell.killAnyZombies();
 
@@ -2195,7 +2195,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static String getProxyForURI(String spec, String scheme, String host, int port) {
+    private static String getProxyForURI(String spec, String scheme, String host, int port) {
         final ProxySelector ps = new ProxySelector();
 
         Proxy proxy = ps.select(scheme, host);
@@ -2214,7 +2214,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI
-    static InputStream createInputStream(URLConnection connection) throws IOException {
+    private static InputStream createInputStream(URLConnection connection) throws IOException {
         return connection.getInputStream();
     }
 
@@ -2268,7 +2268,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI
-    static URLConnection getConnection(String url) {
+    private static URLConnection getConnection(String url) {
         try {
             String spec;
             if (url.startsWith("android://")) {
@@ -2306,7 +2306,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI
-    static String connectionGetMimeType(URLConnection connection) {
+    private static String connectionGetMimeType(URLConnection connection) {
         return connection.getContentType();
     }
 
@@ -2317,7 +2317,7 @@ public class GeckoAppShell
      * @return Absolute path of the specified directory or null on failure
      */
     @WrapForJNI(calledFrom = "gecko")
-    static String getExternalPublicDirectory(final String type) {
+    private static String getExternalPublicDirectory(final String type) {
         final String state = Environment.getExternalStorageState();
         if (!Environment.MEDIA_MOUNTED.equals(state) &&
             !Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
@@ -2349,7 +2349,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    static int getMaxTouchPoints() {
+    private static int getMaxTouchPoints() {
         PackageManager pm = getApplicationContext().getPackageManager();
         if (pm.hasSystemFeature(PackageManager.FEATURE_TOUCHSCREEN_MULTITOUCH_JAZZHAND)) {
             // at least, 5+ fingers.
@@ -2372,7 +2372,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static synchronized Rect getScreenSize() {
+    private static synchronized Rect getScreenSize() {
         if (sScreenSize == null) {
             final WindowManager wm = (WindowManager)
                     getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
