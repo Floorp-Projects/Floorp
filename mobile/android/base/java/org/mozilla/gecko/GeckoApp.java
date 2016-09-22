@@ -1141,11 +1141,10 @@ public abstract class GeckoApp
         // When that's fixed, `this` can change to
         // `(GeckoApplication) getApplication()` here.
         GeckoAppShell.setContextGetter(this);
-        GeckoAppShell.setApplicationContext(getApplicationContext());
         GeckoAppShell.setGeckoInterface(this);
         // We need to set the notification client before launching Gecko, since Gecko could start
         // sending notifications immediately after startup, which we don't want to lose/crash on.
-        GeckoAppShell.setNotificationClient(makeNotificationClient());
+        GeckoAppShell.setNotificationListener(makeNotificationClient());
 
         // Tell Stumbler to register a local broadcast listener to listen for preference intents.
         // We do this via intents since we can't easily access Stumbler directly,
@@ -2394,7 +2393,8 @@ public abstract class GeckoApp
         // even if Gecko is running but it was restarted since the notification
         // was created, the notification won't be handled (bug 849653).
         if (GeckoThread.isRunning()) {
-            GeckoAppShell.handleNotification(action, alertName, alertCookie);
+            ((NotificationClient) GeckoAppShell.getNotificationListener()).onNotificationClick(
+                    alertName);
         }
     }
 

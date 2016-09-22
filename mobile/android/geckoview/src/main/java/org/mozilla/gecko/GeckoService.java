@@ -87,8 +87,7 @@ public class GeckoService extends Service {
     @Override // Service
     public void onCreate() {
         GeckoAppShell.ensureCrashHandling();
-        GeckoAppShell.setApplicationContext(getApplicationContext());
-        GeckoAppShell.setNotificationClient(new ServiceNotificationClient(getApplicationContext()));
+        GeckoAppShell.setNotificationListener(new ServiceNotificationClient(getApplicationContext()));
         GeckoThread.onResume();
         super.onCreate();
 
