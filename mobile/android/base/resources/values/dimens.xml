@@ -147,7 +147,8 @@
     <dimen name="tab_panel_item_width">129dp</dimen>
     <dimen name="tab_panel_grid_hpadding">20dp</dimen>
     <dimen name="tab_panel_grid_vpadding">19dp</dimen>
-    <dimen name="tab_panel_grid_item_hpadding">1dp</dimen>
+    <dimen name="tab_panel_grid_ideal_item_hspacing">20dp</dimen>
+    <dimen name="tab_panel_grid_min_item_hspacing">2dp</dimen>
     <dimen name="tab_panel_grid_item_vpadding">10dp</dimen>
 
     <dimen name="tab_highlight_stroke_width">4dp</dimen>
