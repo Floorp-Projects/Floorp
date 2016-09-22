@@ -7,7 +7,7 @@
 #include "mozilla/NotNull.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/Unused.h"
+#include "mozilla/unused.h"
 
 using mozilla::WrapNotNull;
 using mozilla::MakeUnique;
