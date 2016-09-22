@@ -157,9 +157,10 @@ typedef struct SSLExtraServerCertDataStr {
 } SSLExtraServerCertData;
 
 typedef struct SSLChannelInfoStr {
-    /* |length| is obsolete. On return, SSL_GetChannelInfo sets |length| to the
-     * smaller of the |len| argument and the length of the struct. The caller
-     * may ignore |length|. */
+    /* On return, SSL_GetChannelInfo sets |length| to the smaller of
+     * the |len| argument and the length of the struct used by NSS.
+     * Callers must ensure the application uses a version of NSS that
+     * isn't older than the version used at compile time. */
     PRUint32 length;
     PRUint16 protocolVersion;
     PRUint16 cipherSuite;
@@ -194,6 +195,9 @@ typedef struct SSLChannelInfoStr {
      * client side that the server accepted early (0-RTT) data.
      */
     PRBool earlyDataAccepted;
+
+    /* When adding new fields to this structure, please document the
+     * NSS version in which they were added. */
 } SSLChannelInfo;
 
 /* Preliminary channel info */
@@ -202,9 +206,10 @@ typedef struct SSLChannelInfoStr {
 #define ssl_preinfo_all (ssl_preinfo_version | ssl_preinfo_cipher_suite)
 
 typedef struct SSLPreliminaryChannelInfoStr {
-    /* |length| is obsolete. On return, SSL_GetPreliminaryChannelInfo sets
-     * |length| to the smaller of the |len| argument and the length of the
-     * struct. The caller may ignore |length|. */
+    /* On return, SSL_GetPreliminaryChannelInfo sets |length| to the smaller of
+     * the |len| argument and the length of the struct used by NSS.
+     * Callers must ensure the application uses a version of NSS that
+     * isn't older than the version used at compile time. */
     PRUint32 length;
     /* A bitfield over SSLPreliminaryValueSet that describes which
      * preliminary values are set (see ssl_preinfo_*). */
@@ -213,12 +218,16 @@ typedef struct SSLPreliminaryChannelInfoStr {
     PRUint16 protocolVersion;
     /* Cipher suite: test (valuesSet & ssl_preinfo_cipher_suite) */
     PRUint16 cipherSuite;
+
+    /* When adding new fields to this structure, please document the
+     * NSS version in which they were added. */
 } SSLPreliminaryChannelInfo;
 
 typedef struct SSLCipherSuiteInfoStr {
-    /* |length| is obsolete. On return, SSL_GetCipherSuitelInfo sets |length|
-     * to the smaller of the |len| argument and the length of the struct. The
-     * caller may ignore |length|. */
+    /* On return, SSL_GetCipherSuitelInfo sets |length| to the smaller of
+     * the |len| argument and the length of the struct used by NSS.
+     * Callers must ensure the application uses a version of NSS that
+     * isn't older than the version used at compile time. */
     PRUint16 length;
     PRUint16 cipherSuite;
 
@@ -253,10 +262,13 @@ typedef struct SSLCipherSuiteInfoStr {
     PRUintn nonStandard : 1;
     PRUintn reservedBits : 29;
 
+    /* The following fields were added in NSS 3.24. */
     /* This reports the correct authentication type for the cipher suite, use
      * this instead of |authAlgorithm|. */
     SSLAuthType authType;
 
+    /* When adding new fields to this structure, please document the
+     * NSS version in which they were added. */
 } SSLCipherSuiteInfo;
 
 typedef enum {
