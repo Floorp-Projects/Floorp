@@ -84,6 +84,7 @@ function testReload(shortcut, docked, toolID, callback) {
 
   description = docked + " devtools with tool " + toolID + ", shortcut #" + shortcut;
   info("Testing reload in " + description);
+  toolbox.win.focus();
   synthesizeKeyShortcut(L10N.getStr(shortcut), toolbox.win);
   reloadsSent++;
 }

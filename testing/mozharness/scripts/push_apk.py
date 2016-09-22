@@ -62,6 +62,11 @@ class PushAPK(BaseScript, GooglePlayMixin, VirtualenvMixin):
             "dest": "apk_file_armv7_v15",
             "help": "The path to the ARM v7 API v15 APK file",
         }],
+        [["--rollout-percentage"], {
+            "dest": "rollout_percentage",
+            "help": "The rollout percentage (update percentage)",
+            "default": "None"
+        }],
 
     ]
 
@@ -109,12 +114,23 @@ class PushAPK(BaseScript, GooglePlayMixin, VirtualenvMixin):
         """ Check that the given values are correct,
         files exists, etc
         """
+        if "package_name" not in self.config:
+            self.fatal("--package-name is mandatory")
+
         if self.config['track'] not in self.track_values:
             self.fatal("Unknown track value " + self.config['track'])
 
         if self.config['package_name'] not in self.package_name_values:
             self.fatal("Unknown package name value " +
                        self.config['package_name'])
+
+        if self.config['track'] == "rollout" and self.config["rollout_percentage"] is "None":
+            self.fatal("When using track='rollout', --rollout-percentage must be provided too")
+
+        if self.config["rollout_percentage"] is not "None":
+            self.percentage = float(self.config["rollout_percentage"])
+            if self.percentage < 0 or self.percentage > 100:
+                self.fatal("Percentage should be between 0 and 100")
 
         if not os.path.isfile(self.config['apk_file_x86']):
             self.fatal("Could not find " + self.config['apk_file_x86'])
@@ -166,12 +182,16 @@ class PushAPK(BaseScript, GooglePlayMixin, VirtualenvMixin):
                 self.log('The credentials have been revoked or expired,'
                          'please re-run the application to re-authorize')
 
+        upload_body = {u'versionCodes': versions}
+        if self.config["rollout_percentage"] is not "None":
+            upload_body[u'userFraction'] = self.percentage/100
+
         # Set the track for all apk
         service.edits().tracks().update(
             editId=edit_id,
             track=self.config['track'],
             packageName=self.config['package_name'],
-            body={u'versionCodes': versions}).execute()
+            body=upload_body).execute()
         self.log('Application "%s" set to track "%s" for versions %s' %
                  (self.config['package_name'], self.config['track'], versions))
 

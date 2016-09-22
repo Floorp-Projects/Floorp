@@ -78,3 +78,17 @@ pref("services.sync.fxa.privacyURL", "https://accounts.firefox.com/legal/privacy
 
 pref("services.sync.telemetry.submissionInterval", 43200); // 12 hours in seconds
 pref("services.sync.telemetry.maxPayloadCount", 500);
+
+// Note that services.sync.validation.enabled is located in browser/app/profile/firefox.js
+
+// We consider validation this frequently. After considering validation, even
+// if we don't end up validating, we won't try again unless this much time has passed.
+pref("services.sync.validation.interval", 86400); // 24 hours in seconds
+
+// We only run validation `services.sync.validation.percentageChance` percent of
+// the time, even if it's been the right amount of time since the last validation,
+// and you meet the maxRecord checks.
+pref("services.sync.validation.percentageChance", 10);
+
+// We won't validate an engine if it has more than this many records on the server.
+pref("services.sync.validation.maxRecords", 100);

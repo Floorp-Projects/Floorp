@@ -12,19 +12,31 @@ const { DOM, createClass, PropTypes } = require("devtools/client/shared/vendor/r
 const { div } = DOM;
 
 /**
- * Side panel for the Inspector panel.
- * This side panel is using an existing DOM node as a content.
+ * Helper panel component that is using an existing DOM node
+ * as the content. It's used by Sidebar as well as SplitBox
+ * components.
  */
 var InspectorTabPanel = createClass({
   displayName: "InspectorTabPanel",
 
   propTypes: {
+    // ID of the node that should be rendered as the content.
+    id: PropTypes.string.isRequired,
+    // Optional prefix for panel IDs.
+    idPrefix: PropTypes.string,
+    // Optional mount callback
     onMount: PropTypes.func,
+  },
+
+  getDefaultProps: function () {
+    return {
+      idPrefix: "",
+    };
   },
 
   componentDidMount: function () {
     let doc = this.refs.content.ownerDocument;
-    let panel = doc.getElementById("sidebar-panel-" + this.props.id);
+    let panel = doc.getElementById(this.props.idPrefix + this.props.id);
 
     // Append existing DOM node into panel's content.
     this.refs.content.appendChild(panel);

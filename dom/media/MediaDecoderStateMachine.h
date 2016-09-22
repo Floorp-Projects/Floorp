@@ -292,11 +292,6 @@ private:
   // the decode monitor held.
   void UpdatePlaybackPosition(int64_t aTime);
 
-  // Causes the state machine to switch to buffering state, and to
-  // immediately stop playback and buffer downloaded data. Called on
-  // the state machine thread.
-  void StartBuffering();
-
   bool CanPlayThrough();
 
   MediaStatistics GetStatistics();
@@ -545,8 +540,6 @@ protected:
   void RunStateMachine();
   // Perform one cycle of the DECODING state.
   void StepDecoding();
-  // Perform one cycle of the BUFFERING state.
-  void StepBuffering();
   // Perform one cycle of the COMPLETED state.
   void StepCompleted();
 
@@ -601,11 +594,6 @@ private:
   Watchable<State> mState;
 
   UniquePtr<StateObject> mStateObj;
-
-  // Time that buffering started. Used for buffering timeout and only
-  // accessed on the state machine thread. This is null while we're not
-  // buffering.
-  TimeStamp mBufferingStart;
 
   media::TimeUnit Duration() const { MOZ_ASSERT(OnTaskQueue()); return mDuration.Ref().ref(); }
 

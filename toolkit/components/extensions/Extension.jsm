@@ -700,10 +700,9 @@ GlobalManager = {
         return context.extension.hasPermission(permission);
       },
 
-      shouldInject(namespace, name, restrictions) {
+      shouldInject(namespace, name, allowedContexts) {
         // Do not generate content script APIs, unless explicitly allowed.
-        if (context.envType === "content_parent" &&
-            (!restrictions || !restrictions.includes("content"))) {
+        if (context.envType === "content_parent" && !allowedContexts.includes("content")) {
           return false;
         }
         return findPathInObject(apis, namespace) !== null;

@@ -7,6 +7,7 @@
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/bookmark_utils.js");
 
@@ -82,14 +83,34 @@ class BookmarkProblemData {
   }
 
   /**
+   * Convert ("difference", [{ differences: ["tags", "name"] }, { differences: ["name"] }]) into
+   * [{ name: "difference:tags", count: 1}, { name: "difference:name", count: 2 }], etc.
+   */
+  _summarizeDifferences(prefix, diffs) {
+    let diffCounts = new Map();
+    for (let { differences } of diffs) {
+      for (let type of differences) {
+        let name = prefix + ":" + type;
+        let count = diffCounts.get(name) || 0;
+        diffCounts.set(name, count + 1);
+      }
+    }
+    return [...diffCounts].map(([name, count]) => ({ name, count }));
+  }
+
+  /**
    * Produce a list summarizing problems found. Each entry contains {name, count},
    * where name is the field name for the problem, and count is the number of times
    * the problem was encountered.
    *
    * Validation has failed if all counts are not 0.
+   *
+   * If the `full` argument is truthy, we also include information about which
+   * properties we saw structural differences in. Currently, this means either
+   * "sdiff:parentid" and "sdiff:childGUIDS" may be present.
    */
-  getSummary() {
-    return [
+  getSummary(full) {
+    let result = [
       { name: "clientMissing", count: this.clientMissing.length },
       { name: "serverMissing", count: this.serverMissing.length },
       { name: "serverDeleted", count: this.serverDeleted.length },
@@ -115,6 +136,11 @@ class BookmarkProblemData {
       { name: "parentNotFolder", count: this.parentNotFolder.length },
       { name: "wrongParentName", count: this.wrongParentName.length },
     ];
+    if (full) {
+      let structural = this._summarizeDifferences("sdiff", this.structuralDifferences);
+      result.push.apply(result, structural);
+    }
+    return result;
   }
 }
 
@@ -693,6 +719,40 @@ class BookmarkValidator {
     }
     return inspectionInfo;
   }
+
+  _getServerState(engine) {
+    let collection = engine.itemSource();
+    let collectionKey = engine.service.collectionKeys.keyForCollection(engine.name);
+    collection.full = true;
+    let items = [];
+    collection.recordHandler = function(item) {
+      item.decrypt(collectionKey);
+      items.push(item.cleartext);
+    };
+    collection.get();
+    return items;
+  }
+
+  validate(engine) {
+    let self = this;
+    return Task.spawn(function*() {
+      let start = Date.now();
+      let clientTree = yield PlacesUtils.promiseBookmarksTree("", {
+        includeItemIds: true
+      });
+      let serverState = self._getServerState(engine);
+      let serverRecordCount = serverState.length;
+      let result = self.compareServerWithClient(serverState, clientTree);
+      let end = Date.now();
+      let duration = end-start;
+      return {
+        duration,
+        problems: result.problemData,
+        recordCount: serverRecordCount
+      };
+    });
+  }
+
 };
 
 

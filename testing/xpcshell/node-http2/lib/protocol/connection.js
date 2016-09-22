@@ -353,6 +353,27 @@ Connection.prototype._receive = function _receive(frame, done) {
     this._onFirstFrameReceived(frame);
   }
 
+  // Do some sanity checking here before we create a stream
+  if ((frame.type == 'SETTINGS' ||
+       frame.type == 'PING' ||
+       frame.type == 'GOAWAY') &&
+      frame.stream != 0) {
+    // Got connection-level frame on a stream - EEP!
+    this.close('PROTOCOL_ERROR');
+    return;
+  } else if ((frame.type == 'DATA' ||
+              frame.type == 'HEADERS' ||
+              frame.type == 'PRIORITY' ||
+              frame.type == 'RST_STREAM' ||
+              frame.type == 'PUSH_PROMISE' ||
+              frame.type == 'CONTINUATION') &&
+             frame.stream == 0) {
+    // Got stream-level frame on connection - EEP!
+    this.close('PROTOCOL_ERROR');
+    return;
+  }
+  // WINDOW_UPDATE can be on either stream or connection
+
   // * gets the appropriate stream from the stream registry
   var stream = this._streamIds[frame.stream];
 
@@ -401,7 +422,7 @@ Connection.prototype._onFirstFrameReceived = function _onFirstFrameReceived(fram
     this._log.debug('Receiving the first SETTINGS frame as part of the connection header.');
   } else {
     this._log.fatal({ frame: frame }, 'Invalid connection header: first frame is not SETTINGS.');
-    this.emit('error');
+    this.emit('error', 'PROTOCOL_ERROR');
   }
 };
 

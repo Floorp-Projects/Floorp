@@ -5,6 +5,7 @@
 package org.mozilla.gecko.media;
 
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.Telemetry;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -139,9 +140,14 @@ public final class RemoteManager implements IBinder.DeathRecipient {
         }
     }
 
+    private static final String MEDIA_DECODING_PROCESS_CRASH = "MEDIA_DECODING_PROCESS_CRASH";
+    private void reportDecodingProcessCrash() {
+        Telemetry.addToHistogram(MEDIA_DECODING_PROCESS_CRASH, 1);
+    }
     @Override
     public void binderDied() {
         Log.e(LOGTAG, "remote codec is dead");
+        reportDecodingProcessCrash();
         handleRemoteDeath();
     }
 

@@ -2812,10 +2812,16 @@ HTMLMediaElement::LookupMediaElementURITable(nsIURI* aURI)
 }
 
 class HTMLMediaElement::ShutdownObserver : public nsIObserver {
+  enum class Phase : int8_t {
+    Init,
+    Subscribed,
+    Unsubscribed
+  };
 public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Observe(nsISupports*, const char* aTopic, const char16_t*) override {
+    MOZ_DIAGNOSTIC_ASSERT(mPhase == Phase::Subscribed);
     MOZ_DIAGNOSTIC_ASSERT(mWeak);
     if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
       mWeak->NotifyShutdownEvent();
@@ -2823,14 +2829,18 @@ public:
     return NS_OK;
   }
   void Subscribe(HTMLMediaElement* aPtr) {
+    MOZ_DIAGNOSTIC_ASSERT(mPhase == Phase::Init);
     MOZ_DIAGNOSTIC_ASSERT(!mWeak);
     mWeak = aPtr;
     nsContentUtils::RegisterShutdownObserver(this);
+    mPhase = Phase::Subscribed;
   }
   void Unsubscribe() {
+    MOZ_DIAGNOSTIC_ASSERT(mPhase == Phase::Subscribed);
     MOZ_DIAGNOSTIC_ASSERT(mWeak);
     mWeak = nullptr;
     nsContentUtils::UnregisterShutdownObserver(this);
+    mPhase = Phase::Unsubscribed;
   }
   void AddRefMediaElement() {
     mWeak->AddRef();
@@ -2840,10 +2850,12 @@ public:
   }
 private:
   virtual ~ShutdownObserver() {
+    MOZ_DIAGNOSTIC_ASSERT(mPhase == Phase::Unsubscribed);
     MOZ_DIAGNOSTIC_ASSERT(!mWeak);
   }
   // Guaranteed to be valid by HTMLMediaElement.
   HTMLMediaElement* mWeak = nullptr;
+  Phase mPhase = Phase::Init;
 };
 
 NS_IMPL_ISUPPORTS(HTMLMediaElement::ShutdownObserver, nsIObserver)
@@ -4455,8 +4467,6 @@ void HTMLMediaElement::Error(uint16_t aErrorCode,
                aErrorCode == MEDIA_ERR_NETWORK ||
                aErrorCode == MEDIA_ERR_ABORTED,
                "Only use MediaError codes!");
-  NS_ASSERTION(mReadyState > HAVE_NOTHING,
-               "Shouldn't be called when readyState is HAVE_NOTHING");
 
   // Since we have multiple paths calling into DecodeError, e.g.
   // MediaKeys::Terminated and EMEH264Decoder::Error. We should take the 1st
@@ -4467,7 +4477,15 @@ void HTMLMediaElement::Error(uint16_t aErrorCode,
   mError = new MediaError(this, aErrorCode, aErrorDetails);
 
   DispatchAsyncEvent(NS_LITERAL_STRING("error"));
-  ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_IDLE);
+  if (mReadyState == HAVE_NOTHING && aErrorCode == MEDIA_ERR_ABORTED) {
+    // https://html.spec.whatwg.org/multipage/embedded-content.html#media-data-processing-steps-list
+    // "If the media data fetching process is aborted by the user"
+    DispatchAsyncEvent(NS_LITERAL_STRING("abort"));
+    ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_EMPTY);
+    DispatchAsyncEvent(NS_LITERAL_STRING("emptied"));
+  } else {
+    ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_IDLE);
+  }
   ChangeDelayLoadStatus(false);
   UpdateAudioChannelPlayingState();
 }

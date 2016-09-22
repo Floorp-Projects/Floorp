@@ -26,6 +26,14 @@ function EvaluationResult(props) {
   const {source, type, level} = message;
   const icon = MessageIcon({level});
 
+  let messageBody;
+  if (message.messageText) {
+    messageBody = message.messageText;
+  } else {
+    messageBody = GripMessageBody({grip: message.parameters});
+  }
+
+
   const classes = ["message", "cm-s-mozilla"];
 
   classes.push(source);
@@ -41,7 +49,7 @@ function EvaluationResult(props) {
     dom.span({ className: "message-body-wrapper" },
       dom.span({ className: "message-flex-body" },
         dom.span({ className: "message-body devtools-monospace" },
-          GripMessageBody({grip: message.parameters})
+          messageBody
         )
       )
     )
