@@ -2014,6 +2014,96 @@
     "n_values": 32,
     "description": "H2: goaway reason from peer from rfc 7540. 31 is none received."
   },
+  "HPACK_ELEMENTS_EVICTED_DECOMPRESSOR": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 256,
+    "n_buckets": 50,
+    "description": "HPACK: Number of items removed from dynamic table to make room for 1 new item",
+    "alert_emails": ["necko@mozilla.com", "hurley@mozilla.com"],
+    "bug_numbers": [1296280]
+  },
+  "HPACK_BYTES_EVICTED_DECOMPRESSOR": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 8192,
+    "n_buckets": 50,
+    "description": "HPACK: Number of bytes removed from dynamic table to make room for 1 new item",
+    "alert_emails": ["necko@mozilla.com", "hurley@mozilla.com"],
+    "bug_numbers": [1296280]
+  },
+  "HPACK_BYTES_EVICTED_RATIO_DECOMPRESSOR": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 256,
+    "n_buckets": 50,
+    "description": "HPACK: Ratio of bytes evicted to bytes added (* 100)",
+    "alert_emails": ["necko@mozilla.com", "hurley@mozilla.com"],
+    "bug_numbers": [1296280]
+  },
+  "HPACK_PEAK_COUNT_DECOMPRESSOR": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1024,
+    "n_buckets": 50,
+    "description": "HPACK: peak number of items in the dynamic table",
+    "alert_emails": ["necko@mozilla.com", "hurley@mozilla.com"],
+    "bug_numbers": [1296280]
+  },
+  "HPACK_PEAK_SIZE_DECOMPRESSOR": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 16384,
+    "n_buckets": 100,
+    "description": "HPACK: peak size in bytes of the table",
+    "alert_emails": ["necko@mozilla.com", "hurley@mozilla.com"],
+    "bug_numbers": [1296280]
+  },
+  "HPACK_ELEMENTS_EVICTED_COMPRESSOR": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 256,
+    "n_buckets": 50,
+    "description": "HPACK: Number of items removed from dynamic table to make room for 1 new item",
+    "alert_emails": ["necko@mozilla.com", "hurley@mozilla.com"],
+    "bug_numbers": [1296280]
+  },
+  "HPACK_BYTES_EVICTED_COMPRESSOR": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 8192,
+    "n_buckets": 50,
+    "description": "HPACK: Number of bytes removed from dynamic table to make room for 1 new item",
+    "alert_emails": ["necko@mozilla.com", "hurley@mozilla.com"],
+    "bug_numbers": [1296280]
+  },
+  "HPACK_BYTES_EVICTED_RATIO_COMPRESSOR": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 256,
+    "n_buckets": 50,
+    "description": "HPACK: Ratio of bytes evicted to bytes added (* 100)",
+    "alert_emails": ["necko@mozilla.com", "hurley@mozilla.com"],
+    "bug_numbers": [1296280]
+  },
+  "HPACK_PEAK_COUNT_COMPRESSOR": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1024,
+    "n_buckets": 50,
+    "description": "HPACK: peak number of items in the dynamic table",
+    "alert_emails": ["necko@mozilla.com", "hurley@mozilla.com"],
+    "bug_numbers": [1296280]
+  },
+  "HPACK_PEAK_SIZE_COMPRESSOR": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 16384,
+    "n_buckets": 100,
+    "description": "HPACK: peak size in bytes of the table",
+    "alert_emails": ["necko@mozilla.com", "hurley@mozilla.com"],
+    "bug_numbers": [1296280]
+  },
   "HTTP_CONNECTION_ENTRY_CACHE_HIT_1" : {
     "expires_in_version": "never",
     "kind": "boolean",
@@ -6240,7 +6330,14 @@
     "kind": "boolean",
     "description": "Reports whether a decoder for an HTTP Live Streaming media type was created when requested.",
     "bug_numbers": [1262659]
-
+  },
+  "MEDIA_DECODING_PROCESS_CRASH": {
+    "alert_emails": ["bwu@mozilla.com", "jolin@mozilla.com", "jacheng@mozilla.com"],
+    "expires_in_version": "57",
+    "kind": "count",
+    "bug_numbers": [1297556, 1257777],
+    "description": "Records a value each time Fennec remote decoding process crashes unexpected while decoding media content.",
+    "releaseChannelCollection": "opt-out"
   },
   "VIDEO_MFT_OUTPUT_NULL_SAMPLES": {
     "alert_emails": ["cpearce@mozilla.com"],
@@ -8086,7 +8183,7 @@
     "expires_in_version": "default",
     "kind": "enumerated",
     "n_values": 6,
-    "description": "1 = No SHA1 signatures, 2 = SHA1 certificates issued before 2016, 3 = SHA1 certificates issued by an imported root, 4 = SHA1 certificates issued after 2015, 5 = another error prevented successful verification"
+    "description": "1 = No SHA1 signatures, 2 = SHA1 certificates issued by an imported root, 3 = SHA1 certificates issued before 2016, 4 = SHA1 certificates issued after 2015, 5 = another error prevented successful verification"
   },
   "WEAVE_CONFIGURED": {
     "expires_in_version": "default",
@@ -8585,6 +8682,15 @@
     "high": 1000,
     "n_buckets": 100,
     "description": "720p VP9 decode benchmark measurement in frames per second",
+    "releaseChannelCollection": "opt-out"
+  },
+  "VIDEO_CDM_CREATED": {
+    "alert_emails": ["cpearce@mozilla.com"],
+    "expires_in_version": "58",
+    "bug_numbers": [1304207],
+    "kind": "enumerated",
+    "n_values": 6,
+    "description": "Note the type of CDM (0=ClearKey, 1=Primetime, 2=Widevine, 3=unknown) every time we successfully instantiate an EME MediaKeys object.",
     "releaseChannelCollection": "opt-out"
   },
   "MEDIA_CODEC_USED": {

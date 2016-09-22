@@ -3,29 +3,27 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const { Task } = require("devtools/shared/task");
+
 function DebuggerPanel(iframeWindow, toolbox) {
   this.panelWin = iframeWindow;
   this.toolbox = toolbox;
 }
 
 DebuggerPanel.prototype = {
-  open: function() {
-    let targetPromise;
+  open: Task.async(function*() {
     if (!this.toolbox.target.isRemote) {
-      targetPromise = this.toolbox.target.makeRemote();
-    } else {
-      targetPromise = Promise.resolve(this.toolbox.target);
+      yield this.toolbox.target.makeRemote();
     }
 
-    return targetPromise.then(() => {
-      this.panelWin.Debugger.bootstrap({
-        threadClient: this.toolbox.threadClient,
-        tabTarget: this.toolbox.target
-      });
-      this.isReady = true;
-      return this;
+    yield this.panelWin.Debugger.bootstrap({
+      threadClient: this.toolbox.threadClient,
+      tabTarget: this.toolbox.target
     });
-  },
+
+    this.isReady = true;
+    return this;
+  }),
 
   _store: function() {
     return this.panelWin.Debugger.store;

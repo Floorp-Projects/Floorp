@@ -341,11 +341,14 @@ class InjectionContext extends Context {
    *     e.g. in the case of "devtools.inspectedWindow".
    * @param {string} [name] The name of the property in the namespace.
    *     `null` if we are checking whether the namespace should be injected.
-   * @param {Array} restrictions An arbitrary list of restrictions as declared
-   *     by the schema for a given API node.
+   * @param {Array<string>} allowedContexts A list of additional contexts in which
+   *     this API should be available. May include any of:
+   *         "main" - The main chrome browser process.
+   *         "addon" - An addon process.
+   *         "content" - A content process.
    * @returns {boolean} Whether the API should be injected.
    */
-  shouldInject(namespace, name, restrictions) {
+  shouldInject(namespace, name, allowedContexts) {
     throw new Error("Not implemented");
   }
 
@@ -470,11 +473,11 @@ class Entry {
     this.preprocessor = schema.preprocess || null;
 
     /**
-     * @property {Array<string>} [restrictions]
-     * A list of restrictions to consider before generating the API.
+     * @property {Array<string>} allowedContexts A list of allowed contexts
+     * to consider before generating the API.
      * These are not parsed by the schema, but passed to `shouldInject`.
      */
-    this.restrictions = schema.restrictions || null;
+    this.allowedContexts = schema.allowedContexts || [];
   }
 
   /**
@@ -554,7 +557,7 @@ class Type extends Entry {
    *        schemas of this type.
    */
   static get EXTRA_PROPERTIES() {
-    return ["description", "deprecated", "preprocess", "restrictions"];
+    return ["description", "deprecated", "preprocess", "allowedContexts"];
   }
 
   /**
@@ -1425,7 +1428,8 @@ class SubModuleProperty extends Entry {
     for (let fun of functions) {
       let subpath = path.concat(name);
       let namespace = subpath.join(".");
-      if (context.shouldInject(namespace, fun.name, fun.restrictions || ns.defaultRestrictions)) {
+      let allowedContexts = fun.allowedContexts.length ? fun.allowedContexts : ns.defaultContexts;
+      if (context.shouldInject(namespace, fun.name, allowedContexts)) {
         let apiImpl = context.getImplementation(namespace, fun.name);
         fun.inject(apiImpl, subpath, fun.name, obj, context);
       }
@@ -1655,8 +1659,8 @@ this.Schemas = {
     if (!ns) {
       ns = new Map();
       ns.permissions = null;
-      ns.restrictions = null;
-      ns.defeaultRestrictions = null;
+      ns.allowedContexts = [];
+      ns.defaultContexts = [];
       this.namespaces.set(namespaceName, ns);
     }
     ns.set(symbol, value);
@@ -1850,8 +1854,8 @@ this.Schemas = {
 
       let ns = this.namespaces.get(name);
       ns.permissions = namespace.permissions || null;
-      ns.restrictions = namespace.restrictions || null;
-      ns.defaultRestrictions = namespace.defaultRestrictions || null;
+      ns.allowedContexts = namespace.allowedContexts || [];
+      ns.defaultContexts = namespace.defaultContexts || [];
     }
   },
 
@@ -1919,13 +1923,14 @@ this.Schemas = {
         continue;
       }
 
-      if (!wrapperFuncs.shouldInject(namespace, null, ns.restrictions)) {
+      if (!wrapperFuncs.shouldInject(namespace, null, ns.allowedContexts)) {
         continue;
       }
 
       let obj = Cu.createObjectIn(dest, {defineAs: namespace});
       for (let [name, entry] of ns) {
-        if (context.shouldInject(namespace, name, entry.restrictions || ns.defaultRestrictions)) {
+        let allowedContexts = entry.allowedContexts.length ? entry.allowedContexts : ns.defaultContexts;
+        if (context.shouldInject(namespace, name, allowedContexts)) {
           let apiImpl = context.getImplementation(namespace, name);
           entry.inject(apiImpl, [namespace], name, obj, context);
         }

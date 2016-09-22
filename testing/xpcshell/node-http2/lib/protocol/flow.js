@@ -5,7 +5,7 @@ var assert = require('assert');
 
 // Flow is a [Duplex stream][1] subclass which implements HTTP/2 flow control. It is designed to be
 // subclassed by [Connection](connection.html) and the `upstream` component of [Stream](stream.html).
-// [1]: http://nodejs.org/api/stream.html#stream_class_stream_duplex
+// [1]: https://nodejs.org/api/stream.html#stream_class_stream_duplex
 
 var Duplex  = require('stream').Duplex;
 
@@ -19,7 +19,7 @@ exports.Flow = Flow;
 // * **setInitialWindow(size)**: the initial flow control window size can be changed *any time*
 //   ([as described in the standard][1]) using this method
 //
-// [1]: http://tools.ietf.org/html/draft-ietf-httpbis-http2-16#section-6.9.2
+// [1]: https://tools.ietf.org/html/rfc7540#section-6.9.2
 
 // API for child classes
 // ---------------------
@@ -42,7 +42,7 @@ exports.Flow = Flow;
 // * **read(limit): frame**: like the regular `read`, but the 'flow control size' (0 for non-DATA
 //   frames, length of the payload for DATA frames) of the returned frame will be under `limit`.
 //   Small exception: pass -1 as `limit` if the max. flow control size is 0. `read(0)` means the
-//   same thing as [in the original API](http://nodejs.org/api/stream.html#stream_stream_read_0).
+//   same thing as [in the original API](https://nodejs.org/api/stream.html#stream_stream_read_0).
 //
 // * **getLastQueuedFrame(): frame**: returns the last frame in output buffers
 //
@@ -79,7 +79,7 @@ Flow.prototype._receive = function _receive(frame, callback) {
 // `_receive` is called by `_write` which in turn is [called by Duplex][1] when someone `write()`s
 // to the flow. It emits the 'receiving' event and notifies the window size tracking code if the
 // incoming frame is a WINDOW_UPDATE.
-// [1]: http://nodejs.org/api/stream.html#stream_writable_write_chunk_encoding_callback_1
+// [1]: https://nodejs.org/api/stream.html#stream_writable_write_chunk_encoding_callback_1
 Flow.prototype._write = function _write(frame, encoding, callback) {
   var sentToUs = (this._flowControlId === undefined) || (frame.stream === this._flowControlId);
 
@@ -147,7 +147,7 @@ Flow.prototype._send = function _send() {
 
 // `_send` is called by `_read` which is in turn [called by Duplex][1] when it wants to have more
 // items in the output queue.
-// [1]: http://nodejs.org/api/stream.html#stream_writable_write_chunk_encoding_callback_1
+// [1]: https://nodejs.org/api/stream.html#stream_writable_write_chunk_encoding_callback_1
 Flow.prototype._read = function _read() {
   // * if the flow control queue is empty, then let the user push more frames
   if (this._queue.length === 0) {
@@ -167,7 +167,7 @@ Flow.prototype._read = function _read() {
     } while (moreNeeded && (this._queue.length > 0));
     this._readableState.sync = false;
 
-    assert((moreNeeded == false) ||                              // * output queue is full
+    assert((!moreNeeded) ||                              // * output queue is full
            (this._queue.length === 0) ||                         // * flow control queue is empty
            (!this._window && (this._queue[0].type === 'DATA'))); // * waiting for window update
   }
@@ -249,8 +249,9 @@ Flow.prototype._parentPush = function _parentPush(frame) {
 // did not push the whole frame to the output queue (but maybe it did push part of the frame).
 Flow.prototype._push = function _push(frame) {
   var data = frame && (frame.type === 'DATA') && frame.data;
+  var maxFrameLength = (this._window < 16384) ? this._window : 16384;
 
-  if (!data || (data.length <= this._window)) {
+  if (!data || (data.length <= maxFrameLength)) {
     return this._parentPush(frame);
   }
 
@@ -261,12 +262,12 @@ Flow.prototype._push = function _push(frame) {
   else {
     this._log.trace({ frame: frame, size: frame.data.length, forwardable: this._window },
                     'Splitting out forwardable part of a DATA frame.');
-    frame.data = data.slice(this._window);
+    frame.data = data.slice(maxFrameLength);
     this._parentPush({
       type: 'DATA',
       flags: {},
       stream: frame.stream,
-      data: data.slice(0, this._window)
+      data: data.slice(0, maxFrameLength)
     });
     return null;
   }
@@ -323,7 +324,9 @@ Flow.prototype._increaseWindow = function _increaseWindow(size) {
       this._log.error('Flow control window grew too large.');
       this.emit('error', 'FLOW_CONTROL_ERROR');
     } else {
-      this.emit('window_update');
+      if (size != 0) {
+        this.emit('window_update');
+      }
     }
   }
 };

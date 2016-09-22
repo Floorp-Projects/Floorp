@@ -13,7 +13,9 @@ import mozpack.path as mozpath
 # The xpidl parser is not incorporated in the in-tree virtualenv.
 xpidl_dir = mozpath.join(buildconfig.topsrcdir, 'xpcom', 'idl-parser',
                          'xpidl')
-sys.path.append(xpidl_dir)
+xpidl_cachedir = mozpath.join(buildconfig.topobjdir, 'xpcom', 'idl-parser',
+                              'xpidl')
+sys.path.extend([xpidl_dir, xpidl_cachedir])
 import xpidl
 
 # Instantiate the parser.
@@ -217,10 +219,10 @@ def get_conf(conf_file):
     ]
     return conf, inc_dir
 
-def gen_header_file(fd, conf_file):
+def gen_files(fd, conf_file, xpidllex, xpidlyacc):
+    deps = set()
     conf, inc_dir = get_conf(conf_file)
-    return print_header_file(fd, conf, inc_dir)
-
-def gen_cpp_file(fd, conf_file):
-    conf, inc_dir = get_conf(conf_file)
-    return print_cpp_file(fd, conf, inc_dir)
+    deps.update(print_header_file(fd, conf, inc_dir))
+    with open('xpcAccEvents.cpp', 'w') as cpp_fd:
+        deps.update(print_cpp_file(cpp_fd, conf, inc_dir))
+    return deps

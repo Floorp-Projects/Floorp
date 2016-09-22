@@ -33,36 +33,3 @@ add_task(function* () {
 
   yield receievedMessages;
 });
-
-/**
- * Wait for messages in the web console output, resolving once they are receieved.
- *
- * @param object options
- *        - hud: the webconsole
- *        - messages: Array[Object]. An array of messages to match. Current supported options:
- *            - text: Exact text match in .message-body
- */
-function waitForMessages({ hud, messages }) {
-  return new Promise(resolve => {
-    let numMatched = 0;
-    let receivedLog = hud.ui.on("new-messages", function messagesReceieved(e, newMessage) {
-      for (let message of messages) {
-        if (message.matched) {
-          continue;
-        }
-
-        if (newMessage.node.querySelector(".message-body").textContent == message.text) {
-          numMatched++;
-          message.matched = true;
-          info("Matched a message with text: " + message.text + ", still waiting for " + (messages.length - numMatched) + " messages");
-        }
-
-        if (numMatched === messages.length) {
-          hud.ui.off("new-messages", messagesReceieved);
-          resolve();
-          return;
-        }
-      }
-    });
-  });
-}

@@ -66,8 +66,14 @@ def run_firefox_ui_test(testtype=None, topsrcdir=None, **kwargs):
     if not kwargs['server_root']:
         kwargs['server_root'] = os.path.join(fxui_dir, 'resources')
 
-    # If no tests have been selected, set default ones
-    if not kwargs.get('tests'):
+    # If called via "mach test" a dictionary of tests is passed in
+    if 'test_objects' in kwargs:
+        tests = []
+        for obj in kwargs['test_objects']:
+            tests.append(obj['file_relpath'])
+        kwargs['tests'] = tests
+    elif not kwargs.get('tests'):
+        # If no tests have been selected, set default ones
         kwargs['tests'] = [os.path.join(fxui_dir, 'tests', test)
                            for test in test_types[testtype]['default_tests']]
 

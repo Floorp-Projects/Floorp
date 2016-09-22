@@ -3,7 +3,7 @@ var util = require('./util');
 
 var Flow = require('../lib/protocol/flow').Flow;
 
-var MAX_PAYLOAD_SIZE = 4096;
+var MAX_PAYLOAD_SIZE = 16384;
 
 function createFlow(log) {
   var flowControlId = util.random(10, 100);

@@ -31,7 +31,6 @@
 
   <commandset id="editMenuCommands"/>
   <keyset id="editMenuKeys"/>
-  <keyset id="toolbox-keyset"/>
 
   <popupset>
     <menupopup id="toolbox-textbox-context-popup">
