@@ -1139,7 +1139,7 @@ GeckoMediaPluginServiceParent::RemoveOnGMPThread(const nsAString& aDirectory,
 
   bool inUse = false;
   MutexAutoLock lock(mMutex);
-  for (size_t i = mPlugins.Length() - 1; i < mPlugins.Length(); i--) {
+  for (size_t i = mPlugins.Length(); i-- > 0; ) {
     nsCOMPtr<nsIFile> pluginpath = mPlugins[i]->GetDirectory();
     bool equals;
     if (NS_FAILED(directory->Equals(pluginpath, &equals)) || !equals) {
