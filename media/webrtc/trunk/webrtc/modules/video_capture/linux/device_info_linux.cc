@@ -29,8 +29,10 @@
 #include "webrtc/system_wrappers/interface/ref_count.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 
+#ifdef WEBRTC_LINUX
 #define EVENT_SIZE  ( sizeof (struct inotify_event) )
 #define BUF_LEN     ( 1024 * ( EVENT_SIZE + 16 ) )
+#endif
 
 namespace webrtc
 {
@@ -49,6 +51,7 @@ VideoCaptureImpl::CreateDeviceInfo(const int32_t id)
     return deviceInfo;
 }
 
+#ifdef WEBRTC_LINUX
 void DeviceInfoLinux::HandleEvent(inotify_event* event)
 {
     switch (event->mask) {
@@ -158,11 +161,15 @@ bool DeviceInfoLinux::InotifyProcess()
         return false;
     }
 }
+#endif
 
 DeviceInfoLinux::DeviceInfoLinux(const int32_t id)
     : DeviceInfoImpl(id)
+#ifdef WEBRTC_LINUX
     , _isShutdown(0)
+#endif
 {
+#ifdef WEBRTC_LINUX
     _inotifyEventThread = ThreadWrapper::CreateThread(
         InotifyEventThread, this, "InotifyEventThread");
 
@@ -171,6 +178,7 @@ DeviceInfoLinux::DeviceInfoLinux(const int32_t id)
         _inotifyEventThread->Start();
         _inotifyEventThread->SetPriority(kHighPriority);
     }
+#endif
 }
 
 int32_t DeviceInfoLinux::Init()
@@ -180,12 +188,14 @@ int32_t DeviceInfoLinux::Init()
 
 DeviceInfoLinux::~DeviceInfoLinux()
 {
+#ifdef WEBRTC_LINUX
     ++_isShutdown;
 
     if (_inotifyEventThread) {
         _inotifyEventThread->Stop();
         _inotifyEventThread.reset();
     }
+#endif
 }
 
 uint32_t DeviceInfoLinux::NumberOfDevices()
