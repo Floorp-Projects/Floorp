@@ -520,7 +520,6 @@ NS_IMETHODIMP
 HTMLEditor::InsertTableRow(int32_t aNumber,
                            bool aAfter)
 {
-  RefPtr<Selection> selection;
   nsCOMPtr<nsIDOMElement> table;
   nsCOMPtr<nsIDOMElement> curCell;
 
@@ -1106,7 +1105,6 @@ HTMLEditor::DeleteColumn(nsIDOMElement* aTable,
   NS_ENSURE_TRUE(aTable, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsIDOMElement> cell;
-  nsCOMPtr<nsIDOMElement> cellInDeleteCol;
   int32_t startRowIndex, startColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
   bool    isSelected;
   int32_t rowIndex = 0;

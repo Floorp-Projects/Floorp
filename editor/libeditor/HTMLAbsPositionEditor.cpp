@@ -70,12 +70,12 @@ HTMLEditor::AbsolutePositionSelection(bool aEnabled)
                                     EditAction::removeAbsolutePosition);
   bool cancel, handled;
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
-  nsresult res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  nsCOMPtr<nsIEditRules> rules(mRules);
+  nsresult res = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (NS_FAILED(res) || cancel)
     return res;
 
-  return mRules->DidDoAction(selection, &ruleInfo, res);
+  return rules->DidDoAction(selection, &ruleInfo, res);
 }
 
 NS_IMETHODIMP
@@ -176,12 +176,12 @@ HTMLEditor::RelativeChangeZIndex(int32_t aChange)
                                        EditAction::increaseZIndex);
   bool cancel, handled;
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
-  nsresult res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  nsCOMPtr<nsIEditRules> rules(mRules);
+  nsresult res = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (cancel || NS_FAILED(res))
     return res;
 
-  return mRules->DidDoAction(selection, &ruleInfo, res);
+  return rules->DidDoAction(selection, &ruleInfo, res);
 }
 
 NS_IMETHODIMP

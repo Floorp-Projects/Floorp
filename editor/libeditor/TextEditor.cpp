@@ -660,7 +660,7 @@ TextEditor::DeleteSelection(EDirection aAction,
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+  nsCOMPtr<nsIEditRules> rules(mRules);
 
   nsresult result;
 
@@ -696,7 +696,7 @@ TextEditor::DeleteSelection(EDirection aAction,
   ruleInfo.collapsedAction = aAction;
   ruleInfo.stripWrappers = aStripWrappers;
   bool cancel, handled;
-  result = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  result = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   NS_ENSURE_SUCCESS(result, result);
   if (!cancel && !handled)
   {
@@ -705,7 +705,7 @@ TextEditor::DeleteSelection(EDirection aAction,
   if (!cancel)
   {
     // post-process
-    result = mRules->DidDoAction(selection, &ruleInfo, result);
+    result = rules->DidDoAction(selection, &ruleInfo, result);
   }
 
   return result;
@@ -717,7 +717,7 @@ TextEditor::InsertText(const nsAString& aStringToInsert)
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+  nsCOMPtr<nsIEditRules> rules(mRules);
 
   EditAction opID = EditAction::insertText;
   if (ShouldHandleIMEComposition()) {
@@ -739,7 +739,7 @@ TextEditor::InsertText(const nsAString& aStringToInsert)
   ruleInfo.maxLength = mMaxTextLength;
 
   bool cancel, handled;
-  nsresult res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  nsresult res = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   NS_ENSURE_SUCCESS(res, res);
   if (!cancel && !handled)
   {
@@ -748,7 +748,7 @@ TextEditor::InsertText(const nsAString& aStringToInsert)
   if (!cancel)
   {
     // post-process
-    res = mRules->DidDoAction(selection, &ruleInfo, res);
+    res = rules->DidDoAction(selection, &ruleInfo, res);
   }
   return res;
 }
@@ -759,7 +759,7 @@ TextEditor::InsertLineBreak()
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+  nsCOMPtr<nsIEditRules> rules(mRules);
 
   AutoEditBatch beginBatching(this);
   AutoRules beginRulesSniffing(this, EditAction::insertBreak, nsIEditor::eNext);
@@ -771,7 +771,7 @@ TextEditor::InsertLineBreak()
   TextRulesInfo ruleInfo(EditAction::insertBreak);
   ruleInfo.maxLength = mMaxTextLength;
   bool cancel, handled;
-  nsresult res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  nsresult res = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   NS_ENSURE_SUCCESS(res, res);
   if (!cancel && !handled)
   {
@@ -824,7 +824,7 @@ TextEditor::InsertLineBreak()
   if (!cancel)
   {
     // post-process, always called if WillInsertBreak didn't return cancel==true
-    res = mRules->DidDoAction(selection, &ruleInfo, res);
+    res = rules->DidDoAction(selection, &ruleInfo, res);
   }
 
   return res;
@@ -838,9 +838,9 @@ TextEditor::BeginIMEComposition(WidgetCompositionEvent* aEvent)
   if (IsPasswordEditor()) {
     NS_ENSURE_TRUE(mRules, NS_ERROR_NULL_POINTER);
     // Protect the edit rules object from dying
-    nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+    nsCOMPtr<nsIEditRules> rules(mRules);
 
-    TextEditRules* textEditRules = static_cast<TextEditRules*>(mRules.get());
+    TextEditRules* textEditRules = static_cast<TextEditRules*>(rules.get());
     textEditRules->ResetIMETextPWBuf();
   }
 
@@ -921,9 +921,9 @@ TextEditor::GetDocumentIsEmpty(bool* aDocumentIsEmpty)
   NS_ENSURE_TRUE(mRules, NS_ERROR_NOT_INITIALIZED);
 
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+  nsCOMPtr<nsIEditRules> rules(mRules);
 
-  return mRules->DocumentIsEmpty(aDocumentIsEmpty);
+  return rules->DocumentIsEmpty(aDocumentIsEmpty);
 }
 
 NS_IMETHODIMP
@@ -1087,7 +1087,7 @@ NS_IMETHODIMP
 TextEditor::Undo(uint32_t aCount)
 {
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+  nsCOMPtr<nsIEditRules> rules(mRules);
 
   AutoUpdateViewBatch beginViewBatching(this);
 
@@ -1100,12 +1100,12 @@ TextEditor::Undo(uint32_t aCount)
   TextRulesInfo ruleInfo(EditAction::undo);
   RefPtr<Selection> selection = GetSelection();
   bool cancel, handled;
-  nsresult result = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  nsresult result = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
 
   if (!cancel && NS_SUCCEEDED(result))
   {
     result = EditorBase::Undo(aCount);
-    result = mRules->DidDoAction(selection, &ruleInfo, result);
+    result = rules->DidDoAction(selection, &ruleInfo, result);
   }
 
   NotifyEditorObservers(eNotifyEditorObserversOfEnd);
@@ -1116,7 +1116,7 @@ NS_IMETHODIMP
 TextEditor::Redo(uint32_t aCount)
 {
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+  nsCOMPtr<nsIEditRules> rules(mRules);
 
   AutoUpdateViewBatch beginViewBatching(this);
 
@@ -1129,12 +1129,12 @@ TextEditor::Redo(uint32_t aCount)
   TextRulesInfo ruleInfo(EditAction::redo);
   RefPtr<Selection> selection = GetSelection();
   bool cancel, handled;
-  nsresult result = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  nsresult result = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
 
   if (!cancel && NS_SUCCEEDED(result))
   {
     result = EditorBase::Redo(aCount);
-    result = mRules->DidDoAction(selection, &ruleInfo, result);
+    result = rules->DidDoAction(selection, &ruleInfo, result);
   }
 
   NotifyEditorObservers(eNotifyEditorObserversOfEnd);
@@ -1294,7 +1294,7 @@ TextEditor::OutputToString(const nsAString& aFormatType,
                            nsAString& aOutputString)
 {
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+  nsCOMPtr<nsIEditRules> rules(mRules);
 
   nsString resultString;
   TextRulesInfo ruleInfo(EditAction::outputText);
@@ -1303,7 +1303,7 @@ TextEditor::OutputToString(const nsAString& aFormatType,
   nsAutoString str(aFormatType);
   ruleInfo.outputFormat = &str;
   bool cancel, handled;
-  nsresult rv = mRules->WillDoAction(nullptr, &ruleInfo, &cancel, &handled);
+  nsresult rv = rules->WillDoAction(nullptr, &ruleInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) { return rv; }
   if (handled)
   { // this case will get triggered by password fields
@@ -1410,7 +1410,7 @@ TextEditor::InsertAsQuotation(const nsAString& aQuotedText,
                               nsIDOMNode** aNodeInserted)
 {
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+  nsCOMPtr<nsIEditRules> rules(mRules);
 
   // Let the citer quote it for us:
   nsString quotedStuff;
@@ -1432,7 +1432,7 @@ TextEditor::InsertAsQuotation(const nsAString& aQuotedText,
   // give rules a chance to handle or cancel
   TextRulesInfo ruleInfo(EditAction::insertElement);
   bool cancel, handled;
-  rv = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   NS_ENSURE_SUCCESS(rv, rv);
   if (cancel) return NS_OK; // rules canceled the operation
   if (!handled)
@@ -1550,10 +1550,12 @@ TextEditor::StartOperation(EditAction opID,
                            nsIEditor::EDirection aDirection)
 {
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+  nsCOMPtr<nsIEditRules> rules(mRules);
 
   EditorBase::StartOperation(opID, aDirection);  // will set mAction, mDirection
-  if (mRules) return mRules->BeforeEdit(mAction, mDirection);
+  if (rules) {
+    return rules->BeforeEdit(mAction, mDirection);
+  }
   return NS_OK;
 }
 
@@ -1565,11 +1567,13 @@ NS_IMETHODIMP
 TextEditor::EndOperation()
 {
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+  nsCOMPtr<nsIEditRules> rules(mRules);
 
   // post processing
   nsresult res = NS_OK;
-  if (mRules) res = mRules->AfterEdit(mAction, mDirection);
+  if (rules) {
+    res = rules->AfterEdit(mAction, mDirection);
+  }
   EditorBase::EndOperation();  // will clear mAction, mDirection
   return res;
 }
@@ -1580,12 +1584,11 @@ TextEditor::SelectEntireDocument(Selection* aSelection)
   if (!aSelection || !mRules) { return NS_ERROR_NULL_POINTER; }
 
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+  nsCOMPtr<nsIEditRules> rules(mRules);
 
   // is doc empty?
   bool bDocIsEmpty;
-  if (NS_SUCCEEDED(mRules->DocumentIsEmpty(&bDocIsEmpty)) && bDocIsEmpty)
-  {
+  if (NS_SUCCEEDED(rules->DocumentIsEmpty(&bDocIsEmpty)) && bDocIsEmpty) {
     // get root node
     nsCOMPtr<nsIDOMElement> rootElement = do_QueryInterface(GetRoot());
     NS_ENSURE_TRUE(rootElement, NS_ERROR_FAILURE);
