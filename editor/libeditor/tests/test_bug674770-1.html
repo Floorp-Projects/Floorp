@@ -24,43 +24,59 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=674770
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
-  SpecialPowers.pushPrefEnv({"set":[["middlemouse.paste", true]]}, startTest);
+  SpecialPowers.pushPrefEnv({"set":[["middlemouse.paste", true]]}, startTests);
 });
-function startTest() {
-  localStorage.removeItem("clicked");
-  window.linkWasClicked = false;
 
-  var link = document.querySelector("#link1");
-  addEventListener("storage", function(e) {
-    is(e.key, "clicked", "Correct event");
-    is(e.newValue, "true", "Correct value");
-    window.linkWasClicked = true;
-  }, false);
-  synthesizeMouseAtCenter(link, {button: 1});
-
-  hitEventLoop(function() {
-    ok(window.linkWasClicked, "The click operation worked successfully");
-    window.linkWasClicked = false;
-
-    link = document.querySelector("#link2");
+function startTests() {
+  var tests = [
+    { description: "Testing link in <div>: ",
+      target: function () { return document.querySelector("#link1"); },
+      linkShouldWork: true },
+    { description: "Testing link in <div contenteditable>: ",
+      target: function () { return document.querySelector("#link2"); },
+      linkShouldWork: false },
+  ];
+  var currentTest;
+  function runNextTest() {
     localStorage.removeItem("clicked");
-    synthesizeMouseAtCenter(link, {button: 1});
-
-    hitEventLoop(function() {
-      ok(!window.linkWasClicked, "The click operation shouldn't work in the contenteditable area");
-
-      localStorage.removeItem("clicked");
+    currentTest = tests.shift();
+    if (!currentTest) {
       SimpleTest.finish();
-    }, 100);
-  }, 100);
-}
-
-function hitEventLoop(func, times) {
-  if (times > 0) {
-    setTimeout(hitEventLoop, 0, func, times - 1);
-  } else {
-    setTimeout(func, 0);
+      return;
+    }
+    ok(true, currentTest.description + "Starting to test...");
+    synthesizeMouseAtCenter(currentTest.target(), { button: 1 });
   }
+
+  addEventListener("storage", function(e) {
+    is(e.key, "clicked", currentTest.description + "Key should always be 'clicked'");
+    is(e.newValue, "true", currentTest.description + "Value should always be 'true'");
+    ok(currentTest.linkShouldWork, currentTest.description + "The click operation on the link " + (currentTest.linkShouldWork ? "should work" : "shouldn't work"));
+    SimpleTest.executeSoon(runNextTest);
+  }, false);
+
+  SpecialPowers.addSystemEventListener(window, "click", function (aEvent) {
+    // When the click event should cause default action, e.g., opening the link,
+    // the event shouldn't have been consumed except the link handler.
+    // However, in e10s mode, it's not consumed during propagating the event but
+    // in non-e10s mode, it's consumed during the propagation.  Therefore,
+    // we cannot check defaultPrevented value when the link should work as is
+    // if there is no way to detect if it's running in e10s mode or not.
+    // So, let's skip checking Event.defaultPrevented value when the link should
+    // work.  In such case, we should receive "storage" event later.
+    if (currentTest.linkShouldWork) {
+      return;
+    }
+
+    ok(SpecialPowers.defaultPreventedInAnyGroup(aEvent),
+       currentTest.description + "The default action should be consumed because the link should work as is");
+    if (SpecialPowers.defaultPreventedInAnyGroup(aEvent)) {
+      // In this case, "storage" event won't be fired.
+      SimpleTest.executeSoon(runNextTest);
+    }
+  }, false);
+
+  SimpleTest.executeSoon(runNextTest);
 }
 
 </script>
