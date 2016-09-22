@@ -5621,7 +5621,7 @@ protected:
   IdleResource(const TimeStamp& aIdleTime);
 
   explicit
-  IdleResource(const IdleResource& aOther);
+  IdleResource(const IdleResource& aOther) = delete;
 
   ~IdleResource();
 };
@@ -5636,7 +5636,7 @@ public:
   IdleDatabaseInfo(DatabaseInfo* aDatabaseInfo);
 
   explicit
-  IdleDatabaseInfo(const IdleDatabaseInfo& aOther);
+  IdleDatabaseInfo(const IdleDatabaseInfo& aOther) = delete;
 
   ~IdleDatabaseInfo();
 
@@ -5665,7 +5665,7 @@ public:
   IdleThreadInfo(const ThreadInfo& aThreadInfo);
 
   explicit
-  IdleThreadInfo(const IdleThreadInfo& aOther);
+  IdleThreadInfo(const IdleThreadInfo& aOther) = delete;
 
   ~IdleThreadInfo();
 
@@ -12970,16 +12970,6 @@ IdleResource::IdleResource(const TimeStamp& aIdleTime)
 }
 
 ConnectionPool::
-IdleResource::IdleResource(const IdleResource& aOther)
-  : mIdleTime(aOther.mIdleTime)
-{
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!aOther.mIdleTime.IsNull());
-
-  MOZ_COUNT_CTOR(ConnectionPool::IdleResource);
-}
-
-ConnectionPool::
 IdleResource::~IdleResource()
 {
   AssertIsOnBackgroundThread();
@@ -13002,17 +12992,6 @@ IdleDatabaseInfo::IdleDatabaseInfo(DatabaseInfo* aDatabaseInfo)
 }
 
 ConnectionPool::
-IdleDatabaseInfo::IdleDatabaseInfo(const IdleDatabaseInfo& aOther)
-  : IdleResource(aOther)
-  , mDatabaseInfo(aOther.mDatabaseInfo)
-{
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mDatabaseInfo);
-
-  MOZ_COUNT_CTOR(ConnectionPool::IdleDatabaseInfo);
-}
-
-ConnectionPool::
 IdleDatabaseInfo::~IdleDatabaseInfo()
 {
   AssertIsOnBackgroundThread();
@@ -13030,18 +13009,6 @@ IdleThreadInfo::IdleThreadInfo(const ThreadInfo& aThreadInfo)
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aThreadInfo.mRunnable);
   MOZ_ASSERT(aThreadInfo.mThread);
-
-  MOZ_COUNT_CTOR(ConnectionPool::IdleThreadInfo);
-}
-
-ConnectionPool::
-IdleThreadInfo::IdleThreadInfo(const IdleThreadInfo& aOther)
-  : IdleResource(aOther)
-  , mThreadInfo(aOther.mThreadInfo)
-{
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mThreadInfo.mRunnable);
-  MOZ_ASSERT(mThreadInfo.mThread);
 
   MOZ_COUNT_CTOR(ConnectionPool::IdleThreadInfo);
 }
