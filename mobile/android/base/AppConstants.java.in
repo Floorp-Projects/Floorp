@@ -51,11 +51,6 @@ public class AppConstants {
          * If MIN_SDK_VERSION is greater than or equal to the number, there
          * is no need to do the runtime check.
          */
-        public static final boolean feature10Plus = MIN_SDK_VERSION >= 10 || (MAX_SDK_VERSION >= 10 && Build.VERSION.SDK_INT >= 10);
-        public static final boolean feature11Plus = MIN_SDK_VERSION >= 11 || (MAX_SDK_VERSION >= 11 && Build.VERSION.SDK_INT >= 11);
-        public static final boolean feature12Plus = MIN_SDK_VERSION >= 12 || (MAX_SDK_VERSION >= 12 && Build.VERSION.SDK_INT >= 12);
-        public static final boolean feature14Plus = MIN_SDK_VERSION >= 14 || (MAX_SDK_VERSION >= 14 && Build.VERSION.SDK_INT >= 14);
-        public static final boolean feature15Plus = MIN_SDK_VERSION >= 15 || (MAX_SDK_VERSION >= 15 && Build.VERSION.SDK_INT >= 15);
         public static final boolean feature16Plus = MIN_SDK_VERSION >= 16 || (MAX_SDK_VERSION >= 16 && Build.VERSION.SDK_INT >= 16);
         public static final boolean feature17Plus = MIN_SDK_VERSION >= 17 || (MAX_SDK_VERSION >= 17 && Build.VERSION.SDK_INT >= 17);
         public static final boolean feature19Plus = MIN_SDK_VERSION >= 19 || (MAX_SDK_VERSION >= 19 && Build.VERSION.SDK_INT >= 19);
@@ -238,7 +233,7 @@ public class AppConstants {
     // it if this APK doesn't include API14 support.
     public static final boolean MOZ_ANDROID_BEAM =
 //#ifdef MOZ_ANDROID_BEAM
-    Versions.feature14Plus;
+    true;
 //#else
     false;
 //#endif
@@ -285,7 +280,7 @@ public class AppConstants {
 
     public static final boolean ANDROID_DOWNLOADS_INTEGRATION =
 //#ifdef MOZ_ANDROID_DOWNLOADS_INTEGRATION
-    AppConstants.Versions.feature12Plus;
+    true;
 //#else
     false;
 //#endif

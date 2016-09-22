@@ -160,11 +160,7 @@ public class LayerView extends FrameLayout {
         mPaintState = PAINT_START;
         mFullScreenState = FullScreenState.NONE;
 
-        if (Versions.feature14Plus) {
-            mOverscroll = new OverscrollEdgeEffect(this);
-        } else {
-            mOverscroll = null;
-        }
+        mOverscroll = new OverscrollEdgeEffect(this);
     }
 
     public LayerView(Context context) {

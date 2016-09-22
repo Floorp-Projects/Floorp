@@ -824,21 +824,9 @@ public class GeckoAppShell
 
     @JNITarget
     static public int getPreferredIconSize() {
-        if (Versions.feature11Plus) {
-            ActivityManager am = (ActivityManager)
-                    getApplicationContext().getSystemService(Context.ACTIVITY_SERVICE);
-            return am.getLauncherLargeIconSize();
-        } else {
-            switch (getDpi()) {
-                case DisplayMetrics.DENSITY_MEDIUM:
-                    return 48;
-                case DisplayMetrics.DENSITY_XHIGH:
-                    return 96;
-                case DisplayMetrics.DENSITY_HIGH:
-                default:
-                    return 72;
-            }
-        }
+        ActivityManager am = (ActivityManager)
+            getApplicationContext().getSystemService(Context.ACTIVITY_SERVICE);
+        return am.getLauncherLargeIconSize();
     }
 
     @WrapForJNI(calledFrom = "gecko")

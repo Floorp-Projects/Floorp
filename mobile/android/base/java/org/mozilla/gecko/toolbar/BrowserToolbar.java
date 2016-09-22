@@ -191,9 +191,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
 
         tabsButton = (ThemedImageButton) findViewById(R.id.tabs);
         tabsCounter = (TabCounter) findViewById(R.id.tabs_counter);
-        if (Versions.feature11Plus) {
-            tabsCounter.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
-        }
+        tabsCounter.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
 
         menuButton = (ThemedFrameLayout) findViewById(R.id.menu);
         menuIcon = (ThemedImageView) findViewById(R.id.menu_icon);

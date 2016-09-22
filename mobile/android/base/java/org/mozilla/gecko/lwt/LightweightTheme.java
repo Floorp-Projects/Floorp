@@ -357,13 +357,8 @@ public class LightweightTheme implements GeckoEventListener {
         ViewParent parent;
         View curView = view;
         do {
-            if (Versions.feature11Plus) {
-                offsetX += (int) curView.getTranslationX() - curView.getScrollX();
-                offsetY += (int) curView.getTranslationY() - curView.getScrollY();
-            } else {
-                offsetX -= curView.getScrollX();
-                offsetY -= curView.getScrollY();
-            }
+            offsetX += (int) curView.getTranslationX() - curView.getScrollX();
+            offsetY += (int) curView.getTranslationY() - curView.getScrollY();
 
             parent = curView.getParent();
 
