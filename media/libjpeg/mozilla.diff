@@ -1,3 +1,24 @@
+diff --git jmemmgr.c jmemmgr.c
+--- jmemmgr.c
++++ jmemmgr.c
+@@ -28,16 +28,17 @@
+  */
+ 
+ #define JPEG_INTERNALS
+ #define AM_MEMORY_MANAGER       /* we define jvirt_Xarray_control structs */
+ #include "jinclude.h"
+ #include "jpeglib.h"
+ #include "jmemsys.h"            /* import the system-dependent declarations */
+ #include <stdint.h>
++#include <limits.h>             /* some NDKs define SIZE_MAX in limits.h */
+ 
+ #ifndef NO_GETENV
+ #ifndef HAVE_STDLIB_H           /* <stdlib.h> should declare getenv() */
+ extern char *getenv (const char *name);
+ #endif
+ #endif
+
+
 diff --git jmorecfg.h jmorecfg.h
 --- jmorecfg.h
 +++ jmorecfg.h
