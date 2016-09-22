@@ -848,11 +848,14 @@ Saiz::Saiz(Box& aBox, AtomType aDefaultType)
   uint8_t defaultSampleInfoSize = reader->ReadU8();
   uint32_t count = reader->ReadU32();
   if (defaultSampleInfoSize) {
-    if (!mSampleInfoSize.SetLength(count, fallible)) {
+    if (!mSampleInfoSize.SetCapacity(count, fallible)) {
       LOG(Saiz, "OOM");
       return;
     }
-    MOZ_ALWAYS_TRUE(mSampleInfoSize.ReplaceElementsAt(0, count, defaultSampleInfoSize, fallible));
+    for (int i = 0; i < count; i++) {
+      MOZ_ALWAYS_TRUE(mSampleInfoSize.AppendElement(defaultSampleInfoSize,
+                                                    fallible));
+    }
   } else {
     if (!reader->ReadArray(mSampleInfoSize, count)) {
       LOG(Saiz, "Incomplete Box (OOM or missing count:%u)", count);
