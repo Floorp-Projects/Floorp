@@ -32,7 +32,7 @@ MOZ_MUST_USE bool
 RenderInBase(StringBuffer& sb, uint64_t num);
 
 template<class T>
-struct Raw;
+class Raw;
 
 template<class T>
 MOZ_MUST_USE bool
