@@ -60,7 +60,7 @@ Tools.inspector = {
   modifiers: osString == "Darwin" ? "accel,alt" : "accel,shift",
   icon: "chrome://devtools/skin/images/tool-inspector.svg",
   invertIconForDarkTheme: true,
-  url: "chrome://devtools/content/inspector/inspector.xul",
+  url: "chrome://devtools/content/inspector/inspector.xhtml",
   label: l10n("inspector.label"),
   panelLabel: l10n("inspector.panelLabel"),
   get tooltip() {

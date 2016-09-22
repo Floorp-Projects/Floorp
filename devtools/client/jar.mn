@@ -118,7 +118,7 @@ devtools.jar:
     content/framework/dev-edition-promo/dev-edition-promo.xul (framework/dev-edition-promo/dev-edition-promo.xul)
 *   content/framework/dev-edition-promo/dev-edition-promo.css (framework/dev-edition-promo/dev-edition-promo.css)
     content/framework/dev-edition-promo/dev-edition-logo.png (framework/dev-edition-promo/dev-edition-logo.png)
-    content/inspector/inspector.xul (inspector/inspector.xul)
+    content/inspector/inspector.xhtml (inspector/inspector.xhtml)
     content/framework/connect/connect.xhtml (framework/connect/connect.xhtml)
     content/framework/connect/connect.css (framework/connect/connect.css)
     content/framework/connect/connect.js (framework/connect/connect.js)
