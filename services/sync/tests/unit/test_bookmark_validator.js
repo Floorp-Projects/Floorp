@@ -105,15 +105,6 @@ add_test(function test_isr_duplicatesAndMissingIDs() {
   run_next_test();
 });
 
-add_test(function test_isr_wrongParentName() {
-  let c = inspectServerRecords([
-    {id: 'A', type: 'folder', title: 'My Amazing Bookmarks', parentName: '', parentid: 'places', children: ['B']},
-    {id: 'B', type: 'bookmark', title: '', parentName: 'My Awesome Bookmarks', parentid: 'A'},
-  ]).problemData;
-  deepEqual(c.wrongParentName, ['B'])
-  run_next_test();
-});
-
 add_test(function test_isr_duplicateChildren()  {
   let c = inspectServerRecords([
     {id: 'A', type: 'folder', parentid: 'places', children: ['B', 'B']},
