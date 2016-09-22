@@ -1,18 +1,25 @@
 var fs = require('fs');
 var path = require('path');
 var http2 = require('..');
+var urlParse = require('url').parse;
 
 // Setting the global logger (optional)
 http2.globalAgent = new http2.Agent({
+  rejectUnauthorized: true,
   log: require('../test/util').createLogger('client')
 });
 
-// We use self signed certs in the example code so we ignore cert errors
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-
 // Sending the request
 var url = process.argv.pop();
-var request = process.env.HTTP2_PLAIN ? http2.raw.get(url) : http2.get(url);
+var options = urlParse(url);
+
+// Optionally verify self-signed certificates.
+if (options.hostname == 'localhost') {
+  options.key = fs.readFileSync(path.join(__dirname, '/localhost.key'));
+  options.ca = fs.readFileSync(path.join(__dirname, '/localhost.crt'));
+}
+
+var request = process.env.HTTP2_PLAIN ? http2.raw.get(options) : http2.get(options);
 
 // Receiving the response
 request.on('response', function(response) {

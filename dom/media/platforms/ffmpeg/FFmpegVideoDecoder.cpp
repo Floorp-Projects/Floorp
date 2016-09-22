@@ -250,8 +250,8 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
              mFrame->reordered_opaque, mFrame->pkt_pts, mFrame->pkt_dts);
 
   if (bytesConsumed < 0) {
-    NS_WARNING("FFmpeg video decoder error.");
-    return NS_ERROR_DOM_MEDIA_DECODE_ERR;
+    return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                       RESULT_DETAIL("FFmpeg video error:%d", bytesConsumed));
   }
 
   if (!decoded) {
@@ -315,8 +315,8 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
                                                         mFrame->height));
 
   if (!v) {
-    NS_WARNING("image allocation error.");
-    return MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
+    return MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                       RESULT_DETAIL("image allocation error"));
   }
   mCallback->Output(v);
   if (aGotFrame) {

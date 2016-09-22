@@ -15,6 +15,9 @@ Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/policies.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-common/observers.js");
+Cu.import("resource://services-common/async.js");
+Cu.import("resource://gre/modules/Task.jsm");
 
 /**
  * Perform synchronization of engines.
@@ -158,12 +161,15 @@ EngineSynchronizer.prototype = {
       enginesToSync = engineManager.getEnabled();
     }
     try {
+      // We don't bother validating engines that failed to sync.
+      let enginesToValidate = [];
       for (let engine of enginesToSync) {
         // If there's any problems with syncing the engine, report the failure
         if (!(this._syncEngine(engine)) || this.service.status.enforceBackoff) {
           this._log.info("Aborting sync for failure in " + engine.name);
           break;
         }
+        enginesToValidate.push(engine);
       }
 
       // If _syncEngine fails for a 401, we might not have a cluster URL here.
@@ -189,6 +195,8 @@ EngineSynchronizer.prototype = {
         }
       }
 
+      Async.promiseSpinningly(this._tryValidateEngines(enginesToValidate));
+
       // If there were no sync engine failures
       if (this.service.status.service != SYNC_FAILED_PARTIAL) {
         Svc.Prefs.set("lastSync", new Date().toString());
@@ -205,6 +213,106 @@ EngineSynchronizer.prototype = {
 
     this.onComplete(null);
   },
+
+  _tryValidateEngines: Task.async(function* (recentlySyncedEngines) {
+    if (!Services.telemetry.canRecordBase || !Svc.Prefs.get("validation.enabled", false)) {
+      this._log.info("Skipping validation: validation or telemetry reporting is disabled");
+      return;
+    }
+
+    let lastValidation = Svc.Prefs.get("validation.lastTime", 0);
+    let validationInterval = Svc.Prefs.get("validation.interval");
+    let nowSeconds = Math.floor(Date.now() / 1000);
+
+    if (nowSeconds - lastValidation < validationInterval) {
+      this._log.info("Skipping validation: too recent since last validation attempt");
+      return;
+    }
+    // Update the time now, even if we may return false still. We don't want to
+    // check the rest of these more frequently than once a day.
+    Svc.Prefs.set("validation.lastTime", nowSeconds);
+
+    // Validation only occurs a certain percentage of the time.
+    let validationProbability = Svc.Prefs.get("validation.percentageChance", 0) / 100.0;
+    if (validationProbability < Math.random()) {
+      this._log.info("Skipping validation: Probability threshold not met");
+      return;
+    }
+    let maxRecords = Svc.Prefs.get("validation.maxRecords");
+    if (!maxRecords) {
+      // Don't bother asking the server for the counts if we know validation
+      // won't happen anyway.
+      return;
+    }
+
+    // maxRecords of -1 means "any number", so we can skip asking the server.
+    // Used for tests.
+    let info;
+    if (maxRecords < 0) {
+      info = {};
+      for (let e of recentlySyncedEngines) {
+        info[e.name] = 1; // needs to be < maxRecords
+      }
+      maxRecords = 2;
+    } else {
+
+      let collectionCountsURL = this.service.userBaseURL + "info/collection_counts";
+      try {
+        let infoResp = this.service._fetchInfo(collectionCountsURL);
+        if (!infoResp.success) {
+          this._log.error("Can't run validation: request to info/collection_counts responded with "
+                          + resp.status);
+          return;
+        }
+        info = infoResp.obj; // might throw because obj is a getter which parses json.
+      } catch (e) {
+        // Not running validation is totally fine, so we just write an error log and return.
+        this._log.error("Can't run validation: Caught error when fetching counts", e);
+        return;
+      }
+    }
+
+    if (!info) {
+      return;
+    }
+
+    let engineLookup = new Map(recentlySyncedEngines.map(e => [e.name, e]));
+    let toRun = [];
+    for (let [engineName, recordCount] of Object.entries(info)) {
+      let engine = engineLookup.get(engineName);
+      if (recordCount > maxRecords || !engine) {
+        this._log.debug(`Skipping validation for ${engineName} because it's not an engine or ` +
+                        `the number of records (${recordCount}) is greater than the maximum allowed (${maxRecords}).`);
+        continue;
+      }
+      let validator = engine.getValidator();
+      if (!validator) {
+        continue;
+      }
+      // Put this in an array so that we know how many we're going to do, so we
+      // don't tell users we're going to run some validators when we aren't.
+      toRun.push({ engine, validator });
+    }
+
+    if (!toRun.length) {
+      return;
+    }
+    Services.console.logStringMessage(
+      "Sync is about to run a consistency check. This may be slow, and " +
+      "can be controlled using the pref \"services.sync.validation.enabled\".\n" +
+      "If you encounter any problems because of this, please file a bug.");
+    for (let { validator, engine } of toRun) {
+      try {
+        let result = yield validator.validate(engine);
+        Observers.notify("weave:engine:validate:finish", result, engine.name);
+      } catch (e) {
+        this._log.error(`Failed to run validation on ${engine.name}!`, e);
+        Observers.notify("weave:engine:validate:error", e, engine.name)
+        // Keep validating -- there's no reason to think that a failure for one
+        // validator would mean the others will fail.
+      }
+    }
+  }),
 
   // Returns true if sync should proceed.
   // false / no return value means sync should be aborted.

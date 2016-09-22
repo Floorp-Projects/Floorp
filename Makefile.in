@@ -173,7 +173,7 @@ endif
 
 .PHONY: tup
 tup: install-manifests buildid.h
-	@$(TUP)
+	@$(TUP) $(if $(findstring s,$(filter-out --%,$(MAKEFLAGS))),,--verbose)
 
 # process_install_manifest needs to be invoked with --no-remove when building
 # js as standalone because automated builds are building nspr separately and

@@ -1,7 +1,7 @@
 node-http2
 ==========
 
-An HTTP/2 ([draft-ietf-httpbis-http2-16](http://tools.ietf.org/html/draft-ietf-httpbis-http2-16))
+An HTTP/2 ([RFC 7540](http://tools.ietf.org/html/rfc7540))
 client and server implementation for node.js.
 
 ![Travis CI status](https://travis-ci.org/molnarg/node-http2.svg?branch=master)
@@ -41,8 +41,6 @@ require('http2').createServer(options, function(request, response) {
 ### Using as a client ###
 
 ```javascript
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-
 require('http2').get('https://localhost:8080/', function(response) {
   response.pipe(process.stdout);
 });
@@ -74,10 +72,7 @@ For a server push example, see the source code of the example
 Status
 ------
 
-* ALPN is not yet supported in node.js (see
-  [this issue](https://github.com/joyent/node/issues/5945)). For ALPN support, you will have to use
-  [Shigeki Ohtsu's node.js fork](https://github.com/shigeki/node/tree/alpn_support) until this code
-  gets merged upstream.
+* ALPN is only supported in node.js >= 5.0
 * Upgrade mechanism to start HTTP/2 over unencrypted channel is not implemented yet
   (issue [#4](https://github.com/molnarg/node-http2/issues/4))
 * Other minor features found in
@@ -145,7 +140,7 @@ $ HTTP2_LOG=info node ./example/server.js
 ```
 
 ```bash
-$ HTTP2_LOG=info node ./example/client.js 'http://localhost:8080/server.js' >/dev/null
+$ HTTP2_LOG=info node ./example/client.js 'https://localhost:8080/server.js' >/dev/null
 ```
 
 Contributors
@@ -165,7 +160,7 @@ Code contributions are always welcome! People who contributed to node-http2 so f
 
 Special thanks to Google for financing the development of this module as part of their [Summer of
 Code program](https://developers.google.com/open-source/soc/) (project: [HTTP/2 prototype server
-implementation](https://google-melange.appspot.com/gsoc/project/google/gsoc2013/molnarg/5001)), and
+implementation](https://google-melange.appspot.com/gsoc/project/details/google/gsoc2013/molnarg/5818821692620800)), and
 Nick Hurley of Mozilla, my GSoC mentor, who helped with regular code review and technical advices.
 
 License

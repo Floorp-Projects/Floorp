@@ -517,18 +517,70 @@ public:
 
   void Enter() override
   {
-    mMaster->StartBuffering();
+    if (mMaster->IsPlaying()) {
+      mMaster->StopPlayback();
+    }
+
+    mBufferingStart = TimeStamp::Now();
+
+    MediaStatistics stats = mMaster->GetStatistics();
+    SLOG("Playback rate: %.1lfKB/s%s download rate: %.1lfKB/s%s",
+         stats.mPlaybackRate/1024, stats.mPlaybackRateReliable ? "" : " (unreliable)",
+         stats.mDownloadRate/1024, stats.mDownloadRateReliable ? "" : " (unreliable)");
+
+    mMaster->ScheduleStateMachineIn(USECS_PER_S);
   }
 
   void Step() override
   {
-    mMaster->StepBuffering();
+    TimeStamp now = TimeStamp::Now();
+    MOZ_ASSERT(!mBufferingStart.IsNull(), "Must know buffering start time.");
+
+    // With buffering heuristics we will remain in the buffering state if
+    // we've not decoded enough data to begin playback, or if we've not
+    // downloaded a reasonable amount of data inside our buffering time.
+    if (Reader()->UseBufferingHeuristics()) {
+      TimeDuration elapsed = now - mBufferingStart;
+      bool isLiveStream = Resource()->IsLiveStream();
+      if ((isLiveStream || !mMaster->CanPlayThrough()) &&
+          elapsed < TimeDuration::FromSeconds(mMaster->mBufferingWait * mMaster->mPlaybackRate) &&
+          mMaster->HasLowBufferedData(mMaster->mBufferingWait * USECS_PER_S) &&
+          Resource()->IsExpectingMoreData()) {
+        SLOG("Buffering: wait %ds, timeout in %.3lfs",
+             mMaster->mBufferingWait, mMaster->mBufferingWait - elapsed.ToSeconds());
+        mMaster->ScheduleStateMachineIn(USECS_PER_S);
+        return;
+      }
+    } else if (mMaster->OutOfDecodedAudio() || mMaster->OutOfDecodedVideo()) {
+      MOZ_ASSERT(Reader()->IsWaitForDataSupported(),
+                 "Don't yet have a strategy for non-heuristic + non-WaitForData");
+      mMaster->DispatchDecodeTasksIfNeeded();
+      MOZ_ASSERT(mMaster->mMinimizePreroll ||
+                 !mMaster->OutOfDecodedAudio() ||
+                 Reader()->IsRequestingAudioData() ||
+                 Reader()->IsWaitingAudioData());
+      MOZ_ASSERT(mMaster->mMinimizePreroll ||
+                 !mMaster->OutOfDecodedVideo() ||
+                 Reader()->IsRequestingVideoData() ||
+                 Reader()->IsWaitingVideoData());
+      SLOG("In buffering mode, waiting to be notified: outOfAudio: %d, "
+           "mAudioStatus: %s, outOfVideo: %d, mVideoStatus: %s",
+           mMaster->OutOfDecodedAudio(), mMaster->AudioRequestStatus(),
+           mMaster->OutOfDecodedVideo(), mMaster->VideoRequestStatus());
+      return;
+    }
+
+    SLOG("Buffered for %.3lfs", (now - mBufferingStart).ToSeconds());
+    SetState(DECODER_STATE_DECODING);
   }
 
   State GetState() const override
   {
     return DECODER_STATE_BUFFERING;
   }
+
+private:
+  TimeStamp mBufferingStart;
 };
 
 class MediaDecoderStateMachine::CompletedState
@@ -1690,13 +1742,6 @@ void MediaDecoderStateMachine::PlayStateChanged()
     return;
   }
 
-  // When asked to play, switch to decoding state only if
-  // we are currently buffering. In other cases, we'll start playing anyway
-  // when the state machine notices the decoder's state change to PLAYING.
-  if (mState == DECODER_STATE_BUFFERING) {
-    SetState(DECODER_STATE_DECODING);
-  }
-
   ScheduleStateMachine();
 }
 
@@ -2503,48 +2548,6 @@ MediaDecoderStateMachine::StepDecoding()
 }
 
 void
-MediaDecoderStateMachine::StepBuffering()
-{
-  MOZ_ASSERT(OnTaskQueue());
-
-  TimeStamp now = TimeStamp::Now();
-  NS_ASSERTION(!mBufferingStart.IsNull(), "Must know buffering start time.");
-
-  // With buffering heuristics we will remain in the buffering state if
-  // we've not decoded enough data to begin playback, or if we've not
-  // downloaded a reasonable amount of data inside our buffering time.
-  if (mReader->UseBufferingHeuristics()) {
-    TimeDuration elapsed = now - mBufferingStart;
-    bool isLiveStream = mResource->IsLiveStream();
-    if ((isLiveStream || !CanPlayThrough()) &&
-        elapsed < TimeDuration::FromSeconds(mBufferingWait * mPlaybackRate) &&
-        HasLowBufferedData(mBufferingWait * USECS_PER_S) &&
-        mResource->IsExpectingMoreData()) {
-      DECODER_LOG("Buffering: wait %ds, timeout in %.3lfs",
-                  mBufferingWait, mBufferingWait - elapsed.ToSeconds());
-      ScheduleStateMachineIn(USECS_PER_S);
-      return;
-    }
-  } else if (OutOfDecodedAudio() || OutOfDecodedVideo()) {
-    MOZ_ASSERT(mReader->IsWaitForDataSupported(),
-               "Don't yet have a strategy for non-heuristic + non-WaitForData");
-    DispatchDecodeTasksIfNeeded();
-    MOZ_ASSERT_IF(!mMinimizePreroll && OutOfDecodedAudio(), mReader->IsRequestingAudioData() || mReader->IsWaitingAudioData());
-    MOZ_ASSERT_IF(!mMinimizePreroll && OutOfDecodedVideo(), mReader->IsRequestingVideoData() || mReader->IsWaitingVideoData());
-    DECODER_LOG("In buffering mode, waiting to be notified: outOfAudio: %d, "
-                "mAudioStatus: %s, outOfVideo: %d, mVideoStatus: %s",
-                OutOfDecodedAudio(), AudioRequestStatus(),
-                OutOfDecodedVideo(), VideoRequestStatus());
-    return;
-  }
-
-  DECODER_LOG("Changed state from BUFFERING to DECODING");
-  DECODER_LOG("Buffered for %.3lfs", (now - mBufferingStart).ToSeconds());
-  SetState(DECODER_STATE_DECODING);
-  NS_ASSERTION(IsStateMachineScheduled(), "Must have timer scheduled");
-}
-
-void
 MediaDecoderStateMachine::StepCompleted()
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -2741,29 +2744,6 @@ MediaDecoderStateMachine::GetStatistics()
   result.mDecoderPosition = mDecoderPosition;
   result.mPlaybackPosition = mPlaybackOffset;
   return result;
-}
-
-void
-MediaDecoderStateMachine::StartBuffering()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(mState == DECODER_STATE_BUFFERING);
-
-  if (IsPlaying()) {
-    StopPlayback();
-  }
-
-  mBufferingStart = TimeStamp::Now();
-
-  MediaStatistics stats = GetStatistics();
-  DECODER_LOG("Playback rate: %.1lfKB/s%s download rate: %.1lfKB/s%s",
-              stats.mPlaybackRate/1024, stats.mPlaybackRateReliable ? "" : " (unreliable)",
-              stats.mDownloadRate/1024, stats.mDownloadRateReliable ? "" : " (unreliable)");
-
-  // Don't go straight back to the state machine loop since that might
-  // cause us to start decoding again and we could flip-flop between
-  // decoding and quick-buffering.
-  ScheduleStateMachineIn(USECS_PER_S);
 }
 
 void

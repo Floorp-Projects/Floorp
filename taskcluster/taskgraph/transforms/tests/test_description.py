@@ -32,7 +32,10 @@ test_description_schema = Schema({
     'description': basestring,
 
     # test suite name, or <suite>/<flavor>
-    'suite': basestring,
+    Required('suite'): Any(
+        basestring,
+        {'by-test-platform': {basestring: basestring}},
+    ),
 
     # the name by which this test suite is addressed in try syntax; defaults to
     # the test-name
@@ -50,6 +53,14 @@ test_description_schema = Schema({
     # attributes to appear in the resulting task (later transforms will add the
     # common attributes)
     Optional('attributes'): {basestring: object},
+
+    # The `run_on_projects` attribute, defaulting to "all".  This dictates the
+    # projects on which this task should be included in the target task set.
+    # See the attributes documentation for details.
+    Optional('run-on-projects', default=['all']): Any(
+        [basestring],
+        {'by-test-platform': {basestring: [basestring]}},
+    ),
 
     # the sheriffing tier for this task (default: set based on test platform)
     Optional('tier'): int,
@@ -138,7 +149,10 @@ test_description_schema = Schema({
 
         # additional command-line options for mozharness, beyond those
         # automatically added
-        Required('extra-options', default=[]): [basestring],
+        Required('extra-options', default=[]): Any(
+            [basestring],
+            {'by-test-platform': {basestring: [basestring]}},
+        ),
 
         # the artifact name (including path) to test on the build task; this is
         # generally set in a per-kind transformation

@@ -239,6 +239,7 @@ nsHttpHandler::nsHttpHandler()
     , mTCPKeepaliveLongLivedIdleTimeS(600)
     , mEnforceH1Framing(FRAMECHECK_BARELY)
     , mKeepEmptyResponseHeadersAsEmtpyString(false)
+    , mDefaultHpackBuffer(4096)
 {
     LOG(("Creating nsHttpHandler [this=%p].\n", this));
 
@@ -1690,6 +1691,13 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
                                 &cVar);
         if (NS_SUCCEEDED(rv)) {
             mKeepEmptyResponseHeadersAsEmtpyString = cVar;
+        }
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("spdy.hpack-default-buffer"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("spdy.default-hpack-buffer"), &val);
+        if (NS_SUCCEEDED(rv)) {
+            mDefaultHpackBuffer = val;
         }
     }
 

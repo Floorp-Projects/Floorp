@@ -19,31 +19,28 @@ class TestMediaSourcePrefs(MediaTestCase):
         MediaTestCase.tearDown(self)
 
     def test_mse_prefs(self):
-        """ 'mediasource' should only be used if MSE prefs are enabled."""
+        """ mediasource should only be used if MSE prefs are enabled."""
         self.set_mse_enabled_prefs(False)
-        self.check_src('http', self.test_urls[0])
+        self.check_mse_src(False, self.test_urls[0])
 
         self.set_mse_enabled_prefs(True)
-        self.check_src('mediasource', self.test_urls[0])
+        self.check_mse_src(True, self.test_urls[0])
 
     def set_mse_enabled_prefs(self, value):
         with self.marionette.using_context('chrome'):
             self.prefs.set_pref('media.mediasource.enabled', value)
             self.prefs.set_pref('media.mediasource.mp4.enabled', value)
+            self.prefs.set_pref('media.mediasource.webm.enabled', value)
 
-    def check_src(self, src_type, url):
-        # Why wait to check src until initial ad is done playing?
-        # - src attribute in video element is sometimes null during ad playback
-        # - many ads still don't use MSE even if main video does
+    def check_mse_src(self, mse_expected, url):
         with self.marionette.using_context('content'):
             youtube = YouTubePuppeteer(self.marionette, url)
-            youtube.attempt_ad_skip()
             wait = Wait(youtube,
                         timeout=min(self.max_timeout,
-                                    youtube.player_duration * 1.3),
+                                    youtube.expected_duration * 1.3),
                         interval=1)
 
             def cond(y):
-                return y.video_src.startswith(src_type)
+                return y.mse_enabled == mse_expected
 
             verbose_until(wait, youtube, cond)

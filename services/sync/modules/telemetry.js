@@ -43,6 +43,8 @@ const TOPICS = [
   "weave:engine:sync:error",
   "weave:engine:sync:applied",
   "weave:engine:sync:uploaded",
+  "weave:engine:validate:finish",
+  "weave:engine:validate:error",
 ];
 
 const PING_FORMAT_VERSION = 1;
@@ -164,6 +166,36 @@ class EngineRecord {
         this.incoming = incomingData;
       }
     }
+  }
+
+  recordValidation(validationResult) {
+    if (this.validation) {
+      log.error(`Multiple validations occurred for engine ${this.name}!`);
+      return;
+    }
+    let { problems, duration, recordCount } = validationResult;
+    let validation = {
+      checked: recordCount || 0,
+    };
+    if (duration > 0) {
+      validation.took = Math.round(duration);
+    }
+    let summarized = problems.getSummary(true).filter(({count}) => count > 0);
+    if (summarized.length) {
+      validation.problems = summarized;
+    }
+    this.validation = validation;
+  }
+
+  recordValidationError(e) {
+    if (this.validation) {
+      log.error(`Multiple validations occurred for engine ${this.name}!`);
+      return;
+    }
+
+    this.validation = {
+      failureReason: transformError(e)
+    };
   }
 
   recordUploaded(counts) {
@@ -296,6 +328,36 @@ class TelemetryRecord {
       return;
     }
     this.currentEngine.recordApplied(counts);
+  }
+
+  onEngineValidated(engineName, validationData) {
+    if (this._shouldIgnoreEngine(engineName, false)) {
+      return;
+    }
+    let engine = this.engines.find(e => e.name === engineName);
+    if (!engine && this.currentEngine && engineName === this.currentEngine.name) {
+      engine = this.currentEngine;
+    }
+    if (engine) {
+      engine.recordValidation(validationData);
+    } else {
+      log.warn(`Validation event triggered for engine ${engineName}, which hasn't been synced!`);
+    }
+  }
+
+  onEngineValidateError(engineName, error) {
+    if (this._shouldIgnoreEngine(engineName, false)) {
+      return;
+    }
+    let engine = this.engines.find(e => e.name === engineName);
+    if (!engine && this.currentEngine && engineName === this.currentEngine.name) {
+      engine = this.currentEngine;
+    }
+    if (engine) {
+      engine.recordValidationError(error);
+    } else {
+      log.warn(`Validation failure event triggered for engine ${engineName}, which hasn't been synced!`);
+    }
   }
 
   onEngineUploaded(engineName, counts) {
@@ -464,6 +526,18 @@ class SyncTelemetryImpl {
       case "weave:engine:sync:uploaded":
         if (this._checkCurrent(topic)) {
           this.current.onEngineUploaded(data, subject);
+        }
+        break;
+
+      case "weave:engine:validate:finish":
+        if (this._checkCurrent(topic)) {
+          this.current.onEngineValidated(data, subject);
+        }
+        break;
+
+      case "weave:engine:validate:error":
+        if (this._checkCurrent(topic)) {
+          this.current.onEngineValidateError(data, subject || "Unknown");
         }
         break;
 

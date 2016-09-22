@@ -13,6 +13,7 @@
 #include "nsDeque.h"
 #include "nsString.h"
 #include "nsIMemoryReporter.h"
+#include "mozilla/Telemetry.h"
 
 namespace mozilla {
 namespace net {
@@ -65,6 +66,7 @@ public:
   Http2BaseCompressor();
   virtual ~Http2BaseCompressor();
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  nsresult SetInitialMaxBufferSize(uint32_t maxBufferSize);
 
 protected:
   const static uint32_t kDefaultMaxBuffer = 4096;
@@ -79,6 +81,12 @@ protected:
 
   uint32_t mMaxBuffer;
   uint32_t mMaxBufferSetting;
+  bool mSetInitialMaxBufferSizeAllowed;
+
+  uint32_t mPeakSize;
+  uint32_t mPeakCount;
+  Telemetry::ID mPeakSizeID;
+  Telemetry::ID mPeakCountID;
 
 private:
   RefPtr<HpackDynamicTableReporter> mDynamicReporter;
@@ -89,7 +97,11 @@ class Http2Compressor;
 class Http2Decompressor final : public Http2BaseCompressor
 {
 public:
-  Http2Decompressor() { };
+  Http2Decompressor()
+  {
+    mPeakSizeID = Telemetry::HPACK_PEAK_SIZE_DECOMPRESSOR;
+    mPeakCountID = Telemetry::HPACK_PEAK_COUNT_DECOMPRESSOR;
+  };
   virtual ~Http2Decompressor() { } ;
 
   // NS_OK: Produces the working set of HTTP/1 formatted headers
@@ -144,7 +156,10 @@ public:
   Http2Compressor() : mParsedContentLength(-1),
                       mBufferSizeChangeWaiting(false),
                       mLowestBufferSizeWaiting(0)
-  { };
+  {
+    mPeakSizeID = Telemetry::HPACK_PEAK_SIZE_COMPRESSOR;
+    mPeakCountID = Telemetry::HPACK_PEAK_COUNT_COMPRESSOR;
+  };
   virtual ~Http2Compressor() { }
 
   // HTTP/1 formatted header block as input - HTTP/2 formatted
