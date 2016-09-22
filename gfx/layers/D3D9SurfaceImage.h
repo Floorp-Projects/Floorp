@@ -60,7 +60,7 @@ public:
 
   virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
 
-  virtual TextureClient* GetTextureClient(CompositableClient* aClient) override;
+  virtual TextureClient* GetTextureClient(TextureForwarder* aForwarder) override;
 
   already_AddRefed<IDirect3DSurface9> GetD3D9Surface();
 

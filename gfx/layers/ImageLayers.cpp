@@ -15,7 +15,7 @@ namespace layers {
 
 ImageLayer::ImageLayer(LayerManager* aManager, void* aImplData)
 : Layer(aManager, aImplData), mSamplingFilter(gfx::SamplingFilter::GOOD)
-, mScaleMode(ScaleMode::SCALE_NONE), mDisallowBigImage(false)
+, mScaleMode(ScaleMode::SCALE_NONE)
 {}
 
 ImageLayer::~ImageLayer()
