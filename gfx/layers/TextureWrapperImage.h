@@ -24,7 +24,7 @@ public:
   gfx::IntSize GetSize() override;
   gfx::IntRect GetPictureRect() override;
   already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
-  TextureClient* GetTextureClient(CompositableClient* aClient) override;
+  TextureClient* GetTextureClient(TextureForwarder* aForwarder) override;
 
 private:
   gfx::IntRect mPictureRect;

@@ -155,7 +155,7 @@ static bool UploadData(IDirect3DDevice9* aDevice,
 }
 
 TextureClient*
-IMFYCbCrImage::GetD3D9TextureClient(CompositableClient* aClient)
+IMFYCbCrImage::GetD3D9TextureClient(TextureForwarder* aForwarder)
 {
   RefPtr<IDirect3DDevice9> device = DeviceManagerD3D9::GetDevice();
   if (!device) {
@@ -207,20 +207,20 @@ IMFYCbCrImage::GetD3D9TextureClient(CompositableClient* aClient)
   }
 
   mTextureClient = TextureClient::CreateWithData(
-    DXGIYCbCrTextureData::Create(aClient->GetForwarder(),
+    DXGIYCbCrTextureData::Create(aForwarder,
                                  TextureFlags::DEFAULT,
                                  textureY, textureCb, textureCr,
                                  shareHandleY, shareHandleCb, shareHandleCr,
                                  GetSize(), mData.mYSize, mData.mCbCrSize),
     TextureFlags::DEFAULT,
-    aClient->GetForwarder()
+    aForwarder
   );
 
   return mTextureClient;
 }
 
 TextureClient*
-IMFYCbCrImage::GetTextureClient(CompositableClient* aClient)
+IMFYCbCrImage::GetTextureClient(TextureForwarder* aForwarder)
 {
   if (mTextureClient) {
     return mTextureClient;
@@ -229,11 +229,11 @@ IMFYCbCrImage::GetTextureClient(CompositableClient* aClient)
   RefPtr<ID3D11Device> device =
     gfx::DeviceManagerDx::Get()->GetContentDevice();
 
-  LayersBackend backend = aClient->GetForwarder()->GetCompositorBackendType();
+  LayersBackend backend = aForwarder->GetCompositorBackendType();
   if (!device || backend != LayersBackend::LAYERS_D3D11) {
     if (backend == LayersBackend::LAYERS_D3D9 ||
         backend == LayersBackend::LAYERS_D3D11) {
-      return GetD3D9TextureClient(aClient);
+      return GetD3D9TextureClient(aForwarder);
     }
     return nullptr;
   }
@@ -275,12 +275,12 @@ IMFYCbCrImage::GetTextureClient(CompositableClient* aClient)
   }
 
   mTextureClient = TextureClient::CreateWithData(
-    DXGIYCbCrTextureData::Create(aClient->GetForwarder(),
+    DXGIYCbCrTextureData::Create(aForwarder,
                                  TextureFlags::DEFAULT,
                                  textureY, textureCb, textureCr,
                                  GetSize(), mData.mYSize, mData.mCbCrSize),
     TextureFlags::DEFAULT,
-    aClient->GetForwarder()
+    aForwarder
   );
 
   return mTextureClient;
