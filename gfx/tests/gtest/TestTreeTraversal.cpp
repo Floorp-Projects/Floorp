@@ -1501,7 +1501,6 @@ MOZ_GTEST_BENCH(TreeTraversal, TreeTraversal_ForwardDepthFirstSearchPostOrderPer
 template <typename Node>
 static RefPtr<Node> BreadthFirstSearchForwardQueue(RefPtr<Node> aNode)
 {
-  RefPtr<Node> returnNode = nullptr;
   queue<RefPtr<Node>> nodes;
   nodes.push(aNode);
   while(!nodes.empty()) {
@@ -1951,7 +1950,6 @@ MOZ_GTEST_BENCH(TreeTraversal, TreeTraversal_ReverseDepthFirstSearchPostOrderPer
 template <typename Node>
 static RefPtr<Node> BreadthFirstSearchReverseQueue(RefPtr<Node> aNode)
 {
-  RefPtr<Node> returnNode = nullptr;
   queue<RefPtr<Node>> nodes;
   nodes.push(aNode);
   while(!nodes.empty()) {

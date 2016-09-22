@@ -124,7 +124,6 @@ XULTreeAccessible::Value(nsString& aValue)
     return;
 
   int32_t currentIndex;
-  nsCOMPtr<nsIDOMElement> selectItem;
   selection->GetCurrentIndex(&currentIndex);
   if (currentIndex >= 0) {
     nsCOMPtr<nsITreeColumn> keyCol;

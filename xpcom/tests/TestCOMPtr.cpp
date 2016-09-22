@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
+#include "mozilla/Unused.h"
 
 #define NS_IFOO_IID \
 { 0x6f7652e0,  0xee43, 0x11d1, \
@@ -360,6 +361,7 @@ main()
     {
       printf("\n### Test  6: will a |nsCOMPtr| call the correct destructor?\n");
       nsCOMPtr<IFoo> foop( do_QueryInterface(new IBar) );
+      mozilla::Unused << foop;
     }
 
     {

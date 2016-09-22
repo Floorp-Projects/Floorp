@@ -394,7 +394,6 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
 
   // ------------ Get ranges ready ----------------
   nsCOMPtr<nsIDOMRange> returnRange;
-  nsCOMPtr<nsIPresShell> focusedPS;
   if (NS_FAILED(GetSearchContainers(currentContainer,
                                     (!aIsFirstVisiblePreferred ||
                                      mStartFindRange) ?
@@ -897,7 +896,7 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
   // We now have the correct start node for the range
   // Search for links, starting with startNode, and going up parent chain
 
-  nsCOMPtr<nsIAtom> tag, hrefAtom(NS_Atomize("href"));
+  nsCOMPtr<nsIAtom> hrefAtom(NS_Atomize("href"));
   nsCOMPtr<nsIAtom> typeAtom(NS_Atomize("type"));
 
   while (true) {
