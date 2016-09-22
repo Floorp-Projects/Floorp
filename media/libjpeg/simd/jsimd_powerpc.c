@@ -2,7 +2,7 @@
  * jsimd_powerpc.c
  *
  * Copyright 2009 Pierre Ossman <ossman@cendio.se> for Cendio AB
- * Copyright (C) 2009-2011, 2014-2015, D. R. Commander.
+ * Copyright (C) 2009-2011, 2014-2016, D. R. Commander.
  * Copyright (C) 2015, Matthieu Darbois.
  *
  * Based on the x86 SIMD extension for IJG JPEG library,
@@ -22,19 +22,106 @@
 #include "../jsimddct.h"
 #include "jsimd.h"
 
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
 static unsigned int simd_support = ~0;
 
+#if defined(__linux__) || defined(ANDROID) || defined(__ANDROID__)
+
+#define SOMEWHAT_SANE_PROC_CPUINFO_SIZE_LIMIT (1024 * 1024)
+
+LOCAL(int)
+check_feature (char *buffer, char *feature)
+{
+  char *p;
+  if (*feature == 0)
+    return 0;
+  if (strncmp(buffer, "cpu", 3) != 0)
+    return 0;
+  buffer += 3;
+  while (isspace(*buffer))
+    buffer++;
+
+  /* Check if 'feature' is present in the buffer as a separate word */
+  while ((p = strstr(buffer, feature))) {
+    if (p > buffer && !isspace(*(p - 1))) {
+      buffer++;
+      continue;
+    }
+    p += strlen(feature);
+    if (*p != 0 && !isspace(*p)) {
+      buffer++;
+      continue;
+    }
+    return 1;
+  }
+  return 0;
+}
+
+LOCAL(int)
+parse_proc_cpuinfo (int bufsize)
+{
+  char *buffer = (char *)malloc(bufsize);
+  FILE *fd;
+  simd_support = 0;
+
+  if (!buffer)
+    return 0;
+
+  fd = fopen("/proc/cpuinfo", "r");
+  if (fd) {
+    while (fgets(buffer, bufsize, fd)) {
+      if (!strchr(buffer, '\n') && !feof(fd)) {
+        /* "impossible" happened - insufficient size of the buffer! */
+        fclose(fd);
+        free(buffer);
+        return 0;
+      }
+      if (check_feature(buffer, "altivec"))
+        simd_support |= JSIMD_ALTIVEC;
+    }
+    fclose(fd);
+  }
+  free(buffer);
+  return 1;
+}
+
+#endif
+
+/*
+ * Check what SIMD accelerations are supported.
+ *
+ * FIXME: This code is racy under a multi-threaded environment.
+ */
 LOCAL(void)
 init_simd (void)
 {
   char *env = NULL;
+#if !defined(__ALTIVEC__) && (defined(__linux__) || defined(ANDROID) || defined(__ANDROID__))
+  int bufsize = 1024; /* an initial guess for the line buffer size limit */
+#endif
 
   if (simd_support != ~0U)
     return;
 
-  simd_support = JSIMD_ALTIVEC;
+  simd_support = 0;
+
+#if defined(__ALTIVEC__) || defined(__APPLE__)
+  simd_support |= JSIMD_ALTIVEC;
+#elif defined(__linux__) || defined(ANDROID) || defined(__ANDROID__)
+  while (!parse_proc_cpuinfo(bufsize)) {
+    bufsize *= 2;
+    if (bufsize > SOMEWHAT_SANE_PROC_CPUINFO_SIZE_LIMIT)
+      break;
+  }
+#endif
 
   /* Force different settings through environment variables */
+  env = getenv("JSIMD_FORCEALTIVEC");
+  if ((env != NULL) && (strcmp(env, "1") == 0))
+    simd_support = JSIMD_ALTIVEC;
   env = getenv("JSIMD_FORCENONE");
   if ((env != NULL) && (strcmp(env, "1") == 0))
     simd_support = 0;

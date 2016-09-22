@@ -22,6 +22,7 @@
 #include "jpeglib.h"
 #include "jpegcomp.h"
 #include "jdmaster.h"
+#include "jsimd.h"
 
 
 /*
@@ -69,6 +70,17 @@ use_merged_upsample (j_decompress_ptr cinfo)
       cinfo->comp_info[1]._DCT_scaled_size != cinfo->_min_DCT_scaled_size ||
       cinfo->comp_info[2]._DCT_scaled_size != cinfo->_min_DCT_scaled_size)
     return FALSE;
+#ifdef WITH_SIMD
+  /* If YCbCr-to-RGB color conversion is SIMD-accelerated but merged upsampling
+     isn't, then disabling merged upsampling is likely to be faster when
+     decompressing YCbCr JPEG images. */
+  if (!jsimd_can_h2v2_merged_upsample() && !jsimd_can_h2v1_merged_upsample() &&
+      jsimd_can_ycc_rgb() && cinfo->jpeg_color_space == JCS_YCbCr &&
+      (cinfo->out_color_space == JCS_RGB ||
+       (cinfo->out_color_space >= JCS_EXT_RGB &&
+        cinfo->out_color_space <= JCS_EXT_ARGB)))
+    return FALSE;
+#endif
   /* ??? also need to test for upsample-time rescaling, when & if supported */
   return TRUE;                  /* by golly, it'll work... */
 #else

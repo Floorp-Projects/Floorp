@@ -32,6 +32,8 @@
 #include "jinclude.h"
 #include "jpeglib.h"
 #include "jmemsys.h"            /* import the system-dependent declarations */
+#include <stdint.h>
+#include <limits.h>             /* some NDKs define SIZE_MAX in limits.h */
 
 #ifndef NO_GETENV
 #ifndef HAVE_STDLIB_H           /* <stdlib.h> should declare getenv() */
@@ -650,18 +652,26 @@ realize_virt_arrays (j_common_ptr cinfo)
   maximum_space = 0;
   for (sptr = mem->virt_sarray_list; sptr != NULL; sptr = sptr->next) {
     if (sptr->mem_buffer == NULL) { /* if not realized yet */
+      size_t new_space = (long) sptr->rows_in_array *
+                         (long) sptr->samplesperrow * sizeof(JSAMPLE);
+
       space_per_minheight += (long) sptr->maxaccess *
                              (long) sptr->samplesperrow * sizeof(JSAMPLE);
-      maximum_space += (long) sptr->rows_in_array *
-                       (long) sptr->samplesperrow * sizeof(JSAMPLE);
+      if (SIZE_MAX - maximum_space < new_space)
+        out_of_memory(cinfo, 10);
+      maximum_space += new_space;
     }
   }
   for (bptr = mem->virt_barray_list; bptr != NULL; bptr = bptr->next) {
     if (bptr->mem_buffer == NULL) { /* if not realized yet */
+      size_t new_space = (long) bptr->rows_in_array *
+                         (long) bptr->blocksperrow * sizeof(JBLOCK);
+
       space_per_minheight += (long) bptr->maxaccess *
                              (long) bptr->blocksperrow * sizeof(JBLOCK);
-      maximum_space += (long) bptr->rows_in_array *
-                       (long) bptr->blocksperrow * sizeof(JBLOCK);
+      if (SIZE_MAX - maximum_space < new_space)
+        out_of_memory(cinfo, 11);
+      maximum_space += new_space;
     }
   }
 
