@@ -59,7 +59,6 @@ JSValIsInterfaceOfType(JSContext* cx, HandleValue v, REFNSIID iid)
 {
 
     nsCOMPtr<nsIXPConnectWrappedNative> wn;
-    nsCOMPtr<nsISupports> sup;
     nsCOMPtr<nsISupports> iface;
 
     if (v.isPrimitive())

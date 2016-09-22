@@ -75,7 +75,6 @@ nsChromeRegistryContent::RegisterPackage(const ChromePackage& aPackage)
       return;
   }
   if (aPackage.skinBaseURI.spec.Length()) {
-    nsCOMPtr<nsIURI> skinBaseURI;
     nsresult rv = NS_NewURI(getter_AddRefs(skin),
                             aPackage.skinBaseURI.spec,
                             aPackage.skinBaseURI.charset.get(),
