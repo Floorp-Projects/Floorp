@@ -48,8 +48,6 @@ public:
 private:
   ~VideoDecoderParent();
 
-  VideoDecoderManagerParent* GetManager() { return static_cast<VideoDecoderManagerParent*>(Manager()); }
-
   RefPtr<VideoDecoderManagerParent> mParent;
   RefPtr<VideoDecoderParent> mIPDLSelfRef;
   RefPtr<TaskQueue> mManagerTaskQueue;
