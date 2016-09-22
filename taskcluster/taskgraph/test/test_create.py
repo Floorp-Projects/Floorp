@@ -44,10 +44,11 @@ class TestCreate(unittest.TestCase):
         graph = Graph(nodes={'tid-a', 'tid-b'}, edges={('tid-a', 'tid-b', 'edge')})
         taskgraph = TaskGraph(tasks, graph)
 
-        create.create_tasks(taskgraph, label_to_taskid)
+        create.create_tasks(taskgraph, label_to_taskid, {'level': '4'})
 
         for tid, task in self.created_tasks.iteritems():
             self.assertEqual(task['payload'], 'hello world')
+            self.assertEqual(task['schedulerId'], 'gecko-level-4')
             # make sure the dependencies exist, at least
             for depid in task.get('dependencies', []):
                 if depid is 'decisiontask':
@@ -65,7 +66,7 @@ class TestCreate(unittest.TestCase):
         graph = Graph(nodes={'tid-a'}, edges=set())
         taskgraph = TaskGraph(tasks, graph)
 
-        create.create_tasks(taskgraph, label_to_taskid)
+        create.create_tasks(taskgraph, label_to_taskid, {'level': '4'})
 
         for tid, task in self.created_tasks.iteritems():
             self.assertEqual(task.get('dependencies'), [os.environ['TASK_ID']])
