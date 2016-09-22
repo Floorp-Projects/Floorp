@@ -12,7 +12,6 @@
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
 #include "mozilla/Atomics.h"
-#include "nsIAsyncShutdown.h"
 #include "nsThreadUtils.h"
 #include "mozilla/MozPromise.h"
 #include "GMPStorage.h"
@@ -26,7 +25,6 @@ class GMPParent;
 
 class GeckoMediaPluginServiceParent final : public GeckoMediaPluginService
                                           , public mozIGeckoMediaPluginChromeService
-                                          , public nsIAsyncShutdownBlocker
 {
 public:
   static already_AddRefed<GeckoMediaPluginServiceParent> GetSingleton();
@@ -35,7 +33,6 @@ public:
   nsresult Init() override;
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIASYNCSHUTDOWNBLOCKER
 
   // mozIGeckoMediaPluginService
   NS_IMETHOD GetPluginVersionForAPI(const nsACString& aAPI,
@@ -67,10 +64,6 @@ public:
   already_AddRefed<GMPStorage> GetMemoryStorageFor(const nsACString& aNodeId);
   nsresult ForgetThisSiteNative(const nsAString& aSite,
                                 const mozilla::OriginAttributesPattern& aPattern);
-
-  // Notifies that some user of this class is created/destroyed.
-  void ServiceUserCreated();
-  void ServiceUserDestroyed();
 
 private:
   friend class GMPServiceParent;
@@ -224,10 +217,6 @@ private:
 
   // Hashes nodeId to the hashtable of storage for that nodeId.
   nsRefPtrHashtable<nsCStringHashKey, GMPStorage> mTempGMPStorage;
-
-  // Tracks how many users are running (on the GMP thread). Only when this count
-  // drops to 0 can we safely shut down the thread.
-  MainThreadOnly<int32_t> mServiceUserCount;
 };
 
 nsresult ReadSalt(nsIFile* aPath, nsACString& aOutData);
@@ -241,7 +230,6 @@ public:
   explicit GMPServiceParent(GeckoMediaPluginServiceParent* aService)
     : mService(aService)
   {
-    mService->ServiceUserCreated();
   }
   virtual ~GMPServiceParent();
 
@@ -271,8 +259,6 @@ public:
                      nsresult* aOutRv) override;
 
 private:
-  void CloseTransport(Monitor* aSyncMonitor, bool* aCompleted);
-
   RefPtr<GeckoMediaPluginServiceParent> mService;
 };
 
