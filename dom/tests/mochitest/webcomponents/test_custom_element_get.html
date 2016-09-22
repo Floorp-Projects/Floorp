@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1275838
+-->
+<head>
+  <title>Test custom elements get function.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe id="iframe"></iframe>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1275838">Bug 1275838</a>
+<script>
+const testWindow = iframe.contentDocument.defaultView;
+const customElements = testWindow.customElements;
+
+ok('customElements' in testWindow, '"window.customElements" exists');
+ok('define' in customElements, '"window.customElements.define" exists');
+ok('get' in customElements, '"window.customElements.get" exists');
+
+const name = 'test-get-existing';
+class C extends HTMLElement {};
+customElements.define(name, C);
+is(customElements.get(name), C, 'get() returns the constructor');
+is(customElements.get('test-get-not-defined'), undefined,
+                      'get() returns undefined for not-defined name');
+
+</script>
+</body>
+</html>

@@ -465,6 +465,12 @@ public:
 
   bool SendRealTouchEvent(WidgetTouchEvent& event);
 
+  bool SendHandleTap(TapType aType,
+                     const LayoutDevicePoint& aPoint,
+                     Modifiers aModifiers,
+                     const ScrollableLayerGuid& aGuid,
+                     uint64_t aInputBlockId);
+
   virtual PDocumentRendererParent*
   AllocPDocumentRendererParent(const nsRect& documentRect,
                                const gfx::Matrix& transform,

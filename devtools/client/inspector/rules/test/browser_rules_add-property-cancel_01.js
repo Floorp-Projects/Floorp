@@ -38,6 +38,7 @@ add_task(function* () {
     "Should have cancelled creating a new text property.");
   ok(!elementRuleEditor.propertyList.hasChildNodes(),
     "Should not have any properties.");
-  is(view.styleDocument.activeElement, view.styleDocument.documentElement,
+
+  is(view.styleDocument.activeElement, view.styleDocument.body,
     "Correct element has focus");
 });

@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBlob;
+include protocol PSendStream;
+include IPCStream;
 include ProtocolTypes;
 
 using struct mozilla::void_t
@@ -43,7 +45,7 @@ union BlobData
   nsID;
 
   // For memory-backed blobs.
-  uint8_t[];
+  IPCStream;
 
   // For multiplex blobs.
   BlobData[];

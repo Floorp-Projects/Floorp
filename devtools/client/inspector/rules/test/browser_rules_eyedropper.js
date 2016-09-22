@@ -64,6 +64,8 @@ add_task(function* () {
   tooltip.hide();
   yield onHidden;
   ok(!tooltip.isVisible(), "color picker tooltip is closed");
+
+  yield waitForTick();
 });
 
 function* testESC(swatch, inspector, testActor) {

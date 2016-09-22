@@ -37,10 +37,6 @@ Object.defineProperty(this, "EVENTS", {
   writable: false
 });
 
-// Maximum number of character visible in any cell in the table. This is to
-// avoid making the cell take up all the space in a row.
-const MAX_VISIBLE_STRING_SIZE = 100;
-
 /**
  * A table widget with various features like resizble/toggleable columns,
  * sorting, keyboard navigation etc.
@@ -1508,11 +1504,6 @@ Cell.prototype = {
       let span = this.label.ownerDocument.createElementNS(HTML_NS, "span");
       span.textContent = value;
       value = span;
-    }
-
-    if (!(value instanceof Node) &&
-        value.length > MAX_VISIBLE_STRING_SIZE) {
-      value = value .substr(0, MAX_VISIBLE_STRING_SIZE) + "\u2026";
     }
 
     if (value instanceof Node) {

@@ -23,7 +23,7 @@ add_task(function* () {
   info("Test creating a new property and escaping");
   yield addProperty(view, 1, "color", "red", "VK_ESCAPE", false);
 
-  is(view.styleDocument.documentElement, view.styleDocument.activeElement,
+  is(view.styleDocument.activeElement, view.styleDocument.body,
     "Correct element has focus");
 
   let elementRuleEditor = getRuleViewRuleEditor(view, 1);
