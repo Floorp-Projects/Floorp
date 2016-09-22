@@ -29,7 +29,7 @@ NS_IMPL_ISUPPORTS(ZoomConstraintsClient, nsIDOMEventListener, nsIObserver)
 
 static const nsLiteralString DOM_META_ADDED = NS_LITERAL_STRING("DOMMetaAdded");
 static const nsLiteralString DOM_META_CHANGED = NS_LITERAL_STRING("DOMMetaChanged");
-static const nsLiteralString FULLSCREEN_CHANGED = NS_LITERAL_STRING("mozfullscreenchange");
+static const nsLiteralString FULLSCREEN_CHANGED = NS_LITERAL_STRING("fullscreenchange");
 static const nsLiteralCString BEFORE_FIRST_PAINT = NS_LITERAL_CSTRING("before-first-paint");
 static const nsLiteralCString NS_PREF_CHANGED = NS_LITERAL_CSTRING("nsPref:changed");
 
@@ -76,7 +76,7 @@ ZoomConstraintsClient::Destroy()
   if (mEventTarget) {
     mEventTarget->RemoveEventListener(DOM_META_ADDED, this, false);
     mEventTarget->RemoveEventListener(DOM_META_CHANGED, this, false);
-    mEventTarget->RemoveEventListener(FULLSCREEN_CHANGED, this, false);
+    mEventTarget->RemoveSystemEventListener(FULLSCREEN_CHANGED, this, false);
     mEventTarget = nullptr;
   }
 
@@ -116,7 +116,7 @@ ZoomConstraintsClient::Init(nsIPresShell* aPresShell, nsIDocument* aDocument)
   if (mEventTarget) {
     mEventTarget->AddEventListener(DOM_META_ADDED, this, false);
     mEventTarget->AddEventListener(DOM_META_CHANGED, this, false);
-    mEventTarget->AddEventListener(FULLSCREEN_CHANGED, this, false);
+    mEventTarget->AddSystemEventListener(FULLSCREEN_CHANGED, this, false);
   }
 
   nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
