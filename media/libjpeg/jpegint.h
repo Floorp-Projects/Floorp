@@ -155,8 +155,8 @@ struct jpeg_decomp_master {
   /* Partial decompression variables */
   JDIMENSION first_iMCU_col;
   JDIMENSION last_iMCU_col;
-  JDIMENSION first_MCU_col[MAX_COMPS_IN_SCAN];
-  JDIMENSION last_MCU_col[MAX_COMPS_IN_SCAN];
+  JDIMENSION first_MCU_col[MAX_COMPONENTS];
+  JDIMENSION last_MCU_col[MAX_COMPONENTS];
   boolean jinit_upsampler_no_alloc;
 };
 
