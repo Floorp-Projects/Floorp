@@ -15,6 +15,7 @@ SOURCES += [
     'TestGlobalClass.cpp',
     'TestHeapClass.cpp',
     'TestInheritTypeAnnotationsFromTemplateArgs.cpp',
+    'TestKungFuDeathGrip.cpp',
     'TestMultipleAnnotations.cpp',
     'TestMustOverride.cpp',
     'TestMustUse.cpp',
