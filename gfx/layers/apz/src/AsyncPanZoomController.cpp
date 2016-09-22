@@ -1394,8 +1394,6 @@ nsEventStatus AsyncPanZoomController::OnScale(const PinchGestureInput& aEvent) {
         ScrollBy(neededDisplacement);
       }
 
-      ScheduleComposite();
-
       // We don't want to redraw on every scale, so throttle it.
       if (!mPinchPaintTimerSet) {
         const int delay = gfxPrefs::APZScaleRepaintDelay();
@@ -1412,6 +1410,10 @@ nsEventStatus AsyncPanZoomController::OnScale(const PinchGestureInput& aEvent) {
 
       UpdateSharedCompositorFrameMetrics();
     }
+
+    // We did a ScrollBy call above even if we didn't do a scale, so we
+    // should composite for that.
+    ScheduleComposite();
 
     mLastZoomFocus = focusPoint;
   }
