@@ -350,7 +350,7 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
   
   nsHtml5FlushLoopGuard guard(this); // this is also the self-kungfu!
   
-  nsCOMPtr<nsISupports> parserKungFuDeathGrip(mParser);
+  RefPtr<nsParserBase> parserKungFuDeathGrip(mParser);
 
   // Remember the entry time
   (void) nsContentSink::WillParseImpl();
@@ -366,7 +366,7 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
       return;
     }
 
-    if (!mParser->IsParserEnabled()) {
+    if (!parserKungFuDeathGrip->IsParserEnabled()) {
       // The parser is blocked.
       return;
     }
@@ -413,6 +413,7 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
       // gripped before calling ParseUntilBlocked();
       RefPtr<nsHtml5StreamParser> streamKungFuDeathGrip = 
         GetParser()->GetStreamParser();
+      mozilla::Unused << streamKungFuDeathGrip; // Not used within function
       // Now parse content left in the document.write() buffer queue if any.
       // This may generate tree ops on its own or dequeue a speculation.
       nsresult rv = GetParser()->ParseUntilBlocked();
@@ -527,6 +528,7 @@ nsHtml5TreeOpExecutor::FlushDocumentWrite()
   // avoid crashing near EOF
   RefPtr<nsHtml5TreeOpExecutor> kungFuDeathGrip(this);
   RefPtr<nsParserBase> parserKungFuDeathGrip(mParser);
+  mozilla::Unused << parserKungFuDeathGrip; // Intentionally not used within function
 
   NS_ASSERTION(!mReadingFromStage,
     "Got doc write flush when reading from stage");
