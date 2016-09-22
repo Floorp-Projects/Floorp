@@ -44,8 +44,6 @@
 #include <limits>
 #include "MediaPrefs.h"
 
-using mozilla::ipc::Transport;
-
 namespace mozilla {
 
 #ifdef LOG
@@ -82,8 +80,7 @@ GeckoMediaPluginServiceParent::GetSingleton()
 
 NS_IMPL_ISUPPORTS_INHERITED(GeckoMediaPluginServiceParent,
                             GeckoMediaPluginService,
-                            mozIGeckoMediaPluginChromeService,
-                            nsIAsyncShutdownBlocker)
+                            mozIGeckoMediaPluginChromeService)
 
 GeckoMediaPluginServiceParent::GeckoMediaPluginServiceParent()
   : mShuttingDown(false)
@@ -94,7 +91,6 @@ GeckoMediaPluginServiceParent::GeckoMediaPluginServiceParent()
   , mWaitingForPluginsSyncShutdown(false)
   , mInitPromiseMonitor("GeckoMediaPluginServiceParent::mInitPromiseMonitor")
   , mLoadPluginsFromDiskComplete(false)
-  , mServiceUserCount(0)
 {
   MOZ_ASSERT(NS_IsMainThread());
   mInitPromise.SetMonitor(&mInitPromiseMonitor);
@@ -1842,61 +1838,6 @@ static bool IsNodeIdValid(GMPParent* aParent) {
   return !aParent->GetNodeId().IsEmpty();
 }
 
-static nsCOMPtr<nsIAsyncShutdownClient>
-GetShutdownBarrier()
-{
-  nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdown();
-  MOZ_RELEASE_ASSERT(svc);
-
-  nsCOMPtr<nsIAsyncShutdownClient> barrier;
-  nsresult rv = svc->GetXpcomWillShutdown(getter_AddRefs(barrier));
-
-  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-  MOZ_RELEASE_ASSERT(barrier);
-  return barrier.forget();
-}
-
-NS_IMETHODIMP
-GeckoMediaPluginServiceParent::GetName(nsAString& aName)
-{
-  aName = NS_LITERAL_STRING("GeckoMediaPluginServiceParent: shutdown");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GeckoMediaPluginServiceParent::GetState(nsIPropertyBag**)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GeckoMediaPluginServiceParent::BlockShutdown(nsIAsyncShutdownClient*)
-{
-  return NS_OK;
-}
-
-void
-GeckoMediaPluginServiceParent::ServiceUserCreated()
-{
-  MOZ_ASSERT(mServiceUserCount >= 0);
-  if (++mServiceUserCount == 1) {
-    nsresult rv = GetShutdownBarrier()->AddBlocker(
-      this, NS_LITERAL_STRING(__FILE__), __LINE__,
-      NS_LITERAL_STRING("GeckoMediaPluginServiceParent shutdown"));
-    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-  }
-}
-
-void
-GeckoMediaPluginServiceParent::ServiceUserDestroyed()
-{
-  MOZ_ASSERT(mServiceUserCount > 0);
-  if (--mServiceUserCount == 0) {
-    nsresult rv = GetShutdownBarrier()->RemoveBlocker(this);
-    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-  }
-}
-
 void
 GeckoMediaPluginServiceParent::ClearStorage()
 {
@@ -1936,9 +1877,6 @@ GeckoMediaPluginServiceParent::GetById(uint32_t aPluginId)
 
 GMPServiceParent::~GMPServiceParent()
 {
-  NS_DispatchToMainThread(
-    NewRunnableMethod(mService.get(),
-                      &GeckoMediaPluginServiceParent::ServiceUserDestroyed));
 }
 
 bool
@@ -2038,37 +1976,9 @@ private:
   nsAutoPtr<GMPServiceParent> mToDelete;
 };
 
-void GMPServiceParent::CloseTransport(Monitor* aSyncMonitor, bool* aCompleted)
-{
-  MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
-
-  MonitorAutoLock lock(*aSyncMonitor);
-
-  // This deletes the transport.
-  SetTransport(nullptr);
-
-  *aCompleted = true;
-  lock.NotifyAll();
-}
-
 void
 GMPServiceParent::ActorDestroy(ActorDestroyReason aWhy)
 {
-  Monitor monitor("DeleteGMPServiceParent");
-  bool completed = false;
-
-  // Make sure the IPC channel is closed before destroying mToDelete.
-  MonitorAutoLock lock(monitor);
-  auto task = NewNonOwningRunnableMethod<Monitor*, bool*>(this,
-                                                          &GMPServiceParent::CloseTransport,
-                                                          &monitor,
-                                                          &completed);
-  XRE_GetIOMessageLoop()->PostTask(Move(task));
-
-  while (!completed) {
-    lock.Wait();
-  }
-
   NS_DispatchToCurrentThread(new DeleteGMPServiceParent(this));
 }
 
@@ -2107,16 +2017,11 @@ GMPServiceParent::Create(Transport* aTransport, ProcessId aOtherPid)
   RefPtr<GeckoMediaPluginServiceParent> gmp =
     GeckoMediaPluginServiceParent::GetSingleton();
 
-  if (gmp->mShuttingDown) {
-    // Shutdown is initiated. There is no point creating a new actor.
-    return nullptr;
-  }
+  nsAutoPtr<GMPServiceParent> serviceParent(new GMPServiceParent(gmp));
 
   nsCOMPtr<nsIThread> gmpThread;
   nsresult rv = gmp->GetThread(getter_AddRefs(gmpThread));
   NS_ENSURE_SUCCESS(rv, nullptr);
-
-  nsAutoPtr<GMPServiceParent> serviceParent(new GMPServiceParent(gmp));
 
   bool ok;
   rv = gmpThread->Dispatch(new OpenPGMPServiceParent(serviceParent,
