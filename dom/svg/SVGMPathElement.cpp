@@ -31,7 +31,7 @@ nsSVGElement::StringInfo SVGMPathElement::sStringInfo[2] =
   { &nsGkAtoms::href, kNameSpaceID_XLink, false }
 };
 
-// Cycle collection magic -- based on nsSVGUseElement
+// Cycle collection magic -- based on SVGUseElement
 NS_IMPL_CYCLE_COLLECTION_CLASS(SVGMPathElement)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SVGMPathElement,
