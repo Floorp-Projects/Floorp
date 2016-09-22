@@ -16,73 +16,77 @@
 <?xml-stylesheet href="resource://devtools/client/shared/components/tabs/tabbar.css" type="text/css"?>
 <?xml-stylesheet href="resource://devtools/client/inspector/components/side-panel.css" type="text/css"?>
 <?xml-stylesheet href="resource://devtools/client/inspector/components/inspector-tab-panel.css" type="text/css"?>
+<?xml-stylesheet href="resource://devtools/client/shared/components/splitter/split-box.css" type="text/css"?>
 
-<!DOCTYPE window [
-  <!ENTITY % inspectorDTD SYSTEM "chrome://devtools/locale/inspector.dtd"> %inspectorDTD;
-  <!ENTITY % styleinspectorDTD SYSTEM "chrome://devtools/locale/styleinspector.dtd"> %styleinspectorDTD;
-  <!ENTITY % fontinspectorDTD SYSTEM "chrome://devtools/locale/font-inspector.dtd"> %fontinspectorDTD;
-  <!ENTITY % layoutviewDTD SYSTEM "chrome://devtools/locale/layoutview.dtd"> %layoutviewDTD;
-]>
+<!DOCTYPE window>
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns:html="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:html="http://www.w3.org/1999/xhtml">
 
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
   <script type="application/javascript;version=1.8"
-          src="chrome://devtools/content/shared/theme-switching.js"/>
+          src="chrome://devtools/content/shared/theme-switching.js"></script>
+</head>
+<body class="theme-body devtools-monospace" role="application">
+  <html:div class="inspector-responsive-container theme-body inspector">
 
-  <box flex="1" class="devtools-responsive-container theme-body">
-    <vbox flex="1" class="devtools-main-content">
-      <html:div id="inspector-toolbar"
-        class="devtools-toolbar"
-        nowindowdrag="true">
-        <html:button id="inspector-element-add-button"
-          title="&inspectorAddNode.label;"
-          class="devtools-button" />
+    <!-- Main Panel Content -->
+    <html:div id="inspector-main-content" class="devtools-main-content">
+      <html:div id="inspector-toolbar" class="devtools-toolbar" nowindowdrag="true"
+                data-localization-bundle="devtools/locale/inspector.properties">
+        <html:button id="inspector-element-add-button" class="devtools-button"
+                     data-localization="title=inspectorAddNode.label"/>
         <html:div class="devtools-toolbar-spacer" />
         <html:span id="inspector-searchlabel" />
         <html:div id="inspector-search" class="devtools-searchbox has-clear-btn">
           <html:input id="inspector-searchbox" class="devtools-searchinput"
                       type="search"
-                      placeholder="&inspectorSearchHTML.label3;"/>
+                      data-localization="placeholder=inspectorSearchHTML.label3"/>
           <html:button id="inspector-searchinput-clear" class="devtools-searchinput-clear" tabindex="-1"></html:button>
         </html:div>
         <html:button id="inspector-eyedropper-toggle"
-                     title="&inspectorEyeDropper.label;"
+                     data-localization="title=inspector.eyedropper.label"
                      class="devtools-button command-button-invertable" />
-        <div xmlns="http://www.w3.org/1999/xhtml"
-          id="inspector-sidebar-toggle-box" />
+        <html:div id="inspector-sidebar-toggle-box" />
       </html:div>
-      <vbox flex="1" id="markup-box">
-      </vbox>
+      <html:div id="markup-box" />
       <html:div id="inspector-breadcrumbs-toolbar" class="devtools-toolbar">
         <html:div id="inspector-breadcrumbs" class="breadcrumbs-widget-container"
-                  role="group" aria-label="&inspectorBreadcrumbsGroup;" tabindex="0" />
+                  role="group" data-localization="aria-label=inspector.breadcrumbs.label" tabindex="0" />
       </html:div>
-    </vbox>
-    <splitter class="devtools-side-splitter"/>
-    <vbox id="inspector-sidebar-container">
-      <!-- Specify the XHTML namespace explicitly
-        otherwise the layout is broken. -->
-      <div xmlns="http://www.w3.org/1999/xhtml"
-           id="inspector-sidebar"
-           hidden="true" />
-    </vbox>
+    </html:div>
+
+    <!-- Splitter -->
+    <html:div
+      xmlns="http://www.w3.org/1999/xhtml"
+      id="inspector-splitter-box">
+    </html:div>
+
+    <!-- Sidebar Container -->
+    <html:div id="inspector-sidebar-container">
+      <html:div
+        xmlns="http://www.w3.org/1999/xhtml"
+        id="inspector-sidebar"
+        hidden="true" />
+    </html:div>
 
     <!-- Sidebar panel definitions -->
-    <html:div xmlns="http://www.w3.org/1999/xhtml" id="tabpanels" style="visibility:collapse">
-      <html:div id="sidebar-panel-ruleview" class="devtools-monospace theme-sidebar inspector-tabpanel">
+    <html:div id="tabpanels" style="visibility:collapse">
+      <html:div id="sidebar-panel-ruleview" class="devtools-monospace theme-sidebar inspector-tabpanel"
+                data-localization-bundle="devtools/locale/inspector.properties">
         <html:div id="ruleview-toolbar-container" class="devtools-toolbar">
           <html:div id="ruleview-toolbar">
             <html:div class="devtools-searchbox has-clear-btn">
               <html:input id="ruleview-searchbox"
                           class="devtools-filterinput devtools-rule-searchbox"
                           type="search"
-                          placeholder="&filterStylesPlaceholder;"/>
+                          data-localization="placeholder=inspector.filterStyles.placeholder"/>
               <html:button id="ruleview-searchinput-clear" class="devtools-searchinput-clear"></html:button>
             </html:div>
             <html:div id="ruleview-command-toolbar">
-              <html:button id="ruleview-add-rule-button" title="&addRuleButtonTooltip;" class="devtools-button"></html:button>
-              <html:button id="pseudo-class-panel-toggle" title="&togglePseudoClassPanel;" class="devtools-button"></html:button>
+              <html:button id="ruleview-add-rule-button" data-localization="title=inspector.addRule.tooltip" class="devtools-button"></html:button>
+              <html:button id="pseudo-class-panel-toggle" data-localization="title=inspector.togglePseudo.tooltip" class="devtools-button"></html:button>
             </html:div>
           </html:div>
           <html:div id="pseudo-class-panel" hidden="true">
@@ -98,39 +102,41 @@
         </html:div>
       </html:div>
 
-      <html:div id="sidebar-panel-computedview" class="devtools-monospace theme-sidebar inspector-tabpanel">
+      <html:div id="sidebar-panel-computedview" class="devtools-monospace theme-sidebar inspector-tabpanel"
+                data-localization-bundle="devtools/locale/inspector.properties">
         <html:div id="computedview-toolbar" class="devtools-toolbar">
           <html:div class="devtools-searchbox has-clear-btn">
             <html:input id="computedview-searchbox"
                         class="devtools-filterinput devtools-rule-searchbox"
                         type="search"
-                        placeholder="&filterStylesPlaceholder;"/>
+                        data-localization="placeholder=inspector.filterStyles.placeholder"/>
             <html:button id="computedview-searchinput-clear" class="devtools-searchinput-clear"></html:button>
           </html:div>
-          <html:label id="browser-style-checkbox-label" for="browser-style-checkbox">
-            <html:input id="browser-style-checkbox"
-                        type="checkbox"
-                        class="includebrowserstyles"
-                        label="&browserStylesLabel;"/>&browserStylesLabel;</html:label>
+          <html:input id="browser-style-checkbox"
+                      type="checkbox"
+                      class="includebrowserstyles"/>
+          <html:label id="browser-style-checkbox-label" for="browser-style-checkbox"
+                        data-localization="content=inspector.browserStyles.label"/>
         </html:div>
 
         <html:div id="computedview-container">
           <html:div id="computedview-container-focusable" tabindex="-1">
-            <html:div id="boxmodel-wrapper" tabindex="0">
+            <html:div id="boxmodel-wrapper" tabindex="0"
+              data-localization-bundle="devtools/locale/boxmodel.properties">
               <html:div id="boxmodel-header">
                 <html:div id="boxmodel-expander" class="expander theme-twisty expandable" open=""></html:div>
-                <html:span>&layoutViewTitle;</html:span>
+                <html:span data-localization="content=boxmodel.title"/>
               </html:div>
 
               <html:div id="boxmodel-container">
                 <html:div id="boxmodel-main">
-                  <html:span class="boxmodel-legend" data-box="margin" title="&margin.tooltip;">&margin.tooltip;</html:span>
-                  <html:div id="boxmodel-margins" data-box="margin" title="&margin.tooltip;">
-                    <html:span class="boxmodel-legend" data-box="border" title="&border.tooltip;">&border.tooltip;</html:span>
-                    <html:div id="boxmodel-borders" data-box="border" title="&border.tooltip;">
-                      <html:span class="boxmodel-legend" data-box="padding" title="&padding.tooltip;">&padding.tooltip;</html:span>
-                      <html:div id="boxmodel-padding" data-box="padding" title="&padding.tooltip;">
-                        <html:div id="boxmodel-content" data-box="content" title="&content.tooltip;">
+                  <html:span class="boxmodel-legend" data-box="margin" data-localization="content=boxmodel.margin;title=boxmodel.margin"/>
+                  <html:div id="boxmodel-margins" data-box="margin" data-localization="title=boxmodel.margin">
+                    <html:span class="boxmodel-legend" data-box="border" data-localization="content=boxmodel.border;title=boxmodel.border"/>
+                    <html:div id="boxmodel-borders" data-box="border" data-localization="title=boxmodel.border">
+                      <html:span class="boxmodel-legend" data-box="padding" data-localization="content=boxmodel.padding;title=boxmodel.padding"/>
+                      <html:div id="boxmodel-padding" data-box="padding" data-localization="title=boxmodel.padding">
+                        <html:div id="boxmodel-content" data-box="content" data-localization="title=boxmodel.content">
                         </html:div>
                       </html:div>
                     </html:div>
@@ -151,13 +157,16 @@
                   <html:p class="boxmodel-padding boxmodel-bottom"><html:span data-box="padding" class="boxmodel-editable" title="padding-bottom"></html:span></html:p>
                   <html:p class="boxmodel-padding boxmodel-left"><html:span data-box="padding" class="boxmodel-editable" title="padding-left"></html:span></html:p>
 
-                  <html:p class="boxmodel-size"><html:span data-box="content" title="&content.tooltip;"></html:span></html:p>
+                  <html:p class="boxmodel-size">
+                    <html:span data-box="content" data-localization="title=boxmodel.content"></html:span>
+                  </html:p>
                 </html:div>
 
                 <html:div id="boxmodel-info">
                   <html:span id="boxmodel-element-size"></html:span>
                   <html:section id="boxmodel-position-group">
-                    <html:button class="devtools-button" id="layout-geometry-editor" title="&geometry.button.tooltip;"></html:button>
+                    <html:button class="devtools-button" id="layout-geometry-editor"
+                                 data-localization="title=boxmodel.geometryButton.tooltip"></html:button>
                     <html:span id="boxmodel-element-position"></html:span>
                   </html:section>
                 </html:div>
@@ -171,22 +180,21 @@
             <html:div id="propertyContainer" class="theme-separator" tabindex="0">
             </html:div>
 
-            <html:div id="computedview-no-results" hidden="">
-              &noPropertiesFound;
-            </html:div>
+            <html:div id="computedview-no-results" hidden="" data-localization="content=inspector.noProperties"/>
           </html:div>
         </html:div>
       </html:div>
 
-      <html:div id="sidebar-panel-fontinspector" class="devtools-monospace theme-sidebar inspector-tabpanel">
+      <html:div id="sidebar-panel-fontinspector" class="devtools-monospace theme-sidebar inspector-tabpanel"
+                data-localization-bundle="devtools/locale/font-inspector.properties">
         <html:div class="devtools-toolbar">
           <html:div class="devtools-searchbox">
-            <html:input id="font-preview-text-input"
-                        class="devtools-textinput"
-                        type="search"
-                        placeholder="&previewHint;"/>
+            <html:input id="font-preview-text-input" class="devtools-textinput" type="search"
+                        data-localization="placeholder=fontinspector.previewText"/>
           </html:div>
-          <html:label id="font-showall" class="theme-link" title="&showAllFonts;">&showAllFontsUsed;</html:label>
+          <html:label id="font-showall" class="theme-link"
+                      data-localization="content=fontinspector.seeAll;
+                                         title=fontinspector.seeAll.tooltip"/>
         </html:div>
 
         <html:div id="font-container">
@@ -200,13 +208,15 @@
             </html:div>
             <html:div class="font-info">
               <html:h1 class="font-name"></html:h1>
-              <html:span class="font-is-local">&system;</html:span>
-              <html:span class="font-is-remote">&remote;</html:span>
+              <html:span class="font-is-local" data-localization="content=fontinspector.system"/>
+              <html:span class="font-is-remote" data-localization="content=fontinspector.remote"/>
               <html:p class="font-format-url">
                 <html:input readonly="readonly" class="font-url"></html:input>
                 <html:span class="font-format"></html:span>
               </html:p>
-              <html:p class="font-css">&usedAs; "<html:span class="font-css-name"></html:span>"</html:p>
+              <html:p class="font-css">
+                <html:span data-localization="content=fontinspector.usedAs"/> "<html:span class="font-css-name"></html:span>"
+              </html:p>
               <html:pre class="font-css-code"></html:pre>
             </html:div>
           </html:section>
@@ -218,5 +228,6 @@
       </html:div>
     </html:div>
 
-  </box>
-</window>
+  </html:div>
+</body>
+</html>

@@ -634,7 +634,9 @@ var togglePropStatus = Task.async(function* (view, textProp) {
  */
 var focusNewRuleViewProperty = Task.async(function* (ruleEditor) {
   info("Clicking on a close ruleEditor brace to start editing a new property");
-  ruleEditor.closeBrace.scrollIntoView();
+
+  // Use bottom alignment to avoid scrolling out of the parent element area.
+  ruleEditor.closeBrace.scrollIntoView(false);
   let editor = yield focusEditableField(ruleEditor.ruleView,
     ruleEditor.closeBrace);
 
@@ -813,4 +815,14 @@ function waitForStyleModification(inspector) {
     }
     inspector.on("markupmutation", checkForStyleModification);
   });
+}
+
+/**
+ * Make sure window is properly focused before sending a key event.
+ * @param {Window} win
+ * @param {Event} key
+ */
+function focusAndSendKey(win, key) {
+  win.document.documentElement.focus();
+  EventUtils.sendKey(key, win);
 }

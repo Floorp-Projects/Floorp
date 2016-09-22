@@ -19,7 +19,6 @@ stubPreparedMessages.set("new Date(0)", new ConsoleMessage({
 	"source": "javascript",
 	"type": "result",
 	"level": "log",
-	"messageText": null,
 	"parameters": {
 		"type": "object",
 		"actor": "server1.conn0.child1/obj30",
@@ -33,7 +32,23 @@ stubPreparedMessages.set("new Date(0)", new ConsoleMessage({
 		}
 	},
 	"repeat": 1,
-	"repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"type\":\"result\",\"level\":\"log\",\"messageText\":null,\"parameters\":{\"type\":\"object\",\"actor\":\"server1.conn0.child1/obj30\",\"class\":\"Date\",\"extensible\":true,\"frozen\":false,\"sealed\":false,\"ownPropertyLength\":0,\"preview\":{\"timestamp\":0}},\"repeatId\":null,\"stacktrace\":null,\"frame\":null}",
+	"repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"type\":\"result\",\"level\":\"log\",\"parameters\":{\"type\":\"object\",\"actor\":\"server1.conn0.child1/obj30\",\"class\":\"Date\",\"extensible\":true,\"frozen\":false,\"sealed\":false,\"ownPropertyLength\":0,\"preview\":{\"timestamp\":0}},\"repeatId\":null,\"stacktrace\":null,\"frame\":null}",
+	"stacktrace": null,
+	"frame": null
+}));
+
+stubPreparedMessages.set("asdf()", new ConsoleMessage({
+	"id": "1",
+	"allowRepeating": true,
+	"source": "javascript",
+	"type": "result",
+	"level": "error",
+	"messageText": "ReferenceError: asdf is not defined",
+	"parameters": {
+		"type": "undefined"
+	},
+	"repeat": 1,
+	"repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"type\":\"result\",\"level\":\"error\",\"messageText\":\"ReferenceError: asdf is not defined\",\"parameters\":{\"type\":\"undefined\"},\"repeatId\":null,\"stacktrace\":null,\"frame\":null}",
 	"stacktrace": null,
 	"frame": null
 }));
@@ -54,8 +69,38 @@ stubPackets.set("new Date(0)", {
 			"timestamp": 0
 		}
 	},
-	"timestamp": 1471886229652,
+	"timestamp": 1474405330863,
 	"exception": null,
+	"helperResult": null
+});
+
+stubPackets.set("asdf()", {
+	"from": "server1.conn0.child1/consoleActor2",
+	"input": "asdf()",
+	"result": {
+		"type": "undefined"
+	},
+	"timestamp": 1474405330881,
+	"exception": {
+		"type": "object",
+		"actor": "server1.conn0.child1/obj32",
+		"class": "Error",
+		"extensible": true,
+		"frozen": false,
+		"sealed": false,
+		"ownPropertyLength": 4,
+		"preview": {
+			"kind": "Error",
+			"name": "ReferenceError",
+			"message": "asdf is not defined",
+			"stack": "@debugger eval code:1:1\n",
+			"fileName": "debugger eval code",
+			"lineNumber": 1,
+			"columnNumber": 1
+		}
+	},
+	"exceptionMessage": "ReferenceError: asdf is not defined",
+	"exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
 	"helperResult": null
 });
 
