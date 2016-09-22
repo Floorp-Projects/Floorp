@@ -33,6 +33,7 @@ public:
 
   // PGPUChild overrides.
   bool RecvInitComplete(const GPUDeviceData& aData) override;
+  bool RecvReportCheckerboard(const uint32_t& aSeverity, const nsCString& aLog) override;
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   static void Destroy(UniquePtr<GPUChild>&& aChild);

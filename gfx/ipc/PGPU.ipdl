@@ -72,6 +72,9 @@ child:
   // Sent when the GPU process has initialized devices. This occurs once, after
   // Init().
   async InitComplete(GPUDeviceData data);
+
+  // Sent when APZ detects checkerboarding and apz checkerboard reporting is enabled.
+  async ReportCheckerboard(uint32_t severity, nsCString log);
 };
 
 } // namespace gfx
