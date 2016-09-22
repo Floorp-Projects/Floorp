@@ -211,6 +211,11 @@ add_task(function* test_add_visits_to_database()
     //Ci.nsINavHistoryService.TRANSITION_DOWNLOAD,
   ];
 
+  function newTimeInMicroseconds() {
+    timeInMicroseconds = timeInMicroseconds - 1000;
+    return timeInMicroseconds;
+  }
+
   // we add a visit for each of the above transition types.
   t.forEach(transition => visits.push(
     { isVisit: true,
@@ -218,7 +223,7 @@ add_task(function* test_add_visits_to_database()
       uri: "http://" + transition + ".example.com/",
       title: transition + "-example",
       isRedirect: true,
-      lastVisit: timeInMicroseconds--,
+      lastVisit: newTimeInMicroseconds(),
       visitCount: (transition == Ci.nsINavHistoryService.TRANSITION_EMBED ||
                    transition == Ci.nsINavHistoryService.TRANSITION_FRAMED_LINK) ? 0 : visitCount++,
       isInQuery: true }));
@@ -229,7 +234,7 @@ add_task(function* test_add_visits_to_database()
       transType: Ci.nsINavHistoryService.TRANSITION_REDIRECT_TEMPORARY,
       uri: "http://" + transition + ".redirect.temp.example.com/",
       title: transition + "-redirect-temp-example",
-      lastVisit: timeInMicroseconds--,
+      lastVisit: newTimeInMicroseconds(),
       isRedirect: true,
       referrer: "http://" + transition + ".example.com/",
       visitCount: visitCount++,
@@ -241,7 +246,7 @@ add_task(function* test_add_visits_to_database()
       transType: Ci.nsINavHistoryService.TRANSITION_REDIRECT_PERMANENT,
       uri: "http://" + transition + ".redirect.perm.example.com/",
       title: transition + "-redirect-perm-example",
-      lastVisit: timeInMicroseconds--,
+      lastVisit: newTimeInMicroseconds(),
       isRedirect: true,
       referrer: "http://" + transition + ".redirect.temp.example.com/",
       visitCount: visitCount++,
