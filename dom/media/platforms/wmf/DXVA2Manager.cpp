@@ -13,6 +13,7 @@
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/layers/D3D11ShareHandleImage.h"
 #include "mozilla/layers/ImageBridgeChild.h"
+#include "mozilla/layers/VideoBridgeChild.h"
 #include "mozilla/Telemetry.h"
 #include "MediaTelemetryConstants.h"
 #include "mfapi.h"
@@ -431,8 +432,11 @@ D3D9DXVA2Manager::Init(nsACString& aFailureReason)
   if (layers::ImageBridgeChild::GetSingleton()) {
     mTextureClientAllocator = new D3D9RecycleAllocator(layers::ImageBridgeChild::GetSingleton().get(),
                                                        mDevice);
-    mTextureClientAllocator->SetMaxPoolSize(5);
+  } else {
+    mTextureClientAllocator = new D3D9RecycleAllocator(layers::VideoBridgeChild::GetSingleton(),
+                                                       mDevice);
   }
+  mTextureClientAllocator->SetMaxPoolSize(5);
 
   Telemetry::Accumulate(Telemetry::MEDIA_DECODER_BACKEND_USED,
                         uint32_t(media::MediaDecoderBackend::WMFDXVA2D3D9));
@@ -762,8 +766,11 @@ D3D11DXVA2Manager::Init(nsACString& aFailureReason)
   if (layers::ImageBridgeChild::GetSingleton()) {
     mTextureClientAllocator = new D3D11RecycleAllocator(layers::ImageBridgeChild::GetSingleton().get(),
                                                         mDevice);
-    mTextureClientAllocator->SetMaxPoolSize(5);
+  } else {
+    mTextureClientAllocator = new D3D11RecycleAllocator(layers::VideoBridgeChild::GetSingleton(),
+                                                        mDevice);
   }
+  mTextureClientAllocator->SetMaxPoolSize(5);
 
   Telemetry::Accumulate(Telemetry::MEDIA_DECODER_BACKEND_USED,
                         uint32_t(media::MediaDecoderBackend::WMFDXVA2D3D11));
