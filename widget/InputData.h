@@ -428,14 +428,7 @@ public:
     PINCHGESTURE_SENTINEL,
   };
 
-  // Construct a tap gesture from a Screen point.
-  // mLocalFocusPoint remains (0,0) unless it's set later.
-  PinchGestureInput(PinchGestureType aType, uint32_t aTime,
-                    TimeStamp aTimeStamp, const ScreenPoint& aFocusPoint,
-                    float aCurrentSpan, float aPreviousSpan,
-                    Modifiers aModifiers);
-
-  // Construct a tap gesture from a ParentLayer point.
+  // Construct a pinch gesture from a ParentLayer point.
   // mFocusPoint remains (0,0) unless it's set later.
   PinchGestureInput(PinchGestureType aType, uint32_t aTime, TimeStamp aTimeStamp,
                     const ParentLayerPoint& aLocalFocusPoint, float aCurrentSpan,
