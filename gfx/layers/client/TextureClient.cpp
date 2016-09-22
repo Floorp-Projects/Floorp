@@ -762,11 +762,12 @@ TextureClient::AsTextureClient(PTextureChild* actor)
 
   TextureChild* tc = static_cast<TextureChild*>(actor);
 
-  // TODO: This is not entirely race-free because TextureClient's ref count
-  // can reach zero on another thread and AsTextureClient gets called before
-  // Destroy.
   tc->Lock();
 
+  // Since TextureClient may be destroyed asynchronously with respect to its
+  // IPDL actor, we must acquire a reference within a lock. The mDestroyed bit
+  // tells us whether or not the main thread has disconnected the TextureClient
+  // from its actor.
   if (tc->mDestroyed) {
     tc->Unlock();
     return nullptr;
