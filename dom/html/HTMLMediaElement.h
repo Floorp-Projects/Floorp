@@ -633,7 +633,7 @@ public:
                                          ErrorResult& aRv);
 
   mozilla::dom::EventHandlerNonNull* GetOnencrypted();
-  void SetOnencrypted(mozilla::dom::EventHandlerNonNull* listener);
+  void SetOnencrypted(mozilla::dom::EventHandlerNonNull* aCallback);
 
   mozilla::dom::EventHandlerNonNull* GetOnwaitingforkey();
   void SetOnwaitingforkey(mozilla::dom::EventHandlerNonNull* aCallback);
