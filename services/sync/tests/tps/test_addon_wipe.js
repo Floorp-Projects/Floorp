@@ -30,5 +30,6 @@ Phase("phase02", [
 ]);
 Phase("phase03", [
   [Addons.verify, [id1], STATE_ENABLED],
-  [Addons.verify, [id2], STATE_ENABLED]
+  [Addons.verify, [id2], STATE_ENABLED],
+  [Sync] // Sync to ensure that the addon validator can run without error
 ]);
