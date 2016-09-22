@@ -16,7 +16,7 @@
   <script type="application/javascript;version=1.7">
 
   const SJS = "://example.com/tests/dom/base/test/referrer_testserver.sjs?";
-  const PARAMS = ["ATTRIBUTE_POLICY", "NEW_ATTRIBUTE_POLICY", "META_POLICY"];
+  const PARAMS = ["ATTRIBUTE_POLICY", "NEW_ATTRIBUTE_POLICY", "META_POLICY", "SCHEME_FROM", "SCHEME_TO"];
 
   const testCases = [
     {ACTION: ["generate-iframe-policy-test"],
@@ -44,7 +44,59 @@
          NAME: 'origin-with-no-meta',
          META_POLICY: '',
          DESC: "origin (iframe) with no meta",
-         RESULT: 'origin'}]}
+         RESULT: 'origin'},
+        {ATTRIBUTE_POLICY: 'same-origin',
+         NAME: 'same-origin-with-origin-in-meta',
+         META_POLICY: 'origin',
+         DESC: "same-origin with origin in meta",
+         RESULT: 'full'},
+
+         // 1. Downgrade.
+        {ATTRIBUTE_POLICY: 'strict-origin',
+         NAME: 'origin-in-meta-strict-origin-in-attr',
+         META_POLICY: 'origin',
+         DESC: 'origin in meta strict-origin in attr',
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         RESULT: 'none'},
+        {ATTRIBUTE_POLICY: 'strict-origin-when-cross-origin',
+         NAME: 'origin-in-meta-strict-origin-when-cross-origin-in-attr',
+         META_POLICY: 'origin',
+         DESC: 'origin in meta strict-origin-when-cross-origin in attr',
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         RESULT: 'none'},
+
+         // 2. No downgrade.
+        {ATTRIBUTE_POLICY: 'strict-origin',
+         NAME: 'origin-in-meta-strict-origin-in-attr',
+         META_POLICY: 'origin',
+         DESC: 'origin in meta strict-origin in attr',
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'https',
+         RESULT: 'origin'},
+        {ATTRIBUTE_POLICY: 'strict-origin-when-cross-origin',
+         NAME: 'origin-in-meta-strict-origin-when-cross-origin-in-attr',
+         META_POLICY: 'origin',
+         DESC: 'origin in meta strict-origin-when-cross-origin in attr',
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'https',
+         RESULT: 'full'},
+        {ATTRIBUTE_POLICY: 'strict-origin-when-cross-origin',
+         NAME: 'strict-origin-when-cross-origin-with-origin-in-meta',
+         META_POLICY: 'origin',
+         SCHEME_FROM: 'http',
+         SCHEME_TO: 'https',
+         DESC: "strict-origin-when-cross-origin with origin in meta",
+         RESULT: 'origin'},
+        {ATTRIBUTE_POLICY: 'same-origin',
+         NAME: 'same-origin-with-origin-in-meta',
+         META_POLICY: 'origin',
+         SCHEME_FROM: 'http',
+         SCHEME_TO: 'https',
+         DESC: "same-origin with origin in meta",
+         RESULT: 'none'},
+        ]}
   ];
   </script>
   <script type="application/javascript;version=1.7" src="/tests/dom/base/test/referrer_helper.js"></script>
