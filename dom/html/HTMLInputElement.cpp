@@ -5532,7 +5532,7 @@ HTMLInputElement::GetFiles(bool aRecursiveFlag, ErrorResult& aRv)
   GetFilesHelper* helper = GetOrCreateGetFilesHelper(aRecursiveFlag, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
-   }
+  }
   MOZ_ASSERT(helper);
 
   nsCOMPtr<nsIGlobalObject> global = OwnerDoc()->GetScopeObject();
