@@ -384,7 +384,7 @@ JSRuntime::destroyRuntime()
          * explicit canceling is needed for these.
          */
         for (CompartmentsIter comp(this, SkipAtoms); !comp.done(); comp.next())
-            CancelOffThreadIonCompile(comp, nullptr);
+            CancelOffThreadIonCompile(comp);
         CancelOffThreadParses(this);
 
         /* Remove persistent GC roots. */
