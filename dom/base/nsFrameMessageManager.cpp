@@ -1308,12 +1308,16 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
       }
     }
   }
-  RefPtr<nsFrameMessageManager> kungfuDeathGrip = mParentManager;
-  return mParentManager ? mParentManager->ReceiveMessage(aTarget, aTargetFrameLoader,
-                                                         aTargetClosed, aMessage,
-                                                         aIsSync, aCloneData,
-                                                         aCpows, aPrincipal,
-                                                         aRetVal) : NS_OK;
+
+  RefPtr<nsFrameMessageManager> kungFuDeathGrip = mParentManager;
+  if (kungFuDeathGrip) {
+    return kungFuDeathGrip->ReceiveMessage(aTarget, aTargetFrameLoader,
+                                           aTargetClosed, aMessage,
+                                           aIsSync, aCloneData,
+                                           aCpows, aPrincipal,
+                                           aRetVal);
+  }
+  return NS_OK;
 }
 
 void

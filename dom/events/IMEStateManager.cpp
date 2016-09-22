@@ -1601,8 +1601,8 @@ IMEStateManager::CreateIMEContentObserver(nsIEditor* aEditor)
   // IMEContentObserver::Init() might create another IMEContentObserver
   // instance.  So, sActiveIMEContentObserver would be replaced with new one.
   // We should hold the current instance here.
-  RefPtr<IMEContentObserver> kungFuDeathGrip(sActiveIMEContentObserver);
-  sActiveIMEContentObserver->Init(widget, sPresContext, sContent, aEditor);
+  RefPtr<IMEContentObserver> activeIMEContentObserver(sActiveIMEContentObserver);
+  activeIMEContentObserver->Init(widget, sPresContext, sContent, aEditor);
 }
 
 // static
