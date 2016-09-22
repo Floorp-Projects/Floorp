@@ -345,13 +345,6 @@ var gFxAccounts = {
   },
 
   openAccountsPage: function (action, urlParams={}) {
-    // An entrypoint param is used for server-side metrics.  If the current tab
-    // is UITour, assume that it initiated the call to this method and override
-    // the entrypoint accordingly.
-    if (UITour.tourBrowsersByWindow.get(window) &&
-        UITour.tourBrowsersByWindow.get(window).has(gBrowser.selectedBrowser)) {
-      urlParams.entrypoint = "uitour";
-    }
     let params = new URLSearchParams();
     if (action) {
       params.set("action", action);
