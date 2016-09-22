@@ -434,8 +434,10 @@ ComputeClipExtsInDeviceSpace(gfxContext& aCtx)
                                                                 : IntRect();
 }
 
+typedef nsSVGIntegrationUtils::PaintFramesParams PaintFramesParams;
+
 static IntRect
-ComputeMaskGeometry(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
+ComputeMaskGeometry(const PaintFramesParams& aParams,
                     const nsStyleSVGReset *svgReset,
                     const nsPoint& aOffsetToUserSpace,
                     const nsTArray<nsSVGMaskFrame *>& aMaskFrames)
@@ -494,7 +496,7 @@ ComputeMaskGeometry(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
 }
 
 static DrawResult
-GenerateMaskSurface(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
+GenerateMaskSurface(const PaintFramesParams& aParams,
                     float aOpacity, nsStyleContext* aSC,
                     const nsTArray<nsSVGMaskFrame *>& aMaskFrames,
                     const nsPoint& aOffsetToUserSpace,
@@ -612,7 +614,7 @@ GenerateMaskSurface(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
 }
 
 static float
-ComputeOpacity(const nsSVGIntegrationUtils::PaintFramesParams& aParams)
+ComputeOpacity(const PaintFramesParams& aParams)
 {
   nsIFrame* frame = aParams.frame;
   float opacity = frame->StyleEffects()->mOpacity;
@@ -626,8 +628,8 @@ ComputeOpacity(const nsSVGIntegrationUtils::PaintFramesParams& aParams)
 }
 
 static bool
-ValidateSVGFrame(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
-                 bool aHasSVGLayout, DrawResult* aResult)
+ValidateSVGFrame(const PaintFramesParams& aParams, bool aHasSVGLayout,
+                 DrawResult* aResult)
 {
 #ifdef DEBUG
   NS_ASSERTION(!(aParams.frame->GetStateBits() & NS_FRAME_SVG_LAYOUT) ||
@@ -656,7 +658,7 @@ ValidateSVGFrame(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
 }
 
 static void
-SetupContextMatrix(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
+SetupContextMatrix(const PaintFramesParams& aParams,
                    nsPoint& aOffsetToBoundingBox,
                    nsPoint& aToUserSpace,
                    nsPoint& aOffsetToUserSpace)
@@ -706,8 +708,7 @@ SetupContextMatrix(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
 }
 
 static already_AddRefed<gfxContext>
-CreateBlendTarget(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
-                  IntPoint& aTargetOffset)
+CreateBlendTarget(const PaintFramesParams& aParams, IntPoint& aTargetOffset)
 {
   MOZ_ASSERT(aParams.frame->StyleEffects()->mMixBlendMode !=
              NS_STYLE_BLEND_NORMAL);
@@ -731,8 +732,8 @@ CreateBlendTarget(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
 }
 
 static void
-BlendToTarget(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
-              gfxContext* aTarget, const IntPoint& aTargetOffset)
+BlendToTarget(const PaintFramesParams& aParams, gfxContext* aTarget,
+              const IntPoint& aTargetOffset)
 {
   MOZ_ASSERT(aParams.frame->StyleEffects()->mMixBlendMode !=
              NS_STYLE_BLEND_NORMAL);
