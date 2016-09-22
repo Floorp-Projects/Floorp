@@ -18,7 +18,7 @@ interface FileSystemDirectoryEntry : FileSystemEntry {
                       optional ErrorCallback errorCallback);
 
     // This method is not implemented. ErrorCallback will be called
-    // with NS_ERROR_DOM_NOT_SUPPORTED_ERR.
+    // with SecurityError
     void removeRecursively(VoidCallback successCallback,
                            optional ErrorCallback errorCallback);
 };
