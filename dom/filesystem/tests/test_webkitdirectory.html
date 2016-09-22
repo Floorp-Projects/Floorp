@@ -25,6 +25,7 @@ function populateInputFile(aInputFile) {
     MockFilePicker.useDirectory(message.dir);
 
     var input = document.getElementById(aInputFile);
+    input.setAttribute('data-name', message.name);
     input.addEventListener('change', function change() {
       input.removeEventListener('change', change);
       MockFilePicker.cleanup();
@@ -39,11 +40,11 @@ function populateInputFile(aInputFile) {
   script.sendAsyncMessage("dir.open", { path: 'test' });
 }
 
-function checkFile(file, fileList) {
+function checkFile(file, fileList, dirName) {
   for (var i = 0; i < fileList.length; ++i) {
     ok(fileList[i] instanceof File, "We want just files.");
     if (fileList[i].name == file.name) {
-      is(fileList[i].webkitRelativePath, file.path, "Path matches");
+      is(fileList[i].webkitRelativePath, dirName + file.path, "Path matches");
       return;
     }
   }
@@ -63,7 +64,7 @@ function test_fileList(aInputFile, aWhat) {
 
   is(fileList.length, aWhat.length, "We want just " + aWhat.length + " elements for " + aInputFile);
   for (var i = 0; i < aWhat.length; ++i) {
-    checkFile(aWhat[i], fileList);
+    checkFile(aWhat[i], fileList, input.dataset.name);
   }
 
   next();
