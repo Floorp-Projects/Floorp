@@ -96,9 +96,7 @@ SERVO_BINDING_FUNC(Servo_ComputeRestyleHint, nsRestyleHint,
                    RawGeckoElement* element, ServoElementSnapshot* snapshot,
                    RawServoStyleSetBorrowed set)
 
-// Restyle the given document or subtree
-SERVO_BINDING_FUNC(Servo_RestyleDocument, void,
-                   RawGeckoDocumentBorrowed doc, RawServoStyleSetBorrowedMut set)
+// Restyle the given subtree.
 SERVO_BINDING_FUNC(Servo_RestyleSubtree, void,
                    RawGeckoNodeBorrowed node, RawServoStyleSetBorrowedMut set)
 
