@@ -6,7 +6,6 @@
 #include "VideoDecoderManagerParent.h"
 #include "VideoDecoderParent.h"
 #include "base/thread.h"
-#include "mozilla/StaticMutex.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Services.h"
 #include "mozilla/Observer.h"
@@ -15,6 +14,7 @@
 #include "nsIEventTarget.h"
 #include "nsThreadUtils.h"
 #include "ImageContainer.h"
+#include "mozilla/layers/VideoBridgeChild.h"
 
 #if XP_WIN
 #include <objbase.h>
@@ -28,53 +28,11 @@ using namespace ipc;
 using namespace layers;
 using namespace gfx;
 
-
-struct ImageMapEntry {
-  ImageMapEntry()
-    : mOwner(nullptr)
-  {}
-  ImageMapEntry(layers::Image* aImage, VideoDecoderManagerParent* aOwner)
-    : mImage(aImage)
-    , mOwner(aOwner)
-  {}
-  ~ImageMapEntry() {}
-
-  RefPtr<layers::Image> mImage;
-  VideoDecoderManagerParent* mOwner;
-};
-std::map<uint64_t, ImageMapEntry> sImageMap;
-StaticMutex sImageMutex;
-
-/* static */ layers::Image*
-VideoDecoderManagerParent::LookupImage(const SurfaceDescriptorGPUVideo& aSD)
-{
-  StaticMutexAutoLock lock(sImageMutex);
-  return sImageMap[aSD.handle()].mImage;
-}
-
 SurfaceDescriptorGPUVideo
-VideoDecoderManagerParent::StoreImage(Image* aImage)
+VideoDecoderManagerParent::StoreImage(TextureClient* aTexture)
 {
-  StaticMutexAutoLock lock(sImageMutex);
-
-  static uint64_t sImageCount = 0;
-  sImageMap[++sImageCount] = ImageMapEntry(aImage, this);
-
-  return SurfaceDescriptorGPUVideo(sImageCount);
-}
-
-void
-VideoDecoderManagerParent::ClearAllOwnedImages()
-{
-  StaticMutexAutoLock lock(sImageMutex);
-  for (auto it = sImageMap.begin(); it != sImageMap.end();)
-  {
-    if ((*it).second.mOwner == this) {
-      it = sImageMap.erase(it);
-    } else {
-      ++it;
-    }
-  }
+  mTextureMap[aTexture->GetSerial()] = aTexture;
+  return SurfaceDescriptorGPUVideo(aTexture->GetSerial());
 }
 
 StaticRefPtr<nsIThread> sVideoDecoderManagerThread;
@@ -126,6 +84,9 @@ VideoDecoderManagerParent::StartupThreads()
     MOZ_ASSERT(hr == S_OK);
   }), NS_DISPATCH_NORMAL);
 #endif
+  sVideoDecoderManagerThread->Dispatch(NS_NewRunnableFunction([]() {
+    layers::VideoBridgeChild::Startup();
+  }), NS_DISPATCH_NORMAL);
 
   sManagerTaskQueue = new TaskQueue(managerThread.forget());
 
@@ -156,6 +117,10 @@ VideoDecoderManagerParent::ShutdownThreads()
   sManagerTaskQueue->AwaitShutdownAndIdle();
   sVideoDecoderTaskThread->Shutdown();
   sVideoDecoderTaskThread = nullptr;
+
+  sVideoDecoderManagerThread->Dispatch(NS_NewRunnableFunction([]() {
+    layers::VideoBridgeChild::Shutdown();
+  }), NS_DISPATCH_SYNC);
   sVideoDecoderManagerThread->Shutdown();
   sVideoDecoderManagerThread = nullptr;
 }
@@ -193,8 +158,6 @@ VideoDecoderManagerParent::VideoDecoderManagerParent()
 VideoDecoderManagerParent::~VideoDecoderManagerParent()
 {
   MOZ_COUNT_DTOR(VideoDecoderManagerParent);
-
-  ClearAllOwnedImages();
 }
 
 PVideoDecoderParent*
@@ -231,8 +194,7 @@ VideoDecoderManagerParent::DeallocPVideoDecoderManagerParent()
 bool
 VideoDecoderManagerParent::RecvDeallocateSurfaceDescriptorGPUVideo(const SurfaceDescriptorGPUVideo& aSD)
 {
-  StaticMutexAutoLock lock(sImageMutex);
-  sImageMap.erase(aSD.handle());
+  mTextureMap.erase(aSD.handle());
   return true;
 }
 
