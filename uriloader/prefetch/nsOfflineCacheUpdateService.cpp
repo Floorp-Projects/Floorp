@@ -380,6 +380,7 @@ nsOfflineCacheUpdateService::UpdateFinished(nsOfflineCacheUpdate *aUpdate)
 
     // keep this item alive until we're done notifying observers
     RefPtr<nsOfflineCacheUpdate> update = mUpdates[0];
+    Unused << update;
     mUpdates.RemoveElementAt(0);
     mUpdateRunning = false;
 
