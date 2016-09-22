@@ -408,6 +408,11 @@ nsHttpConnectionMgr::SpeculativeConnect(nsHttpConnectionInfo *ci,
 {
     MOZ_ASSERT(NS_IsMainThread(), "nsHttpConnectionMgr::SpeculativeConnect called off main thread!");
 
+    if (!IsNeckoChild()) {
+        // HACK: make sure PSM gets initialized on the main thread.
+        net_EnsurePSMInit();
+    }
+
     LOG(("nsHttpConnectionMgr::SpeculativeConnect [ci=%s]\n",
          ci->HashKey().get()));
 
