@@ -150,7 +150,7 @@ public abstract class TabsLayout extends RecyclerView
     }
 
     /** Updates the selected position in the list so that it will be scrolled to the right place. */
-    private void updateSelectedPosition() {
+    protected void updateSelectedPosition() {
         final int selected = getSelectedAdapterPosition();
         if (selected != NO_POSITION) {
             scrollToPosition(selected);
