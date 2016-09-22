@@ -16,7 +16,9 @@ const TEST_CASES = [
   [["cookies", "test1.example.org"],
     "c1", "name"],
   [["indexedDB", "http://test1.example.org", "idb1", "obj1"],
-    1, "name"]
+    1, "name"],
+  [["Cache", "http://test1.example.org", "plop"],
+    MAIN_DOMAIN + "404_cached_file.js", "url"],
 ];
 
 add_task(function* () {
@@ -39,8 +41,9 @@ add_task(function* () {
     yield waitForContextMenu(contextMenu, row[cellToClick], () => {
       info(`Opened context menu in ${treeItemName}, row '${rowName}'`);
       menuDeleteItem.click();
-      ok(menuDeleteItem.getAttribute("label").includes(rowName),
-        `Context menu item label contains '${rowName}'`);
+      let truncatedRowName = String(rowName).substr(0, 16);
+      ok(menuDeleteItem.getAttribute("label").includes(truncatedRowName),
+        `Context menu item label contains '${rowName}' (maybe truncated)`);
     });
 
     yield eventWait;
