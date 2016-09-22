@@ -278,7 +278,14 @@ GetFilesHelper::RunIO()
   }
 
   nsAutoString path;
-  path.AssignLiteral(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL);
+  mErrorResult = file->GetLeafName(path);
+  if (NS_WARN_IF(NS_FAILED(mErrorResult))) {
+    return;
+  }
+
+  if (path.IsEmpty()) {
+    path.AppendLiteral(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL);
+  }
 
   mErrorResult = ExploreDirectory(path, file);
 }

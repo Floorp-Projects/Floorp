@@ -111,7 +111,8 @@ addMessageListener("dir.open", function (e) {
   }
 
   sendAsyncMessage("dir.opened", {
-    dir: testFile.path
+    dir: testFile.path,
+    name: testFile.leafName
   });
 });
 
