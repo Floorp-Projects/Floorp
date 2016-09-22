@@ -78,6 +78,15 @@ interface nsIHttpChannel : nsIChannel
     const unsigned long REFERRER_POLICY_ORIGIN_WHEN_XORIGIN        = 3;
     /*   always sends the referrer, even on downgrade.                  */
     const unsigned long REFERRER_POLICY_UNSAFE_URL                 = 4;
+    /*   send referrer when same-origin, no referrer when cross-origin  */
+    const unsigned long REFERRER_POLICY_SAME_ORIGIN                = 5;
+    /*   send origin when request from https->https or http->http(s)
+         No referrer when request from https->http. */
+    const unsigned long REFERRER_POLICY_STRICT_ORIGIN              = 6;
+    /*   send referrer when same-origin,
+         Send origin when cross-origin from https->https or http->http(s)
+         No referrer when request from https->http. */
+    const unsigned long REFERRER_POLICY_STRICT_ORIGIN_WHEN_XORIGIN = 7;
 
     /**
      * Get the HTTP referrer policy.  The policy is retrieved from the meta
