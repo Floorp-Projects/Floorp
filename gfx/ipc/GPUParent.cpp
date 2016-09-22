@@ -41,12 +41,22 @@ namespace gfx {
 using namespace ipc;
 using namespace layers;
 
+static GPUParent* sGPUParent;
+
 GPUParent::GPUParent()
 {
+  sGPUParent = this;
 }
 
 GPUParent::~GPUParent()
 {
+  sGPUParent = nullptr;
+}
+
+/* static */ GPUParent*
+GPUParent::GetSingleton()
+{
+  return sGPUParent;
 }
 
 bool

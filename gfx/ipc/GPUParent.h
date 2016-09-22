@@ -20,6 +20,8 @@ public:
   GPUParent();
   ~GPUParent();
 
+  static GPUParent* GetSingleton();
+
   bool Init(base::ProcessId aParentPid,
             MessageLoop* aIOLoop,
             IPC::Channel* aChannel);
