@@ -33,7 +33,6 @@ import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PanZoomController;
-import org.mozilla.gecko.notifications.NotificationClient;
 import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoRequest;
@@ -181,13 +180,6 @@ public class GeckoAppShell
     }
 
     private static volatile boolean locationHighAccuracyEnabled;
-
-    // Accessed by NotificationHelper. This should be encapsulated.
-    /* package */ static NotificationClient notificationClient;
-
-    public static NotificationClient getNotificationClient() {
-        return notificationClient;
-    }
 
     // See also HardwareUtils.LOW_MEMORY_THRESHOLD_MB.
     private static final int HIGH_MEMORY_DEVICE_THRESHOLD_MB = 768;
@@ -467,7 +459,8 @@ public class GeckoAppShell
                                                        double altitude, float accuracy,
                                                        float bearing, float speed, long time);
 
-    private static class DefaultListeners implements SensorEventListener, LocationListener {
+    private static class DefaultListeners
+            implements SensorEventListener, LocationListener, NotificationListener {
         @Override
         public void onAccuracyChanged(Sensor sensor, int accuracy) {
         }
@@ -577,18 +570,39 @@ public class GeckoAppShell
         public void onStatusChanged(String provider, int status, Bundle extras)
         {
         }
+
+        @Override // NotificationListener
+        public void showNotification(String name, String cookie, String host,
+                                     String title, String text, String imageUrl) {
+            // Default is to not show the notification, and immediate send close message.
+            GeckoAppShell.onNotificationClose(name);
+        }
+
+        @Override // NotificationListener
+        public void showPersistentNotification(String name, String cookie, String host,
+                                               String title, String text, String imageUrl,
+                                               String data) {
+            // Default is to not show the notification, and immediate send close message.
+            GeckoAppShell.onNotificationClose(name);
+        }
+
+        @Override // NotificationListener
+        public void closeNotification(String name) {
+            // Do nothing.
+        }
     }
 
     private static final DefaultListeners DEFAULT_LISTENERS = new DefaultListeners();
     private static SensorEventListener sSensorListener = DEFAULT_LISTENERS;
     private static LocationListener sLocationListener = DEFAULT_LISTENERS;
+    private static NotificationListener sNotificationListener = DEFAULT_LISTENERS;
 
     public static SensorEventListener getSensorListener() {
         return sSensorListener;
     }
 
     public static void setSensorListener(final SensorEventListener listener) {
-        sSensorListener = listener;
+        sSensorListener = (listener != null) ? listener : DEFAULT_LISTENERS;
     }
 
     public static LocationListener getLocationListener() {
@@ -596,7 +610,15 @@ public class GeckoAppShell
     }
 
     public static void setLocationListener(final LocationListener listener) {
-        sLocationListener = listener;
+        sLocationListener = (listener != null) ? listener : DEFAULT_LISTENERS;
+    }
+
+    public static NotificationListener getNotificationListener() {
+        return sNotificationListener;
+    }
+
+    public static void setNotificationListener(final NotificationListener listener) {
+        sNotificationListener = (listener != null) ? listener : DEFAULT_LISTENERS;
     }
 
     @WrapForJNI(calledFrom = "gecko")
@@ -921,97 +943,55 @@ public class GeckoAppShell
         return geckoInterface.openUriExternal(targetURI, mimeType, packageName, className, action, title);
     }
 
-    /**
-     * Only called from GeckoApp.
-     */
-    public static void setNotificationClient(NotificationClient client) {
-        if (notificationClient == null) {
-            notificationClient = client;
-        } else {
-            Log.d(LOGTAG, "Notification client already set");
-        }
-    }
-
-    private static PendingIntent makePersistentNotificationIntent(int notificationID, String type,
-                                                                  String persistentData) {
-        final Uri.Builder b = new Uri.Builder();
-        final Uri u = b.scheme("notification-event")
-                .path(Integer.toString(notificationID))
-                .appendQueryParameter("type", type)
-                .build();
-        final Intent intent = GeckoService.getIntentToCreateServices(
-                getApplicationContext(), type, persistentData);
-        intent.setData(u);
-
-        return PendingIntent.getService(getApplicationContext(), 0, intent,
-                                        PendingIntent.FLAG_UPDATE_CURRENT);
-    }
-
     @WrapForJNI(dispatchTo = "gecko")
     private static native void notifyAlertListener(String name, String topic);
 
-    @WrapForJNI(calledFrom = "gecko")
-    private static void showAlertNotification(String imageUrl, String alertTitle, String alertText,
-                                              String alertCookie, String alertName, String host,
-                                              String persistentData) {
-        final int notificationID = alertName.hashCode();
-        final PendingIntent clickIntent, closeIntent;
-
-        if (persistentData != null) {
-            clickIntent = makePersistentNotificationIntent(
-                    notificationID, "persistent-notification-click", persistentData);
-            closeIntent = makePersistentNotificationIntent(
-                    notificationID, "persistent-notification-close", persistentData);
-
-        } else {
-            notifyAlertListener(alertName, "alertshow");
-
-            // The intent to launch when the user clicks the expanded notification
-            final Intent notificationIntent = new Intent(ACTION_ALERT_CALLBACK);
-            notificationIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
-                                            AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
-            notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-            // Put the strings into the intent as an URI
-            // "alert:?name=<alertName>&app=<appName>&cookie=<cookie>"
-            final Uri.Builder b = new Uri.Builder();
-            final Uri dataUri = b.scheme("alert")
-                    .path(Integer.toString(notificationID))
-                    .appendQueryParameter("name", alertName)
-                    .appendQueryParameter("cookie", alertCookie)
-                    .build();
-            notificationIntent.setData(dataUri);
-
-            clickIntent = PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent,
-                                                    PendingIntent.FLAG_UPDATE_CURRENT);
-            closeIntent = null;
+    /**
+     * Called by the NotificationListener to notify Gecko that a notification has been
+     * shown.
+     */
+    public static void onNotificationShow(final String name) {
+        if (GeckoThread.isRunning()) {
+            notifyAlertListener(name, "alertshow");
         }
+    }
 
-        notificationClient.add(notificationID, imageUrl, host, alertTitle,
-                               alertText, clickIntent, closeIntent);
+    /**
+     * Called by the NotificationListener to notify Gecko that a previously shown
+     * notification has been closed.
+     */
+    public static void onNotificationClose(final String name) {
+        if (GeckoThread.isRunning()) {
+            notifyAlertListener(name, "alertfinished");
+        }
+    }
+
+    /**
+     * Called by the NotificationListener to notify Gecko that a previously shown
+     * notification has been clicked on.
+     */
+    public static void onNotificationClick(final String name) {
+        if (GeckoThread.isRunning()) {
+            notifyAlertListener(name, "alertclickcallback");
+        }
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    private static void closeNotification(String alertName) {
-        notifyAlertListener(alertName, "alertfinished");
-
-        final int notificationID = alertName.hashCode();
-        notificationClient.remove(notificationID);
-    }
-
-    public static void handleNotification(String action, String alertName, String alertCookie) {
-        final int notificationID = alertName.hashCode();
-
-        if (ACTION_ALERT_CALLBACK.equals(action)) {
-            notifyAlertListener(alertName, "alertclickcallback");
-
-            if (notificationClient.isOngoing(notificationID)) {
-                // When clicked, keep the notification if it displays progress
-                return;
-            }
+    private static void showNotification(String name, String cookie, String title,
+                                         String text, String host, String imageUrl,
+                                         String persistentData) {
+        if (persistentData == null) {
+            getNotificationListener().showNotification(name, cookie, title, text, host, imageUrl);
+            return;
         }
 
-        closeNotification(alertName);
+        getNotificationListener().showPersistentNotification(
+                name, cookie, title, text, host, imageUrl, persistentData);
+    }
+
+    @WrapForJNI(calledFrom = "gecko")
+    private static void closeNotification(String name) {
+        getNotificationListener().closeNotification(name);
     }
 
     @WrapForJNI(calledFrom = "gecko")
