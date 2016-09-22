@@ -32,7 +32,6 @@ using namespace js::wasm;
 using mozilla::BinarySearch;
 using mozilla::BitwiseCast;
 using mozilla::IsNaN;
-using mozilla::IsSame;
 using mozilla::Swap;
 
 class SigIdSet
@@ -502,72 +501,6 @@ size_t
 Instance::memoryLength() const
 {
     return memory_->buffer().byteLength();
-}
-
-template<typename T>
-JSObject*
-js::wasm::CreateCustomNaNObject(JSContext* cx, T* addr)
-{
-    MOZ_ASSERT(IsNaN(*addr));
-
-    RootedObject obj(cx, JS_NewPlainObject(cx));
-    if (!obj)
-        return nullptr;
-
-    int32_t* i32 = (int32_t*)addr;
-    RootedValue intVal(cx, Int32Value(i32[0]));
-    if (!JS_DefineProperty(cx, obj, "nan_low", intVal, JSPROP_ENUMERATE))
-        return nullptr;
-
-    if (IsSame<double, T>::value) {
-        intVal = Int32Value(i32[1]);
-        if (!JS_DefineProperty(cx, obj, "nan_high", intVal, JSPROP_ENUMERATE))
-            return nullptr;
-    }
-
-    return obj;
-}
-
-template JSObject* js::wasm::CreateCustomNaNObject(JSContext* cx, float* addr);
-template JSObject* js::wasm::CreateCustomNaNObject(JSContext* cx, double* addr);
-
-bool
-js::wasm::ReadCustomFloat32NaNObject(JSContext* cx, HandleValue v, uint32_t* ret)
-{
-    RootedObject obj(cx, &v.toObject());
-    RootedValue val(cx);
-
-    int32_t i32;
-    if (!JS_GetProperty(cx, obj, "nan_low", &val))
-        return false;
-    if (!ToInt32(cx, val, &i32))
-        return false;
-
-    *ret = i32;
-    return true;
-}
-
-bool
-js::wasm::ReadCustomDoubleNaNObject(JSContext* cx, HandleValue v, uint64_t* ret)
-{
-    RootedObject obj(cx, &v.toObject());
-    RootedValue val(cx);
-
-    int32_t i32;
-    if (!JS_GetProperty(cx, obj, "nan_high", &val))
-        return false;
-    if (!ToInt32(cx, val, &i32))
-        return false;
-    *ret = uint32_t(i32);
-    *ret <<= 32;
-
-    if (!JS_GetProperty(cx, obj, "nan_low", &val))
-        return false;
-    if (!ToInt32(cx, val, &i32))
-        return false;
-    *ret |= uint32_t(i32);
-
-    return true;
 }
 
 WasmInstanceObject*
