@@ -619,6 +619,7 @@ public:
     {
         if (mContext) {
             mContext->SetMatrix(mMatrix);
+            mContext = nullptr;
         }
     }
 

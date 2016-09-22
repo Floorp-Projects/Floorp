@@ -865,37 +865,57 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
   /* Check if we need to do additional operations on this child's
    * rendering, which necessitates rendering into another surface. */
   if (shouldGenerateMask) {
-    gfxContextMatrixAutoSaveRestore save(&context);
-    SetupContextMatrix(firstFrame, aParams, offsetToBoundingBox,
-                       offsetToUserSpace, true);
+    gfxContextMatrixAutoSaveRestore matSR;
+
     Matrix maskTransform;
     RefPtr<SourceSurface> maskSurface;
+
     if (shouldGenerateMaskLayer) {
+      matSR.SetContext(&context);
+
+      // For css-mask, we want to generate a mask for each continuation frame,
+      // so we setup context matrix by the position of the current frame,
+      // instead of the first continuation frame.
+      SetupContextMatrix(frame, aParams, offsetToBoundingBox,
+                         offsetToUserSpace, true);
       result = GenerateMaskSurface(aParams, opacity,
                                   firstFrame->StyleContext(),
                                   maskFrames, offsetToUserSpace,
                                   maskTransform, maskSurface);
-    }
-
-    if (shouldGenerateMaskLayer && !maskSurface) {
-      // Entire surface is clipped out.
-      return result;
+      context.PopClip();
+      if (!maskSurface) {
+        // Entire surface is clipped out.
+        return result;
+      }
     }
 
     if (shouldGenerateClipMaskLayer) {
+      matSR.Restore();
+      matSR.SetContext(&context);
+
+      SetupContextMatrix(firstFrame, aParams, offsetToBoundingBox,
+                         offsetToUserSpace, true);
       Matrix clippedMaskTransform;
       RefPtr<SourceSurface> clipMaskSurface =
         clipPathFrame->GetClipMask(context, frame, cssPxToDevPxMatrix,
                                    &clippedMaskTransform, maskSurface,
                                    maskTransform, &result);
+      context.PopClip();
 
       if (clipMaskSurface) {
         maskSurface = clipMaskSurface;
         maskTransform = clippedMaskTransform;
       }
     }
-    // Pop the clip pushed in SetupContextMatrix.
-    context.PopClip();
+
+    // opacity != 1.0f.
+    if (!shouldGenerateClipMaskLayer && !shouldGenerateMaskLayer) {
+      MOZ_ASSERT(opacity != 1.0f);
+
+      matSR.SetContext(&context);
+      SetupContextMatrix(firstFrame, aParams, offsetToBoundingBox,
+                         offsetToUserSpace, true);
+    }
 
     target->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, opacity, maskSurface, maskTransform);
   }
@@ -931,6 +951,12 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
 
   if (shouldGenerateMask) {
     target->PopGroupAndBlend();
+
+    if (!shouldGenerateClipMaskLayer && !shouldGenerateMaskLayer) {
+      MOZ_ASSERT(opacity != 1.0f);
+      // Pop the clip push by SetupContextMatrix
+      context.PopClip();
+    }
   }
 
   if (aParams.frame->StyleEffects()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
@@ -980,7 +1006,7 @@ nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams)
   // Clip the source context first, so that we can generate a smaller temporary
   // surface. (Since we will clip this context in SetupContextMatrix, a pair
   // of save/restore is needed.)
-  context.Save();
+  gfxContextAutoSaveRestore autoSR(&context);
   SetupContextMatrix(firstFrame, aParams, offsetToBoundingBox,
                      offsetToUserSpace, true);
   IntPoint targetOffset;
@@ -1015,7 +1041,6 @@ nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams)
     BlendToTarget(aParams, target, targetOffset);
   }
 
-  context.Restore();
   return result;
 }
 
