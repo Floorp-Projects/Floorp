@@ -162,6 +162,10 @@ class ExclusiveContext : public ContextFriendFields,
         return options_;
     }
 
+    bool runtimeMatches(JSRuntime* rt) const {
+        return runtime_ == rt;
+    }
+
   protected:
     js::gc::ArenaLists* arenas_;
 
