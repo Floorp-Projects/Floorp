@@ -20,8 +20,8 @@ public:
                                            FileSystemDirectoryReader)
 
   explicit FileSystemRootDirectoryReader(nsIGlobalObject* aGlobalObject,
-                                                   FileSystem* aFileSystem,
-                                                   const Sequence<RefPtr<FileSystemEntry>>& aEntries);
+                                         FileSystem* aFileSystem,
+                                         const Sequence<RefPtr<FileSystemEntry>>& aEntries);
 
   virtual void
   ReadEntries(FileSystemEntriesCallback& aSuccessCallback,
