@@ -74,6 +74,9 @@ class WebDriverServer(object):
             self.logger.error(
                 "WebDriver HTTP server was not accessible "
                 "within the timeout:\n%s" % traceback.format_exc())
+            if self._proc.poll():
+                self.logger.error("Webdriver server process exited with code %i" %
+                                  self._proc.returncode)
             raise
 
         if block:
@@ -150,8 +153,8 @@ class GeckoDriverServer(WebDriverServer):
         return [self.binary,
                 "--connect-existing",
                 "--marionette-port", str(self.marionette_port),
-                "--webdriver-host", self.host,
-                "--webdriver-port", str(self.port)]
+                "--host", self.host,
+                "--port", str(self.port)]
 
 
 def cmd_arg(name, value=None):
