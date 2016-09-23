@@ -355,11 +355,7 @@ TraversalTracer::onChild(const JS::GCCellPtr& aThing)
       getTracingEdgeName(buffer, sizeof(buffer));
       mCb.NoteNextEdgeName(buffer);
     }
-    if (aThing.is<JSObject>()) {
-      mCb.NoteJSObject(&aThing.as<JSObject>());
-    } else {
-      mCb.NoteJSScript(&aThing.as<JSScript>());
-    }
+    mCb.NoteJSChild(aThing);
   } else if (aThing.is<js::Shape>()) {
     // The maximum depth of traversal when tracing a Shape is unbounded, due to
     // the parent pointers on the shape.

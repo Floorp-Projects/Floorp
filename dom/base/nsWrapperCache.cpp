@@ -69,7 +69,7 @@ class DebugWrapperTraversalCallback : public nsCycleCollectionTraversalCallback
 public:
   explicit DebugWrapperTraversalCallback(JSObject* aWrapper)
     : mFound(false)
-    , mWrapper(aWrapper)
+    , mWrapper(JS::GCCellPtr(aWrapper))
   {
     mFlags = WANT_ALL_TRACES;
   }
@@ -84,14 +84,11 @@ public:
   {
   }
 
-  NS_IMETHOD_(void) NoteJSObject(JSObject* aChild)
+  NS_IMETHOD_(void) NoteJSChild(const JS::GCCellPtr& aChild)
   {
     if (aChild == mWrapper) {
       mFound = true;
     }
-  }
-  NS_IMETHOD_(void) NoteJSScript(JSScript* aChild)
-  {
   }
   NS_IMETHOD_(void) NoteXPCOMChild(nsISupports* aChild)
   {
@@ -108,7 +105,7 @@ public:
   bool mFound;
 
 private:
-  JSObject* mWrapper;
+  JS::GCCellPtr mWrapper;
 };
 
 static void
@@ -117,7 +114,7 @@ DebugWrapperTraceCallback(JS::GCCellPtr aPtr, const char* aName, void* aClosure)
   DebugWrapperTraversalCallback* callback =
     static_cast<DebugWrapperTraversalCallback*>(aClosure);
   if (aPtr.is<JSObject>()) {
-    callback->NoteJSObject(&aPtr.as<JSObject>());
+    callback->NoteJSChild(aPtr);
   }
 }
 
