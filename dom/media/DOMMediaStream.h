@@ -635,6 +635,9 @@ protected:
   class PlaybackStreamListener;
   friend class PlaybackStreamListener;
 
+  class PlaybackTrackListener;
+  friend class PlaybackTrackListener;
+
   /**
    * Block a track in our playback stream. Calls NotifyPlaybackTrackBlocked()
    * after the MediaStreamGraph has applied the block and the track is no longer
@@ -703,6 +706,9 @@ protected:
   // Listener tracking changes to mPlaybackStream. This drives state changes
   // in this DOMMediaStream and notifications to mTrackListeners.
   RefPtr<PlaybackStreamListener> mPlaybackListener;
+
+  // Listener tracking when live MediaStreamTracks in mTracks end.
+  RefPtr<PlaybackTrackListener> mPlaybackTrackListener;
 
   nsTArray<nsAutoPtr<OnTracksAvailableCallback> > mRunOnTracksAvailable;
 
