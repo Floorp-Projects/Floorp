@@ -34,6 +34,7 @@ const promise = require("promise");
 const events = require("devtools/shared/event-emitter");
 const { PrefObserver } = require("devtools/client/styleeditor/utils");
 const { getClientCssProperties } = require("devtools/shared/fronts/css-properties");
+const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
 
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/locale/sourceeditor.properties");
@@ -381,65 +382,6 @@ Editor.prototype = {
       popup.openPopupAtScreen(ev.screenX, ev.screenY, true);
     }, false);
 
-    // Intercept the find and find again keystroke on CodeMirror, to avoid
-    // the browser's search
-
-    let findKey = L10N.getStr("find.commandkey");
-    let findAgainKey = L10N.getStr("findAgain.commandkey");
-    let [accel, modifier] = OS === "Darwin"
-        ? ["metaKey", "altKey"]
-        : ["ctrlKey", "shiftKey"];
-
-    cm.getWrapperElement().addEventListener("keydown", ev => {
-      let key = ev.key.toUpperCase();
-      let node = ev.originalTarget;
-      let isInput = node.tagName === "INPUT";
-      let isSearchInput = isInput && node.type === "search";
-
-      // replace box is a different input instance than search, and it is
-      // located in a code mirror dialog
-      let isDialogInput = isInput &&
-          node.parentNode &&
-          node.parentNode.classList.contains("CodeMirror-dialog");
-
-      if (!ev[accel] || !(isSearchInput || isDialogInput)) {
-        return;
-      }
-
-      if (key === findKey) {
-        ev.preventDefault();
-
-        if (isSearchInput || ev[modifier]) {
-          node.select();
-        }
-      } else if (key === findAgainKey) {
-        ev.preventDefault();
-
-        if (!isSearchInput) {
-          return;
-        }
-
-        let query = node.value;
-
-        // If there isn't a search state, or the text in the input does not
-        // match with the current search state, we need to create a new one
-        if (!cm.state.search || cm.state.search.query !== query) {
-          cm.state.search = {
-            posFrom: null,
-            posTo: null,
-            overlay: null,
-            query
-          };
-        }
-
-        if (ev.shiftKey) {
-          cm.execCommand("findPrev");
-        } else {
-          cm.execCommand("findNext");
-        }
-      }
-    });
-
     cm.on("focus", () => this.emit("focus"));
     cm.on("scroll", () => this.emit("scroll"));
     cm.on("change", () => {
@@ -468,11 +410,7 @@ Editor.prototype = {
       return L10N.getStr(name);
     });
 
-    try {
-      cm.getInputField().controllers.insertControllerAt(0, controller(this));
-    } catch (e) {
-      console.warn("controller command is only supported in XUL");
-    }
+    this._initShortcuts(win);
 
     editors.set(this, cm);
 
@@ -1000,8 +938,7 @@ Editor.prototype = {
     let doc = editors.get(this).getWrapperElement().ownerDocument;
     let div = doc.createElement("div");
     let inp = doc.createElement("input");
-    let txt =
-      doc.createTextNode(L10N.getStr("gotoLineCmd.promptTitle"));
+    let txt = doc.createTextNode(L10N.getStr("gotoLineCmd.promptTitle"));
 
     inp.type = "text";
     inp.style.width = "10em";
@@ -1093,6 +1030,65 @@ Editor.prototype = {
       { line: end.line + 1, ch: cm.getLine(end.line + 1).length});
     cm.setSelection({ line: start.line + 1, ch: start.ch },
       { line: end.line + 1, ch: end.ch });
+  },
+
+  /**
+   * Intercept CodeMirror's Find and replace key shortcut to select the search input
+   */
+  findOrReplace: function (node, isReplaceAll) {
+    let cm = editors.get(this);
+    let isInput = node.tagName === "INPUT";
+    let isSearchInput = isInput && node.type === "search";
+    // replace box is a different input instance than search, and it is
+    // located in a code mirror dialog
+    let isDialogInput = isInput &&
+        node.parentNode &&
+        node.parentNode.classList.contains("CodeMirror-dialog");
+    if (!(isSearchInput || isDialogInput)) {
+      return;
+    }
+
+    if (isSearchInput || isReplaceAll) {
+      // select the search input
+      // it's the precise reason why we reimplement these key shortcuts
+      node.select();
+    }
+
+    // need to call it since we prevent the propagation of the event and
+    // cancel codemirror's key handling
+    cm.execCommand("find");
+  },
+
+  /**
+   * Intercept CodeMirror's findNext and findPrev key shortcut to allow
+   * immediately search for next occurance after typing a word to search.
+   */
+  findNextOrPrev: function (node, isFindPrev) {
+    let cm = editors.get(this);
+    let isInput = node.tagName === "INPUT";
+    let isSearchInput = isInput && node.type === "search";
+    if (!isSearchInput) {
+      return;
+    }
+    let query = node.value;
+    // cm.state.search allows to automatically start searching for the next occurance
+    // it's the precise reason why we reimplement these key shortcuts
+    if (!cm.state.search || cm.state.search.query !== query) {
+      cm.state.search = {
+        posFrom: null,
+        posTo: null,
+        overlay: null,
+        query
+      };
+    }
+
+    // need to call it since we prevent the propagation of the event and
+    // cancel codemirror's key handling
+    if (isFindPrev) {
+      cm.execCommand("findPrev");
+    } else {
+      cm.execCommand("findNext");
+    }
   },
 
   /**
@@ -1263,6 +1259,77 @@ Editor.prototype = {
 
       this.setOption("foldGutter", false);
     }
+  },
+
+  /**
+   * Register all key shortcuts.
+   */
+  _initShortcuts: function (win) {
+    let shortcuts = new KeyShortcuts({
+      window: win
+    });
+    this._onShortcut = this._onShortcut.bind(this);
+    let keys = [
+      "find.key",
+      "findNext.key",
+      "findPrev.key"
+    ];
+
+    if (OS === "Darwin") {
+      keys.push("replaceAllMac.key");
+    } else {
+      keys.push("replaceAll.key");
+    }
+    // Process generic keys:
+    keys.forEach(name => {
+      let key = L10N.getStr(name);
+      shortcuts.on(key, (_, event) => this._onShortcut(name, event));
+    });
+  },
+    /**
+   * Key shortcut listener.
+   */
+  _onShortcut: function (name, event) {
+    if (!this._isInputOrTextarea(event.target)) {
+      return;
+    }
+    let cm = editors.get(this);
+    let node = event.originalTarget;
+
+    switch (name) {
+      // replaceAll.key is Alt + find.key
+      case "replaceAllMac.key":
+        this.findOrReplace(node, true);
+        break;
+      // replaceAll.key is Shift + find.key
+      case "replaceAll.key":
+        this.findOrReplace(node, true);
+        break;
+      case "find.key":
+        this.findOrReplace(node, false);
+        break;
+      // findPrev.key is Shift + findNext.key
+      case "findPrev.key":
+        this.findNextOrPrev(node, true);
+        break;
+      case "findNext.key":
+        this.findNextOrPrev(node, false);
+        break;
+      default:
+        console.error("Unexpected editor key shortcut", name);
+        return;
+    }
+    // Prevent default for this action
+    event.stopPropagation();
+    event.preventDefault();
+  },
+
+  /**
+   * Check if a node is an input or textarea
+   */
+  _isInputOrTextarea: function (element) {
+    let name = element.tagName.toLowerCase();
+    return name === "input" || name === "textarea";
   }
 };
 
@@ -1339,75 +1406,6 @@ function getCSSKeywords(cssProperties) {
     propertyKeywords: keySet(propertyKeywords),
     colorKeywords: colorKeywords,
     valueKeywords: valueKeywords
-  };
-}
-
-/**
- * Returns a controller object that can be used for
- * editor-specific commands such as find, jump to line,
- * copy/paste, etc.
- */
-function controller(ed) {
-  return {
-    supportsCommand: function (cmd) {
-      switch (cmd) {
-        case "cmd_find":
-        case "cmd_findAgain":
-        case "cmd_findPrevious":
-        case "cmd_gotoLine":
-        case "cmd_undo":
-        case "cmd_redo":
-        case "cmd_delete":
-        case "cmd_selectAll":
-          return true;
-      }
-
-      return false;
-    },
-
-    isCommandEnabled: function (cmd) {
-      let cm = editors.get(ed);
-
-      switch (cmd) {
-        case "cmd_find":
-        case "cmd_gotoLine":
-        case "cmd_selectAll":
-          return true;
-        case "cmd_findAgain":
-          return cm.state.search != null && cm.state.search.query != null;
-        case "cmd_undo":
-          return ed.canUndo();
-        case "cmd_redo":
-          return ed.canRedo();
-        case "cmd_delete":
-          return ed.somethingSelected();
-      }
-
-      return false;
-    },
-
-    doCommand: function (cmd) {
-      let cm = editors.get(ed);
-      let map = {
-        "cmd_selectAll": "selectAll",
-        "cmd_find": "find",
-        "cmd_undo": "undo",
-        "cmd_redo": "redo",
-        "cmd_delete": "delCharAfter",
-        "cmd_findAgain": "findNext"
-      };
-
-      if (map[cmd]) {
-        cm.execCommand(map[cmd]);
-        return;
-      }
-
-      if (cmd == "cmd_gotoLine") {
-        ed.jumpToLine();
-      }
-    },
-
-    onEvent: function () {}
   };
 }
 
