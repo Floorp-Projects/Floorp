@@ -579,7 +579,7 @@ nsFileInputStream::Serialize(InputStreamParams& aParams,
 {
     FileInputStreamParams params;
 
-    if (mFD) {
+    if (NS_SUCCEEDED(DoPendingOpen()) && mFD) {
         FileHandleType fd = FileHandleType(PR_FileDesc2NativeHandle(mFD));
         NS_ASSERTION(fd, "This should never be null!");
 
