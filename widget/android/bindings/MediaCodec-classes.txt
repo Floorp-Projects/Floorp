@@ -1,3 +1,4 @@
 android.media.MediaCodec
 android.media.MediaCodec$BufferInfo
+android.media.MediaCodec$CryptoInfo
 android.media.MediaFormat

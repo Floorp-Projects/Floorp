@@ -389,10 +389,6 @@ var BrowserApp = {
 
     Messaging.addListener(this.getHistory.bind(this), "Session:GetHistory");
 
-    function showFullScreenWarning() {
-      Snackbars.show(Strings.browser.GetStringFromName("alertFullScreenToast"), Snackbars.LENGTH_LONG);
-    }
-
     window.addEventListener("fullscreen", function() {
       Messaging.sendRequest({
         type: window.fullScreen ? "ToggleChrome:Hide" : "ToggleChrome:Show"
@@ -411,19 +407,13 @@ var BrowserApp = {
         rootElement: doc.fullscreenElement == doc.documentElement
       });
 
-      if (doc.fullscreenElement) {
-        showFullScreenWarning();
-      } else if (this.fullscreenTransitionTab) {
+      if (this.fullscreenTransitionTab) {
         // Tab selection has changed during a fullscreen transition, handle it now.
         let tab = this.fullscreenTransitionTab;
         this.fullscreenTransitionTab = null;
         this._handleTabSelected(tab);
       }
     }, false);
-
-    // When a restricted key is pressed in DOM full-screen mode, we should display
-    // the "Press ESC to exit" warning message.
-    window.addEventListener("MozShowFullScreenWarning", showFullScreenWarning, true);
 
     NativeWindow.init();
     FormAssistant.init();

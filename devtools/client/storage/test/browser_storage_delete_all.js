@@ -31,25 +31,29 @@ add_task(function* () {
       ["iframe-s-ss1"]],
     [["indexedDB", "http://test1.example.org", "idb1", "obj1"],
       [1, 2, 3]],
+    [["Cache", "http://test1.example.org", "plop"],
+      [MAIN_DOMAIN + "404_cached_file.js", MAIN_DOMAIN + "browser_storage_basic.js"]],
   ];
 
   yield checkState(beforeState);
 
   info("do the delete");
   const deleteHosts = [
-    [["localStorage", "https://sectest1.example.org"], "iframe-s-ls1"],
-    [["sessionStorage", "https://sectest1.example.org"], "iframe-s-ss1"],
-    [["indexedDB", "http://test1.example.org", "idb1", "obj1"], 1],
+    [["localStorage", "https://sectest1.example.org"], "iframe-s-ls1", "name"],
+    [["sessionStorage", "https://sectest1.example.org"], "iframe-s-ss1", "name"],
+    [["indexedDB", "http://test1.example.org", "idb1", "obj1"], 1, "name"],
+    [["Cache", "http://test1.example.org", "plop"],
+      MAIN_DOMAIN + "404_cached_file.js", "url"],
   ];
 
-  for (let [store, rowName] of deleteHosts) {
+  for (let [store, rowName, cellToClick] of deleteHosts) {
     let storeName = store.join(" > ");
 
     yield selectTreeItem(store);
 
     let eventWait = gUI.once("store-objects-cleared");
 
-    let cell = getRowCells(rowName).name;
+    let cell = getRowCells(rowName)[cellToClick];
     yield waitForContextMenu(contextMenu, cell, () => {
       info(`Opened context menu in ${storeName}, row '${rowName}'`);
       menuDeleteAllItem.click();
@@ -75,6 +79,8 @@ add_task(function* () {
     [["sessionStorage", "https://sectest1.example.org"],
       []],
     [["indexedDB", "http://test1.example.org", "idb1", "obj1"],
+      []],
+    [["Cache", "http://test1.example.org", "plop"],
       []],
   ];
 

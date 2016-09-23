@@ -118,7 +118,26 @@ CssProperties.prototype = {
    */
   getNames(property) {
     return Object.keys(this.properties);
-  }
+  },
+
+  /**
+   * Return a list of subproperties for the given property.  If |name|
+   * does not name a valid property, an empty array is returned.  If
+   * the property is not a shorthand property, then array containing
+   * just the property itself is returned.
+   *
+   * @param {String} name The property to query
+   * @return {Array} An array of subproperty names.
+   */
+  getSubproperties(name) {
+    if (this.isKnown(name)) {
+      if (this.properties[name] && this.properties[name].subproperties) {
+        return this.properties[name].subproperties;
+      }
+      return [name];
+    }
+    return [];
+  },
 };
 
 /**
@@ -230,6 +249,15 @@ function normalizeCssData(db) {
         if (typeof CSS_PROPERTIES_DB.properties[name] === "object") {
           db.properties[name].values = CSS_PROPERTIES_DB.properties[name].values;
         }
+      }
+    }
+
+    // Add "subproperties" information to the css properties if it's
+    // missing.
+    if (!db.properties.background.subproperties) {
+      for (let name in db.properties) {
+        db.properties[name].subproperties =
+          CSS_PROPERTIES_DB.properties[name].subproperties;
       }
     }
   }

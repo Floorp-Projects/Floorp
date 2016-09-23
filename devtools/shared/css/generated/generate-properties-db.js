@@ -16,6 +16,10 @@ dump(JSON.stringify({
   cssProperties: cssProperties(),
   pseudoElements: pseudoElements()
 }));
+// In a debug build, xpcshell might print extra debugging information,
+// so we emit a trailing newline and then arrange to just read a
+// single (long) line of JSON from the output.
+dump("\n");
 
 /*
  * A list of CSS Properties and their various characteristics. This is used on the

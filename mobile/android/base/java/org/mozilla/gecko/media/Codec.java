@@ -52,7 +52,7 @@ import java.util.Queue;
             }
             ByteBuffer buffer = codec.getOutputBuffer(index);
             try {
-                mRemote.onOutput(new Sample(buffer, info));
+                mRemote.onOutput(new Sample(buffer, info, null));
             } catch (TransactionTooLargeException ttle) {
                 Log.e(LOGTAG, "Output is too large:" + ttle.getMessage());
                 outputDummy(info);

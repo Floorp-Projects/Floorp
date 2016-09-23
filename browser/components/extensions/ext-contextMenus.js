@@ -174,6 +174,7 @@ var gMenuBuilder = {
       if (event.target !== event.currentTarget) {
         return;
       }
+      const wasChecked = item.checked;
       if (item.type == "checkbox") {
         item.checked = !item.checked;
       } else if (item.type == "radio") {
@@ -190,7 +191,7 @@ var gMenuBuilder = {
       item.tabManager.addActiveTabPermission();
 
       let tab = item.tabManager.convert(contextData.tab);
-      let info = item.getClickInfo(contextData, event);
+      let info = item.getClickInfo(contextData, wasChecked);
       item.extension.emit("webext-contextmenu-menuitem-click", info, tab);
       if (item.onclick) {
         runSafe(item.extContext, item.onclick, info, tab);
@@ -399,7 +400,7 @@ MenuItem.prototype = {
     }
   },
 
-  getClickInfo(contextData, event) {
+  getClickInfo(contextData, wasChecked) {
     let mediaType;
     if (contextData.onVideo) {
       mediaType = "video";
@@ -413,10 +414,11 @@ MenuItem.prototype = {
 
     let info = {
       menuItemId: this.id,
+      editable: contextData.onEditableArea,
     };
 
     function setIfDefined(argName, value) {
-      if (value) {
+      if (value !== undefined) {
         info[argName] = value;
       }
     }
@@ -428,7 +430,11 @@ MenuItem.prototype = {
     setIfDefined("pageUrl", contextData.pageUrl);
     setIfDefined("frameUrl", contextData.frameUrl);
     setIfDefined("selectionText", contextData.selectionText);
-    setIfDefined("editable", contextData.onEditableArea);
+
+    if ((this.type === "checkbox") || (this.type === "radio")) {
+      info.checked = this.checked;
+      info.wasChecked = wasChecked;
+    }
 
     return info;
   },

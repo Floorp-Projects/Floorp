@@ -85,11 +85,6 @@ AutoCompleteResultBase.prototype = {
 
   defaultIndex: -1,
 
-  _typeAheadResult: false,
-  get typeAheadResult() {
-    return this._typeAheadResult;
-  },
-
   get matchCount() {
     return this._values.length;
   },

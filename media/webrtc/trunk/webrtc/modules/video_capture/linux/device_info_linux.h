@@ -13,9 +13,11 @@
 
 #include "webrtc/modules/video_capture/device_info_impl.h"
 #include "webrtc/modules/video_capture/video_capture_impl.h"
+#ifdef WEBRTC_LINUX
 #include "webrtc/system_wrappers/interface/thread_wrapper.h"
 #include "webrtc/system_wrappers/interface/atomic32.h"
 #include <sys/inotify.h>
+#endif
 
 namespace webrtc
 {
@@ -51,6 +53,7 @@ private:
 
     bool IsDeviceNameMatches(const char* name, const char* deviceUniqueIdUTF8);
 
+#ifdef WEBRTC_LINUX
     void HandleEvent(inotify_event* event);
     int EventCheck();
     int HandleEvents();
@@ -60,6 +63,7 @@ private:
     bool InotifyProcess();
     int _fd, _wd_v4l, _wd_snd; /* accessed on InotifyEventThread thread */
     Atomic32 _isShutdown;
+#endif
 };
 }  // namespace videocapturemodule
 }  // namespace webrtc

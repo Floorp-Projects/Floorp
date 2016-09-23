@@ -14,6 +14,11 @@ add_task(function* () {
     },
 
     background: function() {
+      // Report onClickData info back.
+      browser.contextMenus.onClicked.addListener(info => {
+        browser.test.sendMessage("contextmenus-click", info);
+      });
+
       browser.contextMenus.create({
         title: "radio-group-1",
         type: "radio",
@@ -57,21 +62,38 @@ add_task(function* () {
     return extensionMenuRoot.getElementsByAttribute("type", "radio");
   }
 
+  function confirmOnClickData(onClickData, id, was, checked) {
+    is(onClickData.wasChecked, was, `radio item ${id} was ${was ? "" : "not "}checked before the click`);
+    is(onClickData.checked, checked, `radio item ${id} is ${checked ? "" : "not "}checked after the click`);
+  }
+
   let extensionMenuRoot = yield openExtensionContextMenu();
   let items = confirmRadioGroupStates(extensionMenuRoot, [true, false, false]);
   yield closeExtensionContextMenu(items[1]);
+
+  let result = yield extension.awaitMessage("contextmenus-click");
+  confirmOnClickData(result, 2, false, true);
 
   extensionMenuRoot = yield openExtensionContextMenu();
   items = confirmRadioGroupStates(extensionMenuRoot, [true, true, false]);
   yield closeExtensionContextMenu(items[2]);
 
-  extensionMenuRoot = yield openExtensionContextMenu();
-  items = confirmRadioGroupStates(extensionMenuRoot, [true, false, true]);
-  yield closeExtensionContextMenu(items[0]);
+  result = yield extension.awaitMessage("contextmenus-click");
+  confirmOnClickData(result, 3, false, true);
 
   extensionMenuRoot = yield openExtensionContextMenu();
   items = confirmRadioGroupStates(extensionMenuRoot, [true, false, true]);
   yield closeExtensionContextMenu(items[0]);
+
+  result = yield extension.awaitMessage("contextmenus-click");
+  confirmOnClickData(result, 1, true, true);
+
+  extensionMenuRoot = yield openExtensionContextMenu();
+  items = confirmRadioGroupStates(extensionMenuRoot, [true, false, true]);
+  yield closeExtensionContextMenu(items[0]);
+
+  result = yield extension.awaitMessage("contextmenus-click");
+  confirmOnClickData(result, 1, true, true);
 
   yield extension.unload();
   yield BrowserTestUtils.removeTab(tab1);

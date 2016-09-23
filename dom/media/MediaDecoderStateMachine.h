@@ -538,10 +538,6 @@ protected:
 
   // Performs one "cycle" of the state machine.
   void RunStateMachine();
-  // Perform one cycle of the DECODING state.
-  void StepDecoding();
-  // Perform one cycle of the COMPLETED state.
-  void StepCompleted();
 
   bool IsStateMachineScheduled() const;
 
@@ -830,8 +826,6 @@ private:
   // start time is known which happens when the first frames are decoded or we
   // are playing an MSE stream (the start time is always assumed 0).
   bool mSentFirstFrameLoadedEvent;
-
-  bool mSentPlaybackEndedEvent;
 
   // True if video decoding is suspended.
   bool mVideoDecodeSuspended;

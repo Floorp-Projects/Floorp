@@ -62,29 +62,6 @@ function dumpSdp(test) {
   }
 }
 
-function waitForIceConnected(test, pc) {
-  if (!pc.iceCheckingRestartExpected) {
-    if (pc.isIceConnected()) {
-      info(pc + ": ICE connection state log: " + pc.iceConnectionLog);
-      ok(true, pc + ": ICE is in connected state");
-      return Promise.resolve();
-    }
-
-    if (!pc.isIceConnectionPending()) {
-      dumpSdp(test);
-      var details = pc + ": ICE is already in bad state: " + pc.iceConnectionState;
-      ok(false, details);
-      return Promise.reject(new Error(details));
-    }
-  }
-
-  return pc.waitForIceConnected()
-    .then(() => {
-      info(pc + ": ICE connection state log: " + pc.iceConnectionLog);
-      ok(pc.isIceConnected(), pc + ": ICE switched to 'connected' state");
-    });
-}
-
 // We need to verify that at least one candidate has been (or will be) gathered.
 function waitForAnIceCandidate(pc) {
   return new Promise(resolve => {
@@ -399,11 +376,17 @@ var commandsPeerConnectionOfferAnswer = [
   },
 
   function PC_LOCAL_WAIT_FOR_ICE_CONNECTED(test) {
-    return waitForIceConnected(test, test.pcLocal);
+    return test.pcLocal.waitForIceConnected()
+    .then(() => {
+      info(test.pcLocal + ": ICE connection state log: " + test.pcLocal.iceConnectionLog);
+    });
   },
 
   function PC_REMOTE_WAIT_FOR_ICE_CONNECTED(test) {
-    return waitForIceConnected(test, test.pcRemote);
+    return test.pcRemote.waitForIceConnected()
+    .then(() => {
+      info(test.pcRemote + ": ICE connection state log: " + test.pcRemote.iceConnectionLog);
+    });
   },
 
   function PC_LOCAL_VERIFY_ICE_GATHERING(test) {
