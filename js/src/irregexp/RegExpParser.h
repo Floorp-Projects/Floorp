@@ -44,7 +44,7 @@ namespace irregexp {
 bool
 ParsePattern(frontend::TokenStream& ts, LifoAlloc& alloc, JSAtom* str,
              bool multiline, bool match_only, bool unicode, bool ignore_case,
-             RegExpCompileData* data);
+             bool global, bool sticky, RegExpCompileData* data);
 
 bool
 ParsePatternSyntax(frontend::TokenStream& ts, LifoAlloc& alloc, JSAtom* str,
