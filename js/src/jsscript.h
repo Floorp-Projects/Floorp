@@ -274,11 +274,43 @@ typedef HashMap<JSScript*,
 
 class ScriptSource;
 
+struct ScriptSourceChunk
+{
+    ScriptSource* ss;
+    uint32_t chunk;
+
+    ScriptSourceChunk()
+      : ss(nullptr), chunk(0)
+    {}
+    ScriptSourceChunk(ScriptSource* ss, uint32_t chunk)
+      : ss(ss), chunk(chunk)
+    {
+        MOZ_ASSERT(valid());;
+    }
+    bool valid() const { return ss != nullptr; }
+
+    bool operator==(const ScriptSourceChunk& other) const {
+        return ss == other.ss && chunk == other.chunk;
+    }
+};
+
+struct ScriptSourceChunkHasher
+{
+    using Lookup = ScriptSourceChunk;
+
+    static HashNumber hash(const ScriptSourceChunk& ssc) {
+        return mozilla::AddToHash(DefaultHasher<ScriptSource*>::hash(ssc.ss), ssc.chunk);
+    }
+    static bool match(const ScriptSourceChunk& c1, const ScriptSourceChunk& c2) {
+        return c1 == c2;
+    }
+};
+
 class UncompressedSourceCache
 {
-    typedef HashMap<ScriptSource*,
+    typedef HashMap<ScriptSourceChunk,
                     UniqueTwoByteChars,
-                    DefaultHasher<ScriptSource*>,
+                    ScriptSourceChunkHasher,
                     SystemAllocPolicy> Map;
 
   public:
@@ -286,15 +318,16 @@ class UncompressedSourceCache
     class AutoHoldEntry
     {
         UncompressedSourceCache* cache_;
-        ScriptSource* source_;
+        ScriptSourceChunk sourceChunk_;
         UniqueTwoByteChars charsToFree_;
       public:
         explicit AutoHoldEntry();
         ~AutoHoldEntry();
+        void holdChars(UniqueTwoByteChars chars);
       private:
-        void holdEntry(UncompressedSourceCache* cache, ScriptSource* source);
+        void holdEntry(UncompressedSourceCache* cache, const ScriptSourceChunk& sourceChunk);
         void deferDelete(UniqueTwoByteChars chars);
-        ScriptSource* source() const { return source_; }
+        const ScriptSourceChunk& sourceChunk() const { return sourceChunk_; }
         friend class UncompressedSourceCache;
     };
 
@@ -305,15 +338,15 @@ class UncompressedSourceCache
   public:
     UncompressedSourceCache() : holder_(nullptr) {}
 
-    const char16_t* lookup(ScriptSource* ss, AutoHoldEntry& asp);
-    bool put(ScriptSource* ss, UniqueTwoByteChars chars, AutoHoldEntry& asp);
+    const char16_t* lookup(const ScriptSourceChunk& ssc, AutoHoldEntry& asp);
+    bool put(const ScriptSourceChunk& ssc, UniqueTwoByteChars chars, AutoHoldEntry& asp);
 
     void purge();
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
   private:
-    void holdEntry(AutoHoldEntry& holder, ScriptSource* ss);
+    void holdEntry(AutoHoldEntry& holder, const ScriptSourceChunk& ssc);
     void releaseEntry(AutoHoldEntry& holder);
 };
 
@@ -398,6 +431,9 @@ class ScriptSource
     bool argumentsNotIncluded_:1;
     bool hasIntroductionOffset_:1;
 
+    const char16_t* chunkChars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holder,
+                               size_t chunk);
+
   public:
     explicit ScriptSource()
       : refs(0),
@@ -460,9 +496,14 @@ class ScriptSource
         MOZ_ASSERT(hasSourceData());
         return argumentsNotIncluded_;
     }
-    const char16_t* chars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& asp);
-    JSFlatString* substring(JSContext* cx, uint32_t start, uint32_t stop);
-    JSFlatString* substringDontDeflate(JSContext* cx, uint32_t start, uint32_t stop);
+
+    // Return a string containing the chars starting at |begin| and ending at
+    // |begin + len|.
+    const char16_t* chars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& asp,
+                          size_t begin, size_t len);
+
+    JSFlatString* substring(JSContext* cx, size_t start, size_t stop);
+    JSFlatString* substringDontDeflate(JSContext* cx, size_t start, size_t stop);
     void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                 JS::ScriptSourceInfo* info) const;
 

@@ -1410,18 +1410,26 @@ JSScript::sourceData(JSContext* cx)
 }
 
 UncompressedSourceCache::AutoHoldEntry::AutoHoldEntry()
-  : cache_(nullptr), source_(nullptr)
+  : cache_(nullptr), sourceChunk_()
 {
 }
 
 void
-UncompressedSourceCache::AutoHoldEntry::holdEntry(UncompressedSourceCache* cache, ScriptSource* source)
+UncompressedSourceCache::AutoHoldEntry::holdEntry(UncompressedSourceCache* cache,
+                                                  const ScriptSourceChunk& sourceChunk)
 {
     // Initialise the holder for a specific cache and script source. This will
     // hold on to the cached source chars in the event that the cache is purged.
-    MOZ_ASSERT(!cache_ && !source_ && !charsToFree_);
+    MOZ_ASSERT(!cache_ && !sourceChunk_.valid() && !charsToFree_);
     cache_ = cache;
-    source_ = source;
+    sourceChunk_ = sourceChunk;
+}
+
+void
+UncompressedSourceCache::AutoHoldEntry::holdChars(UniqueTwoByteChars chars)
+{
+    MOZ_ASSERT(!cache_ && !sourceChunk_.valid() && !charsToFree_);
+    charsToFree_ = Move(chars);
 }
 
 void
@@ -1429,25 +1437,25 @@ UncompressedSourceCache::AutoHoldEntry::deferDelete(UniqueTwoByteChars chars)
 {
     // Take ownership of source chars now the cache is being purged. Remove our
     // reference to the ScriptSource which might soon be destroyed.
-    MOZ_ASSERT(cache_ && source_ && !charsToFree_);
+    MOZ_ASSERT(cache_ && sourceChunk_.valid() && !charsToFree_);
     cache_ = nullptr;
-    source_ = nullptr;
+    sourceChunk_ = ScriptSourceChunk();
     charsToFree_ = Move(chars);
 }
 
 UncompressedSourceCache::AutoHoldEntry::~AutoHoldEntry()
 {
     if (cache_) {
-        MOZ_ASSERT(source_);
+        MOZ_ASSERT(sourceChunk_.valid());
         cache_->releaseEntry(*this);
     }
 }
 
 void
-UncompressedSourceCache::holdEntry(AutoHoldEntry& holder, ScriptSource* ss)
+UncompressedSourceCache::holdEntry(AutoHoldEntry& holder, const ScriptSourceChunk& ssc)
 {
     MOZ_ASSERT(!holder_);
-    holder.holdEntry(this, ss);
+    holder.holdEntry(this, ssc);
     holder_ = &holder;
 }
 
@@ -1459,20 +1467,21 @@ UncompressedSourceCache::releaseEntry(AutoHoldEntry& holder)
 }
 
 const char16_t*
-UncompressedSourceCache::lookup(ScriptSource* ss, AutoHoldEntry& holder)
+UncompressedSourceCache::lookup(const ScriptSourceChunk& ssc, AutoHoldEntry& holder)
 {
     MOZ_ASSERT(!holder_);
     if (!map_)
         return nullptr;
-    if (Map::Ptr p = map_->lookup(ss)) {
-        holdEntry(holder, ss);
+    if (Map::Ptr p = map_->lookup(ssc)) {
+        holdEntry(holder, ssc);
         return p->value().get();
     }
     return nullptr;
 }
 
 bool
-UncompressedSourceCache::put(ScriptSource* ss, UniqueTwoByteChars str, AutoHoldEntry& holder)
+UncompressedSourceCache::put(const ScriptSourceChunk& ssc, UniqueTwoByteChars str,
+                             AutoHoldEntry& holder)
 {
     MOZ_ASSERT(!holder_);
 
@@ -1484,10 +1493,10 @@ UncompressedSourceCache::put(ScriptSource* ss, UniqueTwoByteChars str, AutoHoldE
         map_ = Move(map);
     }
 
-    if (!map_->put(ss, Move(str)))
+    if (!map_->put(ssc, Move(str)))
         return false;
 
-    holdEntry(holder, ss);
+    holdEntry(holder, ssc);
     return true;
 }
 
@@ -1498,7 +1507,7 @@ UncompressedSourceCache::purge()
         return;
 
     for (Map::Range r = map_->all(); !r.empty(); r.popFront()) {
-        if (holder_ && r.front().key() == holder_->source()) {
+        if (holder_ && r.front().key() == holder_->sourceChunk()) {
             holder_->deferDelete(Move(r.front().value()));
             holder_ = nullptr;
         }
@@ -1520,101 +1529,148 @@ UncompressedSourceCache::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
 }
 
 const char16_t*
-ScriptSource::chars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holder)
+ScriptSource::chunkChars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holder,
+                         size_t chunk)
 {
-    struct CharsMatcher
+    const Compressed& c = data.as<Compressed>();
+
+    ScriptSourceChunk ssc(this, chunk);
+    if (const char16_t* decompressed = cx->caches.uncompressedSourceCache.lookup(ssc, holder))
+        return decompressed;
+
+    size_t totalLengthInBytes = length() * sizeof(char16_t);
+    size_t chunkBytes = Compressor::chunkSize(totalLengthInBytes, chunk);
+
+    MOZ_ASSERT((chunkBytes % sizeof(char16_t)) == 0);
+    const size_t lengthWithNull = (chunkBytes / sizeof(char16_t)) + 1;
+    UniqueTwoByteChars decompressed(js_pod_malloc<char16_t>(lengthWithNull));
+    if (!decompressed) {
+        JS_ReportOutOfMemory(cx);
+        return nullptr;
+    }
+
+    if (!DecompressStringChunk((const unsigned char*) c.raw.chars(),
+                               chunk,
+                               reinterpret_cast<unsigned char*>(decompressed.get()),
+                               chunkBytes))
     {
-        JSContext* cx;
-        ScriptSource& ss;
-        UncompressedSourceCache::AutoHoldEntry& holder;
+        JS_ReportOutOfMemory(cx);
+        return nullptr;
+    }
 
-        explicit CharsMatcher(JSContext* cx, ScriptSource& ss,
-                              UncompressedSourceCache::AutoHoldEntry& holder)
-          : cx(cx)
-          , ss(ss)
-          , holder(holder)
-        { }
+    decompressed[lengthWithNull - 1] = '\0';
 
-        const char16_t* match(Uncompressed& u) {
-            return u.string.chars();
-        }
+    const char16_t* ret = decompressed.get();
+    if (!cx->caches.uncompressedSourceCache.put(ssc, Move(decompressed), holder)) {
+        JS_ReportOutOfMemory(cx);
+        return nullptr;
+    }
+    return ret;
+}
 
-        const char16_t* match(Compressed& c) {
-            if (const char16_t* decompressed = cx->caches.uncompressedSourceCache.lookup(&ss, holder))
-                return decompressed;
+const char16_t*
+ScriptSource::chars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holder,
+                    size_t begin, size_t len)
+{
+    MOZ_ASSERT(begin + len <= length());
 
-            const size_t lengthWithNull = ss.length() + 1;
-            UniqueTwoByteChars decompressed(js_pod_malloc<char16_t>(lengthWithNull));
-            if (!decompressed) {
-                JS_ReportOutOfMemory(cx);
-                return nullptr;
-            }
-
-            if (!DecompressString((const unsigned char*) c.raw.chars(),
-                                  c.raw.length(),
-                                  reinterpret_cast<unsigned char*>(decompressed.get()),
-                                  lengthWithNull * sizeof(char16_t)))
-            {
-                JS_ReportOutOfMemory(cx);
-                return nullptr;
-            }
-
-            decompressed[ss.length()] = 0;
-
-            // Decompressing a huge script is expensive. With lazy parsing and
-            // relazification, this can happen repeatedly, so conservatively go
-            // back to storing the data uncompressed to avoid wasting too much
-            // time yo-yoing back and forth between compressed and uncompressed.
-            const size_t HUGE_SCRIPT = 5 * 1024 * 1024;
-            if (lengthWithNull > HUGE_SCRIPT) {
-                auto& strings = cx->runtime()->sharedImmutableStrings();
-                auto str = strings.getOrCreate(mozilla::Move(decompressed), ss.length());
-                if (!str) {
-                    JS_ReportOutOfMemory(cx);
-                    return nullptr;
-                }
-                ss.data = SourceType(Uncompressed(mozilla::Move(*str)));
-                return ss.data.as<Uncompressed>().string.chars();
-            }
-
-            const char16_t* ret = decompressed.get();
-            if (!cx->caches.uncompressedSourceCache.put(&ss, Move(decompressed), holder)) {
-                JS_ReportOutOfMemory(cx);
-                return nullptr;
-            }
-            return ret;
-        }
-
-        const char16_t* match(Missing&) {
-            MOZ_CRASH("ScriptSource::chars() on ScriptSource with SourceType = Missing");
+    if (data.is<Uncompressed>()) {
+        const char16_t* chars = data.as<Uncompressed>().string.chars();
+        if (!chars)
             return nullptr;
+        return chars + begin;
+    }
+
+    if (data.is<Missing>())
+        MOZ_CRASH("ScriptSource::chars() on ScriptSource with SourceType = Missing");
+
+    MOZ_ASSERT(data.is<Compressed>());
+
+    // Determine which chunk(s) we are interested in, and the offsets within
+    // these chunks.
+    size_t firstChunk, lastChunk;
+    size_t firstChunkOffset, lastChunkOffset;
+    MOZ_ASSERT(len > 0);
+    Compressor::toChunkOffset(begin * sizeof(char16_t), &firstChunk, &firstChunkOffset);
+    Compressor::toChunkOffset((begin + len - 1) * sizeof(char16_t), &lastChunk, &lastChunkOffset);
+
+    MOZ_ASSERT(firstChunkOffset % sizeof(char16_t) == 0);
+    size_t firstChar = firstChunkOffset / sizeof(char16_t);
+
+    if (firstChunk == lastChunk) {
+        const char16_t* chars = chunkChars(cx, holder, firstChunk);
+        if (!chars)
+            return nullptr;
+        return chars + firstChar;
+    }
+
+    // We need multiple chunks. Allocate a (null-terminated) buffer to hold
+    // |len| chars and copy uncompressed chars from the chunks into it. We use
+    // chunkChars() so we benefit from chunk caching by UncompressedSourceCache.
+
+    MOZ_ASSERT(firstChunk < lastChunk);
+
+    size_t lengthWithNull = len + 1;
+    UniqueTwoByteChars decompressed(js_pod_malloc<char16_t>(lengthWithNull));
+    if (!decompressed) {
+        JS_ReportOutOfMemory(cx);
+        return nullptr;
+    }
+
+    size_t totalLengthInBytes = length() * sizeof(char16_t);
+    char16_t* cursor = decompressed.get();
+
+    for (size_t i = firstChunk; i <= lastChunk; i++) {
+        UncompressedSourceCache::AutoHoldEntry chunkHolder;
+        const char16_t* chars = chunkChars(cx, chunkHolder, i);
+        if (!chars)
+            return nullptr;
+
+        size_t numChars = Compressor::chunkSize(totalLengthInBytes, i) / sizeof(char16_t);
+        if (i == firstChunk) {
+            MOZ_ASSERT(firstChar < numChars);
+            chars += firstChar;
+            numChars -= firstChar;
+        } else if (i == lastChunk) {
+            size_t numCharsNew = lastChunkOffset / sizeof(char16_t) + 1;
+            MOZ_ASSERT(numCharsNew <= numChars);
+            numChars = numCharsNew;
         }
-    };
+        mozilla::PodCopy(cursor, chars, numChars);
+        cursor += numChars;
+    }
 
-    CharsMatcher cm(cx, *this, holder);
-    return data.match(cm);
+    *cursor++ = '\0';
+    MOZ_ASSERT(size_t(cursor - decompressed.get()) == lengthWithNull);
+
+    // Transfer ownership to |holder|.
+    const char16_t* ret = decompressed.get();
+    holder.holdChars(Move(decompressed));
+    return ret;
 }
 
 JSFlatString*
-ScriptSource::substring(JSContext* cx, uint32_t start, uint32_t stop)
+ScriptSource::substring(JSContext* cx, size_t start, size_t stop)
 {
     MOZ_ASSERT(start <= stop);
+    size_t len = stop - start;
     UncompressedSourceCache::AutoHoldEntry holder;
-    const char16_t* chars = this->chars(cx, holder);
+    const char16_t* chars = this->chars(cx, holder, start, len);
     if (!chars)
         return nullptr;
-    return NewStringCopyN<CanGC>(cx, chars + start, stop - start);
+    return NewStringCopyN<CanGC>(cx, chars, len);
 }
 
 JSFlatString*
-ScriptSource::substringDontDeflate(JSContext* cx, uint32_t start, uint32_t stop)
+ScriptSource::substringDontDeflate(JSContext* cx, size_t start, size_t stop)
 {
     MOZ_ASSERT(start <= stop);
+    size_t len = stop - start;
     UncompressedSourceCache::AutoHoldEntry holder;
-    const char16_t* chars = this->chars(cx, holder);
+    const char16_t* chars = this->chars(cx, holder, start, len);
     if (!chars)
         return nullptr;
-    return NewStringCopyNDontDeflate<CanGC>(cx, chars + start, stop - start);
+    return NewStringCopyNDontDeflate<CanGC>(cx, chars, len);
 }
 
 MOZ_MUST_USE bool
@@ -1751,6 +1807,7 @@ SourceCompressionTask::work()
 
     comp.setOutput(reinterpret_cast<unsigned char*>(compressed.get()), firstSize);
     bool cont = true;
+    bool reallocated = false;
     while (cont) {
         if (abort_)
             return Aborted;
@@ -1759,7 +1816,7 @@ SourceCompressionTask::work()
           case Compressor::CONTINUE:
             break;
           case Compressor::MOREOUTPUT: {
-            if (comp.outWritten() == inputBytes) {
+            if (reallocated) {
                 // The compressed string is longer than the original string.
                 return Aborted;
             }
@@ -1770,6 +1827,7 @@ SourceCompressionTask::work()
                 return OOM;
 
             comp.setOutput(reinterpret_cast<unsigned char*>(compressed.get()), inputBytes);
+            reallocated = true;
             break;
           }
           case Compressor::DONE:
@@ -1779,13 +1837,17 @@ SourceCompressionTask::work()
             return OOM;
         }
     }
-    size_t compressedBytes = comp.outWritten();
+
+    size_t totalBytes = comp.totalBytesNeeded();
 
     // Shrink the buffer to the size of the compressed data.
-    mozilla::Unused << reallocUniquePtr(compressed, compressedBytes);
+    if (!reallocUniquePtr(compressed, totalBytes))
+        return OOM;
+
+    comp.finish(compressed.get(), totalBytes);
 
     auto& strings = cx->sharedImmutableStrings();
-    resultString = strings.getOrCreate(mozilla::Move(compressed), compressedBytes);
+    resultString = strings.getOrCreate(mozilla::Move(compressed), totalBytes);
     if (!resultString)
         return OOM;
 
@@ -4136,17 +4198,18 @@ LazyScriptHashPolicy::match(JSScript* script, const Lookup& lookup)
 
     UncompressedSourceCache::AutoHoldEntry holder;
 
-    const char16_t* scriptChars = script->scriptSource()->chars(cx, holder);
+    size_t scriptBegin = script->sourceStart();
+    size_t length = script->sourceEnd() - scriptBegin;
+    const char16_t* scriptChars = script->scriptSource()->chars(cx, holder, scriptBegin, length);
     if (!scriptChars)
         return false;
 
-    const char16_t* lazyChars = lazy->scriptSource()->chars(cx, holder);
+    MOZ_ASSERT(scriptBegin == lazy->begin());
+    const char16_t* lazyChars = lazy->scriptSource()->chars(cx, holder, scriptBegin, length);
     if (!lazyChars)
         return false;
 
-    size_t begin = script->sourceStart();
-    size_t length = script->sourceEnd() - begin;
-    return !memcmp(scriptChars + begin, lazyChars + begin, length);
+    return !memcmp(scriptChars, lazyChars, length);
 }
 
 void
