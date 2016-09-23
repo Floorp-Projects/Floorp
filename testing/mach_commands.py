@@ -103,10 +103,6 @@ TEST_SUITES = {
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'plain', 'test_paths': None},
     },
-    'luciddream': {
-        'mach_command': 'luciddream',
-        'kwargs': {'test_paths': None},
-    },
     'python': {
         'mach_command': 'python-test',
         'kwargs': {'tests': None},
