@@ -3298,6 +3298,9 @@ WebConsoleConnectionProxy.prototype = {
     messages.sort((a, b) => a.timeStamp - b.timeStamp);
 
     if (this.webConsoleFrame.NEW_CONSOLE_OUTPUT_ENABLED) {
+      // Filter out CSS page errors.
+      messages = messages.filter(message => !(message._type == "PageError"
+          && Utils.categoryForScriptError(message) === CATEGORY_CSS));
       for (let packet of messages) {
         this.dispatchMessageAdd(packet);
       }
