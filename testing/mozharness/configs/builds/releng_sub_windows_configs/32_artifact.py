@@ -15,11 +15,6 @@ config = {
         'checkout-sources',
         # 'setup-mock', windows do not use mock
         'build',
-        'upload-files',
-        'sendchange',
-        'check-test',
-        'generate-build-stats',
-        'update',  # decided by query_is_nightly()
     ],
     "buildbot_json_path": "buildprops.json",
     'exes': {
@@ -41,7 +36,7 @@ config = {
     },
     'app_ini_path': '%(obj_dir)s/dist/bin/application.ini',
     # decides whether we want to use moz_sign_cmd in env
-    'enable_signing': True,
+    'enable_signing': False,
     'enable_ccache': False,
     'vcs_share_base': 'C:/builds/hg-shared',
     'objdir': 'obj-firefox',
@@ -49,18 +44,18 @@ config = {
                         'C:/mozilla-build/tooltool.py'],
     'tooltool_bootstrap': "setup.sh",
     'enable_count_ctors': False,
-    'enable_talos_sendchange': True,
-    'enable_unittest_sendchange': True,
+    'enable_talos_sendchange': False,
+    'enable_unittest_sendchange': False,
     'max_build_output_timeout': 60 * 80,
     #########################################################################
 
 
      #########################################################################
      ###### 32 bit specific ######
-    'base_name': 'WINNT_5.2_%(branch)s',
+    'base_name': 'WINNT_5.2_%(branch)s_Artifact_build',
     'platform': 'win32',
     'stage_platform': 'win32',
-    'publish_nightly_en_US_routes': True,
+    'publish_nightly_en_US_routes': False,
     'env': {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),
         'MOZ_AUTOMATION': '1',
@@ -77,19 +72,8 @@ config = {
         'TOOLTOOL_CACHE': '/c/builds/tooltool_cache',
         'TOOLTOOL_HOME': '/c/builds',
     },
-    'upload_env': {
-        # stage_server is dictated from build_pool_specifics.py
-        'UPLOAD_HOST': '%(stage_server)s',
-        'UPLOAD_USER': '%(stage_username)s',
-        'UPLOAD_SSH_KEY': '/c/Users/cltbld/.ssh/%(stage_ssh_key)s',
-        'UPLOAD_TO_TEMP': '1',
-    },
-    "check_test_env": {
-        'MINIDUMP_STACKWALK': '%(abs_tools_dir)s/breakpad/win32/minidump_stackwalk.exe',
-        'MINIDUMP_SAVE_PATH': '%(base_work_dir)s/minidumps',
-    },
     'enable_pymake': True,
-    'src_mozconfig': 'browser/config/mozconfigs/win32/nightly',
+    'src_mozconfig': 'browser/config/mozconfigs/win32/artifact',
     'tooltool_manifest_src': "browser/config/tooltool-manifests/win32/releng.manifest",
     #########################################################################
 }
