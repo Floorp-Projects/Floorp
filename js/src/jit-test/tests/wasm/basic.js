@@ -29,8 +29,8 @@ wasmValidateText('(module (func) (func) (export "a" 1))');
 wasmValidateText('(module (func $a) (func $b) (export "a" $a) (export "b" $b))');
 wasmValidateText('(module (func $a) (func $b) (export "a" $a) (export "b" $b))');
 
-wasmFailValidateText('(module (func) (export "a" 1))', /exported function index out of bounds/);
-wasmFailValidateText('(module (func) (func) (export "a" 2))', /exported function index out of bounds/);
+wasmFailValidateText('(module (func) (export "a" 1))', TypeError, /exported function index out of bounds/);
+wasmFailValidateText('(module (func) (func) (export "a" 2))', TypeError, /exported function index out of bounds/);
 
 var o = wasmEvalText('(module (func) (export "a" 0) (export "b" 0))').exports;
 assertEq(Object.getOwnPropertyNames(o).sort().toString(), "a,b");
@@ -51,14 +51,14 @@ var o = wasmEvalText('(module (func (result i32) (i32.const 1)) (func (result i3
 assertEq(o.a(), 2);
 assertEq(o.b(), 1);
 
-wasmFailValidateText('(module (func) (export "a" 0) (export "a" 0))', /duplicate export/);
-wasmFailValidateText('(module (func) (func) (export "a" 0) (export "a" 1))', /duplicate export/);
+assertErrorMessage(() => wasmEvalText('(module (func) (export "a" 0) (export "a" 0))'), TypeError, /duplicate export/);
+assertErrorMessage(() => wasmEvalText('(module (func) (func) (export "a" 0) (export "a" 1))'), TypeError, /duplicate export/);
 
 // ----------------------------------------------------------------------------
 // signatures
 
-wasmFailValidateText('(module (func (result i32)))', mismatchError("void", "i32"));
-wasmFailValidateText('(module (func (result i32) (nop)))', mismatchError("void", "i32"));
+wasmFailValidateText('(module (func (result i32)))', TypeError, mismatchError("void", "i32"));
+wasmFailValidateText('(module (func (result i32) (nop)))', TypeError, mismatchError("void", "i32"));
 
 wasmValidateText('(module (func (nop)))');
 wasmValidateText('(module (func (result i32) (i32.const 42)))');
@@ -88,11 +88,10 @@ setJitCompilerOption('wasm.test-mode', 0);
 // ----------------------------------------------------------------------------
 // imports
 
-const noImportObj = "second argument must be an object";
+assertErrorMessage(() => wasmEvalText('(module (import "a" "b"))', 1), Error, /second argument, if present, must be an object/);
+assertErrorMessage(() => wasmEvalText('(module (import "a" "b"))', null), Error, /second argument, if present, must be an object/);
 
-assertErrorMessage(() => wasmEvalText('(module (import "a" "b"))', 1), TypeError, noImportObj);
-assertErrorMessage(() => wasmEvalText('(module (import "a" "b"))', null), TypeError, noImportObj);
-
+const noImportObj = /no import object given/;
 const notObject = /import object field is not an Object/;
 const notFunction = /import object field is not a Function/;
 
@@ -127,7 +126,7 @@ wasmEvalText('(module (import $foo "a" "" (result f64)))', {a:{"":()=>{}}});
 
 wasmValidateText('(module (memory 0))');
 wasmValidateText('(module (memory 1))');
-wasmFailValidateText('(module (memory 65536))', /initial memory size too big/);
+wasmFailValidateText('(module (memory 65536))', TypeError, /initial memory size too big/);
 
 // May OOM, but must not crash:
 try {
@@ -167,8 +166,8 @@ var buf = wasmEvalText('(module (memory 1) (data 65535 "c") (export "memory" mem
 assertEq(new Uint8Array(buf)[0], 0);
 assertEq(new Uint8Array(buf)[65535], 'c'.charCodeAt(0));
 
-wasmFailValidateText('(module (memory 1) (data 65536 "a") (export "memory" memory))', /data segment does not fit/);
-wasmFailValidateText('(module (memory 1) (data 65535 "ab") (export "memory" memory))', /data segment does not fit/);
+wasmFailValidateText('(module (memory 1) (data 65536 "a") (export "memory" memory))', TypeError, /data segment does not fit/);
+wasmFailValidateText('(module (memory 1) (data 65535 "ab") (export "memory" memory))', TypeError, /data segment does not fit/);
 
 // ----------------------------------------------------------------------------
 // locals
@@ -178,23 +177,23 @@ assertEq(wasmEvalText('(module (func (param i32) (result i32) (get_local 0)) (ex
 assertEq(wasmEvalText('(module (func (param i32) (param i32) (result i32) (get_local 0)) (export "" 0))').exports[""](42, 43), 42);
 assertEq(wasmEvalText('(module (func (param i32) (param i32) (result i32) (get_local 1)) (export "" 0))').exports[""](42, 43), 43);
 
-wasmFailValidateText('(module (func (get_local 0)))', /get_local index out of range/);
+wasmFailValidateText('(module (func (get_local 0)))', TypeError, /get_local index out of range/);
 wasmValidateText('(module (func (local i32)))');
 wasmValidateText('(module (func (local i32) (local f32)))');
 assertEq(wasmEvalText('(module (func (result i32) (local i32) (get_local 0)) (export "" 0))').exports[""](), 0);
-wasmFailValidateText('(module (func (result f32) (local i32) (get_local 0)))', mismatchError("i32", "f32"));
-wasmFailValidateText('(module (func (result i32) (local f32) (get_local 0)))', mismatchError("f32", "i32"));
+wasmFailValidateText('(module (func (result f32) (local i32) (get_local 0)))', TypeError, mismatchError("i32", "f32"));
+wasmFailValidateText('(module (func (result i32) (local f32) (get_local 0)))', TypeError, mismatchError("f32", "i32"));
 assertEq(wasmEvalText('(module (func (result i32) (param i32) (local f32) (get_local 0)) (export "" 0))').exports[""](), 0);
 assertEq(wasmEvalText('(module (func (result f32) (param i32) (local f32) (get_local 1)) (export "" 0))').exports[""](), 0);
-wasmFailValidateText('(module (func (result f32) (param i32) (local f32) (get_local 0)))', mismatchError("i32", "f32"));
-wasmFailValidateText('(module (func (result i32) (param i32) (local f32) (get_local 1)))', mismatchError("f32", "i32"));
+wasmFailValidateText('(module (func (result f32) (param i32) (local f32) (get_local 0)))', TypeError, mismatchError("i32", "f32"));
+wasmFailValidateText('(module (func (result i32) (param i32) (local f32) (get_local 1)))', TypeError, mismatchError("f32", "i32"));
 
-wasmFailValidateText('(module (func (set_local 0 (i32.const 0))))', /set_local index out of range/);
+wasmFailValidateText('(module (func (set_local 0 (i32.const 0))))', TypeError, /set_local index out of range/);
 wasmValidateText('(module (func (local i32) (set_local 0 (i32.const 0))))');
-wasmFailValidateText('(module (func (local f32) (set_local 0 (i32.const 0))))', mismatchError("i32", "f32"));
-wasmFailValidateText('(module (func (local f32) (set_local 0 (nop))))', /popping value from empty stack/);
-wasmFailValidateText('(module (func (local i32) (local f32) (set_local 0 (get_local 1))))', mismatchError("f32", "i32"));
-wasmFailValidateText('(module (func (local i32) (local f32) (set_local 1 (get_local 0))))', mismatchError("i32", "f32"));
+wasmFailValidateText('(module (func (local f32) (set_local 0 (i32.const 0))))', TypeError, mismatchError("i32", "f32"));
+wasmFailValidateText('(module (func (local f32) (set_local 0 (nop))))', TypeError, /popping value from empty stack/);
+wasmFailValidateText('(module (func (local i32) (local f32) (set_local 0 (get_local 1))))', TypeError, mismatchError("f32", "i32"));
+wasmFailValidateText('(module (func (local i32) (local f32) (set_local 1 (get_local 0))))', TypeError, mismatchError("i32", "f32"));
 wasmValidateText('(module (func (local i32) (local f32) (set_local 0 (get_local 0))))');
 wasmValidateText('(module (func (local i32) (local f32) (set_local 1 (get_local 1))))');
 assertEq(wasmEvalText('(module (func (result i32) (local i32) (tee_local 0 (i32.const 42))) (export "" 0))').exports[""](), 42);
@@ -210,28 +209,28 @@ wasmValidateText('(module (func (local i32) (local $a f32) (set_local 0 (i32.con
 
 assertEq(wasmEvalText('(module (func (block )) (export "" 0))').exports[""](), undefined);
 
-wasmFailValidateText('(module (func (result i32) (block )))', mismatchError("void", "i32"));
-wasmFailValidateText('(module (func (result i32) (block (block ))))', mismatchError("void", "i32"));
-wasmFailValidateText('(module (func (local i32) (set_local 0 (block ))))', /popping value from empty stack/);
+wasmFailValidateText('(module (func (result i32) (block )))', TypeError, mismatchError("void", "i32"));
+wasmFailValidateText('(module (func (result i32) (block (block ))))', TypeError, mismatchError("void", "i32"));
+wasmFailValidateText('(module (func (local i32) (set_local 0 (block ))))', TypeError, /popping value from empty stack/);
 
 assertEq(wasmEvalText('(module (func (block (block ))) (export "" 0))').exports[""](), undefined);
 assertEq(wasmEvalText('(module (func (result i32) (block i32 (i32.const 42))) (export "" 0))').exports[""](), 42);
 assertEq(wasmEvalText('(module (func (result i32) (block i32 (block i32 (i32.const 42)))) (export "" 0))').exports[""](), 42);
-wasmFailValidateText('(module (func (result f32) (block i32 (i32.const 0))))', mismatchError("i32", "f32"));
+wasmFailValidateText('(module (func (result f32) (block i32 (i32.const 0))))', TypeError, mismatchError("i32", "f32"));
 
 assertEq(wasmEvalText('(module (func (result i32) (block i32 (drop (i32.const 13)) (block i32 (i32.const 42)))) (export "" 0))').exports[""](), 42);
-wasmFailValidateText('(module (func (result f32) (param f32) (block i32 (drop (get_local 0)) (i32.const 0))))', mismatchError("i32", "f32"));
+wasmFailValidateText('(module (func (result f32) (param f32) (block i32 (drop (get_local 0)) (i32.const 0))))', TypeError, mismatchError("i32", "f32"));
 
 assertEq(wasmEvalText('(module (func (result i32) (local i32) (set_local 0 (i32.const 42)) (get_local 0)) (export "" 0))').exports[""](), 42);
 
 // ----------------------------------------------------------------------------
 // calls
 
-wasmFailValidateText('(module (func (nop)) (func (call 0 (i32.const 0))))', /unused values not explicitly dropped by end of block/);
+wasmFailValidateText('(module (func (nop)) (func (call 0 (i32.const 0))))', TypeError, /unused values not explicitly dropped by end of block/);
 
-wasmFailValidateText('(module (func (param i32) (nop)) (func (call 0)))', /peeking at value from outside block/);
-wasmFailValidateText('(module (func (param f32) (nop)) (func (call 0 (i32.const 0))))', mismatchError("i32", "f32"));
-wasmFailValidateText('(module (func (nop)) (func (call 3)))', /callee index out of range/);
+wasmFailValidateText('(module (func (param i32) (nop)) (func (call 0)))', TypeError, /peeking at value from outside block/);
+wasmFailValidateText('(module (func (param f32) (nop)) (func (call 0 (i32.const 0))))', TypeError, mismatchError("i32", "f32"));
+wasmFailValidateText('(module (func (nop)) (func (call 3)))', TypeError, /callee index out of range/);
 
 wasmValidateText('(module (func (nop)) (func (call 0)))');
 wasmValidateText('(module (func (param i32) (nop)) (func (call 0 (i32.const 0))))');
@@ -241,13 +240,13 @@ assertThrowsInstanceOf(() => wasmEvalText('(module (func (call 0)) (export "" 0)
 assertThrowsInstanceOf(() => wasmEvalText('(module (func (call 1)) (func (call 0)) (export "" 0))').exports[""](), InternalError);
 
 wasmValidateText('(module (func (param i32 f32)) (func (call 0 (i32.const 0) (f32.const nan))))');
-wasmFailValidateText('(module (func (param i32 f32)) (func (call 0 (i32.const 0) (i32.const 0))))', mismatchError("i32", "f32"));
+wasmFailValidateText('(module (func (param i32 f32)) (func (call 0 (i32.const 0) (i32.const 0))))', TypeError, mismatchError("i32", "f32"));
 
-wasmFailValidateText('(module (import "a" "") (func (call_import 0 (i32.const 0))))', /unused values not explicitly dropped by end of block/);
-wasmFailValidateText('(module (import "a" "" (param i32)) (func (call_import 0)))', /peeking at value from outside block/);
-wasmFailValidateText('(module (import "a" "" (param f32)) (func (call_import 0 (i32.const 0))))', mismatchError("i32", "f32"));
+wasmFailValidateText('(module (import "a" "") (func (call_import 0 (i32.const 0))))', TypeError, /unused values not explicitly dropped by end of block/);
+wasmFailValidateText('(module (import "a" "" (param i32)) (func (call_import 0)))', TypeError, /peeking at value from outside block/);
+wasmFailValidateText('(module (import "a" "" (param f32)) (func (call_import 0 (i32.const 0))))', TypeError, mismatchError("i32", "f32"));
 
-assertErrorMessage(() => wasmEvalText('(module (import "a" "") (func (call_import 1)))'), TypeError, noImportObj);
+assertErrorMessage(() => wasmEvalText('(module (import "a" "") (func (call_import 1)))'), TypeError, /no import object given/);
 wasmEvalText('(module (import "" "a") (func (call_import 0)))', {"":{a:()=>{}}});
 wasmEvalText('(module (import "" "a" (param i32)) (func (call_import 0 (i32.const 0))))', {"":{a:()=>{}}});
 
@@ -363,7 +362,7 @@ if (typeof evaluate === 'function')
     setJitCompilerOption('wasm.test-mode', 0);
 }
 
-wasmFailValidateText(`(module (type $t (func)) (func (call_indirect $t (i32.const 0))))`, /can't call_indirect without a table/);
+wasmFailValidateText(`(module (type $t (func)) (func (call_indirect $t (i32.const 0))))`, TypeError, /can't call_indirect without a table/);
 
 var {v2i, i2i, i2v} = wasmEvalText(`(module
     (type (func (result i32)))
@@ -446,14 +445,14 @@ wasmValidateText('(module (import $bar "" "a") (func (call_import $bar)) (func $
 // ----------------------------------------------------------------------------
 // select
 
-wasmFailValidateText('(module (func (select (i32.const 0) (i32.const 0) (f32.const 0))))', mismatchError("f32", "i32"));
+wasmFailValidateText('(module (func (select (i32.const 0) (i32.const 0) (f32.const 0))))', TypeError, mismatchError("f32", "i32"));
 
-wasmFailValidateText('(module (func (select (i32.const 0) (f32.const 0) (i32.const 0))) (export "" 0))', /select operand types must match/);
-wasmFailValidateText('(module (func (select (block ) (i32.const 0) (i32.const 0))) (export "" 0))', /popping value from empty stack/);
+wasmFailValidateText('(module (func (select (i32.const 0) (f32.const 0) (i32.const 0))) (export "" 0))', TypeError, /select operand types must match/);
+wasmFailValidateText('(module (func (select (block ) (i32.const 0) (i32.const 0))) (export "" 0))', TypeError, /popping value from empty stack/);
 assertEq(wasmEvalText('(module (func (select (return) (i32.const 0) (i32.const 0))) (export "" 0))').exports[""](), undefined);
 assertEq(wasmEvalText('(module (func (i32.add (i32.const 0) (select (return) (i32.const 0) (i32.const 0)))) (export "" 0))').exports[""](), undefined);
-wasmFailValidateText('(module (func (select (if i32 (i32.const 1) (i32.const 0) (f32.const 0)) (i32.const 0) (i32.const 0))) (export "" 0))', mismatchError("f32", "i32"));
-wasmFailValidateText('(module (func) (func (select (call 0) (call 0) (i32.const 0))) (export "" 0))', /popping value from empty stack/);
+wasmFailValidateText('(module (func (select (if i32 (i32.const 1) (i32.const 0) (f32.const 0)) (i32.const 0) (i32.const 0))) (export "" 0))', TypeError, mismatchError("f32", "i32"));
+wasmFailValidateText('(module (func) (func (select (call 0) (call 0) (i32.const 0))) (export "" 0))', TypeError, /popping value from empty stack/);
 
 (function testSideEffects() {
 

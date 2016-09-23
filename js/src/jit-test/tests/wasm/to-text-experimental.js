@@ -40,8 +40,8 @@ runTest(`
 " i32:16[8] = 128; return 0.0; "+
 "} memory 1, 10 {} ");
 
-wasmFailValidateText(
-`(module
+assertErrorMessage(() => wasmBinaryToText(wasmTextToBinary(`
+(module
   (func (param i32) (result f64)
      (local $l f32)
      (block
@@ -61,7 +61,7 @@ wasmFailValidateText(
   )
   (export "test" 0)
   (memory 1 10)
-)`, /popping value from empty stack/);
+)`), "experimental"), TypeError, /popping value from empty stack/);
 
 // function calls
 runTest(`

@@ -102,11 +102,11 @@ function testStoreOOB(type, ext, base, offset, align, value) {
 }
 
 function badLoadModule(type, ext) {
-    wasmFailValidateText( `(module (func (param i32) (${type}.load${ext} (get_local 0))) (export "" 0))`, /can't touch memory/);
+    return wasmEvalText( `(module (func (param i32) (${type}.load${ext} (get_local 0))) (export "" 0))`);
 }
 
 function badStoreModule(type, ext) {
-    wasmFailValidateText(`(module (func (param i32) (${type}.store${ext} (get_local 0) (${type}.const 0))) (export "" 0))`, /can't touch memory/);
+    return wasmEvalText( `(module (func (param i32) (${type}.store${ext} (get_local 0) (${type}.const 0))) (export "" 0))`);
 }
 
 // Can't touch memory.
@@ -127,7 +127,7 @@ for (let [type, ext] of [
     ['f64', ''],
 ])
 {
-    badLoadModule(type, ext);
+    assertErrorMessage(() => badLoadModule(type, ext), TypeError, /can't touch memory/);
 }
 
 for (let [type, ext] of [
@@ -142,7 +142,7 @@ for (let [type, ext] of [
     ['f64', ''],
 ])
 {
-    badStoreModule(type, ext);
+    assertErrorMessage(() => badStoreModule(type, ext), TypeError, /can't touch memory/);
 }
 
 assertEq(getJitCompilerOptions()['wasm.fold-offsets'], 1);
@@ -185,7 +185,7 @@ for (var foldOffsets = 0; foldOffsets <= 1; foldOffsets++) {
     testStore('i32', '8', 0, 0, 0, 0x23);
     testStore('i32', '16', 0, 0, 0, 0x2345);
 
-    wasmFailValidateText('(module (memory 2 1))', /maximum length 1 is less than initial length 2/);
+    assertErrorMessage(() => wasmEvalText('(module (memory 2 1))'), TypeError, /maximum length 1 is less than initial length 2/);
 
     // Test bounds checks and edge cases.
     const align = 0;
@@ -264,17 +264,17 @@ for (var foldOffsets = 0; foldOffsets <= 1; foldOffsets++) {
         testLoadOOB('f64', '', index, offset, 8);
     }
 
-    wasmFailValidateText('(module (memory 1) (func (f64.store offset=0 (i32.const 0) (i32.const 0))))', mismatchError("i32", "f64"));
-    wasmFailValidateText('(module (memory 1) (func (f64.store offset=0 (i32.const 0) (f32.const 0))))', mismatchError("f32", "f64"));
+    assertErrorMessage(() => wasmEvalText('(module (memory 1) (func (f64.store offset=0 (i32.const 0) (i32.const 0))))'), TypeError, mismatchError("i32", "f64"));
+    assertErrorMessage(() => wasmEvalText('(module (memory 1) (func (f64.store offset=0 (i32.const 0) (f32.const 0))))'), TypeError, mismatchError("f32", "f64"));
 
-    wasmFailValidateText('(module (memory 1) (func (f32.store offset=0 (i32.const 0) (i32.const 0))))', mismatchError("i32", "f32"));
-    wasmFailValidateText('(module (memory 1) (func (f32.store offset=0 (i32.const 0) (f64.const 0))))', mismatchError("f64", "f32"));
+    assertErrorMessage(() => wasmEvalText('(module (memory 1) (func (f32.store offset=0 (i32.const 0) (i32.const 0))))'), TypeError, mismatchError("i32", "f32"));
+    assertErrorMessage(() => wasmEvalText('(module (memory 1) (func (f32.store offset=0 (i32.const 0) (f64.const 0))))'), TypeError, mismatchError("f64", "f32"));
 
-    wasmFailValidateText('(module (memory 1) (func (i32.store offset=0 (i32.const 0) (f32.const 0))))', mismatchError("f32", "i32"));
-    wasmFailValidateText('(module (memory 1) (func (i32.store offset=0 (i32.const 0) (f64.const 0))))', mismatchError("f64", "i32"));
+    assertErrorMessage(() => wasmEvalText('(module (memory 1) (func (i32.store offset=0 (i32.const 0) (f32.const 0))))'), TypeError, mismatchError("f32", "i32"));
+    assertErrorMessage(() => wasmEvalText('(module (memory 1) (func (i32.store offset=0 (i32.const 0) (f64.const 0))))'), TypeError, mismatchError("f64", "i32"));
 
     wasmEvalText('(module (memory 0 65535))')
-    wasmFailValidateText('(module (memory 0 65536))', /maximum memory size too big/);
+    assertErrorMessage(() => wasmEvalText('(module (memory 0 65536))'), TypeError, /maximum memory size too big/);
 
     // Test high charge of registers
     function testRegisters() {
