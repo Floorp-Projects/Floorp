@@ -13,7 +13,7 @@ function assertSameBitPattern(from, to, offset) {
 f32[0] = NaN;
 f32[0] = f32[0]; // Force canonicalization.
 
-f32[1] = wasmEvalText('(module (func (result f32) (f32.const nan:0x123456)) (export "" 0))')();
+f32[1] = wasmEvalText('(module (func (result f32) (f32.const nan:0x123456)) (export "" 0))').exports[""]();
 assertSameBitPattern(0, 4, 4);
 
 var checkBitPatterns = {
@@ -29,14 +29,14 @@ var checkBitPatterns = {
     }
 }
 
-wasmEvalText('(module (import "" "float32" (param f32)) (func (call_import 0 (f32.const nan:0x123456))) (export "" 0))', checkBitPatterns)();
+wasmEvalText('(module (import "" "float32" (param f32)) (func (call_import 0 (f32.const nan:0x123456))) (export "" 0))', checkBitPatterns).exports[""]();
 
 f64[0] = NaN;
 f64[0] = f64[0]; // Force canonicalization.
-f64[1] = wasmEvalText('(module (func (result f64) (f64.const nan:0x123456)) (export "" 0))')();
+f64[1] = wasmEvalText('(module (func (result f64) (f64.const nan:0x123456)) (export "" 0))').exports[""]();
 assertSameBitPattern(0, 8, 8);
 
-wasmEvalText('(module (import "" "float64" (param f64)) (func (call_import 0 (f64.const nan:0x123456))) (export "" 0))', checkBitPatterns)();
+wasmEvalText('(module (import "" "float64" (param f64)) (func (call_import 0 (f64.const nan:0x123456))) (export "" 0))', checkBitPatterns).exports[""]();
 
 // Enable test mode.
 setJitCompilerOption('wasm.test-mode', 1);
@@ -53,11 +53,11 @@ setJitCompilerOption('wasm.test-mode', 1);
 var f32_nan_base = 0x7f800000;
 
 var f32_snan_code = '(f32.const nan:0x200000)';
-var f32_snan = wasmEvalText(`(module (func (result f32) ${f32_snan_code}) (export "" 0))`)();
+var f32_snan = wasmEvalText(`(module (func (result f32) ${f32_snan_code}) (export "" 0))`).exports[""]();
 assertEqNaN(f32_snan, { nan_low: f32_nan_base | 0x200000 });
 
 var f32_qnan_code = '(f32.const nan:0x600000)';
-var f32_qnan = wasmEvalText(`(module (func (result f32) ${f32_qnan_code}) (export "" 0))`)();
+var f32_qnan = wasmEvalText(`(module (func (result f32) ${f32_qnan_code}) (export "" 0))`).exports[""]();
 assertEqNaN(f32_qnan, { nan_low: f32_nan_base | 0x600000 });
 
 // A float64 has 64 bits, 1 for the sign, 11 for the exponent, the rest for the
@@ -65,22 +65,22 @@ assertEqNaN(f32_qnan, { nan_low: f32_nan_base | 0x600000 });
 var f64_nan_base_high = 0x7ff00000;
 
 var f64_snan_code = '(f64.const nan:0x4000000000000)';
-var f64_snan = wasmEvalText(`(module (func (result f64) ${f64_snan_code}) (export "" 0))`)();
+var f64_snan = wasmEvalText(`(module (func (result f64) ${f64_snan_code}) (export "" 0))`).exports[""]();
 assertEqNaN(f64_snan, { nan_low: 0x0, nan_high: f64_nan_base_high | 0x40000 });
 
 var f64_qnan_code = '(f64.const nan:0xc000000000000)';
-var f64_qnan = wasmEvalText(`(module (func (result f64) ${f64_qnan_code}) (export "" 0))`)();
+var f64_qnan = wasmEvalText(`(module (func (result f64) ${f64_qnan_code}) (export "" 0))`).exports[""]();
 assertEqNaN(f64_qnan, { nan_low: 0x0, nan_high: f64_nan_base_high | 0xc0000 });
 
 // Actual tests.
 
 // An example where a signaling nan gets transformed into a quiet nan:
 // snan + 0.0 = qnan
-var nan = wasmEvalText(`(module (func (result f32) (f32.add ${f32_snan_code} (f32.const 0))) (export "" 0))`)();
+var nan = wasmEvalText(`(module (func (result f32) (f32.add ${f32_snan_code} (f32.const 0))) (export "" 0))`).exports[""]();
 assertEqNaN(nan, f32_qnan);
 
 // Globals.
-var m = evalText(`(module
+var m = wasmEvalText(`(module
     (import "globals" "x" (global f32 immutable))
     (func (result f32) (get_global 0))
     (export "global" global 0)
@@ -90,7 +90,7 @@ var m = evalText(`(module
 assertEqNaN(m.test(), f32_snan);
 assertEqNaN(m.global, f32_snan);
 
-var m = evalText(`(module
+var m = wasmEvalText(`(module
     (import "globals" "x" (global f64 immutable))
     (func (result f64) (get_global 0))
     (export "global" global 0)
@@ -109,7 +109,7 @@ function getConstant(code) {
         return constantCache.get(code);
     }
     let type = code.indexOf('f32') >= 0 ? 'f32' : 'f64';
-    let val = wasmEvalText(`(module (func (result ${type}) ${code}) (export "" 0))`)();
+    let val = wasmEvalText(`(module (func (result ${type}) ${code}) (export "" 0))`).exports[""]();
     constantCache.set(code, val);
     return val;
 }
@@ -123,10 +123,10 @@ function test(type, opcode, snan_code, rhs_code, qnan_val) {
     // - (constant, variable),
     // - (variable, constant),
     // - (variable, variable)
-    assertEqNaN(wasmEvalText(`(module (func (result ${type}) (${type}.${opcode} ${snan_code} ${rhs_code})) (export "" 0))`)(), qnan_val);
-    assertEqNaN(wasmEvalText(`(module (func (param ${type}) (result ${type}) (${type}.${opcode} (get_local 0) ${rhs_code})) (export "" 0))`)(snan_val), qnan_val);
-    assertEqNaN(wasmEvalText(`(module (func (param ${type}) (result ${type}) (${type}.${opcode} ${snan_code} (get_local 0))) (export "" 0))`)(rhs), qnan_val);
-    assertEqNaN(wasmEvalText(`(module (func (param ${type}) (param ${type}) (result ${type}) (${type}.${opcode} (get_local 0) (get_local 1))) (export "" 0))`)(snan_val, rhs), qnan_val);
+    assertEqNaN(wasmEvalText(`(module (func (result ${type}) (${type}.${opcode} ${snan_code} ${rhs_code})) (export "" 0))`).exports[""](), qnan_val);
+    assertEqNaN(wasmEvalText(`(module (func (param ${type}) (result ${type}) (${type}.${opcode} (get_local 0) ${rhs_code})) (export "" 0))`).exports[""](snan_val), qnan_val);
+    assertEqNaN(wasmEvalText(`(module (func (param ${type}) (result ${type}) (${type}.${opcode} ${snan_code} (get_local 0))) (export "" 0))`).exports[""](rhs), qnan_val);
+    assertEqNaN(wasmEvalText(`(module (func (param ${type}) (param ${type}) (result ${type}) (${type}.${opcode} (get_local 0) (get_local 1))) (export "" 0))`).exports[""](snan_val, rhs), qnan_val);
 }
 
 var f32_zero = '(f32.const 0)';
