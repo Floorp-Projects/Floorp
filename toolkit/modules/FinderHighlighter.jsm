@@ -233,11 +233,11 @@ FinderHighlighter.prototype = {
     this._found = true;
   },
 
-  onIteratorReset() {},
-
-  onIteratorRestart() {
+  onIteratorReset() {
     this.clear(this.finder._getWindow());
   },
+
+  onIteratorRestart() {},
 
   onIteratorStart(params) {
     let window = this.finder._getWindow();
@@ -511,9 +511,8 @@ FinderHighlighter.prototype = {
   onHighlightAllChange(highlightAll) {
     this._highlightAll = highlightAll;
     if (!highlightAll) {
-      let window = this.finder._getWindow();
-      this.clear(window);
-      this._scheduleRepaintOfMask(window);
+      this.clear();
+      this._scheduleRepaintOfMask(this.finder._getWindow());
     }
   },
 
