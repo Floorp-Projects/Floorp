@@ -1,16 +1,16 @@
 config = {
     "nightly_build": False,
     "branch": "try",
-    "en_us_binary_url": "http://archive.mozilla.org/pub/firefox/nightly/latest-mozilla-central",
+    "en_us_binary_url": "http://archive.mozilla.org/pub/firefox/nightly/latest-mozilla-aurora",
     "update_channel": "nightly",
-    "latest_mar_dir": '/pub/firefox/nightly/latest-mozilla-central-l10n',
+    "latest_mar_dir": '/pub/firefox/nightly/latest-mozilla-aurora-l10n',
     "update_gecko_source_to_enUS": False,
 
     # l10n
-    "hg_l10n_base": "https://hg.mozilla.org/l10n-central",
+    "hg_l10n_base": "https://hg.mozilla.org/releases/l10n/mozilla-aurora",
 
     # mar
-    "mar_tools_url": "http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla-central/mar-tools/%(platform)s",
+    "mar_tools_url": "http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla-aurora/mar-tools/%(platform)s",
 
     # repositories
     "mozilla_dir": "try",
@@ -24,7 +24,7 @@ config = {
         "repo": "https://hg.mozilla.org/try",
         "revision": "%(revision)s",
         "dest": "try",
-        "clone_upstream_url": "https://hg.mozilla.org/mozilla-central",
+        "clone_upstream_url": "https://hg.mozilla.org/releases/mozilla-aurora",
         "clone_by_revision": True,
         "clone_with_purge": True,
     }],
