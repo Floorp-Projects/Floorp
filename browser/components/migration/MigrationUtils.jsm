@@ -25,6 +25,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
                                   "resource://gre/modules/PromiseUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
                                   "resource://gre/modules/TelemetryStopwatch.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "WindowsRegistry",
+                                  "resource://gre/modules/WindowsRegistry.jsm");
 
 var gMigrators = null;
 var gProfileStartup = null;
@@ -603,17 +605,39 @@ this.MigrationUtils = Object.freeze({
     };
 
     let browserDesc = "";
+    let key = "";
     try {
       let browserDesc =
         Cc["@mozilla.org/uriloader/external-protocol-service;1"].
         getService(Ci.nsIExternalProtocolService).
         getApplicationDescription("http");
-      return APP_DESC_TO_KEY[browserDesc] || "";
+      key = APP_DESC_TO_KEY[browserDesc] || "";
     }
     catch (ex) {
       Cu.reportError("Could not detect default browser: " + ex);
     }
-    return "";
+
+    // "firefox" is the least useful entry here, and might just be because we've set
+    // ourselves as the default (on Windows 7 and below). In that case, check if we
+    // have a registry key that tells us where to go:
+    if (key == "firefox" && AppConstants.isPlatformAndVersionAtMost("win", "6.2")) {
+      const kRegPath = "Software\\Mozilla\\Firefox";
+      let oldDefault = WindowsRegistry.readRegKey(
+          Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER, kRegPath, "OldDefaultBrowserCommand");
+      if (oldDefault) {
+        // Remove the key:
+        WindowsRegistry.removeRegKey(
+          Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER, kRegPath, "OldDefaultBrowserCommand");
+        try {
+          let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFileWin);
+          file.initWithCommandLine(oldDefault);
+          key = APP_DESC_TO_KEY[file.getVersionInfoField("FileDescription")] || key;
+        } catch (ex) {
+          Cu.reportError("Could not convert old default browser value to description.");
+        }
+      }
+    }
+    return key;
   },
 
   // Whether or not we're in the process of startup migration
