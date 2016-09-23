@@ -187,8 +187,12 @@ private:
    * |aTransformedSubtreeRoot|.
    * |aClipPartsCache| optionally maps layers to separate fixed and scrolled
    * clips, so we can only adjust the fixed portion.
+   * This function has a recursive implementation; aStartTraversalAt specifies
+   * where to start the current recursion of the traversal. For the initial
+   * call, it should be the same as aTrasnformedSubtreeRoot.
    */
   void AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoot,
+                                 Layer* aStartTraversalAt,
                                  FrameMetrics::ViewID aTransformScrollId,
                                  const LayerToParentLayerMatrix4x4& aPreviousTransformForRoot,
                                  const LayerToParentLayerMatrix4x4& aCurrentTransformForRoot,
