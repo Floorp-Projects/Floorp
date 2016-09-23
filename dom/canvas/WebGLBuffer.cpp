@@ -17,23 +17,30 @@ WebGLBuffer::WebGLBuffer(WebGLContext* webgl, GLuint buf)
     , mGLName(buf)
     , mContent(Kind::Undefined)
     , mByteLength(0)
+    , mNumActiveTFOs(0)
+    , mBoundForTF(false)
 {
     mContext->mBuffers.insertBack(this);
 }
 
 WebGLBuffer::~WebGLBuffer()
 {
+    MOZ_ASSERT(!mNumActiveTFOs);
     DeleteOnce();
 }
 
 void
-WebGLBuffer::BindTo(GLenum target)
+WebGLBuffer::SetContentAfterBind(GLenum target)
 {
+    if (mContent != Kind::Undefined)
+        return;
+
     switch (target) {
     case LOCAL_GL_ELEMENT_ARRAY_BUFFER:
         mContent = Kind::ElementArray;
-        if (!mCache)
-            mCache = new WebGLElementArrayCache;
+        if (!mCache) {
+            mCache.reset(new WebGLElementArrayCache);
+        }
         break;
 
     case LOCAL_GL_ARRAY_BUFFER:
@@ -41,14 +48,9 @@ WebGLBuffer::BindTo(GLenum target)
     case LOCAL_GL_PIXEL_UNPACK_BUFFER:
     case LOCAL_GL_UNIFORM_BUFFER:
     case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER:
-        mContent = Kind::OtherData;
-        break;
-
     case LOCAL_GL_COPY_READ_BUFFER:
     case LOCAL_GL_COPY_WRITE_BUFFER:
-        if (mContent == Kind::Undefined) {
-          mContent = Kind::OtherData;
-        }
+        mContent = Kind::OtherData;
         break;
 
     default:
@@ -65,6 +67,90 @@ WebGLBuffer::Delete()
     mCache = nullptr;
     LinkedListElement<WebGLBuffer>::remove(); // remove from mContext->mBuffers
 }
+
+////////////////////////////////////////
+
+static bool
+ValidateBufferUsageEnum(WebGLContext* webgl, const char* funcName, GLenum usage)
+{
+    switch (usage) {
+    case LOCAL_GL_STREAM_DRAW:
+    case LOCAL_GL_STATIC_DRAW:
+    case LOCAL_GL_DYNAMIC_DRAW:
+        return true;
+
+    case LOCAL_GL_DYNAMIC_COPY:
+    case LOCAL_GL_DYNAMIC_READ:
+    case LOCAL_GL_STATIC_COPY:
+    case LOCAL_GL_STATIC_READ:
+    case LOCAL_GL_STREAM_COPY:
+    case LOCAL_GL_STREAM_READ:
+        if (MOZ_LIKELY(webgl->IsWebGL2()))
+            return true;
+        break;
+
+    default:
+        break;
+    }
+
+    webgl->ErrorInvalidEnum("%s: Invalid `usage`: 0x%04x", funcName, usage);
+    return false;
+}
+
+void
+WebGLBuffer::BufferData(GLenum target, size_t size, const void* data, GLenum usage)
+{
+    const char funcName[] = "bufferData";
+
+    if (!ValidateBufferUsageEnum(mContext, funcName, usage))
+        return;
+
+    if (mNumActiveTFOs) {
+        mContext->ErrorInvalidOperation("%s: Buffer is bound to an active transform"
+                                        " feedback object.",
+                                        funcName);
+        return;
+    }
+
+    const auto& gl = mContext->gl;
+    gl->MakeCurrent();
+    mContext->InvalidateBufferFetching();
+
+#ifdef XP_MACOSX
+    // bug 790879
+    if (gl->WorkAroundDriverBugs() &&
+        size > INT32_MAX)
+    {
+        mContext->ErrorOutOfMemory("%s: Allocation size too large.", funcName);
+        return;
+    }
+#endif
+
+    const bool sizeChanges = (size != ByteLength());
+    if (sizeChanges) {
+        gl::GLContext::LocalErrorScope errorScope(*gl);
+        gl->fBufferData(target, size, data, usage);
+        const auto error = errorScope.GetError();
+
+        if (error) {
+            MOZ_ASSERT(error == LOCAL_GL_OUT_OF_MEMORY);
+            mContext->ErrorOutOfMemory("%s: Error from driver: 0x%04x", funcName, error);
+            return;
+        }
+    } else {
+        gl->fBufferData(target, size, data, usage);
+    }
+
+    mByteLength = size;
+
+    // Warning: Possibly shared memory.  See bug 1225033.
+    if (!ElementArrayCacheBufferData(data, size)) {
+        mByteLength = 0;
+        mContext->ErrorOutOfMemory("%s: Failed update index buffer cache.", funcName);
+    }
+}
+
+////////////////////////////////////////
 
 bool
 WebGLBuffer::ElementArrayCacheBufferData(const void* ptr,
@@ -93,16 +179,77 @@ WebGLBuffer::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 }
 
 bool
-WebGLBuffer::Validate(GLenum type, uint32_t maxAllowed, size_t first,
-                      size_t count, uint32_t* const out_upperBound)
+WebGLBuffer::Validate(GLenum type, uint32_t maxAllowed, size_t first, size_t count) const
 {
-    return mCache->Validate(type, maxAllowed, first, count, out_upperBound);
+    return mCache->Validate(type, maxAllowed, first, count);
 }
 
 bool
 WebGLBuffer::IsElementArrayUsedWithMultipleTypes() const
 {
     return mCache->BeenUsedWithMultipleTypes();
+}
+
+bool
+WebGLBuffer::ValidateCanBindToTarget(const char* funcName, GLenum target)
+{
+    const bool wouldBeTF = (target == LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER);
+    if (mWebGLRefCnt && wouldBeTF != mBoundForTF) {
+        mContext->ErrorInvalidOperation("%s: Buffers cannot be simultaneously bound to "
+                                        " transform feedback and bound elsewhere.",
+                                        funcName);
+        return false;
+    }
+    mBoundForTF = wouldBeTF;
+
+    /* https://www.khronos.org/registry/webgl/specs/latest/2.0/#5.1
+     *
+     * In the WebGL 2 API, buffers have their WebGL buffer type
+     * initially set to undefined. Calling bindBuffer, bindBufferRange
+     * or bindBufferBase with the target argument set to any buffer
+     * binding point except COPY_READ_BUFFER or COPY_WRITE_BUFFER will
+     * then set the WebGL buffer type of the buffer being bound
+     * according to the table above.
+     *
+     * Any call to one of these functions which attempts to bind a
+     * WebGLBuffer that has the element array WebGL buffer type to a
+     * binding point that falls under other data, or bind a
+     * WebGLBuffer which has the other data WebGL buffer type to
+     * ELEMENT_ARRAY_BUFFER will generate an INVALID_OPERATION error,
+     * and the state of the binding point will remain untouched.
+     */
+
+    if (mContent == WebGLBuffer::Kind::Undefined)
+        return true;
+
+    switch (target) {
+    case LOCAL_GL_COPY_READ_BUFFER:
+    case LOCAL_GL_COPY_WRITE_BUFFER:
+        return true;
+
+    case LOCAL_GL_ELEMENT_ARRAY_BUFFER:
+        if (mContent == WebGLBuffer::Kind::ElementArray)
+            return true;
+        break;
+
+    case LOCAL_GL_ARRAY_BUFFER:
+    case LOCAL_GL_PIXEL_PACK_BUFFER:
+    case LOCAL_GL_PIXEL_UNPACK_BUFFER:
+    case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER:
+    case LOCAL_GL_UNIFORM_BUFFER:
+        if (mContent == WebGLBuffer::Kind::OtherData)
+            return true;
+        break;
+
+    default:
+        MOZ_CRASH();
+    }
+
+    const auto dataType = (mContent == WebGLBuffer::Kind::OtherData) ? "other"
+                                                                     : "element";
+    mContext->ErrorInvalidOperation("%s: Buffer already contains %s data.", funcName,
+                                    dataType);
+    return false;
 }
 
 JSObject*

@@ -38,7 +38,7 @@ protected:
   ~SharedRGBImage();
 
 public:
-  virtual TextureClient* GetTextureClient(CompositableClient* aClient) override;
+  virtual TextureClient* GetTextureClient(TextureForwarder* aForwarder) override;
 
   virtual uint8_t* GetBuffer() override;
 

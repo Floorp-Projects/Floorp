@@ -330,20 +330,20 @@ class FunctionCompiler
         return constant;
     }
 
-    MDefinition* constant(float f)
+    MDefinition* constant(RawF32 f)
     {
         if (inDeadCode())
             return nullptr;
-        MConstant* constant = MConstant::NewRawFloat32(alloc(), f);
+        MConstant* constant = MConstant::New(alloc(), f);
         curBlock_->add(constant);
         return constant;
     }
 
-    MDefinition* constant(double d)
+    MDefinition* constant(RawF64 d)
     {
         if (inDeadCode())
             return nullptr;
-        MConstant* constant = MConstant::NewRawDouble(alloc(), d);
+        MConstant* constant = MConstant::New(alloc(), d);
         curBlock_->add(constant);
         return constant;
     }
@@ -2027,10 +2027,10 @@ EmitGetGlobal(FunctionCompiler& f)
         result = f.constant(int64_t(value.i64()));
         break;
       case ValType::F32:
-        result = f.constant(Float32Value(value.f32()), mirType);
+        result = f.constant(value.f32());
         break;
       case ValType::F64:
-        result = f.constant(DoubleValue(value.f64()), mirType);
+        result = f.constant(value.f64());
         break;
       case ValType::I8x16:
         result = f.constant(SimdConstant::CreateX16(value.i8x16()), mirType);
@@ -3268,7 +3268,7 @@ EmitExpr(FunctionCompiler& f)
 
       // F32
       case Expr::F32Const: {
-        float f32;
+        RawF32 f32;
         if (!f.iter().readF32Const(&f32))
             return false;
 
@@ -3324,7 +3324,7 @@ EmitExpr(FunctionCompiler& f)
 
       // F64
       case Expr::F64Const: {
-        double f64;
+        RawF64 f64;
         if (!f.iter().readF64Const(&f64))
             return false;
 

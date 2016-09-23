@@ -810,7 +810,7 @@ InvalidateScriptsInZone(JSContext* cx, Zone* zone, const Vector<DebugModeOSREntr
         // cancel off-thread Ion compiles, only those with existing IonScripts
         // would be cancelled.
         if (script->hasBaselineScript())
-            CancelOffThreadIonCompile(script->compartment(), script);
+            CancelOffThreadIonCompile(script);
     }
 
     // No need to cancel off-thread Ion compiles again, we already did it

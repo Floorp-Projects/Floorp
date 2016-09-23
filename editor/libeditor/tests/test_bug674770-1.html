@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=674770
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
-  SpecialPowers.pushPrefEnv({"set":[["middlemouse.paste", true]]}, startTests);
+  SpecialPowers.pushPrefEnv({"set":[["middlemouse.paste", true], ["dom.ipc.processCount", 1]]}, startTests);
 });
 
 function startTests() {
@@ -42,11 +42,17 @@ function startTests() {
     currentTest = tests.shift();
     if (!currentTest) {
       SimpleTest.finish();
+<<<<<<< local
       return;
     }
     ok(true, currentTest.description + "Starting to test...");
     synthesizeMouseAtCenter(currentTest.target(), { button: 1 });
   }
+=======
+    }, 500);
+  }, 500);
+}
+>>>>>>> other
 
   addEventListener("storage", function(e) {
     is(e.key, "clicked", currentTest.description + "Key should always be 'clicked'");

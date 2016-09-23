@@ -64,6 +64,10 @@ public:
                                       std::string* const out_userName) const;
 
     void EnumerateFragOutputs(std::map<nsCString, const nsCString> &out_FragOutputs) const;
+
+    bool ValidateTransformFeedback(const std::vector<nsString>& userNames,
+                                   uint32_t maxComponents, nsCString* const out_errorText,
+                                   std::vector<std::string>* const out_mappedNames);
 };
 
 } // namespace webgl

@@ -6133,9 +6133,16 @@ nsGridContainerFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame)
   // Note that kPrincipalList doesn't mean aOldFrame must be on that list.
   // It can also be on kOverflowList, in which case it might be a pushed
   // item, and if it's the only pushed item our DID_PUSH_ITEMS bit will lie.
-  mDidPushItemsBitMayLie = mDidPushItemsBitMayLie ||
-                           (aListID == kPrincipalList &&
-                            !aOldFrame->GetPrevInFlow());
+  if (aListID == kPrincipalList && !aOldFrame->GetPrevInFlow()) {
+    // Since the bit may lie, set the mDidPushItemsBitMayLie value to true for
+    // ourself and for all our contiguous previous-in-flow nsGridContainerFrames.
+    nsGridContainerFrame* frameThatMayLie = this;
+    do {
+      frameThatMayLie->mDidPushItemsBitMayLie = true;
+      frameThatMayLie = static_cast<nsGridContainerFrame*>(
+        frameThatMayLie->GetPrevInFlow());
+    } while (frameThatMayLie);
+  }
 #endif
 
   nsContainerFrame::RemoveFrame(aListID, aOldFrame);

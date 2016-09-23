@@ -11,6 +11,8 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
 
+import org.mozilla.gecko.R;
+
 public class NotificationService extends Service {
     private final IBinder mBinder = new NotificationBinder();
     private NotificationHandler mHandler;
@@ -21,13 +23,13 @@ public class NotificationService extends Service {
         // access the NotificationManager service.
         mHandler = new NotificationHandler(this) {
             @Override
-            protected void setForegroundNotification(int id, Notification notification) {
-                super.setForegroundNotification(id, notification);
+            protected void setForegroundNotification(String name, Notification notification) {
+                super.setForegroundNotification(name, notification);
 
                 if (notification == null) {
                     stopForeground(true);
                 } else {
-                    startForeground(id, notification);
+                    startForeground(R.id.foregroundNotification, notification);
                 }
             }
         };

@@ -35,6 +35,13 @@ function checkOriginAttributes(prin, attrs, suffix) {
   }
 }
 
+function checkSandboxOriginAttributes(arr, attrs, options) {
+  options = options || {};
+  var sandbox = Cu.Sandbox(arr, options);
+  checkOriginAttributes(Cu.getObjectPrincipal(sandbox), attrs,
+                        ChromeUtils.originAttributesToSuffix(attrs));
+}
+
 // utility function useful for debugging
 function printAttrs(name, attrs) {
   do_print(name + " {\n" +
@@ -80,7 +87,7 @@ function run_test() {
   var ipv6NPPrin = ssm.createCodebasePrincipal(makeURI('https://[2001:db8::ff00:42:8329]'), {});
   do_check_eq(ipv6NPPrin.origin, 'https://[2001:db8::ff00:42:8329]');
   checkOriginAttributes(ipv6NPPrin);
-  var ep = ssm.createExpandedPrincipal([exampleCom, nullPrin, exampleOrg]);
+  var ep = Cu.getObjectPrincipal(Cu.Sandbox([exampleCom, nullPrin, exampleOrg]));
   checkOriginAttributes(ep);
   checkCrossOrigin(exampleCom, exampleOrg);
   checkCrossOrigin(exampleOrg, nullPrin);
@@ -177,6 +184,30 @@ function run_test() {
   // Just signedPkg (but different value from 'exampleOrg_signedPkg_app')
   var exampleOrg_signedPkg_another = ssm.createCodebasePrincipal(makeURI('http://example.org'), {signedPkg: 'whatup'});
 
+  checkSandboxOriginAttributes(null, {});
+  checkSandboxOriginAttributes('http://example.org', {});
+  checkSandboxOriginAttributes('http://example.org', {}, {originAttributes: {}});
+  checkSandboxOriginAttributes('http://example.org', {appId: 42}, {originAttributes: {appId: 42}});
+  checkSandboxOriginAttributes(['http://example.org'], {});
+  checkSandboxOriginAttributes(['http://example.org'], {}, {originAttributes: {}});
+  checkSandboxOriginAttributes(['http://example.org'], {appId: 42}, {originAttributes: {appId: 42}});
+  checkSandboxOriginAttributes([exampleOrg_signedPkg, 'http://example.org'], {signedPkg: 'whatever'});
+  checkSandboxOriginAttributes(['http://example.org', exampleOrg_signedPkg], {signedPkg: 'whatever'});
+  checkSandboxOriginAttributes(['http://example.org', exampleOrg_app, exampleOrg_signedPkg], {signedPkg: 'whatever'}, {originAttributes: {signedPkg: 'whatever'}});
+  checkSandboxOriginAttributes(['http://example.org', exampleOrg_signedPkg, exampleOrg_app], {signedPkg: 'whatever'}, {originAttributes: {signedPkg: 'whatever'}});
+  checkSandboxOriginAttributes([exampleOrg_app, exampleOrg_signedPkg, 'http://example.org'], {signedPkg: 'whatever'}, {originAttributes: {signedPkg: 'whatever'}});
+  checkSandboxOriginAttributes([exampleOrg_app, 'http://example.org', exampleOrg_signedPkg], {signedPkg: 'whatever'}, {originAttributes: {signedPkg: 'whatever'}});
+  checkSandboxOriginAttributes([exampleOrg_signedPkg, exampleOrg_app, 'http://example.org'], {signedPkg: 'whatever'}, {originAttributes: {signedPkg: 'whatever'}});
+  checkSandboxOriginAttributes([exampleOrg_signedPkg, 'http://example.org', exampleOrg_app], {signedPkg: 'whatever'}, {originAttributes: {signedPkg: 'whatever'}});
+  checkThrows(() => Cu.Sandbox([exampleOrg_app, exampleOrg_signedPkg]));
+  checkThrows(() => Cu.Sandbox([exampleOrg_signedPkg, exampleOrg_app]));
+  checkThrows(() => Cu.Sandbox(['http://example.org', exampleOrg_app, exampleOrg_signedPkg]));
+  checkThrows(() => Cu.Sandbox(['http://example.org', exampleOrg_signedPkg, exampleOrg_app]));
+  checkThrows(() => Cu.Sandbox([exampleOrg_app, exampleOrg_signedPkg, 'http://example.org']));
+  checkThrows(() => Cu.Sandbox([exampleOrg_app, 'http://example.org', exampleOrg_signedPkg]));
+  checkThrows(() => Cu.Sandbox([exampleOrg_signedPkg, exampleOrg_app, 'http://example.org']));
+  checkThrows(() => Cu.Sandbox([exampleOrg_signedPkg, 'http://example.org', exampleOrg_app]));
+
   // Check that all of the above are cross-origin.
   checkCrossOrigin(exampleOrg_app, exampleOrg);
   checkCrossOrigin(exampleOrg_app, nullPrin_app);
@@ -204,7 +235,7 @@ function run_test() {
   }
   checkKind(ssm.createNullPrincipal({}), 'nullPrincipal');
   checkKind(ssm.createCodebasePrincipal(makeURI('http://www.example.com'), {}), 'codebasePrincipal');
-  checkKind(ssm.createExpandedPrincipal([ssm.createCodebasePrincipal(makeURI('http://www.example.com'), {})]), 'expandedPrincipal');
+  checkKind(Cu.getObjectPrincipal(Cu.Sandbox([ssm.createCodebasePrincipal(makeURI('http://www.example.com'), {})])), 'expandedPrincipal');
   checkKind(ssm.getSystemPrincipal(), 'systemPrincipal');
 
   //

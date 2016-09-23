@@ -166,7 +166,7 @@ TestDataStructuresParent::RecvTest7_0(const ActorWrapper& i1,
     o1->actorParent() = mKids[0];
     // malicious behavior
     o1->actorChild() =
-        reinterpret_cast<PTestDataStructuresSubChild*>(0xdeadbeef);
+        reinterpret_cast<PTestDataStructuresSubChild*>(uintptr_t(0xdeadbeef));
     return true;
 }
 

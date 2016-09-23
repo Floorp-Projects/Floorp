@@ -84,8 +84,8 @@ AndroidAlerts::ShowPersistentNotification(const nsAString& aPersistentData,
         sAlertInfoMap->Put(name, new AlertInfo{aAlertListener, cookie});
     }
 
-    java::GeckoAppShell::ShowAlertNotification(
-            imageUrl, title, text, cookie, name, host,
+    java::GeckoAppShell::ShowNotification(
+            name, cookie, title, text, host, imageUrl,
             !aPersistentData.IsEmpty() ? jni::StringParam(aPersistentData)
                                        : jni::StringParam(nullptr));
     return NS_OK;

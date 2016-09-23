@@ -83,6 +83,25 @@ function startTest(test, token)
       onsessioncreated: function(session) {
         sessions.push(session);
         session.addEventListener("keystatuseschange", KeysChangeFunc(session, test.keys, token), false);
+
+        session.numKeystatuseschangeEvents = 0;
+        session.numOnkeystatuseschangeEvents = 0;
+
+        session.addEventListener("keystatuseschange", function() {
+          session.numKeystatuseschangeEvents += 1;
+        });
+        session.onkeystatuseschange = function() {
+          session.numOnkeystatuseschangeEvents += 1;
+        };
+
+        session.numMessageEvents = 0;
+        session.numOnMessageEvents = 0;
+        session.addEventListener("message", function() {
+          session.numMessageEvents += 1;
+        });
+        session.onmessage = function() {
+          session.numOnMessageEvents += 1;
+        };
       }
     }
   );
@@ -129,6 +148,13 @@ function startTest(test, token)
         Log(token, "session[" + session.sessionId + "] key " + kid + " = " + (session.keyIdsReceived[kid] ? "true" : "false"));
         if (session.keyIdsReceived[kid]) { keyIdsReceived[kid] = true; }
       }
+      ok(session.numKeystatuseschangeEvents > 0, TimeStamp(token) + " should get key status changes");
+      is(session.numKeystatuseschangeEvents, session.numOnkeystatuseschangeEvents,
+         TimeStamp(token) + " should have as many keystatuseschange event listener calls as event handler calls.");
+
+      ok(session.numMessageEvents > 0, TimeStamp(token) + " should get message events");
+      is(session.numMessageEvents, session.numOnMessageEvents,
+         TimeStamp(token) + " should have as many message event listener calls as event handler calls.");
     }
     for (var kid in keyIdsReceived) {
       ok(keyIdsReceived[kid], TimeStamp(token) + " key with id " + kid + " was usable as expected");
