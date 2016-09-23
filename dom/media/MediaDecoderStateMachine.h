@@ -247,9 +247,6 @@ public:
   MediaEventSource<MediaResult>&
   OnPlaybackErrorEvent() { return mOnPlaybackErrorEvent; }
 
-  MediaEventSource<DecoderDoctorEvent>&
-  OnDecoderDoctorEvent() { return mOnDecoderDoctorEvent; }
-
   size_t SizeOfVideoQueue() const;
 
   size_t SizeOfAudioQueue() const;
@@ -556,7 +553,7 @@ private:
   void OnMediaSinkVideoComplete();
 
   // Rejected by the MediaSink to signal errors for audio/video.
-  void OnMediaSinkAudioError(nsresult aResult);
+  void OnMediaSinkAudioError();
   void OnMediaSinkVideoError();
 
   // Return true if the video decoder's decode speed can not catch up the
@@ -858,8 +855,6 @@ private:
 
   MediaEventProducer<MediaEventType> mOnPlaybackEvent;
   MediaEventProducer<MediaResult> mOnPlaybackErrorEvent;
-
-  MediaEventProducer<DecoderDoctorEvent> mOnDecoderDoctorEvent;
 
   // True if audio is offloading.
   // Playback will not start when audio is offloading.
