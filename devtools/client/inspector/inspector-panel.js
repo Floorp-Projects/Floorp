@@ -96,6 +96,7 @@ function InspectorPanel(iframeWindow, toolbox) {
   this._onBeforeNavigate = this._onBeforeNavigate.bind(this);
   this.onNewRoot = this.onNewRoot.bind(this);
   this._onContextMenu = this._onContextMenu.bind(this);
+  this.onTextBoxContextMenu = this.onTextBoxContextMenu.bind(this);
   this._updateSearchResultsLabel = this._updateSearchResultsLabel.bind(this);
   this.onNewSelection = this.onNewSelection.bind(this);
   this.onBeforeNewSelection = this.onBeforeNewSelection.bind(this);
@@ -926,6 +927,17 @@ InspectorPanel.prototype = {
     });
   },
 
+  /**
+   * This is meant to be called by all the search, filter, inplace text boxes in the
+   * inspector, and just calls through to the toolbox openTextBoxContextMenu helper.
+   * @param {DOMEvent} e
+   */
+  onTextBoxContextMenu: function (e) {
+    e.stopPropagation();
+    e.preventDefault();
+    this.toolbox.openTextBoxContextMenu(e.screenX, e.screenY);
+  },
+
   _openMenu: function ({ target, screenX = 0, screenY = 0 } = { }) {
     let markupContainer = this.markup.getContainer(this.selection.nodeFront);
 
@@ -1273,7 +1285,7 @@ InspectorPanel.prototype = {
     this._markupFrame = doc.createElement("iframe");
     this._markupFrame.setAttribute("flex", "1");
     this._markupFrame.setAttribute("tooltip", "aHTMLTooltip");
-    this._markupFrame.addEventListener("contextmenu", this._onContextMenu, true);
+    this._markupFrame.addEventListener("contextmenu", this._onContextMenu);
 
     // This is needed to enable tooltips inside the iframe document.
     this._markupFrame.addEventListener("load", this._onMarkupFrameLoad, true);
@@ -1302,7 +1314,7 @@ InspectorPanel.prototype = {
 
     if (this._markupFrame) {
       this._markupFrame.removeEventListener("load", this._onMarkupFrameLoad, true);
-      this._markupFrame.removeEventListener("contextmenu", this._onContextMenu, true);
+      this._markupFrame.removeEventListener("contextmenu", this._onContextMenu);
     }
 
     if (this.markup) {

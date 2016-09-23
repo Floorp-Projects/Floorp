@@ -384,7 +384,6 @@ BoxModelView.prototype = {
       start: self => {
         self.elt.parentNode.classList.add("boxmodel-editing");
       },
-
       change: value => {
         if (NUMERIC.test(value)) {
           value += "px";
@@ -404,7 +403,6 @@ BoxModelView.prototype = {
 
         session.setProperties(properties).catch(e => console.error(e));
       },
-
       done: (value, commit) => {
         editor.elt.parentNode.classList.remove("boxmodel-editing");
         if (!commit) {
@@ -413,6 +411,7 @@ BoxModelView.prototype = {
           }, e => console.error(e));
         }
       },
+      contextMenu: this.inspector.onTextBoxContextMenu,
       cssProperties: this._cssProperties
     }, event);
   },

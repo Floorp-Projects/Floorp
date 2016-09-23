@@ -7,7 +7,7 @@ const URL = "data:text/html;charset=utf8,test for textbox context menu";
 
 add_task(function* () {
   let toolbox = yield openNewTabAndToolbox(URL, "inspector");
-  let textboxContextMenu = toolbox.textboxContextMenuPopup;
+  let textboxContextMenu = toolbox.textBoxContextMenuPopup;
 
   emptyClipboard();
 
