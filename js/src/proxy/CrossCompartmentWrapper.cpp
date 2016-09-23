@@ -473,7 +473,6 @@ js::IsCrossCompartmentWrapper(JSObject* obj)
 void
 js::NukeCrossCompartmentWrapper(JSContext* cx, JSObject* wrapper)
 {
-    MOZ_ASSERT(!IsInsideNursery(wrapper));
     MOZ_ASSERT(wrapper->is<CrossCompartmentWrapperObject>());
 
     NotifyGCNukeWrapper(wrapper);
