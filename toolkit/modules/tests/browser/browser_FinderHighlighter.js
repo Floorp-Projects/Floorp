@@ -69,6 +69,7 @@ function promiseTestHighlighterOutput(browser, word, expectedResult, extraTest =
         removeCalls: []
       };
       let lastMaskNode, lastOutlineNode;
+      let rects = [];
 
       // Amount of milliseconds to wait after the last time one of our stubs
       // was called.
@@ -103,16 +104,44 @@ function promiseTestHighlighterOutput(browser, word, expectedResult, extraTest =
           Assert.ok(false, `No mask node found, but expected ${expectedResult.rectCount} rects.`);
         }
 
-        if (lastMaskNode) {
-          Assert.equal(lastMaskNode.getElementsByTagName("div").length,
-            expectedResult.rectCount, `Amount of inserted rects should match for '${word}'.`);
-        }
+        Assert.equal(rects.length, expectedResult.rectCount,
+          `Amount of inserted rects should match for '${word}'.`);
 
         // Allow more specific assertions to be tested in `extraTest`.
         extraTest = eval(extraTest);
-        extraTest(lastMaskNode, lastOutlineNode);
+        extraTest(lastMaskNode, lastOutlineNode, rects);
 
         resolve();
+      }
+
+      function stubAnonymousContentNode(domNode, anonNode) {
+        let originals = [anonNode.setTextContentForElement,
+          anonNode.setAttributeForElement, anonNode.removeAttributeForElement,
+          anonNode.setCutoutRectsForElement];
+        anonNode.setTextContentForElement = (id, text) => {
+          try {
+            (domNode.querySelector("#" + id) || domNode).textContent = text;
+          } catch (ex) {}
+          return originals[0].call(anonNode, id, text);
+        };
+        anonNode.setAttributeForElement = (id, attrName, attrValue) => {
+          try {
+            (domNode.querySelector("#" + id) || domNode).setAttribute(attrName, attrValue);
+          } catch (ex) {}
+          return originals[1].call(anonNode, id, attrName, attrValue);
+        };
+        anonNode.removeAttributeForElement = (id, attrName) => {
+          try {
+            let node = domNode.querySelector("#" + id) || domNode;
+            if (node.hasAttribute(attrName))
+              node.removeAttribute(attrName);
+          } catch (ex) {}
+          return originals[2].call(anonNode, id, attrName);
+        };
+        anonNode.setCutoutRectsForElement = (id, cutoutRects) => {
+          rects = cutoutRects;
+          return originals[3].call(anonNode, id, cutoutRects);
+        };
       }
 
       // Create a function that will stub the original version and collects
@@ -132,7 +161,10 @@ function promiseTestHighlighterOutput(browser, word, expectedResult, extraTest =
           timeout = setTimeout(() => {
             finish();
           }, kTimeoutMs);
-          return stubbed[which].call(content.document, node);
+          let res = stubbed[which].call(content.document, node);
+          if (which == "insert")
+            stubAnonymousContentNode(node, res);
+          return res;
         };
       }
       content.document.insertAnonymousContent = stub("insert");
@@ -154,14 +186,14 @@ add_task(function* testModalResults() {
     ["Roland", {
       rectCount: 1,
       insertCalls: [2, 4],
-      removeCalls: [1, 2]
+      removeCalls: [0, 1]
     }],
     ["their law might propagate their kind", {
       rectCount: 0,
-      insertCalls: [31, 32],
-      removeCalls: [31, 32],
-      extraTest: function(maskNode, outlineNode) {
-        Assert.equal(outlineNode.getElementsByTagName("div").length, 3,
+      insertCalls: [28, 31],
+      removeCalls: [28, 30],
+      extraTest: function(maskNode, outlineNode, rects) {
+        Assert.equal(outlineNode.getElementsByTagName("div").length, 2,
           "There should be multiple rects drawn");
       }
     }],
@@ -173,12 +205,12 @@ add_task(function* testModalResults() {
     ["new", {
       rectCount: 1,
       insertCalls: [1, 4],
-      removeCalls: [1, 3]
+      removeCalls: [0, 2]
     }],
     ["o", {
       rectCount: 491,
-      insertCalls: [3, 7],
-      removeCalls: [3, 6]
+      insertCalls: [1, 4],
+      removeCalls: [0, 2]
     }]
   ]);
   let url = kFixtureBaseURL + "file_FinderSample.html";
@@ -214,7 +246,7 @@ add_task(function* testModalSwitching() {
     let expectedResult = {
       rectCount: 1,
       insertCalls: [2, 4],
-      removeCalls: [1, 2]
+      removeCalls: [0, 1]
     };
     let promise = promiseTestHighlighterOutput(browser, word, expectedResult);
     yield promiseEnterStringIntoFindField(findbar, word);
@@ -249,8 +281,8 @@ add_task(function* testDarkPageDetection() {
     let word = "Roland";
     let expectedResult = {
       rectCount: 1,
-      insertCalls: [2, 4],
-      removeCalls: [1, 2]
+      insertCalls: [1, 3],
+      removeCalls: [0, 1]
     };
     let promise = promiseTestHighlighterOutput(browser, word, expectedResult, function(node) {
       Assert.ok(!node.hasAttribute("brighttext"), "White HTML page shouldn't have 'brighttext' set");
@@ -270,7 +302,7 @@ add_task(function* testDarkPageDetection() {
     let expectedResult = {
       rectCount: 1,
       insertCalls: [2, 4],
-      removeCalls: [1, 2]
+      removeCalls: [0, 1]
     };
 
     yield ContentTask.spawn(browser, null, function* () {
@@ -307,7 +339,7 @@ add_task(function* testHighlightAllToggle() {
     let expectedResult = {
       rectCount: 1,
       insertCalls: [2, 4],
-      removeCalls: [1, 2]
+      removeCalls: [0, 1]
     };
     let promise = promiseTestHighlighterOutput(browser, word, expectedResult);
     yield promiseEnterStringIntoFindField(findbar, word);
@@ -327,8 +359,8 @@ add_task(function* testHighlightAllToggle() {
     // For posterity, let's switch back.
     expectedResult = {
       rectCount: 2,
-      insertCalls: [2, 4],
-      removeCalls: [1, 2]
+      insertCalls: [1, 3],
+      removeCalls: [0, 1]
     };
     promise = promiseTestHighlighterOutput(browser, word, expectedResult);
     yield SpecialPowers.pushPrefEnv({ "set": [[ kHighlightAllPref, true ]] });
@@ -351,7 +383,7 @@ add_task(function* testXMLDocument() {
     let expectedResult = {
       rectCount: 0,
       insertCalls: [1, 4],
-      removeCalls: [1, 2]
+      removeCalls: [0, 1]
     };
     let promise = promiseTestHighlighterOutput(browser, word, expectedResult);
     yield promiseEnterStringIntoFindField(findbar, word);
@@ -373,7 +405,7 @@ add_task(function* testHideOnLocationChange() {
   let expectedResult = {
     rectCount: 1,
     insertCalls: [2, 4],
-    removeCalls: [1, 2]
+    removeCalls: [0, 1]
   };
   let promise = promiseTestHighlighterOutput(browser, word, expectedResult);
   yield promiseEnterStringIntoFindField(findbar, word);
