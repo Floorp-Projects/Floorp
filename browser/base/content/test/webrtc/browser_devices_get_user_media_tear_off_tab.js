@@ -51,10 +51,6 @@ var gTests = [
     gBrowser.selectedBrowser.messageManager.loadFrameScript(CONTENT_SCRIPT_HELPER, true);
     yield BrowserTestUtils.closeWindow(win);
 
-    if ((yield promiseTodoObserverNotCalled("recording-device-events")) == 1) {
-      todo(false, "Got the 'recording-device-events' notification twice, likely because of bug 962719");
-    }
-
     yield expectObserverCalled("recording-window-ended");
     yield expectNoObserverCalled();
     yield checkNotSharing();
