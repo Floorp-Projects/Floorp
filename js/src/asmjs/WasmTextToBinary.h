@@ -28,12 +28,9 @@ namespace wasm {
 // Translate the textual representation of a wasm module (given by a
 // null-terminated char16_t array) into serialized bytes. If there is an error
 // other than out-of-memory an error message string will be stored in 'error'.
-// The 'newFormat' argument is transitional and enables the new binary
-// format for memory and table imports and exports so that tests can be written
-// before the transition is complete.
 
 extern MOZ_MUST_USE bool
-TextToBinary(const char16_t* text, bool newFormat, Bytes* bytes, UniqueChars* error);
+TextToBinary(const char16_t* text, Bytes* bytes, UniqueChars* error);
 
 } // namespace wasm
 } // namespace js

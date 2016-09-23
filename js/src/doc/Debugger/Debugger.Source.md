@@ -46,7 +46,7 @@ instance to represent each presentation, or it may use a single
 For a `Debugger.Source` instance representing the serialized text of a block
 of WebAssembly code, its properties provide the serialized text as a string.
 
-Currently only entire modules evaluated via `Wasm.instantiateModule` are
+Currently only entire modules evaluated via `new WebAssembly.Module` are
 represented. SpiderMonkey constructs exactly one `Debugger.Source` for each
 underlying WebAssembly module per [`Debugger`][debugger-object] instance.
 
@@ -107,7 +107,7 @@ from its prototype:
     return `undefined`.)
 
     **If the instance refers to WebAssembly code**, the URL of the script that
-    called `Wasm.instantiateModule` with the string `"> wasm"` appended.
+    called `new WebAssembly.Module` with the string `"> wasm"` appended.
 
 `sourceMapURL`
 :   **If the instance refers to JavaScript source**, if this source was
