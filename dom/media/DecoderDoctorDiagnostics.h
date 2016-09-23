@@ -13,13 +13,6 @@ class nsIDocument;
 
 namespace mozilla {
 
-struct DecoderDoctorEvent {
-  enum Domain {
-    eAudioSinkStartup,
-  } mDomain;
-  nsresult mResult;
-};
-
 // DecoderDoctorDiagnostics class, used to gather data from PDMs/DecoderTraits,
 // and then notify the user about issues preventing (or worsening) playback.
 //
@@ -53,15 +46,10 @@ public:
                                  bool aIsSupported,
                                  const char* aCallSite);
 
-  void StoreEvent(nsIDocument* aDocument,
-                  const DecoderDoctorEvent& aEvent,
-                  const char* aCallSite);
-
   enum DiagnosticsType {
     eUnsaved,
     eFormatSupportCheck,
-    eMediaKeySystemAccessRequest,
-    eEvent
+    eMediaKeySystemAccessRequest
   };
   DiagnosticsType Type() const { return mDiagnosticsType; }
 
@@ -103,11 +91,6 @@ public:
     return mKeySystemIssue;
   }
 
-  DecoderDoctorEvent event() const
-  {
-    return mEvent;
-  }
-
 private:
   // Currently-known type of diagnostics. Set from one of the 'Store...' methods.
   // This helps ensure diagnostics are only stored once,
@@ -128,8 +111,6 @@ private:
   nsString mKeySystem;
   bool mIsKeySystemSupported = false;
   KeySystemIssue mKeySystemIssue = eUnset;
-
-  DecoderDoctorEvent mEvent;
 };
 
 } // namespace mozilla
