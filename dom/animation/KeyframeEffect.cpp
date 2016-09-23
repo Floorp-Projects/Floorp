@@ -132,7 +132,7 @@ KeyframeEffect::SetIterationComposite(
 {
   // Ignore iterationComposite if the Web Animations API is not enabled,
   // then the default value 'Replace' will be used.
-  if (!AnimationUtils::IsCoreAPIEnabled()) {
+  if (!AnimationUtils::IsCoreAPIEnabledForCaller()) {
     return;
   }
 
