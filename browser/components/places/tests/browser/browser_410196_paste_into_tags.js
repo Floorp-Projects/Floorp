@@ -93,8 +93,7 @@ function focusTag(PlacesOrganizer) {
   let fooTag = tags.getChild(0);
   let tagNode = fooTag;
   PlacesOrganizer._places.selectNode(fooTag);
-  // Bug 1283076: Nightly has a default 'bug' tag already set
-  ok(tagNode.title in {'bug':true, 'foo':true} , "tagNode title is foo/bug");
+  is(tagNode.title, 'foo', "tagNode title is foo");
   let ip = PlacesOrganizer._places.insertionPoint;
   ok(ip.isTag, "IP is a tag");
 }
