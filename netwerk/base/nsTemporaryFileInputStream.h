@@ -9,11 +9,13 @@
 #include "mozilla/Mutex.h"
 #include "nsAutoPtr.h"
 #include "nsIInputStream.h"
+#include "nsIIPCSerializableInputStream.h"
 #include "nsISeekableStream.h"
 #include "prio.h"
 
 class nsTemporaryFileInputStream : public nsIInputStream
                                  , public nsISeekableStream
+                                 , public nsIIPCSerializableInputStream
 {
 public:
   //used to release a PRFileDesc
@@ -42,10 +44,12 @@ public:
   };
 
   nsTemporaryFileInputStream(FileDescOwner* aFileDescOwner, uint64_t aStartPos, uint64_t aEndPos);
+  nsTemporaryFileInputStream();
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTSTREAM
   NS_DECL_NSISEEKABLESTREAM
+  NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
 
 private:
   virtual ~nsTemporaryFileInputStream() { }

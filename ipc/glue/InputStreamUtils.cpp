@@ -93,6 +93,10 @@ DeserializeInputStream(const InputStreamParams& aParams,
       serializable = do_CreateInstance(kPartialFileInputStreamCID);
       break;
 
+    case InputStreamParams::TTemporaryFileInputStreamParams:
+      serializable = new nsTemporaryFileInputStream();
+      break;
+
     case InputStreamParams::TBufferedInputStreamParams:
       serializable = do_CreateInstance(kBufferedInputStreamCID);
       break;
