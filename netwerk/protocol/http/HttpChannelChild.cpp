@@ -1322,7 +1322,7 @@ HttpChannelChild::BeginNonIPCRedirect(nsIURI* responseURI,
     // is a synthesized response that has its own security info, the pre-redirect channel
     // has already received it and it must be propagated to the post-redirect channel.
     nsCOMPtr<nsIHttpChannelChild> channelChild = do_QueryInterface(newChannel);
-    if (channelChild) {
+    if (mSecurityInfo && channelChild) {
       HttpChannelChild* httpChannelChild = static_cast<HttpChannelChild*>(channelChild.get());
       httpChannelChild->OverrideSecurityInfoForNonIPCRedirect(mSecurityInfo);
     }
