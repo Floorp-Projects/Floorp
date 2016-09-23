@@ -567,48 +567,6 @@ function run_pac3_test() {
 }
 
 function run_pac4_test() {
-  var appId = 10;
-  var isInIsolatedMozBrowser = true;
-  var appOrigin = "apps://browser.gaiamobile.com";
-
-  // We have to setup a profile, otherwise indexed db used by webapps
-  // will throw random exception when trying to get profile folder.
-  do_get_profile();
-
-  // We also need a valid nsIXulAppInfo service as Webapps.jsm is querying it.
-  Cu.import("resource://testing-common/AppInfo.jsm");
-  updateAppInfo();
-
-  // Mock getAppByLocalId() to return testing app origin.
-  Cu.import("resource://gre/modules/AppsUtils.jsm");
-  AppsUtils.getAppByLocalId = function(aAppId) {
-    var app = { origin: appOrigin };
-    return app;
-  };
-
-  var pac = 'data:text/plain,' +
-            'function FindProxyForURL(url, host) {' +
-            ' if (myAppId() == ' + appId +
-            ' && isInIsolatedMozBrowser() == ' + isInIsolatedMozBrowser +
-            ' && myAppOrigin() == "' + appOrigin + '")' +
-            '   return "PROXY foopy:8080; DIRECT";' +
-            '}';
-  var channel = NetUtil.newChannel({
-    uri: "http://www.mozilla.org/",
-    loadUsingSystemPrincipal: true
-  });
-  channel.loadInfo.originAttributes = { appId: appId,
-                                        inIsolatedMozBrowser: isInIsolatedMozBrowser
-                                      };
-
-  // Configure PAC
-  prefs.setIntPref("network.proxy.type", 2);
-  prefs.setCharPref("network.proxy.autoconfig_url", pac);
-
-  var req = pps.asyncResolve(channel, 0, new TestResolveCallback("http", run_pac5_test));
-}
-
-function run_pac5_test() {
   // Bug 1251332
   let wRange = [
     ["SUN", "MON", "SAT", "MON"], // for Sun

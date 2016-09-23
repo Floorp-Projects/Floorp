@@ -80,15 +80,6 @@ function listener(event) {
 
 
 var steps = [
-  function waitForWebapps() {
-    // We are using webapps API later in this test and we need to ensure
-    // it is fully initialized before trying to use it
-    let { DOMApplicationRegistry } =  Cu.import('resource://gre/modules/Webapps.jsm', {});
-    DOMApplicationRegistry.registryReady.then(function () {
-      next();
-    });
-  },
-
   function earlyEvents() {
     // Immediately try to send events
     SystemAppProxy._sendCustomEvent("mozChromeEvent", { name: "first" }, true);
