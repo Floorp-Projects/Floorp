@@ -176,17 +176,6 @@ function removeMetadata()
   }
 }
 
-function getSearchMetadata()
-{
-  // Check that search-metadata.json has been created
-  let metadata = gProfD.clone();
-  metadata.append("search-metadata.json");
-  do_check_true(metadata.exists());
-
-  do_print("Parsing metadata");
-  return readJSONFile(metadata);
-}
-
 function promiseCacheData() {
   return new Promise(resolve => Task.spawn(function* () {
     let path = OS.Path.join(OS.Constants.Path.profileDir, CACHE_FILENAME);
