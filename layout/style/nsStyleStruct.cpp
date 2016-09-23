@@ -3565,17 +3565,17 @@ nsStyleContent::nsStyleContent(const nsStyleContent& aSource)
 nsChangeHint
 nsStyleContent::CalcDifference(const nsStyleContent& aNewData) const
 {
-  // In ReResolveStyleContext we assume that if there's no existing
+  // In ElementRestyler::Restyle we assume that if there's no existing
   // ::before or ::after and we don't have to restyle children of the
   // node then we can't end up with a ::before or ::after due to the
   // restyle of the node itself.  That's not quite true, but the only
   // exception to the above is when the 'content' property of the node
   // changes and the pseudo-element inherits the changed value.  Since
   // the code here triggers a frame change on the node in that case,
-  // the optimization in ReResolveStyleContext is ok.  But if we ever
+  // the optimization in ElementRestyler::Restyle is ok.  But if we ever
   // change this code to not reconstruct frames on changes to the
   // 'content' property, then we will need to revisit the optimization
-  // in ReResolveStyleContext.
+  // in ElementRestyler::Restyle.
 
   // Unfortunately we need to reframe even if the content lengths are the same;
   // a simple reflow will not pick up different text or different image URLs,
