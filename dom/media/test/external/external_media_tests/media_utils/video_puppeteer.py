@@ -62,9 +62,9 @@ class VideoPuppeteer(object):
         'var currentTime = video.wrappedJSObject.currentTime;'
         'var duration = video.wrappedJSObject.duration;'
         'var played = video.wrappedJSObject.played;'
-        'var timeRanges = [];'
+        'var playedRanges = [];'
         'for (var i = 0; i < played.length; i++) {'
-        'timeRanges.push([played.start(i), played.end(i)]);'
+        'playedRanges.push([played.start(i), played.end(i)]);'
         '}'
         'var totalFrames = '
         'video.getVideoPlaybackQuality()["totalVideoFrames"];'
@@ -279,23 +279,23 @@ class VideoPuppeteer(object):
         """
         Create an instance of the video_state_info named tuple. This function
         expects a dictionary populated with the following keys: current_time,
-        duration, raw_time_ranges, total_frames, dropped_frames, and
+        duration, raw_played_ranges, total_frames, dropped_frames, and
         corrupted_frames.
 
-        Aside from raw_time_ranges, see `_video_state_named_tuple` for more
-        information on the above keys and values. For raw_time_ranges a
+        Aside from raw_played_ranges, see `_video_state_named_tuple` for more
+        information on the above keys and values. For raw_played_ranges a
         list is expected that can be consumed to make a TimeRanges object.
 
         :return: A named tuple 'video_state_info' derived from arguments and
         state information from the puppeteer.
         """
-        raw_time_ranges = video_state_info_kwargs['raw_time_ranges']
+        raw_played_ranges = video_state_info_kwargs['raw_played_ranges']
         # Remove raw ranges from dict as it is not used in the final named
         # tuple and will provide an unexpected kwarg if kept.
-        del video_state_info_kwargs['raw_time_ranges']
+        del video_state_info_kwargs['raw_played_ranges']
         # Create played ranges
         video_state_info_kwargs['played'] = (
-            TimeRanges(raw_time_ranges[0], raw_time_ranges[1]))
+            TimeRanges(raw_played_ranges[0], raw_played_ranges[1]))
         # Calculate elapsed times
         elapsed_current_time = (video_state_info_kwargs['current_time'] -
                                 self._first_seen_time)
@@ -327,7 +327,7 @@ class VideoPuppeteer(object):
                 'return ['
                 'currentTime,'
                 'duration,'
-                '[played.length, timeRanges],'
+                '[played.length, playedRanges],'
                 'totalFrames,'
                 'droppedFrames,'
                 'corruptedFrames];')
@@ -342,7 +342,7 @@ class VideoPuppeteer(object):
         information, such as lag. This is stored in the last seen state to
         stress that it's based on the snapshot.
         """
-        keys = ['current_time', 'duration', 'raw_time_ranges', 'total_frames',
+        keys = ['current_time', 'duration', 'raw_played_ranges', 'total_frames',
                 'dropped_frames', 'corrupted_frames']
         values = self._execute_video_script(self._fetch_state_script)
         self._last_seen_video_state = (
