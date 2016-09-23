@@ -36,7 +36,10 @@ class GenericPrinter
     // Puts |len| characters from |s| at the current position and return an offset to
     // the beginning of this new data.
     virtual int put(const char* s, size_t len) = 0;
-    virtual int put(const char* s);
+
+    inline int put(const char* s) {
+        return put(s, strlen(s));
+    }
 
     // Prints a formatted string into the buffer.
     virtual int printf(const char* fmt, ...);
@@ -105,8 +108,8 @@ class Sprinter final : public GenericPrinter
 
     // Puts |len| characters from |s| at the current position and return an offset to
     // the beginning of this new data.
-    using GenericPrinter::put;
     virtual int put(const char* s, size_t len) override;
+    using GenericPrinter::put; // pick up |inline int put(const char* s);|
 
     // Prints a formatted string into the buffer.
     virtual int vprintf(const char* fmt, va_list ap) override;
@@ -145,7 +148,7 @@ class Fprinter final : public GenericPrinter
     // Puts |len| characters from |s| at the current position and return an
     // offset to the beginning of this new data.
     virtual int put(const char* s, size_t len) override;
-    virtual int put(const char* s) override;
+    using GenericPrinter::put; // pick up |inline int put(const char* s);|
 
     // Prints a formatted string into the buffer.
     virtual int printf(const char* fmt, ...) override;
@@ -191,7 +194,7 @@ class LSprinter final : public GenericPrinter
     // Puts |len| characters from |s| at the current position and return an
     // offset to the beginning of this new data.
     virtual int put(const char* s, size_t len) override;
-    virtual int put(const char* s) override;
+    using GenericPrinter::put; // pick up |inline int put(const char* s);|
 
     // Prints a formatted string into the buffer.
     virtual int printf(const char* fmt, ...) override;

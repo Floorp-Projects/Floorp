@@ -42,12 +42,6 @@ GenericPrinter::hadOutOfMemory() const
 }
 
 int
-GenericPrinter::put(const char* s)
-{
-    return put(s, strlen(s));
-}
-
-int
 GenericPrinter::printf(const char* fmt, ...)
 {
     va_list va;
@@ -454,12 +448,6 @@ Fprinter::put(const char* s, size_t len)
 }
 
 int
-Fprinter::put(const char* s)
-{
-    return put(s, strlen(s));
-}
-
-int
 Fprinter::printf(const char* fmt, ...)
 {
     MOZ_ASSERT(file_);
@@ -580,12 +568,6 @@ LSprinter::put(const char* s, size_t len)
 
     MOZ_ASSERT(len <= INT_MAX);
     return int(len);
-}
-
-int
-LSprinter::put(const char* s)
-{
-    return put(s, strlen(s));
 }
 
 int
