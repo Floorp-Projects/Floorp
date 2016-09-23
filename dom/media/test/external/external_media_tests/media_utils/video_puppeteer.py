@@ -61,6 +61,11 @@ class VideoPuppeteer(object):
         'var video = arguments[0];'
         'var currentTime = video.wrappedJSObject.currentTime;'
         'var duration = video.wrappedJSObject.duration;'
+        'var buffered = video.wrappedJSObject.buffered;'
+        'var bufferedRanges = [];'
+        'for (var i = 0; i < buffered.length; i++) {'
+        'bufferedRanges.push([buffered.start(i), buffered.end(i)]);'
+        '}'
         'var played = video.wrappedJSObject.played;'
         'var playedRanges = [];'
         'for (var i = 0; i < played.length; i++) {'
@@ -248,6 +253,11 @@ class VideoPuppeteer(object):
 
         current_time: The current time of the wrapped element.
         duration: the duration of the wrapped element.
+        buffered: the buffered ranges of the wrapped element. In its raw form
+        this is as a list where the first element is the length and the second
+        element is a list of 2 item lists, where each two items are a buffered
+        range. Once assigned to the tuple this data should be wrapped in the
+        TimeRanges class.
         played: the played ranges of the wrapped element. In its raw form this
         is as a list where the first element is the length and the second
         element is a list of 2 item lists, where each two items are a played
@@ -267,6 +277,7 @@ class VideoPuppeteer(object):
                           ['current_time',
                            'duration',
                            'remaining_time',
+                           'buffered',
                            'played',
                            'lag',
                            'total_frames',
@@ -289,10 +300,15 @@ class VideoPuppeteer(object):
         :return: A named tuple 'video_state_info' derived from arguments and
         state information from the puppeteer.
         """
+        raw_buffered_ranges = video_state_info_kwargs['raw_buffered_ranges']
         raw_played_ranges = video_state_info_kwargs['raw_played_ranges']
-        # Remove raw ranges from dict as it is not used in the final named
+        # Remove raw ranges from dict as they are not used in the final named
         # tuple and will provide an unexpected kwarg if kept.
+        del video_state_info_kwargs['raw_buffered_ranges']
         del video_state_info_kwargs['raw_played_ranges']
+        # Create buffered ranges
+        video_state_info_kwargs['buffered'] = (
+            TimeRanges(raw_buffered_ranges[0], raw_buffered_ranges[1]))
         # Create played ranges
         video_state_info_kwargs['played'] = (
             TimeRanges(raw_played_ranges[0], raw_played_ranges[1]))
@@ -327,6 +343,7 @@ class VideoPuppeteer(object):
                 'return ['
                 'currentTime,'
                 'duration,'
+                '[buffered.length, bufferedRanges],'
                 '[played.length, playedRanges],'
                 'totalFrames,'
                 'droppedFrames,'
@@ -342,8 +359,9 @@ class VideoPuppeteer(object):
         information, such as lag. This is stored in the last seen state to
         stress that it's based on the snapshot.
         """
-        keys = ['current_time', 'duration', 'raw_played_ranges', 'total_frames',
-                'dropped_frames', 'corrupted_frames']
+        keys = ['current_time', 'duration', 'raw_buffered_ranges',
+                'raw_played_ranges', 'total_frames', 'dropped_frames',
+                'corrupted_frames']
         values = self._execute_video_script(self._fetch_state_script)
         self._last_seen_video_state = (
             self._create_video_state_info(**dict(zip(keys, values))))
