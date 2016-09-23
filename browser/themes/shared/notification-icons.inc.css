@@ -45,30 +45,14 @@
   margin-inline-end: 10px;
 }
 
-.camera-icon,
-.geo-icon,
-.indexedDB-icon,
-.install-icon,
-.login-icon,
-.microphone-icon,
-.plugin-icon,
-.popup-icon,
-.screen-icon,
-.desktop-notification-icon,
-.popup-notification-icon[popupid="geolocation"],
-.popup-notification-icon[popupid="indexedDB-permissions-prompt"],
-.popup-notification-icon[popupid="password"],
-.popup-notification-icon[popupid="webRTC-shareDevices"],
-.popup-notification-icon[popupid="webRTC-shareMicrophone"],
-.popup-notification-icon[popupid="webRTC-shareScreen"],
-.popup-notification-icon[popupid="web-notifications"] {
+.notification-anchor-icon:not(.plugin-blocked):-moz-lwtheme,
+#blocked-permissions-container > .blocked-permission-icon:-moz-lwtheme {
   filter: url(chrome://browser/skin/filters.svg#fill);
   fill: currentColor;
-  opacity: .4;
 }
 
-.notification-anchor-icon:not(.plugin-blocked):hover {
-  opacity: .6;
+.notification-anchor-icon:not(.plugin-blocked):not(:hover) {
+  opacity: .8;
 }
 
 /* INDIVIDUAL NOTIFICATIONS */
@@ -134,12 +118,20 @@
   list-style-image: url(chrome://browser/skin/notification-icons.svg#camera);
 }
 
+.camera-icon.in-use {
+  list-style-image: url(chrome://browser/skin/notification-icons.svg#camera-sharing);
+}
+
 .camera-icon.blocked-permission-icon {
   list-style-image: url(chrome://browser/skin/notification-icons.svg#camera-blocked);
 }
 
 .microphone-icon {
   list-style-image: url(chrome://browser/skin/notification-icons.svg#microphone);
+}
+
+.microphone-icon.in-use {
+  list-style-image: url(chrome://browser/skin/notification-icons.svg#microphone-sharing);
 }
 
 .microphone-icon.blocked-permission-icon {
@@ -153,6 +145,10 @@
 .popup-notification-icon[popupid="webRTC-shareScreen"],
 .screen-icon {
   list-style-image: url(chrome://browser/skin/notification-icons.svg#screen);
+}
+
+.screen-icon.in-use {
+  list-style-image: url(chrome://browser/skin/notification-icons.svg#screen-sharing);
 }
 
 .screen-icon.blocked-permission-icon {
@@ -241,8 +237,6 @@
 
 .plugin-icon.plugin-blocked {
   list-style-image: url(chrome://browser/skin/notification-icons.svg#plugin-blocked);
-  fill: #d92215;
-  opacity: 1;
 }
 
 #notification-popup-box[hidden] {

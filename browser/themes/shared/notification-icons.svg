@@ -4,7 +4,9 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg xmlns="http://www.w3.org/2000/svg"
      xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="fieldtext"
      width="32" height="32" viewBox="0 0 32 32">
+#include icon-colors.inc.svg
   <style>
     use:not(:target) {
       display: none;
@@ -17,6 +19,19 @@
     }
     .blocked {
       clip-path: url(#clip);
+    }
+
+    #plugin-blocked,
+    #plugin-blocked:target ~ #strikeout {
+      fill: #d92215;
+      fill-opacity: 1;
+    }
+
+    #camera-sharing,
+    #microphone-sharing,
+    #screen-sharing {
+      fill: rgb(224, 41, 29);
+      fill-opacity: 1;
     }
   </style>
 
@@ -43,6 +58,7 @@
   </defs>
 
   <use id="camera" xlink:href="#camera-icon" />
+  <use id="camera-sharing" xlink:href="#camera-icon"/>
   <use id="camera-blocked" class="blocked" xlink:href="#camera-icon" />
   <use id="desktop-notification" xlink:href="#desktop-notification-icon" />
   <use id="desktop-notification-blocked" class="blocked" xlink:href="#desktop-notification-icon" />
@@ -59,12 +75,14 @@
   <use id="login" xlink:href="#login-icon" />
   <use id="login-detailed" xlink:href="#login-detailed-icon" />
   <use id="microphone" xlink:href="#microphone-icon" />
+  <use id="microphone-sharing" xlink:href="#microphone-icon"/>
   <use id="microphone-blocked" class="blocked" xlink:href="#microphone-icon" />
   <use id="microphone-detailed" xlink:href="#microphone-detailed-icon" />
   <use id="plugin" xlink:href="#plugin-icon" />
   <use id="plugin-blocked" class="blocked" xlink:href="#plugin-icon" />
   <use id="popup" xlink:href="#popup-icon" />
   <use id="screen" xlink:href="#screen-icon" />
+  <use id="screen-sharing" xlink:href="#screen-icon"/>
   <use id="screen-blocked" class="blocked" xlink:href="#screen-icon" />
 
   <path id="strikeout" d="m 2,28 2,2 26,-26 -2,-2 z"/>
