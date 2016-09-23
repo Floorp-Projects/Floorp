@@ -1308,7 +1308,8 @@ GetPrincipalOrSOP(JSContext* cx, HandleObject from, nsISupports** out)
  * format or actual objects (see GetPrincipalOrSOP)
  */
 static bool
-GetExpandedPrincipal(JSContext* cx, HandleObject arrayObj, nsIExpandedPrincipal** out)
+GetExpandedPrincipal(JSContext* cx, HandleObject arrayObj,
+                     const SandboxOptions& options, nsIExpandedPrincipal** out)
 {
     MOZ_ASSERT(out);
     uint32_t length;
@@ -1326,6 +1327,37 @@ GetExpandedPrincipal(JSContext* cx, HandleObject arrayObj, nsIExpandedPrincipal*
     nsTArray< nsCOMPtr<nsIPrincipal> > allowedDomains(length);
     allowedDomains.SetLength(length);
 
+    // If an originAttributes option has been specified, we will use that as the
+    // OriginAttribute of all of the string arguments passed to this function.
+    // Otherwise, we will use the OriginAttributes of a principal or SOP object
+    // in the array, if any.  If no such object is present, and all we have are
+    // strings, then we will use a default OriginAttribute.
+    // Otherwise, we will use the origin attributes of the passed object(s). If
+    // more than one object is specified, we ensure that the OAs match.
+    Maybe<PrincipalOriginAttributes> attrs;
+    if (options.originAttributes) {
+        attrs.emplace();
+        JS::RootedValue val(cx, JS::ObjectValue(*options.originAttributes));
+        if (!attrs->Init(cx, val)) {
+            // The originAttributes option, if specified, must be valid!
+            JS_ReportError(cx, "Expected a valid OriginAttributes object");
+            return false;
+        }
+    }
+
+    // Now we go over the array in two passes.  In the first pass, we ignore
+    // strings, and only process objects.  Assuming that no originAttributes
+    // option has been passed, if we encounter a principal or SOP object, we
+    // grab its OA and save it if it's the first OA encountered, otherwise
+    // check to make sure that it is the same as the OA found before.
+    // In the second pass, we ignore objects, and use the OA found in pass 0
+    // (or the previously computed OA if we have obtained it from the options)
+    // to construct codebase principals.
+    //
+    // The effective OA selected above will also be set as the OA of the
+    // expanded principal object.
+
+    // First pass:
     for (uint32_t i = 0; i < length; ++i) {
         RootedValue allowed(cx);
         if (!JS_GetElement(cx, arrayObj, i, &allowed))
@@ -1333,17 +1365,7 @@ GetExpandedPrincipal(JSContext* cx, HandleObject arrayObj, nsIExpandedPrincipal*
 
         nsresult rv;
         nsCOMPtr<nsIPrincipal> principal;
-        if (allowed.isString()) {
-            // In case of string let's try to fetch a codebase principal from it.
-            RootedString str(cx, allowed.toString());
-
-            // We use a default originAttributes here because we don't support
-            // passing a userContextId with an array.
-            PrincipalOriginAttributes attrs;
-            if (!ParsePrincipal(cx, str, attrs, getter_AddRefs(principal)))
-                return false;
-
-        } else if (allowed.isObject()) {
+        if (allowed.isObject()) {
             // In case of object let's see if it's a Principal or a ScriptObjectPrincipal.
             nsCOMPtr<nsISupports> prinOrSop;
             RootedObject obj(cx, &allowed.toObject());
@@ -1354,23 +1376,73 @@ GetExpandedPrincipal(JSContext* cx, HandleObject arrayObj, nsIExpandedPrincipal*
             principal = do_QueryInterface(prinOrSop);
             if (sop)
                 principal = sop->GetPrincipal();
-        }
-        NS_ENSURE_TRUE(principal, false);
+            NS_ENSURE_TRUE(principal, false);
 
-        // We do not allow ExpandedPrincipals to contain any system principals.
-        bool isSystem;
-        rv = nsXPConnect::SecurityManager()->IsSystemPrincipal(principal, &isSystem);
-        NS_ENSURE_SUCCESS(rv, false);
-        if (isSystem) {
-            JS_ReportError(cx, "System principal is not allowed in an expanded principal");
+            if (!options.originAttributes) {
+                const PrincipalOriginAttributes prinAttrs =
+                    BasePrincipal::Cast(principal)->OriginAttributesRef();
+                if (attrs.isNothing()) {
+                    attrs.emplace(prinAttrs);
+                } else if (prinAttrs != attrs.ref()) {
+                    // If attrs is from a previously encountered principal in the
+                    // array, we need to ensure that it matches the OA of the
+                    // principal we have here.
+                    // If attrs comes from OriginAttributes, we don't need
+                    // this check.
+                    return false;
+                }
+            }
+
+            // We do not allow ExpandedPrincipals to contain any system principals.
+            bool isSystem;
+            rv = nsXPConnect::SecurityManager()->IsSystemPrincipal(principal, &isSystem);
+            NS_ENSURE_SUCCESS(rv, false);
+            if (isSystem) {
+                JS_ReportError(cx, "System principal is not allowed in an expanded principal");
+                return false;
+            }
+            allowedDomains[i] = principal;
+        } else if (allowed.isString()) {
+            // Skip any string arguments - we handle them in the next pass.
+        } else {
+            // Don't know what this is.
             return false;
         }
-        allowedDomains[i] = principal;
-  }
+    }
 
-  nsCOMPtr<nsIExpandedPrincipal> result = new nsExpandedPrincipal(allowedDomains);
-  result.forget(out);
-  return true;
+    if (attrs.isNothing()) {
+        // If no OriginAttributes was found in the first pass, fall back to a default one.
+        attrs.emplace();
+    }
+
+    // Second pass:
+    for (uint32_t i = 0; i < length; ++i) {
+        RootedValue allowed(cx);
+        if (!JS_GetElement(cx, arrayObj, i, &allowed))
+            return false;
+
+        nsCOMPtr<nsIPrincipal> principal;
+        if (allowed.isString()) {
+            // In case of string let's try to fetch a codebase principal from it.
+            RootedString str(cx, allowed.toString());
+
+            // attrs here is either a default OriginAttributes in case the
+            // originAttributes option isn't specified, and no object in the array
+            // provides a principal.  Otherwise it's either the forced principal, or
+            // the principal found before, so we can use it here.
+            if (!ParsePrincipal(cx, str, attrs.ref(), getter_AddRefs(principal)))
+                return false;
+            NS_ENSURE_TRUE(principal, false);
+            allowedDomains[i] = principal;
+        } else {
+            MOZ_ASSERT(allowed.isObject());
+        }
+    }
+
+    nsCOMPtr<nsIExpandedPrincipal> result =
+        new nsExpandedPrincipal(allowedDomains, attrs.ref());
+    result.forget(out);
+    return true;
 }
 
 /*
@@ -1605,7 +1677,8 @@ SandboxOptions::Parse()
               ParseBoolean("writeToGlobalPrototype", &writeToGlobalPrototype) &&
               ParseGlobalProperties() &&
               ParseValue("metadata", &metadata) &&
-              ParseUInt32("userContextId", &userContextId);
+              ParseUInt32("userContextId", &userContextId) &&
+              ParseObject("originAttributes", &originAttributes);
     if (!ok)
         return false;
 
@@ -1681,6 +1754,14 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative* wrappe
     if (args[0].isString()) {
         RootedString str(cx, args[0].toString());
         PrincipalOriginAttributes attrs;
+        if (options.originAttributes) {
+            JS::RootedValue val(cx, JS::ObjectValue(*options.originAttributes));
+            if (!attrs.Init(cx, val)) {
+                // The originAttributes option, if specified, must be valid!
+                JS_ReportError(cx, "Expected a valid OriginAttributes object");
+                return ThrowAndFail(NS_ERROR_INVALID_ARG, cx, _retval);
+            }
+        }
         attrs.mUserContextId = options.userContextId;
         ok = ParsePrincipal(cx, str, attrs, getter_AddRefs(principal));
         prinOrSop = principal;
@@ -1694,7 +1775,7 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative* wrappe
                 // We don't support passing a userContextId with an array.
                 ok = false;
             } else {
-                ok = GetExpandedPrincipal(cx, obj, getter_AddRefs(expanded));
+                ok = GetExpandedPrincipal(cx, obj, options, getter_AddRefs(expanded));
                 prinOrSop = expanded;
             }
         } else {

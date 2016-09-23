@@ -580,7 +580,7 @@ public:
    * Should be called only once per TextureClient.
    * The TextureClient must not be locked when calling this method.
    */
-  bool InitIPDLActor(TextureForwarder* aForwarder, LayersBackend aBackendType);
+  bool InitIPDLActor(TextureForwarder* aForwarder);
 
   /**
    * Return a pointer to the IPDLActor.

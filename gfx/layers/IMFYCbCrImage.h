@@ -20,11 +20,11 @@ public:
 
   virtual bool IsValid() { return true; }
 
-  virtual TextureClient* GetTextureClient(CompositableClient* aClient) override;
+  virtual TextureClient* GetTextureClient(TextureForwarder* aForwarder) override;
 
 protected:
 
-  TextureClient* GetD3D9TextureClient(CompositableClient* aClient);
+  TextureClient* GetD3D9TextureClient(TextureForwarder* aForwarder);
 
   ~IMFYCbCrImage();
 

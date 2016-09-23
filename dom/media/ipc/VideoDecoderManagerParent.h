@@ -19,8 +19,7 @@ public:
   static bool CreateForContent(Endpoint<PVideoDecoderManagerParent>&& aEndpoint);
 
   // Can be called from any thread
-  static layers::Image* LookupImage(const SurfaceDescriptorGPUVideo& aSD);
-  SurfaceDescriptorGPUVideo StoreImage(layers::Image* aImage);
+  SurfaceDescriptorGPUVideo StoreImage(layers::TextureClient* aImage);
 
   static void StartupThreads();
   static void ShutdownThreads();
@@ -41,9 +40,9 @@ protected:
   VideoDecoderManagerParent();
   ~VideoDecoderManagerParent();
 
-  void ClearAllOwnedImages();
-
   void Open(Endpoint<PVideoDecoderManagerParent>&& aEndpoint);
+
+  std::map<uint64_t, RefPtr<layers::TextureClient>> mTextureMap;
 };
 
 } // namespace dom

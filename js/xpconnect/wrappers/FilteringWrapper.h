@@ -13,9 +13,7 @@
 #include "js/CallNonGenericMethod.h"
 
 namespace JS {
-template <typename T>
-class AutoVectorRooter;
-typedef AutoVectorRooter<jsid> AutoIdVector;
+class AutoIdVector;
 } // namespace JS
 
 namespace xpc {

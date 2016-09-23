@@ -303,10 +303,12 @@ function test() {
   Services.prefs.setBoolPref(PREF_ACTIVE, true);
   Services.prefs.setBoolPref(PREF_DISPLAY, true);
 
-  var newTab = gBrowser.addTab();
-  gBrowser.selectedTab = newTab;
-  gTestBrowser = gBrowser.selectedBrowser;
-  newTab.linkedBrowser.stop();
+  pushPrefs(["dom.ipc.processCount", 1]).then(() => {
+    var newTab = gBrowser.addTab();
+    gBrowser.selectedTab = newTab;
+    gTestBrowser = gBrowser.selectedBrowser;
+    newTab.linkedBrowser.stop();
 
-  executeSoon(test1);
+    executeSoon(test1);
+  });
 }

@@ -273,21 +273,20 @@ public:
 
     // -------------------------------------------------------------------------
     // Writing to the drawing buffer
-    // TODO(djg): Implemented in WebGLContext
-/*
+
+    /* Implemented in WebGLContext
     void VertexAttribDivisor(GLuint index, GLuint divisor);
     void DrawArraysInstanced(GLenum mode, GLint first, GLsizei count, GLsizei instanceCount);
     void DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type, GLintptr offset, GLsizei instanceCount);
-*/
+    */
     void DrawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, GLintptr offset);
 
 
     // ------------------------------------------------------------------------
     // Multiple Render Targets - WebGL2ContextMRTs.cpp
-    // TODO(djg): Implemented in WebGLContext
-/*
+    /* Implemented in WebGLContext
     void DrawBuffers(const dom::Sequence<GLenum>& buffers);
-*/
+    */
 
     void ClearBufferiv_base(GLenum buffer, GLint drawbuffer, const GLint* value);
     void ClearBufferuiv_base(GLenum buffer, GLint drawbuffer, const GLuint* value);
@@ -412,9 +411,6 @@ private:
     virtual bool ValidateAttribPointerType(bool integerMode, GLenum type,
                                            uint32_t* alignment,
                                            const char* info) override;
-    virtual bool ValidateBufferTarget(GLenum target, const char* info) override;
-    virtual bool ValidateBufferIndexedTarget(GLenum target, const char* info) override;
-    virtual bool ValidateBufferUsageEnum(GLenum usage, const char* info) override;
     virtual bool ValidateQueryTarget(GLenum target, const char* info) override;
     virtual bool ValidateUniformMatrixTranspose(bool transpose, const char* info) override;
 };

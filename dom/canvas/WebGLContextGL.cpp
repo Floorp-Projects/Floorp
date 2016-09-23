@@ -252,10 +252,11 @@ WebGLContext::BlendFuncSeparate(GLenum srcRGB, GLenum dstRGB,
 GLenum
 WebGLContext::CheckFramebufferStatus(GLenum target)
 {
+    const char funcName[] = "checkFramebufferStatus";
     if (IsContextLost())
         return LOCAL_GL_FRAMEBUFFER_UNSUPPORTED;
 
-    if (!ValidateFramebufferTarget(target, "invalidateFramebuffer"))
+    if (!ValidateFramebufferTarget(target, funcName))
         return 0;
 
     WebGLFramebuffer* fb;
@@ -276,8 +277,7 @@ WebGLContext::CheckFramebufferStatus(GLenum target)
     if (!fb)
         return LOCAL_GL_FRAMEBUFFER_COMPLETE;
 
-    nsCString fbErrorInfo;
-    return fb->CheckFramebufferStatus(&fbErrorInfo).get();
+    return fb->CheckFramebufferStatus(funcName).get();
 }
 
 already_AddRefed<WebGLProgram>
@@ -484,10 +484,11 @@ void
 WebGLContext::FramebufferRenderbuffer(GLenum target, GLenum attachment,
                                       GLenum rbtarget, WebGLRenderbuffer* wrb)
 {
+    const char funcName[] = "framebufferRenderbuffer";
     if (IsContextLost())
         return;
 
-    if (!ValidateFramebufferTarget(target, "framebufferRenderbuffer"))
+    if (!ValidateFramebufferTarget(target, funcName))
         return;
 
     WebGLFramebuffer* fb;
@@ -505,20 +506,10 @@ WebGLContext::FramebufferRenderbuffer(GLenum target, GLenum attachment,
         MOZ_CRASH("GFX: Bad target.");
     }
 
-    if (!fb) {
-        return ErrorInvalidOperation("framebufferRenderbuffer: cannot modify"
-                                     " framebuffer 0.");
-    }
+    if (!fb)
+        return ErrorInvalidOperation("%s: Cannot modify framebuffer 0.", funcName);
 
-    if (rbtarget != LOCAL_GL_RENDERBUFFER) {
-        return ErrorInvalidEnumInfo("framebufferRenderbuffer: rbtarget:",
-                                    rbtarget);
-    }
-
-    if (!ValidateFramebufferAttachment(fb, attachment, "framebufferRenderbuffer"))
-        return;
-
-    fb->FramebufferRenderbuffer(attachment, rbtarget, wrb);
+    fb->FramebufferRenderbuffer(funcName, attachment, rbtarget, wrb);
 }
 
 void
@@ -528,56 +519,12 @@ WebGLContext::FramebufferTexture2D(GLenum target,
                                    WebGLTexture* tobj,
                                    GLint level)
 {
+    const char funcName[] = "framebufferTexture2D";
     if (IsContextLost())
         return;
 
-    if (!ValidateFramebufferTarget(target, "framebufferTexture2D"))
+    if (!ValidateFramebufferTarget(target, funcName))
         return;
-
-    if (level < 0) {
-        ErrorInvalidValue("framebufferTexture2D: level must not be negative.");
-        return;
-    }
-
-    if (textarget != LOCAL_GL_TEXTURE_2D &&
-        (textarget < LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X ||
-         textarget > LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z))
-    {
-        return ErrorInvalidEnumInfo("framebufferTexture2D: textarget:",
-                                    textarget);
-    }
-
-    if (IsWebGL2()) {
-        /* GLES 3.0.4 p208:
-         *   If textarget is one of TEXTURE_CUBE_MAP_POSITIVE_X,
-         *   TEXTURE_CUBE_MAP_POSITIVE_Y, TEXTURE_CUBE_MAP_POSITIVE_Z,
-         *   TEXTURE_CUBE_MAP_NEGATIVE_X, TEXTURE_CUBE_MAP_NEGATIVE_Y,
-         *   or TEXTURE_CUBE_MAP_NEGATIVE_Z, then level must be greater
-         *   than or equal to zero and less than or equal to log2 of the
-         *   value of MAX_CUBE_MAP_TEXTURE_SIZE. If textarget is TEXTURE_2D,
-         *   level must be greater than or equal to zero and no larger than
-         *   log2 of the value of MAX_TEXTURE_SIZE. Otherwise, an
-         *   INVALID_VALUE error is generated.
-         */
-
-        if (textarget == LOCAL_GL_TEXTURE_2D) {
-            if (uint32_t(level) > FloorLog2(mImplMaxTextureSize)) {
-                ErrorInvalidValue("framebufferTexture2D: level is too large.");
-                return;
-            }
-        } else {
-            MOZ_ASSERT(textarget >= LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X &&
-                       textarget <= LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z);
-
-            if (uint32_t(level) > FloorLog2(mImplMaxCubeMapTextureSize)) {
-                ErrorInvalidValue("framebufferTexture2D: level is too large.");
-                return;
-            }
-        }
-    } else if (level != 0) {
-        ErrorInvalidValue("framebufferTexture2D: level must be 0.");
-        return;
-    }
 
     WebGLFramebuffer* fb;
     switch (target) {
@@ -594,15 +541,10 @@ WebGLContext::FramebufferTexture2D(GLenum target,
         MOZ_CRASH("GFX: Bad target.");
     }
 
-    if (!fb) {
-        return ErrorInvalidOperation("framebufferTexture2D: cannot modify"
-                                     " framebuffer 0.");
-    }
+    if (!fb)
+        return ErrorInvalidOperation("%s: Cannot modify framebuffer 0.", funcName);
 
-    if (!ValidateFramebufferAttachment(fb, attachment, "framebufferTexture2D"))
-        return;
-
-    fb->FramebufferTexture2D(attachment, textarget, tobj, level);
+    fb->FramebufferTexture2D(funcName, attachment, textarget, tobj, level);
 }
 
 void
@@ -684,14 +626,9 @@ WebGLContext::GetBufferParameter(GLenum target, GLenum pname)
     if (IsContextLost())
         return JS::NullValue();
 
-    if (!ValidateBufferTarget(target, "getBufferParameter"))
+    const auto& buffer = ValidateBufferSelection("getBufferParameter", target);
+    if (!buffer)
         return JS::NullValue();
-
-    WebGLRefPtr<WebGLBuffer>& slot = GetBufferSlotByTarget(target);
-    if (!slot) {
-        ErrorInvalidOperation("No buffer bound to `target` (0x%4x).", target);
-        return JS::NullValue();
-    }
 
     MakeContextCurrent();
 
@@ -1554,6 +1491,13 @@ WebGL2Context::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenu
 
     if (!mBoundPixelPackBuffer) {
         ErrorInvalidOperation("readPixels: PIXEL_PACK_BUFFER must not be null.");
+        return;
+    }
+
+    if (mBoundPixelPackBuffer->mNumActiveTFOs) {
+        ErrorInvalidOperation("%s: Buffer is bound to an active transform feedback"
+                              " object.",
+                              "readPixels");
         return;
     }
 

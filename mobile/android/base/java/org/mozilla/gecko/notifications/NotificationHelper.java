@@ -303,7 +303,7 @@ public final class NotificationHelper implements GeckoEventListener {
         PendingIntent deletePendingIntent = buildNotificationPendingIntent(message, CLEARED_EVENT);
         builder.setDeleteIntent(deletePendingIntent);
 
-        GeckoAppShell.getNotificationClient().add(id.hashCode(), builder.build());
+        ((NotificationClient) GeckoAppShell.getNotificationListener()).add(id, builder.build());
 
         boolean persistent = message.optBoolean(PERSISTENT_ATTR);
         // We add only not persistent notifications to the list since we want to purge only
@@ -344,7 +344,7 @@ public final class NotificationHelper implements GeckoEventListener {
     }
 
     private void closeNotification(String id, String handlerKey, String cookie) {
-        GeckoAppShell.getNotificationClient().remove(id.hashCode());
+        ((NotificationClient) GeckoAppShell.getNotificationListener()).remove(id);
         sendNotificationWasClosed(id, handlerKey, cookie);
     }
 

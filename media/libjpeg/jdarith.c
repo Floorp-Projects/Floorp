@@ -4,7 +4,7 @@
  * This file was part of the Independent JPEG Group's software:
  * Developed 1997-2015 by Guido Vollbeding.
  * libjpeg-turbo Modifications:
- * Copyright (C) 2015, D. R. Commander.
+ * Copyright (C) 2015-2016, D. R. Commander.
  * For conditions of distribution and use, see the accompanying README.ijg
  * file.
  *
@@ -382,7 +382,7 @@ decode_mcu_AC_first (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
       if (arith_decode(cinfo, st)) v |= m;
     v += 1; if (sign) v = -v;
     /* Scale and output coefficient in natural (dezigzagged) order */
-    (*block)[jpeg_natural_order[k]] = (JCOEF) (v << cinfo->Al);
+    (*block)[jpeg_natural_order[k]] = (JCOEF) ((unsigned)v << cinfo->Al);
   }
 
   return TRUE;

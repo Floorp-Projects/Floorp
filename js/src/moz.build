@@ -174,6 +174,7 @@ UNIFIED_SOURCES += [
     'asmjs/WasmStubs.cpp',
     'asmjs/WasmTable.cpp',
     'asmjs/WasmTextToBinary.cpp',
+    'asmjs/WasmTextUtils.cpp',
     'asmjs/WasmTypes.cpp',
     'builtin/AtomicsObject.cpp',
     'builtin/Eval.cpp',

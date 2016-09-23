@@ -3745,6 +3745,11 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
         m_formatter.simd128Constant(data);
     }
 
+    void int32Constant(int32_t i)
+    {
+        spew(".int %d", i);
+        m_formatter.int32Constant(i);
+    }
     void int64Constant(int64_t i)
     {
         spew(".quad %lld", (long long)i);

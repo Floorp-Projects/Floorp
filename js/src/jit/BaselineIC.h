@@ -1680,7 +1680,7 @@ class ICGetName_Env : public ICMonitoredStub
                  ShapeVector&& shapes, bool isFixedSlot, uint32_t offset)
           : ICStubCompiler(cx, GetStubKind(), Engine::Baseline),
             firstMonitorStub_(firstMonitorStub),
-            shapes_(cx, mozilla::Forward<ShapeVector>(shapes)),
+            shapes_(cx, mozilla::Move(shapes)),
             isFixedSlot_(isFixedSlot),
             offset_(offset)
         {

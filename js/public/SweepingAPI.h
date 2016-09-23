@@ -50,14 +50,14 @@ class WeakCache : public js::WeakCacheBase<T>,
     }
     WeakCache(WeakCache&& other)
       : sweeper(other.sweeper),
-        cache(mozilla::Forward<T>(other.cache))
+        cache(mozilla::Move(other.cache))
     {
     }
 
     const T& get() const { return cache; }
     T& get() { return cache; }
 
-    void sweep() { sweeper(&cache); }
+    MOZ_UBSAN_BLACKLIST_FUNCTION void sweep() { sweeper(&cache); }
 };
 
 } // namespace JS

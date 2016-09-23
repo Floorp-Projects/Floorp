@@ -331,7 +331,7 @@ ImplCycleCollectionUnlink(mozilla::WebGLRefPtr<T>& field)
 template <typename T>
 inline void
 ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& callback,
-                            mozilla::WebGLRefPtr<T>& field,
+                            const mozilla::WebGLRefPtr<T>& field,
                             const char* name,
                             uint32_t flags = 0)
 {

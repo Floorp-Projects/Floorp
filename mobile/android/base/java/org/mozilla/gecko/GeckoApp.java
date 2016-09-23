@@ -137,6 +137,7 @@ public abstract class GeckoApp
     private static final String LOGTAG = "GeckoApp";
     private static final long ONE_DAY_MS = TimeUnit.MILLISECONDS.convert(1, TimeUnit.DAYS);
 
+    public static final String ACTION_ALERT_CALLBACK       = "org.mozilla.gecko.ALERT_CALLBACK";
     public static final String ACTION_HOMESCREEN_SHORTCUT  = "org.mozilla.gecko.BOOKMARK";
     public static final String ACTION_DEBUG                = "org.mozilla.gecko.DEBUG";
     public static final String ACTION_LAUNCH_SETTINGS      = "org.mozilla.gecko.SETTINGS";
@@ -1141,11 +1142,10 @@ public abstract class GeckoApp
         // When that's fixed, `this` can change to
         // `(GeckoApplication) getApplication()` here.
         GeckoAppShell.setContextGetter(this);
-        GeckoAppShell.setApplicationContext(getApplicationContext());
         GeckoAppShell.setGeckoInterface(this);
         // We need to set the notification client before launching Gecko, since Gecko could start
         // sending notifications immediately after startup, which we don't want to lose/crash on.
-        GeckoAppShell.setNotificationClient(makeNotificationClient());
+        GeckoAppShell.setNotificationListener(makeNotificationClient());
 
         // Tell Stumbler to register a local broadcast listener to listen for preference intents.
         // We do this via intents since we can't easily access Stumbler directly,
@@ -1660,7 +1660,7 @@ public abstract class GeckoApp
             }
         }
 
-        if (GeckoAppShell.ACTION_ALERT_CALLBACK.equals(action)) {
+        if (ACTION_ALERT_CALLBACK.equals(action)) {
             processAlertCallback(intent);
         }
     }
@@ -1957,7 +1957,9 @@ public abstract class GeckoApp
             if (alertCookie == null)
                 alertCookie = "";
         }
-        handleNotification(GeckoAppShell.ACTION_ALERT_CALLBACK, alertName, alertCookie);
+
+        ((NotificationClient) GeckoAppShell.getNotificationListener()).onNotificationClick(
+                alertName);
     }
 
     @Override
@@ -2002,7 +2004,7 @@ public abstract class GeckoApp
             mLayerView.loadUri(uri, GeckoView.LOAD_SWITCH_TAB);
         } else if (Intent.ACTION_SEARCH.equals(action)) {
             mLayerView.loadUri(uri, GeckoView.LOAD_NEW_TAB);
-        } else if (GeckoAppShell.ACTION_ALERT_CALLBACK.equals(action)) {
+        } else if (ACTION_ALERT_CALLBACK.equals(action)) {
             processAlertCallback(intent);
         } else if (NotificationHelper.HELPER_BROADCAST_ACTION.equals(action)) {
             NotificationHelper.getInstance(getApplicationContext()).handleNotificationIntent(intent);
@@ -2026,7 +2028,7 @@ public abstract class GeckoApp
      */
     protected String getURIFromIntent(SafeIntent intent) {
         final String action = intent.getAction();
-        if (GeckoAppShell.ACTION_ALERT_CALLBACK.equals(action) ||
+        if (ACTION_ALERT_CALLBACK.equals(action) ||
                 NotificationHelper.HELPER_BROADCAST_ACTION.equals(action)) {
             return null;
         }
@@ -2387,15 +2389,6 @@ public abstract class GeckoApp
                 }
             }
         });
-    }
-
-    public void handleNotification(String action, String alertName, String alertCookie) {
-        // If Gecko isn't running yet, we ignore the notification. Note that
-        // even if Gecko is running but it was restarted since the notification
-        // was created, the notification won't be handled (bug 849653).
-        if (GeckoThread.isRunning()) {
-            GeckoAppShell.handleNotification(action, alertName, alertCookie);
-        }
     }
 
     private void checkMigrateProfile() {

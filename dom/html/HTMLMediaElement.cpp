@@ -6214,18 +6214,25 @@ HTMLMediaElement::SetMediaKeys(mozilla::dom::MediaKeys* aMediaKeys,
 EventHandlerNonNull*
 HTMLMediaElement::GetOnencrypted()
 {
-  EventListenerManager *elm = GetExistingListenerManager();
-  return elm ? elm->GetEventHandler(nsGkAtoms::onencrypted, EmptyString())
-              : nullptr;
+  return EventTarget::GetEventHandler(nsGkAtoms::onencrypted, EmptyString());
 }
 
 void
-HTMLMediaElement::SetOnencrypted(EventHandlerNonNull* handler)
+HTMLMediaElement::SetOnencrypted(EventHandlerNonNull* aCallback)
 {
-  EventListenerManager *elm = GetOrCreateListenerManager();
-  if (elm) {
-    elm->SetEventHandler(nsGkAtoms::onencrypted, EmptyString(), handler);
-  }
+  EventTarget::SetEventHandler(nsGkAtoms::onencrypted, EmptyString(), aCallback);
+}
+
+EventHandlerNonNull*
+HTMLMediaElement::GetOnwaitingforkey()
+{
+  return EventTarget::GetEventHandler(nsGkAtoms::onwaitingforkey, EmptyString());
+}
+
+void
+HTMLMediaElement::SetOnwaitingforkey(EventHandlerNonNull* aCallback)
+{
+  EventTarget::SetEventHandler(nsGkAtoms::onwaitingforkey, EmptyString(), aCallback);
 }
 
 void

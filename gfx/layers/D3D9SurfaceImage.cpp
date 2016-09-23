@@ -128,10 +128,10 @@ D3D9SurfaceImage::GetSize()
 }
 
 TextureClient*
-D3D9SurfaceImage::GetTextureClient(CompositableClient* aClient)
+D3D9SurfaceImage::GetTextureClient(TextureForwarder* aForwarder)
 {
   MOZ_ASSERT(mTextureClient);
-  MOZ_ASSERT(mTextureClient->GetAllocator() == aClient->GetForwarder());
+  MOZ_ASSERT(mTextureClient->GetAllocator() == aForwarder);
   return mTextureClient;
 }
 

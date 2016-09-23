@@ -124,12 +124,13 @@ class AsmJSGlobal
   private:
     struct CacheablePod {
         Which which_;
-        union {
+        union V {
             struct {
                 VarInitKind initKind_;
-                union {
+                union U {
                     ValType importType_;
                     Val val_;
+                    U() {}
                 } u;
             } var;
             uint32_t ffiIndex_;
@@ -145,6 +146,7 @@ class AsmJSGlobal
                 ConstantKind kind_;
                 double value_;
             } constant;
+            V() {}
         } u;
     } pod;
     CacheableChars field_;
@@ -879,14 +881,14 @@ class NumLit
         return (uint32_t)toInt32();
     }
 
-    double toDouble() const {
+    RawF64 toDouble() const {
         MOZ_ASSERT(which_ == Double);
-        return u.scalar_.toDouble();
+        return RawF64(u.scalar_.toDouble());
     }
 
-    float toFloat() const {
+    RawF32 toFloat() const {
         MOZ_ASSERT(which_ == Float);
-        return float(u.scalar_.toDouble());
+        return RawF32(float(u.scalar_.toDouble()));
     }
 
     Value scalarValue() const {
@@ -897,9 +899,9 @@ class NumLit
     bool isSimd() const
     {
         return which_ == Int8x16 || which_ == Uint8x16 || which_ == Int16x8 ||
-            which_ == Uint16x8 || which_ == Int32x4 || which_ == Uint32x4 ||
-            which_ == Float32x4 || which_ == Bool8x16 || which_ == Bool16x8 ||
-            which_ == Bool32x4;
+               which_ == Uint16x8 || which_ == Int32x4 || which_ == Uint32x4 ||
+               which_ == Float32x4 || which_ == Bool8x16 || which_ == Bool16x8 ||
+               which_ == Bool32x4;
     }
 
     const SimdConstant& simdValue() const {
@@ -919,9 +921,9 @@ class NumLit
           case NumLit::BigUnsigned:
             return toInt32() == 0;
           case NumLit::Double:
-            return toDouble() == 0.0 && !IsNegativeZero(toDouble());
+            return toDouble().bits() == 0;
           case NumLit::Float:
-            return toFloat() == 0.f && !IsNegativeZero(toFloat());
+            return toFloat().bits() == 0;
           case NumLit::Int8x16:
           case NumLit::Uint8x16:
           case NumLit::Bool8x16:
@@ -7428,14 +7430,14 @@ ValidateGlobalVariable(JSContext* cx, const AsmJSGlobal& global, HandleValue imp
             float f;
             if (!RoundFloat32(cx, v, &f))
                 return false;
-            *val = Val(f);
+            *val = Val(RawF32(f));
             return true;
           }
           case ValType::F64: {
             double d;
             if (!ToNumber(cx, v, &d))
                 return false;
-            *val = Val(d);
+            *val = Val(RawF64(d));
             return true;
           }
           case ValType::I8x16: {

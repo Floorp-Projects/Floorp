@@ -250,10 +250,10 @@ class LIRGeneratorShared : public MDefinitionVisitor
 
   public:
     void lowerConstantDouble(double d, MInstruction* mir) {
-        define(new(alloc()) LDouble(d), mir);
+        define(new(alloc()) LDouble(wasm::RawF64(d)), mir);
     }
     void lowerConstantFloat32(float f, MInstruction* mir) {
-        define(new(alloc()) LFloat32(f), mir);
+        define(new(alloc()) LFloat32(wasm::RawF32(f)), mir);
     }
 
     void visitConstant(MConstant* ins) override;

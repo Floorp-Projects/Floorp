@@ -1808,7 +1808,7 @@ public:
 
     static auto SetURITitle(mozilla::jni::String::Param, mozilla::jni::String::Param) -> void;
 
-    struct ShowAlertNotification_t {
+    struct ShowNotification_t {
         typedef GeckoAppShell Owner;
         typedef void ReturnType;
         typedef void SetterType;
@@ -1820,7 +1820,7 @@ public:
                 mozilla::jni::String::Param,
                 mozilla::jni::String::Param,
                 mozilla::jni::String::Param> Args;
-        static constexpr char name[] = "showAlertNotification";
+        static constexpr char name[] = "showNotification";
         static constexpr char signature[] =
                 "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V";
         static const bool isStatic = true;
@@ -1832,7 +1832,7 @@ public:
                 mozilla::jni::DispatchTarget::CURRENT;
     };
 
-    static auto ShowAlertNotification(mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param) -> void;
+    static auto ShowNotification(mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param) -> void;
 
     struct SyncNotifyObservers_t {
         typedef GeckoAppShell Owner;

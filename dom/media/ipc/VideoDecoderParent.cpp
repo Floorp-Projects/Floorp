@@ -7,8 +7,8 @@
 #include "mozilla/Unused.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "base/thread.h"
-#include "mozilla/layers/TextureHost.h"
-#include "mozilla/layers/PTextureParent.h"
+#include "mozilla/layers/TextureClient.h"
+#include "mozilla/layers/VideoBridgeChild.h"
 #include "MediaInfo.h"
 #include "VideoDecoderManagerParent.h"
 #ifdef XP_WIN
@@ -164,6 +164,13 @@ VideoDecoderParent::Output(MediaData* aData)
 
     MOZ_ASSERT(video->mImage, "Decoded video must output a layer::Image to be used with VideoDecoderParent");
 
+    RefPtr<TextureClient> texture = video->mImage->GetTextureClient(VideoBridgeChild::GetSingleton());
+
+    if (texture && !texture->IsAddedToCompositableClient()) {
+      texture->InitIPDLActor(VideoBridgeChild::GetSingleton());
+      texture->SetAddedToCompositableClient();
+    }
+
     VideoDataIPDL output(MediaDataIPDL(data->mOffset,
                                        data->mTime,
                                        data->mTimecode,
@@ -171,7 +178,7 @@ VideoDecoderParent::Output(MediaData* aData)
                                        data->mFrames,
                                        data->mKeyframe),
                          video->mDisplay,
-                         self->GetManager()->StoreImage(video->mImage),
+                         texture ? self->mParent->StoreImage(texture) : SurfaceDescriptorGPUVideo(0),
                          video->mFrameID);
     Unused << self->SendOutput(output);
   }));

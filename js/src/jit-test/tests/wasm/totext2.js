@@ -8,8 +8,9 @@ function runTest(code, expected) {
   var binary = wasmTextToBinary(code);
   var s = wasmBinaryToText(binary, "experimental");
   s = s.replace(/\s+/g, ' ');
+  expected = expected.replace(/\s+/g, ' ');
   print("TEXT: " + s);
-  assertEq(expected, s);
+  assertEq(s, expected);
 }
 
 // Smoke test
@@ -107,3 +108,30 @@ runTest(`
 " f64[i32.trunc_u/f64(-(0.0 * (1.0 + f64.convert_s/i32(6 <s (7.0 == (f64[8] = $var1 = 9.0))))))];" +
 " unreachable; " +
 "} memory 0, 0 {} ");
+
+// nan
+runTest(`
+(module
+ (func
+  (f64.const nan)
+  (f32.const nan)
+  (f64.const -nan)
+  (f32.const -nan)
+  (f64.const nan:0x35792468abcd)
+  (f64.const -nan:0x135792468abcd)
+  (f32.const nan:0x1337)
+  (f32.const -nan:0xc4f3)
+ )
+)
+`,
+`type $type0 of function () : ();
+function $func0() : () {
+    nan;
+    nan.f;
+    -nan;
+    -nan.f;
+    nan:0x35792468abcd;
+    -nan:0x135792468abcd;
+    nan:0x1337.f;
+    -nan:0xc4f3.f }
+`);

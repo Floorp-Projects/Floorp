@@ -25,6 +25,7 @@
 
 #include "asmjs/WasmAST.h"
 #include "asmjs/WasmBinaryToAST.h"
+#include "asmjs/WasmTextUtils.h"
 #include "asmjs/WasmTypes.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/StringBuffer.h"
@@ -138,6 +139,8 @@ struct WasmPrintContext
         currentFuncIndex(0),
         currentPrecedence(PrintOperatorPrecedence::ExpressionPrecedence)
     {}
+
+    StringBuffer& sb() { return buffer.stringBuffer(); }
 };
 
 /*****************************************************************************/
@@ -216,20 +219,21 @@ PrintInt64(WasmPrintContext& c, int64_t num)
 }
 
 static bool
-PrintDouble(WasmPrintContext& c, double num)
+PrintDouble(WasmPrintContext& c, RawF64 num)
 {
-    if (IsNegativeZero(num))
+    double d = num.fp();
+    if (IsNegativeZero(d))
         return c.buffer.append("-0.0");
-    if (IsNaN(num))
-        return c.buffer.append("nan");
-    if (IsInfinite(num)) {
-        if (num > 0)
+    if (IsNaN(d))
+        return RenderNaN(c.sb(), num);
+    if (IsInfinite(d)) {
+        if (d > 0)
             return c.buffer.append("infinity");
         return c.buffer.append("-infinity");
     }
 
     uint32_t startLength = c.buffer.length();
-    if (!NumberValueToStringBuffer(c.cx, DoubleValue(num), c.buffer.stringBuffer()))
+    if (!NumberValueToStringBuffer(c.cx, DoubleValue(d), c.buffer.stringBuffer()))
         return false;
     MOZ_ASSERT(startLength < c.buffer.length());
 
@@ -240,6 +244,16 @@ PrintDouble(WasmPrintContext& c, double num)
             return true;
     }
     return c.buffer.append(".0");
+}
+
+static bool
+PrintFloat32(WasmPrintContext& c, RawF32 num)
+{
+    float f = num.fp();
+    if (IsNaN(f))
+        return RenderNaN(c.sb(), num) && c.buffer.append(".f");
+    return PrintDouble(c, RawF64(double(f))) &&
+           c.buffer.append("f");
 }
 
 static bool
@@ -466,9 +480,7 @@ PrintConst(WasmPrintContext& c, AstConst& cst)
             return false;
         break;
       case ExprType::F32:
-        if (!PrintDouble(c, (double)cst.val().f32()))
-            return false;
-        if (!c.buffer.append("f"))
+        if (!PrintFloat32(c, cst.val().f32()))
             return false;
         break;
       case ExprType::F64:
@@ -476,10 +488,8 @@ PrintConst(WasmPrintContext& c, AstConst& cst)
             return false;
         break;
       default:
-        MOZ_CRASH("bad const type");
-        break;
+        return false;
     }
-
     return true;
 }
 

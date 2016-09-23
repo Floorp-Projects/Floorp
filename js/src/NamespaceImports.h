@@ -30,18 +30,14 @@ class TwoByteCharsZ;
 class UTF8Chars;
 class UTF8CharsZ;
 
-template <typename T>
-class AutoVectorRooter;
-typedef AutoVectorRooter<Value> AutoValueVector;
-typedef AutoVectorRooter<jsid> AutoIdVector;
-typedef AutoVectorRooter<JSObject*> AutoObjectVector;
-typedef AutoVectorRooter<JSScript*> AutoVector;
+class AutoValueVector;
+class AutoIdVector;
+class AutoObjectVector;
 
 using ValueVector = JS::GCVector<JS::Value>;
 using IdVector = JS::GCVector<jsid>;
 using ScriptVector = JS::GCVector<JSScript*>;
 
-template <typename T> class AutoVectorRooter;
 template<typename K, typename V> class AutoHashMapRooter;
 template<typename T> class AutoHashSetRooter;
 
@@ -84,10 +80,9 @@ using JS::UTF8CharsZ;
 using JS::UniqueChars;
 using JS::UniqueTwoByteChars;
 
-using JS::AutoVectorRooter;
-typedef AutoVectorRooter<Value> AutoValueVector;
-typedef AutoVectorRooter<jsid> AutoIdVector;
-typedef AutoVectorRooter<JSObject*> AutoObjectVector;
+using JS::AutoValueVector;
+using JS::AutoIdVector;
+using JS::AutoObjectVector;
 
 using JS::ValueVector;
 using JS::IdVector;

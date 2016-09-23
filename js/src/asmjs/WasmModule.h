@@ -26,18 +26,6 @@
 namespace js {
 namespace wasm {
 
-// Creates a JS object containing two fields (low: low 32 bits; high: high 32
-// bits) of a given Int64 value. For testing purposes only.
-
-JSObject*
-CreateI64Object(JSContext* cx, int64_t i64);
-
-// Reads an int64 from a JS object with the same shape as described in the
-// comment above. For testing purposes only.
-
-bool
-ReadI64Object(JSContext* cx, HandleValue v, int64_t* i64);
-
 // LinkData contains all the metadata necessary to patch all the locations
 // that depend on the absolute address of a CodeSegment.
 //

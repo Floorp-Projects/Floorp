@@ -1538,19 +1538,19 @@ MacroAssemblerARM::ma_vsqrt_f32(FloatRegister src, FloatRegister dest, Condition
 }
 
 static inline uint32_t
-DoubleHighWord(const double value)
+DoubleHighWord(wasm::RawF64 value)
 {
-    return static_cast<uint32_t>(BitwiseCast<uint64_t>(value) >> 32);
+    return static_cast<uint32_t>(value.bits() >> 32);
 }
 
 static inline uint32_t
-DoubleLowWord(const double value)
+DoubleLowWord(wasm::RawF64 value)
 {
-    return BitwiseCast<uint64_t>(value) & uint32_t(0xffffffff);
+    return value.bits() & uint32_t(0xffffffff);
 }
 
 void
-MacroAssemblerARM::ma_vimm(double value, FloatRegister dest, Condition cc)
+MacroAssemblerARM::ma_vimm(wasm::RawF64 value, FloatRegister dest, Condition cc)
 {
     if (HasVFPv3()) {
         if (DoubleLowWord(value) == 0) {
@@ -1566,25 +1566,18 @@ MacroAssemblerARM::ma_vimm(double value, FloatRegister dest, Condition cc)
                 as_vimm(dest, enc, cc);
                 return;
             }
-
         }
     }
     // Fall back to putting the value in a pool.
     as_FImm64Pool(dest, value, cc);
 }
 
-static inline uint32_t
-Float32Word(const float value)
-{
-    return BitwiseCast<uint32_t>(value);
-}
-
 void
-MacroAssemblerARM::ma_vimm_f32(float value, FloatRegister dest, Condition cc)
+MacroAssemblerARM::ma_vimm_f32(wasm::RawF32 value, FloatRegister dest, Condition cc)
 {
     VFPRegister vd = VFPRegister(dest).singleOverlay();
     if (HasVFPv3()) {
-        if (Float32Word(value) == 0) {
+        if (value.bits() == 0) {
             // To zero a register, load 1.0, then execute sN <- sN - sN.
             as_vimm(vd, VFPImm::One, cc);
             as_vsub(vd, vd, vd, cc);
@@ -1598,8 +1591,8 @@ MacroAssemblerARM::ma_vimm_f32(float value, FloatRegister dest, Condition cc)
         // paths. It is still necessary to firstly check that the double low
         // word is zero because some float32 numbers set these bits and this can
         // not be ignored.
-        double doubleValue = value;
-        if (DoubleLowWord(value) == 0) {
+        wasm::RawF64 doubleValue(double(value.fp()));
+        if (DoubleLowWord(doubleValue) == 0) {
             VFPImm enc(DoubleHighWord(doubleValue));
             if (enc.isValid()) {
                 as_vimm(vd, enc, cc);
@@ -1607,6 +1600,7 @@ MacroAssemblerARM::ma_vimm_f32(float value, FloatRegister dest, Condition cc)
             }
         }
     }
+
     // Fall back to putting the value in a pool.
     as_FImm32Pool(vd, value, cc);
 }
@@ -2316,7 +2310,7 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
         {
             ScratchDoubleScope scratchDouble(*this);
             MOZ_ASSERT(input != scratchDouble);
-            ma_vimm(0.5, scratchDouble);
+            loadConstantDouble(0.5, scratchDouble);
 
             ma_vadd(input, scratchDouble, scratchDouble);
             // Convert the double into an unsigned fixed point value with 24 bits of
@@ -2351,7 +2345,7 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
     } else {
         ScratchDoubleScope scratchDouble(*this);
         MOZ_ASSERT(input != scratchDouble);
-        ma_vimm(0.5, scratchDouble);
+        loadConstantDouble(0.5, scratchDouble);
 
         Label outOfRange;
         ma_vcmpz(input);
@@ -3034,7 +3028,7 @@ void
 MacroAssemblerARMCompat::boolValueToDouble(const ValueOperand& operand, FloatRegister dest)
 {
     VFPRegister d = VFPRegister(dest);
-    ma_vimm(1.0, dest);
+    loadConstantDouble(1.0, dest);
     ma_cmp(operand.payloadReg(), Imm32(0));
     // If the source is 0, then subtract the dest from itself, producing 0.
     as_vsub(d, d, d, Equal);
@@ -3056,7 +3050,7 @@ void
 MacroAssemblerARMCompat::boolValueToFloat32(const ValueOperand& operand, FloatRegister dest)
 {
     VFPRegister d = VFPRegister(dest).singleOverlay();
-    ma_vimm_f32(1.0, dest);
+    loadConstantFloat32(1.0, dest);
     ma_cmp(operand.payloadReg(), Imm32(0));
     // If the source is 0, then subtract the dest from itself, producing 0.
     as_vsub(d, d, d, Equal);
@@ -3075,6 +3069,12 @@ MacroAssemblerARMCompat::int32ValueToFloat32(const ValueOperand& operand, FloatR
 
 void
 MacroAssemblerARMCompat::loadConstantFloat32(float f, FloatRegister dest)
+{
+    loadConstantFloat32(wasm::RawF32(f), dest);
+}
+
+void
+MacroAssemblerARMCompat::loadConstantFloat32(wasm::RawF32 f, FloatRegister dest)
 {
     ma_vimm_f32(f, dest);
 }
@@ -3136,7 +3136,13 @@ MacroAssemblerARMCompat::loadInt32OrDouble(Register base, Register index,
 void
 MacroAssemblerARMCompat::loadConstantDouble(double dp, FloatRegister dest)
 {
-    as_FImm64Pool(dest, dp);
+    loadConstantDouble(wasm::RawF64(dp), dest);
+}
+
+void
+MacroAssemblerARMCompat::loadConstantDouble(wasm::RawF64 dp, FloatRegister dest)
+{
+    ma_vimm(dp, dest);
 }
 
 // Treat the value as a boolean, and set condition codes accordingly.
@@ -3742,7 +3748,7 @@ MacroAssemblerARMCompat::ceil(FloatRegister input, Register output, Label* bail)
 
     // We are in the ]-Inf; 0[ range
     // If we are in the ]-1; 0[ range => bailout
-    ma_vimm(-1.0, scratchDouble);
+    loadConstantDouble(-1.0, scratchDouble);
     compareDouble(input, scratchDouble);
     ma_b(bail, Assembler::GreaterThan);
 
@@ -3797,7 +3803,7 @@ MacroAssemblerARMCompat::ceilf(FloatRegister input, Register output, Label* bail
     // If we are in the ]-1; 0[ range => bailout
     {
         ScratchFloat32Scope scratch(asMasm());
-        ma_vimm_f32(-1.f, scratch);
+        loadConstantFloat32(-1.f, scratch);
         compareFloat(input, scratch);
         ma_b(bail, Assembler::GreaterThan);
     }
@@ -3900,7 +3906,7 @@ MacroAssemblerARMCompat::round(FloatRegister input, Register output, Label* bail
     // Add the biggest number less than 0.5 (not 0.5, because adding that to
     // the biggest number less than 0.5 would undesirably round up to 1), and
     // store the result into tmp.
-    ma_vimm(GetBiggestNumberLessThan(0.5), scratchDouble);
+    loadConstantDouble(GetBiggestNumberLessThan(0.5), scratchDouble);
     ma_vadd(scratchDouble, tmp, tmp);
 
     ma_vcvt_F64_U32(tmp, scratchDouble.uintOverlay());
@@ -3922,7 +3928,7 @@ MacroAssemblerARMCompat::round(FloatRegister input, Register output, Label* bail
     // since we added 0.5.
 
     // Add 0.5 to negative numbers, store the result into tmp
-    ma_vimm(0.5, scratchDouble);
+    loadConstantDouble(0.5, scratchDouble);
     ma_vadd(scratchDouble, tmp, tmp);
 
     ma_vcvt_F64_U32(tmp, scratchDouble.uintOverlay());
@@ -3973,7 +3979,7 @@ MacroAssemblerARMCompat::roundf(FloatRegister input, Register output, Label* bai
     // Add the biggest number less than 0.5f (not 0.5f, because adding that to
     // the biggest number less than 0.5f would undesirably round up to 1), and
     // store the result into tmp.
-    ma_vimm_f32(GetBiggestNumberLessThan(0.5f), scratchFloat);
+    loadConstantFloat32(GetBiggestNumberLessThan(0.5f), scratchFloat);
     ma_vadd_f32(scratchFloat, input, tmp);
 
     // Note: it doesn't matter whether x + .5 === x or not here, as it doesn't
@@ -3998,7 +4004,7 @@ MacroAssemblerARMCompat::roundf(FloatRegister input, Register output, Label* bai
 
     // Add 0.5 to negative numbers, storing the result into tmp.
     ma_vneg_f32(input, tmp);
-    ma_vimm_f32(0.5f, scratchFloat);
+    loadConstantFloat32(0.5f, scratchFloat);
     ma_vadd_f32(tmp, scratchFloat, scratchFloat);
 
     // Adding 0.5 to a float input has chances to yield the wrong result, if

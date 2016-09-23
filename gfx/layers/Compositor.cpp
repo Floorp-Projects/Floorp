@@ -119,21 +119,6 @@ Compositor::AssertOnCompositorThread()
              "Can only call this from the compositor thread!");
 }
 
-already_AddRefed<TextureSource>
-Compositor::CreateTextureSourceForImage(Image* aImage)
-{
-  RefPtr<gfx::SourceSurface> src = aImage->GetAsSourceSurface();
-  if (!src) {
-    return nullptr;
-  }
-  RefPtr<gfx::DataSourceSurface> data = src->GetDataSurface();
-  if (!data) {
-    return nullptr;
-  }
-  RefPtr<DataTextureSource> result = CreateDataTextureSourceAround(data);
-  return result.forget();
-}
-
 bool
 Compositor::ShouldDrawDiagnostics(DiagnosticFlags aFlags)
 {

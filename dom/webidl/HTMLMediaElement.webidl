@@ -165,6 +165,9 @@ partial interface HTMLMediaElement {
 
   [Pref="media.eme.apiVisible"]
   attribute EventHandler onencrypted;
+
+  [Pref="media.eme.apiVisible"]
+  attribute EventHandler onwaitingforkey;
 };
 #endif
 

@@ -42,7 +42,6 @@
 
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
-#include "nsISupportsArray.h"
 #include "nsIMutableArray.h"
 #include "nsContentUtils.h"
 #include "nsIDocumentEncoder.h"
@@ -2770,21 +2769,20 @@ HTMLEditor::SetBodyAttribute(const nsAString& aAttribute,
 }
 
 NS_IMETHODIMP
-HTMLEditor::GetLinkedObjects(nsISupportsArray** aNodeList)
+HTMLEditor::GetLinkedObjects(nsIArray** aNodeList)
 {
   NS_ENSURE_TRUE(aNodeList, NS_ERROR_NULL_POINTER);
 
-  nsresult res;
-
-  res = NS_NewISupportsArray(aNodeList);
-  NS_ENSURE_SUCCESS(res, res);
-  NS_ENSURE_TRUE(*aNodeList, NS_ERROR_NULL_POINTER);
+  nsresult rv;
+  nsCOMPtr<nsIMutableArray> nodes = do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   nsCOMPtr<nsIContentIterator> iter =
-       do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &res);
+    do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &rv);
   NS_ENSURE_TRUE(iter, NS_ERROR_NULL_POINTER);
-  if ((NS_SUCCEEDED(res)))
-  {
+  if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIDocument> doc = GetDocument();
     NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
@@ -2798,18 +2796,16 @@ HTMLEditor::GetLinkedObjects(nsISupportsArray** aNodeList)
       {
         // Let nsURIRefObject make the hard decisions:
         nsCOMPtr<nsIURIRefObject> refObject;
-        res = NS_NewHTMLURIRefObject(getter_AddRefs(refObject), node);
-        if (NS_SUCCEEDED(res))
-        {
-          nsCOMPtr<nsISupports> isupp (do_QueryInterface(refObject));
-
-          (*aNodeList)->AppendElement(isupp);
+        rv = NS_NewHTMLURIRefObject(getter_AddRefs(refObject), node);
+        if (NS_SUCCEEDED(rv)) {
+          nodes->AppendElement(refObject, false);
         }
       }
       iter->Next();
     }
   }
 
+  nodes.forget(aNodeList);
   return NS_OK;
 }
 

@@ -2209,16 +2209,17 @@ Assembler::as_BranchPool(uint32_t value, RepatchLabel* label, ARMBuffer::PoolEnt
 }
 
 BufferOffset
-Assembler::as_FImm64Pool(VFPRegister dest, double value, Condition c)
+Assembler::as_FImm64Pool(VFPRegister dest, wasm::RawF64 value, Condition c)
 {
     MOZ_ASSERT(dest.isDouble());
     PoolHintPun php;
     php.phd.init(0, c, PoolHintData::PoolVDTR, dest);
-    return allocEntry(1, 2, (uint8_t*)&php.raw, (uint8_t*)&value);
+    uint64_t d = value.bits();
+    return allocEntry(1, 2, (uint8_t*)&php.raw, (uint8_t*)&d);
 }
 
 BufferOffset
-Assembler::as_FImm32Pool(VFPRegister dest, float value, Condition c)
+Assembler::as_FImm32Pool(VFPRegister dest, wasm::RawF32 value, Condition c)
 {
     // Insert floats into the double pool as they have the same limitations on
     // immediate offset. This wastes 4 bytes padding per float. An alternative
@@ -2226,7 +2227,8 @@ Assembler::as_FImm32Pool(VFPRegister dest, float value, Condition c)
     MOZ_ASSERT(dest.isSingle());
     PoolHintPun php;
     php.phd.init(0, c, PoolHintData::PoolVDTR, dest);
-    return allocEntry(1, 1, (uint8_t*)&php.raw, (uint8_t*)&value);
+    uint32_t f = value.bits();
+    return allocEntry(1, 1, (uint8_t*)&php.raw, (uint8_t*)&f);
 }
 
 // Pool callbacks stuff:

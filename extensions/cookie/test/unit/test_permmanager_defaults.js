@@ -60,6 +60,13 @@ add_task(function* do_test() {
   let principal4 = Services.scriptSecurityManager.createCodebasePrincipal(TEST_ORIGIN, attrs);
   let principal5 = Services.scriptSecurityManager.createCodebasePrincipal(TEST_ORIGIN_3, attrs);
 
+  attrs = {userContextId: 1};
+  let principal6 = Services.scriptSecurityManager.createCodebasePrincipal(TEST_ORIGIN, attrs);
+  attrs = {firstPartyDomain: "cnn.com"};
+  let principal7 = Services.scriptSecurityManager.createCodebasePrincipal(TEST_ORIGIN, attrs);
+  attrs = {userContextId: 1, firstPartyDomain: "cnn.com"};
+  let principal8 = Services.scriptSecurityManager.createCodebasePrincipal(TEST_ORIGIN, attrs);
+
   do_check_eq(Ci.nsIPermissionManager.ALLOW_ACTION,
               pm.testPermissionFromPrincipal(principal, TEST_PERMISSION));
   do_check_eq(Ci.nsIPermissionManager.ALLOW_ACTION,
@@ -89,12 +96,26 @@ add_task(function* do_test() {
               pm.testPermissionFromPrincipal(principal3, TEST_PERMISSION));
   do_check_eq(Ci.nsIPermissionManager.ALLOW_ACTION,
               pm.testPermissionFromPrincipal(principal4, TEST_PERMISSION));
+  // make sure principals with userContextId or firstPartyDomain use the same permissions
+  do_check_eq(Ci.nsIPermissionManager.ALLOW_ACTION,
+              pm.testPermissionFromPrincipal(principal6, TEST_PERMISSION));
+  do_check_eq(Ci.nsIPermissionManager.ALLOW_ACTION,
+              pm.testPermissionFromPrincipal(principal7, TEST_PERMISSION));
+  do_check_eq(Ci.nsIPermissionManager.ALLOW_ACTION,
+              pm.testPermissionFromPrincipal(principal8, TEST_PERMISSION));
 
   // Asking for this permission to be removed should result in that permission
   // having UNKNOWN_ACTION
   pm.removeFromPrincipal(principal, TEST_PERMISSION);
   do_check_eq(Ci.nsIPermissionManager.UNKNOWN_ACTION,
               pm.testPermissionFromPrincipal(principal, TEST_PERMISSION));
+  // make sure principals with userContextId or firstPartyDomain use the same permissions
+  do_check_eq(Ci.nsIPermissionManager.UNKNOWN_ACTION,
+              pm.testPermissionFromPrincipal(principal6, TEST_PERMISSION));
+  do_check_eq(Ci.nsIPermissionManager.UNKNOWN_ACTION,
+              pm.testPermissionFromPrincipal(principal7, TEST_PERMISSION));
+  do_check_eq(Ci.nsIPermissionManager.UNKNOWN_ACTION,
+              pm.testPermissionFromPrincipal(principal8, TEST_PERMISSION));
   // and we should have this UNKNOWN_ACTION reflected in the DB
   yield checkCapabilityViaDB(Ci.nsIPermissionManager.UNKNOWN_ACTION);
   // but the permission should *not* appear in the enumerator.
@@ -105,6 +126,13 @@ add_task(function* do_test() {
 
   do_check_eq(Ci.nsIPermissionManager.ALLOW_ACTION,
               pm.testPermissionFromPrincipal(principal, TEST_PERMISSION));
+  // make sure principals with userContextId or firstPartyDomain use the same permissions
+  do_check_eq(Ci.nsIPermissionManager.ALLOW_ACTION,
+              pm.testPermissionFromPrincipal(principal6, TEST_PERMISSION));
+  do_check_eq(Ci.nsIPermissionManager.ALLOW_ACTION,
+              pm.testPermissionFromPrincipal(principal7, TEST_PERMISSION));
+  do_check_eq(Ci.nsIPermissionManager.ALLOW_ACTION,
+              pm.testPermissionFromPrincipal(principal8, TEST_PERMISSION));
   // and allow it to again be seen in the enumerator.
   do_check_eq(Ci.nsIPermissionManager.ALLOW_ACTION, findCapabilityViaEnum());
 
@@ -114,6 +142,13 @@ add_task(function* do_test() {
   // it should be reflected in a permission check, in the enumerator and the DB
   do_check_eq(Ci.nsIPermissionManager.DENY_ACTION,
               pm.testPermissionFromPrincipal(principal, TEST_PERMISSION));
+  // make sure principals with userContextId or firstPartyDomain use the same permissions
+  do_check_eq(Ci.nsIPermissionManager.DENY_ACTION,
+              pm.testPermissionFromPrincipal(principal6, TEST_PERMISSION));
+  do_check_eq(Ci.nsIPermissionManager.DENY_ACTION,
+              pm.testPermissionFromPrincipal(principal7, TEST_PERMISSION));
+  do_check_eq(Ci.nsIPermissionManager.DENY_ACTION,
+              pm.testPermissionFromPrincipal(principal8, TEST_PERMISSION));
   do_check_eq(Ci.nsIPermissionManager.DENY_ACTION, findCapabilityViaEnum());
   yield checkCapabilityViaDB(Ci.nsIPermissionManager.DENY_ACTION);
 
@@ -124,6 +159,13 @@ add_task(function* do_test() {
   // it should be reflected in a permission check, in the enumerator and the DB
   do_check_eq(Ci.nsIPermissionManager.PROMPT_ACTION,
               pm.testPermissionFromPrincipal(principal, TEST_PERMISSION));
+  // make sure principals with userContextId or firstPartyDomain use the same permissions
+  do_check_eq(Ci.nsIPermissionManager.PROMPT_ACTION,
+              pm.testPermissionFromPrincipal(principal6, TEST_PERMISSION));
+  do_check_eq(Ci.nsIPermissionManager.PROMPT_ACTION,
+              pm.testPermissionFromPrincipal(principal7, TEST_PERMISSION));
+  do_check_eq(Ci.nsIPermissionManager.PROMPT_ACTION,
+              pm.testPermissionFromPrincipal(principal8, TEST_PERMISSION));
   do_check_eq(Ci.nsIPermissionManager.PROMPT_ACTION, findCapabilityViaEnum());
   yield checkCapabilityViaDB(Ci.nsIPermissionManager.PROMPT_ACTION);
 

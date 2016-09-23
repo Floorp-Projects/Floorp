@@ -63,7 +63,7 @@ function jsify(wasmVal) {
 }
 
 // Assert that the expected value is equal to the int64 value, as passed by
-// Baldr with --wasm-extra-tests {low: int32, high: int32}.
+// Baldr: {low: int32, high: int32}.
 // - if the expected value is in the int32 range, it can be just a number.
 // - otherwise, an object with the properties "high" and "low".
 function assertEqI64(observed, expect) {
@@ -82,6 +82,32 @@ function assertEqI64(observed, expect) {
         assertEq(low, expect.low | 0, "low 32 bits don't match");
         assertEq(high, expect.high | 0, "high 32 bits don't match");
     }
+}
+
+// Asserts in Baldr test mode that NaN payloads match.
+function assertEqNaN(x, y) {
+    if (typeof x === 'number') {
+        assertEq(Number.isNaN(x), Number.isNaN(y));
+        return;
+    }
+
+    assertEq(typeof x === 'object' &&
+             typeof x.nan_low === 'number',
+             true,
+             "assertEqNaN args must have shape {nan_high, nan_low}");
+
+    assertEq(typeof y === 'object' &&
+             typeof y.nan_low === 'number',
+             true,
+             "assertEqNaN args must have shape {nan_high, nan_low}");
+
+    assertEq(typeof x.nan_high,
+             typeof y.nan_high,
+             "both args must have nan_high, or none");
+
+    assertEq(x.nan_high, y.nan_high, "assertEqNaN nan_high don't match");
+    if (typeof x.nan_low !== 'undefined')
+        assertEq(x.nan_low, y.nan_low, "assertEqNaN nan_low don't match");
 }
 
 function createI64(val) {

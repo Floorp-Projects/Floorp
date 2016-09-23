@@ -761,8 +761,8 @@ AstDecodeExpr(AstDecodeContext& c)
             return false;
         c.iter().setResult(AstDecodeStackItem(tmp));
         break;
-      case Expr::F32Const:
-        float f32;
+      case Expr::F32Const: {
+        RawF32 f32;
         if (!c.iter().readF32Const(&f32))
             return false;
         tmp = new(c.lifo) AstConst(Val(f32));
@@ -770,8 +770,9 @@ AstDecodeExpr(AstDecodeContext& c)
             return false;
         c.iter().setResult(AstDecodeStackItem(tmp));
         break;
-      case Expr::F64Const:
-        double f64;
+      }
+      case Expr::F64Const: {
+        RawF64 f64;
         if (!c.iter().readF64Const(&f64))
             return false;
         tmp = new(c.lifo) AstConst(Val(f64));
@@ -779,6 +780,7 @@ AstDecodeExpr(AstDecodeContext& c)
             return false;
         c.iter().setResult(AstDecodeStackItem(tmp));
         break;
+      }
       case Expr::GetLocal:
         if (!AstDecodeGetLocal(c))
             return false;

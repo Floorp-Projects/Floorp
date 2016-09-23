@@ -4,14 +4,10 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
      width="24" height="24" viewBox="0 0 24 24">
+#include ../icon-colors.inc.svg
   <style>
     svg > rect:not(:target) {
       display: none;
-    }
-
-    #connection-degraded {
-      fill: -moz-fieldtext;
-      fill-opacity: .5;
     }
 
     #connection-secure {
@@ -36,6 +32,6 @@
     </mask>
   </defs>
 
-  <rect id="connection-degraded" width="24" height="24" mask="url(#mask-lock)"/>
+  <rect id="connection-degraded" class="fieldtext" width="24" height="24" mask="url(#mask-lock)"/>
   <rect id="connection-secure" width="24" height="24" mask="url(#mask-lock)"/>
 </svg>

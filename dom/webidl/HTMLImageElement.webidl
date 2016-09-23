@@ -14,7 +14,6 @@
 interface imgINotificationObserver;
 interface imgIRequest;
 interface URI;
-interface MozChannel;
 interface nsIStreamListener;
 
 [NamedConstructor=Image(optional unsigned long width, optional unsigned long height)]
@@ -102,8 +101,6 @@ interface MozImageLoadingContent {
   long getRequestType(imgIRequest aRequest);
   [ChromeOnly,Throws]
   readonly attribute URI? currentURI;
-  [ChromeOnly,Throws]
-  nsIStreamListener? loadImageWithChannel(MozChannel aChannel);
   [ChromeOnly,Throws]
   void forceReload(optional boolean aNotify);
   [ChromeOnly]

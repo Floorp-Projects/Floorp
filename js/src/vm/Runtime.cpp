@@ -383,8 +383,7 @@ JSRuntime::destroyRuntime()
          * synchronously (on the main thread or during parse tasks), so no
          * explicit canceling is needed for these.
          */
-        for (CompartmentsIter comp(this, SkipAtoms); !comp.done(); comp.next())
-            CancelOffThreadIonCompile(comp, nullptr);
+        CancelOffThreadIonCompile(this);
         CancelOffThreadParses(this);
 
         /* Remove persistent GC roots. */

@@ -37,6 +37,8 @@ using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
 using mozilla::CheckedInt;
+using mozilla::IsNaN;
+using mozilla::IsSame;
 using mozilla::Nothing;
 
 bool
@@ -56,6 +58,117 @@ wasm::HasCompilerSupport(ExclusiveContext* cx)
 #else
     return true;
 #endif
+}
+
+template<typename T>
+JSObject*
+js::wasm::CreateCustomNaNObject(JSContext* cx, T* addr)
+{
+    MOZ_ASSERT(IsNaN(*addr));
+
+    RootedObject obj(cx, JS_NewPlainObject(cx));
+    if (!obj)
+        return nullptr;
+
+    int32_t* i32 = (int32_t*)addr;
+    RootedValue intVal(cx, Int32Value(i32[0]));
+    if (!JS_DefineProperty(cx, obj, "nan_low", intVal, JSPROP_ENUMERATE))
+        return nullptr;
+
+    if (IsSame<double, T>::value) {
+        intVal = Int32Value(i32[1]);
+        if (!JS_DefineProperty(cx, obj, "nan_high", intVal, JSPROP_ENUMERATE))
+            return nullptr;
+    }
+
+    return obj;
+}
+
+template JSObject* js::wasm::CreateCustomNaNObject(JSContext* cx, float* addr);
+template JSObject* js::wasm::CreateCustomNaNObject(JSContext* cx, double* addr);
+
+bool
+js::wasm::ReadCustomFloat32NaNObject(JSContext* cx, HandleValue v, uint32_t* ret)
+{
+    RootedObject obj(cx, &v.toObject());
+    RootedValue val(cx);
+
+    int32_t i32;
+    if (!JS_GetProperty(cx, obj, "nan_low", &val))
+        return false;
+    if (!ToInt32(cx, val, &i32))
+        return false;
+
+    *ret = i32;
+    return true;
+}
+
+bool
+js::wasm::ReadCustomDoubleNaNObject(JSContext* cx, HandleValue v, uint64_t* ret)
+{
+    RootedObject obj(cx, &v.toObject());
+    RootedValue val(cx);
+
+    int32_t i32;
+    if (!JS_GetProperty(cx, obj, "nan_high", &val))
+        return false;
+    if (!ToInt32(cx, val, &i32))
+        return false;
+    *ret = uint32_t(i32);
+    *ret <<= 32;
+
+    if (!JS_GetProperty(cx, obj, "nan_low", &val))
+        return false;
+    if (!ToInt32(cx, val, &i32))
+        return false;
+    *ret |= uint32_t(i32);
+
+    return true;
+}
+
+JSObject*
+wasm::CreateI64Object(JSContext* cx, int64_t i64)
+{
+    RootedObject result(cx, JS_NewPlainObject(cx));
+    if (!result)
+        return nullptr;
+
+    RootedValue val(cx, Int32Value(uint32_t(i64)));
+    if (!JS_DefineProperty(cx, result, "low", val, JSPROP_ENUMERATE))
+        return nullptr;
+
+    val = Int32Value(uint32_t(i64 >> 32));
+    if (!JS_DefineProperty(cx, result, "high", val, JSPROP_ENUMERATE))
+        return nullptr;
+
+    return result;
+}
+
+bool
+wasm::ReadI64Object(JSContext* cx, HandleValue v, int64_t* i64)
+{
+    if (!v.isObject()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL,
+                             "i64 JS value must be an object");
+        return false;
+    }
+
+    RootedObject obj(cx, &v.toObject());
+
+    int32_t* i32 = (int32_t*)i64;
+
+    RootedValue val(cx);
+    if (!JS_GetProperty(cx, obj, "low", &val))
+        return false;
+    if (!ToInt32(cx, val, &i32[0]))
+        return false;
+
+    if (!JS_GetProperty(cx, obj, "high", &val))
+        return false;
+    if (!ToInt32(cx, val, &i32[1]))
+        return false;
+
+    return true;
 }
 
 // ============================================================================
@@ -161,17 +274,31 @@ GetImports(JSContext* cx,
                 break;
               }
               case ValType::F32: {
+                if (JitOptions.wasmTestMode && v.isObject()) {
+                    uint32_t bits;
+                    if (!ReadCustomFloat32NaNObject(cx, v, &bits))
+                        return false;
+                    val = Val(RawF32::fromBits(bits));
+                    break;
+                }
                 double d;
                 if (!ToNumber(cx, v, &d))
                     return false;
-                val = Val(float(d));
+                val = Val(RawF32(float(d)));
                 break;
               }
               case ValType::F64: {
+                if (JitOptions.wasmTestMode && v.isObject()) {
+                    uint64_t bits;
+                    if (!ReadCustomDoubleNaNObject(cx, v, &bits))
+                        return false;
+                    val = Val(RawF64::fromBits(bits));
+                    break;
+                }
                 double d;
                 if (!ToNumber(cx, v, &d))
                     return false;
-                val = Val(d);
+                val = Val(RawF64(d));
                 break;
               }
               default: {

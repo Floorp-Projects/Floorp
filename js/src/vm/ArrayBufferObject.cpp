@@ -1141,13 +1141,18 @@ ArrayBufferObject::addSizeOfExcludingThis(JSObject* obj, mozilla::MallocSizeOf m
 
     switch (buffer.bufferKind()) {
       case PLAIN:
-        info->objectsMallocHeapElementsNormal += mallocSizeOf(buffer.dataPointer());
+        if (buffer.isPreparedForAsmJS())
+            info->objectsMallocHeapElementsAsmJS += mallocSizeOf(buffer.dataPointer());
+        else
+            info->objectsMallocHeapElementsNormal += mallocSizeOf(buffer.dataPointer());
         break;
       case MAPPED:
         info->objectsNonHeapElementsNormal += buffer.byteLength();
         break;
       case WASM:
-        info->objectsNonHeapElementsAsmJS += buffer.byteLength();
+        info->objectsNonHeapElementsWasm += buffer.byteLength();
+        MOZ_ASSERT(buffer.wasmMappedSize() >= buffer.byteLength());
+        info->wasmGuardPages += buffer.wasmMappedSize() - buffer.byteLength();
         break;
       case KIND_MASK:
         MOZ_CRASH("bad bufferKind()");

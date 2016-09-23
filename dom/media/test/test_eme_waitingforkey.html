@@ -58,6 +58,7 @@ function startTest(test, token)
 
   var gotEncrypted = 0;
   var gotWaitingForKey = 0;
+  var gotOnwaitingforkey = 0;
 
   v.addEventListener("encrypted", function() {
     gotEncrypted += 1;
@@ -68,6 +69,10 @@ function startTest(test, token)
     gotWaitingForKey += 1;
     TestIfDoneDelaying()
   });
+
+  v.onwaitingforkey = function() {
+    gotOnwaitingforkey += 1;
+  };
 
   v.addEventListener("loadedmetadata", function() {
     ok(SpecialPowers.do_lookupGetter(v, "isEncrypted").apply(v),
@@ -81,6 +86,7 @@ function startTest(test, token)
     // I.e. one waitingForKey should be fired, after which, we process all sessions,
     // so it should not be possible to be blocked by a key after that point.
     ok(gotWaitingForKey == 1,  "Expected number 1 wait, got: " + gotWaitingForKey);
+    ok(gotOnwaitingforkey == gotWaitingForKey, "Should have as many event listener calls as event handler calls, got: " + gotOnwaitingforkey);
 
     v.closeSessions().then(() => manager.finished(token));
   });
