@@ -11,7 +11,6 @@ import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.GeckoJarReader;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UIAsyncTask;
@@ -129,7 +128,7 @@ public final class BitmapUtils {
 
         if (data.startsWith("drawable://")) {
             final Uri imageUri = Uri.parse(data);
-            final int id = getResource(imageUri, R.drawable.ic_status_logo);
+            final int id = getResource(context, imageUri);
             final Drawable d = context.getResources().getDrawable(id);
 
             runOnBitmapFoundOnUiThread(loader, d);
@@ -371,44 +370,33 @@ public final class BitmapUtils {
         return bitmap;
     }
 
-    public static int getResource(Uri resourceUrl, int defaultIcon) {
-        int icon = defaultIcon;
-
+    public static int getResource(final Context context, final Uri resourceUrl) {
         final String scheme = resourceUrl.getScheme();
-        if ("drawable".equals(scheme)) {
-            String resource = resourceUrl.getSchemeSpecificPart();
-            resource = resource.substring(resource.lastIndexOf('/') + 1);
-
-            try {
-                return Integer.parseInt(resource);
-            } catch (NumberFormatException ex) {
-                // This isn't a resource id, try looking for a string
-            }
-
-            try {
-                final Class<R.drawable> drawableClass = R.drawable.class;
-                final Field f = drawableClass.getField(resource);
-                icon = f.getInt(null);
-            } catch (final NoSuchFieldException e1) {
-
-                // just means the resource doesn't exist for fennec. Check in Android resources
-                try {
-                    final Class<android.R.drawable> drawableClass = android.R.drawable.class;
-                    final Field f = drawableClass.getField(resource);
-                    icon = f.getInt(null);
-                } catch (final NoSuchFieldException e2) {
-                    // This drawable doesn't seem to exist...
-                } catch (Exception e3) {
-                    Log.i(LOGTAG, "Exception getting drawable", e3);
-                }
-
-            } catch (Exception e4) {
-              Log.i(LOGTAG, "Exception getting drawable", e4);
-            }
-
-            resourceUrl = null;
+        if (!"drawable".equals(scheme)) {
+            // Return a "not found" default icon that's easy to spot.
+            return android.R.drawable.sym_def_app_icon;
         }
-        return icon;
+
+        String resource = resourceUrl.getSchemeSpecificPart();
+        if (resource.startsWith("//")) {
+            resource = resource.substring(2);
+        }
+
+        final Resources res = context.getResources();
+        int id = res.getIdentifier(resource, "drawable", context.getPackageName());
+        if (id != 0) {
+            return id;
+        }
+
+        // For backwards compatibility, we also search in system resources.
+        id = res.getIdentifier(resource, "drawable", "android");
+        if (id != 0) {
+            return id;
+        }
+
+        Log.w(LOGTAG, "Cannot find drawable/" + resource);
+        // Return a "not found" default icon that's easy to spot.
+        return android.R.drawable.sym_def_app_icon;
     }
 
     public static Bitmap getLauncherIcon(Context context, Bitmap aSource, int size) {
