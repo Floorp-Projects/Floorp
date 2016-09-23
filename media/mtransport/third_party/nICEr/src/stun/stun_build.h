@@ -40,6 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifdef USE_STUND_0_96
 #define NR_STUN_MODE_STUND_0_96         2    /* backwards compatibility mode */
 #endif /* USE_STUND_0_96 */
+#define NR_STUN_MODE_STUN_NO_AUTH       3
 int nr_stun_form_request_or_indication(int mode, int msg_type, nr_stun_message **msg);
 
 typedef struct nr_stun_client_stun_binding_request_params_ {
