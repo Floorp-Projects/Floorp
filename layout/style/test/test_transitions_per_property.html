@@ -1373,13 +1373,13 @@ function test_true_currentcolor_transition(prop, get_color=(x => x), is_shorthan
      msg_prefix + "interpolation of rgb color and interpolated currentcolor");
 
   div.style.setProperty("transition-property", "none", "");
-  div.style.setProperty("color", "rgba(128, 0, 0, 0.1)", "");
-  div.style.setProperty(prop, "rgba(0, 0, 128, 0.9)", "");
-  is(get_color(cs.getPropertyValue(prop)), "rgba(0, 0, 128, 0.9)",
+  div.style.setProperty("color", "rgba(128, 0, 0, 0.6)", "");
+  div.style.setProperty(prop, "rgba(0, 0, 128, 0.8)", "");
+  is(get_color(cs.getPropertyValue(prop)), "rgba(0, 0, 128, 0.8)",
      msg_prefix + "computed value before transition");
   div.style.setProperty("transition-property", prop, "");
   div.style.setProperty(prop, "currentcolor", "");
-  is(get_color(cs.getPropertyValue(prop)), "rgba(5, 0, 123, 0.7)",
+  is(get_color(cs.getPropertyValue(prop)), "rgba(26, 0, 102, 0.75)",
      msg_prefix + "interpolation of rgba color and currentcolor");
 
   // It is not possible to check distance, because there is a hidden
