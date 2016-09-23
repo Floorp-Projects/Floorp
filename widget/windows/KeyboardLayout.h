@@ -260,6 +260,12 @@ public:
 
 private:
   NativeKey* mLastInstance;
+  // mRemovingMsg is set at removing a char message from
+  // GetFollowingCharMessage().
+  MSG mRemovingMsg;
+  // mReceivedMsg is set when another instance starts to handle the message
+  // unexpectedly.
+  MSG mReceivedMsg;
   RefPtr<nsWindowBase> mWidget;
   RefPtr<TextEventDispatcher> mDispatcher;
   HKL mKeyboardLayout;
@@ -456,7 +462,7 @@ private:
    * WARNING: Even if this returns true, aCharMsg may be WM_NULL or its
    *          hwnd may be different window.
    */
-  bool GetFollowingCharMessage(MSG& aCharMsg) const;
+  bool GetFollowingCharMessage(MSG& aCharMsg);
 
   /**
    * Whether the key event can compute virtual keycode from the scancode value.
@@ -554,6 +560,26 @@ private:
    * handling a key or char message(s).
    */
   static NativeKey* sLatestInstance;
+
+  static const MSG EmptyMSG()
+  {
+    static bool sInitialized = false;
+    static MSG sEmptyMSG;
+    if (!sInitialized) {
+      memset(&sEmptyMSG, 0, sizeof(sEmptyMSG));
+      sInitialized = true;
+    }
+    return sEmptyMSG;
+  }
+  static bool IsEmptyMSG(const MSG& aMSG)
+  {
+    return !memcmp(&aMSG, &EmptyMSG(), sizeof(MSG));
+  }
+
+  bool IsAnotherInstanceRemovingCharMessage() const
+  {
+    return mLastInstance && !IsEmptyMSG(mLastInstance->mRemovingMsg);
+  }
 };
 
 class KeyboardLayout
