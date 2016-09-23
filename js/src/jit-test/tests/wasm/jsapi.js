@@ -1,8 +1,9 @@
 load(libdir + 'wasm.js');
+load(libdir + 'asserts.js');
 
 const WasmPage = 64 * 1024;
 
-const emptyModule = wasmTextToBinary('(module)');
+const emptyModule = textToBinary('(module)');
 
 // 'WebAssembly' data property on global object
 const wasmDesc = Object.getOwnPropertyDescriptor(this, 'WebAssembly');
@@ -32,8 +33,8 @@ assertErrorMessage(() => new Module(), TypeError, /requires more than 0 argument
 assertErrorMessage(() => new Module(undefined), TypeError, "first argument must be an ArrayBuffer or typed array object");
 assertErrorMessage(() => new Module(1), TypeError, "first argument must be an ArrayBuffer or typed array object");
 assertErrorMessage(() => new Module({}), TypeError, "first argument must be an ArrayBuffer or typed array object");
-assertErrorMessage(() => new Module(new Uint8Array()), /* TODO: WebAssembly.CompileError */ TypeError, /failed to match magic number/);
-assertErrorMessage(() => new Module(new ArrayBuffer()), /* TODO: WebAssembly.CompileError */ TypeError, /failed to match magic number/);
+assertErrorMessage(() => new Module(new Uint8Array()), /* TODO: WebAssembly.CompileError */ TypeError, /compile error/);
+assertErrorMessage(() => new Module(new ArrayBuffer()), /* TODO: WebAssembly.CompileError */ TypeError, /compile error/);
 assertEq(new Module(emptyModule) instanceof Module, true);
 assertEq(new Module(emptyModule.buffer) instanceof Module, true);
 
@@ -335,8 +336,8 @@ assertCompileError([], /requires more than 0 arguments/);
 assertCompileError([undefined], /first argument must be an ArrayBuffer or typed array object/);
 assertCompileError([1], /first argument must be an ArrayBuffer or typed array object/);
 assertCompileError([{}], /first argument must be an ArrayBuffer or typed array object/);
-assertCompileError([new Uint8Array()], /failed to match magic number/);
-assertCompileError([new ArrayBuffer()], /failed to match magic number/);
+assertCompileError([new Uint8Array()], /compile error/);
+assertCompileError([new ArrayBuffer()], /compile error/);
 function assertCompileSuccess(bytes) {
     var module = null;
     compile(bytes).then(m => module = m);

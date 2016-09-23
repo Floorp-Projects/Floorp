@@ -14,4 +14,4 @@ assertEq(wasmEvalText(`(module
         )
     )
     (export "" 0)
-)`).exports[""](), 121);
+)`)(), 121);

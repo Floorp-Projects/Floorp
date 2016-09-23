@@ -552,12 +552,14 @@ SigWithId::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 
 Assumptions::Assumptions(JS::BuildIdCharVector&& buildId)
   : cpuId(GetCPUID()),
-    buildId(Move(buildId))
+    buildId(Move(buildId)),
+    newFormat(false)
 {}
 
 Assumptions::Assumptions()
   : cpuId(GetCPUID()),
-    buildId()
+    buildId(),
+    newFormat(false)
 {}
 
 bool
@@ -574,6 +576,7 @@ bool
 Assumptions::clone(const Assumptions& other)
 {
     cpuId = other.cpuId;
+    newFormat = other.newFormat;
     return buildId.appendAll(other.buildId);
 }
 
@@ -582,14 +585,16 @@ Assumptions::operator==(const Assumptions& rhs) const
 {
     return cpuId == rhs.cpuId &&
            buildId.length() == rhs.buildId.length() &&
-           PodEqual(buildId.begin(), rhs.buildId.begin(), buildId.length());
+           PodEqual(buildId.begin(), rhs.buildId.begin(), buildId.length()) &&
+           newFormat == rhs.newFormat;
 }
 
 size_t
 Assumptions::serializedSize() const
 {
     return sizeof(uint32_t) +
-           SerializedPodVectorSize(buildId);
+           SerializedPodVectorSize(buildId) +
+           sizeof(bool);
 }
 
 uint8_t*
@@ -597,6 +602,7 @@ Assumptions::serialize(uint8_t* cursor) const
 {
     cursor = WriteScalar<uint32_t>(cursor, cpuId);
     cursor = SerializePodVector(cursor, buildId);
+    cursor = WriteScalar<bool>(cursor, newFormat);
     return cursor;
 }
 
@@ -604,7 +610,8 @@ const uint8_t*
 Assumptions::deserialize(const uint8_t* cursor)
 {
     (cursor = ReadScalar<uint32_t>(cursor, &cpuId)) &&
-    (cursor = DeserializePodVector(cursor, &buildId));
+    (cursor = DeserializePodVector(cursor, &buildId)) &&
+    (cursor = ReadScalar<bool>(cursor, &newFormat));
     return cursor;
 }
 

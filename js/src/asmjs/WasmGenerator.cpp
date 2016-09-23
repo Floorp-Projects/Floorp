@@ -137,7 +137,8 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, const CompileArgs& args,
         numSigs_ = shared_->sigs.length();
         numTables_ = shared_->tables.length();
 
-        shared_->firstFuncDefIndex = shared_->funcImports.length();
+        if (args.assumptions.newFormat)
+            shared_->firstFuncDefIndex = shared_->funcImports.length();
 
         for (FuncImportGenDesc& funcImport : shared_->funcImports) {
             MOZ_ASSERT(!funcImport.globalDataOffset);
