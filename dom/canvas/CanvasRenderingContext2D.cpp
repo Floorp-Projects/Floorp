@@ -3617,6 +3617,11 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
       nscolor fill = mState->colorStyles[CanvasRenderingContext2D::Style::FILL];
       thebes->SetColor(Color::FromABGR(fill));
       gfxTextRun::DrawParams params(thebes);
+      const ContextState& state = *mState;
+      DrawOptions drawOpts;
+      drawOpts.mAlpha = state.globalAlpha;
+      drawOpts.mCompositionOp = mCtx->UsedOperation();
+      params.drawOpts = &drawOpts;
       mTextRun->Draw(gfxTextRun::Range(mTextRun.get()), point, params);
       return;
     }
