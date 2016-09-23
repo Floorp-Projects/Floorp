@@ -108,6 +108,7 @@
 #include "nsFrameSelection.h"
 #include "FrameLayerBuilder.h"
 #include "mozilla/layers/APZCTreeManager.h"
+#include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
@@ -9292,10 +9293,11 @@ static void UpdateDisplayPortMarginsForPendingMetrics(FrameMetrics& aMetrics) {
 }
 
 /* static */ void
-nsLayoutUtils::UpdateDisplayPortMarginsFromPendingMessages() {
+nsLayoutUtils::UpdateDisplayPortMarginsFromPendingMessages()
+{
   if (mozilla::dom::ContentChild::GetSingleton() &&
       mozilla::dom::ContentChild::GetSingleton()->GetIPCChannel()) {
-    mozilla::dom::ContentChild::GetSingleton()->GetIPCChannel()->PeekMessages(
+    CompositorBridgeChild::Get()->GetIPCChannel()->PeekMessages(
       [](const IPC::Message& aMsg) -> bool {
         if (aMsg.type() == mozilla::layers::PAPZ::Msg_RequestContentRepaint__ID) {
           PickleIterator iter(aMsg);
