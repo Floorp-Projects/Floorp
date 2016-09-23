@@ -10,10 +10,14 @@ var names = [
   "span", "_moz_generated_content_before", "_moz_generated_content_after"
 ];
 
-names.forEach(name => {
-  var element = document.createElement(name);
-  element.animate({ "color": ["red", "blue"] }, { duration: 1000 });
-  is(element.getAnimations().length, 1);
-});
+if (SpecialPowers.getBoolPref("dom.animations-api.core.enabled")) {
+  names.forEach(name => {
+    var element = document.createElement(name);
+    element.animate({ "color": ["red", "blue"] }, { duration: 1000 });
+    is(element.getAnimations().length, 1);
+  });
+} else {
+  ok("Test requires Web Animations, which is disabled.");
+}
 
 </script>
