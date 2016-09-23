@@ -29,6 +29,8 @@ job-defaults:
             # the functionality that l10n needs
 
             JOB_SCRIPT: "taskcluster/scripts/builder/build-l10n.sh"
+    # don't run anywhere by default, but still available via try
+    run-on-projects: []
     when:
         files-changed:
             - browser/locales/all-locales
