@@ -6,8 +6,6 @@
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
-MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
-
 MOCHITEST_CHROME_MANIFESTS += [
     'tests/chrome.ini'
 ]
@@ -15,27 +13,16 @@ MOCHITEST_CHROME_MANIFESTS += [
 EXTRA_COMPONENTS += [
     'AppsService.js',
     'AppsService.manifest',
-    'Webapps.js',
-    'Webapps.manifest',
 ]
 
 EXTRA_JS_MODULES += [
-    'AppDownloadManager.jsm',
     'AppsServiceChild.jsm',
-    'FreeSpaceWatcher.jsm',
-    'Langpacks.jsm',
     'MessageBroadcaster.jsm',
-    'OfflineCacheInstaller.jsm',
     'PermissionsInstaller.jsm',
     'PermissionsTable.jsm',
-    'StoreTrustAnchor.jsm',
     'UserCustomizations.jsm',
 ]
 
 EXTRA_PP_JS_MODULES += [
     'AppsUtils.jsm',
-    'ImportExport.jsm',
-    'OperatorApps.jsm',
-    'ScriptPreloader.jsm',
-    'Webapps.jsm',
 ]

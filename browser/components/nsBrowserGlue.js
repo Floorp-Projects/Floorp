@@ -669,9 +669,6 @@ BrowserGlue.prototype = {
     // handle any UI migration
     this._migrateUI();
 
-    // Evaluate Webapps.jsm early to resolve ts_paint regression bug 1256667.
-    Cu.import("resource://gre/modules/Webapps.jsm", {});
-
     PageThumbs.init();
     webrtcUI.init();
     AboutHome.init();
