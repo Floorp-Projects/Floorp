@@ -234,14 +234,18 @@ already_AddRefed<File>
 DataTransferItem::GetAsFile(nsIPrincipal& aSubjectPrincipal,
                             ErrorResult& aRv)
 {
-  if (mKind != KIND_FILE) {
-    return nullptr;
-  }
-
   // This is done even if we have an mCachedFile, as it performs the necessary
   // permissions checks to ensure that we are allowed to access this type.
   nsCOMPtr<nsIVariant> data = Data(&aSubjectPrincipal, aRv);
   if (NS_WARN_IF(!data || aRv.Failed())) {
+    return nullptr;
+  }
+
+  // We have to check our kind after getting the data, because if we have
+  // external data and the OS lied to us (which unfortunately does happen
+  // sometimes), then we might not have the same type of data as we did coming
+  // into this function.
+  if (NS_WARN_IF(mKind != KIND_FILE)) {
     return nullptr;
   }
 
@@ -266,6 +270,7 @@ DataTransferItem::GetAsFile(nsIPrincipal& aSubjectPrincipal,
       mCachedFile = File::CreateFromFile(mDataTransfer, ifile);
     } else {
       MOZ_ASSERT(false, "One of the above code paths should be taken");
+      return nullptr;
     }
   }
 
@@ -378,7 +383,7 @@ DataTransferItem::GetAsString(FunctionStringCallback* aCallback,
                               nsIPrincipal& aSubjectPrincipal,
                               ErrorResult& aRv)
 {
-  if (!aCallback || mKind != KIND_STRING) {
+  if (!aCallback) {
     return;
   }
 
@@ -387,6 +392,14 @@ DataTransferItem::GetAsString(FunctionStringCallback* aCallback,
   // NS_ERROR_DOM_SECURITY_ERROR messages which may be raised by this method.
   nsCOMPtr<nsIVariant> data = Data(&aSubjectPrincipal, aRv);
   if (NS_WARN_IF(!data || aRv.Failed())) {
+    return;
+  }
+
+  // We have to check our kind after getting the data, because if we have
+  // external data and the OS lied to us (which unfortunately does happen
+  // sometimes), then we might not have the same type of data as we did coming
+  // into this function.
+  if (NS_WARN_IF(mKind != KIND_STRING)) {
     return;
   }
 
