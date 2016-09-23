@@ -397,6 +397,7 @@ main(int argv, char **argc)
     ECTEST_NAMED_GFP("WTLS-8 (112)", ECCurve_WTLS_8);
     ECTEST_NAMED_GFP("WTLS-9 (160)", ECCurve_WTLS_9);
     ECTEST_NAMED_GFP("WTLS-12 (224)", ECCurve_WTLS_12);
+    ECTEST_NAMED_GFP("Curve25519", ECCurve25519);
 
 CLEANUP:
     EC_FreeCurveParams(params);
