@@ -355,6 +355,13 @@ public:
    */
   void NotifyMediaStreamTracksAvailable(DOMMediaStream* aStream);
 
+  /**
+   * Called when a captured MediaStreamTrack is stopped so we can clean up its
+   * MediaInputPort.
+   */
+  void NotifyOutputTrackStopped(DOMMediaStream* aOwningStream,
+                                TrackID aDestinationTrackID);
+
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
 
   /**
