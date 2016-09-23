@@ -4,9 +4,10 @@ load(libdir + "wasm.js");
 function loadModule(type, ext, offset, align) {
     return wasmEvalText(
     `(module
-       (memory 1)
-       (data 0 "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")
-       (data 16 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
+       (memory 1
+         (segment 0 "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")
+         (segment 16 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
+       )
        (func (param i32) (result ${type})
          (${type}.load${ext}
           offset=${offset}
@@ -14,17 +15,18 @@ function loadModule(type, ext, offset, align) {
           (get_local 0)
          )
        ) (export "" 0))`
-    ).exports[""];
+    );
 }
 
 function storeModule(type, ext, offset, align) {
     var load_ext = ext === '' ? '' : ext + '_s';
     return wasmEvalText(
     `(module
-       (memory 1)
-       (data 0 "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")
-       (data 16 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
-       (func (param i32) (param ${type})
+       (memory 1
+         (segment 0 "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")
+         (segment 16 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
+       )
+       (func (param i32) (param ${type}) (result ${type})
          (${type}.store${ext}
           offset=${offset}
           ${align != 0 ? 'align=' + align : ''}
@@ -39,17 +41,18 @@ function storeModule(type, ext, offset, align) {
          (get_local 0)
         )
        ) (export "load" 1))`
-    ).exports;
+    );
 }
 
 function storeModuleCst(type, ext, offset, align, value) {
     var load_ext = ext === '' ? '' : ext + '_s';
     return wasmEvalText(
     `(module
-       (memory 1)
-       (data 0 "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")
-       (data 16 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
-       (func (param i32)
+       (memory 1
+         (segment 0 "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")
+         (segment 16 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
+       )
+       (func (param i32) (result ${type})
          (${type}.store${ext}
           offset=${offset}
           ${align != 0 ? 'align=' + align : ''}
@@ -64,7 +67,7 @@ function storeModuleCst(type, ext, offset, align, value) {
          (get_local 0)
         )
        ) (export "load" 1))`
-    ).exports;
+    );
 }
 
 function testLoad(type, ext, base, offset, align, expect) {
@@ -83,14 +86,14 @@ function testStore(type, ext, base, offset, align, value) {
     let moduleCst = storeModuleCst(type, ext, offset, align, value);
     if (type === 'i64') {
         var i64 = createI64(value);
-        module.store(base, i64);
+        assertEqI64(module.store(base, i64), i64);
         assertEqI64(module.load(base), i64);
-        moduleCst.store(base);
+        assertEqI64(moduleCst.store(base), i64);
         assertEqI64(moduleCst.load(base), i64);
     } else {
-        module.store(base, value);
+        assertEq(module.store(base, value), value);
         assertEq(module.load(base), value);
-        moduleCst.store(base);
+        assertEq(moduleCst.store(base), value);
         assertEq(moduleCst.load(base), value);
     }
 }
@@ -185,7 +188,7 @@ for (var foldOffsets = 0; foldOffsets <= 1; foldOffsets++) {
     testStore('i32', '8', 0, 0, 0, 0x23);
     testStore('i32', '16', 0, 0, 0, 0x2345);
 
-    assertErrorMessage(() => wasmEvalText('(module (memory 2 1))'), TypeError, /maximum length 1 is less than initial length 2/);
+    assertErrorMessage(() => wasmEvalText('(module (memory 2 1))'), TypeError, /maximum memory size less than initial memory size/);
 
     // Test bounds checks and edge cases.
     const align = 0;
@@ -280,9 +283,10 @@ for (var foldOffsets = 0; foldOffsets <= 1; foldOffsets++) {
     function testRegisters() {
         assertEq(wasmEvalText(
             `(module
-              (memory 1)
-              (data 0 "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")
-              (data 16 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
+              (memory 1
+               (segment 0 "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")
+               (segment 16 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
+              )
               (func (param i32) (local i32 i32 i32 i32 f32 f64) (result i32)
                (set_local 1 (i32.load8_s offset=4 (get_local 0)))
                (set_local 2 (i32.load16_s (get_local 1)))
@@ -312,7 +316,7 @@ for (var foldOffsets = 0; foldOffsets <= 1; foldOffsets++) {
                 )
                )
               ) (export "" 0))`
-        ).exports[""](1), 50464523);
+        )(1), 50464523);
     }
 
     testRegisters();

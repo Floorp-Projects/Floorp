@@ -559,7 +559,9 @@ Module::instantiateMemory(JSContext* cx, MutableHandleWasmMemoryObject memory) c
         if (!buffer)
             return false;
 
-        RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmMemory).toObject());
+        RootedObject proto(cx);
+        if (metadata_->assumptions.newFormat)
+            proto = &cx->global()->getPrototype(JSProto_WasmMemory).toObject();
 
         memory.set(WasmMemoryObject::create(cx, buffer, proto));
         if (!memory)
@@ -742,7 +744,10 @@ CreateExportObject(JSContext* cx,
             val = ObjectValue(*tableObj);
             break;
           case DefinitionKind::Memory:
-            val = ObjectValue(*memoryObj);
+            if (metadata.assumptions.newFormat)
+                val = ObjectValue(*memoryObj);
+            else
+                val = ObjectValue(memoryObj->buffer());
             break;
           case DefinitionKind::Global:
             if (!GetGlobalExport(cx, metadata.globals, exp.globalIndex(), globalImports, &val))

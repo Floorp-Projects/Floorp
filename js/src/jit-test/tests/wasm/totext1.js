@@ -1,5 +1,8 @@
 // |jit-test| test-also-wasm-baseline
-load(libdir + "wasm.js");
+if (!wasmIsSupported())
+     quit();
+
+load(libdir + "asserts.js");
 
 var caught = false;
 try {
@@ -28,10 +31,10 @@ runTest(`
            (br_if $exit (get_local 0))
            (br 2)
         )
-        (drop (if f64 (i32.const 1)
+        (if (i32.const 1)
            (f64.min (f64.neg (f64.const 1)) (f64.const 0))
            (f64.add (f64.const 0.5) (f64.load offset=0 (i32.const 0)) )
-        ))
+        )
      )
      (i32.store16 (i32.const 8) (i32.const 128))
 
@@ -45,12 +48,12 @@ runTest(`
 runTest(`
 (module (func
   (local i32) (local f32) (local f64)
-  (drop (i32.const 0))
-  (drop (i32.const 100002))
-  (drop (f32.const 0.0))
-  (drop (f32.const 1.5))
-  (drop (f64.const 0.0))
-  (drop (f64.const -10.25))
+  (i32.const 0)
+  (i32.const 100002)
+  (f32.const 0.0)
+  (f32.const 1.5)
+  (f64.const 0.0)
+  (f64.const -10.25)
   (i32.store (i32.const 0) (i32.load (i32.const 0)))
   (i32.store8 (i32.const 1) (i32.load8_s (i32.const 2)))
   (i32.store8 (i32.const 3) (i32.load8_u (i32.const 4)))
@@ -67,14 +70,14 @@ runTest(`
 (module
 (func
   (block (block (block (nop))))
-  (block (loop ))
+  (block (loop))
   (if (i32.const 0) (block $label (nop)))
-  (if (i32.const 1) (nop) (loop $exit $cont (block )))
+  (if (i32.const 1) (nop) (loop $exit $cont (block)))
   (block $l (br $l))
   (block $m (block (block (br $m))))
   (block $k (br_if 0 (i32.const 0)) (return))
   (block $n (block (block (br_if 2 (i32.const 1)) (nop))))
-  (block $1 (block $2 (block $3 (br_table $2 $3 $1 (i32.const 1)) )) (nop))
+  (block $1 (block $2 (block $3 (br_table $2 $3 $1 (nop) (i32.const 1)) )) (nop))
   (loop $exit $cont (br_if $cont (i32.const 0)) (nop))
   (return)
 )
@@ -159,7 +162,7 @@ runTest(`
   (func $func2 (param i32) (result i32) (get_local 0))
   (func $test
     (call $func1
-      (call_indirect $type1 (i32.const 2) (i32.const 1))
+      (call_indirect $type1 (i32.const 1) (i32.const 2))
       (call_import $import1 (f32.const 1.0))
     )
   )
@@ -170,91 +173,18 @@ runTest(`
 // default memory export from binaryen
 runTest(`(module (func (nop)) (memory 0 65535))`);
 
-// stack-machine code that isn't directly representable as an AST
+// nan
 runTest(`
 (module
-   (func (result i32)
-     (local $x i32)
-     i32.const 100
-     set_local $x
-     i32.const 200
-     set_local $x
-     i32.const 400
-     set_local $x
-     i32.const 2
-     i32.const 16
-     nop
-     set_local $x
-     i32.const 3
-     i32.const 17
-     set_local $x
-     i32.const 18
-     set_local $x
-     i32.lt_s
-     if i32
-       i32.const 101
-       set_local $x
-       i32.const 8
-       i32.const 102
-       set_local $x
-     else
-       i32.const 103
-       set_local $x
-       i32.const 900
-       i32.const 104
-       set_local $x
-       i32.const 105
-       set_local $x
-     end
-     i32.const 107
-     set_local $x
-     get_local $x
-     i32.add
-     i32.const 106
-     set_local $x
-   )
-   (export "" 0)
-)`);
-
-// more stack-machine code that isn't directly representable as an AST
-runTest(`
-(module
-   (func $return_void)
-
-   (func (result i32)
-     (local $x i32)
-     i32.const 0
-     block
-       i32.const 1
-       set_local $x
-     end
-     i32.const 2
-     set_local $x
-     i32.const 3
-     loop
-       i32.const 4
-       set_local $x
-     end
-     i32.const 5
-     set_local $x
-     i32.add
-     call $return_void
-   )
-   (export "" 0)
-)`);
-
-runTest(`
-  (module
-   (func $func
-    block $block
-     i32.const 0
-     if
-      i32.const 0
-      if
-      end
-     else
-     end
-    end
-   )
-  (export "" 0)
-)`);
+ (func
+  (f64.const nan)
+  (f32.const nan)
+  (f64.const -nan)
+  (f32.const -nan)
+  (f64.const nan:0x35792468abcd)
+  (f64.const -nan:0x135792468abcd)
+  (f32.const nan:0x1337)
+  (f32.const -nan:0xc4f3)
+ )
+)
+`);
