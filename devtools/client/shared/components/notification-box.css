@@ -78,7 +78,7 @@
   margin: 4px;
   margin-inline-end: 8px;
   background-image: url("chrome://devtools/skin/images/close.svg");
-  background-position: 3.45px 2.5px;
+  background-position: center;
   background-color: transparent;
   background-repeat: no-repeat;
   border-radius: 11px;
