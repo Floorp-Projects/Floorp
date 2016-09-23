@@ -138,18 +138,20 @@ function onExecuteFoo23InFirstCall() {
                     onExecuteFooAndFoo3ChangesInFirstCall));
 }
 
-function onExecuteFooAndFoo3ChangesInFirstCall() {
+var onExecuteFooAndFoo3ChangesInFirstCall = Task.async(function*() {
   let expected = "abbabug783499";
   isnot(gWebConsole.outputNode.textContent.indexOf(expected), -1,
         "|foo + foo3| updated in |firstCall()|");
 
-  is(content.wrappedJSObject.foo, "globalFooBug783499",
-     "|foo| in content window");
-  is(content.wrappedJSObject.foo2, "newFoo", "|foo2| in content window");
-  ok(!content.wrappedJSObject.foo3,
-     "|foo3| was not added to the content window");
+  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
+    is(content.wrappedJSObject.foo, "globalFooBug783499",
+       "|foo| in content window");
+    is(content.wrappedJSObject.foo2, "newFoo", "|foo2| in content window");
+    ok(!content.wrappedJSObject.foo3,
+       "|foo3| was not added to the content window");
+  });
 
   gWebConsole = gJSTerm = gDebuggerWin = gThread = gDebuggerController =
     gStackframes = null;
   executeSoon(finishTest);
-}
+});
