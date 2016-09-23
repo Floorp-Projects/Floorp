@@ -29,33 +29,6 @@ using namespace mozilla::gl;
 using namespace mozilla::java::sdk;
 using media::TimeUnit;
 
-namespace {
-  template<class T>
-  mozilla::jni::ByteArray::LocalRef
-  CreateAndInitJByteArray(const T& data, jsize length)
-  {
-    JNIEnv* const jenv = mozilla::jni::GetEnvForThread();
-    jbyteArray result = jenv->NewByteArray(length);
-    MOZ_CATCH_JNI_EXCEPTION(jenv);
-    jenv->SetByteArrayRegion(result, 0, length, reinterpret_cast<const jbyte*>(const_cast<T>(data)));
-    MOZ_CATCH_JNI_EXCEPTION(jenv);
-    return mozilla::jni::ByteArray::LocalRef::Adopt(jenv, result);
-  }
-
-  template<class T>
-  mozilla::jni::IntArray::LocalRef
-  CreateAndInitJIntArray(const T& data, jsize length)
-  {
-    JNIEnv* const jenv = mozilla::jni::GetEnvForThread();
-    jintArray result = jenv->NewIntArray(length);
-    MOZ_CATCH_JNI_EXCEPTION(jenv);
-    jenv->SetIntArrayRegion(result, 0, length, reinterpret_cast<const jint*>(const_cast<T>(data)));
-    MOZ_CATCH_JNI_EXCEPTION(jenv);
-    return mozilla::jni::IntArray::LocalRef::Adopt(jenv, result);
-  }
-}
-
-
 namespace mozilla {
 
 mozilla::LazyLogModule sAndroidDecoderModuleLog("AndroidDecoderModule");
@@ -125,11 +98,17 @@ GetCryptoInfoFromSample(const MediaRawData* aSample)
     tempIV.AppendElement(0);
   }
 
-  auto numBytesOfPlainData = CreateAndInitJIntArray(&plainSizes[0], plainSizes.Length());
-  auto numBytesOfEncryptedData = CreateAndInitJIntArray(&cryptoObj.mEncryptedSizes[0],
-                                                        cryptoObj.mEncryptedSizes.Length());
-  auto iv = CreateAndInitJByteArray(&tempIV[0], tempIV.Length());
-  auto keyId = CreateAndInitJByteArray(&cryptoObj.mKeyId[0], cryptoObj.mKeyId.Length());
+  auto numBytesOfPlainData = mozilla::jni::IntArray::New(
+                              reinterpret_cast<int32_t*>(&plainSizes[0]),
+                              plainSizes.Length());
+
+  auto numBytesOfEncryptedData =
+    mozilla::jni::IntArray::New(reinterpret_cast<const int32_t*>(&cryptoObj.mEncryptedSizes[0]),
+                                cryptoObj.mEncryptedSizes.Length());
+  auto iv = mozilla::jni::ByteArray::New(reinterpret_cast<int8_t*>(&tempIV[0]),
+                                        tempIV.Length());
+  auto keyId = mozilla::jni::ByteArray::New(reinterpret_cast<const int8_t*>(&cryptoObj.mKeyId[0]),
+                                            cryptoObj.mKeyId.Length());
   cryptoInfo->Set(numSubSamples,
                   numBytesOfPlainData,
                   numBytesOfEncryptedData,
