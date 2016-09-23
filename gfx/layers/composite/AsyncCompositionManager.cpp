@@ -297,6 +297,7 @@ TranslateShadowLayer(Layer* aLayer,
   }
 }
 
+#ifdef DEBUG
 static void
 AccumulateLayerTransforms(Layer* aLayer,
                           Layer* aAncestor,
@@ -309,6 +310,7 @@ AccumulateLayerTransforms(Layer* aLayer,
     aMatrix *= transform;
   }
 }
+#endif
 
 static LayerPoint
 GetLayerFixedMarginsOffset(Layer* aLayer,
@@ -435,6 +437,12 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoo
                                                    const ScreenMargin& aFixedLayerMargins,
                                                    ClipPartsCache* aClipPartsCache)
 {
+  // We're going to be inverting |aCurrentTransformForRoot|.
+  // If it's singular, there's nothing we can do.
+  if (aCurrentTransformForRoot.IsSingular()) {
+    return;
+  }
+
   ForEachNode<ForwardIterator>(
       aTransformedSubtreeRoot,
       [&] (Layer* layer)
@@ -453,39 +461,41 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoo
           return TraversalFlag::Continue;
         }
 
+
         // Insert a translation so that the position of the anchor point is the same
         // before and after the change to the transform of aTransformedSubtreeRoot.
 
-        // Accumulate the transforms between this layer and the subtree root layer.
+        // A transform creates a containing block for fixed-position descendants,
+        // so there shouldn't be a transform in between the fixed layer and
+        // the subtree root layer.
+#ifdef DEBUG
         Matrix4x4 ancestorTransform;
         if (layer != aTransformedSubtreeRoot) {
           AccumulateLayerTransforms(layer->GetParent(), aTransformedSubtreeRoot,
                                     ancestorTransform);
         }
+        MOZ_ASSERT(ancestorTransform.IsIdentity());
+#endif
 
-        // Calculate the cumulative transforms between the subtree root with the
-        // old transform and the current transform.
-        Matrix4x4 oldCumulativeTransform = ancestorTransform * aPreviousTransformForRoot.ToUnknownMatrix();
-        Matrix4x4 newCumulativeTransform = ancestorTransform * aCurrentTransformForRoot.ToUnknownMatrix();
-        if (newCumulativeTransform.IsSingular()) {
-          return TraversalFlag::Skip;
-        }
-
-        // Add in the layer's local transform, if it isn't already included in
-        // |aPreviousTransformForRoot| and |aCurrentTransformForRoot| (this happens
-        // when the fixed/sticky layer is itself the transformed subtree root).
+        // Calculate the old and new transforms between the fixed layer and
+        // the subtree root, including the fixed layer's local transform
+        // if it's not already included in |aPreviousTransformForRoot| and
+        // |aCurrentTransformForRoot| (this happens when the fixed layer is
+        // itself the transformed subtree root).
+        Matrix4x4 oldTransform = aPreviousTransformForRoot.ToUnknownMatrix();
+        Matrix4x4 newTransform = aCurrentTransformForRoot.ToUnknownMatrix();
         Matrix4x4 localTransform;
         GetBaseTransform(layer, &localTransform);
         if (layer != aTransformedSubtreeRoot) {
-          oldCumulativeTransform = localTransform * oldCumulativeTransform;
-          newCumulativeTransform = localTransform * newCumulativeTransform;
+          oldTransform = localTransform * oldTransform;
+          newTransform = localTransform * newTransform;
         }
 
         // Now work out the translation necessary to make sure the layer doesn't
         // move given the new sub-tree root transform.
 
         // Get the layer's fixed anchor point, in the layer's local coordinate space
-        // (before any cumulative transform is applied).
+        // (before any transform is applied).
         LayerPoint anchor = layer->GetFixedPositionAnchor();
 
         // Offset the layer's anchor point to make sure fixed position content
@@ -493,13 +503,13 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoo
         LayerPoint offsetAnchor = anchor + GetLayerFixedMarginsOffset(layer, aFixedLayerMargins);
 
         // Additionally transform the anchor to compensate for the change
-        // from the old cumulative transform to the new cumulative transform. We do
+        // from the old transform to the new transform. We do
         // this by using the old transform to take the offset anchor back into
-        // subtree root space, and then the inverse of the new cumulative transform
+        // subtree root space, and then the inverse of the new transform
         // to bring it back to layer space.
         LayerPoint transformedAnchor = ViewAs<LayerPixel>(
-            newCumulativeTransform.Inverse().TransformPoint(
-              (oldCumulativeTransform.TransformPoint(offsetAnchor.ToUnknownPoint()))));
+            newTransform.Inverse().TransformPoint(
+              (oldTransform.TransformPoint(offsetAnchor.ToUnknownPoint()))));
 
         // We want to translate the layer by the difference between |transformedAnchor|
         // and |anchor|. To achieve this, we will add a translation to the layer's
