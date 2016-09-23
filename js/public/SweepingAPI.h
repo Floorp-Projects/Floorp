@@ -57,7 +57,7 @@ class WeakCache : public js::WeakCacheBase<T>,
     const T& get() const { return cache; }
     T& get() { return cache; }
 
-    MOZ_UBSAN_BLACKLIST_FUNCTION void sweep() { sweeper(&cache); }
+    void sweep() { sweeper(&cache); }
 };
 
 } // namespace JS
