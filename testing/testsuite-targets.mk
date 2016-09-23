@@ -182,7 +182,6 @@ stage-all: \
   stage-mochitest \
   stage-jstests \
   stage-jetpack \
-  stage-luciddream \
   test-packages-manifest \
   $(NULL)
 ifdef MOZ_WEBRTC
@@ -325,11 +324,6 @@ stage-steeplechase: make-stage-dir
 	cp -RL $(DIST)/xpi-stage/specialpowers $(PKG_STAGE)/steeplechase
 	cp -RL $(topsrcdir)/testing/profiles/prefs_general.js $(PKG_STAGE)/steeplechase
 
-LUCIDDREAM_DIR=$(PKG_STAGE)/luciddream
-stage-luciddream: make-stage-dir
-	$(NSINSTALL) -D $(LUCIDDREAM_DIR)
-	@(cd $(topsrcdir)/testing/luciddream && tar $(TAR_CREATE_FLAGS) - *) | (cd $(LUCIDDREAM_DIR)/ && tar -xf -)
-
 stage-instrumentation-tests: make-stage-dir
 	$(MAKE) -C $(DEPTH)/testing/instrumentation stage-package
 
@@ -359,6 +353,5 @@ stage-extensions: make-stage-dir
   stage-jetpack \
   stage-steeplechase \
   stage-instrumentation-tests \
-  stage-luciddream \
   test-packages-manifest \
   $(NULL)
