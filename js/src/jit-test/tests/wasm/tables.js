@@ -8,13 +8,13 @@ const Memory = WebAssembly.Memory;
 
 var callee = i => `(func $f${i} (result i32) (i32.const ${i}))`;
 
-assertErrorMessage(() => new Module(wasmTextToBinary(`(module (elem (i32.const 0) $f0) ${callee(0)})`)), TypeError, /table index out of range/);
-assertErrorMessage(() => new Module(wasmTextToBinary(`(module (table (resizable 10)) (elem (i32.const 0) 0))`)), TypeError, /table element out of range/);
-assertErrorMessage(() => new Module(wasmTextToBinary(`(module (table (resizable 10)) (func) (elem (i32.const 0) 0 1))`)), TypeError, /table element out of range/);
-assertErrorMessage(() => new Module(wasmTextToBinary(`(module (table (resizable 10)) (func) (elem (f32.const 0) 0) ${callee(0)})`)), TypeError, /type mismatch/);
+wasmFailValidateText(`(module (elem (i32.const 0) $f0) ${callee(0)})`, /table index out of range/);
+wasmFailValidateText(`(module (table (resizable 10)) (elem (i32.const 0) 0))`, /table element out of range/);
+wasmFailValidateText(`(module (table (resizable 10)) (func) (elem (i32.const 0) 0 1))`, /table element out of range/);
+wasmFailValidateText(`(module (table (resizable 10)) (func) (elem (f32.const 0) 0) ${callee(0)})`, /type mismatch/);
 
-assertErrorMessage(() => new Module(wasmTextToBinary(`(module (table (resizable 10)) (elem (i32.const 10) $f0) ${callee(0)})`)), TypeError, /element segment does not fit/);
-assertErrorMessage(() => new Module(wasmTextToBinary(`(module (table (resizable 10)) (elem (i32.const 8) $f0 $f0 $f0) ${callee(0)})`)), TypeError, /element segment does not fit/);
+wasmFailValidateText(`(module (table (resizable 10)) (elem (i32.const 10) $f0) ${callee(0)})`, /element segment does not fit/);
+wasmFailValidateText(`(module (table (resizable 10)) (elem (i32.const 8) $f0 $f0 $f0) ${callee(0)})`, /element segment does not fit/);
 
 assertErrorMessage(() => wasmEvalText(`(module (table (resizable 10)) (import "globals" "a" (global i32 immutable)) (elem (get_global 0) $f0) ${callee(0)})`, {globals:{a:10}}), RangeError, /elem segment does not fit/);
 assertErrorMessage(() => wasmEvalText(`(module (table (resizable 10)) (import "globals" "a" (global i32 immutable)) (elem (get_global 0) $f0 $f0 $f0) ${callee(0)})`, {globals:{a:8}}), RangeError, /elem segment does not fit/);
