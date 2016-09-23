@@ -6,16 +6,23 @@
 
 #define MOZ_FATAL_ASSERTIONS_FOR_THREAD_SAFETY
 
+#include "mozilla/SyncRunnable.h"
 #include "nsScreenManagerAndroid.h"
-#include "nsWindow.h"
-#include "GeneratedJNIWrappers.h"
+#include "nsServiceManagerUtils.h"
 #include "AndroidBridge.h"
 #include "AndroidRect.h"
+#include "FennecJNINatives.h"
+#include "FennecJNIWrappers.h"
+#include "nsAppShell.h"
+#include "nsThreadUtils.h"
+
+#include <android/log.h>
 #include <mozilla/jni/Refs.h>
 
 #define ALOG(args...) __android_log_print(ANDROID_LOG_INFO, "nsScreenManagerAndroid", ## args)
 
 using namespace mozilla;
+using namespace mozilla::java;
 
 static uint32_t sScreenId = 0;
 const uint32_t PRIMARY_SCREEN_ID = 0;
@@ -109,10 +116,55 @@ nsScreenAndroid::ApplyMinimumBrightness(uint32_t aBrightness)
     }
 }
 
+class nsScreenManagerAndroid::ScreenManagerHelperSupport final
+    : public ScreenManagerHelper::Natives<ScreenManagerHelperSupport>
+{
+public:
+    typedef ScreenManagerHelper::Natives<ScreenManagerHelperSupport> Base;
+
+    static int32_t AddDisplay(int32_t aDisplayType, int32_t aWidth, int32_t aHeight, float aDensity) {
+        int32_t screenId = -1; // return value
+        nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+        SyncRunnable::DispatchToThread(mainThread, NS_NewRunnableFunction(
+            [&aDisplayType, &aWidth, &aHeight, &aDensity, &screenId] {
+                MOZ_ASSERT(NS_IsMainThread());
+                nsCOMPtr<nsIScreenManager> screenMgr =
+                do_GetService("@mozilla.org/gfx/screenmanager;1");
+                MOZ_ASSERT(screenMgr, "Failed to get nsIScreenManager");
+
+                RefPtr<nsScreenManagerAndroid> screenMgrAndroid =
+                (nsScreenManagerAndroid*) screenMgr.get();
+                RefPtr<nsScreenAndroid> screen =
+                screenMgrAndroid->AddScreen(static_cast<DisplayType>(aDisplayType),
+                                            nsIntRect(0, 0, aWidth, aHeight));
+                MOZ_ASSERT(screen);
+                screen->SetDensity(aDensity);
+                screenId = static_cast<int32_t>(screen->GetId());
+            }).take());
+        return screenId;
+    }
+
+    static void RemoveDisplay(int32_t aScreenId) {
+        nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+        SyncRunnable::DispatchToThread(mainThread, NS_NewRunnableFunction(
+            [&aScreenId] {
+                MOZ_ASSERT(NS_IsMainThread());
+                nsCOMPtr<nsIScreenManager> screenMgr =
+                    do_GetService("@mozilla.org/gfx/screenmanager;1");
+                MOZ_ASSERT(screenMgr, "Failed to get nsIScreenManager");
+
+                RefPtr<nsScreenManagerAndroid> screenMgrAndroid =
+                    (nsScreenManagerAndroid*) screenMgr.get();
+                screenMgrAndroid->RemoveScreen(aScreenId);
+            }).take());
+    }
+};
+
 NS_IMPL_ISUPPORTS(nsScreenManagerAndroid, nsIScreenManager)
 
 nsScreenManagerAndroid::nsScreenManagerAndroid()
 {
+    ScreenManagerHelperSupport::Base::Init();
     nsCOMPtr<nsIScreen> screen = AddScreen(DisplayType::DISPLAY_PRIMARY);
     MOZ_ASSERT(screen);
 }
