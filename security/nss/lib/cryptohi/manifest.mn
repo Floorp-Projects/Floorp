@@ -6,6 +6,8 @@ CORE_DEPTH = ../..
 
 MODULE = nss
 
+REQUIRES = nssutil
+
 LIBRARY_NAME = cryptohi
 
 EXPORTS = \
@@ -19,6 +21,7 @@ EXPORTS = \
 	$(NULL)
 
 PRIVATE_EXPORTS = \
+	keyi.h    \
 	$(NULL)
 
 CSRCS = \

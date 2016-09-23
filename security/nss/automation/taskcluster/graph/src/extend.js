@@ -28,11 +28,28 @@ queue.filter(task => {
     }
   }
 
+  if (task.tests == "bogo") {
+    // No BoGo tests on Windows.
+    if (task.platform == "windows2012-64") {
+      return false;
+    }
+
+    // No BoGo tests on ARM.
+    if (task.collection == "arm-debug") {
+      return false;
+    }
+  }
+
   return true;
 });
 
 queue.map(task => {
   if (task.collection == "asan") {
+    // Disable LSan on BoGo runs, for now.
+    if (task.tests == "bogo") {
+      task.env.ASAN_OPTIONS = "detect_leaks=0";
+    }
+
     // CRMF and FIPS tests still leak, unfortunately.
     if (task.tests == "crmf" || task.tests == "fips") {
       task.env.ASAN_OPTIONS = "detect_leaks=0";
@@ -281,7 +298,10 @@ function scheduleTests(task_build, task_cert, test_base) {
   // Schedule tests that do NOT need certificates.
   let no_cert_base = merge(test_base, {parent: task_build});
   queue.scheduleTask(merge(no_cert_base, {
-    name: "Gtests", symbol: "Gtest", tests: "ssl_gtests gtests"
+    name: "Gtests", symbol: "Gtest", tests: "ssl_gtests gtests", cycle: "standard"
+  }));
+  queue.scheduleTask(merge(no_cert_base, {
+    name: "Bogo tests", symbol: "Bogo", tests: "bogo", cycle: "standard"
   }));
   queue.scheduleTask(merge(no_cert_base, {
     name: "Chains tests", symbol: "Chains", tests: "chains"
@@ -365,7 +385,7 @@ async function scheduleTools() {
     },
     artifacts: {
       public: {
-        expires: 24,
+        expires: 24 * 7,
         type: "directory",
         path: "/home/worker/artifacts"
       }

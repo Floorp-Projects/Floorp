@@ -1,14 +1,22 @@
 {
     "DisabledTests": {
-        "*HelloRetryRequest*":"HRR hasn't landed yet",
-        "SecondClientHelloWrongCurve":"HRR hasn't landed yet",
+        "*TLS13*":"Draft version mismatch (NSS=15, BoGo=14)",
+        "FallbackSCSV-VersionMatch":"Draft version mismatch (NSS=15, BoGo=14)",
+        "SendEmptyRecords-Pass":"Draft version mismatch (NSS=15, BoGo=14)",
+        "SendSNIWarningAlert":"Draft version mismatch (NSS=15, BoGo=14)",
+        "UnknownCipher":"Draft version mismatch (NSS=15, BoGo=14)",
+        "UnknownCurve":"Draft version mismatch (NSS=15, BoGo=14)",
+        "*TrailingMessageData*":"Draft version mismatch (NSS=15, BoGo=14)",
+        "*Downgrade-TLS12*":"Draft version mismatch (NSS=15, BoGo=14)",
+        "UnknownCurve":"Draft version mismatch (NSS=15, BoGo=14)",
+        "*MissingKeyShare*":"Draft version mismatch (NSS=15, BoGo=14)",
+        "SecondClientHelloWrongCurve":"Draft version mismatch (NSS=15, BoGo=14)",
+        "SendHelloRetryRequest":"Expects CurveX25519",
+        "SendHelloRetryRequest-2":"Expects CurveX25519",
         "KeyUpdate":"KeyUpdate Unimplemented",
         "ClientAuth-NoFallback-TLS13":"Disagreement about alerts. Bug 1294975",
         "ClientAuth-SHA1-Fallback":"Disagreement about alerts. Bug 1294975",
         "SendWarningAlerts-TLS13":"NSS needs to trigger on warning alerts",
-        "*SignatureType-TLS13":"SignatureScheme patch",
-        "ECDSACurveMismatch-Verify-TLS13":"SignatureScheme patch",
-        "ServerAuth-NoFallback-TLS13":"PSS",
         "NoSupportedCurves":"This tests a non-spec behavior for TLS 1.2 and expects the wrong alert for TLS 1.3",
         "SendEmptyRecords":"Tests a non-spec behavior in BoGo where it chokes on too many empty records",
         "LargePlaintext":"NSS needs to check for over-long records. Bug 1294978",
@@ -29,13 +37,30 @@
         "Renegotiate-Client-Forbidden-1":"Bug 1292898",
         "Renegotiate-Server-Forbidden":"NSS doesn't disable renegotiation by default",
         "Renegotiate-Client-NoIgnore":"NSS doesn't disable renegotiation by default",
-        "StrayHelloRequest*":"NSS doesn't disable renegotiation by default"
+        "StrayHelloRequest*":"NSS doesn't disable renegotiation by default",
+        "NoSupportedCurves-TLS13":"wanted SSL_ERROR_NO_CYPHER_OVERLAP, got missing extension error",
+        "FragmentedClientVersion":"received a malformed Client Hello handshake message",
+        "UnofferedExtension-Client-TLS13":"nss updated/broken",
+        "UnknownExtension-Client-TLS13":"nss updated/broken",
+        "WrongMessageType-TLS13-EncryptedExtensions":"nss updated/broken",
+        "WrongMessageType-TLS13-CertificateRequest":"nss updated/broken",
+        "WrongMessageType-TLS13-ServerCertificateVerify":"nss updated/broken",
+        "WrongMessageType-TLS13-ServerCertificate":"nss updated/broken",
+        "WrongMessageType-TLS13-ServerFinished":"nss updated/broken",
+        "EncryptedExtensionsWithKeyShare":"nss updated/broken",
+        "EmptyEncryptedExtensions":"nss updated/broken",
+        "ClientAuth-SHA1-Fallback-RSA":"We fail when the sig_algs_ext is empty",
+        "SendSNIWarningAlert":"Bug 1304574",
+        "Downgrade-TLS12-*":"NSS implements downgrade detection",
+        "TrailingMessageData-*": "Bug 1304575",
+        "DuplicateKeyShares":"Bug 1304578"
     },
     "ErrorMap" : {
         ":HANDSHAKE_FAILURE_ON_CLIENT_HELLO:":"SSL_ERROR_NO_CYPHER_OVERLAP",
         ":UNKNOWN_CIPHER_RETURNED:":"SSL_ERROR_NO_CYPHER_OVERLAP",
         ":OLD_SESSION_CIPHER_NOT_RETURNED:":"SSL_ERROR_NO_CYPHER_OVERLAP",
-        ":NO_SHARED_CIPHER:":"SSL_ERROR_NO_CYPHER_OVERLAP"
+        ":NO_SHARED_CIPHER:":"SSL_ERROR_NO_CYPHER_OVERLAP",
+        ":DIGEST_CHECK_FAILED:":"SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE"
     }
 }
 

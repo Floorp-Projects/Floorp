@@ -37,6 +37,8 @@
 #   memleak.sh   - memory leak testing (optional)
 #   ssl_gtests.sh- Gtest based unit tests for ssl
 #   gtests.sh    - Gtest based unit tests for everything else
+#   bogo.sh      - Bogo interop tests (disabled by default)
+#                  https://boringssl.googlesource.com/boringssl/+/master/ssl/test/PORTING.md
 #
 # NSS testing is now devided to 4 cycles:
 # ---------------------------------------
