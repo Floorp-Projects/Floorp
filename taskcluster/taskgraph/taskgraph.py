@@ -61,7 +61,7 @@ class TaskGraph(object):
         return self.tasks == other.tasks and self.graph == other.graph
 
     @classmethod
-    def from_json(cls, tasks_dict, root):
+    def from_json(cls, tasks_dict):
         """
         This code is used to generate the a TaskGraph using a dictionary
         which is representative of the TaskGraph.
