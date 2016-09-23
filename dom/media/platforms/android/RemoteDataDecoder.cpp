@@ -442,7 +442,7 @@ RemoteDataDecoder::Drain()
   NS_ENSURE_SUCCESS_VOID(rv);
   bufferInfo->Set(0, 0, -1, MediaCodec::BUFFER_FLAG_END_OF_STREAM);
 
-  mJavaDecoder->Input(nullptr, bufferInfo);
+  mJavaDecoder->Input(nullptr, bufferInfo, nullptr);
 }
 
 void
@@ -483,7 +483,7 @@ RemoteDataDecoder::Input(MediaRawData* aSample)
   }
   bufferInfo->Set(0, aSample->Size(), aSample->mTime, 0);
 
-  mJavaDecoder->Input(bytes, bufferInfo);
+  mJavaDecoder->Input(bytes, bufferInfo, GetCryptoInfoFromSample(aSample));
 }
 
 } // mozilla

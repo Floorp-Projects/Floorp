@@ -70,7 +70,7 @@ add_task(function* () {
         type: "separator",
       });
 
-      let contexts = ["page", "selection", "image"];
+      let contexts = ["page", "selection", "image", "editable"];
       for (let i = 0; i < contexts.length; i++) {
         let context = contexts[i];
         let title = context;
@@ -144,12 +144,13 @@ add_task(function* () {
     mediaType: "image",
     srcUrl: "http://mochi.test:8888/browser/browser/components/extensions/test/browser/ctxmenu-image.png",
     pageUrl: "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html",
+    editable: false,
   };
 
   function checkClickInfo(result) {
     for (let i of Object.keys(expectedClickInfo)) {
       is(result.info[i], expectedClickInfo[i],
-         "click info " + i + " expected to be: " + expectedClickInfo[i] + " but was: " + info[i]);
+         "click info " + i + " expected to be: " + expectedClickInfo[i] + " but was: " + result.info[i]);
     }
     is(expectedClickInfo.pageSrc, result.tab.url);
   }
@@ -179,6 +180,30 @@ add_task(function* () {
   checkClickInfo(result);
   result = yield extension.awaitMessage("browser.contextMenus.onClicked");
   checkClickInfo(result);
+
+
+  // Test "editable" context and OnClick data property.
+  extensionMenuRoot = yield openExtensionContextMenu("#edit-me");
+
+  // Check some menu items.
+  items = extensionMenuRoot.getElementsByAttribute("label", "editable");
+  is(items.length, 1, "contextMenu item for text input element was found (context=editable)");
+  let editable = items[0];
+
+  // Click on ext-editable item and check the click results.
+  yield closeExtensionContextMenu(editable);
+
+  expectedClickInfo = {
+    menuItemId: "ext-editable",
+    pageUrl: "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html",
+    editable: true,
+  };
+
+  result = yield extension.awaitMessage("onclick");
+  checkClickInfo(result);
+  result = yield extension.awaitMessage("browser.contextMenus.onClicked");
+  checkClickInfo(result);
+
 
   // Select some text
   yield ContentTask.spawn(gBrowser.selectedBrowser, { }, function* (arg) {

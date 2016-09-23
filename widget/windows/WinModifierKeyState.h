@@ -10,6 +10,8 @@
 #include "mozilla/EventForwards.h"
 #include <windows.h>
 
+class nsCString;
+
 namespace mozilla {
 namespace widget {
 
@@ -51,6 +53,8 @@ private:
 
   void InitMouseEvent(WidgetInputEvent& aMouseEvent) const;
 };
+
+const nsCString ToString(const ModifierKeyState& aModifierKeyState);
 
 } // namespace widget
 } // namespace mozilla

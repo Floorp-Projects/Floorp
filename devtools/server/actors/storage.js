@@ -1250,6 +1250,61 @@ StorageActors.createActor({
   toStoreObject(item) {
     return item;
   },
+
+  removeItem: Task.async(function* (host, name) {
+    const cacheMap = this.hostVsStores.get(host);
+    if (!cacheMap) {
+      return;
+    }
+
+    const parsedName = JSON.parse(name);
+
+    if (parsedName.length == 1) {
+      // Delete the whole Cache object
+      const [ cacheName ] = parsedName;
+      cacheMap.delete(cacheName);
+      const cacheStorage = yield this.getCachesForHost(host);
+      yield cacheStorage.delete(cacheName);
+      this.onItemUpdated("deleted", host, [ cacheName ]);
+    } else if (parsedName.length == 2) {
+      // Delete one cached request
+      const [ cacheName, url ] = parsedName;
+      const cache = cacheMap.get(cacheName);
+      if (cache) {
+        yield cache.delete(url);
+        this.onItemUpdated("deleted", host, [ cacheName, url ]);
+      }
+    }
+  }),
+
+  removeAll: Task.async(function* (host, name) {
+    const cacheMap = this.hostVsStores.get(host);
+    if (!cacheMap) {
+      return;
+    }
+
+    const parsedName = JSON.parse(name);
+
+    // Only a Cache object is a valid object to clear
+    if (parsedName.length == 1) {
+      const [ cacheName ] = parsedName;
+      const cache = cacheMap.get(cacheName);
+      if (cache) {
+        let keys = yield cache.keys();
+        yield promise.all(keys.map(key => cache.delete(key)));
+        this.onItemUpdated("cleared", host, [ cacheName ]);
+      }
+    }
+  }),
+
+  /**
+   * CacheStorage API doesn't support any notifications, we must fake them
+   */
+  onItemUpdated(action, host, path) {
+    this.storageActor.update(action, "Cache", {
+      [host]: [ JSON.stringify(path) ]
+    });
+  },
 });
 
 /**

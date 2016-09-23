@@ -643,9 +643,11 @@ struct keyCodeData {
 static const keyCodeData gKeyCodes[] = {
 
 #define NS_DEFINE_VK(aDOMKeyName, aDOMKeyCode) \
-  { #aDOMKeyName, sizeof(#aDOMKeyName) - 1, aDOMKeyCode }
+  { #aDOMKeyName, sizeof(#aDOMKeyName) - 1, aDOMKeyCode },
 #include "mozilla/VirtualKeyCodeList.h"
 #undef NS_DEFINE_VK
+
+  { nullptr, 0, 0 }
 };
 
 int32_t nsXBLPrototypeHandler::GetMatchingKeyCode(const nsAString& aKeyName)
@@ -657,10 +659,12 @@ int32_t nsXBLPrototypeHandler::GetMatchingKeyCode(const nsAString& aKeyName)
 
   uint32_t keyNameLength = keyName.Length();
   const char* keyNameStr = keyName.get();
-  for (uint16_t i = 0; i < (sizeof(gKeyCodes) / sizeof(gKeyCodes[0])); ++i)
+  for (uint16_t i = 0; i < ArrayLength(gKeyCodes) - 1; ++i) {
     if (keyNameLength == gKeyCodes[i].strlength &&
-        !nsCRT::strcmp(gKeyCodes[i].str, keyNameStr))
+        !nsCRT::strcmp(gKeyCodes[i].str, keyNameStr)) {
       return gKeyCodes[i].keycode;
+    }
+  }
 
   return 0;
 }

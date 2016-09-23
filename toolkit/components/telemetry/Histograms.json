@@ -5513,6 +5513,13 @@
     "keyed": true,
     "description": "Count of individual invalid ping types that were submitted to Telemetry."
   },
+  "TELEMETRY_INVALID_PAYLOAD_SUBMITTED": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "bug_numbers": [1292226],
+    "kind": "count",
+    "description": "Count of individual invalid payloads that were submitted to Telemetry."
+  },
   "TELEMETRY_PING_EVICTED_FOR_SERVER_ERRORS": {
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
