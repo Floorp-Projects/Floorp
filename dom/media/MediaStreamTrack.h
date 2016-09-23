@@ -157,6 +157,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
     if (mSinks.RemoveElement(aSink) && mSinks.IsEmpty()) {
+      MOZ_ASSERT(!mStopped);
       Stop();
       mStopped = true;
     }
