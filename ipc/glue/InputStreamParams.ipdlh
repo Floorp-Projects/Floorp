@@ -30,6 +30,13 @@ struct PartialFileInputStreamParams
   uint64_t length;
 };
 
+struct TemporaryFileInputStreamParams
+{
+  uint32_t fileDescriptorIndex;
+  uint64_t startPos;
+  uint64_t endPos;
+};
+
 struct MultiplexInputStreamParams
 {
   InputStreamParams[] streams;
@@ -56,6 +63,7 @@ union InputStreamParams
   StringInputStreamParams;
   FileInputStreamParams;
   PartialFileInputStreamParams;
+  TemporaryFileInputStreamParams;
   BufferedInputStreamParams;
   MIMEInputStreamParams;
   MultiplexInputStreamParams;
