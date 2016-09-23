@@ -150,8 +150,7 @@ bool
 wasm::ReadI64Object(JSContext* cx, HandleValue v, int64_t* i64)
 {
     if (!v.isObject()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL,
-                             "i64 JS value must be an object");
+        JS_ReportError(cx, "i64 JS value must be an object");
         return false;
     }
 
@@ -177,16 +176,16 @@ wasm::ReadI64Object(JSContext* cx, HandleValue v, int64_t* i64)
 // (Temporary) Wasm class and static methods
 
 static bool
-Throw(JSContext* cx, const char* str)
+ThrowBadImportArg(JSContext* cx)
 {
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL, str);
+    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_ARG);
     return false;
 }
 
 static bool
-Throw(JSContext* cx, unsigned errorNumber, const char* str)
+ThrowBadImportField(JSContext* cx, const char* str)
 {
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, errorNumber, str);
+    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_FIELD, str);
     return false;
 }
 
@@ -212,7 +211,7 @@ GetImports(JSContext* cx,
 {
     const ImportVector& imports = module.imports();
     if (!imports.empty() && !importObj)
-        return Throw(cx, "no import object given");
+        return ThrowBadImportArg(cx);
 
     const Metadata& metadata = module.metadata();
 
@@ -224,7 +223,7 @@ GetImports(JSContext* cx,
             return false;
 
         if (!v.isObject())
-            return Throw(cx, JSMSG_WASM_BAD_IMPORT_FIELD, "an Object");
+            return ThrowBadImportField(cx, "an Object");
 
         RootedObject obj(cx, &v.toObject());
         if (!GetProperty(cx, obj, import.func.get(), &v))
@@ -233,7 +232,7 @@ GetImports(JSContext* cx,
         switch (import.kind) {
           case DefinitionKind::Function:
             if (!IsFunctionObject(v))
-                return Throw(cx, JSMSG_WASM_BAD_IMPORT_FIELD, "a Function");
+                return ThrowBadImportField(cx, "a Function");
 
             if (!funcImports.append(&v.toObject().as<JSFunction>()))
                 return false;
@@ -241,14 +240,14 @@ GetImports(JSContext* cx,
             break;
           case DefinitionKind::Table:
             if (!v.isObject() || !v.toObject().is<WasmTableObject>())
-                return Throw(cx, JSMSG_WASM_BAD_IMPORT_FIELD, "a Table");
+                return ThrowBadImportField(cx, "a Table");
 
             MOZ_ASSERT(!tableImport);
             tableImport.set(&v.toObject().as<WasmTableObject>());
             break;
           case DefinitionKind::Memory:
             if (!v.isObject() || !v.toObject().is<WasmMemoryObject>())
-                return Throw(cx, JSMSG_WASM_BAD_IMPORT_FIELD, "a Memory");
+                return ThrowBadImportField(cx, "a Memory");
 
             MOZ_ASSERT(!memoryImport);
             memoryImport.set(&v.toObject().as<WasmMemoryObject>());
@@ -362,7 +361,7 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
     SharedModule module = Compile(*bytecode, compileArgs, &error);
     if (!module) {
         if (error) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_DECODE_FAIL,
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_COMPILE_ERROR,
                                  error.get());
             return false;
         }
@@ -598,7 +597,7 @@ WasmModuleObject::construct(JSContext* cx, unsigned argc, Value* vp)
     SharedModule module = Compile(*bytecode, compileArgs, &error);
     if (!module) {
         if (error) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_DECODE_FAIL,
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_COMPILE_ERROR,
                                  error.get());
             return false;
         }
@@ -743,10 +742,8 @@ WasmInstanceObject::construct(JSContext* cx, unsigned argc, Value* vp)
 
     RootedObject importObj(cx);
     if (!args.get(1).isUndefined()) {
-        if (!args[1].isObject()) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_ARG);
-            return false;
-        }
+        if (!args[1].isObject())
+            return ThrowBadImportArg(cx);
         importObj = &args[1].toObject();
     }
 
@@ -1456,7 +1453,7 @@ Reject(JSContext* cx, const CompileArgs& args, UniqueChars error, Handle<Promise
     unsigned line = args.scriptedCaller.line;
     unsigned column = args.scriptedCaller.column;
 
-    // Ideally we'd report a JSMSG_WASM_DECODE_FAIL here, but there's no easy
+    // Ideally we'd report a JSMSG_WASM_COMPILE_ERROR here, but there's no easy
     // way to create an ErrorObject for an arbitrary error code with multiple
     // replacements.
     UniqueChars str(JS_smprintf("wasm validation error: %s", error.get()));
@@ -1583,7 +1580,7 @@ WebAssembly_validate(JSContext* cx, unsigned argc, Value* vp)
 
     if (error) {
         JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
-                                     JSMSG_WASM_DECODE_FAIL, error.get());
+                                     JSMSG_WASM_COMPILE_ERROR, error.get());
     }
 
     callArgs.rval().setBoolean(validated);
@@ -1635,6 +1632,23 @@ InitConstructor(JSContext* cx, HandleObject wasm, const char* name, MutableHandl
     return DefineProperty(cx, wasm, id, ctorValue, nullptr, nullptr, 0);
 }
 
+static bool
+InitErrorClass(JSContext* cx, HandleObject wasm, const char* name, JSExnType exn)
+{
+    Handle<GlobalObject*> global = cx->global();
+    RootedObject proto(cx, GlobalObject::getOrCreateCustomErrorPrototype(cx, global, exn));
+    if (!proto)
+        return false;
+
+    RootedAtom className(cx, Atomize(cx, name, strlen(name)));
+    if (!className)
+        return false;
+
+    RootedId id(cx, AtomToId(className));
+    RootedValue ctorValue(cx, global->getConstructor(GetExceptionProtoKey(exn)));
+    return DefineProperty(cx, wasm, id, ctorValue, nullptr, nullptr, 0);
+}
+
 JSObject*
 js::InitWebAssemblyClass(JSContext* cx, HandleObject obj)
 {
@@ -1667,6 +1681,10 @@ js::InitWebAssemblyClass(JSContext* cx, HandleObject obj)
     if (!InitConstructor<WasmMemoryObject>(cx, wasm, "Memory", &memoryProto))
         return nullptr;
     if (!InitConstructor<WasmTableObject>(cx, wasm, "Table", &tableProto))
+        return nullptr;
+    if (!InitErrorClass(cx, wasm, "CompileError", JSEXN_WASMCOMPILEERROR))
+        return nullptr;
+    if (!InitErrorClass(cx, wasm, "RuntimeError", JSEXN_WASMRUNTIMEERROR))
         return nullptr;
 
     // Perform the final fallible write of the WebAssembly object to a global

@@ -290,15 +290,15 @@ assertEq(testTrunc(13.37), 1);
     setJitCompilerOption('wasm.test-mode', 0);
 }
 
-assertErrorMessage(() => wasmEvalText('(module (func (param f32) (result i32) (i32.clz (get_local 0))))'), TypeError, mismatchError("f32", "i32"));
-assertErrorMessage(() => wasmEvalText('(module (func (param i32) (result f32) (i32.clz (get_local 0))))'), TypeError, mismatchError("i32", "f32"));
-assertErrorMessage(() => wasmEvalText('(module (func (param f32) (result f32) (i32.clz (get_local 0))))'), TypeError, mismatchError("f32", "i32"));
+wasmFailValidateText('(module (func (param f32) (result i32) (i32.clz (get_local 0))))', mismatchError("f32", "i32"));
+wasmFailValidateText('(module (func (param i32) (result f32) (i32.clz (get_local 0))))', mismatchError("i32", "f32"));
+wasmFailValidateText('(module (func (param f32) (result f32) (i32.clz (get_local 0))))', mismatchError("f32", "i32"));
 
-assertErrorMessage(() => wasmEvalText('(module (func (param f32) (param i32) (result i32) (i32.add (get_local 0) (get_local 1))))'), TypeError, mismatchError("f32", "i32"));
-assertErrorMessage(() => wasmEvalText('(module (func (param i32) (param f32) (result i32) (i32.add (get_local 0) (get_local 1))))'), TypeError, mismatchError("f32", "i32"));
-assertErrorMessage(() => wasmEvalText('(module (func (param i32) (param i32) (result f32) (i32.add (get_local 0) (get_local 1))))'), TypeError, mismatchError("i32", "f32"));
-assertErrorMessage(() => wasmEvalText('(module (func (param f32) (param f32) (result f32) (i32.add (get_local 0) (get_local 1))))'), TypeError, mismatchError("f32", "i32"));
+wasmFailValidateText('(module (func (param f32) (param i32) (result i32) (i32.add (get_local 0) (get_local 1))))', mismatchError("f32", "i32"));
+wasmFailValidateText('(module (func (param i32) (param f32) (result i32) (i32.add (get_local 0) (get_local 1))))', mismatchError("f32", "i32"));
+wasmFailValidateText('(module (func (param i32) (param i32) (result f32) (i32.add (get_local 0) (get_local 1))))', mismatchError("i32", "f32"));
+wasmFailValidateText('(module (func (param f32) (param f32) (result f32) (i32.add (get_local 0) (get_local 1))))', mismatchError("f32", "i32"));
 
-assertErrorMessage(() => wasmEvalText('(module (func (param f32) (param i32) (result i32) (i32.eq (get_local 0) (get_local 1))))'), TypeError, mismatchError("f32", "i32"));
-assertErrorMessage(() => wasmEvalText('(module (func (param i32) (param f32) (result i32) (i32.eq (get_local 0) (get_local 1))))'), TypeError, mismatchError("f32", "i32"));
-assertErrorMessage(() => wasmEvalText('(module (func (param i32) (param i32) (result f32) (i32.eq (get_local 0) (get_local 1))))'), TypeError, mismatchError("i32", "f32"));
+wasmFailValidateText('(module (func (param f32) (param i32) (result i32) (i32.eq (get_local 0) (get_local 1))))', mismatchError("f32", "i32"));
+wasmFailValidateText('(module (func (param i32) (param f32) (result i32) (i32.eq (get_local 0) (get_local 1))))', mismatchError("f32", "i32"));
+wasmFailValidateText('(module (func (param i32) (param i32) (result f32) (i32.eq (get_local 0) (get_local 1))))', mismatchError("i32", "f32"));
