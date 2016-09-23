@@ -4861,16 +4861,13 @@ void HTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
   if (oldState < nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA &&
       mReadyState >= nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA) {
     DispatchAsyncEvent(NS_LITERAL_STRING("canplay"));
+    if (!mPaused) {
+      mWaitingForKey = false;
+      DispatchAsyncEvent(NS_LITERAL_STRING("playing"));
+    }
   }
 
   CheckAutoplayDataReady();
-
-  if (oldState < nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA &&
-      mReadyState >= nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA &&
-      IsPotentiallyPlaying()) {
-    mWaitingForKey = false;
-    DispatchAsyncEvent(NS_LITERAL_STRING("playing"));
-  }
 
   if (oldState < nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA &&
       mReadyState >= nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA) {
