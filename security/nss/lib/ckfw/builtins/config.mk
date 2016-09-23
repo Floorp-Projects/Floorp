@@ -32,3 +32,7 @@ INCLUDES += -I.
 ifeq ($(OS_TARGET),Darwin)
 DSO_LDOPTS = -bundle
 endif
+
+ifdef USE_GCOV
+DSO_LDOPTS += --coverage
+endif

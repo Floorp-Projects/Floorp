@@ -14,6 +14,7 @@
 #include "pk11func.h"
 #include "cert.h"
 #include "key.h"
+#include "keyi.h"
 #include "secitem.h"
 #include "secasn1.h" 
 #include "secoid.h" 
@@ -253,7 +254,8 @@ pk11_Attr2SecItem(PLArenaPool *arena, const CK_ATTRIBUTE *attr, SECItem *item)
  * Point length = (Roundup(curveLenInBits/8)*2+1)
  */
 static int
-pk11_get_EC_PointLenInBytes(PLArenaPool *arena, const SECItem *ecParams)
+pk11_get_EC_PointLenInBytes(PLArenaPool *arena, const SECItem *ecParams,
+                            PRBool *plain)
 {
    SECItem oid;
    SECOidTag tag;
@@ -271,6 +273,7 @@ pk11_get_EC_PointLenInBytes(PLArenaPool *arena, const SECItem *ecParams)
 	return 0;
    }
 
+   *plain = PR_FALSE;
    tag = SECOID_FindOIDTag(&oid);
    switch (tag) {
     case SEC_OID_SECG_EC_SECP112R1:
@@ -350,6 +353,9 @@ pk11_get_EC_PointLenInBytes(PLArenaPool *arena, const SECItem *ecParams)
     case SEC_OID_SECG_EC_SECT571K1:
     case SEC_OID_SECG_EC_SECT571R1:
 	return 145; /*curve len in bytes = 72 bytes */
+    case SEC_OID_CURVE25519:
+        *plain = PR_TRUE;
+	return 32; /* curve len in bytes = 32 bytes (only X) */
     /* unknown or unrecognized OIDs. return unknown length */
     default:
 	break;
@@ -371,6 +377,7 @@ pk11_get_Decoded_ECPoint(PLArenaPool *arena, const SECItem *ecParams,
     SECItem encodedPublicValue;
     SECStatus rv;
     int keyLen;
+    PRBool plain = PR_FALSE;
 
     if (ecPoint->ulValueLen == 0) {
 	return CKR_ATTRIBUTE_VALUE_INVALID;
@@ -393,11 +400,19 @@ pk11_get_Decoded_ECPoint(PLArenaPool *arena, const SECItem *ecParams,
      * encoded or not heuristically. If the ecParams are invalid, it
      * will return -1 for the keyLen.
      */
-    keyLen = pk11_get_EC_PointLenInBytes(arena, ecParams);
+    keyLen = pk11_get_EC_PointLenInBytes(arena, ecParams, &plain);
     if (keyLen < 0) {
 	return CKR_ATTRIBUTE_VALUE_INVALID;
     }
 
+    /*
+     * Some curves are not encoded but we don't have the name here.
+     * Instead, pk11_get_EC_PointLenInBytes returns true plain if this is the
+     * case.
+     */
+    if (plain && ecPoint->ulValueLen == (unsigned int)keyLen) {
+        return pk11_Attr2SecItem(arena, ecPoint, publicKeyValue);
+    }
 
     /* If the point is uncompressed and the lengths match, it
      * must be an unencoded point */
@@ -702,6 +717,9 @@ PK11_ExtractPublicKey(PK11SlotInfo *slot,KeyType keyType,CK_OBJECT_HANDLE id)
 	crv = pk11_get_Decoded_ECPoint(arena,
 		 &pubKey->u.ec.DEREncodedParams, value, 
 		 &pubKey->u.ec.publicValue);
+	if (seckey_SetPointEncoding(arena, pubKey) != SECSuccess) {
+		crv |= CKR_GENERAL_ERROR;
+	}
 	break;
     case fortezzaKey:
     case nullKey:

@@ -476,6 +476,7 @@ static CurveNameTagPair nameTagPair[] =
       { "sect113r2", SEC_OID_SECG_EC_SECT113R2 },
       { "sect131r1", SEC_OID_SECG_EC_SECT131R1 },
       { "sect131r2", SEC_OID_SECG_EC_SECT131R2 },
+      { "curve25519", SEC_OID_CURVE25519 },
     };
 
 static SECKEYECParams *

@@ -21,8 +21,6 @@
 #include "nss.h"
 #include "pk11pqg.h"
 
-#define SET_ERROR_CODE /* reminder */
-
 static const sslSocketOps ssl_default_ops = { /* No SSL. */
                                               ssl_DefConnect,
                                               NULL,
@@ -67,7 +65,6 @@ static sslOptions ssl_defaults = {
     PR_FALSE,              /* noCache            */
     PR_FALSE,              /* fdx                */
     PR_TRUE,               /* detectRollBack     */
-    PR_FALSE,              /* noStepDown         */
     PR_FALSE,              /* bypassPKCS11       */
     PR_FALSE,              /* noLocks            */
     PR_FALSE,              /* enableSessionTickets */
@@ -136,52 +133,59 @@ static const PRUint16 srtpCiphers[] = {
     0
 };
 
-/* This list is in rough order of speed.  Note that while some smaller groups
- * appear early in the list, smaller groups are generally ignored when iterating
+/* This list is in preference order.  Note that while some smaller groups appear
+ * early in the list, smaller groups are generally ignored when iterating
  * through this list. ffdhe_custom must not appear in this list. */
-#define ECGROUP(name, size, oid) \
-    ssl_grp_ec_##name, size, group_type_ec, SEC_OID_SECG_EC_##oid
-#define FFGROUP(size, oid) \
-    ssl_grp_ffdhe_##size, size, group_type_ff, SEC_OID_TLS_FFDHE_##oid
+#define ECGROUP(name, size, oid, assumeSupported)  \
+    {                                              \
+        ssl_grp_ec_##name, size, ssl_kea_ecdh,     \
+            SEC_OID_SECG_EC_##oid, assumeSupported \
+    }
+#define FFGROUP(size)                           \
+    {                                           \
+        ssl_grp_ffdhe_##size, size, ssl_kea_dh, \
+            SEC_OID_TLS_FFDHE_##size, PR_TRUE   \
+    }
 
-/* update SSL_NAMED_GROUP_COUNT when changing the number of entries */
-const namedGroupDef ssl_named_groups[] = {
-    { 0, ECGROUP(secp192r1, 192, SECP192R1), PR_FALSE },
-    { 1, ECGROUP(secp160r2, 160, SECP160R2), PR_FALSE },
-    { 2, ECGROUP(secp160k1, 160, SECP160K1), PR_FALSE },
-    { 3, ECGROUP(secp160r1, 160, SECP160R1), PR_FALSE },
-    { 4, ECGROUP(sect163k1, 163, SECT163K1), PR_FALSE },
-    { 5, ECGROUP(sect163r1, 163, SECT163R1), PR_FALSE },
-    { 6, ECGROUP(sect163r2, 163, SECT163R2), PR_FALSE },
-    { 7, ECGROUP(secp192k1, 192, SECP192K1), PR_FALSE },
-    { 8, ECGROUP(sect193r1, 193, SECT193R1), PR_FALSE },
-    { 9, ECGROUP(sect193r2, 193, SECT193R2), PR_FALSE },
-    { 10, ECGROUP(secp224r1, 224, SECP224R1), PR_FALSE },
-    { 11, ECGROUP(secp224k1, 224, SECP224K1), PR_FALSE },
-    { 12, ECGROUP(sect233k1, 233, SECT233K1), PR_FALSE },
-    { 13, ECGROUP(sect233r1, 233, SECT233R1), PR_FALSE },
-    { 14, ECGROUP(sect239k1, 239, SECT239K1), PR_FALSE },
-    { 15, ECGROUP(secp256r1, 256, SECP256R1), PR_TRUE },
-    { 16, ECGROUP(secp256k1, 256, SECP256K1), PR_FALSE },
-    { 17, ECGROUP(sect283k1, 283, SECT283K1), PR_FALSE },
-    { 18, ECGROUP(sect283r1, 283, SECT283R1), PR_FALSE },
-    { 19, ECGROUP(secp384r1, 384, SECP384R1), PR_TRUE },
-    { 20, ECGROUP(sect409k1, 409, SECT409K1), PR_FALSE },
-    { 21, ECGROUP(sect409r1, 409, SECT409R1), PR_FALSE },
-    { 22, ECGROUP(secp521r1, 521, SECP521R1), PR_TRUE },
-    { 23, ECGROUP(sect571k1, 571, SECT571K1), PR_FALSE },
-    { 24, ECGROUP(sect571r1, 571, SECT571R1), PR_FALSE },
-    { 25, FFGROUP(2048, 2048), PR_FALSE },
-    { 26, FFGROUP(3072, 3072), PR_FALSE },
-    { 27, FFGROUP(4096, 4096), PR_FALSE },
-    { 28, FFGROUP(6144, 6144), PR_FALSE },
-    { 29, FFGROUP(8192, 8192), PR_FALSE }
+const sslNamedGroupDef ssl_named_groups[] = {
+    /* Note that 256 for 25519 is a lie, but we only use it for checking bit
+     * security and expect 256 bits there (not 255). */
+    { ssl_grp_ec_curve25519, 256, ssl_kea_ecdh, SEC_OID_CURVE25519, PR_TRUE },
+    ECGROUP(secp256r1, 256, SECP256R1, PR_TRUE),
+    ECGROUP(secp384r1, 384, SECP384R1, PR_TRUE),
+    ECGROUP(secp521r1, 521, SECP521R1, PR_TRUE),
+    FFGROUP(2048),
+    FFGROUP(3072),
+    FFGROUP(4096),
+    FFGROUP(6144),
+    FFGROUP(8192),
+    ECGROUP(secp192r1, 192, SECP192R1, PR_FALSE),
+    ECGROUP(secp160r2, 160, SECP160R2, PR_FALSE),
+    ECGROUP(secp160k1, 160, SECP160K1, PR_FALSE),
+    ECGROUP(secp160r1, 160, SECP160R1, PR_FALSE),
+    ECGROUP(sect163k1, 163, SECT163K1, PR_FALSE),
+    ECGROUP(sect163r1, 163, SECT163R1, PR_FALSE),
+    ECGROUP(sect163r2, 163, SECT163R2, PR_FALSE),
+    ECGROUP(secp192k1, 192, SECP192K1, PR_FALSE),
+    ECGROUP(sect193r1, 193, SECT193R1, PR_FALSE),
+    ECGROUP(sect193r2, 193, SECT193R2, PR_FALSE),
+    ECGROUP(secp224r1, 224, SECP224R1, PR_FALSE),
+    ECGROUP(secp224k1, 224, SECP224K1, PR_FALSE),
+    ECGROUP(sect233k1, 233, SECT233K1, PR_FALSE),
+    ECGROUP(sect233r1, 233, SECT233R1, PR_FALSE),
+    ECGROUP(sect239k1, 239, SECT239K1, PR_FALSE),
+    ECGROUP(secp256k1, 256, SECP256K1, PR_FALSE),
+    ECGROUP(sect283k1, 283, SECT283K1, PR_FALSE),
+    ECGROUP(sect283r1, 283, SECT283R1, PR_FALSE),
+    ECGROUP(sect409k1, 409, SECT409K1, PR_FALSE),
+    ECGROUP(sect409r1, 409, SECT409R1, PR_FALSE),
+    ECGROUP(sect571k1, 571, SECT571K1, PR_FALSE),
+    ECGROUP(sect571r1, 571, SECT571R1, PR_FALSE),
 };
+PR_STATIC_ASSERT(SSL_NAMED_GROUP_COUNT == PR_ARRAY_SIZE(ssl_named_groups));
+
 #undef ECGROUP
 #undef FFGROUP
-
-/* Check that the supported groups bits will fit into ss->namedGroups. */
-PR_STATIC_ASSERT(PR_ARRAY_SIZE(ssl_named_groups) < (sizeof(PRUint32) * 8));
 
 /* forward declarations. */
 static sslSocket *ssl_NewSocket(PRBool makeLocks, SSLProtocolVariant variant);
@@ -257,7 +261,6 @@ ssl_DupSocket(sslSocket *os)
 {
     sslSocket *ss;
     SECStatus rv;
-    unsigned int i;
 
     ss = ssl_NewSocket((PRBool)(!os->opt.noLocks), os->protocolVariant);
     if (!ss) {
@@ -305,7 +308,6 @@ ssl_DupSocket(sslSocket *os)
             PR_APPEND_LINK(&sc->link, &ss->serverCerts);
         }
 
-        ss->stepDownKeyPair = !os->stepDownKeyPair ? NULL : ssl_GetKeyPairRef(os->stepDownKeyPair);
         PR_INIT_CLIST(&ss->ephemeralKeyPairs);
         for (cursor = PR_NEXT_LINK(&os->ephemeralKeyPairs);
              cursor != &os->ephemeralKeyPairs;
@@ -336,9 +338,10 @@ ssl_DupSocket(sslSocket *os)
         ss->pkcs11PinArg = os->pkcs11PinArg;
         ss->nextProtoCallback = os->nextProtoCallback;
         ss->nextProtoArg = os->nextProtoArg;
-        for (i = 0; i < SSL_NAMED_GROUP_COUNT; ++i) {
-            ss->namedGroupPreferences[i] = os->namedGroupPreferences[i];
-        }
+        PORT_Memcpy((void *)ss->namedGroupPreferences,
+                    os->namedGroupPreferences,
+                    sizeof(ss->namedGroupPreferences));
+        ss->additionalShares = os->additionalShares;
 
         /* Create security data */
         rv = ssl_CopySecurityInfo(ss, os);
@@ -413,10 +416,6 @@ ssl_DestroySocketContents(sslSocket *ss)
         cursor = PR_LIST_TAIL(&ss->serverCerts);
         PR_REMOVE_LINK(cursor);
         ssl_FreeServerCert((sslServerCert *)cursor);
-    }
-    if (ss->stepDownKeyPair) {
-        ssl_FreeKeyPair(ss->stepDownKeyPair);
-        ss->stepDownKeyPair = NULL;
     }
     ssl_FreeEphemeralKeyPairs(ss);
     SECITEM_FreeItem(&ss->opt.nextProtoNego, PR_FALSE);
@@ -722,9 +721,6 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRBool on)
             break;
 
         case SSL_NO_STEP_DOWN:
-            ss->opt.noStepDown = on;
-            if (on)
-                SSL_DisableExportCipherSuites(fd);
             break;
 
         case SSL_BYPASS_PKCS11:
@@ -912,7 +908,7 @@ SSL_OptionGet(PRFileDesc *fd, PRInt32 which, PRBool *pOn)
             on = ss->opt.detectRollBack;
             break;
         case SSL_NO_STEP_DOWN:
-            on = ss->opt.noStepDown;
+            on = PR_FALSE;
             break;
         case SSL_BYPASS_PKCS11:
             on = ss->opt.bypassPKCS11;
@@ -1032,7 +1028,7 @@ SSL_OptionGetDefault(PRInt32 which, PRBool *pOn)
             on = ssl_defaults.detectRollBack;
             break;
         case SSL_NO_STEP_DOWN:
-            on = ssl_defaults.noStepDown;
+            on = PR_FALSE;
             break;
         case SSL_BYPASS_PKCS11:
             on = ssl_defaults.bypassPKCS11;
@@ -1186,9 +1182,6 @@ SSL_OptionSetDefault(PRInt32 which, PRBool on)
             break;
 
         case SSL_NO_STEP_DOWN:
-            ssl_defaults.noStepDown = on;
-            if (on)
-                SSL_DisableDefaultExportCipherSuites();
             break;
 
         case SSL_BYPASS_PKCS11:
@@ -1308,13 +1301,6 @@ ssl_IsRemovedCipherSuite(PRInt32 suite)
 SECStatus
 SSL_SetPolicy(long which, int policy)
 {
-    if ((which & 0xfffe) == SSL_RSA_OLDFIPS_WITH_3DES_EDE_CBC_SHA) {
-        /* one of the two old FIPS ciphers */
-        if (which == SSL_RSA_OLDFIPS_WITH_3DES_EDE_CBC_SHA)
-            which = SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA;
-        else if (which == SSL_RSA_OLDFIPS_WITH_DES_CBC_SHA)
-            which = SSL_RSA_FIPS_WITH_DES_CBC_SHA;
-    }
     if (ssl_IsRemovedCipherSuite(which))
         return SECSuccess;
     return SSL_CipherPolicySet(which, policy);
@@ -1369,13 +1355,6 @@ SSL_CipherPolicyGet(PRInt32 which, PRInt32 *oPolicy)
 SECStatus
 SSL_EnableCipher(long which, PRBool enabled)
 {
-    if ((which & 0xfffe) == SSL_RSA_OLDFIPS_WITH_3DES_EDE_CBC_SHA) {
-        /* one of the two old FIPS ciphers */
-        if (which == SSL_RSA_OLDFIPS_WITH_3DES_EDE_CBC_SHA)
-            which = SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA;
-        else if (which == SSL_RSA_OLDFIPS_WITH_DES_CBC_SHA)
-            which = SSL_RSA_FIPS_WITH_DES_CBC_SHA;
-    }
     if (ssl_IsRemovedCipherSuite(which))
         return SECSuccess;
     return SSL_CipherPrefSetDefault(which, enabled);
@@ -1386,10 +1365,6 @@ ssl_CipherPrefSetDefault(PRInt32 which, PRBool enabled)
 {
     if (ssl_IsRemovedCipherSuite(which))
         return SECSuccess;
-    if (enabled && ssl_defaults.noStepDown && SSL_IsExportCipherSuite(which)) {
-        PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
-        return SECFailure;
-    }
     return ssl3_CipherPrefSetDefault((ssl3CipherSuite)which, enabled);
 }
 
@@ -1433,10 +1408,6 @@ SSL_CipherPrefSet(PRFileDesc *fd, PRInt32 which, PRBool enabled)
     }
     if (ssl_IsRemovedCipherSuite(which))
         return SECSuccess;
-    if (enabled && ss->opt.noStepDown && SSL_IsExportCipherSuite(which)) {
-        PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
-        return SECFailure;
-    }
     return ssl3_CipherPrefSet(ss, (ssl3CipherSuite)which, enabled);
 }
 
@@ -1502,8 +1473,10 @@ SECStatus
 SSL_NamedGroupConfig(PRFileDesc *fd, const SSLNamedGroup *groups,
                      unsigned int numGroups)
 {
-    unsigned int i, j;
+    unsigned int i;
+    unsigned int j = 0;
     sslSocket *ss = ssl_FindSocket(fd);
+
     if (!ss) {
         PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
         return SECFailure;
@@ -1518,21 +1491,12 @@ SSL_NamedGroupConfig(PRFileDesc *fd, const SSLNamedGroup *groups,
         return SECFailure;
     }
 
-    for (i = 0; i < SSL_NAMED_GROUP_COUNT; ++i) {
-        ss->namedGroupPreferences[i] = NULL;
-    }
-
+    memset((void *)ss->namedGroupPreferences, 0,
+           sizeof(ss->namedGroupPreferences));
     for (i = 0; i < numGroups; ++i) {
-        for (j = 0; j < SSL_NAMED_GROUP_COUNT; ++j) {
-            /* skip duplicate groups */
-            if (ss->namedGroupPreferences[j] &&
-                ss->namedGroupPreferences[j]->name == groups[i]) {
-                break;
-            }
-            if (ssl_named_groups[j].name == groups[i]) {
-                ss->namedGroupPreferences[i] = &ssl_named_groups[j];
-                break;
-            }
+        const sslNamedGroupDef *groupDef = ssl_LookupNamedGroup(groups[i]);
+        if (!ssl_NamedGroupEnabled(ss, groupDef)) {
+            ss->namedGroupPreferences[j++] = groupDef;
         }
     }
 
@@ -1547,7 +1511,7 @@ SSL_DHEGroupPrefSet(PRFileDesc *fd, const SSLDHEGroupType *groups,
     const SSLDHEGroupType *list;
     unsigned int count;
     int i, k;
-    const namedGroupDef *enabled[SSL_NAMED_GROUP_COUNT] = { 0 };
+    const sslNamedGroupDef *enabled[SSL_NAMED_GROUP_COUNT] = { 0 };
     static const SSLDHEGroupType default_dhe_groups[] = {
         ssl_ff_dhe_2048_group
     };
@@ -1576,7 +1540,7 @@ SSL_DHEGroupPrefSet(PRFileDesc *fd, const SSLDHEGroupType *groups,
     k = 0;
     for (i = 0; i < SSL_NAMED_GROUP_COUNT; ++i) {
         if (ss->namedGroupPreferences[i] &&
-            ss->namedGroupPreferences[i]->type != group_type_ff) {
+            ss->namedGroupPreferences[i]->keaType != ssl_kea_dh) {
             enabled[k++] = ss->namedGroupPreferences[i];
         }
         ss->namedGroupPreferences[i] = NULL;
@@ -1586,7 +1550,7 @@ SSL_DHEGroupPrefSet(PRFileDesc *fd, const SSLDHEGroupType *groups,
     for (i = 0; i < count; ++i) {
         PRBool duplicate = PR_FALSE;
         SSLNamedGroup name;
-        const namedGroupDef *groupDef;
+        const sslNamedGroupDef *groupDef;
         switch (list[i]) {
             case ssl_ff_dhe_2048_group:
                 name = ssl_grp_ffdhe_2048;
@@ -1741,7 +1705,7 @@ SSL_EnableWeakDHEPrimeGroup(PRFileDesc *fd, PRBool enabled)
 #include "dhe-param.c"
 
 const ssl3DHParams *
-ssl_GetDHEParams(const namedGroupDef *groupDef)
+ssl_GetDHEParams(const sslNamedGroupDef *groupDef)
 {
     switch (groupDef->name) {
         case ssl_grp_ffdhe_2048:
@@ -1818,7 +1782,7 @@ SECStatus
 ssl_ValidateDHENamedGroup(sslSocket *ss,
                           const SECItem *dh_p,
                           const SECItem *dh_g,
-                          const namedGroupDef **groupDef,
+                          const sslNamedGroupDef **groupDef,
                           const ssl3DHParams **dhParams)
 {
     unsigned int i;
@@ -1828,10 +1792,7 @@ ssl_ValidateDHENamedGroup(sslSocket *ss,
         if (!ss->namedGroupPreferences[i]) {
             continue;
         }
-        if (ss->namedGroupPreferences[i]->type != group_type_ff) {
-            continue;
-        }
-        if (!ssl_NamedGroupEnabled(ss, ss->namedGroupPreferences[i])) {
+        if (ss->namedGroupPreferences[i]->keaType != ssl_kea_dh) {
             continue;
         }
 
@@ -1855,12 +1816,12 @@ ssl_ValidateDHENamedGroup(sslSocket *ss,
 /* Ensure DH parameters have been selected.  This just picks the first enabled
  * FFDHE group in ssl_named_groups, or the weak one if it was enabled. */
 SECStatus
-ssl_SelectDHEGroup(sslSocket *ss, const namedGroupDef **groupDef)
+ssl_SelectDHEGroup(sslSocket *ss, const sslNamedGroupDef **groupDef)
 {
     unsigned int i;
-    static const namedGroupDef weak_group_def = {
-        0, ssl_grp_ffdhe_custom, WEAK_DHE_SIZE, group_type_ff,
-        SEC_OID_TLS_DHE_CUSTOM, PR_FALSE
+    static const sslNamedGroupDef weak_group_def = {
+        ssl_grp_ffdhe_custom, WEAK_DHE_SIZE, ssl_kea_dh,
+        SEC_OID_TLS_DHE_CUSTOM, PR_TRUE
     };
 
     /* Only select weak groups in TLS 1.2 and earlier, but not if the client has
@@ -1878,8 +1839,7 @@ ssl_SelectDHEGroup(sslSocket *ss, const namedGroupDef **groupDef)
     }
     for (i = 0; i < SSL_NAMED_GROUP_COUNT; ++i) {
         if (ss->namedGroupPreferences[i] &&
-            ss->namedGroupPreferences[i]->type == group_type_ff &&
-            ssl_NamedGroupEnabled(ss, ss->namedGroupPreferences[i])) {
+            ss->namedGroupPreferences[i]->keaType == ssl_kea_dh) {
             *groupDef = ss->namedGroupPreferences[i];
             return SECSuccess;
         }
@@ -1921,7 +1881,7 @@ ssl_ImportFD(PRFileDesc *model, PRFileDesc *fd, SSLProtocolVariant variant)
     rv = ssl_PushIOLayer(ns, fd, PR_TOP_IO_LAYER);
     if (rv != PR_SUCCESS) {
         ssl_FreeSocket(ns);
-        SET_ERROR_CODE
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
         return NULL;
     }
 #if defined(DEBUG) || defined(FORCE_PR_ASSERT)
@@ -2210,12 +2170,6 @@ SSL_ReconfigFD(PRFileDesc *model, PRFileDesc *fd)
         PR_APPEND_LINK(&sc->link, &ss->serverCerts);
     }
 
-    if (sm->stepDownKeyPair) {
-        if (ss->stepDownKeyPair) {
-            ssl_FreeKeyPair(ss->stepDownKeyPair);
-        }
-        ss->stepDownKeyPair = ssl_GetKeyPairRef(sm->stepDownKeyPair);
-    }
     ssl_FreeEphemeralKeyPairs(ss);
     for (cursor = PR_NEXT_LINK(&sm->ephemeralKeyPairs);
          cursor != &sm->ephemeralKeyPairs;
@@ -2226,6 +2180,11 @@ SSL_ReconfigFD(PRFileDesc *model, PRFileDesc *fd)
             return NULL;
         PR_APPEND_LINK(&skp->link, &ss->ephemeralKeyPairs);
     }
+    PORT_Memcpy((void *)ss->namedGroupPreferences,
+                sm->namedGroupPreferences,
+                sizeof(ss->namedGroupPreferences));
+    ss->additionalShares = sm->additionalShares;
+
     /* copy trust anchor names */
     if (sm->ssl3.ca_list) {
         if (ss->ssl3.ca_list) {
@@ -3596,7 +3555,7 @@ ssl_SetDefaultsFromEnvironment(void)
 #endif /* NSS_HAVE_GETENV */
 }
 
-const namedGroupDef *
+const sslNamedGroupDef *
 ssl_LookupNamedGroup(SSLNamedGroup group)
 {
     unsigned int i;
@@ -3610,18 +3569,21 @@ ssl_LookupNamedGroup(SSLNamedGroup group)
 }
 
 PRBool
-ssl_NamedGroupEnabled(const sslSocket *ss, const namedGroupDef *groupDef)
+ssl_NamedGroupEnabled(const sslSocket *ss, const sslNamedGroupDef *groupDef)
 {
-    PRUint32 policy;
-    SECStatus rv;
     unsigned int i;
+    SECStatus rv;
+    PRUint32 policy;
 
-    PORT_Assert(groupDef);
+    if (!groupDef) {
+        return PR_FALSE;
+    }
 
     rv = NSS_GetAlgorithmPolicy(groupDef->oidTag, &policy);
     if (rv == SECSuccess && !(policy & NSS_USE_ALG_IN_SSL_KX)) {
         return PR_FALSE;
     }
+
     for (i = 0; i < SSL_NAMED_GROUP_COUNT; ++i) {
         if (ss->namedGroupPreferences[i] &&
             ss->namedGroupPreferences[i] == groupDef) {
@@ -3673,7 +3635,7 @@ ssl_FreeKeyPair(sslKeyPair *keyPair)
 
 /* Ephemeral key handling. */
 sslEphemeralKeyPair *
-ssl_NewEphemeralKeyPair(const namedGroupDef *group,
+ssl_NewEphemeralKeyPair(const sslNamedGroupDef *group,
                         SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey)
 {
     sslKeyPair *keys;
@@ -3728,7 +3690,7 @@ ssl_FreeEphemeralKeyPair(sslEphemeralKeyPair *keyPair)
 }
 
 sslEphemeralKeyPair *
-ssl_LookupEphemeralKeyPair(sslSocket *ss, const namedGroupDef *groupDef)
+ssl_LookupEphemeralKeyPair(sslSocket *ss, const sslNamedGroupDef *groupDef)
 {
     PRCList *cursor;
     for (cursor = PR_NEXT_LINK(&ss->ephemeralKeyPairs);
@@ -3760,6 +3722,17 @@ ssl_NewSocket(PRBool makeLocks, SSLProtocolVariant protocolVariant)
     SECStatus rv;
     sslSocket *ss;
     int i;
+    /* TODO: remove this when 25519 and p256 have equal priority */
+    const SSLNamedGroup preferredGroups[] = {
+        ssl_grp_ec_secp256r1,
+        ssl_grp_ec_secp384r1,
+        ssl_grp_ec_secp521r1,
+        ssl_grp_ffdhe_2048,
+        ssl_grp_ffdhe_3072,
+        ssl_grp_ffdhe_4096,
+        ssl_grp_ffdhe_6144,
+        ssl_grp_ffdhe_8192
+    };
 
     ssl_SetDefaultsFromEnvironment();
 
@@ -3787,7 +3760,6 @@ ssl_NewSocket(PRBool makeLocks, SSLProtocolVariant protocolVariant)
     ss->url = NULL;
 
     PR_INIT_CLIST(&ss->serverCerts);
-    ss->stepDownKeyPair = NULL;
     PR_INIT_CLIST(&ss->ephemeralKeyPairs);
 
     ss->dbHandle = CERT_GetDefaultCertDB();
@@ -3804,9 +3776,12 @@ ssl_NewSocket(PRBool makeLocks, SSLProtocolVariant protocolVariant)
 
     ssl_ChooseOps(ss);
     ssl3_InitSocketPolicy(ss);
-    for (i = 0; i < SSL_NAMED_GROUP_COUNT; ++i) {
-        ss->namedGroupPreferences[i] = &ssl_named_groups[i];
+    memset((void *)ss->namedGroupPreferences, 0, sizeof(ss->namedGroupPreferences));
+    PORT_Assert(PR_ARRAY_SIZE(preferredGroups) < SSL_NAMED_GROUP_COUNT);
+    for (i = 0; i < PR_ARRAY_SIZE(preferredGroups); ++i) {
+        ss->namedGroupPreferences[i] = ssl_LookupNamedGroup(preferredGroups[i]);
     }
+    ss->additionalShares = 0;
     PR_INIT_CLIST(&ss->ssl3.hs.lastMessageFlight);
     PR_INIT_CLIST(&ss->ssl3.hs.remoteKeyShares);
     PR_INIT_CLIST(&ss->ssl3.hs.cipherSpecs);

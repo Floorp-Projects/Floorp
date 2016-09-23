@@ -95,32 +95,32 @@ static char *ocspStaplingCA = NULL;
 static SECItemArray *certStatus[kt_kea_size] = { NULL };
 
 const int ssl3CipherSuites[] = {
-    -1,                                  /* SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA* a */
-    -1,                                  /* SSL_FORTEZZA_DMS_WITH_RC4_128_SHA    * b */
-    TLS_RSA_WITH_RC4_128_MD5,            /* c */
-    TLS_RSA_WITH_3DES_EDE_CBC_SHA,       /* d */
-    TLS_RSA_WITH_DES_CBC_SHA,            /* e */
-    TLS_RSA_EXPORT_WITH_RC4_40_MD5,      /* f */
-    TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5,  /* g */
-    -1,                                  /* SSL_FORTEZZA_DMS_WITH_NULL_SHA,  * h */
-    TLS_RSA_WITH_NULL_MD5,               /* i */
-    SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA,  /* j */
-    SSL_RSA_FIPS_WITH_DES_CBC_SHA,       /* k */
-    TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA, /* l */
-    TLS_RSA_EXPORT1024_WITH_RC4_56_SHA,  /* m */
-    TLS_RSA_WITH_RC4_128_SHA,            /* n */
-    TLS_DHE_DSS_WITH_RC4_128_SHA,        /* o */
-    TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA,   /* p */
-    TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA,   /* q */
-    TLS_DHE_RSA_WITH_DES_CBC_SHA,        /* r */
-    TLS_DHE_DSS_WITH_DES_CBC_SHA,        /* s */
-    TLS_DHE_DSS_WITH_AES_128_CBC_SHA,    /* t */
-    TLS_DHE_RSA_WITH_AES_128_CBC_SHA,    /* u */
-    TLS_RSA_WITH_AES_128_CBC_SHA,        /* v */
-    TLS_DHE_DSS_WITH_AES_256_CBC_SHA,    /* w */
-    TLS_DHE_RSA_WITH_AES_256_CBC_SHA,    /* x */
-    TLS_RSA_WITH_AES_256_CBC_SHA,        /* y */
-    TLS_RSA_WITH_NULL_SHA,               /* z */
+    -1,                                /* SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA* a */
+    -1,                                /* SSL_FORTEZZA_DMS_WITH_RC4_128_SHA     * b */
+    TLS_RSA_WITH_RC4_128_MD5,          /* c */
+    TLS_RSA_WITH_3DES_EDE_CBC_SHA,     /* d */
+    TLS_RSA_WITH_DES_CBC_SHA,          /* e */
+    -1,                                /* TLS_RSA_EXPORT_WITH_RC4_40_MD5        * f */
+    -1,                                /* TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5    * g */
+    -1,                                /* SSL_FORTEZZA_DMS_WITH_NULL_SHA        * h */
+    TLS_RSA_WITH_NULL_MD5,             /* i */
+    -1,                                /* SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA    * j */
+    -1,                                /* SSL_RSA_FIPS_WITH_DES_CBC_SHA         * k */
+    -1,                                /* TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA   * l */
+    -1,                                /* TLS_RSA_EXPORT1024_WITH_RC4_56_SHA    * m */
+    TLS_RSA_WITH_RC4_128_SHA,          /* n */
+    TLS_DHE_DSS_WITH_RC4_128_SHA,      /* o */
+    TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA, /* p */
+    TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA, /* q */
+    TLS_DHE_RSA_WITH_DES_CBC_SHA,      /* r */
+    TLS_DHE_DSS_WITH_DES_CBC_SHA,      /* s */
+    TLS_DHE_DSS_WITH_AES_128_CBC_SHA,  /* t */
+    TLS_DHE_RSA_WITH_AES_128_CBC_SHA,  /* u */
+    TLS_RSA_WITH_AES_128_CBC_SHA,      /* v */
+    TLS_DHE_DSS_WITH_AES_256_CBC_SHA,  /* w */
+    TLS_DHE_RSA_WITH_AES_256_CBC_SHA,  /* x */
+    TLS_RSA_WITH_AES_256_CBC_SHA,      /* y */
+    TLS_RSA_WITH_NULL_SHA,             /* z */
     0
 };
 
@@ -181,7 +181,6 @@ PrintParameterUsage()
         "-B bypasses the PKCS11 layer for SSL encryption and MACing\n"
         "-q checks for bypassability\n"
         "-D means disable Nagle delays in TCP\n"
-        "-E means disable export ciphersuites and SSL step down key gen\n"
         "-R means disable detection of rollback from TLS to SSL3\n"
         "-a configure server for SNI.\n"
         "-k expected name negotiated on server sockets\n"
@@ -195,7 +194,6 @@ PrintParameterUsage()
         "-s means disable SSL socket locking for performance\n"
         "-u means enable Session Ticket extension for TLS.\n"
         "-v means verbose output\n"
-        "-x means use export policy.\n"
         "-z means enable compression.\n"
         "-L seconds means log statistics every 'seconds' seconds (default=30).\n"
         "-M maxProcs tells how many processes to run in a multi-process server\n"
@@ -311,48 +309,6 @@ disableAllSSLCiphers(void)
             errWarn("SSL_CipherPrefSetDefault");
         }
     }
-}
-
-/* disable all the export SSL cipher suites */
-SECStatus
-disableExportSSLCiphers(void)
-{
-    const PRUint16 *cipherSuites = SSL_ImplementedCiphers;
-    int i = SSL_NumImplementedCiphers;
-    SECStatus rv = SECSuccess;
-    SSLCipherSuiteInfo info;
-
-    while (--i >= 0) {
-        PRUint16 suite = cipherSuites[i];
-        SECStatus status;
-        status = SSL_GetCipherSuiteInfo(suite, &info, sizeof info);
-        if (status != SECSuccess) {
-            printf("SSL_GetCipherSuiteInfo rejected suite 0x%04x (i = %d)\n",
-                   suite, i);
-            errWarn("SSL_GetCipherSuiteInfo");
-            rv = SECFailure;
-            continue;
-        }
-        if (info.cipherSuite != suite) {
-            printf(
-                "SSL_GetCipherSuiteInfo returned wrong suite! Wanted 0x%04x, Got 0x%04x\n",
-                suite, i);
-            PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-            rv = SECFailure;
-            continue;
-        }
-        /* should check here that info.length >= offsetof isExportable */
-        if (info.isExportable) {
-            status = SSL_CipherPolicySet(suite, SSL_NOT_ALLOWED);
-            if (status != SECSuccess) {
-                printf("SSL_CipherPolicySet rejected suite 0x%04x (i = %d)\n",
-                       suite, i);
-                errWarn("SSL_CipherPolicySet");
-                rv = SECFailure;
-            }
-        }
-    }
-    return rv;
 }
 
 static SECStatus
@@ -839,7 +795,6 @@ static SSLVersionRange enabledVersions;
 PRBool disableRollBack = PR_FALSE;
 PRBool NoReuse = PR_FALSE;
 PRBool hasSidCache = PR_FALSE;
-PRBool disableStepDown = PR_FALSE;
 PRBool bypassPKCS11 = PR_FALSE;
 PRBool disableLocking = PR_FALSE;
 PRBool testbypass = PR_FALSE;
@@ -1905,12 +1860,6 @@ server_main(
     if (rv != SECSuccess) {
         errExit("error enabling RollBack detection ");
     }
-    if (disableStepDown) {
-        rv = SSL_OptionSet(model_sock, SSL_NO_STEP_DOWN, PR_TRUE);
-        if (rv != SECSuccess) {
-            errExit("error disabling SSL StepDown ");
-        }
-    }
     if (bypassPKCS11) {
         rv = SSL_OptionSet(model_sock, SSL_BYPASS_PKCS11, PR_TRUE);
         if (rv != SECSuccess) {
@@ -2252,7 +2201,6 @@ main(int argc, char **argv)
     SECStatus rv;
     PRStatus prStatus;
     PRBool bindOnly = PR_FALSE;
-    PRBool useExportPolicy = PR_FALSE;
     PRBool useLocalThreads = PR_FALSE;
     PLOptState *optstate;
     PLOptStatus status;
@@ -2277,9 +2225,10 @@ main(int argc, char **argv)
 
     /* please keep this list of options in ASCII collating sequence.
     ** numbers, then capital letters, then lower case, alphabetical.
-    */
+    ** XXX: 'E' and 'x' were used in the past, please leave some
+    **      time before resuing those. */
     optstate = PL_CreateOptState(argc, argv,
-                                 "2:A:BC:DEGH:L:M:NP:QRS:T:U:V:W:YZa:bc:d:e:f:g:hi:jk:lmn:op:qrst:uvw:xyz");
+                                 "2:A:BC:DGH:L:M:NP:QRS:T:U:V:W:YZa:bc:d:e:f:g:hi:jk:lmn:op:qrst:uvw:yz");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
         ++optionsFound;
         switch (optstate->option) {
@@ -2302,9 +2251,6 @@ main(int argc, char **argv)
 
             case 'D':
                 noDelay = PR_TRUE;
-                break;
-            case 'E':
-                disableStepDown = PR_TRUE;
                 break;
             case 'H':
                 configureDHE = (PORT_Atoi(optstate->value) != 0);
@@ -2490,10 +2436,6 @@ main(int argc, char **argv)
                 pwdata.data = passwd = PORT_Strdup(optstate->value);
                 break;
 
-            case 'x':
-                useExportPolicy = PR_TRUE;
-                break;
-
             case 'y':
                 debugCache = PR_TRUE;
                 break;
@@ -2665,24 +2607,6 @@ main(int argc, char **argv)
         exit(8);
     }
 
-    /* set the policy bits true for all the cipher suites. */
-    if (useExportPolicy) {
-        NSS_SetExportPolicy();
-        if (disableStepDown) {
-            fputs("selfserv: -x and -E options may not be used together\n",
-                  stderr);
-            exit(98);
-        }
-    } else {
-        NSS_SetDomesticPolicy();
-        if (disableStepDown) {
-            rv = disableExportSSLCiphers();
-            if (rv != SECSuccess) {
-                errExit("error disabling export ciphersuites ");
-            }
-        }
-    }
-
     /* all SSL3 cipher suites are enabled by default. */
     if (cipherString) {
         char *cstringSaved = cipherString;
@@ -2851,6 +2775,9 @@ main(int argc, char **argv)
     if (configureWeakDHE > 0) {
         fprintf(stderr, "selfserv: Creating dynamic weak DH parameters\n");
         rv = SSL_EnableWeakDHEPrimeGroup(NULL, PR_TRUE);
+        if (rv != SECSuccess) {
+            goto cleanup;
+        }
         fprintf(stderr, "selfserv: Done creating dynamic weak DH parameters\n");
     }
 

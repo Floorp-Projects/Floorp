@@ -40,8 +40,6 @@ static const ssl3CipherSuite nonDTLSSuites[] = {
     TLS_ECDH_ECDSA_WITH_RC4_128_SHA,
     TLS_RSA_WITH_RC4_128_MD5,
     TLS_RSA_WITH_RC4_128_SHA,
-    TLS_RSA_EXPORT1024_WITH_RC4_56_SHA,
-    TLS_RSA_EXPORT_WITH_RC4_40_MD5,
     0 /* End of list marker */
 };
 

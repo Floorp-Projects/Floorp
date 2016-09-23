@@ -102,10 +102,7 @@ SSL_IMPORT PRFileDesc *DTLS_ImportFD(PRFileDesc *model, PRFileDesc *fd);
 #define SSL_ENABLE_TLS 13 /* enable TLS (on by default) */
 
 #define SSL_ROLLBACK_DETECTION 14       /* for compatibility, default: on */
-#define SSL_NO_STEP_DOWN 15             /* Disable export cipher suites   */
-                                        /* if step-down keys are needed.  */
-                                        /* default: off, generate         */
-                                        /* step-down keys if needed.      */
+#define SSL_NO_STEP_DOWN 15             /* (unsupported, deprecated, off) */
 #define SSL_BYPASS_PKCS11 16            /* use PKCS#11 for pub key only   */
 #define SSL_NO_LOCKS 17                 /* Don't use locks for protection */
 #define SSL_ENABLE_SESSION_TICKETS 18   /* Enable TLS SessionTicket       */
@@ -400,6 +397,22 @@ SSL_IMPORT unsigned int SSL_SignatureMaxCount();
 SSL_IMPORT SECStatus SSL_NamedGroupConfig(PRFileDesc *fd,
                                           const SSLNamedGroup *groups,
                                           unsigned int num_groups);
+
+/*
+** Configure the socket to configure additional key shares.  Normally when a TLS
+** 1.3 ClientHello is sent, just one key share is included using the first
+** preference group (as set by SSL_NamedGroupConfig).  If the server decides to
+** pick a different group for key exchange, it is forced to send a
+** HelloRetryRequest, which adds an entire round trip of latency.
+**
+** This function can be used to configure libssl to generate additional key
+** shares when sending a TLS 1.3 ClientHello.  If |count| is set to a non-zero
+** value, then additional key shares are generated.  Shares are added in the
+** preference order set in SSL_NamedGroupConfig.  |count| can be set to any
+** value; NSS limits the number of shares to the number of supported groups.
+*/
+SSL_IMPORT SECStatus SSL_SendAdditionalKeyShares(PRFileDesc *fd,
+                                                 unsigned int count);
 
 /* Deprecated: use SSL_NamedGroupConfig() instead.
 ** SSL_DHEGroupPrefSet is used to configure the set of allowed/enabled DHE group
