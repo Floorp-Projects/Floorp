@@ -1,4 +1,5 @@
 load(libdir + "wasm.js");
+load(libdir + "asserts.js");
 
 // Single-step profiling currently only works in the ARM simulator
 if (!getBuildConfiguration()["arm-simulator"])
@@ -53,7 +54,7 @@ function test(code, expect)
 {
     enableSPSProfiling();
 
-    var f = wasmEvalText(code).exports[""];
+    var f = evalText(code).exports[""];
     enableSingleStepProfiling();
     f();
     assertEqStacks(disableSingleStepProfiling(), expect);
@@ -99,7 +100,7 @@ testError(
 `(module
     (type $good (func))
     (type $bad (func (param i32)))
-    (func $foo (call_indirect $bad (i32.const 1) (i32.const 0)))
+    (func $foo (call_indirect $bad (i32.const 0) (i32.const 1)))
     (func $bar (type $good))
     (table $bar)
     (export "" $foo)
@@ -107,7 +108,7 @@ testError(
 Error);
 
 (function() {
-    var e = wasmEvalText(`
+    var e = evalText(`
     (module
         (func $foo (result i32) (i32.const 42))
         (export "foo" $foo)
@@ -147,7 +148,7 @@ Error);
     assertEqStacks(disableSingleStepProfiling(), ["", ">", "0,>", ">", "", ">", "1,>", ">", ""]);
     disableSPSProfiling();
 
-    var e2 = wasmEvalText(`
+    var e2 = evalText(`
     (module
         (type $v2i (func (result i32)))
         (import "a" "b" (table 10))
@@ -177,11 +178,11 @@ Error);
 })();
 
 (function() {
-    var m1 = new Module(wasmTextToBinary(`(module
+    var m1 = new Module(textToBinary(`(module
         (func $foo (result i32) (i32.const 42))
         (export "foo" $foo)
     )`));
-    var m2 = new Module(wasmTextToBinary(`(module
+    var m2 = new Module(textToBinary(`(module
         (import $foo "a" "foo" (result i32))
         (func $bar (result i32) (call $foo))
         (export "bar" $bar)

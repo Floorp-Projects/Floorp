@@ -346,7 +346,7 @@ MSG_DEF(JSMSG_USE_ASM_TYPE_OK,         1, JSEXN_WARN,    "Successfully compiled 
 
 // wasm
 MSG_DEF(JSMSG_WASM_FAIL,               1, JSEXN_TYPEERR,     "wasm error: {0}")
-MSG_DEF(JSMSG_WASM_DECODE_FAIL,        1, JSEXN_TYPEERR,     "wasm validation error: {0}")
+MSG_DEF(JSMSG_WASM_DECODE_FAIL,        2, JSEXN_TYPEERR,     "wasm validation error at offset {0}: {1}")
 MSG_DEF(JSMSG_WASM_TEXT_FAIL,          1, JSEXN_SYNTAXERR,   "wasm text error: {0}")
 MSG_DEF(JSMSG_WASM_IND_CALL_TO_NULL,   0, JSEXN_ERR,         "indirect call to null")
 MSG_DEF(JSMSG_WASM_IND_CALL_BAD_SIG,   0, JSEXN_ERR,         "indirect call signature mismatch")

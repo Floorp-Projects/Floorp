@@ -1313,7 +1313,7 @@ class FunctionCompiler
     {
         *loopHeader = nullptr;
 
-        blockDepth_++;
+        blockDepth_ += 2;
         loopDepth_++;
 
         if (inDeadCode())
@@ -1389,17 +1389,19 @@ class FunctionCompiler
   public:
     bool closeLoop(MBasicBlock* loopHeader, MDefinition** loopResult)
     {
-        MOZ_ASSERT(blockDepth_ >= 1);
+        MOZ_ASSERT(blockDepth_ >= 2);
         MOZ_ASSERT(loopDepth_);
 
         uint32_t headerLabel = blockDepth_ - 1;
+        uint32_t afterLabel = blockDepth_ - 2;
 
         if (!loopHeader) {
             MOZ_ASSERT(inDeadCode());
+            MOZ_ASSERT(afterLabel >= blockPatches_.length() || blockPatches_[afterLabel].empty());
             MOZ_ASSERT(headerLabel >= blockPatches_.length() || blockPatches_[headerLabel].empty());
-            blockDepth_--;
-            loopDepth_--;
             *loopResult = nullptr;
+            blockDepth_ -= 2;
+            loopDepth_--;
             return true;
         }
 
@@ -1408,12 +1410,9 @@ class FunctionCompiler
         MBasicBlock* loopBody = curBlock_;
         curBlock_ = nullptr;
 
-        // As explained in bug 1253544, Ion apparently has an invariant that
-        // there is only one backedge to loop headers. To handle wasm's ability
-        // to have multiple backedges to the same loop header, we bind all those
-        // branches as forward jumps to a single backward jump. This is
-        // unfortunate but the optimizer is able to fold these into single jumps
-        // to backedges.
+        // TODO (bug 1253544): blocks branching to the top join to a single
+        // backedge block. Could they directly be set as backedges of the loop
+        // instead?
         MDefinition* _;
         if (!bindBranches(headerLabel, &_))
             return false;
@@ -1434,8 +1433,11 @@ class FunctionCompiler
         curBlock_ = loopBody;
 
         loopDepth_--;
+        if (!bindBranches(afterLabel, loopResult))
+            return false;
 
-        // If the loop depth still at the inner loop body, correct it.
+        // If we have not created a new block in bindBranches, we're still on
+        // the inner loop body, which loop depth is incorrect.
         if (curBlock_ && curBlock_->loopDepth() != loopDepth_) {
             MBasicBlock* out;
             if (!goToNewBlock(curBlock_, &out))
@@ -1443,8 +1445,7 @@ class FunctionCompiler
             curBlock_ = out;
         }
 
-        blockDepth_ -= 1;
-        *loopResult = inDeadCode() ? nullptr : popDefIfPushed();
+        blockDepth_ -= 2;
         return true;
     }
 
@@ -1734,7 +1735,6 @@ EmitEnd(FunctionCompiler& f)
             return false;
         break;
       case LabelKind::Then:
-      case LabelKind::UnreachableThen:
         // If we didn't see an Else, create a trivial else block so that we create
         // a diamond anyway, to preserve Ion invariants.
         if (!f.switchToElse(block, &block))
@@ -1749,9 +1749,7 @@ EmitEnd(FunctionCompiler& f)
         break;
     }
 
-    if (!IsVoid(type))
-        f.iter().setResult(def);
-
+    f.iter().setResult(def);
     return true;
 }
 
@@ -1812,13 +1810,13 @@ EmitBrTable(FunctionCompiler& f)
 
     uint32_t depth;
     for (size_t i = 0; i < tableLength; ++i) {
-        if (!f.iter().readBrTableEntry(&type, &value, &depth))
+        if (!f.iter().readBrTableEntry(type, &depth))
             return false;
         depths.infallibleAppend(depth);
     }
 
     // Read the default label.
-    if (!f.iter().readBrTableDefault(&type, &value, &depth))
+    if (!f.iter().readBrTableEntry(type, &depth))
         return false;
 
     MDefinition* maybeValue = IsVoid(type) ? nullptr : value;
@@ -1835,9 +1833,6 @@ EmitReturn(FunctionCompiler& f)
     MDefinition* value;
     if (!f.iter().readReturn(&value))
         return false;
-
-    if (f.inDeadCode())
-        return true;
 
     if (IsVoid(f.sig().ret())) {
         f.returnVoid();
@@ -1901,15 +1896,13 @@ EmitCall(FunctionCompiler& f, uint32_t callOffset)
     uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode(callOffset);
 
     uint32_t calleeIndex;
-    if (!f.iter().readCall(&calleeIndex))
+    uint32_t arity;
+    if (!f.iter().readCall(&calleeIndex, &arity))
         return false;
 
-    if (f.inDeadCode())
-        return true;
-
-    // For asm.js, imports are not part of the function index space so in
-    // these cases firstFuncDefIndex is fixed to 0, even if there are
-    // function imports.
+    // For asm.js and old-format wasm code, imports are not part of the function
+    // index space so in these cases firstFuncDefIndex is fixed to 0, even if
+    // there are function imports.
     if (calleeIndex < f.mg().firstFuncDefIndex)
         return EmitCallImportCommon(f, lineOrBytecode, calleeIndex);
 
@@ -1942,32 +1935,22 @@ EmitCallImport(FunctionCompiler& f, uint32_t callOffset)
     uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode(callOffset);
 
     uint32_t funcImportIndex;
-    if (!f.iter().readCallImport(&funcImportIndex))
+    uint32_t arity;
+    if (!f.iter().readCallImport(&funcImportIndex, &arity))
         return false;
-
-    if (f.inDeadCode())
-        return true;
 
     return EmitCallImportCommon(f, lineOrBytecode, funcImportIndex);
 }
 
 static bool
-EmitCallIndirect(FunctionCompiler& f, uint32_t callOffset, bool oldStyle)
+EmitCallIndirect(FunctionCompiler& f, uint32_t callOffset)
 {
     uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode(callOffset);
 
     uint32_t sigIndex;
-    MDefinition* callee;
-    if (oldStyle) {
-        if (!f.iter().readOldCallIndirect(&sigIndex))
-            return false;
-    } else {
-        if (!f.iter().readCallIndirect(&sigIndex, &callee))
-            return false;
-    }
-
-    if (f.inDeadCode())
-        return true;
+    uint32_t arity;
+    if (!f.iter().readCallIndirect(&sigIndex, &arity))
+        return false;
 
     const Sig& sig = f.mg().sigs[sigIndex];
 
@@ -1977,10 +1960,9 @@ EmitCallIndirect(FunctionCompiler& f, uint32_t callOffset, bool oldStyle)
     if (!EmitCallArgs(f, sig, interModule, &call))
         return false;
 
-    if (oldStyle) {
-        if (!f.iter().readOldCallIndirectCallee(&callee))
-            return false;
-    }
+    MDefinition* callee;
+    if (!f.iter().readCallIndirectCallee(&callee))
+        return false;
 
     if (!f.iter().readCallReturn(sig.ret()))
         return false;
@@ -2013,18 +1995,6 @@ EmitSetLocal(FunctionCompiler& f)
     uint32_t id;
     MDefinition* value;
     if (!f.iter().readSetLocal(f.locals(), &id, &value))
-        return false;
-
-    f.assign(id, value);
-    return true;
-}
-
-static bool
-EmitTeeLocal(FunctionCompiler& f)
-{
-    uint32_t id;
-    MDefinition* value;
-    if (!f.iter().readTeeLocal(f.locals(), &id, &value))
         return false;
 
     f.assign(id, value);
@@ -2088,21 +2058,6 @@ EmitSetGlobal(FunctionCompiler& f)
     uint32_t id;
     MDefinition* value;
     if (!f.iter().readSetGlobal(f.mg().globals, &id, &value))
-        return false;
-
-    const GlobalDesc& global = f.mg().globals[id];
-    MOZ_ASSERT(global.isMutable());
-
-    f.storeGlobalVar(global.offset(), value);
-    return true;
-}
-
-static bool
-EmitTeeGlobal(FunctionCompiler& f)
-{
-    uint32_t id;
-    MDefinition* value;
-    if (!f.iter().readTeeGlobal(f.mg().globals, &id, &value))
         return false;
 
     const GlobalDesc& global = f.mg().globals[id];
@@ -2357,14 +2312,16 @@ EmitComparison(FunctionCompiler& f,
 static bool
 EmitSelect(FunctionCompiler& f)
 {
-    ValType type;
+    ExprType type;
     MDefinition* trueValue;
     MDefinition* falseValue;
     MDefinition* condition;
     if (!f.iter().readSelect(&type, &trueValue, &falseValue, &condition))
         return false;
 
-    f.iter().setResult(f.select(trueValue, falseValue, condition));
+    if (!IsVoid(type))
+        f.iter().setResult(f.select(trueValue, falseValue, condition));
+
     return true;
 }
 
@@ -2394,24 +2351,11 @@ EmitStore(FunctionCompiler& f, ValType resultType, Scalar::Type viewType)
 }
 
 static bool
-EmitTeeStore(FunctionCompiler& f, ValType resultType, Scalar::Type viewType)
+EmitStoreWithCoercion(FunctionCompiler& f, ValType resultType, Scalar::Type viewType)
 {
     LinearMemoryAddress<MDefinition*> addr;
     MDefinition* value;
-    if (!f.iter().readTeeStore(resultType, Scalar::byteSize(viewType), &addr, &value))
-        return false;
-
-    MWasmMemoryAccess access(viewType, addr.align, addr.offset);
-    f.store(addr.base, access, value);
-    return true;
-}
-
-static bool
-EmitTeeStoreWithCoercion(FunctionCompiler& f, ValType resultType, Scalar::Type viewType)
-{
-    LinearMemoryAddress<MDefinition*> addr;
-    MDefinition* value;
-    if (!f.iter().readTeeStore(resultType, Scalar::byteSize(viewType), &addr, &value))
+    if (!f.iter().readStore(resultType, Scalar::byteSize(viewType), &addr, &value))
         return false;
 
     if (resultType == ValType::F32 && viewType == Scalar::Float64)
@@ -2793,7 +2737,7 @@ EmitSimdStore(FunctionCompiler& f, ValType resultType, unsigned numElems)
 
     LinearMemoryAddress<MDefinition*> addr;
     MDefinition* value;
-    if (!f.iter().readTeeStore(resultType, Scalar::byteSize(viewType), &addr, &value))
+    if (!f.iter().readStore(resultType, Scalar::byteSize(viewType), &addr, &value))
         return false;
 
     MWasmMemoryAccess access(viewType, addr.align, addr.offset, numElems);
@@ -3083,7 +3027,7 @@ EmitCurrentMemory(FunctionCompiler& f, uint32_t callOffset)
 
     CallCompileState args(f, lineOrBytecode);
 
-    if (!f.iter().readNullary(ValType::I32))
+    if (!f.iter().readNullary(ExprType::I32))
         return false;
 
     if (!f.startCall(&args))
@@ -3117,9 +3061,7 @@ EmitExpr(FunctionCompiler& f)
     switch (expr) {
       // Control opcodes
       case Expr::Nop:
-        return f.iter().readNop();
-      case Expr::Drop:
-        return f.iter().readDrop();
+        return f.iter().readNullary(ExprType::Void);
       case Expr::Block:
         return EmitBlock(f);
       case Expr::Loop:
@@ -3148,9 +3090,7 @@ EmitExpr(FunctionCompiler& f)
       case Expr::Call:
         return EmitCall(f, exprOffset);
       case Expr::CallIndirect:
-        return EmitCallIndirect(f, exprOffset, /* oldStyle = */ false);
-      case Expr::OldCallIndirect:
-        return EmitCallIndirect(f, exprOffset, /* oldStyle = */ true);
+        return EmitCallIndirect(f, exprOffset);
       case Expr::CallImport:
         return EmitCallImport(f, exprOffset);
 
@@ -3159,14 +3099,10 @@ EmitExpr(FunctionCompiler& f)
         return EmitGetLocal(f);
       case Expr::SetLocal:
         return EmitSetLocal(f);
-      case Expr::TeeLocal:
-        return EmitTeeLocal(f);
       case Expr::GetGlobal:
         return EmitGetGlobal(f);
       case Expr::SetGlobal:
         return EmitSetGlobal(f);
-      case Expr::TeeGlobal:
-        return EmitTeeGlobal(f);
 
       // Select
       case Expr::Select:
@@ -3244,16 +3180,10 @@ EmitExpr(FunctionCompiler& f)
         return EmitLoad(f, ValType::I32, Scalar::Int32);
       case Expr::I32Store8:
         return EmitStore(f, ValType::I32, Scalar::Int8);
-      case Expr::I32TeeStore8:
-        return EmitTeeStore(f, ValType::I32, Scalar::Int8);
       case Expr::I32Store16:
         return EmitStore(f, ValType::I32, Scalar::Int16);
-      case Expr::I32TeeStore16:
-        return EmitTeeStore(f, ValType::I32, Scalar::Int16);
       case Expr::I32Store:
         return EmitStore(f, ValType::I32, Scalar::Int32);
-      case Expr::I32TeeStore:
-        return EmitTeeStore(f, ValType::I32, Scalar::Int32);
       case Expr::I32Rotr:
       case Expr::I32Rotl:
         return EmitRotate(f, ValType::I32, expr == Expr::I32Rotl);
@@ -3329,20 +3259,12 @@ EmitExpr(FunctionCompiler& f)
         return EmitLoad(f, ValType::I64, Scalar::Int64);
       case Expr::I64Store8:
         return EmitStore(f, ValType::I64, Scalar::Int8);
-      case Expr::I64TeeStore8:
-        return EmitTeeStore(f, ValType::I64, Scalar::Int8);
       case Expr::I64Store16:
         return EmitStore(f, ValType::I64, Scalar::Int16);
-      case Expr::I64TeeStore16:
-        return EmitTeeStore(f, ValType::I64, Scalar::Int16);
       case Expr::I64Store32:
         return EmitStore(f, ValType::I64, Scalar::Int32);
-      case Expr::I64TeeStore32:
-        return EmitTeeStore(f, ValType::I64, Scalar::Int32);
       case Expr::I64Store:
         return EmitStore(f, ValType::I64, Scalar::Int64);
-      case Expr::I64TeeStore:
-        return EmitTeeStore(f, ValType::I64, Scalar::Int64);
 
       // F32
       case Expr::F32Const: {
@@ -3397,10 +3319,8 @@ EmitExpr(FunctionCompiler& f)
         return EmitLoad(f, ValType::F32, Scalar::Float32);
       case Expr::F32Store:
         return EmitStore(f, ValType::F32, Scalar::Float32);
-      case Expr::F32TeeStore:
-        return EmitTeeStore(f, ValType::F32, Scalar::Float32);
-      case Expr::F32TeeStoreF64:
-        return EmitTeeStoreWithCoercion(f, ValType::F32, Scalar::Float64);
+      case Expr::F32StoreF64:
+        return EmitStoreWithCoercion(f, ValType::F32, Scalar::Float64);
 
       // F64
       case Expr::F64Const: {
@@ -3475,10 +3395,8 @@ EmitExpr(FunctionCompiler& f)
         return EmitLoad(f, ValType::F64, Scalar::Float64);
       case Expr::F64Store:
         return EmitStore(f, ValType::F64, Scalar::Float64);
-      case Expr::F64TeeStore:
-        return EmitTeeStore(f, ValType::F64, Scalar::Float64);
-      case Expr::F64TeeStoreF32:
-        return EmitTeeStoreWithCoercion(f, ValType::F64, Scalar::Float32);
+      case Expr::F64StoreF32:
+        return EmitStoreWithCoercion(f, ValType::F64, Scalar::Float32);
       case Expr::F64ReinterpretI64:
         return EmitReinterpret(f, ValType::F64, ValType::I64, MIRType::Double);
 
@@ -3743,10 +3661,7 @@ wasm::IonCompileFunction(IonCompileTask* task)
         if (!f.init())
             return false;
 
-        if (!f.startBlock())
-            return false;
-
-        if (!f.iter().readFunctionStart(f.sig().ret()))
+        if (!f.iter().readFunctionStart())
             return false;
 
         while (!f.done()) {
@@ -3754,13 +3669,13 @@ wasm::IonCompileFunction(IonCompileTask* task)
                 return false;
         }
 
-        if (f.inDeadCode() || IsVoid(f.sig().ret()))
+        MDefinition* value;
+        if (!f.iter().readFunctionEnd(f.sig().ret(), &value))
+            return false;
+        if (IsVoid(f.sig().ret()))
             f.returnVoid();
         else
-            f.returnExpr(f.iter().getResult());
-
-        if (!f.iter().readFunctionEnd())
-            return false;
+            f.returnExpr(value);
 
         f.finish();
     }

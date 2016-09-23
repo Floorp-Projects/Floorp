@@ -1,29 +1,11 @@
 // |jit-test| test-also-wasm-baseline
 load(libdir + "wasm.js");
 
-assertErrorMessage(() => wasmEvalText(`(module
-   (func (result i32) (param i32)
-     (loop (if (i32.const 0) (br 0)) (get_local 0)))
-   (export "" 0)
-)`), TypeError, /unused values not explicitly dropped by end of block/);
-
-assertErrorMessage(() => wasmEvalText(`(module
-   (func (param i32)
-     (loop (if (i32.const 0) (br 0)) (get_local 0)))
-   (export "" 0)
-)`), TypeError, /unused values not explicitly dropped by end of block/);
-
-assertErrorMessage(() => wasmEvalText(`(module
-   (func (result i32) (param i32)
-     (loop (if (i32.const 0) (br 0)) (drop (get_local 0))))
-   (export "" 0)
-)`), TypeError, mismatchError("void", "i32"));
-
 assertEq(wasmEvalText(`(module
    (func (result i32) (param i32)
-     (loop (if (i32.const 0) (br 0))) (get_local 0))
+     (loop (if (i32.const 0) (br 0)) (get_local 0)))
    (export "" 0)
-)`).exports[""](42), 42);
+)`)(42), 42);
 
 wasmEvalText(`(module (func $func$0
       (block (if (i32.const 1) (loop (br_table 0 (br 0)))))
@@ -35,17 +17,16 @@ wasmEvalText(`(module (func
   )
 )`);
 
-wasmEvalText(`(module (func (result i32)
+wasmEvalText(`(module (func
   (select
-    (block i32
-      (drop (block i32
+    (block
+      (block
         (br_table
          1
          0
          (i32.const 1)
-         (i32.const 0)
         )
-      ))
+      )
       (i32.const 2)
     )
     (i32.const 3)
@@ -82,7 +63,7 @@ wasmEvalText(`
 
  (export "" 1)
 )
-`).exports[""]();
+`)();
 
 wasmEvalText(`
 (module
@@ -93,14 +74,14 @@ wasmEvalText(`
     (func
         (call 1
             (i32.const 43)
-            (block $b i32
+            (block $b
                 (if (i32.const 1)
                     (call 0
-                        (block i32
+                        (block
                             (call 0 (i32.const 42))
                             (br $b (i32.const 10)))))
                 (i32.const 44))))
-    (export "foo" 4))
+    (export "foo" 2))
 `, {
     check: {
         one(x) {
@@ -111,18 +92,9 @@ wasmEvalText(`
             assertEq(y, 10);
         }
     }
-}).exports.foo();
+}).foo();
 
-assertEq(wasmEvalText(`(module (func
- (return)
- (select
-  (loop (i32.const 1))
-  (loop (i32.const 2))
-  (i32.const 3)
- )
-) (export "" 0))`).exports[""](), undefined);
-
-wasmEvalText(`(module (func (result i32)
+wasmEvalText(`(module (func
  (return (i32.const 0))
  (select
   (loop (i32.const 1))
@@ -158,16 +130,16 @@ wasmEvalText(`(module (func
  )
 ))`);
 
-assertErrorMessage(() => wasmEvalText(`
+wasmEvalText(`
 (module
   (func $func$0
    (select
-    (if f32
+    (if
      (i32.const 0)
      (f32.const 0)
      (i32.const 0)
     )
-    (if f32
+    (if
      (i32.const 0)
      (f32.const 0)
      (i32.const 0)
@@ -176,19 +148,19 @@ assertErrorMessage(() => wasmEvalText(`
    )
   )
 )
-`), TypeError, mismatchError("i32", "f32"));
+`);
 
 wasmEvalText(`
 (module
- (func (result i32)
+ (func
   (i32.add
-   (block $outer i32
-    (drop (block $middle i32
-     (block $inner i32
+   (block $outer
+    (block $middle
+     (block $inner
       (br_table $middle $outer $inner (i32.const 42) (i32.const 1))
      )
      (nop)
-    ))
+    )
     (i32.const 0)
    )
    (i32.const 13)
