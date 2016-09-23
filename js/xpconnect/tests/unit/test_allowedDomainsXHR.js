@@ -54,6 +54,11 @@ function run_test()
   var res = cu.evalInSandbox('var sync = createXHR("4444/simple"); sync.send(null); sync', sb);
   do_check_true(checkResults(res));
 
+  var principal = res.responseXML.nodePrincipal;
+  do_check_true(principal.isCodebasePrincipal);
+  var requestURL = "http://localhost:4444/simple";
+  do_check_eq(principal.URI.spec, requestURL);
+
   // negative test sync XHR sending (to ensure that the xhr do not have chrome caps, see bug 779821)
   try {
     cu.evalInSandbox('var createXHR = ' + createXHR.toString(), sb);
