@@ -5,10 +5,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=911595
 -->
 <head>
   <title>Test for spinning the event loop inside position handlers</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="geolocation_common.js"></script>
 
-<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=911595 ">Mozilla Bug 911595</a>
@@ -25,41 +25,39 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=911595
  * fired for the same request if that request has a small timeout.
  */
 
+var { classes: Cc, interfaces: Ci, utils: Cu }  = Components;
+
 SimpleTest.waitForExplicitFinish();
-SimpleTest.requestFlakyTimeout("untriaged");
 
 resume_geolocationProvider(function() {
   force_prompt(true, test1);
 });
 
-function spinEventLoopAndSetTimeout() {
-  if (successCallbackCalled || errorCallbackCalled) {
-    // this should only be called once from either callback
-    return;
-  }
-
-  SpecialPowers.spinEventLoop(window);
-
-  setTimeout(function() {
-    ok(successCallbackCalled != errorCallbackCalled, "Ensure only one callback is called");
-    SimpleTest.finish();
-  }, 5);
-}
-
 var successCallbackCalled = false;
 function successCallback(position) {
-  spinEventLoopAndSetTimeout();
   successCallbackCalled = true;
+  check_geolocation(position);
+  while (!timeoutPassed) {
+    SpecialPowers.spinEventLoop(window);
+  }
+  ok(successCallbackCalled != errorCallbackCalled, "Ensure only one callback is called");
+  SimpleTest.finish();
 }
 
 var errorCallbackCalled = false;
 function errorCallback(error) {
-  spinEventLoopAndSetTimeout();
   errorCallbackCalled = true;
 }
 
+var timeoutPassed = false;
+var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 function test1() {
-  navigator.geolocation.getCurrentPosition(successCallback, errorCallback, {timeout: 1});
+  SpecialPowers.pushPrefEnv({"set": [["geo.wifi.timeToWaitBeforeSending", 10]]}, function() {
+    navigator.geolocation.getCurrentPosition(successCallback, errorCallback, {timeout: 500});
+    timer.initWithCallback(timer => {
+      timeoutPassed = true;
+    }, 600, Ci.nsITimer.TYPE_ONE_SHOT);
+  });
 }
 </script>
 </pre>
