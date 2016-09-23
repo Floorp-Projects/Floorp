@@ -9,10 +9,10 @@ PYTHON_UNIT_TESTS += [
 ]
 
 GENERATED_FILES += [
-    ('xpidllex.py', 'xpidlyacc.py'),
+    ('xpidl.stub', 'xpidllex.py', 'xpidlyacc.py'),
 ]
 
-GENERATED_FILES[('xpidllex.py', 'xpidlyacc.py')].script = 'header.py:main'
+GENERATED_FILES[('xpidl.stub', 'xpidllex.py', 'xpidlyacc.py')].script = 'header.py:main'
 
 SDK_FILES.bin += [
     '!xpidllex.py',

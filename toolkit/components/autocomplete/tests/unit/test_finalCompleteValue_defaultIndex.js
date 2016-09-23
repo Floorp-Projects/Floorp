@@ -18,7 +18,7 @@ add_test(function test_handleEnter() {
     ["mozilla.com", "https://www.mozilla.com"],
     ["gomozilla.org", "http://www.gomozilla.org"],
   ];
-  doSearch("moz", results, 0, controller => {
+  doSearch("moz", results, { selectedIndex: 0 }, controller => {
     let input = controller.input;
     Assert.equal(input.textValue, "mozilla.com");
     Assert.equal(controller.getFinalCompleteValueAt(0), results[0][1]);
@@ -41,7 +41,7 @@ add_test(function test_handleEnter_otherSelected() {
     ["mozilla.com", "https://www.mozilla.com"],
     ["gomozilla.org", "http://www.gomozilla.org"],
   ];
-  doSearch("moz", results, 1, controller => {
+  doSearch("moz", results, { selectedIndex: 1 }, controller => {
     let input = controller.input;
     Assert.equal(input.textValue, "mozilla.com");
     Assert.equal(controller.getFinalCompleteValueAt(0), results[0][1]);
@@ -55,7 +55,27 @@ add_test(function test_handleEnter_otherSelected() {
   });
 });
 
-function doSearch(aSearchString, aResults, aSelectedIndex, aOnCompleteCallback) {
+add_test(function test_handleEnter_otherSelected_nocompleteselectedindex() {
+  let results = [
+    ["mozilla.com", "https://www.mozilla.com"],
+    ["gomozilla.org", "http://www.gomozilla.org"],
+  ];
+  doSearch("moz", results, { selectedIndex: 1,
+                             completeSelectedIndex: false }, controller => {
+    let input = controller.input;
+    Assert.equal(input.textValue, "mozilla.com");
+    Assert.equal(controller.getFinalCompleteValueAt(0), results[0][1]);
+    Assert.equal(controller.getFinalCompleteValueAt(1), results[1][1]);
+    Assert.equal(input.popup.selectedIndex, 1);
+
+    controller.handleEnter(false);
+    // Verify that the keyboard-selected result is inserted, not the
+    // defaultComplete.
+    Assert.equal(controller.input.textValue, "http://www.gomozilla.org");
+  });
+});
+
+function doSearch(aSearchString, aResults, aOptions, aOnCompleteCallback) {
   let search = new AutoCompleteSearchBase(
     "search",
     new AutoCompleteResult(aResults)
@@ -64,7 +84,12 @@ function doSearch(aSearchString, aResults, aSelectedIndex, aOnCompleteCallback) 
 
   let input = new AutoCompleteInput([ search.name ]);
   input.textValue = aSearchString;
-  input.popup.selectedIndex = aSelectedIndex;
+  if ("selectedIndex" in aOptions) {
+    input.popup.selectedIndex = aOptions.selectedIndex;
+  }
+  if ("completeSelectedIndex" in aOptions) {
+    input.completeSelectedIndex = aOptions.completeSelectedIndex;
+  }
   // Needed for defaultIndex completion.
   input.selectTextRange(aSearchString.length, aSearchString.length);
 

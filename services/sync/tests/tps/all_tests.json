@@ -16,7 +16,6 @@
     "test_bug575423.js",
     "test_bug546807.js",
     "test_history_collision.js",
-    "test_privbrw_formdata.js",
     "test_privbrw_passwords.js",
     "test_privbrw_tabs.js",
     "test_bookmarks_in_same_named_folder.js",
