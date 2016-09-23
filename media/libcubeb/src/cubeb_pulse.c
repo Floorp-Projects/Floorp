@@ -73,12 +73,14 @@
   X(pa_stream_set_read_callback)                \
   X(pa_stream_connect_record)                   \
   X(pa_stream_readable_size)                    \
+  X(pa_stream_writable_size)                    \
   X(pa_stream_peek)                             \
   X(pa_stream_drop)                             \
   X(pa_stream_get_buffer_attr)                  \
   X(pa_stream_get_device_name)                  \
   X(pa_context_set_subscribe_callback)          \
   X(pa_context_subscribe)                       \
+  X(pa_mainloop_api_once)                       \
 
 #define MAKE_TYPEDEF(x) static typeof(x) * cubeb_##x;
 LIBPULSE_API_VISIT(MAKE_TYPEDEF);
@@ -120,6 +122,7 @@ struct cubeb_stream {
   pa_sample_spec input_sample_spec;
   int shutdown;
   float volume;
+  cubeb_state state;
 };
 
 const float PULSE_NO_GAIN = -1.0;
@@ -173,13 +176,21 @@ stream_success_callback(pa_stream * s, int success, void * u)
 }
 
 static void
+stream_state_change_callback(cubeb_stream * stm, cubeb_state s)
+{
+  stm->state = s;
+  stm->state_callback(stm, stm->user_ptr, s);
+}
+
+static void
 stream_drain_callback(pa_mainloop_api * a, pa_time_event * e, struct timeval const * tv, void * u)
 {
   cubeb_stream * stm = u;
+  stream_state_change_callback(stm, CUBEB_STATE_DRAINED);
   /* there's no pa_rttime_free, so use this instead. */
   a->time_free(stm->drain_timer);
   stm->drain_timer = NULL;
-  stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_DRAINED);
+  WRAP(pa_threaded_mainloop_signal)(stm->context->mainloop, 0);
 }
 
 static void
@@ -187,7 +198,7 @@ stream_state_callback(pa_stream * s, void * u)
 {
   cubeb_stream * stm = u;
   if (!PA_STREAM_IS_GOOD(WRAP(pa_stream_get_state)(s))) {
-    stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_ERROR);
+    stream_state_change_callback(stm, CUBEB_STATE_ERROR);
   }
   WRAP(pa_threaded_mainloop_signal)(stm->context->mainloop, 0);
 }
@@ -286,7 +297,8 @@ stream_write_callback(pa_stream * s, size_t nbytes, void * u)
 {
   LOG("Output callback to be written buffer size %zd\n", nbytes);
   cubeb_stream * stm = u;
-  if (stm->shutdown) {
+  if (stm->shutdown ||
+      stm->state != CUBEB_STATE_STARTED) {
     return;
   }
 
@@ -424,8 +436,8 @@ stream_cork(cubeb_stream * stm, enum cork_state state)
   WRAP(pa_threaded_mainloop_unlock)(stm->context->mainloop);
 
   if (state & NOTIFY) {
-    stm->state_callback(stm, stm->user_ptr,
-                        state & CORK ? CUBEB_STATE_STOPPED : CUBEB_STATE_STARTED);
+    stream_state_change_callback(stm, state & CORK ? CUBEB_STATE_STOPPED
+                                                   : CUBEB_STATE_STARTED);
   }
 }
 
@@ -719,6 +731,8 @@ pulse_stream_init(cubeb * context,
   stm->state_callback = state_callback;
   stm->user_ptr = user_ptr;
   stm->volume = PULSE_NO_GAIN;
+  stm->state = -1;
+  assert(stm->shutdown == 0);
 
   WRAP(pa_threaded_mainloop_lock)(stm->context->mainloop);
   if (output_stream_params) {
@@ -830,16 +844,44 @@ pulse_stream_destroy(cubeb_stream * stm)
   free(stm);
 }
 
+void
+pulse_defer_event_cb(pa_mainloop_api * a, void * userdata)
+{
+  cubeb_stream * stm = userdata;
+  size_t writable_size = WRAP(pa_stream_writable_size)(stm->output_stream);
+  trigger_user_callback(stm->output_stream, NULL, writable_size, stm);
+}
+
 static int
 pulse_stream_start(cubeb_stream * stm)
 {
+  stm->shutdown = 0;
   stream_cork(stm, UNCORK | NOTIFY);
+
+  if (stm->output_stream && !stm->input_stream) {
+    /* On output only case need to manually call user cb once in order to make
+     * things roll. This is done via a defer event in order to execute it
+     * from PA server thread. */
+    WRAP(pa_threaded_mainloop_lock)(stm->context->mainloop);
+    WRAP(pa_mainloop_api_once)(WRAP(pa_threaded_mainloop_get_api)(stm->context->mainloop),
+                               pulse_defer_event_cb, stm);
+    WRAP(pa_threaded_mainloop_unlock)(stm->context->mainloop);
+  }
+
   return CUBEB_OK;
 }
 
 static int
 pulse_stream_stop(cubeb_stream * stm)
 {
+  WRAP(pa_threaded_mainloop_lock)(stm->context->mainloop);
+  stm->shutdown = 1;
+  // If draining is taking place wait to finish
+  while (stm->drain_timer) {
+    WRAP(pa_threaded_mainloop_wait)(stm->context->mainloop);
+  }
+  WRAP(pa_threaded_mainloop_unlock)(stm->context->mainloop);
+
   stream_cork(stm, CORK | NOTIFY);
   return CUBEB_OK;
 }
