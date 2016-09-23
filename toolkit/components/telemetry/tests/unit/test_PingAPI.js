@@ -447,6 +447,27 @@ add_task(function* test_InvalidPingType() {
   }
 });
 
+add_task(function* test_InvalidPayloadType() {
+  const PAYLOAD_TYPES = [
+    19,
+    "string",
+    [1, 2, 3, 4],
+    null,
+    undefined,
+  ];
+
+  let histogram = Telemetry.getHistogramById("TELEMETRY_INVALID_PAYLOAD_SUBMITTED");
+  for (let i = 0; i < PAYLOAD_TYPES.length; i++) {
+    histogram.clear();
+    Assert.equal(histogram.snapshot().sum, 0,
+      "Should not have counted this invalid payload yet: " + JSON.stringify(PAYLOAD_TYPES[i]));
+    Assert.ok(yield promiseRejects(TelemetryController.submitExternalPing("payload-test", PAYLOAD_TYPES[i])),
+      "Payload type should have been rejected.");
+    Assert.equal(histogram.snapshot().sum, 1,
+      "Should have counted this as an invalid payload type.");
+  }
+});
+
 add_task(function* test_currentPingData() {
   yield TelemetryController.testSetup();
 
