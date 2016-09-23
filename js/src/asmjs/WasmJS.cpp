@@ -21,6 +21,8 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Maybe.h"
 
+#include "jsprf.h"
+
 #include "asmjs/WasmCompile.h"
 #include "asmjs/WasmInstance.h"
 #include "asmjs/WasmModule.h"
@@ -336,6 +338,9 @@ bool
 wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj,
            MutableHandleWasmInstanceObject instanceObj)
 {
+    if (!GlobalObject::ensureConstructor(cx, cx->global(), JSProto_WebAssembly))
+        return false;
+
     MutableBytes bytecode = cx->new_<ShareableBytes>();
     if (!bytecode)
         return false;
@@ -356,10 +361,12 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
     UniqueChars error;
     SharedModule module = Compile(*bytecode, compileArgs, &error);
     if (!module) {
-        if (error)
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL, error.get());
-        else
-            ReportOutOfMemory(cx);
+        if (error) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_DECODE_FAIL,
+                                 error.get());
+            return false;
+        }
+        ReportOutOfMemory(cx);
         return false;
     }
 
@@ -371,35 +378,6 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
         return false;
 
     return module->instantiate(cx, funcs, table, memory, globals, nullptr, instanceObj);
-}
-
-static bool
-InstantiateModule(JSContext* cx, unsigned argc, Value* vp)
-{
-    MOZ_ASSERT(cx->options().wasm());
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (!args.get(0).isObject() || !args.get(0).toObject().is<TypedArrayObject>()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_BUF_ARG);
-        return false;
-    }
-
-    RootedObject importObj(cx);
-    if (!args.get(1).isUndefined()) {
-        if (!args.get(1).isObject()) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_ARG);
-            return false;
-        }
-        importObj = &args[1].toObject();
-    }
-
-    Rooted<TypedArrayObject*> code(cx, &args[0].toObject().as<TypedArrayObject>());
-    RootedWasmInstanceObject instanceObj(cx);
-    if (!Eval(cx, code, importObj, &instanceObj))
-        return false;
-
-    args.rval().setObject(*instanceObj);
-    return true;
 }
 
 #if JS_HAS_TOSOURCE
@@ -416,7 +394,6 @@ static const JSFunctionSpec wasm_static_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,     wasm_toSource,     0, 0),
 #endif
-    JS_FN("instantiateModule", InstantiateModule, 1, 0),
     JS_FS_END
 };
 
@@ -601,7 +578,6 @@ GetCompileArgs(JSContext* cx, CallArgs callArgs, const char* name, MutableBytes*
     if (!compileArgs->initFromContext(cx, Move(scriptedCaller)))
         return false;
 
-    compileArgs->assumptions.newFormat = true;
     return true;
 }
 
@@ -621,10 +597,12 @@ WasmModuleObject::construct(JSContext* cx, unsigned argc, Value* vp)
     UniqueChars error;
     SharedModule module = Compile(*bytecode, compileArgs, &error);
     if (!module) {
-        if (error)
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL, error.get());
-        else
-            ReportOutOfMemory(cx);
+        if (error) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_DECODE_FAIL,
+                                 error.get());
+            return false;
+        }
+        ReportOutOfMemory(cx);
         return false;
     }
 
@@ -1478,7 +1456,14 @@ Reject(JSContext* cx, const CompileArgs& args, UniqueChars error, Handle<Promise
     unsigned line = args.scriptedCaller.line;
     unsigned column = args.scriptedCaller.column;
 
-    RootedString message(cx, NewLatin1StringZ(cx, Move(error)));
+    // Ideally we'd report a JSMSG_WASM_DECODE_FAIL here, but there's no easy
+    // way to create an ErrorObject for an arbitrary error code with multiple
+    // replacements.
+    UniqueChars str(JS_smprintf("wasm validation error: %s", error.get()));
+    if (!str)
+        return false;
+
+    RootedString message(cx, NewLatin1StringZ(cx, Move(str)));
     if (!message)
         return false;
 
@@ -1598,7 +1583,7 @@ WebAssembly_validate(JSContext* cx, unsigned argc, Value* vp)
 
     if (error) {
         JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
-                                     JSMSG_WASM_DECODE_FAIL, "?", error.get());
+                                     JSMSG_WASM_DECODE_FAIL, error.get());
     }
 
     callArgs.rval().setBoolean(validated);

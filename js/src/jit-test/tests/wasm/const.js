@@ -3,14 +3,14 @@ load(libdir + "wasm.js");
 
 function testConst(type, str, expect) {
     if (type === 'i64')
-        assertEqI64(wasmEvalText('(module (func (result i64) (i64.const ' + str + ')) (export "" 0))')(), expect);
+        assertEqI64(wasmEvalText('(module (func (result i64) (i64.const ' + str + ')) (export "" 0))').exports[""](), expect);
     else
-        assertEq(wasmEvalText('(module (func (result ' + type + ') (' + type + '.const ' + str + ')) (export "" 0))')(), expect);
+        assertEq(wasmEvalText('(module (func (result ' + type + ') (' + type + '.const ' + str + ')) (export "" 0))').exports[""](), expect);
 }
 
 function testConstError(type, str) {
   // For now at least, we don't distinguish between parse errors and OOMs.
-  assertErrorMessage(() => wasmEvalText('(module (func (result ' + type + ') (' + type + '.const ' + str + ')) (export "" 0))')(), Error, /parsing wasm text/);
+  assertErrorMessage(() => wasmEvalText('(module (func (result ' + type + ') (' + type + '.const ' + str + ')) (export "" 0))').exports[""](), Error, /parsing wasm text/);
 }
 
 testConst('i32', '0', 0);
