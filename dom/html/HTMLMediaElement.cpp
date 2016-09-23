@@ -4977,6 +4977,8 @@ void HTMLMediaElement::CheckAutoplayDataReady()
 
   // For blocked media, the event would be pending until it is resumed.
   DispatchAsyncEvent(NS_LITERAL_STRING("play"));
+
+  DispatchAsyncEvent(NS_LITERAL_STRING("playing"));
 }
 
 bool HTMLMediaElement::IsActive() const
