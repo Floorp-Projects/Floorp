@@ -344,7 +344,7 @@ if (!isChild) {
   // The geo-specific search tests assume certain prefs are already setup, which
   // might not be true when run in comm-central etc.  So create them here.
   Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", true);
-  Services.prefs.setIntPref("browser.search.geoip.timeout", 2000);
+  Services.prefs.setIntPref("browser.search.geoip.timeout", 3000);
   // But still disable geoip lookups - tests that need it will re-configure this.
   Services.prefs.setCharPref("browser.search.geoip.url", "");
   // Also disable region defaults - tests using it will also re-configure it.
