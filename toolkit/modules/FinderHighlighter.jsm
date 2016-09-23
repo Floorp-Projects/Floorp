@@ -562,7 +562,7 @@ FinderHighlighter.prototype = {
    * @return {Rect}
    */
   _getRootBounds(window, includeScroll = true) {
-    let dwu = this._getDWU(window);
+    let dwu = this._getDWU(window.top);
     let cssPageRect = Rect.fromRect(dwu.getRootBounds());
     let scrollX = {};
     let scrollY = {};
@@ -753,14 +753,15 @@ FinderHighlighter.prototype = {
   /**
    * Checks if a range is inside a DOM node that's positioned in a way that it
    * doesn't scroll along when the document is scrolled and/ or zoomed. This
-   * is the case for 'fixed' and 'sticky' positioned elements and elements inside
-   * (i)frames.
+   * is the case for 'fixed' and 'sticky' positioned elements, elements inside
+   * (i)frames and elements that have their overflow styles set to 'auto' or
+   * 'scroll'.
    *
    * @param  {nsIDOMRange} range Range that be enclosed in a dynamic container
    * @return {Boolean}
    */
   _isInDynamicContainer(range) {
-    const kFixed = new Set(["fixed", "sticky"]);
+    const kFixed = new Set(["fixed", "sticky", "scroll", "auto"]);
     let node = range.startContainer;
     while (node.nodeType != 1)
       node = node.parentNode;
@@ -776,8 +777,11 @@ FinderHighlighter.prototype = {
     }
 
     do {
-      if (kFixed.has(window.getComputedStyle(node, null).position))
+      let style = window.getComputedStyle(node, null);
+      if (kFixed.has(style.position) || kFixed.has(style.overflow) ||
+          kFixed.has(style.overflowX) || kFixed.has(style.overflowY)) {
         return true;
+      }
       node = node.parentNode;
     } while (node && node != document.documentElement)
 
@@ -856,11 +860,11 @@ FinderHighlighter.prototype = {
    *                      active window
    */
   _updateDynamicRangesRects(dict) {
-    for (let range of dict.dynamicRangesSet)
-      this._updateRangeRects(range, false, dict);
     // Reset the frame bounds cache.
     for (let frame of dict.frames.keys())
       dict.frames.set(frame, null);
+    for (let range of dict.dynamicRangesSet)
+      this._updateRangeRects(range, false, dict);
   },
 
   /**
@@ -1128,7 +1132,7 @@ FinderHighlighter.prototype = {
 
     window = window.top;
     let dict = this.getForWindow(window);
-    let repaintDynamicRanges = (scrollOnly && !!dict.dynamicRangesSet.size);
+    let repaintDynamicRanges = ((scrollOnly || contentChanged) && !!dict.dynamicRangesSet.size);
 
     // When we request to repaint unconditionally, we mean to call
     // `_repaintHighlightAllMask()` right after the timeout.
