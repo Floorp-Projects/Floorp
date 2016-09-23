@@ -226,11 +226,7 @@ MarkupView.prototype = {
 
     let container = target.container;
     if (this._hoveredNode !== container.node) {
-      if (container.node.nodeType !== nodeConstants.TEXT_NODE) {
-        this._showBoxModel(container.node);
-      } else {
-        this._hideBoxModel();
-      }
+      this._showBoxModel(container.node);
     }
     this._showContainerAsHovered(container.node);
 
