@@ -76,19 +76,20 @@ class TryToolsMixin(TransferMixin):
 
     def _extract_try_message(self):
         msg = None
+        buildbot_config = self.buildbot_config or {}
         if "try_message" in self.config and self.config["try_message"]:
             msg = self.config["try_message"]
         elif 'TRY_COMMIT_MSG' in os.environ:
             msg = os.environ['TRY_COMMIT_MSG']
         elif self._is_try():
-            if self.buildbot_config['sourcestamp']['changes']:
-                msg = self.buildbot_config['sourcestamp']['changes'][-1]['comments']
+            if 'sourcestamp' in buildbot_config and buildbot_config['sourcestamp'].get('changes'):
+                msg = buildbot_config['sourcestamp']['changes'][-1].get('comments')
 
             if msg is None or len(msg) == 1024:
                 # This commit message was potentially truncated or not available in
                 # buildbot_config (e.g. if running in TaskCluster), get the full message
                 # from hg.
-                props = self.buildbot_config['properties']
+                props = buildbot_config.get('properties', {})
                 repo_url = 'https://hg.mozilla.org/%s/'
                 if 'revision' in props and 'repo_path' in props:
                     rev = props['revision']
@@ -112,10 +113,10 @@ class TryToolsMixin(TransferMixin):
                     if isinstance(v, dict) and 'changesets' in v:
                         msg = v['changesets'][-1]['desc']
 
-            if not msg and 'try_syntax' in self.buildbot_config['properties']:
+            if not msg and 'try_syntax' in buildbot_config.get('properties', {}):
                 # If we don't find try syntax in the usual place, check for it in an
                 # alternate property available to tools using self-serve.
-                msg = self.buildbot_config['properties']['try_syntax']
+                msg = buildbot_config['properties']['try_syntax']
         if not msg:
             self.warning('Try message not found.')
         return msg
