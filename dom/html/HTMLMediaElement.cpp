@@ -1397,6 +1397,35 @@ void HTMLMediaElement::NotifyMediaStreamTracksAvailable(DOMMediaStream* aStream)
   mWatchManager.ManualNotify(&HTMLMediaElement::UpdateReadyStateInternal);
 }
 
+void
+HTMLMediaElement::NotifyOutputTrackStopped(DOMMediaStream* aOwningStream,
+                                           TrackID aDestinationTrackID)
+{
+  for (OutputMediaStream& ms : mOutputStreams) {
+    if (!ms.mCapturingMediaStream) {
+      continue;
+    }
+
+    if (ms.mStream != aOwningStream) {
+      continue;
+    }
+
+    for (int32_t i = ms.mTrackPorts.Length() - 1; i >= 0; --i) {
+      MediaInputPort* port = ms.mTrackPorts[i].second();
+      if (port->GetDestinationTrackId() != aDestinationTrackID) {
+        continue;
+      }
+
+      port->Destroy();
+      ms.mTrackPorts.RemoveElementAt(i);
+      return;
+    }
+  }
+
+  // An output track ended but its port is already gone.
+  // It was probably cleared by the removal of the source MediaTrack.
+}
+
 void HTMLMediaElement::LoadFromSourceChildren()
 {
   NS_ASSERTION(mDelayingLoadEvent,
@@ -2203,16 +2232,25 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(StreamCaptureTrackSource,
                                            MediaStreamTrackSource)
 
-  explicit StreamCaptureTrackSource(MediaStreamTrackSource* aCapturedTrackSource)
+  StreamCaptureTrackSource(HTMLMediaElement* aElement,
+                           MediaStreamTrackSource* aCapturedTrackSource,
+                           DOMMediaStream* aOwningStream,
+                           TrackID aDestinationTrackID)
     : MediaStreamTrackSource(aCapturedTrackSource->GetPrincipal(),
                              nsString())
+    , mElement(aElement)
     , mCapturedTrackSource(aCapturedTrackSource)
+    , mOwningStream(aOwningStream)
+    , mDestinationTrackID(aDestinationTrackID)
   {
   }
 
   void Destroy() override
   {
-    MOZ_ASSERT(mCapturedTrackSource);
+    if (mCapturedTrackSource) {
+      mCapturedTrackSource->UnregisterSink(this);
+      mCapturedTrackSource = nullptr;
+    }
   }
 
   MediaSourceEnum GetMediaSource() const override
@@ -2238,9 +2276,15 @@ public:
 
   void Stop() override
   {
-    // XXX fix in later patch
-    NS_ERROR("We're reporting remote=true to not be stoppable. "
-             "Stop() should not be called.");
+    if (mElement && mElement->mSrcStream) {
+      // Only notify if we're still playing the source stream. GC might have
+      // cleared it before the track sources.
+      mElement->NotifyOutputTrackStopped(mOwningStream, mDestinationTrackID);
+    }
+    mElement = nullptr;
+    mOwningStream = nullptr;
+
+    Destroy();
   }
 
   void PrincipalChanged() override
@@ -2252,7 +2296,10 @@ public:
 private:
   virtual ~StreamCaptureTrackSource() {}
 
+  RefPtr<HTMLMediaElement> mElement;
   RefPtr<MediaStreamTrackSource> mCapturedTrackSource;
+  RefPtr<DOMMediaStream> mOwningStream;
+  TrackID mDestinationTrackID;
 };
 
 NS_IMPL_ADDREF_INHERITED(HTMLMediaElement::StreamCaptureTrackSource,
@@ -2263,7 +2310,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(HTMLMediaElement::StreamCaptur
 NS_INTERFACE_MAP_END_INHERITING(MediaStreamTrackSource)
 NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLMediaElement::StreamCaptureTrackSource,
                                    MediaStreamTrackSource,
-                                   mCapturedTrackSource)
+                                   mElement,
+                                   mCapturedTrackSource,
+                                   mOwningStream)
 
 class HTMLMediaElement::DecoderCaptureTrackSource :
   public MediaStreamTrackSource,
@@ -2459,7 +2508,10 @@ HTMLMediaElement::AddCaptureMediaTrackToOutputStream(MediaTrack* aTrack,
 
   TrackID destinationTrackID = aOutputStream.mNextAvailableTrackID++;
   RefPtr<MediaStreamTrackSource> source =
-    new StreamCaptureTrackSource(&inputTrack->GetSource());
+    new StreamCaptureTrackSource(this,
+                                 &inputTrack->GetSource(),
+                                 aOutputStream.mStream,
+                                 destinationTrackID);
 
   MediaSegment::Type type = inputTrack->AsAudioStreamTrack()
                           ? MediaSegment::AUDIO
