@@ -6,8 +6,6 @@
 
 const CSSCompleter = require("devtools/client/sourceeditor/css-autocompleter");
 const {InspectorFront} = require("devtools/shared/fronts/inspector");
-const {TargetFactory} = require("devtools/client/framework/target");
-const { Cc, Ci } = require("chrome");
 
 const CSS_URI = "http://mochi.test:8888/browser/devtools/client/sourceeditor" +
                 "/test/css_statemachine_testcases.css";
