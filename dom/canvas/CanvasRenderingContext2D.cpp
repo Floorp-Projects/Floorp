@@ -4009,11 +4009,12 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
       }
     }
 
-    if (style == Style::STROKE) {
-      const ContextState& state = *mState;
-      drawOpts.mAlpha = state.globalAlpha;
-      drawOpts.mCompositionOp = mCtx->UsedOperation();
+    const ContextState& state = *mState;
+    drawOpts.mAlpha = state.globalAlpha;
+    drawOpts.mCompositionOp = mCtx->UsedOperation();
+    params.drawOpts = &drawOpts;
 
+    if (style == Style::STROKE) {
       strokeOpts.mLineWidth = state.lineWidth;
       strokeOpts.mLineJoin = state.lineJoin;
       strokeOpts.mLineCap = state.lineCap;
@@ -4025,7 +4026,6 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
 
       params.drawMode = DrawMode::GLYPH_STROKE;
       params.strokeOpts = &strokeOpts;
-      params.drawOpts = &drawOpts;
     }
 
     mTextRun->Draw(gfxTextRun::Range(mTextRun.get()), point, params);
