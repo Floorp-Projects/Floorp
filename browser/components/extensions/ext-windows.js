@@ -13,7 +13,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   EventManager,
+  promiseObserved,
 } = ExtensionUtils;
+
+function onXULFrameLoaderCreated({target}) {
+  target.messageManager.sendAsyncMessage("AllowScriptsToClose", {});
+}
 
 extensions.registerSchemaAPI("windows", "addon_parent", context => {
   let {extension} = context;
@@ -94,6 +99,10 @@ extensions.registerSchemaAPI("windows", "addon_parent", context => {
             return Promise.reject({message: "`tabId` may not be used in conjunction with `url`"});
           }
 
+          if (createData.allowScriptsToClose) {
+            return Promise.reject({message: "`tabId` may not be used in conjunction with `allowScriptsToClose`"});
+          }
+
           let tab = TabManager.getTab(createData.tabId, context);
 
           // Private browsing tabs can only be moved to private browsing
@@ -136,6 +145,11 @@ extensions.registerSchemaAPI("windows", "addon_parent", context => {
           }
         }
 
+        let {allowScriptsToClose, url} = createData;
+        if (allowScriptsToClose === null) {
+          allowScriptsToClose = typeof url === "string" && url.startsWith("moz-extension://");
+        }
+
         let window = Services.ww.openWindow(null, "chrome://browser/content/browser.xul", "_blank",
                                             features.join(","), args);
 
@@ -151,23 +165,22 @@ extensions.registerSchemaAPI("windows", "addon_parent", context => {
                 (createData.state == "fullscreen" && AppConstants.platform != "macosx")) {
               window.document.documentElement.setAttribute("sizemode", createData.state);
             } else if (createData.state !== null) {
-              // window.minimize() has no useful effect until the window has
-              // been shown.
-
-              let obs = doc => {
-                if (doc === window.document) {
-                  Services.obs.removeObserver(obs, "document-shown");
-                  WindowManager.setState(window, createData.state);
-                  resolve();
-                }
-              };
-              Services.obs.addObserver(obs, "document-shown", false);
-              return;
+              // window.minimize() has no effect until the window has been shown.
+              return promiseObserved("document-shown", doc => doc == window.document).then(() => {
+                WindowManager.setState(window, createData.state);
+                resolve();
+              });
             }
-
             resolve();
           });
         }).then(() => {
+          if (allowScriptsToClose) {
+            for (let {linkedBrowser} of window.gBrowser.tabs) {
+              onXULFrameLoaderCreated({target: linkedBrowser});
+              linkedBrowser.addEventListener( // eslint-disable-line mozilla/balanced-listeners
+                                             "XULFrameLoaderCreated", onXULFrameLoaderCreated);
+            }
+          }
           return WindowManager.convert(extension, window);
         });
       },
