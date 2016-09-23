@@ -2907,7 +2907,6 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mAudioChannelVolume(1.0),
     mPlayingThroughTheAudioChannel(false),
     mDisableVideo(false),
-    mElementInTreeState(ELEMENT_NOT_INTREE),
     mHasUserInteraction(false),
     mFirstFrameLoaded(false),
     mDefaultPlaybackStartPosition(0.0),
@@ -3408,6 +3407,9 @@ nsresult HTMLMediaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParen
                                                  aParent,
                                                  aBindingParent,
                                                  aCompileEventHandlers);
+
+  mUnboundFromTree = false;
+
   if (aDocument) {
     mAutoplayEnabled =
       IsAutoplayEnabled() && (!aDocument || !aDocument->IsStaticDocument()) &&
@@ -3416,7 +3418,6 @@ nsresult HTMLMediaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParen
     // It's value may have changed, so update it.
     UpdatePreloadAction();
   }
-  mElementInTreeState = ELEMENT_INTREE;
 
   if (mDecoder) {
     // When the MediaElement is binding to tree, the dormant status is
@@ -3650,11 +3651,11 @@ HTMLMediaElement::ReportTelemetry()
 void HTMLMediaElement::UnbindFromTree(bool aDeep,
                                       bool aNullParent)
 {
+  mUnboundFromTree = true;
+
   if (!mPaused && mNetworkState != nsIDOMHTMLMediaElement::NETWORK_EMPTY) {
     Pause();
   }
-
-  mElementInTreeState = ELEMENT_NOT_INTREE_HAD_INTREE;
 
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 
@@ -4989,11 +4990,8 @@ bool HTMLMediaElement::IsActive() const
 
 bool HTMLMediaElement::IsHidden() const
 {
-  if (mElementInTreeState == ELEMENT_NOT_INTREE_HAD_INTREE) {
-    return true;
-  }
-  nsIDocument* ownerDoc = OwnerDoc();
-  return !ownerDoc || ownerDoc->Hidden();
+  nsIDocument* ownerDoc;
+  return mUnboundFromTree || !(ownerDoc = OwnerDoc()) || ownerDoc->Hidden();
 }
 
 VideoFrameContainer* HTMLMediaElement::GetVideoFrameContainer()
