@@ -23,10 +23,10 @@ function wasmValidateText(str) {
     assertEq(WebAssembly.validate(wasmTextToBinary(str)), true);
 }
 
-function wasmFailValidateText(str, errorType, pattern) {
+function wasmFailValidateText(str, pattern) {
     let binary = wasmTextToBinary(str);
     assertEq(WebAssembly.validate(binary), false);
-    assertErrorMessage(() => new WebAssembly.Module(binary), errorType, pattern);
+    assertErrorMessage(() => new WebAssembly.Module(binary), WebAssembly.CompileError, pattern);
 }
 
 function mismatchError(actual, expect) {
