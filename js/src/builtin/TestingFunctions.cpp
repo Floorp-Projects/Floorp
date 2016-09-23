@@ -601,18 +601,15 @@ WasmBinaryToText(JSContext* cx, unsigned argc, Value* vp)
     }
 
     StringBuffer buffer(cx);
-    if (experimental) {
-        if (!wasm::BinaryToExperimentalText(cx, bytes, length, buffer, wasm::ExperimentalTextFormatting())) {
-            if (!cx->isExceptionPending())
-                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL, "print error");
-            return false;
-        }
-    } else {
-        if (!wasm::BinaryToText(cx, bytes, length, buffer)) {
-            if (!cx->isExceptionPending())
-                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL, "print error");
-            return false;
-        }
+    bool ok;
+    if (experimental)
+        ok = wasm::BinaryToExperimentalText(cx, bytes, length, buffer, wasm::ExperimentalTextFormatting());
+    else
+        ok = wasm::BinaryToText(cx, bytes, length, buffer);
+    if (!ok) {
+        if (!cx->isExceptionPending())
+            JS_ReportError(cx, "wasm binary to text print error");
+        return false;
     }
 
     JSString* result = buffer.finishString();

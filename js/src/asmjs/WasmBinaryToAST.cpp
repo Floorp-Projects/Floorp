@@ -2139,7 +2139,7 @@ wasm::BinaryToAst(JSContext* cx, const uint8_t* bytes, uint32_t length,
         !DecodeUnknownSections(c.d))
     {
         if (error) {
-            JS_ReportErrorNumber(c.cx, GetErrorMessage, nullptr, JSMSG_WASM_DECODE_FAIL,
+            JS_ReportErrorNumber(c.cx, GetErrorMessage, nullptr, JSMSG_WASM_COMPILE_ERROR,
                                  error.get());
             return false;
         }

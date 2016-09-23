@@ -1,23 +1,23 @@
 // |jit-test| test-also-wasm-baseline
 load(libdir + "wasm.js");
 
-assertErrorMessage(() => wasmEvalText(`(module
+wasmFailValidateText(`(module
    (func (result i32) (param i32)
      (loop (if (i32.const 0) (br 0)) (get_local 0)))
    (export "" 0)
-)`), TypeError, /unused values not explicitly dropped by end of block/);
+)`, /unused values not explicitly dropped by end of block/);
 
-assertErrorMessage(() => wasmEvalText(`(module
+wasmFailValidateText(`(module
    (func (param i32)
      (loop (if (i32.const 0) (br 0)) (get_local 0)))
    (export "" 0)
-)`), TypeError, /unused values not explicitly dropped by end of block/);
+)`, /unused values not explicitly dropped by end of block/);
 
-assertErrorMessage(() => wasmEvalText(`(module
+wasmFailValidateText(`(module
    (func (result i32) (param i32)
      (loop (if (i32.const 0) (br 0)) (drop (get_local 0))))
    (export "" 0)
-)`), TypeError, mismatchError("void", "i32"));
+)`, mismatchError("void", "i32"));
 
 assertEq(wasmEvalText(`(module
    (func (result i32) (param i32)
@@ -158,8 +158,8 @@ wasmEvalText(`(module (func
  )
 ))`);
 
-assertErrorMessage(() => wasmEvalText(`
-(module
+wasmFailValidateText(
+`(module
   (func $func$0
    (select
     (if f32
@@ -175,8 +175,7 @@ assertErrorMessage(() => wasmEvalText(`
     (i32.const 0)
    )
   )
-)
-`), TypeError, mismatchError("i32", "f32"));
+)`, mismatchError("i32", "f32"));
 
 wasmEvalText(`
 (module

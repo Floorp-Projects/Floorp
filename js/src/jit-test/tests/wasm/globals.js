@@ -9,12 +9,12 @@ assertErrorMessage(() => wasmEvalText(`(module (global i32))`), SyntaxError, /pa
 assertErrorMessage(() => wasmEvalText(`(module (global i32 immutable))`), SyntaxError, /parsing/);
 
 // Initializer expressions.
-assertErrorMessage(() => wasmEvalText(`(module (global i32 (f32.const 13.37)))`), TypeError, /type mismatch/);
-assertErrorMessage(() => wasmEvalText(`(module (global f64 (f32.const 13.37)))`), TypeError, /type mismatch/);
-assertErrorMessage(() => wasmEvalText(`(module (global i32 (i32.add (i32.const 13) (i32.const 37))))`), TypeError, /failed to read end/);
+wasmFailValidateText(`(module (global i32 (f32.const 13.37)))`, /type mismatch/);
+wasmFailValidateText(`(module (global f64 (f32.const 13.37)))`, /type mismatch/);
+wasmFailValidateText(`(module (global i32 (i32.add (i32.const 13) (i32.const 37))))`, /failed to read end/);
 
-assertErrorMessage(() => wasmEvalText(`(module (global i32 (get_global 0)))`), TypeError, /out of range/);
-assertErrorMessage(() => wasmEvalText(`(module (global i32 (get_global 1)) (global i32 immutable (i32.const 1)))`), TypeError, /out of range/);
+wasmFailValidateText(`(module (global i32 (get_global 0)))`, /out of range/);
+wasmFailValidateText(`(module (global i32 (get_global 1)) (global i32 immutable (i32.const 1)))`, /out of range/);
 
 // Test a well-defined global section.
 function testInner(type, initialValue, nextValue, coercion, assertFunc = assertEq)
@@ -46,8 +46,8 @@ testInner('f32', 13.37, 0.1989, Math.fround);
 testInner('f64', 13.37, 0.1989, x => +x);
 
 // Semantic errors.
-assertErrorMessage(() => wasmEvalText(`(module (global i32 (i32.const 1337)) (func (set_global 1 (i32.const 0))))`), TypeError, /out of range/);
-assertErrorMessage(() => wasmEvalText(`(module (global i32 immutable (i32.const 1337)) (func (set_global 0 (i32.const 0))))`), TypeError, /can't write an immutable global/);
+wasmFailValidateText(`(module (global i32 (i32.const 1337)) (func (set_global 1 (i32.const 0))))`, /out of range/);
+wasmFailValidateText(`(module (global i32 immutable (i32.const 1337)) (func (set_global 0 (i32.const 0))))`, /can't write an immutable global/);
 
 // Big module with many variables: test that setting one doesn't overwrite the
 // other ones.
@@ -93,7 +93,7 @@ for (let i = 0; i < 5; i++) {
 }
 
 // Initializer expressions can also be used in elem section initializers.
-assertErrorMessage(() => wasmEvalText(`(module (import "globals" "a" (global f32 immutable)) (table (resizable 4)) (elem (get_global 0) $f) (func $f))`), TypeError, /type mismatch/);
+wasmFailValidateText(`(module (import "globals" "a" (global f32 immutable)) (table (resizable 4)) (elem (get_global 0) $f) (func $f))`, /type mismatch/);
 
 module = wasmEvalText(`(module
     (import "globals" "a" (global i32 immutable))
@@ -110,8 +110,8 @@ module = wasmEvalText(`(module
 assertEq(module.f, module.tbl.get(1));
 
 // Import/export rules.
-assertErrorMessage(() => wasmEvalText(`(module (import "globals" "x" (global i32)))`), TypeError, /can't import.* mutable globals in the MVP/);
-assertErrorMessage(() => wasmEvalText(`(module (global i32 (i32.const 42)) (export "" global 0))`), TypeError, /can't .*export mutable globals in the MVP/);
+wasmFailValidateText(`(module (import "globals" "x" (global i32)))`, /can't import.* mutable globals in the MVP/);
+wasmFailValidateText(`(module (global i32 (i32.const 42)) (export "" global 0))`, /can't .*export mutable globals in the MVP/);
 
 // Import/export semantics.
 module = wasmEvalText(`(module
@@ -136,11 +136,11 @@ assertEq(module.imported, 42);
 assertEq(module.defined, 1337);
 
 // Initializer expressions can reference an imported immutable global.
-assertErrorMessage(() => wasmEvalText(`(module (global f32 immutable (f32.const 13.37)) (global i32 (get_global 0)))`), TypeError, /must reference a global immutable import/);
-assertErrorMessage(() => wasmEvalText(`(module (global f32 (f32.const 13.37)) (global i32 (get_global 0)))`), TypeError, /must reference a global immutable import/);
-assertErrorMessage(() => wasmEvalText(`(module (global i32 (i32.const 0)) (global i32 (get_global 0)))`), TypeError, /must reference a global immutable import/);
+wasmFailValidateText(`(module (global f32 immutable (f32.const 13.37)) (global i32 (get_global 0)))`, /must reference a global immutable import/);
+wasmFailValidateText(`(module (global f32 (f32.const 13.37)) (global i32 (get_global 0)))`, /must reference a global immutable import/);
+wasmFailValidateText(`(module (global i32 (i32.const 0)) (global i32 (get_global 0)))`, /must reference a global immutable import/);
 
-assertErrorMessage(() => wasmEvalText(`(module (import "globals" "a" (global f32 immutable)) (global i32 (get_global 0)))`), TypeError, /type mismatch/);
+wasmFailValidateText(`(module (import "globals" "a" (global f32 immutable)) (global i32 (get_global 0)))`, /type mismatch/);
 
 function testInitExpr(type, initialValue, nextValue, coercion, assertFunc = assertEq) {
     var module = wasmEvalText(`(module
@@ -183,8 +183,8 @@ testInitExpr('f64', 13.37, 0.1989, x => +x);
 
 // Int64.
 {
-    assertErrorMessage(() => wasmEvalText(`(module (import "globals" "x" (global i64 immutable)))`), TypeError, /can't import.* an Int64 global/);
-    assertErrorMessage(() => wasmEvalText(`(module (global i64 immutable (i64.const 42)) (export "" global 0))`), TypeError, /can't .*export an Int64 global/);
+    wasmFailValidateText(`(module (import "globals" "x" (global i64 immutable)))`, /can't import.* an Int64 global/);
+    wasmFailValidateText(`(module (global i64 immutable (i64.const 42)) (export "" global 0))`, /can't .*export an Int64 global/);
 
     setJitCompilerOption('wasm.test-mode', 1);
     testInner('i64', '0x531642753864975F', '0x123456789abcdef0', createI64, assertEqI64);
