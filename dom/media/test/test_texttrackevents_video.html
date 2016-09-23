@@ -14,79 +14,76 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
-  function() {
-    var video = document.createElement("video");
-    video.src = "vp9cake.webm";
-    video.preload = "auto";
-    video.controls = true;
-    var trackElement = document.createElement("track");
-    trackElement.src = "sequential.vtt";
-    trackElement.kind = "subtitles";
-    trackElement.default = true;
-    document.getElementById("content").appendChild(video);
-    video.appendChild(trackElement);
 
-    var trackElementCueChangeCount = 0;
-    var trackCueChangeCount = 0;
-    var cueEnterCount = 0;
-    var cueExitCount = 0;
+var video = document.createElement("video");
+video.src = "vp9cake.webm";
+video.preload = "auto";
+video.controls = true;
+var trackElement = document.createElement("track");
+trackElement.src = "sequential.vtt";
+trackElement.kind = "subtitles";
+trackElement.default = true;
+document.getElementById("content").appendChild(video);
+video.appendChild(trackElement);
 
-    video.addEventListener("loadedmetadata", function run_tests() {
-      // Re-queue run_tests() at the end of the event loop until the track
-      // element has loaded its data.
-      if (trackElement.readyState == 1) {
-        return setTimeout(run_tests, 0);
-      }
-      is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
-      ok('oncuechange' in trackElement.track, "Track::OnCueChange should exist.");
+var trackElementCueChangeCount = 0;
+var trackCueChangeCount = 0;
+var cueEnterCount = 0;
+var cueExitCount = 0;
 
-      var textTrack = trackElement.track;
-      is(textTrack.cues.length, 3, "textTrack.cues.length should 3.");
-      textTrack.cues[0].onenter = function() {
-        ++cueEnterCount;
-      };
-      textTrack.cues[0].onexit = function() {
-        ++cueExitCount;
-      };
-      textTrack.cues[1].onenter = function() {
-        ++cueEnterCount;
-      };
-      textTrack.cues[1].onexit = function() {
-        ++cueExitCount;
-      };
-      textTrack.cues[2].onenter = function() {
-        ++cueEnterCount;
-      };
-      textTrack.cues[2].onexit = function() {
-        ++cueExitCount;
-      };
-
-      trackElement.track.oncuechange = function() {
-        ++trackElementCueChangeCount;
-      };
-
-      trackElement.addEventListener("cuechange", function() {
-        ++trackCueChangeCount;
-      });
-
-      video.play();
-    });
-
-    video.addEventListener('ended', function() {
-      // Should be fired 1 to 6 times, as there are 3 cues,
-      // with a change event for when it is activated/deactivated
-      // (6 events at most).
-      isnot(trackElementCueChangeCount, 0, "TrackElement should fire cue change at least one time.");
-      ok(trackElementCueChangeCount <= 6, 'trackElementCueChangeCount should <= 6');
-      isnot(trackCueChangeCount, 0, "TrackElement.track should fire cue change at least one time.");
-      ok(trackCueChangeCount <= 6, 'trackCueChangeCount should <= 6');
-      is(cueEnterCount, 3, "cueEnterCount should fire three times.");
-      is(cueExitCount, 3, "cueExitCount should fire three times.");
-      SimpleTest.finish()
-    })
+video.addEventListener("loadedmetadata", function run_tests() {
+  // Re-queue run_tests() at the end of the event loop until the track
+  // element has loaded its data.
+  if (trackElement.readyState == 1) {
+    return setTimeout(run_tests, 0);
   }
-);
+  is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
+  ok('oncuechange' in trackElement.track, "Track::OnCueChange should exist.");
+
+  var textTrack = trackElement.track;
+  is(textTrack.cues.length, 3, "textTrack.cues.length should 3.");
+  textTrack.cues[0].onenter = function() {
+    ++cueEnterCount;
+  };
+  textTrack.cues[0].onexit = function() {
+    ++cueExitCount;
+  };
+  textTrack.cues[1].onenter = function() {
+    ++cueEnterCount;
+  };
+  textTrack.cues[1].onexit = function() {
+    ++cueExitCount;
+  };
+  textTrack.cues[2].onenter = function() {
+    ++cueEnterCount;
+  };
+  textTrack.cues[2].onexit = function() {
+    ++cueExitCount;
+  };
+
+  trackElement.track.oncuechange = function() {
+    ++trackElementCueChangeCount;
+  };
+
+  trackElement.addEventListener("cuechange", function() {
+    ++trackCueChangeCount;
+  });
+
+  video.play();
+});
+
+video.addEventListener('ended', function() {
+  // Should be fired 1 to 6 times, as there are 3 cues,
+  // with a change event for when it is activated/deactivated
+  // (6 events at most).
+  isnot(trackElementCueChangeCount, 0, "TrackElement should fire cue change at least one time.");
+  ok(trackElementCueChangeCount <= 6, 'trackElementCueChangeCount should <= 6');
+  isnot(trackCueChangeCount, 0, "TrackElement.track should fire cue change at least one time.");
+  ok(trackCueChangeCount <= 6, 'trackCueChangeCount should <= 6');
+  is(cueEnterCount, 3, "cueEnterCount should fire three times.");
+  is(cueExitCount, 3, "cueExitCount should fire three times.");
+  SimpleTest.finish()
+});
 </script>
 </pre>
 </body>
