@@ -13,7 +13,7 @@ const protocol = require("devtools/shared/protocol");
 const Services = require("Services");
 const { isWindowIncluded } = require("devtools/shared/layout/utils");
 const { highlighterSpec, customHighlighterSpec } = require("devtools/shared/specs/highlighters");
-const { isXUL, isNodeValid } = require("./highlighters/utils/markup");
+const { isXUL } = require("./highlighters/utils/markup");
 const { SimpleOutlineHighlighter } = require("./highlighters/simple-outline");
 
 const HIGHLIGHTER_PICKED_TIMER = 1000;
@@ -182,9 +182,7 @@ var HighlighterActor = exports.HighlighterActor = protocol.ActorClassWithSpec(hi
    * all options may be supported by all types of highlighters.
    */
   showBoxModel: function (node, options = {}) {
-    if (node && isNodeValid(node.rawNode)) {
-      this._highlighter.show(node.rawNode, options);
-    } else {
+    if (!node || !this._highlighter.show(node.rawNode, options)) {
       this._highlighter.hide();
     }
   },
@@ -468,7 +466,7 @@ var CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClas
    * (FF41+)
    */
   show: function (node, options) {
-    if (!node || !isNodeValid(node.rawNode) || !this._highlighter) {
+    if (!node || !this._highlighter) {
       return false;
     }
 
