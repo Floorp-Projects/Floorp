@@ -70,7 +70,7 @@ VRLayerChild::SubmitFrame(int32_t aInputFrameID)
   mFront->SetAddedToCompositableClient();
   VRManagerChild* vrmc = VRManagerChild::Get();
   mFront->SyncWithObject(vrmc->GetSyncObject());
-  MOZ_ALWAYS_TRUE(mFront->InitIPDLActor(vrmc, vrmc->GetBackendType()));
+  MOZ_ALWAYS_TRUE(mFront->InitIPDLActor(vrmc));
 
   SendSubmitFrame(aInputFrameID, mFront->GetIPDLActor());
 }

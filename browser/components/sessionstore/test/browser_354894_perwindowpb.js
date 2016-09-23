@@ -69,7 +69,7 @@ add_task(function* setup() {
 
   // This test takes some time to run, and it could timeout randomly.
   // So we require a longer timeout. See bug 528219.
-  requestLongerTimeout(2);
+  requestLongerTimeout(3);
 
   // Make the main test window not count as a browser window any longer
   let oldWinType = document.documentElement.getAttribute("windowtype");

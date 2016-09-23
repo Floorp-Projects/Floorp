@@ -40,9 +40,9 @@ public:
   // in the other process and send it across.
   virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override { return nullptr; }
 
-  virtual TextureClient* GetTextureClient(CompositableClient* aClient) override
+  virtual TextureClient* GetTextureClient(TextureForwarder* aForwarder) override
   {
-    MOZ_ASSERT(aClient->GetForwarder() == ImageBridgeChild::GetSingleton(), "Must only use GPUVideo on ImageBridge");
+    MOZ_ASSERT(aForwarder == ImageBridgeChild::GetSingleton(), "Must only use GPUVideo on ImageBridge");
     return mTextureClient;
   }
 

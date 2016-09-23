@@ -203,33 +203,6 @@ CompositorD3D9::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
                                                     aRect);
 }
 
-already_AddRefed<TextureSource>
-CompositorD3D9::CreateTextureSourceForImage(Image* aImage)
-{
-  if (aImage->GetFormat() == ImageFormat::D3D9_RGB32_TEXTURE) {
-    D3D9SurfaceImage* image = static_cast<D3D9SurfaceImage*>(aImage);
-
-    HANDLE handle = image->GetShareHandle();
-
-    RefPtr<IDirect3DTexture9> texture;
-    HRESULT hr = device()->CreateTexture(aImage->GetSize().width, aImage->GetSize().height, 1,
-                                         D3DUSAGE_RENDERTARGET,
-                                         D3DFMT_A8R8G8B8,
-                                         D3DPOOL_DEFAULT,
-                                         getter_AddRefs(texture),
-                                         (HANDLE*)&handle);
-    if (FAILED(hr)) {
-      NS_WARNING("Failed to open shared texture");
-      return nullptr;
-    }
-
-    RefPtr<TextureSource> source =
-      new DataTextureSourceD3D9(SurfaceFormat::B8G8R8A8, aImage->GetSize(), this, texture);
-    return source.forget();
-  }
-  return Compositor::CreateTextureSourceForImage(aImage);
-}
-
 void
 CompositorD3D9::SetRenderTarget(CompositingRenderTarget *aRenderTarget)
 {

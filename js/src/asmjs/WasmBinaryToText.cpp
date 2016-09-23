@@ -23,6 +23,7 @@
 
 #include "asmjs/WasmAST.h"
 #include "asmjs/WasmBinaryToAST.h"
+#include "asmjs/WasmTextUtils.h"
 #include "asmjs/WasmTypes.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/StringBuffer.h"
@@ -74,40 +75,32 @@ RenderInt64(WasmRenderContext& c, int64_t num)
         return false;
     if (!num)
         return c.buffer.append("0");
-
-    int64_t abs = mozilla::Abs(num);
-    int64_t n = abs;
-    uint64_t pow = 1;
-    while (n) {
-        pow *= 10;
-        n /= 10;
-    }
-    pow /= 10;
-
-    n = abs;
-    while (pow) {
-        if (!c.buffer.append("0123456789"[n / pow]))
-            return false;
-        n -= (n / pow) * pow;
-        pow /= 10;
-    }
-
-    return true;
+    return RenderInBase<10>(c.buffer, mozilla::Abs(num));
 }
 
 static bool
-RenderDouble(WasmRenderContext& c, double num)
+RenderDouble(WasmRenderContext& c, RawF64 num)
 {
-    if (IsNegativeZero(num))
+    double d = num.fp();
+    if (IsNaN(d))
+        return RenderNaN(c.buffer, num);
+    if (IsNegativeZero(d))
         return c.buffer.append("-0");
-    if (IsNaN(num))
-        return c.buffer.append("nan");
-    if (IsInfinite(num)) {
-        if (num > 0)
+    if (IsInfinite(d)) {
+        if (d > 0)
             return c.buffer.append("infinity");
         return c.buffer.append("-infinity");
     }
-    return NumberValueToStringBuffer(c.cx, DoubleValue(num), c.buffer);
+    return NumberValueToStringBuffer(c.cx, DoubleValue(d), c.buffer);
+}
+
+static bool
+RenderFloat32(WasmRenderContext& c, RawF32 num)
+{
+    float f = num.fp();
+    if (IsNaN(f))
+        return RenderNaN(c.buffer, num);
+    return RenderDouble(c, RawF64(double(f)));
 }
 
 static bool
@@ -310,7 +303,7 @@ RenderConst(WasmRenderContext& c, AstConst& cst)
             return false;
         break;
       case ExprType::F32:
-        if (!RenderDouble(c, (double)cst.val().f32()))
+        if (!RenderFloat32(c, cst.val().f32()))
             return false;
         break;
       case ExprType::F64:

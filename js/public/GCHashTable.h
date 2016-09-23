@@ -80,10 +80,10 @@ class GCHashMap : public js::HashMap<Key, Value, HashPolicy, AllocPolicy>
     }
 
     // GCHashMap is movable
-    GCHashMap(GCHashMap&& rhs) : Base(mozilla::Forward<GCHashMap>(rhs)) {}
+    GCHashMap(GCHashMap&& rhs) : Base(mozilla::Move(rhs)) {}
     void operator=(GCHashMap&& rhs) {
         MOZ_ASSERT(this != &rhs, "self-move assignment is prohibited");
-        Base::operator=(mozilla::Forward<GCHashMap>(rhs));
+        Base::operator=(mozilla::Move(rhs));
     }
 
   private:
@@ -127,10 +127,10 @@ class GCRekeyableHashMap : public JS::GCHashMap<Key, Value, HashPolicy, AllocPol
     }
 
     // GCRekeyableHashMap is movable
-    GCRekeyableHashMap(GCRekeyableHashMap&& rhs) : Base(mozilla::Forward<GCRekeyableHashMap>(rhs)) {}
+    GCRekeyableHashMap(GCRekeyableHashMap&& rhs) : Base(mozilla::Move(rhs)) {}
     void operator=(GCRekeyableHashMap&& rhs) {
         MOZ_ASSERT(this != &rhs, "self-move assignment is prohibited");
-        Base::operator=(mozilla::Forward<GCRekeyableHashMap>(rhs));
+        Base::operator=(mozilla::Move(rhs));
     }
 };
 
@@ -276,10 +276,10 @@ class GCHashSet : public js::HashSet<T, HashPolicy, AllocPolicy>
     }
 
     // GCHashSet is movable
-    GCHashSet(GCHashSet&& rhs) : Base(mozilla::Forward<GCHashSet>(rhs)) {}
+    GCHashSet(GCHashSet&& rhs) : Base(mozilla::Move(rhs)) {}
     void operator=(GCHashSet&& rhs) {
         MOZ_ASSERT(this != &rhs, "self-move assignment is prohibited");
-        Base::operator=(mozilla::Forward<GCHashSet>(rhs));
+        Base::operator=(mozilla::Move(rhs));
     }
 
   private:

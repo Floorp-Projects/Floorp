@@ -16,14 +16,14 @@ using namespace mozilla::layers;
 using namespace mozilla::gfx;
 
 TextureClient*
-MacIOSurfaceImage::GetTextureClient(CompositableClient* aClient)
+MacIOSurfaceImage::GetTextureClient(TextureForwarder* aForwarder)
 {
   if (!mTextureClient) {
     BackendType backend = BackendType::NONE;
     mTextureClient = TextureClient::CreateWithData(
       MacIOSurfaceTextureData::Create(mSurface, backend),
       TextureFlags::DEFAULT,
-      aClient->GetForwarder()
+      aForwarder
     );
   }
   return mTextureClient;

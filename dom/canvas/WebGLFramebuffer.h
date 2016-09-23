@@ -27,30 +27,33 @@ class WebGLTexture;
 template<typename T>
 class PlacementArray;
 
-class WebGLFBAttachPoint
+namespace gl {
+    class GLContext;
+} // namespace gl
+
+class WebGLFBAttachPoint final
 {
+    friend class WebGLFramebuffer;
 public:
     WebGLFramebuffer* const mFB;
     const GLenum mAttachmentPoint;
-private:
+
+protected:
     WebGLRefPtr<WebGLTexture> mTexturePtr;
     WebGLRefPtr<WebGLRenderbuffer> mRenderbufferPtr;
     TexImageTarget mTexImageTarget;
     GLint mTexImageLayer;
     uint32_t mTexImageLevel;
 
-    // PlacementArray needs a default constructor.
-    template<typename T>
-    friend class PlacementArray;
+    ////
 
-    WebGLFBAttachPoint()
-        : mFB(nullptr)
-        , mAttachmentPoint(0)
-    { }
+    WebGLFBAttachPoint();
+    WebGLFBAttachPoint(WebGLFramebuffer* fb, GLenum attachmentPoint);
 
 public:
-    WebGLFBAttachPoint(WebGLFramebuffer* fb, GLenum attachmentPoint);
     ~WebGLFBAttachPoint();
+
+    ////
 
     void Unlink();
 
@@ -65,23 +68,13 @@ public:
 
     void Clear();
 
-    void SetTexImage(WebGLTexture* tex, TexImageTarget target, GLint level);
-    void SetTexImageLayer(WebGLTexture* tex, TexImageTarget target, GLint level,
-                          GLint layer);
+    void SetTexImage(WebGLTexture* tex, TexImageTarget target, GLint level,
+                     GLint layer = 0);
     void SetRenderbuffer(WebGLRenderbuffer* rb);
 
-    const WebGLTexture* Texture() const {
-        return mTexturePtr;
-    }
-    WebGLTexture* Texture() {
-        return mTexturePtr;
-    }
-    const WebGLRenderbuffer* Renderbuffer() const {
-        return mRenderbufferPtr;
-    }
-    WebGLRenderbuffer* Renderbuffer() {
-        return mRenderbufferPtr;
-    }
+    WebGLTexture* Texture() const { return mTexturePtr; }
+    WebGLRenderbuffer* Renderbuffer() const { return mRenderbufferPtr; }
+
     TexImageTarget ImageTarget() const {
         return mTexImageTarget;
     }
@@ -94,69 +87,45 @@ public:
     void AttachmentName(nsCString* out) const;
 
     bool HasUninitializedImageData() const;
-    void SetImageDataStatus(WebGLImageDataStatus x);
+    void SetImageDataStatus(WebGLImageDataStatus x) const;
 
     void Size(uint32_t* const out_width, uint32_t* const out_height) const;
 
     bool HasImage() const;
     bool IsComplete(WebGLContext* webgl, nsCString* const out_info) const;
 
-    void FinalizeAttachment(gl::GLContext* gl, GLenum attachmentLoc) const;
+    void Resolve(gl::GLContext* gl) const;
 
     JS::Value GetParameter(const char* funcName, WebGLContext* webgl, JSContext* cx,
                            GLenum target, GLenum attachment, GLenum pname,
-                           ErrorResult* const out_error);
+                           ErrorResult* const out_error) const;
 
     void OnBackingStoreRespecified() const;
-};
 
-template<typename T>
-class PlacementArray
-{
-public:
-    const size_t mCapacity;
-protected:
-    size_t mSize;
-    T* const mArray;
+    ////
 
-public:
-    explicit PlacementArray(size_t capacity)
-        : mCapacity(capacity)
-        , mSize(0)
-        , mArray((T*)moz_xmalloc(sizeof(T) * capacity))
-    { }
+    struct Ordered {
+        const WebGLFBAttachPoint& mRef;
 
-    ~PlacementArray() {
-        for (auto& cur : *this) {
-            cur.~T();
+        explicit Ordered(const WebGLFBAttachPoint& ref)
+            : mRef(ref)
+        { }
+
+        bool operator<(const Ordered& other) const {
+            MOZ_ASSERT(mRef.IsDefined() && other.mRef.IsDefined());
+
+#define ORDER_BY(X) if (X != other.X) return X < other.X;
+
+            ORDER_BY(mRef.mRenderbufferPtr)
+            ORDER_BY(mRef.mTexturePtr)
+            ORDER_BY(mRef.mTexImageTarget.get())
+            ORDER_BY(mRef.mTexImageLevel)
+            ORDER_BY(mRef.mTexImageLayer)
+
+#undef ORDER_BY
+            return false;
         }
-        free(mArray);
-    }
-
-    T* begin() const {
-        return mArray;
-    }
-
-    T* end() const {
-        return mArray + mSize;
-    }
-
-    T& operator [](size_t offset) const {
-        MOZ_ASSERT(offset < mSize);
-        return mArray[offset];
-    }
-
-    const size_t& Size() const { return mSize; }
-
-    template<typename A, typename B>
-    void AppendNew(A a, B b) {
-        if (mSize == mCapacity)
-            MOZ_CRASH("GFX: Bad EmplaceAppend.");
-
-        // Placement `new`:
-        new (&(mArray[mSize])) T(a, b);
-        ++mSize;
-    }
+    };
 };
 
 class WebGLFramebuffer final
@@ -173,28 +142,7 @@ public:
 
     const GLuint mGLName;
 
-private:
-    mutable bool mIsKnownFBComplete;
-
-    GLenum mReadBufferMode;
-
-    // No need to chase pointers for the oft-used color0.
-    WebGLFBAttachPoint mColorAttachment0;
-    WebGLFBAttachPoint mDepthAttachment;
-    WebGLFBAttachPoint mStencilAttachment;
-    WebGLFBAttachPoint mDepthStencilAttachment;
-
-    PlacementArray<WebGLFBAttachPoint> mMoreColorAttachments;
-
-    std::vector<GLenum> mDrawBuffers;
-
-    bool IsDrawBuffer(size_t n) const {
-        if (n < mDrawBuffers.size())
-            return bool(mDrawBuffers[n]);
-
-        return false;
-    }
-
+protected:
 #ifdef ANDROID
     // Bug 1140459: Some drivers (including our test slaves!) don't
     // give reasonable answers for IsRenderbuffer, maybe others.
@@ -204,94 +152,133 @@ private:
     bool mIsFB;
 #endif
 
+    ////
+
+    WebGLFBAttachPoint mDepthAttachment;
+    WebGLFBAttachPoint mStencilAttachment;
+    WebGLFBAttachPoint mDepthStencilAttachment;
+
+    // In theory, this number can be unbounded based on the driver. However, no driver
+    // appears to expose more than 8. We might as well stop there too, for now.
+    // (http://opengl.gpuinfo.org/gl_stats_caps_single.php?listreportsbycap=GL_MAX_COLOR_ATTACHMENTS)
+    static const size_t kMaxColorAttachments = 8; // jgilbert's MacBook Pro exposes 8.
+    WebGLFBAttachPoint mColorAttachments[kMaxColorAttachments];
+
+    ////
+
+    std::vector<const WebGLFBAttachPoint*> mColorDrawBuffers; // Non-null
+    const WebGLFBAttachPoint* mColorReadBuffer; // Null if NONE
+
+    ////
+
+    struct ResolvedData {
+        // BlitFramebuffer
+        bool hasSampleBuffers;
+        const WebGLFBAttachPoint* depthBuffer;
+        const WebGLFBAttachPoint* stencilBuffer;
+
+        // IsFeedback
+        std::vector<const WebGLFBAttachPoint*> texDrawBuffers; // Non-null
+        std::set<WebGLFBAttachPoint::Ordered> drawSet;
+        std::set<WebGLFBAttachPoint::Ordered> readSet;
+
+        explicit ResolvedData(const WebGLFramebuffer& parent);
+    };
+
+    UniquePtr<const ResolvedData> mResolvedCompleteData;
+
+    ////
+
 public:
+    NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLFramebuffer)
+    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLFramebuffer)
+
     WebGLFramebuffer(WebGLContext* webgl, GLuint fbo);
+
+    WebGLContext* GetParentObject() const { return mContext; }
+    virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) override;
 
 private:
     ~WebGLFramebuffer() {
         DeleteOnce();
     }
 
-    const WebGLRectangleObject& GetAnyRectObject() const;
-
 public:
     void Delete();
 
-    void FramebufferRenderbuffer(GLenum attachment, RBTarget rbtarget,
-                                 WebGLRenderbuffer* rb);
-    void FramebufferTexture2D(GLenum attachment, TexImageTarget texImageTarget,
-                              WebGLTexture* tex, GLint level);
-    void FramebufferTextureLayer(GLenum attachment, WebGLTexture* tex, GLint level,
-                                 GLint layer);
+    ////
 
     bool HasDefinedAttachments() const;
     bool HasIncompleteAttachments(nsCString* const out_info) const;
     bool AllImageRectsMatch() const;
     bool AllImageSamplesMatch() const;
     FBStatus PrecheckFramebufferStatus(nsCString* const out_info) const;
-    FBStatus CheckFramebufferStatus(nsCString* const out_info) const;
-
-    const webgl::FormatUsageInfo*
-    GetFormatForAttachment(const WebGLFBAttachPoint& attachment) const;
-
-    const WebGLFBAttachPoint& ColorAttachment(size_t colorAttachmentId) const {
-        MOZ_ASSERT(colorAttachmentId < 1 + mMoreColorAttachments.Size());
-        return colorAttachmentId ? mMoreColorAttachments[colorAttachmentId - 1]
-                                 : mColorAttachment0;
-    }
-
-    const WebGLFBAttachPoint& DepthAttachment() const {
-        return mDepthAttachment;
-    }
-
-    const WebGLFBAttachPoint& StencilAttachment() const {
-        return mStencilAttachment;
-    }
-
-    const WebGLFBAttachPoint& DepthStencilAttachment() const {
-        return mDepthStencilAttachment;
-    }
-
-    void SetReadBufferMode(GLenum readBufferMode) {
-        mReadBufferMode = readBufferMode;
-    }
-
-    GLenum ReadBufferMode() const { return mReadBufferMode; }
-
-    void GatherAttachments(std::vector<const WebGLFBAttachPoint*>* const out) const;
 
 protected:
-    WebGLFBAttachPoint* GetAttachPoint(GLenum attachment); // Fallible
+    Maybe<WebGLFBAttachPoint*> GetAttachPoint(GLenum attachment); // Fallible
+    Maybe<WebGLFBAttachPoint*> GetColorAttachPoint(GLenum attachment); // Fallible
+    void ResolveAttachments() const;
+    void RefreshDrawBuffers() const;
+    void RefreshReadBuffer() const;
+    bool ResolveAttachmentData(const char* funcName) const;
 
 public:
     void DetachTexture(const WebGLTexture* tex);
-
     void DetachRenderbuffer(const WebGLRenderbuffer* rb);
-
-    WebGLContext* GetParentObject() const {
-        return mContext;
-    }
-
-    void FinalizeAttachments() const;
-
-    virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) override;
-
-    NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLFramebuffer)
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLFramebuffer)
-
     bool ValidateAndInitAttachments(const char* funcName);
-
-    void InvalidateFramebufferStatus() const {
-        mIsKnownFBComplete = false;
-    }
 
     bool ValidateForRead(const char* info,
                          const webgl::FormatUsageInfo** const out_format,
                          uint32_t* const out_width, uint32_t* const out_height);
 
+    ////////////////
+    // Getters
+
+#define GETTER(X) const decltype(m##X)& X() const { return m##X; }
+
+    GETTER(DepthAttachment)
+    GETTER(StencilAttachment)
+    GETTER(DepthStencilAttachment)
+    GETTER(ColorDrawBuffers)
+    GETTER(ColorReadBuffer)
+    GETTER(ResolvedCompleteData)
+
+#undef GETTER
+
+    ////////////////
+    // Invalidation
+
+    bool IsResolvedComplete() const { return bool(mResolvedCompleteData); }
+
+    void InvalidateFramebufferStatus() {
+        mResolvedCompleteData = nullptr;
+    }
+
+    void RefreshResolvedData();
+
+    ////////////////
+    // WebGL funcs
+
+    FBStatus CheckFramebufferStatus(const char* funcName);
+    void FramebufferRenderbuffer(const char* funcName, GLenum attachment, GLenum rbtarget,
+                                 WebGLRenderbuffer* rb);
+    void FramebufferTexture2D(const char* funcName, GLenum attachment,
+                              GLenum texImageTarget, WebGLTexture* tex, GLint level);
+    void FramebufferTextureLayer(const char* funcName, GLenum attachment,
+                                 WebGLTexture* tex, GLint level, GLint layer);
+    void DrawBuffers(const char* funcName, const dom::Sequence<GLenum>& buffers);
+    void ReadBuffer(const char* funcName, GLenum attachPoint);
+
     JS::Value GetAttachmentParameter(const char* funcName, JSContext* cx, GLenum target,
                                      GLenum attachment, GLenum pname,
                                      ErrorResult* const out_error);
+
+    static void BlitFramebuffer(WebGLContext* webgl,
+                                const WebGLFramebuffer* src, GLint srcX0, GLint srcY0,
+                                GLint srcX1, GLint srcY1,
+                                const WebGLFramebuffer* dst, GLint dstX0, GLint dstY0,
+                                GLint dstX1, GLint dstY1,
+                                GLbitfield mask, GLenum filter);
 };
 
 } // namespace mozilla

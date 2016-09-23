@@ -10,8 +10,7 @@ callback interface BlobCallback {
 
 interface FileSystemFileEntry : FileSystemEntry {
     // the successCallback should be a FileWriteCallback but this method is not
-    // implemented. ErrorCallback will be called with
-    // NS_ERROR_DOM_NOT_SUPPORTED_ERR.
+    // implemented. ErrorCallback will be called with SecurityError.
     void createWriter (VoidCallback successCallback,
                        optional ErrorCallback errorCallback);
 

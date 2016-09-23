@@ -125,7 +125,7 @@ init_simd (void)
   /* Force different settings through environment variables */
   env = getenv("JSIMD_FORCENEON");
   if ((env != NULL) && (strcmp(env, "1") == 0))
-    simd_support &= JSIMD_ARM_NEON;
+    simd_support = JSIMD_ARM_NEON;
   env = getenv("JSIMD_FORCENONE");
   if ((env != NULL) && (strcmp(env, "1") == 0))
     simd_support = 0;

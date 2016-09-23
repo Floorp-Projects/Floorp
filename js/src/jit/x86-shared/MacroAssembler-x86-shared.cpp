@@ -254,15 +254,15 @@ MacroAssemblerX86Shared::getConstant(const typename T::Pod& value, Map& map,
 }
 
 MacroAssemblerX86Shared::Float*
-MacroAssemblerX86Shared::getFloat(float f)
+MacroAssemblerX86Shared::getFloat(wasm::RawF32 f)
 {
-    return getConstant<Float, FloatMap>(f, floatMap_, floats_);
+    return getConstant<Float, FloatMap>(f.bits(), floatMap_, floats_);
 }
 
 MacroAssemblerX86Shared::Double*
-MacroAssemblerX86Shared::getDouble(double d)
+MacroAssemblerX86Shared::getDouble(wasm::RawF64 d)
 {
-    return getConstant<Double, DoubleMap>(d, doubleMap_, doubles_);
+    return getConstant<Double, DoubleMap>(d.bits(), doubleMap_, doubles_);
 }
 
 MacroAssemblerX86Shared::SimdData*

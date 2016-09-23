@@ -32,52 +32,9 @@ using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
 
+using mozilla::IsNaN;
+
 const char wasm::InstanceExportField[] = "exports";
-
-JSObject*
-wasm::CreateI64Object(JSContext* cx, int64_t i64)
-{
-    RootedObject result(cx, JS_NewPlainObject(cx));
-    if (!result)
-        return nullptr;
-
-    RootedValue val(cx, Int32Value(uint32_t(i64)));
-    if (!JS_DefineProperty(cx, result, "low", val, JSPROP_ENUMERATE))
-        return nullptr;
-
-    val = Int32Value(uint32_t(i64 >> 32));
-    if (!JS_DefineProperty(cx, result, "high", val, JSPROP_ENUMERATE))
-        return nullptr;
-
-    return result;
-}
-
-bool
-wasm::ReadI64Object(JSContext* cx, HandleValue v, int64_t* i64)
-{
-    if (!v.isObject()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL,
-                             "i64 JS value must be an object");
-        return false;
-    }
-
-    RootedObject obj(cx, &v.toObject());
-
-    int32_t* i32 = (int32_t*)i64;
-
-    RootedValue val(cx);
-    if (!JS_GetProperty(cx, obj, "low", &val))
-        return false;
-    if (!ToInt32(cx, val, &i32[0]))
-        return false;
-
-    if (!JS_GetProperty(cx, obj, "high", &val))
-        return false;
-    if (!ToInt32(cx, val, &i32[1]))
-        return false;
-
-    return true;
-}
 
 #if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
 // On MIPS, CodeLabels are instruction immediates so InternalLinks only
@@ -714,11 +671,29 @@ GetGlobalExport(JSContext* cx, const GlobalDescVector& globals, uint32_t globalI
         return true;
       }
       case ValType::F32: {
-        jsval.set(DoubleValue(double(val.f32())));
+        float f = val.f32().fp();
+        if (JitOptions.wasmTestMode && IsNaN(f)) {
+            uint32_t bits = val.f32().bits();
+            RootedObject obj(cx, CreateCustomNaNObject(cx, (float*)&bits));
+            if (!obj)
+                return false;
+            jsval.set(ObjectValue(*obj));
+            return true;
+        }
+        jsval.set(DoubleValue(double(f)));
         return true;
       }
       case ValType::F64: {
-        jsval.set(DoubleValue(val.f64()));
+        double d = val.f64().fp();
+        if (JitOptions.wasmTestMode && IsNaN(d)) {
+            uint64_t bits = val.f64().bits();
+            RootedObject obj(cx, CreateCustomNaNObject(cx, (double*)&bits));
+            if (!obj)
+                return false;
+            jsval.set(ObjectValue(*obj));
+            return true;
+        }
+        jsval.set(DoubleValue(d));
         return true;
       }
       default: {

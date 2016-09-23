@@ -7,7 +7,6 @@
 #include "WebGLContextUnchecked.h"
 
 #include "GLContext.h"
-#include "WebGLBuffer.h"
 #include "WebGLSampler.h"
 
 namespace mozilla {
@@ -16,50 +15,6 @@ WebGLContextUnchecked::WebGLContextUnchecked(gl::GLContext* _gl)
     : mGL_OnlyClearInDestroyResourcesAndContext(_gl)
     , gl(mGL_OnlyClearInDestroyResourcesAndContext) // const reference
 { }
-
-
-// -----------------------------------------------------------------------------
-// Buffer Objects
-
-void
-WebGLContextUnchecked::BindBuffer(GLenum target, WebGLBuffer* buffer)
-{
-    gl->MakeCurrent();
-    gl->fBindBuffer(target, buffer ? buffer->mGLName : 0);
-}
-
-void
-WebGLContextUnchecked::BindBufferBase(GLenum target, GLuint index, WebGLBuffer* buffer)
-{
-    gl->MakeCurrent();
-    gl->fBindBufferBase(target, index, buffer ? buffer->mGLName : 0);
-}
-
-void
-WebGLContextUnchecked::BindBufferRange(GLenum target, GLuint index, WebGLBuffer* buffer, WebGLintptr offset, WebGLsizeiptr size)
-{
-    gl->MakeCurrent();
-
-#ifdef XP_MACOSX
-    if (buffer && buffer->Content() == WebGLBuffer::Kind::Undefined &&
-        gl->WorkAroundDriverBugs())
-    {
-        // BindBufferRange will fail if the buffer's contents is undefined.
-        // Bind so driver initializes the buffer.
-        gl->fBindBuffer(target, buffer->mGLName);
-    }
-#endif
-
-    gl->fBindBufferRange(target, index, buffer ? buffer->mGLName : 0, offset, size);
-}
-
-void
-WebGLContextUnchecked::CopyBufferSubData(GLenum readTarget, GLenum writeTarget, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size)
-{
-    gl->MakeCurrent();
-    gl->fCopyBufferSubData(readTarget, writeTarget, readOffset, writeOffset, size);
-}
-
 
 // -----------------------------------------------------------------------------
 // Sampler Objects

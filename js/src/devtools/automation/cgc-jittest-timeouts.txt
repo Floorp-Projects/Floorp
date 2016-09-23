@@ -40,3 +40,6 @@ v8-v5/check-earley-boyer.js
 v8-v5/check-raytrace.js
 v8-v5/check-regexp.js
 v8-v5/check-splay.js
+wasm/spec/f32.wast.js
+wasm/spec/f32_cmp.wast.js
+wasm/spec/f64.wast.js

@@ -184,7 +184,7 @@ MacroAssembler::add64(Imm64 imm, Register64 dest)
 void
 MacroAssembler::addConstantDouble(double d, FloatRegister dest)
 {
-    Double* dbl = getDouble(d);
+    Double* dbl = getDouble(wasm::RawF64(d));
     if (!dbl)
         return;
     masm.vaddsd_mr(nullptr, dest.encoding(), dest.encoding());

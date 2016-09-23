@@ -5,7 +5,6 @@
 "use strict";
 
 const { Ci, Cc } = require("chrome");
-const { memoize } = require("sdk/lang/functional");
 const nodeFilterConstants = require("devtools/shared/dom-node-filter-constants");
 
 loader.lazyRequireGetter(this, "setIgnoreLayoutChanges", "devtools/server/actors/layout", true);
@@ -18,10 +17,14 @@ exports.setIgnoreLayoutChanges = (...args) =>
  * @param {DOMWindow} win
  * @returns {DOMWindowUtils}
  */
-const utilsFor = memoize(
-  win => win.QueryInterface(Ci.nsIInterfaceRequestor)
-            .getInterface(Ci.nsIDOMWindowUtils)
-);
+const utilsCache = new WeakMap();
+function utilsFor(win) {
+  if (!utilsCache.has(win)) {
+    utilsCache.set(win, win.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindowUtils));
+  }
+  return utilsCache.get(win);
+}
 
 /**
  * like win.top, but goes through mozbrowsers and mozapps iframes.

@@ -858,14 +858,14 @@ class LPointer : public LInstructionHelper<1, 0, 0>
 // Constant double.
 class LDouble : public LInstructionHelper<1, 0, 0>
 {
-    double d_;
+    wasm::RawF64 d_;
   public:
     LIR_HEADER(Double);
 
-    explicit LDouble(double d) : d_(d)
+    explicit LDouble(wasm::RawF64 d) : d_(d)
     { }
 
-    const double& getDouble() const {
+    wasm::RawF64 getDouble() const {
         return d_;
     }
 };
@@ -873,15 +873,15 @@ class LDouble : public LInstructionHelper<1, 0, 0>
 // Constant float32.
 class LFloat32 : public LInstructionHelper<1, 0, 0>
 {
-    float f_;
+    wasm::RawF32 f_;
   public:
     LIR_HEADER(Float32);
 
-    explicit LFloat32(float f)
+    explicit LFloat32(wasm::RawF32 f)
       : f_(f)
     { }
 
-    const float& getFloat() const {
+    wasm::RawF32 getFloat() const {
         return f_;
     }
 };

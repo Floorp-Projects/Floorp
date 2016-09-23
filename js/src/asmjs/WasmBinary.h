@@ -24,6 +24,41 @@
 namespace js {
 namespace wasm {
 
+// Because WebAssembly allows one to define the payload of a NaN value,
+// including the signal/quiet bit (highest order bit of payload), another
+// represenation of floating-point values is required: on some platforms (x86
+// without SSE2), passing a floating-point argument to a function call may use
+// the x87 stack, which has the side-effect of clearing the signal/quiet bit.
+// Because the signal/quiet bit must be preserved (by spec), we use the raw
+// punned integer representation of floating points instead, in function calls.
+//
+// When we leave the WebAssembly sandbox back to JS, NaNs are canonicalized, so
+// this isn't observable from JS.
+
+template<class T>
+class Raw
+{
+    typedef typename mozilla::FloatingPoint<T>::Bits Bits;
+    Bits value_;
+
+  public:
+    Raw() : value_(0) {}
+
+    explicit Raw(T value)
+      : value_(mozilla::BitwiseCast<Bits>(value))
+    {}
+
+    template<class U> MOZ_IMPLICIT Raw(U) = delete;
+
+    static Raw fromBits(Bits bits) { Raw r; r.value_ = bits; return r; }
+
+    Bits bits() const { return value_; }
+    T fp() const { return mozilla::BitwiseCast<T>(value_); }
+};
+
+using RawF64 = Raw<double>;
+using RawF32 = Raw<float>;
+
 // Telemetry sample values for the JS_AOT_USAGE key, indicating whether asm.js
 // or WebAssembly is used.
 
@@ -516,11 +551,11 @@ class Encoder
     MOZ_MUST_USE bool writeFixedU32(uint32_t i) {
         return write<uint32_t>(i);
     }
-    MOZ_MUST_USE bool writeFixedF32(float f) {
-        return write<float>(f);
+    MOZ_MUST_USE bool writeFixedF32(RawF32 f) {
+        return write<uint32_t>(f.bits());
     }
-    MOZ_MUST_USE bool writeFixedF64(double d) {
-        return write<double>(d);
+    MOZ_MUST_USE bool writeFixedF64(RawF64 d) {
+        return write<uint64_t>(d.bits());
     }
     MOZ_MUST_USE bool writeFixedI8x16(const I8x16& i8x16) {
         return write<I8x16>(i8x16);
@@ -743,11 +778,19 @@ class Decoder
     MOZ_MUST_USE bool readFixedU32(uint32_t* u) {
         return read<uint32_t>(u);
     }
-    MOZ_MUST_USE bool readFixedF32(float* f) {
-        return read<float>(f);
+    MOZ_MUST_USE bool readFixedF32(RawF32* f) {
+        uint32_t u;
+        if (!read<uint32_t>(&u))
+            return false;
+        *f = RawF32::fromBits(u);
+        return true;
     }
-    MOZ_MUST_USE bool readFixedF64(double* d) {
-        return read<double>(d);
+    MOZ_MUST_USE bool readFixedF64(RawF64* d) {
+        uint64_t u;
+        if (!read<uint64_t>(&u))
+            return false;
+        *d = RawF64::fromBits(u);
+        return true;
     }
     MOZ_MUST_USE bool readFixedI8x16(I8x16* i8x16) {
         return read<I8x16>(i8x16);
@@ -871,11 +914,11 @@ class Decoder
     uint32_t uncheckedReadFixedU32() {
         return uncheckedRead<uint32_t>();
     }
-    void uncheckedReadFixedF32(float* ret) {
-        return uncheckedRead<float>(ret);
+    RawF32 uncheckedReadFixedF32() {
+        return RawF32::fromBits(uncheckedRead<uint32_t>());
     }
-    void uncheckedReadFixedF64(double* ret) {
-        return uncheckedRead<double>(ret);
+    RawF64 uncheckedReadFixedF64() {
+        return RawF64::fromBits(uncheckedRead<uint64_t>());
     }
     template <typename UInt>
     UInt uncheckedReadVarU() {
