@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+
+<script>
+function do_test() {
+    var canvas = document.getElementById("test");
+    var ctx = canvas.getContext("2d");
+
+    var g = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    g.addColorStop(0, "red");
+    g.addColorStop(1, "green");
+
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.strokeStyle = "white";
+    ctx.font = "bold 24px sans-serif";
+
+    ctx.strokeText('globalAlpha = 1.0', 20, 40);
+
+    ctx.globalAlpha = 0.5;
+    ctx.strokeText('globalAlpha = 0.5', 20, 80);
+
+    ctx.globalAlpha = 0.2;
+    ctx.strokeText('globalAlpha = 0.2', 20, 120);
+};
+</script>
+
+</head>
+
+<body onload="do_test()">
+
+<canvas id="test"></canvas>
+
+</body>
+</html>
