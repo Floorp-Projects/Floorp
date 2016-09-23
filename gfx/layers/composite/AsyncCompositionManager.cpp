@@ -433,6 +433,7 @@ IsFixedOrSticky(Layer* aLayer)
 
 void
 AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoot,
+                                                   Layer* aStartTraversalAt,
                                                    FrameMetrics::ViewID aTransformScrollId,
                                                    const LayerToParentLayerMatrix4x4& aPreviousTransformForRoot,
                                                    const LayerToParentLayerMatrix4x4& aCurrentTransformForRoot,
@@ -445,114 +446,110 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoo
     return;
   }
 
-  ForEachNode<ForwardIterator>(
-      aTransformedSubtreeRoot,
-      [&] (Layer* layer)
-      {
-        bool needsAsyncTransformUnapplied = false;
-        if (Maybe<FrameMetrics::ViewID> fixedTo = IsFixedOrSticky(layer)) {
-          needsAsyncTransformUnapplied = AsyncTransformShouldBeUnapplied(layer,
-              *fixedTo, aTransformedSubtreeRoot, aTransformScrollId);
-        }
+  Layer* layer = aStartTraversalAt;
+  bool needsAsyncTransformUnapplied = false;
+  if (Maybe<FrameMetrics::ViewID> fixedTo = IsFixedOrSticky(layer)) {
+    needsAsyncTransformUnapplied = AsyncTransformShouldBeUnapplied(layer,
+        *fixedTo, aTransformedSubtreeRoot, aTransformScrollId);
+  }
 
-        // We want to process all the fixed and sticky descendants of
-        // aTransformedSubtreeRoot. Once we do encounter such a descendant, we don't
-        // need to recurse any deeper because the adjustment to the fixed or sticky
-        // layer will apply to its subtree.
-        if (!needsAsyncTransformUnapplied) {
-          return TraversalFlag::Continue;
-        }
+  // We want to process all the fixed and sticky descendants of
+  // aTransformedSubtreeRoot. Once we do encounter such a descendant, we don't
+  // need to recurse any deeper because the adjustment to the fixed or sticky
+  // layer will apply to its subtree.
+  if (!needsAsyncTransformUnapplied) {
+    for (Layer* child = layer->GetFirstChild(); child; child = child->GetNextSibling()) {
+      AlignFixedAndStickyLayers(aTransformedSubtreeRoot, child,
+          aTransformScrollId, aPreviousTransformForRoot,
+          aCurrentTransformForRoot, aFixedLayerMargins, aClipPartsCache);
+    }
+    return;
+  }
 
+  // Insert a translation so that the position of the anchor point is the same
+  // before and after the change to the transform of aTransformedSubtreeRoot.
 
-        // Insert a translation so that the position of the anchor point is the same
-        // before and after the change to the transform of aTransformedSubtreeRoot.
-
-        // A transform creates a containing block for fixed-position descendants,
-        // so there shouldn't be a transform in between the fixed layer and
-        // the subtree root layer.
+  // A transform creates a containing block for fixed-position descendants,
+  // so there shouldn't be a transform in between the fixed layer and
+  // the subtree root layer.
 #ifdef DEBUG
-        Matrix4x4 ancestorTransform;
-        if (layer != aTransformedSubtreeRoot) {
-          AccumulateLayerTransforms(layer->GetParent(), aTransformedSubtreeRoot,
-                                    ancestorTransform);
-        }
-        MOZ_ASSERT(ancestorTransform.IsIdentity());
+  Matrix4x4 ancestorTransform;
+  if (layer != aTransformedSubtreeRoot) {
+    AccumulateLayerTransforms(layer->GetParent(), aTransformedSubtreeRoot,
+                              ancestorTransform);
+  }
+  MOZ_ASSERT(ancestorTransform.IsIdentity());
 #endif
 
-        // Since we create container layers for fixed layers, there shouldn't
-        // a local CSS or OMTA transform on the fixed layer, either (any local
-        // transform would go onto a descendant layer inside the container
-        // layer).
+  // Since we create container layers for fixed layers, there shouldn't
+  // a local CSS or OMTA transform on the fixed layer, either (any local
+  // transform would go onto a descendant layer inside the container
+  // layer).
 #ifdef DEBUG
-        Matrix4x4 localTransform;
-        GetBaseTransform(layer, &localTransform);
-        MOZ_ASSERT(localTransform.IsIdentity());
+  Matrix4x4 localTransform;
+  GetBaseTransform(layer, &localTransform);
+  MOZ_ASSERT(localTransform.IsIdentity());
 #endif
 
-        // Now work out the translation necessary to make sure the layer doesn't
-        // move given the new sub-tree root transform.
+  // Now work out the translation necessary to make sure the layer doesn't
+  // move given the new sub-tree root transform.
 
-        // Get the layer's fixed anchor point, in the layer's local coordinate space
-        // (before any transform is applied).
-        LayerPoint anchor = layer->GetFixedPositionAnchor();
+  // Get the layer's fixed anchor point, in the layer's local coordinate space
+  // (before any transform is applied).
+  LayerPoint anchor = layer->GetFixedPositionAnchor();
 
-        // Offset the layer's anchor point to make sure fixed position content
-        // respects content document fixed position margins.
-        LayerPoint offsetAnchor = anchor + GetLayerFixedMarginsOffset(layer, aFixedLayerMargins);
+  // Offset the layer's anchor point to make sure fixed position content
+  // respects content document fixed position margins.
+  LayerPoint offsetAnchor = anchor + GetLayerFixedMarginsOffset(layer, aFixedLayerMargins);
 
-        // Additionally transform the anchor to compensate for the change
-        // from the old transform to the new transform. We do
-        // this by using the old transform to take the offset anchor back into
-        // subtree root space, and then the inverse of the new transform
-        // to bring it back to layer space.
-        LayerPoint transformedAnchor = aCurrentTransformForRoot.Inverse()
-            .TransformPoint(aPreviousTransformForRoot.TransformPoint(
-                offsetAnchor));
+  // Additionally transform the anchor to compensate for the change
+  // from the old transform to the new transform. We do
+  // this by using the old transform to take the offset anchor back into
+  // subtree root space, and then the inverse of the new transform
+  // to bring it back to layer space.
+  LayerPoint transformedAnchor = aCurrentTransformForRoot.Inverse()
+      .TransformPoint(aPreviousTransformForRoot.TransformPoint(
+          offsetAnchor));
 
-        // We want to translate the layer by the difference between
-        // |transformedAnchor| and |anchor|.
-        LayerPoint translation = transformedAnchor - anchor;
+  // We want to translate the layer by the difference between
+  // |transformedAnchor| and |anchor|.
+  LayerPoint translation = transformedAnchor - anchor;
 
-        // A fixed layer will "consume" (be unadjusted by) the entire translation
-        // calculated above. A sticky layer may consume all, part, or none of it,
-        // depending on where we are relative to its sticky scroll range.
-        bool translationConsumed = true;
+  // A fixed layer will "consume" (be unadjusted by) the entire translation
+  // calculated above. A sticky layer may consume all, part, or none of it,
+  // depending on where we are relative to its sticky scroll range.
+  bool translationConsumed = true;
 
-        if (layer->GetIsStickyPosition()) {
-          // For sticky positioned layers, the difference between the two rectangles
-          // defines a pair of translation intervals in each dimension through which
-          // the layer should not move relative to the scroll container. To
-          // accomplish this, we limit each dimension of the |translation| to that
-          // part of it which overlaps those intervals.
-          const LayerRect& stickyOuter = layer->GetStickyScrollRangeOuter();
-          const LayerRect& stickyInner = layer->GetStickyScrollRangeInner();
+  if (layer->GetIsStickyPosition()) {
+    // For sticky positioned layers, the difference between the two rectangles
+    // defines a pair of translation intervals in each dimension through which
+    // the layer should not move relative to the scroll container. To
+    // accomplish this, we limit each dimension of the |translation| to that
+    // part of it which overlaps those intervals.
+    const LayerRect& stickyOuter = layer->GetStickyScrollRangeOuter();
+    const LayerRect& stickyInner = layer->GetStickyScrollRangeInner();
 
-          LayerPoint originalTranslation = translation;
-          translation.y = IntervalOverlap(translation.y, stickyOuter.y, stickyOuter.YMost()) -
-                          IntervalOverlap(translation.y, stickyInner.y, stickyInner.YMost());
-          translation.x = IntervalOverlap(translation.x, stickyOuter.x, stickyOuter.XMost()) -
-                          IntervalOverlap(translation.x, stickyInner.x, stickyInner.XMost());
-          if (translation != originalTranslation) {
-            translationConsumed = false;
-          }
-        }
+    LayerPoint originalTranslation = translation;
+    translation.y = IntervalOverlap(translation.y, stickyOuter.y, stickyOuter.YMost()) -
+                    IntervalOverlap(translation.y, stickyInner.y, stickyInner.YMost());
+    translation.x = IntervalOverlap(translation.x, stickyOuter.x, stickyOuter.XMost()) -
+                    IntervalOverlap(translation.x, stickyInner.x, stickyInner.XMost());
+    if (translation != originalTranslation) {
+      translationConsumed = false;
+    }
+  }
 
-        // Finally, apply the translation to the layer transform. Note that in cases
-        // where the async transform on |aTransformedSubtreeRoot| affects this layer's
-        // clip rect, we need to apply the same translation to said clip rect, so
-        // that the effective transform on the clip rect takes it back to where it was
-        // originally, had there been no async scroll.
-        TranslateShadowLayer(layer, ViewAs<ParentLayerPixel>(translation,
-            PixelCastJustification::NoTransformOnLayer), true, aClipPartsCache);
+  // Finally, apply the translation to the layer transform. Note that in cases
+  // where the async transform on |aTransformedSubtreeRoot| affects this layer's
+  // clip rect, we need to apply the same translation to said clip rect, so
+  // that the effective transform on the clip rect takes it back to where it was
+  // originally, had there been no async scroll.
+  TranslateShadowLayer(layer, ViewAs<ParentLayerPixel>(translation,
+      PixelCastJustification::NoTransformOnLayer), true, aClipPartsCache);
 
-        // If we didn't consume the entire translation, continue the traversal
-        // to allow a descendant fixed or sticky layer to consume the rest.
-        // TODO: We curently don't handle the case where we consume part but not
-        //       all of the translation correctly. In such a case,
-        //       |a[Previous|Current]TransformForRoot| would need to be adjusted
-        //       to reflect only the unconsumed part of the translation.
-        return translationConsumed ? TraversalFlag::Skip : TraversalFlag::Continue;
-      });
+  // TODO: If we didn't consume the entire translation, continue the traversal
+  //       to allow a descendant fixed or sticky layer to consume the rest.
+  return;
 }
 
 static void
@@ -1046,7 +1043,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
             * CompleteAsyncTransform(
                 AdjustForClip(asyncTransformWithoutOverscroll, layer));
 
-          AlignFixedAndStickyLayers(layer, metrics.GetScrollId(), oldTransform,
+          AlignFixedAndStickyLayers(layer, layer, metrics.GetScrollId(), oldTransform,
                                     transformWithoutOverscrollOrOmta, fixedLayerMargins,
                                     &clipPartsCache);
 
@@ -1490,7 +1487,7 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
 
   // Make sure fixed position layers don't move away from their anchor points
   // when we're asynchronously panning or zooming
-  AlignFixedAndStickyLayers(aLayer, metrics.GetScrollId(), oldTransform,
+  AlignFixedAndStickyLayers(aLayer, aLayer, metrics.GetScrollId(), oldTransform,
                             aLayer->GetLocalTransformTyped(),
                             fixedLayerMargins, nullptr);
 
