@@ -331,7 +331,6 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
   , mIdentity(nullptr)
 #endif
   , mPrivacyRequested(false)
-  , mIsLoop(false)
   , mSTSThread(nullptr)
   , mAllowIceLoopback(false)
   , mAllowIceLinkLocal(false)
@@ -647,12 +646,6 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
     location->ToString(locationAStr);
 
     CopyUTF16toUTF8(locationAStr, locationCStr);
-#define HELLO_CLICKER_URL_START "https://hello.firefox.com/"
-#define HELLO_INITIATOR_URL_START "about:loop"
-    mIsLoop = (strncmp(HELLO_CLICKER_URL_START, locationCStr.get(),
-                       strlen(HELLO_CLICKER_URL_START)) == 0) ||
-              (strncmp(HELLO_INITIATOR_URL_START, locationCStr.get(),
-                       strlen(HELLO_INITIATOR_URL_START)) == 0);
   }
 
   SprintfLiteral(temp,
@@ -2262,14 +2255,10 @@ PeerConnectionImpl::AddIceCandidate(const char* aCandidate, const char* aMid, un
   if(!mIceStartTime.IsNull()) {
     TimeDuration timeDelta = TimeStamp::Now() - mIceStartTime;
     if (mIceConnectionState == PCImplIceConnectionState::Failed) {
-      Telemetry::Accumulate((mIsLoop ?
-                             Telemetry::LOOP_ICE_LATE_TRICKLE_ARRIVAL_TIME :
-                             Telemetry::WEBRTC_ICE_LATE_TRICKLE_ARRIVAL_TIME),
+      Telemetry::Accumulate(Telemetry::WEBRTC_ICE_LATE_TRICKLE_ARRIVAL_TIME,
                             timeDelta.ToMilliseconds());
     } else {
-      Telemetry::Accumulate((mIsLoop ?
-                             Telemetry::LOOP_ICE_ON_TIME_TRICKLE_ARRIVAL_TIME :
-                             Telemetry::WEBRTC_ICE_ON_TIME_TRICKLE_ARRIVAL_TIME),
+      Telemetry::Accumulate(Telemetry::WEBRTC_ICE_ON_TIME_TRICKLE_ARRIVAL_TIME,
                             timeDelta.ToMilliseconds());
     }
   }
@@ -3034,25 +3023,19 @@ PeerConnectionImpl::RecordEndOfCallTelemetry() const
 
   // Report end-of-call Telemetry
   if (mJsepSession->GetNegotiations() > 0) {
-    Telemetry::Accumulate(mIsLoop ? Telemetry::LOOP_RENEGOTIATIONS :
-                          Telemetry::WEBRTC_RENEGOTIATIONS,
+    Telemetry::Accumulate(Telemetry::WEBRTC_RENEGOTIATIONS,
                           mJsepSession->GetNegotiations()-1);
   }
-  Telemetry::Accumulate(mIsLoop ? Telemetry::LOOP_MAX_VIDEO_SEND_TRACK :
-                        Telemetry::WEBRTC_MAX_VIDEO_SEND_TRACK,
+  Telemetry::Accumulate(Telemetry::WEBRTC_MAX_VIDEO_SEND_TRACK,
                         mMaxSending[SdpMediaSection::MediaType::kVideo]);
-  Telemetry::Accumulate(mIsLoop ? Telemetry::LOOP_MAX_VIDEO_RECEIVE_TRACK :
-                        Telemetry::WEBRTC_MAX_VIDEO_RECEIVE_TRACK,
+  Telemetry::Accumulate(Telemetry::WEBRTC_MAX_VIDEO_RECEIVE_TRACK,
                         mMaxReceiving[SdpMediaSection::MediaType::kVideo]);
-  Telemetry::Accumulate(mIsLoop ? Telemetry::LOOP_MAX_AUDIO_SEND_TRACK :
-                        Telemetry::WEBRTC_MAX_AUDIO_SEND_TRACK,
+  Telemetry::Accumulate(Telemetry::WEBRTC_MAX_AUDIO_SEND_TRACK,
                         mMaxSending[SdpMediaSection::MediaType::kAudio]);
-  Telemetry::Accumulate(mIsLoop ? Telemetry::LOOP_MAX_AUDIO_RECEIVE_TRACK :
-                        Telemetry::WEBRTC_MAX_AUDIO_RECEIVE_TRACK,
+  Telemetry::Accumulate(Telemetry::WEBRTC_MAX_AUDIO_RECEIVE_TRACK,
                         mMaxReceiving[SdpMediaSection::MediaType::kAudio]);
   // DataChannels appear in both Sending and Receiving
-  Telemetry::Accumulate(mIsLoop ? Telemetry::LOOP_DATACHANNEL_NEGOTIATED :
-                        Telemetry::WEBRTC_DATACHANNEL_NEGOTIATED,
+  Telemetry::Accumulate(Telemetry::WEBRTC_DATACHANNEL_NEGOTIATED,
                         mMaxSending[SdpMediaSection::MediaType::kApplication]);
   // Enumerated/bitmask: 1 = Audio, 2 = Video, 4 = DataChannel
   // A/V = 3, A/V/D = 7, etc
@@ -3068,8 +3051,7 @@ PeerConnectionImpl::RecordEndOfCallTelemetry() const
   if (mMaxSending[SdpMediaSection::MediaType::kApplication]) {
     type |= kDataChannelTypeMask;
   }
-  Telemetry::Accumulate(mIsLoop ? Telemetry::LOOP_CALL_TYPE :
-                        Telemetry::WEBRTC_CALL_TYPE,
+  Telemetry::Accumulate(Telemetry::WEBRTC_CALL_TYPE,
                         type);
 #endif
 }
@@ -3131,8 +3113,7 @@ PeerConnectionImpl::ShutdownMedia()
   // End of call to be recorded in Telemetry
   if (!mStartTime.IsNull()){
     TimeDuration timeDelta = TimeStamp::Now() - mStartTime;
-    Telemetry::Accumulate(mIsLoop ? Telemetry::LOOP_CALL_DURATION :
-                                    Telemetry::WEBRTC_CALL_DURATION,
+    Telemetry::Accumulate(Telemetry::WEBRTC_CALL_DURATION,
                           timeDelta.ToSeconds());
   }
 #endif
@@ -3439,12 +3420,10 @@ void PeerConnectionImpl::IceConnectionStateChange(
     if (!mIceStartTime.IsNull()){
       TimeDuration timeDelta = TimeStamp::Now() - mIceStartTime;
       if (isSucceeded(domState)) {
-        Telemetry::Accumulate(mIsLoop ? Telemetry::LOOP_ICE_SUCCESS_TIME :
-                                        Telemetry::WEBRTC_ICE_SUCCESS_TIME,
+        Telemetry::Accumulate(Telemetry::WEBRTC_ICE_SUCCESS_TIME,
                               timeDelta.ToMilliseconds());
       } else if (isFailed(domState)) {
-        Telemetry::Accumulate(mIsLoop ? Telemetry::LOOP_ICE_FAILURE_TIME :
-                                        Telemetry::WEBRTC_ICE_FAILURE_TIME,
+        Telemetry::Accumulate(Telemetry::WEBRTC_ICE_FAILURE_TIME,
                               timeDelta.ToMilliseconds());
       }
     }
@@ -3618,7 +3597,6 @@ PeerConnectionImpl::BuildStatsQuery_m(
 
   query->iceStartTime = mIceStartTime;
   query->failed = isFailed(mIceConnectionState);
-  query->isHello = mIsLoop;
 
   // Populate SDP on main
   if (query->internalStats) {

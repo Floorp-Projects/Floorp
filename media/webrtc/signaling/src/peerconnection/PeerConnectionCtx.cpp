@@ -208,7 +208,6 @@ EverySecondTelemetryCallback_s(nsAutoPtr<RTCStatsQueries> aQueryList) {
   for (auto q = aQueryList->begin(); q != aQueryList->end(); ++q) {
     PeerConnectionImpl::ExecuteStatsQuery_s(*q);
     auto& r = *(*q)->report;
-    bool isHello = (*q)->isHello;
     if (r.mInboundRTPStreamStats.WasPassed()) {
       // First, get reports from a second ago, if any, for calculations below
       const Sequence<RTCInboundRTPStreamStats> *lastInboundStats = nullptr;
@@ -251,14 +250,8 @@ EverySecondTelemetryCallback_s(nsAutoPtr<RTCStatsQueries> aQueryList) {
         }
         if (s.mMozRtt.WasPassed()) {
           MOZ_ASSERT(s.mIsRemote);
-          ID id;
-          if (isAudio) {
-            id = isHello ? LOOP_AUDIO_QUALITY_OUTBOUND_RTT :
-                           WEBRTC_AUDIO_QUALITY_OUTBOUND_RTT;
-          } else {
-            id = isHello ? LOOP_VIDEO_QUALITY_OUTBOUND_RTT :
-                           WEBRTC_VIDEO_QUALITY_OUTBOUND_RTT;
-          }
+          ID id = isAudio ? WEBRTC_AUDIO_QUALITY_OUTBOUND_RTT :
+                            WEBRTC_VIDEO_QUALITY_OUTBOUND_RTT;
           Accumulate(id, s.mMozRtt.Value());
         }
         if (lastInboundStats && s.mBytesReceived.WasPassed()) {
@@ -274,21 +267,11 @@ EverySecondTelemetryCallback_s(nsAutoPtr<RTCStatsQueries> aQueryList) {
               if (delta_ms > 500 && delta_ms < 60000) {
                 ID id;
                 if (s.mIsRemote) {
-                  if (isAudio) {
-                    id = isHello ? LOOP_AUDIO_QUALITY_OUTBOUND_BANDWIDTH_KBITS :
-                                   WEBRTC_AUDIO_QUALITY_OUTBOUND_BANDWIDTH_KBITS;
-                  } else {
-                    id = isHello ? LOOP_VIDEO_QUALITY_OUTBOUND_BANDWIDTH_KBITS :
-                                   WEBRTC_VIDEO_QUALITY_OUTBOUND_BANDWIDTH_KBITS;
-                  }
+                  id = isAudio ? WEBRTC_AUDIO_QUALITY_OUTBOUND_BANDWIDTH_KBITS :
+                                 WEBRTC_VIDEO_QUALITY_OUTBOUND_BANDWIDTH_KBITS;
                 } else {
-                  if (isAudio) {
-                    id = isHello ? LOOP_AUDIO_QUALITY_INBOUND_BANDWIDTH_KBITS :
-                                   WEBRTC_AUDIO_QUALITY_INBOUND_BANDWIDTH_KBITS;
-                  } else {
-                    id = isHello ? LOOP_VIDEO_QUALITY_INBOUND_BANDWIDTH_KBITS :
-                                   WEBRTC_VIDEO_QUALITY_INBOUND_BANDWIDTH_KBITS;
-                  }
+                  id = isAudio ? WEBRTC_AUDIO_QUALITY_INBOUND_BANDWIDTH_KBITS :
+                                 WEBRTC_VIDEO_QUALITY_INBOUND_BANDWIDTH_KBITS;
                 }
                 Accumulate(id, ((s.mBytesReceived.Value() -
                                  lasts.mBytesReceived.Value()) * 8) / delta_ms);
