@@ -507,9 +507,10 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoo
   // this by using the old transform to take the offset anchor back into
   // subtree root space, and then the inverse of the new transform
   // to bring it back to layer space.
+  ParentLayerPoint offsetAnchorInSubtreeRootSpace =
+      aPreviousTransformForRoot.TransformPoint(offsetAnchor);
   LayerPoint transformedAnchor = aCurrentTransformForRoot.Inverse()
-      .TransformPoint(aPreviousTransformForRoot.TransformPoint(
-          offsetAnchor));
+      .TransformPoint(offsetAnchorInSubtreeRootSpace);
 
   // We want to translate the layer by the difference between
   // |transformedAnchor| and |anchor|.
@@ -518,7 +519,9 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoo
   // A fixed layer will "consume" (be unadjusted by) the entire translation
   // calculated above. A sticky layer may consume all, part, or none of it,
   // depending on where we are relative to its sticky scroll range.
-  bool translationConsumed = true;
+  // The remainder of the translation (the unconsumed portion) needs to
+  // be propagated to descendant fixed/sticky layers.
+  LayerPoint unconsumedTranslation;
 
   if (layer->GetIsStickyPosition()) {
     // For sticky positioned layers, the difference between the two rectangles
@@ -534,9 +537,7 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoo
                     IntervalOverlap(translation.y, stickyInner.y, stickyInner.YMost());
     translation.x = IntervalOverlap(translation.x, stickyOuter.x, stickyOuter.XMost()) -
                     IntervalOverlap(translation.x, stickyInner.x, stickyInner.XMost());
-    if (translation != originalTranslation) {
-      translationConsumed = false;
-    }
+    unconsumedTranslation = translation - originalTranslation;
   }
 
   // Finally, apply the translation to the layer transform. Note that in cases
@@ -547,8 +548,29 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoo
   TranslateShadowLayer(layer, ViewAs<ParentLayerPixel>(translation,
       PixelCastJustification::NoTransformOnLayer), true, aClipPartsCache);
 
-  // TODO: If we didn't consume the entire translation, continue the traversal
-  //       to allow a descendant fixed or sticky layer to consume the rest.
+  // Propragate the unconsumed portion of the translation to descendant
+  // fixed/sticky layers.
+  if (unconsumedTranslation != LayerPoint()) {
+    // Take the computations we performed to derive |translation| from
+    // |aCurrentTransformForRoot|, and perform them in reverse, keeping other
+    // quantities fixed, to come up with a new transform |newTransform| that
+    // would produce |unconsumedTranslation|.
+    LayerPoint newTransformedAnchor = unconsumedTranslation + anchor;
+    ParentLayerPoint newTransformedAnchorInSubtreeRootSpace =
+        aPreviousTransformForRoot.TransformPoint(newTransformedAnchor);
+    LayerToParentLayerMatrix4x4 newTransform = aPreviousTransformForRoot;
+    newTransform.PostTranslate(newTransformedAnchorInSubtreeRootSpace -
+                               offsetAnchorInSubtreeRootSpace);
+
+    // Propagate this new transform to our descendants as the new value of
+    // |aCurrentTransformForRoot|. This allows them to consume the unconsumed
+    // translation.
+    for (Layer* child = layer->GetFirstChild(); child; child = child->GetNextSibling()) {
+      AlignFixedAndStickyLayers(aTransformedSubtreeRoot, child, aTransformScrollId,
+          aPreviousTransformForRoot, newTransform, aFixedLayerMargins, aClipPartsCache);
+    }
+  }
+
   return;
 }
 
