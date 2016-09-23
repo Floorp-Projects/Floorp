@@ -274,12 +274,10 @@ void RecordSlowSQLStatement(const nsACString &statement,
  * @param iceCandidateBitmask - the bitmask representing local and remote ICE
  *                              candidate types present for the connection
  * @param success - did the peer connection connected
- * @param loop - was this a Firefox Hello AKA Loop call
  */
 void
 RecordWebrtcIceCandidates(const uint32_t iceCandidateBitmask,
-                          const bool success,
-                          const bool loop);
+                          const bool success);
 /**
  * Initialize I/O Reporting
  * Initially this only records I/O for files in the binary directory.

@@ -424,8 +424,6 @@ RTCPeerConnection.prototype = {
     this._observer = new this._win.PeerConnectionObserver(this.__DOM_IMPL__);
 
     var location = "" + this._win.location;
-    this._isLoop = location.startsWith("about:loop") ||
-                   location.startsWith("https://hello.firefox.com/");
 
     // Warn just once per PeerConnection about deprecated getStats usage.
     this._warnDeprecatedStatsAccessNullable = { warn: () =>
@@ -1429,8 +1427,7 @@ PeerConnectionObserver.prototype = {
         checking_histogram.add(false);
       }
     } else if (pc.iceConnectionState === 'checking') {
-      var success_histogram = Services.telemetry.getHistogramById(pc._isLoop ?
-        "LOOP_ICE_SUCCESS_RATE" : "WEBRTC_ICE_SUCCESS_RATE");
+      var success_histogram = Services.telemetry.getHistogramById("WEBRTC_ICE_SUCCESS_RATE");
       if (iceConnectionState === 'completed' ||
           iceConnectionState === 'connected') {
         success_histogram.add(true);
