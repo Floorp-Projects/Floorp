@@ -471,7 +471,7 @@ StatsCellCallback(JSRuntime* rt, void* data, void* thing, JS::TraceKind traceKin
             module.addSizeOfMisc(rtStats->mallocSizeOf_,
                                  &closure->wasmSeenMetadata,
                                  &closure->wasmSeenBytes,
-                                 &info.objectsNonHeapCodeAsmJS,
+                                 &info.objectsNonHeapCodeWasm,
                                  &info.objectsMallocHeapMisc);
         } else if (obj->is<WasmInstanceObject>()) {
             wasm::Instance& instance = obj->as<WasmInstanceObject>().instance();
@@ -481,7 +481,7 @@ StatsCellCallback(JSRuntime* rt, void* data, void* thing, JS::TraceKind traceKin
                                    &closure->wasmSeenMetadata,
                                    &closure->wasmSeenBytes,
                                    &closure->wasmSeenTables,
-                                   &info.objectsNonHeapCodeAsmJS,
+                                   &info.objectsNonHeapCodeWasm,
                                    &info.objectsMallocHeapMisc);
         }
 

@@ -210,10 +210,16 @@ asm_function jsimd_idct_islow_neon
     TMP7            .req x13
     TMP8            .req x14
 
+    /* OUTPUT_COL is a JDIMENSION (unsigned int) argument, so the ABI doesn't
+       guarantee that the upper (unused) 32 bits of x3 are valid.  This
+       instruction ensures that those bits are set to zero. */
+    uxtw x3, w3
+
     sub             sp, sp, #64
     adr             x15, Ljsimd_idct_islow_neon_consts
-    st1             {v8.8b, v9.8b, v10.8b, v11.8b}, [sp], #32
-    st1             {v12.8b, v13.8b, v14.8b, v15.8b}, [sp], #32
+    mov             x10, sp
+    st1             {v8.8b, v9.8b, v10.8b, v11.8b}, [x10], #32
+    st1             {v12.8b, v13.8b, v14.8b, v15.8b}, [x10], #32
     ld1             {v0.8h, v1.8h}, [x15]
     ld1             {v2.8h, v3.8h, v4.8h, v5.8h}, [COEF_BLOCK], #64
     ld1             {v18.8h, v19.8h, v20.8h, v21.8h}, [DCT_TABLE], #64
@@ -238,7 +244,6 @@ asm_function jsimd_idct_islow_neon
     shl             v10.8h, v2.8h, #(PASS1_BITS)
     sqxtn           v16.8b, v15.8h
     mov             TMP1, v16.d[0]
-    sub             sp, sp, #64
     mvn             TMP2, TMP1
 
     cbnz            TMP2, 2f
@@ -807,6 +812,11 @@ asm_function jsimd_idct_ifast_neon
     TMP7            .req x13
     TMP8            .req x14
 
+    /* OUTPUT_COL is a JDIMENSION (unsigned int) argument, so the ABI doesn't
+       guarantee that the upper (unused) 32 bits of x3 are valid.  This
+       instruction ensures that those bits are set to zero. */
+    uxtw x3, w3
+
     /* Load and dequantize coefficients into NEON registers
      * with the following allocation:
      *       0 1 2 3 | 4 5 6 7
@@ -1101,19 +1111,18 @@ asm_function jsimd_idct_4x4_neon
     TMP3            .req x2
     TMP4            .req x15
 
+    /* OUTPUT_COL is a JDIMENSION (unsigned int) argument, so the ABI doesn't
+       guarantee that the upper (unused) 32 bits of x3 are valid.  This
+       instruction ensures that those bits are set to zero. */
+    uxtw x3, w3
+
     /* Save all used NEON registers */
-    sub             sp, sp, 272
-    str             x15, [sp], 16
+    sub             sp, sp, 64
+    mov             x9, sp
     /* Load constants (v3.4h is just used for padding) */
     adr             TMP4, Ljsimd_idct_4x4_neon_consts
-    st1             {v0.8b, v1.8b, v2.8b, v3.8b}, [sp], 32
-    st1             {v4.8b, v5.8b, v6.8b, v7.8b}, [sp], 32
-    st1             {v8.8b, v9.8b, v10.8b, v11.8b}, [sp], 32
-    st1             {v12.8b, v13.8b, v14.8b, v15.8b}, [sp], 32
-    st1             {v16.8b, v17.8b, v18.8b, v19.8b}, [sp], 32
-    st1             {v20.8b, v21.8b, v22.8b, v23.8b}, [sp], 32
-    st1             {v24.8b, v25.8b, v26.8b, v27.8b}, [sp], 32
-    st1             {v28.8b, v29.8b, v30.8b, v31.8b}, [sp], 32
+    st1             {v8.8b, v9.8b, v10.8b, v11.8b}, [x9], 32
+    st1             {v12.8b, v13.8b, v14.8b, v15.8b}, [x9], 32
     ld1             {v0.4h, v1.4h, v2.4h, v3.4h}, [TMP4]
 
     /* Load all COEF_BLOCK into NEON registers with the following allocation:
@@ -1222,16 +1231,8 @@ asm_function jsimd_idct_4x4_neon
 #endif
 
     /* vpop            {v8.4h - v15.4h}    ;not available */
-    sub             sp, sp, #272
-    ldr             x15, [sp], 16
-    ld1             {v0.8b, v1.8b, v2.8b, v3.8b}, [sp], 32
-    ld1             {v4.8b, v5.8b, v6.8b, v7.8b}, [sp], 32
     ld1             {v8.8b, v9.8b, v10.8b, v11.8b}, [sp], 32
     ld1             {v12.8b, v13.8b, v14.8b, v15.8b}, [sp], 32
-    ld1             {v16.8b, v17.8b, v18.8b, v19.8b}, [sp], 32
-    ld1             {v20.8b, v21.8b, v22.8b, v23.8b}, [sp], 32
-    ld1             {v24.8b, v25.8b, v26.8b, v27.8b}, [sp], 32
-    ld1             {v28.8b, v29.8b, v30.8b, v31.8b}, [sp], 32
     blr             x30
 
     .unreq          DCT_TABLE
@@ -1299,19 +1300,19 @@ asm_function jsimd_idct_2x2_neon
     TMP1            .req x0
     TMP2            .req x15
 
+    /* OUTPUT_COL is a JDIMENSION (unsigned int) argument, so the ABI doesn't
+       guarantee that the upper (unused) 32 bits of x3 are valid.  This
+       instruction ensures that those bits are set to zero. */
+    uxtw x3, w3
+
     /* vpush           {v8.4h - v15.4h}            ; not available */
-    sub             sp, sp, 208
-    str             x15, [sp], 16
+    sub             sp, sp, 64
+    mov             x9, sp
 
     /* Load constants */
     adr             TMP2, Ljsimd_idct_2x2_neon_consts
-    st1             {v4.8b, v5.8b, v6.8b, v7.8b}, [sp], 32
-    st1             {v8.8b, v9.8b, v10.8b, v11.8b}, [sp], 32
-    st1             {v12.8b, v13.8b, v14.8b, v15.8b}, [sp], 32
-    st1             {v16.8b, v17.8b, v18.8b, v19.8b}, [sp], 32
-    st1             {v21.8b, v22.8b}, [sp], 16
-    st1             {v24.8b, v25.8b, v26.8b, v27.8b}, [sp], 32
-    st1             {v30.8b, v31.8b}, [sp], 16
+    st1             {v8.8b, v9.8b, v10.8b, v11.8b}, [x9], 32
+    st1             {v12.8b, v13.8b, v14.8b, v15.8b}, [x9], 32
     ld1             {v14.4h}, [TMP2]
 
     /* Load all COEF_BLOCK into NEON registers with the following allocation:
@@ -1411,15 +1412,8 @@ asm_function jsimd_idct_2x2_neon
     st1             {v26.b}[1], [TMP2], 1
     st1             {v27.b}[5], [TMP2], 1
 
-    sub             sp, sp, #208
-    ldr             x15, [sp], 16
-    ld1             {v4.8b, v5.8b, v6.8b, v7.8b}, [sp], 32
     ld1             {v8.8b, v9.8b, v10.8b, v11.8b}, [sp], 32
     ld1             {v12.8b, v13.8b, v14.8b, v15.8b}, [sp], 32
-    ld1             {v16.8b, v17.8b, v18.8b, v19.8b}, [sp], 32
-    ld1             {v21.8b, v22.8b}, [sp], 16
-    ld1             {v24.8b, v25.8b, v26.8b, v27.8b}, [sp], 32
-    ld1             {v30.8b, v31.8b}, [sp], 16
     blr             x30
 
     .unreq          DCT_TABLE
@@ -1688,24 +1682,24 @@ asm_function jsimd_ycc_\colorid\()_convert_neon
 .else
 asm_function jsimd_ycc_\colorid\()_convert_neon_slowst3
 .endif
-    OUTPUT_WIDTH    .req x0
+    OUTPUT_WIDTH    .req w0
     INPUT_BUF       .req x1
-    INPUT_ROW       .req x2
+    INPUT_ROW       .req w2
     OUTPUT_BUF      .req x3
-    NUM_ROWS        .req x4
+    NUM_ROWS        .req w4
 
     INPUT_BUF0      .req x5
     INPUT_BUF1      .req x6
     INPUT_BUF2      .req x1
 
     RGB             .req x7
-    Y               .req x8
-    U               .req x9
-    V               .req x10
-    N               .req x15
+    Y               .req x9
+    U               .req x10
+    V               .req x11
+    N               .req w15
 
-    sub             sp, sp, 336
-    str             x15, [sp], 16
+    sub             sp, sp, 64
+    mov             x9, sp
 
     /* Load constants to d1, d2, d3 (v0.4h is just used for padding) */
     .if \fast_st3 == 1
@@ -1715,23 +1709,11 @@ asm_function jsimd_ycc_\colorid\()_convert_neon_slowst3
     .endif
 
     /* Save NEON registers */
-    st1             {v0.8b, v1.8b, v2.8b, v3.8b}, [sp], 32
-    st1             {v4.8b, v5.8b, v6.8b, v7.8b}, [sp], 32
-    st1             {v8.8b, v9.8b, v10.8b, v11.8b}, [sp], 32
-    st1             {v12.8b, v13.8b, v14.8b, v15.8b}, [sp], 32
-    st1             {v16.8b, v17.8b, v18.8b, v19.8b}, [sp], 32
-    st1             {v20.8b, v21.8b, v22.8b, v23.8b}, [sp], 32
-    st1             {v24.8b, v25.8b, v26.8b, v27.8b}, [sp], 32
-    st1             {v28.8b, v29.8b, v30.8b, v31.8b}, [sp], 32
+    st1             {v8.8b, v9.8b, v10.8b, v11.8b}, [x9], 32
+    st1             {v12.8b, v13.8b, v14.8b, v15.8b}, [x9], 32
     ld1             {v0.4h, v1.4h}, [x15], 16
     ld1             {v2.8h}, [x15]
 
-    /* Save ARM registers and handle input arguments */
-    /* push            {x4, x5, x6, x7, x8, x9, x10, x30} */
-    stp             x4, x5, [sp], 16
-    stp             x6, x7, [sp], 16
-    stp             x8, x9, [sp], 16
-    stp             x10, x30, [sp], 16
     ldr             INPUT_BUF0, [INPUT_BUF]
     ldr             INPUT_BUF1, [INPUT_BUF, #8]
     ldr             INPUT_BUF2, [INPUT_BUF, #16]
@@ -1745,11 +1727,10 @@ asm_function jsimd_ycc_\colorid\()_convert_neon_slowst3
     cmp             NUM_ROWS, #1
     b.lt            9f
 0:
-    lsl             x16, INPUT_ROW, #3
-    ldr             Y, [INPUT_BUF0, x16]
-    ldr             U, [INPUT_BUF1, x16]
+    ldr             Y, [INPUT_BUF0, INPUT_ROW, uxtw #3]
+    ldr             U, [INPUT_BUF1, INPUT_ROW, uxtw #3]
     mov             N, OUTPUT_WIDTH
-    ldr             V, [INPUT_BUF2, x16]
+    ldr             V, [INPUT_BUF2, INPUT_ROW, uxtw #3]
     add             INPUT_ROW, INPUT_ROW, #1
     ldr             RGB, [OUTPUT_BUF], #8
 
@@ -1799,21 +1780,8 @@ asm_function jsimd_ycc_\colorid\()_convert_neon_slowst3
     b.gt            0b
 9:
     /* Restore all registers and return */
-    sub             sp, sp, #336
-    ldr             x15, [sp], 16
-    ld1             {v0.8b, v1.8b, v2.8b, v3.8b}, [sp], 32
-    ld1             {v4.8b, v5.8b, v6.8b, v7.8b}, [sp], 32
     ld1             {v8.8b, v9.8b, v10.8b, v11.8b}, [sp], 32
     ld1             {v12.8b, v13.8b, v14.8b, v15.8b}, [sp], 32
-    ld1             {v16.8b, v17.8b, v18.8b, v19.8b}, [sp], 32
-    ld1             {v20.8b, v21.8b, v22.8b, v23.8b}, [sp], 32
-    ld1             {v24.8b, v25.8b, v26.8b, v27.8b}, [sp], 32
-    ld1             {v28.8b, v29.8b, v30.8b, v31.8b}, [sp], 32
-    /* pop             {r4, r5, r6, r7, r8, r9, r10, pc} */
-    ldp             x4, x5, [sp], 16
-    ldp             x6, x7, [sp], 16
-    ldp             x8, x9, [sp], 16
-    ldp             x10, x30, [sp], 16
     br              x30
     .unreq          OUTPUT_WIDTH
     .unreq          INPUT_ROW
@@ -2054,8 +2022,8 @@ asm_function jsimd_\colorid\()_ycc_convert_neon_slowld3
     OUTPUT_WIDTH    .req w0
     INPUT_BUF       .req x1
     OUTPUT_BUF      .req x2
-    OUTPUT_ROW      .req x3
-    NUM_ROWS        .req x4
+    OUTPUT_ROW      .req w3
+    NUM_ROWS        .req w4
 
     OUTPUT_BUF0     .req x5
     OUTPUT_BUF1     .req x6
@@ -2082,17 +2050,18 @@ asm_function jsimd_\colorid\()_ycc_convert_neon_slowld3
 
     /* Save NEON registers */
     sub             sp, sp, #64
-    st1             {v8.8b, v9.8b, v10.8b, v11.8b}, [sp], 32
-    st1             {v12.8b, v13.8b, v14.8b, v15.8b}, [sp], 32
+    mov             x9, sp
+    st1             {v8.8b, v9.8b, v10.8b, v11.8b}, [x9], 32
+    st1             {v12.8b, v13.8b, v14.8b, v15.8b}, [x9], 32
 
     /* Outer loop over scanlines */
     cmp             NUM_ROWS, #1
     b.lt            9f
 0:
-    ldr             Y, [OUTPUT_BUF0, OUTPUT_ROW, lsl #3]
-    ldr             U, [OUTPUT_BUF1, OUTPUT_ROW, lsl #3]
+    ldr             Y, [OUTPUT_BUF0, OUTPUT_ROW, uxtw #3]
+    ldr             U, [OUTPUT_BUF1, OUTPUT_ROW, uxtw #3]
     mov             N, OUTPUT_WIDTH
-    ldr             V, [OUTPUT_BUF2, OUTPUT_ROW, lsl #3]
+    ldr             V, [OUTPUT_BUF2, OUTPUT_ROW, uxtw #3]
     add             OUTPUT_ROW, OUTPUT_ROW, #1
     ldr             RGB, [INPUT_BUF], #8
 
@@ -2136,7 +2105,6 @@ asm_function jsimd_\colorid\()_ycc_convert_neon_slowld3
     b.gt            0b
 9:
     /* Restore all registers and return */
-    sub             sp, sp, #64
     ld1             {v8.8b, v9.8b, v10.8b, v11.8b}, [sp], 32
     ld1             {v12.8b, v13.8b, v14.8b, v15.8b}, [sp], 32
     br              x30
@@ -2198,6 +2166,11 @@ asm_function jsimd_convsamp_neon
     TMP7            .req x15
     TMP8            .req x4
     TMPDUP          .req w3
+
+    /* START_COL is a JDIMENSION (unsigned int) argument, so the ABI doesn't
+       guarantee that the upper (unused) 32 bits of x1 are valid.  This
+       instruction ensures that those bits are set to zero. */
+    uxtw x1, w1
 
     mov             TMPDUP, #128
     ldp             TMP1, TMP2, [SAMPLE_DATA], 16
@@ -2335,8 +2308,9 @@ asm_function jsimd_fdct_islow_neon
 
     /* Save NEON registers */
     sub             sp, sp, #64
-    st1             {v8.8b, v9.8b, v10.8b, v11.8b}, [sp], 32
-    st1             {v12.8b, v13.8b, v14.8b, v15.8b}, [sp], 32
+    mov             x10, sp
+    st1             {v8.8b, v9.8b, v10.8b, v11.8b}, [x10], 32
+    st1             {v12.8b, v13.8b, v14.8b, v15.8b}, [x10], 32
 
     /* Load all DATA into NEON registers with the following allocation:
      *       0 1 2 3 | 4 5 6 7
@@ -2566,7 +2540,6 @@ asm_function jsimd_fdct_islow_neon
     st1             {v20.8h, v21.8h, v22.8h, v23.8h}, [DATA]
 
     /* Restore NEON registers */
-    sub             sp, sp, #64
     ld1             {v8.8b, v9.8b, v10.8b, v11.8b}, [sp], 32
     ld1             {v12.8b, v13.8b, v14.8b, v15.8b}, [sp], 32
 
@@ -3080,7 +3053,7 @@ asm_function jsimd_huff_encode_one_block_neon_slowtbl
     sub             sp, sp, 272
     sub             BUFFER, BUFFER, #0x1    /* BUFFER=buffer-- */
     /* Save ARM registers */
-    stp             x19, x20, [sp], 16
+    stp             x19, x20, [sp]
 .if \fast_tbl == 1
     adr             x15, Ljsimd_huff_encode_one_block_neon_consts
 .else
@@ -3294,7 +3267,7 @@ asm_function jsimd_huff_encode_one_block_neon_slowtbl
     and             v18.16b, v18.16b, v23.16b
       add             x3, x4, #0x400           /* r1 = dctbl->ehufsi */
     and             v20.16b, v20.16b, v23.16b
-      add             x15, sp, #0x80           /* x15 = t2 */
+      add             x15, sp, #0x90           /* x15 = t2 */
     and             v22.16b, v22.16b, v23.16b
       ldr             w10, [x4, x12, lsl #2]
     addp            v16.16b, v16.16b, v18.16b
@@ -3317,7 +3290,7 @@ asm_function jsimd_huff_encode_one_block_neon_slowtbl
     rbit            x9, x9             /* x9 = index0 */
     ldrb            w14, [x4, #0xf0]   /* x14 = actbl->ehufsi[0xf0] */
     cmp             w12, #(64-8)
-    mov             x11, sp
+    add             x11, sp, #16
     b.lt            4f
     cbz             x9, 6f
     st1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x11], #64
@@ -3421,7 +3394,7 @@ asm_function jsimd_huff_encode_one_block_neon_slowtbl
     put_bits        x3, x11
     cbnz            x9, 1b
 6:
-    add             x13, sp, #0xfe
+    add             x13, sp, #0x10e
     cmp             x15, x13
     b.hs            1f
     ldr             w12, [x5]
@@ -3429,7 +3402,6 @@ asm_function jsimd_huff_encode_one_block_neon_slowtbl
     checkbuf47
     put_bits        x12, x14
 1:
-    sub             sp, sp, 16
     str             PUT_BUFFER, [x0, #0x10]
     str             PUT_BITSw, [x0, #0x18]
     ldp             x19, x20, [sp], 16

@@ -973,7 +973,7 @@ TextureClient::InitIPDLActor(CompositableForwarder* aForwarder)
 }
 
 bool
-TextureClient::InitIPDLActor(TextureForwarder* aForwarder, LayersBackend aBackend)
+TextureClient::InitIPDLActor(TextureForwarder* aForwarder)
 {
   MOZ_ASSERT(aForwarder && aForwarder->GetMessageLoop() == mAllocator->AsClientAllocator()->GetMessageLoop());
   if (mActor && !mActor->mDestroyed) {
@@ -1000,7 +1000,7 @@ TextureClient::InitIPDLActor(TextureForwarder* aForwarder, LayersBackend aBacken
   }
 
   mActor = static_cast<TextureChild*>(aForwarder->CreateTexture(desc,
-    aBackend,
+    aForwarder->GetCompositorBackendType(),
     GetFlags(),
     mSerial));
   MOZ_ASSERT(mActor);

@@ -23,6 +23,7 @@ function create_fileList(aPath) {
 
   function onOpened(message) {
     SpecialPowers.wrap(fileList).mozSetDirectory(message.dir);
+    fileList.setAttribute('data-name', message.name);
 
     fileList.getFilesAndDirectories().then(function(array) {
       is(array.length, 1, "We want just 1 directory.");
@@ -84,6 +85,7 @@ function test_inputGetFiles() {
 
   function onOpened(message) {
     SpecialPowers.wrap(fileList).mozSetDirectory(message.dir);
+    fileList.setAttribute('data-name', message.name);
 
     fileList.getFilesAndDirectories()
     .then(function(result) {
@@ -96,7 +98,7 @@ function test_inputGetFiles() {
       is(result.length, 1, "getFiles should return 1 element");
       ok(result[0] instanceof File, "getFile should return 1 file");
       is(result[0].name, 'foo.txt', "getFiles()[0].name should be 'foo.txt'");
-      is(result[0].webkitRelativePath, '/foo.txt', "getFiles()[0].webkitRelativePath should be '/foo.txt'");
+      is(result[0].webkitRelativePath, fileList.dataset.name + '/foo.txt', "getFiles()[0].webkitRelativePath should be '/foo.txt'");
 
       return fileList.getFiles(true);
     })
@@ -106,10 +108,10 @@ function test_inputGetFiles() {
       function checkFile(file) {
         ok(file instanceof File, "getFile[x] should return a file");
         if (file.name == 'foo.txt') {
-          is(file.webkitRelativePath, '/foo.txt', "getFiles()[x].webkitRelativePath should be '/foo.txt'");
+          is(file.webkitRelativePath, fileList.dataset.name + '/foo.txt', "getFiles()[x].webkitRelativePath should be '/foo.txt'");
         } else {
           is(file.name, 'bar.txt', "getFiles()[x].name should be 'bar.txt'");
-          is(file.webkitRelativePath, '/subdir/bar.txt', "getFiles()[x].webkitRelativePath should be '/subdir/bar.txt'");
+          is(file.webkitRelativePath, fileList.dataset.name + '/subdir/bar.txt', "getFiles()[x].webkitRelativePath should be '/subdir/bar.txt'");
         }
       }
 

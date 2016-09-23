@@ -29,7 +29,6 @@ namespace layers {
 class CompositableClient;
 class AsyncTransactionTracker;
 class ImageContainer;
-struct TextureFactoryIdentifier;
 class SurfaceDescriptor;
 class SurfaceDescriptorTiles;
 class ThebesBufferData;
@@ -80,7 +79,6 @@ class CompositableForwarder : public TextureForwarder
 public:
 
   CompositableForwarder()
-    : mSerial(++sSerialCounter)
   {
     mActiveResourceTracker = MakeUnique<ActiveResourceTracker>(1000, "CompositableForwarder");
   }
@@ -162,21 +160,10 @@ public:
                                          TextureClient* aClientOnBlack,
                                          TextureClient* aClientOnWhite) = 0;
 
-  void IdentifyTextureHost(const TextureFactoryIdentifier& aIdentifier);
-
   virtual void UpdateFwdTransactionId() = 0;
   virtual uint64_t GetFwdTransactionId() = 0;
 
-  int32_t GetSerial() { return mSerial; }
-
-  SyncObject* GetSyncObject() { return mSyncObject; }
-
   virtual CompositableForwarder* AsCompositableForwarder() override { return this; }
-
-  virtual int32_t GetMaxTextureSize() const override
-  {
-    return mTextureFactoryIdentifier.mMaxTextureSize;
-  }
 
   virtual bool InForwarderThread() = 0;
 
@@ -184,44 +171,14 @@ public:
     MOZ_ASSERT(InForwarderThread());
   }
 
-  /**
-   * Returns the type of backend that is used off the main thread.
-   * We only don't allow changing the backend type at runtime so this value can
-   * be queried once and will not change until Gecko is restarted.
-   */
-  LayersBackend GetCompositorBackendType() const
-  {
-    return mTextureFactoryIdentifier.mParentBackend;
-  }
-
-  bool SupportsTextureBlitting() const
-  {
-    return mTextureFactoryIdentifier.mSupportsTextureBlitting;
-  }
-
-  bool SupportsPartialUploads() const
-  {
-    return mTextureFactoryIdentifier.mSupportsPartialUploads;
-  }
-
-  const TextureFactoryIdentifier& GetTextureFactoryIdentifier() const
-  {
-    return mTextureFactoryIdentifier;
-  }
 
   ActiveResourceTracker& GetActiveResourceTracker() { return *mActiveResourceTracker.get(); }
 
 protected:
-  TextureFactoryIdentifier mTextureFactoryIdentifier;
-
   nsTArray<RefPtr<TextureClient> > mTexturesToRemove;
   nsTArray<RefPtr<CompositableClient>> mCompositableClientsToRemove;
-  RefPtr<SyncObject> mSyncObject;
 
   UniquePtr<ActiveResourceTracker> mActiveResourceTracker;
-
-  const int32_t mSerial;
-  static mozilla::Atomic<int32_t> sSerialCounter;
 };
 
 } // namespace layers

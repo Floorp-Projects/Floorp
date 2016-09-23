@@ -168,11 +168,12 @@ struct ClassInfo
     macro(Objects, MallocHeap, objectsMallocHeapSlots) \
     macro(Objects, MallocHeap, objectsMallocHeapElementsNormal) \
     macro(Objects, MallocHeap, objectsMallocHeapElementsAsmJS) \
+    macro(Objects, MallocHeap, objectsMallocHeapMisc) \
     macro(Objects, NonHeap,    objectsNonHeapElementsNormal) \
-    macro(Objects, NonHeap,    objectsNonHeapElementsAsmJS) \
     macro(Objects, NonHeap,    objectsNonHeapElementsShared) \
-    macro(Objects, NonHeap,    objectsNonHeapCodeAsmJS) \
-    macro(Objects, MallocHeap, objectsMallocHeapMisc)
+    macro(Objects, NonHeap,    objectsNonHeapElementsWasm) \
+    macro(Objects, NonHeap,    objectsNonHeapCodeWasm) \
+    macro(Objects, Ignore,     wasmGuardPages)
 
     ClassInfo()
       : FOR_EACH_SIZE(ZERO_SIZE)

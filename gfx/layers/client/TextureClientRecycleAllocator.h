@@ -9,7 +9,7 @@
 #include <map>
 #include <stack>
 #include "mozilla/gfx/Types.h"
-#include "mozilla/layers/CompositableForwarder.h"
+#include "mozilla/layers/TextureForwarder.h"
 #include "mozilla/RefPtr.h"
 #include "TextureClient.h"
 #include "mozilla/Mutex.h"
@@ -48,7 +48,7 @@ public:
     , mAllocationFlags(aAllocationFlags)
   {}
 
-  virtual already_AddRefed<TextureClient> Allocate(CompositableForwarder* aAllocator) = 0;
+  virtual already_AddRefed<TextureClient> Allocate(TextureForwarder* aAllocator) = 0;
   virtual bool IsCompatible(TextureClient* aTextureClient) = 0;
 
   const gfx::SurfaceFormat mFormat;
@@ -66,7 +66,7 @@ public:
 
   bool IsCompatible(TextureClient* aTextureClient) override;
 
-  already_AddRefed<TextureClient> Allocate(CompositableForwarder* aAllocator) override;
+  already_AddRefed<TextureClient> Allocate(TextureForwarder* aAllocator) override;
 
 protected:
   const PlanarYCbCrData& mData;
@@ -88,7 +88,7 @@ protected:
   virtual ~TextureClientRecycleAllocator();
 
 public:
-  explicit TextureClientRecycleAllocator(CompositableForwarder* aAllocator);
+  explicit TextureClientRecycleAllocator(TextureForwarder* aAllocator);
 
   void SetMaxPoolSize(uint32_t aMax);
 
@@ -115,7 +115,7 @@ protected:
            TextureFlags aTextureFlags,
            TextureAllocationFlags aAllocFlags);
 
-  RefPtr<CompositableForwarder> mSurfaceAllocator;
+  RefPtr<TextureForwarder> mSurfaceAllocator;
 
   friend class DefaultTextureClientAllocationHelper;
   void RecycleTextureClient(TextureClient* aClient) override;

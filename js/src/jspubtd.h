@@ -28,9 +28,7 @@
 
 namespace JS {
 
-template <typename T>
-class AutoVectorRooter;
-typedef AutoVectorRooter<jsid> AutoIdVector;
+class AutoIdVector;
 class CallArgs;
 
 template <typename T>

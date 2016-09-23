@@ -166,7 +166,7 @@ struct Zone : public JS::shadow::Zone,
     // Iterate over all cells in the zone. See the definition of ZoneCellIter
     // in jsgcinlines.h for the possible arguments and documentation.
     template <typename T, typename... Args>
-    js::gc::ZoneCellIter<T> cellIter(Args... args) {
+    js::gc::ZoneCellIter<T> cellIter(Args&&... args) {
         return js::gc::ZoneCellIter<T>(const_cast<Zone*>(this), mozilla::Forward<Args>(args)...);
     }
 
@@ -240,6 +240,7 @@ struct Zone : public JS::shadow::Zone,
             return needsIncrementalBarrier();
     }
 
+    GCState gcState() const { return gcState_; }
     bool wasGCStarted() const { return gcState_ != NoGC; }
     bool isGCMarkingBlack() { return gcState_ == Mark; }
     bool isGCMarkingGray() { return gcState_ == MarkGray; }

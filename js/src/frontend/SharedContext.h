@@ -160,10 +160,6 @@ class FunctionContextFlags
     // This class's data is all private and so only visible to these friends.
     friend class FunctionBox;
 
-    // The function or a function that encloses it may define new local names
-    // at runtime through means other than calling eval.
-    bool mightAliasLocals:1;
-
     // This function does something that can extend the set of bindings in its
     // call objects --- it does a direct eval in non-strict code, or includes a
     // function statement (as opposed to a function definition).
@@ -219,8 +215,7 @@ class FunctionContextFlags
 
   public:
     FunctionContextFlags()
-     :  mightAliasLocals(false),
-        hasExtensibleScope(false),
+     :  hasExtensibleScope(false),
         argumentsHasLocalBinding(false),
         definitelyNeedsArgsObj(false),
         needsHomeObject(false),
@@ -546,7 +541,6 @@ class FunctionBox : public ObjectBox, public SharedContext
         generatorKindBits_ = GeneratorKindAsBits(kind);
     }
 
-    bool mightAliasLocals()          const { return funCxFlags.mightAliasLocals; }
     bool hasExtensibleScope()        const { return funCxFlags.hasExtensibleScope; }
     bool hasThisBinding()            const { return funCxFlags.hasThisBinding; }
     bool argumentsHasLocalBinding()  const { return funCxFlags.argumentsHasLocalBinding; }
@@ -555,7 +549,6 @@ class FunctionBox : public ObjectBox, public SharedContext
     bool isDerivedClassConstructor() const { return funCxFlags.isDerivedClassConstructor; }
     bool hasInnerFunctions()         const { return funCxFlags.hasInnerFunctions; }
 
-    void setMightAliasLocals()             { funCxFlags.mightAliasLocals         = true; }
     void setHasExtensibleScope()           { funCxFlags.hasExtensibleScope       = true; }
     void setHasThisBinding()               { funCxFlags.hasThisBinding           = true; }
     void setArgumentsHasLocalBinding()     { funCxFlags.argumentsHasLocalBinding = true; }

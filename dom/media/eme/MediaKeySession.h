@@ -94,6 +94,12 @@ public:
 
   void SetExpiration(double aExpiry);
 
+  mozilla::dom::EventHandlerNonNull* GetOnkeystatuseschange();
+  void SetOnkeystatuseschange(mozilla::dom::EventHandlerNonNull* aCallback);
+
+  mozilla::dom::EventHandlerNonNull* GetOnmessage();
+  void SetOnmessage(mozilla::dom::EventHandlerNonNull* aCallback);
+
   // Process-unique identifier.
   uint32_t Token() const;
 

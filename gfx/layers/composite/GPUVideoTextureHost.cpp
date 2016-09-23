@@ -6,6 +6,7 @@
 #include "GPUVideoTextureHost.h"
 #include "mozilla/dom/VideoDecoderManagerParent.h"
 #include "ImageContainer.h"
+#include "mozilla/layers/VideoBridgeParent.h"
 
 namespace mozilla {
 namespace layers {
@@ -15,7 +16,7 @@ GPUVideoTextureHost::GPUVideoTextureHost(TextureFlags aFlags,
   : TextureHost(aFlags)
 {
   MOZ_COUNT_CTOR(GPUVideoTextureHost);
-  mImage = dom::VideoDecoderManagerParent::LookupImage(aDescriptor);
+  mWrappedTextureHost = VideoBridgeParent::GetSingleton()->LookupTexture(aDescriptor.handle());
 }
 
 GPUVideoTextureHost::~GPUVideoTextureHost()
@@ -26,39 +27,54 @@ GPUVideoTextureHost::~GPUVideoTextureHost()
 bool
 GPUVideoTextureHost::Lock()
 {
-  if (!mImage || !mCompositor) {
+  if (!mWrappedTextureHost) {
     return false;
   }
+  return mWrappedTextureHost->Lock();
+}
 
-  if (!mTextureSource) {
-    mTextureSource = mCompositor->CreateTextureSourceForImage(mImage);
+bool
+GPUVideoTextureHost::BindTextureSource(CompositableTextureSourceRef& aTexture)
+{
+  if (!mWrappedTextureHost) {
+    return false;
   }
+  return mWrappedTextureHost->BindTextureSource(aTexture);
+}
 
-  return !!mTextureSource;
+Compositor*
+GPUVideoTextureHost::GetCompositor()
+{
+  if (!mWrappedTextureHost) {
+    return nullptr;
+  }
+  return mWrappedTextureHost->GetCompositor();
 }
 
 void
 GPUVideoTextureHost::SetCompositor(Compositor* aCompositor)
 {
-  if (mCompositor != aCompositor) {
-    mTextureSource = nullptr;
-    mCompositor = aCompositor;
+  if (mWrappedTextureHost) {
+    mWrappedTextureHost->SetCompositor(aCompositor);
   }
 }
 
 gfx::IntSize
 GPUVideoTextureHost::GetSize() const
 {
-  if (!mImage) {
+  if (!mWrappedTextureHost) {
     return gfx::IntSize();
   }
-  return mImage->GetSize();
+  return mWrappedTextureHost->GetSize();
 }
 
 gfx::SurfaceFormat
 GPUVideoTextureHost::GetFormat() const
 {
-  return mTextureSource ? mTextureSource->GetFormat() : gfx::SurfaceFormat::UNKNOWN;
+  if (!mWrappedTextureHost) {
+    return gfx::SurfaceFormat::UNKNOWN;
+  }
+  return mWrappedTextureHost->GetFormat();
 }
 
 } // namespace layers

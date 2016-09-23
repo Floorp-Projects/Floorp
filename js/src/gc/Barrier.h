@@ -589,7 +589,7 @@ class ReadBarriered : public ReadBarrieredBase<T>
     // Move retains the lifetime status of the source edge, so does not fire
     // the read barrier of the defunct edge.
     ReadBarriered(ReadBarriered&& v)
-      : ReadBarrieredBase<T>(mozilla::Forward<ReadBarriered<T>>(v))
+      : ReadBarrieredBase<T>(mozilla::Move(v))
     {
         this->post(JS::GCPolicy<T>::initial(), v.value);
     }
