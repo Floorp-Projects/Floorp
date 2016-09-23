@@ -24,7 +24,7 @@ const tab4Elem = new Table({initial:4, element:"anyfunc"});
 assertErrorMessage(() => new Memory({initial:2, maximum:1}), RangeError, /bad Memory maximum size/);
 
 const m1 = new Module(wasmTextToBinary('(module (import "foo" "bar") (import "baz" "quux"))'));
-assertErrorMessage(() => new Instance(m1), TypeError, /second argument must be an object/);
+assertErrorMessage(() => new Instance(m1), TypeError, /no import object given/);
 assertErrorMessage(() => new Instance(m1, {foo:null}), TypeError, /import object field is not an Object/);
 assertErrorMessage(() => new Instance(m1, {foo:{bar:{}}}), TypeError, /import object field is not a Function/);
 assertErrorMessage(() => new Instance(m1, {foo:{bar:()=>{}}, baz:null}), TypeError, /import object field is not an Object/);
@@ -32,7 +32,7 @@ assertErrorMessage(() => new Instance(m1, {foo:{bar:()=>{}}, baz:{}}), TypeError
 assertEq(new Instance(m1, {foo:{bar:()=>{}}, baz:{quux:()=>{}}}) instanceof Instance, true);
 
 const m2 = new Module(wasmTextToBinary('(module (import "x" "y" (memory 2 3)))'));
-assertErrorMessage(() => new Instance(m2), TypeError, /second argument must be an object/);
+assertErrorMessage(() => new Instance(m2), TypeError, /no import object given/);
 assertErrorMessage(() => new Instance(m2, {x:null}), TypeError, /import object field is not an Object/);
 assertErrorMessage(() => new Instance(m2, {x:{y:{}}}), TypeError, /import object field is not a Memory/);
 assertErrorMessage(() => new Instance(m2, {x:{y:mem1Page}}), TypeError, /imported Memory with incompatible size/);
@@ -47,7 +47,7 @@ assertEq(new Instance(m2, {x:{y:mem2PageMax3}}) instanceof Instance, true);
 assertErrorMessage(() => new Instance(m2, {x:{y:mem2PageMax4}}), TypeError, /imported Memory with incompatible maximum size/);
 
 const m3 = new Module(wasmTextToBinary('(module (import "foo" "bar" (memory 1 1)) (import "baz" "quux"))'));
-assertErrorMessage(() => new Instance(m3), TypeError, /second argument must be an object/);
+assertErrorMessage(() => new Instance(m3), TypeError, /no import object given/);
 assertErrorMessage(() => new Instance(m3, {foo:null}), TypeError, /import object field is not an Object/);
 assertErrorMessage(() => new Instance(m3, {foo:{bar:{}}}), TypeError, /import object field is not a Memory/);
 assertErrorMessage(() => new Instance(m3, {foo:{bar:mem1Page}, baz:null}), TypeError, /import object field is not an Object/);
@@ -56,7 +56,7 @@ assertErrorMessage(() => new Instance(m3, {foo:{bar:mem1Page}, baz:{quux:()=>{}}
 assertEq(new Instance(m3, {foo:{bar:mem1PageMax1}, baz:{quux:()=>{}}}) instanceof Instance, true);
 
 const m4 = new Module(wasmTextToBinary('(module (import "baz" "quux") (import "foo" "bar" (memory 1 1)))'));
-assertErrorMessage(() => new Instance(m4), TypeError, /second argument must be an object/);
+assertErrorMessage(() => new Instance(m4), TypeError, /no import object given/);
 assertErrorMessage(() => new Instance(m4, {baz:null}), TypeError, /import object field is not an Object/);
 assertErrorMessage(() => new Instance(m4, {baz:{quux:{}}}), TypeError, /import object field is not a Function/);
 assertErrorMessage(() => new Instance(m4, {baz:{quux:()=>{}}, foo:null}), TypeError, /import object field is not an Object/);
@@ -82,10 +82,10 @@ assertErrorMessage(() => new Instance(m7, {a:{b:tab2Elem}}), TypeError, /importe
 assertErrorMessage(() => new Instance(m7, {a:{b:tab3Elem}}), TypeError, /imported Table with incompatible maximum size/);
 assertErrorMessage(() => new Instance(m7, {a:{b:tab4Elem}}), TypeError, /imported Table with incompatible size/);
 
-wasmFailValidateText('(module (memory 2 1))', /maximum length 1 is less than initial length 2/);
-wasmFailValidateText('(module (import "a" "b" (memory 2 1)))', /maximum length 1 is less than initial length 2/);
-wasmFailValidateText('(module (table (resizable 2 1)))', /maximum length 1 is less than initial length 2/);
-wasmFailValidateText('(module (import "a" "b" (table 2 1)))', /maximum length 1 is less than initial length 2/);
+assertErrorMessage(() => new Module(wasmTextToBinary('(module (memory 2 1))')), TypeError, /maximum length 1 is less than initial length 2/);
+assertErrorMessage(() => new Module(wasmTextToBinary('(module (import "a" "b" (memory 2 1)))')), TypeError, /maximum length 1 is less than initial length 2/);
+assertErrorMessage(() => new Module(wasmTextToBinary('(module (table (resizable 2 1)))')), TypeError, /maximum length 1 is less than initial length 2/);
+assertErrorMessage(() => new Module(wasmTextToBinary('(module (import "a" "b" (table 2 1)))')), TypeError, /maximum length 1 is less than initial length 2/);
 
 // Import wasm-wasm type mismatch
 
@@ -323,17 +323,17 @@ assertEq(e2.f(), 52);
 
 // Non-existent export errors
 
-wasmFailValidateText('(module (export "a" 0))', /exported function index out of bounds/);
-wasmFailValidateText('(module (export "a" global 0))', /exported global index out of bounds/);
-wasmFailValidateText('(module (export "a" memory))', /exported memory index out of bounds/);
-wasmFailValidateText('(module (export "a" table))', /exported table index out of bounds/);
+assertErrorMessage(() => new Module(wasmTextToBinary('(module (export "a" 0))')), TypeError, /exported function index out of bounds/);
+assertErrorMessage(() => new Module(wasmTextToBinary('(module (export "a" global 0))')), TypeError, /exported global index out of bounds/);
+assertErrorMessage(() => new Module(wasmTextToBinary('(module (export "a" memory))')), TypeError, /exported memory index out of bounds/);
+assertErrorMessage(() => new Module(wasmTextToBinary('(module (export "a" table))')), TypeError, /exported table index out of bounds/);
 
 // Default memory/table rules
 
-wasmFailValidateText('(module (import "a" "b" (memory 1 1)) (memory 1 1))', /already have default memory/);
-wasmFailValidateText('(module (import "a" "b" (memory 1 1)) (import "x" "y" (memory 2 2)))', /already have default memory/);
-wasmFailValidateText('(module (import "a" "b" (table 1 1)) (table 1 1))', /already have default table/);
-wasmFailValidateText('(module (import "a" "b" (table 1 1)) (import "x" "y" (table 2 2)))', /already have default table/);
+assertErrorMessage(() => new Module(wasmTextToBinary('(module (import "a" "b" (memory 1 1)) (memory 1 1))')), TypeError, /already have default memory/);
+assertErrorMessage(() => new Module(wasmTextToBinary('(module (import "a" "b" (memory 1 1)) (import "x" "y" (memory 2 2)))')), TypeError, /already have default memory/);
+assertErrorMessage(() => new Module(wasmTextToBinary('(module (import "a" "b" (table 1 1)) (table 1 1))')), TypeError, /already have default table/);
+assertErrorMessage(() => new Module(wasmTextToBinary('(module (import "a" "b" (table 1 1)) (import "x" "y" (table 2 2)))')), TypeError, /already have default table/);
 
 // Data segments on imports
 
