@@ -27,17 +27,15 @@ function testConversion(resultType, opcode, paramType, op, expect) {
   setJitCompilerOption('wasm.test-mode', 1);
   for (var bad of ['i32', 'f32', 'f64', 'i64']) {
       if (bad != resultType) {
-          assertErrorMessage(
-              () => wasmEvalText(`(module (func (param ${paramType}) (result ${bad}) (${resultType}.${opcode}/${paramType} (get_local 0))))`),
-              TypeError,
+          wasmFailValidateText(
+              `(module (func (param ${paramType}) (result ${bad}) (${resultType}.${opcode}/${paramType} (get_local 0))))`,
               mismatchError(resultType, bad)
           );
       }
 
       if (bad != paramType) {
-          assertErrorMessage(
-              () => wasmEvalText(`(module (func (param ${bad}) (result ${resultType}) (${resultType}.${opcode}/${paramType} (get_local 0))))`),
-              TypeError,
+          wasmFailValidateText(
+              `(module (func (param ${bad}) (result ${resultType}) (${resultType}.${opcode}/${paramType} (get_local 0))))`,
               mismatchError(bad, paramType)
           );
       }

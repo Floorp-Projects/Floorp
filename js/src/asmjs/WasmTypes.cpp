@@ -77,7 +77,7 @@ __aeabi_uidivmod(int, int);
 static void
 WasmReportOverRecursed()
 {
-    ReportOverRecursed(JSRuntime::innermostWasmActivation()->cx(), JSMSG_WASM_OVERRECURSED);
+    ReportOverRecursed(JSRuntime::innermostWasmActivation()->cx());
 }
 
 static bool
