@@ -57,8 +57,7 @@ const kModalStyles = {
     ["vertical-align", "top !important"]
   ],
   maskNode: [
-    ["background", "#000"],
-    ["opacity", ".35"],
+    ["background", "rgba(0,0,0,.35)"],
     ["pointer-events", "none"],
     ["position", "absolute"],
     ["z-index", 1]
@@ -68,16 +67,7 @@ const kModalStyles = {
     ["top", 0],
     ["left", 0]
   ],
-  maskNodeBrightText: [ ["background", "#fff"] ],
-  maskRect: [
-    ["background", "#fff"],
-    ["border-radius", "3px"],
-    ["margin", "-1px 0 0 -1px !important"],
-    ["padding", "0 1px 2px 1px !important"],
-    ["position", "absolute"],
-    ["white-space", "nowrap"]
-  ],
-  maskRectBrightText: [ ["background", "#000"] ]
+  maskNodeBrightText: [ ["background", "rgba(255,255,255,.35)"] ]
 };
 const kModalOutlineAnim = {
   "keyframes": [
@@ -116,6 +106,9 @@ function mockAnonymousContentNode(domNode) {
     },
     setAnimationForElement(id, keyframes, duration) {
       return (domNode.querySelector("#" + id) || domNode).animate(keyframes, duration);
+    },
+    setCutoutRectsForElement(id, rects) {
+      // no-op for now.
     }
   };
 }
@@ -1006,49 +999,45 @@ FinderHighlighter.prototype = {
   _repaintHighlightAllMask(window, paintContent = true) {
     window = window.top;
     let dict = this.getForWindow(window);
-    let document = window.document;
 
     const kMaskId = kModalIdPrefix + "-findbar-modalHighlight-outlineMask";
-    let maskNode = document.createElementNS(kNSHTML, "div");
+    if (!dict.modalHighlightAllMask) {
+      let document = window.document;
+      let maskNode = document.createElementNS(kNSHTML, "div");
+      maskNode.setAttribute("id", kMaskId);
+      dict.modalHighlightAllMask = kDebug ?
+        mockAnonymousContentNode((document.body || document.documentElement).appendChild(maskNode)) :
+        document.insertAnonymousContent(maskNode);
+    }
 
     // Make sure the dimmed mask node takes the full width and height that's available.
     let {width, height} = dict.lastWindowDimensions = this._getWindowDimensions(window);
-    maskNode.setAttribute("id", kMaskId);
-    maskNode.setAttribute("style", this._getStyleString(kModalStyles.maskNode,
+    let maskStyle = this._getStyleString(kModalStyles.maskNode,
       [ ["width", width + "px"], ["height", height + "px"] ],
       dict.brightText ? kModalStyles.maskNodeBrightText : [],
-      kDebug ? kModalStyles.maskNodeDebug : []));
+      kDebug ? kModalStyles.maskNodeDebug : []);
+    dict.modalHighlightAllMask.setAttributeForElement(kMaskId, "style", maskStyle);
     if (dict.brightText)
-      maskNode.setAttribute("brighttext", "true");
+      dict.modalHighlightAllMask.setAttributeForElement(kMaskId, "brighttext", "true");
 
+    let allRects = [];
     if (paintContent || dict.modalHighlightAllMask) {
       this._updateRangeOutline(dict);
       this._updateDynamicRangesRects(dict);
-      // Create a DOM node for each rectangle representing the ranges we found.
-      let maskContent = [];
-      const rectStyle = this._getStyleString(kModalStyles.maskRect,
-        dict.brightText ? kModalStyles.maskRectBrightText : []);
+
+      let DOMRect = window.DOMRect;
       for (let [range, rects] of dict.modalHighlightRectsMap) {
         if (dict.updateAllRanges)
           rects = this._updateRangeRects(range);
         if (this._checkOverlap(dict.currentFoundRange, range))
           continue;
-        for (let rect of rects) {
-          maskContent.push(`<div xmlns="${kNSHTML}" style="${rectStyle}; top: ${rect.y}px;
-            left: ${rect.x}px; height: ${rect.height}px; width: ${rect.width}px;"></div>`);
-        }
+        for (let rect of rects)
+          allRects.push(new DOMRect(rect.x, rect.y, rect.width, rect.height));
       }
       dict.updateAllRanges = false;
-      maskNode.innerHTML = maskContent.join("");
     }
 
-    // Always remove the current mask and insert it a-fresh, because we're not
-    // free to alter DOM nodes inside the CanvasFrame.
-    this._removeHighlightAllMask(window);
-
-    dict.modalHighlightAllMask = kDebug ?
-      mockAnonymousContentNode((document.body || document.documentElement).appendChild(maskNode)) :
-      document.insertAnonymousContent(maskNode);
+    dict.modalHighlightAllMask.setCutoutRectsForElement(kMaskId, allRects);
   },
 
   /**
