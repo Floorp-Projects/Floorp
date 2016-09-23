@@ -24,11 +24,10 @@ public:
   };
   struct WebrtcIceStatsCategory {
     struct WebrtcIceCandidateStats webrtc;
-    struct WebrtcIceCandidateStats loop;
   };
   typedef nsBaseHashtableET<nsUint32HashKey, WebrtcIceStatsCategory> WebrtcIceCandidateType;
 
-  void RecordIceCandidateMask(const uint32_t iceCandidateBitmask, bool success, bool loop);
+  void RecordIceCandidateMask(const uint32_t iceCandidateBitmask, bool success);
 
   bool GetWebrtcStats(JSContext *cx, JS::MutableHandle<JS::Value> ret);
 
@@ -36,7 +35,7 @@ public:
 
 private:
 
-  bool AddIceInfo(JSContext *cx, JS::Handle<JSObject*> rootObj, bool loop);
+  bool AddIceInfo(JSContext *cx, JS::Handle<JSObject*> rootObj);
 
   mozilla::Telemetry::Common::AutoHashtable<WebrtcIceCandidateType> mWebrtcIceCandidates;
 };
