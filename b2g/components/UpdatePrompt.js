@@ -12,7 +12,6 @@ const Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/WebappsUpdater.jsm");
 Cu.import("resource://gre/modules/AppConstants.jsm");
 
 const VERBOSE = 1;
@@ -139,7 +138,6 @@ UpdateCheckListener.prototype = {
 function UpdatePrompt() {
   this.wrappedJSObject = this;
   this._updateCheckListener = new UpdateCheckListener(this);
-  Services.obs.addObserver(this, "update-check-start", false);
 }
 
 UpdatePrompt.prototype = {
@@ -640,9 +638,6 @@ UpdatePrompt.prototype = {
       case "quit-application":
         Services.idle.removeIdleObserver(this, this.applyIdleTimeout / 1000);
         Services.obs.removeObserver(this, "quit-application");
-        break;
-      case "update-check-start":
-        WebappsUpdater.updateApps();
         break;
     }
   },
