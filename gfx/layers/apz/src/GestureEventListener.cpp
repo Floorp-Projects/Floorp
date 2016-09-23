@@ -105,6 +105,7 @@ nsEventStatus GestureEventListener::HandleInputEvent(const MultiTouchInput& aEve
       for (size_t j = 0; j < mTouches.Length(); j++) {
         if (aEvent.mTouches[i].mIdentifier == mTouches[j].mIdentifier) {
           mTouches[j].mScreenPoint = aEvent.mTouches[i].mScreenPoint;
+          mTouches[j].mLocalScreenPoint = aEvent.mTouches[i].mLocalScreenPoint;
         }
       }
     }
@@ -385,11 +386,11 @@ nsEventStatus GestureEventListener::HandleInputTouchEnd()
   case GESTURE_PINCH:
     if (mTouches.Length() < 2) {
       SetState(GESTURE_NONE);
-      ScreenPoint point(-1, -1);
+      ParentLayerPoint point(-1, -1);
       if (mTouches.Length() == 1) {
         // As user still keeps one finger down the event's focus point should
         // contain meaningful data.
-        point = mTouches[0].mScreenPoint;
+        point = mTouches[0].mLocalScreenPoint;
       }
       PinchGestureInput pinchEvent(PinchGestureInput::PINCHGESTURE_END,
                                    mLastTouchInput.mTime,

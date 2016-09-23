@@ -22,17 +22,13 @@ public:
 
   virtual void SetCompositor(Compositor* aCompositor) override;
 
-  virtual Compositor* GetCompositor() override { return mCompositor; }
+  virtual Compositor* GetCompositor() override;
 
   virtual bool Lock() override;
 
   virtual gfx::SurfaceFormat GetFormat() const override;
 
-  virtual bool BindTextureSource(CompositableTextureSourceRef& aTexture) override
-  {
-    aTexture = mTextureSource;
-    return !!aTexture;
-  }
+  virtual bool BindTextureSource(CompositableTextureSourceRef& aTexture) override;
 
   virtual already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override
   {
@@ -46,9 +42,7 @@ public:
 #endif
 
 protected:
-  RefPtr<Compositor> mCompositor;
-  RefPtr<TextureSource> mTextureSource;
-  RefPtr<Image> mImage;
+  RefPtr<TextureHost> mWrappedTextureHost;
 };
 
 } // namespace layers

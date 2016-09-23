@@ -158,8 +158,7 @@ WebGLContext::InitWebGL2(FailureReason* const out_failReason)
     gl->GetUIntegerv(LOCAL_GL_MAX_UNIFORM_BUFFER_BINDINGS,
                      &mGLMaxUniformBufferBindings);
 
-    mBoundTransformFeedbackBuffers.SetLength(mGLMaxTransformFeedbackSeparateAttribs);
-    mBoundUniformBuffers.SetLength(mGLMaxUniformBufferBindings);
+    mIndexedUniformBufferBindings.resize(mGLMaxUniformBufferBindings);
 
     mDefaultTransformFeedback = new WebGLTransformFeedback(this, 0);
     mBoundTransformFeedback = mDefaultTransformFeedback;

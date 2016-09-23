@@ -287,13 +287,19 @@ EvalSharedContext::EvalSharedContext(ExclusiveContext* cx, JSObject* enclosingEn
     // this binding with respect to enclosingScope is incorrect if the
     // Debugger.Frame is a function frame. Recompute the this binding if we
     // are such an eval.
-    if (enclosingEnv && enclosingEnv->is<DebugEnvironmentProxy>()) {
-        JSObject* env = &enclosingEnv->as<DebugEnvironmentProxy>().environment();
+    if (enclosingEnv && enclosingScope->hasOnChain(ScopeKind::NonSyntactic)) {
+        // For Debugger.Frame.eval with bindings, the environment chain may
+        // have more than the DebugEnvironmentProxy.
+        JSObject* env = enclosingEnv;
         while (env) {
+            if (env->is<DebugEnvironmentProxy>())
+                env = &env->as<DebugEnvironmentProxy>().environment();
+
             if (env->is<CallObject>()) {
                 computeThisBinding(env->as<CallObject>().callee().nonLazyScript()->bodyScope());
                 break;
             }
+
             env = env->enclosingEnvironment();
         }
     }
@@ -4156,6 +4162,19 @@ Parser<ParseHandler>::initializerInNameDeclaration(Node decl, Node binding,
             *forHeadKind = PNK_FORHEAD;
         } else {
             MOZ_ASSERT(*forHeadKind == PNK_FORHEAD);
+
+            // In the very rare case of Parser::assignExpr consuming an
+            // ArrowFunction with block body, when full-parsing with the arrow
+            // function being a skipped lazy inner function, we don't have
+            // lookahead for the next token.  Do a one-off peek here to be
+            // consistent with what Parser::matchForInOrOf does in the other
+            // arm of this |if|.
+            //
+            // If you think this all sounds pretty code-smelly, you're almost
+            // certainly correct.
+            TokenKind ignored;
+            if (!tokenStream.peekToken(&ignored))
+                return false;
         }
 
         // Per Parser::forHeadStart, the semicolon in |for (;| is ultimately
@@ -7679,8 +7698,6 @@ Parser<ParseHandler>::generatorComprehensionLambda(unsigned begin)
      * kid and could be removed from pc->sc().
      */
     genFunbox->anyCxFlags = outerpc->sc()->anyCxFlags;
-    if (outerpc->isFunctionBox())
-        genFunbox->funCxFlags = outerpc->functionBox()->funCxFlags;
 
     if (!declareDotGeneratorName())
         return null();

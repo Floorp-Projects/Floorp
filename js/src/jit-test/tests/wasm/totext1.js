@@ -172,3 +172,19 @@ runTest(`
 
 // default memory export from binaryen
 runTest(`(module (func (nop)) (memory 0 65535))`);
+
+// nan
+runTest(`
+(module
+ (func
+  (f64.const nan)
+  (f32.const nan)
+  (f64.const -nan)
+  (f32.const -nan)
+  (f64.const nan:0x35792468abcd)
+  (f64.const -nan:0x135792468abcd)
+  (f32.const nan:0x1337)
+  (f32.const -nan:0xc4f3)
+ )
+)
+`);

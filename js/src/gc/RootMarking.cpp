@@ -154,24 +154,6 @@ AutoGCRooter::trace(JSTracer* trc)
         frontend::MarkParser(trc, this);
         return;
 
-      case VALVECTOR: {
-        AutoValueVector::VectorImpl& vector = static_cast<AutoValueVector*>(this)->vector;
-        TraceRootRange(trc, vector.length(), vector.begin(), "JS::AutoValueVector.vector");
-        return;
-      }
-
-      case IDVECTOR: {
-        AutoIdVector::VectorImpl& vector = static_cast<AutoIdVector*>(this)->vector;
-        TraceRootRange(trc, vector.length(), vector.begin(), "JS::AutoIdVector.vector");
-        return;
-      }
-
-      case OBJVECTOR: {
-        AutoObjectVector::VectorImpl& vector = static_cast<AutoObjectVector*>(this)->vector;
-        TraceRootRange(trc, vector.length(), vector.begin(), "JS::AutoObjectVector.vector");
-        return;
-      }
-
       case VALARRAY: {
         /*
          * We don't know the template size parameter, but we can safely treat it

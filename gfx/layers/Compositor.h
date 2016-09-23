@@ -203,13 +203,6 @@ public:
   virtual already_AddRefed<DataTextureSource>
   CreateDataTextureSourceAroundYCbCr(TextureHost* aTexture) { return nullptr; }
 
-  /**
-   * Used for OOP video decoding. This should go away when we switch to
-   * using PTexture (bug 1302918). DO NOT USE THIS FOR ANYTHING ELSE.
-   */
-  virtual already_AddRefed<TextureSource>
-  CreateTextureSourceForImage(Image* aImage);
-
   virtual bool Initialize(nsCString* const out_failureReason) = 0;
   virtual void Destroy();
   bool IsDestroyed() const { return mIsDestroyed; }

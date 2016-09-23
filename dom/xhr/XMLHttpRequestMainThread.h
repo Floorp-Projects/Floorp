@@ -389,23 +389,6 @@ public:
   Send(JSContext* aCx, nsIInputStream* aStream, ErrorResult& aRv) override
   {
     NS_ASSERTION(aStream, "Null should go to string version");
-    nsCOMPtr<nsIXPConnectWrappedJS> wjs = do_QueryInterface(aStream);
-    if (wjs) {
-      JSObject* data = wjs->GetJSObject();
-      if (!data) {
-        aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
-        return;
-      }
-      JS::Rooted<JS::Value> dataAsValue(aCx, JS::ObjectValue(*data));
-      nsAutoString dataAsString;
-      if (ConvertJSValueToString(aCx, dataAsValue, eNull,
-                                 eNull, dataAsString)) {
-        Send(aCx, dataAsString, aRv);
-      } else {
-        aRv.Throw(NS_ERROR_FAILURE);
-      }
-      return;
-    }
     RequestBody<nsIInputStream> body(aStream);
     aRv = SendInternal(&body);
   }

@@ -32,7 +32,6 @@ using namespace js::wasm;
 using mozilla::BinarySearch;
 using mozilla::BitwiseCast;
 using mozilla::IsNaN;
-using mozilla::IsSame;
 using mozilla::Swap;
 
 class SigIdSet
@@ -504,72 +503,6 @@ Instance::memoryLength() const
     return memory_->buffer().byteLength();
 }
 
-template<typename T>
-static JSObject*
-CreateCustomNaNObject(JSContext* cx, T* addr)
-{
-    MOZ_ASSERT(IsNaN(*addr));
-
-    RootedObject obj(cx, JS_NewPlainObject(cx));
-    if (!obj)
-        return nullptr;
-
-    int32_t* i32 = (int32_t*)addr;
-    RootedValue intVal(cx, Int32Value(i32[0]));
-    if (!JS_DefineProperty(cx, obj, "nan_low", intVal, JSPROP_ENUMERATE))
-        return nullptr;
-
-    if (IsSame<double, T>::value) {
-        intVal = Int32Value(i32[1]);
-        if (!JS_DefineProperty(cx, obj, "nan_high", intVal, JSPROP_ENUMERATE))
-            return nullptr;
-    }
-
-    return obj;
-}
-
-static bool
-ReadCustomFloat32NaNObject(JSContext* cx, HandleValue v, float* ret)
-{
-    RootedObject obj(cx, &v.toObject());
-    RootedValue val(cx);
-
-    int32_t i32;
-    if (!JS_GetProperty(cx, obj, "nan_low", &val))
-        return false;
-    if (!ToInt32(cx, val, &i32))
-        return false;
-
-    BitwiseCast(i32, ret);
-    return true;
-}
-
-static bool
-ReadCustomDoubleNaNObject(JSContext* cx, HandleValue v, double* ret)
-{
-    RootedObject obj(cx, &v.toObject());
-    RootedValue val(cx);
-
-    uint64_t u64;
-
-    int32_t i32;
-    if (!JS_GetProperty(cx, obj, "nan_high", &val))
-        return false;
-    if (!ToInt32(cx, val, &i32))
-        return false;
-    u64 = uint32_t(i32);
-    u64 <<= 32;
-
-    if (!JS_GetProperty(cx, obj, "nan_low", &val))
-        return false;
-    if (!ToInt32(cx, val, &i32))
-        return false;
-    u64 |= uint32_t(i32);
-
-    BitwiseCast(u64, ret);
-    return true;
-}
-
 WasmInstanceObject*
 Instance::objectUnbarriered() const
 {
@@ -623,7 +556,7 @@ Instance::callExport(JSContext* cx, uint32_t funcDefIndex, CallArgs args)
             break;
           case ValType::F32:
             if (JitOptions.wasmTestMode && v.isObject()) {
-                if (!ReadCustomFloat32NaNObject(cx, v, (float*)&exportArgs[i]))
+                if (!ReadCustomFloat32NaNObject(cx, v, (uint32_t*)&exportArgs[i]))
                     return false;
                 break;
             }
@@ -632,7 +565,7 @@ Instance::callExport(JSContext* cx, uint32_t funcDefIndex, CallArgs args)
             break;
           case ValType::F64:
             if (JitOptions.wasmTestMode && v.isObject()) {
-                if (!ReadCustomDoubleNaNObject(cx, v, (double*)&exportArgs[i]))
+                if (!ReadCustomDoubleNaNObject(cx, v, (uint64_t*)&exportArgs[i]))
                     return false;
                 break;
             }

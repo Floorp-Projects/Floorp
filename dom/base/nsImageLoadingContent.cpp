@@ -596,21 +596,21 @@ nsImageLoadingContent::GetCurrentURI(nsIURI** aURI)
   return result.StealNSResult();
 }
 
-already_AddRefed<nsIStreamListener>
+NS_IMETHODIMP
 nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
-                                            ErrorResult& aError)
+                                            nsIStreamListener** aListener)
 {
   imgLoader* loader =
     nsContentUtils::GetImgLoaderForChannel(aChannel, GetOurOwnerDoc());
   if (!loader) {
-    aError.Throw(NS_ERROR_NULL_POINTER);
-    return nullptr;
+    return NS_ERROR_NULL_POINTER;
   }
 
   nsCOMPtr<nsIDocument> doc = GetOurOwnerDoc();
   if (!doc) {
     // Don't bother
-    return nullptr;
+    *aListener = nullptr;
+    return NS_OK;
   }
 
   // XXX what should we do with content policies here, if anything?
@@ -621,38 +621,24 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
   AutoStateChanger changer(this, true);
 
   // Do the load.
-  nsCOMPtr<nsIStreamListener> listener;
   RefPtr<imgRequestProxy>& req = PrepareNextRequest(eImageLoadType_Normal);
   nsresult rv = loader->
-    LoadImageWithChannel(aChannel, this, doc,
-                         getter_AddRefs(listener),
-                         getter_AddRefs(req));
+    LoadImageWithChannel(aChannel, this, doc, aListener, getter_AddRefs(req));
   if (NS_SUCCEEDED(rv)) {
     TrackImage(req);
     ResetAnimationIfNeeded();
-  } else {
-    MOZ_ASSERT(!req, "Shouldn't have non-null request here");
-    // If we don't have a current URI, we might as well store this URI so people
-    // know what we tried (and failed) to load.
-    if (!mCurrentRequest)
-      aChannel->GetURI(getter_AddRefs(mCurrentURI));
-
-    FireEvent(NS_LITERAL_STRING("error"));
-    FireEvent(NS_LITERAL_STRING("loadend"));
-    aError.Throw(rv);
+    return NS_OK;
   }
-  return listener.forget();
-}
 
-NS_IMETHODIMP
-nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
-                                            nsIStreamListener** aListener)
-{
-  NS_ENSURE_ARG_POINTER(aListener);
+  MOZ_ASSERT(!req, "Shouldn't have non-null request here");
+  // If we don't have a current URI, we might as well store this URI so people
+  // know what we tried (and failed) to load.
+  if (!mCurrentRequest)
+    aChannel->GetURI(getter_AddRefs(mCurrentURI));
 
-  ErrorResult result;
-  *aListener = LoadImageWithChannel(aChannel, result).take();
-  return result.StealNSResult();
+  FireEvent(NS_LITERAL_STRING("error"));
+  FireEvent(NS_LITERAL_STRING("loadend"));
+  return rv;
 }
 
 void

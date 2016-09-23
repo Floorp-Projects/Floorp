@@ -1182,21 +1182,6 @@ nsScriptSecurityManager::CreateNullPrincipal(JS::Handle<JS::Value> aOriginAttrib
 }
 
 NS_IMETHODIMP
-nsScriptSecurityManager::CreateExpandedPrincipal(nsIPrincipal** aPrincipalArray, uint32_t aLength,
-                                                 nsIPrincipal** aResult)
-{
-  nsTArray<nsCOMPtr<nsIPrincipal>> principals;
-  principals.SetCapacity(aLength);
-  for (uint32_t i = 0; i < aLength; ++i) {
-    principals.AppendElement(aPrincipalArray[i]);
-  }
-
-  nsCOMPtr<nsIPrincipal> p = new nsExpandedPrincipal(principals);
-  p.forget(aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsScriptSecurityManager::GetAppCodebasePrincipal(nsIURI* aURI,
                                                  uint32_t aAppId,
                                                  bool aInIsolatedMozBrowser,

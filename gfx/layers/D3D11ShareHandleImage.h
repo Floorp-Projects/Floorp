@@ -19,7 +19,7 @@ namespace layers {
 class D3D11RecycleAllocator : public TextureClientRecycleAllocator
 {
 public:
-  explicit D3D11RecycleAllocator(CompositableForwarder* aAllocator,
+  explicit D3D11RecycleAllocator(TextureForwarder* aAllocator,
                                  ID3D11Device* aDevice)
     : TextureClientRecycleAllocator(aAllocator)
     , mDevice(aDevice)
@@ -54,7 +54,7 @@ public:
 
   gfx::IntSize GetSize() override;
   virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
-  virtual TextureClient* GetTextureClient(CompositableClient* aClient) override;
+  virtual TextureClient* GetTextureClient(TextureForwarder* aForwarder) override;
   virtual gfx::IntRect GetPictureRect() override { return mPictureRect; }
 
   ID3D11Texture2D* GetTexture() const;

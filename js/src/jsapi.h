@@ -218,9 +218,31 @@ class MOZ_RAII AutoVectorRooter : public AutoVectorRooterBase<T>
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-typedef AutoVectorRooter<Value> AutoValueVector;
-typedef AutoVectorRooter<jsid> AutoIdVector;
-typedef AutoVectorRooter<JSObject*> AutoObjectVector;
+class AutoValueVector : public Rooted<GCVector<Value, 8>> {
+    using Vec = GCVector<Value, 8>;
+    using Base = Rooted<Vec>;
+  public:
+    explicit AutoValueVector(JSContext* cx) : Base(cx, Vec(cx)) {}
+    explicit AutoValueVector(js::ContextFriendFields* cx) : Base(cx, Vec(cx)) {}
+};
+
+class AutoIdVector : public Rooted<GCVector<jsid, 8>> {
+    using Vec = GCVector<jsid, 8>;
+    using Base = Rooted<Vec>;
+  public:
+    explicit AutoIdVector(JSContext* cx) : Base(cx, Vec(cx)) {}
+    explicit AutoIdVector(js::ContextFriendFields* cx) : Base(cx, Vec(cx)) {}
+
+    bool appendAll(const AutoIdVector& other) { return this->Base::appendAll(other.get()); }
+};
+
+class AutoObjectVector : public Rooted<GCVector<JSObject*, 8>> {
+    using Vec = GCVector<JSObject*, 8>;
+    using Base = Rooted<Vec>;
+  public:
+    explicit AutoObjectVector(JSContext* cx) : Base(cx, Vec(cx)) {}
+    explicit AutoObjectVector(js::ContextFriendFields* cx) : Base(cx, Vec(cx)) {}
+};
 
 using ValueVector = JS::GCVector<JS::Value>;
 using IdVector = JS::GCVector<jsid>;

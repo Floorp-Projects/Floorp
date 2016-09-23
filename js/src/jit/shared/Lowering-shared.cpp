@@ -81,10 +81,10 @@ LIRGeneratorShared::visitConstant(MConstant* ins)
 
     switch (ins->type()) {
       case MIRType::Double:
-        define(new(alloc()) LDouble(ins->toDouble()), ins);
+        define(new(alloc()) LDouble(ins->toRawF64()), ins);
         break;
       case MIRType::Float32:
-        define(new(alloc()) LFloat32(ins->toFloat32()), ins);
+        define(new(alloc()) LFloat32(ins->toRawF32()), ins);
         break;
       case MIRType::Boolean:
         define(new(alloc()) LInteger(ins->toBoolean()), ins);

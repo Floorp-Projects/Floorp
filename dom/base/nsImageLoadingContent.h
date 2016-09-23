@@ -77,13 +77,6 @@ public:
     return ForceReload(aNotify, 1);
   }
 
-  /**
-   * Used to initialize content with a previously opened channel. Assumes
-   * eImageLoadType_Normal
-   */
-  already_AddRefed<nsIStreamListener>
-    LoadImageWithChannel(nsIChannel* aChannel, mozilla::ErrorResult& aError);
-
 protected:
   enum ImageLoadType {
     // Most normal image loads
