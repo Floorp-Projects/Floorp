@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+
+<script>
+function do_test() {
+    var canvas = document.getElementById("test");
+    var ctx = canvas.getContext("2d");
+
+    var g = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    g.addColorStop(0, "red");
+    g.addColorStop(1, "green");
+
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = "white";
+    ctx.font = "bold 24px sans-serif";
+
+    ctx.fillText('globalAlpha = 1.0', 20, 40);
+
+    // for reference, use a fill color with alpha instead of global alpha
+    ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+    ctx.fillText('globalAlpha = 0.5', 20, 80);
+
+    ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
+    ctx.fillText('globalAlpha = 0.2', 20, 120);
+};
+</script>
+
+</head>
+
+<body onload="do_test()">
+
+<canvas id="test"></canvas>
+
+</body>
+</html>
