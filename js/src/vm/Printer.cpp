@@ -6,6 +6,8 @@
 
 #include "vm/Printer.h"
 
+#include "mozilla/PodOperations.h"
+
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -15,6 +17,8 @@
 #include "jsutil.h"
 
 #include "ds/LifoAlloc.h"
+
+using mozilla::PodCopy;
 
 namespace js {
 
@@ -238,7 +242,7 @@ Sprinter::putString(JSString* s)
 
     JS::AutoCheckCannotGC nogc;
     if (linear->hasLatin1Chars())
-        mozilla::PodCopy(reinterpret_cast<Latin1Char*>(buffer), linear->latin1Chars(nogc), length);
+        PodCopy(reinterpret_cast<Latin1Char*>(buffer), linear->latin1Chars(nogc), length);
     else
         DeflateStringToBuffer(nullptr, linear->twoByteChars(nogc), length, buffer, &size);
 
@@ -442,19 +446,17 @@ Fprinter::put(const char* s, size_t len)
 {
     MOZ_ASSERT(file_);
     int i = fwrite(s, len, 1, file_);
-    if (i == -1 || i != int(len))
+    if (size_t(i) != len) {
         reportOutOfMemory();
+        return -1;
+    }
     return i;
 }
 
 int
 Fprinter::put(const char* s)
 {
-    MOZ_ASSERT(file_);
-    int i = fputs(s, file_);
-    if (i == -1)
-        reportOutOfMemory();
-    return i;
+    return put(s, strlen(s));
 }
 
 int
@@ -516,53 +518,68 @@ LSprinter::clear()
 int
 LSprinter::put(const char* s, size_t len)
 {
-    size_t origLen = len;
+    // Compute how much data will fit in the current chunk.
+    size_t existingSpaceWrite = 0;
+    size_t overflow = len;
     if (unused_ > 0 && tail_) {
-        size_t minLen = unused_ < len ? unused_ : len;
-        js_memcpy(tail_->end() - unused_, s, minLen);
-        unused_ -= minLen;
-        len -= minLen;
-        s += minLen;
+        existingSpaceWrite = std::min(unused_, len);
+        overflow = len - existingSpaceWrite;
     }
 
-    if (len == 0)
-        return origLen;
-
-    size_t allocLength = AlignBytes(sizeof(Chunk) + len, js::detail::LIFO_ALLOC_ALIGN);
+    // If necessary, allocate a new chunk for overflow data.
+    size_t allocLength = 0;
     Chunk* last = nullptr;
-    {
+    if (overflow > 0) {
+        allocLength = AlignBytes(sizeof(Chunk) + overflow, js::detail::LIFO_ALLOC_ALIGN);
+
         LifoAlloc::AutoFallibleScope fallibleAllocator(alloc_);
         last = reinterpret_cast<Chunk*>(alloc_->alloc(allocLength));
-    }
-    if (!last) {
-        reportOutOfMemory();
-        return origLen - len;
-    }
-
-    if (tail_ && reinterpret_cast<char*>(last) == tail_->end()) {
-        // tail_ and last are next to each others in memory, knowing that the
-        // TempAlloctator has no meta data and is just a bump allocator, we
-        // append the new allocated space to the tail_.
-        unused_ = allocLength;
-        tail_->length += allocLength;
-    } else {
-        // Remove the size of the header from the allocated length.
-        allocLength -= sizeof(Chunk);
-        last->next = nullptr;
-        last->length = allocLength;
-        unused_ = allocLength;
-        if (!head_)
-            head_ = last;
-        else
-            tail_->next = last;
-
-        tail_ = last;
+        if (!last) {
+            reportOutOfMemory();
+            return -1;
+        }
     }
 
-    MOZ_ASSERT(tail_->length >= unused_);
-    js_memcpy(tail_->end() - unused_, s, len);
-    unused_ -= len;
-    return origLen;
+    // All fallible operations complete: now fill up existing space, then
+    // overflow space in any new chunk.
+    MOZ_ASSERT(existingSpaceWrite + overflow == len);
+
+    if (existingSpaceWrite > 0) {
+        PodCopy(tail_->end() - unused_, s, existingSpaceWrite);
+        unused_ -= existingSpaceWrite;
+        s += existingSpaceWrite;
+    }
+
+    if (overflow > 0) {
+        if (tail_ && reinterpret_cast<char*>(last) == tail_->end()) {
+            // tail_ and last are consecutive in memory.  LifoAlloc has no
+            // metadata and is just a bump allocator, so we can cheat by
+            // appending the newly-allocated space to tail_.
+            unused_ = allocLength;
+            tail_->length += allocLength;
+        } else {
+            // Remove the size of the header from the allocated length.
+            size_t availableSpace = allocLength - sizeof(Chunk);
+            last->next = nullptr;
+            last->length = availableSpace;
+
+            unused_ = availableSpace;
+            if (!head_)
+                head_ = last;
+            else
+                tail_->next = last;
+
+            tail_ = last;
+        }
+
+        PodCopy(tail_->end() - unused_, s, overflow);
+
+        MOZ_ASSERT(unused_ >= overflow);
+        unused_ -= overflow;
+    }
+
+    MOZ_ASSERT(len <= INT_MAX);
+    return int(len);
 }
 
 int
