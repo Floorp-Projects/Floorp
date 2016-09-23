@@ -7,7 +7,6 @@
  * https://html.spec.whatwg.org/#texttrackcue
  */
 
-[Pref="media.webvtt.enabled"]
 interface TextTrackCue : EventTarget {
   readonly attribute TextTrack? track;
 
