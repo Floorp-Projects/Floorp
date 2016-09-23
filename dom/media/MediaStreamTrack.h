@@ -231,6 +231,27 @@ protected:
 };
 
 /**
+ * Base class that consumers of a MediaStreamTrack can use to get notifications
+ * about state changes in the track.
+ */
+class MediaStreamTrackConsumer : public nsISupports
+{
+public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(MediaStreamTrackConsumer)
+
+  /**
+   * Called when the track's readyState transitions to "ended".
+   * Unlike the "ended" event exposed to script this is called for any reason,
+   * including MediaStreamTrack::Stop().
+   */
+  virtual void NotifyEnded(MediaStreamTrack* aTrack) {};
+
+protected:
+  virtual ~MediaStreamTrackConsumer() {}
+};
+
+/**
  * Class representing a track in a DOMMediaStream.
  */
 class MediaStreamTrack : public DOMEventTargetHelper,
@@ -321,6 +342,12 @@ public:
   void NotifyPrincipalHandleChanged(const PrincipalHandle& aPrincipalHandle);
 
   /**
+   * Called when this track's readyState transitions to "ended".
+   * Notifies all MediaStreamTrackConsumers that this track ended.
+   */
+  void NotifyEnded();
+
+  /**
    * Get this track's CORS mode.
    */
   CORSMode GetCORSMode() const { return GetSource().GetCORSMode(); }
@@ -362,6 +389,18 @@ public:
    * Returns true if it was successfully removed.
    */
   bool RemovePrincipalChangeObserver(PrincipalChangeObserver<MediaStreamTrack>* aObserver);
+
+  /**
+   * Add a MediaStreamTrackConsumer to this track.
+   *
+   * Adding the same consumer multiple times is prohibited.
+   */
+  void AddConsumer(MediaStreamTrackConsumer* aConsumer);
+
+  /**
+   * Remove an added MediaStreamTrackConsumer from this track.
+   */
+  void RemoveConsumer(MediaStreamTrackConsumer* aConsumer);
 
   /**
    * Adds a MediaStreamTrackListener to the MediaStreamGraph representation of
@@ -428,6 +467,8 @@ protected:
                                                            TrackID aTrackID) = 0;
 
   nsTArray<PrincipalChangeObserver<MediaStreamTrack>*> mPrincipalChangeObservers;
+
+  nsTArray<RefPtr<MediaStreamTrackConsumer>> mConsumers;
 
   RefPtr<DOMMediaStream> mOwningStream;
   TrackID mTrackID;

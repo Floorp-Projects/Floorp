@@ -53,6 +53,14 @@ MediaStreamTrackSource::ApplyConstraints(
   return p.forget();
 }
 
+NS_IMPL_CYCLE_COLLECTING_ADDREF(MediaStreamTrackConsumer)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(MediaStreamTrackConsumer)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaStreamTrackConsumer)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_0(MediaStreamTrackConsumer)
+
 /**
  * PrincipalHandleListener monitors changes in PrincipalHandle of the media flowing
  * through the MediaStreamGraph.
@@ -171,6 +179,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(MediaStreamTrack)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MediaStreamTrack,
                                                 DOMEventTargetHelper)
   tmp->Destroy();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mConsumers)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwningStream)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSource)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOriginalTrack)
@@ -180,6 +189,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(MediaStreamTrack,
                                                   DOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConsumers)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwningStream)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSource)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOriginalTrack)
@@ -245,6 +255,8 @@ MediaStreamTrack::Stop()
   Unused << p;
 
   mReadyState = MediaStreamTrackState::Ended;
+
+  NotifyEnded();
 }
 
 void
@@ -357,6 +369,18 @@ MediaStreamTrack::NotifyPrincipalHandleChanged(const PrincipalHandle& aNewPrinci
   }
 }
 
+void
+MediaStreamTrack::NotifyEnded()
+{
+  MOZ_ASSERT(mReadyState == MediaStreamTrackState::Ended);
+
+  for (int32_t i = mConsumers.Length() - 1; i >= 0; --i) {
+    // Loop backwards by index in case the consumer removes itself in the
+    // callback.
+    mConsumers[i]->NotifyEnded(this);
+  }
+}
+
 bool
 MediaStreamTrack::AddPrincipalChangeObserver(
   PrincipalChangeObserver<MediaStreamTrack>* aObserver)
@@ -369,6 +393,19 @@ MediaStreamTrack::RemovePrincipalChangeObserver(
   PrincipalChangeObserver<MediaStreamTrack>* aObserver)
 {
   return mPrincipalChangeObservers.RemoveElement(aObserver);
+}
+
+void
+MediaStreamTrack::AddConsumer(MediaStreamTrackConsumer* aConsumer)
+{
+  MOZ_ASSERT(!mConsumers.Contains(aConsumer));
+  mConsumers.AppendElement(aConsumer);
+}
+
+void
+MediaStreamTrack::RemoveConsumer(MediaStreamTrackConsumer* aConsumer)
+{
+  mConsumers.RemoveElement(aConsumer);
 }
 
 already_AddRefed<MediaStreamTrack>
@@ -422,6 +459,8 @@ MediaStreamTrack::OverrideEnded()
   mSource->UnregisterSink(this);
 
   mReadyState = MediaStreamTrackState::Ended;
+
+  NotifyEnded();
 
   DispatchTrustedEvent(NS_LITERAL_STRING("ended"));
 }
