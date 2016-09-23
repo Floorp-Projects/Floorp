@@ -2185,6 +2185,7 @@ struct TextRunDrawParams {
     double                   devPerApp;
     float                    textStrokeWidth;
     nscolor                  textStrokeColor;
+    const mozilla::gfx::DrawOptions *drawOpts;
     DrawMode                 drawMode;
     bool                     isVerticalRun;
     bool                     isRTL;
