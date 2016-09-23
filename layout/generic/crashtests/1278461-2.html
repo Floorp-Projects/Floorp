@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html class="reftest-wait"><head>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252"></head><body>
+<style>
+html{-moz-columns:50px auto}
+body{display:grid}
+div{height:200px}
+</style>
+<script>
+window.onload=function(){
+var b = document.body, v;
+b.appendChild(document.createElementNS('http://www.w3.org/1999/xhtml', 'div'));
+b.appendChild(document.createElementNS('http://www.w3.org/1999/xhtml', 'div'));
+b.appendChild(v = document.createElementNS('http://www.w3.org/1999/xhtml', 'div'));
+setTimeout(function(){
+  v.style.overflow = "-moz-scrollbars-none";
+  document.documentElement.className = '';
+  },100);
+};
+</script>
+
+<div></div><div></div><div style="overflow: hidden;"></div></body></html>

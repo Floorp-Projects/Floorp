@@ -3,13 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-  <style>
-    .icon-default {
-      fill: -moz-fieldtext;
-      fill-opacity: .5;
-    }
-  </style>
-
+#include ../icon-colors.inc.svg
   <defs>
     <mask id="mask-globe">
       <circle fill="#fff" cx="12" cy="12" r="11"/>
@@ -17,5 +11,5 @@
     </mask>
   </defs>
 
-  <rect width="24" height="24" mask="url(#mask-globe)" class="icon-default"/>
+  <rect width="24" height="24" mask="url(#mask-globe)" class="fieldtext"/>
 </svg>

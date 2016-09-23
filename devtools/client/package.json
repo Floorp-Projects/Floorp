@@ -6,6 +6,9 @@
   "scripts": {
     "build": "webpack"
   },
+  "babel":  {
+    "presets": [ "es2015" ]
+  },
   "author": "",
   "license": "",
   "devDependencies": {

@@ -188,6 +188,8 @@ EXPORTS.mozilla.layers += [
     'ipc/SharedPlanarYCbCrImage.h',
     'ipc/SharedRGBImage.h',
     'ipc/TextureForwarder.h',
+    'ipc/VideoBridgeChild.h',
+    'ipc/VideoBridgeParent.h',
     'LayerMetricsWrapper.h',
     'LayersTypes.h',
     'opengl/CompositingRenderTargetOGL.h',
@@ -385,6 +387,8 @@ UNIFIED_SOURCES += [
     'ipc/SharedBufferManagerParent.cpp',
     'ipc/SharedPlanarYCbCrImage.cpp',
     'ipc/SharedRGBImage.cpp',
+    'ipc/VideoBridgeChild.cpp',
+    'ipc/VideoBridgeParent.cpp',
     'LayerScope.cpp',
     'LayersLogging.cpp',
     'LayerSorter.cpp',
@@ -442,6 +446,7 @@ IPDL_SOURCES = [
     'ipc/PLayerTransaction.ipdl',
     'ipc/PSharedBufferManager.ipdl',
     'ipc/PTexture.ipdl',
+    'ipc/PVideoBridge.ipdl',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

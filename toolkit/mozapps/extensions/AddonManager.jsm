@@ -3211,6 +3211,8 @@ this.AddonManager = {
     ["ERROR_SIGNEDSTATE_REQUIRED", -5],
     // The downloaded add-on had a different type than expected.
     ["ERROR_UNEXPECTED_ADDON_TYPE", -6],
+    // The addon did not have the expected ID
+    ["ERROR_INCORRECT_ID", -7],
   ]),
 
   // These must be kept in sync with AddonUpdateChecker.

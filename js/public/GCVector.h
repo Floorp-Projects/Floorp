@@ -98,6 +98,11 @@ class GCVector
         return vector.infallibleAppend(aBegin, aLength);
     }
 
+    template<typename U, size_t O, class BP>
+    bool appendAll(const mozilla::Vector<U, O, BP>& aU) { return vector.appendAll(aU); }
+    template<typename U, size_t O, class BP>
+    bool appendAll(const GCVector<U, O, BP>& aU) { return vector.append(aU.begin(), aU.length()); }
+
     bool appendN(const T& val, size_t count) { return vector.appendN(val, count); }
 
     template<typename U> bool append(const U* aBegin, const U* aEnd) {
@@ -191,6 +196,8 @@ class MutableGCVectorOperations
     }
     template<typename U, size_t O, class BP>
     bool appendAll(const mozilla::Vector<U, O, BP>& aU) { return vec().appendAll(aU); }
+    template<typename U, size_t O, class BP>
+    bool appendAll(const JS::GCVector<U, O, BP>& aU) { return vec().appendAll(aU); }
     bool appendN(const T& aT, size_t aN) { return vec().appendN(aT, aN); }
     template<typename U> bool append(const U* aBegin, const U* aEnd) {
         return vec().append(aBegin, aEnd);

@@ -48,7 +48,7 @@ const uint8_t kTlsAlertUnsupportedExtension = 110;
 const uint8_t kTlsAlertNoApplicationProtocol = 120;
 
 const uint16_t kTlsSigSchemeRsaPkcs1Sha1 = 0x0201;
-const uint16_t kTlsSigSchemeRsaPssSha256 = 0x0700;
+const uint16_t kTlsSigSchemeRsaPssSha256 = 0x0804;
 
 const uint8_t kTlsFakeChangeCipherSpec[] = {
     kTlsChangeCipherSpecType,  // Type

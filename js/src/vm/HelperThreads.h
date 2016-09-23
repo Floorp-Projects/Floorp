@@ -25,6 +25,10 @@
 #include "threading/ConditionVariable.h"
 #include "threading/Mutex.h"
 
+namespace JS {
+struct Zone;
+} // namespace JS
+
 namespace js {
 
 class AutoLockHelperThreadState;
@@ -409,13 +413,55 @@ StartPromiseTask(JSContext* cx, UniquePtr<PromiseTask> task);
 bool
 StartOffThreadIonCompile(JSContext* cx, jit::IonBuilder* builder);
 
+struct AllCompilations {};
+struct ZonesInState { JSRuntime* runtime; JS::Zone::GCState state; };
+
+using CompilationSelector = mozilla::Variant<JSScript*,
+                                             JSCompartment*,
+                                             ZonesInState,
+                                             JSRuntime*,
+                                             AllCompilations>;
+
 /*
- * Cancel a scheduled or in progress Ion compilation for script. If script is
- * nullptr, all compilations for the compartment are cancelled.
+ * Cancel scheduled or in progress Ion compilations.
  */
 void
-CancelOffThreadIonCompile(JSCompartment* compartment, JSScript* script,
-                          bool discardLazyLinkList = true);
+CancelOffThreadIonCompile(CompilationSelector selector, bool discardLazyLinkList);
+
+inline void
+CancelOffThreadIonCompile(JSScript* script)
+{
+    CancelOffThreadIonCompile(CompilationSelector(script), true);
+}
+
+inline void
+CancelOffThreadIonCompile(JSCompartment* comp)
+{
+    CancelOffThreadIonCompile(CompilationSelector(comp), true);
+}
+
+inline void
+CancelOffThreadIonCompile(JSRuntime* runtime, JS::Zone::GCState state)
+{
+    CancelOffThreadIonCompile(CompilationSelector(ZonesInState{runtime, state}), true);
+}
+
+inline void
+CancelOffThreadIonCompile(JSRuntime* runtime)
+{
+    CancelOffThreadIonCompile(CompilationSelector(runtime), true);
+}
+
+inline void
+CancelOffThreadIonCompile()
+{
+    CancelOffThreadIonCompile(CompilationSelector(AllCompilations()), false);
+}
+
+#ifdef DEBUG
+bool
+HasOffThreadIonCompile(JSCompartment* comp);
+#endif
 
 /* Cancel all scheduled, in progress or finished parses for runtime. */
 void
@@ -522,7 +568,7 @@ struct ParseTask
     bool finish(JSContext* cx);
 
     bool runtimeMatches(JSRuntime* rt) {
-        return exclusiveContextGlobal->runtimeFromAnyThread() == rt;
+        return cx->runtimeMatches(rt);
     }
 
     virtual ~ParseTask();

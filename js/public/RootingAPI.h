@@ -646,7 +646,9 @@ class alignas(8) DispatchWrapper
 
     // Trace the contained storage (of unknown type) using the trace function
     // we set aside when we did know the type.
-    static void TraceWrapped(JSTracer* trc, T* thingp, const char* name) {
+    MOZ_UBSAN_BLACKLIST_FUNCTION static void TraceWrapped(JSTracer* trc, T* thingp,
+                                                          const char* name)
+    {
         auto wrapper = reinterpret_cast<DispatchWrapper*>(
                            uintptr_t(thingp) - offsetof(DispatchWrapper, storage));
         wrapper->tracer(trc, &wrapper->storage, name);

@@ -1591,6 +1591,9 @@ public:
         mDrawTarget) {
       RefPtr<SourceSurface> surface = mDrawTarget->Snapshot();
       RefPtr<SourceSurfaceImage> image = new SourceSurfaceImage(mSize, surface);
+      // Disallow BIGIMAGE (splitting into multiple textures) for mask
+      // layer images
+      image->SetTextureFlags(TextureFlags::DISALLOW_BIGIMAGE);
       return image.forget();
     }
 
@@ -2117,7 +2120,6 @@ ContainerState::CreateOrRecycleMaskImageLayerFor(const MaskLayerKey& aKey)
     if (!result)
       return nullptr;
     result->SetUserData(&gMaskLayerUserData, new MaskLayerUserData());
-    result->SetDisallowBigImage(true);
   }
 
   return result.forget();

@@ -3689,25 +3689,23 @@ Simulator::decodeTypeVFP(SimInstruction* instr)
             } else if ((instr->opc2Value() == 0x0) && (instr->opc3Value() == 0x3)) {
                 // vabs
                 if (instr->szValue() == 0x1) {
-                    double dm_value;
-                    get_double_from_d_register(vm, &dm_value);
-
-                    uint64_t u64 = mozilla::BitwiseCast<uint64_t>(dm_value);
-                    u64 &= 0x7fffffffffffffffu;
-                    double dd_value;
-                    mozilla::BitwiseCast(u64, &dd_value);
-
+                    union {
+                        double f64;
+                        uint64_t u64;
+                    } u;
+                    get_double_from_d_register(vm, &u.f64);
+                    u.u64 &= 0x7fffffffffffffffu;
+                    double dd_value = u.f64;
                     canonicalizeNaN(&dd_value);
                     set_d_register_from_double(vd, dd_value);
                 } else {
-                    float fm_value;
-                    get_float_from_s_register(vm, &fm_value);
-
-                    uint32_t u32 = mozilla::BitwiseCast<uint32_t>(fm_value);
-                    u32 &= 0x7fffffffu;
-                    float fd_value;
-                    mozilla::BitwiseCast(u32, &fd_value);
-
+                    union {
+                        float f32;
+                        uint32_t u32;
+                    } u;
+                    get_float_from_s_register(vm, &u.f32);
+                    u.u32 &= 0x7fffffffu;
+                    float fd_value = u.f32;
                     canonicalizeNaN(&fd_value);
                     set_s_register_from_float(vd, fd_value);
                 }
