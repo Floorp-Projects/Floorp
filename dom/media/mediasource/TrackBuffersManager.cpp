@@ -274,15 +274,8 @@ TrackBuffersManager::EvictData(const TimeUnit& aPlaybackTime, int64_t aSize)
   }
   const int64_t toEvict = GetSize() + aSize - EvictionThreshold();
 
-  uint32_t canEvict;
-  {
-    MonitorAutoLock mon(mMonitor);
-    if (HasVideo()) {
-      canEvict = mVideoTracks.mEvictionIndex.mEvictable;
-    } else {
-      canEvict = mAudioTracks.mEvictionIndex.mEvictable;
-    }
-  }
+  const uint32_t canEvict =
+    Evictable(HasVideo() ? TrackInfo::kVideoTrack : TrackInfo::kAudioTrack);
 
   MSE_DEBUG(
     "buffered=%lldkB, eviction threshold=%ukB, evict=%lldkB canevict=%ukB",
@@ -2391,6 +2384,13 @@ TrackBuffersManager::FindCurrentPosition(TrackInfo::TrackType aTrack,
 
   // Still not found.
   return -1;
+}
+
+uint32_t
+TrackBuffersManager::Evictable(TrackInfo::TrackType aTrack) const
+{
+  MonitorAutoLock mon(mMonitor);
+  return GetTracksData(aTrack).mEvictionIndex.mEvictable;
 }
 
 TimeUnit

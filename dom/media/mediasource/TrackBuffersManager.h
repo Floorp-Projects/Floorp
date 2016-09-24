@@ -147,6 +147,7 @@ public:
   {
     return mEnded;
   }
+  uint32_t Evictable(TrackInfo::TrackType aTrack) const;
   media::TimeUnit Seek(TrackInfo::TrackType aTrack,
                        const media::TimeUnit& aTime,
                        const media::TimeUnit& aFuzz);
@@ -403,6 +404,16 @@ private:
   // Trackbuffers definition.
   nsTArray<TrackData*> GetTracksList();
   TrackData& GetTracksData(TrackType aTrack)
+  {
+    switch(aTrack) {
+      case TrackType::kVideoTrack:
+        return mVideoTracks;
+      case TrackType::kAudioTrack:
+      default:
+        return mAudioTracks;
+    }
+  }
+  const TrackData& GetTracksData(TrackType aTrack) const
   {
     switch(aTrack) {
       case TrackType::kVideoTrack:
