@@ -311,6 +311,20 @@ SandboxBroker::SetSecurityLevelForPluginProcess(int32_t aSandboxLevel)
   SANDBOX_ENSURE_SUCCESS(result,
                          "With these static arguments AddRule should never fail, what happened?");
 
+  // These register keys are used by the file-browser dialog box.  They
+  // remember the most-recently-used folders.
+  result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_REGISTRY,
+                            sandbox::TargetPolicy::REG_ALLOW_ANY,
+                            L"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\OpenSavePidlMRU\\*");
+  SANDBOX_ENSURE_SUCCESS(result,
+                         "With these static arguments AddRule should never fail, what happened?");
+
+  result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_REGISTRY,
+                            sandbox::TargetPolicy::REG_ALLOW_ANY,
+                            L"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\LastVisitedPidlMRULegacy\\*");
+  SANDBOX_ENSURE_SUCCESS(result,
+                         "With these static arguments AddRule should never fail, what happened?");
+
   return true;
 }
 
