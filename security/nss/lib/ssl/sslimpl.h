@@ -60,6 +60,11 @@ typedef SSLMACAlgorithm SSL3MACAlgorithm;
 #define hmac_sha384 ssl_hmac_sha384
 #define mac_aead ssl_mac_aead
 
+#define SET_ERROR_CODE    /* reminder */
+#define SEND_ALERT        /* reminder */
+#define TEST_FOR_FAILURE  /* reminder */
+#define DEAL_WITH_FAILURE /* reminder */
+
 #if defined(DEBUG) || defined(TRACE)
 #ifdef __cplusplus
 #define Debug 1
@@ -133,6 +138,8 @@ typedef enum { SSLAppOpRead = 0,
 #define BPB 8 /* Bits Per Byte */
 #endif
 
+#define EXPORT_RSA_KEY_LENGTH 64 /* bytes */
+
 /* The default value from RFC 4347 is 1s, which is too slow. */
 #define DTLS_RETRANSMIT_INITIAL_MS 50
 /* The maximum time to wait between retransmissions. */
@@ -141,7 +148,7 @@ typedef enum { SSLAppOpRead = 0,
 #define DTLS_RETRANSMIT_FINISHED_MS 30000
 
 /* default number of entries in namedGroupPreferences */
-#define SSL_NAMED_GROUP_COUNT 31
+#define SSL_NAMED_GROUP_COUNT 30
 
 /* Types and names of elliptic curves used in TLS */
 typedef enum {
@@ -150,27 +157,28 @@ typedef enum {
     ec_type_named = 3
 } ECType;
 
+/* TODO: decide if SSLKEAType might be better here. */
 typedef enum {
-    ticket_allow_early_data = 1,
-    ticket_allow_psk_ke = 2,
-    ticket_allow_psk_dhe_ke = 4,
-    ticket_allow_psk_auth = 8,
-    ticket_allow_psk_sign_auth = 16
-} TLS13SessionTicketFlags;
+    group_type_ec,
+    group_type_ff
+} NamedGroupType;
 
 typedef struct {
+    /* This is the index of the curve into the bit mask that we use to track
+     * what has been negotiated on the socket. */
+    PRUint8 index;
     /* The name is the value that is encoded on the wire in TLS. */
     SSLNamedGroup name;
     /* The number of bits in the group. */
     unsigned int bits;
-    /* The key exchange algorithm this group provides. */
-    SSLKEAType keaType;
+    /* Whether the group is Elliptic or Finite-Field. */
+    NamedGroupType type;
     /* The OID that identifies the group to PKCS11.  This also determines
      * whether the group is enabled in policy. */
     SECOidTag oidTag;
-    /* Assume that the group is always supported. */
-    PRBool assumeSupported;
-} sslNamedGroupDef;
+    /* Non-suite-B groups are enabled by patching NSS. Yuck. */
+    PRBool suiteb;
+} namedGroupDef;
 
 typedef struct sslBufferStr sslBuffer;
 typedef struct sslConnectInfoStr sslConnectInfo;
@@ -210,9 +218,9 @@ typedef PRInt32 (*ssl3HelloExtensionSenderFunc)(sslSocket *ss, PRBool append,
 /* registerable callback function that handles a received extension,
  * of the given type.
  */
-typedef SECStatus (*ssl3ExtensionHandlerFunc)(sslSocket *ss,
-                                              PRUint16 ex_type,
-                                              SECItem *data);
+typedef SECStatus (*ssl3HelloExtensionHandlerFunc)(sslSocket *ss,
+                                                   PRUint16 ex_type,
+                                                   SECItem *data);
 
 /* row in a table of hello extension senders */
 typedef struct {
@@ -223,8 +231,8 @@ typedef struct {
 /* row in a table of hello extension handlers */
 typedef struct {
     PRInt32 ex_type;
-    ssl3ExtensionHandlerFunc ex_handler;
-} ssl3ExtensionHandler;
+    ssl3HelloExtensionHandlerFunc ex_handler;
+} ssl3HelloExtensionHandler;
 
 extern SECStatus
 ssl3_RegisterServerHelloExtensionSender(sslSocket *ss, PRUint16 ex_type,
@@ -295,7 +303,7 @@ typedef struct {
 #endif
 } ssl3CipherSuiteCfg;
 
-#define ssl_V3_SUITES_IMPLEMENTED 71
+#define ssl_V3_SUITES_IMPLEMENTED 80
 
 #define MAX_DTLS_SRTP_CIPHER_SUITES 4
 
@@ -316,6 +324,7 @@ typedef struct sslOptionsStr {
     unsigned int noCache : 1;
     unsigned int fdx : 1;
     unsigned int detectRollBack : 1;
+    unsigned int noStepDown : 1;
     unsigned int bypassPKCS11 : 1;
     unsigned int noLocks : 1;
     unsigned int enableSessionTickets : 1;
@@ -698,6 +707,12 @@ typedef struct {
     /* In most cases, cipher suites depend on their signature type for
      * authentication, ECDH certificates being the exception. */
     SSLAuthType authKeyType;
+    /* For export cipher suites:
+     * is_limited identifies a suite as having a limit on the key size.
+     * key_size_limit provides the corresponding limit. */
+    PRBool is_limited;
+    unsigned int key_size_limit;
+    PRBool tls_keygen;
     /* True if the key exchange for the suite is ephemeral.  Or to be more
      * precise: true if the ServerKeyExchange message is always required. */
     PRBool ephemeral;
@@ -751,7 +766,6 @@ typedef enum {
 } sslZeroRttIgnore;
 
 typedef enum {
-    idle_handshake,
     wait_client_hello,
     wait_client_cert,
     wait_client_key,
@@ -766,6 +780,7 @@ typedef enum {
     wait_hello_done,
     wait_new_session_ticket,
     wait_encrypted_extensions,
+    idle_handshake,
     wait_0rtt_finished,
     wait_invalid /* Invalid value. There is no handshake message "invalid". */
 } SSL3WaitState;
@@ -798,10 +813,6 @@ struct TLSExtensionDataStr {
     PRBool ticketTimestampVerified;
     PRBool emptySessionTicket;
     PRBool sentSessionTicketInClientHello;
-    SECItem psk_ke_modes;
-    SECItem psk_auth_modes;
-    PRUint32 ticket_age_add;
-    PRBool ticket_age_add_found;
 
     /* SNI Extension related data
      * Names data is not coppied from the input buffer. It can not be
@@ -841,9 +852,9 @@ typedef struct DTLSQueuedMessageStr {
 } DTLSQueuedMessage;
 
 typedef struct TLS13KeyShareEntryStr {
-    PRCList link;                  /* The linked list link */
-    const sslNamedGroupDef *group; /* The group for the entry */
-    SECItem key_exchange;          /* The share itself */
+    PRCList link;               /* The linked list link */
+    const namedGroupDef *group; /* The group for the entry */
+    SECItem key_exchange;       /* The share itself */
 } TLS13KeyShareEntry;
 
 typedef struct TLS13EarlyDataStr {
@@ -916,10 +927,11 @@ typedef struct SSL3HandshakeStateStr {
     /* message for message type and header length */
     SSL3HandshakeType msg_type;
     unsigned long msg_len;
-    PRBool isResuming;  /* we are resuming (not used in TLS 1.3) */
-    PRBool sendingSCSV; /* instead of empty RI */
-    sslBuffer msgState; /* current state for handshake messages*/
-                        /* protected by recvBufLock */
+    PRBool isResuming;      /* we are resuming (not used in TLS 1.3) */
+    PRBool usedStepDownKey; /* we did a server key exchange. */
+    PRBool sendingSCSV;     /* instead of empty RI */
+    sslBuffer msgState;     /* current state for handshake messages*/
+                            /* protected by recvBufLock */
 
     /* The session ticket received in a NewSessionTicket message is temporarily
      * stored in newSessionTicket until the handshake is finished; then it is
@@ -994,17 +1006,17 @@ typedef struct SSL3HandshakeStateStr {
                                         * traffic keys */
     /* The certificate request from the server. */
     TLS13CertificateRequest *certificateRequest;
-    PRCList cipherSpecs;            /* The cipher specs in the sequence they
+    ssl3CipherSuite origCipherSuite; /* The cipher suite from the original
+                                        * connection if we are resuming. */
+    PRCList cipherSpecs;             /* The cipher specs in the sequence they
                                         * will be applied. */
-    ssl3CipherSpec *nullSpec;       /* In case 0-RTT is rejected. */
-    sslZeroRttState zeroRttState;   /* Are we doing a 0-RTT handshake? */
-    sslZeroRttIgnore zeroRttIgnore; /* Are we ignoring 0-RTT? */
-    PRCList bufferedEarlyData;      /* Buffered TLS 1.3 early data
+    ssl3CipherSpec *nullSpec;        /* In case 0-RTT is rejected. */
+    sslZeroRttState zeroRttState;    /* Are we doing a 0-RTT handshake? */
+    sslZeroRttIgnore zeroRttIgnore;  /* Are we ignoring 0-RTT? */
+    PRCList bufferedEarlyData;       /* Buffered TLS 1.3 early data
                                         * on server.*/
-    PRBool helloRetry;              /* True if HelloRetryRequest has been sent
+    PRBool helloRetry;               /* True if HelloRetryRequest has been sent
                                       * or received. */
-    ssl3KEADef kea_def_mutable;     /* Used to hold the writable kea_def
-                                      * we use for TLS 1.3 */
 } SSL3HandshakeState;
 
 /*
@@ -1059,7 +1071,7 @@ struct ssl3StateStr {
     PRUint16 dtlsSRTPCipherSuite; /* 0 if not selected */
     PRBool fatalAlertSent;
     PRBool dheWeakGroupEnabled; /* used by server */
-    const sslNamedGroupDef *dhePreferredGroup;
+    const namedGroupDef *dhePreferredGroup;
 
     /* TLS 1.2 introduces separate signature algorithm negotiation.
      * TLS 1.3 combined signature and hash into a single enum.
@@ -1093,7 +1105,7 @@ struct sslKeyPairStr {
 
 typedef struct {
     PRCList link;
-    const sslNamedGroupDef *group;
+    const namedGroupDef *group;
     sslKeyPair *keys;
 } sslEphemeralKeyPair;
 
@@ -1243,6 +1255,8 @@ struct sslSocketStr {
     /* the following variable is only used with socks or other proxies. */
     char *peerID; /* String uniquely identifies target server. */
 
+    sslKeyPair *stepDownKeyPair; /* RSA step down keys */
+
     /* ECDHE and DHE keys: In TLS 1.3, we might have to maintain multiple of
      * these on the client side.  The server inserts a single value into this
      * list for all versions. */
@@ -1324,9 +1338,7 @@ struct sslSocketStr {
      * Note that renegotiation will ignore groups that were disabled in the
      * first handshake.
      */
-    const sslNamedGroupDef *namedGroupPreferences[SSL_NAMED_GROUP_COUNT];
-    /* The number of additional shares to generate for the TLS 1.3 ClientHello */
-    unsigned int additionalShares;
+    const namedGroupDef *namedGroupPreferences[SSL_NAMED_GROUP_COUNT];
 
     /* SSL3 state info.  Formerly was a pointer */
     ssl3State ssl3;
@@ -1360,7 +1372,7 @@ extern sslSessionIDLookupFunc ssl_sid_lookup;
 extern sslSessionIDCacheFunc ssl_sid_cache;
 extern sslSessionIDUncacheFunc ssl_sid_uncache;
 
-extern const sslNamedGroupDef ssl_named_groups[];
+extern const namedGroupDef ssl_named_groups[];
 
 /************************************************************************/
 
@@ -1641,7 +1653,7 @@ extern PRBool ssl3_VersionIsSupported(SSLProtocolVariant protocolVariant,
 
 extern SECStatus ssl3_KeyAndMacDeriveBypass(ssl3CipherSpec *pwSpec,
                                             const unsigned char *cr, const unsigned char *sr,
-                                            PRBool isTLS, HASH_HashType tls12HashType);
+                                            PRBool isTLS, HASH_HashType tls12HashType, PRBool isExport);
 extern SECStatus ssl3_MasterSecretDeriveBypass(ssl3CipherSpec *pwSpec,
                                                const unsigned char *cr, const unsigned char *sr,
                                                const SECItem *pms, PRBool isTLS,
@@ -1678,6 +1690,13 @@ SECStatus ssl_RemoveTLSCBCPadding(sslBuffer *plaintext, unsigned int macSize);
 
 int ssl3_GatherAppDataRecord(sslSocket *ss, int flags);
 int ssl3_GatherCompleteHandshake(sslSocket *ss, int flags);
+/*
+ * When talking to export clients or using export cipher suites, servers
+ * with public RSA keys larger than 512 bits need to use a 512-bit public
+ * key, signed by the larger key.  The smaller key is a "step down" key.
+ * Generate that key pair and keep it around.
+ */
+extern SECStatus ssl3_CreateRSAStepDownKeys(sslSocket *ss);
 
 /* Create a new ref counted key pair object from two keys. */
 extern sslKeyPair *ssl_NewKeyPair(SECKEYPrivateKey *privKey,
@@ -1690,54 +1709,56 @@ extern sslKeyPair *ssl_GetKeyPairRef(sslKeyPair *keyPair);
 extern void ssl_FreeKeyPair(sslKeyPair *keyPair);
 
 extern sslEphemeralKeyPair *ssl_NewEphemeralKeyPair(
-    const sslNamedGroupDef *group,
+    const namedGroupDef *group,
     SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey);
 extern sslEphemeralKeyPair *ssl_CopyEphemeralKeyPair(
     sslEphemeralKeyPair *keyPair);
 extern void ssl_FreeEphemeralKeyPair(sslEphemeralKeyPair *keyPair);
 extern sslEphemeralKeyPair *ssl_LookupEphemeralKeyPair(
-    sslSocket *ss, const sslNamedGroupDef *groupDef);
+    sslSocket *ss, const namedGroupDef *groupDef);
 extern void ssl_FreeEphemeralKeyPairs(sslSocket *ss);
 
 extern SECStatus ssl_AppendPaddedDHKeyShare(sslSocket *ss,
                                             SECKEYPublicKey *pubKey,
                                             PRBool appendLength);
-extern const ssl3DHParams *ssl_GetDHEParams(const sslNamedGroupDef *groupDef);
+extern const ssl3DHParams *ssl_GetDHEParams(const namedGroupDef *groupDef);
 extern SECStatus ssl_SelectDHEGroup(sslSocket *ss,
-                                    const sslNamedGroupDef **groupDef);
-extern SECStatus ssl_CreateDHEKeyPair(const sslNamedGroupDef *groupDef,
+                                    const namedGroupDef **groupDef);
+extern SECStatus ssl_CreateDHEKeyPair(const namedGroupDef *groupDef,
                                       const ssl3DHParams *params,
                                       sslEphemeralKeyPair **keyPair);
 extern PRBool ssl_IsValidDHEShare(const SECItem *dh_p, const SECItem *dh_Ys);
 extern SECStatus ssl_ValidateDHENamedGroup(sslSocket *ss,
                                            const SECItem *dh_p,
                                            const SECItem *dh_g,
-                                           const sslNamedGroupDef **groupDef,
+                                           const namedGroupDef **groupDef,
                                            const ssl3DHParams **dhParams);
 
 extern PRBool ssl_IsECCEnabled(sslSocket *ss);
 extern PRBool ssl_IsDHEEnabled(sslSocket *ss);
 
 /* Macro for finding a curve equivalent in strength to RSA key's */
-#define SSL_RSASTRENGTH_TO_ECSTRENGTH(s)                            \
-    ((s <= 1024) ? 160                                              \
-                 : ((s <= 2048) ? 224                               \
-                                : ((s <= 3072) ? 256                \
-                                               : ((s <= 7168) ? 384 \
-                                                              : 521))))
+/* clang-format off */
+#define SSL_RSASTRENGTH_TO_ECSTRENGTH(s)                                       \
+        ((s <= 1024) ? 160                                                     \
+                     : ((s <= 2048) ? 224                                      \
+                                    : ((s <= 3072) ? 256                       \
+                                                   : ((s <= 7168) ? 384        \
+                                                                  : 521 ) ) ) )
+/* clang-format on */
 
-extern const sslNamedGroupDef *ssl_LookupNamedGroup(SSLNamedGroup group);
-extern PRBool ssl_NamedGroupEnabled(const sslSocket *ss, const sslNamedGroupDef *group);
+extern const namedGroupDef *ssl_LookupNamedGroup(SSLNamedGroup group);
+extern PRBool ssl_NamedGroupEnabled(const sslSocket *ss, const namedGroupDef *group);
 extern SECStatus ssl_NamedGroup2ECParams(PLArenaPool *arena,
-                                         const sslNamedGroupDef *curve,
+                                         const namedGroupDef *curve,
                                          SECKEYECParams *params);
-extern const sslNamedGroupDef *ssl_ECPubKey2NamedGroup(
+extern const namedGroupDef *ssl_ECPubKey2NamedGroup(
     const SECKEYPublicKey *pubKey);
 
-extern const sslNamedGroupDef *ssl_GetECGroupWithStrength(sslSocket *ss,
-                                                          unsigned int requiredECCbits);
-extern const sslNamedGroupDef *ssl_GetECGroupForServerSocket(sslSocket *ss);
-extern void ssl_FilterSupportedGroups(sslSocket *ss);
+extern const namedGroupDef *ssl_GetECGroupWithStrength(sslSocket *ss,
+                                                       unsigned int requiredECCbits);
+extern const namedGroupDef *ssl_GetECGroupForServerSocket(sslSocket *ss);
+extern void ssl_DisableNonSuiteBGroups(sslSocket *ss);
 
 extern SECStatus ssl3_CipherPrefSetDefault(ssl3CipherSuite which, PRBool on);
 extern SECStatus ssl3_CipherPrefGetDefault(ssl3CipherSuite which, PRBool *on);
@@ -1772,9 +1793,9 @@ extern SECStatus ssl3_HandleECDHClientKeyExchange(sslSocket *ss,
                                                   SSL3Opaque *b, PRUint32 length,
                                                   sslKeyPair *serverKeys);
 extern SECStatus ssl3_SendECDHServerKeyExchange(sslSocket *ss);
-extern SECStatus ssl_ImportECDHKeyShare(
+extern SECStatus tls13_ImportECDHKeyShare(
     sslSocket *ss, SECKEYPublicKey *peerKey,
-    SSL3Opaque *b, PRUint32 length, const sslNamedGroupDef *curve);
+    SSL3Opaque *b, PRUint32 length, const namedGroupDef *curve);
 unsigned int tls13_SizeOfECDHEKeyShareKEX(const SECKEYPublicKey *pubKey);
 SECStatus tls13_EncodeECDHEKeyShareKEX(sslSocket *ss,
                                        const SECKEYPublicKey *pubKey);
@@ -1854,9 +1875,9 @@ extern PRInt32 ssl3_SendSupportedPointFormatsXtn(sslSocket *ss,
                                                  PRBool append, PRUint32 maxBytes);
 
 /* call the registered extension handlers. */
-extern SECStatus ssl3_HandleExtensions(sslSocket *ss,
-                                       SSL3Opaque **b, PRUint32 *length,
-                                       SSL3HandshakeType handshakeMessage);
+extern SECStatus ssl3_HandleHelloExtensions(sslSocket *ss,
+                                            SSL3Opaque **b, PRUint32 *length,
+                                            SSL3HandshakeType handshakeMessage);
 
 /* Hello Extension related routines. */
 extern PRBool ssl3_ExtensionNegotiated(sslSocket *ss, PRUint16 ex_type);
@@ -1984,10 +2005,8 @@ SECStatus ssl3_ComputeHandshakeHashes(sslSocket *ss,
                                       PRUint32 sender);
 PRInt32 tls13_ServerSendKeyShareXtn(sslSocket *ss, PRBool append,
                                     PRUint32 maxBytes);
-SECStatus ssl_CreateECDHEphemeralKeyPair(const sslNamedGroupDef *ecGroup,
+SECStatus ssl_CreateECDHEphemeralKeyPair(const namedGroupDef *ecGroup,
                                          sslEphemeralKeyPair **keyPair);
-SECStatus ssl_CreateStaticECDHEKey(sslSocket *ss,
-                                   const sslNamedGroupDef *ecGroup);
 SECStatus ssl3_FlushHandshake(sslSocket *ss, PRInt32 flags);
 PK11SymKey *ssl3_GetWrappingKey(sslSocket *ss,
                                 PK11SlotInfo *masterSecretSlot,
@@ -2000,22 +2019,14 @@ PRInt32 tls13_ServerSendPreSharedKeyXtn(sslSocket *ss,
 PRInt32 tls13_ServerSendEarlyDataXtn(sslSocket *ss,
                                      PRBool append,
                                      PRUint32 maxBytes);
-PRInt32 tls13_ServerSendSigAlgsXtn(sslSocket *ss,
-                                   PRBool append,
-                                   PRUint32 maxBytes);
 PRBool ssl3_ClientExtensionAdvertised(sslSocket *ss, PRUint16 ex_type);
 SECStatus ssl3_FillInCachedSID(sslSocket *ss, sslSessionID *sid);
 const ssl3CipherSuiteDef *ssl_LookupCipherSuiteDef(ssl3CipherSuite suite);
 const ssl3BulkCipherDef *
 ssl_GetBulkCipherDef(const ssl3CipherSuiteDef *cipher_def);
 SECStatus ssl3_SelectServerCert(sslSocket *ss);
-SECStatus ssl_PickSignatureScheme(sslSocket *ss, SECKEYPublicKey *key,
-                                  const SignatureScheme *peerSchemes,
-                                  unsigned int peerSchemeCount,
-                                  PRBool requireSha1);
 SECOidTag ssl3_HashTypeToOID(SSLHashType hashType);
 SSLHashType ssl_SignatureSchemeToHashType(SignatureScheme scheme);
-KeyType ssl_SignatureSchemeToKeyType(SignatureScheme scheme);
 
 SECStatus ssl3_SetCipherSuite(sslSocket *ss, ssl3CipherSuite chosenSuite,
                               PRBool initHashes);
@@ -2034,6 +2045,10 @@ extern int ssl_MapLowLevelError(int hiLevelError);
 extern PRUint32 ssl_Time(void);
 
 extern void SSL_AtomicIncrementLong(long *x);
+
+SECStatus SSL_DisableDefaultExportCipherSuites(void);
+SECStatus SSL_DisableExportCipherSuites(PRFileDesc *fd);
+PRBool SSL_IsExportCipherSuite(PRUint16 cipherSuite);
 
 SECStatus ssl3_ApplyNSSPolicy(void);
 

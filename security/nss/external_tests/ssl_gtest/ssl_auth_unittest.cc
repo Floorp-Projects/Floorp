@@ -238,25 +238,6 @@ TEST_P(TlsConnectPre12, SignatureAlgorithmNoOverlapEcdsa) {
   Connect();
 }
 
-// The signature_algorithms extension is mandatory in TLS 1.3.
-TEST_P(TlsConnectTls13, SignatureAlgorithmDrop) {
-  client_->SetPacketFilter(
-      new TlsExtensionDropper(ssl_signature_algorithms_xtn));
-  ConnectExpectFail();
-  client_->CheckErrorCode(SSL_ERROR_MISSING_EXTENSION_ALERT);
-  server_->CheckErrorCode(SSL_ERROR_MISSING_SIGNATURE_ALGORITHMS_EXTENSION);
-}
-
-// TLS 1.2 has trouble detecting this sort of modification: it uses SHA1 and
-// only fails when the Finished is checked.
-TEST_P(TlsConnectTls12, SignatureAlgorithmDrop) {
-  client_->SetPacketFilter(
-      new TlsExtensionDropper(ssl_signature_algorithms_xtn));
-  ConnectExpectFail();
-  client_->CheckErrorCode(SSL_ERROR_DECRYPT_ERROR_ALERT);
-  server_->CheckErrorCode(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
-}
-
 TEST_P(TlsConnectTls12Plus, RequestClientAuthWithSha384) {
   server_->SetSignatureAlgorithms(SignatureRsaSha384,
                                   PR_ARRAY_SIZE(SignatureRsaSha384));

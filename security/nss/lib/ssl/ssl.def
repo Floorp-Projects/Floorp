@@ -212,9 +212,3 @@ SSL_NamedGroupConfig;
 ;+    local:
 ;+*;
 ;+};
-;+NSS_3.28 {    # NSS 3.28 release
-;+    global:
-SSL_SendAdditionalKeyShares;
-;+    local:
-;+*;
-;+};

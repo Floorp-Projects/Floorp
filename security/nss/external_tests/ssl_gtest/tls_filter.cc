@@ -423,7 +423,7 @@ PacketFilter::Action TlsExtensionFilter::FilterExtensions(
 
 PacketFilter::Action TlsExtensionCapture::FilterExtension(
     uint16_t extension_type, const DataBuffer& input, DataBuffer* output) {
-  if (extension_type == extension_ && data_.len() == 0) {
+  if (extension_type == extension_) {
     data_.Assign(input);
   }
   return KEEP;
@@ -437,14 +437,6 @@ PacketFilter::Action TlsExtensionReplacer::FilterExtension(
 
   *output = data_;
   return CHANGE;
-}
-
-PacketFilter::Action TlsExtensionDropper::FilterExtension(
-    uint16_t extension_type, const DataBuffer& input, DataBuffer* output) {
-  if (extension_type == extension_) {
-    return DROP;
-  }
-  return KEEP;
 }
 
 PacketFilter::Action AfterRecordN::FilterRecord(const RecordHeader& header,

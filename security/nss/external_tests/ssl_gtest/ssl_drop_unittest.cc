@@ -65,30 +65,14 @@ TEST_P(TlsConnectDatagram, DropServerSecondFlightThrice) {
   Connect();
 }
 
-static void GetCipherAndLimit(uint16_t version, uint16_t* cipher,
-                              uint64_t* limit = nullptr) {
-  uint64_t l;
-  if (!limit) limit = &l;
-
-  if (version < SSL_LIBRARY_VERSION_TLS_1_2) {
-    *cipher = TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA;
-    *limit = 0x5aULL << 28;
-  } else if (version == SSL_LIBRARY_VERSION_TLS_1_2) {
-    *cipher = TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256;
-    *limit = (1ULL << 48) - 1;
-  } else {
-    *cipher = TLS_CHACHA20_POLY1305_SHA256;
-    *limit = (1ULL << 48) - 1;
-  }
-}
-
 // This simulates a huge number of drops on one side.
 TEST_P(TlsConnectDatagram, MissLotsOfPackets) {
-  uint16_t cipher;
-  uint64_t limit;
-
-  GetCipherAndLimit(version_, &cipher, &limit);
-
+  uint16_t cipher = TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256;
+  uint64_t limit = (1ULL << 48) - 1;
+  if (version_ < SSL_LIBRARY_VERSION_TLS_1_2) {
+    cipher = TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA;
+    limit = 0x5aULL << 28;
+  }
   EnsureTlsSetup();
   server_->EnableSingleCipher(cipher);
   Connect();
@@ -107,9 +91,7 @@ class TlsConnectDatagram12Plus : public TlsConnectDatagram {
 // This simulates missing a window's worth of packets.
 TEST_P(TlsConnectDatagram12Plus, MissAWindow) {
   EnsureTlsSetup();
-  uint16_t cipher;
-  GetCipherAndLimit(version_, &cipher);
-  server_->EnableSingleCipher(cipher);
+  server_->EnableSingleCipher(TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256);
   Connect();
 
   EXPECT_EQ(SECSuccess, SSLInt_AdvanceWriteSeqByAWindow(client_->ssl_fd(), 0));
@@ -118,9 +100,7 @@ TEST_P(TlsConnectDatagram12Plus, MissAWindow) {
 
 TEST_P(TlsConnectDatagram12Plus, MissAWindowAndOne) {
   EnsureTlsSetup();
-  uint16_t cipher;
-  GetCipherAndLimit(version_, &cipher);
-  server_->EnableSingleCipher(cipher);
+  server_->EnableSingleCipher(TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256);
   Connect();
 
   EXPECT_EQ(SECSuccess, SSLInt_AdvanceWriteSeqByAWindow(client_->ssl_fd(), 1));

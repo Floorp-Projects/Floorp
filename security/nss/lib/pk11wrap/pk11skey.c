@@ -1987,19 +1987,18 @@ PK11_PubDerive(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey,
 /* Returns the size of the public key, or 0 if there
  * is an error. */
 static CK_ULONG
-pk11_ECPubKeySize(SECKEYPublicKey *pubKey)
+pk11_ECPubKeySize(SECItem *publicValue)
 {
-    SECItem *publicValue = &pubKey->u.ec.publicValue;
-
-    if (pubKey->u.ec.encoding == ECPoint_XOnly) {
-        return publicValue->len;
-    }
     if (publicValue->data[0] == 0x04) {
-        /* key encoded in uncompressed form */
-        return((publicValue->len - 1)/2);
+	/* key encoded in uncompressed form */
+	return((publicValue->len - 1)/2);
+    } else if ( (publicValue->data[0] == 0x02) ||
+		(publicValue->data[0] == 0x03)) {
+	/* key encoded in compressed form */
+	return(publicValue->len - 1);
     }
     /* key encoding not recognized */
-    return 0;
+    return(0);
 }
 
 static PK11SymKey *
@@ -2060,7 +2059,7 @@ pk11_PubDeriveECKeyWithKDF(
 	     * CKA_VALUE_LEN to be set */
 	    switch (kdf) {
 	    case CKD_NULL:
-                key_size = pk11_ECPubKeySize(pubKey);
+		key_size = pk11_ECPubKeySize(&pubKey->u.ec.publicValue);
 		if (key_size == 0) {
 		    PK11_FreeSymKey(symKey);
 		    return NULL;
@@ -2141,7 +2140,7 @@ pk11_PubDeriveECKeyWithKDF(
 	    CK_ULONG derivedKeySize = key_size;
 
 	    keyType = CKK_GENERIC_SECRET;
-            key_size = pk11_ECPubKeySize(pubKey);
+	    key_size = pk11_ECPubKeySize(&pubKey->u.ec.publicValue);
 	    if (key_size == 0) {
 		SECITEM_FreeItem(pubValue,PR_TRUE);
 		goto loser;

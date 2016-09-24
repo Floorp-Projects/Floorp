@@ -68,10 +68,13 @@ ssl3_KeyAndMacDeriveBypass(
     const unsigned char *cr,
     const unsigned char *sr,
     PRBool isTLS,
-    HASH_HashType tls12HashType)
+    HASH_HashType tls12HashType,
+    PRBool isExport)
 {
     const ssl3BulkCipherDef *cipher_def = pwSpec->cipher_def;
     unsigned char *key_block = pwSpec->key_block;
+    unsigned char *key_block2 = NULL;
+    unsigned int block_bytes = 0;
     unsigned int block_needed = 0;
     unsigned int i;
     unsigned int keySize;    /* actual    size of cipher keys */
@@ -85,8 +88,10 @@ ssl3_KeyAndMacDeriveBypass(
     PRBool isTLS12 = pwSpec->version >= SSL_LIBRARY_VERSION_TLS_1_2;
 
     SECItem srcr;
+    SECItem crsr;
 
     unsigned char srcrdata[SSL3_RANDOM_LENGTH * 2];
+    unsigned char crsrdata[SSL3_RANDOM_LENGTH * 2];
     PRUint64 md5buf[22];
     PRUint64 shabuf[40];
 
@@ -118,7 +123,7 @@ ssl3_KeyAndMacDeriveBypass(
         explicitIV = PR_TRUE;
     }
     block_needed =
-        2 * (macSize + effKeySize + ((!explicitIV) * IVSize));
+        2 * (macSize + effKeySize + ((!isExport && !explicitIV) * IVSize));
 
     /*
      * clear out our returned keys so we can recover on failure
@@ -134,6 +139,14 @@ ssl3_KeyAndMacDeriveBypass(
     srcr.len = sizeof srcrdata;
     PORT_Memcpy(srcrdata, sr, SSL3_RANDOM_LENGTH);
     PORT_Memcpy(srcrdata + SSL3_RANDOM_LENGTH, cr, SSL3_RANDOM_LENGTH);
+
+    /* initialize the client random, server random block */
+    crsr.type = siBuffer;
+    crsr.data = crsrdata;
+    crsr.len = sizeof crsrdata;
+    PORT_Memcpy(crsrdata, cr, SSL3_RANDOM_LENGTH);
+    PORT_Memcpy(crsrdata + SSL3_RANDOM_LENGTH, sr, SSL3_RANDOM_LENGTH);
+    PRINT_BUF(100, (NULL, "Key & MAC CRSR", crsr.data, crsr.len));
 
     /*
      * generate the key material:
@@ -155,6 +168,7 @@ ssl3_KeyAndMacDeriveBypass(
         if (status != SECSuccess) {
             goto key_and_mac_derive_fail;
         }
+        block_bytes = keyblk.len;
     } else {
         /* key_block =
         *     MD5(master_secret + SHA('A' + master_secret +
@@ -184,8 +198,16 @@ ssl3_KeyAndMacDeriveBypass(
             PORT_Assert(outLen == MD5_LENGTH);
             made += MD5_LENGTH;
         }
+        block_bytes = made;
     }
+    PORT_Assert(block_bytes >= block_needed);
+    PORT_Assert(block_bytes <= sizeof pwSpec->key_block);
+    PRINT_BUF(100, (NULL, "key block", key_block, block_bytes));
 
+    /*
+     * Put the key material where it goes.
+     */
+    key_block2 = key_block + block_bytes;
     i = 0; /* now shows how much consumed */
 
     /*
@@ -213,7 +235,7 @@ ssl3_KeyAndMacDeriveBypass(
                     "Client Write IV (MAC only)");
         buildSSLKey(NULL, 0, &pwSpec->server.write_iv_item,
                     "Server Write IV (MAC only)");
-    } else {
+    } else if (!isExport) {
         /*
         ** Generate Domestic write keys and IVs.
         ** client_write_key[CipherSpec.key_material]
@@ -254,8 +276,139 @@ ssl3_KeyAndMacDeriveBypass(
                 buildSSLKey(&key_block[i], IVSize,
                             &pwSpec->server.write_iv_item,
                             "Domestic Server Write IV");
+                i += IVSize;
             }
         }
+        PORT_Assert(i <= block_bytes);
+    } else if (!isTLS) {
+        /*
+        ** Generate SSL3 Export write keys and IVs.
+        */
+        unsigned int outLen;
+
+        /*
+        ** client_write_key[CipherSpec.key_material]
+        ** final_client_write_key = MD5(client_write_key +
+        **                   ClientHello.random + ServerHello.random);
+        */
+        MD5_Begin(md5Ctx);
+        MD5_Update(md5Ctx, &key_block[i], effKeySize);
+        MD5_Update(md5Ctx, crsr.data, crsr.len);
+        MD5_End(md5Ctx, key_block2, &outLen, MD5_LENGTH);
+        i += effKeySize;
+        buildSSLKey(key_block2, keySize, &pwSpec->client.write_key_item,
+                    "SSL3 Export Client Write Key");
+        key_block2 += keySize;
+
+        /*
+        ** server_write_key[CipherSpec.key_material]
+        ** final_server_write_key = MD5(server_write_key +
+        **                    ServerHello.random + ClientHello.random);
+        */
+        MD5_Begin(md5Ctx);
+        MD5_Update(md5Ctx, &key_block[i], effKeySize);
+        MD5_Update(md5Ctx, srcr.data, srcr.len);
+        MD5_End(md5Ctx, key_block2, &outLen, MD5_LENGTH);
+        i += effKeySize;
+        buildSSLKey(key_block2, keySize, &pwSpec->server.write_key_item,
+                    "SSL3 Export Server Write Key");
+        key_block2 += keySize;
+        PORT_Assert(i <= block_bytes);
+
+        if (IVSize) {
+            /*
+            ** client_write_IV =
+            **  MD5(ClientHello.random + ServerHello.random);
+            */
+            MD5_Begin(md5Ctx);
+            MD5_Update(md5Ctx, crsr.data, crsr.len);
+            MD5_End(md5Ctx, key_block2, &outLen, MD5_LENGTH);
+            buildSSLKey(key_block2, IVSize, &pwSpec->client.write_iv_item,
+                        "SSL3 Export Client Write IV");
+            key_block2 += IVSize;
+
+            /*
+            ** server_write_IV =
+            **  MD5(ServerHello.random + ClientHello.random);
+            */
+            MD5_Begin(md5Ctx);
+            MD5_Update(md5Ctx, srcr.data, srcr.len);
+            MD5_End(md5Ctx, key_block2, &outLen, MD5_LENGTH);
+            buildSSLKey(key_block2, IVSize, &pwSpec->server.write_iv_item,
+                        "SSL3 Export Server Write IV");
+            key_block2 += IVSize;
+        }
+
+        PORT_Assert(key_block2 - key_block <= sizeof pwSpec->key_block);
+    } else {
+        /*
+        ** Generate TLS Export write keys and IVs.
+        */
+        SECItem secret;
+        SECItem keyblk;
+
+        secret.type = siBuffer;
+        keyblk.type = siBuffer;
+        /*
+        ** client_write_key[CipherSpec.key_material]
+        ** final_client_write_key = PRF(client_write_key,
+        **                              "client write key",
+        **                              client_random + server_random);
+        */
+        secret.data = &key_block[i];
+        secret.len = effKeySize;
+        i += effKeySize;
+        keyblk.data = key_block2;
+        keyblk.len = keySize;
+        status = TLS_PRF(&secret, "client write key", &crsr, &keyblk, isFIPS);
+        if (status != SECSuccess) {
+            goto key_and_mac_derive_fail;
+        }
+        buildSSLKey(key_block2, keySize, &pwSpec->client.write_key_item,
+                    "TLS Export Client Write Key");
+        key_block2 += keySize;
+
+        /*
+        ** server_write_key[CipherSpec.key_material]
+        ** final_server_write_key = PRF(server_write_key,
+        **                              "server write key",
+        **                              client_random + server_random);
+        */
+        secret.data = &key_block[i];
+        secret.len = effKeySize;
+        keyblk.data = key_block2;
+        keyblk.len = keySize;
+        status = TLS_PRF(&secret, "server write key", &crsr, &keyblk, isFIPS);
+        if (status != SECSuccess) {
+            goto key_and_mac_derive_fail;
+        }
+        buildSSLKey(key_block2, keySize, &pwSpec->server.write_key_item,
+                    "TLS Export Server Write Key");
+        key_block2 += keySize;
+
+        /*
+        ** iv_block = PRF("", "IV block", client_random + server_random);
+        ** client_write_IV[SecurityParameters.IV_size]
+        ** server_write_IV[SecurityParameters.IV_size]
+        */
+        if (IVSize) {
+            secret.data = NULL;
+            secret.len = 0;
+            keyblk.data = key_block2;
+            keyblk.len = 2 * IVSize;
+            status = TLS_PRF(&secret, "IV block", &crsr, &keyblk, isFIPS);
+            if (status != SECSuccess) {
+                goto key_and_mac_derive_fail;
+            }
+            buildSSLKey(key_block2, IVSize,
+                        &pwSpec->client.write_iv_item,
+                        "TLS Export Client Write IV");
+            buildSSLKey(key_block2 + IVSize, IVSize,
+                        &pwSpec->server.write_iv_item,
+                        "TLS Export Server Write IV");
+            key_block2 += 2 * IVSize;
+        }
+        PORT_Assert(key_block2 - key_block <= sizeof pwSpec->key_block);
     }
     rv = SECSuccess;
 
@@ -464,6 +617,7 @@ SSL_CanBypass(CERTCertificate *cert, SECKEYPrivateKey *srvPrivkey,
     PRBool isTLS = PR_FALSE;
     SSLCipherSuiteInfo csdef;
     PRBool testrsa = PR_FALSE;
+    PRBool testrsa_export = PR_FALSE;
     PRBool testecdh = PR_FALSE;
     PRBool testecdhe = PR_FALSE;
     SECKEYECParams ecParams = { siBuffer, NULL, 0 };
@@ -489,7 +643,15 @@ SSL_CanBypass(CERTCertificate *cert, SECKEYPrivateKey *srvPrivkey,
             continue;
         switch (csdef.keaType) {
             case ssl_kea_rsa:
-                testrsa = PR_TRUE;
+                switch (csdef.cipherSuite) {
+                    case TLS_RSA_EXPORT1024_WITH_RC4_56_SHA:
+                    case TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA:
+                    case TLS_RSA_EXPORT_WITH_RC4_40_MD5:
+                    case TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5:
+                        testrsa_export = PR_TRUE;
+                }
+                if (!testrsa_export)
+                    testrsa = PR_TRUE;
                 break;
             case ssl_kea_ecdh:
                 if (strcmp(csdef.keaTypeName, "ECDHE") == 0) /* ephemeral? */
@@ -520,6 +682,13 @@ SSL_CanBypass(CERTCertificate *cert, SECKEYPrivateKey *srvPrivkey,
             protocolmask ^= SSL_CBP_TLS1_0;
         }
 
+        if (privKeytype == rsaKey && testrsa_export) {
+            if (PK11_GetPrivateModulusLen(srvPrivkey) > EXPORT_RSA_KEY_LENGTH) {
+                *pcanbypass = PR_FALSE;
+                break;
+            } else
+                testrsa = PR_TRUE;
+        }
         for (; privKeytype == rsaKey && testrsa;) {
             /* TLS_RSA */
             unsigned char rsaPmsBuf[SSL3_RSA_PMS_LENGTH];
@@ -598,7 +767,7 @@ SSL_CanBypass(CERTCertificate *cert, SECKEYPrivateKey *srvPrivkey,
                 pecParams = &srvPubkey->u.ec.DEREncodedParams;
             } else if (privKeytype == rsaKey && testecdhe) {
                 /* TLS_ECDHE_RSA */
-                const sslNamedGroupDef *ecGroup;
+                const namedGroupDef *ecGroup;
                 int serverKeyStrengthInBits;
                 int signatureKeyStrength;
                 int requiredECCbits;

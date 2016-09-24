@@ -200,9 +200,9 @@ class ChainedPacketFilter : public PacketFilter {
 
 class TlsExtensionFilter : public TlsHandshakeFilter {
  protected:
-  PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
-                                       const DataBuffer& input,
-                                       DataBuffer* output) override;
+  virtual PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
+                                               const DataBuffer& input,
+                                               DataBuffer* output);
 
   virtual PacketFilter::Action FilterExtension(uint16_t extension_type,
                                                const DataBuffer& input,
@@ -226,9 +226,9 @@ class TlsExtensionCapture : public TlsExtensionFilter {
   const DataBuffer& extension() const { return data_; }
 
  protected:
-  PacketFilter::Action FilterExtension(uint16_t extension_type,
-                                       const DataBuffer& input,
-                                       DataBuffer* output) override;
+  virtual PacketFilter::Action FilterExtension(uint16_t extension_type,
+                                               const DataBuffer& input,
+                                               DataBuffer* output);
 
  private:
   const uint16_t extension_;
@@ -248,16 +248,6 @@ class TlsExtensionReplacer : public TlsExtensionFilter {
   const DataBuffer data_;
 };
 
-class TlsExtensionDropper : public TlsExtensionFilter {
- public:
-  TlsExtensionDropper(uint16_t extension) : extension_(extension) {}
-  PacketFilter::Action FilterExtension(uint16_t extension_type,
-                                       const DataBuffer&, DataBuffer*) override;
-
- private:
-  uint16_t extension_;
-};
-
 class TlsAgent;
 typedef std::function<void(void)> VoidFunction;
 
@@ -269,7 +259,7 @@ class AfterRecordN : public TlsRecordFilter {
 
   virtual PacketFilter::Action FilterRecord(const RecordHeader& header,
                                             const DataBuffer& body,
-                                            DataBuffer* out) override;
+                                            DataBuffer* out);
 
  private:
   TlsAgent* src_;

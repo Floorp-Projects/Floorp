@@ -37,11 +37,6 @@ enum SessionResumptionMode {
 
 class TlsAgent;
 
-const extern std::vector<SSLNamedGroup> kAllDHEGroups;
-const extern std::vector<SSLNamedGroup> kECDHEGroups;
-const extern std::vector<SSLNamedGroup> kFFDHEGroups;
-const extern std::vector<SSLNamedGroup> kFasterDHEGroups;
-
 typedef std::function<SECStatus(TlsAgent* agent, bool checksig, bool isServer)>
     AuthCertificateCallbackFunction;
 
@@ -95,8 +90,6 @@ class TlsAgent : public PollTarget {
   void DisableAllCiphers();
   void EnableCiphersByAuthType(SSLAuthType authType);
   void EnableCiphersByKeyExchange(SSLKEAType kea);
-  void EnableGroupsByKeyExchange(SSLKEAType kea);
-  void EnableGroupsByAuthType(SSLAuthType authType);
   void EnableSingleCipher(uint16_t cipher);
 
   void Handshake();
@@ -148,7 +141,7 @@ class TlsAgent : public PollTarget {
   void EnableCompression();
   void SetDowngradeCheckVersion(uint16_t version);
   void CheckSecretsDestroyed();
-  void ConfigNamedGroups(const std::vector<SSLNamedGroup>& groups);
+  void ConfigNamedGroups(const SSLNamedGroup* groups, size_t num);
 
   const std::string& name() const { return name_; }
 
@@ -195,20 +188,6 @@ class TlsAgent : public PollTarget {
   std::vector<uint8_t> session_id() const {
     return std::vector<uint8_t>(info_.sessionID,
                                 info_.sessionID + info_.sessionIDLength);
-  }
-
-  bool auth_type(SSLAuthType* auth_type) const {
-    if (state_ != STATE_CONNECTED) return false;
-
-    *auth_type = info_.authType;
-    return true;
-  }
-
-  bool kea_type(SSLKEAType* kea_type) const {
-    if (state_ != STATE_CONNECTED) return false;
-
-    *kea_type = info_.keaType;
-    return true;
   }
 
   size_t received_bytes() const { return recv_ctr_; }
@@ -322,8 +301,6 @@ class TlsAgent : public PollTarget {
   }
 
   void DisableLameGroups();
-  void ConfigStrongECGroups(bool en);
-  void ConfigAllDHGroups(bool en);
   void CheckCallbacks() const;
   void Connected();
 

@@ -47,32 +47,32 @@
  */
 
 int ssl3CipherSuites[] = {
-    -1,                                /* SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA* a */
-    -1,                                /* SSL_FORTEZZA_DMS_WITH_RC4_128_SHA     * b */
-    TLS_RSA_WITH_RC4_128_MD5,          /* c */
-    TLS_RSA_WITH_3DES_EDE_CBC_SHA,     /* d */
-    TLS_RSA_WITH_DES_CBC_SHA,          /* e */
-    -1,                                /* TLS_RSA_EXPORT_WITH_RC4_40_MD5        * f */
-    -1,                                /* TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5    * g */
-    -1,                                /* SSL_FORTEZZA_DMS_WITH_NULL_SHA        * h */
-    TLS_RSA_WITH_NULL_MD5,             /* i */
-    -1,                                /* SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA    * j */
-    -1,                                /* SSL_RSA_FIPS_WITH_DES_CBC_SHA         * k */
-    -1,                                /* TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA   * l */
-    -1,                                /* TLS_RSA_EXPORT1024_WITH_RC4_56_SHA    * m */
-    TLS_RSA_WITH_RC4_128_SHA,          /* n */
-    TLS_DHE_DSS_WITH_RC4_128_SHA,      /* o */
-    TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA, /* p */
-    TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA, /* q */
-    TLS_DHE_RSA_WITH_DES_CBC_SHA,      /* r */
-    TLS_DHE_DSS_WITH_DES_CBC_SHA,      /* s */
-    TLS_DHE_DSS_WITH_AES_128_CBC_SHA,  /* t */
-    TLS_DHE_RSA_WITH_AES_128_CBC_SHA,  /* u */
-    TLS_RSA_WITH_AES_128_CBC_SHA,      /* v */
-    TLS_DHE_DSS_WITH_AES_256_CBC_SHA,  /* w */
-    TLS_DHE_RSA_WITH_AES_256_CBC_SHA,  /* x */
-    TLS_RSA_WITH_AES_256_CBC_SHA,      /* y */
-    TLS_RSA_WITH_NULL_SHA,             /* z */
+    -1,                                  /* SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA* a */
+    -1,                                  /* SSL_FORTEZZA_DMS_WITH_RC4_128_SHA     * b */
+    TLS_RSA_WITH_RC4_128_MD5,            /* c */
+    TLS_RSA_WITH_3DES_EDE_CBC_SHA,       /* d */
+    TLS_RSA_WITH_DES_CBC_SHA,            /* e */
+    TLS_RSA_EXPORT_WITH_RC4_40_MD5,      /* f */
+    TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5,  /* g */
+    -1,                                  /* SSL_FORTEZZA_DMS_WITH_NULL_SHA        * h */
+    TLS_RSA_WITH_NULL_MD5,               /* i */
+    SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA,  /* j */
+    SSL_RSA_FIPS_WITH_DES_CBC_SHA,       /* k */
+    TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA, /* l */
+    TLS_RSA_EXPORT1024_WITH_RC4_56_SHA,  /* m */
+    TLS_RSA_WITH_RC4_128_SHA,            /* n */
+    TLS_DHE_DSS_WITH_RC4_128_SHA,        /* o */
+    TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA,   /* p */
+    TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA,   /* q */
+    TLS_DHE_RSA_WITH_DES_CBC_SHA,        /* r */
+    TLS_DHE_DSS_WITH_DES_CBC_SHA,        /* s */
+    TLS_DHE_DSS_WITH_AES_128_CBC_SHA,    /* t */
+    TLS_DHE_RSA_WITH_AES_128_CBC_SHA,    /* u */
+    TLS_RSA_WITH_AES_128_CBC_SHA,        /* v */
+    TLS_DHE_DSS_WITH_AES_256_CBC_SHA,    /* w */
+    TLS_DHE_RSA_WITH_AES_256_CBC_SHA,    /* x */
+    TLS_RSA_WITH_AES_256_CBC_SHA,        /* y */
+    TLS_RSA_WITH_NULL_SHA,               /* z */
     0
 };
 

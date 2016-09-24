@@ -39,44 +39,13 @@ ectest_cleanup()
   . common/cleanup.sh
 }
 
-ectest_genkeydb_test()
-{
-  certutil -N -d "${HOSTDIR}" -f "${R_PWFILE}" 2>&1
-  if [ $? -ne 0 ]; then
-    return $?
-  fi
-  curves=( \
-    "curve25519" \
-    "secp256r1" \
-    "secp384r1" \
-    "secp521r1" \
-  )
-  for curve in "${curves[@]}"; do
-    echo "Test $curve key generation using certutil ..."
-    certutil -G -d "${HOSTDIR}" -k ec -q $curve -f "${R_PWFILE}" -z ${NOISE_FILE}
-    if [ $? -ne 0 ]; then
-      html_failed "ec test certutil keygen - $curve"
-    else
-      html_passed "ec test certutil keygen - $curve"
-    fi
-  done
-  echo "Test sect571r1 key generation using certutil that should fail because it's not implemented ..."
-  certutil -G -d "${HOSTDIR}" -k ec -q sect571r1 -f "${R_PWFILE}" -z ${NOISE_FILE}
-  if [ $? -eq 0 ]; then
-    html_failed "ec test certutil keygen - $curve"
-  else
-    html_passed "ec test certutil keygen - $curve"
-  fi
-}
-
 ectest_init
-ectest_genkeydb_test
-ECTEST_OUT=$(ectest -f -p -n -d 2>&1)
+ECTEST_OUT=$(ectest 2>&1)
 ECTEST_OUT=`echo $ECTEST_OUT | grep -i 'not okay\|Assertion failure'`
 # TODO: expose individual tests and failures instead of overall
 if [ -n "$ECTEST_OUT" ] ; then
-  html_failed "ec freebl and pk11 test"
+  html_failed "ec(test) test"
 else
-  html_passed "ec freebl and pk11 test"
+  html_passed "ec(test) test"
 fi
 ectest_cleanup

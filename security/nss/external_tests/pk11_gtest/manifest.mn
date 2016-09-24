@@ -9,7 +9,6 @@ MODULE = nss
 CPPSRCS = \
       pk11_aeskeywrap_unittest.cc \
       pk11_chacha20poly1305_unittest.cc \
-      pk11_export_unittest.cc \
       pk11_pbkdf2_unittest.cc \
       pk11_prf_unittest.cc \
       pk11_rsapss_unittest.cc \

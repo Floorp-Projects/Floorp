@@ -61,32 +61,32 @@
 PRIntervalTime maxInterval = PR_INTERVAL_NO_TIMEOUT;
 
 int ssl3CipherSuites[] = {
-    -1,                                /* SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA* a */
-    -1,                                /* SSL_FORTEZZA_DMS_WITH_RC4_128_SHA     * b */
-    TLS_RSA_WITH_RC4_128_MD5,          /* c */
-    TLS_RSA_WITH_3DES_EDE_CBC_SHA,     /* d */
-    TLS_RSA_WITH_DES_CBC_SHA,          /* e */
-    -1,                                /* TLS_RSA_EXPORT_WITH_RC4_40_MD5        * f */
-    -1,                                /* TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5    * g */
-    -1,                                /* SSL_FORTEZZA_DMS_WITH_NULL_SHA        * h */
-    TLS_RSA_WITH_NULL_MD5,             /* i */
-    -1,                                /* SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA    * j */
-    -1,                                /* SSL_RSA_FIPS_WITH_DES_CBC_SHA         * k */
-    -1,                                /* TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA   * l */
-    -1,                                /* TLS_RSA_EXPORT1024_WITH_RC4_56_SHA    * m */
-    TLS_RSA_WITH_RC4_128_SHA,          /* n */
-    TLS_DHE_DSS_WITH_RC4_128_SHA,      /* o */
-    TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA, /* p */
-    TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA, /* q */
-    TLS_DHE_RSA_WITH_DES_CBC_SHA,      /* r */
-    TLS_DHE_DSS_WITH_DES_CBC_SHA,      /* s */
-    TLS_DHE_DSS_WITH_AES_128_CBC_SHA,  /* t */
-    TLS_DHE_RSA_WITH_AES_128_CBC_SHA,  /* u */
-    TLS_RSA_WITH_AES_128_CBC_SHA,      /* v */
-    TLS_DHE_DSS_WITH_AES_256_CBC_SHA,  /* w */
-    TLS_DHE_RSA_WITH_AES_256_CBC_SHA,  /* x */
-    TLS_RSA_WITH_AES_256_CBC_SHA,      /* y */
-    TLS_RSA_WITH_NULL_SHA,             /* z */
+    -1,                                  /* SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA* a */
+    -1,                                  /* SSL_FORTEZZA_DMS_WITH_RC4_128_SHA,   * b */
+    TLS_RSA_WITH_RC4_128_MD5,            /* c */
+    TLS_RSA_WITH_3DES_EDE_CBC_SHA,       /* d */
+    TLS_RSA_WITH_DES_CBC_SHA,            /* e */
+    TLS_RSA_EXPORT_WITH_RC4_40_MD5,      /* f */
+    TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5,  /* g */
+    -1,                                  /* SSL_FORTEZZA_DMS_WITH_NULL_SHA,      * h */
+    TLS_RSA_WITH_NULL_MD5,               /* i */
+    SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA,  /* j */
+    SSL_RSA_FIPS_WITH_DES_CBC_SHA,       /* k */
+    TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA, /* l */
+    TLS_RSA_EXPORT1024_WITH_RC4_56_SHA,  /* m */
+    TLS_RSA_WITH_RC4_128_SHA,            /* n */
+    TLS_DHE_DSS_WITH_RC4_128_SHA,        /* o */
+    TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA,   /* p */
+    TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA,   /* q */
+    TLS_DHE_RSA_WITH_DES_CBC_SHA,        /* r */
+    TLS_DHE_DSS_WITH_DES_CBC_SHA,        /* s */
+    TLS_DHE_DSS_WITH_AES_128_CBC_SHA,    /* t */
+    TLS_DHE_RSA_WITH_AES_128_CBC_SHA,    /* u */
+    TLS_RSA_WITH_AES_128_CBC_SHA,        /* v */
+    TLS_DHE_DSS_WITH_AES_256_CBC_SHA,    /* w */
+    TLS_DHE_RSA_WITH_AES_256_CBC_SHA,    /* x */
+    TLS_RSA_WITH_AES_256_CBC_SHA,        /* y */
+    TLS_RSA_WITH_NULL_SHA,               /* z */
     0
 };
 
@@ -228,6 +228,7 @@ PrintParameterUsage(void)
     fprintf(stderr, "%-20s Override bad server cert. Make it OK.\n", "-o");
     fprintf(stderr, "%-20s Disable SSL socket locking.\n", "-s");
     fprintf(stderr, "%-20s Verbose progress reporting.\n", "-v");
+    fprintf(stderr, "%-20s Use export policy.\n", "-x");
     fprintf(stderr, "%-20s Ping the server and then exit.\n", "-q");
     fprintf(stderr, "%-20s Timeout for server ping (default: no timeout).\n", "-t seconds");
     fprintf(stderr, "%-20s Renegotiate N times (resuming session if N>1).\n", "-r N");
@@ -277,7 +278,13 @@ PrintCipherUsage(const char *progName)
             "c    SSL3 RSA WITH RC4 128 MD5\n"
             "d    SSL3 RSA WITH 3DES EDE CBC SHA\n"
             "e    SSL3 RSA WITH DES CBC SHA\n"
+            "f    SSL3 RSA EXPORT WITH RC4 40 MD5\n"
+            "g    SSL3 RSA EXPORT WITH RC2 CBC 40 MD5\n"
             "i    SSL3 RSA WITH NULL MD5\n"
+            "j    SSL3 RSA FIPS WITH 3DES EDE CBC SHA\n"
+            "k    SSL3 RSA FIPS WITH DES CBC SHA\n"
+            "l    SSL3 RSA EXPORT WITH DES CBC SHA\t(new)\n"
+            "m    SSL3 RSA EXPORT WITH RC4 56 SHA\t(new)\n"
             "n    SSL3 RSA WITH RC4 128 SHA\n"
             "o    SSL3 DHE DSS WITH RC4 128 SHA\n"
             "p    SSL3 DHE RSA WITH 3DES EDE CBC SHA\n"
@@ -904,6 +911,7 @@ main(int argc, char **argv)
     SSLVersionRange enabledVersions;
     int bypassPKCS11 = 0;
     int disableLocking = 0;
+    int useExportPolicy = 0;
     int enableSessionTickets = 0;
     int enableCompression = 0;
     int enableFalseStart = 0;
@@ -960,7 +968,7 @@ main(int argc, char **argv)
     SSL_VersionRangeGetSupported(ssl_variant_stream, &enabledVersions);
 
     optstate = PL_CreateOptState(argc, argv,
-                                 "46BCDFGHKM:OR:STUV:W:Ya:bc:d:fgh:m:n:op:qr:st:uvw:z");
+                                 "46BCDFGHKM:OR:STUV:W:Ya:bc:d:fgh:m:n:op:qr:st:uvw:xz");
     while ((optstatus = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
         switch (optstate->option) {
             case '?':
@@ -1151,6 +1159,10 @@ main(int argc, char **argv)
                 pwdata.data = PORT_Strdup(optstate->value);
                 break;
 
+            case 'x':
+                useExportPolicy = 1;
+                break;
+
             case 'z':
                 enableCompression = 1;
                 break;
@@ -1303,6 +1315,12 @@ main(int argc, char **argv)
     } else if (rootModule) {
         SECMOD_AddNewModule("Builtins", rootModule, 0, 0);
     }
+
+    /* set the policy bits true for all the cipher suites. */
+    if (useExportPolicy)
+        NSS_SetExportPolicy();
+    else
+        NSS_SetDomesticPolicy();
 
     /* all SSL3 cipher suites are enabled by default. */
     if (cipherString) {

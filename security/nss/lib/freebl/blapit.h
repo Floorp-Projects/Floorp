@@ -343,8 +343,7 @@ typedef enum { ec_params_explicit,
 } ECParamsType;
 
 typedef enum { ec_field_GFp = 1,
-               ec_field_GF2m,
-               ec_field_plain
+               ec_field_GF2m
 } ECFieldType;
 
 struct ECFieldIDStr {
@@ -382,7 +381,6 @@ struct ECParamsStr {
     SECItem DEREncoding;
     ECCurveName name;
     SECItem curveOID;
-    int pointSize;
 };
 typedef struct ECParamsStr ECParams;
 
