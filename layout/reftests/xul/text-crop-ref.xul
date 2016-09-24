@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<window class="reftest-wait"
+        align="left"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <html:style type="text/css">
+    @font-face {
+      font-family: firasans;
+      src: url(../fonts/fira/FiraSans-Regular.otf);
+    }
+    vbox {
+      font-family: firasans;
+      font-size: 40px;
+    }
+  </html:style>
+<vbox width="230">
+  <label id="start" value="" />
+  <label id="end" value="" />
+  <label id="center" value="" />
+</vbox>
+<script>
+<![CDATA[
+function text(n) {
+  return "\u{1F310}".repeat(n);
+}
+var e = "\u{2026}";
+document.getElementById("start").value = e + text(4);
+document.getElementById("end").value = text(4) + e;
+document.getElementById("center").value = text(2) + e + text(2);
+document.documentElement.className = "";
+]]>
+</script>
+</window>
