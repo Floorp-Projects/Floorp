@@ -269,7 +269,8 @@ while True:
     app.on("message", listener);
   });
 
-  app.send(MSG);
+  let buffer = NativeApp.encodeMessage(context, MSG);
+  app.send(buffer);
   yield recvPromise;
 
   app._cleanup();

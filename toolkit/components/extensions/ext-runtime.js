@@ -82,6 +82,7 @@ extensions.registerSchemaAPI("runtime", "addon_parent", context => {
 
       sendNativeMessage(application, message) {
         let app = new NativeApp(extension, context, application);
+        message = NativeApp.encodeMessage(context, message);
         return app.sendMessage(message);
       },
 
