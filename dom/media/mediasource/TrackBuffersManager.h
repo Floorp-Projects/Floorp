@@ -308,7 +308,7 @@ private:
     // If set, position where the next contiguous frame will be inserted.
     // If a discontinuity is detected, it will be unset and recalculated upon
     // the next insertion.
-    Maybe<size_t> mNextInsertionIndex;
+    Maybe<uint32_t> mNextInsertionIndex;
     // Samples just demuxed, but not yet parsed.
     TrackBuffer mQueuedSamples;
     // We only manage a single track of each type at this time.
@@ -381,9 +381,9 @@ private:
   // Remove all frames and their dependencies contained in aIntervals.
   // Return the index at which frames were first removed or 0 if no frames
   // removed.
-  size_t RemoveFrames(const media::TimeIntervals& aIntervals,
-                      TrackData& aTrackData,
-                      uint32_t aStartIndex);
+  uint32_t RemoveFrames(const media::TimeIntervals& aIntervals,
+                        TrackData& aTrackData,
+                        uint32_t aStartIndex);
   // Recalculate track's evictable amount.
   void ResetEvictionIndex(TrackData& aTrackData);
   void UpdateEvictionIndex(TrackData& aTrackData, uint32_t aCurrentIndex);
@@ -391,7 +391,7 @@ private:
   uint32_t FindSampleIndex(const TrackBuffer& aTrackBuffer,
                            const media::TimeInterval& aInterval);
   const MediaRawData* GetSample(TrackInfo::TrackType aTrack,
-                                size_t aIndex,
+                                uint32_t aIndex,
                                 const media::TimeUnit& aExpectedDts,
                                 const media::TimeUnit& aExpectedPts,
                                 const media::TimeUnit& aFuzz);
