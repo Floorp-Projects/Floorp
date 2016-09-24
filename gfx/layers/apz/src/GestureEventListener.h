@@ -171,13 +171,13 @@ private:
    * out we are compared to our original pinch span. Note that this does _not_
    * continue to be updated once we jump into the |GESTURE_PINCH| state.
    */
-  float mSpanChange;
+  ParentLayerCoord mSpanChange;
 
   /**
    * Previous span calculated for the purposes of setting inside a
    * PinchGestureInput.
    */
-  float mPreviousSpan;
+  ParentLayerCoord mPreviousSpan;
 
   /**
    * Cached copy of the last touch input.

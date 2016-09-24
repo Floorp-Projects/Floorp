@@ -431,8 +431,9 @@ public:
   // Construct a pinch gesture from a ParentLayer point.
   // mFocusPoint remains (0,0) unless it's set later.
   PinchGestureInput(PinchGestureType aType, uint32_t aTime, TimeStamp aTimeStamp,
-                    const ParentLayerPoint& aLocalFocusPoint, float aCurrentSpan,
-                    float aPreviousSpan, Modifiers aModifiers);
+                    const ParentLayerPoint& aLocalFocusPoint,
+                    ParentLayerCoord aCurrentSpan,
+                    ParentLayerCoord aPreviousSpan, Modifiers aModifiers);
 
   bool TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform);
 
@@ -454,15 +455,13 @@ public:
   // by the hit. This is set and used by APZ.
   ParentLayerPoint mLocalFocusPoint;
 
-  // The distance in device pixels (though as a float for increased precision
-  // and because it is the distance along both the x and y axis) between the
-  // touches responsible for the pinch gesture.
-  float mCurrentSpan;
+  // The distance between the touches responsible for the pinch gesture.
+  ParentLayerCoord mCurrentSpan;
 
   // The previous |mCurrentSpan| in the PinchGestureInput preceding this one.
   // This is only really relevant during a PINCHGESTURE_SCALE because when it is
   // of this type then there must have been a history of spans.
-  float mPreviousSpan;
+  ParentLayerCoord mPreviousSpan;
 };
 
 /**
