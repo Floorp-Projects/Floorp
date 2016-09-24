@@ -157,6 +157,7 @@ UNIFIED_SOURCES += [
     'WebGLVertexArrayFake.cpp',
     'WebGLVertexArrayGL.cpp',
     'WebGLVertexArrayObject.cpp',
+    'WebGLVertexAttribData.cpp',
 ]
 
 SOURCES += [
