@@ -3474,9 +3474,10 @@ TEST_F(JsepSessionTest, TestExtmap)
   AddTracks(mSessionOff, "audio");
   AddTracks(mSessionAns, "audio");
   // ssrc-audio-level will be extmap 1 for both
-  mSessionOff.AddAudioRtpExtension("foo"); // Default mapping of 2
-  mSessionOff.AddAudioRtpExtension("bar"); // Default mapping of 3
-  mSessionAns.AddAudioRtpExtension("bar"); // Default mapping of 2
+  // rtp-stream-id will be extmap 2 for both
+  mSessionOff.AddAudioRtpExtension("foo"); // Default mapping of 3
+  mSessionOff.AddAudioRtpExtension("bar"); // Default mapping of 4
+  mSessionAns.AddAudioRtpExtension("bar"); // Default mapping of 3
   std::string offer = CreateOffer();
   SetLocalOffer(offer, CHECK_SUCCESS);
   SetRemoteOffer(offer, CHECK_SUCCESS);
@@ -3490,14 +3491,17 @@ TEST_F(JsepSessionTest, TestExtmap)
   auto& offerMediaAttrs = parsedOffer->GetMediaSection(0).GetAttributeList();
   ASSERT_TRUE(offerMediaAttrs.HasAttribute(SdpAttribute::kExtmapAttribute));
   auto& offerExtmap = offerMediaAttrs.GetExtmap().mExtmaps;
-  ASSERT_EQ(3U, offerExtmap.size());
+  ASSERT_EQ(4U, offerExtmap.size());
   ASSERT_EQ("urn:ietf:params:rtp-hdrext:ssrc-audio-level",
       offerExtmap[0].extensionname);
   ASSERT_EQ(1U, offerExtmap[0].entry);
-  ASSERT_EQ("foo", offerExtmap[1].extensionname);
+  ASSERT_EQ("urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id",
+      offerExtmap[1].extensionname);
   ASSERT_EQ(2U, offerExtmap[1].entry);
-  ASSERT_EQ("bar", offerExtmap[2].extensionname);
+  ASSERT_EQ("foo", offerExtmap[2].extensionname);
   ASSERT_EQ(3U, offerExtmap[2].entry);
+  ASSERT_EQ("bar", offerExtmap[3].extensionname);
+  ASSERT_EQ(4U, offerExtmap[3].entry);
 
   UniquePtr<Sdp> parsedAnswer(Parse(answer));
   ASSERT_EQ(1U, parsedAnswer->GetMediaSectionCount());
@@ -3505,13 +3509,16 @@ TEST_F(JsepSessionTest, TestExtmap)
   auto& answerMediaAttrs = parsedAnswer->GetMediaSection(0).GetAttributeList();
   ASSERT_TRUE(answerMediaAttrs.HasAttribute(SdpAttribute::kExtmapAttribute));
   auto& answerExtmap = answerMediaAttrs.GetExtmap().mExtmaps;
-  ASSERT_EQ(2U, answerExtmap.size());
+  ASSERT_EQ(3U, answerExtmap.size());
   ASSERT_EQ("urn:ietf:params:rtp-hdrext:ssrc-audio-level",
       answerExtmap[0].extensionname);
   ASSERT_EQ(1U, answerExtmap[0].entry);
+  ASSERT_EQ("urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id",
+      answerExtmap[1].extensionname);
+  ASSERT_EQ(2U, answerExtmap[1].entry);
   // We ensure that the entry for "bar" matches what was in the offer
-  ASSERT_EQ("bar", answerExtmap[1].extensionname);
-  ASSERT_EQ(3U, answerExtmap[1].entry);
+  ASSERT_EQ("bar", answerExtmap[2].extensionname);
+  ASSERT_EQ(4U, answerExtmap[2].entry);
 }
 
 TEST_F(JsepSessionTest, TestRtcpFbStar)
