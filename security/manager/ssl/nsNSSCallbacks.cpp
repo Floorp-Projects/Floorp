@@ -853,7 +853,7 @@ PreliminaryHandshakeDone(PRFileDesc* fd)
       status->mHaveCipherSuiteAndProtocol = true;
       status->mCipherSuite = channelInfo.cipherSuite;
       status->mProtocolVersion = channelInfo.protocolVersion & 0xFF;
-      infoObject->SetKEAUsed(channelInfo.keaType);
+      infoObject->SetKEAUsed(cipherInfo.keaType);
       infoObject->SetKEAKeyBits(channelInfo.keaKeyBits);
       infoObject->SetMACAlgorithmUsed(cipherInfo.macAlgorithm);
     }
@@ -922,7 +922,7 @@ CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
                              sizeof (cipherInfo)) != SECSuccess) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("CanFalseStartCallback [%p] failed - "
                                       " KEA %d\n", fd,
-                                      static_cast<int32_t>(channelInfo.keaType)));
+                                      static_cast<int32_t>(cipherInfo.keaType)));
     return SECSuccess;
   }
 
@@ -938,10 +938,10 @@ CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
   }
 
   // See bug 952863 for why ECDHE is allowed, but DHE (and RSA) are not.
-  if (channelInfo.keaType != ssl_kea_ecdh) {
+  if (cipherInfo.keaType != ssl_kea_ecdh) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("CanFalseStartCallback [%p] failed - "
                                       "unsupported KEA %d\n", fd,
-                                      static_cast<int32_t>(channelInfo.keaType)));
+                                      static_cast<int32_t>(cipherInfo.keaType)));
     reasonsForNotFalseStarting |= KEA_NOT_SUPPORTED;
   }
 
@@ -1071,9 +1071,9 @@ AccumulateCipherSuite(Telemetry::ID probe, const SSLChannelInfo& channelInfo)
     case TLS_RSA_WITH_RC4_128_SHA: value = 68; break;
     case TLS_RSA_WITH_RC4_128_MD5: value = 69; break;
     // TLS 1.3 PSK resumption
-    case TLS_AES_128_GCM_SHA256: value = 70; break;
-    case TLS_CHACHA20_POLY1305_SHA256: value = 71; break;
-    case TLS_AES_256_GCM_SHA384: value = 72; break;
+    case TLS_ECDHE_PSK_WITH_AES_128_GCM_SHA256: value = 70; break;
+    case TLS_ECDHE_PSK_WITH_CHACHA20_POLY1305_SHA256: value = 71; break;
+    case TLS_ECDHE_PSK_WITH_AES_256_GCM_SHA384: value = 72; break;
     // unknown
     default:
       value = 0;
@@ -1129,19 +1129,19 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
                                 sizeof cipherInfo);
     MOZ_ASSERT(rv == SECSuccess);
     if (rv == SECSuccess) {
-      usesFallbackCipher = channelInfo.keaType == ssl_kea_dh;
+      usesFallbackCipher = cipherInfo.keaType == ssl_kea_dh;
 
       // keyExchange null=0, rsa=1, dh=2, fortezza=3, ecdh=4
       Telemetry::Accumulate(
         infoObject->IsFullHandshake()
           ? Telemetry::SSL_KEY_EXCHANGE_ALGORITHM_FULL
           : Telemetry::SSL_KEY_EXCHANGE_ALGORITHM_RESUMED,
-        channelInfo.keaType);
+        cipherInfo.keaType);
 
-      MOZ_ASSERT(infoObject->GetKEAUsed() == channelInfo.keaType);
+      MOZ_ASSERT(infoObject->GetKEAUsed() == cipherInfo.keaType);
 
       if (infoObject->IsFullHandshake()) {
-        switch (channelInfo.keaType) {
+        switch (cipherInfo.keaType) {
           case ssl_kea_rsa:
             AccumulateNonECCKeySize(Telemetry::SSL_KEA_RSA_KEY_SIZE_FULL,
                                     channelInfo.keaKeyBits);
@@ -1160,13 +1160,12 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
         }
 
         Telemetry::Accumulate(Telemetry::SSL_AUTH_ALGORITHM_FULL,
-                              channelInfo.authType);
+                              cipherInfo.authAlgorithm);
 
         // RSA key exchange doesn't use a signature for auth.
-        if (channelInfo.keaType != ssl_kea_rsa) {
-          switch (channelInfo.authType) {
+        if (cipherInfo.keaType != ssl_kea_rsa) {
+          switch (cipherInfo.authAlgorithm) {
             case ssl_auth_rsa:
-            case ssl_auth_rsa_sign:
               AccumulateNonECCKeySize(Telemetry::SSL_AUTH_RSA_KEY_SIZE_FULL,
                                       channelInfo.authKeyBits);
               break;
