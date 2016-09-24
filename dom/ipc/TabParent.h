@@ -566,7 +566,6 @@ public:
   bool SendLoadRemoteScript(const nsString& aURL,
                             const bool& aRunInGlobalScope);
 
-  static void ObserveLayerUpdate(uint64_t aLayersId, uint64_t aEpoch, bool aActive);
   void LayerTreeUpdate(uint64_t aEpoch, bool aActive);
 
   virtual bool
