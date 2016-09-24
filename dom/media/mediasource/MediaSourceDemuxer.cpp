@@ -258,11 +258,12 @@ MediaSourceDemuxer::GetMozDebugReaderData(nsAString& aString)
   result += nsPrintfCString("Dumping data for demuxer %p:\n", this);
   if (mAudioTrack) {
     result += nsPrintfCString("\tDumping Audio Track Buffer(%s): - mLastAudioTime: %f\n"
-                              "\t\tNumSamples:%u Size:%u NextGetSampleIndex:%u NextInsertionIndex:%d\n",
+                              "\t\tNumSamples:%u Size:%u Evictable:%u NextGetSampleIndex:%u NextInsertionIndex:%d\n",
                               mAudioTrack->mAudioTracks.mInfo->mMimeType.get(),
                               mAudioTrack->mAudioTracks.mNextSampleTime.ToSeconds(),
                               mAudioTrack->mAudioTracks.mBuffers[0].Length(),
                               mAudioTrack->mAudioTracks.mSizeBuffer,
+                              mAudioTrack->Evictable(TrackInfo::kAudioTrack),
                               mAudioTrack->mAudioTracks.mNextGetSampleIndex.valueOr(-1),
                               mAudioTrack->mAudioTracks.mNextInsertionIndex.valueOr(-1));
 
@@ -271,11 +272,12 @@ MediaSourceDemuxer::GetMozDebugReaderData(nsAString& aString)
   }
   if (mVideoTrack) {
     result += nsPrintfCString("\tDumping Video Track Buffer(%s) - mLastVideoTime: %f\n"
-                              "\t\tNumSamples:%u Size:%u NextGetSampleIndex:%u NextInsertionIndex:%d\n",
+                              "\t\tNumSamples:%u Size:%u Evictable:%u NextGetSampleIndex:%u NextInsertionIndex:%d\n",
                               mVideoTrack->mVideoTracks.mInfo->mMimeType.get(),
                               mVideoTrack->mVideoTracks.mNextSampleTime.ToSeconds(),
                               mVideoTrack->mVideoTracks.mBuffers[0].Length(),
                               mVideoTrack->mVideoTracks.mSizeBuffer,
+                              mVideoTrack->Evictable(TrackInfo::kVideoTrack),
                               mVideoTrack->mVideoTracks.mNextGetSampleIndex.valueOr(-1),
                               mVideoTrack->mVideoTracks.mNextInsertionIndex.valueOr(-1));
 
