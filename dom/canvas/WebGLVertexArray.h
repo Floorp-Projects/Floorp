@@ -39,7 +39,7 @@ public:
         return index < mAttribs.Length();
     }
     bool IsAttribArrayEnabled(GLuint index) const {
-        return HasAttrib(index) && mAttribs[index].enabled;
+        return HasAttrib(index) && mAttribs[index].mEnabled;
     }
 
     // Implement parent classes:

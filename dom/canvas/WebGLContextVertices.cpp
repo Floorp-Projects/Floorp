@@ -300,7 +300,7 @@ WebGLContext::EnableVertexAttribArray(GLuint index)
 
     MOZ_ASSERT(mBoundVertexArray);
     mBoundVertexArray->EnsureAttrib(index);
-    mBoundVertexArray->mAttribs[index].enabled = true;
+    mBoundVertexArray->mAttribs[index].mEnabled = true;
 }
 
 void
@@ -315,12 +315,13 @@ WebGLContext::DisableVertexAttribArray(GLuint index)
     MakeContextCurrent();
     InvalidateBufferFetching();
 
-    if (index || gl->IsGLES())
+    if (index || gl->IsGLES()) {
         gl->fDisableVertexAttribArray(index);
+    }
 
     MOZ_ASSERT(mBoundVertexArray);
     mBoundVertexArray->EnsureAttrib(index);
-    mBoundVertexArray->mAttribs[index].enabled = false;
+    mBoundVertexArray->mAttribs[index].mEnabled = false;
 }
 
 JS::Value
@@ -340,20 +341,20 @@ WebGLContext::GetVertexAttrib(JSContext* cx, GLuint index, GLenum pname,
 
     switch (pname) {
     case LOCAL_GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING:
-        return WebGLObjectAsJSValue(cx, mBoundVertexArray->mAttribs[index].buf.get(), rv);
+        return WebGLObjectAsJSValue(cx, mBoundVertexArray->mAttribs[index].mBuf.get(), rv);
 
     case LOCAL_GL_VERTEX_ATTRIB_ARRAY_STRIDE:
-        return JS::Int32Value(mBoundVertexArray->mAttribs[index].stride);
+        return JS::Int32Value(mBoundVertexArray->mAttribs[index].Stride());
 
     case LOCAL_GL_VERTEX_ATTRIB_ARRAY_SIZE:
-        return JS::Int32Value(mBoundVertexArray->mAttribs[index].size);
+        return JS::Int32Value(mBoundVertexArray->mAttribs[index].Size());
 
     case LOCAL_GL_VERTEX_ATTRIB_ARRAY_TYPE:
-        return JS::Int32Value(mBoundVertexArray->mAttribs[index].type);
+        return JS::Int32Value(mBoundVertexArray->mAttribs[index].Type());
 
     case LOCAL_GL_VERTEX_ATTRIB_ARRAY_INTEGER:
         if (IsWebGL2())
-            return JS::BooleanValue(mBoundVertexArray->mAttribs[index].integer);
+            return JS::BooleanValue(mBoundVertexArray->mAttribs[index].IntegerFunc());
 
         break;
 
@@ -361,7 +362,7 @@ WebGLContext::GetVertexAttrib(JSContext* cx, GLuint index, GLenum pname,
         if (IsWebGL2() ||
             IsExtensionEnabled(WebGLExtensionID::ANGLE_instanced_arrays))
         {
-            return JS::Int32Value(mBoundVertexArray->mAttribs[index].divisor);
+            return JS::Int32Value(mBoundVertexArray->mAttribs[index].mDivisor);
         }
         break;
 
@@ -388,10 +389,10 @@ WebGLContext::GetVertexAttrib(JSContext* cx, GLuint index, GLenum pname,
         }
 
     case LOCAL_GL_VERTEX_ATTRIB_ARRAY_ENABLED:
-        return JS::BooleanValue(mBoundVertexArray->mAttribs[index].enabled);
+        return JS::BooleanValue(mBoundVertexArray->mAttribs[index].mEnabled);
 
     case LOCAL_GL_VERTEX_ATTRIB_ARRAY_NORMALIZED:
-        return JS::BooleanValue(mBoundVertexArray->mAttribs[index].normalized);
+        return JS::BooleanValue(mBoundVertexArray->mAttribs[index].Normalized());
 
     default:
         break;
@@ -417,7 +418,7 @@ WebGLContext::GetVertexAttribOffset(GLuint index, GLenum pname)
 
     MOZ_ASSERT(mBoundVertexArray);
     mBoundVertexArray->EnsureAttrib(index);
-    return mBoundVertexArray->mAttribs[index].byteOffset;
+    return mBoundVertexArray->mAttribs[index].ByteOffset();
 }
 
 void
@@ -444,19 +445,14 @@ WebGLContext::VertexAttribPointer(GLuint index, GLint size, GLenum type,
      return ErrorInvalidOperation("vertexAttribPointer: type must match bound VBO type: %d != %d", type, mBoundArrayBuffer->GLType());
      */
 
-    WebGLVertexAttribData& vd = mBoundVertexArray->mAttribs[index];
-
-    vd.buf = mBoundArrayBuffer;
-    vd.stride = stride;
-    vd.size = size;
-    vd.byteOffset = byteOffset;
-    vd.type = type;
-    vd.normalized = normalized;
-    vd.integer = false;
-
     MakeContextCurrent();
     gl->fVertexAttribPointer(index, size, type, normalized, stride,
                              reinterpret_cast<void*>(byteOffset));
+
+    WebGLVertexAttribData& vd = mBoundVertexArray->mAttribs[index];
+    const bool integerFunc = false;
+    vd.VertexAttribPointer(integerFunc, mBoundArrayBuffer, size, type, normalized, stride,
+                           byteOffset);
 }
 
 void
@@ -472,7 +468,7 @@ WebGLContext::VertexAttribDivisor(GLuint index, GLuint divisor)
     mBoundVertexArray->EnsureAttrib(index);
 
     WebGLVertexAttribData& vd = mBoundVertexArray->mAttribs[index];
-    vd.divisor = divisor;
+    vd.mDivisor = divisor;
 
     InvalidateBufferFetching();
 
