@@ -138,8 +138,8 @@ class ViEChannel
   bool GetReceiveAbsoluteSendTimeStatus() const;
   int SetSendVideoRotationStatus(bool enable, int id);
   int SetReceiveVideoRotationStatus(bool enable, int id);
-  int SetSendRIDStatus(bool enable, int id, const char *rid);
-  int SetReceiveRIDStatus(bool enable, int id);
+  int SetSendRtpStreamId(bool enable, int id, const char* rid);
+  int SetReceiveRtpStreamId(bool enable, int id);
   void SetRtcpXrRrtrStatus(bool enable);
   void SetTransmissionSmoothingStatus(bool enable);
   void EnableTMMBR(bool enable);
