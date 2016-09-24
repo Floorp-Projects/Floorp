@@ -163,6 +163,10 @@ this.HostManifestManager = {
 };
 
 this.NativeApp = class extends EventEmitter {
+  /**
+   * @param {BaseContext} context The context that initiated the native app.
+   * @param {string} application The identifier of the native app.
+   */
   constructor(context, application) {
     super();
 
@@ -180,12 +184,10 @@ this.NativeApp = class extends EventEmitter {
 
     this.startupPromise = HostManifestManager.lookupApplication(application, context)
       .then(hostInfo => {
-        if (!hostInfo) {
-          throw new Error(`No such native application ${application}`);
-        }
-
-        if (!hostInfo.manifest.allowed_extensions.includes(context.extension.id)) {
-          throw new Error(`This extension does not have permission to use native application ${application}`);
+        // Put the two errors together to not leak information about whether a native
+        // application is installed to addons that do not have the right permission.
+        if (!hostInfo || !hostInfo.manifest.allowed_extensions.includes(context.extension.id)) {
+          throw new context.cloneScope.Error(`This extension does not have permission to use native application ${application} (or the application is not installed)`);
         }
 
         let command = hostInfo.manifest.path;
@@ -230,7 +232,7 @@ this.NativeApp = class extends EventEmitter {
   static onConnectNative(context, messageManager, portId, sender, application) {
     let app = new NativeApp(context, application);
     let port = new ExtensionUtils.Port(context, messageManager, [messageManager], "", portId, sender, sender);
-    app.once("disconnect", (what, err) => port.disconnect(err && err.message));
+    app.once("disconnect", (what, err) => port.disconnect(err));
 
     /* eslint-disable mozilla/balanced-listeners */
     app.on("message", (what, msg) => port.postMessage(msg));
@@ -269,7 +271,7 @@ this.NativeApp = class extends EventEmitter {
     this.readPromise = this.proc.stdout.readUint32()
       .then(len => {
         if (len > NativeApp.maxRead) {
-          throw new Error(`Native application tried to send a message of ${len} bytes, which exceeds the limit of ${NativeApp.maxRead} bytes.`);
+          throw new this.context.cloneScope.Error(`Native application tried to send a message of ${len} bytes, which exceeds the limit of ${NativeApp.maxRead} bytes.`);
         }
         return this.proc.stdout.readJSON(len);
       }).then(msg => {
@@ -400,6 +402,9 @@ this.NativeApp = class extends EventEmitter {
 
     if (!this.sentDisconnect) {
       this.sentDisconnect = true;
+      if (err && err.errorCode == Subprocess.ERROR_END_OF_FILE) {
+        err = null;
+      }
       this.emit("disconnect", err);
     }
   }
