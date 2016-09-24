@@ -213,10 +213,6 @@ public:
   virtual MediaConduitErrorCode SetExternalRecvCodec(VideoCodecConfig* config,
                                                      VideoDecoder* decoder) override;
 
-  /**
-  * Enables use of Rtp Stream Id, and sets the extension ID.
-  */
-  virtual MediaConduitErrorCode EnableRTPStreamIdExtension(bool enabled, uint8_t id) override;
 
   /**
    * Webrtc transport implementation to send and receive RTP packet.
@@ -403,9 +399,6 @@ private:
   uint32_t mStartBitrate;
   uint32_t mMaxBitrate;
   uint32_t mMinBitrateEstimate;
-
-  bool mRtpStreamIdEnabled;
-  uint8_t mRtpStreamIdExtId;
 
   static const unsigned int sAlphaNum = 7;
   static const unsigned int sAlphaDen = 8;

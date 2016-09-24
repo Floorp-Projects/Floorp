@@ -42,14 +42,11 @@ const char* RtpExtension::kTOffset = "urn:ietf:params:rtp-hdrext:toffset";
 const char* RtpExtension::kAbsSendTime =
     "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time";
 const char* RtpExtension::kVideoRotation = "urn:3gpp:video-orientation";
-const char* RtpExtension::kRtpStreamId =
-  "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id";
 
 bool RtpExtension::IsSupported(const std::string& name) {
   return name == webrtc::RtpExtension::kTOffset ||
          name == webrtc::RtpExtension::kAbsSendTime ||
-         name == webrtc::RtpExtension::kVideoRotation ||
-         name == webrtc::RtpExtension::kRtpStreamId;
+         name == webrtc::RtpExtension::kVideoRotation;
 }
 
 VideoEncoder* VideoEncoder::Create(VideoEncoder::EncoderType codec_type) {
