@@ -214,7 +214,7 @@ bool ViEReceiver::SetReceiveVideoRotationStatus(bool enable, int id) {
 bool ViEReceiver::SetReceiveRIDStatus(bool enable, int id) {
   if (enable) {
     if (rtp_header_parser_->RegisterRtpHeaderExtension(
-            kRtpExtensionRID, id)) {
+            kRtpExtensionRtpStreamId, id)) {
       receiving_rid_enabled_ = true;
       return true;
     } else {
@@ -223,7 +223,7 @@ bool ViEReceiver::SetReceiveRIDStatus(bool enable, int id) {
   } else {
     receiving_rid_enabled_ = false;
     return rtp_header_parser_->DeregisterRtpHeaderExtension(
-        kRtpExtensionRID);
+        kRtpExtensionRtpStreamId);
   }
 }
 

@@ -1234,7 +1234,7 @@ uint16_t RTPSender::BuildRTPHeaderExtension(uint8_t* data_buffer,
       case kRtpExtensionTransportSequenceNumber:
         block_length = BuildTransportSequenceNumberExtension(extension_data);
         break;
-      case kRtpExtensionRID:
+      case kRtpExtensionRtpStreamId:
         block_length = BuildRIDExtension(extension_data);
         break;
       default:
@@ -1422,9 +1422,10 @@ uint8_t RTPSender::BuildRIDExtension(
 
   // Get id defined by user.
   uint8_t id;
-  if (rtp_header_extension_map_.GetId(kRtpExtensionRID,
+  if (!rid_ ||
+    rtp_header_extension_map_.GetId(kRtpExtensionRtpStreamId,
                                       &id) != 0) {
-    // Not registered.
+    // No RtpStreamId or not registered
     return 0;
   }
   size_t pos = 0;
