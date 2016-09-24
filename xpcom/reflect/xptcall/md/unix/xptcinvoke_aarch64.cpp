@@ -92,36 +92,40 @@ invoke_copy_to_stack(uint64_t* stk, uint64_t *end,
     ++ireg_args;
 
     for (uint32_t i = 0; i < paramCount; i++, s++) {
+        uint64_t word;
+
         if (s->IsPtrData()) {
-            alloc_word(ireg_args, stack_args, ireg_end, (uint64_t)s->ptr);
-            continue;
+            word = (uint64_t)s->ptr;
+        } else {
+            // According to the ABI, integral types that are smaller than 8
+            // bytes are to be passed in 8-byte registers or 8-byte stack
+            // slots.
+            switch (s->type) {
+                case nsXPTType::T_FLOAT:
+                    alloc_float(freg_args, stack_args, freg_end, s->val.f);
+                    continue;
+                case nsXPTType::T_DOUBLE:
+                    alloc_double(freg_args, stack_args, freg_end, s->val.d);
+                    continue;
+                case nsXPTType::T_I8:    word = s->val.i8;  break;
+                case nsXPTType::T_I16:   word = s->val.i16; break;
+                case nsXPTType::T_I32:   word = s->val.i32; break;
+                case nsXPTType::T_I64:   word = s->val.i64; break;
+                case nsXPTType::T_U8:    word = s->val.u8;  break;
+                case nsXPTType::T_U16:   word = s->val.u16; break;
+                case nsXPTType::T_U32:   word = s->val.u32; break;
+                case nsXPTType::T_U64:   word = s->val.u64; break;
+                case nsXPTType::T_BOOL:  word = s->val.b;   break;
+                case nsXPTType::T_CHAR:  word = s->val.c;   break;
+                case nsXPTType::T_WCHAR: word = s->val.wc;  break;
+                default:
+                    // all the others are plain pointer types
+                    word = reinterpret_cast<uint64_t>(s->val.p);
+                    break;
+            }
         }
-        // According to the ABI, integral types that are smaller than 8 bytes
-        // are to be passed in 8-byte registers or 8-byte stack slots.
-        switch (s->type) {
-            case nsXPTType::T_FLOAT:
-                alloc_float(freg_args, stack_args, freg_end, s->val.f);
-                break;
-            case nsXPTType::T_DOUBLE:
-                alloc_double(freg_args, stack_args, freg_end, s->val.d);
-                break;
-            case nsXPTType::T_I8:  alloc_word(ireg_args, stk, end, s->val.i8);   break;
-            case nsXPTType::T_I16: alloc_word(ireg_args, stk, end, s->val.i16);  break;
-            case nsXPTType::T_I32: alloc_word(ireg_args, stk, end, s->val.i32);  break;
-            case nsXPTType::T_I64: alloc_word(ireg_args, stk, end, s->val.i64);  break;
-            case nsXPTType::T_U8:  alloc_word(ireg_args, stk, end, s->val.u8);   break;
-            case nsXPTType::T_U16: alloc_word(ireg_args, stk, end, s->val.u16);  break;
-            case nsXPTType::T_U32: alloc_word(ireg_args, stk, end, s->val.u32);  break;
-            case nsXPTType::T_U64: alloc_word(ireg_args, stk, end, s->val.u64);  break;
-            case nsXPTType::T_BOOL: alloc_word(ireg_args, stk, end, s->val.b);   break;
-            case nsXPTType::T_CHAR: alloc_word(ireg_args, stk, end, s->val.c);   break;
-            case nsXPTType::T_WCHAR: alloc_word(ireg_args, stk, end, s->val.wc); break;
-            default:
-                // all the others are plain pointer types
-                alloc_word(ireg_args, stack_args, ireg_end,
-                           reinterpret_cast<uint64_t>(s->val.p));
-                break;
-        }
+
+        alloc_word(ireg_args, stack_args, ireg_end, word);
     }
 }
 
