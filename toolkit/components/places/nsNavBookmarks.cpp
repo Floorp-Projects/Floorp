@@ -799,11 +799,9 @@ nsNavBookmarks::InsertSeparator(int64_t aParent,
 
   *aNewItemId = -1;
   // Set a NULL title rather than an empty string.
-  nsCString voidString;
-  voidString.SetIsVoid(true);
   nsAutoCString guid(aGUID);
   PRTime dateAdded = RoundedPRNow();
-  rv = InsertBookmarkInDB(-1, SEPARATOR, aParent, index, voidString, dateAdded,
+  rv = InsertBookmarkInDB(-1, SEPARATOR, aParent, index, NullCString(), dateAdded,
                           0, folderGuid, grandParentId, nullptr, aSource,
                           aNewItemId, guid);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -814,7 +812,7 @@ nsNavBookmarks::InsertSeparator(int64_t aParent,
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
                    nsINavBookmarkObserver,
                    OnItemAdded(*aNewItemId, aParent, index, TYPE_SEPARATOR,
-                               nullptr, voidString, dateAdded, guid, folderGuid,
+                               nullptr, NullCString(), dateAdded, guid, folderGuid,
                                aSource));
 
   return NS_OK;
