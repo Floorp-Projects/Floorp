@@ -353,6 +353,10 @@ this.UnsubmittedCrashHandler = {
       Services.prefs.getBranch("browser.crashReports.unsubmittedCheck.");
   },
 
+  get enabled() {
+    return this.prefs.getBoolPref("enabled");
+  },
+
   // showingNotification is set to true once a notification
   // is successfully shown, and then set back to false if
   // the notification is dismissed by an action by the user.
@@ -371,9 +375,12 @@ this.UnsubmittedCrashHandler = {
 
     this.initialized = true;
 
-    let shouldCheck = this.prefs.getBoolPref("enabled");
-
-    if (shouldCheck) {
+    // UnsubmittedCrashHandler can be initialized but still be disabled.
+    // This is intentional, as this makes simulating UnsubmittedCrashHandler's
+    // reactions to browser startup and shutdown easier in test automation.
+    //
+    // UnsubmittedCrashHandler, when initialized but not enabled, is inert.
+    if (this.enabled) {
       if (this.prefs.prefHasUserValue("suppressUntilDate")) {
         if (this.prefs.getCharPref("suppressUntilDate") > this.dateString()) {
           // We'll be suppressing any notifications until after suppressedDate,
@@ -399,6 +406,10 @@ this.UnsubmittedCrashHandler = {
     }
 
     this.initialized = false;
+
+    if (!this.enabled) {
+      return;
+    }
 
     if (this.suppressed) {
       this.suppressed = false;
