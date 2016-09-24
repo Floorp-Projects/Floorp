@@ -28,7 +28,9 @@ TEST_P(TlsConnectGeneric, ConnectDhe) {
 
 TEST_P(TlsConnectTls13, SharesForBothEcdheAndDhe) {
   EnsureTlsSetup();
-  client_->ConfigNamedGroups(kAllDHEGroups);
+  client_->DisableAllCiphers();
+  client_->EnableCiphersByKeyExchange(ssl_kea_ecdh);
+  client_->EnableCiphersByKeyExchange(ssl_kea_dh);
 
   auto groups_capture = new TlsExtensionCapture(ssl_supported_groups_xtn);
   auto shares_capture = new TlsExtensionCapture(ssl_tls13_key_share_xtn);
@@ -53,6 +55,26 @@ TEST_P(TlsConnectTls13, SharesForBothEcdheAndDhe) {
   CheckShares(shares_capture->extension(), track_group_type);
   EXPECT_TRUE(ec) << "Should include an EC group and share";
   EXPECT_TRUE(dh) << "Should include an FFDHE group and share";
+}
+
+TEST_P(TlsConnectTls13, NoDheOnEcdheConnections) {
+  EnsureTlsSetup();
+  client_->DisableAllCiphers();
+  client_->EnableCiphersByKeyExchange(ssl_kea_ecdh);
+
+  auto groups_capture = new TlsExtensionCapture(ssl_supported_groups_xtn);
+  auto shares_capture = new TlsExtensionCapture(ssl_tls13_key_share_xtn);
+  std::vector<PacketFilter*> captures;
+  captures.push_back(groups_capture);
+  captures.push_back(shares_capture);
+  client_->SetPacketFilter(new ChainedPacketFilter(captures));
+
+  Connect();
+
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  auto is_ecc = [](SSLNamedGroup group) { EXPECT_NE(0x100U, group & 0xff00U); };
+  CheckGroups(groups_capture->extension(), is_ecc);
+  CheckShares(shares_capture->extension(), is_ecc);
 }
 
 TEST_P(TlsConnectGeneric, ConnectFfdheClient) {
@@ -439,8 +461,8 @@ TEST_P(TlsConnectGenericPre13, WeakDHGroup) {
 
 TEST_P(TlsConnectGeneric, Ffdhe3072) {
   EnableOnlyDheCiphers();
-  static const std::vector<SSLNamedGroup> groups = {ssl_grp_ffdhe_3072};
-  client_->ConfigNamedGroups(groups);
+  SSLNamedGroup groups[] = {ssl_grp_ffdhe_3072};
+  client_->ConfigNamedGroups(groups, PR_ARRAY_SIZE(groups));
 
   Connect();
 }

@@ -159,7 +159,7 @@ Usage()
     PRINTUSAGE("", "", "  c2onb239v4, c2onb239v5, c2pnb272w1, c2pnb304w1,");
     PRINTUSAGE("", "", "  c2tnb359w1, c2pnb368w1, c2tnb431r1, secp112r1,");
     PRINTUSAGE("", "", "  secp112r2, secp128r1, secp128r2, sect113r1, sect113r2,");
-    PRINTUSAGE("", "", "  sect131r1, sect131r2, curve25519");
+    PRINTUSAGE("", "", "  sect131r1, sect131r2");
 #endif
     PRINTUSAGE("", "-p", "do performance test");
     PRINTUSAGE("", "-4", "run test in multithread mode. th_num number of parallel threads");
@@ -496,7 +496,6 @@ static CurveNameTagPair nameTagPair[] =
       { "sect113r2", SEC_OID_SECG_EC_SECT113R2 },
       { "sect131r1", SEC_OID_SECG_EC_SECT131R1 },
       { "sect131r2", SEC_OID_SECG_EC_SECT131R2 },
-      { "curve25519", SEC_OID_CURVE25519 },
     };
 
 static SECItem *
@@ -1888,7 +1887,6 @@ bltest_ecdsa_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
         pubkey->ecParams.DEREncoding.len = key->ecParams.DEREncoding.len;
         pubkey->ecParams.DEREncoding.data = key->ecParams.DEREncoding.data;
         pubkey->ecParams.name = key->ecParams.name;
-        pubkey->ecParams.pointSize = key->ecParams.pointSize;
         pubkey->publicValue.len = key->publicValue.len;
         pubkey->publicValue.data = key->publicValue.data;
         asymk->pubKey = pubkey;

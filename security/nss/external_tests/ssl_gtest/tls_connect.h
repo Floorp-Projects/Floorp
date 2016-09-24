@@ -13,7 +13,6 @@
 #include "sslt.h"
 
 #include "tls_agent.h"
-#include "tls_filter.h"
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
@@ -97,7 +96,6 @@ class TlsConnectTestBase : public ::testing::Test {
   void CheckSrtp() const;
   void SendReceive();
   void SetupForZeroRtt();
-  void SetupForResume();
   void ZeroRttSendReceive(
       bool expect_readable,
       std::function<bool()> post_clienthello_check = nullptr);
@@ -220,21 +218,6 @@ class TlsConnectDatagram13 : public TlsConnectTestBase {
 
 // A variant that is used only with Pre13.
 class TlsConnectGenericPre13 : public TlsConnectGeneric {};
-
-class TlsKeyExchangeTest : public TlsConnectGeneric {
- protected:
-  TlsExtensionCapture* groups_capture_;
-  TlsExtensionCapture* shares_capture_;
-  TlsInspectorRecordHandshakeMessage* capture_hrr_;
-
-  void EnsureKeyShareSetup();
-  void ConfigNamedGroups(const std::vector<SSLNamedGroup>& groups);
-  std::vector<SSLNamedGroup> GetGroupDetails(const DataBuffer& ext);
-  std::vector<SSLNamedGroup> GetShareDetails(const DataBuffer& ext);
-  void CheckKEXDetails(const std::vector<SSLNamedGroup>& expectedGroups,
-                       const std::vector<SSLNamedGroup>& expectedShares,
-                       bool expect_hrr = false);
-};
 
 }  // namespace nss_test
 

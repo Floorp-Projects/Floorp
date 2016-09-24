@@ -253,5 +253,4 @@ mp_err ec_group_set_nistp192_fp(ECGroup *group);
 mp_err ec_group_set_nistp224_fp(ECGroup *group);
 #endif
 
-SECStatus ec_Curve25519_mul(PRUint8 *q, const PRUint8 *s, const PRUint8 *p);
 #endif /* __ecl_priv_h_ */

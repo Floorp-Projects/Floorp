@@ -23,19 +23,14 @@ extern "C" {
 namespace nss_test {
 
 // mode, version, cipher suite
-typedef std::tuple<std::string, uint16_t, uint16_t, SSLNamedGroup,
-                   TlsSignatureScheme>
-    CipherSuiteProfile;
+typedef std::tuple<std::string, uint16_t, uint16_t> CipherSuiteProfile;
 
 class TlsCipherSuiteTestBase : public TlsConnectTestBase {
  public:
   TlsCipherSuiteTestBase(std::string mode, uint16_t version,
-                         uint16_t cipher_suite, SSLNamedGroup group,
-                         TlsSignatureScheme signature_scheme)
+                         uint16_t cipher_suite)
       : TlsConnectTestBase(TlsConnectTestBase::ToMode(mode), version),
         cipher_suite_(cipher_suite),
-        group_(group),
-        signature_scheme_(signature_scheme),
         csinfo_({0}) {
     SECStatus rv =
         SSL_GetCipherSuiteInfo(cipher_suite_, &csinfo_, sizeof(csinfo_));
@@ -43,88 +38,43 @@ class TlsCipherSuiteTestBase : public TlsConnectTestBase {
     if (rv == SECSuccess) {
       std::cerr << "Cipher suite: " << csinfo_.cipherSuiteName << std::endl;
     }
-    auth_type_ = csinfo_.authType;
-    kea_type_ = csinfo_.keaType;
   }
 
  protected:
+  uint16_t cipher_suite_;
+  SSLCipherSuiteInfo csinfo_;
+
+  void SetupCertificate() {
+    switch (csinfo_.authType) {
+      case ssl_auth_rsa_sign:
+        Reset(TlsAgent::kServerRsaSign);
+        break;
+      case ssl_auth_rsa_decrypt:
+        Reset(TlsAgent::kServerRsaDecrypt);
+        break;
+      case ssl_auth_ecdsa:
+        Reset(TlsAgent::kServerEcdsa256);
+        break;
+      case ssl_auth_ecdh_ecdsa:
+        Reset(TlsAgent::kServerEcdhEcdsa);
+        break;
+      case ssl_auth_ecdh_rsa:
+        Reset(TlsAgent::kServerEcdhRsa);
+        break;
+      case ssl_auth_dsa:
+        Reset(TlsAgent::kServerDsa);
+        break;
+      default:
+        ASSERT_TRUE(false) << "Unsupported cipher suite: " << cipher_suite_;
+        break;
+    }
+  }
+
   void EnableSingleCipher() {
     EnsureTlsSetup();
     // It doesn't matter which does this, but the test is better if both do it.
     client_->EnableSingleCipher(cipher_suite_);
     server_->EnableSingleCipher(cipher_suite_);
-
-    if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
-      std::vector<SSLNamedGroup> groups = {group_};
-      client_->ConfigNamedGroups(groups);
-      server_->ConfigNamedGroups(groups);
-      kea_type_ = SSLInt_GetKEAType(group_);
-
-      SSLSignatureAndHashAlg signature_scheme = {
-          static_cast<SSLHashType>(signature_scheme_ >> 8),
-          static_cast<SSLSignType>(signature_scheme_ & 0xff)};
-      client_->SetSignatureAlgorithms(&signature_scheme, 1);
-      server_->SetSignatureAlgorithms(&signature_scheme, 1);
-    }
-  }
-
-  virtual void SetupCertificate() {
-    if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
-      switch (signature_scheme_) {
-        case kTlsSignatureRsaPkcs1Sha256:
-        case kTlsSignatureRsaPkcs1Sha384:
-        case kTlsSignatureRsaPkcs1Sha512:
-          Reset(TlsAgent::kServerRsaSign);
-          auth_type_ = ssl_auth_rsa_sign;
-          break;
-        case kTlsSignatureRsaPssSha256:
-        case kTlsSignatureRsaPssSha384:
-          Reset(TlsAgent::kServerRsaSign);
-          auth_type_ = ssl_auth_rsa_sign;
-          break;
-        case kTlsSignatureRsaPssSha512:
-          // You can't fit SHA-512 PSS in a 1024-bit key.
-          Reset(TlsAgent::kRsa2048);
-          auth_type_ = ssl_auth_rsa_sign;
-          break;
-        case kTlsSignatureEcdsaSecp256r1Sha256:
-          Reset(TlsAgent::kServerEcdsa256);
-          auth_type_ = ssl_auth_ecdsa;
-          break;
-        case kTlsSignatureEcdsaSecp384r1Sha384:
-          Reset(TlsAgent::kServerEcdsa384);
-          auth_type_ = ssl_auth_ecdsa;
-          break;
-        default:
-          ASSERT_TRUE(false) << "Unsupported signature scheme: "
-                             << signature_scheme_;
-          break;
-      }
-    } else {
-      switch (csinfo_.authType) {
-        case ssl_auth_rsa_sign:
-          Reset(TlsAgent::kServerRsaSign);
-          break;
-        case ssl_auth_rsa_decrypt:
-          Reset(TlsAgent::kServerRsaDecrypt);
-          break;
-        case ssl_auth_ecdsa:
-          Reset(TlsAgent::kServerEcdsa256);
-          break;
-        case ssl_auth_ecdh_ecdsa:
-          Reset(TlsAgent::kServerEcdhEcdsa);
-          break;
-        case ssl_auth_ecdh_rsa:
-          Reset(TlsAgent::kServerEcdhRsa);
-          break;
-        case ssl_auth_dsa:
-          Reset(TlsAgent::kServerDsa);
-          break;
-        default:
-          ASSERT_TRUE(false) << "Unsupported cipher suite: " << cipher_suite_;
-          break;
-      }
-    }
   }
 
   void ConnectAndCheckCipherSuite() {
@@ -135,14 +85,118 @@ class TlsCipherSuiteTestBase : public TlsConnectTestBase {
     uint16_t actual;
     EXPECT_TRUE(client_->cipher_suite(&actual) && actual == cipher_suite_);
     EXPECT_TRUE(server_->cipher_suite(&actual) && actual == cipher_suite_);
-    SSLAuthType auth;
-    EXPECT_TRUE(client_->auth_type(&auth) && auth == auth_type_);
-    EXPECT_TRUE(server_->auth_type(&auth) && auth == auth_type_);
-    SSLKEAType kea;
-    EXPECT_TRUE(client_->kea_type(&kea) && kea == kea_type_);
-    EXPECT_TRUE(server_->kea_type(&kea) && kea == kea_type_);
+  }
+};
+
+class TlsCipherSuiteTest
+    : public TlsCipherSuiteTestBase,
+      public ::testing::WithParamInterface<CipherSuiteProfile> {
+ public:
+  TlsCipherSuiteTest()
+      : TlsCipherSuiteTestBase(std::get<0>(GetParam()), std::get<1>(GetParam()),
+                               std::get<2>(GetParam())) {}
+};
+
+TEST_P(TlsCipherSuiteTest, SingleCipherSuite) {
+  SetupCertificate();
+  EnableSingleCipher();
+  ConnectAndCheckCipherSuite();
+}
+
+class TlsResumptionTest
+    : public TlsCipherSuiteTestBase,
+      public ::testing::WithParamInterface<CipherSuiteProfile> {
+ public:
+  TlsResumptionTest()
+      : TlsCipherSuiteTestBase(std::get<0>(GetParam()), std::get<1>(GetParam()),
+                               std::get<2>(GetParam())) {}
+
+  bool SkipIfCipherSuiteIsDSA() {
+    bool isDSA = csinfo_.authType == ssl_auth_dsa;
+    if (isDSA) {
+      std::cerr << "Skipping DSA suite: " << csinfo_.cipherSuiteName
+                << std::endl;
+    }
+    return isDSA;
   }
 
+  void EnablePskCipherSuite() {
+    SSLKEAType targetKea;
+    switch (csinfo_.keaType) {
+      case ssl_kea_ecdh:
+        targetKea = ssl_kea_ecdh_psk;
+        break;
+      case ssl_kea_dh:
+        targetKea = ssl_kea_dh_psk;
+        break;
+      default:
+        EXPECT_TRUE(false) << "Unsupported KEA type for "
+                           << csinfo_.cipherSuiteName;
+        return;
+    }
+
+    size_t count = SSL_GetNumImplementedCiphers();
+    const uint16_t *ciphers = SSL_GetImplementedCiphers();
+    bool found = false;
+    for (size_t i = 0; i < count; ++i) {
+      SSLCipherSuiteInfo candidateInfo;
+      ASSERT_EQ(SECSuccess, SSL_GetCipherSuiteInfo(ciphers[i], &candidateInfo,
+                                                   sizeof(candidateInfo)));
+      if (candidateInfo.authType == ssl_auth_psk &&
+          candidateInfo.keaType == targetKea &&
+          candidateInfo.symCipher == csinfo_.symCipher &&
+          candidateInfo.macAlgorithm == csinfo_.macAlgorithm) {
+        // We aren't able to check that the PRF hash is the same.  This is OK
+        // because there are (currently) no suites that have different PRF
+        // hashes but also use the same symmetric cipher.
+        EXPECT_EQ(SECSuccess,
+                  SSL_CipherPrefSet(client_->ssl_fd(), ciphers[i], PR_TRUE));
+        EXPECT_EQ(SECSuccess,
+                  SSL_CipherPrefSet(server_->ssl_fd(), ciphers[i], PR_TRUE));
+        found = true;
+      }
+    }
+    EXPECT_TRUE(found) << "Can't find matching PSK cipher for "
+                       << csinfo_.cipherSuiteName;
+  }
+};
+
+TEST_P(TlsResumptionTest, ResumeCipherSuite) {
+  if (SkipIfCipherSuiteIsDSA()) {
+    return;  // Tickets don't work with DSA (bug 1174677).
+  }
+
+  SetupCertificate();  // This is only needed once.
+
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  EnableSingleCipher();
+
+  ConnectAndCheckCipherSuite();
+
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  EnableSingleCipher();
+  // Enable a PSK cipher suite, since EnableSingleCipher() disabled all of them.
+  // On resumption in TLS 1.3, even though a PSK cipher suite is negotiated, the
+  // original cipher suite is reported through the API.  That is what makes this
+  // test work without more tweaks.
+  if (version_ == SSL_LIBRARY_VERSION_TLS_1_3) {
+    EnablePskCipherSuite();
+  }
+
+  ExpectResumption(RESUME_TICKET);
+  ConnectAndCheckCipherSuite();
+}
+
+class TlsCipherLimitTest
+    : public TlsCipherSuiteTestBase,
+      public ::testing::WithParamInterface<CipherSuiteProfile> {
+ public:
+  TlsCipherLimitTest()
+      : TlsCipherSuiteTestBase(std::get<0>(GetParam()), std::get<1>(GetParam()),
+                               std::get<2>(GetParam())) {}
+
+ protected:
   // Get the expected limit on the number of records that can be sent for the
   // cipher suite.
   uint64_t record_limit() const {
@@ -178,67 +232,14 @@ class TlsCipherSuiteTestBase : public TlsConnectTestBase {
     }
     return limit;
   }
-
- protected:
-  uint16_t cipher_suite_;
-  SSLAuthType auth_type_;
-  SSLKEAType kea_type_;
-  SSLNamedGroup group_;
-  TlsSignatureScheme signature_scheme_;
-  SSLCipherSuiteInfo csinfo_;
 };
-
-class TlsCipherSuiteTest
-    : public TlsCipherSuiteTestBase,
-      public ::testing::WithParamInterface<CipherSuiteProfile> {
- public:
-  TlsCipherSuiteTest()
-      : TlsCipherSuiteTestBase(std::get<0>(GetParam()), std::get<1>(GetParam()),
-                               std::get<2>(GetParam()), std::get<3>(GetParam()),
-                               std::get<4>(GetParam())) {}
-
- protected:
-  bool SkipIfCipherSuiteIsDSA() {
-    bool isDSA = csinfo_.authType == ssl_auth_dsa;
-    if (isDSA) {
-      std::cerr << "Skipping DSA suite: " << csinfo_.cipherSuiteName
-                << std::endl;
-    }
-    return isDSA;
-  }
-};
-
-TEST_P(TlsCipherSuiteTest, SingleCipherSuite) {
-  SetupCertificate();
-  EnableSingleCipher();
-  ConnectAndCheckCipherSuite();
-}
-
-TEST_P(TlsCipherSuiteTest, ResumeCipherSuite) {
-  if (SkipIfCipherSuiteIsDSA()) {
-    return;  // Tickets don't work with DSA (bug 1174677).
-  }
-
-  SetupCertificate();  // This is only needed once.
-
-  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
-  EnableSingleCipher();
-
-  ConnectAndCheckCipherSuite();
-
-  Reset();
-  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
-  EnableSingleCipher();
-  ExpectResumption(RESUME_TICKET);
-  ConnectAndCheckCipherSuite();
-}
 
 // This only works for stream ciphers because we modify the sequence number -
 // which is included explicitly in the DTLS record header - and that trips a
 // different error code.  Note that the message that the client sends would not
 // decrypt (the nonce/IV wouldn't match), but the record limit is hit before
 // attempting to decrypt a record.
-TEST_P(TlsCipherSuiteTest, ReadLimit) {
+TEST_P(TlsCipherLimitTest, ReadLimit) {
   SetupCertificate();
   EnableSingleCipher();
   ConnectAndCheckCipherSuite();
@@ -271,7 +272,7 @@ TEST_P(TlsCipherSuiteTest, ReadLimit) {
   EXPECT_EQ(SSL_ERROR_TOO_MANY_RECORDS, server_->error_code());
 }
 
-TEST_P(TlsCipherSuiteTest, WriteLimit) {
+TEST_P(TlsCipherLimitTest, WriteLimit) {
   SetupCertificate();
   EnableSingleCipher();
   ConnectAndCheckCipherSuite();
@@ -284,49 +285,38 @@ TEST_P(TlsCipherSuiteTest, WriteLimit) {
 }
 
 // This awful macro makes the test instantiations easier to read.
-#define INSTANTIATE_CIPHER_TEST_P(name, modes, versions, groups, sigalgs, ...) \
-  static const uint16_t k##name##CiphersArr[] = {__VA_ARGS__};                 \
-  static const ::testing::internal::ParamGenerator<uint16_t>                   \
-      k##name##Ciphers = ::testing::ValuesIn(k##name##CiphersArr);             \
-  INSTANTIATE_TEST_CASE_P(                                                     \
-      CipherSuite##name, TlsCipherSuiteTest,                                   \
-      ::testing::Combine(TlsConnectTestBase::kTlsModes##modes,                 \
-                         TlsConnectTestBase::kTls##versions, k##name##Ciphers, \
-                         groups, sigalgs));
+#define INSTANTIATE_CIPHER_TEST_P(name, modes, versions, ...)      \
+  static const uint16_t k##name##CiphersArr[] = {__VA_ARGS__};     \
+  static const ::testing::internal::ParamGenerator<uint16_t>       \
+      k##name##Ciphers = ::testing::ValuesIn(k##name##CiphersArr); \
+  INSTANTIATE_TEST_CASE_P(                                         \
+      CipherSuite##name, TlsCipherSuiteTest,                       \
+      ::testing::Combine(TlsConnectTestBase::kTlsModes##modes,     \
+                         TlsConnectTestBase::kTls##versions,       \
+                         k##name##Ciphers));                       \
+  INSTANTIATE_TEST_CASE_P(                                         \
+      Resume##name, TlsResumptionTest,                             \
+      ::testing::Combine(TlsConnectTestBase::kTlsModes##modes,     \
+                         TlsConnectTestBase::kTls##versions,       \
+                         k##name##Ciphers));                       \
+  INSTANTIATE_TEST_CASE_P(                                         \
+      Limit##name, TlsCipherLimitTest,                             \
+      ::testing::Combine(TlsConnectTestBase::kTlsModes##modes,     \
+                         TlsConnectTestBase::kTls##versions,       \
+                         k##name##Ciphers))
 
-static const SSLNamedGroup kDummyNamedGroupParamsArr[] = {
-    static_cast<SSLNamedGroup>(0)};
-static const auto kDummyNamedGroupParams =
-    ::testing::ValuesIn(kDummyNamedGroupParamsArr);
-static const TlsSignatureScheme kDummySignatureSchemesParamsArr[] = {
-    kTlsSignatureNone};
-static const auto kDummySignatureSchemesParams =
-    ::testing::ValuesIn(kDummySignatureSchemesParamsArr);
-
-static TlsSignatureScheme kSignatureSchemesParamsArr[] = {
-    kTlsSignatureRsaPkcs1Sha256,       kTlsSignatureRsaPkcs1Sha384,
-    kTlsSignatureRsaPkcs1Sha512,       kTlsSignatureEcdsaSecp256r1Sha256,
-    kTlsSignatureEcdsaSecp384r1Sha384, kTlsSignatureRsaPssSha256,
-    kTlsSignatureRsaPssSha384,         kTlsSignatureRsaPssSha512,
-};
-
-INSTANTIATE_CIPHER_TEST_P(RC4, Stream, V10ToV12, kDummyNamedGroupParams,
-                          kDummySignatureSchemesParams,
-                          TLS_RSA_WITH_RC4_128_SHA,
+INSTANTIATE_CIPHER_TEST_P(RC4, Stream, V10ToV12, TLS_RSA_WITH_RC4_128_SHA,
                           TLS_ECDH_ECDSA_WITH_RC4_128_SHA,
                           TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,
                           TLS_ECDH_RSA_WITH_RC4_128_SHA,
                           TLS_ECDHE_RSA_WITH_RC4_128_SHA);
-INSTANTIATE_CIPHER_TEST_P(AEAD12, All, V12, kDummyNamedGroupParams,
-                          kDummySignatureSchemesParams,
-                          TLS_RSA_WITH_AES_128_GCM_SHA256,
+INSTANTIATE_CIPHER_TEST_P(AEAD12, All, V12, TLS_RSA_WITH_AES_128_GCM_SHA256,
                           TLS_RSA_WITH_AES_256_GCM_SHA384,
                           TLS_DHE_DSS_WITH_AES_128_GCM_SHA256,
                           TLS_DHE_DSS_WITH_AES_256_GCM_SHA384,
                           TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384,
                           TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384);
-INSTANTIATE_CIPHER_TEST_P(AEAD, All, V12, kDummyNamedGroupParams,
-                          kDummySignatureSchemesParams,
+INSTANTIATE_CIPHER_TEST_P(AEAD, All, V12Plus,
                           TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
                           TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
                           TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
@@ -336,16 +326,16 @@ INSTANTIATE_CIPHER_TEST_P(AEAD, All, V12, kDummyNamedGroupParams,
                           TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
                           TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
                           TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256);
+INSTANTIATE_CIPHER_TEST_P(CBC12, All, V12, TLS_DHE_RSA_WITH_AES_256_CBC_SHA256,
+                          TLS_RSA_WITH_AES_256_CBC_SHA256,
+                          TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
+                          TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,
+                          TLS_DHE_RSA_WITH_AES_128_CBC_SHA256,
+                          TLS_RSA_WITH_AES_128_CBC_SHA256,
+                          TLS_DHE_DSS_WITH_AES_128_CBC_SHA256,
+                          TLS_DHE_DSS_WITH_AES_256_CBC_SHA256);
 INSTANTIATE_CIPHER_TEST_P(
-    CBC12, All, V12, kDummyNamedGroupParams, kDummySignatureSchemesParams,
-    TLS_DHE_RSA_WITH_AES_256_CBC_SHA256, TLS_RSA_WITH_AES_256_CBC_SHA256,
-    TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
-    TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256, TLS_DHE_RSA_WITH_AES_128_CBC_SHA256,
-    TLS_RSA_WITH_AES_128_CBC_SHA256, TLS_DHE_DSS_WITH_AES_128_CBC_SHA256,
-    TLS_DHE_DSS_WITH_AES_256_CBC_SHA256);
-INSTANTIATE_CIPHER_TEST_P(
-    CBCStream, Stream, V10ToV12, kDummyNamedGroupParams,
-    kDummySignatureSchemesParams, TLS_ECDH_ECDSA_WITH_NULL_SHA,
+    CBCStream, Stream, V10ToV12, TLS_ECDH_ECDSA_WITH_NULL_SHA,
     TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA, TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA,
     TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA, TLS_ECDHE_ECDSA_WITH_NULL_SHA,
     TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA, TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
@@ -355,23 +345,13 @@ INSTANTIATE_CIPHER_TEST_P(
     TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA, TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
     TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA);
 INSTANTIATE_CIPHER_TEST_P(
-    CBCDatagram, Datagram, V11V12, kDummyNamedGroupParams,
-    kDummySignatureSchemesParams, TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA,
+    CBCDatagram, Datagram, V11V12, TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA,
     TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA, TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA,
     TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA, TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
     TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA, TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA,
     TLS_ECDH_RSA_WITH_AES_128_CBC_SHA, TLS_ECDH_RSA_WITH_AES_256_CBC_SHA,
     TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA, TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
     TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA);
-INSTANTIATE_CIPHER_TEST_P(TLS13, All, V13,
-                          ::testing::ValuesIn(kFasterDHEGroups),
-                          ::testing::ValuesIn(kSignatureSchemesParamsArr),
-                          TLS_AES_128_GCM_SHA256, TLS_CHACHA20_POLY1305_SHA256,
-                          TLS_AES_256_GCM_SHA384);
-INSTANTIATE_CIPHER_TEST_P(TLS13AllGroups, All, V13,
-                          ::testing::ValuesIn(kAllDHEGroups),
-                          ::testing::Values(kTlsSignatureEcdsaSecp384r1Sha384),
-                          TLS_AES_256_GCM_SHA384);
 
 // Fields are: version, cipher suite, bulk cipher name, secretKeySize
 struct SecStatusParams {
@@ -400,9 +380,8 @@ class SecurityStatusTest
       public ::testing::WithParamInterface<SecStatusParams> {
  public:
   SecurityStatusTest()
-      : TlsCipherSuiteTestBase(
-            "TLS", GetParam().version, GetParam().cipher_suite,
-            static_cast<SSLNamedGroup>(0), kTlsSignatureNone) {}
+      : TlsCipherSuiteTestBase("TLS", GetParam().version,
+                               GetParam().cipher_suite) {}
 };
 
 // SSL_SecurityStatus produces fairly useless output when compared to
