@@ -2712,7 +2712,9 @@ CrossProcessCompositorBridgeParent::ShadowLayersUpdated(
   }
 
   if (aLayerTree->ShouldParentObserveEpoch()) {
-    dom::TabParent::ObserveLayerUpdate(id, aLayerTree->GetChildEpoch(), true);
+    // Note that we send this through the window compositor, since this needs
+    // to reach the widget owning the tab.
+    Unused << state->mParent->SendObserveLayerUpdate(id, aLayerTree->GetChildEpoch(), true);
   }
 
   aLayerTree->SetPendingTransactionId(aTransactionId);
@@ -2941,7 +2943,13 @@ CrossProcessCompositorBridgeParent::NotifyClearCachedResources(LayerTransactionP
   uint64_t id = aLayerTree->GetId();
   MOZ_ASSERT(id != 0);
 
-  dom::TabParent::ObserveLayerUpdate(id, aLayerTree->GetChildEpoch(), false);
+  const CompositorBridgeParent::LayerTreeState* state =
+    CompositorBridgeParent::GetIndirectShadowTree(id);
+  if (state && state->mParent) {
+    // Note that we send this through the window compositor, since this needs
+    // to reach the widget owning the tab.
+    Unused << state->mParent->SendObserveLayerUpdate(id, aLayerTree->GetChildEpoch(), false);
+  }
 }
 
 bool
