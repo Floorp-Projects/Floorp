@@ -430,8 +430,8 @@ this.NativeApp = class extends EventEmitter {
 
   sendMessage(msg) {
     let responsePromise = new Promise((resolve, reject) => {
-      this.on("message", (what, msg) => { resolve(msg); });
-      this.on("disconnect", (what, err) => { reject(err); });
+      this.once("message", (what, msg) => { resolve(msg); });
+      this.once("disconnect", (what, err) => { reject(err); });
     });
 
     let result = this.startupPromise.then(() => {
