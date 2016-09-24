@@ -970,20 +970,24 @@ EventManager.prototype = {
   },
 
   fire(...args) {
+    this._fireCommon("runSafe", args);
+  },
+
+  fireWithoutClone(...args) {
+    this._fireCommon("runSafeWithoutClone", args);
+  },
+
+  _fireCommon(runSafeMethod, args) {
     for (let callback of this.callbacks) {
       Promise.resolve(callback).then(callback => {
         if (this.context.unloaded) {
           dump(`${this.name} event fired after context unloaded.\n`);
+        } else if (!this.context.active) {
+          dump(`${this.name} event fired while context is inactive.\n`);
         } else if (this.callbacks.has(callback)) {
-          this.context.runSafe(callback, ...args);
+          this.context[runSafeMethod](callback, ...args);
         }
       });
-    }
-  },
-
-  fireWithoutClone(...args) {
-    for (let callback of this.callbacks) {
-      this.context.runSafeWithoutClone(callback, ...args);
     }
   },
 
