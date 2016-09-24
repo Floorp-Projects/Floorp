@@ -11,6 +11,8 @@
  * JS bytecode definitions.
  */
 
+#include "mozilla/Attributes.h"
+
 #include "jsbytecode.h"
 #include "jstypes.h"
 #include "NamespaceImports.h"
@@ -847,7 +849,7 @@ GetNextPc(jsbytecode* pc)
 /*
  * Disassemblers, for debugging only.
  */
-bool
+extern MOZ_MUST_USE bool
 Disassemble(JSContext* cx, JS::Handle<JSScript*> script, bool lines, Sprinter* sp);
 
 unsigned
@@ -856,16 +858,9 @@ Disassemble1(JSContext* cx, JS::Handle<JSScript*> script, jsbytecode* pc, unsign
 
 #endif
 
-void
-DumpPCCounts(JSContext* cx, JS::Handle<JSScript*> script, Sprinter* sp);
-
-namespace jit { struct IonScriptCounts; }
-void
-DumpIonScriptCounts(js::Sprinter* sp, HandleScript script,
-                    jit::IonScriptCounts* ionCounts);
-
-void
+extern MOZ_MUST_USE bool
 DumpCompartmentPCCounts(JSContext* cx);
+
 } // namespace js
 
 #endif /* jsopcode_h */
