@@ -140,8 +140,6 @@ VideoSendStream::VideoSendStream(
       CHECK_EQ(0, rtp_rtcp_->SetSendAbsoluteSendTimeStatus(channel_, true, id));
     } else if (extension == RtpExtension::kVideoRotation) {
       CHECK_EQ(0, rtp_rtcp_->SetSendVideoRotationStatus(channel_, true, id));
-    } else if (extension == RtpExtension::kRtpStreamId) {
-      RTC_CHECK_EQ(0, vie_channel_->SetSendRtpStreamId(true,id));
     } else {
       RTC_NOTREACHED() << "Registering unsupported RTP extension.";
     }

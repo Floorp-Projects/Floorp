@@ -97,7 +97,7 @@ uint32_t GetCurrentRTP(Clock* clock, uint32_t freq) {
 }
 
 uint32_t ConvertNTPTimeToRTP(uint32_t NTPsec, uint32_t NTPfrac, uint32_t freq) {
-  float ftemp = (float)NTPfrac / (float)NTP_FRAC;
+  float ftemp = (float)NTPfrac / (float)NTP_FRAC; 
   uint32_t tmp = (uint32_t)(ftemp * freq);
  return NTPsec * freq + tmp;
 }
@@ -490,7 +490,7 @@ void RtpHeaderParser::ParseOneByteExtensionHeader(
           header.extension.hasTransportSequenceNumber = true;
           break;
         }
-        case kRtpExtensionRtpStreamId: {
+        case kRtpExtensionRID: {
           //   0                   1                   2
           //   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3
           //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

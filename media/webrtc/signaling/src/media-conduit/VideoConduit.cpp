@@ -95,8 +95,6 @@ WebrtcVideoConduit::WebrtcVideoConduit():
   mStartBitrate(0),
   mMaxBitrate(0),
   mMinBitrateEstimate(0),
-  mRtpStreamIdEnabled(false),
-  mRtpStreamIdExtId(0),
   mCodecMode(webrtc::kRealtimeVideo)
 {}
 
@@ -663,9 +661,6 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
     return condError;
   }
 
-  if (mRtpStreamIdEnabled) {
-    video_codec.ridId = mRtpStreamIdExtId;
-  }
   if (mExternalSendCodec &&
       codecConfig->mType == mExternalSendCodec->mType) {
     CSFLogError(logTag, "%s Configuring External H264 Send Codec", __FUNCTION__);
@@ -1365,10 +1360,6 @@ WebrtcVideoConduit::ReconfigureSendCodec(unsigned short width,
               "%s: Requesting resolution change to %ux%u (from %ux%u)",
               __FUNCTION__, width, height, vie_codec.width, vie_codec.height);
 
-  if (mRtpStreamIdEnabled) {
-    vie_codec.ridId = mRtpStreamIdExtId;
-  }
-
   vie_codec.width = width;
   vie_codec.height = height;
   vie_codec.maxFramerate = mSendingFramerate;
@@ -1518,13 +1509,6 @@ WebrtcVideoConduit::SetExternalRecvCodec(VideoCodecConfig* config,
     return kMediaConduitNoError;
   }
   return kMediaConduitInvalidReceiveCodec;
-}
-
-MediaConduitErrorCode
-WebrtcVideoConduit::EnableRTPStreamIdExtension(bool enabled, uint8_t id) {
-  mRtpStreamIdEnabled = enabled;
-  mRtpStreamIdExtId = id;
-  return kMediaConduitNoError;
 }
 
 MediaConduitErrorCode

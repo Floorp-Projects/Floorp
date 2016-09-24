@@ -352,14 +352,6 @@ public:
                                                      VideoDecoder* decoder) = 0;
 
   /**
-   * Function to enable the RTP Stream ID (RID) extension
-   * @param enabled: enable extension
-   * @param id: id to be used for this rtp header extension
-   * NOTE: See VideoConduit for more information
-   */
-  virtual MediaConduitErrorCode EnableRTPStreamIdExtension(bool enabled, uint8_t id) = 0;
-
-  /**
    * These methods allow unit tests to double-check that the
    * max-fs and max-fr related settings are as expected.
    */

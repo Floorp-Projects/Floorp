@@ -711,7 +711,7 @@ int ViERTP_RTCPImpl::SetSendRIDStatus(int video_channel,
     shared_data_->SetLastError(kViERtpRtcpInvalidChannelId);
     return -1;
   }
-  if (vie_channel->SetSendRtpStreamId(enable, id, rid) != 0) {
+  if (vie_channel->SetSendRIDStatus(enable, id, rid) != 0) {
     shared_data_->SetLastError(kViERtpRtcpUnknownError);
     return -1;
   }
@@ -729,7 +729,7 @@ int ViERTP_RTCPImpl::SetReceiveRIDStatus(int video_channel,
     shared_data_->SetLastError(kViERtpRtcpInvalidChannelId);
     return -1;
   }
-  if (vie_channel->SetReceiveRtpStreamId(enable, id) != 0) {
+  if (vie_channel->SetReceiveRIDStatus(enable, id) != 0) {
     shared_data_->SetLastError(kViERtpRtcpUnknownError);
     return -1;
   }
