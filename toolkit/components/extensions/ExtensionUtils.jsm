@@ -1224,6 +1224,7 @@ function Port(context, senderMM, receiverMMs, name, id, sender, recipient) {
   this.recipient = recipient;
   this.disconnected = false;
   this.disconnectListeners = new Set();
+  this.unregisterMessageFuncs = new Set();
 
   // Common options for onMessage and onDisconnect.
   this.handlerBase = {
@@ -1254,37 +1255,15 @@ Port.prototype = {
         this.disconnect();
       },
       postMessage: json => {
-        if (this.disconnected) {
-          throw new this.context.cloneScope.Error("Attempt to postMessage on disconnected port");
-        }
-
-        this._sendMessage("Extension:Port:PostMessage", json);
+        this.postMessage(json);
       },
       onDisconnect: new EventManager(this.context, "Port.onDisconnect", fire => {
-        let listener = () => {
-          if (this.context.active && !this.disconnected) {
-            fire.withoutClone(portObj);
-          }
-        };
-
-        this.disconnectListeners.add(listener);
-        return () => {
-          this.disconnectListeners.delete(listener);
-        };
+        return this.registerOnDisconnect(() => fire.withoutClone(portObj));
       }).api(),
       onMessage: new EventManager(this.context, "Port.onMessage", fire => {
-        let handler = Object.assign({
-          receiveMessage: ({data}) => {
-            if (this.context.active && !this.disconnected) {
-              fire(data);
-            }
-          },
-        }, this.handlerBase);
-
-        MessageChannel.addListener(this.receiverMMs, "Extension:Port:PostMessage", handler);
-        return () => {
-          MessageChannel.removeListener(this.receiverMMs, "Extension:Port:PostMessage", handler);
-        };
+        return this.registerOnMessage(msg => {
+          fire(msg);
+        });
       }).api(),
     };
 
@@ -1294,6 +1273,59 @@ Port.prototype = {
 
     injectAPI(publicAPI, portObj);
     return portObj;
+  },
+
+  postMessage(json) {
+    if (this.disconnected) {
+      throw new this.context.cloneScope.Error("Attempt to postMessage on disconnected port");
+    }
+
+    this._sendMessage("Extension:Port:PostMessage", json);
+  },
+
+  /**
+   * Register a callback that is called when the port is disconnected by the
+   * *other* end. The callback is automatically unregistered when the port or
+   * context is closed.
+   *
+   * @param {function} callback Called when the other end disconnects the port.
+   * @returns {function} Function to unregister the listener.
+   */
+  registerOnDisconnect(callback) {
+    let listener = () => {
+      if (this.context.active && !this.disconnected) {
+        callback();
+      }
+    };
+    this.disconnectListeners.add(listener);
+    return () => {
+      this.disconnectListeners.delete(listener);
+    };
+  },
+
+  /**
+   * Register a callback that is called when a message is received. The callback
+   * is automatically unregistered when the port or context is closed.
+   *
+   * @param {function} callback Called when a message is received.
+   * @returns {function} Function to unregister the listener.
+   */
+  registerOnMessage(callback) {
+    let handler = Object.assign({
+      receiveMessage: ({data}) => {
+        if (this.context.active && !this.disconnected) {
+          callback(data);
+        }
+      },
+    }, this.handlerBase);
+
+    let unregister = () => {
+      this.unregisterMessageFuncs.delete(unregister);
+      MessageChannel.removeListener(this.receiverMMs, "Extension:Port:PostMessage", handler);
+    };
+    MessageChannel.addListener(this.receiverMMs, "Extension:Port:PostMessage", handler);
+    this.unregisterMessageFuncs.add(unregister);
+    return unregister;
   },
 
   _sendMessage(message, data) {
@@ -1307,6 +1339,9 @@ Port.prototype = {
 
   handleDisconnection() {
     MessageChannel.removeListener(this.receiverMMs, "Extension:Port:Disconnect", this.disconnectHandler);
+    for (let unregister of this.unregisterMessageFuncs) {
+      unregister();
+    }
     this.context.forgetOnClose(this);
     this.disconnected = true;
   },
@@ -2122,6 +2157,7 @@ this.ExtensionUtils = {
   LocalAPIImplementation,
   LocaleData,
   Messenger,
+  Port,
   PlatformInfo,
   SchemaAPIInterface,
   SingletonEventManager,
