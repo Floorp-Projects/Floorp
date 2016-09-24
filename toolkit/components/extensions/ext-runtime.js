@@ -76,12 +76,12 @@ extensions.registerSchemaAPI("runtime", "addon_parent", context => {
       },
 
       connectNative(application) {
-        let app = new NativeApp(extension, context, application);
+        let app = new NativeApp(context, application);
         return app.portAPI();
       },
 
       sendNativeMessage(application, message) {
-        let app = new NativeApp(extension, context, application);
+        let app = new NativeApp(context, application);
         message = NativeApp.encodeMessage(context, message);
         return app.sendMessage(message);
       },
