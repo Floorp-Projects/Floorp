@@ -1609,7 +1609,7 @@ TrackBuffersManager::CheckNextInsertionIndex(TrackData& aTrackData,
   TrackBuffer& data = aTrackData.mBuffers.LastElement();
 
   if (data.IsEmpty() || aSampleTime < aTrackData.mBufferedRanges.GetStart()) {
-    aTrackData.mNextInsertionIndex = Some(size_t(0));
+    aTrackData.mNextInsertionIndex = Some(0u);
     return true;
   }
 
@@ -1623,7 +1623,7 @@ TrackBuffersManager::CheckNextInsertionIndex(TrackData& aTrackData,
   }
   if (target.IsEmpty()) {
     // No target found, it will be added at the end of the track buffer.
-    aTrackData.mNextInsertionIndex = Some(data.Length());
+    aTrackData.mNextInsertionIndex = Some(uint32_t(data.Length()));
     return true;
   }
   // We now need to find the first frame of the searched interval.
@@ -1632,7 +1632,7 @@ TrackBuffersManager::CheckNextInsertionIndex(TrackData& aTrackData,
     const RefPtr<MediaRawData>& sample = data[i];
     if (sample->mTime >= target.mStart.ToMicroseconds() ||
         sample->GetEndTime() > target.mStart.ToMicroseconds()) {
-      aTrackData.mNextInsertionIndex = Some(size_t(i));
+      aTrackData.mNextInsertionIndex = Some(i);
       return true;
     }
   }
@@ -1692,7 +1692,7 @@ TrackBuffersManager::InsertFrames(TrackBuffer& aSamples,
       // to overlap the following frame.
       trackBuffer.mNextInsertionIndex.reset();
     }
-    size_t index =
+    uint32_t index =
       RemoveFrames(aIntervals, trackBuffer, trackBuffer.mNextInsertionIndex.refOr(0));
     if (index) {
       trackBuffer.mNextInsertionIndex = Some(index);
@@ -1750,7 +1750,7 @@ TrackBuffersManager::UpdateHighestTimestamp(TrackData& aTrackData,
   }
 }
 
-size_t
+uint32_t
 TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
                                   TrackData& aTrackData,
                                   uint32_t aStartIndex)
@@ -2189,7 +2189,7 @@ TrackBuffersManager::SkipToNextRandomAccessPoint(TrackInfo::TrackType aTrack,
 
 const MediaRawData*
 TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
-                               size_t aIndex,
+                               uint32_t aIndex,
                                const TimeUnit& aExpectedDts,
                                const TimeUnit& aExpectedPts,
                                const TimeUnit& aFuzz)
