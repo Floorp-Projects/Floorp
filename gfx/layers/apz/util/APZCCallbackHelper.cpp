@@ -903,6 +903,35 @@ APZCCallbackHelper::IsScrollInProgress(nsIScrollableFrame* aFrame)
          || aFrame->LastSmoothScrollOrigin();
 }
 
+/* static */ void
+APZCCallbackHelper::NotifyPinchGesture(PinchGestureInput::PinchGestureType aType,
+                                       LayoutDeviceCoord aSpanChange,
+                                       Modifiers aModifiers,
+                                       nsIWidget* aWidget)
+{
+  EventMessage msg;
+  switch (aType) {
+    case PinchGestureInput::PINCHGESTURE_START:
+      msg = eMagnifyGestureStart;
+      break;
+    case PinchGestureInput::PINCHGESTURE_SCALE:
+      msg = eMagnifyGestureUpdate;
+      break;
+    case PinchGestureInput::PINCHGESTURE_END:
+      msg = eMagnifyGesture;
+      break;
+    case PinchGestureInput::PINCHGESTURE_SENTINEL:
+    default:
+      MOZ_ASSERT_UNREACHABLE("Invalid gesture type");
+      return;
+  }
+
+  WidgetSimpleGestureEvent event(true, msg, aWidget);
+  event.mDelta = aSpanChange;
+  event.mModifiers = aModifiers;
+  DispatchWidgetEvent(event);
+}
+
 } // namespace layers
 } // namespace mozilla
 

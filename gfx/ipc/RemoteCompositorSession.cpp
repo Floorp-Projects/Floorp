@@ -63,6 +63,12 @@ RemoteCompositorSession::GetContentController()
   return mContentController.get();
 }
 
+nsIWidget*
+RemoteCompositorSession::GetWidget()
+{
+  return mWidget;
+}
+
 RefPtr<IAPZCTreeManager>
 RemoteCompositorSession::GetAPZCTreeManager() const
 {
