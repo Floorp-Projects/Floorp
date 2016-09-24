@@ -1,4 +1,4 @@
-#
+# 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -7,47 +7,46 @@ CORE_DEPTH = ../..
 # DEFINES = -DTRACE
 
 EXPORTS = \
-        ssl.h \
-        sslt.h \
-        sslerr.h \
-        sslproto.h \
-        preenc.h \
-        $(NULL)
+	ssl.h \
+	sslt.h \
+	sslerr.h \
+	sslproto.h \
+	preenc.h \
+	$(NULL)
 
 MODULE = nss
 MAPFILE = $(OBJDIR)/ssl.def
 
 CSRCS = \
-        derive.c \
-        dtlscon.c \
-        prelib.c \
-        ssl3con.c \
-        ssl3gthr.c \
-        sslauth.c \
-        sslcon.c \
-        ssldef.c \
-        sslenum.c \
-        sslerr.c \
-        sslerrstrs.c \
-        sslinit.c \
-        ssl3ext.c \
-        sslmutex.c \
-        sslnonce.c \
-        sslreveal.c \
-        sslsecur.c \
-        sslsnce.c \
-        sslsock.c \
-        ssltrace.c \
-        sslver.c \
-        authcert.c \
-        cmpcert.c \
-        sslinfo.c \
-        ssl3ecc.c \
+	derive.c \
+	dtlscon.c \
+	prelib.c \
+	ssl3con.c \
+	ssl3gthr.c \
+	sslauth.c \
+	sslcon.c \
+	ssldef.c \
+	sslenum.c \
+	sslerr.c \
+	sslerrstrs.c \
+	sslinit.c \
+	ssl3ext.c \
+	sslmutex.c \
+	sslnonce.c \
+	sslreveal.c \
+	sslsecur.c \
+	sslsnce.c \
+	sslsock.c \
+	ssltrace.c \
+	sslver.c \
+	authcert.c \
+	cmpcert.c \
+	sslinfo.c \
+	ssl3ecc.c \
         tls13con.c \
         tls13hkdf.c \
         sslcert.c \
-        sslgrp.c \
-        $(NULL)
+	$(NULL)
 
 LIBRARY_NAME = ssl
 LIBRARY_VERSION = 3

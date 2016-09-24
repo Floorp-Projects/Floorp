@@ -4,7 +4,6 @@
 #ifndef _KEYTHI_H_
 #define _KEYTHI_H_ 1
 
-#include "eccutil.h"
 #include "plarena.h"
 #include "pkcs11t.h"
 #include "secmodt.h"
@@ -127,7 +126,12 @@ struct SECKEYECPublicKeyStr {
     SECKEYECParams DEREncodedParams;
     int size;            /* size in bits */
     SECItem publicValue; /* encoded point */
-    ECPointEncoding encoding;
+    /* XXX Even though the PKCS#11 interface takes encoded parameters,
+     * we may still wish to decode them above PKCS#11 for things like
+     * printing key information. For named curves, which is what
+     * we initially support, we ought to have the curve name at the
+     * very least.
+     */
 };
 typedef struct SECKEYECPublicKeyStr SECKEYECPublicKey;
 

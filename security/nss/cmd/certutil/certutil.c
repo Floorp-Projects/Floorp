@@ -431,15 +431,10 @@ DumpChain(CERTCertDBHandle *handle, char *name, PRBool ascii)
     for (i = chain->len - 1; i >= 0; i--) {
         CERTCertificate *c;
         c = CERT_FindCertByDERCert(handle, &chain->certs[i]);
-        for (j = i; j < chain->len - 1; j++) {
+        for (j = i; j < chain->len - 1; j++)
             printf("  ");
-        }
-        if (c) {
-            printf("\"%s\" [%s]\n\n", c->nickname, c->subjectName);
-            CERT_DestroyCertificate(c);
-        } else {
-            printf("(null)\n\n");
-        }
+        printf("\"%s\" [%s]\n\n", c->nickname, c->subjectName);
+        CERT_DestroyCertificate(c);
     }
     CERT_DestroyCertificateList(chain);
     return SECSuccess;
@@ -1262,7 +1257,7 @@ luG(enum usage_level ul, const char *command)
 #ifndef NSS_DISABLE_ECC
     FPS "%-20s Elliptic curve name (ec only)\n",
         "   -q curve-name");
-    FPS "%-20s One of nistp256, nistp384, nistp521, curve25519\n", "");
+    FPS "%-20s One of nistp256, nistp384, nistp521\n", "");
 #ifdef NSS_ECC_MORE_THAN_SUITE_B
     FPS "%-20s sect163k1, nistk163, sect163r1, sect163r2,\n", "");
     FPS "%-20s nistb163, sect193r1, sect193r2, sect233k1, nistk233,\n", "");

@@ -105,7 +105,7 @@ ifndef NSS_DISABLE_ECC
 ECL_SRCS = ecl.c ecl_curve.c ecl_mult.c ecl_gf.c \
 	ecp_aff.c ecp_jac.c ecp_mont.c \
 	ec_naf.c ecp_jm.c ecp_256.c ecp_384.c ecp_521.c \
-	ecp_256_32.c ecp_25519.c
+	ecp_256_32.c
 ifdef NSS_ECC_MORE_THAN_SUITE_B
 ECL_SRCS += ec2_aff.c ec2_mont.c ec2_proj.c \
 	ec2_163.c ec2_193.c ec2_233.c \

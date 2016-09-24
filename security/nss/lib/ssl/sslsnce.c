@@ -81,6 +81,8 @@
 #endif
 #include <sys/types.h>
 
+#define SET_ERROR_CODE /* reminder */
+
 #include "nspr.h"
 #include "sslmutex.h"
 
@@ -1122,7 +1124,6 @@ InitCache(cacheDesc *cache, int maxCacheEntries, int maxCertCacheEntries,
 
 loser:
     CloseCache(cache);
-    PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
     return SECFailure;
 }
 
@@ -1177,6 +1178,7 @@ ssl_ConfigServerSessionIDCacheInstanceWithOpt(cacheDesc *cache,
     rv = InitCache(cache, maxCacheEntries, maxCertCacheEntries,
                    maxSrvNameCacheEntries, ssl3_timeout, directory, shared);
     if (rv) {
+        SET_ERROR_CODE
         return SECFailure;
     }
 
@@ -1260,7 +1262,7 @@ ssl_ConfigMPServerSIDCacheWithOpt(PRUint32 ssl3_timeout,
     prStatus = PR_ExportFileMapAsString(cache->cacheMemMap,
                                         sizeof fmString, fmString);
     if ((prStatus != PR_SUCCESS) || !(fmStrLen = strlen(fmString))) {
-        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        SET_ERROR_CODE
         return SECFailure;
     }
 
@@ -1269,12 +1271,12 @@ ssl_ConfigMPServerSIDCacheWithOpt(PRUint32 ssl3_timeout,
 
     inhValue = BTOA_DataToAscii((unsigned char *)&inherit, sizeof inherit);
     if (!inhValue || !strlen(inhValue)) {
-        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        SET_ERROR_CODE
         return SECFailure;
     }
     envValue = PR_smprintf("%s,%s", inhValue, fmString);
     if (!envValue || !strlen(envValue)) {
-        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        SET_ERROR_CODE
         return SECFailure;
     }
     PORT_Free(inhValue);
@@ -1282,7 +1284,7 @@ ssl_ConfigMPServerSIDCacheWithOpt(PRUint32 ssl3_timeout,
     putEnvFailed = (SECStatus)NSS_PutEnv(envVarName, envValue);
     PR_smprintf_free(envValue);
     if (putEnvFailed) {
-        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        SET_ERROR_CODE
         result = SECFailure;
     }
 
@@ -1371,7 +1373,7 @@ SSL_InheritMPServerSIDCacheInstance(cacheDesc *cache, const char *envString)
     if (!envString) {
         envString = PR_GetEnvSecure(envVarName);
         if (!envString) {
-            PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+            SET_ERROR_CODE
             return SECFailure;
         }
     }
@@ -1385,9 +1387,11 @@ SSL_InheritMPServerSIDCacheInstance(cacheDesc *cache, const char *envString)
 
     decoString = ATOB_AsciiToData(myEnvString, &decoLen);
     if (!decoString) {
+        SET_ERROR_CODE
         goto loser;
     }
     if (decoLen != sizeof inherit) {
+        SET_ERROR_CODE
         goto loser;
     }
 
@@ -1412,6 +1416,7 @@ SSL_InheritMPServerSIDCacheInstance(cacheDesc *cache, const char *envString)
     cache->sharedCache = (cacheDesc *)cache->cacheMem;
 
     if (cache->sharedCache->cacheMemSize != cache->cacheMemSize) {
+        SET_ERROR_CODE
         goto loser;
     }
 
@@ -1502,7 +1507,6 @@ loser:
     if (decoString)
         PORT_Free(decoString);
     CloseCache(cache);
-    PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
     return SECFailure;
 }
 
