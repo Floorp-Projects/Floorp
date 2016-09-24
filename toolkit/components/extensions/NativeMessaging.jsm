@@ -5,6 +5,7 @@
 "use strict";
 
 this.EXPORTED_SYMBOLS = ["HostManifestManager", "NativeApp"];
+/* globals NativeApp */
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
@@ -171,16 +172,11 @@ this.NativeApp = class extends EventEmitter {
     // We want a close() notification when the window is destroyed.
     this.context.callOnClose(this);
 
-    this.encoder = new TextEncoder();
     this.proc = null;
     this.readPromise = null;
     this.sendQueue = [];
     this.writePromise = null;
     this.sentDisconnect = false;
-
-    // Grab these once at startup
-    XPCOMUtils.defineLazyPreferenceGetter(this, "maxRead", PREF_MAX_READ, MAX_READ);
-    XPCOMUtils.defineLazyPreferenceGetter(this, "maxWrite", PREF_MAX_WRITE, MAX_WRITE);
 
     this.startupPromise = HostManifestManager.lookupApplication(application, context)
       .then(hostInfo => {
@@ -220,6 +216,20 @@ this.NativeApp = class extends EventEmitter {
       });
   }
 
+  /**
+   * @param {BaseContext} context The scope from where `message` originates.
+   * @param {*} message A message from the extension, meant for a native app.
+   * @returns {ArrayBuffer} An ArrayBuffer that can be sent to the native app.
+   */
+  static encodeMessage(context, message) {
+    message = context.jsonStringify(message);
+    let buffer = new TextEncoder().encode(message).buffer;
+    if (buffer.byteLength > NativeApp.maxWrite) {
+      throw new context.cloneScope.Error("Write too big");
+    }
+    return buffer;
+  }
+
   // A port is definitely "alive" if this.proc is non-null.  But we have
   // to provide a live port object immediately when connecting so we also
   // need to consider a port alive if proc is null but the startupPromise
@@ -234,8 +244,8 @@ this.NativeApp = class extends EventEmitter {
     }
     this.readPromise = this.proc.stdout.readUint32()
       .then(len => {
-        if (len > this.maxRead) {
-          throw new Error(`Native application tried to send a message of ${len} bytes, which exceeds the limit of ${this.maxRead} bytes.`);
+        if (len > NativeApp.maxRead) {
+          throw new Error(`Native application tried to send a message of ${len} bytes, which exceeds the limit of ${NativeApp.maxRead} bytes.`);
         }
         return this.proc.stdout.readJSON(len);
       }).then(msg => {
@@ -304,16 +314,15 @@ this.NativeApp = class extends EventEmitter {
     if (this._isDisconnected) {
       throw new this.context.cloneScope.Error("Attempt to postMessage on disconnected port");
     }
-
-    let json;
-    try {
-      json = this.context.jsonStringify(msg);
-    } catch (err) {
-      throw new this.context.cloneScope.Error(err.message);
+    if (Cu.getClassName(msg, true) != "ArrayBuffer") {
+      // This error cannot be triggered by extensions; it indicates an error in
+      // our implementation.
+      throw new Error("The message to the native messaging host is not an ArrayBuffer");
     }
-    let buffer = this.encoder.encode(json).buffer;
 
-    if (buffer.byteLength > this.maxWrite) {
+    let buffer = msg;
+
+    if (buffer.byteLength > NativeApp.maxWrite) {
       throw new this.context.cloneScope.Error("Write too big");
     }
 
@@ -388,6 +397,7 @@ this.NativeApp = class extends EventEmitter {
       },
 
       postMessage: msg => {
+        msg = NativeApp.encodeMessage(this.context, msg);
         this.send(msg);
       },
 
@@ -442,3 +452,6 @@ this.NativeApp = class extends EventEmitter {
     return result;
   }
 };
+
+XPCOMUtils.defineLazyPreferenceGetter(NativeApp, "maxRead", PREF_MAX_READ, MAX_READ);
+XPCOMUtils.defineLazyPreferenceGetter(NativeApp, "maxWrite", PREF_MAX_WRITE, MAX_WRITE);
