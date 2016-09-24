@@ -497,24 +497,30 @@ class TryOptionSyntax(object):
     def task_matches(self, attributes):
         attr = attributes.get
 
+        def check_run_on_projects():
+            return set(['try', 'all']) & set(attr('run_on_projects', []))
+
         def match_test(try_spec, attr_name):
             if attr('build_type') not in self.build_types:
                 return False
             if self.platforms is not None:
                 if attr('build_platform') not in self.platforms:
                     return False
-            if try_spec is not None:
-                # TODO: optimize this search a bit
-                for test in try_spec:
-                    if attr(attr_name) == test['test']:
-                        break
-                else:
+            else:
+                if not check_run_on_projects():
                     return False
-                if 'platforms' in test and attr('test_platform') not in test['platforms']:
-                    return False
-                if 'only_chunks' in test and attr('test_chunk') not in test['only_chunks']:
-                    return False
+            if try_spec is None:
                 return True
+            # TODO: optimize this search a bit
+            for test in try_spec:
+                if attr(attr_name) == test['test']:
+                    break
+            else:
+                return False
+            if 'platforms' in test and attr('test_platform') not in test['platforms']:
+                return False
+            if 'only_chunks' in test and attr('test_chunk') not in test['only_chunks']:
+                return False
             return True
 
         if attr('kind') in ('desktop-test', 'android-test'):
@@ -529,7 +535,7 @@ class TryOptionSyntax(object):
                 return False
             elif self.platforms is None:
                 # for "-p all", look for try in the 'run_on_projects' attribute
-                return set(['try', 'all']) & set(attr('run_on_projects', []))
+                return check_run_on_projects()
             else:
                 if attr('build_platform') not in self.platforms:
                     return False
