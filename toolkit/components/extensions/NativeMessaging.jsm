@@ -163,7 +163,7 @@ this.HostManifestManager = {
 };
 
 this.NativeApp = class extends EventEmitter {
-  constructor(extension, context, application) {
+  constructor(context, application) {
     super();
 
     this.context = context;
@@ -184,7 +184,7 @@ this.NativeApp = class extends EventEmitter {
           throw new Error(`No such native application ${application}`);
         }
 
-        if (!hostInfo.manifest.allowed_extensions.includes(extension.id)) {
+        if (!hostInfo.manifest.allowed_extensions.includes(context.extension.id)) {
           throw new Error(`This extension does not have permission to use native application ${application}`);
         }
 
