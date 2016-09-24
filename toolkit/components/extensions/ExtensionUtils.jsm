@@ -1262,7 +1262,8 @@ Port.prototype = {
       }).api(),
       onMessage: new EventManager(this.context, "Port.onMessage", fire => {
         return this.registerOnMessage(msg => {
-          fire(msg);
+          msg = Cu.cloneInto(msg, this.context.cloneScope);
+          fire.withoutClone(msg, portObj);
         });
       }).api(),
     };
