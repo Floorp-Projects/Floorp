@@ -111,9 +111,7 @@ class WannabeChildAPIManager extends ChildAPIManager {
     // This is gross and should be removed ASAP.
     let shouldSynchronouslyUseParentAPI = false;
     // Incompatible APIs are listed here.
-    if (namespace == "runtime" && name == "connectNative" || // Returns a custom Port.
-        namespace == "runtime" && name == "sendNativeMessage" || // Fix together with connectNative.
-        namespace == "webNavigation" || // ChildAPIManager is oblivious to filters.
+    if (namespace == "webNavigation" || // ChildAPIManager is oblivious to filters.
         namespace == "webRequest") { // Incompatible by design (synchronous).
       shouldSynchronouslyUseParentAPI = true;
     }

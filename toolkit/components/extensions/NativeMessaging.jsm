@@ -217,6 +217,30 @@ this.NativeApp = class extends EventEmitter {
   }
 
   /**
+   * Open a connection to a native messaging host.
+   *
+   * @param {BaseContext} context The context associated with the port.
+   * @param {nsIMessageSender} messageManager The message manager used to send
+   *     and receive messages from the port's creator.
+   * @param {string} portId A unique internal ID that identifies the port.
+   * @param {object} sender The object describing the creator of the connection
+   *     request.
+   * @param {string} application The name of the native messaging host.
+   */
+  static onConnectNative(context, messageManager, portId, sender, application) {
+    let app = new NativeApp(context, application);
+    let port = new ExtensionUtils.Port(context, messageManager, [messageManager], "", portId, sender, sender);
+    app.once("disconnect", (what, err) => port.disconnect(err && err.message));
+
+    /* eslint-disable mozilla/balanced-listeners */
+    app.on("message", (what, msg) => port.postMessage(msg));
+    /* eslint-enable mozilla/balanced-listeners */
+
+    port.registerOnMessage(msg => app.send(msg));
+    port.registerOnDisconnect(msg => app.close());
+  }
+
+  /**
    * @param {BaseContext} context The scope from where `message` originates.
    * @param {*} message A message from the extension, meant for a native app.
    * @returns {ArrayBuffer} An ArrayBuffer that can be sent to the native app.
@@ -383,49 +407,6 @@ this.NativeApp = class extends EventEmitter {
   // Called from Context when the extension is shut down.
   close() {
     this._cleanup();
-  }
-
-  portAPI() {
-    let port = {
-      name: this.name,
-
-      disconnect: () => {
-        if (this._isDisconnected) {
-          throw new this.context.cloneScope.Error("Attempt to disconnect an already disconnected port");
-        }
-        this._cleanup();
-      },
-
-      postMessage: msg => {
-        msg = NativeApp.encodeMessage(this.context, msg);
-        this.send(msg);
-      },
-
-      onDisconnect: new ExtensionUtils.SingletonEventManager(this.context, "native.onDisconnect", fire => {
-        let listener = what => {
-          this.context.runSafeWithoutClone(fire, port);
-        };
-        this.on("disconnect", listener);
-        return () => {
-          this.off("disconnect", listener);
-        };
-      }).api(),
-
-      onMessage: new ExtensionUtils.SingletonEventManager(this.context, "native.onMessage", fire => {
-        let listener = (what, msg) => {
-          msg = Cu.cloneInto(msg, this.context.cloneScope);
-          this.context.runSafeWithoutClone(fire, msg, port);
-        };
-        this.on("message", listener);
-        return () => {
-          this.off("message", listener);
-        };
-      }).api(),
-    };
-
-    port = Cu.cloneInto(port, this.context.cloneScope, {cloneFunctions: true});
-
-    return port;
   }
 
   sendMessage(msg) {
