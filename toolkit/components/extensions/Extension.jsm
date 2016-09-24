@@ -487,11 +487,7 @@ var ParentAPIManager = {
   },
 
   call(data, target) {
-    let context = this.proxyContexts.get(data.childId);
-    if (!context) {
-      Cu.reportError("WebExtension context not found!");
-      return;
-    }
+    let context = this.getContextById(data.childId);
     if (context.currentMessageManager !== target.messageManager) {
       Cu.reportError("WebExtension warning: Message manager unexpectedly changed");
     }
@@ -525,11 +521,7 @@ var ParentAPIManager = {
   },
 
   addListener(data, target) {
-    let context = this.proxyContexts.get(data.childId);
-    if (!context) {
-      Cu.reportError("WebExtension context not found!");
-      return;
-    }
+    let context = this.getContextById(data.childId);
     if (context.currentMessageManager !== target.messageManager) {
       Cu.reportError("WebExtension warning: Message manager unexpectedly changed");
     }
@@ -549,12 +541,19 @@ var ParentAPIManager = {
   },
 
   removeListener(data) {
-    let context = this.proxyContexts.get(data.childId);
-    if (!context) {
-      Cu.reportError("WebExtension context not found!");
-    }
+    let context = this.getContextById(data.childId);
     let listener = context.listenerProxies.get(data.path);
     findPathInObject(context.apiObj, data.path).removeListener(listener);
+  },
+
+  getContextById(childId) {
+    let context = this.proxyContexts.get(childId);
+    if (!context) {
+      let error = new Error("WebExtension context not found!");
+      Cu.reportError(error);
+      throw error;
+    }
+    return context;
   },
 };
 
