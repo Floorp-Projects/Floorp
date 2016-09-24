@@ -18,9 +18,6 @@ var {
   SingletonEventManager,
 } = ExtensionUtils;
 
-XPCOMUtils.defineLazyModuleGetter(this, "NativeApp",
-                                  "resource://gre/modules/NativeMessaging.jsm");
-
 extensions.registerSchemaAPI("runtime", "addon_parent", context => {
   let {extension} = context;
   return {
@@ -73,17 +70,6 @@ extensions.registerSchemaAPI("runtime", "addon_parent", context => {
             addon.reload();
           });
         }
-      },
-
-      connectNative(application) {
-        let app = new NativeApp(context, application);
-        return app.portAPI();
-      },
-
-      sendNativeMessage(application, message) {
-        let app = new NativeApp(context, application);
-        message = NativeApp.encodeMessage(context, message);
-        return app.sendMessage(message);
       },
 
       get lastError() {

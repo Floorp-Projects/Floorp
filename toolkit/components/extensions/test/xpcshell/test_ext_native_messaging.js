@@ -221,8 +221,7 @@ add_task(function* test_disconnect() {
       browser.test.sendMessage("message", msg);
     });
     port.onDisconnect.addListener(msgPort => {
-      browser.test.assertEq(port, msgPort, "onDisconnect handler should receive the port as the second argument");
-      browser.test.sendMessage("disconnected");
+      browser.test.fail("onDisconnect should not be called for disconnect()");
     });
     browser.test.onMessage.addListener((what, payload) => {
       if (what == "send") {
@@ -269,8 +268,6 @@ add_task(function* test_disconnect() {
   response = yield extension.awaitMessage("disconnect-result");
   equal(response.success, true, "disconnect succeeded");
 
-  yield extension.awaitMessage("disconnected");
-
   do_print("waiting for subprocess to exit");
   yield waitForSubprocessExit();
   procCount = yield getSubprocessCount();
@@ -278,8 +275,7 @@ add_task(function* test_disconnect() {
 
   extension.sendMessage("disconnect");
   response = yield extension.awaitMessage("disconnect-result");
-  equal(response.success, false, "second call to disconnect failed");
-  ok(/already disconnected/.test(response.errmsg), "disconnect error message is reasonable");
+  equal(response.success, true, "second call to disconnect silently ignored");
 
   yield extension.unload();
 });
