@@ -1307,6 +1307,14 @@ nsEventStatus AsyncPanZoomController::OnScaleBegin(const PinchGestureInput& aEve
     return nsEventStatus_eIgnore;
   }
 
+  // For platforms that don't support APZ zooming, dispatch a message to the
+  // content controller, it may want to do something else with this gesture.
+  if (!gfxPrefs::APZAllowZooming()) {
+    if (RefPtr<GeckoContentController> controller = GetGeckoContentController()) {
+      controller->NotifyPinchGesture(aEvent.mType, GetGuid(), 0, aEvent.modifiers);
+    }
+  }
+
   SetState(PINCHING);
   mX.SetVelocity(0);
   mY.SetVelocity(0);
@@ -1324,6 +1332,15 @@ nsEventStatus AsyncPanZoomController::OnScale(const PinchGestureInput& aEvent) {
 
   if (mState != PINCHING) {
     return nsEventStatus_eConsumeNoDefault;
+  }
+
+  if (!gfxPrefs::APZAllowZooming()) {
+    if (RefPtr<GeckoContentController> controller = GetGeckoContentController()) {
+      controller->NotifyPinchGesture(aEvent.mType, GetGuid(),
+          ViewAs<LayoutDevicePixel>(aEvent.mCurrentSpan - aEvent.mPreviousSpan,
+            PixelCastJustification::LayoutDeviceIsParentLayerForRCDRSF),
+          aEvent.modifiers);
+    }
   }
 
   // Only the root APZC is zoomable, and the root APZC is not allowed to have
@@ -1428,6 +1445,12 @@ nsEventStatus AsyncPanZoomController::OnScaleEnd(const PinchGestureInput& aEvent
 
   if (HasReadyTouchBlock() && !GetCurrentTouchBlock()->TouchActionAllowsPinchZoom()) {
     return nsEventStatus_eIgnore;
+  }
+
+  if (!gfxPrefs::APZAllowZooming()) {
+    if (RefPtr<GeckoContentController> controller = GetGeckoContentController()) {
+      controller->NotifyPinchGesture(aEvent.mType, GetGuid(), 0, aEvent.modifiers);
+    }
   }
 
   SetState(NOTHING);
