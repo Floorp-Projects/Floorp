@@ -29,31 +29,26 @@ WebGLVertexArrayFake::BindVertexArrayImpl()
     WebGLRefPtr<WebGLBuffer> prevBuffer = mContext->mBoundArrayBuffer;
     mContext->BindBuffer(LOCAL_GL_ELEMENT_ARRAY_BUFFER, mElementArrayBuffer);
 
-    for (size_t i = 0; i < mAttribs.Length(); ++i) {
-        const WebGLVertexAttribData& vd = mAttribs[i];
+    size_t i = 0;
+    for (const auto& vd : mAttribs) {
+        mContext->BindBuffer(LOCAL_GL_ARRAY_BUFFER, vd.mBuf);
+        vd.DoVertexAttribPointer(gl, i);
 
-        mContext->BindBuffer(LOCAL_GL_ARRAY_BUFFER, vd.buf);
-
-        if (vd.integer) {
-            gl->fVertexAttribIPointer(i, vd.size, vd.type, vd.stride,
-                                      reinterpret_cast<const GLvoid*>(vd.byteOffset));
-        } else {
-            gl->fVertexAttribPointer(i, vd.size, vd.type, vd.normalized, vd.stride,
-                                     reinterpret_cast<const GLvoid*>(vd.byteOffset));
-        }
-
-        if (vd.enabled)
+        if (vd.mEnabled) {
             gl->fEnableVertexAttribArray(i);
-        else
+        } else {
             gl->fDisableVertexAttribArray(i);
+        }
+        ++i;
     }
 
     size_t len = prevVertexArray->mAttribs.Length();
-    for (size_t i = mAttribs.Length(); i < len; ++i) {
-        const WebGLVertexAttribData& vd = prevVertexArray->mAttribs[i];
+    for (; i < len; ++i) {
+        const auto& vd = prevVertexArray->mAttribs[i];
 
-        if (vd.enabled)
+        if (vd.mEnabled) {
             gl->fDisableVertexAttribArray(i);
+        }
     }
 
     mContext->BindBuffer(LOCAL_GL_ARRAY_BUFFER, prevBuffer);
