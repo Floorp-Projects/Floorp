@@ -106,7 +106,6 @@ struct ChannelPixelLayout;
 class Console;
 class Crypto;
 class CustomElementsRegistry;
-class DocGroup;
 class External;
 class Function;
 class Gamepad;
@@ -122,7 +121,6 @@ struct RequestInit;
 class RequestOrUSVString;
 class Selection;
 class SpeechSynthesis;
-class TabGroup;
 class U2F;
 class VRDisplay;
 class VREventObserver;
@@ -1711,14 +1709,9 @@ private:
   // IsSecureContext() for the inner window that corresponds to aDocument.
   bool ComputeIsSecureContext(nsIDocument* aDocument);
 
-  // Called on inner/outer windows to update the current doc/tab group
-  void InheritTabGroupFrom(nsPIDOMWindowOuter* aWindow); // Outer only
-  void SwitchDocGroup(); // Inner only
-
 public:
 
-  mozilla::dom::TabGroup* GetTabGroup();
-  mozilla::dom::DocGroup* GetDocGroup();
+  void GetConstellation(nsACString& aConstellation);
 
 protected:
   // This member is also used on both inner and outer windows, but
@@ -1937,8 +1930,8 @@ protected:
 
   nsAutoPtr<mozilla::dom::VREventObserver> mVREventObserver;
 
-  RefPtr<mozilla::dom::DocGroup> mDocGroup; // Inner window only
-  RefPtr<mozilla::dom::TabGroup> mTabGroup; // Outer window only
+  uint64_t mStaticConstellation; // Only used on outer windows
+  nsCString mConstellation; // Only used on inner windows
 
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;
