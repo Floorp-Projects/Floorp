@@ -94,7 +94,7 @@ FFVPXRuntimeLinker::Init()
     sFFVPXLib.mAVCodecLib = MozAVLink(libname);
     PR_FreeLibraryName(libname);
   }
-  if (sFFVPXLib.Link()) {
+  if (sFFVPXLib.Link() == FFmpegLibWrapper::LinkResult::Success) {
     sLinkStatus = LinkStatus_SUCCEEDED;
     return true;
   }
