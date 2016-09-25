@@ -95,3 +95,15 @@ add_task(function* test_platform_decoder_not_found() {
                                          message,
                                          {noLearnMoreButton: isLinux});
 });
+
+add_task(function* test_unsupported_libavcodec() {
+  // This is only sent on Linux.
+  if (AppConstants.platform != "linux") {
+    return;
+  }
+
+  let message = gNavigatorBundle.getString("decoder.unsupportedLibavcodec.message");
+  yield test_decoder_doctor_notification("unsupported-libavcodec",
+                                         message,
+                                         {noLearnMoreButton: true});
+});
