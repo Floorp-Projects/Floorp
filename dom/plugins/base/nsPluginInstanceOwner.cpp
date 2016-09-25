@@ -222,12 +222,14 @@ nsPluginInstanceOwner::GetImageContainer()
 
   container = LayerManager::CreateImageContainer();
 
-  // Try to get it as an EGLImage first.
-  RefPtr<Image> img;
-  AttachToContainerAsSurfaceTexture(container, mInstance, r, &img);
+  if (r.width && r.height) {
+    // Try to get it as an EGLImage first.
+    RefPtr<Image> img;
+    AttachToContainerAsSurfaceTexture(container, mInstance, r, &img);
 
-  if (img) {
-    container->SetCurrentImageInTransaction(img);
+    if (img) {
+      container->SetCurrentImageInTransaction(img);
+    }
   }
 #else
   if (NeedsScrollImageLayer()) {
@@ -1578,11 +1580,13 @@ nsPluginInstanceOwner::GetImageContainerForVideo(nsNPAPIPluginInstance::VideoInf
 {
   RefPtr<ImageContainer> container = LayerManager::CreateImageContainer();
 
-  RefPtr<Image> img = new SurfaceTextureImage(
-    aVideoInfo->mSurfaceTexture,
-    gfx::IntSize::Truncate(aVideoInfo->mDimensions.width, aVideoInfo->mDimensions.height),
-    gl::OriginPos::BottomLeft);
-  container->SetCurrentImageInTransaction(img);
+  if (aVideoInfo->mDimensions.width && aVideoInfo->mDimensions.height) {
+    RefPtr<Image> img = new SurfaceTextureImage(
+      aVideoInfo->mSurfaceTexture,
+      gfx::IntSize::Truncate(aVideoInfo->mDimensions.width, aVideoInfo->mDimensions.height),
+      gl::OriginPos::BottomLeft);
+    container->SetCurrentImageInTransaction(img);
+  }
 
   return container.forget();
 }
