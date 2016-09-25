@@ -10,12 +10,9 @@
 #include "HttpChannelParentListener.h"
 #include "mozilla/net/HttpChannelParent.h"
 #include "mozilla/Unused.h"
-#include "nsIAuthPrompt.h"
-#include "nsIAuthPrompt2.h"
 #include "nsIHttpEventSink.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsIRedirectChannelRegistrar.h"
-#include "nsIPromptFactory.h"
 #include "nsQueryObject.h"
 
 using mozilla::Unused;
@@ -133,17 +130,6 @@ HttpChannelParentListener::GetInterface(const nsIID& aIID, void **result)
                                       getter_AddRefs(ir))))
   {
     return ir->GetInterface(aIID, result);
-  }
-
-  if (aIID.Equals(NS_GET_IID(nsIAuthPrompt)) ||
-      aIID.Equals(NS_GET_IID(nsIAuthPrompt2))) {
-    nsresult rv;
-    nsCOMPtr<nsIPromptFactory> wwatch =
-      do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return wwatch->GetPrompt(nullptr, aIID,
-                             reinterpret_cast<void**>(result));
   }
 
   return NS_NOINTERFACE;
