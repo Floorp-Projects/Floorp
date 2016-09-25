@@ -106,7 +106,3 @@ add_task(function* test_transfer_with_meta() {
     Assert.equal(result[i], i);
   }
 });
-
-function run_test() {
-  run_next_test();
-}
