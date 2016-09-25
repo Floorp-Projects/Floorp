@@ -106,3 +106,12 @@ add_task(function* test_transfer_with_meta() {
     Assert.equal(result[i], i);
   }
 });
+
+add_task(function* test_throw_error() {
+  try {
+    yield worker.post("throwError", ["error message"]);
+    Assert.ok(false, "should have thrown");
+  } catch (ex) {
+    Assert.equal(ex.message, "Error: error message");
+  }
+});
