@@ -286,11 +286,6 @@ TrackBuffersManager::EvictData(const TimeUnit& aPlaybackTime, int64_t aSize)
     mEvictionState = EvictionState::NO_EVICTION_NEEDED;
     return EvictDataResult::NO_DATA_EVICTED;
   }
-  if (toEvict <= 512*1024) {
-    // Don't bother evicting less than 512KB.
-    mEvictionState = EvictionState::NO_EVICTION_NEEDED;
-    return EvictDataResult::CANT_EVICT;
-  }
 
   EvictDataResult result;
 
