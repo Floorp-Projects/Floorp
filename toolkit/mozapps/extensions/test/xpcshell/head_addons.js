@@ -56,6 +56,33 @@ XPCOMUtils.defineLazyModuleGetter(this, "MockRegistrar",
 XPCOMUtils.defineLazyModuleGetter(this, "MockRegistry",
                                   "resource://testing-common/MockRegistry.jsm");
 
+const {
+  awaitPromise,
+  createAppInfo,
+  createInstallRDF,
+  createTempWebExtensionFile,
+  createUpdateRDF,
+  getFileForAddon,
+  manuallyInstall,
+  manuallyUninstall,
+  promiseAddonByID,
+  promiseAddonEvent,
+  promiseAddonsByIDs,
+  promiseAddonsWithOperationsByTypes,
+  promiseCompleteAllInstalls,
+  promiseConsoleOutput,
+  promiseInstallAllFiles,
+  promiseInstallFile,
+  promiseRestartManager,
+  promiseSetExtensionModifiedTime,
+  promiseShutdownManager,
+  promiseStartupManager,
+  promiseWriteProxyFileToDir,
+  registerDirectory,
+  setExtensionModifiedTime,
+  writeFilesToZip
+} = AddonTestUtils;
+
 // WebExtension wrapper for ease of testing
 ExtensionTestUtils.init(this);
 
@@ -316,8 +343,6 @@ function isNightlyChannel() {
   return channel != "aurora" && channel != "beta" && channel != "release" && channel != "esr";
 }
 
-var {createAppInfo} = AddonTestUtils;
-
 /**
  * Tests that an add-on does appear in the crash report annotations, if
  * crash reporting is enabled. The test will fail if the add-on is not in the
@@ -576,11 +601,6 @@ function do_check_icons(aActual, aExpected) {
   }
 }
 
-var {promiseStartupManager} = AddonTestUtils;
-var {promiseRestartManager} = AddonTestUtils;
-var {promiseShutdownManager} = AddonTestUtils;
-var {awaitPromise} = AddonTestUtils;
-
 function startupManager(aAppChanged) {
   promiseStartupManager(aAppChanged);
 }
@@ -622,9 +642,6 @@ function check_startup_changes(aType, aIds) {
 
   do_check_eq(JSON.stringify(ids), JSON.stringify(changes));
 }
-
-var {createUpdateRDF} = AddonTestUtils;
-var {createInstallRDF} = AddonTestUtils;
 
 /**
  * Writes an install.rdf manifest into a directory using the properties passed
@@ -735,8 +752,6 @@ function promiseWriteWebManifestForExtension(aData, aDir, aId = aData.applicatio
   return AddonTestUtils.promiseWriteFilesToExtension(aDir.path, aId, files);
 }
 
-var {writeFilesToZip} = AddonTestUtils;
-
 /**
  * Creates an XPI file for some manifest data in the temporary directory and
  * returns the nsIFile for it. The file will be deleted when the test completes.
@@ -756,18 +771,6 @@ function createTempXPIFile(aData, aExtraFile) {
 
   return AddonTestUtils.createTempXPIFile(files);
 }
-
-var {createTempWebExtensionFile} = AddonTestUtils;
-
-var {setExtensionModifiedTime} = AddonTestUtils;
-var {promiseSetExtensionModifiedTime} = AddonTestUtils;
-
-var {manuallyInstall} = AddonTestUtils;
-var {manuallyUninstall} = AddonTestUtils;
-
-var {getFileForAddon} = AddonTestUtils;
-
-var {registerDirectory} = AddonTestUtils;
 
 var gExpectedEvents = {};
 var gExpectedInstalls = [];
@@ -1019,10 +1022,6 @@ function ensure_test_completed() {
     do_check_eq(gExpectedInstalls.length, 0);
 }
 
-var {promiseAddonEvent} = AddonTestUtils;
-
-var {promiseCompleteAllInstalls} = AddonTestUtils;
-
 /**
  * A helper method to install an array of AddonInstall to completion and then
  * call a provided callback.
@@ -1035,8 +1034,6 @@ var {promiseCompleteAllInstalls} = AddonTestUtils;
 function completeAllInstalls(aInstalls, aCallback) {
   promiseCompleteAllInstalls(aInstalls).then(aCallback);
 }
-
-var {promiseInstallFile, promiseInstallAllFiles} = AddonTestUtils;
 
 /**
  * A helper method to install an array of files and call a callback after the
@@ -1274,12 +1271,6 @@ function callback_soon(aFunction) {
   }
 }
 
-var {promiseAddonsByIDs} = AddonTestUtils;
-
-var {promiseAddonByID} = AddonTestUtils;
-
-var {promiseAddonsWithOperationsByTypes} = AddonTestUtils;
-
 /**
  * Returns a promise that will be resolved when an add-on update check is
  * complete. The value resolved will be an AddonInstall if a new version was
@@ -1333,10 +1324,6 @@ function promiseFindAddonUpdates(addon, reason = AddonManager.UPDATE_WHEN_PERIOD
     }, reason);
   });
 }
-
-var {promiseConsoleOutput} = AddonTestUtils;
-
-var {promiseWriteProxyFileToDir} = AddonTestUtils;
 
 function writeProxyFileToDir(aDir, aAddon, aId) {
   awaitPromise(promiseWriteProxyFileToDir(aDir, aAddon, aId));
