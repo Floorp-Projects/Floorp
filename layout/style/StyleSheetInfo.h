@@ -11,12 +11,13 @@
 #include "mozilla/net/ReferrerPolicy.h"
 #include "mozilla/CORSMode.h"
 
+#include "nsIURI.h"
+
 namespace mozilla {
 class CSSStyleSheet;
 } // namespace mozilla
 class nsCSSRuleProcessor;
 class nsIPrincipal;
-class nsIURI;
 
 namespace mozilla {
 
@@ -34,21 +35,6 @@ public:
                  ReferrerPolicy aReferrerPolicy,
                  const dom::SRIMetadata& aIntegrity);
   StyleSheetInfo(const StyleSheetInfo& aCopy);
-
-  nsIURI* GetSheetURI() const { return mSheetURI; }
-  nsIURI* GetOriginalURI() const { return mOriginalSheetURI; }
-  nsIURI* GetBaseURI() const { return mBaseURI; }
-  void SetURIs(nsIURI* aSheetURI, nsIURI* aOriginalSheetURI, nsIURI* aBaseURI);
-
-  // Whether the sheet is for an inline <style> element.
-  bool IsInline() const { return !mOriginalSheetURI; }
-
-  nsIPrincipal* Principal() const { return mPrincipal; }
-  void SetPrincipal(nsIPrincipal* aPrincipal);
-
-  CORSMode GetCORSMode() const { return mCORSMode; }
-  net::ReferrerPolicy GetReferrerPolicy() const { return mReferrerPolicy; }
-  void GetIntegrity(dom::SRIMetadata& aResult) const { aResult = mIntegrity; }
 
 protected:
   nsCOMPtr<nsIURI>       mSheetURI; // for error reports, etc.
