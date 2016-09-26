@@ -223,7 +223,7 @@
         content.document.documentElement.focus();
       });
 
-      gFindBar.close();
+      gFindBar.close(true);
       yield new Promise(resolve => setTimeout(resolve, kIteratorTimeout));
     }
   ]]></script>
