@@ -458,8 +458,10 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoo
 
         // Accumulate the transforms between this layer and the subtree root layer.
         Matrix4x4 ancestorTransform;
-        AccumulateLayerTransforms(layer->GetParent(), aTransformedSubtreeRoot,
-                                  ancestorTransform);
+        if (layer != aTransformedSubtreeRoot) {
+          AccumulateLayerTransforms(layer->GetParent(), aTransformedSubtreeRoot,
+                                    ancestorTransform);
+        }
 
         // Calculate the cumulative transforms between the subtree root with the
         // old transform and the current transform.
