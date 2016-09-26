@@ -36,7 +36,6 @@ public:
                              MozPromiseHolder<GenericPromise>&& aPromise)
     : mMutex("DecodedStreamGraphListener::mMutex")
     , mStream(aStream)
-    , mLastOutputTime(aStream->StreamTimeToMicroseconds(aStream->GetCurrentTime()))
   {
     mFinishPromise = Move(aPromise);
   }
@@ -45,9 +44,9 @@ public:
   {
     MutexAutoLock lock(mMutex);
     if (mStream) {
-      mLastOutputTime = mStream->StreamTimeToMicroseconds(
-          mStream->GraphTimeToStreamTime(aCurrentTime));
-      mOnOutput.Notify(mLastOutputTime);
+      int64_t t = mStream->StreamTimeToMicroseconds(
+        mStream->GraphTimeToStreamTime(aCurrentTime));
+      mOnOutput.Notify(t);
     }
   }
 
@@ -63,12 +62,6 @@ public:
   void DoNotifyFinished()
   {
     mFinishPromise.ResolveIfExists(true, __func__);
-  }
-
-  int64_t GetLastOutputTime()
-  {
-    MutexAutoLock lock(mMutex);
-    return mLastOutputTime;
   }
 
   void Forget()
@@ -90,7 +83,6 @@ private:
   Mutex mMutex;
   // Members below are protected by mMutex.
   RefPtr<MediaStream> mStream;
-  int64_t mLastOutputTime; // microseconds
   // Main thread only.
   MozPromiseHolder<GenericPromise> mFinishPromise;
 };
@@ -129,7 +121,6 @@ public:
                     PlaybackInfoInit&& aInit,
                     MozPromiseHolder<GenericPromise>&& aPromise);
   ~DecodedStreamData();
-  int64_t GetPosition() const;
   void SetPlaying(bool aPlaying);
   MediaEventSource<int64_t>& OnOutput();
 
@@ -199,12 +190,6 @@ DecodedStreamData::~DecodedStreamData()
   mOutputStreamManager->Disconnect();
   mListener->Forget();
   mStream->Destroy();
-}
-
-int64_t
-DecodedStreamData::GetPosition() const
-{
-  return mListener->GetLastOutputTime();
 }
 
 MediaEventSource<int64_t>&
@@ -711,7 +696,7 @@ DecodedStream::GetPosition(TimeStamp* aTimeStamp) const
   if (aTimeStamp) {
     *aTimeStamp = TimeStamp::Now();
   }
-  return mStartTime.ref() + (mData ? mData->GetPosition() : 0);
+  return mStartTime.ref() + mLastOutputTime;
 }
 
 void
