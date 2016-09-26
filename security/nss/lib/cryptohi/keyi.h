@@ -17,6 +17,13 @@ KeyType seckey_GetKeyType(SECOidTag pubKeyOid);
 SECStatus sec_DecodeSigAlg(const SECKEYPublicKey *key, SECOidTag sigAlg,
                            const SECItem *param, SECOidTag *encalg, SECOidTag *hashalg);
 
+/*
+ * Set the point encoding of a SECKEYPublicKey from the OID.
+ * This has to be called on any SECKEYPublicKey holding a SECKEYECPublicKey
+ * before it can be used. The encoding is used to dermine the public key size.
+ */
+SECStatus seckey_SetPointEncoding(PLArenaPool *arena, SECKEYPublicKey *pubKey);
+
 SEC_END_PROTOS
 
 #endif /* _KEYHI_H_ */
