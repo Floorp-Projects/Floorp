@@ -584,6 +584,11 @@ CONST_OID evIncorporationLocality[] = { EV_NAME_ATTRIBUTE, 1 };
 CONST_OID evIncorporationState[] = { EV_NAME_ATTRIBUTE, 2 };
 CONST_OID evIncorporationCountry[] = { EV_NAME_ATTRIBUTE, 3 };
 
+/* https://tools.ietf.org/html/draft-josefsson-pkix-newcurves-01
+ * 1.3.6.1.4.1.11591.15.1
+ */
+CONST_OID curve25519[] = { 0x2B, 0x06, 0x01, 0x04, 0x01, 0xDA, 0x47, 0x0F, 0x01 };
+
 #define OI(x)                                  \
     {                                          \
         siDEROID, (unsigned char *)x, sizeof x \
@@ -1743,7 +1748,10 @@ const static SECOidData oids[SEC_OID_TOTAL] = {
         "TLS FFDHE 8192-bit key exchange", CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION),
     ODE(SEC_OID_TLS_DHE_CUSTOM,
         "TLS DHE custom group key exchange", CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION),
-
+    OD(curve25519, SEC_OID_CURVE25519,
+       "Curve25519", CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION),
+    ODE(SEC_OID_TLS13_KEA_ANY,
+        "TLS 1.3 fake key exchange", CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION),
 };
 
 /* PRIVATE EXTENDED SECOID Table

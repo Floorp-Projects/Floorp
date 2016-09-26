@@ -1706,9 +1706,13 @@ make_dirs(char *path, int file_perms)
     }
 
     Path = PL_strdup(path);
+    if (!Path) {
+        return 0;
+    }
+
     start = strpbrk(Path, "/\\");
     if (!start) {
-        return 0;
+        goto loser;
     }
     start++; /* start right after first slash */
 
