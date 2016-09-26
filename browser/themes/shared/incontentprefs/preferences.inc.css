@@ -497,6 +497,8 @@ description > html|a {
 .fxaAccountBoxButtons {
   margin-bottom: 0 !important;
   margin-top: 11px;
+  display: flex;
+  align-items: center;
 }
 
 .fxaAccountBoxButtons > * {

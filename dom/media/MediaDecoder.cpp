@@ -525,7 +525,6 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
   , INIT_MIRROR(mPlaybackPosition, 0)
   , INIT_MIRROR(mIsAudioDataAudible, false)
   , INIT_CANONICAL(mVolume, 0.0)
-  , INIT_CANONICAL(mPlaybackRate, 1.0)
   , INIT_CANONICAL(mPreservesPitch, true)
   , INIT_CANONICAL(mEstimatedDuration, NullableTimeUnit())
   , INIT_CANONICAL(mExplicitDuration, Maybe<double>())
@@ -743,6 +742,9 @@ MediaDecoder::SetStateMachineParameters()
   MOZ_ASSERT(NS_IsMainThread());
   if (mMinimizePreroll) {
     mDecoderStateMachine->DispatchMinimizePrerollUntilPlaybackStarts();
+  }
+  if (mPlaybackRate != 1 && mPlaybackRate != 0) {
+    mDecoderStateMachine->DispatchSetPlaybackRate(mPlaybackRate);
   }
   mTimedMetadataListener = mDecoderStateMachine->TimedMetadataEvent().Connect(
     AbstractThread::MainThread(), this, &MediaDecoder::OnMetadataUpdate);
@@ -1510,7 +1512,10 @@ MediaDecoder::SetPlaybackRate(double aPlaybackRate)
   if (mPlaybackRate == 0.0) {
     mPausedForPlaybackRateNull = true;
     Pause();
-  } else if (mPausedForPlaybackRateNull) {
+    return;
+  }
+
+  if (mPausedForPlaybackRateNull) {
     // Play() uses mPausedForPlaybackRateNull value, so must reset it first
     mPausedForPlaybackRateNull = false;
     // If the playbackRate is no longer null, restart the playback, iff the
@@ -1518,6 +1523,10 @@ MediaDecoder::SetPlaybackRate(double aPlaybackRate)
     if (!mOwner->GetPaused()) {
       Play();
     }
+  }
+
+  if (mDecoderStateMachine) {
+    mDecoderStateMachine->DispatchSetPlaybackRate(aPlaybackRate);
   }
 }
 

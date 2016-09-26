@@ -67,6 +67,8 @@ public:
   IMPL_EVENT_HANDLER(addtrack)
   IMPL_EVENT_HANDLER(removetrack)
 
+  bool mPendingTextTrackChange;
+
 private:
   ~TextTrackList();
 

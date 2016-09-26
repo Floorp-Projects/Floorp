@@ -3238,7 +3238,8 @@ nsCSSRendering::PaintBackgroundWithSC(const PaintBGParams& aParams,
           clipSet = true;
           if (!clipBorderArea.IsEqualEdges(aParams.borderArea)) {
             // We're drawing the background for the joined continuation boxes
-            // so we need to clip that to the slice that we want for this frame.
+            // so we need to clip that to the slice that we want for this
+            // frame.
             gfxRect clip =
               nsLayoutUtils::RectToGfxRect(aParams.borderArea, appUnitsPerPixel);
             autoSR.EnsureSaved(ctx);
@@ -3259,7 +3260,8 @@ nsCSSRendering::PaintBackgroundWithSC(const PaintBGParams& aParams,
         if (!state.mFillArea.IsEmpty()) {
           if (co != CompositionOp::OP_OVER) {
             NS_ASSERTION(ctx->CurrentOp() == CompositionOp::OP_OVER,
-                         "It is assumed the initial op is OP_OVER, when it is restored later");
+                         "It is assumed the initial op is OP_OVER, when it is "
+                         "restored later");
             ctx->SetOp(co);
           }
 

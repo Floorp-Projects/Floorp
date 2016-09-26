@@ -103,6 +103,21 @@ const FilterBar = createClass({
             label: "Debug",
             filterKey: MESSAGE_LEVEL.DEBUG,
             dispatch
+          }),
+          dom.span({
+            className: "devtools-separator",
+          }),
+          FilterButton({
+            active: filter.netxhr,
+            label: "XHR",
+            filterKey: "netxhr",
+            dispatch
+          }),
+          FilterButton({
+            active: filter.network,
+            label: "Requests",
+            filterKey: "network",
+            dispatch
           })
         )
       );

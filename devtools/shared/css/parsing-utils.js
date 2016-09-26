@@ -486,18 +486,12 @@ function parseDeclarations(isCssPropertyKnown, inputString,
  */
 function RuleRewriter(isCssPropertyKnown, rule, inputString) {
   this.rule = rule;
-  this.inputString = inputString;
-  // Whether there are any newlines in the input text.
-  this.hasNewLine = /[\r\n]/.test(this.inputString);
+  this.isCssPropertyKnown = isCssPropertyKnown;
+
   // Keep track of which any declarations we had to rewrite while
   // performing the requested action.
   this.changedDeclarations = {};
-  // The declarations.
-  this.declarations = parseDeclarations(isCssPropertyKnown, this.inputString,
-                                        true);
 
-  this.decl = null;
-  this.result = null;
   // If not null, a promise that must be wait upon before |apply| can
   // do its work.
   this.editPromise = null;
@@ -507,9 +501,28 @@ function RuleRewriter(isCssPropertyKnown, rule, inputString) {
   // indentation based on the style sheet's text.  This override
   // facility is for testing.
   this.defaultIndentation = null;
+
+  this.startInitialization(inputString);
 }
 
 RuleRewriter.prototype = {
+  /**
+   * An internal function to initialize the rewriter with a given
+   * input string.
+   *
+   * @param {String} inputString the input to use
+   */
+  startInitialization: function (inputString) {
+    this.inputString = inputString;
+    // Whether there are any newlines in the input text.
+    this.hasNewLine = /[\r\n]/.test(this.inputString);
+    // The declarations.
+    this.declarations = parseDeclarations(this.isCssPropertyKnown, this.inputString,
+                                          true);
+    this.decl = null;
+    this.result = null;
+  },
+
   /**
    * An internal function to complete initialization and set some
    * properties for further processing.
@@ -922,6 +935,17 @@ RuleRewriter.prototype = {
     // If asked to remove a property that does not exist, bail out.
     if (!this.decl) {
       return;
+    }
+
+    // If the property is disabled, then first enable it, and then
+    // delete it.  We take this approach because we want to remove the
+    // entire comment if possible; but the logic for dealing with
+    // comments is hairy and already implemented in
+    // setPropertyEnabled.
+    if (this.decl.commentOffsets) {
+      this.setPropertyEnabled(index, name, true);
+      this.startInitialization(this.result);
+      this.completeInitialization(index);
     }
 
     let copyOffset = this.decl.offsets[1];

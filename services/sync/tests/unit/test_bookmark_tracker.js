@@ -1140,12 +1140,13 @@ add_task(function* test_onItemDeleted_removeFolderTransaction() {
 
     _("Undo the remove folder transaction");
     txn.undoTransaction();
-    yield verifyTrackedItems(["menu"]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
-    yield resetTracker();
 
     // At this point, the restored folder has the same ID, but a different GUID.
     let new_folder_guid = yield PlacesUtils.promiseItemGuid(folder_id);
+
+    yield verifyTrackedItems(["menu", new_folder_guid]);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
+    yield resetTracker();
 
     _("Redo the transaction");
     txn.redoTransaction();

@@ -132,8 +132,7 @@
         </columns>
         <rows>
           <row align="center">
-            <label accesskey="&syncDeviceName.accesskey;"
-                   control="syncComputerName">
+            <label control="syncComputerName">
               &syncDeviceName.label;
             </label>
             <textbox id="syncComputerName"/>
@@ -185,9 +184,9 @@
               </vbox>
               <vbox flex="1">
                 <label id="signedOutAccountBoxTitle">&signedOut.accountBox.title;</label>
-                <hbox class="fxaAccountBoxButtons" align="center">
-                  <button id="noFxaSignUp" label="&signedOut.accountBox.create;"></button>
-                  <button id="noFxaSignIn" label="&signedOut.accountBox.signin;"></button>
+                <hbox class="fxaAccountBoxButtons">
+                  <button id="noFxaSignUp" label="&signedOut.accountBox.create;" accesskey="&signedOut.accountBox.create.accesskey;"></button>
+                  <button id="noFxaSignIn" label="&signedOut.accountBox.signin;" accesskey="&signedOut.accountBox.signin.accesskey;"></button>
                 </hbox>
               </vbox>
             </hbox>
@@ -230,11 +229,12 @@
               <vbox flex="1" pack="center">
                 <label id="fxaDisplayName" hidden="true"/>
                 <label id="fxaEmailAddress1"/>
-                <hbox class="fxaAccountBoxButtons" align="center">
-                  <button id="fxaUnlinkButton" label="&disconnect.label;"/>
-                  <label id="verifiedManage" class="text-link"
+                <hbox class="fxaAccountBoxButtons">
+                  <button id="fxaUnlinkButton" label="&disconnect.label;" accesskey="&disconnect.label.accesskey;"/>
+                  <html:a id="verifiedManage" target="_blank"
+                         accesskey="&verifiedManage.label.accesskey;"
                          onkeypress="gSyncPane.openManageFirefoxAccount(event);"><!--
-                  -->&verifiedManage.label;</label>
+                  -->&verifiedManage.label;</html:a>
                 </hbox>
               </vbox>
             </hbox>
@@ -253,9 +253,9 @@
                     &signedInUnverified.aftername.label;
                   </description>
                 </hbox>
-                <hbox class="fxaAccountBoxButtons" align="center">
-                  <button id="verifyFxaAccount">&verify.label;</button>
-                  <button id="unverifiedUnlinkFxaAccount">&forget.label;</button>
+                <hbox class="fxaAccountBoxButtons">
+                  <button id="verifyFxaAccount" accesskey="&verify.label.accesskey;">&verify.label;</button>
+                  <button id="unverifiedUnlinkFxaAccount" accesskey="&forget.label.accesskey;">&forget.label;</button>
                 </hbox>
               </vbox>
             </hbox>
@@ -274,9 +274,9 @@
                     &signedInLoginFailure.aftername.label;
                   </description>
                 </hbox>
-                <hbox class="fxaAccountBoxButtons" align="center">
-                  <button id="rejectReSignIn">&signIn.label;</button>
-                  <button id="rejectUnlinkFxaAccount">&forget.label;</button>
+                <hbox class="fxaAccountBoxButtons">
+                  <button id="rejectReSignIn" accessky="&signIn.label.accesskey;">&signIn.label;</button>
+                  <button id="rejectUnlinkFxaAccount" accesskey="&rejectUnlinkFxaAccount.forget.label.accesskey;">&forget.label;</button>
                 </hbox>
               </vbox>
             </hbox>
@@ -317,8 +317,7 @@
     </hbox>
     <groupbox>
       <caption>
-        <label accesskey="&syncDeviceName.accesskey;"
-               control="fxaSyncComputerName">
+        <label control="fxaSyncComputerName">
           &fxaSyncDeviceName.label;
         </label>
       </caption>
@@ -326,12 +325,15 @@
         <textbox id="fxaSyncComputerName" disabled="true"/>
         <hbox>
           <button id="fxaChangeDeviceName"
-                  label="&changeSyncDeviceName.label;"/>
+                  label="&changeSyncDeviceName.label;"
+                  accesskey="&changeSyncDeviceName.label.accesskey;"/>
           <button id="fxaCancelChangeDeviceName"
                   label="&cancelChangeSyncDeviceName.label;"
+                  accesskey="&cancelChangeSyncDeviceName.label.accesskey;"
                   hidden="true"/>
           <button id="fxaSaveChangeDeviceName"
                   label="&saveChangeSyncDeviceName.label;"
+                  accesskey="&saveChangeSyncDeviceName.label.accesskey;"
                   hidden="true"/>
         </hbox>
       </hbox>

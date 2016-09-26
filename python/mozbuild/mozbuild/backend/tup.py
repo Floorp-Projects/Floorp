@@ -15,6 +15,9 @@ from mozbuild.shellutil import quote as shell_quote
 from .common import CommonBackend
 from ..frontend.data import (
     ContextDerived,
+    Defines,
+    GeneratedFile,
+    HostDefines,
 )
 from ..util import (
     FileAvoidWrite,
@@ -33,6 +36,9 @@ class BackendTupfile(object):
         self.environment = environment
         self.name = mozpath.join(objdir, 'Tupfile')
         self.rules_included = False
+        self.shell_exported = False
+        self.defines = []
+        self.host_defines = []
 
         self.fh = FileAvoidWrite(self.name, capture_diff=True)
         self.fh.write('# THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT EDIT.\n')
@@ -46,17 +52,38 @@ class BackendTupfile(object):
             self.write('include_rules\n')
             self.rules_included = True
 
-    def rule(self, cmd, inputs=None, outputs=None, display=None, extra_outputs=None):
+    def rule(self, cmd, inputs=None, outputs=None, display=None, extra_outputs=None, check_unchanged=False):
         inputs = inputs or []
         outputs = outputs or []
+        display = display or ""
         self.include_rules()
+        flags = ""
+        if check_unchanged:
+            # This flag causes tup to compare the outputs with the previous run
+            # of the command, and skip the rest of the DAG for any that are the
+            # same.
+            flags += "o"
+
+        if display:
+            caret_text = flags + ' ' + display
+        else:
+            caret_text = flags
+
         self.write(': %(inputs)s |> %(display)s%(cmd)s |> %(outputs)s%(extra_outputs)s\n' % {
             'inputs': ' '.join(inputs),
-            'display': '^ %s^ ' % display if display else '',
+            'display': '^%s^ ' % caret_text if caret_text else '',
             'cmd': ' '.join(cmd),
             'outputs': ' '.join(outputs),
             'extra_outputs': ' | ' + ' '.join(extra_outputs) if extra_outputs else '',
         })
+
+    def export_shell(self):
+        if not self.shell_exported:
+            # These are used by mach/mixin/process.py to determine the current
+            # shell.
+            for var in ('SHELL', 'MOZILLABUILD', 'COMSPEC'):
+                self.write('export %s\n' % var)
+            self.shell_exported = True
 
     def close(self):
         return self.fh.close()
@@ -85,6 +112,17 @@ class TupOnly(CommonBackend, PartialBackend):
                                    self.environment.topsrcdir, self.environment.topobjdir)
         return self._backend_files[objdir]
 
+    def _get_backend_file_for(self, obj):
+        return self._get_backend_file(obj.relativedir)
+
+    def _py_action(self, action):
+        cmd = [
+            '$(PYTHON)',
+            '-m',
+            'mozbuild.action.%s' % action,
+        ]
+        return cmd
+
     def consume_object(self, obj):
         """Write out build files necessary to build with tup."""
 
@@ -97,6 +135,43 @@ class TupOnly(CommonBackend, PartialBackend):
         # the RecursiveMake backend also handle these objects.
         if consumed:
             return False
+
+        backend_file = self._get_backend_file_for(obj)
+
+        if isinstance(obj, GeneratedFile):
+            # TODO: These are directories that don't work in the tup backend
+            # yet, because things they depend on aren't built yet.
+            skip_directories = (
+                'build', # FinalTargetPreprocessedFiles
+                'layout/style/test', # HostSimplePrograms
+                'toolkit/library', # libxul.so
+            )
+            if obj.script and obj.method and obj.relobjdir not in skip_directories:
+                backend_file.export_shell()
+                cmd = self._py_action('file_generate')
+                cmd.extend([
+                    obj.script,
+                    obj.method,
+                    obj.outputs[0],
+                    '%s.pp' % obj.outputs[0], # deps file required
+                ])
+                full_inputs = [f.full_path for f in obj.inputs]
+                cmd.extend(full_inputs)
+
+                outputs = []
+                outputs.extend(obj.outputs)
+                outputs.append('%s.pp' % obj.outputs[0])
+
+                backend_file.rule(
+                    display='python {script}:{method} -> [%o]'.format(script=obj.script, method=obj.method),
+                    cmd=cmd,
+                    inputs=full_inputs,
+                    outputs=outputs,
+                )
+        elif isinstance(obj, Defines):
+            self._process_defines(backend_file, obj)
+        elif isinstance(obj, HostDefines):
+            self._process_defines(backend_file, obj, host=True)
 
         return True
 
@@ -123,34 +198,24 @@ class TupOnly(CommonBackend, PartialBackend):
             fh.write('PYTHON_PATH = $(PYTHON) $(topsrcdir)/config/pythonpath.py\n')
             fh.write('PLY_INCLUDE = -I$(topsrcdir)/other-licenses/ply\n')
             fh.write('IDL_PARSER_DIR = $(topsrcdir)/xpcom/idl-parser\n')
-            fh.write('IDL_PARSER_CACHE_DIR = $(MOZ_OBJ_ROOT)/xpcom/idl-parser\n')
+            fh.write('IDL_PARSER_CACHE_DIR = $(MOZ_OBJ_ROOT)/xpcom/idl-parser/xpidl\n')
 
         # Run 'tup init' if necessary.
         if not os.path.exists(mozpath.join(self.environment.topsrcdir, ".tup")):
             tup = self.environment.substs.get('TUP', 'tup')
             self._cmd.run_process(cwd=self.environment.topsrcdir, log_name='tup', args=[tup, 'init'])
 
+    def _process_defines(self, backend_file, obj, host=False):
+        defines = list(obj.get_defines())
+        if defines:
+            if host:
+                backend_file.host_defines = defines
+            else:
+                backend_file.defines = defines
+
     def _handle_idl_manager(self, manager):
-
-        # TODO: This should come from GENERATED_FILES, and can be removed once
-        # those are implemented.
-        backend_file = self._get_backend_file('xpcom/idl-parser')
-        backend_file.rule(
-            display='python header.py -> [%o]',
-            cmd=[
-                '$(PYTHON_PATH)',
-                '$(PLY_INCLUDE)',
-                '$(topsrcdir)/xpcom/idl-parser/xpidl/header.py',
-            ],
-            outputs=['xpidlyacc.py', 'xpidllex.py'],
-        )
-
         backend_file = self._get_backend_file('xpcom/xpidl')
-
-        # These are used by mach/mixin/process.py to determine the current
-        # shell.
-        for var in ('SHELL', 'MOZILLABUILD', 'COMSPEC'):
-            backend_file.write('export %s\n' % var)
+        backend_file.export_shell()
 
         for module, data in sorted(manager.modules.iteritems()):
             dest, idls = data
@@ -160,7 +225,7 @@ class TupOnly(CommonBackend, PartialBackend):
                 '-I$(IDL_PARSER_DIR)',
                 '-I$(IDL_PARSER_CACHE_DIR)',
                 '$(topsrcdir)/python/mozbuild/mozbuild/action/xpidl-process.py',
-                '--cache-dir', '$(MOZ_OBJ_ROOT)/xpcom/idl-parser',
+                '--cache-dir', '$(IDL_PARSER_CACHE_DIR)',
                 '$(DIST)/idl',
                 '$(DIST)/include',
                 '$(MOZ_OBJ_ROOT)/%s/components' % dest,
@@ -172,13 +237,25 @@ class TupOnly(CommonBackend, PartialBackend):
             outputs.extend(['$(MOZ_OBJ_ROOT)/dist/include/%s.h' % f for f in sorted(idls)])
             backend_file.rule(
                 inputs=[
-                    '$(MOZ_OBJ_ROOT)/xpcom/idl-parser/xpidllex.py',
-                    '$(MOZ_OBJ_ROOT)/xpcom/idl-parser/xpidlyacc.py',
+                    '$(MOZ_OBJ_ROOT)/xpcom/idl-parser/xpidl/xpidllex.py',
+                    '$(MOZ_OBJ_ROOT)/xpcom/idl-parser/xpidl/xpidlyacc.py',
                 ],
                 display='XPIDL %s' % module,
                 cmd=cmd,
                 outputs=outputs,
             )
+
+    def _preprocess(self, backend_file, input_file):
+        cmd = self._py_action('preprocessor')
+        cmd.extend(backend_file.defines)
+        cmd.extend(['$(ACDEFINES)', '%f', '-o', '%o'])
+
+        backend_file.rule(
+            inputs=[input_file],
+            display='Preprocess %o',
+            cmd=cmd,
+            outputs=[mozpath.basename(input_file)],
+        )
 
     def _handle_ipdl_sources(self, ipdl_dir, sorted_ipdl_sources,
                              unified_ipdl_cppsrcs_mapping):
@@ -189,9 +266,33 @@ class TupOnly(CommonBackend, PartialBackend):
     def _handle_webidl_build(self, bindings_dir, unified_source_mapping,
                              webidls, expected_build_output_files,
                              global_define_files):
-        # TODO: This isn't implemented yet in the tup backend, but it is called
-        # by the CommonBackend.
-        pass
+        backend_file = self._get_backend_file('dom/bindings')
+        backend_file.export_shell()
+
+        for source in sorted(webidls.all_preprocessed_sources()):
+            self._preprocess(backend_file, source)
+
+        cmd = self._py_action('webidl')
+        cmd.append(mozpath.join(self.environment.topsrcdir, 'dom', 'bindings'))
+
+        # The WebIDLCodegenManager knows all of the .cpp and .h files that will
+        # be created (expected_build_output_files), but there are a few
+        # additional files that are also created by the webidl py_action.
+        outputs = [
+            '_cache/webidlyacc.py',
+            'codegen.json',
+            'codegen.pp',
+            'parser.out',
+        ]
+        outputs.extend(expected_build_output_files)
+
+        backend_file.rule(
+            display='WebIDL code generation',
+            cmd=cmd,
+            inputs=webidls.all_non_static_basenames(),
+            outputs=outputs,
+            check_unchanged=True,
+        )
 
 
 class TupBackend(HybridBackend(TupOnly, RecursiveMakeBackend)):

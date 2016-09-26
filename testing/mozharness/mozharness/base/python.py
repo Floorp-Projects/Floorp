@@ -7,12 +7,14 @@
 '''Python usage, esp. virtualenv.
 '''
 
+import distutils.version
 import os
 import subprocess
 import sys
 import time
 import json
 import traceback
+import urlparse
 
 import mozharness
 from mozharness.base.script import (
@@ -49,7 +51,7 @@ def get_tlsv1_post():
 
 # Virtualenv {{{1
 virtualenv_config_options = [
-    [["--venv-path", "--virtualenv-path"], {
+    [["--virtualenv-path"], {
         "action": "store",
         "dest": "virtualenv_path",
         "default": "venv",
@@ -111,18 +113,21 @@ class VirtualenvMixin(object):
                                          optional, two_pass, editable))
 
     def query_virtualenv_path(self):
-        c = self.config
+        """Determine the absolute path to the virtualenv."""
         dirs = self.query_abs_dirs()
-        virtualenv = None
+
         if 'abs_virtualenv_dir' in dirs:
-            virtualenv = dirs['abs_virtualenv_dir']
-        elif c.get('virtualenv_path'):
-            if os.path.isabs(c['virtualenv_path']):
-                virtualenv = c['virtualenv_path']
-            else:
-                virtualenv = os.path.join(dirs['abs_work_dir'],
-                                          c['virtualenv_path'])
-        return virtualenv
+            return dirs['abs_virtualenv_dir']
+
+        p = self.config['virtualenv_path']
+        if not p:
+            self.fatal('virtualenv_path config option not set; '
+                       'this should never happen')
+
+        if os.path.isabs(p):
+            return p
+        else:
+            return os.path.join(dirs['abs_work_dir'], p)
 
     def query_python_path(self, binary="python"):
         """Return the path of a binary inside the virtualenv, if
@@ -134,10 +139,8 @@ class VirtualenvMixin(object):
             if self._is_windows():
                 bin_dir = 'Scripts'
             virtualenv_path = self.query_virtualenv_path()
-            if virtualenv_path:
-                self.python_paths[binary] = os.path.abspath(os.path.join(virtualenv_path, bin_dir, binary))
-            else:
-                self.python_paths[binary] = self.query_exe(binary)
+            self.python_paths[binary] = os.path.abspath(os.path.join(virtualenv_path, bin_dir, binary))
+
         return self.python_paths[binary]
 
     def query_python_site_packages_path(self):
@@ -257,10 +260,20 @@ class VirtualenvMixin(object):
         else:
             self.fatal("install_module() doesn't understand an install_method of %s!" % install_method)
 
-        # Add --find-links pages to look at
+        # Add --find-links pages to look at. Add --trusted-host automatically if
+        # the host isn't secure. This allows modern versions of pip to connect
+        # without requiring an override.
         proxxy = Proxxy(self.config, self.log_obj)
+        trusted_hosts = set()
         for link in proxxy.get_proxies_and_urls(c.get('find_links', [])):
             command.extend(["--find-links", link])
+            parsed = urlparse.urlparse(link)
+            if parsed.scheme != 'https':
+                trusted_hosts.add(parsed.hostname)
+
+        if self.pip_version >= distutils.version.LooseVersion('6.0'):
+            for host in sorted(trusted_hosts):
+                command.extend(['--trusted-host', host])
 
         # module_url can be None if only specifying requirements files
         if module_url:
@@ -349,37 +362,55 @@ class VirtualenvMixin(object):
         dirs = self.query_abs_dirs()
         venv_path = self.query_virtualenv_path()
         self.info("Creating virtualenv %s" % venv_path)
-        virtualenv = c.get('virtualenv', self.query_exe('virtualenv'))
-        if isinstance(virtualenv, str):
-            # allow for [python, virtualenv] in config
-            virtualenv = [virtualenv]
 
-        if not os.path.exists(virtualenv[0]) and not self.which(virtualenv[0]):
-            self.add_summary("The executable '%s' is not found; not creating "
-                             "virtualenv!" % virtualenv[0], level=FATAL)
-            return -1
+        # If running from a source checkout, use the virtualenv that is
+        # vendored since that is deterministic.
+        if self.topsrcdir:
+            virtualenv = [
+                sys.executable,
+                os.path.join(self.topsrcdir, 'python', 'virtualenv', 'virtualenv.py')
+            ]
+            virtualenv_options = c.get('virtualenv_options', [])
+            # Don't create symlinks. If we don't do this, permissions issues may
+            # hinder virtualenv creation or operation. Ideally we should do this
+            # below when using the system virtualenv. However, this is a newer
+            # feature and isn't guaranteed to be supported.
+            virtualenv_options.append('--always-copy')
 
-        # https://bugs.launchpad.net/virtualenv/+bug/352844/comments/3
-        # https://bugzilla.mozilla.org/show_bug.cgi?id=700415#c50
-        if c.get('virtualenv_python_dll'):
-            # We may someday want to copy a differently-named dll, but
-            # let's not think about that right now =\
-            dll_name = os.path.basename(c['virtualenv_python_dll'])
-            target = self.query_python_path(dll_name)
-            scripts_dir = os.path.dirname(target)
-            self.mkdir_p(scripts_dir)
-            self.copyfile(c['virtualenv_python_dll'], target, error_level=WARNING)
+        # No source checkout. Try to find virtualenv from config options
+        # or search path.
         else:
-            self.mkdir_p(dirs['abs_work_dir'])
+            virtualenv = c.get('virtualenv', self.query_exe('virtualenv'))
+            if isinstance(virtualenv, str):
+                # allow for [python, virtualenv] in config
+                virtualenv = [virtualenv]
 
-        # make this list configurable?
-        for module in ('distribute', 'pip'):
-            if c.get('%s_url' % module):
-                self.download_file(c['%s_url' % module],
-                                   parent_dir=dirs['abs_work_dir'])
+            if not os.path.exists(virtualenv[0]) and not self.which(virtualenv[0]):
+                self.add_summary("The executable '%s' is not found; not creating "
+                                 "virtualenv!" % virtualenv[0], level=FATAL)
+                return -1
 
-        virtualenv_options = c.get('virtualenv_options',
-                                   ['--no-site-packages', '--distribute'])
+            # https://bugs.launchpad.net/virtualenv/+bug/352844/comments/3
+            # https://bugzilla.mozilla.org/show_bug.cgi?id=700415#c50
+            if c.get('virtualenv_python_dll'):
+                # We may someday want to copy a differently-named dll, but
+                # let's not think about that right now =\
+                dll_name = os.path.basename(c['virtualenv_python_dll'])
+                target = self.query_python_path(dll_name)
+                scripts_dir = os.path.dirname(target)
+                self.mkdir_p(scripts_dir)
+                self.copyfile(c['virtualenv_python_dll'], target, error_level=WARNING)
+            else:
+                self.mkdir_p(dirs['abs_work_dir'])
+
+            # make this list configurable?
+            for module in ('distribute', 'pip'):
+                if c.get('%s_url' % module):
+                    self.download_file(c['%s_url' % module],
+                                       parent_dir=dirs['abs_work_dir'])
+
+            virtualenv_options = c.get('virtualenv_options',
+                                       ['--no-site-packages', '--distribute'])
 
         if os.path.exists(self.query_python_path()):
             self.info("Virtualenv %s appears to already exist; skipping virtualenv creation." % self.query_python_path())
@@ -388,6 +419,18 @@ class VirtualenvMixin(object):
                              cwd=dirs['abs_work_dir'],
                              error_list=VirtualenvErrorList,
                              halt_on_failure=True)
+
+        # Resolve the pip version so we can conditionally do things if we have
+        # a modern pip.
+        pip = self.query_python_path('pip')
+        output = self.get_output_from_command([pip, '--version'],
+                                              halt_on_failure=True)
+        words = output.split()
+        if words[0] != 'pip':
+            self.fatal('pip --version output is weird: %s' % output)
+        pip_version = words[1]
+        self.pip_version = distutils.version.LooseVersion(pip_version)
+
         if not modules:
             modules = c.get('virtualenv_modules', [])
         if not requirements:

@@ -340,9 +340,10 @@ bool
 MP4Metadata::ReadTrackIndex(FallibleTArray<Index::Indice>& aDest, mozilla::TrackID aTrackID)
 {
 #ifdef MOZ_RUST_MP4PARSE
-  if (mRust && mPreferRust) {
-    return mRust->ReadTrackIndex(aDest, aTrackID);
+  if (mRust && mPreferRust && mRust->ReadTrackIndex(aDest, aTrackID)) {
+    return true;
   }
+  aDest.Clear();
 #endif
   return mStagefright->ReadTrackIndex(aDest, aTrackID);
 }
@@ -839,7 +840,7 @@ MP4MetadataRust::ReadTrackIndex(FallibleTArray<Index::Indice>& aDest, mozilla::T
   }
 
   // For non-fragmented mp4.
-  MOZ_ASSERT(false, "Not yet implemented");
+  NS_WARNING("Not yet implemented");
 
   return false;
 }

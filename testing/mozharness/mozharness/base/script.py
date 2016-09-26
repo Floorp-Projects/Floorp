@@ -1368,7 +1368,8 @@ class ScriptMixin(PlatformMixin):
                 returncode = int(p.proc.returncode)
             else:
                 p = subprocess.Popen(command, shell=shell, stdout=subprocess.PIPE,
-                                     cwd=cwd, stderr=subprocess.STDOUT, env=env)
+                                     cwd=cwd, stderr=subprocess.STDOUT, env=env,
+                                     bufsize=0)
                 loop = True
                 while loop:
                     if p.poll() is not None:
@@ -1784,6 +1785,21 @@ class BaseScript(ScriptMixin, LogMixin, object):
         self.env = None
         self.new_log_obj(default_log_level=default_log_level)
         self.script_obj = self
+
+        # Indicate we're a source checkout if VCS directory is present at the
+        # appropriate place. This code will break if this file is ever moved
+        # to another directory.
+        self.topsrcdir = None
+
+        srcreldir = 'testing/mozharness/mozharness/base'
+        here = os.path.normpath(os.path.dirname(__file__))
+        if here.replace('\\', '/').endswith(srcreldir):
+            topsrcdir = os.path.normpath(os.path.join(here, '..', '..',
+                                                      '..', '..'))
+            hg_dir = os.path.join(topsrcdir, '.hg')
+            git_dir = os.path.join(topsrcdir, '.git')
+            if os.path.isdir(hg_dir) or os.path.isdir(git_dir):
+                self.topsrcdir = topsrcdir
 
         # Set self.config to read-only.
         #

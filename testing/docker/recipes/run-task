@@ -37,12 +37,15 @@ def print_line(prefix, m):
     print(b'[%s %sZ] %s' % (prefix, now.isoformat(), m), end=b'')
 
 
-def run_and_prefix_output(prefix, args):
+def run_and_prefix_output(prefix, args, extra_env=None):
     """Runs a process and prefixes its output with the time.
 
     Returns the process exit code.
     """
     print_line(prefix, b'executing %s\n' % args)
+
+    env = dict(os.environ)
+    env.update(extra_env or {})
 
     # Note: TaskCluster's stdin is a TTY. This attribute is lost
     # when we pass sys.stdin to the invoked process. If we cared
@@ -57,6 +60,7 @@ def run_and_prefix_output(prefix, args):
                          stderr=subprocess.STDOUT,
                          stdin=sys.stdin.fileno(),
                          cwd='/',
+                         env=env,
                          # So \r in progress bars are rendered as multiple
                          # lines, preserving progress indicators.
                          universal_newlines=True)
@@ -121,7 +125,7 @@ def vcs_checkout(args):
         b'--upstream', base_repo,
         revision_flag, revision,
         os.environ['GECKO_HEAD_REPOSITORY'], args.vcs_checkout
-    ])
+    ], extra_env={b'PYTHONUNBUFFERED': b'1'})
 
     if res:
         sys.exit(res)
