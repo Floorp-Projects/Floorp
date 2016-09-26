@@ -210,27 +210,6 @@ WMFMediaDataDecoder::IsHardwareAccelerated(nsACString& aFailureReason) const {
 }
 
 void
-WMFMediaDataDecoder::ConfigurationChanged(const TrackInfo& aConfig)
-{
-  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
-
-  nsCOMPtr<nsIRunnable> runnable =
-    NewRunnableMethod<UniquePtr<TrackInfo>&&>(
-    this,
-    &WMFMediaDataDecoder::ProcessConfigurationChanged,
-    aConfig.Clone());
-  mTaskQueue->Dispatch(runnable.forget());
-}
-
-void
-WMFMediaDataDecoder::ProcessConfigurationChanged(UniquePtr<TrackInfo>&& aConfig)
-{
-  if (mMFTManager) {
-    mMFTManager->ConfigurationChanged(*aConfig);
-  }
-}
-
-void
 WMFMediaDataDecoder::SetSeekThreshold(const media::TimeUnit& aTime)
 {
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
