@@ -35,7 +35,7 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
     private static final String LOGTAG = "GeckoHomeConfigBackend";
 
     // Increment this to trigger a migration.
-    private static final int VERSION = 7;
+    private static final int VERSION = 8;
 
     // This key was originally used to store only an array of panel configs.
     public static final String PREFS_CONFIG_KEY_OLD = "home_panels";
@@ -211,7 +211,12 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
         return newArray;
     }
 
-    private static void ensureDefaultPanelForV5(Context context, JSONArray jsonPanels) throws JSONException {
+    /**
+     * Iterate over all homepanels to verify that there is at least one default panel. If there is
+     * no default panel, set History as the default panel. (This is only relevant for two botched
+     * migrations where the history panel should have been made the default panel, but wasn't.)
+     */
+    private static void ensureDefaultPanelForV5orV8(Context context, JSONArray jsonPanels) throws JSONException {
         int historyIndex = -1;
 
         for (int i = 0; i < jsonPanels.length(); i++) {
@@ -396,7 +401,7 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
 
                 case 5:
                     // This is the fix for bug 1264136 where we lost track of the default panel during some migrations.
-                    ensureDefaultPanelForV5(context, jsonPanels);
+                    ensureDefaultPanelForV5orV8(context, jsonPanels);
                     break;
 
                 case 6:
@@ -407,6 +412,12 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
                 case 7:
                     jsonPanels = removePanel(context, jsonPanels,
                             PanelType.DEPRECATED_RECENT_TABS, PanelType.COMBINED_HISTORY, true);
+                    break;
+
+                case 8:
+                    // Similar to "case 5" above, this time 1304777 - once again we lost track
+                    // of the history panel
+                    ensureDefaultPanelForV5orV8(context, jsonPanels);
                     break;
             }
         }
