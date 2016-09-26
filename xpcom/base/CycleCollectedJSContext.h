@@ -176,7 +176,7 @@ private:
 
   void
   NoteGCThingJSChildren(JS::GCCellPtr aThing,
-                        nsCycleCollectionTraversalCallback& aCb) const;
+                        nsCycleCollectionTraversalCallback& aCb);
 
   void
   NoteGCThingXPCOMChildren(const js::Class* aClasp, JSObject* aObj,
@@ -394,6 +394,8 @@ public:
   {
     mZonesWaitingForGC.PutEntry(aZone);
   }
+
+  void TraceJSChildren(JSTracer* aTrc, JS::GCCellPtr aThing);
 
   // Prepare any zones for GC that have been passed to AddZoneWaitingForGC()
   // since the last GC or since the last call to PrepareWaitingZonesForGC(),
