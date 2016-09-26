@@ -33,26 +33,6 @@ public:
   static CanPlayStatus CanHandleContentType(const MediaContentType& aContentType,
                                             DecoderDoctorDiagnostics* aDiagnostics);
 
-  // Returns the CanPlayStatus indicating if we can handle this
-  // MIME type. The MIME type should not include the codecs parameter.
-  // That parameter should be passed in aRequestedCodecs, and will only be
-  // used if whether a given MIME type being handled depends on the
-  // codec that will be used.  If the codecs parameter has not been
-  // specified, pass false in aHaveRequestedCodecs.
-  static CanPlayStatus CanHandleMediaType(const char* aMIMEType,
-                                          bool aHaveRequestedCodecs,
-                                          const nsAString& aRequestedCodecs,
-                                          DecoderDoctorDiagnostics* aDiagnostics);
-
-  // Returns the CanPlayStatus indicating if we can handle this MIME type and
-  // codecs type natively, excluding any plugins-based reader (such as
-  // GStreamer)
-  // The MIME type should not include the codecs parameter.
-  // That parameter is passed in aRequestedCodecs.
-  static CanPlayStatus CanHandleCodecsType(const char* aMIMEType,
-                                           const nsAString& aRequestedCodecs,
-                                           DecoderDoctorDiagnostics* aDiagnostics);
-
   // Returns true if we should handle this MIME type when it appears
   // as an <object> or as a toplevel page. If, in practice, our support
   // for the type is more limited than appears in the wild, we should return
