@@ -197,6 +197,24 @@ StyleSheet::List(FILE* aOut, int32_t aIndex) const
 #undef FORWARD
 #undef FORWARD_CONCRETE
 
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            RefPtr<StyleSheet>& aField,
+                            const char* aName,
+                            uint32_t aFlags = 0)
+{
+  if (aField && aField->IsGecko()) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCallback, aName);
+    aCallback.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIDOMCSSStyleSheet*, aField->AsGecko()));
+  }
+}
+
+inline void
+ImplCycleCollectionUnlink(RefPtr<StyleSheet>& aField)
+{
+  aField = nullptr;
+}
+
 }
 
 #endif // mozilla_StyleSheetInlines_h
