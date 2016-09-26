@@ -74,3 +74,10 @@ class TestTimeouts(MarionetteTestCase):
             self.assertRaises(InvalidArgumentException, self.marionette.set_search_timeout, val)
             self.assertRaises(InvalidArgumentException, self.marionette.set_script_timeout, val)
             self.assertRaises(InvalidArgumentException, self.marionette.set_page_load_timeout, val)
+
+    def test_compat_input_types(self):
+        # When using the spec-incompatible input format which we have
+        # for backwards compatibility, it should be possible to send ms
+        # as a string type and have the server parseInt it to an integer.
+        body = {"type": "script", "ms": "30000"}
+        self.marionette._send_message("timeouts", body)
