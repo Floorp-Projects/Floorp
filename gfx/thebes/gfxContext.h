@@ -592,40 +592,42 @@ class gfxContextMatrixAutoSaveRestore
 {
 public:
     gfxContextMatrixAutoSaveRestore() :
-        mContext(nullptr)
+      mContext(nullptr)
     {
     }
 
     explicit gfxContextMatrixAutoSaveRestore(gfxContext *aContext) :
-        mContext(aContext), mMatrix(aContext->CurrentMatrix())
+      mContext(aContext), mMatrix(aContext->CurrentMatrix())
     {
     }
 
     ~gfxContextMatrixAutoSaveRestore()
     {
-        if (mContext) {
-            mContext->SetMatrix(mMatrix);
-        }
+      if (mContext) {
+        mContext->SetMatrix(mMatrix);
+      }
     }
 
     void SetContext(gfxContext *aContext)
     {
-        NS_ASSERTION(!mContext, "Not going to restore the matrix on some context!");
-        mContext = aContext;
-        mMatrix = aContext->CurrentMatrix();
+      NS_ASSERTION(!mContext,
+                   "Not going to restore the matrix on some context!");
+      mContext = aContext;
+      mMatrix = aContext->CurrentMatrix();
     }
 
     void Restore()
     {
-        if (mContext) {
-            mContext->SetMatrix(mMatrix);
-        }
+      if (mContext) {
+        mContext->SetMatrix(mMatrix);
+        mContext = nullptr;
+      }
     }
 
     const gfxMatrix& Matrix()
     {
-        MOZ_ASSERT(mContext, "mMatrix doesn't contain a useful matrix");
-        return mMatrix;
+      MOZ_ASSERT(mContext, "mMatrix doesn't contain a useful matrix");
+      return mMatrix;
     }
 
     bool HasMatrix() const { return !!mContext; }

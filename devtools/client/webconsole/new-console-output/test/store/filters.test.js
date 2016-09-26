@@ -13,6 +13,7 @@ const { getAllFilters } = require("devtools/client/webconsole/new-console-output
 const { setupStore } = require("devtools/client/webconsole/new-console-output/test/helpers");
 const { MESSAGE_LEVEL } = require("devtools/client/webconsole/new-console-output/constants");
 const { stubPackets } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
+const { stubPreparedMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
 
 describe("Filtering", () => {
   let store;
@@ -57,6 +58,30 @@ describe("Filtering", () => {
 
       let messages = getAllMessages(store.getState());
       expect(messages.size).toEqual(numMessages - 1);
+    });
+
+    it("filters xhr messages", () => {
+      let message = stubPreparedMessages.get("XHR GET request");
+      store.dispatch(messageAdd(message));
+
+      let messages = getAllMessages(store.getState());
+      expect(messages.size).toEqual(numMessages + 1);
+
+      store.dispatch(actions.filterToggle("netxhr"));
+      messages = getAllMessages(store.getState());
+      expect(messages.size).toEqual(numMessages);
+    });
+
+    it("filters network messages", () => {
+      let message = stubPreparedMessages.get("GET request");
+      store.dispatch(messageAdd(message));
+
+      let messages = getAllMessages(store.getState());
+      expect(messages.size).toEqual(numMessages + 1);
+
+      store.dispatch(actions.filterToggle("network"));
+      messages = getAllMessages(store.getState());
+      expect(messages.size).toEqual(numMessages);
     });
   });
 
@@ -137,13 +162,17 @@ describe("Clear filters", () => {
 
     // Setup test case
     store.dispatch(actions.filterToggle(MESSAGE_LEVEL.ERROR));
+    store.dispatch(actions.filterToggle("netxhr"));
     store.dispatch(actions.filterTextSet("foobar"));
+
     let filters = getAllFilters(store.getState());
     expect(filters.toJS()).toEqual({
       "debug": true,
       "error": false,
       "info": true,
       "log": true,
+      "network": true,
+      "netxhr": false,
       "warn": true,
       "text": "foobar"
     });
@@ -156,6 +185,8 @@ describe("Clear filters", () => {
       "error": true,
       "info": true,
       "log": true,
+      "network": true,
+      "netxhr": true,
       "warn": true,
       "text": ""
     });

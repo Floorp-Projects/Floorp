@@ -1660,7 +1660,9 @@ CompositorBridgeParent::FlushApzRepaints(const LayerTransactionParent* aLayerTre
     // use the compositor's root layer tree id.
     layersId = mRootLayerTreeID;
   }
-  mApzcTreeManager->FlushApzRepaints(layersId);
+  APZThreadUtils::RunOnControllerThread(NS_NewRunnableFunction([=] () {
+    mApzcTreeManager->FlushApzRepaints(layersId);
+  }));
 }
 
 void
@@ -1671,29 +1673,6 @@ CompositorBridgeParent::GetAPZTestData(const LayerTransactionParent* aLayerTree,
   *aOutData = sIndirectLayerTrees[mRootLayerTreeID].mApzTestData;
 }
 
-class NotifyAPZConfirmedTargetTask : public Runnable
-{
-public:
-  explicit NotifyAPZConfirmedTargetTask(const RefPtr<APZCTreeManager>& aAPZCTM,
-                                        const uint64_t& aInputBlockId,
-                                        const nsTArray<ScrollableLayerGuid>& aTargets)
-   : mAPZCTM(aAPZCTM),
-     mInputBlockId(aInputBlockId),
-     mTargets(aTargets)
-  {
-  }
-
-  NS_IMETHOD Run() override {
-    mAPZCTM->SetTargetAPZC(mInputBlockId, mTargets);
-    return NS_OK;
-  }
-
-private:
-  RefPtr<APZCTreeManager> mAPZCTM;
-  uint64_t mInputBlockId;
-  nsTArray<ScrollableLayerGuid> mTargets;
-};
-
 void
 CompositorBridgeParent::SetConfirmedTargetAPZC(const LayerTransactionParent* aLayerTree,
                                          const uint64_t& aInputBlockId,
@@ -1702,8 +1681,13 @@ CompositorBridgeParent::SetConfirmedTargetAPZC(const LayerTransactionParent* aLa
   if (!mApzcTreeManager) {
     return;
   }
-  RefPtr<Runnable> task =
-    new NotifyAPZConfirmedTargetTask(mApzcTreeManager, aInputBlockId, aTargets);
+  // Need to specifically bind this since it's overloaded.
+  void (APZCTreeManager::*setTargetApzcFunc)
+        (uint64_t, const nsTArray<ScrollableLayerGuid>&) =
+        &APZCTreeManager::SetTargetAPZC;
+  RefPtr<Runnable> task = NewRunnableMethod
+        <uint64_t, StoreCopyPassByConstLRef<nsTArray<ScrollableLayerGuid>>>
+        (mApzcTreeManager.get(), setTargetApzcFunc, aInputBlockId, aTargets);
   APZThreadUtils::RunOnControllerThread(task.forget());
 
 }

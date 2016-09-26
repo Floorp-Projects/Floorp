@@ -328,7 +328,7 @@ RestyleTracker::AddPendingRestyle(Element* aElement,
 
   // We can only treat this element as a restyle root if we would
   // actually restyle its descendants (so either call
-  // ReResolveStyleContext on it or just reframe it).
+  // ElementRestyler::Restyle on it or just reframe it).
   if ((aRestyleHint & ~eRestyle_LaterSiblings) ||
       (aMinChangeHint & nsChangeHint_ReconstructFrame)) {
     Element* cur =

@@ -29,6 +29,7 @@ fuzzy-if(skiaContent,50,50) == mask-image-3f.html mask-image-3-ref.html
 == mask-image-4a.html blank.html
 == mask-image-4b.html blank.html
 == mask-image-5.html mask-image-5-ref.html
+== mask-image-6.html mask-image-6-ref.html
 
 # mask-clip test cases
 == mask-clip-1.html mask-clip-1-ref.html

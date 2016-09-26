@@ -1361,7 +1361,11 @@ pref("media.gmp.trial-create.enabled", true);
 
 #ifdef MOZ_ADOBE_EME
 pref("media.gmp-eme-adobe.visible", true);
-pref("media.gmp-eme-adobe.enabled", true);
+// When Adobe EME is enabled in the build system, we don't actually enable
+// the plugin by default, so that it doesn't download and install by default.
+// When Adobe EME is first used, Firefox will prompt the user to enable it,
+// and then download the CDM.
+pref("media.gmp-eme-adobe.enabled", false);
 #endif
 
 #ifdef MOZ_WIDEVINE_EME

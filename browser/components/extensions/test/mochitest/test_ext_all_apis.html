@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <meta charset="utf-8">
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<script>
+"use strict";
+/* exported expectedContentApisTargetSpecific, expectedBackgroundApisTargetSpecific */
+let expectedContentApisTargetSpecific = [
+];
+
+let expectedBackgroundApisTargetSpecific = [
+  "tabs.MutedInfoReason",
+  "tabs.TAB_ID_NONE",
+  "tabs.TabStatus",
+  "tabs.WindowType",
+  "tabs.ZoomSettingsMode",
+  "tabs.ZoomSettingsScope",
+  "tabs.connect",
+  "tabs.create",
+  "tabs.detectLanguage",
+  "tabs.duplicate",
+  "tabs.executeScript",
+  "tabs.get",
+  "tabs.getCurrent",
+  "tabs.getZoom",
+  "tabs.getZoomSettings",
+  "tabs.highlight",
+  "tabs.insertCSS",
+  "tabs.move",
+  "tabs.onActivated",
+  "tabs.onAttached",
+  "tabs.onCreated",
+  "tabs.onDetached",
+  "tabs.onHighlighted",
+  "tabs.onMoved",
+  "tabs.onRemoved",
+  "tabs.onReplaced",
+  "tabs.onUpdated",
+  "tabs.onZoomChange",
+  "tabs.query",
+  "tabs.reload",
+  "tabs.remove",
+  "tabs.removeCSS",
+  "tabs.sendMessage",
+  "tabs.setZoom",
+  "tabs.setZoomSettings",
+  "tabs.update",
+  "windows.CreateType",
+  "windows.WINDOW_ID_CURRENT",
+  "windows.WINDOW_ID_NONE",
+  "windows.WindowState",
+  "windows.WindowType",
+  "windows.create",
+  "windows.get",
+  "windows.getAll",
+  "windows.getCurrent",
+  "windows.getLastFocused",
+  "windows.onCreated",
+  "windows.onFocusChanged",
+  "windows.onRemoved",
+  "windows.remove",
+  "windows.update",
+];
+</script>
+<script src="test_ext_all_apis.js"></script>
+
+</body>
+</html>

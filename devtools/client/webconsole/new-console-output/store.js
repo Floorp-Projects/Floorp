@@ -20,6 +20,8 @@ function configureStore() {
       warn: Services.prefs.getBoolPref("devtools.webconsole.filter.warn"),
       info: Services.prefs.getBoolPref("devtools.webconsole.filter.info"),
       log: Services.prefs.getBoolPref("devtools.webconsole.filter.log"),
+      network: Services.prefs.getBoolPref("devtools.webconsole.filter.network"),
+      netxhr: Services.prefs.getBoolPref("devtools.webconsole.filter.netxhr"),
     })
   };
 
