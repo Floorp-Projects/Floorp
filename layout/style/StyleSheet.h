@@ -9,9 +9,10 @@
 
 #include "mozilla/css/SheetParsingMode.h"
 #include "mozilla/dom/CSSStyleSheetBinding.h"
+#include "mozilla/net/ReferrerPolicy.h"
 #include "mozilla/StyleBackendType.h"
 #include "mozilla/StyleSheetHandle.h"
-#include "mozilla/StyleSheetInfo.h"
+#include "mozilla/CORSMode.h"
 
 class nsIDocument;
 class nsINode;
@@ -20,6 +21,11 @@ namespace mozilla {
 
 class CSSStyleSheet;
 class ServoStyleSheet;
+class StyleSheetInfo;
+
+namespace dom {
+class SRIMetadata;
+} // namespace dom
 
 /**
  * Superclass for data common to CSSStyleSheet and ServoStyleSheet.
@@ -49,11 +55,6 @@ public:
    */
   bool IsComplete() const;
   void SetComplete();
-
-  // Get a handle to the various stylesheet bits which live on the 'inner' for
-  // gecko stylesheets and live on the StyleSheet for Servo stylesheets.
-  StyleSheetInfo& SheetInfo();
-  const StyleSheetInfo& SheetInfo() const { return const_cast<StyleSheet*>(this)->SheetInfo(); };
 
   bool IsGecko() const { return !IsServo(); }
   bool IsServo() const
@@ -129,6 +130,12 @@ public:
 #ifdef DEBUG
   inline void List(FILE* aOut = stdout, int32_t aIndex = 0) const;
 #endif
+
+private:
+  // Get a handle to the various stylesheet bits which live on the 'inner' for
+  // gecko stylesheets and live on the StyleSheet for Servo stylesheets.
+  inline StyleSheetInfo& SheetInfo();
+  inline const StyleSheetInfo& SheetInfo() const;
 
 protected:
   nsIDocument*          mDocument; // weak ref; parents maintain this for their children

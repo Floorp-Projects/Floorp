@@ -8,6 +8,7 @@
 #define mozilla_StyleSheetInlines_h
 
 #include "mozilla/TypeTraits.h"
+#include "mozilla/StyleSheetInfo.h"
 #include "mozilla/ServoStyleSheet.h"
 #include "mozilla/CSSStyleSheet.h"
 
@@ -48,6 +49,24 @@ StyleSheet::AsServo() const
 {
   MOZ_ASSERT(IsServo());
   return static_cast<const ServoStyleSheet*>(this);
+}
+
+StyleSheetInfo&
+StyleSheet::SheetInfo()
+{
+  if (IsServo()) {
+    return *AsServo();
+  }
+  return *AsGecko()->mInner;
+}
+
+const StyleSheetInfo&
+StyleSheet::SheetInfo() const
+{
+  if (IsServo()) {
+    return *AsServo();
+  }
+  return *AsGecko()->mInner;
 }
 
 #define FORWARD_CONCRETE(method_, geckoargs_, servoargs_) \
