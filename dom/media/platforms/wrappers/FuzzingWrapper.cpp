@@ -88,15 +88,6 @@ DecoderFuzzingWrapper::IsHardwareAccelerated(nsACString& aFailureReason) const
   return mDecoder->IsHardwareAccelerated(aFailureReason);
 }
 
-void
-DecoderFuzzingWrapper::ConfigurationChanged(const TrackInfo& aConfig)
-{
-  DFW_LOGV("");
-  MOZ_ASSERT(mDecoder);
-  mDecoder->ConfigurationChanged(aConfig);
-}
-
-
 DecoderCallbackFuzzingWrapper::DecoderCallbackFuzzingWrapper(MediaDataDecoderCallback* aCallback)
   : mCallback(aCallback)
   , mDontDelayInputExhausted(false)
