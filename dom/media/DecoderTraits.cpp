@@ -305,11 +305,11 @@ IsFlacSupportedType(const nsACString& aType,
   return FlacDecoder::CanHandleMediaType(aType, aCodecs);
 }
 
-/* static */
+static
 CanPlayStatus
-DecoderTraits::CanHandleCodecsType(const char* aMIMEType,
-                                   const nsAString& aRequestedCodecs,
-                                   DecoderDoctorDiagnostics* aDiagnostics)
+CanHandleCodecsType(const char* aMIMEType,
+                    const nsAString& aRequestedCodecs,
+                    DecoderDoctorDiagnostics* aDiagnostics)
 {
   char const* const* codecList = nullptr;
   if (IsOggTypeAndEnabled(nsDependentCString(aMIMEType))) {
@@ -325,7 +325,7 @@ DecoderTraits::CanHandleCodecsType(const char* aMIMEType,
     codecList = gWaveCodecs;
   }
 #if !defined(MOZ_OMX_WEBM_DECODER)
-  if (IsWebMTypeAndEnabled(nsDependentCString(aMIMEType))) {
+  if (DecoderTraits::IsWebMTypeAndEnabled(nsDependentCString(aMIMEType))) {
     if (IsWebMSupportedType(nsDependentCString(aMIMEType), aRequestedCodecs)) {
       return CANPLAY_YES;
     } else {
@@ -336,7 +336,7 @@ DecoderTraits::CanHandleCodecsType(const char* aMIMEType,
   }
 #endif
 #ifdef MOZ_FMP4
-  if (IsMP4TypeAndEnabled(nsDependentCString(aMIMEType), aDiagnostics)) {
+  if (DecoderTraits::IsMP4TypeAndEnabled(nsDependentCString(aMIMEType), aDiagnostics)) {
     if (IsMP4SupportedType(nsDependentCString(aMIMEType), aDiagnostics, aRequestedCodecs)) {
       return CANPLAY_YES;
     } else {
@@ -402,12 +402,12 @@ DecoderTraits::CanHandleCodecsType(const char* aMIMEType,
   return CANPLAY_YES;
 }
 
-/* static */
+static
 CanPlayStatus
-DecoderTraits::CanHandleMediaType(const char* aMIMEType,
-                                  bool aHaveRequestedCodecs,
-                                  const nsAString& aRequestedCodecs,
-                                  DecoderDoctorDiagnostics* aDiagnostics)
+CanHandleMediaType(const char* aMIMEType,
+                   bool aHaveRequestedCodecs,
+                   const nsAString& aRequestedCodecs,
+                   DecoderDoctorDiagnostics* aDiagnostics)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -429,11 +429,11 @@ DecoderTraits::CanHandleMediaType(const char* aMIMEType,
   if (IsWaveType(nsDependentCString(aMIMEType))) {
     return CANPLAY_MAYBE;
   }
-  if (IsMP4TypeAndEnabled(nsDependentCString(aMIMEType), aDiagnostics)) {
+  if (DecoderTraits::IsMP4TypeAndEnabled(nsDependentCString(aMIMEType), aDiagnostics)) {
     return CANPLAY_MAYBE;
   }
 #if !defined(MOZ_OMX_WEBM_DECODER)
-  if (IsWebMTypeAndEnabled(nsDependentCString(aMIMEType))) {
+  if (DecoderTraits::IsWebMTypeAndEnabled(nsDependentCString(aMIMEType))) {
     return CANPLAY_MAYBE;
   }
 #endif
