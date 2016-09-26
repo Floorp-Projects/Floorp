@@ -51,8 +51,13 @@ add_task(function* () {
   yield hoverElement("#id4");
   yield assertHighlighterHidden();
 
+  info("Hovering over a text node and waiting for highlighter to appear.");
+  yield hoverTextNode("Visible text node");
+  yield assertHighlighterShownOnTextNode("body", 14);
+
   function hoverContainer(container) {
     let promise = inspector.toolbox.once("node-highlight");
+
     EventUtils.synthesizeMouse(container.tagLine, 2, 2, {type: "mousemove"},
         markupView.doc.defaultView);
 
@@ -60,7 +65,7 @@ add_task(function* () {
   }
 
   function* hoverElement(selector) {
-    info("Hovering node " + selector + " in the markup view");
+    info(`Hovering node ${selector} in the markup view`);
     let container = yield getContainerForSelector(selector, inspector);
     return hoverContainer(container);
   }
@@ -75,9 +80,23 @@ add_task(function* () {
     return null;
   }
 
+  function hoverTextNode(text) {
+    info(`Hovering the text node "${text}" in the markup view`);
+    let container = [...markupView._containers].filter(([nodeFront]) => {
+      return nodeFront.nodeType === Ci.nsIDOMNode.TEXT_NODE &&
+             nodeFront._form.nodeValue.trim() === text.trim();
+    })[0][1];
+    return hoverContainer(container);
+  }
+
   function* assertHighlighterShownOn(selector) {
     ok((yield testActor.assertHighlightedNode(selector)),
        "Highlighter is shown on the right node: " + selector);
+  }
+
+  function* assertHighlighterShownOnTextNode(parentSelector, childNodeIndex) {
+    ok((yield testActor.assertHighlightedTextNode(parentSelector, childNodeIndex)),
+       "Highlighter is shown on the right text node");
   }
 
   function* assertHighlighterHidden() {

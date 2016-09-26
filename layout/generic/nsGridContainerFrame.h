@@ -35,7 +35,8 @@ struct ComputedGridTrackInfo
                         nsTArray<nscoord>&& aPositions,
                         nsTArray<nscoord>&& aSizes,
                         nsTArray<uint32_t>&& aStates,
-                        nsTArray<bool>&& aRemovedRepeatTracks)
+                        nsTArray<bool>&& aRemovedRepeatTracks,
+                        uint32_t aRepeatFirstTrack)
     : mNumLeadingImplicitTracks(aNumLeadingImplicitTracks)
     , mNumExplicitTracks(aNumExplicitTracks)
     , mStartFragmentTrack(aStartFragmentTrack)
@@ -44,6 +45,7 @@ struct ComputedGridTrackInfo
     , mSizes(aSizes)
     , mStates(aStates)
     , mRemovedRepeatTracks(aRemovedRepeatTracks)
+    , mRepeatFirstTrack(aRepeatFirstTrack)
   {}
   uint32_t mNumLeadingImplicitTracks;
   uint32_t mNumExplicitTracks;
@@ -53,14 +55,21 @@ struct ComputedGridTrackInfo
   nsTArray<nscoord> mSizes;
   nsTArray<uint32_t> mStates;
   nsTArray<bool> mRemovedRepeatTracks;
+  uint32_t mRepeatFirstTrack;
 };
 
 struct ComputedGridLineInfo
 {
-  explicit ComputedGridLineInfo(nsTArray<nsTArray<nsString>>&& aNames)
+  explicit ComputedGridLineInfo(nsTArray<nsTArray<nsString>>&& aNames,
+                                const nsTArray<nsString>& aNamesBefore,
+                                const nsTArray<nsString>& aNamesAfter)
     : mNames(aNames)
+    , mNamesBefore(aNamesBefore)
+    , mNamesAfter(aNamesAfter)
   {}
   nsTArray<nsTArray<nsString>> mNames;
+  nsTArray<nsString> mNamesBefore;
+  nsTArray<nsString> mNamesAfter;
 };
 } // namespace mozilla
 

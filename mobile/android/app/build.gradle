@@ -412,3 +412,47 @@ afterEvaluate {
         dependsOn tasks["spoonLocalOldDebugAndroidTest"]
     }
 }
+
+// Bug 1299015: Complain to treeherder if checkstyle, lint, or unittest fails.  It's not obvious
+// how to listen to individual errors in most cases, so we just link to the reports for now.
+def makeTaskExecutionListener(artifactRootUrl) {
+    return new TaskExecutionListener() {
+        void beforeExecute(Task task) {
+            // Do nothing.
+        }
+    
+        void afterExecute(Task task, TaskState state) {
+            if (!state.failure) {
+                return
+            }
+    
+            // Link to the failing report.  The task path and the report path
+            // depend on the android-lint task in
+            // taskcluster/ci/android-stuff/kind.yml.  It's not possible to link
+            // directly, so for now consumers will need to copy-paste the URL.
+            switch (task.path) {
+            case ':app:checkstyle':
+                def url = "${artifactRootUrl}/public/android/checkstyle/checkstyle.xml"
+                println "TEST-UNEXPECTED-FAIL | android-checkstyle | Checkstyle rule violations were found. See the report at: $url"
+                break
+    
+            case ':app:lintAutomationDebug':
+                def url = "${artifactRootUrl}/public/android/lint/lint-results-automationDebug.html"
+                println "TEST-UNEXPECTED-FAIL | android-lint | Lint found errors in the project; aborting build. See the report at: $url"
+                break
+    
+            case ':app:testAutomationDebugUnitTest':
+                def url = "${artifactRootUrl}/public/android/unittest/automationDebug/index.html"
+                println "TEST-UNEXPECTED-FAIL | android-test | There were failing tests. See the report at: $url"
+                break
+            }
+        }
+    }
+}
+
+// TASK_ID and RUN_ID are provided by docker-worker; see
+// https://docs.taskcluster.net/manual/execution/workers/docker-worker.
+if (System.env.TASK_ID && System.env.RUN_ID) {
+    def artifactRootUrl = "https://queue.taskcluster.net/v1/task/${System.env.TASK_ID}/runs/${System.env.RUN_ID}/artifacts"
+    gradle.addListener(makeTaskExecutionListener(artifactRootUrl))
+}

@@ -612,7 +612,7 @@ var TPS = {
 
     let getServerBookmarkState = () => {
       let bookmarkEngine = Weave.Service.engineManager.get('bookmarks');
-      let collection = bookmarkEngine._itemSource();
+      let collection = bookmarkEngine.itemSource();
       let collectionKey = bookmarkEngine.service.collectionKeys.keyForCollection(bookmarkEngine.name);
       collection.full = true;
       let items = [];

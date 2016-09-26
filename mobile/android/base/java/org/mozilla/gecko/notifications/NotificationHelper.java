@@ -237,7 +237,7 @@ public final class NotificationHelper implements GeckoEventListener {
         }
 
         Uri imageUri = Uri.parse(message.optString(SMALLICON_ATTR));
-        builder.setSmallIcon(BitmapUtils.getResource(imageUri, R.drawable.ic_status_logo));
+        builder.setSmallIcon(BitmapUtils.getResource(mContext, imageUri));
 
         JSONArray light = message.optJSONArray(LIGHT_ATTR);
         if (light != null && light.length() == 3) {
@@ -289,7 +289,7 @@ public final class NotificationHelper implements GeckoEventListener {
                     final PendingIntent pending = buildButtonClickPendingIntent(message, action);
                     final String actionTitle = action.getString(ACTION_TITLE_ATTR);
                     final Uri actionImage = Uri.parse(action.optString(ACTION_ICON_ATTR));
-                    builder.addAction(BitmapUtils.getResource(actionImage, R.drawable.ic_status_logo),
+                    builder.addAction(BitmapUtils.getResource(mContext, actionImage),
                                       actionTitle,
                                       pending);
                 }

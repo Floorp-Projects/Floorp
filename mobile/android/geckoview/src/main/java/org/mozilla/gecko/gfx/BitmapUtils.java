@@ -11,7 +11,6 @@ import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.GeckoJarReader;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UIAsyncTask;
@@ -33,9 +32,6 @@ import android.util.Base64;
 import android.util.Log;
 
 public final class BitmapUtils {
-    /* Default colors. */
-    private static final float[] DEFAULT_LAUNCHER_ICON_HSV = { 32.0f, 1.0f, 1.0f };
-
     private static final String LOGTAG = "GeckoBitmapUtils";
 
     private BitmapUtils() {}
@@ -129,7 +125,7 @@ public final class BitmapUtils {
 
         if (data.startsWith("drawable://")) {
             final Uri imageUri = Uri.parse(data);
-            final int id = getResource(imageUri, R.drawable.ic_status_logo);
+            final int id = getResource(context, imageUri);
             final Drawable d = context.getResources().getDrawable(id);
 
             runOnBitmapFoundOnUiThread(loader, d);
@@ -371,96 +367,32 @@ public final class BitmapUtils {
         return bitmap;
     }
 
-    public static int getResource(Uri resourceUrl, int defaultIcon) {
-        int icon = defaultIcon;
-
+    public static int getResource(final Context context, final Uri resourceUrl) {
         final String scheme = resourceUrl.getScheme();
-        if ("drawable".equals(scheme)) {
-            String resource = resourceUrl.getSchemeSpecificPart();
-            resource = resource.substring(resource.lastIndexOf('/') + 1);
-
-            try {
-                return Integer.parseInt(resource);
-            } catch (NumberFormatException ex) {
-                // This isn't a resource id, try looking for a string
-            }
-
-            try {
-                final Class<R.drawable> drawableClass = R.drawable.class;
-                final Field f = drawableClass.getField(resource);
-                icon = f.getInt(null);
-            } catch (final NoSuchFieldException e1) {
-
-                // just means the resource doesn't exist for fennec. Check in Android resources
-                try {
-                    final Class<android.R.drawable> drawableClass = android.R.drawable.class;
-                    final Field f = drawableClass.getField(resource);
-                    icon = f.getInt(null);
-                } catch (final NoSuchFieldException e2) {
-                    // This drawable doesn't seem to exist...
-                } catch (Exception e3) {
-                    Log.i(LOGTAG, "Exception getting drawable", e3);
-                }
-
-            } catch (Exception e4) {
-              Log.i(LOGTAG, "Exception getting drawable", e4);
-            }
-
-            resourceUrl = null;
-        }
-        return icon;
-    }
-
-    public static Bitmap getLauncherIcon(Context context, Bitmap aSource, int size) {
-        final int kOffset = 6;
-        final int kRadius = 5;
-        int insetSize = aSource != null ? size * 2 / 3 : size;
-
-        Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
-
-
-        // draw a base color
-        Paint paint = new Paint();
-        if (aSource == null) {
-            // If we aren't drawing a favicon, just use an orange color.
-            paint.setColor(Color.HSVToColor(DEFAULT_LAUNCHER_ICON_HSV));
-            canvas.drawRoundRect(new RectF(kOffset, kOffset, size - kOffset, size - kOffset), kRadius, kRadius, paint);
-        } else if (aSource.getWidth() >= insetSize || aSource.getHeight() >= insetSize) {
-            // Otherwise, if the icon is large enough, just draw it.
-            Rect iconBounds = new Rect(0, 0, size, size);
-            canvas.drawBitmap(aSource, null, iconBounds, null);
-            return bitmap;
-        } else {
-            // otherwise use the dominant color from the icon + a layer of transparent white to lighten it somewhat
-            int color = BitmapUtils.getDominantColor(aSource);
-            paint.setColor(color);
-            canvas.drawRoundRect(new RectF(kOffset, kOffset, size - kOffset, size - kOffset), kRadius, kRadius, paint);
-            paint.setColor(Color.argb(100, 255, 255, 255));
-            canvas.drawRoundRect(new RectF(kOffset, kOffset, size - kOffset, size - kOffset), kRadius, kRadius, paint);
+        if (!"drawable".equals(scheme)) {
+            // Return a "not found" default icon that's easy to spot.
+            return android.R.drawable.sym_def_app_icon;
         }
 
-        // draw the overlay
-        Bitmap overlay = BitmapUtils.decodeResource(context, R.drawable.home_bg);
-        canvas.drawBitmap(overlay, null, new Rect(0, 0, size, size), null);
+        String resource = resourceUrl.getSchemeSpecificPart();
+        if (resource.startsWith("//")) {
+            resource = resource.substring(2);
+        }
 
-        // draw the favicon
-        if (aSource == null)
-            aSource = BitmapUtils.decodeResource(context, R.drawable.home_star);
+        final Resources res = context.getResources();
+        int id = res.getIdentifier(resource, "drawable", context.getPackageName());
+        if (id != 0) {
+            return id;
+        }
 
-        // by default, we scale the icon to this size
-        int sWidth = insetSize / 2;
-        int sHeight = sWidth;
+        // For backwards compatibility, we also search in system resources.
+        id = res.getIdentifier(resource, "drawable", "android");
+        if (id != 0) {
+            return id;
+        }
 
-        int halfSize = size / 2;
-        canvas.drawBitmap(aSource,
-                null,
-                new Rect(halfSize - sWidth,
-                        halfSize - sHeight,
-                        halfSize + sWidth,
-                        halfSize + sHeight),
-                null);
-
-        return bitmap;
+        Log.w(LOGTAG, "Cannot find drawable/" + resource);
+        // Return a "not found" default icon that's easy to spot.
+        return android.R.drawable.sym_def_app_icon;
     }
 }

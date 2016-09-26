@@ -19,4 +19,4 @@ assertEq(wasmEvalText(`(module
   )
 
   (export "" 0)
-)`)(10), 3628800);
+)`).exports[""](10), 3628800);

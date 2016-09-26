@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Send an nsTemporaryFileInputStream cross-process</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/dom/canvas/test/captureStream_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<div id="content">
+</div>
+<script class="testbody" type="text/javascript">
+function startTest() {
+  var canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 100;
+  document.getElementById("content").appendChild(canvas);
+
+  var helper = new CaptureStreamTestHelper2D(100, 100);
+  helper.drawColor(canvas, helper.red);
+
+  var stream = canvas.captureStream(0);
+
+  var blob;
+
+  mediaRecorder = new MediaRecorder(stream);
+  is(mediaRecorder.stream, stream,
+     "Media recorder stream = canvas stream at the start of recording");
+
+  mediaRecorder.onwarning = () => ok(false, "warning unexpectedly fired");
+
+  mediaRecorder.onerror = () => ok(false, "Recording failed");
+
+  mediaRecorder.ondataavailable = ev => {
+    is(blob, undefined, "Should only get one dataavailable event");
+    blob = ev.data;
+  };
+
+  mediaRecorder.onstart = () => {
+    info("Got 'start' event");
+    // We just want one frame encoded, to see that the recorder produces something readable.
+    mediaRecorder.stop();
+  };
+
+  mediaRecorder.onstop = () => {
+    info("Got 'stop' event");
+    ok(blob, "Should have gotten a data blob");
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', 'blob_verify.sjs', true);
+    xhr.onload = () => {
+      var video = document.createElement("video");
+      video.id = "recorded-video";
+      video.src = URL.createObjectURL(xhr.response);
+      video.play();
+      video.onerror = err => {
+        ok(false, "Should be able to play the recording. Got error. code=" + video.error.code);
+        SimpleTest.finish();
+      };
+      document.getElementById("content").appendChild(video);
+      helper.waitForPixelColor(video, helper.red, 128, "Should become red")
+        .then(SimpleTest.finish);
+    };
+    xhr.onerror = () => {
+      ok(false, "XHR error");
+      SimpleTest.finish();
+    }
+    xhr.responseType = "blob";
+    xhr.send(blob);
+  };
+
+  mediaRecorder.start();
+  is(mediaRecorder.state, "recording", "Media recorder should be recording");
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({set:[["media.recorder.max_memory", 1]]}, startTest);
+</script>
+</pre>
+</body>
+</html>

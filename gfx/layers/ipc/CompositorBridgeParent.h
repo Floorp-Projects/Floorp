@@ -480,6 +480,12 @@ public:
    */
   static APZCTreeManagerParent* GetApzcTreeManagerParentForRoot(
         uint64_t aContentLayersId);
+  /**
+   * Same as the GetApzcTreeManagerParentForRoot function, but returns
+   * the GeckoContentController for the parent process.
+   */
+  static GeckoContentController* GetGeckoContentControllerForRoot(
+        uint64_t aContentLayersId);
 
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
   /**

@@ -9,7 +9,8 @@ const { l10n } = require("devtools/client/webconsole/new-console-output/utils/me
 const { getAllFilters } = require("devtools/client/webconsole/new-console-output/selectors/filters");
 const { getLogLimit } = require("devtools/client/webconsole/new-console-output/selectors/prefs");
 const {
-  MESSAGE_TYPE
+  MESSAGE_TYPE,
+  MESSAGE_SOURCE
 } = require("devtools/client/webconsole/new-console-output/constants");
 
 function getAllMessages(state) {
@@ -19,7 +20,10 @@ function getAllMessages(state) {
 
   return prune(
     search(
-      filterLevel(messages, filters),
+      filterNetwork(
+        filterLevel(messages, filters),
+        filters
+      ),
       filters.text
     ),
     logLimit
@@ -34,6 +38,17 @@ function filterLevel(messages, filters) {
   return messages.filter((message) => {
     return filters.get(message.level) === true
       || [MESSAGE_TYPE.COMMAND, MESSAGE_TYPE.RESULT].includes(message.type);
+  });
+}
+
+function filterNetwork(messages, filters) {
+  return messages.filter((message) => {
+    return (
+      message.source !== MESSAGE_SOURCE.NETWORK
+      || (filters.get("network") === true && message.isXHR === false)
+      || (filters.get("netxhr") === true && message.isXHR === true)
+      || [MESSAGE_TYPE.COMMAND, MESSAGE_TYPE.RESULT].includes(message.type)
+    );
   });
 }
 

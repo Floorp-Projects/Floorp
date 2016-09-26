@@ -56,6 +56,10 @@ enum class PixelCastJustification : uint8_t {
 };
 
 template <class TargetUnits, class SourceUnits>
+gfx::CoordTyped<TargetUnits> ViewAs(const gfx::CoordTyped<SourceUnits>& aCoord, PixelCastJustification) {
+  return gfx::CoordTyped<TargetUnits>(aCoord.value);
+}
+template <class TargetUnits, class SourceUnits>
 gfx::SizeTyped<TargetUnits> ViewAs(const gfx::SizeTyped<SourceUnits>& aSize, PixelCastJustification) {
   return gfx::SizeTyped<TargetUnits>(aSize.width, aSize.height);
 }

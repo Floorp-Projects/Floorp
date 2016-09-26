@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1242019
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1242019</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1242019">Mozilla Bug 1242019</a>
+<p id="display"></p>
+
+<iframe id="cspframe"></iframe>
+
+<pre id="test">
+
+<script class="testbody" type="text/javascript">
+function cleanup() {
+  SpecialPowers.postConsoleSentinel();
+  SimpleTest.finish();
+};
+
+var expectedURI = "data:image/png;base64,iVBORw0KGgoAAAANSU"
+
+SpecialPowers.registerConsoleListener(function ConsoleMsgListener(aMsg) {
+  // look for the message with data uri and see the data uri is truncated to 40 chars
+  data_start = aMsg.message.indexOf(expectedURI) 
+  if (data_start > -1) {
+    data_uri = "";
+    data_uri = aMsg.message.substr(data_start);
+    // this will either match the elipsis after the URI or the . at the end of the message
+    data_uri = data_uri.substr(0, data_uri.indexOf("."));
+    if (data_uri == "") {
+      return;
+    }
+
+    ok(data_uri.length == 40, "Data URI only shows 40 characters in the console");
+    SimpleTest.executeSoon(cleanup);
+  }
+});
+
+// set up and start testing
+SimpleTest.waitForExplicitFinish();
+document.getElementById('cspframe').src = 'file_data-uri_blocked.html';
+</script>
+</pre>
+</body>
+</html>
