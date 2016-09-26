@@ -478,6 +478,11 @@ private:
     void invoke(JS::HandleObject scope, Closure& closure) override;
   };
   EnvironmentPreparer mEnvironmentPreparer;
+
+#ifdef DEBUG
+  uint32_t mNumTraversedGCThings;
+  uint32_t mNumTraceChildren;
+#endif // DEBUG
 };
 
 void TraceScriptHolder(nsISupports* aHolder, JSTracer* aTracer);
