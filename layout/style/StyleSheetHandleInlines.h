@@ -171,6 +171,7 @@ StyleSheetHandle::Ptr::List(FILE* aOut, int32_t aIndex) const
 #endif
 
 #undef FORWARD
+#undef FORWARD_CONCRETE
 
 inline void
 ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
