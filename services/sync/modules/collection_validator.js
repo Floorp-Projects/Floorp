@@ -65,7 +65,7 @@ class CollectionValidator {
   }
 
   getServerItems(engine) {
-    let collection = engine._itemSource();
+    let collection = engine.itemSource();
     let collectionKey = engine.service.collectionKeys.keyForCollection(engine.name);
     collection.full = true;
     let items = [];
