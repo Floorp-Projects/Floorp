@@ -1,0 +1,20 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<head>
+<style>
+  div {
+    width: 100px;
+    height: 100px;
+    mask: url(#m1);
+    background-color: blue;
+  }
+</style>
+</head>
+<body>
+  <div/>
+  <svg:svg height="0">
+    <svg:mask id="m1" style="mask-type:alpha">
+      <svg:rect x="0" y="0" width="50" height="100" style="stroke:none; fill: #ffffff" fill-opacity="0.5"/>
+    </svg:mask>
+  </svg:svg>
+</body>
+</html>
