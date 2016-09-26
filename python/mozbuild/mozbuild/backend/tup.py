@@ -340,6 +340,5 @@ class TupBackend(HybridBackend(TupOnly, RecursiveMakeBackend)):
     def build(self, config, output, jobs, verbose):
         status = config._run_make(directory=self.environment.topobjdir, target='tup',
                                   line_handler=output.on_line, log=False, print_directory=False,
-                                  ensure_exit_code=False, num_jobs=jobs, silent=not verbose,
-                                  append_env={b'NO_BUILDSTATUS_MESSAGES': b'1'})
+                                  ensure_exit_code=False, num_jobs=jobs, silent=not verbose)
         return status
