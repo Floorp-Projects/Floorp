@@ -32,7 +32,6 @@ public:
   void Flush() override;
   void Drain() override;
   void Shutdown() override;
-  void ConfigurationChanged(const TrackInfo& aConfig) override { MOZ_ASSERT(false); }
 
   const char* GetDescriptionName() const override { return "RemoteVideoDecoder"; }
 
