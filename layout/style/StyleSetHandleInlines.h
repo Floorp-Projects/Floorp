@@ -7,9 +7,8 @@
 #ifndef mozilla_StyleSetHandleInlines_h
 #define mozilla_StyleSetHandleInlines_h
 
-#include "mozilla/CSSStyleSheet.h"
+#include "mozilla/StyleSheetInlines.h"
 #include "mozilla/ServoStyleSet.h"
-#include "mozilla/ServoStyleSheet.h"
 #include "nsStyleSet.h"
 
 #define FORWARD_CONCRETE(method_, geckoargs_, servoargs_) \

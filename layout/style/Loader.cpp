@@ -21,7 +21,7 @@
 #include "mozilla/MemoryReporting.h"
 
 #include "mozilla/css/Loader.h"
-#include "mozilla/ServoStyleSheet.h"
+#include "mozilla/StyleSheetInlines.h"
 #include "nsIRunnable.h"
 #include "nsIUnicharStreamLoader.h"
 #include "nsSyncLoadService.h"
@@ -45,7 +45,6 @@
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsCSSParser.h"
-#include "mozilla/CSSStyleSheet.h"
 #include "mozilla/css/ImportRule.h"
 #include "nsThreadUtils.h"
 #include "nsGkAtoms.h"
