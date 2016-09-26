@@ -26,19 +26,16 @@ if (media == null) {
       v2.srcObject = v1.mozCaptureStream();
       v1.play();
     };
-    var onPlayingEventFired = false;
 
-    v2.onplaying = function() {
-      if(!onPlayingEventFired) {
-        onPlayingEventFired = true;
-        ok(true, "playback started");
-        SimpleTest.finish();
-      }
-    }
+    v2.addEventListener('playing', function() {
+      ok(true, "playback started");
+      SimpleTest.finish();
+    }, {once: true});
   }
 
   startTest();
 }
+
 </script>
 </pre>
 </body>
