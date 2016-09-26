@@ -1088,6 +1088,61 @@ var AddonTestUtils = {
   },
 
   /**
+   * Returns a promise that will be resolved when an add-on update check is
+   * complete. The value resolved will be an AddonInstall if a new version was
+   * found.
+   */
+  promiseFindAddonUpdates(addon, reason = AddonManager.UPDATE_WHEN_PERIODIC_UPDATE) {
+    let equal = this.testScope.equal;
+    return new Promise((resolve, reject) => {
+      let result = {};
+      addon.findUpdates({
+        onNoCompatibilityUpdateAvailable: function(addon2) {
+          if ("compatibilityUpdate" in result) {
+            throw new Error("Saw multiple compatibility update events");
+          }
+          equal(addon, addon2, "onNoCompatibilityUpdateAvailable");
+          result.compatibilityUpdate = false;
+        },
+
+        onCompatibilityUpdateAvailable: function(addon2) {
+          if ("compatibilityUpdate" in result) {
+            throw new Error("Saw multiple compatibility update events");
+          }
+          equal(addon, addon2, "onCompatibilityUpdateAvailable");
+          result.compatibilityUpdate = true;
+        },
+
+        onNoUpdateAvailable: function(addon2) {
+          if ("updateAvailable" in result) {
+            throw new Error("Saw multiple update available events");
+          }
+          equal(addon, addon2, "onNoUpdateAvailable");
+          result.updateAvailable = false;
+        },
+
+        onUpdateAvailable: function(addon2, install) {
+          if ("updateAvailable" in result) {
+            throw new Error("Saw multiple update available events");
+          }
+          equal(addon, addon2, "onUpdateAvailable");
+          result.updateAvailable = install;
+        },
+
+        onUpdateFinished: function(addon2, error) {
+          equal(addon, addon2, "onUpdateFinished");
+          if (error == AddonManager.UPDATE_STATUS_NO_ERROR) {
+            resolve(result);
+          } else {
+            result.error = error;
+            reject(result);
+          }
+        }
+      }, reason);
+    });
+  },
+
+  /**
    * A promise-based variant of AddonManager.getAddonsWithOperationsByTypes
    *
    * @param {Array<string>} types
