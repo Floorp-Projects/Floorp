@@ -27,7 +27,6 @@
 #include "nsITimer.h"
 
 #include "AbstractMediaDecoder.h"
-#include "DecoderDoctorDiagnostics.h"
 #include "MediaDecoderOwner.h"
 #include "MediaEventSource.h"
 #include "MediaMetadataManager.h"
@@ -595,8 +594,6 @@ private:
   void OnPlaybackEvent(MediaEventType aEvent);
   void OnPlaybackErrorEvent(const MediaResult& aError);
 
-  void OnDecoderDoctorEvent(DecoderDoctorEvent aEvent);
-
   void OnMediaNotSeekable()
   {
     SetMediaSeekable(false);
@@ -736,7 +733,6 @@ protected:
 
   MediaEventListener mOnPlaybackEvent;
   MediaEventListener mOnPlaybackErrorEvent;
-  MediaEventListener mOnDecoderDoctorEvent;
   MediaEventListener mOnMediaNotSeekable;
 
 protected:

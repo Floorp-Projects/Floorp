@@ -201,6 +201,10 @@ const TELEMETRY_DDSTAT_CLICKED_FIRST = 3;
 const TELEMETRY_DDSTAT_SOLVED = 4;
 
 let gDecoderDoctorHandler = {
+  shouldShowLearnMoreButton() {
+    return AppConstants.platform == "win";
+  },
+
   getLabelForNotificationBox(type) {
     if (type == "adobe-cdm-not-found" &&
         AppConstants.platform == "win") {
@@ -230,23 +234,6 @@ let gDecoderDoctorHandler = {
       if (AppConstants.platform == "linux") {
         return gNavigatorBundle.getString("decoder.noCodecsLinux.message");
       }
-    }
-    if (type == "cannot-initialize-pulseaudio") {
-      return gNavigatorBundle.getString("decoder.noPulseAudio.message");
-    }
-    return "";
-  },
-
-  getSumoForLearnHowButton(type) {
-    if (AppConstants.isPlatformAndVersionAtLeast("win", "6")) {
-      if (type == "adobe-cdm-not-found" ||
-          type == "adobe-cdm-not-activated" ||
-          type == "platform-decoder-not-found") {
-        return "fix-video-audio-problems-firefox-windows";
-      }
-    }
-    if (type == "cannot-initialize-pulseaudio") {
-      return "fix-common-audio-and-video-issues";
     }
     return "";
   },
@@ -319,8 +306,7 @@ let gDecoderDoctorHandler = {
       histogram.add(decoderDoctorReportId, TELEMETRY_DDSTAT_SHOWN);
 
       let buttons = [];
-      let sumo = gDecoderDoctorHandler.getSumoForLearnHowButton(type);
-      if (sumo) {
+      if (gDecoderDoctorHandler.shouldShowLearnMoreButton()) {
         buttons.push({
           label: gNavigatorBundle.getString("decoder.noCodecs.button"),
           accessKey: gNavigatorBundle.getString("decoder.noCodecs.accesskey"),
@@ -334,7 +320,7 @@ let gDecoderDoctorHandler = {
             histogram.add(decoderDoctorReportId, TELEMETRY_DDSTAT_CLICKED);
 
             let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
-            openUILinkIn(baseURL + sumo, "tab");
+            openUILinkIn(baseURL + "fix-video-audio-problems-firefox-windows", "tab");
           }
         });
       }
