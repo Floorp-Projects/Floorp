@@ -66,6 +66,10 @@ TreeWalker::Seek(nsIContent* aChildNode)
   mStateStack.Clear();
   mARIAOwnsIdx = 0;
 
+  if (mAnchorNode == aChildNode) {
+    return true;
+  }
+
   nsIContent* childNode = nullptr;
   nsINode* parentNode = aChildNode;
   do {
