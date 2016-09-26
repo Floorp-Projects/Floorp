@@ -681,6 +681,7 @@ SSL_PeerCertificate
 SSL_PeerCertificateChain
 SSL_PeerStapledOCSPResponses
 SSL_ResetHandshake
+SSL_SendAdditionalKeyShares
 SSL_SetCanFalseStartCallback
 SSL_SetDowngradeCheckVersion
 SSL_SetNextProtoNego
