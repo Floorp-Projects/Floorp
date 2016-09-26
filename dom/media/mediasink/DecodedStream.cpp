@@ -704,6 +704,13 @@ DecodedStream::NotifyOutput(int64_t aTime)
 {
   AssertOwnerThread();
   mLastOutputTime = aTime;
+
+  // Remove audio samples that have been played by MSG from the queue.
+  RefPtr<MediaData> a = mAudioQueue.PeekFront();
+  for (; a && a->mTime < aTime;) {
+    RefPtr<MediaData> releaseMe = mAudioQueue.PopFront();
+    a = mAudioQueue.PeekFront();
+  }
 }
 
 void
