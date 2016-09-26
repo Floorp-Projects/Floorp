@@ -7,10 +7,9 @@
 #include "nsLayoutStylesheetCache.h"
 
 #include "nsAppDirectoryServiceDefs.h"
-#include "mozilla/CSSStyleSheet.h"
+#include "mozilla/StyleSheetInlines.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/ServoStyleSheet.h"
 #include "mozilla/StyleSheetHandle.h"
 #include "mozilla/StyleSheetHandleInlines.h"
 #include "mozilla/css/Loader.h"

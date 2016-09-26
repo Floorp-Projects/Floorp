@@ -12,7 +12,7 @@
 #include "nsStyleSet.h"
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/CSSStyleSheet.h"
+#include "mozilla/StyleSheetInlines.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EnumeratedRange.h"
 #include "mozilla/EventStates.h"

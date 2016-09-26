@@ -67,7 +67,7 @@
 #include "nsIParser.h"
 #include "nsCharsetSource.h"
 #include "nsIParserService.h"
-#include "mozilla/CSSStyleSheet.h"
+#include "mozilla/StyleSheetInlines.h"
 #include "mozilla/css/Loader.h"
 #include "nsIScriptError.h"
 #include "nsIStyleSheetLinkingElement.h"

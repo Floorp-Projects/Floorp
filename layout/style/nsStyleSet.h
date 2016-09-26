@@ -13,7 +13,7 @@
 #define nsStyleSet_h_
 
 #include "mozilla/Attributes.h"
-#include "mozilla/CSSStyleSheet.h"
+#include "mozilla/StyleSheetInlines.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
