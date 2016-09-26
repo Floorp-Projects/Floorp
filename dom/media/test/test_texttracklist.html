@@ -28,15 +28,22 @@ video.textTracks.addEventListener("change", changed);
 
 is(track.mode, "hidden", "New TextTrack's mode should be hidden.");
 track.mode = "showing";
+// Bug882674: change the mode again to see if we receive only one
+// change event.
+track.mode = "hidden";
 
+var eventCount = 0;
 function changed(event) {
+  eventCount++;
+  is(eventCount, 1, "change event dispatched multiple times.");
   is(event.target, video.textTracks, "change event's target should be video.textTracks.");
   ok(event instanceof window.Event, "change event should be a simple event.");
   ok(!event.bubbles, "change event should not bubble.");
   ok(event.isTrusted, "change event should be trusted.");
   ok(!event.cancelable, "change event should not be cancelable.");
 
-SimpleTest.finish();
+  // Delay the finish function call for testing the change event count.
+  setTimeout(SimpleTest.finish, 0);
 }
 </script>
 </pre>

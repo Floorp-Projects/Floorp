@@ -32,7 +32,7 @@ enum class CSSPseudoElementType : uint8_t;
  * (with a few exceptions, like system color changes), the data in an
  * nsStyleContext are also immutable (with the additional exception of
  * GetUniqueStyleData).  When style data change,
- * nsFrameManager::ReResolveStyleContext creates a new style context.
+ * ElementRestyler::Restyle creates a new style context.
  *
  * Style contexts are reference counted.  References are generally held
  * by:

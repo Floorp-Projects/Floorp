@@ -174,6 +174,12 @@ public:
   // Seeks to the decoder to aTarget asynchronously.
   RefPtr<MediaDecoder::SeekPromise> InvokeSeek(SeekTarget aTarget);
 
+  void DispatchSetPlaybackRate(double aPlaybackRate)
+  {
+    OwnerThread()->DispatchStateChange(NewRunnableMethod<double>(
+      this, &MediaDecoderStateMachine::SetPlaybackRate, aPlaybackRate));
+  }
+
   // Set/Unset dormant state.
   void DispatchSetDormant(bool aDormant);
 
@@ -367,7 +373,7 @@ protected:
   void AudioAudibleChanged(bool aAudible);
 
   void VolumeChanged();
-  void LogicalPlaybackRateChanged();
+  void SetPlaybackRate(double aPlaybackRate);
   void PreservesPitchChanged();
 
   MediaQueue<MediaData>& AudioQueue() { return mAudioQueue; }
@@ -381,11 +387,13 @@ protected:
   // decode more.
   bool NeedToDecodeVideo();
 
-  // Returns true if we've got less than aAudioUsecs microseconds of decoded
-  // and playable data. The decoder monitor must be held.
-  //
+  // True if we are low in decoded audio/video data.
   // May not be invoked when mReader->UseBufferingHeuristics() is false.
-  bool HasLowDecodedData(int64_t aAudioUsecs);
+  bool HasLowDecodedData();
+
+  bool HasLowDecodedAudio();
+
+  bool HasLowDecodedVideo();
 
   bool OutOfDecodedAudio();
 
@@ -885,11 +893,6 @@ private:
 
   // Volume of playback. 0.0 = muted. 1.0 = full volume.
   Mirror<double> mVolume;
-
-  // TODO: The separation between mPlaybackRate and mLogicalPlaybackRate is a
-  // kludge to preserve existing fragile logic while converting this setup to
-  // state-mirroring. Some hero should clean this up.
-  Mirror<double> mLogicalPlaybackRate;
 
   // Pitch preservation for the playback rate.
   Mirror<bool> mPreservesPitch;

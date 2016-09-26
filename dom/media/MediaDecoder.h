@@ -764,7 +764,7 @@ protected:
   Canonical<double> mVolume;
 
   // PlaybackRate and pitch preservation status we should start at.
-  Canonical<double> mPlaybackRate;
+  double mPlaybackRate = 1;
 
   Canonical<bool> mPreservesPitch;
 
@@ -826,9 +826,6 @@ public:
   AbstractCanonical<media::NullableTimeUnit>* CanonicalDurationOrNull() override;
   AbstractCanonical<double>* CanonicalVolume() {
     return &mVolume;
-  }
-  AbstractCanonical<double>* CanonicalPlaybackRate() {
-    return &mPlaybackRate;
   }
   AbstractCanonical<bool>* CanonicalPreservesPitch() {
     return &mPreservesPitch;

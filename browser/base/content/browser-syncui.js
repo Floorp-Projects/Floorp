@@ -290,11 +290,6 @@ var gSyncUI = {
 
   openSetup: function SUI_openSetup(wizardType, entryPoint = "syncbutton") {
     if (this.weaveService.fxAccountsEnabled) {
-      // If the user is also in an uitour, set the entrypoint to `uitour`
-      if (UITour.tourBrowsersByWindow.get(window) &&
-          UITour.tourBrowsersByWindow.get(window).has(gBrowser.selectedBrowser)) {
-        entryPoint = "uitour";
-      }
       this.openPrefs(entryPoint);
     } else {
       let win = Services.wm.getMostRecentWindow("Weave:AccountSetup");

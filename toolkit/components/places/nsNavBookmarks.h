@@ -216,6 +216,10 @@ public:
   static const int32_t kGetChildrenIndex_Type;
   static const int32_t kGetChildrenIndex_PlaceID;
 
+  static mozilla::Atomic<int64_t> sLastInsertedItemId;
+  static void StoreLastInsertedId(const nsACString& aTable,
+                                  const int64_t aLastInsertedId);
+
 private:
   static nsNavBookmarks* gBookmarksService;
 

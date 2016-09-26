@@ -79,4 +79,10 @@ interface nsIUnicharStreamLoader : nsIStreamListener
    * called.
    */
   readonly attribute ACString charset;
+
+  /**
+   * Get the raw bytes as seen on the wire prior to character converstion.
+   * Used by Subresource Integrity checker to generate the correct hash.
+   */
+  readonly attribute ACString rawBuffer;
 };
