@@ -20,8 +20,6 @@ toolkit.jar:
 #endif
   skin/classic/global/colorpicker.css
   skin/classic/global/commonDialog.css
-  skin/classic/global/filepicker.css
-  skin/classic/global/Filepicker.png                       (filepicker/Filepicker.png)
   skin/classic/global/findBar.css
 * skin/classic/global/global.css
   skin/classic/global/listbox.css

@@ -7,4 +7,7 @@
 if CONFIG['MOZ_BUILD_APP'] == 'mobile/android':
   DEFINES['MOZ_FENNEC'] = True
 
+if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
+  DEFINES['MOZ_GTK'] = True
+
 JAR_MANIFESTS += ['jar.mn']
