@@ -841,6 +841,10 @@ public:
         .Else(Trap(SchedTrap, nullptr));
     }
 
+    // For clock(3) on older glibcs; bug 1304220.
+    case __NR_times:
+      return Allow();
+
     default:
       return SandboxPolicyCommon::EvaluateSyscall(sysno);
     }
