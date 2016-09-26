@@ -78,7 +78,7 @@ struct BasePoint {
       return x * aPoint.x + y * aPoint.y;
   }
 
-  T Length() const {
+  Coord Length() const {
     return hypot(x, y);
   }
 
