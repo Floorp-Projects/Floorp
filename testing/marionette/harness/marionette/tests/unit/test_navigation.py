@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import time
-import unittest
 import urllib
 
 from marionette import MarionetteTestCase
@@ -123,7 +122,6 @@ class TestNavigate(MarionetteTestCase):
         self.assertEqual("complete", state)
         self.assertTrue(self.marionette.find_element(By.ID, "mozLink"))
 
-    @unittest.skip("Bug 1302707 - No timeout exception raised.")
     def test_should_throw_a_timeoutexception_when_loading_page(self):
         try:
             self.marionette.set_page_load_timeout(0)
