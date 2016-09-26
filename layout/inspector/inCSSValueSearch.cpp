@@ -4,7 +4,7 @@
 
 #include "inCSSValueSearch.h"
 
-#include "mozilla/CSSStyleSheet.h"
+#include "mozilla/StyleSheetInlines.h"
 #include "mozilla/dom/StyleSheetList.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"

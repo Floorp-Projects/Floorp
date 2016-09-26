@@ -21,7 +21,7 @@
 #include "mozilla/Logging.h"
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/CSSStyleSheet.h"
+#include "mozilla/StyleSheetInlines.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"

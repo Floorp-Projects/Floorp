@@ -20,7 +20,7 @@
 #include "DocumentType.h"
 #include "nsHTMLParts.h"
 #include "nsCRT.h"
-#include "mozilla/CSSStyleSheet.h"
+#include "mozilla/StyleSheetInlines.h"
 #include "mozilla/css/Loader.h"
 #include "nsGkAtoms.h"
 #include "nsContentUtils.h"
