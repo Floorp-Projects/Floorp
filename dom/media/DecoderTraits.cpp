@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DecoderTraits.h"
+#include "MediaContentType.h"
 #include "MediaDecoder.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsMimeTypes.h"
@@ -490,6 +491,21 @@ DecoderTraits::CanHandleMediaType(const char* aMIMEType,
   }
 #endif
   return CANPLAY_NO;
+}
+
+/* static */
+CanPlayStatus
+DecoderTraits::CanHandleContentType(const MediaContentType& aContentType,
+                                    DecoderDoctorDiagnostics* aDiagnostics)
+{
+  if (!aContentType.IsValid()) {
+    return CANPLAY_NO;
+  }
+
+  return CanHandleMediaType(aContentType.GetMIMEType().Data(),
+                            aContentType.HaveCodecs(),
+                            aContentType.GetCodecs(),
+                            aDiagnostics);
 }
 
 // Instantiates but does not initialize decoder.

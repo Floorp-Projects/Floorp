@@ -16,6 +16,7 @@ namespace mozilla {
 
 class AbstractMediaDecoder;
 class DecoderDoctorDiagnostics;
+class MediaContentType;
 class MediaDecoder;
 class MediaDecoderOwner;
 class MediaDecoderReader;
@@ -28,6 +29,10 @@ enum CanPlayStatus {
 
 class DecoderTraits {
 public:
+  // Returns the CanPlayStatus indicating if we can handle this content type.
+  static CanPlayStatus CanHandleContentType(const MediaContentType& aContentType,
+                                            DecoderDoctorDiagnostics* aDiagnostics);
+
   // Returns the CanPlayStatus indicating if we can handle this
   // MIME type. The MIME type should not include the codecs parameter.
   // That parameter should be passed in aRequestedCodecs, and will only be
