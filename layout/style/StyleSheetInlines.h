@@ -35,6 +35,20 @@ StyleSheet::AsHandle()
   return &AsGecko();
 }
 
+const CSSStyleSheet&
+StyleSheet::AsGecko() const
+{
+  MOZ_ASSERT(IsGecko());
+  return *static_cast<const CSSStyleSheet*>(this);
+}
+
+const ServoStyleSheet&
+StyleSheet::AsServo() const
+{
+  MOZ_ASSERT(IsServo());
+  return *static_cast<const ServoStyleSheet*>(this);
+}
+
 }
 
 #endif // mozilla_StyleSheetInlines_h

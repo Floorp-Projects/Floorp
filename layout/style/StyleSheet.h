@@ -72,6 +72,8 @@ public:
   inline CSSStyleSheet& AsGecko();
   inline ServoStyleSheet& AsServo();
   inline StyleSheetHandle AsHandle();
+  inline const CSSStyleSheet& AsGecko() const;
+  inline const ServoStyleSheet& AsServo() const;
 
 protected:
   nsIDocument*          mDocument; // weak ref; parents maintain this for their children
