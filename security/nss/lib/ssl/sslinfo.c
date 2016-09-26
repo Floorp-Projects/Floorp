@@ -51,22 +51,34 @@ SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info, PRUintn len)
         inf.authKeyBits = ss->sec.authKeyBits;
         inf.keaKeyBits = ss->sec.keaKeyBits;
         if (ss->ssl3.initialized) {
+            SSLCipherSuiteInfo cinfo;
+            SECStatus rv;
+
             ssl_GetSpecReadLock(ss);
             /* XXX  The cipher suite should be in the specs and this
              * function should get it from cwSpec rather than from the "hs".
              * See bug 275744 comment 69 and bug 766137.
              */
-            /* For TLS 1.3, we return the cipher suite of the original
-             * connection if there was one rather than the PSK cipher
-             * suite. This matches the original interface for resumption
-             * and is safe because we only enable the corresponding PSK
-             * cipher suite.
-             */
-            inf.cipherSuite = ss->version >= SSL_LIBRARY_VERSION_TLS_1_3 ? ss->ssl3.hs.origCipherSuite : ss->ssl3.hs.cipher_suite;
+            inf.cipherSuite = ss->ssl3.hs.cipher_suite;
             inf.compressionMethod = ss->ssl3.cwSpec->compression_method;
             ssl_ReleaseSpecReadLock(ss);
             inf.compressionMethodName =
                 ssl_GetCompressionMethodName(inf.compressionMethod);
+
+            /* Fill in the cipher details from the cipher suite. */
+            rv = SSL_GetCipherSuiteInfo(inf.cipherSuite,
+                                        &cinfo, sizeof(cinfo));
+            if (rv != SECSuccess) {
+                return SECFailure; /* Error code already set. */
+            }
+            inf.symCipher = cinfo.symCipher;
+            inf.macAlgorithm = cinfo.macAlgorithm;
+            /* Get these fromm |ss->sec| because that is accurate
+             * even with TLS 1.3 disaggregated cipher suites. */
+            inf.keaType = ss->sec.keaType;
+            inf.keaKeyBits = ss->sec.keaKeyBits;
+            inf.authType = ss->sec.authType;
+            inf.authKeyBits = ss->sec.authKeyBits;
         }
         if (sid) {
             unsigned int sidLen;
@@ -123,13 +135,7 @@ SSL_GetPreliminaryChannelInfo(PRFileDesc *fd,
 
     inf.valuesSet = ss->ssl3.hs.preliminaryInfo;
     inf.protocolVersion = ss->version;
-    /* For TLS 1.3, we return the cipher suite of the original
-     * connection if there was one rather than the PSK cipher
-     * suite. This matches the original interface for resumption
-     * and is safe because we only enable the corresponding PSK
-     * cipher suite.
-     */
-    inf.cipherSuite = ss->version >= SSL_LIBRARY_VERSION_TLS_1_3 ? ss->ssl3.hs.origCipherSuite : ss->ssl3.hs.cipher_suite;
+    inf.cipherSuite = ss->ssl3.hs.cipher_suite;
 
     memcpy(info, &inf, inf.length);
     return SECSuccess;
@@ -146,6 +152,7 @@ SSL_GetPreliminaryChannelInfo(PRFileDesc *fd,
 #define S_RSA "RSA", ssl_auth_rsa_decrypt
 #define S_ECDSA "ECDSA", ssl_auth_ecdsa
 #define S_PSK "PSK", ssl_auth_psk
+#define S_ANY "TLS 1.3", ssl_auth_tls13_any
 
 /* real authentication algorithm */
 #define A_DSA ssl_auth_dsa
@@ -158,6 +165,7 @@ SSL_GetPreliminaryChannelInfo(PRFileDesc *fd,
 /* Report ssl_auth_null for export suites that can't decide between
  * ssl_auth_rsa_sign and ssl_auth_rsa_decrypt. */
 #define A_EXP ssl_auth_null
+#define A_ANY ssl_auth_tls13_any
 
 /* key exchange */
 #define K_DHE "DHE", ssl_kea_dh
@@ -167,6 +175,7 @@ SSL_GetPreliminaryChannelInfo(PRFileDesc *fd,
 #define K_ECDHE "ECDHE", ssl_kea_ecdh
 #define K_ECDHE_PSK "ECDHE-PSK", ssl_kea_ecdh_psk
 #define K_DHE_PSK "DHE-PSK", ssl_kea_dh_psk
+#define K_ANY "TLS 1.3", ssl_kea_tls13_any
 
 /* record protection cipher */
 #define C_SEED "SEED", calg_seed
@@ -208,6 +217,10 @@ SSL_GetPreliminaryChannelInfo(PRFileDesc *fd,
 
 static const SSLCipherSuiteInfo suiteInfo[] = {
     /* <------ Cipher suite --------------------> <auth> <KEA>  <bulk cipher> <MAC> <FIPS> */
+    { 0, CS_(TLS_AES_128_GCM_SHA256), S_ANY, K_ANY, C_AESGCM, B_128, M_AEAD_128, F_FIPS_STD, A_ANY },
+    { 0, CS_(TLS_CHACHA20_POLY1305_SHA256), S_ANY, K_ANY, C_CHACHA20, B_256, M_AEAD_128, F_NFIPS_STD, A_ANY },
+    { 0, CS_(TLS_AES_256_GCM_SHA384), S_ANY, K_ANY, C_AESGCM, B_256, M_AEAD_128, F_NFIPS_STD, A_ANY },
+
     { 0, CS(RSA_WITH_AES_128_GCM_SHA256), S_RSA, K_RSA, C_AESGCM, B_128, M_AEAD_128, F_FIPS_STD, A_RSAD },
     { 0, CS(DHE_RSA_WITH_CHACHA20_POLY1305_SHA256), S_RSA, K_DHE, C_CHACHA20, B_256, M_AEAD_128, F_NFIPS_STD, A_RSAS },
 
@@ -226,7 +239,6 @@ static const SSLCipherSuiteInfo suiteInfo[] = {
     { 0, CS(DHE_DSS_WITH_RC4_128_SHA), S_DSA, K_DHE, C_RC4, B_128, M_SHA, F_NFIPS_STD, A_DSA },
     { 0, CS(DHE_RSA_WITH_AES_128_CBC_SHA256), S_RSA, K_DHE, C_AES, B_128, M_SHA256, F_FIPS_STD, A_RSAS },
     { 0, CS(DHE_RSA_WITH_AES_128_GCM_SHA256), S_RSA, K_DHE, C_AESGCM, B_128, M_AEAD_128, F_FIPS_STD, A_RSAS },
-    { 0, CS(DHE_PSK_WITH_AES_128_GCM_SHA256), S_PSK, K_DHE_PSK, C_AESGCM, B_128, M_AEAD_128, F_FIPS_STD, A_PSK },
     { 0, CS(DHE_RSA_WITH_AES_128_CBC_SHA), S_RSA, K_DHE, C_AES, B_128, M_SHA, F_FIPS_STD, A_RSAS },
     { 0, CS(DHE_DSS_WITH_AES_128_GCM_SHA256), S_DSA, K_DHE, C_AESGCM, B_128, M_AEAD_128, F_FIPS_STD, A_DSA },
     { 0, CS(DHE_DSS_WITH_AES_128_CBC_SHA), S_DSA, K_DHE, C_AES, B_128, M_SHA, F_FIPS_STD, A_DSA },
@@ -240,18 +252,12 @@ static const SSLCipherSuiteInfo suiteInfo[] = {
 
     { 0, CS(DHE_RSA_WITH_3DES_EDE_CBC_SHA), S_RSA, K_DHE, C_3DES, B_3DES, M_SHA, F_FIPS_STD, A_RSAS },
     { 0, CS(DHE_DSS_WITH_3DES_EDE_CBC_SHA), S_DSA, K_DHE, C_3DES, B_3DES, M_SHA, F_FIPS_STD, A_DSA },
-    { 0, CS_(SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA), S_RSA, K_RSA, C_3DES, B_3DES, M_SHA, F_FIPS_NSTD, A_RSAD },
     { 0, CS(RSA_WITH_3DES_EDE_CBC_SHA), S_RSA, K_RSA, C_3DES, B_3DES, M_SHA, F_FIPS_STD, A_RSAD },
 
     { 0, CS(DHE_RSA_WITH_DES_CBC_SHA), S_RSA, K_DHE, C_DES, B_DES, M_SHA, F_NFIPS_STD, A_RSAS },
     { 0, CS(DHE_DSS_WITH_DES_CBC_SHA), S_DSA, K_DHE, C_DES, B_DES, M_SHA, F_NFIPS_STD, A_DSA },
-    { 0, CS_(SSL_RSA_FIPS_WITH_DES_CBC_SHA), S_RSA, K_RSA, C_DES, B_DES, M_SHA, F_NFIPS_NSTD, A_RSAD },
     { 0, CS(RSA_WITH_DES_CBC_SHA), S_RSA, K_RSA, C_DES, B_DES, M_SHA, F_NFIPS_STD, A_RSAD },
 
-    { 0, CS(RSA_EXPORT1024_WITH_RC4_56_SHA), S_RSA, K_RSA, C_RC4, B_56, M_SHA, F_EXPORT, A_EXP },
-    { 0, CS(RSA_EXPORT1024_WITH_DES_CBC_SHA), S_RSA, K_RSA, C_DES, B_DES, M_SHA, F_EXPORT, A_EXP },
-    { 0, CS(RSA_EXPORT_WITH_RC4_40_MD5), S_RSA, K_RSA, C_RC4, B_40, M_MD5, F_EXPORT, A_EXP },
-    { 0, CS(RSA_EXPORT_WITH_RC2_CBC_40_MD5), S_RSA, K_RSA, C_RC2, B_40, M_MD5, F_EXPORT, A_EXP },
     { 0, CS(RSA_WITH_NULL_SHA256), S_RSA, K_RSA, C_NULL, B_0, M_SHA256, F_EXPORT, A_RSAD },
     { 0, CS(RSA_WITH_NULL_SHA), S_RSA, K_RSA, C_NULL, B_0, M_SHA, F_EXPORT, A_RSAD },
     { 0, CS(RSA_WITH_NULL_MD5), S_RSA, K_RSA, C_NULL, B_0, M_MD5, F_EXPORT, A_RSAD },
@@ -294,13 +300,6 @@ static const SSLCipherSuiteInfo suiteInfo[] = {
     { 0, CS(DHE_DSS_WITH_AES_256_GCM_SHA384), S_DSA, K_DHE, C_AESGCM, B_256, M_AEAD_128, F_FIPS_STD, A_DSA },
     { 0, CS(DHE_RSA_WITH_AES_256_GCM_SHA384), S_RSA, K_DHE, C_AESGCM, B_256, M_AEAD_128, F_FIPS_STD, A_RSAS },
     { 0, CS(RSA_WITH_AES_256_GCM_SHA384), S_RSA, K_RSA, C_AESGCM, B_256, M_AEAD_128, F_FIPS_STD, A_RSAD },
-
-    { 0, CS(ECDHE_PSK_WITH_AES_128_GCM_SHA256), S_PSK, K_ECDHE_PSK, C_AESGCM, B_128, M_AEAD_128, F_FIPS_STD, A_PSK },
-    { 0, CS(ECDHE_PSK_WITH_CHACHA20_POLY1305_SHA256), S_PSK, K_ECDHE_PSK, C_CHACHA20, B_256, M_AEAD_128, F_NFIPS_STD, A_PSK },
-    { 0, CS(ECDHE_PSK_WITH_AES_256_GCM_SHA384), S_PSK, K_ECDHE_PSK, C_AESGCM, B_256, M_AEAD_128, F_FIPS_STD, A_PSK },
-    { 0, CS(DHE_PSK_WITH_AES_128_GCM_SHA256), S_PSK, K_DHE_PSK, C_AESGCM, B_128, M_AEAD_128, F_FIPS_STD, A_PSK },
-    { 0, CS(DHE_PSK_WITH_CHACHA20_POLY1305_SHA256), S_PSK, K_DHE_PSK, C_CHACHA20, B_256, M_AEAD_128, F_NFIPS_STD, A_PSK },
-    { 0, CS(DHE_PSK_WITH_AES_256_GCM_SHA384), S_PSK, K_DHE_PSK, C_AESGCM, B_256, M_AEAD_128, F_FIPS_STD, A_PSK },
 };
 
 #define NUM_SUITEINFOS ((sizeof suiteInfo) / (sizeof suiteInfo[0]))
@@ -327,59 +326,9 @@ SSL_GetCipherSuiteInfo(PRUint16 cipherSuite,
             return SECSuccess;
         }
     }
+
     PORT_SetError(SEC_ERROR_INVALID_ARGS);
     return SECFailure;
-}
-
-/* This function might be a candidate to be public.
- * Disables all export ciphers in the default set of enabled ciphers.
- */
-SECStatus
-SSL_DisableDefaultExportCipherSuites(void)
-{
-    const SSLCipherSuiteInfo *pInfo = suiteInfo;
-    unsigned int i;
-
-    for (i = 0; i < NUM_SUITEINFOS; ++i, ++pInfo) {
-        if (pInfo->isExportable) {
-            PORT_CheckSuccess(SSL_CipherPrefSetDefault(pInfo->cipherSuite, PR_FALSE));
-        }
-    }
-    return SECSuccess;
-}
-
-/* This function might be a candidate to be public,
- * except that it takes an sslSocket pointer as an argument.
- * A Public version would take a PRFileDesc pointer.
- * Disables all export ciphers in the default set of enabled ciphers.
- */
-SECStatus
-SSL_DisableExportCipherSuites(PRFileDesc *fd)
-{
-    const SSLCipherSuiteInfo *pInfo = suiteInfo;
-    unsigned int i;
-
-    for (i = 0; i < NUM_SUITEINFOS; ++i, ++pInfo) {
-        if (pInfo->isExportable) {
-            PORT_CheckSuccess(SSL_CipherPrefSet(fd, pInfo->cipherSuite, PR_FALSE));
-        }
-    }
-    return SECSuccess;
-}
-
-/* Tells us if the named suite is exportable
- * returns false for unknown suites.
- */
-PRBool
-SSL_IsExportCipherSuite(PRUint16 cipherSuite)
-{
-    unsigned int i;
-    for (i = 0; i < NUM_SUITEINFOS; i++) {
-        if (suiteInfo[i].cipherSuite == cipherSuite) {
-            return (PRBool)(suiteInfo[i].isExportable);
-        }
-    }
-    return PR_FALSE;
 }
 
 SECItem *

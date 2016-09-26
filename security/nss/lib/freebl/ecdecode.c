@@ -35,6 +35,9 @@ hexString2SECItem(PLArenaPool *arena, SECItem *item, const char *str)
     int byteval = 0;
     int tmp = PORT_Strlen(str);
 
+    PORT_Assert(arena);
+    PORT_Assert(item);
+
     if ((tmp % 2) != 0)
         return NULL;
 
@@ -82,7 +85,9 @@ EC_CopyParams(PLArenaPool *arena, ECParams *dstParams,
     dstParams->type = srcParams->type;
     dstParams->fieldID.size = srcParams->fieldID.size;
     dstParams->fieldID.type = srcParams->fieldID.type;
-    if (srcParams->fieldID.type == ec_field_GFp) {
+    dstParams->pointSize = srcParams->pointSize;
+    if (srcParams->fieldID.type == ec_field_GFp ||
+        srcParams->fieldID.type == ec_field_plain) {
         CHECK_SEC_OK(SECITEM_CopyItem(arena, &dstParams->fieldID.u.prime,
                                       &srcParams->fieldID.u.prime));
     } else {
@@ -130,7 +135,9 @@ gf_populate_params(ECCurveName name, ECFieldType field_type, ECParams *params)
     CHECK_OK(curveParams);
     params->fieldID.size = curveParams->size;
     params->fieldID.type = field_type;
-    if (field_type == ec_field_GFp) {
+    params->pointSize = curveParams->pointSize;
+    if (field_type == ec_field_GFp ||
+        field_type == ec_field_plain) {
         CHECK_OK(hexString2SECItem(params->arena, &params->fieldID.u.prime,
                                    curveParams->irr));
     } else {
@@ -176,7 +183,8 @@ EC_FillParams(PLArenaPool *arena, const SECItem *encodedParams,
 #endif
 
     if ((encodedParams->len != ANSI_X962_CURVE_OID_TOTAL_LEN) &&
-        (encodedParams->len != SECG_CURVE_OID_TOTAL_LEN)) {
+        (encodedParams->len != SECG_CURVE_OID_TOTAL_LEN) &&
+        (encodedParams->len != PKIX_NEWCURVES_OID_TOTAL_LEN)) {
         PORT_SetError(SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
         return SECFailure;
     };
@@ -563,6 +571,11 @@ EC_FillParams(PLArenaPool *arena, const SECItem *encodedParams,
      */
             CHECK_SEC_OK(gf_populate_params(ECCurve_SECG_PRIME_521R1, ec_field_GFp,
                                             params));
+            break;
+
+        case SEC_OID_CURVE25519:
+            /* Populate params for Curve25519 */
+            CHECK_SEC_OK(gf_populate_params(ECCurve25519, ec_field_plain, params));
             break;
 
         default:

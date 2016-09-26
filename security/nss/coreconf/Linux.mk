@@ -215,4 +215,10 @@ ifeq ($(OS_RELEASE),2.4)
 DEFINES += -DNO_FORK_CHECK
 endif
 
+ifdef USE_GCOV
+OS_CFLAGS += --coverage
+LDFLAGS += --coverage
+DSO_LDOPTS += --coverage
+endif
+
 include $(CORE_DEPTH)/coreconf/sanitizers.mk
