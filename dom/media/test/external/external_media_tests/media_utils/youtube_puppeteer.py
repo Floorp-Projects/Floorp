@@ -346,7 +346,8 @@ class YouTubePuppeteer(VideoPuppeteer):
                 'return ['
                 'currentTime,'
                 'duration,'
-                '[played.length, timeRanges],'
+                '[buffered.length, bufferedRanges],'
+                '[played.length, playedRanges],'
                 'totalFrames,'
                 'droppedFrames,'
                 'corruptedFrames,'
@@ -371,8 +372,9 @@ class YouTubePuppeteer(VideoPuppeteer):
         stress that it's based on the snapshot.
         """
         values = self._execute_yt_script(self._fetch_state_script)
-        video_keys = ['current_time', 'duration', 'raw_time_ranges',
-                      'total_frames', 'dropped_frames', 'corrupted_frames']
+        video_keys = ['current_time', 'duration', 'raw_buffered_ranges',
+                      'raw_played_ranges', 'total_frames', 'dropped_frames',
+                      'corrupted_frames']
         player_keys = ['player_duration', 'player_current_time',
                        'player_playback_quality', 'player_movie_id',
                        'player_movie_title', 'player_url', 'player_state',

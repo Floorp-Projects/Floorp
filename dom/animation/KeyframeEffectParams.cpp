@@ -115,7 +115,7 @@ KeyframeEffectParams::ParseSpacing(const nsAString& aSpacing,
 
   // Ignore spacing if the core API is not enabled since it is not yet ready to
   // ship.
-  if (!AnimationUtils::IsCoreAPIEnabled()) {
+  if (!AnimationUtils::IsCoreAPIEnabledForCaller()) {
     aSpacingMode = SpacingMode::distribute;
     return;
   }

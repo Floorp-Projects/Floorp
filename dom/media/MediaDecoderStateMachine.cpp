@@ -745,7 +745,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   INIT_MIRROR(mPlayState, MediaDecoder::PLAY_STATE_LOADING),
   INIT_MIRROR(mNextPlayState, MediaDecoder::PLAY_STATE_PAUSED),
   INIT_MIRROR(mVolume, 1.0),
-  INIT_MIRROR(mLogicalPlaybackRate, 1.0),
   INIT_MIRROR(mPreservesPitch, true),
   INIT_MIRROR(mSameOriginMedia, false),
   INIT_MIRROR(mMediaPrincipalHandle, PRINCIPAL_HANDLE_NONE),
@@ -807,7 +806,6 @@ MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder)
   mPlayState.Connect(aDecoder->CanonicalPlayState());
   mNextPlayState.Connect(aDecoder->CanonicalNextPlayState());
   mVolume.Connect(aDecoder->CanonicalVolume());
-  mLogicalPlaybackRate.Connect(aDecoder->CanonicalPlaybackRate());
   mPreservesPitch.Connect(aDecoder->CanonicalPreservesPitch());
   mSameOriginMedia.Connect(aDecoder->CanonicalSameOriginMedia());
   mMediaPrincipalHandle.Connect(aDecoder->CanonicalMediaPrincipalHandle());
@@ -824,7 +822,6 @@ MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder)
   mWatchManager.Watch(mAudioCompleted, &MediaDecoderStateMachine::UpdateNextFrameStatus);
   mWatchManager.Watch(mVideoCompleted, &MediaDecoderStateMachine::UpdateNextFrameStatus);
   mWatchManager.Watch(mVolume, &MediaDecoderStateMachine::VolumeChanged);
-  mWatchManager.Watch(mLogicalPlaybackRate, &MediaDecoderStateMachine::LogicalPlaybackRateChanged);
   mWatchManager.Watch(mPreservesPitch, &MediaDecoderStateMachine::PreservesPitchChanged);
   mWatchManager.Watch(mEstimatedDuration, &MediaDecoderStateMachine::RecomputeDuration);
   mWatchManager.Watch(mExplicitDuration, &MediaDecoderStateMachine::RecomputeDuration);
@@ -1494,8 +1491,7 @@ MediaDecoderStateMachine::MaybeStartBuffering()
 
   bool shouldBuffer;
   if (mReader->UseBufferingHeuristics()) {
-    shouldBuffer = HasLowDecodedData(EXHAUSTED_DATA_MARGIN_USECS) &&
-                   HasLowBufferedData();
+    shouldBuffer = HasLowDecodedData() && HasLowBufferedData();
   } else {
     MOZ_ASSERT(mReader->IsWaitForDataSupported());
     shouldBuffer = (OutOfDecodedAudio() && mReader->IsWaitingAudioData()) ||
@@ -1710,7 +1706,6 @@ MediaDecoderStateMachine::Shutdown()
   mPlayState.DisconnectIfConnected();
   mNextPlayState.DisconnectIfConnected();
   mVolume.DisconnectIfConnected();
-  mLogicalPlaybackRate.DisconnectIfConnected();
   mPreservesPitch.DisconnectIfConnected();
   mSameOriginMedia.DisconnectIfConnected();
   mMediaPrincipalHandle.DisconnectIfConnected();
@@ -2318,17 +2313,28 @@ MediaDecoderStateMachine::StartMediaSink()
   }
 }
 
-bool MediaDecoderStateMachine::HasLowDecodedData(int64_t aAudioUsecs)
+bool
+MediaDecoderStateMachine::HasLowDecodedAudio()
+{
+  MOZ_ASSERT(OnTaskQueue());
+  return IsAudioDecoding() &&
+         GetDecodedAudioDuration() < EXHAUSTED_DATA_MARGIN_USECS * mPlaybackRate;
+}
+
+bool
+MediaDecoderStateMachine::HasLowDecodedVideo()
+{
+  MOZ_ASSERT(OnTaskQueue());
+  return IsVideoDecoding() &&
+         VideoQueue().GetSize() < LOW_VIDEO_FRAMES * mPlaybackRate;
+}
+
+bool
+MediaDecoderStateMachine::HasLowDecodedData()
 {
   MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(mReader->UseBufferingHeuristics());
-  // We consider ourselves low on decoded data if we're low on audio,
-  // provided we've not decoded to the end of the audio stream, or
-  // if we're low on video frames, provided
-  // we've not decoded to the end of the video stream.
-  return ((IsAudioDecoding() && GetDecodedAudioDuration() < aAudioUsecs) ||
-         (IsVideoDecoding() &&
-          static_cast<uint32_t>(VideoQueue().GetSize()) < LOW_VIDEO_FRAMES));
+  return HasLowDecodedAudio() || HasLowDecodedVideo();
 }
 
 bool MediaDecoderStateMachine::OutOfDecodedAudio()
@@ -2782,16 +2788,12 @@ bool MediaDecoderStateMachine::IsStateMachineScheduled() const
 }
 
 void
-MediaDecoderStateMachine::LogicalPlaybackRateChanged()
+MediaDecoderStateMachine::SetPlaybackRate(double aPlaybackRate)
 {
   MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(aPlaybackRate != 0, "Should be handled by MediaDecoder::Pause()");
 
-  if (mLogicalPlaybackRate == 0) {
-    // This case is handled in MediaDecoder by pausing playback.
-    return;
-  }
-
-  mPlaybackRate = mLogicalPlaybackRate;
+  mPlaybackRate = aPlaybackRate;
   mMediaSink->SetPlaybackRate(mPlaybackRate);
 
   if (mIsAudioPrerolling && DonePrerollingAudio()) {
