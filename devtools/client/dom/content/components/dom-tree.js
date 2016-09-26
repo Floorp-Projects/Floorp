@@ -61,6 +61,7 @@ var DomTree = React.createClass({
     let renderValue = props => {
       return Rep(Object.assign({}, props, {
         defaultRep: Grip,
+        cropLimit: 50,
       }));
     };
 
