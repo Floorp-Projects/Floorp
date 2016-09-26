@@ -33,7 +33,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.1.0'
+        classpath 'com.android.tools.build:gradle:2.1.3'
         classpath('com.stanfy.spoon:spoon-gradle-plugin:1.0.4') {
             // Without these, we get errors linting.
             exclude module: 'guava'

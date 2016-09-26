@@ -6832,16 +6832,28 @@ bool nsDisplayMask::TryMerge(nsDisplayItem* aItem)
   // items for the same content element should be merged into a single
   // compositing group
   // aItem->GetUnderlyingFrame() returns non-null because it's nsDisplaySVGEffects
-  if (aItem->Frame()->GetContent() != mFrame->GetContent())
+  if (aItem->Frame()->GetContent() != mFrame->GetContent()) {
     return false;
-  if (aItem->GetClip() != GetClip())
+  }
+  if (aItem->GetClip() != GetClip()) {
     return false;
-  if (aItem->ScrollClip() != ScrollClip())
+  }
+  if (aItem->ScrollClip() != ScrollClip()) {
     return false;
+  }
+
+  // Do not merge if mFrame has mask. Continuation frames should apply mask
+  // independently(just like nsDisplayBackgroundImage).
+  const nsStyleSVGReset *style = mFrame->StyleSVGReset();
+  if (style->mMask.HasLayerWithImage()) {
+    return false;
+  }
+
   nsDisplayMask* other = static_cast<nsDisplayMask*>(aItem);
   MergeFromTrackingMergedFrames(other);
   mEffectsBounds.UnionRect(mEffectsBounds,
     other->mEffectsBounds + other->mFrame->GetOffsetTo(mFrame));
+
   return true;
 }
 
@@ -6886,7 +6898,7 @@ nsDisplayMask::GetLayerState(nsDisplayListBuilder* aBuilder,
 }
 
 bool nsDisplayMask::ComputeVisibility(nsDisplayListBuilder* aBuilder,
-                                              nsRegion* aVisibleRegion) 
+                                      nsRegion* aVisibleRegion)
 {
   // Our children may be made translucent or arbitrarily deformed so we should
   // not allow them to subtract area from aVisibleRegion.

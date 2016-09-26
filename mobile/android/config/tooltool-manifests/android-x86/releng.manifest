@@ -50,16 +50,16 @@
 "visibility": "public",
 "filename": "jcentral.tar.xz",
 "unpack": true,
-"digest": "43754910576cf6173f0dcb215ec7988f2a30dbfe32050f53ac7a9088b8b878c3ead80e02afc1dc31e229386116c82e88a403a309e5b5695f0b74f5defb13dec7",
-"size": 42832932
+"digest": "66640e3f77a0f9c0ea52f66c53bee8db3c1a27ea4a11526d15706b9da6a0302cd2d5b088f9addca84f4a962022cba3b76829cb878c90cf9bebb3aab050b4aaa4",
+"size": 47315996
 },
 {
 "algorithm": "sha512",
 "visibility": "public",
 "filename": "gradle-dist.tar.xz",
 "unpack": true,
-"digest": "990edc0e4039dbe5f77790ef59dc0d58faebbb8c82ee497615c7991eec99fe4668d0ab05508c48664b635ff6c0cfd4272db464ae1efaa548e471ab451fe0944f",
-"size": 51955340
+"digest": "36f961f85b0be846cc9e72bfa0dd1f74e7da8ef785717ce4fd102fec977f21f8902c233b28a21c1ce3797eb2759c7a74c5f74e47bd8f13c1eec640f8d7bed4ac",
+"size": 51512016
 },
 {
 "size": 30899096,

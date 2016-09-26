@@ -72,13 +72,13 @@
       ok(true, "A UTF8 stylesheet (with BOM) was correctly loaded when integrity matched");
     }
     function bad_correctUTF8BOMHashBlocked() {
-      todo(false, "We should load UTF8 (with BOM) stylesheets with hashes that match!");
+      ok(false, "We should load UTF8 (with BOM) stylesheets with hashes that match!");
     }
     function good_correctUTF8ishHashLoaded() {
       ok(true, "A UTF8ish stylesheet was correctly loaded when integrity matched");
     }
     function bad_correctUTF8ishHashBlocked() {
-      todo(false, "We should load UTF8ish stylesheets with hashes that match!");
+      ok(false, "We should load UTF8ish stylesheets with hashes that match!");
     }
   </script>
 

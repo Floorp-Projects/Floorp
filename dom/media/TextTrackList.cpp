@@ -30,8 +30,9 @@ TextTrackList::TextTrackList(nsPIDOMWindowInner* aOwnerWindow)
 
 TextTrackList::TextTrackList(nsPIDOMWindowInner* aOwnerWindow,
                              TextTrackManager* aTextTrackManager)
- : DOMEventTargetHelper(aOwnerWindow)
- , mTextTrackManager(aTextTrackManager)
+  : DOMEventTargetHelper(aOwnerWindow)
+  , mPendingTextTrackChange(false)
+  , mTextTrackManager(aTextTrackManager)
 {
 }
 
@@ -131,7 +132,7 @@ TextTrackList::DidSeek()
   }
 }
 
-class TrackEventRunner final: public Runnable
+class TrackEventRunner : public Runnable
 {
 public:
   TrackEventRunner(TextTrackList* aList, nsIDOMEvent* aEvent)
@@ -144,9 +145,23 @@ public:
     return mList->DispatchTrackEvent(mEvent);
   }
 
-private:
   RefPtr<TextTrackList> mList;
+private:
   RefPtr<nsIDOMEvent> mEvent;
+};
+
+class ChangeEventRunner final : public TrackEventRunner
+{
+public:
+  ChangeEventRunner(TextTrackList* aList, nsIDOMEvent* aEvent)
+    : TrackEventRunner(aList, aEvent)
+  {}
+
+  NS_IMETHOD Run() override
+  {
+    mList->mPendingTextTrackChange = false;
+    return TrackEventRunner::Run();
+  }
 };
 
 nsresult
@@ -158,13 +173,17 @@ TextTrackList::DispatchTrackEvent(nsIDOMEvent* aEvent)
 void
 TextTrackList::CreateAndDispatchChangeEvent()
 {
-  RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!mPendingTextTrackChange) {
+    mPendingTextTrackChange = true;
+    RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
 
-  event->InitEvent(NS_LITERAL_STRING("change"), false, false);
-  event->SetTrusted(true);
+    event->InitEvent(NS_LITERAL_STRING("change"), false, false);
+    event->SetTrusted(true);
 
-  nsCOMPtr<nsIRunnable> eventRunner = new TrackEventRunner(this, event);
-  NS_DispatchToMainThread(eventRunner);
+    nsCOMPtr<nsIRunnable> eventRunner = new ChangeEventRunner(this, event);
+    NS_DispatchToMainThread(eventRunner);
+  }
 }
 
 void
