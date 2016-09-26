@@ -21,6 +21,7 @@ ThreadInfo::ThreadInfo(const char* aName, int aThreadId,
   , mStackTop(aStackTop)
   , mPendingDelete(false)
 {
+  MOZ_COUNT_CTOR(ThreadInfo);
 #ifndef SPS_STANDALONE
   mThread = NS_GetCurrentThread();
 #endif
@@ -33,6 +34,7 @@ ThreadInfo::ThreadInfo(const char* aName, int aThreadId,
 }
 
 ThreadInfo::~ThreadInfo() {
+  MOZ_COUNT_DTOR(ThreadInfo);
   free(mName);
 
   if (mProfile)

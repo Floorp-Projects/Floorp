@@ -277,7 +277,14 @@ int tgkill(pid_t tgid, pid_t tid, int signalno) {
 class PlatformData {
  public:
   PlatformData()
-  {}
+  {
+    MOZ_COUNT_CTOR(PlatformData);
+  }
+
+  ~PlatformData()
+  {
+    MOZ_COUNT_DTOR(PlatformData);
+  }
 };
 
 /* static */ PlatformData*
@@ -387,9 +394,11 @@ Sampler::Sampler(double interval, bool profiling, int entrySize)
       paused_(false),
       active_(false),
       entrySize_(entrySize) {
+  MOZ_COUNT_CTOR(Sampler);
 }
 
 Sampler::~Sampler() {
+  MOZ_COUNT_DTOR(Sampler);
   ASSERT(!signal_sender_launched_);
 }
 
