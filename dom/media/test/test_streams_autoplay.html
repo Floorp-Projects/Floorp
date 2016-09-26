@@ -7,8 +7,6 @@
   <script type="text/javascript" src="manifest.js"></script>
 </head>
 <body>
-<video id="v1"></video>
-<video id="v2" autoplay></video>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
@@ -20,8 +18,14 @@ if (media == null) {
   SimpleTest.finish();
 } else {
   function startTest() {
-    v1.src = media.name;
+    var v1 = document.createElement('video');
+    var v2 = document.createElement('video');
     v1.preload = 'metadata';
+    v2.autoplay = true;
+    document.body.appendChild(v1);
+    document.body.appendChild(v2);
+
+    v1.src = media.name;
     v1.onloadedmetadata = function() {
       v2.srcObject = v1.mozCaptureStream();
       v1.play();
