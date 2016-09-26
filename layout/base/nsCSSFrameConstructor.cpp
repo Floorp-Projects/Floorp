@@ -10593,13 +10593,13 @@ nsCSSFrameConstructor::AddFCItemsForAnonymousContent(
       // This happens when a native anonymous node is used to implement a
       // pseudo-element. Allowing Servo to traverse these nodes would be wasted
       // work, so assert that we didn't do that.
-      MOZ_ASSERT_IF(content->IsStyledByServo(), !content->ServoData());
+      MOZ_ASSERT_IF(content->IsStyledByServo(), !content->HasServoData());
       styleContext = aAnonymousItems[i].mStyleContext.forget();
     } else {
       // If we don't have an explicit style context, that means we need the
       // ordinary computed values. Make sure we eagerly cascaded them when the
       // anonymous nodes were created.
-      MOZ_ASSERT_IF(content->IsStyledByServo(), !!content->ServoData());
+      MOZ_ASSERT_IF(content->IsStyledByServo(), content->HasServoData());
       styleContext = ResolveStyleContext(aFrame, content, &aState);
     }
 

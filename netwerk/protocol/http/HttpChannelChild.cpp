@@ -1317,6 +1317,16 @@ HttpChannelChild::BeginNonIPCRedirect(nsIURI* responseURI,
                               getter_AddRefs(newChannel));
 
   if (NS_SUCCEEDED(rv)) {
+    // Ensure that the new channel shares the original channel's security information,
+    // since it won't be provided via IPC. In particular, if the target of this redirect
+    // is a synthesized response that has its own security info, the pre-redirect channel
+    // has already received it and it must be propagated to the post-redirect channel.
+    nsCOMPtr<nsIHttpChannelChild> channelChild = do_QueryInterface(newChannel);
+    if (mSecurityInfo && channelChild) {
+      HttpChannelChild* httpChannelChild = static_cast<HttpChannelChild*>(channelChild.get());
+      httpChannelChild->OverrideSecurityInfoForNonIPCRedirect(mSecurityInfo);
+    }
+
     rv = gHttpHandler->AsyncOnChannelRedirect(this,
                                               newChannel,
                                               nsIChannelEventSink::REDIRECT_INTERNAL);
@@ -1324,6 +1334,13 @@ HttpChannelChild::BeginNonIPCRedirect(nsIURI* responseURI,
 
   if (NS_FAILED(rv))
     OnRedirectVerifyCallback(rv);
+}
+
+void
+HttpChannelChild::OverrideSecurityInfoForNonIPCRedirect(nsISupports* securityInfo)
+{
+  mResponseCouldBeSynthesized = true;
+  OverrideSecurityInfo(securityInfo);
 }
 
 class Redirect3Event : public ChannelEvent

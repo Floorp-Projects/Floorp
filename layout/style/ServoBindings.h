@@ -7,8 +7,12 @@
 #ifndef mozilla_ServoBindings_h
 #define mozilla_ServoBindings_h
 
+#include "mozilla/ServoTypes.h"
 #include "mozilla/ServoElementSnapshot.h"
 #include "mozilla/css/SheetParsingMode.h"
+#include "mozilla/dom/Element.h"
+#include "nsIDocument.h"
+#include "nsINode.h"
 #include "nsChangeHint.h"
 #include "nsColor.h"
 #include "nsProxyRelease.h"
@@ -25,24 +29,17 @@
  */
 
 class nsIAtom;
-class nsINode;
-typedef nsINode RawGeckoNode;
 class nsIPrincipal;
 class nsIURI;
 struct nsFont;
 namespace mozilla {
   class FontFamilyList;
   enum FontFamilyType : uint32_t;
-  namespace dom { class Element; }
 }
 using mozilla::FontFamilyList;
 using mozilla::FontFamilyType;
 using mozilla::dom::Element;
 using mozilla::ServoElementSnapshot;
-typedef mozilla::dom::Element RawGeckoElement;
-class nsIDocument;
-typedef nsIDocument RawGeckoDocument;
-struct ServoNodeData;
 struct ServoComputedValues;
 struct RawServoStyleSheet;
 struct RawServoStyleSet;
@@ -107,8 +104,6 @@ DECL_ARC_REF_TYPE_FOR(RawServoStyleSheet)
 DECL_ARC_REF_TYPE_FOR(ServoDeclarationBlock)
 
 DECL_OWNED_REF_TYPE_FOR(RawServoStyleSet)
-DECL_NULLABLE_OWNED_REF_TYPE_FOR(ServoNodeData)
-DECL_OWNED_REF_TYPE_FOR(ServoNodeData)
 DECL_NULLABLE_OWNED_REF_TYPE_FOR(StyleChildrenIterator)
 DECL_OWNED_REF_TYPE_FOR(StyleChildrenIterator)
 
@@ -222,10 +217,6 @@ SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS(Gecko_Snapshot,
 
 // Style attributes.
 ServoDeclarationBlockBorrowedOrNull Gecko_GetServoDeclarationBlock(RawGeckoElementBorrowed element);
-
-// Node data.
-ServoNodeDataBorrowedOrNull Gecko_GetNodeData(RawGeckoNodeBorrowed node);
-void Gecko_SetNodeData(RawGeckoNodeBorrowed node, ServoNodeDataOwned data);
 
 // Atoms.
 nsIAtom* Gecko_Atomize(const char* aString, uint32_t aLength);

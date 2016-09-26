@@ -43,7 +43,7 @@ class ErrorObject : public NativeObject
 
     static const ClassSpec errorClassSpec_;
     static const ClassSpec subErrorClassSpec_;
-    static const ClassSpec debuggeeWouldRunClassSpec_;
+    static const ClassSpec nonGlobalErrorClassSpec_;
 
   protected:
     static const uint32_t EXNTYPE_SLOT          = 0;

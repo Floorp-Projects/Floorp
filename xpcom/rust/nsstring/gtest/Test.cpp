@@ -10,129 +10,49 @@ extern "C" {
   }
 }
 
-extern "C" void Rust_Test_StringReprInformation(size_t* size,
-                                                size_t* align,
-                                                size_t* dataOff,
-                                                size_t* dataSize,
-                                                size_t* lengthOff,
-                                                size_t* lengthSize,
-                                                size_t* flagsOff,
-                                                size_t* flagsSize);
-TEST(RustNsString, StringRepr) {
-  class nsStringHack : public nsString {
-  public:
-    static void RunTest() {
-      size_t size, align, dataOff, dataSize, lengthOff, lengthSize, flagsOff, flagsSize;
-      Rust_Test_StringReprInformation(&size, &align,
-                                      &dataOff, &dataSize,
-                                      &lengthOff, &lengthSize,
-                                      &flagsOff, &flagsSize);
-      EXPECT_EQ(sizeof(nsString), sizeof(nsStringHack));
-      EXPECT_EQ(size, sizeof(nsStringHack));
-      EXPECT_EQ(align, alignof(nsStringHack));
-      EXPECT_EQ(dataOff, offsetof(nsStringHack, mData));
-      EXPECT_EQ(dataSize, sizeof(mozilla::DeclVal<nsStringHack>().mData));
-      EXPECT_EQ(lengthOff, offsetof(nsStringHack, mLength));
-      EXPECT_EQ(lengthSize, sizeof(mozilla::DeclVal<nsStringHack>().mLength));
-      EXPECT_EQ(flagsOff, offsetof(nsStringHack, mFlags));
-      EXPECT_EQ(flagsSize, sizeof(mozilla::DeclVal<nsStringHack>().mFlags));
-    }
-  };
-  nsStringHack::RunTest();
-}
+#define SIZE_ALIGN_CHECK(Clazz)                                         \
+  extern "C" void Rust_Test_ReprSizeAlign_##Clazz(size_t* size, size_t* align); \
+  TEST(RustNsString, ReprSizeAlign_##Clazz) {                           \
+    size_t size, align;                                                 \
+    Rust_Test_ReprSizeAlign_##Clazz(&size, &align);                     \
+    EXPECT_EQ(size, sizeof(Clazz));                                     \
+    EXPECT_EQ(align, alignof(Clazz));                                   \
+  }
 
-extern "C" void Rust_Test_CStringReprInformation(size_t* size,
-                                                 size_t* align,
-                                                 size_t* dataOff,
-                                                 size_t* dataSize,
-                                                 size_t* lengthOff,
-                                                 size_t* lengthSize,
-                                                 size_t* flagsOff,
-                                                 size_t* flagsSize);
-TEST(RustNsString, CStringRepr) {
-  class nsCStringHack : public nsCString {
-  public:
-    static void RunTest() {
-      size_t size, align, dataOff, dataSize, lengthOff, lengthSize, flagsOff, flagsSize;
-      Rust_Test_CStringReprInformation(&size, &align,
-                                       &dataOff, &dataSize,
-                                       &lengthOff, &lengthSize,
-                                       &flagsOff, &flagsSize);
-      EXPECT_EQ(sizeof(nsCString), sizeof(nsCStringHack));
-      EXPECT_EQ(size, sizeof(nsCStringHack));
-      EXPECT_EQ(align, alignof(nsCStringHack));
-      EXPECT_EQ(dataOff, offsetof(nsCStringHack, mData));
-      EXPECT_EQ(dataSize, sizeof(mozilla::DeclVal<nsCStringHack>().mData));
-      EXPECT_EQ(lengthOff, offsetof(nsCStringHack, mLength));
-      EXPECT_EQ(lengthSize, sizeof(mozilla::DeclVal<nsCStringHack>().mLength));
-      EXPECT_EQ(flagsOff, offsetof(nsCStringHack, mFlags));
-      EXPECT_EQ(flagsSize, sizeof(mozilla::DeclVal<nsCStringHack>().mFlags));
-    }
-  };
-  nsCStringHack::RunTest();
-}
+SIZE_ALIGN_CHECK(nsString)
+SIZE_ALIGN_CHECK(nsCString)
+SIZE_ALIGN_CHECK(nsFixedString)
+SIZE_ALIGN_CHECK(nsFixedCString)
 
-extern "C" void Rust_Test_FixedStringReprInformation(size_t* size,
-                                                     size_t* align,
-                                                     size_t* baseOff,
-                                                     size_t* baseSize,
-                                                     size_t* capacityOff,
-                                                     size_t* capacitySize,
-                                                     size_t* bufferOff,
-                                                     size_t* bufferSize);
-TEST(RustNsString, FixedStringRepr) {
-  class nsFixedStringHack : public nsFixedString {
-  public:
-    static void RunTest() {
-      size_t size, align, baseOff, baseSize, capacityOff, capacitySize, bufferOff, bufferSize;
-      Rust_Test_FixedStringReprInformation(&size, &align,
-                                           &baseOff, &baseSize,
-                                           &capacityOff, &capacitySize,
-                                           &bufferOff, &bufferSize);
-      EXPECT_EQ(sizeof(nsFixedString), sizeof(nsFixedStringHack));
-      EXPECT_EQ(size, sizeof(nsFixedStringHack));
-      EXPECT_EQ(align, alignof(nsFixedStringHack));
-      EXPECT_EQ(baseOff, (size_t)0);
-      EXPECT_EQ(baseSize, sizeof(nsString));
-      EXPECT_EQ(capacityOff, offsetof(nsFixedStringHack, mFixedCapacity));
-      EXPECT_EQ(capacitySize, sizeof(mozilla::DeclVal<nsFixedStringHack>().mFixedCapacity));
-      EXPECT_EQ(bufferOff, offsetof(nsFixedStringHack, mFixedBuf));
-      EXPECT_EQ(bufferSize, sizeof(mozilla::DeclVal<nsFixedStringHack>().mFixedBuf));
-    }
-  };
-  nsFixedStringHack::RunTest();
-}
+#define MEMBER_CHECK(Clazz, Member)                                     \
+  extern "C" void Rust_Test_Member_##Clazz##_##Member(size_t* size,     \
+                                                      size_t* align,    \
+                                                      size_t* offset);  \
+  TEST(RustNsString, ReprMember_##Clazz##_##Member) {                   \
+    class Hack : public Clazz {                                         \
+    public:                                                             \
+      static void RunTest() {                                           \
+        size_t size, align, offset;                                     \
+        Rust_Test_Member_##Clazz##_##Member(&size, &align, &offset);    \
+        EXPECT_EQ(size, sizeof(mozilla::DeclVal<Hack>().Member));       \
+        EXPECT_EQ(size, alignof(decltype(mozilla::DeclVal<Hack>().Member))); \
+        EXPECT_EQ(offset, offsetof(Hack, Member));                      \
+      }                                                                 \
+    };                                                                  \
+    static_assert(sizeof(Clazz) == sizeof(Hack), "Hack matches class"); \
+    Hack::RunTest();                                                    \
+  }
 
-extern "C" void Rust_Test_FixedCStringReprInformation(size_t* size,
-                                                      size_t* align,
-                                                      size_t* baseOff,
-                                                      size_t* baseSize,
-                                                      size_t* capacityOff,
-                                                      size_t* capacitySize,
-                                                      size_t* bufferOff,
-                                                      size_t* bufferSize);
-TEST(RustNsString, FixedCStringRepr) {
-  class nsFixedCStringHack : public nsFixedCString {
-  public:
-    static void RunTest() {
-      size_t size, align, baseOff, baseSize, capacityOff, capacitySize, bufferOff, bufferSize;
-      Rust_Test_FixedCStringReprInformation(&size, &align,
-                                            &baseOff, &baseSize,
-                                            &capacityOff, &capacitySize,
-                                            &bufferOff, &bufferSize);
-      EXPECT_EQ(sizeof(nsFixedCString), sizeof(nsFixedCStringHack));
-      EXPECT_EQ(size, sizeof(nsFixedCStringHack));
-      EXPECT_EQ(align, alignof(nsFixedCStringHack));
-      EXPECT_EQ(baseOff, (size_t)0);
-      EXPECT_EQ(baseSize, sizeof(nsCString));
-      EXPECT_EQ(capacityOff, offsetof(nsFixedCStringHack, mFixedCapacity));
-      EXPECT_EQ(capacitySize, sizeof(mozilla::DeclVal<nsFixedCStringHack>().mFixedCapacity));
-      EXPECT_EQ(bufferOff, offsetof(nsFixedCStringHack, mFixedBuf));
-      EXPECT_EQ(bufferSize, sizeof(mozilla::DeclVal<nsFixedCStringHack>().mFixedBuf));
-    }
-  };
-  nsFixedCStringHack::RunTest();
-}
+MEMBER_CHECK(nsString, mData)
+MEMBER_CHECK(nsString, mLength)
+MEMBER_CHECK(nsString, mFlags)
+MEMBER_CHECK(nsCString, mData)
+MEMBER_CHECK(nsCString, mLength)
+MEMBER_CHECK(nsCString, mFlags)
+MEMBER_CHECK(nsFixedString, mFixedCapacity)
+MEMBER_CHECK(nsFixedString, mFixedBuf)
+MEMBER_CHECK(nsFixedCString, mFixedCapacity)
+MEMBER_CHECK(nsFixedCString, mFixedBuf)
 
 extern "C" void Rust_Test_NsStringFlags(uint32_t* f_none,
                                         uint32_t* f_terminated,

@@ -79,23 +79,21 @@ NewDenseCopyOnWriteArray(JSContext* cx, HandleArrayObject templateObject, gc::In
 
 extern JSObject*
 NewFullyAllocatedArrayTryUseGroup(ExclusiveContext* cx, HandleObjectGroup group, size_t length,
-                                  NewObjectKind newKind = GenericObject, bool forceAnalyze = false);
+                                  NewObjectKind newKind = GenericObject);
 
 extern JSObject*
 NewPartlyAllocatedArrayTryUseGroup(ExclusiveContext* cx, HandleObjectGroup group, size_t length);
 
 extern JSObject*
 NewFullyAllocatedArrayTryReuseGroup(JSContext* cx, JSObject* obj, size_t length,
-                                    NewObjectKind newKind = GenericObject,
-                                    bool forceAnalyze = false);
+                                    NewObjectKind newKind = GenericObject);
 
 extern JSObject*
 NewPartlyAllocatedArrayTryReuseGroup(JSContext* cx, JSObject* obj, size_t length);
 
 extern JSObject*
 NewFullyAllocatedArrayForCallingAllocationSite(JSContext* cx, size_t length,
-                                               NewObjectKind newKind = GenericObject,
-                                               bool forceAnalyze = false);
+                                               NewObjectKind newKind = GenericObject);
 
 extern JSObject*
 NewPartlyAllocatedArrayForCallingAllocationSite(JSContext* cx, size_t length, HandleObject proto);
@@ -105,6 +103,10 @@ enum class ShouldUpdateTypes
     Update,
     DontUpdate
 };
+
+extern bool
+MaybeAnalyzeBeforeCreatingLargeArray(ExclusiveContext* cx, HandleObjectGroup group,
+                                     const Value* vp, size_t length);
 
 extern JSObject*
 NewCopiedArrayTryUseGroup(ExclusiveContext* cx, HandleObjectGroup group,

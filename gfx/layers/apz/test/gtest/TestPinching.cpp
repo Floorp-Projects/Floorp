@@ -102,6 +102,30 @@ public:
     : APZCPinchTester(AsyncPanZoomController::USE_GESTURE_DETECTOR)
   {
   }
+
+  void DoPinchWithPreventDefaultTest() {
+    FrameMetrics originalMetrics = GetPinchableFrameMetrics();
+    apzc->SetFrameMetrics(originalMetrics);
+
+    MakeApzcWaitForMainThread();
+    MakeApzcZoomable();
+
+    int touchInputId = 0;
+    uint64_t blockId = 0;
+    PinchWithTouchInput(apzc, ScreenIntPoint(250, 300), 1.25, touchInputId,
+        nullptr, nullptr, &blockId);
+
+    // Send the prevent-default notification for the touch block
+    apzc->ContentReceivedInputBlock(blockId, true);
+
+    // verify the metrics didn't change (i.e. the pinch was ignored)
+    FrameMetrics fm = apzc->GetFrameMetrics();
+    EXPECT_EQ(originalMetrics.GetZoom(), fm.GetZoom());
+    EXPECT_EQ(originalMetrics.GetScrollOffset().x, fm.GetScrollOffset().x);
+    EXPECT_EQ(originalMetrics.GetScrollOffset().y, fm.GetScrollOffset().y);
+
+    apzc->AssertStateIsReset();
+  }
 };
 
 TEST_F(APZCPinchTester, Pinch_DefaultGestures_NoTouchAction) {
@@ -137,28 +161,32 @@ TEST_F(APZCPinchGestureDetectorTester, Pinch_UseGestureDetector_TouchActionNotAl
   DoPinchTest(false, &behaviors);
 }
 
+TEST_F(APZCPinchGestureDetectorTester, Pinch_UseGestureDetector_TouchActionNone_NoAPZZoom) {
+  SCOPED_GFX_PREF(TouchActionEnabled, bool, true);
+  SCOPED_GFX_PREF(APZAllowZooming, bool, false);
+
+  // Since we are preventing the pinch action via touch-action we should not be
+  // sending the pinch gesture notifications that would normally be sent when
+  // APZAllowZooming is false.
+  EXPECT_CALL(*mcc, NotifyPinchGesture(_, _, _, _)).Times(0);
+  nsTArray<uint32_t> behaviors = { mozilla::layers::AllowedTouchBehavior::NONE,
+                                   mozilla::layers::AllowedTouchBehavior::NONE };
+  DoPinchTest(false, &behaviors);
+}
+
 TEST_F(APZCPinchGestureDetectorTester, Pinch_PreventDefault) {
-  FrameMetrics originalMetrics = GetPinchableFrameMetrics();
-  apzc->SetFrameMetrics(originalMetrics);
+  DoPinchWithPreventDefaultTest();
+}
 
-  MakeApzcWaitForMainThread();
-  MakeApzcZoomable();
+TEST_F(APZCPinchGestureDetectorTester, Pinch_PreventDefault_NoAPZZoom) {
+  SCOPED_GFX_PREF(APZAllowZooming, bool, false);
 
-  int touchInputId = 0;
-  uint64_t blockId = 0;
-  PinchWithTouchInput(apzc, ScreenIntPoint(250, 300), 1.25, touchInputId,
-      nullptr, nullptr, &blockId);
+  // Since we are preventing the pinch action we should not be sending the pinch
+  // gesture notifications that would normally be sent when APZAllowZooming is
+  // false.
+  EXPECT_CALL(*mcc, NotifyPinchGesture(_, _, _, _)).Times(0);
 
-  // Send the prevent-default notification for the touch block
-  apzc->ContentReceivedInputBlock(blockId, true);
-
-  // verify the metrics didn't change (i.e. the pinch was ignored)
-  FrameMetrics fm = apzc->GetFrameMetrics();
-  EXPECT_EQ(originalMetrics.GetZoom(), fm.GetZoom());
-  EXPECT_EQ(originalMetrics.GetScrollOffset().x, fm.GetScrollOffset().x);
-  EXPECT_EQ(originalMetrics.GetScrollOffset().y, fm.GetScrollOffset().y);
-
-  apzc->AssertStateIsReset();
+  DoPinchWithPreventDefaultTest();
 }
 
 TEST_F(APZCPinchTester, Panning_TwoFinger_ZoomDisabled) {
@@ -178,4 +206,34 @@ TEST_F(APZCPinchTester, Panning_TwoFinger_ZoomDisabled) {
   EXPECT_EQ(325, fm.GetScrollOffset().x);
   EXPECT_EQ(325, fm.GetScrollOffset().y);
   EXPECT_EQ(2.0, fm.GetZoom().ToScaleFactor().scale);
+}
+
+TEST_F(APZCPinchGestureDetectorTester, Pinch_APZZoom_Disabled) {
+  SCOPED_GFX_PREF(APZAllowZooming, bool, false);
+
+  FrameMetrics originalMetrics = GetPinchableFrameMetrics();
+  apzc->SetFrameMetrics(originalMetrics);
+
+  // When APZAllowZooming is false, the ZoomConstraintsClient produces
+  // ZoomConstraints with mAllowZoom set to false.
+  MakeApzcUnzoomable();
+
+  // With APZAllowZooming false, we expect the NotifyPinchGesture function to
+  // get called as the pinch progresses, but the metrics shouldn't change.
+  EXPECT_CALL(*mcc, NotifyPinchGesture(PinchGestureInput::PINCHGESTURE_START, apzc->GetGuid(), LayoutDeviceCoord(0), _)).Times(1);
+  EXPECT_CALL(*mcc, NotifyPinchGesture(PinchGestureInput::PINCHGESTURE_SCALE, apzc->GetGuid(), _, _)).Times(AtLeast(1));
+  EXPECT_CALL(*mcc, NotifyPinchGesture(PinchGestureInput::PINCHGESTURE_END, apzc->GetGuid(), LayoutDeviceCoord(0), _)).Times(1);
+
+  int touchInputId = 0;
+  uint64_t blockId = 0;
+  PinchWithTouchInput(apzc, ScreenIntPoint(250, 300), 1.25, touchInputId,
+      nullptr, nullptr, &blockId);
+
+  // verify the metrics didn't change (i.e. the pinch was ignored inside APZ)
+  FrameMetrics fm = apzc->GetFrameMetrics();
+  EXPECT_EQ(originalMetrics.GetZoom(), fm.GetZoom());
+  EXPECT_EQ(originalMetrics.GetScrollOffset().x, fm.GetScrollOffset().x);
+  EXPECT_EQ(originalMetrics.GetScrollOffset().y, fm.GetScrollOffset().y);
+
+  apzc->AssertStateIsReset();
 }

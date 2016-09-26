@@ -50,3 +50,15 @@ class SigningTask(base.Task):
 
     def optimize(self, params):
         return False, None
+
+    @classmethod
+    def from_json(cls, task_dict):
+        unsigned_task_label = task_dict['dependencies']['unsigned-artifact']
+        task_dict['unsigned-task'] = {
+            'label': unsigned_task_label
+        }
+        signing_task = cls(kind='build-signing',
+                           name=task_dict['label'],
+                           attributes=task_dict['attributes'],
+                           task=task_dict)
+        return signing_task

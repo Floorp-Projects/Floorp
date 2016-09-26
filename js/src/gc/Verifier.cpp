@@ -473,6 +473,12 @@ CheckHeapTracer::init()
     return visited.init();
 }
 
+inline static bool
+IsValidGCThingPointer(Cell* cell)
+{
+    return (uintptr_t(cell) & CellMask) == 0;
+}
+
 void
 CheckHeapTracer::onChild(const JS::GCCellPtr& thing)
 {
@@ -485,9 +491,10 @@ CheckHeapTracer::onChild(const JS::GCCellPtr& thing)
         return;
     }
 
-    if (!IsGCThingValidAfterMovingGC(cell)) {
+    if (!IsValidGCThingPointer(cell) || !IsGCThingValidAfterMovingGC(cell))
+    {
         failures++;
-        fprintf(stderr, "Stale pointer %p\n", cell);
+        fprintf(stderr, "Bad pointer %p\n", cell);
         const char* name = contextName();
         for (int index = parentIndex; index != -1; index = stack[index].parentIndex) {
             const WorkItem& parent = stack[index];
@@ -537,7 +544,7 @@ CheckHeapTracer::check(AutoLockForExclusiveAccess& lock)
 }
 
 void
-js::gc::CheckHeapAfterMovingGC(JSRuntime* rt)
+js::gc::CheckHeapAfterGC(JSRuntime* rt)
 {
     AutoTraceSession session(rt, JS::HeapState::Tracing);
     CheckHeapTracer tracer(rt);

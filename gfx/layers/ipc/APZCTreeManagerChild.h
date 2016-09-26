@@ -98,6 +98,11 @@ protected:
                      const ScrollableLayerGuid& aGuid,
                      const uint64_t& aInputBlockId) override;
 
+  bool RecvNotifyPinchGesture(const PinchGestureType& aType,
+                              const ScrollableLayerGuid& aGuid,
+                              const LayoutDeviceCoord& aSpanChange,
+                              const Modifiers& aModifiers) override;
+
   virtual
   ~APZCTreeManagerChild() { }
 

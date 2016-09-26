@@ -146,24 +146,6 @@ struct ShareableBase : RefCounted<T>
 
 // ValType/ExprType utilities
 
-// ExprType::Limit is an out-of-band value and has no wasm-semantic meaning. For
-// the purpose of recursive validation, we use this value to represent the type
-// of branch/return instructions that don't actually return to the parent
-// expression and can thus be used in any context.
-const ExprType AnyType = ExprType::Limit;
-
-inline ExprType
-Unify(ExprType a, ExprType b)
-{
-    if (a == AnyType)
-        return b;
-    if (b == AnyType)
-        return a;
-    if (a == b)
-        return a;
-    return ExprType::Void;
-}
-
 static inline bool
 IsVoid(ExprType et)
 {
@@ -927,7 +909,6 @@ struct Assumptions
 {
     uint32_t              cpuId;
     JS::BuildIdCharVector buildId;
-    bool                  newFormat;
 
     explicit Assumptions(JS::BuildIdCharVector&& buildId);
 

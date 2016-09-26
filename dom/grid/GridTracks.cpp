@@ -72,10 +72,41 @@ GridTracks::SetTrackInfo(const ComputedGridTrackInfo* aTrackInfo)
     return;
   }
 
+  nscoord lastTrackEdge = 0;
+  uint32_t repeatIndex = 0;
+  auto AppendRemovedAutoFits = [this, &aTrackInfo, &lastTrackEdge,
+                                &repeatIndex]()
+  {
+    uint32_t numRepeatTracks = aTrackInfo->mRemovedRepeatTracks.Length();
+    // Add in removed auto-fit tracks
+    while (repeatIndex < numRepeatTracks &&
+         aTrackInfo->mRemovedRepeatTracks[repeatIndex]) {
+
+      RefPtr<GridTrack> track = new GridTrack(this);
+      mTracks.AppendElement(track);
+      track->SetTrackValues(
+        nsPresContext::AppUnitsToDoubleCSSPixels(lastTrackEdge),
+        nsPresContext::AppUnitsToDoubleCSSPixels(0),
+        GridDeclaration::Explicit,
+        GridTrackState::Removed
+      );
+      repeatIndex++;
+    }
+    repeatIndex++;
+  };
+
   for (size_t i = aTrackInfo->mStartFragmentTrack;
        i < aTrackInfo->mEndFragmentTrack;
        i++) {
-    GridTrack* track = new GridTrack(this);
+    if (i >= aTrackInfo->mRepeatFirstTrack) {
+      // Append removed auto-fit tracks, if appropriate. The
+      // AppendRemovedAutoFits function exits early once it has been called
+      // aTrackInfo->mRemovedRepeatTracks.Length() times -- a check we don't
+      // replicate here or at subsequent calling sites.
+      AppendRemovedAutoFits();
+    }
+
+    RefPtr<GridTrack> track = new GridTrack(this);
     mTracks.AppendElement(track);
     track->SetTrackValues(
       nsPresContext::AppUnitsToDoubleCSSPixels(aTrackInfo->mPositions[i]),
@@ -91,7 +122,12 @@ GridTracks::SetTrackInfo(const ComputedGridTrackInfo* aTrackInfo)
       ),
       GridTrackState(aTrackInfo->mStates[i])
     );
+
+    lastTrackEdge = aTrackInfo->mPositions[i] + aTrackInfo->mSizes[i];
   }
+
+  // Append any trailing removed auto-fit tracks.
+  AppendRemovedAutoFits();
 }
 
 } // namespace dom

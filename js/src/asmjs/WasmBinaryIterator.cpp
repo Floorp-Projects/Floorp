@@ -33,6 +33,8 @@ wasm::Classify(Expr expr)
         return ExprKind::Loop;
       case Expr::Unreachable:
         return ExprKind::Unreachable;
+      case Expr::Drop:
+        return ExprKind::Drop;
       case Expr::I32Const:
         return ExprKind::I32;
       case Expr::I64Const:
@@ -62,7 +64,7 @@ wasm::Classify(Expr expr)
       case Expr::BrTable:
         return ExprKind::BrTable;
       case Expr::Nop:
-        return ExprKind::Nullary;
+        return ExprKind::Nop;
       case Expr::I32Clz:
       case Expr::I32Ctz:
       case Expr::I32Popcnt:
@@ -314,8 +316,18 @@ wasm::Classify(Expr expr)
       case Expr::I64Store:
       case Expr::F32Store:
       case Expr::F64Store:
-      case Expr::F32StoreF64:
-      case Expr::F64StoreF32:
+        return ExprKind::Store;
+      case Expr::I32TeeStore8:
+      case Expr::I32TeeStore16:
+      case Expr::I64TeeStore8:
+      case Expr::I64TeeStore16:
+      case Expr::I64TeeStore32:
+      case Expr::I32TeeStore:
+      case Expr::I64TeeStore:
+      case Expr::F32TeeStore:
+      case Expr::F64TeeStore:
+      case Expr::F32TeeStoreF64:
+      case Expr::F64TeeStoreF32:
       case Expr::I8x16store:
       case Expr::I16x8store:
       case Expr::I32x4store:
@@ -326,19 +338,27 @@ wasm::Classify(Expr expr)
       case Expr::F32x4store1:
       case Expr::F32x4store2:
       case Expr::F32x4store3:
-        return ExprKind::Store;
+        return ExprKind::TeeStore;
       case Expr::Select:
         return ExprKind::Select;
       case Expr::GetLocal:
-      case Expr::GetGlobal:
-        return ExprKind::GetVar;
+        return ExprKind::GetLocal;
       case Expr::SetLocal:
+        return ExprKind::SetLocal;
+      case Expr::TeeLocal:
+        return ExprKind::TeeLocal;
+      case Expr::GetGlobal:
+        return ExprKind::GetGlobal;
       case Expr::SetGlobal:
-        return ExprKind::SetVar;
+        return ExprKind::SetGlobal;
+      case Expr::TeeGlobal:
+        return ExprKind::TeeGlobal;
       case Expr::Call:
         return ExprKind::Call;
       case Expr::CallIndirect:
         return ExprKind::CallIndirect;
+      case Expr::OldCallIndirect:
+        return ExprKind::OldCallIndirect;
       case Expr::CallImport:
         return ExprKind::CallImport;
       case Expr::Return:

@@ -3,13 +3,12 @@
 // adding spurious edges to the GC graph.
 
 load(libdir + 'wasm.js');
-load(libdir + 'asserts.js');
 
 const Module = WebAssembly.Module;
 const Instance = WebAssembly.Instance;
 
-const m1 = new Module(textToBinary(`(module (func $f) (export "f" $f))`));
-const m2 = new Module(textToBinary(`(module (import "a" "f") (func $f) (export "g" $f))`));
+const m1 = new Module(wasmTextToBinary(`(module (func $f) (export "f" $f))`));
+const m2 = new Module(wasmTextToBinary(`(module (import "a" "f") (func $f) (export "g" $f))`));
 
 // Imported instance objects should stay alive as long as any importer is alive.
 resetFinalizeCount();

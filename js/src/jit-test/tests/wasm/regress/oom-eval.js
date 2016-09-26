@@ -7,6 +7,6 @@ if (typeof oomTest !== 'function' || !wasmIsSupported()) {
 
 function foo() {
   var g = newGlobal();
-  g.eval(`o = Wasm.instantiateModule(wasmTextToBinary('(module (func) (export "" 0))'));`);
+  g.eval(`o = new WebAssembly.Instance(new WebAssemby.Module(wasmTextToBinary('(module (func) (export "" 0))')));`);
 }
 oomTest(foo);

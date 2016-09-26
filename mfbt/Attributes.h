@@ -208,19 +208,6 @@
 #  define MOZ_TSAN_BLACKLIST /* nothing */
 #endif
 
-/*
- * MOZ_UBSAN_BLACKLIST_FUNCTION is a macro to tell UndefinedBehaviorSanitizer (a
- * run-time instrumentation shipped with Clang) to not check the annotated
- * function for undefined behaviors. Furthermore it prevents the compiler from
- * inlining the function because inlining currently breaks the blacklisting
- * mechanism of UBSan.
- */
-#if defined(__clang__)
-# define MOZ_UBSAN_BLACKLIST_FUNCTION MOZ_NEVER_INLINE __attribute__((no_sanitize("function")))
-#else
-# define MOZ_UBSAN_BLACKLIST_FUNCTION /* nothing */
-#endif
-
 /**
  * MOZ_ALLOCATOR tells the compiler that the function it marks returns either a
  * "fresh", "pointer-free" block of memory, or nullptr. "Fresh" means that the
