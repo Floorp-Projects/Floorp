@@ -46,16 +46,20 @@ struct AstDecodeStackItem
     ExprType type;
 
     explicit AstDecodeStackItem()
-        : expr(nullptr),
-          terminationKind(AstDecodeTerminationKind::Unknown),
-          type(ExprType::Limit) {}
-    explicit AstDecodeStackItem(AstDecodeTerminationKind terminationKind,
-                                ExprType type)
-        : expr(nullptr), terminationKind(terminationKind), type(type) {}
+      : expr(nullptr),
+        terminationKind(AstDecodeTerminationKind::Unknown),
+        type(ExprType::Limit)
+    {}
+    explicit AstDecodeStackItem(AstDecodeTerminationKind terminationKind, ExprType type)
+      : expr(nullptr),
+        terminationKind(terminationKind),
+        type(type)
+    {}
     explicit AstDecodeStackItem(AstExpr* expr)
-        : expr(expr),
-          terminationKind(AstDecodeTerminationKind::Unknown),
-          type(ExprType::Limit) {}
+     : expr(expr),
+       terminationKind(AstDecodeTerminationKind::Unknown),
+       type(ExprType::Limit)
+    {}
 };
 
 // We don't define a Value type because ExprIter doesn't push void values, which
@@ -97,7 +101,8 @@ class AstDecodeContext
     ExprType retType_;
 
   public:
-    AstDecodeContext(JSContext* cx, LifoAlloc& lifo, Decoder& d, AstModule& module, bool generateNames)
+    AstDecodeContext(JSContext* cx, LifoAlloc& lifo, Decoder& d, AstModule& module,
+                     bool generateNames)
      : cx(cx),
        lifo(lifo),
        d(d),
@@ -1469,7 +1474,6 @@ AstDecodeFunctionSection(AstDecodeContext& c)
     if (numDecls > MaxFuncs)
         return c.d.fail("too many functions");
 
-
     if (!c.funcSigs().resize(numDecls))
         return false;
 
@@ -2146,6 +2150,8 @@ wasm::BinaryToAst(JSContext* cx, const uint8_t* bytes, uint32_t length,
         ReportOutOfMemory(c.cx);
         return false;
     }
+
+    MOZ_ASSERT(!error, "unreported error in decoding");
 
     *module = result;
     return true;
