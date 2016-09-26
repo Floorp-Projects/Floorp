@@ -65,7 +65,7 @@ AutoRefreshHighlighter.prototype = {
     let isSameNode = node === this.currentNode;
     let isSameOptions = this._isSameOptions(options);
 
-    if (!isNodeValid(node) || (isSameNode && isSameOptions)) {
+    if (!this._isNodeValid(node) || (isSameNode && isSameOptions)) {
       return false;
     }
 
@@ -87,7 +87,7 @@ AutoRefreshHighlighter.prototype = {
    * Hide the highlighter
    */
   hide: function () {
-    if (!isNodeValid(this.currentNode)) {
+    if (!this._isNodeValid(this.currentNode)) {
       return;
     }
 
@@ -98,6 +98,17 @@ AutoRefreshHighlighter.prototype = {
     this.options = null;
 
     this.emit("hidden");
+  },
+
+  /**
+   * Whether the current node is valid for this highlighter type.
+   * This is implemented by default to check if the node is an element node. Highlighter
+   * sub-classes should override this method if they want to highlight other node types.
+   * @param {DOMNode} node
+   * @return {Boolean}
+   */
+  _isNodeValid: function (node) {
+    return isNodeValid(node);
   },
 
   /**
@@ -151,7 +162,7 @@ AutoRefreshHighlighter.prototype = {
    * Update the highlighter if the node has moved since the last update.
    */
   update: function () {
-    if (!isNodeValid(this.currentNode) || !this._hasMoved()) {
+    if (!this._isNodeValid(this.currentNode) || !this._hasMoved()) {
       return;
     }
 
