@@ -195,7 +195,7 @@ public:
                               uint32_t aIndex, uint32_t* aReturn);
 
   // nsICSSLoaderObserver interface
-  NS_IMETHOD StyleSheetLoaded(StyleSheetHandle aSheet, bool aWasAlternate,
+  NS_IMETHOD StyleSheetLoaded(StyleSheet* aSheet, bool aWasAlternate,
                               nsresult aStatus) override;
 
   void EnsureUniqueInner();

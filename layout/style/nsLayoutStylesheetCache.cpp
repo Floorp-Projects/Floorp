@@ -10,8 +10,8 @@
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StyleSheetHandle.h"
-#include "mozilla/StyleSheetHandleInlines.h"
+#include "mozilla/StyleSheet.h"
+#include "mozilla/StyleSheetInlines.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/SRIMetadata.h"
 #include "nsIFile.h"
@@ -68,7 +68,7 @@ nsLayoutStylesheetCache::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-StyleSheetHandle
+StyleSheet*
 nsLayoutStylesheetCache::ScrollbarsSheet()
 {
   if (!mScrollbarsSheet) {
@@ -80,7 +80,7 @@ nsLayoutStylesheetCache::ScrollbarsSheet()
   return mScrollbarsSheet;
 }
 
-StyleSheetHandle
+StyleSheet*
 nsLayoutStylesheetCache::FormsSheet()
 {
   if (!mFormsSheet) {
@@ -92,7 +92,7 @@ nsLayoutStylesheetCache::FormsSheet()
   return mFormsSheet;
 }
 
-StyleSheetHandle
+StyleSheet*
 nsLayoutStylesheetCache::NumberControlSheet()
 {
   if (!sNumberControlEnabled) {
@@ -107,19 +107,19 @@ nsLayoutStylesheetCache::NumberControlSheet()
   return mNumberControlSheet;
 }
 
-StyleSheetHandle
+StyleSheet*
 nsLayoutStylesheetCache::UserContentSheet()
 {
   return mUserContentSheet;
 }
 
-StyleSheetHandle
+StyleSheet*
 nsLayoutStylesheetCache::UserChromeSheet()
 {
   return mUserChromeSheet;
 }
 
-StyleSheetHandle
+StyleSheet*
 nsLayoutStylesheetCache::UASheet()
 {
   if (!mUASheet) {
@@ -130,7 +130,7 @@ nsLayoutStylesheetCache::UASheet()
   return mUASheet;
 }
 
-StyleSheetHandle
+StyleSheet*
 nsLayoutStylesheetCache::HTMLSheet()
 {
   if (!mHTMLSheet) {
@@ -141,31 +141,31 @@ nsLayoutStylesheetCache::HTMLSheet()
   return mHTMLSheet;
 }
 
-StyleSheetHandle
+StyleSheet*
 nsLayoutStylesheetCache::MinimalXULSheet()
 {
   return mMinimalXULSheet;
 }
 
-StyleSheetHandle
+StyleSheet*
 nsLayoutStylesheetCache::XULSheet()
 {
   return mXULSheet;
 }
 
-StyleSheetHandle
+StyleSheet*
 nsLayoutStylesheetCache::QuirkSheet()
 {
   return mQuirkSheet;
 }
 
-StyleSheetHandle
+StyleSheet*
 nsLayoutStylesheetCache::SVGSheet()
 {
   return mSVGSheet;
 }
 
-StyleSheetHandle
+StyleSheet*
 nsLayoutStylesheetCache::MathMLSheet()
 {
   if (!mMathMLSheet) {
@@ -176,13 +176,13 @@ nsLayoutStylesheetCache::MathMLSheet()
   return mMathMLSheet;
 }
 
-StyleSheetHandle
+StyleSheet*
 nsLayoutStylesheetCache::CounterStylesSheet()
 {
   return mCounterStylesSheet;
 }
 
-StyleSheetHandle
+StyleSheet*
 nsLayoutStylesheetCache::NoScriptSheet()
 {
   if (!mNoScriptSheet) {
@@ -193,7 +193,7 @@ nsLayoutStylesheetCache::NoScriptSheet()
   return mNoScriptSheet;
 }
 
-StyleSheetHandle
+StyleSheet*
 nsLayoutStylesheetCache::NoFramesSheet()
 {
   if (!mNoFramesSheet) {
@@ -204,7 +204,7 @@ nsLayoutStylesheetCache::NoFramesSheet()
   return mNoFramesSheet;
 }
 
-StyleSheetHandle
+StyleSheet*
 nsLayoutStylesheetCache::ChromePreferenceSheet(nsPresContext* aPresContext)
 {
   if (!mChromePreferenceSheet) {
@@ -214,7 +214,7 @@ nsLayoutStylesheetCache::ChromePreferenceSheet(nsPresContext* aPresContext)
   return mChromePreferenceSheet;
 }
 
-StyleSheetHandle
+StyleSheet*
 nsLayoutStylesheetCache::ContentPreferenceSheet(nsPresContext* aPresContext)
 {
   if (!mContentPreferenceSheet) {
@@ -224,7 +224,7 @@ nsLayoutStylesheetCache::ContentPreferenceSheet(nsPresContext* aPresContext)
   return mContentPreferenceSheet;
 }
 
-StyleSheetHandle
+StyleSheet*
 nsLayoutStylesheetCache::ContentEditableSheet()
 {
   if (!mContentEditableSheet) {
@@ -235,7 +235,7 @@ nsLayoutStylesheetCache::ContentEditableSheet()
   return mContentEditableSheet;
 }
 
-StyleSheetHandle
+StyleSheet*
 nsLayoutStylesheetCache::DesignModeSheet()
 {
   if (!mDesignModeSheet) {
@@ -418,7 +418,7 @@ nsLayoutStylesheetCache::InitFromProfile()
 
 void
 nsLayoutStylesheetCache::LoadSheetURL(const char* aURL,
-                                      StyleSheetHandle::RefPtr* aSheet,
+                                      RefPtr<StyleSheet>* aSheet,
                                       SheetParsingMode aParsingMode)
 {
   nsCOMPtr<nsIURI> uri;
@@ -431,7 +431,7 @@ nsLayoutStylesheetCache::LoadSheetURL(const char* aURL,
 
 void
 nsLayoutStylesheetCache::LoadSheetFile(nsIFile* aFile,
-                                       StyleSheetHandle::RefPtr* aSheet,
+                                       RefPtr<StyleSheet>* aSheet,
                                        SheetParsingMode aParsingMode)
 {
   bool exists = false;
@@ -733,7 +733,7 @@ ErrorLoadingBuiltinSheet(nsIURI* aURI, const char* aMsg)
 
 void
 nsLayoutStylesheetCache::LoadSheet(nsIURI* aURI,
-                                   StyleSheetHandle::RefPtr* aSheet,
+                                   RefPtr<StyleSheet>* aSheet,
                                    SheetParsingMode aParsingMode)
 {
   if (!aURI) {
@@ -764,8 +764,8 @@ nsLayoutStylesheetCache::LoadSheet(nsIURI* aURI,
 }
 
 /* static */ void
-nsLayoutStylesheetCache::InvalidateSheet(StyleSheetHandle::RefPtr* aGeckoSheet,
-                                         StyleSheetHandle::RefPtr* aServoSheet)
+nsLayoutStylesheetCache::InvalidateSheet(RefPtr<StyleSheet>* aGeckoSheet,
+                                         RefPtr<StyleSheet>* aServoSheet)
 {
   MOZ_ASSERT(gCSSLoader_Gecko || gCSSLoader_Servo,
              "pref changed before we loaded a sheet?");
@@ -839,7 +839,7 @@ nsLayoutStylesheetCache::InvalidatePreferenceSheets()
 }
 
 void
-nsLayoutStylesheetCache::BuildPreferenceSheet(StyleSheetHandle::RefPtr* aSheet,
+nsLayoutStylesheetCache::BuildPreferenceSheet(RefPtr<StyleSheet>* aSheet,
                                               nsPresContext* aPresContext)
 {
   if (mBackendType == StyleBackendType::Gecko) {
@@ -850,14 +850,14 @@ nsLayoutStylesheetCache::BuildPreferenceSheet(StyleSheetHandle::RefPtr* aSheet,
                                   mozilla::net::RP_Default, dom::SRIMetadata());
   }
 
-  StyleSheetHandle sheet = *aSheet;
+  StyleSheet* sheet = *aSheet;
 
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), "about:PreferenceStyleSheet", nullptr);
   MOZ_ASSERT(uri, "URI creation shouldn't fail");
 
   sheet->SetURIs(uri, uri, uri);
-  sheet->AsStyleSheet()->SetComplete();
+  sheet->SetComplete();
 
   static const uint32_t kPreallocSize = 1024;
 

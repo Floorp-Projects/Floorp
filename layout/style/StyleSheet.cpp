@@ -64,7 +64,7 @@ StyleSheet::SetComplete()
   if (mDocument && !mDisabled) {
     // Let the document know
     mDocument->BeginUpdate(UPDATE_STYLE);
-    mDocument->SetStyleSheetApplicableState(AsHandle(), true);
+    mDocument->SetStyleSheetApplicableState(this, true);
     mDocument->EndUpdate(UPDATE_STYLE);
   }
 
