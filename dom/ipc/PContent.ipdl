@@ -1216,6 +1216,8 @@ parent:
 
      async UnstoreAndBroadcastBlobURLUnregistration(nsCString url);
 
+     sync GetA11yContentId() returns (uint32_t aContentId);
+
 both:
      async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
                         Principal aPrincipal, ClonedMessageData aData);
