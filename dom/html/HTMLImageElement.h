@@ -292,6 +292,9 @@ protected:
   // only mode after Bug 1076583
   bool InResponsiveMode();
 
+  // True if the given URL and density equal the last URL and density that was loaded by this element.
+  bool SelectedSourceMatchesLast(nsIURI* aSelectedSource, double aSelectedDensity);
+
   // Resolve and load the current mResponsiveSelector (responsive mode) or src
   // attr image.
   nsresult LoadSelectedImage(bool aForce, bool aNotify, bool aAlwaysLoad);
@@ -363,6 +366,11 @@ private:
 
   bool mInDocResponsiveContent;
   RefPtr<ImageLoadTask> mPendingImageLoadTask;
+
+  // Last URL that was attempted to load by this element.
+  nsCOMPtr<nsIURI> mLastSelectedSource;
+  // Last pixel density that was selected.
+  double mCurrentDensity;
 };
 
 } // namespace dom
