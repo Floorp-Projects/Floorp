@@ -1,6 +1,6 @@
 load(libdir + "wasm.js");
 
-var exp = evalText(`(module
+var exp = wasmEvalText(`(module
     (memory 1)
     (export "mem" memory)
     (func $f (result i32) (i32.load (i32.const 0)))

@@ -80,7 +80,6 @@ UNITTEST_ALIASES = {
     'jittests': alias_prefix('jittest'),
     'jsreftest': alias_prefix('jsreftest'),
     'jsreftest-e10s': alias_prefix('jsreftest-e10s'),
-    'luciddream': alias_prefix('luciddream'),
     'marionette': alias_prefix('marionette'),
     'marionette-e10s': alias_prefix('marionette-e10s'),
     'mochitest': alias_prefix('mochitest'),

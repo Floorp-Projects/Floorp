@@ -54,6 +54,11 @@ public:
                  const ScrollableLayerGuid& aGuid,
                  uint64_t aInputBlockId) override;
 
+  void NotifyPinchGesture(PinchGestureInput::PinchGestureType aType,
+                          const ScrollableLayerGuid& aGuid,
+                          LayoutDeviceCoord aSpanChange,
+                          Modifiers aModifiers) override;
+
   void NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
                             APZStateChange aChange,
                             int aArg) override;

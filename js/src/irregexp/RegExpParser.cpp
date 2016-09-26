@@ -1832,7 +1832,7 @@ template <typename CharT>
 static bool
 ParsePattern(frontend::TokenStream& ts, LifoAlloc& alloc, const CharT* chars, size_t length,
              bool multiline, bool match_only, bool unicode, bool ignore_case,
-             RegExpCompileData* data)
+             bool global, bool sticky, RegExpCompileData* data)
 {
     if (match_only) {
         // Try to strip a leading '.*' from the RegExp, but only if it is not
@@ -1846,9 +1846,13 @@ ParsePattern(frontend::TokenStream& ts, LifoAlloc& alloc, const CharT* chars, si
 
         // Try to strip a trailing '.*' from the RegExp, which as above will
         // affect the captures but not whether there is a match. Only do this
-        // when there are no other meta characters in the RegExp, so that we
-        // are sure this will not affect how the RegExp is parsed.
+        // when the following conditions are met:
+        //   1. there are no other meta characters in the RegExp, so that we
+        //      are sure this will not affect how the RegExp is parsed
+        //   2. global and sticky flags are not set, as lastIndex needs to be
+        //      set properly on global or sticky match
         if (length >= 3 && !HasRegExpMetaChars(chars, length - 2) &&
+            !global && !sticky &&
             chars[length - 2] == '.' && chars[length - 1] == '*')
         {
             length -= 2;
@@ -1869,14 +1873,14 @@ ParsePattern(frontend::TokenStream& ts, LifoAlloc& alloc, const CharT* chars, si
 bool
 irregexp::ParsePattern(frontend::TokenStream& ts, LifoAlloc& alloc, JSAtom* str,
                        bool multiline, bool match_only, bool unicode, bool ignore_case,
-                       RegExpCompileData* data)
+                       bool global, bool sticky, RegExpCompileData* data)
 {
     JS::AutoCheckCannotGC nogc;
     return str->hasLatin1Chars()
            ? ::ParsePattern(ts, alloc, str->latin1Chars(nogc), str->length(),
-                            multiline, match_only, unicode, ignore_case, data)
+                            multiline, match_only, unicode, ignore_case, global, sticky, data)
            : ::ParsePattern(ts, alloc, str->twoByteChars(nogc), str->length(),
-                            multiline, match_only, unicode, ignore_case, data);
+                            multiline, match_only, unicode, ignore_case, global, sticky, data);
 }
 
 template <typename CharT>

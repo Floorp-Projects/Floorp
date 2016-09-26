@@ -840,6 +840,15 @@ AudioContext::OnStateChanged(void* aPromise, AudioContextState aNewState)
     return;
   }
 
+  // This can happen if this is called in reaction to a
+  // MediaStreamGraph shutdown, and a AudioContext was being
+  // suspended at the same time, for example if a page was being
+  // closed.
+  if (mAudioContextState == AudioContextState::Closed &&
+      aNewState == AudioContextState::Suspended) {
+    return;
+  }
+
 #ifndef WIN32 // Bug 1170547
 #ifndef XP_MACOSX
 #ifdef DEBUG

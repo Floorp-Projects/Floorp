@@ -1,9 +1,8 @@
 load(libdir + 'wasm.js');
-load(libdir + 'asserts.js');
 
 const WasmPage = 64 * 1024;
 
-const emptyModule = textToBinary('(module)');
+const emptyModule = wasmTextToBinary('(module)');
 
 // 'WebAssembly' data property on global object
 const wasmDesc = Object.getOwnPropertyDescriptor(this, 'WebAssembly');
@@ -15,6 +14,42 @@ assertEq(wasmDesc.configurable, true);
 // 'WebAssembly' object
 assertEq(WebAssembly, wasmDesc.value);
 assertEq(String(WebAssembly), "[object WebAssembly]");
+
+// 'WebAssembly.(Compile|Runtime)Error' data property
+const compileErrorDesc = Object.getOwnPropertyDescriptor(WebAssembly, 'CompileError');
+const runtimeErrorDesc = Object.getOwnPropertyDescriptor(WebAssembly, 'RuntimeError');
+assertEq(typeof compileErrorDesc.value, "function");
+assertEq(typeof runtimeErrorDesc.value, "function");
+assertEq(compileErrorDesc.writable, true);
+assertEq(runtimeErrorDesc.writable, true);
+assertEq(compileErrorDesc.enumerable, false);
+assertEq(runtimeErrorDesc.enumerable, false);
+assertEq(compileErrorDesc.configurable, true);
+assertEq(runtimeErrorDesc.configurable, true);
+
+// 'WebAssembly.(Compile|Runtime)Error' constructor function
+const CompileError = WebAssembly.CompileError;
+const RuntimeError = WebAssembly.RuntimeError;
+assertEq(CompileError, compileErrorDesc.value);
+assertEq(RuntimeError, runtimeErrorDesc.value);
+assertEq(CompileError.length, 1);
+assertEq(RuntimeError.length, 1);
+assertEq(CompileError.name, "CompileError");
+assertEq(RuntimeError.name, "RuntimeError");
+
+// 'WebAssembly.(Compile|Runtime)Error' instance objects
+const compileError = new CompileError;
+const runtimeError = new RuntimeError;
+assertEq(compileError instanceof CompileError, true);
+assertEq(runtimeError instanceof RuntimeError, true);
+assertEq(compileError instanceof Error, true);
+assertEq(runtimeError instanceof Error, true);
+assertEq(compileError instanceof TypeError, false);
+assertEq(runtimeError instanceof TypeError, false);
+assertEq(compileError.message, "");
+assertEq(runtimeError.message, "");
+assertEq(new CompileError("hi").message, "hi");
+assertEq(new RuntimeError("hi").message, "hi");
 
 // 'WebAssembly.Module' data property
 const moduleDesc = Object.getOwnPropertyDescriptor(WebAssembly, 'Module');
@@ -33,8 +68,8 @@ assertErrorMessage(() => new Module(), TypeError, /requires more than 0 argument
 assertErrorMessage(() => new Module(undefined), TypeError, "first argument must be an ArrayBuffer or typed array object");
 assertErrorMessage(() => new Module(1), TypeError, "first argument must be an ArrayBuffer or typed array object");
 assertErrorMessage(() => new Module({}), TypeError, "first argument must be an ArrayBuffer or typed array object");
-assertErrorMessage(() => new Module(new Uint8Array()), /* TODO: WebAssembly.CompileError */ TypeError, /compile error/);
-assertErrorMessage(() => new Module(new ArrayBuffer()), /* TODO: WebAssembly.CompileError */ TypeError, /compile error/);
+assertErrorMessage(() => new Module(new Uint8Array()), CompileError, /failed to match magic number/);
+assertErrorMessage(() => new Module(new ArrayBuffer()), CompileError, /failed to match magic number/);
 assertEq(new Module(emptyModule) instanceof Module, true);
 assertEq(new Module(emptyModule.buffer) instanceof Module, true);
 
@@ -72,7 +107,7 @@ assertEq(Instance.name, "Instance");
 assertErrorMessage(() => Instance(), TypeError, /constructor without new is forbidden/);
 assertErrorMessage(() => new Instance(1), TypeError, "first argument must be a WebAssembly.Module");
 assertErrorMessage(() => new Instance({}), TypeError, "first argument must be a WebAssembly.Module");
-assertErrorMessage(() => new Instance(m1, null), TypeError, "second argument, if present, must be an object");
+assertErrorMessage(() => new Instance(m1, null), TypeError, "second argument must be an object");
 assertEq(new Instance(m1) instanceof Instance, true);
 assertEq(new Instance(m1, {}) instanceof Instance, true);
 
@@ -336,8 +371,8 @@ assertCompileError([], /requires more than 0 arguments/);
 assertCompileError([undefined], /first argument must be an ArrayBuffer or typed array object/);
 assertCompileError([1], /first argument must be an ArrayBuffer or typed array object/);
 assertCompileError([{}], /first argument must be an ArrayBuffer or typed array object/);
-assertCompileError([new Uint8Array()], /compile error/);
-assertCompileError([new ArrayBuffer()], /compile error/);
+assertCompileError([new Uint8Array()], /failed to match magic number/);
+assertCompileError([new ArrayBuffer()], /failed to match magic number/);
 function assertCompileSuccess(bytes) {
     var module = null;
     compile(bytes).then(m => module = m);

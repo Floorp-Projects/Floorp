@@ -1,0 +1,358 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+<style>
+body {
+	margin: 40px;
+}
+.wrapper {
+	display: grid;
+	width: 600px;
+	grid-gap: 0px;
+	background-color: #f00;
+}
+.grid1 {
+	grid-template-columns: 50px 0px repeat(auto-fit, 100px);
+}
+.grid2 {
+	grid-template-columns: 50px 0px [real-before] repeat(auto-fit, [before] 100px [after]) [real-after] 0px [final];
+}
+.grid3 {
+	grid-template-columns: repeat(3, 66px) [real-before] repeat(auto-fit, [before] 100px [after]) [real-after];
+}
+.grid4 {
+	grid-template-columns: repeat(2, 100px) repeat(auto-fill, 50px);
+}
+.grid5 {
+	grid-template-columns: [real-before] repeat(auto-fit, [before] 100px [after]) [real-after];
+}
+.grid6 {
+	grid-template-columns: [first] 0px [real-before] repeat(auto-fit, [before] 100px [after]) [real-after];
+}
+.grid7 {
+	grid-template-columns: [real-before] repeat(auto-fit, [before] 100px [after]) [real-after] 0px [final];
+}
+.grid8 {
+	grid-template-columns: [real-before] repeat(auto-fit, [before] 1000px [after]) [real-after];
+}
+.grid9 {
+	grid-template-columns: [real-before] repeat(auto-fit, 100px [after]) [real-after];
+}
+.grid10 {
+	grid-template-columns: [real-before] repeat(auto-fit, [before] 100px) [real-after];
+}
+.box {
+	background-color: #444;
+	color: #fff;
+}
+.a {
+	grid-column: auto;
+}
+.b {
+	grid-column: 4;
+}
+.c {
+	grid-column: 6;
+}
+.d {
+	grid-column: 7;
+}
+.e {
+	grid-column: 5;
+}
+
+</style>
+
+<script>
+'use strict';
+
+SimpleTest.waitForExplicitFinish();
+
+function testLines(elementName, grid, expectedValues) {
+	for (let i = 0; i < grid.cols.lines.length; i++) {
+		is(grid.cols.lines[i].number, (i + 1), elementName + " line " + (i + 1) + " has expected number.");
+		is(grid.cols.lines[i].start, expectedValues[i].start, elementName + " line " + (i + 1) + " has expected start.");
+		is(grid.cols.lines[i].breadth, 0, elementName + " line " + (i + 1) + " has zero breadth.");
+		is(grid.cols.lines[i].names + "", expectedValues[i].names, elementName + " line " + (i + 1) + " has expected names.");
+	}
+}
+
+function runTests() {
+	let wrapper = document.getElementById("wrapper1");
+	let grid = wrapper.getGridFragments()[0];
+
+	// test auto-fit count
+	is(grid.cols.tracks.length, 7, "Grid column track array reports removed auto-fit columns.");
+
+	// test resolved value of grid-template-columns
+	let templateColumnsText = getComputedStyle(wrapper).gridTemplateColumns;
+	is(templateColumnsText, "50px 0px 0px 100px 0px 0px 0px",
+		"Resolved value of grid-template-columns reports removed auto-fits as '0px'.");
+
+	// test starts, breadths, and states
+	let expectedValues = [
+		{ "start": 0,
+		  "breadth": 50,
+		  "state": "static" },
+		{ "start": 50,
+		  "breadth": 0,
+		  "state": "static" },
+		{ "start": 50,
+		  "breadth": 0,
+		  "state": "removed" },
+		{ "start": 50,
+		  "breadth": 100,
+		  "state": "repeat" },
+		{ "start": 150,
+		  "breadth": 0,
+		  "state": "removed" },
+		{ "start": 150,
+		  "breadth": 0,
+		  "state": "removed" },
+		{ "start": 150,
+		  "breadth": 0,
+		  "state": "removed" },
+	];
+	for (let i = 0; i < grid.cols.tracks.length; i++) {
+		is(grid.cols.tracks[i].start, expectedValues[i].start, "Column " + (i + 1) + " has expected start.");
+		is(grid.cols.tracks[i].breadth, expectedValues[i].breadth, "Column " + (i + 1) + " has expected breadth.");
+		is(grid.cols.tracks[i].state, expectedValues[i].state, "Column " + (i + 1) + " has expected state.");
+	}
+
+
+	wrapper = document.getElementById("wrapper2");
+	grid = wrapper.getGridFragments()[0];
+
+	// test auto-fit count
+	is(grid.cols.lines.length, 9, "Grid column line array reports removed auto-fit columns.");
+
+	// test resolved value of grid-template-columns
+	templateColumnsText = getComputedStyle(wrapper).gridTemplateColumns;
+	is(templateColumnsText, "50px 0px [real-before before] 0px [after before] 100px [after before] 0px [after before] 100px [after before] 0px [after real-after] 0px [final]",
+		"Resolved value of grid-template-columns reports lines for removed tracks.");
+
+	// test starts and names
+	expectedValues = [
+		{ "start": 0,
+		  "names": "" },
+		{ "start": 50,
+		  "names": "" },
+		{ "start": 50,
+		  "names": "real-before,before" },
+		{ "start": 50,
+		  "names": "after,before" },
+		{ "start": 150,
+		  "names": "after,before" },
+		{ "start": 150,
+		  "names": "after,before" },
+		{ "start": 250,
+		  "names": "after,before" },
+		{ "start": 250,
+		  "names": "after,real-after" },
+		{ "start": 250,
+		  "names": "final" },
+	];
+	testLines("wrapper2", grid, expectedValues);
+
+
+	wrapper = document.getElementById("wrapper3");
+	grid = wrapper.getGridFragments()[0];
+
+	// test resolved value of grid-template-columns
+	templateColumnsText = getComputedStyle(wrapper).gridTemplateColumns;
+	is(templateColumnsText, "66px 66px 66px [real-before before] 100px [after before] 0px [after before] 100px [after before] 100px [after real-after]",
+		"Resolved value of grid-template-columns reports lines for removed tracks.");
+
+
+	wrapper = document.getElementById("wrapper4");
+	grid = wrapper.getGridFragments()[0];
+
+	// test auto-fill count of tracks
+	is(grid.cols.tracks.length, 10, "Grid column track array respects auto-fill columns.");
+
+	if (grid.cols.tracks.length == 10) {
+		// test for static and repeat
+		is(grid.cols.tracks[1].state, "static", "Grid column track 2 is marked as static.");
+		is(grid.cols.tracks[2].state, "repeat", "Grid column track 3 is marked as repeat.");
+	}
+
+
+	wrapper = document.getElementById("wrapper5");
+	grid = wrapper.getGridFragments()[0];
+
+	// test resolved value of grid-template-columns
+	templateColumnsText = getComputedStyle(wrapper).gridTemplateColumns;
+	is(templateColumnsText, "[real-before before] 0px [after before] 0px [after before] 0px [after before] 0px [after before] 0px [after before] 0px [after real-after]", "Resolved value of grid-template-columns no longer lists 'none' when all auto-fit tracks are empty.");
+
+
+	wrapper = document.getElementById("wrapper6");
+	grid = wrapper.getGridFragments()[0];
+
+	// test starts and names
+	expectedValues = [
+		{ "start": 0,
+		  "names": "first" },
+		{ "start": 0,
+		  "names": "real-before,before" },
+		{ "start": 0,
+		  "names": "after,before" },
+		{ "start": 0,
+		  "names": "after,before" },
+		{ "start": 100,
+		  "names": "after,before" },
+		{ "start": 100,
+		  "names": "after,before" },
+		{ "start": 100,
+		  "names": "after,before" },
+		{ "start": 100,
+		  "names": "after,real-after" },
+	];
+	testLines("wrapper6", grid, expectedValues);
+
+
+	wrapper = document.getElementById("wrapper7");
+	grid = wrapper.getGridFragments()[0];
+
+	// test starts and names
+	expectedValues = [
+		{ "start": 0,
+		  "names": "real-before,before" },
+		{ "start": 0,
+		  "names": "after,before" },
+		{ "start": 0,
+		  "names": "after,before" },
+		{ "start": 0,
+		  "names": "after,before" },
+		{ "start": 100,
+		  "names": "after,before" },
+		{ "start": 100,
+		  "names": "after,before" },
+		{ "start": 100,
+		  "names": "after,real-after" },
+		{ "start": 100,
+		  "names": "final" },
+	];
+	testLines("wrapper7", grid, expectedValues);
+
+
+	wrapper = document.getElementById("wrapper8");
+	grid = wrapper.getGridFragments()[0];
+
+	// test starts and names
+	expectedValues = [
+		{ "start": 0,
+		  "names": "real-before,before" },
+		{ "start": 0,
+		  "names": "after,real-after" },
+	];
+	testLines("wrapper8", grid, expectedValues);
+
+
+	wrapper = document.getElementById("wrapper9");
+	grid = wrapper.getGridFragments()[0];
+
+	// test starts and names
+	expectedValues = [
+		{ "start": 0,
+		  "names": "real-before" },
+		{ "start": 0,
+		  "names": "after" },
+		{ "start": 0,
+		  "names": "after" },
+		{ "start": 0,
+		  "names": "after" },
+		{ "start": 100,
+		  "names": "after" },
+		{ "start": 200,
+		  "names": "after" },
+		{ "start": 200,
+		  "names": "after,real-after" },
+	];
+	testLines("wrapper9", grid, expectedValues);
+
+
+	wrapper = document.getElementById("wrapper10");
+	grid = wrapper.getGridFragments()[0];
+
+	// test starts and names
+	expectedValues = [
+		{ "start": 0,
+		  "names": "real-before,before" },
+		{ "start": 0,
+		  "names": "before" },
+		{ "start": 0,
+		  "names": "before" },
+		{ "start": 0,
+		  "names": "before" },
+		{ "start": 100,
+		  "names": "before" },
+		{ "start": 200,
+		  "names": "before" },
+		{ "start": 200,
+		  "names": "real-after" },
+	];
+	testLines("wrapper10", grid, expectedValues);
+
+	SimpleTest.finish();
+}
+</script>
+</head>
+<body onLoad="runTests();">
+
+	<div id="wrapper1" class="wrapper grid1">
+		<div id="boxB" class="box b">B</div>
+	</div>
+
+	<br/>
+	<div id="wrapper2" class="wrapper grid2">
+		<div id="boxB" class="box b">B</div>
+		<div id="boxC" class="box c">C</div>
+	</div>
+
+	<br/>
+	<div id="wrapper3" class="wrapper grid3">
+		<div id="boxB" class="box b">B</div>
+		<div id="boxC" class="box c">C</div>
+		<div id="boxD" class="box d">D</div>
+	</div>
+
+	<br/>
+	<div id="wrapper4" class="wrapper grid4">
+		<div id="boxA" class="box a">A</div>
+	</div>
+
+	<br/>
+	<div id="wrapper5" class="wrapper grid5">
+	</div>
+
+	<br/>
+	<div id="wrapper6" class="wrapper grid6">
+		<div id="boxB" class="box b">B</div>
+	</div>
+
+	<br/>
+	<div id="wrapper7" class="wrapper grid7">
+		<div id="boxB" class="box b">B</div>
+	</div>
+
+	<br/>
+	<div id="wrapper8" class="wrapper grid8">
+	</div>
+
+	<br/>
+	<div id="wrapper9" class="wrapper grid9">
+		<div id="boxB" class="box b">B</div>
+		<div id="boxE" class="box e">E</div>
+	</div>
+
+	<br/>
+	<div id="wrapper10" class="wrapper grid10">
+		<div id="boxB" class="box b">B</div>
+		<div id="boxE" class="box e">E</div>
+	</div>
+
+</body>
+</html>

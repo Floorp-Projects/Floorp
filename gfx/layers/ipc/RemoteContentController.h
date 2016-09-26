@@ -48,6 +48,11 @@ public:
                          const ScrollableLayerGuid& aGuid,
                          uint64_t aInputBlockId) override;
 
+  virtual void NotifyPinchGesture(PinchGestureInput::PinchGestureType aType,
+                                  const ScrollableLayerGuid& aGuid,
+                                  LayoutDeviceCoord aSpanChange,
+                                  Modifiers aModifiers) override;
+
   virtual void PostDelayedTask(already_AddRefed<Runnable> aTask, int aDelayMs) override;
 
   virtual bool IsRepaintThread() override;

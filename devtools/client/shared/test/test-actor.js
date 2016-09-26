@@ -260,6 +260,15 @@ var testSpec = protocol.generateActorSpec({
         value: RetVal("json")
       }
     },
+    getTextNodeRect: {
+      request: {
+        parentSelector: Arg(0, "string"),
+        childNodeIndex: Arg(1, "number")
+      },
+      response: {
+        value: RetVal("json")
+      }
+    },
     getNodeInfo: {
       request: {
         selector: Arg(0, "string")
@@ -717,6 +726,12 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
     return getRect(this.content, node, this.content);
   }),
 
+  getTextNodeRect: Task.async(function* (parentSelector, childNodeIndex) {
+    let parentNode = this._querySelector(parentSelector);
+    let node = parentNode.childNodes[childNodeIndex];
+    return getAdjustedQuads(this.content, node)[0].bounds;
+  }),
+
   /**
    * Get information about a DOM element, identified by a selector.
    * @param {String} selector The CSS selector to get the node (can be an array
@@ -891,75 +906,59 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
     return ret;
   }),
 
+  /**
+   * Check that the box-model highlighter is currently highlighting the node matching the
+   * given selector.
+   * @param {String} selector
+   * @return {Boolean}
+   */
   assertHighlightedNode: Task.async(function* (selector) {
-    // Taken and tweaked from:
-    // https://github.com/iominh/point-in-polygon-extended/blob/master/src/index.js#L30-L85
-    function isLeft(p0, p1, p2) {
-      let l = ((p1[0] - p0[0]) * (p2[1] - p0[1])) -
-              ((p2[0] - p0[0]) * (p1[1] - p0[1]));
-      return l;
-    }
-    function isInside(point, polygon) {
-      if (polygon.length === 0) {
-        return false;
-      }
+    let rect = yield this.getNodeRect(selector);
+    return yield this.isNodeRectHighlighted(rect);
+  }),
 
-      var n = polygon.length;
-      var newPoints = polygon.slice(0);
-      newPoints.push(polygon[0]);
-      var wn = 0; // wn counter
+  /**
+   * Check that the box-model highlighter is currently highlighting the text node that can
+   * be found at a given index within the list of childNodes of a parent element matching
+   * the given selector.
+   * @param {String} parentSelector
+   * @param {Number} childNodeIndex
+   * @return {Boolean}
+   */
+  assertHighlightedTextNode: Task.async(function* (parentSelector, childNodeIndex) {
+    let rect = yield this.getTextNodeRect(parentSelector, childNodeIndex);
+    return yield this.isNodeRectHighlighted(rect);
+  }),
 
-      // loop through all edges of the polygon
-      for (var i = 0; i < n; i++) {
-        // Accept points on the edges
-        let r = isLeft(newPoints[i], newPoints[i + 1], point);
-        if (r === 0) {
-          return true;
-        }
-        if (newPoints[i][1] <= point[1]) {
-          if (newPoints[i + 1][1] > point[1] && r > 0) {
-            wn++;
-          }
-        } else {
-          if (newPoints[i + 1][1] <= point[1] && r < 0) {
-            wn--;
-          }
-        }
-      }
-      if (wn === 0) {
-        dumpn(JSON.stringify(point) + " is outside of " + JSON.stringify(polygon));
-      }
-      // the point is outside only when this winding number wn===0, otherwise it's inside
-      return wn !== 0;
-    }
-
+  /**
+   * Check that the box-model highlighter is currently highlighting the given rect.
+   * @param {Object} rect
+   * @return {Boolean}
+   */
+  isNodeRectHighlighted: Task.async(function* ({ left, top, width, height }) {
     let {visible, border} = yield this._getBoxModelStatus();
     let points = border.points;
-    if (visible) {
-      // Check that the node is within the box model
-      let { left, top, width, height } = yield this.getNodeRect(selector);
-      let right = left + width;
-      let bottom = top + height;
-
-      // Converts points dictionnary into an array
-      let list = [];
-      for (var i = 1; i <= 4; i++) {
-        let p = points["p" + i];
-        list.push([p.x, p.y]);
-      }
-      points = list;
-
-      // Check that each point of the node is within the box model
-      if (!isInside([left, top], points) ||
-          !isInside([right, top], points) ||
-          !isInside([right, bottom], points) ||
-          !isInside([left, bottom], points)) {
-        return false;
-      }
-      return true;
-    } else {
+    if (!visible) {
       return false;
     }
+
+    // Check that the node is within the box model
+    let right = left + width;
+    let bottom = top + height;
+
+    // Converts points dictionnary into an array
+    let list = [];
+    for (let i = 1; i <= 4; i++) {
+      let p = points["p" + i];
+      list.push([p.x, p.y]);
+    }
+    points = list;
+
+    // Check that each point of the node is within the box model
+    return isInside([left, top], points) &&
+           isInside([right, top], points) &&
+           isInside([right, bottom], points) &&
+           isInside([left, bottom], points);
   }),
 
   /**
@@ -1086,3 +1085,49 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
     return {d, points};
   })
 });
+
+/**
+ * Check whether a point is included in a polygon.
+ * Taken and tweaked from:
+ * https://github.com/iominh/point-in-polygon-extended/blob/master/src/index.js#L30-L85
+ * @param {Array} point [x,y] coordinates
+ * @param {Array} polygon An array of [x,y] points
+ * @return {Boolean}
+ */
+function isInside(point, polygon) {
+  if (polygon.length === 0) {
+    return false;
+  }
+
+  const n = polygon.length;
+  const newPoints = polygon.slice(0);
+  newPoints.push(polygon[0]);
+  let wn = 0;
+
+  // loop through all edges of the polygon
+  for (let i = 0; i < n; i++) {
+    // Accept points on the edges
+    let r = isLeft(newPoints[i], newPoints[i + 1], point);
+    if (r === 0) {
+      return true;
+    }
+    if (newPoints[i][1] <= point[1]) {
+      if (newPoints[i + 1][1] > point[1] && r > 0) {
+        wn++;
+      }
+    } else if (newPoints[i + 1][1] <= point[1] && r < 0) {
+      wn--;
+    }
+  }
+  if (wn === 0) {
+    dumpn(JSON.stringify(point) + " is outside of " + JSON.stringify(polygon));
+  }
+  // the point is outside only when this winding number wn===0, otherwise it's inside
+  return wn !== 0;
+}
+
+function isLeft(p0, p1, p2) {
+  let l = ((p1[0] - p0[0]) * (p2[1] - p0[1])) -
+          ((p2[0] - p0[0]) * (p1[1] - p0[1]));
+  return l;
+}

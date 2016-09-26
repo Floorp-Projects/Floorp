@@ -3005,16 +3005,6 @@ private:
   }
 };
 
-/* static */ void
-TabParent::ObserveLayerUpdate(uint64_t aLayersId, uint64_t aEpoch, bool aActive)
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  RefPtr<LayerTreeUpdateRunnable> runnable =
-    new LayerTreeUpdateRunnable(aLayersId, aEpoch, aActive);
-  NS_DispatchToMainThread(runnable);
-}
-
 void
 TabParent::LayerTreeUpdate(uint64_t aEpoch, bool aActive)
 {

@@ -409,8 +409,12 @@ function prompt(aBrowser, aRequest) {
         if ((!audioDevices.length || micPerm) && (!videoDevices.length || camPerm)) {
           // All permissions we were about to request are already persistently set.
           let allowedDevices = [];
-          if (videoDevices.length && camPerm == perms.ALLOW_ACTION)
+          if (videoDevices.length && camPerm == perms.ALLOW_ACTION) {
             allowedDevices.push(videoDevices[0].deviceIndex);
+            let perms = Services.perms;
+            perms.add(uri, "MediaManagerVideo", perms.ALLOW_ACTION,
+                      perms.EXPIRE_SESSION);
+          }
           if (audioDevices.length && micPerm == perms.ALLOW_ACTION)
             allowedDevices.push(audioDevices[0].deviceIndex);
 

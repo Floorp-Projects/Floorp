@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 sts=4 et cindent: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -155,6 +156,30 @@ private:
 
 // Count the number of grapheme clusters in the given string
 uint32_t CountGraphemeClusters(const char16_t* aText, uint32_t aLength);
+
+// A simple reverse iterator for a string of char16_t codepoints that
+// advances by Unicode grapheme clusters
+class ClusterReverseIterator
+{
+public:
+    ClusterReverseIterator(const char16_t* aText, uint32_t aLength)
+        : mPos(aText + aLength), mLimit(aText)
+    { }
+
+    operator const char16_t* () const {
+        return mPos;
+    }
+
+    bool AtEnd() const {
+        return mPos <= mLimit;
+    }
+
+    void Next();
+
+private:
+    const char16_t* mPos;
+    const char16_t* mLimit;
+};
 
 } // end namespace unicode
 

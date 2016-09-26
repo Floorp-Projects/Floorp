@@ -1072,6 +1072,12 @@ class CSPReportSenderRunnable final : public Runnable
 
       if (blockedURI) {
         blockedURI->GetSpec(blockedDataStr);
+        bool isData = false;
+        rv = blockedURI->SchemeIs("data", &isData);
+        if (NS_SUCCEEDED(rv) && isData) {
+          blockedDataStr.Truncate(40);
+          blockedDataStr.AppendASCII("...");
+        }
       } else if (blockedString) {
         blockedString->GetData(blockedDataStr);
       }

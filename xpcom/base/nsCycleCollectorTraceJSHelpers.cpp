@@ -27,12 +27,8 @@ nsScriptObjectTracer::NoteJSChild(JS::GCCellPtr aGCThing, const char* aName,
   nsCycleCollectionTraversalCallback* cb =
     static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, aName);
-  if (aGCThing.is<JSObject>()) {
-    cb->NoteJSObject(&aGCThing.as<JSObject>());
-  } else if (aGCThing.is<JSScript>()) {
-    cb->NoteJSScript(&aGCThing.as<JSScript>());
-  } else {
-    MOZ_ASSERT(!mozilla::AddToCCKind(aGCThing.kind()));
+  if (mozilla::AddToCCKind(aGCThing.kind())) {
+    cb->NoteJSChild(aGCThing);
   }
 }
 

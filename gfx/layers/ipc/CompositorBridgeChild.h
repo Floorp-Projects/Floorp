@@ -250,6 +250,10 @@ private:
   virtual bool
   RecvRemotePaintIsReady() override;
 
+  bool RecvObserveLayerUpdate(const uint64_t& aLayersId,
+                              const uint64_t& aEpoch,
+                              const bool& aActive) override;
+
   // Class used to store the shared FrameMetrics, mutex, and APZCId  in a hash table
   class SharedFrameMetricsData {
   public:

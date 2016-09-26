@@ -29,6 +29,7 @@
         iframe.src = "http://example.com/tests/dom/workers/test/serviceworkers/fetch/hsts/index.html";
       } else if (e.data.status == "protocol") {
         is(e.data.data, "https:", "Correct protocol expected");
+        ok(e.data.securityInfoPresent, "Security info present on intercepted value");
         switch (++framesLoaded) {
         case 1:
           iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/hsts/embedder.html";

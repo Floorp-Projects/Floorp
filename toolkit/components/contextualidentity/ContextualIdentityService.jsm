@@ -324,7 +324,7 @@ _ContextualIdentityService.prototype = {
       return;
     }
 
-    if (this._openedIdentities.has(userContextId)) {
+    if (!this._openedIdentities.has(userContextId)) {
       this._openedIdentities.add(userContextId);
       Services.telemetry.getHistogramById("UNIQUE_CONTAINERS_OPENED").add(1);
     }
