@@ -265,7 +265,8 @@ mai_util_add_key_event_listener(AtkKeySnoopFunc listener, gpointer data)
   }
   AtkKeySnoopFuncPointer atkKeySnoop;
   atkKeySnoop.func_ptr = listener;
-  g_hash_table_insert(sKey_listener_list, GUINT_TO_POINTER(key++),
+  key++;
+  g_hash_table_insert(sKey_listener_list, GUINT_TO_POINTER(key),
                       atkKeySnoop.data);
   return key;
 }
