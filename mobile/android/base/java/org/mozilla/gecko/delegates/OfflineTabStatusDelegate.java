@@ -63,9 +63,19 @@ public class OfflineTabStatusDelegate extends TabsTrayVisibilityAwareDelegate im
             return;
         }
 
+        // We only want to show these notifications for tabs that were loaded successfully.
+        if (tab.getState() != Tab.STATE_SUCCESS) {
+            return;
+        }
+
         switch (event) {
-            // Show offline notification if tab is visible, or queue it for display later.
-            case PAGE_SHOW:
+            // We listen specifically for the STOP event (as opposed to PAGE_SHOW), because we need
+            // to know if page load actually succeeded. When STOP is triggered, tab.getState()
+            // will return definitive STATE_SUCCESS or STATE_ERROR. When PAGE_SHOW is triggered,
+            // tab.getState() will return STATE_LOADING, which is ambiguous for our purposes.
+            // We don't want to show these notifications for 404 pages, for example. See Bug 1304914.
+            case STOP:
+                // Show offline notification if tab is visible, or queue it for display later.
                 if (!isTabsTrayVisible() && Tabs.getInstance().isSelectedTab(tab)) {
                     showLoadedOfflineSnackbar(activityReference.get());
                 } else {
