@@ -111,8 +111,3 @@ nsPrintObject::DestroyPresentation()
   mViewManager = nullptr;
 }
 
-bool
-nsPrintObject::MayHavePluginFrames()
-{
-  return mDocument && mDocument->MayHavePluginFramesForPrinting();
-}
