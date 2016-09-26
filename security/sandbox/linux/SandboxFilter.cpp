@@ -42,6 +42,11 @@ using namespace sandbox::bpf_dsl;
 #define MADV_DONTDUMP 16
 #endif
 
+// Added in Linux 4.5; see bug 1303813.
+#ifndef MADV_FREE
+#define MADV_FREE 8
+#endif
+
 #ifndef PR_SET_PTRACER
 #define PR_SET_PTRACER 0x59616d61
 #endif
@@ -822,6 +827,7 @@ public:
     case __NR_madvise: {
       Arg<int> advice(2);
       return If(advice == MADV_DONTNEED, Allow())
+        .ElseIf(advice == MADV_FREE, Allow())
 #ifdef MOZ_ASAN
         .ElseIf(advice == MADV_NOHUGEPAGE, Allow())
         .ElseIf(advice == MADV_DONTDUMP, Allow())
