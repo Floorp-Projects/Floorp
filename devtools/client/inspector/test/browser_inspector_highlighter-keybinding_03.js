@@ -46,7 +46,7 @@ add_task(function* () {
     info("Key pressed. Waiting for element to be picked");
     testActor.synthesizeKey(args);
     return promise.all([
-      toolbox.selection.once("new-node-front"),
+      inspector.selection.once("new-node-front"),
       inspector.once("inspector-updated")
     ]);
   }
