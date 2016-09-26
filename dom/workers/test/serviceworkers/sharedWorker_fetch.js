@@ -27,5 +27,3 @@ onconnect = function(e) {
     }
   }
 }
-
-
