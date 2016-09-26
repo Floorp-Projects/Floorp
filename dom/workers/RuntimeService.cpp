@@ -1099,16 +1099,6 @@ public:
   {
   }
 
-  virtual void
-  BeginCycleCollectionCallback() override
-  {
-  }
-
-  virtual void
-  EndCycleCollectionCallback(CycleCollectorResults &aResults) override
-  {
-  }
-
   void
   DispatchDeferredDeletion(bool aContinuation, bool aPurge) override
   {

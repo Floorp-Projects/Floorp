@@ -321,8 +321,8 @@ public:
   void DumpJSHeap(FILE* aFile);
 
   virtual void PrepareForForgetSkippable() = 0;
-  virtual void BeginCycleCollectionCallback() = 0;
-  virtual void EndCycleCollectionCallback(CycleCollectorResults& aResults) = 0;
+  virtual void BeginCycleCollectionCallback();
+  virtual void EndCycleCollectionCallback(CycleCollectorResults& aResults);
   virtual void DispatchDeferredDeletion(bool aContinuation, bool aPurge = false) = 0;
 
   JSContext* Context() const

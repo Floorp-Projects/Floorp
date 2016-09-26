@@ -665,6 +665,7 @@ XPCJSContext::PrepareForForgetSkippable()
 void
 XPCJSContext::BeginCycleCollectionCallback()
 {
+    CycleCollectedJSContext::BeginCycleCollectionCallback();
     nsJSContext::BeginCycleCollectionCallback();
 
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
@@ -676,6 +677,7 @@ XPCJSContext::BeginCycleCollectionCallback()
 void
 XPCJSContext::EndCycleCollectionCallback(CycleCollectorResults& aResults)
 {
+    CycleCollectedJSContext::EndCycleCollectionCallback(aResults);
     nsJSContext::EndCycleCollectionCallback(aResults);
 
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
