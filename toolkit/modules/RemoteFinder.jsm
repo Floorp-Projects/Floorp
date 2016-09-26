@@ -26,17 +26,7 @@ function RemoteFinder(browser) {
 }
 
 RemoteFinder.prototype = {
-  destroy() {
-    this._browser.messageManager.sendAsyncMessage("Finder:Destroy");
-    if (this._messageManager) {
-      this._messageManager.removeMessageListener("Finder:Result", this);
-      this._messageManager.removeMessageListener("Finder:MatchesResult", this);
-      this._messageManager.removeMessageListener("Finder:CurrentSelectionResult",this);
-      this._messageManager.removeMessageListener("Finder:HighlightFinished",this);
-    }
-    this._listeners.clear();
-    this._browser = this._messageManager = null;
-  },
+  destroy() {},
 
   swapBrowser: function(aBrowser) {
     if (this._messageManager) {
@@ -228,7 +218,6 @@ function RemoteFinderListener(global) {
 RemoteFinderListener.prototype = {
   MESSAGES: [
     "Finder:CaseSensitive",
-    "Finder:Destroy",
     "Finder:EntireWord",
     "Finder:FastFind",
     "Finder:FindAgain",
@@ -263,10 +252,6 @@ RemoteFinderListener.prototype = {
     let data = aMessage.data;
 
     switch (aMessage.name) {
-      case "Finder:Destroy":
-        this._finder.destroy();
-        break;
-
       case "Finder:CaseSensitive":
         this._finder.caseSensitive = data.caseSensitive;
         break;
