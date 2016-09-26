@@ -1834,6 +1834,21 @@ private:
     void UnwrapImpl();
 };
 
+class ScopedLazyBind final
+    : public gl::ScopedGLWrapper<ScopedLazyBind>
+{
+    friend struct gl::ScopedGLWrapper<ScopedLazyBind>;
+
+    const GLenum mTarget;
+    const WebGLBuffer* const mBuf;
+
+public:
+    ScopedLazyBind(gl::GLContext* gl, GLenum target, const WebGLBuffer* buf);
+
+private:
+    void UnwrapImpl();
+};
+
 void
 ComputeLengthAndData(const dom::ArrayBufferViewOrSharedArrayBufferView& view,
                      void** const out_data, size_t* const out_length,
