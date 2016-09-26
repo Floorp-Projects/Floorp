@@ -7,11 +7,17 @@
 const { extend } = require("sdk/core/heritage");
 const { AutoRefreshHighlighter } = require("./auto-refresh");
 const {
-  CanvasFrameAnonymousContentHelper, moveInfobar,
-  getBindingElementAndPseudo, hasPseudoClassLock, getComputedStyle,
-  createSVGNode, createNode, isNodeValid } = require("./utils/markup");
+  CanvasFrameAnonymousContentHelper,
+  createNode,
+  createSVGNode,
+  getBindingElementAndPseudo,
+  hasPseudoClassLock,
+  isNodeValid,
+  moveInfobar,
+} = require("./utils/markup");
 const { setIgnoreLayoutChanges } = require("devtools/shared/layout/utils");
 const inspector = require("devtools/server/actors/inspector");
+const nodeConstants = require("devtools/shared/dom-node-constants");
 
 // Note that the order of items in this array is important because it is used
 // for drawing the BoxModelHighlighter's path elements correctly.
@@ -94,23 +100,12 @@ function BoxModelHighlighter(highlighterEnv) {
    * regionFill property: `highlighter.regionFill.margin = "red";
    */
   this.regionFill = {};
-
-  this._currentNode = null;
 }
 
 BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
   typeName: "BoxModelHighlighter",
 
   ID_CLASS_PREFIX: "box-model-",
-
-  get currentNode() {
-    return this._currentNode;
-  },
-
-  set currentNode(node) {
-    this._currentNode = node;
-    this._computedStyle = null;
-  },
 
   _buildMarkup: function () {
     let doc = this.win.document;
@@ -258,14 +253,21 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
    */
   destroy: function () {
     AutoRefreshHighlighter.prototype.destroy.call(this);
-
     this.markup.destroy();
-
-    this._currentNode = null;
   },
 
   getElement: function (id) {
     return this.markup.getElement(this.ID_CLASS_PREFIX + id);
+  },
+
+  /**
+   * Override the AutoRefreshHighlighter's _isNodeValid method to also return true for
+   * text nodes since these can also be highlighted.
+   * @param {DOMNode} node
+   * @return {Boolean}
+   */
+  _isNodeValid: function (node) {
+    return node && (isNodeValid(node) || isNodeValid(node, nodeConstants.TEXT_NODE));
   },
 
   /**
@@ -311,7 +313,9 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     setIgnoreLayoutChanges(true);
 
     if (this._updateBoxModel()) {
-      if (!this.options.hideInfoBar) {
+      // Show the infobar only if configured to do so and the node is an element.
+      if (!this.options.hideInfoBar &&
+          this.currentNode.nodeType === this.currentNode.ELEMENT_NODE) {
         this._showInfobar();
       } else {
         this._hideInfobar();
@@ -519,20 +523,15 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     return path;
   },
 
+  /**
+   * Can the current node be highlighted? Does it have quads.
+   * @return {Boolean}
+   */
   _nodeNeedsHighlighting: function () {
-    let hasNoQuads = !this.currentQuads.margin.length &&
-                     !this.currentQuads.border.length &&
-                     !this.currentQuads.padding.length &&
-                     !this.currentQuads.content.length;
-    if (!isNodeValid(this.currentNode) || hasNoQuads) {
-      return false;
-    }
-
-    if (!this._computedStyle) {
-      this._computedStyle = getComputedStyle(this.currentNode);
-    }
-
-    return this._computedStyle.getPropertyValue("display") !== "none";
+    return this.currentQuads.margin.length ||
+           this.currentQuads.border.length ||
+           this.currentQuads.padding.length ||
+           this.currentQuads.content.length;
   },
 
   _getOuterBounds: function () {

@@ -20,6 +20,7 @@ XPCOMUtils.defineLazyGetter(this, "kDebug", () => {
 });
 
 const kContentChangeThresholdPx = 5;
+const kBrightTextSampleSize = 5;
 const kModalHighlightRepaintFreqMs = 100;
 const kHighlightAllPref = "findbar.highlightAll";
 const kModalHighlightPref = "findbar.modalHighlight";
@@ -57,8 +58,7 @@ const kModalStyles = {
     ["vertical-align", "top !important"]
   ],
   maskNode: [
-    ["background", "#000"],
-    ["opacity", ".35"],
+    ["background", "rgba(0,0,0,.35)"],
     ["pointer-events", "none"],
     ["position", "absolute"],
     ["z-index", 1]
@@ -68,16 +68,7 @@ const kModalStyles = {
     ["top", 0],
     ["left", 0]
   ],
-  maskNodeBrightText: [ ["background", "#fff"] ],
-  maskRect: [
-    ["background", "#fff"],
-    ["border-radius", "3px"],
-    ["margin", "-1px 0 0 -1px !important"],
-    ["padding", "0 1px 2px 1px !important"],
-    ["position", "absolute"],
-    ["white-space", "nowrap"]
-  ],
-  maskRectBrightText: [ ["background", "#000"] ]
+  maskNodeBrightText: [ ["background", "rgba(255,255,255,.35)"] ]
 };
 const kModalOutlineAnim = {
   "keyframes": [
@@ -116,6 +107,9 @@ function mockAnonymousContentNode(domNode) {
     },
     setAnimationForElement(id, keyframes, duration) {
       return (domNode.querySelector("#" + id) || domNode).animate(keyframes, duration);
+    },
+    setCutoutRectsForElement(id, rects) {
+      // no-op for now.
     }
   };
 }
@@ -364,7 +358,6 @@ FinderHighlighter.prototype = {
 
     this._removeHighlightAllMask(window);
     this._removeModalHighlightListeners(window);
-    delete dict.brightText;
 
     dict.visible = false;
   },
@@ -420,11 +413,6 @@ FinderHighlighter.prototype = {
         return;
       }
 
-      let fontStyle = this._getRangeFontStyle(foundRange);
-      if (typeof dict.brightText == "undefined") {
-        dict.brightText = this._isColorBright(fontStyle.color);
-      }
-
       if (data.findAgain)
         dict.updateAllRanges = true;
 
@@ -433,7 +421,7 @@ FinderHighlighter.prototype = {
       else
         this._maybeCreateModalHighlightNodes(window);
 
-      this._updateRangeOutline(dict, textContent, fontStyle);
+      this._updateRangeOutline(dict, textContent);
     }
 
     let outlineNode = dict.modalHighlightOutline;
@@ -469,6 +457,7 @@ FinderHighlighter.prototype = {
     dict.dynamicRangesSet.clear();
     dict.frames.clear();
     dict.modalHighlightRectsMap.clear();
+    dict.brightText = null;
   },
 
   /**
@@ -572,7 +561,7 @@ FinderHighlighter.prototype = {
    * @return {Rect}
    */
   _getRootBounds(window, includeScroll = true) {
-    let dwu = this._getDWU(window);
+    let dwu = this._getDWU(window.top);
     let cssPageRect = Rect.fromRect(dwu.getRootBounds());
     let scrollX = {};
     let scrollY = {};
@@ -719,16 +708,59 @@ FinderHighlighter.prototype = {
   },
 
   /**
+   * Detects if the overall text color in the page can be described as bright.
+   * This is done according to the following algorithm:
+   *  1. With the entire set of ranges that we have found thusfar;
+   *  2. Get an odd-numbered `sampleSize`, with a maximum of `kBrightTextSampleSize`
+   *     ranges,
+   *  3. Slice the set of ranges into `sampleSize` number of equal parts,
+   *  4. Grab the first range for each slice and inspect the brightness of the
+   *     color of its text content.
+   *  5. When the majority of ranges are counted as contain bright colored text,
+   *     the page is considered to contain bright text overall.
+   *
+   * @param {Object} dict Dictionary of properties belonging to the
+   *                      currently active window. The page text color property
+   *                      will be recorded in `dict.brightText` as `true` or `false`.
+   */
+  _detectBrightText(dict) {
+    let sampleSize = Math.min(dict.modalHighlightRectsMap.size, kBrightTextSampleSize);
+    let ranges = [...dict.modalHighlightRectsMap.keys()];
+    let rangesCount = ranges.length;
+    // Make sure the sample size is an odd number.
+    if (sampleSize % 2 == 0) {
+      // Make the currently found range weigh heavier.
+      if (dict.currentFoundRange) {
+        ranges.push(dict.currentFoundRange);
+        ++sampleSize;
+        ++rangesCount;
+      } else {
+        --sampleSize;
+      }
+    }
+    let brightCount = 0;
+    for (let i = 0; i < sampleSize; ++i) {
+      let range = ranges[Math.floor((rangesCount / sampleSize) * i)];
+      let fontStyle = this._getRangeFontStyle(range);
+      if (this._isColorBright(fontStyle.color))
+        ++brightCount;
+    }
+
+    dict.brightText = (brightCount >= Math.ceil(sampleSize / 2));
+  },
+
+  /**
    * Checks if a range is inside a DOM node that's positioned in a way that it
    * doesn't scroll along when the document is scrolled and/ or zoomed. This
-   * is the case for 'fixed' and 'sticky' positioned elements and elements inside
-   * (i)frames.
+   * is the case for 'fixed' and 'sticky' positioned elements, elements inside
+   * (i)frames and elements that have their overflow styles set to 'auto' or
+   * 'scroll'.
    *
    * @param  {nsIDOMRange} range Range that be enclosed in a dynamic container
    * @return {Boolean}
    */
   _isInDynamicContainer(range) {
-    const kFixed = new Set(["fixed", "sticky"]);
+    const kFixed = new Set(["fixed", "sticky", "scroll", "auto"]);
     let node = range.startContainer;
     while (node.nodeType != 1)
       node = node.parentNode;
@@ -744,8 +776,11 @@ FinderHighlighter.prototype = {
     }
 
     do {
-      if (kFixed.has(window.getComputedStyle(node, null).position))
+      let style = window.getComputedStyle(node, null);
+      if (kFixed.has(style.position) || kFixed.has(style.overflow) ||
+          kFixed.has(style.overflowX) || kFixed.has(style.overflowY)) {
         return true;
+      }
       node = node.parentNode;
     } while (node && node != document.documentElement)
 
@@ -824,11 +859,11 @@ FinderHighlighter.prototype = {
    *                      active window
    */
   _updateDynamicRangesRects(dict) {
-    for (let range of dict.dynamicRangesSet)
-      this._updateRangeRects(range, false, dict);
     // Reset the frame bounds cache.
     for (let frame of dict.frames.keys())
       dict.frames.set(frame, null);
+    for (let range of dict.dynamicRangesSet)
+      this._updateRangeRects(range, false, dict);
   },
 
   /**
@@ -1006,49 +1041,47 @@ FinderHighlighter.prototype = {
   _repaintHighlightAllMask(window, paintContent = true) {
     window = window.top;
     let dict = this.getForWindow(window);
-    let document = window.document;
 
     const kMaskId = kModalIdPrefix + "-findbar-modalHighlight-outlineMask";
-    let maskNode = document.createElementNS(kNSHTML, "div");
+    if (!dict.modalHighlightAllMask) {
+      let document = window.document;
+      let maskNode = document.createElementNS(kNSHTML, "div");
+      maskNode.setAttribute("id", kMaskId);
+      dict.modalHighlightAllMask = kDebug ?
+        mockAnonymousContentNode((document.body || document.documentElement).appendChild(maskNode)) :
+        document.insertAnonymousContent(maskNode);
+    }
 
     // Make sure the dimmed mask node takes the full width and height that's available.
     let {width, height} = dict.lastWindowDimensions = this._getWindowDimensions(window);
-    maskNode.setAttribute("id", kMaskId);
-    maskNode.setAttribute("style", this._getStyleString(kModalStyles.maskNode,
+    if (typeof dict.brightText != "boolean" || dict.updateAllRanges)
+      this._detectBrightText(dict);
+    let maskStyle = this._getStyleString(kModalStyles.maskNode,
       [ ["width", width + "px"], ["height", height + "px"] ],
       dict.brightText ? kModalStyles.maskNodeBrightText : [],
-      kDebug ? kModalStyles.maskNodeDebug : []));
+      kDebug ? kModalStyles.maskNodeDebug : []);
+    dict.modalHighlightAllMask.setAttributeForElement(kMaskId, "style", maskStyle);
     if (dict.brightText)
-      maskNode.setAttribute("brighttext", "true");
+      dict.modalHighlightAllMask.setAttributeForElement(kMaskId, "brighttext", "true");
 
+    let allRects = [];
     if (paintContent || dict.modalHighlightAllMask) {
       this._updateRangeOutline(dict);
       this._updateDynamicRangesRects(dict);
-      // Create a DOM node for each rectangle representing the ranges we found.
-      let maskContent = [];
-      const rectStyle = this._getStyleString(kModalStyles.maskRect,
-        dict.brightText ? kModalStyles.maskRectBrightText : []);
+
+      let DOMRect = window.DOMRect;
       for (let [range, rects] of dict.modalHighlightRectsMap) {
         if (dict.updateAllRanges)
           rects = this._updateRangeRects(range);
         if (this._checkOverlap(dict.currentFoundRange, range))
           continue;
-        for (let rect of rects) {
-          maskContent.push(`<div xmlns="${kNSHTML}" style="${rectStyle}; top: ${rect.y}px;
-            left: ${rect.x}px; height: ${rect.height}px; width: ${rect.width}px;"></div>`);
-        }
+        for (let rect of rects)
+          allRects.push(new DOMRect(rect.x, rect.y, rect.width, rect.height));
       }
       dict.updateAllRanges = false;
-      maskNode.innerHTML = maskContent.join("");
     }
 
-    // Always remove the current mask and insert it a-fresh, because we're not
-    // free to alter DOM nodes inside the CanvasFrame.
-    this._removeHighlightAllMask(window);
-
-    dict.modalHighlightAllMask = kDebug ?
-      mockAnonymousContentNode((document.body || document.documentElement).appendChild(maskNode)) :
-      document.insertAnonymousContent(maskNode);
+    dict.modalHighlightAllMask.setCutoutRectsForElement(kMaskId, allRects);
   },
 
   /**
@@ -1098,7 +1131,7 @@ FinderHighlighter.prototype = {
 
     window = window.top;
     let dict = this.getForWindow(window);
-    let repaintDynamicRanges = (scrollOnly && !!dict.dynamicRangesSet.size);
+    let repaintDynamicRanges = ((scrollOnly || contentChanged) && !!dict.dynamicRangesSet.size);
 
     // When we request to repaint unconditionally, we mean to call
     // `_repaintHighlightAllMask()` right after the timeout.

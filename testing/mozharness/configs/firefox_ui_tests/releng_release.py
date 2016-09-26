@@ -13,10 +13,6 @@ external_tools_path = os.path.join(
 
 
 config = {
-    'env': {
-        'PIP_TRUSTED_HOST': 'pypi.pub.build.mozilla.org',
-    },
-
     # General local variable overwrite
     'exes': {
         'gittool.py': [

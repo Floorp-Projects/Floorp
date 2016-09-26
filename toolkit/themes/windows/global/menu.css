@@ -291,11 +291,3 @@ menulist > menupopup > menuseparator {
   max-width: none !important;
   font: message-box;
 }
-
-/* ::::: tree column picker ::::: */
-
-.treecell-popupcell-menu {
-  margin-inline-start: -2px;
-  list-style-image: url("chrome://global/skin/columnselect.gif");
-  -moz-image-region: auto;
-}

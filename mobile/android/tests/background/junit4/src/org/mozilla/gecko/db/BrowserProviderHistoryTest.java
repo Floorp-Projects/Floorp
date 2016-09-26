@@ -10,6 +10,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.RemoteException;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,6 +50,13 @@ public class BrowserProviderHistoryTest extends BrowserProviderHistoryVisitsTest
                         BrowserContract.PARAM_EXPIRE_PRIORITY,
                         BrowserContract.ExpirePriority.AGGRESSIVE.toString()
                 ).build();
+    }
+
+    @After
+    @Override
+    public void tearDown() {
+        thumbnailClient.release();
+        super.tearDown();
     }
 
     /**
