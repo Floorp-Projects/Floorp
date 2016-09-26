@@ -47,6 +47,7 @@ public:
     if (mStream) {
       mLastOutputTime = mStream->StreamTimeToMicroseconds(
           mStream->GraphTimeToStreamTime(aCurrentTime));
+      mOnOutput.Notify(mLastOutputTime);
     }
   }
 
@@ -78,7 +79,14 @@ public:
     mStream = nullptr;
   }
 
+  MediaEventSource<int64_t>& OnOutput()
+  {
+    return mOnOutput;
+  }
+
 private:
+  MediaEventProducer<int64_t> mOnOutput;
+
   Mutex mMutex;
   // Members below are protected by mMutex.
   RefPtr<MediaStream> mStream;
@@ -123,6 +131,7 @@ public:
   ~DecodedStreamData();
   int64_t GetPosition() const;
   void SetPlaying(bool aPlaying);
+  MediaEventSource<int64_t>& OnOutput();
 
   /* The following group of fields are protected by the decoder's monitor
    * and can be read or written on any thread.
@@ -198,6 +207,12 @@ DecodedStreamData::GetPosition() const
   return mListener->GetLastOutputTime();
 }
 
+MediaEventSource<int64_t>&
+DecodedStreamData::OnOutput()
+{
+  return mListener->OnOutput();
+}
+
 void
 DecodedStreamData::SetPlaying(bool aPlaying)
 {
@@ -266,6 +281,7 @@ DecodedStream::Start(int64_t aStartTime, const MediaInfo& aInfo)
   MOZ_ASSERT(mStartTime.isNothing(), "playback already started.");
 
   mStartTime.emplace(aStartTime);
+  mLastOutputTime = 0;
   mInfo = aInfo;
   mPlaying = true;
   ConnectListener();
@@ -314,6 +330,8 @@ DecodedStream::Start(int64_t aStartTime, const MediaInfo& aInfo)
   mData = static_cast<R*>(r.get())->ReleaseData();
 
   if (mData) {
+    mOutputListener = mData->OnOutput().Connect(
+      mOwnerThread, this, &DecodedStream::NotifyOutput);
     mData->SetPlaying(mPlaying);
     SendData();
   }
@@ -356,6 +374,8 @@ DecodedStream::DestroyData(UniquePtr<DecodedStreamData> aData)
   if (!aData) {
     return;
   }
+
+  mOutputListener.Disconnect();
 
   DecodedStreamData* data = aData.release();
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
@@ -692,6 +712,13 @@ DecodedStream::GetPosition(TimeStamp* aTimeStamp) const
     *aTimeStamp = TimeStamp::Now();
   }
   return mStartTime.ref() + (mData ? mData->GetPosition() : 0);
+}
+
+void
+DecodedStream::NotifyOutput(int64_t aTime)
+{
+  AssertOwnerThread();
+  mLastOutputTime = aTime;
 }
 
 void
