@@ -114,6 +114,7 @@ WebGLBuffer::BufferData(GLenum target, size_t size, const void* data, GLenum usa
 
     const auto& gl = mContext->gl;
     gl->MakeCurrent();
+    const ScopedLazyBind lazyBind(gl, target, this);
     mContext->InvalidateBufferFetching();
 
 #ifdef XP_MACOSX
