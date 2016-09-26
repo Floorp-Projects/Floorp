@@ -131,10 +131,12 @@ var Manager = {
 
 EventEmitter.decorate(Manager);
 
-// If the experimental HTML UI is enabled, delegate the ResponsiveUIManager API
-// over to that tool instead.  Performing this delegation here allows us to
-// contain the pref check to a single place.
-if (Services.prefs.getBoolPref("devtools.responsive.html.enabled")) {
+// If the new HTML RDM UI is enabled and e10s is enabled by default (e10s is required for
+// the new HTML RDM UI to function), delegate the ResponsiveUIManager API over to that
+// tool instead.  Performing this delegation here allows us to contain the pref check to a
+// single place.
+if (Services.prefs.getBoolPref("devtools.responsive.html.enabled") &&
+    Services.appinfo.browserTabsRemoteAutostart) {
   let { ResponsiveUIManager } =
     require("devtools/client/responsive.html/manager");
   this.ResponsiveUIManager = ResponsiveUIManager;
