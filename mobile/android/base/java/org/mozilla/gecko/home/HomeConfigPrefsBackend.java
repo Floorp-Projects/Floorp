@@ -253,6 +253,7 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
                                          PanelType panelToRemove, PanelType replacementPanel, boolean alwaysUnhide) throws JSONException {
         boolean wasDefault = false;
         int replacementPanelIndex = -1;
+        boolean replacementWasDefault = false;
 
         // JSONArrary doesn't provide remove() for API < 19, therefore we need to manually copy all
         // the items we don't want deleted into a new array.
@@ -268,6 +269,9 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
             } else {
                 if (panelConfig.getType() == replacementPanel) {
                     replacementPanelIndex = newJSONPanels.length();
+                    if (panelConfig.isDefault()) {
+                        replacementWasDefault = true;
+                    }
                 }
 
                 newJSONPanels.put(panelJSON);
@@ -280,9 +284,22 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
         if (wasDefault || alwaysUnhide) {
             final JSONObject replacementPanelConfig;
             if (wasDefault) {
+                // If the removed panel was the default, the replacement has to be made the new default
                 replacementPanelConfig = createBuiltinPanelConfig(context, replacementPanel, EnumSet.of(PanelConfig.Flags.DEFAULT_PANEL)).toJSON();
             } else {
-                replacementPanelConfig = createBuiltinPanelConfig(context, replacementPanel).toJSON();
+                final EnumSet<HomeConfig.PanelConfig.Flags> flags;
+                if (replacementWasDefault) {
+                    // However if the replacement panel was already default, we need to preserve it's default status
+                    // (By rewriting the PanelConfig, we lose all existing flags, so we need to make sure desired
+                    // flags are retained - in this case there's only DEFAULT_PANEL, which is mutually
+                    // exclusive with the DISABLE_PANEL case).
+                    flags = EnumSet.of(PanelConfig.Flags.DEFAULT_PANEL);
+                } else {
+                    flags = EnumSet.noneOf(PanelConfig.Flags.class);
+                }
+
+                // The panel is visible since we don't set Flags.DISABLED_PANEL.
+                replacementPanelConfig = createBuiltinPanelConfig(context, replacementPanel, flags).toJSON();
             }
 
             if (replacementPanelIndex != -1) {
