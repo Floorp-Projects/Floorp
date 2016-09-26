@@ -87,7 +87,7 @@ RuleEditor.prototype = {
 
   get isSelectorEditable() {
     let trait = this.isEditable &&
-      this.toolbox.target.client.traits.selectorEditable &&
+      this.ruleView.inspector.target.client.traits.selectorEditable &&
       this.rule.domRule.type !== ELEMENT_STYLE &&
       this.rule.domRule.type !== CSSRule.KEYFRAME_RULE;
 
