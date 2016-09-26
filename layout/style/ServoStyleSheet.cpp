@@ -32,7 +32,7 @@ ServoStyleSheet::IsApplicable() const
 bool
 ServoStyleSheet::HasRules() const
 {
-  return Servo_StyleSheet_HasRules(RawSheet());
+  return mSheet && Servo_StyleSheet_HasRules(mSheet);
 }
 
 nsIDocument*
