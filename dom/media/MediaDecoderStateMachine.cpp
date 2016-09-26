@@ -2877,13 +2877,9 @@ void MediaDecoderStateMachine::OnMediaSinkAudioComplete()
   mAudioCompleted = true;
   // To notify PlaybackEnded as soon as possible.
   ScheduleStateMachine();
-
-  // Report OK to Decoder Doctor (to know if issue may have been resolved).
-  mOnDecoderDoctorEvent.Notify(
-    DecoderDoctorEvent{DecoderDoctorEvent::eAudioSinkStartup, NS_OK});
 }
 
-void MediaDecoderStateMachine::OnMediaSinkAudioError(nsresult aResult)
+void MediaDecoderStateMachine::OnMediaSinkAudioError()
 {
   MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(mInfo.HasAudio());
@@ -2891,11 +2887,6 @@ void MediaDecoderStateMachine::OnMediaSinkAudioError(nsresult aResult)
 
   mMediaSinkAudioPromise.Complete();
   mAudioCompleted = true;
-
-  // Result should never be NS_OK in this *error* handler. Report to Dec-Doc.
-  MOZ_ASSERT(NS_FAILED(aResult));
-  mOnDecoderDoctorEvent.Notify(
-    DecoderDoctorEvent{DecoderDoctorEvent::eAudioSinkStartup, aResult});
 
   // Make the best effort to continue playback when there is video.
   if (HasVideo()) {

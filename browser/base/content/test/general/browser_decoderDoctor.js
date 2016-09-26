@@ -37,8 +37,7 @@ function* test_decoder_doctor_notification(type, notificationMessage, options) {
       "notification button should have accesskey");
 
     let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
-    let url = baseURL + ((options && options.sumo) ||
-                         "fix-video-audio-problems-firefox-windows");
+    let url = baseURL + "fix-video-audio-problems-firefox-windows";
     let awaitNewTab = BrowserTestUtils.waitForNewTab(gBrowser, url);
     button.click();
     let sumoTab = yield awaitNewTab;
@@ -95,16 +94,4 @@ add_task(function* test_platform_decoder_not_found() {
   yield test_decoder_doctor_notification("platform-decoder-not-found",
                                          message,
                                          {noLearnMoreButton: isLinux});
-});
-
-add_task(function* test_cannot_initialize_pulseaudio() {
-  // This is only sent on Linux.
-  if (AppConstants.platform != "linux") {
-    return;
-  }
-
-  let message = gNavigatorBundle.getString("decoder.noPulseAudio.message");
-  yield test_decoder_doctor_notification("cannot-initialize-pulseaudio",
-                                         message,
-                                         {sumo: "fix-common-audio-and-video-issues"});
 });
