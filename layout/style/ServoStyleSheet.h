@@ -30,10 +30,8 @@ public:
 
   NS_INLINE_DECL_REFCOUNTING(ServoStyleSheet)
 
-  bool IsApplicable() const;
   bool HasRules() const;
 
-  nsIDocument* GetOwningDocument() const;
   void SetOwningDocument(nsIDocument* aDocument);
 
   ServoStyleSheet* GetParentSheet() const;
