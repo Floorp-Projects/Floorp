@@ -1,10 +1,8 @@
 addEventListener('fetch', function(event) {
   if (event.request.url.indexOf("fail.html") !== -1) {
-    event.respondWith(fetch("serviceworker.html", {"integrity": "abc"}));
+    event.respondWith(fetch("hello.html", {"integrity": "abc"}));
   } else if (event.request.url.indexOf("fake.html") !== -1) {
-    event.respondWith(fetch("serviceworker.html"));
-  } else {
-    event.respondWith(new Response("Hello world"));
+    event.respondWith(fetch("hello.html"));
   }
 });
 
