@@ -306,34 +306,6 @@ IsFlacSupportedType(const nsACString& aType,
 }
 
 /* static */
-bool DecoderTraits::ShouldHandleMediaType(const char* aMIMEType,
-                                          DecoderDoctorDiagnostics* aDiagnostics)
-{
-  if (IsWaveType(nsDependentCString(aMIMEType))) {
-    // We should not return true for Wave types, since there are some
-    // Wave codecs actually in use in the wild that we don't support, and
-    // we should allow those to be handled by plugins or helper apps.
-    // Furthermore people can play Wave files on most platforms by other
-    // means.
-    return false;
-  }
-
-  // If an external plugin which can handle quicktime video is available
-  // (and not disabled), prefer it over native playback as there several
-  // codecs found in the wild that we do not handle.
-  if (nsDependentCString(aMIMEType).EqualsASCII("video/quicktime")) {
-    RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
-    if (pluginHost &&
-        pluginHost->HavePluginForType(nsDependentCString(aMIMEType))) {
-      return false;
-    }
-  }
-
-  return CanHandleMediaType(aMIMEType, false, EmptyString(), aDiagnostics)
-         != CANPLAY_NO;
-}
-
-/* static */
 CanPlayStatus
 DecoderTraits::CanHandleCodecsType(const char* aMIMEType,
                                    const nsAString& aRequestedCodecs,
@@ -506,6 +478,34 @@ DecoderTraits::CanHandleContentType(const MediaContentType& aContentType,
                             aContentType.HaveCodecs(),
                             aContentType.GetCodecs(),
                             aDiagnostics);
+}
+
+/* static */
+bool DecoderTraits::ShouldHandleMediaType(const char* aMIMEType,
+                                          DecoderDoctorDiagnostics* aDiagnostics)
+{
+  if (IsWaveType(nsDependentCString(aMIMEType))) {
+    // We should not return true for Wave types, since there are some
+    // Wave codecs actually in use in the wild that we don't support, and
+    // we should allow those to be handled by plugins or helper apps.
+    // Furthermore people can play Wave files on most platforms by other
+    // means.
+    return false;
+  }
+
+  // If an external plugin which can handle quicktime video is available
+  // (and not disabled), prefer it over native playback as there several
+  // codecs found in the wild that we do not handle.
+  if (nsDependentCString(aMIMEType).EqualsASCII("video/quicktime")) {
+    RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
+    if (pluginHost &&
+        pluginHost->HavePluginForType(nsDependentCString(aMIMEType))) {
+      return false;
+    }
+  }
+
+  return CanHandleMediaType(aMIMEType, false, EmptyString(), aDiagnostics)
+         != CANPLAY_NO;
 }
 
 // Instantiates but does not initialize decoder.
