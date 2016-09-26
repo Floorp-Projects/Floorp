@@ -95,22 +95,6 @@ cppunittests-remote:
 
 endif # COMPILE_ENVIRONMENT
 endif # CPP_UNIT_TESTS
-
-.PHONY: check
-
-ifdef PYTHON_UNIT_TESTS
-
-RUN_PYTHON_UNIT_TESTS := $(addsuffix -run,$(PYTHON_UNIT_TESTS))
-
-.PHONY: $(RUN_PYTHON_UNIT_TESTS)
-
-check:: $(RUN_PYTHON_UNIT_TESTS)
-
-$(RUN_PYTHON_UNIT_TESTS): %-run: %
-	@PYTHONDONTWRITEBYTECODE=1 $(PYTHON) $<
-
-endif # PYTHON_UNIT_TESTS
-
 endif # ENABLE_TESTS
 
 
