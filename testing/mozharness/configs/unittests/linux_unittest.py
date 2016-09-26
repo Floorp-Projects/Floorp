@@ -98,27 +98,6 @@ config = {
             "testsdir": "jit-test/jit-test",
             "run_timeout": 1000 # Keep in sync with --timeout above.
         },
-        "luciddream-emulator": {
-            "options": [
-                "--startup-timeout=300",
-                "--log-raw=%(raw_log_file)s",
-                "--log-errorsummary=%(error_summary_file)s",
-                "--browser-path=%(browser_path)s",
-                "--b2gpath=%(emulator_path)s",
-                "%(test_manifest)s"
-            ],
-        },
-        "luciddream-b2gdt": {
-            "options": [
-                "--startup-timeout=300",
-                "--log-raw=%(raw_log_file)s",
-                "--log-errorsummary=%(error_summary_file)s",
-                "--browser-path=%(browser_path)s",
-                "--b2g-desktop-path=%(fxos_desktop_path)s",
-                "--gaia-profile=%(gaia_profile)s",
-                "%(test_manifest)s"
-            ],
-        },
         "mochitest": {
             "options": [
                 "--appname=%(binary_path)s",

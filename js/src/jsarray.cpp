@@ -3551,12 +3551,12 @@ js::NewDenseCopyOnWriteArray(JSContext* cx, HandleArrayObject templateObject, gc
 template <uint32_t maxLength>
 static inline JSObject*
 NewArrayTryUseGroup(ExclusiveContext* cx, HandleObjectGroup group, size_t length,
-                    NewObjectKind newKind = GenericObject, bool forceAnalyze = false)
+                    NewObjectKind newKind = GenericObject)
 {
     MOZ_ASSERT(newKind != SingletonObject);
 
     if (group->maybePreliminaryObjects())
-        group->maybePreliminaryObjects()->maybeAnalyze(cx, group, forceAnalyze);
+        group->maybePreliminaryObjects()->maybeAnalyze(cx, group);
 
     if (group->shouldPreTenure() || group->maybePreliminaryObjects())
         newKind = TenuredObject;
@@ -3587,9 +3587,9 @@ NewArrayTryUseGroup(ExclusiveContext* cx, HandleObjectGroup group, size_t length
 
 JSObject*
 js::NewFullyAllocatedArrayTryUseGroup(ExclusiveContext* cx, HandleObjectGroup group, size_t length,
-                                      NewObjectKind newKind, bool forceAnalyze)
+                                      NewObjectKind newKind)
 {
-    return NewArrayTryUseGroup<UINT32_MAX>(cx, group, length, newKind, forceAnalyze);
+    return NewArrayTryUseGroup<UINT32_MAX>(cx, group, length, newKind);
 }
 
 JSObject*
@@ -3608,7 +3608,7 @@ js::NewPartlyAllocatedArrayTryUseGroup(ExclusiveContext* cx, HandleObjectGroup g
 template <uint32_t maxLength>
 static inline JSObject*
 NewArrayTryReuseGroup(JSContext* cx, JSObject* obj, size_t length,
-                      NewObjectKind newKind = GenericObject, bool forceAnalyze = false)
+                      NewObjectKind newKind = GenericObject)
 {
     if (!obj->is<ArrayObject>() && !obj->is<UnboxedArrayObject>())
         return NewArray<maxLength>(cx, length, nullptr, newKind);
@@ -3620,14 +3620,14 @@ NewArrayTryReuseGroup(JSContext* cx, JSObject* obj, size_t length,
     if (!group)
         return nullptr;
 
-    return NewArrayTryUseGroup<maxLength>(cx, group, length, newKind, forceAnalyze);
+    return NewArrayTryUseGroup<maxLength>(cx, group, length, newKind);
 }
 
 JSObject*
 js::NewFullyAllocatedArrayTryReuseGroup(JSContext* cx, JSObject* obj, size_t length,
-                                        NewObjectKind newKind, bool forceAnalyze)
+                                        NewObjectKind newKind)
 {
-    return NewArrayTryReuseGroup<UINT32_MAX>(cx, obj, length, newKind, forceAnalyze);
+    return NewArrayTryReuseGroup<UINT32_MAX>(cx, obj, length, newKind);
 }
 
 JSObject*
@@ -3638,12 +3638,12 @@ js::NewPartlyAllocatedArrayTryReuseGroup(JSContext* cx, JSObject* obj, size_t le
 
 JSObject*
 js::NewFullyAllocatedArrayForCallingAllocationSite(JSContext* cx, size_t length,
-                                                   NewObjectKind newKind, bool forceAnalyze)
+                                                   NewObjectKind newKind)
 {
     RootedObjectGroup group(cx, ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array));
     if (!group)
         return nullptr;
-    return NewArrayTryUseGroup<UINT32_MAX>(cx, group, length, newKind, forceAnalyze);
+    return NewArrayTryUseGroup<UINT32_MAX>(cx, group, length, newKind);
 }
 
 JSObject*
@@ -3655,13 +3655,10 @@ js::NewPartlyAllocatedArrayForCallingAllocationSite(JSContext* cx, size_t length
     return NewArrayTryUseGroup<ArrayObject::EagerAllocationMaxLength>(cx, group, length);
 }
 
-JSObject*
-js::NewCopiedArrayTryUseGroup(ExclusiveContext* cx, HandleObjectGroup group,
-                              const Value* vp, size_t length, NewObjectKind newKind,
-                              ShouldUpdateTypes updateTypes)
+bool
+js::MaybeAnalyzeBeforeCreatingLargeArray(ExclusiveContext* cx, HandleObjectGroup group,
+                                         const Value* vp, size_t length)
 {
-    bool forceAnalyze = false;
-
     static const size_t EagerPreliminaryObjectAnalysisThreshold = 800;
 
     // Force analysis to see if an unboxed array can be used when making a
@@ -3675,16 +3672,27 @@ js::NewCopiedArrayTryUseGroup(ExclusiveContext* cx, HandleObjectGroup group,
                 size_t nlength = Min<size_t>(length, 100);
                 JSObject* obj = NewFullyAllocatedArrayTryUseGroup(cx, group, nlength);
                 if (!obj)
-                    return nullptr;
+                    return false;
                 DebugOnly<DenseElementResult> result =
-                    SetOrExtendAnyBoxedOrUnboxedDenseElements(cx, obj, 0, vp, nlength, updateTypes);
+                    SetOrExtendAnyBoxedOrUnboxedDenseElements(cx, obj, 0, vp, nlength,
+                                                              ShouldUpdateTypes::Update);
                 MOZ_ASSERT(result.value == DenseElementResult::Success);
             }
+            objects->maybeAnalyze(cx, group, /* forceAnalyze = */ true);
         }
-        forceAnalyze = true;
     }
+    return true;
+}
 
-    JSObject* obj = NewFullyAllocatedArrayTryUseGroup(cx, group, length, newKind, forceAnalyze);
+JSObject*
+js::NewCopiedArrayTryUseGroup(ExclusiveContext* cx, HandleObjectGroup group,
+                              const Value* vp, size_t length, NewObjectKind newKind,
+                              ShouldUpdateTypes updateTypes)
+{
+    if (!MaybeAnalyzeBeforeCreatingLargeArray(cx, group, vp, length))
+        return nullptr;
+
+    JSObject* obj = NewFullyAllocatedArrayTryUseGroup(cx, group, length, newKind);
     if (!obj)
         return nullptr;
 

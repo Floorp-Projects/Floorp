@@ -1,4 +1,4 @@
 // |jit-test| test-also-wasm-baseline
-// TODO br_if not typed with its br value
+// TODO: ion compile bug with loop return values
 quit();
 var importedArgs = ['labels.wast']; load(scriptdir + '../spec.js');

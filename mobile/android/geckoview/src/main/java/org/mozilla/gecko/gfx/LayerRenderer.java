@@ -7,7 +7,6 @@ package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.R;
 import org.mozilla.gecko.mozglue.DirectBufferAllocator;
 
 import android.graphics.Bitmap;

@@ -18,4 +18,4 @@ var module = `(module
  (export "" 0)
 )`;
 
-assertEq(wasmEvalText(module)(13.37), Math.fround(13.37));
+assertEq(wasmEvalText(module).exports[""](13.37), Math.fround(13.37));

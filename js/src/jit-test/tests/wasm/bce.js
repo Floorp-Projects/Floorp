@@ -64,70 +64,67 @@ function loadTwiceModule(type, ext, offset, align) {
     // TODO: Generate memory from byte string
     return wasmEvalText(
     `(module
-       (memory 1
-         (segment 0 "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")
-         (segment 16 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
-         (segment 65520 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
-       )
+       (memory 1)
+       (data 0 "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")
+       (data 16 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
+       (data 65520 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
        (func (param i32) (param i32) (result ${type})
-         (${type}.load${ext}
+         (drop (${type}.load${ext}
           offset=${offset}
           ${align != 0 ? 'align=' + align : ''}
           (get_local 0)
-         )
+         ))
          (${type}.load${ext}
           offset=${offset}
           ${align != 0 ? 'align=' + align : ''}
           (get_local 1)
          )
        ) (export "" 0))`
-    );
+    ).exports[""];
 }
 
 function loadTwiceSameBasePlusConstModule(type, ext, offset, align, addConst) {
     return wasmEvalText(
     `(module
-       (memory 1
-         (segment 0 "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")
-         (segment 16 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
-         (segment 65520 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
-       )
+       (memory 1)
+       (data 0 "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")
+       (data 16 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
+       (data 65520 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
        (func (param i32) (result ${type})
-         (${type}.load${ext}
+         (drop (${type}.load${ext}
           offset=${offset}
           ${align != 0 ? 'align=' + align : ''}
           (get_local 0)
-         )
+         ))
          (${type}.load${ext}
           offset=${offset}
           ${align != 0 ? 'align=' + align : ''}
           (i32.add (get_local 0) (i32.const ${addConst}))
          )
        ) (export "" 0))`
-    );
+    ).exports[""];
 }
 
 function loadTwiceSameBasePlusNonConstModule(type, ext, offset, align) {
     return wasmEvalText(
     `(module
-       (memory 1
-         (segment 0 "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")
-         (segment 16 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
-         (segment 65520 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
-       )
+       (memory 1)
+       (data 0 "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")
+       (data 16 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
+       (data 65520 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
        (func (param i32) (param i32) (result ${type})
-         (${type}.load${ext}
+         (drop (${type}.load${ext}
           offset=${offset}
           ${align != 0 ? 'align=' + align : ''}
           (get_local 0)
-         )
+         ))
          (${type}.load${ext}
           offset=${offset}
           ${align != 0 ? 'align=' + align : ''}
           (i32.add (get_local 0) (get_local 1))
          )
        ) (export "" 0))`
-    );
+    ).exports[""];
 }
 
 /*

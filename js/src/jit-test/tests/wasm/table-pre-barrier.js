@@ -4,8 +4,8 @@ const Module = WebAssembly.Module;
 const Instance = WebAssembly.Instance;
 const Table = WebAssembly.Table;
 
-var i42 = new Instance(new Module(textToBinary(`(module (func (result i32) (i32.const 42)) (export "f" 0))`)));
-var i13 = new Instance(new Module(textToBinary(`(module (func (result i32) (i32.const 13)) (export "f" 0))`)));
+var i42 = new Instance(new Module(wasmTextToBinary(`(module (func (result i32) (i32.const 42)) (export "f" 0))`)));
+var i13 = new Instance(new Module(wasmTextToBinary(`(module (func (result i32) (i32.const 13)) (export "f" 0))`)));
 var t = new Table({element:"anyfunc", initial:1});
 t.set(0, i42.exports.f);
 

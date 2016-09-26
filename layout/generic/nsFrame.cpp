@@ -5494,6 +5494,10 @@ SchedulePaintInternal(nsIFrame* aFrame, nsIFrame::PaintType aType = nsIFrame::PA
   if (aType == nsIFrame::PAINT_DEFAULT) {
     displayRoot->AddStateBits(NS_FRAME_UPDATE_LAYER_TREE);
   }
+  nsIPresShell* shell = aFrame->PresContext()->PresShell();
+  if (shell) {
+    shell->AddInvalidateHiddenPresShellObserver(pres->RefreshDriver());
+  }
 }
 
 static void InvalidateFrameInternal(nsIFrame *aFrame, bool aHasDisplayItem = true)

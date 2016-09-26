@@ -11,11 +11,11 @@ dbg.onNewScript = (script) => {
   gotScript = script;
 }
 
-g.eval(`o = Wasm.instantiateModule(wasmTextToBinary('(module (func) (export "" 0))'));`);
+g.eval(`o = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary('(module (func) (export "" 0))')));`);
 assertEq(gotScript.format, "wasm");
 
 var gotScript2 = gotScript;
-g.eval(`o = Wasm.instantiateModule(wasmTextToBinary('(module (func) (export "a" 0))'));`);
+g.eval(`o = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary('(module (func) (export "a" 0))')));`);
 assertEq(gotScript.format, "wasm");
 
 // The two wasm Debugger.Scripts are distinct.

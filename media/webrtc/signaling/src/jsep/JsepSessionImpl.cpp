@@ -2211,6 +2211,8 @@ void
 JsepSessionImpl::SetupDefaultRtpExtensions()
 {
   AddAudioRtpExtension("urn:ietf:params:rtp-hdrext:ssrc-audio-level");
+  AddAudioRtpExtension("urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id");
+  AddVideoRtpExtension("urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id");
 }
 
 void

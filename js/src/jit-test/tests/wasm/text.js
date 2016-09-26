@@ -17,11 +17,11 @@ assertErrorMessage(() => wasmEvalText('(module (func $foo) (func $foo))'), Synta
 assertErrorMessage(() => wasmEvalText('(module (func (param $a i32) (local $a i32)))'), SyntaxError, /duplicate var/);
 assertErrorMessage(() => wasmEvalText('(module (func (get_local $a)))'), SyntaxError, /local label '\$a' not found/);
 assertErrorMessage(() => wasmEvalText('(module (type $a (func)) (type $a (func (param i32))))'), SyntaxError, /duplicate signature/);
-assertErrorMessage(() => wasmEvalText('(module (import "a" "") (func (call_import $abc)))'), SyntaxError, /import label '\$abc' not found/);
+assertErrorMessage(() => wasmEvalText('(module (import "a" "") (func (call_import $abc)))'), SyntaxError, /function label '\$abc' not found/);
 assertErrorMessage(() => wasmEvalText('(module (type $a (func)) (func (type $b) (i32.const 13)))'), SyntaxError, /signature label '\$b' not found/);
-assertErrorMessage(() => wasmEvalText('(module (type $a (func)) (func (call_indirect $c (get_local 0) (i32.const 0))))'), SyntaxError, /signature label '\$c' not found/);
+assertErrorMessage(() => wasmEvalText('(module (type $a (func)) (func (call_indirect $c (i32.const 0) (get_local 0))))'), SyntaxError, /signature label '\$c' not found/);
 assertErrorMessage(() => wasmEvalText('(module (func (br $a)))'), SyntaxError, /branch target label '\$a' not found/);
-assertErrorMessage(() => wasmEvalText('(module (func (block $a) (br $a)))'), SyntaxError, /branch target label '\$a' not found/);
+assertErrorMessage(() => wasmEvalText('(module (func (block $a ) (br $a)))'), SyntaxError, /branch target label '\$a' not found/);
 
 wasmEvalText('(module (func (param $a i32)))');
 wasmEvalText('(module (func (param i32)))');

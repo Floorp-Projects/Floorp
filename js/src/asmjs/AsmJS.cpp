@@ -2955,7 +2955,6 @@ class MOZ_STACK_CLASS FunctionValidator
         MOZ_ASSERT(expr == Expr::Br || expr == Expr::BrIf);
         MOZ_ASSERT(absolute < blockDepth_);
         return encoder().writeExpr(expr) &&
-               encoder().writeVarU32(0) &&  // break arity
                encoder().writeVarU32(blockDepth_ - 1 - absolute);
     }
     void removeLabel(PropertyName* label, LabelMap* map) {
@@ -2967,6 +2966,7 @@ class MOZ_STACK_CLASS FunctionValidator
   public:
     bool pushBreakableBlock() {
         return encoder().writeExpr(Expr::Block) &&
+               encoder().writeFixedU8(uint8_t(ExprType::Void)) &&
                breakableStack_.append(blockDepth_++);
     }
     bool popBreakableBlock() {
@@ -2982,7 +2982,8 @@ class MOZ_STACK_CLASS FunctionValidator
             }
         }
         blockDepth_++;
-        return encoder().writeExpr(Expr::Block);
+        return encoder().writeExpr(Expr::Block) &&
+               encoder().writeFixedU8(uint8_t(ExprType::Void));
     }
     bool popUnbreakableBlock(const NameVector* labels = nullptr) {
         if (labels) {
@@ -2995,6 +2996,7 @@ class MOZ_STACK_CLASS FunctionValidator
 
     bool pushContinuableBlock() {
         return encoder().writeExpr(Expr::Block) &&
+               encoder().writeFixedU8(uint8_t(ExprType::Void)) &&
                continuableStack_.append(blockDepth_++);
     }
     bool popContinuableBlock() {
@@ -3003,28 +3005,45 @@ class MOZ_STACK_CLASS FunctionValidator
     }
 
     bool pushLoop() {
-        return encoder().writeExpr(Expr::Loop) &&
+        return encoder().writeExpr(Expr::Block) &&
+               encoder().writeFixedU8(uint8_t(ExprType::Void)) &&
+               encoder().writeExpr(Expr::Loop) &&
+               encoder().writeFixedU8(uint8_t(ExprType::Void)) &&
                breakableStack_.append(blockDepth_++) &&
                continuableStack_.append(blockDepth_++);
     }
     bool popLoop() {
         JS_ALWAYS_TRUE(continuableStack_.popCopy() == --blockDepth_);
         JS_ALWAYS_TRUE(breakableStack_.popCopy() == --blockDepth_);
-        return encoder().writeExpr(Expr::End);
+        return encoder().writeExpr(Expr::End) &&
+               encoder().writeExpr(Expr::End);
     }
 
-    bool pushIf() {
+    bool pushIf(size_t* typeAt) {
         ++blockDepth_;
-        return encoder().writeExpr(Expr::If);
+        return encoder().writeExpr(Expr::If) &&
+               encoder().writePatchableFixedU7(typeAt);
     }
     bool switchToElse() {
         MOZ_ASSERT(blockDepth_ > 0);
         return encoder().writeExpr(Expr::Else);
     }
+    void setIfType(size_t typeAt, ExprType type) {
+        encoder().patchFixedU7(typeAt, uint8_t(type));
+    }
     bool popIf() {
         MOZ_ASSERT(blockDepth_ > 0);
         --blockDepth_;
         return encoder().writeExpr(Expr::End);
+    }
+    bool popIf(size_t typeAt, ExprType type) {
+        MOZ_ASSERT(blockDepth_ > 0);
+        --blockDepth_;
+        if (!encoder().writeExpr(Expr::End))
+            return false;
+
+        setIfType(typeAt, type);
+        return true;
     }
 
     bool writeBreakIf() {
@@ -3812,6 +3831,9 @@ IsLiteralOrConst(FunctionValidator& f, ParseNode* pn, NumLit* lit)
 static bool
 CheckFinalReturn(FunctionValidator& f, ParseNode* lastNonEmptyStmt)
 {
+    if (!f.encoder().writeExpr(Expr::End))
+        return false;
+
     if (!f.hasAlreadyReturned()) {
         f.setReturnedType(ExprType::Void);
         return true;
@@ -4142,34 +4164,34 @@ CheckStoreArray(FunctionValidator& f, ParseNode* lhs, ParseNode* rhs, Type* type
     switch (viewType) {
       case Scalar::Int8:
       case Scalar::Uint8:
-        if (!f.encoder().writeExpr(Expr::I32Store8))
+        if (!f.encoder().writeExpr(Expr::I32TeeStore8))
             return false;
         break;
       case Scalar::Int16:
       case Scalar::Uint16:
-        if (!f.encoder().writeExpr(Expr::I32Store16))
+        if (!f.encoder().writeExpr(Expr::I32TeeStore16))
             return false;
         break;
       case Scalar::Int32:
       case Scalar::Uint32:
-        if (!f.encoder().writeExpr(Expr::I32Store))
+        if (!f.encoder().writeExpr(Expr::I32TeeStore))
             return false;
         break;
       case Scalar::Float32:
         if (rhsType.isFloatish()) {
-            if (!f.encoder().writeExpr(Expr::F32Store))
+            if (!f.encoder().writeExpr(Expr::F32TeeStore))
                 return false;
         } else {
-            if (!f.encoder().writeExpr(Expr::F64StoreF32))
+            if (!f.encoder().writeExpr(Expr::F64TeeStoreF32))
                 return false;
         }
         break;
       case Scalar::Float64:
         if (rhsType.isFloatish()) {
-            if (!f.encoder().writeExpr(Expr::F32StoreF64))
+            if (!f.encoder().writeExpr(Expr::F32TeeStoreF64))
                 return false;
         } else {
-            if (!f.encoder().writeExpr(Expr::F64Store))
+            if (!f.encoder().writeExpr(Expr::F64TeeStore))
                 return false;
         }
         break;
@@ -4193,7 +4215,7 @@ CheckAssignName(FunctionValidator& f, ParseNode* lhs, ParseNode* rhs, Type* type
         if (!CheckExpr(f, rhs, &rhsType))
             return false;
 
-        if (!f.encoder().writeExpr(Expr::SetLocal))
+        if (!f.encoder().writeExpr(Expr::TeeLocal))
             return false;
         if (!f.encoder().writeVarU32(lhsVar->slot))
             return false;
@@ -4217,7 +4239,7 @@ CheckAssignName(FunctionValidator& f, ParseNode* lhs, ParseNode* rhs, Type* type
         Type globType = global->varOrConstType();
         if (!(rhsType <= globType))
             return f.failf(lhs, "%s is not a subtype of %s", rhsType.toChars(), globType.toChars());
-        if (!f.encoder().writeExpr(Expr::SetGlobal))
+        if (!f.encoder().writeExpr(Expr::TeeGlobal))
             return false;
         if (!f.encoder().writeVarU32(global->varOrConstIndex()))
             return false;
@@ -4716,7 +4738,6 @@ CheckInternalCall(FunctionValidator& f, ParseNode* callNode, PropertyName* calle
     if (!CheckCallArgs<CheckIsArgType>(f, callNode, &args))
         return false;
 
-    uint32_t arity = args.length();
     Sig sig(Move(args), ret.canonicalToExprType());
 
     ModuleValidator::Func* callee;
@@ -4724,10 +4745,6 @@ CheckInternalCall(FunctionValidator& f, ParseNode* callNode, PropertyName* calle
         return false;
 
     if (!f.writeCall(callNode, Expr::Call))
-        return false;
-
-    // Call arity
-    if (!f.encoder().writeVarU32(arity))
         return false;
 
     // Function's index, to find out the function's entry
@@ -4805,18 +4822,13 @@ CheckFuncPtrCall(FunctionValidator& f, ParseNode* callNode, Type ret, Type* type
     if (!CheckCallArgs<CheckIsArgType>(f, callNode, &args))
         return false;
 
-    uint32_t arity = args.length();
     Sig sig(Move(args), ret.canonicalToExprType());
 
     uint32_t tableIndex;
     if (!CheckFuncPtrTableAgainstExisting(f.m(), tableNode, name, Move(sig), mask, &tableIndex))
         return false;
 
-    if (!f.writeCall(callNode, Expr::CallIndirect))
-        return false;
-
-    // Call arity
-    if (!f.encoder().writeVarU32(arity))
+    if (!f.writeCall(callNode, Expr::OldCallIndirect))
         return false;
 
     // Call signature
@@ -4851,7 +4863,6 @@ CheckFFICall(FunctionValidator& f, ParseNode* callNode, unsigned ffiIndex, Type 
     if (!CheckCallArgs<CheckIsExternType>(f, callNode, &args))
         return false;
 
-    uint32_t arity = args.length();
     Sig sig(Move(args), ret.canonicalToExprType());
 
     uint32_t importIndex;
@@ -4859,10 +4870,6 @@ CheckFFICall(FunctionValidator& f, ParseNode* callNode, unsigned ffiIndex, Type 
         return false;
 
     if (!f.writeCall(callNode, Expr::CallImport))
-        return false;
-
-    // Call arity
-    if (!f.encoder().writeVarU32(arity))
         return false;
 
     // Import index
@@ -5673,6 +5680,10 @@ CoerceResult(FunctionValidator& f, ParseNode* expr, Type expected, Type actual,
     //      | the thing we wanted to coerce | current position |>
     switch (expected.which()) {
       case Type::Void:
+        if (!actual.isVoid()) {
+            if (!f.encoder().writeExpr(Expr::Drop))
+                return false;
+        }
         break;
       case Type::Int:
         if (!actual.isIntish())
@@ -5925,6 +5936,10 @@ CheckComma(FunctionValidator& f, ParseNode* comma, Type* type)
     if (!f.encoder().writeExpr(Expr::Block))
         return false;
 
+    size_t typeAt;
+    if (!f.encoder().writePatchableFixedU7(&typeAt))
+        return false;
+
     ParseNode* pn = operands;
     for (; NextNode(pn); pn = NextNode(pn)) {
         if (!CheckAsExprStatement(f, pn))
@@ -5933,6 +5948,8 @@ CheckComma(FunctionValidator& f, ParseNode* comma, Type* type)
 
     if (!CheckExpr(f, pn, type))
         return false;
+
+    f.encoder().patchFixedU7(typeAt, uint8_t(Type::canonicalize(*type).canonicalToExprType()));
 
     return f.encoder().writeExpr(Expr::End);
 }
@@ -5953,7 +5970,8 @@ CheckConditional(FunctionValidator& f, ParseNode* ternary, Type* type)
     if (!condType.isInt())
         return f.failf(cond, "%s is not a subtype of int", condType.toChars());
 
-    if (!f.pushIf())
+    size_t typeAt;
+    if (!f.pushIf(&typeAt))
         return false;
 
     Type thenType;
@@ -5981,7 +5999,7 @@ CheckConditional(FunctionValidator& f, ParseNode* ternary, Type* type)
                        thenType.toChars(), elseType.toChars());
     }
 
-    if (!f.popIf())
+    if (!f.popIf(typeAt, Type::canonicalize(*type).canonicalToExprType()))
         return false;
 
     return true;
@@ -6352,10 +6370,21 @@ CheckStatement(FunctionValidator& f, ParseNode* stmt);
 static bool
 CheckAsExprStatement(FunctionValidator& f, ParseNode* expr)
 {
-    Type ignored;
-    if (expr->isKind(PNK_CALL))
+    if (expr->isKind(PNK_CALL)) {
+        Type ignored;
         return CheckCoercedCall(f, expr, Type::Void, &ignored);
-    return CheckExpr(f, expr, &ignored);
+    }
+
+    Type resultType;
+    if (!CheckExpr(f, expr, &resultType))
+        return false;
+
+    if (!resultType.isVoid()) {
+        if (!f.encoder().writeExpr(Expr::Drop))
+            return false;
+    }
+
+    return true;
 }
 
 static bool
@@ -6403,10 +6432,12 @@ CheckWhile(FunctionValidator& f, ParseNode* whileStmt, const NameVector* labels 
     ParseNode* body = BinaryRight(whileStmt);
 
     // A while loop `while(#cond) #body` is equivalent to:
-    // (loop $after_loop $top
-    //    (brIf $after_loop (i32.eq 0 #cond))
-    //    #body
-    //    (br $top)
+    // (block $after_loop
+    //    (loop $top
+    //       (brIf $after_loop (i32.eq 0 #cond))
+    //       #body
+    //       (br $top)
+    //    )
     // )
     if (labels && !f.addLabels(*labels, 0, 1))
         return false;
@@ -6445,11 +6476,13 @@ CheckFor(FunctionValidator& f, ParseNode* forStmt, const NameVector* labels = nu
     // A for-loop `for (#init; #cond; #inc) #body` is equivalent to:
     // (block                                               // depth X
     //   (#init)
-    //   (loop $after_loop $loop_top                        // depth X+2 (loop)
-    //     (brIf $after (eq 0 #cond))
-    //     (block $after_body #body)                        // depth X+3
-    //     #inc
-    //     (br $loop_top)
+    //   (block $after_loop                                 // depth X+1 (block)
+    //     (loop $loop_top                                  // depth X+2 (loop)
+    //       (brIf $after (eq 0 #cond))
+    //       (block $after_body #body)                      // depth X+3
+    //       #inc
+    //       (br $loop_top)
+    //     )
     //   )
     // )
     // A break in the body should break out to $after_loop, i.e. depth + 1.
@@ -6506,9 +6539,11 @@ CheckDoWhile(FunctionValidator& f, ParseNode* whileStmt, const NameVector* label
     ParseNode* cond = BinaryRight(whileStmt);
 
     // A do-while loop `do { #body } while (#cond)` is equivalent to:
-    // (loop $after_loop $top       // depth X
-    //   (block #body)              // depth X+2
-    //   (brIf #cond $top)
+    // (block $after_loop           // depth X
+    //   (loop $top                 // depth X+1
+    //     (block #body)            // depth X+2
+    //     (brIf #cond $top)
+    //   )
     // )
     // A break should break out of the entire loop, i.e. at depth 0.
     // A continue should break out to the condition, i.e. at depth 2.
@@ -6600,8 +6635,11 @@ CheckIf(FunctionValidator& f, ParseNode* ifStmt)
     if (!condType.isInt())
         return f.failf(cond, "%s is not a subtype of int", condType.toChars());
 
-    if (!f.pushIf())
+    size_t typeAt;
+    if (!f.pushIf(&typeAt))
         return false;
+
+    f.setIfType(typeAt, ExprType::Void);
 
     if (!CheckStatement(f, thenStmt))
         return false;
@@ -6746,8 +6784,13 @@ CheckSwitch(FunctionValidator& f, ParseNode* switchStmt)
     }
 
     ParseNode* stmt = ListHead(switchBody);
-    if (!stmt)
-        return CheckSwitchExpr(f, switchExpr);
+    if (!stmt) {
+        if (!CheckSwitchExpr(f, switchExpr))
+            return false;
+        if (!f.encoder().writeExpr(Expr::Drop))
+            return false;
+        return true;
+    }
 
     if (!CheckDefaultAtEnd(f, stmt))
         return false;
@@ -6810,10 +6853,6 @@ CheckSwitch(FunctionValidator& f, ParseNode* switchStmt)
     if (!f.encoder().writeExpr(Expr::BrTable))
         return false;
 
-    // The br_table arity.
-    if (!f.encoder().writeVarU32(0))
-        return false;
-
     // Write the number of cases (tableLength - 1 + 1 (default)).
     // Write the number of cases (tableLength - 1 + 1 (default)).
     if (!f.encoder().writeVarU32(tableLength))
@@ -6823,12 +6862,12 @@ CheckSwitch(FunctionValidator& f, ParseNode* switchStmt)
     // a case is not explicitly defined, it goes to the default.
     for (size_t i = 0; i < tableLength; i++) {
         uint32_t target = caseDepths[i] == CASE_NOT_DEFINED ? defaultDepth : caseDepths[i];
-        if (!f.encoder().writeFixedU32(target))
+        if (!f.encoder().writeVarU32(target))
             return false;
     }
 
     // Write the default depth.
-    if (!f.encoder().writeFixedU32(defaultDepth))
+    if (!f.encoder().writeVarU32(defaultDepth))
         return false;
 
     // Our br_table is done. Close its block, write the cases down in order.
@@ -6891,9 +6930,6 @@ CheckReturn(FunctionValidator& f, ParseNode* returnStmt)
     }
 
     if (!f.encoder().writeExpr(Expr::Return))
-        return false;
-
-    if (!f.encoder().writeVarU32(expr ? 1 : 0))
         return false;
 
     return true;

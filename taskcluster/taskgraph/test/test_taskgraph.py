@@ -33,7 +33,7 @@ class TestTargetTasks(unittest.TestCase):
                                  index_paths=[]),
         }, graph=Graph(nodes={'a', 'b'}, edges=set()))
 
-        tasks, new_graph = TaskGraph.from_json(graph.to_json(), "taskcluster/ci")
+        tasks, new_graph = TaskGraph.from_json(graph.to_json())
         self.assertEqual(graph.tasks['a'], new_graph.tasks['a'])
         self.assertEqual(graph, new_graph)
 

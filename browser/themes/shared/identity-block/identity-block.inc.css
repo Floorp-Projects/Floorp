@@ -109,21 +109,19 @@
 }
 
 #identity-box[sharing="camera"] > #sharing-icon {
-  list-style-image: url("chrome://browser/skin/notification-icons.svg#camera");
+  list-style-image: url("chrome://browser/skin/notification-icons.svg#camera-sharing");
 }
 
 #identity-box[sharing="microphone"] > #sharing-icon {
-  list-style-image: url("chrome://browser/skin/notification-icons.svg#microphone");
+  list-style-image: url("chrome://browser/skin/notification-icons.svg#microphone-sharing");
 }
 
 #identity-box[sharing="screen"] > #sharing-icon {
-  list-style-image: url("chrome://browser/skin/notification-icons.svg#screen");
+  list-style-image: url("chrome://browser/skin/notification-icons.svg#screen-sharing");
 }
 
 #identity-box[sharing] > #sharing-icon {
   display: -moz-box;
-  filter: url("chrome://browser/skin/filters.svg#fill");
-  fill: rgb(224, 41, 29);
   animation-delay: -1.5s;
 }
 

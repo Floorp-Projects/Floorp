@@ -4547,7 +4547,8 @@ Parser<FullParseHandler>::importDeclaration()
                 return null();
 
             if (tt == TOK_COMMA) {
-                if (!tokenStream.getToken(&tt) || !tokenStream.getToken(&tt))
+                tokenStream.consumeKnownToken(tt);
+                if (!tokenStream.getToken(&tt))
                     return null();
 
                 if (tt != TOK_LC && tt != TOK_MUL) {

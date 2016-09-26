@@ -44,7 +44,7 @@ ParentLayerPoint GetCurrentFocus(const MultiTouchInput& aEvent)
   return (firstTouch + secondTouch) / 2;
 }
 
-float GetCurrentSpan(const MultiTouchInput& aEvent)
+ParentLayerCoord GetCurrentSpan(const MultiTouchInput& aEvent)
 {
   const ParentLayerPoint& firstTouch = aEvent.mTouches[0].mLocalScreenPoint;
   const ParentLayerPoint& secondTouch = aEvent.mTouches[1].mLocalScreenPoint;
@@ -271,7 +271,7 @@ nsEventStatus GestureEventListener::HandleInputTouchMove()
       break;
     }
 
-    float currentSpan = GetCurrentSpan(mLastTouchInput);
+    ParentLayerCoord currentSpan = GetCurrentSpan(mLastTouchInput);
 
     mSpanChange += fabsf(currentSpan - mPreviousSpan);
     if (mSpanChange > PINCH_START_THRESHOLD) {
@@ -303,7 +303,7 @@ nsEventStatus GestureEventListener::HandleInputTouchMove()
       break;
     }
 
-    float currentSpan = GetCurrentSpan(mLastTouchInput);
+    ParentLayerCoord currentSpan = GetCurrentSpan(mLastTouchInput);
 
     PinchGestureInput pinchEvent(PinchGestureInput::PINCHGESTURE_SCALE,
                                  mLastTouchInput.mTime,

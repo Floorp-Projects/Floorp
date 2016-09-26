@@ -10,7 +10,7 @@ var asmJS = asmCompile('stdlib', 'ffis', 'buf', USE_ASM + 'var i32 = new stdlib.
 var asmJSBuf = new ArrayBuffer(BUF_MIN);
 asmLink(asmJS, this, null, asmJSBuf);
 
-var wasmMem = evalText('(module (memory 1 1) (export "mem" memory))').exports.mem;
+var wasmMem = wasmEvalText('(module (memory 1 1) (export "mem" memory))').exports.mem;
 assertAsmLinkFail(asmJS, this, null, wasmMem.buffer);
 
 if (!getBuildConfiguration().x64 && isSimdAvailable() && this["SIMD"]) {

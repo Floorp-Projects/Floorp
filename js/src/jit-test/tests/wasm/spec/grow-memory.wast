@@ -28,28 +28,28 @@
   )
 
   (func $ldst8 (param i32) (param i32) (result i32)
-    (block
+    (block i32
       (i32.store8 (get_local 0) (get_local 1))
       (i32.load8_u (get_local 0))
     )
   )
 
   (func $ldst16 (param i32) (param i32) (result i32)
-    (block
+    (block i32
       (i32.store16 (get_local 0) (get_local 1))
       (i32.load16_u (get_local 0))
     )
   )
 
   (func $ldst32 (param i32) (param i32) (result i32)
-    (block
+    (block i32
       (i32.store (get_local 0) (get_local 1))
       (i32.load (get_local 0))
     )
   )
 
   (func $ldst64 (param i32) (param i64) (result i64)
-    (block
+    (block i64
       (i64.store (get_local 0) (get_local 1))
       (i64.load (get_local 0))
     )

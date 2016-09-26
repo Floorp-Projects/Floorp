@@ -210,6 +210,7 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
     mPageSize(-1, -1), mPPScale(1.0f),
     mViewportStyleScrollbar(NS_STYLE_OVERFLOW_AUTO, NS_STYLE_OVERFLOW_AUTO),
     mImageAnimationModePref(imgIContainer::kNormalAnimMode),
+    mAllInvalidated(false),
     mPaintFlashing(false), mPaintFlashingInitialized(false)
 {
   // NOTE! nsPresContext::operator new() zeroes out all members, so don't
@@ -1498,6 +1499,9 @@ nsPresContext::Detach()
 {
   SetContainer(nullptr);
   SetLinkHandler(nullptr);
+  if (mShell) {
+    mShell->CancelInvalidatePresShellIfHidden();
+  }
 }
 
 bool
@@ -2291,6 +2295,7 @@ nsPresContext::NotifyInvalidation(uint32_t aFlags)
 {
   nsIFrame* rootFrame = PresShell()->FrameManager()->GetRootFrame();
   NotifyInvalidation(rootFrame->GetVisualOverflowRect(), aFlags);
+  mAllInvalidated = true;
 }
 
 void
@@ -2324,6 +2329,10 @@ nsPresContext::NotifyInvalidation(const nsRect& aRect, uint32_t aFlags)
   // MayHavePaintEventListener is pretty cheap and we could make it
   // even cheaper by providing a more efficient
   // nsPIDOMWindow::GetListenerManager.
+
+  if (mAllInvalidated) {
+    return;
+  }
 
   nsPresContext* pc;
   for (pc = this; pc; pc = pc->GetParentPresContext()) {
@@ -2459,6 +2468,7 @@ nsPresContext::NotifyDidPaintForSubtree(uint32_t aFlags, uint64_t aTransactionId
   if (aFlags & nsIPresShell::PAINT_LAYERS) {
     mUndeliveredInvalidateRequestsBeforeLastPaint.TakeFrom(
         &mInvalidateRequestsSinceLastPaint);
+    mAllInvalidated = false;
   }
   if (aFlags & nsIPresShell::PAINT_COMPOSITE) {
     nsCOMPtr<nsIRunnable> ev =

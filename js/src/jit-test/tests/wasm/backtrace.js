@@ -19,5 +19,5 @@ var mod = wasmEvalText(code, {
        backtrace();
     }
   }
-});
+}).exports;
 mod.test();

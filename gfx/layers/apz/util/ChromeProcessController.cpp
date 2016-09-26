@@ -208,6 +208,28 @@ ChromeProcessController::HandleTap(TapType aType,
 }
 
 void
+ChromeProcessController::NotifyPinchGesture(PinchGestureInput::PinchGestureType aType,
+                                            const ScrollableLayerGuid& aGuid,
+                                            LayoutDeviceCoord aSpanChange,
+                                            Modifiers aModifiers)
+{
+  if (MessageLoop::current() != mUILoop) {
+    mUILoop->PostTask(NewRunnableMethod
+                      <PinchGestureInput::PinchGestureType,
+                       ScrollableLayerGuid,
+                       LayoutDeviceCoord,
+                       Modifiers>(this,
+                          &ChromeProcessController::NotifyPinchGesture,
+                          aType, aGuid, aSpanChange, aModifiers));
+    return;
+  }
+
+  if (mWidget) {
+    APZCCallbackHelper::NotifyPinchGesture(aType, aSpanChange, aModifiers, mWidget.get());
+  }
+}
+
+void
 ChromeProcessController::NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
                                               APZStateChange aChange,
                                               int aArg)

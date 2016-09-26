@@ -4,10 +4,9 @@ load(libdir + "wasm.js");
 function loadModule(type, ext, offset, align) {
     return wasmEvalText(
     `(module
-       (memory 1
-         (segment 0 "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")
-         (segment 16 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
-       )
+       (memory 1)
+       (data 0 "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")
+       (data 16 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
        (func (param i32) (result ${type})
          (${type}.load${ext}
           offset=${offset}
@@ -15,18 +14,17 @@ function loadModule(type, ext, offset, align) {
           (get_local 0)
          )
        ) (export "" 0))`
-    );
+    ).exports[""];
 }
 
 function storeModule(type, ext, offset, align) {
     var load_ext = ext === '' ? '' : ext + '_s';
     return wasmEvalText(
     `(module
-       (memory 1
-         (segment 0 "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")
-         (segment 16 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
-       )
-       (func (param i32) (param ${type}) (result ${type})
+       (memory 1)
+       (data 0 "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")
+       (data 16 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
+       (func (param i32) (param ${type})
          (${type}.store${ext}
           offset=${offset}
           ${align != 0 ? 'align=' + align : ''}
@@ -41,18 +39,17 @@ function storeModule(type, ext, offset, align) {
          (get_local 0)
         )
        ) (export "load" 1))`
-    );
+    ).exports;
 }
 
 function storeModuleCst(type, ext, offset, align, value) {
     var load_ext = ext === '' ? '' : ext + '_s';
     return wasmEvalText(
     `(module
-       (memory 1
-         (segment 0 "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")
-         (segment 16 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
-       )
-       (func (param i32) (result ${type})
+       (memory 1)
+       (data 0 "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")
+       (data 16 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
+       (func (param i32)
          (${type}.store${ext}
           offset=${offset}
           ${align != 0 ? 'align=' + align : ''}
@@ -67,7 +64,7 @@ function storeModuleCst(type, ext, offset, align, value) {
          (get_local 0)
         )
        ) (export "load" 1))`
-    );
+    ).exports;
 }
 
 function testLoad(type, ext, base, offset, align, expect) {
@@ -86,14 +83,14 @@ function testStore(type, ext, base, offset, align, value) {
     let moduleCst = storeModuleCst(type, ext, offset, align, value);
     if (type === 'i64') {
         var i64 = createI64(value);
-        assertEqI64(module.store(base, i64), i64);
+        module.store(base, i64);
         assertEqI64(module.load(base), i64);
-        assertEqI64(moduleCst.store(base), i64);
+        moduleCst.store(base);
         assertEqI64(moduleCst.load(base), i64);
     } else {
-        assertEq(module.store(base, value), value);
+        module.store(base, value);
         assertEq(module.load(base), value);
-        assertEq(moduleCst.store(base), value);
+        moduleCst.store(base);
         assertEq(moduleCst.load(base), value);
     }
 }
@@ -105,11 +102,11 @@ function testStoreOOB(type, ext, base, offset, align, value) {
 }
 
 function badLoadModule(type, ext) {
-    return wasmEvalText( `(module (func (param i32) (${type}.load${ext} (get_local 0))) (export "" 0))`);
+    wasmFailValidateText( `(module (func (param i32) (${type}.load${ext} (get_local 0))) (export "" 0))`, /can't touch memory/);
 }
 
 function badStoreModule(type, ext) {
-    return wasmEvalText( `(module (func (param i32) (${type}.store${ext} (get_local 0) (${type}.const 0))) (export "" 0))`);
+    wasmFailValidateText(`(module (func (param i32) (${type}.store${ext} (get_local 0) (${type}.const 0))) (export "" 0))`, /can't touch memory/);
 }
 
 // Can't touch memory.
@@ -130,7 +127,7 @@ for (let [type, ext] of [
     ['f64', ''],
 ])
 {
-    assertErrorMessage(() => badLoadModule(type, ext), TypeError, /can't touch memory/);
+    badLoadModule(type, ext);
 }
 
 for (let [type, ext] of [
@@ -145,7 +142,7 @@ for (let [type, ext] of [
     ['f64', ''],
 ])
 {
-    assertErrorMessage(() => badStoreModule(type, ext), TypeError, /can't touch memory/);
+    badStoreModule(type, ext);
 }
 
 assertEq(getJitCompilerOptions()['wasm.fold-offsets'], 1);
@@ -188,7 +185,7 @@ for (var foldOffsets = 0; foldOffsets <= 1; foldOffsets++) {
     testStore('i32', '8', 0, 0, 0, 0x23);
     testStore('i32', '16', 0, 0, 0, 0x2345);
 
-    assertErrorMessage(() => wasmEvalText('(module (memory 2 1))'), TypeError, /maximum memory size less than initial memory size/);
+    wasmFailValidateText('(module (memory 2 1))', /maximum length 1 is less than initial length 2/);
 
     // Test bounds checks and edge cases.
     const align = 0;
@@ -267,26 +264,25 @@ for (var foldOffsets = 0; foldOffsets <= 1; foldOffsets++) {
         testLoadOOB('f64', '', index, offset, 8);
     }
 
-    assertErrorMessage(() => wasmEvalText('(module (memory 1) (func (f64.store offset=0 (i32.const 0) (i32.const 0))))'), TypeError, mismatchError("i32", "f64"));
-    assertErrorMessage(() => wasmEvalText('(module (memory 1) (func (f64.store offset=0 (i32.const 0) (f32.const 0))))'), TypeError, mismatchError("f32", "f64"));
+    wasmFailValidateText('(module (memory 1) (func (f64.store offset=0 (i32.const 0) (i32.const 0))))', mismatchError("i32", "f64"));
+    wasmFailValidateText('(module (memory 1) (func (f64.store offset=0 (i32.const 0) (f32.const 0))))', mismatchError("f32", "f64"));
 
-    assertErrorMessage(() => wasmEvalText('(module (memory 1) (func (f32.store offset=0 (i32.const 0) (i32.const 0))))'), TypeError, mismatchError("i32", "f32"));
-    assertErrorMessage(() => wasmEvalText('(module (memory 1) (func (f32.store offset=0 (i32.const 0) (f64.const 0))))'), TypeError, mismatchError("f64", "f32"));
+    wasmFailValidateText('(module (memory 1) (func (f32.store offset=0 (i32.const 0) (i32.const 0))))', mismatchError("i32", "f32"));
+    wasmFailValidateText('(module (memory 1) (func (f32.store offset=0 (i32.const 0) (f64.const 0))))', mismatchError("f64", "f32"));
 
-    assertErrorMessage(() => wasmEvalText('(module (memory 1) (func (i32.store offset=0 (i32.const 0) (f32.const 0))))'), TypeError, mismatchError("f32", "i32"));
-    assertErrorMessage(() => wasmEvalText('(module (memory 1) (func (i32.store offset=0 (i32.const 0) (f64.const 0))))'), TypeError, mismatchError("f64", "i32"));
+    wasmFailValidateText('(module (memory 1) (func (i32.store offset=0 (i32.const 0) (f32.const 0))))', mismatchError("f32", "i32"));
+    wasmFailValidateText('(module (memory 1) (func (i32.store offset=0 (i32.const 0) (f64.const 0))))', mismatchError("f64", "i32"));
 
     wasmEvalText('(module (memory 0 65535))')
-    assertErrorMessage(() => wasmEvalText('(module (memory 0 65536))'), TypeError, /maximum memory size too big/);
+    wasmFailValidateText('(module (memory 0 65536))', /maximum memory size too big/);
 
     // Test high charge of registers
     function testRegisters() {
         assertEq(wasmEvalText(
             `(module
-              (memory 1
-               (segment 0 "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")
-               (segment 16 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
-              )
+              (memory 1)
+              (data 0 "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")
+              (data 16 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
               (func (param i32) (local i32 i32 i32 i32 f32 f64) (result i32)
                (set_local 1 (i32.load8_s offset=4 (get_local 0)))
                (set_local 2 (i32.load16_s (get_local 1)))
@@ -316,7 +312,7 @@ for (var foldOffsets = 0; foldOffsets <= 1; foldOffsets++) {
                 )
                )
               ) (export "" 0))`
-        )(1), 50464523);
+        ).exports[""](1), 50464523);
     }
 
     testRegisters();

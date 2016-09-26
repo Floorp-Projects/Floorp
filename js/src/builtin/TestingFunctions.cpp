@@ -532,28 +532,16 @@ WasmTextToBinary(JSContext* cx, unsigned argc, Value* vp)
     if (!twoByteChars.initTwoByte(cx, args[0].toString()))
         return false;
 
-    bool newFormat = false;
     if (args.hasDefined(1)) {
         if (!args[1].isString()) {
             ReportUsageError(cx, callee, "Second argument, if present, must be a String");
             return false;
         }
-
-        JSLinearString* str = args[1].toString()->ensureLinear(cx);
-        if (!str)
-            return false;
-
-        if (!StringEqualsAscii(str, "new-format")) {
-            ReportUsageError(cx, callee, "Unknown string value for second argument");
-            return false;
-        }
-
-        newFormat = true;
     }
 
     wasm::Bytes bytes;
     UniqueChars error;
-    if (!wasm::TextToBinary(twoByteChars.twoByteChars(), newFormat, &bytes, &error)) {
+    if (!wasm::TextToBinary(twoByteChars.twoByteChars(), &bytes, &error)) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_TEXT_FAIL,
                              error.get() ? error.get() : "out of memory");
         return false;
@@ -613,18 +601,15 @@ WasmBinaryToText(JSContext* cx, unsigned argc, Value* vp)
     }
 
     StringBuffer buffer(cx);
-    if (experimental) {
-        if (!wasm::BinaryToExperimentalText(cx, bytes, length, buffer, wasm::ExperimentalTextFormatting())) {
-            if (!cx->isExceptionPending())
-                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL, "print error");
-            return false;
-        }
-    } else {
-        if (!wasm::BinaryToText(cx, bytes, length, buffer)) {
-            if (!cx->isExceptionPending())
-                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL, "print error");
-            return false;
-        }
+    bool ok;
+    if (experimental)
+        ok = wasm::BinaryToExperimentalText(cx, bytes, length, buffer, wasm::ExperimentalTextFormatting());
+    else
+        ok = wasm::BinaryToText(cx, bytes, length, buffer);
+    if (!ok) {
+        if (!cx->isExceptionPending())
+            JS_ReportError(cx, "wasm binary to text print error");
+        return false;
     }
 
     JSString* result = buffer.finishString();
@@ -1395,6 +1380,16 @@ OOMTest(JSContext* cx, unsigned argc, Value* vp)
 
             cx->clearPendingException();
             cx->runtime()->hadOutOfMemory = false;
+
+#ifdef JS_TRACE_LOGGING
+            // Reset the TraceLogger state if enabled.
+            TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
+            if (logger->enabled()) {
+                while (logger->enabled())
+                    logger->disable();
+                logger->enable(cx);
+            }
+#endif
 
             allocation++;
         } while (handledOOM);

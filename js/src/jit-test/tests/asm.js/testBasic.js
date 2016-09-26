@@ -164,14 +164,14 @@ var g = asmLink(asmCompile('glob', 'ffis', USE_ASM + 'var f = ffis.f; function g
 assertEq(g(), 0);
 
 if (wasmIsSupported()) {
-    var h = Wasm.instantiateModule(wasmTextToBinary(`(module
+    var h = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`(module
         (import $f "imp" "f" (param i32) (result i32))
         (func $h (result i32) (call_import $f (i32.const 1)))
         (export "h" $h)
-    )`), {imp:{f}}).exports.h;
+    )`)), {imp:{f}}).exports.h;
     assertEq(h(), 0);
 
-    var i = Wasm.instantiateModule(wasmTextToBinary(`(module (func $i) (export "i" $i))`)).exports.i
+    var i = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`(module (func $i) (export "i" $i))`))).exports.i
     var j = asmLink(asmCompile('glob', 'ffis', USE_ASM + 'var i = ffis.i; function j() { return i(1)|0; } return j'), null, {i});
     assertEq(j(), 0);
 }

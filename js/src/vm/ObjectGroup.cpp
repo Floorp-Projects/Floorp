@@ -866,6 +866,8 @@ ObjectGroup::newArrayObject(ExclusiveContext* cx,
     // information, but make sure when creating an unboxed array that the
     // common element type is suitable for the unboxed representation.
     ShouldUpdateTypes updateTypes = ShouldUpdateTypes::DontUpdate;
+    if (!MaybeAnalyzeBeforeCreatingLargeArray(cx, group, vp, length))
+        return nullptr;
     if (group->maybePreliminaryObjects())
         group->maybePreliminaryObjects()->maybeAnalyze(cx, group);
     if (group->maybeUnboxedLayout()) {

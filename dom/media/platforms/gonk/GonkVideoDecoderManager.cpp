@@ -52,7 +52,7 @@ public:
     , mGrallocFormat(aGrallocFormat)
   {}
 
-  already_AddRefed<TextureClient> Allocate(CompositableForwarder* aAllocator) override
+  already_AddRefed<TextureClient> Allocate(TextureForwarder* aAllocator) override
   {
     uint32_t usage = android::GraphicBuffer::USAGE_SW_READ_OFTEN |
                      android::GraphicBuffer::USAGE_SW_WRITE_OFTEN |

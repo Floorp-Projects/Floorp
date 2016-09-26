@@ -7,6 +7,10 @@
 #include "vm/Compression.h"
 
 #include "mozilla/MemoryChecking.h"
+#include "mozilla/PodOperations.h"
+
+#include "jsutil.h"
+
 #include "js/Utility.h"
 
 using namespace js;
@@ -26,8 +30,9 @@ zlib_free(void* cx, void* addr)
 Compressor::Compressor(const unsigned char* inp, size_t inplen)
     : inp(inp),
       inplen(inplen),
-      outbytes(0),
-      initialized(false)
+      initialized(false),
+      currentChunkSize(0),
+      chunkOffsets()
 {
     MOZ_ASSERT(inplen > 0);
     zs.opaque = nullptr;
@@ -37,8 +42,10 @@ Compressor::Compressor(const unsigned char* inp, size_t inplen)
     zs.avail_out = 0;
     zs.zalloc = zlib_alloc;
     zs.zfree = zlib_free;
-}
 
+    // Reserve space for the CompressedDataHeader.
+    outbytes = sizeof(CompressedDataHeader);
+}
 
 Compressor::~Compressor()
 {
@@ -52,6 +59,11 @@ Compressor::~Compressor()
     }
 }
 
+// According to the zlib docs, the default value for windowBits is 15. Passing
+// -15 is treated the same, but it also forces 'raw deflate' (no zlib header or
+// trailer). Raw deflate is necessary for chunked decompression.
+static const int WindowBits = -15;
+
 bool
 Compressor::init()
 {
@@ -60,7 +72,7 @@ Compressor::init()
     // zlib is slow and we'd rather be done compression sooner
     // even if it means decompression is slower which penalizes
     // Function.toString()
-    int ret = deflateInit(&zs, Z_BEST_SPEED);
+    int ret = deflateInit2(&zs, Z_BEST_SPEED, Z_DEFLATED, WindowBits, 8, Z_DEFAULT_STRATEGY);
     if (ret != Z_OK) {
         MOZ_ASSERT(ret == Z_MEM_ERROR);
         return false;
@@ -82,14 +94,30 @@ Compressor::compressMore()
 {
     MOZ_ASSERT(zs.next_out);
     uInt left = inplen - (zs.next_in - inp);
-    bool done = left <= CHUNKSIZE;
+    bool done = left <= MAX_INPUT_SIZE;
     if (done)
         zs.avail_in = left;
     else if (zs.avail_in == 0)
-        zs.avail_in = CHUNKSIZE;
+        zs.avail_in = MAX_INPUT_SIZE;
+
+    // Finish the current chunk if needed.
+    bool flush = false;
+    MOZ_ASSERT(currentChunkSize <= CHUNK_SIZE);
+    if (currentChunkSize + zs.avail_in >= CHUNK_SIZE) {
+        // Adjust avail_in, so we don't get chunks that are larger than
+        // CHUNK_SIZE.
+        zs.avail_in = CHUNK_SIZE - currentChunkSize;
+        MOZ_ASSERT(currentChunkSize + zs.avail_in == CHUNK_SIZE);
+        flush = true;
+    }
+
+    Bytef* oldin = zs.next_in;
     Bytef* oldout = zs.next_out;
-    int ret = deflate(&zs, done ? Z_FINISH : Z_NO_FLUSH);
+    int ret = deflate(&zs, done ? Z_FINISH : (flush ? Z_FULL_FLUSH : Z_NO_FLUSH));
     outbytes += zs.next_out - oldout;
+    currentChunkSize += zs.next_in - oldin;
+    MOZ_ASSERT(currentChunkSize <= CHUNK_SIZE);
+
     if (ret == Z_MEM_ERROR) {
         zs.avail_out = 0;
         return OOM;
@@ -98,9 +126,44 @@ Compressor::compressMore()
         MOZ_ASSERT(zs.avail_out == 0);
         return MOREOUTPUT;
     }
+
+    if (done || currentChunkSize == CHUNK_SIZE) {
+        MOZ_ASSERT_IF(!done, flush);
+        MOZ_ASSERT(chunkSize(inplen, chunkOffsets.length()) == currentChunkSize);
+        if (!chunkOffsets.append(outbytes))
+            return OOM;
+        currentChunkSize = 0;
+        MOZ_ASSERT_IF(done, chunkOffsets.length() == (inplen - 1) / CHUNK_SIZE + 1);
+    }
+
     MOZ_ASSERT_IF(!done, ret == Z_OK);
     MOZ_ASSERT_IF(done, ret == Z_STREAM_END);
     return done ? DONE : CONTINUE;
+}
+
+size_t
+Compressor::totalBytesNeeded() const
+{
+    return AlignBytes(outbytes, sizeof(uint32_t)) + sizeOfChunkOffsets();
+}
+
+void
+Compressor::finish(char* dest, size_t destBytes) const
+{
+    MOZ_ASSERT(!chunkOffsets.empty());
+
+    CompressedDataHeader* compressedHeader = reinterpret_cast<CompressedDataHeader*>(dest);
+    compressedHeader->compressedBytes = outbytes;
+
+    size_t outbytesAligned = AlignBytes(outbytes, sizeof(uint32_t));
+
+    // Zero the padding bytes, the ImmutableStringsCache will hash them.
+    mozilla::PodZero(dest + outbytes, outbytesAligned - outbytes);
+
+    uint32_t* destArr = reinterpret_cast<uint32_t*>(dest + outbytesAligned);
+
+    MOZ_ASSERT(uintptr_t(dest + destBytes) == uintptr_t(destArr + chunkOffsets.length()));
+    mozilla::PodCopy(destArr, chunkOffsets.begin(), chunkOffsets.length());
 }
 
 bool
@@ -127,6 +190,58 @@ js::DecompressString(const unsigned char* inp, size_t inplen, unsigned char* out
     }
     ret = inflate(&zs, Z_FINISH);
     MOZ_ASSERT(ret == Z_STREAM_END);
+    ret = inflateEnd(&zs);
+    MOZ_ASSERT(ret == Z_OK);
+    return true;
+}
+
+bool
+js::DecompressStringChunk(const unsigned char* inp, size_t chunk,
+                          unsigned char* out, size_t outlen)
+{
+    MOZ_ASSERT(outlen <= Compressor::CHUNK_SIZE);
+
+    const CompressedDataHeader* header = reinterpret_cast<const CompressedDataHeader*>(inp);
+
+    size_t compressedBytes = header->compressedBytes;
+    size_t compressedBytesAligned = AlignBytes(compressedBytes, sizeof(uint32_t));
+
+    const unsigned char* offsetBytes = inp + compressedBytesAligned;
+    const uint32_t* offsets = reinterpret_cast<const uint32_t*>(offsetBytes);
+
+    uint32_t compressedStart = chunk > 0 ? offsets[chunk - 1] : sizeof(CompressedDataHeader);
+    uint32_t compressedEnd = offsets[chunk];
+
+    MOZ_ASSERT(compressedStart < compressedEnd);
+    MOZ_ASSERT(compressedEnd <= compressedBytes);
+
+    bool lastChunk = compressedEnd == compressedBytes;
+
+    // Mark the memory we pass to zlib as initialized for MSan.
+    MOZ_MAKE_MEM_DEFINED(out, outlen);
+
+    z_stream zs;
+    zs.zalloc = zlib_alloc;
+    zs.zfree = zlib_free;
+    zs.opaque = nullptr;
+    zs.next_in = (Bytef*)(inp + compressedStart);
+    zs.avail_in = compressedEnd - compressedStart;
+    zs.next_out = out;
+    MOZ_ASSERT(outlen);
+    zs.avail_out = outlen;
+    int ret = inflateInit2(&zs, WindowBits);
+    if (ret != Z_OK) {
+        MOZ_ASSERT(ret == Z_MEM_ERROR);
+        return false;
+    }
+    if (lastChunk) {
+        ret = inflate(&zs, Z_FINISH);
+        MOZ_ASSERT(ret == Z_STREAM_END);
+    } else {
+        ret = inflate(&zs, Z_NO_FLUSH);
+        MOZ_ASSERT(ret == Z_OK);
+    }
+    MOZ_ASSERT(zs.avail_in == 0);
     ret = inflateEnd(&zs);
     MOZ_ASSERT(ret == Z_OK);
     return true;

@@ -116,7 +116,7 @@ ErrorObject::subErrorClassSpec_ = {
 };
 
 const ClassSpec
-ErrorObject::debuggeeWouldRunClassSpec_ = {
+ErrorObject::nonGlobalErrorClassSpec_ = {
     ErrorObject::createConstructor,
     ErrorObject::createProto,
     nullptr,
@@ -138,9 +138,10 @@ ErrorObject::classes[JSEXN_LIMIT] = {
     IMPLEMENT_ERROR_CLASS(TypeError,      &ErrorObject::subErrorClassSpec_),
     IMPLEMENT_ERROR_CLASS(URIError,       &ErrorObject::subErrorClassSpec_),
 
-    // DebuggeeWouldRun is a subclass of Error but is accessible via the
-    // Debugger constructor, not the global.
-    IMPLEMENT_ERROR_CLASS(DebuggeeWouldRun, &ErrorObject::debuggeeWouldRunClassSpec_)
+    // These Error subclasses are not accessible via the global object:
+    IMPLEMENT_ERROR_CLASS(DebuggeeWouldRun, &ErrorObject::nonGlobalErrorClassSpec_),
+    IMPLEMENT_ERROR_CLASS(CompileError,   &ErrorObject::nonGlobalErrorClassSpec_),
+    IMPLEMENT_ERROR_CLASS(RuntimeError,   &ErrorObject::nonGlobalErrorClassSpec_)
 };
 
 JSErrorReport*

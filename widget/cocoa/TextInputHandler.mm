@@ -698,7 +698,7 @@ TISInputSourceWrapper::IsForRTLLanguage()
     bool ret = TranslateToString(kVK_ANSI_A, 0, eKbdType_ANSI, str);
     NS_ENSURE_TRUE(ret, ret);
     char16_t ch = str.IsEmpty() ? char16_t(0) : str.CharAt(0);
-    mIsRTL = UCS2_CHAR_IS_BIDI(ch) || ch == 0xD802 || ch == 0xD803;
+    mIsRTL = UCS2_CHAR_IS_BIDI(ch);
   }
   return mIsRTL != 0;
 }
