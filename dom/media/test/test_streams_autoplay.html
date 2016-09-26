@@ -19,21 +19,25 @@ if (media == null) {
   todo(false, "No media supported.");
   SimpleTest.finish();
 } else {
-  v1.src = media.name;
-  v1.preload = 'metadata';
-  v1.onloadedmetadata = function() {
-    v2.srcObject = v1.mozCaptureStream();
-    v1.play();
-  };
-  var onPlayingEventFired = false;
+  function startTest() {
+    v1.src = media.name;
+    v1.preload = 'metadata';
+    v1.onloadedmetadata = function() {
+      v2.srcObject = v1.mozCaptureStream();
+      v1.play();
+    };
+    var onPlayingEventFired = false;
 
-  v2.onplaying = function() {
-    if(!onPlayingEventFired) {
-      onPlayingEventFired = true;
-      ok(true, "playback started");
-      SimpleTest.finish();
+    v2.onplaying = function() {
+      if(!onPlayingEventFired) {
+        onPlayingEventFired = true;
+        ok(true, "playback started");
+        SimpleTest.finish();
+      }
     }
   }
+
+  startTest();
 }
 </script>
 </pre>
