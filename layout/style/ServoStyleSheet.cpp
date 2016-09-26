@@ -24,21 +24,9 @@ ServoStyleSheet::~ServoStyleSheet()
 }
 
 bool
-ServoStyleSheet::IsApplicable() const
-{
-  return !mDisabled && mComplete;
-}
-
-bool
 ServoStyleSheet::HasRules() const
 {
   return mSheet && Servo_StyleSheet_HasRules(mSheet);
-}
-
-nsIDocument*
-ServoStyleSheet::GetOwningDocument() const
-{
-  return mDocument;
 }
 
 void
