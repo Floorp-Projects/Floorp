@@ -1841,6 +1841,9 @@ if (url.search.length > 1) {
   Task.spawn(function* () {
     let target = yield targetFromURL(url);
 
+    let notImplemented = function () {
+      throw new Error("Not implemented when the inspector is in a tab");
+    };
     let fakeToolbox = {
       target,
       hostType: "bottom",
@@ -1861,6 +1864,21 @@ if (url.search.length > 1) {
       isToolRegistered() {
         return false;
       },
+      currentToolId: "inspector",
+      getCurrentPanel() {
+        return "inspector";
+      },
+      get textboxContextMenuPopup() {
+        notImplemented();
+      },
+      getPanel: notImplemented,
+      openSplitConsole: notImplemented,
+      viewCssSourceInStyleEditor: notImplemented,
+      viewJsSourceInDebugger: notImplemented,
+      viewSource: notImplemented,
+      viewSourceInDebugger: notImplemented,
+      viewSourceInStyleEditor: notImplemented,
+
       // For attachThread:
       highlightTool() {},
       unhighlightTool() {},
