@@ -170,6 +170,7 @@ RIDEALONG_BUILDS = {
 
 TEST_CHUNK_SUFFIX = re.compile('(.*)-([0-9]+)$')
 
+
 class TryOptionSyntax(object):
 
     def __init__(self, message, full_task_graph):
@@ -186,7 +187,7 @@ class TryOptionSyntax(object):
         - jobs: a list of requested job names, or None for all
         - trigger_tests: the number of times tests should be triggered (--rebuild)
         - interactive: true if --interactive
-        - notifications: one of 'none', 'all', 'failure'
+        - notifications: either None if no notifications or one of 'all' or 'failure'
 
         Note that -t is currently completely ignored.
 
@@ -205,7 +206,7 @@ class TryOptionSyntax(object):
         self.talos = []
         self.trigger_tests = 0
         self.interactive = False
-        self.notifications = 'none'
+        self.notifications = None
 
         # shlex used to ensure we split correctly when giving values to argparse.
         parts = shlex.split(self.escape_whitespace_in_brackets(message))
@@ -228,8 +229,10 @@ class TryOptionSyntax(object):
         parser.add_argument('-t', '--talos', nargs='?', dest='talos', const='all', default='all')
         parser.add_argument('-i', '--interactive',
                             dest='interactive', action='store_true', default=False)
-        parser.add_argument('-e', '--all-emails', dest='notifications', action='store_const', const='all')
-        parser.add_argument('-f', '--failure-emails', dest='notifications', action='store_const', const='failure')
+        parser.add_argument('-e', '--all-emails',
+                            dest='notifications', action='store_const', const='all')
+        parser.add_argument('-f', '--failure-emails',
+                            dest='notifications', action='store_const', const='failure')
         parser.add_argument('-j', '--job', dest='jobs', action='append')
         # In order to run test jobs multiple times
         parser.add_argument('--rebuild', dest='trigger_tests', type=int, default=1)
@@ -243,7 +246,7 @@ class TryOptionSyntax(object):
         self.talos = self.parse_test_option("talos_try_name", args.talos, full_task_graph)
         self.trigger_tests = args.trigger_tests
         self.interactive = args.interactive
-        self.notifications = args.notifications or self.notifications
+        self.notifications = args.notifications
 
     def parse_jobs(self, jobs_arg):
         if not jobs_arg or jobs_arg == ['all']:
