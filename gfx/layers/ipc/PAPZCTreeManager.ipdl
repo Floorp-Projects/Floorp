@@ -9,6 +9,7 @@ include "ipc/nsGUIEventIPC.h";
 include protocol PCompositorBridge;
 
 using CSSRect from "Units.h";
+using LayoutDeviceCoord from "Units.h";
 using LayoutDeviceIntPoint from "Units.h";
 using mozilla::LayoutDevicePoint from "Units.h";
 using ScreenPoint from "Units.h";
@@ -31,6 +32,7 @@ using class mozilla::MultiTouchInput from "InputData.h";
 using class mozilla::MouseInput from "InputData.h";
 using class mozilla::PanGestureInput from "InputData.h";
 using class mozilla::PinchGestureInput from "InputData.h";
+using mozilla::PinchGestureInput::PinchGestureType from "InputData.h";
 using class mozilla::TapGestureInput from "InputData.h";
 using class mozilla::ScrollWheelInput from "InputData.h";
 
@@ -128,6 +130,9 @@ child:
 
   async HandleTap(TapType aType, LayoutDevicePoint point, Modifiers aModifiers,
                   ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
+
+  async NotifyPinchGesture(PinchGestureType aType, ScrollableLayerGuid aGuid,
+                           LayoutDeviceCoord aSpanChange, Modifiers aModifiers);
 };
 
 } // namespace gfx

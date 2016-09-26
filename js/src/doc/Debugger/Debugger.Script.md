@@ -55,7 +55,7 @@ evaluated in the same lexical environment.
 For `Debugger.Script` instances referring to a block of WebAssembly code, they
 are distinguished by their `format` property being `"wasm"`.
 
-Currently only entire modules evaluated via `Wasm.instantiateModule` are
+Currently only entire modules evaluated via `new WebAssembly.Module` are
 represented.
 
 `Debugger.Script` objects for WebAssembly are uncovered via `onNewScript` when

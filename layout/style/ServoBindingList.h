@@ -19,7 +19,7 @@
  */
 
 // Node data
-SERVO_BINDING_FUNC(Servo_NodeData_Drop, void, ServoNodeDataOwned data)
+SERVO_BINDING_FUNC(Servo_Node_ClearNodeData, void, RawGeckoNode* node)
 
 // Styleset and Stylesheet management
 SERVO_BINDING_FUNC(Servo_StyleSheet_FromUTF8Bytes, RawServoStyleSheetStrong,

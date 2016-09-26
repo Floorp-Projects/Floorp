@@ -220,7 +220,7 @@ function testNaNEqualityFunction() {
     let f32 = new Float32Array(u8.buffer);
 
     // F64 NaN
-    let someNaN = wasmEvalText('(module (func (result f64) (f64.const -nan:0x12345678)) (export "" 0))')();
+    let someNaN = wasmEvalText('(module (func (result f64) (f64.const -nan:0x12345678)) (export "" 0))').exports[""]();
     i32[0] = someNaN.nan_low;
     i32[1] = someNaN.nan_high;
     assert(Number.isNaN(f64[0]), "we've stored a f64 NaN");
@@ -233,7 +233,7 @@ function testNaNEqualityFunction() {
     assertEqNaN(someNaN, someNaN);
 
     // F32 NaN
-    someNaN = wasmEvalText('(module (func (result f32) (f32.const -nan:0x123456)) (export "" 0))')();
+    someNaN = wasmEvalText('(module (func (result f32) (f32.const -nan:0x123456)) (export "" 0))').exports[""]();
     i32[0] = someNaN.nan_low;
     assert(Number.isNaN(f32[0]), "we've stored a f32 NaN");
 
@@ -244,8 +244,8 @@ function testNaNEqualityFunction() {
     assertEqNaN(someNaN, someNaN);
 
     // Compare a NaN value against another one.
-    let pNaN = wasmEvalText('(module (func (result f64) (f64.const nan)) (export "" 0))')();
-    let nNaN = wasmEvalText('(module (func (result f64) (f64.const -nan)) (export "" 0))')();
+    let pNaN = wasmEvalText('(module (func (result f64) (f64.const nan)) (export "" 0))').exports[""]();
+    let nNaN = wasmEvalText('(module (func (result f64) (f64.const -nan)) (export "" 0))').exports[""]();
 
     i32[0] = pNaN.nan_low;
     i32[1] = pNaN.nan_high;
@@ -266,7 +266,7 @@ function exec(e) {
 
     if (exprName === "module") {
         let moduleText = e.toString();
-        module = evalText(moduleText, imports).exports;
+        module = wasmEvalText(moduleText, imports).exports;
         return;
     }
 
@@ -296,7 +296,7 @@ function exec(e) {
             return constantCache.get(key);
         }
 
-        var val = wasmEvalText(`(module (func (result ${type}) ${e}) (export "" 0))`)();
+        var val = wasmEvalText(`(module (func (result ${type}) ${e}) (export "" 0))`).exports[""]();
         constantCache.set(key, val);
         return val;
     }
@@ -350,7 +350,7 @@ function exec(e) {
         }
         // assert_invalid tests both the decoder *and* the parser itself.
         try {
-            assertEq(WebAssembly.validate(textToBinary(moduleText)), false);
+            assertEq(WebAssembly.validate(wasmTextToBinary(moduleText)), false);
         } catch(e) {
             if (/wasm text error/.test(e.toString()))
                 return;

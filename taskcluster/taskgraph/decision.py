@@ -15,6 +15,7 @@ from .generator import TaskGraphGenerator
 from .create import create_tasks
 from .parameters import Parameters
 from .target_tasks import get_method
+from .taskgraph import TaskGraph
 
 from taskgraph.util.templates import Templates
 from taskgraph.util.time import (
@@ -80,7 +81,11 @@ def taskgraph_decision(options):
     write_artifact('action.yml', get_action_yml(parameters))
 
     # write out the full graph for reference
-    write_artifact('full-task-graph.json', tgg.full_task_graph.to_json())
+    full_task_json = tgg.full_task_graph.to_json()
+    write_artifact('full-task-graph.json', full_task_json)
+
+    # this is just a test to check whether the from_json() function is working
+    _, _ = TaskGraph.from_json(full_task_json)
 
     # write out the target task set to allow reproducing this as input
     write_artifact('target-tasks.json', tgg.target_task_set.tasks.keys())

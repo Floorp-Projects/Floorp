@@ -124,12 +124,8 @@
   width: var(--identity-popup-expander-width);
   border: 0 none;
   -moz-appearance: none;
-  background-image: url("chrome://browser/skin/controlcenter/arrow-subview.svg"),
-                    linear-gradient(rgba(255,255,255,0.3), transparent);
+  background: url("chrome://browser/skin/controlcenter/arrow-subview.svg") center no-repeat;
   background-size: 16px, auto;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-color: transparent;
 }
 
 .identity-popup-expander:-moz-locale-dir(rtl) {
@@ -157,6 +153,8 @@
 
 .identity-popup-expander:hover {
   background-color: var(--arrowpanel-dimmed);
+  background-image: url("chrome://browser/skin/controlcenter/arrow-subview.svg"),
+                    linear-gradient(rgba(255,255,255,0.3), transparent);
 }
 
 .identity-popup-expander:hover:active {
@@ -378,8 +376,6 @@ description#identity-popup-content-verifier,
 }
 
 .identity-popup-permission-icon.in-use {
-  fill: rgb(224, 41, 29);
-  opacity: 1;
   animation: 1.5s ease in-use-blink infinite;
 }
 

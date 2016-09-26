@@ -86,6 +86,45 @@ RemoteContentController::HandleTap(TapType aTapType,
 }
 
 void
+RemoteContentController::NotifyPinchGesture(PinchGestureInput::PinchGestureType aType,
+                                            const ScrollableLayerGuid& aGuid,
+                                            LayoutDeviceCoord aSpanChange,
+                                            Modifiers aModifiers)
+{
+  APZThreadUtils::AssertOnControllerThread();
+
+  // For now we only ever want to handle this NotifyPinchGesture message in
+  // the parent process, even if the APZ is sending it to a content process.
+
+  // If we're in the GPU process, try to find a handle to the parent process
+  // and send it there.
+  if (XRE_IsGPUProcess()) {
+    MOZ_ASSERT(MessageLoop::current() == mCompositorThread);
+
+    // The raw pointer to APZCTreeManagerParent is ok here because we are on the
+    // compositor thread.
+    APZCTreeManagerParent* apzctmp =
+        CompositorBridgeParent::GetApzcTreeManagerParentForRoot(aGuid.mLayersId);
+    if (apzctmp) {
+      Unused << apzctmp->SendNotifyPinchGesture(aType, aGuid, aSpanChange, aModifiers);
+      return;
+    }
+  }
+
+  // If we're in the parent process, handle it directly. We don't have a handle
+  // to the widget though, so we fish out the ChromeProcessController and
+  // delegate to that instead.
+  if (XRE_IsParentProcess()) {
+    MOZ_ASSERT(NS_IsMainThread());
+    RefPtr<GeckoContentController> rootController =
+        CompositorBridgeParent::GetGeckoContentControllerForRoot(aGuid.mLayersId);
+    if (rootController) {
+      rootController->NotifyPinchGesture(aType, aGuid, aSpanChange, aModifiers);
+    }
+  }
+}
+
+void
 RemoteContentController::PostDelayedTask(already_AddRefed<Runnable> aTask, int aDelayMs)
 {
 #ifdef MOZ_WIDGET_ANDROID

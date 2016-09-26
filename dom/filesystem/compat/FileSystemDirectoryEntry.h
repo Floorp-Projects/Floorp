@@ -24,8 +24,8 @@ public:
                                            FileSystemEntry)
 
   FileSystemDirectoryEntry(nsIGlobalObject* aGlobalObject,
-                          Directory* aDirectory,
-                          FileSystem* aFileSystem);
+                           Directory* aDirectory,
+                           FileSystem* aFileSystem);
 
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;

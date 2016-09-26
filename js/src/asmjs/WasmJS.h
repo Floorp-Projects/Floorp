@@ -101,7 +101,7 @@ ExportedFunctionToDefinitionIndex(JSFunction* fun);
 
 } // namespace wasm
 
-// 'Wasm' and its one function 'instantiateModule' are transitional APIs and
+// 'Wasm' and its one field 'experimentalVersion' are transitional APIs and
 // will be removed (replaced by 'WebAssembly') before release.
 
 extern const Class WasmClass;

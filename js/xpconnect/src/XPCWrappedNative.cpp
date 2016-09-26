@@ -74,7 +74,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(XPCWrappedNative)
 
         JSObject* obj = tmp->GetFlatJSObjectPreserveColor();
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mFlatJSObject");
-        cb.NoteJSObject(obj);
+        cb.NoteJSChild(JS::GCCellPtr(obj));
     }
 
     // XPCWrappedNative keeps its native object alive.

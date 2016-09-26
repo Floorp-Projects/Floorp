@@ -473,7 +473,6 @@ js::IsCrossCompartmentWrapper(JSObject* obj)
 void
 js::NukeCrossCompartmentWrapper(JSContext* cx, JSObject* wrapper)
 {
-    MOZ_ASSERT(!IsInsideNursery(wrapper));
     MOZ_ASSERT(wrapper->is<CrossCompartmentWrapperObject>());
 
     NotifyGCNukeWrapper(wrapper);
@@ -580,7 +579,7 @@ js::RemapWrapper(JSContext* cx, JSObject* wobjArg, JSObject* newTargetArg)
     // the choice to reuse |wobj| or not.
     RootedObject tobj(cx, newTarget);
     AutoCompartment ac(cx, wobj);
-    if (!wcompartment->wrap(cx, &tobj, wobj))
+    if (!wcompartment->rewrap(cx, &tobj, wobj))
         MOZ_CRASH();
 
     // If wrap() reused |wobj|, it will have overwritten it and returned with

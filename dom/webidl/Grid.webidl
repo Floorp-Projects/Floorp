@@ -14,10 +14,10 @@
 enum GridDeclaration { "explicit", "implicit" };
 
 /**
- * Tracks expanded from auto-fill or auto-fit have repeat state, other tracks
- * are static.
+ * Tracks expanded from auto-fill are repeat , auto-fits with elements are
+ * also repeat, auto-fits with no elements are removed, other tracks are static.
  */
-enum GridTrackState { "static", "repeat" };
+enum GridTrackState { "static", "repeat", "removed" };
 
 [ChromeOnly]
 interface Grid

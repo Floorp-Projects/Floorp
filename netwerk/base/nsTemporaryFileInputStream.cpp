@@ -7,7 +7,12 @@
 #include "nsStreamUtils.h"
 #include <algorithm>
 
-NS_IMPL_ISUPPORTS(nsTemporaryFileInputStream, nsIInputStream, nsISeekableStream)
+typedef mozilla::ipc::FileDescriptor::PlatformHandleType FileHandleType;
+
+NS_IMPL_ISUPPORTS(nsTemporaryFileInputStream,
+                  nsIInputStream,
+                  nsISeekableStream,
+                  nsIIPCSerializableInputStream)
 
 nsTemporaryFileInputStream::nsTemporaryFileInputStream(FileDescOwner* aFileDescOwner, uint64_t aStartPos, uint64_t aEndPos)
   : mFileDescOwner(aFileDescOwner),
@@ -17,6 +22,14 @@ nsTemporaryFileInputStream::nsTemporaryFileInputStream(FileDescOwner* aFileDescO
     mClosed(false)
 { 
   NS_ASSERTION(aStartPos <= aEndPos, "StartPos should less equal than EndPos!");
+}
+
+nsTemporaryFileInputStream::nsTemporaryFileInputStream()
+  : mStartPos(0),
+    mCurPos(0),
+    mEndPos(0),
+    mClosed(false)
+{
 }
 
 NS_IMETHODIMP
@@ -163,4 +176,66 @@ nsTemporaryFileInputStream::SetEOF()
   }
 
   return Close();
+}
+
+void
+nsTemporaryFileInputStream::Serialize(InputStreamParams& aParams,
+                                      FileDescriptorArray& aFileDescriptors)
+{
+  TemporaryFileInputStreamParams params;
+
+  MutexAutoLock lock(mFileDescOwner->FileMutex());
+  MOZ_ASSERT(mFileDescOwner->mFD);
+  if (!mClosed) {
+    FileHandleType fd = FileHandleType(PR_FileDesc2NativeHandle(mFileDescOwner->mFD));
+    NS_ASSERTION(fd, "This should never be null!");
+
+    DebugOnly<FileDescriptor*> dbgFD = aFileDescriptors.AppendElement(fd);
+    NS_ASSERTION(dbgFD->IsValid(), "Sending an invalid file descriptor!");
+
+    params.fileDescriptorIndex() = aFileDescriptors.Length() - 1;
+
+    Close();
+  } else {
+    NS_WARNING("The stream is already closed. "
+               "Sending an invalid file descriptor to the other process!");
+
+    params.fileDescriptorIndex() = UINT32_MAX;
+  }
+  params.startPos() = mCurPos;
+  params.endPos() = mEndPos;
+  aParams = params;
+}
+
+bool
+nsTemporaryFileInputStream::Deserialize(const InputStreamParams& aParams,
+                                        const FileDescriptorArray& aFileDescriptors)
+{
+  const TemporaryFileInputStreamParams& params = aParams.get_TemporaryFileInputStreamParams();
+
+  uint32_t fileDescriptorIndex = params.fileDescriptorIndex();
+  FileDescriptor fd;
+  if (fileDescriptorIndex < aFileDescriptors.Length()) {
+    fd = aFileDescriptors[fileDescriptorIndex];
+    NS_WARNING_ASSERTION(fd.IsValid(),
+                         "Received an invalid file descriptor!");
+  } else {
+    NS_WARNING("Received a bad file descriptor index!");
+  }
+
+  if (fd.IsValid()) {
+    auto rawFD = fd.ClonePlatformHandle();
+    PRFileDesc* fileDesc = PR_ImportFile(PROsfd(rawFD.release()));
+    if (!fileDesc) {
+      NS_WARNING("Failed to import file handle!");
+      return false;
+    }
+    mFileDescOwner = new FileDescOwner(fileDesc);
+  } else {
+    mClosed = true;
+  }
+
+  mStartPos = mCurPos = params.startPos();
+  mEndPos = params.endPos();
+  return true;
 }

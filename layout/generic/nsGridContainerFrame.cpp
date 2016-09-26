@@ -1644,7 +1644,7 @@ struct nsGridContainerFrame::Tracks
 
     bool hasRepeatAuto = aGridTemplate.HasRepeatAuto();
     const nsTArray<nsTArray<nsString>>& lineNameLists(
-        aGridTemplate.mLineNameLists);
+      aGridTemplate.mLineNameLists);
 
     if (!hasRepeatAuto) {
       if (aIndex < lineNameLists.Length()) {
@@ -1656,11 +1656,7 @@ struct nsGridContainerFrame::Tracks
       const uint32_t repeatAutoEnd = (repeatAutoStart + repeatTrackCount);
       const int32_t repeatEndDelta = int32_t(repeatTrackCount - 1);
 
-      if (aIndex < repeatAutoEnd && aIndex >= repeatAutoStart) {
-        lineNames.AppendElements(aGridTemplate.mRepeatAutoLineNameListBefore);
-      } else if (aIndex <= repeatAutoEnd && aIndex > repeatAutoStart) {
-        lineNames.AppendElements(aGridTemplate.mRepeatAutoLineNameListAfter);
-      } else if (aIndex <= repeatAutoStart) {
+      if (aIndex <= repeatAutoStart) {
         if (aIndex < lineNameLists.Length()) {
           lineNames.AppendElements(lineNameLists[aIndex]);
         }
@@ -1670,7 +1666,14 @@ struct nsGridContainerFrame::Tracks
             lineNames.AppendElements(lineNameLists[i]);
           }
         }
-      } else if (aIndex >= repeatAutoEnd) {
+      }
+      if (aIndex <= repeatAutoEnd && aIndex > repeatAutoStart) {
+        lineNames.AppendElements(aGridTemplate.mRepeatAutoLineNameListAfter);
+      }
+      if (aIndex < repeatAutoEnd && aIndex >= repeatAutoStart) {
+        lineNames.AppendElements(aGridTemplate.mRepeatAutoLineNameListBefore);
+      }
+      if (aIndex >= repeatAutoEnd && aIndex > repeatAutoStart) {
         uint32_t i = aIndex - repeatEndDelta;
         if (i < lineNameLists.Length()) {
           lineNames.AppendElements(lineNameLists[i]);
@@ -5795,7 +5798,8 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
       Move(colTrackPositions),
       Move(colTrackSizes),
       Move(colTrackStates),
-      Move(colRemovedRepeatTracks));
+      Move(colRemovedRepeatTracks),
+      gridReflowInput.mColFunctions.mRepeatAutoStart);
     Properties().Set(GridColTrackInfo(), colInfo);
 
     uint32_t rowTrackCount = gridReflowInput.mRows.mSizes.Length();
@@ -5829,7 +5833,8 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
       Move(rowTrackPositions),
       Move(rowTrackSizes),
       Move(rowTrackStates),
-      Move(rowRemovedRepeatTracks));
+      Move(rowRemovedRepeatTracks),
+      gridReflowInput.mRowFunctions.mRepeatAutoStart);
     Properties().Set(GridRowTrackInfo(), rowInfo);
 
     if (prevInFlow) {
@@ -5859,7 +5864,8 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
         Move(priorRowInfo->mPositions),
         Move(priorRowInfo->mSizes),
         Move(priorRowInfo->mStates),
-        Move(priorRowInfo->mRemovedRepeatTracks));
+        Move(priorRowInfo->mRemovedRepeatTracks),
+        priorRowInfo->mRepeatFirstTrack);
       prevInFlow->Properties().Set(GridRowTrackInfo(), revisedPriorRowInfo);
     }
 
@@ -5869,39 +5875,45 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
     // implicit names from grid areas and assign them to the appropriate lines.
 
     // Generate column lines first.
-    uint32_t capacity = gridReflowInput.mColFunctions.NumRepeatTracks() +
-                        gridReflowInput.mCols.mSizes.Length();
+    uint32_t capacity = gridReflowInput.mCols.mSizes.Length();
+    const nsStyleGridTemplate& gridColTemplate =
+      gridReflowInput.mGridStyle->mGridTemplateColumns;
     nsTArray<nsTArray<nsString>> columnLineNames(capacity);
     for (col = 0; col <= gridReflowInput.mCols.mSizes.Length(); col++) {
       // Offset col by the explicit grid offset, to get the original names.
       nsTArray<nsString> explicitNames =
         gridReflowInput.mCols.GetExplicitLineNamesAtIndex(
-          gridReflowInput.mGridStyle->mGridTemplateColumns,
+          gridColTemplate,
           gridReflowInput.mColFunctions,
           col - gridReflowInput.mColFunctions.mExplicitGridOffset);
 
       columnLineNames.AppendElement(explicitNames);
     }
     ComputedGridLineInfo* columnLineInfo = new ComputedGridLineInfo(
-      Move(columnLineNames));
+      Move(columnLineNames),
+      gridColTemplate.mRepeatAutoLineNameListBefore,
+      gridColTemplate.mRepeatAutoLineNameListAfter);
     Properties().Set(GridColumnLineInfo(), columnLineInfo);
 
     // Generate row lines next.
-    capacity = gridReflowInput.mRowFunctions.NumRepeatTracks() +
-               gridReflowInput.mRows.mSizes.Length();
+    capacity = gridReflowInput.mRows.mSizes.Length();
+    const nsStyleGridTemplate& gridRowTemplate =
+      gridReflowInput.mGridStyle->mGridTemplateRows;
     nsTArray<nsTArray<nsString>> rowLineNames(capacity);
     for (row = 0; row <= gridReflowInput.mRows.mSizes.Length(); row++) {
       // Offset row by the explicit grid offset, to get the original names.
       nsTArray<nsString> explicitNames =
         gridReflowInput.mRows.GetExplicitLineNamesAtIndex(
-          gridReflowInput.mGridStyle->mGridTemplateRows,
+          gridRowTemplate,
           gridReflowInput.mRowFunctions,
           row - gridReflowInput.mRowFunctions.mExplicitGridOffset);
 
       rowLineNames.AppendElement(explicitNames);
     }
     ComputedGridLineInfo* rowLineInfo = new ComputedGridLineInfo(
-      Move(rowLineNames));
+      Move(rowLineNames),
+      gridRowTemplate.mRepeatAutoLineNameListBefore,
+      gridRowTemplate.mRepeatAutoLineNameListAfter);
     Properties().Set(GridRowLineInfo(), rowLineInfo);
 
     // Generate area info for explicit areas. Implicit areas are handled

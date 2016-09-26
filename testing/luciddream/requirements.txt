@@ -1,2 +1,0 @@
-marionette-client >= 1.1.0
-mozlog >= 3.0

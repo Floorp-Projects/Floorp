@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 sts=4 et cindent: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -501,6 +502,34 @@ ClusterIterator::Next()
 
     NS_ASSERTION(mText < mPos && mPos <= mLimit,
                  "ClusterIterator::Next has overshot the string!");
+}
+
+void
+ClusterReverseIterator::Next()
+{
+    if (AtEnd()) {
+        NS_WARNING("ClusterReverseIterator has already reached the end");
+        return;
+    }
+
+    uint32_t ch;
+    do {
+        ch = *--mPos;
+
+        if (NS_IS_LOW_SURROGATE(ch) && mPos > mLimit &&
+            NS_IS_HIGH_SURROGATE(*(mPos - 1))) {
+            ch = SURROGATE_TO_UCS4(*--mPos, ch);
+        }
+
+        if (!IsClusterExtender(ch)) {
+            break;
+        }
+    } while (mPos > mLimit);
+
+    // XXX May need to handle conjoining Jamo
+
+    NS_ASSERTION(mPos >= mLimit,
+                 "ClusterReverseIterator::Next has overshot the string!");
 }
 
 uint32_t

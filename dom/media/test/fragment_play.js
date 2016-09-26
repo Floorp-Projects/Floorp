@@ -19,7 +19,7 @@ function onSeeked() {
     return;
 
   var s = start == null ? 0 : start;
-  ok(v.currentTime == s, "seeked currentTime is " + v.currentTime + " != " + s);
+  ok(v.currentTime - s < 0.1, "seeked currentTime is " + v.currentTime + " != " + s + " (fuzzy compare +-0.1)");
 
   seekedRaised = true;
 }

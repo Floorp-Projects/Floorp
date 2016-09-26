@@ -123,7 +123,7 @@ NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Traverse
     if (tmp->IsValid()) {
         MOZ_ASSERT(refcnt > 1);
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mJSObj");
-        cb.NoteJSObject(tmp->GetJSObjectPreserveColor());
+        cb.NoteJSChild(JS::GCCellPtr(tmp->GetJSObjectPreserveColor()));
     }
 
     if (tmp->IsRootWrapper()) {
