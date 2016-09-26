@@ -11,7 +11,6 @@
 #include "mozilla/dom/CSSStyleSheetBinding.h"
 #include "mozilla/net/ReferrerPolicy.h"
 #include "mozilla/StyleBackendType.h"
-#include "mozilla/StyleSheetHandle.h"
 #include "mozilla/CORSMode.h"
 
 class nsIDocument;
@@ -70,7 +69,6 @@ public:
   // correct type.
   inline CSSStyleSheet* AsGecko();
   inline ServoStyleSheet* AsServo();
-  inline StyleSheetHandle AsHandle();
   inline const CSSStyleSheet* AsGecko() const;
   inline const ServoStyleSheet* AsServo() const;
 

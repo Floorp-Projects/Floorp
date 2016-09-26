@@ -28,15 +28,6 @@ StyleSheet::AsServo()
   return static_cast<ServoStyleSheet*>(this);
 }
 
-StyleSheetHandle
-StyleSheet::AsHandle()
-{
-  if (IsServo()) {
-    return AsServo();
-  }
-  return AsGecko();
-}
-
 const CSSStyleSheet*
 StyleSheet::AsGecko() const
 {
