@@ -2907,13 +2907,9 @@ nsObjectLoadingContent::CreateStaticClone(nsObjectLoadingContent* aDest) const
     aDest->mPrintFrame = const_cast<nsObjectLoadingContent*>(this)->GetExistingFrame();
   }
 
-  nsCOMPtr<nsIContent> content =
-    do_QueryInterface(static_cast<nsIImageLoadingContent*>(aDest));
-  if (aDest->mPrintFrame) {
-    content->OwnerDoc()->SetMayHavePluginFramesForPrinting();
-  }
-
   if (mFrameLoader) {
+    nsCOMPtr<nsIContent> content =
+      do_QueryInterface(static_cast<nsIImageLoadingContent*>(aDest));
     nsFrameLoader* fl = nsFrameLoader::Create(content->AsElement(), false);
     if (fl) {
       aDest->mFrameLoader = fl;
