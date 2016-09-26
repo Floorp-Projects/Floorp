@@ -1331,6 +1331,16 @@ CycleCollectedJSContext::DumpJSHeap(FILE* aFile)
 }
 
 void
+CycleCollectedJSContext::BeginCycleCollectionCallback()
+{
+}
+
+void
+CycleCollectedJSContext::EndCycleCollectionCallback(CycleCollectorResults& aResults)
+{
+}
+
+void
 CycleCollectedJSContext::ProcessStableStateQueue()
 {
   MOZ_ASSERT(mJSContext);
