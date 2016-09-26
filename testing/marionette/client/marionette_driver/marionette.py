@@ -1041,11 +1041,24 @@ class Marionette(object):
                                of the application. Possible values here correspond
                                to constants in nsIAppStartup: http://mzl.la/1X0JZsC.
         """
-        flags = set(["eForceQuit"])
+        flags = set([])
         if shutdown_flags:
             flags.add(shutdown_flags)
-        self._send_message("quitApplication", {"flags": list(flags)})
 
+        # Trigger a 'quit-application-requested' observer notification so that
+        # components can safely shutdown before quitting the application.
+        with self.using_context("chrome"):
+            canceled = self.execute_script("""
+                Components.utils.import("resource://gre/modules/Services.jsm");
+                let cancelQuit = Components.classes["@mozilla.org/supports-PRBool;1"].
+                                 createInstance(Components.interfaces.nsISupportsPRBool);
+                Services.obs.notifyObservers(cancelQuit, "quit-application-requested", null);
+                return cancelQuit.data;
+                """)
+            if canceled:
+                raise errors.MarionetteException("Something canceled the quit application request")
+
+        self._send_message("quitApplication", {"flags": list(flags)})
         self.delete_session(in_app=True)
 
     @do_process_check
