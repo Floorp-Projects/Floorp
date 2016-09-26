@@ -2765,16 +2765,6 @@ public:
     return mHasScrollLinkedEffect;
   }
 
-  bool MayHavePluginFramesForPrinting()
-  {
-    return mMayHavePluginFramesForPrinting;
-  }
-
-  void SetMayHavePluginFramesForPrinting()
-  {
-    mMayHavePluginFramesForPrinting = true;
-  }
-
 protected:
   bool GetUseCounter(mozilla::UseCounter aUseCounter)
   {
@@ -3070,10 +3060,6 @@ protected:
 
   // True is document has ever been in a foreground window.
   bool mEverInForeground : 1;
-
-  // True if this document is a static clone for printing and may
-  // have elements referring to plugins in the original document.
-  bool mMayHavePluginFramesForPrinting : 1;
 
   enum Type {
     eUnknown, // should never be used
