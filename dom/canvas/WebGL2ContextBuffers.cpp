@@ -85,6 +85,8 @@ WebGL2Context::CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
     }
 
     gl->MakeCurrent();
+    const ScopedLazyBind readBind(gl, readTarget, readBuffer);
+    const ScopedLazyBind writeBind(gl, writeTarget, writeBuffer);
     gl->fCopyBufferSubData(readTarget, writeTarget, readOffset, writeOffset, size);
 }
 
@@ -143,6 +145,7 @@ WebGL2Context::GetBufferSubData(GLenum target, GLintptr offset,
     ////
 
     gl->MakeCurrent();
+    const ScopedLazyBind readBind(gl, target, buffer);
 
     const auto ptr = gl->fMapBufferRange(target, offset, data.LengthAllowShared(),
                                          LOCAL_GL_MAP_READ_BIT);
