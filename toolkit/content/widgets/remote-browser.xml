@@ -369,9 +369,11 @@
           this._remoteWebNavigationImpl = this._remoteWebNavigation.wrappedJSObject;
           this._remoteWebNavigationImpl.swapBrowser(this);
 
-          // Initialize to the null principal
-          let Services = Components.utils.import("resource://gre/modules/Services.jsm", {}).Services
-          this._contentPrincipal = Services.scriptSecurityManager.createNullPrincipal({});
+          // Initialize contentPrincipal to the about:blank principal for this loadcontext
+          let {Services} = Components.utils.import("resource://gre/modules/Services.jsm", {});
+          let aboutBlank = Services.io.newURI("about:blank", null, null);
+          let ssm = Services.scriptSecurityManager;
+          this._contentPrincipal = ssm.getLoadContextCodebasePrincipal(aboutBlank, this.loadContext);
 
           this.messageManager.addMessageListener("Browser:Init", this);
           this.messageManager.addMessageListener("DOMTitleChanged", this);
