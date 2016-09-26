@@ -1469,12 +1469,12 @@ function getPlayableVideo(candidates) {
 }
 
 function getPlayableVideos(candidates) {
-  var v = document.createElement("video");
+  var v = manifestVideo();
   return candidates.filter(function(x){return /^video/.test(x.type) && v.canPlayType(x.type);});
 }
 
 function getPlayableAudio(candidates) {
-  var v = document.createElement("audio");
+  var v = manifestVideo();
   var resources = candidates.filter(function(x){return /^audio/.test(x.type) && v.canPlayType(x.type);});
   if (resources.length > 0)
     return resources[0];
