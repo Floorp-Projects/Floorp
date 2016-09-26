@@ -190,33 +190,31 @@ Decoder::CompleteDecode()
     PostError();
   }
 
-  // If this was a metadata decode and we never got a size, the decode failed.
-  if (IsMetadataDecode() && !HasSize()) {
-    PostError();
+  if (IsMetadataDecode()) {
+    // If this was a metadata decode and we never got a size, the decode failed.
+    if (!HasSize()) {
+      PostError();
+    }
+    return;
   }
 
-  // If the implementation left us mid-frame, finish that up.
-  if (mInFrame && !HasError()) {
+  // If the implementation left us mid-frame, finish that up. Note that it may
+  // have left us transparent.
+  if (mInFrame) {
+    PostHasTransparency();
     PostFrameStop();
   }
 
-  // If PostDecodeDone() has not been called, we need to send teardown
-  // notifications (and report an error to the console later).
-  if (!mDecodeDone && !IsMetadataDecode()) {
+  // If PostDecodeDone() has not been called, we may need to send teardown
+  // notifications if it is unrecoverable.
+  if (!mDecodeDone) {
+    // We should always report an error to the console in this case.
     mShouldReportError = true;
 
-    // Even if we encountered an error, we're still usable if we have at least
-    // one complete frame.
     if (GetCompleteFrameCount() > 0) {
-      // We're usable, so do exactly what we should have when the decoder
-      // completed.
-
-      // Not writing to the entire frame may have left us transparent.
+      // We're usable if we have at least one complete frame, so do exactly
+      // what we should have when the decoder completed.
       PostHasTransparency();
-
-      if (mInFrame) {
-        PostFrameStop();
-      }
       PostDecodeDone();
     } else {
       // We're not usable. Record some final progress indicating the error.
@@ -224,7 +222,7 @@ Decoder::CompleteDecode()
     }
   }
 
-  if (mDecodeDone && !IsMetadataDecode()) {
+  if (mDecodeDone) {
     MOZ_ASSERT(HasError() || mCurrentFrame, "Should have an error or a frame");
 
     // If this image wasn't animated and isn't a transient image, mark its frame
@@ -510,8 +508,12 @@ Decoder::PostError()
 {
   mError = true;
 
-  if (mInFrame && mCurrentFrame) {
+  if (mInFrame) {
+    MOZ_ASSERT(mCurrentFrame);
+    MOZ_ASSERT(mFrameCount > 0);
     mCurrentFrame->Abort();
+    mInFrame = false;
+    --mFrameCount;
   }
 }
 
