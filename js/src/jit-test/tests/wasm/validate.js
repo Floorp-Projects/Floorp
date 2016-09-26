@@ -24,3 +24,10 @@ assertEq(validate(wasmTextToBinary(`(module (func) (export "run" 0))`)), true);
 // Feature-testing proof-of-concept.
 assertEq(validate(wasmTextToBinary(`(module (memory 1) (func (result i32) (current_memory)))`)), true);
 assertEq(validate(wasmTextToBinary(`(module (memory 1) (func (result i32) (grow_memory (i32.const 42))))`)), true);
+
+// Enable warning as errors.
+options("werror");
+assertErrorMessage(() => validate(wasmTextToBinary(`(module (func) (func) (export "a" 2))`)),
+                  WebAssembly.CompileError,
+                  /exported function index out of bounds/);
+options("werror");
