@@ -1528,6 +1528,9 @@ WebGL2Context::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenu
         bytesAfterOffset = checkedBytesAfterOffset.value();
     }
 
+    gl->MakeCurrent();
+    const ScopedLazyBind lazyBind(gl, LOCAL_GL_PIXEL_PACK_BUFFER, mBoundPixelPackBuffer);
+
     ReadPixelsImpl(x, y, width, height, format, type, (void*)offset, bytesAfterOffset);
 }
 
