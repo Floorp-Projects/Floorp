@@ -50,7 +50,7 @@ ServoStyleSheet::SetOwningDocument(nsIDocument* aDocument)
   mDocument = aDocument;
 }
 
-StyleSheetHandle
+ServoStyleSheet*
 ServoStyleSheet::GetParentSheet() const
 {
   // XXXheycam: When we implement support for child sheets, we'll have
@@ -60,7 +60,7 @@ ServoStyleSheet::GetParentSheet() const
 }
 
 void
-ServoStyleSheet::AppendStyleSheet(StyleSheetHandle aSheet)
+ServoStyleSheet::AppendStyleSheet(ServoStyleSheet* aSheet)
 {
   // XXXheycam: When we implement support for child sheets, we'll have
   // to fix SetOwningDocument to propagate the owning document down
