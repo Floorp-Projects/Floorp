@@ -18,10 +18,49 @@
 
 #include "asmjs/WasmBinary.h"
 
+#include <stdarg.h>
+
+#include "jsprf.h"
 #include "asmjs/WasmTypes.h"
 
 using namespace js;
 using namespace js::wasm;
+
+bool
+Decoder::fail(const char* msg, ...) {
+    va_list ap;
+    va_start(ap, msg);
+    UniqueChars str(JS_vsmprintf(msg, ap));
+    va_end(ap);
+    if (!str)
+        return false;
+
+    return fail(Move(str));
+}
+
+bool
+Decoder::fail(UniqueChars msg) {
+    UniqueChars strWithOffset(JS_smprintf("at offset %zu: %s", currentOffset(), msg.get()));
+    if (!strWithOffset)
+        return false;
+
+    *error_ = Move(strWithOffset);
+    return false;
+}
+
+bool
+wasm::DecodePreamble(Decoder& d)
+{
+    uint32_t u32;
+    if (!d.readFixedU32(&u32) || u32 != MagicNumber)
+        return d.fail("failed to match magic number");
+
+    if (!d.readFixedU32(&u32) || u32 != EncodingVersion)
+        return d.fail("binary version 0x%" PRIx32 " does not match expected version 0x%" PRIx32,
+                      u32, EncodingVersion);
+
+    return true;
+}
 
 bool
 wasm::EncodeLocalEntries(Encoder& e, const ValTypeVector& locals)
@@ -80,6 +119,66 @@ wasm::DecodeLocalEntries(Decoder& d, ValTypeVector* locals)
             return false;
 
         if (!locals->appendN(type, count))
+            return false;
+    }
+
+    return true;
+}
+
+bool
+wasm::DecodeGlobalType(Decoder& d, ValType* type, uint32_t* flags)
+{
+    if (!d.readValType(type))
+        return d.fail("bad global type");
+
+    if (!d.readVarU32(flags))
+        return d.fail("expected global flags");
+
+    if (*flags & ~uint32_t(GlobalFlags::AllowedMask))
+        return d.fail("unexpected bits set in global flags");
+
+    return true;
+}
+
+bool
+wasm::DecodeResizable(Decoder& d, ResizableLimits* limits)
+{
+    uint32_t flags;
+    if (!d.readVarU32(&flags))
+        return d.fail("expected flags");
+
+    if (flags & ~uint32_t(ResizableFlags::AllowedMask))
+        return d.fail("unexpected bits set in flags: %" PRIu32,
+                      (flags & ~uint32_t(ResizableFlags::AllowedMask)));
+
+    if (!(flags & uint32_t(ResizableFlags::Default)))
+        return d.fail("currently, every memory/table must be declared default");
+
+    if (!d.readVarU32(&limits->initial))
+        return d.fail("expected initial length");
+
+    if (flags & uint32_t(ResizableFlags::HasMaximum)) {
+        uint32_t maximum;
+        if (!d.readVarU32(&maximum))
+            return d.fail("expected maximum length");
+
+        if (limits->initial > maximum) {
+            return d.fail("memory size minimum must not be greater than maximum; "
+                          "maximum length %" PRIu32 " is less than initial length %" PRIu32,
+                          maximum, limits->initial);
+        }
+
+        limits->maximum.emplace(maximum);
+    }
+
+    return true;
+}
+
+bool
+wasm::DecodeUnknownSections(Decoder& d)
+{
+    while (!d.done()) {
+        if (!d.skipUserDefinedSection())
             return false;
     }
 

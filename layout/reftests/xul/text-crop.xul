@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<window class="reftest-wait"
+        align="left"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <html:style type="text/css">
+    @font-face {
+      font-family: firasans;
+      src: url(../fonts/fira/FiraSans-Regular.otf);
+    }
+    vbox {
+      font-family: firasans;
+      font-size: 40px;
+    }
+  </html:style>
+<vbox width="230">
+  <label id="start" value="" crop="start" />
+  <label id="end" value="" crop="end" />
+  <label id="center" value="" crop="center" />
+</vbox>
+<script>
+<![CDATA[
+function text(n) {
+  return "\u{1F310}".repeat(n);
+}
+document.getElementById("start").value = text(10);
+document.getElementById("end").value = text(10);
+document.getElementById("center").value = text(10);
+document.documentElement.className = "";
+]]>
+</script>
+</window>

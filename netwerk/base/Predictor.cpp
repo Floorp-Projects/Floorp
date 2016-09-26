@@ -329,11 +329,7 @@ Predictor::Predictor()
   :mInitialized(false)
   ,mEnabled(true)
   ,mEnableHoverOnSSL(false)
-#ifdef NIGHTLY_BUILD
   ,mEnablePrefetch(true)
-#else
-  ,mEnablePrefetch(false)
-#endif
   ,mPageDegradationDay(PREDICTOR_PAGE_DELTA_DAY_DEFAULT)
   ,mPageDegradationWeek(PREDICTOR_PAGE_DELTA_WEEK_DEFAULT)
   ,mPageDegradationMonth(PREDICTOR_PAGE_DELTA_MONTH_DEFAULT)
@@ -387,11 +383,7 @@ Predictor::InstallObserver()
   Preferences::AddBoolVarCache(&mEnabled, PREDICTOR_ENABLED_PREF, true);
   Preferences::AddBoolVarCache(&mEnableHoverOnSSL,
                                PREDICTOR_SSL_HOVER_PREF, false);
-#ifdef NIGHTLY_BUILD
   Preferences::AddBoolVarCache(&mEnablePrefetch, PREDICTOR_PREFETCH_PREF, true);
-#else
-  Preferences::AddBoolVarCache(&mEnablePrefetch, PREDICTOR_PREFETCH_PREF, false);
-#endif
   Preferences::AddIntVarCache(&mPageDegradationDay,
                               PREDICTOR_PAGE_DELTA_DAY_PREF,
                               PREDICTOR_PAGE_DELTA_DAY_DEFAULT);

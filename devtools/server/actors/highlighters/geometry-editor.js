@@ -6,12 +6,9 @@
 
 const { extend } = require("sdk/core/heritage");
 const { AutoRefreshHighlighter } = require("./auto-refresh");
-const {
-  CanvasFrameAnonymousContentHelper, getCSSStyleRules, getComputedStyle,
-  createSVGNode, createNode } = require("./utils/markup");
-
-const { setIgnoreLayoutChanges,
-  getAdjustedQuads } = require("devtools/shared/layout/utils");
+const { CanvasFrameAnonymousContentHelper, getCSSStyleRules, getComputedStyle,
+        createSVGNode, createNode } = require("./utils/markup");
+const { setIgnoreLayoutChanges, getAdjustedQuads } = require("devtools/shared/layout/utils");
 
 const GEOMETRY_LABEL_SIZE = 6;
 

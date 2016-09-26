@@ -3,7 +3,7 @@ load(libdir + "wasm.js");
 
 var i = wasmEvalText(
 `(module
-   (memory 1 (segment 0 "\\01\\02\\03\\04\\05\\06\\07\\08"))
+   (memory 1) (data 0 "\\01\\02\\03\\04\\05\\06\\07\\08")
    (func $off1 (param $base i32) (result i32)
      (i32.add
        (i32.load8_u (get_local $base))
@@ -16,7 +16,7 @@ var i = wasmEvalText(
        (i32.load8_u offset=2 (get_local $base)))
    )
    (export "off2" $off2)
-)`);
+)`).exports;
 assertEq(i.off1(0), 3);
 assertEq(i.off1(1), 5);
 assertEq(i.off1(2), 7);

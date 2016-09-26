@@ -908,7 +908,7 @@ const char* gc::ZealModeHelpText =
     "   12: (ElementsBarrier) Always use the individual element post-write barrier, regardless of elements size\n"
     "   13: (CheckHashTablesOnMinorGC) Check internal hashtables on minor GC\n"
     "   14: (Compact) Perform a shrinking collection every N allocations\n"
-    "   15: (CheckHeapOnMovingGC) Walk the heap to check all pointers have been updated\n"
+    "   15: (CheckHeapAfterGC) Walk the heap to check its integrity after every GC\n"
     "   16: (CheckNursery) Check nursery integrity on minor GC\n";
 
 void
@@ -6337,9 +6337,9 @@ GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::R
         maybeDoCycleCollection();
 
 #ifdef JS_GC_ZEAL
-    if (shouldCompact() && rt->hasZealMode(ZealMode::CheckHeapOnMovingGC)) {
+    if (rt->hasZealMode(ZealMode::CheckHeapAfterGC)) {
         gcstats::AutoPhase ap(rt->gc.stats, gcstats::PHASE_TRACE_HEAP);
-        CheckHeapAfterMovingGC(rt);
+        CheckHeapAfterGC(rt);
     }
 #endif
 }
@@ -6542,8 +6542,8 @@ GCRuntime::minorGC(JS::gcreason::Reason reason, gcstats::Phase phase)
     blocksToFreeAfterMinorGC.freeAll();
 
 #ifdef JS_GC_ZEAL
-    if (rt->hasZealMode(ZealMode::CheckHeapOnMovingGC))
-        CheckHeapAfterMovingGC(rt);
+    if (rt->hasZealMode(ZealMode::CheckHeapAfterGC))
+        CheckHeapAfterGC(rt);
 #endif
 
     {

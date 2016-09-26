@@ -891,7 +891,7 @@ js::Nursery::maybeResizeNursery(JS::gcreason::Reason reason, double promotionRat
     // Shrink the nursery to its minimum size of we ran out of memory or
     // received a memory pressure event.
     if (gc::IsOOMReason(reason)) {
-        updateNumChunks(1);
+        minimizeAllocableSpace();
         return;
     }
 
@@ -917,6 +917,16 @@ js::Nursery::shrinkAllocableSpace()
         return;
 #endif
     updateNumChunks(Max(numChunks() - 1, 1u));
+}
+
+void
+js::Nursery::minimizeAllocableSpace()
+{
+#ifdef JS_GC_ZEAL
+    if (runtime()->hasZealMode(ZealMode::GenerationalGC))
+        return;
+#endif
+    updateNumChunks(1);
 }
 
 void

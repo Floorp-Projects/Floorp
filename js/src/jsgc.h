@@ -1222,7 +1222,7 @@ CheckValueAfterMovingGC(const JS::Value& value)
             D(ElementsBarrier, 12)             \
             D(CheckHashTablesOnMinorGC, 13)    \
             D(Compact, 14)                     \
-            D(CheckHeapOnMovingGC, 15)         \
+            D(CheckHeapAfterGC, 15)            \
             D(CheckNursery, 16)
 
 enum class ZealMode {

@@ -5,13 +5,15 @@ load(libdir + "wasm.js");
 
 wasmEvalText(
 `(module
-  (func $func0 (param $var0 i32) (result i32)
-	(i32.add
-	 (block
-	  (loop $label1 $label0
-		(block $label2
-		       (br_table $label0 $label1 $label2 (i64.const 0) (get_local $var0)))
-		(set_local $var0 (i32.mul (i32.const 2) (get_local $var0))))
-	  (set_local $var0 (i32.add (i32.const 4) (get_local $var0))))
-	 (i32.const 1)))
+  (func $func0 (param $arg0 i32) (result i32) (local $var0 i64)
+	(set_local $var0 (i64.extend_u/i32 (get_local $arg0)))
+	(i32.wrap/i64
+	 (i64.add
+	  (block i64
+	   (loop $label1 $label0
+		(drop (block $label2 i64
+		       (br_table $label2 (i64.const 0) (get_local $arg0))))
+		(set_local $var0 (i64.mul (i64.const 2) (get_local $var0))))
+	   (tee_local $var0 (i64.add (i64.const 4) (get_local $var0))))
+	  (i64.const 1))))
   (export "" 0))`);

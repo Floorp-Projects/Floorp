@@ -132,7 +132,6 @@
 /* Firebug Theme */
 
 .theme-firebug .tabs .tabs-navigation {
-  background-color: rgb(219, 234, 249);
   background-image: linear-gradient(rgba(253, 253, 253, 0.2), rgba(253, 253, 253, 0));
   padding-top: 3px;
   padding-left: 3px;

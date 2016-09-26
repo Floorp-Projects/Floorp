@@ -7,6 +7,7 @@ skip-if((B2G&&browserIsRemote)||Mulet) == textbox-overflow-1.xul textbox-overflo
 skip-if(cocoaWidget) skip-if((B2G&&browserIsRemote)||Mulet) == accesskey.xul accesskey-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
 fails-if(cocoaWidget) fails-if(browserIsRemote&&dwrite) fuzzy-if(xulRuntime.widgetToolkit=="gtk3",1,11) skip-if((B2G&&browserIsRemote)||Mulet) == tree-row-outline-1.xul tree-row-outline-1-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop, win8: bug 1254832
 skip-if((B2G&&browserIsRemote)||Mulet) != tree-row-outline-1.xul tree-row-outline-1-notref.xul # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if((B2G&&browserIsRemote)||Mulet) == text-crop.xul text-crop-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if((B2G&&browserIsRemote)||Mulet) == text-small-caps-1.xul text-small-caps-1-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,60) fuzzy-if(cocoaWidget&&browserIsRemote&&!skiaContent,1,31) fuzzy-if(winWidget&&browserIsRemote&&layersGPUAccelerated,1,50) == inactive-fixed-bg-bug1205630.xul inactive-fixed-bg-bug1205630-ref.html
 skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,60) fuzzy-if(cocoaWidget&&browserIsRemote&&!skiaContent,1,31) fuzzy-if(winWidget&&browserIsRemote&&layersGPUAccelerated,1,50) == inactive-fixed-bg-bug1272525.xul inactive-fixed-bg-bug1272525-ref.html

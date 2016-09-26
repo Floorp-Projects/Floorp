@@ -95,7 +95,7 @@ PresentationBuilderChild::RecvOnAnswer(const nsString& aSDP)
 bool
 PresentationBuilderChild::RecvOnIceCandidate(const nsString& aCandidate)
 {
-  if (NS_WARN_IF(NS_FAILED(mBuilder->OnIceCandidate(aCandidate)))) {
+  if (NS_WARN_IF(mBuilder && NS_FAILED(mBuilder->OnIceCandidate(aCandidate)))) {
     return false;
   }
   return true;

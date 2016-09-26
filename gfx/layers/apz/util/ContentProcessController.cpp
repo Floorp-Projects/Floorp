@@ -144,6 +144,17 @@ ContentProcessController::HandleTap(
 }
 
 void
+ContentProcessController::NotifyPinchGesture(
+                        PinchGestureInput::PinchGestureType aType,
+                        const ScrollableLayerGuid& aGuid,
+                        LayoutDeviceCoord aSpanChange,
+                        Modifiers aModifiers)
+{
+  // This should never get called
+  MOZ_ASSERT_UNREACHABLE("Unexpected message to content process");
+}
+
+void
 ContentProcessController::NotifyAPZStateChange(
                                   const ScrollableLayerGuid& aGuid,
                                   APZStateChange aChange,
