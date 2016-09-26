@@ -17,7 +17,6 @@
 #include "nsITimer.h"
 #include "nsIWeakReference.h"
 #include "nsPluginHost.h"
-#include "nsPrintfCString.h"
 #include "VideoUtils.h"
 
 #if defined(XP_WIN)
@@ -80,6 +79,10 @@ private:
 
   static const uint32_t sAnalysisPeriod_ms = 1000;
   void EnsureTimerIsStarted();
+
+  void ReportAnalysis(const NotificationAndReportStringId& aNotification,
+                      bool aIsSolved,
+                      const nsAString& aFormats);
 
   void SynthesizeAnalysis();
 
@@ -264,9 +267,6 @@ static const NotificationAndReportStringId sMediaCannotPlayNoDecoders =
 static const NotificationAndReportStringId sMediaNoDecoders =
   { dom::DecoderDoctorNotificationType::Can_play_but_some_missing_decoders,
     "MediaNoDecoders" };
-static const NotificationAndReportStringId sCannotInitializePulseAudio =
-  { dom::DecoderDoctorNotificationType::Cannot_initialize_pulseaudio,
-    "MediaCannotInitializePulseAudio" };
 
 static const NotificationAndReportStringId*
 sAllNotificationsAndReportStringIds[] =
@@ -276,8 +276,7 @@ sAllNotificationsAndReportStringIds[] =
   &sMediaUnsupportedBeforeWindowsVista,
   &sMediaPlatformDecoderNotFound,
   &sMediaCannotPlayNoDecoders,
-  &sMediaNoDecoders,
-  &sCannotInitializePulseAudio
+  &sMediaNoDecoders
 };
 
 static void
@@ -312,43 +311,32 @@ DispatchNotification(nsISupports* aSubject,
   }
 }
 
-static void
-ReportToConsole(nsIDocument* aDocument,
-                const char* aConsoleStringId,
-                const nsAString& aParams)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aDocument);
-
-  // 'params' will only be forwarded for non-empty strings.
-  const char16_t* params[1] = { aParams.Data() };
-  DD_DEBUG("DecoderDoctorDiagnostics.cpp:ReportToConsole(doc=%p) ReportToConsole - aMsg='%s' params[0]='%s'",
-           aDocument, aConsoleStringId,
-           aParams.IsEmpty() ? "<no params>" : NS_ConvertUTF16toUTF8(params[0]).get());
-  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  NS_LITERAL_CSTRING("Media"),
-                                  aDocument,
-                                  nsContentUtils::eDOM_PROPERTIES,
-                                  aConsoleStringId,
-                                  aParams.IsEmpty() ? nullptr : params,
-                                  aParams.IsEmpty() ? 0 : 1);
-}
-
-static void
-ReportAnalysis(nsIDocument* aDocument,
-               const NotificationAndReportStringId& aNotification,
-               bool aIsSolved,
-               const nsAString& aParams)
+void
+DecoderDoctorDocumentWatcher::ReportAnalysis(
+  const NotificationAndReportStringId& aNotification,
+  bool aIsSolved,
+  const nsAString& aParams)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!aDocument) {
+  if (!mDocument) {
     return;
   }
 
   // Report non-solved issues to console.
   if (!aIsSolved) {
-    ReportToConsole(aDocument, aNotification.mReportStringId, aParams);
+    // 'params' will only be forwarded for non-empty strings.
+    const char16_t* params[1] = { aParams.Data() };
+    DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::ReportAnalysis() ReportToConsole - aMsg='%s' params[0]='%s'",
+             this, mDocument, aNotification.mReportStringId,
+             aParams.IsEmpty() ? "<no params>" : NS_ConvertUTF16toUTF8(params[0]).get());
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                    NS_LITERAL_CSTRING("Media"),
+                                    mDocument,
+                                    nsContentUtils::eDOM_PROPERTIES,
+                                    aNotification.mReportStringId,
+                                    aParams.IsEmpty() ? nullptr : params,
+                                    aParams.IsEmpty() ? 0 : 1);
   }
 
   // "media.decoder-doctor.notifications-allowed" controls which notifications
@@ -363,7 +351,7 @@ ReportAnalysis(nsIDocument* aDocument,
   if (filter.EqualsLiteral("*")
       || StringListContains(filter, aNotification.mReportStringId)) {
     DispatchNotification(
-      aDocument->GetInnerWindow(), aNotification, aIsSolved, aParams);
+      mDocument->GetInnerWindow(), aNotification, aIsSolved, aParams);
   }
 }
 
@@ -477,10 +465,6 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
           }
         }
         break;
-      case DecoderDoctorDiagnostics::eEvent:
-        // Events shouldn't be stored for processing.
-        MOZ_ASSERT(false);
-        break;
       default:
         MOZ_ASSERT(diag.mDecoderDoctorDiagnostics.Type()
                      == DecoderDoctorDiagnostics::eFormatSupportCheck
@@ -523,7 +507,7 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
                     NS_ConvertUTF16toUTF8(workingFormat).get(),
                     formatsPref.Data(),
                     NS_ConvertUTF16toUTF8(formatsWithIssues).get());
-            ReportAnalysis(mDocument, *id, true, workingFormat);
+            ReportAnalysis(*id, true, workingFormat);
             // This particular Notification&ReportId has been solved, no need
             // to keep looking at other keysys/formats that might solve it too.
             solved = true;
@@ -550,8 +534,8 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
         if (CheckSilverlight() != eSilverlightEnabled) {
           DD_INFO("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - unsupported key systems: %s, widevine without WMF nor Silverlight",
                   this, mDocument, NS_ConvertUTF16toUTF8(unsupportedKeySystems).get());
-          ReportAnalysis(mDocument, sMediaWidevineNoWMFNoSilverlight,
-                         false, unsupportedKeySystems);
+          ReportAnalysis(
+            sMediaWidevineNoWMFNoSilverlight, false, unsupportedKeySystems);
           return;
         }
         break;
@@ -571,12 +555,11 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
         if (IsVistaOrLater()) {
           DD_INFO("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - unplayable formats: %s -> Cannot play media because WMF was not found",
                   this, mDocument, NS_ConvertUTF16toUTF8(formatsRequiringWMF).get());
-          ReportAnalysis(mDocument, sMediaWMFNeeded, false, formatsRequiringWMF);
+          ReportAnalysis(sMediaWMFNeeded, false, formatsRequiringWMF);
         } else {
           DD_INFO("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - unplayable formats: %s -> Cannot play media before Windows Vista",
                   this, mDocument, NS_ConvertUTF16toUTF8(formatsRequiringWMF).get());
-          ReportAnalysis(mDocument, sMediaUnsupportedBeforeWindowsVista,
-                         false, formatsRequiringWMF);
+          ReportAnalysis(sMediaUnsupportedBeforeWindowsVista, false, formatsRequiringWMF);
         }
         return;
       }
@@ -585,22 +568,21 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
       if (!formatsRequiringFFMpeg.IsEmpty()) {
         DD_INFO("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - unplayable formats: %s -> Cannot play media because platform decoder was not found",
                 this, mDocument, NS_ConvertUTF16toUTF8(formatsRequiringFFMpeg).get());
-        ReportAnalysis(mDocument, sMediaPlatformDecoderNotFound,
+        ReportAnalysis(sMediaPlatformDecoderNotFound,
                        false, formatsRequiringFFMpeg);
         return;
       }
 #endif
       DD_INFO("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - Cannot play media, unplayable formats: %s",
               this, mDocument, NS_ConvertUTF16toUTF8(unplayableFormats).get());
-      ReportAnalysis(mDocument, sMediaCannotPlayNoDecoders,
-                     false, unplayableFormats);
+      ReportAnalysis(sMediaCannotPlayNoDecoders, false, unplayableFormats);
       return;
     }
 
     DD_INFO("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - Can play media, but no decoders for some requested formats: %s",
             this, mDocument, NS_ConvertUTF16toUTF8(unplayableFormats).get());
     if (Preferences::GetBool("media.decoder-doctor.verbose", false)) {
-      ReportAnalysis(mDocument, sMediaNoDecoders, false, unplayableFormats);
+      ReportAnalysis(sMediaNoDecoders, false, unplayableFormats);
     }
     return;
   }
@@ -613,7 +595,6 @@ DecoderDoctorDocumentWatcher::AddDiagnostics(DecoderDoctorDiagnostics&& aDiagnos
                                              const char* aCallSite)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aDiagnostics.Type() != DecoderDoctorDiagnostics::eEvent);
 
   if (!mDocument) {
     return;
@@ -621,7 +602,8 @@ DecoderDoctorDocumentWatcher::AddDiagnostics(DecoderDoctorDiagnostics&& aDiagnos
 
   DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::AddDiagnostics(DecoderDoctorDiagnostics{%s}, call site '%s')",
            this, mDocument, aDiagnostics.GetDescription().Data(), aCallSite);
-  mDiagnosticsSequence.AppendElement(Diagnostics(Move(aDiagnostics), aCallSite));
+  mDiagnosticsSequence.AppendElement(
+    Diagnostics(Move(aDiagnostics), aCallSite));
   EnsureTimerIsStarted();
 }
 
@@ -729,71 +711,26 @@ DecoderDoctorDiagnostics::StoreMediaKeySystemAccess(nsIDocument* aDocument,
 
   if (NS_WARN_IF(!watcher)) {
     DD_WARN("DecoderDoctorDiagnostics[%p]::StoreMediaKeySystemAccess(nsIDocument* aDocument=%p, keysystem='%s', supported=%d, call site '%s') - Could not create document watcher",
-            this, aDocument, NS_ConvertUTF16toUTF8(aKeySystem).get(), aIsSupported, aCallSite);
+            this, NS_ConvertUTF16toUTF8(aKeySystem).get(), aIsSupported, aCallSite);
     return;
   }
 
   mKeySystem = aKeySystem;
   mIsKeySystemSupported = aIsSupported;
 
-  // StoreMediaKeySystemAccess should only be called once, after all data is
-  // available, so it is safe to Move() from this object.
+  // StoreDiagnostics should only be called once, after all data is available,
+  // so it is safe to Move() from this object.
   watcher->AddDiagnostics(Move(*this), aCallSite);
   // Even though it's moved-from, the type should stay set
   // (Only used to ensure that we do store only once.)
   MOZ_ASSERT(mDiagnosticsType == eMediaKeySystemAccessRequest);
 }
 
-void
-DecoderDoctorDiagnostics::StoreEvent(nsIDocument* aDocument,
-                                     const DecoderDoctorEvent& aEvent,
-                                     const char* aCallSite)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  // Make sure we only store once.
-  MOZ_ASSERT(mDiagnosticsType == eUnsaved);
-  mDiagnosticsType = eEvent;
-  mEvent = aEvent;
-
-  if (NS_WARN_IF(!aDocument)) {
-    DD_WARN("DecoderDoctorDiagnostics[%p]::StoreEvent(nsIDocument* aDocument=nullptr, aEvent=%s, call site '%s')",
-            this, GetDescription().get(), aCallSite);
-    return;
-  }
-
-  // Don't keep events for later processing, just handle them now.
-#ifdef MOZ_PULSEAUDIO
-  switch (aEvent.mDomain) {
-    case DecoderDoctorEvent::eAudioSinkStartup:
-      if (aEvent.mResult == NS_ERROR_DOM_MEDIA_CUBEB_INITIALIZATION_ERR) {
-        DD_INFO("DecoderDoctorDocumentWatcher[%p, doc=%p]::AddDiagnostics() - unable to initialize PulseAudio",
-                this, aDocument);
-        ReportAnalysis(aDocument, sCannotInitializePulseAudio,
-                       false, NS_LITERAL_STRING("*"));
-      } else if (aEvent.mResult == NS_OK) {
-        DD_INFO("DecoderDoctorDocumentWatcher[%p, doc=%p]::AddDiagnostics() - now able to initialize PulseAudio",
-                this, aDocument);
-        ReportAnalysis(aDocument, sCannotInitializePulseAudio,
-                       true, NS_LITERAL_STRING("*"));
-      }
-      break;
-  }
-#endif // MOZ_PULSEAUDIO
-}
-
-static const char*
-EventDomainString(DecoderDoctorEvent::Domain aDomain)
-{
-  switch (aDomain) {
-    case DecoderDoctorEvent::eAudioSinkStartup:
-      return "audio-sink-startup";
-  }
-  return "?";
-}
-
 nsCString
 DecoderDoctorDiagnostics::GetDescription() const
 {
+  MOZ_ASSERT(mDiagnosticsType == eFormatSupportCheck
+             || mDiagnosticsType == eMediaKeySystemAccessRequest);
   nsCString s;
   switch (mDiagnosticsType) {
     case eUnsaved:
@@ -835,12 +772,7 @@ DecoderDoctorDiagnostics::GetDescription() const
           break;
       }
       break;
-    case eEvent:
-      s = nsPrintfCString("event domain %s result=%u",
-                          EventDomainString(mEvent.mDomain), mEvent.mResult);
-      break;
     default:
-      MOZ_ASSERT_UNREACHABLE("Unexpected DiagnosticsType");
       s = "?";
       break;
   }

@@ -3252,8 +3252,13 @@ dnl ==================================
 dnl = Check alsa availability on Linux
 dnl ==================================
 
+dnl If using Linux, ensure that the alsa library is available
+if test "$OS_TARGET" = "Linux"; then
+    MOZ_ALSA=1
+fi
+
 MOZ_ARG_ENABLE_BOOL(alsa,
-[  --enable-alsa          Enable Alsa support],
+[  --enable-alsa          Enable Alsa support (default on Linux)],
    MOZ_ALSA=1,
    MOZ_ALSA=)
 
@@ -3284,7 +3289,6 @@ MOZ_ARG_DISABLE_BOOL(pulseaudio,
    MOZ_PULSEAUDIO=1)
 
 if test -n "$MOZ_PULSEAUDIO"; then
-    AC_DEFINE(MOZ_PULSEAUDIO)
     if test -z "$gonkdir"; then
         PKG_CHECK_MODULES(MOZ_PULSEAUDIO, libpulse, ,
              [echo "$MOZ_PULSEAUDIO_PKG_ERRORS"
