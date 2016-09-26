@@ -58,7 +58,8 @@ StyleSheet::IsComplete() const
 void
 StyleSheet::SetComplete()
 {
-  NS_ASSERTION(!IsGecko() || !AsGecko().mDirty, "Can't set a dirty sheet complete!");
+  NS_ASSERTION(!IsGecko() || !AsGecko()->mDirty,
+               "Can't set a dirty sheet complete!");
   SheetInfo().mComplete = true;
   if (mDocument && !mDisabled) {
     // Let the document know
@@ -79,9 +80,9 @@ StyleSheetInfo&
 StyleSheet::SheetInfo()
 {
   if (IsServo()) {
-    return AsServo();
+    return *AsServo();
   }
-  return *AsGecko().mInner;
+  return *AsGecko()->mInner;
 }
 
 } // namespace mozilla

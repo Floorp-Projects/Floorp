@@ -13,41 +13,41 @@
 
 namespace mozilla {
 
-CSSStyleSheet&
+CSSStyleSheet*
 StyleSheet::AsGecko()
 {
   MOZ_ASSERT(IsGecko());
-  return *static_cast<CSSStyleSheet*>(this);
+  return static_cast<CSSStyleSheet*>(this);
 }
 
-ServoStyleSheet&
+ServoStyleSheet*
 StyleSheet::AsServo()
 {
   MOZ_ASSERT(IsServo());
-  return *static_cast<ServoStyleSheet*>(this);
+  return static_cast<ServoStyleSheet*>(this);
 }
 
 StyleSheetHandle
 StyleSheet::AsHandle()
 {
   if (IsServo()) {
-    return &AsServo();
+    return AsServo();
   }
-  return &AsGecko();
+  return AsGecko();
 }
 
-const CSSStyleSheet&
+const CSSStyleSheet*
 StyleSheet::AsGecko() const
 {
   MOZ_ASSERT(IsGecko());
-  return *static_cast<const CSSStyleSheet*>(this);
+  return static_cast<const CSSStyleSheet*>(this);
 }
 
-const ServoStyleSheet&
+const ServoStyleSheet*
 StyleSheet::AsServo() const
 {
   MOZ_ASSERT(IsServo());
-  return *static_cast<const ServoStyleSheet*>(this);
+  return static_cast<const ServoStyleSheet*>(this);
 }
 
 #define FORWARD_CONCRETE(method_, geckoargs_, servoargs_) \
@@ -58,9 +58,9 @@ StyleSheet::AsServo() const
                         decltype(&ServoStyleSheet::method_)>::value, \
                 "ServoStyleSheet should define its own " #method_); \
   if (IsServo()) { \
-    return AsServo().method_ servoargs_; \
+    return AsServo()->method_ servoargs_; \
   } \
-  return AsGecko().method_ geckoargs_;
+  return AsGecko()->method_ geckoargs_;
 
 #define FORWARD(method_, args_) FORWARD_CONCRETE(method_, args_, args_)
 
@@ -140,7 +140,7 @@ StyleSheet::GetParentSheet() const
 void
 StyleSheet::AppendStyleSheet(StyleSheet* aSheet)
 {
-  FORWARD_CONCRETE(AppendStyleSheet, (&aSheet->AsGecko()), (&aSheet->AsServo()))
+  FORWARD_CONCRETE(AppendStyleSheet, (aSheet->AsGecko()), (aSheet->AsServo()))
 }
 
 nsIPrincipal*
