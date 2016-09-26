@@ -972,15 +972,23 @@ pref("security.sandbox.windows.log.stackTraceDepth", 0);
 #endif
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX) && defined(MOZ_CONTENT_SANDBOX)
-// This pref is discussed in bug 1083344, the naming is inspired from its Windows
-// counterpart, but on Mac it's an integer which means:
+// This pref is discussed in bug 1083344, the naming is inspired from its
+// Windows counterpart, but on Mac it's an integer which means:
 // 0 -> "no sandbox"
-// 1 -> "an imperfect sandbox designed to allow firefox to run reasonably well"
-// 2 -> "an ideal sandbox which may break many things"
+// 1 -> "preliminary content sandboxing enabled: write access to
+//       home directory is prevented"
+// 2 -> "preliminary content sandboxing enabled with profile protection:
+//       write access to home directory is prevented, read and write access
+//       to ~/Library and profile directories are prevented (excluding
+//       $PROFILE/{extensions,weave})"
 // This setting is read when the content process is started. On Mac the content
 // process is killed when all windows are closed, so a change will take effect
 // when the 1st window is opened.
+#if defined(NIGHTLY_BUILD)
+pref("security.sandbox.content.level", 2);
+#else
 pref("security.sandbox.content.level", 1);
+#endif
 #endif
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX) && defined(MOZ_CONTENT_SANDBOX)
