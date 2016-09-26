@@ -71,6 +71,7 @@ const {
   promiseAddonsWithOperationsByTypes,
   promiseCompleteAllInstalls,
   promiseConsoleOutput,
+  promiseFindAddonUpdates,
   promiseInstallAllFiles,
   promiseInstallFile,
   promiseRestartManager,
@@ -1269,60 +1270,6 @@ function callback_soon(aFunction) {
       aFunction.apply(null, args);
     }, aFunction.name ? "delayed callback " + aFunction.name : "delayed callback");
   }
-}
-
-/**
- * Returns a promise that will be resolved when an add-on update check is
- * complete. The value resolved will be an AddonInstall if a new version was
- * found.
- */
-function promiseFindAddonUpdates(addon, reason = AddonManager.UPDATE_WHEN_PERIODIC_UPDATE) {
-  return new Promise((resolve, reject) => {
-    let result = {};
-    addon.findUpdates({
-      onNoCompatibilityUpdateAvailable: function(addon2) {
-        if ("compatibilityUpdate" in result) {
-          do_throw("Saw multiple compatibility update events");
-        }
-        equal(addon, addon2, "onNoCompatibilityUpdateAvailable");
-        result.compatibilityUpdate = false;
-      },
-
-      onCompatibilityUpdateAvailable: function(addon2) {
-        if ("compatibilityUpdate" in result) {
-          do_throw("Saw multiple compatibility update events");
-        }
-        equal(addon, addon2, "onCompatibilityUpdateAvailable");
-        result.compatibilityUpdate = true;
-      },
-
-      onNoUpdateAvailable: function(addon2) {
-        if ("updateAvailable" in result) {
-          do_throw("Saw multiple update available events");
-        }
-        equal(addon, addon2, "onNoUpdateAvailable");
-        result.updateAvailable = false;
-      },
-
-      onUpdateAvailable: function(addon2, install) {
-        if ("updateAvailable" in result) {
-          do_throw("Saw multiple update available events");
-        }
-        equal(addon, addon2, "onUpdateAvailable");
-        result.updateAvailable = install;
-      },
-
-      onUpdateFinished: function(addon2, error) {
-        equal(addon, addon2, "onUpdateFinished");
-        if (error == AddonManager.UPDATE_STATUS_NO_ERROR) {
-          resolve(result);
-        } else {
-          result.error = error;
-          reject(result);
-        }
-      }
-    }, reason);
-  });
 }
 
 function writeProxyFileToDir(aDir, aAddon, aId) {
