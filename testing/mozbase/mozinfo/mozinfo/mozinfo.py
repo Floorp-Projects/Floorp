@@ -201,13 +201,20 @@ def find_and_update_from_json(*dirs):
     Find a mozinfo.json file, load it, and update the info with the
     contents.
 
-    :param dirs: Directories in which to look for the file. They will be
-                 searched after first looking in the root of the objdir
-                 if the current script is being run from a Mozilla objdir.
+    The search strategy is as follows. The first available file is used.
+
+    1) MOZINFO_PATH environment variable.
+    2) objdir (via a build system context)
+    3) Traversing directories ``dirs`` for a mozinfo.json file.
 
     Returns the full path to mozinfo.json if it was found, or None otherwise.
     """
-    # First, see if we're in an objdir
+    env_path = _os.environ.get('MOZINFO_PATH', None)
+    if env_path:
+        # Will raise if path does not exist or can't be loaded.
+        update(env_path)
+        return env_path
+
     try:
         from mozbuild.base import MozbuildObject, BuildEnvironmentNotFoundException
         build = MozbuildObject.from_environment()
