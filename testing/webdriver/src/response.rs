@@ -10,6 +10,7 @@ pub enum WebDriverResponse {
     NewSession(NewSessionResponse),
     DeleteSession,
     WindowSize(WindowSizeResponse),
+    WindowPosition(WindowPositionResponse),
     ElementRect(ElementRectResponse),
     Cookie(CookieResponse),
     Generic(ValueResponse),
@@ -18,15 +19,16 @@ pub enum WebDriverResponse {
 
 impl WebDriverResponse {
     pub fn to_json_string(self) -> String {
-        (match self {
+        match self {
             WebDriverResponse::NewSession(x) => json::encode(&x),
             WebDriverResponse::DeleteSession => Ok("{}".to_string()),
             WebDriverResponse::WindowSize(x) => json::encode(&x),
+            WebDriverResponse::WindowPosition(x) => json::encode(&x),
             WebDriverResponse::ElementRect(x) => json::encode(&x),
             WebDriverResponse::Cookie(x) => json::encode(&x),
             WebDriverResponse::Generic(x) => json::encode(&x),
             WebDriverResponse::Void => Ok("{}".to_string())
-        }).unwrap()
+        }.unwrap()
     }
 }
 
@@ -70,6 +72,18 @@ impl WindowSizeResponse {
             width: width,
             height: height
         }
+    }
+}
+
+#[derive(RustcEncodable, Debug)]
+pub struct WindowPositionResponse {
+    pub x: u64,
+    pub y: u64,
+}
+
+impl WindowPositionResponse {
+    pub fn new(x: u64, y: u64) -> WindowPositionResponse {
+        WindowPositionResponse { x: x, y: y }
     }
 }
 
