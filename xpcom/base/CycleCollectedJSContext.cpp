@@ -462,6 +462,10 @@ CycleCollectedJSContext::CycleCollectedJSContext()
   , mDisableMicroTaskCheckpoint(false)
   , mOutOfMemoryState(OOMState::OK)
   , mLargeAllocationFailureState(OOMState::OK)
+#ifdef DEBUG
+  , mNumTraversedGCThings(0)
+  , mNumTraceChildren(0)
+#endif // DEBUG
 {
   nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
   mOwningThread = thread.forget().downcast<nsThread>().take();
@@ -710,6 +714,10 @@ CycleCollectedJSContext::TraverseGCThing(TraverseSelect aTs, JS::GCCellPtr aThin
   if (!isMarkedGray && !aCb.WantAllTraces()) {
     return;
   }
+
+#ifdef DEBUG
+  ++mNumTraversedGCThings;
+#endif
 
   if (aTs == TRAVERSE_FULL) {
     NoteGCThingJSChildren(aThing, aCb);
@@ -1353,11 +1361,35 @@ CycleCollectedJSContext::DumpJSHeap(FILE* aFile)
 void
 CycleCollectedJSContext::BeginCycleCollectionCallback()
 {
+#ifdef DEBUG
+  mNumTraversedGCThings = 0;
+  mNumTraceChildren = 0;
+#endif
 }
 
 void
 CycleCollectedJSContext::EndCycleCollectionCallback(CycleCollectorResults& aResults)
 {
+#ifdef DEBUG
+
+  // GC things that the cycle collector calls Traverse on (ie things
+  // in the CC graph) will also get JS::TraceChildren() called on
+  // them. If a child of a GC thing in the CC graph does not have an
+  // AddToCCKind(), then the CC calls JS::TraceChildren() on it
+  // without adding it to the graph. If there are many such objects
+  // that are referred to by many objects in the CC graph, then the CC
+  // can spend a lot of time in JS::TraceChildren(). If you add a new
+  // TraceKind and are hitting this assertion, adding it to
+  // AddToCCKind might help. (The check is not done for small CC
+  // graphs to avoid noise.)
+  if (mNumTraceChildren > 1000 && mNumTraversedGCThings > 0) {
+    double traceRatio = ((double)mNumTraceChildren) / ((double)mNumTraversedGCThings);
+    MOZ_ASSERT(traceRatio < 2.2, "Excessive calls to JS::TraceChildren by the cycle collector");
+  }
+
+  mNumTraversedGCThings = 0;
+  mNumTraceChildren = 0;
+#endif
 }
 
 void
@@ -1702,6 +1734,9 @@ CycleCollectedJSContext::OnLargeAllocationFailure()
 void
 CycleCollectedJSContext::TraceJSChildren(JSTracer* aTrc, JS::GCCellPtr aThing)
 {
+#ifdef DEBUG
+  ++mNumTraceChildren;
+#endif // DEBUG
   JS::TraceChildren(aTrc, aThing);
 }
 
