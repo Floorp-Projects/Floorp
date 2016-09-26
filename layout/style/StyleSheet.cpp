@@ -76,13 +76,4 @@ StyleSheet::SetComplete()
   }
 }
 
-StyleSheetInfo&
-StyleSheet::SheetInfo()
-{
-  if (IsServo()) {
-    return *AsServo();
-  }
-  return *AsGecko()->mInner;
-}
-
 } // namespace mozilla
