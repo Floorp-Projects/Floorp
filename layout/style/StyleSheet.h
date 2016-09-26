@@ -67,11 +67,11 @@ public:
 
   // Only safe to call if the caller has verified that that |this| is of the
   // correct type.
-  inline CSSStyleSheet& AsGecko();
-  inline ServoStyleSheet& AsServo();
+  inline CSSStyleSheet* AsGecko();
+  inline ServoStyleSheet* AsServo();
   inline StyleSheetHandle AsHandle();
-  inline const CSSStyleSheet& AsGecko() const;
-  inline const ServoStyleSheet& AsServo() const;
+  inline const CSSStyleSheet* AsGecko() const;
+  inline const ServoStyleSheet* AsServo() const;
 
   inline MozExternalRefCountType AddRef();
   inline MozExternalRefCountType Release();
