@@ -5088,10 +5088,6 @@ pref("dom.voicemail.defaultServiceId", 0);
 // Enable mapped array buffer by default.
 pref("dom.mapped_arraybuffer.enabled", true);
 
-// Whether to send more than one "loading" readystatechange during XHRs to
-// simulate progress events for sites still not using modern progress events.
-pref("dom.fire_extra_xhr_loading_readystatechanges", false);
-
 // The tables used for Safebrowsing phishing and malware checks.
 pref("urlclassifier.malwareTable", "goog-malware-shavar,goog-unwanted-shavar,test-malware-simple,test-unwanted-simple");
 

@@ -686,14 +686,6 @@ protected:
   // late, and ensure the XHR only handles one in-flight request at once.
   bool mFlagSend;
 
-  // Before ProgressEvents were a thing, multiple readystatechange events were
-  // fired during the loading state to give sites a way to monitor XHR progress.
-  // The XHR spec now has proper progress events and dictates that only one
-  // "loading" readystatechange should be fired per send. However, it's possible
-  // that some content still relies on this old behavior, so we're keeping it
-  // (behind a preference) for now. See bug 918719.
-  bool mSendExtraLoadingEvents;
-
   RefPtr<XMLHttpRequestUpload> mUpload;
   int64_t mUploadTransferred;
   int64_t mUploadTotal;
