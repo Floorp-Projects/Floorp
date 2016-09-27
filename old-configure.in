@@ -1085,10 +1085,11 @@ case "$target" in
             dnl MSVC allows the use of intrinsics without any flags
             dnl and doesn't have a separate arch for SSSE3
             SSSE3_FLAGS="-arch:SSE2"
-            dnl clang-cl, however, requires the appropriate flags.
-            if test -n "$CLANG_CL"; then
-                SSSE3_FLAGS="-mssse3"
-            fi
+        fi
+        dnl clang-cl requires appropriate flags to enable SSSE3 support
+        dnl on all architectures.
+        if test -n "$CLANG_CL"; then
+            SSSE3_FLAGS="-mssse3"
         fi
         dnl VS2013+ requires -FS when parallel building by make -jN.
         dnl If nothing, compiler sometimes causes C1041 error.
