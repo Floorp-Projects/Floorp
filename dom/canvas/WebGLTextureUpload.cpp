@@ -2021,9 +2021,8 @@ WebGLTexture::CopyTexImage2D(TexImageTarget target, GLint level, GLenum internal
         // 1. Zero the texture data.
         // 2. CopyTexSubImage the subrect.
 
-        const uint8_t zOffset = 0;
-        if (!ZeroTextureData(mContext, funcName, mGLName, target, level, dstUsage, 0, 0,
-                             zOffset, width, height, depth))
+        if (!ZeroTextureData(mContext, funcName, mGLName, target, level, dstUsage, width,
+                             height, depth))
         {
             mContext->ErrorOutOfMemory("%s: Failed to zero texture data.", funcName);
             MOZ_ASSERT(false, "Failed to zero texture data.");
@@ -2036,6 +2035,7 @@ WebGLTexture::CopyTexImage2D(TexImageTarget target, GLint level, GLenum internal
             return;
         }
 
+        const uint8_t zOffset = 0;
         error = DoCopyTexSubImage(gl, target, level, writeX, writeY, zOffset, readX,
                                   readY, rwWidth, rwHeight);
     } while (false);
