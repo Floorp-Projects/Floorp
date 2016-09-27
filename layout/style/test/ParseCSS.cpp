@@ -19,7 +19,7 @@
 #include "nsNetUtil.h"
 
 #include "nsContentCID.h"
-#include "mozilla/CSSStyleSheet.h"
+#include "mozilla/StyleSheetInlines.h"
 #include "mozilla/css/Loader.h"
 
 using namespace mozilla;

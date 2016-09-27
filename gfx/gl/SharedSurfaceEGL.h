@@ -90,14 +90,14 @@ public:
     // Fallible:
     static UniquePtr<SurfaceFactory_EGLImage> Create(GLContext* prodGL,
                                                      const SurfaceCaps& caps,
-                                                     const RefPtr<layers::ClientIPCAllocator>& allocator,
+                                                     const RefPtr<layers::LayersIPCChannel>& allocator,
                                                      const layers::TextureFlags& flags);
 
 protected:
     const EGLContext mContext;
 
     SurfaceFactory_EGLImage(GLContext* prodGL, const SurfaceCaps& caps,
-                            const RefPtr<layers::ClientIPCAllocator>& allocator,
+                            const RefPtr<layers::LayersIPCChannel>& allocator,
                             const layers::TextureFlags& flags,
                             EGLContext context)
         : SurfaceFactory(SharedSurfaceType::EGLImageShare, prodGL, caps, allocator, flags)

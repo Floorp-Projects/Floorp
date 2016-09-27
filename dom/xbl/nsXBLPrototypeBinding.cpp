@@ -44,8 +44,8 @@
 #include "mozilla/dom/CDATASection.h"
 #include "mozilla/dom/Comment.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/StyleSheetHandle.h"
-#include "mozilla/StyleSheetHandleInlines.h"
+#include "mozilla/StyleSheet.h"
+#include "mozilla/StyleSheetInlines.h"
 
 #ifdef MOZ_XUL
 #include "nsXULElement.h"
@@ -1644,14 +1644,14 @@ nsXBLPrototypeBinding::EnsureResources()
 }
 
 void
-nsXBLPrototypeBinding::AppendStyleSheet(StyleSheetHandle aSheet)
+nsXBLPrototypeBinding::AppendStyleSheet(StyleSheet* aSheet)
 {
   EnsureResources();
   mResources->AppendStyleSheet(aSheet);
 }
 
 void
-nsXBLPrototypeBinding::RemoveStyleSheet(StyleSheetHandle aSheet)
+nsXBLPrototypeBinding::RemoveStyleSheet(StyleSheet* aSheet)
 {
   if (!mResources) {
     MOZ_ASSERT(false, "Trying to remove a sheet that does not exist.");
@@ -1661,13 +1661,13 @@ nsXBLPrototypeBinding::RemoveStyleSheet(StyleSheetHandle aSheet)
   mResources->RemoveStyleSheet(aSheet);
 }
 void
-nsXBLPrototypeBinding::InsertStyleSheetAt(size_t aIndex, StyleSheetHandle aSheet)
+nsXBLPrototypeBinding::InsertStyleSheetAt(size_t aIndex, StyleSheet* aSheet)
 {
   EnsureResources();
   mResources->InsertStyleSheetAt(aIndex, aSheet);
 }
 
-StyleSheetHandle
+StyleSheet*
 nsXBLPrototypeBinding::StyleSheetAt(size_t aIndex) const
 {
   MOZ_ASSERT(mResources);
@@ -1688,7 +1688,7 @@ nsXBLPrototypeBinding::HasStyleSheets() const
 
 void
 nsXBLPrototypeBinding::AppendStyleSheetsTo(
-                                      nsTArray<StyleSheetHandle>& aResult) const
+                                      nsTArray<StyleSheet*>& aResult) const
 {
   if (mResources) {
     mResources->AppendStyleSheetsTo(aResult);

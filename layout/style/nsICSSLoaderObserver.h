@@ -9,7 +9,7 @@
 #define nsICSSLoaderObserver_h___
 
 #include "nsISupports.h"
-#include "mozilla/StyleSheetHandle.h"
+#include "mozilla/StyleSheet.h"
 
 #define NS_ICSSLOADEROBSERVER_IID \
 { 0xf51fbf2c, 0xfe4b, 0x4a15, \
@@ -34,7 +34,7 @@ public:
    *        as CSS, and doesn't indicate anything about the status of any child
    *        sheets of aSheet.
    */
-  NS_IMETHOD StyleSheetLoaded(mozilla::StyleSheetHandle aSheet,
+  NS_IMETHOD StyleSheetLoaded(mozilla::StyleSheet* aSheet,
                               bool aWasAlternate,
                               nsresult aStatus) = 0;
 };

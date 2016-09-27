@@ -282,7 +282,6 @@ DeviceManagerDx::CreateCompositorDeviceHelper(
 
   if (FAILED(hr) || !device) {
     if (!aAttemptVideoSupport) {
-      gfxCriticalError() << "D3D11 device creation failed: " << hexa(hr);
       aD3d11.SetFailed(FeatureStatus::Failed, "Failed to acquire a D3D11 device",
                        NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_DEVICE2"));
     }

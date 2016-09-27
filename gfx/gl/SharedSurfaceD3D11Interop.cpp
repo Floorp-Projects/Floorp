@@ -391,7 +391,7 @@ SharedSurface_D3D11Interop::ToSurfaceDescriptor(layers::SurfaceDescriptor* const
 
 /*static*/ UniquePtr<SurfaceFactory_D3D11Interop>
 SurfaceFactory_D3D11Interop::Create(GLContext* gl, const SurfaceCaps& caps,
-                                    layers::ClientIPCAllocator* allocator,
+                                    layers::LayersIPCChannel* allocator,
                                     const layers::TextureFlags& flags)
 {
     WGLLibrary* wgl = &sWGLLib;
@@ -411,7 +411,7 @@ SurfaceFactory_D3D11Interop::Create(GLContext* gl, const SurfaceCaps& caps,
 
 SurfaceFactory_D3D11Interop::SurfaceFactory_D3D11Interop(GLContext* gl,
                                                          const SurfaceCaps& caps,
-                                                         layers::ClientIPCAllocator* allocator,
+                                                         layers::LayersIPCChannel* allocator,
                                                          const layers::TextureFlags& flags,
                                                          DXInterop2Device* interop)
     : SurfaceFactory(SharedSurfaceType::DXGLInterop2, gl, caps, allocator, flags)

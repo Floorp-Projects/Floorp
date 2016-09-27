@@ -52,9 +52,9 @@ VideoDecoderManagerChild::Initialize()
     return;
   }
 
-  // TODO: The above message should return an empty endpoint if there wasn't a GPU
-  // process. Unfortunately IPDL will assert in this case, so it can't actually
-  // happen. Bug 1302009 is filed for fixing this.
+  if (!endpoint.IsValid()) {
+    return;
+  }
 
   sDecoderManager = new VideoDecoderManagerChild();
 

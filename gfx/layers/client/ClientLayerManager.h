@@ -92,7 +92,7 @@ public:
   void UpdateTextureFactoryIdentifier(const TextureFactoryIdentifier& aNewIdentifier);
   TextureFactoryIdentifier GetTextureFactoryIdentifier()
   {
-    return mForwarder->GetTextureFactoryIdentifier();
+    return AsShadowForwarder()->GetTextureFactoryIdentifier();
   }
 
   virtual void FlushRendering() override;

@@ -38,6 +38,7 @@ ClearCallback(nsITimer *aTimer, void *aClosure)
 }
 
 TextureClientPool::TextureClientPool(LayersBackend aLayersBackend,
+                                     int32_t aMaxTextureSize,
                                      gfx::SurfaceFormat aFormat,
                                      gfx::IntSize aSize,
                                      TextureFlags aFlags,
@@ -47,6 +48,7 @@ TextureClientPool::TextureClientPool(LayersBackend aLayersBackend,
                                      uint32_t aPoolUnusedSize,
                                      TextureForwarder* aAllocator)
   : mBackend(aLayersBackend)
+  , mMaxTextureSize(aMaxTextureSize)
   , mFormat(aFormat)
   , mSize(aSize)
   , mFlags(aFlags)
@@ -160,6 +162,7 @@ TextureClientPool::AllocateTextureClient()
       TextureClient::CreateForDrawing(mSurfaceAllocator,
                                       mFormat, mSize,
                                       mBackend,
+                                      mMaxTextureSize,
                                       BackendSelector::Content,
                                       mFlags);
   }

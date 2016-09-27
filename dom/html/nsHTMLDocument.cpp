@@ -114,8 +114,8 @@
 #include "nsIFrame.h"
 #include "nsIContent.h"
 #include "nsLayoutStylesheetCache.h"
-#include "mozilla/StyleSheetHandle.h"
-#include "mozilla/StyleSheetHandleInlines.h"
+#include "mozilla/StyleSheet.h"
+#include "mozilla/StyleSheetInlines.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2550,7 +2550,7 @@ nsHTMLDocument::TearingDownEditor(nsIEditor *aEditor)
     if (!presShell)
       return;
 
-    nsTArray<StyleSheetHandle::RefPtr> agentSheets;
+    nsTArray<RefPtr<StyleSheet>> agentSheets;
     presShell->GetAgentStyleSheets(agentSheets);
 
     auto cache = nsLayoutStylesheetCache::For(GetStyleBackendType());
@@ -2693,13 +2693,13 @@ nsHTMLDocument::EditingStateChanged()
     // Before making this window editable, we need to modify UA style sheet
     // because new style may change whether focused element will be focusable
     // or not.
-    nsTArray<StyleSheetHandle::RefPtr> agentSheets;
+    nsTArray<RefPtr<StyleSheet>> agentSheets;
     rv = presShell->GetAgentStyleSheets(agentSheets);
     NS_ENSURE_SUCCESS(rv, rv);
 
     auto cache = nsLayoutStylesheetCache::For(GetStyleBackendType());
 
-    StyleSheetHandle contentEditableSheet = cache->ContentEditableSheet();
+    StyleSheet* contentEditableSheet = cache->ContentEditableSheet();
 
     if (!agentSheets.Contains(contentEditableSheet)) {
       agentSheets.AppendElement(contentEditableSheet);
@@ -2710,7 +2710,7 @@ nsHTMLDocument::EditingStateChanged()
     // specific states on the elements.
     if (designMode) {
       // designMode is being turned on (overrides contentEditable).
-      StyleSheetHandle designModeSheet = cache->DesignModeSheet();
+      StyleSheet* designModeSheet = cache->DesignModeSheet();
       if (!agentSheets.Contains(designModeSheet)) {
         agentSheets.AppendElement(designModeSheet);
       }

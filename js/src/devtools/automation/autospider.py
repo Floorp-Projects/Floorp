@@ -179,6 +179,7 @@ else:
     env.setdefault('CXX', cxx)
 
 if platform.system() == 'Darwin':
+    os.environ['SOURCE'] = DIR.source
     set_vars_from_script(os.path.join(DIR.scripts, 'macbuildenv.sh'),
                          ['CC', 'CXX'])
 elif platform.system() == 'Windows':

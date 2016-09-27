@@ -312,6 +312,54 @@ TEST_P(TlsConnectGenericPre13, ConnectEcdheTwiceNewKey) {
                         dhe1.public_key_.len())));
 }
 
+// Verify that TLS 1.3 reports an accurate group on resumption.
+TEST_P(TlsConnectTls13, TestTls13ResumeDifferentGroup) {
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  Connect();
+  SendReceive();  // Need to read so that we absorb the session ticket.
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  ExpectResumption(RESUME_TICKET);
+  client_->ConfigNamedGroups(kFFDHEGroups);
+  server_->ConfigNamedGroups(kFFDHEGroups);
+  Connect();
+  CheckKeys(ssl_kea_dh, ssl_auth_rsa_sign);
+}
+
+// Test that we don't resume when we can't negotiate the same cipher.
+TEST_P(TlsConnectTls13, TestTls13ResumeClientDifferentCipher) {
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  client_->EnableSingleCipher(TLS_AES_128_GCM_SHA256);
+  Connect();
+  SendReceive();  // Need to read so that we absorb the session ticket.
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  ExpectResumption(RESUME_NONE);
+  client_->EnableSingleCipher(TLS_AES_256_GCM_SHA384);
+  Connect();
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+}
+
+// Test that we don't resume when we can't negotiate the same cipher.
+TEST_P(TlsConnectTls13, TestTls13ResumeServerDifferentCipher) {
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  server_->EnableSingleCipher(TLS_AES_128_GCM_SHA256);
+  Connect();
+  SendReceive();  // Need to read so that we absorb the session ticket.
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  ExpectResumption(RESUME_NONE);
+  server_->EnableSingleCipher(TLS_AES_256_GCM_SHA384);
+  Connect();
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+}
+
 // Test that two TLS resumptions work and produce the same ticket.
 // This will change after bug 1257047 is fixed.
 TEST_F(TlsConnectTest, TestTls13ResumptionTwice) {
@@ -376,68 +424,4 @@ TEST_F(TlsConnectTest, TestTls13ResumptionTwice) {
   // TODO(ekr@rtfm.com): This will change when we fix bug 1257047.
   ASSERT_EQ(initialTicket, c2->extension());
 }
-
-TEST_F(TlsConnectTest, DisableClientPSKAndFailToResume) {
-  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
-  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
-                           SSL_LIBRARY_VERSION_TLS_1_3);
-  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
-                           SSL_LIBRARY_VERSION_TLS_1_3);
-  Connect();
-  SendReceive();  // Need to read so that we absorb the session ticket.
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
-
-  Reset();
-  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
-  TlsExtensionCapture* capture =
-      new TlsExtensionCapture(ssl_tls13_pre_shared_key_xtn);
-  client_->SetPacketFilter(capture);
-  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
-                           SSL_LIBRARY_VERSION_TLS_1_3);
-  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
-                           SSL_LIBRARY_VERSION_TLS_1_3);
-  // We need to disable ALL PSK cipher suites with the same symmetric cipher and
-  // PRF hash.  Otherwise the server will just use a different key exchange.
-  client_->DisableAllCiphers();
-  client_->EnableCiphersByAuthType(ssl_auth_rsa_sign);
-  ExpectResumption(RESUME_NONE);
-  Connect();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
-  EXPECT_EQ(0U, capture->extension().len());
-}
-
-TEST_F(TlsConnectTest, DisableServerPSKAndFailToResume) {
-  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
-  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
-                           SSL_LIBRARY_VERSION_TLS_1_3);
-  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
-                           SSL_LIBRARY_VERSION_TLS_1_3);
-  Connect();
-  SendReceive();  // Need to read so that we absorb the session ticket.
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
-
-  Reset();
-  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
-  TlsExtensionCapture* clientCapture =
-      new TlsExtensionCapture(ssl_tls13_pre_shared_key_xtn);
-  client_->SetPacketFilter(clientCapture);
-  TlsExtensionCapture* serverCapture =
-      new TlsExtensionCapture(ssl_tls13_pre_shared_key_xtn);
-  server_->SetPacketFilter(serverCapture);
-  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
-                           SSL_LIBRARY_VERSION_TLS_1_3);
-  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
-                           SSL_LIBRARY_VERSION_TLS_1_3);
-  // We need to disable ALL PSK cipher suites with the same symmetric cipher and
-  // PRF hash.  Otherwise the server will just use a different key exchange.
-  server_->DisableAllCiphers();
-  server_->EnableCiphersByAuthType(ssl_auth_rsa_sign);
-  ExpectResumption(RESUME_NONE);
-  Connect();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
-  // The client should have the extension, but the server should not.
-  EXPECT_LT(0U, clientCapture->extension().len());
-  EXPECT_EQ(0U, serverCapture->extension().len());
-}
-
 }  // namespace nss_test

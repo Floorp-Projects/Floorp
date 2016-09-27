@@ -10,6 +10,7 @@
 #include "gfxPrefs.h"
 #include "mozilla/layers/ImageBridgeParent.h" // for ImageBridgeParent
 #include "mozilla/layers/TextureHost.h"       // for TextureHost
+#include "mozilla/layers/TextureForwarder.h"
 
 namespace mozilla {
 namespace layers {
@@ -95,15 +96,21 @@ const uint32_t sShmemPageSize = 4096;
 const uint32_t sSupportedBlockSize = 4;
 #endif
 
-FixedSizeSmallShmemSectionAllocator::FixedSizeSmallShmemSectionAllocator(ClientIPCAllocator* aShmProvider)
+FixedSizeSmallShmemSectionAllocator::FixedSizeSmallShmemSectionAllocator(LayersIPCChannel* aShmProvider)
 : mShmProvider(aShmProvider)
 {
-  MOZ_ASSERT(mShmProvider && mShmProvider->AsShmemAllocator());
+  MOZ_ASSERT(mShmProvider);
 }
 
 FixedSizeSmallShmemSectionAllocator::~FixedSizeSmallShmemSectionAllocator()
 {
   ShrinkShmemSectionHeap();
+}
+
+bool
+FixedSizeSmallShmemSectionAllocator::IPCOpen() const
+{
+  return mShmProvider->IPCOpen();
 }
 
 bool
@@ -132,7 +139,7 @@ FixedSizeSmallShmemSectionAllocator::AllocShmemSection(uint32_t aSize, ShmemSect
 
   if (!aShmemSection->shmem().IsWritable()) {
     ipc::Shmem tmp;
-    if (!GetShmAllocator()->AllocUnsafeShmem(sShmemPageSize, OptimalShmemType(), &tmp)) {
+    if (!mShmProvider->AllocUnsafeShmem(sShmemPageSize, OptimalShmemType(), &tmp)) {
       return false;
     }
 
@@ -233,7 +240,7 @@ FixedSizeSmallShmemSectionAllocator::ShrinkShmemSectionHeap()
   while (i < mUsedShmems.size()) {
     ShmemSectionHeapHeader* header = mUsedShmems[i].get<ShmemSectionHeapHeader>();
     if (header->mAllocatedBlocks == 0) {
-      GetShmAllocator()->DeallocShmem(mUsedShmems[i]);
+      mShmProvider->DeallocShmem(mUsedShmems[i]);
       // We don't particularly care about order, move the last one in the array
       // to this position.
       if (i < mUsedShmems.size() - 1) {
