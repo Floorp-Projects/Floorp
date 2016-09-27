@@ -494,6 +494,10 @@ WebConsoleFrame.prototype = {
     };
     allReady.then(notifyObservers, notifyObservers);
 
+    if (this.NEW_CONSOLE_OUTPUT_ENABLED) {
+      allReady.then(this.newConsoleOutput.init);
+    }
+
     return allReady;
   },
 
