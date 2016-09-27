@@ -218,7 +218,8 @@ public:
                   const nsTArray<nsCString>& aMimeTypes,
                   const nsTArray<nsCString>& aMimeDescriptions,
                   const nsTArray<nsCString>& aExtensions,
-                  const nsCString& aNiceName);
+                  const nsCString& aNiceName,
+                  const nsString& aSandboxScript);
 
   bool IsEnabled() override;
   const nsCString& GetNiceFileName() override;
@@ -228,6 +229,8 @@ public:
   nsIURI* HandlerURI() const { return mHandlerURI; }
 
   uint32_t Id() const { return mId; }
+
+  const nsString& SandboxScript() const { return mSandboxScript; }
 
   static const int32_t NOT_JSPLUGIN = -1;
 
@@ -248,6 +251,8 @@ private:
 
   nsCString     mFullPath;
   nsCString     mNiceName;
+
+  nsString      mSandboxScript;
 
   nsPluginTag::PluginState mState;
 

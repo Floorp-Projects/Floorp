@@ -37,6 +37,7 @@ struct FakePluginTag
   nsCString[] mimeDescriptions;
   nsCString[] extensions;
   nsCString niceName;
+  nsString sandboxScript;
 };
 
 union PluginIdentifier

@@ -2342,7 +2342,8 @@ nsPluginHost::FindPluginsInContent(bool aCreatePluginList, bool* aPluginsChanged
                                                      tag.mimeTypes(),
                                                      tag.mimeDescriptions(),
                                                      tag.extensions(),
-                                                     tag.niceName()));
+                                                     tag.niceName(),
+                                                     tag.sandboxScript()));
     }
   }
 
@@ -2541,7 +2542,8 @@ nsPluginHost::FindPluginsForContent(uint32_t aPluginEpoch,
                                                 tag->MimeTypes(),
                                                 tag->MimeDescriptions(),
                                                 tag->Extensions(),
-                                                tag->GetNiceFileName()));
+                                                tag->GetNiceFileName(),
+                                                tag->SandboxScript()));
       continue;
     }
 
