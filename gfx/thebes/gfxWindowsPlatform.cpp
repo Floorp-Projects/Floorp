@@ -365,10 +365,6 @@ gfxWindowsPlatform::InitAcceleration()
   DeviceManagerDx::Init();
   DeviceManagerD3D9::Init();
 
-  // CanUseHardwareVideoDecoding depends on DeviceManagerDx state,
-  // so update the cached value now.
-  UpdateCanUseHardwareVideoDecoding();
-
   InitializeConfig();
   InitializeDevices();
   UpdateANGLEConfig();
@@ -2034,7 +2030,7 @@ gfxWindowsPlatform::ImportGPUDeviceData(const mozilla::gfx::GPUDeviceData& aData
 
   // CanUseHardwareVideoDecoding depends on d3d11 state, so update
   // the cached value now.
-  UpdateCanUseHardwareVideoDecoding();
+  UpdateCanUseHardareVideoDecoding();
 
   // For completeness (and messaging in about:support). Content recomputes this
   // on its own, and we won't use ANGLE in the UI process if we're using a GPU
