@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252">
+  <title>MSE: QuotaExceededError when source buffer is full</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test"><script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+// We fill up the source buffer with audio data until the buffer is full.
+// We ensure that QuotaExceededError is thrown once the buffer is full.
+// We then seek to half the content. By that time, another appendBuffer must succeed
+// as the auto-eviction would succeed (removing all data prior currentTime)
+
+// Fill up the SourceBuffer by appending data repeatedly via doAppendDataFunc until
+// an exception is thrown.
+function fillUpSourceBuffer(sourceBuffer, doAppendDataFunc, onCaughtExceptionCallback) {
+  // We are appending data repeatedly in sequence mode, there should be no gaps.
+  ok(sourceBuffer.buffered.length <= 1, "there should be no gap in buffered ranges.");
+  try {
+    doAppendDataFunc();
+  } catch(ex) {
+    onCaughtExceptionCallback(ex);
+    return;
+  }
+  once(sourceBuffer, 'updateend', () => {
+    fillUpSourceBuffer(sourceBuffer, doAppendDataFunc, onCaughtExceptionCallback);
+  });
+}
+
+runWithMSE(function(ms, el) {
+  el.controls = true;
+  once(ms, 'sourceopen').then(function() {
+    ok(true, "Receive a sourceopen event");
+    SpecialPowers.pushPrefEnv({
+      "set": [
+        ["media.mediasource.eviction_threshold.audio", 524288],
+      ]
+    }, function() {
+      let audiosb = ms.addSourceBuffer("audio/mp4");
+      audiosb.mode = "sequence";
+      fetchAndLoad(audiosb, 'bipbop/bipbop_audio', ['init'], '.mp4')
+      .then(function() {
+        fetchWithXHR('bipbop/bipbop_audio1.m4s', function(audioBuffer) {
+           fillUpSourceBuffer(audiosb,
+             function() { // doAppendDataFunc
+               audiosb.appendBuffer(audioBuffer);
+             },
+             function(ex) { // onCaughtExceptionCallback
+               is(ex.name, 'QuotaExceededError', "QuotaExceededError thrown");
+               is(audiosb.buffered.end(0), el.duration, "Duration is end of buffered range");
+               let seekTime = audiosb.buffered.end(0) / 2;
+               el.currentTime = seekTime;
+               once(el, 'seeked', () => {
+                 is(el.currentTime, seekTime, "correctly seeked to " + seekTime);
+                 try {
+                   audiosb.appendBuffer(audioBuffer);
+                 } catch(ex) {
+                   ok(false, "Shouldn't throw another time when data can be evicted");
+                   el.mozDumpDebugInfo();
+                   SimpleTest.finish();
+                   return;
+                 }
+                 once(audiosb, 'update', () => {
+                   ok(true, "appendBuffer succeeded");
+                   SimpleTest.finish();
+                 });
+               });
+            });
+        });
+      });
+    });
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>

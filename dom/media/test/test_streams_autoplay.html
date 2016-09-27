@@ -7,8 +7,6 @@
   <script type="text/javascript" src="manifest.js"></script>
 </head>
 <body>
-<video id="v1"></video>
-<video id="v2" autoplay></video>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
@@ -19,22 +17,29 @@ if (media == null) {
   todo(false, "No media supported.");
   SimpleTest.finish();
 } else {
-  v1.src = media.name;
-  v1.preload = 'metadata';
-  v1.onloadedmetadata = function() {
-    v2.srcObject = v1.mozCaptureStream();
-    v1.play();
-  };
-  var onPlayingEventFired = false;
+  function startTest() {
+    var v1 = document.createElement('video');
+    var v2 = document.createElement('video');
+    v1.preload = 'metadata';
+    v2.autoplay = true;
+    document.body.appendChild(v1);
+    document.body.appendChild(v2);
 
-  v2.onplaying = function() {
-    if(!onPlayingEventFired) {
-      onPlayingEventFired = true;
+    v1.src = media.name;
+    v1.onloadedmetadata = function() {
+      v2.srcObject = v1.mozCaptureStream();
+      v1.play();
+    };
+
+    v2.addEventListener('playing', function() {
       ok(true, "playback started");
       SimpleTest.finish();
-    }
+    }, {once: true});
   }
+
+  setMediaTestsPrefs(startTest);
 }
+
 </script>
 </pre>
 </body>
