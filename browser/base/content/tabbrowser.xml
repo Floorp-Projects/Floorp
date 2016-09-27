@@ -3678,7 +3678,11 @@
             assert: function(cond) {
               if (!cond) {
                 dump("Assertion failure\n" + Error().stack);
-                throw new Error("Assertion failure");
+
+                // Don't break a user's browser if an assertion fails.
+                if (this.tabbrowser.AppConstants.DEBUG) {
+                  throw new Error("Assertion failure");
+                }
               }
             },
 
