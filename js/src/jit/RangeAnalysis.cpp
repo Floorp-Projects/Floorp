@@ -3495,13 +3495,14 @@ RangeAnalysis::prepareForUCE(bool* shouldRemoveDeadCode)
         // added by MBeta::computeRange on its own block.
         MTest* test = cond->toTest();
         MDefinition* condition = test->input();
-        MConstant* constant = nullptr;
-        if (block == test->ifTrue()) {
-            constant = MConstant::New(alloc(), BooleanValue(false));
-        } else {
-            MOZ_ASSERT(block == test->ifFalse());
-            constant = MConstant::New(alloc(), BooleanValue(true));
-        }
+
+        // If the false-branch is unreachable, then the test condition must be true.
+        // If the true-branch is unreachable, then the test condition must be false.
+        MOZ_ASSERT(block == test->ifTrue() || block == test->ifFalse());
+        bool value = block == test->ifFalse();
+        MConstant* constant = MConstant::New(alloc().fallible(), BooleanValue(value));
+        if (!constant)
+            return false;
 
         if (DeadIfUnused(condition))
             condition->setGuardRangeBailoutsUnchecked();
