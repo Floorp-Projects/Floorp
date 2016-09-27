@@ -9232,30 +9232,11 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
   }
 
   // column-rule-color: color, inherit
-  const nsCSSValue& colorValue = *aRuleData->ValueForColumnRuleColor();
-  if (eCSSUnit_Inherit == colorValue.GetUnit()) {
-    conditions.SetUncacheable();
-    column->mColumnRuleColorIsForeground = false;
-    if (parent->mColumnRuleColorIsForeground) {
-      if (parentContext) {
-        column->mColumnRuleColor = parentContext->StyleColor()->mColor;
-      } else {
-        nsStyleColor defaultColumnRuleColor(mPresContext);
-        column->mColumnRuleColor = defaultColumnRuleColor.mColor;
-      }
-    } else {
-      column->mColumnRuleColor = parent->mColumnRuleColor;
-    }
-  }
-  else if (eCSSUnit_Initial == colorValue.GetUnit() ||
-           eCSSUnit_Unset == colorValue.GetUnit() ||
-           eCSSUnit_Enumerated == colorValue.GetUnit()) {
-    column->mColumnRuleColorIsForeground = true;
-  }
-  else if (SetColor(colorValue, 0, mPresContext, aContext,
-                    column->mColumnRuleColor, conditions)) {
-    column->mColumnRuleColorIsForeground = false;
-  }
+  SetComplexColor<eUnsetInitial>(*aRuleData->ValueForColumnRuleColor(),
+                                 parent->mColumnRuleColor,
+                                 StyleComplexColor::CurrentColor(),
+                                 mPresContext,
+                                 column->mColumnRuleColor, conditions);
 
   // column-fill: enum
   SetValue(*aRuleData->ValueForColumnFill(),
