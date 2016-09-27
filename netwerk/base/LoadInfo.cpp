@@ -62,6 +62,8 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mIsThirdPartyContext(false)
   , mForcePreflight(false)
   , mIsPreflight(false)
+  , mForceHSTSPriming(false)
+  , mMixedContentWouldBlock(false)
 {
   MOZ_ASSERT(mLoadingPrincipal);
   MOZ_ASSERT(mTriggeringPrincipal);
@@ -233,6 +235,8 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   , mIsThirdPartyContext(false) // NB: TYPE_DOCUMENT implies not third-party.
   , mForcePreflight(false)
   , mIsPreflight(false)
+  , mForceHSTSPriming(false)
+  , mMixedContentWouldBlock(false)
 {
   // Top-level loads are never third-party
   // Grab the information we can out of the window.
@@ -297,6 +301,8 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
   , mCorsUnsafeHeaders(rhs.mCorsUnsafeHeaders)
   , mForcePreflight(rhs.mForcePreflight)
   , mIsPreflight(rhs.mIsPreflight)
+  , mForceHSTSPriming(rhs.mForceHSTSPriming)
+  , mMixedContentWouldBlock(rhs.mMixedContentWouldBlock)
 {
 }
 
@@ -322,7 +328,9 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    nsTArray<nsCOMPtr<nsIPrincipal>>& aRedirectChain,
                    const nsTArray<nsCString>& aCorsUnsafeHeaders,
                    bool aForcePreflight,
-                   bool aIsPreflight)
+                   bool aIsPreflight,
+                   bool aForceHSTSPriming,
+                   bool aMixedContentWouldBlock)
   : mLoadingPrincipal(aLoadingPrincipal)
   , mTriggeringPrincipal(aTriggeringPrincipal)
   , mPrincipalToInherit(aPrincipalToInherit)
@@ -344,6 +352,8 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mCorsUnsafeHeaders(aCorsUnsafeHeaders)
   , mForcePreflight(aForcePreflight)
   , mIsPreflight(aIsPreflight)
+  , mForceHSTSPriming (aForceHSTSPriming)
+  , mMixedContentWouldBlock(aMixedContentWouldBlock)
 {
   // Only top level TYPE_DOCUMENT loads can have a null loadingPrincipal
   MOZ_ASSERT(mLoadingPrincipal || aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT);
@@ -831,6 +841,34 @@ LoadInfo::GetIsPreflight(bool* aIsPreflight)
 {
   *aIsPreflight = mIsPreflight;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetForceHSTSPriming(bool* aForceHSTSPriming)
+{
+  *aForceHSTSPriming = mForceHSTSPriming;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetMixedContentWouldBlock(bool *aMixedContentWouldBlock)
+{
+  *aMixedContentWouldBlock = mMixedContentWouldBlock;
+  return NS_OK;
+}
+
+void
+LoadInfo::SetHSTSPriming(bool aMixedContentWouldBlock)
+{
+  mForceHSTSPriming = true;
+  mMixedContentWouldBlock = aMixedContentWouldBlock;
+}
+
+void
+LoadInfo::ClearHSTSPriming()
+{
+  mForceHSTSPriming = false;
+  mMixedContentWouldBlock = false;
 }
 
 NS_IMETHODIMP

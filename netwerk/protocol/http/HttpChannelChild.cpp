@@ -1592,6 +1592,7 @@ NS_IMETHODIMP
 HttpChannelChild::OnRedirectVerifyCallback(nsresult result)
 {
   LOG(("HttpChannelChild::OnRedirectVerifyCallback [this=%p]\n", this));
+  nsresult rv;
   OptionalURIParams redirectURI;
   nsCOMPtr<nsIHttpChannel> newHttpChannel =
       do_QueryInterface(mRedirectChannelChild);
@@ -1607,9 +1608,18 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult result)
     result = NS_ERROR_DOM_BAD_URI;
   }
 
+  bool forceHSTSPriming = false;
+  bool mixedContentWouldBlock = false;
   if (newHttpChannel) {
     // Must not be called until after redirect observers called.
     newHttpChannel->SetOriginalURI(mOriginalURI);
+
+    nsCOMPtr<nsILoadInfo> newLoadInfo;
+    rv = newHttpChannel->GetLoadInfo(getter_AddRefs(newLoadInfo));
+    if (NS_SUCCEEDED(rv) && newLoadInfo) {
+      forceHSTSPriming = newLoadInfo->GetForceHSTSPriming();
+      mixedContentWouldBlock = newLoadInfo->GetMixedContentWouldBlock();
+    }
   }
 
   if (mRedirectingForSubsequentSynthesizedResponse) {
@@ -1673,7 +1683,8 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult result)
 
   if (mIPCOpen)
     SendRedirect2Verify(result, *headerTuples, loadFlags, redirectURI,
-                        corsPreflightArgs);
+                        corsPreflightArgs, forceHSTSPriming,
+                        mixedContentWouldBlock);
 
   return NS_OK;
 }
