@@ -13,11 +13,14 @@ var gTab, gPanel, gDebugger;
 var gPrefs, gOptions;
 
 function test() {
-  let options = {
-    source: TAB_URL,
-    line: 1
-  };
-  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
+  Task.spawn(function* () {
+    let options = {
+      source: TAB_URL,
+      line: 1
+    };
+
+    let [aTab,, aPanel] = yield initDebugger(TAB_URL, options);
+
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
@@ -28,7 +31,7 @@ function test() {
 
     gDebugger.DebuggerView.toggleInstrumentsPane({ visible: true, animated: false });
 
-    testInstrumentsPaneCollapse();
+    yield testInstrumentsPaneCollapse();
     testPanesStartupPref();
 
     closeDebuggerAndFinish(gPanel);
@@ -50,7 +53,7 @@ function testPanesState() {
     "The options menu item should not be checked.");
 }
 
-function testInstrumentsPaneCollapse() {
+function* testInstrumentsPaneCollapse () {
   let instrumentsPane =
     gDebugger.document.getElementById("instruments-pane");
   let instrumentsPaneToggleButton =
@@ -69,7 +72,12 @@ function testInstrumentsPaneCollapse() {
      !instrumentsPaneToggleButton.classList.contains("pane-collapsed"),
     "The instruments pane should at this point be visible.");
 
+  // Trigger reflow to make sure the UI is in required state.
+  gDebugger.document.documentElement.getBoundingClientRect();
+
   gDebugger.DebuggerView.toggleInstrumentsPane({ visible: false, animated: true });
+
+  yield once(instrumentsPane, "transitionend");
 
   is(gPrefs.panesVisibleOnStartup, false,
     "The debugger view panes should still initially be preffed as hidden.");
@@ -83,7 +91,8 @@ function testInstrumentsPaneCollapse() {
     "The instruments pane has an incorrect left margin after collapsing.");
   is(instrumentsPane.style.marginRight, margin,
     "The instruments pane has an incorrect right margin after collapsing.");
-  ok(instrumentsPane.hasAttribute("animated"),
+
+  ok(!instrumentsPane.hasAttribute("animated"),
     "The instruments pane has an incorrect attribute after an animated collapsing.");
   ok(instrumentsPane.classList.contains("pane-collapsed") &&
      instrumentsPaneToggleButton.classList.contains("pane-collapsed"),
