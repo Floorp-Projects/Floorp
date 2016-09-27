@@ -833,12 +833,14 @@ nsFakePluginTag::nsFakePluginTag(uint32_t aId,
                                  const nsTArray<nsCString>& aMimeTypes,
                                  const nsTArray<nsCString>& aMimeDescriptions,
                                  const nsTArray<nsCString>& aExtensions,
-                                 const nsCString& aNiceName)
+                                 const nsCString& aNiceName,
+                                 const nsString& aSandboxScript)
   : nsIInternalPluginTag(aName, aDescription, nullptr, nullptr,
                          aMimeTypes, aMimeDescriptions, aExtensions),
     mId(aId),
     mHandlerURI(aHandlerURI),
     mNiceName(aNiceName),
+    mSandboxScript(aSandboxScript),
     mState(nsPluginTag::ePluginState_Enabled)
 {}
 
@@ -878,6 +880,7 @@ nsFakePluginTag::Create(const FakePluginTagInit& aInitDictionary,
   CopyUTF16toUTF8(aInitDictionary.mDescription, tag->mDescription);
   CopyUTF16toUTF8(aInitDictionary.mFileName, tag->mFileName);
   CopyUTF16toUTF8(aInitDictionary.mVersion, tag->mVersion);
+  tag->mSandboxScript = aInitDictionary.mSandboxScript;
 
   for (const FakePluginMimeEntry& mimeEntry : aInitDictionary.mMimeEntries) {
     CopyUTF16toUTF8(mimeEntry.mType, *tag->mMimeTypes.AppendElement());
@@ -901,6 +904,13 @@ NS_IMETHODIMP
 nsFakePluginTag::GetHandlerURI(nsIURI **aResult)
 {
   NS_IF_ADDREF(*aResult = mHandlerURI);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFakePluginTag::GetSandboxScript(nsAString& aSandboxScript)
+{
+  aSandboxScript = mSandboxScript;
   return NS_OK;
 }
 
