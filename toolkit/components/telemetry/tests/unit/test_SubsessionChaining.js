@@ -111,10 +111,12 @@ add_task(function* test_subsessionsChaining() {
   // Fake the clock data to manually trigger an aborted-session ping and a daily ping.
   // This is also helpful to make sure we get the archived pings in an expected order.
   let now = fakeNow(2009, 9, 18, 0, 0, 0);
+  let monotonicNow = fakeMonotonicNow(1000);
 
   let moveClockForward = (minutes) => {
-    now = futureDate(now, minutes * MILLISECONDS_PER_MINUTE);
-    fakeNow(now);
+    let ms = minutes * MILLISECONDS_PER_MINUTE;
+    now = fakeNow(futureDate(now, ms));
+    monotonicNow = fakeMonotonicNow(monotonicNow + ms);
   }
 
   // Keep track of the ping reasons we're expecting in this test.
