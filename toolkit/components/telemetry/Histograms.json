@@ -8716,6 +8716,15 @@
     "description": "Note the type of CDM (0=ClearKey, 1=Primetime, 2=Widevine, 3=unknown) every time we successfully instantiate an EME MediaKeys object.",
     "releaseChannelCollection": "opt-out"
   },
+  "VIDEO_CDM_GENERATE_REQUEST_CALLED": {
+    "alert_emails": ["cpearce@mozilla.com"],
+    "expires_in_version": "58",
+    "bug_numbers": [1305552],
+    "kind": "enumerated",
+    "n_values": 6,
+    "description": "Note the type of CDM (0=ClearKey, 1=Primetime, 2=Widevine, 3=unknown) every time we call MediaKeySession.generateRequest().",
+    "releaseChannelCollection": "opt-out"
+  },
   "MEDIA_CODEC_USED": {
     "alert_emails": ["cpearce@mozilla.com"],
     "expires_in_version": "never",
