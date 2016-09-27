@@ -18,6 +18,7 @@ const GripMessageBody = createFactory(require("devtools/client/webconsole/new-co
 const MessageRepeat = createFactory(require("devtools/client/webconsole/new-console-output/components/message-repeat").MessageRepeat);
 const MessageIcon = createFactory(require("devtools/client/webconsole/new-console-output/components/message-icon").MessageIcon);
 const CollapseButton = createFactory(require("devtools/client/webconsole/new-console-output/components/collapse-button").CollapseButton);
+const ConsoleTable = createFactory(require("devtools/client/webconsole/new-console-output/components/console-table").ConsoleTable);
 const actions = require("devtools/client/webconsole/new-console-output/actions/index");
 
 ConsoleApiCall.displayName = "ConsoleApiCall";
@@ -27,6 +28,8 @@ ConsoleApiCall.propTypes = {
   sourceMapService: PropTypes.object,
   onViewSourceInDebugger: PropTypes.func.isRequired,
   open: PropTypes.bool,
+  hudProxyClient: PropTypes.object.isRequired,
+  tableData: PropTypes.array,
 };
 
 ConsoleApiCall.defaultProps = {
@@ -34,15 +37,26 @@ ConsoleApiCall.defaultProps = {
 };
 
 function ConsoleApiCall(props) {
-  const { dispatch, message, sourceMapService, onViewSourceInDebugger, open } = props;
-  const { source, level, stacktrace, type, frame, parameters } = message;
+  const {
+    dispatch,
+    message,
+    sourceMapService,
+    onViewSourceInDebugger,
+    open,
+    hudProxyClient,
+    tableData
+  } = props;
+  const {source, level, stacktrace, type, frame, parameters } = message;
 
   let messageBody;
   if (type === "trace") {
-    messageBody = dom.span({ className: "cm-variable" }, "console.trace()");
+    messageBody = dom.span({className: "cm-variable"}, "console.trace()");
   } else if (type === "assert") {
     let reps = formatReps(parameters);
     messageBody = dom.span({ className: "cm-variable" }, "Assertion failed: ", reps);
+  } else if (type === "table") {
+    // TODO: Chrome does not output anything, see if we want to keep this
+    messageBody = dom.span({className: "cm-variable"}, "console.table()");
   } else if (parameters) {
     messageBody = formatReps(parameters);
   } else {
@@ -82,6 +96,14 @@ function ConsoleApiCall(props) {
           dispatch(actions.messageOpen(message.id));
         }
       },
+    });
+  } else if (type === "table") {
+    attachment = ConsoleTable({
+      dispatch,
+      id: message.id,
+      hudProxyClient,
+      parameters: message.parameters,
+      tableData
     });
   }
 
