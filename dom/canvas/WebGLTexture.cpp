@@ -596,8 +596,8 @@ WebGLTexture::InitializeImageData(const char* funcName, TexImageTarget target,
     const auto& height = imageInfo.mHeight;
     const auto& depth = imageInfo.mDepth;
 
-    if (!ZeroTextureData(mContext, funcName, mGLName, target, level, usage, 0, 0, 0,
-                         width, height, depth))
+    if (!ZeroTextureData(mContext, funcName, mGLName, target, level, usage, width, height,
+                         depth))
     {
         return false;
     }
