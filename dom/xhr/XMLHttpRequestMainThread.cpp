@@ -169,7 +169,6 @@ XMLHttpRequestMainThread::XMLHttpRequestMainThread()
     mFlagSyncLooping(false), mFlagBackgroundRequest(false),
     mFlagHadUploadListenersOnSend(false), mFlagACwithCredentials(false),
     mFlagTimedOut(false), mFlagDeleted(false), mFlagSend(false),
-    mSendExtraLoadingEvents(Preferences::GetBool("dom.fire_extra_xhr_loading_readystatechanges", true)),
     mUploadTransferred(0), mUploadTotal(0), mUploadComplete(true),
     mProgressSinceLastProgressEvent(false),
     mRequestSentTime(0), mTimeoutMilliseconds(0),
@@ -1715,9 +1714,7 @@ XMLHttpRequestMainThread::OnDataAvailable(nsIRequest *request,
 
   mDataAvailable += totalRead;
 
-  if (mState == State::headers_received || mSendExtraLoadingEvents) {
-    ChangeState(State::loading);
-  }
+  ChangeState(State::loading);
 
   if (!mFlagSynchronous && !mProgressTimerIsActive) {
     StartProgressEventTimer();
