@@ -4505,9 +4505,13 @@ nsHttpChannel::OpenCacheInputStream(nsICacheEntry* cacheEntry, bool startBufferi
         if (NS_SUCCEEDED(rv)) {
             // We have succeeded.
             mAvailableCachedAltDataType = mPreferredCachedAltDataType;
-            // The alternative data may have a different length than the original
-            // content, so we clear the Content-Length header
+            // Clear the header.
             mCachedResponseHead->SetContentLength(-1);
+            // Set the correct data size on the channel.
+            int64_t altDataSize;
+            if (NS_SUCCEEDED(cacheEntry->GetAltDataSize(&altDataSize))) {
+                mCachedResponseHead->SetContentLength(altDataSize);
+            }
         }
     }
 
