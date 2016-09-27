@@ -80,7 +80,6 @@ function populateReportList() {
 
   var formatter = Cc["@mozilla.org/intl/scriptabledateformat;1"].
                   createInstance(Ci.nsIScriptableDateFormat);
-  var body = document.getElementById("tbody");
   var ios = Cc["@mozilla.org/network/io-service;1"].
             getService(Ci.nsIIOService);
   var reportURI = ios.newURI(reportURL, null, null);
@@ -100,6 +99,7 @@ function populateReportList() {
       link.setAttribute("href", reportURL + reports[i].id);
     }
     link.setAttribute("id", reports[i].id);
+    link.classList.add("crashReport");
     link.appendChild(document.createTextNode(reports[i].id));
     cell.appendChild(link);
 
@@ -120,7 +120,11 @@ function populateReportList() {
                                        date.getSeconds());
     cell.appendChild(document.createTextNode(timestr));
     row.appendChild(cell);
-    body.appendChild(row);
+    if (reports[i].pending) {
+      document.getElementById("unsubmitted").appendChild(row);
+    } else {
+      document.getElementById("submitted").appendChild(row);
+    }
   }
 }
 
