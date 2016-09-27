@@ -158,40 +158,28 @@ class nsHtml5Tokenizer
   private:
     inline void appendCharRefBuf(char16_t c)
     {
-      MOZ_RELEASE_ASSERT(charRefBufLen < charRefBuf.length, "Attempted to overrun charRefBuf!");
       charRefBuf[charRefBufLen++] = c;
     }
 
+    inline void clearCharRefBufAndAppend(char16_t c)
+    {
+      charRefBuf[0] = c;
+      charRefBufLen = 1;
+    }
+
     void emitOrAppendCharRefBuf(int32_t returnState);
-    inline void clearStrBufAfterUse()
+    inline void clearStrBufAndAppend(char16_t c)
+    {
+      strBuf[0] = c;
+      strBufLen = 1;
+    }
+
+    inline void clearStrBuf()
     {
       strBufLen = 0;
     }
 
-    inline void clearStrBufBeforeUse()
-    {
-      MOZ_ASSERT(!strBufLen, "strBufLen not reset after previous use!");
-      strBufLen = 0;
-    }
-
-    inline void clearStrBufAfterOneHyphen()
-    {
-      MOZ_ASSERT(strBufLen == 1, "strBufLen length not one!");
-      MOZ_ASSERT(strBuf[0] == '-', "strBuf does not start with a hyphen!");
-      strBufLen = 0;
-    }
-
-    inline void appendStrBuf(char16_t c)
-    {
-      MOZ_ASSERT(strBufLen < strBuf.length, "Previous buffer length insufficient.");
-      if (MOZ_UNLIKELY(strBufLen == strBuf.length)) {
-        if (MOZ_UNLIKELY(!EnsureBufferSpace(1))) {
-          MOZ_CRASH("Unable to recover from buffer reallocation failure");
-        }
-      }
-      strBuf[strBufLen++] = c;
-    }
-
+    void appendStrBuf(char16_t c);
   protected:
     nsString* strBufToString();
   private:
@@ -212,7 +200,6 @@ class nsHtml5Tokenizer
     inline void appendCharRefBufToStrBuf()
     {
       appendStrBuf(charRefBuf, 0, charRefBufLen);
-      charRefBufLen = 0;
     }
 
     void emitComment(int32_t provisionalHyphens, int32_t pos);
