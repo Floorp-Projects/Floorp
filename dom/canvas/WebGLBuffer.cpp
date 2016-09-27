@@ -16,6 +16,7 @@ WebGLBuffer::WebGLBuffer(WebGLContext* webgl, GLuint buf)
     : WebGLContextBoundObject(webgl)
     , mGLName(buf)
     , mContent(Kind::Undefined)
+    , mUsage(LOCAL_GL_STATIC_DRAW)
     , mByteLength(0)
     , mNumActiveTFOs(0)
     , mBoundForTF(false)
@@ -142,6 +143,7 @@ WebGLBuffer::BufferData(GLenum target, size_t size, const void* data, GLenum usa
         gl->fBufferData(target, size, data, usage);
     }
 
+    mUsage = usage;
     mByteLength = size;
 
     // Warning: Possibly shared memory.  See bug 1225033.
