@@ -13,6 +13,7 @@ import subprocess
 import sys
 import time
 import json
+import socket
 import traceback
 import urlparse
 
@@ -266,8 +267,16 @@ class VirtualenvMixin(object):
         proxxy = Proxxy(self.config, self.log_obj)
         trusted_hosts = set()
         for link in proxxy.get_proxies_and_urls(c.get('find_links', [])):
-            command.extend(["--find-links", link])
             parsed = urlparse.urlparse(link)
+
+            try:
+                socket.gethostbyname(parsed.hostname)
+            except socket.gaierror as e:
+                self.info('error resolving %s (ignoring): %s' %
+                          (parsed.hostname, e.message))
+                continue
+
+            command.extend(["--find-links", link])
             if parsed.scheme != 'https':
                 trusted_hosts.add(parsed.hostname)
 
