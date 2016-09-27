@@ -3599,11 +3599,11 @@ nsStyleContent::CalcDifference(const nsStyleContent& aNewData) const
 
 nsStyleTextReset::nsStyleTextReset(StyleStructContext aContext)
   : mTextDecorationLine(NS_STYLE_TEXT_DECORATION_LINE_NONE)
+  , mTextDecorationStyle(NS_STYLE_TEXT_DECORATION_STYLE_SOLID)
   , mUnicodeBidi(NS_STYLE_UNICODE_BIDI_NORMAL)
   , mInitialLetterSink(0)
   , mInitialLetterSize(0.0f)
-  , mTextDecorationStyle(NS_STYLE_TEXT_DECORATION_STYLE_SOLID | BORDER_COLOR_FOREGROUND)
-  , mTextDecorationColor(NS_RGB(0, 0, 0))
+  , mTextDecorationColor(StyleComplexColor::CurrentColor())
 {
   MOZ_COUNT_CTOR(nsStyleTextReset);
 }
@@ -3628,10 +3628,8 @@ nsStyleTextReset::CalcDifference(const nsStyleTextReset& aNewData) const
     return NS_STYLE_HINT_REFLOW;
   }
 
-  uint8_t lineStyle = GetDecorationStyle();
-  uint8_t otherLineStyle = aNewData.GetDecorationStyle();
   if (mTextDecorationLine != aNewData.mTextDecorationLine ||
-      lineStyle != otherLineStyle) {
+      mTextDecorationStyle != aNewData.mTextDecorationStyle) {
     // Changes to our text-decoration line can impact our overflow area &
     // also our descendants' overflow areas (particularly for text-frame
     // descendants).  So, we update those areas & trigger a repaint.
@@ -3641,14 +3639,7 @@ nsStyleTextReset::CalcDifference(const nsStyleTextReset& aNewData) const
   }
 
   // Repaint for decoration color changes
-  // Dummy initialisations to keep Valgrind/Memcheck happy.
-  // See bug 1289098 comment 1.
-  nscolor decColor = NS_RGBA(0, 0, 0, 0);
-  nscolor otherDecColor = NS_RGBA(0, 0, 0, 0);
-  bool isFG, otherIsFG;
-  GetDecorationColor(decColor, isFG);
-  aNewData.GetDecorationColor(otherDecColor, otherIsFG);
-  if (isFG != otherIsFG || (!isFG && decColor != otherDecColor)) {
+  if (mTextDecorationColor != aNewData.mTextDecorationColor) {
     return nsChangeHint_RepaintFrame;
   }
 

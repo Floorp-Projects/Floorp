@@ -1128,8 +1128,10 @@ SetComplexColor(const nsCSSValue& aValue,
              (UnsetTo == eUnsetInherit && unit == eCSSUnit_Unset)) {
     aConditions.SetUncacheable();
     aResult = aParentColor;
-  } else if (unit == eCSSUnit_EnumColor &&
-             aValue.GetIntValue() == NS_COLOR_CURRENTCOLOR) {
+  } else if ((unit == eCSSUnit_EnumColor &&
+              aValue.GetIntValue() == NS_COLOR_CURRENTCOLOR) ||
+             (unit == eCSSUnit_Enumerated &&
+              aValue.GetIntValue() == NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR)) {
     aResult = StyleComplexColor::CurrentColor();
   } else if (unit == eCSSUnit_ComplexColor) {
     aResult = aValue.GetStyleComplexColorValue();
@@ -4922,52 +4924,23 @@ nsRuleNode::ComputeTextResetData(void* aStartStruct,
   }
 
   // text-decoration-color: color, string, enum, inherit, initial
-  const nsCSSValue* decorationColorValue =
-    aRuleData->ValueForTextDecorationColor();
-  nscolor decorationColor;
-  if (eCSSUnit_Inherit == decorationColorValue->GetUnit()) {
-    conditions.SetUncacheable();
-    if (parentContext) {
-      bool isForeground;
-      parentText->GetDecorationColor(decorationColor, isForeground);
-      if (isForeground) {
-        text->SetDecorationColor(parentContext->StyleColor()->mColor);
-      } else {
-        text->SetDecorationColor(decorationColor);
-      }
-    } else {
-      text->SetDecorationColorToForeground();
-    }
-  }
-  else if (eCSSUnit_EnumColor == decorationColorValue->GetUnit() &&
-           decorationColorValue->GetIntValue() == NS_COLOR_CURRENTCOLOR) {
-    text->SetDecorationColorToForeground();
-  }
-  else if (SetColor(*decorationColorValue, 0, mPresContext, aContext,
-                    decorationColor, conditions)) {
-    text->SetDecorationColor(decorationColor);
-  }
-  else if (eCSSUnit_Initial == decorationColorValue->GetUnit() ||
-           eCSSUnit_Unset == decorationColorValue->GetUnit() ||
-           eCSSUnit_Enumerated == decorationColorValue->GetUnit()) {
-    MOZ_ASSERT(eCSSUnit_Enumerated != decorationColorValue->GetUnit() ||
-               decorationColorValue->GetIntValue() ==
-                 NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR,
-               "unexpected enumerated value");
-    text->SetDecorationColorToForeground();
-  }
+  SetComplexColor<eUnsetInitial>(*aRuleData->ValueForTextDecorationColor(),
+                                 parentText->mTextDecorationColor,
+                                 StyleComplexColor::CurrentColor(),
+                                 mPresContext,
+                                 text->mTextDecorationColor, conditions);
 
   // text-decoration-style: enum, inherit, initial
   const nsCSSValue* decorationStyleValue =
     aRuleData->ValueForTextDecorationStyle();
   if (eCSSUnit_Enumerated == decorationStyleValue->GetUnit()) {
-    text->SetDecorationStyle(decorationStyleValue->GetIntValue());
+    text->mTextDecorationStyle = decorationStyleValue->GetIntValue();
   } else if (eCSSUnit_Inherit == decorationStyleValue->GetUnit()) {
-    text->SetDecorationStyle(parentText->GetDecorationStyle());
+    text->mTextDecorationStyle = parentText->mTextDecorationStyle;
     conditions.SetUncacheable();
   } else if (eCSSUnit_Initial == decorationStyleValue->GetUnit() ||
              eCSSUnit_Unset == decorationStyleValue->GetUnit()) {
-    text->SetDecorationStyle(NS_STYLE_TEXT_DECORATION_STYLE_SOLID);
+    text->mTextDecorationStyle = NS_STYLE_TEXT_DECORATION_STYLE_SOLID;
   }
 
   // text-overflow: enum, string, pair(enum|string), inherit, initial

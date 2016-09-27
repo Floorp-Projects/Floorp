@@ -1233,17 +1233,8 @@ nsStyleContext::CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
     if (!change && PeekStyleTextReset()) {
       const nsStyleTextReset *thisVisTextReset = thisVis->StyleTextReset();
       const nsStyleTextReset *otherVisTextReset = otherVis->StyleTextReset();
-      // Dummy initialisations to keep Valgrind/Memcheck happy.
-      // See bug 1122375 comment 4.
-      nscolor thisVisDecColor = NS_RGBA(0, 0, 0, 0);
-      nscolor otherVisDecColor = NS_RGBA(0, 0, 0, 0);
-      bool thisVisDecColorIsFG, otherVisDecColorIsFG;
-      thisVisTextReset->GetDecorationColor(thisVisDecColor,
-                                           thisVisDecColorIsFG);
-      otherVisTextReset->GetDecorationColor(otherVisDecColor,
-                                            otherVisDecColorIsFG);
-      if (thisVisDecColorIsFG != otherVisDecColorIsFG ||
-          (!thisVisDecColorIsFG && thisVisDecColor != otherVisDecColor)) {
+      if (thisVisTextReset->mTextDecorationColor !=
+          otherVisTextReset->mTextDecorationColor) {
         change = true;
       }
     }
