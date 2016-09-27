@@ -636,29 +636,19 @@ Tester.prototype = {
         // use a shrinking GC so that the JS engine will discard JIT code and
         // JIT caches more aggressively.
 
-        let checkForLeakedGlobalWindows = aCallback => {
+        let shutdownCleanup = aCallback => {
           Cu.schedulePreciseShrinkingGC(() => {
-            let analyzer = new CCAnalyzer();
-            analyzer.run(() => {
-              let results = [];
-              for (let obj of analyzer.find("nsGlobalWindow ")) {
-                let m = obj.name.match(/^nsGlobalWindow #(\d+)/);
-                if (m && m[1] in this.openedWindows)
-                  results.push({ name: obj.name, url: m[1] });
-              }
-              aCallback(results);
-            });
+            // Run the GC and CC a few times to make sure that as much
+            // as possible is freed.
+            let numCycles = 3;
+            for (i = 0; i < numCycles; i++) {
+              Cu.forceGC();
+              Cu.forceCC();
+            }
+            aCallback();
           });
         };
 
-        let reportLeaks = aResults => {
-          for (let result of aResults) {
-            let test = this.openedWindows[result.url];
-            let msg = "leaked until shutdown [" + result.name +
-                      " " + (this.openedURLs[result.url] || "NULL") + "]";
-            test.addResult(new testResult(false, msg, "", false));
-          }
-        };
 
         let {AsyncShutdown} =
           Cu.import("resource://gre/modules/AsyncShutdown.jsm", {});
@@ -680,17 +670,9 @@ Tester.prototype = {
                        .getService(Ci.nsIMessageBroadcaster);
           ppmm.broadcastAsyncMessage("browser-test:collect-request");
 
-          checkForLeakedGlobalWindows(aResults => {
-            if (aResults.length == 0) {
-              this.finish();
-              return;
-            }
-            // After the first check, if there are reported leaked windows, sleep
-            // for a while, to allow off-main-thread work to complete and free up
-            // main-thread objects.  Then check again.
+          shutdownCleanup(() => {
             setTimeout(() => {
-              checkForLeakedGlobalWindows(aResults => {
-                reportLeaks(aResults);
+              shutdownCleanup(() => {
                 this.finish();
               });
             }, 1000);
