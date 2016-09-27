@@ -26,6 +26,37 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps)
                   || href.split("/").splice(-2, 1)[0]
                   || "REALLY_WEIRD_URI";
 
+  // Verbatim copy from talos-powers/content/TalosPowersContent.js
+  // If the origin changes, this copy should be updated.
+  TalosPowersParent = {
+    replyId: 1,
+
+    // dispatch an event to the framescript and register the result/callback event
+    exec: function(commandName, arg, callback, opt_custom_window) {
+      let win = opt_custom_window || window;
+      let replyEvent = "TalosPowers:ParentExec:ReplyEvent:" + this.replyId++;
+      if (callback) {
+        win.addEventListener(replyEvent, function rvhandler(e) {
+          win.removeEventListener(replyEvent, rvhandler);
+          callback(e.detail);
+        });
+      }
+      win.dispatchEvent(
+        new win.CustomEvent("TalosPowers:ParentExec:QueryEvent", {
+          bubbles: true,
+          detail: {
+            command: {
+              name: commandName,
+              data: arg,
+            },
+            listeningTo: replyEvent,
+          }
+        })
+      );
+    },
+  };
+  // End of code from talos-powers
+
   var report;
   /**
    * Sets up the value of 'report' as a function for reporting the test result[s].
@@ -101,6 +132,12 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps)
   var doScrollTick = isWindow ? function() { target.scrollBy(0, stepSize); ensureScroll(); }
                               : function() { target.scrollTop += stepSize; ensureScroll(); };
 
+  var setSmooth =    isWindow ? function() { target.document.scrollingElement.style.scrollBehavior = "smooth"; }
+                              : function() { target.style.scrollBehavior = "smooth"; };
+
+  var gotoBottom =   isWindow ? function() { target.scrollTo(0, target.scrollMaxY); }
+                              : function() { target.scrollTop = target.scrollHeight; };
+
   function ensureScroll() { // Ensure scroll by reading computed values. screenY is for X11.
     if (!this.dummyEnsureScroll) {
       this.dummyEnsureScroll = 1;
@@ -167,11 +204,58 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps)
     });
   }
 
+  function P_testAPZScroll() {
+    var APZ_MEASURE_MS = 1000;
+
+    function startFrameTimeRecording(cb) {
+      TalosPowersParent.exec("startFrameTimeRecording", null, cb, win);
+    }
+
+    function stopFrameTimeRecording(handle, cb) {
+      TalosPowersParent.exec("stopFrameTimeRecording", handle, cb, win);
+    }
+
+    return new Promise(function(resolve, reject) {
+      setSmooth();
+      var startts = Date.now();
+
+      var handle = -1;
+      startFrameTimeRecording(function(rv) {
+        handle = rv;
+      });
+
+      // Get the measurements after APZ_MEASURE_MS of scrolling
+      setTimeout(function() {
+        var endts = Date.now();
+
+        stopFrameTimeRecording(handle, function(intervals) {
+          function average(arr) {
+              var sum = 0;
+              for(var i = 0; i < arr.length; i++)
+                sum += arr[i];
+              return arr.length ? sum / arr.length : 0;
+          }
+
+          // remove two frames on each side of the recording to get a cleaner result
+          result.values.push(average(intervals.slice(2, intervals.length - 2)));
+          result.names.push("CSSOM." + testBaseName);
+
+          resolve();
+        });
+      }, APZ_MEASURE_MS);
+
+      gotoBottom(); // trigger the APZ scroll
+    });
+  }
+
   P_setupReportFn()
   .then(FP_wait(260))
   .then(gotoTop)
   .then(P_rAF)
   .then(P_syncScrollTest)
+  .then(gotoTop)
+  .then(FP_wait(260))
+  .then(P_testAPZScroll)
   .then(function() {
     report(result.values.join(","), 0, result.names.join(","));
   });
