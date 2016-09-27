@@ -1193,16 +1193,7 @@ nsStyleContext::CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
     if (!change && PeekStyleOutline()) {
       const nsStyleOutline *thisVisOutline = thisVis->StyleOutline();
       const nsStyleOutline *otherVisOutline = otherVis->StyleOutline();
-      bool haveColor;
-      // Dummy initialisations to keep Valgrind/Memcheck happy.
-      // See bug 1289098 comment 1.
-      nscolor thisColor = NS_RGBA(0, 0, 0, 0);
-      nscolor otherColor = NS_RGBA(0, 0, 0, 0);
-      if (thisVisOutline->GetOutlineInitialColor() !=
-            otherVisOutline->GetOutlineInitialColor() ||
-          (haveColor = thisVisOutline->GetOutlineColor(thisColor)) !=
-            otherVisOutline->GetOutlineColor(otherColor) ||
-          (haveColor && thisColor != otherColor)) {
+      if (thisVisOutline->mOutlineColor != otherVisOutline->mOutlineColor) {
         change = true;
       }
     }

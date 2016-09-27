@@ -3126,8 +3126,8 @@ CSS_PROP_OUTLINE(
     "",
     VARIANT_HCK,
     kOutlineColorKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_Custom)
+    offsetof(nsStyleOutline, mOutlineColor),
+    eStyleAnimType_ComplexColor)
 CSS_PROP_OUTLINE(
     outline-offset,
     outline_offset,
