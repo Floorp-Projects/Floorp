@@ -3781,7 +3781,15 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSizeStep1(
   WritingMode wm = aState.mWM;
   nsRenderingContext* rc = &aState.mRenderingContext;
   if (sz.mState & TrackSize::eAutoMinSizing) {
-    nscoord s = MinSize(aGridItem, aState, rc, wm, mAxis);
+    nscoord s;
+    if (aConstraint == SizingConstraint::eMinContent) {
+      s = MinContentContribution(aGridItem, aState, rc, wm, mAxis);
+    } else if (aConstraint == SizingConstraint::eMaxContent) {
+      s = MaxContentContribution(aGridItem, aState, rc, wm, mAxis);
+    } else {
+      MOZ_ASSERT(aConstraint == SizingConstraint::eNoConstraint);
+      s = MinSize(aGridItem, aState, rc, wm, mAxis);
+    }
     sz.mBase = std::max(sz.mBase, s);
   } else if ((sz.mState & TrackSize::eMinContentMinSizing) ||
              (aConstraint == SizingConstraint::eMinContent &&
