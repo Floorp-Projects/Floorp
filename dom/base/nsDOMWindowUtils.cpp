@@ -3500,6 +3500,19 @@ nsDOMWindowUtils::GetIsHandlingUserInput(bool* aHandlingUserInput)
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::GetMillisSinceLastUserInput(double* aMillisSinceLastUserInput)
+{
+  TimeStamp lastInput = EventStateManager::LatestUserInputStart();
+  if (lastInput.IsNull()) {
+    *aMillisSinceLastUserInput = 0;
+    return NS_OK;
+  }
+
+  *aMillisSinceLastUserInput = (TimeStamp::Now() - lastInput).ToMilliseconds();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::AllowScriptsToClose()
 {
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
