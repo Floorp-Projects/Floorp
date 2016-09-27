@@ -1748,6 +1748,32 @@ Function FinishInstall
   Call SetProgressBars
 
   ${If} "$CheckboxSetAsDefault" == "1"
+    ; NB: this code is duplicated in installer.nsi. Please keep in sync.
+    ; For data migration in the app, we want to know what the default browser
+    ; value was before we changed it. To do so, we read it here and store it
+    ; in our own registry key.
+    StrCpy $0 ""
+    ${If} ${AtLeastWinVista}
+      AppAssocReg::QueryCurrentDefault "http" "protocol" "effective"
+      Pop $1
+      ; If the method hasn't failed, $1 will contain the progid. Check:
+      ${If} "$1" != "method failed"
+      ${AndIf} "$1" != "method not available"
+        ; Read the actual command from the progid
+        ReadRegStr $0 HKCR "$1\shell\open\command" ""
+      ${EndIf}
+    ${EndIf}
+    ; If using the App Association Registry didn't happen or failed, fall back
+    ; to the effective http default:
+    ${If} "$0" == ""
+      ReadRegStr $0 HKCR "http\shell\open\command" ""
+    ${EndIf}
+    ; If we have something other than empty string now, write the value.
+    ${If} "$0" != ""
+      ClearErrors
+      WriteRegStr HKCU "Software\Mozilla\Firefox" "OldDefaultBrowserCommand" "$0"
+    ${EndIf}
+
     ${GetParameters} $0
     ClearErrors
     ${GetOptions} "$0" "/UAC:" $0
