@@ -456,7 +456,7 @@ public:
 
     static bool OffMainThreadCompositingEnabled();
 
-    void UpdateCanUseHardwareVideoDecoding();
+    void UpdateCanUseHardareVideoDecoding();
 
     // Returns a prioritized list of all available compositor backends.
     void GetCompositorBackends(bool useAcceleration, nsTArray<mozilla::layers::LayersBackend>& aBackends);
