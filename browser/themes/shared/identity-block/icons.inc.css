@@ -19,7 +19,7 @@
 
 @selectorPrefix@#identity-box.grantedPermissions:hover > #identity-icon:not(.no-hover)@selectorSuffix@,
 @selectorPrefix@#identity-box.grantedPermissions[open=true] > #identity-icon@selectorSuffix@ {
-  list-style-image: url(url(chrome://browser/skin/identity-icon.svg#notice-hover@iconVariant@));
+  list-style-image: url(chrome://browser/skin/identity-icon.svg#notice-hover@iconVariant@);
 }
 
 @selectorPrefix@#urlbar[pageproxystate="valid"] > #identity-box.chromeUI > #identity-icon@selectorSuffix@ {
