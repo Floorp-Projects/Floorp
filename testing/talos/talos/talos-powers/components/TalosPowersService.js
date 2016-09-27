@@ -41,6 +41,7 @@ TalosPowersService.prototype = {
     Services.mm.addMessageListener("TalosContentProfiler:Command", this);
     Services.mm.addMessageListener("TalosPowersContent:ForceCCAndGC", this);
     Services.mm.addMessageListener("TalosPowersContent:GetStartupInfo", this);
+    Services.mm.addMessageListener("TalosPowers:ParentExec:QueryMsg", this);
     Services.obs.addObserver(this, "xpcom-shutdown", false);
   },
 
@@ -66,6 +67,11 @@ TalosPowersService.prototype = {
       }
       case "TalosPowersContent:GetStartupInfo": {
         this.receiveGetStartupInfo(message);
+        break;
+      }
+      case "TalosPowers:ParentExec:QueryMsg": {
+        this.RecieveParentExecCommand(message);
+        break;
       }
     }
   },
@@ -256,6 +262,43 @@ TalosPowersService.prototype = {
                           startupInfo);
     }
   },
+
+  // These services are exposed to local unprivileged content.
+  // Each service is a function which accepts an argument, a callback for sending
+  // the reply (possibly async), and the parent window as a utility.
+  // arg/reply semantice are service-specific.
+  // To add a service: add a method at ParentExecServices here, then at the content:
+  // <script src="chrome://talos-powers-content/content/TalosPowersContent.js"></script>
+  // and then e.g. TalosPowersParent.exec("sampleParentService", myArg, myCallback)
+  // Sample service:
+  /*
+    // arg: anything. return: sample reply
+    sampleParentService: function(arg, callback, win) {
+      win.setTimeout(function() {
+        callback("sample reply for: " + arg);
+      }, 500);
+    },
+
+  */
+  ParentExecServices: {
+  },
+
+  RecieveParentExecCommand(msg) {
+    function sendResult(result) {
+      let mm = msg.target.messageManager;
+      mm.sendAsyncMessage("TalosPowers:ParentExec:ReplyMsg", {
+        id: msg.data.id,
+        result: result
+      });
+    }
+
+    let command = msg.data.command;
+    if (!this.ParentExecServices.hasOwnProperty(command.name))
+      throw new Error("TalosPowers:ParentExec: Invalid service '" + command.name + "'");
+
+    this.ParentExecServices[command.name](command.data, sendResult, msg.target.ownerGlobal);
+  },
+
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TalosPowersService]);
