@@ -13,7 +13,7 @@ add_task(function* test() {
     info("about:crashes loaded");
     return ContentTask.spawn(browser, crashes, function (crashes) {
       let doc = content.document;
-      let crashlinks = doc.getElementById("tbody").getElementsByTagName("a");
+      let crashlinks = doc.getElementById("submitted").querySelectorAll(".crashReport");
       Assert.equal(crashlinks.length, crashes.length,
         "about:crashes lists correct number of crash reports");
       for (let i = 0; i < crashes.length; i++) {
