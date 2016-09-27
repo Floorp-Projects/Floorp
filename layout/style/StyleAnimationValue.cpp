@@ -3862,19 +3862,6 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
           break;
         }
 
-        case eCSSProperty_column_rule_color: {
-          const nsStyleColumn *styleColumn =
-            static_cast<const nsStyleColumn*>(styleStruct);
-          nscolor color;
-          if (styleColumn->mColumnRuleColorIsForeground) {
-            color = aStyleContext->StyleColor()->mColor;
-          } else {
-            color = styleColumn->mColumnRuleColor;
-          }
-          aComputedValue.SetColorValue(color);
-          break;
-        }
-
         case eCSSProperty_column_count: {
           const nsStyleColumn *styleColumn =
             static_cast<const nsStyleColumn*>(styleStruct);

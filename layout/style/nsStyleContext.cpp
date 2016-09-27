@@ -1211,9 +1211,7 @@ nsStyleContext::CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
     if (!change && PeekStyleColumn()) {
       const nsStyleColumn *thisVisColumn = thisVis->StyleColumn();
       const nsStyleColumn *otherVisColumn = otherVis->StyleColumn();
-      if (thisVisColumn->mColumnRuleColor != otherVisColumn->mColumnRuleColor ||
-          thisVisColumn->mColumnRuleColorIsForeground !=
-            otherVisColumn->mColumnRuleColorIsForeground) {
+      if (thisVisColumn->mColumnRuleColor != otherVisColumn->mColumnRuleColor) {
         change = true;
       }
     }

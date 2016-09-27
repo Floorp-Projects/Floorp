@@ -1522,8 +1522,8 @@ CSS_PROP_COLUMN(
     "",
     VARIANT_HCK,
     kBorderColorKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_Custom)
+    offsetof(nsStyleColumn, mColumnRuleColor),
+    eStyleAnimType_ComplexColor)
 CSS_PROP_COLUMN(
     -moz-column-rule-style,
     column_rule_style,
