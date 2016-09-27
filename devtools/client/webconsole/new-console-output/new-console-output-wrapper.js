@@ -17,37 +17,47 @@ const FilterBar = React.createFactory(require("devtools/client/webconsole/new-co
 const store = configureStore();
 
 function NewConsoleOutputWrapper(parentNode, jsterm, toolbox, owner) {
-  const sourceMapService = toolbox ? toolbox._sourceMapService : null;
-  let childComponent = ConsoleOutput({
-    jsterm,
-    sourceMapService,
-    onViewSourceInDebugger: frame => toolbox.viewSourceInDebugger.call(
-      toolbox,
-      frame.url,
-      frame.line
-    ),
-    openNetworkPanel: (requestId) => {
-      return toolbox.selectTool("netmonitor").then(panel => {
-        return panel.panelWin.NetMonitorController.inspectRequest(requestId);
-      });
-    },
-    openLink: (url) => {
-      owner.openLink(url);
-    },
-  });
-  let filterBar = FilterBar({});
-  let provider = React.createElement(
-    Provider,
-    { store },
-    React.DOM.div(
-      {className: "webconsole-output-wrapper"},
-      filterBar,
-      childComponent
-  ));
-  this.body = ReactDOM.render(provider, parentNode);
+  this.parentNode = parentNode;
+  this.jsterm = jsterm;
+  this.toolbox = toolbox;
+  this.owner = owner;
+
+  this.init = this.init.bind(this);
 }
 
 NewConsoleOutputWrapper.prototype = {
+  init: function () {
+    const sourceMapService = this.toolbox ? this.toolbox._sourceMapService : null;
+
+    let childComponent = ConsoleOutput({
+      hudProxyClient: this.jsterm.hud.proxy.client,
+      sourceMapService,
+      onViewSourceInDebugger: frame => this.toolbox.viewSourceInDebugger.call(
+        this.toolbox,
+        frame.url,
+        frame.line
+      ),
+      openNetworkPanel: (requestId) => {
+        return this.toolbox.selectTool("netmonitor").then(panel => {
+          return panel.panelWin.NetMonitorController.inspectRequest(requestId);
+        });
+      },
+      openLink: (url) => {
+        this.owner.openLink(url);
+      },
+    });
+    let filterBar = FilterBar({});
+    let provider = React.createElement(
+      Provider,
+      { store },
+      React.DOM.div(
+        {className: "webconsole-output-wrapper"},
+        filterBar,
+        childComponent
+    ));
+
+    this.body = ReactDOM.render(provider, this.parentNode);
+  },
   dispatchMessageAdd: (message) => {
     store.dispatch(actions.messageAdd(message));
   },
