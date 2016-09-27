@@ -70,16 +70,14 @@ define(function (require, exports, module) {
           delim = (i == delimMax ? "" : ", ");
 
           items.push(GripArrayItem(Object.assign({}, this.props, {
-            key: i,
             object: value,
-            delim: delim}
-          )));
+            delim: delim
+          })));
         } catch (exc) {
           items.push(GripArrayItem(Object.assign({}, this.props, {
             object: exc,
-            delim: delim,
-            key: i}
-          )));
+            delim: delim
+          })));
         }
       }
       if (array.length > max || grip.preview.length > array.length) {
@@ -87,7 +85,6 @@ define(function (require, exports, module) {
         let leftItemNum = grip.preview.length - max > 0 ?
           grip.preview.length - max : grip.preview.length - array.length;
         items.push(Caption({
-          key: "more",
           object: objectLink({
             object: this.props.object
           }, leftItemNum + " more…")
@@ -110,7 +107,7 @@ define(function (require, exports, module) {
       if (mode == "tiny") {
         let objectLength = this.getLength(object);
         let isEmpty = objectLength === 0;
-        items = span({className: "length"}, isEmpty ? "" : objectLength);
+        items = [span({className: "length"}, isEmpty ? "" : objectLength)];
         brackets = needSpace(false);
       } else {
         let max = (mode == "short") ? 3 : 300;
@@ -129,7 +126,7 @@ define(function (require, exports, module) {
             className: "arrayLeftBracket",
             object: object
           }, brackets.left),
-          items,
+          ...items,
           objectLink({
             className: "arrayRightBracket",
             object: object
