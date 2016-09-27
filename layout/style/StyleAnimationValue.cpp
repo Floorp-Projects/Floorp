@@ -3419,22 +3419,6 @@ StyleDataAtOffset(const void* aStyleStruct, ptrdiff_t aOffset)
     reinterpret_cast<const uint8_t*>(aStyleStruct) + aOffset);
 }
 
-static void
-ExtractBorderColor(nsStyleContext* aStyleContext, const void* aStyleBorder,
-                   mozilla::css::Side aSide,
-                   StyleAnimationValue& aComputedValue)
-{
-  nscolor color;
-  bool foreground;
-  static_cast<const nsStyleBorder*>(aStyleBorder)->
-    GetBorderColor(aSide, color, foreground);
-  if (foreground) {
-    // FIXME: should add test for this
-    color = aStyleContext->StyleColor()->mColor;
-  }
-  aComputedValue.SetColorValue(color);
-}
-
 static bool
 StyleCoordToValue(const nsStyleCoord& aCoord, StyleAnimationValue& aValue)
 {
@@ -3833,23 +3817,6 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
           aComputedValue.SetCoordValue(
             static_cast<const nsStyleColumn*>(styleStruct)->
               GetComputedColumnRuleWidth());
-          break;
-
-        case eCSSProperty_border_bottom_color:
-          ExtractBorderColor(aStyleContext, styleStruct, NS_SIDE_BOTTOM,
-                             aComputedValue);
-          break;
-        case eCSSProperty_border_left_color:
-          ExtractBorderColor(aStyleContext, styleStruct, NS_SIDE_LEFT,
-                             aComputedValue);
-          break;
-        case eCSSProperty_border_right_color:
-          ExtractBorderColor(aStyleContext, styleStruct, NS_SIDE_RIGHT,
-                             aComputedValue);
-          break;
-        case eCSSProperty_border_top_color:
-          ExtractBorderColor(aStyleContext, styleStruct, NS_SIDE_TOP,
-                             aComputedValue);
           break;
 
         case eCSSProperty_column_count: {
