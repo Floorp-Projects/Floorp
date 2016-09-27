@@ -124,6 +124,18 @@ function reload(event) {
 
   // Then spawn a brand new Loader.jsm instance and start the main module
   Cu.unload("resource://devtools/shared/Loader.jsm");
+  // Also unload all resources loaded as jsm, hopefully all of them are going
+  // to be converted into regular modules
+  Cu.unload("resource://devtools/client/shared/browser-loader.js");
+  Cu.unload("resource://devtools/client/framework/ToolboxProcess.jsm");
+  Cu.unload("resource://devtools/shared/apps/Devices.jsm");
+  Cu.unload("resource://devtools/client/scratchpad/scratchpad-manager.jsm");
+  Cu.unload("resource://devtools/shared/Parser.jsm");
+  Cu.unload("resource://devtools/client/shared/DOMHelpers.jsm");
+  Cu.unload("resource://devtools/client/shared/widgets/VariablesView.jsm");
+  Cu.unload("resource://devtools/client/responsivedesign/responsivedesign.jsm");
+  Cu.unload("resource://devtools/client/shared/widgets/AbstractTreeItem.jsm");
+  Cu.unload("resource://devtools/shared/deprecated-sync-thenables.js");
   const {devtools} = Cu.import("resource://devtools/shared/Loader.jsm", {});
   devtools.require("devtools/client/framework/devtools-browser");
 

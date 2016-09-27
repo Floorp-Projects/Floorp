@@ -963,13 +963,4 @@ WMFVideoMFTManager::IsHardwareAccelerated(nsACString& aFailureReason) const
   return mDecoder && mUseHwAccel;
 }
 
-void
-WMFVideoMFTManager::ConfigurationChanged(const TrackInfo& aConfig)
-{
-  MOZ_ASSERT(aConfig.GetAsVideoInfo());
-  mVideoInfo = *aConfig.GetAsVideoInfo();
-  mImageSize = mVideoInfo.mImage;
-  ValidateVideoInfo();
-}
-
 } // namespace mozilla

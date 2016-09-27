@@ -32,7 +32,6 @@ public:
   void Flush() override;
   void Drain() override;
   void Shutdown() override;
-  void ConfigurationChanged(const TrackInfo& aConfig) override { MOZ_ASSERT(false); }
 
   const char* GetDescriptionName() const override { return "RemoteVideoDecoder"; }
 
@@ -62,18 +61,22 @@ public:
     : mWrapped(aWrapped)
   {}
 
-  virtual nsresult Startup() override;
+  nsresult Startup() override;
 
-  virtual bool SupportsMimeType(const nsACString& aMimeType,
-                                DecoderDoctorDiagnostics* aDiagnostics) const override;
+  bool SupportsMimeType(const nsACString& aMimeType,
+                        DecoderDoctorDiagnostics* aDiagnostics) const override;
 
-  virtual ConversionRequired DecoderNeedsConversion(const TrackInfo& aConfig) const override;
+  ConversionRequired DecoderNeedsConversion(
+    const TrackInfo& aConfig) const override;
 
-  virtual already_AddRefed<MediaDataDecoder>
-  CreateVideoDecoder(const CreateDecoderParams& aParams) override;
+  already_AddRefed<MediaDataDecoder> CreateVideoDecoder(
+    const CreateDecoderParams& aParams) override;
 
-  virtual already_AddRefed<MediaDataDecoder>
-  CreateAudioDecoder(const CreateDecoderParams& aParams) override { return nullptr; }
+  already_AddRefed<MediaDataDecoder> CreateAudioDecoder(
+    const CreateDecoderParams& aParams) override
+  {
+    return nullptr;
+  }
 
 private:
   RefPtr<PlatformDecoderModule> mWrapped;

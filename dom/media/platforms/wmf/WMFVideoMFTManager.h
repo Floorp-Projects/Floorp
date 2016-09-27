@@ -40,8 +40,6 @@ public:
     return TrackInfo::kVideoTrack;
   }
 
-  void ConfigurationChanged(const TrackInfo& aConfig) override;
-
   const char* GetDescriptionName() const override
   {
     nsCString failureReason;

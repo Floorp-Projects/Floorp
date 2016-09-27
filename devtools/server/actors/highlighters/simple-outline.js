@@ -4,8 +4,12 @@
 
 "use strict";
 
-const { installHelperSheet,
-  addPseudoClassLock, removePseudoClassLock } = require("./utils/markup");
+const {
+  installHelperSheet,
+  isNodeValid,
+  addPseudoClassLock,
+  removePseudoClassLock
+} = require("./utils/markup");
 
 // SimpleOutlineHighlighter's stylesheet
 const HIGHLIGHTED_PSEUDO_CLASS = ":-moz-devtools-highlighted";
@@ -41,7 +45,7 @@ SimpleOutlineHighlighter.prototype = {
    * @param {DOMNode} node
    */
   show: function (node) {
-    if (!this.currentNode || node !== this.currentNode) {
+    if (isNodeValid(node) && (!this.currentNode || node !== this.currentNode)) {
       this.hide();
       this.currentNode = node;
       installHelperSheet(node.ownerDocument.defaultView, SIMPLE_OUTLINE_SHEET);

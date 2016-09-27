@@ -18,7 +18,6 @@ namespace mozilla
 H264Converter::H264Converter(PlatformDecoderModule* aPDM,
                              const CreateDecoderParams& aParams)
   : mPDM(aPDM)
-  , mOriginalConfig(aParams.VideoConfig())
   , mCurrentConfig(aParams.VideoConfig())
   , mLayersBackend(aParams.mLayersBackend)
   , mImageContainer(aParams.mImageContainer)
@@ -166,7 +165,7 @@ H264Converter::SetSeekThreshold(const media::TimeUnit& aTime)
 nsresult
 H264Converter::CreateDecoder(DecoderDoctorDiagnostics* aDiagnostics)
 {
-  if (mNeedAVCC && !mp4_demuxer::AnnexB::HasSPS(mCurrentConfig.mExtraData)) {
+  if (!mp4_demuxer::AnnexB::HasSPS(mCurrentConfig.mExtraData)) {
     // nothing found yet, will try again later
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -183,20 +182,14 @@ H264Converter::CreateDecoder(DecoderDoctorDiagnostics* aDiagnostics)
       }
       return NS_ERROR_FAILURE;
     }
-  } else if (mNeedAVCC) {
+  } else {
     // SPS was invalid.
     mLastError = NS_ERROR_FAILURE;
     return NS_ERROR_FAILURE;
   }
 
-  if (!mNeedAVCC) {
-    // When using a decoder handling AnnexB, we get here only once from the
-    // constructor. We do want to get the dimensions extracted from the SPS.
-    mOriginalConfig = mCurrentConfig;
-  }
-
   mDecoder = mPDM->CreateVideoDecoder({
-    mNeedAVCC ? mCurrentConfig : mOriginalConfig,
+    mCurrentConfig,
     mTaskQueue,
     mCallback,
     aDiagnostics,
@@ -281,11 +274,6 @@ H264Converter::CheckForSPSChange(MediaRawData* aSample)
                                             mCurrentConfig.mExtraData)) {
         return NS_OK;
       }
-  if (!mNeedAVCC) {
-    UpdateConfigFromExtraData(extra_data);
-    mDecoder->ConfigurationChanged(mCurrentConfig);
-    return NS_OK;
-  }
   // The SPS has changed, signal to flush the current decoder and create a
   // new one.
   mDecoder->Flush();

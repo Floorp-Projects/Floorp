@@ -7,7 +7,7 @@ var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 var { BrowserLoader } = Cu.import("resource://devtools/client/shared/browser-loader.js", {});
 var { require } = BrowserLoader({
   baseURI: "resource://devtools/client/memory/",
-  window: this
+  window
 });
 var { Assert } = require("resource://testing-common/Assert.jsm");
 var Services = require("Services");

@@ -108,7 +108,6 @@ public:
   void Drain() override;
   void Shutdown() override;
   bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
-  void ConfigurationChanged(const TrackInfo& aConfig) override;
   const char* GetDescriptionName() const override
   {
     return mDecoder->GetDescriptionName();
