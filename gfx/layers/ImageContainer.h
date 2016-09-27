@@ -151,7 +151,7 @@ class PImageContainerChild;
 class SharedPlanarYCbCrImage;
 class PlanarYCbCrImage;
 class TextureClient;
-class TextureForwarder;
+class KnowsCompositor;
 class GrallocImage;
 class NVImage;
 
@@ -228,7 +228,7 @@ public:
    * For use with the TextureForwarder only (so that the later can
    * synchronize the TextureClient with the TextureHost).
    */
-  virtual TextureClient* GetTextureClient(TextureForwarder* aForwarder) { return nullptr; }
+  virtual TextureClient* GetTextureClient(KnowsCompositor* aForwarder) { return nullptr; }
 
   /* Access to derived classes. */
   virtual EGLImageImage* AsEGLImageImage() { return nullptr; }
@@ -890,7 +890,7 @@ public:
   }
 
   void SetTextureFlags(TextureFlags aTextureFlags) { mTextureFlags = aTextureFlags; }
-  virtual TextureClient* GetTextureClient(TextureForwarder* aForwarder) override;
+  virtual TextureClient* GetTextureClient(KnowsCompositor* aForwarder) override;
 
   virtual gfx::IntSize GetSize() override { return mSize; }
 

@@ -155,7 +155,7 @@ static bool UploadData(IDirect3DDevice9* aDevice,
 }
 
 TextureClient*
-IMFYCbCrImage::GetD3D9TextureClient(TextureForwarder* aForwarder)
+IMFYCbCrImage::GetD3D9TextureClient(KnowsCompositor* aForwarder)
 {
   RefPtr<IDirect3DDevice9> device = DeviceManagerD3D9::GetDevice();
   if (!device) {
@@ -207,20 +207,19 @@ IMFYCbCrImage::GetD3D9TextureClient(TextureForwarder* aForwarder)
   }
 
   mTextureClient = TextureClient::CreateWithData(
-    DXGIYCbCrTextureData::Create(aForwarder,
-                                 TextureFlags::DEFAULT,
+    DXGIYCbCrTextureData::Create(TextureFlags::DEFAULT,
                                  textureY, textureCb, textureCr,
                                  shareHandleY, shareHandleCb, shareHandleCr,
                                  GetSize(), mData.mYSize, mData.mCbCrSize),
     TextureFlags::DEFAULT,
-    aForwarder
+    aForwarder->GetTextureForwarder()
   );
 
   return mTextureClient;
 }
 
 TextureClient*
-IMFYCbCrImage::GetTextureClient(TextureForwarder* aForwarder)
+IMFYCbCrImage::GetTextureClient(KnowsCompositor* aForwarder)
 {
   if (mTextureClient) {
     return mTextureClient;
@@ -275,12 +274,11 @@ IMFYCbCrImage::GetTextureClient(TextureForwarder* aForwarder)
   }
 
   mTextureClient = TextureClient::CreateWithData(
-    DXGIYCbCrTextureData::Create(aForwarder,
-                                 TextureFlags::DEFAULT,
+    DXGIYCbCrTextureData::Create(TextureFlags::DEFAULT,
                                  textureY, textureCb, textureCr,
                                  GetSize(), mData.mYSize, mData.mCbCrSize),
     TextureFlags::DEFAULT,
-    aForwarder
+    aForwarder->GetTextureForwarder()
   );
 
   return mTextureClient;

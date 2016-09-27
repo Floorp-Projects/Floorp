@@ -20,8 +20,8 @@
 #include "nsIBaseWindow.h"
 #include "nsIDocument.h"
 #include "nsContentUtils.h"
-#include "mozilla/StyleSheetHandle.h"
-#include "mozilla/StyleSheetHandleInlines.h"
+#include "mozilla/StyleSheet.h"
+#include "mozilla/StyleSheetInlines.h"
 
 using namespace mozilla;
 

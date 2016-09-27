@@ -16,21 +16,6 @@
 
 namespace nss_test {
 
-class TlsExtensionDropper : public TlsExtensionFilter {
- public:
-  TlsExtensionDropper(uint16_t extension) : extension_(extension) {}
-  virtual PacketFilter::Action FilterExtension(uint16_t extension_type,
-                                               const DataBuffer&, DataBuffer*) {
-    if (extension_type == extension_) {
-      return DROP;
-    }
-    return KEEP;
-  }
-
- private:
-  uint16_t extension_;
-};
-
 class TlsExtensionTruncator : public TlsExtensionFilter {
  public:
   TlsExtensionTruncator(uint16_t extension, size_t length)
@@ -542,16 +527,189 @@ TEST_P(TlsExtensionTest13, ModifyDraftVersionAndFail) {
   EXPECT_EQ(SSL_ERROR_UNSUPPORTED_VERSION, server_->error_code());
 }
 
-// This test only works in stream mode because the MAC error causes a timeout on
-// the server with datagram.
+// These tests only work in stream mode because the client sends a
+// cleartext alert which causes a MAC error on the server. With
+// stream this causes handshake failure but with datagram, the
+// packet gets dropped.
 TEST_F(TlsExtensionTest13Stream, DropServerKeyShare) {
   EnsureTlsSetup();
   server_->SetPacketFilter(new TlsExtensionDropper(ssl_tls13_key_share_xtn));
   ConnectExpectFail();
   EXPECT_EQ(SSL_ERROR_MISSING_KEY_SHARE, client_->error_code());
-  // We are trying to decrypt but we can't. Kind of a screwy error
-  // from the TLS 1.3 stack.
   EXPECT_EQ(SSL_ERROR_BAD_MAC_READ, server_->error_code());
+}
+
+TEST_F(TlsExtensionTest13Stream, DropServerSignatureAlgorithms) {
+  EnsureTlsSetup();
+  server_->SetPacketFilter(
+      new TlsExtensionDropper(ssl_signature_algorithms_xtn));
+  ConnectExpectFail();
+  EXPECT_EQ(SSL_ERROR_MISSING_SIGNATURE_ALGORITHMS_EXTENSION,
+            client_->error_code());
+  EXPECT_EQ(SSL_ERROR_BAD_MAC_READ, server_->error_code());
+}
+
+TEST_F(TlsExtensionTest13Stream, NonEmptySignatureAlgorithms) {
+  EnsureTlsSetup();
+  DataBuffer sig_algs;
+  size_t index = 0;
+  index = sig_algs.Write(index, 2, 2);
+  index = sig_algs.Write(index, kTlsSignatureRsaPssSha256, 2);
+  server_->SetPacketFilter(
+      new TlsExtensionReplacer(ssl_signature_algorithms_xtn, sig_algs));
+  ConnectExpectFail();
+  EXPECT_EQ(SSL_ERROR_RX_MALFORMED_SERVER_HELLO, client_->error_code());
+  EXPECT_EQ(SSL_ERROR_BAD_MAC_READ, server_->error_code());
+}
+
+TEST_F(TlsExtensionTest13Stream, AddServerSignatureAlgorithmsOnResumption) {
+  SetupForResume();
+  DataBuffer empty;
+  server_->SetPacketFilter(
+      new TlsExtensionInjector(ssl_signature_algorithms_xtn, empty));
+  ConnectExpectFail();
+  EXPECT_EQ(SSL_ERROR_RX_UNEXPECTED_EXTENSION, client_->error_code());
+  EXPECT_EQ(SSL_ERROR_BAD_MAC_READ, server_->error_code());
+}
+
+class TlsPreSharedKeyReplacer : public TlsExtensionFilter {
+ public:
+  TlsPreSharedKeyReplacer(const uint8_t* psk, size_t psk_len,
+                          const uint8_t* ke_modes, size_t ke_modes_len,
+                          const uint8_t* auth_modes, size_t auth_modes_len) {
+    if (psk) {
+      psk_.reset(new DataBuffer(psk, psk_len));
+    }
+    if (ke_modes) {
+      ke_modes_.reset(new DataBuffer(ke_modes, ke_modes_len));
+    }
+    if (auth_modes) {
+      auth_modes_.reset(new DataBuffer(auth_modes, auth_modes_len));
+    }
+  }
+
+  static size_t CopyAndMaybeReplace(TlsParser* parser, size_t size,
+                                    const std::unique_ptr<DataBuffer>& replace,
+                                    size_t index, DataBuffer* output) {
+    DataBuffer tmp;
+    bool ret = parser->ReadVariable(&tmp, size);
+    EXPECT_EQ(true, ret);
+    if (!ret) return 0;
+    if (replace) {
+      tmp = *replace;
+    }
+
+    return WriteVariable(output, index, tmp, size);
+    ;
+  }
+
+  PacketFilter::Action FilterExtension(uint16_t extension_type,
+                                       const DataBuffer& input,
+                                       DataBuffer* output) {
+    if (extension_type != ssl_tls13_pre_shared_key_xtn) {
+      return KEEP;
+    }
+
+    TlsParser parser(input);
+    uint32_t len;                 // Length of the overall vector.
+    if (!parser.Read(&len, 2)) {  // We only allow one entry.
+      return DROP;
+    }
+    EXPECT_EQ(parser.remaining(), len);
+    if (len != parser.remaining()) {
+      return DROP;
+    }
+    DataBuffer buf;
+    size_t index = 0;
+    index = CopyAndMaybeReplace(&parser, 1, ke_modes_, index, &buf);
+    if (!index) {
+      return DROP;
+    }
+
+    index = CopyAndMaybeReplace(&parser, 1, auth_modes_, index, &buf);
+    if (!index) {
+      return DROP;
+    }
+
+    index = CopyAndMaybeReplace(&parser, 2, psk_, index, &buf);
+    if (!index) {
+      return DROP;
+    }
+
+    output->Truncate(0);
+    WriteVariable(output, 0, buf, 2);
+
+    return CHANGE;
+  }
+
+ private:
+  std::unique_ptr<DataBuffer> psk_;
+  std::unique_ptr<DataBuffer> ke_modes_;
+  std::unique_ptr<DataBuffer> auth_modes_;
+};
+
+// The following three tests produce bogus (ill-formatted) PreSharedKey
+// extensions so generate errors.
+TEST_F(TlsExtensionTest13Stream, ResumeEmptyPskLabel) {
+  SetupForResume();
+  const static uint8_t psk[1] = {0};
+
+  DataBuffer empty;
+  client_->SetPacketFilter(
+      new TlsPreSharedKeyReplacer(&psk[0], 0, nullptr, 0, nullptr, 0));
+  ConnectExpectFail();
+  client_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
+  server_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_CLIENT_HELLO);
+}
+
+TEST_F(TlsExtensionTest13Stream, ResumeNoKeModes) {
+  SetupForResume();
+  const static uint8_t ke_modes[1] = {0};
+
+  DataBuffer empty;
+  client_->SetPacketFilter(
+      new TlsPreSharedKeyReplacer(nullptr, 0, &ke_modes[0], 0, nullptr, 0));
+  ConnectExpectFail();
+  client_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
+  server_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_CLIENT_HELLO);
+}
+
+TEST_F(TlsExtensionTest13Stream, ResumeNoAuthModes) {
+  SetupForResume();
+  const static uint8_t auth_modes[1] = {0};
+
+  DataBuffer empty;
+  client_->SetPacketFilter(
+      new TlsPreSharedKeyReplacer(nullptr, 0, nullptr, 0, &auth_modes[0], 0));
+  ConnectExpectFail();
+  client_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
+  server_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_CLIENT_HELLO);
+}
+
+// The following two tests are valid but unacceptable PreSharedKey
+// modes and therefore produce non-resumption followed by MAC errors.
+TEST_F(TlsExtensionTest13Stream, ResumeBogusKeModes) {
+  SetupForResume();
+  const static uint8_t ke_modes = kTls13PskKe;
+
+  DataBuffer empty;
+  client_->SetPacketFilter(
+      new TlsPreSharedKeyReplacer(nullptr, 0, &ke_modes, 1, nullptr, 0));
+  ConnectExpectFail();
+  client_->CheckErrorCode(SSL_ERROR_BAD_MAC_READ);
+  server_->CheckErrorCode(SSL_ERROR_BAD_MAC_READ);
+}
+
+TEST_F(TlsExtensionTest13Stream, ResumeBogusAuthModes) {
+  SetupForResume();
+  const static uint8_t auth_modes = kTls13PskSignAuth;
+
+  DataBuffer empty;
+  client_->SetPacketFilter(
+      new TlsPreSharedKeyReplacer(nullptr, 0, nullptr, 0, &auth_modes, 1));
+  ConnectExpectFail();
+  client_->CheckErrorCode(SSL_ERROR_BAD_MAC_READ);
+  server_->CheckErrorCode(SSL_ERROR_BAD_MAC_READ);
 }
 
 INSTANTIATE_TEST_CASE_P(ExtensionStream, TlsExtensionTestGeneric,

@@ -2644,6 +2644,7 @@ class BaseCompiler
                 else
                     masm.outOfLineWasmTruncateDoubleToInt32(fsrc, isUnsigned, rejoin());
 #else
+                (void)isUnsigned; // Suppress warning for unused private.
                 MOZ_CRASH("BaseCompiler platform hook: OutOfLineTruncateF32OrF64ToI32 wasm");
 #endif
             }

@@ -43,12 +43,13 @@ class TextureClientPool;
 struct FrameMetrics;
 
 class CompositorBridgeChild final : public PCompositorBridgeChild,
-                                    public TextureForwarder,
-                                    public ShmemAllocator
+                                    public TextureForwarder
 {
   typedef InfallibleTArray<AsyncParentMessageData> AsyncParentMessageArray;
 
 public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorBridgeChild, override);
+
   explicit CompositorBridgeChild(ClientLayerManager *aLayerManager);
 
   void Destroy();
@@ -189,7 +190,7 @@ public:
 
   virtual void CancelWaitForRecycle(uint64_t aTextureId) override;
 
-  TextureClientPool* GetTexturePool(LayersBackend aBackend,
+  TextureClientPool* GetTexturePool(KnowsCompositor* aAllocator,
                                     gfx::SurfaceFormat aFormat,
                                     TextureFlags aFlags);
   void ClearTexturePool();
@@ -221,9 +222,9 @@ public:
   PAPZChild* AllocPAPZChild(const uint64_t& aLayersId) override;
   bool DeallocPAPZChild(PAPZChild* aActor) override;
 
-  virtual ShmemAllocator* AsShmemAllocator() override { return this; }
-
   void ProcessingError(Result aCode, const char* aReason) override;
+
+  void WillEndTransaction();
 
 private:
   // Private destructor, to discourage deletion outside of Release():

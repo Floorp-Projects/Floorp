@@ -241,4 +241,20 @@ TEST_F(TlsConnectTest, Tls13RejectsRehandshakeServer) {
   EXPECT_EQ(SSL_ERROR_RENEGOTIATION_NOT_ALLOWED, PORT_GetError());
 }
 
+TEST_P(TlsConnectGeneric, AlertBeforeServerHello) {
+  EnsureTlsSetup();
+  client_->StartConnect();
+  server_->StartConnect();
+  client_->Handshake();  // Send ClientHello.
+  static const uint8_t kWarningAlert[] = {kTlsAlertWarning,
+                                          kTlsAlertUnrecognizedName};
+  DataBuffer alert;
+  TlsAgentTestBase::MakeRecord(mode_, kTlsAlertType,
+                               SSL_LIBRARY_VERSION_TLS_1_0, kWarningAlert,
+                               PR_ARRAY_SIZE(kWarningAlert), &alert);
+  client_->adapter()->PacketReceived(alert);
+  Handshake();
+  CheckConnected();
+}
+
 }  // namespace nss_test

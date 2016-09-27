@@ -15,6 +15,7 @@
 #include "SharedSurfaceGL.h"
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/TextureClientSharedSurface.h"
+#include "mozilla/layers/TextureForwarder.h"
 #include "mozilla/Unused.h"
 
 namespace mozilla {
@@ -287,7 +288,7 @@ ChooseBufferBits(const SurfaceCaps& caps,
 
 SurfaceFactory::SurfaceFactory(SharedSurfaceType type, GLContext* gl,
                                const SurfaceCaps& caps,
-                               const RefPtr<layers::ClientIPCAllocator>& allocator,
+                               const RefPtr<layers::LayersIPCChannel>& allocator,
                                const layers::TextureFlags& flags)
     : mType(type)
     , mGL(gl)

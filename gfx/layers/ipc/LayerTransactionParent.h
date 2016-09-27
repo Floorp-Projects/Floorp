@@ -108,8 +108,6 @@ public:
   }
 
 protected:
-  virtual bool RecvSyncWithCompositor() override { return true; }
-
   virtual bool RecvShutdown() override;
 
   virtual bool RecvPaintTime(const uint64_t& aTransactionId,

@@ -46,23 +46,6 @@ class Shmem;
 
 namespace layers {
 
-static int sShmemCreationCounter = 0;
-
-static void ResetShmemCounter()
-{
-  sShmemCreationCounter = 0;
-}
-
-static void ShmemAllocated(LayerTransactionChild* aProtocol)
-{
-  sShmemCreationCounter++;
-  if (sShmemCreationCounter > 256) {
-    aProtocol->SendSyncWithCompositor();
-    ResetShmemCounter();
-    MOZ_PERFORMANCE_WARNING("gfx", "The number of shmem allocations is too damn high!");
-  }
-}
-
 using namespace mozilla::gfx;
 using namespace mozilla::gl;
 using namespace mozilla::ipc;
@@ -184,7 +167,7 @@ struct AutoTxnEnd {
 };
 
 void
-TextureForwarder::IdentifyTextureHost(const TextureFactoryIdentifier& aIdentifier)
+KnowsCompositor::IdentifyTextureHost(const TextureFactoryIdentifier& aIdentifier)
 {
   mTextureFactoryIdentifier = aIdentifier;
 
@@ -547,7 +530,7 @@ ShadowLayerForwarder::RemoveTextureFromCompositableAsync(AsyncTransactionTracker
 bool
 ShadowLayerForwarder::InWorkerThread()
 {
-  return MessageLoop::current() && (GetMessageLoop()->id() == MessageLoop::current()->id());
+  return MessageLoop::current() && (GetTextureForwarder()->GetMessageLoop()->id() == MessageLoop::current()->id());
 }
 
 void
@@ -587,7 +570,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
 {
   *aSent = false;
 
-  ResetShmemCounter();
+  GetCompositorBridgeChild()->WillEndTransaction();
 
   MOZ_ASSERT(aId);
 
@@ -727,7 +710,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
                             mTxn->mTargetOrientation,
                             aRegionToClear);
 
-  if (!IsSameProcess()) {
+  if (!GetTextureForwarder()->IsSameProcess()) {
     MOZ_LAYERS_LOG(("[LayersForwarder] syncing before send..."));
     PlatformSyncBeforeUpdate();
   }
@@ -782,65 +765,9 @@ ShadowLayerForwarder::SetLayerObserverEpoch(uint64_t aLayerObserverEpoch)
 }
 
 bool
-ShadowLayerForwarder::AllocUnsafeShmem(size_t aSize,
-                                       ipc::SharedMemory::SharedMemoryType aShmType,
-                                       ipc::Shmem* aShmem)
-{
-  MOZ_ASSERT(HasShadowManager(), "no shadow manager");
-  if (!IPCOpen()) {
-    return false;
-  }
-
-  ShmemAllocated(mShadowManager);
-  return GetCompositorBridgeChild()->AllocUnsafeShmem(aSize, aShmType, aShmem);
-}
-
-bool
-ShadowLayerForwarder::AllocShmem(size_t aSize,
-                                 ipc::SharedMemory::SharedMemoryType aShmType,
-                                 ipc::Shmem* aShmem)
-{
-  MOZ_ASSERT(HasShadowManager(), "no shadow manager");
-  if (!IPCOpen()) {
-    return false;
-  }
-
-  ShmemAllocated(mShadowManager);
-  return GetCompositorBridgeChild()->AllocShmem(aSize, aShmType, aShmem);
-}
-
-void
-ShadowLayerForwarder::DeallocShmem(ipc::Shmem& aShmem)
-{
-  MOZ_ASSERT(HasShadowManager(), "no shadow manager");
-  if (HasShadowManager() && mShadowManager->IPCOpen()) {
-    GetCompositorBridgeChild()->DeallocShmem(aShmem);
-  }
-}
-
-bool
 ShadowLayerForwarder::IPCOpen() const
 {
   return HasShadowManager() && mShadowManager->IPCOpen();
-}
-
-bool
-ShadowLayerForwarder::IsSameProcess() const
-{
-  if (!HasShadowManager() || !mShadowManager->IPCOpen()) {
-    return false;
-  }
-  return mShadowManager->OtherPid() == base::GetCurrentProcId();
-}
-
-base::ProcessId
-ShadowLayerForwarder::GetParentPid() const
-{
-  if (!HasShadowManager() || !mShadowManager->IPCOpen()) {
-    return base::ProcessId();
-  }
-
-  return mShadowManager->OtherPid();
 }
 
 /**
@@ -904,22 +831,6 @@ void ShadowLayerForwarder::AttachAsyncCompositable(uint64_t aCompositableID,
   mTxn->AddEdit(OpAttachAsyncCompositable(nullptr, Shadow(aLayer),
                                           aCompositableID));
 }
-
-PTextureChild*
-ShadowLayerForwarder::CreateTexture(const SurfaceDescriptor& aSharedData,
-                                    LayersBackend aLayersBackend,
-                                    TextureFlags aFlags,
-                                    uint64_t aSerial)
-{
-  if (!HasShadowManager() ||
-      !mShadowManager->IPCOpen() ||
-      !mShadowManager->Manager()) {
-    gfxCriticalNote << "ShadowLayerForwarder::CreateTexture fails with HSM:" << HasShadowManager() << ", IPCOpen:" << mShadowManager->IPCOpen() << ", Destroyed:" << mShadowManager->IsDestroyed() << ", M:" << !!mShadowManager->Manager();
-    return nullptr;
-  }
-  return mShadowManager->Manager()->SendPTextureConstructor(aSharedData, aLayersBackend, aFlags, mShadowManager->GetId(), aSerial);
-}
-
 
 void ShadowLayerForwarder::SetShadowManager(PLayerTransactionChild* aShadowManager)
 {
@@ -1024,7 +935,7 @@ ShadowLayerForwarder::AllocSurfaceDescriptorWithCaps(const gfx::IntSize& aSize,
   }
 
   MemoryOrShmem bufferDesc;
-  if (IsSameProcess()) {
+  if (GetTextureForwarder()->IsSameProcess()) {
     uint8_t* data = new (std::nothrow) uint8_t[size];
     if (!data) {
       return false;
@@ -1035,7 +946,7 @@ ShadowLayerForwarder::AllocSurfaceDescriptorWithCaps(const gfx::IntSize& aSize,
   } else {
 
     mozilla::ipc::Shmem shmem;
-    if (!AllocUnsafeShmem(size, OptimalShmemType(), &shmem)) {
+    if (!GetTextureForwarder()->AllocUnsafeShmem(size, OptimalShmemType(), &shmem)) {
       return false;
     }
 
@@ -1070,7 +981,7 @@ ShadowLayerForwarder::DestroySurfaceDescriptor(SurfaceDescriptor* aSurface)
   SurfaceDescriptorBuffer& desc = aSurface->get_SurfaceDescriptorBuffer();
   switch (desc.data().type()) {
     case MemoryOrShmem::TShmem: {
-      DeallocShmem(desc.data().get_Shmem());
+      GetTextureForwarder()->DeallocShmem(desc.data().get_Shmem());
       break;
     }
     case MemoryOrShmem::Tuintptr_t: {
@@ -1102,15 +1013,6 @@ ShadowLayerForwarder::GetFwdTransactionId()
   return compositorBridge ? compositorBridge->GetFwdTransactionId() : 0;
 }
 
-void
-ShadowLayerForwarder::CancelWaitForRecycle(uint64_t aTextureId)
-{
-  auto compositorBridge = GetCompositorBridgeChild();
-  if (compositorBridge) {
-    compositorBridge->CancelWaitForRecycle(aTextureId);
-  }
-}
-
 CompositorBridgeChild*
 ShadowLayerForwarder::GetCompositorBridgeChild()
 {
@@ -1122,12 +1024,6 @@ ShadowLayerForwarder::GetCompositorBridgeChild()
   }
   mCompositorBridgeChild = static_cast<CompositorBridgeChild*>(mShadowManager->Manager());
   return mCompositorBridgeChild;
-}
-
-TextureForwarder*
-ShadowLayerForwarder::AsTextureForwarder()
-{
-  return GetCompositorBridgeChild();
 }
 
 } // namespace layers

@@ -125,8 +125,6 @@ parent:
   async SetConfirmedTargetAPZC(uint64_t aInputBlockId, ScrollableLayerGuid[] aTargets);
 
   async Shutdown();
-
-  sync SyncWithCompositor();
 child:
   async __delete__();
 };

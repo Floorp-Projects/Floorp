@@ -7,9 +7,8 @@
 #ifndef mozilla_StyleSetHandleInlines_h
 #define mozilla_StyleSetHandleInlines_h
 
-#include "mozilla/CSSStyleSheet.h"
+#include "mozilla/StyleSheetInlines.h"
 #include "mozilla/ServoStyleSet.h"
-#include "mozilla/ServoStyleSheet.h"
 #include "nsStyleSet.h"
 
 #define FORWARD_CONCRETE(method_, geckoargs_, servoargs_) \
@@ -127,21 +126,21 @@ StyleSetHandle::Ptr::ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag,
 
 // manage the set of style sheets in the style set
 nsresult
-StyleSetHandle::Ptr::AppendStyleSheet(SheetType aType, StyleSheetHandle aSheet)
+StyleSetHandle::Ptr::AppendStyleSheet(SheetType aType, StyleSheet* aSheet)
 {
   FORWARD_CONCRETE(AppendStyleSheet, (aType, aSheet->AsGecko()),
                                      (aType, aSheet->AsServo()));
 }
 
 nsresult
-StyleSetHandle::Ptr::PrependStyleSheet(SheetType aType, StyleSheetHandle aSheet)
+StyleSetHandle::Ptr::PrependStyleSheet(SheetType aType, StyleSheet* aSheet)
 {
   FORWARD_CONCRETE(PrependStyleSheet, (aType, aSheet->AsGecko()),
                                       (aType, aSheet->AsServo()));
 }
 
 nsresult
-StyleSetHandle::Ptr::RemoveStyleSheet(SheetType aType, StyleSheetHandle aSheet)
+StyleSetHandle::Ptr::RemoveStyleSheet(SheetType aType, StyleSheet* aSheet)
 {
   FORWARD_CONCRETE(RemoveStyleSheet, (aType, aSheet->AsGecko()),
                                      (aType, aSheet->AsServo()));
@@ -149,7 +148,7 @@ StyleSetHandle::Ptr::RemoveStyleSheet(SheetType aType, StyleSheetHandle aSheet)
 
 nsresult
 StyleSetHandle::Ptr::ReplaceSheets(SheetType aType,
-                       const nsTArray<StyleSheetHandle::RefPtr>& aNewSheets)
+                       const nsTArray<RefPtr<StyleSheet>>& aNewSheets)
 {
   if (IsGecko()) {
     nsTArray<RefPtr<CSSStyleSheet>> newSheets(aNewSheets.Length());
@@ -168,8 +167,8 @@ StyleSetHandle::Ptr::ReplaceSheets(SheetType aType,
 
 nsresult
 StyleSetHandle::Ptr::InsertStyleSheetBefore(SheetType aType,
-                                StyleSheetHandle aNewSheet,
-                                StyleSheetHandle aReferenceSheet)
+                                StyleSheet* aNewSheet,
+                                StyleSheet* aReferenceSheet)
 {
   FORWARD_CONCRETE(
     InsertStyleSheetBefore,
@@ -183,21 +182,21 @@ StyleSetHandle::Ptr::SheetCount(SheetType aType) const
   FORWARD(SheetCount, (aType));
 }
 
-StyleSheetHandle
+StyleSheet*
 StyleSetHandle::Ptr::StyleSheetAt(SheetType aType, int32_t aIndex) const
 {
   FORWARD(StyleSheetAt, (aType, aIndex));
 }
 
 nsresult
-StyleSetHandle::Ptr::RemoveDocStyleSheet(StyleSheetHandle aSheet)
+StyleSetHandle::Ptr::RemoveDocStyleSheet(StyleSheet* aSheet)
 {
   FORWARD_CONCRETE(RemoveDocStyleSheet, (aSheet->AsGecko()),
                                         (aSheet->AsServo()));
 }
 
 nsresult
-StyleSetHandle::Ptr::AddDocStyleSheet(StyleSheetHandle aSheet,
+StyleSetHandle::Ptr::AddDocStyleSheet(StyleSheet* aSheet,
                                       nsIDocument* aDocument)
 {
   FORWARD_CONCRETE(AddDocStyleSheet, (aSheet->AsGecko(), aDocument),

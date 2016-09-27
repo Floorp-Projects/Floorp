@@ -86,9 +86,9 @@ PersistentBufferProviderBasic::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFo
 already_AddRefed<PersistentBufferProviderShared>
 PersistentBufferProviderShared::Create(gfx::IntSize aSize,
                                        gfx::SurfaceFormat aFormat,
-                                       CompositableForwarder* aFwd)
+                                       KnowsCompositor* aFwd)
 {
-  if (!aFwd || !aFwd->IPCOpen()) {
+  if (!aFwd || !aFwd->GetTextureForwarder()->IPCOpen()) {
     return nullptr;
   }
 
@@ -110,7 +110,7 @@ PersistentBufferProviderShared::Create(gfx::IntSize aSize,
 
 PersistentBufferProviderShared::PersistentBufferProviderShared(gfx::IntSize aSize,
                                                                gfx::SurfaceFormat aFormat,
-                                                               CompositableForwarder* aFwd,
+                                                               KnowsCompositor* aFwd,
                                                                RefPtr<TextureClient>& aTexture)
 
 : mSize(aSize)
@@ -136,7 +136,7 @@ PersistentBufferProviderShared::~PersistentBufferProviderShared()
 }
 
 bool
-PersistentBufferProviderShared::SetForwarder(CompositableForwarder* aFwd)
+PersistentBufferProviderShared::SetForwarder(KnowsCompositor* aFwd)
 {
   MOZ_ASSERT(aFwd);
   if (!aFwd) {
@@ -152,7 +152,7 @@ PersistentBufferProviderShared::SetForwarder(CompositableForwarder* aFwd)
     mFwd->GetActiveResourceTracker().RemoveObject(this);
   }
 
-  if (mFwd->AsTextureForwarder() != aFwd->AsTextureForwarder() ||
+  if (mFwd->GetTextureForwarder() != aFwd->GetTextureForwarder() ||
       mFwd->GetCompositorBackendType() != aFwd->GetCompositorBackendType()) {
     // We are going to be used with an different and/or incompatible forwarder.
     // This should be extremely rare. We have to copy the front buffer into a
@@ -225,7 +225,7 @@ PersistentBufferProviderShared::GetTexture(Maybe<uint32_t> aIndex)
 already_AddRefed<gfx::DrawTarget>
 PersistentBufferProviderShared::BorrowDrawTarget(const gfx::IntRect& aPersistedRect)
 {
-  if (!mFwd->IPCOpen()) {
+  if (!mFwd->GetTextureForwarder()->IPCOpen()) {
     return nullptr;
   }
 

@@ -25,7 +25,8 @@ public:
   virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
 
   virtual TextureData*
-  CreateSimilar(ClientIPCAllocator* aAllocator,
+  CreateSimilar(LayersIPCChannel* aAllocator,
+                LayersBackend aLayersBackend,
                 TextureFlags aFlags = TextureFlags::DEFAULT,
                 TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
 
@@ -34,7 +35,7 @@ public:
   static
   DIBTextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat);
 
-  virtual void Deallocate(ClientIPCAllocator* aAllocator) override
+  virtual void Deallocate(LayersIPCChannel* aAllocator) override
   {
     mSurface = nullptr;
   }
@@ -62,7 +63,8 @@ public:
   virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
 
   virtual TextureData*
-  CreateSimilar(ClientIPCAllocator* aAllocator,
+  CreateSimilar(LayersIPCChannel* aAllocator,
+                LayersBackend aLayersBackend,
                 TextureFlags aFlags = TextureFlags::DEFAULT,
                 TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
 
@@ -70,7 +72,7 @@ public:
 
   static
   DIBTextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                         ClientIPCAllocator* aAllocator);
+                         LayersIPCChannel* aAllocator);
 
   void DeallocateData()
   {
@@ -85,7 +87,7 @@ public:
     }
   }
 
-  virtual void Deallocate(ClientIPCAllocator* aAllocator) override
+  virtual void Deallocate(LayersIPCChannel* aAllocator) override
   {
     DeallocateData();
   }
@@ -137,7 +139,7 @@ DIBTextureData::BorrowDrawTarget()
 
 DIBTextureData*
 DIBTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                       ClientIPCAllocator* aAllocator)
+                       LayersIPCChannel* aAllocator)
 {
   if (!aAllocator) {
     return nullptr;
@@ -153,7 +155,8 @@ DIBTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
 }
 
 TextureData*
-MemoryDIBTextureData::CreateSimilar(ClientIPCAllocator* aAllocator,
+MemoryDIBTextureData::CreateSimilar(LayersIPCChannel* aAllocator,
+                                    LayersBackend aLayersBackend,
                                     TextureFlags aFlags,
                                     TextureAllocationFlags aAllocFlags) const
 {
@@ -216,7 +219,8 @@ MemoryDIBTextureData::UpdateFromSurface(gfx::SourceSurface* aSurface)
 }
 
 TextureData*
-ShmemDIBTextureData::CreateSimilar(ClientIPCAllocator* aAllocator,
+ShmemDIBTextureData::CreateSimilar(LayersIPCChannel* aAllocator,
+                                   LayersBackend aLayersBackend,
                                    TextureFlags aFlags,
                                    TextureAllocationFlags aAllocFlags) const
 {
@@ -280,7 +284,7 @@ ShmemDIBTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
 
 DIBTextureData*
 ShmemDIBTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                            ClientIPCAllocator* aAllocator)
+                            LayersIPCChannel* aAllocator)
 {
   MOZ_ASSERT(aAllocator->GetParentPid() != base::ProcessId());
 
