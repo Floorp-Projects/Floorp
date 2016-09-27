@@ -125,19 +125,9 @@ public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_CSS_STYLE_SHEET_IMPL_CID)
 
-  nsIURI* GetSheetURI() const;
-  nsIURI* GetBaseURI() const;
   void GetTitle(nsString& aTitle) const;
   void GetType(nsString& aType) const;
   bool HasRules() const;
-
-  /**
-   * Whether the sheet is applicable.  A sheet that is not applicable
-   * should never be inserted into a style set.  A sheet may not be
-   * applicable for a variety of reasons including being disabled and
-   * being incomplete.
-   */
-  bool IsApplicable() const;
 
   /**
    * Set the stylesheet to be enabled.  This may or may not make it
@@ -152,7 +142,6 @@ public:
 
   // style sheet owner info
   CSSStyleSheet* GetParentSheet() const;  // may be null
-  nsIDocument* GetOwningDocument() const;  // may be null
   void SetOwningDocument(nsIDocument* aDocument);
 
   // Find the ID of the owner inner window.
@@ -171,23 +160,6 @@ public:
 
   nsresult DeleteRuleFromGroup(css::GroupRule* aGroup, uint32_t aIndex);
   nsresult InsertRuleIntoGroup(const nsAString& aRule, css::GroupRule* aGroup, uint32_t aIndex, uint32_t* _retval);
-
-  /**
-   * SetURIs must be called on all sheets before parsing into them.
-   * SetURIs may only be called while the sheet is 1) incomplete and 2)
-   * has no rules in it
-   */
-  void SetURIs(nsIURI* aSheetURI, nsIURI* aOriginalSheetURI, nsIURI* aBaseURI);
-
-  /**
-   * SetPrincipal should be called on all sheets before parsing into them.
-   * This can only be called once with a non-null principal.  Calling this with
-   * a null pointer is allowed and is treated as a no-op.
-   */
-  void SetPrincipal(nsIPrincipal* aPrincipal);
-
-  // Principal() never returns a null pointer.
-  nsIPrincipal* Principal() const { return mInner->mPrincipal; }
 
   void SetTitle(const nsAString& aTitle) { mTitle = aTitle; }
   void SetMedia(nsMediaList* aMedia);
@@ -222,15 +194,8 @@ public:
   nsresult InsertRuleInternal(const nsAString& aRule,
                               uint32_t aIndex, uint32_t* aReturn);
 
-  /* Get the URI this sheet was originally loaded from, if any.  Can
-     return null */
-  nsIURI* GetOriginalURI() const { return mInner->mOriginalSheetURI; }
-
-  // Whether the sheet is for an inline <style> element.
-  bool IsInline() const { return mInner->IsInline(); }
-
   // nsICSSLoaderObserver interface
-  NS_IMETHOD StyleSheetLoaded(StyleSheetHandle aSheet, bool aWasAlternate,
+  NS_IMETHOD StyleSheetLoaded(StyleSheet* aSheet, bool aWasAlternate,
                               nsresult aStatus) override;
 
   void EnsureUniqueInner();
@@ -257,15 +222,6 @@ public:
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
-  // Get this style sheet's CORS mode
-  CORSMode GetCORSMode() const { return mInner->mCORSMode; }
-
-  // Get this style sheet's Referrer Policy
-  ReferrerPolicy GetReferrerPolicy() const { return mInner->mReferrerPolicy; }
-
-  // Get this style sheet's integrity metadata
-  void GetIntegrity(dom::SRIMetadata& aResult) const { aResult = mInner->mIntegrity; }
-
   dom::Element* GetScopeElement() const { return mScopeElement; }
   void SetScopeElement(dom::Element* aScopeElement)
   {
@@ -279,7 +235,7 @@ public:
     const_cast<const CSSStyleSheet*>(this)->GetType(aType);
   }
   // Our XPCOM GetHref is fine for WebIDL
-  nsINode* GetOwnerNode() const { return mOwningNode; }
+  using StyleSheet::GetOwnerNode;
   CSSStyleSheet* GetParentStyleSheet() const { return mParent; }
   // Our CSSStyleSheet::GetTitle is a const method, so it ends up
   // ambiguous with with the XPCOM version.  Just disambiguate.

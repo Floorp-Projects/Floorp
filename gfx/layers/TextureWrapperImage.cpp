@@ -49,7 +49,7 @@ TextureWrapperImage::GetAsSourceSurface()
 }
 
 TextureClient*
-TextureWrapperImage::GetTextureClient(TextureForwarder* aForwarder)
+TextureWrapperImage::GetTextureClient(KnowsCompositor* aForwarder)
 {
   return mTextureClient;
 }

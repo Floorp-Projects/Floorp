@@ -17,8 +17,8 @@
 #include "mozilla/dom/HTMLContentElement.h"
 #include "mozilla/dom/HTMLShadowElement.h"
 #include "nsXBLPrototypeBinding.h"
-#include "mozilla/StyleSheetHandle.h"
-#include "mozilla/StyleSheetHandleInlines.h"
+#include "mozilla/StyleSheet.h"
+#include "mozilla/StyleSheetInlines.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -132,7 +132,7 @@ ShadowRoot::StyleSheetChanged()
 }
 
 void
-ShadowRoot::InsertSheet(StyleSheetHandle aSheet,
+ShadowRoot::InsertSheet(StyleSheet* aSheet,
                         nsIContent* aLinkingContent)
 {
   nsCOMPtr<nsIStyleSheetLinkingElement>
@@ -163,7 +163,7 @@ ShadowRoot::InsertSheet(StyleSheetHandle aSheet,
 }
 
 void
-ShadowRoot::RemoveSheet(StyleSheetHandle aSheet)
+ShadowRoot::RemoveSheet(StyleSheet* aSheet)
 {
   mProtoBinding->RemoveStyleSheet(aSheet);
 
@@ -756,7 +756,7 @@ ShadowRootStyleSheetList::IndexedGetter(uint32_t aIndex, bool& aFound)
 
   // XXXheycam Return null until ServoStyleSheet implements the right
   // DOM interfaces.
-  StyleSheetHandle sheet = mShadowRoot->mProtoBinding->StyleSheetAt(aIndex);
+  StyleSheet* sheet = mShadowRoot->mProtoBinding->StyleSheetAt(aIndex);
   if (sheet->IsServo()) {
     NS_ERROR("stylo: can't return ServoStyleSheets to script yet");
     return nullptr;

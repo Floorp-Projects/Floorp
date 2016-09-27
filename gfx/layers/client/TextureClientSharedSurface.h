@@ -48,7 +48,7 @@ public:
 
   virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
 
-  virtual void Deallocate(ClientIPCAllocator*) override;
+  virtual void Deallocate(LayersIPCChannel*) override;
 
   gl::SharedSurface* Surf() const { return mSurf.get(); }
 };
@@ -58,13 +58,13 @@ class SharedSurfaceTextureClient : public TextureClient
 public:
   SharedSurfaceTextureClient(SharedSurfaceTextureData* aData,
                              TextureFlags aFlags,
-                             ClientIPCAllocator* aAllocator);
+                             LayersIPCChannel* aAllocator);
 
   ~SharedSurfaceTextureClient();
 
   static already_AddRefed<SharedSurfaceTextureClient>
   Create(UniquePtr<gl::SharedSurface> surf, gl::SurfaceFactory* factory,
-         ClientIPCAllocator* aAllocator, TextureFlags aFlags);
+         LayersIPCChannel* aAllocator, TextureFlags aFlags);
 
   virtual void SetReleaseFenceHandle(const FenceHandle& aReleaseFenceHandle) override;
 

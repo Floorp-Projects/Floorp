@@ -266,14 +266,6 @@ public:
   // after creating. It doesn't need to call Init() before calling this function.
   virtual bool IsHardwareAccelerated(nsACString& aFailureReason) const { return false; }
 
-  // ConfigurationChanged will be called to inform the video or audio decoder
-  // that the format of the next input sample is about to change.
-  // If video decoder, aConfig will be a VideoInfo object.
-  // If audio decoder, aConfig will be a AudioInfo object.
-  // It is not safe to store a reference to this object and the decoder must
-  // make a copy.
-  virtual void ConfigurationChanged(const TrackInfo& aConfig) {}
-
   // Return the name of the MediaDataDecoder, only used for decoding.
   // Only return a static const string, as the information may be accessed
   // in a non thread-safe fashion.

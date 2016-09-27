@@ -12,13 +12,13 @@
 #include "nsStyleSet.h"
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/CSSStyleSheet.h"
+#include "mozilla/StyleSheetInlines.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EnumeratedRange.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/RuleProcessorCache.h"
-#include "mozilla/StyleSheetHandleInlines.h"
+#include "mozilla/StyleSheetInlines.h"
 #include "nsIDocumentInlines.h"
 #include "nsRuleWalker.h"
 #include "nsStyleContext.h"
@@ -751,9 +751,9 @@ nsStyleSet::AppendAllXBLStyleSheets(nsTArray<mozilla::CSSStyleSheet*>& aArray) c
     // XXXheycam stylo: AppendAllSheets will need to be able to return either
     // CSSStyleSheets or ServoStyleSheets, on request (and then here requesting
     // CSSStyleSheets).
-    AutoTArray<StyleSheetHandle, 32> sheets;
+    AutoTArray<StyleSheet*, 32> sheets;
     mBindingManager->AppendAllSheets(sheets);
-    for (StyleSheetHandle handle : sheets) {
+    for (StyleSheet* handle : sheets) {
       MOZ_ASSERT(handle->IsGecko(), "stylo: AppendAllSheets shouldn't give us "
                                     "ServoStyleSheets yet");
       aArray.AppendElement(handle->AsGecko());
@@ -2474,12 +2474,12 @@ nsStyleSet::EnsureUniqueInnerOnCSSSheets()
   }
 
   if (mBindingManager) {
-    AutoTArray<StyleSheetHandle, 32> sheets;
+    AutoTArray<StyleSheet*, 32> sheets;
     // XXXheycam stylo: AppendAllSheets will need to be able to return either
     // CSSStyleSheets or ServoStyleSheets, on request (and then here requesting
     // CSSStyleSheets).
     mBindingManager->AppendAllSheets(sheets);
-    for (StyleSheetHandle sheet : sheets) {
+    for (StyleSheet* sheet : sheets) {
       MOZ_ASSERT(sheet->IsGecko(), "stylo: AppendAllSheets shouldn't give us "
                                    "ServoStyleSheets yet");
       queue.AppendElement(sheet->AsGecko());

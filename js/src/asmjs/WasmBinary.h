@@ -770,7 +770,7 @@ class Decoder
     static const size_t ExprLimit = 2 * UINT8_MAX - 1;
 
   public:
-    Decoder(const uint8_t* begin, const uint8_t* end, UniqueChars* error = nullptr)
+    Decoder(const uint8_t* begin, const uint8_t* end, UniqueChars* error)
       : beg_(begin),
         end_(end),
         cur_(begin),

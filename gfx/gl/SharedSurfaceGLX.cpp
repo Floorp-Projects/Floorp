@@ -13,6 +13,7 @@
 #include "mozilla/layers/LayersSurfaces.h"
 #include "mozilla/layers/ShadowLayerUtilsX11.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
+#include "mozilla/layers/TextureForwarder.h"
 #include "mozilla/X11Util.h"
 
 namespace mozilla {
@@ -120,7 +121,7 @@ SharedSurface_GLXDrawable::ReadbackBySharedHandle(gfx::DataSourceSurface* out_su
 UniquePtr<SurfaceFactory_GLXDrawable>
 SurfaceFactory_GLXDrawable::Create(GLContext* prodGL,
                                    const SurfaceCaps& caps,
-                                   const RefPtr<layers::ClientIPCAllocator>& allocator,
+                                   const RefPtr<layers::LayersIPCChannel>& allocator,
                                    const layers::TextureFlags& flags)
 {
     MOZ_ASSERT(caps.alpha, "GLX surfaces require an alpha channel!");

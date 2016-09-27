@@ -98,7 +98,7 @@ SharedRGBImage::GetSize()
 }
 
 TextureClient*
-SharedRGBImage::GetTextureClient(TextureForwarder* aForwarder)
+SharedRGBImage::GetTextureClient(KnowsCompositor* aForwarder)
 {
   return mTextureClient.get();
 }

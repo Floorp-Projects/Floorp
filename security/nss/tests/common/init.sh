@@ -193,9 +193,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     html_passed()
     {
         html_detect_core "$@" || return
-        increase_msg_id
-        html "<TR><TD>#${MSG_ID}: $1 ${HTML_PASSED}"
-        echo "${SCRIPTNAME}: #${MSG_ID}: $* - PASSED"
+        html_passed_ignore_core "$@"
     }
     html_failed_ignore_core()
     {
@@ -206,9 +204,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     html_failed()
     {
         html_detect_core "$@" || return
-        increase_msg_id
-        html "<TR><TD>#${MSG_ID}: $1 ${HTML_FAILED}"
-        echo "${SCRIPTNAME}: #${MSG_ID}: $* - FAILED"
+        html_failed_ignore_core "$@" || return
     }
     html_unknown_ignore_core()
     {

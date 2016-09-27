@@ -16,8 +16,8 @@
 SECStatus SSLInt_IncrementClientHandshakeVersion(PRFileDesc *fd);
 
 PRUint32 SSLInt_DetermineKEABits(PRUint16 serverKeyBits,
-                                 const SSLCipherSuiteInfo *info);
-
+                                 SSLAuthType authAlgorithm,
+                                 PRUint32 symKeyBits);
 SECStatus SSLInt_UpdateSSLv2ClientRandom(PRFileDesc *fd, uint8_t *rnd,
                                          size_t rnd_len, uint8_t *msg,
                                          size_t msg_len);
@@ -36,5 +36,6 @@ PRBool SSLInt_SendAlert(PRFileDesc *fd, uint8_t level, uint8_t type);
 SECStatus SSLInt_AdvanceWriteSeqNum(PRFileDesc *fd, PRUint64 to);
 SECStatus SSLInt_AdvanceReadSeqNum(PRFileDesc *fd, PRUint64 to);
 SECStatus SSLInt_AdvanceWriteSeqByAWindow(PRFileDesc *fd, PRInt32 extra);
+SSLKEAType SSLInt_GetKEAType(SSLNamedGroup group);
 
 #endif  // ndef libssl_internals_h_

@@ -198,10 +198,13 @@ def docker_worker_setup(config, test, taskdesc):
         '--chown', '/home/worker/workspace',
     ]
 
+    # Support vcs checkouts regardless of whether the task runs from
+    # source or not in case it is needed on an interactive loaner.
+    docker_worker_support_vcs_checkout(config, test, taskdesc)
+
     # If we have a source checkout, run mozharness from it instead of
     # downloading a zip file with the same content.
     if test['checkout']:
-        docker_worker_support_vcs_checkout(config, test, taskdesc)
         command.extend(['--vcs-checkout', '/home/worker/checkouts/gecko'])
         env['MOZHARNESS_PATH'] = '/home/worker/checkouts/gecko/testing/mozharness'
     else:

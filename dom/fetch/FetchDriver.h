@@ -12,7 +12,7 @@
 #include "nsIStreamListener.h"
 #include "nsIThreadRetargetableStreamListener.h"
 #include "mozilla/ConsoleReportCollector.h"
-#include "mozilla/dom/SRICheck.h"
+#include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/RefPtr.h"
 
 #include "mozilla/DebugOnly.h"
