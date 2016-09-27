@@ -30,7 +30,7 @@ from mercurial import (
     util,
 )
 
-testedwith = '3.5 3.6 3.7 3.8'
+testedwith = '3.6 3.7 3.8 3.9'
 minimumhgversion = '3.7'
 
 cmdtable = {}
@@ -266,6 +266,7 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase):
     if not havewantedrev:
         ui.write('(pulling to obtain %s)\n' % (revision or branch,))
 
+        remote = None
         try:
             remote = hg.peer(repo, {}, url)
             pullrevs = [remote.lookup(revision or branch)]
@@ -295,7 +296,8 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase):
             deletesharedstore()
             return callself()
         finally:
-            remote.close()
+            if remote:
+                remote.close()
 
     # Now we should have the wanted revision in the store. Perform
     # working directory manipulation.
