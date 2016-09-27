@@ -282,30 +282,31 @@ MP4Metadata::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
 
 #ifndef RELEASE_BUILD
   if (mRustTestMode && info) {
-    MOZ_ASSERT(infoRust);
-    MOZ_ASSERT(infoRust->mId == info->mId);
-    MOZ_ASSERT(infoRust->mKind == info->mKind);
-    MOZ_ASSERT(infoRust->mLabel == info->mLabel);
-    MOZ_ASSERT(infoRust->mLanguage == info->mLanguage);
-    MOZ_ASSERT(infoRust->mEnabled == info->mEnabled);
-    MOZ_ASSERT(infoRust->mTrackId == info->mTrackId);
-    MOZ_ASSERT(infoRust->mMimeType == info->mMimeType);
-    MOZ_ASSERT(infoRust->mDuration == info->mDuration);
-    MOZ_ASSERT(infoRust->mMediaTime == info->mMediaTime);
+    MOZ_DIAGNOSTIC_ASSERT(infoRust);
+    MOZ_DIAGNOSTIC_ASSERT(infoRust->mId == info->mId);
+    MOZ_DIAGNOSTIC_ASSERT(infoRust->mKind == info->mKind);
+    MOZ_DIAGNOSTIC_ASSERT(infoRust->mLabel == info->mLabel);
+    MOZ_DIAGNOSTIC_ASSERT(infoRust->mLanguage == info->mLanguage);
+    MOZ_DIAGNOSTIC_ASSERT(infoRust->mEnabled == info->mEnabled);
+    MOZ_DIAGNOSTIC_ASSERT(infoRust->mTrackId == info->mTrackId);
+    MOZ_DIAGNOSTIC_ASSERT(infoRust->mMimeType == info->mMimeType);
+    MOZ_DIAGNOSTIC_ASSERT(infoRust->mDuration == info->mDuration);
+    MOZ_DIAGNOSTIC_ASSERT(infoRust->mMediaTime == info->mMediaTime);
     switch (aType) {
     case mozilla::TrackInfo::kAudioTrack: {
       AudioInfo *audioRust = infoRust->GetAsAudioInfo(), *audio = info->GetAsAudioInfo();
-      MOZ_ASSERT(audioRust->mRate == audio->mRate);
-      MOZ_ASSERT(audioRust->mChannels == audio->mChannels);
-      MOZ_ASSERT(audioRust->mBitDepth == audio->mBitDepth);
-      //MOZ_ASSERT(audioRust->mProfile == audio->mProfile);
-      //MOZ_ASSERT(audioRust->mExtendedProfile == audio->mExtendedProfile);
+      MOZ_DIAGNOSTIC_ASSERT(audioRust->mRate == audio->mRate);
+      MOZ_DIAGNOSTIC_ASSERT(audioRust->mChannels == audio->mChannels);
+      MOZ_DIAGNOSTIC_ASSERT(audioRust->mBitDepth == audio->mBitDepth);
+      // TODO: These fields aren't implemented in the Rust demuxer yet.
+      //MOZ_DIAGNOSTIC_ASSERT(audioRust->mProfile != audio->mProfile);
+      //MOZ_DIAGNOSTIC_ASSERT(audioRust->mExtendedProfile != audio->mExtendedProfile);
       break;
     }
     case mozilla::TrackInfo::kVideoTrack: {
       VideoInfo *videoRust = infoRust->GetAsVideoInfo(), *video = info->GetAsVideoInfo();
-      MOZ_ASSERT(videoRust->mDisplay == video->mDisplay);
-      MOZ_ASSERT(videoRust->mImage == video->mImage);
+      MOZ_DIAGNOSTIC_ASSERT(videoRust->mDisplay == video->mDisplay);
+      MOZ_DIAGNOSTIC_ASSERT(videoRust->mImage == video->mImage);
       break;
     }
     default:
