@@ -52,8 +52,8 @@ public class testFindInPage extends JavascriptTest implements GeckoEventListener
         super.setUp();
 
         EventDispatcher.getInstance().registerGeckoThreadListener(this,
-                "Test:FindInPage",
-                "Test:CloseFindInPage");
+                                                                  "Test:FindInPage",
+                                                                  "Test:CloseFindInPage");
     }
 
     @Override
@@ -61,8 +61,8 @@ public class testFindInPage extends JavascriptTest implements GeckoEventListener
         super.tearDown();
 
         EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
-                "Test:FindInPage",
-                "Test:CloseFindInPage");
+                                                                    "Test:FindInPage",
+                                                                    "Test:CloseFindInPage");
     }
 
     public void findText(String text, int nrOfMatches){

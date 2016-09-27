@@ -64,7 +64,7 @@ public final class SharedPreferencesHelper
 
         mListeners = new HashMap<String, SharedPreferences.OnSharedPreferenceChangeListener>();
 
-        EventDispatcher dispatcher = EventDispatcher.getInstance();
+        EventDispatcher dispatcher = GeckoApp.getEventDispatcher();
         if (dispatcher == null) {
             Log.e(LOGTAG, "Gecko event dispatcher must not be null", new RuntimeException());
             return;
@@ -76,7 +76,7 @@ public final class SharedPreferencesHelper
     }
 
     public synchronized void uninit() {
-        EventDispatcher dispatcher = EventDispatcher.getInstance();
+        EventDispatcher dispatcher = GeckoApp.getEventDispatcher();
         if (dispatcher == null) {
             Log.e(LOGTAG, "Gecko event dispatcher must not be null", new RuntimeException());
             return;
