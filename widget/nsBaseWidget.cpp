@@ -260,15 +260,6 @@ nsBaseWidget::Shutdown()
 
 void nsBaseWidget::DestroyCompositor()
 {
-  // We release this before releasing the compositor, since it may hold the
-  // last reference to our ClientLayerManager. ClientLayerManager's dtor can
-  // trigger a paint, creating a new compositor, and we don't want to re-use
-  // the old vsync dispatcher.
-  if (mCompositorVsyncDispatcher) {
-    mCompositorVsyncDispatcher->Shutdown();
-    mCompositorVsyncDispatcher = nullptr;
-  }
-
   // The compositor shutdown sequence looks like this:
   //  1. CompositorSession calls CompositorBridgeChild::Destroy.
   //  2. CompositorBridgeChild synchronously sends WillClose.
@@ -292,6 +283,13 @@ void nsBaseWidget::DestroyCompositor()
     // ClientLayerManager destructor. See bug 1133426.
     RefPtr<CompositorSession> session = mCompositorSession.forget();
     session->Shutdown();
+  }
+
+  // Can have base widgets that are things like tooltips
+  // which don't have CompositorVsyncDispatchers
+  if (mCompositorVsyncDispatcher) {
+    mCompositorVsyncDispatcher->Shutdown();
+    mCompositorVsyncDispatcher = nullptr;
   }
 }
 
