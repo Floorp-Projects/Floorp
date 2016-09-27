@@ -1760,11 +1760,13 @@ private:
 
   uint16_t      mAlignContent;          // [reset] fallback value in the high byte
   uint8_t       mAlignItems;            // [reset] see nsStyleConsts.h
+public:
   uint8_t       mAlignSelf;             // [reset] see nsStyleConsts.h
+private:
   uint16_t      mJustifyContent;        // [reset] fallback value in the high byte
   uint8_t       mJustifyItems;          // [reset] see nsStyleConsts.h
-  uint8_t       mJustifySelf;           // [reset] see nsStyleConsts.h
 public:
+  uint8_t       mJustifySelf;           // [reset] see nsStyleConsts.h
   uint8_t       mFlexDirection;         // [reset] see nsStyleConsts.h
   uint8_t       mFlexWrap;              // [reset] see nsStyleConsts.h
   uint8_t       mObjectFit;             // [reset] see nsStyleConsts.h
