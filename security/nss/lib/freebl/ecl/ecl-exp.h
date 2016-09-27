@@ -23,6 +23,9 @@ struct ECCurveParamsStr {
     char *geny;
     char *order;
     int cofactor;
+    int security;
+    int pointSize;
+    unsigned int usage;
 };
 typedef struct ECCurveParamsStr ECCurveParams;
 
@@ -127,6 +130,8 @@ typedef enum {
     /* ECCurve_WTLS_10 == ECCurve_NIST_K233 */
     /* ECCurve_WTLS_11 == ECCurve_NIST_B233 */
     /* ECCurve_WTLS_12 == ECCurve_NIST_P224 */
+
+    ECCurve25519,
 
     ECCurve_pastLastCurve
 } ECCurveName;

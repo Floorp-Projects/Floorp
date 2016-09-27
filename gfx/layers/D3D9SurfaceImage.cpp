@@ -128,10 +128,10 @@ D3D9SurfaceImage::GetSize()
 }
 
 TextureClient*
-D3D9SurfaceImage::GetTextureClient(TextureForwarder* aForwarder)
+D3D9SurfaceImage::GetTextureClient(KnowsCompositor* aForwarder)
 {
   MOZ_ASSERT(mTextureClient);
-  MOZ_ASSERT(mTextureClient->GetAllocator() == aForwarder);
+  MOZ_ASSERT(mTextureClient->GetAllocator() == aForwarder->GetTextureForwarder());
   return mTextureClient;
 }
 
@@ -207,7 +207,8 @@ D3D9RecycleAllocator::Allocate(gfx::SurfaceFormat aFormat,
     return nullptr;
   }
 
-  return MakeAndAddRef<TextureClient>(data, aTextureFlags, mSurfaceAllocator);
+  return MakeAndAddRef<TextureClient>(data, aTextureFlags,
+                                      mSurfaceAllocator->GetTextureForwarder());
 }
 
 already_AddRefed<TextureClient>

@@ -45,29 +45,4 @@ StyleSheetInfo::StyleSheetInfo(const StyleSheetInfo& aCopy)
 {
 }
 
-void
-StyleSheetInfo::SetURIs(nsIURI* aSheetURI,
-                        nsIURI* aOriginalSheetURI,
-                        nsIURI* aBaseURI)
-{
-  NS_PRECONDITION(aSheetURI && aBaseURI, "null ptr");
-
-  mSheetURI = aSheetURI;
-  mOriginalSheetURI = aOriginalSheetURI;
-  mBaseURI = aBaseURI;
-}
-
-void
-StyleSheetInfo::SetPrincipal(nsIPrincipal* aPrincipal)
-{
-  NS_PRECONDITION(!mPrincipalSet, "Should only set principal once");
-
-  if (aPrincipal) {
-    mPrincipal = aPrincipal;
-#ifdef DEBUG
-    mPrincipalSet = true;
-#endif
-  }
-}
-
 } // namespace mozilla

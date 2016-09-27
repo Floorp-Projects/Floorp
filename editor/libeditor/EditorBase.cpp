@@ -4237,7 +4237,7 @@ EditorBase::CreateTxnForComposition(const nsAString& aStringToInsert)
 }
 
 NS_IMETHODIMP
-EditorBase::CreateTxnForAddStyleSheet(StyleSheetHandle aSheet,
+EditorBase::CreateTxnForAddStyleSheet(StyleSheet* aSheet,
                                       AddStyleSheetTransaction** aTransaction)
 {
   RefPtr<AddStyleSheetTransaction> transaction = new AddStyleSheetTransaction();
@@ -4252,7 +4252,7 @@ EditorBase::CreateTxnForAddStyleSheet(StyleSheetHandle aSheet,
 
 NS_IMETHODIMP
 EditorBase::CreateTxnForRemoveStyleSheet(
-              StyleSheetHandle aSheet,
+              StyleSheet* aSheet,
               RemoveStyleSheetTransaction** aTransaction)
 {
   RefPtr<RemoveStyleSheetTransaction> transaction =

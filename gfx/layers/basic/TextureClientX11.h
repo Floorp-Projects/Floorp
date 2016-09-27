@@ -17,7 +17,7 @@ class X11TextureData : public TextureData
 {
 public:
   static X11TextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                                TextureFlags aFlags, ClientIPCAllocator* aAllocator);
+                                TextureFlags aFlags, LayersIPCChannel* aAllocator);
 
   virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
 
@@ -29,10 +29,11 @@ public:
 
   virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget() override;
 
-  virtual void Deallocate(ClientIPCAllocator*) override;
+  virtual void Deallocate(LayersIPCChannel*) override;
 
   virtual TextureData*
-  CreateSimilar(ClientIPCAllocator* aAllocator,
+  CreateSimilar(LayersIPCChannel* aAllocator,
+                LayersBackend aLayersBackend,
                 TextureFlags aFlags = TextureFlags::DEFAULT,
                 TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
 

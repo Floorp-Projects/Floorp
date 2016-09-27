@@ -35,7 +35,7 @@ nsIDocument::FindDocStyleSheetInsertionPoint(
     if (sheetDocIndex > newDocIndex)
       break;
 
-    mozilla::StyleSheetHandle sheetHandle = sheet;
+    mozilla::StyleSheet* sheetHandle = sheet;
 
     // If the sheet is not owned by the document it can be an author
     // sheet registered at nsStyleSheetService or an additional author

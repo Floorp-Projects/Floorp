@@ -43,3 +43,5 @@ v8-v5/check-splay.js
 wasm/spec/f32.wast.js
 wasm/spec/f32_cmp.wast.js
 wasm/spec/f64.wast.js
+wasm/spec/f64_cmp.wast.js
+wasm/spec/float_exprs.wast.js

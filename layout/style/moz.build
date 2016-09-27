@@ -106,8 +106,6 @@ EXPORTS.mozilla += [
     'StyleSetHandle.h',
     'StyleSetHandleInlines.h',
     'StyleSheet.h',
-    'StyleSheetHandle.h',
-    'StyleSheetHandleInlines.h',
     'StyleSheetInfo.h',
     'StyleSheetInlines.h',
     'StyleStructContext.h',

@@ -12,7 +12,7 @@
 
 namespace mozilla {
 namespace layers {
-class ClientIPCAllocator;
+class LayersIPCChannel;
 class TextureClient;
 }
 
@@ -29,7 +29,7 @@ public:
                                                    const gfx::IntSize& size,
                                                    bool hasAlpha,
                                                    layers::TextureFlags flags,
-                                                   layers::ClientIPCAllocator* allocator);
+                                                   layers::LayersIPCChannel* allocator);
 
     static SharedSurface_Gralloc* Cast(SharedSurface* surf) {
         MOZ_ASSERT(surf->mType == SharedSurfaceType::Gralloc);
@@ -40,7 +40,7 @@ public:
 protected:
     GLLibraryEGL* const mEGL;
     EGLSync mSync;
-    RefPtr<layers::ClientIPCAllocator> mAllocator;
+    RefPtr<layers::LayersIPCChannel> mAllocator;
     RefPtr<layers::TextureClient> mTextureClient;
     const GLuint mProdTex;
 
@@ -48,7 +48,7 @@ protected:
                           const gfx::IntSize& size,
                           bool hasAlpha,
                           GLLibraryEGL* egl,
-                          layers::ClientIPCAllocator* allocator,
+                          layers::LayersIPCChannel* allocator,
                           layers::TextureClient* textureClient,
                           GLuint prodTex);
 
@@ -83,7 +83,7 @@ class SurfaceFactory_Gralloc
 {
 public:
     SurfaceFactory_Gralloc(GLContext* prodGL, const SurfaceCaps& caps,
-                           const RefPtr<layers::ClientIPCAllocator>& allocator,
+                           const RefPtr<layers::LayersIPCChannel>& allocator,
                            const layers::TextureFlags& flags);
 
     virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) override {

@@ -19,7 +19,6 @@
 #include "mozilla/layers/TextureForwarder.h"  // for TextureForwarder
 #include "nsRegion.h"                   // for nsIntRegion
 #include "mozilla/gfx/Rect.h"
-#include "nsExpirationTracker.h"
 #include "nsHashKeys.h"
 #include "nsTHashtable.h"
 
@@ -35,36 +34,6 @@ class ThebesBufferData;
 class PTextureChild;
 
 /**
- * See ActiveResourceTracker below.
- */
-class ActiveResource
-{
-public:
- virtual void NotifyInactive() = 0;
-  nsExpirationState* GetExpirationState() { return &mExpirationState; }
-  bool IsActivityTracked() { return mExpirationState.IsTracked(); }
-private:
-  nsExpirationState mExpirationState;
-};
-
-/**
- * A convenience class on top of nsExpirationTracker
- */
-class ActiveResourceTracker : public nsExpirationTracker<ActiveResource, 3>
-{
-public:
-  ActiveResourceTracker(uint32_t aExpirationCycle, const char* aName)
-  : nsExpirationTracker(aExpirationCycle, aName)
-  {}
-
-  virtual void NotifyExpired(ActiveResource* aResource) override
-  {
-    RemoveObject(aResource);
-    aResource->NotifyInactive();
-  }
-};
-
-/**
  * A transaction is a set of changes that happenned on the content side, that
  * should be sent to the compositor side.
  * CompositableForwarder is an interface to manage a transaction of
@@ -73,16 +42,14 @@ public:
  * ShadowLayerForwarder is an example of a CompositableForwarder (that can
  * additionally forward modifications of the Layer tree).
  * ImageBridgeChild is another CompositableForwarder.
+ *
+ * CompositableForwarder implements KnowsCompositor for simplicity as all
+ * implementations of CompositableForwarder currently also implement KnowsCompositor.
+ * This dependency could be split if we add new use cases.
  */
-class CompositableForwarder : public TextureForwarder
+class CompositableForwarder : public KnowsCompositor
 {
 public:
-
-  CompositableForwarder()
-  {
-    mActiveResourceTracker = MakeUnique<ActiveResourceTracker>(1000, "CompositableForwarder");
-  }
-
   /**
    * Setup the IPDL actor for aCompositable to be part of layers
    * transactions.
@@ -163,22 +130,15 @@ public:
   virtual void UpdateFwdTransactionId() = 0;
   virtual uint64_t GetFwdTransactionId() = 0;
 
-  virtual CompositableForwarder* AsCompositableForwarder() override { return this; }
-
   virtual bool InForwarderThread() = 0;
 
   void AssertInForwarderThread() {
     MOZ_ASSERT(InForwarderThread());
   }
 
-
-  ActiveResourceTracker& GetActiveResourceTracker() { return *mActiveResourceTracker.get(); }
-
 protected:
   nsTArray<RefPtr<TextureClient> > mTexturesToRemove;
   nsTArray<RefPtr<CompositableClient>> mCompositableClientsToRemove;
-
-  UniquePtr<ActiveResourceTracker> mActiveResourceTracker;
 };
 
 } // namespace layers

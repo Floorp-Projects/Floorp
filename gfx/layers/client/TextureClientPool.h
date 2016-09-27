@@ -45,6 +45,7 @@ class TextureClientPool final : public TextureClientAllocator
 
 public:
   TextureClientPool(LayersBackend aBackend,
+                    int32_t aMaxTextureSize,
                     gfx::SurfaceFormat aFormat,
                     gfx::IntSize aSize,
                     TextureFlags aFlags,
@@ -102,6 +103,7 @@ public:
   void Clear();
 
   LayersBackend GetBackend() const { return mBackend; }
+  int32_t GetMaxTextureSize() const { return mMaxTextureSize; }
   gfx::SurfaceFormat GetFormat() { return mFormat; }
   TextureFlags GetFlags() const { return mFlags; }
 
@@ -121,6 +123,9 @@ private:
 
   /// Backend passed to the TextureClient for buffer creation.
   LayersBackend mBackend;
+
+  // Max texture size passed to the TextureClient for buffer creation.
+  int32_t mMaxTextureSize;
 
   /// Format is passed to the TextureClient for buffer creation.
   gfx::SurfaceFormat mFormat;

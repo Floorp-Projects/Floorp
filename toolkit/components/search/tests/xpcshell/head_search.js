@@ -176,17 +176,6 @@ function removeMetadata()
   }
 }
 
-function getSearchMetadata()
-{
-  // Check that search-metadata.json has been created
-  let metadata = gProfD.clone();
-  metadata.append("search-metadata.json");
-  do_check_true(metadata.exists());
-
-  do_print("Parsing metadata");
-  return readJSONFile(metadata);
-}
-
 function promiseCacheData() {
   return new Promise(resolve => Task.spawn(function* () {
     let path = OS.Path.join(OS.Constants.Path.profileDir, CACHE_FILENAME);
@@ -344,7 +333,7 @@ if (!isChild) {
   // The geo-specific search tests assume certain prefs are already setup, which
   // might not be true when run in comm-central etc.  So create them here.
   Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", true);
-  Services.prefs.setIntPref("browser.search.geoip.timeout", 2000);
+  Services.prefs.setIntPref("browser.search.geoip.timeout", 3000);
   // But still disable geoip lookups - tests that need it will re-configure this.
   Services.prefs.setCharPref("browser.search.geoip.url", "");
   // Also disable region defaults - tests using it will also re-configure it.
