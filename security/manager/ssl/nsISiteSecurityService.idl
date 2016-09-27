@@ -115,10 +115,13 @@ interface nsISiteSecurityService : nsISupports
      * @param aHost the hostname (punycode) to query for state.
      * @param aFlags  options for this request as defined in nsISocketProvider:
      *                  NO_PERMANENT_STORAGE
+     * @param aCached true if we have cached information regarding whether or not
+     *                  the host is HSTS, false otherwise.
      */
     boolean isSecureHost(in uint32_t aType,
                          in string aHost,
-                         in uint32_t aFlags);
+                         in uint32_t aFlags,
+                         [optional] out boolean aCached);
 
     /**
      * Checks whether or not the URI's hostname has a given security state set.
@@ -133,8 +136,11 @@ interface nsISiteSecurityService : nsISupports
      * @param aURI the URI to query for STS state.
      * @param aFlags  options for this request as defined in nsISocketProvider:
      *                  NO_PERMANENT_STORAGE
+     * @param aCached true if we have cached information regarding whether or not
+     *                  the host is HSTS, false otherwise.
      */
-    boolean isSecureURI(in uint32_t aType, in nsIURI aURI, in uint32_t aFlags);
+    boolean isSecureURI(in uint32_t aType, in nsIURI aURI, in uint32_t aFlags,
+                        [optional] out boolean aCached);
 
     /**
      * Removes all security state by resetting to factory-original settings.
@@ -174,6 +180,14 @@ interface nsISiteSecurityService : nsISupports
                         in unsigned long aMaxAge, in unsigned long aPinCount,
                         [array, size_is(aPinCount)] in string aSha256Pins);
 
+    /**
+     * Mark a host as declining to provide a given security state so that features
+     * such as HSTS priming will not flood a server with requests.
+     *
+     * @param aURI the nsIURI that this applies to
+     * @param aMaxAge lifetime (in seconds) of this negative cache
+     */
+    [noscript] void cacheNegativeHSTSResult(in nsIURI aURI, in unsigned long long aMaxAge);
 };
 
 %{C++
