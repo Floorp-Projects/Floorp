@@ -98,7 +98,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin):
         dirs = {}
         dirs['abs_app_install_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'application')
         dirs['abs_test_install_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'tests')
-        dirs["abs_wpttest_dir"] = os.path.join(dirs['abs_test_install_dir'], "web-platform")
+        dirs['abs_wpttest_dir'] = os.path.join(abs_dirs['checkout'], 'testing', 'web-platform')
         dirs['abs_blob_upload_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'blobber_upload_dir')
 
         abs_dirs.update(dirs)
@@ -147,7 +147,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin):
             '--symbols-path=%s' % self.query_symbols_url(),
             '--stackwalk-binary=%s' % self.query_minidump_stackwalk(),
             '--processes=1',
-            '--prefs-root=%s/prefs' % wpt_dir,
+            '--prefs-root=%s' % os.path.join(dirs['checkout'], 'testing', 'profiles'),
             '--config=%s/wptrunner.ini' % wpt_dir,
             '--ca-cert-path=%s/certs/cacert.pem' % wpt_dir,
             '--host-key-path=%s/certs/web-platform.test.key' % wpt_dir,
@@ -197,7 +197,8 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin):
                           "mozbase/*",
                           "marionette/*",
                           "tools/wptserve/*",
-                          "web-platform/*"],
+                          "web-platform/*",
+                          "mozinfo.json"],
             suite_categories=["web-platform"])
 
     def fetch_geckodriver(self):
@@ -245,7 +246,11 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin):
                                         log_obj=self.log_obj,
                                         log_compact=True)
 
-        env = {'MINIDUMP_SAVE_PATH': dirs['abs_blob_upload_dir']}
+        env = {
+            'MINIDUMP_SAVE_PATH': dirs['abs_blob_upload_dir'],
+            'MOZINFO_PATH': os.path.join(dirs['abs_test_install_dir'],
+                                         'mozinfo.json'),
+        }
 
         if self.config['allow_software_gl_layers']:
             env['MOZ_LAYERS_ALLOW_SOFTWARE_GL'] = '1'
