@@ -106,16 +106,6 @@ KeySystemToGMPName(const nsAString& aKeySystem);
 bool
 IsClearkeyKeySystem(const nsAString& aKeySystem);
 
-enum CDMType {
-  eClearKey = 0,
-  ePrimetime = 1,
-  eWidevine = 2,
-  eUnknown = 3
-};
-
-static CDMType
-ToCDMTypeTelemetryEnum(const nsString& aKeySystem);
-
 } // namespace mozilla
 
 #endif // EME_LOG_H_
