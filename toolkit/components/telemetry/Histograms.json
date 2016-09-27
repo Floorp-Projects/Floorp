@@ -3764,6 +3764,24 @@
     "n_buckets": 15,
     "description": "Time spent constructing PrefixSet from DB (ms)"
   },
+  "URLCLASSIFIER_VLPS_FILELOAD_TIME": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "58",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 10,
+    "bug_numbers": [1283007],
+    "description": "Time spent loading Variable-Length PrefixSet from file (ms)"
+  },
+  "URLCLASSIFIER_VLPS_FALLOCATE_TIME": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "58",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 10,
+    "bug_numbers": [1283007],
+    "description": "Time spent fallocating Variable-Length PrefixSet (ms)"
+  },
   "URLCLASSIFIER_LC_PREFIXES": {
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
