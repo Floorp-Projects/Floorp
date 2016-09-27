@@ -39,7 +39,7 @@ class DrawTarget;
 } // namespace gfx
 
 namespace layers {
-class ClientIPCAllocator;
+class LayersIPCChannel;
 class SharedSurfaceTextureClient;
 enum class TextureFlags : uint32_t;
 class SurfaceDescriptor;
@@ -267,7 +267,7 @@ public:
     const SharedSurfaceType mType;
     GLContext* const mGL;
     const SurfaceCaps mCaps;
-    const RefPtr<layers::ClientIPCAllocator> mAllocator;
+    const RefPtr<layers::LayersIPCChannel> mAllocator;
     const layers::TextureFlags mFlags;
     const GLFormats mFormats;
     Mutex mMutex;
@@ -278,7 +278,7 @@ protected:
     RefSet<layers::SharedSurfaceTextureClient> mRecycleTotalPool;
 
     SurfaceFactory(SharedSurfaceType type, GLContext* gl, const SurfaceCaps& caps,
-                   const RefPtr<layers::ClientIPCAllocator>& allocator,
+                   const RefPtr<layers::LayersIPCChannel>& allocator,
                    const layers::TextureFlags& flags);
 
 public:

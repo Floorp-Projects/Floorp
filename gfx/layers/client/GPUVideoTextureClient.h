@@ -30,9 +30,9 @@ public:
 
   virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
 
-  virtual void Deallocate(ClientIPCAllocator* aAllocator) override;
+  virtual void Deallocate(LayersIPCChannel* aAllocator) override;
 
-  virtual void Forget(ClientIPCAllocator* aAllocator) override;
+  virtual void Forget(LayersIPCChannel* aAllocator) override;
 
 protected:
   SurfaceDescriptorGPUVideo mSD;

@@ -148,7 +148,7 @@ class SurfaceFactory_GLTexture
 public:
     SurfaceFactory_GLTexture(GLContext* prodGL,
                              const SurfaceCaps& caps,
-                             const RefPtr<layers::ClientIPCAllocator>& allocator,
+                             const RefPtr<layers::LayersIPCChannel>& allocator,
                              const layers::TextureFlags& flags)
         : SurfaceFactory(SharedSurfaceType::SharedGLTexture, prodGL, caps, allocator, flags)
     {
