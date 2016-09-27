@@ -154,4 +154,17 @@ IsClearkeyKeySystem(const nsAString& aKeySystem)
   return aKeySystem.EqualsASCII(kEMEKeySystemClearkey);
 }
 
+CDMType
+ToCDMTypeTelemetryEnum(const nsString& aKeySystem)
+{
+  if (aKeySystem.EqualsASCII(kEMEKeySystemWidevine)) {
+    return CDMType::eWidevine;
+  } else if (aKeySystem.EqualsASCII(kEMEKeySystemClearkey)) {
+    return CDMType::eClearKey;
+  } else if (aKeySystem.EqualsASCII(kEMEKeySystemPrimetime)) {
+    return CDMType::ePrimetime;
+  }
+  return CDMType::eUnknown;
+}
+
 } // namespace mozilla

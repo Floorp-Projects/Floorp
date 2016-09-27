@@ -401,26 +401,6 @@ MediaKeys::Init(ErrorResult& aRv)
   return promise.forget();
 }
 
-enum CDMCreatedType {
-  eClearKey = 0,
-  ePrimetime = 1,
-  eWidevine = 2,
-  eUnknown = 3
-};
-
-static CDMCreatedType
-ToCDMCreatedTelemetryEnum(const nsString& aKeySystem)
-{
-  if (aKeySystem.EqualsASCII(kEMEKeySystemWidevine)) {
-    return CDMCreatedType::eWidevine;
-  } else if (aKeySystem.EqualsASCII(kEMEKeySystemClearkey)) {
-    return CDMCreatedType::eClearKey;
-  } else if (aKeySystem.EqualsASCII(kEMEKeySystemPrimetime)) {
-    return CDMCreatedType::ePrimetime;
-  }
-  return CDMCreatedType::eUnknown;
-}
-
 void
 MediaKeys::OnCDMCreated(PromiseId aId, const nsACString& aNodeId, const uint32_t aPluginId)
 {
@@ -440,7 +420,7 @@ MediaKeys::OnCDMCreated(PromiseId aId, const nsACString& aNodeId, const uint32_t
                                         mKeySystem,
                                         MediaKeySystemStatus::Cdm_created);
 
-  Telemetry::Accumulate(Telemetry::VIDEO_CDM_CREATED, ToCDMCreatedTelemetryEnum(mKeySystem));
+  Telemetry::Accumulate(Telemetry::VIDEO_CDM_CREATED, ToCDMTypeTelemetryEnum(mKeySystem));
 }
 
 already_AddRefed<MediaKeySession>
