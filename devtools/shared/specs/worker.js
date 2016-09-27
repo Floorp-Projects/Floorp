@@ -69,3 +69,10 @@ const serviceWorkerRegistrationSpec = generateActorSpec({
 });
 
 exports.serviceWorkerRegistrationSpec = serviceWorkerRegistrationSpec;
+
+const serviceWorkerSpec = generateActorSpec({
+  typeName: "serviceWorker",
+});
+
+exports.serviceWorkerSpec = serviceWorkerSpec;
+

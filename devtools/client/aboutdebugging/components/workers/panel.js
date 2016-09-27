@@ -60,22 +60,13 @@ module.exports = createClass({
 
     getWorkerForms(this.props.client).then(forms => {
       forms.registrations.forEach(form => {
-        // - In e10s: only active registrations are available, but if the worker is in
-        // activating state it won't be available as the activeWorker. Registrations with
-        // no worker are actually registrations with a hidden activating worker.
-        // - In non-e10s: registrations always have at least one worker, if it is an
-        // active worker, the registration is active.
-        let hasWorker = form.activeWorker || form.waitingWorker || form.installingWorker;
-        let isE10s = Services.appinfo.browserTabsRemoteAutostart;
-        let active = form.activeWorker || (isE10s && !hasWorker);
-
         workers.service.push({
           icon: WorkerIcon,
           name: form.url,
           url: form.url,
           scope: form.scope,
           registrationActor: form.actor,
-          active
+          active: form.active
         });
       });
 
@@ -99,17 +90,11 @@ module.exports = createClass({
             } else {
               // If a service worker registration could not be found, this means we are in
               // e10s, and registrations are not forwarded to other processes until they
-              // reach the activated state. Add a temporary registration to display it in
-              // aboutdebugging.
-              workers.service.push({
-                icon: WorkerIcon,
-                name: form.url,
-                url: form.url,
-                scope: form.scope,
-                registrationActor: null,
-                workerActor: form.actor,
-                active: false
-              });
+              // reach the activated state. Augment the worker as a registration worker to
+              // display it in aboutdebugging.
+              worker.scope = form.scope;
+              worker.active = false;
+              workers.service.push(worker);
             }
             break;
           case Ci.nsIWorkerDebugger.TYPE_SHARED:
