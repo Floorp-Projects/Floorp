@@ -41,7 +41,6 @@ JOB_NAME_WHITELIST = set([
     'linux64-valgrind-opt',
     'linux-debug',
     'linux-opt',
-    'linux-pgo',
     'macosx64-debug',
     'macosx64-opt',
     'macosx64-st-an-opt',
