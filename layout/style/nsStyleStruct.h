@@ -882,12 +882,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBackground {
   nscolor mBackgroundColor;       // [reset]
 };
 
-// See https://bugzilla.mozilla.org/show_bug.cgi?id=271586#c43 for why
-// this is hard to replace with 'currentColor'.
 #define BORDER_COLOR_FOREGROUND   0x20
-#define OUTLINE_COLOR_INITIAL     0x80
-// FOREGROUND | INITIAL(OUTLINE)
-#define BORDER_COLOR_SPECIAL      0xA0
+#define BORDER_COLOR_SPECIAL      BORDER_COLOR_FOREGROUND
 #define BORDER_STYLE_MASK         0x1F
 
 #define NS_SPACING_MARGIN   0
@@ -1424,47 +1420,12 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleOutline
   // see that field's comment.)
   nsStyleCoord  mOutlineWidth;    // [reset] coord, enum (see nsStyleConsts.h)
   nscoord       mOutlineOffset;   // [reset]
+  mozilla::StyleComplexColor mOutlineColor; // [reset]
+  uint8_t       mOutlineStyle;    // [reset] See nsStyleConsts.h
 
   nscoord GetOutlineWidth() const
   {
     return mActualOutlineWidth;
-  }
-
-  uint8_t GetOutlineStyle() const
-  {
-    return (mOutlineStyle & BORDER_STYLE_MASK);
-  }
-
-  void SetOutlineStyle(uint8_t aStyle)
-  {
-    mOutlineStyle &= ~BORDER_STYLE_MASK;
-    mOutlineStyle |= (aStyle & BORDER_STYLE_MASK);
-  }
-
-  // false means initial value
-  bool GetOutlineColor(nscolor& aColor) const
-  {
-    if ((mOutlineStyle & BORDER_COLOR_SPECIAL) == 0) {
-      aColor = mOutlineColor;
-      return true;
-    }
-    return false;
-  }
-
-  void SetOutlineColor(nscolor aColor)
-  {
-    mOutlineColor = aColor;
-    mOutlineStyle &= ~BORDER_COLOR_SPECIAL;
-  }
-
-  void SetOutlineInitialColor()
-  {
-    mOutlineStyle |= OUTLINE_COLOR_INITIAL;
-  }
-
-  bool GetOutlineInitialColor() const
-  {
-    return !!(mOutlineStyle & OUTLINE_COLOR_INITIAL);
   }
 
 protected:
@@ -1472,11 +1433,6 @@ protected:
   // length, forced to zero when outline-style is none) rounded to device
   // pixels.  This is the value used by layout.
   nscoord       mActualOutlineWidth;
-
-  nscolor       mOutlineColor;    // [reset]
-
-  uint8_t       mOutlineStyle;    // [reset] See nsStyleConsts.h
-
   nscoord       mTwipsPerPixel;
 };
 
