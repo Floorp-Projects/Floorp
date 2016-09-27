@@ -44,36 +44,7 @@ MainThreadRuntime::MainThreadRuntime()
     return;
   }
 
-  // Windows XP doesn't support setting of the COM exception policy, so we'll
-  // just stop here in that case.
-  if (!IsVistaOrLater()) {
-    mInitResult = S_OK;
-    return;
-  }
-
-  // We are required to initialize security in order to configure global options.
-  mInitResult = InitializeSecurity();
-  MOZ_ASSERT(SUCCEEDED(mInitResult));
-  if (FAILED(mInitResult)) {
-    return;
-  }
-
-  RefPtr<IGlobalOptions> globalOpts;
-  mInitResult = ::CoCreateInstance(CLSID_GlobalOptions, nullptr,
-                                   CLSCTX_INPROC_SERVER, IID_IGlobalOptions,
-                                   (void**)getter_AddRefs(globalOpts));
-  MOZ_ASSERT(SUCCEEDED(mInitResult));
-  if (FAILED(mInitResult)) {
-    return;
-  }
-
-  // Windows 7 has a policy that is even more strict. We should use that one
-  // whenever possible.
-  ULONG_PTR exceptionSetting = IsWin7OrLater() ?
-                               COMGLB_EXCEPTION_DONOT_HANDLE_ANY :
-                               COMGLB_EXCEPTION_DONOT_HANDLE;
-  mInitResult = globalOpts->Set(COMGLB_EXCEPTION_HANDLING, exceptionSetting);
-  MOZ_ASSERT(SUCCEEDED(mInitResult));
+  mInitResult = S_OK;
 }
 
 HRESULT
