@@ -955,8 +955,8 @@ nsHtml5TreeBuilder::elementPopped(int32_t aNamespace, nsIAtom* aName, nsIContent
 void
 nsHtml5TreeBuilder::accumulateCharacters(const char16_t* aBuf, int32_t aStart, int32_t aLength)
 {
-  MOZ_RELEASE_ASSERT(charBufferLen + aLength <= charBuffer.length,
-                     "About to memcpy past the end of the buffer!");
+  MOZ_ASSERT(charBufferLen + aLength <= charBuffer.length,
+             "About to memcpy past the end of the buffer!");
   memcpy(charBuffer + charBufferLen, aBuf + aStart, sizeof(char16_t) * aLength);
   charBufferLen += aLength;
 }
