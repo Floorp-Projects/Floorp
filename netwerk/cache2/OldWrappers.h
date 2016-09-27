@@ -139,6 +139,7 @@ public:
   NS_IMETHOD MetaDataReady() override { return NS_OK; }
   NS_IMETHOD Recreate(bool, nsICacheEntry**) override;
   NS_IMETHOD GetDataSize(int64_t *size) override;
+  NS_IMETHOD GetAltDataSize(int64_t *size) override;
   NS_IMETHOD OpenInputStream(int64_t offset, nsIInputStream * *_retval) override;
   NS_IMETHOD OpenOutputStream(int64_t offset, nsIOutputStream * *_retval) override;
   NS_IMETHOD MaybeMarkValid() override;

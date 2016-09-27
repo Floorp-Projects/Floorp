@@ -197,6 +197,15 @@ interface nsICacheEntry : nsISupports
   readonly attribute long long dataSize;
 
   /**
+  * Returns the length of data this entry holds.
+  * @throws
+  *    - NS_ERROR_IN_PROGRESS when a write is still in progress (either real
+                              content or alt data).
+  *    - NS_ERROR_NOT_AVAILABLE if alt data does not exist.
+  */
+  readonly attribute long long altDataSize;
+
+  /**
    * Opens and returns an output stream that a consumer may use to save an
    * alternate representation of the data.
    * @throws
