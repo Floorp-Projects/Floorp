@@ -729,10 +729,9 @@ function checkEnvironmentData(data, isInitial = false, expectBrokenAddons = fals
   checkAddonsSection(data, expectBrokenAddons);
 }
 
-function run_test() {
+add_task(function* test_setup() {
   // Load a custom manifest to provide search engine loading from JAR files.
   do_load_manifest("chrome.manifest");
-  do_test_pending();
   spoofGfxAdapter();
   do_get_profile();
 
@@ -764,16 +763,6 @@ function run_test() {
   // Spoof the the hotfixVersion
   Preferences.set("extensions.hotfix.lastVersion", APP_HOTFIX_VERSION);
 
-  run_next_test();
-}
-
-function isRejected(promise) {
-  return new Promise((resolve, reject) => {
-    promise.then(() => resolve(false), () => resolve(true));
-  });
-}
-
-add_task(function* asyncSetup() {
   yield spoofProfileReset();
   TelemetryEnvironment.delayedInit();
 });
@@ -1420,8 +1409,4 @@ add_task(function* test_environmentShutdown() {
 
   // Unregister the listener.
   TelemetryEnvironment.unregisterChangeListener("test_environmentShutdownChange");
-});
-
-add_task(function*() {
-  do_test_finished();
 });
