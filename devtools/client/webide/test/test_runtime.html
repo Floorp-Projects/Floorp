@@ -49,6 +49,14 @@
           let docProject = getProjectDocument(win);
           let winProject = getProjectWindow(win);
 
+          let packagedAppLocation = getTestFilePath("app");
+
+          let onValidated = waitForUpdate(win, "project-validated");
+          let onDetails = waitForUpdate(win, "details");
+          yield winProject.projectList.importPackagedApp(packagedAppLocation);
+          yield onValidated;
+          yield onDetails;
+
           win.AppManager.runtimeList.usb.push({
             connect: function(connection) {
               is(connection, win.AppManager.connection, "connection is valid");
@@ -88,14 +96,6 @@
 
           win.AppManager.update("runtime-list");
 
-          let packagedAppLocation = getTestFilePath("app");
-
-          let onValidated = waitForUpdate(win, "project-validated");
-          let onDetails = waitForUpdate(win, "details");
-          yield winProject.projectList.importPackagedApp(packagedAppLocation);
-          yield onValidated;
-          yield onDetails;
-
           let panelNode = docRuntime.querySelector("#runtime-panel");
           let items = panelNode.querySelectorAll(".runtime-panel-item-usb");
           is(items.length, 3, "Found 3 runtime buttons");
@@ -111,22 +111,23 @@
 
           yield waitForUpdate(win, "runtime-global-actors");
 
-          ok(isPlayActive(), "play button is enabled 1");
-          ok(!isStopActive(), "stop button is disabled 1");
+          // Play button always disabled now, webapps actor removed
+          ok(!isPlayActive(), "play button is disabled");
+          ok(!isStopActive(), "stop button is disabled");
           let oldProject = win.AppManager.selectedProject;
           win.AppManager.selectedProject = null;
 
           yield nextTick();
 
-          ok(!isPlayActive(), "play button is disabled 2");
-          ok(!isStopActive(), "stop button is disabled 2");
+          ok(!isPlayActive(), "play button is disabled");
+          ok(!isStopActive(), "stop button is disabled");
           win.AppManager._selectedProject = oldProject;
           win.UI.updateCommands();
 
           yield nextTick();
 
-          ok(isPlayActive(), "play button is enabled 3");
-          ok(!isStopActive(), "stop button is disabled 3");
+          ok(!isPlayActive(), "play button is enabled");
+          ok(!isStopActive(), "stop button is disabled");
 
           connectionsChanged = waitForConnectionChange("closed", 2);
           yield win.Cmds.disconnectRuntime();
@@ -135,8 +136,8 @@
           is(Object.keys(DebuggerServer._connections).length, 0, "Disconnected");
 
           ok(win.AppManager.selectedProject, "A project is still selected");
-          ok(!isPlayActive(), "play button is disabled 4");
-          ok(!isStopActive(), "stop button is disabled 4");
+          ok(!isPlayActive(), "play button is disabled");
+          ok(!isStopActive(), "stop button is disabled");
 
           connectionsChanged = waitForConnectionChange("opened", 2);
           docRuntime.querySelectorAll(".runtime-panel-item-other")[1].click();
