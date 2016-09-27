@@ -631,10 +631,13 @@ HttpChannelParent::RecvRedirect2Verify(const nsresult& result,
                                        const RequestHeaderTuples& changedHeaders,
                                        const uint32_t& loadFlags,
                                        const OptionalURIParams& aAPIRedirectURI,
-                                       const OptionalCorsPreflightArgs& aCorsPreflightArgs)
+                                       const OptionalCorsPreflightArgs& aCorsPreflightArgs,
+                                       const bool& aForceHSTSPriming,
+                                       const bool& aMixedContentWouldBlock)
 {
   LOG(("HttpChannelParent::RecvRedirect2Verify [this=%p result=%x]\n",
        this, result));
+  nsresult rv;
   if (NS_SUCCEEDED(result)) {
     nsCOMPtr<nsIHttpChannel> newHttpChannel =
         do_QueryInterface(mRedirectChannel);
@@ -667,6 +670,14 @@ HttpChannelParent::RecvRedirect2Verify(const nsresult& result,
         MOZ_RELEASE_ASSERT(newInternalChannel);
         const CorsPreflightArgs& args = aCorsPreflightArgs.get_CorsPreflightArgs();
         newInternalChannel->SetCorsPreflightParameters(args.unsafeHeaders());
+      }
+
+      if (aForceHSTSPriming) {
+        nsCOMPtr<nsILoadInfo> newLoadInfo;
+        rv = newHttpChannel->GetLoadInfo(getter_AddRefs(newLoadInfo));
+        if (NS_SUCCEEDED(rv) && newLoadInfo) {
+          newLoadInfo->SetHSTSPriming(aMixedContentWouldBlock);
+        }
       }
     }
   }

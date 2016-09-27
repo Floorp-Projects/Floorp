@@ -4986,10 +4986,10 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
             do_GetService(NS_SSSERVICE_CONTRACTID, &rv);
           NS_ENSURE_SUCCESS(rv, rv);
           rv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS, aURI,
-                                flags, &isStsHost);
+                                flags, nullptr, &isStsHost);
           NS_ENSURE_SUCCESS(rv, rv);
           rv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HPKP, aURI,
-                                flags, &isPinnedHost);
+                                flags, nullptr, &isPinnedHost);
           NS_ENSURE_SUCCESS(rv, rv);
         } else {
           mozilla::dom::ContentChild* cc =
@@ -9860,6 +9860,25 @@ nsDocShell::InternalLoad(nsIURI* aURI,
     }
 
     return NS_ERROR_CONTENT_BLOCKED;
+  }
+
+  // If HSTS priming was set by nsMixedContentBlocker::ShouldLoad, and we
+  // would block due to mixed content, go ahead and block here. If we try to
+  // proceed with priming, we will error out later on.
+  nsCOMPtr<nsIDocShell> docShell = NS_CP_GetDocShellFromContext(context);
+  NS_ENSURE_TRUE(docShell, NS_OK);
+  if (docShell) {
+    nsIDocument* document = docShell->GetDocument();
+    NS_ENSURE_TRUE(document, NS_OK);
+
+    HSTSPrimingState state = document->GetHSTSPrimingStateForLocation(aURI);
+    if (state == HSTSPrimingState::eHSTS_PRIMING_BLOCK) {
+      // HSTS Priming currently disabled for InternalLoad, so we need to clear
+      // the location that was added by nsMixedContentBlocker::ShouldLoad
+      // Bug 1269815 will address images loaded via InternalLoad
+      document->ClearHSTSPrimingLocation(aURI);
+      return NS_ERROR_CONTENT_BLOCKED;
+    }
   }
 
   nsCOMPtr<nsIPrincipal> principalToInherit = aPrincipalToInherit;
