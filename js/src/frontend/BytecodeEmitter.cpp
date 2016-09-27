@@ -6674,13 +6674,14 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
     RootedFunction fun(cx, funbox->function());
     RootedAtom name(cx, fun->name());
     MOZ_ASSERT_IF(fun->isInterpretedLazy(), fun->lazyScript());
+    MOZ_ASSERT_IF(pn->isOp(JSOP_FUNWITHPROTO), needsProto);
 
     /*
      * Set the |wasEmitted| flag in the funbox once the function has been
      * emitted. Function definitions that need hoisting to the top of the
      * function will be seen by emitFunction in two places.
      */
-    if (funbox->wasEmitted) {
+    if (funbox->wasEmitted && pn->functionIsHoisted()) {
         // Annex B block-scoped functions are hoisted like any other
         // block-scoped function to the top of their scope. When their
         // definitions are seen for the second time, we need to emit the
@@ -6804,7 +6805,7 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
         }
 
         if (needsProto) {
-            MOZ_ASSERT(pn->getOp() == JSOP_LAMBDA);
+            MOZ_ASSERT(pn->getOp() == JSOP_FUNWITHPROTO || pn->getOp() == JSOP_LAMBDA);
             pn->setOp(JSOP_FUNWITHPROTO);
         }
         return emitIndex32(pn->getOp(), index);
@@ -9651,6 +9652,15 @@ CGConstList::finish(ConstArray* array)
         array->vector[i] = list[i];
 }
 
+bool
+CGObjectList::isAdded(ObjectBox* objbox)
+{
+    // An objbox added to CGObjectList as non-first element has non-null
+    // emitLink member.  The first element has null emitLink.
+    // Check for firstbox to cover the first element.
+    return objbox->emitLink || objbox == firstbox;
+}
+
 /*
  * Find the index of the given object for code generator.
  *
@@ -9662,9 +9672,15 @@ CGConstList::finish(ConstArray* array)
 unsigned
 CGObjectList::add(ObjectBox* objbox)
 {
-    MOZ_ASSERT(!objbox->emitLink);
+    if (isAdded(objbox))
+        return indexOf(objbox->object);
+
     objbox->emitLink = lastbox;
     lastbox = objbox;
+
+    // See the comment in CGObjectList::isAdded.
+    if (!firstbox)
+        firstbox = objbox;
     return length++;
 }
 
@@ -9691,7 +9707,12 @@ CGObjectList::finish(ObjectArray* array)
         MOZ_ASSERT(!*cursor);
         MOZ_ASSERT(objbox->object->isTenured());
         *cursor = objbox->object;
-    } while ((objbox = objbox->emitLink) != nullptr);
+
+        ObjectBox* tmp = objbox->emitLink;
+        // Clear emitLink for CGObjectList::isAdded.
+        objbox->emitLink = nullptr;
+        objbox = tmp;
+    } while (objbox != nullptr);
     MOZ_ASSERT(cursor == array->vector);
 }
 
