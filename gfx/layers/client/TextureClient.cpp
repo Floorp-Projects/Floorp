@@ -1132,7 +1132,7 @@ TextureClient::CreateForDrawing(TextureForwarder* aAllocator,
 #endif
 
 #ifdef MOZ_WIDGET_GONK
-  if (!data) {
+  if (!data && aSize.width <= aMaxTextureSize && aSize.height <= aMaxTextureSize) {
     data = GrallocTextureData::CreateForDrawing(aSize, aFormat, moz2DBackend,
                                                 aAllocator);
   }
