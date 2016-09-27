@@ -129,7 +129,8 @@ struct WasmPrintContext
     uint32_t currentFuncIndex;
     PrintOperatorPrecedence currentPrecedence;
 
-    WasmPrintContext(JSContext* cx, AstModule* module, WasmPrintBuffer& buffer, const ExperimentalTextFormatting& f, GeneratedSourceMap* wasmSourceMap_)
+    WasmPrintContext(JSContext* cx, AstModule* module, WasmPrintBuffer& buffer,
+                     const ExperimentalTextFormatting& f, GeneratedSourceMap* wasmSourceMap_)
       : cx(cx),
         module(module),
         buffer(buffer),

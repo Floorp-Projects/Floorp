@@ -33,14 +33,14 @@ GPUVideoTextureData::FillInfo(TextureData::Info& aInfo) const
 }
 
 void
-GPUVideoTextureData::Deallocate(ClientIPCAllocator* aAllocator)
+GPUVideoTextureData::Deallocate(LayersIPCChannel* aAllocator)
 {
   dom::VideoDecoderManagerChild::GetSingleton()->DeallocateSurfaceDescriptorGPUVideo(mSD);
   mSD = SurfaceDescriptorGPUVideo();
 }
 
 void
-GPUVideoTextureData::Forget(ClientIPCAllocator* aAllocator)
+GPUVideoTextureData::Forget(LayersIPCChannel* aAllocator)
 {
   // We always need to manually deallocate on the client side.
   // Ideally we'd set up our TextureClient with the DEALLOCATE_CLIENT

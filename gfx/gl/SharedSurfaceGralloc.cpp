@@ -35,7 +35,7 @@ using namespace mozilla::layers;
 using namespace android;
 
 SurfaceFactory_Gralloc::SurfaceFactory_Gralloc(GLContext* prodGL, const SurfaceCaps& caps,
-                                               const RefPtr<layers::ClientIPCAllocator>& allocator,
+                                               const RefPtr<layers::LayersIPCChannel>& allocator,
                                                const layers::TextureFlags& flags)
     : SurfaceFactory(SharedSurfaceType::Gralloc, prodGL, caps, allocator, flags)
 {
@@ -48,7 +48,7 @@ SharedSurface_Gralloc::Create(GLContext* prodGL,
                               const gfx::IntSize& size,
                               bool hasAlpha,
                               layers::TextureFlags flags,
-                              ClientIPCAllocator* allocator)
+                              LayersIPCChannel* allocator)
 {
     GLLibraryEGL* egl = &sEGLLibrary;
     MOZ_ASSERT(egl);
@@ -118,7 +118,7 @@ SharedSurface_Gralloc::SharedSurface_Gralloc(GLContext* prodGL,
                                              const gfx::IntSize& size,
                                              bool hasAlpha,
                                              GLLibraryEGL* egl,
-                                             layers::ClientIPCAllocator* allocator,
+                                             layers::LayersIPCChannel* allocator,
                                              layers::TextureClient* textureClient,
                                              GLuint prodTex)
     : SharedSurface(SharedSurfaceType::Gralloc,

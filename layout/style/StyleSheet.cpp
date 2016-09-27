@@ -58,12 +58,13 @@ StyleSheet::IsComplete() const
 void
 StyleSheet::SetComplete()
 {
-  NS_ASSERTION(!IsGecko() || !AsGecko().mDirty, "Can't set a dirty sheet complete!");
+  NS_ASSERTION(!IsGecko() || !AsGecko()->mDirty,
+               "Can't set a dirty sheet complete!");
   SheetInfo().mComplete = true;
   if (mDocument && !mDisabled) {
     // Let the document know
     mDocument->BeginUpdate(UPDATE_STYLE);
-    mDocument->SetStyleSheetApplicableState(AsHandle(), true);
+    mDocument->SetStyleSheetApplicableState(this, true);
     mDocument->EndUpdate(UPDATE_STYLE);
   }
 
@@ -73,15 +74,6 @@ StyleSheet::SetComplete()
     dom::ShadowRoot* shadowRoot = mOwningNode->AsContent()->GetContainingShadow();
     shadowRoot->StyleSheetChanged();
   }
-}
-
-StyleSheetInfo&
-StyleSheet::SheetInfo()
-{
-  if (IsServo()) {
-    return AsServo();
-  }
-  return *AsGecko().mInner;
 }
 
 } // namespace mozilla

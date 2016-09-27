@@ -37,6 +37,8 @@
 #   memleak.sh   - memory leak testing (optional)
 #   ssl_gtests.sh- Gtest based unit tests for ssl
 #   gtests.sh    - Gtest based unit tests for everything else
+#   bogo.sh      - Bogo interop tests (disabled by default)
+#                  https://boringssl.googlesource.com/boringssl/+/master/ssl/test/PORTING.md
 #
 # NSS testing is now devided to 4 cycles:
 # ---------------------------------------
@@ -162,11 +164,7 @@ run_cycle_pkix()
 
     TESTS="${ALL_TESTS}"
     TESTS_SKIP="cipher dbtests sdr crmf smime merge multinit"
-
-    echo "${NSS_SSL_TESTS}" | grep "_" > /dev/null
-    RET=$?
-    NSS_SSL_TESTS=`echo "${NSS_SSL_TESTS}" | sed -e "s/normal//g" -e "s/bypass//g" -e "s/fips//g" -e "s/_//g"`
-    [ ${RET} -eq 0 ] && NSS_SSL_TESTS="${NSS_SSL_TESTS} bypass_bypass"
+    NSS_SSL_TESTS=`echo "${NSS_SSL_TESTS}" | sed -e "s/normal//g" -e "s/fips//g" -e "s/_//g"`
 
     run_tests
 }
@@ -209,10 +207,7 @@ run_cycle_upgrade_db()
     TESTS="${ALL_TESTS}"
     TESTS_SKIP="cipher libpkix cert dbtests sdr ocsp pkits chains"
 
-    echo "${NSS_SSL_TESTS}" | grep "_" > /dev/null
-    RET=$?
-    NSS_SSL_TESTS=`echo "${NSS_SSL_TESTS}" | sed -e "s/normal//g" -e "s/bypass//g" -e "s/fips//g" -e "s/_//g"`
-    [ ${RET} -eq 0 ] && NSS_SSL_TESTS="${NSS_SSL_TESTS} bypass_bypass"
+    NSS_SSL_TESTS=`echo "${NSS_SSL_TESTS}" | sed -e "s/normal//g" -e "s/fips//g" -e "s/_//g"`
     NSS_SSL_RUN=`echo "${NSS_SSL_RUN}" | sed -e "s/cov//g" -e "s/auth//g"`
 
     run_tests
@@ -240,10 +235,7 @@ run_cycle_shared_db()
     TESTS="${ALL_TESTS}"
     TESTS_SKIP="cipher libpkix dbupgrade sdr ocsp pkits"
 
-    echo "${NSS_SSL_TESTS}" | grep "_" > /dev/null
-    RET=$?
-    NSS_SSL_TESTS=`echo "${NSS_SSL_TESTS}" | sed -e "s/normal//g" -e "s/bypass//g" -e "s/fips//g" -e "s/_//g"`
-    [ ${RET} -eq 0 ] && NSS_SSL_TESTS="${NSS_SSL_TESTS} bypass_bypass"
+    NSS_SSL_TESTS=`echo "${NSS_SSL_TESTS}" | sed -e "s/normal//g" -e "s/fips//g" -e "s/_//g"`
     NSS_SSL_RUN=`echo "${NSS_SSL_RUN}" | sed -e "s/cov//g" -e "s/auth//g"`
 
     run_tests
@@ -286,7 +278,7 @@ TESTS=${NSS_TESTS:-$tests}
 
 ALL_TESTS=${TESTS}
 
-nss_ssl_tests="crl bypass_normal normal_bypass fips_normal normal_fips iopr policy"
+nss_ssl_tests="crl fips_normal normal_fips iopr policy"
 NSS_SSL_TESTS="${NSS_SSL_TESTS:-$nss_ssl_tests}"
 
 nss_ssl_run="cov auth stapling stress"

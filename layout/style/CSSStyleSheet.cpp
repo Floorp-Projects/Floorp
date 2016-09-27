@@ -1324,33 +1324,6 @@ CSSStyleSheet::DropStyleSet(nsStyleSet* aStyleSet)
 }
 
 void
-CSSStyleSheet::SetURIs(nsIURI* aSheetURI, nsIURI* aOriginalSheetURI,
-                       nsIURI* aBaseURI)
-{
-  NS_ASSERTION(mInner->mOrderedRules.Count() == 0 && !mInner->mComplete,
-               "Can't call SetURIs on sheets that are complete or have rules");
-  mInner->SetURIs(aSheetURI, aOriginalSheetURI, aBaseURI);
-}
-
-void
-CSSStyleSheet::SetPrincipal(nsIPrincipal* aPrincipal)
-{
-  mInner->SetPrincipal(aPrincipal);
-}
-
-nsIURI*
-CSSStyleSheet::GetSheetURI() const
-{
-  return mInner->mSheetURI;
-}
-
-nsIURI*
-CSSStyleSheet::GetBaseURI() const
-{
-  return mInner->mBaseURI;
-}
-
-void
 CSSStyleSheet::GetType(nsString& aType) const
 {
   aType.AssignLiteral("text/css");
@@ -1379,12 +1352,6 @@ CSSStyleSheet::HasRules() const
   return StyleRuleCount() != 0;
 }
 
-bool
-CSSStyleSheet::IsApplicable() const
-{
-  return !mDisabled && mInner->mComplete;
-}
-
 void
 CSSStyleSheet::SetEnabled(bool aEnabled)
 {
@@ -1405,12 +1372,6 @@ CSSStyleSheet*
 CSSStyleSheet::GetParentSheet() const
 {
   return mParent;
-}
-
-nsIDocument*
-CSSStyleSheet::GetOwningDocument() const
-{
-  return mDocument;
 }
 
 void
@@ -2125,7 +2086,7 @@ CSSStyleSheet::InsertRuleIntoGroup(const nsAString & aRule,
 
 // nsICSSLoaderObserver implementation
 NS_IMETHODIMP
-CSSStyleSheet::StyleSheetLoaded(StyleSheetHandle aSheet,
+CSSStyleSheet::StyleSheetLoaded(StyleSheet* aSheet,
                                 bool aWasAlternate,
                                 nsresult aStatus)
 {

@@ -1057,7 +1057,7 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
 
   if (!aTile.mAllocator) {
     aTile.SetTextureAllocator(mManager->GetCompositorBridgeChild()->GetTexturePool(
-      mManager->GetCompositorBackendType(),
+      mManager->AsShadowForwarder(),
       gfxPlatform::GetPlatform()->Optimal2DFormatForContent(content),
       TextureFlags::DISALLOW_BIGIMAGE | TextureFlags::IMMEDIATE_UPLOAD));
     MOZ_ASSERT(aTile.mAllocator);
