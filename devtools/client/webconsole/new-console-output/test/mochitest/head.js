@@ -91,7 +91,7 @@ function waitForMessages({ hud, messages }) {
 function* waitFor(condition, message = "waitFor", interval = 100, maxTries = 50) {
   return new Promise(resolve => {
     BrowserTestUtils.waitForCondition(condition, message, interval, maxTries)
-      .then(resolve(condition()));
+      .then(() => resolve(condition()));
   });
 }
 
@@ -110,5 +110,5 @@ function findMessage(hud, text, selector = ".message") {
     hud.ui.experimentalOutputNode.querySelectorAll(selector),
     (el) => el.textContent.includes(text)
   );
-  return elements.pop();
+  return elements.length > 0 ? elements.pop() : false;
 }
