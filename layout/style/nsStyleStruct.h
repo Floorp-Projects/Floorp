@@ -3484,13 +3484,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleColumn
   nsStyleCoord mColumnWidth; // [reset] coord, auto
   nsStyleCoord mColumnGap;   // [reset] coord, normal
 
-  nscolor      mColumnRuleColor;  // [reset]
+  mozilla::StyleComplexColor mColumnRuleColor; // [reset]
   uint8_t      mColumnRuleStyle;  // [reset]
   uint8_t      mColumnFill;  // [reset] see nsStyleConsts.h
-
-  // See https://bugzilla.mozilla.org/show_bug.cgi?id=271586#c43 for why
-  // this is hard to replace with 'currentColor'.
-  bool mColumnRuleColorIsForeground;
 
   void SetColumnRuleWidth(nscoord aWidth) {
     mColumnRuleWidth = NS_ROUND_BORDER_TO_PIXELS(aWidth, mTwipsPerPixel);
