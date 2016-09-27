@@ -1062,7 +1062,8 @@ button.button-link:not([disabled="true"]):active:hover {
 
 #disabled-unsigned-addons-info {
   margin-bottom: 2em;
-  margin-inline-end: 48px;
+  margin-right: 48px;
+  margin-left: 48px;
 }
 
 #disabled-unsigned-addons-heading {
