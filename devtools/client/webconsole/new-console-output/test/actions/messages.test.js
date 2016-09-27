@@ -57,6 +57,23 @@ describe("Message actions:", () => {
       expect(addAction.type).toEqual(constants.MESSAGE_ADD);
       expect(message.toJS()).toEqual(expectedAction.message.toJS());
     });
+
+    it("dispatches expected action given a console.table packet", () => {
+      const packet = stubPackets.get("console.table(['a', 'b', 'c'])");
+      const store = mockStore({});
+      store.dispatch(actions.messageAdd(packet));
+
+      const expectedActions = store.getActions();
+      expect(expectedActions.length).toEqual(1);
+
+      const addAction = expectedActions[0];
+      const {message} = addAction;
+      const expected = {
+        type: constants.MESSAGE_ADD,
+        message: stubPreparedMessages.get("console.table(['a', 'b', 'c'])")
+      };
+      expect(message.toJS()).toEqual(expected.message.toJS());
+    });
   });
 
   describe("messagesClear", () => {
