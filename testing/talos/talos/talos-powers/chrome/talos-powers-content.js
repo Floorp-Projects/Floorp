@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// This file is loaded as a framescript
-
 var { interfaces: Ci, utils: Cu } = Components;
 
 /**
@@ -82,42 +80,3 @@ addEventListener("TalosPowersContentGetStartupInfo", (e) => {
                               event));
   });
 });
-
-/* *
- * Mediator for the generic ParentExec mechanism.
- * Listens for a query event from the content, forwards it as a query message
- * to the parent, listens to a parent reply message, and forwards it as a reply
- * event for the content to capture.
- * The consumer API for this mechanism is at content/TalosPowersContent.js
- * and the callees are at ParentExecServices at components/TalosPowersService.js
- */
-addEventListener("TalosPowers:ParentExec:QueryEvent", function (e) {
-  if (content.location.protocol != "file:" &&
-      content.location.hostname != "localhost" &&
-      content.location.hostname != "127.0.0.1") {
-    throw new Error("TalosPowers:ParentExec may only be used with local content");
-  }
-  let uniqueMessageId = "TalosPowers:ParentExec:"
-                      + content.document.documentURI + Date.now() + Math.random();
-
-  // Listener for the reply from the parent process
-  addMessageListener("TalosPowers:ParentExec:ReplyMsg", function done(reply) {
-    if (reply.data.id != uniqueMessageId)
-      return;
-
-    removeMessageListener("TalosPowers:ParentExec:ReplyMsg", done);
-
-    // reply to content via an event
-    let contentEvent = Cu.cloneInto({
-      bubbles: true,
-      detail: reply.data.result
-    }, content);
-    content.dispatchEvent(new content.CustomEvent(e.detail.listeningTo, contentEvent));
-  });
-
-  // Send the query to the parent process
-  sendAsyncMessage("TalosPowers:ParentExec:QueryMsg", {
-    command: e.detail.command,
-    id: uniqueMessageId
-  });
-}, false, true);  // wantsUntrusted since we're exposing to unprivileged

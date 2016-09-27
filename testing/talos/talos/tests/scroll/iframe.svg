@@ -35,5 +35,5 @@
   <!-- this has to come after the iframe for some reason -->
 	<script type="text/javascript" xlink:href="../../scripts/talos-debug.js"/>
 	<script type="text/javascript" xlink:href="../../scripts/Profiler.js"/>
-	<script type="text/javascript" xlink:href="../../pageloader/chrome/tscroll.js"/>
+	<script type="text/javascript" xlink:href="scroll-test.js"/>
 </svg>
