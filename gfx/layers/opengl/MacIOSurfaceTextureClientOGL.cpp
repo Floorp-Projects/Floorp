@@ -113,13 +113,13 @@ MacIOSurfaceTextureData::BorrowDrawTarget()
 }
 
 void
-MacIOSurfaceTextureData::Deallocate(ClientIPCAllocator*)
+MacIOSurfaceTextureData::Deallocate(LayersIPCChannel*)
 {
   mSurface = nullptr;
 }
 
 void
-MacIOSurfaceTextureData::Forget(ClientIPCAllocator*)
+MacIOSurfaceTextureData::Forget(LayersIPCChannel*)
 {
   mSurface = nullptr;
 }

@@ -35,9 +35,9 @@ RemoveTextureFromCompositableTracker::ReleaseTextureClient()
       !mTextureClient->GetAllocator()->UsesImageBridge())
   {
     RefPtr<TextureClientReleaseTask> task = new TextureClientReleaseTask(mTextureClient);
-    RefPtr<ClientIPCAllocator> allocator = mTextureClient->GetAllocator();
+    RefPtr<LayersIPCChannel> allocator = mTextureClient->GetAllocator();
     mTextureClient = nullptr;
-    allocator->AsClientAllocator()->GetMessageLoop()->PostTask(task.forget());
+    allocator->GetMessageLoop()->PostTask(task.forget());
   } else {
     mTextureClient = nullptr;
   }
@@ -173,9 +173,8 @@ CompositableClient::CreateTextureClientFromSurface(gfx::SourceSurface* aSurface,
                                                    TextureFlags aTextureFlags,
                                                    TextureAllocationFlags aAllocFlags)
 {
-  return TextureClient::CreateFromSurface(GetForwarder()->AsTextureForwarder(),
+  return TextureClient::CreateFromSurface(GetForwarder(),
                                           aSurface,
-                                          GetForwarder()->GetCompositorBackendType(),
                                           aSelector,
                                           aTextureFlags | mTextureFlags,
                                           aAllocFlags);
@@ -224,7 +223,7 @@ CompositableClient::GetTextureClientRecycler()
     return nullptr;
   }
 
-  if(!mForwarder->UsesImageBridge()) {
+  if(!mForwarder->GetTextureForwarder()->UsesImageBridge()) {
     MOZ_ASSERT(NS_IsMainThread());
     mTextureClientRecycler = new layers::TextureClientRecycleAllocator(mForwarder);
     return mTextureClientRecycler;
