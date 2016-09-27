@@ -154,4 +154,17 @@ IsClearkeyKeySystem(const nsAString& aKeySystem)
   return !CompareUTF8toUTF16(kEMEKeySystemClearkey, aKeySystem);
 }
 
+CDMType
+ToCDMTypeTelemetryEnum(const nsString& aKeySystem)
+{
+  if (!CompareUTF8toUTF16(kEMEKeySystemWidevine, aKeySystem)) {
+    return CDMType::eWidevine;
+  } else if (!CompareUTF8toUTF16(kEMEKeySystemClearkey, aKeySystem)) {
+    return CDMType::eClearKey;
+  } else if (!CompareUTF8toUTF16(kEMEKeySystemPrimetime, aKeySystem)) {
+    return CDMType::ePrimetime;
+  }
+  return CDMType::eUnknown;
+}
+
 } // namespace mozilla
