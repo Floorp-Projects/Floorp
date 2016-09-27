@@ -16,6 +16,7 @@ import org.mozilla.gecko.DataReportingNotification;
 import org.mozilla.gecko.DynamicToolbar;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoActivityStatus;
+import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoProfile;
@@ -370,9 +371,9 @@ OnSharedPreferenceChangeListener
         // Use setResourceToOpen to specify these extras.
         Bundle intentExtras = getIntent().getExtras();
 
-        EventDispatcher.getInstance().registerGeckoThreadListener(this, "Sanitize:Finished");
-
-        EventDispatcher.getInstance().registerGeckoThreadListener(this, "Snackbar:Show");
+        GeckoApp.getEventDispatcher().registerGeckoThreadListener(this,
+                                                                  "Sanitize:Finished",
+                                                                  "Snackbar:Show");
 
         // Add handling for long-press click.
         // This is only for Android 3.0 and below (which use the long-press-context-menu paradigm).
@@ -506,9 +507,10 @@ OnSharedPreferenceChangeListener
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this, "Sanitize:Finished");
 
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this, "Snackbar:Show");
+        GeckoApp.getEventDispatcher().unregisterGeckoThreadListener(this,
+                                                                    "Sanitize:Finished", 
+                                                                    "Snackbar:Show");
 
         if (mPrefsRequest != null) {
             PrefsHelper.removeObserver(mPrefsRequest);
