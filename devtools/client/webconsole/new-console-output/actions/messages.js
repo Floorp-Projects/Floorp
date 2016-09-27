@@ -17,6 +17,7 @@ const {
   MESSAGE_OPEN,
   MESSAGE_CLOSE,
   MESSAGE_TYPE,
+  MESSAGE_TABLE_RECEIVE,
 } = require("../constants");
 
 const defaultIdGenerator = new IdGenerator();
@@ -60,9 +61,39 @@ function messageClose(id) {
   };
 }
 
+function messageTableDataGet(id, client, dataType) {
+  return (dispatch) => {
+    let fetchObjectActorData;
+    if (["Map", "WeakMap", "Set", "WeakSet"].includes(dataType)) {
+      fetchObjectActorData = (cb) => client.enumEntries(cb);
+    } else {
+      fetchObjectActorData = (cb) => client.enumProperties({
+        ignoreNonIndexedProperties: dataType === "Array"
+      }, cb);
+    }
+
+    fetchObjectActorData(enumResponse => {
+      const {iterator} = enumResponse;
+      iterator.slice(0, iterator.count, sliceResponse => {
+        let {ownProperties} = sliceResponse;
+        dispatch(messageTableDataReceive(id, ownProperties));
+      });
+    });
+  };
+}
+
+function messageTableDataReceive(id, data) {
+  return {
+    type: MESSAGE_TABLE_RECEIVE,
+    id,
+    data
+  };
+}
+
 module.exports = {
   messageAdd,
   messagesClear,
   messageOpen,
   messageClose,
+  messageTableDataGet,
 };
