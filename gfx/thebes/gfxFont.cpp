@@ -3105,10 +3105,6 @@ gfxFont::InitFakeSmallCapsRun(DrawTarget     *aDrawTarget,
     bool ok = true;
 
     RefPtr<gfxFont> smallCapsFont = GetSmallCapsFont();
-    if (!smallCapsFont) {
-        NS_WARNING("failed to get reduced-size font for smallcaps!");
-        smallCapsFont = this;
-    }
 
     enum RunCaseAction {
         kNoChange,
