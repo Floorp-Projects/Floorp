@@ -141,7 +141,8 @@ private:
   ~CdmaIccInfo() {}
 
   nsString mPhoneNumber;
-  int32_t mPrlVersion;
+  // The following integer shall be initialized either in the constructor or in Update
+  MOZ_INIT_OUTSIDE_CTOR int32_t mPrlVersion;
 };
 
 } // namespace dom
