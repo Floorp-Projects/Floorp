@@ -13,6 +13,7 @@ DevToolsModules(
     'event.js',
     'function.js',
     'grip-array.js',
+    'grip-map.js',
     'grip.js',
     'null.js',
     'number.js',
