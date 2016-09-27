@@ -117,7 +117,10 @@ class SandboxBroker final
   SandboxBroker(UniquePtr<const Policy> aPolicy, int aChildPid,
                 int& aClientFd);
   void ThreadMain(void) override;
-  void AuditDenial(int aOp, int aFlags, const char* aPath);
+  void AuditPermissive(int aOp, int aFlags, int aPerms, const char* aPath);
+  void AuditDenial(int aOp, int aFlags, int aPerms, const char* aPath);
+  // Remap relative paths to absolute paths.
+  size_t ConvertToRealPath(char* aPath, size_t aBufSize, size_t aPathLen);
 
   // Holding a UniquePtr should disallow copying, but to make that explicit:
   SandboxBroker(const SandboxBroker&) = delete;
