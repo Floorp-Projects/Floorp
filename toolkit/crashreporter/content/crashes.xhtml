@@ -89,33 +89,18 @@ td:last-child {
 </head><body onload="populateReportList()" dir="&locale.dir;">
 <button chromedir="&locale.dir;" id="clear-reports"
         onclick="clearReports().then(null, Cu.reportError)">&clearAllReports.label;</button>
+<h1>&crashes.title;</h1>
 <div id="reportList">
-  <div id="reportListUnsubmitted">
-    <h1>&crashesUnsubmitted.label;</h1>
-    <table>
-      <thead>
-        <tr>
-          <th chromedir="&locale.dir;">&id.heading;</th>
-          <th chromedir="&locale.dir;" colspan="2">&dateCrashed.heading;</th>
-        </tr>
-      </thead>
-      <tbody id="unsubmitted">
-      </tbody>
-    </table>
-  </div>
-  <div id="reportListSubmitted">
-    <h1>&crashesSubmitted.label;</h1>
-    <table>
-      <thead>
-        <tr>
-          <th chromedir="&locale.dir;">&id.heading;</th>
-          <th chromedir="&locale.dir;" colspan="2">&dateSubmitted.heading;</th>
-        </tr>
-      </thead>
-      <tbody id="submitted">
-      </tbody>
-    </table>
-  </div>
+  <table>
+    <thead>
+      <tr>
+        <th chromedir="&locale.dir;">&id.heading;</th>
+        <th chromedir="&locale.dir;" colspan="2">&date.heading;</th>
+      </tr>
+    </thead>
+    <tbody id="tbody">
+    </tbody>
+  </table>
 </div>
 <p id="noReports" style="display: none">&noReports.label;</p>
 <p id="noConfig" style="display: none">&noConfig.label;</p>
