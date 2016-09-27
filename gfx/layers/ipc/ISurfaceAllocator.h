@@ -40,7 +40,6 @@ class DataSourceSurface;
 namespace layers {
 
 class CompositableForwarder;
-class ShadowLayerForwarder;
 class TextureForwarder;
 
 class ShmemAllocator;
@@ -48,6 +47,7 @@ class ShmemSectionAllocator;
 class LegacySurfaceDescriptorAllocator;
 class ClientIPCAllocator;
 class HostIPCAllocator;
+class LayersIPCChannel;
 
 enum BufferCapabilities {
   DEFAULT_BUFFER_CAPS = 0,
@@ -91,9 +91,7 @@ public:
 
   virtual CompositableForwarder* AsCompositableForwarder() { return nullptr; }
 
-  virtual TextureForwarder* AsTextureForwarder() { return nullptr; }
-
-  virtual ShadowLayerForwarder* AsLayerForwarder() { return nullptr; }
+  virtual TextureForwarder* GetTextureForwarder() { return nullptr; }
 
   virtual ClientIPCAllocator* AsClientAllocator() { return nullptr; }
 
@@ -299,7 +297,7 @@ public:
     uint32_t mSize;
   };
 
-  explicit FixedSizeSmallShmemSectionAllocator(ClientIPCAllocator* aShmProvider);
+  explicit FixedSizeSmallShmemSectionAllocator(LayersIPCChannel* aShmProvider);
 
   ~FixedSizeSmallShmemSectionAllocator();
 
@@ -314,13 +312,11 @@ public:
 
   void ShrinkShmemSectionHeap();
 
-  ShmemAllocator* GetShmAllocator() { return mShmProvider->AsShmemAllocator(); }
-
-  bool IPCOpen() const { return mShmProvider->IPCOpen(); }
+  bool IPCOpen() const;
 
 protected:
   std::vector<mozilla::ipc::Shmem> mUsedShmems;
-  ClientIPCAllocator* mShmProvider;
+  LayersIPCChannel* mShmProvider;
 };
 
 } // namespace layers

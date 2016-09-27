@@ -31,7 +31,7 @@ public:
 
   virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
 
-  virtual TextureClient* GetTextureClient(TextureForwarder* aForwarder) override;
+  virtual TextureClient* GetTextureClient(KnowsCompositor* aForwarder) override;
 
   virtual MacIOSurfaceImage* AsMacIOSurfaceImage() override {
     return this;

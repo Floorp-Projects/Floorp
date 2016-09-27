@@ -9,6 +9,8 @@ try {
 }
 assertEq(caught, true);
 
+assertErrorMessage(() => wasmBinaryToText(wasmTextToBinary(`(module (func (result i32) (f32.const 13.37)))`)), WebAssembly.CompileError, /type mismatch/);
+
 function runTest(code) {
   var expected = wasmTextToBinary(code);
   var s = wasmBinaryToText(expected);

@@ -51,30 +51,30 @@ public:
 
   virtual bool BorrowMappedData(MappedTextureData& aMap) override;
 
-  virtual void Deallocate(ClientIPCAllocator*) override;
+  virtual void Deallocate(LayersIPCChannel*) override;
 
-  virtual void Forget(ClientIPCAllocator*) override;
+  virtual void Forget(LayersIPCChannel*) override;
 
   static GrallocTextureData* CreateForDrawing(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                                               gfx::BackendType aMoz2dBackend,
-                                              ClientIPCAllocator* aAllocator);
+                                              LayersIPCChannel* aAllocator);
 
   static GrallocTextureData* CreateForYCbCr(gfx::IntSize aYSize, gfx::IntSize aCbCrSize,
-                                            ClientIPCAllocator* aAllocator);
+                                            LayersIPCChannel* aAllocator);
 
   static GrallocTextureData* CreateForGLRendering(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                                                  ClientIPCAllocator* aAllocator);
+                                                  LayersIPCChannel* aAllocator);
 
   static GrallocTextureData* Create(gfx::IntSize aSize, AndroidFormat aFormat,
                                     gfx::BackendType aMoz2DBackend, uint32_t aUsage,
-                                    ClientIPCAllocator* aAllocator);
+                                    LayersIPCChannel* aAllocator);
 
 
   static already_AddRefed<TextureClient>
   TextureClientFromSharedSurface(gl::SharedSurface* abstractSurf, TextureFlags flags);
 
   virtual TextureData*
-  CreateSimilar(ClientIPCAllocator* aAllocator,
+  CreateSimilar(LayersIPCChannel* aAllocator,
                 TextureFlags aFlags = TextureFlags::DEFAULT,
                 TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
 

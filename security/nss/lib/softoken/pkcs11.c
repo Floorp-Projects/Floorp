@@ -1795,24 +1795,26 @@ sftk_GetPubKey(SFTKObject *object, CK_KEY_TYPE key_type,
             crv = sftk_Attribute2SSecItem(arena, &pubKey->u.ec.publicValue,
                                           object, CKA_EC_POINT);
             if (crv == CKR_OK) {
-                unsigned int keyLen, curveLen;
+                unsigned int keyLen = pubKey->u.ec.ecParams.pointSize;
 
-                curveLen = (pubKey->u.ec.ecParams.fieldID.size + 7) / 8;
-                keyLen = (2 * curveLen) + 1;
+                /* special note: We can't just use the first byte to distinguish
+                 * between EC_POINT_FORM_UNCOMPRESSED and SEC_ASN1_OCTET_STRING.
+                 * Both are 0x04. */
 
-                /* special note: We can't just use the first byte to determine
-                 * between these 2 cases because both EC_POINT_FORM_UNCOMPRESSED
-                 * and SEC_ASN1_OCTET_STRING are 0x04 */
-
-                /* handle the non-DER encoded case (UNCOMPRESSED only) */
-                if (pubKey->u.ec.publicValue.data[0] == EC_POINT_FORM_UNCOMPRESSED && pubKey->u.ec.publicValue.len == keyLen) {
+                /* Handle the non-DER encoded case.
+                 * Some curves are always pressumed to be non-DER.
+                 */
+                if (pubKey->u.ec.publicValue.len == keyLen &&
+                    (pubKey->u.ec.ecParams.fieldID.type == ec_field_plain ||
+                     pubKey->u.ec.publicValue.data[0] == EC_POINT_FORM_UNCOMPRESSED)) {
                     break; /* key was not DER encoded, no need to unwrap */
                 }
 
-                /* if we ever support compressed, handle it here */
+                PORT_Assert(pubKey->u.ec.ecParams.name != ECCurve25519);
 
                 /* handle the encoded case */
-                if ((pubKey->u.ec.publicValue.data[0] == SEC_ASN1_OCTET_STRING) && pubKey->u.ec.publicValue.len > keyLen) {
+                if ((pubKey->u.ec.publicValue.data[0] == SEC_ASN1_OCTET_STRING) &&
+                    pubKey->u.ec.publicValue.len > keyLen) {
                     SECItem publicValue;
                     SECStatus rv;
 

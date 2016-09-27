@@ -20,8 +20,8 @@
 #include "mozilla/dom/Element.h"
 #include "nsSVGElement.h"
 #include "mozilla/dom/SVGDocumentBinding.h"
-#include "mozilla/StyleSheetHandle.h"
-#include "mozilla/StyleSheetHandleInlines.h"
+#include "mozilla/StyleSheet.h"
+#include "mozilla/StyleSheetInlines.h"
 
 using namespace mozilla::css;
 using namespace mozilla::dom;
@@ -157,7 +157,7 @@ SVGDocument::EnsureNonSVGUserAgentStyleSheetsLoaded()
             nsCOMPtr<nsIURI> uri;
             NS_NewURI(getter_AddRefs(uri), spec);
             if (uri) {
-              StyleSheetHandle::RefPtr sheet;
+              RefPtr<StyleSheet> sheet;
               cssLoader->LoadSheetSync(uri,
                                        mozilla::css::eAgentSheetFeatures,
                                        true, &sheet);
@@ -173,7 +173,7 @@ SVGDocument::EnsureNonSVGUserAgentStyleSheetsLoaded()
 
   auto cache = nsLayoutStylesheetCache::For(GetStyleBackendType());
 
-  StyleSheetHandle sheet = cache->NumberControlSheet();
+  StyleSheet* sheet = cache->NumberControlSheet();
   if (sheet) {
     // number-control.css can be behind a pref
     EnsureOnDemandBuiltInUASheet(sheet);

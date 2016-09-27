@@ -1436,10 +1436,8 @@ nsLocalFile::GetParent(nsIFile** aParent)
 
   // <brendan, after jband> I promise to play nice
   char* buffer = mPath.BeginWriting();
-  char* slashp = buffer;
-
   // find the last significant slash in buffer
-  slashp = strrchr(buffer, '/');
+  char* slashp = strrchr(buffer, '/');
   NS_ASSERTION(slashp, "non-canonical path?");
   if (!slashp) {
     return NS_ERROR_FILE_INVALID_PATH;

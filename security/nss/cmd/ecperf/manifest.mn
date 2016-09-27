@@ -11,12 +11,6 @@ MODULE = nss
 
 INCLUDES += -I$(CORE_DEPTH)/nss/lib/softoken
 
-# This next line is used by .mk files
-# and gets translated into $LINCS in manifest.mnw
-REQUIRES = dbm seccmd
-
-# DIRS =
-
 CSRCS = ecperf.c
 
 PROGRAM = ecperf

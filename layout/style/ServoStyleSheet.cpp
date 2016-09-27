@@ -24,21 +24,9 @@ ServoStyleSheet::~ServoStyleSheet()
 }
 
 bool
-ServoStyleSheet::IsApplicable() const
-{
-  return !mDisabled && mComplete;
-}
-
-bool
 ServoStyleSheet::HasRules() const
 {
-  return Servo_StyleSheet_HasRules(RawSheet());
-}
-
-nsIDocument*
-ServoStyleSheet::GetOwningDocument() const
-{
-  return mDocument;
+  return mSheet && Servo_StyleSheet_HasRules(mSheet);
 }
 
 void
@@ -50,7 +38,7 @@ ServoStyleSheet::SetOwningDocument(nsIDocument* aDocument)
   mDocument = aDocument;
 }
 
-StyleSheetHandle
+ServoStyleSheet*
 ServoStyleSheet::GetParentSheet() const
 {
   // XXXheycam: When we implement support for child sheets, we'll have
@@ -60,7 +48,7 @@ ServoStyleSheet::GetParentSheet() const
 }
 
 void
-ServoStyleSheet::AppendStyleSheet(StyleSheetHandle aSheet)
+ServoStyleSheet::AppendStyleSheet(ServoStyleSheet* aSheet)
 {
   // XXXheycam: When we implement support for child sheets, we'll have
   // to fix SetOwningDocument to propagate the owning document down

@@ -8,7 +8,7 @@
 
 
 #include "nsISupports.h"
-#include "mozilla/StyleSheetHandle.h"
+#include "mozilla/StyleSheet.h"
 
 class nsICSSLoaderObserver;
 class nsIURI;
@@ -28,14 +28,14 @@ public:
    * @param aStyleSheet the style sheet associated with this
    *                    element.
    */
-  NS_IMETHOD SetStyleSheet(mozilla::StyleSheetHandle aStyleSheet) = 0;
+  NS_IMETHOD SetStyleSheet(mozilla::StyleSheet* aStyleSheet) = 0;
 
   /**
    * Used to obtain the style sheet linked in by this element.
    *
    * @return the style sheet associated with this element.
    */
-  NS_IMETHOD_(mozilla::StyleSheetHandle) GetStyleSheet() = 0;
+  NS_IMETHOD_(mozilla::StyleSheet*) GetStyleSheet() = 0;
 
   /**
    * Initialize the stylesheet linking element. If aDontLoadStyle is

@@ -36,6 +36,8 @@ using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
 
+using mozilla::IsNaN;
+
 void
 Val::writePayload(uint8_t* dst) const
 {
@@ -206,11 +208,9 @@ UModI64(uint32_t x_hi, uint32_t x_lo, uint32_t y_hi, uint32_t y_lo)
 static int64_t
 TruncateDoubleToInt64(double input)
 {
-    // Note: INT64_MAX is not representable in double. It is actually INT64_MAX + 1.
-    // Therefore also sending the failure value.
-    if (input >= double(INT64_MAX))
-        return 0x8000000000000000;
-    if (input < double(INT64_MIN))
+    // Note: INT64_MAX is not representable in double. It is actually
+    // INT64_MAX + 1.  Therefore also sending the failure value.
+    if (input >= double(INT64_MAX) || input < double(INT64_MIN) || IsNaN(input))
         return 0x8000000000000000;
     return int64_t(input);
 }
@@ -220,9 +220,7 @@ TruncateDoubleToUint64(double input)
 {
     // Note: UINT64_MAX is not representable in double. It is actually UINT64_MAX + 1.
     // Therefore also sending the failure value.
-    if (input >= double(UINT64_MAX))
-        return 0x8000000000000000;
-    if (input <= -1.0)
+    if (input >= double(UINT64_MAX) || input <= -1.0 || IsNaN(input))
         return 0x8000000000000000;
     return uint64_t(input);
 }
