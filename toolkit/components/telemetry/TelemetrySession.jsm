@@ -96,10 +96,6 @@ const SCHEDULER_MIDNIGHT_TOLERANCE_MS = 15 * 60 * 1000;
 // start asynchronous tasks to gather data.
 const IDLE_TIMEOUT_SECONDS = Preferences.get("toolkit.telemetry.idleTimeout", 5 * 60);
 
-// To avoid generating too many main pings, we ignore environment changes that
-// happen within this interval since the last main ping.
-const CHANGE_THROTTLE_INTERVAL_MS = 5 * 60 * 1000;
-
 // The frequency at which we persist session data to the disk to prevent data loss
 // in case of aborted sessions (currently 5 minutes).
 const ABORTED_SESSION_UPDATE_INTERVAL_MS = 5 * 60 * 1000;
@@ -603,7 +599,6 @@ this.TelemetrySession = Object.freeze({
     Impl._profileSubsessionCounter = 0;
     Impl._subsessionStartActiveTicks = 0;
     Impl._subsessionStartTimeMonotonic = 0;
-    Impl._lastEnvironmentChangeDate = Policy.monotonicNow();
     this.testUninstall();
   },
   /**
@@ -713,7 +708,6 @@ var Impl = {
   _childrenToHearFrom: null,
   // monotonically-increasing id for USS reports
   _nextTotalMemoryId: 1,
-  _lastEnvironmentChangeDate: 0,
 
 
   get _log() {
@@ -1517,8 +1511,6 @@ var Impl = {
             yield this._saveAbortedSessionPing();
           }
 
-          // The last change date for the environment, used to throttle environment changes.
-          this._lastEnvironmentChangeDate = Policy.monotonicNow();
           TelemetryEnvironment.registerChangeListener(ENVIRONMENT_CHANGE_LISTENER,
                                  (reason, data) => this._onEnvironmentChange(reason, data));
 
@@ -2043,16 +2035,8 @@ var Impl = {
 
   _onEnvironmentChange: function(reason, oldEnvironment) {
     this._log.trace("_onEnvironmentChange", reason);
-
-    let now = Policy.monotonicNow();
-    let timeDelta = now - this._lastEnvironmentChangeDate;
-    if (timeDelta <= CHANGE_THROTTLE_INTERVAL_MS) {
-      this._log.trace(`_onEnvironmentChange - throttling; last change was ${Math.round(timeDelta / 1000)}s ago.`);
-      return;
-    }
-
-    this._lastEnvironmentChangeDate = now;
     let payload = this.getSessionPayload(REASON_ENVIRONMENT_CHANGE, true);
+
     TelemetryScheduler.reschedulePings(REASON_ENVIRONMENT_CHANGE, payload);
 
     let options = {
