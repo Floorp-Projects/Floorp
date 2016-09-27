@@ -29,7 +29,6 @@ ConsoleApiCall.propTypes = {
   onViewSourceInDebugger: PropTypes.func.isRequired,
   open: PropTypes.bool,
   hudProxyClient: PropTypes.object.isRequired,
-  tableData: PropTypes.array,
 };
 
 ConsoleApiCall.defaultProps = {
