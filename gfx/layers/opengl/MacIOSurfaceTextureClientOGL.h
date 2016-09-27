@@ -35,9 +35,9 @@ public:
 
   virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
 
-  virtual void Deallocate(ClientIPCAllocator*) override;
+  virtual void Deallocate(LayersIPCChannel*) override;
 
-  virtual void Forget(ClientIPCAllocator*) override;
+  virtual void Forget(LayersIPCChannel*) override;
 
   virtual bool UpdateFromSurface(gfx::SourceSurface* aSurface) override;
 

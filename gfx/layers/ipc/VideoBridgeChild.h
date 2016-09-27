@@ -15,10 +15,13 @@ namespace layers {
 
 class VideoBridgeChild final : public PVideoBridgeChild
                              , public TextureForwarder
-                             , public ShmemAllocator
+                             , public KnowsCompositor
 {
 public:
-  ~VideoBridgeChild();
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoBridgeChild, override);
+
+  TextureForwarder* GetTextureForwarder() override { return this; }
+  LayersIPCActor* GetLayersIPCActor() override { return this; }
 
   static void Startup();
   static void Shutdown();
@@ -53,13 +56,13 @@ public:
   void CancelWaitForRecycle(uint64_t aTextureId) override { MOZ_ASSERT(false, "NO RECYCLING HERE"); }
 
   // ISurfaceAllocator
-  ShmemAllocator* AsShmemAllocator() override { return this; }
   bool IsSameProcess() const override;
 
   bool CanSend() { return true; }
 
 private:
   VideoBridgeChild();
+  ~VideoBridgeChild();
 
   MessageLoop* mMessageLoop;
 };

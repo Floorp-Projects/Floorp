@@ -53,7 +53,7 @@ D3D11ShareHandleImage::GetSize()
 }
 
 TextureClient*
-D3D11ShareHandleImage::GetTextureClient(TextureForwarder* aForwarder)
+D3D11ShareHandleImage::GetTextureClient(KnowsCompositor* aForwarder)
 {
   return mTextureClient;
 }
@@ -142,7 +142,7 @@ D3D11RecycleAllocator::Allocate(gfx::SurfaceFormat aFormat,
 {
   return CreateD3D11TextureClientWithDevice(aSize, aFormat,
                                             aTextureFlags, aAllocFlags,
-                                            mDevice, mSurfaceAllocator);
+                                            mDevice, mSurfaceAllocator->GetTextureForwarder());
 }
 
 already_AddRefed<TextureClient>

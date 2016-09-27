@@ -19,8 +19,8 @@
 #include "nsStyleSet.h"
 #include "mozilla/dom/URL.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/StyleSheetHandle.h"
-#include "mozilla/StyleSheetHandleInlines.h"
+#include "mozilla/StyleSheet.h"
+#include "mozilla/StyleSheetInlines.h"
 
 using namespace mozilla;
 using mozilla::dom::IsChromeURI;
@@ -84,18 +84,18 @@ nsXBLPrototypeResources::FlushSkinSheets()
   // skin sheets can't be, and which in any case don't have a usable
   // URL to reload.)
 
-  nsTArray<StyleSheetHandle::RefPtr> oldSheets;
+  nsTArray<RefPtr<StyleSheet>> oldSheets;
 
   oldSheets.SwapElements(mStyleSheetList);
 
   mozilla::css::Loader* cssLoader = doc->CSSLoader();
 
   for (size_t i = 0, count = oldSheets.Length(); i < count; ++i) {
-    StyleSheetHandle oldSheet = oldSheets[i];
+    StyleSheet* oldSheet = oldSheets[i];
 
     nsIURI* uri = oldSheet->GetSheetURI();
 
-    StyleSheetHandle::RefPtr newSheet;
+    RefPtr<StyleSheet> newSheet;
     if (!oldSheet->IsInline() && IsChromeURI(uri)) {
       if (NS_FAILED(cssLoader->LoadSheetSync(uri, &newSheet)))
         continue;
@@ -147,7 +147,7 @@ void
 nsXBLPrototypeResources::GatherRuleProcessor()
 {
   nsTArray<RefPtr<CSSStyleSheet>> sheets(mStyleSheetList.Length());
-  for (StyleSheetHandle sheet : mStyleSheetList) {
+  for (StyleSheet* sheet : mStyleSheetList) {
     MOZ_ASSERT(sheet->IsGecko(),
                "GatherRuleProcessor must only be called for "
                "nsXBLPrototypeResources objects with Gecko-flavored style "
@@ -161,24 +161,24 @@ nsXBLPrototypeResources::GatherRuleProcessor()
 }
 
 void
-nsXBLPrototypeResources::AppendStyleSheet(StyleSheetHandle aSheet)
+nsXBLPrototypeResources::AppendStyleSheet(StyleSheet* aSheet)
 {
   mStyleSheetList.AppendElement(aSheet);
 }
 
 void
-nsXBLPrototypeResources::RemoveStyleSheet(StyleSheetHandle aSheet)
+nsXBLPrototypeResources::RemoveStyleSheet(StyleSheet* aSheet)
 {
   mStyleSheetList.RemoveElement(aSheet);
 }
 
 void
-nsXBLPrototypeResources::InsertStyleSheetAt(size_t aIndex, StyleSheetHandle aSheet)
+nsXBLPrototypeResources::InsertStyleSheetAt(size_t aIndex, StyleSheet* aSheet)
 {
   mStyleSheetList.InsertElementAt(aIndex, aSheet);
 }
 
-StyleSheetHandle
+StyleSheet*
 nsXBLPrototypeResources::StyleSheetAt(size_t aIndex) const
 {
   return mStyleSheetList[aIndex];
@@ -198,7 +198,7 @@ nsXBLPrototypeResources::HasStyleSheets() const
 
 void
 nsXBLPrototypeResources::AppendStyleSheetsTo(
-                                      nsTArray<StyleSheetHandle>& aResult) const
+                                      nsTArray<StyleSheet*>& aResult) const
 {
   aResult.AppendElements(mStyleSheetList);
 }

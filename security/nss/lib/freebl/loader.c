@@ -813,21 +813,16 @@ BL_Unload(void)
      * from NSS_Shutdown. */
     char *disableUnload = NULL;
     vector = NULL;
-    /* If an SSL socket is configured with SSL_BYPASS_PKCS11, but the application
-     * never does a handshake on it, BL_Unload will be called even though freebl
-     * was never loaded. So, don't assert blLib. */
-    if (blLib) {
-        disableUnload = PR_GetEnvSecure("NSS_DISABLE_UNLOAD");
-        if (!disableUnload) {
+    disableUnload = PR_GetEnvSecure("NSS_DISABLE_UNLOAD");
+    if (!disableUnload) {
 #ifdef DEBUG
-            PRStatus status = PR_UnloadLibrary(blLib);
-            PORT_Assert(PR_SUCCESS == status);
+        PRStatus status = PR_UnloadLibrary(blLib);
+        PORT_Assert(PR_SUCCESS == status);
 #else
-            PR_UnloadLibrary(blLib);
+        PR_UnloadLibrary(blLib);
 #endif
-        }
-        blLib = NULL;
     }
+    blLib = NULL;
     loadFreeBLOnce = pristineCallOnce;
 }
 

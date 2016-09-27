@@ -2687,17 +2687,15 @@ Simulator::softwareInterrupt(SimInstruction* instr)
 void
 Simulator::canonicalizeNaN(double* value)
 {
-    *value = !JitOptions.wasmTestMode && FPSCR_default_NaN_mode_
-             ? JS::CanonicalizeNaN(*value)
-             : *value;
+    if (!JitOptions.wasmTestMode && FPSCR_default_NaN_mode_)
+        *value = JS::CanonicalizeNaN(*value);
 }
 
 void
 Simulator::canonicalizeNaN(float* value)
 {
-    *value = !JitOptions.wasmTestMode && FPSCR_default_NaN_mode_
-             ? JS::CanonicalizeNaN(*value)
-             : *value;
+    if (!JitOptions.wasmTestMode && FPSCR_default_NaN_mode_)
+        *value = JS::CanonicalizeNaN(*value);
 }
 
 // Stop helper functions.

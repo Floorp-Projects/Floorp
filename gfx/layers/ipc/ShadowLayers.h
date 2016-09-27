@@ -17,7 +17,9 @@
 #include "mozilla/dom/ScreenOrientation.h"  // for ScreenOrientation
 #include "mozilla/ipc/SharedMemory.h"   // for SharedMemory, etc
 #include "mozilla/layers/CompositableForwarder.h"
+#include "mozilla/layers/TextureForwarder.h"
 #include "mozilla/layers/CompositorTypes.h"  // for OpenMode, etc
+#include "mozilla/layers/CompositorBridgeChild.h"
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsRegion.h"                   // for nsIntRegion
 #include "nsTArrayForwardDeclare.h"     // for InfallibleTArray
@@ -116,39 +118,21 @@ class Transaction;
  * from the content thread. (See CompositableForwarder.h and ImageBridgeChild.h)
  */
 
-class ShadowLayerForwarder final : public CompositableForwarder
-                                 , public ShmemAllocator
+class ShadowLayerForwarder final : public LayersIPCActor
+                                 , public CompositableForwarder
                                  , public LegacySurfaceDescriptorAllocator
 {
   friend class ClientLayerManager;
 
 public:
-  virtual ~ShadowLayerForwarder();
-
-  virtual ShmemAllocator* AsShmemAllocator() override { return this; }
-
-  virtual ShadowLayerForwarder* AsLayerForwarder() override { return this; }
-
-  // TODO: confusingly, this returns a pointer to the CompositorBridgeChild.
-  // Right now ShadowLayerForwarder inherits TextureForwarder but it would
-  // probably be best if it didn't, since it forwards all of the relevent
-  // methods to CompositorBridgeChild.
-  virtual TextureForwarder* AsTextureForwarder() override;
-
-  virtual LegacySurfaceDescriptorAllocator*
-  AsLegacySurfaceDescriptorAllocator() override { return this; }
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ShadowLayerForwarder, override);
 
   /**
    * Setup the IPDL actor for aCompositable to be part of layers
    * transactions.
    */
-  virtual void Connect(CompositableClient* aCompositable,
-                       ImageContainer* aImageContainer) override;
-
-  virtual PTextureChild* CreateTexture(const SurfaceDescriptor& aSharedData,
-                                       LayersBackend aLayersBackend,
-                                       TextureFlags aFlags,
-                                       uint64_t aSerial) override;
+  void Connect(CompositableClient* aCompositable,
+               ImageContainer* aImageContainer) override;
 
   /**
    * Adds an edit in the layers transaction in order to attach
@@ -230,11 +214,11 @@ public:
   /**
    * See CompositableForwarder::UseTiledLayerBuffer
    */
-  virtual void UseTiledLayerBuffer(CompositableClient* aCompositable,
+  void UseTiledLayerBuffer(CompositableClient* aCompositable,
                                    const SurfaceDescriptorTiles& aTileLayerDescriptor) override;
 
-  virtual bool DestroyInTransaction(PTextureChild* aTexture, bool synchronously) override;
-  virtual bool DestroyInTransaction(PCompositableChild* aCompositable, bool synchronously) override;
+  bool DestroyInTransaction(PTextureChild* aTexture, bool synchronously) override;
+  bool DestroyInTransaction(PCompositableChild* aCompositable, bool synchronously) override;
 
   virtual void RemoveTextureFromCompositable(CompositableClient* aCompositable,
                                              TextureClient* aTexture) override;
@@ -344,24 +328,7 @@ public:
    *   buffer, and the double-buffer pair is gone.
    */
 
-
-  virtual bool AllocUnsafeShmem(size_t aSize,
-                                mozilla::ipc::SharedMemory::SharedMemoryType aType,
-                                mozilla::ipc::Shmem* aShmem) override;
-  virtual bool AllocShmem(size_t aSize,
-                          mozilla::ipc::SharedMemory::SharedMemoryType aType,
-                          mozilla::ipc::Shmem* aShmem) override;
-  virtual void DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
-
   virtual bool IPCOpen() const override;
-
-  virtual bool IsSameProcess() const override;
-
-  virtual MessageLoop* GetMessageLoop() const override { return mMessageLoop; }
-
-  virtual void CancelWaitForRecycle(uint64_t aTextureId) override;
-
-  virtual base::ProcessId GetParentPid() const override;
 
   /**
    * Construct a shadow of |aLayer| on the "other side", at the
@@ -401,7 +368,12 @@ public:
   // Returns true if aSurface wraps a Shmem.
   static bool IsShmem(SurfaceDescriptor* aSurface);
 
+  TextureForwarder* GetTextureForwarder() override { return GetCompositorBridgeChild(); }
+  LayersIPCActor* GetLayersIPCActor() override { return this; }
+
 protected:
+  virtual ~ShadowLayerForwarder();
+
   explicit ShadowLayerForwarder(ClientLayerManager* aClientLayerManager);
 
 #ifdef DEBUG
