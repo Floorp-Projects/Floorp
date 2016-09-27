@@ -943,12 +943,12 @@ final class GeckoEditable extends JNIObject
             // cases, and we don't want to unregister an event that was not registered.
             mGeckoFocused = false;
             mSuppressCompositions = false;
-            EventDispatcher.getInstance().
+            GeckoAppShell.getGeckoInterface().getAppEventDispatcher().
                 unregisterGeckoThreadListener(this, "TextSelection:DraggingHandle");
         } else if (type == NOTIFY_IME_OF_FOCUS) {
             mGeckoFocused = true;
             mSuppressCompositions = false;
-            EventDispatcher.getInstance().
+            GeckoAppShell.getGeckoInterface().getAppEventDispatcher().
                 registerGeckoThreadListener(this, "TextSelection:DraggingHandle");
         }
     }

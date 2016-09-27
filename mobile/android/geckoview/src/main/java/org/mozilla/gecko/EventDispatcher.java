@@ -32,7 +32,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @RobocopTarget
 public final class EventDispatcher {
     private static final String LOGTAG = "GeckoEventDispatcher";
-    private static final String GUID = "__guid__";
+    /* package */ static final String GUID = "__guid__";
     private static final String STATUS_ERROR = "error";
     private static final String STATUS_SUCCESS = "success";
 
@@ -63,7 +63,7 @@ public final class EventDispatcher {
         return INSTANCE;
     }
 
-    private EventDispatcher() {
+    public EventDispatcher() {
     }
 
     private <T> void registerListener(final Class<?> listType,
@@ -191,18 +191,31 @@ public final class EventDispatcher {
         unregisterListener(mBackgroundThreadListeners, listener, events);
     }
 
-    public void dispatchEvent(final NativeJSContainer message) {
-        // First try native listeners.
-        final String type = message.optString("type", null);
-        if (type == null) {
-            Log.e(LOGTAG, "JSON message must have a type property");
-            return;
-        }
-
+    private List<NativeEventListener> getNativeListeners(final String type) {
         final List<NativeEventListener> listeners;
         synchronized (mGeckoThreadNativeListeners) {
             listeners = mGeckoThreadNativeListeners.get(type);
         }
+        return listeners;
+    }
+
+    private List<GeckoEventListener> getGeckoListeners(final String type) {
+        final List<GeckoEventListener> listeners;
+        synchronized (mGeckoThreadJSONListeners) {
+            listeners = mGeckoThreadJSONListeners.get(type);
+        }
+        return listeners;
+    }
+
+    public boolean dispatchEvent(final NativeJSContainer message) {
+        // First try native listeners.
+        final String type = message.optString("type", null);
+        if (type == null) {
+            Log.e(LOGTAG, "JSON message must have a type property");
+            return true; // It may seem odd to return true here, but it's necessary to preserve the correct behavior.
+        }
+
+        final List<NativeEventListener> listeners = getNativeListeners(type);
 
         final String guid = message.optString(GUID, null);
         EventCallback callback = null;
@@ -214,11 +227,11 @@ public final class EventDispatcher {
             if (listeners.isEmpty()) {
                 Log.w(LOGTAG, "No listeners for " + type);
 
-                // There were native listeners, and they're gone.  Dispatch an error rather than
-                // looking for JSON listeners.
-                if (callback != null) {
-                    callback.sendError("No listeners for request");
-                }
+                // There were native listeners, and they're gone.  Return a failure rather than
+                // looking for JSON listeners. This is an optimization, as we can safely assume
+                // that an event which previously had native listeners will never have JSON
+                // listeners.
+                return false;
             }
             try {
                 for (final NativeEventListener listener : listeners) {
@@ -229,7 +242,7 @@ public final class EventDispatcher {
             }
             // If we found native listeners, we assume we don't have any other types of listeners
             // and return early. This assumption is checked when registering listeners.
-            return;
+            return true;
         }
 
         // Check for thread event listeners before checking for JSON event listeners,
@@ -238,17 +251,19 @@ public final class EventDispatcher {
         if (dispatchToThreads(type, message, /* bundle */ null, callback)) {
             // If we found thread listeners, we assume we don't have any other types of listeners
             // and return early. This assumption is checked when registering listeners.
-            return;
+            return true;
         }
 
         try {
             // If we didn't find native listeners, try JSON listeners.
-            dispatchEvent(new JSONObject(message.toString()), callback);
+            return dispatchEvent(new JSONObject(message.toString()), callback);
         } catch (final JSONException e) {
             Log.e(LOGTAG, "Cannot parse JSON", e);
         } catch (final UnsupportedOperationException e) {
             Log.e(LOGTAG, "Cannot convert message to JSON", e);
         }
+
+        return true;
     }
 
     /**
@@ -315,7 +330,7 @@ public final class EventDispatcher {
         }
 
         if (jsMessage == null) {
-            Log.w(LOGTAG, "No listeners for " + type);
+            Log.w(LOGTAG, "No listeners for " + type + " in dispatchToThreads");
         }
 
         if (!AppConstants.RELEASE_BUILD && jsMessage == null) {
@@ -355,14 +370,10 @@ public final class EventDispatcher {
             }
 
             if (listeners.isEmpty()) {
-                Log.w(LOGTAG, "No listeners for " + type);
+                Log.w(LOGTAG, "No listeners for " + type + " in dispatchToThread");
 
                 // There were native listeners, and they're gone.
-                // Dispatch an error rather than looking for more listeners.
-                if (callback != null) {
-                    callback.sendError("No listeners for request");
-                }
-                return true;
+                return false;
             }
 
             final Bundle messageAsBundle;
@@ -386,7 +397,7 @@ public final class EventDispatcher {
         }
     }
 
-    public void dispatchEvent(final JSONObject message, final EventCallback callback) {
+    public boolean dispatchEvent(final JSONObject message, final EventCallback callback) {
         // {
         //   "type": "value",
         //   "event_specific": "value",
@@ -394,25 +405,22 @@ public final class EventDispatcher {
         try {
             final String type = message.getString("type");
 
-            List<GeckoEventListener> listeners;
-            synchronized (mGeckoThreadJSONListeners) {
-                listeners = mGeckoThreadJSONListeners.get(type);
-            }
-            if (listeners == null || listeners.isEmpty()) {
-                Log.w(LOGTAG, "No listeners for " + type);
+            final List<GeckoEventListener> listeners = getGeckoListeners(type);
 
-                // If there are no listeners, dispatch an error.
-                if (callback != null) {
-                    callback.sendError("No listeners for request");
-                }
-                return;
+            if (listeners == null || listeners.isEmpty()) {
+                Log.w(LOGTAG, "No listeners for " + type + " in dispatchEvent");
+
+                return false;
             }
+
             for (final GeckoEventListener listener : listeners) {
                 listener.handleMessage(type, message);
             }
         } catch (final JSONException e) {
             Log.e(LOGTAG, "handleGeckoMessage throws " + e, e);
         }
+
+        return true;
     }
 
     @RobocopTarget
@@ -446,7 +454,7 @@ public final class EventDispatcher {
         }
     }
 
-    private static class GeckoEventCallback implements EventCallback {
+    /* package */ static class GeckoEventCallback implements EventCallback {
         private final String guid;
         private final String type;
         private boolean sent;

@@ -42,7 +42,7 @@ public class DoorHangerPopup extends AnchoredPopup
 
         mDoorHangers = new HashSet<DoorHanger>();
 
-        EventDispatcher.getInstance().registerGeckoThreadListener(this,
+        GeckoApp.getEventDispatcher().registerGeckoThreadListener(this,
             "Doorhanger:Add",
             "Doorhanger:Remove");
         Tabs.registerOnTabsChangedListener(this);
@@ -51,7 +51,7 @@ public class DoorHangerPopup extends AnchoredPopup
     }
 
     void destroy() {
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
+        GeckoApp.getEventDispatcher().unregisterGeckoThreadListener(this,
             "Doorhanger:Add",
             "Doorhanger:Remove");
         Tabs.unregisterOnTabsChangedListener(this);

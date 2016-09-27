@@ -9,6 +9,7 @@ import org.json.JSONObject;
 
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.db.BrowserDB;
@@ -35,12 +36,12 @@ public final class ReadingListHelper implements NativeEventListener {
         this.context = context;
         this.db = BrowserDB.from(profile);
 
-        EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener) this,
+        GeckoApp.getEventDispatcher().registerGeckoThreadListener((NativeEventListener) this,
             "Reader:FaviconRequest", "Reader:AddedToCache");
     }
 
     public void uninit() {
-        EventDispatcher.getInstance().unregisterGeckoThreadListener((NativeEventListener) this,
+        GeckoApp.getEventDispatcher().unregisterGeckoThreadListener((NativeEventListener) this,
             "Reader:FaviconRequest", "Reader:AddedToCache");
     }
 
