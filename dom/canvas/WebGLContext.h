@@ -2147,8 +2147,8 @@ Intersect(uint32_t srcSize, int32_t dstStartInSrc, uint32_t dstSize,
 bool
 ZeroTextureData(WebGLContext* webgl, const char* funcName, GLuint tex,
                 TexImageTarget target, uint32_t level,
-                const webgl::FormatUsageInfo* usage, uint32_t xOffset, uint32_t yOffset,
-                uint32_t zOffset, uint32_t width, uint32_t height, uint32_t depth);
+                const webgl::FormatUsageInfo* usage, uint32_t width, uint32_t height,
+                uint32_t depth);
 
 ////
 
