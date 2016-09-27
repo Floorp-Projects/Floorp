@@ -77,13 +77,13 @@ public:
     // Infallible.
     static UniquePtr<SurfaceFactory_IOSurface> Create(GLContext* gl,
                                                       const SurfaceCaps& caps,
-                                                      const RefPtr<layers::ClientIPCAllocator>& allocator,
+                                                      const RefPtr<layers::LayersIPCChannel>& allocator,
                                                       const layers::TextureFlags& flags);
 protected:
     const gfx::IntSize mMaxDims;
 
     SurfaceFactory_IOSurface(GLContext* gl, const SurfaceCaps& caps,
-                             const RefPtr<layers::ClientIPCAllocator>& allocator,
+                             const RefPtr<layers::LayersIPCChannel>& allocator,
                              const layers::TextureFlags& flags,
                              const gfx::IntSize& maxDims)
         : SurfaceFactory(SharedSurfaceType::IOSurface, gl, caps, allocator, flags)

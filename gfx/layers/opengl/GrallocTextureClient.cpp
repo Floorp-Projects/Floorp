@@ -110,7 +110,7 @@ GrallocTextureData::~GrallocTextureData()
 }
 
 void
-GrallocTextureData::Deallocate(ClientIPCAllocator* aAllocator)
+GrallocTextureData::Deallocate(LayersIPCChannel* aAllocator)
 {
   MOZ_ASSERT(aAllocator);
   if (aAllocator && aAllocator->IPCOpen()) {
@@ -122,7 +122,7 @@ GrallocTextureData::Deallocate(ClientIPCAllocator* aAllocator)
 }
 
 void
-GrallocTextureData::Forget(ClientIPCAllocator* aAllocator)
+GrallocTextureData::Forget(LayersIPCChannel* aAllocator)
 {
   MOZ_ASSERT(aAllocator);
   if (aAllocator && aAllocator->IPCOpen()) {
@@ -290,7 +290,7 @@ GrallocTextureData::UpdateFromSurface(gfx::SourceSurface* aSurface)
 GrallocTextureData*
 GrallocTextureData::Create(gfx::IntSize aSize, AndroidFormat aAndroidFormat,
                            gfx::BackendType aMoz2dBackend, uint32_t aUsage,
-                           ClientIPCAllocator* aAllocator)
+                           LayersIPCChannel* aAllocator)
 {
   if (!aAllocator || !aAllocator->IPCOpen()) {
     return nullptr;
@@ -345,7 +345,7 @@ GrallocTextureData::Create(gfx::IntSize aSize, AndroidFormat aAndroidFormat,
 GrallocTextureData*
 GrallocTextureData::CreateForDrawing(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                                      gfx::BackendType aMoz2dBackend,
-                                     ClientIPCAllocator* aAllocator)
+                                     LayersIPCChannel* aAllocator)
 {
   if (DisableGralloc(aFormat, aSize)) {
     return nullptr;
@@ -397,7 +397,7 @@ GrallocTextureData::GetTextureFlags() const
 // static
 GrallocTextureData*
 GrallocTextureData::CreateForYCbCr(gfx::IntSize aYSize, gfx::IntSize aCbCrSize,
-                                   ClientIPCAllocator* aAllocator)
+                                   LayersIPCChannel* aAllocator)
 {
   MOZ_ASSERT(aYSize.width == aCbCrSize.width * 2);
   MOZ_ASSERT(aYSize.height == aCbCrSize.height * 2);
@@ -410,7 +410,7 @@ GrallocTextureData::CreateForYCbCr(gfx::IntSize aYSize, gfx::IntSize aCbCrSize,
 // static
 GrallocTextureData*
 GrallocTextureData::CreateForGLRendering(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                                         ClientIPCAllocator* aAllocator)
+                                         LayersIPCChannel* aAllocator)
 {
   if (aFormat == gfx::SurfaceFormat::YUV) {
     return nullptr;
@@ -446,7 +446,7 @@ GrallocTextureData::TextureClientFromSharedSurface(gl::SharedSurface* abstractSu
 }
 
 TextureData*
-GrallocTextureData::CreateSimilar(ClientIPCAllocator* aAllocator,
+GrallocTextureData::CreateSimilar(LayersIPCChannel* aAllocator,
                                   TextureFlags aFlags,
                                   TextureAllocationFlags aAllocFlags) const
 {
