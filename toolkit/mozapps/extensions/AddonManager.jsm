@@ -2331,6 +2331,19 @@ var AddonManagerInternal = {
                                .installTemporaryAddon(aFile);
   },
 
+  installAddonFromSources: function(aFile) {
+    if (!gStarted)
+      throw Components.Exception("AddonManager is not initialized",
+                                 Cr.NS_ERROR_NOT_INITIALIZED);
+
+    if (!(aFile instanceof Ci.nsIFile))
+      throw Components.Exception("aFile must be a nsIFile",
+                                 Cr.NS_ERROR_INVALID_ARG);
+
+    return AddonManagerInternal._getProviderByName("XPIProvider")
+                               .installAddonFromSources(aFile);
+  },
+
   /**
    * Returns an Addon corresponding to an instance ID.
    * @param aInstanceID
@@ -3505,6 +3518,10 @@ this.AddonManager = {
 
   installTemporaryAddon: function(aDirectory) {
     return AddonManagerInternal.installTemporaryAddon(aDirectory);
+  },
+
+  installAddonFromSources: function(aDirectory) {
+    return AddonManagerInternal.installAddonFromSources(aDirectory);
   },
 
   getAddonByInstanceID: function(aInstanceID) {
