@@ -72,7 +72,6 @@ XPCOMUtils.defineLazyGetter(this, "DATAREPORTING_PATH", function() {
 });
 
 var gClientID = null;
-var gMonotonicNow = 0;
 
 function generateUUID() {
   let str = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID().toString();
@@ -539,7 +538,7 @@ add_task(function* test_simplePing() {
   let now = new Date(2020, 1, 1, 12, 0, 0);
   let expectedDate = new Date(2020, 1, 1, 0, 0, 0);
   fakeNow(now);
-  gMonotonicNow = fakeMonotonicNow(gMonotonicNow + 5000);
+  const monotonicStart = fakeMonotonicNow(5000);
 
   const expectedSessionUUID = "bd314d15-95bf-4356-b682-b6c4a8942202";
   const expectedSubsessionUUID = "3e2e5f6c-74ba-4e4d-a93f-a48af238a8c7";
@@ -550,7 +549,7 @@ add_task(function* test_simplePing() {
   // now fake the session duration.
   const SESSION_DURATION_IN_MINUTES = 15;
   fakeNow(new Date(2020, 1, 1, 12, SESSION_DURATION_IN_MINUTES, 0));
-  gMonotonicNow = fakeMonotonicNow(gMonotonicNow + SESSION_DURATION_IN_MINUTES * 60 * 1000);
+  fakeMonotonicNow(monotonicStart + SESSION_DURATION_IN_MINUTES * 60 * 1000);
 
   yield sendPing();
   let ping = yield PingServer.promiseNextPing();
@@ -1114,14 +1113,14 @@ add_task(function* test_environmentChange() {
     return;
   }
 
+  let now = new Date(2040, 1, 1, 12, 0, 0);
   let timerCallback = null;
   let timerDelay = null;
 
   yield TelemetryStorage.testClearPendingPings();
   PingServer.clearRequests();
 
-  let now = fakeNow(2040, 1, 1, 12, 0, 0);
-  gMonotonicNow = fakeMonotonicNow(gMonotonicNow + 10 * MILLISECONDS_PER_MINUTE);
+  fakeNow(now);
 
   const PREF_TEST = "toolkit.telemetry.test.pref1";
   Preferences.reset(PREF_TEST);
@@ -1148,9 +1147,9 @@ add_task(function* test_environmentChange() {
   keyed.add("b", 1);
 
   // Trigger and collect environment-change ping.
-  gMonotonicNow = fakeMonotonicNow(gMonotonicNow + 10 * MILLISECONDS_PER_MINUTE);
   let startDay = truncateDateToDays(now);
-  now = fakeNow(futureDate(now, 10 * MILLISECONDS_PER_MINUTE));
+  now = futureDate(now, 10 * MILLISECONDS_PER_MINUTE);
+  fakeNow(now);
 
   Preferences.set(PREF_TEST, 1);
   let ping = yield PingServer.promiseNextPing();
@@ -1167,8 +1166,8 @@ add_task(function* test_environmentChange() {
 
   // Trigger and collect another ping. The histograms should be reset.
   startDay = truncateDateToDays(now);
-  gMonotonicNow = fakeMonotonicNow(gMonotonicNow + 10 * MILLISECONDS_PER_MINUTE);
-  now = fakeNow(futureDate(now, 10 * MILLISECONDS_PER_MINUTE));
+  now = futureDate(now, 10 * MILLISECONDS_PER_MINUTE);
+  fakeNow(now);
 
   Preferences.set(PREF_TEST, 2);
   ping = yield PingServer.promiseNextPing();
@@ -1255,8 +1254,7 @@ add_task(function* test_savedSessionData() {
 
   // Watch a test preference, trigger and environment change and wait for it to propagate.
   // _watchPreferences triggers a subsession notification
-  let now = fakeNow(new Date(2050, 1, 1, 12, 0, 0));
-  gMonotonicNow = fakeMonotonicNow(gMonotonicNow + 10 * MILLISECONDS_PER_MINUTE);
+  fakeNow(new Date(2050, 1, 1, 12, 0, 0));
   TelemetryEnvironment.testWatchPreferences(PREFS_TO_WATCH);
   let changePromise = new Promise(resolve =>
     TelemetryEnvironment.registerChangeListener("test_fake_change", resolve));
@@ -1621,16 +1619,16 @@ add_task(function* test_schedulerEnvironmentReschedules() {
   yield TelemetryController.testReset();
 
   // Set a fake current date and start Telemetry.
-  let nowDate = fakeNow(2060, 10, 18, 0, 0, 0);
-  gMonotonicNow = fakeMonotonicNow(gMonotonicNow + 10 * MILLISECONDS_PER_MINUTE);
+  let nowDate = new Date(2060, 10, 18, 0, 0, 0);
+  fakeNow(nowDate);
   let schedulerTickCallback = null;
   fakeSchedulerTimer(callback => schedulerTickCallback = callback, () => {});
   yield TelemetryController.testReset();
   TelemetryEnvironment.testWatchPreferences(PREFS_TO_WATCH);
 
   // Set the current time at midnight.
-  let future = fakeNow(futureDate(nowDate, MS_IN_ONE_DAY));
-  gMonotonicNow = fakeMonotonicNow(gMonotonicNow + 10 * MILLISECONDS_PER_MINUTE);
+  let future = futureDate(nowDate, MS_IN_ONE_DAY);
+  fakeNow(future);
 
   // Trigger the environment change.
   Preferences.set(PREF_TEST, 1);
@@ -1883,53 +1881,7 @@ add_task(function* test_userIdleAndSchedlerTick() {
   checkPingFormat(receivedPing, PING_TYPE_MAIN, true, true);
   Assert.equal(receivedPing.payload.info.reason, REASON_DAILY);
 
-  PingServer.resetPingHandler();
   yield TelemetryController.testShutdown();
-});
-
-add_task(function* test_changeThrottling() {
-  let getSubsessionCount = () => {
-    return TelemetrySession.getPayload().info.subsessionCounter;
-  };
-
-  const PREF_TEST = "toolkit.telemetry.test.pref1";
-  const PREFS_TO_WATCH = new Map([
-    [PREF_TEST, {what: TelemetryEnvironment.RECORD_PREF_STATE}],
-  ]);
-  Preferences.reset(PREF_TEST);
-
-  let now = fakeNow(2050, 1, 2, 0, 0, 0);
-  gMonotonicNow = fakeMonotonicNow(gMonotonicNow + 10 * MILLISECONDS_PER_MINUTE);
-  yield TelemetryController.testReset();
-  Assert.equal(getSubsessionCount(), 1);
-
-  // Set the Environment preferences to watch.
-  TelemetryEnvironment.testWatchPreferences(PREFS_TO_WATCH);
-
-  // The first pref change should not trigger a notification.
-  Preferences.set(PREF_TEST, 1);
-  Assert.equal(getSubsessionCount(), 1);
-
-  // We should get a change notification after the 5min throttling interval.
-  now = fakeNow(futureDate(now, 5 * MILLISECONDS_PER_MINUTE + 1));
-  gMonotonicNow = fakeMonotonicNow(gMonotonicNow + 5 * MILLISECONDS_PER_MINUTE + 1);
-  Preferences.set(PREF_TEST, 2);
-  Assert.equal(getSubsessionCount(), 2);
-
-  // After that, changes should be throttled again.
-  now = fakeNow(futureDate(now, 1 * MILLISECONDS_PER_MINUTE));
-  gMonotonicNow = fakeMonotonicNow(gMonotonicNow + 1 * MILLISECONDS_PER_MINUTE);
-  Preferences.set(PREF_TEST, 3);
-  Assert.equal(getSubsessionCount(), 2);
-
-  // ... for 5min.
-  now = fakeNow(futureDate(now, 4 * MILLISECONDS_PER_MINUTE + 1));
-  gMonotonicNow = fakeMonotonicNow(gMonotonicNow + 4 * MILLISECONDS_PER_MINUTE + 1);
-  Preferences.set(PREF_TEST, 4);
-  Assert.equal(getSubsessionCount(), 3);
-
-  // Unregister the listener.
-  TelemetryEnvironment.unregisterChangeListener("testWatchPrefs_throttling");
 });
 
 add_task(function* stopServer() {
