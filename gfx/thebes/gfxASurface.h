@@ -183,4 +183,22 @@ protected:
     bool mSurfaceValid;
 };
 
+/**
+ * An Unknown surface; used to wrap unknown cairo_surface_t returns from cairo
+ */
+class gfxUnknownSurface : public gfxASurface {
+public:
+    gfxUnknownSurface(cairo_surface_t *surf, const mozilla::gfx::IntSize& aSize)
+        : mSize(aSize)
+    {
+        Init(surf, true);
+    }
+
+    virtual ~gfxUnknownSurface() { }
+    virtual const mozilla::gfx::IntSize GetSize() const override { return mSize; }
+
+private:
+    mozilla::gfx::IntSize mSize;
+};
+
 #endif /* GFX_ASURFACE_H */
