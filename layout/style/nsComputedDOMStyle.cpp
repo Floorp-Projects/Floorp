@@ -3295,7 +3295,7 @@ nsComputedDOMStyle::DoGetOutlineWidth()
   const nsStyleOutline* outline = StyleOutline();
 
   nscoord width;
-  if (outline->GetOutlineStyle() == NS_STYLE_BORDER_STYLE_NONE) {
+  if (outline->mOutlineStyle == NS_STYLE_BORDER_STYLE_NONE) {
     NS_ASSERTION(outline->GetOutlineWidth() == 0, "unexpected width");
     width = 0;
   } else {
@@ -3311,7 +3311,7 @@ nsComputedDOMStyle::DoGetOutlineStyle()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   val->SetIdent(
-    nsCSSProps::ValueToKeywordEnum(StyleOutline()->GetOutlineStyle(),
+    nsCSSProps::ValueToKeywordEnum(StyleOutline()->mOutlineStyle,
                                    nsCSSProps::kOutlineStyleKTable));
   return val.forget();
 }
@@ -3356,12 +3356,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetOutlineColor()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-
-  nscolor color;
-  if (!StyleOutline()->GetOutlineColor(color))
-    color = StyleColor()->mColor;
-
-  SetToRGBAColor(val, color);
+  SetValueFromComplexColor(val, StyleOutline()->mOutlineColor);
   return val.forget();
 }
 

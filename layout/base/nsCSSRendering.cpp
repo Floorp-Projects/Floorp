@@ -876,7 +876,7 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
   MOZ_ASSERT(ourOutline != NS_STYLE_BORDER_STYLE_NONE,
              "shouldn't have created nsDisplayOutline item");
 
-  uint8_t outlineStyle = ourOutline->GetOutlineStyle();
+  uint8_t outlineStyle = ourOutline->mOutlineStyle;
   nscoord width = ourOutline->GetOutlineWidth();
 
   if (width == 0 && outlineStyle != NS_STYLE_BORDER_STYLE_AUTO) {

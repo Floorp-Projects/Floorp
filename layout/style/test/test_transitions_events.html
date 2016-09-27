@@ -71,7 +71,6 @@ var got_one_target_bordertop = false;
 var got_one_target_borderright = false;
 var got_one_target_borderbottom = false;
 var got_one_target_borderleft = false;
-var got_one_target_outlinecolor = false;
 var got_two_target = false;
 var got_three_top = false;
 var got_three_right = false;
@@ -176,12 +175,6 @@ $("one").addEventListener("transitionend",
         got_one_target_borderleft = true;
         event.stopPropagation();
         break;
-      case "outline-color":
-        ok(!got_one_target_outlinecolor,
-           "transitionend on one on target (outline-color)");
-        got_one_target_outlinecolor = true;
-        event.stopPropagation();
-        break;
       default:
         ok(false, "unexpected property name " + event.propertyName +
                   " for transitionend on one on target");
@@ -199,7 +192,6 @@ started_test(); // border-right-color on #one
 started_test(); // border-right-color on #one (listener on root)
 started_test(); // border-bottom-color on #one
 started_test(); // border-left-color on #one
-started_test(); // outline-color on #one
 $("one").style.color = "lime";
 
 
