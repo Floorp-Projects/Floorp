@@ -4227,7 +4227,7 @@ ScrollFrameHelper::ScrollToRestoredPosition()
       if (!weakFrame.IsAlive()) {
         return;
       }
-      if (PageIsStillLoading()) {
+      if (PageIsStillLoading() || NS_SUBTREE_DIRTY(mOuter)) {
         // If we're trying to do a history scroll restore, then we want to
         // keep trying this until we succeed, because the page can be loading
         // incrementally. So re-get the scroll position for the next iteration,
