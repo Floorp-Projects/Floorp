@@ -2098,11 +2098,11 @@ static mozilla::Atomic<bool> sLayersAccelerationPrefsInitialized(false);
 void VideoDecodingFailedChangedCallback(const char* aPref, void*)
 {
   sLayersHardwareVideoDecodingFailed = Preferences::GetBool(aPref, false);
-  gfxPlatform::GetPlatform()->UpdateCanUseHardareVideoDecoding();
+  gfxPlatform::GetPlatform()->UpdateCanUseHardwareVideoDecoding();
 }
 
 void
-gfxPlatform::UpdateCanUseHardareVideoDecoding()
+gfxPlatform::UpdateCanUseHardwareVideoDecoding()
 {
   gfxVars::SetCanUseHardwareVideoDecoding(CanUseHardwareVideoDecoding());
 }
