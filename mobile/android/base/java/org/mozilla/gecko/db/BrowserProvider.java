@@ -15,6 +15,7 @@ import java.util.Map;
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.db.BrowserContract.ActivityStreamBlocklist;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.FaviconColumns;
@@ -55,8 +56,6 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
 
-import static org.mozilla.gecko.db.DBUtils.qualifyColumn;
-
 public class BrowserProvider extends SharedBrowserDatabaseProvider {
     public static final String ACTION_SHRINK_MEMORY = "org.mozilla.gecko.db.intent.action.SHRINK_MEMORY";
 
@@ -84,6 +83,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
     static final String TABLE_THUMBNAILS = Thumbnails.TABLE_NAME;
     static final String TABLE_TABS = Tabs.TABLE_NAME;
     static final String TABLE_URL_ANNOTATIONS = UrlAnnotations.TABLE_NAME;
+    static final String TABLE_ACTIVITY_STREAM_BLOCKLIST = ActivityStreamBlocklist.TABLE_NAME;
 
     static final String VIEW_COMBINED = Combined.VIEW_NAME;
     static final String VIEW_BOOKMARKS_WITH_FAVICONS = Bookmarks.VIEW_WITH_FAVICONS;
@@ -1175,7 +1175,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                   "OR " + DBUtils.qualifyColumn(History.TABLE_NAME, History.VISITS) + " IS NULL) " +
                 "AND " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.IS_DELETED)  + " = 0 " +
                 "AND " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.TYPE) + " = " + Bookmarks.TYPE_BOOKMARK + " " +
-                // TODO: Implement block list (bug 1298783)
+                "AND " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.URL) + " NOT IN (SELECT " + ActivityStreamBlocklist.URL + " FROM " + ActivityStreamBlocklist.TABLE_NAME + " )" +
                 "ORDER BY " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.DATE_CREATED) + " DESC " +
                 "LIMIT " + bookmarkLimit + ")";
 
@@ -1194,7 +1194,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 "AND " + History.VISITS + " <= 3 " +
                 "AND " + History.TITLE + " NOT NULL AND " + History.TITLE + " != '' " +
                 "AND " + History.IS_DELETED + " = 0 " +
-                // TODO: Implement block list (bug 1298783)
+                "AND " + History.URL + " NOT IN (SELECT " + ActivityStreamBlocklist.URL + " FROM " + ActivityStreamBlocklist.TABLE_NAME + " )" +
                 // TODO: Implement domain black list (bug 1298786)
                 // TODO: Group by host (bug 1298785)
                 "ORDER BY " + History.DATE_LAST_VISITED + " DESC " +
