@@ -26,16 +26,16 @@ describe("Message actions:", () => {
       const store = mockStore({});
       store.dispatch(actions.messageAdd(packet));
 
-      const expectedActions = store.getActions();
-      expect(expectedActions.length).toEqual(1);
+      const actualActions = store.getActions();
+      expect(actualActions.length).toEqual(1);
 
-      const addAction = expectedActions[0];
+      const addAction = actualActions[0];
       const {message} = addAction;
-      const expected = {
+      const expectedAction = {
         type: constants.MESSAGE_ADD,
         message: stubPreparedMessages.get("console.log('foobar', 'test')")
       };
-      expect(message.toJS()).toEqual(expected.message.toJS());
+      expect(message.toJS()).toEqual(expectedAction.message.toJS());
     });
 
     it("dispatches expected actions given a console.clear packet", () => {
@@ -43,19 +43,19 @@ describe("Message actions:", () => {
       const store = mockStore({});
       store.dispatch(actions.messageAdd(packet));
 
-      const expectedActions = store.getActions();
-      expect(expectedActions.length).toEqual(2);
+      const actualActions = store.getActions();
+      expect(actualActions.length).toEqual(1);
 
-      const [clearAction, addAction] = expectedActions;
+      const [clearAction, addAction] = actualActions[0].actions;
       expect(clearAction.type).toEqual(constants.MESSAGES_CLEAR);
 
       const {message} = addAction;
-      const expected = {
+      const expectedAction = {
         type: constants.MESSAGE_ADD,
         message: stubPreparedMessages.get("console.clear()")
       };
       expect(addAction.type).toEqual(constants.MESSAGE_ADD);
-      expect(message.toJS()).toEqual(expected.message.toJS());
+      expect(message.toJS()).toEqual(expectedAction.message.toJS());
     });
   });
 

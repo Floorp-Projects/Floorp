@@ -5,8 +5,8 @@
 
 const expect = require("expect");
 
-const actions = require("devtools/client/webconsole/new-console-output/actions/filters");
-const { messageAdd } = require("devtools/client/webconsole/new-console-output/actions/messages");
+const actions = require("devtools/client/webconsole/new-console-output/actions/index");
+const { messageAdd } = require("devtools/client/webconsole/new-console-output/actions/index");
 const { ConsoleCommand } = require("devtools/client/webconsole/new-console-output/types");
 const { getAllMessages } = require("devtools/client/webconsole/new-console-output/selectors/messages");
 const { getAllFilters } = require("devtools/client/webconsole/new-console-output/selectors/filters");

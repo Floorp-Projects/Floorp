@@ -10,7 +10,7 @@ const {
   prepareMessage
 } = require("devtools/client/webconsole/new-console-output/utils/messages");
 const { IdGenerator } = require("devtools/client/webconsole/new-console-output/utils/id-generator");
-
+const { batchActions } = require("devtools/client/webconsole/new-console-output/actions/enhancers");
 const {
   MESSAGE_ADD,
   MESSAGES_CLEAR,
@@ -22,21 +22,22 @@ const {
 const defaultIdGenerator = new IdGenerator();
 
 function messageAdd(packet, idGenerator = null) {
-  return (dispatch) => {
-    if (idGenerator == null) {
-      idGenerator = defaultIdGenerator;
-    }
-    let message = prepareMessage(packet, idGenerator);
-
-    if (message.type === MESSAGE_TYPE.CLEAR) {
-      dispatch(messagesClear());
-    }
-
-    dispatch({
-      type: MESSAGE_ADD,
-      message
-    });
+  if (idGenerator == null) {
+    idGenerator = defaultIdGenerator;
+  }
+  let message = prepareMessage(packet, idGenerator);
+  const addMessageAction = {
+    type: MESSAGE_ADD,
+    message
   };
+
+  if (message.type === MESSAGE_TYPE.CLEAR) {
+    return batchActions([
+      messagesClear(),
+      addMessageAction,
+    ]);
+  }
+  return addMessageAction;
 }
 
 function messagesClear() {
@@ -59,7 +60,9 @@ function messageClose(id) {
   };
 }
 
-exports.messageAdd = messageAdd;
-exports.messagesClear = messagesClear;
-exports.messageOpen = messageOpen;
-exports.messageClose = messageClose;
+module.exports = {
+  messageAdd,
+  messagesClear,
+  messageOpen,
+  messageClose,
+};
