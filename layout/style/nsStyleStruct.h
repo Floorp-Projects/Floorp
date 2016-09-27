@@ -1997,43 +1997,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleTextReset
            mTextDecorationLine != NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL;
   }
 
-  uint8_t GetDecorationStyle() const
-  {
-    return (mTextDecorationStyle & BORDER_STYLE_MASK);
-  }
-
-  void SetDecorationStyle(uint8_t aStyle)
-  {
-    MOZ_ASSERT((aStyle & BORDER_STYLE_MASK) == aStyle,
-               "style doesn't fit");
-    mTextDecorationStyle &= ~BORDER_STYLE_MASK;
-    mTextDecorationStyle |= (aStyle & BORDER_STYLE_MASK);
-  }
-
-  void GetDecorationColor(nscolor& aColor, bool& aForeground) const
-  {
-    aForeground = false;
-    if ((mTextDecorationStyle & BORDER_COLOR_SPECIAL) == 0) {
-      aColor = mTextDecorationColor;
-    } else if (mTextDecorationStyle & BORDER_COLOR_FOREGROUND) {
-      aForeground = true;
-    } else {
-      NS_NOTREACHED("OUTLINE_COLOR_INITIAL should not be set here");
-    }
-  }
-
-  void SetDecorationColor(nscolor aColor)
-  {
-    mTextDecorationColor = aColor;
-    mTextDecorationStyle &= ~BORDER_COLOR_SPECIAL;
-  }
-
-  void SetDecorationColorToForeground()
-  {
-    mTextDecorationStyle &= ~BORDER_COLOR_SPECIAL;
-    mTextDecorationStyle |= BORDER_COLOR_FOREGROUND;
-  }
-
   nsChangeHint CalcDifference(const nsStyleTextReset& aNewData) const;
   static nsChangeHint MaxDifference() {
     return nsChangeHint(
@@ -2051,13 +2014,11 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleTextReset
   nsStyleTextOverflow mTextOverflow;    // [reset] enum, string
 
   uint8_t mTextDecorationLine;          // [reset] see nsStyleConsts.h
+  uint8_t mTextDecorationStyle;         // [reset] see nsStyleConsts.h
   uint8_t mUnicodeBidi;                 // [reset] see nsStyleConsts.h
   nscoord mInitialLetterSink;           // [reset] 0 means normal
   float mInitialLetterSize;             // [reset] 0.0f means normal
-protected:
-  uint8_t mTextDecorationStyle;         // [reset] see nsStyleConsts.h
-
-  nscolor mTextDecorationColor;         // [reset] the colors to use for a decoration lines, not used at currentColor
+  mozilla::StyleComplexColor mTextDecorationColor; // [reset]
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText

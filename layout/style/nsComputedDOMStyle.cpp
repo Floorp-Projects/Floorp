@@ -3756,12 +3756,10 @@ nsComputedDOMStyle::DoGetTextDecoration()
   const nsStyleTextReset* textReset = StyleTextReset();
 
   bool isInitialStyle =
-    textReset->GetDecorationStyle() == NS_STYLE_TEXT_DECORATION_STYLE_SOLID;
-  nscolor color;
-  bool isForegroundColor;
-  textReset->GetDecorationColor(color, isForegroundColor);
+    textReset->mTextDecorationStyle == NS_STYLE_TEXT_DECORATION_STYLE_SOLID;
+  StyleComplexColor color = textReset->mTextDecorationColor;
 
-  if (isInitialStyle && isForegroundColor) {
+  if (isInitialStyle && color.IsCurrentColor()) {
     return DoGetTextDecorationLine();
   }
 
@@ -3771,7 +3769,7 @@ nsComputedDOMStyle::DoGetTextDecoration()
   if (!isInitialStyle) {
     valueList->AppendCSSValue(DoGetTextDecorationStyle());
   }
-  if (!isForegroundColor) {
+  if (!color.IsCurrentColor()) {
     valueList->AppendCSSValue(DoGetTextDecorationColor());
   }
 
@@ -3782,16 +3780,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetTextDecorationColor()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-
-  nscolor color;
-  bool isForeground;
-  StyleTextReset()->GetDecorationColor(color, isForeground);
-  if (isForeground) {
-    color = StyleColor()->mColor;
-  }
-
-  SetToRGBAColor(val, color);
-
+  SetValueFromComplexColor(val, StyleTextReset()->mTextDecorationColor);
   return val.forget();
 }
 
@@ -3825,7 +3814,7 @@ nsComputedDOMStyle::DoGetTextDecorationStyle()
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
 
   val->SetIdent(
-    nsCSSProps::ValueToKeywordEnum(StyleTextReset()->GetDecorationStyle(),
+    nsCSSProps::ValueToKeywordEnum(StyleTextReset()->mTextDecorationStyle,
                                    nsCSSProps::kTextDecorationStyleKTable));
 
   return val.forget();

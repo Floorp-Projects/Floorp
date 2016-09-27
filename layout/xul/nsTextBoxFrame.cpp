@@ -427,13 +427,10 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
         if (aOverrideColor) {
           color = *aOverrideColor;
         } else {
-          bool isForeground;
-          styleText->GetDecorationColor(color, isForeground);
-          if (isForeground) {
-            color = nsLayoutUtils::GetColor(f, eCSSProperty_color);
-          }
+          color = context->StyleColor()->
+            CalcComplexColor(styleText->mTextDecorationColor);
         }
-        uint8_t style = styleText->GetDecorationStyle();
+        uint8_t style = styleText->mTextDecorationStyle;
 
         if (NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE & decorMask &
               styleText->mTextDecorationLine) {
