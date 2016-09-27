@@ -1141,8 +1141,17 @@ _dwrite_draw_glyphs_to_gdi_surface_gdi(cairo_win32_surface_t *surface,
     IDWriteBitmapRenderTarget *rt;
     HRESULT rv;
 
+    cairo_d2d_surface_t::TextRenderingState renderingState =
+      scaled_font->rendering_mode;
+
+    if ((renderingState == cairo_d2d_surface_t::TEXT_RENDERING_NORMAL ||
+         renderingState == cairo_d2d_surface_t::TEXT_RENDERING_GDI_CLASSIC) &&
+        !surface->base.permit_subpixel_antialiasing) {
+      renderingState = cairo_d2d_surface_t::TEXT_RENDERING_NO_CLEARTYPE;
+    }
+
     IDWriteRenderingParams *params =
-        DWriteFactory::RenderingParams(scaled_font->rendering_mode);
+        DWriteFactory::RenderingParams(renderingState);
 
     rv = gdiInterop->CreateBitmapRenderTarget(surface->dc,
 					      area.right - area.left,
@@ -1174,7 +1183,7 @@ _dwrite_draw_glyphs_to_gdi_surface_gdi(cairo_win32_surface_t *surface,
 	   area.left, area.top, 
 	   SRCCOPY | NOMIRRORBITMAP);
     DWRITE_MEASURING_MODE measureMode; 
-    switch (scaled_font->rendering_mode) {
+    switch (renderingState) {
     case cairo_d2d_surface_t::TEXT_RENDERING_GDI_CLASSIC:
     case cairo_d2d_surface_t::TEXT_RENDERING_NO_CLEARTYPE:
         measureMode = DWRITE_MEASURING_MODE_GDI_CLASSIC;
@@ -1277,8 +1286,7 @@ _cairo_dwrite_show_glyphs_on_surface(void			*surface,
 
     /* We can only handle operator SOURCE or OVER with the destination
      * having no alpha */
-    if ((op != CAIRO_OPERATOR_SOURCE && op != CAIRO_OPERATOR_OVER) ||
-	(dst->format != CAIRO_FORMAT_RGB24))
+    if (op != CAIRO_OPERATOR_SOURCE && op != CAIRO_OPERATOR_OVER)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* If we have a fallback mask clip set on the dst, we have
