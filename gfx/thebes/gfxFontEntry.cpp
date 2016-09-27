@@ -280,7 +280,8 @@ gfxFontEntry::FindOrMakeFont(const gfxFontStyle *aStyle,
                              gfxCharacterMap* aUnicodeRangeMap)
 {
     // the font entry name is the psname, not the family name
-    RefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(this, aStyle);
+    RefPtr<gfxFont> font =
+        gfxFontCache::GetCache()->Lookup(this, aStyle, aUnicodeRangeMap);
 
     if (!font) {
         gfxFont *newFont = CreateFontInstance(aStyle, aNeedsBold);
