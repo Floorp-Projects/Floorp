@@ -394,7 +394,9 @@ class ScriptMixin(PlatformMixin):
 
         self.info('Expected file size: {}'.format(expected_file_size))
         self.debug('Url: {}'.format(url))
-        self.debug('Content-Encoding {}'.format(response.headers.get('Content-Encoding')))
+        self.info('Content-Encoding {}'.format(response.headers.get('Content-Encoding')))
+        self.info('Content-Type {}'.format(response.headers.get('Content-Type')))
+        self.info('Http code {}'.format(response.getcode()))
 
         file_contents = response.read()
         obtained_file_size = len(file_contents)
