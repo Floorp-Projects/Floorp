@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1305579
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1305579</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1305579">Mozilla Bug 1305579</a>
+<p id="display"></p>
+<style>
+.off {
+  display:none;
+}
+</style>
+<script>
+SimpleTest.waitForExplicitFinish();
+
+function runtest() {
+  var iframe = document.getElementById("iframe");
+  iframe.contentDocument.scrollingElement.scrollTop = 50;
+  iframe.classList.toggle("off");
+  waitForAllPaintsFlushed(function() {
+    iframe.classList.toggle("off");
+    is(iframe.contentDocument.scrollingElement.scrollTop, 50, "scroll position restored");
+    SimpleTest.finish();
+  });
+}
+</script>
+<iframe onload="runtest()" id="iframe" class="" src="data:text/html,<p>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br>bla<br></p>"></iframe><br>
+</body>
+</html>
