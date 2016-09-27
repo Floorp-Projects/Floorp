@@ -5768,6 +5768,8 @@ CanvasRenderingContext2D::PutImageData_explicit(int32_t aX, int32_t aY, uint32_t
   //uint8_t *src = aArray->Data();
   uint8_t *dst = imgsurf->Data();
   uint8_t* srcLine = aArray->Data() + copyY * (aW * 4) + copyX * 4;
+  // For opaque canvases, we must still premultiply the RGB components, but write the alpha as opaque.
+  uint8_t alphaMask = mOpaque ? 255 : 0;
 #if 0
   printf("PutImageData_explicit: dirty x=%d y=%d w=%d h=%d copy x=%d y=%d w=%d h=%d ext x=%d y=%d w=%d h=%d\n",
        dirtyRect.x, dirtyRect.y, copyWidth, copyHeight,
@@ -5787,9 +5789,9 @@ CanvasRenderingContext2D::PutImageData_explicit(int32_t aX, int32_t aY, uint32_t
       *dst++ = gfxUtils::sPremultiplyTable[a * 256 + b];
       *dst++ = gfxUtils::sPremultiplyTable[a * 256 + g];
       *dst++ = gfxUtils::sPremultiplyTable[a * 256 + r];
-      *dst++ = a;
+      *dst++ = a | alphaMask;
 #else
-      *dst++ = a;
+      *dst++ = a | alphaMask;
       *dst++ = gfxUtils::sPremultiplyTable[a * 256 + r];
       *dst++ = gfxUtils::sPremultiplyTable[a * 256 + g];
       *dst++ = gfxUtils::sPremultiplyTable[a * 256 + b];
