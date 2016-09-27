@@ -129,8 +129,6 @@ function Tester(aTests, structuredLogger, aCallback) {
   this.structuredLogger = structuredLogger;
   this.tests = aTests;
   this.callback = aCallback;
-  this.openedWindows = {};
-  this.openedURLs = {};
 
   this._scriptLoader = Services.scriptloader;
   this.EventUtils = {};
@@ -163,13 +161,6 @@ function Tester(aTests, structuredLogger, aCallback) {
   this.Task.Debugging.maintainStack = true;
   this.Promise = Components.utils.import("resource://gre/modules/Promise.jsm", null).Promise;
   this.Assert = Components.utils.import("resource://testing-common/Assert.jsm", null).Assert;
-
-  Services.ppmm.loadProcessScript("chrome://mochikit/content/document-observer-script.js", true);
-  Services.ppmm.addMessageListener("browser-test:documentCreated", (msg) => {
-    if (this.currentTest) {
-      this.onDocumentCreated(msg.data);
-    }
-  });
 
   this.SimpleTestOriginal = {};
   SIMPLETEST_OVERRIDES.forEach(m => {
@@ -222,7 +213,6 @@ Tester.prototype = {
   checker: null,
   currentTestIndex: -1,
   lastStartTime: null,
-  openedWindows: null,
   lastAssertionCount: 0,
   failuresFromInitialWindowState: 0,
 
@@ -374,7 +364,6 @@ Tester.prototype = {
     } else {
       TabDestroyObserver.destroy();
       Services.console.unregisterListener(this);
-      Services.ppmm.broadcastAsyncMessage("browser-test:removeObservers", {});
       this.Promise.Debugging.clearUncaughtErrorObservers();
       this._treatUncaughtRejectionsAsFailures = false;
 
@@ -403,7 +392,6 @@ Tester.prototype = {
       this.callback(this.tests);
       this.callback = null;
       this.tests = null;
-      this.openedWindows = null;
     }
   },
 
@@ -417,16 +405,6 @@ Tester.prototype = {
     if (!aTopic) {
       this.onConsoleMessage(aSubject);
     }
-  },
-
-  onDocumentCreated: function Tester_onDocumentCreated({ location, outerID, innerID }) {
-    if (!(outerID in this.openedWindows)) {
-      this.openedWindows[outerID] = this.currentTest;
-    }
-    this.openedWindows[innerID] = this.currentTest;
-
-    let url = location || "about:blank";
-    this.openedURLs[outerID] = this.openedURLs[innerID] = url;
   },
 
   onConsoleMessage: function Tester_onConsoleMessage(aConsoleMessage) {
