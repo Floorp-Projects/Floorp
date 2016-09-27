@@ -673,9 +673,9 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
   newStyleBorder.TrackImage(aPresContext);
 
   NS_FOR_CSS_SIDES(side) {
-    newStyleBorder.SetBorderColor(side,
-      aStyleContext->GetVisitedDependentColor(
-        nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_color)[side]));
+    nscolor color = aStyleContext->GetVisitedDependentColor(
+      nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_color)[side]);
+    newStyleBorder.mBorderColor[side] = StyleComplexColor::FromColor(color);
   }
   DrawResult result =
     PaintBorderWithStyleBorder(aPresContext, aRenderingContext, aForFrame,
@@ -804,13 +804,9 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
 
   // pull out styles, colors, composite colors
   NS_FOR_CSS_SIDES (i) {
-    bool foreground;
     borderStyles[i] = aStyleBorder.GetBorderStyle(i);
-    aStyleBorder.GetBorderColor(i, borderColors[i], foreground);
+    borderColors[i] = ourColor->CalcComplexColor(aStyleBorder.mBorderColor[i]);
     aStyleBorder.GetCompositeColors(i, &compositeColors[i]);
-
-    if (foreground)
-      borderColors[i] = ourColor->mColor;
   }
 
   PrintAsFormatString(" borderStyles: %d %d %d %d\n", borderStyles[0], borderStyles[1], borderStyles[2], borderStyles[3]);
@@ -1775,16 +1771,13 @@ IsOpaqueBorderEdge(const nsStyleBorder& aBorder, mozilla::css::Side aSide)
   if (aBorder.mBorderImageSource.GetType() != eStyleImageType_Null)
     return false;
 
-  nscolor color;
-  bool isForeground;
-  aBorder.GetBorderColor(aSide, color, isForeground);
-
+  StyleComplexColor color = aBorder.mBorderColor[aSide];
   // We don't know the foreground color here, so if it's being used
   // we must assume it might be transparent.
-  if (isForeground)
+  if (!color.IsNumericColor()) {
     return false;
-
-  return NS_GET_A(color) == 255;
+  }
+  return NS_GET_A(color.mColor) == 255;
 }
 
 /**

@@ -1175,14 +1175,8 @@ nsStyleContext::CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
       const nsStyleBorder *thisVisBorder = thisVis->StyleBorder();
       const nsStyleBorder *otherVisBorder = otherVis->StyleBorder();
       NS_FOR_CSS_SIDES(side) {
-        bool thisFG, otherFG;
-        // Dummy initialisations to keep Valgrind/Memcheck happy.
-        // See bug 1122375 comment 4.
-        nscolor thisColor = NS_RGBA(0, 0, 0, 0);
-        nscolor otherColor = NS_RGBA(0, 0, 0, 0);
-        thisVisBorder->GetBorderColor(side, thisColor, thisFG);
-        otherVisBorder->GetBorderColor(side, otherColor, otherFG);
-        if (thisFG != otherFG || (!thisFG && thisColor != otherColor)) {
+        if (thisVisBorder->mBorderColor[side] !=
+            otherVisBorder->mBorderColor[side]) {
           change = true;
           break;
         }

@@ -109,25 +109,21 @@ var supported_properties = {
                          // intermediate form.
                          /* test_length_percent_pair_clamped */ ],
     "border-bottom-color": [ test_color_transition,
-                             test_currentcolor_transition,
-                             test_border_color_transition ],
+                             test_true_currentcolor_transition ],
     "border-bottom-width": [ test_length_transition,
                              test_length_clamped ],
     "border-left-color": [ test_color_transition,
-                           test_currentcolor_transition,
-                           test_border_color_transition ],
+                           test_true_currentcolor_transition ],
     "border-left-width": [ test_length_transition,
                            test_length_clamped ],
     "border-right-color": [ test_color_transition,
-                            test_currentcolor_transition,
-                            test_border_color_transition ],
+                            test_true_currentcolor_transition ],
     "border-right-width": [ test_length_transition,
                             test_length_clamped ],
     "border-spacing": [ test_length_pair_transition,
                         test_length_pair_transition_clamped ],
     "border-top-color": [ test_color_transition,
-                          test_currentcolor_transition,
-                          test_border_color_transition ],
+                          test_true_currentcolor_transition ],
     "border-top-width": [ test_length_transition,
                            test_length_clamped ],
     "bottom": [ test_length_transition, test_percent_transition,
@@ -259,8 +255,7 @@ var supported_properties = {
     "stroke-width": [ test_length_transition_svg, test_percent_transition,
                       test_length_clamped_svg, test_percent_clamped ],
     "text-decoration": [ test_color_shorthand_transition,
-                         test_currentcolor_shorthand_transition,
-                         test_border_color_shorthand_transition ],
+                         test_true_currentcolor_shorthand_transition ],
     "text-decoration-color": [ test_color_transition,
                                test_true_currentcolor_transition ],
     "text-emphasis-color": [ test_color_transition,
@@ -1386,26 +1381,8 @@ function test_true_currentcolor_transition(prop, get_color=(x => x), is_shorthan
   div.style.removeProperty("color");
 }
 
-function test_border_color_transition(prop, get_color=(x => x), is_shorthand=false) {
-  div.style.setProperty("transition-property", "none", "");
-  div.style.setProperty(prop, "rgb(128, 64, 0)", "");
-  div.style.setProperty("color", "rgb(0, 0, 128)", "");
-  is(get_color(cs.getPropertyValue(prop)), "rgb(128, 64, 0)",
-     "color-valued property " + prop + ": computed value before transition");
-  div.style.setProperty("transition-property", prop, "");
-  div.style.removeProperty(prop);
-  is(get_color(cs.getPropertyValue(prop)), "rgb(96, 48, 32)",
-     "color-valued property " + prop + ": interpolation of initial value");
-
-  if (!is_shorthand) {
-    check_distance(prop, "rgb(128, 64, 0)", "rgb(96, 48, 32)", "initial");
-  }
-
-  div.style.removeProperty("color");
-}
-
 function get_color_from_shorthand_value(value) {
-  var m = value.match(/rgb\([^, ]*, [^, ]*, [^, ]*\)/);
+  var m = value.match(/rgba?\([^, ]*, [^, ]*, [^, ]*(?:, [^, ]*)?\)/);
   isnot(m, null, "shorthand property value should contain color");
   return m[0];
 }
@@ -1418,8 +1395,8 @@ function test_currentcolor_shorthand_transition(prop) {
   test_currentcolor_transition(prop, get_color_from_shorthand_value, true);
 }
 
-function test_border_color_shorthand_transition(prop) {
-  test_border_color_transition(prop, get_color_from_shorthand_value, true);
+function test_true_currentcolor_shorthand_transition(prop) {
+  test_true_currentcolor_transition(prop, get_color_from_shorthand_value, true);
 }
 
 function test_clip_path_equals(computedValStr, expectedList)
