@@ -85,12 +85,6 @@ if CONFIG['MOZ_PLACES']:
         'UnifiedComplete.js',
     ]
 
-    if CONFIG['MOZ_SUITE']:
-        EXTRA_COMPONENTS += [
-            'nsPlacesAutoComplete.js',
-            'nsPlacesAutoComplete.manifest',
-        ]
-
     FINAL_LIBRARY = 'xul'
 
 include('/ipc/chromium/chromium-config.mozbuild')
