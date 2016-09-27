@@ -19,7 +19,7 @@ class TestL10n(FirefoxTestCase):
         FirefoxTestCase.tearDown(self)
 
     def test_dtd_entity_chrome(self):
-        dtds = ['chrome://global/locale/filepicker.dtd',
+        dtds = ['chrome://global/locale/about.dtd',
                 'chrome://browser/locale/baseMenuOverlay.dtd']
 
         value = self.l10n.get_entity(dtds, 'helpSafeMode.label')
@@ -29,7 +29,7 @@ class TestL10n(FirefoxTestCase):
         self.assertRaises(MarionetteException, self.l10n.get_entity, dtds, 'notExistent')
 
     def test_dtd_entity_content(self):
-        dtds = ['chrome://global/locale/filepicker.dtd',
+        dtds = ['chrome://global/locale/about.dtd',
                 'chrome://global/locale/aboutSupport.dtd']
 
         value = self.l10n.get_entity(dtds, 'aboutSupport.pageTitle')
