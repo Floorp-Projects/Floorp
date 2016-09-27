@@ -1,0 +1,403 @@
+
+<!DOCTYPE HTML>
+<html>
+<!--
+Test GripMap rep
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Rep test - GripMap</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+"use strict";
+
+window.onload = Task.async(function* () {
+  let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
+  let { GripMap } = browserRequire("devtools/client/shared/components/reps/grip-map");
+
+  const componentUnderTest = GripMap;
+
+  try {
+    yield testEmptyMap();
+    yield testSymbolKeyedMap();
+    yield testWeakMap();
+
+    // // Test entries iterator
+    yield testMaxEntries();
+    yield testMoreThanMaxEntries();
+    yield testUninterestingEntries();
+  } catch (e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+
+  function testEmptyMap() {
+    // Test object: `new Map()`
+    const testName = "testEmptyMap";
+
+    // Test that correct rep is chosen
+    const gripStub = getGripStub("testEmptyMap");
+    const renderedRep = shallowRenderComponent(Rep, { object: gripStub });
+    is(renderedRep.type, GripMap.rep, `Rep correctly selects ${GripMap.rep.displayName}`);
+
+    // Test rendering
+    const defaultOutput = `Map {  }`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: "Map",
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function testSymbolKeyedMap() {
+    // Test object:
+    // `new Map([[Symbol("a"), "value-a"], [Symbol("b"), "value-b"]])`
+    const testName = "testSymbolKeyedMap";
+
+    const defaultOutput = `Map { Symbol(a): "value-a", Symbol(b): "value-b" }`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: "Map",
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function testWeakMap() {
+    // Test object: `new WeakMap([[{a: "key-a"}, "value-a"]])`
+    const testName = "testWeakMap";
+
+    // Test that correct rep is chosen
+    const gripStub = getGripStub("testWeakMap");
+    const renderedRep = shallowRenderComponent(Rep, { object: gripStub });
+    is(renderedRep.type, GripMap.rep, `Rep correctly selects ${GripMap.rep.displayName}`);
+
+    // Test rendering
+    const defaultOutput = `WeakMap { Object: "value-a" }`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: "WeakMap",
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function testMaxEntries() {
+    // Test object:
+    // `new Map([["key-a","value-a"], ["key-b","value-b"], ["key-c","value-c"]])`
+    const testName = "testMaxEntries";
+
+    const defaultOutput = `Map { key-a: "value-a", key-b: "value-b", key-c: "value-c" }`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: "Map",
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function testMoreThanMaxEntries() {
+    // Test object = `new Map(
+    //   [["key-0", "value-0"], ["key-1", "value-1"]], …, ["key-100", "value-100"]]}`
+    const testName = "testMoreThanMaxEntries";
+
+    const defaultOutput =
+      `Map { key-0: "value-0", key-1: "value-1", key-2: "value-2", 98 more… }`;
+
+    // Generate string with 101 entries, which is the max limit for 'long' mode.
+    let longString = Array.from({length: 100}).map((_, i) => `key-${i}: "value-${i}"`);
+    const longOutput = `Map { ${longString.join(", ")}, 1 more… }`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: `Map`,
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: longOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function testUninterestingEntries() {
+    // Test object:
+    // `new Map([["key-a",null], ["key-b",undefined], ["key-c","value-c"], ["key-d",4]])`
+    const testName = "testUninterestingEntries";
+
+    const defaultOutput =
+      `Map { key-a: null, key-c: "value-c", key-d: 4, 1 more… }`;
+    const longOutput =
+      `Map { key-a: null, key-b: undefined, key-c: "value-c", key-d: 4 }`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: `Map`,
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: longOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function getGripStub(functionName) {
+    switch (functionName) {
+      case "testEmptyMap":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj97",
+          "class": "Map",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 0,
+          "preview": {
+            "kind": "MapLike",
+            "size": 0,
+            "entries": []
+          }
+        };
+
+      case "testSymbolKeyedMap":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj118",
+          "class": "Map",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 0,
+          "preview": {
+            "kind": "MapLike",
+            "size": 2,
+            "entries": [
+              [
+                {
+                  "type": "symbol",
+                  "name": "a"
+                },
+                "value-a"
+              ],
+              [
+                {
+                  "type": "symbol",
+                  "name": "b"
+                },
+                "value-b"
+              ]
+            ]
+          }
+        };
+
+      case "testWeakMap":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj115",
+          "class": "WeakMap",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 0,
+          "preview": {
+            "kind": "MapLike",
+            "size": 1,
+            "entries": [
+              [
+                {
+                  "type": "object",
+                  "actor": "server1.conn1.child1/obj116",
+                  "class": "Object",
+                  "extensible": true,
+                  "frozen": false,
+                  "sealed": false,
+                  "ownPropertyLength": 1
+                },
+                "value-a"
+              ]
+            ]
+          }
+        };
+
+      case "testMaxEntries":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj109",
+          "class": "Map",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 0,
+          "preview": {
+            "kind": "MapLike",
+            "size": 3,
+            "entries": [
+              [
+                "key-a",
+                "value-a"
+              ],
+              [
+                "key-b",
+                "value-b"
+              ],
+              [
+                "key-c",
+                "value-c"
+              ]
+            ]
+          }
+        };
+
+      case "testMoreThanMaxEntries": {
+        let entryNb = 101;
+        return {
+          "type": "object",
+          "class": "Map",
+          "actor": "server1.conn0.obj332",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 0,
+          "preview": {
+            "kind": "MapLike",
+            "size": entryNb,
+            // Generate 101 entries, which is more that the maximum
+            // limit in case of the 'long' mode.
+            "entries": Array.from({length: entryNb}).map((_, i) => {
+              return [`key-${i}`, `value-${i}`];
+            })
+          }
+        };
+      }
+
+      case "testUninterestingEntries":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj111",
+          "class": "Map",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 0,
+          "preview": {
+            "kind": "MapLike",
+            "size": 4,
+            "entries": [
+              [
+                "key-a",
+                {
+                  "type": "null"
+                }
+              ],
+              [
+                "key-b",
+                {
+                  "type": "undefined"
+                }
+              ],
+              [
+                "key-c",
+                "value-c"
+              ],
+              [
+                "key-d",
+                4
+              ]
+            ]
+          }
+        };
+    }
+  }
+});
+</script>
+</pre>
+</body>
+</html>
