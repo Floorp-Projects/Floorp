@@ -66,12 +66,15 @@ ContentDispatchChooser.prototype =
       Messaging.sendRequestForResult(msg).then(() => {
         // Java opens an app on success: take no action.
       }, (uri) => {
-        // Java didn't load a page so load the page that Java wants us to load.
-        //
-        // Note: when we load the page here (rather than into the selected tab in
-        // java), we load it in the same context where the uri was specified (e.g.
-        // if it's in an iframe, we load the page in an iframe).
-        window.location.href = uri;
+        // We couldn't open this. If this was from a click, it's likely that we just
+        // want this to fail silently. If the user entered this on the address bar, though,
+        // we want to show the neterror page.
+
+        let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+        let millis = dwu.millisSinceLastUserInput;
+        if (millis > 0 && millis >= 1000) {
+          window.location.href = uri;
+        }
       });
     }
   },
