@@ -139,35 +139,7 @@ class TupOnly(CommonBackend, PartialBackend):
         backend_file = self._get_backend_file_for(obj)
 
         if isinstance(obj, GeneratedFile):
-            # TODO: These are directories that don't work in the tup backend
-            # yet, because things they depend on aren't built yet.
-            skip_directories = (
-                'build', # FinalTargetPreprocessedFiles
-                'layout/style/test', # HostSimplePrograms
-                'toolkit/library', # libxul.so
-            )
-            if obj.script and obj.method and obj.relobjdir not in skip_directories:
-                backend_file.export_shell()
-                cmd = self._py_action('file_generate')
-                cmd.extend([
-                    obj.script,
-                    obj.method,
-                    obj.outputs[0],
-                    '%s.pp' % obj.outputs[0], # deps file required
-                ])
-                full_inputs = [f.full_path for f in obj.inputs]
-                cmd.extend(full_inputs)
-
-                outputs = []
-                outputs.extend(obj.outputs)
-                outputs.append('%s.pp' % obj.outputs[0])
-
-                backend_file.rule(
-                    display='python {script}:{method} -> [%o]'.format(script=obj.script, method=obj.method),
-                    cmd=cmd,
-                    inputs=full_inputs,
-                    outputs=outputs,
-                )
+            self._process_generated_file(backend_file, obj)
         elif isinstance(obj, Defines):
             self._process_defines(backend_file, obj)
         elif isinstance(obj, HostDefines):
@@ -204,6 +176,37 @@ class TupOnly(CommonBackend, PartialBackend):
         if not os.path.exists(mozpath.join(self.environment.topsrcdir, ".tup")):
             tup = self.environment.substs.get('TUP', 'tup')
             self._cmd.run_process(cwd=self.environment.topsrcdir, log_name='tup', args=[tup, 'init'])
+
+    def _process_generated_file(self, backend_file, obj):
+        # TODO: These are directories that don't work in the tup backend
+        # yet, because things they depend on aren't built yet.
+        skip_directories = (
+            'build', # FinalTargetPreprocessedFiles
+            'layout/style/test', # HostSimplePrograms
+            'toolkit/library', # libxul.so
+        )
+        if obj.script and obj.method and obj.relobjdir not in skip_directories:
+            backend_file.export_shell()
+            cmd = self._py_action('file_generate')
+            cmd.extend([
+                obj.script,
+                obj.method,
+                obj.outputs[0],
+                '%s.pp' % obj.outputs[0], # deps file required
+            ])
+            full_inputs = [f.full_path for f in obj.inputs]
+            cmd.extend(full_inputs)
+
+            outputs = []
+            outputs.extend(obj.outputs)
+            outputs.append('%s.pp' % obj.outputs[0])
+
+            backend_file.rule(
+                display='python {script}:{method} -> [%o]'.format(script=obj.script, method=obj.method),
+                cmd=cmd,
+                inputs=full_inputs,
+                outputs=outputs,
+            )
 
     def _process_defines(self, backend_file, obj, host=False):
         defines = list(obj.get_defines())
