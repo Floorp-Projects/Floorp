@@ -498,7 +498,9 @@ class tp5o_scroll(PageloaderTest):
     tpmozafterpaint = False
     preferences = {'layout.frame_rate': 0,
                    'docshell.event_starvation_delay_hint': 1,
-                   'dom.send_after_paint_to_content': False}
+                   'dom.send_after_paint_to_content': False,
+                   'layout.css.scroll-behavior.spring-constant': "'10'",
+                   'toolkit.framesRecording.bufferSize': 10000}
     filters = filter.ignore_first.prepare(1) + filter.median.prepare()
     unit = '1/FPS'
 
@@ -688,7 +690,9 @@ class tscrollx(PageloaderTest):
     """ ASAP mode """
     preferences = {'layout.frame_rate': 0,
                    'docshell.event_starvation_delay_hint': 1,
-                   'dom.send_after_paint_to_content': False}
+                   'dom.send_after_paint_to_content': False,
+                   'layout.css.scroll-behavior.spring-constant': "'10'",
+                   'toolkit.framesRecording.bufferSize': 10000}
     filters = filter.ignore_first.prepare(5) + filter.median.prepare()
     unit = 'ms'
 
