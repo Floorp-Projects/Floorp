@@ -45,7 +45,6 @@ TEST_HARNESS_FILES.testing.mochitest += [
     'browser-harness.xul',
     'browser-test-overlay.xul',
     'browser-test.js',
-    'cc-analyzer.js',
     'chrome-harness.js',
     'chunkifyTests.js',
     'gen_template.pl',
