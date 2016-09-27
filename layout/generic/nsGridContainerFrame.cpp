@@ -44,6 +44,14 @@ enum BaselineSharingGroup
   eLast = 1,
 };
 
+// https://drafts.csswg.org/css-sizing/#constraints
+enum class SizingConstraint
+{
+  eMinContent,  // sizing under min-content constraint
+  eMaxContent,  // sizing under max-content constraint
+  eNoConstraint // no constraint, used during Reflow
+};
+
 static void
 ReparentFrame(nsIFrame* aFrame, nsContainerFrame* aOldParent,
               nsContainerFrame* aNewParent)
@@ -1127,13 +1135,13 @@ struct nsGridContainerFrame::Tracks
    * Return true if aRange spans at least one track with an intrinsic sizing
    * function and does not span any tracks with a <flex> max-sizing function.
    * @param aRange the span of tracks to check
-   * @param aConstraint if MIN_ISIZE, treat a <flex> min-sizing as 'min-content'
+   * @param aConstraint if eMinContent, treat a <flex> min-sizing as 'min-content'
    * @param aState will be set to the union of the state bits of all the spanned
    *               tracks, unless a flex track is found - then it only contains
    *               the union of the tracks up to and including the flex track.
    */
   bool HasIntrinsicButNoFlexSizingInRange(const LineRange&      aRange,
-                                          IntrinsicISizeType    aConstraint,
+                                          SizingConstraint      aConstraint,
                                           TrackSize::StateBits* aState) const;
 
   // Some data we collect for aligning baseline-aligned items.
@@ -1178,7 +1186,7 @@ struct nsGridContainerFrame::Tracks
                             const TrackSizingFunctions& aFunctions,
                             LineRange GridArea::*       aRange,
                             nscoord                     aPercentageBasis,
-                            IntrinsicISizeType          aConstraint);
+                            SizingConstraint            aConstraint);
 
   /**
    * Helper for ResolveIntrinsicSize.  It implements step 1 "size tracks to fit
@@ -1188,7 +1196,7 @@ struct nsGridContainerFrame::Tracks
   bool ResolveIntrinsicSizeStep1(GridReflowInput&            aState,
                                  const TrackSizingFunctions& aFunctions,
                                  nscoord                     aPercentageBasis,
-                                 IntrinsicISizeType          aConstraint,
+                                 SizingConstraint            aConstraint,
                                  const LineRange&            aRange,
                                  const GridItemInfo&         aGridItem);
   /**
@@ -1547,7 +1555,7 @@ struct nsGridContainerFrame::Tracks
                       const TrackSizingFunctions& aFunctions,
                       nscoord                     aContentSize,
                       LineRange GridArea::*       aRange,
-                      IntrinsicISizeType          aConstraint);
+                      SizingConstraint            aConstraint);
 
   /**
    * Apply 'align/justify-content', whichever is relevant for this axis.
@@ -1866,7 +1874,7 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowInput
    */
   void CalculateTrackSizes(const Grid&        aGrid,
                            const LogicalSize& aContentBox,
-                           IntrinsicISizeType aConstraint);
+                           SizingConstraint   aConstraint);
 
   /**
    * Return the containing block for a grid item occupying aArea.
@@ -2331,7 +2339,7 @@ void
 nsGridContainerFrame::GridReflowInput::CalculateTrackSizes(
   const Grid&        aGrid,
   const LogicalSize& aContentBox,
-  IntrinsicISizeType aConstraint)
+  SizingConstraint   aConstraint)
 {
   mCols.Initialize(mColFunctions, mGridStyle->mGridColumnGap,
                    aGrid.mGridColEnd, aContentBox.ISize(mWM));
@@ -3702,7 +3710,7 @@ nsGridContainerFrame::Tracks::CalculateSizes(
   const TrackSizingFunctions& aFunctions,
   nscoord                     aContentBoxSize,
   LineRange GridArea::*       aRange,
-  IntrinsicISizeType          aConstraint)
+  SizingConstraint            aConstraint)
 {
   nscoord percentageBasis = aContentBoxSize;
   if (percentageBasis == NS_UNCONSTRAINEDSIZE) {
@@ -3711,7 +3719,7 @@ nsGridContainerFrame::Tracks::CalculateSizes(
   InitializeItemBaselines(aState, aGridItems);
   ResolveIntrinsicSize(aState, aGridItems, aFunctions, aRange, percentageBasis,
                        aConstraint);
-  if (aConstraint != nsLayoutUtils::MIN_ISIZE) {
+  if (aConstraint != SizingConstraint::eMinContent) {
     nscoord freeSpace = aContentBoxSize;
     if (freeSpace != NS_UNCONSTRAINEDSIZE) {
       freeSpace -= SumOfGridGaps();
@@ -3724,7 +3732,7 @@ nsGridContainerFrame::Tracks::CalculateSizes(
 bool
 nsGridContainerFrame::Tracks::HasIntrinsicButNoFlexSizingInRange(
   const LineRange&      aRange,
-  IntrinsicISizeType    aConstraint,
+  SizingConstraint      aConstraint,
   TrackSize::StateBits* aState) const
 {
   MOZ_ASSERT(!aRange.IsAuto(), "must have a definite range");
@@ -3733,8 +3741,8 @@ nsGridContainerFrame::Tracks::HasIntrinsicButNoFlexSizingInRange(
   const TrackSize::StateBits selector =
     TrackSize::eIntrinsicMinSizing |
     TrackSize::eIntrinsicMaxSizing |
-    (aConstraint == nsLayoutUtils::MIN_ISIZE ? TrackSize::eFlexMinSizing
-                                             : TrackSize::StateBits(0));
+    (aConstraint == SizingConstraint::eMinContent ? TrackSize::eFlexMinSizing :
+                                                    TrackSize::StateBits(0));
   bool foundIntrinsic = false;
   for (uint32_t i = start; i < end; ++i) {
     TrackSize::StateBits state = mSizes[i].mState;
@@ -3754,7 +3762,7 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSizeStep1(
   GridReflowInput&            aState,
   const TrackSizingFunctions& aFunctions,
   nscoord                     aPercentageBasis,
-  IntrinsicISizeType          aConstraint,
+  SizingConstraint            aConstraint,
   const LineRange&            aRange,
   const GridItemInfo&         aGridItem)
 {
@@ -3768,7 +3776,7 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSizeStep1(
     nscoord s = MinSize(aGridItem, aState, rc, wm, mAxis);
     sz.mBase = std::max(sz.mBase, s);
   } else if ((sz.mState & TrackSize::eMinContentMinSizing) ||
-             (aConstraint == nsLayoutUtils::MIN_ISIZE &&
+             (aConstraint == SizingConstraint::eMinContent &&
               (sz.mState & TrackSize::eFlexMinSizing))) {
     nscoord s = MinContentContribution(aGridItem, aState, rc, wm, mAxis);
     minContentContribution.emplace(s);
@@ -4083,7 +4091,7 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
   const TrackSizingFunctions& aFunctions,
   LineRange GridArea::*       aRange,
   nscoord                     aPercentageBasis,
-  IntrinsicISizeType          aConstraint)
+  SizingConstraint            aConstraint)
 {
   // Some data we collect on each item for Step 2 of the algorithm below.
   struct Step2ItemData
@@ -4111,9 +4119,9 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
   nsRenderingContext* rc = &aState.mRenderingContext;
   WritingMode wm = aState.mWM;
   uint32_t maxSpan = 0; // max span of the step2Items items
-  const TrackSize::StateBits flexMin =
-    aConstraint == nsLayoutUtils::MIN_ISIZE ? TrackSize::eFlexMinSizing
-                                            : TrackSize::StateBits(0);
+  TrackSize::StateBits flexMin =
+    aConstraint == SizingConstraint::eMinContent ? TrackSize::eFlexMinSizing :
+                                                   TrackSize::StateBits(0);
   iter.Reset();
   for (; !iter.AtEnd(); iter.Next()) {
     auto& gridItem = aGridItems[iter.GridItemIndex()];
@@ -5694,7 +5702,7 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
                         computedSize, aReflowInput.ComputedMaxSize());
 
     gridReflowInput.CalculateTrackSizes(grid, computedSize,
-                                        nsLayoutUtils::PREF_ISIZE);
+                                        SizingConstraint::eNoConstraint);
   } else {
     consumedBSize = GetConsumedBSize();
     gridReflowInput.InitializeForContinuation(this, consumedBSize);
@@ -5977,11 +5985,11 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
 
 nscoord
 nsGridContainerFrame::IntrinsicISize(nsRenderingContext* aRenderingContext,
-                                     IntrinsicISizeType  aConstraint)
+                                     IntrinsicISizeType  aType)
 {
   RenumberList();
 
-  // Calculate the sum of column sizes under aConstraint.
+  // Calculate the sum of column sizes under intrinsic sizing.
   // http://dev.w3.org/csswg/css-grid/#intrinsic-sizes
   GridReflowInput state(this, *aRenderingContext);
   InitImplicitNamedAreas(state.mGridStyle); // XXX optimize
@@ -6035,9 +6043,11 @@ nsGridContainerFrame::IntrinsicISize(nsRenderingContext* aRenderingContext,
   }
   state.mCols.Initialize(state.mColFunctions, state.mGridStyle->mGridColumnGap,
                          grid.mGridColEnd, NS_UNCONSTRAINEDSIZE);
+  auto constraint = aType == nsLayoutUtils::MIN_ISIZE ?
+    SizingConstraint::eMinContent : SizingConstraint::eMaxContent;
   state.mCols.CalculateSizes(state, state.mGridItems, state.mColFunctions,
                              NS_UNCONSTRAINEDSIZE, &GridArea::mCols,
-                             aConstraint);
+                             constraint);
   nscoord length = 0;
   for (const TrackSize& sz : state.mCols.mSizes) {
     length += sz.mBase;
