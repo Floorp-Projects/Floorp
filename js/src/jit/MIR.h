@@ -2665,9 +2665,6 @@ class MParameter : public MNullaryInstruction
 {
     int32_t index_;
 
-  public:
-    static const int32_t THIS_SLOT = -1;
-
     MParameter(int32_t index, TemporaryTypeSet* types)
       : index_(index)
     {
@@ -2677,8 +2674,9 @@ class MParameter : public MNullaryInstruction
 
   public:
     INSTRUCTION_HEADER(Parameter)
-    static MParameter* New(TempAllocator& alloc, int32_t index, TemporaryTypeSet* types);
+    TRIVIAL_NEW_WRAPPERS
 
+    static const int32_t THIS_SLOT = -1;
     int32_t index() const {
         return index_;
     }
