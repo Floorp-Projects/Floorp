@@ -59,6 +59,7 @@ class VideoPuppeteer(object):
 
     _video_var_script = (
         'var video = arguments[0];'
+        'var baseURI = arguments[0].baseURI;'
         'var currentTime = video.wrappedJSObject.currentTime;'
         'var duration = video.wrappedJSObject.duration;'
         'var buffered = video.wrappedJSObject.buffered;'
@@ -203,7 +204,7 @@ class VideoPuppeteer(object):
         if (self.stall_wait_time and
                 self._last_seen_video_state.lag > self.stall_wait_time):
             raise VideoException('Video {} stalled.\n{}'
-                                 .format(self._last_seen_video_state.video_url,
+                                 .format(self._last_seen_video_state.video_uri,
                                          self))
 
         # We are cruising, so we are not done.
@@ -251,7 +252,8 @@ class VideoPuppeteer(object):
         of the wrapped element. The fields in the tuple should be used as
         follows:
 
-        current_time: The current time of the wrapped element.
+        base_uri: the baseURI attribute of the wrapped element.
+        current_time: the current time of the wrapped element.
         duration: the duration of the wrapped element.
         buffered: the buffered ranges of the wrapped element. In its raw form
         this is as a list where the first element is the length and the second
@@ -269,12 +271,12 @@ class VideoPuppeteer(object):
         droppedFrames: number of dropped frames for the wrapped element.
         corruptedFrames: number of corrupted frames for the wrapped.
         video_src: the src attribute of the wrapped element.
-        video_url: the url attribute of the wrapped element.
 
         :return: A 'video_state_info' named tuple class.
         """
         return namedtuple('video_state_info',
-                          ['current_time',
+                          ['base_uri',
+                           'current_time',
                            'duration',
                            'remaining_time',
                            'buffered',
@@ -283,8 +285,7 @@ class VideoPuppeteer(object):
                            'total_frames',
                            'dropped_frames',
                            'corrupted_frames',
-                           'video_src',
-                           'video_url'])
+                           'video_src'])
 
     def _create_video_state_info(self, **video_state_info_kwargs):
         """
@@ -330,7 +331,6 @@ class VideoPuppeteer(object):
             video_state_info_kwargs['remaining_time'] = self.expected_duration
         # Fetch non time critical source information
         video_state_info_kwargs['video_src'] = self.video.get_attribute('src')
-        video_state_info_kwargs['video_url'] = self.video.get_attribute('url')
         # Create video state snapshot
         state_info = self._video_state_named_tuple()
         return state_info(**video_state_info_kwargs)
@@ -341,6 +341,7 @@ class VideoPuppeteer(object):
             self._fetch_state_script_string = (
                 self._video_var_script +
                 'return ['
+                'baseURI,'
                 'currentTime,'
                 'duration,'
                 '[buffered.length, bufferedRanges],'
@@ -359,7 +360,7 @@ class VideoPuppeteer(object):
         information, such as lag. This is stored in the last seen state to
         stress that it's based on the snapshot.
         """
-        keys = ['current_time', 'duration', 'raw_buffered_ranges',
+        keys = ['base_uri', 'current_time', 'duration', 'raw_buffered_ranges',
                 'raw_played_ranges', 'total_frames', 'dropped_frames',
                 'corrupted_frames']
         values = self._execute_video_script(self._fetch_state_script)
