@@ -3,7 +3,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-/* global document, SimpleTest, requestAnimationFrame, is, ok */
+/* global window, document, SimpleTest, requestAnimationFrame, is, ok */
 /* exported Cc, Ci, Cu, Cr, Assert, Task, TargetFactory, Toolbox, browserRequire,
    forceRender, setProps, dumpn, checkOptimizationHeader, checkOptimizationTree */
 let { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
@@ -20,7 +20,7 @@ let { Toolbox } = require("devtools/client/framework/toolbox");
 flags.testing = true;
 let { require: browserRequire } = BrowserLoader({
   baseURI: "resource://devtools/client/performance/",
-  window: this
+  window
 });
 
 let $ = (selector, scope = document) => scope.querySelector(selector);

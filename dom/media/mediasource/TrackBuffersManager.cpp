@@ -274,22 +274,23 @@ TrackBuffersManager::EvictData(const TimeUnit& aPlaybackTime, int64_t aSize)
   }
   const int64_t toEvict = GetSize() + aSize - EvictionThreshold();
 
-  MSE_DEBUG("buffered=%lldkb, eviction threshold=%ukb, evict=%lldkb",
-            GetSize() / 1024, EvictionThreshold() / 1024, toEvict / 1024);
+  const uint32_t canEvict =
+    Evictable(HasVideo() ? TrackInfo::kVideoTrack : TrackInfo::kAudioTrack);
+
+  MSE_DEBUG(
+    "buffered=%lldkB, eviction threshold=%ukB, evict=%lldkB canevict=%ukB",
+    GetSize() / 1024, EvictionThreshold() / 1024, toEvict / 1024,
+    canEvict / 1024);
 
   if (toEvict <= 0) {
     mEvictionState = EvictionState::NO_EVICTION_NEEDED;
     return EvictDataResult::NO_DATA_EVICTED;
   }
-  if (toEvict <= 512*1024) {
-    // Don't bother evicting less than 512KB.
-    mEvictionState = EvictionState::NO_EVICTION_NEEDED;
-    return EvictDataResult::CANT_EVICT;
-  }
 
   EvictDataResult result;
 
-  if (mBufferFull && mEvictionState == EvictionState::EVICTION_COMPLETED) {
+  if (mBufferFull && mEvictionState == EvictionState::EVICTION_COMPLETED &&
+      canEvict < uint32_t(toEvict)) {
     // Our buffer is currently full. We will make another eviction attempt.
     // However, the current appendBuffer will fail as we can't know ahead of
     // time if the eviction will later succeed.
@@ -422,7 +423,7 @@ TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
   mEvictionState = EvictionState::EVICTION_COMPLETED;
 
   // Video is what takes the most space, only evict there if we have video.
-  const auto& track = HasVideo() ? mVideoTracks : mAudioTracks;
+  auto& track = HasVideo() ? mVideoTracks : mAudioTracks;
   const auto& buffer = track.mBuffers.LastElement();
   // Remove any data we've already played, or before the next sample to be
   // demuxed whichever is lowest.
@@ -1603,7 +1604,7 @@ TrackBuffersManager::CheckNextInsertionIndex(TrackData& aTrackData,
   TrackBuffer& data = aTrackData.mBuffers.LastElement();
 
   if (data.IsEmpty() || aSampleTime < aTrackData.mBufferedRanges.GetStart()) {
-    aTrackData.mNextInsertionIndex = Some(size_t(0));
+    aTrackData.mNextInsertionIndex = Some(0u);
     return true;
   }
 
@@ -1617,7 +1618,7 @@ TrackBuffersManager::CheckNextInsertionIndex(TrackData& aTrackData,
   }
   if (target.IsEmpty()) {
     // No target found, it will be added at the end of the track buffer.
-    aTrackData.mNextInsertionIndex = Some(data.Length());
+    aTrackData.mNextInsertionIndex = Some(uint32_t(data.Length()));
     return true;
   }
   // We now need to find the first frame of the searched interval.
@@ -1626,7 +1627,7 @@ TrackBuffersManager::CheckNextInsertionIndex(TrackData& aTrackData,
     const RefPtr<MediaRawData>& sample = data[i];
     if (sample->mTime >= target.mStart.ToMicroseconds() ||
         sample->GetEndTime() > target.mStart.ToMicroseconds()) {
-      aTrackData.mNextInsertionIndex = Some(size_t(i));
+      aTrackData.mNextInsertionIndex = Some(i);
       return true;
     }
   }
@@ -1686,7 +1687,7 @@ TrackBuffersManager::InsertFrames(TrackBuffer& aSamples,
       // to overlap the following frame.
       trackBuffer.mNextInsertionIndex.reset();
     }
-    size_t index =
+    uint32_t index =
       RemoveFrames(aIntervals, trackBuffer, trackBuffer.mNextInsertionIndex.refOr(0));
     if (index) {
       trackBuffer.mNextInsertionIndex = Some(index);
@@ -1706,8 +1707,15 @@ TrackBuffersManager::InsertFrames(TrackBuffer& aSamples,
         aIntervals.GetEnd() >= trackBuffer.mNextSampleTime) {
       MSE_DEBUG("Next sample to be played got overwritten");
       trackBuffer.mNextGetSampleIndex.reset();
+      ResetEvictionIndex(trackBuffer);
     } else if (trackBuffer.mNextInsertionIndex.ref() <= trackBuffer.mNextGetSampleIndex.ref()) {
       trackBuffer.mNextGetSampleIndex.ref() += aSamples.Length();
+      // We could adjust the eviction index so that the new data gets added to
+      // the evictable amount (as it is prior currentTime). However, considering
+      // new data is being added prior the current playback, it's likely that
+      // this data will be played next, and as such we probably don't want to
+      // have it evicted too early. So instead reset the eviction index instead.
+      ResetEvictionIndex(trackBuffer);
     }
   }
 
@@ -1737,7 +1745,7 @@ TrackBuffersManager::UpdateHighestTimestamp(TrackData& aTrackData,
   }
 }
 
-size_t
+uint32_t
 TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
                                   TrackData& aTrackData,
                                   uint32_t aStartIndex)
@@ -1783,6 +1791,7 @@ TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
   }
 
   int64_t maxSampleDuration = 0;
+  uint32_t sizeRemoved = 0;
   TimeIntervals removedIntervals;
   for (uint32_t i = firstRemovedIndex.ref(); i <= lastRemovedIndex; i++) {
     const RefPtr<MediaRawData> sample = data[i];
@@ -1793,8 +1802,9 @@ TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
     if (sample->mDuration > maxSampleDuration) {
       maxSampleDuration = sample->mDuration;
     }
-    aTrackData.mSizeBuffer -= sample->ComputedSizeOfIncludingThis();
+    sizeRemoved += sample->ComputedSizeOfIncludingThis();
   }
+  aTrackData.mSizeBuffer -= sizeRemoved;
 
   MSE_DEBUG("Removing frames from:%u (frames:%u) ([%f, %f))",
             firstRemovedIndex.ref(),
@@ -1807,9 +1817,21 @@ TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
         aTrackData.mNextGetSampleIndex.ref() <= lastRemovedIndex) {
       MSE_DEBUG("Next sample to be played got evicted");
       aTrackData.mNextGetSampleIndex.reset();
+      ResetEvictionIndex(aTrackData);
     } else if (aTrackData.mNextGetSampleIndex.ref() > lastRemovedIndex) {
-      aTrackData.mNextGetSampleIndex.ref() -=
-        lastRemovedIndex - firstRemovedIndex.ref() + 1;
+      uint32_t samplesRemoved = lastRemovedIndex - firstRemovedIndex.ref() + 1;
+      aTrackData.mNextGetSampleIndex.ref() -= samplesRemoved;
+      if (aTrackData.mEvictionIndex.mLastIndex > lastRemovedIndex) {
+        MOZ_DIAGNOSTIC_ASSERT(
+          aTrackData.mEvictionIndex.mLastIndex >= samplesRemoved &&
+          aTrackData.mEvictionIndex.mEvictable >= sizeRemoved,
+          "Invalid eviction index");
+        MonitorAutoLock mon(mMonitor);
+        aTrackData.mEvictionIndex.mLastIndex -= samplesRemoved;
+        aTrackData.mEvictionIndex.mEvictable -= sizeRemoved;
+      } else {
+        ResetEvictionIndex(aTrackData);
+      }
     }
   }
 
@@ -1951,6 +1973,33 @@ TrackBuffersManager::HighestEndTime()
   return highestEndTime;
 }
 
+void
+TrackBuffersManager::ResetEvictionIndex(TrackData& aTrackData)
+{
+  MonitorAutoLock mon(mMonitor);
+  aTrackData.mEvictionIndex.Reset();
+}
+
+void
+TrackBuffersManager::UpdateEvictionIndex(TrackData& aTrackData,
+                                         uint32_t currentIndex)
+{
+  uint32_t evictable = 0;
+  TrackBuffer& data = aTrackData.mBuffers.LastElement();
+  MOZ_DIAGNOSTIC_ASSERT(currentIndex >= aTrackData.mEvictionIndex.mLastIndex,
+                        "Invalid call");
+  MOZ_DIAGNOSTIC_ASSERT(currentIndex == data.Length() ||
+                        data[currentIndex]->mKeyframe,"Must stop at keyframe");
+
+  for (uint32_t i = aTrackData.mEvictionIndex.mLastIndex; i < currentIndex;
+       i++) {
+    evictable += data[i]->ComputedSizeOfIncludingThis();
+  }
+  aTrackData.mEvictionIndex.mLastIndex = currentIndex;
+  MonitorAutoLock mon(mMonitor);
+  aTrackData.mEvictionIndex.mEvictable += evictable;
+}
+
 const TrackBuffersManager::TrackBuffer&
 TrackBuffersManager::GetTrackBuffer(TrackInfo::TrackType aTrack)
 {
@@ -1989,6 +2038,7 @@ TrackBuffersManager::Seek(TrackInfo::TrackType aTrack,
     trackBuffer.mNextGetSampleIndex = Some(uint32_t(0));
     trackBuffer.mNextSampleTimecode = TimeUnit();
     trackBuffer.mNextSampleTime = TimeUnit();
+    ResetEvictionIndex(trackBuffer);
     return TimeUnit();
   }
 
@@ -2027,13 +2077,16 @@ TrackBuffersManager::Seek(TrackInfo::TrackType aTrack,
       break;
     }
   }
-  MSE_DEBUG("Keyframe %s found at %lld",
+  MSE_DEBUG("Keyframe %s found at %lld @ %u",
             lastKeyFrameTime.isSome() ? "" : "not",
-            lastKeyFrameTime.refOr(TimeUnit()).ToMicroseconds());
+            lastKeyFrameTime.refOr(TimeUnit()).ToMicroseconds(),
+            lastKeyFrameIndex);
 
   trackBuffer.mNextGetSampleIndex = Some(lastKeyFrameIndex);
   trackBuffer.mNextSampleTimecode = lastKeyFrameTimecode;
   trackBuffer.mNextSampleTime = lastKeyFrameTime.refOr(TimeUnit());
+  ResetEvictionIndex(trackBuffer);
+  UpdateEvictionIndex(trackBuffer, lastKeyFrameIndex);
 
   return lastKeyFrameTime.refOr(TimeUnit());
 }
@@ -2121,12 +2174,17 @@ TrackBuffersManager::SkipToNextRandomAccessPoint(TrackInfo::TrackType aTrack,
       parsed--;
     }
   }
+
+  if (aFound) {
+    UpdateEvictionIndex(trackData, trackData.mNextGetSampleIndex.ref());
+  }
+
   return parsed;
 }
 
 const MediaRawData*
 TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
-                               size_t aIndex,
+                               uint32_t aIndex,
                                const TimeUnit& aExpectedDts,
                                const TimeUnit& aExpectedPts,
                                const TimeUnit& aFuzz)
@@ -2193,6 +2251,9 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
       aResult = MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
       return nullptr;
     }
+    if (p->mKeyframe) {
+      UpdateEvictionIndex(trackData, trackData.mNextGetSampleIndex.ref());
+    }
     trackData.mNextGetSampleIndex.ref()++;
     // Estimate decode timestamp and timestamp of the next sample.
     TimeUnit nextSampleTimecode =
@@ -2244,6 +2305,13 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
     aResult = MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
     return nullptr;
   }
+
+  // Find the previous keyframe to calculate the evictable amount.
+  int32_t i = pos;
+  for (; !track[i]->mKeyframe; i--) {
+  }
+  UpdateEvictionIndex(trackData, i);
+
   trackData.mNextGetSampleIndex = Some(uint32_t(pos)+1);
   trackData.mNextSampleTimecode =
     TimeUnit::FromMicroseconds(sample->mTimecode + sample->mDuration);
@@ -2311,6 +2379,13 @@ TrackBuffersManager::FindCurrentPosition(TrackInfo::TrackType aTrack,
 
   // Still not found.
   return -1;
+}
+
+uint32_t
+TrackBuffersManager::Evictable(TrackInfo::TrackType aTrack) const
+{
+  MonitorAutoLock mon(mMonitor);
+  return GetTracksData(aTrack).mEvictionIndex.mEvictable;
 }
 
 TimeUnit

@@ -17,7 +17,6 @@ toolkit.jar:
   skin/classic/global/dialog.css
   skin/classic/global/dropmarker.css
   skin/classic/global/filefield.css
-  skin/classic/global/filepicker.css
   skin/classic/global/filters.svg
 * skin/classic/global/findBar.css
 * skin/classic/global/global.css

@@ -24,7 +24,7 @@ var { Toolbox } = require("devtools/client/framework/toolbox");
 flags.testing = true;
 var { require: browserRequire } = BrowserLoader({
   baseURI: "resource://devtools/client/shared/",
-  window: this
+  window
 });
 
 let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");

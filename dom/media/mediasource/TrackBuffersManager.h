@@ -147,6 +147,7 @@ public:
   {
     return mEnded;
   }
+  uint32_t Evictable(TrackInfo::TrackType aTrack) const;
   media::TimeUnit Seek(TrackInfo::TrackType aTrack,
                        const media::TimeUnit& aTime,
                        const media::TimeUnit& aFuzz);
@@ -307,7 +308,7 @@ private:
     // If set, position where the next contiguous frame will be inserted.
     // If a discontinuity is detected, it will be unset and recalculated upon
     // the next insertion.
-    Maybe<size_t> mNextInsertionIndex;
+    Maybe<uint32_t> mNextInsertionIndex;
     // Samples just demuxed, but not yet parsed.
     TrackBuffer mQueuedSamples;
     // We only manage a single track of each type at this time.
@@ -333,6 +334,26 @@ private:
     media::TimeUnit mNextSampleTimecode;
     // Approximation of the next sample's presentation timestamp.
     media::TimeUnit mNextSampleTime;
+
+    struct EvictionIndex
+    {
+      EvictionIndex() { Reset(); }
+      void Reset()
+      {
+        mEvictable = 0;
+        mLastIndex = 0;
+      }
+      uint32_t mEvictable;
+      uint32_t mLastIndex;
+    };
+    // Size of data that can be safely evicted during the next eviction
+    // cycle.
+    // We consider as evictable all frames up to the last keyframe prior to
+    // mNextGetSampleIndex. If mNextGetSampleIndex isn't set, then we assume
+    // that we can't yet evict data.
+    // Protected by global monitor, except when reading on the task queue as it
+    // is only written there.
+    EvictionIndex mEvictionIndex;
 
     void ResetAppendState()
     {
@@ -360,14 +381,17 @@ private:
   // Remove all frames and their dependencies contained in aIntervals.
   // Return the index at which frames were first removed or 0 if no frames
   // removed.
-  size_t RemoveFrames(const media::TimeIntervals& aIntervals,
-                      TrackData& aTrackData,
-                      uint32_t aStartIndex);
+  uint32_t RemoveFrames(const media::TimeIntervals& aIntervals,
+                        TrackData& aTrackData,
+                        uint32_t aStartIndex);
+  // Recalculate track's evictable amount.
+  void ResetEvictionIndex(TrackData& aTrackData);
+  void UpdateEvictionIndex(TrackData& aTrackData, uint32_t aCurrentIndex);
   // Find index of sample. Return a negative value if not found.
   uint32_t FindSampleIndex(const TrackBuffer& aTrackBuffer,
                            const media::TimeInterval& aInterval);
   const MediaRawData* GetSample(TrackInfo::TrackType aTrack,
-                                size_t aIndex,
+                                uint32_t aIndex,
                                 const media::TimeUnit& aExpectedDts,
                                 const media::TimeUnit& aExpectedPts,
                                 const media::TimeUnit& aFuzz);
@@ -380,6 +404,16 @@ private:
   // Trackbuffers definition.
   nsTArray<TrackData*> GetTracksList();
   TrackData& GetTracksData(TrackType aTrack)
+  {
+    switch(aTrack) {
+      case TrackType::kVideoTrack:
+        return mVideoTracks;
+      case TrackType::kAudioTrack:
+      default:
+        return mAudioTracks;
+    }
+  }
+  const TrackData& GetTracksData(TrackType aTrack) const
   {
     switch(aTrack) {
       case TrackType::kVideoTrack:
@@ -436,7 +470,7 @@ private:
   };
   Atomic<EvictionState> mEvictionState;
 
-  // Monitor to protect following objects accessed across multipple threads.
+  // Monitor to protect following objects accessed across multiple threads.
   mutable Monitor mMonitor;
   // Stable audio and video track time ranges.
   media::TimeIntervals mVideoBufferedRanges;
