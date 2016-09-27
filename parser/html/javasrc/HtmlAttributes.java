@@ -62,7 +62,7 @@ public final class HtmlAttributes implements Attributes {
     private @Auto AttributeName[] names;
 
     private @Auto String[] values; // XXX perhaps make this @NoLength?
-
+    
     // CPPONLY: private @Auto int[] lines; // XXX perhaps make this @NoLength?
 
     // [NOCPP[
