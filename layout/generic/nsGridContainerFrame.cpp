@@ -3642,15 +3642,28 @@ ContentContribution(const GridItemInfo&               aGridItem,
   return std::max(size, 0);
 }
 
+struct CachedIntrinsicSizes
+{
+  Maybe<nscoord> mMinSize;
+  Maybe<nscoord> mMinContentContribution;
+  Maybe<nscoord> mMaxContentContribution;
+};
+
 static nscoord
 MinContentContribution(const GridItemInfo&    aGridItem,
                        const GridReflowInput& aState,
                        nsRenderingContext*    aRC,
                        WritingMode            aCBWM,
-                       LogicalAxis            aAxis)
+                       LogicalAxis            aAxis,
+                       CachedIntrinsicSizes*  aCache)
 {
-  return ContentContribution(aGridItem, aState, aRC, aCBWM, aAxis,
-                             nsLayoutUtils::MIN_ISIZE);
+  if (aCache->mMinContentContribution.isSome()) {
+    return aCache->mMinContentContribution.value();
+  }
+  nscoord s = ContentContribution(aGridItem, aState, aRC, aCBWM, aAxis,
+                                  nsLayoutUtils::MIN_ISIZE);
+  aCache->mMinContentContribution.emplace(s);
+  return s;
 }
 
 static nscoord
@@ -3658,10 +3671,16 @@ MaxContentContribution(const GridItemInfo&    aGridItem,
                        const GridReflowInput& aState,
                        nsRenderingContext*    aRC,
                        WritingMode            aCBWM,
-                       LogicalAxis            aAxis)
+                       LogicalAxis            aAxis,
+                       CachedIntrinsicSizes*  aCache)
 {
-  return ContentContribution(aGridItem, aState, aRC, aCBWM, aAxis,
-                             nsLayoutUtils::PREF_ISIZE);
+  if (aCache->mMaxContentContribution.isSome()) {
+    return aCache->mMaxContentContribution.value();
+  }
+  nscoord s = ContentContribution(aGridItem, aState, aRC, aCBWM, aAxis,
+                                  nsLayoutUtils::PREF_ISIZE);
+  aCache->mMaxContentContribution.emplace(s);
+  return s;
 }
 
 // Computes the min-size contribution for a grid item, as defined at
@@ -3671,15 +3690,22 @@ MinSize(const GridItemInfo&    aGridItem,
         const GridReflowInput& aState,
         nsRenderingContext*    aRC,
         WritingMode            aCBWM,
-        LogicalAxis            aAxis)
+        LogicalAxis            aAxis,
+        CachedIntrinsicSizes*  aCache)
 {
+  if (aCache->mMinSize.isSome()) {
+    return aCache->mMinSize.value();
+  }
   nsIFrame* child = aGridItem.mFrame;
   PhysicalAxis axis(aCBWM.PhysicalAxis(aAxis));
   const nsStylePosition* stylePos = child->StylePosition();
   const nsStyleCoord& sizeStyle =
     axis == eAxisHorizontal ? stylePos->mWidth : stylePos->mHeight;
   if (sizeStyle.GetUnit() != eStyleUnit_Auto) {
-    return MinContentContribution(aGridItem, aState, aRC, aCBWM, aAxis);
+    nscoord s =
+      MinContentContribution(aGridItem, aState, aRC, aCBWM, aAxis, aCache);
+    aCache->mMinSize.emplace(s);
+    return s;
   }
 
   // https://drafts.csswg.org/css-grid/#min-size-auto
@@ -3708,6 +3734,7 @@ MinSize(const GridItemInfo&    aGridItem,
                                           nsLayoutUtils::MIN_ISIZE,
                                           nsLayoutUtils::MIN_INTRINSIC_ISIZE));
   }
+  aCache->mMinSize.emplace(sz);
   return sz;
 }
 
@@ -3774,8 +3801,7 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSizeStep1(
   const LineRange&            aRange,
   const GridItemInfo&         aGridItem)
 {
-  Maybe<nscoord> minContentContribution;
-  Maybe<nscoord> maxContentContribution;
+  CachedIntrinsicSizes cache;
   // min sizing
   TrackSize& sz = mSizes[aRange.mStart];
   WritingMode wm = aState.mWM;
@@ -3783,46 +3809,38 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSizeStep1(
   if (sz.mState & TrackSize::eAutoMinSizing) {
     nscoord s;
     if (aConstraint == SizingConstraint::eMinContent) {
-      s = MinContentContribution(aGridItem, aState, rc, wm, mAxis);
+      s = MinContentContribution(aGridItem, aState, rc, wm, mAxis, &cache);
     } else if (aConstraint == SizingConstraint::eMaxContent) {
-      s = MaxContentContribution(aGridItem, aState, rc, wm, mAxis);
+      s = MaxContentContribution(aGridItem, aState, rc, wm, mAxis, &cache);
     } else {
       MOZ_ASSERT(aConstraint == SizingConstraint::eNoConstraint);
-      s = MinSize(aGridItem, aState, rc, wm, mAxis);
+      s = MinSize(aGridItem, aState, rc, wm, mAxis, &cache);
     }
     sz.mBase = std::max(sz.mBase, s);
   } else if ((sz.mState & TrackSize::eMinContentMinSizing) ||
              (aConstraint == SizingConstraint::eMinContent &&
               (sz.mState & TrackSize::eFlexMinSizing))) {
-    nscoord s = MinContentContribution(aGridItem, aState, rc, wm, mAxis);
-    minContentContribution.emplace(s);
-    sz.mBase = std::max(sz.mBase, minContentContribution.value());
+    auto s = MinContentContribution(aGridItem, aState, rc, wm, mAxis, &cache);
+    sz.mBase = std::max(sz.mBase, s);
   } else if (sz.mState & TrackSize::eMaxContentMinSizing) {
-    nscoord s = MaxContentContribution(aGridItem, aState, rc, wm, mAxis);
-    maxContentContribution.emplace(s);
-    sz.mBase = std::max(sz.mBase, maxContentContribution.value());
+    auto s = MaxContentContribution(aGridItem, aState, rc, wm, mAxis, &cache);
+    sz.mBase = std::max(sz.mBase, s);
   }
   // max sizing
   if (sz.mState & TrackSize::eMinContentMaxSizing) {
-    if (minContentContribution.isNothing()) {
-      nscoord s = MinContentContribution(aGridItem, aState, rc, wm, mAxis);
-      minContentContribution.emplace(s);
-    }
+    auto s = MinContentContribution(aGridItem, aState, rc, wm, mAxis, &cache);
     if (sz.mLimit == NS_UNCONSTRAINEDSIZE) {
-      sz.mLimit = minContentContribution.value();
+      sz.mLimit = s;
     } else {
-      sz.mLimit = std::max(sz.mLimit, minContentContribution.value());
+      sz.mLimit = std::max(sz.mLimit, s);
     }
   } else if (sz.mState & (TrackSize::eAutoMaxSizing |
                           TrackSize::eMaxContentMaxSizing)) {
-    if (maxContentContribution.isNothing()) {
-      nscoord s = MaxContentContribution(aGridItem, aState, rc, wm, mAxis);
-      maxContentContribution.emplace(s);
-    }
+    auto s = MaxContentContribution(aGridItem, aState, rc, wm, mAxis, &cache);
     if (sz.mLimit == NS_UNCONSTRAINEDSIZE) {
-      sz.mLimit = maxContentContribution.value();
+      sz.mLimit = s;
     } else {
-      sz.mLimit = std::max(sz.mLimit, maxContentContribution.value());
+      sz.mLimit = std::max(sz.mLimit, s);
     }
     if (MOZ_UNLIKELY(sz.mState & TrackSize::eFitContent)) {
       // Clamp mLimit to the fit-content() size, for §12.5.1.
@@ -4163,21 +4181,22 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
           }
         }
         stateBitsPerSpan[span] |= state;
+        CachedIntrinsicSizes cache;
         nscoord minSize = 0;
         if (state & (flexMin | TrackSize::eIntrinsicMinSizing)) { // for 2.1
-          minSize = MinSize(gridItem, aState, rc, wm, mAxis);
+          minSize = MinSize(gridItem, aState, rc, wm, mAxis, &cache);
         }
         nscoord minContent = 0;
         if (state & (flexMin | TrackSize::eMinOrMaxContentMinSizing | // for 2.2
                      TrackSize::eIntrinsicMaxSizing)) {               // for 2.5
           minContent = MinContentContribution(gridItem, aState,
-                                              rc, wm, mAxis);
+                                              rc, wm, mAxis, &cache);
         }
         nscoord maxContent = 0;
         if (state & (TrackSize::eMaxContentMinSizing |         // for 2.3
                      TrackSize::eAutoOrMaxContentMaxSizing)) { // for 2.6
           maxContent = MaxContentContribution(gridItem, aState,
-                                              rc, wm, mAxis);
+                                              rc, wm, mAxis, &cache);
         }
         step2Items.AppendElement(
           Step2ItemData({span, state, lineRange, minSize,
@@ -4439,7 +4458,9 @@ nsGridContainerFrame::Tracks::FindUsedFlexFraction(
   for (; !iter.AtEnd(); iter.Next()) {
     const GridItemInfo& item = aGridItems[iter.GridItemIndex()];
     if (item.mState[mAxis] & ItemState::eIsFlexing) {
-      nscoord spaceToFill = MaxContentContribution(item, aState, rc, wm, mAxis);
+      // XXX optimize: bug 1194446
+      nscoord spaceToFill = ContentContribution(item, aState, rc, wm, mAxis,
+                                                nsLayoutUtils::PREF_ISIZE);
       if (spaceToFill <= 0) {
         continue;
       }
