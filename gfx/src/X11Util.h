@@ -118,10 +118,7 @@ public:
     static int
     ErrorHandler(Display *, XErrorEvent *ev);
 
-    /**
-     * @param aAllowOffMainThread whether to warn if used off main thread
-     */
-    ScopedXErrorHandler(bool aAllowOffMainThread = false);
+    ScopedXErrorHandler();
 
     ~ScopedXErrorHandler();
 
@@ -132,15 +129,6 @@ public:
      *           the first one will be returned.
      */
     bool SyncAndGetError(Display *dpy, XErrorEvent *ev = nullptr);
-};
-
-class OffMainThreadScopedXErrorHandler : public ScopedXErrorHandler
-{
-public:
-  OffMainThreadScopedXErrorHandler()
-    : ScopedXErrorHandler(true)
-  {
-  }
 };
 
 } // namespace mozilla
