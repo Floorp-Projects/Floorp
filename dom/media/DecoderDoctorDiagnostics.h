@@ -82,8 +82,8 @@ public:
   void SetGMPPDMFailedToStartup() { mGMPPDMFailedToStartup = true; }
   bool DidGMPPDMFailToStartup() const { return mGMPPDMFailedToStartup; }
 
-  void SetVideoFormatNotSupport() { mVideoNotSupported = true; }
-  void SetAudioFormatNotSupport() { mAudioNotSupported = true; }
+  void SetVideoNotSupported() { mVideoNotSupported = true; }
+  void SetAudioNotSupported() { mAudioNotSupported = true; }
 
   void SetGMP(const nsACString& aGMP) { mGMP = aGMP; }
   const nsACString& GMP() const { return mGMP; }
