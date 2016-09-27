@@ -15,6 +15,16 @@ struct PRFileDesc;
 [scriptable, builtinclass, uuid(e7a3a954-384b-4aeb-a5f7-55626b0de9be)]
 interface nsILocalFileWin : nsILocalFile
 {
+    /**
+     *  initWithCommandLine
+     *
+     *  Initialize this object based on the main app path of a commandline
+     *  handler.
+     *
+     *   @param aCommandLine
+     *       the commandline to parse an app path out of.
+     */
+    void initWithCommandLine(in AString aCommandLine);
    /**
     * getVersionInfoValue
     *
