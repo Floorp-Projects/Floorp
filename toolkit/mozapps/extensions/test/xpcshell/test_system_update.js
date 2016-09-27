@@ -289,19 +289,6 @@ const TEST_CONDITIONS = {
  *             if missing the test condition's initialState is used.
  */
 const TESTS = {
-  // Test that an error response does nothing
-  error: {
-    test: function*() {
-      try {
-        yield install_system_addons("foobar");
-        do_throw("Expected to fail the update check");
-      }
-      catch (e) {
-        do_check_true(true, "Expected to fail the update check");
-      }
-    },
-  },
-
   // Test that a blank response does nothing
   blank: {
     updateList: null,
