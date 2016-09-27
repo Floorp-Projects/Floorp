@@ -55,13 +55,6 @@ tasks:
       tags:
         createdForUser: {{owner}}
 
-      scopes:
-        # Bug 1269443: cache scopes, etc. must be listed explicitly
-        - "docker-worker:cache:level-{{level}}-*"
-        - "docker-worker:cache:tooltool-cache"
-        # mozilla-taskcluster will append the appropriate assume:repo:<repo>
-        # scope here.
-
       routes:
         - "index.gecko.v2.{{project}}.latest.firefox.decision"
         - "tc-treeherder.v2.{{project}}.{{revision}}.{{pushlog_id}}"
