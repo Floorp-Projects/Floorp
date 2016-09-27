@@ -9,7 +9,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsICryptoHash.h"
-#include "SRIMetadata.h"
 
 class nsIChannel;
 class nsIUnicharStreamLoader;
@@ -17,6 +16,8 @@ class nsIConsoleReportCollector;
 
 namespace mozilla {
 namespace dom {
+
+class SRIMetadata;
 
 class SRICheck final
 {

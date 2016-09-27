@@ -28,7 +28,7 @@ public:
 
   static
   DIBTextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                         ClientIPCAllocator* aAllocator);
+                         LayersIPCChannel* aAllocator);
 
 protected:
   DIBTextureData(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,

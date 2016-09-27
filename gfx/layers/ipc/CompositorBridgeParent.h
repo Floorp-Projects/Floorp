@@ -239,6 +239,9 @@ public:
                                 mozilla::ipc::SharedMemory::SharedMemoryType aType,
                                 mozilla::ipc::Shmem* aShmem) override;
   virtual void DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
+
+  virtual bool RecvSyncWithCompositor() override { return true; }
+
 };
 
 class CompositorBridgeParent final : public CompositorBridgeParentBase

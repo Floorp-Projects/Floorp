@@ -31,9 +31,14 @@ class VRDisplayClient;
 
 class VRManagerChild : public PVRManagerChild
                      , public layers::TextureForwarder
-                     , public layers::ShmemAllocator
+                     , public layers::KnowsCompositor
 {
 public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRManagerChild, override);
+
+  TextureForwarder* GetTextureForwarder() override { return this; }
+  LayersIPCActor* GetLayersIPCActor() override { return this; }
+
   static VRManagerChild* Get();
 
   // Indicate that an observer wants to receive VR events.
@@ -110,8 +115,6 @@ protected:
 
 
   // ShmemAllocator
-
-  virtual ShmemAllocator* AsShmemAllocator() override { return this; }
 
   virtual bool AllocShmem(size_t aSize,
                           ipc::SharedMemory::SharedMemoryType aType,

@@ -23,7 +23,7 @@ cd nss && make nss_build_all
 # we run scan-build on these folders
 declare -a scan=("lib/ssl" "lib/freebl")
 # corresponds to the number of errors that are expected in the |scan| folder
-declare -a ignore=(1 0)
+declare -a ignore=(0 0)
 
 for i in "${scan[@]}"
 do

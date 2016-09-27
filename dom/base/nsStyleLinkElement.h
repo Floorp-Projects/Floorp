@@ -15,7 +15,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/CORSMode.h"
-#include "mozilla/CSSStyleSheet.h"
+#include "mozilla/StyleSheetInlines.h"
 #include "mozilla/net/ReferrerPolicy.h"
 #include "nsCOMPtr.h"
 #include "nsIStyleSheetLinkingElement.h"
@@ -50,8 +50,8 @@ public:
   }
 
   // nsIStyleSheetLinkingElement  
-  NS_IMETHOD SetStyleSheet(mozilla::StyleSheetHandle aStyleSheet) override;
-  NS_IMETHOD_(mozilla::StyleSheetHandle) GetStyleSheet() override;
+  NS_IMETHOD SetStyleSheet(mozilla::StyleSheet* aStyleSheet) override;
+  NS_IMETHOD_(mozilla::StyleSheet*) GetStyleSheet() override;
   NS_IMETHOD InitStyleLinkElement(bool aDontLoadStyle) override;
   NS_IMETHOD UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
                               bool* aWillNotify,
@@ -143,7 +143,7 @@ private:
                               bool* aIsAlternate,
                               bool aForceUpdate);
 
-  mozilla::StyleSheetHandle::RefPtr mStyleSheet;
+  RefPtr<mozilla::StyleSheet> mStyleSheet;
 protected:
   bool mDontLoadStyle;
   bool mUpdatesEnabled;

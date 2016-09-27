@@ -2583,8 +2583,8 @@ ClampColorStops(nsTArray<ColorStop>& aStops)
     }
   }
 
-  MOZ_ASSERT(aStops[0].mPosition >= 0);
-  MOZ_ASSERT(aStops.LastElement().mPosition <= 1);
+  MOZ_ASSERT(aStops[0].mPosition >= -1e6);
+  MOZ_ASSERT(aStops.LastElement().mPosition - 1 <= 1e6);
 
   // The end points won't exist yet if they don't fall in the original range of
   // |aStops|. Create them if needed.

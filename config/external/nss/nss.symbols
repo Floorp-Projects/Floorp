@@ -673,6 +673,7 @@ SSL_HandshakeCallback
 SSL_HandshakeNegotiatedExtension
 SSL_ImplementedCiphers @DATA@
 SSL_ImportFD
+SSL_NamedGroupConfig
 SSL_NumImplementedCiphers @DATA@
 SSL_OptionSet
 SSL_OptionSetDefault
@@ -680,6 +681,7 @@ SSL_PeerCertificate
 SSL_PeerCertificateChain
 SSL_PeerStapledOCSPResponses
 SSL_ResetHandshake
+SSL_SendAdditionalKeyShares
 SSL_SetCanFalseStartCallback
 SSL_SetDowngradeCheckVersion
 SSL_SetNextProtoNego

@@ -9,8 +9,8 @@
 #include "nsStyleSheetService.h"
 #include "mozilla/CSSStyleSheet.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/StyleSheetHandle.h"
-#include "mozilla/StyleSheetHandleInlines.h"
+#include "mozilla/StyleSheet.h"
+#include "mozilla/StyleSheetInlines.h"
 #include "mozilla/Unused.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/ContentParent.h"
@@ -81,7 +81,7 @@ nsStyleSheetService::RegisterFromEnumerator(nsICategoryManager  *aManager,
 }
 
 int32_t
-nsStyleSheetService::FindSheetByURI(const nsTArray<StyleSheetHandle::RefPtr>& aSheets,
+nsStyleSheetService::FindSheetByURI(const nsTArray<RefPtr<StyleSheet>>& aSheets,
                                     nsIURI* aSheetURI)
 {
   for (int32_t i = aSheets.Length() - 1; i >= 0; i-- ) {
@@ -158,7 +158,7 @@ nsStyleSheetService::LoadAndRegisterSheet(nsIURI *aSheetURI,
 
       // XXXheycam Once the nsStyleSheetService can hold ServoStyleSheets too,
       // we'll need to include them in the notification.
-      StyleSheetHandle sheet = mSheets[aSheetType].LastElement();
+      StyleSheet* sheet = mSheets[aSheetType].LastElement();
       if (sheet->IsGecko()) {
         CSSStyleSheet* cssSheet = sheet->AsGecko();
         serv->NotifyObservers(NS_ISUPPORTS_CAST(nsIDOMCSSStyleSheet*, cssSheet),
@@ -216,7 +216,7 @@ nsStyleSheetService::LoadAndRegisterSheetInternal(nsIURI *aSheetURI,
   // style sheet.
   RefPtr<css::Loader> loader = new css::Loader(StyleBackendType::Gecko);
 
-  StyleSheetHandle::RefPtr sheet;
+  RefPtr<StyleSheet> sheet;
   nsresult rv = loader->LoadSheetSync(aSheetURI, parsingMode, true, &sheet);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -270,7 +270,7 @@ nsStyleSheetService::PreloadSheet(nsIURI *aSheetURI, uint32_t aSheetType,
 
   RefPtr<css::Loader> loader = new css::Loader(StyleBackendType::Gecko);
 
-  StyleSheetHandle::RefPtr sheet;
+  RefPtr<StyleSheet> sheet;
   nsresult rv = loader->LoadSheetSync(aSheetURI, parsingMode, true, &sheet);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -293,7 +293,7 @@ nsStyleSheetService::UnregisterSheet(nsIURI *aSheetURI, uint32_t aSheetType)
 
   int32_t foundIndex = FindSheetByURI(mSheets[aSheetType], aSheetURI);
   NS_ENSURE_TRUE(foundIndex >= 0, NS_ERROR_INVALID_ARG);
-  StyleSheetHandle::RefPtr sheet = mSheets[aSheetType][foundIndex];
+  RefPtr<StyleSheet> sheet = mSheets[aSheetType][foundIndex];
   mSheets[aSheetType].RemoveElementAt(foundIndex);
 
   const char* message;
@@ -376,7 +376,7 @@ nsStyleSheetService::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) co
   size_t n = aMallocSizeOf(this);
   for (auto& sheetArray : mSheets) {
     n += sheetArray.ShallowSizeOfExcludingThis(aMallocSizeOf);
-    for (StyleSheetHandle sheet : sheetArray) {
+    for (StyleSheet* sheet : sheetArray) {
       n += sheet->SizeOfIncludingThis(aMallocSizeOf);
     }
   }

@@ -40,27 +40,27 @@ class nsLayoutStylesheetCache final
    */
   static nsLayoutStylesheetCache* For(mozilla::StyleBackendType aType);
 
-  mozilla::StyleSheetHandle ScrollbarsSheet();
-  mozilla::StyleSheetHandle FormsSheet();
+  mozilla::StyleSheet* ScrollbarsSheet();
+  mozilla::StyleSheet* FormsSheet();
   // This function is expected to return nullptr when the dom.forms.number
   // pref is disabled.
-  mozilla::StyleSheetHandle NumberControlSheet();
-  mozilla::StyleSheetHandle UserContentSheet();
-  mozilla::StyleSheetHandle UserChromeSheet();
-  mozilla::StyleSheetHandle UASheet();
-  mozilla::StyleSheetHandle HTMLSheet();
-  mozilla::StyleSheetHandle MinimalXULSheet();
-  mozilla::StyleSheetHandle XULSheet();
-  mozilla::StyleSheetHandle QuirkSheet();
-  mozilla::StyleSheetHandle SVGSheet();
-  mozilla::StyleSheetHandle MathMLSheet();
-  mozilla::StyleSheetHandle CounterStylesSheet();
-  mozilla::StyleSheetHandle NoScriptSheet();
-  mozilla::StyleSheetHandle NoFramesSheet();
-  mozilla::StyleSheetHandle ChromePreferenceSheet(nsPresContext* aPresContext);
-  mozilla::StyleSheetHandle ContentPreferenceSheet(nsPresContext* aPresContext);
-  mozilla::StyleSheetHandle ContentEditableSheet();
-  mozilla::StyleSheetHandle DesignModeSheet();
+  mozilla::StyleSheet* NumberControlSheet();
+  mozilla::StyleSheet* UserContentSheet();
+  mozilla::StyleSheet* UserChromeSheet();
+  mozilla::StyleSheet* UASheet();
+  mozilla::StyleSheet* HTMLSheet();
+  mozilla::StyleSheet* MinimalXULSheet();
+  mozilla::StyleSheet* XULSheet();
+  mozilla::StyleSheet* QuirkSheet();
+  mozilla::StyleSheet* SVGSheet();
+  mozilla::StyleSheet* MathMLSheet();
+  mozilla::StyleSheet* CounterStylesSheet();
+  mozilla::StyleSheet* NoScriptSheet();
+  mozilla::StyleSheet* NoFramesSheet();
+  mozilla::StyleSheet* ChromePreferenceSheet(nsPresContext* aPresContext);
+  mozilla::StyleSheet* ContentPreferenceSheet(nsPresContext* aPresContext);
+  mozilla::StyleSheet* ContentEditableSheet();
+  mozilla::StyleSheet* DesignModeSheet();
 
   static void InvalidatePreferenceSheets();
 
@@ -75,17 +75,17 @@ private:
   void InitFromProfile();
   void InitMemoryReporter();
   void LoadSheetURL(const char* aURL,
-                    mozilla::StyleSheetHandle::RefPtr* aSheet,
+                    RefPtr<mozilla::StyleSheet>* aSheet,
                     mozilla::css::SheetParsingMode aParsingMode);
   void LoadSheetFile(nsIFile* aFile,
-                     mozilla::StyleSheetHandle::RefPtr* aSheet,
+                     RefPtr<mozilla::StyleSheet>* aSheet,
                      mozilla::css::SheetParsingMode aParsingMode);
-  void LoadSheet(nsIURI* aURI, mozilla::StyleSheetHandle::RefPtr* aSheet,
+  void LoadSheet(nsIURI* aURI, RefPtr<mozilla::StyleSheet>* aSheet,
                  mozilla::css::SheetParsingMode aParsingMode);
-  static void InvalidateSheet(mozilla::StyleSheetHandle::RefPtr* aGeckoSheet,
-                              mozilla::StyleSheetHandle::RefPtr* aServoSheet);
+  static void InvalidateSheet(RefPtr<mozilla::StyleSheet>* aGeckoSheet,
+                              RefPtr<mozilla::StyleSheet>* aServoSheet);
   static void DependentPrefChanged(const char* aPref, void* aData);
-  void BuildPreferenceSheet(mozilla::StyleSheetHandle::RefPtr* aSheet,
+  void BuildPreferenceSheet(RefPtr<mozilla::StyleSheet>* aSheet,
                             nsPresContext* aPresContext);
 
   static mozilla::StaticRefPtr<nsLayoutStylesheetCache> gStyleCache_Gecko;
@@ -93,25 +93,25 @@ private:
   static mozilla::StaticRefPtr<mozilla::css::Loader> gCSSLoader_Gecko;
   static mozilla::StaticRefPtr<mozilla::css::Loader> gCSSLoader_Servo;
   mozilla::StyleBackendType mBackendType;
-  mozilla::StyleSheetHandle::RefPtr mChromePreferenceSheet;
-  mozilla::StyleSheetHandle::RefPtr mContentEditableSheet;
-  mozilla::StyleSheetHandle::RefPtr mContentPreferenceSheet;
-  mozilla::StyleSheetHandle::RefPtr mCounterStylesSheet;
-  mozilla::StyleSheetHandle::RefPtr mDesignModeSheet;
-  mozilla::StyleSheetHandle::RefPtr mFormsSheet;
-  mozilla::StyleSheetHandle::RefPtr mHTMLSheet;
-  mozilla::StyleSheetHandle::RefPtr mMathMLSheet;
-  mozilla::StyleSheetHandle::RefPtr mMinimalXULSheet;
-  mozilla::StyleSheetHandle::RefPtr mNoFramesSheet;
-  mozilla::StyleSheetHandle::RefPtr mNoScriptSheet;
-  mozilla::StyleSheetHandle::RefPtr mNumberControlSheet;
-  mozilla::StyleSheetHandle::RefPtr mQuirkSheet;
-  mozilla::StyleSheetHandle::RefPtr mSVGSheet;
-  mozilla::StyleSheetHandle::RefPtr mScrollbarsSheet;
-  mozilla::StyleSheetHandle::RefPtr mUASheet;
-  mozilla::StyleSheetHandle::RefPtr mUserChromeSheet;
-  mozilla::StyleSheetHandle::RefPtr mUserContentSheet;
-  mozilla::StyleSheetHandle::RefPtr mXULSheet;
+  RefPtr<mozilla::StyleSheet> mChromePreferenceSheet;
+  RefPtr<mozilla::StyleSheet> mContentEditableSheet;
+  RefPtr<mozilla::StyleSheet> mContentPreferenceSheet;
+  RefPtr<mozilla::StyleSheet> mCounterStylesSheet;
+  RefPtr<mozilla::StyleSheet> mDesignModeSheet;
+  RefPtr<mozilla::StyleSheet> mFormsSheet;
+  RefPtr<mozilla::StyleSheet> mHTMLSheet;
+  RefPtr<mozilla::StyleSheet> mMathMLSheet;
+  RefPtr<mozilla::StyleSheet> mMinimalXULSheet;
+  RefPtr<mozilla::StyleSheet> mNoFramesSheet;
+  RefPtr<mozilla::StyleSheet> mNoScriptSheet;
+  RefPtr<mozilla::StyleSheet> mNumberControlSheet;
+  RefPtr<mozilla::StyleSheet> mQuirkSheet;
+  RefPtr<mozilla::StyleSheet> mSVGSheet;
+  RefPtr<mozilla::StyleSheet> mScrollbarsSheet;
+  RefPtr<mozilla::StyleSheet> mUASheet;
+  RefPtr<mozilla::StyleSheet> mUserChromeSheet;
+  RefPtr<mozilla::StyleSheet> mUserContentSheet;
+  RefPtr<mozilla::StyleSheet> mXULSheet;
 };
 
 #endif

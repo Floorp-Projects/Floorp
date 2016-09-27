@@ -175,12 +175,13 @@ class TestAgent {
 
       SECStatus rv = SSL_GetCipherSuiteInfo(SSL_ImplementedCiphers[i], &csinfo,
                                             sizeof(csinfo));
-      if (rv != SECSuccess) return false;
-      if (!csinfo.isExportable) {
-        rv = SSL_CipherPrefSet(ssl_fd_, SSL_ImplementedCiphers[i], PR_TRUE);
-        if (rv != SECSuccess) {
-          return false;
-        }
+      if (rv != SECSuccess) {
+        return false;
+      }
+
+      rv = SSL_CipherPrefSet(ssl_fd_, SSL_ImplementedCiphers[i], PR_TRUE);
+      if (rv != SECSuccess) {
+        return false;
       }
     }
     return true;

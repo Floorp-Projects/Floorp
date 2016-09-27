@@ -1356,7 +1356,7 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   }
 
   lf->SetShadowManager(shadowManager);
-  lf->IdentifyTextureHost(textureFactoryIdentifier);
+  lm->UpdateTextureFactoryIdentifier(textureFactoryIdentifier);
   ImageBridgeChild::IdentifyCompositorTextureHost(textureFactoryIdentifier);
   gfx::VRManagerChild::IdentifyTextureHost(textureFactoryIdentifier);
   WindowUsesOMTC();

@@ -18,7 +18,7 @@ typedef PRUint16 SSL3ProtocolVersion;
 /* The TLS 1.3 draft version. Used to avoid negotiating
  * between incompatible pre-standard TLS 1.3 drafts.
  * TODO(ekr@rtfm.com): Remove when TLS 1.3 is published. */
-#define TLS_1_3_DRAFT_VERSION 14
+#define TLS_1_3_DRAFT_VERSION 15
 
 typedef PRUint16 ssl3CipherSuite;
 /* The cipher suites are defined in sslproto.h */
@@ -185,19 +185,11 @@ typedef struct {
 typedef enum {
     kea_null,
     kea_rsa,
-    kea_rsa_export,
-    kea_rsa_export_1024,
     kea_dh_dss,
-    kea_dh_dss_export,
     kea_dh_rsa,
-    kea_dh_rsa_export,
     kea_dhe_dss,
-    kea_dhe_dss_export,
     kea_dhe_rsa,
-    kea_dhe_rsa_export,
     kea_dh_anon,
-    kea_dh_anon_export,
-    kea_rsa_fips,
     kea_ecdh_ecdsa,
     kea_ecdhe_ecdsa,
     kea_ecdh_rsa,
@@ -205,6 +197,7 @@ typedef enum {
     kea_ecdh_anon,
     kea_ecdhe_psk,
     kea_dhe_psk,
+    kea_tls13_any,
 } SSL3KeyExchangeAlgorithm;
 
 typedef struct {
@@ -299,10 +292,14 @@ typedef struct {
 } NewSessionTicket;
 
 typedef enum {
-    ticket_allow_early_data = 1,
-    ticket_allow_dhe_resumption = 2,
-    ticket_allow_psk_resumption = 4
-} TLS13SessionTicketFlags;
+    tls13_psk_ke = 0,
+    tls13_psk_dh_ke = 1
+} TLS13PskKEModes;
+
+typedef enum {
+    tls13_psk_auth = 0,
+    tls13_psk_sign_auth = 1
+} TLS13PskAuthModes;
 
 typedef enum {
     CLIENT_AUTH_ANONYMOUS = 0,

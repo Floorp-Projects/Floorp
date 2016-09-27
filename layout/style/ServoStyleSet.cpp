@@ -352,7 +352,7 @@ nsresult
 ServoStyleSet::AddDocStyleSheet(ServoStyleSheet* aSheet,
                                 nsIDocument* aDocument)
 {
-  StyleSheetHandle::RefPtr strong(aSheet);
+  RefPtr<StyleSheet> strong(aSheet);
 
   mSheets[SheetType::Doc].RemoveElement(aSheet);
 
