@@ -13,11 +13,11 @@
 #include "nsIMIMEInfo.h"
 #include "nsMIMEInfoWin.h"
 #include "nsMimeTypes.h"
-#include "nsILocalFileWin.h"
 #include "nsIProcess.h"
 #include "plstr.h"
 #include "nsAutoPtr.h"
 #include "nsNativeCharsetUtils.h"
+#include "nsLocalFile.h"
 #include "nsIWindowsRegKey.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/WindowsVersion.h"
@@ -286,114 +286,6 @@ nsOSHelperAppService::typeFromExtEquals(const char16_t* aExt, const char *aType)
   return eq;
 }
 
-// Strip a handler command string of its quotes and parameters.
-static void CleanupHandlerPath(nsString& aPath)
-{
-  // Example command strings passed into this routine:
-
-  // 1) C:\Program Files\Company\some.exe -foo -bar
-  // 2) C:\Program Files\Company\some.dll
-  // 3) C:\Windows\some.dll,-foo -bar
-  // 4) C:\Windows\some.cpl,-foo -bar
-
-  int32_t lastCommaPos = aPath.RFindChar(',');
-  if (lastCommaPos != kNotFound)
-    aPath.Truncate(lastCommaPos);
-
-  aPath.Append(' ');
-
-  // case insensitive
-  uint32_t index = aPath.Find(".exe ", true);
-  if (index == kNotFound)
-    index = aPath.Find(".dll ", true);
-  if (index == kNotFound)
-    index = aPath.Find(".cpl ", true);
-
-  if (index != kNotFound)
-    aPath.Truncate(index + 4);
-  aPath.Trim(" ", true, true);
-}
-
-// Strip the windows host process bootstrap executable rundll32.exe
-// from a handler's command string if it exists.
-static void StripRundll32(nsString& aCommandString)
-{
-  // Example rundll formats:
-  // C:\Windows\System32\rundll32.exe "path to dll"
-  // rundll32.exe "path to dll"
-  // C:\Windows\System32\rundll32.exe "path to dll", var var
-  // rundll32.exe "path to dll", var var
-
-  NS_NAMED_LITERAL_STRING(rundllSegment, "rundll32.exe ");
-  NS_NAMED_LITERAL_STRING(rundllSegmentShort, "rundll32 ");
-
-  // case insensitive
-  int32_t strLen = rundllSegment.Length();
-  int32_t index = aCommandString.Find(rundllSegment, true);
-  if (index == kNotFound) {
-    strLen = rundllSegmentShort.Length();
-    index = aCommandString.Find(rundllSegmentShort, true);
-  }
-
-  if (index != kNotFound) {
-    uint32_t rundllSegmentLength = index + strLen;
-    aCommandString.Cut(0, rundllSegmentLength);
-  }
-}
-
-// Returns the fully qualified path to an application handler based on
-// a parameterized command string. Note this routine should not be used
-// to launch the associated application as it strips parameters and
-// rundll.exe from the string. Designed for retrieving display information
-// on a particular handler.   
-/* static */ bool nsOSHelperAppService::CleanupCmdHandlerPath(nsAString& aCommandHandler)
-{
-  nsAutoString handlerCommand(aCommandHandler);
-
-  // Straight command path:
-  //
-  // %SystemRoot%\system32\NOTEPAD.EXE var
-  // "C:\Program Files\iTunes\iTunes.exe" var var
-  // C:\Program Files\iTunes\iTunes.exe var var
-  //
-  // Example rundll handlers:
-  //
-  // rundll32.exe "%ProgramFiles%\Win...ery\PhotoViewer.dll", var var
-  // rundll32.exe "%ProgramFiles%\Windows Photo Gallery\PhotoViewer.dll"
-  // C:\Windows\System32\rundll32.exe "path to dll", var var
-  // %SystemRoot%\System32\rundll32.exe "%ProgramFiles%\Win...ery\Photo
-  //    Viewer.dll", var var
-
-  // Expand environment variables so we have full path strings.
-  uint32_t bufLength = ::ExpandEnvironmentStringsW(handlerCommand.get(),
-                                                   L"", 0);
-  if (bufLength == 0) // Error
-    return false;
-
-  auto destination = mozilla::MakeUniqueFallible<wchar_t[]>(bufLength);
-  if (!destination)
-    return false;
-  if (!::ExpandEnvironmentStringsW(handlerCommand.get(), destination.get(),
-                                   bufLength))
-    return false;
-
-  handlerCommand.Assign(destination.get());
-
-  // Remove quotes around paths
-  handlerCommand.StripChars("\"");
-
-  // Strip windows host process bootstrap so we can get to the actual
-  // handler.
-  StripRundll32(handlerCommand);
-
-  // Trim any command parameters so that we have a native path we can
-  // initialize a local file with.
-  CleanupHandlerPath(handlerCommand);
-
-  aCommandHandler.Assign(handlerCommand);
-  return true;
-}
-
 // The "real" name of a given helper app (as specified by the path to the 
 // executable file held in various registry keys) is stored n the VERSIONINFO
 // block in the file's resources. We need to find the path to the executable
@@ -482,28 +374,20 @@ nsOSHelperAppService::GetDefaultAppInfo(const nsAString& aAppInfo,
     }
   }
 
-  if (!CleanupCmdHandlerPath(handlerCommand))
-    return NS_ERROR_FAILURE;
-
   // XXX FIXME: If this fails, the UI will display the full command
   // string.
   // There are some rare cases this can happen - ["url.dll" -foo]
   // for example won't resolve correctly to the system dir. The 
   // subsequent launch of the helper app will work though.
-  nsCOMPtr<nsIFile> lf;
-  NS_NewLocalFile(handlerCommand, true, getter_AddRefs(lf));
-  if (!lf)
-    return NS_ERROR_FILE_NOT_FOUND;
-
+  nsCOMPtr<nsIFile> lf = new nsLocalFile();
   nsILocalFileWin* lfw = nullptr;
   CallQueryInterface(lf, &lfw);
-
-  if (lfw) {
-    // The "FileDescription" field contains the actual name of the application.
-    lfw->GetVersionInfoField("FileDescription", aDefaultDescription);
-    // QI addref'ed for us.
-    *aDefaultApplication = lfw;
-  }
+  rv = lfw->InitWithCommandLine(handlerCommand);
+  NS_ENSURE_SUCCESS(rv, rv);
+  // The "FileDescription" field contains the actual name of the application.
+  lfw->GetVersionInfoField("FileDescription", aDefaultDescription);
+  // QI addref'ed for us.
+  *aDefaultApplication = lfw;
 
   return NS_OK;
 }

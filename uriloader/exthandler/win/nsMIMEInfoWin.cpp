@@ -6,7 +6,7 @@
 
 #include "nsArrayEnumerator.h"
 #include "nsCOMArray.h"
-#include "nsIFile.h"
+#include "nsLocalFile.h"
 #include "nsMIMEInfoWin.h"
 #include "nsNetUtil.h"
 #include <windows.h>
@@ -18,7 +18,6 @@
 #include "windows.h"
 #include "nsIWindowsRegKey.h"
 #include "nsIProcess.h"
-#include "nsOSHelperAppService.h"
 #include "nsUnicharUtils.h"
 #include "nsITextToSubURI.h"
 #include "nsVariant.h"
@@ -348,7 +347,7 @@ bool nsMIMEInfoWin::GetAppsVerbCommandHandler(const nsAString& appExeName,
                                            appFilesystemCommand))) {
     
     // Expand environment vars, clean up any misc.
-    if (!nsOSHelperAppService::CleanupCmdHandlerPath(appFilesystemCommand))
+    if (!nsLocalFile::CleanupCmdHandlerPath(appFilesystemCommand))
       return false;
     
     applicationPath = appFilesystemCommand;
@@ -493,7 +492,7 @@ bool nsMIMEInfoWin::GetProgIDVerbCommandHandler(const nsAString& appProgIDName,
   if (NS_SUCCEEDED(appKey->ReadStringValue(EmptyString(), appFilesystemCommand))) {
     
     // Expand environment vars, clean up any misc.
-    if (!nsOSHelperAppService::CleanupCmdHandlerPath(appFilesystemCommand))
+    if (!nsLocalFile::CleanupCmdHandlerPath(appFilesystemCommand))
       return false;
     
     applicationPath = appFilesystemCommand;
