@@ -549,18 +549,15 @@ class Dumper:
         '''Process all pending jobs and any jobs their callbacks submit.
         By default, will shutdown the executor, but for testcases that
         need multiple runs, pass stop_pool = False.'''
-        success = True
         for job, callback in JobPool.as_completed():
             try:
                 res = job.result()
             except Exception as e:
                 self.output(sys.stderr, 'Job raised exception: %s' % e)
-                success = False
                 continue
             callback(res)
         if stop_pool:
             JobPool.shutdown()
-        return 0 if success else 1
 
     def Process(self, *args):
         """Process files recursively in args."""
@@ -598,10 +595,7 @@ class Dumper:
                     yield fullpath
 
     def SubmitJob(self, file_key, func_name, args, callback):
-        """Submits a job to run |func_name| with |args| to the pool of
-        workers, calling |callback| when the job completes. If the function
-        call raises, the call to `Dumper.Finish` will return failure.
-        """
+        """Submits a job to the pool of workers"""
         JobPool.submit((self, Dumper.lock, Dumper.srcdirRepoInfo, func_name, args), callback)
 
     def ProcessFilesFinished(self, res):
@@ -977,7 +971,6 @@ class Dumper_Mac(Dumper):
             subprocess.check_call(cmd, stdout=open(os.devnull, 'w'))
         except subprocess.CalledProcessError as e:
             self.output_pid(sys.stderr, 'Error running dsymutil: %s' % str(e))
-            raise Exception('Error running dsymutil')
 
         if not os.path.exists(dsymbundle):
             # dsymutil won't produce a .dSYM for files without symbols
@@ -1050,17 +1043,17 @@ to canonical locations in the source repository. Specify
         pdbstr = os.environ.get("PDBSTR_PATH")
         if not os.path.exists(pdbstr):
             print >> sys.stderr, "Invalid path to pdbstr.exe - please set/check PDBSTR_PATH.\n"
-            return 1
+            sys.exit(1)
 
     if len(args) < 3:
         parser.error("not enough arguments")
-        return 1
+        exit(1)
 
     try:
         manifests = validate_install_manifests(options.install_manifests)
     except (IOError, ValueError) as e:
         parser.error(str(e))
-        return 1
+        exit(1)
     file_mapping = make_file_mapping(manifests)
     dumper = GetPlatformSpecificDumper(dump_syms=args[0],
                                        symbol_path=args[1],
@@ -1074,7 +1067,7 @@ to canonical locations in the source repository. Specify
                                        file_mapping=file_mapping)
 
     dumper.Process(*args[2:])
-    return dumper.Finish()
+    dumper.Finish()
 
 # run main if run directly
 if __name__ == "__main__":
@@ -1082,4 +1075,4 @@ if __name__ == "__main__":
     # note that this needs to be in the __main__ guard, or else Windows will choke
     Dumper.GlobalInit()
 
-    sys.exit(main())
+    main()
