@@ -80,6 +80,7 @@ function populateReportList() {
 
   var formatter = Cc["@mozilla.org/intl/scriptabledateformat;1"].
                   createInstance(Ci.nsIScriptableDateFormat);
+  var body = document.getElementById("tbody");
   var ios = Cc["@mozilla.org/network/io-service;1"].
             getService(Ci.nsIIOService);
   var reportURI = ios.newURI(reportURL, null, null);
@@ -119,11 +120,7 @@ function populateReportList() {
                                        date.getSeconds());
     cell.appendChild(document.createTextNode(timestr));
     row.appendChild(cell);
-    if (reports[i].pending) {
-      document.getElementById("unsubmitted").appendChild(row);
-    } else {
-      document.getElementById("submitted").appendChild(row);
-    }
+    body.appendChild(row);
   }
 }
 
