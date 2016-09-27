@@ -1,6 +1,87 @@
 # This file contains a definition of the scalar probes that are recorded in Telemetry.
 # They are submitted with the "main" pings and can be inspected in about:telemetry.
 
+# The following section contains the browser engagement scalars.
+browser.engagement:
+  max_concurrent_tab_count:
+    bug_numbers:
+      - 1271304
+    description: >
+      The count of maximum number of tabs open during a subsession,
+      across all windows, including tabs in private windows and restored
+      at startup.
+    expires: "55"
+    kind: uint
+    notification_emails:
+      - rweiss@mozilla.com
+    release_channel_collection: opt-out
+
+  tab_open_event_count:
+    bug_numbers:
+      - 1271304
+    description: >
+      The count of tab open events per subsession, across all windows, after the
+      session has been restored. This includes tab open events from private windows
+      and from manual session restorations (i.e. after crashes and from about:home).
+    expires: "55"
+    kind: uint
+    notification_emails:
+      - rweiss@mozilla.com
+    release_channel_collection: opt-out
+
+  max_concurrent_window_count:
+    bug_numbers:
+      - 1271304
+    description: >
+      The count of maximum number of browser windows open during a subsession. This
+      includes private windows and the ones opened when starting the browser.
+    expires: "55"
+    kind: uint
+    notification_emails:
+      - rweiss@mozilla.com
+    release_channel_collection: opt-out
+
+  window_open_event_count:
+    bug_numbers:
+      - 1271304
+    description: >
+      The count of browser window open events per subsession, after the session
+      has been restored. The count includes private windows and the ones from manual
+      session restorations (i.e. after crashes and from about:home).
+    expires: "55"
+    kind: uint
+    notification_emails:
+      - rweiss@mozilla.com
+    release_channel_collection: opt-out
+
+  total_uri_count:
+    bug_numbers:
+      - 1271313
+    description: >
+      The count of the total non-unique http(s) URIs visited in a subsession, including
+      page reloads, after the session has been restored. This does not include background
+      page requests and URIs from embedded pages or private browsing.
+    expires: "55"
+    kind: uint
+    notification_emails:
+      - rweiss@mozilla.com
+    release_channel_collection: opt-out
+
+  unique_domains_count:
+    bug_numbers:
+      - 1271310
+    description: >
+      The count of the unique domains visited in a subsession, after the session
+      has been restored. Subdomains under eTLD are aggregated after the first level
+      (i.e. test.example.com and other.example.com are only counted once).
+      This does not include background page requests and domains from embedded pages
+      or private browsing. The count is limited to 100 unique domains.
+    expires: "55"
+    kind: uint
+    notification_emails:
+      - rweiss@mozilla.com
+    release_channel_collection: opt-out
+
 # The following section is for probes testing the Telemetry system. They will not be
 # submitted in pings and are only used for testing.
 telemetry.test:
@@ -122,84 +203,3 @@ telemetry.test:
     keyed: true
     notification_emails:
       - telemetry-client-dev@mozilla.com
-
-# The following section contains the browser engagement scalars.
-browser.engagement:
-  max_concurrent_tab_count:
-    bug_numbers:
-      - 1271304
-    description: >
-      The count of maximum number of tabs open during a subsession,
-      across all windows, including tabs in private windows and restored
-      at startup.
-    expires: "55"
-    kind: uint
-    notification_emails:
-      - rweiss@mozilla.com
-    release_channel_collection: opt-out
-
-  tab_open_event_count:
-    bug_numbers:
-      - 1271304
-    description: >
-      The count of tab open events per subsession, across all windows, after the
-      session has been restored. This includes tab open events from private windows
-      and from manual session restorations (i.e. after crashes and from about:home).
-    expires: "55"
-    kind: uint
-    notification_emails:
-      - rweiss@mozilla.com
-    release_channel_collection: opt-out
-
-  max_concurrent_window_count:
-    bug_numbers:
-      - 1271304
-    description: >
-      The count of maximum number of browser windows open during a subsession. This
-      includes private windows and the ones opened when starting the browser.
-    expires: "55"
-    kind: uint
-    notification_emails:
-      - rweiss@mozilla.com
-    release_channel_collection: opt-out
-
-  window_open_event_count:
-    bug_numbers:
-      - 1271304
-    description: >
-      The count of browser window open events per subsession, after the session
-      has been restored. The count includes private windows and the ones from manual
-      session restorations (i.e. after crashes and from about:home).
-    expires: "55"
-    kind: uint
-    notification_emails:
-      - rweiss@mozilla.com
-    release_channel_collection: opt-out
-
-  total_uri_count:
-    bug_numbers:
-      - 1271313
-    description: >
-      The count of the total non-unique http(s) URIs visited in a subsession, including
-      page reloads, after the session has been restored. This does not include background
-      page requests and URIs from embedded pages or private browsing.
-    expires: "55"
-    kind: uint
-    notification_emails:
-      - rweiss@mozilla.com
-    release_channel_collection: opt-out
-
-  unique_domains_count:
-    bug_numbers:
-      - 1271310
-    description: >
-      The count of the unique domains visited in a subsession, after the session
-      has been restored. Subdomains under eTLD are aggregated after the first level
-      (i.e. test.example.com and other.example.com are only counted once).
-      This does not include background page requests and domains from embedded pages
-      or private browsing. The count is limited to 100 unique domains.
-    expires: "55"
-    kind: uint
-    notification_emails:
-      - rweiss@mozilla.com
-    release_channel_collection: opt-out
