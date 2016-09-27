@@ -5271,15 +5271,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::GetBorderColorFor(mozilla::css::Side aSide)
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-
-  nscolor color;
-  bool foreground;
-  StyleBorder()->GetBorderColor(aSide, color, foreground);
-  if (foreground) {
-    color = StyleColor()->mColor;
-  }
-
-  SetToRGBAColor(val, color);
+  SetValueFromComplexColor(val, StyleBorder()->mBorderColor[aSide]);
   return val.forget();
 }
 

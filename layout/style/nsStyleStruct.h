@@ -882,10 +882,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBackground {
   nscolor mBackgroundColor;       // [reset]
 };
 
-#define BORDER_COLOR_FOREGROUND   0x20
-#define BORDER_COLOR_SPECIAL      BORDER_COLOR_FOREGROUND
-#define BORDER_STYLE_MASK         0x1F
-
 #define NS_SPACING_MARGIN   0
 #define NS_SPACING_PADDING  1
 #define NS_SPACING_BORDER   2
@@ -1200,7 +1196,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBorder
   // HasVisibleStyle will be false even though there *is* a border.
   bool HasVisibleStyle(mozilla::css::Side aSide) const
   {
-    return IsVisibleBorderStyle(GetBorderStyle(aSide));
+    return IsVisibleBorderStyle(mBorderStyle[aSide]);
   }
 
   // aBorderWidth is in twips
@@ -1239,14 +1235,13 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBorder
   uint8_t GetBorderStyle(mozilla::css::Side aSide) const
   {
     NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side");
-    return (mBorderStyle[aSide] & BORDER_STYLE_MASK);
+    return mBorderStyle[aSide];
   }
 
   void SetBorderStyle(mozilla::css::Side aSide, uint8_t aStyle)
   {
     NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side");
-    mBorderStyle[aSide] &= ~BORDER_STYLE_MASK;
-    mBorderStyle[aSide] |= (aStyle & BORDER_STYLE_MASK);
+    mBorderStyle[aSide] = aStyle;
     mComputedBorder.Side(aSide) =
       (HasVisibleStyle(aSide) ? mBorder.Side(aSide) : 0);
   }
@@ -1254,27 +1249,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBorder
   inline bool IsBorderImageLoaded() const
   {
     return mBorderImageSource.IsLoaded();
-  }
-
-  void GetBorderColor(mozilla::css::Side aSide, nscolor& aColor,
-                      bool& aForeground) const
-  {
-    aForeground = false;
-    NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side");
-    if ((mBorderStyle[aSide] & BORDER_COLOR_SPECIAL) == 0) {
-      aColor = mBorderColor[aSide];
-    } else if (mBorderStyle[aSide] & BORDER_COLOR_FOREGROUND) {
-      aForeground = true;
-    } else {
-      NS_NOTREACHED("OUTLINE_COLOR_INITIAL should not be set here");
-    }
-  }
-
-  void SetBorderColor(mozilla::css::Side aSide, nscolor aColor)
-  {
-    NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side");
-    mBorderColor[aSide] = aColor;
-    mBorderStyle[aSide] &= ~BORDER_COLOR_SPECIAL;
   }
 
   void TrackImage(nsPresContext* aContext)
@@ -1314,14 +1288,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBorder
       }
       last->mNext = colorEntry;
     }
-    mBorderStyle[aIndex] &= ~BORDER_COLOR_SPECIAL;
-  }
-
-  void SetBorderToForeground(mozilla::css::Side aSide)
-  {
-    NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side");
-    mBorderStyle[aSide] &= ~BORDER_COLOR_SPECIAL;
-    mBorderStyle[aSide] |= BORDER_COLOR_FOREGROUND;
   }
 
   imgIRequest* GetBorderImageRequest() const
@@ -1347,6 +1313,22 @@ public:
   mozilla::StyleBoxDecorationBreak mBoxDecorationBreak; // [reset]
 
 protected:
+  uint8_t       mBorderStyle[4];  // [reset] See nsStyleConsts.h
+
+public:
+  // [reset] the colors to use for a simple border.
+  // not used for -moz-border-colors
+  union {
+    struct {
+      mozilla::StyleComplexColor mBorderTopColor;
+      mozilla::StyleComplexColor mBorderRightColor;
+      mozilla::StyleComplexColor mBorderBottomColor;
+      mozilla::StyleComplexColor mBorderLeftColor;
+    };
+    mozilla::StyleComplexColor mBorderColor[4];
+  };
+
+protected:
   // mComputedBorder holds the CSS2.1 computed border-width values.
   // In particular, these widths take into account the border-style
   // for the relevant side, and the values are rounded to the nearest
@@ -1368,14 +1350,24 @@ protected:
   // value either. The values are rounded to the nearest device pixel.
   nsMargin      mBorder;
 
-  uint8_t       mBorderStyle[4];  // [reset] See nsStyleConsts.h
-  nscolor       mBorderColor[4];  // [reset] the colors to use for a simple
-                                  // border.  not used for -moz-border-colors
 private:
   nscoord       mTwipsPerPixel;
 
   nsStyleBorder& operator=(const nsStyleBorder& aOther) = delete;
 };
+
+#define ASSERT_BORDER_COLOR_FIELD(side_)                          \
+  static_assert(offsetof(nsStyleBorder, mBorder##side_##Color) == \
+                  offsetof(nsStyleBorder, mBorderColor) +         \
+                    size_t(mozilla::eSide##side_) *               \
+                    sizeof(mozilla::StyleComplexColor),           \
+                "mBorder" #side_ "Color must be at same offset "  \
+                "as mBorderColor[mozilla::eSide" #side_ "]")
+ASSERT_BORDER_COLOR_FIELD(Top);
+ASSERT_BORDER_COLOR_FIELD(Right);
+ASSERT_BORDER_COLOR_FIELD(Bottom);
+ASSERT_BORDER_COLOR_FIELD(Left);
+#undef ASSERT_BORDER_COLOR_FIELD
 
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleOutline

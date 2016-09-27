@@ -7587,45 +7587,12 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
   {
     const nsCSSPropertyID* subprops =
       nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_color);
-    bool foreground;
     NS_FOR_CSS_SIDES(side) {
-      const nsCSSValue& value = *aRuleData->ValueFor(subprops[side]);
-      if (eCSSUnit_Inherit == value.GetUnit()) {
-        conditions.SetUncacheable();
-        if (parentContext) {
-          parentBorder->GetBorderColor(side, borderColor, foreground);
-          if (foreground) {
-            // We want to inherit the color from the parent, not use the
-            // color on the element where this chunk of style data will be
-            // used.  We can ensure that the data for the parent are fully
-            // computed (unlike for the element where this will be used, for
-            // which the color could be specified on a more specific rule).
-            border->SetBorderColor(side, parentContext->StyleColor()->mColor);
-          } else
-            border->SetBorderColor(side, borderColor);
-        } else {
-          // We're the root
-          border->SetBorderToForeground(side);
-        }
-      }
-      else if (SetColor(value, unused, mPresContext, aContext, borderColor,
-                        conditions)) {
-        border->SetBorderColor(side, borderColor);
-      }
-      else if (eCSSUnit_Enumerated == value.GetUnit()) {
-        switch (value.GetIntValue()) {
-          case NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR:
-            border->SetBorderToForeground(side);
-            break;
-          default:
-            NS_NOTREACHED("Unexpected enumerated color");
-            break;
-        }
-      }
-      else if (eCSSUnit_Initial == value.GetUnit() ||
-               eCSSUnit_Unset == value.GetUnit()) {
-        border->SetBorderToForeground(side);
-      }
+      SetComplexColor<eUnsetInitial>(*aRuleData->ValueFor(subprops[side]),
+                                     parentBorder->mBorderColor[side],
+                                     StyleComplexColor::CurrentColor(),
+                                     mPresContext,
+                                     border->mBorderColor[side], conditions);
     }
   }
 
