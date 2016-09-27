@@ -908,7 +908,7 @@ function pollForReadyState(msg, start = undefined, callback = undefined) {
  */
 function get(msg) {
   let start = new Date().getTime();
-  let command_id = msg.json.command_id;
+  let {pageTimeout, url, command_id} = msg.json;
 
   let docShell = curContainer.frame
       .document
@@ -923,7 +923,7 @@ function get(msg) {
   let requestedURL;
   let loadEventExpected = false;
   try {
-    requestedURL = new URL(msg.json.url).toString();
+    requestedURL = new URL(url).toString();
     let curURL = curContainer.frame.location;
     loadEventExpected = navigate.isLoadEventExpected(curURL, requestedURL);
   } catch (e) {
@@ -1003,7 +1003,7 @@ function get(msg) {
     }
   };
 
-  if (msg.json.pageTimeout) {
+  if (typeof pageTimeout != "undefined") {
     let onTimeout = function() {
       if (loadEventExpected) {
         removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
@@ -1011,7 +1011,7 @@ function get(msg) {
       webProgress.removeProgressListener(loadListener);
       sendError(new TimeoutError("Error loading page, timed out (onDOMContentLoaded)"), command_id);
     }
-    navTimer.initWithCallback(onTimeout, msg.json.pageTimeout, Ci.nsITimer.TYPE_ONE_SHOT);
+    navTimer.initWithCallback(onTimeout, pageTimeout, Ci.nsITimer.TYPE_ONE_SHOT);
   }
 
   // in Firefox we need to move to the top frame before navigating
