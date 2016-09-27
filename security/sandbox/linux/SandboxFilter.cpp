@@ -415,6 +415,61 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
       : broker->LStat(path, buf);
   }
 
+  static intptr_t ChmodTrap(ArgsRef aArgs, void* aux) {
+    auto broker = static_cast<SandboxBrokerClient*>(aux);
+    auto path = reinterpret_cast<const char*>(aArgs.args[0]);
+    auto mode = static_cast<mode_t>(aArgs.args[1]);
+    return broker->Chmod(path, mode);
+  }
+
+  static intptr_t LinkTrap(ArgsRef aArgs, void *aux) {
+    auto broker = static_cast<SandboxBrokerClient*>(aux);
+    auto path = reinterpret_cast<const char*>(aArgs.args[0]);
+    auto path2 = reinterpret_cast<const char*>(aArgs.args[1]);
+    return broker->Link(path, path2);
+  }
+
+  static intptr_t SymlinkTrap(ArgsRef aArgs, void *aux) {
+    auto broker = static_cast<SandboxBrokerClient*>(aux);
+    auto path = reinterpret_cast<const char*>(aArgs.args[0]);
+    auto path2 = reinterpret_cast<const char*>(aArgs.args[1]);
+    return broker->Symlink(path, path2);
+  }
+
+  static intptr_t RenameTrap(ArgsRef aArgs, void *aux) {
+    auto broker = static_cast<SandboxBrokerClient*>(aux);
+    auto path = reinterpret_cast<const char*>(aArgs.args[0]);
+    auto path2 = reinterpret_cast<const char*>(aArgs.args[1]);
+    return broker->Rename(path, path2);
+  }
+
+  static intptr_t MkdirTrap(ArgsRef aArgs, void* aux) {
+    auto broker = static_cast<SandboxBrokerClient*>(aux);
+    auto path = reinterpret_cast<const char*>(aArgs.args[0]);
+    auto mode = static_cast<mode_t>(aArgs.args[1]);
+    return broker->Mkdir(path, mode);
+  }
+
+  static intptr_t RmdirTrap(ArgsRef aArgs, void* aux) {
+    auto broker = static_cast<SandboxBrokerClient*>(aux);
+    auto path = reinterpret_cast<const char*>(aArgs.args[0]);
+    return broker->Rmdir(path);
+  }
+
+  static intptr_t UnlinkTrap(ArgsRef aArgs, void* aux) {
+    auto broker = static_cast<SandboxBrokerClient*>(aux);
+    auto path = reinterpret_cast<const char*>(aArgs.args[0]);
+    return broker->Unlink(path);
+  }
+
+  static intptr_t ReadlinkTrap(ArgsRef aArgs, void* aux) {
+    auto broker = static_cast<SandboxBrokerClient*>(aux);
+    auto path = reinterpret_cast<const char*>(aArgs.args[0]);
+    auto buf = reinterpret_cast<char*>(aArgs.args[1]);
+    auto size = static_cast<size_t>(aArgs.args[2]);
+    return broker->Readlink(path, buf, size);
+  }
+
   static intptr_t GetPPidTrap(ArgsRef aArgs, void* aux) {
     // In a pid namespace, getppid() will return 0. We will return 0 instead
     // of the real parent pid to see what breaks when we introduce the
@@ -513,6 +568,22 @@ public:
         return Trap(LStatTrap, mBroker);
       CASES_FOR_fstatat:
         return Trap(StatAtTrap, mBroker);
+      case __NR_chmod:
+        return Trap(ChmodTrap, mBroker);
+      case __NR_link:
+        return Trap(LinkTrap, mBroker);
+      case __NR_mkdir:
+        return Trap(MkdirTrap, mBroker);
+      case __NR_symlink:
+        return Trap(SymlinkTrap, mBroker);
+      case __NR_rename:
+        return Trap(RenameTrap, mBroker);
+      case __NR_rmdir:
+        return Trap(RmdirTrap, mBroker);
+      case __NR_unlink:
+        return Trap(UnlinkTrap, mBroker);
+      case __NR_readlink:
+        return Trap(ReadlinkTrap, mBroker);
       }
     } else {
       // No broker; allow the syscalls directly.  )-:
@@ -535,24 +606,16 @@ public:
 
       // Filesystem syscalls that need more work to determine who's
       // using them, if they need to be, and what we intend to about it.
-    case __NR_mkdir:
-    case __NR_rmdir:
     case __NR_getcwd:
     CASES_FOR_statfs:
     CASES_FOR_fstatfs:
-    case __NR_chmod:
-    case __NR_rename:
-    case __NR_symlink:
     case __NR_quotactl:
-    case __NR_link:
-    case __NR_unlink:
     CASES_FOR_fchown:
     case __NR_fchmod:
     case __NR_flock:
 #endif
       return Allow();
 
-    case __NR_readlink:
     case __NR_readlinkat:
 #ifdef DESKTOP
       // Bug 1290896
