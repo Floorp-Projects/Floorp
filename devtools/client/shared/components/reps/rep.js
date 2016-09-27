@@ -35,6 +35,7 @@ define(function (require, exports, module) {
   const { ObjectWithText } = require("./object-with-text");
   const { ObjectWithURL } = require("./object-with-url");
   const { GripArray } = require("./grip-array");
+  const { GripMap } = require("./grip-map");
   const { Grip } = require("./grip");
 
   // List of all registered template.
@@ -54,6 +55,7 @@ define(function (require, exports, module) {
     ObjectWithText,
     ObjectWithURL,
     GripArray,
+    GripMap,
     Grip,
     Undefined,
     Null,
