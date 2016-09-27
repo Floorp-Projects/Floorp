@@ -1522,6 +1522,9 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
       referrerPolicy == REFERRER_POLICY_STRICT_ORIGIN ||
       (isCrossOrigin && (referrerPolicy == REFERRER_POLICY_ORIGIN_WHEN_XORIGIN ||
                          referrerPolicy == REFERRER_POLICY_STRICT_ORIGIN_WHEN_XORIGIN))) {
+    // We can override the user trimming preference because "origin"
+    // (network.http.referer.trimmingPolicy = 2) is the strictest
+    // trimming policy that users can specify.
     userReferrerTrimmingPolicy = 2;
   }
 
