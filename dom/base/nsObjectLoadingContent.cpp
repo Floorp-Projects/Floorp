@@ -2404,6 +2404,42 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
         break;
       }
 
+
+      nsString sandboxScript;
+      tag->GetSandboxScript(sandboxScript);
+      if (!sandboxScript.IsEmpty()) {
+        // Create a sandbox.
+        AutoJSAPI jsapi;
+        jsapi.Init();
+        JS::Rooted<JSObject*> sandbox(jsapi.cx());
+        rv = nsContentUtils::XPConnect()->
+          CreateSandbox(jsapi.cx(), nsContentUtils::GetSystemPrincipal(),
+                        sandbox.address());
+        if (NS_FAILED(rv)) {
+          break;
+        }
+
+        AutoEntryScript aes(sandbox, "JS plugin sandbox code");
+
+        JS::Rooted<JS::Value> element(aes.cx());
+        if (!ToJSValue(aes.cx(), thisContent, &element)) {
+          rv = NS_ERROR_FAILURE;
+          break;
+        }
+
+        if (!JS_DefineProperty(aes.cx(), sandbox, "pluginElement", element, JSPROP_ENUMERATE)) {
+          rv = NS_ERROR_FAILURE;
+          break;
+        }
+
+        JS::Rooted<JS::Value> rval(aes.cx());
+        // If the eval'ed code throws we won't load and do fallback instead.
+        rv = nsContentUtils::XPConnect()->EvalInSandboxObject(sandboxScript, nullptr, aes.cx(), sandbox, &rval);
+        if (NS_FAILED(rv)) {
+          break;
+        }
+      }
+
       nsCOMPtr<nsIURI> handlerURI;
       if (tag) {
         tag->GetHandlerURI(getter_AddRefs(handlerURI));

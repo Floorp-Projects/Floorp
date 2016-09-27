@@ -69,10 +69,22 @@ interface nsIPluginTag : nsISupports
 [scriptable, uuid(6d22c968-226d-4156-b230-da6ad6bbf6e8)]
 interface nsIFakePluginTag : nsIPluginTag
 {
-  // The URI that should be loaded into the tag (as a frame) to handle the
-  // plugin. Note that the original data/src value for the plugin is not loaded
-  // and will need to be requested by the handler via XHR or similar if desired.
+  /**
+   * The URI that should be loaded into the tag (as a frame) to handle the
+   * plugin. Note that the original data/src value for the plugin is not loaded
+   * and will need to be requested by the handler via XHR or similar if desired.
+   */
   readonly attribute nsIURI handlerURI;
+
+  /**
+   * Optional script to run in a sandbox when instantiating a plugin. If this
+   * value is an empty string then no such script will be run.
+   * The script runs in a sandbox with system principal in the process that
+   * contains the element that instantiates the plugin (ie the EMBED or OBJECT
+   * element). The sandbox global has a 'pluginElement' property that the script
+   * can use to access the element that instantiates the plugin.
+   */
+  readonly attribute AString sandboxScript;
 
   /**
    * A unique id for this JS-implemented plugin. 0 is a valid id.
