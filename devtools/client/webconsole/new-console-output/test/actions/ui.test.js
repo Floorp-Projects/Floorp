@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const actions = require("devtools/client/webconsole/new-console-output/actions/ui");
+const actions = require("devtools/client/webconsole/new-console-output/actions/index");
 const {
   FILTER_BAR_TOGGLE
 } = require("devtools/client/webconsole/new-console-output/constants");

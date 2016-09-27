@@ -15,7 +15,7 @@ const {
 const MessageIcon = createFactory(require("devtools/client/webconsole/new-console-output/components/message-icon").MessageIcon);
 const CollapseButton = createFactory(require("devtools/client/webconsole/new-console-output/components/collapse-button").CollapseButton);
 const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
-const actions = require("devtools/client/webconsole/new-console-output/actions/messages");
+const actions = require("devtools/client/webconsole/new-console-output/actions/index");
 
 NetworkEventMessage.displayName = "NetworkEventMessage";
 

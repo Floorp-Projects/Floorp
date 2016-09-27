@@ -8,7 +8,7 @@ const React = require("devtools/client/shared/vendor/react");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
-const actions = require("devtools/client/webconsole/new-console-output/actions/messages");
+const actions = require("devtools/client/webconsole/new-console-output/actions/index");
 const { configureStore } = require("devtools/client/webconsole/new-console-output/store");
 
 const ConsoleOutput = React.createFactory(require("devtools/client/webconsole/new-console-output/components/console-output"));
@@ -50,6 +50,10 @@ function NewConsoleOutputWrapper(parentNode, jsterm, toolbox, owner) {
 NewConsoleOutputWrapper.prototype = {
   dispatchMessageAdd: (message) => {
     store.dispatch(actions.messageAdd(message));
+  },
+  dispatchMessagesAdd: (messages) => {
+    const batchedActions = messages.map(message => actions.messageAdd(message));
+    store.dispatch(actions.batchActions(batchedActions));
   },
   dispatchMessagesClear: () => {
     store.dispatch(actions.messagesClear());
