@@ -13,7 +13,7 @@ const { BrowserLoader } = Cu.import("resource://devtools/client/shared/browser-l
 // Module Loader
 const require = BrowserLoader({
   baseURI: "resource://devtools/client/dom/",
-  window: this
+  window
 }).require;
 
 XPCOMUtils.defineConstant(this, "require", require);

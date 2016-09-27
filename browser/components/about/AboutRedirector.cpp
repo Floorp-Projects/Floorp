@@ -141,7 +141,6 @@ AboutRedirector::NewChannel(nsIURI* aURI,
   for (int i = 0; i < kRedirTotal; i++) {
     if (!strcmp(path.get(), kRedirMap[i].id)) {
       nsAutoCString url;
-      nsLoadFlags loadFlags = static_cast<nsLoadFlags>(nsIChannel::LOAD_NORMAL);
 
       if (path.EqualsLiteral("newtab")) {
         // let the aboutNewTabService decide where to redirect
@@ -159,7 +158,6 @@ AboutRedirector::NewChannel(nsIURI* aURI,
         if (remoteEnabled) {
           NS_ENSURE_ARG_POINTER(aLoadInfo);
           aLoadInfo->SetVerifySignedContent(true);
-          loadFlags = static_cast<nsLoadFlags>(nsIChannel::LOAD_REPLACE);
         }
       }
       // fall back to the specified url in the map
@@ -181,7 +179,7 @@ AboutRedirector::NewChannel(nsIURI* aURI,
                                &isUIResource);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      loadFlags = isUIResource
+      nsLoadFlags loadFlags = isUIResource
                     ? static_cast<nsLoadFlags>(nsIChannel::LOAD_NORMAL)
                     : static_cast<nsLoadFlags>(nsIChannel::LOAD_REPLACE);
 

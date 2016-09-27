@@ -1190,6 +1190,7 @@ VirtualKey::FillKbdState(PBYTE aKbdState,
  *****************************************************************************/
 
 uint8_t NativeKey::sDispatchedKeyOfAppCommand = 0;
+NativeKey* NativeKey::sLatestInstance = nullptr;
 
 LazyLogModule sNativeKeyLogger("NativeKeyWidgets");
 
@@ -1198,7 +1199,10 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
                      const ModifierKeyState& aModKeyState,
                      HKL aOverrideKeyboardLayout,
                      nsTArray<FakeCharMsg>* aFakeCharMsgs)
-  : mWidget(aWidget)
+  : mLastInstance(sLatestInstance)
+  , mRemovingMsg(EmptyMSG())
+  , mReceivedMsg(EmptyMSG())
+  , mWidget(aWidget)
   , mDispatcher(aWidget->GetTextEventDispatcher())
   , mMsg(aMessage)
   , mFocusedWndBeforeDispatch(::GetFocus())
@@ -1218,12 +1222,13 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
 {
   MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
     ("%p NativeKey::NativeKey(aWidget=0x%p { GetWindowHandle()=0x%p }, "
-     "aMessage=%s, aModKeyState=%s)",
+     "aMessage=%s, aModKeyState=%s), sLatestInstance=0x%p",
      this, aWidget, aWidget->GetWindowHandle(), ToString(aMessage).get(),
-     ToString(aModKeyState).get()));
+     ToString(aModKeyState).get(), sLatestInstance));
 
   MOZ_ASSERT(aWidget);
   MOZ_ASSERT(mDispatcher);
+  sLatestInstance = this;
   KeyboardLayout* keyboardLayout = KeyboardLayout::GetInstance();
   mKeyboardLayout = keyboardLayout->GetLayout();
   if (aOverrideKeyboardLayout && mKeyboardLayout != aOverrideKeyboardLayout) {
@@ -1427,6 +1432,22 @@ NativeKey::InitWithKeyChar()
     case WM_CHAR:
     case WM_UNICHAR:
     case WM_SYSCHAR:
+      // If there is another instance and it is trying to remove a char message
+      // from the queue, this message should be handled in the old instance.
+      if (IsAnotherInstanceRemovingCharMessage()) {
+        // XXX Do we need to make mReceivedMsg an array?
+        MOZ_ASSERT(IsEmptyMSG(mLastInstance->mReceivedMsg));
+        MOZ_LOG(sNativeKeyLogger, LogLevel::Warning,
+          ("%p   NativeKey::InitWithKeyChar(), WARNING, detecting another "
+           "instance is trying to remove a char message, so, this instance "
+           "should do nothing, mLastInstance=0x%p, mRemovingMsg=%s, "
+           "mReceivedMsg=%s",
+           this, mLastInstance, ToString(mLastInstance->mRemovingMsg).get(),
+           ToString(mLastInstance->mReceivedMsg).get()));
+        mLastInstance->mReceivedMsg = mMsg;
+        return;
+      }
+
       // NOTE: If other applications like a11y tools sends WM_*CHAR without
       //       scancode, we cannot compute virtual keycode.  I.e., with such
       //       applications, we cannot generate proper KeyboardEvent.code value.
@@ -1515,6 +1536,7 @@ NativeKey::~NativeKey()
     KeyboardLayout* keyboardLayout = KeyboardLayout::GetInstance();
     keyboardLayout->RestoreLayout();
   }
+  sLatestInstance = mLastInstance;
 }
 
 void
@@ -2458,6 +2480,15 @@ NativeKey::HandleCharMessage(const MSG& aCharMsg,
     *aEventDispatched = false;
   }
 
+  if (IsPrintableCharMessage(mMsg) && IsAnotherInstanceRemovingCharMessage()) {
+    MOZ_LOG(sNativeKeyLogger, LogLevel::Warning,
+      ("%p   NativeKey::HandleCharMessage(), WARNING, does nothing because "
+       "the message should be handled in another instance removing this "
+       "message", this));
+    // Consume this for now because it will be handled by another instance.
+    return true;
+  }
+
   // Alt+Space key is handled by OS, we shouldn't touch it.
   if (mModKeyState.IsAlt() && !mModKeyState.IsControl() &&
       mVirtualKeyCode == VK_SPACE) {
@@ -2813,7 +2844,7 @@ NativeKey::MayBeSameCharMessage(const MSG& aCharMsg1,
 }
 
 bool
-NativeKey::GetFollowingCharMessage(MSG& aCharMsg) const
+NativeKey::GetFollowingCharMessage(MSG& aCharMsg)
 {
   MOZ_ASSERT(IsKeyDownMessage());
   MOZ_ASSERT(!IsKeyMessageOnPlugin());
@@ -2852,6 +2883,12 @@ NativeKey::GetFollowingCharMessage(MSG& aCharMsg) const
     return false;
   }
 
+  AutoRestore<MSG> saveLastRemovingMsg(mRemovingMsg);
+  mRemovingMsg = nextKeyMsg;
+
+  mReceivedMsg = EmptyMSG();
+  AutoRestore<MSG> ensureToClearRecivedMsg(mReceivedMsg);
+
   // On Metrofox, PeekMessage() sometimes returns WM_NULL even if we specify
   // the message range.  So, if it returns WM_NULL, we should retry to get
   // the following char message it was found above.
@@ -2864,6 +2901,46 @@ NativeKey::GetFollowingCharMessage(MSG& aCharMsg) const
       // We meets unexpected case.  We should collect the message queue state
       // and crash for reporting the bug.
       doCrash = true;
+
+      // If another instance was created for the removing message during trying
+      // to remove a char message, the instance didn't handle it for preventing
+      // recursive handling.  So, let's handle it in this instance.
+      if (!IsEmptyMSG(mReceivedMsg)) {
+        // If focus is moved to different window, we shouldn't handle it on
+        // the widget.  Let's discard it for now.
+        if (mReceivedMsg.hwnd != nextKeyMsg.hwnd) {
+          MOZ_LOG(sNativeKeyLogger, LogLevel::Warning,
+            ("%p   NativeKey::GetFollowingCharMessage(), WARNING, received a "
+             "char message during removing it from the queue, but it's for "
+             "different window, mReceivedMsg=%s, nextKeyMsg=%s",
+             this, ToString(mReceivedMsg).get(), ToString(nextKeyMsg).get()));
+          // There might still exist char messages, the loop of calling
+          // this method should be continued.
+          aCharMsg.message = WM_NULL;
+          return true;
+        }
+        // Even if the received message is different from what we tried to
+        // remove from the queue, let's take the received message as a part of
+        // the result of this key sequence.
+        if (mReceivedMsg.message != nextKeyMsg.message ||
+            mReceivedMsg.wParam != nextKeyMsg.wParam ||
+            mReceivedMsg.lParam != nextKeyMsg.lParam) {
+          MOZ_LOG(sNativeKeyLogger, LogLevel::Warning,
+            ("%p   NativeKey::GetFollowingCharMessage(), WARNING, received a "
+             "char message during removing it from the queue, but it's "
+             "differnt from what trying to remove from the queue, "
+             "aCharMsg=%s, nextKeyMsg=%s",
+             this, ToString(mReceivedMsg).get(), ToString(nextKeyMsg).get()));
+        } else {
+          MOZ_LOG(sNativeKeyLogger, LogLevel::Verbose,
+            ("%p   NativeKey::GetFollowingCharMessage(), succeeded to retrieve "
+             "next char message via another instance, aCharMsg=%s",
+             this, ToString(mReceivedMsg).get()));
+        }
+        aCharMsg = mReceivedMsg;
+        return true;
+      }
+
       // The char message is redirected to different thread's window by focus
       // move or something or just cancelled by external application.
       if (!WinUtils::PeekMessage(&nextKeyMsgInAllWindows, 0,

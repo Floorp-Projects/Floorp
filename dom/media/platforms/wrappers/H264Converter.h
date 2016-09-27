@@ -55,7 +55,6 @@ private:
   void OnDecoderInitFailed(MediaResult aError);
 
   RefPtr<PlatformDecoderModule> mPDM;
-  VideoInfo mOriginalConfig;
   VideoInfo mCurrentConfig;
   layers::LayersBackend mLayersBackend;
   RefPtr<layers::ImageContainer> mImageContainer;

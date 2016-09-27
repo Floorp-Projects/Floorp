@@ -72,8 +72,8 @@
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "nsTextFragment.h"
 #include "nsContentList.h"
-#include "mozilla/StyleSheetHandle.h"
-#include "mozilla/StyleSheetHandleInlines.h"
+#include "mozilla/StyleSheet.h"
+#include "mozilla/StyleSheetInlines.h"
 
 namespace mozilla {
 
@@ -2854,7 +2854,7 @@ HTMLEditor::ReplaceStyleSheet(const nsAString& aURL)
 NS_IMETHODIMP
 HTMLEditor::RemoveStyleSheet(const nsAString& aURL)
 {
-  StyleSheetHandle::RefPtr sheet = GetStyleSheetForURL(aURL);
+  RefPtr<StyleSheet> sheet = GetStyleSheetForURL(aURL);
   NS_ENSURE_TRUE(sheet, NS_ERROR_UNEXPECTED);
 
   RefPtr<RemoveStyleSheetTransaction> transaction;
@@ -2894,7 +2894,7 @@ HTMLEditor::AddOverrideStyleSheet(const nsAString& aURL)
   // We MUST ONLY load synchronous local files (no @import)
   // XXXbz Except this will actually try to load remote files
   // synchronously, of course..
-  StyleSheetHandle::RefPtr sheet;
+  RefPtr<StyleSheet> sheet;
   // Editor override style sheets may want to style Gecko anonymous boxes
   rv = ps->GetDocument()->CSSLoader()->
     LoadSheetSync(uaURI, mozilla::css::eAgentSheetFeatures, true,
@@ -2939,7 +2939,7 @@ HTMLEditor::ReplaceOverrideStyleSheet(const nsAString& aURL)
 NS_IMETHODIMP
 HTMLEditor::RemoveOverrideStyleSheet(const nsAString& aURL)
 {
-  StyleSheetHandle::RefPtr sheet = GetStyleSheetForURL(aURL);
+  RefPtr<StyleSheet> sheet = GetStyleSheetForURL(aURL);
 
   // Make sure we remove the stylesheet from our internal list in all
   // cases.
@@ -2962,7 +2962,7 @@ NS_IMETHODIMP
 HTMLEditor::EnableStyleSheet(const nsAString& aURL,
                              bool aEnable)
 {
-  StyleSheetHandle::RefPtr sheet = GetStyleSheetForURL(aURL);
+  RefPtr<StyleSheet> sheet = GetStyleSheetForURL(aURL);
   NS_ENSURE_TRUE(sheet, NS_OK); // Don't fail if sheet not found
 
   // Ensure the style sheet is owned by our document.
@@ -2980,7 +2980,7 @@ HTMLEditor::EnableStyleSheet(const nsAString& aURL,
 bool
 HTMLEditor::EnableExistingStyleSheet(const nsAString& aURL)
 {
-  StyleSheetHandle::RefPtr sheet = GetStyleSheetForURL(aURL);
+  RefPtr<StyleSheet> sheet = GetStyleSheetForURL(aURL);
 
   // Enable sheet if already loaded.
   if (sheet)
@@ -3002,7 +3002,7 @@ HTMLEditor::EnableExistingStyleSheet(const nsAString& aURL)
 
 nsresult
 HTMLEditor::AddNewStyleSheetToList(const nsAString& aURL,
-                                   StyleSheetHandle aStyleSheet)
+                                   StyleSheet* aStyleSheet)
 {
   uint32_t countSS = mStyleSheets.Length();
   uint32_t countU = mStyleSheetURLs.Length();
@@ -3032,7 +3032,7 @@ HTMLEditor::RemoveStyleSheetFromList(const nsAString& aURL)
   return NS_OK;
 }
 
-StyleSheetHandle
+StyleSheet*
 HTMLEditor::GetStyleSheetForURL(const nsAString& aURL)
 {
   // is it already in the list?
@@ -3047,7 +3047,7 @@ HTMLEditor::GetStyleSheetForURL(const nsAString& aURL)
 }
 
 void
-HTMLEditor::GetURLForStyleSheet(StyleSheetHandle aStyleSheet,
+HTMLEditor::GetURLForStyleSheet(StyleSheet* aStyleSheet,
                                 nsAString& aURL)
 {
   // is it already in the list?
@@ -3426,7 +3426,7 @@ HTMLEditor::DebugUnitTests(int32_t* outNumTests,
 }
 
 NS_IMETHODIMP
-HTMLEditor::StyleSheetLoaded(StyleSheetHandle aSheet,
+HTMLEditor::StyleSheetLoaded(StyleSheet* aSheet,
                              bool aWasAlternate,
                              nsresult aStatus)
 {

@@ -13,7 +13,7 @@ var { utils: Cu } = Components;
 const rootUrl = "resource://devtools/client/webconsole/net/";
 const require = BrowserLoader({
   baseURI: rootUrl,
-  window: this}).require;
+  window}).require;
 
 const NetRequest = require("./net-request");
 const { loadSheet } = require("sdk/stylesheet/utils");

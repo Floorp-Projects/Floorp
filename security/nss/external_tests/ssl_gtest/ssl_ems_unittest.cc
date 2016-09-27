@@ -26,7 +26,7 @@ TEST_P(TlsConnectGenericPre13, ConnectExtendedMasterSecret) {
   Connect();
 }
 
-TEST_P(TlsConnectTls12Plus, ConnectExtendedMasterSecretSha384) {
+TEST_P(TlsConnectTls12, ConnectExtendedMasterSecretSha384) {
   EnableExtendedMasterSecret();
   server_->EnableSingleCipher(TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384);
   ConnectWithCipherSuite(TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384);

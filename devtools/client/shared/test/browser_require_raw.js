@@ -9,7 +9,7 @@ const { BrowserLoader } = Cu.import("resource://devtools/client/shared/browser-l
 
 const { require: browserRequire } = BrowserLoader({
   baseURI: "resource://devtools/client/shared/",
-  window: this
+  window
 });
 
 const variableFileContents = browserRequire("raw!devtools/client/themes/variables.css");

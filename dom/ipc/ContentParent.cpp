@@ -35,7 +35,7 @@
 #include "imgIContainer.h"
 #include "mozIApplication.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/CSSStyleSheet.h"
+#include "mozilla/StyleSheetInlines.h"
 #include "mozilla/DataStorage.h"
 #include "mozilla/devtools/HeapSnapshotTempFileHelperParent.h"
 #include "mozilla/docshell/OfflineCacheUpdateParent.h"
@@ -187,8 +187,8 @@
 #include "nsPluginHost.h"
 #include "nsPluginTags.h"
 #include "nsIBlocklistService.h"
-#include "mozilla/StyleSheetHandle.h"
-#include "mozilla/StyleSheetHandleInlines.h"
+#include "mozilla/StyleSheet.h"
+#include "mozilla/StyleSheetInlines.h"
 #include "nsHostObjectProtocolHandler.h"
 
 #include "nsIBidiKeyboard.h"
@@ -2267,19 +2267,19 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
     // This looks like a lot of work, but in a normal browser session we just
     // send two loads.
 
-    for (StyleSheetHandle sheet : *sheetService->AgentStyleSheets()) {
+    for (StyleSheet* sheet : *sheetService->AgentStyleSheets()) {
       URIParams uri;
       SerializeURI(sheet->GetSheetURI(), uri);
       Unused << SendLoadAndRegisterSheet(uri, nsIStyleSheetService::AGENT_SHEET);
     }
 
-    for (StyleSheetHandle sheet : *sheetService->UserStyleSheets()) {
+    for (StyleSheet* sheet : *sheetService->UserStyleSheets()) {
       URIParams uri;
       SerializeURI(sheet->GetSheetURI(), uri);
       Unused << SendLoadAndRegisterSheet(uri, nsIStyleSheetService::USER_SHEET);
     }
 
-    for (StyleSheetHandle sheet : *sheetService->AuthorStyleSheets()) {
+    for (StyleSheet* sheet : *sheetService->AuthorStyleSheets()) {
       URIParams uri;
       SerializeURI(sheet->GetSheetURI(), uri);
       Unused << SendLoadAndRegisterSheet(uri, nsIStyleSheetService::AUTHOR_SHEET);
