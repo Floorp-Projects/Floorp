@@ -12,13 +12,13 @@ from marionette_driver import By, errors, expected
 from marionette_driver.wait import Wait
 
 
-single = "data:text/html,%s" % urllib.quote("<input type=file>")
-multiple = "data:text/html,%s" % urllib.quote("<input type=file multiple>")
-upload = lambda url: "data:text/html,%s" % urllib.quote("""
-    <form action='%s' method=post enctype='multipart/form-data'>
+single = "data:text/html,{}".format(urllib.quote("<input type=file>"))
+multiple = "data:text/html,{}".format(urllib.quote("<input type=file multiple>"))
+upload = lambda url: "data:text/html,{}".format(urllib.quote("""
+    <form action='{}' method=post enctype='multipart/form-data'>
      <input type=file>
      <input type=submit>
-    </form>""" % url)
+    </form>""".format(url)))
 
 
 class TestFileUpload(MarionetteTestCase):

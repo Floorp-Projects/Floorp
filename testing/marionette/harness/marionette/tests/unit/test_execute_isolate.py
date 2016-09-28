@@ -18,13 +18,13 @@ class TestExecuteIsolationContent(MarionetteTestCase):
         self.marionette.set_script_timeout(500)
         self.assertRaises(ScriptTimeoutException,
                           self.marionette.execute_async_script,
-                          ("setTimeout(function() { marionetteScriptFinished(5%s); }, 3000);"
-                               % multiplier))
+                          ("setTimeout(function() {{ marionetteScriptFinished(5{}); }}, 3000);"
+                              .format(multiplier)))
 
         self.marionette.set_script_timeout(6000)
         result = self.marionette.execute_async_script("""
-setTimeout(function() { marionetteScriptFinished(10%s); }, 5000);
-""" % multiplier)
+        setTimeout(function() {{ marionetteScriptFinished(10{}); }}, 5000);
+        """.format(multiplier))
         self.assertEqual(result, 30 if self.content else 10)
 
 class TestExecuteIsolationChrome(TestExecuteIsolationContent):

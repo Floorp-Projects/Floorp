@@ -42,7 +42,7 @@ class Command(Message):
         self.params = params
 
     def __str__(self):
-        return "<Command id=%s, name=%s, params=%s>" % (self.id, self.name, self.params)
+        return "<Command id={0}, name={1}, params={2}>".format(self.id, self.name, self.params)
 
     def to_msg(self):
         msg = [Command.TYPE, self.id, self.name, self.params]
@@ -65,7 +65,7 @@ class Response(Message):
         self.result = result
 
     def __str__(self):
-        return "<Response id=%s, error=%s, result=%s>" % (self.id, self.error, self.result)
+        return "<Response id={0}, error={1}, result={2}>".format(self.id, self.error, self.result)
 
     def to_msg(self):
         msg = [Response.TYPE, self.id, self.error, self.result]
@@ -199,7 +199,7 @@ class TcpTransport(object):
 
                 bytes_to_recv = int(length) - len(remaining)
 
-        raise socket.timeout("Connection timed out after %ds" % self.socket_timeout)
+        raise socket.timeout("Connection timed out after {}s".format(self.socket_timeout))
 
     def connect(self):
         """Connect to the server and process the hello message we expect
@@ -241,14 +241,14 @@ class TcpTransport(object):
                 self.expected_response = obj
         else:
             data = json.dumps(obj)
-        payload = "%s:%s" % (len(data), data)
+        payload = "{0}:{1}".format(len(data), data)
 
         totalsent = 0
         while totalsent < len(payload):
             sent = self.sock.send(payload[totalsent:])
             if sent == 0:
-                raise IOError("Socket error after sending %d of %d bytes" %
-                              (totalsent, len(payload)))
+                raise IOError("Socket error after sending {0} of {1} bytes"
+                              .format(totalsent, len(payload)))
             else:
                 totalsent += sent
 

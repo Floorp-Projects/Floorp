@@ -32,7 +32,7 @@ class Server(object):
 
         if not os.path.isfile(path) and exec_not_on_path:
             raise IOError("Browsermob-Proxy binary couldn't be found in path"
-                          " provided: %s" % path)
+                          " provided: {}".format(path))
 
         self.path = path
         self.port = options.get('port', 8080)
@@ -42,7 +42,7 @@ class Server(object):
             self.command = ['sh']
         else:
             self.command = []
-        self.command += [path, '--port=%s' % self.port]
+        self.command += [path, '--port={}'.format(self.port)]
 
     def start(self):
         """
@@ -83,7 +83,7 @@ class Server(object):
         Gets the url that the proxy is running on. This is not the URL clients
         should connect to.
         """
-        return "http://localhost:%d" % self.port
+        return "http://localhost:{}".format(self.port)
 
     def create_proxy(self, params={}):
         """

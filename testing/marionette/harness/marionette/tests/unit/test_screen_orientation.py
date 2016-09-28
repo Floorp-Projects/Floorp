@@ -7,7 +7,7 @@ from marionette import MarionetteTestCase, skip_if_desktop, skip_if_mobile
 from mozrunner.devices.emulator_screen import EmulatorScreen
 
 default_orientation = "portrait-primary"
-unknown_orientation = "Unknown screen orientation: %s"
+unknown_orientation = "Unknown screen orientation: {}"
 
 class TestScreenOrientation(MarionetteTestCase):
     def setUp(self):
@@ -69,12 +69,12 @@ class TestScreenOrientation(MarionetteTestCase):
 
     @skip_if_desktop
     def test_set_invalid_orientation(self):
-        with self.assertRaisesRegexp(errors.MarionetteException, unknown_orientation % "cheese"):
+        with self.assertRaisesRegexp(errors.MarionetteException, unknown_orientation.format("cheese")):
             self.marionette.set_orientation("cheese")
 
     @skip_if_desktop
     def test_set_null_orientation(self):
-        with self.assertRaisesRegexp(errors.MarionetteException, unknown_orientation % "null"):
+        with self.assertRaisesRegexp(errors.MarionetteException, unknown_orientation.format("null")):
             self.marionette.set_orientation(None)
 
     @skip_if_mobile

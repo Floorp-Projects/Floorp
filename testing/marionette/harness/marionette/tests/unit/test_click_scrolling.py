@@ -82,13 +82,13 @@ class TestClickScrolling(MarionetteTestCase):
         for s in ["top", "bottom"]:
             self.marionette.navigate(test_html)
             scroll_y = self.marionette.execute_script("return window.scrollY;")
-            self.marionette.find_element(By.ID, "%s-70" % s).click()
+            self.marionette.find_element(By.ID, "{}-70".format(s)).click()
             self.assertNotEqual(scroll_y, self.marionette.execute_script("return window.scrollY;"))
 
         for s in ["left", "right"]:
             self.marionette.navigate(test_html)
             scroll_x = self.marionette.execute_script("return window.scrollX;")
-            self.marionette.find_element(By.ID, "%s-70" % s).click()
+            self.marionette.find_element(By.ID, "{}-70".format(s)).click()
             self.assertNotEqual(scroll_x, self.marionette.execute_script("return window.scrollX;"))
 
     def test_should_not_scroll_elements_if_click_point_is_in_view(self):
@@ -98,7 +98,7 @@ class TestClickScrolling(MarionetteTestCase):
             for p in ["50", "30"]:
                 self.marionette.navigate(test_html)
                 scroll = self.marionette.execute_script("return [window.scrollX, window.scrollY];")
-                self.marionette.find_element(By.ID, "%s-%s" % (s, p)).click()
+                self.marionette.find_element(By.ID, "{0}-{1}".format(s, p)).click()
                 self.assertEqual(scroll, self.marionette.execute_script("return [window.scrollX, window.scrollY];"))
 
     @skip("Bug 1003687")
