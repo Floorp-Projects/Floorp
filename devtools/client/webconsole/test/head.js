@@ -321,6 +321,12 @@ var finishTest = Task.async(function* () {
   finish();
 });
 
+// Always use the 'old' frontend for tests that rely on it
+Services.prefs.setBoolPref("devtools.webconsole.new-frontend-enabled", false);
+registerCleanupFunction(function* () {
+  Services.prefs.clearUserPref("devtools.webconsole.new-frontend-enabled");
+});
+
 registerCleanupFunction(function* () {
   flags.testing = false;
 
