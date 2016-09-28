@@ -105,8 +105,8 @@ public:
 
 private:
 
-  bool HasVideo() { return mVideo.mTrackDemuxer; }
-  bool HasAudio() { return mAudio.mTrackDemuxer; }
+  bool HasVideo() const { return mVideo.mTrackDemuxer; }
+  bool HasAudio() const { return mAudio.mTrackDemuxer; }
 
   bool IsWaitingOnCDMResource();
 
@@ -528,11 +528,7 @@ private:
   // True if we've read the streams' metadata.
   bool mInitDone;
   MozPromiseHolder<MetadataPromise> mMetadataPromise;
-  bool IsEncrypted()
-  {
-    return mIsEncrypted;
-  }
-  bool mIsEncrypted;
+  bool IsEncrypted() const;
 
   // Set to true if any of our track buffers may be blocking.
   bool mTrackDemuxersMayBlock;
