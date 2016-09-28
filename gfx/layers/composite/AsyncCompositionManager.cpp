@@ -199,6 +199,7 @@ AsyncCompositionManager::ComputeRotation()
   }
 }
 
+#ifdef DEBUG
 static void
 GetBaseTransform(Layer* aLayer, Matrix4x4* aTransform)
 {
@@ -208,6 +209,7 @@ GetBaseTransform(Layer* aLayer, Matrix4x4* aTransform)
         ? aLayer->GetLocalTransform()
         : aLayer->GetTransform());
 }
+#endif
 
 static void
 TransformClipRect(Layer* aLayer,
@@ -477,19 +479,15 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoo
         MOZ_ASSERT(ancestorTransform.IsIdentity());
 #endif
 
-        // Calculate the old and new transforms between the fixed layer and
-        // the subtree root, including the fixed layer's local transform
-        // if it's not already included in |aPreviousTransformForRoot| and
-        // |aCurrentTransformForRoot| (this happens when the fixed layer is
-        // itself the transformed subtree root).
-        Matrix4x4 oldTransform = aPreviousTransformForRoot.ToUnknownMatrix();
-        Matrix4x4 newTransform = aCurrentTransformForRoot.ToUnknownMatrix();
+        // Since we create container layers for fixed layers, there shouldn't
+        // a local CSS or OMTA transform on the fixed layer, either (any local
+        // transform would go onto a descendant layer inside the container
+        // layer).
+#ifdef DEBUG
         Matrix4x4 localTransform;
         GetBaseTransform(layer, &localTransform);
-        if (layer != aTransformedSubtreeRoot) {
-          oldTransform = localTransform * oldTransform;
-          newTransform = localTransform * newTransform;
-        }
+        MOZ_ASSERT(localTransform.IsIdentity());
+#endif
 
         // Now work out the translation necessary to make sure the layer doesn't
         // move given the new sub-tree root transform.
@@ -507,19 +505,13 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoo
         // this by using the old transform to take the offset anchor back into
         // subtree root space, and then the inverse of the new transform
         // to bring it back to layer space.
-        LayerPoint transformedAnchor = ViewAs<LayerPixel>(
-            newTransform.Inverse().TransformPoint(
-              (oldTransform.TransformPoint(offsetAnchor.ToUnknownPoint()))));
+        LayerPoint transformedAnchor = aCurrentTransformForRoot.Inverse()
+            .TransformPoint(aPreviousTransformForRoot.TransformPoint(
+                offsetAnchor));
 
-        // We want to translate the layer by the difference between |transformedAnchor|
-        // and |anchor|. To achieve this, we will add a translation to the layer's
-        // transform. This translation will apply on top of the layer's local
-        // transform, but |anchor| and |transformedAnchor| are in a coordinate space
-        // where the local transform isn't applied yet, so apply it and then subtract
-        // to get the desired translation.
-        auto localTransformTyped = ViewAs<LayerToParentLayerMatrix4x4>(localTransform);
-        ParentLayerPoint translation = TransformBy(localTransformTyped, transformedAnchor)
-                                     - TransformBy(localTransformTyped, anchor);
+        // We want to translate the layer by the difference between
+        // |transformedAnchor| and |anchor|.
+        LayerPoint translation = transformedAnchor - anchor;
 
         // A fixed layer will "consume" (be unadjusted by) the entire translation
         // calculated above. A sticky layer may consume all, part, or none of it,
@@ -535,9 +527,7 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoo
           const LayerRect& stickyOuter = layer->GetStickyScrollRangeOuter();
           const LayerRect& stickyInner = layer->GetStickyScrollRangeInner();
 
-          // TODO: There's a unit mismatch here, as |translation| is in ParentLayer
-          //       space while |stickyOuter| and |stickyInner| are in Layer space.
-          ParentLayerPoint originalTranslation = translation;
+          LayerPoint originalTranslation = translation;
           translation.y = IntervalOverlap(translation.y, stickyOuter.y, stickyOuter.YMost()) -
                           IntervalOverlap(translation.y, stickyInner.y, stickyInner.YMost());
           translation.x = IntervalOverlap(translation.x, stickyOuter.x, stickyOuter.XMost()) -
@@ -552,7 +542,8 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoo
         // clip rect, we need to apply the same translation to said clip rect, so
         // that the effective transform on the clip rect takes it back to where it was
         // originally, had there been no async scroll.
-        TranslateShadowLayer(layer, translation, true, aClipPartsCache);
+        TranslateShadowLayer(layer, ViewAs<ParentLayerPixel>(translation,
+            PixelCastJustification::NoTransformOnLayer), true, aClipPartsCache);
 
         // If we didn't consume the entire translation, continue the traversal
         // to allow a descendant fixed or sticky layer to consume the rest.
