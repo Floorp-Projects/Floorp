@@ -16,8 +16,10 @@ from .common import CommonBackend
 from ..frontend.data import (
     ContextDerived,
     Defines,
+    FinalTargetPreprocessedFiles,
     GeneratedFile,
     HostDefines,
+    ObjdirPreprocessedFiles,
 )
 from ..util import (
     FileAvoidWrite,
@@ -153,6 +155,10 @@ class TupOnly(CommonBackend, PartialBackend):
             self._process_defines(backend_file, obj)
         elif isinstance(obj, HostDefines):
             self._process_defines(backend_file, obj, host=True)
+        elif isinstance(obj, FinalTargetPreprocessedFiles):
+            self._process_final_target_pp_files(obj, backend_file)
+        elif isinstance(obj, ObjdirPreprocessedFiles):
+            self._process_final_target_pp_files(obj, backend_file)
 
         return True
 
@@ -169,6 +175,9 @@ class TupOnly(CommonBackend, PartialBackend):
             acdefines_flags = ' '.join(['-D%s=%s' % (name,
                 shell_quote(self.environment.defines[name]))
                 for name in sorted(acdefines)])
+            # TODO: AB_CD only exists in Makefiles at the moment.
+            acdefines_flags += ' -DAB_CD=en-US'
+
             fh.write('MOZ_OBJ_ROOT = $(TUP_CWD)\n')
             fh.write('DIST = $(MOZ_OBJ_ROOT)/dist\n')
             fh.write('ACDEFINES = %s\n' % acdefines_flags)
@@ -225,6 +234,12 @@ class TupOnly(CommonBackend, PartialBackend):
             else:
                 backend_file.defines = defines
 
+    def _process_final_target_pp_files(self, obj, backend_file):
+        for i, (path, files) in enumerate(obj.files.walk()):
+            for f in files:
+                self._preprocess(backend_file, f.full_path,
+                                 destdir=mozpath.join(self.environment.topobjdir, obj.install_target, path))
+
     def _handle_idl_manager(self, manager):
         backend_file = self._get_backend_file('xpcom/xpidl')
         backend_file.export_shell()
@@ -257,16 +272,21 @@ class TupOnly(CommonBackend, PartialBackend):
                 outputs=outputs,
             )
 
-    def _preprocess(self, backend_file, input_file):
+    def _preprocess(self, backend_file, input_file, destdir=None):
         cmd = self._py_action('preprocessor')
         cmd.extend(backend_file.defines)
         cmd.extend(['$(ACDEFINES)', '%f', '-o', '%o'])
+
+        base_input = mozpath.basename(input_file)
+        if base_input.endswith('.in'):
+            base_input = mozpath.splitext(base_input)[0]
+        output = mozpath.join(destdir, base_input) if destdir else base_input
 
         backend_file.rule(
             inputs=[input_file],
             display='Preprocess %o',
             cmd=cmd,
-            outputs=[mozpath.basename(input_file)],
+            outputs=[output],
         )
 
     def _handle_ipdl_sources(self, ipdl_dir, sorted_ipdl_sources,
