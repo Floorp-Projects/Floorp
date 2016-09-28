@@ -134,7 +134,7 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
                        a.initialRwin(), a.blockAuthPrompt(),
                        a.suspendAfterSynthesizeResponse(),
                        a.allowStaleCacheContent(), a.contentTypeHint(),
-                       a.channelId());
+                       a.channelId(), a.preferredAlternativeType());
   }
   case HttpChannelCreationArgs::THttpChannelConnectArgs:
   {
@@ -266,7 +266,8 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                                  const bool&                aSuspendAfterSynthesizeResponse,
                                  const bool&                aAllowStaleCacheContent,
                                  const nsCString&           aContentTypeHint,
-                                 const nsCString&           aChannelId)
+                                 const nsCString&           aChannelId,
+                                 const nsCString&           aPreferredAlternativeType)
 {
   nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
   if (!uri) {
@@ -421,6 +422,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
   }
 
   mChannel->SetCacheKey(cacheKey);
+  mChannel->PreferAlternativeDataType(aPreferredAlternativeType);
 
   mChannel->SetAllowStaleCacheContent(aAllowStaleCacheContent);
 
@@ -629,10 +631,13 @@ HttpChannelParent::RecvRedirect2Verify(const nsresult& result,
                                        const RequestHeaderTuples& changedHeaders,
                                        const uint32_t& loadFlags,
                                        const OptionalURIParams& aAPIRedirectURI,
-                                       const OptionalCorsPreflightArgs& aCorsPreflightArgs)
+                                       const OptionalCorsPreflightArgs& aCorsPreflightArgs,
+                                       const bool& aForceHSTSPriming,
+                                       const bool& aMixedContentWouldBlock)
 {
   LOG(("HttpChannelParent::RecvRedirect2Verify [this=%p result=%x]\n",
        this, result));
+  nsresult rv;
   if (NS_SUCCEEDED(result)) {
     nsCOMPtr<nsIHttpChannel> newHttpChannel =
         do_QueryInterface(mRedirectChannel);
@@ -665,6 +670,14 @@ HttpChannelParent::RecvRedirect2Verify(const nsresult& result,
         MOZ_RELEASE_ASSERT(newInternalChannel);
         const CorsPreflightArgs& args = aCorsPreflightArgs.get_CorsPreflightArgs();
         newInternalChannel->SetCorsPreflightParameters(args.unsafeHeaders());
+      }
+
+      if (aForceHSTSPriming) {
+        nsCOMPtr<nsILoadInfo> newLoadInfo;
+        rv = newHttpChannel->GetLoadInfo(getter_AddRefs(newLoadInfo));
+        if (NS_SUCCEEDED(rv) && newLoadInfo) {
+          newLoadInfo->SetHSTSPriming(aMixedContentWouldBlock);
+        }
       }
     }
   }
@@ -1059,6 +1072,9 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
     }
   }
 
+  nsAutoCString altDataType;
+  mChannel->GetAlternativeDataType(altDataType);
+
   // !!! We need to lock headers and please don't forget to unlock them !!!
   requestHead->Enter();
   nsresult rv = NS_OK;
@@ -1072,7 +1088,8 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
                           expirationTime, cachedCharset, secInfoSerialization,
                           mChannel->GetSelfAddr(), mChannel->GetPeerAddr(),
                           redirectCount,
-                          cacheKeyValue))
+                          cacheKeyValue,
+                          altDataType))
   {
     rv = NS_ERROR_UNEXPECTED;
   }
@@ -1590,6 +1607,17 @@ HttpChannelParent::NotifyDiversionFailed(nsresult aErrorCode,
   if (!mIPCClosed) {
     Unused << DoSendDeleteSelf();
   }
+}
+
+nsresult
+HttpChannelParent::OpenAlternativeOutputStream(const nsACString & type, nsIOutputStream * *_retval)
+{
+  // We need to make sure the child does not call SendDocumentChannelCleanup()
+  // before opening the altOutputStream, because that clears mCacheEntry.
+  if (!mCacheEntry) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  return mCacheEntry->OpenAlternativeOutputStream(type, _retval);
 }
 
 void

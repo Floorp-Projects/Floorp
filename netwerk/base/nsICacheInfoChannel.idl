@@ -4,6 +4,8 @@
 
 #include "nsISupports.idl"
 
+interface nsIOutputStream;
+
 [scriptable, uuid(72c34415-c6eb-48af-851f-772fa9ee5972)]
 interface nsICacheInfoChannel : nsISupports
 {
@@ -52,4 +54,31 @@ interface nsICacheInfoChannel : nsISupports
    * channel being the default load group's channel.
    */
   attribute boolean allowStaleCacheContent;
+
+  /**
+   * Calling this method instructs the channel to serve the alternative data
+   * if that was previously saved in the cache, otherwise it will serve the
+   * real data.
+   * Must be called before AsyncOpen.
+   */
+  void preferAlternativeDataType(in ACString type);
+
+  /**
+   * Holds the type of the alternative data representation that the channel
+   * is returning.
+   * Is empty string if no alternative data representation was requested, or
+   * if the requested representation wasn't found in the cache.
+   * Can only be called during or after OnStartRequest.
+   */
+  readonly attribute ACString alternativeDataType;
+
+  /**
+   * Opens and returns an output stream that a consumer may use to save an
+   * alternate representation of the data.
+   * Must be called after the OnStopRequest that delivered the real data.
+   * The consumer may choose to replace the saved alt representation.
+   * Opening the output stream will fail if there are any open input streams
+   * reading the already saved alt representation.
+   */
+  nsIOutputStream openAlternativeOutputStream(in ACString type);
 };

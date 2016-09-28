@@ -51,12 +51,12 @@ fuzzy-if(winWidget,70,130) fuzzy-if(cocoaWidget,85,180) == grid-col-max-sizing-m
 fuzzy-if(winWidget,70,130) fuzzy-if(cocoaWidget,85,180) == grid-col-max-sizing-max-content-002.html grid-col-max-sizing-max-content-002-ref.html
 == grid-min-max-content-sizing-001.html grid-min-max-content-sizing-001-ref.html
 == grid-min-max-content-sizing-002.html grid-min-max-content-sizing-002-ref.html
-fuzzy-if(winWidget,1,36) == grid-auto-min-sizing-definite-001.html grid-auto-min-sizing-definite-001-ref.html
+# fuzzy-if(winWidget,1,36) == grid-auto-min-sizing-definite-001.html grid-auto-min-sizing-definite-001-ref.html TODO: bug 1303643
 == grid-auto-min-sizing-intrinsic-001.html grid-auto-min-sizing-intrinsic-001-ref.html
 == grid-auto-min-sizing-intrinsic-002.html grid-auto-min-sizing-intrinsic-002-ref.html
 == grid-auto-min-sizing-intrinsic-003.html grid-auto-min-sizing-intrinsic-003-ref.html
 == grid-auto-min-sizing-intrinsic-004.html grid-auto-min-sizing-intrinsic-004-ref.html
-== grid-auto-min-sizing-percent-001.html grid-auto-min-sizing-percent-001-ref.html
+skip-if(Android) == grid-auto-min-sizing-percent-001.html grid-auto-min-sizing-percent-001-ref.html # bug 1305716
 == grid-track-intrinsic-sizing-001.html grid-track-intrinsic-sizing-001-ref.html
 == grid-track-intrinsic-sizing-002.html grid-track-intrinsic-sizing-002-ref.html
 == grid-track-intrinsic-sizing-003.html grid-track-intrinsic-sizing-003-ref.html

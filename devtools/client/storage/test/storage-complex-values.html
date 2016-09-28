@@ -19,6 +19,9 @@ document.cookie = "c1=" + JSON.stringify([
   }]) + "; expires=" + new Date(cookieExpiresTime).toGMTString() +
   "; path=/browser";
 document.cookie = "cs2=sessionCookie; path=/; domain=" + partialHostname;
+// URLEncoded cookie
+document.cookie = "c_encoded=" + encodeURIComponent(JSON.stringify({foo: {foo1: "bar"}}));
+
 // ... and some local storage items ..
 const es6 = "for";
 localStorage.setItem("ls1", JSON.stringify({

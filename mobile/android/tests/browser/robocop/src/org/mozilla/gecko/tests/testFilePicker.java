@@ -7,6 +7,7 @@ package org.mozilla.gecko.tests;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fFail;
 
 import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.util.GeckoEventListener;
 
@@ -39,13 +40,13 @@ public class testFilePicker extends JavascriptTest implements GeckoEventListener
     public void setUp() throws Exception {
         super.setUp();
 
-        EventDispatcher.getInstance().registerGeckoThreadListener(this, "FilePicker:Show");
+        GeckoApp.getEventDispatcher().registerGeckoThreadListener(this, "FilePicker:Show");
     }
 
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
 
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this, "FilePicker:Show");
+        GeckoApp.getEventDispatcher().unregisterGeckoThreadListener(this, "FilePicker:Show");
     }
 }

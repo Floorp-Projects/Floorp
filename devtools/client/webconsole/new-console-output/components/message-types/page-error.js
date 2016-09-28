@@ -18,7 +18,7 @@ const CollapseButton = createFactory(require("devtools/client/webconsole/new-con
 const MessageRepeat = createFactory(require("devtools/client/webconsole/new-console-output/components/message-repeat").MessageRepeat);
 const MessageIcon = createFactory(require("devtools/client/webconsole/new-console-output/components/message-icon").MessageIcon);
 
-const actions = require("devtools/client/webconsole/new-console-output/actions/messages");
+const actions = require("devtools/client/webconsole/new-console-output/actions/index");
 
 PageError.displayName = "PageError";
 

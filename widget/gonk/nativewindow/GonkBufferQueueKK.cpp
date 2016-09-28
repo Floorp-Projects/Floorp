@@ -443,7 +443,7 @@ status_t GonkBufferQueue::dequeueBuffer(int *outBuf, sp<Fence>* outFence, bool a
 
     if (returnFlags & IGraphicBufferProducer::BUFFER_NEEDS_REALLOCATION) {
 
-        RefPtr<ClientIPCAllocator> allocator = ImageBridgeChild::GetSingleton();
+        RefPtr<LayersIPCChannel> allocator = ImageBridgeChild::GetSingleton();
         usage |= GraphicBuffer::USAGE_HW_TEXTURE;
         GrallocTextureData* texData = GrallocTextureData::Create(IntSize(w, h), format,
                                                                  gfx::BackendType::NONE, usage,

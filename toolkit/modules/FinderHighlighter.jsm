@@ -21,7 +21,8 @@ XPCOMUtils.defineLazyGetter(this, "kDebug", () => {
 
 const kContentChangeThresholdPx = 5;
 const kBrightTextSampleSize = 5;
-const kModalHighlightRepaintFreqMs = 100;
+const kModalHighlightRepaintLoFreqMs = 100;
+const kModalHighlightRepaintHiFreqMs = 16;
 const kHighlightAllPref = "findbar.highlightAll";
 const kModalHighlightPref = "findbar.modalHighlight";
 const kFontPropsCSS = ["color", "font-family", "font-kerning", "font-size",
@@ -1113,7 +1114,9 @@ FinderHighlighter.prototype = {
   /**
    * Doing a full repaint each time a range is delivered by the highlight iterator
    * is way too costly, thus we pipe the frequency down to every
-   * `kModalHighlightRepaintFreqMs` milliseconds.
+   * `kModalHighlightRepaintLoFreqMs` milliseconds. If there are dynamic ranges
+   * found (see `_isInDynamicContainer()` for the definition), the frequency
+   * will be upscaled to `kModalHighlightRepaintHiFreqMs`.
    *
    * @param {nsIDOMWindow} window
    * @param {Object}       options Dictionary of painter hints that contains the
@@ -1134,7 +1137,8 @@ FinderHighlighter.prototype = {
 
     window = window.top;
     let dict = this.getForWindow(window);
-    let repaintDynamicRanges = ((scrollOnly || contentChanged) && !!dict.dynamicRangesSet.size);
+    let hasDynamicRanges = !!dict.dynamicRangesSet.size;
+    let repaintDynamicRanges = ((scrollOnly || contentChanged) && hasDynamicRanges);
 
     // When we request to repaint unconditionally, we mean to call
     // `_repaintHighlightAllMask()` right after the timeout.
@@ -1164,7 +1168,7 @@ FinderHighlighter.prototype = {
         dict.unconditionalRepaintRequested = false;
         this._repaintHighlightAllMask(window);
       }
-    }, kModalHighlightRepaintFreqMs);
+    }, hasDynamicRanges ? kModalHighlightRepaintHiFreqMs : kModalHighlightRepaintLoFreqMs);
   },
 
   /**

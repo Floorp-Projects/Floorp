@@ -1719,6 +1719,7 @@ public class GeckoAppShell
     }
 
     public interface GeckoInterface {
+        public EventDispatcher getAppEventDispatcher();
         public GeckoProfile getProfile();
         public Activity getActivity();
         public String getDefaultUAString();
@@ -1949,7 +1950,15 @@ public class GeckoAppShell
 
     @WrapForJNI(calledFrom = "gecko")
     private static void handleGeckoMessage(final NativeJSContainer message) {
-        EventDispatcher.getInstance().dispatchEvent(message);
+        final boolean success = EventDispatcher.getInstance().dispatchEvent(message) |
+                                getGeckoInterface().getAppEventDispatcher().dispatchEvent(message);
+        if (!success) {
+            final String type = message.optString("type", null);
+            final String guid = message.optString(EventDispatcher.GUID, null);
+            if (type != null && guid != null) {
+                (new EventDispatcher.GeckoEventCallback(guid, type)).sendError("No listeners for request");
+            }
+        }
         message.disposeNative();
     }
 

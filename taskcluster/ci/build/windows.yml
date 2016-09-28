@@ -5,7 +5,7 @@ win32/debug:
         job-name:
             gecko-v2: win32-debug
     treeherder:
-        platform: windowsxp/debug
+        platform: windows2012-32/debug
         symbol: tc(B)
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
@@ -25,7 +25,7 @@ win32/opt:
         job-name:
             gecko-v2: win32-opt
     treeherder:
-        platform: windowsxp/opt
+        platform: windows2012-32/opt
         symbol: tc(B)
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
@@ -45,7 +45,7 @@ win64/debug:
         job-name:
             gecko-v2: win64-debug
     treeherder:
-        platform: windows8-64/debug
+        platform: windows2012-64/debug
         symbol: tc(B)
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
@@ -65,7 +65,7 @@ win64/opt:
         job-name:
             gecko-v2: win64-opt
     treeherder:
-        platform: windows8-64/opt
+        platform: windows2012-64/opt
         symbol: tc(B)
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012

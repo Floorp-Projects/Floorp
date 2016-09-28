@@ -18,6 +18,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
@@ -80,22 +81,22 @@ public class RecentTabsAdapter extends RecyclerView.Adapter<CombinedHistoryItem>
     }
 
     public void startListeningForClosedTabs() {
-        EventDispatcher.getInstance().registerGeckoThreadListener(this, "ClosedTabs:Data");
+        GeckoApp.getEventDispatcher().registerGeckoThreadListener(this, "ClosedTabs:Data");
         GeckoAppShell.notifyObservers("ClosedTabs:StartNotifications", null);
     }
 
     public void stopListeningForClosedTabs() {
         GeckoAppShell.notifyObservers("ClosedTabs:StopNotifications", null);
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this, "ClosedTabs:Data");
+        GeckoApp.getEventDispatcher().unregisterGeckoThreadListener(this, "ClosedTabs:Data");
         recentlyClosedTabsReceived = false;
     }
 
     public void startListeningForHistorySanitize() {
-        EventDispatcher.getInstance().registerGeckoThreadListener(this, "Sanitize:Finished");
+        GeckoApp.getEventDispatcher().registerGeckoThreadListener(this, "Sanitize:Finished");
     }
 
     public void stopListeningForHistorySanitize() {
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this, "Sanitize:Finished");
+        GeckoApp.getEventDispatcher().unregisterGeckoThreadListener(this, "Sanitize:Finished");
     }
 
     @Override

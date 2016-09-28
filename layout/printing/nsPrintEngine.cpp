@@ -3560,26 +3560,6 @@ nsPrintEngine::FirePrintCompletionEvent()
     NS_WARNING("failed to dispatch print completion event");
 }
 
-bool
-nsPrintEngine::MayHavePluginFrames()
-{
-  nsPrintData* prt = mPrt;
-  if (!mPrt) {
-    prt = mPrtPreview;
-    if (!prt) {
-      prt = mOldPrtPreview;
-    }
-  }
-  if (prt) {
-    for (uint32_t i = 0; i < prt->mPrintDocList.Length(); ++i) {
-      if (prt->mPrintDocList[i]->MayHavePluginFrames()) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
 //---------------------------------------------------------------
 //---------------------------------------------------------------
 //-- Debug helper routines

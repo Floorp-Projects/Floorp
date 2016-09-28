@@ -135,6 +135,8 @@ public:
   virtual LayoutDeviceIntPoint WidgetToScreenOffset() override
   { return LayoutDeviceIntPoint::FromUnknownPoint(GetWindowPosition() + GetChromeDimensions()); }
 
+  int32_t RoundsWidgetCoordinatesTo() override;
+
   void InitEvent(WidgetGUIEvent& aEvent,
                  LayoutDeviceIntPoint* aPoint = nullptr);
 
@@ -202,9 +204,10 @@ public:
 
   virtual TabChild* GetOwningTabChild() override { return mTabChild; }
 
-  void UpdateBackingScaleCache(float aDpi, double aScale)
+  void UpdateBackingScaleCache(float aDpi, int32_t aRounding, double aScale)
   {
     mDPI = aDpi;
+    mRounding = aRounding;
     mDefaultScale = aScale;
   }
 
@@ -358,6 +361,7 @@ private:
 
   // The DPI of the screen corresponding to this widget
   float mDPI;
+  int32_t mRounding;
   double mDefaultScale;
 
   // Precomputed answers for ExecuteNativeKeyBinding
