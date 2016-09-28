@@ -89,7 +89,7 @@ WebGL2Context::FramebufferTextureLayer(GLenum target, GLenum attachment,
     }
 
     if (!fb)
-        return ErrorInvalidOperation("%a: Xannot modify framebuffer 0.");
+        return ErrorInvalidOperation("%s: Cannot modify framebuffer 0.", funcName);
 
     fb->FramebufferTextureLayer(funcName, attachment, texture, level, layer);
 }
