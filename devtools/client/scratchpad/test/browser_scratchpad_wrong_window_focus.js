@@ -3,6 +3,11 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 /* Bug 661762 */
 
+// Use the old webconsole since scratchpad focus isn't working on new one (Bug 1304794)
+Services.prefs.setBoolPref("devtools.webconsole.new-frontend-enabled", false);
+registerCleanupFunction(function* () {
+  Services.prefs.clearUserPref("devtools.webconsole.new-frontend-enabled");
+});
 
 function test()
 {
