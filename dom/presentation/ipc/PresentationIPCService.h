@@ -53,6 +53,10 @@ public:
                                   const uint8_t& aRole,
                                   nsIPresentationSessionTransport* transport);
 
+  nsresult CloseContentSessionTransport(const nsString& aSessionId,
+                                        uint8_t aRole,
+                                        nsresult aReason);
+
 private:
   virtual ~PresentationIPCService();
   nsresult SendRequest(nsIPresentationServiceCallback* aCallback,

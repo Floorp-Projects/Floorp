@@ -268,7 +268,6 @@ PresentationIPCService::RegisterSessionListener(const nsAString& aSessionId,
 
   nsCOMPtr<nsIPresentationSessionListener> listener;
   if (mSessionListeners.Get(aSessionId, getter_AddRefs(listener))) {
-    Unused << NS_WARN_IF(NS_FAILED(listener->NotifyReplaced()));
     mSessionListeners.Put(aSessionId, aListener);
     return NS_OK;
   }
@@ -507,4 +506,18 @@ PresentationIPCService::MonitorResponderLoading(const nsAString& aSessionId,
 
   mCallback = new PresentationResponderLoadingCallback(aSessionId);
   return mCallback->Init(aDocShell);
+}
+
+nsresult
+PresentationIPCService::CloseContentSessionTransport(const nsString& aSessionId,
+                                                     uint8_t aRole,
+                                                     nsresult aReason)
+{
+  RefPtr<PresentationContentSessionInfo> info =
+    GetSessionInfo(aSessionId, aRole);
+  if (NS_WARN_IF(!info)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return info->Close(aReason);
 }

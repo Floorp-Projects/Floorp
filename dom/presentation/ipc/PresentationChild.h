@@ -59,6 +59,11 @@ public:
   RecvNotifySessionConnect(const uint64_t& aWindowId,
                            const nsString& aSessionId) override;
 
+  virtual bool
+  RecvNotifyCloseSessionTransport(const nsString& aSessionId,
+                                  const uint8_t& aRole,
+                                  const nsresult& aReason) override;
+
 private:
   virtual ~PresentationChild();
 
