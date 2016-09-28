@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_DocumentTimeline_h
 #define mozilla_dom_DocumentTimeline_h
 
+#include "mozilla/dom/DocumentTimelineBinding.h"
 #include "mozilla/TimeStamp.h"
 #include "AnimationTimeline.h"
 #include "nsIDocument.h"
@@ -54,7 +55,7 @@ public:
 
   static already_AddRefed<DocumentTimeline>
   Constructor(const GlobalObject& aGlobal,
-              const DOMHighResTimeStamp& aOriginTime,
+              const DocumentTimelineOptions& aOptions,
               ErrorResult& aRv);
 
   // AnimationTimeline methods
