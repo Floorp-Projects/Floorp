@@ -144,28 +144,6 @@ WebGLContext::ValidateDataRanges(WebGLintptr readOffset, WebGLintptr writeOffset
 }
 
 bool
-WebGLContext::ValidateTextureTargetEnum(GLenum target, const char* info)
-{
-    switch (target) {
-    case LOCAL_GL_TEXTURE_2D:
-    case LOCAL_GL_TEXTURE_CUBE_MAP:
-        return true;
-
-    case LOCAL_GL_TEXTURE_3D:
-        if (IsWebGL2())
-            return true;
-
-        break;
-
-    default:
-        break;
-    }
-
-    ErrorInvalidEnumInfo(info, target);
-    return false;
-}
-
-bool
 WebGLContext::ValidateComparisonEnum(GLenum target, const char* info)
 {
     switch (target) {
