@@ -409,8 +409,6 @@ class VirtualenvMixin(object):
                 scripts_dir = os.path.dirname(target)
                 self.mkdir_p(scripts_dir)
                 self.copyfile(c['virtualenv_python_dll'], target, error_level=WARNING)
-            else:
-                self.mkdir_p(dirs['abs_work_dir'])
 
             # make this list configurable?
             for module in ('distribute', 'pip'):
@@ -424,6 +422,7 @@ class VirtualenvMixin(object):
         if os.path.exists(self.query_python_path()):
             self.info("Virtualenv %s appears to already exist; skipping virtualenv creation." % self.query_python_path())
         else:
+            self.mkdir_p(dirs['abs_work_dir'])
             self.run_command(virtualenv + virtualenv_options + [venv_path],
                              cwd=dirs['abs_work_dir'],
                              error_list=VirtualenvErrorList,
