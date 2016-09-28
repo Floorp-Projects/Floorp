@@ -109,3 +109,4 @@ fuzzy-if(Mulet,45,2) == 1107096-invisibles.html 1107096-invisibles-ref.html
 
 == 1304353-text-global-alpha-1.html 1304353-text-global-alpha-1-ref.html
 fuzzy-if(winWidget,1,14) == 1304353-text-global-alpha-2.html 1304353-text-global-alpha-2-ref.html
+fuzzy-if(winWidget,63,1575) fuzzy-if(cocoaWidget,1,24) == 1304353-text-global-composite-op-1.html 1304353-text-global-composite-op-1-ref.html

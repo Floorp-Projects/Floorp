@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+function test() {
+  var c = document.getElementById("c");
+  var ctx = c.getContext("2d");
+  ctx.fillStyle = "green";
+  ctx.fillRect(0, 0, 300, 75);
+  ctx.font = "36px sans-serif";
+  ctx.fillStyle = "white";
+  ctx.fillText("HELLO", 50, 50);
+  ctx.fillStyle = "green";
+  ctx.fillText("WORLD", 50, 120);
+}
+</script>
+</head>
+<body onload="test()">
+<canvas id="c" width="300" height="150" style="-moz-osx-font-smoothing:grayscale"></canvas>
+</body>
+</html
