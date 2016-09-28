@@ -32,8 +32,11 @@
 
             let packagedAppLocation = getTestFilePath("app");
 
+            let onValidated = waitForUpdate(win, "project-validated");
+            let onDetails = waitForUpdate(win, "details");
             yield winProject.projectList.importPackagedApp(packagedAppLocation);
-            yield waitForUpdate(win, "details");
+            yield onValidated;
+            yield onDetails;
 
             let project = win.AppManager.selectedProject;
 
