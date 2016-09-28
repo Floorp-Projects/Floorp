@@ -90,19 +90,6 @@
   padding-inline-start: 2px;
 }
 
-/**** menuitem stock icons ****/
-#orgClose {
-  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
-}
-
-#fileImport {
-  list-style-image: url("moz-icon://stock/gtk-revert-to-saved?size=menu");
-}
-
-#fileExport {
-  list-style-image: url("moz-icon://stock/gtk-save-as?size=menu");
-}
-
 /**
  * Downloads pane
  */

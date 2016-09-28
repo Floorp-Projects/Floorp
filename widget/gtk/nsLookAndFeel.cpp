@@ -784,12 +784,6 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
     case eIntID_SpellCheckerUnderlineStyle:
         aResult = NS_STYLE_TEXT_DECORATION_STYLE_WAVY;
         break;
-    case eIntID_ImagesInMenus:
-        aResult = moz_gtk_images_in_menus();
-        break;
-    case eIntID_ImagesInButtons:
-        aResult = moz_gtk_images_in_buttons();
-        break;
     case eIntID_MenuBarDrag:
         aResult = sMenuSupportsDrag;
         break;
