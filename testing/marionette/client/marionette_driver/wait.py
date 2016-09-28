@@ -143,11 +143,11 @@ class Wait(object):
             self.clock.sleep(interval_new)
 
         if message:
-            message = " with message: %s" % message
+            message = " with message: {}".format(message)
 
         raise errors.TimeoutException(
-            "Timed out after %s seconds%s" %
-            (round((self.clock.now - start), 1), message if message else ""),
+            "Timed out after {0} seconds{1}".format(round((self.clock.now - start), 1),
+                                                    message if message else ""),
             cause=last_exc)
 
 

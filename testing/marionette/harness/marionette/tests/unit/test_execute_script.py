@@ -11,7 +11,7 @@ from marionette import MarionetteTestCase
 
 
 def inline(doc):
-    return "data:text/html;charset=utf-8,%s" % urllib.quote(doc)
+    return "data:text/html;charset=utf-8,{}".format(urllib.quote(doc))
 
 
 elements = inline("<p>foo</p> <p>bar</p>")
@@ -110,9 +110,9 @@ class TestExecuteContent(MarionetteTestCase):
 
     def assert_is_defined(self, property, sandbox="default"):
         self.assertTrue(self.marionette.execute_script(
-            "return typeof %s != 'undefined'" % property,
+            "return typeof {} != 'undefined'".format(property),
             sandbox=sandbox),
-            "property %s is undefined" % property)
+                        "property {} is undefined".format(property))
 
     def test_globals(self):
         for property in globals:
@@ -226,8 +226,8 @@ class TestExecuteContent(MarionetteTestCase):
         self.assertEqual(1, foo)
 
         for property in globals:
-            exists = send("return typeof %s != 'undefined'" % property)
-            self.assertTrue(exists, "property %s is undefined" % property)
+            exists = send("return typeof {} != 'undefined'".format(property))
+            self.assertTrue(exists, "property {} is undefined".format(property))
         # TODO(ato): For some reason this fails, probably Sandbox bug?
         # self.assertTrue(send("return typeof Components == 'undefined'"))
         self.assertTrue(
