@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ssl.h"
 #include <functional>
 #include <memory>
 #include "secerr.h"
+#include "ssl.h"
 #include "sslerr.h"
 #include "sslproto.h"
 
@@ -53,6 +53,8 @@ TEST_P(TlsConnectGeneric, ConnectAlpn) {
 
 TEST_P(TlsConnectGeneric, ConnectAlpnClone) {
   EnsureModelSockets();
+  client_model_->EnableAlpn(alpn_dummy_val_, sizeof(alpn_dummy_val_));
+  server_model_->EnableAlpn(alpn_dummy_val_, sizeof(alpn_dummy_val_));
   Connect();
   CheckAlpn("a");
 }

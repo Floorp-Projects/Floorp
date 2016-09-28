@@ -216,7 +216,7 @@ SSL_IMPORT PRFileDesc *DTLS_ImportFD(PRFileDesc *model, PRFileDesc *fd);
  * enabled.  A server will only negotiate TLS_DHE_* cipher suites if the
  * client includes the extension.
  *
- * See SSL_NamedGroupPrefSet() for how to control which groups are enabled.
+ * See SSL_NamedGroupConfig() for how to control which groups are enabled.
  *
  * This option cannot be enabled if NSS is not compiled with ECC support.
  */
@@ -392,16 +392,16 @@ SSL_IMPORT SECStatus SSL_SignaturePrefGet(
 SSL_IMPORT unsigned int SSL_SignatureMaxCount();
 
 /*
-** Enable or disable a named group (see SSLNamedGroup).  This includes both EC
-** and FF groups using in Diffie-Hellman key exchange, as well as the EC groups
-** used in ECDSA signatures.  By default libssl enables all supported groups.
-** NSS uses its own preferences to select a group though it will select the
-** first group from SSL_DHEGroupPrefSet if that was called.
+** Define custom priorities for EC and FF groups used in DH key exchange and EC
+** groups for ECDSA. This only changes the order of enabled lists (and thus
+** their priorities) and enables all groups in |groups| while disabling all other
+** groups.
 */
-SSL_IMPORT SECStatus SSL_NamedGroupPrefSet(PRFileDesc *fd, SSLNamedGroup group,
-                                           PRBool enable);
+SSL_IMPORT SECStatus SSL_NamedGroupConfig(PRFileDesc *fd,
+                                          const SSLNamedGroup *groups,
+                                          unsigned int num_groups);
 
-/* Deprecated: use SSL_NamedGroupPrefSet() instead.
+/* Deprecated: use SSL_NamedGroupConfig() instead.
 ** SSL_DHEGroupPrefSet is used to configure the set of allowed/enabled DHE group
 ** parameters that can be used by NSS for the given server socket.
 ** The first item in the array is used as the default group, if no other
@@ -432,11 +432,11 @@ SSL_IMPORT SECStatus SSL_DHEGroupPrefSet(PRFileDesc *fd,
 ** on sockets. The function needs to be called again for every socket that
 ** should use the weak group.
 **
-** It is allowed to use this API in combination with the SSL_NamedGroupPrefSet API.
-** If both APIs have been called, the weakest group will be used,
-** unless it is certain that the client supports larger group parameters.
-** The weak group will be used as the default group, overriding the preference
-** for the first group potentially set with a call to SSL_DHEGroupPrefSet.
+** It is allowed to use this API in combination with the SSL_NamedGroupConfig API.
+** If both APIs have been called, the weakest group will be used, unless it is
+** certain that the client supports larger group parameters. The weak group will
+** be used as the default group for TLS <= 1.2, overriding the preference for
+** the first group potentially set with a call to SSL_NamedGroupConfig.
 */
 SSL_IMPORT SECStatus SSL_EnableWeakDHEPrimeGroup(PRFileDesc *fd, PRBool enabled);
 
