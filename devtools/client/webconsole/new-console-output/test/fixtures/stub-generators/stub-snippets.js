@@ -46,6 +46,17 @@ console.time("bar");
 console.timeEnd("bar");
 `});
 
+consoleApi.set("console.table('bar')", {
+  keys: ["console.table('bar')"],
+  code: `
+console.table('bar');
+`});
+
+consoleApi.set("console.table(['a', 'b', 'c'])", {
+  keys: ["console.table(['a', 'b', 'c'])"],
+  code: `
+console.table(['a', 'b', 'c']);
+`});
 // Evaluation Result
 
 const evaluationResultCommands = [

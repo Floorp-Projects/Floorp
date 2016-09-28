@@ -494,6 +494,10 @@ WebConsoleFrame.prototype = {
     };
     allReady.then(notifyObservers, notifyObservers);
 
+    if (this.NEW_CONSOLE_OUTPUT_ENABLED) {
+      allReady.then(this.newConsoleOutput.init);
+    }
+
     return allReady;
   },
 
@@ -3273,6 +3277,13 @@ WebConsoleConnectionProxy.prototype = {
   },
 
   /**
+   * Batched dispatch of messages.
+   */
+  dispatchMessagesAdd: function(packets) {
+    this.webConsoleFrame.newConsoleOutput.dispatchMessagesAdd(packets);
+  },
+
+  /**
    * The "cachedMessages" response handler.
    *
    * @private
@@ -3301,9 +3312,7 @@ WebConsoleConnectionProxy.prototype = {
       // Filter out CSS page errors.
       messages = messages.filter(message => !(message._type == "PageError"
           && Utils.categoryForScriptError(message) === CATEGORY_CSS));
-      for (let packet of messages) {
-        this.dispatchMessageAdd(packet);
-      }
+      this.dispatchMessagesAdd(messages);
     } else {
       this.webConsoleFrame.displayCachedMessages(messages);
       if (!this._hasNativeConsoleAPI) {

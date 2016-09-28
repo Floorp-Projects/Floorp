@@ -3083,17 +3083,17 @@ this.XPIProvider = {
     url = UpdateUtils.formatUpdateURL(url);
 
     logger.info(`Starting system add-on update check from ${url}.`);
-    let addonList = yield ProductAddonChecker.getProductAddonList(url);
+    let res = yield ProductAddonChecker.getProductAddonList(url);
 
     // If there was no list then do nothing.
-    if (!addonList) {
+    if (!res || !res.gmpAddons) {
       logger.info("No system add-ons list was returned.");
       yield systemAddonLocation.cleanDirectories();
       return;
     }
 
-    addonList = new Map(
-      addonList.map(spec => [spec.id, { spec, path: null, addon: null }]));
+    let addonList = new Map(
+      res.gmpAddons.map(spec => [spec.id, { spec, path: null, addon: null }]));
 
     let getAddonsInLocation = (location) => {
       return new Promise(resolve => {

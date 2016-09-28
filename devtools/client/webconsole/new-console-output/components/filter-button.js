@@ -8,7 +8,7 @@ const {
   DOM: dom,
   PropTypes
 } = require("devtools/client/shared/vendor/react");
-const actions = require("devtools/client/webconsole/new-console-output/actions/filters");
+const actions = require("devtools/client/webconsole/new-console-output/actions/index");
 
 const FilterButton = createClass({
 
