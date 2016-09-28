@@ -18,6 +18,7 @@
    */
   runTest(function () {
     var v = document.createElement("video");
+    document.body.appendChild(v);
     v.preload = "metadata";
 
     var constraints = {video: true, audio: true};
