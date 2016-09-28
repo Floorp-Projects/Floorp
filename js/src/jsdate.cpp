@@ -375,6 +375,18 @@ JS::DayFromTime(double time)
     return DateFromTime(time);
 }
 
+JS_PUBLIC_API(double)
+JS::DayFromYear(double year)
+{
+    return ::DayFromYear(year);
+}
+
+JS_PUBLIC_API(double)
+JS::DayWithinYear(double time, double year)
+{
+    return ::DayWithinYear(time, year);
+}
+
 /*
  * Find a year for which any given date will fall on the same weekday.
  *
