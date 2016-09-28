@@ -40,20 +40,12 @@
 #endif
 
 #if !defined(OVR_ALIGNAS)
-#if defined(__GNUC__) && (((__GNUC__ * 100) + __GNUC_MINOR__) >= 408) && (defined(__GXX_EXPERIMENTAL_CXX0X__) || (__cplusplus >= 201103L))
-#define OVR_ALIGNAS(n) alignas(n)
-#elif defined(__clang__) && !defined(__APPLE__) && (((__clang_major__ * 100) + __clang_minor__) >= 300) && (__cplusplus >= 201103L)
-#define OVR_ALIGNAS(n) alignas(n)
-#elif defined(__clang__) && defined(__APPLE__) && (((__clang_major__ * 100) + __clang_minor__) >= 401) && (__cplusplus >= 201103L)
-#define OVR_ALIGNAS(n) alignas(n)
-#elif defined(_MSC_VER) && (_MSC_VER >= 1900)
-#define OVR_ALIGNAS(n) alignas(n)
-#elif defined(__EDG_VERSION__) && (__EDG_VERSION__ >= 408)
-#define OVR_ALIGNAS(n) alignas(n)
-#elif defined(__GNUC__) || defined(__clang__)
+#if defined(__GNUC__) || defined(__clang__)
 #define OVR_ALIGNAS(n) __attribute__((aligned(n)))
 #elif defined(_MSC_VER) || defined(__INTEL_COMPILER)
 #define OVR_ALIGNAS(n) __declspec(align(n))
+#elif defined(__CC_ARM)
+#define OVR_ALIGNAS(n) __align(n)
 #else
 #error Need to define OVR_ALIGNAS
 #endif
