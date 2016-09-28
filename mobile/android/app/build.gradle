@@ -219,9 +219,15 @@ dependencies {
         compile "com.google.android.gms:play-services-measurement:${mozconfig.substs.ANDROID_GOOGLE_PLAY_SERVICES_VERSION}"
     }
 
-    // Gradle based builds include LeakCanary.  Gradle based tests include the no-op version.  Mach
-    // based builds only include the no-op version of this library.
-    compile 'com.squareup.leakcanary:leakcanary-android:1.4-beta1'
+    // Include LeakCanary in most gradle based builds. LeakCanary adds about 5k methods, so we disable
+    // it for the (non-proguarded, non-multidex) localOld builds to allow space for other libraries.
+    // Gradle based tests include the no-op version.  Mach based builds only include the no-op version
+    // of this library.
+    // It doesn't seem like there is a non-trivial way to be conditional on 'localOld', so instead we explicitly
+    // define a version of leakcanary for every flavor:
+    localCompile 'com.squareup.leakcanary:leakcanary-android:1.4-beta1'
+    localOldCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta1'
+    automationCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta1'
     testCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta1'
 
     compile project(':thirdparty')
