@@ -15,6 +15,7 @@
 #include "nsProxyRelease.h"
 #include "imgITools.h"
 #include "imgIContainer.h"
+#include "imgLoader.h"
 
 class nsIPrincipal;
 
@@ -59,25 +60,41 @@ enum AsyncFaviconFetchMode {
 };
 
 /**
- * Data cache for a icon entry.
+ * Represents one of the payloads (frames) of an icon entry.
+ */
+struct IconPayload
+{
+  IconPayload()
+  : id(0)
+  , width(0)
+  {
+    data.SetIsVoid(true);
+    mimeType.SetIsVoid(true);
+  }
+
+  int64_t id;
+  uint16_t width;
+  nsCString data;
+  nsCString mimeType;
+};
+
+/**
+ * Represents an icon entry.
  */
 struct IconData
 {
   IconData()
-  : id(0)
-  , expiration(0)
+  : expiration(0)
   , fetchMode(FETCH_NEVER)
   , status(ICON_STATUS_UNKNOWN)
   {
   }
 
-  int64_t id;
   nsCString spec;
-  nsCString data;
-  nsCString mimeType;
   PRTime expiration;
   enum AsyncFaviconFetchMode fetchMode;
   uint16_t status; // This is a bitset, see ICON_STATUS_* defines above.
+  nsTArray<IconPayload> payloads;
 };
 
 /**
@@ -88,7 +105,6 @@ struct PageData
   PageData()
   : id(0)
   , canAddToHistory(true)
-  , iconId(0)
   {
     guid.SetIsVoid(true);
   }
@@ -98,7 +114,6 @@ struct PageData
   nsCString bookmarkedSpec;
   nsString revHost;
   bool canAddToHistory; // False for disabled history and unsupported schemas.
-  int64_t iconId;
   nsCString guid;
 };
 
@@ -199,11 +214,15 @@ public:
    *        URL of the page whose favicon's URL we're fetching
    * @param aCallback
    *        function to be called once finished
+   * @param aPreferredWidth
+   *        The preferred size for the icon
    */
   AsyncGetFaviconURLForPage(const nsACString& aPageSpec,
+                            uint16_t aPreferredWidth,
                             nsIFaviconDataCallback* aCallback);
 
 private:
+  uint16_t mPreferredWidth;
   nsMainThreadPtrHandle<nsIFaviconDataCallback> mCallback;
   nsCString mPageSpec;
 };
@@ -223,13 +242,18 @@ public:
    *
    * @param aPageSpec
    *        URL of the page whose favicon URL and data we're fetching
+   * @param aPreferredWidth
+   *        The preferred size of the icon.  We will try to return an icon close
+   *        to this size.
    * @param aCallback
    *        function to be called once finished
    */
   AsyncGetFaviconDataForPage(const nsACString& aPageSpec,
+                             uint16_t aPreferredWidth,
                              nsIFaviconDataCallback* aCallback);
 
 private:
+  uint16_t mPreferredWidth;
   nsMainThreadPtrHandle<nsIFaviconDataCallback> mCallback;
   nsCString mPageSpec;
 };

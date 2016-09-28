@@ -23,10 +23,10 @@
 #include "nsISupportsPriority.h"
 #include "nsContentUtils.h"
 #include <algorithm>
+#include <deque>
 #include "mozilla/gfx/2D.h"
 #include "imgIContainer.h"
 #include "ImageOps.h"
-#include "imgLoader.h"
 #include "imgIEncoder.h"
 
 using namespace mozilla::places;
@@ -38,9 +38,9 @@ namespace places {
 namespace {
 
 /**
- * Fetches information on a page from the Places database.
+ * Fetches information about a page from the database.
  *
- * @param aDBConn
+ * @param aDB
  *        Database connection to history tables.
  * @param _page
  *        Page that should be fetched.
@@ -55,7 +55,7 @@ FetchPageInfo(const RefPtr<Database>& aDB,
   // This query finds the bookmarked uri we want to set the icon for,
   // walking up to two redirect levels.
   nsCString query = nsPrintfCString(
-    "SELECT h.id, h.favicon_id, h.guid, ( "
+    "SELECT h.id, h.guid, ( "
       "SELECT h.url FROM moz_bookmarks b WHERE b.fk = h.id "
       "UNION ALL " // Union not directly bookmarked pages.
       "SELECT url FROM moz_places WHERE id = ( "
@@ -69,7 +69,9 @@ FetchPageInfo(const RefPtr<Database>& aDB,
         "AND EXISTS(SELECT 1 FROM moz_bookmarks b WHERE b.fk = r_place_id) "
         "LIMIT 1 "
       ") "
-    ") FROM moz_places h WHERE h.url_hash = hash(:page_url) AND h.url = :page_url",
+    ") "
+    "FROM moz_places h "
+    "WHERE h.url_hash = hash(:page_url) AND h.url = :page_url",
     nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
     nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY,
     nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
@@ -94,21 +96,15 @@ FetchPageInfo(const RefPtr<Database>& aDB,
 
   rv = stmt->GetInt64(0, &_page.id);
   NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->GetUTF8String(1, _page.guid);
+  NS_ENSURE_SUCCESS(rv, rv);
+  // Bookmarked url can be nullptr.
   bool isNull;
-  rv = stmt->GetIsNull(1, &isNull);
-  NS_ENSURE_SUCCESS(rv, rv);
-  // favicon_id can be nullptr.
-  if (!isNull) {
-    rv = stmt->GetInt64(1, &_page.iconId);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  rv = stmt->GetUTF8String(2, _page.guid);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->GetIsNull(3, &isNull);
+  rv = stmt->GetIsNull(2, &isNull);
   NS_ENSURE_SUCCESS(rv, rv);
   // The page could not be bookmarked.
   if (!isNull) {
-    rv = stmt->GetUTF8String(3, _page.bookmarkedSpec);
+    rv = stmt->GetUTF8String(2, _page.bookmarkedSpec);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -136,136 +132,273 @@ FetchPageInfo(const RefPtr<Database>& aDB,
 }
 
 /**
- * Stores information on a icon in the database.
+ * Stores information about an icon in the database.
  *
- * @param aDBConn
+ * @param aDB
  *        Database connection to history tables.
  * @param aIcon
  *        Icon that should be stored.
+ * @param aMustReplace
+ *        If set to true, the function will bail out with NS_ERROR_NOT_AVAILABLE
+ *        if it can't find a previous stored icon to replace.
+ * @note Should be wrapped in a transaction.
  */
 nsresult
 SetIconInfo(const RefPtr<Database>& aDB,
-            const IconData& aIcon)
+            IconData& aIcon,
+            bool aMustReplace = false)
 {
   MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(aIcon.payloads.Length() > 0);
+  MOZ_ASSERT(!aIcon.spec.IsEmpty());
 
-  nsCOMPtr<mozIStorageStatement> stmt = aDB->GetStatement(
-    "INSERT OR REPLACE INTO moz_favicons "
-      "(id, url, data, mime_type, expiration) "
-    "VALUES ((SELECT id FROM moz_favicons WHERE url = :icon_url), "
-            ":icon_url, :data, :mime_type, :expiration) "
+  // There are multiple cases possible at this point:
+  //   1. We must insert some payloads and no payloads exist in the table. This
+  //      would be a straight INSERT.
+  //   2. The table contains the same number of payloads we are inserting. This
+  //      would be a straight UPDATE.
+  //   3. The table contains more payloads than we are inserting. This would be
+  //      an UPDATE and a DELETE.
+  //   4. The table contains less payloads than we are inserting. This would be
+  //      an UPDATE and an INSERT.
+  // We can't just remove all the old entries and insert the new ones, cause
+  // we'd lose the referential integrity with pages.  For the same reason we
+  // cannot use INSERT OR REPLACE, since it's implemented as DELETE AND INSERT.
+  // Thus, we follow this strategy:
+  //   * SELECT all existing icon ids
+  //   * For each payload, either UPDATE OR INSERT reusing icon ids.
+  //   * If any previous icon ids is leftover, DELETE it.
+
+  nsCOMPtr<mozIStorageStatement> selectStmt = aDB->GetStatement(
+    "SELECT id FROM moz_icons "
+    "WHERE fixed_icon_url_hash = hash(fixup_url(:url)) "
+      "AND icon_url = :url "
   );
-  NS_ENSURE_STATE(stmt);
-  mozStorageStatementScoper scoper(stmt);
-  nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("icon_url"), aIcon.spec);
+  NS_ENSURE_STATE(selectStmt);
+  mozStorageStatementScoper scoper(selectStmt);
+  nsresult rv = URIBinder::Bind(selectStmt, NS_LITERAL_CSTRING("url"), aIcon.spec);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindBlobByName(NS_LITERAL_CSTRING("data"),
-                            TO_INTBUFFER(aIcon.data), aIcon.data.Length());
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("mime_type"), aIcon.mimeType);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("expiration"), aIcon.expiration);
-  NS_ENSURE_SUCCESS(rv, rv);
+  std::deque<int64_t> ids;
+  bool hasResult = false;
+  while (NS_SUCCEEDED(selectStmt->ExecuteStep(&hasResult)) && hasResult) {
+    int64_t id = selectStmt->AsInt64(0);
+    MOZ_ASSERT(id > 0);
+    ids.push_back(id);
+  }
+  if (aMustReplace && ids.empty()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
-  rv = stmt->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<mozIStorageStatement> insertStmt = aDB->GetStatement(
+    "INSERT INTO moz_icons "
+      "(icon_url, fixed_icon_url_hash, width, expire_ms, data) "
+    "VALUES (:url, hash(fixup_url(:url)), :width, :expire, :data) "
+  );
+  NS_ENSURE_STATE(insertStmt);
+  nsCOMPtr<mozIStorageStatement> updateStmt = aDB->GetStatement(
+    "UPDATE moz_icons SET width = :width, "
+                         "expire_ms = :expire, "
+                         "data = :data "
+    "WHERE id = :id "
+  );
+  NS_ENSURE_STATE(updateStmt);
+
+  for (auto& payload : aIcon.payloads) {
+    // Sanity checks.
+    MOZ_ASSERT(payload.mimeType.EqualsLiteral(PNG_MIME_TYPE) ||
+              payload.mimeType.EqualsLiteral(SVG_MIME_TYPE),
+              "Only png and svg payloads are supported");
+    MOZ_ASSERT(!payload.mimeType.EqualsLiteral(SVG_MIME_TYPE) ||
+               payload.width == UINT16_MAX,
+              "SVG payloads should have max width");
+    MOZ_ASSERT(payload.width > 0, "Payload should have a width");
+#ifdef DEBUG
+    // Done to ensure we fetch the id. See the MOZ_ASSERT below.
+    payload.id = 0;
+#endif
+    if (!ids.empty()) {
+      // Pop the first existing id for reuse.
+      int64_t id = ids.front();
+      ids.pop_front();
+      mozStorageStatementScoper scoper(updateStmt);
+      rv = updateStmt->BindInt64ByName(NS_LITERAL_CSTRING("id"), id);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = updateStmt->BindInt32ByName(NS_LITERAL_CSTRING("width"),
+                                       payload.width);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = updateStmt->BindInt64ByName(NS_LITERAL_CSTRING("expire"),
+                                       aIcon.expiration / 1000);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = updateStmt->BindBlobByName(NS_LITERAL_CSTRING("data"),
+                                TO_INTBUFFER(payload.data),
+                                payload.data.Length());
+      rv = updateStmt->Execute();
+      NS_ENSURE_SUCCESS(rv, rv);
+      // Set the new payload id.
+      payload.id = id;
+    } else {
+      // Insert a new entry.
+      mozStorageStatementScoper scoper(insertStmt);
+      rv = URIBinder::Bind(insertStmt, NS_LITERAL_CSTRING("url"), aIcon.spec);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = insertStmt->BindInt32ByName(NS_LITERAL_CSTRING("width"),
+                                       payload.width);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = insertStmt->BindInt64ByName(NS_LITERAL_CSTRING("expire"),
+                                       aIcon.expiration / 1000);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = insertStmt->BindBlobByName(NS_LITERAL_CSTRING("data"),
+                                TO_INTBUFFER(payload.data),
+                                payload.data.Length());
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = insertStmt->Execute();
+      NS_ENSURE_SUCCESS(rv, rv);
+      // Set the new payload id.
+      payload.id = nsFaviconService::sLastInsertedIconId;
+    }
+    MOZ_ASSERT(payload.id > 0, "Payload should have an id");
+  }
+
+  if (!ids.empty()) {
+    // Remove any old leftover payload.
+    nsAutoCString sql("DELETE FROM moz_icons WHERE id IN (");
+    for (int64_t id : ids) {
+      sql.AppendInt(id);
+      sql.AppendLiteral(",");
+    }
+    sql.AppendLiteral(" 0)"); // Non-existing id to match the trailing comma.
+    nsCOMPtr<mozIStorageStatement> stmt = aDB->GetStatement(sql);
+    NS_ENSURE_STATE(stmt);
+    mozStorageStatementScoper scoper(stmt);
+    rv = stmt->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   return NS_OK;
 }
 
 /**
- * Fetches information on a icon from the Places database.
+ * Fetches information on a icon url from the database.
  *
  * @param aDBConn
  *        Database connection to history tables.
+ * @param aPreferredWidth
+ *        The preferred size to fetch.
  * @param _icon
  *        Icon that should be fetched.
  */
 nsresult
 FetchIconInfo(const RefPtr<Database>& aDB,
-              IconData& _icon)
+              uint16_t aPreferredWidth,
+              IconData& _icon
+)
 {
   MOZ_ASSERT(_icon.spec.Length(), "Must have a non-empty spec!");
   MOZ_ASSERT(!NS_IsMainThread());
 
   if (_icon.status & ICON_STATUS_CACHED) {
+    // The icon data has already been set by ReplaceFaviconData.
     return NS_OK;
   }
 
   nsCOMPtr<mozIStorageStatement> stmt = aDB->GetStatement(
-    "SELECT id, expiration, data, mime_type "
-    "FROM moz_favicons WHERE url = :icon_url"
+    "/* do not warn (bug no: not worth having a compound index) */ "
+    "SELECT id, expire_ms, data, width "
+    "FROM moz_icons "
+    "WHERE fixed_icon_url_hash = hash(fixup_url(:url)) "
+      "AND icon_url = :url "
+    "ORDER BY width ASC "
   );
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scoper(stmt);
 
-  DebugOnly<nsresult> rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("icon_url"),
+  DebugOnly<nsresult> rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("url"),
                                            _icon.spec);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-  bool hasResult;
-  rv = stmt->ExecuteStep(&hasResult);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-  if (!hasResult) {
-    // The icon does not exist yet, bail out.
-    return NS_OK;
-  }
-
-  rv = stmt->GetInt64(0, &_icon.id);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-  // Expiration can be nullptr.
-  bool isNull;
-  rv = stmt->GetIsNull(1, &isNull);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-  if (!isNull) {
-    rv = stmt->GetInt64(1, reinterpret_cast<int64_t*>(&_icon.expiration));
+  bool hasResult = false;
+  while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
+    IconPayload payload;
+    rv = stmt->GetInt64(0, &payload.id);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
-  }
 
-  // Data can be nullptr.
-  rv = stmt->GetIsNull(2, &isNull);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-  if (!isNull) {
+    // Expiration can be nullptr.
+    bool isNull;
+    rv = stmt->GetIsNull(1, &isNull);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    if (!isNull) {
+      int64_t expire_ms;
+      rv = stmt->GetInt64(1, &expire_ms);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+      _icon.expiration = expire_ms * 1000;
+    }
+
     uint8_t* data;
     uint32_t dataLen = 0;
     rv = stmt->GetBlob(2, &dataLen, &data);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
-    _icon.data.Adopt(TO_CHARBUFFER(data), dataLen);
-    // Read mime only if we have data.
-    rv = stmt->GetUTF8String(3, _icon.mimeType);
+
+    payload.data.Adopt(TO_CHARBUFFER(data), dataLen);
+    int32_t width;
+    rv = stmt->GetInt32(3, &width);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
+    payload.width = width;
+
+    if (payload.width == UINT16_MAX) {
+      payload.mimeType.AssignLiteral(SVG_MIME_TYPE);
+    } else {
+      payload.mimeType.AssignLiteral(PNG_MIME_TYPE);
+    }
+
+    if (aPreferredWidth == 0 || _icon.payloads.Length() == 0) {
+      _icon.payloads.AppendElement(payload);
+    } else if (payload.width >= aPreferredWidth) {
+      // Only retain the best matching payload.
+      _icon.payloads.ReplaceElementAt(0, payload);
+    } else {
+      break;
+    }
   }
 
   return NS_OK;
 }
 
 nsresult
-FetchIconURL(const RefPtr<Database>& aDB,
-             const nsACString& aPageSpec,
-             nsACString& aIconSpec)
+FetchIconPerSpec(const RefPtr<Database>& aDB,
+                 const nsACString& aPageSpec,
+                 IconData& aIconData,
+                 uint16_t aPreferredWidth)
 {
   MOZ_ASSERT(!aPageSpec.IsEmpty(), "Page spec must not be empty.");
   MOZ_ASSERT(!NS_IsMainThread());
 
-  aIconSpec.Truncate();
-
   nsCOMPtr<mozIStorageStatement> stmt = aDB->GetStatement(
-    "SELECT f.url "
-    "FROM moz_places h "
-    "JOIN moz_favicons f ON h.favicon_id = f.id "
-    "WHERE h.url_hash = hash(:page_url) AND h.url = :page_url"
+    "/* do not warn (bug no: not worth having a compound index) */ "
+    "SELECT width, icon_url "
+    "FROM moz_icons i "
+    "JOIN moz_icons_to_pages ON i.id = icon_id "
+    "JOIN moz_pages_w_icons p ON p.id = page_id "
+    "WHERE page_url_hash = hash(:url) AND page_url = :url "
+    "ORDER BY width DESC "
   );
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scoper(stmt);
 
-  nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"),
+  nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("url"),
                                 aPageSpec);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Return the biggest icon close to the preferred width. It may be bigger
+  // or smaller if the preferred width isn't found.
   bool hasResult;
-  if (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
-    rv = stmt->GetUTF8String(0, aIconSpec);
+  while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
+    int32_t width;
+    rv = stmt->GetInt32(0, &width);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (width < aPreferredWidth && !aIconData.spec.IsEmpty()) {
+      break;
+    }
+    rv = stmt->GetUTF8String(1, aIconData.spec);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -307,40 +440,6 @@ GetExpirationTimeFromChannel(nsIChannel* aChannel)
                         : expiration;
 }
 
-/**
- * Checks the icon and evaluates if it needs to be optimized.  In such a case it
- * will try to reduce its size through OptimizeFaviconImage method of the
- * favicons service.
- *
- * @param aIcon
- *        The icon to be evaluated.
- * @param aFaviconSvc
- *        Pointer to the favicons service.
- */
-nsresult
-OptimizeIconSize(IconData& aIcon,
-                 nsFaviconService* aFaviconSvc)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  // Even if the page provides a large image for the favicon (eg, a highres
-  // image or a multiresolution .ico file), don't try to store more data than
-  // needed.
-  nsAutoCString newData, newMimeType;
-  if (aIcon.data.Length() > MAX_FAVICON_FILESIZE) {
-    nsresult rv = aFaviconSvc->OptimizeFaviconImage(TO_INTBUFFER(aIcon.data),
-                                                    aIcon.data.Length(),
-                                                    aIcon.mimeType,
-                                                    newData,
-                                                    newMimeType);
-    if (NS_SUCCEEDED(rv) && newData.Length() < aIcon.data.Length()) {
-      aIcon.data = newData;
-      aIcon.mimeType = newMimeType;
-    }
-  }
-  return NS_OK;
-}
-
 } // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -379,10 +478,10 @@ AsyncFetchAndSetIconForPage::Run()
   // Try to fetch the icon from the database.
   RefPtr<Database> DB = Database::GetDatabase();
   NS_ENSURE_STATE(DB);
-  nsresult rv = FetchIconInfo(DB, mIcon);
+  nsresult rv = FetchIconInfo(DB, 0, mIcon);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bool isInvalidIcon = mIcon.data.IsEmpty() ||
+  bool isInvalidIcon = !mIcon.payloads.Length() ||
                        (mIcon.expiration && PR_Now() > mIcon.expiration);
   bool fetchIconFromNetwork = mIcon.fetchMode == FETCH_ALWAYS ||
                               (mIcon.fetchMode == FETCH_IF_MISSING && isInvalidIcon);
@@ -392,9 +491,8 @@ AsyncFetchAndSetIconForPage::Run()
     // directly proceed with association.
     RefPtr<AsyncAssociateIconToPage> event =
         new AsyncAssociateIconToPage(mIcon, mPage, mCallback);
-    DB->DispatchToAsyncThread(event);
-
-    return NS_OK;
+    // We're already on the async thread.
+    return event->Run();
   }
 
   // Fetch the icon from the network, the request starts from the main-thread.
@@ -413,10 +511,10 @@ AsyncFetchAndSetIconForPage::FetchFromNetwork() {
   }
 
   // Ensure data is cleared, since it's going to be overwritten.
-  if (mIcon.data.Length() > 0) {
-    mIcon.data.Truncate(0);
-    mIcon.mimeType.Truncate(0);
-  }
+  mIcon.payloads.Clear();
+
+  IconPayload payload;
+  mIcon.payloads.AppendElement(payload);
 
   nsCOMPtr<nsIURI> iconURI;
   nsresult rv = NS_NewURI(getter_AddRefs(iconURI), mIcon.spec);
@@ -489,9 +587,11 @@ AsyncFetchAndSetIconForPage::OnDataAvailable(nsIRequest* aRequest,
                                              uint64_t aOffset,
                                              uint32_t aCount)
 {
-  const size_t kMaxFaviconDownloadSize = 1 * 1024 * 1024;
-  if (mIcon.data.Length() + aCount > kMaxFaviconDownloadSize) {
-    mIcon.data.Truncate();
+  MOZ_ASSERT(mIcon.payloads.Length() == 1);
+  // Limit downloads to 500KB.
+  const size_t kMaxDownloadSize = 500 * 1024;
+  if (mIcon.payloads[0].data.Length() + aCount > kMaxDownloadSize) {
+    mIcon.payloads.Clear();
     return NS_ERROR_FILE_TOO_BIG;
   }
 
@@ -501,8 +601,8 @@ AsyncFetchAndSetIconForPage::OnDataAvailable(nsIRequest* aRequest,
     return rv;
   }
 
-  if (!mIcon.data.Append(buffer, fallible)) {
-    mIcon.data.Truncate();
+  if (!mIcon.payloads[0].data.Append(buffer, fallible)) {
+    mIcon.payloads.Clear();
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -551,7 +651,7 @@ AsyncFetchAndSetIconForPage::OnStopRequest(nsIRequest* aRequest,
   nsresult rv;
 
   // If fetching the icon failed, add it to the failed cache.
-  if (NS_FAILED(aStatusCode) || mIcon.data.Length() == 0) {
+  if (NS_FAILED(aStatusCode) || mIcon.payloads.Length() == 0) {
     nsCOMPtr<nsIURI> iconURI;
     rv = NS_NewURI(getter_AddRefs(iconURI), mIcon.spec);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -564,19 +664,23 @@ AsyncFetchAndSetIconForPage::OnStopRequest(nsIRequest* aRequest,
   // aRequest should always QI to nsIChannel.
   MOZ_ASSERT(channel);
 
+  MOZ_ASSERT(mIcon.payloads.Length() == 1);
+  IconPayload& payload = mIcon.payloads[0];
+
   nsAutoCString contentType;
   channel->GetContentType(contentType);
-  // Bug 366324 - can't sniff SVG yet, so rely on server-specified type
-  if (contentType.EqualsLiteral("image/svg+xml")) {
-    mIcon.mimeType.AssignLiteral("image/svg+xml");
+  // Bug 366324 - We don't want to sniff for SVG, so rely on server-specified type.
+  if (contentType.EqualsLiteral(SVG_MIME_TYPE)) {
+    payload.mimeType.AssignLiteral(SVG_MIME_TYPE);
+    payload.width = UINT16_MAX;
   } else {
     NS_SniffContent(NS_DATA_SNIFFER_CATEGORY, aRequest,
-                    TO_INTBUFFER(mIcon.data), mIcon.data.Length(),
-                    mIcon.mimeType);
+                    TO_INTBUFFER(payload.data), payload.data.Length(),
+                    payload.mimeType);
   }
 
   // If the icon does not have a valid MIME type, add it to the failed cache.
-  if (mIcon.mimeType.IsEmpty()) {
+  if (payload.mimeType.IsEmpty()) {
     nsCOMPtr<nsIURI> iconURI;
     rv = NS_NewURI(getter_AddRefs(iconURI), mIcon.spec);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -589,37 +693,36 @@ AsyncFetchAndSetIconForPage::OnStopRequest(nsIRequest* aRequest,
 
   // Telemetry probes to measure the favicon file sizes for each different file type.
   // This allow us to measure common file sizes while also observing each type popularity.
-  if (mIcon.mimeType.EqualsLiteral("image/png")) {
-    mozilla::Telemetry::Accumulate(mozilla::Telemetry::PLACES_FAVICON_PNG_SIZES, mIcon.data.Length());
+  if (payload.mimeType.EqualsLiteral(PNG_MIME_TYPE)) {
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::PLACES_FAVICON_PNG_SIZES, payload.data.Length());
   }
-  else if (mIcon.mimeType.EqualsLiteral("image/x-icon") ||
-           mIcon.mimeType.EqualsLiteral("image/vnd.microsoft.icon")) {
-    mozilla::Telemetry::Accumulate(mozilla::Telemetry::PLACES_FAVICON_ICO_SIZES, mIcon.data.Length());
+  else if (payload.mimeType.EqualsLiteral("image/x-icon") ||
+           payload.mimeType.EqualsLiteral("image/vnd.microsoft.icon")) {
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::PLACES_FAVICON_ICO_SIZES, payload.data.Length());
   }
-  else if (mIcon.mimeType.EqualsLiteral("image/jpeg") ||
-           mIcon.mimeType.EqualsLiteral("image/pjpeg")) {
-    mozilla::Telemetry::Accumulate(mozilla::Telemetry::PLACES_FAVICON_JPEG_SIZES, mIcon.data.Length());
+  else if (payload.mimeType.EqualsLiteral("image/jpeg") ||
+           payload.mimeType.EqualsLiteral("image/pjpeg")) {
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::PLACES_FAVICON_JPEG_SIZES, payload.data.Length());
   }
-  else if (mIcon.mimeType.EqualsLiteral("image/gif")) {
-    mozilla::Telemetry::Accumulate(mozilla::Telemetry::PLACES_FAVICON_GIF_SIZES, mIcon.data.Length());
+  else if (payload.mimeType.EqualsLiteral("image/gif")) {
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::PLACES_FAVICON_GIF_SIZES, payload.data.Length());
   }
-  else if (mIcon.mimeType.EqualsLiteral("image/bmp") ||
-           mIcon.mimeType.EqualsLiteral("image/x-windows-bmp")) {
-    mozilla::Telemetry::Accumulate(mozilla::Telemetry::PLACES_FAVICON_BMP_SIZES, mIcon.data.Length());
+  else if (payload.mimeType.EqualsLiteral("image/bmp") ||
+           payload.mimeType.EqualsLiteral("image/x-windows-bmp")) {
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::PLACES_FAVICON_BMP_SIZES, payload.data.Length());
   }
-  else if (mIcon.mimeType.EqualsLiteral("image/svg+xml")) {
-    mozilla::Telemetry::Accumulate(mozilla::Telemetry::PLACES_FAVICON_SVG_SIZES, mIcon.data.Length());
+  else if (payload.mimeType.EqualsLiteral(SVG_MIME_TYPE)) {
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::PLACES_FAVICON_SVG_SIZES, payload.data.Length());
   }
   else {
-    mozilla::Telemetry::Accumulate(mozilla::Telemetry::PLACES_FAVICON_OTHER_SIZES, mIcon.data.Length());
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::PLACES_FAVICON_OTHER_SIZES, payload.data.Length());
   }
 
-  rv = OptimizeIconSize(mIcon, favicons);
+  rv = favicons->OptimizeIconSizes(mIcon);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // If over the maximum size allowed, don't save data to the database to
-  // avoid bloating it.
-  if (mIcon.data.Length() > nsIFaviconService::MAX_FAVICON_BUFFER_SIZE) {
+  // If there's not valid payload, don't store the icon into to the database.
+  if (mIcon.payloads.Length() == 0) {
     return NS_OK;
   }
 
@@ -645,6 +748,7 @@ AsyncAssociateIconToPage::AsyncAssociateIconToPage(
   , mIcon(aIcon)
   , mPage(aPage)
 {
+  // May be created in both threads.
 }
 
 NS_IMETHODIMP
@@ -666,58 +770,81 @@ AsyncAssociateIconToPage::Run()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  bool shouldUpdateIcon = mIcon.status & ICON_STATUS_CHANGED;
+  if (!shouldUpdateIcon) {
+    for (const auto& payload : mIcon.payloads) {
+      // If the entry is missing from the database, we should add it.
+      if (payload.id == 0) {
+        shouldUpdateIcon = true;
+        break;
+      }
+    }
+  }
+
   mozStorageTransaction transaction(DB->MainConn(), false,
                                     mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
-  // If there is no entry for this icon, or the entry is obsolete, replace it.
-  if (mIcon.id == 0 || (mIcon.status & ICON_STATUS_CHANGED)) {
+  if (shouldUpdateIcon) {
     rv = SetIconInfo(DB, mIcon);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Get the new icon id.  Do this regardless mIcon.id, since other code
-    // could have added a entry before us.  Indeed we interrupted the thread
-    // after the previous call to FetchIconInfo.
     mIcon.status = (mIcon.status & ~(ICON_STATUS_CACHED)) | ICON_STATUS_SAVED;
-    rv = FetchIconInfo(DB, mIcon);
-    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // If the page does not have an id, don't try to insert a new one, cause we
   // don't know where the page comes from.  Not doing so we may end adding
   // a page that otherwise we'd explicitly ignore, like a POST or an error page.
   if (mPage.id == 0) {
+    rv = transaction.Commit();
+    NS_ENSURE_SUCCESS(rv, rv);
     return NS_OK;
   }
 
-  // Otherwise just associate the icon to the page, if needed.
-  if (mPage.iconId != mIcon.id) {
+  // First we need to create the page entry.
+  {
     nsCOMPtr<mozIStorageStatement> stmt;
-    if (mPage.id) {
-      stmt = DB->GetStatement(
-        "UPDATE moz_places SET favicon_id = :icon_id WHERE id = :page_id"
-      );
-      NS_ENSURE_STATE(stmt);
-      rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), mPage.id);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    else {
-      stmt = DB->GetStatement(
-        "UPDATE moz_places SET favicon_id = :icon_id "
-        "WHERE url_hash = hash(:page_url) AND url = :page_url"
-      );
-      NS_ENSURE_STATE(stmt);
-      rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), mPage.spec);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("icon_id"), mIcon.id);
-    NS_ENSURE_SUCCESS(rv, rv);
-
+    stmt = DB->GetStatement(
+      "INSERT OR IGNORE INTO moz_pages_w_icons (id, page_url, page_url_hash) "
+      "VALUES (:page_id, :page_url, hash(:page_url)) "
+    );
+    NS_ENSURE_STATE(stmt);
     mozStorageStatementScoper scoper(stmt);
+    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), mPage.id);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), mPage.spec);
+    NS_ENSURE_SUCCESS(rv, rv);
     rv = stmt->Execute();
     NS_ENSURE_SUCCESS(rv, rv);
-
-    mIcon.status |= ICON_STATUS_ASSOCIATED;
   }
+
+  // Then we can create the relations.
+  nsCOMPtr<mozIStorageStatement> stmt;
+  stmt = DB->GetStatement(
+    "INSERT OR IGNORE INTO moz_icons_to_pages (page_id, icon_id) "
+    "VALUES (:page_id, :icon_id) "
+  );
+  NS_ENSURE_STATE(stmt);
+  mozStorageStatementScoper scoper(stmt);
+  nsCOMPtr<mozIStorageBindingParamsArray> paramsArray;
+  rv = stmt->NewBindingParamsArray(getter_AddRefs(paramsArray));
+  NS_ENSURE_SUCCESS(rv, rv);
+  for (const auto& payload : mIcon.payloads) {
+    nsCOMPtr<mozIStorageBindingParams> params;
+    rv = paramsArray->NewBindingParams(getter_AddRefs(params));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = params->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), mPage.id);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = params->BindInt64ByName(NS_LITERAL_CSTRING("icon_id"), payload.id);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = paramsArray->AddParams(params);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  rv = stmt->BindParameters(paramsArray);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mIcon.status |= ICON_STATUS_ASSOCIATED;
 
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -735,8 +862,10 @@ AsyncAssociateIconToPage::Run()
 
 AsyncGetFaviconURLForPage::AsyncGetFaviconURLForPage(
   const nsACString& aPageSpec
+, uint16_t aPreferredWidth
 , nsIFaviconDataCallback* aCallback
-) : mCallback(new nsMainThreadPtrHolder<nsIFaviconDataCallback>(aCallback))
+) : mPreferredWidth(aPreferredWidth == 0 ? UINT16_MAX : aPreferredWidth)
+  , mCallback(new nsMainThreadPtrHolder<nsIFaviconDataCallback>(aCallback))
 {
   MOZ_ASSERT(NS_IsMainThread());
   mPageSpec.Assign(aPageSpec);
@@ -749,14 +878,11 @@ AsyncGetFaviconURLForPage::Run()
 
   RefPtr<Database> DB = Database::GetDatabase();
   NS_ENSURE_STATE(DB);
-  nsAutoCString iconSpec;
-  nsresult rv = FetchIconURL(DB, mPageSpec, iconSpec);
+  IconData iconData;
+  nsresult rv = FetchIconPerSpec(DB, mPageSpec, iconData, mPreferredWidth);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Now notify our callback of the icon spec we retrieved, even if empty.
-  IconData iconData;
-  iconData.spec.Assign(iconSpec);
-
   PageData pageData;
   pageData.spec.Assign(mPageSpec);
 
@@ -773,8 +899,10 @@ AsyncGetFaviconURLForPage::Run()
 
 AsyncGetFaviconDataForPage::AsyncGetFaviconDataForPage(
   const nsACString& aPageSpec
+,  uint16_t aPreferredWidth
 , nsIFaviconDataCallback* aCallback
-) : mCallback(new nsMainThreadPtrHolder<nsIFaviconDataCallback>(aCallback))
+) : mPreferredWidth(aPreferredWidth == 0 ? UINT16_MAX : aPreferredWidth)
+  , mCallback(new nsMainThreadPtrHolder<nsIFaviconDataCallback>(aCallback))
  {
   MOZ_ASSERT(NS_IsMainThread());
   mPageSpec.Assign(aPageSpec);
@@ -787,22 +915,19 @@ AsyncGetFaviconDataForPage::Run()
 
   RefPtr<Database> DB = Database::GetDatabase();
   NS_ENSURE_STATE(DB);
-  nsAutoCString iconSpec;
-  nsresult rv = FetchIconURL(DB, mPageSpec, iconSpec);
+  IconData iconData;
+  nsresult rv = FetchIconPerSpec(DB, mPageSpec, iconData, mPreferredWidth);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  IconData iconData;
-  iconData.spec.Assign(iconSpec);
-
-  PageData pageData;
-  pageData.spec.Assign(mPageSpec);
-
-  if (!iconSpec.IsEmpty()) {
-    rv = FetchIconInfo(DB, iconData);
+  if (!iconData.spec.IsEmpty()) {
+    rv = FetchIconInfo(DB, mPreferredWidth, iconData);
     if (NS_FAILED(rv)) {
       iconData.spec.Truncate();
     }
   }
+
+  PageData pageData;
+  pageData.spec.Assign(mPageSpec);
 
   nsCOMPtr<nsIRunnable> event =
     new NotifyIconObservers(iconData, pageData, mCallback);
@@ -817,6 +942,7 @@ AsyncGetFaviconDataForPage::Run()
 AsyncReplaceFaviconData::AsyncReplaceFaviconData(const IconData &aIcon)
   : mIcon(aIcon)
 {
+  MOZ_ASSERT(NS_IsMainThread());
 }
 
 NS_IMETHODIMP
@@ -826,16 +952,16 @@ AsyncReplaceFaviconData::Run()
 
   RefPtr<Database> DB = Database::GetDatabase();
   NS_ENSURE_STATE(DB);
-  IconData dbIcon;
-  dbIcon.spec.Assign(mIcon.spec);
-  nsresult rv = FetchIconInfo(DB, dbIcon);
-  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!dbIcon.id) {
+  mozStorageTransaction transaction(DB->MainConn(), false,
+                                    mozIStorageConnection::TRANSACTION_IMMEDIATE);
+  nsresult rv = SetIconInfo(DB, mIcon, true);
+  if (rv == NS_ERROR_NOT_AVAILABLE) {
+    // There's no previous icon to replace, we don't need to do anything.
     return NS_OK;
   }
-
-  rv = SetIconInfo(DB, mIcon);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // We can invalidate the cache version since we now persist the icon.
@@ -896,12 +1022,18 @@ NotifyIconObservers::Run()
     }
   }
 
-  if (mCallback) {
-    (void)mCallback->OnComplete(iconURI, mIcon.data.Length(),
-                                TO_INTBUFFER(mIcon.data), mIcon.mimeType);
+  if (!mCallback) {
+    return NS_OK;
   }
 
-  return NS_OK;
+  if (mIcon.payloads.Length() > 0) {
+    IconPayload& payload = mIcon.payloads[0];
+    return mCallback->OnComplete(iconURI, payload.data.Length(),
+                                 TO_INTBUFFER(payload.data), payload.mimeType,
+                                 payload.width);
+  }
+  return mCallback->OnComplete(iconURI, 0, TO_INTBUFFER(EmptyCString()),
+                               EmptyCString(), 0);
 }
 
 void

@@ -258,8 +258,8 @@ public:
                             const nsACString& aBookmarkGuid,
                             const nsACString& aURI,
                             const nsACString& aTitle,
-                            uint32_t aAccessCount, PRTime aTime,
-                            const nsACString& aFavicon,
+                            uint32_t aAccessCount,
+                            PRTime aTime,
                             nsNavHistoryResultNode** aNode);
 
   nsresult VisitIdToResultNode(int64_t visitId,
