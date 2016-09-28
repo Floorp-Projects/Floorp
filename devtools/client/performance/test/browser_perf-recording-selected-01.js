@@ -11,6 +11,7 @@ const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
 const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
+const { setSelectedRecording, getRecordingsCount, getSelectedRecordingIndex } = require("devtools/client/performance/test/helpers/recording-utils");
 
 add_task(function* () {
   let { panel } = yield initPerformanceInNewTab({
@@ -18,7 +19,7 @@ add_task(function* () {
     win: window
   });
 
-  let { EVENTS, PerformanceController, RecordingsView } = panel.panelWin;
+  let { EVENTS, PerformanceController } = panel.panelWin;
 
   yield startRecording(panel);
   yield stopRecording(panel);
@@ -26,18 +27,18 @@ add_task(function* () {
   yield startRecording(panel);
   yield stopRecording(panel);
 
-  is(RecordingsView.itemCount, 2,
+  is(getRecordingsCount(panel), 2,
     "There should be two recordings visible.");
-  is(RecordingsView.selectedIndex, 1,
+  is(getSelectedRecordingIndex(panel), 1,
     "The second recording item should be selected.");
 
   let selected = once(PerformanceController, EVENTS.RECORDING_SELECTED);
-  RecordingsView.selectedIndex = 0;
+  setSelectedRecording(panel, 0);
   yield selected;
 
-  is(RecordingsView.itemCount, 2,
+  is(getRecordingsCount(panel), 2,
     "There should still be two recordings visible.");
-  is(RecordingsView.selectedIndex, 0,
+  is(getSelectedRecordingIndex(panel), 0,
     "The first recording item should be selected.");
 
   yield teardownToolboxAndRemoveTab(panel);

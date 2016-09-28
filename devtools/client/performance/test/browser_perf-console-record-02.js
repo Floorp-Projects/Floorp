@@ -13,6 +13,7 @@ const { initPerformanceInTab, initConsoleInNewTab, teardownToolboxAndRemoveTab }
 const { waitForRecordingStoppedEvents } = require("devtools/client/performance/test/helpers/actions");
 const { waitUntil } = require("devtools/client/performance/test/helpers/wait-utils");
 const { times } = require("devtools/client/performance/test/helpers/event-utils");
+const { getSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
 
 add_task(function* () {
   let { target, console } = yield initConsoleInNewTab({
@@ -24,7 +25,7 @@ add_task(function* () {
   yield console.profile("rust2");
 
   let { panel } = yield initPerformanceInTab({ tab: target.tab });
-  let { EVENTS, PerformanceController, OverviewView, RecordingsView } = panel.panelWin;
+  let { EVENTS, PerformanceController, OverviewView } = panel.panelWin;
 
   yield waitUntil(() => PerformanceController.getRecordings().length == 2);
 
@@ -37,9 +38,10 @@ add_task(function* () {
   is(recordings[1].getLabel(), "rust2", "Correct label in the recording model (2).");
   is(recordings[1].isRecording(), true, "Recording is still recording (2).");
 
-  is(RecordingsView.selectedItem.attachment, recordings[0],
+  const selected = getSelectedRecording(panel);
+  is(selected, recordings[0],
     "The first console recording should be selected.");
-  is(RecordingsView.selectedItem.attachment.getLabel(), "rust",
+  is(selected.getLabel(), "rust",
     "The profile label for the first recording is correct.");
 
   // Ensure overview is still rendering.

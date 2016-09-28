@@ -519,6 +519,10 @@ public:
    */
   static bool GetAppInitDLLs(nsAString& aOutput);
 
+#ifdef ACCESSIBILITY
+  static void SetAPCPending();
+#endif
+
 private:
   typedef HRESULT (WINAPI * SHCreateItemFromParsingNamePtr)(PCWSTR pszPath,
                                                             IBindCtx *pbc,

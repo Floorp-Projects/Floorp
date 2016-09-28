@@ -10,6 +10,7 @@ const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
 const { UI_ENABLE_MEMORY_PREF, UI_ENABLE_ALLOCATIONS_PREF } = require("devtools/client/performance/test/helpers/prefs");
 const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 const { startRecording, stopRecording, waitForAllWidgetsRendered } = require("devtools/client/performance/test/helpers/actions");
+const { setSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
 
 add_task(function* () {
   let { panel } = yield initPerformanceInNewTab({
@@ -17,7 +18,7 @@ add_task(function* () {
     win: window
   });
 
-  let { DetailsView, DetailsSubview, RecordingsView } = panel.panelWin;
+  let { DetailsView, DetailsSubview } = panel.panelWin;
 
   // Enable memory to test the memory overview.
   Services.prefs.setBoolPref(UI_ENABLE_MEMORY_PREF, true);
@@ -43,13 +44,13 @@ add_task(function* () {
   yield stopRecording(panel);
 
   let rerender = waitForAllWidgetsRendered(panel);
-  RecordingsView.selectedIndex = 0;
+  setSelectedRecording(panel, 0);
   yield rerender;
 
   ok(true, "All widgets were rendered when selecting the first recording.");
 
   rerender = waitForAllWidgetsRendered(panel);
-  RecordingsView.selectedIndex = 1;
+  setSelectedRecording(panel, 1);
   yield rerender;
 
   ok(true, "All widgets were rendered when selecting the second recording.");

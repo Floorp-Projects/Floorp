@@ -2495,11 +2495,15 @@ TSFTextStore::RestartComposition(ITfCompositionView* aCompositionView,
   PendingAction* action = LastOrNewPendingCompositionUpdate();
   action->mData = mComposition.mString;
   action->mRanges->Clear();
-  TextRange caretRange;
-  caretRange.mStartOffset = caretRange.mEndOffset =
-    uint32_t(oldComposition.mStart + commitString.Length());
-  caretRange.mRangeType = TextRangeType::eCaret;
-  action->mRanges->AppendElement(caretRange);
+  // Note that we shouldn't append ranges when composition string
+  // is empty because it may cause TextComposition confused.
+  if (!action->mData.IsEmpty()) {
+    TextRange caretRange;
+    caretRange.mStartOffset = caretRange.mEndOffset =
+      uint32_t(oldComposition.mStart + commitString.Length());
+    caretRange.mRangeType = TextRangeType::eCaret;
+    action->mRanges->AppendElement(caretRange);
+  }
   action->mIncomplete = false;
 
   // Record compositionend action.
@@ -2642,126 +2646,133 @@ TSFTextStore::RecordCompositionUpdateAction()
   // information.
   action->mRanges->Clear();
 
-  TextRange newRange;
-  // No matter if we have display attribute info or not,
-  // we always pass in at least one range to eCompositionChange
-  newRange.mStartOffset = 0;
-  newRange.mEndOffset = action->mData.Length();
-  newRange.mRangeType = TextRangeType::eRawClause;
-  action->mRanges->AppendElement(newRange);
-
-  RefPtr<ITfRange> range;
-  while (S_OK == enumRanges->Next(1, getter_AddRefs(range), nullptr) && range) {
-
-    LONG rangeStart = 0, rangeLength = 0;
-    if (FAILED(GetRangeExtent(range, &rangeStart, &rangeLength))) {
-      continue;
-    }
-    // The range may include out of composition string.  We should ignore
-    // outside of the composition string.
-    LONG start = std::min(std::max(rangeStart, mComposition.mStart),
-                          mComposition.EndOffset());
-    LONG end = std::max(std::min(rangeStart + rangeLength,
-                                 mComposition.EndOffset()),
-                        mComposition.mStart);
-    LONG length = end - start;
-    if (length < 0) {
-      MOZ_LOG(sTextStoreLog, LogLevel::Error,
-        ("0x%p   TSFTextStore::RecordCompositionUpdateAction() "
-         "ignores invalid range (%d-%d)",
-         this, rangeStart - mComposition.mStart,
-         rangeStart - mComposition.mStart + rangeLength));
-      continue;
-    }
-    if (!length) {
-      MOZ_LOG(sTextStoreLog, LogLevel::Debug,
-        ("0x%p   TSFTextStore::RecordCompositionUpdateAction() "
-         "ignores a range due to outside of the composition or empty "
-         "(%d-%d)",
-         this, rangeStart - mComposition.mStart,
-         rangeStart - mComposition.mStart + rangeLength));
-      continue;
-    }
-
+  // Note that we shouldn't append ranges when composition string
+  // is empty because it may cause TextComposition confused.
+  if (!action->mData.IsEmpty()) {
     TextRange newRange;
-    newRange.mStartOffset = uint32_t(start - mComposition.mStart);
-    // The end of the last range in the array is
-    // always kept at the end of composition
-    newRange.mEndOffset = mComposition.mString.Length();
+    // No matter if we have display attribute info or not,
+    // we always pass in at least one range to eCompositionChange
+    newRange.mStartOffset = 0;
+    newRange.mEndOffset = action->mData.Length();
+    newRange.mRangeType = TextRangeType::eRawClause;
+    action->mRanges->AppendElement(newRange);
 
-    TF_DISPLAYATTRIBUTE attr;
-    hr = GetDisplayAttribute(attrPropetry, range, &attr);
-    if (FAILED(hr)) {
-      newRange.mRangeType = TextRangeType::eRawClause;
-    } else {
-      newRange.mRangeType = GetGeckoSelectionValue(attr);
-      if (GetColor(attr.crText, newRange.mRangeStyle.mForegroundColor)) {
-        newRange.mRangeStyle.mDefinedStyles |=
-                               TextRangeStyle::DEFINED_FOREGROUND_COLOR;
+    RefPtr<ITfRange> range;
+    while (enumRanges->Next(1, getter_AddRefs(range), nullptr) == S_OK) {
+      if (NS_WARN_IF(!range)) {
+        break;
       }
-      if (GetColor(attr.crBk, newRange.mRangeStyle.mBackgroundColor)) {
-        newRange.mRangeStyle.mDefinedStyles |=
-                               TextRangeStyle::DEFINED_BACKGROUND_COLOR;
+
+      LONG rangeStart = 0, rangeLength = 0;
+      if (FAILED(GetRangeExtent(range, &rangeStart, &rangeLength))) {
+        continue;
       }
-      if (GetColor(attr.crLine, newRange.mRangeStyle.mUnderlineColor)) {
-        newRange.mRangeStyle.mDefinedStyles |=
-                               TextRangeStyle::DEFINED_UNDERLINE_COLOR;
+      // The range may include out of composition string.  We should ignore
+      // outside of the composition string.
+      LONG start = std::min(std::max(rangeStart, mComposition.mStart),
+                            mComposition.EndOffset());
+      LONG end = std::max(std::min(rangeStart + rangeLength,
+                                   mComposition.EndOffset()),
+                          mComposition.mStart);
+      LONG length = end - start;
+      if (length < 0) {
+        MOZ_LOG(sTextStoreLog, LogLevel::Error,
+          ("0x%p   TSFTextStore::RecordCompositionUpdateAction() "
+           "ignores invalid range (%d-%d)",
+           this, rangeStart - mComposition.mStart,
+           rangeStart - mComposition.mStart + rangeLength));
+        continue;
       }
-      if (GetLineStyle(attr.lsStyle, newRange.mRangeStyle.mLineStyle)) {
-        newRange.mRangeStyle.mDefinedStyles |=
-                               TextRangeStyle::DEFINED_LINESTYLE;
-        newRange.mRangeStyle.mIsBoldLine = attr.fBoldLine != 0;
+      if (!length) {
+        MOZ_LOG(sTextStoreLog, LogLevel::Debug,
+          ("0x%p   TSFTextStore::RecordCompositionUpdateAction() "
+           "ignores a range due to outside of the composition or empty "
+           "(%d-%d)",
+           this, rangeStart - mComposition.mStart,
+           rangeStart - mComposition.mStart + rangeLength));
+        continue;
+      }
+
+      TextRange newRange;
+      newRange.mStartOffset = uint32_t(start - mComposition.mStart);
+      // The end of the last range in the array is
+      // always kept at the end of composition
+      newRange.mEndOffset = mComposition.mString.Length();
+
+      TF_DISPLAYATTRIBUTE attr;
+      hr = GetDisplayAttribute(attrPropetry, range, &attr);
+      if (FAILED(hr)) {
+        newRange.mRangeType = TextRangeType::eRawClause;
+      } else {
+        newRange.mRangeType = GetGeckoSelectionValue(attr);
+        if (GetColor(attr.crText, newRange.mRangeStyle.mForegroundColor)) {
+          newRange.mRangeStyle.mDefinedStyles |=
+                                 TextRangeStyle::DEFINED_FOREGROUND_COLOR;
+        }
+        if (GetColor(attr.crBk, newRange.mRangeStyle.mBackgroundColor)) {
+          newRange.mRangeStyle.mDefinedStyles |=
+                                 TextRangeStyle::DEFINED_BACKGROUND_COLOR;
+        }
+        if (GetColor(attr.crLine, newRange.mRangeStyle.mUnderlineColor)) {
+          newRange.mRangeStyle.mDefinedStyles |=
+                                 TextRangeStyle::DEFINED_UNDERLINE_COLOR;
+        }
+        if (GetLineStyle(attr.lsStyle, newRange.mRangeStyle.mLineStyle)) {
+          newRange.mRangeStyle.mDefinedStyles |=
+                                 TextRangeStyle::DEFINED_LINESTYLE;
+          newRange.mRangeStyle.mIsBoldLine = attr.fBoldLine != 0;
+        }
+      }
+
+      TextRange& lastRange = action->mRanges->LastElement();
+      if (lastRange.mStartOffset == newRange.mStartOffset) {
+        // Replace range if last range is the same as this one
+        // So that ranges don't overlap and confuse the editor
+        lastRange = newRange;
+      } else {
+        lastRange.mEndOffset = newRange.mStartOffset;
+        action->mRanges->AppendElement(newRange);
       }
     }
 
-    TextRange& lastRange = action->mRanges->LastElement();
-    if (lastRange.mStartOffset == newRange.mStartOffset) {
-      // Replace range if last range is the same as this one
-      // So that ranges don't overlap and confuse the editor
-      lastRange = newRange;
-    } else {
-      lastRange.mEndOffset = newRange.mStartOffset;
-      action->mRanges->AppendElement(newRange);
+    // We need to hack for Korean Input System which is Korean standard TIP.
+    // It sets no change style to IME selection (the selection is always only
+    // one).  So, the composition string looks like normal (or committed)
+    // string.  At this time, current selection range is same as the
+    // composition string range.  Other applications set a wide caret which
+    // covers the composition string,  however, Gecko doesn't support the wide
+    // caret drawing now (Gecko doesn't support XOR drawing), unfortunately.
+    // For now, we should change the range style to undefined.
+    if (!selectionForTSF.IsCollapsed() && action->mRanges->Length() == 1) {
+      TextRange& range = action->mRanges->ElementAt(0);
+      LONG start = selectionForTSF.MinOffset();
+      LONG end = selectionForTSF.MaxOffset();
+      if ((LONG)range.mStartOffset == start - mComposition.mStart &&
+          (LONG)range.mEndOffset == end - mComposition.mStart &&
+          range.mRangeStyle.IsNoChangeStyle()) {
+        range.mRangeStyle.Clear();
+        // The looks of selected type is better than others.
+        range.mRangeType = TextRangeType::eSelectedRawClause;
+      }
     }
-  }
 
-  // We need to hack for Korean Input System which is Korean standard TIP.
-  // It sets no change style to IME selection (the selection is always only
-  // one).  So, the composition string looks like normal (or committed) string.
-  // At this time, current selection range is same as the composition string
-  // range.  Other applications set a wide caret which covers the composition
-  // string,  however, Gecko doesn't support the wide caret drawing now (Gecko
-  // doesn't support XOR drawing), unfortunately.  For now, we should change
-  // the range style to undefined.
-  if (!selectionForTSF.IsCollapsed() && action->mRanges->Length() == 1) {
-    TextRange& range = action->mRanges->ElementAt(0);
-    LONG start = selectionForTSF.MinOffset();
-    LONG end = selectionForTSF.MaxOffset();
-    if ((LONG)range.mStartOffset == start - mComposition.mStart &&
-        (LONG)range.mEndOffset == end - mComposition.mStart &&
-        range.mRangeStyle.IsNoChangeStyle()) {
-      range.mRangeStyle.Clear();
-      // The looks of selected type is better than others.
-      range.mRangeType = TextRangeType::eSelectedRawClause;
+    // The caret position has to be collapsed.
+    uint32_t caretPosition =
+      static_cast<uint32_t>(selectionForTSF.MaxOffset() - mComposition.mStart);
+
+    // If caret is in the target clause and it doesn't have specific style,
+    // the target clause will be painted as normal selection range.  Since
+    // caret shouldn't be in selection range on Windows, we shouldn't append
+    // caret range in such case.
+    const TextRange* targetClause = action->mRanges->GetTargetClause();
+    if (!targetClause || targetClause->mRangeStyle.IsDefined() ||
+        caretPosition < targetClause->mStartOffset ||
+        caretPosition > targetClause->mEndOffset) {
+      TextRange caretRange;
+      caretRange.mStartOffset = caretRange.mEndOffset = caretPosition;
+      caretRange.mRangeType = TextRangeType::eCaret;
+      action->mRanges->AppendElement(caretRange);
     }
-  }
-
-  // The caret position has to be collapsed.
-  uint32_t caretPosition =
-    static_cast<uint32_t>(selectionForTSF.MaxOffset() - mComposition.mStart);
-
-  // If caret is in the target clause and it doesn't have specific style,
-  // the target clause will be painted as normal selection range.  Since caret
-  // shouldn't be in selection range on Windows, we shouldn't append caret
-  // range in such case.
-  const TextRange* targetClause = action->mRanges->GetTargetClause();
-  if (!targetClause || targetClause->mRangeStyle.IsDefined() ||
-      caretPosition < targetClause->mStartOffset ||
-      caretPosition > targetClause->mEndOffset) {
-    TextRange caretRange;
-    caretRange.mStartOffset = caretRange.mEndOffset = caretPosition;
-    caretRange.mRangeType = TextRangeType::eCaret;
-    action->mRanges->AppendElement(caretRange);
   }
 
   action->mIncomplete = false;

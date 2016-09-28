@@ -13,6 +13,7 @@ const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
 const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
+const { getSelectedRecordingIndex, setSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
 
 add_task(function* () {
   let { panel } = yield initPerformanceInNewTab({
@@ -20,7 +21,7 @@ add_task(function* () {
     win: window
   });
 
-  let { EVENTS, $, PerformanceController, RecordingsView } = panel.panelWin;
+  let { EVENTS, $, PerformanceController } = panel.panelWin;
   let detailsContainer = $("#details-pane-container");
   let recordingNotice = $("#recording-notice");
   let loadingNotice = $("#loading-notice");
@@ -52,7 +53,7 @@ add_task(function* () {
 
   info("While the 2nd record is still going, switch to the first one.");
   let recordingSelected = once(PerformanceController, EVENTS.RECORDING_SELECTED);
-  RecordingsView.selectedIndex = 0;
+  setSelectedRecording(panel, 0);
   yield recordingSelected;
 
   recordingStopping = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
@@ -66,14 +67,14 @@ add_task(function* () {
   yield recordingStopping;
   is(detailsContainer.selectedPanel, detailsPane,
     "The details panel is still shown while the 2nd record is being stopped.");
-  is(RecordingsView.selectedIndex, 0,
+  is(getSelectedRecordingIndex(panel), 0,
     "The first record is still selected.");
 
   yield recordingStopped;
 
   is(detailsContainer.selectedPanel, detailsPane,
     "The details panel is still shown after the 2nd record has stopped.");
-  is(RecordingsView.selectedIndex, 1,
+  is(getSelectedRecordingIndex(panel), 1,
     "The second record is now selected.");
 
   yield everythingStopped;

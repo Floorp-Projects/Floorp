@@ -22,11 +22,6 @@ XPCSHELL_TESTS_MANIFESTS += [
     'unit/xpcshell.ini',
 ]
 
-if CONFIG['MOZ_SUITE']:
-    XPCSHELL_TESTS_MANIFESTS += [
-        'autocomplete/xpcshell.ini',
-    ]
-
 BROWSER_CHROME_MANIFESTS += ['browser/browser.ini']
 MOCHITEST_CHROME_MANIFESTS += [
     'chrome/chrome.ini',

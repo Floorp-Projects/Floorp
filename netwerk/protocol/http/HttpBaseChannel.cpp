@@ -54,6 +54,7 @@
 #include "mozilla/BinarySearch.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsIXULRuntime.h"
+#include "nsICacheInfoChannel.h"
 
 #include <algorithm>
 
@@ -107,6 +108,7 @@ HttpBaseChannel::HttpBaseChannel()
   , mFetchCacheMode(nsIHttpChannelInternal::FETCH_CACHE_MODE_DEFAULT)
   , mOnStartRequestCalled(false)
   , mOnStopRequestCalled(false)
+  , mAfterOnStartRequestBegun(false)
   , mTransferSize(0)
   , mDecodedBodySize(0)
   , mEncodedBodySize(0)
@@ -924,6 +926,11 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
     return NS_OK;
   }
 
+  if (!mAvailableCachedAltDataType.IsEmpty()) {
+    LOG(("not applying conversion because delivering alt-data\n"));
+    return NS_OK;
+  }
+
   nsAutoCString contentEncoding;
   nsresult rv = mResponseHead->GetHeader(nsHttp::Content_Encoding, contentEncoding);
   if (NS_FAILED(rv) || contentEncoding.IsEmpty())
@@ -1522,6 +1529,9 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
       referrerPolicy == REFERRER_POLICY_STRICT_ORIGIN ||
       (isCrossOrigin && (referrerPolicy == REFERRER_POLICY_ORIGIN_WHEN_XORIGIN ||
                          referrerPolicy == REFERRER_POLICY_STRICT_ORIGIN_WHEN_XORIGIN))) {
+    // We can override the user trimming preference because "origin"
+    // (network.http.referer.trimmingPolicy = 2) is the strictest
+    // trimming policy that users can specify.
     userReferrerTrimmingPolicy = 2;
   }
 
@@ -3159,6 +3169,12 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
         mAllRedirectsPassTimingAllowCheck &&
         oldTimedChannel->TimingAllowCheck(principal));
     }
+  }
+
+  // Pass the preferred alt-data type on to the new channel.
+  nsCOMPtr<nsICacheInfoChannel> cacheInfoChan(do_QueryInterface(newChannel));
+  if (cacheInfoChan) {
+    cacheInfoChan->PreferAlternativeDataType(mPreferredCachedAltDataType);
   }
 
   if (redirectFlags & (nsIChannelEventSink::REDIRECT_INTERNAL |

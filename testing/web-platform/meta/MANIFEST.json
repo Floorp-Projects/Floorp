@@ -37376,6 +37376,12 @@
             "url": "/IndexedDB/idbcursor-continuePrimaryKey-exception-order.htm"
           }
         ],
+        "compat/webkit-text-fill-color-currentColor.html": [
+          {
+            "path": "compat/webkit-text-fill-color-currentColor.html",
+            "url": "/compat/webkit-text-fill-color-currentColor.html"
+          }
+        ],
         "editing/other/restoration.html": [
           {
             "path": "editing/other/restoration.html",

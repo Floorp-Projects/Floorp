@@ -873,7 +873,7 @@ function plLoadURLsFromURI(manifestUri) {
       // Note that if we have the scrollTest flag but the item already has "%", then we do
       // nothing (the scroll test will not execute, and the page will report with its
       // own tpRecordTime and not the one from the scroll test).
-      if (scrollTest && items[0].indexOf("%") < 0) {
+      if (scrollTest && items.length == 1) {  // scroll enabled and no "%"
         items.unshift("%");
         flags |= EXECUTE_SCROLL_TEST;
       }

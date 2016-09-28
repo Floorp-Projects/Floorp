@@ -12,6 +12,7 @@ const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
 const { initPerformanceInTab, initConsoleInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 const { waitForRecordingStartedEvents, waitForRecordingStoppedEvents } = require("devtools/client/performance/test/helpers/actions");
 const { idleWait } = require("devtools/client/performance/test/helpers/wait-utils");
+const { getSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
 
 add_task(function* () {
   let { target, console } = yield initConsoleInNewTab({
@@ -20,7 +21,7 @@ add_task(function* () {
   });
 
   let { panel } = yield initPerformanceInTab({ tab: target.tab });
-  let { PerformanceController, RecordingsView } = panel.panelWin;
+  let { PerformanceController } = panel.panelWin;
 
   let started = waitForRecordingStartedEvents(panel, {
     // only emitted for manual recordings
@@ -54,11 +55,12 @@ add_task(function* () {
   yield started;
 
   let recordings = PerformanceController.getRecordings();
+  let selected = getSelectedRecording(panel);
   is(recordings.length, 3, "Three recordings found in the performance panel.");
   is(recordings[0].getLabel(), "", "Checking label of recording 1");
   is(recordings[1].getLabel(), "1", "Checking label of recording 2");
   is(recordings[2].getLabel(), "2", "Checking label of recording 3");
-  is(RecordingsView.selectedItem.attachment, recordings[0],
+  is(selected, recordings[0],
     "The first console recording should be selected.");
 
   is(recordings[0].isRecording(), true,
@@ -81,9 +83,10 @@ add_task(function* () {
   yield console.profileEnd();
   yield stopped;
 
+  selected = getSelectedRecording(panel);
   recordings = PerformanceController.getRecordings();
   is(recordings.length, 3, "Three recordings found in the performance panel.");
-  is(RecordingsView.selectedItem.attachment, recordings[0],
+  is(selected, recordings[0],
     "The first console recording should still be selected.");
 
   is(recordings[0].isRecording(), true, "The not most recent recording should not stop " +
@@ -97,9 +100,10 @@ add_task(function* () {
   console.profileEnd("fxos");
   yield idleWait(1000);
 
+  selected = getSelectedRecording(panel);
   recordings = PerformanceController.getRecordings();
   is(recordings.length, 3, "Three recordings found in the performance panel.");
-  is(RecordingsView.selectedItem.attachment, recordings[0],
+  is(selected, recordings[0],
     "The first console recording should still be selected.");
 
   is(recordings[0].isRecording(), true,
@@ -122,9 +126,10 @@ add_task(function* () {
   yield console.profileEnd();
   yield stopped;
 
+  selected = getSelectedRecording(panel);
   recordings = PerformanceController.getRecordings();
   is(recordings.length, 3, "Three recordings found in the performance panel.");
-  is(RecordingsView.selectedItem.attachment, recordings[0],
+  is(selected, recordings[0],
     "The first console recording should still be selected.");
 
   is(recordings[0].isRecording(), true,
@@ -141,9 +146,10 @@ add_task(function* () {
   yield console.profileEnd();
   yield stopped;
 
+  selected = getSelectedRecording(panel);
   recordings = PerformanceController.getRecordings();
   is(recordings.length, 3, "Three recordings found in the performance panel.");
-  is(RecordingsView.selectedItem.attachment, recordings[0],
+  is(selected, recordings[0],
     "The first console recording should be selected.");
 
   is(recordings[0].isRecording(), false,

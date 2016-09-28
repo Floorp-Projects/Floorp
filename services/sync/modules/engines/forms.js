@@ -233,7 +233,9 @@ FormTracker.prototype = {
 
   observe: function (subject, topic, data) {
     Tracker.prototype.observe.call(this, subject, topic, data);
-
+    if (this.ignoreAll) {
+      return;
+    }
     switch (topic) {
       case "satchel-storage-changed":
         if (data == "formhistory-add" || data == "formhistory-remove") {

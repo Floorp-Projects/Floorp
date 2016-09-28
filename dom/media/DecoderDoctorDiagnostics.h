@@ -13,6 +13,13 @@ class nsIDocument;
 
 namespace mozilla {
 
+struct DecoderDoctorEvent {
+  enum Domain {
+    eAudioSinkStartup,
+  } mDomain;
+  nsresult mResult;
+};
+
 // DecoderDoctorDiagnostics class, used to gather data from PDMs/DecoderTraits,
 // and then notify the user about issues preventing (or worsening) playback.
 //
@@ -46,10 +53,15 @@ public:
                                  bool aIsSupported,
                                  const char* aCallSite);
 
+  void StoreEvent(nsIDocument* aDocument,
+                  const DecoderDoctorEvent& aEvent,
+                  const char* aCallSite);
+
   enum DiagnosticsType {
     eUnsaved,
     eFormatSupportCheck,
-    eMediaKeySystemAccessRequest
+    eMediaKeySystemAccessRequest,
+    eEvent
   };
   DiagnosticsType Type() const { return mDiagnosticsType; }
 
@@ -70,8 +82,8 @@ public:
   void SetGMPPDMFailedToStartup() { mGMPPDMFailedToStartup = true; }
   bool DidGMPPDMFailToStartup() const { return mGMPPDMFailedToStartup; }
 
-  void SetVideoFormatNotSupport() { mVideoNotSupported = true; }
-  void SetAudioFormatNotSupport() { mAudioNotSupported = true; }
+  void SetVideoNotSupported() { mVideoNotSupported = true; }
+  void SetAudioNotSupported() { mAudioNotSupported = true; }
 
   void SetGMP(const nsACString& aGMP) { mGMP = aGMP; }
   const nsACString& GMP() const { return mGMP; }
@@ -89,6 +101,11 @@ public:
   KeySystemIssue GetKeySystemIssue() const
   {
     return mKeySystemIssue;
+  }
+
+  DecoderDoctorEvent event() const
+  {
+    return mEvent;
   }
 
 private:
@@ -111,6 +128,8 @@ private:
   nsString mKeySystem;
   bool mIsKeySystemSupported = false;
   KeySystemIssue mKeySystemIssue = eUnset;
+
+  DecoderDoctorEvent mEvent;
 };
 
 } // namespace mozilla

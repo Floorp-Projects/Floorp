@@ -640,7 +640,6 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
     {
         if (s.isNull() || s.isUndefined()) {
             nsACString* rs = *((nsACString**)d);
-            rs->Truncate();
             rs->SetIsVoid(true);
             return true;
         }

@@ -772,7 +772,6 @@ Statement::GetUTF8String(uint32_t aIndex,
   if (type == mozIStorageStatement::VALUE_TYPE_NULL) {
     // NULL columns should have IsVoid set to distinguish them from the empty
     // string.
-    _value.Truncate(0);
     _value.SetIsVoid(true);
   }
   else {
@@ -795,7 +794,6 @@ Statement::GetString(uint32_t aIndex,
   if (type == mozIStorageStatement::VALUE_TYPE_NULL) {
     // NULL columns should have IsVoid set to distinguish them from the empty
     // string.
-    _value.Truncate(0);
     _value.SetIsVoid(true);
   } else {
     const char16_t *value =

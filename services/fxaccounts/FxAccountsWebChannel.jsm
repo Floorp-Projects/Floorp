@@ -450,9 +450,13 @@ var singleton;
 // things) and allowing multiple channels would cause such notifications to be
 // sent multiple times.
 this.EnsureFxAccountsWebChannel = function() {
+  let contentUri = Services.urlFormatter.formatURLPref("identity.fxaccounts.remote.webchannel.uri");
+  if (singleton && singleton._contentUri !== contentUri) {
+    singleton.tearDown();
+    singleton = null;
+  }
   if (!singleton) {
     try {
-      let contentUri = Services.urlFormatter.formatURLPref("identity.fxaccounts.remote.webchannel.uri");
       if (contentUri) {
         // The FxAccountsWebChannel listens for events and updates
         // the state machine accordingly.

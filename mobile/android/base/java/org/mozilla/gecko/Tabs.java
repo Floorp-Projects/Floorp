@@ -489,7 +489,6 @@ public class Tabs implements GeckoEventListener {
                                           message.getString("title"),
                                           message.getBoolean("isPrivate"),
                                           message.getInt("tabIndex"));
-
                     // If we added the tab as a stub, we should have already
                     // selected it, so ignore this flag for stubbed tabs.
                     if (message.getBoolean("selected"))

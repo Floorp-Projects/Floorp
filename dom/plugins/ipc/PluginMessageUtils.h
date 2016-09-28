@@ -253,9 +253,7 @@ inline nsCString
 NullableString(const char* aString)
 {
     if (!aString) {
-        nsCString str;
-        str.SetIsVoid(true);
-        return str;
+        return NullCString();
     }
     return nsCString(aString);
 }

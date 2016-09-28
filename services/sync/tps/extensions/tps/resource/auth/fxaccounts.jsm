@@ -12,6 +12,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/FxAccounts.jsm");
 Cu.import("resource://gre/modules/FxAccountsClient.jsm");
+Cu.import("resource://gre/modules/FxAccountsConfig.jsm");
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-sync/main.js");
 Cu.import("resource://tps/logger.jsm");
@@ -68,6 +69,9 @@ var Authentication = {
     Logger.AssertTrue(account["password"], "Password has been found");
 
     Logger.logInfo("Login user: " + account["username"]);
+
+    // Required here since we don't go through the real login page
+    Async.promiseSpinningly(FxAccountsConfig.ensureConfigured());
 
     let client = new FxAccountsClient();
     client.signIn(account["username"], account["password"], true).then(credentials => {

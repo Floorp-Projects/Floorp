@@ -569,7 +569,7 @@ BaseCaps(const WebGLContextOptions& options, WebGLContext* webgl)
         if (!forwarder)
             break;
 
-        baseCaps.surfaceAllocator = static_cast<layers::ISurfaceAllocator*>(forwarder);
+        baseCaps.surfaceAllocator = forwarder->GetTextureForwarder();
     } while (false);
 #endif
 

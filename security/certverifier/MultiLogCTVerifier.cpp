@@ -8,53 +8,24 @@
 
 #include "CTObjectsExtractor.h"
 #include "CTSerialization.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/Move.h"
 
 namespace mozilla { namespace ct {
 
 using namespace mozilla::pkix;
 
-// The possible verification statuses for a Signed Certificate Timestamp.
-enum class SCTVerifyStatus {
-  UnknownLog, // The SCT is from an unknown log and can not be verified.
-  Invalid, // The SCT is from a known log, but the signature is invalid.
-  OK // The SCT is from a known log, and the signature is valid.
-};
-
 // Note: this moves |sct| to the target list in |result|, invalidating |sct|.
 static Result
 StoreVerifiedSct(CTVerifyResult& result,
                  SignedCertificateTimestamp&& sct,
-                 SCTVerifyStatus status)
+                 SignedCertificateTimestamp::VerificationStatus status)
 {
-  SCTList* target;
-  switch (status) {
-    case SCTVerifyStatus::UnknownLog:
-      target = &result.unknownLogsScts;
-      break;
-    case SCTVerifyStatus::Invalid:
-      target = &result.invalidScts;
-      break;
-    case SCTVerifyStatus::OK:
-      target = &result.verifiedScts;
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unexpected SCTVerifyStatus type");
-      return Result::FATAL_ERROR_LIBRARY_FAILURE;
-  }
-  if (!target->append(Move(sct))) {
+  sct.verificationStatus = status;
+  if (!result.scts.append(Move(sct))) {
     return Result::FATAL_ERROR_NO_MEMORY;
   }
   return Success;
-}
-
-void
-CTVerifyResult::Reset()
-{
-  verifiedScts.clear();
-  invalidScts.clear();
-  unknownLogsScts.clear();
-  decodingErrors = 0;
 }
 
 Result
@@ -77,7 +48,7 @@ MultiLogCTVerifier::Verify(Input cert,
                            Input sctListFromCert,
                            Input sctListFromOCSPResponse,
                            Input sctListFromTLSExtension,
-                           uint64_t time,
+                           Time time,
                            CTVerifyResult& result)
 {
   MOZ_ASSERT(cert.GetLength() > 0);
@@ -133,7 +104,7 @@ Result
 MultiLogCTVerifier::VerifySCTs(Input encodedSctList,
                                const LogEntry& expectedEntry,
                                SignedCertificateTimestamp::Origin origin,
-                               uint64_t time,
+                               Time time,
                                CTVerifyResult& result)
 {
   Reader listReader;
@@ -171,7 +142,7 @@ MultiLogCTVerifier::VerifySCTs(Input encodedSctList,
 Result
 MultiLogCTVerifier::VerifySingleSCT(SignedCertificateTimestamp&& sct,
                                     const LogEntry& expectedEntry,
-                                    uint64_t time,
+                                    Time time,
                                     CTVerifyResult& result)
 {
   CTLogVerifier* matchingLog = nullptr;
@@ -184,28 +155,39 @@ MultiLogCTVerifier::VerifySingleSCT(SignedCertificateTimestamp&& sct,
 
   if (!matchingLog) {
     // SCT does not match any known log.
-    return StoreVerifiedSct(result, Move(sct), SCTVerifyStatus::UnknownLog);
+    return StoreVerifiedSct(result, Move(sct),
+      SignedCertificateTimestamp::VerificationStatus::UnknownLog);
   }
 
   if (!matchingLog->SignatureParametersMatch(sct.signature)) {
     // SCT signature parameters do not match the log's.
-    return StoreVerifiedSct(result, Move(sct), SCTVerifyStatus::Invalid);
+    return StoreVerifiedSct(result, Move(sct),
+      SignedCertificateTimestamp::VerificationStatus::InvalidSignature);
   }
 
   Result rv = matchingLog->Verify(expectedEntry, sct);
   if (rv != Success) {
     if (rv == Result::ERROR_BAD_SIGNATURE) {
-      return StoreVerifiedSct(result, Move(sct), SCTVerifyStatus::Invalid);
+      return StoreVerifiedSct(result, Move(sct),
+        SignedCertificateTimestamp::VerificationStatus::InvalidSignature);
     }
     return rv;
   }
 
+  // |sct.timestamp| is measured in milliseconds since the epoch,
+  // ignoring leap seconds. When converting it to a second-level precision
+  // pkix::Time, we need to round it either up or down. In our case, rounding up
+  // is more "secure", although practically it does not matter.
+  Time sctTime = TimeFromEpochInSeconds((sct.timestamp + 999u) / 1000u);
+
   // SCT verified ok, just make sure the timestamp is legitimate.
-  if (sct.timestamp > time) {
-    return StoreVerifiedSct(result, Move(sct), SCTVerifyStatus::Invalid);
+  if (sctTime > time) {
+    return StoreVerifiedSct(result, Move(sct),
+      SignedCertificateTimestamp::VerificationStatus::InvalidTimestamp);
   }
 
-  return StoreVerifiedSct(result, Move(sct), SCTVerifyStatus::OK);
+  return StoreVerifiedSct(result, Move(sct),
+    SignedCertificateTimestamp::VerificationStatus::OK);
 }
 
 } } // namespace mozilla::ct

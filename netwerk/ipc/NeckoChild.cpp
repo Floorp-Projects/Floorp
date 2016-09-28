@@ -23,6 +23,8 @@
 #include "mozilla/dom/network/TCPSocketChild.h"
 #include "mozilla/dom/network/TCPServerSocketChild.h"
 #include "mozilla/dom/network/UDPSocketChild.h"
+#include "mozilla/net/AltDataOutputStreamChild.h"
+
 #ifdef NECKO_PROTOCOL_rtsp
 #include "mozilla/net/RtspControllerChild.h"
 #include "mozilla/net/RtspChannelChild.h"
@@ -84,6 +86,24 @@ NeckoChild::DeallocPHttpChannelChild(PHttpChannelChild* channel)
   MOZ_ASSERT(IsNeckoChild(), "DeallocPHttpChannelChild called by non-child!");
 
   HttpChannelChild* child = static_cast<HttpChannelChild*>(channel);
+  child->ReleaseIPDLReference();
+  return true;
+}
+
+PAltDataOutputStreamChild*
+NeckoChild::AllocPAltDataOutputStreamChild(
+        const nsCString& type,
+        PHttpChannelChild* channel)
+{
+  AltDataOutputStreamChild* stream = new AltDataOutputStreamChild();
+  stream->AddIPDLReference();
+  return stream;
+}
+
+bool
+NeckoChild::DeallocPAltDataOutputStreamChild(PAltDataOutputStreamChild* aActor)
+{
+  AltDataOutputStreamChild* child = static_cast<AltDataOutputStreamChild*>(aActor);
   child->ReleaseIPDLReference();
   return true;
 }

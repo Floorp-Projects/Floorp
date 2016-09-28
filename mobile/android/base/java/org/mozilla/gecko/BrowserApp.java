@@ -578,6 +578,7 @@ public class BrowserApp extends GeckoApp
         // widget code and BrowserToolbar need it, and they're created by the
         // layout, which GeckoApp takes care of.
         ((GeckoApplication) getApplication()).prepareLightweightTheme();
+
         super.onCreate(savedInstanceState);
 
         final Context appContext = getApplicationContext();

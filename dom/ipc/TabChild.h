@@ -484,6 +484,8 @@ public:
 
   void GetDefaultScale(double *aScale);
 
+  void GetWidgetRounding(int32_t* aRounding);
+
   bool IsTransparent() const { return mIsTransparent; }
 
   void GetMaxTouchPoints(uint32_t* aTouchPoints);
@@ -572,6 +574,7 @@ public:
   }
 
   virtual bool RecvUIResolutionChanged(const float& aDpi,
+                                       const int32_t& aRounding,
                                        const double& aScale) override;
 
   virtual bool
@@ -777,6 +780,7 @@ private:
 
   friend class ContentChild;
   float mDPI;
+  int32_t mRounding;
   double mDefaultScale;
 
   bool mIsTransparent;

@@ -838,7 +838,7 @@ parent:
     sync IsSecureURI(uint32_t type, URIParams uri, uint32_t flags)
         returns (bool isSecureURI);
 
-    async AccumulateMixedContentHSTS(URIParams uri, bool active);
+    async AccumulateMixedContentHSTS(URIParams uri, bool active, bool hasHSTSPriming);
 
     sync GetLookAndFeelCache()
         returns (LookAndFeelInt[] lookAndFeelIntCache);

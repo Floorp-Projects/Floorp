@@ -492,7 +492,7 @@ ComputeMaskGeometry(const PaintFramesParams& aParams,
 
 static DrawResult
 GenerateMaskSurface(const PaintFramesParams& aParams,
-                    float aOpacity, nsStyleContext* aSC,
+                    nsStyleContext* aSC,
                     const nsTArray<nsSVGMaskFrame *>& aMaskFrames,
                     const nsPoint& aOffsetToUserSpace,
                     Matrix& aOutMaskTransform,
@@ -510,7 +510,7 @@ GenerateMaskSurface(const PaintFramesParams& aParams,
   if (((aMaskFrames.Length() == 1) && aMaskFrames[0])) {
     aOutMaskSurface =
       aMaskFrames[0]->GetMaskForMaskedFrame(&ctx, aParams.frame,
-                                            cssPxToDevPxMatrix, aOpacity,
+                                            cssPxToDevPxMatrix, 1.0,
                                             &aOutMaskTransform,
                                             svgReset->mMask.mLayers[0].mMaskMode);
     return DrawResult::SUCCESS;
@@ -565,7 +565,7 @@ GenerateMaskSurface(const PaintFramesParams& aParams,
       Matrix svgMaskMatrix;
       RefPtr<SourceSurface> svgMask =
         maskFrame->GetMaskForMaskedFrame(maskContext, aParams.frame,
-                                         cssPxToDevPxMatrix, aOpacity,
+                                         cssPxToDevPxMatrix, 1.0,
                                          &svgMaskMatrix,
                                          svgReset->mMask.mLayers[i].mMaskMode);
       if (svgMask) {
@@ -879,7 +879,7 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
       // instead of the first continuation frame.
       SetupContextMatrix(frame, aParams, offsetToBoundingBox,
                          offsetToUserSpace, true);
-      result = GenerateMaskSurface(aParams, opacity,
+      result = GenerateMaskSurface(aParams,
                                   firstFrame->StyleContext(),
                                   maskFrames, offsetToUserSpace,
                                   maskTransform, maskSurface);

@@ -49,7 +49,6 @@
 #include "config.h"
 
 #include "datatypes.h"
-#include "gf2_8.h"
 #include "err.h"
 
 /* aes internals */

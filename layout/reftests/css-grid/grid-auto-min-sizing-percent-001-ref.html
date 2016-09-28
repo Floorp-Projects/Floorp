@@ -45,9 +45,15 @@ br { clear:both; }
 
 #px-border .grid { grid-template-columns: minmax(20px,0) 1fr; }
 .c100 { grid-template-columns: minmax(100px,0) 1fr; }
+.c100100 { grid-template-columns: minmax(100px,0) 100px; }
 #px-border .c100 { grid-template-columns: minmax(120px,0) 1fr; }
+#px-border .c100100 { grid-template-columns: minmax(120px,0) 120px; }
 .c10 { grid-template-columns: minmax(10px,0) 1fr; }
 #px-border .c10 { grid-template-columns: minmax(30px,0) 1fr; }
+
+#percent-border .c100 { grid-template-columns: minmax(100px,0) 11px; }
+#percent-border .c10 { grid-template-columns: minmax(10px,0) 1px; }
+#percent-border .c100100 { grid-template-columns: minmax(100px,0) 150px; }
   </style>
 </head>
 <body>
@@ -86,9 +92,9 @@ var grids = [
 "grid",
 "grid",
 "grid c100",
+"grid c100",
 "grid",
-"grid",
-"grid",
+"grid c100100",
 "grid c10",
 "grid c100",
 "grid c100",
@@ -96,13 +102,13 @@ var grids = [
 "grid",
 "grid",
 "grid",
-"grid",
+"grid c100",
 "grid c100",
 "grid",
+"grid c100100",
+"grid c10",
 "grid c100",
-"grid",
-"grid",
-"grid",
+"grid c100",
 "grid",
 "grid",
 ];

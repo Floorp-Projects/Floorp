@@ -22,10 +22,11 @@ public:
                      OcspGetConfig ogc, uint32_t certShortLifetimeInDays,
                      PinningMode pinningMode, SHA1Mode sha1Mode,
                      BRNameMatchingPolicy::Mode nameMatchingMode,
-                     NetscapeStepUpPolicy netscapeStepUpPolicy)
+                     NetscapeStepUpPolicy netscapeStepUpPolicy,
+                     CertificateTransparencyMode ctMode)
     : mozilla::psm::CertVerifier(odc, osc, ogc, certShortLifetimeInDays,
                                  pinningMode, sha1Mode, nameMatchingMode,
-                                 netscapeStepUpPolicy)
+                                 netscapeStepUpPolicy, ctMode)
   {
   }
 };
