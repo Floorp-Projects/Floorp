@@ -176,7 +176,7 @@ private:
 
   void
   NoteGCThingJSChildren(JS::GCCellPtr aThing,
-                        nsCycleCollectionTraversalCallback& aCb);
+                        nsCycleCollectionTraversalCallback& aCb) const;
 
   void
   NoteGCThingXPCOMChildren(const js::Class* aClasp, JSObject* aObj,
@@ -321,8 +321,8 @@ public:
   void DumpJSHeap(FILE* aFile);
 
   virtual void PrepareForForgetSkippable() = 0;
-  virtual void BeginCycleCollectionCallback();
-  virtual void EndCycleCollectionCallback(CycleCollectorResults& aResults);
+  virtual void BeginCycleCollectionCallback() = 0;
+  virtual void EndCycleCollectionCallback(CycleCollectorResults& aResults) = 0;
   virtual void DispatchDeferredDeletion(bool aContinuation, bool aPurge = false) = 0;
 
   JSContext* Context() const
@@ -394,8 +394,6 @@ public:
   {
     mZonesWaitingForGC.PutEntry(aZone);
   }
-
-  void TraceJSChildren(JSTracer* aTrc, JS::GCCellPtr aThing);
 
   // Prepare any zones for GC that have been passed to AddZoneWaitingForGC()
   // since the last GC or since the last call to PrepareWaitingZonesForGC(),
@@ -478,11 +476,6 @@ private:
     void invoke(JS::HandleObject scope, Closure& closure) override;
   };
   EnvironmentPreparer mEnvironmentPreparer;
-
-#ifdef DEBUG
-  uint32_t mNumTraversedGCThings;
-  uint32_t mNumTraceChildren;
-#endif // DEBUG
 };
 
 void TraceScriptHolder(nsISupports* aHolder, JSTracer* aTracer);
