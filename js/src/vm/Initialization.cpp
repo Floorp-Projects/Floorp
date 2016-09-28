@@ -15,6 +15,7 @@
 #include "jstypes.h"
 
 #include "builtin/AtomicsObject.h"
+#include "ds/MemoryProtectionExceptionHandler.h"
 #include "gc/Statistics.h"
 #include "jit/ExecutableAllocator.h"
 #include "jit/Ion.h"
@@ -100,6 +101,8 @@ JS::detail::InitWithFailureDiagnostic(bool isDebugBuild)
 
     js::jit::ExecutableAllocator::initStatic();
 
+    MOZ_ALWAYS_TRUE(js::MemoryProtectionExceptionHandler::install());
+
     RETURN_IF_FAIL(js::jit::InitializeIon());
 
     js::DateTimeInfo::init();
@@ -144,6 +147,8 @@ JS_ShutDown(void)
     js::DestroyTraceLoggerThreadState();
     js::DestroyTraceLoggerGraphState();
 #endif
+
+    js::MemoryProtectionExceptionHandler::uninstall();
 
     // The only difficult-to-address reason for the restriction that you can't
     // call JS_Init/stuff/JS_ShutDown multiple times is the Windows PRMJ
