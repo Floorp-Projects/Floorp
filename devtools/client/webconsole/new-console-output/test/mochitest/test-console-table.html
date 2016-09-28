@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Simple webconsole test page</title>
+  </head>
+  <body>
+    <p>console.table() test page</p>
+    <script>
+      function doConsoleTable(data, constrainedHeaders = null) {
+        if (constrainedHeaders) {
+          console.table(data, constrainedHeaders);
+        } else {
+          console.table(data);
+        }
+      }
+    </script>
+  </body>
+</html>

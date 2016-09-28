@@ -823,7 +823,7 @@ GLContextGLX::CreateGLContext(CreateContextFlags flags, const SurfaceCaps& caps,
     RefPtr<GLContextGLX> glContext;
     bool error;
 
-    ScopedXErrorHandler xErrorHandler;
+    OffMainThreadScopedXErrorHandler xErrorHandler;
 
     do {
         error = false;
@@ -1311,7 +1311,7 @@ CreateOffscreenPixmapContext(CreateContextFlags flags, const IntSize& size,
     int depth;
     FindVisualAndDepth(display, visid, &visual, &depth);
 
-    ScopedXErrorHandler xErrorHandler;
+    OffMainThreadScopedXErrorHandler xErrorHandler;
     bool error = false;
 
     Drawable drawable;

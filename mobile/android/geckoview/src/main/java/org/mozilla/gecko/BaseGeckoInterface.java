@@ -26,9 +26,16 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
 
     private final Context mContext;
     private GeckoProfile mProfile;
+    private final EventDispatcher eventDispatcher;
 
     public BaseGeckoInterface(Context context) {
         mContext = context;
+        eventDispatcher = new EventDispatcher();
+    }
+
+    @Override
+    public EventDispatcher getAppEventDispatcher() {
+        return eventDispatcher;
     }
 
     @Override

@@ -222,6 +222,9 @@ function openLinkIn(url, where, params) {
   var aAllowPopups          = !!params.allowPopups;
   var aUserContextId        = params.userContextId;
   var aIndicateErrorPageLoad = params.indicateErrorPageLoad;
+  var aPrincipal            = params.originPrincipal;
+  var aForceAboutBlankViewerInCurrent =
+      params.forceAboutBlankViewerInCurrent;
 
   if (where == "save") {
     // TODO(1073187): propagate referrerPolicy.
@@ -290,6 +293,7 @@ function openLinkIn(url, where, params) {
     sa.AppendElement(allowThirdPartyFixupSupports);
     sa.AppendElement(referrerPolicySupports);
     sa.AppendElement(userContextIdSupports);
+    sa.AppendElement(aPrincipal);
 
     let features = "chrome,dialog=no,all";
     if (aIsPrivate) {
@@ -357,6 +361,10 @@ function openLinkIn(url, where, params) {
       flags |= Ci.nsIWebNavigation.LOAD_FLAGS_ERROR_LOAD_CHANGES_RV;
     }
 
+    if (aForceAboutBlankViewerInCurrent) {
+      w.gBrowser.selectedBrowser.createAboutBlankContentViewer(aPrincipal);
+    }
+
     w.gBrowser.loadURIWithFlags(url, {
       flags: flags,
       referrerURI: aNoReferrer ? null : aReferrerURI,
@@ -380,7 +388,8 @@ function openLinkIn(url, where, params) {
       skipAnimation: aSkipTabAnimation,
       allowMixedContent: aAllowMixedContent,
       noReferrer: aNoReferrer,
-      userContextId: aUserContextId
+      userContextId: aUserContextId,
+      originPrincipal: aPrincipal,
     });
     break;
   }

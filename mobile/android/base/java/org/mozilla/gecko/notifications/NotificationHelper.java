@@ -82,6 +82,10 @@ public final class NotificationHelper implements GeckoEventListener {
     }
 
     public void init() {
+        if (mInitialized) {
+            return;
+        }
+
         mClearableNotifications = new HashMap<String, String>();
         EventDispatcher.getInstance().registerGeckoThreadListener(this,
             "Notification:Show",

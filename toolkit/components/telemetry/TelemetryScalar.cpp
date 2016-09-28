@@ -1697,7 +1697,7 @@ TelemetryScalar::SetMaximum(mozilla::Telemetry::ScalarID aId, uint32_t aValue)
     return;
   }
 
-  scalar->SetValue(aValue);
+  scalar->SetMaximum(aValue);
 }
 
 /**
@@ -1718,7 +1718,7 @@ TelemetryScalar::SetMaximum(mozilla::Telemetry::ScalarID aId, const nsAString& a
     return;
   }
 
-  scalar->SetValue(aKey, aValue);
+  scalar->SetMaximum(aKey, aValue);
 }
 
 /**

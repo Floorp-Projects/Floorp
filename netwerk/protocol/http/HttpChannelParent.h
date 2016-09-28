@@ -98,6 +98,8 @@ public:
     }
   }
 
+  nsresult OpenAlternativeOutputStream(const nsACString & type, nsIOutputStream * *_retval);
+
 protected:
   // used to connect redirected-to channel in parent with just created
   // ChildChannel.  Used during redirects.
@@ -140,7 +142,8 @@ protected:
                    const bool&                aSuspendAfterSynthesizeResponse,
                    const bool&                aAllowStaleCacheContent,
                    const nsCString&           aContentTypeHint,
-                   const nsCString&           aChannelId);
+                   const nsCString&           aChannelId,
+                   const nsCString&           aPreferredAlternativeType);
 
   virtual bool RecvSetPriority(const uint16_t& priority) override;
   virtual bool RecvSetClassOfService(const uint32_t& cos) override;
@@ -152,7 +155,9 @@ protected:
                                    const RequestHeaderTuples& changedHeaders,
                                    const uint32_t& loadFlags,
                                    const OptionalURIParams& apiRedirectUri,
-                                   const OptionalCorsPreflightArgs& aCorsPreflightArgs) override;
+                                   const OptionalCorsPreflightArgs& aCorsPreflightArgs,
+                                   const bool& aForceHSTSPriming,
+                                   const bool& aMixedContentWouldBlock) override;
   virtual bool RecvUpdateAssociatedContentSecurity(const int32_t& broken,
                                                    const int32_t& no) override;
   virtual bool RecvDocumentChannelCleanup() override;
