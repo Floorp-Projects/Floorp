@@ -565,14 +565,12 @@ nsHtml5TreeOperation::AppendDoctypeToDocument(nsIAtom* aName,
   // Adapted from nsXMLContentSink
   // Create a new doctype node
   nsCOMPtr<nsIDOMDocumentType> docType;
-  nsAutoString voidString;
-  voidString.SetIsVoid(true);
   NS_NewDOMDocumentType(getter_AddRefs(docType),
                         aBuilder->GetNodeInfoManager(),
                         aName,
                         aPublicId,
                         aSystemId,
-                        voidString);
+                        NullString());
   NS_ASSERTION(docType, "Doctype creation failed.");
   nsCOMPtr<nsIContent> asContent = do_QueryInterface(docType);
   return AppendToDocument(asContent, aBuilder);

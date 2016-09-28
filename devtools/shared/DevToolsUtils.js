@@ -380,7 +380,8 @@ exports.defineLazyGetter(this, "NetworkHelper", () => {
  *        - window: the window to get the loadGroup from
  *        - charset: the charset to use if the channel doesn't provide one
  *        - principal: the principal to use, if omitted, the request is loaded
- *                     with the system principal
+ *                     with a codebase principal corresponding to the url being
+ *                     loaded, using the origin attributes of the window, if any.
  *        - cacheKey: when loading from cache, use this key to retrieve a cache
  *                    specific to a given SHEntry. (Allows loading POST
  *                    requests from cache)
@@ -526,51 +527,44 @@ function mainThreadFetch(aURL, aOptions = { loadFromCache: true,
  */
 function newChannelForURL(url, { policy, window, principal }) {
   var securityFlags = Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
-  if (window) {
-    // Respect private browsing.
-    var req = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIWebNavigation)
-                    .QueryInterface(Ci.nsIDocumentLoader)
-                    .loadGroup;
-    if (req) {
-      var nc = req.notificationCallbacks;
-      if (nc) {
-        try {
-          var lc = nc.getInterface(Ci.nsILoadContext);
-          if (lc) {
-            if (lc.usePrivateBrowsing) {
-              securityFlags |= Ci.nsILoadInfo.SEC_FORCE_PRIVATE_BROWSING;
-            }
-          }
-        } catch (ex) {}
-      }
-    }
-  }
 
-  let channelOptions = {
-    contentPolicyType: policy,
-    securityFlags: securityFlags,
-    uri: url
-  };
-  if (principal) {
-    // contentPolicyType is required when loading with a custom principal
-    if (!channelOptions.contentPolicyType) {
-      channelOptions.contentPolicyType = Ci.nsIContentPolicy.TYPE_OTHER;
-    }
-    channelOptions.loadingPrincipal = principal;
-  } else {
-    channelOptions.loadUsingSystemPrincipal = true;
-  }
-
+  let uri;
   try {
-    return NetUtil.newChannel(channelOptions);
+    uri = Services.io.newURI(url, null, null);
   } catch (e) {
     // In the xpcshell tests, the script url is the absolute path of the test
     // file, which will make a malformed URI error be thrown. Add the file
     // scheme to see if it helps.
-    channelOptions.uri = "file://" + url;
+    uri = Services.io.newURI("file://" + url, null, null);
+  }
+  let channelOptions = {
+    contentPolicyType: policy,
+    securityFlags: securityFlags,
+    uri: uri
+  };
+  let prin = principal;
+  if (!prin) {
+    let oa = {};
+    if (window) {
+      oa = window.document.nodePrincipal.originAttributes;
+    }
+    prin = Services.scriptSecurityManager
+                   .createCodebasePrincipal(uri, oa);
+  }
+  // contentPolicyType is required when specifying a principal
+  if (!channelOptions.contentPolicyType) {
+    channelOptions.contentPolicyType = Ci.nsIContentPolicy.TYPE_OTHER;
+  }
+  channelOptions.loadingPrincipal = prin;
 
+  try {
     return NetUtil.newChannel(channelOptions);
+  } catch (e) {
+    // In xpcshell tests on Windows, nsExternalProtocolHandler::NewChannel()
+    // can throw NS_ERROR_UNKNOWN_PROTOCOL if the external protocol isn't
+    // supported by Windows, so we also need to handle the exception here if
+    // parsing the URL above doesn't throw.
+    return newChannelForURL("file://" + url, { policy, window, principal });
   }
 }
 

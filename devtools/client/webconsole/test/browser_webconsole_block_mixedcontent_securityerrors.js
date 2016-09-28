@@ -60,7 +60,9 @@ function pushPrefEnv() {
   let options = {
     "set": [
       ["security.mixed_content.block_active_content", true],
-      ["security.mixed_content.block_display_content", true]
+      ["security.mixed_content.block_display_content", true],
+      ["security.mixed_content.use_hsts", false],
+      ["security.mixed_content.send_hsts_priming", false],
     ]
   };
   SpecialPowers.pushPrefEnv(options, deferred.resolve);

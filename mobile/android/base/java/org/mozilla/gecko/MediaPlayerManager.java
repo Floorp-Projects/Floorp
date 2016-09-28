@@ -69,22 +69,22 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EventDispatcher.getInstance().registerGeckoThreadListener(this,
-                "MediaPlayer:Load",
-                "MediaPlayer:Start",
-                "MediaPlayer:Stop",
-                "MediaPlayer:Play",
-                "MediaPlayer:Pause",
-                "MediaPlayer:End",
-                "MediaPlayer:Mirror",
-                "MediaPlayer:Message");
+        GeckoApp.getEventDispatcher().registerGeckoThreadListener(this,
+                                                                  "MediaPlayer:Load",
+                                                                  "MediaPlayer:Start",
+                                                                  "MediaPlayer:Stop",
+                                                                  "MediaPlayer:Play",
+                                                                  "MediaPlayer:Pause",
+                                                                  "MediaPlayer:End",
+                                                                  "MediaPlayer:Mirror",
+                                                                  "MediaPlayer:Message");
     }
 
     @Override
     @JNITarget
     public void onDestroy() {
         super.onDestroy();
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
+        GeckoApp.getEventDispatcher().unregisterGeckoThreadListener(this,
                                                                     "MediaPlayer:Load",
                                                                     "MediaPlayer:Start",
                                                                     "MediaPlayer:Stop",

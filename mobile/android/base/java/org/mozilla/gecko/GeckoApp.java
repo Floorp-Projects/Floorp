@@ -201,6 +201,8 @@ public abstract class GeckoApp
     protected boolean mShouldRestore;
     private boolean mSessionRestoreParsingFinished = false;
 
+    private EventDispatcher eventDispatcher;
+
     private static final class LastSessionParser extends SessionParser {
         private JSONArray tabs;
         private JSONObject windowObject;
@@ -1105,6 +1107,8 @@ public abstract class GeckoApp
     public void onCreate(Bundle savedInstanceState) {
         GeckoAppShell.ensureCrashHandling();
 
+        eventDispatcher = new EventDispatcher();
+
         // Enable Android Strict Mode for developers' local builds (the "default" channel).
         if ("default".equals(AppConstants.MOZ_UPDATE_CHANNEL)) {
             enableStrictMode();
@@ -1204,12 +1208,12 @@ public abstract class GeckoApp
         // GeckoThread has to register for "Gecko:Ready" first, so GeckoApp registers
         // for events after initializing GeckoThread but before launching it.
 
-        EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener)this,
+        getAppEventDispatcher().registerGeckoThreadListener((GeckoEventListener)this,
             "Gecko:Ready",
             "Gecko:Exited",
             "Accessibility:Event");
 
-        EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener)this,
+        getAppEventDispatcher().registerGeckoThreadListener((NativeEventListener)this,
             "Accessibility:Ready",
             "Bookmark:Insert",
             "Contact:Add",
@@ -1383,7 +1387,7 @@ public abstract class GeckoApp
                 // through "onDestroy" -- essentially the same as the lifecycle
                 // of the activity itself.
                 final String profilePath = getProfile().getDir().getAbsolutePath();
-                final EventDispatcher dispatcher = EventDispatcher.getInstance();
+                final EventDispatcher dispatcher = getAppEventDispatcher();
 
                 // This is the locale prior to fixing it up.
                 final Locale osLocale = Locale.getDefault();
@@ -1692,11 +1696,11 @@ public abstract class GeckoApp
             public void run() {
                 if (TabQueueHelper.TAB_QUEUE_ENABLED && TabQueueHelper.shouldOpenTabQueueUrls(GeckoApp.this)) {
 
-                    EventDispatcher.getInstance().registerGeckoThreadListener(new NativeEventListener() {
+                    getAppEventDispatcher().registerGeckoThreadListener(new NativeEventListener() {
                         @Override
                         public void handleMessage(String event, NativeJSObject message, EventCallback callback) {
                             if ("Tabs:TabsOpened".equals(event)) {
-                                EventDispatcher.getInstance().unregisterGeckoThreadListener(this, "Tabs:TabsOpened");
+                                getAppEventDispatcher().unregisterGeckoThreadListener(this, "Tabs:TabsOpened");
                                 openTabsRunnable.run();
                             }
                         }
@@ -1753,6 +1757,16 @@ public abstract class GeckoApp
         } catch (JSONException e) {
             throw new SessionRestoreException(e);
         }
+    }
+
+    public static EventDispatcher getEventDispatcher() {
+        final GeckoApp geckoApp = (GeckoApp) GeckoAppShell.getGeckoInterface();
+        return geckoApp.getAppEventDispatcher();
+    }
+
+    @Override
+    public EventDispatcher getAppEventDispatcher() {
+        return eventDispatcher;
     }
 
     @Override
@@ -2108,6 +2122,8 @@ public abstract class GeckoApp
             return;
         }
 
+        GeckoAppShell.setGeckoInterface(this);
+
         int newOrientation = getResources().getConfiguration().orientation;
         if (GeckoScreenOrientation.getInstance().update(newOrientation)) {
             refreshChrome();
@@ -2259,12 +2275,12 @@ public abstract class GeckoApp
             return;
         }
 
-        EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener)this,
+        getAppEventDispatcher().unregisterGeckoThreadListener((GeckoEventListener)this,
             "Gecko:Ready",
             "Gecko:Exited",
             "Accessibility:Event");
 
-        EventDispatcher.getInstance().unregisterGeckoThreadListener((NativeEventListener)this,
+        getAppEventDispatcher().unregisterGeckoThreadListener((NativeEventListener)this,
             "Accessibility:Ready",
             "Bookmark:Insert",
             "Contact:Add",

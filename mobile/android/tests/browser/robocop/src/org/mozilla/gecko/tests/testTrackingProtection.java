@@ -7,6 +7,7 @@ package org.mozilla.gecko.tests;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fFail;
 
 import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.util.GeckoEventListener;
 
@@ -48,15 +49,17 @@ public class testTrackingProtection extends JavascriptTest implements GeckoEvent
     public void setUp() throws Exception {
         super.setUp();
 
-        EventDispatcher.getInstance().registerGeckoThreadListener(this, "Content:SecurityChange");
-        EventDispatcher.getInstance().registerGeckoThreadListener(this, "Test:Expected");
+        EventDispatcher.getInstance().registerGeckoThreadListener(this,
+                                                                  "Content:SecurityChange",
+                                                                  "Test:Expected");
     }
 
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
 
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this, "Content:SecurityChange");
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this, "Test:Expected");
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
+                                                                    "Content:SecurityChange",
+                                                                    "Test:Expected");
     }
 }

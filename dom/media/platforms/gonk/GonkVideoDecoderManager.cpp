@@ -52,7 +52,7 @@ public:
     , mGrallocFormat(aGrallocFormat)
   {}
 
-  already_AddRefed<TextureClient> Allocate(TextureForwarder* aAllocator) override
+  already_AddRefed<TextureClient> Allocate(KnowsCompositor* aAllocator) override
   {
     uint32_t usage = android::GraphicBuffer::USAGE_SW_READ_OFTEN |
                      android::GraphicBuffer::USAGE_SW_WRITE_OFTEN |
@@ -60,7 +60,7 @@ public:
 
     GrallocTextureData* texData = GrallocTextureData::Create(mSize, mGrallocFormat,
                                                              gfx::BackendType::NONE,
-                                                             usage, aAllocator);
+                                                             usage, aAllocator->GetTextureForwarder());
     if (!texData) {
       return nullptr;
     }
@@ -69,7 +69,7 @@ public:
       return nullptr;
     }
     RefPtr<TextureClient> textureClient =
-      TextureClient::CreateWithData(texData, TextureFlags::DEALLOCATE_CLIENT, aAllocator);
+      TextureClient::CreateWithData(texData, TextureFlags::DEALLOCATE_CLIENT, aAllocator->GetTextureForwarder());
     return textureClient.forget();
   }
 
