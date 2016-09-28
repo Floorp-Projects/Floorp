@@ -63,10 +63,10 @@ public:
 
   /**
    * Returns true if the preference to enable the core Web Animations API is
-   * true.
+   * true or the caller is chrome.
    */
   static bool
-  IsCoreAPIEnabled();
+  IsCoreAPIEnabledForCaller();
 };
 
 } // namespace mozilla
