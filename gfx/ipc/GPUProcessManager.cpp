@@ -60,7 +60,8 @@ GPUProcessManager::GPUProcessManager()
  : mTaskFactory(this),
    mNextLayerTreeId(0),
    mProcess(nullptr),
-   mGPUChild(nullptr)
+   mGPUChild(nullptr),
+   mNumProcessAttempts(0)
 {
   mObserver = new Observer(this);
   nsContentUtils::RegisterShutdownObserver(mObserver);
@@ -107,7 +108,7 @@ GPUProcessManager::OnXPCOMShutdown()
 }
 
 void
-GPUProcessManager::EnableGPUProcess()
+GPUProcessManager::LaunchGPUProcess()
 {
   if (mProcess) {
     return;
@@ -115,6 +116,8 @@ GPUProcessManager::EnableGPUProcess()
 
   // Start the Vsync I/O thread so can use it as soon as the process launches.
   EnsureVsyncIOThread();
+
+  mNumProcessAttempts++;
 
   // The subprocess is launched asynchronously, so we wait for a callback to
   // acquire the IPDL actor.
@@ -127,6 +130,10 @@ GPUProcessManager::EnableGPUProcess()
 void
 GPUProcessManager::DisableGPUProcess(const char* aMessage)
 {
+  if (!gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
+    return;
+  }
+
   gfxConfig::SetFailed(Feature::GPU_PROCESS, FeatureStatus::Failed, aMessage);
   gfxCriticalNote << aMessage;
 
@@ -246,6 +253,13 @@ GPUProcessManager::OnProcessUnexpectedShutdown(GPUProcessHost* aHost)
   MOZ_ASSERT(mProcess && mProcess == aHost);
 
   DestroyProcess();
+
+  if (mNumProcessAttempts > gfxPrefs::GPUProcessDevMaxRestarts()) {
+    DisableGPUProcess("GPU processed crashed too many times");
+  }
+  if (gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
+    LaunchGPUProcess();
+  }
 
   // The shutdown and restart sequence for the GPU process is as follows:
   //
