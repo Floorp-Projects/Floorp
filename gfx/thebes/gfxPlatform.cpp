@@ -2178,7 +2178,7 @@ gfxPlatform::InitAcceleration()
 
     if (gpuProc.IsEnabled()) {
       GPUProcessManager* gpu = GPUProcessManager::Get();
-      gpu->LaunchGPUProcess();
+      gpu->EnableGPUProcess();
     }
   }
 }
