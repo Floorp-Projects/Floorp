@@ -266,6 +266,29 @@ XMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
   nsDocument::ResetToURI(aURI, aLoadGroup, aPrincipal);
 }
 
+NS_IMETHODIMP
+XMLDocument::GetAsync(bool *aAsync)
+{
+  NS_ENSURE_ARG_POINTER(aAsync);
+  *aAsync = mAsync;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+XMLDocument::SetAsync(bool aAsync)
+{
+  mAsync = aAsync;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+XMLDocument::Load(const nsAString& aUrl, bool *aReturn)
+{
+  ErrorResult rv;
+  *aReturn = Load(aUrl, rv);
+  return rv.StealNSResult();
+}
+
 bool
 XMLDocument::Load(const nsAString& aUrl, ErrorResult& aRv)
 {
@@ -276,6 +299,8 @@ XMLDocument::Load(const nsAString& aUrl, ErrorResult& aRv)
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return false;
   }
+
+  WarnOnceAbout(nsIDocument::eUseOfDOM3LoadMethod);
 
   nsCOMPtr<nsIDocument> callingDoc = GetEntryDocument();
   nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
@@ -290,12 +315,6 @@ XMLDocument::Load(const nsAString& aUrl, ErrorResult& aRv)
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return false;
   }
-
-  if (nsContentUtils::IsCallerChrome()) {
-    WarnOnceAbout(nsIDocument::eChromeUseOfDOM3LoadMethod);
-  } else {
-    WarnOnceAbout(nsIDocument::eUseOfDOM3LoadMethod);
-  } 
 
   nsIURI *baseURI = mDocumentURI;
   nsAutoCString charset;
