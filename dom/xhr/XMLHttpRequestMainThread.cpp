@@ -12,10 +12,10 @@
 #endif
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/dom/BlobSet.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FetchUtil.h"
 #include "mozilla/dom/FormData.h"
-#include "mozilla/dom/MutableBlobStorage.h"
 #include "mozilla/dom/XMLDocument.h"
 #include "mozilla/dom/URLSearchParams.h"
 #include "mozilla/EventDispatcher.h"
@@ -291,7 +291,7 @@ XMLHttpRequestMainThread::ResetResponse()
   TruncateResponseText();
   mResponseBlob = nullptr;
   mDOMBlob = nullptr;
-  mBlobStorage = nullptr;
+  mBlobSet = nullptr;
   mResultArrayBuffer = nullptr;
   mArrayBufferBuilder.reset();
   mResultJSON.setUndefined();
@@ -677,8 +677,8 @@ XMLHttpRequestMainThread::CreatePartialBlob(ErrorResult& aRv)
     return;
   }
 
-  // mBlobStorage can be null if the request has been canceled
-  if (!mBlobStorage) {
+  // mBlobSet can be null if the request has been canceled
+  if (!mBlobSet) {
     return;
   }
 
@@ -687,7 +687,7 @@ XMLHttpRequestMainThread::CreatePartialBlob(ErrorResult& aRv)
     mChannel->GetContentType(contentType);
   }
 
-  mResponseBlob = mBlobStorage->GetBlob(GetOwner(), contentType, aRv);
+  mResponseBlob = mBlobSet->GetBlobInternal(GetOwner(), contentType, aRv);
 }
 
 NS_IMETHODIMP XMLHttpRequestMainThread::GetResponseType(nsAString& aResponseType)
@@ -1584,10 +1584,10 @@ XMLHttpRequestMainThread::StreamReaderFunc(nsIInputStream* in,
   if (xmlHttpRequest->mResponseType == XMLHttpRequestResponseType::Blob ||
       xmlHttpRequest->mResponseType == XMLHttpRequestResponseType::Moz_blob) {
     if (!xmlHttpRequest->mDOMBlob) {
-      if (!xmlHttpRequest->mBlobStorage) {
-        xmlHttpRequest->mBlobStorage = new MutableBlobStorage();
+      if (!xmlHttpRequest->mBlobSet) {
+        xmlHttpRequest->mBlobSet = new BlobSet();
       }
-      rv = xmlHttpRequest->mBlobStorage->Append(fromRawSegment, count);
+      rv = xmlHttpRequest->mBlobSet->AppendVoidPtr(fromRawSegment, count);
     }
     // Clear the cache so that the blob size is updated.
     if (xmlHttpRequest->mResponseType == XMLHttpRequestResponseType::Moz_blob) {
@@ -1668,7 +1668,7 @@ bool XMLHttpRequestMainThread::CreateDOMBlob(nsIRequest *request)
   mDOMBlob = File::CreateFromFile(GetOwner(), file, EmptyString(),
                                   NS_ConvertASCIItoUTF16(contentType));
 
-  mBlobStorage = nullptr;
+  mBlobSet = nullptr;
   NS_ASSERTION(mResponseBody.IsEmpty(), "mResponseBody should be empty");
   return true;
 }
@@ -2038,18 +2038,18 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
       mResponseBlob = mDOMBlob;
       mDOMBlob = nullptr;
     } else {
-      // mBlobStorage can be null if the channel is non-file non-cacheable
+      // mBlobSet can be null if the channel is non-file non-cacheable
       // and if the response length is zero.
-      if (!mBlobStorage) {
-        mBlobStorage = new MutableBlobStorage();
+      if (!mBlobSet) {
+        mBlobSet = new BlobSet();
       }
       // Smaller files may be written in cache map instead of separate files.
       // Also, no-store response cannot be written in persistent cache.
       nsAutoCString contentType;
       mChannel->GetContentType(contentType);
 
-      mResponseBlob = mBlobStorage->GetBlob(GetOwner(), contentType, rv);
-      mBlobStorage = nullptr;
+      mResponseBlob = mBlobSet->GetBlobInternal(GetOwner(), contentType, rv);
+      mBlobSet = nullptr;
 
       if (NS_WARN_IF(rv.Failed())) {
         return rv.StealNSResult();
