@@ -27,7 +27,7 @@ var test = Task.async(function* () {
   });
 
   const paused = waitForThreadEvents(panel, "paused");
-  yield reloadActiveTab(panel, panel.panelWin.EVENTS.SOURCE_SHOWN);
+  reloadActiveTab(panel);
   const packet = yield paused;
 
   is(packet.why.type, "breakpoint",
@@ -35,5 +35,6 @@ var test = Task.async(function* () {
   is(packet.frame.where.line, 10,
      "Should have stopped at line 10, where we set the breakpoint");
 
+  yield waitForDebuggerEvents(panel, panel.panelWin.EVENTS.SOURCE_SHOWN);
   yield resumeDebuggerThenCloseAndFinish(panel);
 });
