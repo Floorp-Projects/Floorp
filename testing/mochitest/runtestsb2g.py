@@ -219,7 +219,8 @@ class MochitestB2G(MochitestBase):
                 """)
 
             self.marionette.execute_script("""
-                let SECURITY_PREF = "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer";
+                let SECURITY_PREF = "security.turn_off_all_security_" +
+                                    "so_that_viruses_can_take_over_this_computer";
                 Services.prefs.setBoolPref(SECURITY_PREF, true);
 
                 if (!testUtils.hasOwnProperty("specialPowersObserver")) {
@@ -312,7 +313,8 @@ class MochitestB2G(MochitestBase):
                 os.remove(options.pidFile)
                 os.remove(options.pidFile + ".xpcshell.pid")
             except:
-                print "Warning: cleaning up pidfile '%s' was unsuccessful from the test harness" % options.pidFile
+                print("Warning: cleaning up pidfile '%s' was unsuccessful "
+                      "from the test harness") % options.pidFile
 
         # stop and clean up the runner
         if getattr(self, 'runner', False):
