@@ -94,6 +94,13 @@ function testXhrWarn() {
   });
 
   let lastRequest = yield waitForFinishedRequest(XHR_WARN_REQUEST_PREDICATE);
+  if (lastRequest.request.method == "HEAD") {
+    // in non-e10s, we get the HEAD request that priming sends, so make sure
+    // a priming request should be sent, and then get the actual request
+    is(Services.prefs.getBoolPref("security.mixed_content.send_hsts_priming"),
+        true, "Found HSTS Priming Request");
+    lastRequest = yield waitForFinishedRequest(XHR_WARN_REQUEST_PREDICATE);
+  }
 
   ok(lastRequest, "testXhrWarn() was logged");
   is(lastRequest.request.method, "GET", "Method is correct");

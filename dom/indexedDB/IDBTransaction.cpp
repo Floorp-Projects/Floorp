@@ -653,6 +653,12 @@ IDBTransaction::AbortInternal(nsresult aAbortCode,
       mDatabase->RevertToPreviousState();
     }
 
+    // We do the reversion only for the mObjectStores/mDeletedObjectStores but
+    // not for the mIndexes/mDeletedIndexes of each IDBObjectStore because it's
+    // time-consuming(O(m*n)) and mIndexes/mDeletedIndexes won't be used anymore
+    // in IDBObjectStore::(Create|Delete)Index() and IDBObjectStore::Index() in
+    // which all the executions are returned earlier by !transaction->IsOpen().
+
     const nsTArray<ObjectStoreSpec>& specArray =
       mDatabase->Spec()->objectStores();
 

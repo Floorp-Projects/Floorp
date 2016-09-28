@@ -351,7 +351,7 @@ AudioStream::Init(uint32_t aNumChannels, uint32_t aRate,
   if (!cubebContext) {
     NS_WARNING("Can't get cubeb context!");
     CubebUtils::ReportCubebStreamInitFailure(true);
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_DOM_MEDIA_CUBEB_INITIALIZATION_ERR;
   }
 
   return OpenCubeb(cubebContext, params, startTime, CubebUtils::GetFirstStream());
@@ -365,7 +365,8 @@ AudioStream::OpenCubeb(cubeb* aContext, cubeb_stream_params& aParams,
 
   cubeb_stream* stream = nullptr;
   /* Convert from milliseconds to frames. */
-  uint32_t latency_frames = CubebUtils::GetCubebLatency() * aParams.rate / 1000;
+  uint32_t latency_frames =
+    CubebUtils::GetCubebPlaybackLatencyInMilliseconds() * aParams.rate / 1000;
   if (cubeb_stream_init(aContext, &stream, "AudioStream",
                         nullptr, nullptr, nullptr, &aParams,
                         latency_frames,

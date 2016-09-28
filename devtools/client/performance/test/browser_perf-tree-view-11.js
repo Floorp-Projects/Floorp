@@ -12,7 +12,7 @@ var { CATEGORY_MASK } = require("devtools/client/performance/modules/categories"
 function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, $, $$, window, PerformanceController } = panel.panelWin;
-  let { OverviewView, DetailsView, JsCallTreeView, RecordingsView } = panel.panelWin;
+  let { OverviewView, DetailsView, JsCallTreeView } = panel.panelWin;
 
   let profilerData = { threads: [gThread] };
 

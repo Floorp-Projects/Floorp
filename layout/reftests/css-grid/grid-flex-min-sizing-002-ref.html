@@ -25,21 +25,22 @@ body,html { color:black; background:white; font-family:monospace; font-size:16px
 }
 
 .g1 {
- grid-template-columns: minmax(4px,0)
+ grid-template-columns: 4px
                         minmax(0,0)
                         minmax(0,0)
                         1fr;
+ min-width: 24px;
 }
 
 .g2 {
- grid-template-columns: minmax(4px,0)
+ grid-template-columns: min-content
                         0
                         0
                         1fr;
 }
 
 .g3 {
- grid-template-columns: minmax(4px,0)
+ grid-template-columns: min-content
                         0
                         0
                         1fr;
@@ -49,21 +50,22 @@ body,html { color:black; background:white; font-family:monospace; font-size:16px
  grid-template-columns: minmax(2px,0)
                         1px
                         1px
-                        1fr;
+                        20px;
 }
 
 .g5 {
  grid-template-columns: minmax(20px,0)
                         minmax(0,0)
                         minmax(0,0)
-                        0;
+                        4px;
 }
 
 .g6 {
- grid-template-columns: minmax(2px,0)
-                        minmax(1px,0)
-                        minmax(1px,0)
+ grid-template-columns: minmax(1.333333px,0)
+                        minmax(1.333333px,0)
+                        minmax(1.333333px,0)
                         20px;
+ min-width: 44px;
 }
 
 .g7 {
@@ -95,30 +97,32 @@ body,html { color:black; background:white; font-family:monospace; font-size:16px
 }
 
 .gB {
- grid-template-columns: minmax(4px,0)
+ grid-template-columns: 24px
                         0
                         0
                         20px;
+ min-width: 44px;
 }
 
 .gC {
- grid-template-columns: minmax(4px,0)
+ grid-template-columns: minmax(24px,0)
                         0
                         0
                         20px;
+ min-width: 44px;
 }
 
 .gD {
- grid-template-columns: minmax(4px,0)
+ grid-template-columns: minmax(24px,0)
                         0
                         0
                         0;
 }
 
 .gE {
- grid-template-columns: minmax(2px,0)
-                        minmax(1px,0)
-                        minmax(1px,0)
+ grid-template-columns: minmax(8px,0)
+                        minmax(8px,0)
+                        minmax(8px,0)
                         0px;
 }
 

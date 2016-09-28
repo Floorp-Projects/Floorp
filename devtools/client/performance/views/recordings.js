@@ -9,13 +9,11 @@
 /**
  * Functions handling the recordings UI.
  */
-var RecordingsView = Heritage.extend(WidgetMethods, {
+var RecordingsView = {
   /**
    * Initialization function, called when the tool is started.
    */
   initialize: function () {
-    this.widget = new SideMenuWidget($("#recordings-list"));
-
     this._onSelect = this._onSelect.bind(this);
     this._onRecordingStateChange = this._onRecordingStateChange.bind(this);
     this._onNewRecording = this._onNewRecording.bind(this);
@@ -23,13 +21,75 @@ var RecordingsView = Heritage.extend(WidgetMethods, {
     this._onRecordingDeleted = this._onRecordingDeleted.bind(this);
     this._onRecordingExported = this._onRecordingExported.bind(this);
 
-    this.emptyText = L10N.getStr("noRecordingsText");
-
     PerformanceController.on(EVENTS.RECORDING_STATE_CHANGE, this._onRecordingStateChange);
     PerformanceController.on(EVENTS.RECORDING_ADDED, this._onNewRecording);
     PerformanceController.on(EVENTS.RECORDING_DELETED, this._onRecordingDeleted);
     PerformanceController.on(EVENTS.RECORDING_EXPORTED, this._onRecordingExported);
-    this.widget.addEventListener("select", this._onSelect, false);
+
+    // DE-XUL: Begin migrating the recording sidebar to React. Temporarily hold state
+    // here.
+    this._listState = {
+      recordings: [],
+      labels: new WeakMap(),
+      selected: null,
+    };
+    this._listMount = PerformanceUtils.createHtmlMount($("#recording-list-mount"));
+    this._renderList();
+  },
+
+  /**
+   * Get the index of the currently selected recording. Only used by tests.
+   * @return {integer} index
+   */
+  getSelectedIndex() {
+    const { recordings, selected } = this._listState;
+    return recordings.indexOf(selected);
+  },
+
+  /**
+   * Set the currently selected recording via its index. Only used by tests.
+   * @param {integer} index
+   */
+  setSelectedByIndex(index) {
+    this._onSelect(this._listState.recordings[index]);
+    this._renderList();
+  },
+
+  /**
+   * DE-XUL: During the migration, this getter will access the selected recording from
+   * the private _listState object so that tests will continue to pass.
+   */
+  get selected() {
+    return this._listState.selected;
+  },
+
+  /**
+   * DE-XUL: During the migration, this getter will access the number of recordings.
+   */
+  get itemCount() {
+    return this._listState.recordings.length;
+  },
+
+  /**
+   * DE-XUL: Render the recording list using React.
+   */
+  _renderList: function () {
+    const {recordings, labels, selected} = this._listState;
+
+    const recordingList = RecordingList({
+      itemComponent: RecordingListItem,
+      items: recordings.map(recording => ({
+        onSelect: () => this._onSelect(recording),
+        onSave: () => this._onSaveButtonClick(recording),
+        isLoading: !recording.isRecording() && !recording.isCompleted(),
+        isRecording: recording.isRecording(),
+        isSelected: recording === selected,
+        duration: recording.getDuration().toFixed(0),
+        label: labels.get(recording),
+      }))
+    });
+
+    ReactDOM.render(recordingList, this._listMount);
   },
 
   /**
@@ -41,56 +101,6 @@ var RecordingsView = Heritage.extend(WidgetMethods, {
     PerformanceController.off(EVENTS.RECORDING_ADDED, this._onNewRecording);
     PerformanceController.off(EVENTS.RECORDING_DELETED, this._onRecordingDeleted);
     PerformanceController.off(EVENTS.RECORDING_EXPORTED, this._onRecordingExported);
-    this.widget.removeEventListener("select", this._onSelect, false);
-  },
-
-  /**
-   * Adds an empty recording to this container.
-   *
-   * @param RecordingModel recording
-   *        A model for the new recording item created.
-   */
-  addEmptyRecording: function (recording) {
-    let titleNode = document.createElement("label");
-    titleNode.className = "plain recording-item-title";
-    titleNode.setAttribute("crop", "end");
-    titleNode.setAttribute("value", recording.getLabel() ||
-      L10N.getFormatStr("recordingsList.itemLabel", this.itemCount + 1));
-
-    let durationNode = document.createElement("label");
-    durationNode.className = "plain recording-item-duration";
-    durationNode.setAttribute("value",
-      L10N.getStr("recordingsList.recordingLabel"));
-
-    let saveNode = document.createElement("label");
-    saveNode.className = "plain recording-item-save";
-    saveNode.addEventListener("click", this._onSaveButtonClick);
-
-    let hspacer = document.createElement("spacer");
-    hspacer.setAttribute("flex", "1");
-
-    let footerNode = document.createElement("hbox");
-    footerNode.className = "recording-item-footer";
-    footerNode.appendChild(durationNode);
-    footerNode.appendChild(hspacer);
-    footerNode.appendChild(saveNode);
-
-    let vspacer = document.createElement("spacer");
-    vspacer.setAttribute("flex", "1");
-
-    let contentsNode = document.createElement("vbox");
-    contentsNode.className = "recording-item";
-    contentsNode.setAttribute("flex", "1");
-    contentsNode.appendChild(titleNode);
-    contentsNode.appendChild(vspacer);
-    contentsNode.appendChild(footerNode);
-
-    // Append a recording item to this container.
-    return this.push([contentsNode], {
-      // Store the recording model that contains all the data to be
-      // rendered in the item.
-      attachment: recording
-    });
   },
 
   /**
@@ -112,85 +122,55 @@ var RecordingsView = Heritage.extend(WidgetMethods, {
    *        Model of the recording that was started.
    */
   _onRecordingStateChange: function (_, state, recording) {
-    let recordingItem = this.getItemForPredicate(e => e.attachment === recording);
-    if (!recordingItem) {
-      recordingItem = this.addEmptyRecording(recording);
+    const { recordings, labels } = this._listState;
+
+    if (!recordings.includes(recording)) {
+      recordings.push(recording);
+      labels.set(recording, recording.getLabel() ||
+        L10N.getFormatStr("recordingsList.itemLabel", recordings.length));
 
       // If this is a manual recording, immediately select it, or
       // select a console profile if its the only one
-      if (!recording.isConsole() || this.selectedIndex === -1) {
-        this.selectedItem = recordingItem;
+      if (!recording.isConsole() || !this._listState.selected) {
+        this._onSelect(recording);
       }
     }
 
-    recordingItem.isRecording = recording.isRecording();
-
-    // This recording is in the process of stopping.
-    if (!recording.isRecording() && !recording.isCompleted()) {
-      // Mark the corresponding item as loading.
-      let durationNode = $(".recording-item-duration", recordingItem.target);
-      durationNode.setAttribute("value", L10N.getStr("recordingsList.loadingLabel"));
+    // Determine if the recording needs to be selected.
+    const isCompletedManualRecording = !recording.isConsole() && recording.isCompleted();
+    if (recording.isImported() || isCompletedManualRecording) {
+      this._onSelect(recording);
     }
 
-    // Render the recording item with finalized information (timing, etc)
-    if (recording.isCompleted() && !recordingItem.finalized) {
-      this.finalizeRecording(recordingItem);
-      // Select the recording if it was a manual recording only
-      if (!recording.isConsole()) {
-        this.forceSelect(recordingItem);
-      }
-    }
-
-    // Auto select imported items.
-    if (recording.isImported()) {
-      this.selectedItem = recordingItem;
-    }
+    this._renderList();
   },
 
   /**
    * Clears out all non-console recordings.
    */
   _onRecordingDeleted: function (_, recording) {
-    let recordingItem = this.getItemForPredicate(e => e.attachment === recording);
-    this.remove(recordingItem);
-  },
-
-  /**
-   * Adds recording data to a recording item in this container.
-   *
-   * @param Item recordingItem
-   *        An item inserted via `RecordingsView.addEmptyRecording`.
-   */
-  finalizeRecording: function (recordingItem) {
-    let model = recordingItem.attachment;
-    recordingItem.finalized = true;
-
-    let saveNode = $(".recording-item-save", recordingItem.target);
-    saveNode.setAttribute("value",
-      L10N.getStr("recordingsList.saveLabel"));
-
-    let durationMillis = model.getDuration().toFixed(0);
-    let durationNode = $(".recording-item-duration", recordingItem.target);
-    durationNode.setAttribute("value",
-      L10N.getFormatStr("recordingsList.durationLabel", durationMillis));
+    const { recordings } = this._listState;
+    const index = recordings.indexOf(recording);
+    if (index === -1) {
+      throw new Error("Attempting to remove a recording that doesn't exist.");
+    }
+    recordings.splice(index, 1);
+    this._renderList();
   },
 
   /**
    * The select listener for this container.
    */
-  _onSelect: Task.async(function* ({ detail: recordingItem }) {
-    if (!recordingItem) {
-      return;
-    }
-
-    let model = recordingItem.attachment;
-    this.emit(EVENTS.UI_RECORDING_SELECTED, model);
+  _onSelect: Task.async(function* (recording) {
+    this._listState.selected = recording;
+    this.emit(EVENTS.UI_RECORDING_SELECTED, recording);
+    this._renderList();
   }),
 
   /**
    * The click listener for the "save" button of each item in this container.
    */
-  _onSaveButtonClick: function (e) {
+  _onSaveButtonClick: function (recording) {
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     fp.init(window, L10N.getStr("recordingsList.saveDialogTitle"),
             Ci.nsIFilePicker.modeSave);
@@ -202,8 +182,7 @@ var RecordingsView = Heritage.extend(WidgetMethods, {
       if (result == Ci.nsIFilePicker.returnCancel) {
         return;
       }
-      let recordingItem = this.getItemForElement(e.target);
-      this.emit(EVENTS.UI_EXPORT_RECORDING, recordingItem.attachment, fp.file);
+      this.emit(EVENTS.UI_EXPORT_RECORDING, recording, fp.file);
     }});
   },
 
@@ -211,13 +190,11 @@ var RecordingsView = Heritage.extend(WidgetMethods, {
     if (recording.isConsole()) {
       return;
     }
-    let recordingItem = this.getItemForPredicate(e => e.attachment === recording);
-    let titleNode = $(".recording-item-title", recordingItem.target);
-    titleNode.setAttribute("value", file.leafName.replace(/\..+$/, ""));
-  },
-
-  toString: () => "[object RecordingsView]"
-});
+    const name = file.leafName.replace(/\..+$/, "");
+    this._listState.labels.set(recording, name);
+    this._renderList();
+  }
+};
 
 /**
  * Convenient way of emitting events from the RecordingsView.

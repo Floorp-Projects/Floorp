@@ -14,6 +14,7 @@ const { UI_ENABLE_ALLOCATIONS_PREF } = require("devtools/client/performance/test
 const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
+const { setSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
 
 add_task(function* () {
   let { panel } = yield initPerformanceInNewTab({
@@ -24,7 +25,6 @@ add_task(function* () {
   let {
     EVENTS,
     $,
-    RecordingsView,
     DetailsView,
     WaterfallView,
     MemoryCallTreeView,
@@ -80,7 +80,7 @@ add_task(function* () {
   // Select the first recording with no memory data.
   selected = once(DetailsView, EVENTS.UI_DETAILS_VIEW_SELECTED);
   rendered = once(WaterfallView, EVENTS.UI_WATERFALL_RENDERED);
-  RecordingsView.selectedIndex = 0;
+  setSelectedRecording(panel, 0);
   yield selected;
   yield rendered;
 
@@ -94,7 +94,7 @@ add_task(function* () {
 
   // Go back to the recording with memory data.
   rendered = once(WaterfallView, EVENTS.UI_WATERFALL_RENDERED);
-  RecordingsView.selectedIndex = 1;
+  setSelectedRecording(panel, 1);
   yield rendered;
 
   ok(DetailsView.isViewSelected(WaterfallView),

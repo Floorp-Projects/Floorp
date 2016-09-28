@@ -180,6 +180,16 @@ class TestHeaderChecks(BaseCompileChecks):
             checking for foo.h... yes
         '''))
 
+    def test_check_header_conditional(self):
+        cmd = textwrap.dedent('''\
+            check_headers('foo.h', 'bar.h', when=never)
+        ''')
+
+        config, out, status = self.do_compile_test(cmd)
+        self.assertEqual(status, 0)
+        self.assertEqual(out, '')
+        self.assertEqual(config, {'DEFINES':{}})
+
     def test_check_header_include(self):
         expected_test_content = textwrap.dedent('''\
           #include <std.h>

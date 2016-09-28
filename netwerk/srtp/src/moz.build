@@ -19,7 +19,6 @@ UNIFIED_SOURCES += [
     'crypto/kernel/err.c',
     'crypto/kernel/key.c',
     'crypto/math/datatypes.c',
-    'crypto/math/gf2_8.c',
     'crypto/math/stat.c',
     'crypto/replay/rdb.c',
     'crypto/replay/rdbx.c',

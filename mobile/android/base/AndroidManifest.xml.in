@@ -46,7 +46,10 @@
 
         <!-- This activity handles all incoming Intents and dispatches them to other activities. -->
         <activity android:name="org.mozilla.gecko.LauncherActivity"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:relinquishTaskIdentity="true"
+            android:taskAffinity=""
+            android:excludeFromRecents="true" />
 
         <!-- Fennec is shipped as the Android package named
              org.mozilla.{fennec,firefox,firefox_beta}.  The internal Java

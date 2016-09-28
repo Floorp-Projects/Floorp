@@ -628,9 +628,14 @@ AudioCallbackDriver::Init()
     output.format = CUBEB_SAMPLE_FLOAT32NE;
   }
 
-  if (cubeb_get_min_latency(cubebContext, output, &latency_frames) != CUBEB_OK) {
-    NS_WARNING("Could not get minimal latency from cubeb.");
-    return;
+  Maybe<uint32_t> latencyPref = CubebUtils::GetCubebMSGLatencyInFrames();
+  if (latencyPref) {
+    latency_frames = latencyPref.value();
+  } else {
+    if (cubeb_get_min_latency(cubebContext, output, &latency_frames) != CUBEB_OK) {
+      NS_WARNING("Could not get minimal latency from cubeb.");
+      return;
+    }
   }
 
   input = output;

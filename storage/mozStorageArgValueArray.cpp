@@ -108,7 +108,6 @@ ArgValueArray::GetUTF8String(uint32_t aIndex,
   if (::sqlite3_value_type(mArgv[aIndex]) == SQLITE_NULL) {
     // NULL columns should have IsVoid set to distinguish them from an empty
     // string.
-    _value.Truncate(0);
     _value.SetIsVoid(true);
   }
   else {
@@ -127,7 +126,6 @@ ArgValueArray::GetString(uint32_t aIndex,
   if (::sqlite3_value_type(mArgv[aIndex]) == SQLITE_NULL) {
     // NULL columns should have IsVoid set to distinguish them from an empty
     // string.
-    _value.Truncate(0);
     _value.SetIsVoid(true);
   } else {
     _value.Assign(static_cast<const char16_t *>(::sqlite3_value_text16(mArgv[aIndex])),

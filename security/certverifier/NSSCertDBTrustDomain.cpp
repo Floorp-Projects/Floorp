@@ -15,6 +15,7 @@
 #include "PublicKeyPinningService.h"
 #include "cert.h"
 #include "certdb.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
@@ -73,6 +74,8 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
   , mHostname(hostname)
   , mCertBlocklist(do_GetService(NS_CERTBLOCKLIST_CONTRACTID))
   , mOCSPStaplingStatus(CertVerifier::OCSP_STAPLING_NEVER_CHECKED)
+  , mSCTListFromCertificate()
+  , mSCTListFromOCSPStapling()
 {
 }
 
@@ -963,9 +966,59 @@ NSSCertDBTrustDomain::NetscapeStepUpMatchesServerAuth(Time notBefore,
 }
 
 void
-NSSCertDBTrustDomain::NoteAuxiliaryExtension(AuxiliaryExtension /*extension*/,
-                                             Input /*extensionData*/)
+NSSCertDBTrustDomain::ResetAccumulatedState()
 {
+  mOCSPStaplingStatus = CertVerifier::OCSP_STAPLING_NEVER_CHECKED;
+  mSCTListFromOCSPStapling = nullptr;
+  mSCTListFromCertificate = nullptr;
+}
+
+static Input
+SECItemToInput(const UniqueSECItem& item)
+{
+  Input result;
+  if (item) {
+    MOZ_ASSERT(item->type == siBuffer);
+    Result rv = result.Init(item->data, item->len);
+    // As used here, |item| originally comes from an Input,
+    // so there should be no issues converting it back.
+    MOZ_ASSERT(rv == Success);
+    Unused << rv; // suppresses warnings in release builds
+  }
+  return result;
+}
+
+Input
+NSSCertDBTrustDomain::GetSCTListFromCertificate() const
+{
+  return SECItemToInput(mSCTListFromCertificate);
+}
+
+Input
+NSSCertDBTrustDomain::GetSCTListFromOCSPStapling() const
+{
+  return SECItemToInput(mSCTListFromOCSPStapling);
+}
+
+void
+NSSCertDBTrustDomain::NoteAuxiliaryExtension(AuxiliaryExtension extension,
+                                             Input extensionData)
+{
+  UniqueSECItem* out = nullptr;
+  switch (extension) {
+    case AuxiliaryExtension::EmbeddedSCTList:
+      out = &mSCTListFromCertificate;
+      break;
+    case AuxiliaryExtension::SCTListFromOCSPResponse:
+      out = &mSCTListFromOCSPStapling;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("unhandled AuxiliaryExtension");
+  }
+  if (out) {
+    SECItem extensionDataItem = UnsafeMapInputToSECItem(extensionData);
+    out->reset(SECITEM_DupItem(&extensionDataItem));
+  }
 }
 
 SECStatus

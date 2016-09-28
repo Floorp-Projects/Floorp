@@ -443,10 +443,15 @@ nsNSSSocketInfo::IsAcceptableForHost(const nsACString& hostname, bool* _retval)
   nsAutoCString hostnameFlat(PromiseFlatCString(hostname));
   CertVerifier::Flags flags = CertVerifier::FLAG_LOCAL_ONLY;
   UniqueCERTCertList unusedBuiltChain;
-  SECStatus rv = certVerifier->VerifySSLServerCert(nssCert, nullptr,
+  SECStatus rv = certVerifier->VerifySSLServerCert(nssCert,
+                                                   nullptr, // stapledOCSPResponse
+                                                   nullptr, // sctsFromTLSExtension
                                                    mozilla::pkix::Now(),
-                                                   nullptr, hostnameFlat.get(),
-                                                   unusedBuiltChain, false, flags);
+                                                   nullptr, // pinarg
+                                                   hostnameFlat.get(),
+                                                   unusedBuiltChain,
+                                                   false, // save intermediates
+                                                   flags);
   if (rv != SECSuccess) {
     return NS_OK;
   }
@@ -2509,6 +2514,12 @@ nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
 
   bool enabled = infoObject->SharedState().IsOCSPStaplingEnabled();
   if (SECSuccess != SSL_OptionSet(fd, SSL_ENABLE_OCSP_STAPLING, enabled)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  bool sctsEnabled = infoObject->SharedState().IsSignedCertTimestampsEnabled();
+  if (SECSuccess != SSL_OptionSet(fd, SSL_ENABLE_SIGNED_CERT_TIMESTAMPS,
+      sctsEnabled)) {
     return NS_ERROR_FAILURE;
   }
 

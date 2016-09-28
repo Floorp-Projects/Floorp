@@ -607,6 +607,19 @@ ShouldLoadCachedImage(imgRequest* aImgRequest,
     }
   }
 
+  bool sendPriming = false;
+  bool mixedContentWouldBlock = false;
+  rv = nsMixedContentBlocker::GetHSTSPrimingFromRequestingContext(contentLocation,
+      aLoadingContext, &sendPriming, &mixedContentWouldBlock);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+  if (sendPriming && mixedContentWouldBlock) {
+    // if either of the securty checks above would cause a priming request, we
+    // can't load this image from the cache, so go ahead and return false here
+    return false;
+  }
+
   return true;
 }
 
@@ -716,10 +729,6 @@ NewImageChannel(nsIChannel** aResult,
   }
   securityFlags |= nsILoadInfo::SEC_ALLOW_CHROME;
 
-  if (aRespectPrivacy) {
-    securityFlags |= nsILoadInfo::SEC_FORCE_PRIVATE_BROWSING;
-  }
-
   // Note we are calling NS_NewChannelWithTriggeringPrincipal() here with a
   // node and a principal. This is for things like background images that are
   // specified by user stylesheets, where the document is being styled, but
@@ -750,6 +759,22 @@ NewImageChannel(nsIChannel** aResult,
                        nullptr,   // loadGroup
                        callbacks,
                        aLoadFlags);
+
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    // Use the OriginAttributes from the loading principal, if one is available,
+    // and adjust the private browsing ID based on what kind of load the caller
+    // has asked us to perform.
+    NeckoOriginAttributes neckoAttrs;
+    if (aLoadingPrincipal) {
+      neckoAttrs.InheritFromDocToNecko(BasePrincipal::Cast(aLoadingPrincipal)->OriginAttributesRef());
+    }
+    neckoAttrs.mPrivateBrowsingId = aRespectPrivacy ? 1 : 0;
+
+    nsCOMPtr<nsILoadInfo> loadInfo = (*aResult)->GetLoadInfo();
+    rv = loadInfo->SetOriginAttributes(neckoAttrs);
   }
 
   if (NS_FAILED(rv)) {

@@ -18,13 +18,14 @@
 # - `check_msg` is the message to be printed to accompany compiling the test
 #   program.
 @template
-def try_compile(includes=None, body='', language='C++', flags=None, check_msg=None):
+def try_compile(includes=None, body='', language='C++', flags=None, check_msg=None,
+                when=None):
     compiler = {
         'C': c_compiler,
         'C++': cxx_compiler,
     }[language]
 
-    return compiler.try_compile(includes, body, flags, check_msg)
+    return compiler.try_compile(includes, body, flags, check_msg, when=when)
 
 
 # Checks for the presence of the given header on the target system by compiling
@@ -52,10 +53,8 @@ def check_header(header, language='C++', flags=None, includes=None, when=None):
         includes = []
     includes.append(header)
 
-    @depends_when(try_compile(includes=includes, language=language, flags=flags,
-                              check_msg='for %s' % header), when=when)
-    def have_header(value):
-        return value
+    have_header = try_compile(includes=includes, language=language, flags=flags,
+                              check_msg='for %s' % header, when=when)
     header_var = 'HAVE_%s' % (header.upper()
                                     .replace('-', '_')
                                     .replace('/', '_')
