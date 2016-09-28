@@ -53,10 +53,10 @@ class SelectionManager(object):
 
         '''
         cmd = self.js_selection_cmd() + '''
-              for (let i = 0; i < %d; ++i) {
-                  sel.modify("move", "%s", "character");
-              }
-              ''' % (offset, 'backward' if backward else 'forward')
+              for (let i = 0; i < {0}; ++i) {{
+                  sel.modify("move", "{1}", "character");
+              }}
+              '''.format(offset, 'backward' if backward else 'forward')
 
         self.element.marionette.execute_script(
             cmd, script_args=[self.element], sandbox='system')
@@ -91,7 +91,7 @@ class SelectionManager(object):
 
         '''
         cmd = self.js_selection_cmd() +\
-            '''return sel.getRangeAt(%d).getClientRects();''' % idx
+            '''return sel.getRangeAt({}).getClientRects();'''.format(idx)
         return self.element.marionette.execute_script(cmd,
                                                       script_args=[self.element],
                                                       sandbox='system')
