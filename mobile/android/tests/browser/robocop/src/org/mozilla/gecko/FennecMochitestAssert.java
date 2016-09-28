@@ -68,7 +68,6 @@ public class FennecMochitestAssert implements Assert {
         if (mLogTestName != "") {
             long diff = SystemClock.uptimeMillis() - mStartTime;
             mLogger.testEnd(mLogTestName, "OK", "finished in " + diff + "ms");
-            mLogTestName = "";
         }
     }
 
@@ -135,7 +134,6 @@ public class FennecMochitestAssert implements Assert {
         if (mLogTestName != "") {
             long diff = SystemClock.uptimeMillis() - mStartTime;
             mLogger.testEnd(mLogTestName, "OK", "finished in " + diff + "ms");
-            mLogTestName = "";
         }
 
         mLogger.info("TEST-START | Shutdown");
