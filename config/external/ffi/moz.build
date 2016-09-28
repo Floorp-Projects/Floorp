@@ -4,10 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+FINAL_LIBRARY = 'js'
+
 if CONFIG['MOZ_SYSTEM_FFI']:
     OS_LIBS += CONFIG['MOZ_FFI_LIBS']
 else:
-    FINAL_LIBRARY = 'js'
     ALLOW_COMPILER_WARNINGS = True
     NO_VISIBILITY_FLAGS = True
 
