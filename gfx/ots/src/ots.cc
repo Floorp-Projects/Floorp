@@ -478,17 +478,18 @@ bool ProcessWOFF2(ots::OpenTypeFile *header,
     return OTS_FAILURE_MSG_HDR("Size of decompressed WOFF 2.0 font exceeds 30MB");
   }
 
-  std::vector<uint8_t> decompressed_buffer(decompressed_size);
-  if (!woff2::ConvertWOFF2ToTTF(&decompressed_buffer[0], decompressed_size,
-                                data, length)) {
+  std::string buf(decompressed_size, 0);
+  woff2::WOFF2StringOut out(&buf);
+  if (!woff2::ConvertWOFF2ToTTF(data, length, &out)) {
     return OTS_FAILURE_MSG_HDR("Failed to convert WOFF 2.0 font to SFNT");
   }
+  const uint8_t *decompressed = reinterpret_cast<const uint8_t*>(buf.data());
 
   if (data[4] == 't' && data[5] == 't' && data[6] == 'c' && data[7] == 'f') {
-    return ProcessTTC(header, output, &decompressed_buffer[0], decompressed_size, index);
+    return ProcessTTC(header, output, decompressed, out.Size(), index);
   } else {
     ots::Font font(header);
-    return ProcessTTF(header, &font, output, &decompressed_buffer[0], decompressed_size);
+    return ProcessTTF(header, &font, output, decompressed, out.Size());
   }
 }
 
