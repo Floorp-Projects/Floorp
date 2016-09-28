@@ -14,6 +14,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/ipc/FileDescriptorSetChild.h"
+#include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/HttpChannelChild.h"
 
@@ -2009,9 +2010,12 @@ HttpChannelChild::ContinueAsyncOpen()
   openArgs.requestHeaders() = mClientSetRequestHeaders;
   mRequestHead.Method(openArgs.requestMethod());
 
-  nsTArray<mozilla::ipc::FileDescriptor> fds;
-  SerializeInputStream(mUploadStream, openArgs.uploadStream(), fds);
-
+  AutoIPCStream autoStream(openArgs.uploadStream());
+  if (mUploadStream) {
+    autoStream.Serialize(mUploadStream, ContentChild::GetSingleton());
+    autoStream.TakeOptionalValue();
+  }
+  
   if (mResponseHead) {
     openArgs.synthesizedResponseHead() = *mResponseHead;
     openArgs.suspendAfterSynthesizeResponse() =
@@ -2026,25 +2030,6 @@ HttpChannelChild::ContinueAsyncOpen()
     NS_SerializeToString(secInfoSer, openArgs.synthesizedSecurityInfoSerialization());
   }
 
-  OptionalFileDescriptorSet optionalFDs;
-
-  if (fds.IsEmpty()) {
-    optionalFDs = mozilla::void_t();
-  } else if (fds.Length() <= kMaxFileDescriptorsPerMessage) {
-    optionalFDs = nsTArray<mozilla::ipc::FileDescriptor>();
-    optionalFDs.get_ArrayOfFileDescriptor().SwapElements(fds);
-  } else {
-    MOZ_ASSERT(gNeckoChild->Manager());
-
-    PFileDescriptorSetChild* fdSet =
-      gNeckoChild->Manager()->SendPFileDescriptorSetConstructor(fds[0]);
-    for (uint32_t i = 1; i < fds.Length(); ++i) {
-      Unused << fdSet->SendAddFileDescriptor(fds[i]);
-    }
-
-    optionalFDs = fdSet;
-  }
-
   OptionalCorsPreflightArgs optionalCorsPreflightArgs;
   GetClientSetCorsPreflightParameters(optionalCorsPreflightArgs);
 
@@ -2053,8 +2038,6 @@ HttpChannelChild::ContinueAsyncOpen()
   GetTopWindowURI(getter_AddRefs(uri));
 
   SerializeURI(mTopWindowURI, openArgs.topWindowURI());
-
-  openArgs.fds() = optionalFDs;
 
   openArgs.preflightArgs() = optionalCorsPreflightArgs;
 
@@ -2124,15 +2107,6 @@ HttpChannelChild::ContinueAsyncOpen()
                                                 IPC::SerializedLoadContext(this),
                                                 openArgs)) {
     return NS_ERROR_FAILURE;
-  }
-
-  if (optionalFDs.type() ==
-        OptionalFileDescriptorSet::TPFileDescriptorSetChild) {
-    FileDescriptorSetChild* fdSetActor =
-      static_cast<FileDescriptorSetChild*>(
-        optionalFDs.get_PFileDescriptorSetChild());
-
-    fdSetActor->ForgetFileDescriptors(fds);
   }
 
   return NS_OK;
