@@ -7,13 +7,10 @@ package org.mozilla.gecko;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.LinkedList;
 
 import android.os.SystemClock;
 
 public class FennecMochitestAssert implements Assert {
-    private LinkedList<testInfo> mTestList = new LinkedList<testInfo>();
-
     // Internal state variables to make logging match up with existing mochitests
     private int mPassed = 0;
     private int mFailed = 0;
@@ -146,7 +143,6 @@ public class FennecMochitestAssert implements Assert {
     public void ok(boolean condition, String name, String diag) {
         testInfo test = new testInfo(condition, name, diag, false, false);
         _logMochitestResult(test, "PASS", "PASS", "FAIL", "PASS");
-        mTestList.add(test);
     }
 
     public void is(Object actual, Object expected, String name) {
@@ -203,7 +199,6 @@ public class FennecMochitestAssert implements Assert {
     public void todo(boolean condition, String name, String diag) {
         testInfo test = new testInfo(condition, name, diag, true, false);
         _logMochitestResult(test, "PASS", "FAIL", "FAIL", "FAIL");
-        mTestList.add(test);
     }
 
     public void todo_is(Object actual, Object expected, String name) {
