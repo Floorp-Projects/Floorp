@@ -2899,8 +2899,8 @@ SourceMediaStream::AddDirectTrackListenerImpl(already_AddRefed<DirectMediaStream
                                               TrackID aTrackID)
 {
   MOZ_ASSERT(IsTrackIDExplicit(aTrackID));
-  TrackData* data;
-  bool found = false;
+  TrackData* updateData = nullptr;
+  StreamTracks::Track* track = nullptr;
   bool isAudio = false;
   bool isVideo = false;
   RefPtr<DirectMediaStreamTrackListener> listener = aListener;
@@ -2909,44 +2909,30 @@ SourceMediaStream::AddDirectTrackListenerImpl(already_AddRefed<DirectMediaStream
 
   {
     MutexAutoLock lock(mMutex);
-    data = FindDataForTrack(aTrackID);
-    found = !!data;
-    if (found) {
-      isAudio = data->mData->GetType() == MediaSegment::AUDIO;
-      isVideo = data->mData->GetType() == MediaSegment::VIDEO;
+    updateData = FindDataForTrack(aTrackID);
+    track = FindTrack(aTrackID);
+    if (track) {
+      isAudio = track->GetType() == MediaSegment::AUDIO;
+      isVideo = track->GetType() == MediaSegment::VIDEO;
     }
 
-    // The track might be removed from mUpdateTrack but still exist in
-    // mTracks.
-    auto streamTrack = FindTrack(aTrackID);
-    bool foundTrack = !!streamTrack;
-    if (foundTrack) {
-      MediaStreamVideoSink* videoSink = listener->AsMediaStreamVideoSink();
+    MediaStreamVideoSink* videoSink = listener->AsMediaStreamVideoSink();
+    if (track && isVideo && videoSink) {
       // Re-send missed VideoSegment to new added MediaStreamVideoSink.
-      if (streamTrack->GetType() == MediaSegment::VIDEO && videoSink) {
-        VideoSegment videoSegment;
-        if (mTracks.GetForgottenDuration() < streamTrack->GetSegment()->GetDuration()) {
-          videoSegment.AppendSlice(*streamTrack->GetSegment(),
-                                   mTracks.GetForgottenDuration(),
-                                   streamTrack->GetSegment()->GetDuration());
-        } else {
-          VideoSegment* streamTrackSegment = static_cast<VideoSegment*>(streamTrack->GetSegment());
-          VideoChunk* lastChunk = streamTrackSegment->GetLastChunk();
-          if (lastChunk) {
-            StreamTime startTime = streamTrackSegment->GetDuration() - lastChunk->GetDuration();
-            videoSegment.AppendSlice(*streamTrackSegment,
-                                     startTime,
-                                     streamTrackSegment->GetDuration());
-          }
-        }
-        if (found) {
-          videoSegment.AppendSlice(*data->mData, 0, data->mData->GetDuration());
-        }
-        videoSink->SetCurrentFrames(videoSegment);
+      VideoSegment* trackSegment = static_cast<VideoSegment*>(track->GetSegment());
+      VideoSegment videoSegment;
+      if (mTracks.GetForgottenDuration() < trackSegment->GetDuration()) {
+        videoSegment.AppendSlice(*trackSegment,
+                                 mTracks.GetForgottenDuration(),
+                                 trackSegment->GetDuration());
       }
+      if (updateData) {
+        videoSegment.AppendSlice(*updateData->mData, 0, updateData->mData->GetDuration());
+      }
+      videoSink->SetCurrentFrames(videoSegment);
     }
 
-    if (found && (isAudio || isVideo)) {
+    if (track && (isAudio || isVideo)) {
       for (auto entry : mDirectTrackListeners) {
         if (entry.mListener == listener &&
             (entry.mTrackID == TRACK_ANY || entry.mTrackID == aTrackID)) {
@@ -2962,7 +2948,7 @@ SourceMediaStream::AddDirectTrackListenerImpl(already_AddRefed<DirectMediaStream
       sourceListener->mTrackID = aTrackID;
     }
   }
-  if (!found) {
+  if (!track) {
     STREAM_LOG(LogLevel::Warning, ("Couldn't find source track for direct track listener %p",
                                    listener.get()));
     listener->NotifyDirectListenerInstalled(
@@ -2976,9 +2962,15 @@ SourceMediaStream::AddDirectTrackListenerImpl(already_AddRefed<DirectMediaStream
     MOZ_ASSERT(true);
     return;
   }
-  STREAM_LOG(LogLevel::Debug, ("Added direct track listener %p", listener.get()));
+  STREAM_LOG(LogLevel::Debug, ("Added direct track listener %p. ended=%d",
+                               listener.get(), !updateData));
   listener->NotifyDirectListenerInstalled(
     DirectMediaStreamTrackListener::InstallationResult::SUCCESS);
+  if (!updateData) {
+    // The track exists but the mUpdateTracks entry was removed.
+    // This means that the track has ended.
+    listener->NotifyEnded();
+  }
 }
 
 void
