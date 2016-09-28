@@ -19,7 +19,7 @@
 #include "nsWeakReference.h"
 #include "nsWeakPtr.h"
 #include "nsTArray.h"
-#include "nsIDOMXMLDocument.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMDocumentXBL.h"
 #include "nsStubDocumentObserver.h"
 #include "nsIScriptGlobalObject.h"
@@ -485,16 +485,8 @@ protected:
 };
 
 // Base class for our document implementations.
-//
-// Note that this class *implements* nsIDOMXMLDocument, but it's not
-// really an nsIDOMXMLDocument. The reason for implementing
-// nsIDOMXMLDocument on this class is to avoid having to duplicate all
-// its inherited methods on document classes that *are*
-// nsIDOMXMLDocument's. nsDocument's QI should *not* claim to support
-// nsIDOMXMLDocument unless someone writes a real implementation of
-// the interface.
 class nsDocument : public nsIDocument,
-                   public nsIDOMXMLDocument, // inherits nsIDOMDocument
+                   public nsIDOMDocument,
                    public nsIDOMDocumentXBL,
                    public nsSupportsWeakReference,
                    public nsIScriptObjectPrincipal,
@@ -797,9 +789,6 @@ public:
 
   // nsIDOMDocument
   NS_DECL_NSIDOMDOCUMENT
-
-  // nsIDOMXMLDocument
-  NS_DECL_NSIDOMXMLDOCUMENT
 
   // nsIDOMDocumentXBL
   NS_DECL_NSIDOMDOCUMENTXBL
