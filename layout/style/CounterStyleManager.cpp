@@ -220,7 +220,7 @@ DecimalToText(CounterValue aOrdinal, nsSubstring& aResult)
 // armenian needs 12 at most
 // hebrew may need more...
 
-#define NUM_BUF_SIZE 34 
+#define NUM_BUF_SIZE 34
 
 enum CJKIdeographicLang {
   CHINESE, KOREAN, JAPANESE
@@ -396,7 +396,7 @@ CJKIdeographicToText(CounterValue aOrdinal, nsSubstring& aResult,
 }
 
 #define HEBREW_GERESH       0x05F3
-static const char16_t gHebrewDigit[22] = 
+static const char16_t gHebrewDigit[22] =
 {
   //   1       2       3       4       5       6       7       8       9
   0x05D0, 0x05D1, 0x05D2, 0x05D3, 0x05D4, 0x05D5, 0x05D6, 0x05D7, 0x05D8,
@@ -447,11 +447,11 @@ HebrewToText(CounterValue aOrdinal, nsSubstring& aResult)
       } // if
       n3 -= n2;
     } // if
-  
-    // Process digit for 1 - 9 
+
+    // Process digit for 1 - 9
     if ( n3 > 0)
       thousandsGroup.Append(gHebrewDigit[n3-1]);
-    if (outputSep) 
+    if (outputSep)
       thousandsGroup.Append((char16_t)HEBREW_GERESH);
     if (allText.IsEmpty())
       allText = thousandsGroup;
@@ -640,7 +640,7 @@ BuiltinCounterStyle::GetSuffix(nsSubstring& aResult)
     case NS_STYLE_LIST_STYLE_NONE:
       aResult.Truncate();
       break;
- 
+
     case NS_STYLE_LIST_STYLE_DISC:
     case NS_STYLE_LIST_STYLE_CIRCLE:
     case NS_STYLE_LIST_STYLE_SQUARE:
@@ -947,10 +947,10 @@ BuiltinCounterStyle::GetInitialCounterText(CounterValue aOrdinal,
     case NS_STYLE_LIST_STYLE_KOREAN_HANJA_FORMAL:
       return CJKIdeographicToText(aOrdinal, aResult, gDataKoreanHanjaFormal);
 
-    case NS_STYLE_LIST_STYLE_HEBREW: 
+    case NS_STYLE_LIST_STYLE_HEBREW:
       aIsRTL = true;
       return HebrewToText(aOrdinal, aResult);
- 
+
     case NS_STYLE_LIST_STYLE_ETHIOPIC_NUMERIC:
       return EthiopicToText(aOrdinal, aResult);
 
@@ -966,7 +966,7 @@ private:
   ~DependentBuiltinCounterStyle() {}
 public:
   DependentBuiltinCounterStyle(int32_t aStyle, CounterStyleManager* aManager)
-    : BuiltinCounterStyle(aStyle), 
+    : BuiltinCounterStyle(aStyle),
       mManager(aManager)
   {
     NS_ASSERTION(IsDependentStyle(), "Not a dependent builtin style");
@@ -1145,7 +1145,8 @@ private:
   uint32_t mRuleGeneration;
 
   uint8_t mSystem;
-  uint8_t mSpeakAs;
+  // GetSpeakAs will ensure that private member mSpeakAs is initialized before used
+  MOZ_INIT_OUTSIDE_CTOR uint8_t mSpeakAs;
 
   enum {
     // loop detection
