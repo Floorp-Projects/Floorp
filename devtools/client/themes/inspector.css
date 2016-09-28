@@ -51,7 +51,8 @@ window {
 
 /* Minimum width for the Inspector main (uncontrolled) area. */
 #inspector-splitter-box .uncontrolled {
-  min-width: 275px;
+  min-height: 50px;
+  min-width: 50px;
 }
 
 #inspector-splitter-box .controlled.pane-collapsed {
