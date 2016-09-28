@@ -32,8 +32,9 @@ InProcessWinCompositorWidget::RealWidget()
 void
 InProcessWinCompositorWidget::ObserveVsync(VsyncObserver* aObserver)
 {
-  RefPtr<CompositorVsyncDispatcher> cvd = mWindow->GetCompositorVsyncDispatcher();
-  cvd->SetCompositorVsyncObserver(aObserver);
+  if (RefPtr<CompositorVsyncDispatcher> cvd = mWindow->GetCompositorVsyncDispatcher()) {
+    cvd->SetCompositorVsyncObserver(aObserver);
+  }
 }
 
 } // namespace widget
