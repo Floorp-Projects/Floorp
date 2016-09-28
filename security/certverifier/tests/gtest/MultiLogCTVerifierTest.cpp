@@ -24,6 +24,10 @@ using namespace mozilla::pkix;
 class MultiLogCTVerifierTest : public ::testing::Test
 {
 public:
+  MultiLogCTVerifierTest()
+    : mNow(Time::uninitialized)
+  {}
+
   void SetUp() override
   {
     // Does nothing if NSS is already initialized.
@@ -39,17 +43,17 @@ public:
     mIntermediateCertSPKI = ExtractCertSPKI(mIntermediateCert);
 
     // Set the current time making sure all test timestamps are in the past.
-    mNow = UINT64_MAX;
+    mNow = TimeFromEpochInSeconds(1451606400u); // Date.parse("2016-01-01")/1000
   }
 
   void CheckForSingleVerifiedSCTInResult(const CTVerifyResult& result,
     SignedCertificateTimestamp::Origin origin)
   {
     EXPECT_EQ(0U, result.decodingErrors);
-    EXPECT_TRUE(result.invalidScts.empty());
-    EXPECT_TRUE(result.unknownLogsScts.empty());
-    ASSERT_EQ(1U, result.verifiedScts.length());
-    EXPECT_EQ(origin, result.verifiedScts[0].origin);
+    ASSERT_EQ(1U, result.scts.length());
+    EXPECT_EQ(SignedCertificateTimestamp::VerificationStatus::OK,
+              result.scts[0].verificationStatus);
+    EXPECT_EQ(origin, result.scts[0].origin);
   }
 
   // Writes an SCTList containing a single |sct| into |output|.
@@ -93,7 +97,7 @@ protected:
   Buffer mCaCertSPKI;
   Buffer mIntermediateCert;
   Buffer mIntermediateCertSPKI;
-  uint64_t mNow;
+  Time mNow;
 };
 
 // Test that an embedded SCT can be extracted and the extracted SCT contains
@@ -196,7 +200,9 @@ TEST_F(MultiLogCTVerifierTest, VerifiesSCTFromMultipleSources)
 
   // The result should contain verified SCTs from TLS and OCSP origins.
   EnumSet<SignedCertificateTimestamp::Origin> origins;
-  for (auto& sct : result.verifiedScts) {
+  for (const SignedCertificateTimestamp& sct : result.scts) {
+    EXPECT_EQ(SignedCertificateTimestamp::VerificationStatus::OK,
+              sct.verificationStatus);
     origins += sct.origin;
   }
   EXPECT_FALSE(
@@ -218,8 +224,10 @@ TEST_F(MultiLogCTVerifierTest, IdentifiesSCTFromUnknownLog)
                              Input(), Input(), InputForBuffer(sctList),
                              mNow, result));
 
-  EXPECT_EQ(1U, result.unknownLogsScts.length());
   EXPECT_EQ(0U, result.decodingErrors);
+  ASSERT_EQ(1U, result.scts.length());
+  EXPECT_EQ(SignedCertificateTimestamp::VerificationStatus::UnknownLog,
+            result.scts[0].verificationStatus);
 }
 
 } } // namespace mozilla::ct

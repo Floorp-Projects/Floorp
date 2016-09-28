@@ -318,7 +318,7 @@ var gTests = [
 
     let response = yield readyPromise;
     // We are expecting the iframe to be on the "signup" URL
-    let expected = fxAccounts.getAccountsSignUpURI();
+    let expected = yield fxAccounts.promiseAccountsSignUpURI();
     is(response.data.url, expected);
 
     // and expect no signed in user.

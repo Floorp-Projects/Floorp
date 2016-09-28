@@ -1,0 +1,49 @@
+{
+  "vendors": {
+    "gmp-widevinecdm": {
+      "platforms": {
+        "WINNT_x86-msvc-x64": {
+          "alias": "WINNT_x86-msvc"
+        },
+        "WINNT_x86-msvc": {
+          "fileUrl": "https://redirector.gvt1.com/edgedl/widevine-cdm/903-win-ia32.zip",
+          "hashValue": "d7e10d09c87a157af865f8388ba70ae672bd9e38987bdd94077af52d6b1abaa745b3db92e9f93f607af6420c68210f7cfd518a9d2c99fecf79aed3385cbcbc0b",
+          "filesize": 2884452
+        },
+        "WINNT_x86-msvc-x86": {
+          "alias": "WINNT_x86-msvc"
+        },
+        "Linux_x86_64-gcc3": {
+          "fileUrl": "https://redirector.gvt1.com/edgedl/widevine-cdm/903-linux-x64.zip",
+          "hashValue": "1edfb58a44792d2a53694f46fcc698161edafb2a1fe0e5c31b50c1d52408b5e8918d9f33271c62a19a65017694ebeacb4f390fe914688ca7b1952cdb84ed55ec",
+          "filesize": 2975492
+        },
+        "Darwin_x86_64-gcc3-u-i386-x86_64": {
+          "fileUrl": "https://redirector.gvt1.com/edgedl/widevine-cdm/903-mac-x64.zip",
+          "hashValue": "1916805e84a49e04748204f4e4c48ae52c8312f7c04afedacacd7dfab2de424412bc988a8c3e5bcb0865f8844b569c0eb9589dae51e74d9bdfe46792c9d1631f",
+          "filesize": 2155607
+        },
+        "Darwin_x86_64-gcc3": {
+          "alias": "Darwin_x86_64-gcc3-u-i386-x86_64"
+        },
+        "Linux_x86-gcc3": {
+          "fileUrl": "https://redirector.gvt1.com/edgedl/widevine-cdm/903-linux-ia32.zip",
+          "hashValue": "5c4beb72ea693740a013b60bc5491a042bb82fa5ca6845a2f450579e2e1e465263f19e7ab6d08d91deb8219b30f092ab6e6745300d5adda627f270c95e5a66e0",
+          "filesize": 3084582
+        },
+        "WINNT_x86_64-msvc-x64": {
+          "alias": "WINNT_x86_64-msvc"
+        },
+        "WINNT_x86_64-msvc": {
+          "fileUrl": "https://redirector.gvt1.com/edgedl/widevine-cdm/903-win-x64.zip",
+          "hashValue": "33497f3458846e11fa52413f6477bfe1a7f502da262c3a2ce9fe6d773a4a2d023c54228596eb162444b55c87fb126de01f60fa729d897ef5e6eec73b2dfbdc7a",
+          "filesize": 2853777
+        }
+      },
+      "version": "1.4.8.903"
+    }
+  },
+  "hashFunction": "sha512",
+  "name": "Widevine-1.4.8.903",
+  "schema_version": 1000
+}

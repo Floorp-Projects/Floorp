@@ -7,7 +7,8 @@
 enum DecoderDoctorNotificationType {
   "cannot-play",
   "platform-decoder-not-found",
-  "can-play-but-some-missing-decoders"
+  "can-play-but-some-missing-decoders",
+  "cannot-initialize-pulseaudio",
 };
 
 dictionary DecoderDoctorNotification {

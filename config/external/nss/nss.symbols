@@ -679,6 +679,7 @@ SSL_OptionSet
 SSL_OptionSetDefault
 SSL_PeerCertificate
 SSL_PeerCertificateChain
+SSL_PeerSignedCertTimestamps
 SSL_PeerStapledOCSPResponses
 SSL_ResetHandshake
 SSL_SendAdditionalKeyShares

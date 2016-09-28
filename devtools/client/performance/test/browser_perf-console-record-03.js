@@ -11,6 +11,7 @@ const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
 const { initPerformanceInTab, initConsoleInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 const { waitForRecordingStoppedEvents } = require("devtools/client/performance/test/helpers/actions");
 const { waitUntil } = require("devtools/client/performance/test/helpers/wait-utils");
+const { getSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
 
 add_task(function* () {
   let { target, console } = yield initConsoleInNewTab({
@@ -23,7 +24,7 @@ add_task(function* () {
   yield console.profile("rust2");
 
   let { panel } = yield initPerformanceInTab({ tab: target.tab });
-  let { PerformanceController, RecordingsView, WaterfallView } = panel.panelWin;
+  let { PerformanceController, WaterfallView } = panel.panelWin;
 
   yield waitUntil(() => PerformanceController.getRecordings().length == 2);
   yield waitUntil(() => WaterfallView.wasRenderedAtLeastOnce);
@@ -37,9 +38,10 @@ add_task(function* () {
   is(recordings[1].getLabel(), "rust2", "Correct label in the recording model (2).");
   is(recordings[1].isRecording(), true, "Recording is still recording (2).");
 
-  is(RecordingsView.selectedItem.attachment, recordings[0],
+  const selected = getSelectedRecording(panel);
+  is(selected, recordings[0],
     "The first console recording should be selected.");
-  is(RecordingsView.selectedItem.attachment.getLabel(), "rust",
+  is(selected.getLabel(), "rust",
     "The profile label for the first recording is correct.");
 
   let stopped = waitForRecordingStoppedEvents(panel, {

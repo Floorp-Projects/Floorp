@@ -29,7 +29,6 @@ describe("NetworkEventMessage component:", () => {
       expect(wrapper.find(".message-body .xhr").length).toBe(0);
       expect(wrapper.find(".message-body .url").length).toBe(1);
       expect(wrapper.find(".message-body .url").text()).toBe(EXPECTED_URL);
-      expect(wrapper.find(".message-body .status").length).toBe(1);
       expect(wrapper.find("div.message.cm-s-mozilla span.message-body.devtools-monospace").length).toBe(1);
     });
   });
@@ -43,7 +42,6 @@ describe("NetworkEventMessage component:", () => {
       expect(wrapper.find(".message-body .xhr").length).toBe(1);
       expect(wrapper.find(".message-body .xhr").text()).toBe("XHR");
       expect(wrapper.find(".message-body .url").text()).toBe(EXPECTED_URL);
-      expect(wrapper.find(".message-body .status").length).toBe(1);
       expect(wrapper.find("div.message.cm-s-mozilla span.message-body.devtools-monospace").length).toBe(1);
     });
   });
@@ -58,7 +56,6 @@ describe("NetworkEventMessage component:", () => {
       expect(wrapper.find(".message-body .xhr").text()).toBe("XHR");
       expect(wrapper.find(".message-body .url").length).toBe(1);
       expect(wrapper.find(".message-body .url").text()).toBe(EXPECTED_URL);
-      expect(wrapper.find(".message-body .status").length).toBe(1);
       expect(wrapper.find("div.message.cm-s-mozilla span.message-body.devtools-monospace").length).toBe(1);
     });
   });

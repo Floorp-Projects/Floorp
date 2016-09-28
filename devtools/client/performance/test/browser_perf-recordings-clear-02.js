@@ -11,6 +11,7 @@ const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
 const { initPanelInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 const { times, once } = require("devtools/client/performance/test/helpers/event-utils");
+const { getRecordingsCount } = require("devtools/client/performance/test/helpers/recording-utils");
 
 add_task(function* () {
   let { panel } = yield initPanelInNewTab({
@@ -19,13 +20,13 @@ add_task(function* () {
     win: window
   });
 
-  let { EVENTS, PerformanceController, PerformanceView, RecordingsView } = panel.panelWin;
+  let { EVENTS, PerformanceController, PerformanceView } = panel.panelWin;
 
   yield startRecording(panel);
   yield stopRecording(panel);
 
-  is(RecordingsView.itemCount, 1,
-    "RecordingsView should have one recording.");
+  is(getRecordingsCount(panel), 1,
+    "The recordings list should have one recording.");
   isnot(PerformanceView.getState(), "empty",
     "PerformanceView should not be in an empty state.");
   isnot(PerformanceController.getCurrentRecording(), null,
@@ -33,8 +34,8 @@ add_task(function* () {
 
   yield startRecording(panel);
 
-  is(RecordingsView.itemCount, 2,
-    "RecordingsView should have two recordings.");
+  is(getRecordingsCount(panel), 2,
+    "The recordings list should have two recordings.");
   isnot(PerformanceView.getState(), "empty",
     "PerformanceView should not be in an empty state.");
   isnot(PerformanceController.getCurrentRecording(), null,
@@ -50,8 +51,8 @@ add_task(function* () {
   yield recordingDeleted;
   yield recordingStopped;
 
-  is(RecordingsView.itemCount, 0,
-    "RecordingsView should be empty.");
+  is(getRecordingsCount(panel), 0,
+    "The recordings list should be empty.");
   is(PerformanceView.getState(), "empty",
     "PerformanceView should be in an empty state.");
   is(PerformanceController.getCurrentRecording(), null,
@@ -61,8 +62,8 @@ add_task(function* () {
   yield startRecording(panel);
   yield stopRecording(panel);
 
-  is(RecordingsView.itemCount, 1,
-    "RecordingsView should have one recording.");
+  is(getRecordingsCount(panel), 1,
+    "The recordings list should have one recording.");
 
   yield teardownToolboxAndRemoveTab(panel);
 });

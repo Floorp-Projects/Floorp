@@ -332,6 +332,8 @@ DeveloperToolbar.prototype.createToolbar = function () {
   toolboxBtn.setAttribute("class", "developer-toolbar-button");
   let toolboxTooltip = L10N.getStr("toolbar.toolsButton.tooltip");
   toolboxBtn.setAttribute("tooltiptext", toolboxTooltip);
+  let toolboxOpen = gDevToolsBrowser.hasToolboxOpened(this._chromeWindow);
+  toolboxBtn.setAttribute("checked", toolboxOpen);
   toolboxBtn.addEventListener("command", function (event) {
     let window = event.target.ownerDocument.defaultView;
     gDevToolsBrowser.toggleToolboxCommand(window.gBrowser);
@@ -714,6 +716,8 @@ DeveloperToolbar.prototype.handleEvent = function (ev) {
       });
 
       if (ev.type == "TabSelect") {
+        let toolboxOpen = gDevToolsBrowser.hasToolboxOpened(this._chromeWindow);
+        this._errorCounterButton.setAttribute("checked", toolboxOpen);
         this._initErrorsCount(ev.target);
       }
     }

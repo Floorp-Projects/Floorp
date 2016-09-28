@@ -84,7 +84,9 @@
       <hbox id="recordings-controls">
         <html:div id='recording-controls-mount'/>
       </hbox>
-      <vbox id="recordings-list" class="theme-sidebar" flex="1"/>
+      <vbox id="recordings-list" class="theme-sidebar" flex="1">
+        <html:div id="recording-list-mount"/>
+      </vbox>
     </vbox>
 
     <!-- Main panel content -->

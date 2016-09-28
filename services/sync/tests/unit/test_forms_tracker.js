@@ -40,6 +40,18 @@ function run_test() {
     addEntry("address", "Memory Lane");
     do_check_attribute_count(tracker.changedIDs, 3);
 
+
+    _("Check that ignoreAll is respected");
+    tracker.clearChangedIDs();
+    tracker.score = 0;
+    tracker.ignoreAll = true;
+    addEntry("username", "johndoe123");
+    addEntry("favoritecolor", "green");
+    removeEntry("name", "John Doe");
+    tracker.ignoreAll = false;
+    do_check_empty(tracker.changedIDs);
+    equal(tracker.score, 0);
+
     _("Let's stop tracking again.");
     tracker.clearChangedIDs();
     Svc.Obs.notify("weave:engine:stop-tracking");
@@ -50,6 +62,8 @@ function run_test() {
     Svc.Obs.notify("weave:engine:stop-tracking");
     removeEntry("email", "john@doe.com");
     do_check_empty(tracker.changedIDs);
+
+
 
   } finally {
     _("Clean up.");

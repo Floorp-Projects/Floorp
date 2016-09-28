@@ -11,6 +11,9 @@ const {
   setupStore
 } = require("devtools/client/webconsole/new-console-output/test/helpers");
 const { stubPackets, stubPreparedMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
+const {
+  MESSAGE_TYPE,
+} = require("devtools/client/webconsole/new-console-output/constants");
 
 const expect = require("expect");
 
@@ -116,6 +119,17 @@ describe("Message reducer:", () => {
 
       const messages = getAllMessages(getState());
       expect(messages.size).toBe(0);
+    });
+
+    it("adds console.table call with unsupported type as console.log", () => {
+      const { dispatch, getState } = setupStore([]);
+
+      const packet = stubPackets.get("console.table('bar')");
+      dispatch(actions.messageAdd(packet));
+
+      const messages = getAllMessages(getState());
+      const tableMessage = messages.last();
+      expect(tableMessage.level).toEqual(MESSAGE_TYPE.LOG);
     });
   });
 

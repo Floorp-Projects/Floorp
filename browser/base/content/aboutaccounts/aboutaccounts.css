@@ -9,7 +9,7 @@ html, body {
   display: none;
 }
 
-#networkError, #manage, #intro, #stage {
+#networkError, #manage, #intro, #stage, #configError {
   display: none;
 }
 

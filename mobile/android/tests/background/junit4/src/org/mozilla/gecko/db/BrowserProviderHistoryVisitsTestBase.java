@@ -10,6 +10,7 @@ import android.os.RemoteException;
 
 import org.junit.After;
 import org.junit.Before;
+import org.mozilla.gecko.background.db.DelegatingTestContentProvider;
 import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
 import org.robolectric.shadows.ShadowContentResolver;
 
@@ -28,7 +29,7 @@ public class BrowserProviderHistoryVisitsTestBase {
     public void setUp() throws Exception {
         provider = new BrowserProvider();
         provider.onCreate();
-        ShadowContentResolver.registerProvider(BrowserContract.AUTHORITY_URI.toString(), provider);
+        ShadowContentResolver.registerProvider(BrowserContract.AUTHORITY, new DelegatingTestContentProvider(provider));
 
         contentResolver = new ShadowContentResolver();
         historyClient = contentResolver.acquireContentProviderClient(BrowserContractHelpers.HISTORY_CONTENT_URI);
