@@ -214,6 +214,7 @@ typedef uint8_t DirProp;
 #define SURROGATE_OFFSET ((0xd800<<10UL)+0xdc00-0x10000)
 #define GET_UTF_32(first, second) (((first)<<10UL)+(second)-SURROGATE_OFFSET)
 
+#if !ENABLE_INTL_API // these are provided by ICU if present in the build
 
 #define UTF_ERROR_VALUE 0xffff
 /* definitions with forward iteration --------------------------------------- */
@@ -337,6 +338,8 @@ typedef uint8_t DirProp;
 #define UTF_BACK_1(s, start, i)                      UTF_BACK_1_SAFE(s, start, i)
 #define UTF_BACK_N(s, start, i, n)                   UTF_BACK_N_SAFE(s, start, i, n)
 #define UTF_APPEND_CHAR(s, i, length, c)             UTF_APPEND_CHAR_SAFE(s, i, length, c)
+
+#endif // !ENABLE_INTL_API
 
 struct Isolate {
   int32_t start1;
