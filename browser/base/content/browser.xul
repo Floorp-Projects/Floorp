@@ -766,7 +766,7 @@
                        class="urlbar-icon"
                        hidden="true"
                        tooltiptext="&pageReportIcon.tooltip;"
-                       onclick="gPopupBlockerObserver.onReportButtonClick(event);"/>
+                       onmousedown="gPopupBlockerObserver.onReportButtonMousedown(event);"/>
                 <image id="reader-mode-button"
                        class="urlbar-icon"
                        hidden="true"
