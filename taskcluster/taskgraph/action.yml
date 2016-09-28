@@ -10,6 +10,7 @@ metadata:
 
 workerType: "gecko-decision"
 provisionerId: "aws-provisioner-v1"
+schedulerId: "gecko-level-{{level}}"
 
 tags:
   createdForUser: {{owner}}
