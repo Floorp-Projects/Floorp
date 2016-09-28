@@ -18,6 +18,7 @@ const store = configureStore();
 
 function NewConsoleOutputWrapper(parentNode, jsterm, toolbox, owner) {
   this.parentNode = parentNode;
+  this.parentNode = parentNode;
   this.jsterm = jsterm;
   this.toolbox = toolbox;
   this.owner = owner;
@@ -67,6 +68,12 @@ NewConsoleOutputWrapper.prototype = {
   },
   dispatchMessagesClear: () => {
     store.dispatch(actions.messagesClear());
+  },
+  getLastMessage: function() {
+    // Return the last message in the DOM as the message that was just dispatched. This may not
+    // always be correct in the case of filtered messages, but it's close enough for our tests.
+    let messageNodes = this.parentNode.querySelectorAll(".message");
+    return messageNodes[messageNodes.length - 1]
   },
 };
 
