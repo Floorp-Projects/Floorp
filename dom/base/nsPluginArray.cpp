@@ -329,12 +329,6 @@ operator<(const RefPtr<nsPluginElement>& lhs,
   return lhs->PluginTag()->Name() < rhs->PluginTag()->Name();
 }
 
-static bool
-PluginShouldBeHidden(nsCString aName) {
-  // This only supports one hidden plugin
-  return Preferences::GetCString("plugins.navigator.hidden_ctp_plugin").Equals(aName);
-}
-
 void
 nsPluginArray::EnsurePlugins()
 {
@@ -363,7 +357,8 @@ nsPluginArray::EnsurePlugins()
       if (pluginTag->IsClicktoplay()) {
         nsCString name;
         pluginTag->GetName(name);
-        if (PluginShouldBeHidden(name)) {
+        if (name.EqualsLiteral("Shockwave Flash") &&
+            Preferences::GetBool("plugins.navigator_hide_disabled_flash", false)) {
           RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
           nsCString permString;
           nsresult rv = pluginHost->GetPermissionStringForTag(pluginTag, 0, permString);
@@ -380,12 +375,6 @@ nsPluginArray::EnsurePlugins()
         mCTPPlugins.AppendElement(new nsPluginElement(mWindow, pluginTags[i]));
       }
     }
-  }
-
-  if (mPlugins.Length() == 0 && mCTPPlugins.Length() != 0) {
-    nsCOMPtr<nsPluginTag> hiddenTag = new nsPluginTag("Hidden Plugin", NULL, "dummy.plugin", NULL, NULL,
-                                                      NULL, NULL, NULL, 0, 0, false);
-    mPlugins.AppendElement(new nsPluginElement(mWindow, hiddenTag));
   }
 
   // Alphabetize the enumeration order of non-hidden plugins to reduce
