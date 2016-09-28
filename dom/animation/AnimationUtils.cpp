@@ -6,6 +6,7 @@
 
 #include "AnimationUtils.h"
 
+#include "nsContentUtils.h" // For nsContentUtils::IsCallerChrome
 #include "nsDebug.h"
 #include "nsIAtom.h"
 #include "nsIContent.h"
@@ -63,7 +64,7 @@ AnimationUtils::IsOffscreenThrottlingEnabled()
 }
 
 /* static */ bool
-AnimationUtils::IsCoreAPIEnabled()
+AnimationUtils::IsCoreAPIEnabledForCaller()
 {
   static bool sCoreAPIEnabled;
   static bool sPrefCached = false;
@@ -74,7 +75,7 @@ AnimationUtils::IsCoreAPIEnabled()
                                  "dom.animations-api.core.enabled");
   }
 
-  return sCoreAPIEnabled;
+  return sCoreAPIEnabled || nsContentUtils::IsCallerChrome();
 }
 
 } // namespace mozilla
