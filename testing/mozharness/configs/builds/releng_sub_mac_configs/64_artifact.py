@@ -11,6 +11,7 @@ config = {
         # 'setup-mock',
         'checkout-sources',
         'build',
+        'sendchange',
     ],
     "buildbot_json_path": "buildprops.json",
     'exes': {
@@ -27,7 +28,8 @@ config = {
     'tooltool_bootstrap': "setup.sh",
     'enable_count_ctors': False,
     'enable_talos_sendchange': False,
-    'enable_unittest_sendchange': False,
+    # allows triggering of test jobs when --artifact try syntax is detected on buildbot
+    'enable_unittest_sendchange': True,
     #########################################################################
 
 
