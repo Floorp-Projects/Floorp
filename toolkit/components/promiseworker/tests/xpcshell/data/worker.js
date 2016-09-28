@@ -26,5 +26,9 @@ self.addEventListener("message", msg => worker.handleMessage(msg));
 var Agent = {
   bounce: function(...args) {
     return args;
-  }
+  },
+
+  throwError: function(msg, ...args) {
+     throw new Error(msg);
+  },
 };

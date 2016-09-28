@@ -8,44 +8,14 @@
 #define MultiLogCTVerifier_h
 
 #include "CTLogVerifier.h"
+#include "CTVerifyResult.h"
 #include "mozilla/Vector.h"
 #include "pkix/Input.h"
 #include "pkix/Result.h"
+#include "pkix/Time.h"
 #include "SignedCertificateTimestamp.h"
 
 namespace mozilla { namespace ct {
-
-typedef Vector<SignedCertificateTimestamp> SCTList;
-
-// Holds Signed Certificate Timestamps, arranged by their verification results.
-class CTVerifyResult
-{
-public:
-  // SCTs from known logs where the signature verified correctly.
-  SCTList verifiedScts;
-
-  // SCTs from known logs where the signature failed to verify.
-  SCTList invalidScts;
-
-  // SCTs from unknown logs and as such are unverifiable.
-  SCTList unknownLogsScts;
-
-  // For a certificate to pass Certificate Transparency verification, at least
-  // one of the provided SCTs must validate. The verifier makes the best effort
-  // to extract the available SCTs from the binary sources provided to it.
-  // If some SCT cannot be extracted due to encoding errors, the verifier
-  // proceeds to the next available one. In other words, decoding errors are
-  // effectively ignored.
-  // Note that a serialized SCT may fail to decode for a "legitimate" reason,
-  // e.g. if the SCT is from a future version of the Certificate Transparency
-  // standard.
-  // |decodingErrors| field counts the errors of the above kind.
-  // This field is purely informational; there is probably nothing to do with it
-  // in release builds, but it is useful in unit tests.
-  size_t decodingErrors;
-
-  void Reset();
-};
 
 // A Certificate Transparency verifier that can verify Signed Certificate
 // Timestamps from multiple logs.
@@ -80,9 +50,6 @@ public:
   // |sctListFromTLSExtension|  is the SCT list from the TLS extension. Empty
   //                            if no extension was present.
   // |time|  the current time. Used to make sure SCTs are not in the future.
-  //         Measured in milliseconds since the epoch, ignoring leap seconds
-  //         (same format as used by the "timestamp" field of
-  //         SignedCertificateTimestamp).
   // |result|  will be filled with the SCTs present, divided into categories
   //           based on the verification result.
   pkix::Result Verify(pkix::Input cert,
@@ -90,7 +57,7 @@ public:
                       pkix::Input sctListFromCert,
                       pkix::Input sctListFromOCSPResponse,
                       pkix::Input sctListFromTLSExtension,
-                      uint64_t time,
+                      pkix::Time time,
                       CTVerifyResult& result);
 
 private:
@@ -100,14 +67,14 @@ private:
   pkix::Result VerifySCTs(pkix::Input encodedSctList,
                           const LogEntry& expectedEntry,
                           SignedCertificateTimestamp::Origin origin,
-                          uint64_t time,
+                          pkix::Time time,
                           CTVerifyResult& result);
 
   // Verifies a single, parsed SCT against all known logs.
   // Note: moves |sct| to the target list in |result|, invalidating |sct|.
   pkix::Result VerifySingleSCT(SignedCertificateTimestamp&& sct,
                                const ct::LogEntry& expectedEntry,
-                               uint64_t time,
+                               pkix::Time time,
                                CTVerifyResult& result);
 
   // The list of known logs.

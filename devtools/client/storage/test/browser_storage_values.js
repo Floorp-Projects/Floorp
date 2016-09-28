@@ -42,6 +42,14 @@ const testCases = [
     {name: "c1.2", value: "Object"},
     {name: "c1.2.foo", value: "Bar"},
   ], true],
+  ["c_encoded", [
+    {name: "c_encoded", value: encodeURIComponent(JSON.stringify({foo: {foo1: "bar"}}))}
+  ]],
+  [null, [
+    {name: "c_encoded", value: "Object"},
+    {name: "c_encoded.foo", value: "Object"},
+    {name: "c_encoded.foo.foo1", value: "bar"}
+  ], true],
   [["localStorage", "http://test1.example.org"]],
   ["ls2", [
     {name: "ls2", value: "foobar-2"}

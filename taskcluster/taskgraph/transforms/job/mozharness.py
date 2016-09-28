@@ -187,9 +187,10 @@ def mozharness_on_windows(config, job, taskdesc):
         mh_command.append('--config ' + cfg.replace('/', '\\'))
     mh_command.append('--branch ' + config.params['project'])
     mh_command.append(r'--skip-buildbot-actions --work-dir %cd:Z:=z:%\build')
+    hg = r'c:\Program Files\Mercurial\hg.exe'
     worker['command'] = [
         r'mkdir .\build\src',
-        r'hg share c:\builds\hg-shared\mozilla-central .\build\src',
-        r'hg pull -u -R .\build\src --rev %GECKO_HEAD_REV% %GECKO_HEAD_REPOSITORY%',
+        r'"{}" share c:\builds\hg-shared\mozilla-central .\build\src'.format(hg),
+        r'"{}" pull -u -R .\build\src --rev %GECKO_HEAD_REV% %GECKO_HEAD_REPOSITORY%'.format(hg),
         ' '.join(mh_command),
     ]

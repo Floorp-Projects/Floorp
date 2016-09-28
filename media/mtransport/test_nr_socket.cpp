@@ -691,7 +691,7 @@ void TestNrSocket::socket_readable_callback(void *real_sock_v,
                                              int how,
                                              void *test_sock_v) {
   TestNrSocket *test_socket = static_cast<TestNrSocket*>(test_sock_v);
-  NrSocket *real_socket = static_cast<NrSocket*>(real_sock_v);
+  NrSocketBase *real_socket = static_cast<NrSocketBase*>(real_sock_v);
 
   test_socket->on_socket_readable(real_socket);
 }

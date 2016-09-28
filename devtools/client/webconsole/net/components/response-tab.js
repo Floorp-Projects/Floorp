@@ -105,7 +105,9 @@ var ResponseTab = React.createClass({
         columns: [{id: "value"}],
         object: json,
         mode: "tiny",
-        renderValue: props => Rep(props)
+        renderValue: props => Rep(Object.assign({}, props, {
+          cropLimit: 50,
+        })),
       }),
       name: Locale.$STR("jsonScopeName")
     };

@@ -178,7 +178,7 @@ H264Converter::CreateDecoder(DecoderDoctorDiagnostics* aDiagnostics)
     if (spsdata.chroma_format_idc == 3 /*YUV444*/) {
       mLastError = NS_ERROR_FAILURE;
       if (aDiagnostics) {
-        aDiagnostics->SetVideoFormatNotSupport();
+        aDiagnostics->SetVideoNotSupported();
       }
       return NS_ERROR_FAILURE;
     }

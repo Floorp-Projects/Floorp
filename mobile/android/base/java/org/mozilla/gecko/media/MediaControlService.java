@@ -56,6 +56,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
 
     private static WeakReference<Tab> mTabReference = new WeakReference<>(null);
 
+    private int minCoverSize;
     private int coverSize;
 
     @Override
@@ -127,6 +128,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
         initMediaSession();
 
         coverSize = (int) getResources().getDimension(R.dimen.notification_media_cover);
+        minCoverSize = getResources().getDimensionPixelSize(R.dimen.favicon_bg);
 
         Tabs.registerOnTabsChangedListener(this);
         mInitialize = true;
@@ -379,7 +381,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
         final Bitmap favicon = tab.getFavicon();
 
         // If we do not have a favicon or if it's smaller than 72 pixels then just use the default icon.
-        if (favicon == null || favicon.getWidth() < 72 || favicon.getHeight() < 72) {
+        if (favicon == null || favicon.getWidth() < minCoverSize || favicon.getHeight() < minCoverSize) {
             // Use the launcher icon as fallback
             return BitmapFactory.decodeResource(getResources(), R.drawable.notification_media);
         }
