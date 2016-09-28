@@ -723,3 +723,39 @@ a.learn-more-link.webconsole-learn-more-link {
 .message.network .method {
   margin-inline-end: 5px;
 }
+
+/* console.table() */
+.new-consoletable {
+  width: 100%;
+  border-collapse: collapse;
+  --consoletable-border: 1px solid var(--table-splitter-color);
+}
+
+.new-consoletable thead,
+.new-consoletable tbody {
+  background-color: var(--theme-body-background);
+}
+
+.new-consoletable th {
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
+  margin: 0;
+  padding: 5px 0 0;
+  font-weight: inherit;
+  border-inline-end: var(--consoletable-border);
+  border-bottom: var(--consoletable-border);
+}
+
+.new-consoletable tr:nth-of-type(even) {
+  background-color: var(--table-zebra-background);
+}
+
+.new-consoletable td {
+  padding: 3px 4px;
+  min-width: 100px;
+  -moz-user-focus: normal;
+  color: var(--theme-body-color);
+  border-inline-end: var(--consoletable-border);
+  height: 1.25em;
+  line-height: 1.25em;
+}

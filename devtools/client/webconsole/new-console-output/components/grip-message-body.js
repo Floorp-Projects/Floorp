@@ -41,12 +41,14 @@ function GripMessageBody(props) {
     typeof grip === "string"
       ? StringRep({
         object: grip,
-        useQuotes: false
+        useQuotes: false,
+        mode: props.mode,
       })
       : Rep({
         object: grip,
         objectLink: VariablesViewLink,
-        defaultRep: Grip
+        defaultRep: Grip,
+        mode: props.mode,
       })
   );
 }

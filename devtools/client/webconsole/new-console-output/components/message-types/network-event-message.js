@@ -15,7 +15,7 @@ const {
 const MessageIcon = createFactory(require("devtools/client/webconsole/new-console-output/components/message-icon").MessageIcon);
 const CollapseButton = createFactory(require("devtools/client/webconsole/new-console-output/components/collapse-button").CollapseButton);
 const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
-const actions = require("devtools/client/webconsole/new-console-output/actions/messages");
+const actions = require("devtools/client/webconsole/new-console-output/actions/index");
 
 NetworkEventMessage.displayName = "NetworkEventMessage";
 
@@ -60,17 +60,6 @@ function NetworkEventMessage(props) {
     // @TODO add timestamp
     // @TODO add indent if necessary
     MessageIcon({ level }),
-    CollapseButton({
-      open,
-      title: l10n.getStr("messageToggleDetails"),
-      onClick: () => {
-        if (open) {
-          dispatch(actions.messageClose(message.id));
-        } else {
-          dispatch(actions.messageOpen(message.id));
-        }
-      },
-    }),
     dom.span({
       className: "message-body-wrapper message-body devtools-monospace",
       "aria-haspopup": "true"
@@ -78,8 +67,7 @@ function NetworkEventMessage(props) {
       dom.span({ className: "method" }, method),
       isXHR ? dom.span({ className: "xhr" }, xhr) : null,
       dom.a({ className: "url", title: url, onClick: onUrlClick },
-        url.replace(/\?.+/, "")),
-      dom.a({ className: "status" }, statusInfo)
+        url.replace(/\?.+/, ""))
     )
   );
 }
