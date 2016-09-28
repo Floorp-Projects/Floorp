@@ -6,8 +6,10 @@
 
 #include "vm/Compression.h"
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/ScopeExit.h"
 
 #include "jsutil.h"
 
@@ -229,20 +231,28 @@ js::DecompressStringChunk(const unsigned char* inp, size_t chunk,
     zs.next_out = out;
     MOZ_ASSERT(outlen);
     zs.avail_out = outlen;
+
     int ret = inflateInit2(&zs, WindowBits);
     if (ret != Z_OK) {
         MOZ_ASSERT(ret == Z_MEM_ERROR);
         return false;
     }
+
+    auto autoCleanup = mozilla::MakeScopeExit([&] {
+        mozilla::DebugOnly<int> ret = inflateEnd(&zs);
+        MOZ_ASSERT(ret == Z_OK);
+    });
+
     if (lastChunk) {
         ret = inflate(&zs, Z_FINISH);
-        MOZ_ASSERT(ret == Z_STREAM_END);
+        MOZ_RELEASE_ASSERT(ret == Z_STREAM_END);
     } else {
         ret = inflate(&zs, Z_NO_FLUSH);
-        MOZ_ASSERT(ret == Z_OK);
+        if (ret == Z_MEM_ERROR)
+            return false;
+        MOZ_RELEASE_ASSERT(ret == Z_OK);
     }
     MOZ_ASSERT(zs.avail_in == 0);
-    ret = inflateEnd(&zs);
-    MOZ_ASSERT(ret == Z_OK);
+    MOZ_ASSERT(zs.avail_out == 0);
     return true;
 }
