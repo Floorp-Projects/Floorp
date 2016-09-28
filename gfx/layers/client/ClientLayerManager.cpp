@@ -112,15 +112,8 @@ ClientLayerManager::ClientLayerManager(nsIWidget* aWidget)
 ClientLayerManager::~ClientLayerManager()
 {
   if (mTransactionIdAllocator) {
-    // Make sure to notify the refresh driver just in case it's waiting on a
-    // pending transaction.
-    RefPtr<TransactionIdAllocator> allocator = mTransactionIdAllocator;
-    uint64_t id = mLatestTransactionId;
-
-    RefPtr<Runnable> task = NS_NewRunnableFunction([allocator, id] () -> void {
-      allocator->NotifyTransactionCompleted(id);
-    });
-    NS_DispatchToMainThread(task.forget());
+    TimeStamp now = TimeStamp::Now();
+    DidComposite(mLatestTransactionId, now, now);
   }
   mMemoryPressureObserver->Destroy();
   ClearCachedResources();
