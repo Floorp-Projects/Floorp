@@ -58,7 +58,7 @@ class DummyPrSocket {
 
   DummyPrSocket* peer() const { return peer_; }
   void SetPeer(DummyPrSocket* peer) { peer_ = peer; }
-  void SetPacketFilter(PacketFilter* filter) { filter_ = filter; }
+  void SetPacketFilter(PacketFilter* filter);
   // Drops peer, packet filter and any outstanding packets.
   void Reset();
 

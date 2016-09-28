@@ -260,6 +260,13 @@ static int32_t DummyReserved(PRFileDesc *f) {
 
 DummyPrSocket::~DummyPrSocket() { Reset(); }
 
+void DummyPrSocket::SetPacketFilter(PacketFilter *filter) {
+  if (filter_) {
+    delete filter_;
+  }
+  filter_ = filter;
+}
+
 void DummyPrSocket::Reset() {
   delete filter_;
   if (peer_) {

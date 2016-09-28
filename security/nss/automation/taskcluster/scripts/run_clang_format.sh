@@ -7,17 +7,11 @@ if [ $(id -u) -eq 0 ]; then
     exec su worker $0 "$@"
 fi
 
-# Apply clang-format 3.8 on the provided folder and verify that this doesn't change any file.
+# Apply clang-format on the provided folder and verify that this doesn't change any file.
 # If any file differs after formatting, the script eventually exits with 1.
 # Any differences between formatted and unformatted files is printed to stdout to give a hint what's wrong.
 
 # Includes a default set of directories.
-
-apply=false
-if [ $1 = "--apply" ]; then
-    apply=true
-    shift
-fi
 
 if [ $# -gt 0 ]; then
     dirs=("$@")
@@ -47,15 +41,15 @@ else
     )
 fi
 
-STATUS=0
 for dir in "${dirs[@]}"; do
-    for i in $(find "$dir" -type f \( -name '*.[ch]' -o -name '*.cc' \) -print); do
-        if $apply; then
-            clang-format -i "$i"
-        elif ! clang-format "$i" | diff -Naur "$i" -; then
-            echo "Sorry, $i is not formatted properly. Please use clang-format 3.8 on your patch before landing."
-            STATUS=1
-        fi
-    done
+    find "$dir" -type f \( -name '*.[ch]' -o -name '*.cc' \) -exec clang-format -i {} \+
 done
-exit $STATUS
+
+TMPFILE=$(mktemp /tmp/$(basename $0).XXXXXX)
+trap 'rm $TMPFILE' exit
+if (cd $(dirname $0); hg root >/dev/null 2>&1); then
+    hg diff --git "$top" | tee $TMPFILE
+else
+    git -C "$top" diff | tee $TMPFILE
+fi
+[[ ! -s $TMPFILE ]]
