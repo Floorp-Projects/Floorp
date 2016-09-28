@@ -313,6 +313,102 @@ protected:
     return pairs;
   }
 
+  bool Equals(const SdpFingerprintAttributeList::Fingerprint& f1,
+              const SdpFingerprintAttributeList::Fingerprint& f2) const {
+    if (f1.hashFunc != f2.hashFunc) {
+      return false;
+    }
+
+    if (f1.fingerprint != f2.fingerprint) {
+      return false;
+    }
+
+    return true;
+  }
+
+  bool Equals(const SdpFingerprintAttributeList& f1,
+              const SdpFingerprintAttributeList& f2) const {
+    if (f1.mFingerprints.size() != f2.mFingerprints.size()) {
+      return false;
+    }
+
+    for (size_t i=0; i<f1.mFingerprints.size(); ++i) {
+      if (!Equals(f1.mFingerprints[i], f2.mFingerprints[i])) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  bool Equals(const UniquePtr<JsepDtlsTransport>& t1,
+              const UniquePtr<JsepDtlsTransport>& t2) const {
+    if (!t1 && !t2) {
+      return true;
+    }
+
+    if (!t1 || !t2) {
+      return false;
+    }
+
+    if (!Equals(t1->GetFingerprints(),  t2->GetFingerprints())) {
+      return false;
+    }
+
+    if (t1->GetRole() != t2->GetRole()) {
+      return false;
+    }
+
+    return true;
+  }
+
+
+  bool Equals(const UniquePtr<JsepIceTransport>& t1,
+              const UniquePtr<JsepIceTransport>& t2) const {
+    if (!t1 && !t2) {
+      return true;
+    }
+
+    if (!t1 || !t2) {
+      return false;
+    }
+
+    if (t1->GetUfrag() != t2->GetUfrag()) {
+      return false;
+    }
+
+    if (t1->GetPassword() != t2->GetPassword()) {
+      return false;
+    }
+
+    return true;
+  }
+
+  bool Equals(const RefPtr<JsepTransport>& t1,
+              const RefPtr<JsepTransport>& t2) const {
+    if (!t1 && !t2) {
+      return true;
+    }
+
+    if (!t1 || !t2) {
+      return false;
+    }
+
+    if (t1->mTransportId != t2->mTransportId) {
+      return false;
+    }
+
+    if (t1->mComponents != t2->mComponents) {
+      return false;
+    }
+
+    if (!Equals(t1->mIce, t2->mIce)) {
+      return false;
+    }
+
+    return true;
+  }
+
   bool Equals(const JsepTrackPair& p1,
               const JsepTrackPair& p2) const {
     if (p1.mLevel != p2.mLevel) {
@@ -330,11 +426,11 @@ protected:
       return false;
     }
 
-    if (p1.mRtpTransport.get() != p2.mRtpTransport.get()) {
+    if (!Equals(p1.mRtpTransport, p2.mRtpTransport)) {
       return false;
     }
 
-    if (p1.mRtcpTransport.get() != p2.mRtcpTransport.get()) {
+    if (!Equals(p1.mRtcpTransport, p2.mRtcpTransport)) {
       return false;
     }
 
@@ -1885,8 +1981,10 @@ TEST_P(JsepSessionTest, RenegotiationAnswererEnablesMsid)
               newOffererPairs[i].mReceiving->GetMediaType());
 
     ASSERT_EQ(offererPairs[i].mSending, newOffererPairs[i].mSending);
-    ASSERT_EQ(offererPairs[i].mRtpTransport, newOffererPairs[i].mRtpTransport);
-    ASSERT_EQ(offererPairs[i].mRtcpTransport, newOffererPairs[i].mRtcpTransport);
+    ASSERT_TRUE(Equals(offererPairs[i].mRtpTransport,
+                       newOffererPairs[i].mRtpTransport));
+    ASSERT_TRUE(Equals(offererPairs[i].mRtcpTransport,
+                       newOffererPairs[i].mRtcpTransport));
 
     if (offererPairs[i].mReceiving->GetMediaType() ==
         SdpMediaSection::kApplication) {
@@ -1930,8 +2028,10 @@ TEST_P(JsepSessionTest, RenegotiationAnswererDisablesMsid)
               newOffererPairs[i].mReceiving->GetMediaType());
 
     ASSERT_EQ(offererPairs[i].mSending, newOffererPairs[i].mSending);
-    ASSERT_EQ(offererPairs[i].mRtpTransport, newOffererPairs[i].mRtpTransport);
-    ASSERT_EQ(offererPairs[i].mRtcpTransport, newOffererPairs[i].mRtcpTransport);
+    ASSERT_TRUE(Equals(offererPairs[i].mRtpTransport,
+                       newOffererPairs[i].mRtpTransport));
+    ASSERT_TRUE(Equals(offererPairs[i].mRtcpTransport,
+                       newOffererPairs[i].mRtcpTransport));
 
     if (offererPairs[i].mReceiving->GetMediaType() ==
         SdpMediaSection::kApplication) {
