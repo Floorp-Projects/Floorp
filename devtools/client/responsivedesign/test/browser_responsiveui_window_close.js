@@ -12,7 +12,7 @@ add_task(function* () {
   yield once(newWindow.gBrowser, "load", true);
 
   let tab = newWindow.gBrowser.selectedTab;
-  yield ResponsiveUIManager.runIfNeeded(newWindow, tab);
+  yield ResponsiveUIManager.openIfNeeded(newWindow, tab);
 
   // Close the window on a tab with an active responsive design UI and
   // wait for the UI to gracefully shutdown.  This has leaked the window

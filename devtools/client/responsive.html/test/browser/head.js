@@ -142,7 +142,7 @@ var setViewportSize = Task.async(function* (ui, manager, width, height) {
        `set to: ${width} x ${height}`);
   if (size.width != width || size.height != height) {
     let resized = waitForViewportResizeTo(ui, width, height);
-    ui.setViewportSize(width, height);
+    ui.setViewportSize({ width, height });
     yield resized;
   }
 });

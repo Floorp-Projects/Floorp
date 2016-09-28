@@ -10,9 +10,9 @@ const MEDIA_PREF = "devtools.styleeditor.showMediaSidebar";
 
 const RESIZE = 300;
 const LABELS = ["not all", "all", "(max-width: 400px)",
-                "(min-height: 200px) and (max-height: 250px)",
+                "(min-height: 300px) and (max-height: 320px)",
                 "(max-width: 600px)"];
-const LINE_NOS = [1, 7, 19, 25, 30];
+const LINE_NOS = [1, 7, 19, 25, 31];
 const NEW_RULE = "\n@media (max-width: 600px) { div { color: blue; } }";
 
 waitForExplicitFinish();
