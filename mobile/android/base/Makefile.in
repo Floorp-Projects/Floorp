@@ -402,21 +402,30 @@ all_resources = \
 
 generated/org/mozilla/gecko/R.java: .aapt.deps ;
 
+# Only add libraries that contain resources here. We (unecessarily) generate an identical R.java which
+# is copied into each of these locations, and each of these files contains thousands of fields.
+# Each unnecessary copy therefore wastes unnecessary fields in the output dex file.
+# Note: usually proguard will help clean this up after the fact, but having too many fields will cause
+# dexing to fail, regardless of any later optimisations proguard could later make to bring us back
+# under the limit.
+# Ideally we would fix our aapt invocations to correctly generate minimal copies of R.java for each
+# package, but that seems redundant since gradle builds are able to correctly generate these files.
+
 # If native devices are enabled, add Google Play Services, build their resources
-generated/android/support/v4/R.java: .aapt.deps ;
+# (no resources) generated/android/support/v4/R.java: .aapt.deps ;
 generated/android/support/v7/appcompat/R.java: .aapt.deps ;
 generated/android/support/v7/cardview/R.java: .aapt.deps ;
 generated/android/support/design/R.java: .aapt.deps ;
 generated/android/support/v7/mediarouter/R.java: .aapt.deps ;
 generated/android/support/v7/recyclerview/R.java: .aapt.deps ;
-generated/android/support/customtabs/R.java: .aapt.deps ;
-generated/android/support/v7/palette/R.java: .aapt.deps ;
+# (no resources) generated/android/support/customtabs/R.java: .aapt.deps ;
+# (no resources) generated/android/support/v7/palette/R.java: .aapt.deps ;
 generated/com/google/android/gms/R.java: .aapt.deps ;
 generated/com/google/android/gms/ads/R.java: .aapt.deps ;
 generated/com/google/android/gms/base/R.java: .aapt.deps ;
 generated/com/google/android/gms/cast/R.java: .aapt.deps ;
-generated/com/google/android/gms/gcm/R.java: .aapt.deps ;
-generated/com/google/android/gms/measurement/R.java: .aapt.deps ;
+# (no resources) generated/com/google/android/gms/gcm/R.java: .aapt.deps ;
+# (no resources) generated/com/google/android/gms/measurement/R.java: .aapt.deps ;
 
 gecko.ap_: .aapt.deps ;
 R.txt: .aapt.deps ;
