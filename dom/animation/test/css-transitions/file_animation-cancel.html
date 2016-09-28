@@ -118,7 +118,7 @@ test(function(t) {
 }, 'After cancelling a transition, updating transition properties doesn\'t make'
    + ' it live again');
 
-test(function(t) {
+promise_test(function(t) {
   var div = addDiv(t, { style: 'margin-left: 0px' });
   flushComputedStyle(div);
 
@@ -127,10 +127,38 @@ test(function(t) {
   flushComputedStyle(div);
 
   var animation = div.getAnimations()[0];
-  div.style.display = 'none';
-  assert_equals(animation.playState, 'idle');
-  assert_equals(getComputedStyle(div).marginLeft, '1000px');
+  return animation.ready.then(function() {
+    assert_equals(animation.playState, 'running');
+    div.style.display = 'none';
+    return waitForFrame();
+  }).then(function() {
+    assert_equals(animation.playState, 'idle');
+    assert_equals(getComputedStyle(div).marginLeft, '1000px');
+  });
 }, 'Setting display:none on an element cancels its transitions');
+
+promise_test(function(t) {
+  var parentDiv = addDiv(t);
+  var childDiv = document.createElement('div');
+  parentDiv.appendChild(childDiv);
+  childDiv.setAttribute('style', 'margin-left: 0px');
+
+  flushComputedStyle(childDiv);
+
+  childDiv.style.transition = 'margin-left 100s';
+  childDiv.style.marginLeft = '1000px';
+  flushComputedStyle(childDiv);
+
+  var animation = childDiv.getAnimations()[0];
+  return animation.ready.then(function() {
+    assert_equals(animation.playState, 'running');
+    parentDiv.style.display = 'none';
+    return waitForFrame();
+  }).then(function() {
+    assert_equals(animation.playState, 'idle');
+    assert_equals(getComputedStyle(childDiv).marginLeft, '1000px');
+  });
+}, 'Setting display:none cancels transitions on a child element');
 
 done();
 </script>
