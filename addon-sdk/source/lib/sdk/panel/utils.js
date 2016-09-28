@@ -187,12 +187,14 @@ function display(panel, options, anchor) {
     panel.setAttribute("flip", "both");
   }
 
-  panel.viewFrame = document.importNode(panel.backgroundFrame, false);
-  panel.appendChild(panel.viewFrame);
+  if (!panel.viewFrame) {
+    panel.viewFrame = document.importNode(panel.backgroundFrame, false);
+    panel.appendChild(panel.viewFrame);
 
-  let {privateBrowsingId} = getDocShell(panel.viewFrame).getOriginAttributes();
-  let principal = Services.scriptSecurityManager.createNullPrincipal({privateBrowsingId});
-  getDocShell(panel.viewFrame).createAboutBlankContentViewer(principal);
+    let {privateBrowsingId} = getDocShell(panel.viewFrame).getOriginAttributes();
+    let principal = Services.scriptSecurityManager.createNullPrincipal({privateBrowsingId});
+    getDocShell(panel.viewFrame).createAboutBlankContentViewer(principal);
+  }
 
   // Resize the iframe instead of using panel.sizeTo
   // because sizeTo doesn't work with arrow panels
