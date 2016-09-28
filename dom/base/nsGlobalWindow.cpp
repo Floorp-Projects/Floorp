@@ -622,7 +622,7 @@ nsPIDOMWindow<T>::nsPIDOMWindow(nsPIDOMWindowOuter *aOuterWindow)
   mMediaSuspend(Preferences::GetBool("media.block-autoplay-until-in-foreground", true) ?
     nsISuspendedTypes::SUSPENDED_BLOCK : nsISuspendedTypes::NONE_SUSPENDED),
   mAudioMuted(false), mAudioVolume(1.0), mAudioCaptured(false),
-  mDesktopModeViewport(false), mInnerWindow(nullptr),
+  mDesktopModeViewport(false), mIsRootOuterWindow(false), mInnerWindow(nullptr),
   mOuterWindow(aOuterWindow),
   // Make sure no actual window ends up with mWindowID == 0
   mWindowID(NextWindowID()), mHasNotifiedGlobalCreated(false),
@@ -3067,6 +3067,7 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
     }
     else {
       mChromeEventHandler = NS_NewWindowRoot(AsOuter());
+      mIsRootOuterWindow = true;
     }
   }
 
