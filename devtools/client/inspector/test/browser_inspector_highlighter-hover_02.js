@@ -11,7 +11,7 @@
 const TEST_URL = "data:text/html;charset=utf-8,<p>Select me!</p>";
 
 add_task(function* () {
-  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
+  let {toolbox, inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   info("hover over the <p> line in the markup-view so that it's the " +
        "currently hovered node");
@@ -24,7 +24,7 @@ add_task(function* () {
 
   info("listen to the highlighter's hidden event");
   let onHidden = testActor.waitForHighlighterEvent("hidden",
-    inspector.highlighter);
+    toolbox.highlighter);
   info("mouse-leave the markup-view");
   yield mouseLeaveMarkupView(inspector);
   yield onHidden;

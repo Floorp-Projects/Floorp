@@ -34,7 +34,7 @@ add_task(function* () {
 
   info("Waiting for box mode to show.");
   let body = yield getNodeFront("body", inspector);
-  yield inspector.highlighter.showBoxModel(body);
+  yield toolbox.highlighter.showBoxModel(body);
 
   info("Waiting for element picker to become active.");
   yield startPicker(toolbox);
