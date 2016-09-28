@@ -1270,8 +1270,8 @@ Toolbox.prototype = {
       let built = definition.build(iframe.contentWindow, this);
 
       // Set the dir attribute on the documents of panels using HTML.
-      let docEl = iframe.contentWindow.document.documentElement;
-      if (docEl.namespaceURI === HTML_NS) {
+      let docEl = iframe.contentWindow && iframe.contentWindow.document.documentElement;
+      if (docEl && docEl.namespaceURI === HTML_NS) {
         let top = this.win.top;
         let topDocEl = top.document.documentElement;
         let isRtl = top.getComputedStyle(topDocEl).direction === "rtl";
