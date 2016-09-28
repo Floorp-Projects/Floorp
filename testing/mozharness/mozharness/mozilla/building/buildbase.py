@@ -1951,6 +1951,10 @@ or run without that action (ie: --no-{action})"
 
 
     def sendchange(self):
+        if os.environ.get('TASK_ID'):
+            self.info("We are not running this in buildbot; skipping")
+            return
+
         if self.config.get('enable_talos_sendchange'):
             self._do_sendchange('talos')
         else:
