@@ -189,6 +189,12 @@ ClientLayerManager::CreateReadbackLayer()
 void
 ClientLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
 {
+  MOZ_ASSERT(mForwarder, "ClientLayerManager::BeginTransaction without forwarder");
+  if (!mForwarder->IPCOpen()) {
+    gfxCriticalNote << "ClientLayerManager::BeginTransaction with IPC channel down. GPU process may have died.";
+    return;
+  }
+
   mInTransaction = true;
   mTransactionStart = TimeStamp::Now();
 
