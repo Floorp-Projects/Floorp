@@ -6,7 +6,7 @@
 
 #include "nsIContentSniffer.h"
 #include "nsIStreamListener.h"
-#include "nsStringAPI.h"
+#include "nsString.h"
 #include "mozilla/Attributes.h"
 
 class nsFeedSniffer final : public nsIContentSniffer,

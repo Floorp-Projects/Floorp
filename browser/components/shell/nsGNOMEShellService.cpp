@@ -14,7 +14,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsIPrefService.h"
 #include "prenv.h"
-#include "nsStringAPI.h"
+#include "nsString.h"
 #include "nsIGConfService.h"
 #include "nsIGIOService.h"
 #include "nsIGSettingsService.h"
@@ -70,16 +70,16 @@ static const MimeTypeAssociation appTypes[] = {
 // GConf registry key constants
 #define DG_BACKGROUND "/desktop/gnome/background"
 
-static const char kDesktopImageKey[] = DG_BACKGROUND "/picture_filename";
-static const char kDesktopOptionsKey[] = DG_BACKGROUND "/picture_options";
-static const char kDesktopDrawBGKey[] = DG_BACKGROUND "/draw_background";
-static const char kDesktopColorKey[] = DG_BACKGROUND "/primary_color";
+#define kDesktopImageKey DG_BACKGROUND "/picture_filename"
+#define kDesktopOptionsKey DG_BACKGROUND "/picture_options"
+#define kDesktopDrawBGKey DG_BACKGROUND "/draw_background"
+#define kDesktopColorKey DG_BACKGROUND "/primary_color"
 
-static const char kDesktopBGSchema[] = "org.gnome.desktop.background";
-static const char kDesktopImageGSKey[] = "picture-uri";
-static const char kDesktopOptionGSKey[] = "picture-options";
-static const char kDesktopDrawBGGSKey[] = "draw-background";
-static const char kDesktopColorGSKey[] = "primary-color";
+#define kDesktopBGSchema "org.gnome.desktop.background"
+#define kDesktopImageGSKey "picture-uri"
+#define kDesktopOptionGSKey "picture-options"
+#define kDesktopDrawBGGSKey "draw-background"
+#define kDesktopColorGSKey "primary-color"
 
 nsresult
 nsGNOMEShellService::Init()
@@ -508,7 +508,8 @@ static void
 ColorToCString(uint32_t aColor, nsCString& aResult)
 {
   // The #rrrrggggbbbb format is used to match gdk_color_to_string()
-  char *buf = aResult.BeginWriting(13);
+  aResult.SetLength(13);
+  char *buf = aResult.BeginWriting();
   if (!buf)
     return;
 

@@ -185,9 +185,15 @@ IsDocumentElement(const char *start, const char* end)
 static bool
 ContainsTopLevelSubstring(nsACString& dataString, const char *substring) 
 {
-  int32_t offset = dataString.Find(substring);
-  if (offset == -1)
+  nsACString::const_iterator start, end;
+  dataString.BeginReading(start);
+  dataString.EndReading(end);
+
+  if (!FindInReadable(nsCString(substring), start, end)){
     return false;
+  }
+
+  auto offset = start.get() - dataString.Data();
 
   const char *begin = dataString.BeginReading();
 
@@ -312,9 +318,10 @@ nsFeedSniffer::GetMIMETypeFromContent(nsIRequest* request,
 
   // RSS 1.0
   if (!isFeed) {
+    bool foundNS_RDF = FindInReadable(NS_LITERAL_CSTRING(NS_RDF), dataString);
+    bool foundNS_RSS = FindInReadable(NS_LITERAL_CSTRING(NS_RSS), dataString);
     isFeed = ContainsTopLevelSubstring(dataString, "<rdf:RDF") &&
-      dataString.Find(NS_RDF) != -1 &&
-      dataString.Find(NS_RSS) != -1;
+      foundNS_RDF && foundNS_RSS;
   }
 
   // If we sniffed a feed, coerce our internal type

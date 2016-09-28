@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1280590 - xpcshell failure in windows7
+Bug 1302855 changed build system to fold browsercomps into xul

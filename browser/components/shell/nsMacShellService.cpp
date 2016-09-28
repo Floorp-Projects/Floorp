@@ -20,7 +20,7 @@
 #include "nsIProperties.h"
 #include "nsServiceManagerUtils.h"
 #include "nsShellService.h"
-#include "nsStringAPI.h"
+#include "nsString.h"
 #include "nsIDocShell.h"
 #include "nsILoadContext.h"
 
