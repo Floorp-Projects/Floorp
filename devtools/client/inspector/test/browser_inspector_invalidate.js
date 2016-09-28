@@ -15,7 +15,7 @@ add_task(function* () {
   let divFront = yield getNodeFront("div", inspector);
 
   info("Waiting for highlighter to activate");
-  yield inspector.highlighter.showBoxModel(divFront);
+  yield inspector.toolbox.highlighter.showBoxModel(divFront);
 
   let rect = yield testActor.getSimpleBorderRect();
   is(rect.width, 100, "The highlighter has the right width.");
@@ -31,5 +31,5 @@ add_task(function* () {
   is(rect.width, 200, "The highlighter has the right width after update");
 
   info("Waiting for highlighter to hide");
-  yield inspector.highlighter.hideBoxModel();
+  yield inspector.toolbox.highlighter.hideBoxModel();
 });

@@ -341,10 +341,10 @@ BoxModelView.prototype = {
    */
   trackReflows: function () {
     if (!this.reflowFront) {
-      let { target } = this.inspector;
-      if (target.form.reflowActor) {
-        this.reflowFront = ReflowFront(target.client,
-                                       target.form);
+      let toolbox = this.inspector.toolbox;
+      if (toolbox.target.form.reflowActor) {
+        this.reflowFront = ReflowFront(toolbox.target.client,
+                                       toolbox.target.form);
       } else {
         return;
       }
@@ -468,7 +468,7 @@ BoxModelView.prototype = {
     this.inspector.sidebar.off("computedview-selected", this.onNewNode);
     this.inspector.selection.off("new-node-front", this.onNewSelection);
     this.inspector.sidebar.off("select", this.onSidebarSelect);
-    this.inspector.target.off("will-navigate", this.onWillNavigate);
+    this.inspector._target.off("will-navigate", this.onWillNavigate);
     this.inspector.off("computed-view-filtered", this.onFilterComputedView);
 
     this.inspector = null;
@@ -792,7 +792,7 @@ BoxModelView.prototype = {
         this.inspector.markup.on("node-hover", this.onMarkupViewNodeHover);
 
         // Release the actor on will-navigate event
-        this.inspector.target.once("will-navigate", this.onWillNavigate);
+        this.inspector._target.once("will-navigate", this.onWillNavigate);
       });
   },
 

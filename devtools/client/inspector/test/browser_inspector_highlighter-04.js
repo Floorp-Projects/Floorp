@@ -27,11 +27,11 @@ const ELEMENTS = ["box-model-root",
                   "box-model-infobar-dimensions"];
 
 add_task(function* () {
-  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
+  let {inspector, toolbox, testActor} = yield openInspectorForURL(TEST_URL);
 
   info("Show the box-model highlighter");
   let divFront = yield getNodeFront("div", inspector);
-  yield inspector.highlighter.showBoxModel(divFront);
+  yield toolbox.highlighter.showBoxModel(divFront);
 
   for (let id of ELEMENTS) {
     let foundId = yield testActor.getHighlighterNodeAttribute(id, "id");
@@ -39,5 +39,5 @@ add_task(function* () {
   }
 
   info("Hide the box-model highlighter");
-  yield inspector.highlighter.hideBoxModel();
+  yield toolbox.highlighter.hideBoxModel();
 });
