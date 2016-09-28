@@ -106,8 +106,10 @@ exports.close = close
 function resize(panel, width, height) {
   // Resize the iframe instead of using panel.sizeTo
   // because sizeTo doesn't work with arrow panels
-  panel.firstChild.style.width = width + "px";
-  panel.firstChild.style.height = height + "px";
+  if (panel.firstChild) {
+    panel.firstChild.style.width = width + "px";
+    panel.firstChild.style.height = height + "px";
+  }
 }
 exports.resize = resize
 
