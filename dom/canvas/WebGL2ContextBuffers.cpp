@@ -68,8 +68,8 @@ WebGL2Context::CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
         MOZ_ASSERT((CheckedInt<WebGLsizeiptr>(readOffset) + size).isValid());
         MOZ_ASSERT((CheckedInt<WebGLsizeiptr>(writeOffset) + size).isValid());
 
-        const bool separate = (readOffset + size < writeOffset ||
-                               writeOffset + size < readOffset);
+        const bool separate = (readOffset + size <= writeOffset ||
+                               writeOffset + size <= readOffset);
         if (!separate) {
             ErrorInvalidValue("%s: ranges [readOffset, readOffset + size) and"
                               " [writeOffset, writeOffset + size) overlap",
