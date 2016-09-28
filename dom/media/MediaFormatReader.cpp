@@ -72,7 +72,6 @@ MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
   , mPreviousDecodedKeyframeTime_us(sNoPreviousDecodedKeyframe)
   , mLayersBackendType(aLayersBackend)
   , mInitDone(false)
-  , mIsEncrypted(false)
   , mTrackDemuxersMayBlock(false)
   , mDemuxOnly(false)
   , mSeekScheduled(false)
@@ -337,9 +336,6 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
   }
 
   UniquePtr<EncryptionInfo> crypto = mDemuxer->GetCrypto();
-
-  mIsEncrypted = crypto && crypto->IsEncrypted();
-
   if (mDecoder && crypto && crypto->IsEncrypted()) {
 #ifdef MOZ_EME
     // Try and dispatch 'encrypted'. Won't go if ready state still HAVE_NOTHING.
@@ -373,6 +369,13 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
   metadata->mInfo = mInfo;
   metadata->mTags = tags->Count() ? tags.release() : nullptr;
   mMetadataPromise.Resolve(metadata, __func__);
+}
+
+bool
+MediaFormatReader::IsEncrypted() const
+{
+  return (HasAudio() && mInfo.mAudio.mCrypto.mValid) ||
+         (HasVideo() && mInfo.mVideo.mCrypto.mValid);
 }
 
 void
