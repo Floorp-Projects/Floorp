@@ -149,7 +149,6 @@
 @RESPATH@/browser/components/prebuilt-interfaces.manifest
 @RESPATH@/browser/components/interfaces.xpt
 #endif
-@RESPATH@/browser/components/components.manifest
 @RESPATH@/components/alerts.xpt
 #ifdef ACCESSIBILITY
 #ifdef XP_WIN32
@@ -445,7 +444,6 @@
 @RESPATH@/browser/components/nsSessionStore.js
 @RESPATH@/components/nsURLFormatter.manifest
 @RESPATH@/components/nsURLFormatter.js
-@RESPATH@/browser/components/@DLL_PREFIX@browsercomps@DLL_SUFFIX@
 @RESPATH@/components/txEXSLTRegExFunctions.manifest
 @RESPATH@/components/txEXSLTRegExFunctions.js
 @RESPATH@/components/toolkitplaces.manifest
