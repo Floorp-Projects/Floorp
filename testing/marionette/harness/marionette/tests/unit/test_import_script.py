@@ -37,16 +37,16 @@ class TestImportScriptContent(MarionetteTestCase):
 
     def is_defined(self, symbol):
         return self.marionette.execute_script(
-            "return typeof %s != 'undefined'" % symbol)
+            "return typeof {} != 'undefined'".format(symbol))
 
     def assert_defined(self, symbol, msg=None):
         if msg is None:
-            msg = "Expected symbol %s to be defined" % symbol
+            msg = "Expected symbol {} to be defined".format(symbol)
         self.assertTrue(self.is_defined(symbol), msg)
 
     def assert_undefined(self, symbol, msg=None):
         if msg is None:
-            msg = "Expected symbol %s to be undefined" % symbol
+            msg = "Expected symbol {} to be undefined".format(symbol)
         self.assertFalse(self.is_defined(symbol), msg)
 
     def assert_scripts_cleared(self):
@@ -110,14 +110,14 @@ class TestImportScriptContent(MarionetteTestCase):
         self.marionette.find_element(By.LINK_TEXT, "Open new window").click()
 
         windows = set(self.marionette.window_handles)
-        print "windows=%s" % windows
+        print "windows={}".format(windows)
         new_window = windows.difference([original_window]).pop()
         self.marionette.switch_to_window(new_window)
 
         self.marionette.import_script(self.script_file)
         self.marionette.close()
 
-        print "switching to original window: %s" % original_window
+        print "switching to original window: {}".format(original_window)
         self.marionette.switch_to_window(original_window)
         self.assert_defined("testFunc")
 

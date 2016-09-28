@@ -9,7 +9,7 @@ from marionette_driver.by import By
 
 
 def inline(doc):
-    return "data:text/html;charset=utf-8,%s" % urllib.quote(doc)
+    return "data:text/html;charset=utf-8,{}".format(urllib.quote(doc))
 
 
 class SelectTestCase(MarionetteTestCase):

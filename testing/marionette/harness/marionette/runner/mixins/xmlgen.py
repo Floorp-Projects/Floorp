@@ -72,7 +72,7 @@ class Tag(list):
 
     def __repr__(self):
         name = self.__class__.__name__
-        return "<%r tag object %d>" % (name, id(self))
+        return "<{0!r} tag object {1}>".format(name, id(self))
 
 Namespace = NamespaceMetaclass('Namespace', (object, ), {
     '__tagspec__': None,
@@ -169,19 +169,19 @@ class SimpleUnicodeVisitor(object):
             self.write("\n" + u(' ') * self.curindent)
         if tag:
             self.curindent += self.indent
-            self.write(u('<%s%s>') % (tagname, self.attributes(tag)))
+            self.write(u('<{0}{1}>').format(tagname, self.attributes(tag)))
             self.parents.append(tag)
             for x in tag:
                 self.visit(x)
             self.parents.pop()
-            self.write(u('</%s>') % tagname)
+            self.write(u('</{}>').format(tagname))
             self.curindent -= self.indent
         else:
             nameattr = tagname+self.attributes(tag)
             if self._issingleton(tagname):
-                self.write(u('<%s/>') % (nameattr,))
+                self.write(u('<{}/>').format(nameattr))
             else:
-                self.write(u('<%s></%s>') % (nameattr, tagname))
+                self.write(u('<{0}></{1}>').format(nameattr, tagname))
 
     def attributes(self, tag):
         # serialize attributes
@@ -204,7 +204,7 @@ class SimpleUnicodeVisitor(object):
                 insert = value.uniobj
             else:
                 insert = escape(unicode(value))
-            return ' %s="%s"' % (name, insert)
+            return ' {0}="{1}"'.format(name, insert)
 
     def getstyle(self, tag):
         """ return attribute list suitable for styling. """
@@ -214,7 +214,7 @@ class SimpleUnicodeVisitor(object):
             return []
         else:
             stylelist = [x+': ' + y for x,y in styledict.items()]
-            return [u(' style="%s"') % u('; ').join(stylelist)]
+            return [u(' style="{}"').format(u('; ').join(stylelist))]
 
     def _issingleton(self, tagname):
         """can (and will) be overridden in subclasses"""

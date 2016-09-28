@@ -15,7 +15,7 @@ class PingHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         s.wfile.write("<html>")
         s.wfile.write("  <head><title>Success</title></head>")
         s.wfile.write("  <body>")
-        s.wfile.write("    <p>The server is working correctly. Firefox should send a POST request on port %d</p>" % self.server.port)
+        s.wfile.write("    <p>The server is working correctly. Firefox should send a POST request on port {}</p>".format(self.server.port))
         s.wfile.write("  </body>")
         s.wfile.write("</html>")
 

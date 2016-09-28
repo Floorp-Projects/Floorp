@@ -11,13 +11,13 @@ from marionette import marionette_test
 
 
 def inline(doc):
-    return "data:text/html;charset=utf-8,%s" % urllib.quote(doc)
+    return "data:text/html;charset=utf-8,{}".format(urllib.quote(doc))
 
 static_element = inline("""<p>foo</p>""")
 static_elements = static_element + static_element
 
 remove_element_by_tag_name = \
-    """var el = document.getElementsByTagName('%s')[0];
+    """var el = document.getElementsByTagName('{}')[0];
     document.getElementsByTagName("body")[0].remove(el);"""
 
 hidden_element = inline("<p style='display: none'>hidden</p>")
@@ -76,7 +76,7 @@ class TestExpected(marionette_test.MarionetteTestCase):
         self.marionette.navigate(static_element)
         el = self.marionette.find_element(By.TAG_NAME, "p")
         self.assertIsNotNone(el)
-        self.marionette.execute_script(remove_element_by_tag_name % "p")
+        self.marionette.execute_script(remove_element_by_tag_name.format("p"))
         r = expected.element_stale(el)(self.marionette)
         self.assertTrue(r)
 

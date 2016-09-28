@@ -12,7 +12,7 @@ class FixtureServer(object):
 
     def __init__(self, root, host="127.0.0.1", port=0):
         if not os.path.isdir(root):
-            raise IOError("Server root is not a valid path: %s" % root)
+            raise IOError("Server root is not a valid path: {}".format(root))
         self.root = root
         self.host = host
         self.port = port
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     here = os.path.abspath(os.path.dirname(__file__))
     doc_root = os.path.join(os.path.dirname(here), "www")
     httpd = FixtureServer(doc_root, port=2829)
-    print "Started fixture server on http://%s:%d/" % (httpd.host, httpd.port)
+    print "Started fixture server on http://{0}:{1}/".format(httpd.host, httpd.port)
     try:
         httpd.start(True)
     except KeyboardInterrupt:

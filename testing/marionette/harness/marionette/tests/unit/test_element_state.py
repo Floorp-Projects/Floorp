@@ -34,9 +34,9 @@ boolean_attributes = {
 
 def inline(doc, doctype="html"):
     if doctype == "html":
-        return "data:text/html;charset=utf-8,%s" % urllib.quote(doc)
+        return "data:text/html;charset=utf-8,{}".format(urllib.quote(doc))
     elif doctype == "xhtml":
-        return "data:application/xhtml+xml,%s" % urllib.quote(
+        return "data:application/xhtml+xml,{}".format(urllib.quote(
 r"""<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
@@ -45,9 +45,9 @@ r"""<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
   </head>
 
   <body>
-    %s
+    {}
   </body>
-</html>""" % doc)
+</html>""".format(doc)))
 
 
 attribute = inline("<input foo=bar>")
@@ -87,8 +87,8 @@ class TestGetElementAttribute(MarionetteTestCase):
     def test_boolean_attributes(self):
         for tag, attrs in boolean_attributes.iteritems():
             for attr in attrs:
-                print("testing boolean attribute <%s %s>" % (tag, attr))
-                doc = inline("<%s %s>" % (tag, attr))
+                print("testing boolean attribute <{0} {1}>".format(tag, attr))
+                doc = inline("<{0} {1}>".format(tag, attr))
                 self.marionette.navigate(doc)
                 el = self.marionette.find_element(By.TAG_NAME, tag)
                 res = el.get_attribute(attr)

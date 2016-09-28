@@ -47,7 +47,7 @@ class TestMessageSequencing(MarionetteTestCase):
 class MessageTestCase(MarionetteTestCase):
     def assert_attr(self, obj, attr):
         self.assertTrue(hasattr(obj, attr),
-                        "object does not have attribute %s" % attr)
+                        "object does not have attribute {}".format(attr))
 
 
 class TestCommand(MessageTestCase):

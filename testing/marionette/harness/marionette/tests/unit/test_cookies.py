@@ -48,15 +48,15 @@ class CookieTest(MarionetteTestCase):
         self.assertFalse(self.COOKIE_A["name"] in cookie_returned)
 
     def test_should_get_cookie_by_name(self):
-        key = "key_%d" % int(random.random()*10000000)
+        key = "key_{}".format(int(random.random()*10000000))
         self.marionette.execute_script("document.cookie = arguments[0] + '=set';", [key])
 
         cookie = self.marionette.get_cookie(key)
         self.assertEquals("set", cookie["value"])
 
     def test_get_all_cookies(self):
-        key1 = "key_%d" % int(random.random()*10000000)
-        key2 = "key_%d" % int(random.random()*10000000)
+        key1 = "key_{}".format(int(random.random()*10000000))
+        key2 = "key_{}".format(int(random.random()*10000000))
 
         cookies = self.marionette.get_cookies()
         count = len(cookies)
