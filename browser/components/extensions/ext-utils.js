@@ -706,9 +706,6 @@ ExtensionTabManager.prototype = {
       audible: tab.soundPlaying,
       mutedInfo,
     };
-    if (this.extension.hasPermission("cookies")) {
-      result.cookieStoreId = getCookieStoreIdForTab(result);
-    }
 
     if (this.hasTabPermission(tab)) {
       result.url = browser.currentURI.spec;

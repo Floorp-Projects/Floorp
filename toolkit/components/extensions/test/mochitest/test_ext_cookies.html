@@ -30,7 +30,6 @@ add_task(function* test_cookies() {
     const TEST_URL_WITH_PATH = TEST_URL + TEST_PATH;
     const TEST_COOKIE_PATH = `/${TEST_PATH}`;
     const STORE_ID = "firefox-default";
-    const PRIVATE_STORE_ID = "firefox-private";
 
     let expected = {
       name: "name1",
@@ -85,18 +84,7 @@ add_task(function* test_cookies() {
     }).then(stores => {
       browser.test.assertEq(1, stores.length, "expected number of stores returned");
       browser.test.assertEq(STORE_ID, stores[0].id, "expected store id returned");
-      browser.test.assertEq(1, stores[0].tabIds.length, "one tab returned for store");
-      return browser.windows.create({incognito: true});
-    }).then(privateWindow => {
-      return browser.cookies.getAllCookieStores().then(stores => {
-        browser.test.assertEq(2, stores.length, "expected number of stores returned");
-        browser.test.assertEq(STORE_ID, stores[0].id, "expected store id returned");
-        browser.test.assertEq(1, stores[0].tabIds.length, "one tab returned for store");
-        browser.test.assertEq(PRIVATE_STORE_ID, stores[1].id, "expected private store id returned");
-        browser.test.assertEq(1, stores[0].tabIds.length, "one tab returned for private store");
-        return browser.windows.remove(privateWindow.id);
-      });
-    }).then(() => {
+      browser.test.assertEq(0, stores[0].tabIds.length, "no tabs returned for store"); // Todo: Implement this.
       return browser.cookies.set({url: TEST_URL, name: "name2", domain: ".example.org", expirationDate: THE_FUTURE});
     }).then(cookie => {
       browser.test.assertEq(false, cookie.hostOnly, "cookie is not a hostOnly cookie");
@@ -175,34 +163,6 @@ add_task(function* test_cookies() {
       browser.test.assertEq("", cookie.name, "default name set");
       browser.test.assertEq("", cookie.value, "default value set");
       browser.test.assertEq(true, cookie.session, "no expiry date created session cookie");
-      return browser.windows.create({incognito: true});
-    }).then(privateWindow => {
-      return browser.cookies.set({url: TEST_URL, name: "store", value: "private", expirationDate: THE_FUTURE, storeId: PRIVATE_STORE_ID}).then(cookie => {
-        return browser.cookies.set({url: TEST_URL, name: "store", value: "default", expirationDate: THE_FUTURE, storeId: STORE_ID});
-      }).then(cookie => {
-        return browser.cookies.get({url: TEST_URL, name: "store", storeId: PRIVATE_STORE_ID});
-      }).then(cookie => {
-        browser.test.assertEq("private", cookie.value, "get the private cookie");
-        browser.test.assertEq(PRIVATE_STORE_ID, cookie.storeId, "get the private cookie storeId");
-        return browser.cookies.get({url: TEST_URL, name: "store", storeId: STORE_ID});
-      }).then(cookie => {
-        browser.test.assertEq("default", cookie.value, "get the default cookie");
-        browser.test.assertEq(STORE_ID, cookie.storeId, "get the default cookie storeId");
-        return browser.cookies.remove({url: TEST_URL, name: "store", storeId: STORE_ID});
-      }).then(details => {
-        assertExpected({url: TEST_URL, name: "store", storeId: STORE_ID}, details);
-        return browser.cookies.get({url: TEST_URL, name: "store", storeId: STORE_ID});
-      }).then(cookie => {
-        browser.test.assertEq(null, cookie, "deleted the default cookie");
-        return browser.cookies.remove({url: TEST_URL, name: "store", storeId: PRIVATE_STORE_ID});
-      }).then(details => {
-        assertExpected({url: TEST_URL, name: "store", storeId: PRIVATE_STORE_ID}, details);
-        return browser.cookies.get({url: TEST_URL, name: "store", storeId: PRIVATE_STORE_ID});
-      }).then(cookie => {
-        browser.test.assertEq(null, cookie, "deleted the private cookie");
-        return browser.windows.remove(privateWindow.id);
-      });
-    }).then(() => {
       browser.test.notifyPass("cookies");
     });
   }
