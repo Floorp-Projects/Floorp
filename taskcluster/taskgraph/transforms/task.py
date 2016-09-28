@@ -104,8 +104,6 @@ task_description_schema = Schema({
                 Required('gecko-v2'): basestring,
             }
         ),
-
-        'rank': Any('by-tier', int, 'pushdate')
     },
 
     # The `run_on_projects` attribute, defaulting to "all".  This dictates the
@@ -435,20 +433,12 @@ def add_index_routes(config, tasks):
             for tpl in V2_ROUTE_TEMPLATES:
                 routes.append(tpl.format(**subs))
 
-        # The default behavior is to rank tasks according to their tier
-        extra_index = task.setdefault('extra', {}).setdefault('index', {})
-        rank = index.get('rank', 'by-tier')
-
-        if rank == 'by-tier':
-            # rank is zero for non-tier-1 tasks and based on pushid for others;
-            # this sorts tier-{2,3} builds below tier-1 in the index
-            tier = task.get('treeherder', {}).get('tier', 3)
-            extra_index['rank'] = 0 if tier > 1 else int(config.params['pushdate'])
-        elif rank == 'pushdate':
-            extra_index['rank'] = int(config.params['pushdate'])
-        else:
-            extra_index['rank'] = rank
-
+        # rank is zero for non-tier-1 tasks and based on pushid for others;
+        # this sorts tier-{2,3} builds below tier-1 in the index
+        tier = task.get('treeherder', {}).get('tier', 3)
+        task.setdefault('extra', {})['index'] = {
+            'rank': 0 if tier > 1 else int(config.params['pushdate'])
+        }
         del task['index']
         yield task
 
