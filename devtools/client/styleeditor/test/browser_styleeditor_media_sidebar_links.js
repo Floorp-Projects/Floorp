@@ -7,6 +7,15 @@
 /* Tests responsive mode links for
  * @media sidebar width and height related conditions */
 
+const asyncStorage = require("devtools/shared/async-storage");
+Services.prefs.setCharPref("devtools.devices.url",
+  "http://example.com/browser/devtools/client/responsive.html/test/browser/devices.json");
+
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("devtools.devices.url");
+  asyncStorage.removeItem("devtools.devices.url_cache");
+});
+
 const mgr = "resource://devtools/client/responsivedesign/responsivedesign.jsm";
 const {ResponsiveUIManager} = Cu.import(mgr, {});
 const TESTCASE_URI = TEST_BASE_HTTPS + "media-rules.html";
@@ -21,7 +30,7 @@ add_task(function* () {
   let tab = gBrowser.selectedTab;
   testNumberOfLinks(editor);
   yield testMediaLink(editor, tab, ui, 2, "width", 400);
-  yield testMediaLink(editor, tab, ui, 3, "height", 200);
+  yield testMediaLink(editor, tab, ui, 3, "height", 300);
 
   yield closeRDM(tab, ui);
   doFinalChecks(editor);
@@ -47,12 +56,13 @@ function* testMediaLink(editor, tab, ui, itemIndex, type, value) {
   let conditions = sidebar.querySelectorAll(".media-rule-condition");
 
   let onMediaChange = once(ui, "media-list-changed");
-  let onContentResize = waitForResizeTo(ResponsiveUIManager, type, value);
 
   info("Launching responsive mode");
   conditions[itemIndex].querySelector(responsiveModeToggleClass).click();
 
-  ResponsiveUIManager.getResponsiveUIForTab(tab).transitionsEnabled = false;
+  let rdmUI = ResponsiveUIManager.getResponsiveUIForTab(tab);
+  let onContentResize = waitForResizeTo(rdmUI, type, value);
+  rdmUI.transitionsEnabled = false;
 
   info("Waiting for the @media list to update");
   yield onMediaChange;
@@ -64,14 +74,14 @@ function* testMediaLink(editor, tab, ui, itemIndex, type, value) {
   ok(!conditions[itemIndex].classList.contains("media-condition-unmatched"),
      "media rule should now be matched after responsive mode is active");
 
-  let dimension = (yield getSizing())[type];
+  let dimension = (yield getSizing(rdmUI))[type];
   is(dimension, value, `${type} should be properly set.`);
 }
 
 function* closeRDM(tab, ui) {
   info("Closing responsive mode");
   ResponsiveUIManager.toggle(window, tab);
-  let onMediaChange = once(ui, "media-list-changed");
+  let onMediaChange = waitForNEvents(ui, "media-list-changed", 2);
   yield once(ResponsiveUIManager, "off");
   yield onMediaChange;
   ok(!ResponsiveUIManager.isActiveForTab(tab),
@@ -89,23 +99,31 @@ function doFinalChecks(editor) {
 }
 
 /* Helpers */
-function waitForResizeTo(manager, type, value) {
+function waitForResizeTo(rdmUI, type, value) {
   return new Promise(resolve => {
     let onResize = (_, data) => {
       if (data[type] != value) {
         return;
       }
-      manager.off("contentResize", onResize);
-      info(`Got contentResize to a ${type} of ${value}`);
+      ResponsiveUIManager.off("content-resize", onResize);
+      if (rdmUI.off) {
+        rdmUI.off("content-resize", onResize);
+      }
+      info(`Got content-resize to a ${type} of ${value}`);
       resolve();
     };
-    info(`Waiting for contentResize to a ${type} of ${value}`);
-    manager.on("contentResize", onResize);
+    info(`Waiting for content-resize to a ${type} of ${value}`);
+    // Old RDM emits on manager
+    ResponsiveUIManager.on("content-resize", onResize);
+    // New RDM emits on ui
+    if (rdmUI.on) {
+      rdmUI.on("content-resize", onResize);
+    }
   });
 }
 
-function* getSizing() {
-  let browser = gBrowser.selectedBrowser;
+function* getSizing(rdmUI) {
+  let browser = rdmUI.getViewportBrowser();
   let sizing = yield ContentTask.spawn(browser, {}, function* () {
     return {
       width: content.innerWidth,

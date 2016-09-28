@@ -49,6 +49,13 @@ let reducers = {
         return viewport;
       }
 
+      if (!width) {
+        width = viewport.width;
+      }
+      if (!height) {
+        height = viewport.height;
+      }
+
       return Object.assign({}, viewport, {
         width,
         height,
