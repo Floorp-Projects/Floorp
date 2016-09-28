@@ -1058,7 +1058,6 @@ TrackBuffersManager::OnDemuxerInitDone(nsresult)
     // We clear our crypto init data array, so the MediaFormatReader will
     // not emit an encrypted event for the same init data again.
     info.mCrypto.mInitDatas.Clear();
-    mEncrypted = true;
   }
 
   {
