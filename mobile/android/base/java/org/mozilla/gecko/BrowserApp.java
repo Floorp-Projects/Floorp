@@ -9,6 +9,7 @@ import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.DownloadManager;
 import android.os.Environment;
+import android.os.Process;
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 
@@ -63,6 +64,7 @@ import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuItem;
 import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.notifications.NotificationClient;
+import org.mozilla.gecko.notifications.NotificationHelper;
 import org.mozilla.gecko.notifications.ServiceNotificationClient;
 import org.mozilla.gecko.overlays.ui.ShareDialog;
 import org.mozilla.gecko.permissions.Permissions;
@@ -1475,7 +1477,48 @@ public class BrowserApp extends GeckoApp
             delegate.onDestroy(this);
         }
 
+        deleteTempFiles();
+
+        if (mDoorHangerPopup != null)
+            mDoorHangerPopup.destroy();
+        if (mFormAssistPopup != null)
+            mFormAssistPopup.destroy();
+        if (mTextSelection != null)
+            mTextSelection.destroy();
+        NotificationHelper.destroy();
+        IntentHelper.destroy();
+        GeckoNetworkManager.destroy();
+
+        if (SmsManager.isEnabled()) {
+            SmsManager.getInstance().stop();
+            if (isFinishing()) {
+                SmsManager.getInstance().shutdown();
+            }
+        }
+
         super.onDestroy();
+
+        if (!isFinishing()) {
+            // GeckoApp was not intentionally destroyed, so keep our process alive.
+            return;
+        }
+
+        // Wait for Gecko to handle our pause event sent in onPause.
+        if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+            GeckoThread.waitOnGecko();
+        }
+
+        if (mRestartIntent != null) {
+            // Restarting, so let Restarter kill us.
+            final Intent intent = new Intent();
+            intent.setClass(getApplicationContext(), Restarter.class)
+                  .putExtra("pid", Process.myPid())
+                  .putExtra(Intent.EXTRA_INTENT, mRestartIntent);
+            startService(intent);
+        } else {
+            // Exiting, so kill our own process.
+            Process.killProcess(Process.myPid());
+        }
     }
 
     @Override
