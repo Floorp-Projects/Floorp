@@ -2383,6 +2383,10 @@ bool MediaDecoderStateMachine::HasLowBufferedData(int64_t aUsecs)
 
   int64_t start = endOfDecodedData;
   int64_t end = std::min(GetMediaTime() + aUsecs, Duration().ToMicroseconds());
+  if (start >= end) {
+    // Duration of decoded samples is greater than our threshold.
+    return false;
+  }
   media::TimeInterval interval(media::TimeUnit::FromMicroseconds(start),
                                media::TimeUnit::FromMicroseconds(end));
   return !mBuffered.Ref().Contains(interval);
