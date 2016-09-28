@@ -19,6 +19,13 @@ Cu.import('resource://gre/modules/DNSRecord.jsm');
 Cu.import('resource://gre/modules/DNSResourceRecord.jsm');
 Cu.import('resource://gre/modules/DNSTypes.jsm');
 
+const NS_NETWORK_LINK_TOPIC = 'network:link-status-changed';
+
+let observerService     = Cc["@mozilla.org/observer-service;1"]
+                            .getService(Components.interfaces.nsIObserverService);
+let networkInfoService  = Cc['@mozilla.org/network-info-service;1']
+                            .createInstance(Ci.nsINetworkInfoService);
+
 const DEBUG = true;
 
 const MDNS_MULTICAST_GROUP = '224.0.0.251';
@@ -106,12 +113,47 @@ class MulticastDNS {
     this._querySocket     = undefined;
     this._broadcastReceiverSocket = undefined;
     this._broadcastTimer  = undefined;
+
+    this._networkLinkObserver = {
+      observe: (subject, topic, data) => {
+        DEBUG && debug(NS_NETWORK_LINK_TOPIC + '(' + data + '); Clearing list of previously discovered services');
+        this._discovered.clear();
+      }
+    };
+  }
+
+  _attachNetworkLinkObserver() {
+    if (this._networkLinkObserverTimeout) {
+      clearTimeout(this._networkLinkObserverTimeout);
+    }
+
+    if (!this._isNetworkLinkObserverAttached) {
+      DEBUG && debug('Attaching observer ' + NS_NETWORK_LINK_TOPIC);
+      observerService.addObserver(this._networkLinkObserver, NS_NETWORK_LINK_TOPIC, false);
+      this._isNetworkLinkObserverAttached = true;
+    }
+  }
+
+  _detachNetworkLinkObserver() {
+    if (this._isNetworkLinkObserverAttached) {
+      if (this._networkLinkObserverTimeout) {
+        clearTimeout(this._networkLinkObserverTimeout);
+      }
+
+      this._networkLinkObserverTimeout = setTimeout(() => {
+        DEBUG && debug('Detaching observer ' + NS_NETWORK_LINK_TOPIC);
+        observerService.removeObserver(this._networkLinkObserver, NS_NETWORK_LINK_TOPIC);
+        this._isNetworkLinkObserverAttached = false;
+        this._networkLinkObserverTimeout = null;
+      }, 5000);
+    }
   }
 
   startDiscovery(aServiceType, aListener) {
     DEBUG && debug('startDiscovery("' + aServiceType + '")');
     let { serviceType } = _parseServiceDomainName(aServiceType);
 
+    this._attachNetworkLinkObserver();
     this._addServiceListener(serviceType, aListener);
 
     try {
@@ -128,7 +170,9 @@ class MulticastDNS {
     DEBUG && debug('stopDiscovery("' + aServiceType + '")');
     let { serviceType } = _parseServiceDomainName(aServiceType);
 
+    this._detachNetworkLinkObserver();
     this._removeServiceListener(serviceType, aListener);
+
     aListener.onDiscoveryStopped(serviceType);
 
     this._checkCloseSockets();
@@ -705,9 +749,6 @@ class MulticastDNS {
     }
   }
 }
-
-let networkInfoService = Cc['@mozilla.org/network-info-service;1']
-                          .createInstance(Ci.nsINetworkInfoService);
 
 let _addresses;
 
