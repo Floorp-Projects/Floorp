@@ -12,24 +12,6 @@
 namespace mozilla {
 namespace dom {
 
-already_AddRefed<Blob>
-BlobSet::GetBlobInternal(nsISupports* aParent,
-                         const nsACString& aContentType,
-                         ErrorResult& aRv)
-{
-  nsTArray<RefPtr<BlobImpl>> subImpls(GetBlobImpls());
-  RefPtr<BlobImpl> blobImpl =
-    MultipartBlobImpl::Create(Move(subImpls),
-                              NS_ConvertASCIItoUTF16(aContentType),
-                              aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  RefPtr<Blob> blob = Blob::Create(aParent, blobImpl);
-  return blob.forget();
-}
-
 nsresult
 BlobSet::AppendVoidPtr(const void* aData, uint32_t aLength)
 {
@@ -38,13 +20,16 @@ BlobSet::AppendVoidPtr(const void* aData, uint32_t aLength)
     return NS_OK;
   }
 
-  uint64_t offset = mDataLen;
-
-  if (!ExpandBufferSize(aLength)) {
+  void* data = malloc(aLength);
+  if (!data) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  memcpy((char*)mData + offset, aData, aLength);
+  memcpy((char*)data, aData, aLength);
+
+  RefPtr<BlobImpl> blobImpl = new BlobImplMemory(data, aLength, EmptyString());
+  mBlobImpls.AppendElement(blobImpl);
+
   return NS_OK;
 }
 
@@ -71,68 +56,8 @@ nsresult
 BlobSet::AppendBlobImpl(BlobImpl* aBlobImpl)
 {
   NS_ENSURE_ARG_POINTER(aBlobImpl);
-
-  Flush();
   mBlobImpls.AppendElement(aBlobImpl);
-
   return NS_OK;
-}
-
-nsresult
-BlobSet::AppendBlobImpls(const nsTArray<RefPtr<BlobImpl>>& aBlobImpls)
-{
-  Flush();
-  mBlobImpls.AppendElements(aBlobImpls);
-
-  return NS_OK;
-}
-
-bool
-BlobSet::ExpandBufferSize(uint64_t aSize)
-{
-  if (mDataBufferLen >= mDataLen + aSize) {
-    mDataLen += aSize;
-    return true;
-  }
-
-  // Start at 1 or we'll loop forever.
-  CheckedUint32 bufferLen =
-    std::max<uint32_t>(static_cast<uint32_t>(mDataBufferLen), 1);
-  while (bufferLen.isValid() && bufferLen.value() < mDataLen + aSize) {
-    bufferLen *= 2;
-  }
-
-  if (!bufferLen.isValid()) {
-    return false;
-  }
-
-  void* data = realloc(mData, bufferLen.value());
-  if (!data) {
-    return false;
-  }
-
-  mData = data;
-  mDataBufferLen = bufferLen.value();
-  mDataLen += aSize;
-  return true;
-}
-
-void
-BlobSet::Flush()
-{
-  if (mData) {
-    // If we have some data, create a blob for it
-    // and put it on the stack
-
-    RefPtr<BlobImpl> blobImpl =
-      new BlobImplMemory(mData, mDataLen, EmptyString());
-    mBlobImpls.AppendElement(blobImpl);
-
-    mData = nullptr; // The nsDOMMemoryFile takes ownership of the buffer
-    mDataLen = 0;
-    mDataBufferLen = 0;
-    return;
-  }
 }
 
 } // dom namespace
