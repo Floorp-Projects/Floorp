@@ -30,7 +30,7 @@ loader.lazyRequireGetter(this, "util", "gcli/util/util");
 loader.lazyRequireGetter(this, "ConsoleServiceListener", "devtools/shared/webconsole/utils", true);
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 loader.lazyRequireGetter(this, "gDevToolsBrowser", "devtools/client/framework/devtools-browser", true);
-loader.lazyRequireGetter(this, "nodeConstants", "devtools/shared/dom-node-constants", true);
+loader.lazyRequireGetter(this, "nodeConstants", "devtools/shared/dom-node-constants");
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
 /**
