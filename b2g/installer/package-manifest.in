@@ -165,9 +165,6 @@
 #ifdef MOZ_B2G_BT
 @RESPATH@/components/dom_bluetooth.xpt
 #endif
-#ifdef MOZ_B2G_CAMERA
-@RESPATH@/components/dom_camera.xpt
-#endif
 @RESPATH@/components/dom_canvas.xpt
 @RESPATH@/components/dom_contacts.xpt
 @RESPATH@/components/dom_core.xpt
@@ -445,12 +442,6 @@
 @RESPATH@/components/WifiWorker.js
 @RESPATH@/components/WifiWorker.manifest
 #endif // MOZ_WIDGET_GONK
-
-; Camera
-#ifdef MOZ_B2G_CAMERA
-@RESPATH@/components/CameraTestHardware.js
-@RESPATH@/components/CameraTestHardware.manifest
-#endif // MOZ_B2G_CAMERA
 
 ; Tethering
 #ifdef MOZ_WIDGET_GONK
