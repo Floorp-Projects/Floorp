@@ -8,88 +8,43 @@
 #define mozilla_dom_MutableBlobStorage_h
 
 #include "mozilla/RefPtr.h"
-#include "prio.h"
 
 namespace mozilla {
 namespace dom {
 
 class Blob;
 class BlobImpl;
-class MutableBlobStorage;
 
-class MutableBlobStorageCallback
-{
-public:
-  NS_IMETHOD_(MozExternalRefCountType) AddRef(void) = 0;
-
-  NS_IMETHOD_(MozExternalRefCountType) Release(void) = 0;
-
-  virtual void BlobStoreCompleted(MutableBlobStorage* aBlobStorage,
-                                  Blob* aBlob,
-                                  nsresult aRv) = 0;
-};
-
-// This class is main-thread only.
 class MutableBlobStorage final
 {
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MutableBlobStorage);
+  MutableBlobStorage()
+    : mData(nullptr)
+    , mDataLen(0)
+    , mDataBufferLen(0)
+  {}
 
-  enum MutableBlobStorageType
+  ~MutableBlobStorage()
   {
-    eOnlyInMemory,
-    eCouldBeInTemporaryFile,
-  };
-
-  explicit MutableBlobStorage(MutableBlobStorageType aType);
+    free(mData);
+  }
 
   nsresult Append(const void* aData, uint32_t aLength);
 
-  // This method can be called just once.
-  // The callback will be called when the Blob is ready.
-  // The return value is the total size of the blob, when created.
-  uint64_t GetBlobWhenReady(nsISupports* aParent,
-                            const nsACString& aContentType,
-                            MutableBlobStorageCallback* aCallback);
-
-  void TemporaryFileCreated(PRFileDesc* aFD);
-
-  void  CreateBlobAndRespond(already_AddRefed<nsISupports> aParent,
-                             const nsACString& aContentType,
-                             already_AddRefed<MutableBlobStorageCallback> aCallback);
-
-  void ErrorPropagated(nsresult aRv);
+  already_AddRefed<Blob> GetBlob(nsISupports* aParent,
+                                 const nsACString& aContentType,
+                                 ErrorResult& aRv);
 
 private:
-  ~MutableBlobStorage();
-
   bool ExpandBufferSize(uint64_t aSize);
 
-  bool ShouldBeTemporaryStorage(uint64_t aSize) const;
+  void Flush();
 
-  nsresult MaybeCreateTemporaryFile();
-
-  static nsresult DispatchToIOThread(Runnable* aRunnable);
-
-  // All these variables are touched on the main thread only.
+  nsTArray<RefPtr<BlobImpl>> mBlobImpls;
 
   void* mData;
   uint64_t mDataLen;
   uint64_t mDataBufferLen;
-
-  enum StorageState {
-    eKeepInMemory,
-    eInMemory,
-    eWaitingForTemporaryFile,
-    eInTemporaryFile,
-    eClosed
-  };
-
-  StorageState mStorageState;
-
-  PRFileDesc* mFD;
-
-  nsresult mErrorResult;
 };
 
 } // namespace dom
