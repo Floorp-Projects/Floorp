@@ -55,8 +55,8 @@ namespace mozilla {
 namespace dom {
 
 class Blob;
-class BlobSet;
 class FormData;
+class MutableBlobStorage;
 class URLSearchParams;
 class XMLHttpRequestUpload;
 struct OriginAttributesDictionary;
@@ -644,9 +644,9 @@ protected:
   // Non-null only when we are able to get a os-file representation of the
   // response, i.e. when loading from a file.
   RefPtr<Blob> mDOMBlob;
-  // We stream data to mBlobSet when response type is "blob" or "moz-blob"
+  // We stream data to mBlobStorage when response type is "blob" or "moz-blob"
   // and mDOMBlob is null.
-  nsAutoPtr<BlobSet> mBlobSet;
+  nsAutoPtr<MutableBlobStorage> mBlobStorage;
 
   nsString mOverrideMimeType;
 
