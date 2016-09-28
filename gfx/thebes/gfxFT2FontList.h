@@ -119,6 +119,7 @@ class gfxFT2FontList : public gfxPlatformFontList
 {
 public:
     gfxFT2FontList();
+    virtual ~gfxFT2FontList();
 
     virtual gfxFontFamily* GetDefaultFont(const gfxFontStyle* aStyle);
 
@@ -141,6 +142,8 @@ public:
     }
 
     virtual void GetFontFamilyList(nsTArray<RefPtr<gfxFontFamily> >& aFamilyArray);
+
+    void WillShutdown();
 
 protected:
     typedef enum {
@@ -186,6 +189,10 @@ protected:
 
 private:
     FontFamilyTable mHiddenFontFamilies;
+
+    mozilla::UniquePtr<FontNameCache> mFontNameCache;
+    int64_t mJarModifiedTime;
+    nsCOMPtr<nsIObserver> mObserver;
 };
 
 #endif /* GFX_FT2FONTLIST_H */
