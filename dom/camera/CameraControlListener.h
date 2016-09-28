@@ -68,14 +68,6 @@ public:
     kRecorderResumed,
     kPosterCreated,
     kPosterFailed,
-#ifdef MOZ_B2G_CAMERA
-    kFileSizeLimitReached,
-    kVideoLengthLimitReached,
-    kTrackCompleted,
-    kTrackFailed,
-    kMediaRecorderFailed,
-    kMediaServerFailed
-#endif
   };
   enum { kNoTrackNumber = -1 };
   virtual void OnRecorderStateChange(RecorderState aState, int32_t aStatus, int32_t aTrackNum) { }

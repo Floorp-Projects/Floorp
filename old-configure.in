@@ -108,7 +108,6 @@ if test -n "$gonkdir"; then
     15)
         CPPFLAGS="-I$gonkdir/frameworks/base/opengl/include -I$gonkdir/frameworks/base/native/include -I$gonkdir/frameworks/base/include -I$gonkdir/frameworks/base/services/camera -I$gonkdir/frameworks/base/include/media/ -I$gonkdir/frameworks/base/include/media/stagefright -I$gonkdir/frameworks/base/include/media/stagefright/openmax -I$gonkdir/frameworks/base/media/libstagefright/rtsp -I$gonkdir/frameworks/base/media/libstagefright/include -I$gonkdir/external/dbus -I$gonkdir/external/bluetooth/bluez/lib -I$gonkdir/dalvik/libnativehelper/include/nativehelper $CPPFLAGS"
         MOZ_NFC=1
-        MOZ_B2G_CAMERA=1
         MOZ_OMX_DECODER=1
         AC_SUBST(MOZ_OMX_DECODER)
         MOZ_SECUREELEMENT=1
@@ -116,7 +115,6 @@ if test -n "$gonkdir"; then
     17|18)
         CPPFLAGS="-I$gonkdir/frameworks/native/include -I$gonkdir/frameworks/av/include -I$gonkdir/frameworks/av/include/media -I$gonkdir/frameworks/av/include/camera -I$gonkdir/frameworks/native/include/media/openmax -I$gonkdir/frameworks/av/media/libstagefright/include $CPPFLAGS"
         MOZ_NFC=1
-        MOZ_B2G_CAMERA=1
         MOZ_OMX_DECODER=1
         AC_SUBST(MOZ_OMX_DECODER)
         MOZ_OMX_ENCODER=1
@@ -126,7 +124,6 @@ if test -n "$gonkdir"; then
         ;;
     19)
         CPPFLAGS="-I$gonkdir/frameworks/native/include -I$gonkdir/frameworks/av/include -I$gonkdir/frameworks/av/include/media -I$gonkdir/frameworks/av/include/camera -I$gonkdir/frameworks/native/include/media/openmax -I$gonkdir/frameworks/av/media/libstagefright/include $CPPFLAGS"
-        MOZ_B2G_CAMERA=1
         MOZ_NFC=1
         MOZ_OMX_DECODER=1
         MOZ_OMX_ENCODER=1
@@ -144,7 +141,6 @@ if test -n "$gonkdir"; then
         AC_DEFINE(MOZ_OMX_ENCODER)
         AC_SUBST(MOZ_AUDIO_OFFLOAD)
         AC_DEFINE(MOZ_AUDIO_OFFLOAD)
-        MOZ_B2G_CAMERA=1
         MOZ_NFC=1
         ;;
     *)
@@ -4856,18 +4852,6 @@ if test -n "$MOZ_TIME_MANAGER"; then
     AC_DEFINE(MOZ_TIME_MANAGER)
 fi
 AC_SUBST(MOZ_TIME_MANAGER)
-
-dnl ========================================================
-dnl = Enable Camera Interface for B2G (Gonk usually)
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(b2g-camera,
-[  --enable-b2g-camera      Set compile flags necessary for compiling camera API for B2G ],
-    MOZ_B2G_CAMERA=1,
-    MOZ_B2G_CAMERA= )
-if test -n "$MOZ_B2G_CAMERA"; then
-   AC_DEFINE(MOZ_B2G_CAMERA)
-fi
-AC_SUBST(MOZ_B2G_CAMERA)
 
 dnl ========================================================
 dnl = Enable Support for AudioChannelManager API

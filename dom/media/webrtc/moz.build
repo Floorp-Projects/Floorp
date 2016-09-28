@@ -48,16 +48,6 @@ if CONFIG['MOZ_WEBRTC']:
         '/media/webrtc/signaling/src/common/browser_logging',
         '/media/webrtc/trunk',
     ]
-    # Gonk camera source.
-    if CONFIG['MOZ_B2G_CAMERA'] and CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-        EXPORTS += [
-            'GonkCameraImage.h',
-            'MediaEngineGonkVideoSource.h',
-        ]
-        UNIFIED_SOURCES += [
-            'GonkCameraImage.cpp',
-            'MediaEngineGonkVideoSource.cpp',
-        ]
 
 XPIDL_SOURCES += [
     'nsITabSource.idl'

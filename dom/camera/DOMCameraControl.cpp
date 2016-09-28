@@ -1444,32 +1444,6 @@ nsDOMCameraControl::OnRecorderStateChange(CameraControlListener::RecorderState a
       state = NS_LITERAL_STRING("Resumed");
       break;
 
-#ifdef MOZ_B2G_CAMERA
-    case CameraControlListener::kFileSizeLimitReached:
-      state = NS_LITERAL_STRING("FileSizeLimitReached");
-      break;
-
-    case CameraControlListener::kVideoLengthLimitReached:
-      state = NS_LITERAL_STRING("VideoLengthLimitReached");
-      break;
-
-    case CameraControlListener::kTrackCompleted:
-      state = NS_LITERAL_STRING("TrackCompleted");
-      break;
-
-    case CameraControlListener::kTrackFailed:
-      state = NS_LITERAL_STRING("TrackFailed");
-      break;
-
-    case CameraControlListener::kMediaRecorderFailed:
-      state = NS_LITERAL_STRING("MediaRecorderFailed");
-      break;
-
-    case CameraControlListener::kMediaServerFailed:
-      state = NS_LITERAL_STRING("MediaServerFailed");
-      break;
-#endif
-
     default:
       MOZ_ASSERT_UNREACHABLE("Unanticipated video recorder error");
       return;

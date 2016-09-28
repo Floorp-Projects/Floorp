@@ -2339,12 +2339,6 @@ if (privileged) {
     }
   }
 
-#if defined(MOZ_B2G_CAMERA) && defined(MOZ_WIDGET_GONK)
-  if (mCameraManager == nullptr) {
-    mCameraManager = nsDOMCameraManager::CreateInstance(aWindow);
-  }
-#endif
-
   // Get list of all devices, with origin-specific device ids.
 
   MediaEnginePrefs prefs = mPrefs;
