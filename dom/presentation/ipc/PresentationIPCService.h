@@ -21,11 +21,12 @@ class PresentationIPCRequest;
 class PresentationContentSessionInfo;
 class PresentationResponderLoadingCallback;
 
-class PresentationIPCService final : public nsIPresentationService
-                                   , public PresentationServiceBase
+class PresentationIPCService final
+  : public nsIPresentationService
+  , public PresentationServiceBase<PresentationContentSessionInfo>
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIPRESENTATIONSERVICE
 
   PresentationIPCService();
@@ -63,8 +64,6 @@ private:
   nsRefPtrHashtable<nsUint64HashKey,
                     nsIPresentationRespondingListener> mRespondingListeners;
   RefPtr<PresentationResponderLoadingCallback> mCallback;
-  nsRefPtrHashtable<nsStringHashKey,
-                    PresentationContentSessionInfo> mSessionInfos;
 };
 
 } // namespace dom
