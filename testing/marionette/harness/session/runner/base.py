@@ -37,7 +37,7 @@ class SessionTest(TestResult):
     @property
     def test_name(self):
         if self.test_class is not None:
-            return '%s.py %s.%s' % (self.test_class.split('.')[0],
+            return '{0}.py {1}.{2}'.format(self.test_class.split('.')[0],
                                     self.test_class,
                                     self.name)
         else:
@@ -166,7 +166,7 @@ class SessionTestResult(StructuredTestResult, TestResultCollection):
         else:
             desc = str(test)
             if hasattr(test, 'jsFile'):
-                desc = "%s, %s" % (test.jsFile, desc)
+                desc = "{0}, {1}".format(test.jsFile, desc)
             return desc
 
     def printLogs(self, test):
@@ -395,7 +395,7 @@ class BaseSessionArguments(ArgumentParser):
             if not 1 <= args.total_chunks:
                 self.error('Total chunks must be greater than 1.')
             if not 1 <= args.this_chunk <= args.total_chunks:
-                self.error('Chunk to run must be between 1 and %s.' % args.total_chunks)
+                self.error('Chunk to run must be between 1 and {}.'.format(args.total_chunks))
 
         if args.jsdebugger:
             args.app_args.append('-jsdebugger')
@@ -535,13 +535,13 @@ class BaseSessionTestRunner(object):
             for path in list(self.testvars_paths):
                 path = os.path.abspath(os.path.expanduser(path))
                 if not os.path.exists(path):
-                    raise IOError('--testvars file %s does not exist' % path)
+                    raise IOError('--testvars file {} does not exist'.format(path))
                 try:
                     with open(path) as f:
                         data.append(json.loads(f.read()))
                 except ValueError as e:
-                    raise Exception("JSON file (%s) is not properly "
-                                    "formatted: %s" % (os.path.abspath(path),
+                    raise Exception("JSON file ({0}) is not properly "
+                                    "formatted: {1}".format(os.path.abspath(path),
                                                        e.message))
         return data
 
@@ -580,10 +580,10 @@ class BaseSessionTestRunner(object):
                 self.logger.info("starting httpd")
                 self.httpd = self.create_httpd(False)
                 self.base_url = self.httpd.get_url()
-                self.logger.info("running httpd on %s" % self.base_url)
+                self.logger.info("running httpd on {}".format(self.base_url))
             else:
                 self.base_url = self.server_root
-                self.logger.info("using remote content from %s" % self.base_url)
+                self.logger.info("using remote content from {}".format(self.base_url))
 
         device_info = None
 
@@ -596,8 +596,8 @@ class BaseSessionTestRunner(object):
              if not os.path.basename(t['filepath']).startswith('test_')]
         if invalid_tests:
             raise Exception("Tests file names must starts with 'test_'."
-                            " Invalid test names:\n  %s"
-                            % '\n  '.join(invalid_tests))
+                            " Invalid test names:\n  {}".format(
+                                '\n  '.join(invalid_tests)))
 
         self.logger.info("running with e10s: {}".format(self.e10s))
 
@@ -617,7 +617,7 @@ class BaseSessionTestRunner(object):
             while counter >=0:
                 round = self.repeat - counter
                 if round > 0:
-                    self.logger.info('\nREPEAT %d\n-------' % round)
+                    self.logger.info('\nREPEAT {}\n-------'.format(round))
                 self.run_test_sets()
                 counter -= 1
         except KeyboardInterrupt:
@@ -638,20 +638,22 @@ class BaseSessionTestRunner(object):
 
     def _print_summary(self, tests):
         self.logger.info('\nSUMMARY\n-------')
-        self.logger.info('passed: %d' % self.passed)
+        self.logger.info('passed: {}'.format(self.passed))
         if self.unexpected_successes == 0:
-            self.logger.info('failed: %d' % self.failed)
+            self.logger.info('failed: {}'.format(self.failed))
         else:
-            self.logger.info('failed: %d (unexpected sucesses: %d)' % (self.failed, self.unexpected_successes))
+            self.logger.info('failed: {0} '
+                             '(unexpected sucesses: {1})'.format(self.failed,
+                                                                 self.unexpected_successes))
         if self.skipped == 0:
-            self.logger.info('todo: %d' % self.todo)
+            self.logger.info('todo: {}'.format(self.todo))
         else:
-            self.logger.info('todo: %d (skipped: %d)' % (self.todo, self.skipped))
+            self.logger.info('todo: {0} (skipped: {1})'.format(self.todo, self.skipped))
 
         if self.failed > 0:
             self.logger.info('\nFAILED TESTS\n-------')
             for failed_test in self.failures:
-                self.logger.info('%s' % failed_test[0])
+                self.logger.info(str(failed_test[0]))
 
         self.end_time = time.time()
         self.elapsedtime = self.end_time - self.start_time
@@ -659,7 +661,7 @@ class BaseSessionTestRunner(object):
         for run_tests in self.mixin_run_tests:
             run_tests(tests)
         if self.shuffle:
-            self.logger.info("Using seed where seed is:%d" % self.shuffle_seed)
+            self.logger.info("Using seed where seed is: {}".format(self.shuffle_seed))
 
         self.logger.info('mode: {}'.format('e10s' if self.e10s else 'non-e10s'))
         self.logger.suite_end()
@@ -713,7 +715,7 @@ class BaseSessionTestRunner(object):
 
             for i in target_tests:
                 if not os.path.exists(i["path"]):
-                    raise IOError("test file: %s does not exist" % i["path"])
+                    raise IOError("test file: {} does not exist".format(i["path"]))
 
                 file_ext = os.path.splitext(os.path.split(i['path'])[-1])[-1]
                 test_container = None
@@ -784,17 +786,18 @@ class BaseSessionTestRunner(object):
         if len(self.tests) < 1:
             raise Exception('There are no tests to run.')
         elif self.total_chunks > len(self.tests):
-            raise ValueError('Total number of chunks must be between 1 and %d.' % len(self.tests))
+            raise ValueError('Total number of chunks must be between 1 and {}.'
+                             .format(len(self.tests)))
         if self.total_chunks > 1:
             chunks = [[] for i in range(self.total_chunks)]
             for i, test in enumerate(self.tests):
                 target_chunk = i % self.total_chunks
                 chunks[target_chunk].append(test)
 
-            self.logger.info('Running chunk %d of %d (%d tests selected from a '
-                             'total of %d)' % (self.this_chunk, self.total_chunks,
-                                               len(chunks[self.this_chunk - 1]),
-                                               len(self.tests)))
+            self.logger.info('Running chunk {0} of {1} ({2} tests selected from a '
+                             'total of {3})'.format(self.this_chunk, self.total_chunks,
+                                                    len(chunks[self.this_chunk - 1]),
+                                                    len(self.tests)))
             self.tests = chunks[self.this_chunk - 1]
 
         self.run_test_set(self.tests)

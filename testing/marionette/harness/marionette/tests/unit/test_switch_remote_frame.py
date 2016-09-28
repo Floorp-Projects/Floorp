@@ -56,9 +56,9 @@ class TestSwitchRemoteFrame(MarionetteTestCase):
             iframe.id = "remote_iframe";
             iframe.style.height = "100px";
             iframe.style.width = "100%%";
-            iframe.src = "%s";
+            iframe.src = "{}";
             document.body.appendChild(iframe);
-            """ % self.marionette.absolute_url("test.html"))
+            """.format(self.marionette.absolute_url("test.html")))
         remote_iframe = self.marionette.find_element(By.ID, "remote_iframe")
         self.marionette.switch_to_frame(remote_iframe)
         main_process = self.is_main_process
@@ -75,9 +75,9 @@ class TestSwitchRemoteFrame(MarionetteTestCase):
             iframe.id = "remote_iframe";
             iframe.style.height = "100px";
             iframe.style.width = "100%%";
-            iframe.src = "%s";
+            iframe.src = "{}";
             document.body.appendChild(iframe);
-            """ % self.marionette.absolute_url("test.html"))
+            """.format(self.marionette.absolute_url("test.html")))
         self.marionette.switch_to_frame(self.marionette.find_element(By.ID,
                                                                      "remote_iframe"))
         main_process = self.is_main_process
@@ -102,9 +102,9 @@ class TestSwitchRemoteFrame(MarionetteTestCase):
             iframe.id = "remote_iframe";
             iframe.style.height = "100px";
             iframe.style.width = "100%%";
-            iframe.src = "%s";
+            iframe.src = "{}";
             document.body.appendChild(iframe);
-            """ % self.marionette.absolute_url("test.html"))
+            """.format(self.marionette.absolute_url("test.html")))
         self.marionette.switch_to_frame(0)
         main_process = self.is_main_process
         self.assertFalse(main_process)
