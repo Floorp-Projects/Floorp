@@ -11,6 +11,7 @@ const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
 const { initPerformanceInTab, initConsoleInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 const { waitForRecordingStartedEvents, waitForRecordingStoppedEvents } = require("devtools/client/performance/test/helpers/actions");
 const { times } = require("devtools/client/performance/test/helpers/event-utils");
+const { getSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
 
 add_task(function* () {
   let { target, console } = yield initConsoleInNewTab({
@@ -19,7 +20,7 @@ add_task(function* () {
   });
 
   let { panel } = yield initPerformanceInTab({ tab: target.tab });
-  let { EVENTS, PerformanceController, OverviewView, RecordingsView } = panel.panelWin;
+  let { EVENTS, PerformanceController, OverviewView } = panel.panelWin;
 
   let started = waitForRecordingStartedEvents(panel, {
     // only emitted for manual recordings
@@ -30,7 +31,7 @@ add_task(function* () {
 
   let recordings = PerformanceController.getRecordings();
   is(recordings.length, 1, "A recording found in the performance panel.");
-  is(RecordingsView.selectedItem.attachment, recordings[0],
+  is(getSelectedRecording(panel), recordings[0],
     "The first console recording should be selected.");
 
   // Ensure overview is still rendering.
@@ -52,7 +53,7 @@ add_task(function* () {
 
   recordings = PerformanceController.getRecordings();
   is(recordings.length, 2, "Two recordings found in the performance panel.");
-  is(RecordingsView.selectedItem.attachment, recordings[0],
+  is(getSelectedRecording(panel), recordings[0],
     "The first console recording should still be selected.");
 
   // Ensure overview is still rendering.
@@ -69,7 +70,7 @@ add_task(function* () {
 
   recordings = PerformanceController.getRecordings();
   is(recordings.length, 2, "Two recordings found in the performance panel.");
-  is(RecordingsView.selectedItem.attachment, recordings[0],
+  is(getSelectedRecording(panel), recordings[0],
     "The first console recording should still be selected.");
   is(recordings[0].isRecording(), false,
     "The first console recording should no longer be recording.");
@@ -86,7 +87,7 @@ add_task(function* () {
 
   recordings = PerformanceController.getRecordings();
   is(recordings.length, 2, "Two recordings found in the performance panel.");
-  is(RecordingsView.selectedItem.attachment, recordings[0],
+  is(getSelectedRecording(panel), recordings[0],
     "The first console recording should still be selected.");
   is(recordings[1].isRecording(), false,
     "The second console recording should no longer be recording.");

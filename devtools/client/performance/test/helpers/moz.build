@@ -12,6 +12,7 @@ DevToolsModules(
     'panel-utils.js',
     'prefs.js',
     'profiler-mm-utils.js',
+    'recording-utils.js',
     'synth-utils.js',
     'tab-utils.js',
     'urls.js',

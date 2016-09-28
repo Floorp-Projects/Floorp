@@ -38,3 +38,8 @@ skip-if(B2G||Mulet) == mask-html-xbl-bound-01.html mask-html-01-ref.svg # Initia
 fuzzy-if(skiaContent,1,5) == patterned-svg-under-transformed-html-01.xhtml ../pass.svg
 == patterned-svg-under-transformed-html-02.xhtml ../pass.svg
 
+fuzzy(1,5000) == mask-clipPath-opacity-01a.xhtml mask-clipPath-opacity-01-ref.xhtml
+fuzzy(1,5000) == mask-clipPath-opacity-01b.xhtml mask-clipPath-opacity-01-ref.xhtml
+fuzzy(1,5000) == mask-clipPath-opacity-01c.xhtml mask-clipPath-opacity-01-ref.xhtml
+fuzzy(1,5000) == mask-clipPath-opacity-01d.xhtml mask-clipPath-opacity-01-ref.xhtml
+fuzzy(1,5000) == mask-clipPath-opacity-01e.xhtml mask-clipPath-opacity-01-ref.xhtml

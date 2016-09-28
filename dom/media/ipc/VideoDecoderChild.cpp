@@ -21,6 +21,7 @@ using namespace gfx;
 
 VideoDecoderChild::VideoDecoderChild()
   : mThread(VideoDecoderManagerChild::GetManagerThread())
+  , mLayersBackend(layers::LayersBackend::LAYERS_NONE)
   , mCanSend(true)
 {
 }

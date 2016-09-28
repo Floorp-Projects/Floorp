@@ -10,6 +10,7 @@
   "media.gmp-manager.cert.requireBuiltIn": false,
   "media.gmp-manager.url": "http://localhost/media-dummy/gmpmanager",
   "media.gmp-manager.url.override": "http://localhost/dummy-gmp-manager.xml",
+  "media.gmp-manager.updateEnabled": false,
   "browser.aboutHomeSnippets.updateUrl": "https://localhost/snippet-dummy",
   "browser.newtab.url": "about:blank",
   "browser.search.update": false,

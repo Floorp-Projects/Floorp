@@ -13,6 +13,7 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 const { waitUntil } = require("devtools/client/performance/test/helpers/wait-utils");
 const { isVisible } = require("devtools/client/performance/test/helpers/dom-utils");
+const { setSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
 
 add_task(function* () {
   let { panel } = yield initPerformanceInNewTab({
@@ -20,7 +21,7 @@ add_task(function* () {
     win: window
   });
 
-  let { $, EVENTS, PerformanceController, RecordingsView, OverviewView } = panel.panelWin;
+  let { $, EVENTS, PerformanceController, OverviewView } = panel.panelWin;
 
   // Enable memory to test.
   Services.prefs.setBoolPref(UI_ENABLE_MEMORY_PREF, true);
@@ -53,12 +54,12 @@ add_task(function* () {
      "Overview graphs hidden again when starting new recording.");
   is(updated, 1, "Overview graphs have not been updated again.");
 
-  RecordingsView.selectedIndex = 0;
+  setSelectedRecording(panel, 0);
   is(isVisible($("#overview-pane")), true,
      "Overview graphs no longer hidden when switching back to complete recording.");
   is(updated, 1, "Overview graphs have not been updated again.");
 
-  RecordingsView.selectedIndex = 1;
+  setSelectedRecording(panel, 1);
   is(isVisible($("#overview-pane")), false,
      "Overview graphs hidden again when going back to inprogress recording.");
   is(updated, 1, "Overview graphs have not been updated again.");
