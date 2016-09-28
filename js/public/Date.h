@@ -149,6 +149,22 @@ MonthFromTime(double time);
 JS_PUBLIC_API(double)
 DayFromTime(double time);
 
+// Takes an integer year and returns the number of days from epoch to the given
+// year.
+// NOTE: The calculation performed by this function is literally that given in
+// the ECMAScript specification.  Nonfinite years, years containing fractional
+// components, and years outside ECMAScript's date range are not handled with
+// any particular intelligence.  Garbage in, garbage out.
+JS_PUBLIC_API(double)
+DayFromYear(double year);
+
+// Takes an integer number of milliseconds since the epoch and an integer year,
+// returns the number of days in that year. If |time| is nonfinite, returns NaN.
+// Otherwise |time| *must* correspond to a time within the valid year |year|.
+// This should usually be ensured by computing |year| as |JS::DayFromYear(time)|.
+JS_PUBLIC_API(double)
+DayWithinYear(double time, double year);
+
 } // namespace JS
 
 #endif /* js_Date_h */
