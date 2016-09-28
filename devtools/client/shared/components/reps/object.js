@@ -27,12 +27,13 @@ define(function (require, exports, module) {
     },
 
     getTitle: function (object) {
+      let className = object && object.class ? object.class : "Object";
       if (this.props.objectLink) {
         return this.props.objectLink({
           object: object
-        }, object.class);
+        }, className);
       }
-      return "Object";
+      return className;
     },
 
     safePropIterator: function (object, max) {
@@ -139,7 +140,7 @@ define(function (require, exports, module) {
       if (this.props.mode == "tiny" || !props.length) {
         return (
           span({className: "objectBox objectBox-object"},
-            objectLink({className: "objectTitle"}, this.getTitle())
+            objectLink({className: "objectTitle"}, this.getTitle(object))
           )
         );
       }
