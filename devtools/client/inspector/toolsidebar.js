@@ -84,6 +84,27 @@ ToolSidebar.prototype = {
     this._tabbar = this.ReactDOM.render(sidebar, this._tabbox);
   },
 
+  /**
+   * Register a side-panel tab.
+   *
+   * @param {string} tab uniq id
+   * @param {string} title tab title
+   * @param {React.Component} panel component. See `InspectorPanelTab` as an example.
+   * @param {boolean} selected true if the panel should be selected
+   */
+  addTab: function (id, title, panel, selected) {
+    this._tabbar.addTab(id, title, selected, panel);
+    this.emit("new-tab-registered", id);
+  },
+
+  /**
+   * Helper API for adding side-panels that use existing DOM nodes
+   * (defined within inspector.xhtml) as the content.
+   *
+   * @param {string} tab uniq id
+   * @param {string} title tab title
+   * @param {boolean} selected true if the panel should be selected
+   */
   addExistingTab: function (id, title, selected) {
     let panel = this.InspectorTabPanel({
       id: id,
@@ -92,17 +113,18 @@ ToolSidebar.prototype = {
       title: title,
     });
 
-    this._tabbar.addTab(id, title, selected, panel);
-
-    this.emit("new-tab-registered", id);
+    this.addTab(id, title, panel, selected);
   },
 
   /**
-   * Register a tab. A tab is a document.
+   * Helper API for adding side-panels that use existing <iframe> nodes
+   * (defined within inspector.xhtml) as the content.
    * The document must have a title, which will be used as the name of the tab.
    *
    * @param {string} tab uniq id
+   * @param {string} title tab title
    * @param {string} url
+   * @param {boolean} selected true if the panel should be selected
    */
   addFrameTab: function (id, title, url, selected) {
     let panel = this.InspectorTabPanel({
@@ -114,9 +136,7 @@ ToolSidebar.prototype = {
       onMount: this.onSidePanelMounted.bind(this),
     });
 
-    this._tabbar.addTab(id, title, selected, panel);
-
-    this.emit("new-tab-registered", id);
+    this.addTab(id, title, panel, selected);
   },
 
   onSidePanelMounted: function (content, props) {

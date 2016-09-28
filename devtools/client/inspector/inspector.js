@@ -600,6 +600,20 @@ Inspector.prototype = {
     this.sidebar.show(defaultTab);
   },
 
+  /**
+   * Register a side-panel tab. This API can be used outside of
+   * DevTools (e.g. from an extension) as well as by DevTools
+   * code base.
+   *
+   * @param {string} tab uniq id
+   * @param {string} title tab title
+   * @param {React.Component} panel component. See `InspectorPanelTab` as an example.
+   * @param {boolean} selected true if the panel should be selected
+   */
+  addSidebarTab: function (id, title, panel, selected) {
+    this.sidebar.addTab(id, title, panel, selected);
+  },
+
   setupToolbar: function () {
     this.teardownToolbar();
 
