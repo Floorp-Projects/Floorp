@@ -200,6 +200,9 @@ mozilla::Atomic<bool, mozilla::Relaxed> gIPCTimerArming(false);
 StaticAutoPtr<nsTArray<Accumulation>> gAccumulations;
 StaticAutoPtr<nsTArray<KeyedAccumulation>> gKeyedAccumulations;
 
+// Has XPCOM started shutting down?
+mozilla::Atomic<bool, mozilla::Relaxed>  gShuttingDown(false);
+
 } // namespace
 
 
@@ -346,6 +349,27 @@ StringEndsWith(const std::string& name, const std::string& suffix)
 
   return name.compare(name.size() - suffix.size(), suffix.size(), suffix) == 0;
 }
+
+struct TelemetryShutdownObserver : public nsIObserver
+{
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD Observe(nsISupports*, const char* aTopic, const char16_t*) override
+  {
+    if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) != 0) {
+      return NS_OK;
+    }
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (obs) {
+      obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+    }
+    gShuttingDown = true;
+    return NS_OK;
+  }
+private:
+  virtual ~TelemetryShutdownObserver() { }
+};
+NS_IMPL_ISUPPORTS(TelemetryShutdownObserver, nsIObserver)
 
 } // namespace
 
@@ -1303,7 +1327,7 @@ void internal_armIPCTimer()
   gIPCTimerArming = true;
   if (NS_IsMainThread()) {
     internal_armIPCTimerMainThread();
-  } else {
+  } else if (!gShuttingDown) {
     NS_DispatchToMainThread(NS_NewRunnableFunction([]() -> void {
       StaticMutexAutoLock locker(gTelemetryHistogramMutex);
       internal_armIPCTimerMainThread();
@@ -2022,6 +2046,10 @@ void TelemetryHistogram::InitializeGlobalState(bool canRecordBase,
       " was an intentional change, update this assert with its value and update"
       " the n_values for the following in Histograms.json:"
       " STARTUP_MEASUREMENT_ERRORS");
+
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  MOZ_ASSERT(obs);
+  obs->AddObserver(new TelemetryShutdownObserver, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
 
   gInitDone = true;
 }
