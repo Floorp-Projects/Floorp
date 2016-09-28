@@ -150,6 +150,7 @@ var Agent = {
 
     let stateString = JSON.stringify(state);
     let data = Encoder.encode(stateString);
+    let startWriteMs, stopWriteMs;
 
     try {
 
@@ -166,7 +167,7 @@ var Agent = {
         File.move(this.Paths.clean, this.Paths.cleanBackup);
       }
 
-      let startWriteMs = Date.now();
+      startWriteMs = Date.now();
 
       if (options.isFinalWrite) {
         // We are shutting down. At this stage, we know that
@@ -197,8 +198,7 @@ var Agent = {
         });
       }
 
-      telemetry[FX_SESSION_RESTORE_WRITE_FILE_MS] = Date.now() - startWriteMs;
-      telemetry[FX_SESSION_RESTORE_FILE_SIZE_BYTES] = data.byteLength;
+      stopWriteMs = Date.now();
 
     } catch (ex) {
       // Don't throw immediately
@@ -276,7 +276,10 @@ var Agent = {
       result: {
         upgradeBackup: upgradeBackupComplete
       },
-      telemetry: telemetry,
+      telemetry: {
+        FX_SESSION_RESTORE_WRITE_FILE_MS: stopWriteMs - startWriteMs,
+        FX_SESSION_RESTORE_FILE_SIZE_BYTES: data.byteLength,
+      }
     };
   },
 
