@@ -50,7 +50,6 @@ UNIFIED_SOURCES += [
     'PresentationReceiver.cpp',
     'PresentationRequest.cpp',
     'PresentationService.cpp',
-    'PresentationServiceBase.cpp',
     'PresentationSessionInfo.cpp',
     'PresentationSessionRequest.cpp',
     'PresentationTCPSessionTransport.cpp',
