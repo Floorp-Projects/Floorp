@@ -248,7 +248,7 @@ public class FennecNativeDriver implements Driver {
 
     @Override
     public void setupScrollHandling() {
-        EventDispatcher.getInstance().registerGeckoThreadListener(new GeckoEventListener() {
+        GeckoApp.getEventDispatcher().registerGeckoThreadListener(new GeckoEventListener() {
             @Override
             public void handleMessage(final String event, final JSONObject message) {
                 try {

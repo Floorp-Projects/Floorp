@@ -101,6 +101,7 @@ struct ShowInfo
   bool fakeShowInfo;
   bool isTransparent;
   float dpi;
+  int32_t widgetRounding;
   double defaultScale;
 };
 
@@ -374,6 +375,11 @@ parent:
      * Gets the default scaling factor of the screen corresponding to this browser.
      */
     sync GetDefaultScale() returns (double value);
+
+    /**
+     * Gets the rounding of coordinates in the widget.
+     */
+    sync GetWidgetRounding() returns (int32_t value);
 
     /**
      * Gets maximum of touch points at current device.
@@ -793,7 +799,7 @@ child:
      * value (-1) but in the majority of the cases this saves us from two
      * sync requests from the child to the parent.
      */
-    async UIResolutionChanged(float dpi, double scale);
+    async UIResolutionChanged(float dpi, int32_t rounding, double scale);
 
     /**
      * Tell the child that the system theme has changed, and that a repaint

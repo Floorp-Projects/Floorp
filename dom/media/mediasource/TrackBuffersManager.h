@@ -240,7 +240,6 @@ private:
   void OnDemuxerInitFailed(const MediaResult& aFailure);
   void OnDemuxerResetDone(nsresult);
   MozPromiseRequestHolder<MediaDataDemuxer::InitPromise> mDemuxerInitRequest;
-  bool mEncrypted;
 
   void OnDemuxFailed(TrackType aTrack, const MediaResult& aError);
   void DoDemuxVideo();

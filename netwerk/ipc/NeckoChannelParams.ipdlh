@@ -51,6 +51,8 @@ struct LoadInfoArgs
   nsCString[]           corsUnsafeHeaders;
   bool                  forcePreflight;
   bool                  isPreflight;
+  bool                  forceHSTSPriming;
+  bool                  mixedContentWouldBlock;
 };
 
 /**
@@ -126,6 +128,7 @@ struct HttpChannelOpenArgs
   bool                        allowStaleCacheContent;
   nsCString                   contentTypeHint;
   nsCString                   channelId;
+  nsCString                   preferredAlternativeType;
 };
 
 struct HttpChannelConnectArgs

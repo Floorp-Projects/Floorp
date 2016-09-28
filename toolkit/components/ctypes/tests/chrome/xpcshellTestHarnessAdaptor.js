@@ -18,17 +18,31 @@ var Components = {
 };
 
 function do_throw(message, stack) {
+  do_print("error: " + message);
+  do_print("stack: " + (stack ? stack : new Error().stack));
   throw message;
 }
 
 function do_check_neq(left, right, stack) {
-  if (left == right)
+  if (left == right) {
+    var text = "do_check_neq failed";
+    try {
+      text += ": " + left + " == " + right;
+    } catch (e) {
+    }
     do_throw(text, stack);
+  }
 }
 
 function do_check_eq(left, right, stack) {
-  if (left != right)
+  if (left != right) {
+    var text = "do_check_eq failed";
+    try {
+      text += ": " + left + " != " + right;
+    } catch (e) {
+    }
     do_throw(text, stack);
+  }
 }
 
 function do_check_true(condition, stack) {

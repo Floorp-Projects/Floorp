@@ -30,6 +30,7 @@ include URIParams;
 include InputStreamParams;
 include NeckoChannelParams;
 include PBrowserOrId;
+include protocol PAltDataOutputStream;
 
 using class IPC::SerializedLoadContext from "SerializedLoadContext.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
@@ -58,6 +59,7 @@ prio(normal upto urgent) sync protocol PNecko
   manages PRtspChannel;
   manages PChannelDiverter;
   manages PTransportProvider;
+  manages PAltDataOutputStream;
 
 parent:
   async __delete__();
@@ -115,6 +117,8 @@ parent:
   async OnAuthCancelled(uint64_t callbackId, bool userCancel);
 
   async RemoveRequestContext(nsCString rcid);
+
+  async PAltDataOutputStream(nsCString type, PHttpChannel channel);
 
 child:
   /*

@@ -100,6 +100,8 @@
 #include "nsISocketProvider.h"
 #include "mozilla/net/Predictor.h"
 #include "CacheControlParser.h"
+#include "nsMixedContentBlocker.h"
+#include "HSTSPrimerListener.h"
 
 namespace mozilla { namespace net {
 
@@ -407,12 +409,50 @@ nsHttpChannel::Connect()
         // otherwise, let's just proceed without using the cache.
     }
 
+    return TryHSTSPriming();
+}
+
+nsresult
+nsHttpChannel::TryHSTSPriming()
+{
+    if (mLoadInfo) {
+        // HSTS priming requires the LoadInfo provided with AsyncOpen2
+        bool requireHSTSPriming =
+            mLoadInfo->GetForceHSTSPriming();
+
+        if (requireHSTSPriming &&
+                nsMixedContentBlocker::sSendHSTSPriming &&
+                mInterceptCache == DO_NOT_INTERCEPT) {
+            bool isHttpsScheme;
+            nsresult rv = mURI->SchemeIs("https", &isHttpsScheme);
+            NS_ENSURE_SUCCESS(rv, rv);
+            if (!isHttpsScheme) {
+                rv = HSTSPrimingListener::StartHSTSPriming(this, this);
+
+                if (NS_FAILED(rv)) {
+                    CloseCacheEntry(false);
+                    return rv;
+                }
+
+                return NS_OK;
+            }
+
+            // The request was already upgraded, for example by
+            // upgrade-insecure-requests or a prior successful priming request
+            Telemetry::Accumulate(Telemetry::MIXED_CONTENT_HSTS_PRIMING_RESULT,
+                    HSTSPrimingResult::eHSTS_PRIMING_ALREADY_UPGRADED);
+            mLoadInfo->ClearHSTSPriming();
+        }
+    }
+
     return ContinueConnect();
 }
 
 nsresult
 nsHttpChannel::ContinueConnect()
 {
+    // If we have had HSTS priming, we need to reevaluate whether we need
+    // a CORS preflight. Bug: 1272440
     // If we need to start a CORS preflight, do it now!
     // Note that it is important to do this before the early returns below.
     if (!mIsCorsPreflightDone && mRequireCORSPreflight &&
@@ -466,7 +506,7 @@ nsHttpChannel::ContinueConnect()
         if (!mFallbackChannel && !mFallbackKey.IsEmpty()) {
             return AsyncCall(&nsHttpChannel::HandleAsyncFallback);
         }
-        LOG(("  !mCachedEntry && mLoadFlags & LOAD_ONLY_FROM_CACHE"));
+        LOG(("  !mCacheEntry && mLoadFlags & LOAD_ONLY_FROM_CACHE"));
         return NS_ERROR_DOCUMENT_NOT_CACHED;
     }
 
@@ -4138,7 +4178,7 @@ nsHttpChannel::OnCacheEntryAvailableInternal(nsICacheEntry *entry,
         return NS_OK;
     }
 
-    return ContinueConnect();
+    return TryHSTSPriming();
 }
 
 nsresult
@@ -4496,7 +4536,28 @@ nsHttpChannel::OpenCacheInputStream(nsICacheEntry* cacheEntry, bool startBufferi
     // Open an input stream for the entity, so that the call to OpenInputStream
     // happens off the main thread.
     nsCOMPtr<nsIInputStream> stream;
-    rv = cacheEntry->OpenInputStream(0, getter_AddRefs(stream));
+
+    // If an alternate representation was requested, try to open the alt
+    // input stream.
+    if (!mPreferredCachedAltDataType.IsEmpty()) {
+        rv = cacheEntry->OpenAlternativeInputStream(mPreferredCachedAltDataType,
+                                                    getter_AddRefs(stream));
+        if (NS_SUCCEEDED(rv)) {
+            // We have succeeded.
+            mAvailableCachedAltDataType = mPreferredCachedAltDataType;
+            // Clear the header.
+            mCachedResponseHead->SetContentLength(-1);
+            // Set the correct data size on the channel.
+            int64_t altDataSize;
+            if (NS_SUCCEEDED(cacheEntry->GetAltDataSize(&altDataSize))) {
+                mCachedResponseHead->SetContentLength(altDataSize);
+            }
+        }
+    }
+
+    if (!stream) {
+        rv = cacheEntry->OpenInputStream(0, getter_AddRefs(stream));
+    }
 
     if (NS_FAILED(rv)) {
         LOG(("Failed to open cache input stream [channel=%p, "
@@ -5478,6 +5539,7 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
     NS_INTERFACE_MAP_ENTRY(nsIDNSListener)
     NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
     NS_INTERFACE_MAP_ENTRY(nsICorsPreflightCallback)
+    NS_INTERFACE_MAP_ENTRY(nsIHstsPrimingCallback)
     NS_INTERFACE_MAP_ENTRY(nsIChannelWithDivertableParentListener)
     // we have no macro that covers this case.
     if (aIID.Equals(NS_GET_IID(nsHttpChannel)) ) {
@@ -6340,6 +6402,8 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     MOZ_ASSERT(!(mTransactionPump && mCachePump) || mCachedContentIsPartial,
                "If we have both pumps, the cache content must be partial");
 
+    mAfterOnStartRequestBegun = true;
+
     if (!mSecurityInfo && !mCachePump && mTransaction) {
         // grab the security info from the connection object; the transaction
         // is guaranteed to own a reference to the connection.
@@ -6687,6 +6751,14 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
                    "We should not call OnStopRequest twice");
         mListener->OnStopRequest(this, mListenerContext, status);
         mOnStopRequestCalled = true;
+    }
+
+    // If a preferred alt-data type was set, this signals the consumer is
+    // interested in reading and/or writing the alt-data representation.
+    // We need to hold a reference to the cache entry in case the listener calls
+    // openAlternativeOutputStream() after CloseCacheEntry() clears mCacheEntry.
+    if (!mPreferredCachedAltDataType.IsEmpty()) {
+        mAltDataCacheEntry = mCacheEntry;
     }
 
     CloseCacheEntry(!contentComplete);
@@ -7050,6 +7122,37 @@ nsHttpChannel::GetAllowStaleCacheContent(bool *aAllowStaleCacheContent)
     NS_ENSURE_ARG(aAllowStaleCacheContent);
     *aAllowStaleCacheContent = mAllowStaleCacheContent;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::PreferAlternativeDataType(const nsACString & aType)
+{
+    ENSURE_CALLED_BEFORE_ASYNC_OPEN();
+    mPreferredCachedAltDataType = aType;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetAlternativeDataType(nsACString & aType)
+{
+    // must be called during or after OnStartRequest
+    if (!mAfterOnStartRequestBegun) {
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+    aType = mAvailableCachedAltDataType;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::OpenAlternativeOutputStream(const nsACString & type, nsIOutputStream * *_retval)
+{
+    // OnStopRequest will clear mCacheEntry, but we may use mAltDataCacheEntry
+    // if the consumer called PreferAlternativeDataType()
+    nsCOMPtr<nsICacheEntry> cacheEntry = mCacheEntry ? mCacheEntry : mAltDataCacheEntry;
+    if (!cacheEntry) {
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+    return cacheEntry->OpenAlternativeOutputStream(type, _retval);
 }
 
 //-----------------------------------------------------------------------------
@@ -7821,6 +7924,105 @@ nsHttpChannel::OnPreflightFailed(nsresult aError)
 
     CloseCacheEntry(false);
     AsyncAbort(aError);
+    return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// nsIHstsPrimingCallback functions
+//-----------------------------------------------------------------------------
+
+/*
+ * May be invoked synchronously if HSTS priming has already been performed
+ * for the host.
+ */
+nsresult
+nsHttpChannel::OnHSTSPrimingSucceeded(bool aCached)
+{
+    if (nsMixedContentBlocker::sUseHSTS) {
+        // redirect the channel to HTTPS if the pref
+        // "security.mixed_content.use_hsts" is true
+        LOG(("HSTS Priming succeeded, redirecting to HTTPS [this=%p]", this));
+        Telemetry::Accumulate(Telemetry::MIXED_CONTENT_HSTS_PRIMING_RESULT,
+                (aCached) ? HSTSPrimingResult::eHSTS_PRIMING_CACHED_DO_UPGRADE :
+                            HSTSPrimingResult::eHSTS_PRIMING_SUCCEEDED);
+        return AsyncCall(&nsHttpChannel::HandleAsyncRedirectChannelToHttps);
+    }
+
+    // If "security.mixed_content.use_hsts" is false, record the result of
+    // HSTS priming and block or proceed with the load as required by
+    // mixed-content blocking
+    bool wouldBlock = mLoadInfo->GetMixedContentWouldBlock();
+
+    // preserve the mixed-content-before-hsts order and block if required
+    if (wouldBlock) {
+        LOG(("HSTS Priming succeeded, blocking for mixed-content [this=%p]",
+                    this));
+        Telemetry::Accumulate(Telemetry::MIXED_CONTENT_HSTS_PRIMING_RESULT,
+                              HSTSPrimingResult::eHSTS_PRIMING_SUCCEEDED_BLOCK);
+        CloseCacheEntry(false);
+        return AsyncAbort(NS_ERROR_CONTENT_BLOCKED);
+    }
+
+    LOG(("HSTS Priming succeeded, loading insecure: [this=%p]", this));
+    Telemetry::Accumulate(Telemetry::MIXED_CONTENT_HSTS_PRIMING_RESULT,
+                          HSTSPrimingResult::eHSTS_PRIMING_SUCCEEDED_HTTP);
+
+    nsresult rv = ContinueConnect();
+    if (NS_FAILED(rv)) {
+        CloseCacheEntry(false);
+        return AsyncAbort(rv);
+    }
+
+    return NS_OK;
+}
+
+/*
+ * May be invoked synchronously if HSTS priming has already been performed
+ * for the host.
+ */
+nsresult
+nsHttpChannel::OnHSTSPrimingFailed(nsresult aError, bool aCached)
+{
+    bool wouldBlock = mLoadInfo->GetMixedContentWouldBlock();
+
+    LOG(("HSTS Priming Failed [this=%p], %s the load", this,
+                (wouldBlock) ? "blocking" : "allowing"));
+    if (aCached) {
+        // Between the time we marked for priming and started the priming request,
+        // the host was found to not allow the upgrade, probably from another
+        // priming request.
+        Telemetry::Accumulate(Telemetry::MIXED_CONTENT_HSTS_PRIMING_RESULT,
+                (wouldBlock) ?  HSTSPrimingResult::eHSTS_PRIMING_CACHED_BLOCK :
+                                HSTSPrimingResult::eHSTS_PRIMING_CACHED_NO_UPGRADE);
+    } else {
+        // A priming request was sent, and no HSTS header was found that allows
+        // the upgrade.
+        Telemetry::Accumulate(Telemetry::MIXED_CONTENT_HSTS_PRIMING_RESULT,
+                (wouldBlock) ?  HSTSPrimingResult::eHSTS_PRIMING_FAILED_BLOCK :
+                                HSTSPrimingResult::eHSTS_PRIMING_FAILED_ACCEPT);
+    }
+
+    // Don't visit again for at least one day
+    nsISiteSecurityService* sss = gHttpHandler->GetSSService();
+    NS_ENSURE_TRUE(sss, NS_ERROR_OUT_OF_MEMORY);
+    nsresult rv = sss->CacheNegativeHSTSResult(mURI, 24 * 60 * 60);
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsISiteSecurityService::CacheNegativeHSTSResult failed");
+    }
+
+    // If we would block, go ahead and abort with the error provided
+    if (wouldBlock) {
+        CloseCacheEntry(false);
+        return AsyncAbort(aError);
+    }
+
+    // we can continue the load and the UI has been updated as mixed content
+    rv = ContinueConnect();
+    if (NS_FAILED(rv)) {
+        CloseCacheEntry(false);
+        return AsyncAbort(rv);
+    }
+
     return NS_OK;
 }
 

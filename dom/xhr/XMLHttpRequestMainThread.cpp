@@ -169,7 +169,6 @@ XMLHttpRequestMainThread::XMLHttpRequestMainThread()
     mFlagSyncLooping(false), mFlagBackgroundRequest(false),
     mFlagHadUploadListenersOnSend(false), mFlagACwithCredentials(false),
     mFlagTimedOut(false), mFlagDeleted(false), mFlagSend(false),
-    mSendExtraLoadingEvents(Preferences::GetBool("dom.fire_extra_xhr_loading_readystatechanges", true)),
     mUploadTransferred(0), mUploadTotal(0), mUploadComplete(true),
     mProgressSinceLastProgressEvent(false),
     mRequestSentTime(0), mTimeoutMilliseconds(0),
@@ -1715,9 +1714,7 @@ XMLHttpRequestMainThread::OnDataAvailable(nsIRequest *request,
 
   mDataAvailable += totalRead;
 
-  if (mState == State::headers_received || mSendExtraLoadingEvents) {
-    ChangeState(State::loading);
-  }
+  ChangeState(State::loading);
 
   if (!mFlagSynchronous && !mProgressTimerIsActive) {
     StartProgressEventTimer();
@@ -2412,6 +2409,27 @@ XMLHttpRequestMainThread::CreateChannel()
 
   if (mIsAnon) {
     secFlags |= nsILoadInfo::SEC_COOKIES_OMIT;
+  }
+
+  nsCOMPtr<nsIExpandedPrincipal> ep = do_QueryInterface(mPrincipal);
+  if (ep) {
+    // If we have an expanded principal, instead of using that, select the
+    // principal in the whitelist which can load our URL, and use that instead.
+    nsTArray<nsCOMPtr<nsIPrincipal>>* whitelist = nullptr;
+    ep->GetWhiteList(&whitelist);
+    if (!whitelist) {
+      return NS_ERROR_FAILURE;
+    }
+    MOZ_ASSERT(!(secFlags & nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS));
+    bool dataInherits = (secFlags &
+      (nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
+       nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS)) != 0;
+    for (const auto& principal : *whitelist) {
+      if (NS_SUCCEEDED(principal->CheckMayLoad(mRequestURL, false, dataInherits))) {
+        mPrincipal = principal;
+        break;
+      }
+    }
   }
 
   // Use the responsibleDocument if we have it, except for dedicated workers

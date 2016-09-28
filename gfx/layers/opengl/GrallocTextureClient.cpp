@@ -8,7 +8,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/layers/AsyncTransactionTracker.h" // for AsyncTransactionTracker
 #include "mozilla/layers/GrallocTextureClient.h"
-#include "mozilla/layers/CompositableForwarder.h"
+#include "mozilla/layers/TextureForwarder.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/ShadowLayerUtilsGralloc.h"
 #include "mozilla/layers/SharedBufferManagerChild.h"
@@ -295,10 +295,6 @@ GrallocTextureData::Create(gfx::IntSize aSize, AndroidFormat aAndroidFormat,
   if (!aAllocator || !aAllocator->IPCOpen()) {
     return nullptr;
   }
-  int32_t maxSize = aAllocator->AsClientAllocator()->GetMaxTextureSize();
-  if (aSize.width > maxSize || aSize.height > maxSize) {
-    return nullptr;
-  }
   gfx::SurfaceFormat format;
   switch (aAndroidFormat) {
   case android::PIXEL_FORMAT_RGBA_8888:
@@ -447,6 +443,7 @@ GrallocTextureData::TextureClientFromSharedSurface(gl::SharedSurface* abstractSu
 
 TextureData*
 GrallocTextureData::CreateSimilar(LayersIPCChannel* aAllocator,
+                                  LayersBackend aLayersBackend,
                                   TextureFlags aFlags,
                                   TextureAllocationFlags aAllocFlags) const
 {
