@@ -4,11 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Casting.h"
 #include "nsSSLStatus.h"
 #include "plstr.h"
 #include "nsIClassInfoImpl.h"
 #include "nsIObjectOutputStream.h"
 #include "nsIObjectInputStream.h"
+#include "SignedCertificateTimestamp.h"
 #include "ssl.h"
 
 NS_IMETHODIMP
@@ -87,6 +89,16 @@ nsSSLStatus::GetProtocolVersion(uint16_t* aProtocolVersion)
 }
 
 NS_IMETHODIMP
+nsSSLStatus::GetCertificateTransparencyStatus(
+  uint16_t* aCertificateTransparencyStatus)
+{
+  NS_ENSURE_ARG_POINTER(aCertificateTransparencyStatus);
+
+  *aCertificateTransparencyStatus = mCertificateTransparencyStatus;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSSLStatus::GetIsDomainMismatch(bool* aIsDomainMismatch)
 {
   NS_ENSURE_ARG_POINTER(aIsDomainMismatch);
@@ -146,8 +158,19 @@ nsSSLStatus::Read(nsIObjectInputStream* aStream)
 
   rv = aStream->Read16(&mCipherSuite);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = aStream->Read16(&mProtocolVersion);
+
+  // The code below is a workaround to allow serializing new fields
+  // while preserving binary compatibility with older streams. For more details
+  // on the binary compatibility requirement, refer to bug 1248628.
+  // Here, we take advantage of the fact that mProtocolVersion was originally
+  // stored as a 16 bits integer, but the highest 8 bits were never used.
+  // These bits are now used for stream versioning.
+  uint16_t protocolVersionAndStreamFormatVersion;
+  rv = aStream->Read16(&protocolVersionAndStreamFormatVersion);
   NS_ENSURE_SUCCESS(rv, rv);
+  mProtocolVersion = protocolVersionAndStreamFormatVersion & 0xFF;
+  const uint8_t streamFormatVersion =
+    (protocolVersionAndStreamFormatVersion >> 8) & 0xFF;
 
   rv = aStream->ReadBoolean(&mIsDomainMismatch);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -165,12 +188,21 @@ nsSSLStatus::Read(nsIObjectInputStream* aStream)
   rv = aStream->ReadBoolean(&mHaveCertErrorBits);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Added in version 1 (see bug 1305289).
+  if (streamFormatVersion >= 1) {
+    rv = aStream->Read16(&mCertificateTransparencyStatus);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSSLStatus::Write(nsIObjectOutputStream* aStream)
 {
+  // The current version of the binary stream format.
+  const uint8_t STREAM_FORMAT_VERSION = 1;
+
   nsresult rv = aStream->WriteCompoundObject(mServerCert,
                                              NS_GET_IID(nsIX509Cert),
                                              true);
@@ -178,7 +210,11 @@ nsSSLStatus::Write(nsIObjectOutputStream* aStream)
 
   rv = aStream->Write16(mCipherSuite);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = aStream->Write16(mProtocolVersion);
+
+  uint16_t protocolVersionAndStreamFormatVersion =
+    mozilla::AssertedCast<uint8_t>(mProtocolVersion) |
+    (STREAM_FORMAT_VERSION << 8);
+  rv = aStream->Write16(protocolVersionAndStreamFormatVersion);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aStream->WriteBoolean(mIsDomainMismatch);
@@ -195,6 +231,10 @@ nsSSLStatus::Write(nsIObjectOutputStream* aStream)
   rv = aStream->WriteBoolean(mHaveCipherSuiteAndProtocol);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = aStream->WriteBoolean(mHaveCertErrorBits);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Added in version 1.
+  rv = aStream->Write16(mCertificateTransparencyStatus);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -258,6 +298,8 @@ nsSSLStatus::GetClassIDNoAlloc(nsCID* aClassIDNoAlloc)
 nsSSLStatus::nsSSLStatus()
 : mCipherSuite(0)
 , mProtocolVersion(0)
+, mCertificateTransparencyStatus(nsISSLStatus::
+    CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE)
 , mIsDomainMismatch(false)
 , mIsNotValidAtThisTime(false)
 , mIsUntrusted(false)
@@ -292,5 +334,57 @@ nsSSLStatus::SetServerCert(nsNSSCertificate* aServerCert,
       return;
     }
     mHasIsEVStatus = true;
+  }
+}
+
+void
+nsSSLStatus::SetCertificateTransparencyInfo(
+  const mozilla::psm::CertificateTransparencyInfo& info)
+{
+  using mozilla::ct::SignedCertificateTimestamp;
+
+  if (!info.enabled) {
+    // CT disabled.
+    mCertificateTransparencyStatus =
+      nsISSLStatus::CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE;
+    return;
+  }
+
+  if (!info.processedSCTs) {
+    // No SCTs processed on the connection.
+    mCertificateTransparencyStatus =
+      nsISSLStatus::CERTIFICATE_TRANSPARENCY_NONE;
+    return;
+  }
+
+  bool hasOKSCTs = false;
+  bool hasUnknownLogSCTs = false;
+  bool hasInvalidSCTs = false;
+  for (const SignedCertificateTimestamp& sct : info.verifyResult.scts) {
+    switch (sct.verificationStatus) {
+      case SignedCertificateTimestamp::VerificationStatus::OK:
+        hasOKSCTs = true;
+        break;
+      case SignedCertificateTimestamp::VerificationStatus::UnknownLog:
+        hasUnknownLogSCTs = true;
+        break;
+      case SignedCertificateTimestamp::VerificationStatus::InvalidSignature:
+      case SignedCertificateTimestamp::VerificationStatus::InvalidTimestamp:
+        hasInvalidSCTs = true;
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unexpected SCT::VerificationStatus type");
+    }
+  }
+
+  if (hasOKSCTs) {
+    mCertificateTransparencyStatus =
+      nsISSLStatus::CERTIFICATE_TRANSPARENCY_OK;
+  } else if (hasUnknownLogSCTs) {
+    mCertificateTransparencyStatus =
+      nsISSLStatus::CERTIFICATE_TRANSPARENCY_UNKNOWN_LOG;
+  } else if (hasInvalidSCTs) {
+    mCertificateTransparencyStatus =
+      nsISSLStatus::CERTIFICATE_TRANSPARENCY_INVALID;
   }
 }
