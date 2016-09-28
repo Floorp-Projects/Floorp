@@ -18,7 +18,8 @@ class nsIChannel;
 namespace mozilla {
 namespace dom {
 
-class XMLDocument : public nsDocument
+class XMLDocument : public nsDocument,
+                    public nsIDOMXMLDocument
 {
 public:
   explicit XMLDocument(const char* aContentType = "application/xml");
@@ -61,7 +62,10 @@ public:
   {
     return mAsync;
   }
-  // The XPCOM SetAsync is ok for us
+  void SetAsync(bool aAsync)
+  {
+    mAsync = aAsync;
+  }
 
   // .location is [Unforgeable], so we have to make it clear that the
   // nsIDocument version applies to us (it's shadowed by the XPCOM thing on
