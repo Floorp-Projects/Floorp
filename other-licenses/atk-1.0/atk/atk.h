@@ -22,6 +22,12 @@
 
 #define __ATK_H_INSIDE__
 
+// XXX this is a Mozilla hack to avoid using atkversion.h which needs to be run
+// through m4, and we don't want to deal with that.  Fortunately we don't need
+// any of the fancyness in that header to deal with compile time version
+// detection.
+#define ATK_AVAILABLE_IN_2_12 extern
+
 #include <atk/atkobject.h>
 #include <atk/atkaction.h>
 #include <atk/atkcomponent.h>
@@ -46,6 +52,7 @@
 #include <atk/atkstateset.h>
 #include <atk/atkstreamablecontent.h>
 #include <atk/atktable.h>
+#include <atk/atktablecell.h>
 #include <atk/atktext.h>
 #include <atk/atkutil.h>
 #include <atk/atkvalue.h>
