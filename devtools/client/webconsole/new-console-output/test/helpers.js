@@ -7,7 +7,7 @@ let ReactDOM = require("devtools/client/shared/vendor/react-dom");
 let React = require("devtools/client/shared/vendor/react");
 var TestUtils = React.addons.TestUtils;
 
-const actions = require("devtools/client/webconsole/new-console-output/actions/messages");
+const actions = require("devtools/client/webconsole/new-console-output/actions/index");
 const { configureStore } = require("devtools/client/webconsole/new-console-output/store");
 const { IdGenerator } = require("devtools/client/webconsole/new-console-output/utils/id-generator");
 const { stubPackets } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");

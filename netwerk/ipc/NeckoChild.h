@@ -29,6 +29,10 @@ protected:
     AllocPHttpChannelChild(const PBrowserOrId&, const SerializedLoadContext&,
                            const HttpChannelCreationArgs& aOpenArgs) override;
   virtual bool DeallocPHttpChannelChild(PHttpChannelChild*) override;
+
+  virtual PAltDataOutputStreamChild* AllocPAltDataOutputStreamChild(const nsCString& type, PHttpChannelChild* channel) override;
+  virtual bool DeallocPAltDataOutputStreamChild(PAltDataOutputStreamChild* aActor) override;
+
   virtual PCookieServiceChild* AllocPCookieServiceChild() override;
   virtual bool DeallocPCookieServiceChild(PCookieServiceChild*) override;
   virtual PWyciwygChannelChild* AllocPWyciwygChannelChild() override;

@@ -16,6 +16,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
@@ -94,7 +95,7 @@ public class FloatingToolbarTextSelection implements TextSelection, GeckoEventLi
     }
 
     private void registerForEvents() {
-        EventDispatcher.getInstance().registerGeckoThreadListener(this,
+        GeckoApp.getEventDispatcher().registerGeckoThreadListener(this,
                 "TextSelection:ActionbarInit",
                 "TextSelection:ActionbarStatus",
                 "TextSelection:ActionbarUninit",
@@ -103,7 +104,7 @@ public class FloatingToolbarTextSelection implements TextSelection, GeckoEventLi
     }
 
     private void unregisterFromEvents() {
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
+        GeckoApp.getEventDispatcher().unregisterGeckoThreadListener(this,
                 "TextSelection:ActionbarInit",
                 "TextSelection:ActionbarStatus",
                 "TextSelection:ActionbarUninit",

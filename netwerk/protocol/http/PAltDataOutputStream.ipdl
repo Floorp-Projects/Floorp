@@ -1,0 +1,32 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PNecko;
+
+namespace mozilla {
+namespace net {
+
+protocol PAltDataOutputStream
+{
+  manager PNecko;
+
+parent:
+  // Sends data from the child to the parent that will be written to the cache.
+  async WriteData(nsCString data);
+  // Signals that writing to the output stream is done.
+  async Close();
+  async __delete__();
+
+child:
+  // The parent calls this method to signal that an error has ocurred.
+  // This may mean that opening the output stream has failed or that writing to
+  // the stream has returned an error.
+  async Error(nsresult err);
+};
+
+} // namespace net
+} // namespace mozilla

@@ -93,13 +93,16 @@ mochitest:
     suite: mochitest/plain-chunked
     treeherder-symbol: tc-M()
     instance-size: xlarge
-    chunks: 20
+    chunks:
+        by-test-platform:
+            android-4.3-arm7-api-15/debug: 26
+            default: 20
     loopback-video: true
     e10s: false
     max-run-time:
         by-test-platform:
             android-4.3-arm7-api-15/debug: 10800
-            default: 3600
+            default: 5400
     mozharness:
         script: android_emulator_unittest.py
         no-read-buildbot-config: true

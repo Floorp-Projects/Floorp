@@ -196,6 +196,38 @@ interface nsICacheEntry : nsISupports
    */
   readonly attribute long long dataSize;
 
+  /**
+  * Returns the length of data this entry holds.
+  * @throws
+  *    - NS_ERROR_IN_PROGRESS when a write is still in progress (either real
+                              content or alt data).
+  *    - NS_ERROR_NOT_AVAILABLE if alt data does not exist.
+  */
+  readonly attribute long long altDataSize;
+
+  /**
+   * Opens and returns an output stream that a consumer may use to save an
+   * alternate representation of the data.
+   * @throws
+   *    - NS_ERROR_NOT_AVAILABLE if the real data hasn't been written.
+   *    - NS_ERROR_IN_PROGRESS when the writing regular content or alt-data to
+   *      the cache entry is still in progress.
+   *
+   * If there is alt-data already saved, it will be overwritten.
+   */
+  nsIOutputStream openAlternativeOutputStream(in ACString type);
+
+  /**
+   * Opens and returns an input stream that can be used to read the alternative
+   * representation previously saved in the cache.
+   * If this call is made while writing alt-data is still in progress, it is
+   * still possible to read content from the input stream as it's being written.
+   * @throws
+   *    - NS_ERROR_NOT_AVAILABLE if the alt-data representation doesn't exist at
+   *      all or if alt-data of the given type doesn't exist.
+   */
+  nsIInputStream openAlternativeInputStream(in ACString type);
+
   /****************************************************************************
    * The following methods might be added to some nsICacheEntryInternal
    * interface since we want to remove them as soon as the old cache backend is

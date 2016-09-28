@@ -70,7 +70,6 @@ nsJSON::Encode(JS::Handle<JS::Value> aValue, JSContext* cx, uint8_t aArgc,
     return rv;
 
   if (aArgc == 0) {
-    aJSON.Truncate();
     aJSON.SetIsVoid(true);
     return NS_OK;
   }
@@ -83,7 +82,6 @@ nsJSON::Encode(JS::Handle<JS::Value> aValue, JSContext* cx, uint8_t aArgc,
     rv = NS_OK;
     // if we didn't consume anything, it's not JSON, so return null
     if (!writer.DidWrite()) {
-      aJSON.Truncate();
       aJSON.SetIsVoid(true);
     } else {
       writer.FlushBuffer();

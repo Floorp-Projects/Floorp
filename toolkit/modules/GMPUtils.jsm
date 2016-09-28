@@ -134,6 +134,7 @@ this.GMPPrefs = {
   KEY_CERT_REQUIREBUILTIN:      "media.gmp-manager.cert.requireBuiltIn",
   KEY_UPDATE_LAST_CHECK:        "media.gmp-manager.lastCheck",
   KEY_SECONDS_BETWEEN_CHECKS:   "media.gmp-manager.secondsBetweenChecks",
+  KEY_UPDATE_ENABLED:           "media.gmp-manager.updateEnabled",
   KEY_APP_DISTRIBUTION:         "distribution.id",
   KEY_APP_DISTRIBUTION_VERSION: "distribution.version",
   KEY_BUILDID:                  "media.gmp-manager.buildID",

@@ -1,0 +1,31 @@
+{
+  "vendors": {
+    "gmp-eme-adobe": {
+      "platforms": {
+        "WINNT_x86-msvc-x64": {
+          "alias": "WINNT_x86-msvc"
+        },
+        "WINNT_x86-msvc": {
+          "fileUrl": "https://cdmdownload.adobe.com/firefox/win/x86/primetime_gmp_win_x86_gmc_40673.zip",
+          "hashValue": "8aad35fc13814b0f1daacddb0d599eedd685287d5afddc97c2f740c8aea270636ccd75b1d1a57364b84e8eb1b23c9f1c126c057d95f3d8217b331dc4b1d5340f",
+          "filesize": 3694349
+        },
+        "WINNT_x86_64-msvc-x64": {
+          "alias": "WINNT_x86_64-msvc"
+        },
+        "WINNT_x86-msvc-x86": {
+          "alias": "WINNT_x86-msvc"
+        },
+        "WINNT_x86_64-msvc": {
+          "fileUrl": "https://cdmdownload.adobe.com/firefox/win/x64/primetime_gmp_win_x64_gmc_40673.zip",
+          "hashValue": "bd1e1a370c5f9dadc247c9f00dd203fab1a75ff3afed8439a0a0bfcc7e1767d0da68497140cbe48daa70e2535dde5f220dd7b344619cecd830a6b685efb9d5a0",
+          "filesize": 4853103
+        }
+      },
+      "version": "17"
+    }
+  },
+  "hashFunction": "sha512",
+  "name": "CDM-17",
+  "schema_version": 1000
+}
