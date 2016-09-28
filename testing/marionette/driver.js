@@ -104,9 +104,9 @@ this.GeckoDriver = function(appName, stopSignal) {
   // points to current browser
   this.curBrowser = null;
   this.context = Context.CONTENT;
-  this.scriptTimeout = null;
+  this.scriptTimeout = 30000;  // 30 seconds
   this.searchTimeout = null;
-  this.pageTimeout = null;
+  this.pageTimeout = 300000;  // five minutes
   this.timer = null;
   this.inactivityTimer = null;
   this.marionetteLog = new logging.ContentLogger();
