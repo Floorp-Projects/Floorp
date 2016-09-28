@@ -4356,51 +4356,10 @@ nsCookieService::PurgeCookies(int64_t aCurrentTimeInUsec)
 // find whether a given cookie has been previously set. this is provided by the
 // nsICookieManager2 interface.
 NS_IMETHODIMP
-nsCookieService::CookieExists(nsICookie2* aCookie,
-                              JS::HandleValue aOriginAttributes,
-                              JSContext* aCx,
-                              uint8_t aArgc,
-                              bool* aFoundCookie)
+nsCookieService::CookieExists(nsICookie2 *aCookie,
+                              bool       *aFoundCookie)
 {
   NS_ENSURE_ARG_POINTER(aCookie);
-  NS_ENSURE_ARG_POINTER(aCx);
-  NS_ENSURE_ARG_POINTER(aFoundCookie);
-
-  MOZ_ASSERT(aArgc == 0 || aArgc == 1);
-
-  nsresult rv;
-  NeckoOriginAttributes attrs;
-
-  if (aArgc == 0) {
-    JS::Rooted<JS::Value> value(aCx);
-    rv = aCookie->GetOriginAttributes(aCx, &value);
-    // We ignore this failure because nsICookie2 could be implemented in JS and
-    // this getter will failed because marked [implicit_jscontext].
-    if (NS_SUCCEEDED(rv) &&
-        (!value.isObject() || !attrs.Init(aCx, value))) {
-      return NS_ERROR_INVALID_ARG;
-    }
-  } else {
-    rv = InitializeOriginAttributes(&attrs,
-                                    aOriginAttributes,
-                                    aCx,
-                                    aArgc,
-                                    u"nsICookieManager2.cookieExists()",
-                                    u"2");
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return CookieExistsNative(aCookie, &attrs, aFoundCookie);
-}
-
-NS_IMETHODIMP_(nsresult)
-nsCookieService::CookieExistsNative(nsICookie2* aCookie,
-                                    NeckoOriginAttributes* aOriginAttributes,
-                                    bool* aFoundCookie)
-{
-  NS_ENSURE_ARG_POINTER(aCookie);
-  NS_ENSURE_ARG_POINTER(aOriginAttributes);
-  NS_ENSURE_ARG_POINTER(aFoundCookie);
 
   if (!mDBState) {
     NS_WARNING("No DBState! Profile already closed?");
@@ -4420,8 +4379,7 @@ nsCookieService::CookieExistsNative(nsICookie2* aCookie,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsListIter iter;
-  *aFoundCookie = FindCookie(nsCookieKey(baseDomain, *aOriginAttributes),
-                             host, name, path, iter);
+  *aFoundCookie = FindCookie(DEFAULT_APP_KEY(baseDomain), host, name, path, iter);
   return NS_OK;
 }
 
