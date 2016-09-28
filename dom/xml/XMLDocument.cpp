@@ -277,8 +277,6 @@ XMLDocument::Load(const nsAString& aUrl, ErrorResult& aRv)
     return false;
   }
 
-  WarnOnceAbout(nsIDocument::eUseOfDOM3LoadMethod);
-
   nsCOMPtr<nsIDocument> callingDoc = GetEntryDocument();
   nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
 
@@ -292,6 +290,12 @@ XMLDocument::Load(const nsAString& aUrl, ErrorResult& aRv)
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return false;
   }
+
+  if (nsContentUtils::IsCallerChrome()) {
+    WarnOnceAbout(nsIDocument::eChromeUseOfDOM3LoadMethod);
+  } else {
+    WarnOnceAbout(nsIDocument::eUseOfDOM3LoadMethod);
+  } 
 
   nsIURI *baseURI = mDocumentURI;
   nsAutoCString charset;
