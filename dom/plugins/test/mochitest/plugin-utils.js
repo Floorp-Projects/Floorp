@@ -27,6 +27,10 @@ function getTestPlugin(pluginName) {
 // ends
 function setTestPluginEnabledState(newEnabledState, pluginName) {
   var oldEnabledState = SpecialPowers.setTestPluginEnabledState(newEnabledState, pluginName);
+  if (!oldEnabledState) {
+    ok(false, "Cannot find plugin '" + plugin + "'");
+    return;
+  }
   var plugin = getTestPlugin(pluginName);
   while (plugin.enabledState != newEnabledState) {
     // Run a nested event loop to wait for the preference change to
