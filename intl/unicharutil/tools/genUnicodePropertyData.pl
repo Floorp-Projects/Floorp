@@ -773,7 +773,8 @@ sub sprintCasemap
   my $usv = shift;
   return sprintf("0x%08x,", $casemap[$usv]);
 }
-&genTables("", "", "CaseMap", "", "uint32_t", 11, 5, \&sprintCasemap, 1, 4, 1);
+&genTables("#if !ENABLE_INTL_API", "#endif",
+           "CaseMap", "", "uint32_t", 11, 5, \&sprintCasemap, 1, 4, 1);
 
 print STDERR "Total data = $totalData\n";
 
