@@ -86,7 +86,7 @@ class GeckoInstance(object):
             if path is None:
                 path = 'gecko.log'
             elif os.path.isdir(path):
-                fname = 'gecko-%d.log' % time.time()
+                fname = 'gecko-{}.log'.format(time.time())
                 path = os.path.join(path, fname)
 
             path = os.path.realpath(path)
@@ -267,7 +267,7 @@ class FennecInstance(GeckoInstance):
         super(FennecInstance, self).close(restart)
         if self.runner and self.runner.device.connected:
             self.runner.device.dm.remove_forward(
-                'tcp:%d' % int(self.marionette_port)
+                'tcp:{}'.format(int(self.marionette_port))
             )
 
 

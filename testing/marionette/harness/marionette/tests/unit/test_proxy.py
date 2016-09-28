@@ -206,7 +206,7 @@ class TestProxy(MarionetteTestCase):
 
         self.assertEqual(result["proxyType"], 1)
         self.assertNotEqual(result["httpProxy"], url,
-                            'httpProxy was set. %s' % result["httpProxy"])
+                            'httpProxy was set. {}'.format(result["httpProxy"]))
         self.assertNotEqual(result["httpProxyPort"], port, 'httpProxyPort was set')
         self.assertNotEqual(result["sslProxy"], url, 'sslProxy url was set')
         self.assertNotEqual(result["sslProxyPort"], port, 'sslProxyPort was set')

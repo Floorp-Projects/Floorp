@@ -16,7 +16,7 @@ from marionette_driver.by import By
 
 
 def inline(doc, mime="text/html;charset=utf-8"):
-    return "data:%s,%s" % (mime, urllib.quote(doc))
+    return "data:{0},{1}".format(mime, urllib.quote(doc))
 
 
 ELEMENT = "iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAVklEQVRoge3PMQ0AMAzAsPJHVWYbjEWTj/zx7O75oXk9AAISD6QWSC2QWiC1QGqB1AKpBVILpBZILZBaILVAaoHUAqkFUgukFkgtkFogtUBqgdT6BnIBMKa1DtYxhPkAAAAASUVORK5CYII="

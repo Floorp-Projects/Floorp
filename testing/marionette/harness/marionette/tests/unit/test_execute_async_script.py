@@ -46,9 +46,9 @@ class TestExecuteAsyncContent(MarionetteTestCase):
     def test_same_context(self):
         var1 = 'testing'
         self.assertEqual(self.marionette.execute_script("""
-            this.testvar = '%s';
+            this.testvar = '{}';
             return this.testvar;
-            """ % var1), var1)
+            """.format(var1)), var1)
         self.assertEqual(self.marionette.execute_async_script(
             "marionetteScriptFinished(this.testvar);", new_sandbox=False), var1)
 

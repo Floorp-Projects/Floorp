@@ -32,7 +32,7 @@ def _wraps_parameterized(func, func_suffix, args, kwargs):
     def wrapper(self):
         return func(self, *args, **kwargs)
     wrapper.__name__ = func.__name__ + '_' + str(func_suffix)
-    wrapper.__doc__ = '[%s] %s' % (func_suffix, func.__doc__)
+    wrapper.__doc__ = '[{0}] {1}'.format(func_suffix, func.__doc__)
     return wrapper
 
 
@@ -53,8 +53,8 @@ class MetaParameterized(type):
                     func_suffix = cls.RE_ESCAPE_BAD_CHARS.sub('_', func_suffix)
                     wrapper = _wraps_parameterized(v, func_suffix, args, kwargs)
                     if wrapper.__name__ in attrs:
-                        raise KeyError("%s is already a defined method on %s" %
-                                       (wrapper.__name__, name))
+                        raise KeyError("{0} is already a defined method on {1}"
+                                       .format(wrapper.__name__, name))
                     attrs[wrapper.__name__] = wrapper
                 del attrs[k]
 
@@ -233,9 +233,9 @@ class CommonTestCase(unittest.TestCase):
         if hasattr(self, 'jsFile'):
             return os.path.basename(self.jsFile)
         else:
-            return '%s.py %s.%s' % (self.__class__.__module__,
-                                    self.__class__.__name__,
-                                    self._testMethodName)
+            return '{0}.py {1}.{2}'.format(self.__class__.__module__,
+                                           self.__class__.__name__,
+                                           self._testMethodName)
 
     def id(self):
         # TBPL starring requires that the "test name" field of a failure message
@@ -269,7 +269,7 @@ class CommonTestCase(unittest.TestCase):
                 try:
                     self.loglines.extend(self.marionette.get_logs())
                 except Exception, inst:
-                    self.loglines = [['Error getting log: %s' % inst]]
+                    self.loglines = [['Error getting log: {}'.format(inst)]]
                 try:
                     self.marionette.delete_session()
                 except (socket.error, MarionetteException, IOError):
@@ -315,7 +315,7 @@ if (!testUtils.hasOwnProperty("specialPowersObserver")) {
             caller_file = os.path.abspath(caller_file)
             filename = os.path.join(os.path.dirname(caller_file), filename)
         self.assert_(os.path.exists(filename),
-                     'Script "%s" must exist' % filename)
+                     'Script "{}" must exist' .format(filename))
         original_test_name = self.marionette.test_name
         self.marionette.test_name = os.path.basename(filename)
         f = open(filename, 'r')
@@ -398,7 +398,7 @@ if (!testUtils.hasOwnProperty("specialPowersObserver")) {
                     self.logger.test_status(self.test_name, name, 'PASS',
                                             expected='FAIL', message=diag)
                 self.assertEqual(0, len(results['failures']),
-                                 '%d tests failed' % len(results['failures']))
+                                 '{} tests failed' .format(len(results['failures'])))
                 if len(results['unexpectedSuccesses']) > 0:
                     raise _UnexpectedSuccess('')
                 if len(results['expectedFailures']) > 0:
@@ -468,8 +468,9 @@ class MarionetteTestCase(CommonTestCase):
     def setUp(self):
         CommonTestCase.setUp(self)
         self.marionette.test_name = self.test_name
-        self.marionette.execute_script("log('TEST-START: %s:%s')" %
-                                       (self.filepath.replace('\\', '\\\\'), self.methodName),
+        self.marionette.execute_script("log('TEST-START: {0}:{1}')"
+                                       .format(self.filepath.replace('\\', '\\\\'),
+                                               self.methodName),
                                        sandbox="simpletest")
 
     def tearDown(self):
@@ -481,9 +482,9 @@ class MarionetteTestCase(CommonTestCase):
         if not self.marionette.check_for_crash():
             try:
                 self.marionette.clear_imported_scripts()
-                self.marionette.execute_script("log('TEST-END: %s:%s')" %
-                                               (self.filepath.replace('\\', '\\\\'),
-                                                self.methodName),
+                self.marionette.execute_script("log('TEST-END: {0}:{1}')"
+                                               .format(self.filepath.replace('\\', '\\\\'),
+                                                       self.methodName),
                                                sandbox="simpletest")
                 self.marionette.test_name = None
             except (MarionetteException, IOError):
@@ -525,13 +526,13 @@ class MarionetteJSTestCase(CommonTestCase):
         if self.marionette.session is None:
             self.marionette.start_session()
         self.marionette.execute_script(
-            "log('TEST-START: %s');" % self.jsFile.replace('\\', '\\\\'),
+            "log('TEST-START: {}');".format(self.jsFile.replace('\\', '\\\\')),
             sandbox="simpletest")
 
         self.run_js_test(self.jsFile)
 
         self.marionette.execute_script(
-            "log('TEST-END: %s');" % self.jsFile.replace('\\', '\\\\'),
+            "log('TEST-END:{}s');".format(self.jsFile.replace('\\', '\\\\')),
             sandbox="simpletest")
         self.marionette.test_name = None
 

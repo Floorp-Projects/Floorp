@@ -73,11 +73,13 @@ class EnduranceTestCaseMixin(object):
         # Now drive the actual test case iterations
         for count in range(1, self.iterations + 1):
             self.iteration = count
-            self.marionette.log("%s iteration %d of %d" % (self.test_method.__name__, count, self.iterations))
+            self.marionette.log("{0} iteration {1} of {2}".format(self.test_method.__name__,
+                                                                  count,
+                                                                  self.iterations))
             # Print to console so can see what iteration we're on while test is running
             if self.iteration == 1:
                 print "\n"
-            print "Iteration %d of %d..." % (count, self.iterations)
+            print "Iteration {0} of {1}...".format(count, self.iterations)
             sys.stdout.flush()
 
             for function in self.pre_test_functions:
@@ -105,13 +107,18 @@ class EnduranceTestCaseMixin(object):
             self.checkpoint_path = "checkpoints"
             if not os.path.exists(self.checkpoint_path):
                 os.makedirs(self.checkpoint_path, 0755)
-            self.log_name = "%s/checkpoint_%s_%s.log" % (self.checkpoint_path, self.test_method.__name__, self.cur_time)
+            self.log_name = "{0}/checkpoint_{1}_{2}.log".format(self.checkpoint_path,
+                                                                self.test_method.__name__,
+                                                                self.cur_time)
             with open(self.log_name, 'a') as log_file:
-                log_file.write('%s Endurance Test: %s\n' % (self.cur_time, self.test_method.__name__))
-                log_file.write('%s Checkpoint after iteration %d of %d:\n' % (self.cur_time, self.iteration, self.iterations))
+                log_file.write('{0} Endurance Test: {1}\n'.format(self.cur_time,
+                                                                  self.test_method.__name__))
+                log_file.write('{0} Checkpoint after iteration {1} of xs{2}%d:\n'
+                               .format(self.cur_time, self.iteration, self.iterations))
         else:
             with open(self.log_name, 'a') as log_file:
-                log_file.write('%s Checkpoint after iteration %d of %d:\n' % (self.cur_time, self.iteration, self.iterations))
+                log_file.write('{0} Checkpoint after iteration {1} of {2}:\n'
+                               .format(self.cur_time, self.iteration, self.iterations))
 
         for function in self.checkpoint_functions:
             function()
@@ -136,21 +143,22 @@ class MemoryEnduranceTestCaseMixin(object):
 
         # Sleep to give device idle time (for gc)
         idle_time = 30
-        self.marionette.log("sleeping %d seconds to give the device some idle time" % idle_time)
+        self.marionette.log(
+            "sleeping {} seconds to give the device some idle time".format(idle_time))
         time.sleep(idle_time)
 
         # Dump out some memory status info
         self.marionette.log("checkpoint")
         output_str = self.device_manager.shellCheckOutput(["b2g-ps"])
         with open(self.log_name, 'a') as log_file:
-            log_file.write('%s\n' % output_str)
+            log_file.write('{}\n'.format(output_str))
 
     def memory_b2g_process_checkpoint(self):
         if not self.device_manager:
             return
 
         # Process checkpoint data into .json
-        self.marionette.log("processing checkpoint data from %s" % self.log_name)
+        self.marionette.log("processing checkpoint data from {}".format(self.log_name))
 
         # Open the checkpoint file
         checkpoint_file = open(self.log_name, 'r')
@@ -175,21 +183,21 @@ class MemoryEnduranceTestCaseMixin(object):
         summary_file = open(summary_name, 'w')
 
         # Write the summarized checkpoint data
-        summary_file.write('test_name: %s\n' % self.test_method.__name__)
-        summary_file.write('completed: %s\n' % self.cur_time)
-        summary_file.write('app_under_test: %s\n' % self.app_under_test.lower())
-        summary_file.write('total_iterations: %d\n' % self.iterations)
-        summary_file.write('checkpoint_interval: %d\n' % self.checkpoint_interval)
+        summary_file.write('test_name: {}\n'.format(self.test_method.__name__))
+        summary_file.write('completed: {}\n'.format(self.cur_time))
+        summary_file.write('app_under_test: {}\n'.format(self.app_under_test.lower()))
+        summary_file.write('total_iterations: {}\n'.format(self.iterations))
+        summary_file.write('checkpoint_interval: {}\n'.format(self.checkpoint_interval))
         summary_file.write('b2g_rss: ')
         summary_file.write(', '.join(b2g_rss_list))
-        summary_file.write('\navg_rss: %d\n\n' % avg_rss)
+        summary_file.write('\navg_rss: {}\n\n'.format(avg_rss))
 
         # Close the summary file
         summary_file.close()
 
         # Write to suite summary file
-        suite_summary_file_name = '%s/avg_b2g_rss_suite_summary.log' % self.checkpoint_path
+        suite_summary_file_name = '{}/avg_b2g_rss_suite_summary.log'.format(self.checkpoint_path)
         suite_summary_file = open(suite_summary_file_name, 'a')
-        suite_summary_file.write('%s: %s\n' % (self.test_method.__name__, avg_rss))
+        suite_summary_file.write('{0}: {1}\n'.format(self.test_method.__name__, avg_rss))
         suite_summary_file.close()
 

@@ -143,9 +143,9 @@ def skip_unless_browser_pref(pref, predicate=bool):
         def wrapped(self, *args, **kwargs):
             value = self.marionette.get_pref(pref)
             if value is None:
-                self.fail("No such browser preference: %r" % pref)
+                self.fail("No such browser preference: {0!r}".format(pref))
             if not predicate(value):
-                raise SkipTest("browser preference %r: %r" % (pref, value))
+                raise SkipTest("browser preference {0!r}: {1!r}".format((pref, value)))
             return target(self, *args, **kwargs)
         return wrapped
     return wrapper
@@ -158,7 +158,7 @@ def skip_unless_protocol(predicate):
         def skip_wrapper(self):
             level = self.marionette.client.protocol
             if not predicate(level):
-                raise SkipTest('skipping because protocol level is %s' % level)
+                raise SkipTest('skipping because protocol level is {}'.format(level))
             return test_item(self)
         return skip_wrapper
     return decorator

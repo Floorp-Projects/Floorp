@@ -83,7 +83,7 @@ class HTMLReportingTestRunnerMixin(object):
 
             if result.upper() in ['SKIPPED', 'UNEXPECTED-FAIL', 'KNOWN-FAIL', 'ERROR']:
                 if debug.get('screenshot'):
-                    screenshot = 'data:image/png;base64,%s' % debug['screenshot']
+                    screenshot = 'data:image/png;base64,{}'.format(debug['screenshot'])
                     additional_html.append(html.div(
                         html.a(html.img(src=screenshot), href="#"),
                         class_='screenshot'))
@@ -95,7 +95,8 @@ class HTMLReportingTestRunnerMixin(object):
                             # use base64 to avoid that some browser (such as Firefox, Opera)
                             # treats '#' as the start of another link if the data URL contains.
                             # use 'charset=utf-8' to show special characters like Chinese.
-                            href = 'data:text/plain;charset=utf-8;base64,%s' % base64.b64encode(content)
+                            href = 'data:text/plain;charset=utf-8;base64,{}'.format(
+                                base64.b64encode(content))
                         links_html.append(html.a(
                             name.title(),
                             class_=name,
@@ -173,7 +174,8 @@ class HTMLReportingTestRunnerMixin(object):
         if version.get('gaia_changeset'):
             configuration['Gaia revision'] = html.a(
                 version.get('gaia_changeset')[:12],
-                href='https://github.com/mozilla-b2g/gaia/commit/%s' % version.get('gaia_changeset'),
+                href='https://github.com/mozilla-b2g/gaia/commit/{}'.format(
+                    version.get('gaia_changeset')),
                 target='_blank')
 
         doc = html.html(
@@ -191,7 +193,7 @@ class HTMLReportingTestRunnerMixin(object):
                 html.script(raw(pkg_resources.resource_string(
                     __name__, os.path.sep.join(['resources', 'htmlreport', 'main.js']))),
                     type='text/javascript'),
-                html.p('Report generated on %s at %s by %s version %s' % (
+                html.p('Report generated on {0} at {1} by {2} version {3}'.format(
                     generated.strftime('%d-%b-%Y'),
                     generated.strftime('%H:%M:%S'),
                     self.html_name, self.html_version)),
@@ -200,16 +202,16 @@ class HTMLReportingTestRunnerMixin(object):
                     [html.tr(html.td(k), html.td(v)) for k, v in sorted(configuration.items()) if v],
                     id='configuration'),
                 html.h2('Summary'),
-                html.p('%i tests ran in %i seconds.' % (tests, test_time),
+                html.p('{0} tests ran in {1} seconds.'.format(tests, test_time),
                        html.br(),
-                       html.span('%i passed' % passes, class_='passed'), ', ',
-                       html.span('%i skipped' % skips, class_='skipped'), ', ',
-                       html.span('%i failed' % failures, class_='failed'), ', ',
-                       html.span('%i errors' % errors, class_='error'), '.',
+                       html.span('{} passed'.format(passes), class_='passed'), ', ',
+                       html.span('{} skipped'.format(skips), class_='skipped'), ', ',
+                       html.span('{} failed'.format(failures), class_='failed'), ', ',
+                       html.span('{} errors'.format(errors), class_='error'), '.',
                        html.br(),
-                       html.span('%i expected failures' % expected_failures,
+                       html.span('{} expected failures'.format(expected_failures),
                                  class_='expected failure'), ', ',
-                       html.span('%i unexpected passes' % unexpected_passes,
+                       html.span('{} unexpected passes'.format(unexpected_passes),
                                  class_='unexpected pass'), '.'),
                 html.h2('Results'),
                 html.table([html.thead(

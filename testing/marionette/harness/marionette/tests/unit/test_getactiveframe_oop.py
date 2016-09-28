@@ -43,9 +43,9 @@ class TestGetActiveFrameOOP(MarionetteTestCase):
             iframe1.setAttribute('mozbrowser', true);
             iframe1.style.height = "100px";
             iframe1.style.width = "100%%";
-            iframe1.src = "%s";
+            iframe1.src = "{}";
             document.body.appendChild(iframe1);
-            """ % self.marionette.absolute_url("test_oop_1.html"))
+            """.format(self.marionette.absolute_url("test_oop_1.html")))
 
         # Currently no active frame
         self.assertEqual(self.marionette.get_active_frame(), None)
@@ -71,9 +71,9 @@ class TestGetActiveFrameOOP(MarionetteTestCase):
             iframe2.id = "remote_iframe2";
             iframe2.style.height = "100px";
             iframe2.style.width = "100%%";
-            iframe2.src = "%s";
+            iframe2.src = "{}";
             document.body.appendChild(iframe2);
-            """ % self.marionette.absolute_url("test_oop_2.html"))
+            """.format(self.marionette.absolute_url("test_oop_2.html")))
 
         # Switch to iframe2, get active frame
         frame2 = self.marionette.find_element(By.ID, 'remote_iframe2')

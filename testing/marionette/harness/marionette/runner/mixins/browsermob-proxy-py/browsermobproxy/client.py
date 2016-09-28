@@ -21,7 +21,7 @@ class Client(object):
             urlparams = "?" + unquote(urlencode(params))
         else:
             urlparams = ""
-        resp = requests.post('%s/proxy' % self.host + urlparams)
+        resp = requests.post('{}/proxy'.format(self.host + urlparams))
         jcontent = json.loads(resp.content.decode('utf-8'))
         self.port = jcontent['port']
         url_parts = self.host.split(":")
@@ -31,7 +31,7 @@ class Client(object):
         """
         shuts down the proxy and closes the port
         """
-        r = requests.delete('%s/proxy/%s' % (self.host, self.port))
+        r = requests.delete('{0}/proxy/{1}'.format(self.host, self.port))
         return r.status_code
 
     # webdriver integration
@@ -76,7 +76,7 @@ class Client(object):
         """
         Gets the HAR that has been recorded
         """
-        r = requests.get('%s/proxy/%s/har' % (self.host, self.port))
+        r = requests.get('{0}/proxy/{1}/har'.format(self.host, self.port))
 
         return r.json()
 
@@ -99,7 +99,7 @@ class Client(object):
         if options:
             payload.update(options)
 
-        r = requests.put('%s/proxy/%s/har' % (self.host, self.port), payload)
+        r = requests.put('{0}/proxy/{1}/har'.format(self.host, self.port), payload)
         if r.status_code == 200:
             return (r.status_code, r.json())
         else:
@@ -116,7 +116,7 @@ class Client(object):
             payload = {"pageRef": ref}
         else:
             payload = {}
-        r = requests.put('%s/proxy/%s/har/pageRef' % (self.host, self.port),
+        r = requests.put('{0}/proxy/{1}/har/pageRef'.format(self.host, self.port),
                          payload)
         return r.status_code
 
@@ -130,7 +130,7 @@ class Client(object):
                        match the blacklist
 
         """
-        r = requests.put('%s/proxy/%s/blacklist' % (self.host, self.port),
+        r = requests.put('{0}/proxy/{1}/blacklist'.format(self.host, self.port),
                          {'regex': regexp, 'status': status_code})
         return r.status_code
 
@@ -143,7 +143,7 @@ class Client(object):
         :param status_code: the HTTP status code to return for URLs that do not \
                        match the whitelist
         """
-        r = requests.put('%s/proxy/%s/whitelist' % (self.host, self.port),
+        r = requests.put('{0}/proxy/{1}/whitelist'.format(self.host, self.port),
                          {'regex': regexp, 'status': status_code})
         return r.status_code
 
@@ -156,7 +156,7 @@ class Client(object):
         :param username: valid username to use when authenticating
         :param  password: valid password to use when authenticating
         """
-        r = requests.post(url='%s/proxy/%s/auth/basic/%s' % (self.host, self.port, domain),
+        r = requests.post(url='{0}/proxy/{1}/auth/basic/{2}'.format(self.host, self.port, domain),
                           data=json.dumps({'username': username, 'password': password}),
                           headers={'content-type': 'application/json'})
         return r.status_code
@@ -171,7 +171,7 @@ class Client(object):
         if not isinstance(headers, dict):
             raise TypeError("headers needs to be dictionary")
 
-        r = requests.post(url='%s/proxy/%s/headers' % (self.host, self.port),
+        r = requests.post(url='{0}/proxy/{1}/headers'.format(self.host, self.port),
                           data=json.dumps(headers),
                           headers={'content-type': 'application/json'})
         return r.status_code
@@ -183,7 +183,7 @@ class Client(object):
 
         :param js: the javascript to execute
         """
-        r = requests.post(url='%s/proxy/%s/interceptor/response' % (self.host, self.port),
+        r = requests.post(url='{0}/proxy/{1}/interceptor/response'.format(self.host, self.port),
                   data=js,
                   headers={'content-type': 'x-www-form-urlencoded'})
         return r.status_code
@@ -195,7 +195,7 @@ class Client(object):
 
         :param js: the javascript to execute
         """
-        r = requests.post(url='%s/proxy/%s/interceptor/request' % (self.host, self.port),
+        r = requests.post(url='{0}/proxy/{1}/interceptor/request'.format(self.host, self.port),
                   data=js,
                   headers={'content-type': 'x-www-form-urlencoded'})
         return r.status_code
@@ -220,14 +220,14 @@ class Client(object):
 
         for (k, v) in list(options.items()):
             if k not in self.LIMITS:
-                raise KeyError('invalid key: %s' % k)
+                raise KeyError('invalid key: {}'.format(k))
 
             params[self.LIMITS[k]] = int(v)
 
         if len(list(params.items())) == 0:
             raise KeyError("You need to specify one of the valid Keys")
 
-        r = requests.put('%s/proxy/%s/limit' % (self.host, self.port),
+        r = requests.put('{0}/proxy/{1}/limit'.format(self.host, self.port),
                          params)
         return r.status_code
 
@@ -253,14 +253,14 @@ class Client(object):
 
         for (k, v) in list(options.items()):
             if k not in self.TIMEOUTS:
-                raise KeyError('invalid key: %s' % k)
+                raise KeyError('invalid key: {}'.format(k))
 
             params[self.TIMEOUTS[k]] = int(v)
 
         if len(list(params.items())) == 0:
             raise KeyError("You need to specify one of the valid Keys")
 
-        r = requests.put('%s/proxy/%s/timeout' % (self.host, self.port),
+        r = requests.put('{0}/proxy/{1}/timeout'.format(self.host, self.port),
                          params)
         return r.status_code
 
@@ -273,7 +273,7 @@ class Client(object):
         :param ip_address: IP Address that will handle all traffic for the address passed in
         """
         assert address is not None and ip_address is not None
-        r = requests.post('%s/proxy/%s/hosts' % (self.host, self.port),
+        r = requests.post('{0}/proxy/{1}/hosts'.format(self.host, self.port),
                          json.dumps({address: ip_address}),
                           headers={'content-type': 'application/json'})
         return r.status_code
@@ -286,7 +286,7 @@ class Client(object):
         :param quiet_period: number of miliseconds the network needs to be quiet for
         :param timeout: max number of miliseconds to wait
         """
-        r = requests.put('%s/proxy/%s/wait' % (self.host, self.port),
+        r = requests.put('{0}/proxy/{1}/wait'.format(self.host, self.port),
                  {'quietPeriodInMs': quiet_period, 'timeoutInMs': timeout})
         return r.status_code
 
@@ -294,7 +294,7 @@ class Client(object):
         """
         Clears the DNS cache associated with the proxy instance
         """
-        r = requests.delete('%s/proxy/%s/dns/cache' % (self.host, self.port))
+        r = requests.delete('{0}/proxy/{1}/dns/cache'.format(self.host, self.port))
         return r.status_code
 
     def rewrite_url(self, match, replace):
@@ -310,7 +310,7 @@ class Client(object):
             "matchRegex": match,
             "replace": replace
         }
-        r = requests.put('%s/proxy/%s/rewrite' % (self.host, self.port),
+        r = requests.put('{0}/proxy/{1}/rewrite'.format(self.host, self.port),
                          params)
         return r.status_code
 
@@ -321,6 +321,6 @@ class Client(object):
 
         :param retry_count: the number of retries
         """
-        r = requests.put('%s/proxy/%s/retry' % (self.host, self.port),
+        r = requests.put('{0}/proxy/{1}/retry'.format(self.host, self.port),
                  {'retrycount': retry_count})
         return r.status_code

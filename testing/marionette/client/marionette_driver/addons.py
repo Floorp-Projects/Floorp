@@ -92,7 +92,8 @@ class Addons(object):
         if status:
             if status in ADDON_INSTALL_ERRORS:
                 raise AddonInstallException(ADDON_INSTALL_ERRORS[status])
-            raise AddonInstallException("Addon failed to install with return code: %d" % status)
+            raise AddonInstallException(
+                "Addon failed to install with return code: {}".format(status))
         return addon_id
 
     def uninstall(self, addon_id):
