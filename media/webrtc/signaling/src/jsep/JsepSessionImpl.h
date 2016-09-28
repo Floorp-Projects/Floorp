@@ -281,8 +281,7 @@ private:
                                    bool usingBundle,
                                    size_t transportLevel,
                                    JsepTrackPair* trackPairOut);
-  void UpdateTransport(const SdpMediaSection& msection,
-                       JsepTransport* transport);
+  void InitTransport(const SdpMediaSection& msection, JsepTransport* transport);
 
   nsresult FinalizeTransport(const SdpAttributeList& remote,
                              const SdpAttributeList& answer,

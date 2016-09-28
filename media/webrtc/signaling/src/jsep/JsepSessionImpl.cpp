@@ -1115,12 +1115,10 @@ JsepSessionImpl::SetLocalDescription(JsepSdpType type, const std::string& sdp)
 
   // Create transport objects.
   mOldTransports = mTransports; // Save in case we need to rollback
+  mTransports.clear();
   for (size_t t = 0; t < parsed->GetMediaSectionCount(); ++t) {
-    if (t >= mTransports.size()) {
-      mTransports.push_back(RefPtr<JsepTransport>(new JsepTransport));
-    }
-
-    UpdateTransport(parsed->GetMediaSection(t), mTransports[t].get());
+    mTransports.push_back(RefPtr<JsepTransport>(new JsepTransport));
+    InitTransport(parsed->GetMediaSection(t), mTransports[t].get());
   }
 
   switch (type) {
@@ -1454,8 +1452,8 @@ JsepSessionImpl::MakeNegotiatedTrackPair(const SdpMediaSection& remote,
 }
 
 void
-JsepSessionImpl::UpdateTransport(const SdpMediaSection& msection,
-                                 JsepTransport* transport)
+JsepSessionImpl::InitTransport(const SdpMediaSection& msection,
+                               JsepTransport* transport)
 {
   if (mSdpHelper.MsectionIsDisabled(msection)) {
     transport->Close();
