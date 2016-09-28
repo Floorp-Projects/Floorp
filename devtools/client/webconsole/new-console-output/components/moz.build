@@ -10,6 +10,7 @@ DIRS += [
 DevToolsModules(
     'collapse-button.js',
     'console-output.js',
+    'console-table.js',
     'filter-bar.js',
     'filter-button.js',
     'grip-message-body.js',
