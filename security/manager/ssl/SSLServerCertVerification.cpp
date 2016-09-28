@@ -1417,6 +1417,8 @@ AuthCertificate(CertVerifier& certVerifier,
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
              ("AuthCertificate setting NEW cert %p\n", nsc.get()));
     }
+
+    status->SetCertificateTransparencyInfo(certificateTransparencyInfo);
   }
 
   if (rv != Success) {
