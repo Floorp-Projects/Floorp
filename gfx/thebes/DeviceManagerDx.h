@@ -58,6 +58,7 @@ public:
 
   unsigned GetCompositorFeatureLevel() const;
   bool TextureSharingWorks();
+  bool AlphaTextureSharingWorks();
   bool IsWARP();
 
   // Returns true if we can create a texture with

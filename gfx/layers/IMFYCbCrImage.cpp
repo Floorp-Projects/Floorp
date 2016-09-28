@@ -237,7 +237,8 @@ IMFYCbCrImage::GetTextureClient(KnowsCompositor* aForwarder)
     return nullptr;
   }
 
-  if (!gfx::DeviceManagerDx::Get()->CanInitializeKeyedMutexTextures()) {
+  if (!gfx::DeviceManagerDx::Get()->CanInitializeKeyedMutexTextures() ||
+      !gfx::DeviceManagerDx::Get()->AlphaTextureSharingWorks()) {
     return nullptr;
   }
 
