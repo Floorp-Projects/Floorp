@@ -269,15 +269,24 @@ const EXPIRATION_QUERIES = {
              ACTION.DEBUG
   },
 
+  // Expire orphan pages from the icons database.
+  QUERY_EXPIRE_FAVICONS_PAGES: {
+    sql: `DELETE FROM moz_pages_w_icons
+          WHERE page_url_hash NOT IN (
+            SELECT url_hash FROM moz_places
+          )`,
+    actions: ACTION.TIMED_OVERLIMIT | ACTION.CLEAR_HISTORY |
+             ACTION.SHUTDOWN_DIRTY | ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY |
+             ACTION.DEBUG
+  },
+
   // Expire orphan icons from the database.
   QUERY_EXPIRE_FAVICONS: {
-    sql: `DELETE FROM moz_favicons WHERE id IN (
-            SELECT f.id FROM moz_favicons f
-            LEFT JOIN moz_places h ON f.id = h.favicon_id
-            WHERE h.favicon_id IS NULL
-            LIMIT :limit_favicons
+    sql: `DELETE FROM moz_icons
+          WHERE id NOT IN (
+            SELECT icon_id FROM moz_icons_to_pages
           )`,
-    actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.CLEAR_HISTORY |
+    actions: ACTION.TIMED_OVERLIMIT | ACTION.CLEAR_HISTORY |
              ACTION.SHUTDOWN_DIRTY | ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY |
              ACTION.DEBUG
   },
@@ -995,9 +1004,6 @@ nsPlacesExpiration.prototype = {
         break;
       case "QUERY_SILENT_EXPIRE_ORPHAN_URIS":
         params.limit_uris = baseLimit;
-        break;
-      case "QUERY_EXPIRE_FAVICONS":
-        params.limit_favicons = baseLimit;
         break;
       case "QUERY_EXPIRE_ANNOS":
         // Each page may have multiple annos.

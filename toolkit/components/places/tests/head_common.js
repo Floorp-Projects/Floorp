@@ -819,23 +819,6 @@ function promiseIsURIVisited(aURI) {
   return deferred.promise;
 }
 
-/**
- * Asynchronously set the favicon associated with a page.
- * @param aPageURI
- *        The page's URI
- * @param aIconURI
- *        The URI of the favicon to be set.
- */
-function promiseSetIconForPage(aPageURI, aIconURI) {
-  let deferred = Promise.defer();
-  PlacesUtils.favicons.setAndFetchFaviconForPage(
-    aPageURI, aIconURI, true,
-    PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
-    () => { deferred.resolve(); },
-    Services.scriptSecurityManager.getSystemPrincipal());
-  return deferred.promise;
-}
-
 function checkBookmarkObject(info) {
   do_check_valid_places_guid(info.guid);
   do_check_valid_places_guid(info.parentGuid);
@@ -872,4 +855,52 @@ function compareAscending(a, b) {
 
 function sortBy(array, prop) {
   return array.sort((a, b) => compareAscending(a[prop], b[prop]));
+}
+
+/**
+ * Asynchronously set the favicon associated with a page.
+ * @param page
+ *        The page's URL
+ * @param icon
+ *        The URL of the favicon to be set.
+ */
+function setFaviconForPage(page, icon) {
+  let pageURI = page instanceof Ci.nsIURI ? page
+                                          : NetUtil.newURI(new URL(page).href);
+  let iconURI = icon instanceof Ci.nsIURI ? icon
+                                          : NetUtil.newURI(new URL(icon).href);
+  return new Promise(resolve => {
+    PlacesUtils.favicons.setAndFetchFaviconForPage(
+      pageURI, iconURI, true,
+      PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+      resolve,
+      Services.scriptSecurityManager.getSystemPrincipal()
+    );
+  });
+}
+
+/**
+ * Asynchronously compares contents from 2 favicon urls.
+ */
+function* compareFavicons(icon1, icon2, msg) {
+  icon1 = new URL(icon1 instanceof Ci.nsIURI ? icon1.spec : icon1);
+  icon2 = new URL(icon2 instanceof Ci.nsIURI ? icon2.spec : icon2);
+
+  function getIconData(icon) {
+    new Promise((resolve, reject) => {
+      NetUtil.asyncFetch({
+        uri: icon.href, loadUsingSystemPrincipal: true,
+        contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON
+      }, function(inputStream, status) {
+          if (!Components.isSuccessCode(status))
+            reject();
+          let size = inputStream.available();
+          resolve(NetUtil.readInputStreamToString(inputStream, size));
+      });
+    });
+  }
+
+  let data1 = yield getIconData(icon1);
+  let data2 = yield getIconData(icon2);
+  Assert.deepEqual(data1, data2, msg);
 }

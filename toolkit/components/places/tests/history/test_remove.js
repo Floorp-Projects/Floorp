@@ -352,8 +352,11 @@ add_task(function* test_orphans() {
 
   yield PlacesUtils.history.remove(uri);
   Assert.ok(!(yield PlacesTestUtils.isPageInDB(uri)), "Page should have been removed");
+
   let db = yield PlacesUtils.promiseDBConnection();
   let rows = yield db.execute(`SELECT (SELECT count(*) FROM moz_annos) +
-                                      (SELECT count(*) FROM moz_favicons) AS count`);
+                                      (SELECT count(*) FROM moz_icons) +
+                                      (SELECT count(*) FROM moz_pages_w_icons) +
+                                      (SELECT count(*) FROM moz_icons_to_pages) AS count`);
   Assert.equal(rows[0].getResultByName("count"), 0, "Should not find orphans");
 });

@@ -160,9 +160,7 @@ this.History = Object.freeze({
    *
    * @throws (Error)
    *      If the `url` specified was for a protocol that should not be
-   *      stored (e.g. "chrome:", "mailbox:", "about:", "imap:", "news:",
-   *      "moz-anno:", "view-source:", "resource:", "data:", "wyciwyg:",
-   *      "javascript:", "blob:").
+   *      stored (@see nsNavHistory::CanAddURI).
    * @throws (Error)
    *      If `pageInfo` has an unexpected type.
    * @throws (Error)
@@ -216,9 +214,7 @@ this.History = Object.freeze({
    *
    * @throws (Error)
    *      If the `url` specified was for a protocol that should not be
-   *      stored (e.g. "chrome:", "mailbox:", "about:", "imap:", "news:",
-   *      "moz-anno:", "view-source:", "resource:", "data:", "wyciwyg:",
-   *      "javascript:", "blob:").
+   *      stored (@see nsNavHistory::CanAddURI).
    * @throws (Error)
    *      If `pageInfos` has an unexpected type.
    * @throws (Error)
@@ -706,9 +702,10 @@ var cleanupPages = Task.async(function*(db, pages) {
     yield db.executeCached(`DELETE FROM moz_updatehosts_temp`);
 
     // Expire orphans.
-    yield db.executeCached(`
-      DELETE FROM moz_favicons WHERE NOT EXISTS
-        (SELECT 1 FROM moz_places WHERE favicon_id = moz_favicons.id)`);
+    yield db.executeCached(`DELETE FROM moz_pages_w_icons
+                            WHERE page_url_hash NOT IN (SELECT url_hash FROM moz_places)`);
+    yield db.executeCached(`DELETE FROM moz_icons
+                            WHERE id NOT IN (SELECT icon_id FROM moz_icons_to_pages)`);
     yield db.execute(`DELETE FROM moz_annos
                       WHERE place_id IN ( ${ idsList } )`);
     yield db.execute(`DELETE FROM moz_inputhistory

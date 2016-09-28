@@ -19,7 +19,7 @@ interface nsIFaviconService : nsISupports
    * The limit in bytes of the size of favicons in memory and passed via the
    * favicon protocol.
    */
-  const unsigned long MAX_FAVICON_BUFFER_SIZE = 10240;
+  const unsigned long MAX_FAVICON_BUFFER_SIZE = 35840;
 
   /**
    * For a given icon URI, this will return a URI that will result in the image.
@@ -121,6 +121,9 @@ interface nsIFaviconDataCallback : nsISupports
    *        Icon data, or an empty array if aDataLen is 0.
    * @param aMimeType
    *        Mime type of the icon, or an empty string if aDataLen is 0.
+   * @param aWidth
+   *        Width of the icon. 0 if the width is unknown or if the icon is
+   *        vectorial.
    *
    * @note If you want to open a network channel to access the favicon, it's
    *       recommended that you call the getFaviconLinkForIcon method to convert
@@ -129,7 +132,8 @@ interface nsIFaviconDataCallback : nsISupports
   void onComplete(in nsIURI aFaviconURI,
                   in unsigned long aDataLen,
                   [const,array,size_is(aDataLen)] in octet aData,
-                  in AUTF8String aMimeType);
+                  in AUTF8String aMimeType,
+                  in unsigned short aWidth);
 };
 
 %{C++

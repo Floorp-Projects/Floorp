@@ -33,6 +33,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/storage.h"
 #include "Helpers.h"
+#include "FaviconHelpers.h"
 
 using namespace mozilla;
 using namespace mozilla::places;
@@ -65,22 +66,21 @@ namespace {
  * HandleResult, and on HandleCompletion, we'll close our output stream which
  * will close the original channel for the favicon request.
  *
- * However, if an error occurs at any point, we do not set mReturnDefaultIcon to
- * false, so we will open up another channel to get the default favicon, and
- * pass that along to our output stream in HandleCompletion.  If anything
- * happens at that point, the world must be against us, so we return nothing.
+ * However, if an error occurs at any point and we don't have mData, we will
+ * just fallback to the default favicon.  If anything happens at that point, the
+ * world must be against us, so we can do nothing.
  */
 class faviconAsyncLoader : public AsyncStatementCallback
 {
 public:
-  faviconAsyncLoader(nsIChannel *aChannel, nsIStreamListener *aListener) :
-      mChannel(aChannel)
+  faviconAsyncLoader(nsIChannel *aChannel, nsIStreamListener *aListener)
+    : mChannel(aChannel)
     , mListener(aListener)
   {
-    NS_ASSERTION(aChannel,
-                 "Not providing a channel will result in crashes!");
-    NS_ASSERTION(aListener,
-                 "Not providing a stream listener will result in crashes!");
+    MOZ_ASSERT(aChannel, "Not providing a channel will result in crashes!");
+    MOZ_ASSERT(aListener, "Not providing a stream listener will result in crashes!");
+    // Set the default content type.
+    Unused << mChannel->SetContentType(NS_LITERAL_CSTRING(PNG_MIME_TYPE));
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -88,77 +88,73 @@ public:
 
   NS_IMETHOD HandleResult(mozIStorageResultSet *aResultSet) override
   {
-    // We will only get one row back in total, so we do not need to loop.
     nsCOMPtr<mozIStorageRow> row;
-    nsresult rv = aResultSet->GetNextRow(getter_AddRefs(row));
-    NS_ENSURE_SUCCESS(rv, rv);
+    while (NS_SUCCEEDED(aResultSet->GetNextRow(getter_AddRefs(row))) && row) {
+      // TODO: For now just return the biggest icon, that is the first one.
+      // Later this should allow to return a specific size.
+      if (!mData.IsEmpty()) {
+        return NS_OK;
+      }
 
-    // We do not allow favicons without a MIME type, so we'll return the default
-    // icon.
-    nsAutoCString mimeType;
-    (void)row->GetUTF8String(1, mimeType);
-    NS_ENSURE_FALSE(mimeType.IsEmpty(), NS_OK);
+      int32_t width;
+      nsresult rv = row->GetInt32(1, &width);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    // Set our mimeType now that we know it.
-    rv = mChannel->SetContentType(mimeType);
-    NS_ENSURE_SUCCESS(rv, rv);
+      // Eventually override the default mimeType for svg.
+      if (width == UINT16_MAX) {
+        rv = mChannel->SetContentType(NS_LITERAL_CSTRING(SVG_MIME_TYPE));
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
 
-    // Obtain the binary blob that contains our favicon data.
-    uint8_t *favicon;
-    uint32_t size = 0;
-    rv = row->GetBlob(0, &size, &favicon);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIInputStream> stream;
-    rv = NS_NewByteInputStream(getter_AddRefs(stream),
-                               reinterpret_cast<char*>(favicon),
-                               size, NS_ASSIGNMENT_ADOPT);
-    if (NS_FAILED(rv)) {
-      free(favicon);
-      return rv;
+      // Obtain the binary blob that contains our favicon data.
+      uint8_t *data;
+      uint32_t dataLen;
+      rv = row->GetBlob(0, &dataLen, &data);
+      NS_ENSURE_SUCCESS(rv, rv);
+      mData.Adopt(TO_CHARBUFFER(data), dataLen);
     }
 
-    RefPtr<nsInputStreamPump> pump;
-    rv = nsInputStreamPump::Create(getter_AddRefs(pump), stream, -1, -1, 0, 0,
-                                   true);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    MOZ_DIAGNOSTIC_ASSERT(mListener);
-    NS_ENSURE_TRUE(mListener, NS_ERROR_UNEXPECTED);
-
-    rv = pump->AsyncRead(mListener, nullptr);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mListener = nullptr;
     return NS_OK;
   }
 
   NS_IMETHOD HandleCompletion(uint16_t aReason) override
   {
-    // If we've already written our icon data to the channel, there's nothing
-    // more to do. If we didn't, then return the default icon instead.
-    if (!mListener)
-      return NS_OK;
+    MOZ_DIAGNOSTIC_ASSERT(mListener);
+    NS_ENSURE_TRUE(mListener, NS_ERROR_UNEXPECTED);
 
+    nsresult rv;
+    // Ensure we'll break possible cycles with the listener.
     auto cleanup = MakeScopeExit([&] () {
       mListener = nullptr;
     });
 
+    if (!mData.IsEmpty()) {
+      nsCOMPtr<nsIInputStream> stream;
+      rv = NS_NewCStringInputStream(getter_AddRefs(stream), mData);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+      if (NS_SUCCEEDED(rv)) {
+        RefPtr<nsInputStreamPump> pump;
+        rv = nsInputStreamPump::Create(getter_AddRefs(pump), stream, -1, -1, 0, 0,
+                                      true);
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
+        if (NS_SUCCEEDED(rv)) {
+          return pump->AsyncRead(mListener, nullptr);
+        }
+      }
+    }
+
+    // Fallback to the default favicon.
     // we should pass the loadInfo of the original channel along
     // to the new channel. Note that mChannel can not be null,
     // constructor checks that.
     nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
     nsCOMPtr<nsIChannel> newChannel;
-    nsresult rv = GetDefaultIcon(loadInfo, getter_AddRefs(newChannel));
-
+    rv = GetDefaultIcon(loadInfo, getter_AddRefs(newChannel));
     if (NS_FAILED(rv)) {
       mListener->OnStartRequest(mChannel, nullptr);
       mListener->OnStopRequest(mChannel, nullptr, rv);
       return rv;
     }
-
-    mChannel->SetContentType(NS_LITERAL_CSTRING("image/png"));
-
     return newChannel->AsyncOpen2(mListener);
   }
 
@@ -168,6 +164,7 @@ protected:
 private:
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIStreamListener> mListener;
+  nsCString mData;
 };
 
 } // namespace

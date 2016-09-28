@@ -1280,7 +1280,7 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, uint32_t aQueryCount
   if (!rootNode) {
     // Either this is not a folder shortcut, or is a broken one.  In both cases
     // just generate a query node.
-    rootNode = new nsNavHistoryQueryResultNode(EmptyCString(), EmptyCString(),
+    rootNode = new nsNavHistoryQueryResultNode(EmptyCString(),
                                                queries, options);
   }
 
@@ -1517,11 +1517,10 @@ PlacesSQLQueryBuilder::SelectAsURI()
 
       mQueryString = NS_LITERAL_CSTRING(
         "SELECT h.id, h.url, h.title AS page_title, h.rev_host, h.visit_count, "
-        "h.last_visit_date, f.url, null, null, null, null, ") +
+        "h.last_visit_date, null, null, null, null, null, ") +
         tagsSqlFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden, h.guid, "
         "null, null, null "
         "FROM moz_places h "
-        "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
         // WHERE 1 is a no-op since additonal conditions will start with AND.
         "WHERE 1 "
           "{QUERY_OPTIONS_VISITS} {QUERY_OPTIONS_PLACES} "
@@ -1543,7 +1542,7 @@ PlacesSQLQueryBuilder::SelectAsURI()
 
         mQueryString = NS_LITERAL_CSTRING(
           "SELECT b2.fk, h.url, COALESCE(b2.title, h.title) AS page_title, "
-            "h.rev_host, h.visit_count, h.last_visit_date, f.url, b2.id, "
+            "h.rev_host, h.visit_count, h.last_visit_date, null, b2.id, "
             "b2.dateAdded, b2.lastModified, b2.parent, ") +
             tagsSqlFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden, h.guid, "
             "null, null, null, b2.guid, b2.position, b2.type, b2.fk "
@@ -1554,7 +1553,6 @@ PlacesSQLQueryBuilder::SelectAsURI()
                 "WHERE b.type = 1 {ADDITIONAL_CONDITIONS} "
                 ") AS seed ON b2.fk = seed.fk "
           "JOIN moz_places h ON h.id = b2.fk "
-          "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
           "WHERE NOT EXISTS ( "
             "SELECT id FROM moz_bookmarks WHERE id = b2.parent AND parent = ") +
                 nsPrintfCString("%" PRId64, history->GetTagsFolder()) +
@@ -1568,13 +1566,12 @@ PlacesSQLQueryBuilder::SelectAsURI()
                            tagsSqlFragment);
         mQueryString = NS_LITERAL_CSTRING(
           "SELECT b.fk, h.url, COALESCE(b.title, h.title) AS page_title, "
-            "h.rev_host, h.visit_count, h.last_visit_date, f.url, b.id, "
+            "h.rev_host, h.visit_count, h.last_visit_date, null, b.id, "
             "b.dateAdded, b.lastModified, b.parent, ") +
             tagsSqlFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden, h.guid,"
             "null, null, null, b.guid, b.position, b.type, b.fk "
           "FROM moz_bookmarks b "
           "JOIN moz_places h ON b.fk = h.id "
-          "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
           "WHERE NOT EXISTS "
               "(SELECT id FROM moz_bookmarks "
                 "WHERE id = b.parent AND parent = ") +
@@ -1602,12 +1599,11 @@ PlacesSQLQueryBuilder::SelectAsVisit()
                      tagsSqlFragment);
   mQueryString = NS_LITERAL_CSTRING(
     "SELECT h.id, h.url, h.title AS page_title, h.rev_host, h.visit_count, "
-      "v.visit_date, f.url, null, null, null, null, ") +
+      "v.visit_date, null, null, null, null, null, ") +
       tagsSqlFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden, h.guid, "
       "v.id, v.from_visit, v.visit_type "
     "FROM moz_places h "
     "JOIN moz_historyvisits v ON h.id = v.place_id "
-    "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
     // WHERE 1 is a no-op since additonal conditions will start with AND.
     "WHERE 1 "
       "{QUERY_OPTIONS_VISITS} {QUERY_OPTIONS_PLACES} "
@@ -2131,11 +2127,10 @@ nsNavHistory::ConstructQueryString(
     // smart bookmark.
     queryString = NS_LITERAL_CSTRING(
       "SELECT h.id, h.url, h.title AS page_title, h.rev_host, h.visit_count, h.last_visit_date, "
-          "f.url, null, null, null, null, ") +
+          "null, null, null, null, null, ") +
           tagsSqlFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden, h.guid, "
           "null, null, null "
         "FROM moz_places h "
-        "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
         "WHERE h.hidden = 0 "
           "AND EXISTS (SELECT id FROM moz_historyvisits WHERE place_id = h.id "
                        "AND visit_type NOT IN ") +
@@ -3797,11 +3792,6 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
   uint32_t accessCount = aRow->AsInt32(kGetInfoIndex_VisitCount);
   PRTime time = aRow->AsInt64(kGetInfoIndex_VisitDate);
 
-  // favicon
-  nsAutoCString favicon;
-  rv = aRow->GetUTF8String(kGetInfoIndex_FaviconURL, favicon);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // itemId
   int64_t itemId = aRow->AsInt64(kGetInfoIndex_ItemId);
   int64_t parentId = -1;
@@ -3842,7 +3832,7 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
     }
 
     RefPtr<nsNavHistoryResultNode> resultNode;
-    rv = QueryRowToResult(itemId, guid, url, title, accessCount, time, favicon,
+    rv = QueryRowToResult(itemId, guid, url, title, accessCount, time,
                           getter_AddRefs(resultNode));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3864,7 +3854,7 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
   } else if (aOptions->ResultType() == nsNavHistoryQueryOptions::RESULTS_AS_URI ||
              aOptions->ResultType() == nsNavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS) {
     RefPtr<nsNavHistoryResultNode> resultNode =
-      new nsNavHistoryResultNode(url, title, accessCount, time, favicon);
+      new nsNavHistoryResultNode(url, title, accessCount, time);
 
     if (itemId != -1) {
       resultNode->mItemId = itemId;
@@ -3896,7 +3886,7 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
 
   if (aOptions->ResultType() == nsNavHistoryQueryOptions::RESULTS_AS_VISIT) {
     RefPtr<nsNavHistoryResultNode> resultNode =
-      new nsNavHistoryResultNode(url, title, accessCount, time, favicon);
+      new nsNavHistoryResultNode(url, title, accessCount, time);
 
     nsAutoString tags;
     rv = aRow->GetString(kGetInfoIndex_ItemTags, tags);
@@ -3937,8 +3927,8 @@ nsNavHistory::QueryRowToResult(int64_t itemId,
                                const nsACString& aBookmarkGuid,
                                const nsACString& aURI,
                                const nsACString& aTitle,
-                               uint32_t aAccessCount, PRTime aTime,
-                               const nsACString& aFavicon,
+                               uint32_t aAccessCount,
+                               PRTime aTime,
                                nsNavHistoryResultNode** aNode)
 {
   MOZ_ASSERT((itemId != -1 && !aBookmarkGuid.IsEmpty()) ||
@@ -3981,8 +3971,7 @@ nsNavHistory::QueryRowToResult(int64_t itemId,
     }
     else {
       // This is a regular query.
-      resultNode = new nsNavHistoryQueryResultNode(aTitle, EmptyCString(),
-                                                   aTime, queries, options);
+      resultNode = new nsNavHistoryQueryResultNode(aTitle, aTime, queries, options);
       resultNode->mItemId = itemId;
     }
   }
@@ -3992,7 +3981,7 @@ nsNavHistory::QueryRowToResult(int64_t itemId,
     // This is a broken query, that either did not parse or points to not
     // existing data.  We don't want to return failure since that will kill the
     // whole result.  Instead make a generic empty query node.
-    resultNode = new nsNavHistoryQueryResultNode(aTitle, aFavicon, aURI);
+    resultNode = new nsNavHistoryQueryResultNode(aTitle, aURI);
     resultNode->mItemId = itemId;
     // This is a perf hack to generate an empty query that skips filtering.
     resultNode->GetAsQuery()->Options()->SetExcludeItems(true);
@@ -4026,12 +4015,11 @@ nsNavHistory::VisitIdToResultNode(int64_t visitId,
       // Should match kGetInfoIndex_* (see GetQueryResults)
       statement = mDB->GetStatement(NS_LITERAL_CSTRING(
         "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
-               "v.visit_date, f.url, null, null, null, null, "
+               "v.visit_date, null, null, null, null, null, "
                ) + tagsFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden, h.guid, "
               "v.id, v.from_visit, v.visit_type "
         "FROM moz_places h "
         "JOIN moz_historyvisits v ON h.id = v.place_id "
-        "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
         "WHERE v.id = :visit_id ")
       );
       break;
@@ -4041,12 +4029,11 @@ nsNavHistory::VisitIdToResultNode(int64_t visitId,
       // Should match kGetInfoIndex_* (see GetQueryResults)
       statement = mDB->GetStatement(NS_LITERAL_CSTRING(
         "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
-               "h.last_visit_date, f.url, null, null, null, null, "
+               "h.last_visit_date, null, null, null, null, null, "
                ) + tagsFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden, h.guid, "
               "null, null, null "
         "FROM moz_places h "
         "JOIN moz_historyvisits v ON h.id = v.place_id "
-        "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
         "WHERE v.id = :visit_id ")
       );
       break;
@@ -4087,13 +4074,12 @@ nsNavHistory::BookmarkIdToResultNode(int64_t aBookmarkId, nsNavHistoryQueryOptio
   // Should match kGetInfoIndex_*
   nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(NS_LITERAL_CSTRING(
       "SELECT b.fk, h.url, COALESCE(b.title, h.title), "
-             "h.rev_host, h.visit_count, h.last_visit_date, f.url, b.id, "
+             "h.rev_host, h.visit_count, h.last_visit_date, null, b.id, "
              "b.dateAdded, b.lastModified, b.parent, "
              ) + tagsFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden, h.guid, "
              "null, null, null, b.guid, b.position, b.type, b.fk "
       "FROM moz_bookmarks b "
       "JOIN moz_places h ON b.fk = h.id "
-      "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
       "WHERE b.id = :item_id ")
   );
   NS_ENSURE_STATE(stmt);
@@ -4128,13 +4114,12 @@ nsNavHistory::URIToResultNode(nsIURI* aURI,
   // Should match kGetInfoIndex_*
   nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(NS_LITERAL_CSTRING(
     "SELECT h.id, :page_url, COALESCE(b.title, h.title), "
-           "h.rev_host, h.visit_count, h.last_visit_date, f.url, "
+           "h.rev_host, h.visit_count, h.last_visit_date, null, "
            "b.id, b.dateAdded, b.lastModified, b.parent, "
            ) + tagsFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden, h.guid, "
            "null, null, null, b.guid, b.position, b.type, b.fk "
     "FROM moz_places h "
     "LEFT JOIN moz_bookmarks b ON b.fk = h.id "
-    "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
     "WHERE h.url_hash = hash(:page_url) AND h.url = :page_url ")
   );
   NS_ENSURE_STATE(stmt);
