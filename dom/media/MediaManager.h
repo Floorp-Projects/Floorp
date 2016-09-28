@@ -334,9 +334,6 @@ private:
   media::CoatCheck<PledgeSourceSet> mOutstandingPledges;
   media::CoatCheck<PledgeChar> mOutstandingCharPledges;
   media::CoatCheck<PledgeVoid> mOutstandingVoidPledges;
-#if defined(MOZ_B2G_CAMERA) && defined(MOZ_WIDGET_GONK)
-  RefPtr<nsDOMCameraManager> mCameraManager;
-#endif
 public:
   media::CoatCheck<media::Pledge<nsCString>> mGetOriginKeyPledges;
   UniquePtr<media::Parent<media::NonE10s>> mNonE10sParent;
