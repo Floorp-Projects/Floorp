@@ -5974,30 +5974,6 @@ nsDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
 }
 
 NS_IMETHODIMP
-nsDocument::GetAsync(bool *aAsync)
-{
-  NS_ERROR("nsDocument::GetAsync() should be overriden by subclass!");
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDocument::SetAsync(bool aAsync)
-{
-  NS_ERROR("nsDocument::SetAsync() should be overriden by subclass!");
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDocument::Load(const nsAString& aUrl, bool *aReturn)
-{
-  NS_ERROR("nsDocument::Load() should be overriden by subclass!");
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsDocument::GetStyleSheets(nsIDOMStyleSheetList** aStyleSheets)
 {
   NS_ADDREF(*aStyleSheets = StyleSheets());
