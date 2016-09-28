@@ -102,6 +102,7 @@ include_when('build/moz.configure/headers.configure',
 include_when('build/moz.configure/warnings.configure',
              when='--enable-compile-environment')
 
+include(include_project_configure)
 
 @depends(building_js, '--help')
 def ctypes_default(building_js, _):

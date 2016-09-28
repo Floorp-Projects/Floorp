@@ -816,5 +816,3 @@ add_old_configure_assignment('PKG_CONFIG', pkg_config)
 @dependable
 def gonkdir():
     return None
-
-include(include_project_configure)
