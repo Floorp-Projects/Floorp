@@ -62,7 +62,7 @@ resjar.generated_sources += [
 if CONFIG['ANDROID_SUPPORT_V4_AAR']:
     ANDROID_EXTRA_PACKAGES += ['android.support.v4']
     ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_SUPPORT_V4_AAR_RES']]
-    resjar.generated_sources += ['android/support/v4/R.java']
+# (no resources) resjar.generated_sources += ['android/support/v4/R.java']
 if CONFIG['ANDROID_APPCOMPAT_V7_AAR']:
     ANDROID_EXTRA_PACKAGES += ['android.support.v7.appcompat']
     ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_APPCOMPAT_V7_AAR_RES']]
@@ -82,12 +82,11 @@ if CONFIG['ANDROID_RECYCLERVIEW_V7_AAR']:
 if CONFIG['ANDROID_CUSTOMTABS_AAR']:
     ANDROID_EXTRA_PACKAGES += ['android.support.customtabs']
     ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_CUSTOMTABS_AAR_RES']]
-    resjar.generated_sources += ['android/support/customtabs/R.java']
+# (no resources) resjar.generated_sources += ['android/support/customtabs/R.java']
 if CONFIG['ANDROID_PALETTE_V7_AAR']:
     ANDROID_EXTRA_PACKAGES += ['android.support.v7.palette']
     ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_PALETTE_V7_AAR_RES']]
-    resjar.generated_sources += ['android/support/v7/palette/R.java']
-
+# (no resources) resjar.generated_sources += ['android/support/v7/palette/R.java']
 
 resjar.javac_flags += ['-Xlint:all']
 
@@ -880,12 +879,12 @@ if CONFIG['MOZ_ANDROID_GCM']:
     if CONFIG['ANDROID_PLAY_SERVICES_GCM_AAR']:
         ANDROID_EXTRA_PACKAGES += ['com.google.android.gms.gcm']
         ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_PLAY_SERVICES_GCM_AAR_RES']]
-        resjar.generated_sources += ['com/google/android/gms/gcm/R.java']
+# (no resources) resjar.generated_sources += ['com/google/android/gms/gcm/R.java']
 
     if CONFIG['ANDROID_PLAY_SERVICES_MEASUREMENT_AAR']:
         ANDROID_EXTRA_PACKAGES += ['com.google.android.gms.measurement']
         ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_PLAY_SERVICES_MEASUREMENT_AAR_RES']]
-        resjar.generated_sources += ['com/google/android/gms/measurement/R.java']
+# (no resources) resjar.generated_sources += ['android/support/v7/palette/R.java']
 
 if CONFIG['MOZ_INSTALL_TRACKING']:
     gbjar.extra_jars += [
