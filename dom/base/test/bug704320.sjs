@@ -194,6 +194,12 @@ function createPolicyTest(policy, optionalEarlierPolicy) {
 }
 
 function handleRequest(request, response) {
+  if (request.method == 'HEAD') {
+    // respond to a HEAD request with a 418 so that we can easily distinguish
+    // HSTS priming responses and ignore them
+    response.setStatusLine('1.1', 418, "I'm a teapot");
+    return;
+  }
   var sharedKey = 'bug704320.sjs';
   var params = request.queryString.split('&');
   var action = params[0].split('=')[1];

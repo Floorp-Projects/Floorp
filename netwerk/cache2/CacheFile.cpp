@@ -2100,6 +2100,22 @@ CacheFile::DataSize(int64_t* aSize)
   return true;
 }
 
+nsresult
+CacheFile::GetAltDataSize(int64_t *aSize)
+{
+  CacheFileAutoLock lock(this);
+  if (mOutput) {
+    return NS_ERROR_IN_PROGRESS;
+  }
+
+  if (mAltDataOffset == -1) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  *aSize = mDataSize - mAltDataOffset;
+  return NS_OK;
+}
+
 bool
 CacheFile::IsDoomed()
 {

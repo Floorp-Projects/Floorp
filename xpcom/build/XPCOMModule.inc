@@ -22,7 +22,7 @@
     COMPONENT(ATOMSERVICE, nsAtomServiceConstructor)
     COMPONENT_M(OBSERVERSERVICE, nsObserverService::Create, Module::ALLOW_IN_GPU_PROCESS)
 
-    COMPONENT_M(TIMER, nsTimerImplConstructor, Module::ALLOW_IN_GPU_PROCESS)
+    COMPONENT_M(TIMER, nsTimerConstructor, Module::ALLOW_IN_GPU_PROCESS)
 
 #define COMPONENT_SUPPORTS(TYPE, Type)                                         \
   COMPONENT(SUPPORTS_##TYPE, nsSupports##Type##Constructor)

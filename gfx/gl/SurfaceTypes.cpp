@@ -5,7 +5,7 @@
 
 #include "SurfaceTypes.h"
 
-#include "mozilla/layers/ISurfaceAllocator.h"
+#include "mozilla/layers/TextureForwarder.h"
 
 namespace mozilla {
 namespace gl {

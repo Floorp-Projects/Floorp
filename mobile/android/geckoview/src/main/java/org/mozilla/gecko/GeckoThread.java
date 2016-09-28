@@ -518,6 +518,7 @@ public class GeckoThread extends Thread {
         try {
             final JSONObject msg = new JSONObject();
             msg.put("type", "Gecko:Exited");
+            GeckoAppShell.getGeckoInterface().getAppEventDispatcher().dispatchEvent(msg, null);
             EventDispatcher.getInstance().dispatchEvent(msg, null);
         } catch (final JSONException e) {
             Log.e(LOGTAG, "unable to dispatch event", e);

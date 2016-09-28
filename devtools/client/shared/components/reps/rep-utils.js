@@ -48,13 +48,8 @@ define(function (require, exports, module) {
     // Make sure it's a string.
     text = text + "";
 
-    // Use default limit if necessary.
-    if (!limit) {
-      limit = 50;
-    }
-
     // Crop the string only if a limit is actually specified.
-    if (limit <= 0) {
+    if (!limit || limit <= 0) {
       return text;
     }
 

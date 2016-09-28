@@ -822,14 +822,15 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
     renderFrame = nullptr;
   }
 
-  ShowInfo showInfo(EmptyString(), false, false, true, false, 0, 0);
+  ShowInfo showInfo(EmptyString(), false, false, true, false, 0, 0, 0);
   auto* opener = nsPIDOMWindowOuter::From(aParent);
   nsIDocShell* openerShell;
   if (opener && (openerShell = opener->GetDocShell())) {
     nsCOMPtr<nsILoadContext> context = do_QueryInterface(openerShell);
     showInfo = ShowInfo(EmptyString(), false,
                         context->UsePrivateBrowsing(), true, false,
-                        aTabOpener->mDPI, aTabOpener->mDefaultScale);
+                        aTabOpener->mDPI, aTabOpener->mRounding,
+                        aTabOpener->mDefaultScale);
   }
 
   // Unfortunately we don't get a window unless we've shown the frame.  That's

@@ -2249,33 +2249,33 @@ static int nr_socket_local_close(void *obj) {
 
 static int nr_socket_local_write(void *obj, const void *msg, size_t len,
                                  size_t *written) {
-  NrSocket *sock = static_cast<NrSocket *>(obj);
+  NrSocketBase *sock = static_cast<NrSocketBase *>(obj);
 
   return sock->write(msg, len, written);
 }
 
 static int nr_socket_local_read(void *obj, void * restrict buf, size_t maxlen,
                                 size_t *len) {
-  NrSocket *sock = static_cast<NrSocket *>(obj);
+  NrSocketBase *sock = static_cast<NrSocketBase *>(obj);
 
   return sock->read(buf, maxlen, len);
 }
 
 static int nr_socket_local_connect(void *obj, nr_transport_addr *addr) {
-  NrSocket *sock = static_cast<NrSocket *>(obj);
+  NrSocketBase *sock = static_cast<NrSocketBase *>(obj);
 
   return sock->connect(addr);
 }
 
 static int nr_socket_local_listen(void *obj, int backlog) {
-  NrSocket *sock = static_cast<NrSocket *>(obj);
+  NrSocketBase *sock = static_cast<NrSocketBase *>(obj);
 
   return sock->listen(backlog);
 }
 
 static int nr_socket_local_accept(void *obj, nr_transport_addr *addrp,
                                   nr_socket **sockp) {
-  NrSocket *sock = static_cast<NrSocket *>(obj);
+  NrSocketBase *sock = static_cast<NrSocketBase *>(obj);
 
   return sock->accept(addrp, sockp);
 }

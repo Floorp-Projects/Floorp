@@ -69,7 +69,7 @@ class ActionBarTextSelection implements TextSelection, GeckoEventListener {
         if (anchorHandle == null) {
             Log.e(LOGTAG, "Failed to initialize text selection because at least one handle is null");
         } else {
-            EventDispatcher.getInstance().registerGeckoThreadListener(this,
+            GeckoApp.getEventDispatcher().registerGeckoThreadListener(this,
                 "TextSelection:ActionbarInit",
                 "TextSelection:ActionbarStatus",
                 "TextSelection:ActionbarUninit",
@@ -88,7 +88,7 @@ class ActionBarTextSelection implements TextSelection, GeckoEventListener {
         if (anchorHandle == null) {
             Log.e(LOGTAG, "Do not unregister TextSelection:* listeners since anchorHandle is null");
         } else {
-            EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
+            GeckoApp.getEventDispatcher().unregisterGeckoThreadListener(this,
                     "TextSelection:ActionbarInit",
                     "TextSelection:ActionbarStatus",
                     "TextSelection:ActionbarUninit",

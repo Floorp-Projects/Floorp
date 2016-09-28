@@ -1274,7 +1274,7 @@ class RecursiveMakeBackend(CommonBackend):
             for rlib in rlibs:
                 rlib_relpath = pretty_relpath(rlib)
                 backend_file.write('RUST_PRELINK_FLAGS += --extern %s=%s/%s\n'
-                                   % (rlib.basename, rlib_relpath, rlib.import_name))
+                                   % (rlib.basename.replace('-', '_'), rlib_relpath, rlib.import_name))
                 backend_file.write('RUST_PRELINK_FLAGS += -L %s/%s\n'
                                    % (rlib_relpath, rlib.deps_path))
                 backend_file.write('RUST_PRELINK_DEPS += %s/%s\n'

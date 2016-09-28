@@ -8,6 +8,7 @@ package org.mozilla.gecko.prompts;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -21,14 +22,14 @@ public class PromptService implements GeckoEventListener {
     private final Context mContext;
 
     public PromptService(Context context) {
-        EventDispatcher.getInstance().registerGeckoThreadListener(this,
+        GeckoApp.getEventDispatcher().registerGeckoThreadListener(this,
             "Prompt:Show",
             "Prompt:ShowTop");
         mContext = context;
     }
 
     public void destroy() {
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
+        GeckoApp.getEventDispatcher().unregisterGeckoThreadListener(this,
             "Prompt:Show",
             "Prompt:ShowTop");
     }

@@ -238,9 +238,9 @@ PDMFactory::CreateDecoderWithPDM(PlatformDecoderModule* aPDM,
     DecoderDoctorDiagnostics* diagnostics = aParams.mDiagnostics;
     if (diagnostics) {
       if (reason == SupportChecker::Result::kVideoFormatNotSupported) {
-        diagnostics->SetVideoFormatNotSupport();
+        diagnostics->SetVideoNotSupported();
       } else if (reason == SupportChecker::Result::kAudioFormatNotSupported) {
-        diagnostics->SetAudioFormatNotSupport();
+        diagnostics->SetAudioNotSupported();
       }
     }
     return nullptr;

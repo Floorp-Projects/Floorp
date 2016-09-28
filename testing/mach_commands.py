@@ -471,7 +471,11 @@ class CheckSpiderMonkeyCommand(MachCommandBase):
         check_masm_cmd = [sys.executable, os.path.join(self.topsrcdir, 'config', 'check_macroassembler_style.py')]
         check_masm_result = subprocess.call(check_masm_cmd, cwd=os.path.join(self.topsrcdir, 'js', 'src'))
 
-        all_passed = jittest_result and jstest_result and jsapi_tests_result and check_style_result and check_masm_result
+        print('running check-js-msg-encoding')
+        check_js_msg_cmd = [sys.executable, os.path.join(self.topsrcdir, 'config', 'check_js_msg_encoding.py')]
+        check_js_msg_result = subprocess.call(check_js_msg_cmd, cwd=self.topsrcdir)
+
+        all_passed = jittest_result and jstest_result and jsapi_tests_result and check_style_result and check_masm_result and check_js_msg_result
 
         return all_passed
 
