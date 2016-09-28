@@ -38,6 +38,7 @@ import android.widget.TextView;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
@@ -532,6 +533,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
                 try {
                     final JSONObject json = new JSONObject();
                     json.put("type", "Menu:Open");
+                    GeckoApp.getEventDispatcher().dispatchEvent(json, null);
                     EventDispatcher.getInstance().dispatchEvent(json, null);
                 } catch (JSONException e) {
                     Log.e(LOGTAG, "Error forming JSON for Private Browsing contextual hint", e);

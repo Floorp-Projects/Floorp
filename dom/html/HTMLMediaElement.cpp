@@ -565,16 +565,6 @@ public:
       ? nsIContentPolicy::TYPE_INTERNAL_AUDIO :
         nsIContentPolicy::TYPE_INTERNAL_VIDEO;
 
-    nsCOMPtr<nsIDocShell> docShell = aElement->OwnerDoc()->GetDocShell();
-    if (docShell) {
-      nsDocShell* docShellPtr = nsDocShell::Cast(docShell);
-      bool privateBrowsing;
-      docShellPtr->GetUsePrivateBrowsing(&privateBrowsing);
-      if (privateBrowsing) {
-        securityFlags |= nsILoadInfo::SEC_FORCE_PRIVATE_BROWSING;
-      }
-    }
-
     nsCOMPtr<nsILoadGroup> loadGroup = aElement->GetDocumentLoadGroup();
     nsCOMPtr<nsIChannel> channel;
     nsresult rv = NS_NewChannel(getter_AddRefs(channel),

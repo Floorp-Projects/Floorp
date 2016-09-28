@@ -67,6 +67,7 @@ class IDBObjectStore final
   nsAutoPtr<ObjectStoreSpec> mDeletedSpec;
 
   nsTArray<RefPtr<IDBIndex>> mIndexes;
+  nsTArray<RefPtr<IDBIndex>> mDeletedIndexes;
 
   const int64_t mId;
   bool mRooted;

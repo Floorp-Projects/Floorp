@@ -766,7 +766,6 @@ nsDiscriminatedUnion::ToString(nsACString& aOutString) const
 
     case nsIDataType::VTYPE_VOID:
     case nsIDataType::VTYPE_EMPTY:
-      aOutString.Truncate();
       aOutString.SetIsVoid(true);
       return NS_OK;
 

@@ -1,5 +1,6 @@
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 var httpserver = new HttpServer();
 httpserver.start(-1);
@@ -23,7 +24,9 @@ function LoadContext(usePrivateBrowsing) {
 }
 
 LoadContext.prototype = {
-  originAttributes: {},
+  originAttributes: {
+    privateBrowsingId : 0
+  },
   usePrivateBrowsing: false,
   // don't bother defining rest of nsILoadContext fields: don't need 'em
 
@@ -38,24 +41,26 @@ LoadContext.prototype = {
       return this;
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
-
-  originAttributes: {}
 };
 
-PrivateBrowsingLoadContext = new LoadContext(true);
+var PrivateBrowsingLoadContext = new LoadContext(true);
 
 function make_channel(url, flags, usePrivateBrowsing) {
   var securityFlags = Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
-  if (usePrivateBrowsing) {
-    securityFlags |= Ci.nsILoadInfo.SEC_FORCE_PRIVATE_BROWSING;
-  }
-  var req = NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true,
-                                securityFlags: securityFlags});
+
+  var uri = Services.io.newURI(url, null, null);
+  var principal = Services.scriptSecurityManager.createCodebasePrincipal(uri,
+    { privateBrowsingId : usePrivateBrowsing ? 1 : 0 });
+
+  var req = NetUtil.newChannel({uri: uri,
+                                loadingPrincipal: principal,
+                                securityFlags: securityFlags,
+                                contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER});
+
   req.loadFlags = flags;
   if (usePrivateBrowsing) {
     req.notificationCallbacks = PrivateBrowsingLoadContext;
   }
-  req.loadInfo.originAttributes = {privateBrowsingId: usePrivateBrowsing ? 1 : 0};
   return req;
 }
 

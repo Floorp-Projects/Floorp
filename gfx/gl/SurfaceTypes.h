@@ -12,7 +12,7 @@
 
 namespace mozilla {
 namespace layers {
-class ISurfaceAllocator;
+class LayersIPCChannel;
 } // namespace layers
 
 namespace gl {
@@ -29,7 +29,7 @@ struct SurfaceCaps final
 
     // The surface allocator that we want to create this
     // for.  May be null.
-    RefPtr<layers::ISurfaceAllocator> surfaceAllocator;
+    RefPtr<layers::LayersIPCChannel> surfaceAllocator;
 
     SurfaceCaps();
     SurfaceCaps(const SurfaceCaps& other);

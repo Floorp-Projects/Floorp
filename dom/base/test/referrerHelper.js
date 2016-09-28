@@ -25,6 +25,9 @@ function doXHR(url, onSuccess, onFail) {
   xhr.onload = function () {
     if (xhr.status == 200) {
       onSuccess(xhr);
+    } else if (xhr.status == 418) {
+      // Ignore HSTS priming responses
+      return;
     } else {
       onFail(xhr);
     }

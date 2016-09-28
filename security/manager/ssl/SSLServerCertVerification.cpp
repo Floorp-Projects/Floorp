@@ -509,6 +509,7 @@ CertErrorRunnable::CheckCertOverrides()
   nsresult nsrv = sss->IsSecureHost(nsISiteSecurityService::HEADER_HSTS,
                                     mInfoObject->GetHostNameRaw(),
                                     mProviderFlags,
+                                    nullptr,
                                     &strictTransportSecurityEnabled);
   if (NS_FAILED(nsrv)) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
@@ -519,6 +520,7 @@ CertErrorRunnable::CheckCertOverrides()
   nsrv = sss->IsSecureHost(nsISiteSecurityService::HEADER_HPKP,
                            mInfoObject->GetHostNameRaw(),
                            mProviderFlags,
+                           nullptr,
                            &hasPinningInformation);
   if (NS_FAILED(nsrv)) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,

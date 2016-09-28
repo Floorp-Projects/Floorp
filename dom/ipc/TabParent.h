@@ -321,6 +321,8 @@ public:
 
   virtual bool RecvGetDefaultScale(double* aValue) override;
 
+  virtual bool RecvGetWidgetRounding(int32_t* aValue) override;
+
   virtual bool RecvGetMaxTouchPoints(uint32_t* aTouchPoints) override;
 
   virtual bool RecvGetWidgetNativeData(WindowsHandle* aValue) override;
@@ -635,6 +637,7 @@ protected:
   ScreenIntSize mDimensions;
   ScreenOrientationInternal mOrientation;
   float mDPI;
+  int32_t mRounding;
   CSSToLayoutDeviceScale mDefaultScale;
   bool mUpdatedDimensions;
   nsSizeMode mSizeMode;

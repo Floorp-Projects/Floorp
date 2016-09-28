@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
+    'nsIHstsPrimingCallback.idl',
     'nsIHttpActivityObserver.idl',
     'nsIHttpAuthenticableChannel.idl',
     'nsIHttpAuthenticator.idl',
@@ -31,6 +32,8 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla.net += [
+    'AltDataOutputStreamChild.h',
+    'AltDataOutputStreamParent.h',
     'HttpBaseChannel.h',
     'HttpChannelChild.h',
     'HttpChannelParent.h',
@@ -53,8 +56,11 @@ SOURCES += [
 ]
 
 UNIFIED_SOURCES += [
+    'AltDataOutputStreamChild.cpp',
+    'AltDataOutputStreamParent.cpp',
     'CacheControlParser.cpp',
     'ConnectionDiagnostics.cpp',
+    'HSTSPrimerListener.cpp',
     'Http2Compression.cpp',
     'Http2Push.cpp',
     'Http2Session.cpp',
@@ -95,6 +101,7 @@ SOURCES += [
 ]
 
 IPDL_SOURCES += [
+    'PAltDataOutputStream.ipdl',
     'PHttpChannel.ipdl',
 ]
 

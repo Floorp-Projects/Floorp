@@ -175,19 +175,10 @@ interface nsILoadInfo : nsISupports
   const unsigned long SEC_DONT_FOLLOW_REDIRECTS = (1<<12);
 
   /**
-   * Force private browsing. Setting this flag the private browsing can be
-   * enforce even when a loading is not happening in the context of a document.
-   *
-   * If the flag is true, even if a document context is present,
-   * GetUsePrivateBrowsing will always return true.
-   */
-  const unsigned long SEC_FORCE_PRIVATE_BROWSING = (1<<13);
-
-  /**
    * Load an error page, it should be one of following : about:neterror,
    * about:certerror, about:blocked, or about:tabcrashed.
    */
-  const unsigned long SEC_LOAD_ERROR_PAGE = (1<<14);
+  const unsigned long SEC_LOAD_ERROR_PAGE = (1<<13);
 
   /**
    * This is the principal of the network request's caller/requester where
@@ -349,13 +340,6 @@ interface nsILoadInfo : nsISupports
    * the principal.
    */
   [infallible] readonly attribute boolean aboutBlankInherits;
-
-  /**
-   * If usePrivateBrowsing is true, private browsing will be used.
-   * This value equals to originAttributes.privateBrowsingId in *content*
-   * side.
-   */
-  [infallible] readonly attribute boolean usePrivateBrowsing;
 
   /**
    * If allowChrome is true, then use nsIScriptSecurityManager::ALLOW_CHROME
@@ -600,6 +584,32 @@ interface nsILoadInfo : nsISupports
    * A C++ friendly getter for the forcePreflight flag.
    */
   [infallible] readonly attribute boolean isPreflight;
+
+  /**
+   * When this request would be mixed-content and we do not have an
+   * entry in the HSTS cache, we send an HSTS priming request to
+   * determine if it is ok to upgrade the request to HTTPS.
+   */
+  /**
+   * True if this is a mixed-content load and HSTS priming request will be sent.
+   */
+  [noscript, infallible] readonly attribute boolean forceHSTSPriming;
+  /**
+   * Carry the decision whether this load would be blocked by mixed content so
+   * that if HSTS priming fails, the correct decision can be made.
+   */
+  [noscript, infallible] readonly attribute boolean mixedContentWouldBlock;
+
+  /**
+   * Mark this LoadInfo as needing HSTS Priming
+   *
+   * @param wouldBlock Carry the decision of Mixed Content Blocking to be
+   * applied when HSTS priming is complete.
+   */
+  [noscript, notxpcom, nostdcall]
+  void setHSTSPriming(in boolean mixeContentWouldBlock);
+  [noscript, notxpcom, nostdcall]
+  void clearHSTSPriming();
 
   /**
   * Constants reflecting the channel tainting.  These are mainly defined here

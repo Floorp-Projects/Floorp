@@ -94,7 +94,7 @@ MSG_DEF(MSG_SW_INSTALL_ERROR, 2, JSEXN_TYPEERR, "ServiceWorker script at {0} for
 MSG_DEF(MSG_SW_SCRIPT_THREW, 2, JSEXN_TYPEERR, "ServiceWorker script at {0} for scope {1} threw an exception during script evaluation.")
 MSG_DEF(MSG_TYPEDARRAY_IS_SHARED, 1, JSEXN_TYPEERR, "{0} can't be a typed array on SharedArrayBuffer")
 MSG_DEF(MSG_CACHE_ADD_FAILED_RESPONSE, 3, JSEXN_TYPEERR, "Cache got {0} response with bad status {1} while trying to add request {2}")
-MSG_DEF(MSG_SW_UPDATE_BAD_REGISTRATION, 2, JSEXN_TYPEERR, "Failed to update the ServiceWorker for scope {0] because the registration has been {1} since the update was scheduled.")
+MSG_DEF(MSG_SW_UPDATE_BAD_REGISTRATION, 2, JSEXN_TYPEERR, "Failed to update the ServiceWorker for scope {0} because the registration has been {1} since the update was scheduled.")
 MSG_DEF(MSG_INVALID_DURATION_ERROR, 1, JSEXN_TYPEERR, "Invalid duration '{0}'.")
 MSG_DEF(MSG_INVALID_EASING_ERROR, 1, JSEXN_TYPEERR, "Invalid easing '{0}'.")
 MSG_DEF(MSG_INVALID_SPACING_MODE_ERROR, 1, JSEXN_TYPEERR, "Invalid spacing '{0}'.")

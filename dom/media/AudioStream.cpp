@@ -365,7 +365,8 @@ AudioStream::OpenCubeb(cubeb* aContext, cubeb_stream_params& aParams,
 
   cubeb_stream* stream = nullptr;
   /* Convert from milliseconds to frames. */
-  uint32_t latency_frames = CubebUtils::GetCubebLatency() * aParams.rate / 1000;
+  uint32_t latency_frames =
+    CubebUtils::GetCubebPlaybackLatencyInMilliseconds() * aParams.rate / 1000;
   if (cubeb_stream_init(aContext, &stream, "AudioStream",
                         nullptr, nullptr, nullptr, &aParams,
                         latency_frames,

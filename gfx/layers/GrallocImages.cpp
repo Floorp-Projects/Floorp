@@ -73,7 +73,7 @@ GrallocImage::SetData(const Data& aData)
     return false;
   }
 
-  RefPtr<ClientIPCAllocator> allocator = ImageBridgeChild::GetSingleton();
+  RefPtr<LayersIPCChannel> allocator = ImageBridgeChild::GetSingleton();
   GrallocTextureData* texData = GrallocTextureData::Create(mData.mYSize, HAL_PIXEL_FORMAT_YV12,
                                                            gfx::BackendType::NONE,
                                                            GraphicBuffer::USAGE_SW_READ_OFTEN |
@@ -469,7 +469,7 @@ GrallocImage::GetNativeBuffer()
 }
 
 TextureClient*
-GrallocImage::GetTextureClient(TextureForwarder* aForwarder)
+GrallocImage::GetTextureClient(KnowsCompositor* aForwarder)
 {
   return mTextureClient;
 }

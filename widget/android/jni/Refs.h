@@ -707,6 +707,21 @@ public:
         : Base(ctx)
     {}
 
+    static typename Base::LocalRef New(const ElementType* data, size_t length) {
+        using JNIElemType = typename detail::TypeAdapter<ElementType>::JNIType;
+        static_assert(sizeof(ElementType) == sizeof(JNIElemType),
+                      "Size of native type must match size of JNI type");
+        JNIEnv* const jenv = mozilla::jni::GetEnvForThread();
+        auto result =
+            (jenv->*detail::TypeAdapter<ElementType>::NewArray)(length);
+        MOZ_CATCH_JNI_EXCEPTION(jenv);
+        (jenv->*detail::TypeAdapter<ElementType>::SetArray)(
+                result, jsize(0), length,
+                reinterpret_cast<const JNIElemType*>(data));
+        MOZ_CATCH_JNI_EXCEPTION(jenv);
+        return Base::LocalRef::Adopt(jenv, result);
+    }
+
     size_t Length() const
     {
         const size_t ret = Base::Env()->GetArrayLength(Base::Instance());

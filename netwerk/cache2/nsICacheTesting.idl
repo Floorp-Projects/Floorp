@@ -4,6 +4,8 @@
 
 #include "nsISupports.idl"
 
+interface nsIObserver;
+
 /**
  * This is an internal interface used only for testing purposes.
  *
@@ -14,4 +16,5 @@ interface nsICacheTesting : nsISupports
 {
   void suspendCacheIOThread(in uint32_t aLevel);
   void resumeCacheIOThread();
+  void flush(in nsIObserver aObserver);
 };

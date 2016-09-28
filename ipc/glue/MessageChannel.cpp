@@ -484,6 +484,9 @@ MessageChannel::MessageChannel(MessageListener *aListener)
     mTransactionStack(nullptr),
     mTimedOutMessageSeqno(0),
     mTimedOutMessagePriority(0),
+#if defined(MOZ_CRASHREPORTER) && defined(OS_WIN)
+    mPending(AnnotateAllocator<Message>(*this)),
+#endif
     mRemoteStackDepthGuess(false),
     mSawInterruptOutMsg(false),
     mIsWaitingForIncoming(false),
@@ -492,9 +495,6 @@ MessageChannel::MessageChannel(MessageListener *aListener)
     mFlags(REQUIRE_DEFAULT),
     mPeerPidSet(false),
     mPeerPid(-1)
-#if defined(MOZ_CRASHREPORTER) && defined(OS_WIN)
-    , mPending(AnnotateAllocator<Message>(*this))
-#endif
 {
     MOZ_COUNT_CTOR(ipc::MessageChannel);
 
