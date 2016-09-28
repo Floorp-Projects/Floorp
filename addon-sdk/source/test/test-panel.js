@@ -254,6 +254,10 @@ exports["test Resize Panel"] = function(assert, done) {
       height: 10,
       width: 10,
       onMessage: function (message) {
+        // Make sure that attempting to resize a panel while it isn't
+        // visible doesn't cause an error.
+        panel.resize(1, 1);
+
         panel.show();
       },
       onShow: function () {
@@ -335,7 +339,7 @@ exports["test Several Show Hides"] = function(assert, done) {
   panel.show();
 };
 
-exports["test Anchor And Arrow"] = function(assert, done) {
+exports["test Anchor And Arrow"] = function*(assert, done) {
   let { loader } = LoaderWithHookedConsole(module, ignorePassingDOMNodeWarning);
   let { Panel } = loader.require('sdk/panel');
 
