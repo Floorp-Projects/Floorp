@@ -25,9 +25,8 @@ InProcessX11CompositorWidget::InProcessX11CompositorWidget(const CompositorWidge
 void
 InProcessX11CompositorWidget::ObserveVsync(VsyncObserver* aObserver)
 {
-  if (RefPtr<CompositorVsyncDispatcher> cvd = mWidget->GetCompositorVsyncDispatcher()) {
-    cvd->SetCompositorVsyncObserver(aObserver);
-  }
+  RefPtr<CompositorVsyncDispatcher> cvd = mWidget->GetCompositorVsyncDispatcher();
+  cvd->SetCompositorVsyncObserver(aObserver);
 }
 
 } // namespace widget
