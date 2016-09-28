@@ -36,7 +36,9 @@ job-defaults:
       - mozilla-central
       - integration
       - pine
-
+    index:
+        rank: pushdate # despite being tier-3, these jobs should be inserted into the
+	               # index ranked by pushdate
 
 jobs:
     aries-eng/opt:
