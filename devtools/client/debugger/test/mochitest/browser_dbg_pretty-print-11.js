@@ -31,8 +31,8 @@ function test() {
     finished.then(testSourceIsPretty)
       .then(() => {
         const finished = waitForCaretUpdated(gPanel, 7);
-        const reloaded = reloadActiveTab(gPanel, gDebugger.EVENTS.SOURCE_SHOWN);
-        return Promise.all([finished, reloaded]);
+        reloadActiveTab(gPanel);
+        return finished;
       })
       .then(testSourceIsPretty)
       .then(() => resumeDebuggerThenCloseAndFinish(gPanel))
