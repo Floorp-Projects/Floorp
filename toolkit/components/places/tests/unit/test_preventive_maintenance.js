@@ -36,18 +36,34 @@ function cleanDatabase() {
   mDBConn.executeSimpleSQL("DELETE FROM moz_items_annos");
   mDBConn.executeSimpleSQL("DELETE FROM moz_inputhistory");
   mDBConn.executeSimpleSQL("DELETE FROM moz_keywords");
-  mDBConn.executeSimpleSQL("DELETE FROM moz_favicons");
+  mDBConn.executeSimpleSQL("DELETE FROM moz_icons");
+  mDBConn.executeSimpleSQL("DELETE FROM moz_pages_w_icons");
   mDBConn.executeSimpleSQL("DELETE FROM moz_bookmarks WHERE id > " + defaultBookmarksMaxId);
 }
 
 function addPlace(aUrl, aFavicon) {
+  let href = new URL(aUrl || "http://www.mozilla.org").href;
   let stmt = mDBConn.createStatement(
-    "INSERT INTO moz_places (url, url_hash, favicon_id) VALUES (:url, hash(:url), :favicon)");
-  stmt.params["url"] = aUrl || "http://www.mozilla.org";
-  stmt.params["favicon"] = aFavicon || null;
+    "INSERT INTO moz_places (url, url_hash) VALUES (:url, hash(:url))");
+  stmt.params["url"] = href;
   stmt.execute();
   stmt.finalize();
-  return mDBConn.lastInsertRowID;
+  let id = mDBConn.lastInsertRowID;
+  if (aFavicon) {
+    stmt = mDBConn.createStatement(
+      "INSERT INTO moz_pages_w_icons (page_url, page_url_hash) VALUES (:url, hash(:url))");
+    stmt.params["url"] = href;
+    stmt.execute();
+    stmt.finalize();
+    stmt = mDBConn.createStatement(
+      "INSERT INTO moz_icons_to_pages (page_id, icon_id) " +
+      "VALUES ((SELECT id FROM moz_pages_w_icons WHERE page_url_hash = hash(:url)), :favicon)");
+    stmt.params["url"] = href;
+    stmt.params["favicon"] = aFavicon;
+    stmt.execute();
+    stmt.finalize();
+  }
+  return id;
 }
 
 function addBookmark(aPlaceId, aType, aParent, aKeywordId, aFolderType, aTitle) {
@@ -789,13 +805,13 @@ tests.push({
 
 tests.push({
   name: "E.1",
-  desc: "Remove orphan icons",
+  desc: "Remove orphan icon entries",
 
   _placeId: null,
 
   setup() {
     // Insert favicon entries
-    let stmt = mDBConn.createStatement("INSERT INTO moz_favicons (id, url) VALUES(:favicon_id, :url)");
+    let stmt = mDBConn.createStatement("INSERT INTO moz_icons (id, icon_url, fixed_icon_url_hash) VALUES(:favicon_id, :url, hash(fixup_url(:url)))");
     stmt.params["favicon_id"] = 1;
     stmt.params["url"] = "http://www1.mozilla.org/favicon.ico";
     stmt.execute();
@@ -804,18 +820,30 @@ tests.push({
     stmt.params["url"] = "http://www2.mozilla.org/favicon.ico";
     stmt.execute();
     stmt.finalize();
+    // Insert orphan page.
+    stmt = mDBConn.createStatement("INSERT INTO moz_pages_w_icons (id, page_url, page_url_hash) VALUES(:page_id, :url, hash(:url))");
+    stmt.params["page_id"] = 99;
+    stmt.params["url"] = "http://w99.mozilla.org/";
+    stmt.execute();
+    stmt.finalize();
+
     // Insert a place using the existing favicon entry
     this._placeId = addPlace("http://www.mozilla.org", 1);
   },
 
   check() {
     // Check that used icon is still there
-    let stmt = mDBConn.createStatement("SELECT id FROM moz_favicons WHERE id = :favicon_id");
+    let stmt = mDBConn.createStatement("SELECT id FROM moz_icons WHERE id = :favicon_id");
     stmt.params["favicon_id"] = 1;
     do_check_true(stmt.executeStep());
     stmt.reset();
     // Check that unused icon has been removed
     stmt.params["favicon_id"] = 2;
+    do_check_false(stmt.executeStep());
+    stmt.finalize();
+    // Check that the orphan page is gone.
+    stmt = mDBConn.createStatement("SELECT id FROM moz_pages_w_icons WHERE id = :page_id");
+    stmt.params["page_id"] = 99;
     do_check_false(stmt.executeStep());
     stmt.finalize();
   }
@@ -1024,50 +1052,6 @@ tests.push({
   }
 });
 
-
-// ------------------------------------------------------------------------------
-
-tests.push({
-  name: "L.1",
-  desc: "Fix wrong favicon ids",
-
-  _validIconPlaceId: null,
-  _invalidIconPlaceId: null,
-
-  setup() {
-    // Insert a favicon entry
-    let stmt = mDBConn.createStatement("INSERT INTO moz_favicons (id, url) VALUES(1, :url)");
-    stmt.params["url"] = "http://www.mozilla.org/favicon.ico";
-    stmt.execute();
-    stmt.finalize();
-    // Insert a place using the existing favicon entry
-    this._validIconPlaceId = addPlace("http://www1.mozilla.org", 1);
-
-    // Insert a place using a nonexistent favicon entry
-    this._invalidIconPlaceId = addPlace("http://www2.mozilla.org", 1337);
-  },
-
-  check() {
-    // Check that bogus favicon is not there
-    let stmt = mDBConn.createStatement("SELECT id FROM moz_places WHERE favicon_id = :favicon_id");
-    stmt.params["favicon_id"] = 1337;
-    do_check_false(stmt.executeStep());
-    stmt.reset();
-    // Check that valid favicon is still there
-    stmt.params["favicon_id"] = 1;
-    do_check_true(stmt.executeStep());
-    stmt.finalize();
-    // Check that place entries are there
-    stmt = mDBConn.createStatement("SELECT id FROM moz_places WHERE id = :place_id");
-    stmt.params["place_id"] = this._validIconPlaceId;
-    do_check_true(stmt.executeStep());
-    stmt.reset();
-    stmt.params["place_id"] = this._invalidIconPlaceId;
-    do_check_true(stmt.executeStep());
-    stmt.finalize();
-  }
-});
-
 // ------------------------------------------------------------------------------
 
 tests.push({
@@ -1185,8 +1169,6 @@ tests.push({
         handleError(aError) {
         },
         handleCompletion(aReason) {
-          dump_table("moz_places");
-          dump_table("moz_historyvisits");
           do_check_eq(aReason, Ci.mozIStorageStatementCallback.REASON_FINISHED);
           do_check_eq(this._count, 2);
           resolve();

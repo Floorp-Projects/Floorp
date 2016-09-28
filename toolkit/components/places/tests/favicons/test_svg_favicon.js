@@ -9,10 +9,11 @@ add_task(function* () {
   });
 
   yield new Promise(resolve => {
-    function onSetComplete(aURI, aDataLen, aData, aMimeType) {
+    function onSetComplete(aURI, aDataLen, aData, aMimeType, aWidth) {
       equal(aURI.spec, SMALLSVG_DATA_URI.spec, "setFavicon aURI check");
       equal(aDataLen, 263, "setFavicon aDataLen check");
       equal(aMimeType, "image/svg+xml", "setFavicon aMimeType check");
+      dump(aWidth);
       resolve();
     }
 

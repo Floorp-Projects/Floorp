@@ -1869,7 +1869,11 @@ this.PlacesUtils = {
          JOIN descendants ON b2.parent = descendants.id AND b2.id <> :tags_folder)
        SELECT d.level, d.id, d.guid, d.parent, d.parentGuid, d.type,
               d.position AS [index], d.title, d.dateAdded, d.lastModified,
-              h.url, f.url AS iconuri,
+              h.url, (SELECT icon_url FROM moz_icons i
+                      JOIN moz_icons_to_pages ON icon_id = i.id
+                      JOIN moz_pages_w_icons pi ON page_id = pi.id
+                      WHERE pi.page_url_hash = hash(h.url) AND pi.page_url = h.url
+                      ORDER BY width DESC LIMIT 1) AS iconuri,
               (SELECT GROUP_CONCAT(t.title, ',')
                FROM moz_bookmarks b2
                JOIN moz_bookmarks t ON t.id = +b2.parent AND t.parent = :tags_folder
@@ -1884,7 +1888,6 @@ this.PlacesUtils = {
        FROM descendants d
        LEFT JOIN moz_bookmarks b3 ON b3.id = d.parent
        LEFT JOIN moz_places h ON h.id = d.fk
-       LEFT JOIN moz_favicons f ON f.id = h.favicon_id
        ORDER BY d.level, d.parent, d.position`;
 
 

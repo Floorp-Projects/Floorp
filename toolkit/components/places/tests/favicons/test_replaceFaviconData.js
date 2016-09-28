@@ -74,6 +74,7 @@ add_task(function* test_replaceFaviconData_validHistoryURI() {
   iconsvc.setAndFetchFaviconForPage(pageURI, favicon.uri, true,
     PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
     function test_replaceFaviconData_validHistoryURI_check(aURI, aDataLen, aData, aMimeType) {
+dump("GOT " + aMimeType + "\n");
       checkCallbackSucceeded(aMimeType, aData, favicon.mimetype, favicon.data);
       checkFaviconDataForPage(
         pageURI, favicon.mimetype, favicon.data,
@@ -190,41 +191,22 @@ add_task(function* test_replaceFaviconData_unrelatedReplace() {
 
 add_task(function* test_replaceFaviconData_badInputs() {
   do_print("test replaceFaviconData to throw on bad inputs");
+  let icon = createFavicon("favicon8.png");
 
-  let favicon = createFavicon("favicon8.png");
+  Assert.throws(
+    () => iconsvc.replaceFaviconData(icon.uri, icon.data, icon.data.length, ""),
+    /NS_ERROR_ILLEGAL_VALUE/);
+  Assert.throws(
+    () => iconsvc.replaceFaviconData(icon.uri, icon.data, icon.data.length, "not-an-image"),
+    /NS_ERROR_ILLEGAL_VALUE/);
+  Assert.throws(
+    () => iconsvc.replaceFaviconData(null, icon.data, icon.data.length, icon.mimetype),
+    /NS_ERROR_ILLEGAL_VALUE/);
+  Assert.throws(
+    () => iconsvc.replaceFaviconData(icon.uri, null, 0, icon.mimetype),
+    /NS_ERROR_ILLEGAL_VALUE/);
 
-  let ex = null;
-  try {
-    iconsvc.replaceFaviconData(
-      favicon.uri, favicon.data, favicon.data.length, "");
-  } catch (e) {
-    ex = e;
-  } finally {
-    do_check_true(!!ex);
-  }
-
-  ex = null;
-  try {
-    iconsvc.replaceFaviconData(
-      null, favicon.data, favicon.data.length, favicon.mimeType);
-  } catch (e) {
-    ex = e;
-  } finally {
-    do_check_true(!!ex);
-  }
-
-  ex = null;
-  try {
-    iconsvc.replaceFaviconData(
-      favicon.uri, null, 0, favicon.mimeType);
-  } catch (e) {
-    ex = e;
-  } finally {
-    do_check_true(!!ex);
-  }
-
-  favicon.file.remove(false);
-
+  icon.file.remove(false);
   yield PlacesTestUtils.clearHistory();
 });
 
