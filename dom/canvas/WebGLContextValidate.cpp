@@ -122,27 +122,6 @@ WebGLContext::ValidateBlendFuncEnumsCompatibility(GLenum sfactor,
     return true;
 }
 
-/**
- * Check data ranges [readOffset, readOffset + size] and [writeOffset,
- * writeOffset + size] for overlap.
- *
- * It is assumed that offset and size have already been validated.
- */
-bool
-WebGLContext::ValidateDataRanges(WebGLintptr readOffset, WebGLintptr writeOffset, WebGLsizeiptr size, const char* info)
-{
-    MOZ_ASSERT((CheckedInt<WebGLsizeiptr>(readOffset) + size).isValid());
-    MOZ_ASSERT((CheckedInt<WebGLsizeiptr>(writeOffset) + size).isValid());
-
-    bool separate = (readOffset + size < writeOffset || writeOffset + size < readOffset);
-    if (!separate) {
-        ErrorInvalidValue("%s: ranges [readOffset, readOffset + size) and [writeOffset, "
-                          "writeOffset + size) overlap", info);
-    }
-
-    return separate;
-}
-
 bool
 WebGLContext::ValidateComparisonEnum(GLenum target, const char* info)
 {
