@@ -56,7 +56,6 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin):
             all_actions=[
                 'clobber',
                 'read-buildbot-config',
-                'ensure-firefox-checkout',
                 'download-and-extract',
                 'create-virtualenv',
                 'pull',
@@ -94,7 +93,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin):
         dirs = {}
         dirs['abs_app_install_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'application')
         dirs['abs_test_install_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'tests')
-        dirs['abs_wpttest_dir'] = os.path.join(abs_dirs['checkout'], 'testing', 'web-platform')
+        dirs["abs_wpttest_dir"] = os.path.join(dirs['abs_test_install_dir'], "web-platform")
         dirs['abs_blob_upload_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'blobber_upload_dir')
 
         abs_dirs.update(dirs)
@@ -131,25 +130,14 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin):
             self.fatal("Could not create blobber upload directory")
             # Exit
 
-        blob_upload_dir = dirs['abs_blob_upload_dir']
-        wpt_dir = dirs['abs_wpttest_dir']
-
-        cmd.extend([
-            '--log-raw=-',
-            '--log-raw=%s' % os.path.join(blob_upload_dir, 'wpt_raw.log'),
-            '--log-errorsummary=%s' % os.path.join(blob_upload_dir,
-                                                   'wpt_errorsummary.log'),
-            '--binary=%s' % self.binary_path,
-            '--symbols-path=%s' % self.query_symbols_url(),
-            '--stackwalk-binary=%s' % self.query_minidump_stackwalk(),
-            '--processes=1',
-            '--prefs-root=%s' % os.path.join(dirs['checkout'], 'testing', 'profiles'),
-            '--config=%s/wptrunner.ini' % wpt_dir,
-            '--ca-cert-path=%s/certs/cacert.pem' % wpt_dir,
-            '--host-key-path=%s/certs/web-platform.test.key' % wpt_dir,
-            '--host-cert-path=%s/certs/web-platform.test.pem' % wpt_dir,
-            '--certutil-binary=%s/bin/certutil' % dirs['abs_test_install_dir'],
-        ])
+        cmd += ["--log-raw=-",
+                "--log-raw=%s" % os.path.join(dirs["abs_blob_upload_dir"],
+                                              "wpt_raw.log"),
+                "--log-errorsummary=%s" % os.path.join(dirs["abs_blob_upload_dir"],
+                                                       "wpt_errorsummary.log"),
+                "--binary=%s" % self.binary_path,
+                "--symbols-path=%s" % self.query_symbols_url(),
+                "--stackwalk-binary=%s" % self.query_minidump_stackwalk()]
 
         for test_type in c.get("test_type", []):
             cmd.append("--test-type=%s" % test_type)
@@ -189,8 +177,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin):
                           "mozbase/*",
                           "marionette/*",
                           "tools/wptserve/*",
-                          "web-platform/*",
-                          "mozinfo.json"],
+                          "web-platform/*"],
             suite_categories=["web-platform"])
 
     def run_tests(self):
@@ -201,11 +188,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin):
                                         log_obj=self.log_obj,
                                         log_compact=True)
 
-        env = {
-            'MINIDUMP_SAVE_PATH': dirs['abs_blob_upload_dir'],
-            'MOZINFO_PATH': os.path.join(dirs['abs_test_install_dir'],
-                                         'mozinfo.json'),
-        }
+        env = {'MINIDUMP_SAVE_PATH': dirs['abs_blob_upload_dir']}
 
         if self.config['allow_software_gl_layers']:
             env['MOZ_LAYERS_ALLOW_SOFTWARE_GL'] = '1'
