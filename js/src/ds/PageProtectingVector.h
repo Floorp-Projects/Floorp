@@ -9,6 +9,7 @@
 
 #include "mozilla/Vector.h"
 
+#include "ds/MemoryProtectionExceptionHandler.h"
 #include "gc/Memory.h"
 
 namespace js {
@@ -100,10 +101,14 @@ class PageProtectingVector final
 
     void protectNewBuffer() {
         updateOffsetToPage();
+        if (protectionEnabled)
+            MemoryProtectionExceptionHandler::addRegion(vector.begin(), vector.capacity());
         protect();
     }
 
     void unprotectOldBuffer() {
+        if (protectionEnabled)
+            MemoryProtectionExceptionHandler::removeRegion(vector.begin());
         unprotect();
     }
 
