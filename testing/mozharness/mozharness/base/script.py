@@ -393,9 +393,9 @@ class ScriptMixin(PlatformMixin):
             expected_file_size = int(response.headers.get('Content-Length'))
 
         self.info('Http code: {}'.format(response.getcode()))
-        for k in ('Content-Encoding', 'Content-Type', 'via', 'x-amz-cf-id',
-                  'x-amz-version-id', 'x-cache'):
-            self.info('{}: {}'.format(k, response.headers.get(k)))
+        for k in sorted(response.headers.keys()):
+            if k.lower().startswith('x-amz-') or k in ('Content-Encoding', 'Content-Type', 'via'):
+                self.info('{}: {}'.format(k, response.headers.get(k)))
 
         file_contents = response.read()
         obtained_file_size = len(file_contents)
@@ -687,15 +687,9 @@ class ScriptMixin(PlatformMixin):
         try:
             function(**kwargs)
         except zipfile.BadZipfile:
-            # Bug 1305752 - Sometimes a good download turns out to be a
-            # corrupted zipfile. Let's upload the file for inspection
-            filepath = os.path.join(self.query_abs_dirs()['abs_upload_dir'], url.split('/')[-1])
-            self.info('Storing corrupted file to {}'.format(filepath))
-            with open(filepath, 'w') as f:
-                f.write(compressed_file.read())
-
-            # Dump the exception and exit
-            self.exception(level=FATAL)
+            # Bug 1306189 - Sometimes a good download turns out to be a
+            # corrupted zipfile. Let's create a signature that is easy to match
+            self.fatal('Check bug 1306189 for details on downloading a truncated zip file.')
 
 
     def load_json_url(self, url, error_level=None, *args, **kwargs):
