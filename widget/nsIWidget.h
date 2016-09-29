@@ -1192,11 +1192,6 @@ class nsIWidget : public nsISupports
                                              nsIRunnable* aCallback) = 0;
 
     /**
-     * Return the screen the widget is in, or null if we don't know.
-     */
-    already_AddRefed<nsIScreen> GetWidgetScreen();
-
-    /**
      * Put the toplevel window into or out of fullscreen mode.
      * If aTargetScreen is given, attempt to go fullscreen on that screen,
      * if possible.  (If not, it behaves as if aTargetScreen is null.)

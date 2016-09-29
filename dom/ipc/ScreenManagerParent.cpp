@@ -216,11 +216,6 @@ ScreenManagerParent::ExtractScreenDetails(nsIScreen* aScreen, ScreenDetails &aDe
   NS_ENSURE_SUCCESS(rv, false);
   aDetails.contentsScaleFactor() = contentsScaleFactor;
 
-  double defaultCSSScaleFactor = 1.0;
-  rv = aScreen->GetDefaultCSSScaleFactor(&defaultCSSScaleFactor);
-  NS_ENSURE_SUCCESS(rv, false);
-  aDetails.defaultCSSScaleFactor() = defaultCSSScaleFactor;
-
   return true;
 }
 
