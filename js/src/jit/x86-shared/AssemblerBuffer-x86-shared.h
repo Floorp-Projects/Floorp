@@ -87,8 +87,6 @@ namespace jit {
         AssemblerBuffer()
             : m_oom(false)
         {
-            // Provide memory protection once the buffer starts to get big.
-            m_buffer.setLowerBoundForProtection(32 * 1024);
         }
 
         void ensureSpace(size_t space)
@@ -140,6 +138,9 @@ namespace jit {
             MOZ_ASSERT(!m_oom);
             return m_buffer.begin();
         }
+
+        void enableBufferProtection() { m_buffer.enableProtection(); }
+        void disableBufferProtection() { m_buffer.disableProtection(); }
 
         void unprotectDataRegion(size_t firstByteOffset, size_t lastByteOffset) {
             m_buffer.unprotectRegion(firstByteOffset, lastByteOffset);
