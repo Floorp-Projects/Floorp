@@ -49,7 +49,8 @@ public:
   void ProcessSingleTap(const CSSPoint& aPoint,
                         const CSSToLayoutDeviceScale& aScale,
                         Modifiers aModifiers,
-                        const ScrollableLayerGuid& aGuid);
+                        const ScrollableLayerGuid& aGuid,
+                        int32_t aClickCount);
   void ProcessLongTap(const nsCOMPtr<nsIPresShell>& aUtils,
                       const CSSPoint& aPoint,
                       const CSSToLayoutDeviceScale& aScale,
