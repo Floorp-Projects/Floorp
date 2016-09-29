@@ -828,11 +828,8 @@ void
 WebGLContext::ThrowEvent_WebGLContextCreationError(const nsACString& text)
 {
     RefPtr<EventTarget> target = mCanvasElement;
-    if (!target && mOffscreenCanvas) {
+    if (!target) {
         target = mOffscreenCanvas;
-    } else {
-        GenerateWarning("Failed to create WebGL context: %s", text.BeginReading());
-        return;
     }
 
     const auto kEventName = NS_LITERAL_STRING("webglcontextcreationerror");
