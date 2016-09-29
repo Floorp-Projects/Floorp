@@ -132,6 +132,29 @@ public:
    */
   EventTree* QueueMutation(Accessible* aContainer);
 
+  class MoveGuard final {
+  public:
+    explicit MoveGuard(NotificationController* aController) :
+      mController(aController)
+    {
+#ifdef DEBUG
+      MOZ_ASSERT(!mController->mMoveGuardOnStack,
+                 "Move guard is on stack already!");
+      mController->mMoveGuardOnStack = true;
+#endif
+    }
+    ~MoveGuard() {
+#ifdef DEBUG
+      MOZ_ASSERT(mController->mMoveGuardOnStack, "No move guard on stack!");
+      mController->mMoveGuardOnStack = false;
+#endif
+      mController->mPrecedingEvents.Clear();
+    }
+
+  private:
+    NotificationController* mController;
+  };
+
 #ifdef A11Y_LOG
   const EventTree& RootEventTree() const { return mEventTree; };
 #endif
@@ -247,6 +270,26 @@ private:
   // nsARefreshObserver
   virtual void WillRefresh(mozilla::TimeStamp aTime) override;
 
+  /**
+   * Set and returns a hide event, paired with a show event, for the move.
+   */
+  void WithdrawPrecedingEvents(nsTArray<RefPtr<AccHideEvent>>* aEvs)
+  {
+    if (mPrecedingEvents.Length() > 0) {
+      aEvs->AppendElements(mozilla::Move(mPrecedingEvents));
+    }
+  }
+  void StorePrecedingEvent(AccHideEvent* aEv)
+  {
+    MOZ_ASSERT(mMoveGuardOnStack, "No move guard on stack!");
+    mPrecedingEvents.AppendElement(aEv);
+  }
+  void StorePrecedingEvents(nsTArray<RefPtr<AccHideEvent>>&& aEvs)
+  {
+    MOZ_ASSERT(mMoveGuardOnStack, "No move guard on stack!");
+    mPrecedingEvents.InsertElementsAt(0, aEvs);
+  }
+
 private:
   /**
    * Indicates whether we're waiting on an event queue processing from our
@@ -320,6 +363,19 @@ private:
    * Holds all mutation events.
    */
   EventTree mEventTree;
+
+  /**
+   * A temporary collection of hide events that should be fired before related
+   * show event. Used by EventTree.
+   */
+  nsTArray<RefPtr<AccHideEvent>> mPrecedingEvents;
+
+#ifdef DEBUG
+  bool mMoveGuardOnStack;
+#endif
+
+  friend class MoveGuard;
+  friend class EventTree;
 };
 
 } // namespace a11y
