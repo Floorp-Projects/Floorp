@@ -129,7 +129,7 @@ var pktUI = (function() {
      */
     function showSignUp() {
         // AB test: Direct logged-out users to tab vs panel
-        if (pktApi.getSignupPanelTabTestVariant() == 'tab')
+        if (pktApi.getSignupPanelTabTestVariant() == 'v2')
         {
             let site = Services.prefs.getCharPref("extensions.pocket.site");
             openTabWithUrl('https://' + site + '/firefox_learnmore?s=ffi&t=autoredirect&tv=page_learnmore&src=ff_ext', true);
