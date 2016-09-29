@@ -12,6 +12,20 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps)
     win = window;
   }
 
+  var result = {
+    names: [],
+    values: [],
+  };
+  // We report multiple results, so we base the name on the path.
+  // Everything after '/tp5n/' if exists (for tp5o_scroll), or the file name at
+  // the path if non-empty (e.g. with tscrollx), or the last dir otherwise (e.g.
+  // 'mydir' for 'http://my.domain/dir1/mydir/').
+  var href = win.location.href;
+  var testBaseName = href.split("/tp5n/")[1]
+                  || href.split("/").pop()
+                  || href.split("/").splice(-2, 1)[0]
+                  || "REALLY_WEIRD_URI";
+
   var report;
   /**
    * Sets up the value of 'report' as a function for reporting the test result[s].
@@ -136,7 +150,9 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps)
             sum += Number(durations[i]);
 
           // Report average interval or (failsafe) 0 if no intervls were recorded
-          resolve(durations.length ? sum / durations.length : 0);
+          result.values.push(durations.length ? sum / durations.length : 0);
+          result.names.push(testBaseName);
+          resolve();
           return;
         }
 
@@ -156,8 +172,8 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps)
   .then(gotoTop)
   .then(P_rAF)
   .then(P_syncScrollTest)
-  .then(function(result) { // function since 'report' might not be ready when invoking 'then'
-    report(result);
+  .then(function() {
+    report(result.values.join(","), 0, result.names.join(","));
   });
 }
 
