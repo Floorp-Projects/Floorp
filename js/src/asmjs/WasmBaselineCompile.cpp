@@ -2576,19 +2576,15 @@ class BaseCompiler
     }
 
     bool popcnt64NeedsTemp() const {
-#if defined(JS_CODEGEN_X64)
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
         return !AssemblerX86Shared::HasPOPCNT();
 #else
         MOZ_CRASH("BaseCompiler platform hook: popcnt64NeedsTemp");
 #endif
     }
 
-    void popcntI64(RegI64 srcDest, RegI64 tmp) {
-#if defined(JS_CODEGEN_X64)
-        masm.popcnt64(srcDest.reg, srcDest.reg, tmp.reg.reg);
-#else
-        MOZ_CRASH("BaseCompiler platform hook: popcntI64");
-#endif
+    void popcntI64(RegI64 srcDest, RegI32 tmp) {
+        masm.popcnt64(srcDest.reg, srcDest.reg, tmp.reg);
     }
 
     void reinterpretI64AsF64(RegI64 src, RegF64 dest) {
@@ -4209,11 +4205,11 @@ BaseCompiler::emitPopcntI64()
 {
     RegI64 r0 = popI64();
     if (popcnt64NeedsTemp()) {
-        RegI64 tmp = needI64();
+        RegI32 tmp = needI32();
         popcntI64(r0, tmp);
-        freeI64(tmp);
+        freeI32(tmp);
     } else {
-        popcntI64(r0, invalidI64());
+        popcntI64(r0, invalidI32());
     }
     pushI64(r0);
 }
