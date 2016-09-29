@@ -7,8 +7,8 @@
 
 "use strict";
 
-const TEST_ARTICLE = "http://example.com/browser/browser/base/content/test/" +
-  "general/readerModeArticle.html";
+const TEST_ARTICLE =
+  "http://example.com/browser/toolkit/components/narrate/test/moby_dick.html";
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -27,11 +27,15 @@ const TEST_PREFS = [
   ["narrate.test", true]
 ];
 
-function setup() {
+function setup(voiceUri) {
   // Set required test prefs.
   TEST_PREFS.forEach(([name, value]) => {
     setBoolPref(name, value);
   });
+
+  if (voiceUri) {
+    Services.prefs.setCharPref("narrate.voice", voiceUri);
+  }
 }
 
 function teardown() {

@@ -167,6 +167,24 @@ Narrator.prototype = {
 
     let highlighter = new Highlighter(paragraph);
 
+    if (this._inTest) {
+      let onTestSynthEvent = e => {
+        if (e.detail.type == "boundary") {
+          let args = Object.assign({ utterance }, e.detail.args);
+          let evt = new this._win.SpeechSynthesisEvent(e.detail.type, args);
+          utterance.dispatchEvent(evt);
+        }
+      };
+
+      let removeListeners = () => {
+        this._win.removeEventListener("testsynthevent", onTestSynthEvent);
+      };
+
+      this._win.addEventListener("testsynthevent", onTestSynthEvent);
+      utterance.addEventListener("end", removeListeners);
+      utterance.addEventListener("error", removeListeners);
+    }
+
     return new Promise((resolve, reject) => {
       utterance.addEventListener("start", () => {
         paragraph.classList.add("narrating");
@@ -179,7 +197,8 @@ Narrator.prototype = {
           this._sendTestEvent("paragraphstart", {
             voice: utterance.chosenVoiceURI,
             rate: utterance.rate,
-            paragraph: paragraph.textContent
+            paragraph: paragraph.textContent,
+            tag: paragraph.localName
           });
         }
       });
@@ -224,6 +243,12 @@ Narrator.prototype = {
         let firstIndex = reWordBoundary.exec(paragraph.textContent);
         if (firstIndex) {
           highlighter.highlight(firstIndex.index, reWordBoundary.lastIndex);
+          if (this._inTest) {
+            this._sendTestEvent("wordhighlight", {
+              start: firstIndex.index,
+              end: reWordBoundary.lastIndex
+            });
+          }
         }
       });
 
