@@ -126,6 +126,12 @@ ToPrimitive(nsCSSKeyword aKeyword)
   }
 }
 
+static bool
+TransformFunctionsMatch(nsCSSKeyword func1, nsCSSKeyword func2)
+{
+  return ToPrimitive(func1) == ToPrimitive(func2);
+}
+
 static already_AddRefed<nsCSSValue::Array>
 AppendFunction(nsCSSKeyword aTransformFunction)
 {
@@ -476,6 +482,149 @@ CalcPositionCoordSquareDistance(const nsCSSValue& aPos1,
   float difflen = calcVal2.mLength - calcVal1.mLength;
   float diffpct = calcVal2.mPercent - calcVal1.mPercent;
   return difflen * difflen + diffpct * diffpct;
+}
+
+// Ensure that a float/double value isn't NaN by returning zero instead
+// (NaN doesn't have a sign) as a general restriction for floating point
+// values in RestrictValue.
+template<typename T>
+MOZ_ALWAYS_INLINE T
+EnsureNotNan(T aValue)
+{
+  return aValue;
+}
+template<>
+MOZ_ALWAYS_INLINE float
+EnsureNotNan(float aValue)
+{
+  // This would benefit from a MOZ_FLOAT_IS_NaN if we had one.
+  return MOZ_LIKELY(!mozilla::IsNaN(aValue)) ? aValue : 0;
+}
+template<>
+MOZ_ALWAYS_INLINE double
+EnsureNotNan(double aValue)
+{
+  return MOZ_LIKELY(!mozilla::IsNaN(aValue)) ? aValue : 0;
+}
+
+template <typename T>
+T
+RestrictValue(uint32_t aRestrictions, T aValue)
+{
+  T result = EnsureNotNan(aValue);
+  switch (aRestrictions) {
+    case 0:
+      break;
+    case CSS_PROPERTY_VALUE_NONNEGATIVE:
+      if (result < 0) {
+        result = 0;
+      }
+      break;
+    case CSS_PROPERTY_VALUE_AT_LEAST_ONE:
+      if (result < 1) {
+        result = 1;
+      }
+      break;
+    default:
+      MOZ_ASSERT(false, "bad value restriction");
+      break;
+  }
+  return result;
+}
+
+template <typename T>
+T
+RestrictValue(nsCSSPropertyID aProperty, T aValue)
+{
+  return RestrictValue(nsCSSProps::ValueRestrictions(aProperty), aValue);
+}
+
+static void
+AddCSSValueAngle(double aCoeff1, const nsCSSValue &aValue1,
+                 double aCoeff2, const nsCSSValue &aValue2,
+                 nsCSSValue &aResult)
+{
+  if (aValue1.GetUnit() == aValue2.GetUnit()) {
+    // To avoid floating point error, if the units match, maintain the unit.
+    aResult.SetFloatValue(
+      EnsureNotNan(aCoeff1 * aValue1.GetFloatValue() +
+                   aCoeff2 * aValue2.GetFloatValue()),
+      aValue1.GetUnit());
+  } else {
+    aResult.SetFloatValue(
+      EnsureNotNan(aCoeff1 * aValue1.GetAngleValueInRadians() +
+                   aCoeff2 * aValue2.GetAngleValueInRadians()),
+      eCSSUnit_Radian);
+  }
+}
+
+static inline void
+AddCSSValuePercent(double aCoeff1, const nsCSSValue &aValue1,
+                   double aCoeff2, const nsCSSValue &aValue2,
+                   nsCSSValue &aResult, uint32_t aValueRestrictions = 0)
+{
+  MOZ_ASSERT(aValue1.GetUnit() == eCSSUnit_Percent, "unexpected unit");
+  MOZ_ASSERT(aValue2.GetUnit() == eCSSUnit_Percent, "unexpected unit");
+  aResult.SetPercentValue(RestrictValue(aValueRestrictions,
+                                        aCoeff1 * aValue1.GetPercentValue() +
+                                        aCoeff2 * aValue2.GetPercentValue()));
+}
+
+// Add two canonical-form calc values (eUnit_Calc) to make another
+// canonical-form calc value.
+static void
+AddCSSValueCanonicalCalc(double aCoeff1, const nsCSSValue &aValue1,
+                         double aCoeff2, const nsCSSValue &aValue2,
+                         nsCSSValue &aResult)
+{
+  PixelCalcValue v1 = ExtractCalcValue(aValue1);
+  PixelCalcValue v2 = ExtractCalcValue(aValue2);
+  PixelCalcValue result;
+  result.mLength = aCoeff1 * v1.mLength + aCoeff2 * v2.mLength;
+  result.mPercent = aCoeff1 * v1.mPercent + aCoeff2 * v2.mPercent;
+  result.mHasPercent = v1.mHasPercent || v2.mHasPercent;
+  MOZ_ASSERT(result.mHasPercent || result.mPercent == 0.0f,
+             "can't have a nonzero percentage part without having percentages");
+  SetCalcValue(result, aResult);
+}
+
+static inline void
+AddCSSValuePixel(double aCoeff1, const nsCSSValue &aValue1,
+                 double aCoeff2, const nsCSSValue &aValue2,
+                 nsCSSValue &aResult, uint32_t aValueRestrictions = 0)
+{
+  MOZ_ASSERT(aValue1.GetUnit() == eCSSUnit_Pixel, "unexpected unit");
+  MOZ_ASSERT(aValue2.GetUnit() == eCSSUnit_Pixel, "unexpected unit");
+  aResult.SetFloatValue(RestrictValue(aValueRestrictions,
+                                      aCoeff1 * aValue1.GetFloatValue() +
+                                      aCoeff2 * aValue2.GetFloatValue()),
+                        eCSSUnit_Pixel);
+}
+
+static void
+AddTransformTranslate(double aCoeff1, const nsCSSValue &aValue1,
+                      double aCoeff2, const nsCSSValue &aValue2,
+                      nsCSSValue &aResult)
+{
+  MOZ_ASSERT(aValue1.GetUnit() == eCSSUnit_Percent ||
+             aValue1.GetUnit() == eCSSUnit_Pixel ||
+            aValue1.IsCalcUnit(),
+            "unexpected unit");
+  MOZ_ASSERT(aValue2.GetUnit() == eCSSUnit_Percent ||
+             aValue2.GetUnit() == eCSSUnit_Pixel ||
+             aValue2.IsCalcUnit(),
+             "unexpected unit");
+
+  if (aValue1.GetUnit() != aValue2.GetUnit() || aValue1.IsCalcUnit()) {
+    // different units; create a calc() expression
+    AddCSSValueCanonicalCalc(aCoeff1, aValue1, aCoeff2, aValue2, aResult);
+  } else if (aValue1.GetUnit() == eCSSUnit_Percent) {
+    // both percent
+    AddCSSValuePercent(aCoeff1, aValue1, aCoeff2, aValue2, aResult);
+  } else {
+    // both pixels
+    AddCSSValuePixel(aCoeff1, aValue1, aCoeff2, aValue2, aResult);
+  }
 }
 
 // CLASS METHODS
@@ -1008,74 +1157,6 @@ StyleAnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
   return false;
 }
 
-// Ensure that a float/double value isn't NaN by returning zero instead
-// (NaN doesn't have a sign) as a general restriction for floating point
-// values in RestrictValue.
-template<typename T>
-MOZ_ALWAYS_INLINE T
-EnsureNotNan(T aValue)
-{
-  return aValue;
-}
-template<>
-MOZ_ALWAYS_INLINE float
-EnsureNotNan(float aValue)
-{
-  // This would benefit from a MOZ_FLOAT_IS_NaN if we had one.
-  return MOZ_LIKELY(!mozilla::IsNaN(aValue)) ? aValue : 0;
-}
-template<>
-MOZ_ALWAYS_INLINE double
-EnsureNotNan(double aValue)
-{
-  return MOZ_LIKELY(!mozilla::IsNaN(aValue)) ? aValue : 0;
-}
-
-template <typename T>
-T
-RestrictValue(uint32_t aRestrictions, T aValue)
-{
-  T result = EnsureNotNan(aValue);
-  switch (aRestrictions) {
-    case 0:
-      break;
-    case CSS_PROPERTY_VALUE_NONNEGATIVE:
-      if (result < 0) {
-        result = 0;
-      }
-      break;
-    case CSS_PROPERTY_VALUE_AT_LEAST_ONE:
-      if (result < 1) {
-        result = 1;
-      }
-      break;
-    default:
-      MOZ_ASSERT(false, "bad value restriction");
-      break;
-  }
-  return result;
-}
-
-template <typename T>
-T
-RestrictValue(nsCSSPropertyID aProperty, T aValue)
-{
-  return RestrictValue(nsCSSProps::ValueRestrictions(aProperty), aValue);
-}
-
-static inline void
-AddCSSValuePixel(double aCoeff1, const nsCSSValue &aValue1,
-                 double aCoeff2, const nsCSSValue &aValue2,
-                 nsCSSValue &aResult, uint32_t aValueRestrictions = 0)
-{
-  MOZ_ASSERT(aValue1.GetUnit() == eCSSUnit_Pixel, "unexpected unit");
-  MOZ_ASSERT(aValue2.GetUnit() == eCSSUnit_Pixel, "unexpected unit");
-  aResult.SetFloatValue(RestrictValue(aValueRestrictions,
-                                      aCoeff1 * aValue1.GetFloatValue() +
-                                      aCoeff2 * aValue2.GetFloatValue()),
-                        eCSSUnit_Pixel);
-}
-
 static inline void
 AddCSSValueNumber(double aCoeff1, const nsCSSValue &aValue1,
                   double aCoeff2, const nsCSSValue &aValue2,
@@ -1087,55 +1168,6 @@ AddCSSValueNumber(double aCoeff1, const nsCSSValue &aValue1,
                                       aCoeff1 * aValue1.GetFloatValue() +
                                       aCoeff2 * aValue2.GetFloatValue()),
                         eCSSUnit_Number);
-}
-
-static inline void
-AddCSSValuePercent(double aCoeff1, const nsCSSValue &aValue1,
-                   double aCoeff2, const nsCSSValue &aValue2,
-                   nsCSSValue &aResult, uint32_t aValueRestrictions = 0)
-{
-  MOZ_ASSERT(aValue1.GetUnit() == eCSSUnit_Percent, "unexpected unit");
-  MOZ_ASSERT(aValue2.GetUnit() == eCSSUnit_Percent, "unexpected unit");
-  aResult.SetPercentValue(RestrictValue(aValueRestrictions,
-                                        aCoeff1 * aValue1.GetPercentValue() +
-                                        aCoeff2 * aValue2.GetPercentValue()));
-}
-
-// Add two canonical-form calc values (eUnit_Calc) to make another
-// canonical-form calc value.
-static void
-AddCSSValueCanonicalCalc(double aCoeff1, const nsCSSValue &aValue1,
-                         double aCoeff2, const nsCSSValue &aValue2,
-                         nsCSSValue &aResult)
-{
-  PixelCalcValue v1 = ExtractCalcValue(aValue1);
-  PixelCalcValue v2 = ExtractCalcValue(aValue2);
-  PixelCalcValue result;
-  result.mLength = aCoeff1 * v1.mLength + aCoeff2 * v2.mLength;
-  result.mPercent = aCoeff1 * v1.mPercent + aCoeff2 * v2.mPercent;
-  result.mHasPercent = v1.mHasPercent || v2.mHasPercent;
-  MOZ_ASSERT(result.mHasPercent || result.mPercent == 0.0f,
-             "can't have a nonzero percentage part without having percentages");
-  SetCalcValue(result, aResult);
-}
-
-static void
-AddCSSValueAngle(double aCoeff1, const nsCSSValue &aValue1,
-                 double aCoeff2, const nsCSSValue &aValue2,
-                 nsCSSValue &aResult)
-{
-  if (aValue1.GetUnit() == aValue2.GetUnit()) {
-    // To avoid floating point error, if the units match, maintain the unit.
-    aResult.SetFloatValue(
-      EnsureNotNan(aCoeff1 * aValue1.GetFloatValue() +
-                   aCoeff2 * aValue2.GetFloatValue()),
-      aValue1.GetUnit());
-  } else {
-    aResult.SetFloatValue(
-      EnsureNotNan(aCoeff1 * aValue1.GetAngleValueInRadians() +
-                   aCoeff2 * aValue2.GetAngleValueInRadians()),
-      eCSSUnit_Radian);
-  }
 }
 
 static bool
@@ -1325,32 +1357,6 @@ AddWeightedShadowItems(double aCoeff1, const nsCSSValue &aValue1,
   auto resultItem = MakeUnique<nsCSSValueList>();
   resultItem->mValue.SetArrayValue(resultArray, eCSSUnit_Array);
   return resultItem;
-}
-
-static void
-AddTransformTranslate(double aCoeff1, const nsCSSValue &aValue1,
-                      double aCoeff2, const nsCSSValue &aValue2,
-                      nsCSSValue &aResult)
-{
-  MOZ_ASSERT(aValue1.GetUnit() == eCSSUnit_Percent ||
-             aValue1.GetUnit() == eCSSUnit_Pixel ||
-            aValue1.IsCalcUnit(),
-            "unexpected unit");
-  MOZ_ASSERT(aValue2.GetUnit() == eCSSUnit_Percent ||
-             aValue2.GetUnit() == eCSSUnit_Pixel ||
-             aValue2.IsCalcUnit(),
-             "unexpected unit");
-
-  if (aValue1.GetUnit() != aValue2.GetUnit() || aValue1.IsCalcUnit()) {
-    // different units; create a calc() expression
-    AddCSSValueCanonicalCalc(aCoeff1, aValue1, aCoeff2, aValue2, aResult);
-  } else if (aValue1.GetUnit() == eCSSUnit_Percent) {
-    // both percent
-    AddCSSValuePercent(aCoeff1, aValue1, aCoeff2, aValue2, aResult);
-  } else {
-    // both pixels
-    AddCSSValuePixel(aCoeff1, aValue1, aCoeff2, aValue2, aResult);
-  }
 }
 
 static void
@@ -1776,12 +1782,6 @@ AddDifferentTransformLists(double aCoeff1, const nsCSSValueList* aList1,
   arr->Item(3).SetPercentValue(aCoeff2);
 
   return result.forget();
-}
-
-static bool
-TransformFunctionsMatch(nsCSSKeyword func1, nsCSSKeyword func2)
-{
-  return ToPrimitive(func1) == ToPrimitive(func2);
 }
 
 static UniquePtr<nsCSSValueList>
