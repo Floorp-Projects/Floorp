@@ -1117,7 +1117,7 @@ QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp)
   JS::Rooted<JSObject*> obj(cx, js::CheckedUnwrap(origObj,
                                                   /* stopAtWindowProxy = */ false));
   if (!obj) {
-      JS_ReportError(cx, "Permission denied to access object");
+      JS_ReportErrorASCII(cx, "Permission denied to access object");
       return false;
   }
 

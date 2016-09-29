@@ -30,7 +30,7 @@ function runTests()
 {
   var svg = $("svg");
   var doc = svg.contentWindow.document;
-  var rootElement = doc.rootElement;
+  var rootElement = doc.documentElement;
 
   var tests = [
       new Test("unknown", false),

@@ -3,24 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDOMDocument.idl"
+#include "nsISupports.idl"
 
+// The only reason this interface still exists is that we have addon and Firefox
+// code QIing to it and using it for instanceof via Components.interfaces, and
+// the interface needs to exist in order for the shim stuff in
+// xpcom/reflect/xptinfo/ShimInterfaceInfo.cpp to work.
 [uuid(89ab39cb-c568-4d85-bd34-306d5cd5164d)]
-interface nsIDOMXMLDocument : nsIDOMDocument
+interface nsIDOMXMLDocument : nsISupports
 {
-  // DOM Level 3 Load & Save, DocumentLS
-  // http://www.w3.org/TR/DOM-Level-3-LS/load-save.html#LS-DocumentLS
-  /**
-   * Whether to load synchronously or asynchronously.
-   * The default is async==true.
-   */
-  attribute boolean            async;
- 
-  /**
-   * Load an XML document.
-   *
-   * @param  url URL to an XML document.
-   * @return     True if load successfull.
-   */
-  boolean                      load(in DOMString url);
 };

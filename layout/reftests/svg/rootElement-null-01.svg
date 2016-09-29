@@ -14,8 +14,8 @@
 
 function handleLoad(event)
 {
-  var root = document.removeChild(document.rootElement);
-  if (document.rootElement == null) { // this shouldn't crash
+  var root = document.removeChild(document.documentElement);
+  if (document.documentElement == null) { // this shouldn't crash
     document.appendChild(root);
     document.getElementById('rect').setAttribute('fill', 'lime');
   }

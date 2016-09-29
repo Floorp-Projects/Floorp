@@ -14,10 +14,8 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 IMPL_IUNKNOWN_QUERY_HEAD(ChildrenEnumVariant)
-IMPL_IUNKNOWN_QUERY_IFACE(IEnumVARIANT);
-IMPL_IUNKNOWN_QUERY_IFACE(IUnknown);
-IMPL_IUNKNOWN_QUERY_AGGR_COND(mAnchorAcc, !mAnchorAcc->IsDefunct());
-IMPL_IUNKNOWN_QUERY_TAIL
+IMPL_IUNKNOWN_QUERY_IFACE(IEnumVARIANT)
+IMPL_IUNKNOWN_QUERY_TAIL_AGGREGATED(mAnchorAcc)
 
 STDMETHODIMP
 ChildrenEnumVariant::Next(ULONG aCount, VARIANT FAR* aItems,

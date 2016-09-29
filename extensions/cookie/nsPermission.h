@@ -18,13 +18,19 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPERMISSION
 
+  static already_AddRefed<nsPermission> Create(nsIPrincipal* aPrincipal,
+                                               const nsACString &aType,
+                                               uint32_t aCapability,
+                                               uint32_t aExpireType,
+                                               int64_t aExpireTime);
+
+protected:
   nsPermission(nsIPrincipal* aPrincipal,
                const nsACString &aType,
                uint32_t aCapability,
                uint32_t aExpireType,
                int64_t aExpireTime);
 
-protected:
   virtual ~nsPermission() {};
 
   nsCOMPtr<nsIPrincipal> mPrincipal;

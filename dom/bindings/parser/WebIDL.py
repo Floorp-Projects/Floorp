@@ -4204,6 +4204,7 @@ class IDLAttribute(IDLInterfaceMember):
               identifier == "Frozen" or
               identifier == "NewObject" or
               identifier == "UnsafeInPrerendering" or
+              identifier == "NeedsSubjectPrincipal" or
               identifier == "BinaryName"):
             # Known attributes that we don't need to do anything with here
             pass
@@ -4920,6 +4921,7 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
               identifier == "Func" or
               identifier == "SecureContext" or
               identifier == "BinaryName" or
+              identifier == "NeedsSubjectPrincipal" or
               identifier == "StaticClassOverride"):
             # Known attributes that we don't need to do anything with here
             pass

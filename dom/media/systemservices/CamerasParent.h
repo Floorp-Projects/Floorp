@@ -99,14 +99,19 @@ public:
   static already_AddRefed<CamerasParent> Create();
 
   // Messages received form the child. These run on the IPC/PBackground thread.
-  virtual bool RecvAllocateCaptureDevice(const int&, const nsCString&, const nsCString&) override;
-  virtual bool RecvReleaseCaptureDevice(const int&, const int &) override;
-  virtual bool RecvNumberOfCaptureDevices(const int&) override;
-  virtual bool RecvNumberOfCapabilities(const int&, const nsCString&) override;
-  virtual bool RecvGetCaptureCapability(const int&, const nsCString&, const int&) override;
-  virtual bool RecvGetCaptureDevice(const int&, const int&) override;
-  virtual bool RecvStartCapture(const int&, const int&, const CaptureCapability&) override;
-  virtual bool RecvStopCapture(const int&, const int&) override;
+  virtual bool RecvAllocateCaptureDevice(const CaptureEngine&, const nsCString&,
+                                         const nsCString&) override;
+  virtual bool RecvReleaseCaptureDevice(const CaptureEngine&,
+                                        const int&) override;
+  virtual bool RecvNumberOfCaptureDevices(const CaptureEngine&) override;
+  virtual bool RecvNumberOfCapabilities(const CaptureEngine&,
+                                        const nsCString&) override;
+  virtual bool RecvGetCaptureCapability(const CaptureEngine&, const nsCString&,
+                                        const int&) override;
+  virtual bool RecvGetCaptureDevice(const CaptureEngine&, const int&) override;
+  virtual bool RecvStartCapture(const CaptureEngine&, const int&,
+                                const CaptureCapability&) override;
+  virtual bool RecvStopCapture(const CaptureEngine&, const int&) override;
   virtual bool RecvReleaseFrame(mozilla::ipc::Shmem&&) override;
   virtual bool RecvAllDone() override;
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
@@ -134,8 +139,8 @@ protected:
   virtual ~CamerasParent();
 
   // We use these helpers for shutdown and for the respective IPC commands.
-  void StopCapture(const int& aCapEngine, const int& capnum);
-  int ReleaseCaptureDevice(const int& aCapEngine, const int& capnum);
+  void StopCapture(const CaptureEngine& aCapEngine, const int& capnum);
+  int ReleaseCaptureDevice(const CaptureEngine& aCapEngine, const int& capnum);
 
   bool SetupEngine(CaptureEngine aCapEngine);
   bool EnsureInitialized(int aEngine);

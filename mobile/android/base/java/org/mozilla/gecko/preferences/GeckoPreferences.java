@@ -509,7 +509,7 @@ OnSharedPreferenceChangeListener
         super.onDestroy();
 
         GeckoApp.getEventDispatcher().unregisterGeckoThreadListener(this,
-                                                                    "Sanitize:Finished", 
+                                                                    "Sanitize:Finished",
                                                                     "Snackbar:Show");
 
         if (mPrefsRequest != null) {

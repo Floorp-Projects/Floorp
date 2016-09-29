@@ -932,7 +932,10 @@ bool ReconstructFont(uint8_t* transformed_buf,
         table.dst_offset = dest_offset;
         checksum = ComputeULongSum(transformed_buf + table.src_offset,
                                    table.src_length);
-        out->Write(transformed_buf + table.src_offset, table.src_length);
+        if (PREDICT_FALSE(!out->Write(transformed_buf + table.src_offset,
+            table.src_length))) {
+          return FONT_COMPRESSION_FAILURE();
+        }
       } else {
         if (table.tag == kGlyfTableTag) {
           table.dst_offset = dest_offset;

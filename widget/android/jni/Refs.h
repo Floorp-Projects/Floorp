@@ -180,7 +180,9 @@ public:
     jclass ClassRef() const
     {
         if (!sClassRef) {
-            sClassRef = GetClassGlobalRef(mEnv, Cls::name);
+            const jclass cls = GetClassRef(mEnv, Cls::name);
+            sClassRef = jclass(mEnv->NewGlobalRef(cls));
+            mEnv->DeleteLocalRef(cls);
         }
         return sClassRef;
     }
