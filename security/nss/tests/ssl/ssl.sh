@@ -214,12 +214,9 @@ start_selfserv()
   sparam=`echo $sparam | sed -e 's;_; ;g'`
   if [ -z "$NSS_DISABLE_ECC" ] && \
      [ -z "$NO_ECC_CERTS" -o "$NO_ECC_CERTS" != "1"  ] ; then
-      ECC_OPTIONS="-e ${HOSTADDR}-ec"
+      ECC_OPTIONS="-e ${HOSTADDR}-ecmixed -e ${HOSTADDR}-ec"
   else
       ECC_OPTIONS=""
-  fi
-  if [ "$1" = "mixed" ]; then
-      ECC_OPTIONS="-e ${HOSTADDR}-ecmixed"
   fi
   echo "selfserv starting at `date`"
   echo "selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} -n ${HOSTADDR} ${SERVER_OPTIONS} \\"
@@ -272,7 +269,6 @@ ssl_cov()
   testname=""
   sparam="$CIPHER_SUITES"
 
-  mixed=0
   start_selfserv # Launch the server
 
   VMIN="ssl3"
@@ -297,34 +293,6 @@ ssl_cov()
           fi
           if [ "$testmax" = "TLS12" ]; then
               VMAX="tls1.2"
-          fi
-
-# These five tests need an EC cert signed with RSA
-# This requires a different certificate loaded in selfserv
-# due to a (current) NSS limitation of only loaded one cert
-# per type so the default selfserv setup will not work.
-#:C00B TLS ECDH RSA WITH NULL SHA
-#:C00C TLS ECDH RSA WITH RC4 128 SHA
-#:C00D TLS ECDH RSA WITH 3DES EDE CBC SHA
-#:C00E TLS ECDH RSA WITH AES 128 CBC SHA
-#:C00F TLS ECDH RSA WITH AES 256 CBC SHA
-
-          if [ $mixed -eq 0 ]; then
-            if [ "${param}" = ":C00B" -o "${param}" = ":C00C" -o "${param}" = ":C00D" -o "${param}" = ":C00E" -o "${param}" = ":C00F" ]; then
-              kill_selfserv
-              start_selfserv mixed
-              mixed=1
-            else
-              is_selfserv_alive
-            fi
-          else
-            if [ "${param}" = ":C00B" -o "${param}" = ":C00C" -o "${param}" = ":C00D" -o "${param}" = ":C00E" -o "${param}" = ":C00F" ]; then
-              is_selfserv_alive
-            else
-              kill_selfserv
-              start_selfserv
-              mixed=0
-            fi
           fi
 
           echo "tstclnt -p ${PORT} -h ${HOSTADDR} -c ${param} -V ${VMIN}:${VMAX} ${CLIENT_OPTIONS} \\"
@@ -594,15 +562,7 @@ ssl_stress()
               sparam=`echo $sparam | sed -e "s/Host/$HOST/g" -e "s/Dom/$DOMSUF/g" `
           fi
 
-# These tests need the mixed cert
-# Stress TLS ECDH-RSA AES 128 CBC with SHA (no reuse)
-# Stress TLS ECDH-RSA AES 128 CBC with SHA (no reuse, client auth)
-          p=`echo "$sparam" | sed -e "s/\(.*\)\(-c_:C0..\)\(.*\)/\2/"`;
-          if [ "$p" = "-c_:C00E" ]; then
-              start_selfserv mixed
-          else
-              start_selfserv
-          fi
+          start_selfserv
 
           if [ "`uname -n`" = "sjsu" ] ; then
               echo "debugging disapering selfserv... ps -ef | grep selfserv"
@@ -727,7 +687,6 @@ ssl_policy()
   echo "Saving pkcs11.txt"
   cp ${P_R_CLIENTDIR}/pkcs11.txt ${P_R_CLIENTDIR}/pkcs11.txt.sav
 
-  mixed=0
   start_selfserv # Launch the server
 
   VMIN="ssl3"
@@ -751,34 +710,6 @@ ssl_policy()
           fi
           if [ "$testmax" = "TLS12" ]; then
               VMAX="tls1.2"
-          fi
-
-# These five tests need an EC cert signed with RSA
-# This requires a different certificate loaded in selfserv
-# due to a (current) NSS limitation of only loaded one cert
-# per type so the default selfserv setup will not work.
-#:C00B TLS ECDH RSA WITH NULL SHA
-#:C00C TLS ECDH RSA WITH RC4 128 SHA
-#:C00D TLS ECDH RSA WITH 3DES EDE CBC SHA
-#:C00E TLS ECDH RSA WITH AES 128 CBC SHA
-#:C00F TLS ECDH RSA WITH AES 256 CBC SHA
-
-          if [ $mixed -eq 0 ]; then
-            if [ "${param}" = ":C00B" -o "${param}" = ":C00C" -o "${param}" = ":C00D" -o "${param}" = ":C00E" -o "${param}" = ":C00F" ]; then
-              kill_selfserv
-              start_selfserv mixed
-              mixed=1
-            else
-              is_selfserv_alive
-            fi
-          else
-            if [ "${param}" = ":C00B" -o "${param}" = ":C00C" -o "${param}" = ":C00D" -o "${param}" = ":C00E" -o "${param}" = ":C00F" ]; then
-              is_selfserv_alive
-            else
-              kill_selfserv
-              start_selfserv
-              mixed=0
-            fi
           fi
 
           # load the policy

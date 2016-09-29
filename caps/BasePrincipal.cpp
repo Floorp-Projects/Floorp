@@ -66,6 +66,13 @@ PrincipalOriginAttributes::InheritFromNecko(const NeckoOriginAttributes& aAttrs)
 }
 
 void
+PrincipalOriginAttributes::StripUserContextIdAndFirstPartyDomain()
+{
+  mUserContextId = nsIScriptSecurityManager::DEFAULT_USER_CONTEXT_ID;
+  mFirstPartyDomain.Truncate();
+}
+
+void
 DocShellOriginAttributes::InheritFromDocToChildDocShell(const PrincipalOriginAttributes& aAttrs)
 {
   mAppId = aAttrs.mAppId;
@@ -712,6 +719,23 @@ BasePrincipal::CreateCodebasePrincipal(const nsACString& aOrigin)
 
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), originNoSuffix);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  return BasePrincipal::CreateCodebasePrincipal(uri, attrs);
+}
+
+already_AddRefed<BasePrincipal>
+BasePrincipal::CloneStrippingUserContextIdAndFirstPartyDomain()
+{
+  PrincipalOriginAttributes attrs = OriginAttributesRef();
+  attrs.StripUserContextIdAndFirstPartyDomain();
+
+  nsAutoCString originNoSuffix;
+  nsresult rv = GetOriginNoSuffix(originNoSuffix);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  nsCOMPtr<nsIURI> uri;
+  rv = NS_NewURI(getter_AddRefs(uri), originNoSuffix);
   NS_ENSURE_SUCCESS(rv, nullptr);
 
   return BasePrincipal::CreateCodebasePrincipal(uri, attrs);

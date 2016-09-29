@@ -429,10 +429,12 @@ def write_mozbuild(sources):
   f.write("if CONFIG['INTEL_ARCHITECTURE']:\n")
   write_sources(f, sources['intel'], 4)
 
-  f.write("elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC']:\n")
+  f.write("elif CONFIG['CPU_ARCH'] in ('arm', 'aarch64') and CONFIG['GNU_CC']:\n")
   write_sources(f, sources['arm'], 4)
 
-  f.write("    if CONFIG['BUILD_ARM_NEON']:\n")
+  f.write("    if CONFIG['CPU_ARCH'] == 'aarch64':\n")
+  write_sources(f, sources['neon'], 8)
+  f.write("    elif CONFIG['BUILD_ARM_NEON']:\n")
   write_list(f, 'SOURCES', sources['neon'], 8)
   write_cflags(f, sources['neon'], 'neon', "CONFIG['NEON_FLAGS']", 8)
 

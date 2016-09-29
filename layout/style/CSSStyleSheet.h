@@ -191,8 +191,8 @@ public:
   /**
    * Like the DOM insertRule() method, but doesn't do any security checks
    */
-  nsresult InsertRuleInternal(const nsAString& aRule,
-                              uint32_t aIndex, uint32_t* aReturn);
+  uint32_t InsertRuleInternal(const nsAString& aRule,
+                              uint32_t aIndex, ErrorResult& aRv);
 
   // nsICSSLoaderObserver interface
   NS_IMETHOD StyleSheetLoaded(StyleSheet* aSheet, bool aWasAlternate,
@@ -251,16 +251,15 @@ public:
   // called GetOwnerRule because that would be ambiguous with the ImportRule
   // version.
   nsIDOMCSSRule* GetDOMOwnerRule() const;
-  dom::CSSRuleList* GetCssRules(ErrorResult& aRv);
+  dom::CSSRuleList* GetCssRules(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                                ErrorResult& aRv);
   uint32_t InsertRule(const nsAString& aRule, uint32_t aIndex,
-                      ErrorResult& aRv) {
-    uint32_t retval;
-    aRv = InsertRule(aRule, aIndex, &retval);
-    return retval;
-  }
-  void DeleteRule(uint32_t aIndex, ErrorResult& aRv) {
-    aRv = DeleteRule(aIndex);
-  }
+                      const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                      ErrorResult& aRv);
+
+  void DeleteRule(uint32_t aIndex,
+                  const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                  ErrorResult& aRv);
 
   // WebIDL miscellaneous bits
   dom::ParentObject GetParentObject() const {
@@ -297,7 +296,8 @@ protected:
   // inner, error otherwise.  This will also succeed if the subject has
   // UniversalXPConnect or if access is allowed by CORS.  In the latter case,
   // it will set the principal of the inner to the subject principal.
-  nsresult SubjectSubsumesInnerPrincipal();
+  void SubjectSubsumesInnerPrincipal(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                                     ErrorResult& aRv);
 
   // Add the namespace mapping from this @namespace rule to our namespace map
   nsresult RegisterNamespaceRule(css::Rule* aRule);

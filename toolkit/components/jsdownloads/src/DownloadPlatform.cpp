@@ -109,7 +109,7 @@ nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIURI* aReferrer, nsIF
     {
       bool addToRecentDocs = Preferences::GetBool(PREF_BDM_ADDTORECENTDOCS);
 #ifdef MOZ_WIDGET_ANDROID
-      if (addToRecentDocs) {
+      if (jni::IsFennec() && addToRecentDocs) {
         java::DownloadsIntegration::ScanMedia(path, aContentType);
       }
 #else

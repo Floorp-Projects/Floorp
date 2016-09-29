@@ -125,8 +125,7 @@ uintptr_t GetNativeHandle(JNIEnv* env, jobject instance);
 
 void SetNativeHandle(JNIEnv* env, jobject instance, uintptr_t handle);
 
-jclass GetClassGlobalRef(JNIEnv* aEnv, const char* aClassName);
-
+jclass GetClassRef(JNIEnv* aEnv, const char* aClassName);
 
 struct AbstractCall
 {
@@ -135,6 +134,12 @@ struct AbstractCall
 };
 
 void DispatchToGeckoThread(UniquePtr<AbstractCall>&& aCall);
+
+/**
+ * Returns whether Gecko is running in a Fennec environment, as determined by
+ * the presence of the GeckoApp class.
+ */
+bool IsFennec();
 
 } // jni
 } // mozilla
