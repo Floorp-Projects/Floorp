@@ -327,6 +327,12 @@ partial interface Document {
   sequence<Animation> getAnimations();
 };
 
+// https://svgwg.org/svg2-draft/struct.html#InterfaceDocumentExtensions
+partial interface Document {
+  [BinaryName="SVGRootElement"]
+  readonly attribute SVGSVGElement? rootElement;
+};
+
 //  Mozilla extensions of various sorts
 partial interface Document {
   // nsIDOMDocumentXBL.  Wish we could make these [ChromeOnly], but
