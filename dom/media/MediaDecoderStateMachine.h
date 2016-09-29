@@ -730,24 +730,6 @@ private:
             VideoPrerollFrames() * mPlaybackRate + 1;
   }
 
-  void StopPrerollingAudio()
-  {
-    MOZ_ASSERT(OnTaskQueue());
-    if (mIsAudioPrerolling) {
-      mIsAudioPrerolling = false;
-      ScheduleStateMachine();
-    }
-  }
-
-  void StopPrerollingVideo()
-  {
-    MOZ_ASSERT(OnTaskQueue());
-    if (mIsVideoPrerolling) {
-      mIsVideoPrerolling = false;
-      ScheduleStateMachine();
-    }
-  }
-
   // When we start decoding (either for the first time, or after a pause)
   // we may be low on decoded data. We don't want our "low data" logic to
   // kick in and decide that we're low on decoded data because the download
