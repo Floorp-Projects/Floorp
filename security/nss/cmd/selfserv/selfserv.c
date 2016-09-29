@@ -61,6 +61,9 @@ static int handle_connection(PRFileDesc *, PRFileDesc *, int);
 static const char envVarName[] = { SSL_ENV_VAR_NAME };
 static const char inheritableSockName[] = { "SELFSERV_LISTEN_SOCKET" };
 
+#define MAX_VIRT_SERVER_NAME_ARRAY_INDEX 10
+#define MAX_CERT_NICKNAME_ARRAY_INDEX 10
+
 #define DEFAULT_BULK_TEST 16384
 #define MAX_BULK_TEST 1048576 /* 1 MB */
 static PRBool testBulk;
@@ -92,7 +95,7 @@ static enum ocspStaplingModeEnum {
 } ocspStaplingMode = osm_disabled;
 typedef enum ocspStaplingModeEnum ocspStaplingModeType;
 static char *ocspStaplingCA = NULL;
-static SECItemArray *certStatus[kt_kea_size] = { NULL };
+static SECItemArray *certStatus[MAX_CERT_NICKNAME_ARRAY_INDEX] = { NULL };
 
 const int ssl3CipherSuites[] = {
     -1,                                /* SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA* a */
@@ -427,8 +430,6 @@ myBadCertHandler(void *arg, PRFileDesc *fd)
                 err, SECU_Strerror(err));
     return (MakeCertOK ? SECSuccess : SECFailure);
 }
-
-#define MAX_VIRT_SERVER_NAME_ARRAY_INDEX 10
 
 /* Simple SNI socket config function that does not use SSL_ReconfigFD.
  * Only uses one server name but verifies that the names match. */
@@ -804,6 +805,9 @@ PRBool enableALPN = PR_FALSE;
 static char *virtServerNameArray[MAX_VIRT_SERVER_NAME_ARRAY_INDEX];
 static int virtServerNameIndex = 1;
 
+static char *certNicknameArray[MAX_CERT_NICKNAME_ARRAY_INDEX];
+static int certNicknameIndex = 0;
+
 static const char stopCmd[] = { "GET /stop " };
 static const char getCmd[] = { "GET " };
 static const char EOFmsg[] = { "EOF\r\n\r\n\r\n" };
@@ -1166,7 +1170,7 @@ makeSignedOCSPResponse(PLArenaPool *arena, ocspStaplingModeType osm,
 
 void
 setupCertStatus(PLArenaPool *arena, enum ocspStaplingModeEnum ocspStaplingMode,
-                CERTCertificate *cert, SSLKEAType kea, secuPWData *pwdata)
+                CERTCertificate *cert, int index, secuPWData *pwdata)
 {
     if (ocspStaplingMode == osm_random) {
         /* 6 different responses */
@@ -1220,7 +1224,7 @@ setupCertStatus(PLArenaPool *arena, enum ocspStaplingModeEnum ocspStaplingMode,
                 break;
         }
         if (multiOcspResponses) {
-            certStatus[kea] = multiOcspResponses;
+            certStatus[index] = multiOcspResponses;
         }
     }
 }
@@ -1251,7 +1255,6 @@ handle_connection(
     char fileName[513];
     char proto[128];
     PRDescIdentity aboveLayer = PR_INVALID_IO_LAYER;
-    SSLKEAType kea;
 
     pBuf = buf;
     bufRem = sizeof buf;
@@ -1276,12 +1279,6 @@ handle_connection(
         }
     } else {
         ssl_sock = tcp_sock;
-    }
-
-    for (kea = kt_rsa; kea < kt_kea_size; kea++) {
-        if (certStatus[kea] != NULL) {
-            SSL_SetStapledOCSPResponses(ssl_sock, certStatus[kea], kea);
-        }
     }
 
     if (loggingLayer) {
@@ -1820,9 +1817,9 @@ server_main(
     CERTCertificate **cert,
     const char *expectedHostNameVal)
 {
+    int i;
     PRFileDesc *model_sock = NULL;
     int rv;
-    SSLKEAType kea;
     SECStatus secStatus;
 
     if (useModelSocket) {
@@ -1919,12 +1916,17 @@ server_main(
 
     /* This uses the legacy certificate API.  See mySSLSNISocketConfig() for the
      * new, prefered API. */
-    for (kea = kt_rsa; kea < kt_kea_size; kea++) {
-        if (cert[kea] != NULL) {
-            secStatus = SSL_ConfigSecureServer(model_sock,
-                                               cert[kea], privKey[kea], kea);
+    for (i = 0; i < certNicknameIndex; i++) {
+        if (cert[i] != NULL) {
+            const SSLExtraServerCertData ocspData = {
+                ssl_auth_null, NULL, certStatus[i], NULL
+            };
+
+            secStatus = SSL_ConfigServerCert(model_sock, cert[i],
+                                             privKey[i], &ocspData,
+                                             sizeof(ocspData));
             if (secStatus != SECSuccess)
-                errExit("SSL_ConfigSecureServer");
+                errExit("SSL_ConfigServerCert");
         }
     }
 
@@ -2169,11 +2171,6 @@ int
 main(int argc, char **argv)
 {
     char *progName = NULL;
-    char *nickName = NULL;
-#ifndef NSS_DISABLE_ECC
-    char *ecNickName = NULL;
-#endif
-    char *dsaNickName = NULL;
     const char *fileName = NULL;
     char *cipherString = NULL;
     const char *dir = ".";
@@ -2183,8 +2180,8 @@ main(int argc, char **argv)
     char *tmp;
     char *envString;
     PRFileDesc *listen_sock;
-    CERTCertificate *cert[kt_kea_size] = { NULL };
-    SECKEYPrivateKey *privKey[kt_kea_size] = { NULL };
+    CERTCertificate *cert[MAX_CERT_NICKNAME_ARRAY_INDEX] = { NULL };
+    SECKEYPrivateKey *privKey[MAX_CERT_NICKNAME_ARRAY_INDEX] = { NULL };
     int optionsFound = 0;
     int maxProcs = 1;
     unsigned short port = 0;
@@ -2276,7 +2273,11 @@ main(int argc, char **argv)
                 break;
 
             case 'S':
-                dsaNickName = PORT_Strdup(optstate->value);
+                if (certNicknameIndex >= MAX_CERT_NICKNAME_ARRAY_INDEX) {
+                    Usage(progName);
+                    break;
+                }
+                certNicknameArray[certNicknameIndex++] = PORT_Strdup(optstate->value);
                 break;
 
             case 'T':
@@ -2331,7 +2332,11 @@ main(int argc, char **argv)
 
 #ifndef NSS_DISABLE_ECC
             case 'e':
-                ecNickName = PORT_Strdup(optstate->value);
+                if (certNicknameIndex >= MAX_CERT_NICKNAME_ARRAY_INDEX) {
+                    Usage(progName);
+                    break;
+                }
+                certNicknameArray[certNicknameIndex++] = PORT_Strdup(optstate->value);
                 break;
 #endif /* NSS_DISABLE_ECC */
 
@@ -2372,7 +2377,11 @@ main(int argc, char **argv)
                 break;
 
             case 'n':
-                nickName = PORT_Strdup(optstate->value);
+                if (certNicknameIndex >= MAX_CERT_NICKNAME_ARRAY_INDEX) {
+                    Usage(progName);
+                    break;
+                }
+                certNicknameArray[certNicknameIndex++] = PORT_Strdup(optstate->value);
                 virtServerNameArray[0] = PORT_Strdup(optstate->value);
                 break;
 
@@ -2481,14 +2490,8 @@ main(int argc, char **argv)
         exit(0);
     }
 
-    if ((nickName == NULL) &&
-        (dsaNickName == NULL)
-#ifndef NSS_DISABLE_ECC
-        && (ecNickName == NULL)
-#endif
-            ) {
-
-        fprintf(stderr, "Required arg '-n' (rsa nickname) not supplied.\n");
+    if (certNicknameIndex == 0) {
+        fprintf(stderr, "Must specify at least one certificate nickname using '-n' (RSA), '-S' (DSA), or 'e' (EC).\n");
         fprintf(stderr, "Run '%s -h' for usage information.\n", progName);
         exit(6);
     }
@@ -2643,56 +2646,23 @@ main(int argc, char **argv)
     if (!certStatusArena)
         errExit("cannot allocate certStatusArena");
 
-    if (nickName) {
-        cert[kt_rsa] = PK11_FindCertFromNickname(nickName, &pwdata);
-        if (cert[kt_rsa] == NULL) {
-            fprintf(stderr, "selfserv: Can't find certificate %s\n", nickName);
+    for (i = 0; i < certNicknameIndex; i++) {
+        cert[i] = PK11_FindCertFromNickname(certNicknameArray[i], &pwdata);
+        if (cert[i] == NULL) {
+            fprintf(stderr, "selfserv: Can't find certificate %s\n", certNicknameArray[i]);
             exit(10);
         }
-        privKey[kt_rsa] = PK11_FindKeyByAnyCert(cert[kt_rsa], &pwdata);
-        if (privKey[kt_rsa] == NULL) {
+        privKey[i] = PK11_FindKeyByAnyCert(cert[i], &pwdata);
+        if (privKey[i] == NULL) {
             fprintf(stderr, "selfserv: Can't find Private Key for cert %s\n",
-                    nickName);
+                    certNicknameArray[i]);
             exit(11);
         }
-        setupCertStatus(certStatusArena, ocspStaplingMode, cert[kt_rsa], kt_rsa,
-                        &pwdata);
+#ifdef NSS_DISABLE_ECC
+        if (privKey[i]->keyType != ecKey)
+#endif
+            setupCertStatus(certStatusArena, ocspStaplingMode, cert[i], i, &pwdata);
     }
-    if (dsaNickName) {
-        /* Investigate if ssl_kea_dh should be changed to ssl_auth_dsa.
-         * See bug 102794.*/
-        cert[ssl_kea_dh] = PK11_FindCertFromNickname(dsaNickName, &pwdata);
-        if (cert[ssl_kea_dh] == NULL) {
-            fprintf(stderr, "selfserv: Can't find certificate %s\n", dsaNickName);
-            exit(12);
-        }
-        privKey[ssl_kea_dh] = PK11_FindKeyByAnyCert(cert[ssl_kea_dh], &pwdata);
-        if (privKey[ssl_kea_dh] == NULL) {
-            fprintf(stderr, "selfserv: Can't find Private Key for cert %s\n",
-                    dsaNickName);
-            exit(11);
-        }
-        setupCertStatus(certStatusArena, ocspStaplingMode, cert[ssl_kea_dh], ssl_kea_dh,
-                        &pwdata);
-    }
-#ifndef NSS_DISABLE_ECC
-    if (ecNickName) {
-        cert[kt_ecdh] = PK11_FindCertFromNickname(ecNickName, &pwdata);
-        if (cert[kt_ecdh] == NULL) {
-            fprintf(stderr, "selfserv: Can't find certificate %s\n",
-                    ecNickName);
-            exit(13);
-        }
-        privKey[kt_ecdh] = PK11_FindKeyByAnyCert(cert[kt_ecdh], &pwdata);
-        if (privKey[kt_ecdh] == NULL) {
-            fprintf(stderr, "selfserv: Can't find Private Key for cert %s\n",
-                    ecNickName);
-            exit(11);
-        }
-        setupCertStatus(certStatusArena, ocspStaplingMode, cert[kt_ecdh], kt_ecdh,
-                        &pwdata);
-    }
-#endif /* NSS_DISABLE_ECC */
 
     if (configureWeakDHE > 0) {
         fprintf(stderr, "selfserv: Creating dynamic weak DH parameters\n");
@@ -2739,13 +2709,14 @@ cleanup:
 
     {
         int i;
-        for (i = 0; i < kt_kea_size; i++) {
+        for (i = 0; i < certNicknameIndex; i++) {
             if (cert[i]) {
                 CERT_DestroyCertificate(cert[i]);
             }
             if (privKey[i]) {
                 SECKEY_DestroyPrivateKey(privKey[i]);
             }
+            PORT_Free(certNicknameArray[i]);
         }
         for (i = 0; virtServerNameArray[i]; i++) {
             PORT_Free(virtServerNameArray[i]);
@@ -2754,9 +2725,6 @@ cleanup:
 
     if (debugCache) {
         nss_DumpCertificateCacheInfo();
-    }
-    if (nickName) {
-        PORT_Free(nickName);
     }
     if (expectedHostNameVal) {
         PORT_Free(expectedHostNameVal);
@@ -2769,14 +2737,6 @@ cleanup:
     }
     if (certPrefix && certPrefix != emptyString) {
         PORT_Free(certPrefix);
-    }
-#ifndef NSS_DISABLE_ECC
-    if (ecNickName) {
-        PORT_Free(ecNickName);
-    }
-#endif
-    if (dsaNickName) {
-        PORT_Free(dsaNickName);
     }
 
     if (hasSidCache) {

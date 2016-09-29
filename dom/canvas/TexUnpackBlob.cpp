@@ -395,14 +395,15 @@ TexUnpackBytes::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
 
     if (!isSubImage) {
         // Alloc first to catch OOMs.
-        gl->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
+        AssertUintParamCorrect(gl, LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
         *out_error = DoTexOrSubImage(false, gl, target, level, dui, xOffset, yOffset,
                                      zOffset, mWidth, mHeight, mDepth, nullptr);
-        gl->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER,
-                        webgl->mBoundPixelUnpackBuffer->mGLName);
         if (*out_error)
             return false;
     }
+
+    const ScopedLazyBind bindPBO(gl, LOCAL_GL_PIXEL_UNPACK_BUFFER,
+                                 webgl->mBoundPixelUnpackBuffer);
 
     //////
 

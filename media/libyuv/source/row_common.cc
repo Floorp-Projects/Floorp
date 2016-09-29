@@ -1143,20 +1143,20 @@ const YuvConstants SIMD_ALIGNED(kYvuJPEGConstants) = {
 #undef YG
 
 // BT.709 YUV to RGB reference
-// *  R = Y                - V * -1.28033
-// *  G = Y - U *  0.21482 - V *  0.38059
-// *  B = Y - U * -2.12798
+//  R = (Y - 16) * 1.164              - V * -1.793
+//  G = (Y - 16) * 1.164 - U *  0.213 - V *  0.533
+//  B = (Y - 16) * 1.164 - U * -2.112
 
 // Y contribution to R,G,B.  Scale and bias.
-#define YG 16320 /* round(1.000 * 64 * 256 * 256 / 257) */
-#define YGB 32  /* 64 / 2 */
+#define YG 18997 /* round(1.164 * 64 * 256 * 256 / 257) */
+#define YGB -1160 /* 1.164 * 64 * -16 + 64 / 2 */
 
-// TODO(fbarchard): Find way to express 2.12 instead of 2.0.
+// TODO(fbarchard): Find way to express 2.112 instead of 2.0.
 // U and V contributions to R,G,B.
-#define UB -128 /* max(-128, round(-2.12798 * 64)) */
-#define UG 14 /* round(0.21482 * 64) */
-#define VG 24 /* round(0.38059  * 64) */
-#define VR -82 /* round(-1.28033 * 64) */
+#define UB -128 /* max(-128, round(-2.112 * 64)) */
+#define UG 14 /* round(0.213 * 64) */
+#define VG 34 /* round(0.533  * 64) */
+#define VR -115 /* round(-1.793 * 64) */
 
 // Bias values to round, and subtract 128 from U and V.
 #define BB (UB * 128            + YGB)

@@ -5,8 +5,6 @@
 
 <?xml-stylesheet href="chrome://global/skin/global.css"?>
 
-<?xml-stylesheet href="chrome://mozapps/content/preferences/preferences.css"?>
-
 <?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css"?>
 <?xml-stylesheet href="chrome://global/skin/in-content/common.css"?>
 <?xml-stylesheet

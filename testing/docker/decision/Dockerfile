@@ -8,6 +8,9 @@ RUN mkdir /home/worker/artifacts && chown worker:worker /home/worker/artifacts
 # %include testing/docker/recipes/tooltool.py
 ADD topsrcdir/testing/docker/recipes/tooltool.py /tmp/tooltool.py
 
+# %include testing/mozharness/external_tools/robustcheckout.py
+ADD topsrcdir/testing/mozharness/external_tools/robustcheckout.py /usr/local/mercurial/robustcheckout.py
+
 # %include testing/docker/recipes/install-mercurial.sh
 ADD topsrcdir/testing/docker/recipes/install-mercurial.sh /tmp/install-mercurial.sh
 

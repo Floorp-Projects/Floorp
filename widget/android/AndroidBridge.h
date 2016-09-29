@@ -263,7 +263,6 @@ public:
     static jstring NewJavaString(AutoLocalJNIFrame* frame, const char* string);
     static jstring NewJavaString(AutoLocalJNIFrame* frame, const nsACString& string);
 
-    static jclass GetClassGlobalRef(JNIEnv* env, const char* className);
     static jfieldID GetFieldID(JNIEnv* env, jclass jClass, const char* fieldName, const char* fieldType);
     static jfieldID GetStaticFieldID(JNIEnv* env, jclass jClass, const char* fieldName, const char* fieldType);
     static jmethodID GetMethodID(JNIEnv* env, jclass jClass, const char* methodName, const char* methodType);
@@ -312,9 +311,6 @@ protected:
     // some convinient types to have around
     jclass jStringClass;
 
-    jni::Object::GlobalRef mClassLoader;
-    jmethodID mClassLoaderLoadClass;
-
     jni::Object::GlobalRef mMessageQueue;
     jfieldID mMessageQueueMessages;
     jmethodID mMessageQueueNext;
@@ -337,11 +333,11 @@ private:
 public:
     AutoJNIClass(JNIEnv* jEnv, const char* name)
         : mEnv(jEnv)
-        , mClass(AndroidBridge::GetClassGlobalRef(jEnv, name))
+        , mClass(jni::GetClassRef(jEnv, name))
     {}
 
     ~AutoJNIClass() {
-        mEnv->DeleteGlobalRef(mClass);
+        mEnv->DeleteLocalRef(mClass);
     }
 
     jclass getRawRef() const {

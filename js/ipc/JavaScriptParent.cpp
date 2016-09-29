@@ -110,7 +110,7 @@ JavaScriptParent::allowMessage(JSContext* cx)
         if (!xpc::CompartmentPrivate::Get(jsGlobal)->allowCPOWs) {
             if (!addonId && ForbidUnsafeBrowserCPOWs() && !isSafe) {
                 Telemetry::Accumulate(Telemetry::BROWSER_SHIM_USAGE_BLOCKED, 1);
-                JS_ReportError(cx, "unsafe CPOW usage forbidden");
+                JS_ReportErrorASCII(cx, "unsafe CPOW usage forbidden");
                 return false;
             }
 
@@ -122,7 +122,7 @@ JavaScriptParent::allowMessage(JSContext* cx)
                 Telemetry::Accumulate(Telemetry::ADDON_FORBIDDEN_CPOW_USAGE, addonIdCString);
 
                 if (ForbidCPOWsInCompatibleAddon(addonIdCString)) {
-                    JS_ReportError(cx, "CPOW usage forbidden in this add-on");
+                    JS_ReportErrorASCII(cx, "CPOW usage forbidden in this add-on");
                     return false;
                 }
 

@@ -151,7 +151,7 @@ bool IsWitness(JS::Handle<JS::Value> v)
 bool ForgetImpl(JSContext* cx, const JS::CallArgs& args)
 {
   if (args.length() != 0) {
-    JS_ReportError(cx, "forget() takes no arguments");
+    JS_ReportErrorASCII(cx, "forget() takes no arguments");
     return false;
   }
   JS::Rooted<JS::Value> valSelf(cx, args.thisv());
@@ -159,7 +159,7 @@ bool ForgetImpl(JSContext* cx, const JS::CallArgs& args)
 
   RefPtr<FinalizationEvent> event = ExtractFinalizationEvent(objSelf);
   if (event == nullptr) {
-    JS_ReportError(cx, "forget() called twice");
+    JS_ReportErrorASCII(cx, "forget() called twice");
     return false;
   }
 

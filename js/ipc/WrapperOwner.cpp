@@ -149,7 +149,7 @@ const CPOWProxyHandler CPOWProxyHandler::singleton;
     PROFILER_LABEL_FUNC(js::ProfileEntry::Category::JS);                \
     WrapperOwner* owner = OwnerOf(proxy);                               \
     if (!owner->active()) {                                             \
-        JS_ReportError(cx, "cannot use a CPOW whose process is gone");  \
+        JS_ReportErrorASCII(cx, "cannot use a CPOW whose process is gone"); \
         return false;                                                   \
     }                                                                   \
     if (!owner->allowMessage(cx)) {                                     \
@@ -359,7 +359,7 @@ CPOWDOMQI(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (!args.thisv().isObject() || !IsCPOW(&args.thisv().toObject())) {
-        JS_ReportError(cx, "bad this object passed to special QI");
+        JS_ReportErrorASCII(cx, "bad this object passed to special QI");
         return false;
     }
 
@@ -377,7 +377,7 @@ CPOWToString(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     if (!cpowValue.isObject() || !IsCPOW(&cpowValue.toObject())) {
-        JS_ReportError(cx, "CPOWToString called on an incompatible object");
+        JS_ReportErrorASCII(cx, "CPOWToString called on an incompatible object");
         return false;
     }
 
@@ -649,7 +649,7 @@ WrapperOwner::callOrConstruct(JSContext* cx, HandleObject proxy, const CallArgs&
                 if (!JS_HasProperty(cx, obj, "value", &found))
                     return false;
                 if (found) {
-                    JS_ReportError(cx, "in-out objects cannot be sent via CPOWs yet");
+                    JS_ReportErrorASCII(cx, "in-out objects cannot be sent via CPOWs yet");
                     return false;
                 }
 
@@ -1062,7 +1062,7 @@ WrapperOwner::ActorDestroy(ActorDestroyReason why)
 bool
 WrapperOwner::ipcfail(JSContext* cx)
 {
-    JS_ReportError(cx, "cross-process JS call failed");
+    JS_ReportErrorASCII(cx, "cross-process JS call failed");
     return false;
 }
 
@@ -1076,7 +1076,7 @@ WrapperOwner::ok(JSContext* cx, const ReturnStatus& status)
         return JS_ThrowStopIteration(cx);
 
     if (status.type() == ReturnStatus::TReturnDeadCPOW) {
-        JS_ReportError(cx, "operation not possible on dead CPOW");
+        JS_ReportErrorASCII(cx, "operation not possible on dead CPOW");
         return false;
     }
 

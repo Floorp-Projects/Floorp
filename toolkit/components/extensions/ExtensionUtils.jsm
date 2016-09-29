@@ -316,6 +316,8 @@ class BaseContext {
     options.recipient = options.recipient || {};
     options.sender = options.sender || {};
 
+    // TODO(robwu): This should not unconditionally be overwritten once we
+    // support onMessageExternal / onConnectExternal (bugzil.la/1258360).
     options.recipient.extensionId = this.extension.id;
     options.sender.extensionId = this.extension.id;
     options.sender.contextId = this.contextId;
@@ -1157,7 +1159,8 @@ let gNextPortId = 1;
  *
  * @param {BaseContext} context The context that owns this port.
  * @param {nsIMessageSender} senderMM The message manager to send messages to.
- * @param {Array<nsIMessageSender>} receiverMMs Message managers to listen on.
+ * @param {Array<nsIMessageListenerManager>} receiverMMs Message managers to
+ *     listen on.
  * @param {string} name Arbitrary port name as defined by the addon.
  * @param {string} id An ID that uniquely identifies this port's channel.
  * @param {object} sender The `port.sender` property.
@@ -1294,18 +1297,35 @@ function getMessageManager(target) {
   return target.QueryInterface(Ci.nsIMessageSender);
 }
 
-// Each extension scope gets its own Messenger object. It handles the
-// basics of sendMessage, onMessage, connect, and onConnect.
-//
-// |context| is the extension scope.
-// |messageManagers| is an array of MessageManagers used to receive messages.
-// |sender| is an object describing the sender (usually giving its extension id, tabId, etc.)
-// |filter| is a recipient filter to apply to incoming messages from the broker.
-function Messenger(context, messageManagers, sender, filter) {
+/**
+ * Each extension context gets its own Messenger object. It handles the
+ * basics of sendMessage, onMessage, connect and onConnect.
+ *
+ * @param {BaseContext} context The context to which this Messenger is tied.
+ * @param {Array<nsIMessageListenerManager>} messageManagers
+ *     The message managers used to receive messages (e.g. onMessage/onConnect
+ *     requests).
+ * @param {object} sender Describes this sender to the recipient. This object
+ *     is extended further by BaseContext's sendMessage method and appears as
+ *     the `sender` object to `onConnect` and `onMessage`.
+ *     Do not set the `extensionId`, `contextId` or `tab` properties. The former
+ *     two are added by BaseContext's sendMessage, while `sender.tab` is set by
+ *     the ProxyMessenger in the main process.
+ * @param {object} filter A recipient filter to apply to incoming messages from
+ *     the broker. Messages are only handled by this Messenger if all key-value
+ *     pairs match the `recipient` as specified by the sender of the message.
+ *     In other words, this filter defines the required fields of `recipient`.
+ * @param {object} [optionalFilter] An additional filter to apply to incoming
+ *     messages. Unlike `filter`, the keys from `optionalFilter` are allowed to
+ *     be omitted from `recipient`. Only keys that are present in both
+ *     `optionalFilter` and `recipient` are applied to filter incoming messages.
+ */
+function Messenger(context, messageManagers, sender, filter, optionalFilter) {
   this.context = context;
   this.messageManagers = messageManagers;
   this.sender = sender;
   this.filter = filter;
+  this.optionalFilter = optionalFilter;
 
   MessageChannel.setupMessageManagers(messageManagers);
 }
@@ -1337,7 +1357,8 @@ Messenger.prototype = {
   onMessage(name) {
     return new SingletonEventManager(this.context, name, callback => {
       let listener = {
-        messageFilterPermissive: this.filter,
+        messageFilterPermissive: this.optionalFilter,
+        messageFilterStrict: this.filter,
 
         filterMessage: (sender, recipient) => {
           // Ignore the message if it was sent by this Messenger.
@@ -1393,7 +1414,8 @@ Messenger.prototype = {
   onConnect(name) {
     return new SingletonEventManager(this.context, name, callback => {
       let listener = {
-        messageFilterPermissive: this.filter,
+        messageFilterPermissive: this.optionalFilter,
+        messageFilterStrict: this.filter,
 
         filterMessage: (sender, recipient) => {
           // Ignore the port if it was created by this Messenger.

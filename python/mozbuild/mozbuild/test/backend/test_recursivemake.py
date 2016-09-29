@@ -895,6 +895,7 @@ class TestRecursiveMakeBackend(BackendTester):
             'SHARED_LIBRARY := foo\n',
             'IS_COMPONENT := 1\n',
             'DSO_SONAME := foo\n',
+            'LIB_IS_C_ONLY := 1\n',
         ])
 
         with open(mozpath.join(env.topobjdir, 'bar', 'backend.mk')) as fh:
@@ -907,6 +908,7 @@ class TestRecursiveMakeBackend(BackendTester):
             'SHARED_LIBRARY := bar\n',
             'IS_COMPONENT := 1\n',
             'DSO_SONAME := bar\n',
+            'LIB_IS_C_ONLY := 1\n',
         ])
 
         self.assertTrue(os.path.exists(mozpath.join(env.topobjdir, 'binaries.json')))

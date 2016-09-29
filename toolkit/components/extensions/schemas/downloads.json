@@ -381,7 +381,6 @@
                 "optional": true
               },
               "saveAs": {
-                "unsupported": true,
                 "description": "Use a file-chooser to allow the user to select a filename.",
                 "optional": true,
                 "type": "boolean"

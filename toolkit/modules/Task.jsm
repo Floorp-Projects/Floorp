@@ -315,20 +315,24 @@ TaskImpl.prototype = {
       gCurrentTask = this;
 
       if (this._isStarGenerator) {
-        try {
-          let result = aSendResolved ? this._iterator.next(aSendValue)
-                                     : this._iterator.throw(aSendValue);
+        if (Cu.isDeadWrapper(this._iterator)) {
+          this.deferred.resolve(undefined);
+        } else {
+          try {
+            let result = aSendResolved ? this._iterator.next(aSendValue)
+                                       : this._iterator.throw(aSendValue);
 
-          if (result.done) {
-            // The generator function returned.
-            this.deferred.resolve(result.value);
-          } else {
-            // The generator function yielded.
-            this._handleResultValue(result.value);
+            if (result.done) {
+              // The generator function returned.
+              this.deferred.resolve(result.value);
+            } else {
+              // The generator function yielded.
+              this._handleResultValue(result.value);
+            }
+          } catch (ex) {
+            // The generator function failed with an uncaught exception.
+            this._handleException(ex);
           }
-        } catch (ex) {
-          // The generator function failed with an uncaught exception.
-          this._handleException(ex);
         }
       } else {
         try {

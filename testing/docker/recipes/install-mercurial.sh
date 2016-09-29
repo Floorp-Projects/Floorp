@@ -56,18 +56,6 @@ else
     exit 1
 fi
 
-mkdir -p /usr/local/mercurial
-tooltool_fetch <<'EOF'
-[
-{
-    "size": 11849,
-    "digest": "c88d9b8afd6649bd28bbacfa654ebefec8087a01d1662004aae088d485edeb03a92df1193d1310c0369d7721f475b974fcd4a911428ec65936f7e40cf1609c49",
-    "algorithm": "sha512",
-    "filename": "robustcheckout.py"
-}
-]
-EOF
-mv robustcheckout.py /usr/local/mercurial/robustcheckout.py
 chmod 644 /usr/local/mercurial/robustcheckout.py
 
 mkdir -p /etc/mercurial

@@ -317,12 +317,7 @@ private:
     // feeding in the CDM, which we need to decode the first frame (and
     // thus get the metadata). We could fix this if we could compute the start
     // time by demuxing without necessaring decoding.
-    bool waitingForCDM =
-#ifdef MOZ_EME
-    mMaster->mInfo.IsEncrypted() && !mMaster->mCDMProxy;
-#else
-    false;
-#endif
+    bool waitingForCDM = mMaster->mInfo.IsEncrypted() && !mMaster->mCDMProxy;
 
     mMaster->mNotifyMetadataBeforeFirstFrame =
       mMaster->mDuration.Ref().isSome() || waitingForCDM;
@@ -1346,12 +1341,10 @@ nsresult MediaDecoderStateMachine::Init(MediaDecoder* aDecoder)
 
   mMediaSink = CreateMediaSink(mAudioCaptured);
 
-#ifdef MOZ_EME
   mCDMProxyPromise.Begin(aDecoder->RequestCDMProxy()->Then(
     OwnerThread(), __func__, this,
     &MediaDecoderStateMachine::OnCDMProxyReady,
     &MediaDecoderStateMachine::OnCDMProxyNotReady));
-#endif
 
   nsresult rv = mReader->Init();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1678,9 +1671,7 @@ MediaDecoderStateMachine::Shutdown()
   // dispose of the timer.
   mVideoDecodeSuspendTimer.Reset();
 
-#ifdef MOZ_EME
   mCDMProxyPromise.DisconnectIfExists();
-#endif
 
   if (IsPlaying()) {
     StopPlayback();
@@ -2392,6 +2383,10 @@ bool MediaDecoderStateMachine::HasLowBufferedData(int64_t aUsecs)
 
   int64_t start = endOfDecodedData;
   int64_t end = std::min(GetMediaTime() + aUsecs, Duration().ToMicroseconds());
+  if (start >= end) {
+    // Duration of decoded samples is greater than our threshold.
+    return false;
+  }
   media::TimeInterval interval(media::TimeUnit::FromMicroseconds(start),
                                media::TimeUnit::FromMicroseconds(end));
   return !mBuffered.Ref().Contains(interval);
@@ -2907,7 +2902,6 @@ void MediaDecoderStateMachine::OnMediaSinkAudioError(nsresult aResult)
   DecodeError(MediaResult(NS_ERROR_DOM_MEDIA_MEDIASINK_ERR, __func__));
 }
 
-#ifdef MOZ_EME
 void
 MediaDecoderStateMachine::OnCDMProxyReady(RefPtr<CDMProxy> aProxy)
 {
@@ -2924,7 +2918,6 @@ MediaDecoderStateMachine::OnCDMProxyNotReady()
   MOZ_ASSERT(OnTaskQueue());
   mCDMProxyPromise.Complete();
 }
-#endif
 
 void
 MediaDecoderStateMachine::SetAudioCaptured(bool aCaptured)

@@ -18,12 +18,12 @@ enum CSSStyleSheetParsingMode {
 interface CSSStyleSheet : StyleSheet {
   [Pure]
   readonly attribute CSSRule? ownerRule;
-  [Throws]
+  [Throws, NeedsSubjectPrincipal]
   readonly attribute CSSRuleList cssRules;
   [ChromeOnly, BinaryName="parsingModeDOM"]
   readonly attribute CSSStyleSheetParsingMode parsingMode;
-  [Throws]
+  [Throws, NeedsSubjectPrincipal]
   unsigned long insertRule(DOMString rule, unsigned long index);
-  [Throws]
+  [Throws, NeedsSubjectPrincipal]
   void deleteRule(unsigned long index);
 };

@@ -60,7 +60,7 @@ var testData = [
   {
     isVisit: true,
     uri: "http://example.net/1",
-    lastVisit: olderthansixmonths + 1,
+    lastVisit: olderthansixmonths + 1000,
     title: "test visit",
     isInQuery: true
   }
