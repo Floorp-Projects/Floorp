@@ -98,8 +98,6 @@ private:
   nsCOMPtr<nsIUrlClassifierCallback> mSuccessCallback;
   nsCOMPtr<nsIUrlClassifierCallback> mUpdateErrorCallback;
   nsCOMPtr<nsIUrlClassifierCallback> mDownloadErrorCallback;
-
-  nsCString mDownloadErrorMessage;
 };
 
 #endif // nsUrlClassifierStreamUpdater_h_

@@ -72,9 +72,6 @@ const NEW_CLIENT_STATE = 'sta\0te';
 
 prefBranch.setBoolPref("browser.safebrowsing.debug", true);
 
-// The "\xFF\xFF" is to generate a base64 string with "/".
-prefBranch.setCharPref("browser.safebrowsing.id", "Firefox\xFF\xFF");
-
 // Register tables.
 TEST_TABLE_DATA_LIST.forEach(function(t) {
   gListManager.registerTable(t.tableName,
@@ -156,7 +153,7 @@ const SERVER_INVOLVED_TEST_CASE_LIST = [
     let requestV4 = gUrlUtils.makeUpdateRequestV4([TEST_TABLE_DATA_V4.tableName],
                                                   [""],
                                                   1);
-    gExpectedQueryV4 = "&$req=" + requestV4;
+    gExpectedQueryV4 = "&$req=" + btoa(requestV4);
 
     forceTableUpdate();
   },
@@ -176,7 +173,7 @@ add_test(function test_partialUpdateV4() {
   let requestV4 = gUrlUtils.makeUpdateRequestV4([TEST_TABLE_DATA_V4.tableName],
                                                 [btoa(NEW_CLIENT_STATE)],
                                                 1);
-  gExpectedQueryV4 = "&$req=" + requestV4;
+  gExpectedQueryV4 = "&$req=" + btoa(requestV4);
 
   forceTableUpdate();
 });
@@ -244,8 +241,6 @@ function run_test() {
 
     // V4 append the base64 encoded request to the query string.
     equal(request.queryString, gExpectedQueryV4);
-    equal(request.queryString.indexOf('+'), -1);
-    equal(request.queryString.indexOf('/'), -1);
 
     // Respond a V2 compatible content for now. In the future we can
     // send a meaningful response to test Bug 1284178 to see if the

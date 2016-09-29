@@ -118,7 +118,7 @@ InitListUpdateRequest(ThreatType aThreatType,
     nsCString stateBinary;
     nsresult rv = Base64Decode(nsCString(aStateBase64), stateBinary);
     if (NS_SUCCEEDED(rv)) {
-      aListUpdateRequest->set_state(stateBinary.get(), stateBinary.Length());
+      aListUpdateRequest->set_state(stateBinary.get());
     }
   }
 }
@@ -297,11 +297,7 @@ nsUrlClassifierUtils::MakeUpdateRequestV4(const char** aListNames,
   r.SerializeToString(&s);
 
   nsCString out;
-  nsresult rv = Base64URLEncode(s.size(),
-                                (const uint8_t*)s.c_str(),
-                                Base64URLEncodePaddingPolicy::Include,
-                                out);
-  NS_ENSURE_SUCCESS(rv, rv);
+  out.Assign(s.c_str(), s.size());
 
   aRequest = out;
 
