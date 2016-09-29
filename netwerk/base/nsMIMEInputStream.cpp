@@ -23,7 +23,6 @@
 #include "mozilla/ipc/InputStreamUtils.h"
 
 using namespace mozilla::ipc;
-using mozilla::Maybe;
 
 class nsMIMEInputStream : public nsIMIMEInputStream,
                           public nsISeekableStream,
@@ -380,11 +379,3 @@ nsMIMEInputStream::Deserialize(const InputStreamParams& aParams,
 
     return true;
 }
-
-Maybe<uint64_t>
-nsMIMEInputStream::ExpectedSerializedLength()
-{
-    nsCOMPtr<nsIIPCSerializableInputStream> serializable = do_QueryInterface(mStream);
-    return serializable ? serializable->ExpectedSerializedLength() : Nothing();
-}
-

@@ -20,9 +20,6 @@
 #include "mozilla/ipc/SendStream.h"
 #include "mozilla/Unused.h"
 #include "nsIAsyncInputStream.h"
-#include "nsIAsyncOutputStream.h"
-#include "nsIPipe.h"
-#include "nsStreamUtils.h"
 
 namespace mozilla {
 namespace ipc {
@@ -125,41 +122,17 @@ SerializeInputStream(nsIInputStream* aStream, IPCStream& aValue, M* aManager)
   MOZ_ASSERT(aStream);
   MOZ_ASSERT(aManager);
 
-  // If a stream is known to be larger than 1MB, prefer sending it in chunks.
-  const uint64_t kTooLargeStream = 1024 * 1024;
-
   // First attempt simple stream serialization
   nsCOMPtr<nsIIPCSerializableInputStream> serializable =
     do_QueryInterface(aStream);
-  uint64_t expectedLength =
-    serializable ? serializable->ExpectedSerializedLength().valueOr(0) : 0;
-  if (serializable && expectedLength < kTooLargeStream) {
+  if (serializable) {
     SerializeInputStreamWithFdsChild(aStream, aValue, aManager);
     return;
   }
 
   // As a fallback, attempt to stream the data across using a SendStream
-  // actor. For blocking streams, create a nonblocking pipe instead,
+  // actor.  This will fail for blocking streams.
   nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(aStream);
-  if (!asyncStream) {
-    const uint32_t kBufferSize = 32768; // matches SendStream buffer size.
-    nsCOMPtr<nsIAsyncOutputStream> sink;
-    nsresult rv = NS_NewPipe2(getter_AddRefs(asyncStream),
-                              getter_AddRefs(sink),
-                              true,
-                              false,
-                              kBufferSize,
-                              UINT32_MAX);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-    nsCOMPtr<nsIEventTarget> target =
-        do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
-
-    rv = NS_AsyncCopy(aStream, sink, target, NS_ASYNCCOPY_VIA_READSEGMENTS, kBufferSize);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-  }
-
-  MOZ_ASSERT(asyncStream);
   aValue = SendStreamChild::Create(asyncStream, aManager);
 
   if (!aValue.get_PSendStreamChild()) {
