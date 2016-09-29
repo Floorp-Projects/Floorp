@@ -823,12 +823,6 @@ CanCacheIterableObject(JSContext* cx, JSObject* obj)
 bool
 js::GetIterator(JSContext* cx, HandleObject obj, unsigned flags, MutableHandleObject objp)
 {
-#ifdef DEBUG
-    auto assertCompartment = mozilla::MakeScopeExit([&] {
-        assertSameCompartment(cx, objp);
-    });
-#endif
-
     if (obj->is<PropertyIteratorObject>() || obj->is<LegacyGeneratorObject>()) {
         objp.set(obj);
         return true;
@@ -860,6 +854,7 @@ js::GetIterator(JSContext* cx, HandleObject obj, unsigned flags, MutableHandleOb
                     !proto->staticPrototype())
                 {
                     objp.set(last);
+                    assertSameCompartment(cx, objp);
                     UpdateNativeIterator(lastni, obj);
                     RegisterEnumerator(cx, last, lastni);
                     return true;
@@ -910,8 +905,10 @@ js::GetIterator(JSContext* cx, HandleObject obj, unsigned flags, MutableHandleOb
   miss:
     if (!GetCustomIterator(cx, obj, flags, objp))
         return false;
-    if (objp)
+    if (objp) {
+        assertSameCompartment(cx, objp);
         return true;
+    }
 
     AutoIdVector keys(cx);
     if (flags & JSITER_FOREACH) {
@@ -929,6 +926,7 @@ js::GetIterator(JSContext* cx, HandleObject obj, unsigned flags, MutableHandleOb
     }
 
     PropertyIteratorObject* iterobj = &objp->as<PropertyIteratorObject>();
+    assertSameCompartment(cx, iterobj);
 
     /* Cache the iterator object if possible. */
     if (guards.length())
