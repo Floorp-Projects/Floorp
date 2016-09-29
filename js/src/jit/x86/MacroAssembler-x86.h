@@ -626,8 +626,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         movl(Operand(address), dest);
     }
     void load64(const Address& address, Register64 dest) {
-        movl(Operand(address), dest.low);
-        movl(Operand(Address(address.base, address.offset + 4)), dest.high);
+        movl(Operand(Address(address.base, address.offset + INT64LOW_OFFSET)), dest.low);
+        int32_t highOffset = (address.offset < 0) ? -int32_t(INT64HIGH_OFFSET) : INT64HIGH_OFFSET;
+        movl(Operand(Address(address.base, address.offset + highOffset)), dest.high);
     }
     template <typename T>
     void storePtr(ImmWord imm, T address) {
