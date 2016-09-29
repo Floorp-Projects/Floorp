@@ -2372,14 +2372,12 @@ class BaseCompiler
         masm.sub64(rhs.reg, srcDest.reg);
     }
 
-    void multiplyI64(RegI64 rhs, RegI64 srcDest) {
+    void multiplyI64(RegI64 rhs, RegI64 srcDest, RegI32 temp) {
 #if defined(JS_CODEGEN_X64)
         MOZ_ASSERT(srcDest.reg.reg == rax);
         MOZ_ASSERT(isAvailable(rdx));
-        masm.imulq(rhs.reg.reg, srcDest.reg.reg);
-#else
-        MOZ_CRASH("BaseCompiler platform hook: multiplyI64");
 #endif
+        masm.mul64(rhs.reg, srcDest.reg, temp.reg);
     }
 
     void checkDivideByZeroI32(RegI32 rhs, RegI32 srcDest, Label* done) {
@@ -3469,6 +3467,7 @@ BaseCompiler::emitMultiplyI64()
 {
     // TODO / OPTIMIZE: Multiplication by constant is common (bug 1275442)
     RegI64 r0, r1;
+    RegI32 temp;
 #if defined(JS_CODEGEN_X64)
     // srcDest must be rax, and rdx will be clobbered.
     need2xI64(specific_rax, specific_rdx);
@@ -3476,11 +3475,16 @@ BaseCompiler::emitMultiplyI64()
     r0 = popI64ToSpecific(specific_rax);
     freeI64(specific_rdx);
 #elif defined(JS_CODEGEN_X86)
-    MOZ_CRASH("BaseCompiler platform hook: emitMultiplyI64");
+    need2xI32(specific_eax, specific_edx);
+    r1 = popI64();
+    r0 = popI64ToSpecific(RegI64(Register64(specific_edx.reg, specific_eax.reg)));
+    temp = needI32();
 #else
     pop2xI64(&r0, &r1);
 #endif
-    multiplyI64(r1, r0);
+    multiplyI64(r1, r0, temp);
+    if (temp.reg != Register::Invalid())
+        freeI32(temp);
     freeI64(r1);
     pushI64(r0);
 }
