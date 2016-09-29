@@ -46,14 +46,19 @@ br { clear:both; }
 #px-border .grid { grid-template-columns: minmax(20px,0) 1fr; }
 .c100 { grid-template-columns: minmax(100px,0) 1fr; }
 .c100100 { grid-template-columns: minmax(100px,0) 100px; }
+.c200 { grid-template-columns: 200px; }
 #px-border .c100 { grid-template-columns: minmax(120px,0) 1fr; }
+#px-border .c100calc100 { grid-template-columns: minmax(120px,0) 1fr; }
 #px-border .c100100 { grid-template-columns: minmax(120px,0) 120px; }
+#px-border .c200 { grid-template-columns: 240px; }
 .c10 { grid-template-columns: minmax(10px,0) 1fr; }
 #px-border .c10 { grid-template-columns: minmax(30px,0) 1fr; }
 
-#percent-border .c100 { grid-template-columns: minmax(100px,0) 11px; }
-#percent-border .c10 { grid-template-columns: minmax(10px,0) 1px; }
+#percent-border .c100 { grid-template-columns: 111px 0; }
+#percent-border .c100calc100 { grid-template-columns: 100px 11px; }
+#percent-border .c10 { grid-template-columns: minmax(11px,0) 0; }
 #percent-border .c100100 { grid-template-columns: minmax(100px,0) 150px; }
+#percent-border .c200 { grid-template-columns: 250px; }
   </style>
 </head>
 <body>
@@ -94,7 +99,7 @@ var grids = [
 "grid c100",
 "grid c100",
 "grid",
-"grid c100100",
+"grid c200",
 "grid c10",
 "grid c100",
 "grid c100",
@@ -105,7 +110,7 @@ var grids = [
 "grid c100",
 "grid c100",
 "grid",
-"grid c100100",
+"grid c200",
 "grid c10",
 "grid c100",
 "grid c100",
