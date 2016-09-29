@@ -303,7 +303,6 @@ enum class StyleUserSelect : uint8_t {
 #define NS_STYLE_VOLUME_X_LOUD            5
 
 // See nsStyleColor
-#define NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR 1
 #define NS_STYLE_COLOR_INHERIT_FROM_BODY  2  /* Can't come from CSS directly */
 
 // See nsStyleColor

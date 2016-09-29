@@ -991,11 +991,6 @@ const KTableEntry nsCSSProps::kBorderCollapseKTable[] = {
   { eCSSKeyword_UNKNOWN,   -1 }
 };
 
-const KTableEntry nsCSSProps::kBorderColorKTable[] = {
-  { eCSSKeyword__moz_use_text_color, NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
 const KTableEntry nsCSSProps::kBorderImageRepeatKTable[] = {
   { eCSSKeyword_stretch, NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH },
   { eCSSKeyword_repeat, NS_STYLE_BORDER_IMAGE_REPEAT_REPEAT },
@@ -1808,11 +1803,6 @@ const KTableEntry nsCSSProps::kOutlineStyleKTable[] = {
   { eCSSKeyword_ridge,  NS_STYLE_BORDER_STYLE_RIDGE },
   { eCSSKeyword_inset,  NS_STYLE_BORDER_STYLE_INSET },
   { eCSSKeyword_outset, NS_STYLE_BORDER_STYLE_OUTSET },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kOutlineColorKTable[] = {
-  { eCSSKeyword__moz_use_text_color, NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
