@@ -27,6 +27,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.support.annotation.CheckResult;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
@@ -337,47 +338,13 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
         return false;
     }
 
-    /**
-     * Migrates JSON config data storage.
-     *
-     * @param context Context used to get shared preferences and create built-in panel.
-     * @param jsonString String currently stored in preferences.
-     *
-     * @return JSONArray array representing new set of panel configs.
-     */
-    private static synchronized JSONArray maybePerformMigration(Context context, String jsonString) throws JSONException {
-        // If the migration is already done, we're at the current version.
-        if (sMigrationDone) {
-            final JSONObject json = new JSONObject(jsonString);
-            return json.getJSONArray(JSON_KEY_PANELS);
-        }
+    @CheckResult
+    static synchronized JSONArray migratePrefsFromVersionToVersion(final Context context, final int currentVersion, final int newVersion,
+                                                              final JSONArray jsonPanelsIn, final SharedPreferences.Editor prefsEditor) throws JSONException {
 
-        // Make sure we only do this version check once.
-        sMigrationDone = true;
+        JSONArray jsonPanels = jsonPanelsIn;
 
-        JSONArray jsonPanels;
-        final int version;
-
-        final SharedPreferences prefs = GeckoSharedPrefs.forProfile(context);
-        if (prefs.contains(PREFS_CONFIG_KEY_OLD)) {
-            // Our original implementation did not contain versioning, so this is implicitly version 0.
-            jsonPanels = new JSONArray(jsonString);
-            version = 0;
-        } else {
-            final JSONObject json = new JSONObject(jsonString);
-            jsonPanels = json.getJSONArray(JSON_KEY_PANELS);
-            version = json.getInt(JSON_KEY_VERSION);
-        }
-
-        if (version == VERSION) {
-            return jsonPanels;
-        }
-
-        Log.d(LOGTAG, "Performing migration");
-
-        final SharedPreferences.Editor prefsEditor = prefs.edit();
-
-        for (int v = version + 1; v <= VERSION; v++) {
+        for (int v = currentVersion + 1; v <= newVersion; v++) {
             Log.d(LOGTAG, "Migrating to version = " + v);
 
             switch (v) {
@@ -438,6 +405,51 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
                     break;
             }
         }
+
+        return jsonPanels;
+    }
+
+    /**
+     * Migrates JSON config data storage.
+     *
+     * @param context Context used to get shared preferences and create built-in panel.
+     * @param jsonString String currently stored in preferences.
+     *
+     * @return JSONArray array representing new set of panel configs.
+     */
+    private static synchronized JSONArray maybePerformMigration(Context context, String jsonString) throws JSONException {
+        // If the migration is already done, we're at the current version.
+        if (sMigrationDone) {
+            final JSONObject json = new JSONObject(jsonString);
+            return json.getJSONArray(JSON_KEY_PANELS);
+        }
+
+        // Make sure we only do this version check once.
+        sMigrationDone = true;
+
+        JSONArray jsonPanels;
+        final int version;
+
+        final SharedPreferences prefs = GeckoSharedPrefs.forProfile(context);
+        if (prefs.contains(PREFS_CONFIG_KEY_OLD)) {
+            // Our original implementation did not contain versioning, so this is implicitly version 0.
+            jsonPanels = new JSONArray(jsonString);
+            version = 0;
+        } else {
+            final JSONObject json = new JSONObject(jsonString);
+            jsonPanels = json.getJSONArray(JSON_KEY_PANELS);
+            version = json.getInt(JSON_KEY_VERSION);
+        }
+
+        if (version == VERSION) {
+            return jsonPanels;
+        }
+
+        Log.d(LOGTAG, "Performing migration");
+
+        final SharedPreferences.Editor prefsEditor = prefs.edit();
+
+        jsonPanels = migratePrefsFromVersionToVersion(context, version, VERSION, jsonPanels, prefsEditor);
 
         // Save the new panel config and the new version number.
         final JSONObject newJson = new JSONObject();
