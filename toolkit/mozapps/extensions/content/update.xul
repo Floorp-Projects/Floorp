@@ -87,7 +87,6 @@
     <description>&noupdates.intro.desc;</description>
     <separator class="thin"/>
     <hbox id="updateCheckErrorNotFound" class="alertBox" hidden="true" align="top">
-      <image id="alert"/>
       <description flex="1">&noupdates.error.desc;</description>
     </hbox>
     <separator class="thin"/>
@@ -157,7 +156,6 @@
               onpageshow="gAdminDisabledPage.onPageShow();">
     <separator/>
     <hbox class="alertBox" align="top">
-      <image id="alert"/>
       <description flex="1">&adminDisabled.warning.label;</description>
     </hbox>
     <separator flex="1"/>
