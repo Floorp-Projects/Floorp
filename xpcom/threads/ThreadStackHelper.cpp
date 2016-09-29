@@ -247,8 +247,15 @@ ThreadStackHelper::GetStack(Stack& aStack)
     return;
   }
 
-  FillStackBuffer();
-  FillThreadContext();
+  // SuspendThread is asynchronous, so the thread may still be running. Use
+  // GetThreadContext to ensure it's really suspended.
+  // See https://blogs.msdn.microsoft.com/oldnewthing/20150205-00/?p=44743.
+  CONTEXT context;
+  context.ContextFlags = CONTEXT_CONTROL;
+  if (::GetThreadContext(mThreadID, &context)) {
+    FillStackBuffer();
+    FillThreadContext();
+  }
 
   MOZ_ALWAYS_TRUE(::ResumeThread(mThreadID) != DWORD(-1));
 
