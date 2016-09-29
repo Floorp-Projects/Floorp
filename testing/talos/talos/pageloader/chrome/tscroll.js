@@ -1,9 +1,6 @@
-// Note: The content from here upto '// End scroll test' is duplicated at:
-//       - talos/tests/scroll/scroll-test.js
-//       - inside talos/pageloader/chrome/tscroll.js
-//
-// - Please keep these copies in sync.
-// - Pleace make sure that any changes apply cleanly to all use cases.
+// Note: This file is used at both tscrollx and tp5o_scroll. With the former as
+//       unprivileged code.
+// - Please make sure that any changes apply cleanly to all use cases.
 
 function testScroll(target, stepSize, opt_reportFunc, opt_numSteps)
 {
@@ -121,12 +118,13 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps)
     rAF(startTest);
   }, 260);
 }
-// End scroll test - End duplicated code
 
 // This code below here is unique to tscroll.js inside of pageloader
-function handleMessageFromChrome(message) {
-  var payload = message.data.details;
-  testScroll(payload.target, payload.stepSize, 'PageLoader:RecordTime', payload.opt_numSteps);
-}
+try {
+  function handleMessageFromChrome(message) {
+    var payload = message.data.details;
+    testScroll(payload.target, payload.stepSize, 'PageLoader:RecordTime', payload.opt_numSteps);
+  }
 
-addMessageListener("PageLoader:ScrollTest", handleMessageFromChrome);
+  addMessageListener("PageLoader:ScrollTest", handleMessageFromChrome);
+} catch (e) {}
