@@ -2490,27 +2490,15 @@ class BaseCompiler
     }
 
     void orI64(RegI64 rhs, RegI64 srcDest) {
-#if defined(JS_CODEGEN_X64)
-        masm.orq(rhs.reg.reg, srcDest.reg.reg);
-#else
-        MOZ_CRASH("BaseCompiler platform hook: orI64");
-#endif
+        masm.or64(rhs.reg, srcDest.reg);
     }
 
     void andI64(RegI64 rhs, RegI64 srcDest) {
-#if defined(JS_CODEGEN_X64)
-        masm.andq(rhs.reg.reg, srcDest.reg.reg);
-#else
-        MOZ_CRASH("BaseCompiler platform hook: andI64");
-#endif
+        masm.and64(rhs.reg, srcDest.reg);
     }
 
     void xorI64(RegI64 rhs, RegI64 srcDest) {
-#if defined(JS_CODEGEN_X64)
-        masm.xorq(rhs.reg.reg, srcDest.reg.reg);
-#else
-        MOZ_CRASH("BaseCompiler platform hook: xorI64");
-#endif
+        masm.xor64(rhs.reg, srcDest.reg);
     }
 
     void lshiftI64(RegI64 rhs, RegI64 srcDest) {
