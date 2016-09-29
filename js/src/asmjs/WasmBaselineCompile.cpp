@@ -2590,6 +2590,11 @@ class BaseCompiler
     void reinterpretI64AsF64(RegI64 src, RegF64 dest) {
 #if defined(JS_CODEGEN_X64)
         masm.vmovq(src.reg.reg, dest.reg);
+#elif defined(JS_CODEGEN_X86)
+        masm.Push(src.reg.high);
+        masm.Push(src.reg.low);
+        masm.vmovq(Operand(esp, 0), dest.reg);
+        masm.freeStack(sizeof(uint64_t));
 #else
         MOZ_CRASH("BaseCompiler platform hook: reinterpretI64AsF64");
 #endif
@@ -2598,6 +2603,11 @@ class BaseCompiler
     void reinterpretF64AsI64(RegF64 src, RegI64 dest) {
 #if defined(JS_CODEGEN_X64)
         masm.vmovq(src.reg, dest.reg.reg);
+#elif defined(JS_CODEGEN_X86)
+        masm.reserveStack(sizeof(uint64_t));
+        masm.vmovq(src.reg, Operand(esp, 0));
+        masm.Pop(dest.reg.low);
+        masm.Pop(dest.reg.high);
 #else
         MOZ_CRASH("BaseCompiler platform hook: reinterpretF64AsI64");
 #endif
