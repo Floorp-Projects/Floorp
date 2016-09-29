@@ -9,6 +9,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "MockRegistry",
                                   "resource://testing-common/MockRegistry.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
+                                  "resource://gre/modules/Timer.jsm");
 
 let {Subprocess, SubprocessImpl} = Cu.import("resource://gre/modules/Subprocess.jsm");
 
@@ -117,5 +119,9 @@ function getSubprocessCount() {
                        .then(result => result.size);
 }
 function waitForSubprocessExit() {
-  return SubprocessImpl.Process.getWorker().call("waitForNoProcesses", []);
+  return SubprocessImpl.Process.getWorker().call("waitForNoProcesses", []).then(() => {
+    // Return to the main event loop to give IO handlers enough time to consume
+    // their remaining buffered input.
+    return new Promise(resolve => setTimeout(resolve, 0));
+  });
 }
