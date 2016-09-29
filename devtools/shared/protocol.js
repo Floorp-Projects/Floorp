@@ -11,6 +11,7 @@ var {EventTarget} = require("sdk/event/target");
 var events = require("sdk/event/core");
 var object = require("sdk/util/object");
 var {getStack, callFunctionWithAsyncStack} = require("devtools/shared/platform/stack");
+var {settleAll} = require("devtools/shared/DevToolsUtils");
 
 exports.emit = events.emit;
 
@@ -794,6 +795,20 @@ var Pool = Class({
     return !this.__poolMap || this._poolMap.size == 0;
   },
 
+  // Generator that yields each non-self child of the pool.
+  poolChildren: function* () {
+    if (!this.__poolMap) {
+      return;
+    }
+    for (let actor of this.__poolMap.values()) {
+      // Self-owned actors are ok, but don't need visiting twice.
+      if (actor === this) {
+        continue;
+      }
+      yield actor;
+    }
+  },
+
   /**
    * Destroy this item, removing it from a parent if it has one,
    * and destroying all children if necessary.
@@ -1283,7 +1298,23 @@ var Front = Class({
         deferred.resolve(packet);
       }
     }, stack, "DevTools RDP");
-  }
+  },
+
+  hasRequests() {
+    return !!this._requests.length;
+  },
+
+  /**
+   * Wait for all current requests from this front to settle.  This is especially useful
+   * for tests and other utility environments that may not have events or mechanisms to
+   * await the completion of requests without this utility.
+   *
+   * @return Promise
+   *         Resolved when all requests have settled.
+   */
+  waitForRequestsToSettle() {
+    return settleAll(this._requests.map(({ deferred }) => deferred.promise));
+  },
 });
 exports.Front = Front;
 
