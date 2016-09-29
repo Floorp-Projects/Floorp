@@ -411,10 +411,11 @@ PROT_ListManager.prototype.makeUpdateRequest_ = function(updateUrl, tableData) {
 
     let urlUtils = Cc["@mozilla.org/url-classifier/utils;1"]
                      .getService(Ci.nsIUrlClassifierUtils);
-
-    streamerMap.requestPayload = urlUtils.makeUpdateRequestV4(tableArray,
-                                                              stateArray,
-                                                              tableArray.length);
+    let requestPayload =  urlUtils.makeUpdateRequestV4(tableArray,
+                                                       stateArray,
+                                                       tableArray.length);
+    // Use a base64-encoded request.
+    streamerMap.requestPayload = btoa(requestPayload);
     streamerMap.isPostRequest = false;
   } else {
     // Build the request. For each table already in the database, include the
