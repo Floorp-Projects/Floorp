@@ -58,17 +58,17 @@ use zip;
 const DEFAULT_HOST: &'static str = "localhost";
 
 lazy_static! {
-    pub static ref FIREFOX_DEFAULT_PREFERENCES: [(&'static str, Pref); 49] = [
+    pub static ref FIREFOX_DEFAULT_PREFERENCES: [(&'static str, Pref); 50] = [
         ("app.update.auto", Pref::new(false)),
         ("app.update.enabled", Pref::new(false)),
-        ("browser.EULA.3.accepted", Pref::new(true)),
-        ("browser.EULA.override", Pref::new(true)),
-        ("browser.displayedE10SPrompt", Pref::new(5)),
         ("browser.displayedE10SPrompt.1", Pref::new(5)),
         ("browser.displayedE10SPrompt.2", Pref::new(5)),
         ("browser.displayedE10SPrompt.3", Pref::new(5)),
         ("browser.displayedE10SPrompt.4", Pref::new(5)),
+        ("browser.displayedE10SPrompt", Pref::new(5)),
         ("browser.dom.window.dump.enabled", Pref::new(true)),
+        ("browser.EULA.3.accepted", Pref::new(true)),
+        ("browser.EULA.override", Pref::new(true)),
         ("browser.firstrun-content.dismissed", Pref::new("")),
         ("browser.offline", Pref::new(false)),
         ("browser.safebrowsing.enabled", Pref::new(false)),
@@ -102,8 +102,8 @@ lazy_static! {
         ("security.warn_viewing_mixed.show_once", Pref::new(false)),
         ("signon.autofillForms", Pref::new(false)),
         ("signon.rememberSignons", Pref::new(false)),
-        ("startup.homepage_welcome_url", Pref::new("about:blank")),
         ("startup.homepage_welcome_url.additional", Pref::new("about:blank")),
+        ("startup.homepage_welcome_url", Pref::new("about:blank")),
         ("toolkit.networkmanager.disable", Pref::new(true)),
         ("toolkit.telemetry.enabled", Pref::new(false)),
         ("toolkit.telemetry.prompted", Pref::new(2)),
