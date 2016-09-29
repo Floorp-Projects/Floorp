@@ -26,6 +26,7 @@
 #include "webrtc/common.h"
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
 #include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp.h"
+#include "webrtc/voice_engine/include/voe_dtmf.h"
 #include "webrtc/voice_engine/include/voe_errors.h"
 #include "webrtc/system_wrappers/interface/clock.h"
 
@@ -220,6 +221,24 @@ bool WebrtcAudioConduit::GetRTCPSenderReport(DOMHighResTimeStamp* timestamp,
    return result;
  }
 
+bool WebrtcAudioConduit::SetDtmfPayloadType(unsigned char type) {
+  CSFLogInfo(logTag, "%s : setting dtmf payload %d", __FUNCTION__, (int)type);
+
+  ScopedCustomReleasePtr<webrtc::VoEDtmf> mPtrVoEDtmf;
+  mPtrVoEDtmf = webrtc::VoEDtmf::GetInterface(mVoiceEngine);
+  if (!mPtrVoEDtmf) {
+    CSFLogError(logTag, "%s Unable to initialize VoEDtmf", __FUNCTION__);
+    return false;
+  }
+
+  int result = mPtrVoEDtmf->SetSendTelephoneEventPayloadType(mChannel, type);
+  if (result == -1) {
+    CSFLogError(logTag, "%s Failed call to SetSendTelephoneEventPayloadType",
+                        __FUNCTION__);
+  }
+  return result != -1;
+}
+
 /*
  * WebRTCAudioConduit Implementation
  */
@@ -402,6 +421,8 @@ WebrtcAudioConduit::ConfigureSendMediaCodec(const AudioCodecConfig* codecConfig)
                 mPtrVoEBase->LastError());
     return kMediaConduitFECStatusError;
   }
+
+  mDtmfEnabled = codecConfig->mDtmfEnabled;
 
   if (codecConfig->mName == "opus" && codecConfig->mMaxPlaybackRate) {
     if (mPtrVoECodec->SetOpusMaxPlaybackRate(
