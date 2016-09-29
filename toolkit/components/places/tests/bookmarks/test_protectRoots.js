@@ -8,7 +8,8 @@ function run_test()
     PlacesUtils.toolbarFolderId,
     PlacesUtils.unfiledBookmarksFolderId,
     PlacesUtils.tagsFolderId,
-    PlacesUtils.placesRootId
+    PlacesUtils.placesRootId,
+    PlacesUtils.mobileFolderId,
   ];
 
   for (let root of ROOTS) {
