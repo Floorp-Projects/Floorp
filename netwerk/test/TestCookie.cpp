@@ -757,9 +757,9 @@ main(int32_t argc, char *argv[])
       uint32_t hostCookies = 0;
       rv[8] = NS_SUCCEEDED(cookieMgr2->CountCookiesFromHost(NS_LITERAL_CSTRING("cookiemgr.test"), &hostCookies)) &&
               hostCookies == 2;
-      // check CookieExists() using the third cookie
+      // check CookieExistsNative() using the third cookie
       bool found;
-      rv[9] = NS_SUCCEEDED(cookieMgr2->CookieExists(newDomainCookie, &found)) && found;
+      rv[9] = NS_SUCCEEDED(cookieMgr2->CookieExistsNative(newDomainCookie, &attrs,  &found)) && found;
 
 
       // remove the cookie, block it, and ensure it can't be added again
@@ -768,7 +768,7 @@ main(int32_t argc, char *argv[])
                                                     NS_LITERAL_CSTRING("/rabbit"),    // path
                                                     true,                             // is blocked
                                                     &attrs));                         // originAttributes
-      rv[11] = NS_SUCCEEDED(cookieMgr2->CookieExists(newDomainCookie, &found)) && !found;
+      rv[11] = NS_SUCCEEDED(cookieMgr2->CookieExistsNative(newDomainCookie, &attrs, &found)) && !found;
       rv[12] = NS_SUCCEEDED(cookieMgr2->AddNative(NS_LITERAL_CSTRING("new.domain"),     // domain
                                             NS_LITERAL_CSTRING("/rabbit"),        // path
                                             NS_LITERAL_CSTRING("test3"),          // name
@@ -778,14 +778,14 @@ main(int32_t argc, char *argv[])
                                             true,                              // is session
                                             INT64_MIN,                            // expiry time
                                             &attrs));                         // originAttributes
-      rv[13] = NS_SUCCEEDED(cookieMgr2->CookieExists(newDomainCookie, &found)) && !found;
+      rv[13] = NS_SUCCEEDED(cookieMgr2->CookieExistsNative(newDomainCookie, &attrs, &found)) && !found;
       // sleep four seconds, to make sure the second cookie has expired
       PR_Sleep(4 * PR_TicksPerSecond());
-      // check that both CountCookiesFromHost() and CookieExists() count the
+      // check that both CountCookiesFromHost() and CookieExistsNative() count the
       // expired cookie
       rv[14] = NS_SUCCEEDED(cookieMgr2->CountCookiesFromHost(NS_LITERAL_CSTRING("cookiemgr.test"), &hostCookies)) &&
               hostCookies == 2;
-      rv[15] = NS_SUCCEEDED(cookieMgr2->CookieExists(expiredCookie, &found)) && found;
+      rv[15] = NS_SUCCEEDED(cookieMgr2->CookieExistsNative(expiredCookie, &attrs, &found)) && found;
       // double-check RemoveAll() using the enumerator
       rv[16] = NS_SUCCEEDED(cookieMgr->RemoveAll());
       rv[17] = NS_SUCCEEDED(cookieMgr->GetEnumerator(getter_AddRefs(enumerator))) &&
