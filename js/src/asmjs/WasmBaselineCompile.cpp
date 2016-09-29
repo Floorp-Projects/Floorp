@@ -1404,7 +1404,8 @@ class BaseCompiler
 #ifdef JS_PUNBOX64
             masm.Pop(r.reg.reg);
 #else
-            MOZ_CRASH("BaseCompiler platform hook: popI64");
+            masm.Pop(r.reg.low);
+            masm.Pop(r.reg.high);
 #endif
             break;
           case Stk::RegisterI64:
