@@ -627,10 +627,8 @@ LIRGeneratorX86::visitWasmTruncateToInt64(MWasmTruncateToInt64* ins)
     MDefinition* opd = ins->input();
     MOZ_ASSERT(opd->type() == MIRType::Double || opd->type() == MIRType::Float32);
 
-    LDefinition temp1 = temp();
-    LDefinition temp2 = tempDouble();
-    LDefinition maybeTemp = ins->isUnsigned() ? tempDouble() : LDefinition::BogusTemp();
-    defineInt64(new(alloc()) LWasmTruncateToInt64(useRegister(opd), temp1, temp2, maybeTemp), ins);
+    LDefinition temp = tempDouble();
+    defineInt64(new(alloc()) LWasmTruncateToInt64(useRegister(opd), temp), ins);
 }
 
 void

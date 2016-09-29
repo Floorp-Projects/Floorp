@@ -809,7 +809,7 @@ void
 CodeGeneratorX64::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir)
 {
     FloatRegister input = ToFloatRegister(lir->input());
-    Register output = ToRegister(lir->output());
+    Register64 output = ToOutRegister64(lir);
 
     MWasmTruncateToInt64* mir = lir->mir();
     MIRType inputType = mir->input()->type();
@@ -834,8 +834,6 @@ CodeGeneratorX64::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir)
         else
             masm.wasmTruncateFloat32ToInt64(input, output, oolEntry, oolRejoin, temp);
     }
-
-    masm.bind(ool->rejoin());
 }
 
 void
