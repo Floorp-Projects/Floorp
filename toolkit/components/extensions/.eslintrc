@@ -23,6 +23,7 @@
     "runSafeSyncWithoutClone": true,
     "Services": true,
     "TabManager": true,
+    "WindowListManager": true,
     "XPCOMUtils": true,
   },
 
