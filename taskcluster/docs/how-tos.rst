@@ -42,7 +42,7 @@ The recommended process for changing task graphs is this:
 
    .. code-block:: none
 
-       ./mach taskgraph --json -p parameters.yml tasks > old-tasks.json
+       ./mach taskgraph tasks --json -p parameters.yml > old-tasks.json
 
 3. Make your modifications under ``taskcluster/``.
 

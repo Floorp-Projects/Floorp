@@ -31,6 +31,7 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
 const {Task} = require("devtools/shared/task");
 const Services = require("Services");
+const {getCssProperties} = require("devtools/shared/fronts/css-properties");
 
 const PREF_IMAGE_TOOLTIP_SIZE = "devtools.inspector.imagePreviewTooltipSize";
 
@@ -262,6 +263,7 @@ function TooltipsOverlay(view) {
 
   let {CssRuleView} = require("devtools/client/inspector/rules/rules");
   this.isRuleView = view instanceof CssRuleView;
+  this._cssProperties = getCssProperties(this.view.inspector.toolbox);
 
   this._onNewSelection = this._onNewSelection.bind(this);
   this.view.inspector.selection.on("new-node-front", this._onNewSelection);
@@ -305,7 +307,8 @@ TooltipsOverlay.prototype = {
       // Cubic bezier tooltip
       this.cubicBezier = new SwatchCubicBezierTooltip(toolbox);
       // Filter editor tooltip
-      this.filterEditor = new SwatchFilterTooltip(toolbox);
+      this.filterEditor = new SwatchFilterTooltip(toolbox,
+        this._cssProperties.getValidityChecker(this.view.inspector.panelDoc));
     }
 
     this._isStarted = true;

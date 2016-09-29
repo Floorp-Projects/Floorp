@@ -13,6 +13,7 @@ import subprocess
 import sys
 import time
 import json
+import socket
 import traceback
 import urlparse
 
@@ -266,8 +267,16 @@ class VirtualenvMixin(object):
         proxxy = Proxxy(self.config, self.log_obj)
         trusted_hosts = set()
         for link in proxxy.get_proxies_and_urls(c.get('find_links', [])):
-            command.extend(["--find-links", link])
             parsed = urlparse.urlparse(link)
+
+            try:
+                socket.gethostbyname(parsed.hostname)
+            except socket.gaierror as e:
+                self.info('error resolving %s (ignoring): %s' %
+                          (parsed.hostname, e.message))
+                continue
+
+            command.extend(["--find-links", link])
             if parsed.scheme != 'https':
                 trusted_hosts.add(parsed.hostname)
 
@@ -400,8 +409,6 @@ class VirtualenvMixin(object):
                 scripts_dir = os.path.dirname(target)
                 self.mkdir_p(scripts_dir)
                 self.copyfile(c['virtualenv_python_dll'], target, error_level=WARNING)
-            else:
-                self.mkdir_p(dirs['abs_work_dir'])
 
             # make this list configurable?
             for module in ('distribute', 'pip'):
@@ -415,6 +422,7 @@ class VirtualenvMixin(object):
         if os.path.exists(self.query_python_path()):
             self.info("Virtualenv %s appears to already exist; skipping virtualenv creation." % self.query_python_path())
         else:
+            self.mkdir_p(dirs['abs_work_dir'])
             self.run_command(virtualenv + virtualenv_options + [venv_path],
                              cwd=dirs['abs_work_dir'],
                              error_list=VirtualenvErrorList,

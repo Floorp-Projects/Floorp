@@ -430,8 +430,6 @@ MarkupView.prototype = {
   /**
    * Hide the box model highlighter on a given node front
    *
-   * @param  {NodeFront} nodeFront
-   *         The node to hide the highlighter for
    * @param  {Boolean} forceHide
    *         See toolbox-highlighter-utils/unhighlight
    * @return {Promise} Resolves when the highlighter for this nodeFront is

@@ -265,16 +265,3 @@ treechildren::-moz-tree-cell-text(broken) {
 #securityPanel row {
   -moz-box-align: center;
 }
-
-/* Icons for context menus */
-menuitem:not([type]) {
-  -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem-iconic");
-}
-
-#menu_selectall {
-  list-style-image: url("moz-icon://stock/gtk-select-all?size=menu");
-}
-
-#menu_copy {
-  list-style-image: url("moz-icon://stock/gtk-copy?size=menu");
-}

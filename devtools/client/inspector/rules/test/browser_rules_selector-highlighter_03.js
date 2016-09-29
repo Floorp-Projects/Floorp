@@ -76,9 +76,3 @@ add_task(function* () {
   ok(!HighlighterFront.isShown,
     "The highlighter is hidden now that the same selector was clicked");
 });
-
-function* clickSelectorIcon(icon, view) {
-  let onToggled = view.once("ruleview-selectorhighlighter-toggled");
-  EventUtils.synthesizeMouseAtCenter(icon, {}, view.styleWindow);
-  yield onToggled;
-}

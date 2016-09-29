@@ -82,6 +82,7 @@ tasks:
 
         features:
           taskclusterProxy: true
+          chainOfTrust: true
 
         # Note: This task is built server side without the context or tooling that
         # exist in tree so we must hard code the version

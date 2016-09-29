@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset='UTF-8'>
+  <script src='/tests/SimpleTest/SimpleTest.js'></script>
+  <link rel='stylesheet' href='/tests/SimpleTest/test.css'>
+</head>
+<title>WebGL test: Framebuffer maximum size test. (Bug 1290333)</title>
+<body>
+<script>
+function TestSize(contextName, testSize) {
+  var attributes = {
+    antialias: false,
+  };
+
+  var canvas = document.createElement('canvas');
+  var gl = canvas.getContext(contextName, attributes);
+
+  if (!gl) {
+    todo(false, contextName + 'is unavailable.');
+    return;
+  }
+  gl.canvas.width = testSize;
+  gl.canvas.height = testSize;
+
+  ok(true, contextName + 'test complete.');
+}
+
+function run() {
+  TestSize('webgl', 16384);
+  TestSize('webgl2', 16384);
+
+  ok(true, 'Test complete.');
+  SimpleTest.finish();
+}
+
+////////////////////////////////////////
+
+SimpleTest.waitForExplicitFinish();
+
+try {
+  var prefPairList = [
+    ['webgl.force-enabled', true],
+  ];
+  var prefEnv = {'set': prefPairList};
+  SpecialPowers.pushPrefEnv(prefEnv, run);
+} catch (e) {
+  warning('No SpecialPowers, but trying WebGL2 anyway...');
+  run();
+}
+
+</script>
+</body>
+</html>
