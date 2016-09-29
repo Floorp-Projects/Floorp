@@ -743,7 +743,8 @@ protected:
 NS_IMPL_ISUPPORTS(MediaDevice, nsIMediaDevice)
 
 MediaDevice::MediaDevice(MediaEngineSource* aSource, bool aIsVideo)
-  : mMediaSource(aSource->GetMediaSource())
+  : mScary(aSource->GetScary())
+  , mMediaSource(aSource->GetMediaSource())
   , mSource(aSource)
   , mIsVideo(aIsVideo)
 {
@@ -878,6 +879,13 @@ NS_IMETHODIMP
 MediaDevice::GetRawId(nsAString& aID)
 {
   aID.Assign(mRawID);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MediaDevice::GetScary(bool* aScary)
+{
+  *aScary = mScary;
   return NS_OK;
 }
 

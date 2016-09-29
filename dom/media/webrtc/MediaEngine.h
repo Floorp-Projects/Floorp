@@ -214,6 +214,9 @@ public:
   /* Populate the UUID of this device in the nsACString */
   virtual void GetUUID(nsACString&) const = 0;
 
+  /* Override w/true if source does end-run around cross origin restrictions. */
+  virtual bool GetScary() const { return false; };
+
   class AllocationHandle
   {
   public:
