@@ -47,7 +47,7 @@ mozlint-flake8/opt:
     treeherder:
         symbol: f8
         kind: test
-        tier: 2
+        tier: 1
         platform: lint/opt
     worker-type: aws-provisioner-v1/b2gtest
     worker:
@@ -73,7 +73,7 @@ wptlint-gecko/opt:
     treeherder:
         symbol: W
         kind: test
-        tier: 2
+        tier: 1
         platform: lint/opt
     worker-type: aws-provisioner-v1/b2gtest
     worker:

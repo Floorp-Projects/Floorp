@@ -172,25 +172,27 @@ private:
   /**
    * Adds a translation to the transform of any fixed position (whose parent
    * layer is not fixed) or sticky position layer descendant of
-   * aTransformedSubtreeRoot. The translation is chosen so that the layer's
-   * anchor point relative to aTransformedSubtreeRoot's parent layer is the same
-   * as it was when aTransformedSubtreeRoot's GetLocalTransform() was
-   * aPreviousTransformForRoot. aCurrentTransformForRoot is
-   * aTransformedSubtreeRoot's current GetLocalTransform() modulo any
+   * |aTransformedSubtreeRoot|. The translation is chosen so that the layer's
+   * anchor point relative to |aTransformedSubtreeRoot|'s parent layer is the same
+   * as it was when |aTransformedSubtreeRoot|'s GetLocalTransform() was
+   * |aPreviousTransformForRoot|. |aCurrentTransformForRoot| is
+   * |aTransformedSubtreeRoot|'s current GetLocalTransform() modulo any
    * overscroll-related transform, which we don't want to adjust for.
    * For sticky position layers, the translation is further intersected with
    * the layer's sticky scroll ranges.
    * This function will also adjust layers so that the given content document
    * fixed position margins will be respected during asynchronous panning and
    * zooming.
-   * aTransformAffectsLayerClip indicates whether the transform on
-   * aTransformedSubtreeRoot affects aLayer's clip rects, so we know
-   * whether we need to perform a corresponding unadjustment to keep
-   * the clip rect fixed.
-   * aClipPartsCache optionally maps layers to separate fixed and scrolled
+   * |aTransformScrollId| is the scroll id of the scroll frame that scrolls
+   * |aTransformedSubtreeRoot|.
+   * |aClipPartsCache| optionally maps layers to separate fixed and scrolled
    * clips, so we can only adjust the fixed portion.
+   * This function has a recursive implementation; aStartTraversalAt specifies
+   * where to start the current recursion of the traversal. For the initial
+   * call, it should be the same as aTrasnformedSubtreeRoot.
    */
   void AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoot,
+                                 Layer* aStartTraversalAt,
                                  FrameMetrics::ViewID aTransformScrollId,
                                  const LayerToParentLayerMatrix4x4& aPreviousTransformForRoot,
                                  const LayerToParentLayerMatrix4x4& aCurrentTransformForRoot,

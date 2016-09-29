@@ -1102,18 +1102,6 @@ InitSystemMetrics()
   }
 
   metricResult =
-    LookAndFeel::GetInt(LookAndFeel::eIntID_ImagesInMenus);
-  if (metricResult) {
-    sSystemMetrics->AppendElement(nsGkAtoms::images_in_menus);
-  }
-
-  metricResult =
-    LookAndFeel::GetInt(LookAndFeel::eIntID_ImagesInButtons);
-  if (metricResult) {
-    sSystemMetrics->AppendElement(nsGkAtoms::images_in_buttons);
-  }
-
-  metricResult =
     LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars);
   if (metricResult) {
     sSystemMetrics->AppendElement(nsGkAtoms::overlay_scrollbars);

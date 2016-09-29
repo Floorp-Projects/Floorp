@@ -519,7 +519,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
         'skia/src/opts/SkOpts_sse41.cpp',
         'skia/src/opts/SkOpts_ssse3.cpp',
     ]
-elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC']:
+elif CONFIG['CPU_ARCH'] in ('arm', 'aarch64') and CONFIG['GNU_CC']:
     UNIFIED_SOURCES += [
         'skia/src/core/SkUtilsArm.cpp',
         'skia/src/opts/SkBitmapProcState_opts_arm.cpp',
@@ -528,7 +528,15 @@ elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC']:
     SOURCES += [
         'skia/src/opts/SkBlitRow_opts_arm.cpp',
     ]
-    if CONFIG['BUILD_ARM_NEON']:
+    if CONFIG['CPU_ARCH'] == 'aarch64':
+        SOURCES += [
+            'skia/src/opts/SkBitmapProcState_arm_neon.cpp',
+            'skia/src/opts/SkBitmapProcState_matrixProcs_neon.cpp',
+            'skia/src/opts/SkBlitMask_opts_arm_neon.cpp',
+            'skia/src/opts/SkBlitRow_opts_arm_neon.cpp',
+            'skia/src/opts/SkOpts_neon.cpp',
+        ]
+    elif CONFIG['BUILD_ARM_NEON']:
         SOURCES += [
             'skia/src/opts/SkBitmapProcState_arm_neon.cpp',
             'skia/src/opts/SkBitmapProcState_matrixProcs_neon.cpp',

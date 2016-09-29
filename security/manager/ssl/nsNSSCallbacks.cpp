@@ -1190,11 +1190,16 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   }
 
   PRBool siteSupportsSafeRenego;
-  rv = SSL_HandshakeNegotiatedExtension(fd, ssl_renegotiation_info_xtn,
-                                        &siteSupportsSafeRenego);
-  MOZ_ASSERT(rv == SECSuccess);
-  if (rv != SECSuccess) {
-    siteSupportsSafeRenego = false;
+  if (channelInfo.protocolVersion != SSL_LIBRARY_VERSION_TLS_1_3) {
+    rv = SSL_HandshakeNegotiatedExtension(fd, ssl_renegotiation_info_xtn,
+                                          &siteSupportsSafeRenego);
+    MOZ_ASSERT(rv == SECSuccess);
+    if (rv != SECSuccess) {
+      siteSupportsSafeRenego = false;
+    }
+  } else {
+    // TLS 1.3 dropped support for renegotiation.
+    siteSupportsSafeRenego = true;
   }
   bool renegotiationUnsafe = !siteSupportsSafeRenego &&
                              ioLayerHelpers.treatUnsafeNegotiationAsBroken();

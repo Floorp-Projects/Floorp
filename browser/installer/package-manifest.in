@@ -830,10 +830,8 @@ bin/libfreebl_32int64_3.so
 
 
 ; media
-#ifdef MOZ_EME
 @RESPATH@/gmp-clearkey/0.1/@DLL_PREFIX@clearkey@DLL_SUFFIX@
 @RESPATH@/gmp-clearkey/0.1/clearkey.info
-#endif
 
 ; gfx
 #ifdef XP_WIN

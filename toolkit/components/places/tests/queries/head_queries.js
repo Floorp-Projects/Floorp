@@ -23,11 +23,10 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 // Some Useful Date constants - PRTime uses microseconds, so convert
 const DAY_MICROSEC = 86400000000;
-const today = Date.now() * 1000;
+const today = PlacesUtils.toPRTime(Date.now());
 const yesterday = today - DAY_MICROSEC;
 const lastweek = today - (DAY_MICROSEC * 7);
 const daybefore = today - (DAY_MICROSEC * 2);
-const tomorrow = today + DAY_MICROSEC;
 const old = today - (DAY_MICROSEC * 3);
 const futureday = today + (DAY_MICROSEC * 3);
 const olderthansixmonths = today - (DAY_MICROSEC * 31 * 7);

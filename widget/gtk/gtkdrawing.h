@@ -505,18 +505,6 @@ gint
 moz_gtk_get_tab_thickness(WidgetNodeType aNodeType);
 
 /**
- * Get a boolean which indicates whether or not to use images in menus.
- * If TRUE, use images in menus.
- */
-gboolean moz_gtk_images_in_menus(void);
-
-/**
- * Get a boolean which indicates whether or not to use images in buttons.
- * If TRUE, use images in buttons.
- */
-gboolean moz_gtk_images_in_buttons(void);
-
-/**
  * Get a boolean which indicates whether the theme draws scrollbar buttons.
  * If TRUE, draw scrollbar buttons.
  */

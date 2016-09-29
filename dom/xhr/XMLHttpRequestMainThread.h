@@ -34,6 +34,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/NotNull.h"
+#include "mozilla/dom/MutableBlobStorage.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/XMLHttpRequest.h"
 #include "mozilla/dom/XMLHttpRequestBinding.h"
@@ -162,7 +163,8 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
                                        public nsIInterfaceRequestor,
                                        public nsSupportsWeakReference,
                                        public nsITimerCallback,
-                                       public nsISizeOfEventTarget
+                                       public nsISizeOfEventTarget,
+                                       public MutableBlobStorageCallback
 {
   friend class nsXHRParseEndListener;
   friend class nsXMLHttpRequestXPCOMifier;
@@ -536,6 +538,10 @@ public:
   virtual void
   SetOriginAttributes(const mozilla::dom::OriginAttributesDictionary& aAttrs) override;
 
+  void BlobStoreCompleted(MutableBlobStorage* aBlobStorage,
+                          Blob* aBlob,
+                          nsresult aResult) override;
+
 protected:
   // XHR states are meant to mirror the XHR2 spec:
   //   https://xhr.spec.whatwg.org/#states
@@ -577,6 +583,8 @@ protected:
 
   void StartProgressEventTimer();
   void StopProgressEventTimer();
+
+  void MaybeCreateBlobStorage();
 
   nsresult OnRedirectVerifyCallback(nsresult result);
 
@@ -644,8 +652,11 @@ protected:
   // Non-null only when we are able to get a os-file representation of the
   // response, i.e. when loading from a file.
   RefPtr<Blob> mDOMBlob;
-  // We stream data to mBlobSet when response type is "blob" or "moz-blob"
-  // and mDOMBlob is null.
+  // We stream data to mBlobStorage when response type is "blob" and mDOMBlob is
+  // null.
+  RefPtr<MutableBlobStorage> mBlobStorage;
+  // We stream data to mBlobStorage when response type is "moz-blob" and
+  // mDOMBlob is null.
   nsAutoPtr<BlobSet> mBlobSet;
 
   nsString mOverrideMimeType;

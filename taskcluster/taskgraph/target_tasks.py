@@ -57,6 +57,17 @@ def target_tasks_try_option_syntax(full_task_graph, parameters):
             if 'unittest_suite' in task.attributes:
                 task.attributes['task_duplicates'] = options.trigger_tests
 
+    # Add notifications here as well
+    if options.notifications:
+        for task in full_task_graph:
+            owner = parameters.get('owner')
+            routes = task.task.setdefault('routes', [])
+            if options.notifications == 'all':
+                routes.append("notify.email.{}.on-any".format(owner))
+            elif options.notifications == 'failure':
+                routes.append("notify.email.{}.on-failed".format(owner))
+                routes.append("notify.email.{}.on-exception".format(owner))
+
     return target_tasks_labels
 
 

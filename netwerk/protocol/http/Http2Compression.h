@@ -85,7 +85,9 @@ protected:
 
   uint32_t mPeakSize;
   uint32_t mPeakCount;
+  MOZ_INIT_OUTSIDE_CTOR
   Telemetry::ID mPeakSizeID;
+  MOZ_INIT_OUTSIDE_CTOR
   Telemetry::ID mPeakCountID;
 
 private:

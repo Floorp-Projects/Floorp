@@ -392,14 +392,15 @@ class ScriptMixin(PlatformMixin):
         if parsed_url.scheme in ('http', 'https'):
             expected_file_size = int(response.headers.get('Content-Length'))
 
-        self.info('Expected file size: {}'.format(expected_file_size))
-        self.debug('Url: {}'.format(url))
-        self.info('Content-Encoding {}'.format(response.headers.get('Content-Encoding')))
-        self.info('Content-Type {}'.format(response.headers.get('Content-Type')))
-        self.info('Http code {}'.format(response.getcode()))
+        self.info('Http code: {}'.format(response.getcode()))
+        for k in ('Content-Encoding', 'Content-Type', 'via', 'x-amz-cf-id',
+                  'x-amz-version-id', 'x-cache'):
+            self.info('{}: {}'.format(k, response.headers.get(k)))
 
         file_contents = response.read()
         obtained_file_size = len(file_contents)
+        self.info('Expected file size: {}'.format(expected_file_size))
+        self.info('Obtained file size: {}'.format(obtained_file_size))
 
         if obtained_file_size != expected_file_size:
             raise FetchedIncorrectFilesize(
@@ -553,7 +554,7 @@ class ScriptMixin(PlatformMixin):
                                       Defaults to False.
 
         Raises:
-            zipfile.BadZipFile: on contents of zipfile being invalid
+            zipfile.BadZipfile: on contents of zipfile being invalid
         """
         with zipfile.ZipFile(compressed_file) as bundle:
             entries = self._filter_entries(bundle.namelist(), extract_dirs)
@@ -683,7 +684,18 @@ class ScriptMixin(PlatformMixin):
         # 2) We're guaranteed to have download the file with error_level=FATAL
         #    Let's unpack the file
         function, kwargs = _determine_extraction_method_and_kwargs(url)
-        function(**kwargs)
+        try:
+            function(**kwargs)
+        except zipfile.BadZipfile:
+            # Bug 1305752 - Sometimes a good download turns out to be a
+            # corrupted zipfile. Let's upload the file for inspection
+            filepath = os.path.join(self.query_abs_dirs()['abs_upload_dir'], url.split('/')[-1])
+            self.info('Storing corrupted file to {}'.format(filepath))
+            with open(filepath, 'w') as f:
+                f.write(compressed_file.read())
+
+            # Dump the exception and exit
+            self.exception(level=FATAL)
 
 
     def load_json_url(self, url, error_level=None, *args, **kwargs):

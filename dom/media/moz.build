@@ -20,6 +20,7 @@ with Files('GetUserMedia*'):
     BUG_COMPONENT = component_av
 
 DIRS += [
+    'eme',
     'encoder',
     'flac',
     'gmp',
@@ -55,9 +56,6 @@ if CONFIG['MOZ_WEBRTC']:
 
 if CONFIG['MOZ_OMX_DECODER']:
     DIRS += ['omx']
-
-if CONFIG['MOZ_EME']:
-    DIRS += ['eme']
 
 TEST_DIRS += [
     'compiledtest',

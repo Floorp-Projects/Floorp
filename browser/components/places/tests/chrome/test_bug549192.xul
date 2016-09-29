@@ -48,15 +48,22 @@
         yield PlacesTestUtils.clearHistory();
 
         // Add some visits.
+        let timeInMicroseconds = PlacesUtils.toPRTime(Date.now() - 10000);
+
+        function newTimeInMicroseconds() {
+          timeInMicroseconds = timeInMicroseconds + 1000;
+          return timeInMicroseconds;
+        }
+
         let vtime = Date.now() * 1000;
         const ttype = PlacesUtils.history.TRANSITION_TYPED;
         let places =
           [{ uri: Services.io.newURI("http://example.tld/", null, null),
-             visitDate: ++vtime, transition: ttype },
+             visitDate: newTimeInMicroseconds(), transition: ttype },
            { uri: Services.io.newURI("http://example2.tld/", null, null),
-             visitDate: ++vtime, transition: ttype },
+             visitDate: newTimeInMicroseconds(), transition: ttype },
            { uri: Services.io.newURI("http://example3.tld/", null, null),
-             visitDate: ++vtime, transition: ttype }];
+             visitDate: newTimeInMicroseconds(), transition: ttype }];
 
         yield PlacesTestUtils.addVisits(places);
 
@@ -85,7 +92,7 @@
         is(rc, 3, "Found expected number of rows.");
 
         // First check live-update of the view when adding visits.
-        places.forEach(place => place.visitDate = ++vtime);
+        places.forEach(place => place.visitDate = newTimeInMicroseconds());
         yield PlacesTestUtils.addVisits(places);
 
         for (let i = 0; i < rc; i++) {

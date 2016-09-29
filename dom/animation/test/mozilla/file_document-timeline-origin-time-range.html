@@ -12,13 +12,17 @@
 // inside the allowed range will just mean we overflow elsewhere.
 
 test(function(t) {
-  assert_throws({name: 'TypeError'},
-    function() { new DocumentTimeline(Number.MAX_SAFE_INTEGER); });
+  assert_throws({ name: 'TypeError'},
+    function() {
+      new DocumentTimeline({ originTime: Number.MAX_SAFE_INTEGER });
+    });
 }, 'Calculated current time is positive infinity');
 
 test(function(t) {
-  assert_throws({name: 'TypeError'},
-    function() { new DocumentTimeline(-1 * Number.MAX_SAFE_INTEGER); });
+  assert_throws({ name: 'TypeError'},
+    function() {
+      new DocumentTimeline({ originTime: -1 * Number.MAX_SAFE_INTEGER });
+    });
 }, 'Calculated current time is negative infinity');
 
 done();

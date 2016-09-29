@@ -41,10 +41,8 @@ using CrashReporter::GetIDFromMinidump;
 #include "WMFDecoderModule.h"
 #endif
 
-#ifdef MOZ_EME
 #include "mozilla/dom/WidevineCDMManifestBinding.h"
 #include "widevine-adapter/WidevineAdapter.h"
-#endif
 
 namespace mozilla {
 
@@ -810,7 +808,6 @@ GMPParent::ReadGMPMetaData()
     return ReadGMPInfoFile(infoFile);
   }
 
-#ifdef MOZ_EME
   // Maybe this is the Widevine adapted plugin?
   nsCOMPtr<nsIFile> manifestFile;
   rv = mDirectory->Clone(getter_AddRefs(manifestFile));
@@ -819,9 +816,6 @@ GMPParent::ReadGMPMetaData()
   }
   manifestFile->AppendRelativePath(NS_LITERAL_STRING("manifest.json"));
   return ReadChromiumManifestFile(manifestFile);
-#else
-  return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
-#endif
 }
 
 RefPtr<GenericPromise>
@@ -935,7 +929,6 @@ GMPParent::ParseChromiumManifest(nsString aJSON)
   LOGD("%s: for '%s'", __FUNCTION__, NS_LossyConvertUTF16toASCII(aJSON).get());
 
   MOZ_ASSERT(NS_IsMainThread());
-#ifdef MOZ_EME
   mozilla::dom::WidevineCDMManifest m;
   if (!m.Init(aJSON)) {
     return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
@@ -970,10 +963,6 @@ GMPParent::ParseChromiumManifest(nsString aJSON)
 #endif
 
   return GenericPromise::CreateAndResolve(true, __func__);
-#else
-  MOZ_ASSERT_UNREACHABLE("don't call me if EME isn't enabled");
-  return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
-#endif
 }
 
 bool

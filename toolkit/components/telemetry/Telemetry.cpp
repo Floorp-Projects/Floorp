@@ -2841,12 +2841,6 @@ AccumulateChildKeyed(const nsTArray<KeyedAccumulation>& aAccumulations)
   TelemetryHistogram::AccumulateChildKeyed(aAccumulations);
 }
 
-void
-ClearHistogram(ID aId)
-{
-  TelemetryHistogram::ClearHistogram(aId);
-}
-
 const char*
 GetHistogramName(ID id)
 {

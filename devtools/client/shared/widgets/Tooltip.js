@@ -918,10 +918,14 @@ Heritage.extend(SwatchBasedEditorTooltip.prototype, {
  *
  * @param {Toolbox} toolbox
  *        The devtools toolbox, needed to get the devtools main window.
+ * @param {function} cssIsValid
+ *        A function to check that css declaration's name and values are valid together.
+ *        This can be obtained from "shared/fronts/css-properties.js".
  */
-function SwatchFilterTooltip(toolbox) {
+function SwatchFilterTooltip(toolbox, cssIsValid) {
   let stylesheet = "chrome://devtools/content/shared/widgets/filter-widget.css";
   SwatchBasedEditorTooltip.call(this, toolbox, stylesheet);
+  this._cssIsValid = cssIsValid;
 
   // Creating a filter editor instance.
   this.widget = this.setFilterContent("none");
@@ -945,7 +949,7 @@ Heritage.extend(SwatchBasedEditorTooltip.prototype, {
 
     this.tooltip.setContent(container, { width: 510, height: 200 });
 
-    return new CSSFilterEditorWidget(container, filter);
+    return new CSSFilterEditorWidget(container, filter, this._cssIsValid);
   },
 
   show: Task.async(function* () {

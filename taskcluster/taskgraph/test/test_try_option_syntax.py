@@ -255,5 +255,20 @@ class TestTryOptionSyntax(unittest.TestCase):
         tos = TryOptionSyntax('try: --interactive', empty_graph)
         self.assertEqual(tos.interactive, True)
 
+    def test_all_email(self):
+        "--all-emails sets notifications"
+        tos = TryOptionSyntax('try: --all-emails', empty_graph)
+        self.assertEqual(tos.notifications, 'all')
+
+    def test_fail_email(self):
+        "--failure-emails sets notifications"
+        tos = TryOptionSyntax('try: --failure-emails', empty_graph)
+        self.assertEqual(tos.notifications, 'failure')
+
+    def test_no_email(self):
+        "no email settings don't set notifications"
+        tos = TryOptionSyntax('try:', empty_graph)
+        self.assertEqual(tos.notifications, None)
+
 if __name__ == '__main__':
     main()

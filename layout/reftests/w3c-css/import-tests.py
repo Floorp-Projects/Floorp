@@ -251,8 +251,9 @@ def copy_and_prefix(test, aSourceFileName, aDestFileName, aProps, isSupportFile=
             newFile.write(AHEM_DECL_HTML if is_html(aDestFileName) else AHEM_DECL_XML)
             ahemFontAdded = True
 
-        for rule in aProps:
-            replacementLine = replacementLine.replace(rule, "-moz-" + rule)
+        for prop in aProps:
+            replacementLine = re.sub(r"([^-#]|^)" + prop + r"\b", r"\1-moz-" + prop, replacementLine)
+
         newFile.write(replacementLine)
 
     newFile.close()

@@ -559,6 +559,7 @@ ParseNodeAllocator::allocNode()
         return pn;
     }
 
+    LifoAlloc::AutoFallibleScope fallibleAllocator(&alloc);
     void* p = alloc.alloc(sizeof (ParseNode));
     if (!p)
         ReportOutOfMemory(cx);

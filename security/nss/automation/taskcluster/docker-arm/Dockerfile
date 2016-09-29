@@ -1,5 +1,5 @@
 FROM armv7/armhf-ubuntu:16.04
-MAINTAINER Tim Taubert <ttaubert@mozilla.com>
+MAINTAINER Franziskus Kiefer <franziskuskiefer@gmail.com>
 
 RUN useradd -d /home/worker -s /bin/bash -m worker
 WORKDIR /home/worker

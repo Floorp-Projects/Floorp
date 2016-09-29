@@ -252,7 +252,7 @@ public:
   // should fire error events or load events.  This gets initialized
   // by ScheduleLoadEventIfNeeded, and is only used after that has
   // been called.
-  nsresult                              mStatus;
+  MOZ_INIT_OUTSIDE_CTOR nsresult        mStatus;
 
 private:
   void FireLoadEvent(nsIThreadInternal* aThread);

@@ -41,7 +41,7 @@ import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.Telemetry;
-import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -873,7 +873,7 @@ public class Distribution {
         return context.getApplicationInfo().dataDir;
     }
 
-    @WrapForJNI(calledFrom = "gecko")
+    @JNITarget
     public static String[] getDistributionDirectories() {
         final Context context = GeckoAppShell.getApplicationContext();
 

@@ -630,28 +630,17 @@ WebGLContext::GetBufferParameter(GLenum target, GLenum pname)
     if (!buffer)
         return JS::NullValue();
 
-    MakeContextCurrent();
-
     switch (pname) {
-        case LOCAL_GL_BUFFER_SIZE:
-        case LOCAL_GL_BUFFER_USAGE:
-        {
-            GLint i = 0;
-            gl->fGetBufferParameteriv(target, pname, &i);
-            if (pname == LOCAL_GL_BUFFER_SIZE) {
-                return JS::Int32Value(i);
-            }
+    case LOCAL_GL_BUFFER_SIZE:
+        return JS::NumberValue(buffer->ByteLength());
 
-            MOZ_ASSERT(pname == LOCAL_GL_BUFFER_USAGE);
-            return JS::NumberValue(uint32_t(i));
-        }
-            break;
+    case LOCAL_GL_BUFFER_USAGE:
+        return JS::NumberValue(buffer->Usage());
 
-        default:
-            ErrorInvalidEnumInfo("getBufferParameter: parameter", pname);
+    default:
+        ErrorInvalidEnumInfo("getBufferParameter: parameter", pname);
+        return JS::NullValue();
     }
-
-    return JS::NullValue();
 }
 
 JS::Value
@@ -1527,6 +1516,9 @@ WebGL2Context::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenu
     if (checkedBytesAfterOffset.isValid()) {
         bytesAfterOffset = checkedBytesAfterOffset.value();
     }
+
+    gl->MakeCurrent();
+    const ScopedLazyBind lazyBind(gl, LOCAL_GL_PIXEL_PACK_BUFFER, mBoundPixelPackBuffer);
 
     ReadPixelsImpl(x, y, width, height, format, type, (void*)offset, bytesAfterOffset);
 }

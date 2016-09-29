@@ -302,7 +302,7 @@ add_task(function* () {
   yield initCssProperties(toolbox);
   let cssProperties = getCssProperties(toolbox);
 
-  let parser = new OutputParser(document, cssProperties.supportsType);
+  let parser = new OutputParser(document, cssProperties);
   for (let i = 0; i < TEST_DATA.length; i++) {
     let data = TEST_DATA[i];
     info("Output-parser test data " + i + ". {" + data.name + " : " +

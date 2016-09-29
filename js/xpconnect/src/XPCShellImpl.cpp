@@ -136,7 +136,7 @@ GetLocationProperty(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (!args.thisv().isObject()) {
-        JS_ReportError(cx, "Unexpected this value for GetLocationProperty");
+        JS_ReportErrorASCII(cx, "Unexpected this value for GetLocationProperty");
         return false;
     }
 #if !defined(XP_WIN) && !defined(XP_UNIX)
@@ -343,7 +343,7 @@ Load(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     if (!JS_IsGlobalObject(obj)) {
-        JS_ReportError(cx, "Trying to load() into a non-global object");
+        JS_ReportErrorASCII(cx, "Trying to load() into a non-global object");
         return false;
     }
 
@@ -457,23 +457,23 @@ SendCommand(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (args.length() == 0) {
-        JS_ReportError(cx, "Function takes at least one argument!");
+        JS_ReportErrorASCII(cx, "Function takes at least one argument!");
         return false;
     }
 
     RootedString str(cx, ToString(cx, args[0]));
     if (!str) {
-        JS_ReportError(cx, "Could not convert argument 1 to string!");
+        JS_ReportErrorASCII(cx, "Could not convert argument 1 to string!");
         return false;
     }
 
     if (args.length() > 1 && JS_TypeOfValue(cx, args[1]) != JSTYPE_FUNCTION) {
-        JS_ReportError(cx, "Could not convert argument 2 to function!");
+        JS_ReportErrorASCII(cx, "Could not convert argument 2 to function!");
         return false;
     }
 
     if (!XRE_SendTestShellCommand(cx, str, args.length() > 1 ? args[1].address() : nullptr)) {
-        JS_ReportError(cx, "Couldn't send command!");
+        JS_ReportErrorASCII(cx, "Couldn't send command!");
         return false;
     }
 
@@ -574,7 +574,7 @@ SetInterruptCallback(JSContext* cx, unsigned argc, Value* vp)
     // Sanity-check args.
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
     if (args.length() != 1) {
-        JS_ReportError(cx, "Wrong number of arguments");
+        JS_ReportErrorASCII(cx, "Wrong number of arguments");
         return false;
     }
 
@@ -586,7 +586,7 @@ SetInterruptCallback(JSContext* cx, unsigned argc, Value* vp)
 
     // Otherwise, we should have a callable object.
     if (!args[0].isObject() || !JS::IsCallable(&args[0].toObject())) {
-        JS_ReportError(cx, "Argument must be callable");
+        JS_ReportErrorASCII(cx, "Argument must be callable");
         return false;
     }
 
@@ -601,7 +601,7 @@ SimulateActivityCallback(JSContext* cx, unsigned argc, Value* vp)
     // Sanity-check args.
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
     if (args.length() != 1 || !args[0].isBoolean()) {
-        JS_ReportError(cx, "Wrong number of arguments");
+        JS_ReportErrorASCII(cx, "Wrong number of arguments");
         return false;
     }
     xpc::SimulateActivityCallback(args[0].toBoolean());
@@ -613,11 +613,11 @@ RegisterAppManifest(JSContext* cx, unsigned argc, Value* vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
     if (args.length() != 1) {
-        JS_ReportError(cx, "Wrong number of arguments");
+        JS_ReportErrorASCII(cx, "Wrong number of arguments");
         return false;
     }
     if (!args[0].isObject()) {
-        JS_ReportError(cx, "Expected object as argument 1 to registerAppManifest");
+        JS_ReportErrorASCII(cx, "Expected object as argument 1 to registerAppManifest");
         return false;
     }
 

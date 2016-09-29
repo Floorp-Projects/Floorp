@@ -116,10 +116,8 @@
 #endif
 #include "mozilla/dom/ContentChild.h"
 
-#ifdef MOZ_EME
 #include "mozilla/EMEUtils.h"
 #include "mozilla/DetailedPromise.h"
-#endif
 
 namespace mozilla {
 namespace dom {
@@ -249,9 +247,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mServiceWorkerContainer)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
-#ifdef MOZ_EME
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMediaKeySystemAccessManager)
-#endif
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDeviceStorageAreaListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPresentation)
 #ifdef MOZ_GAMEPAD
@@ -386,12 +382,10 @@ Navigator::Invalidate()
 
   mServiceWorkerContainer = nullptr;
 
-#ifdef MOZ_EME
   if (mMediaKeySystemAccessManager) {
     mMediaKeySystemAccessManager->Shutdown();
     mMediaKeySystemAccessManager = nullptr;
   }
-#endif
 
   if (mDeviceStorageAreaListener) {
     mDeviceStorageAreaListener = nullptr;
@@ -2324,7 +2318,6 @@ Navigator::GetUserAgent(nsPIDOMWindowInner* aWindow, nsIURI* aURI,
   return siteSpecificUA->GetUserAgentForURIAndWindow(aURI, aWindow, aUserAgent);
 }
 
-#ifdef MOZ_EME
 static nsCString
 ToCString(const nsString& aString)
 {
@@ -2450,7 +2443,6 @@ Navigator::RequestMediaKeySystemAccess(const nsAString& aKeySystem,
   mMediaKeySystemAccessManager->Request(promise, aKeySystem, aConfigs);
   return promise.forget();
 }
-#endif
 
 Presentation*
 Navigator::GetPresentation(ErrorResult& aRv)

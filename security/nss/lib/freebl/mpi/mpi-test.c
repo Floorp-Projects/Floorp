@@ -1182,39 +1182,6 @@ test_2expt(void)
 /*------------------------------------------------------------------------*/
 
 int
-test_sqrt(void)
-{
-    mp_int a;
-    int res = 0;
-
-    mp_init(&a);
-    mp_read_radix(&a, mp9, 16);
-    mp_sqrt(&a, &a);
-    mp_toradix(&a, g_intbuf, 16);
-
-    if (strcmp(g_intbuf, t_mp9) != 0) {
-        reason("error: computed %s, expected %s\n", g_intbuf, t_mp9);
-        res = 1;
-        goto CLEANUP;
-    }
-
-    mp_read_radix(&a, mp15, 16);
-    mp_sqrt(&a, &a);
-    mp_toradix(&a, g_intbuf, 16);
-
-    if (strcmp(g_intbuf, t_mp15) != 0) {
-        reason("error: computed %s, expected %s\n", g_intbuf, t_mp15);
-        res = 1;
-    }
-
-CLEANUP:
-    mp_clear(&a);
-    return res;
-}
-
-/*------------------------------------------------------------------------*/
-
-int
 test_mod_d(void)
 {
     mp_int a;

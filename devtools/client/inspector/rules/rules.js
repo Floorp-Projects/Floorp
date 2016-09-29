@@ -105,7 +105,7 @@ function CssRuleView(inspector, document, store, pageStyle) {
 
   this.cssProperties = getCssProperties(inspector.toolbox);
 
-  this._outputParser = new OutputParser(document, this.cssProperties.supportsType);
+  this._outputParser = new OutputParser(document, this.cssProperties);
 
   this._onAddRule = this._onAddRule.bind(this);
   this._onContextMenu = this._onContextMenu.bind(this);

@@ -1501,29 +1501,29 @@ internal_JSHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
     // For categorical histograms we allow passing a string argument that specifies the label.
     nsAutoJSString label;
     if (!label.init(cx, args[0])) {
-      JS_ReportError(cx, "Invalid string parameter");
+      JS_ReportErrorASCII(cx, "Invalid string parameter");
       return false;
     }
 
     nsresult rv = gHistograms[id].label_id(NS_ConvertUTF16toUTF8(label).get(), &value);
     if (NS_FAILED(rv)) {
-      JS_ReportError(cx, "Unknown label for categorical histogram");
+      JS_ReportErrorASCII(cx, "Unknown label for categorical histogram");
       return false;
     }
   } else {
     // All other accumulations expect one numerical argument.
     if (!args.length()) {
-      JS_ReportError(cx, "Expected one argument");
+      JS_ReportErrorASCII(cx, "Expected one argument");
       return false;
     }
 
     if (!(args[0].isNumber() || args[0].isBoolean())) {
-      JS_ReportError(cx, "Not a number");
+      JS_ReportErrorASCII(cx, "Not a number");
       return false;
     }
 
     if (!JS::ToUint32(cx, args[0], &value)) {
-      JS_ReportError(cx, "Failed to convert argument");
+      JS_ReportErrorASCII(cx, "Failed to convert argument");
       return false;
     }
   }
@@ -1550,7 +1550,7 @@ internal_JSHistogram_Snapshot(JSContext *cx, unsigned argc, JS::Value *vp)
   case REFLECT_FAILURE:
     return false;
   case REFLECT_CORRUPT:
-    JS_ReportError(cx, "Histogram is corrupt");
+    JS_ReportErrorASCII(cx, "Histogram is corrupt");
     return false;
   case REFLECT_OK:
     args.rval().setObject(*snapshot);
@@ -1574,7 +1574,7 @@ internal_JSHistogram_Clear(JSContext *cx, unsigned argc, JS::Value *vp)
 
   if (args.length() >= 1) {
     if (!args[0].isBoolean()) {
-      JS_ReportError(cx, "Not a boolean");
+      JS_ReportErrorASCII(cx, "Not a boolean");
       return false;
     }
 
@@ -1685,12 +1685,12 @@ internal_KeyedHistogram_SnapshotImpl(JSContext *cx, unsigned argc,
   if (args.length() == 0) {
     JS::RootedObject snapshot(cx, JS_NewPlainObject(cx));
     if (!snapshot) {
-      JS_ReportError(cx, "Failed to create object");
+      JS_ReportErrorASCII(cx, "Failed to create object");
       return false;
     }
 
     if (!NS_SUCCEEDED(keyed->GetJSSnapshot(cx, snapshot, subsession, clearSubsession))) {
-      JS_ReportError(cx, "Failed to reflect keyed histograms");
+      JS_ReportErrorASCII(cx, "Failed to reflect keyed histograms");
       return false;
     }
 
@@ -1700,14 +1700,14 @@ internal_KeyedHistogram_SnapshotImpl(JSContext *cx, unsigned argc,
 
   nsAutoJSString key;
   if (!args[0].isString() || !key.init(cx, args[0])) {
-    JS_ReportError(cx, "Not a string");
+    JS_ReportErrorASCII(cx, "Not a string");
     return false;
   }
 
   Histogram* h = nullptr;
   nsresult rv = keyed->GetHistogram(NS_ConvertUTF16toUTF8(key), &h, subsession);
   if (NS_FAILED(rv)) {
-    JS_ReportError(cx, "Failed to get histogram");
+    JS_ReportErrorASCII(cx, "Failed to get histogram");
     return false;
   }
 
@@ -1720,7 +1720,7 @@ internal_KeyedHistogram_SnapshotImpl(JSContext *cx, unsigned argc,
   case REFLECT_FAILURE:
     return false;
   case REFLECT_CORRUPT:
-    JS_ReportError(cx, "Histogram is corrupt");
+    JS_ReportErrorASCII(cx, "Histogram is corrupt");
     return false;
   case REFLECT_OK:
     args.rval().setObject(*snapshot);
@@ -1745,13 +1745,13 @@ internal_JSKeyedHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
 
   JS::CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() < 1) {
-    JS_ReportError(cx, "Expected one argument");
+    JS_ReportErrorASCII(cx, "Expected one argument");
     return false;
   }
 
   nsAutoJSString key;
   if (!args[0].isString() || !key.init(cx, args[0])) {
-    JS_ReportError(cx, "Not a string");
+    JS_ReportErrorASCII(cx, "Not a string");
     return false;
   }
 
@@ -1762,12 +1762,12 @@ internal_JSKeyedHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
   int32_t value = 1;
   if ((type != base::CountHistogram::COUNT_HISTOGRAM) || (args.length() == 2)) {
     if (args.length() < 2) {
-      JS_ReportError(cx, "Expected two arguments for this histogram type");
+      JS_ReportErrorASCII(cx, "Expected two arguments for this histogram type");
       return false;
     }
 
     if (!(args[1].isNumber() || args[1].isBoolean())) {
-      JS_ReportError(cx, "Not a number");
+      JS_ReportErrorASCII(cx, "Not a number");
       return false;
     }
 
@@ -1820,7 +1820,7 @@ internal_JSKeyedHistogram_SnapshotSubsessionAndClear(JSContext *cx,
 {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   if (args.length() != 0) {
-    JS_ReportError(cx, "No key arguments supported for snapshotSubsessionAndClear");
+    JS_ReportErrorASCII(cx, "No key arguments supported for snapshotSubsessionAndClear");
   }
 
   return internal_KeyedHistogram_SnapshotImpl(cx, argc, vp, true, true);
@@ -1846,7 +1846,7 @@ internal_JSKeyedHistogram_Clear(JSContext *cx, unsigned argc, JS::Value *vp)
 
   if (args.length() >= 1) {
     if (!(args[0].isNumber() || args[0].isBoolean())) {
-      JS_ReportError(cx, "Not a boolean");
+      JS_ReportErrorASCII(cx, "Not a boolean");
       return false;
     }
 
@@ -2212,21 +2212,6 @@ TelemetryHistogram::AccumulateChildKeyed(const nsTArray<KeyedAccumulation>& aAcc
     internal_AccumulateChildKeyed(aAccumulations[i].mId,
                                   aAccumulations[i].mKey,
                                   aAccumulations[i].mSample);
-  }
-}
-
-void
-TelemetryHistogram::ClearHistogram(mozilla::Telemetry::ID aId)
-{
-  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
-  if (!internal_CanRecordBase()) {
-    return;
-  }
-
-  Histogram *h;
-  nsresult rv = internal_GetHistogramByEnumId(aId, &h);
-  if (NS_SUCCEEDED(rv) && h) {
-    internal_HistogramClear(*h, false);
   }
 }
 

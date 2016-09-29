@@ -4785,12 +4785,10 @@ CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
       return;
     }
 
-#ifdef MOZ_EME
     if (video->ContainsRestrictedContent()) {
       aError.Throw(NS_ERROR_NOT_AVAILABLE);
       return;
     }
-#endif
 
     uint16_t readyState;
     if (NS_SUCCEEDED(video->GetReadyState(&readyState)) &&

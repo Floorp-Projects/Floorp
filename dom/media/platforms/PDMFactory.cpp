@@ -26,6 +26,7 @@
 #endif
 #include "GMPDecoderModule.h"
 
+#include "mozilla/CDMProxy.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/StaticPtr.h"
@@ -38,11 +39,7 @@
 #include "H264Converter.h"
 
 #include "AgnosticDecoderModule.h"
-
-#ifdef MOZ_EME
 #include "EMEDecoderModule.h"
-#include "mozilla/CDMProxy.h"
-#endif
 
 #include "DecoderDoctorDiagnostics.h"
 
@@ -419,13 +416,11 @@ PDMFactory::GetDecoder(const nsACString& aMimeType,
   return pdm.forget();
 }
 
-#ifdef MOZ_EME
 void
 PDMFactory::SetCDMProxy(CDMProxy* aProxy)
 {
   RefPtr<PDMFactory> m = new PDMFactory();
   mEMEPDM = new EMEDecoderModule(aProxy, m);
 }
-#endif
 
 }  // namespace mozilla

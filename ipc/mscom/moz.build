@@ -7,36 +7,46 @@
 EXPORTS.mozilla.mscom += [
     'COMApartmentRegion.h',
     'COMPtrHolder.h',
-    'DispatchForwarder.h',
     'EnsureMTA.h',
-    'Interceptor.h',
-    'InterceptorLog.h',
-    'MainThreadHandoff.h',
-    'MainThreadInvoker.h',
     'MainThreadRuntime.h',
     'ProxyStream.h',
     'Ptr.h',
-    'Registration.h',
     'Utils.h',
-    'WeakRef.h',
 ]
 
 SOURCES += [
-    'Interceptor.cpp',
-    'Registration.cpp',
     'Utils.cpp',
-    'WeakRef.cpp',
 ]
 
 UNIFIED_SOURCES += [
-    'DispatchForwarder.cpp',
     'EnsureMTA.cpp',
-    'InterceptorLog.cpp',
-    'MainThreadHandoff.cpp',
-    'MainThreadInvoker.cpp',
     'MainThreadRuntime.cpp',
     'ProxyStream.cpp',
 ]
+
+if CONFIG['ACCESSIBILITY']:
+    EXPORTS.mozilla.mscom += [
+        'DispatchForwarder.h',
+        'Interceptor.h',
+        'InterceptorLog.h',
+        'MainThreadHandoff.h',
+        'MainThreadInvoker.h',
+        'Registration.h',
+        'WeakRef.h',
+    ]
+
+    SOURCES += [
+        'Interceptor.cpp',
+        'Registration.cpp',
+        'WeakRef.cpp',
+    ]
+
+    UNIFIED_SOURCES += [
+        'DispatchForwarder.cpp',
+        'InterceptorLog.cpp',
+        'MainThreadHandoff.cpp',
+        'MainThreadInvoker.cpp',
+    ]
 
 LOCAL_INCLUDES += [
     '/xpcom/build',

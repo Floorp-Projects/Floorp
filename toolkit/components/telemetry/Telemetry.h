@@ -143,13 +143,6 @@ void AccumulateChild(const nsTArray<Accumulation>& aAccumulations);
 void AccumulateChildKeyed(const nsTArray<KeyedAccumulation>& aAccumulations);
 
 /**
- * This clears the data for a histogram in TelemetryHistogramEnums.h.
- *
- * @param id - histogram id
- */
-void ClearHistogram(ID id);
-
-/**
  * Enable/disable recording for this histogram at runtime.
  * Recording is enabled by default, unless listed at kRecordingInitiallyDisabledIDs[].
  * id must be a valid telemetry enum, otherwise an assertion is triggered.

@@ -10,11 +10,6 @@
 #include "mozilla/ArrayUtils.h"
 #include "nsCharTraits.h"
 
-#if ENABLE_INTL_API
-#include "unicode/uchar.h"
-#include "unicode/uscript.h"
-#endif
-
 #define UNICODE_BMP_LIMIT 0x10000
 #define UNICODE_LIMIT     0x110000
 
@@ -173,118 +168,68 @@ const hb_unicode_general_category_t sICUtoHBcategory[U_CHAR_CATEGORY_COUNT] = {
 };
 #endif
 
+#if !ENABLE_INTL_API
 uint8_t GetGeneralCategory(uint32_t aCh) {
-#if ENABLE_INTL_API
-  return sICUtoHBcategory[u_charType(aCh)];
-#else
   return GetCharProps2(aCh).mCategory;
-#endif
 }
 
 nsCharType GetBidiCat(uint32_t aCh) {
-#if ENABLE_INTL_API
-  return nsCharType(u_charDirection(aCh));
-#else
   return nsCharType(GetCharProps2(aCh).mBidiCategory);
-#endif
 }
 
 int8_t GetNumericValue(uint32_t aCh) {
-#if ENABLE_INTL_API
-  UNumericType type =
-    UNumericType(u_getIntPropertyValue(aCh, UCHAR_NUMERIC_TYPE));
-  return type == U_NT_DECIMAL || type == U_NT_DIGIT
-         ? int8_t(u_getNumericValue(aCh))
-         : -1;  
-#else
   return GetCharProps2(aCh).mNumericValue;
-#endif
 }
 
 uint32_t
 GetMirroredChar(uint32_t aCh)
 {
-#if ENABLE_INTL_API
-    return u_charMirror(aCh);
-#else
     return aCh + sMirrorOffsets[GetCharProps1(aCh).mMirrorOffsetIndex];
-#endif
 }
 
 bool
 HasMirroredChar(uint32_t aCh)
 {
-#if ENABLE_INTL_API
-    return u_isMirrored(aCh);
-#else
     return GetCharProps1(aCh).mMirrorOffsetIndex != 0;
-#endif
 }
 
 uint8_t
 GetCombiningClass(uint32_t aCh)
 {
-#if ENABLE_INTL_API
-    return u_getCombiningClass(aCh);
-#else
     return GetCharProps1(aCh).mCombiningClass;
-#endif
 }
 
 uint8_t
 GetLineBreakClass(uint32_t aCh)
 {
-#if ENABLE_INTL_API
-    return u_getIntPropertyValue(aCh, UCHAR_LINE_BREAK);
-#else
     return GetCharProps2(aCh).mLineBreak;
-#endif
 }
 
 Script
 GetScriptCode(uint32_t aCh)
 {
-#if ENABLE_INTL_API
-    UErrorCode err = U_ZERO_ERROR;
-    return Script(uscript_getScript(aCh, &err));
-#else
     return Script(GetCharProps2(aCh).mScriptCode);
-#endif
 }
 
 uint32_t
 GetScriptTagForCode(Script aScriptCode)
 {
-#if ENABLE_INTL_API
-    const char* tag = uscript_getShortName(UScriptCode(aScriptCode));
-    return HB_TAG(tag[0], tag[1], tag[2], tag[3]);
-#else
     // this will safely return 0 for negative script codes, too :)
     if (static_cast<uint32_t>(aScriptCode) > ArrayLength(sScriptCodeToTag)) {
         return 0;
     }
     return sScriptCodeToTag[static_cast<uint32_t>(aScriptCode)];
-#endif
 }
 
 PairedBracketType GetPairedBracketType(uint32_t aCh)
 {
-#if ENABLE_INTL_API
-  return PairedBracketType
-           (u_getIntPropertyValue(aCh, UCHAR_BIDI_PAIRED_BRACKET_TYPE));
-#else
   return PairedBracketType(GetCharProps2(aCh).mPairedBracketType);
-#endif
 }
 
 uint32_t GetPairedBracket(uint32_t aCh)
 {
-#if ENABLE_INTL_API
-  return u_getBidiPairedBracket(aCh);
-#else
   return GetPairedBracketType(aCh) != PAIRED_BRACKET_TYPE_NONE
          ? GetMirroredChar(aCh) : aCh;
-#endif
 }
 
 static inline uint32_t
@@ -349,26 +294,6 @@ GetTitlecaseForAll(uint32_t aCh)
         return GetTitlecaseForLower(aCh ^ (mapValue & kCaseMapCharMask));
     }
     return aCh;
-}
-
-#if 0 // currently unused - bug 857481
-HanVariantType
-GetHanVariant(uint32_t aCh)
-{
-    // In the sHanVariantValues array, data for 4 successive characters
-    // (2 bits each) is packed in to each uint8_t entry, with the value
-    // for the lowest character stored in the least significant bits.
-    uint8_t v = 0;
-    if (aCh < UNICODE_BMP_LIMIT) {
-        v = sHanVariantValues[sHanVariantPages[0][aCh >> kHanVariantCharBits]]
-                             [(aCh & ((1 << kHanVariantCharBits) - 1)) >> 2];
-    } else if (aCh < (kHanVariantMaxPlane + 1) * 0x10000) {
-        v = sHanVariantValues[sHanVariantPages[sHanVariantPlanes[(aCh >> 16) - 1]]
-                                              [(aCh & 0xffff) >> kHanVariantCharBits]]
-                             [(aCh & ((1 << kHanVariantCharBits) - 1)) >> 2];
-    }
-    // extract the appropriate 2-bit field from the value
-    return HanVariantType((v >> ((aCh & 3) * 2)) & 3);
 }
 #endif
 

@@ -159,17 +159,6 @@ const char ZoomedView::name[] =
 constexpr char ZoomedView::RequestZoomedViewData_t::name[];
 constexpr char ZoomedView::RequestZoomedViewData_t::signature[];
 
-const char Distribution::name[] =
-        "org/mozilla/gecko/distribution/Distribution";
-
-constexpr char Distribution::GetDistributionDirectories_t::name[];
-constexpr char Distribution::GetDistributionDirectories_t::signature[];
-
-auto Distribution::GetDistributionDirectories() -> mozilla::jni::ObjectArray::LocalRef
-{
-    return mozilla::jni::Method<GetDistributionDirectories_t>::Call(Distribution::Context(), nullptr);
-}
-
 const char AudioFocusAgent::name[] =
         "org/mozilla/gecko/media/AudioFocusAgent";
 

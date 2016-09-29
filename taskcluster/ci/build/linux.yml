@@ -128,6 +128,33 @@ linux/debug:
         tooltool-downloads: public
         need-xvfb: true
 
+linux/pgo:
+    description: "Linux32 PGO"
+    index:
+        product: firefox
+        job-name:
+            gecko-v2: linux-pgo
+    treeherder:
+        platform: linux32/pgo
+        symbol: tc(B)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        implementation: docker-worker
+        max-run-time: 36000
+    coalesce-name: linux32-pgo
+    run:
+        using: mozharness
+        actions: [get-secrets build check-test generate-build-stats update]
+        options: [enable-pgo]
+        config:
+            - builds/releng_base_linux_32_builds.py
+            - balrog/production.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
+        tooltool-downloads: public
+        need-xvfb: true
+
 linux64-asan/opt:
     description: "Linux64 Opt ASAN"
     index:

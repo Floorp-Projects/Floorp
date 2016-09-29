@@ -325,10 +325,9 @@ class ExtensionContext extends BaseContext {
     let url = contentWindow.location.href;
     // The |sender| parameter is passed directly to the extension.
     let sender = {id: this.extension.uuid, frameId, url};
-    // Properties in |filter| must match those in the |recipient|
-    // parameter of sendMessage.
-    let filter = {extensionId: this.extension.id, frameId};
-    this.messenger = new Messenger(this, [this.messageManager], sender, filter);
+    let filter = {extensionId: this.extension.id};
+    let optionalFilter = {frameId};
+    this.messenger = new Messenger(this, [this.messageManager], sender, filter, optionalFilter);
 
     this.chromeObj = Cu.createObjectIn(this.sandbox, {defineAs: "browser"});
 

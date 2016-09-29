@@ -11,6 +11,7 @@
 
 #include "mozilla/MemoryReporting.h"
 
+#include "js/CharacterEncoding.h"
 #include "js/GCVector.h"
 #include "js/Vector.h"
 #include "vm/Caches.h"
@@ -583,7 +584,8 @@ DestroyContext(JSContext* cx);
 enum ErrorArgumentsType {
     ArgumentsAreUnicode,
     ArgumentsAreASCII,
-    ArgumentsAreLatin1
+    ArgumentsAreLatin1,
+    ArgumentsAreUTF8
 };
 
 /*
@@ -597,7 +599,8 @@ SelfHostedFunction(JSContext* cx, HandlePropertyName propName);
 
 #ifdef va_start
 extern bool
-ReportErrorVA(JSContext* cx, unsigned flags, const char* format, va_list ap);
+ReportErrorVA(JSContext* cx, unsigned flags, const char* format,
+              ErrorArgumentsType argumentsType, va_list ap);
 
 extern bool
 ReportErrorNumberVA(JSContext* cx, unsigned flags, JSErrorCallback callback,
@@ -619,7 +622,7 @@ ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
 
 /* |callee| requires a usage string provided by JS_DefineFunctionsWithHelp. */
 extern void
-ReportUsageError(JSContext* cx, HandleObject callee, const char* msg);
+ReportUsageErrorASCII(JSContext* cx, HandleObject callee, const char* msg);
 
 /*
  * Prints a full report and returns true if the given report is non-nullptr
@@ -816,6 +819,19 @@ class MOZ_RAII AutoLockForExclusiveAccess
 
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
+
+/*
+ * ExclusiveContext variants of encoding functions, for off-main-thread use.
+ * Refer to CharacterEncoding.h for details.
+ */
+extern JS::TwoByteCharsZ
+LossyUTF8CharsToNewTwoByteCharsZ(ExclusiveContext* cx, const JS::UTF8Chars utf8, size_t* outlen);
+
+extern JS::TwoByteCharsZ
+LossyUTF8CharsToNewTwoByteCharsZ(ExclusiveContext* cx, const JS::ConstUTF8CharsZ& utf8, size_t* outlen);
+
+extern JS::Latin1CharsZ
+LossyUTF8CharsToNewLatin1CharsZ(ExclusiveContext* cx, const JS::UTF8Chars utf8, size_t* outlen);
 
 } /* namespace js */
 

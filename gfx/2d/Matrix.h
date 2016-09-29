@@ -904,9 +904,14 @@ public:
                           aX,   aY,   aZ, 1.0f);
   }
 
-  static Matrix4x4Typed Translation(const Point3D& aP)
+  static Matrix4x4Typed Translation(const TargetPoint3D& aP)
   {
     return Translation(aP.x, aP.y, aP.z);
+  }
+
+  static Matrix4x4Typed Translation(const TargetPoint& aP)
+  {
+    return Translation(aP.x, aP.y, 0);
   }
 
   /**
@@ -972,8 +977,12 @@ public:
     return *this;
   }
 
-  Matrix4x4Typed &PostTranslate(const Point3D& aPoint) {
+  Matrix4x4Typed &PostTranslate(const TargetPoint3D& aPoint) {
     return PostTranslate(aPoint.x, aPoint.y, aPoint.z);
+  }
+
+  Matrix4x4Typed &PostTranslate(const TargetPoint& aPoint) {
+    return PostTranslate(aPoint.x, aPoint.y, 0);
   }
 
   static Matrix4x4Typed Scaling(Float aScaleX, Float aScaleY, float aScaleZ)

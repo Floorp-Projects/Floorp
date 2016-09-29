@@ -30,9 +30,7 @@ class MediaResource;
 class ReentrantMonitor;
 class VideoFrameContainer;
 class MediaDecoderOwner;
-#ifdef MOZ_EME
 class CDMProxy;
-#endif
 
 typedef nsDataHashtable<nsCStringHashKey, nsCString> MetadataTags;
 

@@ -89,15 +89,3 @@ function check_geolocation(location) {
   // optional  ok(location.coords.altitudeAccuracy == 42, "alt acc matches known value");
 }
 
-function toggleGeolocationSetting(value, callback) {
-  var mozSettings = window.navigator.mozSettings;
-  var lock = mozSettings.createLock();
-
-  var geoenabled = {"geolocation.enabled": value};
-
-  req = lock.set(geoenabled);
-  req.onsuccess = function () {
-    ok(true, "set done");
-    callback();
-  }
-}
