@@ -1420,6 +1420,7 @@ DrawTargetD2D1::GetDeviceSpaceClipRect(D2D1_RECT_F& aClipRect, bool& aIsPixelAli
     return false;
   }
 
+  aIsPixelAligned = true;
   aClipRect = D2D1::RectF(0, 0, mSize.width, mSize.height);
   for (auto iter = CurrentLayer().mPushedClips.begin();iter != CurrentLayer().mPushedClips.end(); iter++) {
     if (iter->mGeometry) {
