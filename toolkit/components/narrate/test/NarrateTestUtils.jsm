@@ -124,5 +124,26 @@ this.NarrateTestUtils = {
 
       Services.prefs.addObserver(pref, observeChange, false);
     });
+  },
+
+  sendBoundaryEvent: function(window, name, charIndex) {
+    let detail = { type: "boundary", args: { name, charIndex } };
+    window.dispatchEvent(new window.CustomEvent("testsynthevent",
+      { detail: detail }));
+  },
+
+  isWordHighlightGone: function(window, ok) {
+    let $ = window.document.querySelector.bind(window.document);
+    ok(!$(".narrate-word-highlight"), "No more word highlights exist");
+  },
+
+  getWordHighlights: function(window) {
+    let $$ = window.document.querySelectorAll.bind(window.document);
+    let nodes = Array.from($$(".narrate-word-highlight"));
+    return nodes.map(node => {
+      return { word: node.dataset.word,
+               left: Number(node.style.left.replace(/px$/, "")),
+               top: Number(node.style.top.replace(/px$/, ""))};
+    });
   }
 };
