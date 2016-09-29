@@ -278,9 +278,24 @@ TalosPowersService.prototype = {
         callback("sample reply for: " + arg);
       }, 500);
     },
-
   */
   ParentExecServices: {
+
+    // arg: ignored. return: handle (number) for use with stopFrameTimeRecording
+    startFrameTimeRecording: function(arg, callback, win) {
+      var rv = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                  .getInterface(Ci.nsIDOMWindowUtils)
+                  .startFrameTimeRecording();
+      callback(rv);
+    },
+
+    // arg: handle from startFrameTimeRecording. return: array with composition intervals
+    stopFrameTimeRecording: function(arg, callback, win) {
+      var rv = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                  .getInterface(Ci.nsIDOMWindowUtils)
+                  .stopFrameTimeRecording(arg);
+      callback(rv);
+    },
   },
 
   RecieveParentExecCommand(msg) {
