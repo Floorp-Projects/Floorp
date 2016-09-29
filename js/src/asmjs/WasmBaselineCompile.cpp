@@ -2542,18 +2542,20 @@ class BaseCompiler
     }
 
     void clzI64(RegI64 srcDest) {
-#if defined(JS_CODEGEN_X64)
+#ifdef JS_PUNBOX64
         masm.clz64(srcDest.reg, srcDest.reg.reg);
 #else
-        MOZ_CRASH("BaseCompiler platform hook: clzI64");
+        masm.clz64(srcDest.reg, srcDest.reg.low);
+        masm.move32(Imm32(0), srcDest.reg.high);
 #endif
     }
 
     void ctzI64(RegI64 srcDest) {
-#if defined(JS_CODEGEN_X64)
+#ifdef JS_PUNBOX64
         masm.ctz64(srcDest.reg, srcDest.reg.reg);
 #else
-        MOZ_CRASH("BaseCompiler platform hook: ctzI64");
+        masm.ctz64(srcDest.reg, srcDest.reg.low);
+        masm.move32(Imm32(0), srcDest.reg.high);
 #endif
     }
 
