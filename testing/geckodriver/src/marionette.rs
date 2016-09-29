@@ -76,6 +76,7 @@ lazy_static! {
         ("browser.search.update", Pref::new(false)),
         ("browser.sessionstore.resume_from_crash", Pref::new(false)),
         ("browser.shell.checkDefaultBrowser", Pref::new(false)),
+        ("browser.startup.homepage override.mstone", Pref::new("ignore")),
         ("browser.startup.page", Pref::new(0)),
         ("browser.tabs.warnOnOpen", Pref::new(false)),
         ("browser.usedOnWindows10.introURL", Pref::new("")),
