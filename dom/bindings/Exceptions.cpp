@@ -657,7 +657,9 @@ NS_IMETHODIMP JSStackFrame::GetFormattedStack(JSContext* aCx, nsAString& aStack)
 
 NS_IMETHODIMP JSStackFrame::GetNativeSavedFrame(JS::MutableHandle<JS::Value> aSavedFrame)
 {
-  JS::ExposeObjectToActiveJS(mStack);
+  if (mStack) {
+    JS::ExposeObjectToActiveJS(mStack);
+  }
   aSavedFrame.setObjectOrNull(mStack);
   return NS_OK;
 }
