@@ -102,7 +102,7 @@ function do_test() {
 
   var prop = "border";
   var values = getCSSValuesForProperty(prop);
-  var expected = [ "-moz-calc", "initial", "unset", "-moz-use-text-color", "aliceblue",
+  var expected = [ "-moz-calc", "initial", "unset", "aliceblue",
       "antiquewhite", "aqua", "aquamarine", "azure", "beige", "bisque", "black", "blanchedalmond", "blue", "blueviolet",
       "brown", "burlywood", "cadetblue", "calc", "chartreuse", "chocolate", "coral", "cornflowerblue", "cornsilk",
       "crimson", "currentColor", "cyan", "darkblue", "darkcyan", "darkgoldenrod", "darkgray", "darkgreen", "darkgrey", "darkkhaki",
@@ -132,7 +132,7 @@ function do_test() {
   var prop = "border-top";
   var values = getCSSValuesForProperty(prop);
   var expected = [ "initial", "inherit", "unset", "thin", "medium", "thick", "none", "hidden", "dotted",
-      "dashed", "solid", "double", "groove", "ridge", "inset", "outset", "-moz-use-text-color",
+      "dashed", "solid", "double", "groove", "ridge", "inset", "outset",
       "aliceblue", "antiquewhite", "aqua", "aquamarine", "azure", "beige", "bisque", "black",
       "blanchedalmond", "blue", "blueviolet", "brown", "burlywood", "cadetblue", "chartreuse",
       "chocolate", "coral", "cornflowerblue", "cornsilk", "crimson", "currentColor", "cyan", "darkblue", "darkcyan",
@@ -215,7 +215,7 @@ function do_test() {
   // test border-image propery, for bug 973345
   var prop = "border-image";
   var values = getCSSValuesForProperty(prop);
-  var expected = [ "-moz-calc", "initial", "unset", "-moz-use-text-color", "aliceblue",
+  var expected = [ "-moz-calc", "initial", "unset", "aliceblue",
       "antiquewhite", "aqua", "aquamarine", "azure", "beige", "bisque", "black", "blanchedalmond", "blue", "blueviolet",
       "brown", "burlywood", "cadetblue", "calc", "chartreuse", "chocolate", "coral", "cornflowerblue", "cornsilk",
       "crimson", "currentColor", "cyan", "darkblue", "darkcyan", "darkgoldenrod", "darkgray", "darkgreen", "darkgrey", "darkkhaki",
