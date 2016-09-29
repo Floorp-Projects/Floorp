@@ -467,7 +467,7 @@ CssRuleView.prototype = {
   _onAddRule: function () {
     let elementStyle = this._elementStyle;
     let element = elementStyle.element;
-    let client = this.inspector.toolbox.target.client;
+    let client = this.inspector.target.client;
     let pseudoClasses = element.pseudoClassLocks;
 
     if (!client.traits.addNewRule) {

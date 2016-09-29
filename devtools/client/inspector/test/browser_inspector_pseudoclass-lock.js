@@ -89,9 +89,8 @@ function* testNavigate(inspector, testActor, ruleview) {
 }
 
 function* showPickerOn(selector, inspector) {
-  let highlighter = inspector.toolbox.highlighter;
   let nodeFront = yield getNodeFront(selector, inspector);
-  yield highlighter.showBoxModel(nodeFront);
+  yield inspector.highlighter.showBoxModel(nodeFront);
 }
 
 function* assertPseudoAddedToNode(inspector, testActor, ruleview) {
@@ -119,7 +118,7 @@ function* assertPseudoAddedToNode(inspector, testActor, ruleview) {
   let value = yield testActor.getHighlighterNodeTextContent(
     "box-model-infobar-pseudo-classes");
   is(value, PSEUDO, "pseudo-class in infobar selector");
-  yield inspector.toolbox.highlighter.hideBoxModel();
+  yield inspector.highlighter.hideBoxModel();
 }
 
 function* assertPseudoRemovedFromNode(testActor) {
@@ -145,5 +144,5 @@ function* assertPseudoRemovedFromView(inspector, testActor, ruleview) {
   let value = yield testActor.getHighlighterNodeTextContent(
     "box-model-infobar-pseudo-classes");
   is(value, "", "pseudo-class removed from infobar selector");
-  yield inspector.toolbox.highlighter.hideBoxModel();
+  yield inspector.highlighter.hideBoxModel();
 }
