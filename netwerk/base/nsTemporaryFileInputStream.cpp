@@ -239,3 +239,9 @@ nsTemporaryFileInputStream::Deserialize(const InputStreamParams& aParams,
   mEndPos = params.endPos();
   return true;
 }
+
+Maybe<uint64_t>
+nsTemporaryFileInputStream::ExpectedSerializedLength()
+{
+  return Nothing();
+}
