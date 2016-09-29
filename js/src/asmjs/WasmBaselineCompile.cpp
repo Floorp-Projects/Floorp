@@ -448,6 +448,7 @@ class BaseCompiler
     int32_t                     varHigh_;        // High byte offset + 1 of local area for true locals
     int32_t                     maxFramePushed_; // Max value of masm.framePushed() observed
     bool                        deadCode_;       // Flag indicating we should decode & discard the opcode
+    ValTypeVector               SigI64I64_;
     ValTypeVector               SigDD_;
     ValTypeVector               SigD_;
     ValTypeVector               SigF_;
@@ -491,6 +492,9 @@ class BaseCompiler
 
 #if defined(JS_CODEGEN_X86)
     AllocatableGeneralRegisterSet singleByteRegs_;
+#endif
+#if defined(JS_NUNBOX32)
+    RegI64 abiReturnRegI64;
 #endif
 
     // The join registers are used to carry values out of blocks.
@@ -2351,7 +2355,11 @@ class BaseCompiler
         masm.testq(rhs.reg.reg, rhs.reg.reg);
         masm.j(Assembler::Zero, wasm::JumpTarget::IntegerDivideByZero);
 #else
-        MOZ_CRASH("BaseCompiler platform hook: checkDivideByZeroI64");
+        Label nonZero;
+        masm.branchTest32(Assembler::NonZero, rhs.reg.low, rhs.reg.low, &nonZero);
+        masm.branchTest32(Assembler::Zero, rhs.reg.high, rhs.reg.high,
+                          wasm::JumpTarget::IntegerDivideByZero);
+        masm.bind(&nonZero);
 #endif
     }
 
@@ -2373,26 +2381,15 @@ class BaseCompiler
 
     void checkDivideSignedOverflowI64(RegI64 rhs, RegI64 srcDest, Label* done, bool zeroOnOverflow) {
         MOZ_ASSERT(!isCompilingAsmJS());
-#ifdef JS_CODEGEN_X64
-        Label notMin;
-        {
-            ScratchI32 scratch(*this);
-            masm.move64(Imm64(INT64_MIN), Register64(scratch));
-            masm.cmpq(scratch, srcDest.reg.reg);
-        }
-        masm.j(Assembler::NotEqual, &notMin);
-        masm.cmpq(Imm32(-1), rhs.reg.reg);
-        if (zeroOnOverflow) {
-            masm.j(Assembler::NotEqual, &notMin);
-            masm.xorq(srcDest.reg.reg, srcDest.reg.reg);
-            masm.jump(done);
-        } else {
-            masm.j(Assembler::Equal, wasm::JumpTarget::IntegerOverflow);
-        }
-        masm.bind(&notMin);
-#else
-        MOZ_CRASH("BaseCompiler platform hook: checkDivideSignedOverflowI64");
-#endif
+        Label notmin;
+        masm.branch64(Assembler::NotEqual, srcDest.reg, Imm64(INT64_MIN), &notmin);
+        masm.branch64(Assembler::NotEqual, rhs.reg, Imm64(-1), &notmin);
+        if (zeroOnOverflow)
+            masm.xor64(srcDest.reg, srcDest.reg);
+        else
+            masm.jump(wasm::JumpTarget::IntegerOverflow);
+        masm.jump(done);
+        masm.bind(&notmin);
     }
 
     void quotientI64(RegI64 rhs, RegI64 srcDest, IsUnsigned isUnsigned) {
@@ -3173,6 +3170,10 @@ class BaseCompiler
     bool emitUnaryMathBuiltinCall(uint32_t callOffset, SymbolicAddress callee, ValType operandType);
     MOZ_MUST_USE
     bool emitBinaryMathBuiltinCall(uint32_t callOffset, SymbolicAddress callee, ValType operandType);
+#ifdef JS_NUNBOX32
+    void emitDivOrModI64BuiltinCall(SymbolicAddress callee, RegI64 rhs, RegI64 srcDest,
+                                    RegI32 temp);
+#endif
     MOZ_MUST_USE
     bool emitGetLocal();
     MOZ_MUST_USE
@@ -3500,41 +3501,71 @@ BaseCompiler::emitQuotientU32()
 void
 BaseCompiler::emitQuotientI64()
 {
+#ifdef JS_PUNBOX64
     RegI64 r0, r1;
-#if defined(JS_CODEGEN_X64)
+# ifdef JS_CODEGEN_X64
     // srcDest must be rax, and rdx will be clobbered.
     need2xI64(specific_rax, specific_rdx);
     r1 = popI64();
     r0 = popI64ToSpecific(specific_rax);
     freeI64(specific_rdx);
-#elif defined(JS_CODEGEN_X86)
-    MOZ_CRASH("BaseCompiler platform hook: emitQuotientI64");
-#else
+# else
     pop2xI64(&r0, &r1);
-#endif
+# endif
     quotientI64(r1, r0, IsUnsigned(false));
     freeI64(r1);
     pushI64(r0);
+#else
+# if defined(JS_CODEGEN_X86)
+    RegI64 r0, r1;
+    RegI32 temp;
+    needI64(abiReturnRegI64);
+    temp = needI32();
+    r1 = popI64();
+    r0 = popI64ToSpecific(abiReturnRegI64);
+    emitDivOrModI64BuiltinCall(SymbolicAddress::DivI64, r1, r0, temp);
+    freeI32(temp);
+    freeI64(r1);
+    pushI64(r0);
+# else
+    MOZ_CRASH("BaseCompiler platform hook: emitQuotientI64");
+# endif
+#endif
 }
 
 void
 BaseCompiler::emitQuotientU64()
 {
+#ifdef JS_PUNBOX64
     RegI64 r0, r1;
-#if defined(JS_CODEGEN_X64)
+ #ifdef JS_CODEGEN_X64
     // srcDest must be rax, and rdx will be clobbered.
     need2xI64(specific_rax, specific_rdx);
     r1 = popI64();
     r0 = popI64ToSpecific(specific_rax);
     freeI64(specific_rdx);
-#elif defined(JS_CODEGEN_X86)
-    MOZ_CRASH("BaseCompiler platform hook: emitQuotientU64");
-#else
+ #else
     pop2xI64(&r0, &r1);
-#endif
+ #endif
     quotientI64(r1, r0, IsUnsigned(true));
     freeI64(r1);
     pushI64(r0);
+#else
+ #if defined(JS_CODEGEN_X86)
+    RegI64 r0, r1;
+    RegI32 temp;
+    needI64(abiReturnRegI64);
+    temp = needI32();
+    r1 = popI64();
+    r0 = popI64ToSpecific(abiReturnRegI64);
+    emitDivOrModI64BuiltinCall(SymbolicAddress::UDivI64, r1, r0, temp);
+    freeI32(temp);
+    freeI64(r1);
+    pushI64(r0);
+ #else
+    MOZ_CRASH("BaseCompiler platform hook: emitQuotientU64");
+ #endif
+#endif
 }
 
 void
@@ -3589,39 +3620,69 @@ BaseCompiler::emitRemainderU32()
 void
 BaseCompiler::emitRemainderI64()
 {
+#ifdef JS_PUNBOX64
     RegI64 r0, r1;
-#if defined(JS_CODEGEN_X64)
+ #ifdef JS_CODEGEN_X64
     need2xI64(specific_rax, specific_rdx);
     r1 = popI64();
     r0 = popI64ToSpecific(specific_rax);
     freeI64(specific_rdx);
-#elif defined(JS_CODEGEN_X86)
-    MOZ_CRASH("BaseCompiler platform hook: emitRemainderI64");
-#else
+ #else
     pop2xI64(&r0, &r1);
-#endif
+ #endif
     remainderI64(r1, r0, IsUnsigned(false));
     freeI64(r1);
     pushI64(r0);
+#else
+ #if defined(JS_CODEGEN_X86)
+    RegI64 r0, r1;
+    RegI32 temp;
+    needI64(abiReturnRegI64);
+    temp = needI32();
+    r1 = popI64();
+    r0 = popI64ToSpecific(abiReturnRegI64);
+    emitDivOrModI64BuiltinCall(SymbolicAddress::ModI64, r1, r0, temp);
+    freeI32(temp);
+    freeI64(r1);
+    pushI64(r0);
+ #else
+    MOZ_CRASH("BaseCompiler platform hook: emitRemainderI64");
+ #endif
+#endif
 }
 
 void
 BaseCompiler::emitRemainderU64()
 {
+#ifdef JS_PUNBOX64
     RegI64 r0, r1;
-#if defined(JS_CODEGEN_X64)
+ #ifdef JS_CODEGEN_X64
     need2xI64(specific_rax, specific_rdx);
     r1 = popI64();
     r0 = popI64ToSpecific(specific_rax);
     freeI64(specific_rdx);
-#elif defined(JS_CODEGEN_X86)
-    MOZ_CRASH("BaseCompiler platform hook: emitRemainderU64");
-#else
+ #else
     pop2xI64(&r0, &r1);
-#endif
+ #endif
     remainderI64(r1, r0, IsUnsigned(true));
     freeI64(r1);
     pushI64(r0);
+#else
+ #if defined(JS_CODEGEN_X86)
+    RegI64 r0, r1;
+    RegI32 temp;
+    needI64(abiReturnRegI64);
+    temp = needI32();
+    r1 = popI64();
+    r0 = popI64ToSpecific(abiReturnRegI64);
+    emitDivOrModI64BuiltinCall(SymbolicAddress::UModI64, r1, r0, temp);
+    freeI32(temp);
+    freeI64(r1);
+    pushI64(r0);
+ #else
+    MOZ_CRASH("BaseCompiler platform hook: emitRemainderU64");
+ #endif
+#endif
 }
 
 void
@@ -5286,6 +5347,35 @@ BaseCompiler::emitBinaryMathBuiltinCall(uint32_t callOffset, SymbolicAddress cal
     return true;
 }
 
+#ifdef JS_NUNBOX32
+void
+BaseCompiler::emitDivOrModI64BuiltinCall(SymbolicAddress callee, RegI64 rhs, RegI64 srcDest,
+                                         RegI32 temp)
+{
+    Label done;
+
+    sync();
+
+    checkDivideByZeroI64(rhs, srcDest, &done);
+
+    if (callee == SymbolicAddress::DivI64)
+        checkDivideSignedOverflowI64(rhs, srcDest, &done, ZeroOnOverflow(false));
+    else if (callee == SymbolicAddress::ModI64)
+        checkDivideSignedOverflowI64(rhs, srcDest, &done, ZeroOnOverflow(true));
+
+    masm.setupUnalignedABICall(temp.reg);
+    masm.passABIArg(srcDest.reg.high);
+    masm.passABIArg(srcDest.reg.low);
+    masm.passABIArg(rhs.reg.high);
+    masm.passABIArg(rhs.reg.low);
+    masm.callWithABI(callee);
+
+    MOZ_ASSERT(abiReturnRegI64.reg == srcDest.reg);
+
+    masm.bind(&done);
+}
+#endif
+
 bool
 BaseCompiler::emitGetLocal()
 {
@@ -6752,6 +6842,7 @@ BaseCompiler::BaseCompiler(const ModuleGeneratorData& mg,
 #endif
 #ifdef JS_CODEGEN_X86
       singleByteRegs_(GeneralRegisterSet(Registers::SingleByteRegs)),
+      abiReturnRegI64(RegI64(Register64(edx, eax))),
 #endif
       joinRegI32(RegI32(ReturnReg)),
       joinRegI64(RegI64(ReturnReg64)),
@@ -6796,6 +6887,8 @@ BaseCompiler::init()
     if (!SigF_.append(ValType::F32))
         return false;
     if (!SigI_.append(ValType::I32))
+        return false;
+    if (!SigI64I64_.append(ValType::I64) || !SigI64I64_.append(ValType::I64))
         return false;
 
     const ValTypeVector& args = func_.sig().args();
