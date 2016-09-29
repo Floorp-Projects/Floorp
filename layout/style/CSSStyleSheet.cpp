@@ -1625,17 +1625,20 @@ CSSStyleSheet::DidDirty()
   ClearRuleCascades();
 }
 
-nsresult
-CSSStyleSheet::SubjectSubsumesInnerPrincipal()
+void
+CSSStyleSheet::SubjectSubsumesInnerPrincipal(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                                             ErrorResult& aRv)
 {
-  nsCOMPtr<nsIPrincipal> subjectPrincipal = nsContentUtils::SubjectPrincipal();
-  if (subjectPrincipal->Subsumes(mInner->mPrincipal)) {
-    return NS_OK;
+  MOZ_ASSERT(aSubjectPrincipal.isSome());
+
+  if (aSubjectPrincipal.value()->Subsumes(mInner->mPrincipal)) {
+    return;
   }
 
   // Allow access only if CORS mode is not NONE
   if (GetCORSMode() == CORS_NONE) {
-    return NS_ERROR_DOM_SECURITY_ERR;
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
   }
 
   // Now make sure we set the principal of our inner to the subjectPrincipal.
@@ -1650,16 +1653,15 @@ CSSStyleSheet::SubjectSubsumesInnerPrincipal()
   // if we're not complete yet.  Luckily, all the callers of this method throw
   // anyway if not complete, so we can just do that here too.
   if (!mInner->mComplete) {
-    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    return;
   }
 
   WillDirty();
 
-  mInner->mPrincipal = subjectPrincipal;
+  mInner->mPrincipal = aSubjectPrincipal.value();
 
   DidDirty();
-
-  return NS_OK;
 }
 
 nsresult
@@ -1779,13 +1781,15 @@ NS_IMETHODIMP
 CSSStyleSheet::GetCssRules(nsIDOMCSSRuleList** aCssRules)
 {
   ErrorResult rv;
-  nsCOMPtr<nsIDOMCSSRuleList> rules = GetCssRules(rv);
+  nsCOMPtr<nsIDOMCSSRuleList> rules =
+    GetCssRules(Some(nsContentUtils::SubjectPrincipal()), rv);
   rules.forget(aCssRules);
   return rv.StealNSResult();
 }
 
 CSSRuleList*
-CSSStyleSheet::GetCssRules(ErrorResult& aRv)
+CSSStyleSheet::GetCssRules(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                           ErrorResult& aRv)
 {
   // No doing this on incomplete sheets!
   if (!mInner->mComplete) {
@@ -1795,9 +1799,8 @@ CSSStyleSheet::GetCssRules(ErrorResult& aRv)
   
   //-- Security check: Only scripts whose principal subsumes that of the
   //   style sheet can access rule collections.
-  nsresult rv = SubjectSubsumesInnerPrincipal();
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
+  SubjectSubsumesInnerPrincipal(aSubjectPrincipal, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
@@ -1814,12 +1817,25 @@ CSSStyleSheet::InsertRule(const nsAString& aRule,
                           uint32_t aIndex,
                           uint32_t* aReturn)
 {
+  ErrorResult rv;
+  *aReturn =
+    InsertRule(aRule, aIndex, Some(nsContentUtils::SubjectPrincipal()), rv);
+  return rv.StealNSResult();
+}
+
+uint32_t
+CSSStyleSheet::InsertRule(const nsAString& aRule, uint32_t aIndex,
+                          const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                          ErrorResult& aRv)
+{
   //-- Security check: Only scripts whose principal subsumes that of the
   //   style sheet can modify rule collections.
-  nsresult rv = SubjectSubsumesInnerPrincipal();
-  NS_ENSURE_SUCCESS(rv, rv);
+  SubjectSubsumesInnerPrincipal(aSubjectPrincipal, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return 0;
+  }
 
-  return InsertRuleInternal(aRule, aIndex, aReturn);
+  return InsertRuleInternal(aRule, aIndex, aRv);
 }
 
 static bool
@@ -1833,20 +1849,23 @@ RuleHasPendingChildSheet(css::Rule *cssRule)
   return cssSheet != nullptr && !cssSheet->IsComplete();
 }
 
-nsresult
+uint32_t
 CSSStyleSheet::InsertRuleInternal(const nsAString& aRule,
                                   uint32_t aIndex,
-                                  uint32_t* aReturn)
+                                  ErrorResult& aRv)
 {
   // No doing this if the sheet is not complete!
   if (!mInner->mComplete) {
-    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    return 0;
   }
 
   WillDirty();
   
-  if (aIndex > uint32_t(mInner->mOrderedRules.Count()))
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  if (aIndex > uint32_t(mInner->mOrderedRules.Count())) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return 0;
+  }
   
   NS_ASSERTION(uint32_t(mInner->mOrderedRules.Count()) <= INT32_MAX,
                "Too many style rules!");
@@ -1864,10 +1883,11 @@ CSSStyleSheet::InsertRuleInternal(const nsAString& aRule,
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, true);
 
   RefPtr<css::Rule> rule;
-  nsresult result = css.ParseRule(aRule, mInner->mSheetURI, mInner->mBaseURI,
-                                  mInner->mPrincipal, getter_AddRefs(rule));
-  if (NS_FAILED(result))
-    return result;
+  aRv = css.ParseRule(aRule, mInner->mSheetURI, mInner->mBaseURI,
+                      mInner->mPrincipal, getter_AddRefs(rule));
+  if (NS_WARN_IF(aRv.Failed())) {
+    return 0;
+  }
 
   // Hierarchy checking.
   int32_t newType = rule->GetType();
@@ -1877,27 +1897,31 @@ CSSStyleSheet::InsertRuleInternal(const nsAString& aRule,
   if (nextRule) {
     int32_t nextType = nextRule->GetType();
     if (nextType == css::Rule::CHARSET_RULE) {
-      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+      aRv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+      return 0;
     }
 
     if (nextType == css::Rule::IMPORT_RULE &&
         newType != css::Rule::CHARSET_RULE &&
         newType != css::Rule::IMPORT_RULE) {
-      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+      aRv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+      return 0;
     }
 
     if (nextType == css::Rule::NAMESPACE_RULE &&
         newType != css::Rule::CHARSET_RULE &&
         newType != css::Rule::IMPORT_RULE &&
         newType != css::Rule::NAMESPACE_RULE) {
-      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+      aRv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+      return 0;
     }
   }
 
   if (aIndex != 0) {
     // no inserting charset at nonzero position
     if (newType == css::Rule::CHARSET_RULE) {
-      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+      aRv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+      return 0;
     }
 
     css::Rule* prevRule = mInner->mOrderedRules.SafeObjectAt(aIndex - 1);
@@ -1906,19 +1930,24 @@ CSSStyleSheet::InsertRuleInternal(const nsAString& aRule,
     if (newType == css::Rule::IMPORT_RULE &&
         prevType != css::Rule::CHARSET_RULE &&
         prevType != css::Rule::IMPORT_RULE) {
-      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+      aRv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+      return 0;
     }
 
     if (newType == css::Rule::NAMESPACE_RULE &&
         prevType != css::Rule::CHARSET_RULE &&
         prevType != css::Rule::IMPORT_RULE &&
         prevType != css::Rule::NAMESPACE_RULE) {
-      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+      aRv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+      return 0;
     }
   }
 
-  bool insertResult = mInner->mOrderedRules.InsertObjectAt(rule, aIndex);
-  NS_ENSURE_TRUE(insertResult, NS_ERROR_OUT_OF_MEMORY);
+  if (!mInner->mOrderedRules.InsertObjectAt(rule, aIndex)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return 0;
+  }
+
   DidDirty();
 
   rule->SetStyleSheet(this);
@@ -1928,8 +1957,10 @@ CSSStyleSheet::InsertRuleInternal(const nsAString& aRule,
     // XXXbz does this screw up when inserting a namespace rule before
     // another namespace rule that binds the same prefix to a different
     // namespace?
-    result = RegisterNamespaceRule(rule);
-    NS_ENSURE_SUCCESS(result, result);
+    aRv = RegisterNamespaceRule(rule);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return 0;
+    }
   }
 
   // We don't notify immediately for @import rules, but rather when
@@ -1939,30 +1970,44 @@ CSSStyleSheet::InsertRuleInternal(const nsAString& aRule,
     mDocument->StyleRuleAdded(this, rule);
   }
 
-  *aReturn = aIndex;
-  return NS_OK;
+  return aIndex;
 }
 
 NS_IMETHODIMP    
 CSSStyleSheet::DeleteRule(uint32_t aIndex)
 {
+  ErrorResult rv;
+  DeleteRule(aIndex, Some(nsContentUtils::SubjectPrincipal()), rv);
+  return rv.StealNSResult();
+}
+
+void
+CSSStyleSheet::DeleteRule(uint32_t aIndex,
+                          const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                          ErrorResult& aRv)
+{
   // No doing this if the sheet is not complete!
   if (!mInner->mComplete) {
-    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    return;
   }
 
   //-- Security check: Only scripts whose principal subsumes that of the
   //   style sheet can modify rule collections.
-  nsresult rv = SubjectSubsumesInnerPrincipal();
-  NS_ENSURE_SUCCESS(rv, rv);
+  SubjectSubsumesInnerPrincipal(aSubjectPrincipal, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
 
   // XXX TBI: handle @rule types
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, true);
     
   WillDirty();
 
-  if (aIndex >= uint32_t(mInner->mOrderedRules.Count()))
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  if (aIndex >= uint32_t(mInner->mOrderedRules.Count())) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
+  }
 
   NS_ASSERTION(uint32_t(mInner->mOrderedRules.Count()) <= INT32_MAX,
                "Too many style rules!");
@@ -1983,8 +2028,6 @@ CSSStyleSheet::DeleteRule(uint32_t aIndex)
       mDocument->StyleRuleRemoved(this, rule);
     }
   }
-
-  return NS_OK;
 }
 
 nsresult
