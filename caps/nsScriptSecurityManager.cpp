@@ -1169,6 +1169,7 @@ nsScriptSecurityManager::
                                   nsILoadContext* aLoadContext,
                                   nsIPrincipal** aPrincipal)
 {
+  NS_ENSURE_STATE(aLoadContext);
   DocShellOriginAttributes docShellAttrs;
   bool result = aLoadContext->GetOriginAttributes(docShellAttrs);;
   NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
