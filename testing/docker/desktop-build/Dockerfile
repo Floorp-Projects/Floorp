@@ -11,6 +11,9 @@ VOLUME /home/worker/tooltool-cache
 ADD             bin /home/worker/bin
 RUN             chmod +x /home/worker/bin/*
 
+# %include testing/docker/recipes/tooltool.py
+ADD topsrcdir/testing/docker/recipes/tooltool.py /builds/tooltool.py
+
 # Add wrapper scripts for xvfb allowing tasks to easily retry starting up xvfb
 # %include testing/docker/recipes/xvfb.sh
 ADD topsrcdir/testing/docker/recipes/xvfb.sh /home/worker/scripts/xvfb.sh
@@ -31,11 +34,6 @@ ADD           oauth.txt /home/worker/
 # Note that this needs to be in the parent of the workspace directory and in
 # the directory where mozharness is run (not its --work-dir)
 ADD           buildprops.json /home/worker/
-
-# install tooltool directly from github where tooltool_wrapper.sh et al. expect
-# to find it
-RUN wget -O /builds/tooltool.py https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py
-RUN chmod +x /builds/tooltool.py
 
 # Move installation to base centos6-build image once Bug 1272629 is fixed
 # Install the screen package here to use with xvfb.
