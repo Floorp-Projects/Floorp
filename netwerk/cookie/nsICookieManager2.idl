@@ -76,23 +76,11 @@ interface nsICookieManager2 : nsICookieManager
    *
    * @param aCookie
    *        the cookie to look for
-   * @param aOriginAttributes
-   *        nsICookie2 contains an originAttributes but if nsICookie2 is
-   *        implemented in JS, we can't retrieve its originAttributes because
-   *        the getter is marked [implicit_jscontext]. This optional parameter
-   *        is a workaround.
    *
    * @return true if a cookie was found which matches the host, path, and name
    *         fields of aCookie
    */
-  [implicit_jscontext, optional_argc]
-  boolean cookieExists(in nsICookie2 aCookie,
-                       [optional] in jsval aOriginAttributes);
-
-  [notxpcom]
-  nsresult cookieExistsNative(in nsICookie2 aCookie,
-                              in NeckoOriginAttributesPtr aOriginAttributes,
-                              out boolean aExists);
+  boolean cookieExists(in nsICookie2 aCookie);
 
   /**
    * Count how many cookies exist within the base domain of 'aHost'.
