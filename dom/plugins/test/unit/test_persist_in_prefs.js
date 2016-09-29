@@ -39,6 +39,8 @@ function write_registry(version, info) {
 }
 
 function run_test() {
+  allow_all_plugins();
+
   do_check_true(gIsWindows || gIsOSX || gIsLinux);
 
   let file = get_test_plugin_no_symlink();

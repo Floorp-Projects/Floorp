@@ -353,3 +353,7 @@ user_pref("webextensions.tests", true);
 user_pref("startup.homepage_welcome_url", "about:blank");
 user_pref("startup.homepage_welcome_url.additional", "");
 user_pref("browser.usedOnWindows10.introURL", "");
+
+// For Firefox 52 only, ESR will support non-Flash plugins while release will
+// not, so we keep testing the non-Flash pathways
+user_pref("plugin.load_flash_only", false);
