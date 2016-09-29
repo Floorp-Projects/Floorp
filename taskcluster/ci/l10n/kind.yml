@@ -7,6 +7,7 @@
 implementation: taskgraph.task.transform:TransformTask
 
 transforms:
+   - taskgraph.transforms.l10n:transforms
    - taskgraph.transforms.build_attrs:transforms
    - taskgraph.transforms.job:transforms
    - taskgraph.transforms.task:transforms
@@ -58,8 +59,8 @@ jobs:
                 - single_locale/tc_linux32.py
             options:
                 - environment-config=single_locale/production.py
-                - branch-config=single_locale/try.py # NOTE: this will need to be modified in a transform..
-                - platform-config=single_locale/linux32.py  # same
+                - branch-config=single_locale/{project}.py
+                - platform-config=single_locale/linux32.py
                 - total-chunks=1
                 - this-chunk=1
             tooltool-downloads: public
@@ -81,7 +82,7 @@ jobs:
                 - single_locale/tc_linux64.py
             options:
                 - environment-config=single_locale/production.py
-                - branch-config=single_locale/try.py
+                - branch-config=single_locale/{project}.py
                 - platform-config=single_locale/linux64.py
                 - total-chunks=1
                 - this-chunk=1
@@ -104,8 +105,9 @@ jobs:
             using: mozharness
             script: mozharness/scripts/mobile_l10n.py
             actions: [clone-locales list-locales setup repack upload-repacks summary]
-            config:  # NOTE: this will need to be modified in a transform..
-                - single_locale/try_android-api-15.py single_locale/tc_android-api-15.py
+            config:
+                - single_locale/{project}_android-api-15.py
+                - single_locale/tc_android-api-15.py
             options:
                 - total-chunks=1
                 - this-chunk=1
