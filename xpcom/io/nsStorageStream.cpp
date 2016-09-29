@@ -29,6 +29,8 @@
 
 using mozilla::ipc::InputStreamParams;
 using mozilla::ipc::StringInputStreamParams;
+using mozilla::Maybe;
+using mozilla::Some;
 
 //
 // Log module for StorageStream logging...
@@ -596,6 +598,15 @@ nsStorageInputStream::Serialize(InputStreamParams& aParams, FileDescriptorArray&
   StringInputStreamParams params;
   params.data() = combined;
   aParams = params;
+}
+
+Maybe<uint64_t>
+nsStorageInputStream::ExpectedSerializedLength()
+{
+  uint64_t remaining = 0;
+  DebugOnly<nsresult> rv = Available(&remaining);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  return Some(remaining);
 }
 
 bool
