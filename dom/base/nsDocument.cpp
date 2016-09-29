@@ -252,7 +252,7 @@
 #include "mozilla/StyleSetHandleInlines.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
-
+#include "mozilla/dom/SVGSVGElement.h"
 #include "mozilla/DocLoadingTimelineMarker.h"
 
 #include "nsISpeculativeConnect.h"
@@ -3036,6 +3036,16 @@ nsDocument::GetAnimations(nsTArray<RefPtr<Animation>>& aAnimations)
   AnimationFilter filter;
   filter.mSubtree = true;
   root->GetAnimations(filter, aAnimations);
+}
+
+SVGSVGElement*
+nsIDocument::GetSVGRootElement() const
+{
+  Element* root = GetRootElement();
+  if (!root || !root->IsSVGElement(nsGkAtoms::svg)) {
+    return nullptr;
+  }
+  return static_cast<SVGSVGElement*>(root);
 }
 
 /* Return true if the document is in the focused top-level window, and is an
