@@ -12,9 +12,8 @@ from voluptuous import Schema, Required, Optional, Any
 
 from taskgraph.transforms.job import run_job_using
 from taskgraph.transforms.job.common import (
-    docker_worker_add_gecko_vcs_env_vars,
-    docker_worker_add_tc_vcs_cache,
-    docker_worker_add_public_artifacts
+    docker_worker_add_public_artifacts,
+    docker_worker_support_vcs_checkout,
 )
 
 sm_run_schema = Schema({
@@ -46,14 +45,11 @@ def docker_worker_spidermonkey(config, job, taskdesc, schema=sm_run_schema):
             'mount-point': "/home/worker/workspace",
         })
 
-    docker_worker_add_tc_vcs_cache(config, job, taskdesc)
     docker_worker_add_public_artifacts(config, job, taskdesc)
-    docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc)
 
     env = worker['env']
     env.update({
         'MOZHARNESS_DISABLE': 'true',
-        'TOOLS_DISABLE': 'true',
         'SPIDERMONKEY_VARIANT': run['spidermonkey-variant'],
         'MOZ_BUILD_DATE': time.strftime("%Y%m%d%H%M%S", time.gmtime(config.params['pushdate'])),
         'MOZ_SCM_LEVEL': config.params['level'],
@@ -70,14 +66,19 @@ def docker_worker_spidermonkey(config, job, taskdesc, schema=sm_run_schema):
     if run.get('tooltool-manifest'):
         env['TOOLTOOL_MANIFEST'] = run['tooltool-manifest']
 
+    docker_worker_support_vcs_checkout(config, job, taskdesc)
+
     script = "build-sm.sh"
     if run['using'] == 'spidermonkey-package':
         script = "build-sm-package.sh"
 
     worker['command'] = [
-        "/bin/bash",
-        "-c",
-        "cd /home/worker/ "
-        "&& ./bin/checkout-sources.sh "
-        "&& ./workspace/build/src/taskcluster/scripts/builder/" + script
+        '/home/worker/bin/run-task',
+        '--chown-recursive', '/home/worker/workspace',
+        '--chown-recursive', '/home/worker/tooltool-cache',
+        '--vcs-checkout', '/home/worker/workspace/build/src',
+        '--',
+        '/bin/bash',
+        '-c',
+        'cd /home/worker && workspace/build/src/taskcluster/scripts/builder/%s' % script
     ]
