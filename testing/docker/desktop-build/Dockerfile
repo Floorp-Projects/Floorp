@@ -37,6 +37,9 @@ RUN bash /setup/system-setup.sh
 # %include testing/docker/recipes/xvfb.sh
 ADD topsrcdir/testing/docker/recipes/xvfb.sh /home/worker/scripts/xvfb.sh
 
+# %include testing/docker/recipes/run-task
+ADD topsrcdir/testing/docker/recipes/run-task /home/worker/bin/run-task
+
 # Add configuration
 COPY            dot-config                    /home/worker/.config
 
