@@ -2075,12 +2075,12 @@ class CloneBufferObject : public NativeObject {
 
     static bool
     setCloneBuffer_impl(JSContext* cx, const CallArgs& args) {
-        if (args.length() != 1 || !args[0].isString()) {
-            JS_ReportErrorASCII(cx,
-                                "the first argument argument must be maxBytes, "
-                                "maxMallocBytes, gcStackpoolLifespan, gcBytes or "
-                                "gcNumber");
+        if (args.length() != 1) {
             JS_ReportErrorASCII(cx, "clonebuffer setter requires a single string argument");
+            return false;
+        }
+        if (!args[0].isString()) {
+            JS_ReportErrorASCII(cx, "clonebuffer value must be a string");
             return false;
         }
 
