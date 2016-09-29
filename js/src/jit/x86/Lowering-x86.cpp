@@ -638,7 +638,10 @@ LIRGeneratorX86::visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins)
     MOZ_ASSERT(opd->type() == MIRType::Int64);
     MOZ_ASSERT(IsFloatingPointType(ins->type()));
 
-    define(new(alloc()) LInt64ToFloatingPoint(useInt64Register(opd)), ins);
+    LDefinition maybeTemp =
+        (ins->isUnsigned() && AssemblerX86Shared::HasSSE3()) ? temp() : LDefinition::BogusTemp();
+
+    define(new(alloc()) LInt64ToFloatingPoint(useInt64Register(opd), maybeTemp), ins);
 }
 
 void

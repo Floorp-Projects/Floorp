@@ -85,25 +85,34 @@ MacroAssemblerX64::loadConstantSimd128Float(const SimdConstant&v, FloatRegister 
 }
 
 void
-MacroAssemblerX64::convertInt64ToDouble(Register input, FloatRegister output)
+MacroAssemblerX64::convertInt64ToDouble(Register64 input, FloatRegister output)
 {
     // Zero the output register to break dependencies, see convertInt32ToDouble.
     zeroDouble(output);
 
-    vcvtsq2sd(input, output, output);
+    vcvtsq2sd(input.reg, output, output);
 }
 
 void
-MacroAssemblerX64::convertInt64ToFloat32(Register input, FloatRegister output)
+MacroAssemblerX64::convertInt64ToFloat32(Register64 input, FloatRegister output)
 {
     // Zero the output register to break dependencies, see convertInt32ToDouble.
     zeroFloat32(output);
 
-    vcvtsq2ss(input, output, output);
+    vcvtsq2ss(input.reg, output, output);
 }
-void
-MacroAssemblerX64::convertUInt64ToDouble(Register input, FloatRegister output)
+
+bool
+MacroAssemblerX64::convertUInt64ToDoubleNeedsTemp()
 {
+    return false;
+}
+
+void
+MacroAssemblerX64::convertUInt64ToDouble(Register64 input, FloatRegister output, Register temp)
+{
+    MOZ_ASSERT(temp == Register::Invalid());
+
     // Zero the output register to break dependencies, see convertInt32ToDouble.
     zeroDouble(output);
 
@@ -112,15 +121,15 @@ MacroAssemblerX64::convertUInt64ToDouble(Register input, FloatRegister output)
     Label done;
     Label isSigned;
 
-    testq(input, input);
+    testq(input.reg, input.reg);
     j(Assembler::Signed, &isSigned);
-    vcvtsq2sd(input, output, output);
+    vcvtsq2sd(input.reg, output, output);
     jump(&done);
 
     bind(&isSigned);
 
     ScratchRegisterScope scratch(asMasm());
-    mov(input, scratch);
+    mov(input.reg, scratch);
     shrq(Imm32(1), scratch);
     vcvtsq2sd(scratch, output, output);
     vaddsd(output, output, output);
@@ -129,8 +138,10 @@ MacroAssemblerX64::convertUInt64ToDouble(Register input, FloatRegister output)
 }
 
 void
-MacroAssemblerX64::convertUInt64ToFloat32(Register input, FloatRegister output)
+MacroAssemblerX64::convertUInt64ToFloat32(Register64 input, FloatRegister output, Register temp)
 {
+    MOZ_ASSERT(temp == Register::Invalid());
+
     // Zero the output register to break dependencies, see convertInt32ToDouble.
     zeroFloat32(output);
 
@@ -139,15 +150,15 @@ MacroAssemblerX64::convertUInt64ToFloat32(Register input, FloatRegister output)
     Label done;
     Label isSigned;
 
-    testq(input, input);
+    testq(input.reg, input.reg);
     j(Assembler::Signed, &isSigned);
-    vcvtsq2ss(input, output, output);
+    vcvtsq2ss(input.reg, output, output);
     jump(&done);
 
     bind(&isSigned);
 
     ScratchRegisterScope scratch(asMasm());
-    mov(input, scratch);
+    mov(input.reg, scratch);
     shrq(Imm32(1), scratch);
     vcvtsq2ss(scratch, output, output);
     vaddss(output, output, output);

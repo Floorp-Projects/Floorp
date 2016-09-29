@@ -834,7 +834,11 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     // Note: this function clobbers the source register.
     inline void convertUInt32ToFloat32(Register src, FloatRegister dest);
 
-    void convertUInt64ToDouble(Register64 src, Register temp, FloatRegister dest);
+    void convertUInt64ToFloat32(Register64 src, FloatRegister dest, Register temp);
+    void convertInt64ToFloat32(Register64 src, FloatRegister dest);
+    static bool convertUInt64ToDoubleNeedsTemp();
+    void convertUInt64ToDouble(Register64 src, FloatRegister dest, Register temp);
+    void convertInt64ToDouble(Register64 src, FloatRegister dest);
 
     void wasmTruncateDoubleToInt64(FloatRegister input, Register64 output, Label* oolEntry,
                                    Label* oolRejoin, FloatRegister tempDouble);
