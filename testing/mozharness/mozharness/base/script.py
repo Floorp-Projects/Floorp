@@ -1667,6 +1667,10 @@ class ScriptMixin(PlatformMixin):
             self.log('No extraction method found for: %s' % filename,
                      level=error_level, exit_code=fatal_exit_code)
 
+    def is_taskcluster(self):
+        """Returns boolean indicating if we're running in TaskCluster."""
+        return 'TASKCLUSTER_INSTANCE_TYPE' in os.environ
+
 
 def PreScriptRun(func):
     """Decorator for methods that will be called before script execution.
