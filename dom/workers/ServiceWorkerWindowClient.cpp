@@ -336,6 +336,7 @@ public:
     : mWindowId(aWindowId)
     , mUrl(aUrl)
     , mPromiseProxy(aPromiseProxy)
+    , mWorkerPrivate(nullptr)
   {
     MOZ_ASSERT(aPromiseProxy);
     MOZ_ASSERT(aPromiseProxy->GetWorkerPrivate());
