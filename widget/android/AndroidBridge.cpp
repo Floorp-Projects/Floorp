@@ -1206,7 +1206,9 @@ nsAndroidBridge::AddObservers()
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
     obs->AddObserver(this, "xpcom-shutdown", false);
-    obs->AddObserver(this, "media-playback", false);
+    if (jni::IsFennec()) { // No AudioFocusAgent in non-Fennec environment.
+        obs->AddObserver(this, "media-playback", false);
+    }
   }
 }
 
@@ -1216,7 +1218,9 @@ nsAndroidBridge::RemoveObservers()
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
     obs->RemoveObserver(this, "xpcom-shutdown");
-    obs->RemoveObserver(this, "media-playback");
+    if (jni::IsFennec()) { // No AudioFocusAgent in non-Fennec environment.
+        obs->RemoveObserver(this, "media-playback");
+    }
   }
 }
 
