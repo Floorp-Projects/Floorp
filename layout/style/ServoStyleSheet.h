@@ -20,7 +20,6 @@ namespace mozilla {
  * CSS style sheet object that is a wrapper for a Servo Stylesheet.
  */
 class ServoStyleSheet : public StyleSheet
-                      , public StyleSheetInfo
 {
 public:
   ServoStyleSheet(css::SheetParsingMode aParsingMode,
@@ -58,6 +57,9 @@ private:
   void DropSheet();
 
   RefPtr<RawServoStyleSheet> mSheet;
+  StyleSheetInfo mSheetInfo;
+
+  friend class StyleSheet;
 };
 
 } // namespace mozilla

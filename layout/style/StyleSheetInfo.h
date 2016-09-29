@@ -22,7 +22,7 @@ class nsIPrincipal;
 namespace mozilla {
 
 /**
- * Superclass for data common to CSSStyleSheetInner and ServoStyleSheet.
+ * Struct for data common to CSSStyleSheetInner and ServoStyleSheet.
  */
 class StyleSheetInfo
 {
