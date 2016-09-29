@@ -876,14 +876,14 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void convertUInt64ToDouble(Register input, FloatRegister output);
     void convertUInt64ToFloat32(Register input, FloatRegister output);
 
-    void wasmTruncateDoubleToInt64(FloatRegister input, Register output, Label* oolEntry,
+    void wasmTruncateDoubleToInt64(FloatRegister input, Register64 output, Label* oolEntry,
                                    Label* oolRejoin, FloatRegister tempDouble);
-    void wasmTruncateDoubleToUInt64(FloatRegister input, Register output, Label* oolEntry,
+    void wasmTruncateDoubleToUInt64(FloatRegister input, Register64 output, Label* oolEntry,
                                     Label* oolRejoin, FloatRegister tempDouble);
 
-    void wasmTruncateFloat32ToInt64(FloatRegister input, Register output, Label* oolEntry,
+    void wasmTruncateFloat32ToInt64(FloatRegister input, Register64 output, Label* oolEntry,
                                     Label* oolRejoin, FloatRegister tempDouble);
-    void wasmTruncateFloat32ToUInt64(FloatRegister input, Register output, Label* oolEntry,
+    void wasmTruncateFloat32ToUInt64(FloatRegister input, Register64 output, Label* oolEntry,
                                      Label* oolRejoin, FloatRegister tempDouble);
 
     void loadWasmGlobalPtr(uint32_t globalDataOffset, Register dest) {

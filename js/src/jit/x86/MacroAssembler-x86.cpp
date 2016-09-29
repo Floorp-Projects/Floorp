@@ -805,3 +805,124 @@ MacroAssembler::wasmTruncateFloat32ToUInt32(FloatRegister input, Register output
 }
 
 //}}} check_macroassembler_style
+
+void
+MacroAssemblerX86::wasmTruncateDoubleToInt64(FloatRegister input, Register64 output, Label* oolEntry,
+                                             Label* oolRejoin, FloatRegister tempReg)
+{
+    Label fail, convert;
+    Register temp = output.high;
+
+    // Make sure input fits in (u)int64.
+    asMasm().reserveStack(2 * sizeof(int32_t));
+    asMasm().storeDouble(input, Operand(esp, 0));
+    asMasm().branchDoubleNotInInt64Range(Address(esp, 0), temp, &fail);
+    jump(&convert);
+
+    // Handle failure in ool.
+    bind(&fail);
+    asMasm().freeStack(2 * sizeof(int32_t));
+    jump(oolEntry);
+    bind(oolRejoin);
+    asMasm().reserveStack(2 * sizeof(int32_t));
+    asMasm().storeDouble(input, Operand(esp, 0));
+
+    // Convert the double/float to int64.
+    bind(&convert);
+    asMasm().truncateDoubleToInt64(Address(esp, 0), Address(esp, 0), temp);
+
+    // Load value into int64 register.
+    load64(Address(esp, 0), output);
+    asMasm().freeStack(2 * sizeof(int32_t));
+}
+
+void
+MacroAssemblerX86::wasmTruncateFloat32ToInt64(FloatRegister input, Register64 output, Label* oolEntry,
+                                              Label* oolRejoin, FloatRegister tempReg)
+{
+    Label fail, convert;
+    Register temp = output.high;
+
+    // Make sure input fits in (u)int64.
+    asMasm().reserveStack(2 * sizeof(int32_t));
+    asMasm().storeFloat32(input, Operand(esp, 0));
+    asMasm().branchFloat32NotInInt64Range(Address(esp, 0), temp, &fail);
+    jump(&convert);
+
+    // Handle failure in ool.
+    bind(&fail);
+    asMasm().freeStack(2 * sizeof(int32_t));
+    jump(oolEntry);
+    bind(oolRejoin);
+    asMasm().reserveStack(2 * sizeof(int32_t));
+    asMasm().storeFloat32(input, Operand(esp, 0));
+
+    // Convert the double/float to int64.
+    bind(&convert);
+    asMasm().truncateFloat32ToInt64(Address(esp, 0), Address(esp, 0), temp);
+
+    // Load value into int64 register.
+    load64(Address(esp, 0), output);
+    asMasm().freeStack(2 * sizeof(int32_t));
+}
+
+void
+MacroAssemblerX86::wasmTruncateDoubleToUInt64(FloatRegister input, Register64 output, Label* oolEntry,
+                                              Label* oolRejoin, FloatRegister tempReg)
+{
+    Label fail, convert;
+    Register temp = output.high;
+
+    // Make sure input fits in (u)int64.
+    asMasm().reserveStack(2 * sizeof(int32_t));
+    asMasm().storeDouble(input, Operand(esp, 0));
+    asMasm().branchDoubleNotInUInt64Range(Address(esp, 0), temp, &fail);
+    jump(&convert);
+
+    // Handle failure in ool.
+    bind(&fail);
+    asMasm().freeStack(2 * sizeof(int32_t));
+    jump(oolEntry);
+    bind(oolRejoin);
+    asMasm().reserveStack(2 * sizeof(int32_t));
+    asMasm().storeDouble(input, Operand(esp, 0));
+
+    // Convert the double/float to int64.
+    bind(&convert);
+    asMasm().truncateDoubleToUInt64(Address(esp, 0), Address(esp, 0), temp, tempReg);
+
+    // Load value into int64 register.
+    load64(Address(esp, 0), output);
+    asMasm().freeStack(2 * sizeof(int32_t));
+}
+
+void
+MacroAssemblerX86::wasmTruncateFloat32ToUInt64(FloatRegister input, Register64 output, Label* oolEntry,
+                                               Label* oolRejoin, FloatRegister tempReg)
+{
+    Label fail, convert;
+    Register temp = output.high;
+
+    // Make sure input fits in (u)int64.
+    asMasm().reserveStack(2 * sizeof(int32_t));
+    asMasm().storeFloat32(input, Operand(esp, 0));
+    asMasm().branchFloat32NotInUInt64Range(Address(esp, 0), temp, &fail);
+    jump(&convert);
+
+    // Handle failure in ool.
+    bind(&fail);
+    asMasm().freeStack(2 * sizeof(int32_t));
+    jump(oolEntry);
+    bind(oolRejoin);
+    asMasm().reserveStack(2 * sizeof(int32_t));
+    asMasm().storeFloat32(input, Operand(esp, 0));
+
+    // Convert the double/float to int64.
+    bind(&convert);
+    asMasm().truncateFloat32ToUInt64(Address(esp, 0), Address(esp, 0), temp, tempReg);
+
+    // Load value into int64 register.
+    load64(Address(esp, 0), output);
+    asMasm().freeStack(2 * sizeof(int32_t));
+}
+

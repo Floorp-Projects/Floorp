@@ -2724,19 +2724,18 @@ class BaseCompiler
 
     MOZ_MUST_USE
     bool truncateF32ToI64(RegF32 src, RegI64 dest, bool isUnsigned, RegF64 temp) {
-#ifdef JS_CODEGEN_X64
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
         OutOfLineCode* ool =
             addOutOfLineCode(new (alloc_) OutOfLineTruncateCheckF32OrF64ToI64(AnyReg(src),
                                                                               isUnsigned));
         if (!ool)
             return false;
         if (isUnsigned)
-            masm.wasmTruncateFloat32ToUInt64(src.reg, dest.reg.reg, ool->entry(),
+            masm.wasmTruncateFloat32ToUInt64(src.reg, dest.reg, ool->entry(),
                                              ool->rejoin(), temp.reg);
         else
-            masm.wasmTruncateFloat32ToInt64(src.reg, dest.reg.reg, ool->entry(),
+            masm.wasmTruncateFloat32ToInt64(src.reg, dest.reg, ool->entry(),
                                             ool->rejoin(), temp.reg);
-        masm.bind(ool->rejoin());
 #else
         MOZ_CRASH("BaseCompiler platform hook: truncateF32ToI64");
 #endif
@@ -2745,19 +2744,18 @@ class BaseCompiler
 
     MOZ_MUST_USE
     bool truncateF64ToI64(RegF64 src, RegI64 dest, bool isUnsigned, RegF64 temp) {
-#ifdef JS_CODEGEN_X64
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
         OutOfLineCode* ool =
             addOutOfLineCode(new (alloc_) OutOfLineTruncateCheckF32OrF64ToI64(AnyReg(src),
                                                                               isUnsigned));
         if (!ool)
             return false;
         if (isUnsigned)
-            masm.wasmTruncateDoubleToUInt64(src.reg, dest.reg.reg, ool->entry(),
+            masm.wasmTruncateDoubleToUInt64(src.reg, dest.reg, ool->entry(),
                                             ool->rejoin(), temp.reg);
         else
-            masm.wasmTruncateDoubleToInt64(src.reg, dest.reg.reg, ool->entry(),
-                                            ool->rejoin(), temp.reg);
-        masm.bind(ool->rejoin());
+            masm.wasmTruncateDoubleToInt64(src.reg, dest.reg, ool->entry(),
+                                           ool->rejoin(), temp.reg);
 #else
         MOZ_CRASH("BaseCompiler platform hook: truncateF64ToI64");
 #endif
