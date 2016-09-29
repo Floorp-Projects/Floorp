@@ -5131,6 +5131,9 @@ nsLayoutUtils::MinSizeContributionForAxis(PhysicalAxis        aAxis,
                 aWM.IsVertical() ? "vertical" : "horizontal");
 #endif
 
+  // Note: this method is only meant for grid/flex items which always
+  // include percentages in their intrinsic size.
+  aFlags |= nsLayoutUtils::ADD_PERCENTS;
   const nsStylePosition* const stylePos = aFrame->StylePosition();
   const nsStyleCoord* style = aAxis == eAxisHorizontal ? &stylePos->mMinWidth
                                                        : &stylePos->mMinHeight;
