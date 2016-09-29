@@ -144,11 +144,7 @@ function runTestDisabled() {
     debug("Testing binding enum with extension disabled");
 
     supportedFormats = gl.getParameter(gl.COMPRESSED_TEXTURE_FORMATS);
-    if (contextVersion < 2) {
-        shouldBe("supportedFormats", "[]");
-    } else {
-        shouldBe("supportedFormats.length", "10");
-    }
+    shouldBe("supportedFormats", "[]");
 }
 
 function formatExists(format, supportedFormats) {
@@ -181,12 +177,7 @@ function runTestExtension() {
     }
 
     supportedFormats = gl.getParameter(gl.COMPRESSED_TEXTURE_FORMATS);
-    // There should be exactly 4 formats for WebGL 1.0 and 14 formats for WebGL 2.0.
-    if (contextVersion < 2) {
-        shouldBe("supportedFormats.length", "4");
-    } else {
-        shouldBe("supportedFormats.length", "14");
-    }
+    shouldBe("supportedFormats.length", "4");
 
     // check that all 4 formats exist
     for (var name in validFormats.length) {
