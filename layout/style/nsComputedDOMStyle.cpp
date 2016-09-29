@@ -4159,24 +4159,22 @@ nsComputedDOMStyle::DoGetCursor()
 
   const nsStyleUserInterface *ui = StyleUserInterface();
 
-  for (nsCursorImage *item = ui->mCursorArray,
-         *item_end = ui->mCursorArray + ui->mCursorArrayLength;
-       item < item_end; ++item) {
+  for (const nsCursorImage& item : ui->mCursorImages) {
     RefPtr<nsDOMCSSValueList> itemList = GetROCSSValueList(false);
 
     nsCOMPtr<nsIURI> uri;
-    item->GetImage()->GetURI(getter_AddRefs(uri));
+    item.GetImage()->GetURI(getter_AddRefs(uri));
 
     RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
     val->SetURI(uri);
     itemList->AppendCSSValue(val.forget());
 
-    if (item->mHaveHotspot) {
+    if (item.mHaveHotspot) {
       RefPtr<nsROCSSPrimitiveValue> valX = new nsROCSSPrimitiveValue;
       RefPtr<nsROCSSPrimitiveValue> valY = new nsROCSSPrimitiveValue;
 
-      valX->SetNumber(item->mHotspotX);
-      valY->SetNumber(item->mHotspotY);
+      valX->SetNumber(item.mHotspotX);
+      valY->SetNumber(item.mHotspotY);
 
       itemList->AppendCSSValue(valX.forget());
       itemList->AppendCSSValue(valY.forget());
