@@ -282,6 +282,18 @@ StreamWrapper::Deserialize(const InputStreamParams& aParams,
   return false;
 }
 
+Maybe<uint64_t>
+StreamWrapper::ExpectedSerializedLength()
+{
+  nsCOMPtr<nsIIPCSerializableInputStream> stream =
+    do_QueryInterface(mInputStream);
+
+  if (stream) {
+    return stream->ExpectedSerializedLength();
+  }
+  return Nothing();
+}
+
 NS_IMPL_ISUPPORTS_INHERITED0(StreamWrapper::CloseRunnable,
                              Runnable)
 
