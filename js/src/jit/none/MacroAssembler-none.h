@@ -380,7 +380,8 @@ class MacroAssemblerNone : public Assembler
 
     template <typename T> void convertInt32ToDouble(T, FloatRegister) { MOZ_CRASH(); }
     void convertFloat32ToDouble(FloatRegister, FloatRegister) { MOZ_CRASH(); }
-    void convertUInt64ToDouble(Register64, Register, FloatRegister) { MOZ_CRASH(); }
+    static bool convertUInt64ToDoubleNeedsTemp() { MOZ_CRASH(); }
+    void convertUInt64ToDouble(Register64, FloatRegister, Register) { MOZ_CRASH(); }
 
     void boolValueToDouble(ValueOperand, FloatRegister) { MOZ_CRASH(); }
     void boolValueToFloat32(ValueOperand, FloatRegister) { MOZ_CRASH(); }
