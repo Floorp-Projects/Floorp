@@ -215,6 +215,9 @@ def main(args):
     for path in args.chown_recursive or []:
         print_line(b'chown', b'recursively changing ownership of %s to %s:%s\n' %
                    (path, user.pw_name, group.gr_name))
+
+        set_dir_permissions(path, uid, gid)
+
         for root, dirs, files in os.walk(path):
             for d in dirs:
                 set_dir_permissions(os.path.join(root, d), uid, gid)
