@@ -220,3 +220,4 @@ asserts(1-10) == grid-fragmentation-dyn4-021.html grid-fragmentation-021-ref.htm
 == grid-fragmentation-dyn2-029.html grid-fragmentation-029-ref.html
 == grid-fragmentation-dyn2-030.html grid-fragmentation-030-ref.html
 == grid-fragmentation-dyn2-031.html grid-fragmentation-031-ref.html
+== bug1306106.html bug1306106-ref.html
