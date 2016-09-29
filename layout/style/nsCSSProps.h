@@ -704,7 +704,6 @@ public:
   static KTableEntry kBackgroundClipKTable[];
   static const KTableEntry kBlendModeKTable[];
   static const KTableEntry kBorderCollapseKTable[];
-  static const KTableEntry kBorderColorKTable[];
   static const KTableEntry kBorderImageRepeatKTable[];
   static const KTableEntry kBorderImageSliceKTable[];
   static const KTableEntry kBorderStyleKTable[];
@@ -810,7 +809,6 @@ public:
   static const KTableEntry kObjectFitKTable[];
   static const KTableEntry kOrientKTable[];
   static const KTableEntry kOutlineStyleKTable[];
-  static const KTableEntry kOutlineColorKTable[];
   static const KTableEntry kOverflowKTable[];
   static const KTableEntry kOverflowSubKTable[];
   static const KTableEntry kOverflowClipBoxKTable[];

@@ -1128,10 +1128,8 @@ SetComplexColor(const nsCSSValue& aValue,
              (UnsetTo == eUnsetInherit && unit == eCSSUnit_Unset)) {
     aConditions.SetUncacheable();
     aResult = aParentColor;
-  } else if ((unit == eCSSUnit_EnumColor &&
-              aValue.GetIntValue() == NS_COLOR_CURRENTCOLOR) ||
-             (unit == eCSSUnit_Enumerated &&
-              aValue.GetIntValue() == NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR)) {
+  } else if (unit == eCSSUnit_EnumColor &&
+             aValue.GetIntValue() == NS_COLOR_CURRENTCOLOR) {
     aResult = StyleComplexColor::CurrentColor();
   } else if (unit == eCSSUnit_ComplexColor) {
     aResult = aValue.GetStyleComplexColorValue();
