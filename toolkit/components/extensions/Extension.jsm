@@ -201,14 +201,13 @@ ExtensionContext = class extends BaseContext {
     }
     Management.emit("page-load", this, params, sender);
 
-    // Properties in |filter| must match those in the |recipient|
-    // parameter of sendMessage.
     let filter = {extensionId: extension.id};
+    let optionalFilter = {};
     // Addon-generated messages (not necessarily from the same process as the
     // addon itself) are sent to the main process, which forwards them via the
     // parent process message manager. Specific replies can be sent to the frame
     // message manager.
-    this.messenger = new Messenger(this, [Services.cpmm, this.messageManager], sender, filter);
+    this.messenger = new Messenger(this, [Services.cpmm, this.messageManager], sender, filter, optionalFilter);
 
     if (this.externallyVisible) {
       this.extension.views.add(this);

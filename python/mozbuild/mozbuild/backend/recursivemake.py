@@ -1160,6 +1160,8 @@ class RecursiveMakeBackend(CommonBackend):
             backend_file.write('SDK_LIBRARY := %s\n' % libdef.import_name)
         if libdef.symbols_file:
             backend_file.write('SYMBOLS_FILE := %s\n' % libdef.symbols_file)
+        if not libdef.cxx_link:
+            backend_file.write('LIB_IS_C_ONLY := 1\n')
 
     def _process_static_library(self, libdef, backend_file):
         backend_file.write_once('LIBRARY_NAME := %s\n' % libdef.basename)

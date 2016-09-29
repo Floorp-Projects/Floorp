@@ -2159,6 +2159,39 @@ ScopedFBRebinder::UnwrapImpl()
     }
 }
 
+////////////////////
+
+static GLenum
+TargetIfLazy(GLenum target)
+{
+    switch (target) {
+    case LOCAL_GL_PIXEL_PACK_BUFFER:
+    case LOCAL_GL_PIXEL_UNPACK_BUFFER:
+        return target;
+
+    default:
+        return 0;
+    }
+}
+
+ScopedLazyBind::ScopedLazyBind(gl::GLContext* gl, GLenum target, const WebGLBuffer* buf)
+    : ScopedGLWrapper<ScopedLazyBind>(gl)
+    , mTarget(buf ? TargetIfLazy(target) : 0)
+    , mBuf(buf)
+{
+    if (mTarget) {
+        mGL->fBindBuffer(mTarget, mBuf->mGLName);
+    }
+}
+
+void
+ScopedLazyBind::UnwrapImpl()
+{
+    if (mTarget) {
+        mGL->fBindBuffer(mTarget, 0);
+    }
+}
+
 ////////////////////////////////////////
 
 void

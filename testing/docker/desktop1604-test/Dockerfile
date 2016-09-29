@@ -7,6 +7,9 @@ WORKDIR /home/worker
 # %include testing/docker/recipes/tooltool.py
 ADD topsrcdir/testing/docker/recipes/tooltool.py /setup/tooltool.py
 
+# %include testing/mozharness/external_tools/robustcheckout.py
+ADD topsrcdir/testing/mozharness/external_tools/robustcheckout.py /usr/local/mercurial/robustcheckout.py
+
 # %include testing/docker/recipes/install-mercurial.sh
 ADD topsrcdir/testing/docker/recipes/install-mercurial.sh /setup/install-mercurial.sh
 

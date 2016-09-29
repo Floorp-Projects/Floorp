@@ -8018,7 +8018,7 @@ HandleInstantiationFailure(JSContext* cx, CallArgs args, const AsmJSMetadata& me
     if (!haveSource && !JSScript::loadSource(cx, source, &haveSource))
         return false;
     if (!haveSource) {
-        JS_ReportError(cx, "asm.js link failure with source discarding enabled");
+        JS_ReportErrorASCII(cx, "asm.js link failure with source discarding enabled");
         return false;
     }
 

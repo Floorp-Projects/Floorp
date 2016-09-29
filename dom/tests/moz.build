@@ -34,7 +34,6 @@ MOCHITEST_CHROME_MANIFESTS += [
     'mochitest/beacon/chrome.ini',
     'mochitest/chrome/chrome.ini',
     'mochitest/general/chrome.ini',
-    'mochitest/geolocation/chrome.ini',
     'mochitest/localstorage/chrome.ini',
     'mochitest/notification/chrome.ini',
     'mochitest/sessionstorage/chrome.ini',

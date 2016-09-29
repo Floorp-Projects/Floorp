@@ -218,15 +218,12 @@ public:
     }
 
     // initialize font lists
-    nsresult InitFontList() override;
+    virtual nsresult InitFontListForPlatform() override;
 
     void GetFontList(nsIAtom *aLangGroup,
                      const nsACString& aGenericFamily,
                      nsTArray<nsString>& aListOfFonts) override;
 
-
-    gfxFontFamily*
-    GetDefaultFont(const gfxFontStyle* aStyle) override;
 
     gfxFontEntry*
     LookupLocalFont(const nsAString& aFontName, uint16_t aWeight,
@@ -279,6 +276,9 @@ protected:
     bool PrefFontListsUseOnlyGenerics();
 
     static void CheckFontUpdates(nsITimer *aTimer, void *aThis);
+
+    virtual gfxFontFamily*
+    GetDefaultFontForPlatform(const gfxFontStyle* aStyle) override;
 
 #ifdef MOZ_BUNDLED_FONTS
     void ActivateBundledFonts();

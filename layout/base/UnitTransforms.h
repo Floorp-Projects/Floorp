@@ -52,7 +52,10 @@ enum class PixelCastJustification : uint8_t {
   // Used to treat the product of AsyncTransformComponentMatrix objects
   // as an AsyncTransformMatrix. See the definitions of these matrices in
   // LayersTypes.h for details.
-  MultipleAsyncTransforms
+  MultipleAsyncTransforms,
+  // We have reason to believe a layer doesn't have a local transform.
+  // Should only be used if we've already checked or asserted this.
+  NoTransformOnLayer
 };
 
 template <class TargetUnits, class SourceUnits>

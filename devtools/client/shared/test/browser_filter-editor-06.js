@@ -6,6 +6,7 @@
 // Tests the Filter Editor Widget's add button
 
 const {CSSFilterEditorWidget} = require("devtools/client/shared/widgets/FilterWidget");
+const {getClientCssProperties} = require("devtools/shared/fronts/css-properties");
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const STRINGS_URI = "devtools/locale/filterwidget.properties";
@@ -15,9 +16,10 @@ const TEST_URI = `data:text/html,<div id="filter-container" />`;
 
 add_task(function* () {
   let [host, win, doc] = yield createHost("bottom", TEST_URI);
+  const cssIsValid = getClientCssProperties().getValidityChecker(doc);
 
   const container = doc.querySelector("#filter-container");
-  let widget = new CSSFilterEditorWidget(container, "none");
+  let widget = new CSSFilterEditorWidget(container, "none", cssIsValid);
 
   const select = widget.el.querySelector("select"),
     add = widget.el.querySelector("#add-filter");

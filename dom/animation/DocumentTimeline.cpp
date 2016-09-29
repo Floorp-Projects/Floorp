@@ -46,7 +46,7 @@ DocumentTimeline::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 
 /* static */ already_AddRefed<DocumentTimeline>
 DocumentTimeline::Constructor(const GlobalObject& aGlobal,
-                              const DOMHighResTimeStamp& aOriginTime,
+                              const DocumentTimelineOptions& aOptions,
                               ErrorResult& aRv)
 {
   nsIDocument* doc = AnimationUtils::GetCurrentRealmDocument(aGlobal.Context());
@@ -54,12 +54,11 @@ DocumentTimeline::Constructor(const GlobalObject& aGlobal,
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
+  TimeDuration originTime =
+    TimeDuration::FromMilliseconds(aOptions.mOriginTime);
 
-  TimeDuration originTime = TimeDuration::FromMilliseconds(aOriginTime);
   if (originTime == TimeDuration::Forever() ||
       originTime == -TimeDuration::Forever()) {
-    nsAutoString inputOriginTime;
-    inputOriginTime.AppendFloat(aOriginTime);
     aRv.ThrowTypeError<dom::MSG_TIME_VALUE_OUT_OF_RANGE>(
       NS_LITERAL_STRING("Origin time"));
     return nullptr;

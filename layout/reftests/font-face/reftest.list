@@ -169,6 +169,7 @@ HTTP(..) == color-2a.html color-2-ref.html
 HTTP(..) != color-2a.html color-2-notref.html
 
 pref(gfx.downloadable_fonts.woff2.enabled,true) HTTP(..) == woff2-1.html woff2-1-ref.html
+pref(gfx.downloadable_fonts.woff2.enabled,true) HTTP(..) == woff2-totalsfntsize.html woff2-totalsfntsize-ref.html
 
 # sanity tests for reflow behavior with downloadable fonts
 HTTP(..) == reflow-sanity-1.html reflow-sanity-1-ref.html

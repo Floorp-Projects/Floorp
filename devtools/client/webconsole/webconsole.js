@@ -3266,14 +3266,10 @@ WebConsoleConnectionProxy.prototype = {
    */
   dispatchMessageAdd: function(packet) {
     this.webConsoleFrame.newConsoleOutput.dispatchMessageAdd(packet);
-
-    // Return the last message in the DOM as the message that was just dispatched. This may not
-    // always be true in the case of filtered messages, but it's close enough for our tests.
-    let messageNodes = this.webConsoleFrame.experimentalOutputNode.querySelectorAll(".message");
-    this.webConsoleFrame.emit("new-messages", {
+    this.webConsoleFrame.emit("new-messages", new Set([{
       response: packet,
-      node: messageNodes[messageNodes.length - 1],
-    });
+      node: this.webConsoleFrame.newConsoleOutput.getLastMessage(),
+    }]));
   },
 
   /**

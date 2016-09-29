@@ -65,33 +65,6 @@ AndroidBridge* AndroidBridge::sBridge = nullptr;
 static jobject sGlobalContext = nullptr;
 nsDataHashtable<nsStringHashKey, nsString> AndroidBridge::sStoragePaths;
 
-jclass AndroidBridge::GetClassGlobalRef(JNIEnv* env, const char* className)
-{
-    // First try the default class loader.
-    auto classRef = Class::LocalRef::Adopt(
-            env, env->FindClass(className));
-
-    if (!classRef && sBridge && sBridge->mClassLoader) {
-        // If the default class loader failed but we have an app class loader, try that.
-        // Clear the pending exception from failed FindClass call above.
-        env->ExceptionClear();
-        classRef = Class::LocalRef::Adopt(env, jclass(
-                env->CallObjectMethod(sBridge->mClassLoader.Get(),
-                                      sBridge->mClassLoaderLoadClass,
-                                      StringParam(className, env).Get())));
-    }
-
-    if (!classRef) {
-        ALOG(">>> FATAL JNI ERROR! FindClass(className=\"%s\") failed. "
-             "Did ProGuard optimize away something it shouldn't have?",
-             className);
-        env->ExceptionDescribe();
-        MOZ_CRASH();
-    }
-
-    return Class::GlobalRef(env, classRef).Forget();
-}
-
 jmethodID AndroidBridge::GetMethodID(JNIEnv* env, jclass jClass,
                               const char* methodName, const char* methodType)
 {
@@ -188,11 +161,6 @@ AndroidBridge::AndroidBridge()
 
     JNIEnv* const jEnv = jni::GetGeckoThreadEnv();
     AutoLocalJNIFrame jniFrame(jEnv);
-
-    mClassLoader = Object::GlobalRef(jEnv, java::GeckoThread::ClsLoader());
-    mClassLoaderLoadClass = GetMethodID(
-            jEnv, jEnv->GetObjectClass(mClassLoader.Get()),
-            "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
 
     mMessageQueue = java::GeckoThread::MsgQueue();
     auto msgQueueClass = Class::LocalRef::Adopt(
@@ -1238,7 +1206,9 @@ nsAndroidBridge::AddObservers()
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
     obs->AddObserver(this, "xpcom-shutdown", false);
-    obs->AddObserver(this, "media-playback", false);
+    if (jni::IsFennec()) { // No AudioFocusAgent in non-Fennec environment.
+        obs->AddObserver(this, "media-playback", false);
+    }
   }
 }
 
@@ -1248,7 +1218,9 @@ nsAndroidBridge::RemoveObservers()
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
     obs->RemoveObserver(this, "xpcom-shutdown");
-    obs->RemoveObserver(this, "media-playback");
+    if (jni::IsFennec()) { // No AudioFocusAgent in non-Fennec environment.
+        obs->RemoveObserver(this, "media-playback");
+    }
   }
 }
 

@@ -29,6 +29,7 @@
 #include "nssrwlk.h"
 #include "prthread.h"
 #include "prclist.h"
+#include "private/pprthred.h"
 
 #include "sslt.h" /* for some formerly private types, now public */
 
@@ -98,9 +99,6 @@ extern int Debug;
 #define SSL_DBG(b)
 #endif
 
-#include "private/pprthred.h" /* for PR_InMonitor() */
-#define ssl_InMonitor(m) PZ_InMonitor(m)
-
 #define LSB(x) ((unsigned char)((x)&0xff))
 #define MSB(x) ((unsigned char)(((unsigned)(x)) >> 8))
 
@@ -118,7 +116,6 @@ typedef enum { SSLAppOpRead = 0,
 #define SSL_MIN_CHALLENGE_BYTES 16
 #define SSL_MAX_CHALLENGE_BYTES 32
 
-#define SSL3_RSA_PMS_LENGTH 48
 #define SSL3_MASTER_SECRET_LENGTH 48
 
 /* number of wrap mechanisms potentially used to wrap master secrets. */
@@ -126,8 +123,6 @@ typedef enum { SSLAppOpRead = 0,
 
 /* This makes the cert cache entry exactly 4k. */
 #define SSL_MAX_CACHED_CERT_LEN 4060
-
-#define NUM_MIXERS 9
 
 #ifndef BPB
 #define BPB 8 /* Bits Per Byte */
@@ -341,7 +336,6 @@ typedef enum { sslHandshakingUndetermined = 0,
 } sslHandshakingType;
 
 #define SSL_LOCK_RANK_SPEC 255
-#define SSL_LOCK_RANK_GLOBAL NSS_RWLOCK_RANK_NONE
 
 /* These are the valid values for shutdownHow.
 ** These values are each 1 greater than the NSPR values, and the code
@@ -412,9 +406,7 @@ struct sslGatherStr {
 /* sslGather.state */
 #define GS_INIT 0
 #define GS_HEADER 1
-#define GS_MAC 2
-#define GS_DATA 3
-#define GS_PAD 4
+#define GS_DATA 2
 
 /*
 ** ssl3State and CipherSpec structs
@@ -449,14 +441,6 @@ typedef PRUint16 DTLSEpoch;
 
 typedef void (*DTLSTimerCb)(sslSocket *);
 
-/* 400 is large enough for MD5, SHA-1, and SHA-256.
- * For SHA-384 support, increase it to 712. */
-#define MAX_MAC_CONTEXT_BYTES 712
-#define MAX_MAC_CONTEXT_LLONGS (MAX_MAC_CONTEXT_BYTES / 8)
-
-#define MAX_CIPHER_CONTEXT_BYTES 2080
-#define MAX_CIPHER_CONTEXT_LLONGS (MAX_CIPHER_CONTEXT_BYTES / 8)
-
 typedef struct {
     SSL3Opaque wrapped_master_secret[48];
     PRUint16 wrapped_master_secret_len;
@@ -473,7 +457,6 @@ typedef struct {
     SECItem write_iv_item;
     SECItem write_mac_key_item;
     SSL3Opaque write_iv[MAX_IV_LENGTH];
-    PRUint64 cipher_context[MAX_CIPHER_CONTEXT_LLONGS];
 } ssl3KeyMaterial;
 
 typedef SECStatus (*SSLCipher)(void *context,
@@ -545,8 +528,6 @@ typedef struct {
     ssl3KeyMaterial client;
     ssl3KeyMaterial server;
     SECItem msItem;
-    unsigned char key_block[NUM_MIXERS * HASH_LENGTH_MAX];
-    unsigned char raw_master_secret[56];
     DTLSEpoch epoch;
     DTLSRecvdRecords recvdRecords;
 

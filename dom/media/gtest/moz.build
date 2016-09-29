@@ -7,6 +7,7 @@
 UNIFIED_SOURCES += [
     'MockMediaResource.cpp',
     'TestAudioCompactor.cpp',
+    'TestEME.cpp',
     'TestGMPCrossOrigin.cpp',
     'TestGMPRemoveAndDelete.cpp',
     'TestGMPUtils.cpp',
@@ -24,11 +25,6 @@ UNIFIED_SOURCES += [
     'TestVPXDecoding.cpp',
     'TestWebMBuffered.cpp',
 ]
-
-if CONFIG['MOZ_EME']:
-    UNIFIED_SOURCES += [
-        'TestEME.cpp',
-    ]
 
 if CONFIG['MOZ_WEBM_ENCODER']:
     UNIFIED_SOURCES += [

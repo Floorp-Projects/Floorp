@@ -138,7 +138,7 @@ class FilteringMessageManager {
    *        data:
    *          An object describing the message, as defined in
    *          `MessageChannel.addListener`.
-   * @param {nsIMessageManager} messageManager
+   * @param {nsIMessageListenerManager} messageManager
    */
   constructor(messageName, callback, messageManager) {
     this.messageName = messageName;
@@ -246,7 +246,7 @@ class FilteringMessageManagerMap extends Map {
    * Returns, and possibly creates, a message broker for the given
    * message manager.
    *
-   * @param {nsIMessageSender} target
+   * @param {nsIMessageListenerManager} target
    *     The message manager for which to return a broker.
    *
    * @returns {FilteringMessageManager}
@@ -348,7 +348,7 @@ this.MessageChannel = {
   /**
    * Initializes message handlers for the given message managers if needed.
    *
-   * @param {[nsIMessageSender]} messageManagers
+   * @param {Array<nsIMessageListenerManager>} messageManagers
    */
   setupMessageManagers(messageManagers) {
     for (let mm of messageManagers) {
@@ -392,7 +392,7 @@ this.MessageChannel = {
   /**
    * Adds a message listener to the given message manager.
    *
-   * @param {nsIMessageSender|[nsIMessageSender]} targets
+   * @param {nsIMessageListenerManager|Array<nsIMessageListenerManager>} targets
    *    The message managers on which to listen.
    * @param {string|number} messageName
    *    The name of the message to listen for.
@@ -458,7 +458,7 @@ this.MessageChannel = {
   /**
    * Removes a message listener from the given message manager.
    *
-   * @param {nsIMessageSender|Array<nsIMessageSender>} targets
+   * @param {nsIMessageListenerManager|Array<nsIMessageListenerManager>} targets
    *    The message managers on which to stop listening.
    * @param {string|number} messageName
    *    The name of the message to stop listening for.
@@ -607,7 +607,7 @@ this.MessageChannel = {
    *
    * @param {Array<MessageHandler>} handlers
    * @param {object} data
-   * @param {nsIMessageSender|nsIMessageManagerOwner} data.target
+   * @param {nsIMessageSender|{messageManager:nsIMessageSender}} data.target
    */
   _handleMessage(handlers, data) {
     // The target passed to `receiveMessage` is sometimes a message manager
@@ -686,7 +686,7 @@ this.MessageChannel = {
    *
    * @param {Array<MessageHandler>} handlers
    * @param {object} data
-   * @param {nsIMessageSender|nsIMessageManagerOwner} data.target
+   * @param {nsIMessageSender|{messageManager:nsIMessageSender}} data.target
    */
   _handleResponse(handlers, data) {
     // If we have an error at this point, we have handler to report it to,
@@ -762,7 +762,7 @@ this.MessageChannel = {
    * Aborts any pending message responses to the broker for the given
    * message manager.
    *
-   * @param {nsIMessageSender} target
+   * @param {nsIMessageListenerManager} target
    *    The message manager for which to abort brokers.
    * @param {object} reason
    *    An object describing the reason the responses were aborted.

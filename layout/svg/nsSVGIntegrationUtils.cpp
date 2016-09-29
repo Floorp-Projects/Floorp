@@ -492,11 +492,12 @@ ComputeMaskGeometry(const PaintFramesParams& aParams,
 
 static DrawResult
 GenerateMaskSurface(const PaintFramesParams& aParams,
-                    nsStyleContext* aSC,
+                    float aOpacity, nsStyleContext* aSC,
                     const nsTArray<nsSVGMaskFrame *>& aMaskFrames,
                     const nsPoint& aOffsetToUserSpace,
                     Matrix& aOutMaskTransform,
-                    RefPtr<SourceSurface>& aOutMaskSurface)
+                    RefPtr<SourceSurface>& aOutMaskSurface,
+                    bool& aOpacityApplied)
 {
   const nsStyleSVGReset *svgReset = aSC->StyleSVGReset();
   MOZ_ASSERT(aMaskFrames.Length() > 0);
@@ -508,9 +509,10 @@ GenerateMaskSurface(const PaintFramesParams& aParams,
 
   // There is only one SVG mask.
   if (((aMaskFrames.Length() == 1) && aMaskFrames[0])) {
+    aOpacityApplied = true;
     aOutMaskSurface =
       aMaskFrames[0]->GetMaskForMaskedFrame(&ctx, aParams.frame,
-                                            cssPxToDevPxMatrix, 1.0,
+                                            cssPxToDevPxMatrix, aOpacity,
                                             &aOutMaskTransform,
                                             svgReset->mMask.mLayers[0].mMaskMode);
     return DrawResult::SUCCESS;
@@ -550,6 +552,18 @@ GenerateMaskSurface(const PaintFramesParams& aParams,
     ctx.CurrentMatrix() * gfxMatrix::Translation(-maskSurfaceRect.TopLeft());
   maskContext->SetMatrix(maskSurfaceMatrix);
 
+  // Set aAppliedOpacity as true only if all mask layers are svg mask.
+  // In this case, we will apply opacity into the final mask surface, so the
+  // caller does not need to apply it again.
+  aOpacityApplied = true;
+  for (size_t i = 0; i < aMaskFrames.Length() ; i++) {
+    nsSVGMaskFrame *maskFrame = aMaskFrames[i];
+    if (!maskFrame) {
+      aOpacityApplied = false;
+      break;
+    }
+  }
+
   // Multiple SVG masks interleave with image mask. Paint each layer onto
   // maskDT one at a time.
   for (int i = aMaskFrames.Length() - 1; i >= 0 ; i--) {
@@ -565,7 +579,8 @@ GenerateMaskSurface(const PaintFramesParams& aParams,
       Matrix svgMaskMatrix;
       RefPtr<SourceSurface> svgMask =
         maskFrame->GetMaskForMaskedFrame(maskContext, aParams.frame,
-                                         cssPxToDevPxMatrix, 1.0,
+                                         cssPxToDevPxMatrix,
+                                         aOpacityApplied ? aOpacity : 1.0,
                                          &svgMaskMatrix,
                                          svgReset->mMask.mLayers[i].mMaskMode);
       if (svgMask) {
@@ -573,7 +588,8 @@ GenerateMaskSurface(const PaintFramesParams& aParams,
 
         maskContext->Multiply(ThebesMatrix(svgMaskMatrix));
         Rect drawRect = IntRectToRect(IntRect(IntPoint(0, 0), svgMask->GetSize()));
-        maskDT->MaskSurface(ColorPattern(Color(0.0, 0.0, 0.0, 1.0)), svgMask, drawRect.TopLeft(),
+        maskDT->MaskSurface(ColorPattern(Color(0.0, 0.0, 0.0, 1.0)), svgMask,
+                            drawRect.TopLeft(),
                             DrawOptions(1.0, compositionOp));
       }
     } else {
@@ -870,6 +886,7 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
 
     Matrix maskTransform;
     RefPtr<SourceSurface> maskSurface;
+    bool opacityApplied = false;
 
     if (shouldGenerateMaskLayer) {
       matSR.SetContext(&context);
@@ -879,10 +896,10 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
       // instead of the first continuation frame.
       SetupContextMatrix(frame, aParams, offsetToBoundingBox,
                          offsetToUserSpace, true);
-      result = GenerateMaskSurface(aParams,
+      result = GenerateMaskSurface(aParams, opacity,
                                   firstFrame->StyleContext(),
                                   maskFrames, offsetToUserSpace,
-                                  maskTransform, maskSurface);
+                                  maskTransform, maskSurface, opacityApplied);
       context.PopClip();
       if (!maskSurface) {
         // Entire surface is clipped out.
@@ -922,7 +939,9 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
                          offsetToUserSpace, true);
     }
 
-    target->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, opacity, maskSurface, maskTransform);
+    target->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA,
+                                  opacityApplied ?  1.0 : opacity,
+                                  maskSurface, maskTransform);
   }
 
   /* If this frame has only a trivial clipPath, set up cairo's clipping now so

@@ -4,26 +4,32 @@
 // This test ensures that tags changes are correctly live-updated in a history
 // query.
 
-var gNow = Date.now();
+let timeInMicroseconds = PlacesUtils.toPRTime(Date.now() - 10000);
+
+function newTimeInMicroseconds() {
+  timeInMicroseconds = timeInMicroseconds + 1000;
+  return timeInMicroseconds;
+}
+
 var gTestData = [
   {
     isVisit: true,
     uri: "http://example.com/1/",
-    lastVisit: gNow,
+    lastVisit: newTimeInMicroseconds(),
     isInQuery: true,
     title: "title1",
   },
   {
     isVisit: true,
     uri: "http://example.com/2/",
-    lastVisit: gNow++,
+    lastVisit: newTimeInMicroseconds(),
     isInQuery: true,
     title: "title2",
   },
   {
     isVisit: true,
     uri: "http://example.com/3/",
-    lastVisit: gNow++,
+    lastVisit: newTimeInMicroseconds(),
     isInQuery: true,
     title: "title3",
   },
