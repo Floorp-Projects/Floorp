@@ -16,10 +16,10 @@ from voluptuous import Schema, Required, Optional, Any
 from taskgraph.transforms.job import run_job_using
 from taskgraph.transforms.job.common import (
     docker_worker_add_workspace_cache,
-    docker_worker_add_tc_vcs_cache,
     docker_worker_add_gecko_vcs_env_vars,
     docker_worker_setup_secrets,
-    docker_worker_add_public_artifacts
+    docker_worker_add_public_artifacts,
+    docker_worker_support_vcs_checkout,
 )
 
 COALESCE_KEY = 'builds.{project}.{name}'
@@ -88,9 +88,8 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
     worker['taskcluster-proxy'] = run.get('taskcluster-proxy')
 
     docker_worker_add_public_artifacts(config, job, taskdesc)
-    docker_worker_add_tc_vcs_cache(config, job, taskdesc)
     docker_worker_add_workspace_cache(config, job, taskdesc)
-    docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc)
+    docker_worker_support_vcs_checkout(config, job, taskdesc)
 
     env = worker.setdefault('env', {})
     env.update({
@@ -143,7 +142,18 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
 
     docker_worker_setup_secrets(config, job, taskdesc)
 
-    worker['command'] = ["/bin/bash", "bin/build.sh"]
+    command = [
+        '/home/worker/bin/run-task',
+        # Various caches/volumes are default owned by root:root.
+        '--chown-recursive', '/home/worker/workspace',
+        '--chown-recursive', '/home/worker/tooltool-cache',
+        '--vcs-checkout', '/home/worker/workspace/build/src',
+        '--tools-checkout', '/home/worker/workspace/build/tools',
+        '--',
+        '/home/worker/workspace/build/src/taskcluster/scripts/builder/build-linux.sh',
+    ]
+
+    worker['command'] = command
 
 
 # We use the generic worker to run tasks on Windows
