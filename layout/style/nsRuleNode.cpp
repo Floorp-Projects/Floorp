@@ -109,6 +109,14 @@ nsConditionalResetStyleData::GetConditionalStyleData(nsStyleStructID aSID,
   return nullptr;
 }
 
+// Creates and returns an imgRequestProxy based on the specified
+// value in aValue.
+static imgRequestProxy*
+GetImageRequest(nsPresContext* aPresContext, const nsCSSValue& aValue)
+{
+  return aValue.GetImageValue(aPresContext->Document());
+}
+
 // Creates an imgRequestProxy based on the specified value in
 // aValue and calls aCallback with it.  If the nsPresContext
 // is static (e.g. for printing), then a static request (i.e.
@@ -120,8 +128,7 @@ SetImageRequest(function<void(imgRequestProxy*)> aCallback,
                 nsPresContext* aPresContext,
                 const nsCSSValue& aValue)
 {
-  nsIDocument* doc = aPresContext->Document();
-  imgRequestProxy* req = aValue.GetImageValue(doc);
+  imgRequestProxy* req = GetImageRequest(aPresContext, aValue);
   if (aPresContext->IsDynamic()) {
     aCallback(req);
   } else {
@@ -5073,15 +5080,13 @@ nsRuleNode::ComputeUserInterfaceData(void* aStartStruct,
   const nsCSSValue* cursorValue = aRuleData->ValueForCursor();
   nsCSSUnit cursorUnit = cursorValue->GetUnit();
   if (cursorUnit != eCSSUnit_Null) {
-    delete [] ui->mCursorArray;
-    ui->mCursorArray = nullptr;
-    ui->mCursorArrayLength = 0;
+    ui->mCursorImages.Clear();
 
     if (cursorUnit == eCSSUnit_Inherit ||
         cursorUnit == eCSSUnit_Unset) {
       conditions.SetUncacheable();
       ui->mCursor = parentUI->mCursor;
-      ui->CopyCursorArrayFrom(*parentUI);
+      ui->mCursorImages = parentUI->mCursorImages;
     }
     else if (cursorUnit == eCSSUnit_Initial) {
       ui->mCursor = NS_STYLE_CURSOR_AUTO;
@@ -5092,32 +5097,17 @@ nsRuleNode::ComputeUserInterfaceData(void* aStartStruct,
       MOZ_ASSERT(cursorUnit == eCSSUnit_List || cursorUnit == eCSSUnit_ListDep,
                  "unrecognized cursor unit");
       const nsCSSValueList* list = cursorValue->GetListValue();
-      const nsCSSValueList* list2 = list;
-      nsIDocument* doc = aContext->PresContext()->Document();
-      uint32_t arrayLength = 0;
-      for ( ; list->mValue.GetUnit() == eCSSUnit_Array; list = list->mNext)
-        if (list->mValue.GetArrayValue()->Item(0).GetImageValue(doc))
-          ++arrayLength;
-
-      if (arrayLength != 0) {
-        ui->mCursorArray = new nsCursorImage[arrayLength];
-        if (ui->mCursorArray) {
-          ui->mCursorArrayLength = arrayLength;
-
-          for (nsCursorImage *item = ui->mCursorArray;
-               list2->mValue.GetUnit() == eCSSUnit_Array;
-               list2 = list2->mNext) {
-            nsCSSValue::Array *arr = list2->mValue.GetArrayValue();
-            imgIRequest *req = arr->Item(0).GetImageValue(doc);
-            if (req) {
-              item->SetImage(req);
-              if (arr->Item(1).GetUnit() != eCSSUnit_Null) {
-                item->mHaveHotspot = true;
-                item->mHotspotX = arr->Item(1).GetFloatValue(),
-                item->mHotspotY = arr->Item(2).GetFloatValue();
-              }
-              ++item;
-            }
+      for ( ; list->mValue.GetUnit() == eCSSUnit_Array; list = list->mNext) {
+        nsCSSValue::Array* arr = list->mValue.GetArrayValue();
+        imgRequestProxy* req =
+          GetImageRequest(aContext->PresContext(), arr->Item(0));
+        if (req) {
+          nsCursorImage* item = ui->mCursorImages.AppendElement();
+          item->SetImage(req);
+          if (arr->Item(1).GetUnit() != eCSSUnit_Null) {
+            item->mHaveHotspot = true;
+            item->mHotspotX = arr->Item(1).GetFloatValue();
+            item->mHotspotY = arr->Item(2).GetFloatValue();
           }
         }
       }
