@@ -254,7 +254,7 @@
           },
           {
             "type": "string",
-            "pattern": "^(https?|file|ftp|app|\\*)://(\\*|\\*\\.[^*/]+|[^*/]+)/.*$"
+            "pattern": "^(https?|file|ftp|\\*)://(\\*|\\*\\.[^*/]+|[^*/]+)/.*$"
           },
           {
             "type": "string",
