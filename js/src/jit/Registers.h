@@ -124,8 +124,7 @@ struct Register64
         return reg != other.reg;
     }
     static Register64 Invalid() {
-        Register64 r(Register::Invalid());
-        return r;
+        return Register64(Register::Invalid());
     }
 #else
     constexpr Register64(Register h, Register l)
@@ -138,8 +137,7 @@ struct Register64
         return high != other.high || low != other.low;
     }
     static Register64 Invalid() {
-        Register64 r(Register::Invalid(), Register::Invalid());
-        return r;
+        return Register64(Register::Invalid(), Register::Invalid());
     }
 #endif
 };

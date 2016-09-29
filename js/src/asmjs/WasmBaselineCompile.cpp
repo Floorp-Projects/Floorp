@@ -259,7 +259,7 @@ class BaseCompiler
 
     struct RegI32
     {
-        RegI32() {}
+        RegI32() : reg(Register::Invalid()) {}
         explicit RegI32(Register reg) : reg(reg) {}
         Register reg;
         bool operator==(const RegI32& that) { return reg == that.reg; }
@@ -861,11 +861,7 @@ class BaseCompiler
     }
 
     Register64 invalidRegister64() {
-#ifdef JS_PUNBOX64
-        return Register64(Register::Invalid());
-#else
-        MOZ_CRASH("BaseCompiler platform hook: invalidRegister64");
-#endif
+        return Register64::Invalid();
     }
 
     RegI32 invalidI32() {
@@ -889,10 +885,12 @@ class BaseCompiler
     }
 
     RegI64 fromI32(RegI32 r) {
+        MOZ_ASSERT(!isAvailable(r.reg));
 #ifdef JS_PUNBOX64
         return RegI64(Register64(r.reg));
 #else
-        return RegI64(Register64(needI32().reg, r.reg)); // TODO: BUG if sync is called.
+        RegI32 high = needI32();
+        return RegI64(Register64(high.reg, r.reg));
 #endif
     }
 
@@ -902,6 +900,18 @@ class BaseCompiler
 
     void freeI64(RegI64 r) {
         freeInt64(r.reg);
+    }
+
+    void freeI64Except(RegI64 r, RegI32 except) {
+#ifdef JS_PUNBOX64
+        MOZ_ASSERT(r.reg.reg == except.reg);
+#else
+        MOZ_ASSERT(r.reg.high == except.reg || r.reg.low == except.reg);
+        freeI64(r);
+        needI32(except);
+#endif
+
+
     }
 
     void freeF64(RegF64 r) {
@@ -930,7 +940,7 @@ class BaseCompiler
 
     void need2xI32(RegI32 r0, RegI32 r1) {
         needI32(r0);
-        needI32(r1); // TODO: BUG if sync is called.
+        needI32(r1);
     }
 
     MOZ_MUST_USE
@@ -948,7 +958,7 @@ class BaseCompiler
 
     void need2xI64(RegI64 r0, RegI64 r1) {
         needI64(r0);
-        needI64(r1); // TODO: BUG if sync is called.
+        needI64(r1);
     }
 
     MOZ_MUST_USE
@@ -998,11 +1008,7 @@ class BaseCompiler
     }
 
     void setI64(int64_t v, RegI64 r) {
-#ifdef JS_PUNBOX64
         masm.move64(Imm64(v), r.reg);
-#else
-        MOZ_CRASH("BaseCompiler platform hook: setI64");
-#endif
     }
 
     void loadConstI32(Register r, Stk& src) {
@@ -1170,9 +1176,9 @@ class BaseCompiler
                 masm.Push(scratch);
 #else
                 int32_t offset = frameOffsetFromSlot(v.slot(), MIRType::Int64);
-                loadFromFrameI32(scratch, offset + INT64LOW_OFFSET);
+                loadFromFrameI32(scratch, offset - INT64HIGH_OFFSET);
                 masm.Push(scratch);
-                loadFromFrameI32(scratch, offset + INT64HIGH_OFFSET);
+                loadFromFrameI32(scratch, offset - INT64LOW_OFFSET);
                 masm.Push(scratch);
 #endif
                 v.setOffs(Stk::MemI64, masm.framePushed());
@@ -1183,8 +1189,8 @@ class BaseCompiler
                 masm.Push(v.i64reg().reg.reg);
                 freeI64(v.i64reg());
 #else
-                masm.Push(v.i64reg().reg.low);
                 masm.Push(v.i64reg().reg.high);
+                masm.Push(v.i64reg().reg.low);
                 freeI64(v.i64reg());
 #endif
                 v.setOffs(Stk::MemI64, masm.framePushed());
@@ -1258,13 +1264,9 @@ class BaseCompiler
     }
 
     void pushI64(RegI64 r) {
-#ifdef JS_PUNBOX64
-        MOZ_ASSERT(!isAvailable(r.reg.reg));
+        MOZ_ASSERT(!isAvailable(r.reg));
         Stk& x = push();
         x.setI64Reg(r);
-#else
-        MOZ_CRASH("BaseCompiler platform hook: pushI64");
-#endif
     }
 
     void pushF64(RegF64 r) {
@@ -2252,11 +2254,7 @@ class BaseCompiler
     }
 
     void captureReturnedI64(RegI64 dest) {
-#ifdef JS_PUNBOX64
         moveI64(RegI64(ReturnReg64), dest);
-#else
-        MOZ_CRASH("BaseCompiler platform hook: captureReturnedI64");
-#endif
     }
 
     void captureReturnedF32(const FunctionCall& call, RegF32 dest) {
@@ -2299,11 +2297,7 @@ class BaseCompiler
     }
 
     void returnI64(RegI64 r) {
-#ifdef JS_PUNBOX64
-        moveI64(r, RegI64(Register64(ReturnReg)));
-#else
-        MOZ_CRASH("BaseCompiler platform hook: returnI64");
-#endif
+        moveI64(r, RegI64(Register64(ReturnReg64)));
         popStackBeforeBranch(ctl_[0].framePushed);
         masm.jump(&returnLabel_);
     }
@@ -3749,7 +3743,7 @@ BaseCompiler::emitCopysignF32()
     RegF32 r0, r1;
     pop2xF32(&r0, &r1);
     RegI32 i0 = needI32();
-    RegI32 i1 = needI32(); // TODO: BUG if sync is called.
+    RegI32 i1 = needI32();
     masm.moveFloat32ToGPR(r0.reg, i0.reg);
     masm.moveFloat32ToGPR(r1.reg, i1.reg);
     masm.and32(Imm32(INT32_MAX), i0.reg);
