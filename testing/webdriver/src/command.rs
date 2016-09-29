@@ -60,7 +60,7 @@ pub enum WebDriverCommand<T: WebDriverExtensionCommand> {
     DismissAlert,
     AcceptAlert,
     GetAlertText,
-    SendAlertText(SendAlertTextParameters),
+    SendAlertText(SendKeysParameters),
     TakeScreenshot,
     Extension(T)
 }
@@ -315,7 +315,7 @@ impl <U: WebDriverExtensionRoute> WebDriverMessage<U> {
                 WebDriverCommand::GetAlertText
             },
             Route::SendAlertText => {
-                let parameters: SendAlertTextParameters = try!(Parameters::from_json(&body_data));
+                let parameters: SendKeysParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::SendAlertText(parameters)
             },
             Route::TakeScreenshot => WebDriverCommand::TakeScreenshot,
@@ -936,35 +936,6 @@ impl ToJson for AddCookieParameters {
         data.insert("expiry".to_string(), self.expiry.to_json());
         data.insert("secure".to_string(), self.secure.to_json());
         data.insert("httpOnly".to_string(), self.httpOnly.to_json());
-        Json::Object(data)
-    }
-}
-
-#[derive(PartialEq)]
-pub struct SendAlertTextParameters {
-    message: String
-}
-
-impl Parameters for SendAlertTextParameters {
-    fn from_json(body: &Json) -> WebDriverResult<SendAlertTextParameters> {
-        let data = try_opt!(body.as_object(), ErrorStatus::InvalidArgument,
-                            "Message body was not an object");
-        let keys = try_opt!(
-            try_opt!(data.get("text"),
-                     ErrorStatus::InvalidArgument,
-                     "Missing 'text' parameter").as_string(),
-            ErrorStatus::InvalidArgument,
-            "'text' not a string").to_string();
-        return Ok(SendAlertTextParameters {
-            message: keys
-        })
-    }
-}
-
-impl ToJson for SendAlertTextParameters {
-    fn to_json(&self) -> Json {
-        let mut data = BTreeMap::new();
-        data.insert("message".to_string(), self.message.to_json());
         Json::Object(data)
     }
 }
