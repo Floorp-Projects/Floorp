@@ -747,6 +747,13 @@ MediaPipelineFactory::GetOrCreateAudioConduit(
 
     conduit->SetLocalCNAME(aTrack.GetCNAME().c_str());
 
+    if (configs.values.size() > 1
+        && configs.values.back()->mName == "telephone-event") {
+      // we have a telephone event codec, so we need to make sure
+      // the dynamic pt is set properly
+      conduit->SetDtmfPayloadType(configs.values.back()->mType);
+    }
+
     auto error = conduit->ConfigureSendMediaCodec(configs.values[0]);
     if (error) {
       MOZ_MTLOG(ML_ERROR, "ConfigureSendMediaCodec failed: " << error);
