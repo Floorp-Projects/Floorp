@@ -62,6 +62,13 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
                         remote_file = posixpath.join(self.remote_bin_dir, os.path.basename(info.filename))
                         apk_contents.extract(info, tmpdir)
                         local_file = os.path.join(tmpdir, info.filename)
+                        with open(local_file) as f:
+                            # Decompress xz-compressed file.
+                            if f.read(5)[1:] == '7zXZ':
+                                cmd = ['xz', '-df', '--suffix', '.so', local_file]
+                                subprocess.check_output(cmd)
+                                # xz strips the ".so" file suffix.
+                                os.rename(local_file[:-3], local_file)
                         self.device.pushFile(local_file, remote_file)
 
         elif self.options.local_lib:

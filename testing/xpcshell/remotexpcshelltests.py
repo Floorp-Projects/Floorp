@@ -453,6 +453,13 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
                         remoteFile = remoteJoin(self.remoteBinDir, os.path.basename(info.filename))
                         self.localAPKContents.extract(info, dir)
                         localFile = os.path.join(dir, info.filename)
+                        with open(localFile) as f:
+                            # Decompress xz-compressed file.
+                            if f.read(5)[1:] == '7zXZ':
+                                cmd = ['xz', '-df', '--suffix', '.so', localFile]
+                                subprocess.check_output(cmd)
+                                # xz strips the ".so" file suffix.
+                                os.rename(localFile[:-3], localFile)
                         self.device.pushFile(localFile, remoteFile)
                         pushed_libs_count += 1
             finally:
