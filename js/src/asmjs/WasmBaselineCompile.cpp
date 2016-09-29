@@ -2838,6 +2838,14 @@ class BaseCompiler
 #if defined(JS_CODEGEN_X64)
         masm.cmpq(rhs.reg.reg, lhs.reg.reg);
         masm.emitSet(cond, dest.reg);
+#elif defined(JS_CODEGEN_X86)
+        Label done, condTrue;
+        masm.branch64(cond, lhs.reg, rhs.reg, &condTrue);
+        masm.move32(Imm32(0), dest.reg);
+        masm.jump(&done);
+        masm.bind(&condTrue);
+        masm.move32(Imm32(1), dest.reg);
+        masm.bind(&done);
 #else
         MOZ_CRASH("BaseCompiler platform hook: cmp64Set");
 #endif
@@ -4171,6 +4179,7 @@ BaseCompiler::emitEqzI64()
     RegI32 i0 = fromI64(r0);
     cmp64Set(Assembler::Equal, r0, r1, i0);
     freeI64(r1);
+    freeI64Except(r0, i0);
     pushI32(i0);
 }
 
@@ -6053,6 +6062,7 @@ BaseCompiler::emitCompareI64(JSOp compareOp, MCompare::CompareType compareType)
         MOZ_CRASH("Compiler bug: Unexpected compare opcode");
     }
     freeI64(r1);
+    freeI64Except(r0, i0);
     pushI32(i0);
 }
 
