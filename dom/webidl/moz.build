@@ -464,7 +464,6 @@ WEBIDL_FILES = [
     'SVGComponentTransferFunctionElement.webidl',
     'SVGDefsElement.webidl',
     'SVGDescElement.webidl',
-    'SVGDocument.webidl',
     'SVGElement.webidl',
     'SVGEllipseElement.webidl',
     'SVGFEBlendElement.webidl',
