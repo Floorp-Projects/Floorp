@@ -21,6 +21,11 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
 
     void GetName(nsAString_internal&) const override;
     void GetUUID(nsACString_internal&) const override;
+
+    bool GetScary() const override {
+      return true;
+    }
+
     nsresult Allocate(const dom::MediaTrackConstraints &,
                       const mozilla::MediaEnginePrefs&,
                       const nsString& aDeviceId,
