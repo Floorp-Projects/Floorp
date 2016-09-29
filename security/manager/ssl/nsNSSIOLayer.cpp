@@ -2500,7 +2500,7 @@ nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
   // Include a modest set of named groups.
   const SSLNamedGroup namedGroups[] = {
     ssl_grp_ec_curve25519, ssl_grp_ec_secp256r1, ssl_grp_ec_secp384r1,
-    ssl_grp_ffdhe_2048, ssl_grp_ffdhe_3072
+    ssl_grp_ec_secp521r1, ssl_grp_ffdhe_2048, ssl_grp_ffdhe_3072
   };
   if (SECSuccess != SSL_NamedGroupConfig(fd, namedGroups,
                                          mozilla::ArrayLength(namedGroups))) {
