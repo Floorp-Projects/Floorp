@@ -47,7 +47,8 @@ class Proxxy(ScriptMixin, LogMixin):
         # just the 'proxxy' element
         # if configuration has no 'proxxy' section use the default
         # configuration instead
-        self.config = config.get('proxxy', self.PROXXY_CONFIG)
+        default_config = {} if self.is_taskcluster() else self.PROXXY_CONFIG
+        self.config = config.get('proxxy', default_config)
         self.log_obj = log_obj
 
     def get_proxies_for_url(self, url):
