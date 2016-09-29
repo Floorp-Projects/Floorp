@@ -3014,13 +3014,17 @@ class BaseCompiler
 # elif defined(JS_CODEGEN_X86)
         Operand srcAddr(ptr.reg, access.offset());
 
-        bool byteRegConflict = access.byteSize() == 1 && !singleByteRegs_.has(dest.i32().reg);
-        AnyRegister out = byteRegConflict ? AnyRegister(ScratchRegX86) : dest.any();
+        if (dest.tag == AnyReg::I64) {
+            masm.wasmLoadI64(access.accessType(), srcAddr, dest.i64().reg);
+        } else {
+            bool byteRegConflict = access.byteSize() == 1 && !singleByteRegs_.has(dest.i32().reg);
+            AnyRegister out = byteRegConflict ? AnyRegister(ScratchRegX86) : dest.any();
 
-        masm.wasmLoad(access.accessType(), 0, srcAddr, out);
+            masm.wasmLoad(access.accessType(), 0, srcAddr, out);
 
-        if (byteRegConflict)
-            masm.mov(ScratchRegX86, dest.i32().reg);
+            if (byteRegConflict)
+                masm.mov(ScratchRegX86, dest.i32().reg);
+        }
 # else
         MOZ_CRASH("Compiler bug: Unexpected platform.");
 # endif
@@ -3054,15 +3058,21 @@ class BaseCompiler
 # elif defined(JS_CODEGEN_X86)
         Operand dstAddr(ptr.reg, access.offset());
 
-        AnyRegister value;
-        if (access.byteSize() == 1 && !singleByteRegs_.has(src.i32().reg)) {
-            masm.mov(src.i32().reg, ScratchRegX86);
-            value = AnyRegister(ScratchRegX86);
+        if (access.accessType() == Scalar::Int64) {
+            masm.wasmStoreI64(src.i64().reg, dstAddr);
         } else {
-            value = src.any();
-        }
+            AnyRegister value;
+            if (src.tag == AnyReg::I64) {
+                value = AnyRegister(src.i64().reg.low);
+            } else if (access.byteSize() == 1 && !singleByteRegs_.has(src.i32().reg)) {
+                masm.mov(src.i32().reg, ScratchRegX86);
+                value = AnyRegister(ScratchRegX86);
+            } else {
+                value = src.any();
+            }
 
-        masm.wasmStore(access.accessType(), 0, value, dstAddr);
+            masm.wasmStore(access.accessType(), 0, value, dstAddr);
+        }
 # else
         MOZ_CRASH("Compiler bug: unexpected platform");
 # endif
@@ -5679,8 +5689,16 @@ BaseCompiler::emitLoad(ValType type, Scalar::Type viewType)
         break;
       }
       case ValType::I64: {
-        RegI32 rp = popI32();
-        RegI64 rv = needI64();
+        RegI64 rv;
+        RegI32 rp;
+#ifdef JS_CODEGEN_X86
+        rv = abiReturnRegI64;
+        needI64(rv);
+        rp = popI32();
+#else
+        rp = popI32();
+        rv = needI64();
+#endif
         if (!load(access, rp, AnyReg(rv)))
             return false;
         pushI64(rv);
