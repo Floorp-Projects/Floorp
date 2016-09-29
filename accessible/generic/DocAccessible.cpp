@@ -2180,6 +2180,8 @@ DocAccessible::MoveChild(Accessible* aChild, Accessible* aNewParent,
     children->RemoveElement(aChild);
   }
 
+  NotificationController::MoveGuard mguard(mNotificationController);
+
   if (curParent == aNewParent) {
     MOZ_ASSERT(aChild->IndexInParent() != aIdxInParent, "No move case");
     curParent->MoveChild(aIdxInParent, aChild);
