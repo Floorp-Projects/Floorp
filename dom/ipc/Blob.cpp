@@ -1307,12 +1307,6 @@ RemoteInputStream::Deserialize(const InputStreamParams& /* aParams */,
   MOZ_CRASH("RemoteInputStream should never be deserialized");
 }
 
-Maybe<uint64_t>
-RemoteInputStream::ExpectedSerializedLength()
-{
-  return Nothing();
-}
-
 nsIInputStream*
 RemoteInputStream::BlockAndGetInternalStream()
 {
