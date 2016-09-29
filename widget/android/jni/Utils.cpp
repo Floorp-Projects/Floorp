@@ -73,6 +73,7 @@ pthread_key_t sThreadEnvKey;
 jclass sOOMErrorClass;
 jobject sClassLoader;
 jmethodID sClassLoaderLoadClass;
+bool sIsFennec;
 
 void UnregisterThreadEnv(void* env)
 {
@@ -114,6 +115,11 @@ void SetGeckoThreadEnv(JNIEnv* aEnv)
             Class::LocalRef::Adopt(aEnv->GetObjectClass(sClassLoader)).Get(),
             "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
     MOZ_ASSERT(sClassLoader && sClassLoaderLoadClass);
+
+    auto geckoAppClass = Class::LocalRef::Adopt(
+            aEnv->FindClass("org/mozilla/gecko/GeckoApp"));
+    aEnv->ExceptionClear();
+    sIsFennec = !!geckoAppClass;
 }
 
 JNIEnv* GetEnvForThread()
@@ -284,6 +290,11 @@ void DispatchToGeckoThread(UniquePtr<AbstractCall>&& aCall)
     };
 
     nsAppShell::PostEvent(MakeUnique<AbstractCallEvent>(Move(aCall)));
+}
+
+bool IsFennec()
+{
+    return sIsFennec;
 }
 
 } // jni

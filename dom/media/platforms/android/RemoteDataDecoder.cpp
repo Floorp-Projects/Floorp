@@ -199,6 +199,11 @@ public:
       return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
     }
 
+    if (!jni::IsFennec()) {
+      NS_WARNING("Remote decoding not supported in non-Fennec environment\n");
+      return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
+    }
+
     // Register native methods.
     JavaCallbacksSupport::Init();
 
