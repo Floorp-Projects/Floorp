@@ -1591,9 +1591,7 @@ XMLHttpRequestMainThread::StreamReaderFunc(nsIInputStream* in,
 
   if (xmlHttpRequest->mResponseType == XMLHttpRequestResponseType::Blob) {
     if (!xmlHttpRequest->mDOMBlob) {
-      if (!xmlHttpRequest->mBlobStorage) {
-        xmlHttpRequest->mBlobStorage = new MutableBlobStorage();
-      }
+      xmlHttpRequest->MaybeCreateBlobStorage();
       rv = xmlHttpRequest->mBlobStorage->Append(fromRawSegment, count);
     }
   } else if (xmlHttpRequest->mResponseType == XMLHttpRequestResponseType::Moz_blob) {
@@ -2036,6 +2034,8 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
   mXMLParserStreamListener = nullptr;
   mContext = nullptr;
 
+  bool waitingForBlobCreation = false;
+
   if (NS_SUCCEEDED(status) &&
       (mResponseType == XMLHttpRequestResponseType::_empty ||
        mResponseType == XMLHttpRequestResponseType::Text)) {
@@ -2050,6 +2050,11 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
     if (mDOMBlob) {
       mResponseBlob = mDOMBlob;
       mDOMBlob = nullptr;
+
+      mLoadTotal = mResponseBlob->GetSize(rv);
+      if (NS_WARN_IF(rv.Failed())) {
+        status = rv.StealNSResult();
+      }
     } else {
       // Smaller files may be written in cache map instead of separate files.
       // Also, no-store response cannot be written in persistent cache.
@@ -2059,16 +2064,10 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
       if (mResponseType == XMLHttpRequestResponseType::Blob) {
         // mBlobStorage can be null if the channel is non-file non-cacheable
         // and if the response length is zero.
-        if (!mBlobStorage) {
-          mBlobStorage = new MutableBlobStorage();
-        }
-
-        mResponseBlob = mBlobStorage->GetBlob(GetOwner(), contentType, rv);
-        mBlobStorage = nullptr;
-
-        if (NS_WARN_IF(rv.Failed())) {
-          return rv.StealNSResult();
-        }
+        MaybeCreateBlobStorage();
+        mLoadTotal =
+          mBlobStorage->GetBlobWhenReady(GetOwner(), contentType, this);
+        waitingForBlobCreation = true;
       } else {
         // mBlobSet can be null if the channel is non-file non-cacheable
         // and if the response length is zero.
@@ -2088,14 +2087,11 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
         }
 
         mResponseBlob = Blob::Create(GetOwner(), blobImpl);
+        mLoadTotal = mResponseBlob->GetSize(rv);
+        if (NS_WARN_IF(rv.Failed())) {
+          status = rv.StealNSResult();
+        }
       }
-    }
-
-    MOZ_ASSERT(mResponseBlob);
-
-    mLoadTotal = mResponseBlob->GetSize(rv);
-    if (NS_WARN_IF(rv.Failed())) {
-      status = rv.StealNSResult();
     }
 
     NS_ASSERTION(mResponseBody.IsEmpty(), "mResponseBody should be empty");
@@ -2144,7 +2140,12 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
 
   if (!mResponseXML) {
     mFlagParseBody = false;
-    ChangeStateToDone();
+
+    //We postpone the 'done' until the creation of the Blob is completed.
+    if (!waitingForBlobCreation) {
+      ChangeStateToDone();
+    }
+
     return NS_OK;
   }
 
@@ -3628,6 +3629,46 @@ nsHeaderVisitor::VisitHeader(const nsACString &header, const nsACString &value)
     mHeaders.AppendLiteral("\r\n");
   }
   return NS_OK;
+}
+
+void
+XMLHttpRequestMainThread::MaybeCreateBlobStorage()
+{
+  MOZ_ASSERT(mResponseType == XMLHttpRequestResponseType::Blob);
+
+  if (mBlobStorage) {
+    return;
+  }
+
+  MutableBlobStorage::MutableBlobStorageType storageType =
+    BasePrincipal::Cast(mPrincipal)->PrivateBrowsingId() == 0
+      ? MutableBlobStorage::eCouldBeInTemporaryFile
+      : MutableBlobStorage::eOnlyInMemory;
+
+  mBlobStorage = new MutableBlobStorage(storageType);
+}
+
+void
+XMLHttpRequestMainThread::BlobStoreCompleted(MutableBlobStorage* aBlobStorage,
+                                             Blob* aBlob, nsresult aRv)
+{
+  // Ok, the state is changed...
+  if (mBlobStorage != aBlobStorage || NS_FAILED(aRv)) {
+    return;
+  }
+
+  MOZ_ASSERT(mState != State::done);
+
+  mResponseBlob = aBlob;
+  mBlobStorage = nullptr;
+
+  ErrorResult rv;
+  mLoadTotal = mResponseBlob->GetSize(rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    rv.SuppressException();
+  }
+
+  ChangeStateToDone();
 }
 
 // nsXMLHttpRequestXPCOMifier implementation
