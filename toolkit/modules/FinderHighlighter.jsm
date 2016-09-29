@@ -59,7 +59,7 @@ const kModalStyles = {
     ["vertical-align", "top !important"]
   ],
   maskNode: [
-    ["background", "rgba(0,0,0,.35)"],
+    ["background", "rgba(0,0,0,.25)"],
     ["pointer-events", "none"],
     ["position", "absolute"],
     ["z-index", 1]
@@ -69,7 +69,7 @@ const kModalStyles = {
     ["top", 0],
     ["left", 0]
   ],
-  maskNodeBrightText: [ ["background", "rgba(255,255,255,.35)"] ]
+  maskNodeBrightText: [ ["background", "rgba(255,255,255,.25)"] ]
 };
 const kModalOutlineAnim = {
   "keyframes": [
