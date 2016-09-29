@@ -76,6 +76,9 @@ class BaseFirefoxTestCase(unittest.TestCase, Puppeteer):
         else:
             self.marionette.restart(in_app=True)
 
+        # Marionette doesn't keep the former context, so restore to chrome
+        self.marionette.set_context('chrome')
+
         # Ensure that we always have a valid browser instance available
         self.browser = self.windows.switch_to(lambda win: type(win) is BrowserWindow)
 
