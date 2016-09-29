@@ -2617,6 +2617,8 @@ class BaseCompiler
 #if defined(JS_CODEGEN_X64)
         // movl clears the high bits if the two registers are the same.
         masm.movl(src.reg.reg, dest.reg);
+#elif defined(JS_NUNBOX32)
+        masm.move32(src.reg.low, dest.reg);
 #else
         MOZ_CRASH("BaseCompiler platform hook: wrapI64ToI32");
 #endif
@@ -2625,6 +2627,11 @@ class BaseCompiler
     void extendI32ToI64(RegI32 src, RegI64 dest) {
 #if defined(JS_CODEGEN_X64)
         masm.movslq(src.reg, dest.reg.reg);
+#elif defined(JS_CODEGEN_X86)
+        MOZ_ASSERT(dest.reg.low == src.reg);
+        MOZ_ASSERT(dest.reg.low == eax);
+        MOZ_ASSERT(dest.reg.high == edx);
+        masm.cdq();
 #else
         MOZ_CRASH("BaseCompiler platform hook: extendI32ToI64");
 #endif
@@ -2633,6 +2640,9 @@ class BaseCompiler
     void extendU32ToI64(RegI32 src, RegI64 dest) {
 #if defined(JS_CODEGEN_X64)
         masm.movl(src.reg, dest.reg.reg);
+#elif defined(JS_NUNBOX32)
+        masm.move32(src.reg, dest.reg.low);
+        masm.move32(Imm32(0), dest.reg.high);
 #else
         MOZ_CRASH("BaseCompiler platform hook: extendU32ToI64");
 #endif
@@ -4372,16 +4382,24 @@ BaseCompiler::emitWrapI64ToI32()
     RegI64 r0 = popI64();
     RegI32 i0 = fromI64(r0);
     wrapI64ToI32(r0, i0);
+    freeI64Except(r0, i0);
     pushI32(i0);
 }
 
 void
 BaseCompiler::emitExtendI32ToI64()
 {
+#if defined(JS_CODEGEN_X86)
+    need2xI32(specific_edx, specific_eax);
+    RegI32 r0 = popI32ToSpecific(specific_eax);
+    RegI64 x0 = RegI64(Register64(specific_edx.reg, specific_eax.reg));
+#else
     RegI32 r0 = popI32();
     RegI64 x0 = fromI32(r0);
+#endif
     extendI32ToI64(r0, x0);
     pushI64(x0);
+    // Note: no need to free r0, since it is part of x0
 }
 
 void
@@ -4391,6 +4409,7 @@ BaseCompiler::emitExtendU32ToI64()
     RegI64 x0 = fromI32(r0);
     extendU32ToI64(r0, x0);
     pushI64(x0);
+    // Note: no need to free r0, since it is part of x0
 }
 
 void
