@@ -23,7 +23,7 @@ interface DataTransfer {
   DOMString getData(DOMString format);
   [Throws]
   void setData(DOMString format, DOMString data);
-  [Throws]
+  [Throws, NeedsSubjectPrincipal]
   void clearData(optional DOMString format);
   [Throws]
   readonly attribute FileList? files;
@@ -91,7 +91,7 @@ partial interface DataTransfer {
    * @throws NS_ERROR_DOM_INDEX_SIZE_ERR if index is greater or equal than itemCount
    * @throws NO_MODIFICATION_ALLOWED_ERR if the item cannot be modified
    */
-  [Throws]
+  [Throws, NeedsSubjectPrincipal]
   void mozClearDataAt(DOMString format, unsigned long index);
 
   /*

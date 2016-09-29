@@ -81,8 +81,12 @@ DataTransferItemList::Clone(DataTransfer* aDataTransfer) const
 }
 
 void
-DataTransferItemList::Remove(uint32_t aIndex, ErrorResult& aRv)
+DataTransferItemList::Remove(uint32_t aIndex,
+                             const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                             ErrorResult& aRv)
 {
+  MOZ_ASSERT(aSubjectPrincipal.isSome());
+
   if (mDataTransfer->IsReadOnly()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
@@ -93,7 +97,7 @@ DataTransferItemList::Remove(uint32_t aIndex, ErrorResult& aRv)
     return;
   }
 
-  ClearDataHelper(mItems[aIndex], aIndex, -1, aRv);
+  ClearDataHelper(mItems[aIndex], aIndex, -1, aSubjectPrincipal, aRv);
 }
 
 DataTransferItem*
@@ -122,8 +126,11 @@ DataTransferItemList::MozItemCount() const
 }
 
 void
-DataTransferItemList::Clear(ErrorResult& aRv)
+DataTransferItemList::Clear(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                            ErrorResult& aRv)
 {
+  MOZ_ASSERT(aSubjectPrincipal.isSome());
+
   if (NS_WARN_IF(mDataTransfer->IsReadOnly())) {
     return;
   }
@@ -132,7 +139,7 @@ DataTransferItemList::Clear(ErrorResult& aRv)
   for (uint32_t i = 0; i < count; i++) {
     // We always remove the last item first, to avoid moving items around in
     // memory as much
-    Remove(Length() - 1, aRv);
+    Remove(Length() - 1, aSubjectPrincipal, aRv);
     ENSURE_SUCCESS_VOID(aRv);
   }
 
@@ -142,8 +149,11 @@ DataTransferItemList::Clear(ErrorResult& aRv)
 DataTransferItem*
 DataTransferItemList::Add(const nsAString& aData,
                           const nsAString& aType,
+                          const Maybe<nsIPrincipal*>& aSubjectPrincipal,
                           ErrorResult& aRv)
 {
+  MOZ_ASSERT(aSubjectPrincipal.isSome());
+
   if (NS_WARN_IF(mDataTransfer->IsReadOnly())) {
     return nullptr;
   }
@@ -153,9 +163,8 @@ DataTransferItemList::Add(const nsAString& aData,
   nsAutoString format;
   mDataTransfer->GetRealFormat(aType, format);
 
-  nsIPrincipal* subjectPrincipal = nsContentUtils::SubjectPrincipal();
-
-  if (!DataTransfer::PrincipalMaySetData(format, data, subjectPrincipal)) {
+  if (!DataTransfer::PrincipalMaySetData(format, data,
+                                         aSubjectPrincipal.value())) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
@@ -163,7 +172,7 @@ DataTransferItemList::Add(const nsAString& aData,
   // We add the textual data to index 0. We set aInsertOnly to true, as we don't
   // want to update an existing entry if it is already present, as per the spec.
   RefPtr<DataTransferItem> item =
-    SetDataWithPrincipal(format, data, 0, subjectPrincipal,
+    SetDataWithPrincipal(format, data, 0, aSubjectPrincipal.value(),
                          /* aInsertOnly = */ true,
                          /* aHidden = */ false,
                          aRv);
@@ -176,8 +185,12 @@ DataTransferItemList::Add(const nsAString& aData,
 }
 
 DataTransferItem*
-DataTransferItemList::Add(File& aData, ErrorResult& aRv)
+DataTransferItemList::Add(File& aData,
+                          const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                          ErrorResult& aRv)
 {
+  MOZ_ASSERT(aSubjectPrincipal.isSome());
+
   if (mDataTransfer->IsReadOnly()) {
     return nullptr;
   }
@@ -189,9 +202,8 @@ DataTransferItemList::Add(File& aData, ErrorResult& aRv)
   nsAutoString type;
   aData.GetType(type);
 
-  nsIPrincipal* subjectPrincipal = nsContentUtils::SubjectPrincipal();
-
-  if (!DataTransfer::PrincipalMaySetData(type, data, subjectPrincipal)) {
+  if (!DataTransfer::PrincipalMaySetData(type, data,
+                                         aSubjectPrincipal.value())) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
@@ -201,7 +213,7 @@ DataTransferItemList::Add(File& aData, ErrorResult& aRv)
   // the internal specced layout.
   uint32_t index = mIndexedItems.Length();
   RefPtr<DataTransferItem> item =
-    SetDataWithPrincipal(type, data, index, subjectPrincipal,
+    SetDataWithPrincipal(type, data, index, aSubjectPrincipal.value(),
                          /* aInsertOnly = */ true,
                          /* aHidden = */ false,
                          aRv);
@@ -260,8 +272,11 @@ DataTransferItemList::Files(nsIPrincipal* aPrincipal)
 void
 DataTransferItemList::MozRemoveByTypeAt(const nsAString& aType,
                                         uint32_t aIndex,
+                                        const Maybe<nsIPrincipal*>& aSubjectPrincipal,
                                         ErrorResult& aRv)
 {
+  MOZ_ASSERT(aSubjectPrincipal.isSome());
+
   if (NS_WARN_IF(mDataTransfer->IsReadOnly() ||
                  aIndex >= mIndexedItems.Length())) {
     return;
@@ -278,7 +293,7 @@ DataTransferItemList::MozRemoveByTypeAt(const nsAString& aType,
       uint32_t index = items.Length() - 1;
       MOZ_ASSERT(index == count - i - 1);
 
-      ClearDataHelper(items[index], -1, index, aRv);
+      ClearDataHelper(items[index], -1, index, aSubjectPrincipal, aRv);
       if (NS_WARN_IF(aRv.Failed())) {
         return;
       }
@@ -294,7 +309,7 @@ DataTransferItemList::MozRemoveByTypeAt(const nsAString& aType,
     nsAutoString type;
     items[i]->GetType(type);
     if (type == aType) {
-      ClearDataHelper(items[i], -1, i, aRv);
+      ClearDataHelper(items[i], -1, i, aSubjectPrincipal, aRv);
       return;
     }
   }
@@ -469,6 +484,7 @@ void
 DataTransferItemList::ClearDataHelper(DataTransferItem* aItem,
                                       uint32_t aIndexHint,
                                       uint32_t aMozOffsetHint,
+                                      const Maybe<nsIPrincipal*>& aSubjectPrincipal,
                                       ErrorResult& aRv)
 {
   MOZ_ASSERT(aItem);
@@ -476,9 +492,8 @@ DataTransferItemList::ClearDataHelper(DataTransferItem* aItem,
     return;
   }
 
-  nsIPrincipal* principal = nsContentUtils::SubjectPrincipal();
-  if (aItem->Principal() && principal &&
-      !principal->Subsumes(aItem->Principal())) {
+  if (aItem->Principal() && aSubjectPrincipal.isSome() &&
+      !aSubjectPrincipal.value()->Subsumes(aItem->Principal())) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }

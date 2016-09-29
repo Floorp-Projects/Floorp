@@ -449,8 +449,12 @@ DataTransfer::SetData(const nsAString& aFormat, const nsAString& aData,
 }
 
 void
-DataTransfer::ClearData(const Optional<nsAString>& aFormat, ErrorResult& aRv)
+DataTransfer::ClearData(const Optional<nsAString>& aFormat,
+                        const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                        ErrorResult& aRv)
 {
+  MOZ_ASSERT(aSubjectPrincipal.isSome());
+
   if (mReadOnly) {
     aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
@@ -461,9 +465,9 @@ DataTransfer::ClearData(const Optional<nsAString>& aFormat, ErrorResult& aRv)
   }
 
   if (aFormat.WasPassed()) {
-    MozClearDataAtHelper(aFormat.Value(), 0, aRv);
+    MozClearDataAtHelper(aFormat.Value(), 0, aSubjectPrincipal, aRv);
   } else {
-    MozClearDataAtHelper(EmptyString(), 0, aRv);
+    MozClearDataAtHelper(EmptyString(), 0, aSubjectPrincipal, aRv);
   }
 }
 
@@ -473,7 +477,7 @@ DataTransfer::ClearData(const nsAString& aFormat)
   Optional<nsAString> format;
   format = &aFormat;
   ErrorResult rv;
-  ClearData(format, rv);
+  ClearData(format, Some(nsContentUtils::SubjectPrincipal()), rv);
   return rv.StealNSResult();
 }
 
@@ -743,8 +747,11 @@ DataTransfer::MozSetDataAt(JSContext* aCx, const nsAString& aFormat,
 
 void
 DataTransfer::MozClearDataAt(const nsAString& aFormat, uint32_t aIndex,
+                             const Maybe<nsIPrincipal*>& aSubjectPrincipal,
                              ErrorResult& aRv)
 {
+  MOZ_ASSERT(aSubjectPrincipal.isSome());
+
   if (mReadOnly) {
     aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
@@ -763,7 +770,7 @@ DataTransfer::MozClearDataAt(const nsAString& aFormat, uint32_t aIndex,
     return;
   }
 
-  MozClearDataAtHelper(aFormat, aIndex, aRv);
+  MozClearDataAtHelper(aFormat, aIndex, aSubjectPrincipal, aRv);
 
   // If we just cleared the 0-th index, and there are still more than 1 indexes
   // remaining, MozClearDataAt should cause the 1st index to become the 0th
@@ -779,6 +786,7 @@ DataTransfer::MozClearDataAt(const nsAString& aFormat, uint32_t aIndex,
 
 void
 DataTransfer::MozClearDataAtHelper(const nsAString& aFormat, uint32_t aIndex,
+                                   const Maybe<nsIPrincipal*>& aSubjectPrincipal,
                                    ErrorResult& aRv)
 {
   MOZ_ASSERT(!mReadOnly);
@@ -786,18 +794,19 @@ DataTransfer::MozClearDataAtHelper(const nsAString& aFormat, uint32_t aIndex,
   MOZ_ASSERT(aIndex == 0 ||
              (mEventMessage != eCut && mEventMessage != eCopy &&
               mEventMessage != ePaste));
+  MOZ_ASSERT(aSubjectPrincipal.isSome());
 
   nsAutoString format;
   GetRealFormat(aFormat, format);
 
-  mItems->MozRemoveByTypeAt(format, aIndex, aRv);
+  mItems->MozRemoveByTypeAt(format, aIndex, aSubjectPrincipal, aRv);
 }
 
 NS_IMETHODIMP
 DataTransfer::MozClearDataAt(const nsAString& aFormat, uint32_t aIndex)
 {
   ErrorResult rv;
-  MozClearDataAt(aFormat, aIndex, rv);
+  MozClearDataAt(aFormat, aIndex, Some(nsContentUtils::SubjectPrincipal()), rv);
   return rv.StealNSResult();
 }
 
