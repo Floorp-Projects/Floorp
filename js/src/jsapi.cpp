@@ -5622,7 +5622,7 @@ JS_ReportErrorNumberVA(JSContext* cx, JSErrorCallback errorCallback,
 {
     AssertHeapIsIdle(cx);
     ReportErrorNumberVA(cx, JSREPORT_ERROR, errorCallback, userRef,
-                        errorNumber, ArgumentsAreASCII, ap);
+                        errorNumber, ArgumentsAreLatin1, ap);
 }
 
 JS_PUBLIC_API(void)
@@ -5771,7 +5771,7 @@ JS_ReportErrorFlagsAndNumber(JSContext* cx, unsigned flags,
     AssertHeapIsIdle(cx);
     va_start(ap, errorNumber);
     ok = ReportErrorNumberVA(cx, flags, errorCallback, userRef,
-                             errorNumber, ArgumentsAreASCII, ap);
+                             errorNumber, ArgumentsAreLatin1, ap);
     va_end(ap);
     return ok;
 }
