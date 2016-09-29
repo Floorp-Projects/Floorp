@@ -1128,13 +1128,10 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
                "Readers that send WAITING_FOR_DATA need to implement WaitForData");
     mReader->WaitForData(aType);
 
-    // We are out of data to decode and will enter buffering mode soon.
-    // We want to play the frames we have already decoded, so we stop pre-rolling
-    // and ensure that loadeddata is fired as required.
-    if (isAudio) {
-      StopPrerollingAudio();
-    } else {
-      StopPrerollingVideo();
+    if ((isAudio && mIsAudioPrerolling) || (!isAudio && mIsVideoPrerolling)) {
+      // Schedule next cycle to stop prerolling so we can play the frames we've
+      // decoded so far.
+      ScheduleStateMachine();
     }
     return;
   }
@@ -1158,11 +1155,16 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
   // state.
   if (isAudio) {
     AudioQueue().Finish();
-    StopPrerollingAudio();
   } else {
     VideoQueue().Finish();
-    StopPrerollingVideo();
   }
+
+  if ((isAudio && mIsAudioPrerolling) || (!isAudio && mIsVideoPrerolling)) {
+    // No more data to decode. Schedule next cycle to stop prerolling
+    // and start playback.
+    ScheduleStateMachine();
+  }
+
   switch (mState) {
     case DECODER_STATE_DECODING_FIRSTFRAME:
       MaybeFinishDecodeFirstFrame();
@@ -2120,12 +2122,10 @@ MediaDecoderStateMachine::OnSeekTaskResolved(SeekTaskResolveValue aValue)
 
   if (aValue.mIsAudioQueueFinished) {
     AudioQueue().Finish();
-    StopPrerollingAudio();
   }
 
   if (aValue.mIsVideoQueueFinished) {
     VideoQueue().Finish();
-    StopPrerollingVideo();
   }
 
   SeekCompleted();
@@ -2141,12 +2141,10 @@ MediaDecoderStateMachine::OnSeekTaskRejected(SeekTaskRejectValue aValue)
 
   if (aValue.mIsAudioQueueFinished) {
     AudioQueue().Finish();
-    StopPrerollingAudio();
   }
 
   if (aValue.mIsVideoQueueFinished) {
     VideoQueue().Finish();
-    StopPrerollingVideo();
   }
 
   DecodeError(aValue.mError);
