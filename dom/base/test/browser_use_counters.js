@@ -40,6 +40,17 @@ add_task(function* () {
   yield check_use_counter_iframe("file_use_counter_svg_currentScale.svg",
                                  "SVGSVGELEMENT_CURRENTSCALE_setter");
 
+  // Check that even loads from the imglib cache update use counters.  The
+  // images should still be there, because we just loaded them in the last
+  // set of tests.  But we won't get updated counts for the document
+  // counters, because we won't be re-parsing the SVG documents.
+  yield check_use_counter_iframe("file_use_counter_svg_getElementById.svg",
+                                 "SVGSVGELEMENT_GETELEMENTBYID", false);
+  yield check_use_counter_iframe("file_use_counter_svg_currentScale.svg",
+                                 "SVGSVGELEMENT_CURRENTSCALE_getter", false);
+  yield check_use_counter_iframe("file_use_counter_svg_currentScale.svg",
+                                 "SVGSVGELEMENT_CURRENTSCALE_setter", false);
+
   // Check that use counters are incremented by SVGs loaded as images.
   // Note that SVG images are not permitted to execute script, so we can only
   // check for properties here.
@@ -64,19 +75,8 @@ add_task(function* () {
   // Check that use counters are incremented by SVGs loaded as CSS images in
   // pages loaded in iframes.  Again, SVG images in CSS aren't permitted to
   // execute script, so we need to use properties here.
-  yield check_use_counter_iframe("file_use_counter_svg_background.html",
-                                 "PROPERTY_FILL");
   yield check_use_counter_iframe("file_use_counter_svg_list_style_image.html",
                                  "PROPERTY_FILL");
-
-  // Check that even loads from the imglib cache update use counters.  The
-  // background images should still be there, because we just loaded them
-  // in the last set of tests.  But we won't get updated counts for the
-  // document counters, because we won't be re-parsing the SVG documents.
-  yield check_use_counter_iframe("file_use_counter_svg_background.html",
-                                 "PROPERTY_FILL", false);
-  yield check_use_counter_iframe("file_use_counter_svg_list_style_image.html",
-                                 "PROPERTY_FILL", false);
 });
 
 add_task(function* () {
