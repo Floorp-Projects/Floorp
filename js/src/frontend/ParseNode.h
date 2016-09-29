@@ -452,7 +452,7 @@ class ParseNode
       : pn_type(kind),
         pn_op(op),
         pn_arity(arity),
-        pn_parens(false),
+        pn_parens(0),
         pn_pos(0, 0),
         pn_next(nullptr)
     {
@@ -464,7 +464,7 @@ class ParseNode
       : pn_type(kind),
         pn_op(op),
         pn_arity(arity),
-        pn_parens(false),
+        pn_parens(0),
         pn_pos(pos),
         pn_next(nullptr)
     {

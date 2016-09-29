@@ -283,15 +283,15 @@ TraceLoggerGraph::~TraceLoggerGraph()
         // Make sure every start entry has a corresponding stop value.
         // We temporarily enable logging for this. Stop doesn't need any extra data,
         // so is safe to do even when we have encountered OOM.
-        enabled = true;
+        enabled = 1;
         while (stack.size() > 1)
             stopEvent(0);
-        enabled = false;
+        enabled = 0;
     }
 
     if (!failed && !flush()) {
         fprintf(stderr, "TraceLogging: Couldn't write the data to disk.\n");
-        enabled = false;
+        enabled = 0;
         failed = true;
     }
 
@@ -364,7 +364,7 @@ TraceLoggerGraph::startEvent(uint32_t id, uint64_t timestamp)
         if (tree.size() >= treeSizeFlushLimit() || !tree.ensureSpaceBeforeAdd()) {
             if (!flush()) {
                 fprintf(stderr, "TraceLogging: Couldn't write the data to disk.\n");
-                enabled = false;
+                enabled = 0;
                 failed = true;
                 return;
             }
@@ -373,7 +373,7 @@ TraceLoggerGraph::startEvent(uint32_t id, uint64_t timestamp)
 
     if (!startEventInternal(id, timestamp)) {
         fprintf(stderr, "TraceLogging: Failed to start an event.\n");
-        enabled = false;
+        enabled = 0;
         failed = true;
         return;
     }
@@ -462,7 +462,7 @@ TraceLoggerGraph::stopEvent(uint64_t timestamp)
     if (enabled && stack.lastEntry().active()) {
         if (!updateStop(stack.lastEntry().treeId(), timestamp)) {
             fprintf(stderr, "TraceLogging: Failed to stop an event.\n");
-            enabled = false;
+            enabled = 0;
             failed = true;
             return;
         }
