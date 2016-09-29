@@ -25,8 +25,6 @@
 #include "nsIIPCSerializableInputStream.h"
 
 using namespace mozilla::ipc;
-using mozilla::Maybe;
-using mozilla::Some;
 
 //-----------------------------------------------------------------------------
 // nsIStringInputStream implementation
@@ -354,12 +352,6 @@ nsStringInputStream::Deserialize(const InputStreamParams& aParams,
   }
 
   return true;
-}
-
-Maybe<uint64_t>
-nsStringInputStream::ExpectedSerializedLength()
-{
-  return Some(static_cast<uint64_t>(Length()));
 }
 
 /////////

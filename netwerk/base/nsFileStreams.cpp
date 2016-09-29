@@ -32,9 +32,6 @@ typedef mozilla::ipc::FileDescriptor::PlatformHandleType FileHandleType;
 
 using namespace mozilla::ipc;
 using mozilla::DebugOnly;
-using mozilla::Maybe;
-using mozilla::Nothing;
-using mozilla::Some;
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsFileStreamBase
@@ -665,12 +662,6 @@ nsFileInputStream::Deserialize(const InputStreamParams& aParams,
     return true;
 }
 
-Maybe<uint64_t>
-nsFileInputStream::ExpectedSerializedLength()
-{
-    return Nothing();
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsPartialFileInputStream
 
@@ -868,13 +859,6 @@ nsPartialFileInputStream::Deserialize(
     // XXX This is so broken. Main thread IO alert.
     return NS_SUCCEEDED(nsFileInputStream::Seek(NS_SEEK_SET, mStart));
 }
-
-Maybe<uint64_t>
-nsPartialFileInputStream::ExpectedSerializedLength()
-{
-    return Some(mLength);
-}
-
 
 nsresult
 nsPartialFileInputStream::DoPendingSeek()
