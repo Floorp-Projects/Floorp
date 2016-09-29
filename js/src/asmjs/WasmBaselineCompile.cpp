@@ -2369,11 +2369,7 @@ class BaseCompiler
     }
 
     void subtractI64(RegI64 rhs, RegI64 srcDest) {
-#if defined(JS_CODEGEN_X64)
-        masm.subq(rhs.reg.reg, srcDest.reg.reg);
-#else
-        MOZ_CRASH("BaseCompiler platform hook: subtractI64");
-#endif
+        masm.sub64(rhs.reg, srcDest.reg);
     }
 
     void multiplyI64(RegI64 rhs, RegI64 srcDest) {
