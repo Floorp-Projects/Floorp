@@ -147,9 +147,25 @@ GetChromeHangReport(Telemetry::ProcessedStack& aStack,
   std::vector<uintptr_t> rawStack;
   rawStack.reserve(MAX_CALL_STACK_PCS);
   DWORD ret = ::SuspendThread(winMainThreadHandle);
-  if (ret == -1) {
+  bool suspended = false;
+  if (ret != -1) {
+    // SuspendThread is asynchronous, so the thread may still be running. Use
+    // GetThreadContext to ensure it's really suspended.
+    // See https://blogs.msdn.microsoft.com/oldnewthing/20150205-00/?p=44743.
+    CONTEXT context;
+    context.ContextFlags = CONTEXT_CONTROL;
+    if (::GetThreadContext(winMainThreadHandle, &context)) {
+      suspended = true;
+    }
+  }
+
+  if (!suspended) {
+    if (ret != -1) {
+      MOZ_ALWAYS_TRUE(::ResumeThread(winMainThreadHandle) != DWORD(-1));
+    }
     return;
   }
+
   MozStackWalk(ChromeStackWalker, /* skipFrames */ 0, /* maxFrames */ 0,
                reinterpret_cast<void*>(&rawStack),
                reinterpret_cast<uintptr_t>(winMainThreadHandle), nullptr);
