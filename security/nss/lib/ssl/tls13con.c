@@ -185,7 +185,7 @@ tls13_HandshakeState(SSL3WaitState st)
 
 #define TLS13_BASE_WAIT_STATE(ws) (ws & ~TLS13_WAIT_STATE_MASK)
 /* We don't mask idle_handshake because other parts of the code use it*/
-#define TLS13_WAIT_STATE(ws) (ws == idle_handshake ? ws : ws | TLS13_WAIT_STATE_MASK)
+#define TLS13_WAIT_STATE(ws) (((ws == idle_handshake) || (ws == wait_server_hello)) ? ws : ws | TLS13_WAIT_STATE_MASK)
 #define TLS13_CHECK_HS_STATE(ss, err, ...)                          \
     tls13_CheckHsState(ss, err, #err, __func__, __FILE__, __LINE__, \
                        __VA_ARGS__,                                 \
@@ -215,7 +215,7 @@ tls13_InHsStateV(sslSocket *ss, va_list ap)
     SSL3WaitState ws;
 
     while ((ws = va_arg(ap, SSL3WaitState)) != wait_invalid) {
-        if (ws == TLS13_BASE_WAIT_STATE(ss->ssl3.hs.ws)) {
+        if (TLS13_WAIT_STATE(ws) == ss->ssl3.hs.ws) {
             return PR_TRUE;
         }
     }

@@ -21,6 +21,8 @@
 #include "secoid.h"
 #include "nssutil.h"
 
+#include "pkcs1_vectors.h"
+
 #ifndef NSS_DISABLE_ECC
 #include "ecl-curve.h"
 SECStatus EC_DecodeParams(const SECItem *encodedParams,
@@ -3410,9 +3412,55 @@ rsaPrivKeysAreEqual(RSAPrivateKey *src, RSAPrivateKey *dest)
     return areEqual;
 }
 
+static int
+doRSAPopulateTestKV()
+{
+    RSAPrivateKey tstKey = { 0 };
+    SECStatus rv;
+    int failed = 0;
+    int i;
+
+    tstKey.arena = NULL;
+
+    /* Test public exponent, private exponent, modulus cases from
+     * pkcs1v15sign-vectors.txt. Some are valid PKCS#1 keys but not valid RSA
+     * ones (de = 1 mod lcm(p − 1, q − 1))
+     */
+    for (i = 0; i < PR_ARRAY_SIZE(PKCS1_VECTORS); ++i) {
+        struct pkcs1_test_vector *v = &PKCS1_VECTORS[i];
+
+        rsaPrivKeyReset(&tstKey);
+        tstKey.privateExponent.data = v->d;
+        tstKey.privateExponent.len = v->d_len;
+        tstKey.publicExponent.data = v->e;
+        tstKey.publicExponent.len = v->e_len;
+        tstKey.modulus.data = v->n;
+        tstKey.modulus.len = v->n_len;
+
+        rv = RSA_PopulatePrivateKey(&tstKey);
+        if (rv != SECSuccess) {
+            fprintf(stderr, "RSA Populate failed: pkcs1v15sign-vector %d\n", i);
+            failed = 1;
+        } else if (memcmp(v->q, tstKey.prime1.data, v->q_len) ||
+                   tstKey.prime1.len != v->q_len) {
+            fprintf(stderr, "RSA Populate key mismatch: pkcs1v15sign-vector %d q\n", i);
+            failed = 1;
+        } else if (memcmp(v->p, tstKey.prime2.data, v->p_len) ||
+                   tstKey.prime1.len != v->p_len) {
+            fprintf(stderr, "RSA Populate key mismatch: pkcs1v15sign-vector %d p\n", i);
+            failed = 1;
+        } else {
+            fprintf(stderr, "RSA Populate success: pkcs1v15sign-vector %d p\n", i);
+        }
+    }
+
+    PORT_FreeArena(tstKey.arena, PR_TRUE);
+    return failed;
+}
+
 /*
  * Test the RSA populate command to see that it can really build
- * keys from it's components.
+ * keys from its components.
  */
 static int
 doRSAPopulateTest(unsigned int keySize, unsigned long exponent)
@@ -3421,7 +3469,7 @@ doRSAPopulateTest(unsigned int keySize, unsigned long exponent)
     RSAPrivateKey tstKey = { 0 };
     SECItem expitem = { 0, 0, 0 };
     SECStatus rv;
-    unsigned char pubExp[4];
+    unsigned char pubExp[32];
     int expLen = 0;
     int failed = 0;
     int i;
@@ -3504,8 +3552,8 @@ doRSAPopulateTest(unsigned int keySize, unsigned long exponent)
         fprintf(stderr, "RSA Populate failed: pubExp privExp q\n");
         fprintf(stderr, " - not fatal\n");
         /* it's possible that we can't uniquely determine the original key
-     * from just the exponents and prime. Populate returns an error rather
-     * than return the wrong key. */
+         * from just the exponents and prime. Populate returns an error rather
+         * than return the wrong key. */
     } else if (!rsaPrivKeysAreEqual(&tstKey, srcKey)) {
         /* if we returned a key, it *must* be correct */
         fprintf(stderr, "RSA Populate key mismatch: pubExp privExp  q\n");
@@ -3529,6 +3577,7 @@ doRSAPopulateTest(unsigned int keySize, unsigned long exponent)
         failed = 1;
     }
 
+    PORT_FreeArena(srcKey->arena, PR_TRUE);
     return failed ? -1 : 0;
 }
 
@@ -3541,6 +3590,7 @@ enum {
     cmd_Nonce,
     cmd_Dump,
     cmd_RSAPopulate,
+    cmd_RSAPopulateKV,
     cmd_Sign,
     cmd_SelfTest,
     cmd_Verify
@@ -3594,6 +3644,7 @@ static secuCommandFlag bltest_commands[] =
       { /* cmd_Nonce */ 'N', PR_FALSE, 0, PR_FALSE },
       { /* cmd_Dump */ 'P', PR_FALSE, 0, PR_FALSE },
       { /* cmd_RSAPopulate */ 'R', PR_FALSE, 0, PR_FALSE },
+      { /* cmd_RSAPopulateKV */ 'K', PR_FALSE, 0, PR_FALSE },
       { /* cmd_Sign */ 'S', PR_FALSE, 0, PR_FALSE },
       { /* cmd_SelfTest */ 'T', PR_FALSE, 0, PR_FALSE },
       { /* cmd_Verify */ 'V', PR_FALSE, 0, PR_FALSE }
@@ -3731,6 +3782,12 @@ main(int argc, char **argv)
      * Handle three simple cases first
      */
 
+    /* test the RSA_PopulatePrivateKey function with known vectors */
+    if (bltest.commands[cmd_RSAPopulateKV].activated) {
+        PORT_Free(cipherInfo);
+        return doRSAPopulateTestKV();
+    }
+
     /* test the RSA_PopulatePrivateKey function */
     if (bltest.commands[cmd_RSAPopulate].activated) {
         unsigned int keySize = 1024;
@@ -3758,6 +3815,7 @@ main(int argc, char **argv)
         if (ret != 0) {
             fprintf(stderr, "RSA Populate test round %d: FAILED\n", i);
         }
+        PORT_Free(cipherInfo);
         return ret;
     }
 
