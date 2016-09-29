@@ -21,7 +21,7 @@ const TEST_CASES = [
   },
   {
     input: '(new DOMParser()).parseFromString("<svg></svg>", "image/svg+xml")',
-    output: "SVGDocument",
+    output: "XMLDocument",
     inspectable: true,
   },
 ];
