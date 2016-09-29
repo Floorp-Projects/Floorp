@@ -32,17 +32,37 @@ MOZ_ALIGNED_DECL(static const uint64_t, 16) TO_DOUBLE[4] = {
 
 static const double TO_DOUBLE_HIGH_SCALE = 0x100000000;
 
+bool
+MacroAssemblerX86::convertUInt64ToDoubleNeedsTemp()
+{
+    return HasSSE3();
+}
+
 void
-MacroAssemblerX86::convertUInt64ToDouble(Register64 src, Register temp, FloatRegister dest)
+MacroAssemblerX86::convertUInt64ToDouble(Register64 src, FloatRegister dest, Register temp)
 {
     // SUBPD needs SSE2, HADDPD needs SSE3.
     if (!HasSSE3()) {
-        convertUInt32ToDouble(src.high, dest);
-        movePtr(ImmPtr(&TO_DOUBLE_HIGH_SCALE), temp);
-        loadDouble(Address(temp, 0), ScratchDoubleReg);
-        asMasm().mulDouble(ScratchDoubleReg, dest);
-        convertUInt32ToDouble(src.low, ScratchDoubleReg);
-        asMasm().addDouble(ScratchDoubleReg, dest);
+        MOZ_ASSERT(temp == Register::Invalid());
+
+        // Zero the dest register to break dependencies, see convertInt32ToDouble.
+        zeroDouble(dest);
+
+        asMasm().Push(src.high);
+        asMasm().Push(src.low);
+        fild(Operand(esp, 0));
+
+        Label notNegative;
+        asMasm().branch32(Assembler::NotSigned, src.high, Imm32(0), &notNegative);
+        double add_constant = 18446744073709551616.0; // 2^64
+        store64(Imm64(mozilla::BitwiseCast<uint64_t>(add_constant)), Address(esp, 0));
+        fld(Operand(esp, 0));
+        faddp();
+        bind(&notNegative);
+
+        fstp(Operand(esp, 0));
+        vmovsd(Address(esp, 0), dest);
+        asMasm().freeStack(2*sizeof(intptr_t));
         return;
     }
 
@@ -70,7 +90,7 @@ MacroAssemblerX86::convertUInt64ToDouble(Register64 src, Register temp, FloatReg
     // here, each 64-bit part of dest represents following double:
     //   HI(dest) = 0x 1.00000HHHHHHHH * 2**84 == 2**84 + 0x HHHHHHHH 00000000
     //   LO(dest) = 0x 1.00000LLLLLLLL * 2**52 == 2**52 + 0x 00000000 LLLLLLLL
-    movePtr(ImmPtr(TO_DOUBLE), temp);
+    movePtr(ImmWord((uintptr_t)TO_DOUBLE), temp);
     vpunpckldq(Operand(temp, 0), dest128, dest128);
 
     // Subtract a constant C2 from dest, for each 64-bit part:
@@ -805,6 +825,35 @@ MacroAssembler::wasmTruncateFloat32ToUInt32(FloatRegister input, Register output
 }
 
 //}}} check_macroassembler_style
+
+void
+MacroAssemblerX86::convertInt64ToDouble(Register64 input, FloatRegister output)
+{
+    // Zero the output register to break dependencies, see convertInt32ToDouble.
+    zeroDouble(output);
+
+    asMasm().Push(input.high);
+    asMasm().Push(input.low);
+    fild(Operand(esp, 0));
+
+    fstp(Operand(esp, 0));
+    vmovsd(Address(esp, 0), output);
+    asMasm().freeStack(2*sizeof(intptr_t));
+}
+
+void
+MacroAssemblerX86::convertInt64ToFloat32(Register64 input, FloatRegister output)
+{
+    convertInt64ToDouble(input, output);
+    convertDoubleToFloat32(output, output);
+}
+
+void
+MacroAssemblerX86::convertUInt64ToFloat32(Register64 input, FloatRegister output, Register temp)
+{
+    convertUInt64ToDouble(input, output.asDouble(), temp);
+    convertDoubleToFloat32(output, output);
+}
 
 void
 MacroAssemblerX86::wasmTruncateDoubleToInt64(FloatRegister input, Register64 output, Label* oolEntry,

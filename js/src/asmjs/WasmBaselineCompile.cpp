@@ -2762,23 +2762,31 @@ class BaseCompiler
         return true;
     }
 
-    void convertI64ToF32(RegI64 src, bool isUnsigned, RegF32 dest) {
-#ifdef JS_CODEGEN_X64
+    bool convertI64ToFloatNeedsTemp(bool isUnsigned) const {
+#if defined(JS_CODEGEN_X86)
+        return isUnsigned && AssemblerX86Shared::HasSSE3();
+#else
+        return false;
+#endif
+    }
+
+    void convertI64ToF32(RegI64 src, bool isUnsigned, RegF32 dest, RegI32 temp) {
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
         if (isUnsigned)
-            masm.convertUInt64ToFloat32(src.reg.reg, dest.reg);
+            masm.convertUInt64ToFloat32(src.reg, dest.reg, temp.reg);
         else
-            masm.convertInt64ToFloat32(src.reg.reg, dest.reg);
+            masm.convertInt64ToFloat32(src.reg, dest.reg);
 #else
         MOZ_CRASH("BaseCompiler platform hook: convertI64ToF32");
 #endif
     }
 
-    void convertI64ToF64(RegI64 src, bool isUnsigned, RegF64 dest) {
-#ifdef JS_CODEGEN_X64
+    void convertI64ToF64(RegI64 src, bool isUnsigned, RegF64 dest, RegI32 temp) {
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
         if (isUnsigned)
-            masm.convertUInt64ToDouble(src.reg.reg, dest.reg);
+            masm.convertUInt64ToDouble(src.reg, dest.reg, temp.reg);
         else
-            masm.convertInt64ToDouble(src.reg.reg, dest.reg);
+            masm.convertInt64ToDouble(src.reg, dest.reg);
 #else
         MOZ_CRASH("BaseCompiler platform hook: convertI32ToF64");
 #endif
@@ -4328,7 +4336,7 @@ BaseCompiler::emitConvertI64ToF32()
 {
     RegI64 r0 = popI64();
     RegF32 f0 = needF32();
-    convertI64ToF32(r0, IsUnsigned(false), f0);
+    convertI64ToF32(r0, IsUnsigned(false), f0, RegI32());
     freeI64(r0);
     pushF32(f0);
 }
@@ -4338,7 +4346,12 @@ BaseCompiler::emitConvertU64ToF32()
 {
     RegI64 r0 = popI64();
     RegF32 f0 = needF32();
-    convertI64ToF32(r0, IsUnsigned(true), f0);
+    RegI32 temp;
+    if (convertI64ToFloatNeedsTemp(IsUnsigned(true)))
+        temp = needI32();
+    convertI64ToF32(r0, IsUnsigned(true), f0, temp);
+    if (temp.reg != Register::Invalid())
+        freeI32(temp);
     freeI64(r0);
     pushF32(f0);
 }
@@ -4378,7 +4391,7 @@ BaseCompiler::emitConvertI64ToF64()
 {
     RegI64 r0 = popI64();
     RegF64 d0 = needF64();
-    convertI64ToF64(r0, IsUnsigned(false), d0);
+    convertI64ToF64(r0, IsUnsigned(false), d0, RegI32());
     freeI64(r0);
     pushF64(d0);
 }
@@ -4388,7 +4401,12 @@ BaseCompiler::emitConvertU64ToF64()
 {
     RegI64 r0 = popI64();
     RegF64 d0 = needF64();
-    convertI64ToF64(r0, IsUnsigned(true), d0);
+    RegI32 temp;
+    if (convertI64ToFloatNeedsTemp(IsUnsigned(true)))
+        temp = needI32();
+    convertI64ToF64(r0, IsUnsigned(true), d0, temp);
+    if (temp.reg != Register::Invalid())
+        freeI32(temp);
     freeI64(r0);
     pushF64(d0);
 }
