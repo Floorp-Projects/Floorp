@@ -3376,6 +3376,12 @@ struct nsCursorImage
 
   nsCursorImage& operator=(const nsCursorImage& aOther);
 
+  bool operator==(const nsCursorImage& aOther) const;
+  bool operator!=(const nsCursorImage& aOther) const
+  {
+    return !(*this == aOther);
+  }
+
   void SetImage(imgIRequest *aImage) {
     if (mImage) {
       mImage->UnlockImage();
@@ -3431,17 +3437,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUserInterface
   mozilla::StyleUserFocus   mUserFocus;       // [inherited] (auto-select)
   uint8_t                   mPointerEvents;   // [inherited] see nsStyleConsts.h
 
-  uint8_t   mCursor;          // [inherited] See nsStyleConsts.h
-
-  uint32_t mCursorArrayLength;
-  nsCursorImage *mCursorArray;// [inherited] The specified URL values
-                              //   and coordinates.  Takes precedence over
-                              //   mCursor.  Zero-length array is represented
-                              //   by null pointer.
-
-  // Does not free mCursorArray; the caller is responsible for calling
-  // |delete [] mCursorArray| first if it is needed.
-  void CopyCursorArrayFrom(const nsStyleUserInterface& aSource);
+  uint8_t mCursor;                            // [inherited] See nsStyleConsts.h
+  nsTArray<nsCursorImage> mCursorImages;      // [inherited] images and coords
 
   inline uint8_t GetEffectivePointerEvents(nsIFrame* aFrame) const;
 };
