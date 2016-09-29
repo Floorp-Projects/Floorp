@@ -483,7 +483,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
         boolean showEmptyHistoryView = false;
         boolean showEmptyClientsView = false;
         boolean showEmptyRecentTabsView = false;
-        if(mPanelLevel == level){
+        if (mPanelLevel == level) {
             switch (mPanelLevel) {
                 case PARENT:
                     showEmptyHistoryView = mHistoryAdapter.getItemCount() == mHistoryAdapter.getNumVisibleSmartFolders();
