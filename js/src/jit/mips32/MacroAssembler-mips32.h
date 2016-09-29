@@ -850,8 +850,9 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void load32(AbsoluteAddress address, Register dest);
     void load32(wasm::SymbolicAddress address, Register dest);
     void load64(const Address& address, Register64 dest) {
-        load32(Address(address.base, address.offset + LOW_32_OFFSET), dest.low);
-        load32(Address(address.base, address.offset + HIGH_32_OFFSET), dest.high);
+        load32(Address(address.base, address.offset + INT64LOW_OFFSET), dest.low);
+        int32_t highOffset = (address.offset < 0) ? -int32_t(INT64HIGH_OFFSET) : INT64HIGH_OFFSET;
+        load32(Address(address.base, address.offset + highOffset), dest.high);
     }
 
     void loadPtr(const Address& address, Register dest);
