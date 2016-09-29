@@ -701,6 +701,145 @@ StyleAnimationValue::ComputeColorDistance(const RGBAColorData& aStartColor,
   return sqrt(diffA * diffA + diffR * diffR + diffG * diffG + diffB * diffB);
 }
 
+static double
+ComputeTransformDistance(nsCSSValue::Array* aArray1,
+                         nsCSSValue::Array* aArray2)
+{
+  MOZ_ASSERT(aArray1, "aArray1 should be non-null.");
+  MOZ_ASSERT(aArray2, "aArray2 should be non-null.");
+
+  // Normalize translate and scale functions to equivalent "translate3d" and
+  // "scale3d" functions.
+  RefPtr<nsCSSValue::Array> a1 = ToPrimitive(aArray1),
+                            a2 = ToPrimitive(aArray2);
+  nsCSSKeyword tfunc = nsStyleTransformMatrix::TransformFunctionOf(a1);
+  MOZ_ASSERT(nsStyleTransformMatrix::TransformFunctionOf(a2) == tfunc);
+
+  double distance = 0.0;
+  switch (tfunc) {
+    case eCSSKeyword_translate3d: {
+      MOZ_ASSERT(a1->Count() == 4, "unexpected count");
+      MOZ_ASSERT(a2->Count() == 4, "unexpected count");
+
+      nsCSSValue x, y, z;
+      AddTransformTranslate(1.0, a2->Item(1), -1.0, a1->Item(1), x);
+      AddTransformTranslate(1.0, a2->Item(2), -1.0, a1->Item(2), y);
+      AddTransformTranslate(1.0, a2->Item(3), -1.0, a1->Item(3), z);
+      // Drop percent part because we only compute distance by computed values.
+      double c1 = ExtractCalcValue(x).mLength;
+      double c2 = ExtractCalcValue(y).mLength;
+      double c3 = z.GetFloatValue();
+      distance = c1 * c1 + c2 * c2 + c3 * c3;
+      break;
+    }
+    case eCSSKeyword_scale3d: {
+      MOZ_ASSERT(a1->Count() == 4, "unexpected count");
+      MOZ_ASSERT(a2->Count() == 4, "unexpected count");
+
+      auto ComputeScaleDiff = [](const nsCSSValue& aValue1,
+                                 const nsCSSValue& aValue2) {
+        float v1 = aValue1.GetFloatValue();
+        float v2 = aValue2.GetFloatValue();
+        return EnsureNotNan(v2 - v1);
+      };
+
+      double c1 = ComputeScaleDiff(a1->Item(1), a2->Item(1));
+      double c2 = ComputeScaleDiff(a1->Item(2), a2->Item(2));
+      double c3 = ComputeScaleDiff(a1->Item(3), a2->Item(3));
+      distance = c1 * c1 + c2 * c2 + c3 * c3;
+      break;
+    }
+    case eCSSKeyword_skew: {
+      MOZ_ASSERT(a1->Count() == 2 || a1->Count() == 3, "unexpected count");
+      MOZ_ASSERT(a2->Count() == 2 || a2->Count() == 3, "unexpected count");
+
+      const nsCSSValue zero(0.0f, eCSSUnit_Radian);
+      nsCSSValue x, y;
+      AddCSSValueAngle(1.0, a2->Item(1), -1.0, a1->Item(1), x);
+      AddCSSValueAngle(1.0, a2->Count() == 3 ? a2->Item(2) : zero,
+                      -1.0, a1->Count() == 3 ? a1->Item(2) : zero,
+                       y);
+      distance = x.GetAngleValueInRadians() * x.GetAngleValueInRadians() +
+                 y.GetAngleValueInRadians() * y.GetAngleValueInRadians();
+      break;
+    }
+    case eCSSKeyword_skewx:
+    case eCSSKeyword_skewy:
+    case eCSSKeyword_rotate:
+    case eCSSKeyword_rotatex:
+    case eCSSKeyword_rotatey:
+    case eCSSKeyword_rotatez: {
+      MOZ_ASSERT(a1->Count() == 2, "unexpected count");
+      MOZ_ASSERT(a2->Count() == 2, "unexpected count");
+
+      nsCSSValue angle;
+      AddCSSValueAngle(1.0, a2->Item(1), -1.0, a1->Item(1), angle);
+      distance = angle.GetAngleValueInRadians() *
+                 angle.GetAngleValueInRadians();
+      break;
+    }
+    case eCSSKeyword_rotate3d: {
+      MOZ_ASSERT(a1->Count() == 5, "unexpected count");
+      MOZ_ASSERT(a2->Count() == 5, "unexpected count");
+
+      Point3D vector1(a1->Item(1).GetFloatValue(),
+                      a1->Item(2).GetFloatValue(),
+                      a1->Item(3).GetFloatValue());
+      vector1.Normalize();
+      Point3D vector2(a2->Item(1).GetFloatValue(),
+                      a2->Item(2).GetFloatValue(),
+                      a2->Item(3).GetFloatValue());
+      vector2.Normalize();
+
+      if (vector1 == vector2) {
+        // Handle rotate3d with matched (normalized) vectors.
+        nsCSSValue angle;
+        AddCSSValueAngle(1.0, a2->Item(4), -1.0, a1->Item(4), angle);
+        distance = angle.GetAngleValueInRadians() *
+                   angle.GetAngleValueInRadians();
+      } else {
+        // TODO: Convert to quaternion vectors and calculate the angle.
+        distance = 0.0;
+      }
+      break;
+    }
+    case eCSSKeyword_perspective:
+      // TODO: This will be fixed in the later patch.
+      distance = 0.0;
+      break;
+    case eCSSKeyword_matrix:
+    case eCSSKeyword_matrix3d:
+      // TODO: decompose matrix and calculate distance. This will be fixed in
+      // the later patch.
+      distance = 0.0;
+      break;
+    case eCSSKeyword_interpolatematrix:
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unsupported transform function");
+      break;
+  }
+  return distance;
+}
+
+static double
+ComputeTransformListDistance(const nsCSSValueList* aList1,
+                             const nsCSSValueList* aList2)
+{
+  MOZ_ASSERT(aList1, "aList1 should be non-null.");
+  MOZ_ASSERT(aList2, "aList2 should be non-null.");
+
+  double distance = 0.0;
+  do {
+    distance += ComputeTransformDistance(aList1->mValue.GetArrayValue(),
+                                         aList2->mValue.GetArrayValue());
+    aList1 = aList1->mNext;
+    aList2 = aList2->mNext;
+    MOZ_ASSERT(!aList1 == !aList2,
+               "aList1 and aList2 should have the same length.");
+  } while (aList1);
+  return sqrt(distance);
+}
+
 bool
 StyleAnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
                                      const StyleAnimationValue& aStartValue,
@@ -1066,14 +1205,69 @@ StyleAnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
       aDistance = sqrt(squareDistance);
       return true;
     }
-    // The CSS Shapes spec doesn't define paced animations for shape functions.
-    case eUnit_Shape: {
+    case eUnit_Shape:
+      // Bug 1286150: The CSS Shapes spec doesn't define paced animations for
+      // shape functions, but we still need to implement one.
       return false;
-    }
+
     case eUnit_Filter:
-      // FIXME: Support paced animations for filter function interpolation.
-    case eUnit_Transform: {
+      // Bug 1286151: Support paced animations for filter function
+      // interpolation.
       return false;
+
+    case eUnit_Transform: {
+      // FIXME: We don't have an official spec to define the distance of
+      // two transform lists, but paced spacing (defined in Web Animations API)
+      // needs this, so we implement this according to the concept of the
+      // interpolation of two transform lists.
+      // Issue: https://www.w3.org/TR/web-animations-1/#issue-789f9fd1
+
+      const nsCSSValueList* list1 =
+        aStartValue.GetCSSValueSharedListValue()->mHead;
+      const nsCSSValueList* list2 =
+        aEndValue.GetCSSValueSharedListValue()->mHead;
+      MOZ_ASSERT(list1);
+      MOZ_ASSERT(list2);
+
+      if (list1->mValue.GetUnit() == eCSSUnit_None &&
+          list2->mValue.GetUnit() == eCSSUnit_None) {
+        // Both none, nothing happens.
+        aDistance = 0.0;
+      } else if (list1->mValue.GetUnit() == eCSSUnit_None) {
+        // TODO: Implement none transform list in the later patch.
+        aDistance = 0.0;
+        return false;
+      } else if (list2->mValue.GetUnit() == eCSSUnit_None) {
+        // TODO: Implement none transform list in the later patch.
+        aDistance = 0.0;
+        return false;
+      } else {
+        const nsCSSValueList *item1 = list1, *item2 = list2;
+        do {
+          nsCSSKeyword func1 = nsStyleTransformMatrix::TransformFunctionOf(
+            item1->mValue.GetArrayValue());
+          nsCSSKeyword func2 = nsStyleTransformMatrix::TransformFunctionOf(
+            item2->mValue.GetArrayValue());
+          if (!TransformFunctionsMatch(func1, func2)) {
+            break;
+          }
+
+          item1 = item1->mNext;
+          item2 = item2->mNext;
+        } while (item1 && item2);
+
+        if (item1 || item2) {
+          // Either the transform function types don't match or
+          // the lengths don't match.
+
+          // TODO: Implement this for mismatched transform function in the later
+          // patch.
+          aDistance = 0.0;
+          return false;
+        }
+        aDistance = ComputeTransformListDistance(list1, list2);
+      }
+      return true;
     }
     case eUnit_BackgroundPositionCoord: {
       const nsCSSValueList *position1 = aStartValue.GetCSSValueListValue();
