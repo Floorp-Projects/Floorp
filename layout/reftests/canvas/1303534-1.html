@@ -1,0 +1,25 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <script>
+      function draw() {
+        var c = document.getElementById('c').getContext('2d');
+        var img = document.getElementById("img");
+
+        c.fillStyle = 'lime';
+        c.fillRect(0, 0, 200, 100);
+
+        c.rect(0, 0, 200, 100);
+        c.clip();
+        
+        c.globalCompositeOperation = "multiply";
+        c.fillStyle = 'rgb(255, 255, 255)';
+        c.fillRect(0, 0, 200, 100);
+      }
+    </script>
+  </head>
+  <body onload="draw();">
+    <canvas id='c' width='200' height='100'></canvas>
+  </body>
+</html>
