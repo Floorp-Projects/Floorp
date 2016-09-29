@@ -1079,6 +1079,52 @@ class BaseCompiler
         }
     }
 
+#ifdef JS_NUNBOX32
+    void loadI64Low(Register r, Stk& src) {
+        switch (src.kind()) {
+          case Stk::ConstI64:
+            masm.move32(Imm64(src.i64val()).low(), r);
+            break;
+          case Stk::MemI64:
+            loadFromFrameI32(r, src.offs() - INT64LOW_OFFSET);
+            break;
+          case Stk::LocalI64:
+            loadFromFrameI32(r, frameOffsetFromSlot(src.slot(), MIRType::Int64) - INT64LOW_OFFSET);
+            break;
+          case Stk::RegisterI64:
+            if (src.i64reg().reg.low != r)
+                masm.move32(src.i64reg().reg.low, r);
+            break;
+          case Stk::None:
+            break;
+          default:
+            MOZ_CRASH("Compiler bug: Expected int on stack");
+        }
+    }
+
+    void loadI64High(Register r, Stk& src) {
+        switch (src.kind()) {
+          case Stk::ConstI64:
+            masm.move32(Imm64(src.i64val()).hi(), r);
+            break;
+          case Stk::MemI64:
+            loadFromFrameI32(r, src.offs() - INT64HIGH_OFFSET);
+            break;
+          case Stk::LocalI64:
+            loadFromFrameI32(r, frameOffsetFromSlot(src.slot(), MIRType::Int64) - INT64HIGH_OFFSET);
+            break;
+          case Stk::RegisterI64:
+            if (src.i64reg().reg.high != r)
+                masm.move32(src.i64reg().reg.high, r);
+            break;
+          case Stk::None:
+            break;
+          default:
+            MOZ_CRASH("Compiler bug: Expected int on stack");
+        }
+    }
+#endif
+
     void loadF64(FloatRegister r, Stk& src) {
         switch (src.kind()) {
           case Stk::ConstF64:
@@ -2073,18 +2119,21 @@ class BaseCompiler
             break;
           }
           case ValType::I64: {
-#ifdef JS_CODEGEN_X64
             ABIArg argLoc = call.abi_.next(MIRType::Int64);
             if (argLoc.kind() == ABIArg::Stack) {
                 ScratchI32 scratch(*this);
+#ifdef JS_PUNBOX64
                 loadI64(Register64(scratch), arg);
                 masm.movq(scratch, Operand(StackPointer, argLoc.offsetFromArgBase()));
+#else
+                loadI64Low(scratch, arg);
+                masm.move32(scratch, Operand(StackPointer, argLoc.offsetFromArgBase() + INT64LOW_OFFSET));
+                loadI64High(scratch, arg);
+                masm.move32(scratch, Operand(StackPointer, argLoc.offsetFromArgBase() + INT64HIGH_OFFSET));
+#endif
             } else {
                 loadI64(argLoc.gpr64(), arg);
             }
-#else
-            MOZ_CRASH("BaseCompiler platform hook: passArg I64");
-#endif
             break;
           }
           case ValType::F64: {
