@@ -85,6 +85,10 @@ a11y::ProxyDestroyed(ProxyAccessible* aProxy)
   if (!wrapper)
     return;
 
+  if (aProxy->IsDoc() && nsWinUtils::IsWindowEmulationStarted()) {
+    aProxy->AsDoc()->SetEmulatedWindowHandle(nullptr);
+  }
+
   wrapper->Shutdown();
   aProxy->SetWrapper(0);
   wrapper->Release();

@@ -30,6 +30,9 @@ public:
   DocAccessibleParent() :
     ProxyAccessible(this), mParentDoc(nullptr),
     mTopLevel(false), mShutdown(false)
+#if defined(XP_WIN)
+                                      , mEmulatedWindowHandle(nullptr)
+#endif // defined(XP_WIN)
   { MOZ_COUNT_CTOR_INHERITED(DocAccessibleParent, ProxyAccessible); }
   ~DocAccessibleParent()
   {
@@ -151,6 +154,13 @@ public:
 
   virtual mozilla::ipc::IPCResult RecvGetWindowedPluginIAccessible(
       const WindowsHandle& aHwnd, IAccessibleHolder* aPluginCOMProxy) override;
+
+  /**
+   * Set emulated native window handle for a document.
+   * @param aWindowHandle emulated native window handle
+   */
+  void SetEmulatedWindowHandle(HWND aWindowHandle);
+  HWND GetEmulatedWindowHandle() const { return mEmulatedWindowHandle; }
 #endif
 
 private:
@@ -186,6 +196,11 @@ private:
 
   nsTArray<DocAccessibleParent*> mChildDocs;
   DocAccessibleParent* mParentDoc;
+
+#if defined(XP_WIN)
+  // The handle associated with the emulated window that contains this document
+  HWND mEmulatedWindowHandle;
+#endif
 
   /*
    * Conceptually this is a map from IDs to proxies, but we store the ID in the
