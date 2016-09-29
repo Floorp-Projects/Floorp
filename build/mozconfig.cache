@@ -82,8 +82,11 @@ elif test -z "$CCACHE_DIR" -a -z "$SCCACHE_DISABLE" -a -z "$no_sccache" -a -z "$
             esac
         fi
     fi
+fi
 
-
+# if platform hasn't been determined from buildprops, and we're on windows,
+# it must be set to prevent adding ac_add_options --with-ccache below
+if test -z "$platform"; then
     # set platform based on the SYSTEMROOT env var
     case "${SYSTEMROOT}" in
     *Windows)
