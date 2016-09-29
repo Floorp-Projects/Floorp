@@ -6,6 +6,12 @@
 const TEST_URI = "data:text/html;charset=utf-8,gcli-commands";
 const HUDService = require("devtools/client/webconsole/hudservice");
 
+// Use the old webconsole since pprint isn't working on new one (Bug 1304794)
+Services.prefs.setBoolPref("devtools.webconsole.new-frontend-enabled", false);
+registerCleanupFunction(function* () {
+  Services.prefs.clearUserPref("devtools.webconsole.new-frontend-enabled");
+});
+
 function test() {
   return Task.spawn(spawnTest).then(finish, helpers.handleError);
 }

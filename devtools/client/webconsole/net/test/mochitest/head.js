@@ -25,6 +25,13 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref(NET_XHR_PREF, true);
 });
 
+// Use the old webconsole since the new one doesn't yet support
+// XHR spy. See Bug 1304794.
+Services.prefs.setBoolPref("devtools.webconsole.new-frontend-enabled", false);
+registerCleanupFunction(function* () {
+  Services.prefs.clearUserPref("devtools.webconsole.new-frontend-enabled");
+});
+
 /**
  * Add a new test tab in the browser and load the given url.
  * @param {String} url The url to be loaded in the new tab

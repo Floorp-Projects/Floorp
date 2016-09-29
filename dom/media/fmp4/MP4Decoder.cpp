@@ -9,9 +9,7 @@
 #include "MP4Demuxer.h"
 #include "mozilla/Preferences.h"
 #include "nsCharSeparatedTokenizer.h"
-#ifdef MOZ_EME
 #include "mozilla/CDMProxy.h"
-#endif
 #include "mozilla/Logging.h"
 #include "mozilla/SharedThreadPool.h"
 #include "nsMimeTypes.h"

@@ -818,6 +818,17 @@ function waitForStyleModification(inspector) {
 }
 
 /**
+ * Click on the selector icon
+ * @param {DOMNode} icon
+ * @param {CSSRuleView} view
+ */
+function* clickSelectorIcon(icon, view) {
+  let onToggled = view.once("ruleview-selectorhighlighter-toggled");
+  EventUtils.synthesizeMouseAtCenter(icon, {}, view.styleWindow);
+  yield onToggled;
+}
+
+/**
  * Make sure window is properly focused before sending a key event.
  * @param {Window} win
  * @param {Event} key

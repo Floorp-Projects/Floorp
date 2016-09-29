@@ -34,10 +34,8 @@ public:
   void DownloadProgressed() override {}
   void UpdateReadyState() override {}
   void FirstFrameLoaded() override {}
-#ifdef MOZ_EME
   void DispatchEncrypted(const nsTArray<uint8_t>& aInitData,
                          const nsAString& aInitDataType) override {}
-#endif // MOZ_EME
   bool IsActive() const override { return true; }
   bool IsHidden() const override { return false; }
   void DownloadSuspended() override {}

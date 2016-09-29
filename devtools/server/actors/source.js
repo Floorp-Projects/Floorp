@@ -626,14 +626,20 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
   /**
    * Handle a request to set a breakpoint.
    *
-   * @param JSON request
-   *        A JSON object representing the request.
+   * @param Number line
+   *        Line to break on.
+   * @param Number column
+   *        Column to break on.
+   * @param String condition
+   *        A condition which must be true for breakpoint to be hit.
+   * @param Boolean noSliding
+   *        If true, disables breakpoint sliding.
    *
    * @returns Promise
    *          A promise that resolves to a JSON object representing the
    *          response.
    */
-  setBreakpoint: function (line, column, condition) {
+  setBreakpoint: function (line, column, condition, noSliding) {
     if (this.threadActor.state !== "paused") {
       throw {
         error: "wrongState",
@@ -644,7 +650,8 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
     let location = new OriginalLocation(this, line, column);
     return this._getOrCreateBreakpointActor(
       location,
-      condition
+      condition,
+      noSliding
     ).then((actor) => {
       let response = {
         actor: actor.actorID,
@@ -671,11 +678,13 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
    * @param String condition
    *        A string that is evaluated whenever the breakpoint is hit. If the
    *        string evaluates to false, the breakpoint is ignored.
+   * @param Boolean noSliding
+   *        If true, disables breakpoint sliding.
    *
    * @returns BreakpointActor
    *          A BreakpointActor representing the breakpoint.
    */
-  _getOrCreateBreakpointActor: function (originalLocation, condition) {
+  _getOrCreateBreakpointActor: function (originalLocation, condition, noSliding) {
     let actor = this.breakpointActorMap.getActor(originalLocation);
     if (!actor) {
       actor = new BreakpointActor(this.threadActor, originalLocation);
@@ -685,7 +694,7 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
 
     actor.condition = condition;
 
-    return this._setBreakpoint(actor);
+    return this._setBreakpoint(actor, noSliding);
   },
 
   /*
@@ -705,18 +714,19 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
    *
    * @param BreakpointActor actor
    *        The BreakpointActor to be set as a breakpoint handler.
+   * @param Boolean noSliding
+   *        If true, disables breakpoint sliding.
    *
    * @returns A Promise that resolves to the given BreakpointActor.
    */
-  _setBreakpoint: function (actor) {
+  _setBreakpoint: function (actor, noSliding) {
     const { originalLocation } = actor;
     const { originalLine, originalSourceActor } = originalLocation;
 
     if (!this.isSourceMapped) {
-      if (!this._setBreakpointAtGeneratedLocation(
-        actor,
-        GeneratedLocation.fromOriginalLocation(originalLocation)
-      )) {
+      const generatedLocation = GeneratedLocation.fromOriginalLocation(originalLocation);
+      if (!this._setBreakpointAtGeneratedLocation(actor, generatedLocation) &&
+          !noSliding) {
         const query = { line: originalLine };
         // For most cases, we have a real source to query for. The
         // only time we don't is for HTML pages. In that case we want

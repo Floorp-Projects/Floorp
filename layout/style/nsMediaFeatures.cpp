@@ -677,22 +677,6 @@ nsMediaFeatures::features[] = {
     GetSystemMetric
   },
   {
-    &nsGkAtoms::_moz_images_in_menus,
-    nsMediaFeature::eMinMaxNotAllowed,
-    nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
-    { &nsGkAtoms::images_in_menus },
-    GetSystemMetric
-  },
-  {
-    &nsGkAtoms::_moz_images_in_buttons,
-    nsMediaFeature::eMinMaxNotAllowed,
-    nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
-    { &nsGkAtoms::images_in_buttons },
-    GetSystemMetric
-  },
-  {
     &nsGkAtoms::_moz_overlay_scrollbars,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,

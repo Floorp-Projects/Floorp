@@ -3200,32 +3200,6 @@ moz_gtk_get_scrollbar_metrics(MozGtkScrollbarMetrics *metrics)
     return MOZ_GTK_SUCCESS;
 }
 
-gboolean
-moz_gtk_images_in_menus()
-{
-    gboolean result;
-    GtkSettings* settings;
-
-    ensure_image_menu_item_widget();
-    settings = gtk_widget_get_settings(gImageMenuItemWidget);
-
-    g_object_get(settings, "gtk-menu-images", &result, NULL);
-    return result;
-}
-
-gboolean
-moz_gtk_images_in_buttons()
-{
-    gboolean result;
-    GtkSettings* settings;
-
-    ensure_button_widget();
-    settings = gtk_widget_get_settings(gButtonWidget);
-
-    g_object_get(settings, "gtk-button-images", &result, NULL);
-    return result;
-}
-
 gint
 moz_gtk_widget_paint(WidgetNodeType widget, GdkDrawable* drawable,
                      GdkRectangle* rect, GdkRectangle* cliprect,

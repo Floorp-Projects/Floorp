@@ -43,6 +43,11 @@ function WebRequestEventManager(context, eventName) {
         parentFrameId: ExtensionManagement.getParentFrameId(data.parentWindowId, data.windowId),
       };
 
+      const maybeCached = ["onResponseStarted", "onBeforeRedirect", "onCompleted", "onErrorOccurred"];
+      if (maybeCached.includes(eventName)) {
+        data2.fromCache = !!data.fromCache;
+      }
+
       if ("ip" in data) {
         data2.ip = data.ip;
       }

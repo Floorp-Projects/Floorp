@@ -28,7 +28,7 @@ this.PlacesTestUtils = Object.freeze({
    *          { uri: nsIURI of the page,
    *            [optional] transition: one of the TRANSITION_* from nsINavHistoryService,
    *            [optional] title: title of the page,
-   *            [optional] visitDate: visit date in microseconds from the epoch
+   *            [optional] visitDate: visit date, either in microseconds from the epoch or as a date object
    *            [optional] referrer: nsIURI of the referrer for this visit
    *          }
    *
@@ -38,6 +38,8 @@ this.PlacesTestUtils = Object.freeze({
    */
   addVisits: Task.async(function* (placeInfo) {
     let places = [];
+    let infos = [];
+
     if (placeInfo instanceof Ci.nsIURI ||
         placeInfo instanceof URL ||
         typeof placeInfo == "string") {
@@ -51,46 +53,31 @@ this.PlacesTestUtils = Object.freeze({
       throw new Error("Unsupported type passed to addVisits");
     }
 
-    // Create mozIVisitInfo for each entry.
-    let now = Date.now();
+    // Create a PageInfo for each entry.
     for (let place of places) {
-      if (typeof place.uri == "string") {
-        place.uri = NetUtil.newURI(place.uri);
-      } else if (place.uri instanceof URL) {
-        place.uri = NetUtil.newURI(place.uri.href);
-      }
-      if (typeof place.title != "string") {
-        place.title = "test visit for " + place.uri.spec;
-      }
+      let info = {url: place.uri};
+      info.title = (typeof place.title === "string") ? place.title : "test visit for " + info.url.spec ;
       if (typeof place.referrer == "string") {
         place.referrer = NetUtil.newURI(place.referrer);
       } else if (place.referrer && place.referrer instanceof URL) {
         place.referrer = NetUtil.newURI(place.referrer.href);
       }
-      place.visits = [{
-        transitionType: place.transition === undefined ? Ci.nsINavHistoryService.TRANSITION_LINK
-                                                       : place.transition,
-        visitDate: place.visitDate || (now++) * 1000,
-        referrerURI: place.referrer
-      }];
-    }
-
-    yield new Promise((resolve, reject) => {
-      PlacesUtils.asyncHistory.updatePlaces(
-        places,
-        {
-          handleError(resultCode, placeInfo) {
-            let ex = new Components.Exception("Unexpected error in adding visits.",
-                                              resultCode);
-            reject(ex);
-          },
-          handleResult: function () {},
-          handleCompletion() {
-            resolve();
-          }
+      let visitDate = place.visitDate;
+      if (visitDate) {
+        if (!(visitDate instanceof Date)) {
+          visitDate = PlacesUtils.toDate(visitDate);
         }
-      );
-    });
+      } else {
+        visitDate = new Date();
+      }
+      info.visits = [{
+        transition: place.transition,
+        date: visitDate,
+        referrer: place.referrer
+      }];
+      infos.push(info);
+    }
+    return PlacesUtils.history.insertMany(infos);
   }),
 
   /**

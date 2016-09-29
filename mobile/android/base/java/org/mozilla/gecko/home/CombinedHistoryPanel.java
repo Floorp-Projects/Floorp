@@ -270,7 +270,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
         if (data != null && data.getBoolean("goToRecentTabs", false) && mPanelLevel != PanelLevel.CHILD_RECENT_TABS) {
             mPanelLevel = PanelLevel.CHILD_RECENT_TABS;
             mRecyclerView.swapAdapter(mRecentTabsAdapter, true);
-            updateEmptyView();
+            updateEmptyView(PanelLevel.CHILD_RECENT_TABS);
             updateButtonFromLevel();
         }
     }
@@ -344,16 +344,17 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
             switch (loaderId) {
                 case LOADER_ID_HISTORY:
                     mHistoryAdapter.setHistory(c);
+                    updateEmptyView(PanelLevel.PARENT);
                     break;
 
                 case LOADER_ID_REMOTE:
                     final List<RemoteClient> clients = mDB.getTabsAccessor().getClientsFromCursor(c);
                     mHistoryAdapter.getDeviceUpdateHandler().onDeviceCountUpdated(clients.size());
                     mClientsAdapter.setClients(clients);
+                    updateEmptyView(PanelLevel.CHILD_SYNC);
                     break;
             }
 
-            updateEmptyView();
             updateButtonFromLevel();
         }
 
@@ -365,15 +366,15 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
     }
 
     public interface PanelStateUpdateHandler {
-        void onPanelStateUpdated();
+        void onPanelStateUpdated(PanelLevel level);
     }
 
     public PanelStateUpdateHandler getPanelStateUpdateHandler() {
         if (mPanelStateUpdateHandler == null) {
             mPanelStateUpdateHandler = new PanelStateUpdateHandler() {
                 @Override
-                public void onPanelStateUpdated() {
-                    updateEmptyView();
+                public void onPanelStateUpdated(PanelLevel level) {
+                    updateEmptyView(level);
                     updateButtonFromLevel();
                 }
             };
@@ -403,7 +404,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
                     break;
             }
 
-            updateEmptyView();
+            updateEmptyView(level);
             updateButtonFromLevel();
             return true;
         }
@@ -478,30 +479,31 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
         }
     }
 
-    private void updateEmptyView() {
+    private void updateEmptyView(PanelLevel level) {
         boolean showEmptyHistoryView = false;
         boolean showEmptyClientsView = false;
         boolean showEmptyRecentTabsView = false;
-        switch (mPanelLevel) {
-            case PARENT:
-                showEmptyHistoryView = mHistoryAdapter.getItemCount() == mHistoryAdapter.getNumVisibleSmartFolders();
-                break;
+        if (mPanelLevel == level) {
+            switch (mPanelLevel) {
+                case PARENT:
+                    showEmptyHistoryView = mHistoryAdapter.getItemCount() == mHistoryAdapter.getNumVisibleSmartFolders();
+                    mHistoryEmptyView.setVisibility(showEmptyHistoryView ? View.VISIBLE : View.GONE);
+                    break;
 
-            case CHILD_SYNC:
-                showEmptyClientsView = mClientsAdapter.getItemCount() == 1;
-                break;
+                case CHILD_SYNC:
+                    showEmptyClientsView = mClientsAdapter.getItemCount() == 1;
+                    mClientsEmptyView.setVisibility(showEmptyClientsView ? View.VISIBLE : View.GONE);
+                    break;
 
-            case CHILD_RECENT_TABS:
-                showEmptyRecentTabsView = mRecentTabsAdapter.getClosedTabsCount() == 0;
-                break;
+                case CHILD_RECENT_TABS:
+                    showEmptyRecentTabsView = mRecentTabsAdapter.getClosedTabsCount() == 0;
+                    mRecentTabsEmptyView.setVisibility(showEmptyRecentTabsView ? View.VISIBLE : View.GONE);
+                    break;
+            }
         }
 
         final boolean showEmptyView = showEmptyClientsView || showEmptyHistoryView || showEmptyRecentTabsView;
         mRecyclerView.setOverScrollMode(showEmptyView ? View.OVER_SCROLL_NEVER : View.OVER_SCROLL_IF_CONTENT_SCROLLS);
-
-        mClientsEmptyView.setVisibility(showEmptyClientsView ? View.VISIBLE : View.GONE);
-        mHistoryEmptyView.setVisibility(showEmptyHistoryView ? View.VISIBLE : View.GONE);
-        mRecentTabsEmptyView.setVisibility(showEmptyRecentTabsView ? View.VISIBLE : View.GONE);
     }
 
     /**
