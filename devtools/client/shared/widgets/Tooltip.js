@@ -741,7 +741,7 @@ Heritage.extend(SwatchBasedEditorTooltip.prototype, {
       this.spectrum.updateUI();
     }
 
-    let {target} = this.inspector.toolbox;
+    let {target} = this.inspector;
     target.actorHasMethod("inspector", "pickColorFromPage").then(value => {
       let tooltipDoc = this.tooltip.doc;
       let eyeButton = tooltipDoc.querySelector("#eyedropper-button");
