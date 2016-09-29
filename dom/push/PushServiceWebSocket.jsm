@@ -24,12 +24,6 @@ const {
   getCryptoParams,
 } = Cu.import("resource://gre/modules/PushCrypto.jsm");
 
-if (AppConstants.MOZ_B2G) {
-  XPCOMUtils.defineLazyServiceGetter(this, "gPowerManagerService",
-                                     "@mozilla.org/power/powermanagerservice;1",
-                                     "nsIPowerManagerService");
-}
-
 const kPUSHWSDB_DB_NAME = "pushapi";
 const kPUSHWSDB_DB_VERSION = 5; // Change this if the IndexedDB format changes
 const kPUSHWSDB_STORE_NAME = "pushapi";
@@ -516,7 +510,6 @@ this.PushServiceWebSocket = {
       // Grab a wakelock before we open the socket to ensure we don't go to
       // sleep before connection the is opened.
       this._ws.asyncOpen(uri, uri.spec, 0, this._wsListener, null);
-      this._acquireWakeLock();
       this._currentState = STATE_WAITING_FOR_WS_START;
     } catch(e) {
       console.error("beginWSSetup: Error opening websocket.",
@@ -535,48 +528,6 @@ this.PushServiceWebSocket = {
 
   isConnected: function() {
     return !!this._ws;
-  },
-
-  _acquireWakeLock: function() {
-    if (!AppConstants.MOZ_B2G) {
-      return;
-    }
-
-    // Disable the wake lock on non-B2G platforms to work around bug 1154492.
-    if (!this._socketWakeLock) {
-      console.debug("acquireWakeLock: Acquiring Socket Wakelock");
-      this._socketWakeLock = gPowerManagerService.newWakeLock("cpu");
-    }
-    if (!this._socketWakeLockTimer) {
-      console.debug("acquireWakeLock: Creating Socket WakeLock Timer");
-      this._socketWakeLockTimer = Cc["@mozilla.org/timer;1"]
-                                    .createInstance(Ci.nsITimer);
-    }
-
-    console.debug("acquireWakeLock: Setting Socket WakeLock Timer");
-    this._socketWakeLockTimer
-      .initWithCallback(this._releaseWakeLock.bind(this),
-                        // Allow the same time for socket setup as we do for
-                        // requests after the setup. Fudge it a bit since
-                        // timers can be a little off and we don't want to go
-                        // to sleep just as the socket connected.
-                        this._requestTimeout + 1000,
-                        Ci.nsITimer.TYPE_ONE_SHOT);
-  },
-
-  _releaseWakeLock: function() {
-    if (!AppConstants.MOZ_B2G) {
-      return;
-    }
-
-    console.debug("releaseWakeLock: Releasing Socket WakeLock");
-    if (this._socketWakeLockTimer) {
-      this._socketWakeLockTimer.cancel();
-    }
-    if (this._socketWakeLock) {
-      this._socketWakeLock.unlock();
-      this._socketWakeLock = null;
-    }
   },
 
   /**
@@ -1000,7 +951,6 @@ this.PushServiceWebSocket = {
   // begin Push protocol handshake
   _wsOnStart: function(context) {
     console.debug("wsOnStart()");
-    this._releaseWakeLock();
 
     if (this._currentState != STATE_WAITING_FOR_WS_START) {
       console.error("wsOnStart: NOT in STATE_WAITING_FOR_WS_START. Current",
@@ -1030,7 +980,6 @@ this.PushServiceWebSocket = {
    */
   _wsOnStop: function(context, statusCode) {
     console.debug("wsOnStop()");
-    this._releaseWakeLock();
 
     if (statusCode != Cr.NS_OK && !this._skipReconnect) {
       console.debug("wsOnStop: Reconnecting after socket error", statusCode);
