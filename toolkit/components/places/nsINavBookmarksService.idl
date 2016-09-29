@@ -292,6 +292,11 @@ interface nsINavBookmarksService : nsISupports
   readonly attribute long long toolbarFolder;
 
   /**
+   * The item ID of the mobile bookmarks folder.
+   */
+  readonly attribute long long mobileFolder;
+
+  /**
    * This value should be used for APIs that allow passing in an index
    * where an index is not known, or not required to be specified.
    * e.g.: When appending an item to a folder.

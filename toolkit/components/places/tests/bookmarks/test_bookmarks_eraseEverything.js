@@ -64,10 +64,14 @@ add_task(function* test_eraseEverything() {
 
   // Check there are no orphan annotations.
   let conn = yield PlacesUtils.promiseDBConnection();
-  let rows = yield conn.execute(`SELECT * FROM moz_items_annos`);
-  Assert.equal(rows.length, 0);
-  rows = yield conn.execute(`SELECT * FROM moz_anno_attributes`);
-  Assert.equal(rows.length, 0);
+  let annoAttrs = yield conn.execute(`SELECT id, name FROM moz_anno_attributes`);
+  // Bug 1306445 will eventually remove the mobile root anno.
+  Assert.equal(annoAttrs.length, 1);
+  Assert.equal(annoAttrs[0].getResultByName("name"), PlacesUtils.MOBILE_ROOT_ANNO);
+  let annos = rows = yield conn.execute(`SELECT item_id, anno_attribute_id FROM moz_items_annos`);
+  Assert.equal(annos.length, 1);
+  Assert.equal(annos[0].getResultByName("item_id"), PlacesUtils.mobileFolderId);
+  Assert.equal(annos[0].getResultByName("anno_attribute_id"), annoAttrs[0].getResultByName("id"));
 });
 
 add_task(function* test_eraseEverything_roots() {
