@@ -10,6 +10,7 @@
 
 #include "mozilla/a11y/Accessible.h"
 
+class nsEventShell;
 namespace mozilla {
 
 namespace dom {
@@ -131,6 +132,7 @@ protected:
 
   friend class EventQueue;
   friend class EventTree;
+  friend class ::nsEventShell;
 };
 
 
@@ -290,7 +292,10 @@ public:
   uint32_t InsertionIndex() const { return mInsertionIndex; }
 
 private:
+  nsTArray<RefPtr<AccHideEvent>> mPrecedingEvents;
   uint32_t mInsertionIndex;
+
+  friend class EventTree;
 };
 
 

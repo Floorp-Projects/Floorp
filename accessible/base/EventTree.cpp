@@ -154,6 +154,24 @@ TreeMutation::PrefixLog(void* aData, Accessible* aAcc)
 // EventTree
 
 void
+EventTree::Shown(Accessible* aChild)
+{
+  RefPtr<AccShowEvent> ev = new AccShowEvent(aChild);
+  Controller(aChild)->WithdrawPrecedingEvents(&ev->mPrecedingEvents);
+  Mutated(ev);
+}
+
+void
+EventTree::Hidden(Accessible* aChild, bool aNeedsShutdown)
+{
+  RefPtr<AccHideEvent> ev = new AccHideEvent(aChild, aNeedsShutdown);
+  if (!aNeedsShutdown) {
+    Controller(aChild)->StorePrecedingEvent(ev);
+  }
+  Mutated(ev);
+}
+
+void
 EventTree::Process(const RefPtr<DocAccessible>& aDeathGrip)
 {
   while (mFirst) {
@@ -177,9 +195,18 @@ EventTree::Process(const RefPtr<DocAccessible>& aDeathGrip)
   uint32_t eventsCount = mDependentEvents.Length();
   for (uint32_t jdx = 0; jdx < eventsCount; jdx++) {
     AccMutationEvent* mtEvent = mDependentEvents[jdx];
-    MOZ_ASSERT(mtEvent->mEventRule != AccEvent::eDoNotEmit,
-               "The event shouldn't be presented in the tree");
     MOZ_ASSERT(mtEvent->Document(), "No document for event target");
+
+    // Fire all hide events that has to be fired before this show event.
+    if (mtEvent->IsShow()) {
+      AccShowEvent* showEv = downcast_accEvent(mtEvent);
+      for (uint32_t i = 0; i < showEv->mPrecedingEvents.Length(); i++) {
+        nsEventShell::FireEvent(showEv->mPrecedingEvents[i]);
+        if (aDeathGrip->IsDefunct()) {
+          return;
+        }
+      }
+    }
 
     nsEventShell::FireEvent(mtEvent);
     if (aDeathGrip->IsDefunct()) {
@@ -415,13 +442,22 @@ EventTree::Log(uint32_t aLevel) const
   for (uint32_t i = 0; i < mDependentEvents.Length(); i++) {
     AccMutationEvent* ev = mDependentEvents[i];
     if (ev->IsShow()) {
-      for (uint32_t i = 0; i < aLevel; i++) {
+      for (uint32_t i = 0; i < aLevel + 1; i++) {
         printf("  ");
       }
       logging::AccessibleInfo("shown", ev->mAccessible);
+
+      AccShowEvent* showEv = downcast_accEvent(ev);
+      for (uint32_t i = 0; i < showEv->mPrecedingEvents.Length(); i++) {
+        for (uint32_t j = 0; j < aLevel + 1; j++) {
+          printf("  ");
+        }
+        logging::AccessibleInfo("preceding",
+                                showEv->mPrecedingEvents[i]->mAccessible);
+      }
     }
     else {
-      for (uint32_t i = 0; i < aLevel; i++) {
+      for (uint32_t i = 0; i < aLevel + 1; i++) {
         printf("  ");
       }
       logging::AccessibleInfo("hidden", ev->mAccessible);
