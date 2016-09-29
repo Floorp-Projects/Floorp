@@ -57,13 +57,8 @@ class CSSRuleList;
 // CSS Style Sheet Inner Data Container
 //
 
-class CSSStyleSheetInner : public StyleSheetInfo
+struct CSSStyleSheetInner : public StyleSheetInfo
 {
-public:
-  friend class mozilla::CSSStyleSheet;
-  friend class ::nsCSSRuleProcessor;
-
-private:
   CSSStyleSheetInner(CSSStyleSheet* aPrimarySheet,
                      CORSMode aCORSMode,
                      ReferrerPolicy aReferrerPolicy,
