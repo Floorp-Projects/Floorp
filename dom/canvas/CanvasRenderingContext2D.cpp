@@ -3980,9 +3980,8 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
     Style style = (mOp == CanvasRenderingContext2D::TextDrawOperation::FILL)
                     ? Style::FILL
                     : Style::STROKE;
-    AdjustedTarget target(mCtx);
     RefPtr<gfxContext> thebes =
-      gfxContext::CreatePreservingTransformOrNull(target);
+      gfxContext::CreatePreservingTransformOrNull(mCtx->mTarget);
     gfxTextRun::DrawParams params(thebes);
 
     if (mState->StyleIsColor(style)) { // Color
