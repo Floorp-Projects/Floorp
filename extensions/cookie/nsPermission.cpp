@@ -27,6 +27,24 @@ nsPermission::nsPermission(nsIPrincipal*    aPrincipal,
 {
 }
 
+already_AddRefed<nsPermission>
+nsPermission::Create(nsIPrincipal* aPrincipal,
+                     const nsACString &aType,
+                     uint32_t aCapability,
+                     uint32_t aExpireType,
+                     int64_t aExpireTime)
+{
+  NS_ENSURE_TRUE(aPrincipal, nullptr);
+  nsCOMPtr<nsIPrincipal> principal =
+    mozilla::BasePrincipal::Cast(aPrincipal)->CloneStrippingUserContextIdAndFirstPartyDomain();
+
+  NS_ENSURE_TRUE(principal, nullptr);
+
+  RefPtr<nsPermission> permission =
+    new nsPermission(principal, aType, aCapability, aExpireType, aExpireTime);
+  return permission.forget();
+}
+
 NS_IMETHODIMP
 nsPermission::GetPrincipal(nsIPrincipal** aPrincipal)
 {
@@ -71,8 +89,16 @@ nsPermission::Matches(nsIPrincipal* aPrincipal, bool aExactHost, bool* aMatches)
 
   *aMatches = false;
 
+  nsCOMPtr<nsIPrincipal> principal =
+    mozilla::BasePrincipal::Cast(aPrincipal)->CloneStrippingUserContextIdAndFirstPartyDomain();
+
+  if (!principal) {
+    *aMatches = false;
+    return NS_OK;
+  }
+
   // If the principals are equal, then they match.
-  if (mPrincipal->Equals(aPrincipal)) {
+  if (mPrincipal->Equals(principal)) {
     *aMatches = true;
     return NS_OK;
   }
@@ -84,7 +110,7 @@ nsPermission::Matches(nsIPrincipal* aPrincipal, bool aExactHost, bool* aMatches)
   }
 
   // Compare their OriginAttributes
-  const mozilla::PrincipalOriginAttributes& theirAttrs = mozilla::BasePrincipal::Cast(aPrincipal)->OriginAttributesRef();
+  const mozilla::PrincipalOriginAttributes& theirAttrs = mozilla::BasePrincipal::Cast(principal)->OriginAttributesRef();
   const mozilla::PrincipalOriginAttributes& ourAttrs = mozilla::BasePrincipal::Cast(mPrincipal)->OriginAttributesRef();
 
   if (theirAttrs != ourAttrs) {
@@ -92,7 +118,7 @@ nsPermission::Matches(nsIPrincipal* aPrincipal, bool aExactHost, bool* aMatches)
   }
 
   nsCOMPtr<nsIURI> theirURI;
-  nsresult rv = aPrincipal->GetURI(getter_AddRefs(theirURI));
+  nsresult rv = principal->GetURI(getter_AddRefs(theirURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIURI> ourURI;

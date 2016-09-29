@@ -33,16 +33,6 @@ class BackgroundChildImpl;
 
 namespace camera {
 
-enum CaptureEngine : int {
-  InvalidEngine = 0,
-  ScreenEngine,
-  BrowserEngine,
-  WinEngine,
-  AppEngine,
-  CameraEngine,
-  MaxEngine
-};
-
 struct CapturerElement {
   CaptureEngine engine;
   int id;
@@ -153,10 +143,10 @@ public:
 
   // IPC messages recevied, received on the PBackground thread
   // these are the actual callbacks with data
-  virtual bool RecvDeliverFrame(const int&, const int&, mozilla::ipc::Shmem&&,
+  virtual bool RecvDeliverFrame(const CaptureEngine&, const int&, mozilla::ipc::Shmem&&,
                                 const size_t&, const uint32_t&, const int64_t&,
                                 const int64_t&) override;
-  virtual bool RecvFrameSizeChange(const int&, const int&,
+  virtual bool RecvFrameSizeChange(const CaptureEngine&, const int&,
                                    const int& w, const int& h) override;
 
   virtual bool RecvDeviceChange() override;

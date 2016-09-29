@@ -124,7 +124,7 @@ export default async function main() {
   await scheduleTools();
 
   await scheduleLinux("Linux 32 (ARM, debug)", {
-    image: "ttaubert/nss-rpi-ci:0.0.3",
+    image: "franziskus/nss-arm-ci",
     provisioner: "localprovisioner",
     collection: "arm-debug",
     workerType: "nss-rpi",

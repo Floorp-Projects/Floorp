@@ -192,7 +192,6 @@ GeckoSampler::GeckoSampler(double aInterval, int aEntrySize,
   mUseStackWalk = hasFeature(aFeatures, aFeatureCount, "stackwalk");
 
   mProfileJS = hasFeature(aFeatures, aFeatureCount, "js");
-  mProfileJava = hasFeature(aFeatures, aFeatureCount, "java");
   mProfileGPU = hasFeature(aFeatures, aFeatureCount, "gpu");
   mProfilePower = hasFeature(aFeatures, aFeatureCount, "power");
   // Users sometimes ask to filter by a list of threads but forget to request
@@ -212,6 +211,13 @@ GeckoSampler::GeckoSampler(double aInterval, int aEntrySize,
     mIntelPowerGadget = new IntelPowerGadget();
     mProfilePower = mIntelPowerGadget->Init();
   }
+#endif
+
+#if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
+  mProfileJava = mozilla::jni::IsFennec() &&
+      hasFeature(aFeatures, aFeatureCount, "java");
+#else
+  mProfileJava = false;
 #endif
 
   // Deep copy aThreadNameFilters
