@@ -557,7 +557,7 @@ DataTransferItemList::GenerateFiles(FileList* aFiles,
     }
 
     if (item->Kind() == DataTransferItem::KIND_FILE) {
-      RefPtr<File> file = item->GetAsFileWithPrincipal(aFilesPrincipal, rv);
+      RefPtr<File> file = item->GetAsFile(Some(aFilesPrincipal), rv);
       if (NS_WARN_IF(rv.Failed() || !file)) {
         continue;
       }
