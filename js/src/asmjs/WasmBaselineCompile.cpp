@@ -2501,30 +2501,27 @@ class BaseCompiler
         masm.xor64(rhs.reg, srcDest.reg);
     }
 
-    void lshiftI64(RegI64 rhs, RegI64 srcDest) {
-#if defined(JS_CODEGEN_X64)
-        MOZ_ASSERT(rhs.reg.reg == rcx);
-        masm.shlq_cl(srcDest.reg.reg);
+    void lshiftI64(RegI64 shift, RegI64 srcDest) {
+#ifdef JS_PUNBOX64
+        masm.lshift64(shift.reg.reg, srcDest.reg);
 #else
-        MOZ_CRASH("BaseCompiler platform hook: lshiftI64");
+        masm.lshift64(shift.reg.low, srcDest.reg);
 #endif
     }
 
-    void rshiftI64(RegI64 rhs, RegI64 srcDest) {
-#if defined(JS_CODEGEN_X64)
-        MOZ_ASSERT(rhs.reg.reg == rcx);
-        masm.sarq_cl(srcDest.reg.reg);
+    void rshiftI64(RegI64 shift, RegI64 srcDest) {
+#ifdef JS_PUNBOX64
+        masm.rshift64Arithmetic(shift.reg.reg, srcDest.reg);
 #else
-        MOZ_CRASH("BaseCompiler platform hook: rshiftI64");
+        masm.rshift64Arithmetic(shift.reg.low, srcDest.reg);
 #endif
     }
 
-    void rshiftU64(RegI64 rhs, RegI64 srcDest) {
-#if defined(JS_CODEGEN_X64)
-        MOZ_ASSERT(rhs.reg.reg == rcx);
-        masm.shrq_cl(srcDest.reg.reg);
+    void rshiftU64(RegI64 shift, RegI64 srcDest) {
+#ifdef JS_PUNBOX64
+        masm.rshift64(shift.reg.reg, srcDest.reg);
 #else
-        MOZ_CRASH("BaseCompiler platform hook: rshiftU64");
+        masm.rshift64(shift.reg.low, srcDest.reg);
 #endif
     }
 
@@ -3977,11 +3974,11 @@ BaseCompiler::emitShlI64()
 {
     // TODO / OPTIMIZE: Constant rhs
     RegI64 r0, r1;
-#if defined(JS_CODEGEN_X64)
-    r1 = popI64(specific_rcx);
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    needI32(specific_ecx);
+    r1 = fromI32(specific_ecx);
+    r1 = popI64ToSpecific(r1);
     r0 = popI64();
-#elif defined(JS_CODEGEN_X86)
-    MOZ_CRASH("BaseCompiler platform hook: emitShlI64");
 #else
     pop2xI64(&r0, &r1);
 #endif
@@ -4017,11 +4014,11 @@ BaseCompiler::emitShrI64()
 {
     // TODO / OPTIMIZE: Constant rhs
     RegI64 r0, r1;
-#if defined(JS_CODEGEN_X64)
-    r1 = popI64(specific_rcx);
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    needI32(specific_ecx);
+    r1 = fromI32(specific_ecx);
+    r1 = popI64ToSpecific(r1);
     r0 = popI64();
-#elif defined(JS_CODEGEN_X86)
-    MOZ_CRASH("BaseCompiler platform hook: emitShrI64");
 #else
     pop2xI64(&r0, &r1);
 #endif
@@ -4057,11 +4054,11 @@ BaseCompiler::emitShrU64()
 {
     // TODO / OPTIMIZE: Constant rhs
     RegI64 r0, r1;
-#if defined(JS_CODEGEN_X64)
-    r1 = popI64(specific_rcx);
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    needI32(specific_ecx);
+    r1 = fromI32(specific_ecx);
+    r1 = popI64ToSpecific(r1);
     r0 = popI64();
-#elif defined(JS_CODEGEN_X86)
-    MOZ_CRASH("BaseCompiler platform hook: emitShrUI64");
 #else
     pop2xI64(&r0, &r1);
 #endif
