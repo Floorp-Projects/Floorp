@@ -8,10 +8,15 @@ var Ci = Components.interfaces;
 var Cc = Components.classes;
 var Cu = Components.utils;
 
-const gDashboard = Cc['@mozilla.org/network/dashboard;1'].
-  getService(Ci.nsIDashboard);
-const gPrefs = Cc["@mozilla.org/preferences-service;1"].
-  getService(Ci.nsIPrefService).getBranch("network.");
+Cu.import("resource://gre/modules/Services.jsm");
+const FileUtils = Cu.import("resource://gre/modules/FileUtils.jsm").FileUtils
+const gEnv = Cc["@mozilla.org/process/environment;1"]
+               .getService(Ci.nsIEnvironment);
+const gDashboard = Cc['@mozilla.org/network/dashboard;1']
+                     .getService(Ci.nsIDashboard);
+const gDirServ = Cc["@mozilla.org/file/directory_service;1"]
+                   .getService(Ci.nsIDirectoryServiceProvider);
+
 const gRequestNetworkingData = {
   "http": gDashboard.requestHttpConnections,
   "sockets": gDashboard.requestSockets,
@@ -130,7 +135,7 @@ function requestNetworkingDataForTab(id) {
 
 function init() {
   gDashboard.enableLogging = true;
-  if (gPrefs.getBoolPref("warnOnAboutNetworking")) {
+  if (Services.prefs.getBoolPref("network.warnOnAboutNetworking")) {
     let div = document.getElementById("warning_message");
     div.classList.add("active");
     div.hidden = false;
@@ -170,6 +175,137 @@ function init() {
   dnsLookupButton.addEventListener("click", function() {
     doLookup();
   });
+
+  let setLogButton = document.getElementById("set-log-file-button");
+  setLogButton.addEventListener("click", setLogFile);
+
+  let setModulesButton = document.getElementById("set-log-modules-button");
+  setModulesButton.addEventListener("click", setLogModules);
+
+  try {
+    let file = gDirServ.getFile("TmpD",  {});
+    file.append("log.txt");
+    document.getElementById("log-file").value = file.path;
+  } catch (e) {
+    console.error(e);
+  }
+
+  // Update the value of the log file.
+  updateLogFile();
+
+  // Update the active log modules
+  updateLogModules();
+}
+
+function updateLogFile() {
+  let logPath = "";
+
+  // Try to get the environment variable for the log file
+  logPath = gEnv.get("MOZ_LOG_FILE") || gEnv.get("NSPR_LOG_FILE");
+  let currentLogFile = document.getElementById("current-log-file");
+  let setLogFileButton = document.getElementById("set-log-file-button");
+
+  // If the log file was set from an env var, we disable the ability to set it
+  // at runtime.
+  if (logPath.length > 0) {
+    currentLogFile.innerText = logPath;
+    setLogFileButton.disabled = true;
+  } else {
+    // There may be a value set by a pref.
+    currentLogFile.innerText = gDashboard.getLogPath();
+    setLogFileButton.disabled = false;
+  }
+}
+
+function updateLogModules() {
+  // Try to get the environment variable for the log file
+  let logModules = gEnv.get("MOZ_LOG") ||
+                   gEnv.get("MOZ_LOG_MODULES") ||
+                   gEnv.get("NSPR_LOG_MODULES");
+  let currentLogModules = document.getElementById("current-log-modules");
+  let setLogModulesButton = document.getElementById("set-log-modules-button");
+  if (logModules.length > 0) {
+    currentLogModules.innerText = logModules;
+    // If the log modules are set by an environment variable at startup, do not
+    // allow changing them throught a pref. It would be difficult to figure out
+    // which ones are enabled and which ones are not. The user probably knows
+    // what he they are doing.
+    setLogModulesButton.disabled = true;
+  } else {
+    let activeLogModules = [];
+    try {
+      if (Services.prefs.getBoolPref("logging.config.add_timestamp")) {
+        activeLogModules.push("timestamp");
+      }
+    } catch (e) {}
+    try {
+      if (Services.prefs.getBoolPref("logging.config.sync")) {
+        activeLogModules.push("sync");
+      }
+    } catch (e) {}
+
+    let children = Services.prefs.getBranch("logging.").getChildList("", {});
+
+    for (let pref of children) {
+      if (pref.startsWith("config.")) {
+        continue;
+      }
+
+      try {
+        let value = Services.prefs.getIntPref(`logging.${pref}`);
+        activeLogModules.push(`${pref}:${value}`);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    currentLogModules.innerText = activeLogModules.join(",");
+  }
+}
+
+function setLogFile() {
+  let logFile = document.getElementById("log-file").value.trim();
+  Services.prefs.setCharPref("logging.config.LOG_FILE", logFile);
+  updateLogFile();
+}
+
+function setLogModules() {
+  let modules = document.getElementById("log-modules").value.trim();
+  if (modules.length == 0) {
+    // Turn off all the modules.
+    let children = Services.prefs.getBranch("logging.").getChildList("", {});
+    for (let pref of children) {
+      if (!pref.startsWith("config.")) {
+        Services.prefs.clearUserPref(`logging.${pref}`);
+      }
+    }
+    Services.prefs.clearUserPref("logging.config.add_timestamp");
+    Services.prefs.clearUserPref("logging.config.sync");
+    updateLogModules();
+    return;
+  }
+
+  let logModules = modules.split(",");
+  let isSync = false;
+  let addTimestamp = false;
+  for (let module of logModules) {
+    if (module == "timestamp") {
+      addTimestamp = true;
+    } else if (module == "rotate") {
+      // XXX: rotate is not yet supported.
+    } else if (module == "append") {
+      // XXX: append is not yet supported.
+    } else if (module == "sync") {
+      isSync = true;
+    } else {
+      let [key, value] = module.split(":");
+      Services.prefs.setIntPref(`logging.${key}`, parseInt(value, 10));
+    }
+  }
+  Services.prefs.setBoolPref("logging.config.add_timestamp", addTimestamp);
+  Services.prefs.setBoolPref("logging.config.sync", isSync);
+
+  updateLogModules();
 }
 
 function confirm () {
@@ -177,7 +313,7 @@ function confirm () {
   div.classList.remove("active");
   div.hidden = true;
   let warnBox = document.getElementById("warncheck");
-  gPrefs.setBoolPref("warnOnAboutNetworking", warnBox.checked);
+  Services.prefs.setBoolPref("network.warnOnAboutNetworking", warnBox.checked);
 }
 
 function show(button) {
