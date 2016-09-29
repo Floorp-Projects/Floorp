@@ -34,7 +34,12 @@ add_task(function* () {
      !detailsPaneToggleButton.classList.contains("pane-collapsed"),
     "The details pane should at this point be visible.");
 
+  // Trigger reflow to make sure the UI is in required state.
+  document.documentElement.getBoundingClientRect();
+
   NetMonitorView.toggleDetailsPane({ visible: false, animated: true });
+
+  yield once(detailsPane, "transitionend");
 
   let margin = -(width + 1) + "px";
   is(width, Prefs.networkDetailsWidth,
@@ -43,7 +48,7 @@ add_task(function* () {
     "The details pane has an incorrect left margin after collapsing.");
   is(detailsPane.style.marginRight, margin,
     "The details pane has an incorrect right margin after collapsing.");
-  ok(detailsPane.hasAttribute("animated"),
+  ok(!detailsPane.hasAttribute("animated"),
     "The details pane has an incorrect attribute after an animated collapsing.");
   ok(detailsPane.classList.contains("pane-collapsed") &&
      detailsPaneToggleButton.classList.contains("pane-collapsed"),

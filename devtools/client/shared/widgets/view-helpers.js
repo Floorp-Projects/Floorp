@@ -252,6 +252,11 @@ const ViewHelpers = exports.ViewHelpers = {
     // Add a class to the pane to handle min-widths, margins and animations.
     pane.classList.add("generic-toggled-pane");
 
+    // Avoid toggles in the middle of animation.
+    if (pane.hasAttribute("animated")) {
+      return;
+    }
+
     // Avoid useless toggles.
     if (flags.visible == !pane.classList.contains("pane-collapsed")) {
       if (flags.callback) {
@@ -283,23 +288,36 @@ const ViewHelpers = exports.ViewHelpers = {
         pane.style.marginLeft = -width + "px";
         pane.style.marginRight = -width + "px";
         pane.style.marginBottom = -height + "px";
-        pane.classList.add("pane-collapsed");
       }
 
       // Wait for the animation to end before calling afterToggle()
       if (flags.animated) {
-        pane.addEventListener("transitionend", function onEvent() {
-          pane.removeEventListener("transitionend", onEvent, false);
+        let options = {
+          useCapture: false,
+          once: true
+        };
+
+        pane.addEventListener("transitionend", () => {
           // Prevent unwanted transitions: if the panel is hidden and the layout
           // changes margins will be updated and the panel will pop out.
           pane.removeAttribute("animated");
+
+          if (!flags.visible) {
+            pane.classList.add("pane-collapsed");
+          }
           if (flags.callback) {
             flags.callback();
           }
-        }, false);
-      } else if (flags.callback) {
+        }, options);
+      } else {
+        if (!flags.visible) {
+          pane.classList.add("pane-collapsed");
+        }
+
         // Invoke the callback immediately since there's no transition.
-        flags.callback();
+        if (flags.callback) {
+          flags.callback();
+        }
       }
     };
 

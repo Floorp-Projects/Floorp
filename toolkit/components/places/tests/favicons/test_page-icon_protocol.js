@@ -30,7 +30,7 @@ var gDefaultFavicon;
 var gFavicon;
 
 add_task(function* setup() {
-  PlacesTestUtils.addVisits({ uri: TEST_URI });
+  yield PlacesTestUtils.addVisits({ uri: TEST_URI });
 
   PlacesUtils.favicons.replaceFaviconDataFromDataURL(
     ICON_URI, ICON_DATA, (Date.now() + 8640000) * 1000,

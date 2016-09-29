@@ -52,6 +52,7 @@ function TextProperty(rule, name, value, priority, enabled = true,
   this.priority = priority;
   this.enabled = !!enabled;
   this.invisible = invisible;
+  this.panelDoc = this.rule.elementStyle.ruleView.inspector.panelDoc;
 
   const toolbox = this.rule.elementStyle.ruleView.inspector.toolbox;
   this.cssProperties = getCssProperties(toolbox);
@@ -204,7 +205,7 @@ TextProperty.prototype = {
     // compute validity locally (which might not be correct, but better than
     // nothing).
     if (!this.rule.domRule.declarations) {
-      return domUtils.cssPropertyIsValid(this.name, this.value);
+      return this.cssProperties.isValidOnClient(this.name, this.value, this.panelDoc);
     }
 
     let selfIndex = this.rule.textProps.indexOf(this);

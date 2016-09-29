@@ -337,14 +337,6 @@ public:
     eIntID_SpellCheckerUnderlineStyle,
 
     /**
-     * If this metric != 0, show icons in menus.
-     */
-    eIntID_ImagesInMenus,
-    /**
-     * If this metric != 0, show icons in buttons.
-     */
-    eIntID_ImagesInButtons,
-    /**
      * If this metric != 0, support window dragging on the menubar.
      */
     eIntID_MenuBarDrag,

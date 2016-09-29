@@ -7,6 +7,8 @@
 
 const PAGE_URL = "data:text/html;charset=utf-8,test select events";
 
+requestLongerTimeout(2);
+
 add_task(function* () {
   let tab = yield addTab(PAGE_URL);
 

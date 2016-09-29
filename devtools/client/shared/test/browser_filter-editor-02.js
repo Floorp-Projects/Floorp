@@ -6,6 +6,7 @@
 // Tests that the Filter Editor Widget renders filters correctly
 
 const {CSSFilterEditorWidget} = require("devtools/client/shared/widgets/FilterWidget");
+const {getClientCssProperties} = require("devtools/shared/fronts/css-properties");
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const STRINGS_URI = "devtools/locale/filterwidget.properties";
@@ -15,6 +16,7 @@ const TEST_URI = `data:text/html,<div id="filter-container" />`;
 
 add_task(function* () {
   let [host, win, doc] = yield createHost("bottom", TEST_URI);
+  const cssIsValid = getClientCssProperties().getValidityChecker(doc);
 
   const TEST_DATA = [
     {
@@ -69,7 +71,7 @@ add_task(function* () {
   ];
 
   const container = doc.querySelector("#filter-container");
-  let widget = new CSSFilterEditorWidget(container, "none");
+  let widget = new CSSFilterEditorWidget(container, "none", cssIsValid);
 
   info("Test rendering of different types");
 

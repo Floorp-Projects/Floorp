@@ -13,18 +13,18 @@ function run_test()
 
 add_task(function* test_execute()
 {
-  let now = Date.now() * 1000;
+  let now = (Date.now() - 10000) * 1000;
 
   for (let i = 0; i < TOTAL_SITES; i++) {
     let site = "http://www.test-" + i + ".com/";
     let testURI = uri(site);
     let testImageURI = uri(site + "blank.gif");
-    let when = now + (i * TOTAL_SITES);
+    let when = now + (i * TOTAL_SITES * 1000);
     yield PlacesTestUtils.addVisits([
       { uri: testURI, visitDate: when, transition: TRANSITION_TYPED },
-      { uri: testImageURI, visitDate: ++when, transition: TRANSITION_EMBED },
-      { uri: testImageURI, visitDate: ++when, transition: TRANSITION_FRAMED_LINK },
-      { uri: testURI, visitDate: ++when, transition: TRANSITION_LINK },
+      { uri: testImageURI, visitDate: when + 1000, transition: TRANSITION_EMBED },
+      { uri: testImageURI, visitDate: when + 2000, transition: TRANSITION_FRAMED_LINK },
+      { uri: testURI, visitDate: when + 3000, transition: TRANSITION_LINK },
     ]);
   }
 

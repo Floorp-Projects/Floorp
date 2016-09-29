@@ -419,9 +419,6 @@ extensions.registerSchemaAPI("downloads", "addon_parent", context => {
         }
 
         function createTarget(downloadsDir) {
-          // TODO
-          // if (options.saveAs) { }
-
           let target;
           if (filename) {
             target = OS.Path.join(downloadsDir, filename);
@@ -455,7 +452,29 @@ extensions.registerSchemaAPI("downloads", "addon_parent", context => {
                   break;
               }
             }
-            return target;
+          }).then(() => {
+            if (!options.saveAs) {
+              return Promise.resolve(target);
+            }
+
+            // Setup the file picker Save As dialog.
+            const picker = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+            const window = Services.wm.getMostRecentWindow("navigator:browser");
+            picker.init(window, null, Ci.nsIFilePicker.modeSave);
+            picker.displayDirectory = new FileUtils.File(dir);
+            picker.appendFilters(Ci.nsIFilePicker.filterAll);
+            picker.defaultString = OS.Path.basename(target);
+
+            // Open the dialog and resolve/reject with the result.
+            return new Promise((resolve, reject) => {
+              picker.open(result => {
+                if (result === Ci.nsIFilePicker.returnCancel) {
+                  reject({message: "Download canceled by the user"});
+                } else {
+                  resolve(picker.file.path);
+                }
+              });
+            });
           });
         }
 

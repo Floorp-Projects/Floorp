@@ -143,6 +143,16 @@ def robustcheckout(ui, url, dest, upstream=None, revision=None, branch=None,
     # which our automation doesn't. Disable it.
     ui.setconfig('worker', 'backgroundclose', False)
 
+    # By default the progress bar starts after 3s and updates every 0.1s. We
+    # change this so it shows and updates every 1.0s.
+    # We also tell progress to assume a TTY is present so updates are printed
+    # even if there is no known TTY.
+    # We make the config change here instead of in a config file because
+    # otherwise we're at the whim of whatever configs are used in automation.
+    ui.setconfig('progress', 'delay', 1.0)
+    ui.setconfig('progress', 'refresh', 1.0)
+    ui.setconfig('progress', 'assume-tty', True)
+
     sharebase = os.path.realpath(sharebase)
 
     return _docheckout(ui, url, dest, upstream, revision, branch, purge,

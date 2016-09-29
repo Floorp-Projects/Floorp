@@ -282,23 +282,23 @@
 /* RTL support: move the images that were on the left to the right,
  * and move images that were on the right to the left.
  */
-.breadcrumbs-widget-item:-moz-locale-dir(rtl) {
+.breadcrumbs-widget-item:dir(rtl) {
   padding: 0 20px 0 8px;
 }
 
-.breadcrumbs-widget-item:-moz-locale-dir(rtl),
-.breadcrumbs-widget-item[checked] + .breadcrumbs-widget-item:-moz-locale-dir(rtl) {
+.breadcrumbs-widget-item:dir(rtl),
+.breadcrumbs-widget-item[checked] + .breadcrumbs-widget-item:dir(rtl) {
   background-position: center right;
 }
 
-#breadcrumb-separator-before:-moz-locale-dir(rtl),
-#breadcrumb-separator-after:-moz-locale-dir(rtl),
-#breadcrumb-separator-normal:-moz-locale-dir(rtl) {
+#breadcrumb-separator-before:dir(rtl),
+#breadcrumb-separator-after:dir(rtl),
+#breadcrumb-separator-normal:dir(rtl) {
   transform: scaleX(-1);
 }
 
-#breadcrumb-separator-before:-moz-locale-dir(rtl):after,
-#breadcrumb-separator-after:-moz-locale-dir(rtl):after {
+#breadcrumb-separator-before:dir(rtl):after,
+#breadcrumb-separator-after:dir(rtl):after {
   transform: translateX(-5px) rotate(45deg);
 }
 

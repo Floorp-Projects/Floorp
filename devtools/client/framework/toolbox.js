@@ -335,6 +335,7 @@ Toolbox.prototype = {
   get splitConsole() {
     return this._splitConsole;
   },
+
   /**
    * Get the focused state of the split console
    */
@@ -1267,6 +1268,16 @@ Toolbox.prototype = {
       // backward compatibility with existing extensions do a check
       // for a promise return value.
       let built = definition.build(iframe.contentWindow, this);
+
+      // Set the dir attribute on the documents of panels using HTML.
+      let docEl = iframe.contentWindow && iframe.contentWindow.document.documentElement;
+      if (docEl && docEl.namespaceURI === HTML_NS) {
+        let top = this.win.top;
+        let topDocEl = top.document.documentElement;
+        let isRtl = top.getComputedStyle(topDocEl).direction === "rtl";
+        docEl.setAttribute("dir", isRtl ? "rtl" : "ltr");
+      }
+
       if (!(typeof built.then == "function")) {
         let panel = built;
         iframe.panel = panel;

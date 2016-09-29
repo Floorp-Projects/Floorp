@@ -11,6 +11,13 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.toolbox.splitconsoleEnabled");
 });
 
+// Use the old webconsole since the node isn't being rendered as an HTML tag
+// in the new one (Bug 1304794)
+Services.prefs.setBoolPref("devtools.webconsole.new-frontend-enabled", false);
+registerCleanupFunction(function* () {
+  Services.prefs.clearUserPref("devtools.webconsole.new-frontend-enabled");
+});
+
 add_task(function* () {
   let { inspector, toolbox } = yield openInspectorForURL(TEST_URL);
 

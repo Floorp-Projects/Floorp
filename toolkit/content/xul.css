@@ -115,14 +115,6 @@ button[type="menu-button"] {
   -moz-binding: url("chrome://global/content/bindings/button.xml#menu-button");
 }
 
-%ifdef MOZ_WIDGET_GTK
-/********* detection of system setting to use icons in buttons ***********/
-button[label]:not([label=""]) > .button-box > .button-icon:not(:-moz-system-metric(images-in-buttons)),
-button[label]:not([label=""]) > .button-box > .box-inherit > .button-icon:not(:-moz-system-metric(images-in-buttons)) {
-  display: none;
-}
-%endif
-
 /********** toolbarbutton **********/
 
 toolbarbutton {
@@ -395,18 +387,6 @@ menucaption {
 .menu-text {
   -moz-box-flex: 1;
 }
-
-%ifdef MOZ_WIDGET_GTK
-/********* detection of system setting to use icons in menus ***********/
-@media not all and (-moz-images-in-menus) {
-  .menu-iconic-left {
-    visibility: hidden;
-  }
-  :-moz-any(menuitem[type], .menuitem-with-favicon) > .menu-iconic-left {
-    visibility: visible;
-  }
-}
-%endif
 
 /********* menuseparator ***********/
 

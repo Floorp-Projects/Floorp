@@ -2621,30 +2621,6 @@ moz_gtk_get_scrollbar_metrics(MozGtkScrollbarMetrics *metrics)
     return MOZ_GTK_SUCCESS;
 }
 
-gboolean
-moz_gtk_images_in_menus()
-{
-    gboolean result;
-    GtkSettings* settings;
-
-    settings = gtk_widget_get_settings(GetWidget(MOZ_GTK_IMAGEMENUITEM));
-
-    g_object_get(settings, "gtk-menu-images", &result, NULL);
-    return result;
-}
-
-gboolean
-moz_gtk_images_in_buttons()
-{
-    gboolean result;
-    GtkSettings* settings;
-
-    settings = gtk_widget_get_settings(GetWidget(MOZ_GTK_BUTTON));
-
-    g_object_get(settings, "gtk-button-images", &result, NULL);
-    return result;
-}
-
 /* cairo_t *cr argument has to be a system-cairo. */
 gint
 moz_gtk_widget_paint(WidgetNodeType widget, cairo_t *cr,
