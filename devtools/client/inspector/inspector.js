@@ -448,8 +448,6 @@ Inspector.prototype = {
     let SplitBox = this.React.createFactory(this.browserRequire(
       "devtools/client/shared/components/splitter/split-box"));
 
-    this.panelWin.addEventListener("resize", this.onPanelWindowResize, true);
-
     let splitter = SplitBox({
       className: "inspector-sidebar-splitter",
       initialWidth: INITIAL_SIDEBAR_SIZE,
@@ -468,6 +466,8 @@ Inspector.prototype = {
 
     this._splitter = this.ReactDOM.render(splitter,
       this.panelDoc.getElementById("inspector-splitter-box"));
+
+    this.panelWin.addEventListener("resize", this.onPanelWindowResize, true);
 
     // Persist splitter state in preferences.
     this.sidebar.on("show", this.onSidebarShown);
