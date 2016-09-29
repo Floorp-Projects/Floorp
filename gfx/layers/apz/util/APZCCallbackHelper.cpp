@@ -478,6 +478,7 @@ APZCCallbackHelper::DispatchSynthesizedMouseEvent(EventMessage aMsg,
                                                   uint64_t aTime,
                                                   const LayoutDevicePoint& aRefPoint,
                                                   Modifiers aModifiers,
+                                                  int32_t aClickCount,
                                                   nsIWidget* aWidget)
 {
   MOZ_ASSERT(aMsg == eMouseMove || aMsg == eMouseDown ||
@@ -491,7 +492,7 @@ APZCCallbackHelper::DispatchSynthesizedMouseEvent(EventMessage aMsg,
   event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
   event.mIgnoreRootScrollFrame = true;
   if (aMsg != eMouseMove) {
-    event.mClickCount = 1;
+    event.mClickCount = aClickCount;
   }
   event.mModifiers = aModifiers;
   // Real touch events will generate corresponding pointer events. We set
@@ -525,6 +526,7 @@ APZCCallbackHelper::DispatchMouseEvent(const nsCOMPtr<nsIPresShell>& aPresShell,
 void
 APZCCallbackHelper::FireSingleTapEvent(const LayoutDevicePoint& aPoint,
                                        Modifiers aModifiers,
+                                       int32_t aClickCount,
                                        nsIWidget* aWidget)
 {
   if (aWidget->Destroyed()) {
@@ -533,9 +535,9 @@ APZCCallbackHelper::FireSingleTapEvent(const LayoutDevicePoint& aPoint,
   APZCCH_LOG("Dispatching single-tap component events to %s\n",
     Stringify(aPoint).c_str());
   int time = 0;
-  DispatchSynthesizedMouseEvent(eMouseMove, time, aPoint, aModifiers, aWidget);
-  DispatchSynthesizedMouseEvent(eMouseDown, time, aPoint, aModifiers, aWidget);
-  DispatchSynthesizedMouseEvent(eMouseUp, time, aPoint, aModifiers, aWidget);
+  DispatchSynthesizedMouseEvent(eMouseMove, time, aPoint, aModifiers, aClickCount, aWidget);
+  DispatchSynthesizedMouseEvent(eMouseDown, time, aPoint, aModifiers, aClickCount, aWidget);
+  DispatchSynthesizedMouseEvent(eMouseUp, time, aPoint, aModifiers, aClickCount, aWidget);
 }
 
 static dom::Element*
