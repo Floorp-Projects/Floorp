@@ -117,6 +117,7 @@ HTMLImageElement::HTMLImageElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
   : nsGenericHTMLElement(aNodeInfo)
   , mForm(nullptr)
   , mInDocResponsiveContent(false)
+  , mCurrentDensity(1.0)
 {
   // We start out broken
   AddStatesSilently(NS_EVENT_STATE_BROKEN);
@@ -951,6 +952,19 @@ HTMLImageElement::InResponsiveMode()
          HaveSrcsetOrInPicture();
 }
 
+bool
+HTMLImageElement::SelectedSourceMatchesLast(nsIURI* aSelectedSource, double aSelectedDensity)
+{
+  // If there was no selected source previously, we don't want to short-circuit the load.
+  // Similarly for if there is no newly selected source.
+  if (!mLastSelectedSource || !aSelectedSource) {
+    return false;
+  }
+  bool equal = false;
+  return NS_SUCCEEDED(mLastSelectedSource->Equals(aSelectedSource, &equal)) && equal &&
+      aSelectedDensity == mCurrentDensity;
+}
+
 nsresult
 HTMLImageElement::LoadSelectedImage(bool aForce, bool aNotify, bool aAlwaysLoad)
 {
@@ -965,8 +979,15 @@ HTMLImageElement::LoadSelectedImage(bool aForce, bool aNotify, bool aAlwaysLoad)
     }
   }
 
+  nsCOMPtr<nsIURI> selectedSource;
+  double currentDensity = 1.0; // default to 1.0 for the src attribute case
   if (mResponsiveSelector) {
     nsCOMPtr<nsIURI> url = mResponsiveSelector->GetSelectedImageURL();
+    selectedSource = url;
+    currentDensity = mResponsiveSelector->GetSelectedImageDensity();
+    if (!aAlwaysLoad && SelectedSourceMatchesLast(selectedSource, currentDensity)) {
+      return NS_OK;
+    }
     if (url) {
       rv = LoadImage(url, aForce, aNotify, eImageLoadType_Imageset);
     }
@@ -976,6 +997,14 @@ HTMLImageElement::LoadSelectedImage(bool aForce, bool aNotify, bool aAlwaysLoad)
       CancelImageRequests(aNotify);
       rv = NS_OK;
     } else {
+      nsIDocument* doc = GetOurOwnerDoc();
+      if (doc) {
+        StringToURI(src, doc, getter_AddRefs(selectedSource));
+        if (!aAlwaysLoad && SelectedSourceMatchesLast(selectedSource, currentDensity)) {
+          return NS_OK;
+        }
+      }
+
       // If we have a srcset attribute or are in a <picture> element,
       // we always use the Imageset load type, even if we parsed no
       // valid responsive sources from either, per spec.
@@ -984,6 +1013,8 @@ HTMLImageElement::LoadSelectedImage(bool aForce, bool aNotify, bool aAlwaysLoad)
                                              : eImageLoadType_Normal);
     }
   }
+  mLastSelectedSource = selectedSource;
+  mCurrentDensity = currentDensity;
 
   if (NS_FAILED(rv)) {
     CancelImageRequests(aNotify);

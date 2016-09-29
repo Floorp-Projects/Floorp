@@ -313,6 +313,7 @@ class LinkageWrongKindError(Exception):
 class Linkable(ContextDerived):
     """Generic context derived container object for programs and libraries"""
     __slots__ = (
+        'cxx_link',
         'lib_defines',
         'linked_libraries',
         'linked_system_libs',
@@ -320,6 +321,7 @@ class Linkable(ContextDerived):
 
     def __init__(self, context):
         ContextDerived.__init__(self, context)
+        self.cxx_link = False
         self.linked_libraries = []
         self.linked_system_libs = []
         self.lib_defines = Defines(context, {})
@@ -332,6 +334,8 @@ class Linkable(ContextDerived):
         if obj.KIND != self.KIND:
             raise LinkageWrongKindError('%s != %s' % (obj.KIND, self.KIND))
         self.linked_libraries.append(obj)
+        if obj.cxx_link:
+            self.cxx_link = True
         obj.refs.append(self)
 
     def link_system_library(self, lib):

@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1202006</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="common_temporaryFileBlob.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <script type="application/javascript">
+
+var tests = [
+  // from common_temporaryFileBlob.js:
+  test_simple,
+  test_reuse,
+  test_abort,
+
+  test_worker,
+  test_worker_reuse,
+  test_worker_abort,
+];
+
+function next() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+
+SpecialPowers.pushPrefEnv({ "set" : [[ "dom.blob.memoryToTemporaryFile", 1 ]] },
+                          next);
+SimpleTest.waitForExplicitFinish();
+
+  </script>
+</body>
+</html>

@@ -252,7 +252,7 @@
 #include "mozilla/StyleSetHandleInlines.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
-
+#include "mozilla/dom/SVGSVGElement.h"
 #include "mozilla/DocLoadingTimelineMarker.h"
 
 #include "nsISpeculativeConnect.h"
@@ -3036,6 +3036,16 @@ nsDocument::GetAnimations(nsTArray<RefPtr<Animation>>& aAnimations)
   AnimationFilter filter;
   filter.mSubtree = true;
   root->GetAnimations(filter, aAnimations);
+}
+
+SVGSVGElement*
+nsIDocument::GetSVGRootElement() const
+{
+  Element* root = GetRootElement();
+  if (!root || !root->IsSVGElement(nsGkAtoms::svg)) {
+    return nullptr;
+  }
+  return static_cast<SVGSVGElement*>(root);
 }
 
 /* Return true if the document is in the focused top-level window, and is an
@@ -5969,30 +5979,6 @@ nsDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
   // transfer ref to aReturn
   list.forget(aReturn);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetAsync(bool *aAsync)
-{
-  NS_ERROR("nsDocument::GetAsync() should be overriden by subclass!");
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDocument::SetAsync(bool aAsync)
-{
-  NS_ERROR("nsDocument::SetAsync() should be overriden by subclass!");
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDocument::Load(const nsAString& aUrl, bool *aReturn)
-{
-  NS_ERROR("nsDocument::Load() should be overriden by subclass!");
-
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

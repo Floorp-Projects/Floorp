@@ -541,9 +541,9 @@ JSXrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsWrapper,
                     }
                     return true;
                 } else {
-                    JS_ReportError(cx, "Accessing TypedArray data over Xrays is slow, and forbidden "
-                                       "in order to encourage performant code. To copy TypedArrays "
-                                       "across origin boundaries, consider using Components.utils.cloneInto().");
+                    JS_ReportErrorASCII(cx, "Accessing TypedArray data over Xrays is slow, and forbidden "
+                                        "in order to encourage performant code. To copy TypedArrays "
+                                        "across origin boundaries, consider using Components.utils.cloneInto().");
                     return false;
                 }
             }
@@ -733,21 +733,21 @@ JSXrayTraits::defineProperty(JSContext* cx, HandleObject wrapper, HandleId id,
     if (isObjectOrArray && isInstance) {
         RootedObject target(cx, getTargetObject(wrapper));
         if (desc.hasGetterOrSetter()) {
-            JS_ReportError(cx, "Not allowed to define accessor property on [Object] or [Array] XrayWrapper");
+            JS_ReportErrorASCII(cx, "Not allowed to define accessor property on [Object] or [Array] XrayWrapper");
             return false;
         }
         if (desc.value().isObject() &&
             !AccessCheck::subsumes(target, js::UncheckedUnwrap(&desc.value().toObject())))
         {
-            JS_ReportError(cx, "Not allowed to define cross-origin object as property on [Object] or [Array] XrayWrapper");
+            JS_ReportErrorASCII(cx, "Not allowed to define cross-origin object as property on [Object] or [Array] XrayWrapper");
             return false;
         }
         if (existingDesc.hasGetterOrSetter()) {
-            JS_ReportError(cx, "Not allowed to overwrite accessor property on [Object] or [Array] XrayWrapper");
+            JS_ReportErrorASCII(cx, "Not allowed to overwrite accessor property on [Object] or [Array] XrayWrapper");
             return false;
         }
         if (existingDesc.object() && existingDesc.object() != wrapper) {
-            JS_ReportError(cx, "Not allowed to shadow non-own Xray-resolved property on [Object] or [Array] XrayWrapper");
+            JS_ReportErrorASCII(cx, "Not allowed to shadow non-own Xray-resolved property on [Object] or [Array] XrayWrapper");
             return false;
         }
 
@@ -1384,13 +1384,13 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext* cx, HandleObject wr
     RootedValue fval(cx, JS::UndefinedValue());
     if (member->IsConstant()) {
         if (!member->GetConstantValue(ccx, iface, desc.value().address())) {
-            JS_ReportError(cx, "Failed to convert constant native property to JS value");
+            JS_ReportErrorASCII(cx, "Failed to convert constant native property to JS value");
             return false;
         }
     } else if (member->IsAttribute()) {
         // This is a getter/setter. Clone a function for it.
         if (!member->NewFunctionObject(ccx, iface, wrapper, fval.address())) {
-            JS_ReportError(cx, "Failed to clone function object for native getter/setter");
+            JS_ReportErrorASCII(cx, "Failed to clone function object for native getter/setter");
             return false;
         }
 
@@ -1406,7 +1406,7 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext* cx, HandleObject wr
     } else {
         // This is a method. Clone a function for it.
         if (!member->NewFunctionObject(ccx, iface, wrapper, desc.value().address())) {
-            JS_ReportError(cx, "Failed to clone function object for native function");
+            JS_ReportErrorASCII(cx, "Failed to clone function object for native function");
             return false;
         }
 
@@ -1434,13 +1434,13 @@ wrappedJSObject_getter(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (!args.thisv().isObject()) {
-        JS_ReportError(cx, "This value not an object");
+        JS_ReportErrorASCII(cx, "This value not an object");
         return false;
     }
     RootedObject wrapper(cx, &args.thisv().toObject());
     if (!IsWrapper(wrapper) || !WrapperFactory::IsXrayWrapper(wrapper) ||
         !WrapperFactory::AllowWaiver(wrapper)) {
-        JS_ReportError(cx, "Unexpected object");
+        JS_ReportErrorASCII(cx, "Unexpected object");
         return false;
     }
 
@@ -1847,7 +1847,7 @@ XrayToString(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (!args.thisv().isObject()) {
-        JS_ReportError(cx, "XrayToString called on an incompatible object");
+        JS_ReportErrorASCII(cx, "XrayToString called on an incompatible object");
         return false;
     }
 
@@ -1859,13 +1859,13 @@ XrayToString(JSContext* cx, unsigned argc, Value* vp)
         wrapper = xpc::SandboxCallableProxyHandler::wrappedObject(wrapper);
     }
     if (!IsWrapper(wrapper) || !WrapperFactory::IsXrayWrapper(wrapper)) {
-        JS_ReportError(cx, "XrayToString called on an incompatible object");
+        JS_ReportErrorASCII(cx, "XrayToString called on an incompatible object");
         return false;
     }
 
     RootedObject obj(cx, XrayTraits::getTargetObject(wrapper));
     if (GetXrayType(obj) != XrayForWrappedNative) {
-        JS_ReportError(cx, "XrayToString called on an incompatible object");
+        JS_ReportErrorASCII(cx, "XrayToString called on an incompatible object");
         return false;
     }
 

@@ -192,10 +192,6 @@ treechildren::-moz-tree-progressmeter {
   color: ThreeDShadow;
 }
 
-treechildren::-moz-tree-progressmeter(progressUndetermined) {
-  list-style-image: url("chrome://global/skin/progressmeter/progressmeter-busy.gif");
-}
-
 treechildren::-moz-tree-cell-text(progressmeter) {
   margin: 2px 4px;
 }

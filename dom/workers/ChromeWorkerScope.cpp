@@ -28,7 +28,7 @@ UnicodeToNative(JSContext* aCx, const char16_t* aSource, size_t aSourceLen)
 
   nsAutoCString native;
   if (NS_FAILED(NS_CopyUnicodeToNative(unicode, native))) {
-    JS_ReportError(aCx, "Could not convert string to native charset!");
+    JS_ReportErrorASCII(aCx, "Could not convert string to native charset!");
     return nullptr;
   }
 
