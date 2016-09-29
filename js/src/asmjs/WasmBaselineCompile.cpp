@@ -2525,21 +2525,19 @@ class BaseCompiler
 #endif
     }
 
-    void rotateRightI64(RegI64 rhs, RegI64 srcDest) {
-#if defined(JS_CODEGEN_X64)
-        MOZ_ASSERT(rhs.reg.reg == rcx);
-        masm.rorq_cl(srcDest.reg.reg);
+    void rotateRightI64(RegI64 shift, RegI64 srcDest) {
+#ifdef JS_PUNBOX64
+        masm.rotateRight64(shift.reg.reg, srcDest.reg, srcDest.reg, Register::Invalid());
 #else
-        MOZ_CRASH("BaseCompiler platform hook: rotateRightI64");
+        masm.rotateRight64(shift.reg.low, srcDest.reg, srcDest.reg, shift.reg.high);
 #endif
     }
 
-    void rotateLeftI64(RegI64 rhs, RegI64 srcDest) {
-#if defined(JS_CODEGEN_X64)
-        MOZ_ASSERT(rhs.reg.reg == rcx);
-        masm.rolq_cl(srcDest.reg.reg);
+    void rotateLeftI64(RegI64 shift, RegI64 srcDest) {
+#ifdef JS_PUNBOX64
+        masm.rotateLeft64(shift.reg.reg, srcDest.reg, srcDest.reg, Register::Invalid());
 #else
-        MOZ_CRASH("BaseCompiler platform hook: rotateLeftI64");
+        masm.rotateLeft64(shift.reg.low, srcDest.reg, srcDest.reg, shift.reg.high);
 #endif
     }
 
@@ -4088,11 +4086,11 @@ BaseCompiler::emitRotrI64()
 {
     // TODO / OPTIMIZE: Constant rhs
     RegI64 r0, r1;
-#if defined(JS_CODEGEN_X64)
-    r1 = popI64(specific_rcx);
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    needI32(specific_ecx);
+    r1 = fromI32(specific_ecx);
+    r1 = popI64ToSpecific(r1);
     r0 = popI64();
-#elif defined(JS_CODEGEN_X86)
-    MOZ_CRASH("BaseCompiler platform hook: emitRotrI64");
 #else
     pop2xI64(&r0, &r1);
 #endif
@@ -4122,11 +4120,11 @@ BaseCompiler::emitRotlI64()
 {
     // TODO / OPTIMIZE: Constant rhs
     RegI64 r0, r1;
-#if defined(JS_CODEGEN_X64)
-    r1 = popI64(specific_rcx);
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    needI32(specific_ecx);
+    r1 = fromI32(specific_ecx);
+    r1 = popI64ToSpecific(r1);
     r0 = popI64();
-#elif defined(JS_CODEGEN_X86)
-    MOZ_CRASH("BaseCompiler platform hook: emitRotlI64");
 #else
     pop2xI64(&r0, &r1);
 #endif
