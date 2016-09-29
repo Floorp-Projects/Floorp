@@ -196,7 +196,6 @@ mp_err mp_div(const mp_int *a, const mp_int *b, mp_int *q, mp_int *r);
 mp_err mp_div_2d(const mp_int *a, mp_digit d, mp_int *q, mp_int *r);
 mp_err mp_expt(mp_int *a, mp_int *b, mp_int *c);
 mp_err mp_2expt(mp_int *a, mp_digit k);
-mp_err mp_sqrt(const mp_int *a, mp_int *b);
 
 /* Modular arithmetic      */
 #if MP_MODARITH
