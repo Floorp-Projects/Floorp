@@ -12,23 +12,11 @@
 namespace mozilla {
 namespace dom {
 
-class Blob;
 class BlobImpl;
 
 class BlobSet final
 {
 public:
-  BlobSet()
-    : mData(nullptr)
-    , mDataLen(0)
-    , mDataBufferLen(0)
-  {}
-
-  ~BlobSet()
-  {
-    free(mData);
-  }
-
   nsresult AppendVoidPtr(const void* aData, uint32_t aLength);
 
   nsresult AppendString(const nsAString& aString, bool nativeEOL,
@@ -36,23 +24,10 @@ public:
 
   nsresult AppendBlobImpl(BlobImpl* aBlobImpl);
 
-  nsresult AppendBlobImpls(const nsTArray<RefPtr<BlobImpl>>& aBlobImpls);
-
-  nsTArray<RefPtr<BlobImpl>>& GetBlobImpls() { Flush(); return mBlobImpls; }
-
-  already_AddRefed<Blob> GetBlobInternal(nsISupports* aParent,
-                                         const nsACString& aContentType,
-                                         ErrorResult& aRv);
+  nsTArray<RefPtr<BlobImpl>>& GetBlobImpls() { return mBlobImpls; }
 
 private:
-  bool ExpandBufferSize(uint64_t aSize);
-
-  void Flush();
-
   nsTArray<RefPtr<BlobImpl>> mBlobImpls;
-  void* mData;
-  uint64_t mDataLen;
-  uint64_t mDataBufferLen;
 };
 
 } // namespace dom

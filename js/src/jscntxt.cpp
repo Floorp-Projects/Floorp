@@ -317,8 +317,20 @@ checkReportFlags(JSContext* cx, unsigned* flags)
     return false;
 }
 
+#ifdef DEBUG
+static void
+AssertIsASCII(const char* s)
+{
+    while (*s) {
+        MOZ_ASSERT((*s & 0x80) == 0);
+        s++;
+    }
+}
+#endif
+
 bool
-js::ReportErrorVA(JSContext* cx, unsigned flags, const char* format, va_list ap)
+js::ReportErrorVA(JSContext* cx, unsigned flags, const char* format,
+                  ErrorArgumentsType argumentsType, va_list ap)
 {
     char* message;
     char16_t* ucmessage;
@@ -336,9 +348,25 @@ js::ReportErrorVA(JSContext* cx, unsigned flags, const char* format, va_list ap)
     }
     messagelen = strlen(message);
 
+#ifdef DEBUG
+    if (argumentsType == ArgumentsAreASCII)
+        AssertIsASCII(message);
+#endif
+
     report.flags = flags;
     report.errorNumber = JSMSG_USER_DEFINED_ERROR;
-    report.ucmessage = ucmessage = InflateString(cx, message, &messagelen);
+    if (argumentsType == ArgumentsAreASCII || argumentsType == ArgumentsAreLatin1) {
+        ucmessage = InflateString(cx, message, &messagelen);
+    } else {
+        JS::UTF8Chars utf8(message, messagelen);
+        size_t unused;
+        ucmessage = LossyUTF8CharsToNewTwoByteCharsZ(cx, utf8, &unused).get();
+    }
+    if (!ucmessage) {
+        js_free(message);
+        return false;
+    }
+    report.ucmessage = ucmessage;
     PopulateReportBlame(cx, &report);
 
     warning = JSREPORT_IS_WARNING(report.flags);
@@ -351,7 +379,7 @@ js::ReportErrorVA(JSContext* cx, unsigned flags, const char* format, va_list ap)
 
 /* |callee| requires a usage string provided by JS_DefineFunctionsWithHelp. */
 void
-js::ReportUsageError(JSContext* cx, HandleObject callee, const char* msg)
+js::ReportUsageErrorASCII(JSContext* cx, HandleObject callee, const char* msg)
 {
     const char* usageStr = "usage";
     PropertyName* usageAtom = Atomize(cx, usageStr, strlen(usageStr))->asPropertyName();
@@ -366,7 +394,7 @@ js::ReportUsageError(JSContext* cx, HandleObject callee, const char* msg)
         return;
 
     if (!usage.isString()) {
-        JS_ReportError(cx, "%s", msg);
+        JS_ReportErrorASCII(cx, "%s", msg);
     } else {
         JSString* str = usage.toString();
         if (!str->ensureFlat(cx))
@@ -539,14 +567,27 @@ class MOZ_RAII AutoMessageArgs
             if (passed_) {
                 lengths_[i] = js_strlen(args_[i]);
             } else if (typeArg == ArgumentsAreASCII || typeArg == ArgumentsAreLatin1) {
-                char* charArg = va_arg(ap, char*);
+                const char* charArg = va_arg(ap, char*);
                 size_t charArgLength = strlen(charArg);
+
+#ifdef DEBUG
+                if (typeArg == ArgumentsAreASCII)
+                    AssertIsASCII(charArg);
+#endif
+
                 args_[i] = InflateString(cx, charArg, &charArgLength);
                 if (!args_[i])
                     return false;
                 allocatedElements_ = true;
                 MOZ_ASSERT(charArgLength == js_strlen(args_[i]));
                 lengths_[i] = charArgLength;
+            } else if (typeArg == ArgumentsAreUTF8) {
+                const char* charArg = va_arg(ap, char*);
+                JS::UTF8Chars utf8(charArg, strlen(charArg));
+                args_[i] = LossyUTF8CharsToNewTwoByteCharsZ(cx, utf8, &lengths_[i]).get();
+                if (!args_[i])
+                    return false;
+                allocatedElements_ = true;
             } else {
                 args_[i] = va_arg(ap, char16_t*);
                 lengths_[i] = js_strlen(args_[i]);
@@ -589,6 +630,11 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
 
     if (efs) {
         reportp->exnType = efs->exnType;
+
+#ifdef DEBUG
+        if (argumentsType == ArgumentsAreASCII)
+            AssertIsASCII(efs->format);
+#endif
 
         uint16_t argCount = efs->argCount;
         MOZ_RELEASE_ASSERT(argCount <= JS::MaxNumErrorArguments);

@@ -502,7 +502,7 @@ void mozilla_sampler_init(void* stackTop)
 #endif
 
 #if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
-  if (mozilla::jni::IsAvailable()) {
+  if (mozilla::jni::IsFennec()) {
     GeckoJavaSampler::Init();
   }
 #endif

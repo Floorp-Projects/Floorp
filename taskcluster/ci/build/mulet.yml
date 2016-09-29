@@ -6,6 +6,8 @@ linux64-mulet/debug:
             buildbot: linux64-mulet
             gecko-v1: mulet.dbg
             gecko-v2: mulet-dbg
+        # despite being tier-3, these jobs should be inserted into the index ranked by pushdate
+        rank: pushdate
     treeherder:
         platform: mulet-linux64/debug  # See bug 1286086
         symbol: B
@@ -27,6 +29,8 @@ linux64-mulet/opt:
             buildbot: linux64-mulet
             gecko-v1: mulet.opt
             gecko-v2: mulet-opt
+        # despite being tier-3, these jobs should be inserted into the index ranked by pushdate
+        rank: pushdate
     treeherder:
         platform: mulet-linux64/opt # ?!?%
         symbol: B

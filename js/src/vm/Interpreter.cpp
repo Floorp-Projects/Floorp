@@ -667,7 +667,7 @@ js::ExecuteKernel(JSContext* cx, HandleScript script, JSObject& envChainArg,
 
     if (script->treatAsRunOnce()) {
         if (script->hasRunOnce()) {
-            JS_ReportError(cx, "Trying to execute a run-once script multiple times");
+            JS_ReportErrorASCII(cx, "Trying to execute a run-once script multiple times");
             return false;
         }
 

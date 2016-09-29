@@ -1468,7 +1468,9 @@ nsWindow::InitNatives()
     nsWindow::GeckoViewSupport::EditableBase::Init();
     nsWindow::LayerViewSupport::Init();
     nsWindow::NPZCSupport::Init();
-    nsWindow::PMPMSupport::Init();
+    if (jni::IsFennec()) {
+        nsWindow::PMPMSupport::Init();
+    }
 }
 
 nsWindow*

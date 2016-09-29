@@ -51,10 +51,15 @@ public:
   };
 
   DataTransferItem* Add(const nsAString& aData, const nsAString& aType,
+                        const Maybe<nsIPrincipal*>& aSubjectPrincipal,
                         ErrorResult& rv);
-  DataTransferItem* Add(File& aData, ErrorResult& aRv);
+  DataTransferItem* Add(File& aData,
+                        const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                        ErrorResult& aRv);
 
-  void Remove(uint32_t aIndex, ErrorResult& aRv);
+  void Remove(uint32_t aIndex,
+              const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+              ErrorResult& aRv);
 
   DataTransferItem* IndexedGetter(uint32_t aIndex, bool& aFound,
                                   ErrorResult& aRv) const;
@@ -64,7 +69,7 @@ public:
     return mDataTransfer;
   }
 
-  void Clear(ErrorResult& aRv);
+  void Clear(const Maybe<nsIPrincipal*>& aSubjectPrincipal, ErrorResult& aRv);
 
   already_AddRefed<DataTransferItem>
   SetDataWithPrincipal(const nsAString& aType, nsIVariant* aData,
@@ -75,6 +80,7 @@ public:
 
   // Moz-style helper methods for interacting with the stored data
   void MozRemoveByTypeAt(const nsAString& aType, uint32_t aIndex,
+                         const Maybe<nsIPrincipal*>& aSubjectPrincipal,
                          ErrorResult& aRv);
   DataTransferItem* MozItemByTypeAt(const nsAString& aType, uint32_t aIndex);
   const nsTArray<RefPtr<DataTransferItem>>* MozItemsAt(uint32_t aIndex);
@@ -89,7 +95,9 @@ public:
 
 private:
   void ClearDataHelper(DataTransferItem* aItem, uint32_t aIndexHint,
-                       uint32_t aMozOffsetHint, ErrorResult& aRv);
+                       uint32_t aMozOffsetHint,
+                       const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                       ErrorResult& aRv);
   DataTransferItem* AppendNewItem(uint32_t aIndex, const nsAString& aType,
                                   nsIVariant* aData, nsIPrincipal* aPrincipal,
                                   bool aHidden);

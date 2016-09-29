@@ -79,8 +79,9 @@ protected:
   nsString mMcc;
   nsString mMnc;
   nsString mSpn;
-  bool mIsDisplayNetworkNameRequired;
-  bool mIsDisplaySpnRequired;
+  // The following booleans shall be initialized either in the constructor or in Update
+  MOZ_INIT_OUTSIDE_CTOR bool mIsDisplayNetworkNameRequired;
+  MOZ_INIT_OUTSIDE_CTOR bool mIsDisplaySpnRequired;
 };
 
 class GsmIccInfo final : public IccInfo
@@ -140,7 +141,8 @@ private:
   ~CdmaIccInfo() {}
 
   nsString mPhoneNumber;
-  int32_t mPrlVersion;
+  // The following integer shall be initialized either in the constructor or in Update
+  MOZ_INIT_OUTSIDE_CTOR int32_t mPrlVersion;
 };
 
 } // namespace dom

@@ -57,7 +57,7 @@ def taskgraph_action(options):
     write_artifact('task-graph.json', optimized_graph.to_json())
     write_artifact('label-to-taskid.json', label_to_taskid)
     # actually create the graph
-    create_tasks(optimized_graph, label_to_taskid)
+    create_tasks(optimized_graph, label_to_taskid, decision_params)
 
 
 def get_action_parameters(options):

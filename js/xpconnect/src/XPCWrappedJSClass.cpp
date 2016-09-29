@@ -971,7 +971,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
         const char* str = "IDL methods marked with [implicit_jscontext] "
                           "or [optional_argc] may not be implemented in JS";
         // Throw and warn for good measure.
-        JS_ReportError(cx, str);
+        JS_ReportErrorASCII(cx, str);
         NS_WARNING(str);
         return CheckForException(ccx, aes, name, GetInterfaceName());
     }
