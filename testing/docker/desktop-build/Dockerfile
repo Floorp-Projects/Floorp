@@ -5,6 +5,7 @@ MAINTAINER    Dustin J. Mitchell <dustin@mozilla.com>
 # TODO remove when base image is updated
 VOLUME /home/worker/workspace
 VOLUME /home/worker/tooltool-cache
+VOLUME /home/worker/hg-shared
 
 # Add build scripts; these are the entry points from the taskcluster worker, and
 # operate on environment variables
