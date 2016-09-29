@@ -90,13 +90,7 @@ apt-get install -y -f ${apt_packages[@]}
 
 dpkg-reconfigure locales
 
-# set up tooltool (temporarily)
-tooltool_fetch() {
-    cat >manifest.tt
-    python /setup/tooltool.py fetch
-    rm manifest.tt
-}
-
+. /setup/common.sh
 . /setup/install-mercurial.sh
 
 pip install --upgrade pip
