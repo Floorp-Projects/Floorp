@@ -609,7 +609,7 @@ Inspector.prototype = {
 
     // Setup the eye-dropper icon if we're in an HTML document and we have actor support.
     if (this.selection.nodeFront && this.selection.nodeFront.isInHTMLDocument) {
-      this.toolbox.target.actorHasMethod("inspector", "pickColorFromPage").then(value => {
+      this.target.actorHasMethod("inspector", "pickColorFromPage").then(value => {
         if (!value) {
           return;
         }
