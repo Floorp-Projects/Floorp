@@ -30,6 +30,7 @@ function getTestaddonFilename() {
 }
 
 function run_test() {
+  allow_all_plugins();
   loadAddonManager();
   gProfileDir = do_get_profile();
   do_register_cleanup(() => shutdownManager());

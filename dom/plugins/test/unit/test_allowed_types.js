@@ -9,6 +9,8 @@ function run_test() {
   const pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
   const pluginDefaultState = Services.prefs.getIntPref("plugin.default.state");
 
+  Services.prefs.setBoolPref("plugin.load_flash_only", false);
+
   function reload_plugins_with_allowed_types(allowed_types) {
     if (typeof allowed_types === "undefined") {
       // If we didn't get an allowed_types string, then unset the pref,
