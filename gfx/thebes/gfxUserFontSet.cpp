@@ -422,7 +422,10 @@ gfxUserFontEntry::LoadNextSrc()
         // src local ==> lookup and load immediately
 
         if (currSrc.mSourceType == gfxFontFaceSrc::eSourceType_Local) {
-            gfxFontEntry* fe =
+            // Don't look up local fonts if the font whitelist is being used.
+            gfxFontEntry* fe = gfxPlatformFontList::PlatformFontList()->
+                                 IsFontFamilyWhitelistActive() ?
+                nullptr :
                 gfxPlatform::GetPlatform()->LookupLocalFont(currSrc.mLocalName,
                                                             mWeight,
                                                             mStretch,

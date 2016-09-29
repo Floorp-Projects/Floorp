@@ -34,8 +34,6 @@ function testHTMLDocuments(ids, isXHTML) {
     is(doc1.body, null, "Shouldn't have .body!");
     ok(doc1 instanceof HTMLDocument,
        "Document should be an HTML document!");
-    ok(!(doc1 instanceof SVGDocument),
-       "Document shouldn't be an SVG document!");
 
     var docType2 =
       document.implementation.createDocumentType(isXHTML ? "html" : "HTML",
@@ -70,11 +68,11 @@ function testSVGDocument() {
   ok(!doc1.documentElement, "Document shouldn't have document element!");
   ok(!(doc1 instanceof HTMLDocument),
      "Document shouldn't be an HTML document!");
-  ok(doc1 instanceof SVGDocument,
-     "Document should be an SVG document!");
+  ok(doc1 instanceof XMLDocument,
+     "Document should be an XML document!");
 
-  // SVG documents have .rootElement.
-  ok("rootElement" in doc1, "No .rootElement in document");
+  // SVG documents have .documentElement.
+  ok("documentElement" in doc1, "No .documentElement in document");
 
   var docType2 =
       document.implementation.createDocumentType("svg",
@@ -83,8 +81,7 @@ function testSVGDocument() {
   var doc2 = document.implementation.createDocument("http://www.w3.org/2000/svg",
                                                     "svg", docType2);
   ok(doc2.documentElement, "Document should have document element!");
-  ok(doc2.rootElement, "Should have .rootElement in document");
-  is(doc2.rootElement.localName, "svg", "Wrong .rootElement!");
+  is(doc2.documentElement.localName, "svg", "Wrong .documentElement!");
 }
 
 function testFooBarDocument() {
@@ -97,8 +94,6 @@ function testFooBarDocument() {
   ok(!doc1.documentElement, "Document shouldn't have document element!");
   ok(!(doc1 instanceof HTMLDocument),
      "Document shouldn't be an HTML document!");
-  ok(!(doc1 instanceof SVGDocument),
-     "Document shouldn't be an SVG document!");
 
   var docType2 =
       document.implementation.createDocumentType("FooBar", "FooBar", null);
@@ -114,8 +109,6 @@ function testNullDocTypeDocument() {
   ok(!doc1.documentElement, "Document shouldn't have document element!");
   ok(!(doc1 instanceof HTMLDocument),
      "Document shouldn't be an HTML document!");
-  ok(!(doc1 instanceof SVGDocument),
-     "Document shouldn't be an SVG document!");
 
   var doc2 = document.implementation.createDocument("FooBarNS",
                                                     "FooBar", null);

@@ -910,8 +910,10 @@ Location::GetSourceBaseURL(JSContext* cx, nsIURI** sourceURL)
 }
 
 bool
-Location::CallerSubsumes()
+Location::CallerSubsumes(nsIPrincipal* aSubjectPrincipal)
 {
+  MOZ_ASSERT(aSubjectPrincipal);
+
   // Get the principal associated with the location object.  Note that this is
   // the principal of the page which will actually be navigated, not the
   // principal of the Location object itself.  This is why we need this check
@@ -923,7 +925,8 @@ Location::CallerSubsumes()
   nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(outer);
   bool subsumes = false;
   nsresult rv =
-    nsContentUtils::SubjectPrincipal()->SubsumesConsideringDomain(sop->GetPrincipal(), &subsumes);
+    aSubjectPrincipal->SubsumesConsideringDomain(sop->GetPrincipal(),
+                                                 &subsumes);
   NS_ENSURE_SUCCESS(rv, false);
   return subsumes;
 }

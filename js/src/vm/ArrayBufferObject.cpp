@@ -1563,7 +1563,7 @@ JS_DetachArrayBuffer(JSContext* cx, HandleObject obj)
     assertSameCompartment(cx, obj);
 
     if (!obj->is<ArrayBufferObject>()) {
-        JS_ReportError(cx, "ArrayBuffer object required");
+        JS_ReportErrorASCII(cx, "ArrayBuffer object required");
         return false;
     }
 

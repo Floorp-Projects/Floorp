@@ -759,10 +759,8 @@ function runTest() {
          "wrong responseXML in test for " + test.toSource());
       is(res.responseText, "",
          "wrong responseText in test for " + test.toSource());
-      var expectedProgressCount = 0;
       if (!res.sendThrew) {
         if (test.username) {
-          expectedProgressCount = 1;
           is(res.events.join(","),
              "opening,rs1,sending,loadstart,rs4,error,loadend",
              "wrong events in test for " + test.toSource());
@@ -772,7 +770,7 @@ function runTest() {
              "wrong events in test for " + test.toSource());
         }
       }
-      is(res.progressEvents, expectedProgressCount,
+      is(res.progressEvents, 0,
          "wrong events in test for " + test.toSource());
       if (test.responseHeaders) {
         for (header in test.responseHeaders) {

@@ -659,8 +659,12 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
       }
     }
 
-    if (opacity != 1.0f || maskFrame || (clipPathFrame && !isTrivialClip)) {
-      target->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, opacity, maskSurface, maskTransform);
+    if (maskFrame) {
+      target->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, 1.0,
+                                    maskSurface, maskTransform);
+    } else if (opacity != 1.0f || (clipPathFrame && !isTrivialClip)) {
+      target->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, opacity,
+                                    maskSurface, maskTransform);
     }
   }
 

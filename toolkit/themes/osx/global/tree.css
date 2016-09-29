@@ -155,11 +155,6 @@ treechildren::-moz-tree-progressmeter {
   -moz-border-left-colors: #AAAAAA #000000;
 }
 
-/*
-treechildren::-moz-tree-progressmeter(progressUndetermined) {
-}
-*/
-
 treechildren::-moz-tree-cell-text(progressmeter) {
   margin: 2px 4px;
   -moz-appearance: progressbar;

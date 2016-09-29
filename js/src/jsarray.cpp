@@ -903,7 +903,7 @@ js::IsWrappedArrayConstructor(JSContext* cx, const Value& v, bool* result)
     if (v.toObject().is<WrapperObject>()) {
         JSObject* obj = CheckedUnwrap(&v.toObject());
         if (!obj) {
-            JS_ReportError(cx, "Permission denied to access object");
+            JS_ReportErrorASCII(cx, "Permission denied to access object");
             return false;
         }
 

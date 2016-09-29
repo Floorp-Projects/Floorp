@@ -593,7 +593,7 @@ CamerasChild::ShutdownChild()
 }
 
 bool
-CamerasChild::RecvDeliverFrame(const int& capEngine,
+CamerasChild::RecvDeliverFrame(const CaptureEngine& capEngine,
                                const int& capId,
                                mozilla::ipc::Shmem&& shmem,
                                const size_t& size,
@@ -602,13 +602,12 @@ CamerasChild::RecvDeliverFrame(const int& capEngine,
                                const int64_t& render_time)
 {
   MutexAutoLock lock(mCallbackMutex);
-  CaptureEngine capEng = static_cast<CaptureEngine>(capEngine);
-  if (Callback(capEng, capId)) {
+  if (Callback(capEngine, capId)) {
     unsigned char* image = shmem.get<unsigned char>();
-    Callback(capEng, capId)->DeliverFrame(image, size,
-                                          time_stamp,
-                                          ntp_time, render_time,
-                                          nullptr);
+    Callback(capEngine, capId)->DeliverFrame(image, size,
+                                             time_stamp,
+                                             ntp_time, render_time,
+                                             nullptr);
   } else {
     LOG(("DeliverFrame called with dead callback"));
   }
@@ -637,15 +636,14 @@ CamerasChild::SetFakeDeviceChangeEvents()
 }
 
 bool
-CamerasChild::RecvFrameSizeChange(const int& capEngine,
+CamerasChild::RecvFrameSizeChange(const CaptureEngine& capEngine,
                                   const int& capId,
                                   const int& w, const int& h)
 {
   LOG((__PRETTY_FUNCTION__));
   MutexAutoLock lock(mCallbackMutex);
-  CaptureEngine capEng = static_cast<CaptureEngine>(capEngine);
-  if (Callback(capEng, capId)) {
-    Callback(capEng, capId)->FrameSizeChange(w, h, 0);
+  if (Callback(capEngine, capId)) {
+    Callback(capEngine, capId)->FrameSizeChange(w, h, 0);
   } else {
     LOG(("Frame size change with dead callback"));
   }

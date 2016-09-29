@@ -863,7 +863,7 @@ ErrorReport::init(JSContext* cx, HandleValue exn,
         //
         // but without the reporting bits.  Instead it just puts all
         // the stuff we care about in our ownedReport and message_.
-        if (!populateUncaughtExceptionReport(cx, message_)) {
+        if (!populateUncaughtExceptionReportUTF8(cx, message_)) {
             // Just give up.  We're out of memory or something; not much we can
             // do here.
             return false;
@@ -877,17 +877,17 @@ ErrorReport::init(JSContext* cx, HandleValue exn,
 }
 
 bool
-ErrorReport::populateUncaughtExceptionReport(JSContext* cx, ...)
+ErrorReport::populateUncaughtExceptionReportUTF8(JSContext* cx, ...)
 {
     va_list ap;
     va_start(ap, cx);
-    bool ok = populateUncaughtExceptionReportVA(cx, ap);
+    bool ok = populateUncaughtExceptionReportUTF8VA(cx, ap);
     va_end(ap);
     return ok;
 }
 
 bool
-ErrorReport::populateUncaughtExceptionReportVA(JSContext* cx, va_list ap)
+ErrorReport::populateUncaughtExceptionReportUTF8VA(JSContext* cx, va_list ap)
 {
     new (&ownedReport) JSErrorReport();
     ownedReport.flags = JSREPORT_ERROR;
@@ -908,7 +908,7 @@ ErrorReport::populateUncaughtExceptionReportVA(JSContext* cx, va_list ap)
 
     if (!ExpandErrorArgumentsVA(cx, GetErrorMessage, nullptr,
                                 JSMSG_UNCAUGHT_EXCEPTION, &ownedMessage,
-                                nullptr, ArgumentsAreASCII, &ownedReport, ap)) {
+                                nullptr, ArgumentsAreUTF8, &ownedReport, ap)) {
         return false;
     }
 

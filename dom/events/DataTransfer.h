@@ -144,6 +144,7 @@ public:
                ErrorResult& aRv);
 
   void ClearData(const mozilla::dom::Optional<nsAString>& aFormat,
+                 const Maybe<nsIPrincipal*>& aSubjectPrincipal,
                  mozilla::ErrorResult& aRv);
 
   already_AddRefed<FileList> GetFiles(mozilla::ErrorResult& aRv);
@@ -170,6 +171,7 @@ public:
                                              mozilla::ErrorResult& aRv) const;
 
   void MozClearDataAt(const nsAString& aFormat, uint32_t aIndex,
+                      const Maybe<nsIPrincipal*>& aSubjectPrincipal,
                       mozilla::ErrorResult& aRv);
 
   void MozSetDataAt(JSContext* aCx, const nsAString& aFormat,
@@ -307,6 +309,7 @@ protected:
                                  nsIPrincipal* aPrincipal);
 
   void MozClearDataAtHelper(const nsAString& aFormat, uint32_t aIndex,
+                            const Maybe<nsIPrincipal*>& aSubjectPrincipal,
                             mozilla::ErrorResult& aRv);
 
   nsCOMPtr<nsISupports> mParent;

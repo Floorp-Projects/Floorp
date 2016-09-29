@@ -149,9 +149,10 @@ RuleEditor.prototype = {
       });
     }
 
-    if (this.rule.domRule.type !== CSSRule.KEYFRAME_RULE &&
-        this.rule.domRule.selectors) {
-      let selector = this.rule.domRule.selectors.join(", ");
+    if (this.rule.domRule.type !== CSSRule.KEYFRAME_RULE) {
+      let selector = this.rule.domRule.selectors
+               ? this.rule.domRule.selectors.join(", ")
+               : this.ruleView.inspector.selectionCssSelector;
 
       let selectorHighlighter = createChild(header, "span", {
         class: "ruleview-selectorhighlighter" +

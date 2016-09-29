@@ -8,6 +8,7 @@ if CONFIG['MOZ_WEBRTC']:
     EXPORTS += [
         'CamerasChild.h',
         'CamerasParent.h',
+        'CamerasTypes.h',
         'LoadManager.h',
         'LoadManagerFactory.h',
         'LoadMonitor.h',

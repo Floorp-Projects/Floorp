@@ -776,12 +776,12 @@ XPCWrappedNativeScope::UpdateInterpositionWhitelist(JSContext* cx,
     RootedValue whitelistVal(cx);
     nsresult rv = interposition->GetWhitelist(&whitelistVal);
     if (NS_FAILED(rv)) {
-        JS_ReportError(cx, "Could not get the whitelist from the interposition.");
+        JS_ReportErrorASCII(cx, "Could not get the whitelist from the interposition.");
         return false;
     }
 
     if (!whitelistVal.isObject()) {
-        JS_ReportError(cx, "Whitelist must be an array.");
+        JS_ReportErrorASCII(cx, "Whitelist must be an array.");
         return false;
     }
 
@@ -792,7 +792,7 @@ XPCWrappedNativeScope::UpdateInterpositionWhitelist(JSContext* cx,
     RootedObject whitelistObj(cx, &whitelistVal.toObject());
     whitelistObj = js::UncheckedUnwrap(whitelistObj);
     if (!AccessCheck::isChrome(whitelistObj)) {
-        JS_ReportError(cx, "Whitelist must be from system scope.");
+        JS_ReportErrorASCII(cx, "Whitelist must be from system scope.");
         return false;
     }
 
@@ -804,7 +804,7 @@ XPCWrappedNativeScope::UpdateInterpositionWhitelist(JSContext* cx,
             return false;
 
         if (!isArray) {
-            JS_ReportError(cx, "Whitelist must be an array.");
+            JS_ReportErrorASCII(cx, "Whitelist must be an array.");
             return false;
         }
 
@@ -818,14 +818,14 @@ XPCWrappedNativeScope::UpdateInterpositionWhitelist(JSContext* cx,
                 return false;
 
             if (!idval.isString()) {
-                JS_ReportError(cx, "Whitelist must contain strings only.");
+                JS_ReportErrorASCII(cx, "Whitelist must contain strings only.");
                 return false;
             }
 
             RootedString str(cx, idval.toString());
             str = JS_AtomizeAndPinJSString(cx, str);
             if (!str) {
-                JS_ReportError(cx, "String internization failed.");
+                JS_ReportErrorASCII(cx, "String internization failed.");
                 return false;
             }
 

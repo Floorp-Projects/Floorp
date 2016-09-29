@@ -1525,7 +1525,7 @@ class Analysis : public NodeVisitor
         MOZ_ASSERT(error_message_ != nullptr);
         return error_message_;
     }
-    void fail(const char* error_message) {
+    void failASCII(const char* error_message) {
         error_message_ = error_message;
     }
 

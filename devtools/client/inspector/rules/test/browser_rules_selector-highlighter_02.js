@@ -76,9 +76,3 @@ add_task(function* () {
   is(HighlighterFront.options.selector, "body",
     "The right selector option is passed to the highlighter (2)");
 });
-
-function* clickSelectorIcon(icon, view) {
-  let onToggled = view.once("ruleview-selectorhighlighter-toggled");
-  EventUtils.synthesizeMouseAtCenter(icon, {}, view.styleWindow);
-  yield onToggled;
-}
