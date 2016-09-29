@@ -2880,11 +2880,14 @@ class BaseCompiler
 
     void loadGlobalVarI64(unsigned globalDataOffset, RegI64 r)
     {
-#if defined(JS_CODEGEN_X64)
+#if defined(JS_PUNBOX64)
         CodeOffset label = masm.loadRipRelativeInt64(r.reg.reg);
         masm.append(GlobalAccess(label, globalDataOffset));
 #else
-        MOZ_CRASH("BaseCompiler platform hook: loadGlobalVarI64");
+        CodeOffset labelLow = masm.movlWithPatch(PatchedAbsoluteAddress(), r.reg.low);
+        masm.append(GlobalAccess(labelLow, globalDataOffset + INT64LOW_OFFSET));
+        CodeOffset labelHigh = masm.movlWithPatch(PatchedAbsoluteAddress(), r.reg.high);
+        masm.append(GlobalAccess(labelHigh, globalDataOffset + INT64HIGH_OFFSET));
 #endif
     }
 
@@ -2934,6 +2937,11 @@ class BaseCompiler
 #if defined(JS_CODEGEN_X64)
         CodeOffset label = masm.storeRipRelativeInt64(r.reg.reg);
         masm.append(GlobalAccess(label, globalDataOffset));
+#elif defined(JS_CODEGEN_X86)
+        CodeOffset labelLow = masm.movlWithPatch(r.reg.low, PatchedAbsoluteAddress());
+        masm.append(GlobalAccess(labelLow, globalDataOffset + INT64LOW_OFFSET));
+        CodeOffset labelHigh = masm.movlWithPatch(r.reg.high, PatchedAbsoluteAddress());
+        masm.append(GlobalAccess(labelHigh, globalDataOffset + INT64HIGH_OFFSET));
 #else
         MOZ_CRASH("BaseCompiler platform hook: storeGlobalVarI64");
 #endif
