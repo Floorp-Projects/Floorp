@@ -1,0 +1,33 @@
+<html class="reftest-wait">
+<head>
+  <title> Bug 1304948 : Crash if a texttrack remove a cue not belongs to it. </title>
+</head>
+<meta charset="utf-8">
+<script type="text/javascript">
+
+window.onload = function() {
+  var a = document.createElementNS('http://www.w3.org/1999/xhtml', 'video');
+  a.src = "";
+  document.body.appendChild(a);
+  var b = a.addTextTrack('chapters', "AAAAAAAAAAAAAAAA", "de");
+  var c = new VTTCue(0.6, 0.3, "AA");
+  b.addCue(c);
+  var d = document.createElementNS('http://www.w3.org/1999/xhtml', 'video');
+  var e = d.addTextTrack('chapters', "AAAA", "en-US");
+  a.currentTime = 2;
+  a.play();
+  try {
+    // This will queue a TimeMarchesOn task on mainthread, so use
+    // timer to wait the TimeMarchesOn crash.
+    e.removeCue(c);
+  } catch (e) {
+    if (e.name == "NotFoundError") {
+      setTimeout(function() {
+        document.documentElement.removeAttribute("class");}, 0);
+	  }
+  }
+};
+
+</script>
+</body>
+</html>
