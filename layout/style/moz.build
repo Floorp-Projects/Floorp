@@ -198,7 +198,6 @@ UNIFIED_SOURCES += [
     'StyleAnimationValue.cpp',
     'StyleRule.cpp',
     'StyleSheet.cpp',
-    'StyleSheetInfo.cpp',
     'SVGAttrAnimationRuleProcessor.cpp',
 ]
 
