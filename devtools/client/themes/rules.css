@@ -325,7 +325,7 @@
   display: inline-block;
 }
 
-.ruleview-expander.theme-twisty:-moz-locale-dir(rtl) {
+.ruleview-expander.theme-twisty:dir(rtl) {
   /* for preventing .theme-twisty's wrong direction in rtl; Bug 1296648 */
   transform: none;
 }
