@@ -308,8 +308,7 @@ ContentEventHandler::Init(WidgetQueryContentEvent* aEvent)
     } else {
       LineBreakType lineBreakType = GetLineBreakType(aEvent);
       uint32_t selectionStart = 0;
-      rv = GetFlatTextLengthBefore(mFirstSelectedRange,
-                                   &selectionStart, lineBreakType);
+      rv = GetStartOffset(mFirstSelectedRange, &selectionStart, lineBreakType);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return NS_ERROR_FAILURE;
       }
@@ -1309,8 +1308,8 @@ ContentEventHandler::OnQuerySelectedText(WidgetQueryContentEvent* aEvent)
                "The reply string must be empty");
 
   LineBreakType lineBreakType = GetLineBreakType(aEvent);
-  rv = GetFlatTextLengthBefore(mFirstSelectedRange,
-                               &aEvent->mReply.mOffset, lineBreakType);
+  rv = GetStartOffset(mFirstSelectedRange,
+                      &aEvent->mReply.mOffset, lineBreakType);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsINode> anchorNode, focusNode;
@@ -2440,8 +2439,8 @@ ContentEventHandler::OnQueryCaretRect(WidgetQueryContentEvent* aEvent)
     nsIFrame* caretFrame = nsCaret::GetGeometry(mSelection, &caretRect);
     if (caretFrame) {
       uint32_t offset;
-      rv = GetFlatTextLengthBefore(mFirstSelectedRange,
-                                   &offset, GetLineBreakType(aEvent));
+      rv = GetStartOffset(mFirstSelectedRange,
+                          &offset, GetLineBreakType(aEvent));
       NS_ENSURE_SUCCESS(rv, rv);
       if (offset == aEvent->mInput.mOffset) {
         rv = ConvertToRootRelativeOffset(caretFrame, caretRect);
@@ -2698,6 +2697,10 @@ ContentEventHandler::GetFlatTextLengthInRange(
   // destroying without initializing causes unexpected NS_ASSERTION() call.
   nsCOMPtr<nsIContentIterator> iter;
 
+  // Working with ContentIterator, we may need to adjust the end position for
+  // including it forcibly.
+  NodePosition endPosition(aEndPosition);
+
   // This may be called for retrieving the text of removed nodes.  Even in this
   // case, the node thinks it's still in the tree because UnbindFromTree() will
   // be called after here.  However, the node was already removed from the
@@ -2707,12 +2710,12 @@ ContentEventHandler::GetFlatTextLengthInRange(
     MOZ_ASSERT(parent && parent->IndexOf(aStartPosition.mNode) == -1,
       "At removing the node, the node shouldn't be in the array of children "
       "of its parent");
-    MOZ_ASSERT(aStartPosition.mNode == aEndPosition.mNode,
+    MOZ_ASSERT(aStartPosition.mNode == endPosition.mNode,
       "At removing the node, start and end node should be same");
     MOZ_ASSERT(aStartPosition.mOffset == 0,
       "When the node is being removed, the start offset should be 0");
-    MOZ_ASSERT(static_cast<uint32_t>(aEndPosition.mOffset) ==
-                 aEndPosition.mNode->GetChildCount(),
+    MOZ_ASSERT(static_cast<uint32_t>(endPosition.mOffset) ==
+                 endPosition.mNode->GetChildCount(),
       "When the node is being removed, the end offset should be child count");
     iter = NS_NewPreContentIterator();
     nsresult rv = iter->Init(aStartPosition.mNode);
@@ -2728,31 +2731,28 @@ ContentEventHandler::GetFlatTextLengthInRange(
 
     // When the end position is immediately after non-root element's open tag,
     // we need to include a line break caused by the open tag.
-    NodePosition endPosition;
-    if (aEndPosition.mNode != aRootContent &&
-        aEndPosition.IsImmediatelyAfterOpenTag()) {
-      if (aEndPosition.mNode->HasChildren()) {
-        // When the end node has some children, move the end position to the
-        // start of its first child.
-        nsINode* firstChild = aEndPosition.mNode->GetFirstChild();
+    if (endPosition.mNode != aRootContent &&
+        endPosition.IsImmediatelyAfterOpenTag()) {
+      if (endPosition.mNode->HasChildren()) {
+        // When the end node has some children, move the end position to before
+        // the open tag of its first child.
+        nsINode* firstChild = endPosition.mNode->GetFirstChild();
         if (NS_WARN_IF(!firstChild)) {
           return NS_ERROR_FAILURE;
         }
-        endPosition = NodePosition(firstChild, 0);
+        endPosition = NodePositionBefore(firstChild, 0);
       } else {
         // When the end node is empty, move the end position after the node.
-        nsIContent* parentContent = aEndPosition.mNode->GetParent();
+        nsIContent* parentContent = endPosition.mNode->GetParent();
         if (NS_WARN_IF(!parentContent)) {
           return NS_ERROR_FAILURE;
         }
-        int32_t indexInParent = parentContent->IndexOf(aEndPosition.mNode);
+        int32_t indexInParent = parentContent->IndexOf(endPosition.mNode);
         if (NS_WARN_IF(indexInParent < 0)) {
           return NS_ERROR_FAILURE;
         }
-        endPosition = NodePosition(parentContent, indexInParent + 1);
+        endPosition = NodePositionBefore(parentContent, indexInParent + 1);
       }
-    } else {
-      endPosition = aEndPosition;
     }
 
     if (endPosition.OffsetIsValid()) {
@@ -2800,9 +2800,9 @@ ContentEventHandler::GetFlatTextLengthInRange(
 
     if (node->IsNodeOfType(nsINode::eTEXT)) {
       // Note: our range always starts from offset 0
-      if (node == aEndPosition.mNode) {
+      if (node == endPosition.mNode) {
         *aLength += GetTextLength(content, aLineBreakType,
-                                  aEndPosition.mOffset);
+                                  endPosition.mOffset);
       } else {
         *aLength += GetTextLength(content, aLineBreakType);
       }
@@ -2812,6 +2812,11 @@ ContentEventHandler::GetFlatTextLengthInRange(
       if (node == aStartPosition.mNode && !aStartPosition.IsBeforeOpenTag()) {
         continue;
       }
+      // If the end position is before the open tag, don't append the line
+      // break length.
+      if (node == endPosition.mNode && endPosition.IsBeforeOpenTag()) {
+        continue;
+      }
       *aLength += GetBRLength(aLineBreakType);
     }
   }
@@ -2819,14 +2824,14 @@ ContentEventHandler::GetFlatTextLengthInRange(
 }
 
 nsresult
-ContentEventHandler::GetFlatTextLengthBefore(nsRange* aRange,
-                                             uint32_t* aOffset,
-                                             LineBreakType aLineBreakType)
+ContentEventHandler::GetStartOffset(nsRange* aRange,
+                                    uint32_t* aOffset,
+                                    LineBreakType aLineBreakType)
 {
   MOZ_ASSERT(aRange);
   return GetFlatTextLengthInRange(
            NodePosition(mRootContent, 0),
-           NodePositionBefore(aRange->GetStartParent(), aRange->StartOffset()),
+           NodePosition(aRange->GetStartParent(), aRange->StartOffset()),
            mRootContent, aOffset, aLineBreakType);
 }
 

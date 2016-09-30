@@ -109,6 +109,14 @@ nsConditionalResetStyleData::GetConditionalStyleData(nsStyleStructID aSID,
   return nullptr;
 }
 
+// Creates and returns an imgRequestProxy based on the specified
+// value in aValue.
+static imgRequestProxy*
+GetImageRequest(nsPresContext* aPresContext, const nsCSSValue& aValue)
+{
+  return aValue.GetImageValue(aPresContext->Document());
+}
+
 // Creates an imgRequestProxy based on the specified value in
 // aValue and calls aCallback with it.  If the nsPresContext
 // is static (e.g. for printing), then a static request (i.e.
@@ -120,8 +128,7 @@ SetImageRequest(function<void(imgRequestProxy*)> aCallback,
                 nsPresContext* aPresContext,
                 const nsCSSValue& aValue)
 {
-  nsIDocument* doc = aPresContext->Document();
-  imgRequestProxy* req = aValue.GetImageValue(doc);
+  imgRequestProxy* req = GetImageRequest(aPresContext, aValue);
   if (aPresContext->IsDynamic()) {
     aCallback(req);
   } else {
@@ -4915,52 +4922,23 @@ nsRuleNode::ComputeTextResetData(void* aStartStruct,
   }
 
   // text-decoration-color: color, string, enum, inherit, initial
-  const nsCSSValue* decorationColorValue =
-    aRuleData->ValueForTextDecorationColor();
-  nscolor decorationColor;
-  if (eCSSUnit_Inherit == decorationColorValue->GetUnit()) {
-    conditions.SetUncacheable();
-    if (parentContext) {
-      bool isForeground;
-      parentText->GetDecorationColor(decorationColor, isForeground);
-      if (isForeground) {
-        text->SetDecorationColor(parentContext->StyleColor()->mColor);
-      } else {
-        text->SetDecorationColor(decorationColor);
-      }
-    } else {
-      text->SetDecorationColorToForeground();
-    }
-  }
-  else if (eCSSUnit_EnumColor == decorationColorValue->GetUnit() &&
-           decorationColorValue->GetIntValue() == NS_COLOR_CURRENTCOLOR) {
-    text->SetDecorationColorToForeground();
-  }
-  else if (SetColor(*decorationColorValue, 0, mPresContext, aContext,
-                    decorationColor, conditions)) {
-    text->SetDecorationColor(decorationColor);
-  }
-  else if (eCSSUnit_Initial == decorationColorValue->GetUnit() ||
-           eCSSUnit_Unset == decorationColorValue->GetUnit() ||
-           eCSSUnit_Enumerated == decorationColorValue->GetUnit()) {
-    MOZ_ASSERT(eCSSUnit_Enumerated != decorationColorValue->GetUnit() ||
-               decorationColorValue->GetIntValue() ==
-                 NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR,
-               "unexpected enumerated value");
-    text->SetDecorationColorToForeground();
-  }
+  SetComplexColor<eUnsetInitial>(*aRuleData->ValueForTextDecorationColor(),
+                                 parentText->mTextDecorationColor,
+                                 StyleComplexColor::CurrentColor(),
+                                 mPresContext,
+                                 text->mTextDecorationColor, conditions);
 
   // text-decoration-style: enum, inherit, initial
   const nsCSSValue* decorationStyleValue =
     aRuleData->ValueForTextDecorationStyle();
   if (eCSSUnit_Enumerated == decorationStyleValue->GetUnit()) {
-    text->SetDecorationStyle(decorationStyleValue->GetIntValue());
+    text->mTextDecorationStyle = decorationStyleValue->GetIntValue();
   } else if (eCSSUnit_Inherit == decorationStyleValue->GetUnit()) {
-    text->SetDecorationStyle(parentText->GetDecorationStyle());
+    text->mTextDecorationStyle = parentText->mTextDecorationStyle;
     conditions.SetUncacheable();
   } else if (eCSSUnit_Initial == decorationStyleValue->GetUnit() ||
              eCSSUnit_Unset == decorationStyleValue->GetUnit()) {
-    text->SetDecorationStyle(NS_STYLE_TEXT_DECORATION_STYLE_SOLID);
+    text->mTextDecorationStyle = NS_STYLE_TEXT_DECORATION_STYLE_SOLID;
   }
 
   // text-overflow: enum, string, pair(enum|string), inherit, initial
@@ -5073,15 +5051,13 @@ nsRuleNode::ComputeUserInterfaceData(void* aStartStruct,
   const nsCSSValue* cursorValue = aRuleData->ValueForCursor();
   nsCSSUnit cursorUnit = cursorValue->GetUnit();
   if (cursorUnit != eCSSUnit_Null) {
-    delete [] ui->mCursorArray;
-    ui->mCursorArray = nullptr;
-    ui->mCursorArrayLength = 0;
+    ui->mCursorImages.Clear();
 
     if (cursorUnit == eCSSUnit_Inherit ||
         cursorUnit == eCSSUnit_Unset) {
       conditions.SetUncacheable();
       ui->mCursor = parentUI->mCursor;
-      ui->CopyCursorArrayFrom(*parentUI);
+      ui->mCursorImages = parentUI->mCursorImages;
     }
     else if (cursorUnit == eCSSUnit_Initial) {
       ui->mCursor = NS_STYLE_CURSOR_AUTO;
@@ -5092,32 +5068,17 @@ nsRuleNode::ComputeUserInterfaceData(void* aStartStruct,
       MOZ_ASSERT(cursorUnit == eCSSUnit_List || cursorUnit == eCSSUnit_ListDep,
                  "unrecognized cursor unit");
       const nsCSSValueList* list = cursorValue->GetListValue();
-      const nsCSSValueList* list2 = list;
-      nsIDocument* doc = aContext->PresContext()->Document();
-      uint32_t arrayLength = 0;
-      for ( ; list->mValue.GetUnit() == eCSSUnit_Array; list = list->mNext)
-        if (list->mValue.GetArrayValue()->Item(0).GetImageValue(doc))
-          ++arrayLength;
-
-      if (arrayLength != 0) {
-        ui->mCursorArray = new nsCursorImage[arrayLength];
-        if (ui->mCursorArray) {
-          ui->mCursorArrayLength = arrayLength;
-
-          for (nsCursorImage *item = ui->mCursorArray;
-               list2->mValue.GetUnit() == eCSSUnit_Array;
-               list2 = list2->mNext) {
-            nsCSSValue::Array *arr = list2->mValue.GetArrayValue();
-            imgIRequest *req = arr->Item(0).GetImageValue(doc);
-            if (req) {
-              item->SetImage(req);
-              if (arr->Item(1).GetUnit() != eCSSUnit_Null) {
-                item->mHaveHotspot = true;
-                item->mHotspotX = arr->Item(1).GetFloatValue(),
-                item->mHotspotY = arr->Item(2).GetFloatValue();
-              }
-              ++item;
-            }
+      for ( ; list->mValue.GetUnit() == eCSSUnit_Array; list = list->mNext) {
+        nsCSSValue::Array* arr = list->mValue.GetArrayValue();
+        imgRequestProxy* req =
+          GetImageRequest(aContext->PresContext(), arr->Item(0));
+        if (req) {
+          nsCursorImage* item = ui->mCursorImages.AppendElement();
+          item->SetImage(req);
+          if (arr->Item(1).GetUnit() != eCSSUnit_Null) {
+            item->mHaveHotspot = true;
+            item->mHotspotX = arr->Item(1).GetFloatValue();
+            item->mHotspotY = arr->Item(2).GetFloatValue();
           }
         }
       }
@@ -7624,45 +7585,12 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
   {
     const nsCSSPropertyID* subprops =
       nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_color);
-    bool foreground;
     NS_FOR_CSS_SIDES(side) {
-      const nsCSSValue& value = *aRuleData->ValueFor(subprops[side]);
-      if (eCSSUnit_Inherit == value.GetUnit()) {
-        conditions.SetUncacheable();
-        if (parentContext) {
-          parentBorder->GetBorderColor(side, borderColor, foreground);
-          if (foreground) {
-            // We want to inherit the color from the parent, not use the
-            // color on the element where this chunk of style data will be
-            // used.  We can ensure that the data for the parent are fully
-            // computed (unlike for the element where this will be used, for
-            // which the color could be specified on a more specific rule).
-            border->SetBorderColor(side, parentContext->StyleColor()->mColor);
-          } else
-            border->SetBorderColor(side, borderColor);
-        } else {
-          // We're the root
-          border->SetBorderToForeground(side);
-        }
-      }
-      else if (SetColor(value, unused, mPresContext, aContext, borderColor,
-                        conditions)) {
-        border->SetBorderColor(side, borderColor);
-      }
-      else if (eCSSUnit_Enumerated == value.GetUnit()) {
-        switch (value.GetIntValue()) {
-          case NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR:
-            border->SetBorderToForeground(side);
-            break;
-          default:
-            NS_NOTREACHED("Unexpected enumerated color");
-            break;
-        }
-      }
-      else if (eCSSUnit_Initial == value.GetUnit() ||
-               eCSSUnit_Unset == value.GetUnit()) {
-        border->SetBorderToForeground(side);
-      }
+      SetComplexColor<eUnsetInitial>(*aRuleData->ValueFor(subprops[side]),
+                                     parentBorder->mBorderColor[side],
+                                     StyleComplexColor::CurrentColor(),
+                                     mPresContext,
+                                     border->mBorderColor[side], conditions);
     }
   }
 
@@ -7855,34 +7783,11 @@ nsRuleNode::ComputeOutlineData(void* aStartStruct,
   }
 
   // outline-color: color, string, enum, inherit
-  nscolor outlineColor;
-  nscolor unused = NS_RGB(0,0,0);
-  const nsCSSValue* outlineColorValue = aRuleData->ValueForOutlineColor();
-  if (eCSSUnit_Inherit == outlineColorValue->GetUnit()) {
-    conditions.SetUncacheable();
-    if (parentContext) {
-      if (parentOutline->GetOutlineColor(outlineColor))
-        outline->SetOutlineColor(outlineColor);
-      else {
-        // We want to inherit the color from the parent, not use the
-        // color on the element where this chunk of style data will be
-        // used.  We can ensure that the data for the parent are fully
-        // computed (unlike for the element where this will be used, for
-        // which the color could be specified on a more specific rule).
-        outline->SetOutlineColor(parentContext->StyleColor()->mColor);
-      }
-    } else {
-      outline->SetOutlineInitialColor();
-    }
-  }
-  else if (SetColor(*outlineColorValue, unused, mPresContext,
-                    aContext, outlineColor, conditions))
-    outline->SetOutlineColor(outlineColor);
-  else if (eCSSUnit_Enumerated == outlineColorValue->GetUnit() ||
-           eCSSUnit_Initial == outlineColorValue->GetUnit() ||
-           eCSSUnit_Unset == outlineColorValue->GetUnit()) {
-    outline->SetOutlineInitialColor();
-  }
+  SetComplexColor<eUnsetInitial>(*aRuleData->ValueForOutlineColor(),
+                                 parentOutline->mOutlineColor,
+                                 StyleComplexColor::CurrentColor(),
+                                 mPresContext,
+                                 outline->mOutlineColor, conditions);
 
   // -moz-outline-radius: length, percent, inherit
   {
@@ -7913,13 +7818,13 @@ nsRuleNode::ComputeOutlineData(void* aStartStruct,
   MOZ_ASSERT(eCSSUnit_None != unit && eCSSUnit_Auto != unit,
              "'none' and 'auto' should be handled as enumerated values");
   if (eCSSUnit_Enumerated == unit) {
-    outline->SetOutlineStyle(outlineStyleValue->GetIntValue());
+    outline->mOutlineStyle = outlineStyleValue->GetIntValue();
   } else if (eCSSUnit_Initial == unit ||
              eCSSUnit_Unset == unit) {
-    outline->SetOutlineStyle(NS_STYLE_BORDER_STYLE_NONE);
+    outline->mOutlineStyle = NS_STYLE_BORDER_STYLE_NONE;
   } else if (eCSSUnit_Inherit == unit) {
     conditions.SetUncacheable();
-    outline->SetOutlineStyle(parentOutline->GetOutlineStyle());
+    outline->mOutlineStyle = parentOutline->mOutlineStyle;
   }
 
   outline->RecalcData();
@@ -9269,30 +9174,11 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
   }
 
   // column-rule-color: color, inherit
-  const nsCSSValue& colorValue = *aRuleData->ValueForColumnRuleColor();
-  if (eCSSUnit_Inherit == colorValue.GetUnit()) {
-    conditions.SetUncacheable();
-    column->mColumnRuleColorIsForeground = false;
-    if (parent->mColumnRuleColorIsForeground) {
-      if (parentContext) {
-        column->mColumnRuleColor = parentContext->StyleColor()->mColor;
-      } else {
-        nsStyleColor defaultColumnRuleColor(mPresContext);
-        column->mColumnRuleColor = defaultColumnRuleColor.mColor;
-      }
-    } else {
-      column->mColumnRuleColor = parent->mColumnRuleColor;
-    }
-  }
-  else if (eCSSUnit_Initial == colorValue.GetUnit() ||
-           eCSSUnit_Unset == colorValue.GetUnit() ||
-           eCSSUnit_Enumerated == colorValue.GetUnit()) {
-    column->mColumnRuleColorIsForeground = true;
-  }
-  else if (SetColor(colorValue, 0, mPresContext, aContext,
-                    column->mColumnRuleColor, conditions)) {
-    column->mColumnRuleColorIsForeground = false;
-  }
+  SetComplexColor<eUnsetInitial>(*aRuleData->ValueForColumnRuleColor(),
+                                 parent->mColumnRuleColor,
+                                 StyleComplexColor::CurrentColor(),
+                                 mPresContext,
+                                 column->mColumnRuleColor, conditions);
 
   // column-fill: enum
   SetValue(*aRuleData->ValueForColumnFill(),

@@ -1718,7 +1718,7 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput,
     mAlignSelf = ConvertLegacyStyleToAlignItems(containerStyleXUL);
   } else {
     mAlignSelf = aFlexItemReflowInput.mStylePosition->ComputedAlignSelf(
-                   mFrame->StyleContext()->GetParent());
+                   containerRS->mFrame->StyleContext());
     if (MOZ_LIKELY(mAlignSelf == NS_STYLE_ALIGN_NORMAL)) {
       mAlignSelf = NS_STYLE_ALIGN_STRETCH;
     }

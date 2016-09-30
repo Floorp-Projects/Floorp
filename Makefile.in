@@ -172,8 +172,14 @@ faster: install-dist/idl
 endif
 
 .PHONY: tup
-tup: install-manifests buildid.h source-repo.h
+tup:
+	$(call BUILDSTATUS,TIERS make tup)
+	$(call BUILDSTATUS,TIER_START make)
+	$(MAKE) install-manifests buildid.h source-repo.h
+	$(call BUILDSTATUS,TIER_FINISH make)
+	$(call BUILDSTATUS,TIER_START tup)
 	@$(TUP) $(if $(findstring s,$(filter-out --%,$(MAKEFLAGS))),,--verbose)
+	$(call BUILDSTATUS,TIER_FINISH tup)
 
 # process_install_manifest needs to be invoked with --no-remove when building
 # js as standalone because automated builds are building nspr separately and

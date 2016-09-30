@@ -1175,14 +1175,8 @@ nsStyleContext::CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
       const nsStyleBorder *thisVisBorder = thisVis->StyleBorder();
       const nsStyleBorder *otherVisBorder = otherVis->StyleBorder();
       NS_FOR_CSS_SIDES(side) {
-        bool thisFG, otherFG;
-        // Dummy initialisations to keep Valgrind/Memcheck happy.
-        // See bug 1122375 comment 4.
-        nscolor thisColor = NS_RGBA(0, 0, 0, 0);
-        nscolor otherColor = NS_RGBA(0, 0, 0, 0);
-        thisVisBorder->GetBorderColor(side, thisColor, thisFG);
-        otherVisBorder->GetBorderColor(side, otherColor, otherFG);
-        if (thisFG != otherFG || (!thisFG && thisColor != otherColor)) {
+        if (thisVisBorder->mBorderColor[side] !=
+            otherVisBorder->mBorderColor[side]) {
           change = true;
           break;
         }
@@ -1193,16 +1187,7 @@ nsStyleContext::CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
     if (!change && PeekStyleOutline()) {
       const nsStyleOutline *thisVisOutline = thisVis->StyleOutline();
       const nsStyleOutline *otherVisOutline = otherVis->StyleOutline();
-      bool haveColor;
-      // Dummy initialisations to keep Valgrind/Memcheck happy.
-      // See bug 1289098 comment 1.
-      nscolor thisColor = NS_RGBA(0, 0, 0, 0);
-      nscolor otherColor = NS_RGBA(0, 0, 0, 0);
-      if (thisVisOutline->GetOutlineInitialColor() !=
-            otherVisOutline->GetOutlineInitialColor() ||
-          (haveColor = thisVisOutline->GetOutlineColor(thisColor)) !=
-            otherVisOutline->GetOutlineColor(otherColor) ||
-          (haveColor && thisColor != otherColor)) {
+      if (thisVisOutline->mOutlineColor != otherVisOutline->mOutlineColor) {
         change = true;
       }
     }
@@ -1211,9 +1196,7 @@ nsStyleContext::CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
     if (!change && PeekStyleColumn()) {
       const nsStyleColumn *thisVisColumn = thisVis->StyleColumn();
       const nsStyleColumn *otherVisColumn = otherVis->StyleColumn();
-      if (thisVisColumn->mColumnRuleColor != otherVisColumn->mColumnRuleColor ||
-          thisVisColumn->mColumnRuleColorIsForeground !=
-            otherVisColumn->mColumnRuleColorIsForeground) {
+      if (thisVisColumn->mColumnRuleColor != otherVisColumn->mColumnRuleColor) {
         change = true;
       }
     }
@@ -1233,17 +1216,8 @@ nsStyleContext::CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
     if (!change && PeekStyleTextReset()) {
       const nsStyleTextReset *thisVisTextReset = thisVis->StyleTextReset();
       const nsStyleTextReset *otherVisTextReset = otherVis->StyleTextReset();
-      // Dummy initialisations to keep Valgrind/Memcheck happy.
-      // See bug 1122375 comment 4.
-      nscolor thisVisDecColor = NS_RGBA(0, 0, 0, 0);
-      nscolor otherVisDecColor = NS_RGBA(0, 0, 0, 0);
-      bool thisVisDecColorIsFG, otherVisDecColorIsFG;
-      thisVisTextReset->GetDecorationColor(thisVisDecColor,
-                                           thisVisDecColorIsFG);
-      otherVisTextReset->GetDecorationColor(otherVisDecColor,
-                                            otherVisDecColorIsFG);
-      if (thisVisDecColorIsFG != otherVisDecColorIsFG ||
-          (!thisVisDecColorIsFG && thisVisDecColor != otherVisDecColor)) {
+      if (thisVisTextReset->mTextDecorationColor !=
+          otherVisTextReset->mTextDecorationColor) {
         change = true;
       }
     }

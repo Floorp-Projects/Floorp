@@ -8,7 +8,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
 
 XPCOMUtils.defineLazyModuleGetter(this, "MatchPattern",
                                   "resource://gre/modules/MatchPattern.jsm");
-
+XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
+                                  "resource://gre/modules/PromiseUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 
@@ -242,6 +243,7 @@ let tabListener = {
 
   tabReadyInitialized: false,
   tabReadyPromises: new WeakMap(),
+  initializingTabs: new WeakSet(),
 
   initTabReady() {
     if (!this.tabReadyInitialized) {
@@ -256,6 +258,10 @@ let tabListener = {
       let gBrowser = browser.ownerGlobal.gBrowser;
       let tab = gBrowser.getTabForBrowser(browser);
 
+      // Now we are certain that the first page in the tab was loaded.
+      this.initializingTabs.delete(tab);
+
+      // browser.innerWindowID is now set, resolve the promises if any.
       let deferred = this.tabReadyPromises.get(tab);
       if (deferred) {
         deferred.resolve(tab);
@@ -264,10 +270,25 @@ let tabListener = {
     }
   },
 
+  /**
+   * Returns a promise that resolves when the tab is ready.
+   * Tabs created via the `tabs.create` method are "ready" once the location
+   * changed to the requested URL. Other tabs are always assumed to be ready.
+   *
+   * @param {XULElement} tab The <tab> element.
+   * @returns {Promise} Resolves with the given tab once ready.
+   */
   awaitTabReady(tab) {
-    return new Promise((resolve, reject) => {
-      this.tabReadyPromises.set(tab, {resolve, reject});
-    });
+    let deferred = this.tabReadyPromises.get(tab);
+    if (!deferred) {
+      deferred = PromiseUtils.defer();
+      if (!this.initializingTabs.has(tab) && tab.linkedBrowser.innerWindowID) {
+        deferred.resolve(tab);
+      } else {
+        this.tabReadyPromises.set(tab, deferred);
+      }
+    }
+    return deferred.promise;
   },
 };
 
@@ -538,18 +559,18 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
             window.gBrowser.pinTab(tab);
           }
 
-          if (!createProperties.url || createProperties.url.startsWith("about:")) {
+          if (createProperties.url && !createProperties.url.startsWith("about:")) {
             // We can't wait for a location change event for about:newtab,
             // since it may be pre-rendered, in which case its initial
             // location change event has already fired.
-            return tab;
+
+            // Mark the tab as initializing, so that operations like
+            // `executeScript` wait until the requested URL is loaded in
+            // the tab before dispatching messages to the inner window
+            // that contains the URL we're attempting to load.
+            tabListener.initializingTabs.add(tab);
           }
 
-          // Wait for the first location change event, so that operations
-          // like `executeScript` are dispatched to the inner window that
-          // contains the URL we're attempting to load.
-          return tabListener.awaitTabReady(tab);
-        }).then(tab => {
           return TabManager.convert(extension, tab);
         });
       },
@@ -717,45 +738,49 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
           WindowManager.topWindow :
           WindowManager.getWindow(windowId, context);
 
-        let browser = window.gBrowser.selectedBrowser;
-        let recipient = {
-          innerWindowID: browser.innerWindowID,
-        };
+        let tab = window.gBrowser.selectedTab;
+        return tabListener.awaitTabReady(tab).then(() => {
+          let browser = tab.linkedBrowser;
+          let recipient = {
+            innerWindowID: browser.innerWindowID,
+          };
 
-        if (!options) {
-          options = {};
-        }
-        if (options.format == null) {
-          options.format = "png";
-        }
-        if (options.quality == null) {
-          options.quality = 92;
-        }
+          if (!options) {
+            options = {};
+          }
+          if (options.format == null) {
+            options.format = "png";
+          }
+          if (options.quality == null) {
+            options.quality = 92;
+          }
 
-        let message = {
-          options,
-          width: browser.clientWidth,
-          height: browser.clientHeight,
-        };
+          let message = {
+            options,
+            width: browser.clientWidth,
+            height: browser.clientHeight,
+          };
 
-        return context.sendMessage(browser.messageManager, "Extension:Capture",
-                                   message, {recipient});
+          return context.sendMessage(browser.messageManager, "Extension:Capture",
+                                     message, {recipient});
+        });
       },
 
       detectLanguage: function(tabId) {
         let tab = tabId !== null ? TabManager.getTab(tabId, context) : TabManager.activeTab;
 
-        let browser = tab.linkedBrowser;
-        let recipient = {innerWindowID: browser.innerWindowID};
+        return tabListener.awaitTabReady(tab).then(() => {
+          let browser = tab.linkedBrowser;
+          let recipient = {innerWindowID: browser.innerWindowID};
 
-        return context.sendMessage(browser.messageManager, "Extension:DetectLanguage",
-                                   {}, {recipient});
+          return context.sendMessage(browser.messageManager, "Extension:DetectLanguage",
+                                     {}, {recipient});
+        });
       },
 
       // Used to executeScript, insertCSS and removeCSS.
       _execute: function(tabId, details, kind, method) {
         let tab = tabId !== null ? TabManager.getTab(tabId, context) : TabManager.activeTab;
-        let mm = tab.linkedBrowser.messageManager;
 
         let options = {
           js: [],
@@ -771,10 +796,6 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
         if (details.frameId !== null && details.allFrames) {
           return Promise.reject({message: `'frameId' and 'allFrames' are mutually exclusive`});
         }
-
-        let recipient = {
-          innerWindowID: tab.linkedBrowser.innerWindowID,
-        };
 
         if (TabManager.for(extension).hasActiveTabPermission(tab)) {
           // If we have the "activeTab" permission for this tab, ignore
@@ -809,7 +830,14 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
           options.run_at = "document_idle";
         }
 
-        return context.sendMessage(mm, "Extension:Execute", {options}, {recipient});
+        return tabListener.awaitTabReady(tab).then(() => {
+          let browser = tab.linkedBrowser;
+          let recipient = {
+            innerWindowID: browser.innerWindowID,
+          };
+
+          return context.sendMessage(browser.messageManager, "Extension:Execute", {options}, {recipient});
+        });
       },
 
       executeScript: function(tabId, details) {

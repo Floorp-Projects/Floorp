@@ -252,10 +252,12 @@ protected:
   nsresult GenerateFlatTextContent(nsRange* aRange,
                                    nsAFlatString& aString,
                                    LineBreakType aLineBreakType);
-  // Get the text length before the start position of aRange.
-  nsresult GetFlatTextLengthBefore(nsRange* aRange,
-                                   uint32_t* aOffset,
-                                   LineBreakType aLineBreakType);
+  // Get offset of start of aRange.  Note that the result includes the length
+  // of line breaker caused by the start of aContent because aRange never
+  // includes the line breaker caused by its start node.
+  nsresult GetStartOffset(nsRange* aRange,
+                          uint32_t* aOffset,
+                          LineBreakType aLineBreakType);
   // Check if we should insert a line break before aContent.
   // This should return false only when aContent is an html element which
   // is typically used in a paragraph like <em>.

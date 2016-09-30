@@ -450,6 +450,23 @@ web-platform-tests-reftests:
         extra-options:
             - --test-type=reftest
 
+web-platform-tests-wdspec:
+    description: "Web platform webdriver-spec run"
+    suite: web-platform-tests-wdspec
+    treeherder-symbol: tc-W(Wd)
+    max-run-time: 5400
+    instance-size: xlarge
+    docker-image: {"in-tree": "desktop1604-test"}
+    checkout: true
+    mozharness:
+        script: web_platform_tests.py
+        no-read-buildbot-config: true
+        config:
+            - web_platform_tests/prod_config.py
+            - remove_executables.py
+        extra-options:
+            - --test-type=wdspec
+
 xpcshell:
     description: "xpcshell test run"
     suite: xpcshell
