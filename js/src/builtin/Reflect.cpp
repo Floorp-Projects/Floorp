@@ -39,11 +39,7 @@ InitArgsFromArrayLike(JSContext* cx, HandleValue v, InvokeArgs* args)
         return false;
 
     // Allocate space for the arguments.
-    if (len > ARGS_LENGTH_MAX) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TOO_MANY_FUN_APPLY_ARGS);
-        return false;
-    }
-    if (!args->init(len))
+    if (!args->init(cx, len))
         return false;
 
     // Steps 6-8.
