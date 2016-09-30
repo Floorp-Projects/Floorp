@@ -58,6 +58,8 @@ cargo_config() {
 [target.$TARGET]
 linker = "$prefix-gcc"
 EOF
+
+    cat ~/.cargo/config
 }
 
 # Build current crate for given target and print file type information.
