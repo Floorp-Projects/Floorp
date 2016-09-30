@@ -350,7 +350,7 @@ nsWindowsRegKey::ReadStringValue(const nsAString& aName, nsAString& aResult)
       nsAutoString expandedResult;
       // |resultLen| includes the terminating null character
       --resultLen;
-      if (expandedResult.SetLength(resultLen, mozilla::fallible)) {
+      if (!expandedResult.SetLength(resultLen, mozilla::fallible)) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
 
@@ -422,7 +422,7 @@ nsWindowsRegKey::ReadBinaryValue(const nsAString& aName, nsACString& aResult)
     return NS_OK;
   }
 
-  if (aResult.SetLength(size, mozilla::fallible)) {
+  if (!aResult.SetLength(size, mozilla::fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
