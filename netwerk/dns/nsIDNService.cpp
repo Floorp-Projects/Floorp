@@ -326,11 +326,8 @@ nsresult nsIDNService::ACEtoUTF8(const nsACString & input, nsACString & _retval,
 
 NS_IMETHODIMP nsIDNService::IsACE(const nsACString & input, bool *_retval)
 {
-  nsACString::const_iterator begin;
-  input.BeginReading(begin);
-
-  const char *data = begin.get();
-  uint32_t dataLen = begin.size_forward();
+  const char *data = input.BeginReading();
+  uint32_t dataLen = input.Length();
 
   // look for the ACE prefix in the input string.  it may occur
   // at the beginning of any segment in the domain name.  for
