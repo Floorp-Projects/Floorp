@@ -2109,6 +2109,9 @@ pref("security.mixed_content.block_display_content", false);
 // Sub-resource integrity
 pref("security.sri.enable", true);
 
+// Block images of wrong MIME for XCTO: nosniff.
+pref("security.xcto_nosniff_block_images", false);
+
 // OCSP must-staple
 pref("security.ssl.enable_ocsp_must_staple", true);
 
