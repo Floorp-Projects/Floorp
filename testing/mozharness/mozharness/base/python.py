@@ -199,7 +199,7 @@ class VirtualenvMixin(object):
         packages = self.package_versions(error_level=error_level).keys()
         return package_name.lower() in [package.lower() for package in packages]
 
-    def install_module(self, module=None, module_url=None, install_method=None,
+    def install_module(self, module=None, module_url=None,
                        requirements=(), optional=False, global_options=[],
                        no_deps=False, editable=False):
         """
@@ -221,27 +221,25 @@ class VirtualenvMixin(object):
         self.info("Installing %s into virtualenv %s" % (module, venv_path))
         if not module_url:
             module_url = module
-        if install_method in (None, 'pip'):
-            if not module_url and not requirements:
-                self.fatal("Must specify module and/or requirements")
-            pip = self.query_python_path("pip")
-            if c.get("verbose_pip"):
-                command = [pip, "-v", "install"]
-            else:
-                command = [pip, "install"]
-            if no_deps:
-                command += ["--no-deps"]
-            # To avoid timeouts with our pypi server, increase default timeout:
-            # https://bugzilla.mozilla.org/show_bug.cgi?id=1007230#c802
-            command += ['--timeout', str(c.get('pip_timeout', 120))]
-            for requirement in requirements:
-                command += ["-r", requirement]
-            if c.get('find_links') and not c["pip_index"]:
-                command += ['--no-index']
-            for opt in global_options:
-                command += ["--global-option", opt]
+
+        if not module_url and not requirements:
+            self.fatal("Must specify module and/or requirements")
+        pip = self.query_python_path("pip")
+        if c.get("verbose_pip"):
+            command = [pip, "-v", "install"]
         else:
-            self.fatal("install_module() doesn't understand an install_method of %s!" % install_method)
+            command = [pip, "install"]
+        if no_deps:
+            command += ["--no-deps"]
+        # To avoid timeouts with our pypi server, increase default timeout:
+        # https://bugzilla.mozilla.org/show_bug.cgi?id=1007230#c802
+        command += ['--timeout', str(c.get('pip_timeout', 120))]
+        for requirement in requirements:
+            command += ["-r", requirement]
+        if c.get('find_links') and not c["pip_index"]:
+            command += ['--no-index']
+        for opt in global_options:
+            command += ["--global-option", opt]
 
         # Add --find-links pages to look at. Add --trusted-host automatically if
         # the host isn't secure. This allows modern versions of pip to connect
@@ -269,10 +267,7 @@ class VirtualenvMixin(object):
         # module_url can be None if only specifying requirements files
         if module_url:
             if editable:
-                if install_method in (None, 'pip'):
-                    command += ['-e']
-                else:
-                    self.fatal("editable installs not supported for install_method %s" % install_method)
+                command += ['-e']
             command += [module_url]
 
         # If we're only installing a single requirements file, use
@@ -426,8 +421,7 @@ class VirtualenvMixin(object):
         if not requirements:
             requirements = c.get('virtualenv_requirements', [])
         if not modules and requirements:
-            self.install_module(requirements=requirements,
-                                install_method='pip')
+            self.install_module(requirements=requirements)
         for module in modules:
             module_url = module
             global_options = []
@@ -442,10 +436,8 @@ class VirtualenvMixin(object):
             else:
                 module_url = self.config.get('%s_url' % module, module_url)
                 module_name = module
-            install_method = 'pip'
             self.install_module(module=module_name,
                                 module_url=module_url,
-                                install_method=install_method,
                                 requirements=requirements,
                                 global_options=global_options)
 
@@ -454,12 +446,12 @@ class VirtualenvMixin(object):
             if two_pass:
                 self.install_module(
                     module=module, module_url=url,
-                    install_method=method, requirements=requirements or (),
+                    requirements=requirements or (),
                     optional=optional, no_deps=True, editable=editable
                 )
             self.install_module(
                 module=module, module_url=url,
-                install_method=method, requirements=requirements or (),
+                requirements=requirements or (),
                 optional=optional, editable=editable
             )
 
