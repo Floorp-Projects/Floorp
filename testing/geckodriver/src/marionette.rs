@@ -1,4 +1,6 @@
 use hyper::method::Method;
+use logging;
+use logging::LogLevel;
 use mozprofile::preferences::Pref;
 use mozprofile::profile::Profile;
 use mozrunner::runner::{Runner, FirefoxRunner};
@@ -9,7 +11,6 @@ use rustc_serialize::json;
 use rustc_serialize::json::{Json, ToJson};
 use std::collections::BTreeMap;
 use std::error::Error;
-use std::fmt;
 use std::fs;
 use std::io;
 use std::io::BufWriter;
@@ -299,52 +300,6 @@ impl ToMarionette for AttributeParameters {
     }
 }
 
-/// Logger levels from [Log.jsm]
-/// (https://developer.mozilla.org/en/docs/Mozilla/JavaScript_code_modules/Log.jsm).
-#[derive(Debug, Clone)]
-#[allow(dead_code)]
-pub enum LogLevel {
-    Fatal,
-    Error,
-    Warn,
-    Info,
-    Config,
-    Debug,
-    Trace,
-}
-
-impl fmt::Display for LogLevel {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let s = match *self {
-            LogLevel::Fatal => "fatal",
-            LogLevel::Error => "error",
-            LogLevel::Warn => "warn",
-            LogLevel::Info => "info",
-            LogLevel::Config => "config",
-            LogLevel::Debug => "debug",
-            LogLevel::Trace => "trace",
-        }.to_string();
-        write!(f, "{}", s)
-    }
-}
-
-impl FromStr for LogLevel {
-    type Err = ();
-
-    fn from_str(s: &str) -> Result<LogLevel, ()> {
-        match s {
-            "fatal" => Ok(LogLevel::Fatal),
-            "error" => Ok(LogLevel::Error),
-            "warn" => Ok(LogLevel::Warn),
-            "info" => Ok(LogLevel::Info),
-            "config" => Ok(LogLevel::Config),
-            "debug" => Ok(LogLevel::Debug),
-            "trace" => Ok(LogLevel::Trace),
-            _ => Err(()),
-        }
-    }
-}
-
 #[derive(Default)]
 pub struct LogOptions {
     pub level: Option<LogLevel>,
@@ -492,6 +447,7 @@ pub struct MarionetteHandler {
     connection: Mutex<Option<MarionetteConnection>>,
     settings: MarionetteSettings,
     browser: Option<FirefoxRunner>,
+    current_log_level: Option<LogLevel>,
 }
 
 impl MarionetteHandler {
@@ -500,6 +456,7 @@ impl MarionetteHandler {
             connection: Mutex::new(None),
             settings: settings,
             browser: None,
+            current_log_level: None,
         }
     }
 
@@ -507,18 +464,13 @@ impl MarionetteHandler {
                          capabilities: &mut NewSessionParameters) -> WebDriverResult<()> {
         let options = try!(FirefoxOptions::from_capabilities(capabilities));
 
-        // override marionette logging level
-        // if passed a firefoxOptions.logging.level capability
-        if let Some(level) = options.log.level.clone() {
-            self.settings.log_level = Some(level);
-        }
+        self.current_log_level = options.log.level.clone().or(self.settings.log_level.clone());
+        logging::init(&self.current_log_level);
 
         let port = self.settings.port.unwrap_or(try!(get_free_port()));
         if !self.settings.connect_existing {
-            debug!("Starting browser process");
             try!(self.start_browser(port, options));
         }
-
 
         let mut connection = MarionetteConnection::new(port, session_id.clone());
         try!(connection.connect());
@@ -566,7 +518,6 @@ impl MarionetteHandler {
             .or_else(|| firefox_default_path())
     }
 
-
     pub fn set_prefs(&self, port: u16, profile: &mut Profile, custom_profile: bool,
                      extra_prefs: Vec<(String, Pref)>)
                  -> WebDriverResult<()> {
@@ -583,7 +534,7 @@ impl MarionetteHandler {
 
         prefs.insert_slice(&FIREFOX_REQUIRED_PREFERENCES[..]);
 
-        if let Some(ref level) = self.settings.log_level {
+        if let Some(ref level) = self.current_log_level {
             prefs.insert("marionette.logging", Pref::new(level.to_string()));
         };
 
