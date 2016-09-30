@@ -133,6 +133,21 @@ interface VRPose {
   [Constant, Throws] readonly attribute Float32Array? angularAcceleration;
 };
 
+[Constructor,
+ Pref="dom.vr.enabled",
+ HeaderFile="mozilla/dom/VRDisplay.h"]
+interface VRFrameData {
+  readonly attribute DOMHighResTimeStamp timestamp;
+
+  [Throws, Pure] readonly attribute Float32Array leftProjectionMatrix;
+  [Throws, Pure] readonly attribute Float32Array leftViewMatrix;
+
+  [Throws, Pure] readonly attribute Float32Array rightProjectionMatrix;
+  [Throws, Pure] readonly attribute Float32Array rightViewMatrix;
+
+  [Pure] readonly attribute VRPose pose;
+};
+
 [Pref="dom.vr.enabled",
  HeaderFile="mozilla/dom/VRDisplay.h"]
 interface VREyeParameters {
@@ -186,6 +201,12 @@ interface VRDisplay : EventTarget {
    * A display name, a user-readable name identifying it.
    */
   [Constant] readonly attribute DOMString displayName;
+
+  /**
+   * Populates the passed VRFrameData with the information required to render
+   * the current frame.
+   */
+  boolean getFrameData(VRFrameData frameData);
 
   /**
    * Return a VRPose containing the future predicted pose of the VRDisplay
