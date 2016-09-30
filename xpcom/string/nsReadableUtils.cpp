@@ -758,15 +758,17 @@ class CopyToUpperCase
 public:
   typedef char value_type;
 
-  explicit CopyToUpperCase(nsACString::iterator& aDestIter)
+  explicit CopyToUpperCase(nsACString::iterator& aDestIter,
+                           const nsACString::iterator& aEndIter)
     : mIter(aDestIter)
+    , mEnd(aEndIter)
   {
   }
 
   uint32_t
   write(const char* aSource, uint32_t aSourceLength)
   {
-    uint32_t len = XPCOM_MIN(uint32_t(mIter.size_forward()), aSourceLength);
+    uint32_t len = XPCOM_MIN(uint32_t(mEnd - mIter), aSourceLength);
     char* cp = mIter.get();
     const char* end = aSource + len;
     while (aSource != end) {
@@ -785,16 +787,17 @@ public:
 
 protected:
   nsACString::iterator& mIter;
+  const nsACString::iterator& mEnd;
 };
 
 void
 ToUpperCase(const nsACString& aSource, nsACString& aDest)
 {
   nsACString::const_iterator fromBegin, fromEnd;
-  nsACString::iterator toBegin;
+  nsACString::iterator toBegin, toEnd;
   aDest.SetLength(aSource.Length());
 
-  CopyToUpperCase converter(aDest.BeginWriting(toBegin));
+  CopyToUpperCase converter(aDest.BeginWriting(toBegin), aDest.EndWriting(toEnd));
   copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd),
               converter);
 }
@@ -839,15 +842,17 @@ class CopyToLowerCase
 public:
   typedef char value_type;
 
-  explicit CopyToLowerCase(nsACString::iterator& aDestIter)
+  explicit CopyToLowerCase(nsACString::iterator& aDestIter,
+                           const nsACString::iterator& aEndIter)
     : mIter(aDestIter)
+    , mEnd(aEndIter)
   {
   }
 
   uint32_t
   write(const char* aSource, uint32_t aSourceLength)
   {
-    uint32_t len = XPCOM_MIN(uint32_t(mIter.size_forward()), aSourceLength);
+    uint32_t len = XPCOM_MIN(uint32_t(mEnd - mIter), aSourceLength);
     char* cp = mIter.get();
     const char* end = aSource + len;
     while (aSource != end) {
@@ -866,16 +871,17 @@ public:
 
 protected:
   nsACString::iterator& mIter;
+  const nsACString::iterator& mEnd;
 };
 
 void
 ToLowerCase(const nsACString& aSource, nsACString& aDest)
 {
   nsACString::const_iterator fromBegin, fromEnd;
-  nsACString::iterator toBegin;
+  nsACString::iterator toBegin, toEnd;
   aDest.SetLength(aSource.Length());
 
-  CopyToLowerCase converter(aDest.BeginWriting(toBegin));
+  CopyToLowerCase converter(aDest.BeginWriting(toBegin), aDest.EndWriting(toEnd));
   copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd),
               converter);
 }
