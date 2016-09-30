@@ -601,9 +601,9 @@ GetFirstSubsumedSavedFrame(JSContext* cx, HandleObject savedFrame,
     return GetFirstSubsumedFrame(cx, frame, selfHosted, skippedAsync);
 }
 
-/* static */ bool
-SavedFrame::checkThis(JSContext* cx, CallArgs& args, const char* fnName,
-                      MutableHandleObject frame)
+static MOZ_MUST_USE bool
+SavedFrame_checkThis(JSContext* cx, CallArgs& args, const char* fnName,
+                     MutableHandleObject frame)
 {
     const Value& thisValue = args.thisv();
 
@@ -651,7 +651,7 @@ SavedFrame::checkThis(JSContext* cx, CallArgs& args, const char* fnName,
 #define THIS_SAVEDFRAME(cx, argc, vp, fnName, args, frame)             \
     CallArgs args = CallArgsFromVp(argc, vp);                          \
     RootedObject frame(cx);                                            \
-    if (!checkThis(cx, args, fnName, &frame))                          \
+    if (!SavedFrame_checkThis(cx, args, fnName, &frame))               \
         return false;
 
 } /* namespace js */
