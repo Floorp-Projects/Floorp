@@ -149,6 +149,7 @@ WebGLExtensionDisjointTimerQuery::GetQueryEXT(JSContext* cx, GLenum target,
                                               GLenum pname,
                                               JS::MutableHandle<JS::Value> retval)
 {
+    retval.setNull();
     if (mIsLost)
         return;
 
@@ -200,6 +201,7 @@ WebGLExtensionDisjointTimerQuery::GetQueryObjectEXT(JSContext* cx,
                                                     GLenum pname,
                                                     JS::MutableHandle<JS::Value> retval)
 {
+    retval.setNull();
     if (mIsLost)
         return;
 
@@ -209,6 +211,7 @@ WebGLExtensionDisjointTimerQuery::GetQueryObjectEXT(JSContext* cx,
     if (query == mActiveQuery.get()) {
         mContext->ErrorInvalidOperation("getQueryObjectEXT: Query must not be"
                                         " active.");
+        return;
     }
 
     mContext->MakeContextCurrent();
