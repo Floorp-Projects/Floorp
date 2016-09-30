@@ -8,6 +8,9 @@ NOT_NESTED = 1
 INSIDE_SYNC_NESTED = 2
 INSIDE_CPOW_NESTED = 3
 
+NORMAL_PRIORITY = 1
+HIGH_PRIORITY = 2
+
 class Visitor:
     def defaultVisit(self, node):
         raise Exception, "INTERNAL ERROR: no visitor for node type `%s'"% (
@@ -297,6 +300,7 @@ class MessageDecl(Node):
         self.name = None
         self.sendSemantics = ASYNC
         self.nested = NOT_NESTED
+        self.prio = NORMAL_PRIORITY
         self.direction = None
         self.inParams = [ ]
         self.outParams = [ ]
