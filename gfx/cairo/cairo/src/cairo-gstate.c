@@ -1509,10 +1509,8 @@ _cairo_gstate_int_clip_extents (cairo_gstate_t        *gstate,
 
     clip_extents = _cairo_clip_get_extents (&gstate->clip);
     if (clip_extents != NULL) {
-	cairo_bool_t is_empty;
-
-	is_empty = _cairo_rectangle_intersect (extents, clip_extents);
-	is_bounded = TRUE;
+        _cairo_rectangle_intersect (extents, clip_extents);
+        is_bounded = TRUE;
     }
 
     return is_bounded;
