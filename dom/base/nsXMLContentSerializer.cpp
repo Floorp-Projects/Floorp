@@ -1244,7 +1244,7 @@ nsXMLContentSerializer::AppendAndTranslateEntities(const nsAString& aStr,
   for (aStr.BeginReading(iter);
        iter != done_reading;
        iter.advance(int32_t(advanceLength))) {
-    uint32_t fragmentLength = iter.size_forward();
+    uint32_t fragmentLength = done_reading - iter;
     const char16_t* c = iter.get();
     const char16_t* fragmentStart = c;
     const char16_t* fragmentEnd = c + fragmentLength;
