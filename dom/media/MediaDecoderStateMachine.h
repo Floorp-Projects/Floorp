@@ -724,8 +724,7 @@ private:
   bool DonePrerollingVideo()
   {
     MOZ_ASSERT(OnTaskQueue());
-    return !mIsVisible ||
-        !IsVideoDecoding() ||
+    return !IsVideoDecoding() ||
         static_cast<uint32_t>(VideoQueue().GetSize()) >=
             VideoPrerollFrames() * mPlaybackRate + 1;
   }
