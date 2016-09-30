@@ -1,0 +1,77 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsrootidl.idl"
+
+/**
+ * nsINamedPipeDataObserver
+ *
+ * This is the callback interface for nsINamedPipeService.
+ * The functions are called by the internal thread in the nsINamedPipeService.
+ */
+[scriptable, uuid(de4f460b-94fd-442c-9002-1637beb2185a)]
+interface nsINamedPipeDataObserver : nsISupports
+{
+    /**
+     * onDataAvailable
+     *
+     * @param aBytesTransferred
+     *        Transfered bytes during last transmission.
+     * @param aOverlapped
+     *        Corresponding overlapped structure used by the async I/O
+     */
+    void onDataAvailable(in unsigned long aBytesTransferred,
+                         in voidPtr aOverlapped);
+
+    /**
+     * onError
+     *
+     * @param aError
+     *        Error code of the error.
+     * @param aOverlapped
+     *        Corresponding overlapped structure used by the async I/O
+     */
+    void onError(in unsigned long aError,
+                 in voidPtr aOverlapped);
+};
+
+/**
+ * nsINamedPipeService
+ */
+[scriptable, uuid(1bf19133-5625-4ac8-836a-80b1c215f72b)]
+interface nsINamedPipeService : nsISupports
+{
+    /**
+     * addDataObserver
+     *
+     * @param aHandle
+     *        The handle that is going to be monitored for read/write operations.
+     *        Only handles that are opened with overlapped IO are supported.
+     * @param aObserver
+     *        The observer of the handle, the service strong-refs of the observer.
+     */
+    void addDataObserver(in voidPtr aHandle,
+                         in nsINamedPipeDataObserver aObserver);
+
+    /**
+     * removeDataObserver
+     *
+     * @param aHandle
+              The handle associated to the observer, and will be closed by the
+              service.
+     * @param aObserver
+     *        The observer to be removed.
+     */
+    void removeDataObserver(in voidPtr aHandle,
+                            in nsINamedPipeDataObserver aObserver);
+
+    /**
+     * isOnCurrentThread
+     *
+     * @return the caller runs within the internal thread.
+     */
+    boolean isOnCurrentThread();
+};
