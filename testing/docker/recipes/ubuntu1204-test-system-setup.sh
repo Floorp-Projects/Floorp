@@ -227,6 +227,12 @@ apt-get install -y libc6-dbg
 valgrind --version
 valgrind date
 
+# Fetch the minidump_stackwalk binary specified by the in-tree tooltool manifest.
+python /setup/tooltool.py fetch -m minidump_stackwalk.manifest
+rm minidump_stackwalk.manifest
+mv linux64-minidump_stackwalk /usr/local/bin/
+chmod +x /usr/local/bin/linux64-minidump_stackwalk
+
 apt-get update
 
 apt-get -q -y --force-yes install \
