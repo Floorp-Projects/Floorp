@@ -19,7 +19,8 @@ namespace webrtc {
                                   char* deviceUniqueIdUTF8,
                                   uint32_t deviceUniqueIdUTF8Length,
                                   char* productUniqueIdUTF8 = NULL,
-                                  uint32_t productUniqueIdUTF8Length = 0) {
+                                  uint32_t productUniqueIdUTF8Length = 0,
+                                  pid_t* pid = 0) {
       deviceNameUTF8 = const_cast<char*>(kDeviceName);
       deviceUniqueIdUTF8 = const_cast<char*>(kUniqueDeviceName);
       productUniqueIdUTF8 =  const_cast<char*>(kProductUniqueId);
