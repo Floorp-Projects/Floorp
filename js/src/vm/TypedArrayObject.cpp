@@ -1260,7 +1260,7 @@ TypedArrayObject::GetTemplateObjectForNative(JSContext* cx, Native native, uint3
     }
 JS_FOR_EACH_TYPED_ARRAY(CHECK_TYPED_ARRAY_CONSTRUCTOR)
 #undef CHECK_TYPED_ARRAY_CONSTRUCTOR
-    return false;
+    return true;
 }
 
 /*
