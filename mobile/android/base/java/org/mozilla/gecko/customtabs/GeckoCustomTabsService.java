@@ -20,13 +20,6 @@ public class GeckoCustomTabsService extends CustomTabsService {
     private static final String LOGTAG = "GeckoCustomTabsService";
 
     @Override
-    protected boolean updateVisuals(CustomTabsSessionToken sessionToken, Bundle bundle) {
-        Log.v(LOGTAG, "updateVisuals()");
-
-        return false;
-    }
-
-    @Override
     protected boolean warmup(long flags) {
         Log.v(LOGTAG, "warmup()");
 
