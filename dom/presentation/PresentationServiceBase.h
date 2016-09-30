@@ -8,21 +8,37 @@
 #define mozilla_dom_PresentationServiceBase_h
 
 #include "nsClassHashtable.h"
+#include "nsIPresentationService.h"
 #include "nsRefPtrHashtable.h"
+#include "nsString.h"
 #include "nsTArray.h"
 
 class nsIPresentationRespondingListener;
-class nsString;
 
 namespace mozilla {
 namespace dom {
 
-class PresentationServiceBase : public nsISupports
+template<class T>
+class PresentationServiceBase
 {
 public:
-  NS_DECL_ISUPPORTS
-
   PresentationServiceBase() = default;
+
+  already_AddRefed<T>
+  GetSessionInfo(const nsAString& aSessionId, const uint8_t aRole)
+  {
+    MOZ_ASSERT(aRole == nsIPresentationService::ROLE_CONTROLLER ||
+               aRole == nsIPresentationService::ROLE_RECEIVER);
+
+    RefPtr<T> info;
+    if (aRole == nsIPresentationService::ROLE_CONTROLLER) {
+      return mSessionInfoAtController.Get(aSessionId, getter_AddRefs(info)) ?
+             info.forget() : nullptr;
+    } else {
+      return mSessionInfoAtReceiver.Get(aSessionId, getter_AddRefs(info)) ?
+             info.forget() : nullptr;
+    }
+  }
 
 protected:
   class SessionIdManager final
@@ -38,15 +54,72 @@ protected:
       MOZ_COUNT_DTOR(SessionIdManager);
     }
 
-    nsresult GetWindowId(const nsAString& aSessionId, uint64_t* aWindowId);
+    nsresult GetWindowId(const nsAString& aSessionId, uint64_t* aWindowId)
+    {
+      MOZ_ASSERT(NS_IsMainThread());
 
-    nsresult GetSessionIds(uint64_t aWindowId, nsTArray<nsString>& aSessionIds);
+      if (mRespondingWindowIds.Get(aSessionId, aWindowId)) {
+        return NS_OK;
+      }
+      return NS_ERROR_NOT_AVAILABLE;
+    }
 
-    void AddSessionId(uint64_t aWindowId, const nsAString& aSessionId);
+    nsresult GetSessionIds(uint64_t aWindowId, nsTArray<nsString>& aSessionIds)
+    {
+      MOZ_ASSERT(NS_IsMainThread());
 
-    void RemoveSessionId(const nsAString& aSessionId);
+      nsTArray<nsString>* sessionIdArray;
+      if (!mRespondingSessionIds.Get(aWindowId, &sessionIdArray)) {
+        return NS_ERROR_INVALID_ARG;
+      }
 
-    nsresult UpdateWindowId(const nsAString& aSessionId, const uint64_t aWindowId);
+      aSessionIds.Assign(*sessionIdArray);
+      return NS_OK;
+    }
+
+    void AddSessionId(uint64_t aWindowId, const nsAString& aSessionId)
+    {
+      MOZ_ASSERT(NS_IsMainThread());
+
+      if (NS_WARN_IF(aWindowId == 0)) {
+        return;
+      }
+
+      nsTArray<nsString>* sessionIdArray;
+      if (!mRespondingSessionIds.Get(aWindowId, &sessionIdArray)) {
+        sessionIdArray = new nsTArray<nsString>();
+        mRespondingSessionIds.Put(aWindowId, sessionIdArray);
+      }
+
+      sessionIdArray->AppendElement(nsString(aSessionId));
+      mRespondingWindowIds.Put(aSessionId, aWindowId);
+    }
+
+    void RemoveSessionId(const nsAString& aSessionId)
+    {
+      MOZ_ASSERT(NS_IsMainThread());
+
+      uint64_t windowId = 0;
+      if (mRespondingWindowIds.Get(aSessionId, &windowId)) {
+        mRespondingWindowIds.Remove(aSessionId);
+        nsTArray<nsString>* sessionIdArray;
+        if (mRespondingSessionIds.Get(windowId, &sessionIdArray)) {
+          sessionIdArray->RemoveElement(nsString(aSessionId));
+          if (sessionIdArray->IsEmpty()) {
+            mRespondingSessionIds.Remove(windowId);
+          }
+        }
+      }
+    }
+
+    nsresult UpdateWindowId(const nsAString& aSessionId, const uint64_t aWindowId)
+    {
+      MOZ_ASSERT(NS_IsMainThread());
+
+      RemoveSessionId(aSessionId);
+      AddSessionId(aWindowId, aSessionId);
+      return NS_OK;
+    }
 
     void Clear()
     {
@@ -70,15 +143,62 @@ protected:
 
   nsresult GetWindowIdBySessionIdInternal(const nsAString& aSessionId,
                                           uint8_t aRole,
-                                          uint64_t* aWindowId);
+                                          uint64_t* aWindowId)
+  {
+    MOZ_ASSERT(aRole == nsIPresentationService::ROLE_CONTROLLER ||
+               aRole == nsIPresentationService::ROLE_RECEIVER);
+
+    if (NS_WARN_IF(!aWindowId)) {
+      return NS_ERROR_INVALID_POINTER;
+    }
+
+    if (aRole == nsIPresentationService::ROLE_CONTROLLER) {
+      return mControllerSessionIdManager.GetWindowId(aSessionId, aWindowId);
+    }
+
+    return mReceiverSessionIdManager.GetWindowId(aSessionId, aWindowId);
+  }
+
   void AddRespondingSessionId(uint64_t aWindowId,
                               const nsAString& aSessionId,
-                              uint8_t aRole);
+                              uint8_t aRole)
+  {
+    MOZ_ASSERT(aRole == nsIPresentationService::ROLE_CONTROLLER ||
+               aRole == nsIPresentationService::ROLE_RECEIVER);
+
+    if (aRole == nsIPresentationService::ROLE_CONTROLLER) {
+      mControllerSessionIdManager.AddSessionId(aWindowId, aSessionId);
+    } else {
+      mReceiverSessionIdManager.AddSessionId(aWindowId, aSessionId);
+    }
+  }
+
   void RemoveRespondingSessionId(const nsAString& aSessionId,
-                                 uint8_t aRole);
+                                 uint8_t aRole)
+  {
+    MOZ_ASSERT(aRole == nsIPresentationService::ROLE_CONTROLLER ||
+               aRole == nsIPresentationService::ROLE_RECEIVER);
+
+    if (aRole == nsIPresentationService::ROLE_CONTROLLER) {
+      mControllerSessionIdManager.RemoveSessionId(aSessionId);
+    } else {
+      mReceiverSessionIdManager.RemoveSessionId(aSessionId);
+    }
+  }
+
   nsresult UpdateWindowIdBySessionIdInternal(const nsAString& aSessionId,
                                              uint8_t aRole,
-                                             const uint64_t aWindowId);
+                                             const uint64_t aWindowId)
+  {
+    MOZ_ASSERT(aRole == nsIPresentationService::ROLE_CONTROLLER ||
+               aRole == nsIPresentationService::ROLE_RECEIVER);
+
+    if (aRole == nsIPresentationService::ROLE_CONTROLLER) {
+      return mControllerSessionIdManager.UpdateWindowId(aSessionId, aWindowId);
+    }
+
+    return mReceiverSessionIdManager.UpdateWindowId(aSessionId, aWindowId);
+  }
 
   // Store the responding listener based on the window ID of the (in-process or
   // OOP) receiver page.
@@ -92,6 +212,9 @@ protected:
   // window ID.
   SessionIdManager mControllerSessionIdManager;
   SessionIdManager mReceiverSessionIdManager;
+
+  nsRefPtrHashtable<nsStringHashKey, T> mSessionInfoAtController;
+  nsRefPtrHashtable<nsStringHashKey, T> mSessionInfoAtReceiver;
 };
 
 } // namespace dom

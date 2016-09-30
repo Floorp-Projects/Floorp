@@ -26,6 +26,10 @@ NotificationController::NotificationController(DocAccessible* aDocument,
   EventQueue(aDocument), mObservingState(eNotObservingRefresh),
   mPresShell(aPresShell)
 {
+#ifdef DEBUG
+  mMoveGuardOnStack = false;
+#endif
+
   // Schedule initial accessible tree construction.
   ScheduleProcessing();
 }

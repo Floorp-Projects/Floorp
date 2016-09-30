@@ -130,6 +130,43 @@ TestCJKWithDisallowLineBreaking()
   return NS_OK;
 }
 
+// Test for ASCII with format=flowed; and quoted lines in preformatted span.
+nsresult
+TestPreformatFlowedQuotes()
+{
+  nsString test;
+  nsString result;
+
+  test.AssignLiteral("<html><body>"
+                     "<span style=\"white-space: pre-wrap;\">"
+                     "&gt; Firefox Firefox Firefox Firefox <br>"
+                     "&gt; Firefox Firefox Firefox Firefox<br>"
+                     "&gt;<br>"
+                     "&gt;&gt; Firefox Firefox Firefox Firefox <br>"
+                     "&gt;&gt; Firefox Firefox Firefox Firefox<br>"
+                     "</span></body></html>");
+
+  ConvertBufToPlainText(test, nsIDocumentEncoder::OutputFormatted |
+                              nsIDocumentEncoder::OutputCRLineBreak |
+                              nsIDocumentEncoder::OutputLFLineBreak |
+                              nsIDocumentEncoder::OutputFormatFlowed);
+
+  // create result case
+  result.AssignLiteral("> Firefox Firefox Firefox Firefox \r\n"
+                       "> Firefox Firefox Firefox Firefox\r\n"
+                       ">\r\n"
+                       ">> Firefox Firefox Firefox Firefox \r\n"
+                       ">> Firefox Firefox Firefox Firefox\r\n");
+  if (!test.Equals(result)) {
+    fail("Wrong HTML to ASCII text serialization with format=flowed; and quoted lines");
+    return NS_ERROR_FAILURE;
+  }
+
+  passed("HTML to ASCII text serialization with format=flowed; and quoted lines");
+
+  return NS_OK;
+}
+
 nsresult
 TestPrettyPrintedHtml()
 {
@@ -265,6 +302,9 @@ TestPlainTextSerializer()
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = TestCJKWithDisallowLineBreaking();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = TestPreformatFlowedQuotes();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Add new tests here...

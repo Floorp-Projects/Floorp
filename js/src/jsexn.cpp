@@ -727,8 +727,8 @@ ErrorReport::init(JSContext* cx, HandleValue exn,
         reportp = ErrorFromException(cx, exnObject);
 
         if (!reportp && sniffingBehavior == NoSideEffects) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                                 JSMSG_ERR_DURING_THROW);
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                      JSMSG_ERR_DURING_THROW);
             return false;
         }
 
@@ -858,8 +858,8 @@ ErrorReport::init(JSContext* cx, HandleValue exn,
     if (!reportp) {
         // This is basically an inlined version of
         //
-        //   JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-        //                        JSMSG_UNCAUGHT_EXCEPTION, message_);
+        //   JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+        //                            JSMSG_UNCAUGHT_EXCEPTION, message_);
         //
         // but without the reporting bits.  Instead it just puts all
         // the stuff we care about in our ownedReport and message_.

@@ -1710,13 +1710,17 @@ function RecordResult(testRunTime, errorMsg, scriptResults)
                     if (!equal) {
                         extra.max_difference = maxDifference.value;
                         extra.differences = differences;
+                        var image1 = gCanvas1.toDataURL();
+                        var image2 = gCanvas2.toDataURL();
                         extra.reftest_screenshots = [
-                            {url:gURLs[0].identifier[0], screenshot: gCanvas1.toDataURL()},
+                            {url:gURLs[0].identifier[0],
+                             screenshot: image1.slice(image1.indexOf(",") + 1)},
                             gURLs[0].identifier[1],
-                            {url:gURLs[0].identifier[1], screenshot: gCanvas2.toDataURL()}
+                            {url:gURLs[0].identifier[2],
+                             screenshot: image2.slice(image2.indexOf(",") + 1)}
                         ];
-                        extra.image1 = gCanvas1.toDataURL();
-                        extra.image2 = gCanvas2.toDataURL();
+                        extra.image1 = image1;
+                        extra.image2 = image2;
                         message += (", max difference: " + extra.max_difference +
                                     ", number of differing pixels: " + differences);
                     } else {

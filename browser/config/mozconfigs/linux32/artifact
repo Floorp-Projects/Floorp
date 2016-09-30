@@ -1,0 +1,9 @@
+MOZ_AUTOMATION_BUILD_SYMBOLS=0
+MOZ_AUTOMATION_L10N_CHECK=0
+
+. "$topsrcdir/browser/config/mozconfigs/linux32/common-opt"
+. "$topsrcdir/build/mozconfig.common.override"
+
+ac_add_options --enable-artifact-builds
+unset CC
+unset CXX

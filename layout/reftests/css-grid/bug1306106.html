@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta charset="utf-8">
+    <title>Table grid item bug</title>
+</head>
+<body>
+
+<pre>You should see "A B" below:</pre>
+
+<div style="display:grid; grid: 50px / 50px 50px">
+<div style="display:table">B</div>
+<div style="display:table; grid-area:1/1">A</div>
+</div>
+
+</body>
+</html>

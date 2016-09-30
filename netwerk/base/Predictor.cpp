@@ -48,6 +48,8 @@
 #include "SerializedLoadContext.h"
 #include "mozilla/net/NeckoChild.h"
 
+#include "mozilla/dom/ContentParent.h"
+
 using namespace mozilla;
 
 namespace mozilla {
@@ -2227,17 +2229,26 @@ NS_IMETHODIMP
 Predictor::OnPredictPrefetch(nsIURI *aURI, uint32_t httpStatus)
 {
   if (IsNeckoChild()) {
-    MOZ_DIAGNOSTIC_ASSERT(mChildVerifier);
-    return mChildVerifier->OnPredictPrefetch(aURI, httpStatus);
+    if (mChildVerifier) {
+      // Ideally, we'd assert here. But since we're slowly moving towards a
+      // world where we have multiple child processes, and only one child process
+      // will be likely to have a verifier, we have to play it safer.
+      return mChildVerifier->OnPredictPrefetch(aURI, httpStatus);
+    }
+    return NS_OK;
   }
-
-  MOZ_DIAGNOSTIC_ASSERT(gNeckoParent);
 
   ipc::URIParams serURI;
   SerializeURI(aURI, serURI);
 
-  if (!gNeckoParent->SendPredOnPredictPrefetch(serURI, httpStatus)) {
-    return NS_ERROR_NOT_AVAILABLE;
+  for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
+    PNeckoParent* neckoParent = SingleManagedOrNull(cp->ManagedPNeckoParent());
+    if (!neckoParent) {
+      continue;
+    }
+    if (!neckoParent->SendPredOnPredictPrefetch(serURI, httpStatus)) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
   }
 
   return NS_OK;
@@ -2246,17 +2257,26 @@ Predictor::OnPredictPrefetch(nsIURI *aURI, uint32_t httpStatus)
 NS_IMETHODIMP
 Predictor::OnPredictPreconnect(nsIURI *aURI) {
   if (IsNeckoChild()) {
-    MOZ_DIAGNOSTIC_ASSERT(mChildVerifier);
-    return mChildVerifier->OnPredictPreconnect(aURI);
+    if (mChildVerifier) {
+      // Ideally, we'd assert here. But since we're slowly moving towards a
+      // world where we have multiple child processes, and only one child process
+      // will be likely to have a verifier, we have to play it safer.
+      return mChildVerifier->OnPredictPreconnect(aURI);
+    }
+    return NS_OK;
   }
-
-  MOZ_DIAGNOSTIC_ASSERT(gNeckoParent);
 
   ipc::URIParams serURI;
   SerializeURI(aURI, serURI);
 
-  if (!gNeckoParent->SendPredOnPredictPreconnect(serURI)) {
-    return NS_ERROR_NOT_AVAILABLE;
+  for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
+    PNeckoParent* neckoParent = SingleManagedOrNull(cp->ManagedPNeckoParent());
+    if (!neckoParent) {
+      continue;
+    }
+    if (!neckoParent->SendPredOnPredictPreconnect(serURI)) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
   }
 
   return NS_OK;
@@ -2265,17 +2285,26 @@ Predictor::OnPredictPreconnect(nsIURI *aURI) {
 NS_IMETHODIMP
 Predictor::OnPredictDNS(nsIURI *aURI) {
   if (IsNeckoChild()) {
-    MOZ_DIAGNOSTIC_ASSERT(mChildVerifier);
-    return mChildVerifier->OnPredictDNS(aURI);
+    if (mChildVerifier) {
+      // Ideally, we'd assert here. But since we're slowly moving towards a
+      // world where we have multiple child processes, and only one child process
+      // will be likely to have a verifier, we have to play it safer.
+      return mChildVerifier->OnPredictDNS(aURI);
+    }
+    return NS_OK;
   }
-
-  MOZ_DIAGNOSTIC_ASSERT(gNeckoParent);
 
   ipc::URIParams serURI;
   SerializeURI(aURI, serURI);
 
-  if (!gNeckoParent->SendPredOnPredictDNS(serURI)) {
-    return NS_ERROR_NOT_AVAILABLE;
+  for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
+    PNeckoParent* neckoParent = SingleManagedOrNull(cp->ManagedPNeckoParent());
+    if (!neckoParent) {
+      continue;
+    }
+    if (!neckoParent->SendPredOnPredictDNS(serURI)) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
   }
 
   return NS_OK;

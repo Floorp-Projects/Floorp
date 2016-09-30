@@ -479,6 +479,11 @@ protected:
   nsEventStatus OnDoubleTap(const TapGestureInput& aEvent);
 
   /**
+   * Helper method for double taps where the double-tap gesture is disabled.
+   */
+  nsEventStatus OnSecondTap(const TapGestureInput& aEvent);
+
+  /**
    * Helper method to cancel any gesture currently going to Gecko. Used
    * primarily when a user taps the screen over some clickable content but then
    * pans down instead of letting go (i.e. to cancel a previous touch so that a

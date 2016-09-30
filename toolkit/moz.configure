@@ -366,7 +366,8 @@ def enable_eme(value, target):
         return value
     elif value and value.origin != 'default':
         die('%s is not supported on %s' % (value.format('--enable-eme'), target.alias))
-    return value
+    # Return the same type of OptionValue (Positive or Negative), with an empty tuple.
+    return value.__class__(())
 
 @depends(enable_eme, fmp4)
 def eme(value, fmp4):

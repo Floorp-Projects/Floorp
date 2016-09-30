@@ -462,8 +462,8 @@ nsStyleBorder::nsStyleBorder(StyleStructContext aContext)
     mBorderImageOutset.Set(side, nsStyleCoord(0.0f, eStyleUnit_Factor));
 
     mBorder.Side(side) = medium;
-    mBorderStyle[side] = NS_STYLE_BORDER_STYLE_NONE | BORDER_COLOR_FOREGROUND;
-    mBorderColor[side] = NS_RGB(0, 0, 0);
+    mBorderStyle[side] = NS_STYLE_BORDER_STYLE_NONE;
+    mBorderColor[side] = StyleComplexColor::CurrentColor();
   }
 
   mTwipsPerPixel = aContext.DevPixelsToAppUnits(1);
@@ -645,9 +645,9 @@ nsStyleBorder::CalcDifference(const nsStyleBorder& aNewData) const
 nsStyleOutline::nsStyleOutline(StyleStructContext aContext)
   : mOutlineWidth(NS_STYLE_BORDER_WIDTH_MEDIUM, eStyleUnit_Enumerated)
   , mOutlineOffset(0)
-  , mActualOutlineWidth(0)
-  , mOutlineColor(NS_RGB(0, 0, 0))
+  , mOutlineColor(StyleComplexColor::CurrentColor())
   , mOutlineStyle(NS_STYLE_BORDER_STYLE_NONE)
+  , mActualOutlineWidth(0)
   , mTwipsPerPixel(aContext.DevPixelsToAppUnits(1))
 {
   MOZ_COUNT_CTOR(nsStyleOutline);
@@ -656,17 +656,15 @@ nsStyleOutline::nsStyleOutline(StyleStructContext aContext)
   NS_FOR_CSS_HALF_CORNERS(corner) {
     mOutlineRadius.Set(corner, zero);
   }
-
-  SetOutlineInitialColor();
 }
 
 nsStyleOutline::nsStyleOutline(const nsStyleOutline& aSrc)
   : mOutlineRadius(aSrc.mOutlineRadius)
   , mOutlineWidth(aSrc.mOutlineWidth)
   , mOutlineOffset(aSrc.mOutlineOffset)
-  , mActualOutlineWidth(aSrc.mActualOutlineWidth)
   , mOutlineColor(aSrc.mOutlineColor)
   , mOutlineStyle(aSrc.mOutlineStyle)
+  , mActualOutlineWidth(aSrc.mActualOutlineWidth)
   , mTwipsPerPixel(aSrc.mTwipsPerPixel)
 {
   MOZ_COUNT_CTOR(nsStyleOutline);
@@ -675,7 +673,7 @@ nsStyleOutline::nsStyleOutline(const nsStyleOutline& aSrc)
 void
 nsStyleOutline::RecalcData()
 {
-  if (NS_STYLE_BORDER_STYLE_NONE == GetOutlineStyle()) {
+  if (NS_STYLE_BORDER_STYLE_NONE == mOutlineStyle) {
     mActualOutlineWidth = 0;
   } else {
     MOZ_ASSERT(mOutlineWidth.ConvertsToLength() ||
@@ -886,10 +884,9 @@ nsStyleColumn::nsStyleColumn(StyleStructContext aContext)
   : mColumnCount(NS_STYLE_COLUMN_COUNT_AUTO)
   , mColumnWidth(eStyleUnit_Auto)
   , mColumnGap(eStyleUnit_Normal)
-  , mColumnRuleColor(NS_RGB(0, 0, 0))
+  , mColumnRuleColor(StyleComplexColor::CurrentColor())
   , mColumnRuleStyle(NS_STYLE_BORDER_STYLE_NONE)
   , mColumnFill(NS_STYLE_COLUMN_FILL_BALANCE)
-  , mColumnRuleColorIsForeground(true)
   , mColumnRuleWidth((StaticPresData::Get()
                         ->GetBorderWidthTable())[NS_STYLE_BORDER_WIDTH_MEDIUM])
   , mTwipsPerPixel(aContext.AppUnitsPerDevPixel())
@@ -909,7 +906,6 @@ nsStyleColumn::nsStyleColumn(const nsStyleColumn& aSource)
   , mColumnRuleColor(aSource.mColumnRuleColor)
   , mColumnRuleStyle(aSource.mColumnRuleStyle)
   , mColumnFill(aSource.mColumnFill)
-  , mColumnRuleColorIsForeground(aSource.mColumnRuleColorIsForeground)
   , mColumnRuleWidth(aSource.mColumnRuleWidth)
   , mTwipsPerPixel(aSource.mTwipsPerPixel)
 {
@@ -936,8 +932,7 @@ nsStyleColumn::CalcDifference(const nsStyleColumn& aNewData) const
 
   if (GetComputedColumnRuleWidth() != aNewData.GetComputedColumnRuleWidth() ||
       mColumnRuleStyle != aNewData.mColumnRuleStyle ||
-      mColumnRuleColor != aNewData.mColumnRuleColor ||
-      mColumnRuleColorIsForeground != aNewData.mColumnRuleColorIsForeground) {
+      mColumnRuleColor != aNewData.mColumnRuleColor) {
     return NS_STYLE_HINT_VISUAL;
   }
 
@@ -3204,6 +3199,7 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
     // nsChangeHint_RepaintFrame will forcibly invalidate the frame area and
     // ensure layers are rebuilt (or removed).
     hint |= nsChangeHint_UpdateContainingBlock |
+            nsChangeHint_AddOrRemoveTransform |
             nsChangeHint_UpdateOverflow |
             nsChangeHint_RepaintFrame;
   } else {
@@ -3599,11 +3595,11 @@ nsStyleContent::CalcDifference(const nsStyleContent& aNewData) const
 
 nsStyleTextReset::nsStyleTextReset(StyleStructContext aContext)
   : mTextDecorationLine(NS_STYLE_TEXT_DECORATION_LINE_NONE)
+  , mTextDecorationStyle(NS_STYLE_TEXT_DECORATION_STYLE_SOLID)
   , mUnicodeBidi(NS_STYLE_UNICODE_BIDI_NORMAL)
   , mInitialLetterSink(0)
   , mInitialLetterSize(0.0f)
-  , mTextDecorationStyle(NS_STYLE_TEXT_DECORATION_STYLE_SOLID | BORDER_COLOR_FOREGROUND)
-  , mTextDecorationColor(NS_RGB(0, 0, 0))
+  , mTextDecorationColor(StyleComplexColor::CurrentColor())
 {
   MOZ_COUNT_CTOR(nsStyleTextReset);
 }
@@ -3628,10 +3624,8 @@ nsStyleTextReset::CalcDifference(const nsStyleTextReset& aNewData) const
     return NS_STYLE_HINT_REFLOW;
   }
 
-  uint8_t lineStyle = GetDecorationStyle();
-  uint8_t otherLineStyle = aNewData.GetDecorationStyle();
   if (mTextDecorationLine != aNewData.mTextDecorationLine ||
-      lineStyle != otherLineStyle) {
+      mTextDecorationStyle != aNewData.mTextDecorationStyle) {
     // Changes to our text-decoration line can impact our overflow area &
     // also our descendants' overflow areas (particularly for text-frame
     // descendants).  So, we update those areas & trigger a repaint.
@@ -3641,14 +3635,7 @@ nsStyleTextReset::CalcDifference(const nsStyleTextReset& aNewData) const
   }
 
   // Repaint for decoration color changes
-  // Dummy initialisations to keep Valgrind/Memcheck happy.
-  // See bug 1289098 comment 1.
-  nscolor decColor = NS_RGBA(0, 0, 0, 0);
-  nscolor otherDecColor = NS_RGBA(0, 0, 0, 0);
-  bool isFG, otherIsFG;
-  GetDecorationColor(decColor, isFG);
-  aNewData.GetDecorationColor(otherDecColor, otherIsFG);
-  if (isFG != otherIsFG || (!isFG && decColor != otherDecColor)) {
+  if (mTextDecorationColor != aNewData.mTextDecorationColor) {
     return nsChangeHint_RepaintFrame;
   }
 
@@ -3895,14 +3882,27 @@ nsCursorImage::operator=(const nsCursorImage& aOther)
   return *this;
 }
 
+bool
+nsCursorImage::operator==(const nsCursorImage& aOther) const
+{
+  NS_ASSERTION(mHaveHotspot ||
+               (mHotspotX == 0 && mHotspotY == 0),
+               "expected mHotspot{X,Y} to be 0 when mHaveHotspot is false");
+  NS_ASSERTION(aOther.mHaveHotspot ||
+               (aOther.mHotspotX == 0 && aOther.mHotspotY == 0),
+               "expected mHotspot{X,Y} to be 0 when mHaveHotspot is false");
+  return mHaveHotspot == aOther.mHaveHotspot &&
+         mHotspotX == aOther.mHotspotX &&
+         mHotspotY == aOther.mHotspotY &&
+         EqualImages(mImage, aOther.mImage);
+}
+
 nsStyleUserInterface::nsStyleUserInterface(StyleStructContext aContext)
   : mUserInput(NS_STYLE_USER_INPUT_AUTO)
   , mUserModify(NS_STYLE_USER_MODIFY_READ_ONLY)
   , mUserFocus(StyleUserFocus::None)
   , mPointerEvents(NS_STYLE_POINTER_EVENTS_AUTO)
   , mCursor(NS_STYLE_CURSOR_AUTO)
-  , mCursorArrayLength(0)
-  , mCursorArray(nullptr)
 {
   MOZ_COUNT_CTOR(nsStyleUserInterface);
 }
@@ -3913,15 +3913,14 @@ nsStyleUserInterface::nsStyleUserInterface(const nsStyleUserInterface& aSource)
   , mUserFocus(aSource.mUserFocus)
   , mPointerEvents(aSource.mPointerEvents)
   , mCursor(aSource.mCursor)
+  , mCursorImages(aSource.mCursorImages)
 {
   MOZ_COUNT_CTOR(nsStyleUserInterface);
-  CopyCursorArrayFrom(aSource);
 }
 
 nsStyleUserInterface::~nsStyleUserInterface()
 {
   MOZ_COUNT_DTOR(nsStyleUserInterface);
-  delete [] mCursorArray;
 }
 
 nsChangeHint
@@ -3934,7 +3933,7 @@ nsStyleUserInterface::CalcDifference(const nsStyleUserInterface& aNewData) const
 
   // We could do better. But it wouldn't be worth it, URL-specified cursors are
   // rare.
-  if (mCursorArrayLength > 0 || aNewData.mCursorArrayLength > 0) {
+  if (mCursorImages != aNewData.mCursorImages) {
     hint |= nsChangeHint_UpdateCursor;
   }
 
@@ -3964,22 +3963,6 @@ nsStyleUserInterface::CalcDifference(const nsStyleUserInterface& aNewData) const
   }
 
   return hint;
-}
-
-void
-nsStyleUserInterface::CopyCursorArrayFrom(const nsStyleUserInterface& aSource)
-{
-  mCursorArray = nullptr;
-  mCursorArrayLength = 0;
-  if (aSource.mCursorArrayLength) {
-    mCursorArray = new nsCursorImage[aSource.mCursorArrayLength];
-    if (mCursorArray) {
-      mCursorArrayLength = aSource.mCursorArrayLength;
-      for (uint32_t i = 0; i < mCursorArrayLength; ++i) {
-        mCursorArray[i] = aSource.mCursorArray[i];
-      }
-    }
-  }
 }
 
 //-----------------------

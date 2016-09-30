@@ -1059,6 +1059,7 @@ nsEventStatus AsyncPanZoomController::HandleGestureEvent(const InputData& aEvent
       case TapGestureInput::TAPGESTURE_UP: rv = OnSingleTapUp(tapGestureInput); break;
       case TapGestureInput::TAPGESTURE_CONFIRMED: rv = OnSingleTapConfirmed(tapGestureInput); break;
       case TapGestureInput::TAPGESTURE_DOUBLE: rv = OnDoubleTap(tapGestureInput); break;
+      case TapGestureInput::TAPGESTURE_SECOND: rv = OnSecondTap(tapGestureInput); break;
       case TapGestureInput::TAPGESTURE_CANCEL: rv = OnCancelTap(tapGestureInput); break;
       default: NS_WARNING("Unhandled tap gesture"); break;
     }
@@ -2117,6 +2118,12 @@ nsEventStatus AsyncPanZoomController::OnDoubleTap(const TapGestureInput& aEvent)
     return nsEventStatus_eConsumeNoDefault;
   }
   return nsEventStatus_eIgnore;
+}
+
+nsEventStatus AsyncPanZoomController::OnSecondTap(const TapGestureInput& aEvent)
+{
+  APZC_LOG("%p got a second-tap in state %d\n", this, mState);
+  return GenerateSingleTap(TapType::eSecondTap, aEvent.mPoint, aEvent.modifiers);
 }
 
 nsEventStatus AsyncPanZoomController::OnCancelTap(const TapGestureInput& aEvent) {

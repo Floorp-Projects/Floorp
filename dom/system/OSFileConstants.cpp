@@ -841,8 +841,9 @@ JSObject *GetOrCreateObjectProperty(JSContext *cx, JS::Handle<JSObject*> aObject
       return &val.toObject();
     }
 
-    JS_ReportErrorNumber(cx, js::GetErrorMessage, nullptr,
-      JSMSG_UNEXPECTED_TYPE, aProperty, "not an object");
+    JS_ReportErrorNumberASCII(cx, js::GetErrorMessage, nullptr,
+                              JSMSG_UNEXPECTED_TYPE,
+                              aProperty, "not an object");
     return nullptr;
   }
   return JS_DefineObject(cx, aObject, aProperty, nullptr, JSPROP_ENUMERATE);
@@ -880,8 +881,9 @@ bool DefineOSFileConstants(JSContext *cx, JS::Handle<JSObject*> global)
     // |gInitialized == true| but |gPaths == nullptr|. We cannot
     // |MOZ_ASSERT| this, as this would kill precompile_cache.js,
     // so we simply return an error.
-    JS_ReportErrorNumber(cx, js::GetErrorMessage, nullptr,
-      JSMSG_CANT_OPEN, "OSFileConstants", "initialization has failed");
+    JS_ReportErrorNumberASCII(cx, js::GetErrorMessage, nullptr,
+                              JSMSG_CANT_OPEN,
+                              "OSFileConstants", "initialization has failed");
     return false;
   }
 

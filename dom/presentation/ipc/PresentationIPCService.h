@@ -21,11 +21,12 @@ class PresentationIPCRequest;
 class PresentationContentSessionInfo;
 class PresentationResponderLoadingCallback;
 
-class PresentationIPCService final : public nsIPresentationService
-                                   , public PresentationServiceBase
+class PresentationIPCService final
+  : public nsIPresentationService
+  , public PresentationServiceBase<PresentationContentSessionInfo>
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIPRESENTATIONSERVICE
 
   PresentationIPCService();
@@ -52,6 +53,10 @@ public:
                                   const uint8_t& aRole,
                                   nsIPresentationSessionTransport* transport);
 
+  nsresult CloseContentSessionTransport(const nsString& aSessionId,
+                                        uint8_t aRole,
+                                        nsresult aReason);
+
 private:
   virtual ~PresentationIPCService();
   nsresult SendRequest(nsIPresentationServiceCallback* aCallback,
@@ -63,8 +68,6 @@ private:
   nsRefPtrHashtable<nsUint64HashKey,
                     nsIPresentationRespondingListener> mRespondingListeners;
   RefPtr<PresentationResponderLoadingCallback> mCallback;
-  nsRefPtrHashtable<nsStringHashKey,
-                    PresentationContentSessionInfo> mSessionInfos;
 };
 
 } // namespace dom

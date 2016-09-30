@@ -357,8 +357,11 @@ Load(JSContext* cx, unsigned argc, Value* vp)
             return false;
         FILE* file = fopen(filename.ptr(), "r");
         if (!file) {
-            JS_ReportError(cx, "cannot open file '%s' for reading",
-                           filename.ptr());
+            filename.clear();
+            if (!filename.encodeUtf8(cx, str))
+                return false;
+            JS_ReportErrorUTF8(cx, "cannot open file '%s' for reading",
+                               filename.ptr());
             return false;
         }
         JS::CompileOptions options(cx);
@@ -487,13 +490,15 @@ Options(JSContext* cx, unsigned argc, Value* vp)
     JS::CallArgs args = CallArgsFromVp(argc, vp);
     ContextOptions oldContextOptions = ContextOptionsRef(cx);
 
+    RootedString str(cx);
+    JSAutoByteString opt;
     for (unsigned i = 0; i < args.length(); ++i) {
-        JSString* str = ToString(cx, args[i]);
+        str = ToString(cx, args[i]);
         if (!str)
             return false;
 
-        JSAutoByteString opt(cx, str);
-        if (!opt)
+        opt.clear();
+        if (!opt.encodeUtf8(cx, str))
             return false;
 
         if (strcmp(opt.ptr(), "strict") == 0)
@@ -503,8 +508,8 @@ Options(JSContext* cx, unsigned argc, Value* vp)
         else if (strcmp(opt.ptr(), "strict_mode") == 0)
             ContextOptionsRef(cx).toggleStrictMode();
         else {
-            JS_ReportError(cx, "unknown option name '%s'. The valid names are "
-                           "strict, werror, and strict_mode.", opt.ptr());
+            JS_ReportErrorUTF8(cx, "unknown option name '%s'. The valid names are "
+                               "strict, werror, and strict_mode.", opt.ptr());
             return false;
         }
     }
@@ -532,7 +537,7 @@ Options(JSContext* cx, unsigned argc, Value* vp)
         }
     }
 
-    JSString* str = JS_NewStringCopyZ(cx, names);
+    str = JS_NewStringCopyZ(cx, names);
     free(names);
     if (!str)
         return false;
@@ -665,8 +670,8 @@ env_setProperty(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue
 {
 /* XXX porting may be easy, but these don't seem to supply setenv by default */
 #if !defined SOLARIS
-    JSString* valstr;
-    JS::Rooted<JSString*> idstr(cx);
+    RootedString valstr(cx);
+    RootedString idstr(cx);
     int rv;
 
     RootedValue idval(cx);
@@ -706,7 +711,13 @@ env_setProperty(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue
     rv = setenv(name.ptr(), value.ptr(), 1);
 #endif
     if (rv < 0) {
-        JS_ReportError(cx, "can't set envariable %s to %s", name.ptr(), value.ptr());
+        name.clear();
+        value.clear();
+        if (!name.encodeUtf8(cx, idstr))
+            return false;
+        if (!value.encodeUtf8(cx, valstr))
+            return false;
+        JS_ReportErrorUTF8(cx, "can't set envariable %s to %s", name.ptr(), value.ptr());
         return false;
     }
     vp.setString(valstr);
@@ -917,9 +928,13 @@ Process(AutoJSAPI& jsapi, const char* filename, bool forceTTY)
     } else {
         file = fopen(filename, "r");
         if (!file) {
-            JS_ReportErrorNumber(jsapi.cx(), my_GetErrorMessage, nullptr,
-                                 JSSMSG_CANT_OPEN,
-                                 filename, strerror(errno));
+            /*
+             * Use Latin1 variant here because the encoding of the return value
+             * of strerror function can be non-UTF-8.
+             */
+            JS_ReportErrorNumberLatin1(jsapi.cx(), my_GetErrorMessage, nullptr,
+                                       JSSMSG_CANT_OPEN,
+                                       filename, strerror(errno));
             gExitCode = EXITCODE_FILE_NOT_FOUND;
             return false;
         }

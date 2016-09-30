@@ -62,6 +62,8 @@
 #include "mozilla/Unused.h"
 #include "mozilla/BasePrincipal.h"
 
+#include "mozilla/dom/ContentParent.h"
+
 #if defined(XP_UNIX)
 #include <sys/utsname.h>
 #endif
@@ -2224,8 +2226,14 @@ nsHttpHandler::SpeculativeConnectInternal(nsIURI *aURI,
         // feature
         obsService->NotifyObservers(nullptr, "speculative-connect-request",
                                     nullptr);
-        if (!IsNeckoChild() && gNeckoParent) {
-            Unused << gNeckoParent->SendSpeculativeConnectRequest();
+        if (!IsNeckoChild()) {
+            for (auto* cp : dom::ContentParent::AllProcesses(dom::ContentParent::eLive)) {
+                PNeckoParent* neckoParent = SingleManagedOrNull(cp->ManagedPNeckoParent());
+                if (!neckoParent) {
+                    continue;
+                }
+                Unused << neckoParent->SendSpeculativeConnectRequest();
+            }
         }
     }
 

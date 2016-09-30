@@ -11,7 +11,7 @@
   <link rel="match" href="grid-auto-min-sizing-definite-001-ref.html">
   <style type="text/css">
 body,html { color:black; background:white; font-size:12px; padding:0; margin:0; }
-pre { clear:both; }
+br { clear:both; }
 	
 .grid {
   display: grid;
@@ -62,20 +62,30 @@ b40 {
   height: 40px;
   border: 1px solid pink;
 }
+
+xx { 
+  display: block;
+  background: lime;
+  padding:32px 32px 20% 40%;
+  margin: 0 0 40% 20%;
+}
+
   </style>
 </head>
 <body>
 
-<pre>horizontal container, horizontal item</pre>
 <div class="grid"><span class="h"><x></x></span></div>
 <div class="grid"><span class="h bb"><x></x></span></div>
 <div class="grid"><span class="h"><x></x></span><span class="h"><x></x></span></div>
 <div class="grid"><span class="h"><b40></b40></span></div>
-<pre>horizontal container, vertical item</pre>
+<br>
 <div class="grid"><span class="v"><x></x></span></div>
 <div class="grid"><span class="v bb"><x></x></span></div>
 <div class="grid"><span class="v"><x></x></span><span class="v"><x></x></span></div>
 <div class="grid"><span class="v"><b40></b40></span></div>
+
+<div class="grid"><xx class="v"></xx></div>
+<div class="grid v"><xx class="h"></xx></div>
 
 </body>
 </html>

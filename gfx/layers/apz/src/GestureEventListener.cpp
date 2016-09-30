@@ -196,18 +196,15 @@ nsEventStatus GestureEventListener::HandleInputTouchMultiStart()
     rv = nsEventStatus_eConsumeNoDefault;
     break;
   case GESTURE_FIRST_SINGLE_TOUCH_UP:
+  case GESTURE_SECOND_SINGLE_TOUCH_DOWN:
     // Cancel wait for double tap
     CancelMaxTapTimeoutTask();
+    MOZ_ASSERT(mSingleTapSent.isSome());
+    if (!mSingleTapSent.value()) {
+      TriggerSingleTapConfirmedEvent();
+    }
+    mSingleTapSent = Nothing();
     SetState(GESTURE_MULTI_TOUCH_DOWN);
-    TriggerSingleTapConfirmedEvent();
-    // Prevent APZC::OnTouchStart() from handling MULTITOUCH_START event
-    rv = nsEventStatus_eConsumeNoDefault;
-    break;
-  case GESTURE_SECOND_SINGLE_TOUCH_DOWN:
-    // Cancel wait for single tap
-    CancelMaxTapTimeoutTask();
-    SetState(GESTURE_MULTI_TOUCH_DOWN);
-    TriggerSingleTapConfirmedEvent();
     // Prevent APZC::OnTouchStart() from handling MULTITOUCH_START event
     rv = nsEventStatus_eConsumeNoDefault;
     break;
@@ -260,6 +257,7 @@ nsEventStatus GestureEventListener::HandleInputTouchMove()
     if (MoveDistanceIsLarge()) {
       CancelLongTapTimeoutTask();
       CancelMaxTapTimeoutTask();
+      mSingleTapSent = Nothing();
       SetState(GESTURE_NONE);
     }
     break;
@@ -346,21 +344,21 @@ nsEventStatus GestureEventListener::HandleInputTouchEnd()
     CancelMaxTapTimeoutTask();
     nsEventStatus tapupStatus = mAsyncPanZoomController->HandleGestureEvent(
         CreateTapEvent(mLastTouchInput, TapGestureInput::TAPGESTURE_UP));
-    if (tapupStatus == nsEventStatus_eIgnore) {
-      SetState(GESTURE_FIRST_SINGLE_TOUCH_UP);
-      CreateMaxTapTimeoutTask();
-    } else {
-      // We sent the tapup into content without waiting for a double tap
-      SetState(GESTURE_NONE);
-    }
+    mSingleTapSent = Some(tapupStatus != nsEventStatus_eIgnore);
+    SetState(GESTURE_FIRST_SINGLE_TOUCH_UP);
+    CreateMaxTapTimeoutTask();
     break;
   }
 
   case GESTURE_SECOND_SINGLE_TOUCH_DOWN: {
     CancelMaxTapTimeoutTask();
-    SetState(GESTURE_NONE);
+    MOZ_ASSERT(mSingleTapSent.isSome());
     mAsyncPanZoomController->HandleGestureEvent(
-        CreateTapEvent(mLastTouchInput, TapGestureInput::TAPGESTURE_DOUBLE));
+        CreateTapEvent(mLastTouchInput,
+            mSingleTapSent.value() ? TapGestureInput::TAPGESTURE_SECOND
+                                   : TapGestureInput::TAPGESTURE_DOUBLE));
+    mSingleTapSent = Nothing();
+    SetState(GESTURE_NONE);
     break;
   }
 
@@ -417,6 +415,7 @@ nsEventStatus GestureEventListener::HandleInputTouchEnd()
 
 nsEventStatus GestureEventListener::HandleInputTouchCancel()
 {
+  mSingleTapSent = Nothing();
   SetState(GESTURE_NONE);
   CancelMaxTapTimeoutTask();
   CancelLongTapTimeoutTask();
@@ -458,10 +457,12 @@ void GestureEventListener::HandleInputTimeoutMaxTap(bool aDuringFastFling)
     SetState(GESTURE_FIRST_SINGLE_TOUCH_MAX_TAP_DOWN);
   } else if (mState == GESTURE_FIRST_SINGLE_TOUCH_UP ||
              mState == GESTURE_SECOND_SINGLE_TOUCH_DOWN) {
-    SetState(GESTURE_NONE);
-    if (!aDuringFastFling) {
+    MOZ_ASSERT(mSingleTapSent.isSome());
+    if (!aDuringFastFling && !mSingleTapSent.value()) {
       TriggerSingleTapConfirmedEvent();
     }
+    mSingleTapSent = Nothing();
+    SetState(GESTURE_NONE);
   } else {
     NS_WARNING("Unhandled state upon MAX_TAP timeout");
     SetState(GESTURE_NONE);

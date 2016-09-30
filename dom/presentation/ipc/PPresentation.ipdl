@@ -81,6 +81,9 @@ child:
                                  nsresult aReason);
   async NotifyMessage(nsString aSessionId, nsCString aData, bool aIsBinary);
   async NotifySessionConnect(uint64_t aWindowId, nsString aSessionId);
+  async NotifyCloseSessionTransport(nsString aSessionId,
+                                    uint8_t aRole,
+                                    nsresult aReason);
 
   async PPresentationBuilder(nsString aSessionId, uint8_t aRole);
 

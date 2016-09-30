@@ -13,7 +13,7 @@ module.metadata = {
   }
 };
 
-const { Ci } = require("chrome");
+const { Cu, Ci } = require("chrome");
 const { setTimeout } = require('./timers');
 const { Class } = require("./core/heritage");
 const { merge } = require("./util/object");
@@ -111,32 +111,73 @@ const panelFor = (view) => panels.get(view);
 const workerFor = (panel) => workers.get(panel);
 const styleFor = (panel) => styles.get(panel);
 
-// Utility function takes `panel` instance and makes sure it will be
-// automatically hidden as soon as other panel is shown.
-var setupAutoHide = new function() {
-  let refs = new WeakMap();
-
-  return function setupAutoHide(panel) {
-    // Create system event listener that reacts to any panel showing and
-    // hides given `panel` if it's not the one being shown.
-    function listener({subject}) {
-      // It could be that listener is not GC-ed in the same cycle as
-      // panel in such case we remove listener manually.
-      let view = viewFor(panel);
-      if (!view) systemEvents.off("popupshowing", listener);
-      else if (subject !== view) panel.hide();
-    }
-
-    // system event listener is intentionally weak this way we'll allow GC
-    // to claim panel if it's no longer referenced by an add-on code. This also
-    // helps minimizing cleanup required on unload.
-    systemEvents.on("popupshowing", listener);
-    // To make sure listener is not claimed by GC earlier than necessary we
-    // associate it with `panel` it's associated with. This way it won't be
-    // GC-ed earlier than `panel` itself.
-    refs.set(panel, listener);
+function getPanelFromWeakRef(weakRef) {
+  if (!weakRef) {
+    return null;
   }
+  let panel = weakRef.get();
+  if (!panel) {
+    return null;
+  }
+  if (isDisposed(panel)) {
+    return null;
+  }
+  return panel;
 }
+
+var SinglePanelManager = {
+  visiblePanel: null,
+  enqueuedPanel: null,
+  enqueuedPanelCallback: null,
+  // Calls |callback| with no arguments when the panel may be shown.
+  requestOpen: function(panelToOpen, callback) {
+    let currentPanel = getPanelFromWeakRef(SinglePanelManager.visiblePanel);
+    if (currentPanel || SinglePanelManager.enqueuedPanel) {
+      SinglePanelManager.enqueuedPanel = Cu.getWeakReference(panelToOpen);
+      SinglePanelManager.enqueuedPanelCallback = callback;
+      if (currentPanel && currentPanel.isShowing) {
+        currentPanel.hide();
+      }
+    } else {
+      SinglePanelManager.notifyPanelCanOpen(panelToOpen, callback);
+    }
+  },
+  notifyPanelCanOpen: function(panel, callback) {
+    let view = viewFor(panel);
+    // Can't pass an arrow function as the event handler because we need to be
+    // able to call |removeEventListener| later.
+    view.addEventListener("popuphidden", SinglePanelManager.onVisiblePanelHidden, true);
+    view.addEventListener("popupshown", SinglePanelManager.onVisiblePanelShown, false);
+    SinglePanelManager.enqueuedPanel = null;
+    SinglePanelManager.enqueuedPanelCallback = null;
+    SinglePanelManager.visiblePanel = Cu.getWeakReference(panel);
+    callback();
+  },
+  onVisiblePanelShown: function(event) {
+    let panel = panelFor(event.target);
+    if (SinglePanelManager.enqueuedPanel) {
+      // Another panel started waiting for |panel| to close before |panel| was
+      // even done opening.
+      panel.hide();
+    }
+  },
+  onVisiblePanelHidden: function(event) {
+    let view = event.target;
+    let panel = panelFor(view);
+    let currentPanel = getPanelFromWeakRef(SinglePanelManager.visiblePanel);
+    if (currentPanel && currentPanel != panel) {
+      return;
+    }
+    SinglePanelManager.visiblePanel = null;
+    view.removeEventListener("popuphidden", SinglePanelManager.onVisiblePanelHidden, true);
+    view.removeEventListener("popupshown", SinglePanelManager.onVisiblePanelShown, false);
+    let nextPanel = getPanelFromWeakRef(SinglePanelManager.enqueuedPanel);
+    let nextPanelCallback = SinglePanelManager.enqueuedPanelCallback;
+    if (nextPanel) {
+      SinglePanelManager.notifyPanelCanOpen(nextPanel, nextPanelCallback);
+    }
+  }
+};
 
 const Panel = Class({
   implements: [
@@ -177,8 +218,6 @@ const Panel = Class({
 
     // Allow context menu
     domPanel.allowContextMenu(view, model.contextMenu);
-
-    setupAutoHide(this);
 
     // Setup listeners.
     setListeners(this, options);
@@ -262,35 +301,37 @@ const Panel = Class({
 
   /* Public API: Panel.show */
   show: function show(options={}, anchor) {
-    if (options instanceof Ci.nsIDOMElement) {
-      [anchor, options] = [options, null];
-    }
+    SinglePanelManager.requestOpen(this, () => {
+      if (options instanceof Ci.nsIDOMElement) {
+        [anchor, options] = [options, null];
+      }
 
-    if (anchor instanceof Ci.nsIDOMElement) {
-      console.warn(
-        "Passing a DOM node to Panel.show() method is an unsupported " +
-        "feature that will be soon replaced. " +
-        "See: https://bugzilla.mozilla.org/show_bug.cgi?id=878877"
-      );
-    }
+      if (anchor instanceof Ci.nsIDOMElement) {
+        console.warn(
+          "Passing a DOM node to Panel.show() method is an unsupported " +
+          "feature that will be soon replaced. " +
+          "See: https://bugzilla.mozilla.org/show_bug.cgi?id=878877"
+        );
+      }
 
-    let model = modelFor(this);
-    let view = viewFor(this);
-    let anchorView = getNodeView(anchor || options.position || model.position);
+      let model = modelFor(this);
+      let view = viewFor(this);
+      let anchorView = getNodeView(anchor || options.position || model.position);
 
-    options = merge({
-      position: model.position,
-      width: model.width,
-      height: model.height,
-      defaultWidth: model.defaultWidth,
-      defaultHeight: model.defaultHeight,
-      focus: model.focus,
-      contextMenu: model.contextMenu
-    }, displayContract(options));
+      options = merge({
+        position: model.position,
+        width: model.width,
+        height: model.height,
+        defaultWidth: model.defaultWidth,
+        defaultHeight: model.defaultHeight,
+        focus: model.focus,
+        contextMenu: model.contextMenu
+      }, displayContract(options));
 
-    if (!isDisposed(this))
-      domPanel.show(view, options, anchorView);
-
+      if (!isDisposed(this)) {
+        domPanel.show(view, options, anchorView);
+      }
+    });
     return this;
   },
 

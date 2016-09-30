@@ -36,7 +36,6 @@ public:
                              MozPromiseHolder<GenericPromise>&& aPromise)
     : mMutex("DecodedStreamGraphListener::mMutex")
     , mStream(aStream)
-    , mLastOutputTime(aStream->StreamTimeToMicroseconds(aStream->GetCurrentTime()))
   {
     mFinishPromise = Move(aPromise);
   }
@@ -45,8 +44,9 @@ public:
   {
     MutexAutoLock lock(mMutex);
     if (mStream) {
-      mLastOutputTime = mStream->StreamTimeToMicroseconds(
-          mStream->GraphTimeToStreamTime(aCurrentTime));
+      int64_t t = mStream->StreamTimeToMicroseconds(
+        mStream->GraphTimeToStreamTime(aCurrentTime));
+      mOnOutput.Notify(t);
     }
   }
 
@@ -64,12 +64,6 @@ public:
     mFinishPromise.ResolveIfExists(true, __func__);
   }
 
-  int64_t GetLastOutputTime()
-  {
-    MutexAutoLock lock(mMutex);
-    return mLastOutputTime;
-  }
-
   void Forget()
   {
     MOZ_ASSERT(NS_IsMainThread());
@@ -78,11 +72,17 @@ public:
     mStream = nullptr;
   }
 
+  MediaEventSource<int64_t>& OnOutput()
+  {
+    return mOnOutput;
+  }
+
 private:
+  MediaEventProducer<int64_t> mOnOutput;
+
   Mutex mMutex;
   // Members below are protected by mMutex.
   RefPtr<MediaStream> mStream;
-  int64_t mLastOutputTime; // microseconds
   // Main thread only.
   MozPromiseHolder<GenericPromise> mFinishPromise;
 };
@@ -121,8 +121,8 @@ public:
                     PlaybackInfoInit&& aInit,
                     MozPromiseHolder<GenericPromise>&& aPromise);
   ~DecodedStreamData();
-  int64_t GetPosition() const;
   void SetPlaying(bool aPlaying);
+  MediaEventSource<int64_t>& OnOutput();
 
   /* The following group of fields are protected by the decoder's monitor
    * and can be read or written on any thread.
@@ -192,10 +192,10 @@ DecodedStreamData::~DecodedStreamData()
   mStream->Destroy();
 }
 
-int64_t
-DecodedStreamData::GetPosition() const
+MediaEventSource<int64_t>&
+DecodedStreamData::OnOutput()
 {
-  return mListener->GetLastOutputTime();
+  return mListener->OnOutput();
 }
 
 void
@@ -266,6 +266,7 @@ DecodedStream::Start(int64_t aStartTime, const MediaInfo& aInfo)
   MOZ_ASSERT(mStartTime.isNothing(), "playback already started.");
 
   mStartTime.emplace(aStartTime);
+  mLastOutputTime = 0;
   mInfo = aInfo;
   mPlaying = true;
   ConnectListener();
@@ -314,6 +315,8 @@ DecodedStream::Start(int64_t aStartTime, const MediaInfo& aInfo)
   mData = static_cast<R*>(r.get())->ReleaseData();
 
   if (mData) {
+    mOutputListener = mData->OnOutput().Connect(
+      mOwnerThread, this, &DecodedStream::NotifyOutput);
     mData->SetPlaying(mPlaying);
     SendData();
   }
@@ -356,6 +359,8 @@ DecodedStream::DestroyData(UniquePtr<DecodedStreamData> aData)
   if (!aData) {
     return;
   }
+
+  mOutputListener.Disconnect();
 
   DecodedStreamData* data = aData.release();
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
@@ -691,7 +696,21 @@ DecodedStream::GetPosition(TimeStamp* aTimeStamp) const
   if (aTimeStamp) {
     *aTimeStamp = TimeStamp::Now();
   }
-  return mStartTime.ref() + (mData ? mData->GetPosition() : 0);
+  return mStartTime.ref() + mLastOutputTime;
+}
+
+void
+DecodedStream::NotifyOutput(int64_t aTime)
+{
+  AssertOwnerThread();
+  mLastOutputTime = aTime;
+
+  // Remove audio samples that have been played by MSG from the queue.
+  RefPtr<MediaData> a = mAudioQueue.PeekFront();
+  for (; a && a->mTime < aTime;) {
+    RefPtr<MediaData> releaseMe = mAudioQueue.PopFront();
+    a = mAudioQueue.PeekFront();
+  }
 }
 
 void

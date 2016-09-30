@@ -112,7 +112,7 @@ html {
   margin: 4px 8px 10px;
   border-width: 3px;
   border-style: solid;
-  border-color: -moz-use-text-color;
+  border-color: currentcolor;
   border-image: none;
   -moz-border-top-colors: transparent #888 #000;
   -moz-border-right-colors: transparent #FFF #000;

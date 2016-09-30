@@ -3608,7 +3608,8 @@ ContentContribution(const GridItemInfo&               aGridItem,
   nsIFrame* child = aGridItem.mFrame;
   PhysicalAxis axis(aCBWM.PhysicalAxis(aAxis));
   nscoord size = nsLayoutUtils::IntrinsicForAxis(axis, aRC, child, aConstraint,
-                   aFlags | nsLayoutUtils::BAIL_IF_REFLOW_NEEDED);
+                   aFlags | nsLayoutUtils::BAIL_IF_REFLOW_NEEDED |
+                            nsLayoutUtils::ADD_PERCENTS);
   if (size == NS_INTRINSIC_WIDTH_UNKNOWN) {
     // We need to reflow the child to find its BSize contribution.
     // XXX this will give mostly correct results for now (until bug 1174569).
@@ -3627,7 +3628,14 @@ ContentContribution(const GridItemInfo&               aGridItem,
     size = ::MeasuringReflow(child, aState.mReflowInput, aRC, availableSize);
     nsIFrame::IntrinsicISizeOffsetData offsets = child->IntrinsicBSizeOffsets();
     size += offsets.hMargin;
-    size = nsLayoutUtils::AddPercents(aConstraint, size, offsets.hPctMargin);
+    auto percent = offsets.hPctMargin;
+    if (!aState.mReflowInput) {
+      // We always want to add in percent padding too, but during Reflow we
+      // always have a definite percentage basis (the grid area) so any percent
+      // padding is already resolved and baked in to 'size' at this point.
+      percent += offsets.hPctPadding;
+    }
+    size = nsLayoutUtils::AddPercents(size, percent);
   }
   MOZ_ASSERT(aGridItem.mBaselineOffset[aAxis] >= 0,
              "baseline offset should be non-negative at this point");

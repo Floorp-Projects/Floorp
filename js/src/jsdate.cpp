@@ -375,6 +375,18 @@ JS::DayFromTime(double time)
     return DateFromTime(time);
 }
 
+JS_PUBLIC_API(double)
+JS::DayFromYear(double year)
+{
+    return ::DayFromYear(year);
+}
+
+JS_PUBLIC_API(double)
+JS::DayWithinYear(double time, double year)
+{
+    return ::DayWithinYear(time, year);
+}
+
 /*
  * Find a year for which any given date will fall on the same weekday.
  *
@@ -2492,7 +2504,7 @@ date_toISOString_impl(JSContext* cx, const CallArgs& args)
 {
     double utctime = args.thisv().toObject().as<DateObject>().UTCTime().toNumber();
     if (!IsFinite(utctime)) {
-        JS_ReportErrorNumber(cx, js::GetErrorMessage, nullptr, JSMSG_INVALID_DATE);
+        JS_ReportErrorNumberASCII(cx, js::GetErrorMessage, nullptr, JSMSG_INVALID_DATE);
         return false;
     }
 
@@ -2547,8 +2559,8 @@ date_toJSON(JSContext* cx, unsigned argc, Value* vp)
 
     /* Step 5. */
     if (!IsCallable(toISO)) {
-        JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js::GetErrorMessage, nullptr,
-                                     JSMSG_BAD_TOISOSTRING_PROP);
+        JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_ERROR, js::GetErrorMessage, nullptr,
+                                          JSMSG_BAD_TOISOSTRING_PROP);
         return false;
     }
 

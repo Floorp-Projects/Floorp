@@ -955,7 +955,7 @@ IsDebuggerSandbox(JSObject* object)
 bool
 GetterOnlyJSNative(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
 {
-  JS_ReportErrorNumber(aCx, js::GetErrorMessage, nullptr, JSMSG_GETTER_ONLY);
+  JS_ReportErrorNumberASCII(aCx, js::GetErrorMessage, nullptr, JSMSG_GETTER_ONLY);
   return false;
 }
 

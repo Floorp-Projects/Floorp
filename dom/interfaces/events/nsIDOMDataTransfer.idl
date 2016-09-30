@@ -74,14 +74,6 @@ interface nsIDOMDataTransfer : nsISupports
   readonly attribute nsISupports types;
 
   /**
-   * Remove the data associated with a given format. If format is empty or not
-   * specified, the data associated with all formats is removed. If data for
-   * the specified format does not exist, or the data transfer contains no
-   * data, this method will have no effect.
-   */
-  void clearData([optional] in DOMString format);
-
-  /**
    * Retrieves the data for a given format, or an empty string if data for
    * that format does not exist or the data transfer contains no data.
    */
@@ -143,22 +135,6 @@ interface nsIDOMDataTransfer : nsISupports
    * itemCount - 1, an empty string list is returned.
    */
   nsISupports mozTypesAt(in unsigned long index);
-
-  /**
-   * Remove the data associated with the given format for an item at the
-   * specified index. The index is in the range from zero to itemCount - 1.
-   *
-   * If the last format for the item is removed, the entire item is removed,
-   * reducing the itemCount by one.
-   *
-   * If format is empty, then the data associated with all formats is removed.
-   * If the format is not found, then this method has no effect.
-   *
-   * @param format the format to remove
-   * @throws NS_ERROR_DOM_INDEX_SIZE_ERR if index is greater or equal than itemCount
-   * @throws NO_MODIFICATION_ALLOWED_ERR if the item cannot be modified
-   */
-  void mozClearDataAt(in DOMString format, in unsigned long index);
 
   /**
    * Will be true when the user has cancelled the drag (typically by pressing

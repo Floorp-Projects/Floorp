@@ -709,21 +709,21 @@ nsSMILParserUtils::CheckForNegativeNumber(const nsAString& aStr)
 {
   int32_t absValLocation = -1;
 
-  nsAString::const_iterator start, end;
-  aStr.BeginReading(start);
-  aStr.EndReading(end);
+  RangedPtr<const char16_t> start(SVGContentUtils::GetStartRangedPtr(aStr));
+  RangedPtr<const char16_t> iter = start;
+  RangedPtr<const char16_t> end(SVGContentUtils::GetEndRangedPtr(aStr));
 
   // Skip initial whitespace
-  while (start != end && IsSVGWhitespace(*start)) {
-    ++start;
+  while (iter != end && IsSVGWhitespace(*iter)) {
+    ++iter;
   }
 
   // Check for dash
-  if (start != end && *start == '-') {
-    ++start;
+  if (iter != end && *iter == '-') {
+    ++iter;
     // Check for numeric character
-    if (start != end && SVGContentUtils::IsDigit(*start)) {
-      absValLocation = start.get() - start.start();
+    if (iter != end && SVGContentUtils::IsDigit(*iter)) {
+      absValLocation = iter - start;
     }
   }
   return absValLocation;

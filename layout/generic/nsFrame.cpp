@@ -1799,8 +1799,9 @@ void
 nsFrame::DisplayOutlineUnconditional(nsDisplayListBuilder*   aBuilder,
                                      const nsDisplayListSet& aLists)
 {
-  if (StyleOutline()->GetOutlineStyle() == NS_STYLE_BORDER_STYLE_NONE)
+  if (StyleOutline()->mOutlineStyle == NS_STYLE_BORDER_STYLE_NONE) {
     return;
+  }
 
   aLists.Outlines()->AppendNewToTop(
     new (aBuilder) nsDisplayOutline(aBuilder, this));
@@ -4847,7 +4848,7 @@ nsIFrame::ComputeTightBounds(DrawTarget* aDrawTarget) const
 nsRect
 nsFrame::ComputeSimpleTightBounds(DrawTarget* aDrawTarget) const
 {
-  if (StyleOutline()->GetOutlineStyle() != NS_STYLE_BORDER_STYLE_NONE ||
+  if (StyleOutline()->mOutlineStyle != NS_STYLE_BORDER_STYLE_NONE ||
       StyleBorder()->HasBorder() || !StyleBackground()->IsTransparent() ||
       StyleDisplay()->mAppearance) {
     // Not necessarily tight, due to clipping, negative
@@ -7970,7 +7971,7 @@ ComputeAndIncludeOutlineArea(nsIFrame* aFrame, nsOverflowAreas& aOverflowAreas,
                              const nsSize& aNewSize)
 {
   const nsStyleOutline* outline = aFrame->StyleOutline();
-  const uint8_t outlineStyle = outline->GetOutlineStyle();
+  const uint8_t outlineStyle = outline->mOutlineStyle;
   if (outlineStyle == NS_STYLE_BORDER_STYLE_NONE) {
     return;
   }
@@ -8680,11 +8681,9 @@ void nsFrame::FillCursorInformationFromStyle(const nsStyleUserInterface* ui,
   aCursor.mLoading = false;
   aCursor.mHotspotX = aCursor.mHotspotY = 0.0f;
 
-  for (nsCursorImage *item = ui->mCursorArray,
-                 *item_end = ui->mCursorArray + ui->mCursorArrayLength;
-       item < item_end; ++item) {
+  for (const nsCursorImage& item : ui->mCursorImages) {
     uint32_t status;
-    nsresult rv = item->GetImage()->GetImageStatus(&status);
+    nsresult rv = item.GetImage()->GetImageStatus(&status);
     if (NS_SUCCEEDED(rv)) {
       if (!(status & imgIRequest::STATUS_LOAD_COMPLETE)) {
         // If we are falling back because any cursor before is loading,
@@ -8692,10 +8691,10 @@ void nsFrame::FillCursorInformationFromStyle(const nsStyleUserInterface* ui,
         aCursor.mLoading = true;
       } else if (!(status & imgIRequest::STATUS_ERROR)) {
         // This is the one we want
-        item->GetImage()->GetImage(getter_AddRefs(aCursor.mContainer));
-        aCursor.mHaveHotspot = item->mHaveHotspot;
-        aCursor.mHotspotX = item->mHotspotX;
-        aCursor.mHotspotY = item->mHotspotY;
+        item.GetImage()->GetImage(getter_AddRefs(aCursor.mContainer));
+        aCursor.mHaveHotspot = item.mHaveHotspot;
+        aCursor.mHotspotX = item.mHotspotX;
+        aCursor.mHotspotY = item.mHotspotY;
         break;
       }
     }

@@ -74,9 +74,17 @@ MacroAssemblerMIPS64Compat::convertUInt32ToDouble(Register src, FloatRegister de
     as_addd(dest, dest, SecondScratchDoubleReg);
 }
 
-void
-MacroAssemblerMIPS64Compat::convertUInt64ToDouble(Register64 src, Register temp, FloatRegister dest)
+bool
+MacroAssemblerMIPS64Compat::convertUInt64ToDoubleNeedsTemp()
 {
+    return false;
+}
+
+void
+MacroAssemblerMIPS64Compat::convertUInt64ToDouble(Register64 src, FloatRegister dest, Register temp)
+{
+    MOZ_ASSERT(temp == Register::Invalid());
+
     Label positive, done;
     ma_b(src.reg, src.reg, &positive, NotSigned, ShortJump);
 

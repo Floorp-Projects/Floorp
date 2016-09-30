@@ -150,7 +150,10 @@ Load(JSContext *cx,
             return false;
         FILE *file = fopen(filename.ptr(), "r");
         if (!file) {
-            JS_ReportError(cx, "cannot open file '%s' for reading", filename.ptr());
+            filename.clear();
+            if (!filename.encodeUtf8(cx, str))
+                return false;
+            JS_ReportErrorUTF8(cx, "cannot open file '%s' for reading", filename.ptr());
             return false;
         }
         JS::CompileOptions options(cx);

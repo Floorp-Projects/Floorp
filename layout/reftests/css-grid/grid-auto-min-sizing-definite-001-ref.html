@@ -9,7 +9,7 @@
   <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1176775">
   <style type="text/css">
 body,html { color:black; background:white; font-size:12px; padding:0; margin:0; }
-pre { clear:both; }
+br { clear:both; }
 	
 .grid {
   display: grid;
@@ -59,7 +59,7 @@ b40 {
   width: 40px;
   height: 40px;
   border: 1px solid pink;
-  z-index: 1; position:relative; 
+  z-index: 1; position:relative;
 }
 
 w {
@@ -67,9 +67,8 @@ w {
   background: lime;
   border-width: 1px 0 0 3px;
   border-style: solid;
-  height:45px;
-  width:60px;
-  left:-3px; top:-1px;
+  height:48px;
+  width:75px;
 }
 .v > w {
   border-width: 3px 0 0 1px;
@@ -77,13 +76,14 @@ w {
   height:53px;
   width:61px;
 }
+.h.r { margin-left:19px; padding: 1px 15px 37px 30px; }
 .v .h > w {
   height:48px;
   width:45px;
 }
 .v.r > w {
-  height:47px;
-  width:54px;
+  height:53px;
+  width:61px;
 }
 .v .v > w {
   height:41px;
@@ -92,20 +92,32 @@ w {
 
 .r { position:relative; }
 
+.t6 { width:46px; }
+.t8 { width:118px; }
+
+xx { 
+  display: block;
+  background: lime;
+  padding:32px 32px 16px 32px;
+  margin: 0 0 32px 16px;
+}
   </style>
 </head>
 <body>
 
-<pre>horizontal container, horizontal item</pre>
+
 <div class="grid"><span class="h"><x></x></span></div>
 <div class="grid"><span class="h bb"><x></x></span></div>
-<div class="grid t3"><span class="h"><x></x></span><span class="h"><x></x></span></div>
-<div class="grid"><span class="h r"><w></w><b40></b40></span></div>
-<pre>horizontal container, vertical item</pre>
+<div class="grid"><span class="h"><x></x></span><span class="h"><x></x></span></div>
+<div class="grid" style="grid:48px / 122px"><span class="h r"><b40></b40></span></div>
+<br>
 <div class="grid"><span class="v"><x></x></span></div>
-<div class="grid"><span class="v bb"><x></x></span></div>
-<div class="grid t7"><span class="v"><x></x></span><span class="v"><x></x></span></div>
-<div class="grid"><span class="v r"><w></w><b40></b40></span></div>
+<div class="grid t6"><span class="v bb"><x></x></span></div>
+<div class="grid"><span class="v"><x></x></span><span class="v"><x></x></span></div>
+<div class="grid t8"><span class="v r"><w></w><b40></b40></span></div>
+
+<div class="grid"><xx class="v"></xx></div>
+<div class="grid v"><xx class="h"></xx></div>
 
 </body>
 </html>

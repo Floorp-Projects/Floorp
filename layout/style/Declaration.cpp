@@ -750,14 +750,14 @@ Declaration::GetValue(nsCSSPropertyID aProperty, nsAString& aValue,
                                 NS_LITERAL_CSTRING("-color")),
                  "third subprop must be the color property");
       const nsCSSValue *colorValue = data->ValueFor(subprops[2]);
-      bool isMozUseTextColor =
-        colorValue->GetUnit() == eCSSUnit_Enumerated &&
-        colorValue->GetIntValue() == NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR;
+      bool isCurrentColor =
+        colorValue->GetUnit() == eCSSUnit_EnumColor &&
+        colorValue->GetIntValue() == NS_COLOR_CURRENTCOLOR;
       if (!AppendValueToString(subprops[0], aValue, aSerialization) ||
           !(aValue.Append(char16_t(' ')),
             AppendValueToString(subprops[1], aValue, aSerialization)) ||
-          // Don't output a third value when it's -moz-use-text-color.
-          !(isMozUseTextColor ||
+          // Don't output a third value when it's currentcolor.
+          !(isCurrentColor ||
             (aValue.Append(char16_t(' ')),
              AppendValueToString(subprops[2], aValue, aSerialization)))) {
         aValue.Truncate();
@@ -1004,8 +1004,8 @@ Declaration::GetValue(nsCSSPropertyID aProperty, nsAString& aValue,
         AppendValueToString(eCSSProperty_text_decoration_style, aValue,
                             aSerialization);
       }
-      if (decorationColor->GetUnit() != eCSSUnit_Enumerated ||
-          decorationColor->GetIntValue() != NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR) {
+      if (decorationColor->GetUnit() != eCSSUnit_EnumColor ||
+          decorationColor->GetIntValue() != NS_COLOR_CURRENTCOLOR) {
         aValue.Append(char16_t(' '));
         AppendValueToString(eCSSProperty_text_decoration_color, aValue,
                             aSerialization);

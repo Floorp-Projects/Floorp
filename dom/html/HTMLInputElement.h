@@ -1049,11 +1049,7 @@ protected:
   /**
    * Returns if valueAsNumber attribute applies for the current type.
    */
-  bool DoesValueAsNumberApply() const
-  {
-    // TODO: this is temporary until bug 888316 is fixed.
-    return DoesMinMaxApply() && mType != NS_FORM_INPUT_WEEK;
-  }
+  bool DoesValueAsNumberApply() const { return DoesMinMaxApply(); }
 
   /**
    * Returns if autocomplete attribute applies for the current type.
@@ -1232,6 +1228,12 @@ protected:
                  uint32_t* aDay) const;
 
   /**
+   * This methods returns the number of days since epoch for a given year and
+   * week.
+   */
+  double DaysSinceEpochFromWeek(uint32_t aYear, uint32_t aWeek) const;
+
+  /**
    * This methods returns the number of days in a given month, for a given year.
    */
   uint32_t NumberOfDaysInMonth(uint32_t aMonth, uint32_t aYear) const;
@@ -1243,9 +1245,11 @@ protected:
   int32_t MonthsSinceJan1970(uint32_t aYear, uint32_t aMonth) const;
 
   /**
-   * This methods returns the day of the week given a date, note that 0 = Sunday.
+   * This methods returns the day of the week given a date. If @isoWeek is true,
+   * 7=Sunday, otherwise, 0=Sunday.
    */
-  uint32_t DayOfWeek(uint32_t aYear, uint32_t aMonth, uint32_t aDay) const;
+  uint32_t DayOfWeek(uint32_t aYear, uint32_t aMonth, uint32_t aDay,
+                     bool isoWeek) const;
 
   /**
    * This methods returns the maximum number of week in a given year, the
@@ -1490,12 +1494,21 @@ protected:
   // Float value returned by GetStep() when the step attribute is set to 'any'.
   static const Decimal kStepAny;
 
-  // Maximum year limited by ECMAScript date object range, year <= 275760.
-  static const double kMaximumYear;
   // Minimum year limited by HTML standard, year >= 1.
   static const double kMinimumYear;
+  // Maximum year limited by ECMAScript date object range, year <= 275760.
+  static const double kMaximumYear;
+  // Maximum valid week is 275760-W37.
+  static const double kMaximumWeekInMaximumYear;
+  // Maximum valid day is 275760-09-13.
+  static const double kMaximumDayInMaximumYear;
+  // Maximum valid month is 275760-09.
+  static const double kMaximumMonthInMaximumYear;
   // Long years in a ISO calendar have 53 weeks in them.
   static const double kMaximumWeekInYear;
+  // Milliseconds in a day.
+  static const double kMsPerDay;
+
 
   /**
    * The type of this input (<input type=...>) as an integer.

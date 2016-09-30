@@ -29,10 +29,14 @@ import static org.mozilla.gecko.db.BrowserContract.PARAM_PROFILE;
 @RunWith(TestRunner.class)
 public class BrowserProviderHighlightsTest extends BrowserProviderHistoryVisitsTestBase {
     private ContentProviderClient highlightsClient;
+    private ContentProviderClient activityStreamBlocklistClient;
     private ContentProviderClient bookmarksClient;
 
     private Uri highlightsTestUri;
+    private Uri activityStreamBlocklistTestUri;
     private Uri bookmarksTestUri;
+
+    private Uri expireHistoryNormalUri;
 
     @Before
     public void setUp() throws Exception {
@@ -42,16 +46,29 @@ public class BrowserProviderHighlightsTest extends BrowserProviderHistoryVisitsT
                 .appendQueryParameter(PARAM_PROFILE, Constants.DEFAULT_PROFILE)
                 .build();
 
+        final Uri activityStreamBlocklistClientUri = BrowserContract.ActivityStreamBlocklist.CONTENT_URI.buildUpon()
+                .appendQueryParameter(PARAM_PROFILE, Constants.DEFAULT_PROFILE)
+                .build();
+
         highlightsClient = contentResolver.acquireContentProviderClient(highlightsClientUri);
+        activityStreamBlocklistClient = contentResolver.acquireContentProviderClient(activityStreamBlocklistClientUri);
         bookmarksClient = contentResolver.acquireContentProviderClient(BrowserContractHelpers.BOOKMARKS_CONTENT_URI);
 
         highlightsTestUri = testUri(BrowserContract.Highlights.CONTENT_URI);
+        activityStreamBlocklistTestUri = testUri(BrowserContract.ActivityStreamBlocklist.CONTENT_URI);
         bookmarksTestUri = testUri(BrowserContract.Bookmarks.CONTENT_URI);
+
+        expireHistoryNormalUri = testUri(BrowserContract.History.CONTENT_OLD_URI).buildUpon()
+                .appendQueryParameter(
+                        BrowserContract.PARAM_EXPIRE_PRIORITY,
+                        BrowserContract.ExpirePriority.NORMAL.toString()
+                ).build();
     }
 
     @After
     public void tearDown() {
         highlightsClient.release();
+        activityStreamBlocklistClient.release();
         bookmarksClient.release();
 
         super.tearDown();
@@ -291,6 +308,74 @@ public class BrowserProviderHighlightsTest extends BrowserProviderHistoryVisitsT
         cursor.close();
     }
 
+    @Test
+    public void testBlocklistItemsAreNotSelected() throws Exception {
+        final long oneDayAgo = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(1);
+
+        final String blockURL = createUniqueUrl();
+
+        insertBookmarkItem(blockURL, createUniqueTitle(), oneDayAgo);
+
+        Cursor cursor = highlightsClient.query(highlightsTestUri, null, null, null, null);
+        Assert.assertNotNull(cursor);
+        Assert.assertEquals(1, cursor.getCount());
+        cursor.close();
+
+        insertBlocklistItem(blockURL);
+
+        cursor = highlightsClient.query(highlightsTestUri, null, null, null, null);
+        Assert.assertNotNull(cursor);
+        Assert.assertEquals(0, cursor.getCount());
+        cursor.close();
+    }
+
+    @Test
+    public void testBlocklistItemsExpire() throws Exception {
+        final long oneDayAgo = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(1);
+
+        final String blockURL = createUniqueUrl();
+        final String blockTitle = createUniqueTitle();
+
+        insertBookmarkItem(blockURL, blockTitle, oneDayAgo);
+        insertBlocklistItem(blockURL);
+
+        {
+            final Cursor cursor = highlightsClient.query(highlightsTestUri, null, null, null, null);
+            Assert.assertNotNull(cursor);
+            Assert.assertEquals(0, cursor.getCount());
+            cursor.close();
+        }
+
+        // Add (2000 / 10) items in the loop -> 201 items total
+        int itemsNeeded = BrowserProvider.DEFAULT_EXPIRY_RETAIN_COUNT / BrowserProvider.ACTIVITYSTREAM_BLOCKLIST_EXPIRY_FACTOR;
+        for (int i = 0; i < itemsNeeded; i++) {
+            insertBlocklistItem(createUniqueUrl());
+        }
+
+        // We still have zero highlights: the item is still blocked
+        {
+            final Cursor cursor = highlightsClient.query(highlightsTestUri, null, null, null, null);
+            Assert.assertNotNull(cursor);
+            Assert.assertEquals(0, cursor.getCount());
+            cursor.close();
+        }
+
+        // expire the original blocked URL - only most recent 200 items are retained
+        historyClient.delete(expireHistoryNormalUri, null, null);
+
+        // And the original URL is now in highlights again (note: this shouldn't happen in real life,
+        // since the URL will no longer be eligible for highlights by the time we expire it)
+        {
+            final Cursor cursor = highlightsClient.query(highlightsTestUri, null, null, null, null);
+            Assert.assertNotNull(cursor);
+            Assert.assertEquals(1, cursor.getCount());
+
+            cursor.moveToFirst();
+            assertCursor(cursor, blockURL, blockTitle);
+            cursor.close();
+        }
+    }
+
     private void insertBookmarkItem(String url, String title, long createdAt) throws RemoteException {
         ContentValues values = new ContentValues();
 
@@ -301,6 +386,13 @@ public class BrowserProviderHighlightsTest extends BrowserProviderHistoryVisitsT
         values.put(BrowserContract.Bookmarks.DATE_CREATED, createdAt);
 
         bookmarksClient.insert(bookmarksTestUri, values);
+    }
+
+    private void insertBlocklistItem(String url) throws RemoteException {
+        final ContentValues values = new ContentValues();
+        values.put(BrowserContract.ActivityStreamBlocklist.URL, url);
+
+        activityStreamBlocklistClient.insert(activityStreamBlocklistTestUri, values);
     }
 
     private void assertCursor(Cursor cursor, String url, String title) {
