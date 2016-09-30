@@ -1696,6 +1696,10 @@ TabParent::SendHandleTap(TapType aType,
   if (mIsDestroyed) {
     return false;
   }
+  if ((aType == TapType::eSingleTap || aType == TapType::eSecondTap) &&
+      GetRenderFrame()) {
+    GetRenderFrame()->TakeFocusForClickFromTap();
+  }
   LayoutDeviceIntPoint offset = GetChildProcessOffset();
   return PBrowserParent::SendHandleTap(aType, aPoint + offset, aModifiers, aGuid,
       aInputBlockId);
