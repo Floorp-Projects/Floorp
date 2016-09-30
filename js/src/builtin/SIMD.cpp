@@ -1039,17 +1039,18 @@ BinaryScalar(JSContext* cx, unsigned argc, Value* vp)
     if (args.length() != 2)
         return ErrorBadArgs(cx);
 
-    Elem result[V::lanes];
     if (!IsVectorObject<V>(args[0]))
         return ErrorBadArgs(cx);
 
-    Elem* val = TypedObjectMemory<Elem*>(args[0]);
     int32_t bits;
     if (!ToInt32(cx, args[1], &bits))
         return false;
 
+    Elem result[V::lanes];
+    Elem* val = TypedObjectMemory<Elem*>(args[0]);
     for (unsigned i = 0; i < V::lanes; i++)
         result[i] = Op<Elem>::apply(val[i], bits);
+
     return StoreResult<V>(cx, args, result);
 }
 
