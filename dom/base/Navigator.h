@@ -89,7 +89,6 @@ class MobileConnectionArray;
 #endif
 
 class PowerManager;
-class CellBroadcast;
 class IccManager;
 class Telephony;
 class Voicemail;
@@ -229,7 +228,6 @@ public:
                                 ErrorResult& aRv);
 
   DesktopNotificationCenter* GetMozNotification(ErrorResult& aRv);
-  CellBroadcast* GetMozCellBroadcast(ErrorResult& aRv);
   IccManager* GetMozIccManager(ErrorResult& aRv);
   MobileMessageManager* GetMozMobileMessage();
   Telephony* GetMozTelephony(ErrorResult& aRv);
@@ -346,7 +344,6 @@ private:
   RefPtr<FMRadio> mFMRadio;
 #endif
   RefPtr<PowerManager> mPowerManager;
-  RefPtr<CellBroadcast> mCellBroadcast;
   RefPtr<IccManager> mIccManager;
   RefPtr<MobileMessageManager> mMobileMessageManager;
   RefPtr<Telephony> mTelephony;

@@ -58,7 +58,6 @@
 #include "mozilla/dom/PMemoryReportRequestParent.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
 #include "mozilla/dom/bluetooth/PBluetoothParent.h"
-#include "mozilla/dom/cellbroadcast/CellBroadcastParent.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestParent.h"
 #include "mozilla/dom/icc/IccParent.h"
 #include "mozilla/dom/mobileconnection/MobileConnectionParent.h"
@@ -294,7 +293,6 @@ using mozilla::ProfileGatherer;
 using namespace CrashReporter;
 #endif
 using namespace mozilla::dom::bluetooth;
-using namespace mozilla::dom::cellbroadcast;
 using namespace mozilla::dom::devicestorage;
 using namespace mozilla::dom::icc;
 using namespace mozilla::dom::power;
@@ -3470,31 +3468,6 @@ ContentParent::DeallocPHandlerServiceParent(PHandlerServiceParent* aHandlerServi
 {
   static_cast<HandlerServiceParent*>(aHandlerServiceParent)->Release();
   return true;
-}
-
-PCellBroadcastParent*
-ContentParent::AllocPCellBroadcastParent()
-{
-  if (!AssertAppProcessPermission(this, "cellbroadcast")) {
-    return nullptr;
-  }
-
-  CellBroadcastParent* actor = new CellBroadcastParent();
-  actor->AddRef();
-  return actor;
-}
-
-bool
-ContentParent::DeallocPCellBroadcastParent(PCellBroadcastParent* aActor)
-{
-  static_cast<CellBroadcastParent*>(aActor)->Release();
-  return true;
-}
-
-bool
-ContentParent::RecvPCellBroadcastConstructor(PCellBroadcastParent* aActor)
-{
-  return static_cast<CellBroadcastParent*>(aActor)->Init();
 }
 
 PSmsParent*
