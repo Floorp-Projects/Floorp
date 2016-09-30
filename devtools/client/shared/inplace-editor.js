@@ -88,6 +88,8 @@ function isKeyIn(key, ...keys) {
  *       This function is called before the editor has been torn down.
  *    {Function} destroy:
  *       Called when the editor is destroyed and has been torn down.
+ *    {Function} contextMenu:
+ *       Called when the user triggers a contextmenu event on the input.
  *    {Object} advanceChars:
  *       This can be either a string or a function.
  *       If it is a string, then if any characters in it are typed,
@@ -222,6 +224,7 @@ function InplaceEditor(options, event) {
   this.cssProperties = options.cssProperties;
   this.change = options.change;
   this.done = options.done;
+  this.contextMenu = options.contextMenu;
   this.destroy = options.destroy;
   this.initial = options.initial ? options.initial : this.elt.textContent;
   this.multiline = options.multiline || false;
@@ -249,6 +252,7 @@ function InplaceEditor(options, event) {
   this._onInput = this._onInput.bind(this);
   this._onKeyup = this._onKeyup.bind(this);
   this._onAutocompletePopupClick = this._onAutocompletePopupClick.bind(this);
+  this._onContextMenu = this._onContextMenu.bind(this);
 
   this._createInput();
 
@@ -290,6 +294,7 @@ function InplaceEditor(options, event) {
   this.input.addEventListener("dblclick", this._stopEventPropagation, false);
   this.input.addEventListener("click", this._stopEventPropagation, false);
   this.input.addEventListener("mousedown", this._stopEventPropagation, false);
+  this.input.addEventListener("contextmenu", this._onContextMenu, false);
   this.doc.defaultView.addEventListener("blur", this._onWindowBlur, false);
 
   this.validate = options.validate;
@@ -349,11 +354,10 @@ InplaceEditor.prototype = {
     this.input.removeEventListener("keypress", this._onKeyPress, false);
     this.input.removeEventListener("keyup", this._onKeyup, false);
     this.input.removeEventListener("input", this._onInput, false);
-    this.input.removeEventListener("dblclick", this._stopEventPropagation,
-      false);
+    this.input.removeEventListener("dblclick", this._stopEventPropagation, false);
     this.input.removeEventListener("click", this._stopEventPropagation, false);
-    this.input.removeEventListener("mousedown", this._stopEventPropagation,
-      false);
+    this.input.removeEventListener("mousedown", this._stopEventPropagation, false);
+    this.input.removeEventListener("contextmenu", this._onContextMenu, false);
     this.doc.defaultView.removeEventListener("blur", this._onWindowBlur, false);
 
     this._stopAutosize();
@@ -1161,6 +1165,12 @@ InplaceEditor.prototype = {
 
     if (prevent) {
       event.preventDefault();
+    }
+  },
+
+  _onContextMenu: function (event) {
+    if (this.contextMenu) {
+      this.contextMenu(event);
     }
   },
 

@@ -142,7 +142,7 @@ var AnimationsController = {
     this.onNewNodeFront = this.onNewNodeFront.bind(this);
     this.onAnimationMutations = this.onAnimationMutations.bind(this);
 
-    let target = gToolbox.target;
+    let target = gInspector.target;
     this.animationsFront = new AnimationsFront(target.client, target.form);
 
     // Expose actor capabilities.
