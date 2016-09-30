@@ -3,5 +3,5 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-  <polygon fill="#808080" points="5,3.5 6.5,2 12.375,8 6.5,14 5,12.5 9.375,8" />
+  <polygon fill="-moz-fieldtext" fill-opacity=".7" points="5,3.5 6.5,2 12.375,8 6.5,14 5,12.5 9.375,8"/>
 </svg>

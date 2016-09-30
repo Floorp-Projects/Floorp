@@ -3,35 +3,45 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-     width="64" height="16" viewBox="0 0 64 16">
+     width="16" height="16" viewBox="0 0 16 16">
+  <style>
+    use:not(:target) {
+      display: none;
+    }
+    use {
+      fill-rule: evenodd;
+      fill: -moz-fieldtext;
+      fill-opacity: .5;
+    }
+    use[id$="-black"] {
+      fill: black;
+      fill-opacity: .6;
+    }
+    use[id$="-white"] {
+      fill: white;
+      fill-opacity: .7;
+    }
+  </style>
+
   <defs>
-    <style>
-      path {
-        fill-rule: evenodd;
-        fill: -moz-fieldtext;
-        fill-opacity: .5;
-      }
-    </style>
+    <path id="glyph-normal" d="M128,193a7,7,0,1,1,7-7A7,7,0,0,1,128,193Zm0-13a6,6,0,1,0,6,6A6,6,0,0,0,128,180Zm0,10a1,1,0,0,1-1-1v-3a1,1,0,0,1,2,0v3A1,1,0,0,1,128,190Zm0-6a1,1,0,1,1,1-1A1,1,0,0,1,128,184Z" transform="translate(-120 -178)"/>
+    <path id="glyph-hover" d="M102,179a7,7,0,1,1-7,7A7,7,0,0,1,102,179Zm0,3a1,1,0,1,1-1,1A1,1,0,0,1,102,182Zm0,3a1,1,0,0,1,1,1v3a1,1,0,0,1-2,0v-3A1,1,0,0,1,102,185Z" transform="translate(-94 -178)"/>
+    <path id="glyph-notice" d="M133.5,202a2.5,2.5,0,1,1,2.5-2.5A2.5,2.5,0,0,1,133.5,202Zm-5.5,1a1,1,0,1,1,1-1A1,1,0,0,1,128,203Zm1,5a1,1,0,0,1-2,0v-3a1,1,0,0,1,2,0v3Zm-1-9a6.08,6.08,0,1,0,5.629,3.987,3.452,3.452,0,0,0,.984-0.185A6.9,6.9,0,0,1,135,205a7,7,0,1,1-7-7,6.9,6.9,0,0,1,2.2.387,3.452,3.452,0,0,0-.185.984A5.951,5.951,0,0,0,128,199Z" transform="translate(-120 -197)"/>
+    <path id="glyph-notice-hover" d="M107.5,202a2.5,2.5,0,1,1,2.5-2.5A2.5,2.5,0,0,1,107.5,202Zm0,1.039a3.5,3.5,0,0,0,1.125-.2,7.124,7.124,0,1,1-4.464-4.464,3.5,3.5,0,0,0-.2,1.125A3.54,3.54,0,0,0,107.5,203.039ZM102,201a1,1,0,1,0,1,1A1,1,0,0,0,102,201Zm1,4a1,1,0,0,0-2,0v3a1,1,0,0,0,2,0v-3Z" transform="translate(-94 -197)"/>
   </defs>
 
-  <view id="normal" viewBox="0 0 16 16"/>
-  <g>
-    <path d="M128,193a7,7,0,1,1,7-7A7,7,0,0,1,128,193Zm0-13a6,6,0,1,0,6,6A6,6,0,0,0,128,180Zm0,10a1,1,0,0,1-1-1v-3a1,1,0,0,1,2,0v3A1,1,0,0,1,128,190Zm0-6a1,1,0,1,1,1-1A1,1,0,0,1,128,184Z" transform="translate(-120 -178)"/>
-  </g>
+  <use id="normal" xlink:href="#glyph-normal"/>
+  <use id="hover" xlink:href="#glyph-hover"/>
+  <use id="notice" xlink:href="#glyph-notice"/>
+  <use id="notice-hover" xlink:href="#glyph-notice-hover"/>
 
-  <view id="hover" viewBox="16 0 16 16"/>
-  <g transform="translate(16)">
-    <path d="M102,179a7,7,0,1,1-7,7A7,7,0,0,1,102,179Zm0,3a1,1,0,1,1-1,1A1,1,0,0,1,102,182Zm0,3a1,1,0,0,1,1,1v3a1,1,0,0,1-2,0v-3A1,1,0,0,1,102,185Z" transform="translate(-94 -178)"/>
-  </g>
+  <use id="normal-black" xlink:href="#glyph-normal"/>
+  <use id="hover-black" xlink:href="#glyph-hover"/>
+  <use id="notice-black" xlink:href="#glyph-notice"/>
+  <use id="notice-hover-black" xlink:href="#glyph-notice-hover"/>
 
-  <view id="notice" viewBox="32 0 16 16"/>
-  <g transform="translate(32)">
-    <path d="M133.5,202a2.5,2.5,0,1,1,2.5-2.5A2.5,2.5,0,0,1,133.5,202Zm-5.5,1a1,1,0,1,1,1-1A1,1,0,0,1,128,203Zm1,5a1,1,0,0,1-2,0v-3a1,1,0,0,1,2,0v3Zm-1-9a6.08,6.08,0,1,0,5.629,3.987,3.452,3.452,0,0,0,.984-0.185A6.9,6.9,0,0,1,135,205a7,7,0,1,1-7-7,6.9,6.9,0,0,1,2.2.387,3.452,3.452,0,0,0-.185.984A5.951,5.951,0,0,0,128,199Z" transform="translate(-120 -197)"/>
-  </g>
-
-  <view id="notice-hover" viewBox="48 0 16 16"/>
-  <g transform="translate(48)">
-    <path d="M107.5,202a2.5,2.5,0,1,1,2.5-2.5A2.5,2.5,0,0,1,107.5,202Zm0,1.039a3.5,3.5,0,0,0,1.125-.2,7.124,7.124,0,1,1-4.464-4.464,3.5,3.5,0,0,0-.2,1.125A3.54,3.54,0,0,0,107.5,203.039ZM102,201a1,1,0,1,0,1,1A1,1,0,0,0,102,201Zm1,4a1,1,0,0,0-2,0v3a1,1,0,0,0,2,0v-3Z" transform="translate(-94 -197)"/>
-  </g>
-
+  <use id="normal-white" xlink:href="#glyph-normal"/>
+  <use id="hover-white" xlink:href="#glyph-hover"/>
+  <use id="notice-white" xlink:href="#glyph-notice"/>
+  <use id="notice-hover-white" xlink:href="#glyph-notice-hover"/>
 </svg>

@@ -4,6 +4,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 
+%filter substitution
+
+%define selectorPrefix
+%define selectorSuffix
+%define iconVariant
+%include icons.inc.css
+
+%define selectorPrefix
+%define selectorSuffix :-moz-lwtheme
+%define iconVariant -black
+%include icons.inc.css
+
 #identity-box {
   font-size: .9em;
   padding: 3px 5px;
@@ -54,25 +66,6 @@
 #identity-icon {
   width: 16px;
   height: 16px;
-  list-style-image: url(chrome://browser/skin/identity-icon.svg#normal);
-}
-
-#identity-box:hover > #identity-icon:not(.no-hover),
-#identity-box[open=true] > #identity-icon {
-  list-style-image: url(chrome://browser/skin/identity-icon.svg#hover);
-}
-
-#identity-box.grantedPermissions > #identity-icon {
-  list-style-image: url(chrome://browser/skin/identity-icon.svg#notice);
-}
-
-#identity-box.grantedPermissions:hover > #identity-icon:not(.no-hover),
-#identity-box.grantedPermissions[open=true] > #identity-icon {
-  list-style-image: url(chrome://browser/skin/identity-icon.svg#notice-hover);
-}
-
-#urlbar[pageproxystate="valid"] > #identity-box.chromeUI > #identity-icon {
-  list-style-image: url(chrome://branding/content/identity-icons-brand.svg);
 }
 
 #urlbar[pageproxystate="invalid"] > #identity-box > #identity-icon {
@@ -136,11 +129,6 @@
   height: 16px;
   margin-inline-start: 2px;
   margin-inline-end: 0;
-  list-style-image: url(chrome://browser/skin/tracking-protection-16.svg);
-}
-
-#tracking-protection-icon[state="loaded-tracking-content"] {
-  list-style-image: url(chrome://browser/skin/tracking-protection-disabled-16.svg);
 }
 
 #tracking-protection-icon[animate] {
@@ -168,27 +156,3 @@
   visibility: collapse;
 }
 
-#urlbar[pageproxystate="valid"] > #identity-box.verifiedDomain > #connection-icon,
-#urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity > #connection-icon,
-#urlbar[pageproxystate="valid"] > #identity-box.mixedActiveBlocked > #connection-icon {
-  list-style-image: url(chrome://browser/skin/identity-secure.svg);
-  visibility: visible;
-}
-
-#urlbar[pageproxystate="valid"] > #identity-box.certUserOverridden > #connection-icon {
-  list-style-image: url(chrome://browser/skin/identity-mixed-passive-loaded.svg);
-  visibility: visible;
-}
-
-#urlbar[pageproxystate="valid"] > #identity-box.insecureLoginForms > #connection-icon,
-#urlbar[pageproxystate="valid"] > #identity-box.mixedActiveContent > #connection-icon {
-  list-style-image: url(chrome://browser/skin/identity-mixed-active-loaded.svg);
-  visibility: visible;
-}
-
-#urlbar[pageproxystate="valid"] > #identity-box.weakCipher > #connection-icon,
-#urlbar[pageproxystate="valid"] > #identity-box.mixedDisplayContent > #connection-icon,
-#urlbar[pageproxystate="valid"] > #identity-box.mixedDisplayContentLoadedActiveBlocked > #connection-icon {
-  list-style-image: url(chrome://browser/skin/identity-mixed-passive-loaded.svg);
-  visibility: visible;
-}
