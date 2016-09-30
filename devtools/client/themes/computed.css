@@ -5,7 +5,7 @@
 
 #sidebar-panel-computedview {
   margin: 0;
-  display : flex;
+  display: flex;
   flex-direction: column;
   width: 100%;
   height: 100%;
@@ -61,7 +61,8 @@
 }
 
 .property-view {
-  padding: 2px 17px;
+  padding: 2px 0px;
+  padding-inline-start: 5px;
   display: flex;
   flex-wrap: wrap;
 }
@@ -105,17 +106,21 @@
   overflow-x: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  padding-left: 10px;
+  padding-inline-start: 14px;
   outline: 0 !important;
 }
 
 .other-property-value {
   background-position: left center;
-  padding-left: 8px;
+  padding-inline-start: 8px;
+}
+
+.other-property-value:dir(rtl) {
+  background-position-x: right;
 }
 
 .property-content {
-  padding-left: 17px;
+  padding-inline-start: 17px;
 }
 
 .theme-firebug .property-view,
@@ -130,7 +135,6 @@
 /* From skin */
 .expander {
   visibility: hidden;
-  margin-inline-start: -12px !important;
 }
 
 .expandable {
@@ -143,7 +147,8 @@
 
 .matchedselectors > p {
   clear: both;
-  margin: 0 2px 0 0;
+  margin: 0;
+  margin-inline-end: 2px;
   padding: 2px;
   overflow-x: hidden;
   border-style: dotted;
@@ -179,6 +184,11 @@
   padding: 0 3px;
   cursor: pointer;
   float: right;
+}
+
+/* Workaround until float: inline-end; is enabled by default */
+.link:dir(rtl) {
+  float: left;
 }
 
 /* Take away these two :visited rules to get a core dumper     */
