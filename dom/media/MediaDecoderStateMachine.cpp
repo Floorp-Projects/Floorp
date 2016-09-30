@@ -1015,36 +1015,34 @@ MediaDecoderStateMachine::NeedToDecodeAudio()
 }
 
 void
-MediaDecoderStateMachine::OnAudioDecoded(MediaData* aAudioSample)
+MediaDecoderStateMachine::OnAudioDecoded(MediaData* aAudio)
 {
   MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(mState != DECODER_STATE_SEEKING);
-
-  RefPtr<MediaData> audio(aAudioSample);
-  MOZ_ASSERT(audio);
+  MOZ_ASSERT(aAudio);
 
   // audio->GetEndTime() is not always mono-increasing in chained ogg.
-  mDecodedAudioEndTime = std::max(audio->GetEndTime(), mDecodedAudioEndTime);
+  mDecodedAudioEndTime = std::max(aAudio->GetEndTime(), mDecodedAudioEndTime);
 
-  SAMPLE_LOG("OnAudioDecoded [%lld,%lld]", audio->mTime, audio->GetEndTime());
+  SAMPLE_LOG("OnAudioDecoded [%lld,%lld]", aAudio->mTime, aAudio->GetEndTime());
 
   switch (mState) {
     case DECODER_STATE_BUFFERING: {
       // If we're buffering, this may be the sample we need to stop buffering.
       // Save it and schedule the state machine.
-      Push(audio, MediaData::AUDIO_DATA);
+      Push(aAudio, MediaData::AUDIO_DATA);
       ScheduleStateMachine();
       return;
     }
 
     case DECODER_STATE_DECODING_FIRSTFRAME: {
-      Push(audio, MediaData::AUDIO_DATA);
+      Push(aAudio, MediaData::AUDIO_DATA);
       MaybeFinishDecodeFirstFrame();
       return;
     }
 
     case DECODER_STATE_DECODING: {
-      Push(audio, MediaData::AUDIO_DATA);
+      Push(aAudio, MediaData::AUDIO_DATA);
       MaybeStopPrerolling();
       return;
     }
