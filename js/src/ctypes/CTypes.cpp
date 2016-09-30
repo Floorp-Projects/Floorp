@@ -1346,11 +1346,10 @@ ArrayLengthOverflow(JSContext* cx, unsigned expectedLength, HandleObject arrObj,
 }
 
 static bool
-ArgumentRangeMismatch(JSContext* cx, const char* arg, const char* func,
-                     const char* range)
+ArgumentRangeMismatch(JSContext* cx, const char* func, const char* range)
 {
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                            CTYPESMSG_ARG_RANGE_MISMATCH, arg, func, range);
+                            CTYPESMSG_ARG_RANGE_MISMATCH, func, range);
   return false;
 }
 
@@ -8629,9 +8628,9 @@ Int64Base::ToString(JSContext* cx,
       radix = arg.toInt32();
     if (!arg.isInt32() || radix < 2 || radix > 36) {
       if (isUnsigned) {
-        return ArgumentRangeMismatch(cx, "", "UInt64.prototype.toString", "an integer at least 2 and no greater than 36");
+        return ArgumentRangeMismatch(cx, "UInt64.prototype.toString", "an integer at least 2 and no greater than 36");
       }
-      return ArgumentRangeMismatch(cx, "", "Int64.prototype.toString", "an integer at least 2 and no greater than 36");
+      return ArgumentRangeMismatch(cx, "Int64.prototype.toString", "an integer at least 2 and no greater than 36");
     }
   }
 
