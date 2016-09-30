@@ -56,15 +56,6 @@ public:
     return *get();
   }
 
-#if 0
-  // An iterator really deserves this, but some compilers (notably IBM VisualAge for OS/2)
-  //  don't like this when |CharT| is a type without members.
-  pointer operator->() const
-  {
-    return get();
-  }
-#endif
-
   self_type& operator++()
   {
     ++mPosition;
@@ -167,16 +158,6 @@ public:
   {
     return *get();
   }
-
-#if 0
-  // An iterator really deserves this, but some compilers (notably IBM VisualAge for OS/2)
-  //  don't like this when |CharT| is a type without members.
-  pointer
-  operator->() const
-  {
-    return get();
-  }
-#endif
 
   self_type& operator++()
   {
