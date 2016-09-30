@@ -417,7 +417,6 @@ class SessionTestCase(CommonTestCase):
         self.methodName = methodName
         self.filepath = filepath
         self.testvars = kwargs.pop('testvars', None)
-        self.test_container = kwargs.pop('test_container', None)
         CommonTestCase.__init__(self, methodName, **kwargs)
 
     @classmethod
@@ -473,7 +472,6 @@ class SessionJSTestCase(CommonTestCase):
         assert(jsFile)
         self.jsFile = jsFile
         self.marionette = None
-        self.test_container = kwargs.pop('test_container', None)
         CommonTestCase.__init__(self, methodName)
 
     @classmethod

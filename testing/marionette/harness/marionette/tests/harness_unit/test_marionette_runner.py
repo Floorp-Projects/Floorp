@@ -244,8 +244,7 @@ def _check_crash_counts(has_crashed, runner, mock_marionette):
 def test_increment_crash_count_in_run_test_set(runner, has_crashed,
                                                mock_marionette):
     fake_tests = [{'filepath': i,
-                   'expected': 'pass',
-                   'test_container': False} for i in 'abc']
+                   'expected': 'pass'} for i in 'abc']
 
     with patch.multiple(runner, run_test=DEFAULT, marionette=mock_marionette):
         runner.run_test_set(fake_tests)
@@ -268,7 +267,7 @@ def test_add_test_module(runner):
         with patch('os.path.abspath', return_value=test) as abspath:
             runner.add_test(test)
         assert abspath.called
-        expected = {'filepath': test, 'expected': 'pass', 'test_container': None}
+        expected = {'filepath': test, 'expected': 'pass'}
         assert expected in runner.tests
     # add_test doesn't validate module names; 'bad_test.py' gets through
     assert len(runner.tests) == 3
