@@ -42,5 +42,4 @@ setup(name=PACKAGE_NAME,
       mozprofile = mozprofile:cli
       view-profile = mozprofile:view_profile
       diff-profiles = mozprofile:diff_profiles
-      """,
-    )
+      """, )

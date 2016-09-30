@@ -34,35 +34,35 @@ class AutologOutput(Output):
             known_fails = coll.tests_with_result('KNOWN-FAIL')
 
             testgroup = RESTfulAutologTestGroup(
-                 testgroup=context.testgroup,
-                 os=context.os,
-                 platform=context.arch,
-                 harness=context.harness,
-                 server=self.es_server,
-                 restserver=self.rest_server,
-                 machine=context.hostname,
-                 logfile=context.logfile,
-                )
+                testgroup=context.testgroup,
+                os=context.os,
+                platform=context.arch,
+                harness=context.harness,
+                server=self.es_server,
+                restserver=self.rest_server,
+                machine=context.hostname,
+                logfile=context.logfile,
+            )
             testgroup.add_test_suite(
                 testsuite=results_collection.suite_name,
                 elapsedtime=coll.time_taken,
                 passed=count(passed),
                 failed=count(failed) + count(errors) + count(unexpected_passes),
                 todo=count(skipped) + count(known_fails),
-                )
+            )
             testgroup.set_primary_product(
                 tree=context.tree,
                 revision=context.revision,
                 productname=context.product,
                 buildtype=context.buildtype,
-                )
+            )
             # need to call this again since we already used the generator
             for f in coll.tests_with_result('UNEXPECTED-FAIL'):
                 testgroup.add_test_failure(
                     test=long_name(f),
                     text='\n'.join(f.output),
                     status=f.result,
-                    )
+                )
             testgroups.append(testgroup)
         return testgroups
 

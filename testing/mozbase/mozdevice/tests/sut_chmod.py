@@ -1,4 +1,4 @@
-#/usr/bin/env python
+#!/usr/bin/env python
 import mozdevice
 import logging
 import unittest
@@ -9,9 +9,10 @@ class TestChmod(unittest.TestCase):
 
     def test_chmod(self):
 
-        command = [('chmod /mnt/sdcard/test', 'Changing permissions for /storage/emulated/legacy/Test\n'
-                                              '        <empty>\n'
-                                              'chmod /storage/emulated/legacy/Test ok\n')]
+        command = [('chmod /mnt/sdcard/test',
+                    'Changing permissions for /storage/emulated/legacy/Test\n'
+                    '        <empty>\n'
+                    'chmod /storage/emulated/legacy/Test ok\n')]
         m = MockAgent(self, commands=command)
         d = mozdevice.DroidSUT('127.0.0.1', port=m.port, logLevel=logging.DEBUG)
 

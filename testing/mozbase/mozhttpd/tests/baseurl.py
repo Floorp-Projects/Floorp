@@ -1,6 +1,7 @@
 import mozhttpd
 import unittest
 
+
 class BaseUrlTest(unittest.TestCase):
 
     def test_base_url(self):
@@ -9,8 +10,8 @@ class BaseUrlTest(unittest.TestCase):
         httpd.start(block=False)
         self.assertEqual("http://127.0.0.1:%s/" % httpd.httpd.server_port,
                          httpd.get_url())
-        self.assertEqual("http://127.0.0.1:%s/cheezburgers.html" % \
-                             httpd.httpd.server_port,
+        self.assertEqual("http://127.0.0.1:%s/cheezburgers.html" %
+                         httpd.httpd.server_port,
                          httpd.get_url(path="/cheezburgers.html"))
         httpd.stop()
 

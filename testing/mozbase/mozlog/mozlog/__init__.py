@@ -24,3 +24,7 @@ from .proxy import get_proxy_logger
 # Backwards compatibility shim for consumers that use mozlog.structured
 structured = sys.modules[__name__]
 sys.modules['{}.structured'.format(__name__)] = structured
+
+__all__ = ['commandline', 'structuredlog', 'unstructured',
+           'get_default_logger', 'set_default_logger', 'get_proxy_logger',
+           'structured']

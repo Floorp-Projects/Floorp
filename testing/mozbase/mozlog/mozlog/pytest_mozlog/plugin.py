@@ -6,6 +6,7 @@ import mozlog
 import os
 import time
 
+
 def pytest_addoption(parser):
     # We can't simply use mozlog.commandline.add_logging_group(parser) here because
     # Pytest's parser doesn't have the add_argument_group method Mozlog expects.
@@ -31,6 +32,7 @@ def pytest_configure(config):
 
 
 class MozLog(object):
+
     def __init__(self):
         self.results = {}
         self.start_time = int(time.time() * 1000)  # in ms for Mozlog compatibility

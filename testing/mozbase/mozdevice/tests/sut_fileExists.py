@@ -2,6 +2,7 @@ from sut import MockAgent
 import mozdevice
 import unittest
 
+
 class FileExistsTest(unittest.TestCase):
 
     commands = [('isdir /', 'TRUE'),
@@ -26,4 +27,3 @@ class FileExistsTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-

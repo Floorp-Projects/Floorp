@@ -51,6 +51,7 @@ class LogLevelFilter(BaseHandler):
     :param inner: Handler to use for messages that pass this filter
     :param level: Minimum log level to process
     """
+
     def __init__(self, inner, level):
         BaseHandler.__init__(self, inner)
         self.inner = inner
@@ -58,7 +59,7 @@ class LogLevelFilter(BaseHandler):
 
     def __call__(self, item):
         if (item["action"] != "log" or
-            log_levels[item["level"].upper()] <= self.level):
+                log_levels[item["level"].upper()] <= self.level):
             return self.inner(item)
 
 

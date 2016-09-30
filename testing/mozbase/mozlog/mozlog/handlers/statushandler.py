@@ -7,13 +7,13 @@ from collections import (
     namedtuple,
 )
 
-from mozlog.structuredlog import log_levels
 
 RunSummary = namedtuple("RunSummary",
                         ("unexpected_statuses",
                          "expected_statuses",
                          "log_level_counts",
                          "action_counts"))
+
 
 class StatusHandler(object):
     """A handler used to determine an overall status for a test run according
@@ -29,7 +29,6 @@ class StatusHandler(object):
         # The count of messages logged at each log level
         self.log_level_counts = defaultdict(int)
 
-
     def __call__(self, data):
         action = data['action']
         self.action_counts[action] += 1
@@ -43,7 +42,6 @@ class StatusHandler(object):
                 self.unexpected_statuses[status] += 1
             else:
                 self.expected_statuses[status] += 1
-
 
     def summarize(self):
         return RunSummary(
