@@ -1243,7 +1243,7 @@ function Port(context, senderMM, receiverMMs, name, id, sender, recipient) {
   };
 
   this.disconnectHandler = Object.assign({
-    receiveMessage: () => this.disconnectByOtherEnd(),
+    receiveMessage: ({data}) => this.disconnectByOtherEnd(data),
   }, this.handlerBase);
   MessageChannel.addListener(this.receiverMMs, "Extension:Port:Disconnect", this.disconnectHandler);
   this.context.callOnClose(this);
@@ -1253,6 +1253,7 @@ Port.prototype = {
   api() {
     let portObj = Cu.createObjectIn(this.context.cloneScope);
 
+    let portError = null;
     let publicAPI = {
       name: this.name,
       disconnect: () => {
@@ -1262,7 +1263,10 @@ Port.prototype = {
         this.postMessage(json);
       },
       onDisconnect: new EventManager(this.context, "Port.onDisconnect", fire => {
-        return this.registerOnDisconnect(() => fire.withoutClone(portObj));
+        return this.registerOnDisconnect(error => {
+          portError = error && this.context.normalizeError(error);
+          fire.withoutClone(portObj);
+        });
       }).api(),
       onMessage: new EventManager(this.context, "Port.onMessage", fire => {
         return this.registerOnMessage(msg => {
@@ -1270,6 +1274,10 @@ Port.prototype = {
           fire.withoutClone(msg, portObj);
         });
       }).api(),
+
+      get error() {
+        return portError;
+      },
     };
 
     if (this.sender) {
@@ -1294,12 +1302,14 @@ Port.prototype = {
    * context is closed.
    *
    * @param {function} callback Called when the other end disconnects the port.
+   *     If the disconnect is caused by an error, the first parameter is an
+   *     object with a "message" string property that describes the cause.
    * @returns {function} Function to unregister the listener.
    */
   registerOnDisconnect(callback) {
-    let listener = () => {
+    let listener = error => {
       if (this.context.active && !this.disconnected) {
-        callback();
+        callback(error);
       }
     };
     this.disconnectListeners.add(listener);
@@ -1351,26 +1361,41 @@ Port.prototype = {
     this.disconnected = true;
   },
 
-  disconnectByOtherEnd() {
+  /**
+   * Disconnect the port from the other end (which may not even exist).
+   *
+   * @param {Error|{message: string}} [error] The reason for disconnecting,
+   *     if it is an abnormal disconnect.
+   */
+  disconnectByOtherEnd(error = null) {
     if (this.disconnected) {
       return;
     }
 
     for (let listener of this.disconnectListeners) {
-      listener();
+      listener(error);
     }
 
     this.handleDisconnection();
   },
 
-  disconnect() {
+  /**
+   * Disconnect the port from this end.
+   *
+   * @param {Error|{message: string}} [error] The reason for disconnecting,
+   *     if it is an abnormal disconnect.
+   */
+  disconnect(error = null) {
     if (this.disconnected) {
       // disconnect() may be called without side effects even after the port is
       // closed - https://developer.chrome.com/extensions/runtime#type-Port
       return;
     }
     this.handleDisconnection();
-    this._sendMessage("Extension:Port:Disconnect", null);
+    if (error) {
+      error = {message: this.context.normalizeError(error).message};
+    }
+    this._sendMessage("Extension:Port:Disconnect", error);
   },
 
   close() {
@@ -1495,7 +1520,14 @@ Messenger.prototype = {
     let port = new Port(this.context, messageManager, this.messageManagers, name, portId, null, recipient);
     let msg = {name, portId};
     this._sendMessage(messageManager, "Extension:Connect", msg, recipient)
-      .catch(e => port.disconnectByOtherEnd());
+      .catch(e => {
+        if (e.result === MessageChannel.RESULT_NO_HANDLER) {
+          e = {message: "Could not establish connection. Receiving end does not exist."};
+        } else if (e.result === MessageChannel.RESULT_DISCONNECTED) {
+          e = null;
+        }
+        port.disconnectByOtherEnd(e);
+      });
     return port.api();
   },
 
