@@ -26,7 +26,7 @@ namespace net {
  * @see nsICookiePermission
  */
 
-prio(normal upto urgent) sync protocol PCookieService
+nested(upto inside_cpow) sync protocol PCookieService
 {
   manager PNecko;
 
@@ -59,10 +59,10 @@ parent:
    *
    * @return the resulting cookie string.
    */
-  prio(urgent) sync GetCookieString(URIParams host,
-                                    bool isForeign,
-                                    bool fromHttp,
-                                    NeckoOriginAttributes attrs)
+  nested(inside_cpow) sync GetCookieString(URIParams host,
+                                           bool isForeign,
+                                           bool fromHttp,
+                                           NeckoOriginAttributes attrs)
        returns (nsCString result);
 
   /*
@@ -94,12 +94,12 @@ parent:
    * @see nsICookieService.setCookieStringFromHttp
    * @see mozIThirdPartyUtil.isThirdPartyChannel
    */
-  prio(urgent) async SetCookieString(URIParams host,
-                                     bool isForeign,
-                                     nsCString cookieString,
-                                     nsCString serverTime,
-                                     bool fromHttp,
-                                     NeckoOriginAttributes attrs);
+  nested(inside_cpow) async SetCookieString(URIParams host,
+                                            bool isForeign,
+                                            nsCString cookieString,
+                                            nsCString serverTime,
+                                            bool fromHttp,
+                                            NeckoOriginAttributes attrs);
 
   async __delete__();
 };
