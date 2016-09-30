@@ -52,7 +52,7 @@ add_task(function* test_simple() {
             .getComputedStyle(document.getElementById("identity-popup-security-content"), "")
             .getPropertyValue("background-image");
       is(connectionIconImage,
-         "url(\"chrome://browser/skin/identity-mixed-active-loaded.svg\")",
+         "url(\"chrome://browser/skin/connection-mixed-active-loaded.svg#icon\")",
          "Using expected icon image in the identity block");
       is(securityViewBG,
          "url(\"chrome://browser/skin/controlcenter/mcb-disabled.svg\")",

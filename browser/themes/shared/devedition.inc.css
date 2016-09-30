@@ -191,6 +191,12 @@ toolbar[brighttext] #downloads-indicator-counter {
   box-shadow: none !important;
 }
 
+%filter substitution
+%define selectorPrefix :root[devtoolstheme="dark"] 
+%define selectorSuffix :-moz-lwtheme
+%define iconVariant -white
+%include identity-block/icons.inc.css
+
 #urlbar {
   border-inline-start: none !important;
   opacity: 1 !important;
