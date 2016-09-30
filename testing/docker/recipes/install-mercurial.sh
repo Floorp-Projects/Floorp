@@ -30,6 +30,34 @@ if [ -f /etc/lsb-release ]; then
         HG_COMMON_SIZE=2993590
         HG_COMMON_FILENAME=mercurial-common_3.9.4_all.deb
     fi
+
+    CERT_PATH=/etc/ssl/certs/ca-certificates.crt
+
+elif [ -f /etc/centos-release ]; then
+    CENTOS_VERSION=`rpm -q --queryformat '%{VERSION}' centos-release`
+    if [ "${CENTOS_VERSION}" = "6" ]; then
+        if [ -f /usr/bin/pip2.7 ]; then
+            PIP_PATH=/usr/bin/pip2.7
+        else
+            # The following RPM is "linked" against Python 2.6, which doesn't
+            # support TLS 1.2. Given the security implications of an insecure
+            # version control tool, we choose to prefer a Mercurial built using
+            # Python 2.7 that supports TLS 1.2. Before you uncomment the code
+            # below, think long and hard about the implications of limiting
+            # Mercurial to TLS 1.0.
+            #HG_RPM=1
+            #HG_DIGEST=68f020e5584d58855c46b5e36e7cd7d480a69effcdc927dcb1f97cb9b638d23e058ed113dbfd817a047ba0550d287cedcbec0cee67a9ef2519657339fe2f9426
+            #HG_SIZE=4175628
+            #HG_FILENAME=mercurial-3.9.1-1.x86_64.rpm
+            echo "We currently require Python 2.7 and /usr/bin/pip2.7 to run Mercurial"
+            exit 1
+        fi
+    else
+        echo "Unsupported CentOS version: ${CENTOS_VERSION}"
+        exit 1
+    fi
+
+    CERT_PATH=/etc/ssl/certs/ca-bundle.crt
 fi
 
 if [ -n "${HG_DEB}" ]; then
@@ -51,6 +79,33 @@ tooltool_fetch <<EOF
 EOF
 
     dpkg -i ${HG_COMMON_FILENAME} ${HG_FILENAME}
+elif [ -n "${HG_RPM}" ]; then
+tooltool_fetch <<EOF
+[
+{
+    "size": ${HG_SIZE},
+    "digest": "${HG_DIGEST}",
+    "algorithm": "sha512",
+    "filename": "${HG_FILENAME}"
+}
+]
+EOF
+
+    rpm -i ${HG_FILENAME}
+elif [ -n "${PIP_PATH}" ]; then
+tooltool_fetch <<EOF
+[
+{
+"size": 4797967,
+"visibility": "public",
+"digest": "d96e45cafd36be692d6ce5259e18140641c24f73d4731ff767df0f39af425b0630c687436fc0f53d5882495ceacacaadd5e19f8f7c701b4b94c48631123b4666",
+"algorithm": "sha512",
+"filename": "mercurial-3.9.1.tar.gz"
+}
+]
+EOF
+
+   ${PIP_PATH} install mercurial-3.9.1.tar.gz
 else
     echo "Do not know how to install Mercurial on this OS"
     exit 1
@@ -70,7 +125,7 @@ refresh = 1.0
 assume-tty = true
 
 [web]
-cacerts = /etc/ssl/certs/ca-certificates.crt
+cacerts = ${CERT_PATH}
 
 [extensions]
 robustcheckout = /usr/local/mercurial/robustcheckout.py
