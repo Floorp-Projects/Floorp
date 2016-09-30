@@ -263,8 +263,7 @@ void Channel::ChannelImpl::ResetFileDescriptor(int fd) {
 
 bool Channel::ChannelImpl::EnqueueHelloMessage() {
   mozilla::UniquePtr<Message> msg(new Message(MSG_ROUTING_NONE,
-                                              HELLO_MESSAGE_TYPE,
-                                              IPC::Message::PRIORITY_NORMAL));
+                                              HELLO_MESSAGE_TYPE));
   if (!msg->WriteInt(base::GetCurrentProcId())) {
     Close();
     return false;
