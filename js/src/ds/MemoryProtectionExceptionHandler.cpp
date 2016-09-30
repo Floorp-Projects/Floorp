@@ -17,6 +17,7 @@
 # include <unistd.h>
 #elif defined(XP_DARWIN)
 # include <mach/mach.h>
+# include <unistd.h>
 #endif
 
 #ifdef ANDROID
@@ -27,6 +28,7 @@
 
 #include "threading/LockGuard.h"
 #include "threading/Mutex.h"
+#include "threading/Thread.h"
 
 namespace js {
 
