@@ -461,8 +461,6 @@ class VirtualenvMixin(object):
                 module_url = self.config.get('%s_url' % module, module_url)
                 module_name = module
             install_method = 'pip'
-            if module_name in ('pywin32',):
-                install_method = 'easy_install'
             self.install_module(module=module_name,
                                 module_url=module_url,
                                 install_method=install_method,
