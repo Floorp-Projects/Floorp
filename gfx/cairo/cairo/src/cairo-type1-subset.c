@@ -1010,7 +1010,7 @@ cairo_type1_font_subset_write_private_dict (cairo_type1_font_subset_t *font,
     const char *p, *charstrings, *dict_start;
     const char *closefile_token;
     char buffer[32], *glyph_count_end;
-    int num_charstrings, length;
+    int length;
 
     /* The private dict holds hint information, common subroutines and
      * the actual glyph definitions (charstrings).
@@ -1034,7 +1034,7 @@ cairo_type1_font_subset_write_private_dict (cairo_type1_font_subset_t *font,
 
     /* Scan past /CharStrings and the integer following it. */
     p = charstrings + strlen ("/CharStrings");
-    num_charstrings = strtol (p, &glyph_count_end, 10);
+    strtol (p, &glyph_count_end, 10);
     if (p == glyph_count_end)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
@@ -1311,7 +1311,7 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type1_subset,
                           cairo_bool_t                   hex_encode)
 {
     cairo_type1_font_subset_t font;
-    cairo_status_t status, status_ignored;
+    cairo_status_t status;
     unsigned long parent_glyph, length;
     unsigned int i;
     cairo_unscaled_font_t *unscaled_font;
@@ -1387,7 +1387,7 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type1_subset,
  fail2:
     free (type1_subset->base_font);
  fail1:
-    status_ignored = _cairo_type1_font_subset_fini (&font);
+    _cairo_type1_font_subset_fini (&font);
 
     return status;
 }

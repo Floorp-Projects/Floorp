@@ -314,7 +314,7 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
 					       double			 height)
 {
     cairo_pdf_surface_t *surface;
-    cairo_status_t status, status_ignored;
+    cairo_status_t status;
 
     surface = malloc (sizeof (cairo_pdf_surface_t));
     if (unlikely (surface == NULL)) {
@@ -413,7 +413,7 @@ BAIL0:
     free (surface);
 
     /* destroy stream on behalf of caller */
-    status_ignored = _cairo_output_stream_destroy (output);
+    _cairo_output_stream_destroy (output);
 
     return _cairo_surface_create_in_error (status);
 }
@@ -511,37 +511,36 @@ _extract_pdf_surface (cairo_surface_t		 *surface,
 		      cairo_pdf_surface_t	**pdf_surface)
 {
     cairo_surface_t *target;
-    cairo_status_t status_ignored;
 
     if (surface->status)
 	return FALSE;
     if (surface->finished) {
-	status_ignored = _cairo_surface_set_error (surface,
-						   _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
+	_cairo_surface_set_error (surface,
+				  _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
         return FALSE;
     }
 
     if (! _cairo_surface_is_paginated (surface)) {
-	status_ignored = _cairo_surface_set_error (surface,
-						   _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
+	_cairo_surface_set_error (surface,
+				  _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
 	return FALSE;
     }
 
     target = _cairo_paginated_surface_get_target (surface);
     if (target->status) {
-	status_ignored = _cairo_surface_set_error (surface,
-						   target->status);
+	_cairo_surface_set_error (surface,
+				  target->status);
 	return FALSE;
     }
     if (target->finished) {
-	status_ignored = _cairo_surface_set_error (surface,
-						   _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
+	_cairo_surface_set_error (surface,
+				  _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
 	return FALSE;
     }
 
     if (! _cairo_surface_is_pdf (target)) {
-	status_ignored = _cairo_surface_set_error (surface,
-						   _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
+	_cairo_surface_set_error (surface,
+				  _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
 	return FALSE;
     }
 
@@ -5358,15 +5357,6 @@ _cairo_pdf_surface_analyze_operation (cairo_pdf_surface_t  *surface,
     }
 
     return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
-static cairo_bool_t
-_cairo_pdf_surface_operation_supported (cairo_pdf_surface_t  *surface,
-					cairo_operator_t      op,
-					const cairo_pattern_t      *pattern,
-					const cairo_rectangle_int_t *extents)
-{
-    return _cairo_pdf_surface_analyze_operation (surface, op, pattern, extents) != CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
 static cairo_int_status_t

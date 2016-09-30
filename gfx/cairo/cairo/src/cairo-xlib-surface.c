@@ -3529,25 +3529,24 @@ cairo_xlib_surface_set_size (cairo_surface_t *abstract_surface,
 			     int              height)
 {
     cairo_xlib_surface_t *surface = (cairo_xlib_surface_t *) abstract_surface;
-    cairo_status_t status;
 
     if (unlikely (abstract_surface->status))
 	return;
     if (unlikely (abstract_surface->finished)) {
-	status = _cairo_surface_set_error (abstract_surface,
-		                           _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
+	_cairo_surface_set_error (abstract_surface,
+				  _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
 	return;
     }
 
     if (! _cairo_surface_is_xlib (abstract_surface)) {
-	status = _cairo_surface_set_error (abstract_surface,
-		                           _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
+	_cairo_surface_set_error (abstract_surface,
+				  _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
 	return;
     }
 
     if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX) {
-	status = _cairo_surface_set_error (abstract_surface,
-		                           _cairo_error (CAIRO_STATUS_INVALID_SIZE));
+	_cairo_surface_set_error (abstract_surface,
+				  _cairo_error (CAIRO_STATUS_INVALID_SIZE));
 	return;
     }
 
