@@ -605,26 +605,25 @@ cairo_tee_surface_remove (cairo_surface_t *abstract_surface,
     cairo_tee_surface_t *surface;
     cairo_surface_wrapper_t *slaves;
     int n, num_slaves;
-    cairo_status_t status;
 
     if (unlikely (abstract_surface->status))
 	return;
     if (unlikely (abstract_surface->finished)) {
-	status = _cairo_surface_set_error (abstract_surface,
-					   _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
+    _cairo_surface_set_error (abstract_surface,
+                              _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
 	return;
     }
 
     if (abstract_surface->backend != &cairo_tee_surface_backend) {
-	status = _cairo_surface_set_error (abstract_surface,
-					   _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
+	_cairo_surface_set_error (abstract_surface,
+                              _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
 	return;
     }
 
     surface = (cairo_tee_surface_t *) abstract_surface;
     if (target == surface->master.target) {
-	status = _cairo_surface_set_error (abstract_surface,
-					   _cairo_error (CAIRO_STATUS_INVALID_INDEX));
+	_cairo_surface_set_error (abstract_surface,
+                              _cairo_error (CAIRO_STATUS_INVALID_INDEX));
 	return;
     }
 
@@ -636,8 +635,8 @@ cairo_tee_surface_remove (cairo_surface_t *abstract_surface,
     }
 
     if (n == num_slaves) {
-	status = _cairo_surface_set_error (abstract_surface,
-					   _cairo_error (CAIRO_STATUS_INVALID_INDEX));
+    _cairo_surface_set_error (abstract_surface,
+                              _cairo_error (CAIRO_STATUS_INVALID_INDEX));
 	return;
     }
 

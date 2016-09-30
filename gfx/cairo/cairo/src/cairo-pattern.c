@@ -1335,7 +1335,6 @@ _cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pat
     pixman_transform_t	  pixman_transform;
     cairo_status_t	  status;
     cairo_bool_t	  repeat = FALSE;
-    cairo_bool_t          opaque = TRUE;
 
     pixman_gradient_stop_t pixman_stops_static[2];
     pixman_gradient_stop_t *pixman_stops = pixman_stops_static;
@@ -1359,8 +1358,6 @@ _cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pat
 	pixman_stops[i].color.green = pattern->stops[i].color.green_short;
 	pixman_stops[i].color.blue = pattern->stops[i].color.blue_short;
 	pixman_stops[i].color.alpha = pattern->stops[i].color.alpha_short;
-	if (! CAIRO_ALPHA_SHORT_IS_OPAQUE (pixman_stops[i].color.alpha))
-	    opaque = FALSE;
     }
 
     if (pattern->base.type == CAIRO_PATTERN_TYPE_LINEAR)
@@ -2117,7 +2114,6 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
     int tx, ty;
     double pad;
     cairo_bool_t is_identity;
-    cairo_bool_t is_empty;
     cairo_bool_t is_bounded;
     cairo_int_status_t status;
 
@@ -2288,7 +2284,7 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
     if ( _cairo_surface_get_extents (surface, &extents)) {
 	if (attr->extend == CAIRO_EXTEND_NONE) {
 	    /* Never acquire a larger area than the source itself */
-	    is_empty = _cairo_rectangle_intersect (&extents, &sampled_area);
+	    _cairo_rectangle_intersect (&extents, &sampled_area);
 	} else {
 	    int trim = 0;
 
@@ -2315,7 +2311,6 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
 		attr->extend = CAIRO_EXTEND_NONE;
 	    }
 
-	    is_empty = extents.width == 0 || extents.height == 0;
 	}
     }
 

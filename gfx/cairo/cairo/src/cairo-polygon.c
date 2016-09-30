@@ -474,10 +474,9 @@ _cairo_polygon_line_to (cairo_polygon_t *polygon,
 cairo_status_t
 _cairo_polygon_close (cairo_polygon_t *polygon)
 {
-    cairo_status_t status;
 
     if (polygon->has_current_point) {
-	status = _cairo_polygon_line_to (polygon, &polygon->first_point);
+	_cairo_polygon_line_to (polygon, &polygon->first_point);
 	polygon->has_current_point = FALSE;
     }
 
