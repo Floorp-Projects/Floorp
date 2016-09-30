@@ -23,9 +23,7 @@ add_task(function* () {
   let tree = PlacesOrganizer._places;
   let tagsContainer = tree.selectedNode;
   tagsContainer.containerOpen = true;
-  // Bug 1283076: Nightly already has several tags set, position changes
-  let tagPosition = AppConstants.NIGHTLY_BUILD ? 7 : 0;
-  let fooTag = tagsContainer.getChild(tagPosition);
+  let fooTag = tagsContainer.getChild(0);
   let tagNode = fooTag;
   tree.selectNode(fooTag);
   is(tagNode.title, 'tag1', "tagNode title is correct");
