@@ -272,8 +272,6 @@ class ExtensionContext extends BaseContext {
     let attrs = contentPrincipal.originAttributes;
     attrs.addonId = this.extension.id;
     let extensionPrincipal = ssm.createCodebasePrincipal(this.extension.baseURI, attrs);
-    Object.defineProperty(this, "principal",
-                          {value: extensionPrincipal, enumerable: true, configurable: true});
 
     if (ssm.isSystemPrincipal(contentPrincipal)) {
       // Make sure we don't hand out the system principal by accident.
@@ -321,6 +319,12 @@ class ExtensionContext extends BaseContext {
         window.fetch = fetch;
       `, this.sandbox);
     }
+
+    Object.defineProperty(this, "principal", {
+      value: Cu.getObjectPrincipal(this.sandbox),
+      enumerable: true,
+      configurable: true,
+    });
 
     let url = contentWindow.location.href;
     // The |sender| parameter is passed directly to the extension.
