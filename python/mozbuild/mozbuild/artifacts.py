@@ -106,6 +106,13 @@ MAX_CACHED_ARTIFACTS = 6
 # separate archive for fast re-installation.
 PROCESSED_SUFFIX = '.processed.jar'
 
+CANDIDATE_TREES = (
+    'mozilla-central',
+    'integration/fx-team',
+    'integration/mozilla-inbound',
+    'releases/mozilla-aurora'
+)
+
 class ArtifactJob(object):
     # These are a subset of TEST_HARNESS_BINS in testing/mochitest/Makefile.in.
     # Each item is a pair of (pattern, (src_prefix, dest_prefix), where src_prefix
@@ -207,6 +214,8 @@ class ArtifactJob(object):
 
 class AndroidArtifactJob(ArtifactJob):
 
+    product = 'mobile'
+
     package_artifact_patterns = {
         'application.ini',
         'platform.ini',
@@ -234,6 +243,8 @@ class AndroidArtifactJob(ArtifactJob):
 
 
 class LinuxArtifactJob(ArtifactJob):
+
+    product = 'firefox'
 
     package_artifact_patterns = {
         'firefox/application.ini',
@@ -274,6 +285,9 @@ class LinuxArtifactJob(ArtifactJob):
 
 
 class MacArtifactJob(ArtifactJob):
+
+    product = 'firefox'
+
     def process_package_artifact(self, filename, processed_filename):
         tempdir = tempfile.mkdtemp()
         try:
@@ -379,6 +393,9 @@ class WinArtifactJob(ArtifactJob):
         'firefox/*.exe',
         'firefox/**/interfaces.xpt',
     }
+
+    product = 'firefox'
+
     # These are a subset of TEST_HARNESS_BINS in testing/mochitest/Makefile.in.
     test_artifact_patterns = {
         ('bin/BadCertServer.exe', ('bin', 'bin')),
@@ -415,31 +432,31 @@ class WinArtifactJob(ArtifactJob):
 
 # Keep the keys of this map in sync with the |mach artifact| --job
 # options.  The keys of this map correspond to entries at
-# https://tools.taskcluster.net/index/artifacts/#buildbot.branches.mozilla-central/buildbot.branches.mozilla-central.
+# https://tools.taskcluster.net/index/artifacts/#gecko.v2.mozilla-central.latest/gecko.v2.mozilla-central.latest
 # The values correpsond to a pair of (<package regex>, <test archive regex>).
 JOB_DETAILS = {
     'android-api-15': (AndroidArtifactJob, ('public/build/fennec-(.*)-arm\.apk',
                                             None)),
     'android-x86': (AndroidArtifactJob, ('public/build/fennec-(.*)-i386\.apk',
                                          None)),
-    'linux': (LinuxArtifactJob, ('public/build/firefox-(.*)\.linux-i686\.tar\.bz2',
-                                 'public/build/firefox-(.*)\.common\.tests\.zip')),
+    'linux-opt': (LinuxArtifactJob, ('public/build/firefox-(.*)\.linux-i686\.tar\.bz2',
+                                     'public/build/firefox-(.*)\.common\.tests\.zip')),
     'linux-debug': (LinuxArtifactJob, ('public/build/firefox-(.*)\.linux-i686\.tar\.bz2',
                                  'public/build/firefox-(.*)\.common\.tests\.zip')),
-    'linux64': (LinuxArtifactJob, ('public/build/firefox-(.*)\.linux-x86_64\.tar\.bz2',
-                                   'public/build/firefox-(.*)\.common\.tests\.zip')),
+    'linux64-opt': (LinuxArtifactJob, ('public/build/firefox-(.*)\.linux-x86_64\.tar\.bz2',
+                                       'public/build/firefox-(.*)\.common\.tests\.zip')),
     'linux64-debug': (LinuxArtifactJob, ('public/build/target\.tar\.bz2',
                                          'public/build/target\.common\.tests\.zip')),
-    'macosx64': (MacArtifactJob, ('public/build/firefox-(.*)\.mac\.dmg',
-                                  'public/build/firefox-(.*)\.common\.tests\.zip')),
+    'macosx64-opt': (MacArtifactJob, ('public/build/firefox-(.*)\.mac\.dmg',
+                                      'public/build/firefox-(.*)\.common\.tests\.zip')),
     'macosx64-debug': (MacArtifactJob, ('public/build/firefox-(.*)\.mac64\.dmg',
                                   'public/build/firefox-(.*)\.common\.tests\.zip')),
-    'win32': (WinArtifactJob, ('public/build/firefox-(.*)\.win32.zip',
-                               'public/build/firefox-(.*)\.common\.tests\.zip')),
+    'win32-opt': (WinArtifactJob, ('public/build/firefox-(.*)\.win32.zip',
+                                   'public/build/firefox-(.*)\.common\.tests\.zip')),
     'win32-debug': (WinArtifactJob, ('public/build/firefox-(.*)\.win32.zip',
                                'public/build/firefox-(.*)\.common\.tests\.zip')),
-    'win64': (WinArtifactJob, ('public/build/firefox-(.*)\.win64.zip',
-                               'public/build/firefox-(.*)\.common\.tests\.zip')),
+    'win64-opt': (WinArtifactJob, ('public/build/firefox-(.*)\.win64.zip',
+                                   'public/build/firefox-(.*)\.common\.tests\.zip')),
     'win64-debug': (WinArtifactJob, ('public/build/firefox-(.*)\.win64.zip',
                                'public/build/firefox-(.*)\.common\.tests\.zip')),
 }
@@ -561,32 +578,6 @@ class CacheManager(object):
     def __exit__(self, type, value, traceback):
         self.dump_cache()
 
-class TreeCache(CacheManager):
-    '''Map pushhead revisions to trees with tasks/artifacts known to taskcluster.'''
-
-    def __init__(self, cache_dir, log=None, skip_cache=False):
-        CacheManager.__init__(self, cache_dir, 'artifact_tree', MAX_CACHED_TASKS, log=log, skip_cache=skip_cache)
-
-        self._index = taskcluster.Index()
-
-    @cachedmethod(operator.attrgetter('_cache'))
-    def artifact_trees(self, rev):
-        rev_ns = 'buildbot.revisions.{rev}'.format(rev=rev)
-        try:
-            result = self._index.listNamespaces(rev_ns, {"limit": 10})
-        except Exception:
-            raise ValueError
-        trees = [ns['name'] for ns in result['namespaces']]
-        if not trees:
-            raise ValueError
-        return trees
-
-    def print_last_item(self, args, sorted_kwargs, result):
-        rev, = args
-        self.log(logging.INFO, 'artifact',
-            {'rev': rev},
-            'Last fetched trees for pushhead revision {rev}')
-
 class PushheadCache(CacheManager):
     '''Helps map tree/revision pairs to parent pushheads according to the pushlog.'''
 
@@ -636,14 +627,26 @@ class TaskCache(CacheManager):
                 'Unknown job {job}')
             raise KeyError("Unknown job")
 
-        key = '{rev}.{tree}.{job}'.format(rev=rev, tree=tree, job=job)
+        # Grab the second part of the repo name, which is generally how things
+        # are indexed. Eg: 'integration/mozilla-inbound' is indexed as
+        # 'mozilla-inbound'
+        tree = tree.split('/')[1] if '/' in tree else tree
+
+        namespace = 'gecko.v2.{tree}.revision.{rev}.{product}.{job}'.format(
+            rev=rev,
+            tree=tree,
+            product=artifact_job.product,
+            job=job,
+        )
+        self.log(logging.DEBUG, 'artifact',
+                 {'namespace': namespace},
+                 'Searching Taskcluster index with namespace: {namespace}')
         try:
-            namespace = 'buildbot.revisions.{key}'.format(key=key)
             task = self._index.findTask(namespace)
         except Exception:
             # Not all revisions correspond to pushes that produce the job we
             # care about; and even those that do may not have completed yet.
-            raise ValueError('Task for {key} does not exist (yet)!'.format(key=key))
+            raise ValueError('Task for {namespace} does not exist (yet)!'.format(namespace=namespace))
         taskId = task['taskId']
 
         artifacts = self._queue.listLatestArtifacts(taskId)['artifacts']
@@ -785,7 +788,6 @@ class Artifacts(object):
 
         self._task_cache = TaskCache(self._cache_dir, log=self._log, skip_cache=self._skip_cache)
         self._artifact_cache = ArtifactCache(self._cache_dir, log=self._log, skip_cache=self._skip_cache)
-        self._tree_cache = TreeCache(self._cache_dir, log=self._log, skip_cache=self._skip_cache)
         self._pushhead_cache = PushheadCache(self._cache_dir, log=self._log, skip_cache=self._skip_cache)
 
     def log(self, *args, **kwargs):
@@ -802,12 +804,12 @@ class Artifacts(object):
         if self._substs['target_cpu'] == 'x86_64':
             target_64bit = True
 
-        target_suffix = ''
-
         # Add the "-debug" suffix to the guessed artifact job name
         # if MOZ_DEBUG is enabled.
         if self._substs.get('MOZ_DEBUG'):
             target_suffix = '-debug'
+        else:
+            target_suffix = '-opt'
 
         if self._defines.get('XP_LINUX', False):
             return ('linux64' if target_64bit else 'linux') + target_suffix
@@ -827,16 +829,9 @@ class Artifacts(object):
         `count` pushheads from that point are included in the output.
         """
 
-        candidate_trees = (
-            'mozilla-central',
-            'integration/fx-team',
-            'integration/mozilla-inbound',
-            'releases/mozilla-aurora'
-        )
-
         with self._pushhead_cache as pushhead_cache:
             found_pushids = {}
-            for tree in candidate_trees:
+            for tree in CANDIDATE_TREES:
                 self.log(logging.INFO, 'artifact',
                          {'tree': tree,
                           'rev': rev},
@@ -847,7 +842,8 @@ class Artifacts(object):
                 except ValueError:
                     continue
 
-            candidate_pushheads = []
+            candidate_pushheads = collections.defaultdict(list)
+
             for tree, pushid in found_pushids.iteritems():
                 end = pushid
                 start = pushid - NUM_PUSHHEADS_TO_QUERY_PER_PARENT
@@ -857,7 +853,8 @@ class Artifacts(object):
                           'pushid': pushid,
                           'num': NUM_PUSHHEADS_TO_QUERY_PER_PARENT},
                          'Retrieving the last {num} pushheads starting with id {pushid} on {tree}')
-                candidate_pushheads.extend(pushhead_cache.pushid_range(tree, start, end))
+                for pushhead in pushhead_cache.pushid_range(tree, start, end):
+                    candidate_pushheads[pushhead].append(tree)
 
         return candidate_pushheads
 
@@ -904,8 +901,8 @@ class Artifacts(object):
         """
 
         last_revs = self._get_recent_public_revisions()
-        candidate_pushheads = set(self._pushheads_from_rev(last_revs[0].rstrip(),
-                                                           NUM_PUSHHEADS_TO_QUERY_PER_PARENT))
+        candidate_pushheads = self._pushheads_from_rev(last_revs[0].rstrip(),
+                                                       NUM_PUSHHEADS_TO_QUERY_PER_PARENT)
         count = 0
         for rev in last_revs:
             rev = rev.rstrip()
@@ -914,7 +911,7 @@ class Artifacts(object):
             if rev not in candidate_pushheads:
                 continue
             count += 1
-            yield rev
+            yield candidate_pushheads[rev], rev
 
         if not count:
             raise Exception('Could not find any candidate pushheads in the last {num} revisions.\n'
@@ -922,24 +919,17 @@ class Artifacts(object):
                             'see https://developer.mozilla.org/en-US/docs/Artifact_builds'.format(
                                 rev=last_revs[0], num=NUM_PUSHHEADS_TO_QUERY_PER_PARENT))
 
-    def find_pushhead_artifacts(self, task_cache, tree_cache, job, pushhead):
+    def find_pushhead_artifacts(self, task_cache, job, tree, pushhead):
         try:
-            trees = tree_cache.artifact_trees(pushhead)
+            urls = task_cache.artifact_urls(tree, job, pushhead, self._download_symbols)
         except ValueError:
             return None
-        trees.sort()
-
-        for tree in trees:
-            try:
-                urls = task_cache.artifact_urls(tree, job, pushhead, self._download_symbols)
-            except ValueError:
-                continue
-            if urls:
-                self.log(logging.INFO, 'artifact',
-                         {'pushhead': pushhead,
-                          'tree': tree},
-                         'Installing from remote pushhead {pushhead} on {tree}')
-                return urls
+        if urls:
+            self.log(logging.INFO, 'artifact',
+                     {'pushhead': pushhead,
+                      'tree': tree},
+                     'Installing from remote pushhead {pushhead} on {tree}')
+            return urls
         return None
 
     def install_from_file(self, filename, distdir):
@@ -1008,19 +998,20 @@ class Artifacts(object):
         urls = None
         count = 0
         # with blocks handle handle persistence.
-        with self._task_cache as task_cache, self._tree_cache as tree_cache:
-            for hg_hash in hg_pushheads:
-                count += 1
-                self.log(logging.DEBUG, 'artifact',
-                         {'hg_hash': hg_hash},
-                         'Trying to find artifacts for hg revision {hg_hash}.')
-                urls = self.find_pushhead_artifacts(task_cache, tree_cache,
-                                                    self._job, hg_hash)
-                if urls:
-                    for url in urls:
-                        if self.install_from_url(url, distdir):
-                            return 1
-                    return 0
+        with self._task_cache as task_cache:
+            for trees, hg_hash in hg_pushheads:
+                for tree in trees:
+                    count += 1
+                    self.log(logging.DEBUG, 'artifact',
+                             {'hg_hash': hg_hash,
+                              'tree': tree},
+                             'Trying to find artifacts for hg revision {hg_hash} on tree {tree}.')
+                    urls = self.find_pushhead_artifacts(task_cache, self._job, tree, hg_hash)
+                    if urls:
+                        for url in urls:
+                            if self.install_from_url(url, distdir):
+                                return 1
+                        return 0
 
         self.log(logging.ERROR, 'artifact',
                  {'count': count},
@@ -1050,7 +1041,8 @@ class Artifacts(object):
                   'revision': revision},
                  'Will only accept artifacts from a pushhead at {revision} '
                  '(matched revset "{revset}").')
-        return self._install_from_hg_pushheads([revision], distdir)
+        pushheads = [(list(CANDIDATE_TREES), revision)]
+        return self._install_from_hg_pushheads(pushheads, distdir)
 
     def install_from(self, source, distdir):
         """Install artifacts from a ``source`` into the given ``distdir``.
@@ -1073,7 +1065,6 @@ class Artifacts(object):
         self.log(logging.INFO, 'artifact',
             {},
             'Printing last used artifact details.')
-        self._tree_cache.print_last()
         self._task_cache.print_last()
         self._artifact_cache.print_last()
         self._pushhead_cache.print_last()
@@ -1082,7 +1073,6 @@ class Artifacts(object):
         self.log(logging.INFO, 'artifact',
             {},
             'Deleting cached artifacts and caches.')
-        self._tree_cache.clear_cache()
         self._task_cache.clear_cache()
         self._artifact_cache.clear_cache()
         self._pushhead_cache.clear_cache()
@@ -1091,7 +1081,6 @@ class Artifacts(object):
         self.log(logging.INFO, 'artifact',
             {},
             'Printing cached artifacts and caches.')
-        self._tree_cache.print_cache()
         self._task_cache.print_cache()
         self._artifact_cache.print_cache()
         self._pushhead_cache.print_cache()
