@@ -328,7 +328,8 @@ SumChildTimes(size_t phaseSlot, Phase phase, const Statistics::PhaseTimeTable ph
 {
     // Sum the contributions from single-parented children.
     int64_t total = 0;
-    for (unsigned i = 0; i < PHASE_LIMIT; i++) {
+    size_t depth = phaseExtra[phase].depth;
+    for (unsigned i = phase + 1; i < PHASE_LIMIT && phaseExtra[i].depth > depth; i++) {
         if (phases[i].parent == phase)
             total += phaseTimes[phaseSlot][i];
     }
