@@ -255,8 +255,6 @@ static const char contentSandboxRules[] =
   "    (allow file-read*\n"
   "           (home-regex (string-append \"/Library/Preferences/\" (regex-quote domain)))))\n"
   "\n"
-  "  (allow file-read-metadata)\n"
-  "\n"
   "  (allow ipc-posix-shm\n"
   "      (ipc-posix-name-regex \"^/tmp/com.apple.csseed:\")\n"
   "      (ipc-posix-name-regex \"^CFPBS:\")\n"
