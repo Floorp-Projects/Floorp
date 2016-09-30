@@ -23,7 +23,9 @@ const TEST_DATA = [
     check: function* (inspector) {
       let {editor} = yield getContainerForSelector("#node1", inspector);
       ok([...editor.attrList.querySelectorAll(".attreditor")].some(attr => {
-        return attr.textContent.trim() === "newattr=\"newattrval\"";
+        return attr.textContent.trim() === "newattr=\"newattrval\""
+          && attr.dataset.value === "newattrval"
+          && attr.dataset.attr === "newattr";
       }), "newattr attribute found");
     }
   },
@@ -47,7 +49,9 @@ const TEST_DATA = [
     check: function* (inspector) {
       let {editor} = yield getContainerForSelector("#node1", inspector);
       ok([...editor.attrList.querySelectorAll(".attreditor")].some(attr => {
-        return attr.textContent.trim() === "newattr=\"newattrval\"";
+        return attr.textContent.trim() === "newattr=\"newattrval\""
+          && attr.dataset.value === "newattrval"
+          && attr.dataset.attr === "newattr";
       }), "newattr attribute found");
     }
   },
@@ -59,8 +63,40 @@ const TEST_DATA = [
     check: function* (inspector) {
       let {editor} = yield getContainerForSelector("#node1", inspector);
       ok([...editor.attrList.querySelectorAll(".attreditor")].some(attr => {
-        return attr.textContent.trim() === "newattr=\"newattrchanged\"";
+        return attr.textContent.trim() === "newattr=\"newattrchanged\""
+          && attr.dataset.value === "newattrchanged"
+          && attr.dataset.attr === "newattr";
       }), "newattr attribute found");
+    }
+  },
+  {
+    desc: "Adding another attribute does not rerender unchanged attributes",
+    test: function* (testActor, inspector) {
+      let {editor} = yield getContainerForSelector("#node1", inspector);
+
+      // This test checks the impact on the markup-view nodes after setting attributes on
+      // content nodes.
+      info("Expect attribute-container for 'new-attr' from the previous test");
+      let attributeContainer = editor.attrList.querySelector("[data-attr=newattr]");
+      ok(attributeContainer, "attribute-container for 'newattr' found");
+
+      info("Set a flag on the attribute-container to check after the mutation");
+      attributeContainer.beforeMutationFlag = true;
+
+      info("Add the attribute 'otherattr' on the content node to trigger the mutation");
+      yield testActor.setAttribute("#node1", "otherattr", "othervalue");
+    },
+    check: function* (inspector) {
+      let {editor} = yield getContainerForSelector("#node1", inspector);
+
+      info("Check the attribute-container for the new attribute mutation was created");
+      let otherAttrContainer = editor.attrList.querySelector("[data-attr=otherattr]");
+      ok(otherAttrContainer, "attribute-container for 'otherattr' found");
+
+      info("Check the attribute-container for 'new-attr' is the same node as earlier.");
+      let newAttrContainer = editor.attrList.querySelector("[data-attr=newattr]");
+      ok(newAttrContainer, "attribute-container for 'newattr' found");
+      ok(newAttrContainer.beforeMutationFlag, "attribute-container same as earlier");
     }
   },
   {
@@ -292,7 +328,7 @@ add_task(function* () {
         def.resolve();
       }
     });
-    yield test(testActor);
+    yield test(testActor, inspector);
     yield def.promise;
 
     info("Expanding all markup-view nodes to make sure new nodes are imported");
