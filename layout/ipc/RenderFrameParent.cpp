@@ -326,13 +326,6 @@ RenderFrameParent::TakeFocusForClickFromTap()
                         nsIFocusManager::FLAG_NOSCROLL);
 }
 
-bool
-RenderFrameParent::RecvTakeFocusForClickFromTap()
-{
-  TakeFocusForClickFromTap();
-  return true;
-}
-
 void
 RenderFrameParent::EnsureLayersConnected()
 {

@@ -93,8 +93,6 @@ protected:
 
   virtual bool RecvUpdateHitRegion(const nsRegion& aRegion) override;
 
-  virtual bool RecvTakeFocusForClickFromTap() override;
-
 private:
   void TriggerRepaint();
   void DispatchEventForPanZoomController(const InputEvent& aEvent);
