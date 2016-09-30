@@ -75,25 +75,16 @@ def run_and_prefix_output(prefix, args, extra_env=None):
     return p.wait()
 
 
-def vcs_checkout(args):
-    # TODO get VCS parameters from arguments.
-    base_repo = os.environ.get('GECKO_BASE_REPOSITORY')
-
-    # We set the base repository to mozilla-central so tc-vcs doesn't get
-    # confused. Switch to mozilla-unified because robustcheckout works best
-    # with it.
-    if base_repo == 'https://hg.mozilla.org/mozilla-central':
-        base_repo = b'https://hg.mozilla.org/mozilla-unified'
-
+def vcs_checkout(source_repo, dest, base_repo=None, revision=None, branch=None):
     # Specify method to checkout a revision. This defaults to revisions as
     # SHA-1 strings, but also supports symbolic revisions like `tip` via the
     # branch flag.
-    if os.environ.get('GECKO_HEAD_REV'):
+    if revision:
         revision_flag = b'--revision'
-        revision = os.environ['GECKO_HEAD_REV']
-    elif os.environ.get('GECKO_HEAD_REF'):
+        revision_value = revision
+    elif branch:
         revision_flag = b'--branch'
-        revision = os.environ['GECKO_HEAD_REF']
+        revision_value = branch
     else:
         print('revision is not specified for checkout')
         sys.exit(1)
@@ -116,17 +107,24 @@ def vcs_checkout(args):
 
     hgmo_fingerprint = secret['secret']['fingerprints'].encode('ascii')
 
-    res = run_and_prefix_output(b'vcs', [
+    args = [
         b'/usr/bin/hg',
         b'--config', b'hostsecurity.hg.mozilla.org:fingerprints=%s' % hgmo_fingerprint,
         b'robustcheckout',
         b'--sharebase', b'/home/worker/hg-shared',
         b'--purge',
-        b'--upstream', base_repo,
-        revision_flag, revision,
-        os.environ['GECKO_HEAD_REPOSITORY'], args.vcs_checkout
-    ], extra_env={b'PYTHONUNBUFFERED': b'1'})
+    ]
 
+    if base_repo:
+        args.extend([b'--upstream', base_repo])
+
+    args.extend([
+        revision_flag, revision_value,
+        source_repo, dest,
+    ])
+
+    res = run_and_prefix_output(b'vcs', args,
+                                extra_env={b'PYTHONUNBUFFERED': b'1'})
     if res:
         sys.exit(res)
 
@@ -135,10 +133,10 @@ def vcs_checkout(args):
         [b'/usr/bin/hg', b'log',
          b'--rev', b'.',
          b'--template', b'{node}'],
-        cwd=args.vcs_checkout)
+        cwd=dest)
 
     assert re.match('^[a-f0-9]{40}$', revision)
-    os.environ['GECKO_HEAD_REV'] = revision
+    return revision
 
 
 def main(args):
@@ -225,8 +223,10 @@ def main(args):
             for f in files:
                 os.chown(os.path.join(root, f), uid, gid)
 
-    checkout = args.vcs_checkout
-    if checkout:
+    def prepare_checkout_dir(checkout):
+        if not checkout:
+            return
+
         # Ensure the directory for the source checkout exists.
         try:
             os.makedirs(os.path.dirname(checkout))
@@ -237,6 +237,8 @@ def main(args):
         # And that it is owned by the appropriate user/group.
         os.chown('/home/worker/hg-shared', uid, gid)
         os.chown(os.path.dirname(checkout), uid, gid)
+
+    prepare_checkout_dir(args.vcs_checkout)
 
     # Drop permissions to requested user.
     # This code is modeled after what `sudo` was observed to do in a Docker
@@ -252,8 +254,21 @@ def main(args):
     # revision hash. Revision hashes have priority over symbolic revisions. We
     # disallow running tasks with symbolic revisions unless they have been
     # resolved by a checkout.
-    if checkout:
-        vcs_checkout(args)
+    if args.vcs_checkout:
+        base_repo = os.environ.get('GECKO_BASE_REPOSITORY')
+        # Some callers set the base repository to mozilla-central for historical
+        # reasons. Switch to mozilla-unified because robustcheckout works best
+        # with it.
+        if base_repo == 'https://hg.mozilla.org/mozilla-central':
+            base_repo = b'https://hg.mozilla.org/mozilla-unified'
+
+        os.environ['GECKO_HEAD_REV'] = vcs_checkout(
+            os.environ['GECKO_HEAD_REPOSITORY'],
+            args.vcs_checkout,
+            base_repo=base_repo,
+            revision=os.environ.get('GECKO_HEAD_REV'),
+            branch=os.environ.get('GECKO_HEAD_REF'))
+
     elif not os.environ.get('GECKO_HEAD_REV') and \
             os.environ.get('GECKO_HEAD_REF'):
         print('task should be defined in terms of non-symbolic revision')
