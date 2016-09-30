@@ -46,16 +46,6 @@ public:
   // nsReadingIterator( const nsReadingIterator<CharT>& );                    // auto-generated copy-constructor OK
   // nsReadingIterator<CharT>& operator=( const nsReadingIterator<CharT>& );  // auto-generated copy-assignment operator OK
 
-  pointer start() const
-  {
-    return mStart;
-  }
-
-  pointer end() const
-  {
-    return mEnd;
-  }
-
   pointer get() const
   {
     return mPosition;
@@ -177,16 +167,6 @@ public:
   }
   // nsWritingIterator( const nsWritingIterator<CharT>& );                    // auto-generated copy-constructor OK
   // nsWritingIterator<CharT>& operator=( const nsWritingIterator<CharT>& );  // auto-generated copy-assignment operator OK
-
-  pointer start() const
-  {
-    return mStart;
-  }
-
-  pointer end() const
-  {
-    return mEnd;
-  }
 
   pointer get() const
   {
