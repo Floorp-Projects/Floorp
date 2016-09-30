@@ -303,6 +303,20 @@ VRPose::VRPose(nsISupports* aParent, const gfx::VRHMDSensorState& aState)
   mozilla::HoldJSObjects(this);
 }
 
+VRPose::VRPose(nsISupports* aParent)
+  : mParent(aParent)
+  , mPosition(nullptr)
+  , mLinearVelocity(nullptr)
+  , mLinearAcceleration(nullptr)
+  , mOrientation(nullptr)
+  , mAngularVelocity(nullptr)
+  , mAngularAcceleration(nullptr)
+{
+  mFrameId = 0;
+  mVRState.Clear();
+  mozilla::HoldJSObjects(this);
+}
+
 VRPose::~VRPose()
 {
   mozilla::DropJSObjects(this);
@@ -490,6 +504,15 @@ VRDisplay::GetStageParameters()
   return mStageParameters;
 }
 
+bool
+VRDisplay::GetFrameData(VRFrameData& aFrameData)
+{
+  gfx::VRHMDSensorState state = mClient->GetSensorState();
+  const gfx::VRDisplayInfo& info = mClient->GetDisplayInfo();
+  aFrameData.Update(info, state, mDepthNear, mDepthFar);
+  return true;
+}
+
 already_AddRefed<VRPose>
 VRDisplay::GetPose()
 {
@@ -657,6 +680,175 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(VRDisplay)
 NS_INTERFACE_MAP_ENTRY(nsIObserver)
 NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, DOMEventTargetHelper)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(VRFrameData)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(VRFrameData)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent, mPose)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+  tmp->mLeftProjectionMatrix = nullptr;
+  tmp->mLeftViewMatrix = nullptr;
+  tmp->mRightProjectionMatrix = nullptr;
+  tmp->mRightViewMatrix = nullptr;
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(VRFrameData)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent, mPose)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(VRFrameData)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mLeftProjectionMatrix)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mLeftViewMatrix)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mRightProjectionMatrix)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mRightViewMatrix)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(VRFrameData, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(VRFrameData, Release)
+
+VRFrameData::VRFrameData(nsISupports* aParent)
+  : mParent(aParent)
+  , mLeftProjectionMatrix(nullptr)
+  , mLeftViewMatrix(nullptr)
+  , mRightProjectionMatrix(nullptr)
+  , mRightViewMatrix(nullptr)
+{
+  mPose = new VRPose(aParent);
+}
+
+VRFrameData::~VRFrameData()
+{
+  mozilla::DropJSObjects(this);
+}
+
+/* static */ already_AddRefed<VRFrameData>
+VRFrameData::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
+{
+  RefPtr<VRFrameData> obj = new VRFrameData(aGlobal.GetAsSupports());
+  return obj.forget();
+}
+
+JSObject*
+VRFrameData::WrapObject(JSContext* aCx,
+                        JS::Handle<JSObject*> aGivenProto)
+{
+  return VRFrameDataBinding::Wrap(aCx, this, aGivenProto);
+}
+
+VRPose*
+VRFrameData::Pose()
+{
+  return mPose;
+}
+
+void
+VRFrameData::LazyCreateMatrix(JS::Heap<JSObject*>& aArray, gfx::Matrix4x4& aMat, JSContext* aCx,
+                              JS::MutableHandle<JSObject*> aRetval, ErrorResult& aRv)
+{
+  if (!aArray) {
+    // Lazily create the Float32Array
+    aArray = dom::Float32Array::Create(aCx, this, 16, aMat.components);
+    if (!aArray) {
+      aRv.NoteJSContextException(aCx);
+      return;
+    }
+  }
+  if (aArray) {
+    JS::ExposeObjectToActiveJS(aArray);
+  }
+  aRetval.set(aArray);
+}
+
+double
+VRFrameData::Timestamp() const
+{
+  return mVRState.timestamp * 1000.0f; // Converting from seconds to milliseconds
+}
+
+void
+VRFrameData::GetLeftProjectionMatrix(JSContext* aCx,
+                                     JS::MutableHandle<JSObject*> aRetval,
+                                     ErrorResult& aRv)
+{
+  LazyCreateMatrix(mLeftProjectionMatrix, mLeftProjection, aCx, aRetval, aRv);
+}
+
+void
+VRFrameData::GetLeftViewMatrix(JSContext* aCx,
+                               JS::MutableHandle<JSObject*> aRetval,
+                               ErrorResult& aRv)
+{
+  LazyCreateMatrix(mLeftViewMatrix, mLeftView, aCx, aRetval, aRv);
+}
+
+void
+VRFrameData::GetRightProjectionMatrix(JSContext* aCx,
+                                      JS::MutableHandle<JSObject*> aRetval,
+                                      ErrorResult& aRv)
+{
+  LazyCreateMatrix(mRightProjectionMatrix, mRightProjection, aCx, aRetval, aRv);
+}
+
+void
+VRFrameData::GetRightViewMatrix(JSContext* aCx,
+                                JS::MutableHandle<JSObject*> aRetval,
+                                ErrorResult& aRv)
+{
+  LazyCreateMatrix(mRightViewMatrix, mRightView, aCx, aRetval, aRv);
+}
+
+void
+VRFrameData::Update(const gfx::VRDisplayInfo& aInfo,
+                    const gfx::VRHMDSensorState& aState,
+                    float aDepthNear,
+                    float aDepthFar)
+{
+  mVRState = aState;
+
+  mLeftProjectionMatrix = nullptr;
+  mLeftViewMatrix = nullptr;
+  mRightProjectionMatrix = nullptr;
+  mRightViewMatrix = nullptr;
+
+  mPose = new VRPose(GetParentObject(), aState);
+
+  gfx::Quaternion qt;
+  if (mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_Orientation) {
+    qt.x = mVRState.orientation[0];
+    qt.y = mVRState.orientation[1];
+    qt.z = mVRState.orientation[2];
+    qt.w = mVRState.orientation[3];
+  }
+  gfx::Point3D pos;
+  if (mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_Position) {
+    pos.x = -mVRState.position[0];
+    pos.y = -mVRState.position[1];
+    pos.z = -mVRState.position[2];
+  }
+  gfx::Matrix4x4 matHead;
+  matHead.SetRotationFromQuaternion(qt);
+  matHead.PreTranslate(pos);
+
+  mLeftView = matHead;
+  mLeftView.PostTranslate(-aInfo.mEyeTranslation[gfx::VRDisplayInfo::Eye_Left]);
+
+  mRightView = matHead;
+  mRightView.PostTranslate(-aInfo.mEyeTranslation[gfx::VRDisplayInfo::Eye_Right]);
+
+  // Avoid division by zero within ConstructProjectionMatrix
+  const float kEpsilon = 0.00001f;
+  if (fabs(aDepthFar - aDepthNear) < kEpsilon) {
+    aDepthFar = aDepthNear + kEpsilon;
+  }
+
+  const gfx::VRFieldOfView leftFOV = aInfo.mEyeFOV[gfx::VRDisplayInfo::Eye_Left];
+  mLeftProjection = leftFOV.ConstructProjectionMatrix(aDepthNear, aDepthFar, true);
+  const gfx::VRFieldOfView rightFOV = aInfo.mEyeFOV[gfx::VRDisplayInfo::Eye_Right];
+  mRightProjection = rightFOV.ConstructProjectionMatrix(aDepthNear, aDepthFar, true);
+
+}
 
 } // namespace dom
 } // namespace mozilla
