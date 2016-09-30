@@ -299,7 +299,6 @@ VRPose::VRPose(nsISupports* aParent, const gfx::VRHMDSensorState& aState)
   , mAngularVelocity(nullptr)
   , mAngularAcceleration(nullptr)
 {
-  mTimeStamp = aState.timestamp * 1000.0f; // Converting from seconds to ms
   mFrameId = aState.inputFrameID;
   mozilla::HoldJSObjects(this);
 }
