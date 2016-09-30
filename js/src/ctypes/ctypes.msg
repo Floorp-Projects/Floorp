@@ -44,7 +44,7 @@ MSG_DEF(CTYPESMSG_EMPTY_FIN_CALL,1, JSEXN_TYPEERR, "{0} called on empty CDataFin
 MSG_DEF(CTYPESMSG_FIN_SIZE_ERROR,2, JSEXN_TYPEERR, "expected an object with the same size as argument 1 of {0}, got {1}")
 
 /* native function */
-MSG_DEF(CTYPESMSG_ARG_RANGE_MISMATCH,3, JSEXN_RANGEERR, "{0}argument of {1} must be {2}")
+MSG_DEF(CTYPESMSG_ARG_RANGE_MISMATCH,2, JSEXN_RANGEERR, "argument of {0} must be {1}")
 MSG_DEF(CTYPESMSG_ARG_TYPE_MISMATCH,3, JSEXN_TYPEERR, "{0}argument of {1} must be {2}")
 MSG_DEF(CTYPESMSG_INCOMPATIBLE_CALLEE,2, JSEXN_TYPEERR, "callee is not correct in {0}, got {1}")
 MSG_DEF(CTYPESMSG_INCOMPATIBLE_THIS,2, JSEXN_TYPEERR, "{0} called on incompatible {1}")

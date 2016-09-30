@@ -231,7 +231,7 @@ AddonWrapper<Base>::defineProperty(JSContext* cx, HandleObject wrapper, HandleId
     if (!interpDesc.object())
         return Base::defineProperty(cx, wrapper, id, desc, result);
 
-    js::ReportErrorWithId(cx, "unable to modify interposed property %s", id);
+    js::ReportASCIIErrorWithId(cx, "unable to modify interposed property %s", id);
     return false;
 }
 
@@ -247,7 +247,7 @@ AddonWrapper<Base>::delete_(JSContext* cx, HandleObject wrapper, HandleId id,
     if (!desc.object())
         return Base::delete_(cx, wrapper, id, result);
 
-    js::ReportErrorWithId(cx, "unable to delete interposed property %s", id);
+    js::ReportASCIIErrorWithId(cx, "unable to delete interposed property %s", id);
     return false;
 }
 

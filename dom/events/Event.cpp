@@ -28,7 +28,6 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
-#include "nsIScreen.h"
 #include "nsIScrollableFrame.h"
 #include "nsJSEnvironment.h"
 #include "nsLayoutUtils.h"
@@ -928,46 +927,17 @@ Event::GetScreenCoords(nsPresContext* aPresContext,
     return CSSIntPoint(aPoint.x, aPoint.y);
   }
 
+  nsPoint pt =
+    LayoutDevicePixel::ToAppUnits(aPoint, aPresContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom());
 
-  int32_t appPerDevFullZoom =
-    aPresContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom();
-
-  LayoutDevicePoint devPt = aPoint;
   if (nsIPresShell* ps = aPresContext->GetPresShell()) {
-    // convert to appUnits in order to use RemoveResolution, then back to
-    // device pixels
-    nsPoint pt =
-      LayoutDevicePixel::ToAppUnits(aPoint, appPerDevFullZoom);
     pt = pt.RemoveResolution(nsLayoutUtils::GetCurrentAPZResolutionScale(ps));
-    devPt = LayoutDevicePixel::FromAppUnits(pt, appPerDevFullZoom);
   }
 
-  devPt += guiEvent->mWidget->WidgetToScreenOffset();
+  pt += LayoutDevicePixel::ToAppUnits(guiEvent->mWidget->WidgetToScreenOffset(),
+                                      aPresContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom());
 
-  nsCOMPtr<nsIScreen> screen = guiEvent->mWidget->GetWidgetScreen();
-  if (screen) {
-    // subtract device-pixel origin of current screen
-    int32_t x, y, w, h;
-    screen->GetRect(&x, &y, &w, &h);
-    devPt.x -= x;
-    devPt.y -= y;
-    // then convert position *within the current screen* to unscaled CSS px
-    double cssToDevScale;
-    screen->GetDefaultCSSScaleFactor(&cssToDevScale);
-    CSSIntPoint cssPt(NSToIntRound(devPt.x / cssToDevScale),
-                      NSToIntRound(devPt.y / cssToDevScale));
-    // finally, add the desktop-pixel origin of the screen, to get a global
-    // CSS pixel value that is compatible with window.screenX/Y positions
-    screen->GetRectDisplayPix(&x, &y, &w, &h);
-    cssPt.x += x;
-    cssPt.y += y;
-    return cssPt;
-  }
-
-  // this shouldn't happen, but just in case...
-  NS_WARNING("failed to find screen, using default CSS px conversion");
-  return CSSPixel::FromAppUnitsRounded(
-      LayoutDevicePixel::ToAppUnits(aPoint, appPerDevFullZoom));
+  return CSSPixel::FromAppUnitsRounded(pt);
 }
 
 // static

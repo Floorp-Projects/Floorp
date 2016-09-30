@@ -1360,6 +1360,52 @@ this.Extension = class extends ExtensionData {
 
     provide(files, ["manifest.json"], manifest);
 
+    if (data.embedded) {
+      // Package this as a webextension embedded inside a legacy
+      // extension.
+
+      let xpiFiles = {
+        "install.rdf": `<?xml version="1.0" encoding="UTF-8"?>
+          <RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+               xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+              <Description about="urn:mozilla:install-manifest"
+                  em:id="${manifest.applications.gecko.id}"
+                  em:name="${manifest.name}"
+                  em:type="2"
+                  em:version="${manifest.version}"
+                  em:description=""
+                  em:hasEmbeddedWebExtension="true"
+                  em:bootstrap="true">
+
+                  <!-- Firefox -->
+                  <em:targetApplication>
+                      <Description
+                          em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
+                          em:minVersion="51.0a1"
+                          em:maxVersion="*"/>
+                  </em:targetApplication>
+              </Description>
+          </RDF>
+        `,
+
+        "bootstrap.js": `
+          function install() {}
+          function uninstall() {}
+          function shutdown() {}
+
+          function startup(data) {
+            data.webExtension.startup();
+          }
+        `,
+      };
+
+      for (let [path, data] of Object.entries(files)) {
+        xpiFiles[`webextension/${path}`] = data;
+      }
+
+      files = xpiFiles;
+    }
+
     return this.generateZipFile(files);
   }
 

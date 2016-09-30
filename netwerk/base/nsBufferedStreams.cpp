@@ -38,6 +38,9 @@ static struct {
 #endif
 
 using namespace mozilla::ipc;
+using mozilla::Maybe;
+using mozilla::Nothing;
+using mozilla::Some;
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsBufferedStream
@@ -539,6 +542,16 @@ nsBufferedInputStream::Deserialize(const InputStreamParams& aParams,
     NS_ENSURE_SUCCESS(rv, false);
 
     return true;
+}
+
+Maybe<uint64_t>
+nsBufferedInputStream::ExpectedSerializedLength()
+{
+    nsCOMPtr<nsIIPCSerializableInputStream> stream = do_QueryInterface(mStream);
+    if (stream) {
+        return stream->ExpectedSerializedLength();
+    }
+    return Nothing();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

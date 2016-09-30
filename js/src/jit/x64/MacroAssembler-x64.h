@@ -870,20 +870,20 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void loadConstantSimd128Int(const SimdConstant& v, FloatRegister dest);
     void loadConstantSimd128Float(const SimdConstant& v, FloatRegister dest);
 
-    void convertInt64ToDouble(Register input, FloatRegister output);
-    void convertInt64ToFloat32(Register input, FloatRegister output);
+    void convertInt64ToDouble(Register64 input, FloatRegister output);
+    void convertInt64ToFloat32(Register64 input, FloatRegister output);
+    static bool convertUInt64ToDoubleNeedsTemp();
+    void convertUInt64ToDouble(Register64 input, FloatRegister output, Register temp);
+    void convertUInt64ToFloat32(Register64 input, FloatRegister output, Register temp);
 
-    void convertUInt64ToDouble(Register input, FloatRegister output);
-    void convertUInt64ToFloat32(Register input, FloatRegister output);
-
-    void wasmTruncateDoubleToInt64(FloatRegister input, Register output, Label* oolEntry,
+    void wasmTruncateDoubleToInt64(FloatRegister input, Register64 output, Label* oolEntry,
                                    Label* oolRejoin, FloatRegister tempDouble);
-    void wasmTruncateDoubleToUInt64(FloatRegister input, Register output, Label* oolEntry,
+    void wasmTruncateDoubleToUInt64(FloatRegister input, Register64 output, Label* oolEntry,
                                     Label* oolRejoin, FloatRegister tempDouble);
 
-    void wasmTruncateFloat32ToInt64(FloatRegister input, Register output, Label* oolEntry,
+    void wasmTruncateFloat32ToInt64(FloatRegister input, Register64 output, Label* oolEntry,
                                     Label* oolRejoin, FloatRegister tempDouble);
-    void wasmTruncateFloat32ToUInt64(FloatRegister input, Register output, Label* oolEntry,
+    void wasmTruncateFloat32ToUInt64(FloatRegister input, Register64 output, Label* oolEntry,
                                      Label* oolRejoin, FloatRegister tempDouble);
 
     void loadWasmGlobalPtr(uint32_t globalDataOffset, Register dest) {
@@ -943,15 +943,17 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
 
     void convertUInt32ToDouble(Register src, FloatRegister dest) {
+        // Zero the output register to break dependencies, see convertInt32ToDouble.
+        zeroDouble(dest);
+
         vcvtsq2sd(src, dest, dest);
     }
 
     void convertUInt32ToFloat32(Register src, FloatRegister dest) {
-        vcvtsq2ss(src, dest, dest);
-    }
+        // Zero the output register to break dependencies, see convertInt32ToDouble.
+        zeroDouble(dest);
 
-    void convertUInt64ToDouble(Register64 src, Register temp, FloatRegister dest) {
-        vcvtsi2sdq(src.reg, dest);
+        vcvtsq2ss(src, dest, dest);
     }
 
     inline void incrementInt32Value(const Address& addr);

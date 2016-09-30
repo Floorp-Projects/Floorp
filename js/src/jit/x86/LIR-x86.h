@@ -169,33 +169,23 @@ class LUDivOrModI64 : public LCallInstructionHelper<INT64_PIECES, INT64_PIECES*2
     }
 };
 
-class LWasmTruncateToInt64 : public LInstructionHelper<INT64_PIECES, 1, 3>
+class LWasmTruncateToInt64 : public LInstructionHelper<INT64_PIECES, 1, 1>
 {
   public:
     LIR_HEADER(WasmTruncateToInt64);
 
-    LWasmTruncateToInt64(const LAllocation& in, const LDefinition& temp1, const LDefinition& temp2,
-                         const LDefinition& temp3)
+    LWasmTruncateToInt64(const LAllocation& in, const LDefinition& temp)
     {
         setOperand(0, in);
-        setTemp(0, temp1);
-        setTemp(1, temp2);
-        setTemp(2, temp3);
+        setTemp(0, temp);
     }
 
     MWasmTruncateToInt64* mir() const {
         return mir_->toWasmTruncateToInt64();
     }
 
-    const LDefinition* temp1() {
+    const LDefinition* temp() {
         return getTemp(0);
-    }
-    const LDefinition* temp2() {
-        return getTemp(1);
-    }
-    const LDefinition* temp3() {
-        MOZ_ASSERT(mir()->isUnsigned());
-        return getTemp(2);
     }
 };
 

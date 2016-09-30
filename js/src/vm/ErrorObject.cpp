@@ -158,15 +158,15 @@ js::ErrorObject::getOrCreateErrorReport(JSContext* cx)
     return copy;
 }
 
-/* static */ bool
-js::ErrorObject::checkAndUnwrapThis(JSContext* cx, CallArgs& args, const char* fnName,
-                                    MutableHandle<ErrorObject*> error)
+static bool
+ErrorObject_checkAndUnwrapThis(JSContext* cx, CallArgs& args, const char* fnName,
+                               MutableHandle<ErrorObject*> error)
 {
     const Value& thisValue = args.thisv();
 
     if (!thisValue.isObject()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT,
-                             InformalValueTypeName(thisValue));
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT,
+                                  InformalValueTypeName(thisValue));
         return false;
     }
 
@@ -188,8 +188,8 @@ js::ErrorObject::checkAndUnwrapThis(JSContext* cx, CallArgs& args, const char* f
         if (!proto) {
             // We walked the whole prototype chain and did not find an Error
             // object.
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
-                                 js_Error_str, fnName, thisValue.toObject().getClass()->name);
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
+                                      js_Error_str, fnName, thisValue.toObject().getClass()->name);
             return false;
         }
 
@@ -209,7 +209,7 @@ js::ErrorObject::getStack(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     Rooted<ErrorObject*> error(cx);
-    if (!checkAndUnwrapThis(cx, args, "(get stack)", &error))
+    if (!ErrorObject_checkAndUnwrapThis(cx, args, "(get stack)", &error))
         return false;
 
     RootedObject savedFrameObj(cx, error->stack());

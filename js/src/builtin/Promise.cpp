@@ -173,7 +173,7 @@ FulfillMaybeWrappedPromise(JSContext *cx, HandleObject promiseObj, HandleValue v
         promise = &promiseObj->as<PromiseObject>();
     } else {
         if (JS_IsDeadWrapper(promiseObj)) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
             return false;
         }
         promise = &UncheckedUnwrap(promiseObj)->as<PromiseObject>();
@@ -198,7 +198,7 @@ RejectMaybeWrappedPromise(JSContext *cx, HandleObject promiseObj, HandleValue re
         promise = &promiseObj->as<PromiseObject>();
     } else {
         if (JS_IsDeadWrapper(promiseObj)) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
             return false;
         }
         promise = &UncheckedUnwrap(promiseObj)->as<PromiseObject>();
@@ -341,8 +341,8 @@ ResolvePromiseFunction(JSContext* cx, unsigned argc, Value* vp)
     // Step 6.
     if (resolutionVal == promiseVal) {
         // Step 6.a.
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                             JSMSG_CANNOT_RESOLVE_PROMISE_WITH_ITSELF);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_CANNOT_RESOLVE_PROMISE_WITH_ITSELF);
         RootedValue selfResolutionError(cx);
         bool status = GetAndClearException(cx, &selfResolutionError);
         MOZ_ASSERT(status);
@@ -506,8 +506,8 @@ GetCapabilitiesExecutor(JSContext* cx, unsigned argc, Value* vp)
 
     // Steps 3-4.
     if (!F->getExtendedSlot(0).isUndefined() || !F->getExtendedSlot(1).isUndefined()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                             JSMSG_PROMISE_CAPABILITY_HAS_SOMETHING_ALREADY);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_PROMISE_CAPABILITY_HAS_SOMETHING_ALREADY);
         return false;
     }
 
@@ -556,16 +556,16 @@ NewPromiseCapability(JSContext* cx, HandleObject C, MutableHandleObject promise,
     // Step 7.
     RootedValue resolveVal(cx, executor->getExtendedSlot(0));
     if (!IsCallable(resolveVal)) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                             JSMSG_PROMISE_RESOLVE_FUNCTION_NOT_CALLABLE);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_PROMISE_RESOLVE_FUNCTION_NOT_CALLABLE);
         return false;
     }
 
     // Step 8.
     RootedValue rejectVal(cx, executor->getExtendedSlot(1));
     if (!IsCallable(rejectVal)) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                             JSMSG_PROMISE_REJECT_FUNCTION_NOT_CALLABLE);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_PROMISE_REJECT_FUNCTION_NOT_CALLABLE);
         return false;
     }
 
@@ -593,7 +593,7 @@ CommonStaticResolveRejectImpl(JSContext* cx, unsigned argc, Value* vp, ResolveOr
         const char* msg = mode == ResolveMode
                           ? "Receiver of Promise.resolve call"
                           : "Receiver of Promise.reject call";
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, msg);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, msg);
         return false;
     }
     RootedValue cVal(cx, args.thisv());

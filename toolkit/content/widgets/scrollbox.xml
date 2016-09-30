@@ -501,6 +501,8 @@
       <field name="_isScrolling">0</field>
       <field name="_prevMouseScrolls">[null, null]</field>
 
+      <field name="_touchStart">-1</field>
+
       <method name="_stopSmoothScroll">
         <body><![CDATA[
           if (this._isScrolling) {
@@ -589,6 +591,40 @@
 
         event.stopPropagation();
         event.preventDefault();
+      ]]></handler>
+
+      <handler event="touchstart"><![CDATA[
+        if (event.touches.length > 1) {
+          // Multiple touch points detected, abort. In particular this aborts
+          // the panning gesture when the user puts a second finger down after
+          // already panning with one finger. Aborting at this point prevents
+          // the pan gesture from being resumed until all fingers are lifted
+          // (as opposed to when the user is back down to one finger).
+          this._touchStart = -1;
+        } else {
+          this._touchStart = (this.orient == "vertical"
+                ? event.touches[0].screenY
+                : event.touches[0].screenX);
+        }
+      ]]></handler>
+
+      <handler event="touchmove"><![CDATA[
+        if (event.touches.length == 1 &&
+            this._touchStart >= 0) {
+          var touchPoint = (this.orient == "vertical"
+                ? event.touches[0].screenY
+                : event.touches[0].screenX);
+          var delta = this._touchStart - touchPoint;
+          if (Math.abs(delta) > 0) {
+            this.scrollByPixels(delta);
+            this._touchStart = touchPoint;
+          }
+          event.preventDefault();
+        }
+      ]]></handler>
+
+      <handler event="touchend"><![CDATA[
+        this._touchStart = -1;
       ]]></handler>
 
       <handler event="underflow" phase="capturing"><![CDATA[

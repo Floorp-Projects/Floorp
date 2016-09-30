@@ -37,6 +37,8 @@ NS_IMPL_ISUPPORTS(HttpServer,
                   nsILocalCertGetCallback)
 
 HttpServer::HttpServer()
+  : mPort()
+  , mHttps()
 {
 }
 
@@ -303,6 +305,8 @@ HttpServer::Connection::Connection(nsISocketTransport* aTransport,
   : mServer(aServer)
   , mTransport(aTransport)
   , mState(eRequestLine)
+  , mPendingReqVersion()
+  , mRemainingBodySize()
   , mCloseAfterRequest(false)
 {
   nsCOMPtr<nsIInputStream> input;

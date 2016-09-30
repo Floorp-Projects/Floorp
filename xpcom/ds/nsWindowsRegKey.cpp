@@ -327,12 +327,12 @@ nsWindowsRegKey::ReadStringValue(const nsAString& aName, nsAString& aResult)
   // |size| may or may not include the terminating null character.
   DWORD resultLen = size / 2;
 
-  aResult.SetLength(resultLen);
-  nsAString::iterator begin;
-  aResult.BeginWriting(begin);
-  if (begin.size_forward() != resultLen) {
+  if (!aResult.SetLength(resultLen, mozilla::fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
+  nsAString::iterator begin;
+  aResult.BeginWriting(begin);
 
   rv = RegQueryValueExW(mKey, flatName.get(), 0, &type, (LPBYTE)begin.get(),
                         &size);
@@ -350,12 +350,12 @@ nsWindowsRegKey::ReadStringValue(const nsAString& aName, nsAString& aResult)
       nsAutoString expandedResult;
       // |resultLen| includes the terminating null character
       --resultLen;
-      expandedResult.SetLength(resultLen);
-      nsAString::iterator begin;
-      expandedResult.BeginWriting(begin);
-      if (begin.size_forward() != resultLen) {
+      if (!expandedResult.SetLength(resultLen, mozilla::fallible)) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
+
+      nsAString::iterator begin;
+      expandedResult.BeginWriting(begin);
 
       resultLen = ExpandEnvironmentStringsW(flatSource.get(),
                                             wwc(begin.get()),
@@ -422,12 +422,12 @@ nsWindowsRegKey::ReadBinaryValue(const nsAString& aName, nsACString& aResult)
     return NS_OK;
   }
 
-  aResult.SetLength(size);
-  nsACString::iterator begin;
-  aResult.BeginWriting(begin);
-  if (begin.size_forward() != size) {
+  if (!aResult.SetLength(size, mozilla::fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
+  nsACString::iterator begin;
+  aResult.BeginWriting(begin);
 
   rv = RegQueryValueExW(mKey, PromiseFlatString(aName).get(), 0, nullptr,
                         (LPBYTE)begin.get(), &size);

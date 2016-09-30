@@ -362,6 +362,11 @@ PresentationConnection::NotifyStateChange(const nsAString& aSessionId,
     return NS_ERROR_INVALID_ARG;
   }
 
+  // A terminated connection should always remain in terminated.
+  if (mState == PresentationConnectionState::Terminated) {
+    return NS_OK;
+  }
+
   PresentationConnectionState state;
   switch (aState) {
     case nsIPresentationSessionListener::STATE_CONNECTING:
@@ -522,17 +527,6 @@ PresentationConnection::DoReceiveMessage(const nsACString& aData, bool aIsBinary
   }
 
   return DispatchMessageEvent(jsData);
-}
-
-NS_IMETHODIMP
-PresentationConnection::NotifyReplaced()
-{
-  PRES_DEBUG("connection %s:id[%s], role[%d]\n", __func__,
-             NS_ConvertUTF16toUTF8(mId).get(), mRole);
-
-  return NotifyStateChange(mId,
-                           nsIPresentationSessionListener::STATE_CLOSED,
-                           NS_OK);
 }
 
 nsresult

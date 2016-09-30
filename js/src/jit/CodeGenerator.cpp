@@ -11904,7 +11904,10 @@ CodeGenerator::visitRandom(LRandom* ins)
 
     masm.and64(Imm64((1ULL << MantissaBits) - 1), s1Reg);
 
-    masm.convertUInt64ToDouble(s1Reg, tempReg, output);
+    if (masm.convertUInt64ToDoubleNeedsTemp())
+        masm.convertUInt64ToDouble(s1Reg, output, tempReg);
+    else
+        masm.convertUInt64ToDouble(s1Reg, output, Register::Invalid());
 
     // output *= ScaleInv
     masm.mulDoublePtr(ImmPtr(&ScaleInv), tempReg, output);
