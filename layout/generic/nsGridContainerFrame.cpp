@@ -3932,8 +3932,8 @@ nsGridContainerFrame::Tracks::InitializeItemBaselines(
     if (itemHasBaselineParallelToTrack) {
       // [align|justify]-self:[last-]baseline.
       auto selfAlignment = isOrthogonal ?
-        child->StylePosition()->ComputedJustifySelf(containerSC) :
-        child->StylePosition()->ComputedAlignSelf(containerSC);
+        child->StylePosition()->UsedJustifySelf(containerSC) :
+        child->StylePosition()->UsedAlignSelf(containerSC);
       selfAlignment &= ~NS_STYLE_ALIGN_FLAG_BITS;
       if (selfAlignment == NS_STYLE_ALIGN_BASELINE) {
         state |= ItemState::eFirstBaseline | ItemState::eSelfBaseline;
@@ -4897,7 +4897,7 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
     if (!childRI.mStyleMargin->HasBlockAxisAuto(childWM) &&
         childRI.mStylePosition->BSize(childWM).GetUnit() == eStyleUnit_Auto) {
       auto blockAxisAlignment =
-        childRI.mStylePosition->ComputedAlignSelf(StyleContext());
+        childRI.mStylePosition->UsedAlignSelf(StyleContext());
       if (blockAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
           blockAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
         stretch = true;
@@ -4924,7 +4924,7 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
   if (MOZ_LIKELY(isGridItem)) {
     LogicalSize size = childSize.Size(childWM); // from the ReflowChild()
     if (NS_FRAME_IS_COMPLETE(aStatus)) {
-      auto align = childRI.mStylePosition->ComputedAlignSelf(containerSC);
+      auto align = childRI.mStylePosition->UsedAlignSelf(containerSC);
       auto state = aGridItemInfo->mState[eLogicalAxisBlock];
       if (state & ItemState::eContentBaseline) {
         align = (state & ItemState::eFirstBaseline) ? NS_STYLE_ALIGN_SELF_START
@@ -4933,7 +4933,7 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
       nscoord cbsz = cb.BSize(wm) - consumedGridAreaBSize;
       AlignSelf(*aGridItemInfo, align, cbsz, wm, childRI, size, &childPos);
     }
-    auto justify = childRI.mStylePosition->ComputedJustifySelf(containerSC);
+    auto justify = childRI.mStylePosition->UsedJustifySelf(containerSC);
     auto state = aGridItemInfo->mState[eLogicalAxisInline];
     if (state & ItemState::eContentBaseline) {
       justify = (state & ItemState::eFirstBaseline) ? NS_STYLE_JUSTIFY_SELF_START

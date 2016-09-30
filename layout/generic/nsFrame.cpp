@@ -4770,8 +4770,8 @@ nsFrame::ComputeSize(nsRenderingContext *aRenderingContext,
           !StyleMargin()->HasBlockAxisAuto(aWM)) {
         auto blockAxisAlignment =
           !aWM.IsOrthogonalTo(GetParent()->GetWritingMode()) ?
-            StylePosition()->ComputedAlignSelf(StyleContext()->GetParent()) :
-            StylePosition()->ComputedJustifySelf(StyleContext()->GetParent());
+            StylePosition()->UsedAlignSelf(StyleContext()->GetParent()) :
+            StylePosition()->UsedJustifySelf(StyleContext()->GetParent());
         if (blockAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
             blockAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
           result.BSize(aWM) = std::max(nscoord(0), cbSize -

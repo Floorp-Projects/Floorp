@@ -1718,10 +1718,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition
   uint8_t ComputedAlignItems() const { return mAlignItems; }
 
   /**
-   * Return the computed value for 'align-self' given our parent StyleContext
+   * Return the used value for 'align-self' given our parent StyleContext
    * aParent (or null for the root).
    */
-  uint8_t ComputedAlignSelf(nsStyleContext* aParent) const;
+  uint8_t UsedAlignSelf(nsStyleContext* aParent) const;
 
   /**
    * Return the computed value for 'justify-content'.
@@ -1735,10 +1735,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition
   uint8_t ComputedJustifyItems(nsStyleContext* aParent) const;
 
   /**
-   * Return the computed value for 'justify-self' given our parent StyleContext
+   * Return the used value for 'justify-self' given our parent StyleContext
    * aParent (or null for the root).
    */
-  uint8_t ComputedJustifySelf(nsStyleContext* aParent) const;
+  uint8_t UsedJustifySelf(nsStyleContext* aParent) const;
 
   mozilla::Position mObjectPosition;    // [reset]
   nsStyleSides  mOffset;                // [reset] coord, percent, calc, auto
