@@ -5533,8 +5533,10 @@ GetTemplateObjectForNative(JSContext* cx, HandleFunction target, const CallArgs&
         if (args[0].isInt32() && args[0].toInt32() >= 0)
             len = args[0].toInt32();
 
-        if (TypedArrayObject::GetTemplateObjectForNative(cx, native, len, res))
-            return !!res;
+        if (!TypedArrayObject::GetTemplateObjectForNative(cx, native, len, res))
+            return false;
+        if (res)
+            return true;
     }
 
     if (native == js::array_slice) {

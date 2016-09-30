@@ -1281,12 +1281,12 @@ TypedArrayObject::GetTemplateObjectForNative(JSContext* cx, Native native, uint3
         \
         if (nbytes < TypedArrayObject::SINGLETON_BYTE_LENGTH) { \
             res.set(TypedArrayObjectTemplate<T>::makeTemplateObject(cx, len)); \
-            return true; \
+            return !!res; \
         } \
     }
 JS_FOR_EACH_TYPED_ARRAY(CHECK_TYPED_ARRAY_CONSTRUCTOR)
 #undef CHECK_TYPED_ARRAY_CONSTRUCTOR
-    return false;
+    return true;
 }
 
 /*
