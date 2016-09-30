@@ -31,12 +31,17 @@ protected:
 
 private:
   mozilla::UniquePK11SlotInfo mSlot;
-  nsString mSlotDesc, mSlotManID, mSlotHWVersion, mSlotFWVersion;
+  nsCString mSlotDesc;
+  nsCString mSlotManufacturerID;
+  nsCString mSlotHWVersion;
+  nsCString mSlotFWVersion;
   int mSeries;
 
   virtual void virtualDestroyNSSReference() override;
   void destructorSafeDestroyNSSReference();
   nsresult refreshSlotInfo(const nsNSSShutDownPreventionLock& proofOfLock);
+  nsresult GetAttributeHelper(const nsACString& attribute,
+                      /*out*/ nsACString& xpcomOutParam);
 };
 
 class nsPKCS11Module : public nsIPKCS11Module,

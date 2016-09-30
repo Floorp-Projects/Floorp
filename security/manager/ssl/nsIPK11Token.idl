@@ -16,13 +16,21 @@ interface nsIPK11Token : nsISupports
   /*
    * The name of the token
    */
-  readonly attribute wstring tokenName;
-
-  readonly attribute wstring tokenLabel;
-  readonly attribute wstring tokenManID;
-  readonly attribute wstring tokenHWVersion;
-  readonly attribute wstring tokenFWVersion;
-  readonly attribute wstring tokenSerialNumber;
+  readonly attribute AUTF8String tokenName;
+  readonly attribute AUTF8String tokenLabel;
+  /**
+   * Manufacturer ID of the token.
+   */
+  readonly attribute AUTF8String tokenManID;
+  /**
+   * Hardware version of the token.
+   */
+  readonly attribute AUTF8String tokenHWVersion;
+  /**
+   * Firmware version of the token.
+   */
+  readonly attribute AUTF8String tokenFWVersion;
+  readonly attribute AUTF8String tokenSerialNumber;
 
   /*
    * Login information
@@ -42,9 +50,16 @@ interface nsIPK11Token : nsISupports
    */
   readonly attribute long minimumPasswordLength;
   readonly attribute boolean needsUserInit;
-  boolean checkPassword(in wstring password);  /* Logs out if check fails */
-  void initPassword(in wstring initialPassword);
-  void changePassword(in wstring oldPassword, in wstring newPassword);
+  /**
+   * Checks whether the given password is correct. Logs the token out if an
+   * incorrect password is given.
+   *
+   * @param password The password to check.
+   * @return true if the password was correct, false otherwise.
+   */
+  boolean checkPassword(in AUTF8String password);
+  void initPassword(in AUTF8String initialPassword);
+  void changePassword(in AUTF8String oldPassword, in AUTF8String newPassword);
   long getAskPasswordTimes();
   long getAskPasswordTimeout();
   void setAskPasswordDefaults([const] in long askTimes, [const] in long timeout);

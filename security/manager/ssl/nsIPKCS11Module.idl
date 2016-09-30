@@ -12,10 +12,10 @@ interface nsISimpleEnumerator;
 [scriptable, uuid(8a44bdf9-d1a5-4734-bd5a-34ed7fe564c2)]
 interface nsIPKCS11Module : nsISupports
 {
-  readonly attribute wstring name;
-  readonly attribute wstring libName;
+  readonly attribute AUTF8String name;
+  readonly attribute AUTF8String libName;
 
-  nsIPKCS11Slot findSlotByName(in wstring name);
+  nsIPKCS11Slot findSlotByName(in AUTF8String name);
 
   nsISimpleEnumerator listSlots();
 };

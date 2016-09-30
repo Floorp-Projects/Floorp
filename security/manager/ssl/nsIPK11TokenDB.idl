@@ -33,7 +33,7 @@ interface nsIPK11TokenDB : nsISupports
   /*
    * Find a token by name
    */
-  nsIPK11Token findTokenByName(in wstring tokenName);
+  nsIPK11Token findTokenByName(in AUTF8String tokenName);
 
   /*
    * List all tokens
