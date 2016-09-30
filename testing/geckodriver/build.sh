@@ -45,6 +45,9 @@ cargo_config() {
     x86_64-pc-windows-gnu)
         prefix=x86_64-w64-mingw32
         ;;
+    i686-pc-windows-gnu)
+        prefix=i686-w64-mingw32
+        ;;
     *)
         return
         ;;
