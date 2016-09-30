@@ -118,6 +118,11 @@ public:
   typedef uint8_t ShiftState;
 
   static ShiftState ModifiersToShiftState(Modifiers aModifiers);
+  static ShiftState ModifierKeyStateToShiftState(
+                      const ModifierKeyState& aModKeyState)
+  {
+    return ModifiersToShiftState(aModKeyState.GetModifiers());
+  }
   static Modifiers ShiftStateToModifiers(ShiftState aShiftState);
 
 private:
@@ -167,8 +172,23 @@ public:
                                            uint32_t aEntries) const;
   inline char16_t GetCompositeChar(ShiftState aShiftState,
                                     char16_t aBaseChar) const;
+  char16_t GetCompositeChar(const ModifierKeyState& aModKeyState,
+                            char16_t aBaseChar) const
+  {
+    return GetCompositeChar(ModifierKeyStateToShiftState(aModKeyState),
+                            aBaseChar);
+  }
   UniCharsAndModifiers GetNativeUniChars(ShiftState aShiftState) const;
+  UniCharsAndModifiers GetNativeUniChars(
+                         const ModifierKeyState& aModKeyState) const
+  {
+    return GetNativeUniChars(ModifierKeyStateToShiftState(aModKeyState));
+  }
   UniCharsAndModifiers GetUniChars(ShiftState aShiftState) const;
+  UniCharsAndModifiers GetUniChars(const ModifierKeyState& aModKeyState) const
+  {
+    return GetUniChars(ModifierKeyStateToShiftState(aModKeyState));
+  }
 };
 
 class MOZ_STACK_CLASS NativeKey final
