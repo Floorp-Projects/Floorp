@@ -4,7 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import os, unittest, subprocess, tempfile, shutil, urlparse, zipfile, StringIO
+import os
+import unittest
+import subprocess
+import tempfile
+import shutil
+import urlparse
+import zipfile
+import StringIO
 import mozcrash
 import mozhttpd
 import mozlog.unstructured as mozlog
@@ -12,12 +19,14 @@ import mozlog.unstructured as mozlog
 # Make logs go away
 log = mozlog.getLogger("mozcrash", handler=mozlog.FileHandler(os.devnull))
 
+
 def popen_factory(stdouts):
     """
     Generate a class that can mock subprocess.Popen. |stdouts| is an iterable that
     should return an iterable for the stdout of each process in turn.
     """
     class mock_popen(object):
+
         def __init__(self, args, *args_rest, **kwargs):
             self.stdout = stdouts.next()
             self.returncode = 0
@@ -30,7 +39,9 @@ def popen_factory(stdouts):
 
     return mock_popen
 
+
 class TestCrash(unittest.TestCase):
+
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()
         # a fake file to use as a stackwalk binary
@@ -173,56 +184,67 @@ class TestCrash(unittest.TestCase):
             z.writestr("symbols.txt", "abc/xyz")
             z.close()
             return data.getvalue()
+
         def get_symbols(req):
             headers = {}
             return (200, headers, make_zipfile())
         httpd = mozhttpd.MozHttpd(port=0,
-                                  urlhandlers=[{'method':'GET', 'path':'/symbols', 'function':get_symbols}])
+                                  urlhandlers=[{'method': 'GET',
+                                                'path': '/symbols',
+                                                'function': get_symbols}])
         httpd.start()
         symbol_url = urlparse.urlunsplit(('http', '%s:%d' % httpd.httpd.server_address,
-                                        '/symbols','',''))
+                                          '/symbols', '', ''))
         self.assert_(mozcrash.check_for_crashes(self.tempdir,
                                                 symbol_url,
                                                 stackwalk_binary=self.stackwalk,
                                                 quiet=True))
 
+
 class TestJavaException(unittest.TestCase):
-       def setUp(self):
-               self.test_log = ["01-30 20:15:41.937 E/GeckoAppShell( 1703): >>> REPORTING UNCAUGHT EXCEPTION FROM THREAD 9 (\"GeckoBackgroundThread\")",
-                       "01-30 20:15:41.937 E/GeckoAppShell( 1703): java.lang.NullPointerException",
-                       "01-30 20:15:41.937 E/GeckoAppShell( 1703):    at org.mozilla.gecko.GeckoApp$21.run(GeckoApp.java:1833)",
-                       "01-30 20:15:41.937 E/GeckoAppShell( 1703):    at android.os.Handler.handleCallback(Handler.java:587)"]
 
-       def test_uncaught_exception(self):
-               """
-               Test for an exception which should be caught
-               """
-               self.assert_(mozcrash.check_for_java_exception(self.test_log, quiet=True))
+    def setUp(self):
+        self.test_log = [
+            "01-30 20:15:41.937 E/GeckoAppShell( 1703): >>> "
+            "REPORTING UNCAUGHT EXCEPTION FROM THREAD 9 (\"GeckoBackgroundThread\")",
+            "01-30 20:15:41.937 E/GeckoAppShell( 1703): java.lang.NullPointerException",
+            "01-30 20:15:41.937 E/GeckoAppShell( 1703):"
+            "    at org.mozilla.gecko.GeckoApp$21.run(GeckoApp.java:1833)",
+            "01-30 20:15:41.937 E/GeckoAppShell( 1703):"
+            "    at android.os.Handler.handleCallback(Handler.java:587)"]
 
-       def test_fatal_exception(self):
-               """
-               Test for an exception which should be caught
-               """
-               fatal_log = list(self.test_log)
-               fatal_log[0] = "01-30 20:15:41.937 E/GeckoAppShell( 1703): >>> FATAL EXCEPTION FROM THREAD 9 (\"GeckoBackgroundThread\")"
-               self.assert_(mozcrash.check_for_java_exception(fatal_log, quiet=True))
+    def test_uncaught_exception(self):
+        """
+        Test for an exception which should be caught
+        """
+        self.assert_(mozcrash.check_for_java_exception(self.test_log, quiet=True))
 
-       def test_truncated_exception(self):
-               """
-               Test for an exception which should be caught which
-               was truncated
-               """
-               truncated_log = list(self.test_log)
-               truncated_log[0], truncated_log[1] = truncated_log[1], truncated_log[0]
-               self.assert_(mozcrash.check_for_java_exception(truncated_log, quiet=True))
+    def test_fatal_exception(self):
+        """
+        Test for an exception which should be caught
+        """
+        fatal_log = list(self.test_log)
+        fatal_log[0] = "01-30 20:15:41.937 E/GeckoAppShell( 1703):" \
+                       " >>> FATAL EXCEPTION FROM THREAD 9 (\"GeckoBackgroundThread\")"
+        self.assert_(mozcrash.check_for_java_exception(fatal_log, quiet=True))
 
-       def test_unchecked_exception(self):
-               """
-               Test for an exception which should not be caught
-               """
-               passable_log = list(self.test_log)
-               passable_log[0] = "01-30 20:15:41.937 E/GeckoAppShell( 1703): >>> NOT-SO-BAD EXCEPTION FROM THREAD 9 (\"GeckoBackgroundThread\")"
-               self.assert_(not mozcrash.check_for_java_exception(passable_log, quiet=True))
+    def test_truncated_exception(self):
+        """
+        Test for an exception which should be caught which
+        was truncated
+        """
+        truncated_log = list(self.test_log)
+        truncated_log[0], truncated_log[1] = truncated_log[1], truncated_log[0]
+        self.assert_(mozcrash.check_for_java_exception(truncated_log, quiet=True))
+
+    def test_unchecked_exception(self):
+        """
+        Test for an exception which should not be caught
+        """
+        passable_log = list(self.test_log)
+        passable_log[0] = "01-30 20:15:41.937 E/GeckoAppShell( 1703):" \
+                          " >>> NOT-SO-BAD EXCEPTION FROM THREAD 9 (\"GeckoBackgroundThread\")"
+        self.assert_(not mozcrash.check_for_java_exception(passable_log, quiet=True))
 
 if __name__ == '__main__':
     unittest.main()

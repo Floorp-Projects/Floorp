@@ -7,8 +7,8 @@
 import unittest
 from mozprocess import processhandler
 
-class ParamTests(unittest.TestCase):
 
+class ParamTests(unittest.TestCase):
 
     def test_process_outputline_handler(self):
         """Parameter processOutputLine is accepted with a single function"""
@@ -16,7 +16,7 @@ class ParamTests(unittest.TestCase):
             print("output " + str(line))
         err = None
         try:
-            processhandler.ProcessHandler(['ls','-l'], processOutputLine=output)
+            processhandler.ProcessHandler(['ls', '-l'], processOutputLine=output)
         except (TypeError, AttributeError) as e:
             err = e
         self.assertFalse(err)
@@ -27,11 +27,10 @@ class ParamTests(unittest.TestCase):
             print("output " + str(line))
         err = None
         try:
-            processhandler.ProcessHandler(['ls','-l'], processOutputLine=[output])
+            processhandler.ProcessHandler(['ls', '-l'], processOutputLine=[output])
         except (TypeError, AttributeError) as e:
             err = e
         self.assertFalse(err)
-
 
     def test_process_ontimeout_handler(self):
         """Parameter onTimeout is accepted with a single function"""
@@ -83,4 +82,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

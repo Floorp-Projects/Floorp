@@ -7,6 +7,7 @@ import posixpath
 
 from dmunit import DeviceManagerTestCase
 
+
 class FileExistsTestCase(DeviceManagerTestCase):
     """This tests the "fileExists" command.
     """
@@ -34,4 +35,3 @@ class FileExistsTestCase(DeviceManagerTestCase):
         self.assertTrue(self.dm.fileExists(remote_path))
         self.dm.removeFile(remote_path_file)
         self.dm.removeDir(remote_path)
-

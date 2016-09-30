@@ -13,6 +13,7 @@ from StringIO import StringIO
 
 here = os.path.dirname(os.path.abspath(__file__))
 
+
 class TestManifestParser(unittest.TestCase):
     """
     Test the manifest parser
@@ -41,7 +42,8 @@ class TestManifestParser(unittest.TestCase):
         self.assertTrue(len(restart_tests) < len(parser.tests))
         self.assertEqual(len(restart_tests), len(parser.get(manifest=mozmill_restart_example)))
         self.assertFalse([test for test in restart_tests
-                          if test['manifest'] != os.path.join(here, 'mozmill-restart-example.ini')])
+                          if test['manifest'] != os.path.join(here,
+                                                              'mozmill-restart-example.ini')])
         self.assertEqual(parser.get('name', tags=['foo']),
                          ['restartTests/testExtensionInstallUninstall/test2.js',
                           'restartTests/testExtensionInstallUninstall/test1.js'])
@@ -57,20 +59,21 @@ class TestManifestParser(unittest.TestCase):
         # All of the tests should be included, in order:
         self.assertEqual(parser.get('name'),
                          ['crash-handling', 'fleem', 'flowers'])
-        self.assertEqual([(test['name'], os.path.basename(test['manifest'])) for test in parser.tests],
-                         [('crash-handling', 'bar.ini'), ('fleem', 'include-example.ini'), ('flowers', 'foo.ini')])
+        self.assertEqual([(test['name'], os.path.basename(test['manifest']))
+                          for test in parser.tests],
+                         [('crash-handling', 'bar.ini'),
+                          ('fleem', 'include-example.ini'),
+                          ('flowers', 'foo.ini')])
 
         # The including manifest is always reported as a part of the generated test object.
         self.assertTrue(all([t['ancestor-manifest'] == include_example
                              for t in parser.tests if t['name'] != 'fleem']))
-
 
         # The manifests should be there too:
         self.assertEqual(len(parser.manifests()), 3)
 
         # We already have the root directory:
         self.assertEqual(here, parser.rootdir)
-
 
         # DEFAULT values should persist across includes, unless they're
         # overwritten.  In this example, include-example.ini sets foo=bar, but
@@ -81,7 +84,7 @@ class TestManifestParser(unittest.TestCase):
                          ['crash-handling'])
 
         # Passing parameters in the include section allows defining variables in
-        #the submodule scope:
+        # the submodule scope:
         self.assertEqual(parser.get('name', tags=['red']),
                          ['flowers'])
 
@@ -107,15 +110,27 @@ class TestManifestParser(unittest.TestCase):
         # Write the output to a manifest:
         buffer = StringIO()
         parser.write(fp=buffer, global_kwargs={'foo': 'bar'})
+        expected_output = """[DEFAULT]
+foo = bar
+
+[fleem]
+subsuite = 
+
+[include/flowers]
+blue = ocean
+red = roses
+subsuite = 
+yellow = submarine"""  # noqa
+
         self.assertEqual(buffer.getvalue().strip(),
-                         '[DEFAULT]\nfoo = bar\n\n[fleem]\nsubsuite = \n\n[include/flowers]\nblue = ocean\nred = roses\nsubsuite = \nyellow = submarine')
+                         expected_output)
 
     def test_invalid_path(self):
         """
         Test invalid path should not throw when not strict
         """
         manifest = os.path.join(here, 'include-invalid.ini')
-        parser = ManifestParser(manifests=(manifest,), strict=False)
+        ManifestParser(manifests=(manifest,), strict=False)
 
     def test_parent_inheritance(self):
         """
@@ -130,7 +145,8 @@ class TestManifestParser(unittest.TestCase):
         # Parent manifest test should not be included
         self.assertEqual(parser.get('name'),
                          ['test_3'])
-        self.assertEqual([(test['name'], os.path.basename(test['manifest'])) for test in parser.tests],
+        self.assertEqual([(test['name'], os.path.basename(test['manifest']))
+                          for test in parser.tests],
                          [('test_3', 'level_3.ini')])
 
         # DEFAULT values should be the ones from level 1
@@ -154,7 +170,8 @@ class TestManifestParser(unittest.TestCase):
         # Parent manifest test should not be included
         self.assertEqual(parser.get('name'),
                          ['test_3'])
-        self.assertEqual([(test['name'], os.path.basename(test['manifest'])) for test in parser.tests],
+        self.assertEqual([(test['name'], os.path.basename(test['manifest']))
+                          for test in parser.tests],
                          [('test_3', 'level_3_default.ini')])
 
         # DEFAULT values should be the ones from level 3
@@ -191,7 +208,7 @@ class TestManifestParser(unittest.TestCase):
 
         # A regular variable will inherit its value directly
         self.assertEqual(parser.get('name', **{'other-root': '../root'}),
-                                    ['test_3'])
+                         ['test_3'])
 
         # server-root will expand its value as an absolute path
         # we will not find anything for the original value

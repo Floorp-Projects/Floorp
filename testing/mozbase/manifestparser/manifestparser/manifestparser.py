@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-__all__ = ['ManifestParser', 'TestManifest', 'convert']
-
 from StringIO import StringIO
 import json
 import fnmatch
@@ -20,17 +18,20 @@ from .filters import (
     filterlist,
 )
 
+__all__ = ['ManifestParser', 'TestManifest', 'convert']
+
 relpath = os.path.relpath
 string = (basestring,)
 
 
-### path normalization
+# path normalization
 
 def normalize_path(path):
     """normalize a relative path"""
     if sys.platform.startswith('win'):
         return path.replace('/', os.path.sep)
     return path
+
 
 def denormalize_path(path):
     """denormalize a relative path"""
@@ -39,7 +40,7 @@ def denormalize_path(path):
     return path
 
 
-### objects for parsing manifests
+# objects for parsing manifests
 
 class ManifestParser(object):
     """read .ini manifests"""
@@ -82,7 +83,7 @@ class ManifestParser(object):
             return self.finder.get(path) is not None
         return os.path.exists(path)
 
-    ### methods for reading manifests
+    # methods for reading manifests
 
     def _read(self, root, filename, defaults, defaults_only=False, parentmanifest=None):
         """
@@ -186,7 +187,7 @@ class ManifestParser(object):
             # determine the path
             path = test.get('path', section)
             _relpath = path
-            if '://' not in path: # don't futz with URLs
+            if '://' not in path:  # don't futz with URLs
                 path = normalize_path(path)
                 if here and not os.path.isabs(path):
                     # Profiling indicates 25% of manifest parsing is spent
@@ -260,7 +261,7 @@ class ManifestParser(object):
             here = None
             if isinstance(filename, string):
                 here = os.path.dirname(os.path.abspath(filename))
-                defaults['here'] = here # directory of master .ini file
+                defaults['here'] = here  # directory of master .ini file
 
             if self.rootdir is None:
                 # set the root directory
@@ -269,8 +270,7 @@ class ManifestParser(object):
 
             self._read(here, filename, defaults)
 
-
-    ### methods for querying manifests
+    # methods for querying manifests
 
     def query(self, *checks, **kw):
         """
@@ -304,14 +304,18 @@ class ManifestParser(object):
 
         # make some check functions
         if inverse:
-            has_tags = lambda test: not tags.intersection(test.keys())
+            def has_tags(test):
+                return not tags.intersection(test.keys())
+
             def dict_query(test):
                 for key, value in kwargs.items():
                     if test.get(key) == value:
                         return False
                 return True
         else:
-            has_tags = lambda test: tags.issubset(test.keys())
+            def has_tags(test):
+                return tags.issubset(test.keys())
+
             def dict_query(test):
                 for key, value in kwargs.items():
                     if test.get(key) != value:
@@ -349,8 +353,7 @@ class ManifestParser(object):
     def paths(self):
         return [i['path'] for i in self.tests]
 
-
-    ### methods for auditing
+    # methods for auditing
 
     def missing(self, tests=None):
         """
@@ -370,7 +373,7 @@ class ManifestParser(object):
                               "The following test(s) are missing: %s" %
                               json.dumps(missing_paths, indent=2))
             print >> sys.stderr, "Warning: The following test(s) are missing: %s" % \
-                                  json.dumps(missing_paths, indent=2)
+                json.dumps(missing_paths, indent=2)
         return missing
 
     def verifyDirectory(self, directories, pattern=None, extensions=None):
@@ -404,8 +407,7 @@ class ManifestParser(object):
         missing_from_manifest = files.difference(paths)
         return (missing_from_filesystem, missing_from_manifest)
 
-
-    ### methods for output
+    # methods for output
 
     def write(self, fp=sys.stdout, rootdir=None,
               global_tags=None, global_kwargs=None,
@@ -454,7 +456,7 @@ class ManifestParser(object):
             print >> fp
 
         for test in tests:
-            test = test.copy() # don't overwrite
+            test = test.copy()  # don't overwrite
 
             path = test['name']
             if not os.path.isabs(path):
@@ -509,7 +511,7 @@ class ManifestParser(object):
         # tests to copy
         tests = self.get(tags=tags, **kwargs)
         if not tests:
-            return # nothing to do!
+            return  # nothing to do!
 
         # root directory
         if rootdir is None:
@@ -567,7 +569,7 @@ class ManifestParser(object):
                 destination = os.path.join(rootdir, _relpath)
                 shutil.copy(source, destination)
 
-    ### directory importers
+    # directory importers
 
     @classmethod
     def _walk_directories(cls, directories, callback, pattern=None, ignore=()):
@@ -582,7 +584,8 @@ class ManifestParser(object):
         ignore = set(ignore)
 
         if not patterns:
-            accept_filename = lambda filename: True
+            def accept_filename(filename):
+                return True
         else:
             def accept_filename(filename):
                 for pattern in patterns:
@@ -590,9 +593,11 @@ class ManifestParser(object):
                         return True
 
         if not ignore:
-            accept_dirname = lambda dirname: True
+            def accept_dirname(dirname):
+                return True
         else:
-            accept_dirname = lambda dirname: dirname not in ignore
+            def accept_dirname(dirname):
+                return dirname not in ignore
 
         rootdirectories = directories[:]
         seen_directories = set()
@@ -632,12 +637,12 @@ class ManifestParser(object):
                 if subdirs or files:
                     callback(rootdirectory, directory, subdirs, files)
 
-
     @classmethod
-    def populate_directory_manifests(cls, directories, filename, pattern=None, ignore=(), overwrite=False):
+    def populate_directory_manifests(cls, directories, filename, pattern=None, ignore=(),
+                                     overwrite=False):
         """
-        walks directories and writes manifests of name `filename` in-place; returns `cls` instance populated
-        with the given manifests
+        walks directories and writes manifests of name `filename` in-place;
+        returns `cls` instance populated with the given manifests
 
         filename -- filename of manifests to write
         pattern -- shell pattern (glob) or patterns of filenames to match
@@ -692,10 +697,9 @@ class ManifestParser(object):
                        if false then the paths are absolute
         """
 
-
         # determine output
-        opened_manifest_file = None # name of opened manifest file
-        absolute = not relative_to # whether to output absolute path names as names
+        opened_manifest_file = None  # name of opened manifest file
+        absolute = not relative_to  # whether to output absolute path names as names
         if isinstance(write, string):
             opened_manifest_file = write
             write = file(write, 'w')
@@ -718,8 +722,7 @@ class ManifestParser(object):
 
             # write to manifest
             print >> write, '\n'.join(['[%s]' % denormalize_path(filename)
-                                               for filename in filenames])
-
+                                       for filename in filenames])
 
         cls._walk_directories(directories, callback, pattern=pattern, ignore=ignore)
 
@@ -733,7 +736,6 @@ class ManifestParser(object):
             write.flush()
             write.seek(0)
             manifests = [write]
-
 
         # make a ManifestParser instance
         return cls(manifests=manifests)
@@ -762,7 +764,7 @@ class TestManifest(ManifestParser):
         :param filters: list of filters to apply to the tests
         :returns: list of test objects that were not filtered out
         """
-        tests = [i.copy() for i in self.tests] # shallow copy
+        tests = [i.copy() for i in self.tests]  # shallow copy
 
         # mark all tests as passing
         for test in tests:

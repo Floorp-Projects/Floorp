@@ -10,9 +10,9 @@ from manifestparser import ManifestParser
 
 here = os.path.dirname(os.path.abspath(__file__))
 
+
 class TestDefaultSkipif(unittest.TestCase):
     """Tests applying a skip-if condition in [DEFAULT] and || with the value for the test"""
-
 
     def test_defaults(self):
 
@@ -26,11 +26,13 @@ class TestDefaultSkipif(unittest.TestCase):
             elif test['name'] == 'test3':
                 self.assertEqual(test['skip-if'], "(os == 'win' && debug ) || (os == 'win')")
             elif test['name'] == 'test4':
-                self.assertEqual(test['skip-if'], "(os == 'win' && debug ) || (os == 'win' && debug)")
+                self.assertEqual(
+                    test['skip-if'], "(os == 'win' && debug ) || (os == 'win' && debug)")
             elif test['name'] == 'test5':
                 self.assertEqual(test['skip-if'], "os == 'win' && debug # a pesky comment")
             elif test['name'] == 'test6':
                 self.assertEqual(test['skip-if'], "(os == 'win' && debug ) || (debug )")
+
 
 class TestDefaultSupportFiles(unittest.TestCase):
     """Tests combining support-files field in [DEFAULT] with the value for a test"""

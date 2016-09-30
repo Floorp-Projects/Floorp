@@ -46,7 +46,7 @@ def main(ip, port, heartbeat_port, scripts, directory, isTestDevice, verbose):
     genfiles.clean_test_files()
 
 
-if  __name__ == "__main__":
+if __name__ == "__main__":
 
     default_ip = '127.0.0.1'
     default_port = 20701

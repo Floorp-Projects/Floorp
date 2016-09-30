@@ -9,6 +9,7 @@ import unittest
 
 here = os.path.dirname(os.path.abspath(__file__))
 
+
 class RequestLogTest(unittest.TestCase):
 
     def check_logging(self, log_requests=False):

@@ -19,6 +19,7 @@ from mozsystemmonitor.resourcemonitor import (
 
 @unittest.skipIf(psutil is None, 'Resource monitor requires psutil.')
 class TestResourceMonitor(unittest.TestCase):
+
     def test_basic(self):
         monitor = SystemResourceMonitor(poll_interval=0.5)
 

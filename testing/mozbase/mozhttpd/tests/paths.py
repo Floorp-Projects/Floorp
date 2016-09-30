@@ -9,7 +9,9 @@ import os
 import unittest
 import urllib2
 
+
 class PathTest(unittest.TestCase):
+
     def try_get(self, url, expected_contents):
         f = urllib2.urlopen(url)
         self.assertEqual(f.getcode(), 200)
@@ -42,7 +44,7 @@ class PathTest(unittest.TestCase):
             open(os.path.join(d2, "test2.txt"), "w").write("test 2 contents")
             httpd = mozhttpd.MozHttpd(port=0,
                                       path_mappings={'/abcxyz': d1,
-                                                     '/abc': d2,}
+                                                     '/abc': d2, }
                                       )
             httpd.start(block=False)
             self.try_get(httpd.get_url("/abcxyz/test1.txt"), "test 1 contents")
