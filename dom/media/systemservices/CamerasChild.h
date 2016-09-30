@@ -94,6 +94,11 @@ public:
     return gTheInstance.get()->mCamerasChildThread;
   }
 
+  static nsCOMPtr<nsIThread>& FakeDeviceChangeEventThread() {
+    Mutex().AssertCurrentThreadOwns();
+    return gTheInstance.get()->mFakeDeviceChangeEventThread;
+  }
+
 private:
   static Singleton<CamerasSingleton> gTheInstance;
 
@@ -110,6 +115,7 @@ private:
   // will be before actual destruction.
   CamerasChild* mCameras;
   nsCOMPtr<nsIThread> mCamerasChildThread;
+  nsCOMPtr<nsIThread> mFakeDeviceChangeEventThread;
 };
 
 // Get a pointer to a CamerasChild object we can use to do IPC with.
