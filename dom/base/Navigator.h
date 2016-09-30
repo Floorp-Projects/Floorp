@@ -88,7 +88,6 @@ class PowerManager;
 class IccManager;
 class Telephony;
 class Voicemail;
-class TVManager;
 class InputPortManager;
 class DeviceStorageAreaListener;
 class Presentation;
@@ -228,7 +227,6 @@ public:
   MobileMessageManager* GetMozMobileMessage();
   Telephony* GetMozTelephony(ErrorResult& aRv);
   Voicemail* GetMozVoicemail(ErrorResult& aRv);
-  TVManager* GetTv();
   InputPortManager* GetInputPortManager(ErrorResult& aRv);
   already_AddRefed<LegacyMozTCPSocket> MozTCPSocket();
   network::Connection* GetConnection(ErrorResult& aRv);
@@ -338,7 +336,6 @@ private:
   RefPtr<MobileMessageManager> mMobileMessageManager;
   RefPtr<Telephony> mTelephony;
   RefPtr<Voicemail> mVoicemail;
-  RefPtr<TVManager> mTVManager;
   RefPtr<InputPortManager> mInputPortManager;
   RefPtr<network::Connection> mConnection;
 #ifdef MOZ_B2G_RIL

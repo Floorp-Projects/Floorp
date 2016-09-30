@@ -96,7 +96,6 @@ DIRS += [
     'promise',
     'smil',
     'telephony',
-    'tv',
     'url',
     'voicemail',
     'inputmethod',
