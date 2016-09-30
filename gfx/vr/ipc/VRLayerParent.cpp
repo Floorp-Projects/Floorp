@@ -46,11 +46,10 @@ VRLayerParent::Destroy()
 }
 
 bool
-VRLayerParent::RecvSubmitFrame(const int32_t& aInputFrameID,
-                               PTextureParent* texture)
+VRLayerParent::RecvSubmitFrame(PTextureParent* texture)
 {
   VRManager* vm = VRManager::Get();
-  vm->SubmitFrame(this, aInputFrameID, texture, mLeftEyeRect, mRightEyeRect);
+  vm->SubmitFrame(this, texture, mLeftEyeRect, mRightEyeRect);
 
   return true;
 }

@@ -20,8 +20,7 @@ class VRLayerParent : public PVRLayerParent {
 
 public:
   VRLayerParent(uint32_t aVRDisplayID, const Rect& aLeftEyeRect, const Rect& aRightEyeRect);
-  virtual bool RecvSubmitFrame(const int32_t& aInputFrameID,
-                               PTextureParent* texture) override;
+  virtual bool RecvSubmitFrame(PTextureParent* texture) override;
   virtual bool RecvDestroy() override;
   uint32_t GetDisplayID() const { return mVRDisplayID; }
 protected:
