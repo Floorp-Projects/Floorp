@@ -60,13 +60,6 @@ public:
   bool TextureSharingWorks();
   bool IsWARP();
 
-  // Returns true if we can create a texture with
-  // D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX and also
-  // upload texture data during the CreateTexture2D
-  // call. This crashes on some devices, so we might
-  // need to avoid it.
-  bool CanInitializeKeyedMutexTextures();
-
   bool CreateCompositorDevices();
   void CreateContentDevices();
 
