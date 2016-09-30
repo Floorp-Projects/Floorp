@@ -112,7 +112,7 @@ struct VRFieldOfView {
       leftDegrees == 0.0;
   }
 
-  Matrix4x4 ConstructProjectionMatrix(float zNear, float zFar, bool rightHanded);
+  Matrix4x4 ConstructProjectionMatrix(float zNear, float zFar, bool rightHanded) const;
 
   double upDegrees;
   double rightDegrees;
