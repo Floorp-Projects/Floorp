@@ -983,6 +983,11 @@ void TransportLayerDtls::PacketReceived(TransportLayer* layer,
     return;
   }
 
+  // not DTLS per RFC 7983
+  if (data[0] < 20 || data[0] > 63) {
+    return;
+  }
+
   nspr_io_adapter_->PacketReceived(data, len);
 
   // If we're still connecting, try to handshake
@@ -994,7 +999,6 @@ void TransportLayerDtls::PacketReceived(TransportLayer* layer,
   if (state_ == TS_OPEN) {
     // nICEr uses a 9216 bytes buffer to allow support for jumbo frames
     unsigned char buf[9216];
-
     int32_t rv;
     // One packet might contain several DTLS packets
     do {
