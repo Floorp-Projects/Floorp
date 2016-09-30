@@ -3638,23 +3638,19 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
     }
   }
 
-  uint8_t virtualKey = aNativeKey.mOriginalVirtualKeyCode;
-
   // If the key is not a usual printable key, KeyboardLayout class assume that
   // it's not cause dead char nor printable char.  Therefore, there are nothing
   // to do here fore such keys (e.g., function keys).
   // However, this should keep dead key state even if non-printable key is
   // pressed during a dead key sequence.
-  if (!IsPrintableCharKey(virtualKey)) {
+  if (!IsPrintableCharKey(aNativeKey.mOriginalVirtualKeyCode)) {
     return;
   }
 
-  MOZ_ASSERT(virtualKey != VK_PACKET,
+  MOZ_ASSERT(aNativeKey.mOriginalVirtualKeyCode != VK_PACKET,
     "At handling VK_PACKET, we shouldn't refer keyboard layout");
   MOZ_ASSERT(aNativeKey.mKeyNameIndex == KEY_NAME_INDEX_USE_STRING,
     "Printable key's key name index must be KEY_NAME_INDEX_USE_STRING");
-
-  bool isKeyDown = aNativeKey.IsKeyDownMessage();
 
   // If it's a dead key, aNativeKey will be initialized by
   // MaybeInitNativeKeyAsDeadKey().
@@ -3670,7 +3666,7 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
   }
 
   UniCharsAndModifiers baseChars =
-    GetUniCharsAndModifiers(virtualKey, aModKeyState);
+    GetUniCharsAndModifiers(aNativeKey.mOriginalVirtualKeyCode, aModKeyState);
 
   // If the key press isn't related to any dead keys, initialize aNativeKey
   // with the characters which should be caused by the key.
@@ -3693,7 +3689,7 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
   UniCharsAndModifiers deadChars =
     GetUniCharsAndModifiers(mActiveDeadKey, mDeadKeyShiftState);
   aNativeKey.mCommittedCharsAndModifiers = deadChars + baseChars;
-  if (isKeyDown) {
+  if (aNativeKey.IsKeyDownMessage()) {
     DeactivateDeadKeyState();
   }
 }
@@ -3703,8 +3699,7 @@ KeyboardLayout::MaybeInitNativeKeyAsDeadKey(
                   NativeKey& aNativeKey,
                   const ModifierKeyState& aModKeyState)
 {
-  uint8_t virtualKey = aNativeKey.mOriginalVirtualKeyCode;
-  if (!IsDeadKey(virtualKey, aModKeyState)) {
+  if (!IsDeadKey(aNativeKey.mOriginalVirtualKeyCode, aModKeyState)) {
     return false;
   }
 
@@ -3712,11 +3707,13 @@ KeyboardLayout::MaybeInitNativeKeyAsDeadKey(
   // event of a dead key which activated current dead key sequence,
   // initialize aNativeKey as a dead key event.
   if ((aNativeKey.IsKeyDownMessage() && mActiveDeadKey < 0) ||
-      (!aNativeKey.IsKeyDownMessage() && mActiveDeadKey == virtualKey)) {
+      (!aNativeKey.IsKeyDownMessage() &&
+       mActiveDeadKey == aNativeKey.mOriginalVirtualKeyCode)) {
     ActivateDeadKeyState(aNativeKey, aModKeyState);
 #ifdef DEBUG
     UniCharsAndModifiers deadChars =
-      GetNativeUniCharsAndModifiers(virtualKey, aModKeyState);
+      GetNativeUniCharsAndModifiers(aNativeKey.mOriginalVirtualKeyCode,
+                                    aModKeyState);
     MOZ_ASSERT(deadChars.mLength == 1,
                "dead key must generate only one character");
 #endif
@@ -3735,17 +3732,17 @@ KeyboardLayout::MaybeInitNativeKeyAsDeadKey(
   // set only a character for current key for keyup event.
   if (mActiveDeadKey < 0) {
     aNativeKey.mCommittedCharsAndModifiers =
-      GetUniCharsAndModifiers(virtualKey, aModKeyState);
+      GetUniCharsAndModifiers(aNativeKey.mOriginalVirtualKeyCode, aModKeyState);
     return true;
   }
 
   if (NS_WARN_IF(!IsPrintableCharKey(mActiveDeadKey))) {
 #if defined(DEBUG) || defined(MOZ_CRASHREPORTER)
     nsPrintfCString warning("The virtual key index (%d) of mActiveDeadKey "
-                            "(0x%02X) is not a printable key (virtualKey="
-                            "0x%02X)",
+                            "(0x%02X) is not a printable key "
+                            "(aNativeKey.mOriginalVirtualKeyCode=0x%02X)",
                             GetKeyIndex(mActiveDeadKey), mActiveDeadKey,
-                            virtualKey);
+                            aNativeKey.mOriginalVirtualKeyCode);
     NS_WARNING(warning.get());
 #ifdef MOZ_CRASHREPORTER
     CrashReporter::AppendAppNotesToCrashReport(
@@ -3766,7 +3763,7 @@ KeyboardLayout::MaybeInitNativeKeyAsDeadKey(
   UniCharsAndModifiers prevDeadChars =
     GetUniCharsAndModifiers(mActiveDeadKey, mDeadKeyShiftState);
   UniCharsAndModifiers newChars =
-    GetUniCharsAndModifiers(virtualKey, aModKeyState);
+    GetUniCharsAndModifiers(aNativeKey.mOriginalVirtualKeyCode, aModKeyState);
   // But keypress events should be fired for each committed character.
   aNativeKey.mCommittedCharsAndModifiers = prevDeadChars + newChars;
   if (aNativeKey.IsKeyDownMessage()) {
