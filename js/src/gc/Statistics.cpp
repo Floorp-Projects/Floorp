@@ -937,17 +937,42 @@ SumPhase(Phase phase, const Statistics::PhaseTimeTable times)
 }
 
 static Phase
-LongestPhase(const Statistics::PhaseTimeTable times)
+LongestPhaseSelfTime(const Statistics::PhaseTimeTable times)
 {
+    int64_t selfTimes[PHASE_LIMIT];
+
+    // Start with total times, including children's times.
+    for (size_t i = 0; i < PHASE_LIMIT; ++i)
+        selfTimes[i] = SumPhase(Phase(i), times);
+
+    // Subtract out the children's times.
+    for (size_t i = 0; i < PHASE_LIMIT; ++i) {
+        Phase parent = phases[i].parent;
+        if (parent == PHASE_MULTI_PARENTS) {
+            // Subtract out only the time for the children specific to this
+            // parent.
+            for (auto edge : dagChildEdges) {
+                if (edge.parent == parent) {
+                    size_t dagSlot = phaseExtra[edge.parent].dagSlot;
+                    MOZ_ASSERT(selfTimes[parent] >= times[dagSlot][edge.child]);
+                    selfTimes[parent] -= times[dagSlot][edge.child];
+                }
+            }
+        } else if (parent != PHASE_NO_PARENT) {
+            MOZ_ASSERT(selfTimes[parent] >= selfTimes[i]);
+            selfTimes[parent] -= selfTimes[i];
+        }
+    }
+
     int64_t longestTime = 0;
     Phase longestPhase = PHASE_NONE;
     for (size_t i = 0; i < PHASE_LIMIT; ++i) {
-        int64_t phaseTime = SumPhase(Phase(i), times);
-        if (phaseTime > longestTime) {
-            longestTime = phaseTime;
+        if (selfTimes[i] > longestTime) {
+            longestTime = selfTimes[i];
             longestPhase = Phase(i);
         }
     }
+
     return longestPhase;
 }
 
@@ -1096,7 +1121,7 @@ Statistics::endSlice()
 
             // Record any phase that goes more than 2x over its budget.
             if (sliceTime > 2 * budget_ms * 1000) {
-                Phase longest = LongestPhase(slices.back().phaseTimes);
+                Phase longest = LongestPhaseSelfTime(slices.back().phaseTimes);
                 runtime->addTelemetry(JS_TELEMETRY_GC_SLOW_PHASE, phases[longest].telemetryBucket);
             }
         }
