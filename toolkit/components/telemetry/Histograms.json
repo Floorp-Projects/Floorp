@@ -5228,6 +5228,14 @@
     "n_values": 3,
     "description": "Whether the user is in safe mode (No, Yes, Forced)"
   },
+  "XCTO_NOSNIFF_BLOCK_IMAGE": {
+    "alert_emails": ["ckerschbaumer@mozilla.com"],
+    "bug_numbers": [1302539],
+    "expires_in_version": "56",
+    "kind": "enumerated",
+    "n_values": 3,
+    "description": "Whether XCTO: nosniff would allow/block an image load? (0=allow, 1=block)"
+  },
   "NEWTAB_PAGE_ENABLED": {
     "expires_in_version": "default",
     "kind": "boolean",
