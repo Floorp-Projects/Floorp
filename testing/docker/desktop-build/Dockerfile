@@ -13,6 +13,24 @@ RUN             chmod +x /home/worker/bin/*
 
 # %include testing/docker/recipes/tooltool.py
 ADD topsrcdir/testing/docker/recipes/tooltool.py /builds/tooltool.py
+ADD topsrcdir/testing/docker/recipes/tooltool.py /setup/tooltool.py
+
+# %include testing/mozharness/external_tools/robustcheckout.py
+ADD topsrcdir/testing/mozharness/external_tools/robustcheckout.py /usr/local/mercurial/robustcheckout.py
+
+# %include testing/docker/recipes/common.sh
+ADD topsrcdir/testing/docker/recipes/common.sh /setup/common.sh
+
+# %include testing/docker/recipes/install-mercurial.sh
+ADD topsrcdir/testing/docker/recipes/install-mercurial.sh /setup/install-mercurial.sh
+
+# %include testing/docker/recipes/centos6-build-system-setup.sh
+ADD topsrcdir/testing/docker/recipes/centos6-build-system-setup.sh /setup/system-setup.sh
+
+# TODO remove once base image doesn't install Mercurial
+RUN pip uninstall -y Mercurial
+
+RUN bash /setup/system-setup.sh
 
 # Add wrapper scripts for xvfb allowing tasks to easily retry starting up xvfb
 # %include testing/docker/recipes/xvfb.sh
