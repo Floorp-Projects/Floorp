@@ -449,7 +449,7 @@ js::InternalCallOrConstruct(JSContext* cx, const CallArgs& args, MaybeConstruct 
     /* Invoke native functions. */
     JSFunction* fun = &args.callee().as<JSFunction>();
     if (construct != CONSTRUCT && fun->isClassConstructor()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_CALL_CLASS_CONSTRUCTOR);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_CALL_CLASS_CONSTRUCTOR);
         return false;
     }
 
@@ -2617,7 +2617,7 @@ END_CASE(JSOP_CHECKTHIS)
 CASE(JSOP_CHECKTHISREINIT)
 {
     if (!REGS.sp[-1].isMagic(JS_UNINITIALIZED_LEXICAL)) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_REINIT_THIS);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_REINIT_THIS);
         goto error;
     }
 }
@@ -4036,8 +4036,8 @@ CASE(JSOP_SUPERBASE)
         goto error;
 
     if (!superBase) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
-                                "null", "object");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
+                                  "null", "object");
         goto error;
     }
     PUSH_OBJECT(*superBase);
@@ -4125,8 +4125,7 @@ DEFAULT()
 {
     char numBuf[12];
     SprintfLiteral(numBuf, "%d", *REGS.pc);
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                         JSMSG_BAD_BYTECODE, numBuf);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_BYTECODE, numBuf);
     goto error;
 }
 
@@ -4428,7 +4427,7 @@ js::DefFunOperation(JSContext* cx, HandleScript script, HandleObject envChain,
 bool
 js::ThrowMsgOperation(JSContext* cx, const unsigned errorNum)
 {
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, errorNum);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, errorNum);
     return false;
 }
 
@@ -4737,9 +4736,9 @@ js::SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc, Hand
     bool constructing = op == JSOP_SPREADNEW || op == JSOP_SPREADSUPERCALL;
 
     if (length > ARGS_LENGTH_MAX) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                             constructing ? JSMSG_TOO_MANY_CON_SPREADARGS
-                                          : JSMSG_TOO_MANY_FUN_SPREADARGS);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  constructing ? JSMSG_TOO_MANY_CON_SPREADARGS
+                                               : JSMSG_TOO_MANY_FUN_SPREADARGS);
         return false;
     }
 
@@ -4983,7 +4982,7 @@ js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber, HandleId id)
                errorNumber == JSMSG_BAD_CONST_ASSIGN);
     JSAutoByteString printable;
     if (ValueToPrintable(cx, IdToValue(id), &printable))
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, errorNumber, printable.ptr());
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, errorNumber, printable.ptr());
 }
 
 void
@@ -5026,8 +5025,8 @@ js::ReportRuntimeRedeclaration(JSContext* cx, HandlePropertyName name, const cha
 {
     JSAutoByteString printable;
     if (AtomToPrintableString(cx, name, &printable)) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_REDECLARED_VAR,
-                             redeclKind, printable.ptr());
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_REDECLARED_VAR,
+                                   redeclKind, printable.ptr());
     }
 }
 
@@ -5036,7 +5035,7 @@ js::ThrowCheckIsObject(JSContext* cx, CheckIsObjectKind kind)
 {
     switch (kind) {
       case CheckIsObjectKind::IteratorNext:
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NEXT_RETURNED_PRIMITIVE);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NEXT_RETURNED_PRIMITIVE);
         break;
       default:
         MOZ_CRASH("Unknown kind");
@@ -5079,11 +5078,11 @@ js::ThrowUninitializedThis(JSContext* cx, AbstractFramePtr frame)
             name = str.ptr();
         }
 
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNINITIALIZED_THIS, name);
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_UNINITIALIZED_THIS, name);
         return false;
     }
 
     MOZ_ASSERT(fun->isArrow());
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNINITIALIZED_THIS_ARROW);
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_UNINITIALIZED_THIS_ARROW);
     return false;
 }

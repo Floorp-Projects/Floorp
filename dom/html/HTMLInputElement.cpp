@@ -215,9 +215,13 @@ const Decimal HTMLInputElement::kDefaultStep = Decimal(1);
 const Decimal HTMLInputElement::kDefaultStepTime = Decimal(60);
 const Decimal HTMLInputElement::kStepAny = Decimal(0);
 
-const double HTMLInputElement::kMaximumYear = 275760;
 const double HTMLInputElement::kMinimumYear = 1;
+const double HTMLInputElement::kMaximumYear = 275760;
+const double HTMLInputElement::kMaximumWeekInMaximumYear = 37;
+const double HTMLInputElement::kMaximumDayInMaximumYear = 13;
+const double HTMLInputElement::kMaximumMonthInMaximumYear = 9;
 const double HTMLInputElement::kMaximumWeekInYear = 53;
+const double HTMLInputElement::kMsPerDay = 24 * 60 * 60 * 1000;
 
 #define NS_INPUT_ELEMENT_STATE_IID                 \
 { /* dc3b3d14-23e2-4479-b513-7b369343e3a0 */       \
@@ -1880,17 +1884,37 @@ HTMLInputElement::ConvertStringToNumber(nsAString& aValue,
           return false;
         }
 
-        // Maximum valid month is 275760-09.
         if (year < kMinimumYear || year > kMaximumYear) {
           return false;
         }
 
-        if (year == kMaximumYear && month > 9) {
+        // Maximum valid month is 275760-09.
+        if (year == kMaximumYear && month > kMaximumMonthInMaximumYear) {
           return false;
         }
 
         int32_t months = MonthsSinceJan1970(year, month);
         aResultValue = Decimal(int32_t(months));
+        return true;
+      }
+    case NS_FORM_INPUT_WEEK:
+      {
+        uint32_t year, week;
+        if (!ParseWeek(aValue, &year, &week)) {
+          return false;
+        }
+
+        if (year < kMinimumYear || year > kMaximumYear) {
+          return false;
+        }
+
+        // Maximum week is 275760-W37, the week of 275760-09-13.
+        if (year == kMaximumYear && week > kMaximumWeekInMaximumYear) {
+          return false;
+        }
+
+        double days = DaysSinceEpochFromWeek(year, week);
+        aResultValue = Decimal::fromDouble(days * kMsPerDay);
         return true;
       }
     default:
@@ -2131,6 +2155,41 @@ HTMLInputElement::ConvertNumberToString(Decimal aValue,
         aResultString.AppendPrintf("%04.0f-%02.0f", year, month + 1);
         return true;
       }
+    case NS_FORM_INPUT_WEEK:
+      {
+        aValue = aValue.floor();
+
+        // Based on ISO 8601 date.
+        double year = JS::YearFromTime(aValue.toDouble());
+        double month = JS::MonthFromTime(aValue.toDouble());
+        double day = JS::DayFromTime(aValue.toDouble());
+        // Adding 1 since day starts from 0.
+        double dayInYear = JS::DayWithinYear(aValue.toDouble(), year) + 1;
+
+        // Adding 1 since month starts from 0.
+        uint32_t isoWeekday = DayOfWeek(year, month + 1, day, true);
+        // Target on Wednesday since ISO 8601 states that week 1 is the week
+        // with the first Thursday of that year.
+        uint32_t week = (dayInYear - isoWeekday + 10) / 7;
+
+        if (week < 1) {
+          year--;
+          if (year < 1) {
+            return false;
+          }
+          week = MaximumWeekInYear(year);
+        } else if (week > MaximumWeekInYear(year)) {
+          year++;
+          if (year > kMaximumYear ||
+              (year == kMaximumYear && week > kMaximumWeekInMaximumYear)) {
+            return false;
+          }
+          week = 1;
+        }
+
+        aResultString.AppendPrintf("%04.0f-W%02d", year, week);
+        return true;
+      }
     default:
       MOZ_ASSERT(false, "Unrecognized input type");
       return false;
@@ -2141,8 +2200,7 @@ HTMLInputElement::ConvertNumberToString(Decimal aValue,
 Nullable<Date>
 HTMLInputElement::GetValueAsDate(ErrorResult& aRv)
 {
-  // TODO: this is temporary until bug 888316 is fixed.
-  if (!IsDateTimeInputType(mType) || mType == NS_FORM_INPUT_WEEK) {
+  if (!IsDateTimeInputType(mType)) {
     return Nullable<Date>();
   }
 
@@ -2186,6 +2244,20 @@ HTMLInputElement::GetValueAsDate(ErrorResult& aRv)
       JS::ClippedTime time = JS::TimeClip(JS::MakeDate(year, month - 1, 1));
       return Nullable<Date>(Date(time));
     }
+    case NS_FORM_INPUT_WEEK:
+    {
+      uint32_t year, week;
+      nsAutoString value;
+      GetValueInternal(value);
+      if (!ParseWeek(value, &year, &week)) {
+        return Nullable<Date>();
+      }
+
+      double days = DaysSinceEpochFromWeek(year, week);
+      JS::ClippedTime time = JS::TimeClip(days * kMsPerDay);
+
+      return Nullable<Date>(Date(time));
+    }
   }
 
   MOZ_ASSERT(false, "Unrecognized input type");
@@ -2196,8 +2268,7 @@ HTMLInputElement::GetValueAsDate(ErrorResult& aRv)
 void
 HTMLInputElement::SetValueAsDate(Nullable<Date> aDate, ErrorResult& aRv)
 {
-  // TODO: this is temporary until bug 888316 is fixed.
-  if (!IsDateTimeInputType(mType) || mType == NS_FORM_INPUT_WEEK) {
+  if (!IsDateTimeInputType(mType)) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
@@ -5096,24 +5167,31 @@ HTMLInputElement::IsLeapYear(uint32_t aYear) const
 }
 
 uint32_t
-HTMLInputElement::DayOfWeek(uint32_t aYear, uint32_t aMonth, uint32_t aDay) const
+HTMLInputElement::DayOfWeek(uint32_t aYear, uint32_t aMonth, uint32_t aDay,
+                            bool isoWeek) const
 {
   // Tomohiko Sakamoto algorithm.
   int monthTable[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
   aYear -= aMonth < 3;
 
-  return (aYear + aYear / 4 - aYear / 100 + aYear / 400 +
-          monthTable[aMonth - 1] + aDay) % 7;
+  uint32_t day = (aYear + aYear / 4 - aYear / 100 + aYear / 400 +
+                  monthTable[aMonth - 1] + aDay) % 7;
+
+  if (isoWeek) {
+    return ((day + 6) % 7) + 1;
+  }
+
+  return day;
 }
 
 uint32_t
 HTMLInputElement::MaximumWeekInYear(uint32_t aYear) const
 {
-  int day = DayOfWeek(aYear, 1, 1); // January 1.
+  int day = DayOfWeek(aYear, 1, 1, true); // January 1.
   // A year starting on Thursday or a leap year starting on Wednesday has 53
   // weeks. All other years have 52 weeks.
-  return day == 4 || (day == 3 && IsLeapYear(aYear)) ? kMaximumWeekInYear
-                                                     : kMaximumWeekInYear - 1;
+  return day == 4 || (day == 3 && IsLeapYear(aYear)) ?
+    kMaximumWeekInYear : kMaximumWeekInYear - 1;
 }
 
 bool
@@ -5228,6 +5306,25 @@ bool HTMLInputElement::ParseDate(const nsAString& aValue,
          *aDay > 0 && *aDay <= NumberOfDaysInMonth(*aMonth, *aYear);
 }
 
+double
+HTMLInputElement::DaysSinceEpochFromWeek(uint32_t aYear, uint32_t aWeek) const
+{
+  double days = JS::DayFromYear(aYear) + (aWeek - 1) * 7;
+  uint32_t dayOneIsoWeekday = DayOfWeek(aYear, 1, 1, true);
+
+  // If day one of that year is on/before Thursday, we should subtract the
+  // days that belong to last year in our first week, otherwise, our first
+  // days belong to last year's last week, and we should add those days
+  // back.
+  if (dayOneIsoWeekday <= 4) {
+    days -= (dayOneIsoWeekday - 1);
+  } else {
+    days += (7 - dayOneIsoWeekday + 1);
+  }
+
+  return days;
+}
+
 uint32_t
 HTMLInputElement::NumberOfDaysInMonth(uint32_t aMonth, uint32_t aYear) const
 {
@@ -5251,8 +5348,7 @@ HTMLInputElement::NumberOfDaysInMonth(uint32_t aMonth, uint32_t aYear) const
     return 30;
   }
 
-  return (aYear % 400 == 0 || (aYear % 100 != 0 && aYear % 4 == 0))
-          ? 29 : 28;
+  return IsLeapYear(aYear) ? 29 : 28;
 }
 
 /* static */ bool

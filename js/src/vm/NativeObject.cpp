@@ -2086,7 +2086,7 @@ js::GetPropertyForNameLookup(JSContext* cx, HandleObject obj, HandleId id, Mutab
 /*** [[Set]] *************************************************************************************/
 
 static bool
-MaybeReportUndeclaredVarAssignment(JSContext* cx, JSString* propname)
+MaybeReportUndeclaredVarAssignment(JSContext* cx, HandleString propname)
 {
     unsigned flags;
     {
@@ -2105,10 +2105,11 @@ MaybeReportUndeclaredVarAssignment(JSContext* cx, JSString* propname)
             return true;
     }
 
-    JSAutoByteString bytes(cx, propname);
-    return !!bytes &&
-           JS_ReportErrorFlagsAndNumber(cx, flags, GetErrorMessage, nullptr,
-                                        JSMSG_UNDECLARED_VAR, bytes.ptr());
+    JSAutoByteString bytes;
+    if (!bytes.encodeUtf8(cx, propname))
+        return false;
+    return JS_ReportErrorFlagsAndNumberUTF8(cx, flags, GetErrorMessage, nullptr,
+                                            JSMSG_UNDECLARED_VAR, bytes.ptr());
 }
 
 /*
@@ -2269,7 +2270,8 @@ SetNonexistentProperty(JSContext* cx, HandleId id, HandleValue v, HandleValue re
                        QualifiedBool qualified, ObjectOpResult& result)
 {
     if (!qualified && receiver.isObject() && receiver.toObject().isUnqualifiedVarObj()) {
-        if (!MaybeReportUndeclaredVarAssignment(cx, JSID_TO_STRING(id)))
+        RootedString idStr(cx, JSID_TO_STRING(id));
+        if (!MaybeReportUndeclaredVarAssignment(cx, idStr))
             return false;
     }
 

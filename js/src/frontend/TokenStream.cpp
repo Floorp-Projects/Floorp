@@ -641,7 +641,7 @@ TokenStream::reportCompileErrorNumberVA(uint32_t offset, unsigned flags, unsigne
     }
 
     if (!ExpandErrorArgumentsVA(cx, GetErrorMessage, nullptr, errorNumber, &err.message,
-                                nullptr, ArgumentsAreASCII, &err.report, args))
+                                nullptr, ArgumentsAreLatin1, &err.report, args))
     {
         return false;
     }

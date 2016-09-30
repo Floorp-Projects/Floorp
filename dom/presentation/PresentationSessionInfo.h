@@ -192,6 +192,7 @@ public:
   NS_DECL_NSIPRESENTATIONCONTROLCHANNELLISTENER
   NS_DECL_NSISERVERSOCKETLISTENER
   NS_DECL_NSILISTNETWORKADDRESSESLISTENER
+  NS_DECL_NSIPRESENTATIONSESSIONTRANSPORTCALLBACK
 
   PresentationControllingInfo(const nsAString& aUrl,
                               const nsAString& aSessionId)
@@ -220,9 +221,12 @@ private:
 
   nsresult ContinueReconnect();
 
+  nsresult NotifyReconnectResult(nsresult aStatus);
+
   nsCOMPtr<nsIServerSocket> mServerSocket;
   nsCOMPtr<nsIPresentationServiceCallback> mReconnectCallback;
   bool mIsReconnecting = false;
+  bool mDoReconnectAfterClose = false;
 };
 
 // Session info with presenting browsing context (receiver side) behaviors.

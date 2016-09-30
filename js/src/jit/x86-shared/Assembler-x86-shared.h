@@ -167,9 +167,8 @@ class Operand
           case REG:          return r.encoding() == reg();
           case MEM_REG_DISP: return r.encoding() == base();
           case MEM_SCALE:    return r.encoding() == base() || r.encoding() == index();
-          default: MOZ_CRASH("Unexpected Operand kind");
+          default:           return false;
         }
-        return false;
     }
 };
 

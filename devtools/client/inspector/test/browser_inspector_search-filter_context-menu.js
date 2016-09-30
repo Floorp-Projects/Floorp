@@ -15,7 +15,7 @@ add_task(function* () {
   yield selectNode("h1", inspector);
 
   let win = inspector.panelWin;
-  let searchContextMenu = toolbox.textboxContextMenuPopup;
+  let searchContextMenu = toolbox.textBoxContextMenuPopup;
   ok(searchContextMenu,
     "The search filter context menu is loaded in the inspector");
 

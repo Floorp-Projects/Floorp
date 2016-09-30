@@ -40,7 +40,7 @@ bool
 GenerateInterfaceHelp(JSContext* cx, JS::HandleObject obj, const char* name);
 
 JSString*
-FileAsString(JSContext* cx, const char* pathname);
+FileAsString(JSContext* cx, JS::HandleString pathnameStr);
 
 class AutoCloseFile
 {

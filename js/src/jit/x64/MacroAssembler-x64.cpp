@@ -85,25 +85,34 @@ MacroAssemblerX64::loadConstantSimd128Float(const SimdConstant&v, FloatRegister 
 }
 
 void
-MacroAssemblerX64::convertInt64ToDouble(Register input, FloatRegister output)
+MacroAssemblerX64::convertInt64ToDouble(Register64 input, FloatRegister output)
 {
     // Zero the output register to break dependencies, see convertInt32ToDouble.
     zeroDouble(output);
 
-    vcvtsq2sd(input, output, output);
+    vcvtsq2sd(input.reg, output, output);
 }
 
 void
-MacroAssemblerX64::convertInt64ToFloat32(Register input, FloatRegister output)
+MacroAssemblerX64::convertInt64ToFloat32(Register64 input, FloatRegister output)
 {
     // Zero the output register to break dependencies, see convertInt32ToDouble.
     zeroFloat32(output);
 
-    vcvtsq2ss(input, output, output);
+    vcvtsq2ss(input.reg, output, output);
 }
-void
-MacroAssemblerX64::convertUInt64ToDouble(Register input, FloatRegister output)
+
+bool
+MacroAssemblerX64::convertUInt64ToDoubleNeedsTemp()
 {
+    return false;
+}
+
+void
+MacroAssemblerX64::convertUInt64ToDouble(Register64 input, FloatRegister output, Register temp)
+{
+    MOZ_ASSERT(temp == Register::Invalid());
+
     // Zero the output register to break dependencies, see convertInt32ToDouble.
     zeroDouble(output);
 
@@ -112,15 +121,15 @@ MacroAssemblerX64::convertUInt64ToDouble(Register input, FloatRegister output)
     Label done;
     Label isSigned;
 
-    testq(input, input);
+    testq(input.reg, input.reg);
     j(Assembler::Signed, &isSigned);
-    vcvtsq2sd(input, output, output);
+    vcvtsq2sd(input.reg, output, output);
     jump(&done);
 
     bind(&isSigned);
 
     ScratchRegisterScope scratch(asMasm());
-    mov(input, scratch);
+    mov(input.reg, scratch);
     shrq(Imm32(1), scratch);
     vcvtsq2sd(scratch, output, output);
     vaddsd(output, output, output);
@@ -129,8 +138,10 @@ MacroAssemblerX64::convertUInt64ToDouble(Register input, FloatRegister output)
 }
 
 void
-MacroAssemblerX64::convertUInt64ToFloat32(Register input, FloatRegister output)
+MacroAssemblerX64::convertUInt64ToFloat32(Register64 input, FloatRegister output, Register temp)
 {
+    MOZ_ASSERT(temp == Register::Invalid());
+
     // Zero the output register to break dependencies, see convertInt32ToDouble.
     zeroFloat32(output);
 
@@ -139,15 +150,15 @@ MacroAssemblerX64::convertUInt64ToFloat32(Register input, FloatRegister output)
     Label done;
     Label isSigned;
 
-    testq(input, input);
+    testq(input.reg, input.reg);
     j(Assembler::Signed, &isSigned);
-    vcvtsq2ss(input, output, output);
+    vcvtsq2ss(input.reg, output, output);
     jump(&done);
 
     bind(&isSigned);
 
     ScratchRegisterScope scratch(asMasm());
-    mov(input, scratch);
+    mov(input.reg, scratch);
     shrq(Imm32(1), scratch);
     vcvtsq2ss(scratch, output, output);
     vaddss(output, output, output);
@@ -156,25 +167,27 @@ MacroAssemblerX64::convertUInt64ToFloat32(Register input, FloatRegister output)
 }
 
 void
-MacroAssemblerX64::wasmTruncateDoubleToInt64(FloatRegister input, Register output, Label* oolEntry,
+MacroAssemblerX64::wasmTruncateDoubleToInt64(FloatRegister input, Register64 output, Label* oolEntry,
                                              Label* oolRejoin, FloatRegister tempReg)
 {
-    vcvttsd2sq(input, output);
-    cmpq(Imm32(1), output);
+    vcvttsd2sq(input, output.reg);
+    cmpq(Imm32(1), output.reg);
     j(Assembler::Overflow, oolEntry);
+    bind(oolRejoin);
 }
 
 void
-MacroAssemblerX64::wasmTruncateFloat32ToInt64(FloatRegister input, Register output, Label* oolEntry,
+MacroAssemblerX64::wasmTruncateFloat32ToInt64(FloatRegister input, Register64 output, Label* oolEntry,
                                               Label* oolRejoin, FloatRegister tempReg)
 {
-    vcvttss2sq(input, output);
-    cmpq(Imm32(1), output);
+    vcvttss2sq(input, output.reg);
+    cmpq(Imm32(1), output.reg);
     j(Assembler::Overflow, oolEntry);
+    bind(oolRejoin);
 }
 
 void
-MacroAssemblerX64::wasmTruncateDoubleToUInt64(FloatRegister input, Register output, Label* oolEntry,
+MacroAssemblerX64::wasmTruncateDoubleToUInt64(FloatRegister input, Register64 output, Label* oolEntry,
                                               Label* oolRejoin, FloatRegister tempReg)
 {
     // If the input < INT64_MAX, vcvttsd2sq will do the right thing, so
@@ -186,8 +199,8 @@ MacroAssemblerX64::wasmTruncateDoubleToUInt64(FloatRegister input, Register outp
     ScratchDoubleScope scratch(asMasm());
     loadConstantDouble(double(0x8000000000000000), scratch);
     asMasm().branchDouble(Assembler::DoubleGreaterThanOrEqual, input, scratch, &isLarge);
-    vcvttsd2sq(input, output);
-    testq(output, output);
+    vcvttsd2sq(input, output.reg);
+    testq(output.reg, output.reg);
     j(Assembler::Signed, oolEntry);
     jump(oolRejoin);
 
@@ -195,14 +208,16 @@ MacroAssemblerX64::wasmTruncateDoubleToUInt64(FloatRegister input, Register outp
 
     moveDouble(input, tempReg);
     vsubsd(scratch, tempReg, tempReg);
-    vcvttsd2sq(tempReg, output);
-    testq(output, output);
+    vcvttsd2sq(tempReg, output.reg);
+    testq(output.reg, output.reg);
     j(Assembler::Signed, oolEntry);
-    asMasm().or64(Imm64(0x8000000000000000), Register64(output));
+    asMasm().or64(Imm64(0x8000000000000000), output);
+
+    bind(oolRejoin);
 }
 
 void
-MacroAssemblerX64::wasmTruncateFloat32ToUInt64(FloatRegister input, Register output, Label* oolEntry,
+MacroAssemblerX64::wasmTruncateFloat32ToUInt64(FloatRegister input, Register64 output, Label* oolEntry,
                                                Label* oolRejoin, FloatRegister tempReg)
 {
     // If the input < INT64_MAX, vcvttss2sq will do the right thing, so
@@ -214,8 +229,8 @@ MacroAssemblerX64::wasmTruncateFloat32ToUInt64(FloatRegister input, Register out
     ScratchFloat32Scope scratch(asMasm());
     loadConstantFloat32(float(0x8000000000000000), scratch);
     asMasm().branchFloat(Assembler::DoubleGreaterThanOrEqual, input, scratch, &isLarge);
-    vcvttss2sq(input, output);
-    testq(output, output);
+    vcvttss2sq(input, output.reg);
+    testq(output.reg, output.reg);
     j(Assembler::Signed, oolEntry);
     jump(oolRejoin);
 
@@ -223,10 +238,12 @@ MacroAssemblerX64::wasmTruncateFloat32ToUInt64(FloatRegister input, Register out
 
     moveFloat32(input, tempReg);
     vsubss(scratch, tempReg, tempReg);
-    vcvttss2sq(tempReg, output);
-    testq(output, output);
+    vcvttss2sq(tempReg, output.reg);
+    testq(output.reg, output.reg);
     j(Assembler::Signed, oolEntry);
-    asMasm().or64(Imm64(0x8000000000000000), Register64(output));
+    asMasm().or64(Imm64(0x8000000000000000), output);
+
+    bind(oolRejoin);
 }
 
 void

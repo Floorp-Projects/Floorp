@@ -83,7 +83,8 @@ js::ReportNotObject(JSContext* cx, const Value& v)
     RootedValue value(cx, v);
     UniqueChars bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, value, nullptr);
     if (bytes)
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, bytes.get());
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT,
+                                   bytes.get());
 }
 
 const char*
@@ -191,8 +192,8 @@ js::GetFirstArgumentAsObject(JSContext* cx, const CallArgs& args, const char* me
                              MutableHandleObject objp)
 {
     if (args.length() == 0) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
-                             method, "0", "s");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
+                                  method, "0", "s");
         return false;
     }
 
@@ -201,8 +202,8 @@ js::GetFirstArgumentAsObject(JSContext* cx, const CallArgs& args, const char* me
         UniqueChars bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, nullptr);
         if (!bytes)
             return false;
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
-                             bytes.get(), "not an object");
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
+                                   bytes.get(), "not an object");
         return false;
     }
 
@@ -236,7 +237,7 @@ js::Throw(JSContext* cx, jsid id, unsigned errorNumber)
     JSAutoByteString bytes(cx, idstr);
     if (!bytes)
         return false;
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, errorNumber, bytes.ptr());
+    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, errorNumber, bytes.ptr());
     return false;
 }
 
@@ -250,7 +251,7 @@ js::Throw(JSContext* cx, JSObject* obj, unsigned errorNumber)
                               nullptr, nullptr);
     } else {
         MOZ_ASSERT(js_ErrorFormatString[errorNumber].argCount == 0);
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, errorNumber);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, errorNumber);
     }
     return false;
 }
@@ -262,8 +263,8 @@ bool
 CheckCallable(JSContext* cx, JSObject* obj, const char* fieldName)
 {
     if (obj && !obj->isCallable()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
-                             fieldName);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
+                                  fieldName);
         return false;
     }
     return true;
@@ -340,8 +341,8 @@ js::ToPropertyDescriptor(JSContext* cx, HandleValue descval, bool checkAccessors
                 return false;
             desc.setGetterObject(&v.toObject());
         } else if (!v.isUndefined()) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
-                                 js_getter_str);
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
+                                      js_getter_str);
             return false;
         }
         attrs |= JSPROP_GETTER | JSPROP_SHARED;
@@ -358,8 +359,8 @@ js::ToPropertyDescriptor(JSContext* cx, HandleValue descval, bool checkAccessors
                 return false;
             desc.setSetterObject(&v.toObject());
         } else if (!v.isUndefined()) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
-                                 js_setter_str);
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
+                                      js_setter_str);
             return false;
         }
         attrs |= JSPROP_SETTER | JSPROP_SHARED;
@@ -368,7 +369,7 @@ js::ToPropertyDescriptor(JSContext* cx, HandleValue descval, bool checkAccessors
     // step 10
     if (hasGetOrSet) {
         if (!(attrs & JSPROP_IGNORE_READONLY) || !(attrs & JSPROP_IGNORE_VALUE)) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INVALID_DESCRIPTOR);
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_DESCRIPTOR);
             return false;
         }
 
@@ -1128,8 +1129,7 @@ JSObject*
 js::CloneObject(JSContext* cx, HandleObject obj, Handle<js::TaggedProto> proto)
 {
     if (!obj->isNative() && !obj->is<ProxyObject>()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                             JSMSG_CANT_CLONE_OBJECT);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_CLONE_OBJECT);
         return nullptr;
     }
 
@@ -1140,8 +1140,7 @@ js::CloneObject(JSContext* cx, HandleObject obj, Handle<js::TaggedProto> proto)
             return nullptr;
 
         if (clone->is<JSFunction>() && (obj->compartment() != clone->compartment())) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                                 JSMSG_CANT_CLONE_OBJECT);
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_CLONE_OBJECT);
             return nullptr;
         }
 
@@ -2522,8 +2521,8 @@ js::SetPrototype(JSContext* cx, HandleObject obj, HandleObject proto, JS::Object
      * have a mutable [[Prototype]].
      */
     if (obj->is<ArrayBufferObject>()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_SET_PROTO_OF,
-                             "incompatible ArrayBuffer");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_SET_PROTO_OF,
+                                  "incompatible ArrayBuffer");
         return false;
     }
 
@@ -2531,8 +2530,8 @@ js::SetPrototype(JSContext* cx, HandleObject obj, HandleObject proto, JS::Object
      * Disallow mutating the [[Prototype]] on Typed Objects, per the spec.
      */
     if (obj->is<TypedObject>()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_SET_PROTO_OF,
-                             "incompatible TypedObject");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_SET_PROTO_OF,
+                                  "incompatible TypedObject");
         return false;
     }
 
@@ -2841,8 +2840,8 @@ js::WatchProperty(JSContext* cx, HandleObject obj, HandleId id, HandleObject cal
         return op(cx, obj, id, callable);
 
     if (!obj->isNative() || obj->is<TypedArrayObject>()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_WATCH,
-                             obj->getClass()->name);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_WATCH,
+                                  obj->getClass()->name);
         return false;
     }
 
@@ -3173,8 +3172,8 @@ js::ToObjectSlow(JSContext* cx, JS::HandleValue val, bool reportScanStack)
         if (reportScanStack) {
             ReportIsNullOrUndefined(cx, JSDVG_SEARCH_STACK, val, nullptr);
         } else {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
-                                 val.isNull() ? "null" : "undefined", "object");
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
+                                      val.isNull() ? "null" : "undefined", "object");
         }
         return nullptr;
     }
@@ -3282,12 +3281,12 @@ GetObjectSlotNameFunctor::operator()(JS::CallbackTracer* trc, char* buf, size_t 
 bool
 js::ReportGetterOnlyAssignment(JSContext* cx, bool strict)
 {
-    return JS_ReportErrorFlagsAndNumber(cx,
-                                        strict
-                                        ? JSREPORT_ERROR
-                                        : JSREPORT_WARNING | JSREPORT_STRICT,
-                                        GetErrorMessage, nullptr,
-                                        JSMSG_GETTER_ONLY);
+    return JS_ReportErrorFlagsAndNumberASCII(cx,
+                                             strict
+                                             ? JSREPORT_ERROR
+                                             : JSREPORT_WARNING | JSREPORT_STRICT,
+                                             GetErrorMessage, nullptr,
+                                             JSMSG_GETTER_ONLY);
 }
 
 

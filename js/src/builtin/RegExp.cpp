@@ -324,7 +324,7 @@ regexp_compile_impl(JSContext* cx, const CallArgs& args)
     if (cls == ESClass::RegExp) {
         // Step 3a.
         if (args.hasDefined(1)) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NEWREGEXP_FLAGGED);
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NEWREGEXP_FLAGGED);
             return false;
         }
 

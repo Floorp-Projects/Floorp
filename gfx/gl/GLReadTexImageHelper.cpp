@@ -417,6 +417,7 @@ ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest)
 #ifdef XP_MACOSX
     if (gl->WorkAroundDriverBugs() &&
         gl->Vendor() == gl::GLVendor::NVIDIA &&
+        !gl->IsCoreProfile() &&
         hasAlpha &&
         width && height)
     {

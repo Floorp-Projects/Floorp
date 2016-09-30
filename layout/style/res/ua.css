@@ -39,15 +39,20 @@
   page-break-inside: inherit;
   vertical-align: inherit; /* needed for inline-table */
   line-height: inherit; /* needed for vertical-align on inline-table */
-  align-self: inherit;
-  justify-self: inherit;
-  order: inherit;   /* needed for "order" to work on table flex/grid items */
   /* Bug 722777 */
   transform: inherit;
   transform-origin: inherit;
   /* Bug 724750 */
   backface-visibility: inherit;
   clip: inherit;
+  /* When the table wrapper is a Flex/Grid item we need these: */
+  align-self: inherit;
+  justify-self: inherit;
+  grid-column-start: inherit;
+  grid-column-end: inherit;
+  grid-row-start: inherit;
+  grid-row-end: inherit;
+  order: inherit;
 }
 
 *|*::-moz-table-row {

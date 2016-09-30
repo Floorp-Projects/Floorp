@@ -261,10 +261,9 @@ PresentationDeviceRequest::Cancel(nsresult aReason)
  * Implementation of PresentationService
  */
 
-NS_IMPL_ISUPPORTS_INHERITED(PresentationService,
-                            PresentationServiceBase,
-                            nsIPresentationService,
-                            nsIObserver)
+NS_IMPL_ISUPPORTS(PresentationService,
+                  nsIPresentationService,
+                  nsIObserver)
 
 PresentationService::PresentationService()
   : mIsAvailable(false)

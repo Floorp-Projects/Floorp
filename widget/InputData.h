@@ -487,6 +487,7 @@ public:
     TAPGESTURE_UP,
     TAPGESTURE_CONFIRMED,
     TAPGESTURE_DOUBLE,
+    TAPGESTURE_SECOND, // See GeckoContentController::TapType::eSecondTap
     TAPGESTURE_CANCEL,
 
     // Used as an upper bound for ContiguousEnumSerializer

@@ -728,7 +728,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void orPtr(Register src, Register dest) PER_ARCH;
     inline void orPtr(Imm32 imm, Register dest) PER_ARCH;
 
-    inline void and64(Register64 src, Register64 dest) DEFINED_ON(x86, arm);
+    inline void and64(Register64 src, Register64 dest) DEFINED_ON(x86, x64, arm);
     inline void or64(Register64 src, Register64 dest) PER_ARCH;
     inline void xor64(Register64 src, Register64 dest) PER_ARCH;
 

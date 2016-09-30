@@ -93,7 +93,8 @@ AndroidContentController::HandleTap(TapType aType, const LayoutDevicePoint& aPoi
     // HandleTap). We want to post the SingleTap message once; it can be
     // done from either thread but we need access to the callback transform
     // so we do it from the main thread.
-    if (NS_IsMainThread() && aType == TapType::eSingleTap) {
+    if (NS_IsMainThread() &&
+        (aType == TapType::eSingleTap || aType == TapType::eSecondTap)) {
         DispatchSingleTapToObservers(aPoint, aGuid);
     }
 

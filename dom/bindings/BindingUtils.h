@@ -1228,15 +1228,12 @@ HandleNewBindingWrappingFailure(JSContext* cx, JS::Handle<JSObject*> scope,
 
 template<bool Fatal>
 inline bool
-EnumValueNotFound(JSContext* cx, JSString* str, const char* type,
-                  const char* sourceDescription)
-{
-  return false;
-}
+EnumValueNotFound(JSContext* cx, JS::HandleString str, const char* type,
+                  const char* sourceDescription);
 
 template<>
 inline bool
-EnumValueNotFound<false>(JSContext* cx, JSString* str, const char* type,
+EnumValueNotFound<false>(JSContext* cx, JS::HandleString str, const char* type,
                          const char* sourceDescription)
 {
   // TODO: Log a warning to the console.
@@ -1245,11 +1242,11 @@ EnumValueNotFound<false>(JSContext* cx, JSString* str, const char* type,
 
 template<>
 inline bool
-EnumValueNotFound<true>(JSContext* cx, JSString* str, const char* type,
+EnumValueNotFound<true>(JSContext* cx, JS::HandleString str, const char* type,
                         const char* sourceDescription)
 {
-  JSAutoByteString deflated(cx, str);
-  if (!deflated) {
+  JSAutoByteString deflated;
+  if (!deflated.encodeUtf8(cx, str)) {
     return false;
   }
   return ThrowErrorMessage(cx, MSG_INVALID_ENUM_VALUE, sourceDescription,
@@ -1289,7 +1286,7 @@ FindEnumStringIndex(JSContext* cx, JS::Handle<JS::Value> v, const EnumEntry* val
                     const char* type, const char* sourceDescription, bool* ok)
 {
   // JS_StringEqualsAscii is slow as molasses, so don't use it here.
-  JSString* str = JS::ToString(cx, v);
+  JS::RootedString str(cx, JS::ToString(cx, v));
   if (!str) {
     *ok = false;
     return 0;
