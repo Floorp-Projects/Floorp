@@ -4365,21 +4365,16 @@ nsCookieService::CookieExists(nsICookie2* aCookie,
   NS_ENSURE_ARG_POINTER(aCookie);
   NS_ENSURE_ARG_POINTER(aCx);
   NS_ENSURE_ARG_POINTER(aFoundCookie);
-
   MOZ_ASSERT(aArgc == 0 || aArgc == 1);
 
-  nsresult rv;
   NeckoOriginAttributes attrs;
-
-  if (aArgc == 1) {
-    rv = InitializeOriginAttributes(&attrs,
-                                    aOriginAttributes,
-                                    aCx,
-                                    aArgc,
-                                    u"nsICookieManager2.cookieExists()",
-                                    u"2");
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  nsresult rv = InitializeOriginAttributes(&attrs,
+                                           aOriginAttributes,
+                                           aCx,
+                                           aArgc,
+                                           u"nsICookieManager2.cookieExists()",
+                                           u"2");
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return CookieExistsNative(aCookie, &attrs, aFoundCookie);
 }
