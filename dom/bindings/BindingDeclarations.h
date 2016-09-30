@@ -26,6 +26,7 @@
 #include "nsStringGlue.h"
 #include "nsTArray.h"
 
+class nsIPrincipal;
 class nsWrapperCache;
 
 namespace mozilla {
@@ -107,6 +108,10 @@ public:
   {
     return !Get();
   }
+
+  // It returns the subjectPrincipal if called on the main-thread, otherwise
+  // a nullptr is returned.
+  nsIPrincipal* GetSubjectPrincipal() const;
 
 protected:
   JS::Rooted<JSObject*> mGlobalJSObject;
