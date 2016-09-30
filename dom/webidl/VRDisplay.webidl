@@ -117,8 +117,6 @@ interface VRStageParameters {
 [Pref="dom.vr.enabled",
  HeaderFile="mozilla/dom/VRDisplay.h"]
 interface VRPose {
-  readonly attribute DOMHighResTimeStamp timestamp;
-
   /**
    * position, linearVelocity, and linearAcceleration are 3-component vectors.
    * position is relative to a sitting space. Transforming this point with
