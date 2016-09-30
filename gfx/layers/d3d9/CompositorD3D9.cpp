@@ -198,6 +198,10 @@ CompositorD3D9::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
 {
   RefPtr<IDirect3DTexture9> texture = CreateTexture(aRect, aSource, aSourcePoint);
 
+  if (!texture) {
+    return nullptr;
+  }
+
   return MakeAndAddRef<CompositingRenderTargetD3D9>(texture,
                                                     INIT_MODE_NONE,
                                                     aRect);
