@@ -75,6 +75,9 @@ child:
 
   // Sent when APZ detects checkerboarding and apz checkerboard reporting is enabled.
   async ReportCheckerboard(uint32_t severity, nsCString log);
+
+  // Graphics errors, analogous to PContent::GraphicsError
+  async GraphicsError(nsCString aError);
 };
 
 } // namespace gfx
