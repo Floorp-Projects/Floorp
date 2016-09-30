@@ -86,7 +86,7 @@ task_description_schema = Schema({
     # if omitted, the build will not be indexed.
     Optional('index'): {
         # the name of the product this build produces
-        'product': Any('firefox', 'mobile', 'b2g'),
+        'product': Any('firefox', 'mobile'),
 
         # the names to use for this job in the TaskCluster index
         'job-name': Any(
@@ -267,7 +267,6 @@ GROUP_NAMES = {
     'tc-W-e10s': 'Web platform tests executed by TaskCluster with e10s',
     'tc-X': 'Xpcshell tests executed by TaskCluster',
     'tc-X-e10s': 'Xpcshell tests executed by TaskCluster with e10s',
-    'tc-Sim': 'Mulet simulator runs',
     'Aries': 'Aries Device Image',
     'Nexus 5-L': 'Nexus 5-L Device Image',
     'Cc': 'Toolchain builds',
