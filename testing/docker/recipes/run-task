@@ -223,7 +223,12 @@ def main(args):
                 set_dir_permissions(os.path.join(root, d), uid, gid)
 
             for f in files:
-                os.chown(os.path.join(root, f), uid, gid)
+                # File may be a symlink that points to nowhere. In which case
+                # os.chown() would fail because it attempts to follow the
+                # symlink. We only care about directory entries, not what
+                # they point to. So setting the owner of the symlink should
+                # be sufficient.
+                os.lchown(os.path.join(root, f), uid, gid)
 
     def prepare_checkout_dir(checkout):
         if not checkout:
