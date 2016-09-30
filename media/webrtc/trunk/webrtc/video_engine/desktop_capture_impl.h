@@ -55,7 +55,8 @@ public:
                                 char* deviceUniqueIdUTF8,
                                 uint32_t deviceUniqueIdUTF8Length,
                                 char* productUniqueIdUTF8,
-                                uint32_t productUniqueIdUTF8Length);
+                                uint32_t productUniqueIdUTF8Length,
+                                pid_t* pid);
 
   virtual int32_t DisplayCaptureSettingsDialogBox(const char* deviceUniqueIdUTF8,
                                                   const char* dialogTitleUTF8,
@@ -93,7 +94,8 @@ public:
                                 char* deviceUniqueIdUTF8,
                                 uint32_t deviceUniqueIdUTF8Length,
                                 char* productUniqueIdUTF8,
-                                uint32_t productUniqueIdUTF8Length);
+                                uint32_t productUniqueIdUTF8Length,
+                                pid_t* pid);
 
   virtual int32_t DisplayCaptureSettingsDialogBox(const char* deviceUniqueIdUTF8,
                                                   const char* dialogTitleUTF8,
@@ -130,7 +132,8 @@ public:
                                 char* deviceUniqueIdUTF8,
                                 uint32_t deviceUniqueIdUTF8Length,
                                 char* productUniqueIdUTF8,
-                                uint32_t productUniqueIdUTF8Length);
+                                uint32_t productUniqueIdUTF8Length,
+                                pid_t* pid);
 
   virtual int32_t DisplayCaptureSettingsDialogBox(const char* deviceUniqueIdUTF8,
                                                   const char* dialogTitleUTF8,

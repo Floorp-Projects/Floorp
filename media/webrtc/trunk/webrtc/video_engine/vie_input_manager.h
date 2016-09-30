@@ -49,7 +49,8 @@ class ViEInputManager : private ViEManagerBase,
                     char* device_nameUTF8,
                     uint32_t device_name_length,
                     char* device_unique_idUTF8,
-                    uint32_t device_unique_idUTF8Length);
+                    uint32_t device_unique_idUTF8Length,
+                    pid_t* pid);
 
   // Returns the number of capture capabilities for a specified device.
   int NumberOfCaptureCapabilities(const char* device_unique_idUTF8);
