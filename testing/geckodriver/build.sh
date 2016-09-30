@@ -7,7 +7,7 @@ print_versions() {
 
 rustup_install() {
     export PATH="$PATH:$HOME/.cargo/bin"
-    curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain=beta
+    curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain=$1
 }
 
 # Add provided target to current Rust toolchain if it is not already
@@ -122,12 +122,14 @@ package_binary() {
 }
 
 main() {
+    TOOLCHAIN=${TOOLCHAIN:=beta}
+
     if [ ! -z "$USE_DOCKER" ]
     then
         setup_docker
         print_versions
     else
-        rustup_install
+        rustup_install $TOOLCHAIN
         print_versions
         rustup_target_add $TARGET
     fi
