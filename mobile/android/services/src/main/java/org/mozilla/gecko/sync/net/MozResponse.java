@@ -149,7 +149,7 @@ public class MozResponse {
     response = res;
   }
 
-  private String getNonMissingHeader(String h) {
+  protected String getNonMissingHeader(String h) {
     if (!this.hasHeader(h)) {
       return null;
     }

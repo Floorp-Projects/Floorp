@@ -191,7 +191,7 @@ public class TestServer11RepositorySession {
         getAuthHeaderProvider(),
         infoCollections,
         infoConfiguration,
-        5000, "sortindex", countsFetcher);
+        5000, 5000, "sortindex", countsFetcher);
 
     data.startHTTPServer(server);
     final AtomicBoolean out = new AtomicBoolean(false);

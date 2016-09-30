@@ -47,6 +47,7 @@ public class MockServer implements Container {
     final String timestampHeader = Utils.millisecondsToDecimalSecondsString(time);
     response.setValue("X-Weave-Timestamp", timestampHeader);
     Logger.debug(LOG_TAG, "> X-Weave-Timestamp header: " + timestampHeader);
+    response.setValue("X-Last-Modified", "12345678");
     return bodyStream;
   }
 

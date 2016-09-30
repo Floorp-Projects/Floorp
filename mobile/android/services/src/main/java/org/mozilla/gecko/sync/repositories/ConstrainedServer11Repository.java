@@ -11,29 +11,41 @@ import org.mozilla.gecko.sync.InfoConfiguration;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 
 /**
- * A kind of Server11Repository that supports explicit setting of limit and sort on operations.
+ * A kind of Server11Repository that supports explicit setting of total fetch limit, per-batch fetch limit, and a sort order.
  *
  * @author rnewman
  *
  */
 public class ConstrainedServer11Repository extends Server11Repository {
 
-  private String sort = null;
-  private long limit  = -1;
+  private final String sort;
+  private final long batchLimit;
+  private final long totalLimit;
 
-  public ConstrainedServer11Repository(String collection, String storageURL, AuthHeaderProvider authHeaderProvider, InfoCollections infoCollections, InfoConfiguration infoConfiguration, long limit, String sort) throws URISyntaxException {
+  public ConstrainedServer11Repository(String collection, String storageURL,
+                                       AuthHeaderProvider authHeaderProvider,
+                                       InfoCollections infoCollections,
+                                       InfoConfiguration infoConfiguration,
+                                       long batchLimit, long totalLimit, String sort)
+          throws URISyntaxException {
     super(collection, storageURL, authHeaderProvider, infoCollections, infoConfiguration);
-    this.limit = limit;
+    this.batchLimit = batchLimit;
+    this.totalLimit = totalLimit;
     this.sort  = sort;
   }
 
   @Override
-  protected String getDefaultSort() {
+  public String getDefaultSort() {
     return sort;
   }
 
   @Override
-  protected long getDefaultFetchLimit() {
-    return limit;
+  public long getDefaultBatchLimit() {
+    return batchLimit;
+  }
+
+  @Override
+  public long getDefaultTotalLimit() {
+    return totalLimit;
   }
 }
