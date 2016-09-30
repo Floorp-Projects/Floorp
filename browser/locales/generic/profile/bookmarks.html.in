@@ -4,53 +4,29 @@
 #if AB_CD == ja_jp_mac
 #define AB_CD ja
 #endif
-
-#define mozilla_icon data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gwMDAsTBZbkNwAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAABNElEQVQ4y8WSsU0DURBE3yyWIaAJaqAAN4DPSL6AlIACKIEOyJEgRsIgOOkiInJqgAKowNg7BHdn7MOksNl+zZ//dvbDf5cAiklp22BdVtXdeTEpDYDB9m1VzU6OJuVp2NdEQCaI96fH2YHG4+mDduKYNMYINTcjcGbXzQVDEAphG0k48zUsajIbnAiMIXThpW8EICE0RAK4dvoKg9NIcTiQ589otyHOZLnwqK5nLwBFUZ4igc3iM0d1ff8CMC6mZ6Ihiaqq3gi1aUAnArD00SW1fq5OLBg0ymYmSZsR2/t4e/rGyCLW0sbp3oq+yTYqVgytQWui2FS7XYF7GFprY921T4CNQt8zr47dNzCkIX7y/jBtH+v+RGMQrc828W8pApnZbmEVQp/Ae7BlOy2ttib81/UFc+WRWEbjckIAAAAASUVORK5CYII=
-
-#define nightly_icon data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA01JREFUeNpkk01oXFUUx//vzp33ZiaTzkwnyUwmsbbNRpp0GhuVKiVgQIUiLmoX7lyIG10I6qIUrG6KGyuYZbMwiATqxipSMVhQYwWhiwSJwUxKkzbz8ZJ5H/M+7/vunUIE7Vnc1f3/zjn/c46wsCbjIOI4Rlfew+Zf6/h9+RYYYzj70hymZp7GULUCSin+H8IBwLYsfLOwiOfffndK1c2LmhO84jl+2e5ZCTN6Xer0fpp5dmq+frxy5zGAY9n49IOLuHDls8uqE3y07YV0ywwQGA6oZsJRFRT0FnK2Hpw8PTl/7tXZDw8ApF/29YUvufjqxxqLPrnLQBUiQRUI4EcQHQ+EgwbjENl8Pv3H9W/f//m7W9cOAKkXzr+J4pm5umy6S/uEkiAEOlzscWHG5jTbhcsrDJiHsN1CIScJTlc5JaSlldEna9uk8fcGHNO6tOMGqfssQjNFoHOxyAXU9xF5HiRXw2AqhuUEsLs6giCkjbXG549a+O3mMhQneLnthOh0NBiaAdozkTEdpC0Hnm2hKAKR3ESJRigNFZBHCF2zn+p7SMIwRM9kRcI/D5g2xAcd1PQeMtw8xkGuafIRGRgZKfHfCbKlIu5t3IVASYYDDtMzL85il2fLuh6qIkFkWtjrARY3zjENJLwCKgqwOjLcnW30Qh/HnpmGYTJhT1bSdPL0NBpr+6rbs8qhIiPivQtRhDDJQuCViI4BxdJRrx/jBopob25BDmIMnzgZjFTK+2R4tAo4+q8iM9Ba3wBTuxirHELeM5AxFO6FCsnSsHNnFfL9XUiFIo7ypNmB9D3eQkT665nS5Xm72Q5r3KCo04be2MIRKULOUlEkPnJpAbn8AI7XJyEUy/CBhIrJlUdT6D/rP3x1u1yQFjP5bFIbH4HdbHG2j/GJMfiqzneCwVI0oFrD8OgTiKLgl5Ubi0v/uYV3ZqcrE2ff+Do2/LlUxAi/HKQZH9eegupzpxDztL4gIfTU9d3VG+ev/nh7s6/797wiz1K3VpYuDU3MvFWunXg9ly2WTNVNDZaPgIU08V3NMNXVZfmfP68lvt187Br78d5r52hoKaUkiWspQqqHx4+OCQLhFu3KAXNbCYQWzR5SBCr5X3x/M+lrHgowAMP2wWqd+FzxAAAAAElFTkSuQmCC
-
-#define firefox_icon data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAz5JREFUeNpcU0toXFUY/s49596588ikySSmM8rk0UkJEirVTVEjYk1NUdRFFgouXZQI2k2hUCjdiYIuCi4Kuig0DbqQYgU3Yi0iFRuRCBMwaZvMZDTNY95z3/fM8b8jldpzOeeee/i/737n+/+f4ZExf730rkiaZ9NJMx/nmk5HypMqqLr+ZuD4F67N5ZYejmfRsnvhyKsLhSs3zP70SubgYKHSdFENu+gXAprQIGnvBi5ez0m1b6u7M399+PTx+UvtCKtFi2F6195qXK2byir88esy5ksfYND5DhuhRCtUKBNB0Q7w5Z8ee2GgWdjOn250fn5v5j8F5dOHlZD0kWRgAwp3hrKY0S9BJWKIcQ5PShhNG4+1bHx+IocT+RXcrRSDMfFNRvvt3Oyp/icIrRhUl9hoO4kt3F55Bxf3LkLV20jWOohbDjzXxyc/lMH0cRSyCd1xq+dFhu986t7T0CUwIzB8EkW3O5ibhj44ib7NJhiBKRoB/aS4ZWHjbxtjGQYP7nGRTjim1SaQqYiAVAREpHG8vzWJn+6PQ6CF0HPR7nQQczpYeEWHyWMUkwU8MSECGwgJxAWp9xWKNzkuH3oet+JDlIE9Momedh1G4CN0bfhVG9nsS0BQQthJx0V7j3elq7ihqV5ezQTwZmodP9ZGkU/bOPr4Nr53xtDYsaD7Dg4nNqFaH5OCYSSdGhf7daNmuv6wEKqXk/yExKGBHSznFsH6FFpKQ/JAA0ulUejWLt44lkHXsqDaX6C6Nl4Rnq8vK8s/KThDMlJhkI91YOO+iR3XwEelCdTCBLSgijNzd6DLNfhlHfZ6FtWiWBQpq/V2LdSrrNPljBQkoOjuCiPxAMutOIbkPqYSEqeequGZaTLzdhZhS0PlnlB9bvhtr5CuHj3y2Qj8hVQ/kEopxONEEsO/0yATDYXYAdWrE69JEElXq7Hyk0tro+xBU1yZmr4xrIcvptIRCZlJJAYBmRGRkD08aivA7VDvWPqt564Xn41w/AHB1/u7l1/uGxGU8mNcgodUNDIq0JDeLnpzc1uo1Qr76rWbqyf/142PjsXJqdkmN2YDnQ9oGkJNU+t57q7qUv4y9/t64+HYfwQYAN7OczrzUDvGAAAAAElFTkSuQmCC
-
-#define bugzilla_icon data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAnYCL7J0pY9wwETY9kYEM9AAAAAEBAYAhVVVUDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA1bjTOS1Vb/wAA2/8JEqT/Q0g8kQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJnMqoiJtJ/0haST/NEkp/yQnW/8AAPD8AAHY/RsgP/JZUI+GKitih4ObUEAAAAAAAAAAAAAAAAAAAAAAKnouwip5Lv9ooW//a6Jz/y9GIv8JBXb/AADO/gEBvf8AAK7/FRJp/z9BfP8iLGj1AAAAAAAAAAAAAAAAL4YzwiB0I/+UwJ3/bK+C/02eZ/9CTjz/DBa1/wABxf8BAOj/AACp/w8Oc/sJCv//EhCN9AAAAAAAAAAANJA6iC2MMv93tYL/TZ5U/3mzjP9NoWr/NEss/wYIU/8CBOn/ARCX/wwNqP0TD6X/Cgyex5qacDAAAAAAAAAAADKUN/ZirWj/d76R/0SgXf9Ln1P/eLSM/1mda/8rOkb/CQiD/wMQvf8UEnT/MTAt4P//MwUhZyN8AAAAAAAAAAAznDf5UqlZ/228jP9NqnD/Qp9c/0yiVP+Dv5b/VaVw/0VxXf9PZXD/S3pQ/y54Nf8jcCf/I2wn/wAAAAA0ozjIM6E4/zOeOP+Uz6z/XLR+/06scv9BoV3/TqZX/4XBmP9XqHP/hr6Z/yp+Lf8leSr1JXUqbQAAAAA3rTz7Nqo7/zWmOqM3oz7rUK1W/43Mpf9etYD/T61z/0KjXf9Rqln/msup/46/lf8pgy7/JFg6sAAAAAAAAAAAOK8+8jqvOiMAAAAAAAAAADSlOv85pT//kM6o/2K5hP9Ysnv/YLJ2/ziXPv8piS3/V6Ri/yZQQ9wAAAAAAAAAAAAAAAAAAAAAAAAAADetP0E2qzz/OKg98UWsS/+e1K3/pNe4/4XDjv8ojy3/T7df/5fIqv8sjTH/K4kw/yqFLv8AAAAAAAAAAAAAAAA4sT3xN7A8+QAAAAA4qz3yNag6/zSlOf80oTn/csJ+/6/jwv9fjHj/MmRMdQAAAAAAAAAAAAAAAAAAAAAAAAAAOrdA/zm0QHQAAAAAAAAAADasO/k2qTvuRX5lpjqGT/gznDr/O3FXigAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADq9QiMAAAAAAAAAAAAAAAA4sj7/Nq09s0uOaSI1qTplM6U68wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOrc//zu0P0EAAAAAOK4+UjWsPPgAAAAAAAAAAAAAAAAAAAAA/48AAP8HAAD4AQAA8AAAAOAAAADAAQAAwAMAAMAAAACAAwAAAAMAAHADAADwAAAA5AcAAO4HAAD+bwAA/u8AAA==
-
-#define mdn_icon data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAA3XAAAN1wFCKJt4AAACYklEQVQ4y3WSTYjNYRTGf+f9/+/NuDN3GKMxt1mYpKR8RT6zEk1iyUo2IysSNspCxEIZRSN07YiUJSWkaUIZizELMzIZlO9h3MzXvf/341jcmTGa69RZvKfnPOc5z3mhQlRd651Ry17tqQQl5uR9ONHC3EtdiPPxWKZ24bhJvQV0OlBHhiV7pTs3WpUdEmeLrnWJAhhOtJA5/3RjqZg8Lrnwy4bQT/DvTb73Qt3N9ymATNvTU15Mvx8vfvTWDrmgT0y+dzuAZM527lM0Xx6jFKvnEKIYvIIqVeMFRCfEiDBWMw9UQUBUT8fBWvmrU9HEUpUWDq2cT23a0P6kQEqEwTFLQCBJpm9mYrV+6lW0ngNr62jb0kw6KvMeXJohZYSLzz9xvOMDJG6aPUKMtZPDObq+iXPbmoG/ooJC0QVaVy2g5AI3Bkq8/jYCkQEBo9ah1hESS1N1Gu9DxXNFRji0oYm+/Stoaa4tK0kcRq1HE4fxHqOKEf4bk16ubphd9iKxGKxFrcOWLB1vvuOCzmg0Irig1MxKMfBznPbOd2DLCmJNHKgSIdzr/kjXhwKbFtVPNQ+NJiw7+YDh0YTFuVr6CwLpaNJDjCYOtR61DldyHL7975c9dqeH4ZESscC7r79BFBI7kY5YrZsCC8qL/kFyR+6yY0UjS3M1PHz5ich71IOIQGSn0cskwdTeryTyfV9+jGzOP3rTQAiIHUNQEBkCeUbkcqguB2JEMGqt4sJlg8lGIsv0+p5dON8YaVgn3veJ85/F61YNtn5uXf3OCF0TQVacP0PiXMVzpfbemlnbna+I/QPSFTsRLd+hHAAAAABJRU5ErkJggg==
-
-#define addon_icon data:image/vndmicrosofticon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAN1wAADdcBQiibeAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAKoSURBVDiNjZNLaJRnFIaf75vvy2UGTWr8NYkxl0IFUYkNXSSZQNWFWlxIEVy1FLLo0i4adddVXRnS4kJwYxci2GaRTWlSFGKFGRXNmFBF62VMO4TENBdjMv9k5p//Oy4SLzgqHs7yPc95eTlHiQjvqniPbVYRzuBoR+FQDEvId4neIPNCY945DayNVff/8NUvn9XXNJMv5hhKnTvYP3ymHmj/IMBSbmHjjP8fycxv+MEzGqtatUI1vK7R7wM4J32XUv3Li/l5imGBkbtXlsMw/PF1jXozg3iP3aM0Z8XRBFDr1fl7Og9EnTguXx30p/6fjAIozb/i6C4BdB2z6QOfH27ZUFNL0QUELs/tycs4J2zdGEerCADTM1P8df3PxyUZiKPF8zyGHpwGFLC6QCCRuYA4QQQ6mw4hjhYT77GN2qiBWFnV5sXc0xMAgfKx5foVYKURB2vLPbxoM8auODE6ws/fH+77dHtjhxp5OHzywpWf/IIsRk25Rq0CRFY4UVNNndkmqZFRf3YuWaYUS0aE3RP5MXX3/iCOgu3Y1WYfL90sdSDgxRoYTY5mZ2anjwC/AqEBdM4tMJ4dwYs1YiOGSBkYrVHqlQNxoC34OV8BdxK9gQ+guo7bwdYdrXu92nU6nR7Pzc/PSXxfazTj30IpRaWpIqbX4UQoBDkWJlRwLzVeLBTyGs2UcUX5duzvsfPqNpvDovQhnBIdELGaWFk1hclYmLx2fxmFbNm5qXJNvdi2DQ1WAsO1P/5petshyf6v25gJ0nxUUUeiP531s/kvAcor7MDOL2pjz3JzVKpqUoMTpb8QsSqdeTT98fomjyDv8LP5aKI3uAgQP2orCkGAVRVMZxbQhnQJIAzkm3s3Js6GSfkEQEd4+bpa8+TW71P1ANqoB65I93OA2DgV+Z+omgAAAABJRU5ErkJggg==
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<!DOCTYPE NETSCAPE-Bookmark-file-1>
-<meta charset="UTF-8">
-<title>@bookmarks_title@</title>
-<h1>@bookmarks_heading@</h1>
 
-<dl><p>
-    <dt><h3 personal_toolbar_folder="true">@bookmarks_toolbarfolder@</h3></dt>
-    <dd>@bookmarks_toolbarfolder_description@
-#ifndef NIGHTLY_BUILD
-        <dl>
-            <p><dt><a href="https://www.mozilla.org/@AB_CD@/firefox/central/" icon="@firefox_icon@">@getting_started@</a></dt>
-        </dl>
-    <p><dt><h3>@firefox_heading@</h3></dt>
-        <dl><p>
-            <dt><a href="https://www.mozilla.org/@AB_CD@/firefox/help/" icon="@mozilla_icon@">@firefox_help@</a>
-            <dt><a href="https://www.mozilla.org/@AB_CD@/firefox/customize/" icon="@mozilla_icon@">@firefox_customize@</a>
-            <dt><a href="https://www.mozilla.org/@AB_CD@/contribute/" icon="@mozilla_icon@">@firefox_community@</a>
-            <dt><a href="https://www.mozilla.org/@AB_CD@/about/" icon="@mozilla_icon@">@firefox_about@</a>
-        </dl>
-#else
-        <dl>
-            <p><dt><a href="https://www.mozilla.org/@AB_CD@/contribute/" icon="@mozilla_icon@">@firefox_community@</a>
-        </dl>
-    <p><dt><h3>@nightly_heading@</h3></dt>
-        <dl><p>
-            <dt><a href="https://blog.nightly.mozilla.org/" icon="@nightly_icon@">@nightly_blog@</a>
-            <dt><a href="https://bugzilla.mozilla.org/" icon="@bugzilla_icon@" shortcuturl="bz" tags="bug,issue">@bugzilla@</a>
-            <dt><a href="https://developer.mozilla.org/" icon="@mdn_icon@" shortcuturl="mdn">@mdn@</a>
-            <dt><a href="https://addons.mozilla.org/@AB_CD@/firefox/addon/nightly-tester-tools/" icon="@addon_icon@">@nightly_tester_tools@</a>
-            <dt><a href="about:crashes" icon="@mozilla_icon@" tags="crash">@crashes@</a>
-            <dt><a href="https://mibbit.com/?server=irc.mozilla.org&channel=%23nightly" icon="@mozilla_icon@" tags="chat,irc">@irc@</a>
-            <dt><a href="https://planet.mozilla.org/" icon="@mozilla_icon@" tags="planet,news">@planet@</a>
-        </dl>
-#endif
-</dl>
+<!DOCTYPE NETSCAPE-Bookmark-file-1>
+<!-- This is an automatically generated file.
+     It will be read and overwritten.
+     DO NOT EDIT! -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<TITLE>@bookmarks_title@</TITLE>
+<H1>@bookmarks_heading@</H1>
+
+<DL><p>
+    <DT><H3 PERSONAL_TOOLBAR_FOLDER="true" ID="rdf:#$FvPhC3">@bookmarks_toolbarfolder@</H3>
+<DD>@bookmarks_toolbarfolder_description@
+    <DL><p>
+        <DT><A HREF="https://www.mozilla.org/@AB_CD@/firefox/central/" ICON="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAz5JREFUeNpcU0toXFUY/s49596588ikySSmM8rk0UkJEirVTVEjYk1NUdRFFgouXZQI2k2hUCjdiYIuCi4Kuig0DbqQYgU3Yi0iFRuRCBMwaZvMZDTNY95z3/fM8b8jldpzOeeee/i/737n+/+f4ZExf730rkiaZ9NJMx/nmk5HypMqqLr+ZuD4F67N5ZYejmfRsnvhyKsLhSs3zP70SubgYKHSdFENu+gXAprQIGnvBi5ez0m1b6u7M399+PTx+UvtCKtFi2F6195qXK2byir88esy5ksfYND5DhuhRCtUKBNB0Q7w5Z8ee2GgWdjOn250fn5v5j8F5dOHlZD0kWRgAwp3hrKY0S9BJWKIcQ5PShhNG4+1bHx+IocT+RXcrRSDMfFNRvvt3Oyp/icIrRhUl9hoO4kt3F55Bxf3LkLV20jWOohbDjzXxyc/lMH0cRSyCd1xq+dFhu986t7T0CUwIzB8EkW3O5ibhj44ib7NJhiBKRoB/aS4ZWHjbxtjGQYP7nGRTjim1SaQqYiAVAREpHG8vzWJn+6PQ6CF0HPR7nQQczpYeEWHyWMUkwU8MSECGwgJxAWp9xWKNzkuH3oet+JDlIE9Momedh1G4CN0bfhVG9nsS0BQQthJx0V7j3elq7ihqV5ezQTwZmodP9ZGkU/bOPr4Nr53xtDYsaD7Dg4nNqFaH5OCYSSdGhf7daNmuv6wEKqXk/yExKGBHSznFsH6FFpKQ/JAA0ulUejWLt44lkHXsqDaX6C6Nl4Rnq8vK8s/KThDMlJhkI91YOO+iR3XwEelCdTCBLSgijNzd6DLNfhlHfZ6FtWiWBQpq/V2LdSrrNPljBQkoOjuCiPxAMutOIbkPqYSEqeequGZaTLzdhZhS0PlnlB9bvhtr5CuHj3y2Qj8hVQ/kEopxONEEsO/0yATDYXYAdWrE69JEElXq7Hyk0tro+xBU1yZmr4xrIcvptIRCZlJJAYBmRGRkD08aivA7VDvWPqt564Xn41w/AHB1/u7l1/uGxGU8mNcgodUNDIq0JDeLnpzc1uo1Qr76rWbqyf/142PjsXJqdkmN2YDnQ9oGkJNU+t57q7qUv4y9/t64+HYfwQYAN7OczrzUDvGAAAAAElFTkSuQmCC" ID="rdf:#$GvPhC3">@getting_started@</A>
+    </DL><p>
+    <DT><H3 ID="rdf:#$ZvPhC3">@firefox_heading@</H3>
+    <DL><p>
+        <DT><A HREF="https://www.mozilla.org/@AB_CD@/firefox/help/" ICON="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gwMDAsTBZbkNwAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAABNElEQVQ4y8WSsU0DURBE3yyWIaAJaqAAN4DPSL6AlIACKIEOyJEgRsIgOOkiInJqgAKowNg7BHdn7MOksNl+zZ//dvbDf5cAiklp22BdVtXdeTEpDYDB9m1VzU6OJuVp2NdEQCaI96fH2YHG4+mDduKYNMYINTcjcGbXzQVDEAphG0k48zUsajIbnAiMIXThpW8EICE0RAK4dvoKg9NIcTiQ589otyHOZLnwqK5nLwBFUZ4igc3iM0d1ff8CMC6mZ6Ihiaqq3gi1aUAnArD00SW1fq5OLBg0ymYmSZsR2/t4e/rGyCLW0sbp3oq+yTYqVgytQWui2FS7XYF7GFprY921T4CNQt8zr47dNzCkIX7y/jBtH+v+RGMQrc828W8pApnZbmEVQp/Ae7BlOy2ttib81/UFc+WRWEbjckIAAAAASUVORK5CYII=" ID="rdf:#$22iCK1">@firefox_help@</A>
+        <DT><A HREF="https://www.mozilla.org/@AB_CD@/firefox/customize/" ICON="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gwMDAsTBZbkNwAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAABNElEQVQ4y8WSsU0DURBE3yyWIaAJaqAAN4DPSL6AlIACKIEOyJEgRsIgOOkiInJqgAKowNg7BHdn7MOksNl+zZ//dvbDf5cAiklp22BdVtXdeTEpDYDB9m1VzU6OJuVp2NdEQCaI96fH2YHG4+mDduKYNMYINTcjcGbXzQVDEAphG0k48zUsajIbnAiMIXThpW8EICE0RAK4dvoKg9NIcTiQ589otyHOZLnwqK5nLwBFUZ4igc3iM0d1ff8CMC6mZ6Ihiaqq3gi1aUAnArD00SW1fq5OLBg0ymYmSZsR2/t4e/rGyCLW0sbp3oq+yTYqVgytQWui2FS7XYF7GFprY921T4CNQt8zr47dNzCkIX7y/jBtH+v+RGMQrc828W8pApnZbmEVQp/Ae7BlOy2ttib81/UFc+WRWEbjckIAAAAASUVORK5CYII=" ID="rdf:#$32iCK1">@firefox_customize@</A>
+        <DT><A HREF="https://www.mozilla.org/@AB_CD@/contribute/" ICON="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gwMDAsTBZbkNwAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAABNElEQVQ4y8WSsU0DURBE3yyWIaAJaqAAN4DPSL6AlIACKIEOyJEgRsIgOOkiInJqgAKowNg7BHdn7MOksNl+zZ//dvbDf5cAiklp22BdVtXdeTEpDYDB9m1VzU6OJuVp2NdEQCaI96fH2YHG4+mDduKYNMYINTcjcGbXzQVDEAphG0k48zUsajIbnAiMIXThpW8EICE0RAK4dvoKg9NIcTiQ589otyHOZLnwqK5nLwBFUZ4igc3iM0d1ff8CMC6mZ6Ihiaqq3gi1aUAnArD00SW1fq5OLBg0ymYmSZsR2/t4e/rGyCLW0sbp3oq+yTYqVgytQWui2FS7XYF7GFprY921T4CNQt8zr47dNzCkIX7y/jBtH+v+RGMQrc828W8pApnZbmEVQp/Ae7BlOy2ttib81/UFc+WRWEbjckIAAAAASUVORK5CYII=" ID="rdf:#$42iCK1">@firefox_community@</A>
+        <DT><A HREF="https://www.mozilla.org/@AB_CD@/about/" ICON="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gwMDAsTBZbkNwAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAABNElEQVQ4y8WSsU0DURBE3yyWIaAJaqAAN4DPSL6AlIACKIEOyJEgRsIgOOkiInJqgAKowNg7BHdn7MOksNl+zZ//dvbDf5cAiklp22BdVtXdeTEpDYDB9m1VzU6OJuVp2NdEQCaI96fH2YHG4+mDduKYNMYINTcjcGbXzQVDEAphG0k48zUsajIbnAiMIXThpW8EICE0RAK4dvoKg9NIcTiQ589otyHOZLnwqK5nLwBFUZ4igc3iM0d1ff8CMC6mZ6Ihiaqq3gi1aUAnArD00SW1fq5OLBg0ymYmSZsR2/t4e/rGyCLW0sbp3oq+yTYqVgytQWui2FS7XYF7GFprY921T4CNQt8zr47dNzCkIX7y/jBtH+v+RGMQrc828W8pApnZbmEVQp/Ae7BlOy2ttib81/UFc+WRWEbjckIAAAAASUVORK5CYII=" ID="rdf:#$52iCK1">@firefox_about@</A>
+    </DL><p>
+</DL><p>

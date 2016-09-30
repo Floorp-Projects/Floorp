@@ -152,9 +152,7 @@ function test() {
       var tagsNode = PlacesUtils.history.executeQuery(query, options).root;
 
       tagsNode.containerOpen = true;
-      // Bug 1283076: Nightly already has 7 tags set
-      let tagsCount = AppConstants.NIGHTLY_BUILD ? 8 : 1;
-      is(tagsNode.childCount, tagsCount, "has new tag");
+      is(tagsNode.childCount, 1, "has new tag");
 
       var tagNode = tagsNode.getChild(0);
 

@@ -205,9 +205,7 @@ add_task(function* test_tags() {
 
   // Now select the tag.
   PlacesUtils.asContainer(tagsNode).containerOpen = true;
-  // Bug 1283076: Nightly already has several tags set, position changes
-  let tagPosition = AppConstants.NIGHTLY_BUILD ? 7 : 0;
-  let tag = tagsNode.getChild(tagPosition);
+  let tag = tagsNode.getChild(0);
   PO._places.selectNode(tag);
   is(PO._places.selectedNode.title, "test",
      "The created tag has been properly selected");
