@@ -16,7 +16,7 @@ function cleanup_and_finish() {
  */
 function check_crash_list(crashes) {
   let doc = content.document;
-  let crashlinks = doc.getElementById("tbody").getElementsByTagName("a");
+  let crashlinks = doc.getElementsByClassName("crashReport");
   Assert.equal(crashlinks.length, crashes.length,
     "about:crashes lists correct number of crash reports");
   // no point in checking this if the lists aren't the same length

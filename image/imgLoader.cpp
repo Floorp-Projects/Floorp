@@ -1217,6 +1217,12 @@ void imgLoader::GlobalInit()
     imgMemoryReporter::ImagesContentUsedUncompressedDistinguishedAmount);
 }
 
+void imgLoader::ShutdownMemoryReporter()
+{
+  UnregisterImagesContentUsedUncompressedDistinguishedAmount();
+  UnregisterStrongMemoryReporter(sMemReporter);
+}
+
 nsresult
 imgLoader::InitCache()
 {
@@ -1281,9 +1287,11 @@ imgLoader::Observe(nsISupports* aSubject, const char* aTopic,
       ClearImageCache();
       ClearChromeImageCache();
     }
-  } else if (strcmp(aTopic, "profile-before-change") == 0 ||
-             strcmp(aTopic, "xpcom-shutdown") == 0) {
+  } else if (strcmp(aTopic, "profile-before-change") == 0) {
     mCacheTracker = nullptr;
+  } else if (strcmp(aTopic, "xpcom-shutdown") == 0) {
+    mCacheTracker = nullptr;
+    ShutdownMemoryReporter();
 
   } else {
   // (Nothing else should bring us here)

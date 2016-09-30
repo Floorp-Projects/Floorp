@@ -51,9 +51,10 @@ FindCRLF(nsACString::const_iterator& aStart,
 
 // Reads over a CRLF and positions start after it.
 static bool
-PushOverLine(nsACString::const_iterator& aStart)
+PushOverLine(nsACString::const_iterator& aStart,
+	     const nsACString::const_iterator& aEnd)
 {
-  if (*aStart == nsCRT::CR && (aStart.size_forward() > 1) && *(++aStart) == nsCRT::LF) {
+  if (*aStart == nsCRT::CR && (aEnd - aStart > 1) && *(++aStart) == nsCRT::LF) {
     ++aStart; // advance to after CRLF
     return true;
   }
@@ -86,26 +87,27 @@ FetchUtil::ExtractHeader(nsACString::const_iterator& aStart,
 
   nsAutoCString header(beginning, aStart.get() - beginning);
 
-  nsACString::const_iterator headerStart, headerEnd;
+  nsACString::const_iterator headerStart, iter, headerEnd;
   header.BeginReading(headerStart);
   header.EndReading(headerEnd);
-  if (!FindCharInReadable(':', headerStart, headerEnd)) {
+  iter = headerStart;
+  if (!FindCharInReadable(':', iter, headerEnd)) {
     return false;
   }
 
-  aHeaderName.Assign(StringHead(header, headerStart.size_backward()));
+  aHeaderName.Assign(StringHead(header, iter - headerStart));
   aHeaderName.CompressWhitespace();
   if (!NS_IsValidHTTPToken(aHeaderName)) {
     return false;
   }
 
-  aHeaderValue.Assign(Substring(++headerStart, headerEnd));
+  aHeaderValue.Assign(Substring(++iter, headerEnd));
   if (!NS_IsReasonableHTTPHeaderValue(aHeaderValue)) {
     return false;
   }
   aHeaderValue.CompressWhitespace();
 
-  return PushOverLine(aStart);
+  return PushOverLine(aStart, aEnd);
 }
 
 } // namespace dom

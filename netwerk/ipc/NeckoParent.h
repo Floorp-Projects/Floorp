@@ -241,11 +241,6 @@ private:
   RefPtr<OfflineObserver> mObserver;
 };
 
-/**
- * Reference to the PNecko Parent protocol.
- */
-extern PNeckoParent *gNeckoParent;
-
 } // namespace net
 } // namespace mozilla
 

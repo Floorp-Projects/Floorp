@@ -65,8 +65,6 @@ using IPC::SerializedLoadContext;
 namespace mozilla {
 namespace net {
 
-PNeckoParent *gNeckoParent = nullptr;
-
 // C++ file contents
 NeckoParent::NeckoParent()
 {
@@ -77,7 +75,6 @@ NeckoParent::NeckoParent()
     do_GetService("@mozilla.org/network/protocol;1?name=http");
 
   mObserver = new OfflineObserver(this);
-  gNeckoParent = this;
 
   // only register once--we will have multiple NeckoParents if there are
   // multiple child processes.
@@ -91,7 +88,6 @@ NeckoParent::NeckoParent()
 
 NeckoParent::~NeckoParent()
 {
-  gNeckoParent = nullptr;
   if (mObserver) {
     mObserver->RemoveObserver();
   }

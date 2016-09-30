@@ -90,12 +90,13 @@ WebGLContext::GenerateWarning(const char* fmt, va_list ap)
     }
 
     JSContext* cx = api.cx();
-    JS_ReportWarning(cx, "WebGL: %s", buf);
+    JS_ReportWarningASCII(cx, "WebGL: %s", buf);
     if (!ShouldGenerateWarnings()) {
-        JS_ReportWarning(cx,
-                         "WebGL: No further warnings will be reported for this"
-                         " WebGL context. (already reported %d warnings)",
-                         mAlreadyGeneratedWarnings);
+        JS_ReportWarningASCII(cx,
+                              "WebGL: No further warnings will be reported for"
+                              " this WebGL context."
+                              " (already reported %d warnings)",
+                              mAlreadyGeneratedWarnings);
     }
 }
 

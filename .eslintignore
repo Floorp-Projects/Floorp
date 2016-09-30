@@ -102,7 +102,7 @@ devtools/client/shared/test/**
 devtools/client/shared/widgets/*.jsm
 devtools/client/sourceeditor/test/*.js
 devtools/client/webaudioeditor/**
-devtools/client/webconsole/**
+#devtools/client/webconsole/**
 !devtools/client/webconsole/panel.js
 !devtools/client/webconsole/jsterm.js
 !devtools/client/webconsole/console-commands.js

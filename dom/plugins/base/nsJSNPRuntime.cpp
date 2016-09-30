@@ -1795,9 +1795,9 @@ NPObjWrapper_toPrimitive(JSContext *cx, unsigned argc, JS::Value *vp)
       return true;
   }
 
-  JS_ReportErrorNumber(cx, js::GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
-                       JS_GetClass(obj)->name,
-                       "primitive type");
+  JS_ReportErrorNumberASCII(cx, js::GetErrorMessage, nullptr,
+                            JSMSG_CANT_CONVERT_TO,
+                            JS_GetClass(obj)->name, "primitive type");
   return false;
 }
 

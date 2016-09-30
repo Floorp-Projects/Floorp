@@ -20,6 +20,7 @@ import org.json.simple.JSONObject;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.annotation.RobocopTarget;
+import org.mozilla.gecko.db.BrowserContract.ActivityStreamBlocklist;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.Favicons;
@@ -58,7 +59,7 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
     // Replace the Bug number below with your Bug that is conducting a DB upgrade, as to force a merge conflict with any
     // other patches that require a DB upgrade.
-    public static final int DATABASE_VERSION = 34; // Bug 1274029
+    public static final int DATABASE_VERSION = 35; // Bug 1298783
     public static final String DATABASE_NAME = "browser.db";
 
     final protected Context mContext;
@@ -723,6 +724,8 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
         createVisitsTable(db);
         createCombinedViewOn34(db);
+
+        createActivityStreamBlocklistTable(db);
     }
 
     /**
@@ -897,6 +900,15 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
         db.execSQL("CREATE INDEX idx_search_history_last_visited ON " +
                 SearchHistory.TABLE_NAME + "(" + SearchHistory.DATE_LAST_VISITED + ")");
+    }
+
+    private void createActivityStreamBlocklistTable(final SQLiteDatabase db) {
+        debug("Creating " + ActivityStreamBlocklist.TABLE_NAME + " table");
+
+        db.execSQL("CREATE TABLE " + ActivityStreamBlocklist.TABLE_NAME + "(" +
+                   ActivityStreamBlocklist._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                   ActivityStreamBlocklist.URL + " TEXT UNIQUE NOT NULL, " +
+                   ActivityStreamBlocklist.CREATED + " INTEGER NOT NULL)");
     }
 
     private void createReadingListTable(final SQLiteDatabase db, final String tableName) {
@@ -1935,6 +1947,10 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         createV34CombinedView(db);
     }
 
+    private void upgradeDatabaseFrom34to35(final SQLiteDatabase db) {
+        createActivityStreamBlocklistTable(db);
+    }
+
     private void createV33CombinedView(final SQLiteDatabase db) {
         db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED);
         db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED_WITH_FAVICONS);
@@ -2061,6 +2077,10 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
                 case 34:
                     upgradeDatabaseFrom33to34(db);
+                    break;
+
+                case 35:
+                    upgradeDatabaseFrom34to35(db);
                     break;
             }
         }

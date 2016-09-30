@@ -176,6 +176,13 @@ public abstract class BrowserDB {
      */
     public abstract CursorLoader getHighlights(Context context, int limit);
 
+    /**
+     * Block a page from the highlights list.
+     *
+     * @param url The page URL. Only pages exactly matching this URL will be blocked.
+     */
+    public abstract void blockActivityStreamSite(ContentResolver cr, String url);
+
     public static BrowserDB from(final Context context) {
         return from(GeckoProfile.get(context));
     }

@@ -3419,22 +3419,6 @@ StyleDataAtOffset(const void* aStyleStruct, ptrdiff_t aOffset)
     reinterpret_cast<const uint8_t*>(aStyleStruct) + aOffset);
 }
 
-static void
-ExtractBorderColor(nsStyleContext* aStyleContext, const void* aStyleBorder,
-                   mozilla::css::Side aSide,
-                   StyleAnimationValue& aComputedValue)
-{
-  nscolor color;
-  bool foreground;
-  static_cast<const nsStyleBorder*>(aStyleBorder)->
-    GetBorderColor(aSide, color, foreground);
-  if (foreground) {
-    // FIXME: should add test for this
-    color = aStyleContext->StyleColor()->mColor;
-  }
-  aComputedValue.SetColorValue(color);
-}
-
 static bool
 StyleCoordToValue(const nsStyleCoord& aCoord, StyleAnimationValue& aValue)
 {
@@ -3835,46 +3819,6 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
               GetComputedColumnRuleWidth());
           break;
 
-        case eCSSProperty_border_bottom_color:
-          ExtractBorderColor(aStyleContext, styleStruct, NS_SIDE_BOTTOM,
-                             aComputedValue);
-          break;
-        case eCSSProperty_border_left_color:
-          ExtractBorderColor(aStyleContext, styleStruct, NS_SIDE_LEFT,
-                             aComputedValue);
-          break;
-        case eCSSProperty_border_right_color:
-          ExtractBorderColor(aStyleContext, styleStruct, NS_SIDE_RIGHT,
-                             aComputedValue);
-          break;
-        case eCSSProperty_border_top_color:
-          ExtractBorderColor(aStyleContext, styleStruct, NS_SIDE_TOP,
-                             aComputedValue);
-          break;
-
-        case eCSSProperty_outline_color: {
-          const nsStyleOutline *styleOutline =
-            static_cast<const nsStyleOutline*>(styleStruct);
-          nscolor color;
-          if (!styleOutline->GetOutlineColor(color))
-            color = aStyleContext->StyleColor()->mColor;
-          aComputedValue.SetColorValue(color);
-          break;
-        }
-
-        case eCSSProperty_column_rule_color: {
-          const nsStyleColumn *styleColumn =
-            static_cast<const nsStyleColumn*>(styleStruct);
-          nscolor color;
-          if (styleColumn->mColumnRuleColorIsForeground) {
-            color = aStyleContext->StyleColor()->mColor;
-          } else {
-            color = styleColumn->mColumnRuleColor;
-          }
-          aComputedValue.SetColorValue(color);
-          break;
-        }
-
         case eCSSProperty_column_count: {
           const nsStyleColumn *styleColumn =
             static_cast<const nsStyleColumn*>(styleStruct);
@@ -3892,27 +3836,6 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
             static_cast<const nsStylePosition*>(styleStruct);
           aComputedValue.SetIntValue(stylePosition->mOrder,
                                      eUnit_Integer);
-          break;
-        }
-
-        case eCSSProperty_text_decoration_color: {
-          const nsStyleTextReset *styleTextReset =
-            static_cast<const nsStyleTextReset*>(styleStruct);
-          nscolor color;
-          bool isForeground;
-          styleTextReset->GetDecorationColor(color, isForeground);
-          if (isForeground) {
-            color = aStyleContext->StyleColor()->mColor;
-          }
-          aComputedValue.SetColorValue(color);
-          break;
-        }
-
-        case eCSSProperty_text_decoration_style: {
-          uint8_t decorationStyle =
-            static_cast<const nsStyleTextReset*>(styleStruct)->
-              GetDecorationStyle();
-          aComputedValue.SetIntValue(decorationStyle, eUnit_Enumerated);
           break;
         }
 

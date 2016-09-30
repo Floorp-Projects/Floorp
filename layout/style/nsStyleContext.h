@@ -403,9 +403,6 @@ public:
    * aProperty must be a color-valued property that StyleAnimationValue
    * knows how to extract.  It must also be a property that we know to
    * do change handling for in nsStyleContext::CalcDifference.
-   *
-   * Note that if aProperty is eCSSProperty_border_*_color, this
-   * function handles -moz-use-text-color.
    */
   nscolor GetVisitedDependentColor(nsCSSPropertyID aProperty);
 

@@ -18,3 +18,13 @@ fuzzy-if(azureSkia,1,1500) == global-alpha.html global-alpha-ref.html
 == units-em.html ref.html
 == units-ex.html ref.html
 == units-off-screen.html ref.html
+fuzzy(1,700) == fillText-with-filter-opacity-1.html fillText-with-filter-opacity-1-ref.html
+fuzzy(1,300) == fillText-with-filter-opacity-2.html fillText-with-filter-opacity-2-ref.html
+fuzzy(1,400) == strokeText-with-filter-grayscale-1.html strokeText-with-filter-grayscale-1-ref.html
+fuzzy(1,400) == strokeText-with-filter-grayscale-2.html strokeText-with-filter-grayscale-2-ref.html
+!= fillText-with-shadow-1.html fillText-without-shadow-1-ref.html
+!= fillText-with-shadow-2.html fillText-without-shadow-2-ref.html
+fuzzy(1,400) == fillText-with-filter-grayscale-1.html fillText-with-filter-grayscale-1-ref.html
+fuzzy(1,400) == fillText-with-filter-grayscale-2.html fillText-with-filter-grayscale-2-ref.html
+!= strokeText-with-shadow-1.html strokeText-without-shadow-1-ref.html
+!= strokeText-with-shadow-2.html strokeText-without-shadow-2-ref.html

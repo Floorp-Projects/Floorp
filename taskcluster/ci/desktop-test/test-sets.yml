@@ -33,6 +33,7 @@ all-tests:
     - reftest-no-accel
     - web-platform-tests
     - web-platform-tests-reftests
+    - web-platform-tests-wdspec
     - xpcshell
 
 asan-tests:

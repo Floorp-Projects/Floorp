@@ -375,8 +375,7 @@ struct ComplexColorData
 
   StyleComplexColor ToComplexColor() const
   {
-    return StyleComplexColor(
-      mColor.ToColor(), ClampColor(mForegroundRatio * 255.0f));
+    return {mColor.ToColor(), ClampColor(mForegroundRatio * 255.0f)};
   }
 };
 

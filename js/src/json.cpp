@@ -309,8 +309,7 @@ class CycleDetector
     bool foundCycle(JSContext* cx) {
         auto addPtr = stack.lookupForAdd(obj_);
         if (addPtr) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_JSON_CYCLIC_VALUE,
-                                 js_object_str);
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_JSON_CYCLIC_VALUE);
             return false;
         }
         if (!stack.add(addPtr, obj_)) {

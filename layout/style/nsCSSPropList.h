@@ -680,8 +680,8 @@ CSS_PROP_LOGICAL(
         CSS_PROPERTY_LOGICAL_BLOCK_AXIS |
         CSS_PROPERTY_LOGICAL_END_EDGE,
     "",
-    VARIANT_HCK,
-    kBorderColorKTable,
+    VARIANT_HC,
+    nullptr,
     BorderColor,
     Border,
     CSS_PROP_NO_OFFSET,
@@ -735,8 +735,8 @@ CSS_PROP_LOGICAL(
         CSS_PROPERTY_LOGICAL |
         CSS_PROPERTY_LOGICAL_BLOCK_AXIS,
     "",
-    VARIANT_HCK,
-    kBorderColorKTable,
+    VARIANT_HC,
+    nullptr,
     BorderColor,
     Border,
     CSS_PROP_NO_OFFSET,
@@ -788,10 +788,10 @@ CSS_PROP_BORDER(
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED |
         CSS_PROPERTY_HASHLESS_COLOR_QUIRK,
     "",
-    VARIANT_HCK,
-    kBorderColorKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_Custom)
+    VARIANT_HC,
+    nullptr,
+    offsetof(nsStyleBorder, mBorderBottomColor),
+    eStyleAnimType_ComplexColor)
 CSS_PROP_BORDER(
     -moz-border-bottom-colors,
     border_bottom_colors,
@@ -951,8 +951,8 @@ CSS_PROP_LOGICAL(
         CSS_PROPERTY_LOGICAL |
         CSS_PROPERTY_LOGICAL_END_EDGE,
     "",
-    VARIANT_HCK,
-    kBorderColorKTable,
+    VARIANT_HC,
+    nullptr,
     BorderColor,
     Border,
     CSS_PROP_NO_OFFSET,
@@ -1003,8 +1003,8 @@ CSS_PROP_LOGICAL(
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_LOGICAL,
     "",
-    VARIANT_HCK,
-    kBorderColorKTable,
+    VARIANT_HC,
+    nullptr,
     BorderColor,
     Border,
     CSS_PROP_NO_OFFSET,
@@ -1054,10 +1054,10 @@ CSS_PROP_BORDER(
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     "",
-    VARIANT_HCK,
-    kBorderColorKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_Custom)
+    VARIANT_HC,
+    nullptr,
+    offsetof(nsStyleBorder, mBorderLeftColor),
+    eStyleAnimType_ComplexColor)
 CSS_PROP_BORDER(
     -moz-border-left-colors,
     border_left_colors,
@@ -1116,10 +1116,10 @@ CSS_PROP_BORDER(
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     "",
-    VARIANT_HCK,
-    kBorderColorKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_Custom)
+    VARIANT_HC,
+    nullptr,
+    offsetof(nsStyleBorder, mBorderRightColor),
+    eStyleAnimType_ComplexColor)
 CSS_PROP_BORDER(
     -moz-border-right-colors,
     border_right_colors,
@@ -1190,10 +1190,10 @@ CSS_PROP_BORDER(
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED |
         CSS_PROPERTY_HASHLESS_COLOR_QUIRK,
     "",
-    VARIANT_HCK,
-    kBorderColorKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_Custom)
+    VARIANT_HC,
+    nullptr,
+    offsetof(nsStyleBorder, mBorderTopColor),
+    eStyleAnimType_ComplexColor)
 CSS_PROP_BORDER(
     -moz-border-top-colors,
     border_top_colors,
@@ -1520,10 +1520,10 @@ CSS_PROP_COLUMN(
     CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     "",
-    VARIANT_HCK,
-    kBorderColorKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_Custom)
+    VARIANT_HC,
+    nullptr,
+    offsetof(nsStyleColumn, mColumnRuleColor),
+    eStyleAnimType_ComplexColor)
 CSS_PROP_COLUMN(
     -moz-column-rule-style,
     column_rule_style,
@@ -3124,10 +3124,10 @@ CSS_PROP_OUTLINE(
     CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     "",
-    VARIANT_HCK,
-    kOutlineColorKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_Custom)
+    VARIANT_HC,
+    nullptr,
+    offsetof(nsStyleOutline, mOutlineColor),
+    eStyleAnimType_ComplexColor)
 CSS_PROP_OUTLINE(
     outline-offset,
     outline_offset,
@@ -3938,10 +3938,10 @@ CSS_PROP_TEXTRESET(
         CSS_PROPERTY_APPLIES_TO_PLACEHOLDER |
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     "",
-    VARIANT_HCK,
-    kBorderColorKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_Custom)
+    VARIANT_HC,
+    nullptr,
+    offsetof(nsStyleTextReset, mTextDecorationColor),
+    eStyleAnimType_ComplexColor)
 CSS_PROP_TEXTRESET(
     text-decoration-line,
     text_decoration_line,
@@ -3966,7 +3966,7 @@ CSS_PROP_TEXTRESET(
     VARIANT_HK,
     kTextDecorationStyleKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_Custom)
+    eStyleAnimType_None)
 CSS_PROP_SHORTHAND(
     text-emphasis,
     text_emphasis,

@@ -231,6 +231,15 @@ private:
   RefPtr<CancelableRunnable> mMaxTapTimeoutTask;
   void CancelMaxTapTimeoutTask();
   void CreateMaxTapTimeoutTask();
+
+  /**
+   * Tracks whether the single-tap event was already sent to content. This is
+   * needed because it affects how the double-tap gesture, if detected, is
+   * handled. The value is only valid in states GESTURE_FIRST_SINGLE_TOUCH_UP and
+   * GESTURE_SECOND_SINGLE_TOUCH_DOWN; to more easily catch violations it is
+   * stored in a Maybe which is set to Nothing() at all other times.
+   */
+  Maybe<bool> mSingleTapSent;
 };
 
 } // namespace layers
