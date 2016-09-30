@@ -28,8 +28,8 @@ factory((root.pdfjsDistBuildPdfWorker = {}));
   // Use strict in our context only - users might not want it
   'use strict';
 
-var pdfjsVersion = '1.5.476';
-var pdfjsBuild = 'c0e82db';
+var pdfjsVersion = '1.5.498';
+var pdfjsBuild = '1564dc3';
 
   var pdfjsFilePath =
     typeof document !== 'undefined' && document.currentScript ?
@@ -1101,25 +1101,25 @@ var AnnotationFlag = {
 };
 
 var AnnotationFieldFlag = {
-  READONLY: 1,
-  REQUIRED: 2,
-  NOEXPORT: 3,
-  MULTILINE: 13,
-  PASSWORD: 14,
-  NOTOGGLETOOFF: 15,
-  RADIO: 16,
-  PUSHBUTTON: 17,
-  COMBO: 18,
-  EDIT: 19,
-  SORT: 20,
-  FILESELECT: 21,
-  MULTISELECT: 22,
-  DONOTSPELLCHECK: 23,
-  DONOTSCROLL: 24,
-  COMB: 25,
-  RICHTEXT: 26,
-  RADIOSINUNISON: 26,
-  COMMITONSELCHANGE: 27,
+  READONLY: 0x0000001,
+  REQUIRED: 0x0000002,
+  NOEXPORT: 0x0000004,
+  MULTILINE: 0x0001000,
+  PASSWORD: 0x0002000,
+  NOTOGGLETOOFF: 0x0004000,
+  RADIO: 0x0008000,
+  PUSHBUTTON: 0x0010000,
+  COMBO: 0x0020000,
+  EDIT: 0x0040000,
+  SORT: 0x0080000,
+  FILESELECT: 0x0100000,
+  MULTISELECT: 0x0200000,
+  DONOTSPELLCHECK: 0x0400000,
+  DONOTSCROLL: 0x0800000,
+  COMB: 0x1000000,
+  RICHTEXT: 0x2000000,
+  RADIOSINUNISON: 0x2000000,
+  COMMITONSELCHANGE: 0x4000000,
 };
 
 var AnnotationBorderStyleType = {
@@ -10214,7 +10214,7 @@ var error = sharedUtil.error;
  *   (partners.adobe.com/public/developer/en/ps/sdk/5116.DCT_Filter.pdf)
  */
 
-var JpegImage = (function jpegImage() {
+var JpegImage = (function JpegImageClosure() {
   var dctZigZag = new Uint8Array([
      0,
      1,  8,
@@ -10242,7 +10242,9 @@ var JpegImage = (function jpegImage() {
   var dctSqrt2 =  5793;   // sqrt(2)
   var dctSqrt1d2 = 2896;  // sqrt(2) / 2
 
-  function constructor() {
+  function JpegImage() {
+    this.decodeTransform = null;
+    this.colorTransform = -1;
   }
 
   function buildHuffmanTable(codeLengths, values) {
@@ -10537,6 +10539,12 @@ var JpegImage = (function jpegImage() {
       // find marker
       bitsCount = 0;
       marker = (data[offset] << 8) | data[offset + 1];
+      // Some bad images seem to pad Scan blocks with zero bytes, skip past
+      // those to attempt to find a valid marker (fixes issue4090.pdf).
+      while (data[offset] === 0x00 && offset < data.length - 1) {
+        offset++;
+        marker = (data[offset] << 8) | data[offset + 1];
+      }
       if (marker <= 0xFF00) {
         error('JPEG error: marker was not found');
       }
@@ -10759,7 +10767,7 @@ var JpegImage = (function jpegImage() {
     return a <= 0 ? 0 : a >= 255 ? 255 : a;
   }
 
-  constructor.prototype = {
+  JpegImage.prototype = {
     parse: function parse(data) {
 
       function readUint16() {
@@ -11076,8 +11084,20 @@ var JpegImage = (function jpegImage() {
         // The adobe transform marker overrides any previous setting
         return true;
       } else if (this.numComponents === 3) {
+        if (!this.adobe && this.colorTransform === 0) {
+          // If the Adobe transform marker is not present and the image
+          // dictionary has a 'ColorTransform' entry, explicitly set to `0`,
+          // then the colours should *not* be transformed.
+          return false;
+        }
         return true;
-      } else {
+      } else { // `this.numComponents !== 3`
+        if (!this.adobe && this.colorTransform === 1) {
+          // If the Adobe transform marker is not present and the image
+          // dictionary has a 'ColorTransform' entry, explicitly set to `1`,
+          // then the colours should be transformed.
+          return true;
+        }
         return false;
       }
     },
@@ -11219,7 +11239,7 @@ var JpegImage = (function jpegImage() {
           rgbData[offset++] = grayColor;
         }
         return rgbData;
-      } else if (this.numComponents === 3) {
+      } else if (this.numComponents === 3 && this._isColorConversionNeeded()) {
         return this._convertYccToRgb(data);
       } else if (this.numComponents === 4) {
         if (this._isColorConversionNeeded()) {
@@ -11236,7 +11256,7 @@ var JpegImage = (function jpegImage() {
     }
   };
 
-  return constructor;
+  return JpegImage;
 })();
 
 exports.JpegImage = JpegImage;
@@ -18829,6 +18849,7 @@ exports.isStream = isStream;
 var Util = sharedUtil.Util;
 var error = sharedUtil.error;
 var info = sharedUtil.info;
+var isInt = sharedUtil.isInt;
 var isArray = sharedUtil.isArray;
 var createObjectURL = sharedUtil.createObjectURL;
 var shadow = sharedUtil.shadow;
@@ -19686,7 +19707,7 @@ var PredictorStream = (function PredictorStreamClosure() {
  * DecodeStreams.
  */
 var JpegStream = (function JpegStreamClosure() {
-  function JpegStream(stream, maybeLength, dict, xref) {
+  function JpegStream(stream, maybeLength, dict) {
     // Some images may contain 'junk' before the SOI (start-of-image) marker.
     // Note: this seems to mainly affect inline images.
     var ch;
@@ -19720,8 +19741,8 @@ var JpegStream = (function JpegStreamClosure() {
     var jpegImage = new JpegImage();
 
     // Checking if values need to be transformed before conversion.
-    if (this.forceRGB && this.dict && isArray(this.dict.get('Decode'))) {
-      var decodeArr = this.dict.getArray('Decode');
+    var decodeArr = this.dict.getArray('Decode', 'D');
+    if (this.forceRGB && isArray(decodeArr)) {
       var bitsPerComponent = this.dict.get('BitsPerComponent') || 8;
       var decodeArrLength = decodeArr.length;
       var transform = new Int32Array(decodeArrLength);
@@ -19736,6 +19757,14 @@ var JpegStream = (function JpegStreamClosure() {
       }
       if (transformNeeded) {
         jpegImage.decodeTransform = transform;
+      }
+    }
+    // Fetching the 'ColorTransform' entry, if it exists.
+    var decodeParams = this.dict.get('DecodeParms', 'DP');
+    if (isDict(decodeParams)) {
+      var colorTransform = decodeParams.get('ColorTransform');
+      if (isInt(colorTransform)) {
+        jpegImage.colorTransform = colorTransform;
       }
     }
 
@@ -19859,7 +19888,7 @@ var Jbig2Stream = (function Jbig2StreamClosure() {
     var jbig2Image = new Jbig2Image();
 
     var chunks = [];
-    var decodeParams = this.dict.getArray('DecodeParms');
+    var decodeParams = this.dict.getArray('DecodeParms', 'DP');
 
     // According to the PDF specification, DecodeParms can be either
     // a dictionary, or an array whose elements are dictionaries.
@@ -24663,7 +24692,7 @@ var Parser = (function ParserClosure() {
         }
         if (name === 'DCTDecode' || name === 'DCT') {
           xrefStreamStats[StreamType.DCT] = true;
-          return new JpegStream(stream, maybeLength, stream.dict, this.xref);
+          return new JpegStream(stream, maybeLength, stream.dict);
         }
         if (name === 'JPXDecode' || name === 'JPX') {
           xrefStreamStats[StreamType.JPX] = true;
@@ -30104,7 +30133,14 @@ var Type1Font = (function Type1FontClosure() {
       var charStringsIndex = new CFFIndex();
       charStringsIndex.add([0x8B, 0x0E]); // .notdef
       for (i = 0; i < count; i++) {
-        charStringsIndex.add(glyphs[i]);
+        var glyph = glyphs[i];
+        // If the CharString outline is empty, replace it with .notdef to
+        // prevent OTS from rejecting the font (fixes bug1252420.pdf).
+        if (glyph.length === 0) {
+          charStringsIndex.add([0x8B, 0x0E]); // .notdef
+          continue;
+        }
+        charStringsIndex.add(glyph);
       }
       cff.charStrings = charStringsIndex;
 
@@ -36074,18 +36110,26 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
    */
   NativeImageDecoder.isSupported =
       function NativeImageDecoder_isSupported(image, xref, res) {
-    var cs = ColorSpace.parse(image.dict.get('ColorSpace', 'CS'), xref, res);
+    var dict = image.dict;
+    if (dict.has('DecodeParms') || dict.has('DP')) {
+      return false;
+    }
+    var cs = ColorSpace.parse(dict.get('ColorSpace', 'CS'), xref, res);
     return (cs.name === 'DeviceGray' || cs.name === 'DeviceRGB') &&
-           cs.isDefaultDecode(image.dict.getArray('Decode', 'D'));
+           cs.isDefaultDecode(dict.getArray('Decode', 'D'));
   };
   /**
    * Checks if the image can be decoded by the browser.
    */
   NativeImageDecoder.isDecodable =
       function NativeImageDecoder_isDecodable(image, xref, res) {
-    var cs = ColorSpace.parse(image.dict.get('ColorSpace', 'CS'), xref, res);
+    var dict = image.dict;
+    if (dict.has('DecodeParms') || dict.has('DP')) {
+      return false;
+    }
+    var cs = ColorSpace.parse(dict.get('ColorSpace', 'CS'), xref, res);
     return (cs.numComps === 1 || cs.numComps === 3) &&
-           cs.isDefaultDecode(image.dict.getArray('Decode', 'D'));
+           cs.isDefaultDecode(dict.getArray('Decode', 'D'));
   };
 
   function PartialEvaluator(pdfManager, xref, handler, pageIndex,
@@ -39286,12 +39330,10 @@ AnnotationFactory.prototype = /** @lends AnnotationFactory.prototype */ {
    * @param {Object} ref
    * @param {string} uniquePrefix
    * @param {Object} idCounters
-   * @param {boolean} renderInteractiveForms
    * @returns {Annotation}
    */
   create: function AnnotationFactory_create(xref, ref,
-                                            uniquePrefix, idCounters,
-                                            renderInteractiveForms) {
+                                            uniquePrefix, idCounters) {
     var dict = xref.fetchIfRef(ref);
     if (!isDict(dict)) {
       return;
@@ -39310,7 +39352,6 @@ AnnotationFactory.prototype = /** @lends AnnotationFactory.prototype */ {
       ref: isRef(ref) ? ref : null,
       subtype: subtype,
       id: id,
-      renderInteractiveForms: renderInteractiveForms,
     };
 
     switch (subtype) {
@@ -39635,7 +39676,8 @@ var Annotation = (function AnnotationClosure() {
       }.bind(this));
     },
 
-    getOperatorList: function Annotation_getOperatorList(evaluator, task) {
+    getOperatorList: function Annotation_getOperatorList(evaluator, task,
+                                                         renderForms) {
       if (!this.appearance) {
         return Promise.resolve(new OperatorList());
       }
@@ -39672,13 +39714,13 @@ var Annotation = (function AnnotationClosure() {
   };
 
   Annotation.appendToOperatorList = function Annotation_appendToOperatorList(
-      annotations, opList, partialEvaluator, task, intent) {
+      annotations, opList, partialEvaluator, task, intent, renderForms) {
     var annotationPromises = [];
     for (var i = 0, n = annotations.length; i < n; ++i) {
       if ((intent === 'display' && annotations[i].viewable) ||
           (intent === 'print' && annotations[i].printable)) {
         annotationPromises.push(
-          annotations[i].getOperatorList(partialEvaluator, task));
+          annotations[i].getOperatorList(partialEvaluator, task, renderForms));
       }
     }
     return Promise.all(annotationPromises).then(function(operatorLists) {
@@ -39896,14 +39938,13 @@ var WidgetAnnotation = (function WidgetAnnotationClosure() {
      *
      * @public
      * @memberof WidgetAnnotation
-     * @param {number} flag - Bit position, numbered from one instead of
-     *                        zero, to check
+     * @param {number} flag - Hexadecimal representation for an annotation
+     *                        field characteristic
      * @return {boolean}
      * @see {@link shared/util.js}
      */
     hasFieldFlag: function WidgetAnnotation_hasFieldFlag(flag) {
-      var mask = 1 << (flag - 1);
-      return !!(this.data.fieldFlags & mask);
+      return !!(this.data.fieldFlags & flag);
     },
   });
 
@@ -39913,8 +39954,6 @@ var WidgetAnnotation = (function WidgetAnnotationClosure() {
 var TextWidgetAnnotation = (function TextWidgetAnnotationClosure() {
   function TextWidgetAnnotation(params) {
     WidgetAnnotation.call(this, params);
-
-    this.renderInteractiveForms = params.renderInteractiveForms;
 
     // Determine the alignment of text in the field.
     var alignment = Util.getInheritableProperty(params.dict, 'Q');
@@ -39933,21 +39972,28 @@ var TextWidgetAnnotation = (function TextWidgetAnnotationClosure() {
     // Process field flags for the display layer.
     this.data.readOnly = this.hasFieldFlag(AnnotationFieldFlag.READONLY);
     this.data.multiLine = this.hasFieldFlag(AnnotationFieldFlag.MULTILINE);
+    this.data.comb = this.hasFieldFlag(AnnotationFieldFlag.COMB) &&
+                     !this.hasFieldFlag(AnnotationFieldFlag.MULTILINE) &&
+                     !this.hasFieldFlag(AnnotationFieldFlag.PASSWORD) &&
+                     !this.hasFieldFlag(AnnotationFieldFlag.FILESELECT) &&
+                     this.data.maxLen !== null;
   }
 
   Util.inherit(TextWidgetAnnotation, WidgetAnnotation, {
-    getOperatorList: function TextWidgetAnnotation_getOperatorList(evaluator,
-                                                                   task) {
+    getOperatorList:
+        function TextWidgetAnnotation_getOperatorList(evaluator, task,
+                                                      renderForms) {
       var operatorList = new OperatorList();
 
       // Do not render form elements on the canvas when interactive forms are
       // enabled. The display layer is responsible for rendering them instead.
-      if (this.renderInteractiveForms) {
+      if (renderForms) {
         return Promise.resolve(operatorList);
       }
 
       if (this.appearance) {
-        return Annotation.prototype.getOperatorList.call(this, evaluator, task);
+        return Annotation.prototype.getOperatorList.call(this, evaluator, task,
+                                                         renderForms);
       }
 
       // Even if there is an appearance stream, ignore it. This is the
@@ -40448,8 +40494,6 @@ var Page = (function PageClosure() {
           });
       });
 
-      this.renderInteractiveForms = renderInteractiveForms;
-
       var annotationsPromise = pdfManager.ensure(this, 'annotations');
       return Promise.all([pageListPromise, annotationsPromise]).then(
           function(datas) {
@@ -40462,7 +40506,8 @@ var Page = (function PageClosure() {
         }
 
         var annotationsReadyPromise = Annotation.appendToOperatorList(
-          annotations, pageOpList, partialEvaluator, task, intent);
+          annotations, pageOpList, partialEvaluator, task, intent,
+          renderInteractiveForms);
         return annotationsReadyPromise.then(function () {
           pageOpList.flush(true);
           return pageOpList;
@@ -40533,8 +40578,7 @@ var Page = (function PageClosure() {
         var annotationRef = annotationRefs[i];
         var annotation = annotationFactory.create(this.xref, annotationRef,
                                                   this.uniquePrefix,
-                                                  this.idCounters,
-                                                  this.renderInteractiveForms);
+                                                  this.idCounters);
         if (annotation) {
           annotations.push(annotation);
         }
