@@ -721,6 +721,13 @@ public:
                  const ModifierKeyState& aModKeyState) const;
 
   /**
+   * IsInDeadKeySequence() returns true when it's in a dead key sequence.
+   * It starts when a dead key is down and ends when another key down causes
+   * inactivating the dead key state.
+   */
+  bool IsInDeadKeySequence() const { return mActiveDeadKey >= 0; }
+
+  /**
    * IsSysKey() returns true if aVirtualKey with aModKeyState causes WM_SYSKEY*
    * or WM_SYS*CHAR messages.
    */
