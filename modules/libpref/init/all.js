@@ -2152,6 +2152,9 @@ pref("security.sri.enable", true);
 // Block scripts with wrong MIME type such as image/ or video/.
 pref("security.block_script_with_wrong_mime", true);
 
+// Block images of wrong MIME for XCTO: nosniff.
+pref("security.xcto_nosniff_block_images", false);
+
 // OCSP must-staple
 pref("security.ssl.enable_ocsp_must_staple", true);
 
