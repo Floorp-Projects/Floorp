@@ -148,8 +148,6 @@ function CssComputedView(inspector, document, pageStyle) {
   this._onFilterStyles = this._onFilterStyles.bind(this);
   this._onClearSearch = this._onClearSearch.bind(this);
   this._onIncludeBrowserStyles = this._onIncludeBrowserStyles.bind(this);
-  this._onFilterTextboxContextMenu =
-    this._onFilterTextboxContextMenu.bind(this);
 
   let doc = this.styleDocument;
   this.element = doc.getElementById("propertyContainer");
@@ -167,8 +165,7 @@ function CssComputedView(inspector, document, pageStyle) {
   this.element.addEventListener("copy", this._onCopy);
   this.element.addEventListener("contextmenu", this._onContextMenu);
   this.searchField.addEventListener("input", this._onFilterStyles);
-  this.searchField.addEventListener("contextmenu",
-                                    this._onFilterTextboxContextMenu);
+  this.searchField.addEventListener("contextmenu", this.inspector.onTextBoxContextMenu);
   this.searchClearButton.addEventListener("click", this._onClearSearch);
   this.includeBrowserStylesCheckbox.addEventListener("input",
     this._onIncludeBrowserStyles);
@@ -547,19 +544,6 @@ CssComputedView.prototype = {
   },
 
   /**
-   * Context menu handler for filter style search box.
-   */
-  _onFilterTextboxContextMenu: function (event) {
-    try {
-      this.styleDocument.defaultView.focus();
-      let contextmenu = this.inspector.toolbox.textboxContextMenuPopup;
-      contextmenu.openPopupAtScreen(event.screenX, event.screenY, true);
-    } catch (e) {
-      console.error(e);
-    }
-  },
-
-  /**
    * Called when the user clicks on the clear button in the filter style search
    * box. Returns true if the search box is cleared and false otherwise.
    */
@@ -654,8 +638,7 @@ CssComputedView.prototype = {
    * Focus the window on mousedown.
    */
   focusWindow: function () {
-    let win = this.styleDocument.defaultView;
-    win.focus();
+    this.styleWindow.focus();
   },
 
   /**
@@ -692,7 +675,7 @@ CssComputedView.prototype = {
    */
   copySelection: function () {
     try {
-      let win = this.styleDocument.defaultView;
+      let win = this.styleWindow;
       let text = win.getSelection().toString().trim();
 
       // Tidy up block headings by moving CSS property names and their
@@ -758,7 +741,7 @@ CssComputedView.prototype = {
     this.element.removeEventListener("contextmenu", this._onContextMenu);
     this.searchField.removeEventListener("input", this._onFilterStyles);
     this.searchField.removeEventListener("contextmenu",
-                                         this._onFilterTextboxContextMenu);
+      this.inspector.onTextBoxContextMenu);
     this.searchClearButton.removeEventListener("click", this._onClearSearch);
     this.includeBrowserStylesCheckbox.removeEventListener("input",
       this._onIncludeBrowserStyles);

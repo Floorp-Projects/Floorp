@@ -17,7 +17,7 @@ add_task(function* () {
 
   let win = view.styleWindow;
   let searchField = view.searchField;
-  let searchContextMenu = toolbox.textboxContextMenuPopup;
+  let searchContextMenu = toolbox.textBoxContextMenuPopup;
   ok(searchContextMenu,
     "The search filter context menu is loaded in the computed view");
 

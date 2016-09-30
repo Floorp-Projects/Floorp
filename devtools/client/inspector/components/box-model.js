@@ -341,10 +341,10 @@ BoxModelView.prototype = {
    */
   trackReflows: function () {
     if (!this.reflowFront) {
-      let toolbox = this.inspector.toolbox;
-      if (toolbox.target.form.reflowActor) {
-        this.reflowFront = ReflowFront(toolbox.target.client,
-                                       toolbox.target.form);
+      let { target } = this.inspector;
+      if (target.form.reflowActor) {
+        this.reflowFront = ReflowFront(target.client,
+                                       target.form);
       } else {
         return;
       }
@@ -384,7 +384,6 @@ BoxModelView.prototype = {
       start: self => {
         self.elt.parentNode.classList.add("boxmodel-editing");
       },
-
       change: value => {
         if (NUMERIC.test(value)) {
           value += "px";
@@ -404,7 +403,6 @@ BoxModelView.prototype = {
 
         session.setProperties(properties).catch(e => console.error(e));
       },
-
       done: (value, commit) => {
         editor.elt.parentNode.classList.remove("boxmodel-editing");
         if (!commit) {
@@ -413,6 +411,7 @@ BoxModelView.prototype = {
           }, e => console.error(e));
         }
       },
+      contextMenu: this.inspector.onTextBoxContextMenu,
       cssProperties: this._cssProperties
     }, event);
   },
@@ -468,7 +467,7 @@ BoxModelView.prototype = {
     this.inspector.sidebar.off("computedview-selected", this.onNewNode);
     this.inspector.selection.off("new-node-front", this.onNewSelection);
     this.inspector.sidebar.off("select", this.onSidebarSelect);
-    this.inspector._target.off("will-navigate", this.onWillNavigate);
+    this.inspector.target.off("will-navigate", this.onWillNavigate);
     this.inspector.off("computed-view-filtered", this.onFilterComputedView);
 
     this.inspector = null;
@@ -792,7 +791,7 @@ BoxModelView.prototype = {
         this.inspector.markup.on("node-hover", this.onMarkupViewNodeHover);
 
         // Release the actor on will-navigate event
-        this.inspector._target.once("will-navigate", this.onWillNavigate);
+        this.inspector.target.once("will-navigate", this.onWillNavigate);
       });
   },
 
