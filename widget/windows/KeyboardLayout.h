@@ -668,6 +668,27 @@ private:
                      const ModifierKeyState& aModKeyState);
 
   /**
+   * MaybeInitNativeKeyAsDeadKey() initializes aNativeKey only when aNativeKey
+   * is a dead key's event.
+   * When it's not in a dead key sequence, this activates the dead key state.
+   * When it's in a dead key sequence, this initializes aNativeKey with a
+   * composite character or a preceding dead char and a dead char which should
+   * be caused by aNativeKey.
+   * Returns true when this initializes aNativeKey.  Otherwise, false.
+   */
+  bool MaybeInitNativeKeyAsDeadKey(NativeKey& aNativeKey,
+                                   const ModifierKeyState& aModKeyState);
+
+  /**
+   * MaybeInitNativeKeyWithCompositeChar() may initialize aNativeKey with
+   * proper composite character when dead key produces a composite character.
+   * Otherwise, just returns false.
+   */
+  bool MaybeInitNativeKeyWithCompositeChar(
+         NativeKey& aNativeKey,
+         const ModifierKeyState& aModKeyState);
+
+  /**
    * See the comment of GetUniCharsAndModifiers() below.
    */
   UniCharsAndModifiers GetUniCharsAndModifiers(
@@ -705,15 +726,6 @@ public:
    */
   bool IsSysKey(uint8_t aVirtualKey,
                 const ModifierKeyState& aModKeyState) const;
-
-  /**
-   * MaybeInitNativeKeyWithCompositeChar() may initialize aNativeKey with
-   * proper composite character when dead key produces a composite character.
-   * Otherwise, just returns false.
-   */
-  bool MaybeInitNativeKeyWithCompositeChar(
-         NativeKey& aNativeKey,
-         const ModifierKeyState& aModKeyState);
 
   /**
    * GetUniCharsAndModifiers() returns characters which are inputted by
