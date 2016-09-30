@@ -121,8 +121,8 @@ CaptureStreamTestHelper.prototype = {
         var pixelMatch = false;
         try {
             pixelMatch = test(this.getPixel(video, offsetX, offsetY, width, height));
-        } catch (NS_ERROR_NOT_AVAILABLE) {
-          info("Waiting for pixel but no video available");
+        } catch (e) {
+          info("Waiting for pixel but no video available: " + e + "\n" + e.stack);
         }
         if (!pixelMatch &&
             (!timeout || video.currentTime < startTime + (timeout / 1000.0))) {
