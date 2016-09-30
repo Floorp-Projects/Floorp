@@ -26,7 +26,6 @@ config = {
     "xpcshell_name": XPCSHELL_NAME,
     "virtualenv_path": 'venv',
     "virtualenv_python_dll": os.path.join(os.path.dirname(sys.executable), "python27.dll"),
-    "virtualenv_modules": ['pywin32'],
 
     "find_links": [
         "http://pypi.pvt.build.mozilla.org/pub",
