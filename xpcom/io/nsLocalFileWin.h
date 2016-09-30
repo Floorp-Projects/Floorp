@@ -57,6 +57,9 @@ public:
   static void GlobalInit();
   static void GlobalShutdown();
 
+  // Removes registry command handler parameters, quotes, and expands environment strings.
+  static bool CleanupCmdHandlerPath(nsAString& aCommandHandler);
+
 private:
   // CopyMove and CopySingleFile constants for |options| parameter:
   enum CopyFileOption {
