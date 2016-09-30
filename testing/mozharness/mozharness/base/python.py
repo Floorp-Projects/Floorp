@@ -240,24 +240,6 @@ class VirtualenvMixin(object):
                 command += ['--no-index']
             for opt in global_options:
                 command += ["--global-option", opt]
-        elif install_method == 'easy_install':
-            if not module:
-                self.fatal("module parameter required with install_method='easy_install'")
-            if requirements:
-                # Install pip requirements files separately, since they're
-                # not understood by easy_install.
-                self.install_module(requirements=requirements,
-                                    install_method='pip')
-            # Allow easy_install to be overridden by
-            # self.config['exes']['easy_install']
-            default = 'easy_install'
-            if self._is_windows():
-                # Don't invoke `easy_install` directly on windows since
-                # the 'install' in the executable name hits UAC
-                # - http://answers.microsoft.com/en-us/windows/forum/windows_7-security/uac-message-do-you-want-to-allow-the-following/bea30ad8-9ef8-4897-aab4-841a65f7af71
-                # - https://bugzilla.mozilla.org/show_bug.cgi?id=791840
-                default = [self.query_python_path(), self.query_python_path('easy_install-script.py')]
-            command = self.query_exe('easy_install', default=default, return_type="list")
         else:
             self.fatal("install_module() doesn't understand an install_method of %s!" % install_method)
 

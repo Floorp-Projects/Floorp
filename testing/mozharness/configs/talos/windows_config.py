@@ -20,8 +20,6 @@ config = {
     "exes": {
         'python': PYTHON,
         'virtualenv': [PYTHON, 'c:/mozilla-build/buildbotve/virtualenv.py'],
-        'easy_install': ['%s/scripts/python' % VENV_PATH,
-                         '%s/scripts/easy_install-2.7-script.py' % VENV_PATH],
         'mozinstall': ['%s/scripts/python' % VENV_PATH,
                        '%s/scripts/mozinstall-script.py' % VENV_PATH],
         'hg': 'c:/mozilla-build/hg/hg',
