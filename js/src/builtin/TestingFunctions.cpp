@@ -542,8 +542,8 @@ WasmTextToBinary(JSContext* cx, unsigned argc, Value* vp)
     wasm::Bytes bytes;
     UniqueChars error;
     if (!wasm::TextToBinary(twoByteChars.twoByteChars(), &bytes, &error)) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_TEXT_FAIL,
-                             error.get() ? error.get() : "out of memory");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_TEXT_FAIL,
+                                  error.get() ? error.get() : "out of memory");
         return false;
     }
 
@@ -564,7 +564,7 @@ WasmBinaryToText(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (!args.get(0).isObject() || !args.get(0).toObject().is<TypedArrayObject>()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_BUF_ARG);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_BUF_ARG);
         return false;
     }
 
@@ -574,7 +574,7 @@ WasmBinaryToText(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     if (code->isSharedMemory()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_BUF_ARG);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_BUF_ARG);
         return false;
     }
 
@@ -967,9 +967,9 @@ NondeterministicGetWeakMapKeys(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
     if (!args[0].isObject()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
-                             "nondeterministicGetWeakMapKeys", "WeakMap",
-                             InformalValueTypeName(args[0]));
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
+                                  "nondeterministicGetWeakMapKeys", "WeakMap",
+                                  InformalValueTypeName(args[0]));
         return false;
     }
     RootedObject arr(cx);
@@ -977,9 +977,9 @@ NondeterministicGetWeakMapKeys(JSContext* cx, unsigned argc, Value* vp)
     if (!JS_NondeterministicGetWeakMapKeys(cx, mapObj, &arr))
         return false;
     if (!arr) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
-                             "nondeterministicGetWeakMapKeys", "WeakMap",
-                             args[0].toObject().getClass()->name);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
+                                  "nondeterministicGetWeakMapKeys", "WeakMap",
+                                  args[0].toObject().getClass()->name);
         return false;
     }
     args.rval().setObject(*arr);
@@ -1547,14 +1547,17 @@ DumpHeap(JSContext* cx, unsigned argc, Value* vp)
         Value v = args[i];
         if (v.isString()) {
             if (!fuzzingSafe) {
-                JSString* str = v.toString();
+                RootedString str(cx, v.toString());
                 JSAutoByteString fileNameBytes;
                 if (!fileNameBytes.encodeLatin1(cx, str))
                     return false;
                 const char* fileName = fileNameBytes.ptr();
                 dumpFile = fopen(fileName, "w");
                 if (!dumpFile) {
-                    JS_ReportError(cx, "can't open %s", fileName);
+                    fileNameBytes.clear();
+                    if (!fileNameBytes.encodeUtf8(cx, str))
+                        return false;
+                    JS_ReportErrorUTF8(cx, "can't open %s", fileNameBytes.ptr());
                     return false;
                 }
             }
@@ -2621,8 +2624,8 @@ FindPath(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (argc < 2) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
-                             "findPath", "1", "");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
+                                  "findPath", "1", "");
         return false;
     }
 
@@ -3181,9 +3184,9 @@ GetConstructorName(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     if (!args[0].isObject()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
-                             "getConstructorName", "Object",
-                             InformalValueTypeName(args[0]));
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
+                                  "getConstructorName", "Object",
+                                  InformalValueTypeName(args[0]));
         return false;
     }
 

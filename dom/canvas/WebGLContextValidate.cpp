@@ -672,6 +672,8 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
     mStencilRefFront = 0;
     mStencilRefBack = 0;
 
+    mLineWidth = 1.0;
+
     /*
     // Technically, we should be setting mStencil[...] values to
     // `allOnes`, but either ANGLE breaks or the SGX540s on Try break.

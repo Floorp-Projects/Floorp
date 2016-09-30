@@ -13,69 +13,56 @@ namespace mozilla {
 
 class WebGLBuffer;
 
-struct WebGLVertexAttribData
+class WebGLVertexAttribData final
 {
+public:
+    uint32_t mDivisor;
+    bool mEnabled;
+
+private:
+    bool mIntegerFunc;
+public:
+    WebGLRefPtr<WebGLBuffer> mBuf;
+private:
+    GLenum mType;
+    uint8_t mSize; // num of mType vals per vert
+    uint8_t mBytesPerVertex;
+    bool mNormalized;
+    uint32_t mStride; // bytes
+    uint32_t mExplicitStride;
+    uint64_t mByteOffset;
+
+public:
+
+#define GETTER(X) const decltype(m##X)& X() const { return m##X; }
+
+    GETTER(IntegerFunc)
+    GETTER(Type)
+    GETTER(Size)
+    GETTER(BytesPerVertex)
+    GETTER(Normalized)
+    GETTER(Stride)
+    GETTER(ExplicitStride)
+    GETTER(ByteOffset)
+
+#undef GETTER
+
     // note that these initial values are what GL initializes vertex attribs to
     WebGLVertexAttribData()
-        : buf(0)
-        , stride(0)
-        , size(4)
-        , divisor(0) // OpenGL ES 3.0 specs paragraphe 6.2 p240
-        , byteOffset(0)
-        , type(LOCAL_GL_FLOAT)
-        , enabled(false)
-        , normalized(false)
-        , integer(false)
-    {}
-
-    WebGLRefPtr<WebGLBuffer> buf;
-    GLuint stride;
-    GLuint size;
-    GLuint divisor;
-    GLuint byteOffset;
-    GLenum type;
-    bool enabled;
-    bool normalized;
-    bool integer;
-
-    GLuint componentSize() const {
-        switch(type) {
-        case LOCAL_GL_BYTE:
-        case LOCAL_GL_UNSIGNED_BYTE:
-            return 1;
-
-        case LOCAL_GL_SHORT:
-        case LOCAL_GL_UNSIGNED_SHORT:
-        case LOCAL_GL_HALF_FLOAT:
-        case LOCAL_GL_HALF_FLOAT_OES:
-            return 2;
-
-        case LOCAL_GL_INT:
-        case LOCAL_GL_UNSIGNED_INT:
-        case LOCAL_GL_FLOAT:
-            return 4;
-
-        default:
-            MOZ_ASSERT(false, "Should never get here!");
-            return 0;
-        }
+        : mDivisor(0)
+        , mEnabled(false)
+    {
+        VertexAttribPointer(false, nullptr, 4, LOCAL_GL_FLOAT, false, 0, 0);
     }
 
-    GLuint actualStride() const {
-        if (stride)
-            return stride;
+    void VertexAttribPointer(bool integerFunc, WebGLBuffer* buf, uint8_t size,
+                             GLenum type, bool normalized, uint32_t stride,
+                             uint64_t byteOffset);
 
-        return size * componentSize();
-    }
+    void DoVertexAttribPointer(gl::GLContext* gl, GLuint index) const;
 };
 
 } // namespace mozilla
-
-inline void
-ImplCycleCollectionUnlink(mozilla::WebGLVertexAttribData& field)
-{
-    field.buf = nullptr;
-}
 
 inline void
 ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& callback,
@@ -83,7 +70,7 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& callback,
                             const char* name,
                             uint32_t flags = 0)
 {
-    CycleCollectionNoteChild(callback, field.buf.get(), name, flags);
+    CycleCollectionNoteChild(callback, field.mBuf.get(), name, flags);
 }
 
 #endif // WEBGL_VERTEX_ATTRIB_DATA_H_

@@ -92,7 +92,7 @@ binding_detail::ThrowErrorMessage(JSContext* aCx, const unsigned aErrorNumber, .
 {
   va_list ap;
   va_start(ap, aErrorNumber);
-  JS_ReportErrorNumberVA(aCx, GetErrorMessage, nullptr, aErrorNumber, ap);
+  JS_ReportErrorNumberUTF8VA(aCx, GetErrorMessage, nullptr, aErrorNumber, ap);
   va_end(ap);
 }
 

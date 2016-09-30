@@ -153,7 +153,8 @@ RestyleManagerBase::ChangeHintToString(nsChangeHint aHint)
     "BorderStyleNoneChange", "UpdateTextPath", "SchedulePaint",
     "NeutralChange", "InvalidateRenderingObservers",
     "ReflowChangesSizeOrPosition", "UpdateComputedBSize",
-    "UpdateUsesOpacity", "UpdateBackgroundPosition"
+    "UpdateUsesOpacity", "UpdateBackgroundPosition",
+    "AddOrRemoveTransform"
   };
   static_assert(nsChangeHint_AllHints == (1 << ArrayLength(names)) - 1,
                 "Name list doesn't match change hints.");
@@ -1125,19 +1126,14 @@ RestyleManagerBase::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
           // but we're not going to reconstruct the frame so we need to set them.
           // It's because we need to set this state on each affected frame
           // that we can't coalesce nsChangeHint_UpdateContainingBlock hints up
-          // to ancestors (i.e. it can't be an inherited change hint).
+          // to ancestors (i.e. it can't be an change hint that is handled for
+          // descendants).
           if (cont->IsAbsPosContainingBlock()) {
-            if (cont->StyleDisplay()->HasTransform(cont)) {
-              cont->AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
-            }
             if (!cont->IsAbsoluteContainer() &&
                 (cont->GetStateBits() & NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN)) {
               cont->MarkAsAbsoluteContainingBlock();
             }
           } else {
-            // Don't remove NS_FRAME_MAY_BE_TRANSFORMED since it may still by
-            // transformed by other means. It's OK to have the bit even if it's
-            // not needed.
             if (cont->IsAbsoluteContainer()) {
               cont->MarkAsNotAbsoluteContainingBlock();
             }
@@ -1145,6 +1141,20 @@ RestyleManagerBase::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
         }
       }
     }
+
+    if ((hint & nsChangeHint_AddOrRemoveTransform) && frame &&
+        !(hint & nsChangeHint_ReconstructFrame)) {
+      for (nsIFrame* cont = frame; cont;
+           cont = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
+        if (cont->StyleDisplay()->HasTransform(cont)) {
+          cont->AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
+        }
+        // Don't remove NS_FRAME_MAY_BE_TRANSFORMED since it may still be
+        // transformed by other means. It's OK to have the bit even if it's
+        // not needed.
+      }
+    }
+
     if (hint & nsChangeHint_ReconstructFrame) {
       // If we ever start passing true here, be careful of restyles
       // that involve a reframe and animations.  In particular, if the

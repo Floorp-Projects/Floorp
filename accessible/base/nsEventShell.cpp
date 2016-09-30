@@ -19,7 +19,7 @@ using namespace mozilla::a11y;
 void
 nsEventShell::FireEvent(AccEvent* aEvent)
 {
-  if (!aEvent)
+  if (!aEvent || aEvent->mEventRule == AccEvent::eDoNotEmit)
     return;
 
   Accessible* accessible = aEvent->GetAccessible();
@@ -43,6 +43,7 @@ nsEventShell::FireEvent(AccEvent* aEvent)
 #endif
 
   accessible->HandleAccEvent(aEvent);
+  aEvent->mEventRule = AccEvent::eDoNotEmit;
 
   sEventTargetNode = nullptr;
 }

@@ -57,6 +57,7 @@ public class CustomTabsActivity extends GeckoApp {
                             return;
                         }
 
+                        tabs.closeTab(tab);
                         finish();
                     }
                 });

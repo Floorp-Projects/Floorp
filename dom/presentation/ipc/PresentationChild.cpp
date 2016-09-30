@@ -133,6 +133,18 @@ PresentationChild::RecvNotifySessionConnect(const uint64_t& aWindowId,
   return true;
 }
 
+bool
+PresentationChild::RecvNotifyCloseSessionTransport(const nsString& aSessionId,
+                                                   const uint8_t& aRole,
+                                                   const nsresult& aReason)
+{
+  if (mService) {
+    Unused << NS_WARN_IF(NS_FAILED(
+      mService->CloseContentSessionTransport(aSessionId, aRole, aReason)));
+  }
+  return true;
+}
+
 /*
  * Implementation of PresentationRequestChild
  */

@@ -1523,6 +1523,8 @@ protected:
     GLsizei mViewportHeight;
     bool mAlreadyWarnedAboutViewportLargerThanDest;
 
+    GLfloat mLineWidth;
+
     WebGLContextLossHandler mContextLossHandler;
     bool mAllowContextRestore;
     bool mLastLossWasSimulated;

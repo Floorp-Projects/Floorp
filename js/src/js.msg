@@ -34,7 +34,7 @@
  *
  * can be used:
  *
- * JS_ReportErrorNumber(JSMSG_NOT_A_SUBSPECIES, "Rhino", "Monkey");
+ * JS_ReportErrorNumberASCII(JSMSG_NOT_A_SUBSPECIES, "Rhino", "Monkey");
  *
  * to report:
  *
@@ -107,7 +107,7 @@ MSG_DEF(JSMSG_BAD_DERIVED_RETURN,      1, JSEXN_TYPEERR, "derived class construc
 
 // JSON
 MSG_DEF(JSMSG_JSON_BAD_PARSE,          3, JSEXN_SYNTAXERR, "JSON.parse: {0} at line {1} column {2} of the JSON data")
-MSG_DEF(JSMSG_JSON_CYCLIC_VALUE,       1, JSEXN_TYPEERR, "cyclic {0} value")
+MSG_DEF(JSMSG_JSON_CYCLIC_VALUE,       0, JSEXN_TYPEERR, "cyclic object value")
 
 // Runtime errors
 MSG_DEF(JSMSG_BAD_INSTANCEOF_RHS,      1, JSEXN_TYPEERR, "invalid 'instanceof' operand {0}")

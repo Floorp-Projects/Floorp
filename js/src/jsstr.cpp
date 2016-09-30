@@ -468,8 +468,8 @@ ToStringForStringFunction(JSContext* cx, HandleValue thisv)
                 return nobj->unbox();
         }
     } else if (thisv.isNullOrUndefined()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
-                             thisv.isNull() ? "null" : "undefined", "object");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
+                                  thisv.isNull() ? "null" : "undefined", "object");
         return nullptr;
     }
 
@@ -962,8 +962,7 @@ js::str_normalize(JSContext* cx, unsigned argc, Value* vp)
         } else if (EqualStrings(formStr, cx->names().NFKD)) {
             form = UNORM_NFKD;
         } else {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                                 JSMSG_INVALID_NORMALIZE_FORM);
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_NORMALIZE_FORM);
             return false;
         }
     }
@@ -1588,8 +1587,8 @@ js::str_includes(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 6
     if (isRegExp) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INVALID_ARG_TYPE,
-                             "first", "", "Regular Expression");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_ARG_TYPE,
+                                  "first", "", "Regular Expression");
         return false;
     }
 
@@ -1812,8 +1811,8 @@ js::str_startsWith(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 6
     if (isRegExp) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INVALID_ARG_TYPE,
-                             "first", "", "Regular Expression");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_ARG_TYPE,
+                                  "first", "", "Regular Expression");
         return false;
     }
 
@@ -1878,8 +1877,8 @@ js::str_endsWith(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 6
     if (isRegExp) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INVALID_ARG_TYPE,
-                             "first", "", "Regular Expression");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_ARG_TYPE,
+                                  "first", "", "Regular Expression");
         return false;
     }
 
@@ -2792,7 +2791,7 @@ ToCodePoint(JSContext* cx, HandleValue code, uint32_t* codePoint)
     if (JS::ToInteger(nextCP) != nextCP || nextCP < 0 || nextCP > 0x10FFFF) {
         ToCStringBuf cbuf;
         if (char* numStr = NumberToCString(cx, &cbuf, nextCP))
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_A_CODEPOINT, numStr);
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_A_CODEPOINT, numStr);
         return false;
     }
 
@@ -3042,8 +3041,8 @@ js::ToStringSlow(ExclusiveContext* cx, typename MaybeRooted<Value, allowGC>::Han
         str = cx->names().null;
     } else if (v.isSymbol()) {
         if (cx->shouldBeJSContext() && allowGC) {
-            JS_ReportErrorNumber(cx->asJSContext(), GetErrorMessage, nullptr,
-                                 JSMSG_SYMBOL_TO_STRING);
+            JS_ReportErrorNumberASCII(cx->asJSContext(), GetErrorMessage, nullptr,
+                                      JSMSG_SYMBOL_TO_STRING);
         }
         return nullptr;
     } else {
@@ -3411,8 +3410,8 @@ js::DeflateStringToBuffer(JSContext* maybecx, const CharT* src, size_t srclen,
             dst[i] = char(src[i]);
         if (maybecx) {
             AutoSuppressGC suppress(maybecx);
-            JS_ReportErrorNumber(maybecx, GetErrorMessage, nullptr,
-                                 JSMSG_BUFFER_TOO_SMALL);
+            JS_ReportErrorNumberASCII(maybecx, GetErrorMessage, nullptr,
+                                      JSMSG_BUFFER_TOO_SMALL);
         }
         return false;
     }
@@ -3660,7 +3659,7 @@ Encode(JSContext* cx, HandleLinearString str, const bool* unescapedSet,
         return false;
 
     if (res == Encode_BadUri) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_URI, nullptr);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_URI);
         return false;
     }
 
@@ -3770,7 +3769,7 @@ Decode(JSContext* cx, HandleLinearString str, const bool* reservedSet, MutableHa
         return false;
 
     if (res == Decode_BadUri) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_URI);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_URI);
         return false;
     }
 
