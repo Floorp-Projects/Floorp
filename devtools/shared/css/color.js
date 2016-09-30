@@ -461,12 +461,7 @@ function rgbToHsl([r, g, b]) {
     }
   }
 
-  return [roundTo(h, 1), roundTo(s * 100, 1), roundTo(l * 100, 1)];
-}
-
-function roundTo(number, digits) {
-  const multiplier = Math.pow(10, digits);
-  return Math.round(number * multiplier) / multiplier;
+  return [Math.round(h), Math.round(s * 100), Math.round(l * 100)];
 }
 
 /**
@@ -578,9 +573,9 @@ function hslToRGB([h, s, l]) {
     m2 = l + s - l * s;
   }
   m1 = l * 2 - m2;
-  r = Math.round(255 * _hslValue(m1, m2, h + 1.0 / 3.0));
-  g = Math.round(255 * _hslValue(m1, m2, h));
-  b = Math.round(255 * _hslValue(m1, m2, h - 1.0 / 3.0));
+  r = Math.floor(255 * _hslValue(m1, m2, h + 1.0 / 3.0));
+  g = Math.floor(255 * _hslValue(m1, m2, h));
+  b = Math.floor(255 * _hslValue(m1, m2, h - 1.0 / 3.0));
   return [r, g, b];
 }
 
