@@ -3656,96 +3656,123 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
 
   bool isKeyDown = aNativeKey.IsKeyDownMessage();
 
-  if (IsDeadKey(virtualKey, aModKeyState)) {
-    if ((isKeyDown && mActiveDeadKey < 0) ||
-        (!isKeyDown && mActiveDeadKey == virtualKey)) {
-      ActivateDeadKeyState(aNativeKey, aModKeyState);
-#ifdef DEBUG
-      UniCharsAndModifiers deadChars =
-        GetNativeUniCharsAndModifiers(virtualKey, aModKeyState);
-      MOZ_ASSERT(deadChars.mLength == 1,
-                 "dead key must generate only one character");
-#endif
-      // First dead key event doesn't generate characters.  Dead key should
-      // cause only keydown event and keyup event whose KeyboardEvent.key
-      // values are "Dead".
-      aNativeKey.mCommittedCharsAndModifiers.Clear();
-      aNativeKey.mKeyNameIndex = KEY_NAME_INDEX_Dead;
-      return;
-    }
-
-    // At keydown message handling, we need to forget the first dead key
-    // because there is no guarantee coming WM_KEYUP for the second dead
-    // key before next WM_KEYDOWN.  E.g., due to auto key repeat or pressing
-    // another dead key before releasing current key.  Therefore, we can
-    // set only a character for current key for keyup event.
-    if (mActiveDeadKey < 0) {
-      aNativeKey.mCommittedCharsAndModifiers =
-        GetUniCharsAndModifiers(virtualKey, aModKeyState);
-      return;
-    }
-
-    if (NS_WARN_IF(!IsPrintableCharKey(mActiveDeadKey))) {
-#if defined(DEBUG) || defined(MOZ_CRASHREPORTER)
-      nsPrintfCString warning("The virtual key index (%d) of mActiveDeadKey "
-                              "(0x%02X) is not a printable key (virtualKey="
-                              "0x%02X)",
-                              GetKeyIndex(mActiveDeadKey), mActiveDeadKey,
-                              virtualKey);
-      NS_WARNING(warning.get());
-#ifdef MOZ_CRASHREPORTER
-      CrashReporter::AppendAppNotesToCrashReport(
-                       NS_LITERAL_CSTRING("\n") + warning);
-#endif // #ifdef MOZ_CRASHREPORTER
-#endif // #if defined(DEBUG) || defined(MOZ_CRASHREPORTER)
-      MOZ_CRASH("Trying to reference out of range of mVirtualKeys");
-    }
-
-    // Dead key followed by another dead key may cause a composed character
-    // (e.g., "Russian - Mnemonic" keyboard layout's 's' -> 'c').
-    if (MaybeInitNativeKeyWithCompositeChar(aNativeKey, aModKeyState)) {
-      return;
-    }
-
-    // Otherwise, dead key followed by another dead key causes inputting both
-    // character.
-    UniCharsAndModifiers prevDeadChars =
-      GetUniCharsAndModifiers(mActiveDeadKey, mDeadKeyShiftState);
-    UniCharsAndModifiers newChars =
-      GetUniCharsAndModifiers(virtualKey, aModKeyState);
-    // But keypress events should be fired for each committed character.
-    aNativeKey.mCommittedCharsAndModifiers = prevDeadChars + newChars;
-    if (isKeyDown) {
-      DeactivateDeadKeyState();
-    }
+  // If it's a dead key, aNativeKey will be initialized by
+  // MaybeInitNativeKeyAsDeadKey().
+  if (MaybeInitNativeKeyAsDeadKey(aNativeKey, aModKeyState)) {
     return;
   }
 
+  // If it's in dead key handling and the pressed key causes a composite
+  // character, aNativeKey will be initialized by
+  // MaybeInitNativeKeyWithCompositeChar().
   if (MaybeInitNativeKeyWithCompositeChar(aNativeKey, aModKeyState)) {
     return;
   }
 
   UniCharsAndModifiers baseChars =
     GetUniCharsAndModifiers(virtualKey, aModKeyState);
+
+  // If the key press isn't related to any dead keys, initialize aNativeKey
+  // with the characters which should be caused by the key.
   if (mActiveDeadKey < 0) {
-    // No dead-keys are active. Just return the produced characters.
     aNativeKey.mCommittedCharsAndModifiers = baseChars;
     return;
   }
 
+  // Although, this shouldn't occur, if active dead key isn't a printable
+  // key, we cannot handle it because KeyboardLayout assumes that dead key
+  // is never mapped to non-printable keys (e.g., F4, etc).  Please be aware,
+  // it's possible, but we've not known such special keyboard layout yet.
   if (NS_WARN_IF(!IsPrintableCharKey(mActiveDeadKey))) {
     return;
   }
 
-  // There is no valid dead-key and base character combination.
-  // Return dead-key character followed by base character.
+  // If the key doesn't cause a composite character with preceding dead key,
+  // initialize aNativeKey with the dead-key character followed by current
+  // key's character.
   UniCharsAndModifiers deadChars =
     GetUniCharsAndModifiers(mActiveDeadKey, mDeadKeyShiftState);
-  // But keypress events should be fired for each committed character.
   aNativeKey.mCommittedCharsAndModifiers = deadChars + baseChars;
   if (isKeyDown) {
     DeactivateDeadKeyState();
   }
+}
+
+bool
+KeyboardLayout::MaybeInitNativeKeyAsDeadKey(
+                  NativeKey& aNativeKey,
+                  const ModifierKeyState& aModKeyState)
+{
+  uint8_t virtualKey = aNativeKey.mOriginalVirtualKeyCode;
+  if (!IsDeadKey(virtualKey, aModKeyState)) {
+    return false;
+  }
+
+  // If it's a keydown event but not in dead key sequence or it's a keyup
+  // event of a dead key which activated current dead key sequence,
+  // initialize aNativeKey as a dead key event.
+  if ((aNativeKey.IsKeyDownMessage() && mActiveDeadKey < 0) ||
+      (!aNativeKey.IsKeyDownMessage() && mActiveDeadKey == virtualKey)) {
+    ActivateDeadKeyState(aNativeKey, aModKeyState);
+#ifdef DEBUG
+    UniCharsAndModifiers deadChars =
+      GetNativeUniCharsAndModifiers(virtualKey, aModKeyState);
+    MOZ_ASSERT(deadChars.mLength == 1,
+               "dead key must generate only one character");
+#endif
+    // First dead key event doesn't generate characters.  Dead key should
+    // cause only keydown event and keyup event whose KeyboardEvent.key
+    // values are "Dead".
+    aNativeKey.mCommittedCharsAndModifiers.Clear();
+    aNativeKey.mKeyNameIndex = KEY_NAME_INDEX_Dead;
+    return true;
+  }
+
+  // At keydown message handling, we need to forget the first dead key
+  // because there is no guarantee coming WM_KEYUP for the second dead
+  // key before next WM_KEYDOWN.  E.g., due to auto key repeat or pressing
+  // another dead key before releasing current key.  Therefore, we can
+  // set only a character for current key for keyup event.
+  if (mActiveDeadKey < 0) {
+    aNativeKey.mCommittedCharsAndModifiers =
+      GetUniCharsAndModifiers(virtualKey, aModKeyState);
+    return true;
+  }
+
+  if (NS_WARN_IF(!IsPrintableCharKey(mActiveDeadKey))) {
+#if defined(DEBUG) || defined(MOZ_CRASHREPORTER)
+    nsPrintfCString warning("The virtual key index (%d) of mActiveDeadKey "
+                            "(0x%02X) is not a printable key (virtualKey="
+                            "0x%02X)",
+                            GetKeyIndex(mActiveDeadKey), mActiveDeadKey,
+                            virtualKey);
+    NS_WARNING(warning.get());
+#ifdef MOZ_CRASHREPORTER
+    CrashReporter::AppendAppNotesToCrashReport(
+                     NS_LITERAL_CSTRING("\n") + warning);
+#endif // #ifdef MOZ_CRASHREPORTER
+#endif // #if defined(DEBUG) || defined(MOZ_CRASHREPORTER)
+    MOZ_CRASH("Trying to reference out of range of mVirtualKeys");
+  }
+
+  // Dead key followed by another dead key may cause a composed character
+  // (e.g., "Russian - Mnemonic" keyboard layout's 's' -> 'c').
+  if (MaybeInitNativeKeyWithCompositeChar(aNativeKey, aModKeyState)) {
+    return true;
+  }
+
+  // Otherwise, dead key followed by another dead key causes inputting both
+  // character.
+  UniCharsAndModifiers prevDeadChars =
+    GetUniCharsAndModifiers(mActiveDeadKey, mDeadKeyShiftState);
+  UniCharsAndModifiers newChars =
+    GetUniCharsAndModifiers(virtualKey, aModKeyState);
+  // But keypress events should be fired for each committed character.
+  aNativeKey.mCommittedCharsAndModifiers = prevDeadChars + newChars;
+  if (aNativeKey.IsKeyDownMessage()) {
+    DeactivateDeadKeyState();
+  }
+  return true;
 }
 
 bool
