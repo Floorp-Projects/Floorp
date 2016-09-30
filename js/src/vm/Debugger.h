@@ -582,12 +582,14 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     void markCrossCompartmentEdges(JSTracer* tracer);
 
     static const ClassOps classOps_;
+
+  public:
     static const Class class_;
 
+  private:
     static MOZ_MUST_USE bool getHookImpl(JSContext* cx, CallArgs& args, Debugger& dbg, Hook which);
     static MOZ_MUST_USE bool setHookImpl(JSContext* cx, CallArgs& args, Debugger& dbg, Hook which);
 
-    static Debugger* fromThisValue(JSContext* cx, const CallArgs& ca, const char* fnname);
     static bool getEnabled(JSContext* cx, unsigned argc, Value* vp);
     static bool setEnabled(JSContext* cx, unsigned argc, Value* vp);
     static bool getOnDebuggerStatement(JSContext* cx, unsigned argc, Value* vp);
@@ -1122,8 +1124,6 @@ class DebuggerEnvironment : public NativeObject
 
     Debugger* owner() const;
 
-    static DebuggerEnvironment* checkThis(JSContext* cx, const CallArgs& args, const char* fnname,
-                                          bool requireDebuggee);
     bool requireDebuggee(JSContext* cx) const;
 
     static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
@@ -1168,8 +1168,6 @@ class DebuggerFrame : public NativeObject
     static NativeObject* initClass(JSContext* cx, HandleObject dbgCtor, HandleObject objProto);
     static DebuggerFrame* create(JSContext* cx, HandleObject proto, AbstractFramePtr referent,
                                  const ScriptFrameIter* maybeIter, HandleNativeObject debugger);
-    static DebuggerFrame* checkThis(JSContext* cx, const CallArgs& args, const char* fnname,
-                                    bool checkLive);
 
     static MOZ_MUST_USE bool getCallee(JSContext* cx, HandleDebuggerFrame frame,
                                        MutableHandleDebuggerObject result);
@@ -1199,7 +1197,6 @@ class DebuggerFrame : public NativeObject
     static const JSPropertySpec properties_[];
     static const JSFunctionSpec methods_[];
 
-    static MOZ_MUST_USE bool requireLive(JSContext* cx, HandleDebuggerFrame frame);
     static AbstractFramePtr getReferent(HandleDebuggerFrame frame);
     static MOZ_MUST_USE bool getScriptFrameIter(JSContext* cx, HandleDebuggerFrame frame,
                                                 mozilla::Maybe<ScriptFrameIter>& result);
@@ -1346,7 +1343,6 @@ class DebuggerObject : public NativeObject
     PromiseObject* promise() const;
 #endif // SPIDERMONKEY_PROMISE
 
-    static DebuggerObject* checkThis(JSContext* cx, const CallArgs& args, const char* fnname);
     static MOZ_MUST_USE bool requireGlobal(JSContext* cx, HandleDebuggerObject object);
 #ifdef SPIDERMONKEY_PROMISE
     static MOZ_MUST_USE bool requirePromise(JSContext* cx, HandleDebuggerObject object);
