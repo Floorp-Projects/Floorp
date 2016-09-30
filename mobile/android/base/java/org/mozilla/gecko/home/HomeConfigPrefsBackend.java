@@ -28,6 +28,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.support.annotation.CheckResult;
+import android.support.annotation.VisibleForTesting;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
@@ -36,7 +37,8 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
     private static final String LOGTAG = "GeckoHomeConfigBackend";
 
     // Increment this to trigger a migration.
-    private static final int VERSION = 8;
+    @VisibleForTesting
+    static final int VERSION = 8;
 
     // This key was originally used to store only an array of panel configs.
     public static final String PREFS_CONFIG_KEY_OLD = "home_panels";
