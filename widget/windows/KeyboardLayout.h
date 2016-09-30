@@ -475,6 +475,13 @@ private:
   }
 
   /**
+   * IsReservedBySystem() returns true if the key combination is reserved by
+   * the system.  Even if it's consumed by web apps, the message should be
+   * sent to next wndproc.
+   */
+  bool IsReservedBySystem() const;
+
+  /**
    * GetFollowingCharMessage() returns following char message of handling
    * keydown event.  If the message is found, this method returns true.
    * Otherwise, returns false.

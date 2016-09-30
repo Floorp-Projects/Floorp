@@ -1277,23 +1277,7 @@ NativeKey::InitWithKeyChar()
   mIsExtended = WinUtils::IsExtendedScanCode(mMsg.lParam);
   switch (mMsg.message) {
     case WM_KEYDOWN:
-    case WM_SYSKEYDOWN: {
-      // If next message is WM_*CHAR message, let's consume it now.
-      MSG charMsg;
-      while (GetFollowingCharMessage(charMsg)) {
-        // Although, got message shouldn't be WM_NULL in desktop apps,
-        // we should keep checking this.  FYI: This was added for Metrofox.
-        if (charMsg.message == WM_NULL) {
-          continue;
-        }
-        MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
-          ("%p   NativeKey::InitWithKeyChar(), removed char message, %s",
-           this, ToString(charMsg).get()));
-        NS_WARN_IF(charMsg.hwnd != mMsg.hwnd);
-        mFollowingCharMsgs.AppendElement(charMsg);
-      }
-      MOZ_FALLTHROUGH;
-    }
+    case WM_SYSKEYDOWN:
     case WM_KEYUP:
     case WM_SYSKEYUP:
     case MOZ_WM_KEYDOWN:
@@ -1483,6 +1467,26 @@ NativeKey::InitWithKeyChar()
     KeyboardLayout::ConvertScanCodeToCodeNameIndex(
       GetScanCodeWithExtendedFlag());
 
+  // If next message of WM_(SYS)KEYDOWN is WM_*CHAR message and the key
+  // combination is not reserved by the system, let's consume it now.
+  if ((mMsg.message == WM_KEYDOWN || mMsg.message == WM_SYSKEYDOWN) &&
+      !IsReservedBySystem()) {
+    MSG charMsg;
+    while (GetFollowingCharMessage(charMsg)) {
+      // Although, got message shouldn't be WM_NULL in desktop apps,
+      // we should keep checking this.  FYI: This was added for Metrofox.
+      if (charMsg.message == WM_NULL) {
+        continue;
+      }
+      MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
+        ("%p   NativeKey::InitWithKeyChar(), removed char message, %s",
+         this, ToString(charMsg).get()));
+      NS_WARN_IF(charMsg.hwnd != mMsg.hwnd);
+      mFollowingCharMsgs.AppendElement(charMsg);
+    }
+  }
+
+
   keyboardLayout->InitNativeKey(*this, mModKeyState);
 
   mIsDeadKey =
@@ -1661,6 +1665,22 @@ NativeKey::IsFollowedByNonControlCharMessage() const
   }
   return mFollowingCharMsgs[0].message == WM_CHAR &&
          !IsControlChar(static_cast<char16_t>(mFollowingCharMsgs[0].wParam));
+}
+
+bool
+NativeKey::IsReservedBySystem() const
+{
+  // Alt+Space key is handled by OS, we shouldn't touch it.
+  if (mModKeyState.IsAlt() && !mModKeyState.IsControl() &&
+      mVirtualKeyCode == VK_SPACE) {
+    return true;
+  }
+
+  // XXX How about Alt+F4? We receive WM_SYSKEYDOWN for F4 before closing the
+  //     window.  Although, we don't prevent to close the window but the key
+  //     event shouldn't be exposed to the web.
+
+  return false;
 }
 
 bool
@@ -2248,18 +2268,16 @@ NativeKey::HandleKeyDownMessage(bool* aEventDispatched) const
     return true;
   }
 
+  if (IsReservedBySystem()) {
+    MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
+      ("%p   NativeKey::HandleKeyDownMessage(), doesn't dispatch keydown "
+       "event because the key combination is reserved by the system", this));
+    return false;
+  }
+
   bool defaultPrevented = false;
   if (mFakeCharMsgs || IsKeyMessageOnPlugin() ||
       !RedirectedKeyDownMessageManager::IsRedirectedMessage(mMsg)) {
-    // Ignore [shift+]alt+space so the OS can handle it.
-    if (mModKeyState.IsAlt() && !mModKeyState.IsControl() &&
-        mVirtualKeyCode == VK_SPACE) {
-      MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
-        ("%p   NativeKey::HandleKeyDownMessage(), doesn't dispatch keydown "
-         "event due to Alt+Space", this));
-      return false;
-    }
-
     nsresult rv = mDispatcher->BeginNativeInputTransaction();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       MOZ_LOG(sNativeKeyLogger, LogLevel::Error,
@@ -2489,12 +2507,12 @@ NativeKey::HandleCharMessage(const MSG& aCharMsg,
     return true;
   }
 
-  // Alt+Space key is handled by OS, we shouldn't touch it.
-  if (mModKeyState.IsAlt() && !mModKeyState.IsControl() &&
-      mVirtualKeyCode == VK_SPACE) {
+  // If the key combinations is reserved by the system, we shouldn't dispatch
+  // eKeyPress event for it and passes the message to next wndproc.
+  if (IsReservedBySystem()) {
     MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
       ("%p   NativeKey::HandleCharMessage(), doesn't dispatch keypress "
-       "event due to Alt+Space", this));
+       "event because the key combination is reserved by the system", this));
     return false;
   }
 
@@ -2692,12 +2710,12 @@ NativeKey::HandleKeyUpMessage(bool* aEventDispatched) const
     *aEventDispatched = false;
   }
 
-  // Ignore [shift+]alt+space so the OS can handle it.
-  if (mModKeyState.IsAlt() && !mModKeyState.IsControl() &&
-      mVirtualKeyCode == VK_SPACE) {
+  // If the key combinations is reserved by the system, we shouldn't dispatch
+  // eKeyUp event for it and passes the message to next wndproc.
+  if (IsReservedBySystem()) {
     MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
       ("%p   NativeKey::HandleKeyUpMessage(), doesn't dispatch keyup "
-       "event due to Alt+Space", this));
+       "event because the key combination is reserved by the system", this));
     return false;
   }
 
@@ -2747,6 +2765,12 @@ NativeKey::NeedsToHandleWithoutFollowingCharMessages() const
   // process.  So, let's compute the character to be inputted with every
   // printable key should be computed with the keyboard layout.
   if (IsKeyMessageOnPlugin()) {
+    return true;
+  }
+
+  // If the key combination is reserved by the system, the caller shouldn't
+  // do anything with following WM_*CHAR messages.  So, let's return true here.
+  if (IsReservedBySystem()) {
     return true;
   }
 
