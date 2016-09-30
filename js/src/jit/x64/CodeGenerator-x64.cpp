@@ -809,7 +809,7 @@ void
 CodeGeneratorX64::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir)
 {
     FloatRegister input = ToFloatRegister(lir->input());
-    Register output = ToRegister(lir->output());
+    Register64 output = ToOutRegister64(lir);
 
     MWasmTruncateToInt64* mir = lir->mir();
     MIRType inputType = mir->input()->type();
@@ -834,14 +834,12 @@ CodeGeneratorX64::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir)
         else
             masm.wasmTruncateFloat32ToInt64(input, output, oolEntry, oolRejoin, temp);
     }
-
-    masm.bind(ool->rejoin());
 }
 
 void
 CodeGeneratorX64::visitInt64ToFloatingPoint(LInt64ToFloatingPoint* lir)
 {
-    Register input = ToRegister(lir->input());
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
     FloatRegister output = ToFloatRegister(lir->output());
 
     MIRType outputType = lir->mir()->type();
@@ -849,12 +847,12 @@ CodeGeneratorX64::visitInt64ToFloatingPoint(LInt64ToFloatingPoint* lir)
 
     if (outputType == MIRType::Double) {
         if (lir->mir()->isUnsigned())
-            masm.convertUInt64ToDouble(input, output);
+            masm.convertUInt64ToDouble(input, output, Register::Invalid());
         else
             masm.convertInt64ToDouble(input, output);
     } else {
         if (lir->mir()->isUnsigned())
-            masm.convertUInt64ToFloat32(input, output);
+            masm.convertUInt64ToFloat32(input, output, Register::Invalid());
         else
             masm.convertInt64ToFloat32(input, output);
     }

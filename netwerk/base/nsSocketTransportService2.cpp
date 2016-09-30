@@ -553,6 +553,7 @@ nsSocketTransportService::Init()
         obsSvc->AddObserver(this, "last-pb-context-exited", false);
         obsSvc->AddObserver(this, NS_WIDGET_SLEEP_OBSERVER_TOPIC, true);
         obsSvc->AddObserver(this, NS_WIDGET_WAKE_OBSERVER_TOPIC, true);
+        obsSvc->AddObserver(this, "xpcom-shutdown-threads", false);
     }
 
     mInitialized = true;
@@ -561,7 +562,7 @@ nsSocketTransportService::Init()
 
 // called from main thread only
 NS_IMETHODIMP
-nsSocketTransportService::Shutdown()
+nsSocketTransportService::Shutdown(bool aXpcomShutdown)
 {
     SOCKET_LOG(("nsSocketTransportService::Shutdown\n"));
 
@@ -584,6 +585,23 @@ nsSocketTransportService::Shutdown()
         }
     }
 
+    if (!aXpcomShutdown) {
+        return ShutdownThread();
+    }
+
+    return NS_OK;
+}
+
+nsresult
+nsSocketTransportService::ShutdownThread()
+{
+    SOCKET_LOG(("nsSocketTransportService::ShutdownThread\n"));
+
+    NS_ENSURE_STATE(NS_IsMainThread());
+
+    if (!mInitialized || !mShuttingDown)
+        return NS_OK;
+
     // join with thread
     mThread->Shutdown();
     {
@@ -603,6 +621,7 @@ nsSocketTransportService::Shutdown()
         obsSvc->RemoveObserver(this, "last-pb-context-exited");
         obsSvc->RemoveObserver(this, NS_WIDGET_SLEEP_OBSERVER_TOPIC);
         obsSvc->RemoveObserver(this, NS_WIDGET_WAKE_OBSERVER_TOPIC);
+        obsSvc->RemoveObserver(this, "xpcom-shutdown-threads");
     }
 
     if (mAfterWakeUpTimer) {
@@ -1347,6 +1366,8 @@ nsSocketTransportService::Observe(nsISupports *subject,
                 mAfterWakeUpTimer->Init(this, 2000, nsITimer::TYPE_ONE_SHOT);
             }
         }
+    } else if (!strcmp(topic, "xpcom-shutdown-threads")) {
+        ShutdownThread();
     }
 
     return NS_OK;

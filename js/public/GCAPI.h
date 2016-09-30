@@ -642,6 +642,7 @@ namespace JS {
 static MOZ_ALWAYS_INLINE void
 ExposeObjectToActiveJS(JSObject* obj)
 {
+    MOZ_ASSERT(obj);
     js::gc::ExposeGCThingToActiveJS(GCCellPtr(obj));
 }
 

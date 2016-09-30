@@ -130,7 +130,9 @@ WeakSetObject::construct(JSContext* cx, unsigned argc, Value* vp)
                         DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, keyVal, nullptr);
                     if (!bytes)
                         return false;
-                    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, bytes.get());
+                    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                                               JSMSG_NOT_NONNULL_OBJECT,
+                                               bytes.get());
                     return false;
                 }
 

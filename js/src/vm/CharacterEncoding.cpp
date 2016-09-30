@@ -231,8 +231,8 @@ ReportInvalidCharacter(JSContext* cx, uint32_t offset)
 {
     char buffer[10];
     SprintfLiteral(buffer, "%u", offset);
-    JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, GetErrorMessage, nullptr,
-                                 JSMSG_MALFORMED_UTF8_CHAR, buffer);
+    JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_ERROR, GetErrorMessage, nullptr,
+                                      JSMSG_MALFORMED_UTF8_CHAR, buffer);
 }
 
 static void
@@ -243,7 +243,7 @@ ReportInvalidCharacter(js::ExclusiveContext* cx, uint32_t offset)
 static void
 ReportBufferTooSmall(JSContext* cx, uint32_t dummy)
 {
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BUFFER_TOO_SMALL);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BUFFER_TOO_SMALL);
 }
 
 static void
@@ -256,8 +256,8 @@ ReportTooBigCharacter(JSContext* cx, uint32_t v)
 {
     char buffer[10];
     SprintfLiteral(buffer, "0x%x", v + 0x10000);
-    JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, GetErrorMessage, nullptr,
-                                 JSMSG_UTF8_CHAR_TOO_LARGE, buffer);
+    JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_ERROR, GetErrorMessage, nullptr,
+                                      JSMSG_UTF8_CHAR_TOO_LARGE, buffer);
 }
 
 static void
@@ -518,3 +518,14 @@ JS::ConstUTF8CharsZ::validate(size_t aLength)
         /* smallestEncoding = */ nullptr);
 }
 #endif
+
+bool
+JS::StringIsASCII(const char* s)
+{
+    while (*s) {
+        if (*s & 0x80)
+            return false;
+        s++;
+    }
+    return true;
+}

@@ -47,6 +47,9 @@
             <div class="category" value="dnslookuptool">
                 <span class="category-name">&aboutNetworking.dnsLookup;</span>
             </div>
+            <div class="category" value="logging">
+                <span class="category-name">&aboutNetworking.logging;</span>
+            </div>
         </div>
         <div class="main-content">
             <div class="header">
@@ -135,6 +138,23 @@
                   <tbody id="dnslookuptool_content" />
               </table>
           </div>
+
+          <div id="logging" class="tab" hidden="true">
+            <div>
+              &aboutNetworking.logTutorial;
+            </div>
+            <div>
+              &aboutNetworking.currentLogFile; <div id="current-log-file"></div><br/>
+              <input type="text" name="log-file" id="log-file"></input>
+              <button id="set-log-file-button"> &aboutNetworking.setLogFile; </button>
+            </div>
+            <div>
+              &aboutNetworking.currentLogModules; <div id="current-log-modules"></div><br/>
+              <input type="text" name="log-modules" id="log-modules" value="timestamp,sync,nsHttp:5,nsSocketTransport:5,nsStreamPump:5,nsHostResolver:5"></input>
+              <button id="set-log-modules-button"> &aboutNetworking.setLogModules; </button>
+            </div>
+          </div>
+
         </div>
     </body>
 </html>

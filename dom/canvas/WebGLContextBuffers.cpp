@@ -533,7 +533,7 @@ WebGLContext::DeleteBuffer(WebGLBuffer* buffer)
 
     for (int32_t i = 0; i < mGLMaxVertexAttribs; i++) {
         if (mBoundVertexArray->HasAttrib(i)) {
-            fnClearIfBuffer(mBoundVertexArray->mAttribs[i].buf);
+            fnClearIfBuffer(mBoundVertexArray->mAttribs[i].mBuf);
         }
     }
 

@@ -77,17 +77,8 @@ private:
   // NSPR file I/O for export file
   PRFileDesc *mTmpFile;
 
-  // simulated file I/O for "in memory" temporary digest data
-  nsCString                 *mDigest;
-  nsCString::const_iterator *mDigestIterator;
-
   bool        mTokenSet;
 
-  // C-style callback functions for the NSS PKCS#12 library
-  static SECStatus digest_open(void *, PRBool);
-  static SECStatus digest_close(void *, PRBool);
-  static int       digest_read(void *, unsigned char *, unsigned long);
-  static int       digest_write(void *, unsigned char *, unsigned long);
   static SECItem * nickname_collision(SECItem *, PRBool *, void *);
   static void write_export_file(void *arg, const char *buf, unsigned long len);
 

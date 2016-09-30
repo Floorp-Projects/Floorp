@@ -45,12 +45,15 @@ add_task(function* testAddOnBeforeCreatedWidget() {
     try {
       widgetNode.click();
 
+      let tempPanel = document.getElementById("customizationui-widget-panel");
+      let panelShownPromise = promisePanelElementShown(window, tempPanel);
+
       let shownTimeout = setTimeout(() => viewShownDeferred.reject("Panel not shown within 20s"), 20000);
       yield viewShownDeferred.promise;
+      yield panelShownPromise;
       clearTimeout(shownTimeout);
       ok(true, "Found view shown");
 
-      let tempPanel = document.getElementById("customizationui-widget-panel");
       let panelHiddenPromise = promisePanelElementHidden(window, tempPanel);
       tempPanel.hidePopup();
       yield panelHiddenPromise;

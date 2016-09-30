@@ -25,6 +25,7 @@ devtools.jar:
     content/shared/frame-script-utils.js (shared/frame-script-utils.js)
     content/styleeditor/styleeditor.xul (styleeditor/styleeditor.xul)
     content/storage/storage.xul (storage/storage.xul)
+    content/inspector/inspector.js (inspector/inspector.js)
     content/inspector/fonts/fonts.js (inspector/fonts/fonts.js)
     content/inspector/markup/markup.xhtml (inspector/markup/markup.xhtml)
     content/animationinspector/animation-controller.js (animationinspector/animation-controller.js)

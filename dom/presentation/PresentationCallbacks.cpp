@@ -110,6 +110,10 @@ PresentationReconnectCallback::NotifySuccess(const nsAString& aUrl)
   // the session ID. Resolve the promise with this connection and dispatch
   // the event.
   if (mConnection) {
+    mConnection->NotifyStateChange(
+      mSessionId,
+      nsIPresentationSessionListener::STATE_CONNECTING,
+      NS_OK);
     mPromise->MaybeResolve(mConnection);
     rv = mRequest->DispatchConnectionAvailableEvent(mConnection);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -142,6 +146,12 @@ PresentationReconnectCallback::NotifySuccess(const nsAString& aUrl)
 NS_IMETHODIMP
 PresentationReconnectCallback::NotifyError(nsresult aError)
 {
+  if (mConnection) {
+    mConnection->NotifyStateChange(
+      mSessionId,
+      nsIPresentationSessionListener::STATE_CLOSED,
+      aError);
+  }
   return PresentationRequesterCallback::NotifyError(aError);
 }
 

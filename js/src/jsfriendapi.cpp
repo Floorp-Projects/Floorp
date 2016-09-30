@@ -1336,18 +1336,18 @@ js::ReportIsNotFunction(JSContext* cx, HandleValue v)
 }
 
 JS_FRIEND_API(void)
-js::ReportErrorWithId(JSContext* cx, const char* msg, HandleId id)
+js::ReportASCIIErrorWithId(JSContext* cx, const char* msg, HandleId id)
 {
     RootedValue idv(cx);
     if (!JS_IdToValue(cx, id, &idv))
         return;
-    JSString* idstr = JS::ToString(cx, idv);
+    RootedString idstr(cx, JS::ToString(cx, idv));
     if (!idstr)
         return;
-    JSAutoByteString bytes(cx, idstr);
-    if (!bytes)
+    JSAutoByteString bytes;
+    if (!bytes.encodeUtf8(cx, idstr))
         return;
-    JS_ReportError(cx, msg, bytes.ptr());
+    JS_ReportErrorUTF8(cx, msg, bytes.ptr());
 }
 
 #ifdef DEBUG

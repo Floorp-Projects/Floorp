@@ -178,14 +178,14 @@ wasm::ReadI64Object(JSContext* cx, HandleValue v, int64_t* i64)
 static bool
 ThrowBadImportArg(JSContext* cx)
 {
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_ARG);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_ARG);
     return false;
 }
 
 static bool
 ThrowBadImportField(JSContext* cx, const char* str)
 {
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_FIELD, str);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_FIELD, str);
     return false;
 }
 
@@ -361,8 +361,8 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
     SharedModule module = Compile(*bytecode, compileArgs, &error);
     if (!module) {
         if (error) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_COMPILE_ERROR,
-                                 error.get());
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_COMPILE_ERROR,
+                                      error.get());
             return false;
         }
         ReportOutOfMemory(cx);
@@ -441,7 +441,8 @@ ToNonWrappingUint32(JSContext* cx, HandleValue v, uint32_t max, const char* kind
         return false;
 
     if (dbl < 0 || dbl > max) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_UINT32, kind, noun);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_UINT32,
+                                  kind, noun);
         return false;
     }
 
@@ -482,8 +483,8 @@ GetResizableLimits(JSContext* cx, HandleObject obj, uint32_t max, const char* ki
             return false;
 
         if (limits->initial > *limits->maximum) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_UINT32,
-                                 kind, "maximum size");
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_UINT32,
+                                      kind, "maximum size");
             return false;
         }
     }
@@ -548,7 +549,7 @@ GetCompileArgs(JSContext* cx, CallArgs callArgs, const char* name, MutableBytes*
         return false;
 
     if (!callArgs[0].isObject()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_BUF_ARG);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_BUF_ARG);
         return false;
     }
 
@@ -566,7 +567,7 @@ GetCompileArgs(JSContext* cx, CallArgs callArgs, const char* name, MutableBytes*
         if (!(*bytecode)->append(buffer.dataPointer(), buffer.byteLength()))
             return false;
     } else {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_BUF_ARG);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_BUF_ARG);
         return false;
     }
 
@@ -597,8 +598,8 @@ WasmModuleObject::construct(JSContext* cx, unsigned argc, Value* vp)
     SharedModule module = Compile(*bytecode, compileArgs, &error);
     if (!module) {
         if (error) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_COMPILE_ERROR,
-                                 error.get());
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_COMPILE_ERROR,
+                                      error.get());
             return false;
         }
         ReportOutOfMemory(cx);
@@ -734,7 +735,7 @@ WasmInstanceObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     if (!args.get(0).isObject() || !args[0].toObject().is<WasmModuleObject>()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_MOD_ARG);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_MOD_ARG);
         return false;
     }
 
@@ -933,7 +934,7 @@ WasmMemoryObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     if (!args.get(0).isObject()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_DESC_ARG, "memory");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_DESC_ARG, "memory");
         return false;
     }
 
@@ -998,7 +999,7 @@ WasmMemoryObject::growImpl(JSContext* cx, const CallArgs& args)
     uint32_t ret = grow(memory, delta, cx);
 
     if (ret == uint32_t(-1)) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_GROW, "memory");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_GROW, "memory");
         return false;
     }
 
@@ -1217,7 +1218,7 @@ WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     if (!args.get(0).isObject()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_DESC_ARG, "table");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_DESC_ARG, "table");
         return false;
     }
 
@@ -1233,7 +1234,7 @@ WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     if (!elementVal.isString()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_ELEMENT);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_ELEMENT);
         return false;
     }
 
@@ -1242,7 +1243,7 @@ WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     if (!StringEqualsAscii(elementStr, "anyfunc")) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_ELEMENT);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_ELEMENT);
         return false;
     }
 
@@ -1335,7 +1336,7 @@ WasmTableObject::setImpl(JSContext* cx, const CallArgs& args)
 
     RootedFunction value(cx);
     if (!IsExportedFunction(args[1], &value) && !args[1].isNull()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_TABLE_VALUE);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_TABLE_VALUE);
         return false;
     }
 
@@ -1381,7 +1382,7 @@ WasmTableObject::growImpl(JSContext* cx, const CallArgs& args)
     uint32_t ret = table->table().grow(delta, cx);
 
     if (ret == uint32_t(-1)) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_GROW, "table");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_GROW, "table");
         return false;
     }
 
@@ -1578,9 +1579,12 @@ WebAssembly_validate(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    if (error && !JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
-                                               JSMSG_WASM_COMPILE_ERROR, error.get())) {
-        return false;
+    if (error) {
+        if (!JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
+                                               JSMSG_WASM_COMPILE_ERROR, error.get()))
+        {
+            return false;
+        }
     }
 
     callArgs.rval().setBoolean(validated);

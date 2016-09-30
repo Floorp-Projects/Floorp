@@ -182,9 +182,6 @@ class SavedFrame : public NativeObject {
         // The total number of reserved slots in the SavedFrame class.
         JSSLOT_COUNT
     };
-
-    static MOZ_MUST_USE bool checkThis(JSContext* cx, CallArgs& args, const char* fnName,
-                                       MutableHandleObject frame);
 };
 
 struct SavedFrame::HashPolicy

@@ -5184,9 +5184,6 @@ const uint16_t MaxNumErrorArguments = 10;
  * and its arguments.
  */
 extern JS_PUBLIC_API(void)
-JS_ReportError(JSContext* cx, const char* format, ...);
-
-extern JS_PUBLIC_API(void)
 JS_ReportErrorASCII(JSContext* cx, const char* format, ...);
 
 extern JS_PUBLIC_API(void)
@@ -5198,16 +5195,6 @@ JS_ReportErrorUTF8(JSContext* cx, const char* format, ...);
 /*
  * Use an errorNumber to retrieve the format string, args are char*
  */
-extern JS_PUBLIC_API(void)
-JS_ReportErrorNumber(JSContext* cx, JSErrorCallback errorCallback,
-                     void* userRef, const unsigned errorNumber, ...);
-
-#ifdef va_start
-extern JS_PUBLIC_API(void)
-JS_ReportErrorNumberVA(JSContext* cx, JSErrorCallback errorCallback,
-                       void* userRef, const unsigned errorNumber, va_list ap);
-#endif
-
 extern JS_PUBLIC_API(void)
 JS_ReportErrorNumberASCII(JSContext* cx, JSErrorCallback errorCallback,
                           void* userRef, const unsigned errorNumber, ...);
@@ -5255,9 +5242,6 @@ JS_ReportErrorNumberUCArray(JSContext* cx, JSErrorCallback errorCallback,
  * being set, false otherwise.
  */
 extern JS_PUBLIC_API(bool)
-JS_ReportWarning(JSContext* cx, const char* format, ...);
-
-extern JS_PUBLIC_API(bool)
 JS_ReportWarningASCII(JSContext* cx, const char* format, ...);
 
 extern JS_PUBLIC_API(bool)
@@ -5265,11 +5249,6 @@ JS_ReportWarningLatin1(JSContext* cx, const char* format, ...);
 
 extern JS_PUBLIC_API(bool)
 JS_ReportWarningUTF8(JSContext* cx, const char* format, ...);
-
-extern JS_PUBLIC_API(bool)
-JS_ReportErrorFlagsAndNumber(JSContext* cx, unsigned flags,
-                             JSErrorCallback errorCallback, void* userRef,
-                             const unsigned errorNumber, ...);
 
 extern JS_PUBLIC_API(bool)
 JS_ReportErrorFlagsAndNumberASCII(JSContext* cx, unsigned flags,

@@ -472,16 +472,6 @@ DataTransfer::ClearData(const Optional<nsAString>& aFormat,
 }
 
 NS_IMETHODIMP
-DataTransfer::ClearData(const nsAString& aFormat)
-{
-  Optional<nsAString> format;
-  format = &aFormat;
-  ErrorResult rv;
-  ClearData(format, Some(nsContentUtils::SubjectPrincipal()), rv);
-  return rv.StealNSResult();
-}
-
-NS_IMETHODIMP
 DataTransfer::GetMozItemCount(uint32_t* aCount)
 {
   *aCount = MozItemCount();
@@ -800,14 +790,6 @@ DataTransfer::MozClearDataAtHelper(const nsAString& aFormat, uint32_t aIndex,
   GetRealFormat(aFormat, format);
 
   mItems->MozRemoveByTypeAt(format, aIndex, aSubjectPrincipal, aRv);
-}
-
-NS_IMETHODIMP
-DataTransfer::MozClearDataAt(const nsAString& aFormat, uint32_t aIndex)
-{
-  ErrorResult rv;
-  MozClearDataAt(aFormat, aIndex, Some(nsContentUtils::SubjectPrincipal()), rv);
-  return rv.StealNSResult();
 }
 
 void

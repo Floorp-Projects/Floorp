@@ -161,8 +161,8 @@ BytecodeCompiler::checkLength()
     // is using size_t internally already.
     if (sourceBuffer.length() > UINT32_MAX) {
         if (cx->isJSContext())
-            JS_ReportErrorNumber(cx->asJSContext(), GetErrorMessage, nullptr,
-                                 JSMSG_SOURCE_TOO_LONG);
+            JS_ReportErrorNumberASCII(cx->asJSContext(), GetErrorMessage, nullptr,
+                                      JSMSG_SOURCE_TOO_LONG);
         return false;
     }
     return true;

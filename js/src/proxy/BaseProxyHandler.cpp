@@ -406,8 +406,8 @@ BaseProxyHandler::setPrototype(JSContext* cx, HandleObject proxy, HandleObject p
     // Disallow sets of protos on proxies with dynamic prototypes but no hook.
     // This keeps us away from the footgun of having the first proto set opt
     // you out of having dynamic protos altogether.
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_SET_PROTO_OF,
-                         "incompatible Proxy");
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_SET_PROTO_OF,
+                              "incompatible Proxy");
     return false;
 }
 
@@ -421,8 +421,8 @@ BaseProxyHandler::setImmutablePrototype(JSContext* cx, HandleObject proxy, bool*
 bool
 BaseProxyHandler::watch(JSContext* cx, HandleObject proxy, HandleId id, HandleObject callable) const
 {
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_WATCH,
-                         proxy->getClass()->name);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_WATCH,
+                              proxy->getClass()->name);
     return false;
 }
 

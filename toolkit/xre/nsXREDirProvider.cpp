@@ -1315,14 +1315,14 @@ GetRegWindowsAppDataFolder(bool aLocal, nsAString& _retval)
   // |size| may or may not include room for the terminating null character
   DWORD resultLen = size / 2;
 
-  _retval.SetLength(resultLen);
-  nsAString::iterator begin;
-  _retval.BeginWriting(begin);
-  if (begin.size_forward() != resultLen) {
+  if (!_retval.SetLength(resultLen, mozilla::fallible)) {
     ::RegCloseKey(key);
     _retval.SetLength(0);
     return NS_ERROR_NOT_AVAILABLE;
   }
+
+  nsAString::iterator begin;
+  _retval.BeginWriting(begin);
 
   res = RegQueryValueExW(key, (aLocal ? L"Local AppData" : L"AppData"),
                          nullptr, nullptr, (LPBYTE) begin.get(), &size);
