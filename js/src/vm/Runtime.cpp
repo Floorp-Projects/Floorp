@@ -244,7 +244,9 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     debuggerMallocSizeOf(ReturnZeroSize),
     lastAnimationTime(0),
     performanceMonitoring(thisFromCtor()),
-    ionLazyLinkListSize_(0)
+    ionLazyLinkListSize_(0),
+    stackFormat_(parentRuntime ? js::StackFormat::Default
+                               : js::StackFormat::SpiderMonkey)
 {
     setGCStoreBufferPtr(&gc.storeBuffer);
 
