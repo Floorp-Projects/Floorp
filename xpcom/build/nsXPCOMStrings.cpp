@@ -83,10 +83,8 @@ NS_StringGetData(const nsAString& aStr, const char16_t** aData,
     *aTerminated = aStr.IsTerminated();
   }
 
-  nsAString::const_iterator begin;
-  aStr.BeginReading(begin);
-  *aData = begin.get();
-  return begin.size_forward();
+  *aData = aStr.BeginReading();
+  return aStr.Length();
 }
 
 XPCOM_API(uint32_t)
@@ -101,10 +99,8 @@ NS_StringGetMutableData(nsAString& aStr, uint32_t aDataLength,
     }
   }
 
-  nsAString::iterator begin;
-  aStr.BeginWriting(begin);
-  *aData = begin.get();
-  return begin.size_forward();
+  *aData = aStr.BeginWriting();
+  return aStr.Length();
 }
 
 XPCOM_API(char16_t*)
@@ -242,10 +238,8 @@ NS_CStringGetData(const nsACString& aStr, const char** aData,
     *aTerminated = aStr.IsTerminated();
   }
 
-  nsACString::const_iterator begin;
-  aStr.BeginReading(begin);
-  *aData = begin.get();
-  return begin.size_forward();
+  *aData = aStr.BeginReading();
+  return aStr.Length();
 }
 
 XPCOM_API(uint32_t)
@@ -259,10 +253,8 @@ NS_CStringGetMutableData(nsACString& aStr, uint32_t aDataLength, char** aData)
     }
   }
 
-  nsACString::iterator begin;
-  aStr.BeginWriting(begin);
-  *aData = begin.get();
-  return begin.size_forward();
+  *aData = aStr.BeginWriting();
+  return aStr.Length();
 }
 
 XPCOM_API(char*)
