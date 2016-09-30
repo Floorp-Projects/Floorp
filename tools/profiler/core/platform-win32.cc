@@ -193,6 +193,22 @@ class SamplerThread : public Thread {
     if (SuspendThread(profiled_thread) == kSuspendFailed)
       return;
 
+    // SuspendThread is asynchronous, so the thread may still be running.
+    // Call GetThreadContext first to ensure the thread is really suspended.
+    // See https://blogs.msdn.microsoft.com/oldnewthing/20150205-00/?p=44743.
+
+    // Using only CONTEXT_CONTROL is faster but on 64-bit it causes crashes in
+    // RtlVirtualUnwind (see bug 1120126) so we set all the flags.
+#if V8_HOST_ARCH_X64
+    context.ContextFlags = CONTEXT_FULL;
+#else
+    context.ContextFlags = CONTEXT_CONTROL;
+#endif
+    if (!GetThreadContext(profiled_thread, &context)) {
+      ResumeThread(profiled_thread);
+      return;
+    }
+
 #ifdef MOZ_STACKWALKING
     // Threads that may invoke JS require extra attention. Since, on windows,
     // the jits also need to modify the same dynamic function table that we need
@@ -218,26 +234,19 @@ class SamplerThread : public Thread {
     }
 #endif
 
-    // Using only CONTEXT_CONTROL is faster but on 64-bit it causes crashes in
-    // RtlVirtualUnwind (see bug 1120126) so we set all the flags.
 #if V8_HOST_ARCH_X64
-    context.ContextFlags = CONTEXT_FULL;
+    sample->pc = reinterpret_cast<Address>(context.Rip);
+    sample->sp = reinterpret_cast<Address>(context.Rsp);
+    sample->fp = reinterpret_cast<Address>(context.Rbp);
 #else
-    context.ContextFlags = CONTEXT_CONTROL;
+    sample->pc = reinterpret_cast<Address>(context.Eip);
+    sample->sp = reinterpret_cast<Address>(context.Esp);
+    sample->fp = reinterpret_cast<Address>(context.Ebp);
 #endif
-    if (GetThreadContext(profiled_thread, &context) != 0) {
-#if V8_HOST_ARCH_X64
-      sample->pc = reinterpret_cast<Address>(context.Rip);
-      sample->sp = reinterpret_cast<Address>(context.Rsp);
-      sample->fp = reinterpret_cast<Address>(context.Rbp);
-#else
-      sample->pc = reinterpret_cast<Address>(context.Eip);
-      sample->sp = reinterpret_cast<Address>(context.Esp);
-      sample->fp = reinterpret_cast<Address>(context.Ebp);
-#endif
-      sample->context = &context;
-      sampler->Tick(sample);
-    }
+
+    sample->context = &context;
+    sampler->Tick(sample);
+
     ResumeThread(profiled_thread);
   }
 

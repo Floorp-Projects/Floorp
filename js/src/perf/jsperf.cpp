@@ -225,7 +225,7 @@ GetPM(JSContext* cx, JS::HandleValue value, const char* fname)
         UniqueChars bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, value, nullptr);
         if (!bytes)
             return nullptr;
-        JS_ReportErrorNumber(cx, GetErrorMessage, 0, JSMSG_NOT_NONNULL_OBJECT, bytes.get());
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, 0, JSMSG_NOT_NONNULL_OBJECT, bytes.get());
         return nullptr;
     }
     RootedObject obj(cx, &value.toObject());
@@ -236,8 +236,8 @@ GetPM(JSContext* cx, JS::HandleValue value, const char* fname)
 
     // JS_GetInstancePrivate only sets an exception if its last argument
     // is nonzero, so we have to do it by hand.
-    JS_ReportErrorNumber(cx, GetErrorMessage, 0, JSMSG_INCOMPATIBLE_PROTO,
-                         pm_class.name, fname, JS_GetClass(obj)->name);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, 0, JSMSG_INCOMPATIBLE_PROTO,
+                              pm_class.name, fname, JS_GetClass(obj)->name);
     return nullptr;
 }
 

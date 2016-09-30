@@ -1252,8 +1252,7 @@ CodeGeneratorX86::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir)
     Register64 output = ToOutRegister64(lir);
 
     MWasmTruncateToInt64* mir = lir->mir();
-    Register temp = ToRegister(lir->temp1());
-    FloatRegister floatTemp = ToFloatRegister(lir->temp2());
+    FloatRegister floatTemp = ToFloatRegister(lir->temp());
 
     Label fail, convert;
 
@@ -1262,49 +1261,17 @@ CodeGeneratorX86::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir)
     auto* ool = new(alloc()) OutOfLineWasmTruncateCheck(mir, input);
     addOutOfLineCode(ool, mir);
 
-    masm.reserveStack(2 * sizeof(int32_t));
-    masm.storeDouble(input, Operand(esp, 0));
-
-    // Make sure input fits in (u)int64.
     if (mir->input()->type() == MIRType::Float32) {
         if (mir->isUnsigned())
-            masm.branchFloat32NotInUInt64Range(Address(esp, 0), temp, &fail);
+            masm.wasmTruncateFloat32ToUInt64(input, output, ool->entry(), ool->rejoin(), floatTemp);
         else
-            masm.branchFloat32NotInInt64Range(Address(esp, 0), temp, &fail);
+            masm.wasmTruncateFloat32ToInt64(input, output, ool->entry(), ool->rejoin(), floatTemp);
     } else {
         if (mir->isUnsigned())
-            masm.branchDoubleNotInUInt64Range(Address(esp, 0), temp, &fail);
+            masm.wasmTruncateDoubleToUInt64(input, output, ool->entry(), ool->rejoin(), floatTemp);
         else
-            masm.branchDoubleNotInInt64Range(Address(esp, 0), temp, &fail);
+            masm.wasmTruncateDoubleToInt64(input, output, ool->entry(), ool->rejoin(), floatTemp);
     }
-    masm.jump(&convert);
-
-    // Handle failure in ool.
-    masm.bind(&fail);
-    masm.freeStack(2 * sizeof(int32_t));
-    masm.jump(ool->entry());
-    masm.bind(ool->rejoin());
-    masm.reserveStack(2 * sizeof(int32_t));
-    masm.storeDouble(input, Operand(esp, 0));
-
-    // Convert the double/float to int64.
-    masm.bind(&convert);
-    if (mir->input()->type() == MIRType::Float32) {
-        if (mir->isUnsigned())
-            masm.truncateFloat32ToUInt64(Address(esp, 0), Address(esp, 0), temp, floatTemp);
-        else
-            masm.truncateFloat32ToInt64(Address(esp, 0), Address(esp, 0), temp);
-    } else {
-        if (mir->isUnsigned())
-            masm.truncateDoubleToUInt64(Address(esp, 0), Address(esp, 0), temp, floatTemp);
-        else
-            masm.truncateDoubleToInt64(Address(esp, 0), Address(esp, 0), temp);
-    }
-
-    // Load value into int64 register.
-    masm.load64(Address(esp, 0), output);
-
-    masm.freeStack(2 * sizeof(int32_t));
 }
 
 void
@@ -1312,36 +1279,22 @@ CodeGeneratorX86::visitInt64ToFloatingPoint(LInt64ToFloatingPoint* lir)
 {
     Register64 input = ToRegister64(lir->getInt64Operand(0));
     FloatRegister output = ToFloatRegister(lir->output());
+    Register temp = lir->temp()->isBogusTemp() ? InvalidReg : ToRegister(lir->temp());
 
     MIRType outputType = lir->mir()->type();
     MOZ_ASSERT(outputType == MIRType::Double || outputType == MIRType::Float32);
 
-    // Zero the output register to break dependencies, see convertInt32ToDouble.
-    if (outputType == MIRType::Double)
-        masm.zeroDouble(output);
-    else
-        masm.zeroFloat32(output);
-
-    masm.Push(input.high);
-    masm.Push(input.low);
-    masm.fild(Operand(esp, 0));
-
-    if (lir->mir()->isUnsigned()) {
-        Label notNegative;
-        masm.branch32(Assembler::NotSigned, input.high, Imm32(0), &notNegative);
-        double add_constant = 18446744073709551616.0; // 2^64
-        masm.store64(Imm64(mozilla::BitwiseCast<uint64_t>(add_constant)), Address(esp, 0));
-        masm.fld(Operand(esp, 0));
-        masm.faddp();
-        masm.bind(&notNegative);
+    if (outputType == MIRType::Double) {
+        if (lir->mir()->isUnsigned())
+            masm.convertUInt64ToDouble(input, output, temp);
+        else
+            masm.convertInt64ToDouble(input, output);
+    } else {
+        if (lir->mir()->isUnsigned())
+            masm.convertUInt64ToFloat32(input, output, temp);
+        else
+            masm.convertInt64ToFloat32(input, output);
     }
-
-    masm.fstp(Operand(esp, 0));
-    masm.vmovsd(Address(esp, 0), output);
-    masm.freeStack(2*sizeof(intptr_t));
-
-    if (outputType == MIRType::Float32)
-        masm.convertDoubleToFloat32(output, output);
 }
 
 void

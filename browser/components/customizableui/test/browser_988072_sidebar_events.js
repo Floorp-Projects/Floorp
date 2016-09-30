@@ -82,9 +82,11 @@ var showSidebarPopup = Task.async(function*() {
   let button = document.getElementById("sidebar-button");
   let subview = document.getElementById("PanelUI-sidebar");
 
+  let popupShownPromise = BrowserTestUtils.waitForEvent(document, "popupshown");
+
   let subviewShownPromise = subviewShown(subview);
   EventUtils.synthesizeMouseAtCenter(button, {});
-  return subviewShownPromise;
+  return Promise.all([subviewShownPromise, popupShownPromise]);
 });
 
 // Check the sidebar widget shows the default items

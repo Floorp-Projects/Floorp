@@ -259,7 +259,7 @@ class BaseCompiler
 
     struct RegI32
     {
-        RegI32() {}
+        RegI32() : reg(Register::Invalid()) {}
         explicit RegI32(Register reg) : reg(reg) {}
         Register reg;
         bool operator==(const RegI32& that) { return reg == that.reg; }
@@ -448,6 +448,7 @@ class BaseCompiler
     int32_t                     varHigh_;        // High byte offset + 1 of local area for true locals
     int32_t                     maxFramePushed_; // Max value of masm.framePushed() observed
     bool                        deadCode_;       // Flag indicating we should decode & discard the opcode
+    ValTypeVector               SigI64I64_;
     ValTypeVector               SigDD_;
     ValTypeVector               SigD_;
     ValTypeVector               SigF_;
@@ -491,6 +492,9 @@ class BaseCompiler
 
 #if defined(JS_CODEGEN_X86)
     AllocatableGeneralRegisterSet singleByteRegs_;
+#endif
+#if defined(JS_NUNBOX32)
+    RegI64 abiReturnRegI64;
 #endif
 
     // The join registers are used to carry values out of blocks.
@@ -861,11 +865,7 @@ class BaseCompiler
     }
 
     Register64 invalidRegister64() {
-#ifdef JS_PUNBOX64
-        return Register64(Register::Invalid());
-#else
-        MOZ_CRASH("BaseCompiler platform hook: invalidRegister64");
-#endif
+        return Register64::Invalid();
     }
 
     RegI32 invalidI32() {
@@ -889,10 +889,12 @@ class BaseCompiler
     }
 
     RegI64 fromI32(RegI32 r) {
+        MOZ_ASSERT(!isAvailable(r.reg));
 #ifdef JS_PUNBOX64
         return RegI64(Register64(r.reg));
 #else
-        return RegI64(Register64(needI32().reg, r.reg)); // TODO: BUG if sync is called.
+        RegI32 high = needI32();
+        return RegI64(Register64(high.reg, r.reg));
 #endif
     }
 
@@ -902,6 +904,18 @@ class BaseCompiler
 
     void freeI64(RegI64 r) {
         freeInt64(r.reg);
+    }
+
+    void freeI64Except(RegI64 r, RegI32 except) {
+#ifdef JS_PUNBOX64
+        MOZ_ASSERT(r.reg.reg == except.reg);
+#else
+        MOZ_ASSERT(r.reg.high == except.reg || r.reg.low == except.reg);
+        freeI64(r);
+        needI32(except);
+#endif
+
+
     }
 
     void freeF64(RegF64 r) {
@@ -930,7 +944,7 @@ class BaseCompiler
 
     void need2xI32(RegI32 r0, RegI32 r1) {
         needI32(r0);
-        needI32(r1); // TODO: BUG if sync is called.
+        needI32(r1);
     }
 
     MOZ_MUST_USE
@@ -948,7 +962,7 @@ class BaseCompiler
 
     void need2xI64(RegI64 r0, RegI64 r1) {
         needI64(r0);
-        needI64(r1); // TODO: BUG if sync is called.
+        needI64(r1);
     }
 
     MOZ_MUST_USE
@@ -998,11 +1012,7 @@ class BaseCompiler
     }
 
     void setI64(int64_t v, RegI64 r) {
-#ifdef JS_PUNBOX64
         masm.move64(Imm64(v), r.reg);
-#else
-        MOZ_CRASH("BaseCompiler platform hook: setI64");
-#endif
     }
 
     void loadConstI32(Register r, Stk& src) {
@@ -1068,6 +1078,52 @@ class BaseCompiler
             MOZ_CRASH("Compiler bug: Expected int on stack");
         }
     }
+
+#ifdef JS_NUNBOX32
+    void loadI64Low(Register r, Stk& src) {
+        switch (src.kind()) {
+          case Stk::ConstI64:
+            masm.move32(Imm64(src.i64val()).low(), r);
+            break;
+          case Stk::MemI64:
+            loadFromFrameI32(r, src.offs() - INT64LOW_OFFSET);
+            break;
+          case Stk::LocalI64:
+            loadFromFrameI32(r, frameOffsetFromSlot(src.slot(), MIRType::Int64) - INT64LOW_OFFSET);
+            break;
+          case Stk::RegisterI64:
+            if (src.i64reg().reg.low != r)
+                masm.move32(src.i64reg().reg.low, r);
+            break;
+          case Stk::None:
+            break;
+          default:
+            MOZ_CRASH("Compiler bug: Expected int on stack");
+        }
+    }
+
+    void loadI64High(Register r, Stk& src) {
+        switch (src.kind()) {
+          case Stk::ConstI64:
+            masm.move32(Imm64(src.i64val()).hi(), r);
+            break;
+          case Stk::MemI64:
+            loadFromFrameI32(r, src.offs() - INT64HIGH_OFFSET);
+            break;
+          case Stk::LocalI64:
+            loadFromFrameI32(r, frameOffsetFromSlot(src.slot(), MIRType::Int64) - INT64HIGH_OFFSET);
+            break;
+          case Stk::RegisterI64:
+            if (src.i64reg().reg.high != r)
+                masm.move32(src.i64reg().reg.high, r);
+            break;
+          case Stk::None:
+            break;
+          default:
+            MOZ_CRASH("Compiler bug: Expected int on stack");
+        }
+    }
+#endif
 
     void loadF64(FloatRegister r, Stk& src) {
         switch (src.kind()) {
@@ -1170,9 +1226,9 @@ class BaseCompiler
                 masm.Push(scratch);
 #else
                 int32_t offset = frameOffsetFromSlot(v.slot(), MIRType::Int64);
-                loadFromFrameI32(scratch, offset + INT64LOW_OFFSET);
+                loadFromFrameI32(scratch, offset - INT64HIGH_OFFSET);
                 masm.Push(scratch);
-                loadFromFrameI32(scratch, offset + INT64HIGH_OFFSET);
+                loadFromFrameI32(scratch, offset - INT64LOW_OFFSET);
                 masm.Push(scratch);
 #endif
                 v.setOffs(Stk::MemI64, masm.framePushed());
@@ -1183,8 +1239,8 @@ class BaseCompiler
                 masm.Push(v.i64reg().reg.reg);
                 freeI64(v.i64reg());
 #else
-                masm.Push(v.i64reg().reg.low);
                 masm.Push(v.i64reg().reg.high);
+                masm.Push(v.i64reg().reg.low);
                 freeI64(v.i64reg());
 #endif
                 v.setOffs(Stk::MemI64, masm.framePushed());
@@ -1258,13 +1314,9 @@ class BaseCompiler
     }
 
     void pushI64(RegI64 r) {
-#ifdef JS_PUNBOX64
-        MOZ_ASSERT(!isAvailable(r.reg.reg));
+        MOZ_ASSERT(!isAvailable(r.reg));
         Stk& x = push();
         x.setI64Reg(r);
-#else
-        MOZ_CRASH("BaseCompiler platform hook: pushI64");
-#endif
     }
 
     void pushF64(RegF64 r) {
@@ -1398,7 +1450,8 @@ class BaseCompiler
 #ifdef JS_PUNBOX64
             masm.Pop(r.reg.reg);
 #else
-            MOZ_CRASH("BaseCompiler platform hook: popI64");
+            masm.Pop(r.reg.low);
+            masm.Pop(r.reg.high);
 #endif
             break;
           case Stk::RegisterI64:
@@ -2066,18 +2119,23 @@ class BaseCompiler
             break;
           }
           case ValType::I64: {
-#ifdef JS_CODEGEN_X64
             ABIArg argLoc = call.abi_.next(MIRType::Int64);
             if (argLoc.kind() == ABIArg::Stack) {
                 ScratchI32 scratch(*this);
+#if defined(JS_CODEGEN_X64)
                 loadI64(Register64(scratch), arg);
                 masm.movq(scratch, Operand(StackPointer, argLoc.offsetFromArgBase()));
+#elif defined(JS_CODEGEN_X86)
+                loadI64Low(scratch, arg);
+                masm.move32(scratch, Operand(StackPointer, argLoc.offsetFromArgBase() + INT64LOW_OFFSET));
+                loadI64High(scratch, arg);
+                masm.move32(scratch, Operand(StackPointer, argLoc.offsetFromArgBase() + INT64HIGH_OFFSET));
+#else
+                MOZ_CRASH("BaseCompiler platform hook: passArg I64");
+#endif
             } else {
                 loadI64(argLoc.gpr64(), arg);
             }
-#else
-            MOZ_CRASH("BaseCompiler platform hook: passArg I64");
-#endif
             break;
           }
           case ValType::F64: {
@@ -2252,11 +2310,7 @@ class BaseCompiler
     }
 
     void captureReturnedI64(RegI64 dest) {
-#ifdef JS_PUNBOX64
         moveI64(RegI64(ReturnReg64), dest);
-#else
-        MOZ_CRASH("BaseCompiler platform hook: captureReturnedI64");
-#endif
     }
 
     void captureReturnedF32(const FunctionCall& call, RegF32 dest) {
@@ -2299,11 +2353,7 @@ class BaseCompiler
     }
 
     void returnI64(RegI64 r) {
-#ifdef JS_PUNBOX64
-        moveI64(r, RegI64(Register64(ReturnReg)));
-#else
-        MOZ_CRASH("BaseCompiler platform hook: returnI64");
-#endif
+        moveI64(r, RegI64(Register64(ReturnReg64)));
         popStackBeforeBranch(ctl_[0].framePushed);
         masm.jump(&returnLabel_);
     }
@@ -2321,18 +2371,20 @@ class BaseCompiler
     }
 
     void subtractI64(RegI64 rhs, RegI64 srcDest) {
-#if defined(JS_CODEGEN_X64)
-        masm.subq(rhs.reg.reg, srcDest.reg.reg);
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
+        masm.sub64(rhs.reg, srcDest.reg);
 #else
         MOZ_CRASH("BaseCompiler platform hook: subtractI64");
 #endif
     }
 
-    void multiplyI64(RegI64 rhs, RegI64 srcDest) {
+    void multiplyI64(RegI64 rhs, RegI64 srcDest, RegI32 temp) {
 #if defined(JS_CODEGEN_X64)
         MOZ_ASSERT(srcDest.reg.reg == rax);
         MOZ_ASSERT(isAvailable(rdx));
-        masm.imulq(rhs.reg.reg, srcDest.reg.reg);
+        masm.mul64(rhs.reg, srcDest.reg, temp.reg);
+#elif defined(JS_CODEGEN_X86)
+        masm.mul64(rhs.reg, srcDest.reg, temp.reg);
 #else
         MOZ_CRASH("BaseCompiler platform hook: multiplyI64");
 #endif
@@ -2356,6 +2408,12 @@ class BaseCompiler
 #ifdef JS_CODEGEN_X64
         masm.testq(rhs.reg.reg, rhs.reg.reg);
         masm.j(Assembler::Zero, wasm::JumpTarget::IntegerDivideByZero);
+#elif defined(JS_CODEGEN_X86)
+        Label nonZero;
+        masm.branchTest32(Assembler::NonZero, rhs.reg.low, rhs.reg.low, &nonZero);
+        masm.branchTest32(Assembler::Zero, rhs.reg.high, rhs.reg.high,
+                          wasm::JumpTarget::IntegerDivideByZero);
+        masm.bind(&nonZero);
 #else
         MOZ_CRASH("BaseCompiler platform hook: checkDivideByZeroI64");
 #endif
@@ -2378,24 +2436,17 @@ class BaseCompiler
     }
 
     void checkDivideSignedOverflowI64(RegI64 rhs, RegI64 srcDest, Label* done, bool zeroOnOverflow) {
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
         MOZ_ASSERT(!isCompilingAsmJS());
-#ifdef JS_CODEGEN_X64
-        Label notMin;
-        {
-            ScratchI32 scratch(*this);
-            masm.move64(Imm64(INT64_MIN), Register64(scratch));
-            masm.cmpq(scratch, srcDest.reg.reg);
-        }
-        masm.j(Assembler::NotEqual, &notMin);
-        masm.cmpq(Imm32(-1), rhs.reg.reg);
-        if (zeroOnOverflow) {
-            masm.j(Assembler::NotEqual, &notMin);
-            masm.xorq(srcDest.reg.reg, srcDest.reg.reg);
-            masm.jump(done);
-        } else {
-            masm.j(Assembler::Equal, wasm::JumpTarget::IntegerOverflow);
-        }
-        masm.bind(&notMin);
+        Label notmin;
+        masm.branch64(Assembler::NotEqual, srcDest.reg, Imm64(INT64_MIN), &notmin);
+        masm.branch64(Assembler::NotEqual, rhs.reg, Imm64(-1), &notmin);
+        if (zeroOnOverflow)
+            masm.xor64(srcDest.reg, srcDest.reg);
+        else
+            masm.jump(wasm::JumpTarget::IntegerOverflow);
+        masm.jump(done);
+        masm.bind(&notmin);
 #else
         MOZ_CRASH("BaseCompiler platform hook: checkDivideSignedOverflowI64");
 #endif
@@ -2455,69 +2506,66 @@ class BaseCompiler
     }
 
     void orI64(RegI64 rhs, RegI64 srcDest) {
-#if defined(JS_CODEGEN_X64)
-        masm.orq(rhs.reg.reg, srcDest.reg.reg);
-#else
-        MOZ_CRASH("BaseCompiler platform hook: orI64");
-#endif
+        masm.or64(rhs.reg, srcDest.reg);
     }
 
     void andI64(RegI64 rhs, RegI64 srcDest) {
-#if defined(JS_CODEGEN_X64)
-        masm.andq(rhs.reg.reg, srcDest.reg.reg);
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
+        masm.and64(rhs.reg, srcDest.reg);
 #else
         MOZ_CRASH("BaseCompiler platform hook: andI64");
 #endif
     }
 
     void xorI64(RegI64 rhs, RegI64 srcDest) {
-#if defined(JS_CODEGEN_X64)
-        masm.xorq(rhs.reg.reg, srcDest.reg.reg);
-#else
-        MOZ_CRASH("BaseCompiler platform hook: xorI64");
-#endif
+        masm.xor64(rhs.reg, srcDest.reg);
     }
 
-    void lshiftI64(RegI64 rhs, RegI64 srcDest) {
+    void lshiftI64(RegI64 shift, RegI64 srcDest) {
 #if defined(JS_CODEGEN_X64)
-        MOZ_ASSERT(rhs.reg.reg == rcx);
-        masm.shlq_cl(srcDest.reg.reg);
+        masm.lshift64(shift.reg.reg, srcDest.reg);
+#elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
+        masm.lshift64(shift.reg.low, srcDest.reg);
 #else
         MOZ_CRASH("BaseCompiler platform hook: lshiftI64");
 #endif
     }
 
-    void rshiftI64(RegI64 rhs, RegI64 srcDest) {
+    void rshiftI64(RegI64 shift, RegI64 srcDest) {
 #if defined(JS_CODEGEN_X64)
-        MOZ_ASSERT(rhs.reg.reg == rcx);
-        masm.sarq_cl(srcDest.reg.reg);
+        masm.rshift64Arithmetic(shift.reg.reg, srcDest.reg);
+#elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
+        masm.rshift64Arithmetic(shift.reg.low, srcDest.reg);
 #else
         MOZ_CRASH("BaseCompiler platform hook: rshiftI64");
 #endif
     }
 
-    void rshiftU64(RegI64 rhs, RegI64 srcDest) {
+    void rshiftU64(RegI64 shift, RegI64 srcDest) {
 #if defined(JS_CODEGEN_X64)
-        MOZ_ASSERT(rhs.reg.reg == rcx);
-        masm.shrq_cl(srcDest.reg.reg);
+        masm.rshift64(shift.reg.reg, srcDest.reg);
+#elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
+        masm.rshift64(shift.reg.low, srcDest.reg);
 #else
         MOZ_CRASH("BaseCompiler platform hook: rshiftU64");
 #endif
     }
 
-    void rotateRightI64(RegI64 rhs, RegI64 srcDest) {
+    void rotateRightI64(RegI64 shift, RegI64 srcDest) {
 #if defined(JS_CODEGEN_X64)
-        MOZ_ASSERT(rhs.reg.reg == rcx);
-        masm.rorq_cl(srcDest.reg.reg);
+        masm.rotateRight64(shift.reg.reg, srcDest.reg, srcDest.reg, Register::Invalid());
+#elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
+        masm.rotateRight64(shift.reg.low, srcDest.reg, srcDest.reg, shift.reg.high);
 #else
         MOZ_CRASH("BaseCompiler platform hook: rotateRightI64");
 #endif
     }
 
-    void rotateLeftI64(RegI64 rhs, RegI64 srcDest) {
+    void rotateLeftI64(RegI64 shift, RegI64 srcDest) {
 #if defined(JS_CODEGEN_X64)
-        MOZ_ASSERT(rhs.reg.reg == rcx);
-        masm.rolq_cl(srcDest.reg.reg);
+        masm.rotateLeft64(shift.reg.reg, srcDest.reg, srcDest.reg, Register::Invalid());
+#elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
+        masm.rotateLeft64(shift.reg.low, srcDest.reg, srcDest.reg, shift.reg.high);
 #else
         MOZ_CRASH("BaseCompiler platform hook: rotateLeftI64");
 #endif
@@ -2526,6 +2574,9 @@ class BaseCompiler
     void clzI64(RegI64 srcDest) {
 #if defined(JS_CODEGEN_X64)
         masm.clz64(srcDest.reg, srcDest.reg.reg);
+#elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
+        masm.clz64(srcDest.reg, srcDest.reg.low);
+        masm.move32(Imm32(0), srcDest.reg.high);
 #else
         MOZ_CRASH("BaseCompiler platform hook: clzI64");
 #endif
@@ -2534,6 +2585,9 @@ class BaseCompiler
     void ctzI64(RegI64 srcDest) {
 #if defined(JS_CODEGEN_X64)
         masm.ctz64(srcDest.reg, srcDest.reg.reg);
+#elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
+        masm.ctz64(srcDest.reg, srcDest.reg.low);
+        masm.move32(Imm32(0), srcDest.reg.high);
 #else
         MOZ_CRASH("BaseCompiler platform hook: ctzI64");
 #endif
@@ -2556,16 +2610,16 @@ class BaseCompiler
     }
 
     bool popcnt64NeedsTemp() const {
-#if defined(JS_CODEGEN_X64)
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
         return !AssemblerX86Shared::HasPOPCNT();
 #else
         MOZ_CRASH("BaseCompiler platform hook: popcnt64NeedsTemp");
 #endif
     }
 
-    void popcntI64(RegI64 srcDest, RegI64 tmp) {
-#if defined(JS_CODEGEN_X64)
-        masm.popcnt64(srcDest.reg, srcDest.reg, tmp.reg.reg);
+    void popcntI64(RegI64 srcDest, RegI32 tmp) {
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM)
+        masm.popcnt64(srcDest.reg, srcDest.reg, tmp.reg);
 #else
         MOZ_CRASH("BaseCompiler platform hook: popcntI64");
 #endif
@@ -2574,6 +2628,11 @@ class BaseCompiler
     void reinterpretI64AsF64(RegI64 src, RegF64 dest) {
 #if defined(JS_CODEGEN_X64)
         masm.vmovq(src.reg.reg, dest.reg);
+#elif defined(JS_CODEGEN_X86)
+        masm.Push(src.reg.high);
+        masm.Push(src.reg.low);
+        masm.vmovq(Operand(esp, 0), dest.reg);
+        masm.freeStack(sizeof(uint64_t));
 #else
         MOZ_CRASH("BaseCompiler platform hook: reinterpretI64AsF64");
 #endif
@@ -2582,6 +2641,11 @@ class BaseCompiler
     void reinterpretF64AsI64(RegF64 src, RegI64 dest) {
 #if defined(JS_CODEGEN_X64)
         masm.vmovq(src.reg, dest.reg.reg);
+#elif defined(JS_CODEGEN_X86)
+        masm.reserveStack(sizeof(uint64_t));
+        masm.vmovq(src.reg, Operand(esp, 0));
+        masm.Pop(dest.reg.low);
+        masm.Pop(dest.reg.high);
 #else
         MOZ_CRASH("BaseCompiler platform hook: reinterpretF64AsI64");
 #endif
@@ -2591,6 +2655,8 @@ class BaseCompiler
 #if defined(JS_CODEGEN_X64)
         // movl clears the high bits if the two registers are the same.
         masm.movl(src.reg.reg, dest.reg);
+#elif defined(JS_NUNBOX32)
+        masm.move32(src.reg.low, dest.reg);
 #else
         MOZ_CRASH("BaseCompiler platform hook: wrapI64ToI32");
 #endif
@@ -2599,6 +2665,11 @@ class BaseCompiler
     void extendI32ToI64(RegI32 src, RegI64 dest) {
 #if defined(JS_CODEGEN_X64)
         masm.movslq(src.reg, dest.reg.reg);
+#elif defined(JS_CODEGEN_X86)
+        MOZ_ASSERT(dest.reg.low == src.reg);
+        MOZ_ASSERT(dest.reg.low == eax);
+        MOZ_ASSERT(dest.reg.high == edx);
+        masm.cdq();
 #else
         MOZ_CRASH("BaseCompiler platform hook: extendI32ToI64");
 #endif
@@ -2607,6 +2678,9 @@ class BaseCompiler
     void extendU32ToI64(RegI32 src, RegI64 dest) {
 #if defined(JS_CODEGEN_X64)
         masm.movl(src.reg, dest.reg.reg);
+#elif defined(JS_NUNBOX32)
+        masm.move32(src.reg, dest.reg.low);
+        masm.move32(Imm32(0), dest.reg.high);
 #else
         MOZ_CRASH("BaseCompiler platform hook: extendU32ToI64");
 #endif
@@ -2730,19 +2804,18 @@ class BaseCompiler
 
     MOZ_MUST_USE
     bool truncateF32ToI64(RegF32 src, RegI64 dest, bool isUnsigned, RegF64 temp) {
-#ifdef JS_CODEGEN_X64
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
         OutOfLineCode* ool =
             addOutOfLineCode(new (alloc_) OutOfLineTruncateCheckF32OrF64ToI64(AnyReg(src),
                                                                               isUnsigned));
         if (!ool)
             return false;
         if (isUnsigned)
-            masm.wasmTruncateFloat32ToUInt64(src.reg, dest.reg.reg, ool->entry(),
+            masm.wasmTruncateFloat32ToUInt64(src.reg, dest.reg, ool->entry(),
                                              ool->rejoin(), temp.reg);
         else
-            masm.wasmTruncateFloat32ToInt64(src.reg, dest.reg.reg, ool->entry(),
+            masm.wasmTruncateFloat32ToInt64(src.reg, dest.reg, ool->entry(),
                                             ool->rejoin(), temp.reg);
-        masm.bind(ool->rejoin());
 #else
         MOZ_CRASH("BaseCompiler platform hook: truncateF32ToI64");
 #endif
@@ -2751,42 +2824,49 @@ class BaseCompiler
 
     MOZ_MUST_USE
     bool truncateF64ToI64(RegF64 src, RegI64 dest, bool isUnsigned, RegF64 temp) {
-#ifdef JS_CODEGEN_X64
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
         OutOfLineCode* ool =
             addOutOfLineCode(new (alloc_) OutOfLineTruncateCheckF32OrF64ToI64(AnyReg(src),
                                                                               isUnsigned));
         if (!ool)
             return false;
         if (isUnsigned)
-            masm.wasmTruncateDoubleToUInt64(src.reg, dest.reg.reg, ool->entry(),
+            masm.wasmTruncateDoubleToUInt64(src.reg, dest.reg, ool->entry(),
                                             ool->rejoin(), temp.reg);
         else
-            masm.wasmTruncateDoubleToInt64(src.reg, dest.reg.reg, ool->entry(),
-                                            ool->rejoin(), temp.reg);
-        masm.bind(ool->rejoin());
+            masm.wasmTruncateDoubleToInt64(src.reg, dest.reg, ool->entry(),
+                                           ool->rejoin(), temp.reg);
 #else
         MOZ_CRASH("BaseCompiler platform hook: truncateF64ToI64");
 #endif
         return true;
     }
 
-    void convertI64ToF32(RegI64 src, bool isUnsigned, RegF32 dest) {
-#ifdef JS_CODEGEN_X64
+    bool convertI64ToFloatNeedsTemp(bool isUnsigned) const {
+#if defined(JS_CODEGEN_X86)
+        return isUnsigned && AssemblerX86Shared::HasSSE3();
+#else
+        return false;
+#endif
+    }
+
+    void convertI64ToF32(RegI64 src, bool isUnsigned, RegF32 dest, RegI32 temp) {
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
         if (isUnsigned)
-            masm.convertUInt64ToFloat32(src.reg.reg, dest.reg);
+            masm.convertUInt64ToFloat32(src.reg, dest.reg, temp.reg);
         else
-            masm.convertInt64ToFloat32(src.reg.reg, dest.reg);
+            masm.convertInt64ToFloat32(src.reg, dest.reg);
 #else
         MOZ_CRASH("BaseCompiler platform hook: convertI64ToF32");
 #endif
     }
 
-    void convertI64ToF64(RegI64 src, bool isUnsigned, RegF64 dest) {
-#ifdef JS_CODEGEN_X64
+    void convertI64ToF64(RegI64 src, bool isUnsigned, RegF64 dest, RegI32 temp) {
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
         if (isUnsigned)
-            masm.convertUInt64ToDouble(src.reg.reg, dest.reg);
+            masm.convertUInt64ToDouble(src.reg, dest.reg, temp.reg);
         else
-            masm.convertInt64ToDouble(src.reg.reg, dest.reg);
+            masm.convertInt64ToDouble(src.reg, dest.reg);
 #else
         MOZ_CRASH("BaseCompiler platform hook: convertI32ToF64");
 #endif
@@ -2796,6 +2876,14 @@ class BaseCompiler
 #if defined(JS_CODEGEN_X64)
         masm.cmpq(rhs.reg.reg, lhs.reg.reg);
         masm.emitSet(cond, dest.reg);
+#elif defined(JS_CODEGEN_X86)
+        Label done, condTrue;
+        masm.branch64(cond, lhs.reg, rhs.reg, &condTrue);
+        masm.move32(Imm32(0), dest.reg);
+        masm.jump(&done);
+        masm.bind(&condTrue);
+        masm.move32(Imm32(1), dest.reg);
+        masm.bind(&done);
 #else
         MOZ_CRASH("BaseCompiler platform hook: cmp64Set");
 #endif
@@ -2833,6 +2921,11 @@ class BaseCompiler
 #if defined(JS_CODEGEN_X64)
         CodeOffset label = masm.loadRipRelativeInt64(r.reg.reg);
         masm.append(GlobalAccess(label, globalDataOffset));
+#elif defined(JS_CODEGEN_X86)
+        CodeOffset labelLow = masm.movlWithPatch(PatchedAbsoluteAddress(), r.reg.low);
+        masm.append(GlobalAccess(labelLow, globalDataOffset + INT64LOW_OFFSET));
+        CodeOffset labelHigh = masm.movlWithPatch(PatchedAbsoluteAddress(), r.reg.high);
+        masm.append(GlobalAccess(labelHigh, globalDataOffset + INT64HIGH_OFFSET));
 #else
         MOZ_CRASH("BaseCompiler platform hook: loadGlobalVarI64");
 #endif
@@ -2884,6 +2977,11 @@ class BaseCompiler
 #if defined(JS_CODEGEN_X64)
         CodeOffset label = masm.storeRipRelativeInt64(r.reg.reg);
         masm.append(GlobalAccess(label, globalDataOffset));
+#elif defined(JS_CODEGEN_X86)
+        CodeOffset labelLow = masm.movlWithPatch(r.reg.low, PatchedAbsoluteAddress());
+        masm.append(GlobalAccess(labelLow, globalDataOffset + INT64LOW_OFFSET));
+        CodeOffset labelHigh = masm.movlWithPatch(r.reg.high, PatchedAbsoluteAddress());
+        masm.append(GlobalAccess(labelHigh, globalDataOffset + INT64HIGH_OFFSET));
 #else
         MOZ_CRASH("BaseCompiler platform hook: storeGlobalVarI64");
 #endif
@@ -3017,13 +3115,17 @@ class BaseCompiler
 # elif defined(JS_CODEGEN_X86)
         Operand srcAddr(ptr.reg, access.offset());
 
-        bool byteRegConflict = access.byteSize() == 1 && !singleByteRegs_.has(dest.i32().reg);
-        AnyRegister out = byteRegConflict ? AnyRegister(ScratchRegX86) : dest.any();
+        if (dest.tag == AnyReg::I64) {
+            masm.wasmLoadI64(access.accessType(), srcAddr, dest.i64().reg);
+        } else {
+            bool byteRegConflict = access.byteSize() == 1 && !singleByteRegs_.has(dest.i32().reg);
+            AnyRegister out = byteRegConflict ? AnyRegister(ScratchRegX86) : dest.any();
 
-        masm.wasmLoad(access.accessType(), 0, srcAddr, out);
+            masm.wasmLoad(access.accessType(), 0, srcAddr, out);
 
-        if (byteRegConflict)
-            masm.mov(ScratchRegX86, dest.i32().reg);
+            if (byteRegConflict)
+                masm.mov(ScratchRegX86, dest.i32().reg);
+        }
 # else
         MOZ_CRASH("Compiler bug: Unexpected platform.");
 # endif
@@ -3057,15 +3159,21 @@ class BaseCompiler
 # elif defined(JS_CODEGEN_X86)
         Operand dstAddr(ptr.reg, access.offset());
 
-        AnyRegister value;
-        if (access.byteSize() == 1 && !singleByteRegs_.has(src.i32().reg)) {
-            masm.mov(src.i32().reg, ScratchRegX86);
-            value = AnyRegister(ScratchRegX86);
+        if (access.accessType() == Scalar::Int64) {
+            masm.wasmStoreI64(src.i64().reg, dstAddr);
         } else {
-            value = src.any();
-        }
+            AnyRegister value;
+            if (src.tag == AnyReg::I64) {
+                value = AnyRegister(src.i64().reg.low);
+            } else if (access.byteSize() == 1 && !singleByteRegs_.has(src.i32().reg)) {
+                masm.mov(src.i32().reg, ScratchRegX86);
+                value = AnyRegister(ScratchRegX86);
+            } else {
+                value = src.any();
+            }
 
-        masm.wasmStore(access.accessType(), 0, value, dstAddr);
+            masm.wasmStore(access.accessType(), 0, value, dstAddr);
+        }
 # else
         MOZ_CRASH("Compiler bug: unexpected platform");
 # endif
@@ -3173,6 +3281,10 @@ class BaseCompiler
     bool emitUnaryMathBuiltinCall(uint32_t callOffset, SymbolicAddress callee, ValType operandType);
     MOZ_MUST_USE
     bool emitBinaryMathBuiltinCall(uint32_t callOffset, SymbolicAddress callee, ValType operandType);
+#ifdef JS_NUNBOX32
+    void emitDivOrModI64BuiltinCall(SymbolicAddress callee, RegI64 rhs, RegI64 srcDest,
+                                    RegI32 temp);
+#endif
     MOZ_MUST_USE
     bool emitGetLocal();
     MOZ_MUST_USE
@@ -3412,6 +3524,7 @@ BaseCompiler::emitMultiplyI64()
 {
     // TODO / OPTIMIZE: Multiplication by constant is common (bug 1275442)
     RegI64 r0, r1;
+    RegI32 temp;
 #if defined(JS_CODEGEN_X64)
     // srcDest must be rax, and rdx will be clobbered.
     need2xI64(specific_rax, specific_rdx);
@@ -3419,11 +3532,16 @@ BaseCompiler::emitMultiplyI64()
     r0 = popI64ToSpecific(specific_rax);
     freeI64(specific_rdx);
 #elif defined(JS_CODEGEN_X86)
-    MOZ_CRASH("BaseCompiler platform hook: emitMultiplyI64");
+    need2xI32(specific_eax, specific_edx);
+    r1 = popI64();
+    r0 = popI64ToSpecific(RegI64(Register64(specific_edx.reg, specific_eax.reg)));
+    temp = needI32();
 #else
     pop2xI64(&r0, &r1);
 #endif
-    multiplyI64(r1, r0);
+    multiplyI64(r1, r0, temp);
+    if (temp.reg != Register::Invalid())
+        freeI32(temp);
     freeI64(r1);
     pushI64(r0);
 }
@@ -3500,41 +3618,71 @@ BaseCompiler::emitQuotientU32()
 void
 BaseCompiler::emitQuotientI64()
 {
+#ifdef JS_PUNBOX64
     RegI64 r0, r1;
-#if defined(JS_CODEGEN_X64)
+# ifdef JS_CODEGEN_X64
     // srcDest must be rax, and rdx will be clobbered.
     need2xI64(specific_rax, specific_rdx);
     r1 = popI64();
     r0 = popI64ToSpecific(specific_rax);
     freeI64(specific_rdx);
-#elif defined(JS_CODEGEN_X86)
-    MOZ_CRASH("BaseCompiler platform hook: emitQuotientI64");
-#else
+# else
     pop2xI64(&r0, &r1);
-#endif
+# endif
     quotientI64(r1, r0, IsUnsigned(false));
     freeI64(r1);
     pushI64(r0);
+#else
+# if defined(JS_CODEGEN_X86)
+    RegI64 r0, r1;
+    RegI32 temp;
+    needI64(abiReturnRegI64);
+    temp = needI32();
+    r1 = popI64();
+    r0 = popI64ToSpecific(abiReturnRegI64);
+    emitDivOrModI64BuiltinCall(SymbolicAddress::DivI64, r1, r0, temp);
+    freeI32(temp);
+    freeI64(r1);
+    pushI64(r0);
+# else
+    MOZ_CRASH("BaseCompiler platform hook: emitQuotientI64");
+# endif
+#endif
 }
 
 void
 BaseCompiler::emitQuotientU64()
 {
+#ifdef JS_PUNBOX64
     RegI64 r0, r1;
-#if defined(JS_CODEGEN_X64)
+# ifdef JS_CODEGEN_X64
     // srcDest must be rax, and rdx will be clobbered.
     need2xI64(specific_rax, specific_rdx);
     r1 = popI64();
     r0 = popI64ToSpecific(specific_rax);
     freeI64(specific_rdx);
-#elif defined(JS_CODEGEN_X86)
-    MOZ_CRASH("BaseCompiler platform hook: emitQuotientU64");
-#else
+# else
     pop2xI64(&r0, &r1);
-#endif
+# endif
     quotientI64(r1, r0, IsUnsigned(true));
     freeI64(r1);
     pushI64(r0);
+#else
+# if defined(JS_CODEGEN_X86)
+    RegI64 r0, r1;
+    RegI32 temp;
+    needI64(abiReturnRegI64);
+    temp = needI32();
+    r1 = popI64();
+    r0 = popI64ToSpecific(abiReturnRegI64);
+    emitDivOrModI64BuiltinCall(SymbolicAddress::UDivI64, r1, r0, temp);
+    freeI32(temp);
+    freeI64(r1);
+    pushI64(r0);
+# else
+    MOZ_CRASH("BaseCompiler platform hook: emitQuotientU64");
+# endif
+#endif
 }
 
 void
@@ -3589,39 +3737,69 @@ BaseCompiler::emitRemainderU32()
 void
 BaseCompiler::emitRemainderI64()
 {
+#ifdef JS_PUNBOX64
     RegI64 r0, r1;
-#if defined(JS_CODEGEN_X64)
+# ifdef JS_CODEGEN_X64
     need2xI64(specific_rax, specific_rdx);
     r1 = popI64();
     r0 = popI64ToSpecific(specific_rax);
     freeI64(specific_rdx);
-#elif defined(JS_CODEGEN_X86)
-    MOZ_CRASH("BaseCompiler platform hook: emitRemainderI64");
-#else
+# else
     pop2xI64(&r0, &r1);
-#endif
+# endif
     remainderI64(r1, r0, IsUnsigned(false));
     freeI64(r1);
     pushI64(r0);
+#else
+# if defined(JS_CODEGEN_X86)
+    RegI64 r0, r1;
+    RegI32 temp;
+    needI64(abiReturnRegI64);
+    temp = needI32();
+    r1 = popI64();
+    r0 = popI64ToSpecific(abiReturnRegI64);
+    emitDivOrModI64BuiltinCall(SymbolicAddress::ModI64, r1, r0, temp);
+    freeI32(temp);
+    freeI64(r1);
+    pushI64(r0);
+# else
+    MOZ_CRASH("BaseCompiler platform hook: emitRemainderI64");
+# endif
+#endif
 }
 
 void
 BaseCompiler::emitRemainderU64()
 {
+#ifdef JS_PUNBOX64
     RegI64 r0, r1;
-#if defined(JS_CODEGEN_X64)
+# ifdef JS_CODEGEN_X64
     need2xI64(specific_rax, specific_rdx);
     r1 = popI64();
     r0 = popI64ToSpecific(specific_rax);
     freeI64(specific_rdx);
-#elif defined(JS_CODEGEN_X86)
-    MOZ_CRASH("BaseCompiler platform hook: emitRemainderU64");
-#else
+# else
     pop2xI64(&r0, &r1);
-#endif
+# endif
     remainderI64(r1, r0, IsUnsigned(true));
     freeI64(r1);
     pushI64(r0);
+#else
+# if defined(JS_CODEGEN_X86)
+    RegI64 r0, r1;
+    RegI32 temp;
+    needI64(abiReturnRegI64);
+    temp = needI32();
+    r1 = popI64();
+    r0 = popI64ToSpecific(abiReturnRegI64);
+    emitDivOrModI64BuiltinCall(SymbolicAddress::UModI64, r1, r0, temp);
+    freeI32(temp);
+    freeI64(r1);
+    pushI64(r0);
+# else
+    MOZ_CRASH("BaseCompiler platform hook: emitRemainderU64");
+# endif
+#endif
 }
 
 void
@@ -3749,7 +3927,7 @@ BaseCompiler::emitCopysignF32()
     RegF32 r0, r1;
     pop2xF32(&r0, &r1);
     RegI32 i0 = needI32();
-    RegI32 i1 = needI32(); // TODO: BUG if sync is called.
+    RegI32 i1 = needI32();
     masm.moveFloat32ToGPR(r0.reg, i0.reg);
     masm.moveFloat32ToGPR(r1.reg, i1.reg);
     masm.and32(Imm32(INT32_MAX), i0.reg);
@@ -3868,11 +4046,11 @@ BaseCompiler::emitShlI64()
 {
     // TODO / OPTIMIZE: Constant rhs
     RegI64 r0, r1;
-#if defined(JS_CODEGEN_X64)
-    r1 = popI64(specific_rcx);
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    needI32(specific_ecx);
+    r1 = fromI32(specific_ecx);
+    r1 = popI64ToSpecific(r1);
     r0 = popI64();
-#elif defined(JS_CODEGEN_X86)
-    MOZ_CRASH("BaseCompiler platform hook: emitShlI64");
 #else
     pop2xI64(&r0, &r1);
 #endif
@@ -3908,11 +4086,11 @@ BaseCompiler::emitShrI64()
 {
     // TODO / OPTIMIZE: Constant rhs
     RegI64 r0, r1;
-#if defined(JS_CODEGEN_X64)
-    r1 = popI64(specific_rcx);
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    needI32(specific_ecx);
+    r1 = fromI32(specific_ecx);
+    r1 = popI64ToSpecific(r1);
     r0 = popI64();
-#elif defined(JS_CODEGEN_X86)
-    MOZ_CRASH("BaseCompiler platform hook: emitShrI64");
 #else
     pop2xI64(&r0, &r1);
 #endif
@@ -3948,11 +4126,11 @@ BaseCompiler::emitShrU64()
 {
     // TODO / OPTIMIZE: Constant rhs
     RegI64 r0, r1;
-#if defined(JS_CODEGEN_X64)
-    r1 = popI64(specific_rcx);
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    needI32(specific_ecx);
+    r1 = fromI32(specific_ecx);
+    r1 = popI64ToSpecific(r1);
     r0 = popI64();
-#elif defined(JS_CODEGEN_X86)
-    MOZ_CRASH("BaseCompiler platform hook: emitShrUI64");
 #else
     pop2xI64(&r0, &r1);
 #endif
@@ -3982,11 +4160,11 @@ BaseCompiler::emitRotrI64()
 {
     // TODO / OPTIMIZE: Constant rhs
     RegI64 r0, r1;
-#if defined(JS_CODEGEN_X64)
-    r1 = popI64(specific_rcx);
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    needI32(specific_ecx);
+    r1 = fromI32(specific_ecx);
+    r1 = popI64ToSpecific(r1);
     r0 = popI64();
-#elif defined(JS_CODEGEN_X86)
-    MOZ_CRASH("BaseCompiler platform hook: emitRotrI64");
 #else
     pop2xI64(&r0, &r1);
 #endif
@@ -4016,11 +4194,11 @@ BaseCompiler::emitRotlI64()
 {
     // TODO / OPTIMIZE: Constant rhs
     RegI64 r0, r1;
-#if defined(JS_CODEGEN_X64)
-    r1 = popI64(specific_rcx);
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    needI32(specific_ecx);
+    r1 = fromI32(specific_ecx);
+    r1 = popI64ToSpecific(r1);
     r0 = popI64();
-#elif defined(JS_CODEGEN_X86)
-    MOZ_CRASH("BaseCompiler platform hook: emitRotlI64");
 #else
     pop2xI64(&r0, &r1);
 #endif
@@ -4049,6 +4227,7 @@ BaseCompiler::emitEqzI64()
     RegI32 i0 = fromI64(r0);
     cmp64Set(Assembler::Equal, r0, r1, i0);
     freeI64(r1);
+    freeI64Except(r0, i0);
     pushI32(i0);
 }
 
@@ -4103,11 +4282,11 @@ BaseCompiler::emitPopcntI64()
 {
     RegI64 r0 = popI64();
     if (popcnt64NeedsTemp()) {
-        RegI64 tmp = needI64();
+        RegI32 tmp = needI32();
         popcntI64(r0, tmp);
-        freeI64(tmp);
+        freeI32(tmp);
     } else {
-        popcntI64(r0, invalidI64());
+        popcntI64(r0, invalidI32());
     }
     pushI64(r0);
 }
@@ -4260,16 +4439,24 @@ BaseCompiler::emitWrapI64ToI32()
     RegI64 r0 = popI64();
     RegI32 i0 = fromI64(r0);
     wrapI64ToI32(r0, i0);
+    freeI64Except(r0, i0);
     pushI32(i0);
 }
 
 void
 BaseCompiler::emitExtendI32ToI64()
 {
+#if defined(JS_CODEGEN_X86)
+    need2xI32(specific_edx, specific_eax);
+    RegI32 r0 = popI32ToSpecific(specific_eax);
+    RegI64 x0 = RegI64(Register64(specific_edx.reg, specific_eax.reg));
+#else
     RegI32 r0 = popI32();
     RegI64 x0 = fromI32(r0);
+#endif
     extendI32ToI64(r0, x0);
     pushI64(x0);
+    // Note: no need to free r0, since it is part of x0
 }
 
 void
@@ -4279,6 +4466,7 @@ BaseCompiler::emitExtendU32ToI64()
     RegI64 x0 = fromI32(r0);
     extendU32ToI64(r0, x0);
     pushI64(x0);
+    // Note: no need to free r0, since it is part of x0
 }
 
 void
@@ -4336,7 +4524,7 @@ BaseCompiler::emitConvertI64ToF32()
 {
     RegI64 r0 = popI64();
     RegF32 f0 = needF32();
-    convertI64ToF32(r0, IsUnsigned(false), f0);
+    convertI64ToF32(r0, IsUnsigned(false), f0, RegI32());
     freeI64(r0);
     pushF32(f0);
 }
@@ -4346,7 +4534,12 @@ BaseCompiler::emitConvertU64ToF32()
 {
     RegI64 r0 = popI64();
     RegF32 f0 = needF32();
-    convertI64ToF32(r0, IsUnsigned(true), f0);
+    RegI32 temp;
+    if (convertI64ToFloatNeedsTemp(IsUnsigned(true)))
+        temp = needI32();
+    convertI64ToF32(r0, IsUnsigned(true), f0, temp);
+    if (temp.reg != Register::Invalid())
+        freeI32(temp);
     freeI64(r0);
     pushF32(f0);
 }
@@ -4386,7 +4579,7 @@ BaseCompiler::emitConvertI64ToF64()
 {
     RegI64 r0 = popI64();
     RegF64 d0 = needF64();
-    convertI64ToF64(r0, IsUnsigned(false), d0);
+    convertI64ToF64(r0, IsUnsigned(false), d0, RegI32());
     freeI64(r0);
     pushF64(d0);
 }
@@ -4396,7 +4589,12 @@ BaseCompiler::emitConvertU64ToF64()
 {
     RegI64 r0 = popI64();
     RegF64 d0 = needF64();
-    convertI64ToF64(r0, IsUnsigned(true), d0);
+    RegI32 temp;
+    if (convertI64ToFloatNeedsTemp(IsUnsigned(true)))
+        temp = needI32();
+    convertI64ToF64(r0, IsUnsigned(true), d0, temp);
+    if (temp.reg != Register::Invalid())
+        freeI32(temp);
     freeI64(r0);
     pushF64(d0);
 }
@@ -5276,6 +5474,35 @@ BaseCompiler::emitBinaryMathBuiltinCall(uint32_t callOffset, SymbolicAddress cal
     return true;
 }
 
+#ifdef JS_NUNBOX32
+void
+BaseCompiler::emitDivOrModI64BuiltinCall(SymbolicAddress callee, RegI64 rhs, RegI64 srcDest,
+                                         RegI32 temp)
+{
+    Label done;
+
+    sync();
+
+    checkDivideByZeroI64(rhs, srcDest, &done);
+
+    if (callee == SymbolicAddress::DivI64)
+        checkDivideSignedOverflowI64(rhs, srcDest, &done, ZeroOnOverflow(false));
+    else if (callee == SymbolicAddress::ModI64)
+        checkDivideSignedOverflowI64(rhs, srcDest, &done, ZeroOnOverflow(true));
+
+    masm.setupUnalignedABICall(temp.reg);
+    masm.passABIArg(srcDest.reg.high);
+    masm.passABIArg(srcDest.reg.low);
+    masm.passABIArg(rhs.reg.high);
+    masm.passABIArg(rhs.reg.low);
+    masm.callWithABI(callee);
+
+    MOZ_ASSERT(abiReturnRegI64.reg == srcDest.reg);
+
+    masm.bind(&done);
+}
+#endif
+
 bool
 BaseCompiler::emitGetLocal()
 {
@@ -5579,8 +5806,16 @@ BaseCompiler::emitLoad(ValType type, Scalar::Type viewType)
         break;
       }
       case ValType::I64: {
-        RegI32 rp = popI32();
-        RegI64 rv = needI64();
+        RegI64 rv;
+        RegI32 rp;
+#ifdef JS_CODEGEN_X86
+        rv = abiReturnRegI64;
+        needI64(rv);
+        rp = popI32();
+#else
+        rp = popI32();
+        rv = needI64();
+#endif
         if (!load(access, rp, AnyReg(rv)))
             return false;
         pushI64(rv);
@@ -5875,6 +6110,7 @@ BaseCompiler::emitCompareI64(JSOp compareOp, MCompare::CompareType compareType)
         MOZ_CRASH("Compiler bug: Unexpected compare opcode");
     }
     freeI64(r1);
+    freeI64Except(r0, i0);
     pushI32(i0);
 }
 
@@ -6742,6 +6978,7 @@ BaseCompiler::BaseCompiler(const ModuleGeneratorData& mg,
 #endif
 #ifdef JS_CODEGEN_X86
       singleByteRegs_(GeneralRegisterSet(Registers::SingleByteRegs)),
+      abiReturnRegI64(RegI64(Register64(edx, eax))),
 #endif
       joinRegI32(RegI32(ReturnReg)),
       joinRegI64(RegI64(ReturnReg64)),
@@ -6786,6 +7023,8 @@ BaseCompiler::init()
     if (!SigF_.append(ValType::F32))
         return false;
     if (!SigI_.append(ValType::I32))
+        return false;
+    if (!SigI64I64_.append(ValType::I64) || !SigI64I64_.append(ValType::I64))
         return false;
 
     const ValTypeVector& args = func_.sig().args();
@@ -6893,7 +7132,7 @@ js::wasm::BaselineCanCompile(const FunctionGenerator* fg)
     // If we made it this far we must have signals.
     MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
 
-#if defined(JS_CODEGEN_X64)
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
     if (fg->usesAtomics())
         return false;
 

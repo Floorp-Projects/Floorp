@@ -152,6 +152,8 @@ private:
     // Detaches all sockets.
     void Reset(bool aGuardLocals);
 
+    nsresult ShutdownThread();
+
     //-------------------------------------------------------------------------
     // socket lists (socket thread only)
     //

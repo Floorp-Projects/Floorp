@@ -2063,17 +2063,19 @@ nsresult UnsetExceptionHandler()
 static void ReplaceChar(nsCString& str, const nsACString& character,
                         const nsACString& replacement)
 {
-  nsCString::const_iterator start, end;
+  nsCString::const_iterator iter, end;
 
-  str.BeginReading(start);
+  str.BeginReading(iter);
   str.EndReading(end);
 
-  while (FindInReadable(character, start, end)) {
-    int32_t pos = end.size_backward();
+  while (FindInReadable(character, iter, end)) {
+    nsCString::const_iterator start;
+    str.BeginReading(start);
+    int32_t pos = end - start;
     str.Replace(pos - 1, 1, replacement);
 
-    str.BeginReading(start);
-    start.advance(pos + replacement.Length() - 1);
+    str.BeginReading(iter);
+    iter.advance(pos + replacement.Length() - 1);
     str.EndReading(end);
   }
 }

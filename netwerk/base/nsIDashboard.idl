@@ -49,4 +49,6 @@ interface nsIDashboard : nsISupports
     /* DNS resolver for host name
      * aHost: host name */
     void requestDNSLookup(in ACString aHost, in NetDashboardCallback cb);
+
+    AUTF8String getLogPath();
 };

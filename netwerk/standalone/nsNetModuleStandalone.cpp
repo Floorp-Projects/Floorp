@@ -61,7 +61,7 @@ ShutdownNetModuleStandalone()
 
   nsCOMPtr<nsPISocketTransportService> sts = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
-    mozilla::DebugOnly<nsresult> rv = sts->Shutdown();
+    mozilla::DebugOnly<nsresult> rv = sts->Shutdown(true);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Socket transport service shutdown failed");
   } else {
     NS_WARNING("failed to get socket transport service");

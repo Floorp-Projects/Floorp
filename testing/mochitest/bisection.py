@@ -15,7 +15,8 @@ class Bisect(object):
         self.max_failures = 3
 
     def setup(self, tests):
-        "This method is used to initialize various variables that are required for test bisection"
+        """This method is used to initialize various variables that are required
+        for test bisection"""
         status = 0
         self.contents.clear()
         # We need totalTests key in contents for sanity check
@@ -25,12 +26,13 @@ class Bisect(object):
         return status
 
     def reset(self, expectedError, result):
-        "This method is used to initialize self.expectedError and self.result for each loop in runtests."
+        """This method is used to initialize self.expectedError and self.result
+        for each loop in runtests."""
         self.expectedError = expectedError
         self.result = result
 
     def get_tests_for_bisection(self, options, tests):
-        "Make a list of tests for bisection from a given list of tests"
+        """Make a list of tests for bisection from a given list of tests"""
         bisectlist = []
         for test in tests:
             bisectlist.append(test)
@@ -40,23 +42,27 @@ class Bisect(object):
         return bisectlist
 
     def pre_test(self, options, tests, status):
-        "This method is used to call other methods for setting up variables and getting the list of tests for bisection."
+        """This method is used to call other methods for setting up variables and
+        getting the list of tests for bisection."""
         if options.bisectChunk == "default":
             return tests
         # The second condition in 'if' is required to verify that the failing
         # test is the last one.
-        elif 'loop' not in self.contents or not self.contents['tests'][-1].endswith(options.bisectChunk):
+        elif ('loop' not in self.contents or not self.contents['tests'][-1].endswith(
+                options.bisectChunk)):
             tests = self.get_tests_for_bisection(options, tests)
             status = self.setup(tests)
 
         return self.next_chunk_binary(options, status)
 
     def post_test(self, options, expectedError, result):
-        "This method is used to call other methods to summarize results and check whether a sanity check is done or not."
+        """This method is used to call other methods to summarize results and check whether a
+        sanity check is done or not."""
         self.reset(expectedError, result)
         status = self.summarize_chunk(options)
-        # Check whether sanity check has to be done. Also it is necessary to check whether options.bisectChunk is present
-        # in self.expectedError as we do not want to run if it is "default".
+        # Check whether sanity check has to be done. Also it is necessary to check whether
+        # options.bisectChunk is present in self.expectedError as we do not want to run
+        # if it is "default".
         if status == -1 and options.bisectChunk in self.expectedError:
             # In case we have a debug build, we don't want to run a sanity
             # check, will take too much time.
@@ -213,7 +219,8 @@ class Bisect(object):
                     # is the failing test itself therefore the bleedthrough
                     # test is the first test
                     self.summary.append(
-                        "TEST-UNEXPECTED-FAIL | %s | Bleedthrough detected, this test is the root cause for many of the above failures" %
+                        "TEST-UNEXPECTED-FAIL | %s | Bleedthrough detected, this test is the "
+                        "root cause for many of the above failures" %
                         self.contents['testsToRun'][0])
                     status = -1
             else:
@@ -236,7 +243,8 @@ class Bisect(object):
                 return 0
             else:
                 if self.failcount > 0:
-                    # -1 is being returned as the test is intermittent, so no need to bisect further.
+                    # -1 is being returned as the test is intermittent, so no need to bisect
+                    # further.
                     return -1
                 # If the test does not fail even once, then proceed to next chunk for bisection.
                 # loop is set to 2 to proceed on bisection.
@@ -254,12 +262,14 @@ class Bisect(object):
             # limit set, it is a perma-fail.
             if self.failcount < self.max_failures:
                 if self.repeat == 0:
-                    # -1 is being returned as the test is intermittent, so no need to bisect further.
+                    # -1 is being returned as the test is intermittent, so no need to bisect
+                    # further.
                     return -1
                 return 0
             else:
                 self.summary.append(
-                    "TEST-UNEXPECTED-FAIL | %s | Bleedthrough detected, this test is the root cause for many of the above failures" %
+                    "TEST-UNEXPECTED-FAIL | %s | Bleedthrough detected, this test is the "
+                    "root cause for many of the above failures" %
                     self.contents['testsToRun'][0])
                 return -1
 

@@ -43,10 +43,16 @@ public:
    * all eLongTap notifications will be followed by an eLongTapUp (for instance,
    * if the user moves their finger after triggering the long-tap but before
    * lifting it).
+   * The difference between eDoubleTap and eSecondTap is subtle - the eDoubleTap
+   * is for an actual double-tap "gesture" while eSecondTap is for the same user
+   * input but where a double-tap gesture is not allowed. This is used to fire
+   * a click event with detail=2 to web content (similar to what a mouse double-
+   * click would do).
    */
   enum class TapType {
     eSingleTap,
     eDoubleTap,
+    eSecondTap,
     eLongTap,
     eLongTapUp,
 

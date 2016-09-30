@@ -534,8 +534,8 @@ SavedFrame::isSelfHosted(JSContext* cx)
 /* static */ bool
 SavedFrame::construct(JSContext* cx, unsigned argc, Value* vp)
 {
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NO_CONSTRUCTOR,
-                         "SavedFrame");
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NO_CONSTRUCTOR,
+                              "SavedFrame");
     return false;
 }
 
@@ -601,31 +601,32 @@ GetFirstSubsumedSavedFrame(JSContext* cx, HandleObject savedFrame,
     return GetFirstSubsumedFrame(cx, frame, selfHosted, skippedAsync);
 }
 
-/* static */ bool
-SavedFrame::checkThis(JSContext* cx, CallArgs& args, const char* fnName,
-                      MutableHandleObject frame)
+static MOZ_MUST_USE bool
+SavedFrame_checkThis(JSContext* cx, CallArgs& args, const char* fnName,
+                     MutableHandleObject frame)
 {
     const Value& thisValue = args.thisv();
 
     if (!thisValue.isObject()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, InformalValueTypeName(thisValue));
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT,
+                                  InformalValueTypeName(thisValue));
         return false;
     }
 
     JSObject* thisObject = CheckedUnwrap(&thisValue.toObject());
     if (!thisObject || !thisObject->is<SavedFrame>()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
-                             SavedFrame::class_.name, fnName,
-                             thisObject ? thisObject->getClass()->name : "object");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
+                                  SavedFrame::class_.name, fnName,
+                                  thisObject ? thisObject->getClass()->name : "object");
         return false;
     }
 
     // Check for SavedFrame.prototype, which has the same class as SavedFrame
     // instances, however doesn't actually represent a captured stack frame. It
     // is the only object that is<SavedFrame>() but doesn't have a source.
-    if (thisObject->as<SavedFrame>().getReservedSlot(JSSLOT_SOURCE).isNull()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
-                             SavedFrame::class_.name, fnName, "prototype object");
+    if (!SavedFrame::isSavedFrameAndNotProto(*thisObject)) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
+                                  SavedFrame::class_.name, fnName, "prototype object");
         return false;
     }
 
@@ -650,7 +651,7 @@ SavedFrame::checkThis(JSContext* cx, CallArgs& args, const char* fnName,
 #define THIS_SAVEDFRAME(cx, argc, vp, fnName, args, frame)             \
     CallArgs args = CallArgsFromVp(argc, vp);                          \
     RootedObject frame(cx);                                            \
-    if (!checkThis(cx, args, fnName, &frame))                          \
+    if (!SavedFrame_checkThis(cx, args, fnName, &frame))               \
         return false;
 
 } /* namespace js */

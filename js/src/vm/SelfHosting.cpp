@@ -336,8 +336,8 @@ ThrowErrorWithType(JSContext* cx, JSExnType type, const CallArgs& args)
             return;
     }
 
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, errorNumber,
-                         errorArgs[0].ptr(), errorArgs[1].ptr(), errorArgs[2].ptr());
+    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, errorNumber,
+                               errorArgs[0].ptr(), errorArgs[1].ptr(), errorArgs[2].ptr());
 }
 
 static bool
@@ -1193,7 +1193,7 @@ intrinsic_MoveTypedArrayElements(JSContext* cx, unsigned argc, Value* vp)
                "the not-detached requirement is wrong");
 
     if (tarray->hasDetachedBuffer()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
         return false;
     }
 
@@ -1256,7 +1256,7 @@ DangerouslyUnwrapTypedArray(JSContext* cx, JSObject* obj)
         // Yeah, yeah, it's pretty unlikely.  Are you willing to stake a
         // sec-critical bug on that assessment, now and forever, against
         // all changes those pesky GC and JIT people might make?
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
         return nullptr;
     }
 
@@ -1296,14 +1296,14 @@ intrinsic_SetFromTypedArrayApproach(JSContext* cx, unsigned argc, Value* vp)
 
     // Steps 12-13.
     if (unsafeTypedArrayCrossCompartment->hasDetachedBuffer()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
         return false;
     }
 
     // Steps 21, 23.
     uint32_t unsafeSrcLengthCrossCompartment = unsafeTypedArrayCrossCompartment->length();
     if (unsafeSrcLengthCrossCompartment + doubleTargetOffset > targetLength) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
         return false;
     }
 
@@ -1793,8 +1793,8 @@ js::ReportIncompatibleSelfHostedMethod(JSContext* cx, const CallArgs& args)
         if (!funName)
             return false;
         if (strcmp(funName, "IsTypedArrayEnsuringArrayBuffer") != 0) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_METHOD,
-                                 funName, "method", InformalValueTypeName(args.thisv()));
+            JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_METHOD,
+                                       funName, "method", InformalValueTypeName(args.thisv()));
             return false;
         }
         ++iter;
@@ -1863,7 +1863,7 @@ intrinsic_RuntimeDefaultLocale(JSContext* cx, unsigned argc, Value* vp)
 
     const char* locale = cx->runtime()->getDefaultLocale();
     if (!locale) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_DEFAULT_LOCALE_ERROR);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEFAULT_LOCALE_ERROR);
         return false;
     }
 

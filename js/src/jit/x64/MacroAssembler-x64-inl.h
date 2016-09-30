@@ -90,6 +90,12 @@ MacroAssembler::orPtr(Imm32 imm, Register dest)
 }
 
 void
+MacroAssembler::and64(Register64 src, Register64 dest)
+{
+    andq(src.reg, dest.reg);
+}
+
+void
 MacroAssembler::or64(Register64 src, Register64 dest)
 {
     orq(src.reg, dest.reg);

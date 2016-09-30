@@ -154,8 +154,8 @@ private:
 };
 
 static nsresult
-ReportOnCaller(JSContext* callerContext,
-               const char* format, ...) {
+ReportOnCallerUTF8(JSContext* callerContext,
+                   const char* format, ...) {
     if (!callerContext) {
         return NS_ERROR_FAILURE;
     }
@@ -168,15 +168,15 @@ ReportOnCaller(JSContext* callerContext,
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    JS_ReportError(callerContext, buf);
+    JS_ReportErrorUTF8(callerContext, "%s", buf);
     JS_smprintf_free(buf);
 
     return NS_OK;
 }
 
 static nsresult
-ReportOnCaller(JSCLContextHelper& helper,
-               const char* format, ...)
+ReportOnCallerUTF8(JSCLContextHelper& helper,
+                   const char* format, ...)
 {
     va_list ap;
     va_start(ap, format);
@@ -255,6 +255,12 @@ class MOZ_STACK_CLASS ComponentLoaderInfo {
         ENSURE_DEPS(ResolvedURI);
         mKey.emplace();
         return mResolvedURI->GetSpec(*mKey);
+    }
+
+    MOZ_MUST_USE nsresult GetLocation(nsCString& aLocation) {
+        nsresult rv = EnsureURI();
+        NS_ENSURE_SUCCESS(rv, rv);
+        return mURI->GetSpec(aLocation);
     }
 
   private:
@@ -404,8 +410,12 @@ mozJSComponentLoader::LoadModule(FileLocation& aFile)
     }
 
     if (JS_TypeOfValue(cx, NSGetFactory_val) != JSTYPE_FUNCTION) {
-        JS_ReportError(cx, "%s has NSGetFactory property that is not a function",
-                       spec.get());
+        /*
+         * spec's encoding is ASCII unless it's zip file, otherwise it's
+         * random encoding.  Latin1 variant is safe for random encoding.
+         */
+        JS_ReportErrorLatin1(cx, "%s has NSGetFactory property that is not a function",
+                             spec.get());
         return nullptr;
     }
 
@@ -1034,8 +1044,8 @@ mozJSComponentLoader::Import(const nsACString& registryLocation,
         } else if (!targetVal.isNull()) {
             // If targetVal isNull(), we actually want to leave targetObject null.
             // Not doing so breaks |make package|.
-            return ReportOnCaller(cx, ERROR_SCOPE_OBJ,
-                                  PromiseFlatCString(registryLocation).get());
+            return ReportOnCallerUTF8(cx, ERROR_SCOPE_OBJ,
+                                      PromiseFlatCString(registryLocation).get());
         }
     } else {
         nsresult rv = FindTargetObject(cx, &targetObject);
@@ -1223,8 +1233,11 @@ mozJSComponentLoader::ImportInto(const nsACString& aLocation,
         if (!exportedSymbolsHolder ||
             !JS_GetProperty(cx, exportedSymbolsHolder,
                             "EXPORTED_SYMBOLS", &symbols)) {
-            return ReportOnCaller(cxhelper, ERROR_NOT_PRESENT,
-                                  PromiseFlatCString(aLocation).get());
+            nsCString location;
+            rv = info.GetLocation(location);
+            NS_ENSURE_SUCCESS(rv, rv);
+            return ReportOnCallerUTF8(cxhelper, ERROR_NOT_PRESENT,
+                                      location.get());
         }
 
         bool isArray;
@@ -1232,8 +1245,11 @@ mozJSComponentLoader::ImportInto(const nsACString& aLocation,
             return NS_ERROR_FAILURE;
         }
         if (!isArray) {
-            return ReportOnCaller(cxhelper, ERROR_NOT_AN_ARRAY,
-                                  PromiseFlatCString(aLocation).get());
+            nsCString location;
+            rv = info.GetLocation(location);
+            NS_ENSURE_SUCCESS(rv, rv);
+            return ReportOnCallerUTF8(cxhelper, ERROR_NOT_AN_ARRAY,
+                                      location.get());
         }
 
         RootedObject symbolsObj(cx, &symbols.toObject());
@@ -1242,8 +1258,11 @@ mozJSComponentLoader::ImportInto(const nsACString& aLocation,
 
         uint32_t symbolCount = 0;
         if (!JS_GetArrayLength(cx, symbolsObj, &symbolCount)) {
-            return ReportOnCaller(cxhelper, ERROR_GETTING_ARRAY_LENGTH,
-                                  PromiseFlatCString(aLocation).get());
+            nsCString location;
+            rv = info.GetLocation(location);
+            NS_ENSURE_SUCCESS(rv, rv);
+            return ReportOnCallerUTF8(cxhelper, ERROR_GETTING_ARRAY_LENGTH,
+                                      location.get());
         }
 
 #ifdef DEBUG
@@ -1257,31 +1276,40 @@ mozJSComponentLoader::ImportInto(const nsACString& aLocation,
             if (!JS_GetElement(cx, symbolsObj, i, &value) ||
                 !value.isString() ||
                 !JS_ValueToId(cx, value, &symbolId)) {
-                return ReportOnCaller(cxhelper, ERROR_ARRAY_ELEMENT,
-                                      PromiseFlatCString(aLocation).get(), i);
+                nsCString location;
+                rv = info.GetLocation(location);
+                NS_ENSURE_SUCCESS(rv, rv);
+                return ReportOnCallerUTF8(cxhelper, ERROR_ARRAY_ELEMENT,
+                                          location.get(), i);
             }
 
             symbolHolder = ResolveModuleObjectPropertyById(cx, mod->obj, symbolId);
             if (!symbolHolder ||
                 !JS_GetPropertyById(cx, symbolHolder, symbolId, &value)) {
-                JSAutoByteString bytes(cx, JSID_TO_STRING(symbolId));
-                if (!bytes)
+                JSAutoByteString bytes;
+                RootedString symbolStr(cx, JSID_TO_STRING(symbolId));
+                if (!bytes.encodeUtf8(cx, symbolStr))
                     return NS_ERROR_FAILURE;
-                return ReportOnCaller(cxhelper, ERROR_GETTING_SYMBOL,
-                                      PromiseFlatCString(aLocation).get(),
-                                      bytes.ptr());
+                nsCString location;
+                rv = info.GetLocation(location);
+                NS_ENSURE_SUCCESS(rv, rv);
+                return ReportOnCallerUTF8(cxhelper, ERROR_GETTING_SYMBOL,
+                                          location.get(), bytes.ptr());
             }
 
             JSAutoCompartment target_ac(cx, targetObj);
 
             if (!JS_WrapValue(cx, &value) ||
                 !JS_SetPropertyById(cx, targetObj, symbolId, value)) {
-                JSAutoByteString bytes(cx, JSID_TO_STRING(symbolId));
-                if (!bytes)
+                JSAutoByteString bytes;
+                RootedString symbolStr(cx, JSID_TO_STRING(symbolId));
+                if (!bytes.encodeUtf8(cx, symbolStr))
                     return NS_ERROR_FAILURE;
-                return ReportOnCaller(cxhelper, ERROR_SETTING_SYMBOL,
-                                      PromiseFlatCString(aLocation).get(),
-                                      bytes.ptr());
+                nsCString location;
+                rv = info.GetLocation(location);
+                NS_ENSURE_SUCCESS(rv, rv);
+                return ReportOnCallerUTF8(cxhelper, ERROR_SETTING_SYMBOL,
+                                          location.get(), bytes.ptr());
             }
 #ifdef DEBUG
             if (i == 0) {
@@ -1292,8 +1320,10 @@ mozJSComponentLoader::ImportInto(const nsACString& aLocation,
                 logBuffer.Append(bytes.ptr());
             logBuffer.Append(' ');
             if (i == symbolCount - 1) {
-                LOG(("%s] from %s\n", logBuffer.get(),
-                     PromiseFlatCString(aLocation).get()));
+                nsCString location;
+                rv = info.GetLocation(location);
+                NS_ENSURE_SUCCESS(rv, rv);
+                LOG(("%s] from %s\n", logBuffer.get(), location.get()));
             }
 #endif
         }
@@ -1379,7 +1409,7 @@ JSCLContextHelper::JSCLContextHelper(JSContext* aCx)
 JSCLContextHelper::~JSCLContextHelper()
 {
     if (mBuf) {
-        JS_ReportError(mContext, mBuf);
+        JS_ReportErrorUTF8(mContext, "%s", mBuf);
         JS_smprintf_free(mBuf);
     }
 }

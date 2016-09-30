@@ -1582,7 +1582,7 @@ nsPlainTextSerializer::Write(const nsAString& aStr)
   // that does normal formatted text. The one for preformatted text calls
   // Output directly while the other code path goes through AddToLine.
   if ((mPreFormattedMail && !mWrapColumn) || (IsInPre() && !mPreFormattedMail)
-      || (mSpanLevel > 0 && mEmptyLines >= 0 && str.First() == char16_t('>'))) {
+      || (mSpanLevel > 0 && mEmptyLines >= 0 && IsQuotedLine(str))) {
     // No intelligent wrapping.
 
     // This mustn't be mixed with intelligent wrapping without clearing
@@ -1657,10 +1657,11 @@ nsPlainTextSerializer::Write(const nsAString& aStr)
       mCurrentLine.Truncate();
       if (mFlags & nsIDocumentEncoder::OutputFormatFlowed) {
         if ((outputLineBreak || !spacesOnly) && // bugs 261467,125928
+            !IsQuotedLine(stringpart) &&
             !stringpart.EqualsLiteral("-- ") &&
             !stringpart.EqualsLiteral("- -- "))
           stringpart.Trim(" ", false, true, true);
-        if (IsSpaceStuffable(stringpart.get()) && stringpart[0] != '>')
+        if (IsSpaceStuffable(stringpart.get()) && !IsQuotedLine(stringpart))
           mCurrentLine.Append(char16_t(' '));
       }
       mCurrentLine.Append(stringpart);

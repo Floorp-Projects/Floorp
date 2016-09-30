@@ -1782,11 +1782,19 @@ TabChild::RecvHandleTap(const GeckoContentController::TapType& aType,
       mRemoteFrame->SendTakeFocusForClickFromTap();
     }
     if (mGlobal && mTabChildGlobal) {
-      mAPZEventState->ProcessSingleTap(point, scale, aModifiers, aGuid);
+      mAPZEventState->ProcessSingleTap(point, scale, aModifiers, aGuid, 1);
     }
     break;
   case GeckoContentController::TapType::eDoubleTap:
     HandleDoubleTap(point, aModifiers, aGuid);
+    break;
+  case GeckoContentController::TapType::eSecondTap:
+    if (mRemoteFrame) {
+      mRemoteFrame->SendTakeFocusForClickFromTap();
+    }
+    if (mGlobal && mTabChildGlobal) {
+      mAPZEventState->ProcessSingleTap(point, scale, aModifiers, aGuid, 2);
+    }
     break;
   case GeckoContentController::TapType::eLongTap:
     if (mGlobal && mTabChildGlobal) {

@@ -40,7 +40,7 @@ InitArgsFromArrayLike(JSContext* cx, HandleValue v, InvokeArgs* args)
 
     // Allocate space for the arguments.
     if (len > ARGS_LENGTH_MAX) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TOO_MANY_FUN_APPLY_ARGS);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TOO_MANY_FUN_APPLY_ARGS);
         return false;
     }
     if (!args->init(len))
@@ -64,8 +64,8 @@ Reflect_apply(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 1.
     if (!IsCallable(args.get(0))) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_FUNCTION,
-                             "Reflect.apply argument");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_FUNCTION,
+                                  "Reflect.apply argument");
         return false;
     }
 
@@ -87,8 +87,8 @@ Reflect_construct(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 1.
     if (!IsConstructor(args.get(0))) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_CONSTRUCTOR,
-                             "Reflect.construct argument");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_CONSTRUCTOR,
+                                  "Reflect.construct argument");
         return false;
     }
 
@@ -97,8 +97,8 @@ Reflect_construct(JSContext* cx, unsigned argc, Value* vp)
     if (argc > 2) {
         newTarget = args[2];
         if (!IsConstructor(newTarget)) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_CONSTRUCTOR,
-                                 "Reflect.construct argument 3");
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_CONSTRUCTOR,
+                                      "Reflect.construct argument 3");
             return false;
         }
     }
@@ -328,9 +328,9 @@ Reflect_setPrototypeOf(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 2.
     if (!args.get(1).isObjectOrNull()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
-                             "Reflect.setPrototypeOf", "an object or null",
-                             InformalValueTypeName(args.get(1)));
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
+                                  "Reflect.setPrototypeOf", "an object or null",
+                                  InformalValueTypeName(args.get(1)));
         return false;
     }
     RootedObject proto(cx, args.get(1).toObjectOrNull());

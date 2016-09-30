@@ -12,6 +12,7 @@
 
 #include "ds/IdValuePair.h"
 #include "gc/Barrier.h"
+#include "js/CharacterEncoding.h"
 #include "js/GCHashTable.h"
 #include "vm/TaggedProto.h"
 #include "vm/TypeInference.h"
@@ -102,6 +103,7 @@ class ObjectGroup : public gc::TenuredCell
     }
 
     void setClasp(const Class* clasp) {
+        MOZ_ASSERT(JS::StringIsASCII(clasp->name));
         clasp_ = clasp;
     }
 

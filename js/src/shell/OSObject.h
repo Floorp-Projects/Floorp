@@ -31,7 +31,7 @@ JSString*
 ResolvePath(JSContext* cx, JS::HandleString filenameStr, PathResolutionMode resolveMode);
 
 JSObject*
-FileAsTypedArray(JSContext* cx, const char* pathname);
+FileAsTypedArray(JSContext* cx, JS::HandleString pathnameStr);
 
 } // namespace shell
 } // namespace js

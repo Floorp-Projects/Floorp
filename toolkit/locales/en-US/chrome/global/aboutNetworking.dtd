@@ -29,6 +29,12 @@
 <!ENTITY aboutNetworking.messagesReceived      "Messages Received">
 <!ENTITY aboutNetworking.bytesSent             "Bytes Sent">
 <!ENTITY aboutNetworking.bytesReceived         "Bytes Received">
+<!ENTITY aboutNetworking.logging               "Logging">
+<!ENTITY aboutNetworking.logTutorial           "See <a href='https://developer.mozilla.org/docs/Mozilla/Debugging/HTTP_logging'>HTTP Logging</a> for instructions on how to use this tool.">
+<!ENTITY aboutNetworking.currentLogFile        "Current Log File:">
+<!ENTITY aboutNetworking.currentLogModules     "Current Log Modules:">
+<!ENTITY aboutNetworking.setLogFile            "Set Log File">
+<!ENTITY aboutNetworking.setLogModules         "Set Log Modules">
 <!ENTITY aboutNetworking.dnsLookup             "DNS Lookup">
 <!ENTITY aboutNetworking.dnsLookupButton       "Resolve">
 <!ENTITY aboutNetworking.dnsDomain             "Domain">
