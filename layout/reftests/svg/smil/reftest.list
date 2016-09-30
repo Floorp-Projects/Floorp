@@ -279,5 +279,3 @@ fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,2) == anim-gradient-attr-presence-0
 # Test animation that changes 'display' attribute
 == anim-display.svg lime.svg
 == anim-display-in-g-element.svg lime.svg
-
-pref(layout.css.clip-path-shapes.enabled,true) == anim-clipPath-viewBox.svg anim-clipPath-viewBox-ref.svg
