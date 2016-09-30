@@ -2436,7 +2436,9 @@ CanvasRenderingContext2D::CreatePattern(const CanvasImageSource& aSource,
       if (!srcSurf) {
         JSContext* context = nsContentUtils::GetCurrentJSContext();
         if (context) {
-          JS_ReportWarning(context, "CanvasRenderingContext2D.createPattern() failed to snapshot source canvas.");
+          JS_ReportWarningASCII(context,
+                                "CanvasRenderingContext2D.createPattern()"
+                                " failed to snapshot source canvas.");
         }
         aError.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
         return nullptr;
@@ -2467,7 +2469,9 @@ CanvasRenderingContext2D::CreatePattern(const CanvasImageSource& aSource,
     if (!srcSurf) {
       JSContext* context = nsContentUtils::GetCurrentJSContext();
       if (context) {
-        JS_ReportWarning(context, "CanvasRenderingContext2D.createPattern() failed to prepare source ImageBitmap.");
+        JS_ReportWarningASCII(context,
+                              "CanvasRenderingContext2D.createPattern()"
+                              " failed to prepare source ImageBitmap.");
       }
       aError.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
       return nullptr;
