@@ -2,7 +2,7 @@ diff --git a/media/libstagefright/binding/mp4parse_capi/Cargo.toml b/media/libst
 index 5092cd7..ecbc8c0 100644
 --- a/media/libstagefright/binding/mp4parse_capi/Cargo.toml
 +++ b/media/libstagefright/binding/mp4parse_capi/Cargo.toml
-@@ -17,14 +17,9 @@ exclude = [
+@@ -17,15 +17,7 @@ exclude = [
    "*.mp4",
  ]
  
@@ -14,9 +14,10 @@ index 5092cd7..ecbc8c0 100644
 -[build-dependencies]
 -rusty-cheddar = "0.3.2"
 -
- [features]
- fuzz = ["mp4parse/fuzz"]
- 
+-[features]
+-fuzz = ["mp4parse/fuzz"]
+-
+ # Somewhat heavy-handed, but we want at least -Z force-overflow-checks=on.
 diff --git a/media/libstagefright/binding/mp4parse/Cargo.toml b/media/libstagefright/binding/mp4parse/Cargo.toml
 index ff9422c..814c4c6 100644
 --- a/media/libstagefright/binding/mp4parse/Cargo.toml
