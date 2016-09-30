@@ -15,7 +15,7 @@ add_task(function* () {
   assertMarkupViewIsLoaded();
   yield selectNode("#one", inspector);
 
-  let willNavigate = inspector.toolbox.target.once("will-navigate");
+  let willNavigate = inspector.target.once("will-navigate");
   yield testActor.eval(`content.location = "${URL_2}"`);
 
   info("Waiting for will-navigate");

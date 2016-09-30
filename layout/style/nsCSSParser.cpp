@@ -13406,7 +13406,7 @@ CSSParserImpl::ParseBorderSide(const nsCSSPropertyID aPropIDs[],
     values[1].SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
   }
   if ((found & 4) == 0) { // text color will be used
-    values[2].SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
+    values[2].SetIntValue(NS_COLOR_CURRENTCOLOR, eCSSUnit_EnumColor);
   }
 
   if (aSetAllSides) {
@@ -13479,8 +13479,8 @@ CSSParserImpl::ParseBorderColors(nsCSSPropertyID aProperty)
                                nullptr)) {
     nsCSSValueList *cur = value.SetListValue();
     for (;;) {
-      if (ParseVariant(cur->mValue, VARIANT_COLOR | VARIANT_KEYWORD,
-                       nsCSSProps::kBorderColorKTable) != CSSParseResult::Ok) {
+      if (ParseVariant(cur->mValue, VARIANT_COLOR, nullptr) !=
+          CSSParseResult::Ok) {
         return false;
       }
       if (CheckEndProperty()) {
@@ -15201,7 +15201,7 @@ CSSParserImpl::ParseOutline()
 
   // Provide default values
   if ((found & 1) == 0) { // Provide default outline-color
-    values[0].SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
+    values[0].SetIntValue(NS_COLOR_CURRENTCOLOR, eCSSUnit_EnumColor);
   }
   if ((found & 2) == 0) { // Provide default outline-style
     values[1].SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
@@ -15311,8 +15311,7 @@ CSSParserImpl::ParseTextDecoration()
                           eCSSUnit_Enumerated);
   }
   if ((found & 4) == 0) { // Provide default text-decoration-color
-    values[2].SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR,
-                          eCSSUnit_Enumerated);
+    values[2].SetIntValue(NS_COLOR_CURRENTCOLOR, eCSSUnit_EnumColor);
   }
 
   for (int32_t index = 0; index < numProps; index++) {

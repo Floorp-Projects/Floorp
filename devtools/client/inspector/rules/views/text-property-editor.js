@@ -219,7 +219,8 @@ TextPropertyEditor.prototype = {
         advanceChars: ":",
         contentType: InplaceEditor.CONTENT_TYPES.CSS_PROPERTY,
         popup: this.popup,
-        cssProperties: this.cssProperties
+        cssProperties: this.cssProperties,
+        contextMenu: this.ruleView.inspector.onTextBoxContextMenu
       });
 
       // Auto blur name field on multiple CSS rules get pasted in.
@@ -289,7 +290,8 @@ TextPropertyEditor.prototype = {
         popup: this.popup,
         multiline: true,
         maxWidth: () => this.container.getBoundingClientRect().width,
-        cssProperties: this.cssProperties
+        cssProperties: this.cssProperties,
+        contextMenu: this.ruleView.inspector.onTextBoxContextMenu
       });
     }
   },
