@@ -39,11 +39,13 @@ public class SafeConstrainedServer11Repository extends ConstrainedServer11Reposi
                                            AuthHeaderProvider authHeaderProvider,
                                            InfoCollections infoCollections,
                                            InfoConfiguration infoConfiguration,
-                                           long limit,
+                                           long batchLimit,
+                                           long totalLimit,
                                            String sort,
                                            JSONRecordFetcher countFetcher)
     throws URISyntaxException {
-    super(collection, storageURL, authHeaderProvider, infoCollections, infoConfiguration, limit, sort);
+    super(collection, storageURL, authHeaderProvider, infoCollections, infoConfiguration,
+            batchLimit, totalLimit, sort);
     if (countFetcher == null) {
       throw new IllegalArgumentException("countFetcher must not be null");
     }
@@ -53,7 +55,7 @@ public class SafeConstrainedServer11Repository extends ConstrainedServer11Reposi
   @Override
   public void createSession(RepositorySessionCreationDelegate delegate,
                             Context context) {
-    delegate.onSessionCreated(new CountCheckingServer11RepositorySession(this, this.getDefaultFetchLimit()));
+    delegate.onSessionCreated(new CountCheckingServer11RepositorySession(this, this.getDefaultBatchLimit()));
   }
 
   public class CountCheckingServer11RepositorySession extends Server11RepositorySession {

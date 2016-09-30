@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko.sync.net;
 
+import android.support.annotation.Nullable;
+
 import org.mozilla.gecko.sync.Utils;
 
 import ch.boye.httpclientandroidlib.HttpResponse;
@@ -16,6 +18,7 @@ public class SyncResponse extends MozResponse {
   public static final String X_WEAVE_RECORDS = "x-weave-records";
   public static final String X_WEAVE_QUOTA_REMAINING = "x-weave-quota-remaining";
   public static final String X_WEAVE_ALERT = "x-weave-alert";
+  public static final String X_WEAVE_NEXT_OFFSET = "x-weave-next-offset";
 
   public SyncResponse(HttpResponse res) {
     super(res);
@@ -120,9 +123,35 @@ public class SyncResponse extends MozResponse {
   }
 
   public String weaveAlert() {
-    if (this.hasHeader(X_WEAVE_ALERT)) {
-      return this.response.getFirstHeader(X_WEAVE_ALERT).getValue();
-    }
-    return null;
+    return this.getNonMissingHeader(X_WEAVE_ALERT);
+  }
+
+  /**
+   * This header may be sent back with multi-record responses where the request included a limit parameter.
+   * Its presence indicates that the number of available records exceeded the given limit.
+   * The value from this header can be passed back in the offset parameter to retrieve additional records.
+   * The value of this header will always be a string of characters from the urlsafe-base64 alphabet.
+   * The specific contents of the string are an implementation detail of the server,
+   * so clients should treat it as an opaque token.
+   *
+   * @return the offset header
+   */
+  public String weaveOffset() {
+    return this.getNonMissingHeader(X_WEAVE_NEXT_OFFSET);
+  }
+
+  /**
+   * This header gives the last-modified time of the target resource as seen during processing of the request,
+   * and will be included in all success responses (200, 201, 204).
+   * When given in response to a write request, this will be equal to the server’s current time and
+   * to the new last-modified time of any BSOs created or changed by the request.
+   * It is similar to the standard HTTP Last-Modified header,
+   * but the value is a decimal timestamp rather than a HTTP-format date.
+   *
+   * @return the last modified header
+   */
+  @Nullable
+  public String lastModified() {
+    return this.getNonMissingHeader(X_LAST_MODIFIED);
   }
 }

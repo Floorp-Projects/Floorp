@@ -88,7 +88,7 @@ public class TestSafeConstrainedServer11Repository {
       final int TEST_LIMIT = 1000;
       final SafeConstrainedServer11Repository repo = new SafeConstrainedServer11Repository(
           collection, getCollectionURL(collection), null, infoCollections, infoConfiguration,
-          TEST_LIMIT, sort, countFetcher);
+          TEST_LIMIT, TEST_LIMIT, sort, countFetcher);
 
       final AtomicBoolean shouldSkipLots = new AtomicBoolean(false);
       final AtomicBoolean shouldSkipFew = new AtomicBoolean(true);
