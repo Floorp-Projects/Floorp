@@ -21,6 +21,7 @@ class nsReadingIterator
 public:
   typedef nsReadingIterator<CharT>    self_type;
   typedef ptrdiff_t                   difference_type;
+  typedef size_t                      size_type;
   typedef CharT                       value_type;
   typedef const CharT*                pointer;
   typedef const CharT&                reference;
@@ -129,6 +130,17 @@ public:
     }
     return *this;
   }
+
+  // We return an unsigned type here (with corresponding assert) rather than
+  // the more usual difference_type because we want to make this class go
+  // away in favor of mozilla::RangedPtr.  Since RangedPtr has the same
+  // requirement we are enforcing here, the transition ought to be much
+  // smoother.
+  size_type operator-(const self_type& aOther) const
+  {
+    MOZ_ASSERT(mPosition >= aOther.mPosition);
+    return mPosition - aOther.mPosition;
+  }
 };
 
 /**
@@ -141,6 +153,7 @@ class nsWritingIterator
 public:
   typedef nsWritingIterator<CharT>   self_type;
   typedef ptrdiff_t                  difference_type;
+  typedef size_t                     size_type;
   typedef CharT                      value_type;
   typedef CharT*                     pointer;
   typedef CharT&                     reference;
@@ -258,6 +271,17 @@ public:
 
     nsCharTraits<value_type>::move(mPosition, aS, aN);
     advance(difference_type(aN));
+  }
+
+  // We return an unsigned type here (with corresponding assert) rather than
+  // the more usual difference_type because we want to make this class go
+  // away in favor of mozilla::RangedPtr.  Since RangedPtr has the same
+  // requirement we are enforcing here, the transition ought to be much
+  // smoother.
+  size_type operator-(const self_type& aOther) const
+  {
+    MOZ_ASSERT(mPosition >= aOther.mPosition);
+    return mPosition - aOther.mPosition;
   }
 };
 
