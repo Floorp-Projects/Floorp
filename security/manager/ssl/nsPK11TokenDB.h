@@ -33,14 +33,19 @@ private:
   friend class nsPK11TokenDB;
   nsresult refreshTokenInfo(const nsNSSShutDownPreventionLock& proofOfLock);
 
-  nsString mTokenName;
-  nsString mTokenLabel, mTokenManID, mTokenHWVersion, mTokenFWVersion;
-  nsString mTokenSerialNum;
+  nsCString mTokenName;
+  nsCString mTokenLabel;
+  nsCString mTokenManufacturerID;
+  nsCString mTokenHWVersion;
+  nsCString mTokenFWVersion;
+  nsCString mTokenSerialNum;
   mozilla::UniquePK11SlotInfo mSlot;
   int mSeries;
   nsCOMPtr<nsIInterfaceRequestor> mUIContext;
   virtual void virtualDestroyNSSReference() override;
   void destructorSafeDestroyNSSReference();
+  nsresult GetAttributeHelper(const nsACString& attribute,
+                      /*out*/ nsACString& xpcomOutParam);
 };
 
 class nsPK11TokenDB : public nsIPK11TokenDB
