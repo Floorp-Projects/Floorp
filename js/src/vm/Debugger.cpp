@@ -3180,8 +3180,8 @@ const Class Debugger::class_ = {
     &Debugger::classOps_
 };
 
-/* static */ Debugger*
-Debugger::fromThisValue(JSContext* cx, const CallArgs& args, const char* fnname)
+static Debugger*
+Debugger_fromThisValue(JSContext* cx, const CallArgs& args, const char* fnname)
 {
     JSObject* thisobj = NonNullObject(cx, args.thisv());
     if (!thisobj)
@@ -3197,7 +3197,7 @@ Debugger::fromThisValue(JSContext* cx, const CallArgs& args, const char* fnname)
      * really a Debugger object. The prototype object is distinguished by
      * having a nullptr private value.
      */
-    Debugger* dbg = fromJSObject(thisobj);
+    Debugger* dbg = Debugger::fromJSObject(thisobj);
     if (!dbg) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
                                   "Debugger", fnname, "prototype object");
@@ -3207,7 +3207,7 @@ Debugger::fromThisValue(JSContext* cx, const CallArgs& args, const char* fnname)
 
 #define THIS_DEBUGGER(cx, argc, vp, fnname, args, dbg)                       \
     CallArgs args = CallArgsFromVp(argc, vp);                                \
-    Debugger* dbg = Debugger::fromThisValue(cx, args, fnname);               \
+    Debugger* dbg = Debugger_fromThisValue(cx, args, fnname);                \
     if (!dbg)                                                                \
         return false
 
@@ -7602,8 +7602,8 @@ DebuggerFrame::isLive() const
     return !!getPrivate();
 }
 
-/* static */ bool
-DebuggerFrame::requireLive(JSContext* cx, HandleDebuggerFrame frame)
+static bool
+DebuggerFrame_requireLive(JSContext* cx, HandleDebuggerFrame frame)
 {
     if (!frame->isLive()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_NOT_LIVE,
@@ -7670,8 +7670,8 @@ DebuggerFrame_finalize(FreeOp* fop, JSObject* obj)
     DebuggerFrame_freeScriptFrameIterData(fop, obj);
 }
 
-/* static */ DebuggerFrame*
-DebuggerFrame::checkThis(JSContext* cx, const CallArgs& args, const char* fnname, bool checkLive)
+static DebuggerFrame*
+DebuggerFrame_checkThis(JSContext* cx, const CallArgs& args, const char* fnname, bool checkLive)
 {
     JSObject* thisobj = NonNullObject(cx, args.thisv());
     if (!thisobj)
@@ -7698,8 +7698,10 @@ DebuggerFrame::checkThis(JSContext* cx, const CallArgs& args, const char* fnname
         return nullptr;
     }
 
-    if (checkLive && !DebuggerFrame::requireLive(cx, frame))
-        return nullptr;
+    if (checkLive) {
+        if (!DebuggerFrame_requireLive(cx, frame))
+            return nullptr;
+    }
 
     return frame;
 }
@@ -7723,13 +7725,13 @@ DebuggerFrame::checkThis(JSContext* cx, const CallArgs& args, const char* fnname
 
 #define THIS_DEBUGGER_FRAME(cx, argc, vp, fnname, args, frame)                          \
     CallArgs args = CallArgsFromVp(argc, vp);                                           \
-    RootedDebuggerFrame frame(cx, DebuggerFrame::checkThis(cx, args, fnname, true)); \
+    RootedDebuggerFrame frame(cx, DebuggerFrame_checkThis(cx, args, fnname, true));     \
     if (!frame)                                                                         \
         return false;
 
 #define THIS_FRAME_THISOBJ(cx, argc, vp, fnname, args, thisobj)                       \
     CallArgs args = CallArgsFromVp(argc, vp);                                         \
-    RootedNativeObject thisobj(cx, DebuggerFrame::checkThis(cx, args, fnname, true)); \
+    RootedNativeObject thisobj(cx, DebuggerFrame_checkThis(cx, args, fnname, true));  \
     if (!thisobj)                                                                     \
         return false
 
@@ -8065,7 +8067,7 @@ DebuggerFrame::offsetGetter(JSContext* cx, unsigned argc, Value* vp)
 DebuggerFrame::liveGetter(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedDebuggerFrame frame(cx, DebuggerFrame::checkThis(cx, args, "get live", false));
+    RootedDebuggerFrame frame(cx, DebuggerFrame_checkThis(cx, args, "get live", false));
     if (!frame)
         return false;
 
@@ -8256,8 +8258,8 @@ DebuggerObject_trace(JSTracer* trc, JSObject* obj)
     }
 }
 
-/* static */ DebuggerObject*
-DebuggerObject::checkThis(JSContext* cx, const CallArgs& args, const char* fnname)
+static DebuggerObject*
+DebuggerObject_checkThis(JSContext* cx, const CallArgs& args, const char* fnname)
 {
     JSObject* thisobj = NonNullObject(cx, args.thisv());
     if (!thisobj)
@@ -8284,13 +8286,13 @@ DebuggerObject::checkThis(JSContext* cx, const CallArgs& args, const char* fnnam
 
 #define THIS_DEBUGOBJECT(cx, argc, vp, fnname, args, object)                         \
     CallArgs args = CallArgsFromVp(argc, vp);                                        \
-    RootedDebuggerObject object(cx, DebuggerObject::checkThis(cx, args, fnname)); \
+    RootedDebuggerObject object(cx, DebuggerObject_checkThis(cx, args, fnname));     \
     if (!object)                                                                     \
         return false;                                                                \
 
 #define THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, fnname, args, obj)     \
     CallArgs args = CallArgsFromVp(argc, vp);                          \
-    RootedObject obj(cx, DebuggerObject::checkThis(cx, args, fnname)); \
+    RootedObject obj(cx, DebuggerObject_checkThis(cx, args, fnname));  \
     if (!obj)                                                          \
         return false;                                                  \
     obj = (JSObject*) obj->as<NativeObject>().getPrivate();            \
@@ -8298,7 +8300,7 @@ DebuggerObject::checkThis(JSContext* cx, const CallArgs& args, const char* fnnam
 
 #define THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, fnname, args, dbg, obj) \
     CallArgs args = CallArgsFromVp(argc, vp);                                 \
-    RootedObject obj(cx, DebuggerObject::checkThis(cx, args, fnname));        \
+    RootedObject obj(cx, DebuggerObject_checkThis(cx, args, fnname));         \
     if (!obj)                                                                 \
         return false;                                                         \
     Debugger* dbg = Debugger::fromChildJSObject(obj);                         \
@@ -10190,9 +10192,9 @@ DebuggerEnv_trace(JSTracer* trc, JSObject* obj)
     }
 }
 
-/* static */ DebuggerEnvironment*
-DebuggerEnvironment::checkThis(JSContext* cx, const CallArgs& args, const char* fnname,
-                               bool requireDebuggee)
+static DebuggerEnvironment*
+DebuggerEnvironment_checkThis(JSContext* cx, const CallArgs& args, const char* fnname,
+                              bool requireDebuggee)
 {
     JSObject* thisobj = NonNullObject(cx, args.thisv());
     if (!thisobj)
@@ -10233,7 +10235,7 @@ DebuggerEnvironment::checkThis(JSContext* cx, const CallArgs& args, const char* 
 
 #define THIS_DEBUGGER_ENVIRONMENT(cx, argc, vp, fnname, args, environment)                                 \
     CallArgs args = CallArgsFromVp(argc, vp);                                                              \
-    Rooted<DebuggerEnvironment*> environment(cx, DebuggerEnvironment::checkThis(cx, args, fnname, false)); \
+    Rooted<DebuggerEnvironment*> environment(cx, DebuggerEnvironment_checkThis(cx, args, fnname, false));  \
     if (!environment)                                                                                      \
         return false;                                                                                      \
 
