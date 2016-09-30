@@ -1,28 +1,32 @@
+extern crate chrono;
 #[macro_use]
 extern crate clap;
 #[macro_use]
-extern crate log;
-#[macro_use]
 extern crate lazy_static;
-extern crate env_logger;
 extern crate hyper;
 extern crate mozprofile;
 extern crate mozrunner;
 extern crate regex;
 extern crate rustc_serialize;
-extern crate time;
+#[macro_use]
+extern crate slog;
+extern crate slog_atomic;
+extern crate slog_stdlog;
+extern crate slog_stream;
+extern crate zip;
 #[macro_use]
 extern crate webdriver;
-extern crate zip;
 
-use clap::{App, Arg};
-use marionette::{MarionetteHandler, LogLevel, MarionetteSettings, extension_routes};
+#[macro_use]
+extern crate log;
+
 use std::borrow::ToOwned;
-use std::env;
 use std::io::Write;
 use std::net::{SocketAddr, IpAddr};
 use std::path::PathBuf;
 use std::str::FromStr;
+
+use clap::{App, Arg};
 
 macro_rules! try_opt {
     ($expr:expr, $err_type:expr, $err_msg:expr) => ({
@@ -33,51 +37,17 @@ macro_rules! try_opt {
     })
 }
 
+mod logging;
 mod marionette;
+
+use logging::LogLevel;
+use marionette::{MarionetteHandler, MarionetteSettings, extension_routes};
 
 type ProgramResult = std::result::Result<(), (ExitCode, String)>;
 
 enum ExitCode {
     Ok = 0,
     Usage = 64,
-}
-
-// Produces a timestamp in milliseconds which format is similar to Gecko.
-fn timestamp() -> String {
-    let tm = time::get_time();
-    let ms = tm.sec as f64 + (tm.nsec as f64 / 1000.0 / 1000.0 / 1000.0);
-    format!("{:.3}", ms).replace(".", "")
-}
-
-fn init_env_logger(level: &Option<LogLevel>) {
-    let mut builder = env_logger::LogBuilder::new();
-
-    let format = |r: &log::LogRecord| {
-        format!("{}\t{}\t{}\t{}", timestamp(), r.target(), r.level(), r.args())
-    };
-    builder.format(format);
-
-    // allow passed log level to override environment variable
-    match *level {
-        Some(ref level) => {
-            let filter = match *level {
-                LogLevel::Fatal | LogLevel::Error => log::LogLevelFilter::Error,
-                LogLevel::Warn => log::LogLevelFilter::Warn,
-                LogLevel::Info => log::LogLevelFilter::Info,
-                LogLevel::Config | LogLevel::Debug => log::LogLevelFilter::Debug,
-                LogLevel::Trace => log::LogLevelFilter::Trace,
-            };
-            builder.filter(None, filter);
-        },
-
-        None => {
-            if env::var("RUST_LOG").is_ok() {
-                builder.parse(&env::var("RUST_LOG").unwrap());
-            }
-        },
-    }
-
-    let _ = builder.init();
 }
 
 fn app<'a, 'b>() -> App<'a, 'b> {
@@ -179,7 +149,7 @@ You can obtain a copy of the license at https://mozilla.org/MPL/2.0/.");
             _ => Some(LogLevel::Trace),
         }
     };
-    init_env_logger(&log_level);
+    logging::init(&log_level);
 
     let settings = MarionetteSettings {
         port: marionette_port,
@@ -210,15 +180,20 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
+    extern crate mozprofile;
+    extern crate rustc_serialize;
+
     use std::collections::BTreeMap;
-    use marionette::{FirefoxOptions, MarionetteHandler};
-    use webdriver::command::NewSessionParameters;
-    use rustc_serialize::json::Json;
-    use std::fs::File;
-    use rustc_serialize::base64::{ToBase64, Config, CharacterSet, Newline};
-    use mozprofile::preferences::Pref;
-    use std::io::Read;
     use std::default::Default;
+    use std::fs::File;
+    use std::io::Read;
+
+    use self::mozprofile::preferences::Pref;
+    use self::rustc_serialize::base64::{ToBase64, Config, CharacterSet, Newline};
+    use self::rustc_serialize::json::Json;
+
+    use webdriver::command::NewSessionParameters;
+    use marionette::{FirefoxOptions, MarionetteHandler};
 
     fn example_profile() -> Json {
         let mut profile_data = Vec::with_capacity(1024);

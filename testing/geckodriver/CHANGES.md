@@ -18,6 +18,7 @@ All notable changes to this program is documented in this file.
 - Removed `--no-e10s` flag, and geckodriver will from now rely on the Firefox default multiprocessing settings (override using preferences)
 - Disable pop-up blocker in the default profile by @juangj
 - Changed Rust compiler version to 1.12 (beta) temporarily because of [trouble linking Musl binaries](https://github.com/rust-lang/rust/issues/34978)
+- Replaced _env_logger_ logging facility with the _slog_ package, causing the `RUST_LOG` environment variable to no longer have any affect
 
 ### Fixed
 - Corrected link to repository in Cargo metadata
