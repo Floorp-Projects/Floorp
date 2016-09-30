@@ -628,14 +628,10 @@ VRDisplay::GetLayers(nsTArray<VRLayer>& result)
 }
 
 void
-VRDisplay::SubmitFrame(const Optional<NonNull<VRPose>>& aPose)
+VRDisplay::SubmitFrame()
 {
   if (mPresentation) {
-    if (aPose.WasPassed()) {
-      mPresentation->SubmitFrame(aPose.Value().FrameID());
-    } else {
-      mPresentation->SubmitFrame(0);
-    }
+    mPresentation->SubmitFrame();
   }
 }
 

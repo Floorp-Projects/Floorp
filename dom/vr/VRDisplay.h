@@ -320,7 +320,7 @@ public:
   already_AddRefed<Promise> RequestPresent(const nsTArray<VRLayer>& aLayers, ErrorResult& aRv);
   already_AddRefed<Promise> ExitPresent(ErrorResult& aRv);
   void GetLayers(nsTArray<VRLayer>& result);
-  void SubmitFrame(const Optional<NonNull<VRPose>>& aPose);
+  void SubmitFrame();
 
   int32_t RequestAnimationFrame(mozilla::dom::FrameRequestCallback& aCallback,
                                 mozilla::ErrorResult& aError);

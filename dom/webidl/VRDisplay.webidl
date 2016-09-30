@@ -281,5 +281,5 @@ interface VRDisplay : EventTarget {
    * canvas as any other operation that uses its source image, and canvases
    * created without preserveDrawingBuffer set to true will be cleared.
    */
-  void submitFrame(optional VRPose pose);
+  void submitFrame();
 };
