@@ -7,6 +7,7 @@ mochikit.jar:
   content/jetpack-package-overlay.xul (jetpack-package-overlay.xul)
   content/jetpack-addon-harness.js (jetpack-addon-harness.js)
   content/jetpack-addon-overlay.xul (jetpack-addon-overlay.xul)
+  content/cc-analyzer.js (cc-analyzer.js)
   content/chrome-harness.js (chrome-harness.js)
   content/mochitest-e10s-utils.js (mochitest-e10s-utils.js)
   content/shutdown-leaks-collector.js (shutdown-leaks-collector.js)
