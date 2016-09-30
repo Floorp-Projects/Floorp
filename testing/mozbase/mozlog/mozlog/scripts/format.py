@@ -3,9 +3,11 @@ import sys
 
 from .. import handlers, commandline, reader
 
+
 def get_parser(add_help=True):
     parser = argparse.ArgumentParser("format",
-                                     description="Format a structured log stream", add_help=add_help)
+                                     description="Format a structured log stream",
+                                     add_help=add_help)
     parser.add_argument("--input", action="store", default=None,
                         help="Filename to read from, defaults to stdin")
     parser.add_argument("--output", action="store", default=None,
@@ -13,6 +15,7 @@ def get_parser(add_help=True):
     parser.add_argument("format", choices=commandline.log_formatters.keys(),
                         help="Format to use")
     return parser
+
 
 def main(**kwargs):
     if kwargs["input"] is None:

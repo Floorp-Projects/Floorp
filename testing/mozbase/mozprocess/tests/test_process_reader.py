@@ -3,18 +3,23 @@ import subprocess
 import sys
 from mozprocess.processhandler import ProcessReader, StoreOutput
 
+
 def run_python(str_code, stdout=subprocess.PIPE, stderr=subprocess.PIPE):
     cmd = [sys.executable, '-c', str_code]
     return subprocess.Popen(cmd, stdout=stdout, stderr=stderr)
 
+
 class TestProcessReader(unittest.TestCase):
+
     def setUp(self):
         self.out = StoreOutput()
         self.err = StoreOutput()
         self.finished = False
+
         def on_finished():
             self.finished = True
         self.timeout = False
+
         def on_timeout():
             self.timeout = True
         self.reader = ProcessReader(stdout_callback=self.out,
@@ -84,7 +89,8 @@ class TestProcessReader(unittest.TestCase):
         self.assertEqual(self.out.output, ['1'])
 
     def test_mixed_stdout_stderr(self):
-        proc = run_python('import sys; sys.stderr.write("hello world\\n"); print 1; print 2', stderr=subprocess.STDOUT)
+        proc = run_python('import sys; sys.stderr.write("hello world\\n"); print 1; print 2',
+                          stderr=subprocess.STDOUT)
         self.reader.start(proc)
         self.reader.thread.join()
 

@@ -149,9 +149,9 @@ class B2GVersion(Version):
                     '^\w{40}$', changeset) and changeset or None
                 self._info['gaia_date'] = date
         except KeyError:
-                self._logger.warning(
-                    'Unable to find resources/gaia_commit.txt in '
-                    'application.zip')
+            self._logger.warning(
+                'Unable to find resources/gaia_commit.txt in '
+                'application.zip')
         finally:
             mozfile.remove(tempdir)
 

@@ -8,6 +8,7 @@ from StringIO import StringIO
 
 from dmunit import DeviceManagerTestCase
 
+
 class ExecEnvTestCase(DeviceManagerTestCase):
 
     def runTest(self):

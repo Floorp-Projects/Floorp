@@ -153,7 +153,7 @@ class ADBAndroid(ADBDevice):
                 elif parameter == 'scale':
                     scale = float(value)
                 if parameter is not None and scale is not None:
-                    percentage = 100.0*level/scale
+                    percentage = 100.0 * level / scale
                     break
         return percentage
 
@@ -219,7 +219,7 @@ class ADBAndroid(ADBDevice):
 
             if not success:
                 self._logger.debug('Attempt %s of %s device not ready: %s' % (
-                    attempt+1, self._device_ready_retry_attempts,
+                    attempt + 1, self._device_ready_retry_attempts,
                     failure))
                 time.sleep(self._device_ready_retry_wait)
 
@@ -293,8 +293,8 @@ class ADBAndroid(ADBDevice):
         return True
 
     def launch_application(self, app_name, activity_name, intent, url=None,
-                          extras=None, wait=True, fail_if_running=True,
-                          timeout=None):
+                           extras=None, wait=True, fail_if_running=True,
+                           timeout=None):
         """Launches an Android application
 
         :param str app_name: Name of application (e.g. `com.android.chrome`)
@@ -326,7 +326,7 @@ class ADBAndroid(ADBDevice):
             raise ADBError("Only one instance of an application may be running "
                            "at once")
 
-        acmd = [ "am", "start" ] + \
+        acmd = ["am", "start"] + \
             ["-W" if wait else '', "-n", "%s/%s" % (app_name, activity_name)]
 
         if intent:
@@ -349,8 +349,8 @@ class ADBAndroid(ADBDevice):
         self.shell_output(cmd, timeout=timeout)
 
     def launch_fennec(self, app_name, intent="android.intent.action.VIEW",
-                     moz_env=None, extra_args=None, url=None, wait=True,
-                     fail_if_running=True, timeout=None):
+                      moz_env=None, extra_args=None, url=None, wait=True,
+                      fail_if_running=True, timeout=None):
         """Convenience method to launch Fennec on Android with various
         debugging arguments
 
@@ -391,9 +391,10 @@ class ADBAndroid(ADBDevice):
         if extra_args:
             extras['args'] = " ".join(extra_args)
 
-        self.launch_application(app_name, "org.mozilla.gecko.BrowserApp", intent, url=url, extras=extras,
-                               wait=wait, fail_if_running=fail_if_running,
-                               timeout=timeout)
+        self.launch_application(app_name, "org.mozilla.gecko.BrowserApp", intent, url=url,
+                                extras=extras,
+                                wait=wait, fail_if_running=fail_if_running,
+                                timeout=timeout)
 
     def stop_application(self, app_name, timeout=None, root=False):
         """Stops the specified application
@@ -428,7 +429,7 @@ class ADBAndroid(ADBDevice):
             while self.process_exist(app_name, timeout=timeout):
                 if num_tries > max_tries:
                     raise ADBError("Couldn't successfully kill %s after %s "
-                                  "tries" % (app_name, max_tries))
+                                   "tries" % (app_name, max_tries))
                 self.pkill(app_name, timeout=timeout, root=root)
                 num_tries += 1
 

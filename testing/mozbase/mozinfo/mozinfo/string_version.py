@@ -9,6 +9,7 @@ class StringVersion(str):
     """
     A string version that can be compared with comparison operators.
     """
+
     def __init__(self, vstring):
         str.__init__(self, vstring)
         self.version = LooseVersion(vstring)

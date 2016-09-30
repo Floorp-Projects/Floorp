@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# flake8: noqa
 
 from copy import deepcopy
 import os
@@ -144,7 +145,7 @@ class BuiltinFilters(unittest.TestCase):
         tests = deepcopy(self.tests)
         tests = list(sub1(tests, {}))
         self.assertNotIn(self.tests[5], tests)
-        self.assertEquals(len(tests), len(self.tests)-1)
+        self.assertEquals(len(tests), len(self.tests) - 1)
 
         tests = deepcopy(self.tests)
         tests = list(sub2(tests, {}))

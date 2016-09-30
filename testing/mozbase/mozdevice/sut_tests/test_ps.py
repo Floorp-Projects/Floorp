@@ -4,6 +4,7 @@
 
 from dmunit import DeviceManagerTestCase
 
+
 class ProcessListTestCase(DeviceManagerTestCase):
 
     def runTest(self):
@@ -24,4 +25,3 @@ class ProcessListTestCase(DeviceManagerTestCase):
             self.assertGreater(len(item[1]), 0)
             if len(item) > 2:
                 self.assertIsInstance(item[2], int)
-

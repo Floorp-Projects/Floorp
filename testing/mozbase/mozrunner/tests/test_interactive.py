@@ -7,6 +7,7 @@ import mozrunnertest
 
 
 class RunnerThread(threading.Thread):
+
     def __init__(self, runner, timeout=10):
         threading.Thread.__init__(self)
         self.runner = runner

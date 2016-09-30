@@ -12,9 +12,6 @@ Additionally there is a separate json manifest that keeps track of the installed
 webapps, their manifestURLs and their permissions.
 """
 
-__all__ = ["Webapp", "WebappCollection", "WebappFormatException", "APP_STATUS_NOT_INSTALLED",
-           "APP_STATUS_INSTALLED", "APP_STATUS_PRIVILEGED", "APP_STATUS_CERTIFIED"]
-
 from string import Template
 import json
 import os
@@ -22,12 +19,15 @@ import shutil
 
 import mozfile
 
+__all__ = ["Webapp", "WebappCollection", "WebappFormatException", "APP_STATUS_NOT_INSTALLED",
+           "APP_STATUS_INSTALLED", "APP_STATUS_PRIVILEGED", "APP_STATUS_CERTIFIED"]
+
 
 # from http://hg.mozilla.org/mozilla-central/file/add0b94c2c0b/caps/idl/nsIPrincipal.idl#l163
 APP_STATUS_NOT_INSTALLED = 0
-APP_STATUS_INSTALLED     = 1
-APP_STATUS_PRIVILEGED    = 2
-APP_STATUS_CERTIFIED     = 3
+APP_STATUS_INSTALLED = 1
+APP_STATUS_PRIVILEGED = 2
+APP_STATUS_CERTIFIED = 3
 
 
 class WebappFormatException(Exception):
@@ -105,7 +105,8 @@ class WebappCollection(object):
     def __init__(self, profile, apps=None, json_template=None, manifest_template=None):
         """
         :param profile: the file path to a profile
-        :param apps: [optional] a list of webapp objects or file paths to json files describing webapps
+        :param apps: [optional] a list of webapp objects or file paths to json files describing
+          webapps
         :param json_template: [optional] string template describing the webapp json format
         :param manifest_template: [optional] string template describing the webapp manifest format
         """

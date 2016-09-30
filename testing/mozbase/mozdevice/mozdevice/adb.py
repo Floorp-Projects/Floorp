@@ -15,6 +15,7 @@ from abc import ABCMeta, abstractmethod
 
 class ADBProcess(object):
     """ADBProcess encapsulates the data related to executing the adb process."""
+
     def __init__(self, args):
         #: command argument argument list.
         self.args = args
@@ -59,6 +60,7 @@ class ADBProcess(object):
 # differently in order that unhandled ADBRootErrors and
 # ADBTimeoutErrors can be handled distinctly from ADBErrors.
 
+
 class ADBError(Exception):
     """ADBError is raised in situations where a command executed on a
     device either exited with a non-zero exitcode or when an
@@ -67,15 +69,18 @@ class ADBError(Exception):
     """
     pass
 
+
 class ADBListDevicesError(ADBError):
     """ADBListDevicesError is raised when errors are found listing the
     devices, typically not any permissions.
 
     The devices information is stocked with the *devices* member.
     """
+
     def __init__(self, msg, devices):
         ADBError.__init__(self, msg)
         self.devices = devices
+
 
 class ADBRootError(Exception):
     """ADBRootError is raised when a shell command is to be executed as
@@ -84,6 +89,7 @@ class ADBRootError(Exception):
     your device or change your scripts to not require running as root.
     """
     pass
+
 
 class ADBTimeoutError(Exception):
     """ADBTimeoutError is raised when either a host command or shell
@@ -234,10 +240,10 @@ class ADBCommand(object):
         start_time = time.time()
         adb_process.exitcode = adb_process.proc.poll()
         while ((time.time() - start_time) <= timeout and
-               adb_process.exitcode == None):
+               adb_process.exitcode is None):
             time.sleep(self._polling_interval)
             adb_process.exitcode = adb_process.proc.poll()
-        if adb_process.exitcode == None:
+        if adb_process.exitcode is None:
             adb_process.proc.kill()
             adb_process.timedout = True
             adb_process.exitcode = adb_process.proc.poll()
@@ -310,6 +316,7 @@ class ADBHost(ADBCommand):
        adbhost = ADBHost()
        adbhost.start_server()
     """
+
     def __init__(self,
                  adb='adb',
                  adb_host=None,
@@ -458,7 +465,9 @@ class ADBHost(ADBCommand):
         """
         # b313b945               device usb:1-7 product:d2vzw model:SCH_I535 device:d2vzw
         # from Android system/core/adb/transport.c statename()
-        re_device_info = re.compile(r'([^\s]+)\s+(offline|bootloader|device|host|recovery|sideload|no permissions|unauthorized|unknown)')
+        re_device_info = re.compile(
+            r"([^\s]+)\s+(offline|bootloader|device|host|recovery|sideload|"
+            "no permissions|unauthorized|unknown)")
         devices = []
         lines = self.command_output(["devices", "-l"], timeout=timeout).split('\n')
         for line in lines:
@@ -664,7 +673,6 @@ class ADBDevice(ADBCommand):
                 self._logger.info("adbd restarted as root")
         except ADBError:
             self._logger.debug("Check for root adbd failed")
-
 
     @staticmethod
     def _escape_command_line(cmd):
@@ -1039,10 +1047,10 @@ class ADBDevice(ADBCommand):
 
         start_time = time.time()
         exitcode = adb_process.proc.poll()
-        while ((time.time() - start_time) <= timeout) and exitcode == None:
+        while ((time.time() - start_time) <= timeout) and exitcode is None:
             time.sleep(self._polling_interval)
             exitcode = adb_process.proc.poll()
-        if exitcode == None:
+        if exitcode is None:
             adb_process.proc.kill()
             adb_process.timedout = True
             adb_process.exitcode = adb_process.proc.poll()
@@ -1130,12 +1138,12 @@ class ADBDevice(ADBCommand):
                                    'timedout: %s, '
                                    'exitcode: %s, '
                                    'output: %s' %
-                                (' '.join(adb_process.args),
-                                 timeout,
+                                   (' '.join(adb_process.args),
+                                    timeout,
                                     root,
-                                 adb_process.timedout,
-                                 adb_process.exitcode,
-                                 output))
+                                    adb_process.timedout,
+                                    adb_process.exitcode,
+                                    output))
 
             return output
         finally:
@@ -1698,7 +1706,7 @@ class ADBDevice(ADBCommand):
             if not pid_list:
                 break
             self._logger.debug("Attempt %d of %d to kill processes %s failed" %
-                               (attempt+1, attempts, pid_list))
+                               (attempt + 1, attempts, pid_list))
             time.sleep(wait)
 
         if pid_list:

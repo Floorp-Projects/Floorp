@@ -33,7 +33,7 @@ class ChunkBySlice(TestCase):
         for total in range(1, num_tests + 1):
             res = []
             res_disabled = []
-            for chunk in range(1, total+1):
+            for chunk in range(1, total + 1):
                 f = chunk_by_slice(chunk, total)
                 res.append(list(f(tests, {})))
                 if disabled:
@@ -96,20 +96,20 @@ class ChunkByDir(TestCase):
     def run_all_combos(self, dirs):
         tests = list(self.generate_tests(dirs))
 
-        deepest = max(len(t['relpath'].split(os.sep))-1 for t in tests)
-        for depth in range(1, deepest+1):
+        deepest = max(len(t['relpath'].split(os.sep)) - 1 for t in tests)
+        for depth in range(1, deepest + 1):
 
             def num_groups(tests):
                 unique = set()
                 for p in [t['relpath'] for t in tests]:
                     p = p.split(os.sep)
-                    p = p[:min(depth, len(p)-1)]
+                    p = p[:min(depth, len(p) - 1)]
                     unique.add(os.sep.join(p))
                 return len(unique)
 
-            for total in range(1, num_groups(tests)+1):
+            for total in range(1, num_groups(tests) + 1):
                 res = []
-                for this in range(1, total+1):
+                for this in range(1, total + 1):
                     f = chunk_by_dir(this, total, depth)
                     res.append(list(f(tests, {})))
 
@@ -208,7 +208,7 @@ class ChunkByRuntime(TestCase):
             chunks[i].extend(batch)
 
             # "draft" style (last pick goes first in the next round)
-            if (i == 0 and d == -1) or (i == total-1 and d == 1):
+            if (i == 0 and d == -1) or (i == total - 1 and d == 1):
                 d = -d
             else:
                 i += d
@@ -225,9 +225,9 @@ class ChunkByRuntime(TestCase):
         tests = list(self.generate_tests(dirs))
         runtimes = self.get_runtimes(tests)
 
-        for total in range(1, len(dirs)+1):
+        for total in range(1, len(dirs) + 1):
             chunks = []
-            for this in range(1, total+1):
+            for this in range(1, total + 1):
                 f = chunk_by_runtime(this, total, runtimes)
                 ret = list(f(tests, {}))
                 chunks.append(ret)

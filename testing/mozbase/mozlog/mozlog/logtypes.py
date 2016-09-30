@@ -6,7 +6,9 @@ convertor_registry = {}
 missing = object()
 no_default = object()
 
+
 class log_action(object):
+
     def __init__(self, *args):
         self.args = {}
 
@@ -36,7 +38,6 @@ class log_action(object):
 
         for extra in self.default_args:
             self.args[extra.name] = extra
-
 
     def __call__(self, f):
         convertor_registry[f.__name__] = self
@@ -72,7 +73,6 @@ class log_action(object):
         positional_with_default = [self.args_with_default[i]
                                    for i in range(len(args) - num_no_default)]
 
-
         for i, name in enumerate(positional_with_default):
             if name in values:
                 raise TypeError("Argument %s specified twice" % name)
@@ -98,7 +98,9 @@ class log_action(object):
                         if name in self.args}
         return self.convert(**known_kwargs)
 
+
 class DataType(object):
+
     def __init__(self, name, default=no_default, optional=False):
         self.name = name
         self.default = default
@@ -120,7 +122,9 @@ class DataType(object):
             raise ValueError("Failed to convert value %s of type %s for field %s to type %s" %
                              (value, type(value).__name__, self.name, self.__class__.__name__))
 
+
 class Unicode(DataType):
+
     def convert(self, data):
         if isinstance(data, unicode):
             return data
@@ -128,7 +132,9 @@ class Unicode(DataType):
             return data.decode("utf8", "replace")
         return unicode(data)
 
+
 class TestId(DataType):
+
     def convert(self, data):
         if isinstance(data, unicode):
             return data
@@ -142,23 +148,29 @@ class TestId(DataType):
         else:
             raise ValueError
 
+
 class Status(DataType):
     allowed = ["PASS", "FAIL", "OK", "ERROR", "TIMEOUT", "CRASH", "ASSERT", "SKIP"]
+
     def convert(self, data):
         value = data.upper()
         if value not in self.allowed:
             raise ValueError
         return value
 
+
 class SubStatus(Status):
     allowed = ["PASS", "FAIL", "ERROR", "TIMEOUT", "ASSERT", "NOTRUN", "SKIP"]
 
+
 class Dict(DataType):
+
     def convert(self, data):
         return dict(data)
 
 
 class List(DataType):
+
     def __init__(self, name, item_type, default=no_default, optional=False):
         DataType.__init__(self, name, default, optional)
         self.item_type = item_type(None)
@@ -166,17 +178,21 @@ class List(DataType):
     def convert(self, data):
         return [self.item_type.convert(item) for item in data]
 
+
 class Int(DataType):
+
     def convert(self, data):
         return int(data)
 
 
 class Any(DataType):
+
     def convert(self, data):
         return data
 
 
 class Tuple(DataType):
+
     def __init__(self, name, item_types, default=no_default, optional=False):
         DataType.__init__(self, name, default, optional)
         self.item_types = item_types

@@ -20,6 +20,7 @@ import setup_development
 
 here = os.path.abspath(os.path.dirname(__file__))
 
+
 def run_hg(command):
     command = command[:]
     if not isinstance(command, Iterable):
@@ -73,7 +74,9 @@ def changelog(args):
         to_ref = get_version_rev(to_ref)
 
     delim = '\x12\x59\x52\x99\x05'
-    changelog = run_hg(['log', '-r', '%s:children(%s)' % (to_ref, from_ref), '--template={desc}%s' % delim, '-M', args.module]).split(delim)[:-1]
+    changelog = run_hg(['log', '-r', '%s:children(%s)' % (to_ref, from_ref),
+                        '--template={desc}%s' % delim,
+                        '-M', args.module]).split(delim)[:-1]
 
     def prettify(desc):
         lines = desc.splitlines()
@@ -111,9 +114,11 @@ def main(args=sys.argv[1:]):
     p_changelog = subcommands.add_parser('changelog', help="Print a changelog.")
     p_changelog.add_argument('module', help="Module to get changelog from.")
     p_changelog.add_argument('--from', dest='from_ref', default=None,
-                             help="Starting version or revision to list changes from. [defaults to latest version]")
+                             help="Starting version or revision to list "
+                             "changes from. [defaults to latest version]")
     p_changelog.add_argument('--to', dest='to_ref', default=None,
-                             help="Ending version or revision to list changes to. [defaults to tip]")
+                             help="Ending version or revision to list "
+                             "changes to. [defaults to tip]")
     p_changelog.set_defaults(func=changelog)
 
     # default to showing dependencies

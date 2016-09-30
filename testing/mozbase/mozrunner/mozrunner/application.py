@@ -20,12 +20,12 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 
 def get_app_context(appname):
-    context_map = { 'default': DefaultContext,
-                    'b2g': B2GContext,
-                    'firefox': FirefoxContext,
-                    'thunderbird': ThunderbirdContext,
-                    'metro': MetroContext,
-                    'fennec': FennecContext}
+    context_map = {'default': DefaultContext,
+                   'b2g': B2GContext,
+                   'firefox': FirefoxContext,
+                   'thunderbird': ThunderbirdContext,
+                   'metro': MetroContext,
+                   'fennec': FennecContext}
     if appname not in context_map:
         raise KeyError("Application '%s' not supported!" % appname)
     return context_map[appname]
@@ -66,7 +66,7 @@ class RemoteContext(object):
             paths = [p for p in paths if p is not None if os.path.isfile(p)]
             if not paths:
                 raise OSError(
-                    'Could not find the adb binary, make sure it is on your' \
+                    'Could not find the adb binary, make sure it is on your'
                     'path or set the $ADB_PATH environment variable.')
             self._adb = paths[0]
         return self._adb

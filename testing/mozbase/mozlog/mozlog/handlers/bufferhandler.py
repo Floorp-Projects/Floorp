@@ -4,6 +4,7 @@
 
 from .base import BaseHandler
 
+
 class BufferHandler(BaseHandler):
     """Handler that maintains a circular buffer of messages based on the
     size and actions specified by a user.

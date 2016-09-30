@@ -8,6 +8,7 @@ from time import strptime
 
 from dmunit import DeviceManagerTestCase, heartbeat_port
 
+
 class DataChannelTestCase(DeviceManagerTestCase):
 
     runs_on_test_device = False
@@ -36,12 +37,12 @@ class DataChannelTestCase(DeviceManagerTestCase):
             if not capturedHeader:
                 m = re.match(r"(.*?) trace output", data)
                 self.assertNotEqual(m, None,
-                    'trace output line does not match. The line: ' + str(data))
+                                    'trace output line does not match. The line: ' + str(data))
                 capturedHeader = True
 
             # Check for standard heartbeat messsage
             m = re.match(r"(.*?) Thump thump - (.*)", data)
-            if m == None:
+            if m is None:
                 # This isn't an error, it usually means we've obtained some
                 # unexpected data from the device
                 continue

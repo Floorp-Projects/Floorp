@@ -62,6 +62,7 @@ Subfields for all messages:
 
 _default_logger_name = None
 
+
 def get_default_logger(component=None):
     """Gets the default logger if available, optionally tagged with component
     name. Will return None if not yet set
@@ -74,6 +75,7 @@ def get_default_logger(component=None):
         return None
 
     return StructuredLogger(_default_logger_name, component=component)
+
 
 def set_default_logger(default_logger):
     """Sets the default logger to logger.
@@ -95,20 +97,26 @@ log_levels = dict((k.upper(), v) for v, k in
 
 lint_levels = ["ERROR", "WARNING"]
 
+
 def log_actions():
     """Returns the set of actions implemented by mozlog."""
     return set(convertor_registry.keys())
 
+
 class LoggerState(object):
+
     def __init__(self):
         self.handlers = []
         self.running_tests = set()
         self.suite_started = False
         self.component_states = {}
 
+
 class ComponentState(object):
+
     def __init__(self):
         self.filter_ = None
+
 
 class StructuredLogger(object):
     _lock = Lock()
@@ -186,7 +194,7 @@ class StructuredLogger(object):
         if action in ("test_status", "test_end"):
             if (data["expected"] == data["status"] or
                 data["status"] == "SKIP" or
-                "expected" not in raw_data):
+                    "expected" not in raw_data):
                 del data["expected"]
 
         if not self._ensure_suite_state(action, data):
@@ -253,7 +261,8 @@ class StructuredLogger(object):
 
         :param list tests: Test identifiers that will be run in the suite.
         :param dict run_info: Optional information typically provided by mozinfo.
-        :param dict version_info: Optional target application version information provided by mozversion.
+        :param dict version_info: Optional target application version information provided
+          by mozversion.
         :param dict device_info: Optional target device information provided by mozdevice.
         """
         if not self._ensure_suite_state('suite_start', data):
@@ -311,7 +320,7 @@ class StructuredLogger(object):
         """
 
         if (data["expected"] == data["status"] or
-            data["status"] == "SKIP"):
+                data["status"] == "SKIP"):
             del data["expected"]
 
         if data["test"] not in self._state.running_tests:
@@ -343,7 +352,7 @@ class StructuredLogger(object):
         """
 
         if (data["expected"] == data["status"] or
-             data["status"] == "SKIP"):
+                data["status"] == "SKIP"):
             del data["expected"]
 
         if data["test"] not in self._state.running_tests:
@@ -440,6 +449,7 @@ def _log_func(level_name):
     log.__name__ = str(level_name).lower()
     return log
 
+
 def _lint_func(level_name):
     @log_action(Unicode("path"),
                 Unicode("message", default=""),
@@ -479,6 +489,7 @@ for level_name in lint_levels:
     name = "lint_%s" % level_name
     setattr(StructuredLogger, name, _lint_func(level_name))
 
+
 class StructuredLogFileLike(object):
     """Wrapper for file-like objects to redirect writes to logger
     instead. Each call to `write` becomes a single log entry of type `log`.
@@ -491,6 +502,7 @@ class StructuredLogFileLike(object):
     :param level: log level to use for each write.
     :param prefix: String prefix to prepend to each log entry.
     """
+
     def __init__(self, logger, level="info", prefix=None):
         self.logger = logger
         self.log_func = getattr(self.logger, level)
@@ -507,4 +519,3 @@ class StructuredLogFileLike(object):
 
     def flush(self):
         pass
-

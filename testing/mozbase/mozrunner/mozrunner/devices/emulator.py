@@ -20,8 +20,9 @@ from ..errors import TimeoutException
 
 
 class ArchContext(object):
+
     def __init__(self, arch, context, binary=None, avd=None, extra_args=None):
-        homedir = getattr(context,'homedir', '')
+        homedir = getattr(context, 'homedir', '')
         kernel = os.path.join(homedir, 'prebuilts', 'qemu-kernel', '%s', '%s')
         sysdir = os.path.join(homedir, 'out', 'target', 'product', '%s')
         self.extra_args = []
@@ -49,6 +50,7 @@ class ArchContext(object):
 
 
 class SDCard(object):
+
     def __init__(self, emulator, size):
         self.emulator = emulator
         self.path = self.create_sdcard(size)
@@ -138,7 +140,7 @@ class BaseEmulator(Device):
 
     def _get_online_devices(self):
         return [d[0] for d in self.dm.devices() if d[1] != 'offline' if
-                    d[0].startswith('emulator')]
+                d[0].startswith('emulator')]
 
     def connect(self):
         """
@@ -191,6 +193,7 @@ class BaseEmulator(Device):
 
 
 class Emulator(BaseEmulator):
+
     def __init__(self, app_ctx, arch, resolution=None, sdcard=None, userdata=None,
                  no_window=None, binary=None, **kwargs):
         super(Emulator, self).__init__(app_ctx, arch=arch, binary=binary, **kwargs)
@@ -217,11 +220,11 @@ class Emulator(BaseEmulator):
         """
         qemu_args = super(Emulator, self).args
         qemu_args.extend([
-                     '-kernel', self.arch.kernel,
-                     '-sysdir', self.arch.sysdir,
-                     '-data', self.userdata.name,
-                     '-initdata', self.initdata,
-                     '-wipe-data'])
+            '-kernel', self.arch.kernel,
+            '-sysdir', self.arch.sysdir,
+            '-data', self.userdata.name,
+            '-initdata', self.initdata,
+            '-wipe-data'])
         if self.no_window:
             qemu_args.append('-no-window')
         if self.sdcard:
@@ -257,7 +260,9 @@ class Emulator(BaseEmulator):
         # Remove temporary files
         self.userdata.close()
 
+
 class EmulatorAVD(BaseEmulator):
+
     def __init__(self, app_ctx, binary, avd, port=5554, **kwargs):
         super(EmulatorAVD, self).__init__(app_ctx, binary=binary, avd=avd, **kwargs)
         self.port = port

@@ -25,10 +25,10 @@ class AutophoneRunner(object):
     """
        Supporting the mach 'autophone' command: configure, run autophone.
     """
-    config = {'base-dir' : None,
-              'requirements-installed' : False,
-              'devices-configured' : False,
-              'test-manifest' : None }
+    config = {'base-dir': None,
+              'requirements-installed': False,
+              'devices-configured': False,
+              'test-manifest': None}
     CONFIG_FILE = os.path.join(os.path.expanduser('~'), '.mozbuild', 'autophone.json')
 
     def __init__(self, build_obj, verbose):
@@ -45,7 +45,8 @@ class AutophoneRunner(object):
         dir = self.config['base-dir']
         if dir and os.path.exists(dir) and os.path.exists(self.CONFIG_FILE):
             self.build_obj.log(logging.WARN, "autophone", {},
-                "*** This will delete %s and reset your 'mach autophone' configuration! ***" % dir)
+                               "*** This will delete %s and reset your "
+                               "'mach autophone' configuration! ***" % dir)
             response = raw_input(
                 "Proceed with deletion? (y/N) ").strip()
             if response.lower().startswith('y'):
@@ -53,7 +54,7 @@ class AutophoneRunner(object):
                 shutil.rmtree(dir)
         else:
             self.build_obj.log(logging.INFO, "autophone", {},
-                "Already clean -- nothing to do!")
+                               "Already clean -- nothing to do!")
 
     def save_config(self):
         """
@@ -66,10 +67,11 @@ class AutophoneRunner(object):
                 print("saved configuration: %s" % self.config)
         except:
             self.build_obj.log(logging.ERROR, "autophone", {},
-                "unable to save 'mach autophone' configuration to %s" % self.CONFIG_FILE)
+                               "unable to save 'mach autophone' "
+                               "configuration to %s" % self.CONFIG_FILE)
             if self.verbose:
                 self.build_obj.log(logging.ERROR, "autophone", {},
-                    str(sys.exc_info()[0]))
+                                   str(sys.exc_info()[0]))
 
     def load_config(self):
         """
@@ -83,10 +85,11 @@ class AutophoneRunner(object):
                     print("loaded configuration: %s" % self.config)
             except:
                 self.build_obj.log(logging.ERROR, "autophone", {},
-                    "unable to load 'mach autophone' configuration from %s" % self.CONFIG_FILE)
+                                   "unable to load 'mach autophone' "
+                                   "configuration from %s" % self.CONFIG_FILE)
                 if self.verbose:
                     self.build_obj.log(logging.ERROR, "autophone", {},
-                        str(sys.exc_info()[0]))
+                                       str(sys.exc_info()[0]))
 
     def setup_directory(self):
         """
@@ -99,12 +102,13 @@ class AutophoneRunner(object):
         if os.path.exists(os.path.join(dir, '.git')):
             response = raw_input(
                 "Run autophone from existing directory, %s (Y/n) " % dir).strip()
-            if not 'n' in response.lower():
+            if 'n' not in response.lower():
                 self.build_obj.log(logging.INFO, "autophone", {},
-                    "Configuring and running autophone at %s" % dir)
+                                   "Configuring and running autophone at %s" % dir)
                 return keep_going
         self.build_obj.log(logging.INFO, "autophone", {},
-            "Unable to find an existing autophone directory. Let's setup a new one...")
+                           "Unable to find an existing autophone directory. "
+                           "Let's setup a new one...")
         response = raw_input(
             "Enter location of new autophone directory: [%s] " % dir).strip()
         if response != '':
@@ -112,7 +116,7 @@ class AutophoneRunner(object):
         self.config['base-dir'] = dir
         if not os.path.exists(os.path.join(dir, '.git')):
             self.build_obj.log(logging.INFO, "autophone", {},
-                "Cloning autophone repository to '%s'..." % dir)
+                               "Cloning autophone repository to '%s'..." % dir)
             self.config['requirements-installed'] = False
             self.config['devices-configured'] = False
             self.run_process(['git', 'clone', 'https://github.com/mozilla/autophone', dir])
@@ -120,10 +124,10 @@ class AutophoneRunner(object):
         if not os.path.exists(os.path.join(dir, '.git')):
             # git not installed? File permission problem? github not available?
             self.build_obj.log(logging.ERROR, "autophone", {},
-                "Unable to clone autophone directory.")
+                               "Unable to clone autophone directory.")
             if not self.verbose:
                 self.build_obj.log(logging.ERROR, "autophone", {},
-                    "Try re-running this command with --verbose to get more info.")
+                                   "Try re-running this command with --verbose to get more info.")
             keep_going = False
         return keep_going
 
@@ -135,14 +139,17 @@ class AutophoneRunner(object):
         dir = self.config['base-dir']
         vdir = os.path.join(dir, '_virtualenv')
         self.auto_virtualenv_manager = VirtualenvManager(self.build_obj.topsrcdir,
-            self.build_obj.topobjdir, vdir, sys.stdout,
-            os.path.join(self.build_obj.topsrcdir, 'build', 'virtualenv_packages.txt'))
+                                                         self.build_obj.topobjdir,
+                                                         vdir, sys.stdout,
+                                                         os.path.join(self.build_obj.topsrcdir,
+                                                                      'build',
+                                                                      'virtualenv_packages.txt'))
         if not self.config['requirements-installed'] or not os.path.exists(vdir):
             self.build_obj.log(logging.INFO, "autophone", {},
-                "Installing required modules in a virtualenv...")
+                               "Installing required modules in a virtualenv...")
             self.auto_virtualenv_manager.build()
             self.auto_virtualenv_manager._run_pip(['install', '-r',
-                os.path.join(dir, 'requirements.txt')])
+                                                   os.path.join(dir, 'requirements.txt')])
             self.config['requirements-installed'] = True
         return keep_going
 
@@ -155,13 +162,14 @@ class AutophoneRunner(object):
         if os.path.exists(device_ini):
             response = raw_input(
                 "Use existing device configuration at %s? (Y/n) " % device_ini).strip()
-            if not 'n' in response.lower():
+            if 'n' not in response.lower():
                 self.build_obj.log(logging.INFO, "autophone", {},
-                    "Using device configuration at %s" % device_ini)
+                                   "Using device configuration at %s" % device_ini)
                 return keep_going
         keep_going = False
         self.build_obj.log(logging.INFO, "autophone", {},
-            "You must configure at least one Android device before running autophone.")
+                           "You must configure at least one Android device "
+                           "before running autophone.")
         response = raw_input(
             "Configure devices now? (Y/n) ").strip()
         if response.lower().startswith('y') or response == '':
@@ -174,7 +182,7 @@ class AutophoneRunner(object):
             except:
                 if self.verbose:
                     self.build_obj.log(logging.ERROR, "autophone", {},
-                        str(sys.exc_info()[0]))
+                                       str(sys.exc_info()[0]))
                 # No build environment?
                 try:
                     adb_path = which.which('adb')
@@ -193,21 +201,22 @@ class AutophoneRunner(object):
                             f.write("[device-%d]\nserialno=%s\n" % (device_index, serial))
                             device_index += 1
                             self.build_obj.log(logging.INFO, "autophone", {},
-                                "Added '%s' to device configuration." % serial)
+                                               "Added '%s' to device configuration." % serial)
                             keep_going = True
                         else:
                             self.build_obj.log(logging.WARNING, "autophone", {},
-                                "Device '%s' is not rooted - skipping" % serial)
+                                               "Device '%s' is not rooted - skipping" % serial)
             except:
                 self.build_obj.log(logging.ERROR, "autophone", {},
-                    "Failed to get list of connected Android devices.")
+                                   "Failed to get list of connected Android devices.")
                 if self.verbose:
                     self.build_obj.log(logging.ERROR, "autophone", {},
-                        str(sys.exc_info()[0]))
+                                       str(sys.exc_info()[0]))
                 keep_going = False
             if device_index <= 1:
                 self.build_obj.log(logging.ERROR, "autophone", {},
-                    "No devices configured! (Can you see your rooted test device(s) in 'adb devices'?")
+                                   "No devices configured! (Can you see your rooted test device(s)"
+                                   " in 'adb devices'?")
                 keep_going = False
             if keep_going:
                 self.config['devices-configured'] = True
@@ -219,7 +228,8 @@ class AutophoneRunner(object):
         """
         dir = self.config['base-dir']
         self.build_obj.log(logging.INFO, "autophone", {},
-            "Autophone must be started with a 'test manifest' describing the type(s) of test(s) to run.")
+                           "Autophone must be started with a 'test manifest' "
+                           "describing the type(s) of test(s) to run.")
         test_options = []
         for ini in glob.glob(os.path.join(dir, 'tests', '*.ini')):
             with open(ini, 'r') as f:
@@ -235,7 +245,7 @@ class AutophoneRunner(object):
         if len(test_options) >= 1:
             test_options.sort()
             self.build_obj.log(logging.INFO, "autophone", {},
-                "These test manifests are available:")
+                               "These test manifests are available:")
             index = 1
             for option in test_options:
                 print("%d. %s" % (index, option[0]))
@@ -256,15 +266,17 @@ class AutophoneRunner(object):
                     try:
                         choice = int(response)
                         if choice >= 1 and choice <= highest:
-                            path = test_options[choice-1][1]
-                            if test_options[choice-1][2]:
+                            path = test_options[choice - 1][1]
+                            if test_options[choice - 1][2]:
                                 self.webserver_required = True
                         else:
                             self.build_obj.log(logging.ERROR, "autophone", {},
-                                "'%s' invalid: Enter a number between 1 and %d!" % (response, highest))
+                                               "'%s' invalid: Enter a number between "
+                                               "1 and %d!" % (response, highest))
                     except ValueError:
                         self.build_obj.log(logging.ERROR, "autophone", {},
-                            "'%s' unrecognized: Enter a number between 1 and %d!" % (response, highest))
+                                           "'%s' unrecognized: Enter a number between "
+                                           "1 and %d!" % (response, highest))
             self.autophone_options.extend(['--test-path', path])
         else:
             # Provide a simple backup for the unusual case where test manifests
@@ -302,10 +314,10 @@ time_out = 300""" % (xre_path, xre_path))
                 print("Created %s with host utilities path %s" % (defaults_path, xre_path))
         except:
             self.build_obj.log(logging.ERROR, "autophone", {},
-                "Unable to create %s" % defaults_path)
+                               "Unable to create %s" % defaults_path)
             if self.verbose:
                 self.build_obj.log(logging.ERROR, "autophone", {},
-                    str(sys.exc_info()[0]))
+                                   str(sys.exc_info()[0]))
 
     def configure_unittests(self):
         """
@@ -320,7 +332,8 @@ time_out = 300""" % (xre_path, xre_path))
         if not os.path.isfile(defaults_path):
             xre_path = os.environ.get('MOZ_HOST_BIN')
             if not xre_path or not os.path.isdir(xre_path):
-                emulator_path = os.path.join(os.path.expanduser('~'), '.mozbuild', 'android-device')
+                emulator_path = os.path.join(os.path.expanduser('~'), '.mozbuild',
+                                             'android-device')
                 xre_paths = glob.glob(os.path.join(emulator_path, 'host-utils*'))
                 for xre_path in xre_paths:
                     if os.path.isdir(xre_path):
@@ -328,18 +341,20 @@ time_out = 300""" % (xre_path, xre_path))
             if not xre_path or not os.path.isdir(xre_path) or \
                not os.path.isfile(os.path.join(xre_path, 'xpcshell')):
                 self.build_obj.log(logging.INFO, "autophone", {},
-                    "Some tests require access to 'host utilities' such as xpcshell.")
+                                   "Some tests require access to 'host utilities' "
+                                   "such as xpcshell.")
                 xre_path = raw_input(
                     "Enter path to host utilities directory: ").strip()
                 if not xre_path or not os.path.isdir(xre_path) or \
                    not os.path.isfile(os.path.join(xre_path, 'xpcshell')):
-                    self.build_obj.log(logging.ERROR, "autophone", {},
+                    self.build_obj.log(
+                        logging.ERROR, "autophone", {},
                         "Unable to configure unit tests - no path to host utilities.")
                     return False
             self.write_unittest_defaults(defaults_path, xre_path)
         if os.path.isfile(defaults_path):
             self.build_obj.log(logging.INFO, "autophone", {},
-                "Using unit test configuration at %s" % defaults_path)
+                               "Using unit test configuration at %s" % defaults_path)
         return True
 
     def configure_ip(self):
@@ -365,7 +380,7 @@ time_out = 300""" % (xre_path, xre_path))
         """
         if self.webserver_required:
             self.build_obj.log(logging.INFO, "autophone", {},
-                "Some of your selected tests require a webserver.")
+                               "Some of your selected tests require a webserver.")
             response = raw_input("Start a webserver now? [Y/n] ").strip()
             parts = []
             while len(parts) != 2:
@@ -380,19 +395,25 @@ time_out = 300""" % (xre_path, xre_path))
                     try:
                         port = int(parts[1])
                         if port <= 0:
-                            self.build_obj.log(logging.ERROR, "autophone", {},
-                                "Port must be > 0. Enter webserver address in the format <ip>:<port>")
+                            self.build_obj.log(
+                                logging.ERROR, "autophone", {},
+                                "Port must be > 0. "
+                                "Enter webserver address in the format <ip>:<port>")
                             parts = []
                     except ValueError:
-                        self.build_obj.log(logging.ERROR, "autophone", {},
-                            "Port must be a number. Enter webserver address in the format <ip>:<port>")
+                        self.build_obj.log(
+                            logging.ERROR, "autophone", {},
+                            "Port must be a number. "
+                            "Enter webserver address in the format <ip>:<port>")
                         parts = []
                 else:
-                    self.build_obj.log(logging.ERROR, "autophone", {},
+                    self.build_obj.log(
+                        logging.ERROR, "autophone", {},
                         "Enter webserver address in the format <ip>:<port>")
             if not ('n' in response.lower()):
                 self.launch_webserver(addr, port)
-            self.autophone_options.extend(['--webserver-url', 'http://%s:%d' % (addr,port)])
+            self.autophone_options.extend(['--webserver-url',
+                                           'http://%s:%d' % (addr, port)])
         return True
 
     def configure_other(self):
@@ -410,11 +431,11 @@ time_out = 300""" % (xre_path, xre_path))
            Ensure all configuration files are set up and determine autophone options.
         """
         return self.configure_devices() and \
-               self.configure_unittests() and \
-               self.configure_tests() and \
-               self.configure_ip() and \
-               self.configure_webserver() and \
-               self.configure_other()
+            self.configure_unittests() and \
+            self.configure_tests() and \
+            self.configure_ip() and \
+            self.configure_webserver() and \
+            self.configure_other()
 
     def verify_device(self, adb_path, device):
         """
@@ -425,11 +446,12 @@ time_out = 300""" % (xre_path, xre_path))
             if dm._haveSu or dm._haveRootShell:
                 return True
         except:
-            self.build_obj.log(logging.WARN, "autophone", {},
+            self.build_obj.log(
+                logging.WARN, "autophone", {},
                 "Unable to verify root on device.")
             if self.verbose:
                 self.build_obj.log(logging.ERROR, "autophone", {},
-                    str(sys.exc_info()[0]))
+                                   str(sys.exc_info()[0]))
         return False
 
     def launch_autophone(self):
@@ -437,7 +459,7 @@ time_out = 300""" % (xre_path, xre_path))
            Launch autophone in its own thread and wait for autophone startup.
         """
         self.build_obj.log(logging.INFO, "autophone", {},
-            "Launching autophone...")
+                           "Launching autophone...")
         self.thread = threading.Thread(target=self.run_autophone)
         self.thread.start()
         # Wait for startup, so that autophone startup messages do not get mixed
@@ -452,7 +474,7 @@ time_out = 300""" % (xre_path, xre_path))
         time.sleep(1)
         if not started:
             self.build_obj.log(logging.WARN, "autophone", {},
-                "Autophone is taking longer than expected to start.")
+                               "Autophone is taking longer than expected to start.")
 
     def run_autophone(self):
         dir = self.config['base-dir']
@@ -466,9 +488,11 @@ time_out = 300""" % (xre_path, xre_path))
         """
         dir = self.config['base-dir']
         if self.thread.isAlive():
-            self.build_obj.log(logging.INFO, "autophone", {},
+            self.build_obj.log(
+                logging.INFO, "autophone", {},
                 "Use 'trigger' to select builds to test using the current test manifest.")
-            self.build_obj.log(logging.INFO, "autophone", {},
+            self.build_obj.log(
+                logging.INFO, "autophone", {},
                 "Type 'trigger', 'help', 'quit', or an autophone command.")
         quitting = False
         while self.thread.isAlive() and not quitting:
@@ -495,7 +519,7 @@ quit
                 continue
             if response == "quit":
                 self.build_obj.log(logging.INFO, "autophone", {},
-                    "Quitting...")
+                                   "Quitting...")
                 response = "autophone-shutdown"
             if response == "autophone-shutdown":
                 quitting = True
@@ -509,7 +533,8 @@ quit
            Sub-prompts for the "trigger" command.
         """
         dir = self.config['base-dir']
-        self.build_obj.log(logging.INFO, "autophone", {},
+        self.build_obj.log(
+            logging.INFO, "autophone", {},
             "Tests will be run against a build or collection of builds, selected by:")
         print("""\
 1. The latest build
@@ -526,7 +551,7 @@ quit
                 choice = int(response)
             except ValueError:
                 self.build_obj.log(logging.ERROR, "autophone", {},
-                    "Enter a number between 1 and %d" % highest)
+                                   "Enter a number between 1 and %d" % highest)
                 choice = 0
         if choice == 1:
             options = ["latest"]
@@ -540,20 +565,25 @@ quit
             options = [response]
         elif choice == 4:
             start = raw_input(
-                "Enter start build date or date-time, e.g. 2012-04-03 or 2012-04-03T06:31:58 ").strip()
+                "Enter start build date or date-time, "
+                "e.g. 2012-04-03 or 2012-04-03T06:31:58 ").strip()
             end = raw_input(
-                "Enter end build date or date-time, e.g. 2012-04-03 or 2012-04-03T06:31:58 ").strip()
+                "Enter end build date or date-time, "
+                "e.g. 2012-04-03 or 2012-04-03T06:31:58 ").strip()
             options = [start, end]
-        self.build_obj.log(logging.INFO, "autophone", {},
+        self.build_obj.log(
+            logging.INFO, "autophone", {},
             "You may optionally specify a repository name like 'mozilla-inbound' or 'try'.")
-        self.build_obj.log(logging.INFO, "autophone", {},
+        self.build_obj.log(
+            logging.INFO, "autophone", {},
             "If not specified, 'mozilla-central' is assumed.")
         repo = raw_input(
             "Enter repository name: ").strip()
         if len(repo) > 0:
             options.extend(["--repo=%s" % repo])
         if repo == "mozilla-central" or repo == "mozilla-aurora" or len(repo) < 1:
-            self.build_obj.log(logging.INFO, "autophone", {},
+            self.build_obj.log(
+                logging.INFO, "autophone", {},
                 "You may optionally specify the build location, like 'nightly' or 'tinderbox'.")
             location = raw_input(
                 "Enter build location: ").strip()
@@ -563,10 +593,11 @@ quit
             options.extend(["--build-location=tinderbox"])
         cmd = [self.auto_virtualenv_manager.python_path, "trigger_runs.py"]
         cmd.extend(options)
-        self.build_obj.log(logging.INFO, "autophone", {},
+        self.build_obj.log(
+            logging.INFO, "autophone", {},
             "Triggering...Tests will run once builds have been downloaded.")
         self.build_obj.log(logging.INFO, "autophone", {},
-            "Use 'autophone-status' to check progress.")
+                           "Use 'autophone-status' to check progress.")
         self.run_process(cmd, cwd=dir, dump=True)
 
     def launch_webserver(self, addr, port):
@@ -574,7 +605,7 @@ quit
            Launch the webserver (in a separate thread).
         """
         self.build_obj.log(logging.INFO, "autophone", {},
-            "Launching webserver...")
+                           "Launching webserver...")
         self.webserver_addr = addr
         self.webserver_port = port
         self.threadweb = threading.Thread(target=self.run_webserver)
@@ -583,6 +614,7 @@ quit
     def run_webserver(self):
         class AutoHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             # A simple request handler with logging suppressed.
+
             def log_message(self, format, *args):
                 pass
 
@@ -601,9 +633,9 @@ quit
 
         if self.verbose:
             self.build_obj.log(logging.INFO, "autophone", {},
-                "Running '%s' in '%s'" % (cmd, cwd))
+                               "Running '%s' in '%s'" % (cmd, cwd))
         proc = ProcessHandler(cmd, cwd=cwd, processOutputLine=_processOutput,
-            processStderrLine=_processOutput)
+                              processStderrLine=_processOutput)
         proc.run()
         proc_complete = False
         try:

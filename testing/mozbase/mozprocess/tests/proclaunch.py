@@ -8,6 +8,7 @@ import time
 
 ProcessNode = collections.namedtuple('ProcessNode', ['maxtime', 'children'])
 
+
 class ProcessLauncher(object):
 
     """ Create and Launch process trees specified by a '.ini' file
@@ -78,7 +79,7 @@ class ProcessLauncher(object):
         Genrates a lot of output. Disabled by default.
         """
 
-        self.verbose=verbose
+        self.verbose = verbose
 
         # Children is a dictionary used to store information from the,
         # Configuration file in a more usable format.
@@ -86,7 +87,6 @@ class ProcessLauncher(object):
         # Value : A Named tuple of the form (max_time, (list of child processes of Key))
         #   Where each child process is a list of type: [count to run, name of child]
         self.children = {}
-
 
         cfgparser = ConfigParser.ConfigParser()
 
@@ -98,7 +98,9 @@ class ProcessLauncher(object):
             # Maxtime is a mandatory option
             # ConfigParser.NoOptionError is raised if maxtime does not exist
             if '*' in section or ',' in section:
-                raise ConfigParser.ParsingError('%s is not a valid section name. Section names cannot contain a \'*\' or \',\'.' % section)
+                raise ConfigParser.ParsingError(
+                    "%s is not a valid section name. "
+                    "Section names cannot contain a '*' or ','." % section)
             m_time = cfgparser.get(section, 'maxtime')
             try:
                 m_time = int(m_time)
@@ -126,9 +128,11 @@ class ProcessLauncher(object):
                                 children[i][0] = int(child[0])
 
                             if children[i][1] not in sections:
-                                raise ConfigParser.ParsingError('No section corresponding to child %s' % child[1])
+                                raise ConfigParser.ParsingError(
+                                    'No section corresponding to child %s' % child[1])
                     except ValueError:
-                        raise ValueError('Expected process count to be an integer, specified %s' % child[0])
+                        raise ValueError(
+                            'Expected process count to be an integer, specified %s' % child[0])
 
             except ConfigParser.NoOptionError:
                 children = None
@@ -155,19 +159,22 @@ class ProcessLauncher(object):
 
         maxtime = self.children[proc_name].maxtime
         if self.verbose:
-            print "%sLaunching %s for %d*%d seconds" % (" "*level, proc_name, maxtime, self.UNIT_TIME)
+            print "%sLaunching %s for %d*%d seconds" % (" " * level,
+                                                        proc_name,
+                                                        maxtime,
+                                                        self.UNIT_TIME)
 
         while self.children[proc_name].children:
             child = self.children[proc_name].children.pop()
 
             count, child_proc = child
             for i in range(count):
-                p = multiprocessing.Process(target=self._run, args=(child[1], level+1))
+                p = multiprocessing.Process(target=self._run, args=(child[1], level + 1))
                 p.start()
 
         self._launch(maxtime)
         if self.verbose:
-            print "%sFinished %s" % (" "*level, proc_name)
+            print "%sFinished %s" % (" " * level, proc_name)
 
     def _launch(self, running_time):
         """

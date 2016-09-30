@@ -26,6 +26,7 @@ def mark_readonly(path):
 
 class FileOpenCloseThread(threading.Thread):
     """Helper thread for asynchronous file handling"""
+
     def __init__(self, path, delay, delete=False):
         threading.Thread.__init__(self)
         self.file_opened = threading.Event()
@@ -201,6 +202,7 @@ class MozfileRemoveTestCase(unittest.TestCase):
 
 
 class MozFileMoveTestCase(unittest.TestCase):
+
     def setUp(self):
         # Generate a stub
         self.tempdir = stubs.create_stub()

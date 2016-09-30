@@ -15,6 +15,7 @@ class ProxyLogger(object):
 
     RuntimeError will be raised when the default logger is not yet initialized.
     """
+
     def __init__(self, component=None):
         self.logger = None
         self._component = component

@@ -15,6 +15,7 @@ from manifestparser import read_ini
 from ConfigParser import ConfigParser
 from StringIO import StringIO
 
+
 class IniParserTest(unittest.TestCase):
 
     def test_inline_comments(self):

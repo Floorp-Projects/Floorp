@@ -21,4 +21,6 @@ Example usage:
 
 """
 
-from moznetwork import *
+from moznetwork import get_ip
+
+__all__ = ['get_ip']

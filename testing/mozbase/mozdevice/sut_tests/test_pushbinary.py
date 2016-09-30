@@ -7,6 +7,7 @@ import posixpath
 
 from dmunit import DeviceManagerTestCase
 
+
 class PushBinaryTestCase(DeviceManagerTestCase):
 
     def runTest(self):

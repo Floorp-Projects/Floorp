@@ -340,4 +340,3 @@ def uninstall_cli(argv=sys.argv[1:]):
 
     # Run it
     uninstall(argv[0])
-

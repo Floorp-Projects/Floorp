@@ -7,7 +7,6 @@ import glob
 import os
 import platform
 import psutil
-import re
 import shutil
 import signal
 import sys
@@ -32,10 +31,12 @@ MANIFEST_PATH = 'testing/config/tooltool-manifests'
 
 verbose_logging = False
 
+
 class AvdInfo(object):
     """
        Simple class to contain an AVD description.
     """
+
     def __init__(self, description, name, tooltool_manifest, extra_args,
                  port):
         self.description = description
@@ -73,6 +74,7 @@ AVD_DICT = {
                    5554)
 }
 
+
 def verify_android_device(build_obj, install=False, xre=False, debugger=False):
     """
        Determine if any Android device is connected via adb.
@@ -101,7 +103,7 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False):
                 _log_info("Fetching AVD. This may take a while...")
                 emulator.update_avd()
             _log_info("Starting emulator running %s..." %
-                emulator.get_avd_description())
+                      emulator.get_avd_description())
             emulator.start()
             emulator.wait_for_start()
             device_verified = True
@@ -120,15 +122,15 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False):
         #  - it prevents testing against other builds (downloaded apk)
         #  - installation may take a couple of minutes.
         installed = emulator.dm.shellCheckOutput(['pm', 'list',
-            'packages', 'org.mozilla.'])
-        if not 'fennec' in installed and not 'firefox' in installed:
+                                                  'packages', 'org.mozilla.'])
+        if 'fennec' not in installed and 'firefox' not in installed:
             response = raw_input(
                 "It looks like Firefox is not installed on this device.\n"
                 "Install Firefox? (Y/n) ").strip()
             if response.lower().startswith('y') or response == '':
                 _log_info("Installing Firefox. This may take a while...")
                 build_obj._run_make(directory=".", target='install',
-                    ensure_exit_code=False)
+                                    ensure_exit_code=False)
 
     if device_verified and xre:
         # Check whether MOZ_HOST_BIN has been set to a valid xre; if not,
@@ -136,7 +138,8 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False):
         xre_path = os.environ.get('MOZ_HOST_BIN')
         err = None
         if not xre_path:
-            err = 'environment variable MOZ_HOST_BIN is not set to a directory containing host xpcshell'
+            err = "environment variable MOZ_HOST_BIN is not set to a directory" \
+                  "containing host xpcshell"
         elif not os.path.isdir(xre_path):
             err = '$MOZ_HOST_BIN does not specify a directory'
         elif not os.path.isfile(os.path.join(xre_path, 'xpcshell')):
@@ -157,7 +160,8 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False):
                 host_platform = _get_host_platform()
                 if host_platform:
                     path = os.path.join(MANIFEST_PATH, host_platform, 'hostutils.manifest')
-                    _get_tooltool_manifest(build_obj.substs, path, EMULATOR_HOME_DIR, 'releng.manifest')
+                    _get_tooltool_manifest(build_obj.substs, path, EMULATOR_HOME_DIR,
+                                           'releng.manifest')
                     _tooltool_fetch()
                     xre_path = glob.glob(os.path.join(EMULATOR_HOME_DIR, 'host-utils*'))
                     for path in xre_path:
@@ -168,7 +172,8 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False):
                     if err:
                         _log_warning("Unable to install host utilities.")
                 else:
-                    _log_warning("Unable to install host utilities -- your platform is not supported!")
+                    _log_warning(
+                        "Unable to install host utilities -- your platform is not supported!")
 
     if debugger:
         # Optionally set up JimDB. See https://wiki.mozilla.org/Mobile/Fennec/Android/GDB.
@@ -188,9 +193,13 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False):
             if response.lower().startswith('y') or response == '':
                 host_platform = _get_host_platform()
                 if host_platform:
-                    _log_info("Installing JimDB (%s/%s). This may take a while..." % (host_platform, build_platform))
-                    path = os.path.join(MANIFEST_PATH, host_platform, 'jimdb-%s.manifest' % build_platform)
-                    _get_tooltool_manifest(build_obj.substs, path, EMULATOR_HOME_DIR, 'releng.manifest')
+                    _log_info(
+                        "Installing JimDB (%s/%s). This may take a while..." % (host_platform,
+                                                                                build_platform))
+                    path = os.path.join(MANIFEST_PATH, host_platform,
+                                        'jimdb-%s.manifest' % build_platform)
+                    _get_tooltool_manifest(build_obj.substs, path,
+                                           EMULATOR_HOME_DIR, 'releng.manifest')
                     _tooltool_fetch()
                     if os.path.isfile(gdb_path):
                         # Get JimDB utilities from git repository
@@ -205,7 +214,8 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False):
                             if proc.poll() is None:
                                 proc.kill(signal.SIGTERM)
                         if not git_pull_complete:
-                            _log_warning("Unable to update JimDB utils from git -- some JimDB features may be unavailable.")
+                            _log_warning("Unable to update JimDB utils from git -- "
+                                         "some JimDB features may be unavailable.")
                     else:
                         _log_warning("Unable to install JimDB -- unable to fetch from tooltool.")
                 else:
@@ -218,6 +228,7 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False):
             os.environ['PATH'] = "%s:%s" % (bin_path, os.environ['PATH'])
 
     return device_verified
+
 
 def run_firefox_for_android(build_obj, params):
     """
@@ -232,7 +243,10 @@ def run_firefox_for_android(build_obj, params):
         #
         # Construct an adb command similar to:
         #
-        #   adb shell am start -a android.activity.MAIN -n org.mozilla.fennec_$USER -d <url param> --es args "<params>"
+        # $ adb shell am start -a android.activity.MAIN \
+        #   -n org.mozilla.fennec_$USER \
+        #   -d <url param> \
+        #   --es args "<params>"
         #
         app = "%s/org.mozilla.gecko.BrowserApp" % build_obj.substs['ANDROID_PACKAGE_NAME']
         cmd = ['am', 'start', '-a', 'android.activity.MAIN', '-n', app]
@@ -252,9 +266,11 @@ def run_firefox_for_android(build_obj, params):
         return 1
     return 0
 
+
 def grant_runtime_permissions(build_obj):
     """
-       Grant required runtime permissions to the specified app (typically org.mozilla.fennec_$USER).
+    Grant required runtime permissions to the specified app
+    (typically org.mozilla.fennec_$USER).
     """
     app = build_obj.substs['ANDROID_PACKAGE_NAME']
     adb_path = _find_sdk_exe(build_obj.substs, 'adb', False)
@@ -273,6 +289,7 @@ def grant_runtime_permissions(build_obj):
             dm.shellCheckOutput(['pm', 'grant', app, 'android.permission.WRITE_CONTACTS'])
     except DMError:
         _log_warning("Unable to grant runtime permissions to %s" % app)
+
 
 class AndroidEmulator(object):
 
@@ -303,7 +320,7 @@ class AndroidEmulator(object):
         if not adb_path:
             adb_path = 'adb'
         self.dm = DeviceManagerADB(autoconnect=False, adbPath=adb_path, retryLimit=1,
-            deviceSerial=device_serial)
+                                   deviceSerial=device_serial)
         self.dm.default_timeout = 10
         _log_debug("Emulator created with type %s" % self.avd_type)
 
@@ -401,15 +418,15 @@ class AndroidEmulator(object):
         log_path = os.path.join(EMULATOR_HOME_DIR, 'emulator.log')
         self.emulator_log = open(log_path, 'w')
         _log_debug("Starting the emulator with this command: %s" %
-                        ' '.join(command))
+                   ' '.join(command))
         _log_debug("Emulator output will be written to '%s'" %
-                        log_path)
+                   log_path)
         self.proc = ProcessHandler(
             command, storeOutput=False, processOutputLine=outputHandler,
             env=env)
         self.proc.run()
         _log_debug("Emulator started with pid %d" %
-                        int(self.proc.proc.pid))
+                   int(self.proc.proc.pid))
 
     def wait_for_start(self):
         """
@@ -514,7 +531,7 @@ class AndroidEmulator(object):
             try:
                 tn = telnetlib.Telnet('localhost', self.avd_info.port, 10)
                 if tn is not None:
-                    res = tn.read_until('OK', 10)
+                    tn.read_until('OK', 10)
                     self._telnet_cmd(tn, 'avd status')
                     self._telnet_cmd(tn, 'redir list')
                     self._telnet_cmd(tn, 'network status')
@@ -522,7 +539,7 @@ class AndroidEmulator(object):
                     tn.read_all()
                     telnet_ok = True
                 else:
-                    _log_warning("Unable to connect to port %d" % port)
+                    _log_warning("Unable to connect to port %d" % self.avd_info.port)
             except:
                 _log_warning("Trying again after unexpected exception")
             finally:
@@ -542,6 +559,7 @@ class AndroidEmulator(object):
             if not self.substs['TARGET_CPU'].startswith('arm'):
                 return 'x86'
         return '4.3'
+
 
 def _find_sdk_exe(substs, exe, tools):
     if tools:
@@ -585,7 +603,7 @@ def _find_sdk_exe(substs, exe, tools):
     if not found:
         # Can exe be found in the default bootstrap location?
         mozbuild_path = os.environ.get('MOZBUILD_STATE_PATH',
-            os.path.expanduser(os.path.join('~', '.mozbuild')))
+                                       os.path.expanduser(os.path.join('~', '.mozbuild')))
         exe_path = os.path.join(
             mozbuild_path, 'android-sdk-linux', subdir, exe)
         if os.path.exists(exe_path):
@@ -608,15 +626,19 @@ def _find_sdk_exe(substs, exe, tools):
         exe_path = None
     return exe_path
 
+
 def _log_debug(text):
     if verbose_logging:
         print "DEBUG: %s" % text
 
+
 def _log_warning(text):
     print "WARNING: %s" % text
 
+
 def _log_info(text):
     print "%s" % text
+
 
 def _download_file(url, filename, path):
     f = urllib2.urlopen(url)
@@ -631,6 +653,7 @@ def _download_file(url, filename, path):
     local_file.close()
     _log_debug("Downloaded %s to %s/%s" % (url, path, filename))
     return True
+
 
 def _get_tooltool_manifest(substs, src_path, dst_path, filename):
     if not os.path.isdir(dst_path):
@@ -650,6 +673,7 @@ def _get_tooltool_manifest(substs, src_path, dst_path, filename):
         url = os.path.join(TRY_URL, src_path)
         _download_file(url, filename, dst_path)
 
+
 def _tooltool_fetch():
     def outputHandler(line):
         _log_debug(line)
@@ -666,6 +690,7 @@ def _tooltool_fetch():
         if proc.poll() is None:
             proc.kill(signal.SIGTERM)
 
+
 def _get_host_platform():
     plat = None
     if 'darwin' in str(sys.platform).lower():
@@ -676,6 +701,7 @@ def _get_host_platform():
         else:
             plat = 'linux32'
     return plat
+
 
 def _get_device_platform(substs):
     # PIE executables are required when SDK level >= 21 - important for gdbserver
@@ -698,6 +724,7 @@ def _get_device_platform(substs):
     if substs['TARGET_CPU'].startswith('arm'):
         return 'arm%s' % pie
     return 'x86%s' % pie
+
 
 def _update_gdbinit(substs, path):
     if os.path.exists(path):

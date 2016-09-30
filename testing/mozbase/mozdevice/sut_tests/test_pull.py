@@ -9,6 +9,7 @@ import posixpath
 from dmunit import DeviceManagerTestCase
 from mozdevice.devicemanager import DMError
 
+
 class PullTestCase(DeviceManagerTestCase):
 
     def runTest(self):

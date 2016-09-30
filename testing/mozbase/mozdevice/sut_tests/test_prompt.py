@@ -7,6 +7,7 @@ import socket
 
 from dmunit import DeviceManagerTestCase
 
+
 class PromptTestCase(DeviceManagerTestCase):
 
     def tearDown(self):

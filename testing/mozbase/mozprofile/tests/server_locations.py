@@ -10,6 +10,7 @@ from mozprofile.permissions import ServerLocations, \
     MissingPrimaryLocationError, MultiplePrimaryLocationsError, \
     DuplicateLocationError, BadPortLocationError, LocationsSyntaxError
 
+
 class ServerLocationsTest(unittest.TestCase):
     """test server locations"""
 
