@@ -67,8 +67,6 @@ def docker_worker_spidermonkey(config, job, taskdesc, schema=sm_run_schema):
         'mount-point': '/home/worker/tooltool-cache',
     })
     env['TOOLTOOL_CACHE'] = '/home/worker/tooltool-cache'
-    env['TOOLTOOL_REPO'] = 'https://github.com/mozilla/build-tooltool'
-    env['TOOLTOOL_REV'] = 'master'
     if run.get('tooltool-manifest'):
         env['TOOLTOOL_MANIFEST'] = run['tooltool-manifest']
 
