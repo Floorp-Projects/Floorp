@@ -168,6 +168,8 @@ def main(args):
                         help='Directory to recursively chown to --user:--group')
     parser.add_argument('--vcs-checkout',
                         help='Directory where Gecko checkout should be created')
+    parser.add_argument('--tools-checkout',
+                        help='Directory where build/tools checkout should be created')
 
     args = parser.parse_args(our_args)
 
@@ -239,6 +241,7 @@ def main(args):
         os.chown(os.path.dirname(checkout), uid, gid)
 
     prepare_checkout_dir(args.vcs_checkout)
+    prepare_checkout_dir(args.tools_checkout)
 
     # Drop permissions to requested user.
     # This code is modeled after what `sudo` was observed to do in a Docker
@@ -273,6 +276,13 @@ def main(args):
             os.environ.get('GECKO_HEAD_REF'):
         print('task should be defined in terms of non-symbolic revision')
         return 1
+
+    if args.tools_checkout:
+        vcs_checkout(b'https://hg.mozilla.org/build/tools',
+                     args.tools_checkout,
+                     # Always check out the latest commit on default branch.
+                     # This is non-deterministic!
+                     branch=b'default')
 
     return run_and_prefix_output(b'task', task_args)
 
