@@ -1296,6 +1296,46 @@ class Type
         return NonVoidToValType(canonicalToExprType());
     }
 
+    // Convert this type to a wasm::ExprType for use in a wasm
+    // block signature. This works for all types, including non-canonical
+    // ones. Consequently, the type isn't valid for subsequent asm.js
+    // validation; it's only valid for use in producing wasm.
+    ExprType toWasmBlockSignatureType() const {
+        switch (which()) {
+          case Fixnum:
+          case Signed:
+          case Unsigned:
+          case Int:
+          case Intish:
+            return ExprType::I32;
+
+          case Float:
+          case MaybeFloat:
+          case Floatish:
+            return ExprType::F32;
+
+          case DoubleLit:
+          case Double:
+          case MaybeDouble:
+            return ExprType::F64;
+
+          case Void:
+            return ExprType::Void;
+
+          case Uint8x16:
+          case Int8x16:   return ExprType::I8x16;
+          case Uint16x8:
+          case Int16x8:   return ExprType::I16x8;
+          case Uint32x4:
+          case Int32x4:   return ExprType::I32x4;
+          case Float32x4: return ExprType::F32x4;
+          case Bool8x16:  return ExprType::B8x16;
+          case Bool16x8:  return ExprType::B16x8;
+          case Bool32x4:  return ExprType::B32x4;
+        }
+        MOZ_CRASH("Invalid Type");
+    }
+
     const char* toChars() const {
         switch (which_) {
           case Double:      return "double";
@@ -5949,7 +5989,7 @@ CheckComma(FunctionValidator& f, ParseNode* comma, Type* type)
     if (!CheckExpr(f, pn, type))
         return false;
 
-    f.encoder().patchFixedU7(typeAt, uint8_t(Type::canonicalize(*type).canonicalToExprType()));
+    f.encoder().patchFixedU7(typeAt, uint8_t(type->toWasmBlockSignatureType()));
 
     return f.encoder().writeExpr(Expr::End);
 }
@@ -5999,7 +6039,7 @@ CheckConditional(FunctionValidator& f, ParseNode* ternary, Type* type)
                        thenType.toChars(), elseType.toChars());
     }
 
-    if (!f.popIf(typeAt, Type::canonicalize(*type).canonicalToExprType()))
+    if (!f.popIf(typeAt, type->toWasmBlockSignatureType()))
         return false;
 
     return true;
