@@ -524,17 +524,17 @@ public final class IntentHelper implements GeckoEventListener,
             callback.sendSuccess(null);
 
         }  else {
-            // We originally loaded about:neterror when we failed to match the Intent. However, many
-            // websites worked around Chrome's implementation, which does nothing in this case. For
-            // example, the site might set a timeout and load a play store url for their app if the
-            // intent link fails to load, i.e. the app is not installed. These work-arounds would often
-            // end with our users seeing about:neterror instead of the intended experience. While I
-            // feel showing about:neterror is a better solution for users (when not hacked around),
+            // We return the error page here, but it will only be shown if we think the load did
+            // not come from clicking a link. Chrome does not show error pages in that case, and
+            // many websites have catered to this behavior. For example, the site might set a timeout and load a play 
+            // store url for their app if the intent link fails to load, i.e. the app is not installed.
+            // These work-arounds would often end with our users seeing about:neterror instead of the intended experience.
+            // While I feel showing about:neterror is a better solution for users (when not hacked around),
             // we should match the status quo for the good of our users.
             //
             // Don't log the URI to prevent leaking it.
-            Log.w(LOGTAG, "Unable to open URI - ignoring click");
-            callback.sendSuccess(null); // pretend we opened the page.
+            Log.w(LOGTAG, "Unable to open URI, maybe showing neterror");
+            callback.sendError(getUnknownProtocolErrorPageUri(intent.getData().toString()));
         }
     }
 

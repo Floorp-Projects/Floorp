@@ -235,7 +235,7 @@ EvalKernel(JSContext* cx, HandleValue v, EvalType evalType, AbstractFramePtr cal
 
     Rooted<GlobalObject*> envGlobal(cx, &env->global());
     if (!GlobalObject::isRuntimeCodeGenEnabled(cx, envGlobal)) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CSP_BLOCKED_EVAL);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CSP_BLOCKED_EVAL);
         return false;
     }
 
@@ -338,7 +338,7 @@ js::DirectEvalStringFromIon(JSContext* cx,
 
     Rooted<GlobalObject*> envGlobal(cx, &env->global());
     if (!GlobalObject::isRuntimeCodeGenEnabled(cx, envGlobal)) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CSP_BLOCKED_EVAL);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CSP_BLOCKED_EVAL);
         return false;
     }
 

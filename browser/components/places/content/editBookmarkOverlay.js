@@ -177,6 +177,18 @@ var gEditItemOverlay = {
   initPanel(aInfo) {
     if (typeof(aInfo) != "object" || aInfo === null)
       throw new Error("aInfo must be an object.");
+    if ("node" in aInfo) {
+      try {
+        aInfo.node.type;
+      } catch (e) {
+        // If the lazy loader for |type| generates an exception, it means that
+        // this bookmark could not be loaded. This sometimes happens when tests
+        // create a bookmark by clicking the bookmark star, then try to cleanup
+        // before the bookmark panel has finished opening. Either way, if we
+        // cannot retrieve the bookmark information, we cannot open the panel.
+        return;
+      }
+    }
 
     // For sanity ensure that the implementer has uninited the panel before
     // trying to init it again, or we could end up leaking due to observers.

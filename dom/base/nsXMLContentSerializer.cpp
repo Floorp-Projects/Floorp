@@ -658,26 +658,24 @@ nsXMLContentSerializer::SerializeAttr(const nsAString& aPrefix,
     bool bIncludesSingle = false;
     bool bIncludesDouble = false;
     nsAString::const_iterator iCurr, iEnd;
-    uint32_t uiSize, i;
     aValue.BeginReading(iCurr);
     aValue.EndReading(iEnd);
-    for ( ; iCurr != iEnd; iCurr.advance(uiSize) ) {
-      const char16_t * buf = iCurr.get();
-      uiSize = iCurr.size_forward();
-      for ( i = 0; i < uiSize; i++, buf++ ) {
-        if ( *buf == char16_t('\'') )
-        {
-          bIncludesSingle = true;
-          if ( bIncludesDouble ) break;
+    for ( ; iCurr != iEnd; ++iCurr) {
+      if (*iCurr == char16_t('\'')) {
+        bIncludesSingle = true;
+        if (bIncludesDouble) {
+          break;
         }
-        else if ( *buf == char16_t('"') )
-        {
-          bIncludesDouble = true;
-          if ( bIncludesSingle ) break;
+      } else if (*iCurr == char16_t('"')) {
+        bIncludesDouble = true;
+        if (bIncludesSingle) {
+          break;
         }
       }
       // if both have been found we don't need to search further
-      if ( bIncludesDouble && bIncludesSingle ) break;
+      if (bIncludesDouble && bIncludesSingle) {
+        break;
+      }
     }
 
     // Delimiter and escaping is according to the following table
@@ -1246,7 +1244,7 @@ nsXMLContentSerializer::AppendAndTranslateEntities(const nsAString& aStr,
   for (aStr.BeginReading(iter);
        iter != done_reading;
        iter.advance(int32_t(advanceLength))) {
-    uint32_t fragmentLength = iter.size_forward();
+    uint32_t fragmentLength = done_reading - iter;
     const char16_t* c = iter.get();
     const char16_t* fragmentStart = c;
     const char16_t* fragmentEnd = c + fragmentLength;

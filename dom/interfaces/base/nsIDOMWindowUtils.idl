@@ -1760,6 +1760,13 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute boolean isHandlingUserInput;
 
   /**
+   * Returns milliseconds elapsed since last user input was started
+   *
+   * This relies on EventStateManager::LatestUserInputStart()
+   */
+  readonly attribute double millisSinceLastUserInput;
+
+  /**
    * After calling the method, the window for which this DOMWindowUtils
    * was created can be closed using scripts.
    */

@@ -24,33 +24,18 @@ namespace dom {
 class PresentationDeviceRequest;
 class PresentationRespondingInfo;
 
-class PresentationService final : public nsIPresentationService
-                                , public nsIObserver
-                                , public PresentationServiceBase
+class PresentationService final
+                      : public nsIPresentationService
+                      , public nsIObserver
+                      , public PresentationServiceBase<PresentationSessionInfo>
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIPRESENTATIONSERVICE
 
   PresentationService();
   bool Init();
-
-  already_AddRefed<PresentationSessionInfo>
-  GetSessionInfo(const nsAString& aSessionId, const uint8_t aRole)
-  {
-    MOZ_ASSERT(aRole == nsIPresentationService::ROLE_CONTROLLER ||
-               aRole == nsIPresentationService::ROLE_RECEIVER);
-
-    RefPtr<PresentationSessionInfo> info;
-    if (aRole == nsIPresentationService::ROLE_CONTROLLER) {
-      return mSessionInfoAtController.Get(aSessionId, getter_AddRefs(info)) ?
-             info.forget() : nullptr;
-    } else {
-      return mSessionInfoAtReceiver.Get(aSessionId, getter_AddRefs(info)) ?
-             info.forget() : nullptr;
-    }
-  }
 
   bool IsSessionAccessible(const nsAString& aSessionId,
                            const uint8_t aRole,
@@ -76,8 +61,6 @@ private:
 
   bool mIsAvailable;
   nsTObserverArray<nsCOMPtr<nsIPresentationAvailabilityListener>> mAvailabilityListeners;
-  nsRefPtrHashtable<nsStringHashKey, PresentationSessionInfo> mSessionInfoAtController;
-  nsRefPtrHashtable<nsStringHashKey, PresentationSessionInfo> mSessionInfoAtReceiver;
 };
 
 } // namespace dom

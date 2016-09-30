@@ -931,8 +931,8 @@ js::Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
         char numBuf1[12], numBuf2[12];
         SprintfLiteral(numBuf1, "%d", op);
         SprintfLiteral(numBuf2, "%d", JSOP_LIMIT);
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                             JSMSG_BYTECODE_TOO_BIG, numBuf1, numBuf2);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BYTECODE_TOO_BIG,
+                                  numBuf1, numBuf2);
         return 0;
     }
     const JSCodeSpec* cs = &CodeSpec[op];
@@ -1116,8 +1116,7 @@ js::Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       default: {
         char numBuf[12];
         SprintfLiteral(numBuf, "%x", cs->format);
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                             JSMSG_UNKNOWN_FORMAT, numBuf);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_UNKNOWN_FORMAT, numBuf);
         return 0;
       }
     }
@@ -1784,7 +1783,7 @@ js::GetPCCountScriptSummary(JSContext* cx, size_t index)
     JSRuntime* rt = cx->runtime();
 
     if (!rt->scriptAndCountsVector || index >= rt->scriptAndCountsVector->length()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BUFFER_TOO_SMALL);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BUFFER_TOO_SMALL);
         return nullptr;
     }
 
@@ -2068,7 +2067,7 @@ js::GetPCCountScriptContents(JSContext* cx, size_t index)
     JSRuntime* rt = cx->runtime();
 
     if (!rt->scriptAndCountsVector || index >= rt->scriptAndCountsVector->length()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BUFFER_TOO_SMALL);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BUFFER_TOO_SMALL);
         return nullptr;
     }
 

@@ -1056,11 +1056,12 @@ js::ParseRegExpFlags(JSContext* cx, JSString* flagStr, RegExpFlag* flagsOut)
     }
 
     if (!ok) {
-        char charBuf[2];
-        charBuf[0] = char(lastParsed);
-        charBuf[1] = '\0';
-        JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, GetErrorMessage, nullptr,
-                                     JSMSG_BAD_REGEXP_FLAG, charBuf);
+        TwoByteChars range(&lastParsed, 1);
+        UniqueChars utf8(JS::CharsToNewUTF8CharsZ(nullptr, range).c_str());
+        if (!utf8)
+            return false;
+        JS_ReportErrorFlagsAndNumberUTF8(cx, JSREPORT_ERROR, GetErrorMessage, nullptr,
+                                         JSMSG_BAD_REGEXP_FLAG, utf8.get());
         return false;
     }
 

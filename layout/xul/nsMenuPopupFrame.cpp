@@ -436,7 +436,7 @@ nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu,
   if (!isOpen) {
     // if the popup is not open, only do layout while showing or if the menu
     // is sized to the popup
-    shouldPosition = (mPopupState == ePopupShowing);
+    shouldPosition = (mPopupState == ePopupShowing || mPopupState == ePopupPositioning);
     if (!shouldPosition && !aSizedToPopup) {
       RemoveStateBits(NS_FRAME_FIRST_REFLOW);
       return;
@@ -476,7 +476,7 @@ nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu,
 
   bool needCallback = false;
   if (shouldPosition) {
-    SetPopupPosition(aAnchor, false, aSizedToPopup);
+    SetPopupPosition(aAnchor, false, aSizedToPopup, mPopupState == ePopupPositioning);
     needCallback = true;
   }
 
@@ -502,7 +502,7 @@ nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu,
   }
 
   if (rePosition) {
-    SetPopupPosition(aAnchor, false, aSizedToPopup);
+    SetPopupPosition(aAnchor, false, aSizedToPopup, false);
   }
 
   nsPresContext* pc = PresContext();
@@ -561,7 +561,7 @@ nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu,
 bool
 nsMenuPopupFrame::ReflowFinished()
 {
-  SetPopupPosition(mReflowCallbackData.mAnchor, false, mReflowCallbackData.mSizedToPopup);
+  SetPopupPosition(mReflowCallbackData.mAnchor, false, mReflowCallbackData.mSizedToPopup, false);
 
   mReflowCallbackData.Clear();
 
@@ -802,31 +802,7 @@ nsMenuPopupFrame::InitializePopupAtScreen(nsIContent* aTriggerContent,
   mPopupState = ePopupShowing;
   mAnchorContent = nullptr;
   mTriggerContent = aTriggerContent;
-
-  nsCOMPtr<nsIScreenManager> screenMgr =
-    do_GetService("@mozilla.org/gfx/screenmanager;1");
-  nsCOMPtr<nsIScreen> screen;
-  if (screenMgr) {
-    // aXPos and aYPos are "global desktop" coordinates in units of
-    // CSS pixels, but nsMenuPopupFrame wants CSS pixels that are
-    // directly scaled from device pixels, without being offset for
-    // the screen origin. So we need to undo the offset that was
-    // applied to the global CSS coordinate values in the mouse event.
-    screenMgr->ScreenForRect(aXPos, aYPos, 1, 1,
-                             getter_AddRefs(screen));
-    double cssToDevScale, deskToDevScale;
-    screen->GetDefaultCSSScaleFactor(&cssToDevScale);
-    screen->GetContentsScaleFactor(&deskToDevScale);
-    double scale = deskToDevScale / cssToDevScale;
-    int32_t w, h;
-    DesktopIntPoint origin;
-    screen->GetRectDisplayPix(&origin.x, &origin.y, &w, &h);
-    mScreenRect.x = aXPos + (origin.x * scale) - origin.x;
-    mScreenRect.y = aYPos + (origin.y * scale) - origin.y;
-    mScreenRect.width = mScreenRect.height = 0;
-  } else {
-    mScreenRect = nsIntRect(aXPos, aYPos, 0, 0);
-  }
+  mScreenRect = nsIntRect(aXPos, aYPos, 0, 0);
   mXPos = 0;
   mYPos = 0;
   mFlip = FlipType_Default;
@@ -889,7 +865,7 @@ nsMenuPopupFrame::ShowPopup(bool aIsContextMenu)
 
   InvalidateFrameSubtree();
 
-  if (mPopupState == ePopupShowing) {
+  if (mPopupState == ePopupShowing || mPopupState == ePopupPositioning) {
     mPopupState = ePopupOpening;
     mIsOpenChanged = true;
 
@@ -930,7 +906,8 @@ nsMenuPopupFrame::HidePopup(bool aDeselectMenu, nsPopupState aNewState)
   ClearPopupShownDispatcher();
 
   // don't hide the popup when it isn't open
-  if (mPopupState == ePopupClosed || mPopupState == ePopupShowing)
+  if (mPopupState == ePopupClosed || mPopupState == ePopupShowing ||
+      mPopupState == ePopupPositioning)
     return;
 
   // clear the trigger content if the popup is being closed. But don't clear
@@ -1208,6 +1185,8 @@ nsMenuPopupFrame::FlipOrResize(nscoord& aScreenPoint, nscoord aSize,
                                nscoord aOffsetForContextMenu, FlipStyle aFlip,
                                bool* aFlipSide)
 {
+  *aFlipSide = false;
+
   // all of the coordinates used here are in app units relative to the screen
   nscoord popupSize = aSize;
   if (aScreenPoint < aScreenBegin) {
@@ -1308,7 +1287,7 @@ nsMenuPopupFrame::FlipOrResize(nscoord& aScreenPoint, nscoord aSize,
 }
 
 nsresult
-nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, bool aIsMove, bool aSizedToPopup)
+nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, bool aIsMove, bool aSizedToPopup, bool aNotify)
 {
   if (!mShouldAutoPosition)
     return NS_OK;
@@ -1611,6 +1590,17 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, bool aIsMove, bool aS
     nsBoxLayoutState state(PresContext());
     // XXXndeakin can parentSize.width still extend outside?
     SetXULBounds(state, mRect);
+  }
+
+  // If the popup is in the positioned state or if it is shown and the position
+  // or size changed, dispatch a popuppositioned event if the popup wants it.
+  nsIntRect newRect(screenPoint.x, screenPoint.y, mRect.width, mRect.height);
+  if (mPopupState == ePopupPositioning ||
+      (mPopupState == ePopupShown && !newRect.IsEqualEdges(mUsedScreenRect))) {
+    mUsedScreenRect = newRect;
+    if (aNotify) {
+      nsXULPopupPositionedEvent::DispatchIfNeeded(mContent, false, false);
+    }
   }
 
   return NS_OK;
@@ -2294,7 +2284,7 @@ nsMenuPopupFrame::MoveTo(const CSSIntPoint& aPos, bool aUpdateAttrs)
   mScreenRect.x = aPos.x - presContext->AppUnitsToIntCSSPixels(margin.left);
   mScreenRect.y = aPos.y - presContext->AppUnitsToIntCSSPixels(margin.top);
 
-  SetPopupPosition(nullptr, true, false);
+  SetPopupPosition(nullptr, true, false, true);
 
   nsCOMPtr<nsIContent> popup = mContent;
   if (aUpdateAttrs && (popup->HasAttr(kNameSpaceID_None, nsGkAtoms::left) ||
@@ -2323,7 +2313,7 @@ nsMenuPopupFrame::MoveToAnchor(nsIContent* aAnchorContent,
   mPopupState = oldstate;
 
   // Pass false here so that flipping and adjusting to fit on the screen happen.
-  SetPopupPosition(nullptr, false, false);
+  SetPopupPosition(nullptr, false, false, true);
 }
 
 bool

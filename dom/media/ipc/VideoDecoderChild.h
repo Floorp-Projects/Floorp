@@ -40,6 +40,7 @@ public:
   void Drain();
   void Shutdown();
 
+  MOZ_IS_CLASS_INIT
   void InitIPDL(MediaDataDecoderCallback* aCallback,
                 const VideoInfo& aVideoInfo,
                 layers::LayersBackend aLayersBackend);

@@ -130,6 +130,8 @@
       <field name="_lastKeyTime">0</field>
       <field name="_incrementalString">""</field>
 
+      <field name="_touchY">-1</field>
+
       <method name="_ensureColumnOrder">
         <body><![CDATA[
           if (!this._columnsDirty)
@@ -684,6 +686,40 @@
     </implementation>
 
     <handlers>
+      <handler event="touchstart">
+        <![CDATA[
+          if (event.touches.length > 1) {
+            // Multiple touch points detected, abort. In particular this aborts
+            // the panning gesture when the user puts a second finger down after
+            // already panning with one finger. Aborting at this point prevents
+            // the pan gesture from being resumed until all fingers are lifted
+            // (as opposed to when the user is back down to one finger).
+            this._touchY = -1;
+          } else {
+            this._touchY = event.touches[0].screenY;
+          }
+        ]]>
+      </handler>
+      <handler event="touchmove">
+        <![CDATA[
+          if (event.touches.length == 1 &&
+              this._touchY >= 0) {
+            var deltaY = this._touchY - event.touches[0].screenY;
+            var lines = Math.trunc(deltaY / this.treeBoxObject.rowHeight);
+            if (Math.abs(lines) > 0) {
+              this.treeBoxObject.scrollByLines(lines);
+              deltaY -= lines * this.treeBoxObject.rowHeight;
+              this._touchY = event.touches[0].screenY + deltaY;
+            }
+            event.preventDefault();
+          }
+        ]]>
+      </handler>
+      <handler event="touchend">
+        <![CDATA[
+          this._touchY = -1;
+        ]]>
+      </handler>
       <handler event="MozMousePixelScroll" preventdefault="true"/>
       <handler event="DOMMouseScroll" preventdefault="true">
         <![CDATA[

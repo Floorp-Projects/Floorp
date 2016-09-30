@@ -400,7 +400,8 @@ Module::initSegments(JSContext* cx,
         uint32_t offset = EvaluateInitExpr(globalImports, seg.offset);
 
         if (offset > tableLength || tableLength - offset < seg.elemCodeRangeIndices.length()) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_FIT, "elem", "table");
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_FIT,
+                                      "elem", "table");
             return false;
         }
     }
@@ -411,7 +412,8 @@ Module::initSegments(JSContext* cx,
             uint32_t offset = EvaluateInitExpr(globalImports, seg.offset);
 
             if (offset > memoryLength || memoryLength - offset < seg.length) {
-                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_FIT, "data", "memory");
+                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_FIT,
+                                          "data", "memory");
                 return false;
             }
         }
@@ -438,7 +440,7 @@ Module::initSegments(JSContext* cx,
 
                 HandleFunction f = funcImports[elemFuncIndex];
                 if (!IsExportedWasmFunction(f)) {
-                    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_TABLE_VALUE);
+                    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_TABLE_VALUE);
                     return false;
                 }
 
@@ -492,7 +494,7 @@ Module::instantiateFunctions(JSContext* cx, Handle<FunctionVector> funcImports) 
         const FuncDefExport& funcDefExport = instance.metadata().lookupFuncDefExport(funcDefIndex);
 
         if (funcDefExport.sig() != metadata_->funcImports[i].sig()) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_SIG);
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_SIG);
             return false;
         }
     }
@@ -513,12 +515,14 @@ CheckResizableLimits(JSContext* cx, uint32_t declaredMin, Maybe<uint32_t> declar
     }
 
     if (actualLength < declaredMin || actualLength > declaredMax.valueOr(UINT32_MAX)) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMP_SIZE, kind);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMP_SIZE,
+                                  kind);
         return false;
     }
 
     if ((actualMax && (!declaredMax || *actualMax > *declaredMax)) || (!actualMax && declaredMax)) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMP_MAX, kind);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMP_MAX,
+                                  kind);
         return false;
     }
 

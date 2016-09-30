@@ -3049,6 +3049,9 @@
         </getter>
         <setter>
           <![CDATA[
+          if (gNavToolbox.collapsed) {
+            return this.mTabBox.selectedTab;
+          }
           // Update the tab
           this.mTabBox.selectedTab = val;
           return val;
@@ -5989,7 +5992,8 @@
           return;
 
         if (event.target.localName == "tab") {
-          this.tabbrowser.removeTab(event.target, {animate: true, byMouse: true});
+          this.tabbrowser.removeTab(event.target, {animate: true,
+                byMouse: event.mozInputSource == MouseEvent.MOZ_SOURCE_MOUSE});
         } else if (event.originalTarget.localName == "box") {
           // The user middleclicked an open space on the tabstrip. This could
           // be because they intend to open a new tab, but it could also be
@@ -6411,7 +6415,8 @@
       <handler event="click" button="0"><![CDATA[
         var bindingParent = document.getBindingParent(this);
         var tabContainer = bindingParent.parentNode;
-        tabContainer.tabbrowser.removeTab(bindingParent, {animate: true, byMouse: true});
+        tabContainer.tabbrowser.removeTab(bindingParent, {animate: true,
+                byMouse: event.mozInputSource == MouseEvent.MOZ_SOURCE_MOUSE});
         // This enables double-click protection for the tab container
         // (see tabbrowser-tabs 'click' handler).
         tabContainer._blockDblClick = true;

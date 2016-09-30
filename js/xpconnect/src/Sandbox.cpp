@@ -890,8 +890,10 @@ xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj)
             JS_ReportErrorASCII(cx, "Property names must be strings");
             return false;
         }
-        JSAutoByteString name(cx, nameValue.toString());
-        NS_ENSURE_TRUE(name, false);
+        RootedString nameStr(cx, nameValue.toString());
+        JSAutoByteString name;
+        if (!name.encodeUtf8(cx, nameStr))
+            return false;
         if (!strcmp(name.ptr(), "CSS")) {
             CSS = true;
         } else if (!strcmp(name.ptr(), "indexedDB")) {
@@ -929,7 +931,7 @@ xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj)
         } else if (!strcmp(name.ptr(), "FileReader")) {
             fileReader = true;
         } else {
-            JS_ReportError(cx, "Unknown property name: %s", name.ptr());
+            JS_ReportErrorUTF8(cx, "Unknown property name: %s", name.ptr());
             return false;
         }
     }

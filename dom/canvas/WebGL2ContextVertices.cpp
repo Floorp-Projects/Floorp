@@ -80,17 +80,14 @@ WebGL2Context::VertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsiz
 
   InvalidateBufferFetching();
 
-  WebGLVertexAttribData& vd = mBoundVertexArray->mAttribs[index];
-  vd.buf = mBoundArrayBuffer;
-  vd.stride = stride;
-  vd.size = size;
-  vd.byteOffset = offset;
-  vd.type = type;
-  vd.normalized = false;
-  vd.integer = true;
-
   MakeContextCurrent();
   gl->fVertexAttribIPointer(index, size, type, stride, reinterpret_cast<void*>(offset));
+
+  WebGLVertexAttribData& vd = mBoundVertexArray->mAttribs[index];
+  const bool integerFunc = true;
+  const bool normalized = false;
+  vd.VertexAttribPointer(integerFunc, mBoundArrayBuffer, size, type, normalized, stride,
+                         offset);
 }
 
 void

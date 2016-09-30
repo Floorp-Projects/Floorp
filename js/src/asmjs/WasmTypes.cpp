@@ -138,7 +138,7 @@ HandleTrap(int32_t trapIndex)
         MOZ_CRASH("unexpected trap");
     }
 
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, errorNumber);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, errorNumber);
 }
 
 static int32_t

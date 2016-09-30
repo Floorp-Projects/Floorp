@@ -19,8 +19,8 @@ Compare(const nsTSubstring_CharT::base_string_type& aLhs,
   aLhs.BeginReading(leftIter);
   aRhs.BeginReading(rightIter);
 
-  size_type lLength = leftIter.size_forward();
-  size_type rLength = rightIter.size_forward();
+  size_type lLength = aLhs.Length();
+  size_type rLength = aRhs.Length();
   size_type lengthToCompare = XPCOM_MIN(lLength, rLength);
 
   int result;

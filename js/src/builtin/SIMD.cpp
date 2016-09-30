@@ -125,7 +125,7 @@ js::IsSimdTypeName(const JSAtomState& atoms, const PropertyName* name, SimdType*
 static inline bool
 ErrorBadArgs(JSContext* cx)
 {
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
     return false;
 }
 
@@ -141,8 +141,8 @@ ErrorWrongTypeArg(JSContext* cx, unsigned argIndex, Handle<TypeDescr*> typeDescr
     if (!typeNameStr)
         return false;
 
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SIMD_NOT_A_VECTOR,
-                         typeNameStr, charArgIndex);
+    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_SIMD_NOT_A_VECTOR,
+                               typeNameStr, charArgIndex);
     JS_free(cx, typeNameStr);
     return false;
 }
@@ -150,7 +150,7 @@ ErrorWrongTypeArg(JSContext* cx, unsigned argIndex, Handle<TypeDescr*> typeDescr
 static inline bool
 ErrorBadIndex(JSContext* cx)
 {
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
     return false;
 }
 
@@ -1165,8 +1165,7 @@ FuncConvert(JSContext* cx, unsigned argc, Value* vp)
     RetElem result[Vret::lanes];
     for (unsigned i = 0; i < V::lanes; i++) {
         if (ThrowOnConvert<Elem, RetElem>::value(val[i])) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                                 JSMSG_SIMD_FAILED_CONVERSION);
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SIMD_FAILED_CONVERSION);
             return false;
         }
         result[i] = ConvertScalar<RetElem>(val[i]);

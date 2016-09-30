@@ -531,7 +531,7 @@ nsHTMLContentSerializer::AppendAndTranslateEntities(const nsAString& aStr,
     for (aStr.BeginReading(iter);
          iter != done_reading;
          iter.advance(int32_t(advanceLength))) {
-      uint32_t fragmentLength = iter.size_forward();
+      uint32_t fragmentLength = done_reading - iter;
       uint32_t lengthReplaced = 0; // the number of UTF-16 codepoints
                                     //  replaced by a particular entity
       const char16_t* c = iter.get();

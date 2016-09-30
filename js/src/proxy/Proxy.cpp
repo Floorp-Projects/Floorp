@@ -34,8 +34,7 @@ js::AutoEnterPolicy::reportErrorIfExceptionIsNotPending(JSContext* cx, jsid id)
         return;
 
     if (JSID_IS_VOID(id)) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                             JSMSG_OBJECT_ACCESS_DENIED);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_ACCESS_DENIED);
     } else {
         RootedValue idVal(cx, IdToValue(id));
         JSString* str = ValueToSource(cx, idVal);

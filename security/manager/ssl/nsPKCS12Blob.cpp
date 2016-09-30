@@ -44,8 +44,6 @@ extern LazyLogModule gPIPNSSLog;
 // constructor
 nsPKCS12Blob::nsPKCS12Blob():mCertArray(0),
                              mTmpFile(nullptr),
-                             mDigest(nullptr),
-                             mDigestIterator(nullptr),
                              mTokenSet(false)
 {
   mUIContext = new PipUIContext();
@@ -54,9 +52,6 @@ nsPKCS12Blob::nsPKCS12Blob():mCertArray(0),
 // destructor
 nsPKCS12Blob::~nsPKCS12Blob()
 {
-  delete mDigestIterator;
-  delete mDigest;
-
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return;
@@ -179,10 +174,8 @@ nsPKCS12Blob::ImportFromFileHelper(nsIFile *file,
   }
 
   // initialize the decoder
-  dcx = SEC_PKCS12DecoderStart(&unicodePw, slot.get(), nullptr,
-                               digest_open, digest_close,
-                               digest_read, digest_write,
-                               this);
+  dcx = SEC_PKCS12DecoderStart(&unicodePw, slot.get(), nullptr, nullptr,
+                               nullptr, nullptr, nullptr, nullptr);
   if (!dcx) {
     srv = SECFailure;
     goto finish;
@@ -502,105 +495,6 @@ nsPKCS12Blob::inputToDecoder(SEC_PKCS12DecoderContext *dcx, nsIFile *file)
       break;
   }
   return NS_OK;
-}
-
-//
-// C callback methods
-//
-
-// digest_open
-// prepare a memory buffer for reading/writing digests
-SECStatus
-nsPKCS12Blob::digest_open(void *arg, PRBool reading)
-{
-  auto cx = static_cast<nsPKCS12Blob*>(arg);
-  NS_ENSURE_TRUE(cx, SECFailure);
-
-  if (reading) {
-    NS_ENSURE_TRUE(cx->mDigest, SECFailure);
-
-    delete cx->mDigestIterator;
-    cx->mDigestIterator = new nsCString::const_iterator;
-
-    if (!cx->mDigestIterator) {
-      PORT_SetError(SEC_ERROR_NO_MEMORY);
-      return SECFailure;
-    }
-
-    cx->mDigest->BeginReading(*cx->mDigestIterator);
-  }
-  else {
-    delete cx->mDigest;
-    cx->mDigest = new nsCString;
-
-    if (!cx->mDigest) {
-      PORT_SetError(SEC_ERROR_NO_MEMORY);
-      return SECFailure;
-    }
-  }
-
-  return SECSuccess;
-}
-
-// digest_close
-// destroy a possibly active iterator
-// remove the data buffer if requested
-SECStatus
-nsPKCS12Blob::digest_close(void *arg, PRBool remove_it)
-{
-  auto cx = static_cast<nsPKCS12Blob*>(arg);
-  NS_ENSURE_TRUE(cx, SECFailure);
-
-  delete cx->mDigestIterator;
-  cx->mDigestIterator = nullptr;
-
-  if (remove_it) {
-    delete cx->mDigest;
-    cx->mDigest = nullptr;
-  }
-
-  return SECSuccess;
-}
-
-// digest_read
-// read bytes from the memory buffer
-int
-nsPKCS12Blob::digest_read(void *arg, unsigned char *buf, unsigned long len)
-{
-  auto cx = static_cast<nsPKCS12Blob*>(arg);
-  NS_ENSURE_TRUE(cx, SECFailure);
-  NS_ENSURE_TRUE(cx->mDigest, SECFailure);
-
-  // iterator object must exist when digest has been opened in read mode
-  NS_ENSURE_TRUE(cx->mDigestIterator, SECFailure);
-
-  unsigned long available = cx->mDigestIterator->size_forward();
-
-  if (len > available)
-    len = available;
-
-  memcpy(buf, cx->mDigestIterator->get(), len);
-  cx->mDigestIterator->advance(len);
-
-  return len;
-}
-
-// digest_write
-// append bytes to the memory buffer
-int
-nsPKCS12Blob::digest_write(void *arg, unsigned char *buf, unsigned long len)
-{
-  auto cx = static_cast<nsPKCS12Blob*>(arg);
-  NS_ENSURE_TRUE(cx, SECFailure);
-  NS_ENSURE_TRUE(cx->mDigest, SECFailure);
-
-  // make sure we are in write mode, read iterator has not yet been allocated
-  NS_ENSURE_FALSE(cx->mDigestIterator, SECFailure);
-
-  cx->mDigest->Append(BitwiseCast<char*, unsigned char*>(buf),
-                      static_cast<uint32_t>(len));
-
-  return len;
 }
 
 // nickname_collision

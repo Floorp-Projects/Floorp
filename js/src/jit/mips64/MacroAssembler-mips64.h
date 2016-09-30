@@ -946,7 +946,8 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
         moveToDouble(zero, reg);
     }
 
-    void convertUInt64ToDouble(Register64 src, Register temp, FloatRegister dest);
+    static bool convertUInt64ToDoubleNeedsTemp();
+    void convertUInt64ToDouble(Register64 src, FloatRegister dest, Register temp);
 
     void breakpoint();
 
